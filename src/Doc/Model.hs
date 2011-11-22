@@ -77,7 +77,6 @@ module Doc.Model
   , NewDocument(..)
   , PendingToAwaitingAuthor(..)
   , PreparationToPending(..)
-  -- , PutDocumentUnchecked(..)
   , ReallyDeleteDocuments(..)
   , RejectDocument(..)
   , RemoveDaysToSign(..)
@@ -171,7 +170,7 @@ mkInsertStatement :: String -> [SqlField] -> String
 mkInsertStatement tableName fields =
    "INSERT INTO " ++ tableName ++
    " (" ++ concat (intersperse "," (map name fields)) ++ ")" ++
-   " VALUES (" ++ concat (intersperse "," (map xtype fields)) ++ ")"
+   " SELECT " ++ concat (intersperse "," (map xtype fields))
    where
      name (SqlField x _ _) = x
      xtype (SqlField _ x _) = insertType x
@@ -192,6 +191,71 @@ runInsertStatement tableName fields = do
   where
     value (SqlField _ _ v) = v
     statement = mkInsertStatement tableName fields
+
+mkInsertStatementWhere :: String -> [SqlField] -> String -> [SqlValue] -> String
+mkInsertStatementWhere tableName fields xwhere _values =
+   "INSERT INTO " ++ tableName ++
+   " (" ++ concat (intersperse "," (map name fields)) ++ ")" ++
+   " SELECT " ++ concat (intersperse "," (map xtype fields))  ++
+   case xwhere of
+     [] -> ""
+     _ -> " WHERE " ++ xwhere
+   where
+     name (SqlField x _ _) = x
+     xtype (SqlField _ x _) = insertType x
+     insertType "" = "?"
+     insertType "timestamp" = "to_timestamp(?)"
+     insertType "base64" = "decode(?, 'base64')"
+     insertType ytype = error $ "mkInsertStatement: invalid insert type " ++ ytype
+
+
+runInsertStatementWhere :: String -> [SqlField] -> String -> [SqlValue] -> DB Integer
+runInsertStatementWhere tableName fields xwhere values = do
+
+  wrapDB $ \conn -> (run conn statement (map value fields ++ values)) `E.catch` 
+        (\e -> liftIO $ E.throwIO $ SQLError { DB.Classes.originalQuery = statement
+                                             , sqlError = e 
+                                             }) 
+    
+  where
+    value (SqlField _ _ v) = v
+    statement = mkInsertStatementWhere tableName fields xwhere values
+
+mkInsertStatementWhereReturning :: String -> [SqlField] -> String -> [SqlValue] -> [String] -> String
+mkInsertStatementWhereReturning tableName fields xwhere _values returnFields =
+   "INSERT INTO " ++ tableName ++
+   " (" ++ concat (intersperse "," (map name fields)) ++ ")" ++
+   " SELECT " ++ concat (intersperse "," (map xtype fields)) ++
+   (case xwhere of
+      [] -> ""
+      _ -> " WHERE " ++ xwhere) ++
+   (case returnFields of
+      [] -> ""
+      _ -> " RETURNING " ++ concat (intersperse ", " returnFields))
+   where
+     name (SqlField x _ _) = x
+     xtype (SqlField _ x _) = insertType x
+     insertType "" = "?"
+     insertType "timestamp" = "to_timestamp(?)"
+     insertType "base64" = "decode(?, 'base64')"
+     insertType ytype = error $ "mkInsertStatement: invalid insert type " ++ ytype
+
+
+runInsertStatementWhereReturning :: String -> [SqlField] -> String -> [SqlValue] -> [String] -> DB Statement
+runInsertStatementWhereReturning tableName fields xwhere values returnFields = do
+
+  wrapDB $ \conn -> (doit conn `E.catch` handle)
+    
+  where
+    doit conn = do
+      st <- prepare conn statement
+      r <- execute st (map value fields ++ values)
+      return st
+    handle e = E.throwIO $ SQLError { DB.Classes.originalQuery = statement
+                                    , sqlError = e 
+                                    } 
+    value (SqlField _ _ v) = v
+    statement = mkInsertStatementWhereReturning tableName fields xwhere values returnFields
 
 -- here we can add encoding and better error reporting in case conversion fails
 mkUpdateStatement :: String -> [SqlField] -> String
@@ -422,72 +486,78 @@ decodeRowAsDocument did
                                                , documentregion = region
                                                }) :: Either DBException Document
 
+selectDocumentsSelectors :: [String]
+selectDocumentsSelectors = [ "id" 
+                           , "title" 
+                           , "file_id" 
+                           , "sealed_file_id" 
+                           , "status" 
+                           , "error_text" 
+                           , "type" 
+                           , "process" 
+                           , "functionality" 
+                           , "EXTRACT(EPOCH FROM ctime)" 
+                           , "EXTRACT(EPOCH FROM mtime)" 
+                           , "days_to_sign" 
+                           , "EXTRACT(EPOCH FROM timeout_time)" 
+                           , "EXTRACT(EPOCH FROM invite_time)" 
+                           , "invite_ip" 
+                           , "log" 
+                           , "invite_text" 
+                           , "allowed_id_types" 
+                           , "csv_title" 
+                           , "csv_contents" 
+                           , "csv_signatory_index" 
+                           , "cancelation_reason" 
+                           , "sharing" 
+                           , "EXTRACT(EPOCH FROM rejection_time)" 
+                           , "rejection_signatory_link_id" 
+                           , "rejection_reason" 
+                           , "tags" 
+                           , "service_id" 
+                           , "deleted" 
+                           --authorattachments
+                           --signatoryattachments
+                           --, "ui" 
+                           , "region"
+                           ] 
+
 selectDocumentsSQL :: String
-selectDocumentsSQL = "SELECT id" ++
-                     ",title" ++
-                     ",file_id" ++
-                     ",sealed_file_id" ++
-                     ",status" ++
-                     ",error_text" ++
-                     ",type" ++
-                     ",process" ++
-                     ",functionality" ++
-                     ",EXTRACT(EPOCH FROM ctime)" ++
-                     ",EXTRACT(EPOCH FROM mtime)" ++
-                     ",days_to_sign" ++
-                     ",EXTRACT(EPOCH FROM timeout_time)" ++
-                     ",EXTRACT(EPOCH FROM invite_time)" ++
-                     ",invite_ip" ++
-                     ",log" ++
-                     ",invite_text" ++
-                     ",allowed_id_types" ++
-                     ",csv_title" ++
-                     ",csv_contents" ++
-                     ",csv_signatory_index" ++
-                     ",cancelation_reason" ++
-                     ",sharing" ++
-                     ",EXTRACT(EPOCH FROM rejection_time)" ++
-                     ",rejection_signatory_link_id" ++
-                     ",rejection_reason" ++
-                     ",tags" ++
-                     ",service_id" ++
-                     ",deleted" ++
-                     --authorattachments
-                     --signatoryattachments
-                     --",ui" ++
-                     ",region " ++
-                     "FROM documents "
+selectDocumentsSQL = "SELECT " ++ concat (intersperse "," selectDocumentsSelectors) ++ " FROM documents "
 
 fetchDocuments :: Statement -> IO [Document]
 fetchDocuments st = do
   fetchValues st decodeRowAsDocument
 
 
+selectSignatoryLinksSelectors :: [String]
+selectSignatoryLinksSelectors = [ "id" 
+                                , "document_id"
+                                , "user_id"
+                                , "company_id"
+                                , "fields"
+                                , "sign_order"
+                                , "token"
+                                , "sign_time"
+                                , "sign_ip"
+                                , "seen_time"
+                                , "seen_ip"
+                                , "read_invitation"
+                                , "invitation_delivery_status"
+                                , "signinfo_text"
+                                , "signinfo_signature"
+                                , "signinfo_certificate"
+                                , "signinfo_provider"
+                                , "signinfo_first_name_verified"
+                                , "signinfo_last_name_verified"
+                                , "signinfo_personal_number_verified"
+                                , "roles"
+                                , "deleted"
+                                , "really_deleted"
+                                ]
+
 selectSignatoryLinksSQL :: String
-selectSignatoryLinksSQL = "SELECT id" ++
-                          ", document_id" ++
-                          ", user_id" ++
-                          ", company_id" ++
-                          ", fields" ++
-                          ", sign_order" ++
-                          ", token" ++
-                          ", sign_time" ++
-                          ", sign_ip" ++
-                          ", seen_time" ++
-                          ", seen_ip" ++
-                          ", read_invitation" ++
-                          ", invitation_delivery_status" ++
-                          ", signinfo_text" ++
-                          ", signinfo_signature" ++
-                          ", signinfo_certificate" ++
-                          ", signinfo_provider" ++
-                          ", signinfo_first_name_verified" ++
-                          ", signinfo_last_name_verified" ++
-                          ", signinfo_personal_number_verified" ++
-                          ", roles" ++
-                          ", deleted" ++
-                          ", really_deleted" ++
-                          " FROM signatory_links "
+selectSignatoryLinksSQL = "SELECT " ++ concat (intersperse "," selectSignatoryLinksSelectors) ++ " FROM signatory_links "
 
 
 decodeRowAsSignatoryLink :: SignatoryLinkID
@@ -582,10 +652,47 @@ fetchSignatoryLinks st = do
   fetchValues st decodeRowAsSignatoryLink
 
 
-data PutDocumentUnchecked = PutDocumentUnchecked Document
-                            deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate PutDocumentUnchecked Document where
-  dbUpdate (PutDocumentUnchecked document) = do
+insertSignatoryLinkAsIs :: DocumentID -> SignatoryLink -> DB (Maybe SignatoryLink)
+insertSignatoryLinkAsIs documentid link = do
+  st <- runInsertStatementWhereReturning "signatory_links"
+                            [ sqlField "id" $ signatorylinkid link
+                            , sqlField "document_id" documentid
+                            , sqlField "user_id" $ maybesignatory link
+                            , sqlField "roles" $ signatoryroles link
+                            , sqlField "company_id" $ maybecompany link
+                            , sqlField "token" $ signatorymagichash link
+                            , sqlField "fields" $ signatoryfields $ signatorydetails link
+                            , sqlField "sign_order"$ signatorysignorder $ signatorydetails link
+                            , sqlFieldType "sign_time" "timestamp" $ signtime `fmap` maybesigninfo link
+                            , sqlField "sign_ip" $ signipnumber `fmap` maybesigninfo link
+                            , sqlFieldType "seen_time" "timestamp" $ signtime `fmap` maybeseeninfo link
+                            , sqlField "seen_ip" $ signipnumber `fmap` maybeseeninfo link
+                            , sqlField "read_invitation" $ maybereadinvite link
+                            , sqlField "invitation_delivery_status" $ invitationdeliverystatus link
+                            , sqlField "signinfo_text" $ signatureinfotext `fmap` signatorysignatureinfo link
+                            , sqlField "signinfo_signature" $ signatureinfosignature `fmap` signatorysignatureinfo link
+                            , sqlField "signinfo_certificate" $ signatureinfocertificate `fmap` signatorysignatureinfo link
+                            , sqlField "signinfo_provider" $ signatureinfoprovider `fmap` signatorysignatureinfo link
+                            , sqlField "signinfo_first_name_verified" $ signaturefstnameverified `fmap` signatorysignatureinfo link
+                            , sqlField "signinfo_last_name_verified" $ signaturelstnameverified `fmap` signatorysignatureinfo link
+                            , sqlField "signinfo_personal_number_verified" $ signaturepersnumverified `fmap` signatorysignatureinfo link
+                            , sqlField "deleted" $ signatorylinkdeleted link
+                            , sqlField "really_deleted" $ signatorylinkreallydeleted link
+                            ] 
+                            "NOT EXISTS (SELECT * FROM signatory_links WHERE id = ? AND document_id = ?)"
+                            [ toSql (signatorylinkid link), toSql documentid ]
+                            selectSignatoryLinksSelectors
+
+  links <- liftIO $ fetchSignatoryLinks st
+
+  case links of
+    [newlink] -> return (Just newlink)
+    [] -> return Nothing
+    _ -> return Nothing -- should throw an exception probably
+           
+
+insertDocumentAsIs :: Document -> DB (Maybe Document)
+insertDocumentAsIs document = do
     let Document { documentid
                  , documenttitle
                  , documentsignatorylinks
@@ -617,10 +724,7 @@ instance DBUpdate PutDocumentUnchecked Document where
         simpletype = toDocumentSimpleType documenttype
         process = toDocumentProcess documenttype
 
-    when (any ((>1) . length) . group . map signatorylinkid $ documentsignatorylinks ) $
-         error "PutDocumentUnchecked got a Document that has duplicate ids in documentsignatorylinks"
-
-    rowsInserted <- runInsertStatement "documents"
+    st <- runInsertStatementWhereReturning "documents"
                                      [ sqlField "id" documentid
                                      , sqlField "title" documenttitle
                                      , sqlField "tags" documenttags
@@ -658,41 +762,23 @@ instance DBUpdate PutDocumentUnchecked Document where
                                      -- , toSql documentui  -- should go into separate table?
                                      , sqlField "region" documentregion
                                      ]
-    when (rowsInserted /= 1) $
-         error "PutDocumentUnchecked did not manage to insert a row"
+                                     "NOT EXISTS (SELECT * FROM documents WHERE id = ?)"
+                                     [toSql documentid]
+                                     selectDocumentsSelectors
+    
+    docs <- liftIO $ fetchDocuments st
 
-    _ <- flip mapM documentsignatorylinks $ \link -> do
-
-             r1 <- runInsertStatement "signatory_links"
-                      [ sqlField "id" $ signatorylinkid link
-                      , sqlField "document_id" documentid
-                      , sqlField "user_id" $ maybesignatory link
-                      , sqlField "roles" $ signatoryroles link
-                      , sqlField "company_id" $ maybecompany link
-                      , sqlField "token" $ signatorymagichash link
-                      , sqlField "fields" $ signatoryfields $ signatorydetails link
-                      , sqlField "sign_order"$ signatorysignorder $ signatorydetails link
-                      , sqlFieldType "sign_time" "timestamp" $ signtime `fmap` maybesigninfo link
-                      , sqlField "sign_ip" $ signipnumber `fmap` maybesigninfo link
-                      , sqlFieldType "seen_time" "timestamp" $ signtime `fmap` maybeseeninfo link
-                      , sqlField "seen_ip" $ signipnumber `fmap` maybeseeninfo link
-                      , sqlField "read_invitation" $ maybereadinvite link
-                      , sqlField "invitation_delivery_status" $ invitationdeliverystatus link
-                      , sqlField "signinfo_text" $ signatureinfotext `fmap` signatorysignatureinfo link
-                      , sqlField "signinfo_signature" $ signatureinfosignature `fmap` signatorysignatureinfo link
-                      , sqlField "signinfo_certificate" $ signatureinfocertificate `fmap` signatorysignatureinfo link
-                      , sqlField "signinfo_provider" $ signatureinfoprovider `fmap` signatorysignatureinfo link
-                      , sqlField "signinfo_first_name_verified" $ signaturefstnameverified `fmap` signatorysignatureinfo link
-                      , sqlField "signinfo_last_name_verified" $ signaturelstnameverified `fmap` signatorysignatureinfo link
-                      , sqlField "signinfo_personal_number_verified" $ signaturepersnumverified `fmap` signatorysignatureinfo link
-                      , sqlField "deleted" $ signatorylinkdeleted link
-                      , sqlField "really_deleted" $ signatorylinkreallydeleted link
-                      ]
-             when (r1 /= 1) $
-                  error "PutDocumentUnchecked:Insert signatory_links did not manage to insert a row"
-    Just newdocument <- dbQuery $ GetDocumentByDocumentID documentid
-    assertEqualDocuments document newdocument
-    return newdocument
+    case docs of
+      [] -> return Nothing
+      [doc] -> do
+        mlinks <- mapM (insertSignatoryLinkAsIs documentid) documentsignatorylinks
+        if any isNothing mlinks
+         then return Nothing
+         else do
+          let newdocument = doc { documentsignatorylinks = catMaybes mlinks }
+          assertEqualDocuments document newdocument
+          return (Just newdocument)
+      _ -> error "XXX"
 
 data AdminOnlySaveForUser = AdminOnlySaveForUser DocumentID User
                             deriving (Eq, Ord, Show, Typeable)
@@ -1463,7 +1549,7 @@ instance DBUpdate StoreDocumentForTesting DocumentID where
     -- FIXME: this requires more thinking...
     wrapDB $ \conn -> runRaw conn "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
     did <- DocumentID <$> getUniqueID tableDocuments
-    doc <- dbUpdate (PutDocumentUnchecked (document { documentid = did }))
+    Just doc <- insertDocumentAsIs (document { documentid = did })
     return (documentid doc)
 
 
