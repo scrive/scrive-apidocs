@@ -25,6 +25,7 @@ module ActionSchedulerState (
     , newViralInvitationSent
     , newAccountCreated
     , newAccountCreatedBySigning
+    , newRequestEmailChange
     , newEmailSendoutAction
     ) where
 
@@ -143,6 +144,11 @@ data ActionType = TrustWeaverUpload {
                     , acbsDocLinkDataID :: (DocumentID, SignatoryLinkID)
                     , acbsToken         :: MagicHash
                 }
+                | RequestEmailChange {
+                      recUser :: UserID
+                    , recNewEmail :: Email
+                    , recToken :: MagicHash
+                }
                 | EmailSendout {
                       esMail :: Mail
                 }
@@ -239,6 +245,7 @@ data ActionTypeID = TrustWeaverUploadID
                   | ViralInvitationSentID
                   | AccountCreatedID
                   | AccountCreatedBySigningID
+                  | RequestEmailChangeID
                   | EmailSendoutID
                   | SentEmailInfoID
                     deriving (Eq, Ord, Show, Typeable)
@@ -251,6 +258,7 @@ actionTypeID (PasswordReminder _ _ _) = PasswordReminderID
 actionTypeID (ViralInvitationSent _ _ _ _ _) = ViralInvitationSentID
 actionTypeID (AccountCreated _ _) = AccountCreatedID
 actionTypeID (AccountCreatedBySigning _ _ _ _) = AccountCreatedBySigningID
+actionTypeID (RequestEmailChange _ _ _) = RequestEmailChangeID
 actionTypeID (EmailSendout _) = EmailSendoutID
 actionTypeID (SentEmailInfo _ _ _ _ _) = SentEmailInfoID
 
@@ -267,6 +275,7 @@ actionImportance (PasswordReminder _ _ _) = LeisureAction
 actionImportance (ViralInvitationSent _ _ _ _ _) = LeisureAction
 actionImportance (AccountCreated _ _) = LeisureAction
 actionImportance (AccountCreatedBySigning _ _ _ _) = LeisureAction
+actionImportance (RequestEmailChange _ _ _) = LeisureAction
 actionImportance (EmailSendout _) = EmailSendoutAction
 actionImportance (SentEmailInfo _ _ _ _ _) = LeisureAction
 
@@ -315,6 +324,7 @@ instance Indexable Action where
                             ViralInvitationSent _ _ uid _ _   -> [uid]
                             AccountCreated uid _              -> [uid]
                             AccountCreatedBySigning _ uid _ _ -> [uid]
+                            RequestEmailChange uid _ _        -> [uid]
                             _                                 -> [])
         ]
 
@@ -474,6 +484,17 @@ newAccountCreatedBySigning user doclinkdata = do
         , acbsToken         = hash
     }
     update $ NewAction action $ (24 * 60) `minutesAfter` now
+
+newRequestEmailChange :: User -> Email -> IO Action
+newRequestEmailChange user newemail = do
+  hash <- randomIO
+  now <- getMinutesTime
+  let action = RequestEmailChange {
+    recUser = userid user
+  , recNewEmail = newemail
+  , recToken = hash
+  }
+  update $ NewAction action $ (24 * 60) `minutesAfter` now
 
 -- | Create new 'email sendout' action
 newEmailSendoutAction :: Mail -> IO ()

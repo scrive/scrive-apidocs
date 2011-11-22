@@ -960,6 +960,41 @@ modalDoYouWantToBeCompanyAccount=
   </div>
 </form>
 ####
+####
+modalDoYouWantToChangeEmail=
+<form action="" method="post">
+  <div class="modal-container">
+    <div class="modal-header">
+      <span class="modal-icon message"></span>
+      <span class="modal-title">
+            <h1>$_modalDoYouWantToChangeEmailHeader()$</h1>
+      </span>
+      <a class="modal-close close"> </a>
+    </div>
+    <div class="modal-body">
+      <div class="modal-content">
+            <div class="recovery-container">
+              <div class="body">
+                <p>$_modalDoYouWantToChangeEmailBody()$</p>
+              </div>
+            </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="float-left">
+            <a class="close cancel">$_cancel()$</a>
+      </div>
+      <a href="#" class="btn-small blue float-right submit">
+            <div class="left"></div>
+            <div class="label">
+              <p>$_modalDoYouWantToChangeEmailAccept()$</p>
+            </div>
+            <div class="right"></div>
+      </a>
+    </div>
+  </div>
+</form>
+####
 ###
 modalError=
 <div class="modal-container">
