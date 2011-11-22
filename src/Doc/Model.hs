@@ -183,7 +183,12 @@ mkInsertStatement tableName fields =
 
 runInsertStatement :: String -> [SqlField] -> DB Integer
 runInsertStatement tableName fields = do
-  wrapDB $ \conn -> run conn statement (map value fields)
+
+  wrapDB $ \conn -> (run conn statement (map value fields)) `E.catch` 
+        (\e -> liftIO $ E.throwIO $ SQLError { DB.Classes.originalQuery = statement
+                                             , sqlError = e 
+                                             }) 
+    
   where
     value (SqlField _ _ v) = v
     statement = mkInsertStatement tableName fields
@@ -205,7 +210,10 @@ mkUpdateStatement tableName fields =
 
 runUpdateStatement :: String -> [SqlField] -> String -> [SqlValue] -> DB Integer
 runUpdateStatement tableName fields whereClause whereValues = do
-  wrapDB $ \conn -> run conn statement (map value fields ++ whereValues)
+  wrapDB $ \conn -> (run conn statement (map value fields ++ whereValues)) `E.catch` 
+        (\e -> liftIO $ E.throwIO $ SQLError { DB.Classes.originalQuery = statement
+                                             , sqlError = e 
+                                             }) 
   where
     value (SqlField _ _ v) = v
     statement = mkUpdateStatement tableName fields ++ whereClause
@@ -257,8 +265,8 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
   where
     message = "Documents aren't equal in " ++ concat (map showInequality inequalities)
     showInequality (name,obj1,obj2) = name ++ ": \n" ++ obj1 ++ "\n" ++ obj2 ++ "\n"
-    sl1 = documentsignatorylinks d1
-    sl2 = documentsignatorylinks d2
+    sl1 = sort $ documentsignatorylinks d1
+    sl2 = sort $ documentsignatorylinks d2
     checkSigLink s1 s2 = map (\f -> f s1 s2)
                          [ checkEqualBy "signatorylinkid" signatorylinkid
                          , checkEqualBy "signatorydetails" signatorydetails
@@ -609,6 +617,9 @@ instance DBUpdate PutDocumentUnchecked Document where
         simpletype = toDocumentSimpleType documenttype
         process = toDocumentProcess documenttype
 
+    when (any ((>1) . length) . group . map signatorylinkid $ documentsignatorylinks ) $
+         error "PutDocumentUnchecked got a Document that has duplicate ids in documentsignatorylinks"
+
     rowsInserted <- runInsertStatement "documents"
                                      [ sqlField "id" documentid
                                      , sqlField "title" documenttitle
@@ -651,6 +662,7 @@ instance DBUpdate PutDocumentUnchecked Document where
          error "PutDocumentUnchecked did not manage to insert a row"
 
     _ <- flip mapM documentsignatorylinks $ \link -> do
+
              r1 <- runInsertStatement "signatory_links"
                       [ sqlField "id" $ signatorylinkid link
                       , sqlField "document_id" documentid
