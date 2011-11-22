@@ -298,7 +298,7 @@ handleAddFriend User{userid} email = do
 -}
 isUserDeletable :: Kontrakcja m => User -> m Bool
 isUserDeletable user = do
-  userdocs <- query $ GetDocumentsByUser user
+  userdocs <- doc_query $ GetDocumentsByUser user
   return $ all isDeletableDocument userdocs
 
 {- |
