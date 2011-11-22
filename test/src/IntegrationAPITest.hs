@@ -51,7 +51,7 @@ integrationAPITests conn = testGroup "Integration API" [
       
       
     , testCase "Test that you can set the relation for a signatory and read it back" $ testNewDocumentRelations conn
-      
+    , testCase "Test that we can create from templates" $ testCreateFromTemplate conn
 
     ]
 
@@ -488,7 +488,7 @@ containsCompanyEmbedLink :: JSObject JSValue -> Bool
 containsCompanyEmbedLink obj = "connectcompany" `isInfixOf` (getJSONStringField "link" obj)
 
   
-{- use this later
+
 createTemplateJSON :: String -> String -> DB JSValue
 createTemplateJSON company author = randomCall $ \title fname sname -> JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
@@ -535,4 +535,3 @@ testCreateFromTemplate conn = withTestEnvironment conn $ do
   assertBool ("Failed to get doc: " ++ show apiRes2) $ not (isError apiRes2)
   assertBool ("doctype is not contract: " ++ show apiRes2) $ (Right (showJSON (1 :: Int))) == jsget ["document", "type"] (showJSON apiRes2)
   
--}  
