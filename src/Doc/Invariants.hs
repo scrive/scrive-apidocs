@@ -60,6 +60,7 @@ documentInvariants = [ documentHasOneAuthor
 --                   , hasLastName
                      , hasValidEmail
                      , hasAtMostOneOfEachTypeOfField
+                     , signatoryLinksHaveDifferentIDs
                      ]
 
 {- |
@@ -99,6 +100,16 @@ noSigningOrSeeingInPrep _ document =
   assertInvariant "document has seen and/or signed siglinks when still in Preparation" $
     isPreparation document =>> 
     none (hasSigned ||^ hasSeen) (documentsignatorylinks document)
+
+{- |
+  Each of signatory links per document should have different id.
+  Tests used to produce such documents.
+-}
+signatoryLinksHaveDifferentIDs :: MinutesTime -> Document -> Maybe String
+signatoryLinksHaveDifferentIDs _ document =
+  assertInvariant ("some of document signatory links have same id: " ++ 
+                   show (map signatorylinkid (documentsignatorylinks document))) $
+    (any ((>1) . length) . group . sort) (documentsignatorylinks document)
 
 {- |
    Template or Preparation implies only Author has user or company connected
