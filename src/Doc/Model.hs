@@ -155,6 +155,7 @@ import Control.Monad
 import qualified Control.Exception as E
 
 data SqlField = SqlField String String SqlValue
+              | SqlFieldFunction String String
 
 instance Convertible SqlValue SqlValue where
     safeConvert = return . id
@@ -165,7 +166,12 @@ sqlField name value = SqlField name "" (toSql value)
 sqlFieldType :: (Convertible v SqlValue) => String -> String -> v -> SqlField
 sqlFieldType name xtype value = SqlField name xtype (toSql value)
 
+sqlFieldFunction :: String -> String -> SqlField
+sqlFieldFunction name func = SqlFieldFunction name func
+
 -- here we can add encoding and better error reporting in case conversion fails
+
+{-
 mkInsertStatement :: String -> [SqlField] -> String
 mkInsertStatement tableName fields =
    "INSERT INTO " ++ tableName ++
@@ -173,25 +179,21 @@ mkInsertStatement tableName fields =
    " SELECT " ++ concat (intersperse "," (map xtype fields))
    where
      name (SqlField x _ _) = x
+     name (SqlFieldFunction x _) = x
      xtype (SqlField _ x _) = insertType x
+     xtype (SqlFieldFunction _ f) = f
      insertType "" = "?"
      insertType "timestamp" = "to_timestamp(?)"
      insertType "base64" = "decode(?, 'base64')"
      insertType ytype = error $ "mkInsertStatement: invalid insert type " ++ ytype
+-}
 
 
 runInsertStatement :: String -> [SqlField] -> DB Integer
-runInsertStatement tableName fields = do
+runInsertStatement tableName fields = 
+  runInsertStatementWhere tableName fields "" []
 
-  wrapDB $ \conn -> (run conn statement (map value fields)) `E.catch` 
-        (\e -> liftIO $ E.throwIO $ SQLError { DB.Classes.originalQuery = statement
-                                             , sqlError = e 
-                                             }) 
-    
-  where
-    value (SqlField _ _ v) = v
-    statement = mkInsertStatement tableName fields
-
+{-
 mkInsertStatementWhere :: String -> [SqlField] -> String -> [SqlValue] -> String
 mkInsertStatementWhere tableName fields xwhere _values =
    "INSERT INTO " ++ tableName ++
@@ -207,19 +209,13 @@ mkInsertStatementWhere tableName fields xwhere _values =
      insertType "timestamp" = "to_timestamp(?)"
      insertType "base64" = "decode(?, 'base64')"
      insertType ytype = error $ "mkInsertStatement: invalid insert type " ++ ytype
+-}
 
 
 runInsertStatementWhere :: String -> [SqlField] -> String -> [SqlValue] -> DB Integer
 runInsertStatementWhere tableName fields xwhere values = do
-
-  wrapDB $ \conn -> (run conn statement (map value fields ++ values)) `E.catch` 
-        (\e -> liftIO $ E.throwIO $ SQLError { DB.Classes.originalQuery = statement
-                                             , sqlError = e 
-                                             }) 
-    
-  where
-    value (SqlField _ _ v) = v
-    statement = mkInsertStatementWhere tableName fields xwhere values
+  (r,_s) <- runInsertStatementWhereReturning tableName fields xwhere values []
+  return r
 
 mkInsertStatementWhereReturning :: String -> [SqlField] -> String -> [SqlValue] -> [String] -> String
 mkInsertStatementWhereReturning tableName fields xwhere _values returnFields =
@@ -234,14 +230,16 @@ mkInsertStatementWhereReturning tableName fields xwhere _values returnFields =
       _ -> " RETURNING " ++ concat (intersperse ", " returnFields))
    where
      name (SqlField x _ _) = x
+     name (SqlFieldFunction x _) = x
      xtype (SqlField _ x _) = insertType x
+     xtype (SqlFieldFunction _ f) = f
      insertType "" = "?"
      insertType "timestamp" = "to_timestamp(?)"
      insertType "base64" = "decode(?, 'base64')"
      insertType ytype = error $ "mkInsertStatement: invalid insert type " ++ ytype
 
 
-runInsertStatementWhereReturning :: String -> [SqlField] -> String -> [SqlValue] -> [String] -> DB Statement
+runInsertStatementWhereReturning :: String -> [SqlField] -> String -> [SqlValue] -> [String] -> DB (Integer, Statement)
 runInsertStatementWhereReturning tableName fields xwhere values returnFields = do
 
   wrapDB $ \conn -> (doit conn `E.catch` handle)
@@ -249,12 +247,13 @@ runInsertStatementWhereReturning tableName fields xwhere values returnFields = d
   where
     doit conn = do
       st <- prepare conn statement
-      r <- execute st (map value fields ++ values)
-      return st
+      r <- execute st (concatMap value fields ++ values)
+      return (r, st)
     handle e = E.throwIO $ SQLError { DB.Classes.originalQuery = statement
                                     , sqlError = e 
                                     } 
-    value (SqlField _ _ v) = v
+    value (SqlField _ _ v) = [v]
+    value _ = []
     statement = mkInsertStatementWhereReturning tableName fields xwhere values returnFields
 
 -- here we can add encoding and better error reporting in case conversion fails
@@ -264,7 +263,9 @@ mkUpdateStatement tableName fields =
    " SET " ++ concat (intersperse "," (map one fields)) ++ " "
    where
      name (SqlField x _ _) = x
+     name (SqlFieldFunction x _) = x
      xtype (SqlField _ x _) = insertType x
+     xtype (SqlFieldFunction _ f) = f
      insertType "" = "?"
      insertType "timestamp" = "to_timestamp(?)"
      insertType "base64" = "decode(?, 'base64')"
@@ -274,12 +275,13 @@ mkUpdateStatement tableName fields =
 
 runUpdateStatement :: String -> [SqlField] -> String -> [SqlValue] -> DB Integer
 runUpdateStatement tableName fields whereClause whereValues = do
-  wrapDB $ \conn -> (run conn statement (map value fields ++ whereValues)) `E.catch` 
+  wrapDB $ \conn -> (run conn statement (concatMap value fields ++ whereValues)) `E.catch` 
         (\e -> liftIO $ E.throwIO $ SQLError { DB.Classes.originalQuery = statement
                                              , sqlError = e 
                                              }) 
   where
-    value (SqlField _ _ v) = v
+    value (SqlField _ _ v) = [v]
+    value _ = []
     statement = mkUpdateStatement tableName fields ++ whereClause
 
 
@@ -654,7 +656,7 @@ fetchSignatoryLinks st = do
 
 insertSignatoryLinkAsIs :: DocumentID -> SignatoryLink -> DB (Maybe SignatoryLink)
 insertSignatoryLinkAsIs documentid link = do
-  st <- runInsertStatementWhereReturning "signatory_links"
+  (_, st) <- runInsertStatementWhereReturning "signatory_links"
                             [ sqlField "id" $ signatorylinkid link
                             , sqlField "document_id" documentid
                             , sqlField "user_id" $ maybesignatory link
@@ -724,7 +726,7 @@ insertDocumentAsIs document = do
         simpletype = toDocumentSimpleType documenttype
         process = toDocumentProcess documenttype
 
-    st <- runInsertStatementWhereReturning "documents"
+    (_,st) <- runInsertStatementWhereReturning "documents"
                                      [ sqlField "id" documentid
                                      , sqlField "title" documenttitle
                                      , sqlField "tags" documenttags
