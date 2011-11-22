@@ -1377,8 +1377,55 @@ instance DBUpdate SignDocument (Either String Document) where
 data ResetSignatoryDetails = ResetSignatoryDetails DocumentID [(SignatoryDetails, [SignatoryRole])] MinutesTime
                                   deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate ResetSignatoryDetails (Either String Document) where
-  dbUpdate (ResetSignatoryDetails documentid signatories time) = wrapDB $ \conn -> do
-    unimplemented "ResetSignatoryDetails"
+  dbUpdate (ResetSignatoryDetails documentid signatories time) = do
+    mdocument <- dbQuery $ GetDocumentByDocumentID documentid
+    case mdocument of
+      Nothing -> return $ Left "document does not exist"
+      Just document ->
+        case checkResetSignatoryData document signatories of
+          [] -> do
+
+            wrapDB $ \conn -> runRaw conn "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
+            wrapDB $ \conn -> run conn "DELETE FROM signatory_links WHERE document_id = ?" [toSql documentid]
+
+            flip mapM signatories $ \(details, roles) -> do
+                     linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
+
+                     magichash <- liftIO $ MagicHash <$> randomRIO (0,maxBound)
+
+                     let link = signLinkFromDetails' details roles linkid magichash
+                     r1 <- runInsertStatement "signatory_links"
+                           [ sqlField "id" $ signatorylinkid link
+                           , sqlField "document_id" documentid
+                           , sqlField "user_id" $ maybesignatory link
+                           , sqlField "roles" $ signatoryroles link
+                           , sqlField "company_id" $ maybecompany link
+                           , sqlField "token" $ signatorymagichash link
+                           , sqlField "fields" $ signatoryfields $ signatorydetails link
+                           , sqlField "sign_order"$ signatorysignorder $ signatorydetails link
+                           , sqlFieldType "sign_time" "timestamp" $ signtime `fmap` maybesigninfo link
+                           , sqlField "sign_ip" $ signipnumber `fmap` maybesigninfo link
+                           , sqlFieldType "seen_time" "timestamp" $ signtime `fmap` maybeseeninfo link
+                           , sqlField "seen_ip" $ signipnumber `fmap` maybeseeninfo link
+                           , sqlField "read_invitation" $ maybereadinvite link
+                           , sqlField "invitation_delivery_status" $ invitationdeliverystatus link
+                           , sqlField "signinfo_text" $ signatureinfotext `fmap` signatorysignatureinfo link
+                           , sqlField "signinfo_signature" $ signatureinfosignature `fmap` signatorysignatureinfo link
+                           , sqlField "signinfo_certificate" $ signatureinfocertificate `fmap` signatorysignatureinfo link
+                           , sqlField "signinfo_provider" $ signatureinfoprovider `fmap` signatorysignatureinfo link
+                           , sqlField "signinfo_first_name_verified" $ signaturefstnameverified `fmap` signatorysignatureinfo link
+                           , sqlField "signinfo_last_name_verified" $ signaturelstnameverified `fmap` signatorysignatureinfo link
+                           , sqlField "signinfo_personal_number_verified" $ signaturepersnumverified `fmap` signatorysignatureinfo link
+                           , sqlField "deleted" $ signatorylinkdeleted link
+                           , sqlField "really_deleted" $ signatorylinkreallydeleted link
+                           ]
+                     when (r1 /= 1) $
+                          error "ResetSignatoryDetails signatory_links did not manage to insert a row"
+
+            Just newdocument <- dbQuery $ GetDocumentByDocumentID documentid
+            return $ Right newdocument
+
+          s -> return $ Left $ "cannot reset signatory details on document " ++ show documentid ++ " because " ++ intercalate ";" s
 
 
 data SignLinkFromDetailsForTest = SignLinkFromDetailsForTest SignatoryDetails [SignatoryRole]
