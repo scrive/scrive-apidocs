@@ -43,6 +43,9 @@ clearTables = wrapDB $ \conn -> do
   runRaw conn "DELETE FROM companies"
   runRaw conn "DELETE FROM services"
   runRaw conn "DELETE FROM users"
+  runRaw conn "DELETE FROM author_attachments"
+  runRaw conn "DELETE FROM signatory_links"
+  runRaw conn "DELETE FROM documents"
   return ()
 
 -- happstack-state --
