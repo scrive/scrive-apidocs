@@ -133,7 +133,7 @@ import Doc.DocStateData
 import Data.Data
 import Database.HDBC
 import Data.Word
-import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.UTF8 as BS
 import qualified Mails.MailsUtil as Mail
 import Data.Maybe
 import Misc
@@ -653,7 +653,6 @@ fetchSignatoryLinks :: Statement -> IO [SignatoryLink]
 fetchSignatoryLinks st = do
   fetchValues st decodeRowAsSignatoryLink
 
-
 insertSignatoryLinkAsIs :: DocumentID -> SignatoryLink -> DB (Maybe SignatoryLink)
 insertSignatoryLinkAsIs documentid link = do
   (_, st) <- runInsertStatementWhereReturning "signatory_links"
@@ -781,6 +780,26 @@ insertDocumentAsIs document = do
           assertEqualDocuments document newdocument
           return (Just newdocument)
       _ -> error "XXX"
+
+insertNewDocument :: Document -> DB Document
+insertNewDocument doc = do
+  docid <- DocumentID <$> getUniqueID tableDocuments
+  now <- liftIO $ getMinutesTime
+  let docWithId = doc {documentid = docid, documentmtime  = now, documentctime = now}
+  newdoc <- insertDocumentAsIs docWithId
+  case newdoc of
+    Just d -> return d
+    Nothing -> error "insertNewDocument failed for some reason"
+
+
+-- Create new document based on existing one
+newFromDocument :: (Document -> Document) -> DocumentID -> DB (Either String Document)
+newFromDocument f docid = do
+  mdoc <- dbQuery $ GetDocumentByDocumentID docid
+  case mdoc of
+      Just doc -> fmap Right $ insertNewDocument $ f doc
+      Nothing -> return $ Left $ "Document " ++ show docid ++ " does not exist"
+
 
 data AdminOnlySaveForUser = AdminOnlySaveForUser DocumentID User
                             deriving (Eq, Ord, Show, Typeable)
@@ -941,8 +960,31 @@ instance DBUpdate DeleteSigAttachment (Either String Document) where
 data DocumentFromSignatoryData = DocumentFromSignatoryData DocumentID Int BS.ByteString BS.ByteString BS.ByteString BS.ByteString BS.ByteString BS.ByteString [BS.ByteString]
                                  deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate DocumentFromSignatoryData (Either String Document) where
-  dbUpdate (DocumentFromSignatoryData docid sigindex fstname sndname email company personalnumber companynumber fieldvalues) = wrapDB $ \conn -> do
-    unimplemented "DocumentFromSignatoryData"
+  dbUpdate (DocumentFromSignatoryData docid sigindex fstname sndname email company personalnumber companynumber fieldvalues) = do
+        newFromDocument toNewDoc docid
+   where
+    toNewDoc :: Document -> Document
+    toNewDoc d = d { documentsignatorylinks = map snd . map toNewSigLink . zip [0..] $ (documentsignatorylinks d)
+                    , documentcsvupload = Nothing
+                    , documentsharing = Private
+                    , documenttype = newDocType $ documenttype d
+                    , documentsignatoryattachments = map replaceCSV (documentsignatoryattachments d)
+                    }
+    replaceCSV :: SignatoryAttachment -> SignatoryAttachment
+    replaceCSV sa =
+      if signatoryattachmentemail sa == BS.fromString "csv"
+      then sa { signatoryattachmentemail = email }
+      else sa
+    newDocType :: DocumentType -> DocumentType
+    newDocType (Signable p) = Signable p
+    newDocType (Template p) = Signable p
+    newDocType dt = dt
+    toNewSigLink :: (Int, SignatoryLink) -> (Int, SignatoryLink)
+    toNewSigLink (i, sl)
+      | i==sigindex = (i, pumpData sl)
+      | otherwise = (i, sl)
+    pumpData :: SignatoryLink -> SignatoryLink
+    pumpData siglink = replaceSignatoryData siglink fstname sndname email company personalnumber companynumber fieldvalues
 
 data ErrorDocument = ErrorDocument DocumentID String
                      deriving (Eq, Ord, Show, Typeable)
