@@ -107,9 +107,10 @@ noSigningOrSeeingInPrep _ document =
 -}
 signatoryLinksHaveDifferentIDs :: MinutesTime -> Document -> Maybe String
 signatoryLinksHaveDifferentIDs _ document =
-  assertInvariant ("some of document signatory links have same id: " ++ 
-                   show (map signatorylinkid (documentsignatorylinks document))) $
-    (any ((>1) . length) . group . sort) (documentsignatorylinks document)
+  let slids = map signatorylinkid (documentsignatorylinks document)
+  in assertInvariant ("some of document signatory links have same id: " ++ 
+                   show slids) $
+          (all ((==1) . length) . group . sort) slids
 
 {- |
    Template or Preparation implies only Author has user or company connected
