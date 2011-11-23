@@ -817,8 +817,19 @@ instance DBUpdate ArchiveDocumentForAll (Either String Document) where
 data ArchiveDocumentForAuthor = ArchiveDocumentForAuthor DocumentID
                              deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate ArchiveDocumentForAuthor (Either String Document) where
-  dbUpdate (ArchiveDocumentForAuthor docid) = wrapDB $ \conn -> do
-    unimplemented "ArchiveDocumentForAuthor"
+  dbUpdate (ArchiveDocumentForAuthor did) = do
+    r <- runUpdateStatement "signatory_links" 
+                         [ sqlField "deleted" True
+                         ]
+                         "WHERE document_id = ? AND roles = ? AND EXISTS (SELECT * FROM documents WHERE id = ? AND type = ? AND status <> ? AND status <> ?)"
+                         [ toSql did
+                         , toSql [SignatoryAuthor]
+                         , toSql did
+                         , toSql (toDocumentSimpleType (Signable undefined))
+                         , toSql Preparation
+                         , toSql Closed
+                         ]
+    getOneDocumentAffected "ArchiveDocumentForAuthor" r did
 
 data ArchiveDocuments = ArchiveDocuments User [DocumentID] deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate ArchiveDocuments (Either String [Document]) where
