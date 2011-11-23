@@ -33,6 +33,12 @@ apiPageContents=
     enterprise.
   </p>
   <br />
+  <p>
+    Eliminate costly paper-based contracts and tenders. Deliver your
+    contracts directly to the email inbox and see them signed within
+    minutes.
+  </p>
+  <br />
   <h2> Some uses for the Scrive API: </h2>
   <br />
   <ul>
