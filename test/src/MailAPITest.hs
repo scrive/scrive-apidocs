@@ -6,7 +6,6 @@ import Data.Maybe
 import Database.HDBC
 import Database.HDBC.PostgreSQL
 import Happstack.Server
-import Happstack.State hiding (Method)
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit (Assertion)
@@ -23,7 +22,7 @@ import Data.List
 import ScriveByMail.Control
 import DB.Classes
 import Context
-import Doc.DocState
+import Doc.Transitory
 import Misc
 import StateHelper
 import User.Model
@@ -82,7 +81,7 @@ testSuccessfulDocCreation conn emlfile sigs = withMyTestEnvironment conn $ \tmpd
     Log.debug $ "Here's what I got back from handleMailCommand: " ++ show res
     let mdocid = maybeRead res
     assertBool ("documentid is not given: " ++ show mdocid) $ isJust mdocid
-    mdoc <- query $ GetDocumentByDocumentID $ fromJust mdocid
+    mdoc <- doc_query $ GetDocumentByDocumentID $ fromJust mdocid
     assertBool "document was really created" $ isJust mdoc
     let doc = fromJust mdoc
     assertBool ("document should have " ++ show sigs ++ " signatories has " ++ show (length (documentsignatorylinks doc))) $ length (documentsignatorylinks doc) == sigs
@@ -103,7 +102,7 @@ testSuccessfulDocCreation conn emlfile sigs = withMyTestEnvironment conn $ \tmpd
                  return ()
     Log.debug $ "doing img request"
     liftIO $ keepTrying 100
-    Just doc' <- query $ GetDocumentByDocumentID $ fromJust mdocid
+    Just doc' <- doc_query $ GetDocumentByDocumentID $ fromJust mdocid
     assertBool "document is in error!" $ not $ isDocumentError doc'
 
 
@@ -130,7 +129,7 @@ successChecks sigs res = do
         equalsKey (=~ "^Document #[0-9]+ created$") "message" res
     let mdocid = lookup "documentid" res
     assertBool "documentid is given" $ isJust mdocid
-    mdoc <- query $ GetDocumentByDocumentID $ read $ fromJust mdocid
+    mdoc <- doc_query $ GetDocumentByDocumentID $ read $ fromJust mdocid
     assertBool "document was really created" $ isJust mdoc
     let doc = fromJust mdoc
     assertBool ("document should have " ++ show sigs ++ " signatories has " ++ show (length (documentsignatorylinks doc))) $ length (documentsignatorylinks doc) == sigs
