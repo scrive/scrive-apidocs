@@ -95,16 +95,16 @@ testDocumentsAccess conn = withTestEnvironment conn $ do
     _ <- makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz+1@skrivapa.se" 
     apiReqDocs1 <- getDocumentsJSON "test_company1" "mariusz@skrivapa.se"
     apiRespDocs1 <- makeAPIRequest getDocuments $ apiReqDocs1
-    assertBool ("Two document was created by  this company but " ++ (show $ docsCount apiRespDocs1) ++ " were found") $ (docsCount apiRespDocs1) == 2
+    assertBool ("Two documents were created by this company but " ++ (show $ docsCount apiRespDocs1) ++ " were found") $ (docsCount apiRespDocs1) == 2
     apiReqDocs2 <- getDocumentsJSON "test_company2" "mariusz@skrivapa.se"
     apiRespDocs2 <- makeAPIRequest getDocuments $ apiReqDocs2
-    assertBool ("One document was created by  this company but " ++ (show $ docsCount apiRespDocs2) ++ " were found") $ (docsCount apiRespDocs2) == 1
+    assertBool ("One document was created by this company but " ++ (show $ docsCount apiRespDocs2) ++ " were found") $ (docsCount apiRespDocs2) == 1
     apiReqDocs3 <- getDocumentsJSON "test_company3" "mariusz+1@skrivapa.se"
     apiRespDocs3 <- makeAPIRequest getDocuments $ apiReqDocs3
     assertBool ("No document was created for this company but " ++ (show $ docsCount apiRespDocs3) ++ " were found") $ (docsCount apiRespDocs3) == 0
     let Ok ard = decode "{\"company_id\":\"test_company1\"}"
     arspd <- makeAPIRequest getDocuments $ ard
-    assertBool ("Example from doc. Two document was created by  this company but " ++ (show $ docsCount arspd) ++ " were found") $ (docsCount arspd) == 2
+    assertBool ("Example from doc. Two documents were created by this company but " ++ (show $ docsCount arspd) ++ " were found") $ (docsCount arspd) == 2
 
 
 testDocumentAccessEmbeddedPage :: Connection -> Assertion
