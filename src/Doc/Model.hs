@@ -1012,32 +1012,43 @@ instance DBQuery FileModTime MinutesTime where
 data GetDeletedDocumentsByCompany = GetDeletedDocumentsByCompany User
                                     deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDeletedDocumentsByCompany [Document] where
-  dbQuery (GetDeletedDocumentsByCompany uid) = wrapDB $ \conn -> do
-    unimplemented "GetDeletedDocumentsByCompany"
+  dbQuery (GetDeletedDocumentsByCompany user) = do
+    case useriscompanyadmin user of
+      True -> 
+        selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE deleted = TRUE AND company_id = ? AND service_id = ?)") 
+                      [ toSql (usercompany user)
+                      , toSql (userservice user)
+                      ]
+      False -> return []
 
 data GetDeletedDocumentsByUser = GetDeletedDocumentsByUser User
                                  deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDeletedDocumentsByUser [Document] where
-  dbQuery (GetDeletedDocumentsByUser uid) = wrapDB $ \conn -> do
-    unimplemented "GetDeletedDocumentsByUser"
+  dbQuery (GetDeletedDocumentsByUser user) = do
+    selectDocuments (selectDocumentsSQL ++ 
+                     " WHERE EXISTS (SELECT * FROM signatory_links WHERE deleted = TRUE AND user_id = ?)")
+                      [ toSql (userid user)
+                      ]
+
+selectDocuments :: String -> [SqlValue] -> DB [Document]
+selectDocuments select values = wrapDB $ \conn -> do
+    st <- prepare conn $ select
+    _ <- execute st values
+    docs <- fetchDocuments st
+    flip mapM docs $ \doc -> do
+      stx <- prepare conn $ selectSignatoryLinksSQL ++ " WHERE document_id = ?"
+      _ <- execute stx [toSql (documentid doc)]
+      sls <- fetchSignatoryLinks stx
+      return (doc { documentsignatorylinks = sls })
 
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
                                deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentByDocumentID (Maybe Document) where
-  dbQuery (GetDocumentByDocumentID did) = wrapDB $ \conn -> do
-    st <- prepare conn $ selectDocumentsSQL ++ " WHERE id = ? AND deleted = FALSE"
-    _ <- execute st [toSql did]
-    docs <- fetchDocuments st
-    mdoc <- oneObjectReturnedGuard docs
-    case mdoc of
-      Nothing -> return Nothing
-      Just doc -> do
-                stx <- prepare conn $ selectSignatoryLinksSQL ++ " WHERE document_id = ? AND deleted = FALSE"
-                _ <- execute stx [toSql did]
-                sls <- fetchSignatoryLinks stx
-                return (Just (doc { documentsignatorylinks = sls }))
-
-
+  dbQuery (GetDocumentByDocumentID did) = do
+    docs <- selectDocuments (selectDocumentsSQL ++ " WHERE id = ? AND deleted = FALSE") [toSql did]
+    case docs of
+      [doc] -> return (Just doc)
+      _ -> return Nothing
 
 data GetDocumentStats = GetDocumentStats
                         deriving (Eq, Ord, Show, Typeable)
@@ -1054,47 +1065,54 @@ instance DBQuery GetDocumentStatsByUser DocStats where
 data GetDocuments = GetDocuments (Maybe ServiceID)
                     deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocuments [Document] where
-  dbQuery (GetDocuments mserviceid) = wrapDB $ \conn -> do
-    st <- prepare conn $ selectDocumentsSQL
-    _ <- execute st []
-    docs <- fetchDocuments st
-
-    let fetchSignatoryLinksOfDocument doc = do
-             stx <- prepare conn $ selectSignatoryLinksSQL ++ " WHERE document_id = ?"
-             _ <- execute stx [toSql (documentid doc)]
-             sls <- fetchSignatoryLinks stx
-             return (doc { documentsignatorylinks = sls })
-    mapM fetchSignatoryLinksOfDocument docs
+  dbQuery (GetDocuments mserviceid) = do
+    selectDocuments selectDocumentsSQL []
 
 data GetDocumentsByAuthor = GetDocumentsByAuthor UserID
                             deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsByAuthor [Document] where
-  dbQuery (GetDocumentsByAuthor userid) = wrapDB $ \conn -> do
-    unimplemented "GetDocumentsByAuthor"
+  dbQuery (GetDocumentsByAuthor uid) = do
+    selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE deleted = FALSE AND user_id = ? AND roles = ?)") [toSql uid, toSql [SignatoryAuthor]]
 
 data GetDocumentsByCompany = GetDocumentsByCompany User
                              deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsByCompany [Document] where
-  dbQuery (GetDocumentsByCompany userid) = wrapDB $ \conn -> do
-    unimplemented "GetDocumentsByCompany"
+  dbQuery (GetDocumentsByCompany user) = do
+    case useriscompanyadmin user of
+      True -> 
+        selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE deleted = FALSE AND company_id = ? AND service_id = ?)") 
+                      [ toSql (usercompany user)
+                      , toSql (userservice user)
+                      ]
+      False -> return []
 
+{- |
+    Fetches documents by company and tags, this won't return documents that have been deleted (so ones
+    that would appear in the recycle bin//trash can.)  It also makes sure to respect the sign order in
+    cases where the company is linked via a signatory that hasn't yet been activated.
+-}
 data GetDocumentsByCompanyAndTags = GetDocumentsByCompanyAndTags (Maybe ServiceID) CompanyID [DocumentTag]
                                     deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsByCompanyAndTags [Document] where
-  dbQuery (GetDocumentsByCompanyAndTags mservice companyid doctags) = wrapDB $ \conn -> do
-    unimplemented "GetDocumentsByCompanyAndTags"
+  dbQuery (GetDocumentsByCompanyAndTags mservice companyid doctags) = do
+        docs <- selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE deleted = FALSE AND company_id = ? AND service_id = ?)") 
+                      [ toSql companyid
+                      , toSql mservice
+                      ]
+        return (filter hasTags docs)
+    where hasTags doc = not (null (intersect (documenttags doc) doctags))
 
 data GetDocumentsBySignatory = GetDocumentsBySignatory User
                                deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsBySignatory [Document] where
-  dbQuery (GetDocumentsBySignatory user) = wrapDB $ \conn -> do
-    unimplemented "GetDocumentsBySignatory"
+  dbQuery (GetDocumentsBySignatory user) = do
+    selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE deleted = FALSE AND user_id = ? AND roles = ?)") [toSql (userid user), toSql [SignatoryPartner]]
 
 data GetDocumentsByUser = GetDocumentsByUser User
                           deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsByUser [Document] where
-  dbQuery (GetDocumentsByUser user) = wrapDB $ \conn -> do
-    unimplemented "GetDocumentsByUser"
+  dbQuery (GetDocumentsByUser user) = do
+    selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE deleted = FALSE AND user_id = ? AND roles = ?)") [toSql (userid user), toSql [SignatoryAuthor]]
 
 data GetDocumentsSharedInCompany = GetDocumentsSharedInCompany User
                                    deriving (Eq, Ord, Show, Typeable)
@@ -1681,14 +1699,24 @@ instance DBUpdate SetCSVSigIndex (Either String Document) where
 data SetEmailIdentification = SetEmailIdentification DocumentID MinutesTime
                       deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetEmailIdentification (Either String Document) where
-  dbUpdate (SetEmailIdentification did time) = wrapDB $ \conn -> do
-    unimplemented "SetEmailIdentification"
+  dbUpdate (SetEmailIdentification did time) = do
+    r <- runUpdateStatement "documents"
+         [ sqlField "allowed_id_types" $ [EmailIdentification]
+         , sqlFieldType "mtime" "timestamp" $ time
+         ]
+         "WHERE id = ?" [ toSql did ]
+    getOneDocumentAffected "SetEmailIdentification" r did
 
 data SetElegitimationIdentification = SetElegitimationIdentification DocumentID MinutesTime
                       deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetElegitimationIdentification (Either String Document) where
-  dbUpdate (SetElegitimationIdentification did time) = wrapDB $ \conn -> do
-    unimplemented "SetElegitimationIdentification"
+  dbUpdate (SetElegitimationIdentification did time) = do
+    r <- runUpdateStatement "documents"
+         [ sqlField "allowed_id_types" $ [ELegitimationIdentification]
+         , sqlFieldType "mtime" "timestamp" $ time
+         ]
+         "WHERE id = ?" [ toSql did ]
+    getOneDocumentAffected "SetElegitimationIdentification" r did
 
 
 data UpdateFields  = UpdateFields DocumentID SignatoryLinkID [(BS.ByteString, BS.ByteString)]
