@@ -9,6 +9,9 @@ module CompanyAccounts.CompanyAccountsControl (
   -- aren't still using these old takeover links
   , handleGetBecomeCompanyAccountOld
   , handlePostBecomeCompanyAccountOld
+  -- this shares some handy stuff with the adminonly section
+  , handleCompanyAccountsForAdminOnly
+  , sendTakeoverPrivateUserMail
   ) where
 
 import Control.Monad.State
@@ -56,10 +59,26 @@ handleGetCompanyAccounts = withUserGet $ withCompanyAdmin $ \_ -> do
     Gets the ajax data for the company accounts list.
 -}
 handleCompanyAccounts :: Kontrakcja m => m JSValue
-handleCompanyAccounts = withCompanyAdmin $ \(user, company) -> do
-  companyusers <- runDBQuery $ GetCompanyAccounts (companyid company)
+handleCompanyAccounts = withCompanyAdmin $ \(_user, company) -> do
+  handleCompanyAccountsInternal (companyid company)
+
+{- |
+    Gets the ajax data for the company accounts list.
+-}
+handleCompanyAccountsForAdminOnly :: Kontrakcja m => CompanyID -> m JSValue
+handleCompanyAccountsForAdminOnly cid = onlySuperUser $ do
+  handleCompanyAccountsInternal cid
+
+{- |
+    This creates the JSON for either the admin only user or the logged in
+    company admin.
+-}
+handleCompanyAccountsInternal :: Kontrakcja m => CompanyID -> m JSValue
+handleCompanyAccountsInternal cid = do
+  Context{ctxmaybeuser = Just user} <- getContext
+  companyusers <- runDBQuery $ GetCompanyAccounts cid
   deletableuserids <- map userid <$> filterM isUserDeletable companyusers
-  companyinvites <- runDBQuery $ GetCompanyInvites (companyid company)
+  companyinvites <- runDBQuery $ GetCompanyInvites cid
   let isUser CompanyInvite{invitedemail} = unEmail invitedemail `elem` map getEmail companyusers
   let
     companyaccounts =
@@ -156,6 +175,8 @@ companyAccountsSortFunc "deletable" = viewComparing cadeletable
 companyAccountsSortFunc "deletableREV" = viewComparingRev cadeletable
 companyAccountsSortFunc "activated" = viewComparing caactivated
 companyAccountsSortFunc "activatedREV" = viewComparingRev caactivated
+companyAccountsSortFunc "id" = viewComparing camaybeuserid
+companyAccountsSortFunc "idREV" = viewComparingRev camaybeuserid
 companyAccountsSortFunc _ = const $ const EQ
 
 companyAccountsPageSize :: Int

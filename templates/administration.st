@@ -196,8 +196,8 @@ admincompanies=
     name : "CompaniesTable",
     schema: new Schema({
       url: "/adminonly/companies",
-      sorting: new Sorting({ fields: [         
-                                       "companyname",  
+      sorting: new Sorting({ fields: [
+                                       "companyname",
                                        "companynumber",
                                        "companyaddress",
                                        "companyzip",
@@ -213,7 +213,7 @@ admincompanies=
         new Cell({name: "City",   width:"100px", field:"companycity"   , special:"link"}),
         new Cell({name: "Contry", width:"100px", field:"companycountry", special:"link"}),
         new Cell({name: "ID",     width:"120px", field:"id"            , special:"link"})
-      ] 
+      ]
     })
   });
 
@@ -452,71 +452,109 @@ admincompanyusers=
 <br/>
 <br/>
 <div id="tab-viewer">
-	<div class="tab-header">
-	</div>
-	<ul class="tabs">
-	  <li><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
-	  <li class="active"><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
-	  <li><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
-	</ul>
-	<div class="tab-container">
-	  <div class="tab-content account">
-	    <form method="post" action="$admincompanieslink$/users/$companyid$">
-        Create user:<br/>
-        <table style="width:600px">
-          <tr>
-            <td>First name:</td>
-            <td><input type="text" name="fstname"/></td>
-          </tr>
-          <tr>
-            <td>Second name:</td>
-            <td><input type="text" name="sndname"/></td>
-          </tr>
-          <tr>
-            <td>Email address:</td>
-            <td><input type="email" name="email"/></td>
-          </tr>
-          <tr>
-            <td>Is Admin?</td>
-            <td>
-              <input type="checkbox" name="iscompanyadmin"/>
-            </td>
-          </tr>
-          <tr>
-            <td>Region:</td>
-            <td><select name="region">
-              <option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>
-              <option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>
-                </select>
-            </td>
-          </tr>
-         <tr>
-            <td>Header:</td>
-            <td> <input type="button" class="editer " value="Default"/>
-                 <span class="editable" name="custommessage" style="display:none">$mailNewAccountCreatedByAdminContentHeader()$</span>
-           </td>
-          </tr>
-        </table><br/>
-        <input type="submit" value="Add User" />
-      </form>
-	    $adminlistfilter(link=adminlistlink;item="user";items="users")$
-      $adminlistpaging()$
-      <br/><br/>
-      <table>
-        <thead>
-          <td style="width:200px">Username</td>
-          <td style="width:200px">Email</td>
-          <td style="width:200px">Role</td>
-        </thead>
-        $users:{user|<tr>
-          <td><a href="$adminuserslink$/$user.id$">$user.fullname$</a> </td>
-          <td><a href="$adminuserslink$/$user.id$">$user.email$</a> </td>
-          <td> $if(user.iscompanyadmin)$ Admin $else$ Standard $endif$ </td>
-        </tr>}$
-      </table>
-	  </div>
-	</div>
+  <div class="tab-header">
+  </div>
+  <ul class="tabs">
+    <li><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+    <li class="active"><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
+    <li><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
+  </ul>
+  <div class="tab-container">
+    <div class="tab-content account">
+      <div style="height:195px;border: 1px solid gray;padding:10px;">
+        <div class="float-left">
+          <form method="post" action="$admincompanieslink$/users/$companyid$">
+            <h2>Create user:</h2>
+            <table style="width:450px">
+              <tr>
+                <td>First name:</td>
+                <td><input type="text" name="fstname"/></td>
+              </tr>
+              <tr>
+                <td>Second name:</td>
+                <td><input type="text" name="sndname"/></td>
+              </tr>
+              <tr>
+                <td>Email address:</td>
+                <td><input type="email" name="email"/></td>
+              </tr>
+              <tr>
+                <td>Is Admin?</td>
+                <td>
+                  <input type="checkbox" name="iscompanyadmin"/>
+                </td>
+              </tr>
+              <tr>
+                <td>Region:</td>
+                <td>
+                  <select name="region">
+                    <option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>
+                    <option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td>Header:</td>
+                <td>
+                  <input type="button" class="editer " value="Default"/>
+                  <span class="editable" name="custommessage" style="display:none">$mailNewAccountCreatedByAdminContentHeader()$</span>
+                </td>
+              </tr>
+            </table><br/>
+            <input type="submit" value="Add User" />
+          </form>
+        </div>
+        <div class="float-left">
+          <form method="post" action="$admincompanieslink$/users/$companyid$">
+            <h2>Invite private user:</h2>
+            <input type="hidden" name="privateinvite" value="true" />
+            <table>
+              <tr>
+                <td style="width:173px;">Email address:</td>
+                <td><input type="email" name="email"/></td>
+              </tr>
+            </table><br/>
+            <input type="submit" value="Invite Private User" />
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+<script>
+  jQuery(function() {
+
+    var companyAccountsTable = KontraList.init({
+      name : "CompanyAccountsTable",
+      schema: new Schema({
+        url: "/adminonly/companyaccounts/$companyid$",
+        sorting: new Sorting({ fields: ["fullname",
+                                        "email",
+                                        "role",
+                                        "activated",
+                                        "id",
+                                        "deletable"] }),
+        paging: new Paging({}),
+        filtering: new Filtering({ text: "", infotext: "Company Accounts" }),
+        cells: [
+          new Cell({name: "Name", width: "100px", field:"fullname"}),
+          new Cell({name: "Email", width: "100px", field:"email"}),
+          new Cell({name: "Role", width: "100px", field:"role", special: "rendered",
+                    rendering: function(value, idx, user) {
+                      if (user.field("role")=="RoleAdmin") {
+                        return jQuery("<span>Admin</span>");
+                      } else if (user.field("role")=="RoleStandard") {
+                        return jQuery("<span>Standard</span>");
+                      } else {
+                        return jQuery("<span>Pending</span>");
+                      }
+                    }})
+        ]
+      })
+    });
+    jQuery(".tab-content").append(companyAccountsTable.view.el);
+  });
+</script>
 ####
 userusagestats=
    <a href="$adminlink$">Go back to main admin page</a>
@@ -813,7 +851,7 @@ adminTranslations =
 </center>
 
 ####
-daylydocumentinfo = 
+daylydocumentinfo =
 
 
 $backtoadminmainlink()$
@@ -842,7 +880,7 @@ $backtoadminmainlink()$
   </tr>
 </thead>
 <tbody>
-$documents:{document |<tr style="border:4px solid #DDDDDD"> 
+$documents:{document |<tr style="border:4px solid #DDDDDD">
     <td style="border:2px solid #DDDDDD"> $document.ctime$ <BR/>
                                           $document.mtime$
     </td>
@@ -858,8 +896,8 @@ $documents:{document |<tr style="border:4px solid #DDDDDD">
 </table>
 </div>
 ####
-daveDocument= 
-$daveBody:noescape()$ 
+daveDocument=
+$daveBody:noescape()$
 
 <div style="border:10px solid red;padding:10px">
 <center> <h1>This option is extreme. Use this only if really needed </h1></center>
