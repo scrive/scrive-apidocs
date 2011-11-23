@@ -124,6 +124,9 @@ Executable kontrakcja-server
     cpp-options: -DWINDOWS
   if impl(ghc >= 7)
     ghc-options: -rtsopts
+
+  cpp-options: -DDOCUMENTS_IN_POSTGRES
+
   Build-depends: filepath
   Build-depends: base64-bytestring
   Build-depends: convertible
@@ -241,6 +244,8 @@ Executable kontrakcja-test
     GHC-Options: -threaded
   if os(windows)
     cpp-options: -DWINDOWS
+
+  cpp-options: -DDOCUMENTS_IN_POSTGRES
 
   if !flag(test-companystate)
     cpp-options: -DNO_COMPANYSTATE
