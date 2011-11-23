@@ -67,7 +67,9 @@ handleUserPost = do
 
   --whatever happens run the update in case they changed things in other places
   ctx <- getContext
-  user <- guardJust $ ctxmaybeuser ctx
+  user' <- guardJust $ ctxmaybeuser ctx
+  --requery for the user as they may have been upgraded
+  user <- guardJustM $ runDBQuery $ GetUserByID (userid user')
   infoUpdate <- getUserInfoUpdate
   _ <- runDBUpdate $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
   mcompany <- getCompanyForUser user

@@ -21,6 +21,7 @@ module AppView( TopMenu(..)
               , partnersPage
               , clientsPage
               , contactUsPage
+              , apiPage
               , modalError
               , embeddedErrorPage
               , serviceFields
@@ -170,6 +171,10 @@ clientsPage = getContext >>= \ctx -> renderTemplateAsPage ctx "clientsPage" (Jus
 
 contactUsPage:: Kontra String
 contactUsPage = getContext >>= \ctx -> renderTemplateAsPage ctx "contactUsPage" (Just LinkContactUs) True
+
+apiPage:: Kontra String
+apiPage = getContext >>= \ctx -> renderTemplateAsPage ctx "apiPage" (Just LinkAPIPage) True
+
 
 {- |
     Render a template as an entire page.
