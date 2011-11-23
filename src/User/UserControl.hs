@@ -172,9 +172,11 @@ handleGetChangeEmail actionid hash = withUserGet $ do
 
 handlePostChangeEmail :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
 handlePostChangeEmail actionid hash = withUserPost $ do
-  newemail <- guardJustM $ getNewEmailFromAction actionid hash
+  mnewemail <- getNewEmailFromAction actionid hash
   Context{ctxmaybeuser = Just user} <- getContext
-  changed <- runDBUpdate $ SetUserEmail (userservice user) (userid user) newemail
+  changed <- maybe (return False)
+                   (runDBUpdate . SetUserEmail (userservice user) (userid user))
+                   mnewemail
   if changed
     then addFlashM $ flashMessageYourEmailHasChanged
     else addFlashM $ flashMessageProblemWithEmailChange
