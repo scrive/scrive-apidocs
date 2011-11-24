@@ -174,17 +174,23 @@ handlePostChangeEmail :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
 handlePostChangeEmail actionid hash = withUserPost $ do
   mnewemail <- getNewEmailFromAction actionid hash
   Context{ctxmaybeuser = Just user} <- getContext
-  changed <- maybe (return False)
-                   (runDBUpdate . SetUserEmail (userservice user) (userid user))
-                   mnewemail
-  if changed
-    then addFlashM $ flashMessageYourEmailHasChanged
-    else addFlashM $ flashMessageProblemWithEmailChange
+  mpassword <- getRequiredField asDirtyPassword "password"
+  case mpassword of
+    Nothing -> return ()
+    Just password | verifyPassword (userpassword user) password -> do
+      changed <- maybe (return False)
+                      (runDBUpdate . SetUserEmail (userservice user) (userid user))
+                      mnewemail
+      if changed
+        then addFlashM $ flashMessageYourEmailHasChanged
+        else addFlashM $ flashMessageProblemWithEmailChange
+    Just _password -> do
+      addFlashM $ flashMessageProblemWithPassword
   return $ LinkAccount False
 
 getNewEmailFromAction :: Kontrakcja m => ActionID -> MagicHash -> m (Maybe Email)
 getNewEmailFromAction actionid hash = do
-  Context{ctxmaybeuser = Just user} <-getContext
+  Context{ctxmaybeuser = Just user} <- getContext
   maction <- getActionByActionID actionid
   case actionType <$> maction of
     Just (RequestEmailChange recUser recNewEmail recToken)

@@ -976,6 +976,9 @@ modalDoYouWantToChangeEmail=
             <div class="recovery-container">
               <div class="body">
                 <p>$_modalDoYouWantToChangeEmailBody()$</p>
+                <p>
+                  <input type="password" name="password" autocomplete="off"/>
+                </p>
               </div>
             </div>
       </div>

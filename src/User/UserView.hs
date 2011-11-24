@@ -51,6 +51,7 @@ module User.UserView (
     flashMessageChangeEmailMailSent,
     flashMessageMismatchedEmails,
     flashMessageProblemWithEmailChange,
+    flashMessageProblemWithPassword,
     flashMessageYourEmailHasChanged,
 
     --modals
@@ -397,6 +398,10 @@ flashMessageMismatchedEmails =
 flashMessageProblemWithEmailChange :: TemplatesMonad m => m FlashMessage
 flashMessageProblemWithEmailChange =
   toFlashMsg OperationFailed <$> renderTemplateM "flashMessageProblemWithEmailChange" ()
+
+flashMessageProblemWithPassword :: TemplatesMonad m => m FlashMessage
+flashMessageProblemWithPassword =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageProblemWithPassword" ()
 
 flashMessageYourEmailHasChanged :: TemplatesMonad m => m FlashMessage
 flashMessageYourEmailHasChanged =

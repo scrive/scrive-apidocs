@@ -3268,6 +3268,7 @@ _flashMessageMismatchedEmails,"E-postadresserna matchar inte.",,"The emails you 
 _flashMessageProblemWithEmailChange,"Vi kan tyvärr inte genomföra ändringen. Din länk kanske blivit gammal. Vänligen gör ny förfrågan.",,"We're unable to complete this change.  Perhaps your link has expired?  Please request again."
 _flashMessageYourEmailHasChanged,"Ditt användarnamn och din e-post har nu ändrats.",,"Your username and email have been successfully changed."
 _modalDoYouWantToChangeEmailHeader,"Bekräfta ändring av användarnamn",,"Confirm username change"
-_modalDoYouWantToChangeEmailBody,"Är du säker att du vill ändra både ditt användarnamn och din e-post till $newemail$?",,"Are you sure you would like to change both your username and email to $newemail$?"
+_modalDoYouWantToChangeEmailBody,"Vänligen fyll i ditt lösenord för att fullfölja ändringen av både användarnamn och e-post till $newemail$.",,"Please enter your password to complete the change of both your username and email to $newemail$."
 _modalDoYouWantToChangeEmailAccept,"OK",,"OK"
+_flashMessageProblemWithPassword,"Felaktig lösenord.",,"Incorrect password."
 "_apiPageMetaDescription","",,""

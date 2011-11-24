@@ -266,3 +266,5 @@ flashMessageProblemWithEmailChange=$_flashMessageProblemWithEmailChange()$
 ###
 flashMessageYourEmailHasChanged=$_flashMessageYourEmailHasChanged()$
 ###
+flashMessageProblemWithPassword=$_flashMessageProblemWithPassword()$
+###
