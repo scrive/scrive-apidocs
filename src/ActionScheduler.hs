@@ -230,6 +230,11 @@ mailArchiveProblemsCheck :: String -> ActionScheduler ()
 mailArchiveProblemsCheck msg = do
   sd <- ask
   scheduleEmailSendout (sdMailEnforcer sd) $ Mail { to = zipWith MailAddress archiveProblemsCheckEmails archiveProblemsCheckEmails
+                                                  , title = BS.fromString $ "Archive problems report " ++ (hostpart $ sdAppConf sd)
+                                                  , content = BS.fromString msg
+                                                  , attachments = []
+                                                  , from = Nothing
+                                                  , mailInfo = None
                                                   }
 archiveProblemsCheckEmails :: [BS.ByteString]
 archiveProblemsCheckEmails = map BS.fromString ["emily@scrive.com"]
