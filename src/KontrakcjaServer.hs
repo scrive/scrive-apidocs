@@ -234,11 +234,12 @@ runKontrakcjaServer = Log.withLogger $ do
                               t3 <- forkIO $ cron 600 $ runScheduler (actionScheduler LeisureAction) scheddata
                               t4 <- forkIO $ runEnforceableScheduler 300 es_enforcer (actionScheduler EmailSendoutAction) scheddata
                               t5 <- forkIO $ cron (60 * 60 * 4) $ runScheduler runDocumentProblemsCheck scheddata
-                              t6 <- forkIO $ cron (60) $ (let loop = (do
+                              t6 <- forkIO $ cron (60 * 60 * 24) $ runScheduler runArchiveProblemsCheck scheddata
+                              t7 <- forkIO $ cron (60) $ (let loop = (do
                                                                         r <- uploadFileToAmazon appConf
                                                                         if r then loop else return ()) in loop)
-                              t7 <- forkIO $ cron (60*60) System.Mem.performGC
-                              return [t1, t2, t3, t4, t5, t6, t7]
+                              t8 <- forkIO $ cron (60*60) System.Mem.performGC
+                              return [t1, t2, t3, t4, t5, t6, t7, t8]
                            )
                            (mapM_ killThread) $ \_ -> E.bracket
                                         -- checkpoint the state once a day
