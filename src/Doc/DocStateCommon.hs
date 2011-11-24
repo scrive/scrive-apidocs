@@ -256,3 +256,9 @@ replaceSignatoryUser siglink user mcompany =
                        (map sfValue $ filter isFieldCustom $ signatoryfields $ signatorydetails siglink) in
   newsl { maybesignatory = Just $ userid user,
           maybecompany = usercompany user }
+
+checkAddEvidence :: Document -> SignatoryLinkID -> [String]
+checkAddEvidence doc slid = catMaybes $
+  [ trueOrMessage (documentstatus doc == Pending) "Document is not in pending"
+  , trueOrMessage (isSignatory (doc, slid)) "Given signatorylinkid is not a signatory"
+  ]

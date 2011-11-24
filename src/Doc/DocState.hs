@@ -687,10 +687,6 @@ preparationToPending documentid time =
                               }
     s -> Left $ "Document " ++ show documentid ++ " cannot go from Preparation to Pending. " ++ concat s
 
-checkAddEvidence :: Document -> SignatoryLinkID -> [String]
-checkAddEvidence doc slid = catMaybes $
-  [trueOrMessage (documentstatus doc == Pending) "Document is not in pending",
-  trueOrMessage (isSignatory (doc, slid)) "Given signatorylinkid is not a signatory"]
 
 {- | Add a bit of evidence about when a signatory was invited.
      Store the invite time + a history log message;
