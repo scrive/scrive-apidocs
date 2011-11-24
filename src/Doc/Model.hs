@@ -927,7 +927,7 @@ instance DBUpdate PreparationToPending (Either String Document) where
         case checkPreparationToPending document of
           [] -> do
             r <- runUpdateStatement "documents"
-                 [ sqlField "status" $ Preparation
+                 [ sqlField "status" $ Pending
                  , sqlFieldType "mtime" "timestamp" $ time
                  , sqlFieldType "timeout_time" "timestamp" $ (\days -> (days * 24 *60) `minutesAfter` time) <$> documentdaystosign document
                  ]
@@ -1173,8 +1173,20 @@ instance DBUpdate MarkDocumentSeen (Either String Document) where
 data AddInvitationEvidence = AddInvitationEvidence DocumentID SignatoryLinkID MinutesTime Word32
                           deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate AddInvitationEvidence (Either String Document) where
-  dbUpdate (AddInvitationEvidence docid slid time ipnumber) = wrapDB $ \conn -> do
-    unimplemented "AddInvitationEvidence"
+  dbUpdate (AddInvitationEvidence docid _slid _time _ipnumber) = do
+  -- modifySignable docid $ \document ->
+  -- case checkAddEvidence document slid of
+  --  [] -> let Just sds = signatorydetails <$> getSigLinkFor document slid
+  --        in Right $ document { documentinvitetime = Just (SignInfo time ipnumber) } 
+  --           `appendHistory` [DocumentHistoryInvitationSent time ipnumber [sds]]
+  --  s -> Left $ "Document " ++ show documentid ++ " cannot have evidence attached for signatory " ++ show slid ++ " because " ++ concat s
+    mdoc <- dbQuery $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Left "no such document"
+      Just doc -> return $ Right doc
+
+                                    
+                               
 
 data MarkInvitationRead = MarkInvitationRead DocumentID SignatoryLinkID MinutesTime
                           deriving (Eq, Ord, Show, Typeable)
