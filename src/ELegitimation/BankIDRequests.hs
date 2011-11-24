@@ -29,7 +29,7 @@ instance XmlContent (GenerateChallengeRequest) where
                 [mkAttr "xmlns" "urn:www.sll.se/wsdl/soap/osif"]
                 [CElem (Elem "provider"
                                  [mkAttr "xmlns" ""]
-                                 (toText $ show provider)) ()
+                                 (toText $ show $ fromSafeEnumInt provider)) ()
                 ,CElem (Elem "policy"
                                  [mkAttr "xmlns" ""]
                                  (toText policy)) ()

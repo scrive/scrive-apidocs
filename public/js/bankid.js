@@ -164,86 +164,6 @@ function netIDSuccess(transactionid, tbs, nonce, servertime, posturl, formselect
     postBack(doSignNetID(tbs, nonce, servertime), "telia", formselector, transactionid, posturl);
 }
 
-// start the signature for signatory
-function sign1() {
-    if (!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage))
-        return false;
-
-    displayLoadingOverlay(localization.startingSaveSigning);
-    var url = window.location.pathname.substring(2);
-    var ajaxurl = "/s/nordea" + url;
-    var posturl = "/s" + url;
-    var formselector = "#dialog-confirm-sign";
-    ajaxRequest(ajaxurl, posturl, formselector, sign1Success, false);
-    return false;
-}
-
-function sign2() {
-    if (!checkPlugin(hasSign2PluginIE, hasSign2PluginMozilla, flashBankIDMessage))
-        return false;
-
-    displayLoadingOverlay(localization.startingSaveSigning);
-    var url = window.location.pathname.substring(2);
-    var ajaxurl = "/s/bankid" + url;
-    var posturl = "/s" + url;
-    var formselector = "#dialog-confirm-sign";
-    ajaxRequest(ajaxurl, posturl, formselector, sign2Success, false);
-    return false;
-}
-
-function netIDSign() {
-    if (!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage))
-        return false;
-
-    displayLoadingOverlay(localization.startingSaveSigning);
-    var url = window.location.pathname.substring(2);
-    var ajaxurl = "/s/telia" + url;
-    var posturl = "/s" + url;
-    var formselector = "#dialog-confirm-sign";
-    ajaxRequest(ajaxurl, posturl, formselector, netIDSuccess, false);
-    return false;
-}
-
-// for author2
-function sign1AwaitingAuthor() {
-    if (!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage))
-        return false;
-
-    displayLoadingOverlay(localization.startingSaveSigning);
-    var url = window.location.pathname.substring(2);
-    var ajaxurl = "/d/nordea" + url;
-    var posturl = "/d" + url;
-    var formselector = "#dialog-confirm-sign-by-author";
-    ajaxRequest(ajaxurl, posturl, formselector, sign1Success, false);
-    return false;
-}
-
-function sign2AwaitingAuthor() {
-    if (!checkPlugin(hasSign2PluginIE, hasSign2PluginMozilla, flashBankIDMessage))
-        return false;
-
-    displayLoadingOverlay(localization.startingSaveSigning);
-    var url = window.location.pathname.substring(2);
-    var ajaxurl = "/d/bankid" + url;
-    var posturl = "/d" + url;
-    var formselector = "#dialog-confirm-sign-by-author";
-    ajaxRequest(ajaxurl, posturl, formselector, sign2Success, false);
-    return false;
-}
-
-function netIDSignAwaitingAuthor() {
-    if (!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage))
-        return false;
-
-    displayLoadingOverlay(localization.startingSaveSigning);
-    var url = window.location.pathname.substring(2);
-    var ajaxurl = "/d/telia" + url;
-    var posturl = "/d" + url;
-    var formselector = "#dialog-confirm-sign-by-author";
-    ajaxRequest(ajaxurl, posturl, formselector, netIDSuccess, false);
-    return false;
-}
-
 // for author
 function sign1Author() {
     if (!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage))
@@ -251,10 +171,10 @@ function sign1Author() {
 
     displayLoadingOverlay(localization.startingSaveSigning);
     var url = window.location.pathname.substring(2);
-    var ajaxurl = "/d/nordea" + url;
+    var ajaxurl = "/d/eleg" + url;
     var posturl = "/d" + url;
     var formselector = "#dialog-confirm-signinvite";
-    ajaxRequest(ajaxurl, posturl, formselector, sign1Success, true);
+    ajaxRequest(ajaxurl,"nordea", posturl, formselector, sign1Success, true);
     return false;
 }
 
@@ -264,10 +184,10 @@ function sign2Author() {
 
     displayLoadingOverlay(localization.startingSaveSigning);
     var url = window.location.pathname.substring(2);
-    var ajaxurl = "/d/bankid" + url;
+    var ajaxurl = "/d/eleg" + url;
     var posturl = "/d" + url;
     var formselector = "#dialog-confirm-signinvite";
-    ajaxRequest(ajaxurl, posturl, formselector, sign2Success, true);
+    ajaxRequest(ajaxurl,"bankid", posturl, formselector, sign2Success, true);
     return false;
 }
 
@@ -277,10 +197,10 @@ function netIDSignAuthor() {
 
     displayLoadingOverlay(localization.startingSaveSigning);
     var url = window.location.pathname.substring(2);
-    var ajaxurl = "/d/telia" + url;
+    var ajaxurl = "/d/eleg" + url;
     var posturl = "/d" + url;
     var formselector = "#dialog-confirm-signinvite";
-    ajaxRequest(ajaxurl, posturl, formselector, netIDSuccess, true);
+    ajaxRequest(ajaxurl,"telia", posturl, formselector, netIDSuccess, true);
     return false;
 }
 
@@ -306,17 +226,9 @@ function failEleg(msg) {
 }
 
 safeReady(function() {
-    $("a.bankid.signatory").click(sign2);
     $("a.bankid.author").click(sign2Author);
-    $("a.bankid.author2").click(sign2AwaitingAuthor);
-
-    $("a.nordea.signatory").click(sign1);
     $("a.nordea.author").click(sign1Author);
-    $("a.nordea.author2").click(sign1AwaitingAuthor);
-
-    $("a.telia.signatory").click(netIDSign);
     $("a.telia.author").click(netIDSignAuthor);
-    $("a.telia.author2").click(netIDSignAwaitingAuthor);
 });
 
 // set up the sign modals when eleg/email is selected
@@ -408,11 +320,11 @@ function checkPlugin(iefn, otfn, msgfn) {
     return false;
 }
 
-function ajaxRequest(ajaxurl, posturl, formselector, successfn, tbs) {
+function ajaxRequest(ajaxurl, provider, posturl, formselector, successfn, tbs) {
     $.ajax({
-        'url': ajaxurl,
+        'url': ajaxurl,     
         'dataType': 'json',
-        'data': tbs ? { 'tbs': getTBS() }: {},
+        'data': tbs ? { 'tbs': getTBS()  ,  'provider' : provider}: {   'provider' : provider},
         'scriptCharset': "utf-8",
         'success': function(data) {
             if (data && data.status === 0)
@@ -430,7 +342,6 @@ function postBack(sig, provider, formselector, transactionid, posturl) {
 
     displayLoadingOverlay(localization.verifyingSignature);
     var form = $(formselector);
-    form.find("#signauto").attr("name", "dontsign");
     form.find("#signatureinput").val(sig);
     form.find("#transactionidinput").val(transactionid);
     form.find("#elegprovider").val(provider);
@@ -451,10 +362,8 @@ window.Eleg = {
       LoadingDialog.open(localization.startingSaveSigning);
       $.ajax({
             'url': "/s/eleg/" + document.documentid() +  "/" + document.viewer().signatoryid(),
-            'magichash' : document.viewer().magichash(),
-            'provider' : 'bankid',
             'dataType': 'json',
-            'data': {}, 
+            'data': { 'provider' : 'bankid', 'magichash' : document.viewer().magichash()}, 
             'scriptCharset': "utf-8",
             'success': function(data) {
               if (data && data.status === 0)  {
@@ -507,10 +416,8 @@ window.Eleg = {
     LoadingDialog.open(localization.startingSaveSigning);
     $.ajax({
             'url': "/s/eleg/" + document.documentid() +  "/" + document.viewer().signatoryid(),
-            'magichash' : document.viewer().magichash(),
-            'provider' : 'nordea',   
             'dataType': 'json',
-            'data': {}, 
+            'data': {  'provider' : 'nordea' , 'magichash' : document.viewer().magichash() }, 
             'scriptCharset': "utf-8",
             'success': function(data) {
               if (data && data.status === 0)  {
@@ -568,10 +475,8 @@ window.Eleg = {
         LoadingDialog.open(localization.startingSaveSigning);
         $.ajax({
             'url': "/s/eleg/" + document.documentid() +  "/" + document.viewer().signatoryid(),
-            'magichash' : document.viewer().magichash(),
-            'provider' : 'telia',   
             'dataType': 'json',
-            'data': {}, 
+            'data': { 'provider' : 'telia', 'magichash' : document.viewer().magichash()}, 
             'scriptCharset': "utf-8",
             'success': function(data) {
             if (data && data.status === 0)  {

@@ -1068,13 +1068,25 @@ handleIssueSave document = do
           return $ LinkContracts
 
 handleIssueSignByAuthor :: Kontrakcja m => Document -> m KontraLink
-handleIssueSignByAuthor document = do
-    unless (document `allowsIdentification` EmailIdentification) mzero
-    doc <- guardRightM $ authorSignDocumentFinal (documentid document) Nothing
-    postDocumentChangeAction doc document Nothing
-    addFlashM flashAuthorSigned
-    return $ LinkIssueDoc (documentid document)
-
+handleIssueSignByAuthor doc = do
+     mprovider <- readField "eleg"  
+     mndoc <- case mprovider of
+                   Nothing ->  Right <$> authorSignDocumentFinal (documentid doc) Nothing   
+                   Just provider -> do
+                      signature     <- getDataFnM $ look "signature"
+                      transactionid <- getDataFnM $ look "transactionid"
+                      esinfo <- BankID.verifySignatureAndGetSignInfoForAuthor (documentid doc) provider signature transactionid
+                      case esinfo of
+                        BankID.Problem msg -> return $ Left msg
+                        BankID.Mismatch msg _ _ _ -> return $ Left msg
+                        BankID.Sign sinfo -> Right <$>  authorSignDocumentFinal (documentid doc) (Just sinfo)   
+    
+     case mndoc of 
+         Right (Right ndoc) -> do
+             postDocumentChangeAction ndoc doc Nothing                     
+             addFlashM flashAuthorSigned
+             return $ LinkIssueDoc (documentid doc)
+         _ -> return LoopBack
 
 -- | Check if current user is author or friend so he can view the document
 withAuthorOrFriend :: Kontrakcja m => DocumentID -> m (Either KontraLink a) -> m (Either KontraLink a)
