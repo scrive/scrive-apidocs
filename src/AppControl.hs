@@ -208,7 +208,6 @@ staticRoutes = choice
      , dir "cancel"  $ hPost $ toK1 $ DocControl.handleCancel
 
      , dir "pages"  $ hGetAjax $ toK3 $ DocControl.showPage
-     , dir "pages"  $ hGetAjax $ toK5 $ DocControl.showPageForSignatory
      -- HTMP emails can have embedded preview image
      , dir "preview" $ hGet $ toK2 $ DocControl.showPreview
      , dir "preview" $ hGet $ toK4 $ DocControl.showPreviewForSignatory
@@ -360,7 +359,7 @@ staticRoutes = choice
 
      , userAPI
      , integrationAPI
-     , documentApi
+     , documentAPI
      -- static files
      , remainingPath GET $ msum
          [ allowHttp $ serveHTMLFiles

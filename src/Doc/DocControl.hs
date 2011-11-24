@@ -1675,14 +1675,18 @@ handleIssueBulkRemind doctype = do
    FIXME: Should probably check for permissions to view
  -}
 showPage :: Kontrakcja m => DocumentID -> FileID -> Int -> m (Either KontraLink Response)
-showPage docid fileid = withAuthorOrFriend docid
-    . checkUserTOSGet . showPage' fileid
+showPage docid fileid pageno = do
+  msid <- readField "signatorylinkid"   
+  mmh <- readField "magichash"   
+  edoc <- case (msid, mmh) of
+           (Just sid, Just mh) -> Right <$> guardRightM (getDocByDocIDSigLinkIDAndMagicHash docid sid mh)
+           _ ->  checkUserTOSGet $ guardRightM (getDocByDocID docid)
+  case edoc of
+       Right doc -> do
+           unless (fileInDocument doc fileid) mzero
+           Right <$> showPage' fileid pageno
+       Left rdir -> return $ Left rdir    
 
-showPageForSignatory :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> FileID -> Int -> m Response
-showPageForSignatory docid siglinkid sigmagichash fileid pageno = do
-    doc <- queryOrFail $ GetDocumentByDocumentID docid
-    checkLinkIDAndMagicHash doc siglinkid sigmagichash
-    showPage' fileid pageno
 
 showPreview:: Kontrakcja m => DocumentID -> FileID -> m (Either KontraLink Response)
 showPreview docid fileid = withAuthorOrFriend docid $ do
