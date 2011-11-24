@@ -23,6 +23,8 @@ import Data.List
 import Data.Maybe
 import Database.HDBC.PostgreSQL
 import Util.JSON
+import Test.QuickCheck.Gen
+
 
 integrationAPITests :: Connection -> Test
 integrationAPITests conn = testGroup "Integration API" [
@@ -184,10 +186,12 @@ testNewDocumentWithCompanyNr conn = withTestEnvironment conn $ do
 
 -- Requests body
 createDocumentJSON :: String -> String -> DB JSValue
-createDocumentJSON company author = randomCall $ \title fname sname -> JSObject $ toJSObject $
+createDocumentJSON company author = do
+     dt <- rand 10 $  elements [1,3,5]
+     randomCall $ \title fname sname -> JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
          ,("title" , JSString $ toJSString  title)
-         ,("type" , JSRational True (1%1))
+         ,("type" , JSRational True (dt%1))
          ,("involved" , JSArray [ JSObject $ toJSObject $
                                     [ ("fstname", JSString $ toJSString fname),
                                       ("sndname", JSString $ toJSString sname),
