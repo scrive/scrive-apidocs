@@ -8,7 +8,6 @@ import User.Model
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
 import qualified Data.ByteString.UTF8 as BS
-import PayEx.PayExState
 import ListUtil
 import Session
 import API.Service.Model
@@ -106,7 +105,6 @@ data KontraLink
     | LinkAskQuestion
     | LinkRequestPhoneCall
     | LinkInvite
-    | LinkPayExView (Maybe PaymentId)
     | LinkSignCanceledDataMismatch DocumentID SignatoryLinkID
     | LinkConnectUserSession ServiceID UserID SessionId KontraLink
     | LinkConnectCompanySession ServiceID CompanyID SessionId KontraLink
@@ -228,8 +226,6 @@ instance Show KontraLink where
     showsPrec _ (LinkAskQuestion) = (++) ("/question")
     showsPrec _ (LinkRequestPhoneCall) = (++) "/phone"
     showsPrec _ (LinkInvite) = (++) "/invite"
-    showsPrec _ (LinkPayExView Nothing) = (++) $ "/payex"
-    showsPrec _ (LinkPayExView (Just pid)) = (++) $ "/payex/" ++ show pid
     showsPrec _ (LinkSignCanceledDataMismatch docid sigid) = (++) $ "/landpage/signcanceleddatamismatch/" ++ show docid ++ "/" ++ show sigid
     showsPrec _ (LinkConnectUserSession sid uid ssid referer) = (++) $ "/integration/connectuser/" ++ encodeForURL sid ++ "/" ++ show uid  ++ "/" ++ show ssid
                                                                         ++ "?referer=" ++ (URL.encode $ UTF.encode  $ show referer)
