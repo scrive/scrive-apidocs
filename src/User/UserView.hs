@@ -15,12 +15,14 @@ module User.UserView (
     mailAccountCreatedBySigningOfferReminder,
     mailAccountCreatedBySigningOrderReminder,
     resetPasswordMail,
+    mailRequestChangeEmail,
 
     -- modals
     modalWelcomeToSkrivaPa,
     modalAccountSetup,
     modalAccountRemoval,
     modalAccountRemoved,
+    modalDoYouWantToChangeEmail,
 
     -- flash messages
     flashMessageLoginRedirectReason,
@@ -46,6 +48,10 @@ module User.UserView (
     flashMessageUserSignupDone,
     flashMessageThanksForTheQuestion,
     flashMessageWeWillCallYouSoon,
+    flashMessageChangeEmailMailSent,
+    flashMessageMismatchedEmails,
+    flashMessageProblemWithEmailChange,
+    flashMessageYourEmailHasChanged,
 
     --modals
     modalNewPasswordView,
@@ -221,6 +227,14 @@ mailAccountCreatedBySigning' mail_template hostpart doctitle personname activati
         field "documenttitle"  $ BS.toString doctitle
         field "activationlink" $ show activationlink
 
+mailRequestChangeEmail :: (TemplatesMonad m, HasSomeUserInfo a) => String -> a -> Email -> KontraLink -> m Mail
+mailRequestChangeEmail hostpart user newemail link = do
+  kontramail "mailRequestChangeEmail" $ do
+    field "fullname" $ getFullName user
+    field "newemail" $ unEmail newemail
+    field "hostpart" $ hostpart
+    field "link" $ show link
+
 -------------------------------------------------------------------------------
 
 modalWelcomeToSkrivaPa :: TemplatesMonad m => m FlashMessage
@@ -246,6 +260,11 @@ modalAccountRemoved :: TemplatesMonad m => BS.ByteString -> m FlashMessage
 modalAccountRemoved doctitle = do
     toModal <$> (renderTemplateFM "modalAccountRemoved" $ do
         field "documenttitle"  $ BS.toString doctitle)
+
+modalDoYouWantToChangeEmail :: TemplatesMonad m => Email -> m FlashMessage
+modalDoYouWantToChangeEmail newemail = do
+  toModal <$> (renderTemplateFM "modalDoYouWantToChangeEmail" $
+                 field "newemail" $ unEmail newemail)
 
 flashMessageThanksForTheQuestion :: TemplatesMonad m => m FlashMessage
 flashMessageThanksForTheQuestion =
@@ -365,6 +384,23 @@ modalUserSignupDone :: TemplatesMonad m => Email -> m FlashMessage
 modalUserSignupDone email =
   toModal <$> (renderTemplateFM "modalUserSignupDone" $ do
                  field "email" $ BS.toString (unEmail email))
+
+flashMessageChangeEmailMailSent :: TemplatesMonad m => Email -> m FlashMessage
+flashMessageChangeEmailMailSent newemail =
+  toFlashMsg OperationDone <$> (renderTemplateFM "flashMessageChangeEmailMailSent" $
+                                  field "newemail" $ unEmail newemail)
+
+flashMessageMismatchedEmails :: TemplatesMonad m => m FlashMessage
+flashMessageMismatchedEmails =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageMismatchedEmails" ()
+
+flashMessageProblemWithEmailChange :: TemplatesMonad m => m FlashMessage
+flashMessageProblemWithEmailChange =
+  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageProblemWithEmailChange" ()
+
+flashMessageYourEmailHasChanged :: TemplatesMonad m => m FlashMessage
+flashMessageYourEmailHasChanged =
+  toFlashMsg OperationDone <$> renderTemplateM "flashMessageYourEmailHasChanged" ()
 
 -------------------------------------------------------------------------------
 

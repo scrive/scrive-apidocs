@@ -15,7 +15,7 @@ viewCompanyAccounts =
 
 <script>
  jQuery(function(){
-  var addCompanyButton = Button.init({
+    var addCompanyAccountButton = Button.init({
         color: "green",
         size: "tiny",
         text: "$_newCompanyAccountButtonText()$",
@@ -191,7 +191,7 @@ viewCompanyAccounts =
                  }})
       ]
     }),
-    headerExtras: addCompanyButton.input()
+    headerExtras: addCompanyAccountButton.input()
   });
     jQuery("#tab-viewer").append(companyAccountsTable.view.el);
   });

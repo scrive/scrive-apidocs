@@ -129,6 +129,7 @@ staticRoutes = choice
      , publicDir "partners" "partners" LinkPartners handlePartnersPage -- FIXME: Same dirs for two languages is broken
      , publicDir "kunder" "clients" LinkClients handleClientsPage
      , publicDir "kontakta" "contact" LinkContactUs handleContactUsPage
+     , publicDir "scriveapi" "scriveapi" LinkAPIPage handleApiPage
      -- sitemap
      , dir "webbkarta"       $ hGetAllowHttp $ handleSitemapPage
      , dir "sitemap"         $ hGetAllowHttp $ handleSitemapPage
@@ -223,6 +224,8 @@ staticRoutes = choice
      -- UserControl
      , dir "account"                    $ hGet  $ toK0 $ UserControl.handleUserGet
      , dir "account"                    $ hPost $ toK0 $ UserControl.handleUserPost
+     , dir "account" $ hGet $ toK2 $ UserControl.handleGetChangeEmail
+     , dir "account" $ hPost $ toK2 $ UserControl.handlePostChangeEmail
      , dir "account" $ dir "sharing" $ hGet $ toK0 $ UserControl.handleGetSharing
      , dir "account" $ dir "sharing" $ hPost $ toK0 $ UserControl.handlePostSharing
      , dir "account" $ dir "security" $ hGet $ toK0 $ UserControl.handleGetUserSecurity
@@ -245,7 +248,6 @@ staticRoutes = choice
      , dir "account" $ dir "bsa" $ hGet $ toK1 $ CompanyAccounts.handleGetBecomeCompanyAccountOld
      , dir "account" $ dir "bsa" $ hPost $ toK1 $ CompanyAccounts.handlePostBecomeCompanyAccountOld
 
-
      -- super user only
      , dir "stats"      $ hGet  $ toK0 $ Administration.showStats
      , dir "createuser" $ hPost $ toK0 $ Administration.handleCreateUser
@@ -262,7 +264,8 @@ staticRoutes = choice
      , dir "adminonly" $ dir "companyadmin" $ hGet $ toK0 $ Administration.showAdminCompanies
      , dir "adminonly" $ dir "companyadmin" $ hGet $ toK1 $ Administration.showAdminCompany
      , dir "adminonly" $ dir "companyadmin" $ dir "users" $ hGet $ toK1 $ Administration.showAdminCompanyUsers
-     , dir "adminonly" $ dir "companyadmin" $ dir "users" $ hPost $ toK1 $ Administration.handleCreateCompanyUser
+     , dir "adminonly" $ dir "companyadmin" $ dir "users" $ hPost $ toK1 $ Administration.handlePostAdminCompanyUsers, dir "adminonly" $ dir "companyaccounts" $ hGet  $ toK1 $ CompanyAccounts.handleCompanyAccountsForAdminOnly
+     , dir "adminonly" $ dir "companyaccounts" $ hGet  $ toK1 $ CompanyAccounts.handleCompanyAccountsForAdminOnly
      , dir "adminonly" $ dir "companyadmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminCompanyUsageStats
      , dir "adminonly" $ dir "companyadmin" $ hPost $ toK1 $ Administration.handleCompanyChange
      , dir "adminonly" $ dir "functionalitystats" $ hGet $ toK0 $ Administration.showFunctionalityStats
@@ -509,6 +512,9 @@ handleClientsPage = handleWholePage clientsPage
 
 handleContactUsPage :: Kontra Response
 handleContactUsPage = handleWholePage contactUsPage
+
+handleApiPage :: Kontra Response
+handleApiPage = handleWholePage apiPage
 
 handleWholePage :: Kontra String -> Kontra Response
 handleWholePage f = do

@@ -650,6 +650,19 @@ mailTakeoverCompanyUserInfoP=
   <p>$_hi()$ $invitedname$,</p>
   <p>$_mailTakeoverCompanyUserInfoBody()$</p>
 ####
+mailRequestChangeEmail=
+  $_mailRequestChangeEmailTitle()$
+  $nicemail(
+    mailheader=_mailRequestChangeEmailTitle();
+    mailp1=mailRequestChangeEmailP();
+    mailp2=poweredBySkrivaPaPara()
+  )$
+####
+mailRequestChangeEmailP=
+  <p>$_hi()$ $fullname$,</p>
+  <p>$_mailRequestChangeEmailExplanation()$</p>
+  <p><a href="$hostpart$$link$">$hostpart$$link$</a></p>
+####
 #### Mail API EMAILS
 ####
 mailMailAPIConfirmContract=

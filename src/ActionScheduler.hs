@@ -140,6 +140,9 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
             _ <- update $ UpdateActionEvalTime actionID ((72 * 60) `minutesAfter` now)
             return ()
 
+evaluateAction Action{actionID, actionType = RequestEmailChange{}} =
+  deleteAction actionID
+
 evaluateAction Action{actionID, actionType = EmailSendout mail@Mail{mailInfo}} =
  if (unsendable mail)
   then do -- Due to next block, bad emails were alive in queue, and making logs unreadable.

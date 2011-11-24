@@ -26,6 +26,7 @@ module User.Model (
   , SetUserCompany(..)
   , DeleteUser(..)
   , AddUser(..)
+  , SetUserEmail(..)
   , SetUserPassword(..)
   , SetInviteInfo(..)
   , SetUserMailAPI(..)
@@ -326,6 +327,26 @@ instance DBUpdate AddUser (Maybe User) where
           return ()
         dbQuery $ GetUserByID uid
 
+--TODO EM, I don't really understand what I'm doing
+--and I need to make sure if this is safe ... check
+--with someone
+data SetUserEmail = SetUserEmail (Maybe ServiceID) UserID Email
+instance DBUpdate SetUserEmail Bool where
+  dbUpdate (SetUserEmail msid uid email) = do
+    let handle e = case e of
+          NoObject{} -> return Nothing
+          _ -> E.throw e
+    mu <- dbQuery (GetUserByEmail msid email) `catchDB` handle
+    case mu of
+      Just _ -> return False -- user with the same email address exists
+      Nothing -> do
+        wrapDB $ \conn -> do
+        st <- prepare conn $ "UPDATE users SET"
+                ++ "  email = ?"
+                ++ "  WHERE id = ? AND deleted = FALSE"
+        r <- execute st [toSql $ email, toSql $ uid]
+        oneRowAffectedGuard r
+
 data SetUserPassword = SetUserPassword UserID Password
 instance DBUpdate SetUserPassword Bool where
   dbUpdate (SetUserPassword uid pwd) = wrapDB $ \conn -> do
@@ -556,7 +577,7 @@ fetchUsers st = do
                 signup_method service_id company_id first_name
                 last_name personal_number company_position phone mobile email
                 preferred_design_mode lang region
-                = (return $ User 
+                = (return $ User
                   { userid = uid
                   , userpassword = case (password, salt) of
                                      (Just pwd, Just salt') -> Just Password

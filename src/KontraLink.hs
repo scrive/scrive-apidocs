@@ -53,6 +53,7 @@ data KontraLink
     | LinkPartners Locale
     | LinkClients Locale
     | LinkContactUs Locale
+    | LinkAPIPage Locale
     | LinkLogin Locale LoginRedirectReason
     | LinkLogout
     | LinkSignup
@@ -66,6 +67,7 @@ data KontraLink
     | LinkAttachments
     | LinkRubbishBin
     | LinkAccount Bool -- show create company modal?
+    | LinkChangeUserEmail ActionID MagicHash
     | LinkAccountSecurity
     | LinkUserMailAPI
     | LinkSignDoc Document SignatoryLink
@@ -154,6 +156,9 @@ instance Show KontraLink where
     showsPrec _ (LinkContactUs locale)
       | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/kontakta"
       | otherwise = (++) $ localeFolder locale ++ "/contact"
+    showsPrec _ (LinkAPIPage locale)
+      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/scriveapi"
+      | otherwise = (++) $ localeFolder locale ++ "/scriveapi"
     showsPrec _ (LinkLogin locale LoginTry) = (++) $ localeFolder locale ++ "/login"
     showsPrec _ (LinkLogin locale (InvalidLoginInfo email)) = (++) $ localeFolder locale ++ "/?logging&email=" ++ (URL.encode . UTF.encode $ email)
     showsPrec _ (LinkLogin locale _) = (++) $ localeFolder locale ++ "/?logging"
@@ -171,6 +176,8 @@ instance Show KontraLink where
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
     showsPrec _ (LinkAccount False) = (++) "/account"
     showsPrec _ (LinkAccount True) = (++) "/account/?createcompany"
+    showsPrec _ (LinkChangeUserEmail actionid magichash) =
+        (++) $ "/account/" ++ show actionid ++  "/" ++ show magichash
     showsPrec _ (LinkCompanyAccounts params) = (++) $ "/account/companyaccounts" ++ "?" ++ show params
     showsPrec _ (LinkCompanyTakeover companyid) = (++) $ "/companyaccounts/join/" ++ show companyid
     showsPrec _ (LinkSharing params) = (++) $ "/account/sharing" ++ "?" ++ show params
