@@ -18,63 +18,64 @@ class DocHelper
       @wait.until { @driver.find_element :css => "form#dialog-confirm-basic" }
       (@wait.until { @driver.find_element :css => "a.tobasic" }).click
       @wait.until { @driver.find_element :id => "toadvanced" }
-    end  
+    end
   end
-  
+
   def useAdvancedMode
     if ((@driver.find_elements :id => "toadvanced").length>0) then
       (@wait.until { @driver.find_element :id => "toadvanced" }).click
       @wait.until { @driver.find_element :css => "form#dialog-confirm-advanced" }
       (@wait.until { @driver.find_element :css => "a.toadvanced" }).click
       @wait.until { @driver.find_element :id => "tobasic" }
-    end  
+    end
   end
-  
+
   def uploadContract
-    (@wait.until { @driver.find_element :xpath => "//a[@href='/upload?doctype=Contract']" }).click
+    @wait.until { (@driver.find_elements :css => "a.documenticon").length>0 }
+    (@wait.until { (@driver.find_elements :css => "a.documenticon").first }).click
     (@wait.until { @driver.find_element :css => "input.multiFileInput" }).send_keys @ctx.props.contract_pdf_path
     @wait.until { @driver.find_element :css => "form.stepForm" }
   end
-  
+
   def enterCounterpart(fstname, sndname, email)
     (@wait.until { @driver.find_element :xpath => "//span[@class='persondetails currentPerson']//input[@name='signatoryfstname']" }).send_keys fstname
     (@wait.until { @driver.find_element :xpath => "//span[@class='persondetails currentPerson']//input[@name='signatorysndname']" }).send_keys sndname
     (@wait.until { @driver.find_element :xpath => "//span[@class='persondetails currentPerson']//input[@name='signatoryemail']" }).send_keys email
   end
-  
+
   def addAuthorCustomField(fieldname, fieldvalue)
     (@wait.until { @driver.find_element :css => ".authordetails a.plus" }).click
     (@wait.until { @driver.find_element :css => ".authordetails .newfieldbox" }).send_keys fieldname
     (@wait.until { @driver.find_element :css => ".authordetails .newfield .okIcon" }).click
     (@driver.find_elements :css => ".authordetails .customfieldbox").last.send_keys fieldvalue
   end
-  
+
   def addCounterpartCustomField(fieldname)
     (@wait.until { @driver.find_element :css => ".currentPerson a.plus" }).click
     (@wait.until { @driver.find_element :css => ".currentPerson .newfieldbox" }).send_keys fieldname
     (@wait.until { @driver.find_element :css => ".currentPerson .newfield .okIcon" }).click
   end
-  
+
   def enterCounterpartCustomFieldValue(fieldvalue)
     (@driver.find_elements :css => ".currentPerson .customfieldbox").last.send_keys fieldvalue
   end
-  
+
   def addPart
     (@wait.until { @driver.find_element :id => "addSignatory" }).click
     @wait.until { (@driver.find_element :xpath => "//span[@class='persondetails currentPerson']") }
   end
-  
+
   def inFinalDesignStep
     if ((@driver.find_elements :css => "#step3select.current").length==0)
       (@wait.until { @driver.find_element :id => "nextstep" }).click
       @wait.until { @driver.find_element :css => "#step3select.current" }
     end
   end
-  
+
   def authorAttachmentUploadCount
     (@driver.find_elements :xpath => "//div[@id='tooltip-attachmentlist']/div").length
   end
-  
+
   def loadAuthorAttachment filepath
     inFinalDesignStep
     originalcount = authorAttachmentUploadCount
@@ -83,7 +84,7 @@ class DocHelper
     (@wait.until { @driver.find_element :css => "#update-attachments-dialog a.submitAttachments" }).click
     @wait.until { authorAttachmentUploadCount == (originalcount + 1) }
   end
-  
+
   def requestSigAttachment(attname, attdesc, attemails)
     inFinalDesignStep
     (@wait.until { @driver.find_element :id => "addsigattachmentlink" }).click
@@ -94,11 +95,11 @@ class DocHelper
       (@driver.find_elements :xpath => ("//option[@value='" + attemail + "']")).last.click
     end
     selectedsigselem = (@driver.find_elements :css => "#update-sigattachments-dialog .selectedsigs").last
-    @wait.until { (selectedsigselem.find_elements :css => "li").length == attemails.length } 
+    @wait.until { (selectedsigselem.find_elements :css => "li").length == attemails.length }
     (@wait.until { @driver.find_element :css => "#update-sigattachments-dialog a.submiter" }).click
     @wait.until { @driver.find_element :id => "addsigattachmentlink" }
   end
-  
+
   def signAndSend
     (@wait.until { @driver.find_element :id => "signinvite" }).click
     (@wait.until { @driver.find_element :css => "#dialog-confirm-signinvite a.submiter" }).click
