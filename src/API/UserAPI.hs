@@ -159,7 +159,7 @@ sendNewDocument = do
   let (filename, content) = head files
   signatories <- getSignatories
   when (Data.List.null signatories) $ throwApiError API_ERROR_MISSING_VALUE "There were no involved parties. At least one is needed."
-  mtype <- liftMM (return . toSafeEnum) (fromJSONField "type")
+  mtype <- liftMM (return . toSafeEnumInt) (fromJSONField "type")
   when (isNothing mtype) $ throwApiError API_ERROR_MISSING_VALUE "BAD DOCUMENT TYPE"
   let doctype = toDocumentType $ fromJust mtype
   --_msignedcallback <- fromJSONField "signed_callback"

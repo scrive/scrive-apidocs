@@ -17,7 +17,7 @@ window.File = Backbone.Model.extend({
         this.url = "/filepages/" + args.document.documentid() + "/" + args.id;
     },
     downloadLink : function() {
-      return "/d/"+ this.document().documentid() + this.document().viewer().urlPart() +"/" + this.fileid() +"/"+ this.name() + ".pdf";
+        return "/download/"+ this.document().documentid() + "/" + this.fileid() +"/"+ this.name() + ".pdf" + this.document().viewer().urlPart();
     },
     fileid : function(){
         return this.get("id");
@@ -124,7 +124,7 @@ var FilePageView = Backbone.View.extend({
         
         // Page part with image
         var pagejpg = $("<div class='pagejpg'/>")
-        var pagelink = "/pages/" + model.file().document().documentid() + model.file().document().viewer().urlPart() + "/" + model.file().fileid()  + "/" + model.number();
+        var pagelink = "/pages/" + model.file().document().documentid() + "/" + model.file().fileid()  + "/" + model.number() + model.file().document().viewer().urlPart() ;
         pagejpg.css("background-image", "url(" +pagelink +")");
         pagejpg.append($("<input type='hidden' name='width'/>").val(model.width()));
         pagejpg.append($("<input type='hidden' name='height'/>").val(model.height()));

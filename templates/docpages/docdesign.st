@@ -1111,6 +1111,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
         <div class="right"></div>
       </a>
       <span class="eleghidden" style="display: none;">
+        <input type="hidden" name="sign" value="automatic" id="signauto" />
         <input type="hidden" name="changetoeleg" id="elegprovider" value="" />
         <input type="hidden" name="signature" value="" id="signatureinput" />
         <input type="hidden" name="transactionid" value="" id="transactionidinput" />

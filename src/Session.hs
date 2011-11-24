@@ -38,7 +38,7 @@ import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie, r
 import System.Random
 import Happstack.Util.Common ( readM)
 import Misc (mkTypeOf, isSecure, isHTTPS)
-import ELegitimation.ELeg
+import ELegitimation.ELegTransaction
 import Data.Typeable
 import API.Service.Model
 import Cookies

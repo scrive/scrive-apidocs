@@ -120,7 +120,7 @@ class (JSONContainer a) =>  APIContext a where
 -- Building pure api error.
 apiError :: API_ERROR -> String -> APIResponse
 apiError code message= toJSObject [
-      ("error" , showJSON $ fromSafeEnum code)
+      ("error" , showJSON $ fromSafeEnumInt code)
     , ("status" , showJSON $ "error")
     , ("error_message", showJSON message)
     ]

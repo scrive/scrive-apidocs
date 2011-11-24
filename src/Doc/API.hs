@@ -1,4 +1,4 @@
-module Doc.API where
+module Doc.API (documentAPI) where
 
 import Happstack.StaticRouting
 import Text.JSON
@@ -34,8 +34,8 @@ import API.APICommons
 import Happstack.Server.Monads
 import API.Monad
 
-documentApi :: Route (Kontra Response)
-documentApi = choice [
+documentAPI :: Route (Kontra Response)
+documentAPI = choice [
   dir "api" $ dir "document" $ hGet          $ toK0 $ documentList,
   dir "api" $ dir "document" $ hPostNoXToken $ toK0 $ documentNew,
   dir "api" $ dir "document" $ hGet          $ toK1 $ documentView,
@@ -88,7 +88,7 @@ documentNew = api $ do
   when (isNothing mdoctypei)
     apiBadInput
   let Just doctypei = mdoctypei
-  let mdoctype = toDocumentType <$> toSafeEnum doctypei
+  let mdoctype = toDocumentType <$> toSafeEnumInt doctypei
   when (isNothing mdoctype)
     apiBadInput
   let Just doctype = mdoctype
@@ -166,35 +166,18 @@ instance FromReqURI FileResource where
 data MetadataResource = MetadataResource
 instance FromReqURI MetadataResource where
     fromReqURI s = Just MetadataResource <| s == "metadata" |> Nothing
-
-getMagicHash :: Kontrakcja m => APIMonad m MagicHash
-getMagicHash = do
-  mmagichashs <- lift $ getDataFn' (look "mh")
-  when (isNothing mmagichashs) $
-    apiNotLoggedIn
-  let Just magichashs = mmagichashs
-      mmagichash = maybeRead magichashs
-  when (isNothing mmagichash) $
-    apiBadInput
-  let Just magichash = mmagichash
-  return magichash
-  
-getSigLinkID :: Kontrakcja m => APIMonad m SignatoryLinkID
+ 
+getSigLinkID :: Kontrakcja m => APIMonad m (SignatoryLinkID, MagicHash)
 getSigLinkID = do
-  msignatorylinks <- lift $ getDataFn' (look "slid")
-  when (isNothing msignatorylinks) $
-    apiNotLoggedIn
-  let Just signatorylinks = msignatorylinks
-      msignatorylink = maybeRead signatorylinks
-  when (isNothing msignatorylink) $
-    apiBadInput
-  let Just signatorylink = msignatorylink
-  return signatorylink
+  msignatorylink <- lift $ readField "signatorylinkid"
+  mmagichash <- lift $ readField "magichash"
+  case (msignatorylink, mmagichash) of
+       (Just sl, Just mh) -> return (sl,mh)
+       _ -> apiBadInput
   
 documentUploadSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryResource -> SignatoryLinkID -> AttachmentResource -> String -> FileResource -> m Response
 documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
-  magichash <- getMagicHash
-  slid <- getSigLinkID
+  (slid, magichash) <- getSigLinkID
   -- doc exists
   -- doc magichash/siglink match
   doc <- apiGuardL $ getDocByDocIDSigLinkIDAndMagicHash did slid magichash
@@ -238,8 +221,7 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
 
 documentDeleteSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryResource -> SignatoryLinkID -> AttachmentResource -> String -> FileResource -> m Response
 documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
-  magichash <- getMagicHash
-  slid <- getSigLinkID
+  (slid, magichash) <- getSigLinkID
   -- doc exists
   -- doc magichash/siglink match
   doc <- apiGuardL $ getDocByDocIDSigLinkIDAndMagicHash did slid magichash

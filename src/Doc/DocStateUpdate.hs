@@ -2,6 +2,7 @@ module Doc.DocStateUpdate
     ( restartDocument
     , markDocumentSeen
     , signDocumentWithEmail
+    , signDocumentWithEleg
     , rejectDocumentWithChecks
     , authorSignDocument
     , authorSendDocument
@@ -32,7 +33,6 @@ import User.Utils
 import File.Model
 import DB.Classes
 import Data.Either
-import File.FileID
 
 {- |
    Mark document seen securely.
@@ -82,7 +82,26 @@ signDocumentWithEmail did slid mh fields = do
             case newdocument of
               Left message -> return $ Left (DBActionNotAvailable message)
               Right doc -> return $ Right (doc, olddoc)
-            
+
+              
+signDocumentWithEleg :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(BS.ByteString, BS.ByteString)] -> SignatureInfo -> m (Either DBError (Document, Document))    
+signDocumentWithEleg did slid mh fields sinfo = do
+  edoc <- getDocByDocIDSigLinkIDAndMagicHash did slid mh
+  case edoc of
+    Left err -> return $ Left err
+    Right olddoc -> case olddoc `allowsIdentification` ELegitimationIdentification of
+      False -> return $ Left (DBActionNotAvailable "This document does not allow signing using email identification.")
+      True  -> do
+        Context{ ctxtime, ctxipnumber } <- getContext
+        ed1 <- doc_update $ UpdateFields did slid fields
+        case ed1 of
+          Left err -> return $ Left $ DBActionNotAvailable err
+          Right _ -> do
+            newdocument <- doc_update $ SignDocument did slid mh ctxtime ctxipnumber (Just sinfo)
+            case newdocument of
+              Left message -> return $ Left (DBActionNotAvailable message)
+              Right doc -> return $ Right (doc, olddoc)
+
 {- |
    Reject a document with security checks.
  -}

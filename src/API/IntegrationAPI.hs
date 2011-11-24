@@ -167,7 +167,7 @@ createDocument = do
    when (isNothing mtitle) $ throwApiError API_ERROR_MISSING_VALUE "No title provided"
    let title = fromJust mtitle
    files <- getFiles
-   mtype <- liftMM (return . toSafeEnum) (fromJSONField "type")
+   mtype <- liftMM (return . toSafeEnumInt) (fromJSONField "type")
    when (isNothing mtype) $ 
      throwApiError API_ERROR_MISSING_VALUE "BAD DOCUMENT TYPE"
    let doctype = toDocumentType $ fromJust mtype

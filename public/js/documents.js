@@ -14,9 +14,10 @@ window.DocumentViewer = Backbone.Model.extend({
     },
     urlPart : function() {
         if (this.signatoryid() != undefined && this.magichash() != undefined)
-            return "/" + this.signatoryid() + "/" + this.magichash();
+            return "?signatorylinkid=" + this.signatoryid() + "&magichash=" + this.magichash();
         else return "";
     },
+    
     forFetch : function() {
         return {
             signatoryid : this.signatoryid(),
@@ -117,6 +118,7 @@ window.Document = Backbone.Model.extend({
           return new Submit({
               sign : "YES",
               method: "POST",
+              magichash : this.viewer().magichash(),
               fieldname : fieldnames,
               fieldvalue : fieldvalues
           });

@@ -24,6 +24,7 @@ module Doc.DocStateData
     , FileStorage(..)
     , IdentificationType(..)
     , JpegPages(..)
+    , SignatureProvider(..)
     , SignInfo(..)
     , SignOrder(..)
     , Signatory(..)
@@ -34,7 +35,6 @@ module Doc.DocStateData
     , SignatoryLinkID(..)
     , SignatoryRole(..)
     , SignatureInfo(..)
-    , SignatureProvider(..)
     , TimeoutTime(..)
     , AuthorAttachment(..)
     , SignatoryAttachment(..)
@@ -70,7 +70,7 @@ import File.File
 import Doc.JpegPages
 import Database.HDBC
 import Data.List
-
+import ELegitimation.SignatureProvider 
 newtype Author = Author { unAuthor :: UserID }
     deriving (Eq, Ord, Typeable)
 
@@ -96,11 +96,6 @@ instance Show SignOrder where
 data IdentificationType = EmailIdentification
                         | ELegitimationIdentification
     deriving (Eq, Ord, Bounded, Enum, Typeable)
-
-data SignatureProvider = BankIDProvider
-                       | TeliaProvider
-                       | NordeaProvider
-    deriving (Eq, Ord, Typeable)
 
 data SignatureInfo0 = SignatureInfo0 { signatureinfotext0        :: String
                                      , signatureinfosignature0   :: String
@@ -773,7 +768,6 @@ deriving instance Show SignatoryDetails0
 deriving instance Show DocumentHistoryEntry
 deriving instance Show IdentificationType
 deriving instance Show CancelationReason
-deriving instance Show SignatureProvider
 deriving instance Show SignatureInfo0
 deriving instance Show SignatureInfo
 
@@ -838,9 +832,6 @@ instance Version IdentificationType
 
 $(deriveSerialize ''CancelationReason)
 instance Version CancelationReason
-
-$(deriveSerialize ''SignatureProvider)
-instance Version SignatureProvider
 
 $(deriveSerialize ''SignatureInfo0)
 instance Version SignatureInfo0
@@ -1511,7 +1502,6 @@ $(deriveSerialize ''SignatoryRole)
 -- stuff for converting to pgsql
 
 $(bitfieldDeriveConvertible ''SignatoryRole)
-$(enumDeriveConvertible ''SignatureProvider)
 $(enumDeriveConvertible ''MailsDeliveryStatus)
 $(newtypeDeriveConvertible ''SignOrder)
 $(jsonableDeriveConvertible [t| [SignatoryField] |])

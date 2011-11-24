@@ -30,6 +30,7 @@ module Doc.DocView (
   , flashRemindMailSent
   , getDataMismatchMessage
   , isNotLinkForUserID
+  , modalMismatch
   , modalPdfTooLarge
   , mailCancelDocumentByAuthor
   , mailCancelDocumentByAuthorContent
@@ -97,7 +98,15 @@ import Data.List (intercalate)
 --import Happstack.State (query)
 import File.Model
 import DB.Classes
-import File.FileID
+
+
+
+modalMismatch :: TemplatesMonad m => String -> SignatoryLink -> m FlashMessage
+modalMismatch msg author = toModal <$>  do 
+    renderTemplateFM "signCanceledDataMismatchModal" $ do
+                    field "authorname"  $ getSmartName author
+                    field "authoremail" $ getEmail author
+                    field "message"     $ concatMap para $ lines msg
 
 modalPdfTooLarge :: TemplatesMonad m => m FlashMessage
 modalPdfTooLarge = toModal <$> renderTemplateM "pdfTooBigModal" ()
@@ -382,38 +391,6 @@ placementJSON doc placement = JSObject $ toJSObject $
 jsonDate :: Maybe MinutesTime -> JSValue
 jsonDate mdate = fromMaybe JSNull $ JSString <$> toJSString <$> showDateYMD <$> mdate
 
-{-
-, signatorysndnameplacements        = []
-    , signatorycompanyplacements        = []
-    , signatorypersonalnumberplacements = []
-    , signatorycompanynumberplacements  = []
-    , signatoryemailplacements          = []
-    , signatoryotherfields
-
-
-      field "current" $ current
-      field "fstname" $ packToMString $ getFirstName signatorydetails
-      field "sndname" $ packToMString $ getLastName  signatorydetails
-      field "company" $ packToMString $ signatorycompany $ signatorydetails
-      field "personalnumber" $ packToMString $ signatorypersonalnumber $ signatorydetails
-      field "companynumber"  $ packToMString $ signatorycompanynumber $ signatorydetails
-      field "email" $ packToMString $ getEmail signatorydetails
-      fieldFL "fields" $ for (signatoryotherfields signatorydetails) $ \sof -> do
-        field "fieldlabel" $ fieldlabel sof
-        field "fieldvalue" $ fieldvalue sof
-      field "signorder" $ unSignOrder $ signatorysignorder signatorydetails
-      field "allowRemindForm" $ isEligibleForReminder muser document siglnk
-      field "linkremind" $ show (LinkRemind document siglnk)
-      field "linkchangeemail" $  show $ LinkChangeSignatoryEmail (documentid document) signatorylinkid
-      field "allowEmailChange" $ (isCurrentUserAuthor && (invitationdeliverystatus == Undelivered || invitationdeliverystatus == Deferred) && isActiveDoc)
-      fieldM "reminderMessage" $ mailDocumentRemindContent Nothing ctx document siglnk
-      field "role" $ if isSignatory siglnk
-                     then "signatory"
-                     else "viewer"
-      field "secretary"  $ (isAuthor siglnk) &&  not (isSignatory siglnk)
-      field "author" $ (isAuthor siglnk)
-      ]
-      -}
 
 processJSON :: (TemplatesMonad m) => Document -> m JSValue
 processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
