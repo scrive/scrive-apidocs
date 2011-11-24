@@ -114,6 +114,48 @@ data ActionType0 = TrustWeaverUpload0 {
                 }
                   deriving (Eq, Ord, Show, Typeable)
 
+data ActionType1 = TrustWeaverUpload1 {
+                      twuOwner1 :: String
+                    , twuDocID1 :: DocumentID
+                }
+                | AmazonUpload1 {
+                      auDocID1  :: DocumentID
+                    , uaFileID1 :: FileID
+                }
+                | PasswordReminder1 {
+                      prUserID1         :: UserID
+                    , prRemainedEmails1 :: Int
+                    , prToken1          :: MagicHash
+                }
+                | ViralInvitationSent1 {
+                      visEmail1          :: Email
+                    , visTime1           :: MinutesTime
+                    , visInviterID1      :: UserID
+                    , visRemainedEmails1 :: Int
+                    , visToken1          :: MagicHash
+                }
+                | AccountCreated1 {
+                      acUserID1 :: UserID
+                    , acToken1  :: MagicHash
+                }
+                | AccountCreatedBySigning1 {
+                      acbsState1         :: InactiveAccountState
+                    , acbsUserID1        :: UserID
+                    , acbsDocLinkDataID1 :: (DocumentID, SignatoryLinkID)
+                    , acbsToken1         :: MagicHash
+                }
+                | EmailSendout1 {
+                      esMail1 :: Mail
+                }
+                | SentEmailInfo1 {
+                      seiEmail1            :: Email
+                    , seiMailInfo1         :: MailInfo
+                    , seiEventType1        :: SendGridEventType
+                    , seiLastModification1 :: MinutesTime
+                    , seiBackdoorInfo1     :: Maybe ActionBackdoorInfo
+                }
+                  deriving (Eq, Ord, Show, Typeable)
+
 data ActionType = TrustWeaverUpload {
                       twuOwner :: String
                     , twuDocID :: DocumentID
@@ -161,29 +203,29 @@ data ActionType = TrustWeaverUpload {
                 }
                   deriving (Eq, Ord, Show, Typeable)
 
-instance Migrate ActionType0 ActionType where
+instance Migrate ActionType0 ActionType1 where
   migrate (TrustWeaverUpload0
              { twuOwner0
              , twuDocID0
-             }) = TrustWeaverUpload {
-                    twuOwner = twuOwner0
-                  , twuDocID = twuDocID0
+             }) = TrustWeaverUpload1 {
+                    twuOwner1 = twuOwner0
+                  , twuDocID1 = twuDocID0
                   }
   migrate (AmazonUpload0
              { auDocID0
              , uaFileID0
-             }) = AmazonUpload {
-                    auDocID = auDocID0
-                  , uaFileID = uaFileID0
+             }) = AmazonUpload1 {
+                    auDocID1 = auDocID0
+                  , uaFileID1 = uaFileID0
                   }
   migrate (PasswordReminder0
              { prUserID0
              , prRemainedEmails0
              , prToken0
-             }) = PasswordReminder {
-                    prUserID = prUserID0
-                  , prRemainedEmails = prRemainedEmails0
-                  , prToken = prToken0
+             }) = PasswordReminder1 {
+                    prUserID1 = prUserID0
+                  , prRemainedEmails1 = prRemainedEmails0
+                  , prToken1 = prToken0
                   }
   migrate (ViralInvitationSent0
              { visEmail0
@@ -191,47 +233,122 @@ instance Migrate ActionType0 ActionType where
              , visInviterID0
              , visRemainedEmails0
              , visToken0
-             }) = ViralInvitationSent {
-                    visEmail = visEmail0
-                  , visTime = visTime0
-                  , visInviterID = visInviterID0
-                  , visRemainedEmails = visRemainedEmails0
-                  , visToken = visToken0
+             }) = ViralInvitationSent1 {
+                    visEmail1 = visEmail0
+                  , visTime1 = visTime0
+                  , visInviterID1 = visInviterID0
+                  , visRemainedEmails1 = visRemainedEmails0
+                  , visToken1 = visToken0
                   }
   migrate (AccountCreated0
              { acUserID0
              , acToken0
-             }) = AccountCreated {
-                    acUserID = acUserID0
-                  , acToken = acToken0
+             }) = AccountCreated1 {
+                    acUserID1 = acUserID0
+                  , acToken1 = acToken0
                   }
   migrate (AccountCreatedBySigning0
              { acbsState0
              , acbsUserID0
              , acbsDocLinkDataID0
              , acbsToken0
-             }) = AccountCreatedBySigning {
-                    acbsState = acbsState0
-                  , acbsUserID = acbsUserID0
-                  , acbsDocLinkDataID = acbsDocLinkDataID0
-                  , acbsToken = acbsToken0
+             }) = AccountCreatedBySigning1 {
+                    acbsState1 = acbsState0
+                  , acbsUserID1 = acbsUserID0
+                  , acbsDocLinkDataID1 = acbsDocLinkDataID0
+                  , acbsToken1 = acbsToken0
                   }
   migrate (EmailSendout0
              { esMail0
-             }) = EmailSendout {
-                    esMail = esMail0
+             }) = EmailSendout1 {
+                    esMail1 = esMail0
                   }
   migrate (SentEmailInfo0
              { seiEmail0
              , seiMailInfo0
              , seiEventType0
              , seiLastModification0
+             }) = SentEmailInfo1 {
+                    seiEmail1 = seiEmail0
+                  , seiMailInfo1 = seiMailInfo0
+                  , seiEventType1 = seiEventType0
+                  , seiLastModification1 = seiLastModification0
+                  , seiBackdoorInfo1 = Nothing
+                  }
+
+
+instance Migrate ActionType1 ActionType where
+  migrate (TrustWeaverUpload1
+             { twuOwner1
+             , twuDocID1
+             }) = TrustWeaverUpload {
+                    twuOwner = twuOwner1
+                  , twuDocID = twuDocID1
+                  }
+  migrate (AmazonUpload1
+             { auDocID1
+             , uaFileID1
+             }) = AmazonUpload {
+                    auDocID = auDocID1
+                  , uaFileID = uaFileID1
+                  }
+  migrate (PasswordReminder1
+             { prUserID1
+             , prRemainedEmails1
+             , prToken1
+             }) = PasswordReminder {
+                    prUserID = prUserID1
+                  , prRemainedEmails = prRemainedEmails1
+                  , prToken = prToken1
+                  }
+  migrate (ViralInvitationSent1
+             { visEmail1
+             , visTime1
+             , visInviterID1
+             , visRemainedEmails1
+             , visToken1
+             }) = ViralInvitationSent {
+                    visEmail = visEmail1
+                  , visTime = visTime1
+                  , visInviterID = visInviterID1
+                  , visRemainedEmails = visRemainedEmails1
+                  , visToken = visToken1
+                  }
+  migrate (AccountCreated1
+             { acUserID1
+             , acToken1
+             }) = AccountCreated {
+                    acUserID = acUserID1
+                  , acToken = acToken1
+                  }
+  migrate (AccountCreatedBySigning1
+             { acbsState1
+             , acbsUserID1
+             , acbsDocLinkDataID1
+             , acbsToken1
+             }) = AccountCreatedBySigning {
+                    acbsState = acbsState1
+                  , acbsUserID = acbsUserID1
+                  , acbsDocLinkDataID = acbsDocLinkDataID1
+                  , acbsToken = acbsToken1
+                  }
+  migrate (EmailSendout1
+             { esMail1
+             }) = EmailSendout {
+                    esMail = esMail1
+                  }
+  migrate (SentEmailInfo1
+             { seiEmail1
+             , seiMailInfo1
+             , seiEventType1
+             , seiLastModification1
+             , seiBackdoorInfo1
              }) = SentEmailInfo {
-                    seiEmail = seiEmail0
-                  , seiMailInfo = seiMailInfo0
-                  , seiEventType = seiEventType0
-                  , seiLastModification = seiLastModification0
-                  , seiBackdoorInfo = Nothing
+                    seiEmail = seiEmail1
+                  , seiMailInfo = seiMailInfo1
+                  , seiEventType = seiEventType1
+                  , seiLastModification = seiLastModification1
+                  , seiBackdoorInfo = seiBackdoorInfo1
                   }
 
 data InactiveAccountState = NothingSent
@@ -294,9 +411,13 @@ instance Version ActionID
 $(deriveSerialize ''ActionType0)
 instance Version ActionType0
 
+$(deriveSerialize ''ActionType1)
+instance Version ActionType1 where
+    mode = extension 1 (Proxy :: Proxy ActionType0)
+
 $(deriveSerialize ''ActionType)
 instance Version ActionType where
-    mode = extension 1 (Proxy :: Proxy ActionType0)
+    mode = extension 2 (Proxy :: Proxy ActionType1)
 
 $(deriveSerialize ''ActionBackdoorInfo)
 instance Version ActionBackdoorInfo
