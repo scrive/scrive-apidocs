@@ -136,21 +136,20 @@ staticRoutes = choice
      -- this is SMTP to HTTP gateway
      , dir "mailapi" $ hPostNoXToken $ toK0 $ ScriveByMail.handleScriveByMail
      
+     -- Only download function | unified for author and signatories
+     , dir "download"                     $ hGet  $ toK3 $ DocControl.handleDownloadFile
      
+     , dir "s" $ dir "eleg" $ hGet $ toK2 $ BankID.generateBankIDTransaction
+     , dir "s" $ hGet $ toK0    $ sendRedirect $ LinkContracts
+     , dir "s" $ hGet $ toK2    $ DocControl.handleSignShow
+     , dir "s" $ hGet $ toK3    $ DocControl.handleSignShowOldRedirectToNew -- Redirect for old version to version above, remove not earlier then 31.12.2012.
      
-     , dir "s" $ dir "eleg" $ hGet $ toK2 $ BankID.handleSignBankID
-     , dir "s" $ hGet $ toK0 $ sendRedirect $ LinkContracts
-     , dir "s" $ hGet $ toK3 $ DocControl.handleSignShow
-     , dir "s" $ hGet $ toK4 $ DocControl.handleAttachmentDownloadForViewer --  FIXME: Shadowed by ELegitimation.handleRoutes; This will be droped
-
-     
-     , dir "s" $ param "eleg" $ hPostNoXToken $ toK3 $ BankID.handleSignPostBankID
-     , dir "s" $ param "sign"           $ hPostNoXToken $ toK3 $ DocControl.signDocument
-     , dir "s" $ param "cancel"         $ hPostNoXToken $ toK3 $ DocControl.rejectDocument
+     , dir "s" $ param "sign"           $ hPostNoXToken $ toK2 $ DocControl.signDocument
+     , dir "s" $ param "cancel"         $ hPostNoXToken $ toK2 $ DocControl.rejectDocument
      , dir "s" $ param "acceptaccount"  $ hPostNoXToken $ toK5 $ DocControl.handleAcceptAccountFromSign
      , dir "s" $ param "declineaccount" $ hPostNoXToken $ toK5 $ DocControl.handleDeclineAccountFromSign
-     , dir "s" $ param "sigattachment"  $ hPostNoXToken $ toK3 $ DocControl.handleSigAttach
-     , dir "s" $ param "deletesigattachment" $ hPostNoXToken $ toK3 $ DocControl.handleDeleteSigAttach
+     , dir "s" $ param "sigattachment"  $ hPostNoXToken $ toK2 $ DocControl.handleSigAttach
+     , dir "s" $ param "deletesigattachment" $ hPostNoXToken $ toK2 $ DocControl.handleDeleteSigAttach
 
      , dir "sv" $ hGet $ toK3 $ DocControl.handleAttachmentViewForViewer
 
@@ -185,22 +184,13 @@ staticRoutes = choice
      , dir "r" $ param "restore" $ hPost $ toK0 $ DocControl.handleRubbishRestore
      , dir "r" $ param "reallydelete" $ hPost $ toK0 $ DocControl.handleRubbishReallyDelete
 
-     , dir "d"                     $ hGet  $ toK2 $ DocControl.handleAttachmentDownloadForAuthor -- This will be droped and unified to one below
-                                                                                                 -- FIXME: Shadowed by ELegitimation.handleRoutes
-
-     , dir "d"                     $ hGet  $ toK3 $ DocControl.handleDownloadFileLogged -- This + magic hash version will be the only file download possible
-     , dir "d"                     $ hGet  $ toK5 $ DocControl.handleDownloadFileNotLogged
-
      , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showContractsList
      , dir "d"                     $ hGet  $ toK1 $ DocControl.handleIssueShowGet
-     , dir "d"                     $ hGet  $ toK2 $ DocControl.handleIssueShowTitleGet -- FIXME: Shadowed by DocControl.handleAttachmentDownloadForAuthor
-     , dir "d"                     $ hGet  $ toK4 $ DocControl.handleIssueShowTitleGetForSignatory
+     , dir "d" $ dir "eleg"        $ hPost $ toK1 $ BankID.generateBankIDTransactionForAuthor
      , dir "d" $ {- param "doc" $ -} hPost $ toK0 $ DocControl.handleIssueNewDocument
      , dir "d" $ param "archive"   $ hPost $ toK0 $ ArchiveControl.handleContractArchive
      , dir "d" $ param "remind"    $ hPost $ toK0 $ DocControl.handleBulkContractRemind
      , dir "d"                     $ hPost $ toK1 $ DocControl.handleIssueShowPost
-     , dir "d"                     $ hGet  $ toK2 $ BankID.handleIssueBankID
-     , dir "d" $ param "eleg"      $ hPost $ toK1 $ BankID.handleIssuePostBankID
      , dir "docs"                  $ hGet  $ toK0 $ DocControl.jsonDocumentsList
      , dir "doc"                   $ hGet  $ toK1 $ DocControl.jsonDocument
      , dir "mailpreview"           $ hGet  $ toK2 $ DocControl.prepareEmailPreview

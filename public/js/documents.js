@@ -117,6 +117,7 @@ window.Document = Backbone.Model.extend({
           return new Submit({
               sign : "YES",
               method: "POST",
+              magichash : this.viewer().magichash(),
               fieldname : fieldnames,
               fieldvalue : fieldvalues
           });

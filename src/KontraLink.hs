@@ -68,7 +68,6 @@ data KontraLink
     | LinkAccount Bool -- show create company modal?
     | LinkAccountSecurity
     | LinkUserMailAPI
-    | LinkLandpageSaved Document SignatoryLink
     | LinkSignDoc Document SignatoryLink
     | LinkAccountFromSign Document SignatoryLink ActionID MagicHash
     | LinkIssueDoc DocumentID
@@ -177,8 +176,6 @@ instance Show KontraLink where
     showsPrec _ (LinkSharing params) = (++) $ "/account/sharing" ++ "?" ++ show params
     showsPrec _ LinkAccountSecurity = (++) "/account/security"
     showsPrec _ LinkUserMailAPI = (++) "/account/mailapi"
-    showsPrec _ (LinkLandpageSaved document signatorylink) =
-        (++) $ "/landpage/signedsave/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink)
     showsPrec _ (LinkIssueDoc documentid) =
         (++) $ "/d/" ++ show documentid
     showsPrec _ (LinkDesignDoc designstep) =  (++) $ "/" ++ show designstep
@@ -191,7 +188,7 @@ instance Show KontraLink where
         (++) $ "/df/" ++ show fileid ++ "/" ++ BS.toString filename
     showsPrec _ (LinkSignDoc document signatorylink) =
         (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++
-                 "/" ++ show (signatorymagichash signatorylink)
+                 "?" ++ "magichash="++ show (signatorymagichash signatorylink)
     showsPrec _ (LinkAccountFromSign document signatorylink actionid magichash) =
         (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++
                  "/" ++ show (signatorymagichash signatorylink) ++

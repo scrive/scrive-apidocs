@@ -399,3 +399,10 @@ documentfilesM Document{documentfiles} = do
 documentsealedfilesM :: (MonadIO m, DBMonad m) => Document -> m [File]
 documentsealedfilesM Document{documentsealedfiles} = do
     liftM catMaybes $ mapM (runDBQuery . GetFileByFileID) documentsealedfiles
+
+fileInDocument :: Document -> FileID -> Bool
+fileInDocument doc fid = 
+    elem fid $      (documentfiles doc) 
+                 ++ (documentsealedfiles doc) 
+                 ++ (fmap authorattachmentfile $ documentauthorattachments doc)
+                 ++ (catMaybes $ fmap signatoryattachmentfile $ documentsignatoryattachments doc)

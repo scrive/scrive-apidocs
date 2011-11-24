@@ -14,7 +14,7 @@ import qualified Data.Map as Map
 import qualified Network.AWS.Authentication as AWS
 import Templates.Templates
 import qualified TrustWeaver as TW
-import ELegitimation.ELeg
+import ELegitimation.ELegTransaction
 import qualified MemCache
 import FlashMessage
 import API.Service.Model

@@ -316,10 +316,10 @@ class SafeEnum a where
     toSafeEnum::(Integral b) =>  b -> Maybe a
 
 fromSafeEnumInt :: (SafeEnum a) => a -> Int
-fromSafeEnumInt = fromSafeEnumInt
+fromSafeEnumInt = fromSafeEnum
 
 toSafeEnumInt :: (SafeEnum a) => Int -> Maybe a
-toSafeEnumInt = toSafeEnumInt
+toSafeEnumInt = toSafeEnum
 
 -- | Just @flip map@.
 for :: [a] -> (a -> b) -> [b]
