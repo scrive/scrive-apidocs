@@ -23,6 +23,8 @@ import Data.List
 import Data.Maybe
 import Database.HDBC.PostgreSQL
 import Util.JSON
+import Test.QuickCheck.Gen
+
 
 integrationAPITests :: Connection -> Test
 integrationAPITests conn = testGroup "Integration API" [
@@ -75,22 +77,22 @@ testNewDocumentOrder conn = withTestEnvironment conn $ do
 testDocumentCreation :: Connection -> Assertion
 testDocumentCreation conn = withTestEnvironment conn $ do
     createTestService
-    apiReq1 <- createDocumentJSON "test_company1" "mariusz@skrivapa.se" 1
+    apiReq1 <- createDocumentJSON "test_company1" "mariusz@skrivapa.se"
     apiRes1 <- makeAPIRequest createDocument $ apiReq1
     assertBool ("Failed to create first document :" ++ show apiRes1)  $ not (isError apiRes1)
-    apiReq2 <- createDocumentJSON "test_company2" "mariusz@skrivapa.se" 1
+    apiReq2 <- createDocumentJSON "test_company2" "mariusz@skrivapa.se"
     apiRes2 <- makeAPIRequest createDocument $ apiReq2
     assertBool ("Failed to create second document" ++ show apiRes2) $ not (isError apiRes2)
-    apiReq3 <- createDocumentJSON "test_company1" "mariusz+1@skrivapa.se" 1
+    apiReq3 <- createDocumentJSON "test_company1" "mariusz+1@skrivapa.se"
     apiRes3 <- makeAPIRequest createDocument $ apiReq3
     assertBool ("Failed to create third document" ++ show apiRes3) $ not (isError apiRes3)
 
 testDocumentsAccess :: Connection -> Assertion
 testDocumentsAccess conn = withTestEnvironment conn $ do
     createTestService
-    _ <- makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz@skrivapa.se" 1
-    _ <- makeAPIRequest createDocument =<< createDocumentJSON "test_company2" "mariusz@skrivapa.se" 1
-    _ <- makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz+1@skrivapa.se" 1
+    _ <- makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz@skrivapa.se" 
+    _ <- makeAPIRequest createDocument =<< createDocumentJSON "test_company2" "mariusz@skrivapa.se" 
+    _ <- makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz+1@skrivapa.se" 
     apiReqDocs1 <- getDocumentsJSON "test_company1" "mariusz@skrivapa.se"
     apiRespDocs1 <- makeAPIRequest getDocuments $ apiReqDocs1
     assertBool ("Two document was created by  this company but " ++ (show $ docsCount apiRespDocs1) ++ " were found") $ (docsCount apiRespDocs1) == 2
@@ -108,9 +110,9 @@ testDocumentsAccess conn = withTestEnvironment conn $ do
 testDocumentAccessEmbeddedPage :: Connection -> Assertion
 testDocumentAccessEmbeddedPage conn = withTestEnvironment conn $ do
     createTestService
-    docid1 <- getJSONStringField "document_id" <$> (makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz@skrivapa.se" 1)
-    docid2 <- getJSONStringField "document_id" <$> (makeAPIRequest createDocument =<< createDocumentJSON "test_company2" "mariusz@skrivapa.se" 1)
-    docid3 <- getJSONStringField "document_id" <$> (makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz+1@skrivapa.se" 1)
+    docid1 <- getJSONStringField "document_id" <$> (makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz@skrivapa.se")
+    docid2 <- getJSONStringField "document_id" <$> (makeAPIRequest createDocument =<< createDocumentJSON "test_company2" "mariusz@skrivapa.se")
+    docid3 <- getJSONStringField "document_id" <$> (makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz+1@skrivapa.se")
     apiRespDocs1 <- makeAPIRequest embeddDocumentFrame =<< getEmbedDocumentaJSON docid1 "test_company1" "mariusz@skrivapa.se"
     assertBool ("User from right company could not access his document") $ containsUserEmbedLink apiRespDocs1
     apiRespDocs2 <- makeAPIRequest embeddDocumentFrame =<< getEmbedDocumentaJSON docid2 "test_company1" "mariusz@skrivapa.se"
@@ -135,7 +137,7 @@ testNewDocumentWithOtherSpecificExample conn = withTestEnvironment conn $ do
 testEmbedDocumentFrameFromExamples :: Connection -> Assertion
 testEmbedDocumentFrameFromExamples conn = withTestEnvironment conn $ do
   createTestService
-  docid1 <- getJSONStringField "document_id" <$> (makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz@skrivapa.se" 1)
+  docid1 <- getJSONStringField "document_id" <$> (makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz@skrivapa.se")
   let Ok rq = decode $ "{\"email\":\"mariusz@skrivapa.se\",\"company_id\":\"test_company1\",\"document_id\":" ++ show docid1 ++ ",\"location\":\"http://192.168.0.16:8080/Demo/index.jsp\"}"
   rsp <- makeAPIRequest embeddDocumentFrame rq
   assertBool ("response json does not have link field: " ++ show rsp) $ isJust $ getJSONField "link" rsp
@@ -143,7 +145,7 @@ testEmbedDocumentFrameFromExamples conn = withTestEnvironment conn $ do
 testRemoveDocumentFromExamples :: Connection -> Assertion
 testRemoveDocumentFromExamples conn = withTestEnvironment conn $ do
   createTestService
-  docid1 <- getJSONStringField "document_id" <$> (makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz@skrivapa.se" 1)
+  docid1 <- getJSONStringField "document_id" <$> (makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz@skrivapa.se")
   let Ok rq = decode $ "{\"document_id\":" ++ show docid1 ++ "}"
   _rsp <- makeAPIRequest removeDocument rq -- the response is empty
   assertBool "Done" True
@@ -151,7 +153,7 @@ testRemoveDocumentFromExamples conn = withTestEnvironment conn $ do
 testSetDocumentTagFromExamples :: Connection -> Assertion
 testSetDocumentTagFromExamples conn = withTestEnvironment conn $ do
   createTestService
-  docid1 <- getJSONStringField "document_id" <$> (makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz@skrivapa.se" 1)
+  docid1 <- getJSONStringField "document_id" <$> (makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz@skrivapa.se")
   let Ok rq = decode $ "{\"document_id\":" ++ show docid1 ++ ",\"tag\"    : { \"name\": \"client\", \"value\": \"3213123\" }}"
   _rsp <- makeAPIRequest setDocumentTag rq -- response empty
   assertBool "Done" True
@@ -191,11 +193,13 @@ testNewDocumentWithCompanyNr conn = withTestEnvironment conn $ do
         _ -> error $ "No document returned: " ++ show doc
 
 -- Requests body
-createDocumentJSON :: String -> String -> Int -> DB JSValue
-createDocumentJSON company author t = randomCall $ \title fname sname -> JSObject $ toJSObject $
+createDocumentJSON :: String -> String -> DB JSValue
+createDocumentJSON company author = do
+     dt <- rand 10 $  elements [1,3,5]
+     randomCall $ \title fname sname -> JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
          ,("title" , JSString $ toJSString  title)
-         ,("type" , showJSON t)
+         ,("type" , JSRational True (dt%1))
          ,("involved" , JSArray [ JSObject $ toJSObject $
                                     [ ("fstname", JSString $ toJSString fname),
                                       ("sndname", JSString $ toJSString sname),
