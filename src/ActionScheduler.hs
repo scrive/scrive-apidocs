@@ -23,7 +23,8 @@ import AppControl (AppConf(..))
 import ActionSchedulerState
 import Archive.Invariants
 import DB.Classes
-import Doc.DocState
+import Doc.DocStateData
+import Doc.Transitory
 import Kontra
 import KontraLink
 import MinutesTime
@@ -120,7 +121,7 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
         sendReminder = do
             now <- liftIO getMinutesTime
             sd <- ask
-            mdoc <- query $ GetDocumentByDocumentID docid
+            mdoc <- doc_query $ GetDocumentByDocumentID docid
             let doctitle = maybe BS.empty documenttitle mdoc
             (runDBQuery $ GetUserByID uid) >>= maybe (return ()) (\user -> do
                 let mailfunc :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
@@ -184,7 +185,7 @@ runDocumentProblemsCheck :: ActionScheduler ()
 runDocumentProblemsCheck = do
   sd <- ask
   now <- liftIO getMinutesTime
-  docs <- query $ GetDocuments Nothing
+  docs <- doc_query $ GetDocuments Nothing
   let probs = listInvariantProblems now docs
   when (probs /= []) $ mailDocumentProblemsCheck $
     "<p>"  ++ (hostpart $ sdAppConf sd) ++ "/dave/document/" ++
@@ -254,8 +255,8 @@ getGlobalTemplates = do
 
 timeoutDocuments :: MinutesTime -> ActionScheduler ()
 timeoutDocuments now = do
-    docs <- query $ GetTimeoutedButPendingDocuments now
+    docs <- doc_query $ GetTimeoutedButPendingDocuments now
     forM_ docs $ \doc -> do
-        _ <- update $ TimeoutDocument (documentid doc) now
+        _ <- doc_update $ TimeoutDocument (documentid doc) now
         Log.debug $ "Document timedout " ++ (show $ documenttitle doc)
 

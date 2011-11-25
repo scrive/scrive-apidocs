@@ -69,7 +69,7 @@ import DB.Types
 import Doc.CSVUtils
 import Doc.DocProcess
 import Doc.DocRegion
-import Doc.DocState
+import Doc.DocStateData
 import Doc.DocUtils
 import Doc.DocViewMail
 import FlashMessage

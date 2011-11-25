@@ -46,7 +46,7 @@ import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
 
 import DB.Types
-import Doc.DocState
+import Doc.DocStateData
 import Misc
 import MinutesTime
 import Mails.MailsData

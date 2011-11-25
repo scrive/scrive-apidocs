@@ -2,6 +2,25 @@
 {-# LANGUAGE CPP #-}
 
 module Doc.DocState
+#ifdef DOCUMENTS_IN_POSTGRES
+    ( Documents
+    , GetAllDocuments(..)
+    )
+where
+
+import Happstack.Data.IxSet as IxSet hiding (null)
+import Happstack.State
+import Doc.DocStateData
+import Control.Monad.Reader (ask)
+
+getAllDocuments :: Query Documents [Document]
+getAllDocuments = return . toList =<< ask
+
+-- create types for event serialization
+$(mkMethods ''Documents [ 'getAllDocuments
+                        ])
+
+#else
     ( module Doc.DocStateData
     , isTemplate -- fromUtils
     , isShared -- fromUtils
@@ -1720,4 +1739,5 @@ populateDBWithDocumentsIfEmpty = do
           , toSql storage
           ]
       return ()
+#endif
 #endif
