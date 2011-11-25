@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 {- |
    DocControl represents the controler (in MVC) of the document.
  -}
@@ -1522,14 +1523,16 @@ handleDocumentUploadNoLogin docid content1 filename = do
 
 handleIssueNewDocument :: Kontrakcja m => m KontraLink
 handleIssueNewDocument = withUserPost $ do
+    Log.debug $ "Creating a new document"
     input <- getDataFnM (lookInput "doc")
     mdocprocess <- getDocProcess
     let docprocess = fromMaybe (Contract) mdocprocess
+    Log.debug $ "Creating new document of process : " ++ show docprocess
     mdoc <- makeDocumentFromFile (Signable docprocess) input
-    liftIO $ print mdoc
     case mdoc of
       Nothing -> return LinkUpload
       Just doc -> do
+        Log.debug $ "Document #" ++ show (documentid doc) ++ " created"
         _ <- addDocumentCreateStatEvents doc
         return $ LinkIssueDoc $ documentid doc
 
@@ -1554,13 +1557,14 @@ handleCreateNewAttachment = withUserPost $ do
 
 makeDocumentFromFile :: Kontrakcja m => DocumentType -> Input -> m (Maybe Document)
 makeDocumentFromFile doctype (Input contentspec (Just filename) _contentType) = do
+    Log.debug $ "makeDocumentFromFile: beggining"
     guardLoggedIn
     content <- case contentspec of
         Left filepath -> liftIO $ BSL.readFile filepath
         Right content -> return content
     if BSL.null content
       then do
-        Log.debug "No content"
+        Log.debug "makeDocumentFromFile: no content"
         return Nothing
       else do
           Log.debug "Got the content, creating document"

@@ -32,7 +32,7 @@ import Control.Monad.Reader
 import Control.Monad.State
 import DB.Classes
 import DB.Types
-import Doc.DocState
+import Doc.DocStateData
 import ELegitimation.ELeg
 import Happstack.Server
 #ifndef DOCUMENTS_IN_POSTGRES

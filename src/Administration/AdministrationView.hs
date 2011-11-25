@@ -48,7 +48,7 @@ import DB.Classes
 import Misc
 import User.UserView
 import User.Model
-import Doc.DocState
+import Doc.DocStateData
 import Company.Model
 import API.Service.Model
 import Util.HasSomeUserInfo

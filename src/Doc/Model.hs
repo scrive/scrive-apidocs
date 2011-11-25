@@ -69,7 +69,7 @@ module Doc.Model
   -- , GetMagicHash(..)
   -- , GetNumberOfDocumentsOfUser(..)
   , GetSignatoryLinkIDs(..)
-  -- , GetTimeoutedButPendingDocuments(..)
+  , GetTimeoutedButPendingDocuments(..)
   -- , GetUniqueSignatoryLinkID(..)
   , MarkDocumentSeen(..)
   , MarkInvitationRead(..)
@@ -105,7 +105,7 @@ module Doc.Model
   , ShareDocument(..)
   , SignDocument(..)
   , SignLinkFromDetailsForTest(..)
-  -- , SignableFromDocument(..)
+  , SignableFromDocument(..)
   , SignableFromDocumentIDWithUpdatedAuthor(..)
   , StoreDocumentForTesting(..)
   , TemplateFromDocument(..)
@@ -874,14 +874,13 @@ instance DBUpdate AttachFile (Either String Document) where
         "WHERE id = ?" [ toSql did ]
     getOneDocumentAffected "AttachFile" r did
 
-data AttachSealedFile = AttachSealedFile DocumentID FileID
+data AttachSealedFile = AttachSealedFile DocumentID FileID MinutesTime
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate AttachSealedFile (Either String Document) where
-  dbUpdate (AttachSealedFile did fid) = do
+  dbUpdate (AttachSealedFile did fid time) = do
     r <- runUpdateStatement "documents"
-         [ -- sqlFieldType "mtime" "timestamp" $ time
-         --,
-           sqlField "sealed_file_id" $ fid
+         [ sqlFieldType "mtime" "timestamp" $ time
+         , sqlField "sealed_file_id" $ fid
          ]
          "WHERE id = ? AND status = ?" [ toSql did, toSql Closed ]
     getOneDocumentAffected "AttachSealedFile" r did
@@ -1629,7 +1628,7 @@ instance DBUpdate SignLinkFromDetailsForTest SignatoryLink where
 
 data SignableFromDocument = SignableFromDocument Document
                             deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate SignableFromDocument (Either String Document) where
+instance DBUpdate SignableFromDocument Document where
   dbUpdate (SignableFromDocument document) = wrapDB $ \conn -> do
     unimplemented "SignableFromDocument"
 

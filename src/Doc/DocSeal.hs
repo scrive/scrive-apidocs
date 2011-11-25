@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Doc.DocSeal
@@ -15,11 +17,11 @@ import Data.List
 import Data.Ord
 import Debug.Trace
 import Doc.DocProcess
-import Doc.DocState
+import Doc.DocStateData
+import Doc.Transitory
 import Doc.DocStorage
 import Doc.DocView
 import Doc.DocUtils
-import Happstack.State (update, query)
 import Misc
 import System.Directory
 import System.Exit
@@ -210,7 +212,7 @@ sealDocument ctx document = do
   Log.debug $ "Sealing document"
   mapM_ (sealDocumentFile ctx document) files
   Log.debug $ "Sealing should be done now"
-  Just newdocument <- query $ GetDocumentByDocumentID (documentid document)
+  Just newdocument <- doc_query $ GetDocumentByDocumentID (documentid document)
   return $ Right newdocument
 
 
@@ -275,7 +277,12 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplat
                   withPostgreSQL (ctxdbconnstring ctx) $ \conn ->
                       ioRunDB conn $ dbUpdate $ NewFile filename newfilepdf
               Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
-              res <- update $ AttachSealedFile documentid sealedfileid (ctxtime ctx)
+#ifdef DOCUMENTS_IN_POSTGRES
+              res <- withPostgreSQL (ctxdbconnstring ctx) $ \conn ->
+                      ioRunDB conn $ dbUpdate $ AttachSealedFile documentid sealedfileid (ctxtime ctx)
+#else
+              res <- doc_update $ AttachSealedFile documentid sealedfileid (ctxtime ctx)
+#endif
               Log.debug $ "Should be attached to document; is it? " ++ show ((elem sealedfileid . documentsealedfiles) <$> res)
               return res
       ExitFailure _ ->
@@ -289,5 +296,10 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplat
               Log.error $ "Sealing configuration: " ++ show config
               BS.hPutStr handle content
               hClose handle
-              _ <- update $ ErrorDocument documentid $ "Could not seal document because of file #" ++ show fileid
+#ifdef DOCUMENTS_IN_POSTGRES
+              _ <- withPostgreSQL (ctxdbconnstring ctx) $ \conn ->
+                      ioRunDB conn $ dbUpdate $ ErrorDocument documentid $ "Could not seal document because of file #" ++ show fileid
+#else
+              _ <- doc_update $ ErrorDocument documentid $ "Could not seal document because of file #" ++ show fileid
+#endif
               return $ Left msg

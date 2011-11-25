@@ -22,7 +22,7 @@ import InputValidation
 import KontraLink
 import Kontra
 import Doc.DocStateData
-import Doc.DocState
+import Doc.Transitory
 import User.UserControl
 import User.Model
 import Util.FlashUtil
@@ -32,7 +32,6 @@ import qualified AppLogger as Log
 
 import Control.Applicative
 import Control.Monad
-import Happstack.State
 
 handleContractArchive :: Kontrakcja m => m KontraLink
 handleContractArchive = do
@@ -71,7 +70,7 @@ handleIssueArchive :: Kontrakcja m => m ()
 handleIssueArchive = do
     Context { ctxmaybeuser = Just user } <- getContext
     docids <- getCriticalFieldList asValidDocID "doccheck"
-    res <- update . ArchiveDocuments user $ map DocumentID docids
+    res <- doc_update . ArchiveDocuments user $ map DocumentID docids
     case res of
       Left msg -> do
         Log.debug $ "Failed to delete docs " ++ (show docids) ++ " : " ++ msg

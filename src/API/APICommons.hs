@@ -36,7 +36,7 @@ module API.APICommons (
         ) where
 
 
-import Doc.DocState
+import Doc.DocStateData
 import Text.JSON
 import MinutesTime
 import qualified Data.ByteString as BS

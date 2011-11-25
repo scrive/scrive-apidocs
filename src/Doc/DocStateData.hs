@@ -1468,9 +1468,7 @@ $(deriveSerialize ''DocStats)
 instance Version DocStats where
 
 
-
 type Documents = IxSet Document
-
 
 instance Indexable Document where
   empty =

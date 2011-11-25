@@ -54,8 +54,6 @@ import Templates.Templates (readGlobalTemplates, getTemplatesModTime)
 import Misc
 import qualified MemCache
 import File.Model
-import Doc.DocState
-import Happstack.State (query)
 import qualified System.Mem as System.Mem
 
 {- | Getting application configuration. Reads 'kontrakcja.conf' from current directory
@@ -208,12 +206,6 @@ runKontrakcjaServer = Log.withLogger $ do
                   -- start the http server
                   E.bracket
                            (do
-                              -- need to evaluate documents upgraded because there is plenty of unsafePerformIO used
-                              x <- query $ GetDocumentByDocumentID (DocumentID 0)
-                              case x of
-                                  Just _ -> return ()
-                                  Nothing -> return ()
-
                               -- populate db with entries from happstack-state
                               ioRunDB conn $ do
                                   -- U.populateDBWithUsersIfEmpty

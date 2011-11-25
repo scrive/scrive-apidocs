@@ -28,7 +28,7 @@ import Happstack.Data.IxSet
 import qualified Happstack.Data.IxSet as IxSet
 import Happstack.State
 import User.Model (UserID(..))
-import Doc.DocState
+import Doc.DocStateData
 import MinutesTime
 import Payments.PaymentsState(Money(..))
 import Misc
