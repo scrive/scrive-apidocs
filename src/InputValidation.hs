@@ -316,7 +316,7 @@ withFailureIfBad (_,Empty) = return Nothing
     Validating emails is bizarrely hard.  These rules define a subset of what the official rules (RFC) would allow you to have.  This is because the official rules are very liberal, and email providers in practise aren't that liberal.  So this is kind of a, hopefully, practical compromise. So officially “Abc\@def”@example.com is a valid email address, but really if a user put that in, it's got to be wrong!
     Rules:
     * It must contain an @ character
-    * Before the @ character there must appear one of more of the following: Full-stop ., Underscore _, Percentage %, Plus +, Hyphen -, ASCII letters a-z and A-Z, digits 0-9, and nordic chars æ, Æ, ä, Ä, ø, Ø, ö, Ö, å, Å
+    * Before the @ character there must appear one of more of the following: Full-stop ., Underscore _, Percentage %, Plus +, Hyphen -, ASCII letters a-z and A-Z, digits 0-9
     * After the @ character you must have a full-stop .
     * Between the @ character and the full-stop you must have one of the following: Full-stop ., Hyphen -, ASCII letters a-z and A-Z, digits 0-9.
     * After the full-stop there must be either two, three or four characters and these can be: ASCII letters a-z and A-Z.
@@ -336,7 +336,7 @@ asValidEmail input =
           checkFormat email | isValidFormat email = return email
                             | otherwise = Bad $ flashMessageInvalidFormat fieldtemplate
           isValidFormat :: String -> Bool
-          isValidFormat = (=~ "^[æÆäÄøØöÖåÅ[:alnum:]._%+-]+@[[:alnum:].-]+[.][[:alpha:]]{2,4}$")
+          isValidFormat = (=~ "^[[:alnum:]._%+-]+@[[:alnum:].-]+[.][[:alpha:]]{2,4}$")
 
 {- |
     Creates an email that hasn't been completely validated.  It still does handy things
