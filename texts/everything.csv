@@ -539,7 +539,7 @@ _dialogConfirmSendinviteBody,"Du har valt att vara Ej undertecknande part och ko
  Är du säker på att du vill skicka en inbjudan att underteckna
  dokumentet",,"You have chosen a non-signatory role, and will not sign. Are you
  sure you want to sent an invitation to sign the document"
-_dialogConfirmSendinviteBody2To,till,,to
+_dialogConfirmSendinviteBody2To," till ",," to "
 _dialogConfirmSendinviteBody3,"Du har skapat fält för parterna att fylla i innan de undertecknar.
  Efter att alla har undertecknat kommer du att
  få ett mail med en länk till en sida på Scrive där du kan
@@ -548,7 +548,7 @@ _dialogConfirmSendinviteBody3,"Du har skapat fält för parterna att fylla i inn
  will receive an e-mail with a link to a Scrive page where you
  can sign the document."
 _dialogConfirmSendinviteBody4,"Vill du skicka inbjudan att fylla i och underteckna dokumentet",,"Do you want to send an invitation to fill in and sign the document"
-_dialogConfirmSendinviteBody5,till,,to
+_dialogConfirmSendinviteBody5," till ",," to "
 _dialogConfirmSignByAuthorBody1,"Är du säker att du vill underteckna dokumentet",,"Are you sure you want to sign the document"
 _dialogConfirmSignByAuthorBody2,När,,When
 _dialogConfirmSignByAuthorBody3,"undertecknat blir avtalet <strong>juridiskt bindande</strong> och              det färdigställda avtalet skickas till din e-post.",,"has signed the document, it becomes <strong>legally binding</strong>         and the finished document will be sent to your  e-mail."
@@ -571,7 +571,7 @@ _dialogConfirmSigninviteSubBody,"Har du ingen e-legitimation? Du kan ladda ned e
 _dialogConfirmSigninviteSubBody2ClickHere,"Klicka här",,"Click here"
 _dialogConfirmSigninviteSubBody3,"för att läsa mer.",,"to read more."
 _dialogConfirmSigninviteSubHead,"Välj typ av e-legitimation",,"Choose type of e-legitimation"
-_dialogConfirmTextSendIfNotNormalOrFieldsTo,till,,to
+_dialogConfirmTextSendIfNotNormalOrFieldsTo," till ",," to "
 _dialogConfirmTextSendNormalBody1,"Vill du skicka en inbjudan att underteckna dokumentet till",,"Do you want to send an invitation to sign the document to"
 _dialogConfirmTextSendNormalBody2,"?               Efter att de har undertecknat kommer du att få
  ett mail med en länk till en sida på Scrive där du kan underteckna
@@ -1904,30 +1904,30 @@ _nonsignatory,"Ej undertecknande part",,"Non-signing party"
 _noonehadsignedtext,"Ingen har undertecknat dokumentet ännu",,"No one has signed the document yet"
 _of,av,,of
 _offerAuthor,Avsändare,,Sender
-_offerInvitationSentEntry,"skickar offerten till",,"sends the offer to"
-_offerInvitationSentEntryIfElse,parterna,,"the parties"
-_offerInvitationSentEntryIfoneSignatory,parten,,"the party"
+_offerInvitationSentEntry," skickar offerten till ",," sends the offer to "
+_offerInvitationSentEntryIfElse," parterna ",," the parties "
+_offerInvitationSentEntryIfoneSignatory," parten ",," the party "
 _offerLastHistEntry,"Samligta parter har accepterat offerten.",,"All parties have accepted the offer."
-_offerSeenHistEntry,"granskar offerten online",,"reviews the offer online"
-_offerSignHistEntry,"accepterar offerten med",,"accepts the offer online with"
+_offerSeenHistEntry,"granskar offerten online ",,"reviews the offer online "
+_offerSignHistEntry,"accepterar offerten med ",,"accepts the offer online with "
 _offerSignatory,Mottagare,,Recipient
 _offerauthorissecretarytext,Avsändare,,Sender
-_offercancelbuttontext,"Återkalla offert",,"Withdraw offer"
+_offercancelbuttontext,"Återkalla offert ",,"Withdraw offer "
 _offercancelbyauthormodaltitleBody,"När du återkallat offerten kommer nedanstående meddelande att
  skickas till din motpart.",,"When you have withdrawn the offer, the following message will be sent to your counterpart."
 _offercancelbyauthormodaltitleHead,"Är du säker att du vill återkalla offerten?",,"Are you sure you want to withdraw the offer?"
-_offercancelledinfoheader,"Offert återkallad",,"Offer withdrawn"
-_offercancelledinfotext,"har återkallat offerten. Den går således inte att acceptera.",,"has withdrawn the offer. You can no longer accept it."
-_offerconfirmsendtext,"Är du säker på att du vill skicka offerten",,"Are you sure you want to send the offer"
-_offerconfirmsendtitle,"Skicka offert",,"Send offer"
+_offercancelledinfoheader,"Offert återkallad ",,"Offer withdrawn "
+_offercancelledinfotext," har återkallat offerten. Den går således inte att acceptera. ",," has withdrawn the offer. You can no longer accept it. "
+_offerconfirmsendtext,"Är du säker på att du vill skicka offerten ",,"Are you sure you want to send the offer "
+_offerconfirmsendtitle,"Skicka offert ",,"Send offer "
 _offerexpirytext,Förfallodatum,,"Expiration date"
 _offerexpirywarntext,"Observera! Du kan ej återkalla offerten om du väljer ett förfallodatum.
  Detta regleras av avtalslagen.",,"OBSERVE: If you choose an expiration date, you cannot withdraw
  the invitation before the expiration. This is controlled by
  the Swedish Law of Contracts."
-_offerhassignedformailtext,"Har accepterat",,"Has accepted"
+_offerhassignedformailtext,"Har accepterat ",,"Has accepted "
 _offername,Offert,,Offer
-_offerpendingauthorinfoheader,"Väntar på accept",,"Waiting for acceptance"
+_offerpendingauthorinfoheader,"Väntar på accept ",,"Waiting for acceptance "
 _offerpendingauthorinfotext,"Du har skickat offerten. Offerten har ännu inte accepterats av
  mottagaren.",,"You have sent the offer. It has not yet been accepted by the
  recipient."
