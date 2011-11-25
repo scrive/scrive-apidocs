@@ -827,8 +827,6 @@ _mailTakeoverPrivateUserInviteContentInstructionFirst,"Så här går du vidare",
 _mailTakeoverPrivateUserInviteContentInstructionSecond,"<li>Kontrollera att du inte har några privata dokument i kontoarkiven</li><li>Spara ned samtliga privata dokument till din dator</li><li>Klicka på länken nedan</li><li>Läs meddelandet online</li><li>Acceptera</li><li>Ditt konto är nu underkonto</li>",,"<li>Check your Archive for private or personal documents.</li><li>Download and save these documents, then remove from your Archive.</li> <li>Click the link below</li><li>Follow the online instructions.</li>"
 _mailTakeoverPrivateUserInviteContentLink,"Detta är länken nedan",,"Click to accept the invitation"
 _mailTakeoverPrivateUserInviteTitle,"Förfrågan att göra till företagskonton",,"Company Account Invitation"
-_mailTakeoverCompanyUserInfoTitle,"Förfrågan att göra till företagskonton",,"Company Account Invitation"
-_mailTakeoverCompanyUserInfoBody,"$invitername$ vill du gå med som ett företagskonto för $companyname$. Vi märker att du redan är medlem i ett annat företag. Om du vill flytta ditt konto kontakta oss på +46 (0) 10-195 99 15 eller info@scrive.se och vi kommer att kunna hjälpa dig.",,"$invitername$ would like you to join as a company account for $companyname$.  We notice that you are already a member of another company.  If you would like to move your account please contact us at +46 (0)10-195 99 15 or info@scrive.se and we will be able to help you out."
 _inviteTextFieldName,"invite text",,"invite text"
 _invitetextSaveTemplate,"Spara mall",,"Save template"
 _lastname,Efternamn,,"Last name"
