@@ -16,6 +16,7 @@ module Util.HasSomeCompanyInfo (
 
 import Doc.DocStateData
 import Company.Model
+import Util.SignatoryLinkUtils
 
 import qualified Data.ByteString as BS
 
@@ -39,3 +40,7 @@ instance HasSomeCompanyInfo SignatoryDetails where
 instance HasSomeCompanyInfo SignatoryLink where
   getCompanyName   = getCompanyName . signatorydetails
   getCompanyNumber = getCompanyNumber . signatorydetails
+
+instance HasSomeCompanyInfo Document where
+  getCompanyName  doc  = maybe BS.empty getCompanyName   $ getAuthorSigLink doc
+  getCompanyNumber doc = maybe BS.empty getCompanyNumber $ getAuthorSigLink doc

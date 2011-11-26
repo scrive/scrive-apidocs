@@ -1586,7 +1586,9 @@ _mailCancelContractByAuthorContentBody,"<strong>$creatorname$</strong> har valt 
  dokumentet.",,"<strong>$creatorname$</strong> has chosen to withdraw
  the invitation to sign <strong>$documenttitle$</strong>. Therefore the
  agreement process has been cancelled."
-_mailCancelDocumentByAuthorTitle,"Återkallelsenotis: $documenttitle$",,"Cancellation notice: $documenttitle$"
+_mailCancelDocumentByAuthorTitleContract,"Återkallat avtal från $if(companyname)$$companyname$ $else$$creatorname$$endif$",,"Contract cancellation from $if(companyname)$$companyname$ $else$$creatorname$$endif$"
+_mailCancelDocumentByAuthorTitleOffer,"Återkallad offert från $if(companyname)$$companyname$ $else$$creatorname$$endif$",,"Offer cancellation from  $if(companyname)$$companyname$ $else$$creatorname$$endif$"
+_mailCancelDocumentByAuthorTitleOrder,"Återkallad orderbekräftelse från $if(companyname)$$companyname$ $else$$creatorname$$endif$",,"Order confirmation cancellation from $if(companyname)$$companyname$ $else$$creatorname$$endif$"
 _mailCancelOfferByAuthorContentBody,"<strong>$creatorname$</strong>   har valt att återkalla
  offerten  $documenttitle$.",,"<strong>$creatorname$</strong>   has chosen to withdraw
  the offer  $documenttitle$."
@@ -1605,8 +1607,10 @@ _mailDocumentAwaitingForAuthorContentInstruction,"För att färdigställa dokume
 _mailDocumentAwaitingForAuthorContentSignedBy,"Dokumentet <strong>$documenttitle$</strong> har undertecknats
  av $partylist:noescape()$.      Därmed är det bara du kvar innan
  dokumentet är färdigställt.",,"The document <strong>$documenttitle$</strong> has been signed  by $partylist:noescape()$.  Therefore it only remains for you sign before the document is final."
-_mailDocumentAwaitingForAuthorTitle,"Vänligen underteckna $documenttitle$",,"Please sign $documenttitle$"
-_mailDocumentClosedTitle,"Bekräftelse: $documenttitle$",,"Confirmation: $documenttitle$"
+_mailDocumentAwaitingForAuthorTitle,"Din tur att e-signera $documenttitle$",,"Please sign $documenttitle$"
+_mailDocumentClosedTitleContract,"Bekräftelse: e-signerat avtal $documenttitle$",,"Confirmation: $documenttitle$"
+_mailDocumentClosedTitleOffer,"Bekräftelse: e-signerat offert $documenttitle$",,"Confirmation: $documenttitle$"
+_mailDocumentClosedTitleOrder,"Bekräftelse: e-signerat orderbekräftelse $documenttitle$",,"Confirmation: $documenttitle$"
 _mailDocumentErrorContentBodyFirst,"Vi är ledsna, men vi kunde inte hantera dokumentet <strong>$documenttitle$</strong>.
       Problem uppstod relaterade till formatet på PDF-filen.",,"We are sorry, but we could not handle document <strong>$documenttitle$</strong>.
   There were problems related to the format of the document contents."
@@ -1650,10 +1654,15 @@ _mailInvitationToSignOrderContentPartys,Parter:,,Parties:
 _mailInvitationToSignOrderContentSender,Avsändare:,,Sender:
 _mailInvitationToSignOrderDefaultHeader,"<strong>$creatorname$</strong> har skickat orderbekräftelsen  <strong>$documenttitle$</strong> till dig och önskar din bekräftelse. Bekräfta eller avvisa ordern genom att
  följa instruktionerna nedan.",,"<strong>$creatorname$</strong> has sent the order confirmation <strong>$documenttitle$</strong> to you and wants your confirmation. To confirm or return the order:"
-_mailInvitationToSignTitle,"Inbjudan från $creatorname$ till $documenttitle$",,"Invite from $creatorname$ for $documenttitle$"
+_mailInvitationToSignTitleContract,"Avtal att e-signera $if(companyname)$från $companyname$ $endif$ ",,"Contract to e-sign $if(companyname)$ from $companyname$ $endif$"
+_mailInvitationToSignTitleOffer,"Offert att e-signera $if(companyname)$från $companyname$ $endif$ ",,"Offer to e-sign $if(companyname)$ from $companyname$ $endif$"
+_mailInvitationToSignTitleOrder,"Orderbekräftelse att e-signera $if(companyname)$från $companyname$ $endif$ ",,"Order confirmation to e-sign $if(companyname)$ from $companyname$ $endif$"
 _mailInvitationToViewDefaultHeader,"<strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong>.",,"<strong>$creatorname$</strong> has invited you to view the document <strong>$creatorname$</strong>."
 _mailInvitationToViewDefaultHeaderWithService,"<strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong>.",,"<strong>$creatorname$</strong> has invited you to view the document <strong>$creatorname$</strong>."
-_mailInvitationToViewTitle,"Inbjudan från $creatorname$ till $documenttitle$",,"Invite from $creatorname$ for $documenttitle$"
+_mailInvitationToViewTitleContract,"Inbjudan från $creatorname$ till $documenttitle$",,"Invite from $creatorname$ for $documenttitle$"
+_mailInvitationToViewTitleOffer,"Inbjudan från $creatorname$ till $documenttitle$",,"Invite from $creatorname$ for $documenttitle$"
+_mailInvitationToViewTitleOrder,"Inbjudan från $creatorname$ till $documenttitle$",,"Invite from $creatorname$ for $documenttitle$"
+
 _mailInviteUserAsCompanyAccountContentBodyFirst,"Användaren $supervisor.fullnamePlusEmail$ har begärt att få bli
  huvudkonto till ditt konto. Om du accepterar blir ditt konto
  ett underkonto till avsändaren. Du kommer fortfarande att kunna
@@ -1726,7 +1735,9 @@ _mailRejectContractMailContentContractRejected,"<strong>$rejectorName$</strong> 
  är därmed avbruten.",,"<strong>$rejectorName$</strong> has  returned
 the document <strong>$documenttitle$</strong>. The agreement
  process is therefore canceled."
-_mailRejectMailTitle,"Avvisat: $documenttitle$",,"Returned: $documenttitle$"
+_mailRejectMailTitleContract,"Avvisat avtal från $if(companyname)$companyname$ $else$$creatorname$ $endif$",,"Returned contract from $if(companyname)$$companyname$$else$$creatorname$ $endif$"
+_mailRejectMailTitleOffer,"Avvisad offert från $if(companyname)$$companyname$ $else$$creatorname$$endif$",,"Returned offer from $if(companyname)$$companyname$$else$$creatorname$ $endif$"
+_mailRejectMailTitleOrder,"Avvisad orderbekräftelse från $if(companyname)$$companyname$$else$$creatorname$ $endif$",,"Returned order confirmation from $if(companyname)$$companyname$$else$$creatorname$ $endif$"
 _mailRejectOfferMailContentOfferRejected,"<strong>$rejectorName$</strong> har avvisat offerten
  <strong>$documenttitle$</strong>.",,"<strong>$rejectorName$</strong> has returned the offer
  <strong>$documenttitle$</strong>."
@@ -2566,7 +2577,9 @@ _remindMailNotSignedOrderContentPartys,Parter:,,Parties:
 _remindMailNotSignedOrderStandardHeaderRemind,"<strong>$author$</strong> vill påminna dig om att du inte bekräftat
  ordern <strong>$documenttitle$</strong> ännu. Bekräfta ordern eller avvisa
  genom att följa instruktionerna nedan.",,"<strong>$author$</strong> wants to remind you that you haven't  confirmed or returned the order <strong>$documenttitle$</strong> yet. To do so:"
-_remindMailNotSignedTitle,"Påminnelse att underteckna  $documenttitle$",,"Reminder to sign  $documenttitle$"
+_remindMailNotSignedTitleContract,"Påminnelse att e-signera avtal $if(companyname)$från $companyname$ $endif$",,"Reminder to e-sign contract $if(companyname)$from $companyname$ $endif$"
+_remindMailNotSignedTitleOffer,"Påminnelse att e-signera offert $if(companyname)$från $companyname$ $endif$",,"Reminder to e-sign offer $if(companyname)$from $companyname$ $endif$"
+_remindMailNotSignedTitleOrder,"Påminnelse att e-signera orderbekräftelse $if(companyname)$från $companyname$ $endif$",,"Reminder to e-sign order confirmation $if(companyname)$from $companyname$ $endif$"
 _remindMailSignedContractStandardHeaderSendRequest,"<strong>$author$</strong> vill skicka
  <strong>$documenttitle$</strong>        till dig. Dokumentet
  har undertecknats av dig via tjänsten Scrive. Dokumentet bifogas

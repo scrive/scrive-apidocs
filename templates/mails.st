@@ -15,27 +15,27 @@ mailCancelOrderByAuthorStandardHeader=
     <p>$_hi()$,</p>
 ######
 mailCancelContractByAuthor=
-    $_mailCancelDocumentByAuthorTitle()$
+    $_mailCancelDocumentByAuthorTitleContract()$
     $nicemail(
-        mailheader= _mailCancelDocumentByAuthorTitle();
+        mailheader= _mailCancelDocumentByAuthorTitleContract();
         mailp1 = header;
         mailp2 = _mailCancelContractByAuthorContentBody();
         mailp3 = footer
     )$
 #####
 mailCancelOfferByAuthor=
-    $_mailCancelDocumentByAuthorTitle()$
+    $_mailCancelDocumentByAuthorTitleOffer()$
     $nicemail(
-        mailheader= _mailCancelDocumentByAuthorTitle();
+        mailheader= _mailCancelDocumentByAuthorTitleOffer();
         mailp1 = header;
         mailp2 = _mailCancelOfferByAuthorContentBody();
         mailp3 = footer
     )$
 #####
 mailCancelOrderByAuthor=
-    $_mailCancelDocumentByAuthorTitle()$
+    $_mailCancelDocumentByAuthorTitleOrder()$
     $nicemail(
-        mailheader= _mailCancelDocumentByAuthorTitle();
+        mailheader= _mailCancelDocumentByAuthorTitleOrder();
         mailp1 = header;
         mailp2 = _mailCancelOrderByAuthorContentBody();
         mailp3 = footer
@@ -61,9 +61,9 @@ mailDocumentAwaitingForAuthorContentMainP =
 ##### CLOSED MAIL
 #####
 mailContractClosed=
-    $_mailDocumentClosedTitle()$
+    $_mailDocumentClosedTitleContract()$
     $nicemail(
-        mailheader = _mailDocumentClosedTitle();
+        mailheader = _mailDocumentClosedTitleContract();
         mailp1 = mailContractClosedMainP();
         mailp2 = footer
     )$
@@ -76,9 +76,9 @@ mailContractClosedMainP =
 
 ####
 mailOfferClosed=
-    $_mailDocumentClosedTitle()$
+    $_mailDocumentClosedTitleOffer()$
     $nicemail(
-        mailheader = _mailDocumentClosedTitle();
+        mailheader = _mailDocumentClosedTitleOffer();
         mailp1 = mailOfferClosedMainP();
         mailp2 = footer
     )$
@@ -96,9 +96,9 @@ mailOfferClosedMainP =
       <p>$_mailOfferClosedContentAttached()$</p>
 ####
 mailOrderClosed=
-    $_mailDocumentClosedTitle()$
+    $_mailDocumentClosedTitleOrder()$
     $nicemail(
-        mailheader = _mailDocumentClosedTitle();
+        mailheader = _mailDocumentClosedTitleOrder();
         mailp1 = mailOrderClosedMainP();
         mailp2 = footer
     )$
@@ -117,27 +117,27 @@ mailOrderClosedMainP=
 #### REJECTED MAIL
 ####
 mailRejectContractMail=
-      $_mailRejectMailTitle()$
+      $_mailRejectMailTitleContract()$
       $nicemail(
-        mailheader = _mailRejectMailTitle();
+        mailheader = _mailRejectMailTitleContract();
         mailp1 = mailRejectMailContentHeader();
         mailp2 = _mailRejectContractMailContentContractRejected();
         mailp3 = footer
       )$
 ####
 mailRejectOfferMail=
-      $_mailRejectMailTitle()$
+      $_mailRejectMailTitleOffer()$
       $nicemail(
-        mailheader = _mailRejectMailTitle();
+        mailheader = _mailRejectMailTitleOffer();
         mailp1 = mailRejectMailContentHeader();
         mailp2 = _mailRejectOfferMailContentOfferRejected();
         mailp3 = footer
       )$
 ###
 mailRejectOrderMail=
-      $_mailRejectMailTitle()$
+      $_mailRejectMailTitleOrder()$
     $nicemail(
-        mailheader = _mailRejectMailTitle();
+        mailheader = _mailRejectMailTitleOrder();
         mailp1 = mailRejectMailContentHeader();
         mailp2 = _mailRejectOrderMailContentHasRejected();
         mailp3 = footer
@@ -154,19 +154,38 @@ mailRejectMailContentHeader=
 ####
 #### INVITATION MAILS
 ####
-mailInvitationTitle=
+mailInvitationTitleContract=
     $if(sign)$
-        $_mailInvitationToSignTitle()$
+        $_mailInvitationToSignTitleContract()$
     $elseif(send)$
-        $_mailInvitationToSignTitle()$
+        $_mailInvitationToSignTitleContract()$
     $elseif(view)$
-        $_mailInvitationToViewTitle()$
+        $_mailInvitationToViewTitleContract()$
     $endif$
 ###
+mailInvitationTitleOffer=
+    $if(sign)$
+        $_mailInvitationToSignTitleOffer()$
+    $elseif(send)$
+        $_mailInvitationToSignTitleOffer()$
+    $elseif(view)$
+        $_mailInvitationToViewTitleOffer()$
+    $endif$
+###
+mailInvitationTitleOrder=
+    $if(sign)$
+        $_mailInvitationToSignTitleOrder()$
+    $elseif(send)$
+        $_mailInvitationToSignTitleOrder()$
+    $elseif(view)$
+        $_mailInvitationToViewTitleOrder()$
+    $endif$
+###
+###
 mailInvitationToSignContract=
-    $mailInvitationTitle()$
+    $mailInvitationTitleContract()$
      $nicemail(
-        mailheader= mailInvitationTitle();
+        mailheader= mailInvitationTitleContract();
         mailp1 = header;
         mailp2 = mailInvitationToSignContractIntructions();
         mailp3 = contractInfo();
@@ -187,9 +206,9 @@ mailInvitationToSignContractIntructions=
 
 ####
 mailInvitationToSignOffer=
-     $mailInvitationTitle()$
+     $mailInvitationTitleOffer()$
      $nicemail(
-        mailheader= mailInvitationTitle();
+        mailheader= mailInvitationTitleOffer();
         mailp1 = header;
         mailp2 = mailInvitationToSignOfferIntructions();
         mailp3 = offerInfo();
@@ -209,9 +228,9 @@ mailInvitationToSignOfferIntructions=
 
 ###
 mailInvitationToSignOrder=
-    $mailInvitationTitle()$
+    $mailInvitationTitleOrder()$
     $nicemail(
-        mailheader= mailInvitationTitle();
+        mailheader= mailInvitationTitleOrder();
         mailp1 = header;
         mailp2 = mailInvitationToSignOrderIntructions();
         mailp3 = orderInfo();
@@ -332,10 +351,10 @@ remindMailNotSignedOrderStandardHeader=
     </span>
 #####
 remindMailNotSignedContract=
-    $_remindMailNotSignedTitle()$
+    $_remindMailNotSignedTitleContract()$
 
     $nicemail(
-        mailheader=_remindMailNotSignedTitle();
+        mailheader=_remindMailNotSignedTitleContract();
         mailp1=header;
         mailp2=contractInfo();
         mailp3=_remindMailNotSignedContractContentInstruction();
@@ -344,9 +363,9 @@ remindMailNotSignedContract=
 #####
 #####
 remindMailNotSignedOffer=
-    $_remindMailNotSignedTitle()$
+    $_remindMailNotSignedTitleOffer()$
     $nicemail(
-        mailheader=_remindMailNotSignedTitle();
+        mailheader=_remindMailNotSignedTitleOffer();
         mailp1=header;
         mailp2=_remindMailNotSignedOfferContentInstruction();
         mailp3=offerInfo();
@@ -355,9 +374,9 @@ remindMailNotSignedOffer=
     )$
 ###
 remindMailNotSignedOrder=
-    $_remindMailNotSignedTitle()$
+    $_remindMailNotSignedTitleOrder()$
     $nicemail(
-        mailheader=_remindMailNotSignedTitle();
+        mailheader=_remindMailNotSignedTitleOrder();
         mailp1=header;
         mailp2=_remindMailNotSignedOrderContentInstruction();
         mailp3=orderInfo();
