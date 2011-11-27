@@ -31,7 +31,7 @@ module Administration.AdministrationControl(
           , handleCompanyChange
           , handleDatabaseCleanup
           , handleCreateUser
-          , handleCreateCompanyUser
+          , handlePostAdminCompanyUsers
           , handleCreateService
           , handleStatistics
           , showFunctionalityStats
@@ -107,6 +107,8 @@ import File.Model
 import ListUtil
 import Text.JSON
 import Util.HasSomeCompanyInfo
+import CompanyAccounts.CompanyAccountsControl
+import CompanyAccounts.Model
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m Response
@@ -210,11 +212,8 @@ companiesPageSize :: Int
 companiesPageSize = 100
 
 showAdminCompanyUsers :: Kontrakcja m => CompanyID -> m Response
-showAdminCompanyUsers companyid = onlySuperUser $ do
-  company <- guardJustM . runDBQuery $ GetCompany companyid
-  users <- runDBQuery $ GetCompanyAccounts companyid
-  params <- getAdminListPageParams
-  content <- adminCompanyUsersPage company users params
+showAdminCompanyUsers cid = onlySuperUser $ do
+  content <- adminCompanyUsersPage cid
   renderFromBody TopEmpty kontrakcja content
 
 showAdminUsersForSales :: Kontrakcja m => m String
@@ -468,7 +467,30 @@ handleCreateUser = onlySuperUser $ do
     -- FIXME: where to redirect?
     return LinkStats
 
-handleCreateCompanyUser :: Kontrakcja m => CompanyID -> m KontraLink
+handlePostAdminCompanyUsers :: Kontrakcja m => CompanyID -> m KontraLink
+handlePostAdminCompanyUsers companyid = onlySuperUser $ do
+  privateinvite <- isFieldSet "privateinvite"
+  if privateinvite
+    then handlePrivateUserCompanyInvite companyid
+    else handleCreateCompanyUser companyid
+  return $ LinkCompanyUserAdmin companyid
+
+handlePrivateUserCompanyInvite :: Kontrakcja m => CompanyID -> m ()
+handlePrivateUserCompanyInvite companyid = onlySuperUser $ do
+  ctx <- getContext
+  user <- guardJust $ ctxmaybeuser ctx
+  email <- Email <$> getCriticalField asValidEmail "email"
+  existinguser <- guardJustM $ runDBQuery $ GetUserByEmail Nothing email
+  _ <- runDBUpdate $ AddCompanyInvite CompanyInvite{
+          invitedemail = email
+        , invitedfstname = getFirstName existinguser
+        , invitedsndname = getLastName existinguser
+        , invitingcompany = companyid
+        }
+  company <- guardJustM $ runDBQuery $ GetCompany companyid
+  sendTakeoverPrivateUserMail user company existinguser
+
+handleCreateCompanyUser :: Kontrakcja m => CompanyID -> m ()
 handleCreateCompanyUser companyid = onlySuperUser $ do
   ctx <- getContext
   email <- getCriticalField asValidEmail "email"
@@ -485,7 +507,7 @@ handleCreateCompanyUser companyid = onlySuperUser $ do
         _ <- runDBUpdate $ SetUserCompanyAdmin userid True
         return ()
     Nothing -> addFlashM flashMessageUserWithSameEmailExists
-  return $ LinkCompanyUserAdmin companyid
+  return ()
 
 {- | Reads params and returns function for conversion of company info.  With no param leaves fields unchanged -}
 getCompanyInfoChange :: Kontrakcja m => m (CompanyInfo -> CompanyInfo)

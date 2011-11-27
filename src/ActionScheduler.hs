@@ -5,6 +5,7 @@ module ActionScheduler (
     , actionScheduler
     , oldScheduler
     , runDocumentProblemsCheck
+    , runArchiveProblemsCheck
     ) where
 
 import Control.Applicative
@@ -20,6 +21,7 @@ import qualified Data.ByteString.UTF8 as BS hiding (length)
 
 import AppControl (AppConf(..))
 import ActionSchedulerState
+import Archive.Invariants
 import DB.Classes
 import Doc.DocState
 import Kontra
@@ -140,6 +142,9 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
             _ <- update $ UpdateActionEvalTime actionID ((72 * 60) `minutesAfter` now)
             return ()
 
+evaluateAction Action{actionID, actionType = RequestEmailChange{}} =
+  deleteAction actionID
+
 evaluateAction Action{actionID, actionType = EmailSendout mail@Mail{mailInfo}} =
  if (unsendable mail)
   then do -- Due to next block, bad emails were alive in queue, and making logs unreadable.
@@ -202,6 +207,37 @@ mailDocumentProblemsCheck msg = do
 -- | A message will be sent to these email addresses when there is an inconsistent document found in the database.
 documentProblemsCheckEmails :: [BS.ByteString]
 documentProblemsCheckEmails = map BS.fromString ["bugs@skrivapa.se"]
+
+runArchiveProblemsCheck :: ActionScheduler ()
+runArchiveProblemsCheck = do
+  users <- runDBQuery $ GetUsers
+  personaldocs <- mapM getPersonalDocs users
+  superviseddocs <- mapM getSupervisedDocs users
+  let personaldocprobs = listPersonalDocInvariantProblems personaldocs
+      supervisedocprobs = listSupervisedDocInvariantProblems superviseddocs
+      probs = unlines personaldocprobs ++ unlines supervisedocprobs
+  when (probs /= []) $ mailArchiveProblemsCheck probs
+  return ()
+  where
+    getPersonalDocs user = do
+      docs <- query $ GetDocumentsBySignatory user
+      return (user, docs)
+    getSupervisedDocs user = do
+      docs <- query $ GetDocumentsByCompany user
+      return (user, docs)
+
+mailArchiveProblemsCheck :: String -> ActionScheduler ()
+mailArchiveProblemsCheck msg = do
+  sd <- ask
+  scheduleEmailSendout (sdMailEnforcer sd) $ Mail { to = zipWith MailAddress archiveProblemsCheckEmails archiveProblemsCheckEmails
+                                                  , title = BS.fromString $ "Archive problems report " ++ (hostpart $ sdAppConf sd)
+                                                  , content = BS.fromString msg
+                                                  , attachments = []
+                                                  , from = Nothing
+                                                  , mailInfo = None
+                                                  }
+archiveProblemsCheckEmails :: [BS.ByteString]
+archiveProblemsCheckEmails = map BS.fromString ["emily@scrive.com"]
 
 deleteAction :: ActionID -> ActionScheduler ()
 deleteAction aid = do

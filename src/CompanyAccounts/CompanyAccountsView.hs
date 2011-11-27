@@ -5,7 +5,6 @@ module CompanyAccounts.CompanyAccountsView (
     -- mails
     mailNewCompanyUserInvite,
     mailTakeoverPrivateUserInvite,
-    mailTakeoverCompanyUserInfo,
 
     -- modals
     modalDoYouWantToBeCompanyAccount,
@@ -52,13 +51,6 @@ mailTakeoverPrivateUserInvite hostpart invited inviter company link =
   kontramaillocal invited  "mailTakeoverPrivateUserInvite" $ do
     basicCompanyInviteFields invited inviter company
     basicLinkFields hostpart link
-
-mailTakeoverCompanyUserInfo :: (TemplatesMonad m,  HasSomeUserInfo a, HasLocale a, HasSomeUserInfo b, HasSomeCompanyInfo c) =>
-                               a -> b -> c -> m Mail
-mailTakeoverCompanyUserInfo invited inviter company =
-  --send info in the language of the existing user rather than in the inviter's language
-  kontramaillocal invited  "mailTakeoverCompanyUserInfo" $
-    basicCompanyInviteFields invited inviter company
 
 basicCompanyInviteFields :: (TemplatesMonad m, HasSomeUserInfo a, HasSomeUserInfo b, HasSomeCompanyInfo c) =>
                             a -> b -> c -> Fields m

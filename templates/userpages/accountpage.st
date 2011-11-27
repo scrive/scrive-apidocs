@@ -184,4 +184,120 @@ modalCreateCompany=
       </div>
     </div>
   </form>
+<script>
+  jQuery(function() {
+    var changeEmailRequestButton = Button.init({
+    color: "green",
+    size: "tiny",
+    text: "$_changeEmailRequestButtonText()$",
+    onClick: function() {
+        var body = jQuery("<div>");
+        var p = jQuery("<p>").text("$_changeEmailRequestExplanation()$");
+        body.append(p);
+        var table = jQuery("<table/>");
+
+        var tr1 = jQuery("<tr/>").append(jQuery("<td/>").text("$_newemail()$:"));
+        var newemail = jQuery("<input type='text' name='newemail' autocomplete='off' />");
+        tr1.append(jQuery("<td/>").append(newemail));
+        table.append(tr1);
+
+        var tr2 = jQuery("<tr/>").append(jQuery("<td/>").text("$_newemailagain()$:"));
+        var newemailagain = jQuery("<input type='text' name='newemailagain' autocomplete='off' />");
+        tr2.append(jQuery("<td/>").append(newemailagain));
+        table.append(tr2);
+
+        body.append(table);
+
+
+        Confirmation.popup({
+          onAccept: function() {
+                      new Submit({
+                        method: "POST",
+                        changeemail: "true",
+                        newemail: newemail.val(),
+                        newemailagain: newemailagain.val()
+                        }).send();
+                      },
+          title: "$_changeEmailRequestTitle()$",
+          acceptButtonText: "$_changeEmailRequestAcceptText()$",
+          content: body
+        });
+      }
+    });
+
+    jQuery('[name="email"]').parent().append(changeEmailRequestButton.input());
+
+    var addCompanyAccountButton = Button.init({
+    color: "green",
+    size: "small",
+    text: "$_newCompanyAccountButtonText()$",
+    onClick: function() {
+        var body = jQuery("<div class='account-body'>");
+        var firstp = jQuery("<p>").text("$_createCompanyExplanation()$");
+        var secondp = jQuery("<p>").text("$_createCompanyFormPreamble()$");
+        body.append(firstp);
+        body.append(secondp);
+        var table = jQuery("<table/>");
+
+        var tr1 = jQuery("<tr/>").append(jQuery("<td/>").text("$_company()$:"));
+        var companyname = jQuery("<input type='text' name='companyname' autocomplete='off' />");
+        tr1.append(jQuery("<td/>").append(companyname));
+        table.append(tr1);
+
+        var tr2 = jQuery("<tr/>").append(jQuery("<td/>").text("$_orgnumber()$:"));
+        var companynumber = jQuery("<input type='text' name='companynumber' autocomplete='off' />");
+        tr2.append(jQuery("<td/>").append(companynumber));
+        table.append(tr2);
+
+        var tr5 = jQuery("<tr/>").append(jQuery("<td/>").text("$_address()$"));
+        var companyaddress = jQuery("<input type='text' name='companyaddress' autocomplete='off' />");
+        tr5.append(jQuery("<td/>").append(companyaddress));
+        table.append(tr5);
+
+        var tr6 = jQuery("<tr/>").append(jQuery("<td/>").text("$_zip()$"));
+        var companyzip = jQuery("<input type='text' name='companyzip' autocomplete='off' />");
+        tr6.append(jQuery("<td/>").append(companyzip));
+        table.append(tr6);
+
+        var tr7 = jQuery("<tr/>").append(jQuery("<td/>").text("$_city()$"));
+        var companycity = jQuery("<input type='text' name='companycity' autocomplete='off' />");
+        tr7.append(jQuery("<td/>").append(companycity));
+        table.append(tr7);
+
+        var tr8 = jQuery("<tr/>").append(jQuery("<td/>").text("$_country()$"));
+        var companycountry = jQuery("<input type='text' name='companycountry' autocomplete='off' />");
+        tr8.append(jQuery("<td/>").append(companycountry));
+        table.append(tr8);
+
+        body.append(table);
+
+
+        Confirmation.popup({
+          onAccept: function() {
+            new Submit({
+              method: "POST",
+              createcompany: "true",
+              companynumber: companynumber.val(),
+              companyaddress: companyaddress.val(),
+              companyzip: companyzip.val(),
+              companycity: companycity.val(),
+              companycountry: companycountry.val()
+              }).send();
+            },
+          title: "$_createCompany()$",
+          acceptButtonText: "$_createCompany()$",
+          content: body
+        });
+      }
+    });
+
+    /** isn't used yet, because the server might decide to
+        pop up this dialog in response to bad input validation.
+       when validation happens on client we can start using **/
+    var createcompany = jQuery("#createcompany");
+    if (createcompany.length>0) {
+      /** createcompany.append(addCompanyAccountButton.view.el); **/
+    }
+  });
+</script>
 #####

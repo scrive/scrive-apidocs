@@ -33,7 +33,7 @@ import Control.Monad.State
 import DB.Classes
 import DB.Types
 import Doc.DocState
-import ELegitimation.ELeg
+import ELegitimation.ELegTransaction
 import Happstack.Server
 #ifndef DOCUMENTS_IN_POSTGRES
 import Happstack.State (query, QueryEvent)

@@ -35,7 +35,7 @@ class TestContext
     end
     @driver = Selenium::WebDriver.for(browser, params)
   end
-  
+
   def createKontrakcjaURL url
     @props.kontrakcja_url + url
   end

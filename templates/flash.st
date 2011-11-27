@@ -258,3 +258,13 @@ flashCompanyAccountInviteSent=$_flashCompanyAccountInviteSent()$
 ###
 flashCompanyAccountInviteResent=$_flashCompanyAccountInviteResent()$
 ###
+flashMessageChangeEmailMailSent=$_flashMessageChangeEmailMailSent()$
+###
+flashMessageMismatchedEmails=$_flashMessageMismatchedEmails()$
+###
+flashMessageProblemWithEmailChange=$_flashMessageProblemWithEmailChange()$
+###
+flashMessageYourEmailHasChanged=$_flashMessageYourEmailHasChanged()$
+###
+flashMessageProblemWithPassword=$_flashMessageProblemWithPassword()$
+###

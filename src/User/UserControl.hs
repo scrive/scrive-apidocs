@@ -58,7 +58,18 @@ handleUserGet = checkUserTOSGet $ do
 handleUserPost :: Kontrakcja m => m KontraLink
 handleUserPost = do
   guardLoggedIn
-  (user, mendflash, link) <- maybeUpgradeToCompanyAdmin
+  createcompany <- isFieldSet "createcompany"
+  changeemail <- isFieldSet "changeemail"
+  mlink <- case True of
+             _ | createcompany -> Just <$> handleCreateCompany
+             _ | changeemail -> Just <$> handleRequestChangeEmail
+             _ -> return Nothing
+
+  --whatever happens run the update in case they changed things in other places
+  ctx <- getContext
+  user' <- guardJust $ ctxmaybeuser ctx
+  --requery for the user as they may have been upgraded
+  user <- guardJustM $ runDBQuery $ GetUserByID (userid user')
   infoUpdate <- getUserInfoUpdate
   _ <- runDBUpdate $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
   mcompany <- getCompanyForUser user
@@ -68,34 +79,125 @@ handleUserPost = do
       _ <- runDBUpdate $ SetCompanyInfo (companyid company) (companyinfoupdate $ companyinfo company)
       return ()
     _ -> return ()
-  case mendflash of
-    Just endflash -> addFlashM endflash
+
+  case mlink of
+    Just link -> return link
+    Nothing -> do
+       addFlashM flashMessageUserDetailsSaved
+       return $ LinkAccount False
+
+handleRequestChangeEmail :: Kontrakcja m => m KontraLink
+handleRequestChangeEmail = do
+  ctx <- getContext
+  user <- guardJust $ ctxmaybeuser ctx
+  mnewemail <- getRequiredField asValidEmail "newemail"
+  mnewemailagain <- getRequiredField asValidEmail "newemailagain"
+  case (Email <$> mnewemail, Email <$> mnewemailagain) of
+    (Just newemail, Just newemailagain) | newemail == newemailagain -> do
+       mexistinguser <- runDBQuery $ GetUserByEmail (userservice user) newemail
+       case mexistinguser of
+         Just _existinguser ->
+           sendChangeToExistingEmailInternalWarningMail user newemail
+         Nothing ->
+           sendRequestChangeEmailMail user newemail
+       --so there's no info leaking show this flash either way
+       addFlashM $ flashMessageChangeEmailMailSent newemail
+    (Just newemail, Just newemailagain) | newemail /= newemailagain -> do
+       addFlashM flashMessageMismatchedEmails
     _ -> return ()
-  return link
-  where
-    -- this stuff would be far cleaner if we did all the validation on the client
-    -- and just failed if there were a problem with it on the server, rather
-    -- than make an effort to handle it elegantly
-    maybeUpgradeToCompanyAdmin = do
-      ctx <- getContext
-      user <- guardJust $ ctxmaybeuser ctx
-      mcompany <- getCompanyForUser user
-      createcompany <- isFieldSet "createcompany"
-      if isNothing mcompany && createcompany
-        then do
-          -- they've submitted the modal so
-          -- check they've at least filled in a name
-          mcompanyname <- getRequiredField asValidCompanyName "companyname"
-          case mcompanyname of
-            Just _ -> do
-              company <- runDBUpdate $ CreateCompany Nothing Nothing
-              _ <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid company)
-              _ <- runDBUpdate $ SetUserCompanyAdmin (userid user) True
-              upgradeduser <- guardJustM $ runDBQuery $ GetUserByID $ userid user
-              _ <- addUserCreateCompanyStatEvent (ctxtime ctx) upgradeduser
-              return (upgradeduser, Just flashMessageCompanyCreated, LinkCompanyAccounts emptyListParams)
-            Nothing -> return (user, Nothing, LinkAccount True)
-        else return (user, Just flashMessageUserDetailsSaved, LinkAccount False)
+  return $ LinkAccount False
+
+sendChangeToExistingEmailInternalWarningMail :: Kontrakcja m => User -> Email -> m ()
+sendChangeToExistingEmailInternalWarningMail user newemail = do
+  ctx <- getContext
+  let securitymsg =
+        "User " ++ BS.toString (getEmail user) ++ " (" ++ show (userid user) ++ ")"
+        ++ " has requested that their email be changed to " ++ BS.toString (unEmail newemail)
+        ++ " but this email is already used by another account."
+      content =
+        securitymsg
+        ++ "Maybe they're trying to attempt to merge accounts and need help, "
+        ++ "or maybe they're a hacker trying to figure out who is and isn't a user."
+  Log.security securitymsg
+  scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail {
+      to = [MailAddress { fullname = BS.fromString "info@skrivapa.se", email = BS.fromString "info@skrivapa.se" }]
+    , title = BS.fromString "Request to Change Email to Existing Account"
+    , content = BS.fromString content
+    }
+
+sendRequestChangeEmailMail :: Kontrakcja m => User -> Email -> m ()
+sendRequestChangeEmailMail user newemail = do
+  ctx <- getContext
+  changeemaillink <- newRequestChangeEmailLink user newemail
+  mail <- mailRequestChangeEmail (ctxhostpart ctx) user newemail changeemaillink
+  scheduleEmailSendout (ctxesenforcer ctx)
+                        (mail{to = [MailAddress{
+                                    fullname = getFullName user
+                                  , email = unEmail newemail }]})
+
+newRequestChangeEmailLink :: MonadIO m => User -> Email -> m KontraLink
+newRequestChangeEmailLink user newemail = do
+    action <- liftIO $ newRequestEmailChange user newemail
+    return $ LinkChangeUserEmail (actionID action)
+                                 (recToken $ actionType action)
+
+
+handleCreateCompany :: Kontrakcja m => m KontraLink
+handleCreateCompany = do
+  ctx <- getContext
+  user <- guardJust $ ctxmaybeuser ctx
+  mcompany <- getCompanyForUser user
+  mcompanyname <- getRequiredField asValidCompanyName "companyname"
+  case (mcompany, mcompanyname) of
+    (Nothing, Just _companyname) -> do
+          company <- runDBUpdate $ CreateCompany Nothing Nothing
+          _ <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid company)
+          _ <- runDBUpdate $ SetUserCompanyAdmin (userid user) True
+          upgradeduser <- guardJustM $ runDBQuery $ GetUserByID $ userid user
+          _ <- addUserCreateCompanyStatEvent (ctxtime ctx) upgradeduser
+          addFlashM flashMessageCompanyCreated
+          return $ LinkCompanyAccounts emptyListParams
+    _ -> return $ LinkAccount True  --we could remove this ugly flag with more javascript validation
+
+handleGetChangeEmail :: Kontrakcja m => ActionID -> MagicHash -> m (Either KontraLink Response)
+handleGetChangeEmail actionid hash = withUserGet $ do
+  mnewemail <- getNewEmailFromAction actionid hash
+  case mnewemail of
+    Nothing -> addFlashM $ flashMessageProblemWithEmailChange
+    Just newemail -> addFlashM $ modalDoYouWantToChangeEmail newemail
+  Context{ctxmaybeuser = Just user} <- getContext
+  mcompany <- getCompanyForUser user
+  content <- showUser user mcompany False
+  renderFromBody TopAccount kontrakcja content
+
+handlePostChangeEmail :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
+handlePostChangeEmail actionid hash = withUserPost $ do
+  mnewemail <- getNewEmailFromAction actionid hash
+  Context{ctxmaybeuser = Just user} <- getContext
+  mpassword <- getRequiredField asDirtyPassword "password"
+  case mpassword of
+    Nothing -> return ()
+    Just password | verifyPassword (userpassword user) password -> do
+      changed <- maybe (return False)
+                      (runDBUpdate . SetUserEmail (userservice user) (userid user))
+                      mnewemail
+      if changed
+        then addFlashM $ flashMessageYourEmailHasChanged
+        else addFlashM $ flashMessageProblemWithEmailChange
+    Just _password -> do
+      addFlashM $ flashMessageProblemWithPassword
+  return $ LinkAccount False
+
+getNewEmailFromAction :: Kontrakcja m => ActionID -> MagicHash -> m (Maybe Email)
+getNewEmailFromAction actionid hash = do
+  Context{ctxmaybeuser = Just user} <- getContext
+  maction <- getActionByActionID actionid
+  case actionType <$> maction of
+    Just (RequestEmailChange recUser recNewEmail recToken)
+      | hash == recToken
+        && userid user == recUser -> do
+      return $ Just recNewEmail
+    _ -> return Nothing
 
 getUserInfoUpdate :: Kontrakcja m => m (UserInfo -> UserInfo)
 getUserInfoUpdate  = do

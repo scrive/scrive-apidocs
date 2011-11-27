@@ -174,7 +174,7 @@ test_addingExistingCompanyUserAsCompanyAccount conn = withTestEnvironment conn $
   assertCompanyInvitesAre company [mkInvite company "bob@blue.com" "Bob" "Blue"]
 
   emailactions <- getEmailActions
-  assertEqual "Two emails were sent" 2 (length emailactions)
+  assertEqual "An email was sent" 1 (length emailactions)
 
 test_resendingInviteToNewCompanyAccount :: Connection -> Assertion
 test_resendingInviteToNewCompanyAccount conn = withTestEnvironment conn $ do
@@ -249,7 +249,7 @@ test_resendingInviteToCompanyUser conn = withTestEnvironment conn $ do
   assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
 
   emailactions <- getEmailActions
-  assertEqual "Two emails were sent" 2 (length emailactions)
+  assertEqual "An email was sent" 1 (length emailactions)
 
 test_switchingStandardToAdminUser :: Connection -> Assertion
 test_switchingStandardToAdminUser conn = withTestEnvironment conn $ do

@@ -277,6 +277,16 @@ pageDocumentDesign=
                     <div class="right"></div>
                   </a>
                 </div>
+                $elseif(process.isauthorsend)$
+                <div class="signbutton" style="display:inline-block;">
+                  <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  style="display:inline-block;padding-left:0px" class="btn-small green center">
+                    <div class="left"></div>
+                    <div class="label" style="width:120px;">
+                       <span style="padding-left:9px;padding-right:9px">$process.sendbuttontext$</span>
+                    </div>
+                    <div class="right"></div>
+                  </a>
+                </div>
                 $else$
                 <div class="signbutton" style="display:inline-block;">
                   <a type="button" id="signinvite" rel="#dialog-confirm-signinvite"  style="display:inline-block" class="btn-small blue center">
@@ -1111,6 +1121,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
         <div class="right"></div>
       </a>
       <span class="eleghidden" style="display: none;">
+        <input type="hidden" name="sign" value="automatic" id="signauto" />
         <input type="hidden" name="changetoeleg" id="elegprovider" value="" />
         <input type="hidden" name="signature" value="" id="signatureinput" />
         <input type="hidden" name="transactionid" value="" id="transactionidinput" />

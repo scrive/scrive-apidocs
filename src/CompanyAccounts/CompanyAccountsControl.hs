@@ -9,6 +9,9 @@ module CompanyAccounts.CompanyAccountsControl (
   -- aren't still using these old takeover links
   , handleGetBecomeCompanyAccountOld
   , handlePostBecomeCompanyAccountOld
+  -- this shares some handy stuff with the adminonly section
+  , handleCompanyAccountsForAdminOnly
+  , sendTakeoverPrivateUserMail
   ) where
 
 import Control.Monad.State
@@ -56,10 +59,26 @@ handleGetCompanyAccounts = withUserGet $ withCompanyAdmin $ \_ -> do
     Gets the ajax data for the company accounts list.
 -}
 handleCompanyAccounts :: Kontrakcja m => m JSValue
-handleCompanyAccounts = withCompanyAdmin $ \(user, company) -> do
-  companyusers <- runDBQuery $ GetCompanyAccounts (companyid company)
+handleCompanyAccounts = withCompanyAdmin $ \(_user, company) -> do
+  handleCompanyAccountsInternal (companyid company)
+
+{- |
+    Gets the ajax data for the company accounts list.
+-}
+handleCompanyAccountsForAdminOnly :: Kontrakcja m => CompanyID -> m JSValue
+handleCompanyAccountsForAdminOnly cid = onlySuperUser $ do
+  handleCompanyAccountsInternal cid
+
+{- |
+    This creates the JSON for either the admin only user or the logged in
+    company admin.
+-}
+handleCompanyAccountsInternal :: Kontrakcja m => CompanyID -> m JSValue
+handleCompanyAccountsInternal cid = do
+  Context{ctxmaybeuser = Just user} <- getContext
+  companyusers <- runDBQuery $ GetCompanyAccounts cid
   deletableuserids <- map userid <$> filterM isUserDeletable companyusers
-  companyinvites <- runDBQuery $ GetCompanyInvites (companyid company)
+  companyinvites <- runDBQuery $ GetCompanyInvites cid
   let isUser CompanyInvite{invitedemail} = unEmail invitedemail `elem` map getEmail companyusers
   let
     companyaccounts =
@@ -156,6 +175,8 @@ companyAccountsSortFunc "deletable" = viewComparing cadeletable
 companyAccountsSortFunc "deletableREV" = viewComparingRev cadeletable
 companyAccountsSortFunc "activated" = viewComparing caactivated
 companyAccountsSortFunc "activatedREV" = viewComparingRev caactivated
+companyAccountsSortFunc "id" = viewComparing camaybeuserid
+companyAccountsSortFunc "idREV" = viewComparingRev camaybeuserid
 companyAccountsSortFunc _ = const $ const EQ
 
 companyAccountsPageSize :: Int
@@ -213,7 +234,6 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
       (Just _email, Just existinguser, Just existingcompany) | existingcompany /= company -> do
         --this is a corner case where someone is trying to takeover someone in another company
         --we send emails to tell people, but we don't send any activation links
-        _ <- sendTakeoverCompanyUserMail user company existinguser
         _ <- sendTakeoverCompanyInternalWarningMail user company existinguser
         return $ Just existinguser
       _ -> return Nothing
@@ -258,7 +278,6 @@ handleResendToCompanyAccount = withCompanyAdmin $ \(user, company) -> do
       (Nothing, Nothing, Just _invite, Just userbyemail) |
         isJust (usercompany userbyemail) -> do
         -- this is a company user
-          _ <- sendTakeoverCompanyUserMail user company userbyemail
           _ <- sendTakeoverCompanyInternalWarningMail user company userbyemail
           return True
       _ -> return False
@@ -277,12 +296,6 @@ sendTakeoverPrivateUserMail :: Kontrakcja m => User -> Company -> User -> m ()
 sendTakeoverPrivateUserMail inviter company user = do
   ctx <- getContext
   mail <- mailTakeoverPrivateUserInvite (ctxhostpart ctx) user inviter company (LinkCompanyTakeover (companyid company))
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress user] }
-
-sendTakeoverCompanyUserMail :: Kontrakcja m => User -> Company -> User -> m ()
-sendTakeoverCompanyUserMail inviter company user = do
-  ctx <- getContext
-  mail <- mailTakeoverCompanyUserInfo user inviter company
   scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress user] }
 
 sendTakeoverCompanyInternalWarningMail :: Kontrakcja m => User -> Company -> User -> m ()

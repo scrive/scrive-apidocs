@@ -41,6 +41,9 @@ window.SignatoryAttachment = Backbone.Model.extend({
     },
     isLoading : function() {
         return this.get('loading');
+    },
+    document : function() {
+        return this.signatory().document();
     }
 });
 
@@ -65,7 +68,7 @@ window.SignatoryAttachmentRowView = Backbone.View.extend({
         } else if (attachment.hasFile()) {  
             var filelink = $("<a target='_blank'/>").text(attachment.file().name()).attr("href",attachment.file().downloadLink());
             var path = document.location.pathname.split("/");
-            var deleteurl = "/api/document/" + path[2] + "/signatory/" + path[3] + "/attachment/" + attachment.name() +"/file?" + "slid=" + path[3] + "&mh=" + path[4];
+            var deleteurl = "/api/document/" + path[2] + "/signatory/" + path[3] + "/attachment/" + attachment.name() +"/file"+ attachment.document().viewer().urlPart();
             var removelink = $("<a href='' style='padding-left: 2em'>x</a>").click(function(){
                 attachment.loading();
                 $.ajax(deleteurl, {
@@ -89,7 +92,7 @@ window.SignatoryAttachmentRowView = Backbone.View.extend({
             lasttd.append(removelink);
         } else {
             var path = document.location.pathname.split("/");
-            var uploadurl = "/api/document/" + path[2] + "/signatory/" + path[3] + "/attachment/" + attachment.name() +"/file?" + "slid=" + path[3] + "&mh=" + path[4];
+            var uploadurl = "/api/document/" + path[2] + "/signatory/" + path[3] + "/attachment/" + attachment.name() +"/file" + attachment.document().viewer().urlPart();
             var uploadbutton = UploadButton.init({
                 width: 200,
                 name: "file",

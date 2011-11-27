@@ -1,4 +1,4 @@
-module ELegitimation.ELeg where
+module ELegitimation.ELegTransaction where
 
 import Happstack.Data
 

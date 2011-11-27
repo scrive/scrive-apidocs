@@ -539,7 +539,7 @@ _dialogConfirmSendinviteBody,"Du har valt att vara Ej undertecknande part och ko
  Är du säker på att du vill skicka en inbjudan att underteckna
  dokumentet",,"You have chosen a non-signatory role, and will not sign. Are you
  sure you want to sent an invitation to sign the document"
-_dialogConfirmSendinviteBody2To,till,,to
+_dialogConfirmSendinviteBody2To," till ",," to "
 _dialogConfirmSendinviteBody3,"Du har skapat fält för parterna att fylla i innan de undertecknar.
  Efter att alla har undertecknat kommer du att
  få ett mail med en länk till en sida på Scrive där du kan
@@ -548,7 +548,7 @@ _dialogConfirmSendinviteBody3,"Du har skapat fält för parterna att fylla i inn
  will receive an e-mail with a link to a Scrive page where you
  can sign the document."
 _dialogConfirmSendinviteBody4,"Vill du skicka inbjudan att fylla i och underteckna dokumentet",,"Do you want to send an invitation to fill in and sign the document"
-_dialogConfirmSendinviteBody5,till,,to
+_dialogConfirmSendinviteBody5," till ",," to "
 _dialogConfirmSignByAuthorBody1,"Är du säker att du vill underteckna dokumentet",,"Are you sure you want to sign the document"
 _dialogConfirmSignByAuthorBody2,När,,When
 _dialogConfirmSignByAuthorBody3,"undertecknat blir avtalet <strong>juridiskt bindande</strong> och              det färdigställda avtalet skickas till din e-post.",,"has signed the document, it becomes <strong>legally binding</strong>         and the finished document will be sent to your  e-mail."
@@ -571,7 +571,7 @@ _dialogConfirmSigninviteSubBody,"Har du ingen e-legitimation? Du kan ladda ned e
 _dialogConfirmSigninviteSubBody2ClickHere,"Klicka här",,"Click here"
 _dialogConfirmSigninviteSubBody3,"för att läsa mer.",,"to read more."
 _dialogConfirmSigninviteSubHead,"Välj typ av e-legitimation",,"Choose type of e-legitimation"
-_dialogConfirmTextSendIfNotNormalOrFieldsTo,till,,to
+_dialogConfirmTextSendIfNotNormalOrFieldsTo," till ",," to "
 _dialogConfirmTextSendNormalBody1,"Vill du skicka en inbjudan att underteckna dokumentet till",,"Do you want to send an invitation to sign the document to"
 _dialogConfirmTextSendNormalBody2,"?               Efter att de har undertecknat kommer du att få
  ett mail med en länk till en sida på Scrive där du kan underteckna
@@ -763,10 +763,9 @@ _flashMessageWeWillCallYouSoon,"Tack. Vi kommer att kontakta dig på $phone$ ino
 _flashMessageUserActivated,"Välkommen till Scrive!",,"Welcome to Scrive!"
 _flashMessageUserAlreadyActivated,"Du har redan aktiverat detta konto.",,"You have already activated this account."
 _flashMessageUserDetailsSaved,"Dina kontoändringar har sparats.",,"Your account settings have been saved."
-_flashMessageCompanyCreated,"Ditt företag har skapats. Nu bjuder dina kollegor att gå med dig.",,"Your company has been created.  Now invite your colleagues to join you."
-_flashMessageUserHasBecomeCompanyAccount,"Du är nu underkonto underhuvudkontot $supervisor.fullnamePlusEmail$
- och rättigheterna till dina dokument har överförts till huvudkontot.",,"Your account is now a part of $companyname$ and the rights to your documents have been transferred."
-_flashMessageUserHasLiveDocs,"Det går inte att ta bort kontot som de har dokument som ännu inte avslutats.",,"Unable to remove account as they have documents that are not yet finalised."
+_flashMessageCompanyCreated,"Ditt företag har skapats. Nu kan du skapa Scrive-konton till dina kollegor inom organisationen.",,"Your company has been created.  Now invite your colleagues to join you."
+_flashMessageUserHasBecomeCompanyAccount,"Ditt konto är nu en del av $companyname$ och rättigheterna till dina dokument har nu överförts till $companyname$.",,"Your account is now a part of $companyname$ and the rights to your documents have been transferred."
+_flashMessageUserHasLiveDocs,"Det går inte att ta bort kontot eftersom användaren har dokument som ännu inte avslutats eller avbrutits.",,"Unable to remove the account as the user has documents that have not yet been finalised or cancelled."
 _flashMessageUserInvitedAsSubaccount,"Din förfrågan har skickats!",,"Your request has been sent!"
 _flashMessageUserPasswordChanged,"Ditt lösenord har ändrats.",,"Your password has been changed."
 _flashMessageUserSignupDone,"Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter
@@ -818,18 +817,16 @@ _invitationMailUndeliveredContentInstruction,"1. Kontrollera vilken som är mott
        <br/>       3. Klicka ""Starta om""<br/>       4. Skriv
  in rätt e-postadress och skicka igen",,"1. Confirm the counterpart's address<br/>  2. Access the document from the Archive or by clicking the following link<br/> <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/> <br/> 3. Click ""Restart""<br/> 4. Correct the email address and send again"
 _invitationMailUndeliveredTitle,"Felaktig e-post",,"Incorrect email"
-_mailNewCompanyUserInviteContentBodyFirst,"<strong>$invitername$</strong> har bjudit in dig till Scrive genom vilket du kan skriva avtal för organisationen <strong>$companyname$</strong>. Observera att detta konto inte är avsett för privat bruk då samtliga dokument i kontot tillhör organisationen",,"<strong>$invitername$</strong> has invited you to Scrive.  Using Scrive you will be able to write contracts for <strong>$companyname$</strong>.  Please note that this account is not intended for private use and all documents will belong to $companyname$."
+_mailNewCompanyUserInviteContentBodyFirst,"<strong>$invitername$</strong> har bjudit in dig till Scrive genom vilket du kan skriva avtal för organisationen $companyname$och samtliga arkiverade dokument kommer att tillhöra $companyname$. Vänligen notera därför att kontot inte bör användas för privat bruk.",,"<strong>$invitername$</strong> has made you an account in Scrive.  You can use this to get documents signed online.  This account is intended to be used only in relation to $companyname$ and all saved documents will belong to $companyname$.  This account is not for private use."
 _mailNewCompanyUserInviteContentBodyUserName,"Användarnamn:",,"Username:"
 _mailNewCompanyUserInviteContentClickLink,"Vänligen klicka på länken för att aktivera kontot:<br/>",,"Please click to activate your account:<br/>"
 _mailNewCompanyUserInviteTitle,"Inbjudan från $invitername$ till $companyname$",,"Invitation from $invitername$ to join $companyname$"
-_mailTakeoverPrivateUserInviteContentBodyFirst,"$invitername$ har bjudit in dig till bolaget $companyname$. Om du accepterar ditt konto och dokument kommer att ägas av $companyname$.",,"$invitername$ has invited you to join company $companyname$. If you accept your account and documents will be owned by $companyname$."
-_mailTakeoverPrivateUserInviteContentBodySecond,"Vänligen iaktta försiktighet innan du accepterar. Särskilt om du har privata dokument i kontot.",,"Please consider before accepting, especially if you have private documents in your account."
+_mailTakeoverPrivateUserInviteContentBodyFirst,"$invitername$ har bjudit in dig att konvertera ditt privata Scrive konto till ett $companyname$ Scrive-konto. Om du accepterar kommer ditt konto och dina dokument att ägas av $companyname$.",,"$invitername$ has invited you to convert your private account into a company account with $companyname$. If you accept this invite, your account and documents will be owned by $companyname$."
+_mailTakeoverPrivateUserInviteContentBodySecond,"Vänligen iaktta försiktighet innan du accepterar. Särskilt om du har privata dokument i kontot.",,"Please consider before accepting. You should not have any private documents in your account when accepting."
 _mailTakeoverPrivateUserInviteContentInstructionFirst,"Så här går du vidare",,"To continue"
 _mailTakeoverPrivateUserInviteContentInstructionSecond,"<li>Kontrollera att du inte har några privata dokument i kontoarkiven</li><li>Spara ned samtliga privata dokument till din dator</li><li>Klicka på länken nedan</li><li>Läs meddelandet online</li><li>Acceptera</li><li>Ditt konto är nu underkonto</li>",,"<li>Check your Archive for private or personal documents.</li><li>Download and save these documents, then remove from your Archive.</li> <li>Click the link below</li><li>Follow the online instructions.</li>"
 _mailTakeoverPrivateUserInviteContentLink,"Detta är länken nedan",,"Click to accept the invitation"
 _mailTakeoverPrivateUserInviteTitle,"Förfrågan att göra till företagskonton",,"Company Account Invitation"
-_mailTakeoverCompanyUserInfoTitle,"Förfrågan att göra till företagskonton",,"Company Account Invitation"
-_mailTakeoverCompanyUserInfoBody,"$invitername$ vill du gå med som ett företagskonto för $companyname$. Vi märker att du redan är medlem i ett annat företag. Om du vill flytta ditt konto kontakta oss på +46 (0) 10-195 99 15 eller info@scrive.se och vi kommer att kunna hjälpa dig.",,"$invitername$ would like you to join as a company account for $companyname$.  We notice that you are already a member of another company.  If you would like to move your account please contact us at +46 (0)10-195 99 15 or info@scrive.se and we will be able to help you out."
 _inviteTextFieldName,"invite text",,"invite text"
 _invitetextSaveTemplate,"Spara mall",,"Save template"
 _lastname,Efternamn,,"Last name"
@@ -1766,9 +1763,9 @@ _modalAccountSetupHeaderAcceptTOS,"Vänligen acceptera användarvillkoren",,"Ple
 _modalAccountSetupIfPrivateAccount,Privatperson,,"Private person"
 _modalAccountSetupPosition,Position:,,Position:
 _modalAccountSetupRepeatPassword,"Upprepa lösenord:",,"Repeat password:"
-_modalDoYouWantToBeCompanyAccountBody,"Om du accepterar blir du företagskonto till $companyname$ och huvudkontot tar över ägarskapet över samtliga dokument.  Är du säker att vill acceptera?",,"If you accept the invitation to join $companyname$ the ownership of all your documents will be transferred.  Are you sure you want to accept?"
+_modalDoYouWantToBeCompanyAccountBody,"Accepterar du att konvertera ditt privata Scrive konto till ett $companyname$ Scrive-konto?Om du accepterar kommer ägarskapet av kontot och samtliga dokument i kontot att överföras till $companyname$",,"Do you want to convert your existing Scrive account into a company account for $companyname$? This will mean the ownership of the account and your documents will be transferred to $companyname$."
 _modalDoYouWantToBeCompanyAccountFooterAccept,"Acceptera",,"Accept"
-_modalDoYouWantToBeCompanyAccountHeader,"Vill du acceptera att bli företagskonto?",,"Do you accept the invitation to become a company account?"
+_modalDoYouWantToBeCompanyAccountHeader,"Vänligen verifiera din avsikt",,"Account confirmation"
 _modalErrorBody,"Oroa dig inte, vi tittar på problemet",,"Don't worry, we are looking at the problem"
 _modalErrorHeader,"Oops, ett fel har uppstått",,"Oops, an error has occurred"
 _modalLoginForSaveViewBody,"Ditt konto har skapats. En aktiveringslänk har skickats till
@@ -1887,30 +1884,30 @@ _nonsignatory,"Ej undertecknande part",,"Non-signing party"
 _noonehadsignedtext,"Ingen har undertecknat dokumentet ännu",,"No one has signed the document yet"
 _of,av,,of
 _offerAuthor,Avsändare,,Sender
-_offerInvitationSentEntry,"skickar offerten till",,"sends the offer to"
-_offerInvitationSentEntryIfElse,parterna,,"the parties"
-_offerInvitationSentEntryIfoneSignatory,parten,,"the party"
+_offerInvitationSentEntry," skickar offerten till ",," sends the offer to "
+_offerInvitationSentEntryIfElse," parterna ",," the parties "
+_offerInvitationSentEntryIfoneSignatory," parten ",," the party "
 _offerLastHistEntry,"Samligta parter har accepterat offerten.",,"All parties have accepted the offer."
-_offerSeenHistEntry,"granskar offerten online",,"reviews the offer online"
-_offerSignHistEntry,"accepterar offerten med",,"accepts the offer online with"
+_offerSeenHistEntry,"granskar offerten online ",,"reviews the offer online "
+_offerSignHistEntry,"accepterar offerten med ",,"accepts the offer online with "
 _offerSignatory,Mottagare,,Recipient
 _offerauthorissecretarytext,Avsändare,,Sender
-_offercancelbuttontext,"Återkalla offert",,"Withdraw offer"
+_offercancelbuttontext,"Återkalla offert ",,"Withdraw offer "
 _offercancelbyauthormodaltitleBody,"När du återkallat offerten kommer nedanstående meddelande att
  skickas till din motpart.",,"When you have withdrawn the offer, the following message will be sent to your counterpart."
 _offercancelbyauthormodaltitleHead,"Är du säker att du vill återkalla offerten?",,"Are you sure you want to withdraw the offer?"
-_offercancelledinfoheader,"Offert återkallad",,"Offer withdrawn"
-_offercancelledinfotext,"har återkallat offerten. Den går således inte att acceptera.",,"has withdrawn the offer. You can no longer accept it."
-_offerconfirmsendtext,"Är du säker på att du vill skicka offerten",,"Are you sure you want to send the offer"
-_offerconfirmsendtitle,"Skicka offert",,"Send offer"
+_offercancelledinfoheader,"Offert återkallad ",,"Offer withdrawn "
+_offercancelledinfotext," har återkallat offerten. Den går således inte att acceptera. ",," has withdrawn the offer. You can no longer accept it. "
+_offerconfirmsendtext,"Är du säker på att du vill skicka offerten ",,"Are you sure you want to send the offer "
+_offerconfirmsendtitle,"Skicka offert ",,"Send offer "
 _offerexpirytext,Förfallodatum,,"Expiration date"
 _offerexpirywarntext,"Observera! Du kan ej återkalla offerten om du väljer ett förfallodatum.
  Detta regleras av avtalslagen.",,"OBSERVE: If you choose an expiration date, you cannot withdraw
  the invitation before the expiration. This is controlled by
  the Swedish Law of Contracts."
-_offerhassignedformailtext,"Har accepterat",,"Has accepted"
+_offerhassignedformailtext,"Har accepterat ",,"Has accepted "
 _offername,Offert,,Offer
-_offerpendingauthorinfoheader,"Väntar på accept",,"Waiting for acceptance"
+_offerpendingauthorinfoheader,"Väntar på accept ",,"Waiting for acceptance "
 _offerpendingauthorinfotext,"Du har skickat offerten. Offerten har ännu inte accepterats av
  mottagaren.",,"You have sent the offer. It has not yet been accepted by the
  recipient."
@@ -3216,7 +3213,7 @@ _createCompanyExplanation,"När ett företag är skapat kommer du att bli en adm
 _createCompanyFormPreamble,"För att skapa ett företag vänligen fyll i följande information:",,"To create a company please complete the following information:"
 _documentLanguageLabel,"Mottagares språk",,"Recipient's language"
 _signInEnglish,"Signera på engelska",,"Sign in English"
-_modalUserSignupDoneHeader,"Konto skapat",,"Account Saved"
+_modalUserSignupDoneHeader,"Konto skapat",,"Account saved"
 _modalUserSignupDoneBody,"Ditt konto har skapats! Vi har skickat ett mail med dina användaruppgifter
  till $email$.",,"Your account has been created. An email containing your account details has been sent to $email$."
 _GoBack,"Gå tillbaka",,"Go back"
@@ -3248,7 +3245,7 @@ _contractauthorsignlastbuttontext,Signera,,Sign
 _offerauthorsignlastbuttontext,Bekräfta,,Confirm
 _orderauthorsignlastbuttontext,Bekräfta,,Confirm
 "_flashCompanyAccountInviteSent","En inbjudan har skickats.",,"An invitation has been sent."
-"_flashCompanyAccountInviteResent","Den inbjudan har skickats igen.",,"The invitation has been sent again."
+"_flashCompanyAccountInviteResent","Din inbjudan har skickats igen.",,"The invitation has been sent again."
 "_role","Role",,"Role"
 "_admin","Admin",,"Admin"
 "_standard","Standard",,"Standard"
@@ -3256,5 +3253,21 @@ _orderauthorsignlastbuttontext,Bekräfta,,Confirm
 "_modalResendCompanyAccountInviteBody","Vänligen bekräfta att du vill skicka om inbjudan till",,"Please confirm that you would like to resend an invitation to"
 "_modalResendCompanyAccountInviteConfirm","Skicka",,"Send"
 "_pendingcompanyaccount","Väntar",,"Pending"
+_changeEmailRequestExplanation,"Din e-post och ditt användarnamn är samma i Scrive. Genom att ändra e-post kommer du också att ändra ditt användarnamn vid inloggning.  För att bekräfta din nya adress skickar vi ett bekräftelsemail med en länk. Vänligen följ instruktionerna för att fullfölja ändringen.",,"Your email and user name are the same in Scrive. By changing the email you will also change the username for logging in.  To verify your new address we will send you an confirmation mail with a link. Please follow the instructions to complete the change."
+_newemail,"Ny e-post",,"New email"
+_newemailagain,"Ny e-post igen",,"New email again"
+_changeEmailRequestTitle,"Ändra användarnamn och e-post",,"Change username and email"
+_changeEmailRequestAcceptText,"Ändra",,"Change"
+_changeEmailRequestButtonText,"Ändra",,"Change"
+_mailRequestChangeEmailTitle,"Ändring av användarnamn",,"Username change"
+_mailRequestChangeEmailExplanation,"Du har begärt att få ändra ditt användarnamn och din e-post hos Scrive till $newemail$. Vänligen klicka på länken för att fullfölja ändringen:",,"You have requested that we change your Scrive username and email to $newemail$.  Please follow this link to complete the change:"
+_flashMessageChangeEmailMailSent,"Vi har mailat en bekräftelselänk till $newemail$. Vänligen följ instruktionerna för att fullborda ändringen.",,"We have mailed a confirmation link to $newemail$, please follow to complete the change."
+_flashMessageMismatchedEmails,"E-postadresserna matchar inte.",,"The emails you entered do not match."
+_flashMessageProblemWithEmailChange,"Vi kan tyvärr inte genomföra ändringen. Din länk kanske blivit gammal. Vänligen gör ny förfrågan.",,"We're unable to complete this change.  Perhaps your link has expired?  Please request again."
+_flashMessageYourEmailHasChanged,"Ditt användarnamn och din e-post har nu ändrats.",,"Your username and email have been successfully changed."
+_modalDoYouWantToChangeEmailHeader,"Bekräfta ändring av användarnamn",,"Confirm username change"
+_modalDoYouWantToChangeEmailBody,"Vänligen fyll i ditt lösenord för att fullfölja ändringen av både användarnamn och e-post till $newemail$.",,"Please enter your password to complete the change of both your username and email to $newemail$."
+_modalDoYouWantToChangeEmailAccept,"OK",,"OK"
+_flashMessageProblemWithPassword,"Felaktig lösenord.",,"Incorrect password."
 "_apiPageMetaDescription","",,""
 "_scrivebymailPageMetaDescription","",,""

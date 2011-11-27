@@ -194,7 +194,7 @@ api_signatory sl = JSObject $ toJSObject $
      Just signinfo ->  [("sign", api_date $ signtime signinfo)]
      Nothing -> []
     ++
-    [("relation",showJSON $ fromSafeEnum $ api_document_relation sl)]
+    [("relation",showJSON $ fromSafeEnumInt $ api_document_relation sl)]
     ++
     [("fields", JSArray $ for (filterCustomField $ signatoryfields $ signatorydetails sl) $ \(s, label, _) -> JSObject $ toJSObject [
         ("name",  JSString $ toJSString $ BS.toString label)
@@ -234,11 +234,11 @@ api_document :: Maybe [JSValue] -> Document -> JSValue
 api_document mfiles doc = JSObject $ toJSObject $ [
   ("document_id", showJSON  $ show $ unDocumentID $ documentid doc)
   , ("title", showJSON  $ BS.toString $ documenttitle doc)
-  , ("type", showJSON  $ fromSafeEnum $ api_document_type doc)
-  , ("state", showJSON  $ fromSafeEnum $ api_document_status doc)
+  , ("type", showJSON  $ fromSafeEnumInt $ api_document_type doc)
+  , ("state", showJSON  $ fromSafeEnumInt $ api_document_status doc)
   , ("involved", JSArray $ map api_signatory $ documentsignatorylinks doc)
   , ("tags", JSArray $ map api_document_tag $ documenttags doc)
-  , ("authorization", showJSON  $ fromSafeEnum $ api_document_authorisation doc)
+  , ("authorization", showJSON  $ fromSafeEnumInt $ api_document_authorisation doc)
   , ("mdate", api_date $ documentmtime doc)
   , ("locale", jsonFromLocale $ getLocale doc)
   ] ++ case mfiles of

@@ -117,7 +117,11 @@ instance FromJSON BS.ByteString where
 instance FromJSON Integer where
     fromJSValue (JSRational _ r) = Just $ numerator r
     fromJSValue _ = Nothing
+    
+instance FromJSON Int where
+    fromJSValue j = liftM fromIntegral (fromJSValue j :: Maybe Integer)
 
+    
 instance (FromJSON a) => FromJSON [a] where
     fromJSValue (JSArray list) = let plist = map fromJSValue list 
                                  in if (all isJust plist) 
