@@ -1,4 +1,4 @@
-{-# LANGUAGE DoRec #-}
+{-# LANGUAGE DoRec, PatternGuards #-}
 {-# OPTIONS_GHC -funbox-strict-fields #-}
 
 module PdfModel where
