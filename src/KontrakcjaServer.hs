@@ -27,7 +27,8 @@ import System.Console.GetOpt
 import System.Directory (createDirectoryIfMissing)
 import qualified AppLogger as Log
 import AppState (AppState)
-import AppControl (staticRoutes,appHandler,defaultAWSAction,AppConf(..),AppGlobals(..))
+import RoutingTable (staticRoutes)
+import AppControl (appHandler,defaultAWSAction,AppConf(..),AppGlobals(..))
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Map as Map
