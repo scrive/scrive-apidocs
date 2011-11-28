@@ -659,6 +659,8 @@ handleIssueShowGet docid =
           (True, _, True, Preparation) -> Right <$> pageAttachmentDesign document
           (_, _, True, _) -> Right <$> pageAttachmentView document
           (True, _, _, _) -> do
+            let Just author = ctxmaybeuser
+                showadvancedoption = Just AdvancedMode /= preferreddesignmode (usersettings author)
             let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
             when (isCanceled document && isJust mMismatchMessage) $
               addFlash (OperationFailed, fromJust mMismatchMessage)
@@ -670,8 +672,8 @@ handleIssueShowGet docid =
               Preparation -> do
                 mattachments <- getDocsByLoggedInUser
                 case mattachments of
-                  Left _ -> Right <$> pageDocumentDesign ctx2 document step [] filesforattachments
-                  Right attachments -> Right <$> pageDocumentDesign ctx2 document step (filter isAttachment attachments) filesforattachments
+                  Left _ -> Right <$> pageDocumentDesign ctx2 document step showadvancedoption [] filesforattachments
+                  Right attachments -> Right <$> pageDocumentDesign ctx2 document step showadvancedoption (filter isAttachment attachments) filesforattachments
               _ ->  Right <$> pageDocumentForAuthor ctx2 document
           (_, Just invitedlink, _, _) -> Right <$> pageDocumentForSignatory (LinkSignDoc document invitedlink) document ctx invitedlink
           -- friends can just look (but not touch)

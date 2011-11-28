@@ -1003,8 +1003,12 @@ pageDocumentForAuthorHelpersLocalDialogs=
     <div class="modal-body">
       <div class="modal-content">
         <p>$_dialogConfirmAdvancedBody()$</p>
-        <p><input type="checkbox" name="defaultadvanced"
-        id="defaultadvancedcheck"> <label for="defaultadvancedcheck">$_dialogConfirmAdvancedCheck()$</label></p>
+        $if(showadvancedoption)$
+        <p>
+          <input type="checkbox" name="defaultadvanced"
+                 id="defaultadvancedcheck"> <label for="defaultadvancedcheck">$_dialogConfirmAdvancedCheck()$</label>
+        </p>
+        $endif$
       </div>
     </div>
     <div class="modal-footer">
