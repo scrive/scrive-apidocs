@@ -285,7 +285,7 @@ instance DBUpdate AddUser (Maybe User) where
             ++ ", preferred_design_mode"
             ++ ", lang"
             ++ ", region"
-            ++ ", deleted) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") $ [
+            ++ ", deleted) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") $ [
                 toSql uid
               , toSql $ pwdHash <$> mpwd
               , toSql $ pwdSalt <$> mpwd
