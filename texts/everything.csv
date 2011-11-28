@@ -516,8 +516,8 @@ _daystosigncheckboxExpDate,Förfallodatum,,"Expiration date"
 _delete,Radera,,Delete
 _dialogConfirmAdvancedBody,"Du kan byta till avancerad process för att ta del av mer avancerade
  funktioner så som förfallodatum, mallar, massutskick mm.",,"Change to Advanced View to enjoy more advanced features such
- as expiration date, templates, multi send, etc."
-_dialogConfirmAdvancedCheck,"",,"Always use Advanced View for new documents."
+ as expiration date, templates, multiple send-out, etc."
+_dialogConfirmAdvancedCheck,"Använd alltid avancerad funktionalitet för nya dokument.",,"Always use Advanced View for new documents."
 _dialogConfirmAdvancedChangeToFooterChangeProcess,"Byt process",,"Change process"
 _dialogConfirmAdvancedChangeToHead,"Vill du byta till avancerad process?",,"Do you want to change to advanced process?"
 _dialogConfirmBasicChangeToBody,"Du kan byta till förenklad process för att göra processen ännu
