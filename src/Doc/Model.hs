@@ -102,7 +102,7 @@ module Doc.Model
   , SetInviteText(..)
   , SetDaysToSign(..)
   , RemoveDaysToSign(..)
-  , SetDocumentFunctionality(..)
+  , SetDocumentAdvancedFunctionality(..)
   , SetCSVSigIndex(..)
   , SetEmailIdentification(..)
   , SetElegitimationIdentification(..)
@@ -1129,16 +1129,16 @@ instance DBUpdate RemoveDaysToSign (Either String Document) where
   dbUpdate (RemoveDaysToSign docid time) = wrapDB $ \conn -> do
     unimplemented "RemoveDaysToSign"
 
-data SetDocumentFunctionality = SetDocumentFunctionality DocumentID DocumentFunctionality MinutesTime
+data SetDocumentAdvancedFunctionality = SetDocumentAdvancedFunctionality DocumentID MinutesTime
                         deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate SetDocumentFunctionality (Either String Document) where
-  dbUpdate (SetDocumentFunctionality did docfunc time) = do
+instance DBUpdate SetDocumentAdvancedFunctionality (Either String Document) where
+  dbUpdate (SetDocumentAdvancedFunctionality did time) = do
     r <- runUpdateStatement "documents"
-         [ sqlField "functionality" $ docfunc
+         [ sqlField "functionality" AdvancedFunctionality
          , sqlFieldType "mtime" "timestamp" $ time
          ]
-         "WHERE id = ?" [ toSql did ]
-    getOneDocumentAffected "SetDocumentFunctionality" r did
+         "WHERE id = ? AND functionality <> ?" [ toSql did, toSql AdvancedFunctionality ]
+    getOneDocumentAffected "SetDocumentAdvancedFunctionality" r did
 
 
 data SetDocumentTitle = SetDocumentTitle DocumentID BS.ByteString MinutesTime

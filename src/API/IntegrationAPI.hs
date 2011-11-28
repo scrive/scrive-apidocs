@@ -61,7 +61,6 @@ import Util.JSON
 import Text.JSON.String
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified AppLogger as Log (integration)
-import Doc.DocProcess
 
 {- |
   Definition of integration API
@@ -262,7 +261,7 @@ createAPIDocument company' (authorTMP:signTMPS) tags mlocale createFun = do
     mdoc <- createFun author (Just company) now
     when (isNothing mdoc) $ throwApiError API_ERROR_OTHER "Problem creating a document | This may be because the company and author don't match"
     let doc = fromJust mdoc
-    _ <- update $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality now
+    _ <- update $ SetDocumentAdvancedFunctionality (documentid doc) now
     _ <- update $ SetDocumentTags (documentid doc) tags
     when (isJust mlocale) $
       ignore $ update $ SetDocumentLocale (documentid doc) (fromJust mlocale) now
@@ -274,11 +273,6 @@ createAPIDocument company' (authorTMP:signTMPS) tags mlocale createFun = do
         nonauthordetails = map toSignatoryDetails signTMPS
         nonauthorroles = map (fromMaybe defsigroles . toSignatoryRoles) signTMPS
         sigs = (toSignatoryDetails authorTMP, authorroles):zip nonauthordetails nonauthorroles
-        disallowspartner = getValueForProcess doc processauthorsend /= Just True
-    when (any hasFieldsAndPlacements (toSignatoryDetails authorTMP : nonauthordetails) ||
-          length nonauthordetails > 1 ||
-          (disallowspartner && SignatoryPartner `elem` authorroles)) $
-      ignore $ update $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality (ctxtime ctx)
     doc' <- update $ ResetSignatoryDetails (documentid doc) sigs (ctxtime ctx)
     when (isLeft doc') $ Log.integration $ "error creating document: " ++ fromLeft doc'
     when (isLeft doc') $ throwApiError API_ERROR_OTHER "Problem creating a document (SIGUPDATE) | This should never happend"

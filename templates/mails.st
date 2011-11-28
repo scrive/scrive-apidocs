@@ -656,19 +656,6 @@ mailTakeoverPrivateUserInviteP=
 
   <p>$_mailTakeoverPrivateUserInviteContentLink()$: <a href="$ctxhostpart$$link$">$ctxhostpart$$link$</a></p>
 ####
-####
-mailTakeoverCompanyUserInfo=
-  $_mailTakeoverCompanyUserInfoTitle()$
-  $nicemail(
-      mailheader=_mailTakeoverCompanyUserInfoTitle();
-      mailp1=mailTakeoverCompanyUserInfoP();
-      mailp2=poweredBySkrivaPaPara()
-    )$
-####
-mailTakeoverCompanyUserInfoP=
-  <p>$_hi()$ $invitedname$,</p>
-  <p>$_mailTakeoverCompanyUserInfoBody()$</p>
-####
 mailRequestChangeEmail=
   $_mailRequestChangeEmailTitle()$
   $nicemail(

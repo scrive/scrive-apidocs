@@ -334,7 +334,7 @@ handlePostUserSecurity = do
       footer <- getField "footer"
       _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
              locale = maybe (locale $ usersettings user) mkLocaleFromRegion mregion,
-             preferreddesignmode = Nothing  <| advancedMode |> Just AdvancedMode,
+             preferreddesignmode = Just AdvancedMode  <| advancedMode |> Nothing,
              customfooter = footer
            }
       return LinkAccountSecurity

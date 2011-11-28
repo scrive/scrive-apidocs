@@ -515,12 +515,9 @@ _daystosigncheckboxActivateExpDate,"Aktivera förfallodatum",,"Activate expirati
 _daystosigncheckboxExpDate,Förfallodatum,,"Expiration date"
 _delete,Radera,,Delete
 _dialogConfirmAdvancedBody,"Du kan byta till avancerad process för att ta del av mer avancerade
- funktioner så som förfallodatum, mallar, massutskick mm. Denna
- process tillhör betalplanerna Business och Enterprise, även
- vid fri testperiod.",,"Change to advanced process to enjoy more advanced features such
- as expiration date, templates, multi send etc. You can use the
- advanced process if you have price plan Business or Enterprise,
- or if you are in a trial period."
+ funktioner så som förfallodatum, mallar, massutskick mm.",,"Change to Advanced View to enjoy more advanced features such
+ as expiration date, templates, multi send, etc."
+_dialogConfirmAdvancedCheck,"Always use Advanced View for new documents.",,"Always use Advanced View for new documents."
 _dialogConfirmAdvancedChangeToFooterChangeProcess,"Byt process",,"Change process"
 _dialogConfirmAdvancedChangeToHead,"Vill du byta till avancerad process?",,"Do you want to change to advanced process?"
 _dialogConfirmBasicChangeToBody,"Du kan byta till förenklad process för att göra processen ännu
@@ -827,8 +824,6 @@ _mailTakeoverPrivateUserInviteContentInstructionFirst,"Så här går du vidare",
 _mailTakeoverPrivateUserInviteContentInstructionSecond,"<li>Kontrollera att du inte har några privata dokument i kontoarkiven</li><li>Spara ned samtliga privata dokument till din dator</li><li>Klicka på länken nedan</li><li>Läs meddelandet online</li><li>Acceptera</li><li>Ditt konto är nu underkonto</li>",,"<li>Check your Archive for private or personal documents.</li><li>Download and save these documents, then remove from your Archive.</li> <li>Click the link below</li><li>Follow the online instructions.</li>"
 _mailTakeoverPrivateUserInviteContentLink,"Detta är länken nedan",,"Click to accept the invitation"
 _mailTakeoverPrivateUserInviteTitle,"Förfrågan att göra till företagskonton",,"Company Account Invitation"
-_mailTakeoverCompanyUserInfoTitle,"Förfrågan att göra till företagskonton",,"Company Account Invitation"
-_mailTakeoverCompanyUserInfoBody,"$invitername$ vill du gå med som ett företagskonto för $companyname$. Vi märker att du redan är medlem i ett annat företag. Om du vill flytta ditt konto kontakta oss på +46 (0) 10-195 99 15 eller info@scrive.se och vi kommer att kunna hjälpa dig.",,"$invitername$ would like you to join as a company account for $companyname$.  We notice that you are already a member of another company.  If you would like to move your account please contact us at +46 (0)10-195 99 15 or info@scrive.se and we will be able to help you out."
 _inviteTextFieldName,"invite text",,"invite text"
 _invitetextSaveTemplate,"Spara mall",,"Save template"
 _lastname,Efternamn,,"Last name"
@@ -3242,7 +3237,7 @@ _Product1Body,"Skicka inbjudan att signera ditt dokument från tjänsten online.
 _Product2,"Scrive by Mail",,"Scrive by Mail"
 _Product2Body,"Skicka inbjudan att signera ditt dokument direkt från din mailklient. Inga installationer, inget krångel. Det kan inte bli enklare.",,"Send invite to sign your document directly from your mail client. No installations, no hassle. Cant be simpler."
 _Product3,"Scrive API",,"Scrive API"
-_Product3Body,"Vill ni integrera tjänsten i era arbetsflöden? Vi tillhandahåller ett API med full integration av vår tjänst. Ändra färg och form efter vad som passar er bäst. <a href='/se/sv/scriveapi'>Läs mer här.</a>",,"Do you want to integrate the service in your workflows? We provide an API with full integration of our service. Change color and forms after what fits you best. <a href='/gb/en/scriveapi'>Read more here.</a>"
+_Product3Body,"Vill ni integrera tjänsten i era arbetsflöden? Vi tillhandahåller ett API med full integration av vår tjänst. Ändra färg och form efter vad som passar er bäst.<br /><a href='/se/sv/scriveapi'>Läs mer här.</a>",,"Do you want to integrate the service in your workflows? We provide an API with full integration of our service. Change color and forms after what fits you best.<br /><a href='/gb/en/scriveapi'>Read more here.</a>"
 _Product4,"Alla typer av dokument",,"All types of documents"
 _Product4Body,"Scrive fungerar för alla dina processer och passar för alla typer av dokument. Skicka till exempel avtal, offerter eller orderbekräftelser med Scrive.",,"Scrive works for all types of processes and fits all types of documents. For example you can send contracts, tenders or order confirmations through Scrive."
 _legalModalTitle,"Artikel med John Kihlman, doktor i avtalsrätt",,
@@ -3285,3 +3280,5 @@ _modalDoYouWantToChangeEmailBody,"Vänligen fyll i ditt lösenord för att fullf
 _modalDoYouWantToChangeEmailAccept,"OK",,"OK"
 _flashMessageProblemWithPassword,"Felaktig lösenord.",,"Incorrect password."
 "_apiPageMetaDescription","",,""
+"_scrivebymailPageMetaDescription","",,""
+_defaultView,"Avancerad Process",,"Advanced View"

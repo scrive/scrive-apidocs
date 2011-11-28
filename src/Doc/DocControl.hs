@@ -659,6 +659,8 @@ handleIssueShowGet docid =
           (True, _, True, Preparation) -> Right <$> pageAttachmentDesign document
           (_, _, True, _) -> Right <$> pageAttachmentView document
           (True, _, _, _) -> do
+            let Just author = ctxmaybeuser
+                showadvancedoption = Just AdvancedMode /= preferreddesignmode (usersettings author)
             let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
             when (isCanceled document && isJust mMismatchMessage) $
               addFlash (OperationFailed, fromJust mMismatchMessage)
@@ -670,8 +672,8 @@ handleIssueShowGet docid =
               Preparation -> do
                 mattachments <- getDocsByLoggedInUser
                 case mattachments of
-                  Left _ -> Right <$> pageDocumentDesign ctx2 document step [] filesforattachments
-                  Right attachments -> Right <$> pageDocumentDesign ctx2 document step (filter isAttachment attachments) filesforattachments
+                  Left _ -> Right <$> pageDocumentDesign ctx2 document step showadvancedoption [] filesforattachments
+                  Right attachments -> Right <$> pageDocumentDesign ctx2 document step showadvancedoption (filter isAttachment attachments) filesforattachments
               _ ->  Right <$> pageDocumentForAuthor ctx2 document
           (_, Just invitedlink, _, _) -> Right <$> pageDocumentForSignatory (LinkSignDoc document invitedlink) document ctx invitedlink
           -- friends can just look (but not touch)
@@ -1016,13 +1018,11 @@ handleIssueChangeFunctionality document = do
   ctx <- getContext
   udoc <- guardRightM $ updateDocument ctx document
   signlast <- isFieldSet "signlast"
-  toBasic <- isFieldSet "tobasic"
-  toAdvanced <- isFieldSet "toadvanced"
-  let newmode = caseOf [(toBasic, Just BasicMode)
-                       ,(toAdvanced, Just AdvancedMode)
-                       ] Nothing
-  SignatoryLink { maybesignatory = Just authorid } <- guardJust $ getAuthorSigLink udoc
-  _ <- runDBUpdate $ SetPreferredDesignMode authorid newmode
+  defaultadvanced <- isFieldSet "defaultadvanced"
+  when defaultadvanced $ do
+    SignatoryLink { maybesignatory = Just authorid } <- guardJust $ getAuthorSigLink udoc
+    _ <- runDBUpdate $ SetPreferredDesignMode authorid (Just AdvancedMode)
+    return ()
   return $ LinkDesignDoc $ DesignStep2 (documentid udoc) Nothing Nothing signlast
 
 {- |
@@ -1381,7 +1381,9 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
 
   -- author is gotten above, no?
   -- Just author <- doc_query $ GetUserByUserID $ unAuthor $ documentauthor documentis
-  _ <- doc_update $ SetDocumentFunctionality documentid docfunctionality ctxtime
+  when (docfunctionality == AdvancedFunctionality) $ do
+    _ <- doc_update $ SetDocumentAdvancedFunctionality documentid ctxtime
+    return ()
   _ <- doc_update $ SetDocumentTitle documentid docname ctxtime
   _ <- doc_update $ SetInviteText documentid invitetext ctxtime
   if docfunctionality == BasicFunctionality

@@ -22,6 +22,7 @@ module AppView( TopMenu(..)
               , clientsPage
               , contactUsPage
               , apiPage
+              , scriveByMailPage              
               , modalError
               , embeddedErrorPage
               , serviceFields
@@ -175,6 +176,8 @@ contactUsPage = getContext >>= \ctx -> renderTemplateAsPage ctx "contactUsPage" 
 apiPage:: Kontra String
 apiPage = getContext >>= \ctx -> renderTemplateAsPage ctx "apiPage" (Just LinkAPIPage) True
 
+scriveByMailPage :: Kontra String
+scriveByMailPage = getContext >>= \ctx -> renderTemplateAsPage ctx "scrivebymailPage" (Just LinkScriveByMailPage) True
 
 {- |
     Render a template as an entire page.

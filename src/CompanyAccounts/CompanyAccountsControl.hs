@@ -234,7 +234,6 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
       (Just _email, Just existinguser, Just existingcompany) | existingcompany /= company -> do
         --this is a corner case where someone is trying to takeover someone in another company
         --we send emails to tell people, but we don't send any activation links
-        _ <- sendTakeoverCompanyUserMail user company existinguser
         _ <- sendTakeoverCompanyInternalWarningMail user company existinguser
         return $ Just existinguser
       _ -> return Nothing
@@ -279,7 +278,6 @@ handleResendToCompanyAccount = withCompanyAdmin $ \(user, company) -> do
       (Nothing, Nothing, Just _invite, Just userbyemail) |
         isJust (usercompany userbyemail) -> do
         -- this is a company user
-          _ <- sendTakeoverCompanyUserMail user company userbyemail
           _ <- sendTakeoverCompanyInternalWarningMail user company userbyemail
           return True
       _ -> return False
@@ -298,12 +296,6 @@ sendTakeoverPrivateUserMail :: Kontrakcja m => User -> Company -> User -> m ()
 sendTakeoverPrivateUserMail inviter company user = do
   ctx <- getContext
   mail <- mailTakeoverPrivateUserInvite (ctxhostpart ctx) user inviter company (LinkCompanyTakeover (companyid company))
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress user] }
-
-sendTakeoverCompanyUserMail :: Kontrakcja m => User -> Company -> User -> m ()
-sendTakeoverCompanyUserMail inviter company user = do
-  ctx <- getContext
-  mail <- mailTakeoverCompanyUserInfo user inviter company
   scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress user] }
 
 sendTakeoverCompanyInternalWarningMail :: Kontrakcja m => User -> Company -> User -> m ()

@@ -2997,3 +2997,10 @@ a#attachmentback {
     height: 2em;
 }
 
+.account-body.advancedview {
+    font-size: 12px;
+}
+
+.account-body.advancedview p {
+    margin: 10px;
+}

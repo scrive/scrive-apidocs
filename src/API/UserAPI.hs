@@ -120,7 +120,7 @@ sendFromTemplate = do
   doc <- update $ SignableFromDocument temp
   let mauthorsiglink = getAuthorSigLink doc
   when (isNothing mauthorsiglink) $ throwApiError API_ERROR_OTHER "Template has no author."
-  _ <- update $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality (ctxtime ctx)
+  _ <- update $ SetDocumentAdvancedFunctionality (documentid doc) (ctxtime ctx)
   _ <- update $ SetEmailIdentification (documentid doc) (ctxtime ctx)
   medoc <- update $ ResetSignatoryDetails (documentid doc) (((signatoryDetailsFromUser author mcompany) { signatorysignorder = SignOrder 0 }, 
                                                              [SignatoryPartner, SignatoryAuthor]): 
@@ -169,7 +169,7 @@ sendNewDocument = do
   when (isLeft mnewdoc) $ throwApiError API_ERROR_OTHER "Problem making doc, maybe company and user don't match."
   let newdoc = fromRight mnewdoc
   _ <- liftKontra $ handleDocumentUpload (documentid newdoc) content filename
-  _ <- update $ SetDocumentFunctionality (documentid newdoc) AdvancedFunctionality (ctxtime ctx)
+  _ <- update $ SetDocumentAdvancedFunctionality (documentid newdoc) (ctxtime ctx)
   _ <- update $ SetEmailIdentification (documentid newdoc) (ctxtime ctx)
   edoc <- update $ ResetSignatoryDetails (documentid newdoc) (((signatoryDetailsFromUser author mcompany) { signatorysignorder = SignOrder 0 }, 
                                                              [SignatoryPartner, SignatoryAuthor]): 

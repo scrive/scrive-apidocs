@@ -73,7 +73,7 @@ module Doc.DocState
     , SetInviteText(..)
     , SetDaysToSign(..)
     , RemoveDaysToSign(..)
-    , SetDocumentFunctionality(..)
+    , SetDocumentAdvancedFunctionality(..)
     , SetCSVSigIndex(..)
     , SetEmailIdentification(..)
     , SetElegitimationIdentification(..)
@@ -410,20 +410,14 @@ removeDaysToSign docid time = do
     Right $ doc { documentdaystosign = Nothing
                 , documentmtime = time}
 
-setDocumentFunctionality :: DocumentID -> DocumentFunctionality -> MinutesTime -> Update Documents (Either String Document)
-setDocumentFunctionality did docfunc time =
+setDocumentAdvancedFunctionality :: DocumentID -> MinutesTime -> Update Documents (Either String Document)
+setDocumentAdvancedFunctionality did time =
   modifySignableOrTemplate did $ guardStatus "set document functionality on" Preparation $ \doc ->
-  let isbasic = BasicFunctionality == docfunc
-      oldsiglinks = documentsignatorylinks doc
-      basicsiglinks = signatoriesToBasic oldsiglinks
-  in Right $ doc { documentfunctionality        = docfunc
-                 , documentmtime                = time
-                 , documentauthorattachments    = []                    <| isbasic |> documentauthorattachments doc
-                 , documentsignatoryattachments = []                    <| isbasic |> documentsignatoryattachments doc
-                 , documentcsvupload            = Nothing               <| isbasic |> documentcsvupload doc
-                 , documentsignatorylinks       = basicsiglinks         <| isbasic |> oldsiglinks
-                 , documentallowedidtypes       = [EmailIdentification] <| isbasic |> documentallowedidtypes doc
-                 }
+  if documentfunctionality doc == AdvancedFunctionality
+  then Left "Document is already in AdvancedFunctionality."
+  else Right $ doc { documentfunctionality = AdvancedFunctionality
+                   , documentmtime         = time
+                   }
      
 setCSVSigIndex :: DocumentID -> Int -> MinutesTime -> Update Documents (Either String Document)
 setCSVSigIndex did csvsigindex time =
@@ -452,8 +446,8 @@ setElegitimationIdentification did time =
               , documentallowedidtypes = [ELegitimationIdentification]
               }
   
-signatoriesToBasic :: [SignatoryLink] -> [SignatoryLink]
-signatoriesToBasic sls =
+_signatoriesToBasic :: [SignatoryLink] -> [SignatoryLink]
+_signatoriesToBasic sls =
   let news = [sl { signatorydetails = removeFieldsAndPlacements (signatorydetails sl)} | sl <- sls]
       asl  = head   [ sl { signatoryroles = [SignatoryAuthor] }  | sl <- news, isAuthor sl]
       nsls = take 1 [ sl { signatoryroles = [SignatoryPartner] } | sl <- news, not $ isAuthor sl]
@@ -1611,7 +1605,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'setInviteText  
                         , 'setDaysToSign  
                         , 'removeDaysToSign  
-                        , 'setDocumentFunctionality  
+                        , 'setDocumentAdvancedFunctionality  
                         , 'setCSVSigIndex  
                         , 'setEmailIdentification  
                         , 'setElegitimationIdentification  

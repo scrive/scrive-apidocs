@@ -689,6 +689,7 @@ pageDocumentDesign :: TemplatesMonad m
                    => Context
                    -> Document
                    -> (Maybe DesignStep)
+                   -> Bool
                    -> [Document]
                    -> [(FileID, File)]
                    -> m String
@@ -700,6 +701,7 @@ pageDocumentDesign ctx
     , documentinvitetext
   }
   step
+  showadvancedoption
   attachments 
   files =
    let
@@ -724,6 +726,7 @@ pageDocumentDesign ctx
        field "documentdaystosignboxvalue" $ documentdaystosignboxvalue
        field "docstate" (buildDocState (signatorydetails authorsiglink) documentsignatorylinks)
        field "fromservice" (isJust $ ctxservice ctx)
+       field "showadvancedoption" showadvancedoption
        documentAuthorInfo document
        csvfields
        documentFunctionalityFields document

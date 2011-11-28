@@ -231,7 +231,7 @@ handleMailCommand = do
     (_ :: ()) <- liftKontra $ DocControl.handleDocumentUploadNoLogin (documentid doc) content title
     _errs <- lefts <$> (liftIO $ sequence $ [update $ SetEmailIdentification (documentid doc) ctxtime,
                                             update $ SetDocumentTitle (documentid doc) title ctxtime,
-                                            update $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality ctxtime,
+                                            update $ SetDocumentAdvancedFunctionality (documentid doc) ctxtime,
                                             update $ ResetSignatoryDetails (documentid doc) ((userDetails, authorrole):signatories) ctxtime])
 
     (eithernewdocument :: Either String Document) <- update $ PreparationToPending (documentid doc) ctxtime
