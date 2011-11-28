@@ -301,6 +301,7 @@ newDocument user mcompany title documenttype ctime =
                 , documentauthorattachments    = []
                 , documentsignatoryattachments = []
                 , documentallowedidtypes       = [EmailIdentification]
+                , documentui           = (documentui blankDocument) {documentmailfooter = BS.fromString <$> (customfooter $ usersettings user)}
                 } `appendHistory` [DocumentHistoryCreated ctime]
 
       inserteddoc <- insertNewDocument doc

@@ -66,14 +66,46 @@ showUserSecurity =
            </div>
            <div class="col">
              <div class="account-header">
-               <h2>$_defaultView()$</h2>
+               <h2>$_userDocumentsSettings()$</h2>
              </div>
              <div class="account-body advancedview">
-               <p>$advancedMode$
+               <p>
                  <input type="checkbox" id="advancedMode"
                         name="advancedMode"
                         $if(advancedMode)$checked="checked"$endif$ /> 
                  <label for="advancedMode">$_dialogConfirmAdvancedCheck()$</label>
+               </p>
+              <p>
+                 <input type="checkbox" id="footerCheckbox"
+                        name="footerCheckbox"
+                        $if(footer)$checked="checked"$endif$ /> 
+                 <label for="footerCheckbox">$_userDocumentSettingsMailFooter()$</label>
+                 <div class="customfooterbox" style="display:none">
+                    <textarea id="customfooter" name="customfooter" style="width:350px;height:110px">$footer$</textarea>
+                 </div>
+                 <script>
+                   jQuery(function() { 
+                   function toogleFooterBox() {
+                    if (jQuery('#footerCheckbox').attr("checked"))
+                            jQuery('.customfooterbox').show();
+                        else
+                            jQuery('.customfooterbox').hide();
+                    }
+                   jQuery("#footerCheckbox").click(function(){ toogleFooterBox()  });
+                   jQuery("#customfooter").tinymce({
+                                script_url: '/tiny_mce/tiny_mce.js',
+                                theme: "advanced",
+                                theme_advanced_toolbar_location: "top",
+                                theme_advanced_buttons1: "bold,italic,underline",
+                                theme_advanced_buttons2: "",
+                                convert_urls: false,
+                                theme_advanced_toolbar_align: "left",
+                                valid_elements: "br,em,li,ol,p,span[style<_text-decoration: underline;_text-decoration: line-through;],strong,ul"
+                        });
+                  toogleFooterBox();
+                  });
+                 </script>  
+
                </p>
              </div>
              

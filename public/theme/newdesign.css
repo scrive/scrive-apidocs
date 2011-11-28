@@ -688,10 +688,23 @@
    padding: 4px;
 }
 
+/* Two small tinyMCE editor fixes */
+#tab-viewer .account-body .mceEditor table {
+   color: #666;
+   margin-top: 0px;
+   margin-bottom: 0px;
+   text-transform: none;
+}
+
+#tab-viewer .account-body .mceEditor table td {
+   padding: 0px;
+} 
+
 .account-body table td:first-child,
 #tab-viewer .account-body table td:first-child {
    width: 120px;
 }
+
 
 .account-body table input,
 #tab-viewer .account-body table input {

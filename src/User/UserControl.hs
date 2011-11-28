@@ -331,11 +331,12 @@ handlePostUserSecurity = do
         _ -> return ()
       mregion <- readField "region"
       advancedMode <- isFieldSet "advancedMode"
-      footer <- getField "footer"
+      footer <- getField "customfooter"
+      footerCheckbox <- isFieldSet "footerCheckbox"
       _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
              locale = maybe (locale $ usersettings user) mkLocaleFromRegion mregion,
              preferreddesignmode = Just AdvancedMode  <| advancedMode |> Nothing,
-             customfooter = footer
+             customfooter = footer <| footerCheckbox |> Nothing
            }
       return LinkAccountSecurity
     Nothing -> return $ LinkLogin (ctxlocale ctx) NotLogged
