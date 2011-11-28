@@ -1016,13 +1016,11 @@ handleIssueChangeFunctionality document = do
   ctx <- getContext
   udoc <- guardRightM $ updateDocument ctx document
   signlast <- isFieldSet "signlast"
-  toBasic <- isFieldSet "tobasic"
-  toAdvanced <- isFieldSet "toadvanced"
-  let newmode = caseOf [(toBasic, Just BasicMode)
-                       ,(toAdvanced, Just AdvancedMode)
-                       ] Nothing
-  SignatoryLink { maybesignatory = Just authorid } <- guardJust $ getAuthorSigLink udoc
-  _ <- runDBUpdate $ SetPreferredDesignMode authorid newmode
+  defaultadvanced <- isFieldSet "defaultadvanced"
+  when defaultadvanced $ do
+    SignatoryLink { maybesignatory = Just authorid } <- guardJust $ getAuthorSigLink udoc
+    _ <- runDBUpdate $ SetPreferredDesignMode authorid (Just AdvancedMode)
+    return ()
   return $ LinkDesignDoc $ DesignStep2 (documentid udoc) Nothing Nothing signlast
 
 {- |
@@ -1381,7 +1379,9 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
 
   -- author is gotten above, no?
   -- Just author <- doc_query $ GetUserByUserID $ unAuthor $ documentauthor documentis
-  _ <- doc_update $ SetDocumentFunctionality documentid docfunctionality ctxtime
+  when (docfunctionality == AdvancedFunctionality) $ do
+    _ <- doc_update $ SetDocumentAdvancedFunctionality documentid ctxtime
+    return ()
   _ <- doc_update $ SetDocumentTitle documentid docname ctxtime
   _ <- doc_update $ SetInviteText documentid invitetext ctxtime
   if docfunctionality == BasicFunctionality

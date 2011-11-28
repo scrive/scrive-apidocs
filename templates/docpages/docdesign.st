@@ -76,10 +76,6 @@ pageDocumentDesign=
         <div class="signStepsFunctionalityChange  extraLink">
           <small><a id="toadvanced" class="switchIcon" rel="#dialog-confirm-advanced" style="padding-right:19px;">$_signStepsFunctionalityChangeToAdvanced()$</a></small>
         </div>
-        $else$
-        <div class="signStepsFunctionalityChange extraLink">
-          <small><a id="tobasic" class="switchIcon" rel="#dialog-confirm-basic">$_signStepsFunctionalityChangeToSimplified()$</a></small>
-        </div>
         $endif$
         $endif$
       </div>
@@ -1007,6 +1003,8 @@ pageDocumentForAuthorHelpersLocalDialogs=
     <div class="modal-body">
       <div class="modal-content">
         <p>$_dialogConfirmAdvancedBody()$</p>
+        <p><input type="checkbox" name="defaultadvanced"
+        id="defaultadvancedcheck"> <label for="defaultadvancedcheck">$_dialogConfirmAdvancedCheck()$</label></p>
       </div>
     </div>
     <div class="modal-footer">
@@ -1015,70 +1013,6 @@ pageDocumentForAuthorHelpersLocalDialogs=
         <div class="left"></div>
         <div class="label">
             <span>$_dialogConfirmAdvancedChangeToFooterChangeProcess()$</span>
-        </div>
-        <div class="right"></div>
-      </a>
-    </div>
-  </div>
-</form>
-
-<form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-basic" rel=".stepForm">
-  <input type="hidden" name="changefunctionality" value="true" />
-  <input type="hidden" name="tobasic" value="true" />
-  <div class="modal-container">
-    <div class="modal-header">
-      <span class="modal-icon message"></span>
-      <span class="modal-title">
-          <h2 id="dialog-title">$_dialogConfirmBasicChangeToHead()$</h2>
-      </span>
-      <a class="modal-close close"> </a>
-    </div>
-    <div class="modal-body">
-      <div class="modal-content">
-        <p>
-            $_dialogConfirmBasicChangeToBody()$</p>
-        <p>
-            $_dialogConfirmBasicChangeToBody2()$</p>
-      </div>
-    </div>
-    <div class="modal-footer">
-        <a  class="close cancel float-left">$_cancel()$</a>
-      <a href="#" class="btn-small green float-right submiter tobasic">
-        <div class="left"></div>
-        <div class="label">
-            <span>$_dialogConfirmBasicChangeToChangeProcess()$</span>
-        </div>
-        <div class="right"></div>
-      </a>
-    </div>
-  </div>
-</form>
-
-<form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-basic" rel=".stepForm">
-  <input type="hidden" name="changefunctionality" value="true" />
-  <input type="hidden" name="tobasic" value="true" />
-  <div class="modal-container">
-    <div class="modal-header">
-      <span class="modal-icon message"></span>
-      <span class="modal-title">
-          <h2 id="dialog-title">$_dialogConfirmBasicChangeToHead()$</h2>
-      </span>
-      <a class="modal-close close"> </a>
-    </div>
-    <div class="modal-body">
-      <div class="modal-content">
-        <p>
-            $_dialogConfirmBasicChangeToBody()$</p>
-        <p>
-            $_dialogConfirmBasicChangeToBody2()$</p>
-      </div>
-    </div>
-    <div class="modal-footer">
-        <a  class="close cancel float-left">$_cancel()$</a>
-      <a href="#" class="btn-small green float-right submiter tobasic">
-        <div class="left"></div>
-        <div class="label">
-            <span>$_dialogConfirmBasicChangeToChangeProcess()$</span>
         </div>
         <div class="right"></div>
       </a>

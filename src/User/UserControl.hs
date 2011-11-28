@@ -311,6 +311,7 @@ handlePostUserSecurity = do
   ctx <- getContext
   case (ctxmaybeuser ctx) of
     Just user -> do
+      defaultadvanced <- isFieldSet "defaultadvanced"
       moldpassword <- getOptionalField asDirtyPassword "oldpassword"
       mpassword <- getOptionalField asValidPassword "password"
       mpassword2 <- getOptionalField asDirtyPassword "password2"
@@ -331,7 +332,8 @@ handlePostUserSecurity = do
         _ -> return ()
       mregion <- readField "region"
       _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
-             locale = maybe (locale $ usersettings user) mkLocaleFromRegion mregion
+             locale = maybe (locale $ usersettings user) mkLocaleFromRegion mregion,
+             preferreddesignmode = Just AdvancedMode <| defaultadvanced |> Nothing
            }
       return LinkAccountSecurity
     Nothing -> return $ LinkLogin (ctxlocale ctx) NotLogged

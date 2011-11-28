@@ -27,7 +27,7 @@ scrivebymailPageContents=
     Built on the same, powerful signing solution as the rest of
     Scrive, Scrive by Mail lets you send a document to be signed by
     multiple parties in an intuitive and straightforward manner. This
-    is by far the easiest way to send a contract from you smartphone.
+    is by far the easiest way to send a contract from your smartphone.
   </p>
   <br />
   <p>

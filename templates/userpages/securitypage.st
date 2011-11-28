@@ -38,46 +38,62 @@ showUserSecurity =
 
            <div class="col">
 
-               <div class="account-header">
-                  <h2>$_LanguageSettings()$</h2>
-               </div>
-               <div class="account-body">
-                   <table>
-                       <tr>
-                           <td>$_UserRegion()$</td>
-                           <td><select name="region">
-                                     <option $if(region.se)$ selected="" $endif$ value="REGION_SE">$_Sweden()$</option>
-                                     <option $if(region.gb)$ selected="" $endif$ value="REGION_GB">$_Britain()$</option>
-                               </select>
-                            </td>
-                       </tr>
-                       <!--
-                       <tr>
-                           <td>$_UserLanguage()$</td>
-                           <td><select name="lang">
-                                     <option $if(lang.se)$ selected="" $endif$ value="LANG_SE">$_Swedish()$</option>
-                                     <option $if(lang.en)$ selected="" $endif$ value="LANG_EN">$_English()$</option>
-                               </select>
-                            </td>
-                       </tr>
-                       -->
-                   </table>
-               </div> 
-
-             <div class="account-footer">
-                <input type="submit" class="hidden"/>
-                <a href="#" class="btn-small green submit">
-                   <div class="left"></div>
-                   <div class="label">
-                       <p>$_SaveSettings()$</p>
-                   </div>
-                   <div class="right"></div>
-                </a>
+             <div class="account-header">
+               <h2>$_LanguageSettings()$</h2>
              </div>
+             <div class="account-body">
+               <table>
+                 <tr>
+                   <td>$_UserRegion()$</td>
+                   <td><select name="region">
+                       <option $if(region.se)$ selected="" $endif$ value="REGION_SE">$_Sweden()$</option>
+                       <option $if(region.gb)$ selected="" $endif$ value="REGION_GB">$_Britain()$</option>
+                     </select>
+                   </td>
+                 </tr>
+                 <!--
+                 <tr>
+                   <td>$_UserLanguage()$</td>
+                   <td><select name="lang">
+                       <option $if(lang.se)$ selected="" $endif$ value="LANG_SE">$_Swedish()$</option>
+                       <option $if(lang.en)$ selected="" $endif$ value="LANG_EN">$_English()$</option>
+                     </select>
+                   </td>
+                 </tr>
+                 -->
+               </table>
+             </div> 
+           </div>
+           <div class="col">
+             <div class="account-header">
+               <h2>$_defaultView()$</h2>
+             </div>
+             <div class="account-body advancedview">
+               <p>
+                 <input type="checkbox" id="defaultadvanced"
+                        name="defaultadvanced"
+                        $if(defaultadvanced)$checked="checked"$endif$ /> 
+                 <label for="defaultadvanced">$_dialogConfirmAdvancedCheck()$</label>
+               </p>
+             </div>
+             
+           </div>
+           <div class="clearfix"></div>
 
+           <div class="account-footer">
+             <input type="submit" class="hidden"/>
+             <a href="#" class="btn-small green submit">
+               <div class="left"></div>
+               <div class="label">
+                 <p>$_SaveSettings()$</p>
+               </div>
+               <div class="right"></div>
+             </a>
            </div>
 
+
            <div class="clearfix"></div>
+
        </div>
    </div>
 </div>

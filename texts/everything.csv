@@ -515,12 +515,9 @@ _daystosigncheckboxActivateExpDate,"Aktivera förfallodatum",,"Activate expirati
 _daystosigncheckboxExpDate,Förfallodatum,,"Expiration date"
 _delete,Radera,,Delete
 _dialogConfirmAdvancedBody,"Du kan byta till avancerad process för att ta del av mer avancerade
- funktioner så som förfallodatum, mallar, massutskick mm. Denna
- process tillhör betalplanerna Business och Enterprise, även
- vid fri testperiod.",,"Change to advanced process to enjoy more advanced features such
- as expiration date, templates, multi send etc. You can use the
- advanced process if you have price plan Business or Enterprise,
- or if you are in a trial period."
+ funktioner så som förfallodatum, mallar, massutskick mm.",,"Change to Advanced View to enjoy more advanced features such
+ as expiration date, templates, multi send, etc."
+_dialogConfirmAdvancedCheck,"",,"Always use Advanced View for new documents."
 _dialogConfirmAdvancedChangeToFooterChangeProcess,"Byt process",,"Change process"
 _dialogConfirmAdvancedChangeToHead,"Vill du byta till avancerad process?",,"Do you want to change to advanced process?"
 _dialogConfirmBasicChangeToBody,"Du kan byta till förenklad process för att göra processen ännu
@@ -3271,3 +3268,4 @@ _modalDoYouWantToChangeEmailAccept,"OK",,"OK"
 _flashMessageProblemWithPassword,"Felaktig lösenord.",,"Incorrect password."
 "_apiPageMetaDescription","",,""
 "_scrivebymailPageMetaDescription","",,""
+_defaultView,"",,"Advanced View"
