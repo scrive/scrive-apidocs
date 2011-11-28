@@ -30,7 +30,8 @@ import File.Tables
 import File.Model ()
 
 migrationsList :: [Migration]
-migrationsList = [addRegionToUserSettings
+migrationsList = [addUserCustomFooter
+                 ,addRegionToUserSettings
                  ,addServiceAndCompanyToStats
                  ,removeSystemServer]
 

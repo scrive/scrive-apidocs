@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# OPTIONS_GHC -fno-warn-orphans -fcontext-stack=50 #-}
 module User.Model (
     module User.Lang
   , module User.Region
@@ -122,6 +122,7 @@ data UserMailAPI = UserMailAPI {
 data UserSettings  = UserSettings {
     preferreddesignmode :: Maybe DesignMode
   , locale              :: Locale
+  , customfooter        :: Maybe String
   } deriving (Eq, Ord, Show)
 
 instance HasLocale User where
@@ -305,7 +306,7 @@ instance DBUpdate AddUser (Maybe User) where
             ++ ", preferred_design_mode"
             ++ ", lang"
             ++ ", region"
-            ++ ", deleted) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") $ [
+            ++ ", deleted) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") $ [
                 toSql uid
               , toSql $ pwdHash <$> mpwd
               , toSql $ pwdSalt <$> mpwd
@@ -469,10 +470,12 @@ instance DBUpdate SetUserSettings Bool where
       ++ "  preferred_design_mode = ?"
       ++ ", lang = ?"
       ++ ", region = ?"
+      ++ ", customfooter = ?"
       ++ "  WHERE id = ?") [
         toSql $ preferreddesignmode us
       , toSql $ getLang us
       , toSql $ getRegion us
+      , toSql $ customfooter us
       , toSql uid
       ]
     oneRowAffectedGuard r
@@ -483,7 +486,7 @@ instance DBUpdate SetPreferredDesignMode Bool where
     r <- run conn "UPDATE users SET preferred_design_mode = ? WHERE id = ?"
       [toSql mmode, toSql uid]
     oneRowAffectedGuard r
-
+    
 data AddViewerByEmail = AddViewerByEmail UserID Email
 instance DBUpdate AddViewerByEmail Bool where
   dbUpdate (AddViewerByEmail uid email) = wrapDB $ \conn -> do
@@ -567,7 +570,8 @@ selectUsersSQL = "SELECT "
  ++ ", u.preferred_design_mode"
  ++ ", u.lang"
  ++ ", u.region"
- ++ "  FROM users u"
+ ++ ", u.customfooter"
+  ++ "  FROM users u"
  ++ " "
 
 fetchUsers :: Statement -> IO [User]
@@ -576,7 +580,7 @@ fetchUsers st = do
   where decoder uid password salt is_company_admin account_suspended has_accepted_terms_of_service
                 signup_method service_id company_id first_name
                 last_name personal_number company_position phone mobile email
-                preferred_design_mode lang region
+                preferred_design_mode lang region customfooter
                 = (return $ User
                   { userid = uid
                   , userpassword = case (password, salt) of
@@ -601,6 +605,7 @@ fetchUsers st = do
                   , usersettings = UserSettings
                                    { preferreddesignmode = preferred_design_mode
                                    , locale = mkLocale (region) (lang)
+                                   , customfooter = customfooter
                                    }
                   , userservice = service_id
                   , usercompany = company_id

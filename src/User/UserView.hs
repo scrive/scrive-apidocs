@@ -140,6 +140,8 @@ showUserSecurity user = renderTemplateFM "showUserSecurity" $ do
     fieldF "lang" $ do
         field "en" $ LANG_EN == (getLang user)
         field "se" $ LANG_SE == (getLang user)
+    field "footer" $ customfooter $ usersettings user
+    field "advancedMode" $ Just AdvancedMode == (preferreddesignmode $ usersettings user)    
     menuFields user
 
 showUserMailAPI :: TemplatesMonad m => User -> Maybe UserMailAPI -> m String

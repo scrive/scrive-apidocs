@@ -412,6 +412,7 @@ blankUser = User {
                 , usersettings  = UserSettings {
                                     preferreddesignmode = Nothing
                                   , locale = mkLocaleFromRegion Misc.defaultValue
+                                  , customfooter = Nothing
                                   }
               , userservice = Nothing
               , usercompany = Nothing

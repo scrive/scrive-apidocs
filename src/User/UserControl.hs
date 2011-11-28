@@ -330,8 +330,12 @@ handlePostUserSecurity = do
               addFlashM flashMessageMissingRequiredField
         _ -> return ()
       mregion <- readField "region"
+      advancedMode <- isFieldSet "advancedMode"
+      footer <- getField "footer"
       _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
-             locale = maybe (locale $ usersettings user) mkLocaleFromRegion mregion
+             locale = maybe (locale $ usersettings user) mkLocaleFromRegion mregion,
+             preferreddesignmode = Nothing  <| advancedMode |> Just AdvancedMode,
+             customfooter = footer
            }
       return LinkAccountSecurity
     Nothing -> return $ LinkLogin (ctxlocale ctx) NotLogged
@@ -983,6 +987,9 @@ handleFriends = do
                                                                                  ,("id", JSString $ toJSString (show (userid f)))])])
                                            (list friendsPage)),
                                   ("paging", pagingParamsJSON friendsPage)]
+
+                                  
+
 
 {- |
    Fetch the xtoken param and double read it. Once as String and once as MagicHash.

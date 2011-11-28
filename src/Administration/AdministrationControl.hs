@@ -538,12 +538,8 @@ getCompanyInfoChange = do
 getUserSettingsChange :: Kontrakcja m => m (UserSettings -> UserSettings)
 getUserSettingsChange = do
   mregion <- readField "userregion"
-  return $ \UserSettings {
-    preferreddesignmode
-  , locale
-  } -> UserSettings {
-    preferreddesignmode
-  , locale = maybe locale mkLocaleFromRegion mregion
+  return $ \settings -> settings {
+     locale = maybe (locale settings) mkLocaleFromRegion mregion
   }
 
 {- | Reads params and returns function for conversion of user info. With no param leaves fields unchanged -}
