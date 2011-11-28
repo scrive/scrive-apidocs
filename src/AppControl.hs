@@ -147,8 +147,6 @@ getUserLocale conn muser = do
         Nothing -> defaultValue
 
 
-handleScriveByMailPage :: Kontra Response
-handleScriveByMailPage = handleWholePage scriveByMailPage
 {- |
     Handles an error by displaying the home page with a modal error dialog.
 -}

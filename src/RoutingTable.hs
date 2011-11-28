@@ -81,6 +81,8 @@ staticRoutes = choice
      , publicDir "kunder" "clients" LinkClients handleClientsPage
      , publicDir "kontakta" "contact" LinkContactUs handleContactUsPage
      , publicDir "scriveapi" "scriveapi" LinkAPIPage handleApiPage
+     , publicDir "scrivebymail" "scrivebymail" LinkScriveByMailPage handleScriveByMailPage
+       
      -- sitemap
      , dir "webbkarta"       $ hGetAllowHttp $ handleSitemapPage
      , dir "sitemap"         $ hGetAllowHttp $ handleSitemapPage
@@ -403,6 +405,9 @@ handleContactUsPage = handleWholePage contactUsPage
 
 handleApiPage :: Kontra Response
 handleApiPage = handleWholePage apiPage
+
+handleScriveByMailPage :: Kontra Response
+handleScriveByMailPage = handleWholePage scriveByMailPage
 
 handleWholePage :: Kontra String -> Kontra Response
 handleWholePage f = do
