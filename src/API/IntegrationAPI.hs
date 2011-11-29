@@ -277,6 +277,11 @@ createAPIDocument company' (authorTMP:signTMPS) tags mlocale createFun = do
         nonauthordetails = map toSignatoryDetails signTMPS
         nonauthorroles = map (fromMaybe defsigroles . toSignatoryRoles) signTMPS
         sigs = (toSignatoryDetails authorTMP, authorroles):zip nonauthordetails nonauthorroles
+        disallowspartner = getValueForProcess doc processauthorsend /= Just True
+    when (any hasFieldsAndPlacements (toSignatoryDetails authorTMP : nonauthordetails) ||
+          length nonauthordetails > 1 ||
+          (disallowspartner && SignatoryPartner `elem` authorroles)) $
+      ignore $ doc_update $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality (ctxtime ctx)
     doc' <- doc_update $ ResetSignatoryDetails (documentid doc) sigs (ctxtime ctx)
 
     when (isLeft doc') $ Log.integration $ "error creating document: " ++ fromLeft doc'
