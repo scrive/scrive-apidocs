@@ -657,3 +657,11 @@ ignore :: Monad m => m a -> m ()
 ignore acc = do
   _ <- acc
   return ()
+pair :: a -> b -> (a, b)
+pair a b = (a, b)
+
+mapassoc :: (a -> b) -> [a] -> [(a, b)]
+mapassoc f l = map (\a -> pair a $ f a) l
+
+mapassocM :: Monad m => (a -> m b) -> [a] -> m [(a, b)]
+mapassocM f l = mapM (\a -> (return . pair a) =<< f a) l

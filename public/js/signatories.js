@@ -134,8 +134,14 @@ window.Signatory = Backbone.Model.extend({
     email: function(){
         return  this.field("email").value();
     },
+    fstname : function(){
+        return this.field("fstname").value();
+    },
+    sndname : function(){
+        return this.field("sndname").value();
+    },
     name : function(){
-        var name = this.field("fstname").value() + " "+this.field("sndname").value();
+        var name = this.fstname() + " "+ this.sndname();
         if (name != undefined)
             return name;
         else

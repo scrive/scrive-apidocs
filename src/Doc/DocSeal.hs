@@ -37,9 +37,10 @@ import System.IO hiding (stderr)
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import File.TransState
+import File.Model
 import DB.Classes
 import Database.HDBC.PostgreSQL
+import Control.Applicative
 
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
@@ -127,13 +128,13 @@ sealSpecFromDocument hostpart document inputpath outputpath =
 
       initials = concatComma initialsx
       makeHistoryEntryFromSignatory personInfo@(_ ,seen, signed, isauthor, _, _)  = do
-          seenDesc <- renderTemplateForProcess document processseenhistentry $ do
+          seenDesc <- renderLocalTemplateForProcess document processseenhistentry $ do
                         personFields personInfo
                         documentInfoFields document
           let seenEvent = Seal.HistEntry
                             { Seal.histdate = show (signtime seen)
                             , Seal.histcomment = pureString seenDesc}
-          signDesc <- renderTemplateForProcess document processsignhistentry $ do
+          signDesc <- renderLocalTemplateForProcess document processsignhistentry $ do
                         personFields personInfo
                         documentInfoFields document
           let signEvent = Seal.HistEntry
@@ -145,7 +146,7 @@ sealSpecFromDocument hostpart document inputpath outputpath =
       invitationSentEntry = case documentinvitetime document of
                                 Nothing -> return []
                                 Just (SignInfo time ipnumber) -> do
-                                   desc <-  renderTemplateForProcess document processinvitationsententry $ do
+                                   desc <-  renderLocalTemplateForProcess document processinvitationsententry $ do
                                        documentInfoFields document
                                        documentAuthorInfo document
                                        field "oneSignatory"  (length signatories>1)
@@ -160,7 +161,7 @@ sealSpecFromDocument hostpart document inputpath outputpath =
       concatComma = concat . intersperse ", "
 
       lastHistEntry = do
-                       desc <- renderTemplateForProcess document processlasthisentry (documentInfoFields document)
+                       desc <- renderLocalTemplateForProcess document processlasthisentry (documentInfoFields document)
                        return $ if (Just True == getValueForProcess document processsealincludesmaxtime)
                                 then [Seal.HistEntry
                                 { Seal.histdate = show maxsigntime
@@ -181,7 +182,7 @@ sealSpecFromDocument hostpart document inputpath outputpath =
       -- signatories actions before what happened with a document
       let history = sortBy (comparing Seal.histdate) events
       -- Log.debug ("about to render staticTexts")
-      staticTexts <- renderTemplateForProcess document processsealingtext $ do
+      staticTexts <- renderLocalTemplateForProcess document processsealingtext $ do
                         documentInfoFields document
                         field "hostpart" hostpart
       -- Log.debug ("finished staticTexts: " ++ show staticTexts)
@@ -233,7 +234,7 @@ sealDocumentFile :: (MonadIO m, DBMonad m)
                  -> Document
                  -> File
                  -> m (Either String Document)
-sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates}
+sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplates}
                  document@Document{documentid,documenttitle}
                  file@File {fileid,filename} =
   liftIO $ withSystemTempDirectory ("seal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
@@ -242,7 +243,7 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates}
     let tmpout = tmppath ++ "/output.pdf"
     content <- getFileContents ctx file
     BS.writeFile tmpin content
-    config <- runLocalTemplates ctxtemplates $ sealSpecFromDocument ctxhostpart document tmpin tmpout
+    config <- runWithTemplates ctxlocale ctxglobaltemplates $ sealSpecFromDocument ctxhostpart document tmpin tmpout
     (code,_stdout,stderr) <- readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
     Log.debug $ "Sealing completed with " ++ show code
     case code of
@@ -269,10 +270,13 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxtemplates}
                                       let msg = "TrustWeaver signed doc #" ++ show documentid ++ " file #" ++ show fileid ++ ": " ++ BS.toString documenttitle
                                       Log.trustWeaver msg
                                       return result
-              File{fileid = sealedfileid} <- 
-                  withPostgreSQL (ctxdbconnstring ctx) $ \conn -> 
+              Log.debug $ "Addeing new sealed file to DB"
+              File{fileid = sealedfileid} <-
+                  withPostgreSQL (ctxdbconnstring ctx) $ \conn ->
                       ioRunDB conn $ dbUpdate $ NewFile filename newfilepdf
+              Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
               res <- update $ AttachSealedFile documentid sealedfileid (ctxtime ctx)
+              Log.debug $ "Should be attached to document; is it? " ++ show ((elem sealedfileid . documentsealedfiles) <$> res)
               return res
       ExitFailure _ ->
           do

@@ -14,10 +14,10 @@ module API.IntegrationAPI (
     -- For tests (and only for tests)
     , IntegrationAPIFunction
     , embeddDocumentFrame
-    , createDocument     
-    , getDocuments       
-    , getDocument        
-    , setDocumentTag     
+    , createDocument
+    , getDocuments
+    , getDocument
+    , setDocumentTag
     , removeDocument
     ) where
 
@@ -26,8 +26,9 @@ import Data.Functor
 import Data.Maybe
 import DB.Classes
 import Doc.DocState
-import Happstack.Server hiding (simpleHTTP,host,body)
+import Happstack.Server (Response, finishWith, askRq, rqUri, look, toResponseBS)
 import Happstack.State (query, update)
+import Happstack.StaticRouting(Route, dir, choice)
 import KontraLink
 import MinutesTime
 import Misc
@@ -55,7 +56,7 @@ import Util.ServiceUtils
 import Util.MonadUtils
 import Templates.Templates
 import Stats.Control
-import File.TransState
+import File.Model
 import Util.JSON
 import Text.JSON.String
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
@@ -97,18 +98,21 @@ integrationService = do
                 else return Nothing
          Nothing -> return Nothing
 
-integrationAPI :: Kontra Response
-integrationAPI = dir "integration" $ msum [
-      dir "api" $ apiCall "embed_document_frame" embeddDocumentFrame :: Kontrakcja m => m Response
-    , dir "api" $ apiCall "new_document" createDocument              :: Kontrakcja m => m Response
-    , dir "api" $ apiCall "documents" getDocuments                   :: Kontrakcja m => m Response
-    , dir "api" $ apiCall "document" getDocument                     :: Kontrakcja m => m Response
-    , dir "api" $ apiCall "set_document_tag" setDocumentTag          :: Kontrakcja m => m Response
-    , dir "api" $ apiCall "remove_document" removeDocument           :: Kontrakcja m => m Response
-    , dir "api" $ apiUnknownCall
-    , dir "connectuser" $ hGet3 $ toK3 $ connectUserToSessionGet
-    , dir "connectuser" $ hPostNoXToken3 $ toK3 $ connectUserToSessionPost
-    , dir "connectcompany" $ hGet3 $ toK3 $ connectCompanyToSession
+integrationAPI :: Route (Kontra Response)
+integrationAPI = dir "integration" $ choice [
+      dir "api" $ 
+        choice 
+          [ apiCall "embed_document_frame" embeddDocumentFrame
+          , apiCall "new_document" createDocument
+          , apiCall "documents" getDocuments
+          , apiCall "document" getDocument
+          , apiCall "set_document_tag" setDocumentTag
+          , apiCall "remove_document" removeDocument
+          , apiUnknownCall
+          ]
+    , dir "connectuser" $ hGet $ toK3 $ connectUserToSessionGet
+    , dir "connectuser" $ hPostNoXToken $ toK3 $ connectUserToSessionPost
+    , dir "connectcompany" $ hGet $ toK3 $ connectCompanyToSession
     ]
 
 
@@ -149,7 +153,7 @@ embeddDocumentFrame = do
                      when (not $ sameService srvs company) $ throwApiError API_ERROR_MISSING_VALUE "Not matching company | This should never happend"
                      ssid <- createServiceSession (Left $ companyid $ company) location
                      returnLink $ LinkConnectCompanySession sid (companyid company) ssid $ LinkIssueDoc (documentid doc)
-      
+
 
 
 createDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
@@ -167,6 +171,7 @@ createDocument = do
    let doctype = toDocumentType $ fromJust mtype
    mtemplate <- liftMM (query . GetDocumentByDocumentID) $ maybeReadM $ fromJSONField "template_id"
    involved  <- fmap (fromMaybe []) $ fromJSONLocal "involved" $ fromJSONLocalMap $ getSignatoryTMP
+   mlocale <- fromJSONField "locale"
    tags <- fmap (fromMaybe []) $ fromJSONLocal "tags" $ fromJSONLocalMap $ do
                     n <- fromJSONField "name"
                     v <- fromJSONField "value"
@@ -175,7 +180,7 @@ createDocument = do
    doc <- case mtemplate of
             Just _template -> throwApiError API_ERROR_OTHER "Template support is not implemented yet"
             Nothing -> do
-                        d <- createAPIDocument company doctype title files involved tags
+                        d <- createAPIDocument company doctype title files involved tags mlocale
                         updateDocumentWithDocumentUI d
    return $ toJSObject [ ("document_id",JSString $ toJSString $ show $ documentid doc)]
 
@@ -193,10 +198,11 @@ createAPIDocument :: Kontrakcja m
                   -> [(BS.ByteString,BS.ByteString)]
                   -> [SignatoryTMP]
                   -> [DocumentTag]
+                  -> Maybe Locale
                   -> IntegrationAPIFunction m Document
-createAPIDocument _ _ _ _ [] _  =
+createAPIDocument _ _ _ _ [] _ _  =
     throwApiError API_ERROR_OTHER "One involved person must be provided"
-createAPIDocument company' doctype title files (authorTMP:signTMPS) tags = do
+createAPIDocument company' doctype title files (authorTMP:signTMPS) tags mlocale = do
     now <- liftIO $ getMinutesTime
     company <- setCompanyInfoFromTMP authorTMP company'
     author <- userFromTMP authorTMP company
@@ -208,6 +214,8 @@ createAPIDocument company' doctype title files (authorTMP:signTMPS) tags = do
             update $ AttachFile (documentid doc) (fileid file) now
     mapM_ (uncurry addAndAttachFile) files
     _ <- update $ SetDocumentTags (documentid doc) tags
+    when (isJust mlocale) $
+      ignore $ update $ SetDocumentLocale (documentid doc) (fromJust mlocale) now
     doc' <- update $ UpdateDocumentSimple (documentid doc) (toSignatoryDetails authorTMP, author) (map toSignatoryDetails signTMPS)
     when (isLeft doc') $ throwApiError API_ERROR_OTHER "Problem creating a document (SIGUPDATE) | This should never happend"
     return $ fromRight doc'
@@ -222,12 +230,12 @@ userFromTMP uTMP company = do
               Just u -> return u
               Nothing -> do
                 password <- liftIO $ createPassword . BS.fromString =<< (sequence $ replicate 12 randomIO)
-                mu <- runDBUpdate $ AddUser (fold $ fstname uTMP,fold $ sndname uTMP) (fromGood remail) (Just password) False (Just sid) (Just $ companyid company) defaultValue (mkLocaleFromRegion defaultValue)
+                mu <- runDBUpdate $ AddUser (fold $ fstname uTMP,fold $ sndname uTMP) (fromGood remail) (Just password) False (Just sid) (Just $ companyid company) (mkLocaleFromRegion defaultValue)
                 when (isNothing mu) $ throwApiError API_ERROR_OTHER "Problem creating a user (BASE) | This should never happend"
                 let u = fromJust mu
                 tos_accepted <- runDBUpdate $ AcceptTermsOfService (userid u) (fromSeconds 0)
                 when (not tos_accepted) $ throwApiError API_ERROR_OTHER "Problem creating a user (TOS) | This should never happend"
-                mtosuser <- runDBQuery $ GetUserByID (userid u)                
+                mtosuser <- runDBQuery $ GetUserByID (userid u)
                 when (isNothing mtosuser) $ throwApiError API_ERROR_OTHER "Problem reading a user (BASE) | This should never happend"
                 let tosuser = fromJust mtosuser
 
@@ -272,11 +280,11 @@ getDocuments = do
     linkeddocuments <- query $ GetDocumentsByCompanyAndTags (Just sid) (companyid company) tags
     let documents = filter (isAuthoredByCompany $ companyid company) linkeddocuments
     let notDeleted doc =  any (not . signatorylinkdeleted) $ documentsignatorylinks doc
-    -- We support only offers and contracts by API calls    
+    -- We support only offers and contracts by API calls
     let supportedType doc = documenttype doc `elem` [Template Contract, Template Offer, Signable Contract, Signable Offer]
     api_docs <- sequence $  map (api_document_read False) $ filter (\d -> notDeleted d && supportedType d) documents
     return $ toJSObject [("documents",JSArray $ api_docs)]
-    
+
 
 
 getDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
@@ -328,7 +336,7 @@ connectUserToSessionGet _sid _uid _ssid = do
   bdy <- renderTemplateFM "connectredirect" $ do
     field "url" uri
     field "referer" referer
-  simpleResponse bdy  
+  simpleResponse bdy
 
 connectCompanyToSession :: Kontrakcja m => ServiceID -> CompanyID -> SessionId -> m KontraLink
 connectCompanyToSession sid cid ssid = do

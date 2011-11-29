@@ -101,20 +101,21 @@ function disableInfoText(where) {
     inputs.focus();
 }
 
-function swedishString(names) {
-    if (names.length === 0) {
+function listString(names) {
+    if (names.length === 0)
         return "";
-    }
-    if (names.length === 1) {
+    if (names.length === 1)
         return "<strong>" + names[0] + "</strong>";
-    }
+    if (names.length === 2)
+        return "<strong>" + names[0] + "</strong> " + localization.and + " <strong>" + names[1] + "</strong>";
+    return listStringMany(names);
+}
 
+function listStringMany(names) {
     var name0 = names.shift();
-    if (names.length === 1) {
-        return "<strong>" + name0 + "</strong> och " + swedishString(names);
-    }
-
-    return "<strong>" + name0 + "</strong>, " + swedishString(names);
+    if (names.length === 1)
+        return "<strong>" + name0 + "</strong>" + localization.listand + "<strong>" + names[0] + "</strong>";
+    return "<strong>" + name0 + "</strong>, " + listStringMany(names);
 }
 
 /*
@@ -486,7 +487,7 @@ safeReady(function() {
             if (!checkAllCustomFieldsAreNamed())
                 return false;
             fieldValidationType = "";
-            var tot = swedishString(allparties());
+            var tot = listString(allparties());
             $(".Xinvited").html(tot);
         },
         fixed:false
@@ -511,12 +512,31 @@ safeReady(function() {
             if (!checkAllCustomFieldsAreNamed())
                 return false;
             fieldValidationType = "";
-            var tot = swedishString(allparties());
+            var tot = listString(allparties());
             $(".Xinvited").html(tot);
             //here
         },
         fixed:false
     });
+});
+
+safeReady(function() {
+  console.log($("#docregionselector option"));
+  $("#docregionselector option").overlay({
+    mask: standardDialogMask,
+    top: standardDialogTop,
+    fixed: false
+  });
+
+  $("#docregionselector").change(function() {
+    var val = $("#docregionselector").val();
+    $("#docregionselector option[value=" + val + "]").data("overlay").load();
+    if (val=="REGION_GB") {
+      $("#docregionselector option[value=REGION_SE]").attr("selected", "selected");
+    } else {
+      $("#docregionselector option[value=REGION_GB]").attr("selected", "selected");
+    }
+  });
 });
 
 safeReady(function() {
@@ -630,7 +650,7 @@ safeReady(function() {
             });
             $("select.signatoryselector option").detach();
             var select = $("select.signatoryselector");
-            select.append($("<option selected>" + localization.offerSignatory + "</option>"));
+            select.append($("<option selected>" + localization.sigattachmessage + "</option>"));
             select.append(sigoptions);
         },
         fixed:false
@@ -1738,4 +1758,12 @@ safeReady(function () {
 
 safeReady(function() {
     $(".dateinput").datepicker();
+});
+
+safeReady(function() {
+    $(".openmodal").overlay({
+        mask: standardDialogMask,
+        top: standardDialogTop,
+        fixed: false
+    });
 });

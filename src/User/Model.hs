@@ -4,10 +4,8 @@ module User.Model (
   , module User.Region
   , module User.Locale
   , module User.Password
-  , module User.SystemServer
   , module User.UserID
   , Email(..)
-  , ExternalUserID(..)
   , DesignMode(..)
   , InviteType(..)
   , SignupMethod(..)
@@ -62,7 +60,6 @@ import User.Lang
 import User.Locale
 import User.Password
 import User.Region
-import User.SystemServer
 import User.Tables
 import User.UserID
 
@@ -71,11 +68,6 @@ newtype Email = Email { unEmail :: BS.ByteString }
   deriving (Eq, Ord)
 $(newtypeDeriveConvertible ''Email)
 $(newtypeDeriveUnderlyingReadShow ''Email)
-
-newtype ExternalUserID = ExternalUserID { unExternalUserID :: BS.ByteString }
-  deriving (Eq, Ord)
-$(newtypeDeriveConvertible ''ExternalUserID)
-$(newtypeDeriveUnderlyingReadShow ''ExternalUserID)
 
 -- enums
 data DesignMode = BasicMode | AdvancedMode
@@ -129,7 +121,6 @@ data UserMailAPI = UserMailAPI {
 data UserSettings  = UserSettings {
     preferreddesignmode :: Maybe DesignMode
   , locale              :: Locale
-  , systemserver        :: SystemServer
   } deriving (Eq, Ord, Show)
 
 instance HasLocale User where
@@ -143,14 +134,14 @@ instance DBQuery GetUsers [User] where
   dbQuery GetUsers = wrapDB $ \conn -> do
     st <- prepare conn $ selectUsersSQL ++ " WHERE u.deleted = FALSE ORDER BY u.first_name || ' ' || u.last_name DESC"
     _ <- executeRaw st
-    fetchUsers st []
+    fetchUsers st
 
 data GetUserByID = GetUserByID UserID
 instance DBQuery GetUserByID (Maybe User) where
   dbQuery (GetUserByID uid) = wrapDB $ \conn -> do
     st <- prepare conn $ selectUsersSQL ++ " WHERE u.id = ? AND u.deleted = FALSE"
     _ <- execute st [toSql uid]
-    us <- fetchUsers st []
+    us <- fetchUsers st
     oneObjectReturnedGuard us
 
 data GetUserByEmail = GetUserByEmail (Maybe ServiceID) Email
@@ -159,7 +150,7 @@ instance DBQuery GetUserByEmail (Maybe User) where
     st <- prepare conn $ selectUsersSQL
       ++ " WHERE u.deleted = FALSE AND ((?::TEXT IS NULL AND u.service_id IS NULL) OR u.service_id = ?) AND u.email = ?"
     _ <- execute st [toSql msid, toSql msid, toSql email]
-    us <- fetchUsers st []
+    us <- fetchUsers st
     oneObjectReturnedGuard us
 
 -- | Name may be confusing, but this just returns a list of
@@ -170,7 +161,7 @@ instance DBQuery GetUsersByFriendUserID [User] where
     st <- prepare conn $ selectUsersSQL
       ++ " JOIN user_friends uf ON (u.id = uf.user_id) WHERE uf.friend_id = ? AND u.deleted = FALSE ORDER BY u.email DESC"
     _ <- execute st [toSql uid]
-    fetchUsers st []
+    fetchUsers st
 
 data GetUserFriends = GetUserFriends UserID
 instance DBQuery GetUserFriends [User] where
@@ -178,14 +169,14 @@ instance DBQuery GetUserFriends [User] where
     st <- prepare conn $ selectUsersSQL
       ++ " JOIN user_friends uf ON (u.id = uf.friend_id) WHERE uf.user_id = ? AND u.deleted = FALSE ORDER BY u.email DESC"
     _ <- execute st [toSql uid]
-    fetchUsers st []
+    fetchUsers st
 
 data GetCompanyAccounts = GetCompanyAccounts CompanyID
 instance DBQuery GetCompanyAccounts [User] where
   dbQuery (GetCompanyAccounts cid) = wrapDB $ \conn -> do
     st <- prepare conn $ selectUsersSQL ++ " WHERE u.company_id = ? ORDER BY u.email DESC"
     _ <- execute st [toSql cid]
-    fetchUsers st []
+    fetchUsers st
 
 data GetInviteInfo = GetInviteInfo UserID
 instance DBQuery GetInviteInfo (Maybe InviteInfo) where
@@ -203,7 +194,7 @@ instance DBQuery GetInviteInfo (Maybe InviteInfo) where
                  , invitetype = fromSql invite_type
                } : acc
               f l = error $ "fetchInviteInfos: unexpected row: "++show l
-              
+
 
 data GetUserMailAPI = GetUserMailAPI UserID
 instance DBQuery GetUserMailAPI (Maybe UserMailAPI) where
@@ -267,8 +258,7 @@ instance DBUpdate DeleteUser Bool where
           ++ ", mobile"
           ++ ", email"
           ++ ", lang"
-          ++ ", region"
-          ++ ", system_server) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") $ [
+          ++ ", region) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") $ [
             toSql uid
           , toSql True
           , toSql False
@@ -277,16 +267,15 @@ instance DBUpdate DeleteUser Bool where
           ] ++ replicate 7 (toSql "") ++ [
             toSql (defaultValue::Lang)
           , toSql (defaultValue::Region)
-          , toSql (defaultValue::SystemServer)
           ]
         return True
       else return False
 
-data AddUser = AddUser (BS.ByteString, BS.ByteString) BS.ByteString (Maybe Password) Bool (Maybe ServiceID) (Maybe CompanyID) SystemServer Locale
+data AddUser = AddUser (BS.ByteString, BS.ByteString) BS.ByteString (Maybe Password) Bool (Maybe ServiceID) (Maybe CompanyID) Locale
 instance DBUpdate AddUser (Maybe User) where
-  dbUpdate (AddUser (fname, lname) email mpwd iscompadmin msid mcid ss l) = do
+  dbUpdate (AddUser (fname, lname) email mpwd iscompadmin msid mcid l) = do
     let handle e = case e of
-          NoObject -> return Nothing
+          NoObject{} -> return Nothing
           _ -> E.throw e
     mu <- dbQuery (GetUserByEmail msid $ Email email) `catchDB` handle
     case mu of
@@ -315,8 +304,7 @@ instance DBUpdate AddUser (Maybe User) where
             ++ ", preferred_design_mode"
             ++ ", lang"
             ++ ", region"
-            ++ ", system_server"
-            ++ ", deleted) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") $ [
+            ++ ", deleted) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") $ [
                 toSql uid
               , toSql $ pwdHash <$> mpwd
               , toSql $ pwdSalt <$> mpwd
@@ -333,7 +321,6 @@ instance DBUpdate AddUser (Maybe User) where
                 SqlNull
               , toSql $ getLang l
               , toSql $ getRegion l
-              , toSql ss
               , toSql False
               ]
           return ()
@@ -461,12 +448,10 @@ instance DBUpdate SetUserSettings Bool where
       ++ "  preferred_design_mode = ?"
       ++ ", lang = ?"
       ++ ", region = ?"
-      ++ ", system_server = ?"
       ++ "  WHERE id = ?") [
         toSql $ preferreddesignmode us
       , toSql $ getLang us
       , toSql $ getRegion us
-      , toSql $ systemserver us
       , toSql uid
       ]
     oneRowAffectedGuard r
@@ -561,46 +546,44 @@ selectUsersSQL = "SELECT "
  ++ ", u.preferred_design_mode"
  ++ ", u.lang"
  ++ ", u.region"
- ++ ", u.system_server"
  ++ "  FROM users u"
  ++ " "
 
-fetchUsers :: Statement -> [User] -> IO [User]
-fetchUsers st acc = fetchRow st >>= maybe (return acc) f
-  where f [uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service
-          , signup_method, service_id, company_id, first_name
-          , last_name, personal_number, company_position, phone, mobile, email
-          , preferred_design_mode, lang, region, system_server
-          ] = fetchUsers st $ User {
-              userid = fromSql uid
-            , userpassword = case (fromSql password, fromSql salt) of
-                                  (Just pwd, Just salt') -> Just Password {
-                                      pwdHash = pwd
-                                    , pwdSalt = salt'
-                                  }
-                                  _ -> Nothing
-            , useriscompanyadmin = fromSql is_company_admin
-            , useraccountsuspended = fromSql account_suspended
-            , userhasacceptedtermsofservice = fromSql has_accepted_terms_of_service
-            , usersignupmethod = fromSql signup_method
-            , userinfo = UserInfo {
-                userfstname = fromSql first_name
-              , usersndname = fromSql last_name
-              , userpersonalnumber = fromSql personal_number
-              , usercompanyposition = fromSql company_position
-              , userphone = fromSql phone
-              , usermobile = fromSql mobile
-              , useremail = fromSql email
-            }
-            , usersettings = UserSettings {
-                preferreddesignmode = fromSql preferred_design_mode
-              , locale = mkLocale (fromSql region) (fromSql lang)
-              , systemserver = fromSql system_server
-            }
-            , userservice = fromSql service_id
-            , usercompany = fromSql company_id
-          } : acc
-        f l = error $ "fetchUsers: unexpected row: "++show l
+fetchUsers :: Statement -> IO [User]
+fetchUsers st = do
+  fetchValues st decoder
+  where decoder uid password salt is_company_admin account_suspended has_accepted_terms_of_service
+                signup_method service_id company_id first_name
+                last_name personal_number company_position phone mobile email
+                preferred_design_mode lang region
+                = (return $ User 
+                  { userid = uid
+                  , userpassword = case (password, salt) of
+                                     (Just pwd, Just salt') -> Just Password
+                                                               { pwdHash = pwd
+                                                               , pwdSalt = salt'
+                                                               }
+                                     _ -> Nothing
+                  , useriscompanyadmin = is_company_admin
+                  , useraccountsuspended = account_suspended
+                  , userhasacceptedtermsofservice = has_accepted_terms_of_service
+                  , usersignupmethod = signup_method
+                  , userinfo = UserInfo
+                               { userfstname = first_name
+                               , usersndname = last_name
+                               , userpersonalnumber = personal_number
+                               , usercompanyposition = company_position
+                               , userphone = phone
+                               , usermobile = mobile
+                               , useremail = email
+                               }
+                  , usersettings = UserSettings
+                                   { preferreddesignmode = preferred_design_mode
+                                   , locale = mkLocale (region) (lang)
+                                   }
+                  , userservice = service_id
+                  , usercompany = company_id
+                  }) :: Either DBException User
 
 -- this will not be needed when we move documents to pgsql. for now it's needed
 -- for document handlers - it seems that types of arguments that handlers take
@@ -618,7 +601,6 @@ deriving instance Typeable Locale
 deriving instance Typeable DesignMode
 deriving instance Typeable Email
 deriving instance Typeable Binary
-deriving instance Typeable SystemServer
 
 instance Version User
 instance Version UserSettings
@@ -631,7 +613,6 @@ instance Version Locale
 instance Version DesignMode
 instance Version Email
 instance Version Binary
-instance Version SystemServer
 
 $(deriveSerializeFor [
     ''User
@@ -645,5 +626,4 @@ $(deriveSerializeFor [
   , ''DesignMode
   , ''Email
   , ''Binary
-  , ''SystemServer
   ])

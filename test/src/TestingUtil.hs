@@ -60,12 +60,12 @@ instance Arbitrary Company where
                      , companyservice = c
                      , companyinfo = d
                      }
-      
+
 instance Arbitrary CompanyID where
   arbitrary = do
     a <- arbitrary
     return $ CompanyID a
-  
+
 instance Arbitrary ExternalCompanyID where
   arbitrary = do
     a <- arbitrary
@@ -91,14 +91,14 @@ instance Arbitrary ServiceID where
   arbitrary = do
     a <- arbitrary
     return $ ServiceID a
-  
+
 instance Arbitrary MagicHash where
   arbitrary = do
     a <- arbitrary
     return $ MagicHash a
 
 instance Arbitrary MailsDeliveryStatus where
-  arbitrary = elements [ Delivered 
+  arbitrary = elements [ Delivered
                        , Undelivered
                        , Unknown
                        , Deferred]
@@ -120,7 +120,7 @@ instance Arbitrary DocumentUI where
 
 instance Arbitrary ActionID where
   arbitrary = ActionID <$> arbitrary
-  
+
 {- | Sometimes we get and object that is not as random as we would expect (from some reason)
      Like author signatorylink that by default does not have any fields attached
      This is a class to make it more random - so to attach this fields for example.
@@ -213,7 +213,7 @@ instance Arbitrary DocumentType where
                        , Attachment
                        , AttachmentTemplate
                        ]
-         
+
 
 instance Arbitrary Document where
   arbitrary = do
@@ -221,10 +221,12 @@ instance Arbitrary Document where
     dt <- arbitrary
     sls <- arbitrary
     f <- arbitrary
-    return $ blankDocument { documentstatus = ds 
+    ids <- arbitrary
+    return $ blankDocument { documentstatus = ds
                            , documenttype = dt
                            , documentsignatorylinks = sls
                            , documentfiles = [f]
+                           , documentallowedidtypes = [ids]
                            }
 
 instance Arbitrary DocumentStatus where
@@ -237,12 +239,12 @@ instance Arbitrary DocumentStatus where
                        , AwaitingAuthor
                        , DocumentError "Bad document."
                        ]
-    
-nonemptybs :: Gen BS.ByteString              
+
+nonemptybs :: Gen BS.ByteString
 nonemptybs = do
   s <- arbString 1 10
   return $ BS.fromString s
-  
+
 -- | Remove fields from duplicate types
 filterSingleFieldType :: [SignatoryField] -> [SignatoryField]
 filterSingleFieldType [] = []
@@ -255,11 +257,11 @@ instance Arbitrary SignatoryDetails where
     em <- arbEmail
     fields <- filterSingleFieldType <$> arbitrary
     return $ SignatoryDetails { signatorysignorder = SignOrder 1
-                              , signatoryfields = filter (\f->notElem (sfType f) [FirstNameFT, LastNameFT, EmailFT]) fields 
+                              , signatoryfields = filter (\f->notElem (sfType f) [FirstNameFT, LastNameFT, EmailFT]) fields
                                                   ++ [ SignatoryField FirstNameFT fn []
                                                      , SignatoryField LastNameFT  ln []
                                                      , SignatoryField EmailFT     em []]}
-      
+
 instance Arbitrary FieldPlacement where
   arbitrary = do
     (a,b,c,d,e) <- arbitrary
@@ -267,15 +269,15 @@ instance Arbitrary FieldPlacement where
                             , placementy = b
                             , placementpage = c
                             , placementpagewidth = d
-                            , placementpageheight = e      
+                            , placementpageheight = e
                             }
-    
+
 instance Arbitrary FieldType where
   arbitrary = do
     fieldlabel <- arbitrary
     filled <- arbitrary
     elements [FirstNameFT, LastNameFT, EmailFT, CompanyFT, CompanyNumberFT, PersonalNumberFT, CustomFT fieldlabel filled]
-  
+
 instance Arbitrary SignatoryField where
   arbitrary = do
     t <- arbitrary
@@ -322,7 +324,7 @@ instance Arbitrary UserInfo where
                       , useremail           = Email em
                       }
 
-    
+
 instance Arbitrary BS.ByteString where
   arbitrary = fmap BS.fromString arbitrary
 
@@ -330,7 +332,7 @@ arbString :: Int -> Int -> Gen String
 arbString minl maxl = do
   l <- choose (minl, maxl)
   vectorOf l $ elements ['a'..'z']
-  
+
 arbEmail :: Gen BS.ByteString
 arbEmail = do
   n <- arbString 1 34
@@ -359,18 +361,18 @@ signatoryLinkExample1 = SignatoryLink { signatorylinkid = SignatoryLinkID 0
                                                                                                  SignatoryField CompanyNumberFT (BS.fromString "1234") [],
                                                                                                  SignatoryField PersonalNumberFT (BS.fromString "9101112") [],
                                                                                                  SignatoryField (CustomFT (BS.fromString "phone") True) (BS.fromString "504-302-3742") []
-                                                                                
+
                                                                                                 ]
-                                        
+
                                                                             }
                                       }
-                        
+
 blankUser :: User
-blankUser = User {  
+blankUser = User {
                    userid                  =  UserID 0
                  , userpassword            =  Nothing
                  , useriscompanyadmin = False
-                 , useraccountsuspended    =  False  
+                 , useraccountsuspended    =  False
                  , userhasacceptedtermsofservice = Nothing
                  , usersignupmethod = AccountRequest
                  , userinfo = UserInfo {
@@ -380,18 +382,17 @@ blankUser = User {
                                   , usercompanyposition =  BS.empty
                                   , userphone = BS.empty
                                   , usermobile = BS.empty
-                                  , useremail =  Email BS.empty 
+                                  , useremail =  Email BS.empty
                                    }
                 , usersettings  = UserSettings {
                                     preferreddesignmode = Nothing
                                   , locale = mkLocaleFromRegion Misc.defaultValue
-                                  , systemserver = Misc.defaultValue
                                   }
               , userservice = Nothing
               , usercompany = Nothing
               }
 
-blankDocument :: Document 
+blankDocument :: Document
 blankDocument =
           Document
           { documentid                   = DocumentID 0
@@ -431,16 +432,16 @@ testThat s conn a = testCase s (withTestEnvironment conn a)
 
 addNewCompany ::  DB Company
 addNewCompany = do
-    eid <- rand 10 arbitrary 
+    eid <- rand 10 arbitrary
     dbUpdate $ CreateCompany Nothing eid
 
 addNewUser :: String -> String -> String -> DB (Maybe User)
 addNewUser firstname secondname email =
-  dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing Nothing defaultValue (mkLocaleFromRegion defaultValue)
+  dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing Nothing (mkLocaleFromRegion defaultValue)
 
 addNewCompanyUser :: String -> String -> String -> CompanyID -> DB (Maybe User)
 addNewCompanyUser firstname secondname email cid =
-  dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing (Just cid) defaultValue (mkLocaleFromRegion defaultValue)
+  dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing (Just cid) (mkLocaleFromRegion defaultValue)
 
 addNewRandomUser :: DB User
 addNewRandomUser = do
@@ -481,15 +482,16 @@ addRandomDocumentWithAuthor user = do
   sldets <- rand 10 (vectorOf sls arbitrary)
   slr <- rand 1000 (vectorOf sls $ elements [[], [SignatoryPartner]])
   slinks <- sequence $ zipWith (\a r -> update $ (SignLinkFromDetailsForTest a r)) sldets slr
-  
-  mcompany <- case usercompany user of  
+
+  mcompany <- case usercompany user of
     Nothing -> return Nothing
     Just cid -> dbQuery $ GetCompany cid
-  
+
   asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
   asl <- update $ SignLinkFromDetailsForTest asd roles
-  let adoc = doc { documentsignatorylinks = slinks ++ 
+  let adoc = doc { documentsignatorylinks = slinks ++
                                             [asl { maybesignatory = Just (userid user) }]
+                 , documentregion = getRegion user
                  }
   update $ StoreDocumentForTesting adoc
 
@@ -507,25 +509,26 @@ addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> DB Docu
 addRandomDocumentWithAuthorAndCondition user p =  do
   doc <- rand 10 arbitrary
   roles <- getRandomAuthorRoles doc
-  
-  mcompany <- case usercompany user of  
+
+  mcompany <- case usercompany user of
     Nothing -> return Nothing
     Just cid -> dbQuery $ GetCompany cid
-    
+
   now <- liftIO getMinutesTime
-  
+
   (signinfo, seeninfo) <- rand 10 arbitrary
   asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
   asl <- update $ SignLinkFromDetailsForTest asd roles
   let asl' = asl { maybeseeninfo = seeninfo
                  , maybesigninfo = signinfo
                  }
-             
+
   let siglinks = documentsignatorylinks doc ++ [asl' { maybesignatory = Just (userid user), maybecompany = usercompany user }]
   let unsignedsiglinks = map (\sl -> sl { maybesigninfo = Nothing,
                                           maybeseeninfo = Nothing }) siglinks
   let siglinksandauthor = (if isPreparation doc then unsignedsiglinks else siglinks)
   let adoc = doc { documentsignatorylinks = siglinksandauthor
+                 , documentregion = getRegion user
                  }
   if p adoc
     then do
@@ -546,11 +549,11 @@ addRandomDocumentWithAuthorAndCondition user p =  do
         --print $ "rejecting doc: " ++ fromJust d
         addRandomDocumentWithAuthorAndCondition user p
     else do
-      --print adoc   
+      --print adoc
       addRandomDocumentWithAuthorAndCondition user p
 
 rand :: MonadIO m => Int -> Gen a -> m a
-rand i a = do  
+rand i a = do
   stdgn <- liftIO newStdGen
   return $ unGen a stdgn i
 
@@ -562,7 +565,7 @@ untilCondition cond gen = do
 addRandomDocumentWithAuthor' :: User -> DB Document
 addRandomDocumentWithAuthor' user = addRandomDocumentWithAuthorAndCondition user (\_ -> True)
 
-doNTimes :: Int -> IO () -> IO ()
+doNTimes :: (Monad m) => Int -> m () -> m ()
 doNTimes 0 _ = return ()
 doNTimes n a = do
   _ <- a
@@ -590,7 +593,7 @@ validTest = return . Just
 --Random query
 class RandomQuery a b where
   randomQuery :: MonadIO m => a -> m b
-  
+
 instance (QueryEvent ev res) => RandomQuery ev res where
   randomQuery = query
 
@@ -605,7 +608,7 @@ class RandomUpdate a b where
 
 instance (UpdateEvent ev res) => RandomUpdate ev res where
   randomUpdate = update
-  
+
 instance (Arbitrary a, RandomUpdate c b) => RandomUpdate (a -> c) b where
   randomUpdate f = do
     a <- rand 10 arbitrary
@@ -616,10 +619,10 @@ class RandomCallable a b where
   randomCall :: MonadIO m => a -> m b
 
 instance RandomCallable (IO res) res where
-  randomCall = liftIO  
+  randomCall = liftIO
 
 instance (Typeable res) => RandomCallable res res where
-  randomCall = return 
+  randomCall = return
 
 
 instance (Arbitrary a, RandomCallable c b) => RandomCallable (a -> c) b where
@@ -640,7 +643,7 @@ instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbit
     g <- arbitrary
     return (a, b, c, d, e, f, g)
 
-instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbitrary f, Arbitrary g, Arbitrary h) 
+instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbitrary f, Arbitrary g, Arbitrary h)
          => Arbitrary (a, b, c, d, e, f, g, h) where
   arbitrary = do
     a <- arbitrary
@@ -653,14 +656,14 @@ instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbit
     h <- arbitrary
     return (a, b, c, d, e, f, g, h)
 
-instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbitrary f, Arbitrary g, Arbitrary h, Arbitrary i, Arbitrary j) 
+instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbitrary f, Arbitrary g, Arbitrary h, Arbitrary i, Arbitrary j)
          => Arbitrary (a, b, c, d, e, f, g, h, i, j) where
   arbitrary = do
     (a, b, c, d, e, f, g, h) <- arbitrary
     (i, j) <- arbitrary
     return (a, b, c, d, e, f, g, h, i, j)
 
-instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbitrary f, Arbitrary g, Arbitrary h, Arbitrary i) 
+instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbitrary f, Arbitrary g, Arbitrary h, Arbitrary i)
          => Arbitrary (a, b, c, d, e, f, g, h, i) where
   arbitrary = do
     (a, b, c, d, e, f, g, h) <- arbitrary
@@ -669,7 +672,7 @@ instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbit
 
 instance Arbitrary FileID where
   arbitrary = fmap FileID arbitrary
-  
+
 instance Arbitrary File where
   arbitrary = do
     (a, b, c) <- arbitrary
@@ -693,8 +696,8 @@ instance Arbitrary JSValue where
          2 -> JSRational True <$> toRational <$> (arbitrary :: Gen Integer)
          3 -> JSBool <$> arbitrary
          _ -> JSString <$> toJSString <$> arbitrary
-         
-         
+
+
 
 -- our asserts
 
@@ -752,3 +755,18 @@ testAPI f = do
 isFlashOfType :: FlashMessage -> FlashType -> Bool
 isFlashOfType (FlashMessage ft _) t = ft == t
 isFlashOfType (FlashTemplate ft _ _) t = ft == t
+
+getFlashType :: FlashMessage -> FlashType
+getFlashType (FlashMessage ft _) = ft
+getFlashType (FlashTemplate ft _ _) = ft
+
+instance Arbitrary Locale where
+  arbitrary = do  
+    (a, b) <- arbitrary
+    return $ mkLocale a b
+
+instance Arbitrary Region where
+  arbitrary = elements [REGION_SE, REGION_GB]
+  
+instance Arbitrary Lang where
+  arbitrary = elements [LANG_SE, LANG_EN]

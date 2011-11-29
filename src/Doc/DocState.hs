@@ -16,6 +16,7 @@ module Doc.DocState
     , DeleteDocumentRecordIfRequired(..)
     , AttachFile(..)
     , AttachSealedFile(..)
+    , ChangeMainfile(..)
     , RejectDocument(..)
     , GetDocumentByDocumentID(..)
     , GetDocumentStats(..)
@@ -55,7 +56,6 @@ module Doc.DocState
     , signatoryDetailsFromUser
     , GetUniqueSignatoryLinkID(..)
     , GetMagicHash(..)
-    , GetDocumentByFileID(..)
     , ErrorDocument(..)
     , TemplateFromDocument(..)
     , SignableFromDocument(..)
@@ -79,7 +79,7 @@ module Doc.DocState
     , SetEmailIdentification(..)
     , SetElegitimationIdentification(..)
     , ResetSignatoryDetails(..)
-
+    , SetDocumentLocale(..)
     --, MigrateDocumentSigAccounts(..)
     , MigrateDocumentSigLinkCompanies(..)
     , FixBug510ForDocument(..)
@@ -88,6 +88,7 @@ module Doc.DocState
     , DeleteSigAttachment(..)
     , GetSignatoryLinkIDs(..)
     , AdminOnlySaveForUser(..)
+    , UpdateDraft(..)
     -- , populateDBWithDocumentsIfEmpty
     )
 where
@@ -314,6 +315,12 @@ newDocument user mcompany title documenttype ctime =
       inserteddoc <- insertNewDocument doc
       return $ Right inserteddoc 
 
+setDocumentLocale :: DocumentID -> Locale -> MinutesTime -> Update Documents (Either String Document)
+setDocumentLocale did locale time = 
+  modifySignableOrTemplate did $ guardStatus "set locale for" Preparation $ \document ->
+    Right $ document { documentregion = getRegion locale
+                     , documentmtime = time}
+
 {- |
     A blank document containing default values that need to be set before
     saving.
@@ -352,16 +359,6 @@ blankDocument =
           , documentregion               = defaultValue
           }
 
-{- |
-    Gets the document for the given FileID.  This includes documents where
-    documentdeleted = True.  If a document cannot be found then this is counted
-    as an error and a Left is returned.
- -}
-getDocumentByFileID :: FileID -> Query Documents (Either String Document)
-getDocumentByFileID fileid' = queryDocs $ \documents ->
-  case toList (documents @= fileid') of
-    [] -> Left $ "cannot find document for file #" ++ show fileid'
-    (document:_) -> Right document
 
 {- |
     Attaches a file to the indicated document.
@@ -376,7 +373,7 @@ attachFile documentid fid time = do
   modifySignableOrTemplate documentid $ guardStatus "attach a file to" Preparation $ \document ->
     Right $ document { documentfiles = documentfiles document ++ [fid]
                      , documentmtime = time}
-
+    
 {- |
     Attaches a sealed file to the indicated document.
     If there is a problem, such as the document not existing,
@@ -387,22 +384,33 @@ attachSealedFile :: DocumentID
                  -> MinutesTime
                  -> Update Documents (Either String Document)
 attachSealedFile documentid fid time = do
-  modifySignable documentid $ guardStatus "attach a file to" Pending $ \document ->
+  modifySignable documentid $ \document -> 
     Right $ document { documentsealedfiles = documentsealedfiles document ++ [fid] 
-                     , documentmtime = time }
+                          , documentmtime = time }
+
+                                          
       
-modifysiglink :: Document -> SignatoryLinkID -> (SignatoryLink -> SignatoryLink) -> Either String Document
-modifysiglink doc slid f = case getSigLinkFor doc slid of
-    Nothing -> Left $ "No signatory for document " ++ show (documentid doc) ++ " and signatorylinkid " ++ show slid
-    Just _ -> Right $ doc { documentsignatorylinks = mapIf (isSigLinkFor slid) f $ documentsignatorylinks doc }
-      
-{- | Set the maybecompany for a signatorylink
- -}
+
+changeMainfile :: DocumentID -> FileID -> Update Documents (Either String Document)
+changeMainfile did fid = do
+    modifySignable did $ \doc ->
+        if (documentstatus doc == Closed || allHadSigned doc)
+         then Right $ doc { documentsealedfiles = [fid] , documentstatus = Closed}
+         else Right $ doc { documentfiles = [fid] }   
+    where
+        allHadSigned doc = all (hasSigned ||^ (not . isSignatory)) $ documentsignatorylinks doc
+
 setSignatoryCompany :: DocumentID -> SignatoryLinkID -> CompanyID -> Update Documents (Either String Document)
 setSignatoryCompany documentid slid cid = do
   modifySignable documentid $ \doc -> 
     modifysiglink doc slid (\sl -> sl { maybecompany = Just cid })    
     
+modifysiglink :: Document -> SignatoryLinkID -> (SignatoryLink -> SignatoryLink) -> Either String Document
+modifysiglink doc slid f = case getSigLinkFor doc slid of
+    Nothing -> Left $ "No signatory for document " ++ show (documentid doc) ++ " and signatorylinkid " ++ show slid
+    Just _ -> Right $ doc { documentsignatorylinks = mapIf (isSigLinkFor slid) f $ documentsignatorylinks doc }
+    
+   
 {- | Remove the maybecompany for a signatorylink
  -}
 removeSignatoryCompany :: DocumentID -> SignatoryLinkID -> Update Documents (Either String Document)
@@ -455,13 +463,13 @@ setDocumentFunctionality did docfunc time =
   let isbasic = BasicFunctionality == docfunc
       oldsiglinks = documentsignatorylinks doc
       basicsiglinks = signatoriesToBasic oldsiglinks
-  in Right $ doc { documentfunctionality = docfunc
-                 , documentmtime = time
-                 , documentauthorattachments      = [] <| isbasic |> documentauthorattachments doc
-                 , documentsignatoryattachments   = [] <| isbasic |> documentsignatoryattachments doc
-                 , documentcsvupload              = Nothing <| isbasic |> documentcsvupload doc
-                 , documentsignatorylinks         = basicsiglinks <| isbasic |> oldsiglinks
-                 , documentallowedidtypes         = [EmailIdentification] <| isbasic |> documentallowedidtypes doc
+  in Right $ doc { documentfunctionality        = docfunc
+                 , documentmtime                = time
+                 , documentauthorattachments    = []                    <| isbasic |> documentauthorattachments doc
+                 , documentsignatoryattachments = []                    <| isbasic |> documentsignatoryattachments doc
+                 , documentcsvupload            = Nothing               <| isbasic |> documentcsvupload doc
+                 , documentsignatorylinks       = basicsiglinks         <| isbasic |> oldsiglinks
+                 , documentallowedidtypes       = [EmailIdentification] <| isbasic |> documentallowedidtypes doc
                  }
      
 setCSVSigIndex :: DocumentID -> Int -> MinutesTime -> Update Documents (Either String Document)
@@ -508,7 +516,7 @@ checkResetSignatoryData doc sigs =
       [trueOrMessage (documentstatus doc == Preparation) $ "Document is not in preparation, is in " ++ show (documentstatus doc),
        trueOrMessage (length authors == 1) $ "Should have exactly one author, had " ++ show (length authors),
        trueOrMessage (isbasic =>> (length nonauthors == 1)) $ "Should have exactly one signatory since it's basic functionality",
-       trueOrMessage (isbasic =>> all (allowspartner =>>^ (SignatoryPartner `notElem`)) authors) "The author should not be a signatory with this doc type and basic functionality", 
+       trueOrMessage (isbasic =>> all (allowspartner =>>^ (SignatoryPartner `elem`)) authors) "The author should not be a signatory with this doc type and basic functionality", 
        trueOrMessage (isbasic =>> none (hasFieldsAndPlacements . fst) sigs) "The signatories should have no custom fields or placements" ]
   
 resetSignatoryDetails :: DocumentID
@@ -1615,8 +1623,7 @@ saveSigAttachment docid name email fid = do
         where
           newsigatts = map addfile $ documentsignatoryattachments doc
           addfile a | email == signatoryattachmentemail a && name == signatoryattachmentname a =
-            a { signatoryattachmentfile = Just $ fid
-              }
+            a { signatoryattachmentfile = Just $ fid }
           addfile a = a
 
 {- |
@@ -1649,6 +1656,13 @@ getSignatoryLinkIDs =
 getAllDocuments :: Query Documents [Document]
 getAllDocuments = return . toList =<< ask
 
+updateDraft:: DocumentID -> Document -> Update Documents (Either String Document)
+updateDraft did draft = do
+    modifySignableOrTemplate did $ \doc -> 
+        if (documentstatus doc == Preparation && documentstatus draft == Preparation )
+           then Right $ draft
+           else Left $ "Document is not a draft"
+           
 -- create types for event serialization
 $(mkMethods ''Documents [ 'getDocuments
                         , 'getDocumentsByAuthor
@@ -1667,6 +1681,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'removeDocumentAttachment                          
                         , 'updateSigAttachments
                         , 'signDocument
+                        , 'setDocumentLocale
 --                        , 'authorSendDocument
                         , 'setSignatoryCompany
                         , 'removeSignatoryCompany
@@ -1683,6 +1698,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'rejectDocument
                         , 'attachFile
                         , 'attachSealedFile
+                        , 'changeMainfile
                         , 'markDocumentSeen
                         , 'markInvitationRead
                         , 'setInvitationDeliveryStatus
@@ -1720,7 +1736,6 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'saveSigAttachment
                         , 'storeDocumentForTesting
                         , 'signLinkFromDetailsForTest
-                        , 'getDocumentByFileID
                         , 'errorDocument
                         , 'signableFromDocument
                         , 'signableFromDocumentIDWithUpdatedAuthor
@@ -1731,6 +1746,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'fixBug510ForDocument
                         , 'getSignatoryLinkIDs
                         , 'getAllDocuments
+                        , 'updateDraft
                         ])
 
 -- stuff for converting to pgsql

@@ -11,6 +11,8 @@ module Stats.Control
          addUserIDSignTOSStatEvent,
          addUserSignTOSStatEvent,
          addUserSaveAfterSignStatEvent,
+         addUserRefuseSaveAfterSignStatEvent,
+         addUserPhoneAfterTOS,
          addAllDocsToStats,
          addAllUsersToStats,
          handleDocStatsCSV,
@@ -476,6 +478,14 @@ addAllUsersToStats = onlySuperUser $ do
   addFlash (OperationDone, "Added all users to stats")
   return LinkUpload
 
+addUserRefuseSaveAfterSignStatEvent :: Kontrakcja m => User -> SignatoryLink -> m Bool
+addUserRefuseSaveAfterSignStatEvent user siglink = msum [
+  do
+    case maybesigninfo siglink of
+      Nothing -> return False
+      Just SignInfo{ signtime } -> do
+        addUserIDStatEvent UserRefuseSaveAfterSign (userid user) signtime (usercompany user) (userservice user)
+  , return False]
 
 addUserSignTOSStatEvent :: Kontrakcja m => User -> m Bool
 addUserSignTOSStatEvent = addUserStatEventWithTOSTime UserSignTOS
@@ -485,6 +495,9 @@ addUserIDSignTOSStatEvent = addUserIDStatEvent UserSignTOS
 
 addUserSaveAfterSignStatEvent :: Kontrakcja m => User -> m Bool
 addUserSaveAfterSignStatEvent = addUserStatEventWithTOSTime UserSaveAfterSign
+
+addUserPhoneAfterTOS :: Kontrakcja m => User -> m Bool
+addUserPhoneAfterTOS = addUserStatEventWithTOSTime UserPhoneAfterTOS
 
 addUserStatEventWithTOSTime :: Kontrakcja m => UserStatQuantity -> User -> m Bool
 addUserStatEventWithTOSTime qty user = msum [

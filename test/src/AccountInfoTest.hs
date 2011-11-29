@@ -19,6 +19,7 @@ import StateHelper
 import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
+import User.Locale
 import User.Model
 import User.UserControl
 import User.Utils
@@ -29,10 +30,6 @@ accountInfoTests :: Connection -> Test
 accountInfoTests conn = testGroup "AccountInfo" [
       testCase "lets private account upgrade to company account" $ testPrivateToCompanyUpgrade conn
     , testCase "company upgrade requires a company name" $ testCompanyUpgradeRequiresCompanyName conn
-    , testCase "company upgrade requires a company first name" $ testCompanyUpgradeRequiresFirstName conn
-    , testCase "company upgrade requires a company second name" $ testCompanyUpgradeRequiresSecondName conn
-    , testCase "company upgrade requires a company position" $ testCompanyUpgradeRequiresPosition conn
-    , testCase "company upgrade requires a phone number" $ testCompanyUpgradeRequiresPhone conn
     ]
 
 testPrivateToCompanyUpgrade :: Connection -> Assertion
@@ -59,54 +56,6 @@ testCompanyUpgradeRequiresCompanyName conn = withTestEnvironment conn $ do
 
   assertCompanyUpgradeFailed (userid user) (res1, ctx1)
 
-testCompanyUpgradeRequiresFirstName :: Connection -> Assertion
-testCompanyUpgradeRequiresFirstName conn = withTestEnvironment conn $ do
-  Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  let upgradeinfo = UpgradeInfo "Test Corp"
-                                ""
-                                "Rybczakk"
-                                "Tester"
-                                "12345"
-  (res1, ctx1) <- upgradeCompanyForUser conn user upgradeinfo
-
-  assertCompanyUpgradeFailed (userid user) (res1, ctx1)
-
-testCompanyUpgradeRequiresSecondName :: Connection -> Assertion
-testCompanyUpgradeRequiresSecondName conn = withTestEnvironment conn $ do
-  Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  let upgradeinfo = UpgradeInfo "Test Corp"
-                                "Andrzejj"
-                                ""
-                                "Tester"
-                                "12345"
-  (res1, ctx1) <- upgradeCompanyForUser conn user upgradeinfo
-
-  assertCompanyUpgradeFailed (userid user) (res1, ctx1)
-
-testCompanyUpgradeRequiresPosition :: Connection -> Assertion
-testCompanyUpgradeRequiresPosition conn = withTestEnvironment conn $ do
-  Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  let upgradeinfo = UpgradeInfo "Test Corp"
-                                "Andrzejj"
-                                "Rybczakk"
-                                ""
-                                "12345"
-  (res1, ctx1) <- upgradeCompanyForUser conn user upgradeinfo
-
-  assertCompanyUpgradeFailed (userid user) (res1, ctx1)
-
-testCompanyUpgradeRequiresPhone :: Connection -> Assertion
-testCompanyUpgradeRequiresPhone conn = withTestEnvironment conn $ do
-  Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  let upgradeinfo = UpgradeInfo "Test Corp"
-                                "Andrzejj"
-                                "Rybczakk"
-                                "Tester"
-                                ""
-  (res1, ctx1) <- upgradeCompanyForUser conn user upgradeinfo
-
-  assertCompanyUpgradeFailed (userid user) (res1, ctx1)
-
 data UpgradeInfo = UpgradeInfo String String String String String
 
 upgradeCompanyForUser :: (MonadIO m, Functor m) =>
@@ -115,8 +64,9 @@ upgradeCompanyForUser :: (MonadIO m, Functor m) =>
                             -> UpgradeInfo
                             -> m (Response, Context)
 upgradeCompanyForUser conn user (UpgradeInfo cname fstname sndname position phone) = do
+  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
-    <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [ ("createcompany", inText "true")
                         , ("companyname", inText cname)

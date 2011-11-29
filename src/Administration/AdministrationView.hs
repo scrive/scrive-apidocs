@@ -22,6 +22,7 @@ module Administration.AdministrationView(
           , databaseContent
           , statsPage
           , servicesAdminPage
+          , adminDocumentsDaylyList
           , adminTranslationsPage
           , adminUserUsageStatsPage
           , adminCompanyUsageStatsPage
@@ -52,6 +53,8 @@ import Company.Model
 import API.Service.Model
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
+import Util.SignatoryLinkUtils
+import MinutesTime
 
 {-| Main admin page - can go from here to other pages -}
 adminMainPage :: TemplatesMonad m => m String
@@ -87,7 +90,7 @@ adminCompanyUsersPage company users params =
         field "admincompanieslink" $ show $ LinkCompanyAdmin Nothing
         field "adminuserslink" $ show $ LinkUserAdmin Nothing
         fieldFL "users" $ map (uncurry userBasicFields) . visibleItems params $ zip users (repeat $ Just company)
-        adminListFields (const $ LinkCompanyUserAdmin (companyid company)) users params 
+        adminListFields (const $ LinkCompanyUserAdmin (companyid company)) users params
 
 {-| Manage users page - can find user here -}
 adminUsersPageForSales :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> AdminListPageParams -> m String
@@ -103,7 +106,7 @@ adminUsersPageForPayments users params =
         fieldFL "users" $ map mkUserInfoView $ visibleItems params users
         adminListFields LinkUserAdmin users params
 
-adminListFields :: (TemplatesMonad m, AdminListable a) => (Maybe b -> KontraLink) -> [a] -> AdminListPageParams -> Fields m        
+adminListFields :: (TemplatesMonad m, AdminListable a) => (Maybe b -> KontraLink) -> [a] -> AdminListPageParams -> Fields m
 adminListFields listlink items params = do
   field "adminlistlink" $ show (listlink Nothing)
   field "adminlink" $ show $ LinkAdminOnly
@@ -121,7 +124,7 @@ adminUserPage user mcompany =
         fieldF "company" $ companyFields mcompany
         --field "paymentmodel" $ getModelView paymentModel
         field "adminlink" $ show $ LinkAdminOnly
-        
+
 {- | Manager company page - can change company info and settings here -}
 adminCompanyPage :: TemplatesMonad m => Company -> m String
 adminCompanyPage company =
@@ -129,22 +132,20 @@ adminCompanyPage company =
     field "admincompanieslink" $ show $ LinkCompanyAdmin Nothing
     companyFields (Just company)
     field "adminlink" $ show $ LinkAdminOnly
-    
+
 adminUserStatisticsPage :: TemplatesMonad m => Fields m -> m String
 adminUserStatisticsPage morefields =
   renderTemplateFM "statisticsPage" $ do
     morefields
     field "adminlink" $ show $ LinkAdminOnly
-
-adminFunctionalityStatsPage :: TemplatesMonad m => [(String, Int)] 
-                                              -> [(String, Int)] 
-                                              -> [(String,Int)] 
+ 
+adminFunctionalityStatsPage :: TemplatesMonad m => [(String, Int)]
+                                              -> [(String, Int)]
                                               -> m String
-adminFunctionalityStatsPage userstats docstats siglinkstats =
+adminFunctionalityStatsPage userstats docstats =
   renderTemplateFM "adminFunctionalityStatsPage" $ do
     fieldFL "userfunctionalitystats" $ map functionalityStatFields userstats
     fieldFL "docfunctionalitystats" $ map functionalityStatFields docstats
-    fieldFL "siglinkfunctionalitystats" $ map functionalityStatFields siglinkstats
     field "adminlink" $ show $ LinkAdminOnly
   where
     functionalityStatFields (label, count) = do
@@ -161,7 +162,7 @@ adminUserUsageStatsPage user mcompany morefields =
         fieldF "company" $ companyFields mcompany
         field "adminlink" $ show $ LinkAdminOnly
         morefields
-        
+
 {-| The company stats page -}
 adminCompanyUsageStatsPage :: TemplatesMonad m => CompanyID -> Fields m -> m String
 adminCompanyUsageStatsPage companyid morefields =
@@ -170,6 +171,26 @@ adminCompanyUsageStatsPage companyid morefields =
         field "adminlink" $ show $ LinkAdminOnly
         field "companyid" $ show companyid
         morefields
+
+adminDocumentsDaylyList :: TemplatesMonad m => MinutesTime -> [Document] -> m String
+adminDocumentsDaylyList t docs = do
+    renderTemplateFM "daylydocumentinfo" $ do
+       fieldFL "documents" $ for docs $ \doc -> do
+           field "id" $ show $ documentid doc
+           field "title" $ documenttitle doc
+           field "service" $ fmap show $ documentservice doc
+           field "type" $ show $ documenttype doc
+           field "status" $ take 20 $ show $ documentstatus doc
+           field "signatories" $ map getSmartName $ documentsignatorylinks doc
+           fieldF "author" $ do
+               field "name"    $ fmap getSmartName    $ getAuthorSigLink doc
+               field "email"   $ fmap getEmail        $ getAuthorSigLink doc
+               field "company" $ fmap getCompanyName  $ getAuthorSigLink doc
+           field "ctime" $ showMinutesTimeForAPI $ documentctime doc
+           field "mtime" $ showMinutesTimeForAPI $ documentmtime doc
+       field "adminlink" $ show $ LinkAdminOnly
+       field "day" $ showDateOnly t
+
 
 allUsersTable :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> m String
 allUsersTable users =
@@ -270,7 +291,7 @@ data AdminListPageParams = AdminListPageParams {
                              startletter::Maybe String,
                              page::Int
                             }
-                            
+
 companyFields :: MonadIO m => Maybe Company -> Fields m
 companyFields mc = do
         field "companyid" $ maybe "" (show . companyid) mc
@@ -291,8 +312,6 @@ userFields u =  do
         field "phone" $ toString $ userphone $ userinfo u
         field "mobile" $ toString $ usermobile $ userinfo u
         field "email" $ getEmail u
-        field "serviceskrivapa" $ SkrivaPa == (systemserver $ usersettings u)
-        field "servicescrive" $ Scrive == (systemserver $ usersettings u)
         field "regionse" $ REGION_SE == getRegion u
         field "regiongb" $ REGION_GB == getRegion u
         field "langsv" $ LANG_SE == getLang u

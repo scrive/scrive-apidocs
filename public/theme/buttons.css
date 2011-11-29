@@ -5,18 +5,24 @@
 	display: block;
 	text-decoration: none;
     cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-small p, .btn-big p, .btn-tiny p {
+    font-weight: bold;
 }
 
 a.btn-small .label, a.btn-big .label, a.btn-tiny .label{
     color: #fff;
     white-space: nowrap;
+    font-weight: bold;
 }
 
 a.btn-small.center, a.btn-big.center, a.btn-tiny.center {
 	text-align: center;
 }
 
-.btn-small p, btn-big p, btn-tiny p {
+.btn-small p, .btn-big p, .btn-tiny p {
 	display: inline;
 }
 a.btn-small{
@@ -41,7 +47,9 @@ a.btn-small .right {
 a.btn-small .label {
 	background: url(../img/spr-btn-bg.png) 0 0;
 	float: left;
-	font: 12px/33px "Helvetica Neue";
+    font-size: 12px;
+    line-height: 33px;
+    font-family: "Helvetica Neue";
 	height: 33px;
 	letter-spacing: 0.2px;
 	position: relative;

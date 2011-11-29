@@ -29,7 +29,7 @@ import Data.List hiding (insert)
 import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-import File.TransState
+import File.Model
 
 --import Happstack.State
 
@@ -41,7 +41,7 @@ isDeletableDocument :: Document -> Bool
 isDeletableDocument doc =
     (not  $ (documentstatus doc) `elem` [Pending, AwaitingAuthor]) -- We dont allow to delete pending documents
     || (isAttachment doc || isTemplate doc)  -- But attachments and templates never can be pending (it they are this is a bug somewere else)
-    
+
 {- |
    Given a Document, return all of the signatory details for all signatories (exclude viewers but include author if he must sign).
    See also: partyListButAuthor to exclude the author.
@@ -85,12 +85,21 @@ joinWith s (x:xs) = x ++ s ++ joinWith s xs
 
 -- where does this go? -EN
 renderListTemplate :: TemplatesMonad m => [String] -> m String
-renderListTemplate list =
+renderListTemplate = renderListTemplate' renderTemplateFM
+
+renderLocalListTemplate :: (HasLocale a, TemplatesMonad m) => a -> [String] -> m String
+renderLocalListTemplate haslocale = renderListTemplate' (renderLocalTemplateFM haslocale)
+
+renderListTemplate' :: TemplatesMonad m
+                       => (String -> Fields m -> m String)
+                       -> [String]
+                       -> m String
+renderListTemplate' renderFunc list =
   if length list > 1
-     then renderTemplateFM "morethenonelist" $ do
+     then renderFunc "morethenonelist" $ do
          field "list" $ init list
          field "last" $ last list
-     else renderTemplateFM "nomorethanonelist" $ field "list" list
+     else renderFunc "nomorethanonelist" $ field "list" list
 
 -- CHECKERS
 
@@ -143,7 +152,7 @@ instance  MaybeAttachment Document where
 
 class MaybeShared a where
     isShared :: a -> Bool
-    
+
 instance  MaybeShared Document where
     isShared doc = documentsharing doc == Shared
 
@@ -280,9 +289,9 @@ isDocumentEligibleForReminder doc = not $ documentstatus doc `elem` [Timedout, C
 removeFieldsAndPlacements :: SignatoryDetails -> SignatoryDetails
 removeFieldsAndPlacements sd = sd { signatoryfields = filter (not . isFieldCustom)
   $ map (\sf -> sf { sfPlacements = [] }) $ signatoryfields sd }
-                               
+
 hasFieldsAndPlacements :: SignatoryDetails -> Bool
-hasFieldsAndPlacements sd = any (isFieldCustom ||^ (not . Data.List.null . sfPlacements)) (signatoryfields sd) 
+hasFieldsAndPlacements sd = any (isFieldCustom ||^ (not . Data.List.null . sfPlacements)) (signatoryfields sd)
 
 {- |
     Sets the sign order on some signatory details.
@@ -345,7 +354,7 @@ addTag _ (n,v) = [DocumentTag n v]
 samenameanddescription :: BS.ByteString -> BS.ByteString -> (BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)]) -> Bool
 samenameanddescription n d (nn, dd, _) = n == nn && d == dd
 
-buildattach :: String -> Document -> [SignatoryAttachment] 
+buildattach :: String -> Document -> [SignatoryAttachment]
                -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])]
                -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])]
 buildattach _ _ [] a = a
@@ -368,7 +377,7 @@ isAuthoredByCompany :: CompanyID -> Document -> Bool
 isAuthoredByCompany companyid doc = (getAuthorSigLink doc >>= maybecompany) == Just companyid
 
 getFilesByStatus :: (MonadIO m, DBMonad m) => Document -> m [File]
-getFilesByStatus doc 
+getFilesByStatus doc
   | isClosed doc = liftM catMaybes $ mapM doGet $ documentsealedfiles doc
   | otherwise    = liftM catMaybes $ mapM doGet $ documentfiles doc
   where

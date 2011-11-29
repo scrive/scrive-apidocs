@@ -6,6 +6,7 @@ module User.Locale (
   , getLang
   , HasLocale (..)
   , targetedLocales
+  , allLocales
   ) where
 
 import Misc
@@ -15,8 +16,11 @@ import User.Region
 data Locale = Locale Region Lang
   deriving (Bounded, Show, Read, Ord, Eq)
 
+-- I suggest that this returns Maybe Locale, where Nothing 
+-- signals an invalid combo; or it could be an error - EN
+
 mkLocale :: Region -> Lang -> Locale
-mkLocale region _locale = mkLocaleFromRegion region --implemented like this to restrict the regions and langs allowed
+mkLocale region _lang = mkLocaleFromRegion region --implemented like this to restrict the regions and langs allowed
 
 mkLocaleFromRegion :: Region -> Locale
 mkLocaleFromRegion region = Locale region (defaultRegionLang region)
@@ -30,7 +34,7 @@ instance HasLocale Locale where
 getRegion :: HasLocale a => a -> Region
 getRegion x =
   let Locale region _lang = getLocale x in
-  region            
+  region
 
 getLang :: HasLocale a => a -> Lang
 getLang x =
@@ -39,3 +43,6 @@ getLang x =
 
 targetedLocales :: [Locale]
 targetedLocales = map mkLocaleFromRegion allValues
+
+allLocales :: [Locale]
+allLocales = targetedLocales

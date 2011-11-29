@@ -96,7 +96,7 @@ instance DBUpdate FileMovedToDisk () where
 data GetFileThatShouldBeMovedToAmazon = GetFileThatShouldBeMovedToAmazon
 instance DBQuery GetFileThatShouldBeMovedToAmazon (Maybe File) where
   dbQuery GetFileThatShouldBeMovedToAmazon = wrapDB $ \conn -> do
-    st <- prepare conn $ "SELECT id, name, content, amazon_bucket, amazon_url, disk_path " ++
+    st <- prepare conn $ "SELECT id, name, encode(content,'base64'), amazon_bucket, amazon_url, disk_path " ++
                          "FROM files " ++
                          "WHERE content IS NOT NULL " ++
                          "LIMIT 1"

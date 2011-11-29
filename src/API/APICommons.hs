@@ -1,4 +1,5 @@
 {-# LANGUAGE TupleSections #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  API.APICommons
@@ -6,7 +7,7 @@
 -- Stability   :  development
 -- Portability :  portable
 --
--- Constans and data structures used by many other API's
+-- Constants and data structures used by many other API's
 -- Some low level helpers.
 --
 -- !! Constants described here should be used between all API's
@@ -38,7 +39,7 @@ import Text.JSON
 import MinutesTime
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-import qualified  Codec.Binary.Base64 as BASE64
+import qualified Data.ByteString.Base64 as Base64 
 import API.API
 import Doc.DocStorage
 import Doc.DocControl
@@ -54,7 +55,9 @@ import Util.SignatoryLinkUtils
 import DB.Classes
 import qualified AppLogger as Log
 import Util.JSON
-
+import User.Lang
+import User.Region
+import User.Locale
 
 {- -}
 
@@ -107,6 +110,8 @@ data DOCUMENT_TYPE =
     | DOCUMENT_TYPE_OFFER
     | DOCUMENT_TYPE_CONTRACT_TEMPLATE
     | DOCUMENT_TYPE_OFFER_TEMPLATE
+    | DOCUMENT_TYPE_ORDER
+    | DOCUMENT_TYPE_ORDER_TEMPLATE
     deriving (Bounded,Ord,Eq)
 
 instance SafeEnum DOCUMENT_TYPE where
@@ -114,10 +119,14 @@ instance SafeEnum DOCUMENT_TYPE where
     fromSafeEnum DOCUMENT_TYPE_CONTRACT_TEMPLATE = 2
     fromSafeEnum DOCUMENT_TYPE_OFFER             = 3
     fromSafeEnum DOCUMENT_TYPE_OFFER_TEMPLATE    = 4
+    fromSafeEnum DOCUMENT_TYPE_ORDER             = 5
+    fromSafeEnum DOCUMENT_TYPE_ORDER_TEMPLATE    = 6
     toSafeEnum 1 = Just DOCUMENT_TYPE_CONTRACT
     toSafeEnum 2 = Just DOCUMENT_TYPE_CONTRACT_TEMPLATE
     toSafeEnum 3 = Just DOCUMENT_TYPE_OFFER
     toSafeEnum 4 = Just DOCUMENT_TYPE_OFFER_TEMPLATE
+    toSafeEnum 5 = Just DOCUMENT_TYPE_ORDER
+    toSafeEnum 6 = Just DOCUMENT_TYPE_ORDER_TEMPLATE
     toSafeEnum _ = Nothing
 
 toDocumentType :: DOCUMENT_TYPE -> DocumentType
@@ -125,6 +134,8 @@ toDocumentType DOCUMENT_TYPE_CONTRACT          = Signable Contract
 toDocumentType DOCUMENT_TYPE_OFFER             = Signable Offer
 toDocumentType DOCUMENT_TYPE_CONTRACT_TEMPLATE = Template Contract
 toDocumentType DOCUMENT_TYPE_OFFER_TEMPLATE    = Template Offer
+toDocumentType DOCUMENT_TYPE_ORDER             = Signable Order
+toDocumentType DOCUMENT_TYPE_ORDER_TEMPLATE    = Template Order
 
 {- Building JSON structure representing object in any API response
    TODO: Something is WRONG FOR ATTACHMENTS HERE
@@ -133,8 +144,10 @@ api_document_type :: Document ->  DOCUMENT_TYPE
 api_document_type doc
     | Template Contract == documenttype doc = DOCUMENT_TYPE_CONTRACT_TEMPLATE
     | Template Offer    == documenttype doc = DOCUMENT_TYPE_OFFER_TEMPLATE
+    | Template Order    == documenttype doc = DOCUMENT_TYPE_ORDER_TEMPLATE
     | Signable Contract == documenttype doc = DOCUMENT_TYPE_CONTRACT
     | Signable Offer    == documenttype doc = DOCUMENT_TYPE_OFFER
+    | Signable Order    == documenttype doc = DOCUMENT_TYPE_ORDER
     | otherwise                             = error "Not matching type" -- TO DO WITH NEXT INTEGRATION API FIXES
 
 
@@ -185,13 +198,13 @@ api_signatory sl = JSObject $ toJSObject $
       sfToJS sf name = (name, showJSON $ BS.toString $ sfValue sf)
       fields = for (filter (not . isFieldCustom) $ signatoryfields $ signatorydetails sl) $
         \sf -> case sfType sf of
-          FirstNameFT -> sfToJS sf "fstname"
-          LastNameFT -> sfToJS sf "sndname"
-          CompanyFT -> sfToJS sf "company"
-          CompanyNumberFT -> sfToJS sf "companynr"
+          FirstNameFT      -> sfToJS sf "fstname"
+          LastNameFT       -> sfToJS sf "sndname"
+          CompanyFT        -> sfToJS sf "company"
+          CompanyNumberFT  -> sfToJS sf "companynr"
           PersonalNumberFT -> sfToJS sf "personalnr"
-          EmailFT -> sfToJS sf "email"
-          CustomFT _ _ -> error "api_signatory: impossible happened"
+          EmailFT          -> sfToJS sf "email"
+          CustomFT _ _     -> error "api_signatory: impossible happened"
 
 api_document_tag :: DocumentTag -> JSValue
 api_document_tag tag = JSObject $ toJSObject [
@@ -200,7 +213,7 @@ api_document_tag tag = JSObject $ toJSObject [
                        
 api_file :: BS.ByteString -> BS.ByteString -> JSValue
 api_file name content = 
-  let base64data = BASE64.encode (BS.unpack content) in
+  let base64data = BS.toString (Base64.encode content) in
   JSObject $ toJSObject [ ("name", showJSON $ BS.toString name)
                         , ("content", showJSON base64data)]
 
@@ -220,10 +233,11 @@ api_document mfiles doc = JSObject $ toJSObject $ [
   , ("tags", JSArray $ map api_document_tag $ documenttags doc)
   , ("authorization", showJSON  $ fromSafeEnum $ api_document_authorisation doc)
   , ("mdate", api_date $ documentmtime doc)
+  , ("locale", jsonFromLocale $ getLocale doc)
   ] ++ case mfiles of
   Nothing -> []
   Just files -> [("files", JSArray files)]
-  
+
 
 api_document_read :: (APIContext c, Kontrakcja m, DBMonad m) => Bool -> Document -> APIFunction m c JSValue
 api_document_read False doc = return $ api_document Nothing doc
@@ -248,7 +262,7 @@ data SignatoryTMP = SignatoryTMP {
 
 getSignatoryTMP :: (APIContext c, Kontrakcja m) => APIFunction m c (Maybe SignatoryTMP)
 getSignatoryTMP = do
-    Log.debug "getSigantoryTMP"
+    Log.debug "getSignatoryTMP"
     fstname        <- fromJSONField "fstname"
     sndname        <- fromJSONField "sndname"
     company        <- fromJSONField "company"
@@ -314,3 +328,23 @@ getFiles = fmap (fromMaybe []) $ fromJSONLocal "files" $ fromJSONLocalMap $ do
     content <- fromJSONFieldBase64 "content"
     when (isNothing name || isNothing content) $ throwApiError API_ERROR_MISSING_VALUE "Problems with files upload."
     return $ Just (fromJust name, fromJust content)
+
+{- | JSON from Locale
+ -}
+jsonFromLocale :: Locale -> JSValue
+jsonFromLocale l = JSObject $ toJSObject [("region", showJSON $ codeFromRegion $ getRegion l),
+                                          ("language", showJSON $ codeFromLang $ getLang l)]
+
+instance FromJSON Locale where
+  fromJSValue (JSObject obj) = 
+    case (fromJSValue =<< getJSONField "region" obj, fromJSValue =<< getJSONField "language" obj) of
+      (Just region, Just language) -> Just $ mkLocale region language
+      (Just region, _)             -> Just $ mkLocaleFromRegion region
+      _                            -> Nothing
+  fromJSValue _ = Nothing
+
+instance FromJSON Region where
+  fromJSValue a = regionFromCode =<< (fromJSValue a)
+  
+instance FromJSON Lang where
+  fromJSValue a = langFromCode =<< (fromJSValue a)

@@ -3,6 +3,7 @@ module MailsTest (mailsTests) where
 import Control.Applicative
 import Database.HDBC.PostgreSQL
 import Happstack.Server
+import Happstack.State (update)
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit (Assertion)
@@ -47,16 +48,21 @@ gRight ac = do
       assertFailure (show m)
       return undefined
     Right d -> return d
-      
+
 
 testDocumentMails  :: Connection -> Maybe String -> Assertion
 testDocumentMails  conn mailTo = withTestEnvironment conn $ do
   author <- addNewRandomAdvancedUser
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
-  forM_ allValues $ \l ->   
+  forM_ allLocales $ \l ->
     forM_ [Contract,Offer,Order] $ \doctype -> do
-        d <- gRight $ randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype)
-        let docid = documentid d 
+        -- make  the context, user and document all use the same locale
+        ctx <- mailingContext l conn
+        _ <- runDBUpdate $ SetUserSettings (userid author) $ (usersettings author) { locale = l }
+        d' <- gRight $ randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype)
+        d <- gRight . update $ SetDocumentLocale (documentid d') l (ctxtime ctx)
+
+        let docid = documentid d
         let asl = head $ documentsignatorylinks d
         let authordetails = signatorydetails asl
         _ <- gRight $ randomUpdate $ AttachFile docid
@@ -69,11 +75,10 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
         _ <- gRight $ randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2) now
         doc <- gRight $ randomUpdate $ SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) now
         let [sl] = filter (not . isAuthor) (documentsignatorylinks doc)
-        ctx <- mailingContext l conn
         req <- mkRequest POST []
         --Invitation Mails
         let checkMail s mg = do
-                              m <- fst <$> (runTestKontra req ctx $ mg) 
+                              m <- fst <$> (runTestKontra req ctx $ mg)
                               validMail (s ++ " "++ show doctype) m
                               sendoutForManualChecking (s ++ " " ++ show doctype ) req ctx mailTo m
         checkMail "Invitation" $ mailInvitation True ctx Sign doc (Just sl)
@@ -87,10 +92,10 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
         checkMail "Cancel" $ mailCancelDocumentByAuthor True Nothing  ctx doc
         --reject mail
         checkMail "Reject"  $ mailDocumentRejected  Nothing  ctx doc sl
-        -- awaiting author email 
+        -- awaiting author email
         when (doctype == Contract) $ do
-          checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc 
-        -- Virtual signing 
+          checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc (mkLocaleFromRegion defaultValue)
+        -- Virtual signing
         _ <- randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl) (signatorymagichash sl) (10 `minutesAfter` now) ip Nothing
         (Just sdoc) <- randomQuery $ GetDocumentByDocumentID docid
         -- Sending closed email
@@ -101,44 +106,55 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
 
 testUserMails :: Connection -> Maybe String -> Assertion
 testUserMails conn mailTo = withTestEnvironment conn $ do
-  forM_ allValues $ \l ->  do  
-    user <- addNewRandomAdvancedUser
+  forM_ allLocales $ \l ->  do
+    -- make a user and context that use the same locale
     ctx <- mailingContext l conn
+    user <- addNewRandomAdvancedUserWithLocale l
+
     req <- mkRequest POST []
     let checkMail s mg = do
-                           m <- fst <$> (runTestKontra req ctx $ mg) 
+                           m <- fst <$> (runTestKontra req ctx $ mg)
                            validMail s m
                            sendoutForManualChecking s req ctx mailTo m
-    checkMail "New account" $ do 
+    checkMail "New account" $ do
           al <- newAccountCreatedLink user
           newUserMail (ctxhostpart ctx) (getEmail user) (getEmail user) al False
-    checkMail "New account by admin" $ do 
+    checkMail "New account by admin" $ do
           al <- newAccountCreatedLink user
-          mailNewAccountCreatedByAdmin ctx (getSmartName user) (getEmail user) al Nothing
-    checkMail "New account after signing contract" $ do 
+          mailNewAccountCreatedByAdmin ctx (ctxlocale ctx) (getSmartName user) (getEmail user) al Nothing
+    checkMail "New account after signing contract" $ do
           al <- newAccountCreatedLink user
-          mailAccountCreatedBySigningContractReminder (ctxhostpart ctx)  (getSmartName user) (getEmail user) al 
-    checkMail "Reset password mail" $ do 
+          mailAccountCreatedBySigningContractReminder (ctxhostpart ctx)  (getSmartName user) (getEmail user) al
+    checkMail "Reset password mail" $ do
           al <- newAccountCreatedLink user
-          resetPasswordMail (ctxhostpart ctx) user al 
-    
-    
+          resetPasswordMail (ctxhostpart ctx) user al
+
+
 -- MAIL TESTING UTILS
 validMail :: String -> Mail -> DB ()
 validMail name m = do
     let c = BS.toString $ content m
     let exml = xmlParse' name c
-    case (any isAlphaNum $ BS.toString $ title m) of 
+    case (any isAlphaNum $ BS.toString $ title m) of
          True -> assertSuccess
-         False -> assertFailure ("Empty title of mail " ++ name) 
-    case exml of 
+         False -> assertFailure ("Empty title of mail " ++ name)
+    case exml of
          Right _ -> assertSuccess
-         Left err -> assertFailure ("Not valid HTML mail " ++ name ++ " : " ++ c ++ " " ++ err) 
+         Left err -> assertFailure ("Not valid HTML mail " ++ name ++ " : " ++ c ++ " " ++ err)
 
+addNewRandomAdvancedUserWithLocale :: Locale -> DB User
+addNewRandomAdvancedUserWithLocale l = do
+  user <- addNewRandomAdvancedUser
+  _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
+           locale = l
+         }
+  (Just uuser) <- runDBQuery $ GetUserByID (userid user)
+  return uuser
 
-mailingContext :: Region -> Connection -> DB Context
-mailingContext r conn = do
-    ctx <- mkContext =<< localizedVersion (Scrive,r,defaultRegionLang r)  <$> readGlobalTemplates
+mailingContext :: Locale -> Connection -> DB Context
+mailingContext locale conn = do
+    globaltemplates <- readGlobalTemplates
+    ctx <- mkContext locale globaltemplates
     return $ ctx {
                 ctxdbconn = conn,
                 ctxhostpart = "http://dev.skrivapa.se"
@@ -152,14 +168,14 @@ sendoutForManualChecking titleprefix req ctx (Just email) m = do
             let mailToSend =  m {to = [MailAddress {fullname=BS.fromString "Tester",
                                                 email=BS.fromString email}],
                                  title = BS.fromString $ "(" ++ titleprefix ++"): " ++ (BS.toString $ title m)}
-            a <- rand 10 arbitrary 
+            a <- rand 10 arbitrary
             success <- sendMail testMailer a mailToSend
             assertBool "Mail could not be send" success
-    assertSuccess 
+    assertSuccess
 
 testMailer:: Mailer
 testMailer = createSendgridMailer $ MailsSendgrid {
-        mailbackdooropen = False, 
+        mailbackdooropen = False,
         ourInfoEmail = "test@skrivapa.se",
         ourInfoEmailNiceName = "test",
         sendgridSMTP = "smtps://smtp.sendgrid.net",

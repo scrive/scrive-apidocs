@@ -1,5 +1,5 @@
 ###
-pageLogin= 
+pageLogin=
     <div class="centerdivnarrow">
       <p class="headline">$_login()$</p>
       $loginBox()$
@@ -33,11 +33,11 @@ standardHeaderContents=
         <link href="$prefix$/theme/flash.css" rel="stylesheet" type="text/css" media="screen" />
         <link href="/css/main.css" rel="stylesheet" type="text/css" />
         <link rel="stylesheet" type="text/css"
-              href="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/themes/ui-lightness/jquery-ui.css"
+              href="$if(production)$$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/themes$else$/css$endif$/ui-lightness/jquery-ui.css"
                    media="screen" />
-        <script src="$protocol$//ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"
+        <script src="$if(production)$$protocol$//ajax.googleapis.com/ajax/libs/jquery/1.5.1$else$/js$endif$/jquery.min.js"
                 type="text/javascript"></script>
-        <script src="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/jquery-ui.min.js"
+        <script src="$if(production)$$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.11$else$/js$endif$/jquery-ui.min.js"
                 type="text/javascript"></script>
         <script src="$prefix$/js/jquery.tools.min.js"
                 type="text/javascript"></script>
@@ -64,7 +64,7 @@ standardHeaderContents=
 
         <script src="$prefix$/js/infotextinputs.js"
                 type="text/javascript"></script>
-        
+
         <script src="$prefix$/js/buttons.js"
                 type="text/javascript"></script>
         <script src="$prefix$/js/uploadbuttons.js"
@@ -94,19 +94,21 @@ standardHeaderContents=
 		<script src="$prefix$/js/confirmationsWithEmails.js"
                 type="text/javascript"></script>
         <script src="$prefix$/js/docview.js"
-                type="text/javascript"></script>  
+                type="text/javascript"></script>
+        <script src="$prefix$/js/signatorydesignview.js"
+                type="text/javascript"></script>    
         <script src="$prefix$/js/docdesignview.js"
                 type="text/javascript"></script>  
         <script src="$prefix$/js/bankid.js"
-                type="text/javascript"></script>  
+                type="text/javascript"></script>
        $if(publicsafe)$
-        <script src="/js/jquery.tweet.js" 
+        <script src="/js/jquery.tweet.js"
                 type="text/javascript"></script>
             $if(production)$
                 <script src="$prefix$/js/analytics.js" type="text/javascript"></script>
             $endif$
        $endif$
-       <script src="/js/main.js" 
+       <script src="/js/main.js"
                 type="text/javascript"></script>
 ####
 standardBodyWithQueryCol=
@@ -140,7 +142,7 @@ standardBodyWrapper=
           $unwrappedbody:noescape()$
                                         <div class="clearfix"></div>
                                         <div class="spacer40"></div>
-                                        $if(showCreateAccount)$    
+                                        $if(showCreateAccount)$
                                         <div class="try-skrivapa">
                                           <div class="left">
                                             <h3>$_standardBodyWrapperHead()$</h3>
@@ -154,20 +156,20 @@ standardBodyWrapper=
                                                      autocomplete="off"
                                                      /> <a href="#" class="submit
                                                                            new-btn-small green2 center
-                                                                           float-right"><p>$_createaccount()$!</p></a>
+                                                                           float-right"><p>$_ButtonCreateAccount()$!</p></a>
                                               <input type="submit" class="hidden" />
                                             </form>
                                           </div>
                                         </div>
-                                        $endif$ 
+                                        $endif$
         </div>
         </div>
-        
+
         $pageFooter()$
-      </body>               
+      </body>
 ####
 queryColumn=
-<div class="white thin box">
+<div class="white thin box createaccountbox">
                                                 <h4>$_queryColumnHead()$</h4>
 <br />
 <p>$_queryColumnBody1()$</p>
@@ -182,7 +184,7 @@ queryColumn=
                                                         autocomplete="off"
                                                         /><br /><br />
 
-                                                        <a class="submit new-btn-small green2 center"><p>$_createaccount()$</p></a>
+                                                        <a class="submit new-btn-small green2 center"><p>$_ButtonCreateAccount()$</p></a>
                                                         <input type="submit" class="hidden" />
                                                 </form>
                                         </div>
@@ -193,7 +195,7 @@ queryColumn=
 
                                                 <p>$_queryColumnPhone()$</p>
                                                 <p>$_queryColumnEmail()$</p>
-                                                
+
                                                 <br />
                                                 <form method="post"
                                                       action="$linkquestion$">
@@ -218,7 +220,6 @@ pageFooter=
         <!--<li><a href="/features.html">Funktioner</a></li> -->
         <!--<li><a href="/benefits.html">Fördelar</a></li> -->
         <li><a href="$linkpriceplan$">$_pageFooterPrices()$</a></li>
-        <li><a href="http://api.scrive.com/index.php?title=Scrive_by_Mail">Scrive by Mail</a></li>
       </ul>
       <br />
       <strong>$_pageFooterTerms()$</strong>
@@ -229,21 +230,20 @@ pageFooter=
         <li><a href="$linkterms$">$_pageFooterTOS()$</a></li>
       </ul>
       <br />
-      <strong style='text-transform:uppercase'>$ourServiceName()$</strong>
+      <strong style='text-transform:uppercase'>Scrive</strong>
       <ul>
         <li><a href="$linkhome$">$_pageFooterHome()$</a></li>
         <li><a href="$linkabout$">$_pageFooterAbout()$</a></li>
-        <li><a href="http://support.skrivapa.se">$_pageFooterSupportFeedback()$</a></li>
         <li><a href="$linkpartners$">$_pageFooterPartners()$</a></li>
         <li><a href="$linkclients$">$_pageFooterCustomers()$</a></li>
         <!--<li><a href="/board.html">Board of Advisors</a></li>-->
       </ul>
     </div>
     $if(publicsafe)$
-    <div class="col centre">        
+    <div class="col centre">
       <strong>$_pageFooterTwitter()$</strong>
       <div class="tweet">
-        
+
       </div>
     </div>
     $endif$
@@ -261,6 +261,12 @@ pageFooter=
         </li>
         <li>
           $_pageFooterContact5()$
+        </li>
+        <li>
+          $_pageFooterContact6()$
+        </li>
+        <li>
+          $_pageFooterContact7()$
         </li>
       </ul>
     </div>
@@ -296,13 +302,13 @@ loginBox=
         <table>
 	  <tr>
             <td>$_email()$:</td>
-            <td><input type="email" name="email" autocomplete="off" class="noflash" value="$if(email)$$email$$endif$" /></td> 
+            <td><input type="email" name="email" autocomplete="off" class="noflash" value="$if(email)$$email$$endif$" /></td>
           </tr>
-	  <tr> 
+	  <tr>
             <td>$_password()$:</td>
-            <td><input type="password" name="password" autocomplete="off" /></td> 
+            <td><input type="password" name="password" autocomplete="off" /></td>
           </tr>
-	  <tr> 
+	  <tr>
             <td><input class="button" id="loginbtn" type="submit" name="login" value="Logga in" /></td>
             <td><a href="/amnesia"> $_forgotpassword()$</a></td>
 	  </tr>
@@ -314,10 +320,13 @@ loginBox=
 header=
  <div id="top-slim-container" class="newdesign">
                         <div class="content">
-                                <a href="$linkhome$" class="$ourLogoClass()$"></a>
-                                $localeSwitcher()$
+                                <a href="$linkhome$"
+                                class="scrive-logo"></a>
+
+
                                 $if(logged)$
-                                
+
+                                <!--
                                <span id="inviteContainer">
                                  <form method="post" action="$linkinvite$" class="MultiFile-intercepted">
                                  <div>
@@ -326,30 +335,42 @@ header=
                                        <a class="btn-tiny green float-right submit" href="#">
                                             <div class="left"></div>
                                             <div class="label"><p>$_headerInvite()$</p></div>
-                                            <div class="right"></div> 
+                                            <div class="right"></div>
                                        </a>
                                        <input type="submit" class="hidden" name="invite" value="Skicka" />
                                   </div>
                                  </div>
                                  </form>
                                 </span>
-                                 
-     <a href="$linklogout$" class="document-button logout">$_headerLogOut()$</a>
-     <a href="$linkaccount$" class="document-button">$_headerAccount()$</a>
-     <a href="$linkissue$" class="document-button">$_headerArchive()$</a>
-     <a href="$linkupload$" class="document-button">$_headerSend()$</a>
-
+                                 -->
+                               <a href="$linklogout$" class="document-button logout">$_headerLogOut()$</a>
+                               <a href="$linkaccount$" class="document-button">$_headerAccount()$</a>
+                               <a href="$linkissue$" class="document-button">$_headerArchive()$</a>
+                               <a href="$linkupload$" class="document-button">$_headerSend()$</a>
+                                $localeSwitcher()$
                                 $else$
+
                                 <a href="#" class="login-button"><p>$_login()$</p></a>
+
+                                  <span id="moveleft2">
+                                <a href="$linkabout$"
+                                  class="document-button">$_pageFooterAbout()$</a>
+                                  <a href="$linklegal$" class="document-button">$_pageFooterLaw()$</a>
+                                  <a href="$linkpriceplan$"
+                                  class="document-button">$_pageFooterPrices()$</a>
+                                $localeSwitcher()$
+                                  </span>
+
                                 $endif$
+
                             </div>
-                           
+
             <div class="clearboth"></div>
           </div>
 ####
 localeSwitcher=
   <div class="localeSwitcher">
-    $if(!isdoclocale)$
+    $if(islocaleswitch)$
     $if(!logged)$
     <div><a href="$linksesv$" class="icon flag swedish $if(localesweden)$active$endif$"></a></div>
     <div><a href="$linkgben$" class="icon flag british $if(localebritain)$active$endif$"></a></div>

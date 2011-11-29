@@ -169,6 +169,7 @@ Executable kontrakcja-server
   Build-depends: unix
   Build-depends: spreadsheet
   Build-depends: explicit-exception
+  Build-depends: list-tries
 
   Main-Is: Main.hs
 

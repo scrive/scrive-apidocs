@@ -31,7 +31,8 @@ module API.API(
 import Control.Monad.State
 import Data.Functor
 import AppView as V
-import Happstack.Server hiding (simpleHTTP,host,body)
+import Happstack.Server (Response, Method(POST)) -- GHC 6.12.3 workaround hack
+import Happstack.StaticRouting (Route, Path, dir, path, remainingPath)
 import Misc
 import KontraMonad
 import Text.JSON
@@ -58,6 +59,7 @@ instance (APIContext c, Kontrakcja m) => DBMonad (APIFunction m c) where
 
 instance Kontrakcja m => TemplatesMonad (APIFunction m c) where
     getTemplates = liftKontra getTemplates
+    getLocalTemplates = liftKontra . getLocalTemplates
 
 instance Kontrakcja m => KontraMonad (APIFunction m c) where
     getContext    = liftKontra getContext
@@ -86,9 +88,9 @@ apiResponse action = action >>= simpleResponse . encode
 
 -}
 
-apiCall :: (APIContext c, Kontrakcja m) => String -> APIFunction m c APIResponse -> m Response
-apiCall s f = dir s $ do
-    methodM POST
+apiCall :: (APIContext c, Kontrakcja m, Path m (m Response) Response Response) => 
+           String -> APIFunction m c APIResponse -> Route (m Response)
+apiCall s f = dir s $ path POST id $ do
     Log.debug $ "API call " ++ s ++ " matched"
     apiResponse $ do
         mcontext <- apiContext
@@ -100,9 +102,8 @@ apiCall s f = dir s $ do
              Left emsg -> return $ uncurry apiError emsg
 
 {- | Also for routing tables, to mark that api calls did not match and not to fall to mzero-}
-apiUnknownCall :: Kontrakcja m => m Response
-apiUnknownCall = apiResponse $ return $ apiError API_ERROR_UNNOWN_CALL "Bad request"
-
+apiUnknownCall :: (Kontrakcja m, Path m (m Response) Response Response) => Route (m Response)
+apiUnknownCall = remainingPath POST $ apiResponse $ return $ apiError API_ERROR_UNNOWN_CALL "Bad request"
 
 
 

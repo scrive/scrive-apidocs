@@ -220,6 +220,8 @@ flashMessageRubbishHardDeleteDone= $_flashMessageRubbishHardDeleteDone()$
 ###
 flashMessageThanksForTheQuestion=	$_flashMessageThanksForTheQuestion()$
 ###
+flashMessageWeWillCallYouSoon=$_flashMessageWeWillCallYouSoon()$
+###
 flashMessageInvalidCSV=	$_flashMessageInvalidCSV()$
 ###
 flashMessageCSVSent=	$_flashMessageCSVSent()$

@@ -16,6 +16,9 @@ import System.IO.Temp
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
 import qualified Codec.MIME.Type as MIME
+import Control.Concurrent
+import Control.Monad.Trans
+import Data.List
 
 import API.MailAPI
 import DB.Classes
@@ -27,6 +30,9 @@ import User.Model
 import TestingUtil
 import Templates.TemplatesLoader
 import TestKontra as T
+import Doc.DocControl
+import Doc.DocInfo
+import qualified AppLogger as Log
 
 mailApiTests :: Connection -> Test
 mailApiTests conn = testGroup "MailAPI" [
@@ -37,10 +43,14 @@ mailApiTests conn = testGroup "MailAPI" [
     , testCase "Parse mime document email_simple_onesig.eml" $ testParseMimes "test/mailapi/email_simple_onesig.eml"
     , testCase "Parse mime document email_outlook_three.eml" $ testParseMimes "test/mailapi/email_outlook_three.eml"
     , testCase "Parse mime document email_outlook_viktor.eml" $ testParseMimes "test/mailapi/email_outlook_viktor.eml"
-    , testCase "Parse mime document email_gmail_eric.eml" $ testParseMimes "test/mailapi/email_gmail_eric.eml"      
+    , testCase "Parse mime document email_gmail_eric.eml" $ testParseMimes "test/mailapi/email_gmail_eric.eml"
     , testCase "Create outlook email document with three signatories" $ testSuccessfulDocCreation conn "test/mailapi/email_outlook_three.eml" 4
+    , testCase "test lukas's error email" $ testSuccessfulDocCreation conn "test/mailapi/lukas_mail_error.eml" 2
+    , testCase "test eric's error email" $ testSuccessfulDocCreation conn "test/mailapi/eric_email_error.eml" 2    
+    , testCase "test lukas's funny title" $ testSuccessfulDocCreation conn "test/mailapi/email_weird_subject.eml" 2
+    , testCase "test 2 sig model from outlook mac" $ testSuccessfulDocCreation conn "test/mailapi/email_outlook_viktor.eml" 3
     ]
-                    
+
 testParseMimes :: String -> Assertion
 testParseMimes mimepath = do
   cont <- readFile mimepath
@@ -50,7 +60,7 @@ testParseMimes mimepath = do
       --typesOfParts = map fst allParts
       pdfs = filter isPDF allParts
       plains = filter isPlain allParts
-  assertBool ("SHould be exactly one pdf, found " ++ show pdfs) (length pdfs == 1)
+  assertBool ("Should be exactly one pdf, found " ++ show pdfs) (length pdfs == 1)
   assertBool ("Should be exactly one plaintext, found " ++ show plains) (length plains == 1)
 
 testSuccessfulDocCreation :: Connection -> String -> Int -> Assertion
@@ -58,22 +68,47 @@ testSuccessfulDocCreation conn emlfile sigs = withMyTestEnvironment conn $ \tmpd
     req <- mkRequest POST [("mail", inFile emlfile)]
     uid <- createTestUser
     muser <- dbQuery $ GetUserByID uid
+    globaltemplates <- readGlobalTemplates
     ctx <- (\c -> c { ctxdbconn = conn, ctxdocstore = tmpdir, ctxmaybeuser = muser })
-      <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     _ <- dbUpdate $ SetUserMailAPI uid $ Just UserMailAPI {
           umapiKey = read "ef545848bcd3f7d8"
         , umapiDailyLimit = 1
         , umapiSentToday = 0
     }
     (res, _) <- runTestKontra req ctx $ testAPI handleMailCommand
-    wrapDB rollback
-    successChecks sigs $ jsonToStringList res
+    wrapDB rollback 
+    Log.debug $ "Here's what I got back from handleMailCommand: " ++ show res
+    let res' = jsonToStringList res
+    successChecks sigs res'
+    let mdocid = lookup "documentid" res'
+    assertBool "documentid is given" $ isJust mdocid
+    Just doc <- query $ GetDocumentByDocumentID $ read $ fromJust mdocid
+    assertBool ("doc has iso encoded title " ++ show (documenttitle doc)) $ not $ "=?iso" `isInfixOf` (BS.toString $ documenttitle doc)
+    imgreq <- mkRequest GET []
+    let keepTrying 0 = return ()
+        keepTrying (n::Int) = do
+              (imgres, _) <- runTestKontra imgreq ctx $ showPreview (documentid doc) (head $ documentfiles doc)
+              case imgres of
+               Left _ -> do
+                 Log.debug $ "retrying img req . . ."
+                 --Log.debug $ "Code was " ++ show (rsCode imgres)
+                 threadDelay (1000::Int)
+                 keepTrying (n - 1)
+               Right _ -> do
+                 return ()
+    Log.debug $ "doing img request"
+    liftIO $ keepTrying 100
+    Just doc' <- query $ GetDocumentByDocumentID $ read $ fromJust mdocid
+    assertBool "document is in error!" $ not $ isDocumentError doc'
+
 
 testFailureNoSuchUser :: Connection -> Assertion
 testFailureNoSuchUser conn = withMyTestEnvironment conn $ \tmpdir -> do
     req <- mkRequest POST [("mail", inFile "test/mailapi/email_onesig_ok.eml")]
+    globaltemplates <- readGlobalTemplates
     ctx <- (\c -> c { ctxdbconn = conn, ctxdocstore = tmpdir })
-      <$> (mkContext =<< localizedVersion defaultValue <$> readGlobalTemplates)
+      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     (res, _) <- first jsonToStringList <$> runTestKontra req ctx (testAPI handleMailCommand)
     assertBool "error occured" $ isJust $ lookup "error" res
     assertBool "message matches regex 'User .* not found'" $
@@ -103,10 +138,10 @@ jsonToStringList = (mapSnd toString) . fromJSObject
         toString _ = error "Pattern not matched -> Waiting for JSON string, but other structure found"
 
 withMyTestEnvironment :: Connection -> (FilePath -> DB ()) -> Assertion
-withMyTestEnvironment conn f = 
+withMyTestEnvironment conn f =
   withSystemTempDirectory "mailapi-test-" (\d -> withTestEnvironment conn (f d))
 
 createTestUser :: DB UserID
 createTestUser = do
-    Just User{userid} <- dbUpdate $ AddUser (BSC.empty, BSC.empty) (BSC.pack "andrzej@skrivapa.se") Nothing False Nothing Nothing defaultValue (mkLocaleFromRegion defaultValue)
+    Just User{userid} <- dbUpdate $ AddUser (BSC.empty, BSC.empty) (BSC.pack "andrzej@skrivapa.se") Nothing False Nothing Nothing (mkLocaleFromRegion defaultValue)
     return userid

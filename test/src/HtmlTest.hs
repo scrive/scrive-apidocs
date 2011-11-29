@@ -2,7 +2,6 @@ module HtmlTest (htmlTests) where
 
 import Data.Char
 import Data.List
-import Control.Applicative
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertFailure, assertBool, Assertion)
@@ -12,14 +11,11 @@ import Text.XML.HaXml.Html.Pretty
 import Text.XML.HaXml.Types
 import Control.Monad
 
-import Misc
 import Templates.TemplatesFiles
 import Templates.Templates (renderTemplate)
-import Templates.Templates (Localization)
 import Templates.TemplatesLoader (KontrakcjaTemplates, readGlobalTemplates, localizedVersion)
 import Templates.TextTemplates
-import User.Lang
-import User.Region
+import User.Locale
 
 htmlTests :: Test
 htmlTests = testGroup "HTML"
@@ -35,17 +31,10 @@ excludedTemplates = ["paymentsadminpagesuperuser"]
 isIncluded :: (String, String) -> Bool
 isIncluded (name, _) = not $ name `elem` excludedTemplates
 
-allRegionsAndLangs :: [(Region, Lang)]
-allRegionsAndLangs = (\r l -> (r,l)) <$> allValues <*> allValues
-
-allLocalizations :: [Localization]
-allLocalizations = (\s r l -> (s,r,l)) <$> allValues <*> allValues <*> allValues
-
-
 testValidXml :: Assertion
 testValidXml = do
   ts <- mapM getTemplates templatesFilesPath
-  texts <- mapM (uncurry getTextTemplates) allRegionsAndLangs
+  texts <- mapM (\l -> getTextTemplates (getRegion l) (getLang l)) allLocales
   _ <- mapM assertTemplateIsValidXML . filter isIncluded $ concat ts ++ concat texts
   assertSuccess
 
@@ -54,7 +43,7 @@ assertTemplateIsValidXML t =
   case parseTemplateAsXML t of
     Left msg -> assertFailure msg
     Right _ -> assertSuccess
-    
+
 testNoUnecessaryDoubleDivs :: Assertion
 testNoUnecessaryDoubleDivs = do
   templates <- mapM getTemplates templatesFilesPath
@@ -65,14 +54,14 @@ testNoNestedP :: Assertion
 testNoNestedP = do
   langtemplates <- readGlobalTemplates
   ts <- mapM getTemplates templatesFilesPath
-  texts <- forM allRegionsAndLangs (uncurry getTextTemplates)
+  texts <- forM allLocales (\l -> getTextTemplates (getRegion l) (getLang l))
   let alltemplatenames = map fst (concat texts ++ concat ts)
-  _ <- forM allLocalizations $ \localization -> do
-    let templates = localizedVersion localization langtemplates
+  _ <- forM allLocales $ \locale -> do
+    let templates = localizedVersion locale langtemplates
     --ts <- getTextTemplates lang
     assertNoNestedP alltemplatenames templates
   assertSuccess
-  
+
 assertNoNestedP :: [String] -> KontrakcjaTemplates -> Assertion
 assertNoNestedP tnames templates = do
   _ <- forM (filter (not . (flip elem) excludedTemplates) tnames) $ \n -> do
@@ -81,11 +70,11 @@ assertNoNestedP tnames templates = do
       Left msg -> assertFailure msg
       Right (Document _ _ root _) -> checkXMLForNestedP n $ CElem root undefined
   assertSuccess
-    
+
 checkXMLForNestedP :: String -> Content Posn -> Assertion
 checkXMLForNestedP templatename e =
-  if isPAndHasP e 
-  then assertFailure $ "nested <p> tags in template " ++ templatename ++ ":\n" ++ 
+  if isPAndHasP e
+  then assertFailure $ "nested <p> tags in template " ++ templatename ++ ":\n" ++
                          (show $ content e)
   else assertSuccess
 
@@ -112,7 +101,7 @@ assertNoUnecessaryDoubleDivs t@(name,_) =
   case parseTemplateAsXML t of
     Left msg -> assertFailure msg
     Right (Document _ _ root _) -> checkXMLForUnecessaryDoubleDivs name $ CElem root undefined
-       
+
 checkXMLForUnecessaryDoubleDivs :: String -> Content Posn -> Assertion
 checkXMLForUnecessaryDoubleDivs templatename e@(CElem (Elem _ _ children) _) =
   let isDiv = isDivElem e
@@ -120,18 +109,18 @@ checkXMLForUnecessaryDoubleDivs templatename e@(CElem (Elem _ _ children) _) =
       isSingleChildDiv = isSingleChild && isDivElem (head children)
       isUnecessaryDiv = isDiv && isSingleChildDiv in
   if isUnecessaryDiv
-    then assertFailure $ "unecesary double divs in template " ++ templatename ++ ":\n" ++ 
+    then assertFailure $ "unecesary double divs in template " ++ templatename ++ ":\n" ++
                          (show $ content e)
     else do
       _ <- mapM (checkXMLForUnecessaryDoubleDivs templatename) children
       assertSuccess
   where isDivElem :: Content Posn -> Bool
-        isDivElem (CElem (Elem n _ _) _) | map toLower n == "div" = True
+        isDivElem (CElem (Elem n _ _) _) = map toLower n == "div"
         isDivElem _ = False
 checkXMLForUnecessaryDoubleDivs _ _ = assertSuccess
 
 parseStringAsXML :: (String, String) -> Either String (Document Posn)
-parseStringAsXML (name, rawtxt) = 
+parseStringAsXML (name, rawtxt) =
   let preparedtxt = "<template>\n" ++ rawtxt ++ "\n</template>"
       prettyprinttxt = unlines . zipWith mklinewithno ([1..]::[Int]) $ lines preparedtxt
       mklinewithno no line --okay, i did indenting in a horrible way, it's just a test!
@@ -142,7 +131,7 @@ parseStringAsXML (name, rawtxt) =
   in case xmlParse' name preparedtxt of
     Left msg -> Left $ msg ++ "\n" ++ prettyprinttxt
     r@(Right _) -> r
-  
+
 
 parseTemplateAsXML :: (String, String) -> Either String (Document Posn)
 parseTemplateAsXML (name, rawtxt) =
@@ -156,7 +145,7 @@ removeDocTypeDeclaration s =
   if "<!DOCTYPE" `isPrefixOf` s
     then tail $ dropWhile (/= '>') s
     else s
-    
+
 removeScripts :: String -> String
 removeScripts = removeScripts' NotScript
 
@@ -187,12 +176,12 @@ clearTemplating' NotTag NotTemplateCode ('$':'e':'n':'d':'i':'f':'$':xs) = "</te
 clearTemplating' NotTag TemplateCode ('|':xs) = "<template-loop>" ++ clearTemplating' NotTag NotTemplateCode xs
 clearTemplating' NotTag NotTemplateCode ('}':';':xs) = "</template-loop>" ++ clearTemplating' NotTag TemplateCode xs
 clearTemplating' NotTag NotTemplateCode ('}':':':xs) = "</template-loop>" ++ clearTemplating' NotTag TemplateCode xs
-clearTemplating' NotTag NotTemplateCode ('}':'$':xs) = "</template-loop>" ++ clearTemplating' NotTag NotTemplateCode xs 
+clearTemplating' NotTag NotTemplateCode ('}':'$':xs) = "</template-loop>" ++ clearTemplating' NotTag NotTemplateCode xs
 clearTemplating' Tag NotTemplateCode ('>':xs) = '>' : clearTemplating' NotTag NotTemplateCode xs
 clearTemplating' ts NotTemplateCode ('$':xs) = clearTemplating' ts TemplateCode xs
 clearTemplating' ts NotTemplateCode ('}':';':xs) = clearTemplating' ts TemplateCode xs
 clearTemplating' ts NotTemplateCode ('}':':':xs) = clearTemplating' ts TemplateCode xs
-clearTemplating' ts NotTemplateCode ('}':'$':xs) = clearTemplating' ts NotTemplateCode xs 
+clearTemplating' ts NotTemplateCode ('}':'$':xs) = clearTemplating' ts NotTemplateCode xs
 clearTemplating' ts TemplateCode ('|':xs) = clearTemplating' ts NotTemplateCode xs
 clearTemplating' ts TemplateCode ('$':xs) = clearTemplating' ts NotTemplateCode xs
 clearTemplating' ts TemplateCode (_:xs) = clearTemplating' ts TemplateCode xs

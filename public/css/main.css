@@ -3,7 +3,7 @@ html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockq
 a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp,
 small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li,
 fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td,
-article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, 
+article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup,
 menu, nav, output, ruby, section, summary, time, mark, audio, video {
 	margin: 0;
 	padding: 0;
@@ -97,6 +97,7 @@ table {
     padding-top: 10px;
     text-decoration: none;
     width: 136px;
+    font-weight: bold;
 }
 
 .new-btn-small p {
@@ -235,6 +236,34 @@ a.new-btn-small.black p {
 	width: 73px;
 }
 
+.icon.cloud {
+	height: 64px;
+	margin: 0 auto;
+	width: 64px;
+    background-image: url(/img/cloud.png);
+}
+
+.icon.mail {
+	height: 64px;
+	margin: 0 auto;
+	width: 64px;
+    background-image: url(/img/mail.png);
+}
+
+.icon.api {
+	height: 64px;
+	margin: 0 auto;
+	width: 64px;
+    background-image: url(/img/api.png);
+}
+
+.icon.question {
+	height: 64px;
+	margin: 0 auto;
+	width: 64px;
+    background-image: url(/img/question.png);
+}
+
 #wrap {
 	left: 0;
 	position: absolute;
@@ -247,16 +276,16 @@ a.new-btn-small.black p {
 	background: url(../img/bg-header.jpg) repeat-x;
 	height: 430px;
 	min-width: 960px;
-	
+
 }
 
 #top-container .person {
 	background: url(../img/persons.jpg);
-	top: 34px;
-	height: 396px;
-	left: 453px;
+	top: 67px;
+	height: 363px;
+	left: 493px;
 	position: absolute;
-	width: 433px;
+	width: 390px;
 	z-index: 0;
 }
 
@@ -270,14 +299,14 @@ a.new-btn-small.black p {
 	float: left;
 	position: relative;
 	width: 460px;
-        z-index: 1;
+    z-index: 1;
 }
 
 #top-container .rightMain {
 	float: left;
 	position: relative;
 	width: 460px;
-    z-index: 2;
+    z-index: 100;
 }
 
 /* Intro text */
@@ -318,10 +347,6 @@ a.new-btn-small.black p {
 	margin-bottom: 8px;
 }
 
-#top-container .intro-container a {
-    margin-left: 5px;
-    display: inline-block;
-}
 
 #top-container .intro-container input {
 	width: 200px;
@@ -343,7 +368,42 @@ a.new-btn-small.black p {
 	text-shadow: #000 0 1px 3px;
 	top: 21px;
 	width: 95px;
-        z-index: 10;
+    z-index: 10;
+    font-weight: bold;
+}
+
+#top-container #moveleft {
+	display: block;
+	height: 28px;
+	padding-left: 47px;
+	padding-top: 15px;
+	position: absolute;
+	right: 170px;
+	top: 3px;
+    z-index: 10;
+}
+
+#top-container #moveleft a {
+    padding: 0px;
+    margin-left: 20px;
+    font-weight: bold;
+}
+
+#top-container .document-button:hover
+{
+  color: #FFFFFF;
+}  
+
+#moveleft2
+{
+	display: block;
+	height: 28px;
+	padding-left: 47px;
+	padding-top: 15px;
+	position: absolute;
+	right: 160px;
+	top: -14px;
+    z-index: 10;
 }
 
 #top-container .enter-button:hover {
@@ -351,16 +411,21 @@ a.new-btn-small.black p {
 }
 
 .localeSwitcher {
-  float: left;
   display: inline-block;
-  width: 76px;
-  position: relative;
-  top: 20px;
+  position:relative;
+  z-index:100;
+  padding-right: 20px;
 }
 
 #top-container .localeSwitcher {
-  top: 35px;
-  left: 200px;
+  top: 33px;
+  left: 0px;
+}
+
+#top-slim-container .localeSwitcher {
+    float: right;
+    top: 17px;
+    padding-right: 20px;
 }
 
 .localeSwitcher div {
@@ -571,15 +636,15 @@ a.new-btn-small.black p {
 	min-width: 940px;
 }
 
-#body-container .spacer70 {
+.spacer70 {
 	height: 70px;
 }
 
-#body-container .spacer50 {
+.spacer50 {
 	height: 50px;
 }
 
-#body-container .spacer40 {
+.spacer40 {
 	height: 40px;
 }
 
@@ -692,6 +757,10 @@ a.new-btn-small.black p {
 	margin-right: 20px;
 	text-align: center;
 	width: 220px;
+}
+
+.col.leftm {
+    margin-left:10px;
 }
 
 #body-container .grid .col.no-margin {
@@ -892,7 +961,7 @@ a.new-btn-small.black p {
 	background: #fff;
 	border: 1px solid #ccc;
 	height: 250px;
-	margin-top: 65px;
+	margin-top: 35px;
 	position: relative;
 	width: 938px;
 	z-index: 1;
@@ -1069,7 +1138,7 @@ a.new-btn-small.black p {
 
 
 #body-container .highlight-container .highlight-rows li.bottom a {
-	color: #35A4D6; 
+	color: #35A4D6;
 	font: 10px "Lucida Grande";
 	text-transform: uppercase;
 }
@@ -1191,15 +1260,6 @@ div.price-plan-details {
 	min-width: 940px;
 }
 
-#top-slim-container .skrivapa-logo {
-	background: url(../img/logo-skrivapa-small.png);
-	display: block;
-	float: left;
-	height: 35px;
-	margin-top: 9px;
-	width: 137px;
-    margin-left: -8px;
-}
 #top-slim-container .scrive-logo {
     background: url(../img/logo-scrive-small.png);
     display: block;
@@ -1223,7 +1283,24 @@ div.price-plan-details {
 	padding-left: 28px;
 	text-shadow: #000 0 1px 3px;
 	text-decoration: none;
+    font-weight: bold;
 }
+
+.login-button p {
+    padding-left: 4px;
+}
+
+#top-container .document-button {
+        color: #999;
+        float: right;
+        font: 14px/18px "Helvetica Neue";
+        margin-top: 17px;
+        padding-bottom: 5px;
+        padding-left: 15px;
+        text-shadow: #000 0 1px 3px;
+        text-decoration: none;
+}
+
 
 .user-container {
 	height: 150px;
@@ -1782,31 +1859,31 @@ top: 0px;
 }
 
 .group-portrait-image a.group {
-      background: url(../img/group-portrait-1.jpg) center no-repeat;      
+      background: url(../img/group-portrait-1.jpg) center no-repeat;
 }
 
 .group-portrait-image a.group:hover {
-      background: url(../img/group-portrait-2.jpg) center no-repeat;      
+      background: url(../img/group-portrait-2.jpg) center no-repeat;
 }
 
 .portrait-image a.lukas {
-      background: url(../img/lukas-portrait-1.jpg) center no-repeat;      
+      background: url(../img/lukas-portrait-1.jpg) center no-repeat;
 }
 
 .portrait-image a.lukas:hover {
-      background: url(../img/lukas-portrait-2.jpg) center no-repeat;      
+      background: url(../img/lukas-portrait-2.jpg) center no-repeat;
 }
 
 .portrait-image a.gracjan {
-      background: url(../img/gracjan-portrait-1.jpg) center no-repeat;      
+      background: url(../img/gracjan-portrait-1.jpg) center no-repeat;
 }
 
 .portrait-image a.gracjan:hover {
-      background: url(../img/gracjan-portrait-2.jpg) center no-repeat;      
+      background: url(../img/gracjan-portrait-2.jpg) center no-repeat;
 }
 
 .portrait-image a.viktor {
-      background: url(../img/viktor-portrait-1.jpg) center no-repeat;      
+      background: url(../img/viktor-portrait-1.jpg) center no-repeat;
 }
 
 .portrait-image a.viktor:hover {
@@ -1814,7 +1891,7 @@ top: 0px;
 }
 
 .portrait-image a.mariusz {
-      background: url(../img/mariusz-portrait-1.jpg) center no-repeat;      
+      background: url(../img/mariusz-portrait-1.jpg) center no-repeat;
 }
 
 .portrait-image a.mariusz:hover {
@@ -1822,7 +1899,7 @@ top: 0px;
 }
 
 .portrait-image a.eric {
-      background: url(../img/missing-portrait.png) center no-repeat;      
+      background: url(../img/missing-portrait.png) center no-repeat;
 }
 
 .portrait-image a.eric:hover {
@@ -1830,7 +1907,7 @@ top: 0px;
 }
 
 .portrait-image a.emily {
-      background: url(../img/emily-portrait-1.jpg) center no-repeat;      
+      background: url(../img/emily-portrait-1.jpg) center no-repeat;
 }
 
 .portrait-image a.emily:hover {
@@ -1838,7 +1915,7 @@ top: 0px;
 }
 
 .portrait-image a.oskar {
-      background: url(../img/missing-portrait.png) center no-repeat;      
+      background: url(../img/missing-portrait.png) center no-repeat;
 }
 
 .portrait-image a.oskar:hover {
@@ -1846,7 +1923,7 @@ top: 0px;
 }
 
 .portrait-image a.nazli {
-      background: url(../img/nazli-portrait-1.jpg) center no-repeat;      
+      background: url(../img/nazli-portrait-1.jpg) center no-repeat;
 }
 
 .portrait-image a.nazli:hover {
@@ -1854,7 +1931,7 @@ top: 0px;
 }
 
 .portrait-image a.belle {
-      background: url(../img/missing-portrait.png) center no-repeat;      
+      background: url(../img/missing-portrait.png) center no-repeat;
 }
 
 .portrait-image a.belle:hover {
@@ -1934,6 +2011,7 @@ top: 0px;
 .nicetext h1 {
 	color: #000;
 	font: 14px "Copse";
+    text-transform: uppercase;
 }
 
 .nicetext h2 {
@@ -2025,12 +2103,12 @@ top: 0px;
 	text-transform: uppercase;
 }
 
-.hidden { 
+.hidden {
    height:0px;
    width:0px;
    opacity:0;
-   -ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=0)"; 
-   filter: alpha(opacity=0);                                      
+   -ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+   filter: alpha(opacity=0);
 }
 
 input.grayed, textarea.grayed
@@ -2092,4 +2170,85 @@ input.grayed, textarea.grayed
 	right: 0;
 	left: 0;
 	margin: auto;
+}
+
+.logos {
+    text-align: center;
+}
+
+.logos img {
+    margin-top: 17px;
+    margin-bottom: 17px;
+    padding-right: 40px;
+    padding-left: 40px;
+}
+
+.benefitstitle {
+    text-align: center;
+    font-family: Copse;
+    font-weight: normal;
+}
+
+.benefitsbox {
+	background: #fff;
+	border: 1px solid #ccc;
+	height: 250px;
+	padding-top: 35px;
+	position: relative;
+	/*width: 938px;*/
+	z-index: 1;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+    border-radius: 5px 5px 5px 5px;
+
+}
+
+.productdescriptionbox {
+	background: #fff;
+	border: 1px solid #ccc;
+	height: 265px;
+	padding-top: 35px;
+	position: relative;
+	/*width: 938px;*/
+	z-index: 1;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+    border-radius: 5px 5px 5px 5px;
+}
+
+form.requestAccount {
+    height: 40px;
+
+}
+
+a {
+    color: #35A4D6;
+}
+
+#top-container .intro-container form.requestAccount a {
+    margin-left: 5px;
+    display: inline-block;
+}
+
+#legalmodal div img
+{
+    margin-right: 15px;
+}
+
+#legalmodal p.introtext
+{
+    padding-top: 50px;
+    font-size: 1.2em;
+    /*line-height: 1.4em;*/
+}
+
+#legalmodal .modal-body p
+{
+    line-height: 1.4em;
+    /*height: 750px;*/
+    /*overflow: scroll;*/
+}
+
+.createaccountbox {
+    height: 250px;
 }

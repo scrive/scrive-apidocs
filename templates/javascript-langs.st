@@ -1,15 +1,16 @@
-#### 
+####
 #### This module puts in global context object 'localisation'
-#### If some script requires some string to be shown to the user 
+#### If some script requires some string to be shown to the user
 #### it just uses this module
 ####
-javascriptLocalisation = 
-    var localization = 
+javascriptLocalisation =
+    var localization =
         {
        loadingFile : "$_loadingFile()$"
              , problemWithPDF : "$_problemWithPDF()$"
-             , repetedEmailAddress : "$_repetedEmailAddress()$" 
-             , offerSignatory : "$_offerSignatory()$" 
+             , repetedEmailAddress : "$_repetedEmailAddress()$"
+             , offerSignatory : "$_offerSignatory()$"
+             , sigattachmessage : "$_pageDocumentForAuthorHelpersLocalDialogsRecipient()$"
              , secretaryCantSign : "$_secretaryCantSign()$"
              , cantSendReminder: function(listtype){
                     return "$_cantSendReminder1()$" + listtype + "$_cantSendReminder2()$"
@@ -26,7 +27,7 @@ javascriptLocalisation =
              , atLeastOneSignatoryRequired : "$_atLeastOneSignatoryRequired()$"
              , mustFillFieldsBeforeSigning : "$_mustFillFieldsBeforeSigning()$"
              , backToStepTwoAndFillPersonNumber : "$_backToStepTwoAndFillPersonNumber()$"
-             , missingNames : "$_missingNames()$" 
+             , missingNames : "$_missingNames()$"
              , missingSignatoryNames : "$_missingSignatoryNames()$"
              , yourSigningPluginFailed : "$_yourSigningPluginFailed()$"
              , startingSaveSigning : "$_startingSaveSigning()$"
@@ -74,8 +75,8 @@ javascriptLocalisation =
              , select : "$_options()$"
              , of : "$_of()$"
              , and : "$_and()$"
+             , listand : "$_listand()$"
              , you : "$_you()$"
-             , outLogoClass : "$ourLogoClass()$"
              , searchBoxButtonText : "$_searchBoxButtonText()$"
              , downloadPDF : "$_DownloadPDF()$"
              , document : "$_Document()$"
@@ -111,7 +112,7 @@ javascriptLocalisation =
                                    , clickHere : "$_dialogConfirmSignByAuthorElegClickHere1()$"
                                    , body2 : "$_dialogConfirmSignByAuthorElegClickHere2()$"
                                  }
-               
+
                }
              , reject : {
                          send : "$_pageDocumentForSignContentRejectFooterReject()$"
@@ -130,12 +131,11 @@ javascriptLocalisation =
                        , delivered : "$_signatoryMessageIfSignatoryDeliveredEmail()$"
                        , signed : "$_signatoryMessageIfSigned()$"
                        , cancelled : "$_signatoryMessageIfCancelled()$"
-                       , other : "$_signatoryMessageIfElse()$"   
+                       , other : "$_signatoryMessageIfElse()$"
                     }
             , authorAttachmentBoxHeader : "$_signViewNotsignedbymeAttachmentBoxHead()$"
             , signatoryAttachmentBoxHeader : "$_signViewSigAttachmentBoxHead()$"
             , signatoryAttachmentUploadButton: "$_signViewSigAttachmentBoxChooseFile()$"
-            , skrivapa : "$_skrivapa()$" 
             , templateTitle : "$_signStepsTitleRowTextContainerIfTemplate()$" 
             , step1template : "$_step1selectIfTemplate()$"
             , step2template : "$_step2selectIfTemplate()$"
@@ -156,6 +156,7 @@ javascriptLocalisation =
                     , content : "<p> $_dialogConfirmBasicChangeToBody()$</p> <p> $_dialogConfirmBasicChangeToBody2()$</p>"
                     , button : "$_dialogConfirmBasicChangeToChangeProcess()$"
                     }
+            , skrivapa : "$_skrivapa()$"
             , tweetAccount : "$_tweetAccount()$"
    }
 ####

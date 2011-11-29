@@ -1,5 +1,5 @@
-module KontrakcjaServer (defaultConf, 
-                         runKontrakcjaServer, 
+module KontrakcjaServer (defaultConf,
+                         runKontrakcjaServer,
                          runTest,
                          readAppConfig ) where
 
@@ -10,6 +10,7 @@ import Happstack.Server
   , simpleHTTPWithSocket
   , nullConf
   )
+import Happstack.StaticRouting (compile)
 import Happstack.State
   ( Component
   , Proxy(..)
@@ -26,7 +27,7 @@ import System.Console.GetOpt
 import System.Directory (createDirectoryIfMissing)
 import qualified AppLogger as Log
 import AppState (AppState)
-import AppControl (appHandler,defaultAWSAction,AppConf(..),AppGlobals(..))
+import AppControl (staticRoutes,appHandler,defaultAWSAction,AppConf(..),AppGlobals(..))
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Map as Map
@@ -46,14 +47,13 @@ import ActionScheduler
 import ActionSchedulerState (ActionImportance(..), SchedulerData(..))
 import User.Model
 -- import qualified User.UserState as U
-import qualified File.State as F
 import qualified Amazon as AWS
 import Mails.MailsConfig
 import Mails.SendMail
 import Templates.Templates (readGlobalTemplates, getTemplatesModTime)
 import Misc
 import qualified MemCache
-import File.TransState
+import File.Model
 import Doc.DocState
 import Happstack.State (query)
 
@@ -128,7 +128,7 @@ initDatabaseEntries conn iusers = do
       maybeuser <- ioRunDB conn $ dbQuery $ GetUserByEmail Nothing email
       case maybeuser of
           Nothing -> do
-              _ <- ioRunDB conn $ dbUpdate $ AddUser (BS.empty, BS.empty) (unEmail email) (Just passwd) False Nothing Nothing defaultValue (mkLocaleFromRegion defaultValue)
+              _ <- ioRunDB conn $ dbUpdate $ AddUser (BS.empty, BS.empty) (unEmail email) (Just passwd) False Nothing Nothing (mkLocaleFromRegion defaultValue)
               return ()
           Just _ -> return () -- user exist, do not add it
 
@@ -140,7 +140,7 @@ uploadFileToAmazon appConf = do
         Just file -> do
                    runReaderT (AWS.uploadFile (docstore appConf) (defaultAWSAction appConf) file) conn
                    return True
-        _ -> return False 
+        _ -> return False
 
 runKontrakcjaServer :: IO ()
 runKontrakcjaServer = Log.withLogger $ do
@@ -214,15 +214,19 @@ runKontrakcjaServer = Log.withLogger $ do
 
                               -- populate db with entries from happstack-state
                               ioRunDB conn $ do
-                                -- U.populateDBWithUsersIfEmpty
-                                F.populateDBWithFilesIfEmpty
-  
-                                -- this is not ready yet
-                                --populateDBWithDocumentsIfEmpty
+                                  -- U.populateDBWithUsersIfEmpty
+
+                                  -- this is not ready yet
+                                  --populateDBWithDocumentsIfEmpty
+
+                                  return ()
+
                               let (iface,port) = httpBindAddress appConf
                               listensocket <- listenOn (htonl iface) (fromIntegral port)
+                              let (routes,overlaps) = compile staticRoutes
+                              maybe (return ()) Log.server overlaps
                               t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port })
-                                    (appHandler appConf appGlobals)
+                                    (appHandler routes appConf appGlobals)
                               let scheddata = SchedulerData appConf mailer' templates es_enforcer
                               t2 <- forkIO $ cron 60 $ runScheduler (oldScheduler >> actionScheduler UrgentAction) scheddata
                               t3 <- forkIO $ cron 600 $ runScheduler (actionScheduler LeisureAction) scheddata

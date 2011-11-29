@@ -163,7 +163,15 @@ modalAccountSetup=
           <input type="checkbox" id="tosCBox" name="tos" />
           <label for="tosCBox">$_modalAccountSetupBodyAcceptTOS()$</label><br/>
         </div>
-        <table id="passwordInfo"><tbody>
+        <table id="signupInfo"><tbody>
+            <tr>
+                <td>$_firstname()$:</td>
+                <td><input type="text" name="fstname" value="$fstname$" autocomplete="off" /></td>
+            </tr>
+            <tr>
+                <td>$_lastname()$:</td>
+                <td><input type="text" name="sndname" value="$sndname$" autocomplete="off" /></td>
+            </tr>
             <tr>
                 <td style="width: 120px">$_modalAccountSetupChoosePassword()$</td>
                 <td><input type="password" name="password" autocomplete="off"/></td>
@@ -192,35 +200,38 @@ modalAccountSetup=
 ######
 modalWelcomeToSkrivaPa=
 <div class="modal-container">
-  <div class="modal-header">
-    <span class="modal-icon message"></span>
-    <span class="modal-title">
-      <h3>$_modalWelcomeToSkrivaPaHeader()$</h3>
-    </span>
-    <a class="modal-close close"> </a>
-  </div>
-  <div class="modal-body">
-    <div class="modal-content">
-      <p>$_modalWelcomeToSkrivaPaBodyMain()$</p>
-
-      <p>$_modalWelcomeToSkrivaPaBodyInstructions()$</p>
-
-      <p>$_modalWelcomeToSkrivaPaBodyHint()$</p>
-
-      <p>$_modalWelcomeToSkrivaPaBodyBestRegards()$<br/>
-        Team $ourServiceName()$</p>
+  <form action="$phonelink$" method="post">
+    <div class="modal-header">
+      <span class="modal-icon message"></span>
+      <span class="modal-title">
+        <h3>$_modalWelcomeToSkrivaPaHeader()$</h3>
+      </span>
+      <a class="modal-close close"> </a>
     </div>
-  </div>
-  <div class="modal-footer">
-    <a class="btn-small green float-right close">
-      <div class="left"></div>
-      <div class="label">
-        <p>$_modalWelcomeToSkrivaPaFooter()$</p>
-        <div class="btn-symbol green arrow-left"></div>
+    <div class="modal-body">
+      <div class="modal-content">
+        $_modalWelcomeToSkrivaPaBodyMain()$
+
+        <table>
+          <tr>
+            <td style="padding-left:10px;padding-right:10px;">$_phone()$:</td>
+            <td><input type="text" name="phone" id="phone"/></td>
+          </tr>
+        </table>
+
       </div>
-      <div class="right"></div>
-    </a>
-  </div>
+    </div>
+    <div class="modal-footer">
+      <a class="btn-small green float-right submit">
+        <div class="left"></div>
+        <div class="label">
+          <p>$_modalWelcomeToSkrivaPaFooter()$</p>
+          <div class="btn-symbol green arrow-left"></div>
+        </div>
+        <div class="right"></div>
+      </a>
+    </div>
+  </form>
 </div>
 ####
 modalAccountRemoval=
@@ -616,10 +627,9 @@ modalSignedViewNotClosedNoAccount=
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
-      <h3>Du har undertecknat!</h3>
+      <h3>$_modalSignedViewNotClosedNoAccountHeader()$</h3>
       <p>
-        $partyUnsignedListString:noescape()$ har ännu inte undertecknat. När alla undertecknat utfärdar $ourServiceName()$ ett verifikat,
-        dokumentet blir bindande och en kopia skickas till din e-post.
+        $_modalSignedViewNotClosedNoAccountBody()$
       </p>
     </span>
     <a class="modal-close close"> </a>
@@ -748,6 +758,7 @@ accountFromSignInputs=
               <td><input type="password" name="password2" /></td>
             </tr>
           </table>
+          <input type="submit" class="hidden" />
          </div>
         </div>
       </div>
@@ -758,7 +769,7 @@ accountFromSignInputs=
 accountFromSignFooter=
     <div class="accountFromSignFooter">
       <div class="float-left">
-        <a class="declineAccountFromSign cancel" style="width:70px;">$_accountFromSignFooterNoThx()$</a>
+        <a class="declineAccountFromSign cancel">$_accountFromSignFooterNoThx()$</a>
       </div>
       <a class="btn-small green float-right submit">
         <div class="left"></div>
@@ -1100,3 +1111,29 @@ pdfTooBigModal=
     </div>
 </div>
 ####
+modalUserSignupDone=
+<div class="modal-container">
+  <div class="modal-header">
+    <span class="modal-icon message"></span>
+    <span class="modal-title">
+      <h3>$_modalUserSignupDoneHeader()$</h3>
+    </span>
+    <a class="modal-close close"> </a>
+  </div>
+  <div class="modal-body">
+    <div class="modal-content">
+      <p>$_modalUserSignupDoneBody()$</p>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <a class="btn-small green float-right close">
+      <div class="left"></div>
+      <div class="label">
+        <p>$_close()$</p>
+        <div class="btn-symbol green arrow-left"></div>
+      </div>
+      <div class="right"></div>
+    </a>
+  </div>
+</div>
+#####

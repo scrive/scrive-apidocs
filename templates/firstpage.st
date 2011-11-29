@@ -20,7 +20,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 type="text/javascript"></script>
                <script src="$prefix$/js/jquery.MultiFile.js"
                 type="text/javascript"></script>
-               <script src="$prefix$/tiny_mce/jquery.tinymce.js"  
+               <script src="$prefix$/tiny_mce/jquery.tinymce.js"
                 type="text/javascript"></script>
                <script type="text/javascript">
                 $javascriptLocalisation()$</script>
@@ -41,31 +41,36 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
         <body>
                 $flashmessages()$
                 $loginModal()$
+                $legalModal()$
                 <div id="wrap">
                 <div id="top-container">
                         <div class="content">
-                                <img src="$ourFirstPageLogo()$" alt="$ourServiceName()$" class="logo" />
+                                <img src="/img/logo-scrive.png" alt="Scrive" class="logo" />
                                 <div class="leftMain">
-                                        
-                                        $localeSwitcher()$
+
                                         <div class="intro-container">
                                                 <h1>$_h1()$</h1>
-                                                <p class="introtext">$_h1Body()$ 
-                                                </p>
+                                                <p class="introtext">$_h1Body()$</p>
                                                 <h3>$_h3CreateAccount()$</h3>
                                                 <p class="introtext">$_h3CreateAccountBody()$</p>
                                                 <form method="post" action="$linksignup$" class="requestAccount">
-                                                        <input class="shiny"
-                                                        type="email"
-                                                        name="email"
-                                                        infotext="$_FillInEmail()$"
-                                                        autocomplete="off"
-                                                        /> <a href="#" class="submit new-btn-small green2 center"><p>$_CreateAccount()$</p></a>
-                                                        <input type="submit" class="hidden" />
+                                                  <input class="shiny" type="email" name="email" infotext="$_FillInEmail()$" autocomplete="off" /> 
+                                                  <a href="#" class="submit new-btn-small green2 center"><p>$_ButtonCreateAccount()$</p></a>
+                                                  <input type="submit" class="hidden" />
                                                 </form>
+                                                <h3>$_legalTitleFrontPage()$</h3>
+                                                <p class="introtext">$_legalBodyFrontPage()$</p>
                                         </div>
                                 </div>
                                 <div class="rightMain">
+                                        $localeSwitcher()$
+                                  <span id="moveleft">
+                                  <a href="$linkabout$"
+                                  class="document-button">$_pageFooterAbout()$</a>
+                                  <a href="$linklegal$" class="document-button">$_pageFooterLaw()$</a>
+                                  <a href="$linkpriceplan$"
+                                  class="document-button">$_pageFooterPrices()$</a>
+                                  </span>
                                         $if(logged)$
                                         <a href="$linkupload$" class="enter-button"><p>$_enter()$</p></a>
                                         $else$
@@ -83,32 +88,22 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                         </div>
                 </div>
                 <div id="nav-container">
-                        <div class="content">
-                                <div class="col left campaign-play campaign-play-video">
-                                        <div class="icon one"></div>
-                                        <a href="#"><h3>$_StepsH3Send()$</h3>
-                                        <p>$_StepsH3SendBody()$</p></a>
-                                </div>
-                                <div class="divider-hor"></div>
-                                <div class="col centre campaign-play campaign-play-video">
-                                        <div class="icon two"></div>
-                                        <a href="#"><h3>$_StepsH3Sign()$</h3>
-                                        <p>$_StepsH3SignBody()$</p></a>
-                                </div>
-                                <div class="divider-hor"></div>
-                                <div class="col right campaign-play campaign-play-video">
-                                        <div class="icon three"></div>
-                                        <a href="#"><h3>$_StepsH3Store()$</h3>
-                                        <p>$_StepsH3StoreBody()$</p></a>
-                                </div>
+                        <div class="content logos">
+                          <img src="/img/logo/coopkonsum.png" />
+                          <img src="/img/logo/mynewsdesk.png" />
+                          <img src="/img/logo/qalllogo.png" />
+                          <img src="/img/logo/upsales.png" />
                         </div>
                         <div class="bottom-border"></div>
                 </div>
                 <div id="body-container">
                         <div class="content">
                                 <div class="spacer50"></div>
+                                <div class="benefitsbox">
+                                <h2 class="benefitstitle">$_benefitsTitle()$</h2>
+                                <div class="spacer50"></div>
                                 <div class="grid 4x4">
-                                        <div class="col">
+                                        <div class="col leftm">
                                                 <div class="icon-container">
                                                         <div class="icon money"></div>
                                                 </div>
@@ -124,49 +119,57 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         </div>
                                         <div class="col">
                                                 <div class="icon-container">
-                                                        <div class="icon globe"></div>
-                                                </div>
-                                                <h2>$_Bemefit3()$</h2>
-                                                <p>$_Bemefit3Body()$</p>
-                                        </div>
-                                        <div class="col no-margin">
-                                                <div class="icon-container">
                                                         <div class="icon seal"></div>
                                                 </div>
                                                 <h2>$_Bemefit4()$</h2>
                                                 <p>$_Bemefit4Body()$</p>
                                         </div>
-                                        <div class="col">
+                                        <div class="col no-margin">
                                                 <div class="icon-container">
                                                         <div class="icon safe"></div>
                                                 </div>
                                                 <h2>$_Bemefit5()$</h2>
                                                 <p>$_Bemefit5Body()$</p>
                                         </div>
-                                        <div class="col">
+                                </div>
+                                </div>
+                                <div class="spacer50"></div>
+                                <div class="productdescriptionbox">
+                                <h2 class="benefitstitle">$_productDescriptionTitle()$</h2>
+                                <div class="spacer50"></div>
+                                <div class="grid 4x4">
+                                        <div class="col leftm">
                                                 <div class="icon-container">
-                                                        <div class="icon face"></div>
+                                                        <div class="icon cloud"></div>
                                                 </div>
-                                                <h2>$_Bemefit6()$</h2>
-                                                <p>$_Bemefit6Body()$</p>
+                                                <h2>$_Product1()$</h2>
+                                                <p>$_Product1Body()$</p>
                                         </div>
                                         <div class="col">
                                                 <div class="icon-container">
-                                                        <div class="icon paper"></div>
+                                                        <div class="icon mail"></div>
                                                 </div>
-                                                <h2>$_Bemefit7()$</h2>
-                                                <p>$_Bemefit7Body()$</p>
+                                                <h2>$_Product2()$</h2>
+                                                <p>$_Product2Body()$</p>
+                                        </div>
+                                        <div class="col">
+                                                <div class="icon-container">
+                                                        <div class="icon api"></div>
+                                                </div>
+                                                <h2>$_Product3()$</h2>
+                                                <p>$_Product3Body()$</p>
                                         </div>
                                         <div class="col no-margin">
                                                 <div class="icon-container">
-                                                        <div class="icon ipad"></div>
+                                                        <div class="icon question"></div>
                                                 </div>
-                                                <h2>$_Bemefit8()$</h2>
-                                                <p>$_Bemefit8Body()$</p>
+                                                <h2>$_Product4()$</h2>
+                                                <p>$_Product4Body()$</p>
                                         </div>
                                 </div>
+                                </div>
                                 <div class="clearfix"></div>
-                                <div class="slide">
+                                <div class="slide" style="display:none">
                                     <div class="slide-container">
                                         <h2>$_QuotesHead()$</h2>
                                         <div class="slide-content active">
@@ -219,7 +222,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 </ul>
                                         </div>
                                 </div>
-                                <div class="drop-shadow-container">
+                                <div class="drop-shadow-container" style="display:none">
                                         <div class="drop-shadow"></div>
                                 </div>
                                 <div class="price-plan-container">
@@ -253,9 +256,6 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                 <div class="price-plan-annotation">
                                 $_priceplanPageVAT()$
                                 </div>
-                                <div class="price-plan-details">
-                                  $_BelowPriceTable1()$
-                                </div>
                                 <div class="spacer70"></div>
                                 <div class="try-skrivapa">
                                         <div class="left">
@@ -288,4 +288,114 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
        $endif$
         </body>
 </html>
+####
+###
+legalModal=
+<div class="modal-container overlay toscontainer" id="legalmodal">
+  <div class="modal-header">
+    <span class="modal-icon message"></span>
+    <span class="modal-title">
+      <h2>$_legalModalTitle()$</h2>
+    </span>
+    <a class="modal-close close"> </a>
+  </div>
+  <div class="modal-body">
+    <div class="modal-content">     
+
+      <div>
+        <img src="/img/Lawyer picture.jpg" class="float-left" />
+
+        <p class="introtext">
+          <b>Advokat, jur. dr Jon Kihlmans</b> krönika <i>Supply Chain Effect
+          nr 1/2011</i> behandlar den övertro på olika varianter av
+          skriftlig form som finns i näringslivet och bland många
+          jurister. Artikeln kan även läsas
+          som <a href="/supplychaineffectarticle.pdf">pdf</a>.
+        </p>
+      </div>
+
+      <div class="clearfix"></div>
+      <div class="spacer40"></div>
+      
+      <h3>Finns det papper och penna i molnet?</h3>
+      
+      <p>
+        För en tid sedan träffade jag för en klients räkning ett
+        förlikningsavtal i en tvist. Det var ingen stor fråga och det
+        var inte fråga om särskilt mycket pengar. Jag föreslog för
+        motpartsombudet att vi skulle dokumentera förlikningsavtalet
+        genom att jag skrev ned vårt avtal, skickade det till henne
+        med mejl och hon – om jag hade fått med allt – skrev OK och
+        mejlade tillbaka. Motpartsombudet tyckte emellertid inte att
+        det dög, utan ville absolut att vi skulle skriva på papper och
+        att våra huvudmän själva skulle skriva under. Och avtal är ju
+        som att dansa tango: It takes two! Så det fick bli papper och
+        penna. Jag skrev ut avtalet och skickade det till min huvudman
+        för underskrift. Så småningom kom det tillbaka – med vanlig
+        post – och jag skickade det till motpartsombudet – med vanlig
+        post – som skickade det till sin huvudman – med vanlig
+        post. Så småningom fick jag en avi om att det fanns ett REK
+        att hämta på posten. Jag gick dit och hämtade ut det slutligt
+        undertecknade avtalet.
+      </p>
+
+      <h4>Skall det verkligen behöva vara så komplicerat?</h4>
+      <p>
+        Svaret på frågan är naturligtvis nej! Med några få undantag
+        finns det inga formkrav för avtals giltighet, åtminstone inte
+        i svensk rätt. Det finns – naturligtvis – inte heller några
+        krav på att huvudmännen själva skall skriva under – eller vad
+        de nu skall göra – avtalen. Det går alldeles utmärkt att lämna
+        fullmakt. Och det kan – naturligtvis – ske formlöst: ”Kan inte
+        du vara snäll och skriva under åt mig?”, duger alldeles
+        utmärkt.
+      </p>
+      <p>
+        Eftersom lagen för de flesta avtal inte kräver någon särskild
+        form, blir också svaret på frågan om e-post är ett giltigt
+        medel enkel: Självklart är e-post giltigt. Detsamma gäller med
+        samma självklarhet andra former av elektronisk kommunikation.
+      </p>
+      <p>
+        Men giltighet är inte det enda problemet att ta ställning
+        till. Man måste också beakta behovet av att säkra bevisning –
+        i det här fallet om att avtal har ingåtts. Duger e-post som
+        bevisning? Vi har i Sverige vad som brukar kallas fri
+        bevisprövning. Det innebär att all bevisning i och för sig är
+        tillåten. Det är svårt att slå ett undertecknat dokument när
+        fråga är om att bevisa förekomsten av ett avtal, men e-post är
+        i de flesta fall mer än tillräcklig bevisning. Detsamma gäller
+        andra former av elektronisk kommunikation.
+      </p>
+      <p>
+        Många människor – inklusive en del motpartsombud – har en
+        överdriven, närmast vidskeplig, tro på det nödvändiga i att
+        avtal och andra rättshandlingar måste dokumenteras i
+        pappersform och skrivas under med penna. En sådan inställning
+        är ett hinder mot en effektivare affärskultur med fler och
+        bättre avtal. För att inte tala om alla träd som måste sågas
+        ner i onödan.
+      </p>
+      <p>
+        Det finns inga juridiska hinder mot att i stort sett alla
+        avtal ingås och dokumenteras i elektronisk form, antingen via
+        e-post eller SMS eller genom att använda de lösningar för
+        slutande av avtal med tillhörande arkivering som en del
+        företag har börjat tillhandahålla. I molnet behövs varken
+        papper eller penna. Jag ser fram emot att i framtiden slippa
+        gå till posten för att hämta ut onödiga REK!
+      </p>      
+    </div>
+  </div>
+  <div class="modal-footer">
+    <a href="#" class="btn-small green float-right close">
+      <div class="left"></div>
+      <div class="label">
+        <p>$_close()$</p>
+        <div class="btn-symbol green arrow-left"></div>
+      </div>
+      <div class="right"></div>
+    </a>
+  </div>
+</div>
 ####

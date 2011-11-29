@@ -6,7 +6,7 @@ module Doc.DocStateUpdate
     , authorSignDocument
     , authorSendDocument
     , updateSigAttachments
-    , closeDocument
+    , authorSignDocumentFinal
     , signableFromTemplateWithUpdatedAuthor
     , updateDocAuthorAttachments
     , attachFile
@@ -30,7 +30,7 @@ import User.Model
 import Control.Monad.Trans
 import Doc.DocStorage
 import User.Utils
-import File.TransState
+import File.Model
 import DB.Classes
 import Data.Either
 
@@ -149,8 +149,8 @@ updateSigAttachments did sigatts = onlyAuthor did $ do
 {- |
    Only the author can Close a document when its in AwaitingAuthor status.
  -}
-closeDocument :: (Kontrakcja m) => DocumentID -> Maybe SignatureInfo -> m (Either DBError Document)
-closeDocument did msigninfo = onlyAuthor did $ do
+authorSignDocumentFinal :: (Kontrakcja m) => DocumentID -> Maybe SignatureInfo -> m (Either DBError Document)
+authorSignDocumentFinal did msigninfo = onlyAuthor did $ do
   ctx <- getContext
   edoc <- getDocByDocID did
   case edoc of

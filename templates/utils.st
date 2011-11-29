@@ -17,7 +17,7 @@ customFooter= <span/>
 ###
 poweredBySkrivaPaPara=
     <p>
-      <small> $_poweredBySkrivaPaPara()$ <br/><a href="$ctxhostpart$">$ourServiceName()$</a></small>
+      <small> $_poweredBySkrivaPaPara()$ <br/><a href="$ctxhostpart$">Scrive</a></small>
     </p>
 #####
 wrapHTML=
@@ -70,7 +70,7 @@ spanNoEscape=<span>$it:noescape()$</span>
 ####
 #### Puts an invisible box with flash messages. jScripts do all show magic.
 ####
-flashmessages = 
+flashmessages =
 <div class="flashmsgbox"> </div>
 <script>
    jQuery(function(){
@@ -85,7 +85,7 @@ flashmessages =
    })
 </script>
 <div class="modalcontainer">
-$flashmessages:{ flash | 
+$flashmessages:{ flash |
     $if(flash.isModal)$
         <div class="modalbox overlay">
             $flash.message:noescape()$
@@ -101,10 +101,12 @@ loadingdialog=
   <div class="modal-container">
     <div class="modal-body" style="padding:30px">
       <center>
-        <h3 id="loadingmessage">Loading</h3> 
+        <h3 id="loadingmessage">Loading</h3>
         <img src="/theme/images/wait30trans.gif" style="margin:30px"/>
       </center>
     </div>
   </div>
 </div>
 ####
+englishHasSP=$if(pl)$have$else$has$endif$
+##

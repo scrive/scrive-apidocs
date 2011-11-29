@@ -15,7 +15,6 @@ module Kontra
     , newAccountCreatedBySigningLink
     , scheduleEmailSendout
     , queryOrFail
-    , param
     , currentService
     , currentServiceID
     , HasService(..)
@@ -38,7 +37,6 @@ import Happstack.State (query, QueryEvent)
 import KontraLink
 import KontraMonad
 import Mails.SendMail
-import Misc
 import Templates.Templates
 import User.Model
 import Util.HasSomeUserInfo
@@ -63,7 +61,9 @@ instance KontraMonad Kontra where
 
 instance TemplatesMonad Kontra where
     getTemplates = ctxtemplates <$> getContext
-
+    getLocalTemplates locale = do
+      Context{ctxglobaltemplates} <- getContext
+      return $ localizedVersion locale ctxglobaltemplates
 {- |
    Whether the user is an administrator.
 -}
@@ -153,10 +153,6 @@ queryOrFail :: (MonadPlus m,Monad m, MonadIO m) => (QueryEvent ev (Maybe res)) =
 queryOrFail q = do
   mres <- query q
   guardJust mres
-
--- | Checks if request contains a param , else mzero
-param :: String -> Kontra Response -> Kontra Response
-param p action = (getDataFnM $ look p) >> action
 
 -- | Current service id
 

@@ -93,6 +93,7 @@ showUser =
                 </div>
             </div>
             $endif$
+            <input type="submit" class="hidden" />
             <div class="account-footer">
                   $if(!iscompanyaccount)$
                   <a href="#" rel="#dialog-create-company" id="createcompany" class="btn-small green $if(createcompany)$loadbydefault$endif$">
@@ -144,27 +145,32 @@ modalCreateCompany=
             <table>
               <tr>
                   <td>$_company()$:</td>
-                  <td><input type="text" name="companyname" value="$companyname$" autocomplete="off"/></td>
+                  <td><input type="text" name="companyname" value="$companyname$" autocomplete="off" /></td>
               </tr>
               <tr>
-                  <td>$_firstname()$:</td>
-                  <td><input type="text" name="fstname" value="$fstname$" autocomplete="off" /></td>
+                  <td>$_orgnumber()$:</td>
+                  <td><input type="text" name="companynumber" value="$companynumber$" autocomplete="off" /></td>
               </tr>
               <tr>
-                  <td>$_lastname()$:</td>
-                  <td><input type="text" name="sndname" value="$sndname$" autocomplete="off" /></td>
+                  <td>$_address()$:</td>
+                  <td><input type="text" name="companyaddress" value="$address$" autocomplete="off" /></td>
               </tr>
               <tr>
-                  <td>$_phone()$:</td>
-                  <td><input type="text" name="phone" value="$phone$" autocomplete="off" /></td>
+                  <td>$_zip()$:</td>
+                  <td><input type="email" name="companyzip" value="$zip$" autocomplete="off" /></td>
               </tr>
               <tr>
-                  <td>$_companyposition()$:</td>
-                  <td style="height:30px;width:210px;"><input type="text" name="companyposition" value="$companyposition$" autocomplete="off" /></td>
+                  <td>$_city()$:</td>
+                  <td><input type="text" name="companycity" value="$city$" autocomplete="off" /></td>
+              </tr>
+              <tr>
+                  <td>$_country()$:</td>
+                  <td><input type="text" name="companycountry" value="$country$" autocomplete="off" /></td>
               </tr>
             </table>
           </div>
         </div>
+        <input type="submit" class="hidden" />
       </div>
       <div class="modal-footer">
         <a class="cancel close float-left" style="height:40px;">
