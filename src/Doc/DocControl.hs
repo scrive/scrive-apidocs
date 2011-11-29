@@ -1384,7 +1384,7 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
   -- author is gotten above, no?
   -- Just author <- doc_query $ GetUserByUserID $ unAuthor $ documentauthor documentis
   when (docfunctionality == AdvancedFunctionality) $ do
-    _ <- doc_update $ SetDocumentAdvancedFunctionality documentid ctxtime
+    _ <- doc_update $ SetDocumentFunctionality documentid docfunctionality ctxtime
     return ()
   _ <- doc_update $ SetDocumentTitle documentid docname ctxtime
   _ <- doc_update $ SetInviteText documentid invitetext ctxtime

@@ -264,8 +264,8 @@ createAPIDocument company' (authorTMP:signTMPS) tags mlocale createFun = do
     mdoc <- createFun author (Just company) now
     when (isNothing mdoc) $ throwApiError API_ERROR_OTHER "Problem creating a document | This may be because the company and author don't match"
     let doc = fromJust mdoc
-    _ <- update $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality now
-    _ <- update $ SetDocumentTags (documentid doc) tags
+    _ <- doc_update $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality now
+    _ <- doc_update $ SetDocumentTags (documentid doc) tags
 
     when (isJust mlocale) $
       ignore $ doc_update $ SetDocumentLocale (documentid doc) (fromJust mlocale) now
@@ -277,16 +277,8 @@ createAPIDocument company' (authorTMP:signTMPS) tags mlocale createFun = do
         nonauthordetails = map toSignatoryDetails signTMPS
         nonauthorroles = map (fromMaybe defsigroles . toSignatoryRoles) signTMPS
         sigs = (toSignatoryDetails authorTMP, authorroles):zip nonauthordetails nonauthorroles
-<<<<<<< HEAD
-    doc' <- update $ ResetSignatoryDetails (documentid doc) sigs (ctxtime ctx)
-=======
-        disallowspartner = getValueForProcess doc processauthorsend /= Just True
-    when (any hasFieldsAndPlacements (toSignatoryDetails authorTMP : nonauthordetails) ||
-          length nonauthordetails > 1 ||
-          (disallowspartner && SignatoryPartner `elem` authorroles)) $
-      ignore $ doc_update $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality (ctxtime ctx)
     doc' <- doc_update $ ResetSignatoryDetails (documentid doc) sigs (ctxtime ctx)
->>>>>>> Using documents in postgres
+
     when (isLeft doc') $ Log.integration $ "error creating document: " ++ fromLeft doc'
     when (isLeft doc') $ throwApiError API_ERROR_OTHER "Problem creating a document (SIGUPDATE) | This should never happend"
     return $ fromRight doc'

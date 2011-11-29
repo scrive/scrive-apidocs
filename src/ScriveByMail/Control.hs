@@ -204,7 +204,7 @@ handleScriveByMail = do
   _ <- DocControl.handleDocumentUploadNoLogin (documentid doc) pdfBinary (BS.fromString title)
   
   errs <- lefts <$> (sequence $ [doc_update $ SetEmailIdentification (documentid doc) ctxtime,
-                                 doc_update $ SetDocumentAdvancedFunctionality (documentid doc) ctxtime,
+                                 doc_update $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality ctxtime,
                                  doc_update $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) ctxtime])
           
   when ([] /= errs) $ do

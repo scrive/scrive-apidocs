@@ -221,10 +221,10 @@ runArchiveProblemsCheck = do
   return ()
   where
     getPersonalDocs user = do
-      docs <- query $ GetDocumentsBySignatory user
+      docs <- doc_query $ GetDocumentsBySignatory user
       return (user, docs)
     getSupervisedDocs user = do
-      docs <- query $ GetDocumentsByCompany user
+      docs <- doc_query $ GetDocumentsByCompany user
       return (user, docs)
 
 mailArchiveProblemsCheck :: String -> ActionScheduler ()

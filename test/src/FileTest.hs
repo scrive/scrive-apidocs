@@ -3,7 +3,7 @@
 module FileTest (fileTests) where
 
 import DB.Classes
-import Doc.DocState
+import Doc.Transitory
 import Doc.DocStateData()
 import TestingUtil
 
@@ -19,6 +19,7 @@ import qualified Data.ByteString.UTF8 as BS
 import Happstack.Server.SimpleHTTP
 import Control.Monad.Trans
 import File.FileID
+import File.File
 
 fileTests :: Connection -> Test
 fileTests conn = testGroup "Files" [

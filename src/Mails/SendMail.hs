@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Mails.SendMail
@@ -52,8 +53,10 @@ import InputValidation
 -- Needed only for FROM address
 import User.Region
 import Util.SignatoryLinkUtils
-import Doc.DocState
+import Doc.Transitory
+#ifndef DOCUMENTS_IN_POSTGRES
 import Happstack.State (query)
+#endif
 
 -- from simple utf-8 to =?UTF-8?Q?zzzzzzz?=
 mailEncode :: BS.ByteString -> String
@@ -325,7 +328,7 @@ wrapMail body = "<html>"++
 fromNiceAddress ::  DBMonad m =>  MailInfo -> String -> m String
 fromNiceAddress (None) servicename = return servicename
 fromNiceAddress (Invitation did _) servicename = do
-    mdoc <- query $ GetDocumentByDocumentID did
+    mdoc <- doc_query $ GetDocumentByDocumentID did
     case mdoc of
          Nothing -> return $ servicename
          Just doc -> case (documentregion doc, BS.toString $ getAuthorName doc) of 

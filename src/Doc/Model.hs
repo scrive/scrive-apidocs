@@ -1449,12 +1449,12 @@ instance DBUpdate RemoveDaysToSign (Either String Document) where
          "WHERE id = ?" [ toSql did ]
     getOneDocumentAffected "RemoveDaysToSign" r did
 
-data SetDocumentAdvancedFunctionality = SetDocumentAdvancedFunctionality DocumentID MinutesTime
+data SetDocumentFunctionality = SetDocumentFunctionality DocumentID DocumentFunctionality MinutesTime
                         deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate SetDocumentAdvancedFunctionality (Either String Document) where
-  dbUpdate (SetDocumentAdvancedFunctionality did time) = do
+instance DBUpdate SetDocumentFunctionality (Either String Document) where
+  dbUpdate (SetDocumentFunctionality did functionality time) = do
     r <- runUpdateStatement "documents"
-         [ sqlField "functionality" AdvancedFunctionality
+         [ sqlField "functionality" functionality
          , sqlFieldType "mtime" "timestamp" $ time
          ]
          "WHERE id = ? AND functionality <> ?" [ toSql did, toSql AdvancedFunctionality ]

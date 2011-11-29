@@ -121,7 +121,7 @@ sendFromTemplate = do
   doc <- doc_update $ SignableFromDocument temp
   let mauthorsiglink = getAuthorSigLink doc
   when (isNothing mauthorsiglink) $ throwApiError API_ERROR_OTHER "Template has no author."
-  _ <- doc_update $ SetDocumentAdvancedFunctionality (documentid doc) (ctxtime ctx)
+  _ <- doc_update $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality (ctxtime ctx)
   _ <- doc_update $ SetEmailIdentification (documentid doc) (ctxtime ctx)
   medoc <- doc_update $ ResetSignatoryDetails (documentid doc) (((signatoryDetailsFromUser author mcompany) { signatorysignorder = SignOrder 0 }, 
                                                              [SignatoryPartner, SignatoryAuthor]): 
@@ -170,15 +170,9 @@ sendNewDocument = do
   when (isLeft mnewdoc) $ throwApiError API_ERROR_OTHER "Problem making doc, maybe company and user don't match."
   let newdoc = fromRight mnewdoc
   _ <- liftKontra $ handleDocumentUpload (documentid newdoc) content filename
-<<<<<<< HEAD
-  _ <- update $ SetDocumentAdvancedFunctionality (documentid newdoc) (ctxtime ctx)
-  _ <- update $ SetEmailIdentification (documentid newdoc) (ctxtime ctx)
-  edoc <- update $ ResetSignatoryDetails (documentid newdoc) (((signatoryDetailsFromUser author mcompany) { signatorysignorder = SignOrder 0 }, 
-=======
   _ <- doc_update $ SetDocumentFunctionality (documentid newdoc) AdvancedFunctionality (ctxtime ctx)
   _ <- doc_update $ SetEmailIdentification (documentid newdoc) (ctxtime ctx)
   edoc <- doc_update $ ResetSignatoryDetails (documentid newdoc) (((signatoryDetailsFromUser author mcompany) { signatorysignorder = SignOrder 0 }, 
->>>>>>> Simplified imports, killed most of Doc.DocState, refactored everything else to support SQL Model
                                                              [SignatoryPartner, SignatoryAuthor]): 
                                                             (zip signatories (repeat [SignatoryPartner]))) (ctxtime ctx)
   case edoc of
