@@ -713,11 +713,6 @@ closeDocument docid time ipnumber =
                            } `appendHistory` [DocumentHistoryClosed time ipnumber]
     s -> Left $ "Cannot Close document " ++ show docid ++ " because " ++ concat s
     
-checkPendingToAwaitingAuthor :: Document -> [String]
-checkPendingToAwaitingAuthor doc = catMaybes $
-  [trueOrMessage (documentstatus doc == Pending) ("document should be pending but it is " ++ (show $ documentstatus doc)),
-   trueOrMessage (all ((isSignatory &&^ (not . isAuthor)) =>>^ hasSigned) (documentsignatorylinks doc)) ("Not all non-author signatories have signed"),
-   trueOrMessage (not $ hasSigned $ getAuthorSigLink doc) "Author has already signed"]
 
 {- | Pending to AwaitingAuthor
 -}
