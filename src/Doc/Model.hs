@@ -1483,12 +1483,6 @@ instance DBUpdate SetDocumentLocale (Either String Document) where
          "WHERE id = ?" [ toSql did ]
     getOneDocumentAffected "SetDocumentLocale" r did
 
-data SetDocumentTrustWeaverReference = SetDocumentTrustWeaverReference DocumentID String
-                                       deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate SetDocumentTrustWeaverReference (Either String Document) where
-  dbUpdate (SetDocumentTrustWeaverReference documentid reference) = wrapDB $ \conn -> do
-    unimplemented "SetDocumentTrustWeaverReference"
-
 data SetDocumentUI = SetDocumentUI DocumentID DocumentUI
                      deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentUI (Either String Document) where
