@@ -7,6 +7,7 @@ import DB.Derive
 import Happstack.Data
 import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
+import Numeric
 import Data.Int
 
 newtype FileID = FileID { unFileID :: Int64 }
@@ -17,7 +18,7 @@ instance Show FileID where
 
 instance Read FileID where
     readsPrec prec = let make (i,v) = (FileID i,v)
-                     in map make . readsPrec prec
+                     in map make . readDec
 
 instance FromReqURI FileID where
     fromReqURI = readM

@@ -38,6 +38,7 @@ import Happstack.Server.SimpleHTTP
 import Happstack.State
 import Happstack.Util.Common
 import Misc
+import Numeric
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 
@@ -122,8 +123,8 @@ instance Show CompanyID where
     showsPrec prec (CompanyID val) = showsPrec prec val
 
 instance Read CompanyID where
-    readsPrec prec = let make (i,v) = (CompanyID i,v)
-                     in map make . readsPrec prec
+    readsPrec _prec = let make (i,v) = (CompanyID i,v)
+                      in map make . readDec
 
 instance FromReqURI CompanyID where
     fromReqURI = readM
@@ -138,8 +139,8 @@ instance Show CompanyUser where
     showsPrec prec (CompanyUser val) = showsPrec prec val
 
 instance Read CompanyUser where
-    readsPrec prec = let make (i,v) = (CompanyUser i,v)
-                     in map make . readsPrec prec
+    readsPrec _prec = let make (i,v) = (CompanyUser i,v)
+                      in map make . readDec
 
 type Companies = IxSet Company
 

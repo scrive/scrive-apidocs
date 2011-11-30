@@ -32,6 +32,7 @@ import KontraLink
 import Mails.MailsConfig
 import Mails.SendGridEvents
 import Mails.SendMail
+import Numeric
 import MinutesTime
 import Misc
 --import PayEx.PayExInterface ()-- Import so at least we check if it compiles
@@ -379,7 +380,7 @@ publicDir swedish english link handler = choice [
 getDocumentLocale :: (ServerMonad m, MonadIO m) => m (Maybe Locale)
 getDocumentLocale = do
   rq <- askRq
-  let docids = catMaybes . map (fmap fst . listToMaybe . reads) $ rqPaths rq
+  let docids = catMaybes . map (fmap fst . listToMaybe . readDec) $ rqPaths rq
   mdoclocales <- mapM (DocControl.getDocumentLocale . DocumentID) docids
   return . listToMaybe $ catMaybes mdoclocales
 
@@ -416,7 +417,7 @@ getUserLocale conn muser = do
       mkLocaleFromRegion $ regionFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
     -- try and get the locale from the current activation user by checking the path for action ids, and giving them a go
     getActivationLocale rq = do
-      let actionids = catMaybes . map (fmap fst . listToMaybe . reads) $ rqPaths rq
+      let actionids = catMaybes . map (fmap fst . listToMaybe . readDec) $ rqPaths rq
       mactionlocales <- mapM (getActivationLocaleFromAction . ActionID) actionids
       return . listToMaybe $ catMaybes mactionlocales
     getActivationLocaleFromAction aid = do

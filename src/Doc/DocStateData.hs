@@ -63,6 +63,7 @@ import Happstack.Util.Common
 import Mails.MailsUtil
 import MinutesTime
 import Misc
+import Numeric
 import User.Model
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
@@ -1048,11 +1049,11 @@ instance Show DocumentID where
 
 instance Read DocumentID where
     readsPrec prec = let makeDocumentID (i,v) = (DocumentID i,v)
-                     in map makeDocumentID . readsPrec prec
+                     in map makeDocumentID . readDec
 
 instance Read SignatoryLinkID where
     readsPrec prec = let make (i,v) = (SignatoryLinkID i,v)
-                     in map make . readsPrec prec
+                     in map make . readDec
 
 instance FromReqURI DocumentID where
     fromReqURI = readM

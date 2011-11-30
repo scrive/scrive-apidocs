@@ -78,6 +78,7 @@ import Happstack.State
 import Happstack.Util.Common
 import MinutesTime as MT
 import Misc
+import Numeric
 import Payments.PaymentsState as Payments
 import User.OldPassword
 import User.OldLang
@@ -1087,8 +1088,8 @@ instance Show UserID where
     showsPrec prec (UserID val) = showsPrec prec val
 
 instance Read UserID where
-    readsPrec prec = let make (i,v) = (UserID i,v)
-                     in map make . readsPrec prec
+    readsPrec _prec = let make (i,v) = (UserID i,v)
+                      in map make . readDec
 
 instance FromReqURI UserID where
     fromReqURI = readM
@@ -1097,8 +1098,8 @@ instance Show SupervisorID where
     showsPrec prec (SupervisorID val) = showsPrec prec val
 
 instance Read SupervisorID where
-    readsPrec prec = let make (i,v) = (SupervisorID i,v)
-                     in map make . readsPrec prec
+    readsPrec _prec = let make (i,v) = (SupervisorID i,v)
+                      in map make . readDec
 
 instance FromReqURI SupervisorID where
     fromReqURI = readM

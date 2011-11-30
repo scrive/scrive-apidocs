@@ -63,6 +63,7 @@ import Text.XML.HaXml.Types
 
 import KontraMonad
 import Context
+import Numeric
 import AppLogger as Log (security)
 import Misc hiding (getFields)
 import Templates.Templates
@@ -519,7 +520,7 @@ asValidDocID input =
     where fieldtemplate = "idFieldName"
           parseAsInt64 :: String -> Result Int64
           parseAsInt64 xs =
-            case reads xs of
+            case readDec xs of
               (val,[]):[] -> return val
               _ -> Bad $ flashMessageNotAValidInteger fieldtemplate
 
@@ -690,7 +691,7 @@ flashMessageNumberAboveMaximum fieldtemplate upperbound =
 -}
 parseAsNum :: (Num a, Read a) => String -> String -> Result a
 parseAsNum fieldtemplate xs =
-    case reads xs of
+    case readDec xs of
         (val,[]):[] -> return val
         _ -> Bad $ flashMessageNotAValidInteger fieldtemplate
 
