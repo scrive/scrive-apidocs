@@ -1611,8 +1611,8 @@ instance DBUpdate SignLinkFromDetailsForTest SignatoryLink where
 data SignableFromDocument = SignableFromDocument Document
                             deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SignableFromDocument Document where
-  dbUpdate (SignableFromDocument document) = wrapDB $ \conn -> do
-    unimplemented "SignableFromDocument"
+  dbUpdate (SignableFromDocument document) = do
+    insertNewDocument $ templateToDocument document
 
 
 data SignableFromDocumentIDWithUpdatedAuthor = SignableFromDocumentIDWithUpdatedAuthor User (Maybe Company) DocumentID MinutesTime
