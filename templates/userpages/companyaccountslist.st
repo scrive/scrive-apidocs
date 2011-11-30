@@ -69,7 +69,7 @@ viewCompanyAccounts =
     return fullname;
   };
 
-  var companyAccountsTable = KontraList.init({
+  var companyAccountsTable = KontraList().init({
     name : "CompanyAccountsTable",
     schema: new Schema({
       url: "/companyaccounts",

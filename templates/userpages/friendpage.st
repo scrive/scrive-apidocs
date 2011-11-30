@@ -1,7 +1,7 @@
 ####    Pages for friends
 viewFriends =
 <script>
-  var friendsTable = KontraList.init({
+  var friendsTable = KontraList().init({
   name : "FriendsTable",
   schema: new Schema({
   url: "/friends",
