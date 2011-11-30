@@ -139,6 +139,7 @@ import Util.SignatoryLinkUtils
 --import Doc.DocStateUtils
 import Doc.DocProcess
 import Doc.DocStateCommon
+import qualified AppLogger as Log
 import System.Random
 --import Happstack.Server
 --import Happstack.State
@@ -236,7 +237,7 @@ mkInsertStatementWhereReturning tableName fields xwhere _values returnFields =
 
 runInsertStatementWhereReturning :: String -> [SqlField] -> String -> [SqlValue] -> [String] -> DB (Integer, Statement)
 runInsertStatementWhereReturning tableName fields xwhere values returnFields = do
-
+  Log.debug $ statement
   wrapDB $ \conn -> (doit conn `E.catch` handle)
     
   where
@@ -270,6 +271,7 @@ mkUpdateStatement tableName fields =
 
 runUpdateStatement :: String -> [SqlField] -> String -> [SqlValue] -> DB Integer
 runUpdateStatement tableName fields whereClause whereValues = do
+  Log.debug $ statement
   wrapDB $ \conn -> (run conn statement (concatMap value fields ++ whereValues)) `E.catch` 
         (\e -> liftIO $ E.throwIO $ SQLError { DB.Classes.originalQuery = statement
                                              , sqlError = e 
@@ -809,7 +811,7 @@ instance DBUpdate ArchiveDocumentForAuthor (Either String Document) where
     r <- runUpdateStatement "signatory_links" 
                          [ sqlField "deleted" True
                          ]
-                         "WHERE document_id = ? AND roles = ? AND EXISTS (SELECT * FROM documents WHERE id = ? AND type = ? AND status <> ? AND status <> ?)"
+                         "WHERE document_id = ? AND ((roles & ?)<>0) AND EXISTS (SELECT * FROM documents WHERE id = ? AND type = ? AND status <> ? AND status <> ?)"
                          [ toSql did
                          , toSql [SignatoryAuthor]
                          , toSql did
@@ -1035,6 +1037,7 @@ instance DBQuery GetDeletedDocumentsByUser [Document] where
 
 selectDocuments :: String -> [SqlValue] -> DB [Document]
 selectDocuments select values = wrapDB $ \conn -> do
+    Log.debug $ select
     st <- prepare conn $ select
     _ <- execute st values
     docs <- fetchDocuments st
@@ -1059,6 +1062,7 @@ instance DBQuery GetDocumentStats DocStats where
   dbQuery (GetDocumentStats) = wrapDB $ \conn -> do
     unimplemented "GetDocumentStats"
 
+
 data GetDocumentStatsByUser = GetDocumentStatsByUser User MinutesTime
                               deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentStatsByUser DocStats where
@@ -1071,11 +1075,14 @@ instance DBQuery GetDocuments [Document] where
   dbQuery (GetDocuments mserviceid) = do
     selectDocuments selectDocumentsSQL []
 
+{- |
+    All documents authored by the user that have never been deleted.
+-}
 data GetDocumentsByAuthor = GetDocumentsByAuthor UserID
                             deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsByAuthor [Document] where
   dbQuery (GetDocumentsByAuthor uid) = do
-    selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE deleted = FALSE AND user_id = ? AND roles = ?)") [toSql uid, toSql [SignatoryAuthor]]
+    selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE deleted = FALSE AND user_id = ? AND ((roles & ?)<>0))") [toSql uid, toSql [SignatoryAuthor]]
 
 data GetDocumentsByCompany = GetDocumentsByCompany User
                              deriving (Eq, Ord, Show, Typeable)
@@ -1105,17 +1112,28 @@ instance DBQuery GetDocumentsByCompanyAndTags [Document] where
         return (filter hasTags docs)
     where hasTags doc = not (null (intersect (documenttags doc) doctags))
 
+{- |
+    All documents where the user is a signatory that are not deleted.  An author is a type
+    of signatory, so authored documents are included too.
+    This also filters so that documents where a user is a signatory, but that signatory
+    has not yet been activated according to the document's sign order, are excluded.
+-}
 data GetDocumentsBySignatory = GetDocumentsBySignatory User
                                deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsBySignatory [Document] where
   dbQuery (GetDocumentsBySignatory user) = do
-    selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE deleted = FALSE AND user_id = ? AND roles = ?)") [toSql (userid user), toSql [SignatoryPartner]]
+    selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE deleted = FALSE AND user_id = ? AND ((roles & ?)<>0))") [toSql (userid user), toSql [SignatoryPartner]]
 
+{- |
+    All documents which are saved for the user which have never been deleted.
+    This doesn't respect sign order, so should be used carefully.
+    This also makes sure that the documents match the user's service.
+-}
 data GetDocumentsByUser = GetDocumentsByUser User
                           deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsByUser [Document] where
   dbQuery (GetDocumentsByUser user) = do
-    selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE deleted = FALSE AND user_id = ? AND roles = ?)") [toSql (userid user), toSql [SignatoryAuthor]]
+    selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE deleted = FALSE AND user_id = ? AND ((roles & ?)<>0))") [toSql (userid user), toSql [SignatoryAuthor]]
 
 data GetDocumentsSharedInCompany = GetDocumentsSharedInCompany User
                                    deriving (Eq, Ord, Show, Typeable)
@@ -1151,7 +1169,7 @@ data GetTimeoutedButPendingDocuments = GetTimeoutedButPendingDocuments MinutesTi
                                        deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetTimeoutedButPendingDocuments [Document] where
   dbQuery (GetTimeoutedButPendingDocuments mtime) = do
-        selectDocuments (selectDocumentsSQL ++ " WHERE status = ? AND timeout_time IS NOT NULL AND timeout_time < ?") 
+        selectDocuments (selectDocumentsSQL ++ " WHERE status = ? AND timeout_time IS NOT NULL AND timeout_time < to_timestamp(?)") 
                       [ toSql Pending
                       , toSql mtime
                       ]
@@ -1276,7 +1294,7 @@ instance DBUpdate NewDocument (Either String Document) where
                       [ sqlField "id" slid
                       , sqlField "document_id" did
                       , sqlField "user_id" (userid user)
-                      , sqlField "roles" [SignatoryAuthor]
+                      , sqlField "roles" authorRoles
                       , sqlField "company_id" (companyid `fmap` mcompany)
                       , sqlField "token" magichash
                       , sqlField "fields" $ signatoryfields $ signatorydetails authorlink

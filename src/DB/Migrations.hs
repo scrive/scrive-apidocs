@@ -52,10 +52,7 @@ tablesList = [
   , tableDocuments
   , tableSignatoryLinks
   , tableAuthorAttachments
-  -- this is not ready yet
-  {-
   , tableSignatoryAttachments
-  -}
 #endif
   ]
 
