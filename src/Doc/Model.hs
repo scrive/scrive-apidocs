@@ -883,18 +883,6 @@ instance DBUpdate AttachSealedFile (Either String Document) where
          "WHERE id = ? AND status = ?" [ toSql did, toSql Closed ]
     getOneDocumentAffected "AttachSealedFile" r did
 
-data AuthorSendDocument = AuthorSendDocument DocumentID MinutesTime Word32 (Maybe SignatureInfo)
-                          deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate AuthorSendDocument (Either String Document) where
-  dbUpdate (AuthorSendDocument docid mtime ipaddress msiginfo) = wrapDB $ \conn -> do
-    unimplemented "AuthorSendDocument"
-
-data AuthorSignDocument = AuthorSignDocument DocumentID MinutesTime Word32 (Maybe SignatureInfo)
-                          deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate AuthorSignDocument (Either String Document) where
-  dbUpdate (AuthorSignDocument docid mtime ipaddress msiginfo) = wrapDB $ \conn -> do
-    unimplemented "AuthorSignDocument"
-
 data CancelDocument = CancelDocument DocumentID CancelationReason MinutesTime Word32
                       deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate CancelDocument (Either String Document) where
@@ -1674,15 +1662,6 @@ instance DBUpdate TimeoutDocument (Either String Document) where
                                                     , toSql Pending
                                                     ]
     getOneDocumentAffected "TimeoutDocument" r did
-
-data UpdateDocument = UpdateDocument MinutesTime DocumentID BS.ByteString [(SignatoryDetails,[SignatoryRole])] (Maybe Int)
-                      BS.ByteString (SignatoryDetails, [SignatoryRole], UserID, Maybe CompanyID) [IdentificationType]
-                      (Maybe Int) DocumentFunctionality
-                      deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate UpdateDocument (Either String Document) where
-  dbUpdate (UpdateDocument time documentid docname signatories daystosign invitetext (authordetails, authorroles, authorid, mcompanyid) idtypes mcsvsigindex docfunctionality) = wrapDB $ \conn -> do
-    unimplemented "UpdateDocument"
-
 
 data SetCSVSigIndex = SetCSVSigIndex DocumentID Int MinutesTime
                       deriving (Eq, Ord, Show, Typeable)
