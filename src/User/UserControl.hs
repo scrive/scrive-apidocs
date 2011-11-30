@@ -239,6 +239,15 @@ getCompanyInfoUpdate = do
   where
     getValidField = getDefaultedField BS.empty
 
+handleUsageStatsForUser :: Kontrakcja m => m (Either KontraLink Response)
+handleUsageStatsForUser = withUserGet $ do
+  Context{ctxtime, ctxmaybeuser = Just user} <- getContext
+  let today = asInt ctxtime
+      som = 100 * (today `div` 100) -- start of month
+      sixm = ((today `div` 100) - 5) * 100
+  (statsByDay, statsByMonth) <- getUsageStatsForUser (userid user) som sixm
+  showUsageStats user statsByDay statsByMonth >>= renderFromBody TopAccount kontrakcja
+
 handleGetUserMailAPI :: Kontrakcja m => m (Either KontraLink Response)
 handleGetUserMailAPI = withUserGet $ do
     Context{ctxmaybeuser = Just user@User{userid}} <- getContext

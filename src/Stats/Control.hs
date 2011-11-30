@@ -18,7 +18,8 @@ module Stats.Control
          addAllUsersToStats,
          handleDocStatsCSV,
          handleMigrate1To2,
-         handleUserStatsCSV
+         handleUserStatsCSV,  
+         getUsageStatsForUser
        )
 
        where
@@ -214,10 +215,7 @@ userEventToDocStatTuple (UserStatEvent {usTime, usQuantity, usAmount}) = case us
 
 -- | Stats are very simple:
 -- Date
--- # of documents Closed that date
--- # of signatures on documents closed that date
--- # of documents sent that date
--- # of users signing tos that day
+-- list of quantities
 calculateStatsByDay :: [(Int, [Int])] -> [(Int, [Int])]
 calculateStatsByDay events =
   let byDay = groupWith fst $ reverse $ sortWith fst events
@@ -225,9 +223,7 @@ calculateStatsByDay events =
 
 -- | User Stats are very simple:
 -- Date
--- # of documents Closed that date
--- # of signatures on documents closed that date
--- # of documents sent that date
+-- list of quantities
 calculateStatsByMonth :: [(Int, [Int])] -> [(Int, [Int])]
 calculateStatsByMonth events =
   let monthOnly = [(100 * (a `div` 100), b) | (a, b) <- events]
@@ -362,11 +358,10 @@ addDocumentCancelStatEvents doc = msum [
                                                         , seServiceID  = documentservice doc
                                                         , seDocumentType = documenttype doc
                                                         }
-      unless a $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatCancel
+      unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatCancel
       let q = case documentallowedidtypes doc of
-            [EmailIdentification] -> DocStatEmailSignatureCancel
             [ELegitimationIdentification] -> DocStatElegSignatureCancel
-            _ -> DocStatEmailSignatures
+            _ -> DocStatEmailSignatureCancel
       b <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = canceltime
                                                         , seQuantity   = q
@@ -376,7 +371,7 @@ addDocumentCancelStatEvents doc = msum [
                                                         , seDocumentType = documenttype doc
                                                         , seDocumentID = did
                                                         }
-      unless b $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show q
+      unless b $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show q
       return (a && b)
   , return False]
 
@@ -395,18 +390,17 @@ addDocumentRejectStatEvents doc = msum [
           sigs = countSignatories doc
       a <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = rejecttime
-                                                        , seQuantity   = DocStatCancel
+                                                        , seQuantity   = DocStatReject
                                                         , seAmount     = 1
                                                         , seDocumentID = did
                                                         , seCompanyID  = maybecompany sl
                                                         , seServiceID  = documentservice doc
                                                         , seDocumentType = documenttype doc
                                                         }
-      unless a $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatCancel
+      unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatReject
       let q = case documentallowedidtypes doc of
-            [EmailIdentification] -> DocStatEmailSignatureCancel
-            [ELegitimationIdentification] -> DocStatElegSignatureCancel
-            _ -> DocStatEmailSignatures
+            [ELegitimationIdentification] -> DocStatElegSignatureReject
+            _ -> DocStatEmailSignatureReject
       b <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
                                                         , seTime       = rejecttime
                                                         , seQuantity   = q
@@ -416,7 +410,7 @@ addDocumentRejectStatEvents doc = msum [
                                                         , seDocumentType = documenttype doc
                                                         , seDocumentID = did
                                                         }
-      unless b $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show q
+      unless b $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show q
       return (a && b)
   , return False]
 
@@ -439,6 +433,46 @@ addDocumentCreateStatEvents doc = msum [
       unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatCreate
       return a
   , return False]
+                                  
+addDocumentTimeoutStatEvents :: Kontrakcja m => Document -> m Bool
+addDocumentTimeoutStatEvents doc = msum [
+  do
+    if not $ isTimedout doc
+      then do
+      Log.stats $ "Cannot add Timeout stat because document is not timed out: " ++ show (documentid doc)
+      return False
+      else do
+      sl  <- guardJust $ getAuthorSigLink doc
+      uid <- guardJust $ maybesignatory sl
+      (rejecttime,_,_) <- guardJust $ documentrejectioninfo doc
+      let did = documentid doc
+          sigs = countSignatories doc
+      a <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
+                                                        , seTime       = rejecttime
+                                                        , seQuantity   = DocStatTimeout
+                                                        , seAmount     = 1
+                                                        , seDocumentID = did
+                                                        , seCompanyID  = maybecompany sl
+                                                        , seServiceID  = documentservice doc
+                                                        , seDocumentType = documenttype doc
+                                                        }
+      unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatTimeout
+      let q = case documentallowedidtypes doc of
+            [ELegitimationIdentification] -> DocStatElegSignatureTimeout
+            _ -> DocStatEmailSignatureTimeout
+      b <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
+                                                        , seTime       = rejecttime
+                                                        , seQuantity   = q
+                                                        , seAmount     = sigs
+                                                        , seCompanyID  = maybecompany sl
+                                                        , seServiceID  = documentservice doc
+                                                        , seDocumentType = documenttype doc
+                                                        , seDocumentID = did
+                                                        }
+      unless b $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show q
+      return (a && b)
+  , return False]
+
 
 allDocStats :: Kontrakcja m => Document -> m ()
 allDocStats doc = do
@@ -447,6 +481,7 @@ allDocStats doc = do
     _ <- addDocumentCreateStatEvents doc
     _ <- addDocumentRejectStatEvents doc
     _ <- addDocumentCancelStatEvents doc
+    _ <- addDocumentTimeoutStatEvents doc
     return ()
 
 -- | Must be sorted (both!)
@@ -551,3 +586,21 @@ handleUserStatsCSV = onlySuperUser $ do
   ok $ setHeader "Content-Disposition" "attachment;filename=userstats.csv"
      $ setHeader "Content-Type" "text/csv"
      $ toResponse (userStatisticsCSV stats)
+
+-- For Usage Stats tab in Account
+getUsageStatsForUser :: Kontrakcja m => UserID -> Int -> Int -> m ([(Int, [Int])], [(Int, [Int])])
+getUsageStatsForUser uid som sixm = do
+  statEvents <- tuplesFromUsageStatsForUser <$> runDBQuery (GetDocStatEventsByUserID uid)
+  let statsByDay = calculateStatsByDay $ filter (\s -> (fst s) >= som) statEvents
+      statsByMonth = calculateStatsByMonth $ filter (\s -> (fst s) >= sixm) statEvents
+  return (statsByDay, statsByMonth)
+
+
+tuplesFromUsageStatsForUser :: [DocStatEvent] -> [(Int, [Int])]
+tuplesFromUsageStatsForUser = catMaybes . map toTuple
+  where toTuple (DocStatEvent {seTime, seQuantity, seAmount}) = case seQuantity of
+          DocStatEmailSignatures -> Just (asInt seTime, [seAmount, 0, 0])
+          DocStatElegSignatures  -> Just (asInt seTime, [seAmount, 0, 0])
+          DocStatClose           -> Just (asInt seTime, [0, seAmount, 0])
+          DocStatSend            -> Just (asInt seTime, [0, 0, seAmount])
+          _                      -> Nothing

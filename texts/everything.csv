@@ -3283,3 +3283,11 @@ _flashMessageProblemWithPassword,"Felaktig lösenord.",,"Incorrect password."
 "_scrivebymailPageMetaDescription","",,""
 _userDocumentsSettings,"Dokument inställningar",,"Document settings"
 _userDocumentSettingsMailFooter,"Personlig e-post signatur","Personal email signature"
+_HeadUsageStats,"Användarstatistik",,"Usage Stats"
+_last30Days,"Senaste 30 dagarna",,"Last 30 Days"
+_last6Months,"Senaste 6 månade",,"Last 6 Months"
+_usageStatsDate,Datum,,Date
+_closedDocuments,"Stängda Dokument ",,"Closed Documents"
+_sentDocuments,"Skickade Dokument ",,"Sent Documents"
+_closedSignatures,"Stängda Signaturer ",,"Closed Signatures"
+_usageStatsMonth,Månad,,Month

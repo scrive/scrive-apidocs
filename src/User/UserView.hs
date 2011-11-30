@@ -4,6 +4,7 @@ module User.UserView (
     showUser,
     showUserSecurity,
     showUserMailAPI,
+    showUsageStats,
     pageAcceptTOS,
     activatePageViewNotValidLink,
 
@@ -85,6 +86,7 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import User.Model
 import Data.List
+import MinutesTime
 
 showUser :: TemplatesMonad m => User -> Maybe Company -> Bool -> m String
 showUser user mcompany createcompany = renderTemplateFM "showUser" $ do
@@ -153,6 +155,31 @@ showUserMailAPI user mapi =
         field "mapidailylimit" $ show . umapiDailyLimit <$> mapi
         field "mapisenttoday" $ show . umapiSentToday <$> mapi
         menuFields user
+
+usageStatisticsFieldsByDay :: (Functor m, MonadIO m) => [(Int, [Int])] -> [Fields m]
+usageStatisticsFieldsByDay stats = map f stats
+  where f (ct, s:c:i:_) = do
+                field "date" $ showAsDate ct
+                field "closed" c
+                field "signatures" s
+                field "sent" i
+        f _ = error $ "statisticsFieldsByDay: bad stats"
+
+usageStatisticsFieldsByMonth :: (Functor m, MonadIO m) => [(Int, [Int])] -> [Fields m]
+usageStatisticsFieldsByMonth stats = map f stats
+  where f (ct, s:c:i:_) = do
+                field "date" $ showAsMonth ct
+                field "closed" c
+                field "signatures" s
+                field "sent" i
+        f _ = error $ "statisticsFieldsByMonth: bad stats"
+
+showUsageStats :: TemplatesMonad m => User -> [(Int, [Int])] -> [(Int, [Int])] -> m String
+showUsageStats user statsByDay statsByMonth =
+    renderTemplateFM "showUsageStats" $ do
+      fieldFL "statisticsbyday" $ usageStatisticsFieldsByDay statsByDay
+      fieldFL "statisticsbymonth" $ usageStatisticsFieldsByMonth statsByMonth
+      menuFields user
 
 pageAcceptTOS :: TemplatesMonad m => m String
 pageAcceptTOS = renderTemplateM "pageAcceptTOS" ()

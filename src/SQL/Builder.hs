@@ -89,9 +89,9 @@ transformToSelects t (WhereOr  a b) =
     (Nothing, Just rb) -> Just rb
     (Just ra, Just rb) -> Just $ ReasonOr ra rb
 transformToSelects t (WhereReason a s) = Just $ SimpleSelect SelectStatement { ssFields = ["1"]
-                                                                                , ssFrom   = [t]
-                                                                                , ssWhereClause = Just a
-                                                                                } s
+                                                                             , ssFrom   = [t]
+                                                                             , ssWhereClause = Just a
+                                                                             } s
 {-This should work, though it need to go somewhere else.
 instance DBQuery ReasonSelect [String] where
   dbQuery rs = recurse rs

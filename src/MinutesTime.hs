@@ -18,6 +18,8 @@ module MinutesTime
        , toMinutes
        , toSeconds
        , toUTCTime
+       , showAsMonth
+       , showAsDate
        ) where
 
 import Control.Monad.IO.Class
@@ -30,6 +32,7 @@ import System.IO.Unsafe
 import System.Locale
 import System.Time hiding (toClockTime, toUTCTime)
 import qualified System.Time as System.Time (toUTCTime)
+import Text.Printf
 
 import DB.Derive
 
@@ -239,3 +242,9 @@ asInt m = ctYear*10000 + (fromEnum ctMonth+1)*100 + ctDay
   where
     -- January counts as 0, so we need to add 1
     CalendarTime {ctYear,ctMonth,ctDay} = toUTCTime m
+
+showAsDate :: Int -> String
+showAsDate int = printf "%04d-%02d-%02d" (int `div` 10000) (int `div` 100 `mod` 100) (int `mod` 100)
+
+showAsMonth :: Int -> String
+showAsMonth int = printf "%04d-%02d" (int `div` 10000) (int `div` 100 `mod` 100)

@@ -185,6 +185,7 @@ staticRoutes = choice
      , dir "account" $ dir "security" $ hPost $ toK0 $ UserControl.handlePostUserSecurity
      , dir "account" $ dir "mailapi" $ hGet $ toK0 $ UserControl.handleGetUserMailAPI
      , dir "account" $ dir "mailapi" $ hPost $ toK0 $ UserControl.handlePostUserMailAPI
+     , dir "account" $ dir "usagestats" $ hGet $ toK0 $ UserControl.handleUsageStatsForUser
      , dir "contacts"  $ hGet  $ toK0 $ Contacts.showContacts
      , dir "contacts"  $ hPost $ toK0 $ Contacts.handleContactsChange
      , dir "accepttos" $ hGet  $ toK0 $ UserControl.handleAcceptTOSGet
