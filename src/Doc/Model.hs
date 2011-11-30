@@ -70,7 +70,6 @@ module Doc.Model
   , GetTimeoutedButPendingDocuments(..)
   , MarkDocumentSeen(..)
   , MarkInvitationRead(..)
-  -- , MigrateDocumentSigLinkCompanies(..)
   , NewDocument(..)
   , PendingToAwaitingAuthor(..)
   , PreparationToPending(..)
@@ -1212,12 +1211,6 @@ instance DBUpdate MarkInvitationRead (Either String Document) where
                          , toSql did
                          ]
     getOneDocumentAffected "MarkInvitationRead" r did
-
-data MigrateDocumentSigLinkCompanies = MigrateDocumentSigLinkCompanies DocumentID [User]
-                                       deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate MigrateDocumentSigLinkCompanies (Either String Document) where
-  dbUpdate (MigrateDocumentSigLinkCompanies docid sigusers) = wrapDB $ \conn -> do
-    unimplemented "MigrateDocumentSigLinkCompanies"
 
 data NewDocument = NewDocument User (Maybe Company) BS.ByteString DocumentType MinutesTime
                  deriving (Eq, Ord, Show, Typeable)
