@@ -34,7 +34,7 @@ var MonthTable = KontraList().init({
     schema: new Schema({
     url: "/account/usagestats/months/json",
     cells : [
-        new Cell({name: "$_usageStatsDate()$",   width:"100px", field:"date"}),
+        new Cell({name: "$_usageStatsMonth()$",   width:"100px", field:"date"}),
         new Cell({name: "$_closedDocuments()$",  width:"70px",  field:"closed", class: 'num'}),
         new Cell({name: "$_sentDocuments()$",    width:"70px",  field:"sent", class: 'num'}),
         new Cell({name: "$_closedSignatures()$", width:"70px",  field:"signatures", class: 'num'})
