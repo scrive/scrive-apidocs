@@ -886,8 +886,25 @@ instance DBUpdate AttachSealedFile (Either String Document) where
 data CancelDocument = CancelDocument DocumentID CancelationReason MinutesTime Word32
                       deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate CancelDocument (Either String Document) where
-  dbUpdate (CancelDocument docid reason mtime ipaddress) = wrapDB $ \conn -> do
-    unimplemented "CancelDocument"
+  dbUpdate (CancelDocument did reason mtime _ipaddress) = do
+    mdocument <- dbQuery $ GetDocumentByDocumentID did
+    case mdocument of
+      Nothing -> return $ Left $ "Cannot CancelDocument document " ++ show did ++ " because it does not exist"
+      Just document ->
+        case checkCancelDocument document of
+          [] -> do
+            r <- runUpdateStatement "documents"
+                 [ sqlField "status" $ Canceled
+                 , sqlFieldType "mtime" "timestamp" $ mtime
+                 , sqlField "cancelation_reason" $ reason
+                 ]
+                "WHERE id = ? AND type = ?" [ toSql did, toSql (toDocumentSimpleType (Signable undefined)) ]
+            getOneDocumentAffected "CancelDocument" r did
+
+            -- return $ Right $ document { documentstatus = Closed 
+            --                          , documentmtime  = time
+            --                          } `appendHistory` [DocumentHistoryClosed time ipaddress]
+          s -> return $ Left $ "Cannot CancelDocument document " ++ show did ++ " because " ++ concat s
 
 data ChangeMainfile = ChangeMainfile DocumentID FileID
 instance DBUpdate ChangeMainfile (Either String Document) where

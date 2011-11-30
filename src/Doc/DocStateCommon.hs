@@ -134,6 +134,17 @@ checkCloseDocument doc = catMaybes $
                     ("Not all signatories have signed")
   ]
 
+{- |
+
+-}
+checkCancelDocument :: Document -> [String]
+checkCancelDocument doc = catMaybes $
+  [ trueOrMessage (isSignable doc) ("document is not signable")
+  , trueOrMessage (documentstatus doc == Pending || documentstatus doc == AwaitingAuthor)
+                    ("document should be pending or awaiting author but it is " ++ (show $ documentstatus doc))
+  ]
+
+
 {- | Preconditions for moving a document from Preparation to Pending.
  -}
 checkPreparationToPending :: Document -> [String]
