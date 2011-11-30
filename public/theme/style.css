@@ -3004,3 +3004,33 @@ a#attachmentback {
 .account-body.advancedview p {
     margin: 10px;
 }
+
+.usagestats table {
+    font-size: 12px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.usagestats thead {
+    border-bottom: 2px solid black;
+}
+
+.usagestats td {
+    padding: 5px;
+    padding-right: 20px;
+}
+
+.usagestats td.date {
+    width: 100px;
+}
+
+.usagestats tbody td.num {
+    text-align:right;
+    font-weight: bold;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 14px;
+}
+
+.usagestats tbody tr {
+    border-bottom: 1px solid #6D6E70;
+}

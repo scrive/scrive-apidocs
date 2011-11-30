@@ -14,35 +14,35 @@ showUsageStats =
     </ul>
     <div class="tab-container">
       <div class="tab-content account usagestats">
-        
+
         <h2>$_last30Days()$</h2>
 	    <table>
           <thead>
-            <td style="width:200px">$_usageStatsDate()$</td>
-            <td style="width:200px">$_closedDocuments()$</td>
-            <td style="width:200px">$_sentDocuments()$</td>
-            <td style="width:200px">$_closedSignatures()$</td>
+            <td >$_usageStatsDate()$</td>
+            <td >$_closedDocuments()$</td>
+            <td >$_sentDocuments()$</td>
+            <td >$_closedSignatures()$</td>
 	      </thead>
           $statisticsbyday:{stat|<tr>
-            <td>$stat.date$</td>
-            <td>$stat.closed$ </td>
-            <td>$stat.sent$ </td>
-            <td>$stat.signatures$ </td>
+            <td class="date">$stat.date$</td>
+            <td class="num">$stat.closed$ </td>
+            <td class="num">$stat.sent$ </td>
+            <td class="num">$stat.signatures$ </td>
 	      </tr>}$
 	    </table>
         <h2>$_last6Months()$</h2>
 	    <table>
           <thead>
-            <td style="width:200px">$_usageStatsMonth()$</td>
-            <td style="width:200px">$_closedDocuments()$</td>
-            <td style="width:200px">$_sentDocuments()$</td>
-            <td style="width:200px">$_closedSignatures()$</td>
+            <td >$_usageStatsMonth()$</td>
+            <td >$_closedDocuments()$</td>
+            <td >$_sentDocuments()$</td>
+            <td >$_closedSignatures()$</td>
 	      </thead>
           $statisticsbymonth:{stat|<tr>
-            <td>$stat.date$</td>
-            <td>$stat.closed$ </td>
-            <td>$stat.sent$ </td>
-            <td>$stat.signatures$ </td>
+            <td class="date">$stat.date$</td>
+            <td class="num">$stat.closed$ </td>
+            <td class="num">$stat.sent$ </td>
+            <td class="num">$stat.signatures$ </td>
 	      </tr>}$
 	    </table>
 
