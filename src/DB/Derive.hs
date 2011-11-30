@@ -20,6 +20,9 @@ import Data.Convertible
 import Language.Haskell.TH
 import Text.JSON.Generic
 import Text.JSON.String
+import Numeric
+import Data.Word
+import Data.Int
 
 -- | Derives Read/Show instances for a given newtype
 -- that behave like the ones of underlying type.
@@ -35,18 +38,33 @@ newtypeDeriveUnderlyingReadShow t = do
   info <- reify t
   case info of
     TyConI (NewtypeD _ name _ tcon _) -> do
-      let con = case tcon of
-            RecC c _    -> c
-            NormalC c _ -> c
+      let (con,typename) = case tcon of
+            RecC c    [(_,_,ConT n)] -> (c,n)
+            NormalC c [(_,ConT n)]   -> (c,n)
             _ -> error $ "Wrong constructor: " ++ show tcon
-      p' <- newName "p"
+      p' <- newName "_p"
       s' <- newName "s"
       v' <- newName "v"
+      let readsPrecE = VarE 'readsPrec `AppE` VarE p' `AppE` VarE s'
+          readDecE = VarE 'readDec `AppE` VarE s'
+          correctRead = if typename `elem` [ ''Integer
+                                           , ''Int
+                                           , ''Int8
+                                           , ''Int16
+                                           , ''Int32
+                                           , ''Int64
+                                           , ''Word
+                                           , ''Word8
+                                           , ''Word16
+                                           , ''Word32
+                                           , ''Word64
+                                           ] then readDecE
+                        else readsPrecE
       return [
         InstanceD [] (AppT (ConT ''Read) (ConT name)) [
             FunD 'readsPrec [
               Clause [VarP p', VarP s']
-                (NormalB (InfixE (Just (AppE (VarE 'first) (ConE con))) (VarE 'fmap) (Just (AppE (AppE (VarE 'readsPrec) (VarE p')) (VarE s'))))) []
+                (NormalB (InfixE (Just (AppE (VarE 'first) (ConE con))) (VarE 'fmap) (Just correctRead))) []
               ]
             ]
         , InstanceD [] (AppT (ConT ''Show) (ConT name)) [
