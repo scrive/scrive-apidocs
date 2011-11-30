@@ -1128,8 +1128,11 @@ instance DBQuery GetSignatoryLinkIDs [SignatoryLinkID] where
 data GetTimeoutedButPendingDocuments = GetTimeoutedButPendingDocuments MinutesTime
                                        deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetTimeoutedButPendingDocuments [Document] where
-  dbQuery (GetTimeoutedButPendingDocuments mtime) = wrapDB $ \conn -> do
-    unimplemented "GetTimeoutedButPendingDocuments"
+  dbQuery (GetTimeoutedButPendingDocuments mtime) = do
+        selectDocuments (selectDocumentsSQL ++ " WHERE status = ? AND timeout_time IS NOT NULL AND timeout_time < ?") 
+                      [ toSql Pending
+                      , toSql mtime
+                      ]
 
 data MarkDocumentSeen = MarkDocumentSeen DocumentID SignatoryLinkID MagicHash MinutesTime Word32
                         deriving (Eq, Ord, Show, Typeable)
