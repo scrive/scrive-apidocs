@@ -908,8 +908,21 @@ instance DBUpdate CancelDocument (Either String Document) where
 
 data ChangeMainfile = ChangeMainfile DocumentID FileID
 instance DBUpdate ChangeMainfile (Either String Document) where
-  dbUpdate (ChangeMainfile did fid) = wrapDB $ \conn -> do
-    unimplemented "ChangeMainfile"
+  dbUpdate (ChangeMainfile did fid) = do
+    mdocument <- dbQuery $ GetDocumentByDocumentID did
+    case mdocument of
+      Nothing -> return $ Left $ "Cannot ChangeMainfile document " ++ show did ++ " because it does not exist"
+      Just document -> do
+        let fieldname = if (documentstatus document == Closed || allHadSigned document)
+                        then "sealed_file_id"
+                        else "file_id"
+        r <- runUpdateStatement "documents"
+                 [ sqlField fieldname $ fid
+                 ]
+             "WHERE id = ?" [ toSql did ]
+        getOneDocumentAffected "ChangeMainfile" r did
+    where
+        allHadSigned doc = all (hasSigned ||^ (not . isSignatory)) $ documentsignatorylinks doc
 
 data ChangeSignatoryEmailWhenUndelivered = ChangeSignatoryEmailWhenUndelivered DocumentID SignatoryLinkID (Maybe User) BS.ByteString
                                            deriving (Eq, Ord, Show, Typeable)
