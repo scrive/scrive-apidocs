@@ -1743,12 +1743,6 @@ instance DBUpdate PendingToAwaitingAuthor (Either String Document) where
 
 
 
-data UpdateDocumentAttachments = UpdateDocumentAttachments DocumentID [DocumentID] [FileID]
-                                 deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate UpdateDocumentAttachments (Either String Document) where
-  dbUpdate (UpdateDocumentAttachments docid idstoadd idstoremove) = wrapDB $ \conn -> do
-    unimplemented "UpdateDocumentAttachments"
-
 data AddDocumentAttachment = AddDocumentAttachment DocumentID FileID
                                  deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate AddDocumentAttachment (Either String Document) where
