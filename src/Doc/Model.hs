@@ -66,7 +66,6 @@ module Doc.Model
   , GetDocumentsBySignatory(..)
   , GetDocumentsByUser(..)
   , GetDocumentsSharedInCompany(..)
-  -- , GetNumberOfDocumentsOfUser(..)
   , GetSignatoryLinkIDs(..)
   , GetTimeoutedButPendingDocuments(..)
   , MarkDocumentSeen(..)
@@ -1143,12 +1142,6 @@ instance DBQuery GetDocumentsSharedInCompany [Document] where
         
         return $ filter ((== Shared) . documentsharing) . filterDocsWhereActivated companyid . filterDocsWhereDeleted False companyid $ documents
       _ -> return []
-
-data GetNumberOfDocumentsOfUser = GetNumberOfDocumentsOfUser User
-                                  deriving (Eq, Ord, Show, Typeable)
-instance DBQuery GetNumberOfDocumentsOfUser Int where
-  dbQuery (GetNumberOfDocumentsOfUser user) = wrapDB $ \conn -> do
-    unimplemented "GetNumberOfDocumentsOfUser"
 
 data GetSignatoryLinkIDs = GetSignatoryLinkIDs
                            deriving (Eq, Ord, Show, Typeable)
