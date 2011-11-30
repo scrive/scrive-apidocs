@@ -1147,7 +1147,12 @@ data GetSignatoryLinkIDs = GetSignatoryLinkIDs
                            deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetSignatoryLinkIDs [SignatoryLinkID] where
   dbQuery (GetSignatoryLinkIDs) = wrapDB $ \conn -> do
-    unimplemented "GetSignatoryLinkIDs"
+    st <- prepare conn "SELECT id FROM signatory_links"
+    result <- execute st []
+    fetchValues st decodeRowAsSignatoryLinkID
+    where
+      decodeRowAsSignatoryLinkID :: SignatoryLinkID -> Either DBException SignatoryLinkID
+      decodeRowAsSignatoryLinkID slid = return slid
 
 data GetTimeoutedButPendingDocuments = GetTimeoutedButPendingDocuments MinutesTime
                                        deriving (Eq, Ord, Show, Typeable)
