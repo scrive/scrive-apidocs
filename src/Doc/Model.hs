@@ -50,7 +50,6 @@ module Doc.Model
   , ChangeMainfile(..)
   , ChangeSignatoryEmailWhenUndelivered(..)
   , CloseDocument(..)
-  , DeleteDocumentRecordIfRequired(..)
   , DeleteSigAttachment(..)
   , DocumentFromSignatoryData(..)
   , ErrorDocument(..)
@@ -970,12 +969,6 @@ instance DBUpdate CloseDocument (Either String Document) where
             --                          , documentmtime  = time
             --                          } `appendHistory` [DocumentHistoryClosed time ipaddress]
           s -> return $ Left $ "Cannot Close document " ++ show docid ++ " because " ++ concat s
-
-data DeleteDocumentRecordIfRequired = DeleteDocumentRecordIfRequired DocumentID [User]
-                                      deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate DeleteDocumentRecordIfRequired (Either String Document) where
-  dbUpdate (DeleteDocumentRecordIfRequired docid users) = wrapDB $ \conn -> do
-    unimplemented "DeleteDocumentRecordIfRequired"
 
 data DeleteSigAttachment = DeleteSigAttachment DocumentID BS.ByteString FileID
                            deriving (Eq, Ord, Show, Typeable)
