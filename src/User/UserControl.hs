@@ -10,7 +10,7 @@ import Happstack.State (update, query)
 import System.Random
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS
-import Text.JSON (JSValue(..), toJSObject, toJSString)
+import Text.JSON (JSValue(..), toJSObject, toJSString, showJSON)
 
 import ActionSchedulerState
 import AppView
@@ -241,12 +241,41 @@ getCompanyInfoUpdate = do
 
 handleUsageStatsForUser :: Kontrakcja m => m (Either KontraLink Response)
 handleUsageStatsForUser = withUserGet $ do
-  Context{ctxtime, ctxmaybeuser = Just user} <- getContext
+  Context{ctxmaybeuser = Just user} <- getContext
+  showUsageStats user >>= renderFromBody TopAccount kontrakcja
+
+handleUsageStatsJSONForUserDays :: Kontrakcja m => m JSValue
+handleUsageStatsJSONForUserDays = do
+  Context{ctxtime, ctxmaybeuser } <- getContext
+  user <- guardJust ctxmaybeuser
   let today = asInt ctxtime
       som = 100 * (today `div` 100) -- start of month
       sixm = ((today `div` 100) - 5) * 100
-  (statsByDay, statsByMonth) <- getUsageStatsForUser (userid user) som sixm
-  showUsageStats user statsByDay statsByMonth >>= renderFromBody TopAccount kontrakcja
+  (statsByDay, _) <- getUsageStatsForUser (userid user) som sixm
+  return $ JSObject $ toJSObject [("list", userStatsDayToJSON statsByDay),
+                                  ("paging", JSObject $ toJSObject [
+                                      ("pageMax",showJSON (0::Int)),
+                                      ("pageCurrent", showJSON (0::Int)),
+                                      ("itemMin",showJSON $ (0::Int)),
+                                      ("itemMax",showJSON $ (length statsByDay) - 1),
+                                      ("itemTotal",showJSON $ (length statsByDay))])]
+
+handleUsageStatsJSONForUserMonths :: Kontrakcja m => m JSValue
+handleUsageStatsJSONForUserMonths = do
+  Context{ctxtime, ctxmaybeuser } <- getContext
+  user <- guardJust ctxmaybeuser
+  let today = asInt ctxtime
+      som = 100 * (today `div` 100) -- start of month
+      sixm = ((today `div` 100) - 5) * 100
+  (_, statsByMonth) <- getUsageStatsForUser (userid user) som sixm
+  return $ JSObject $ toJSObject [("list", userStatsMonthToJSON statsByMonth),
+                                  ("paging", JSObject $ toJSObject [
+                                      ("pageMax",showJSON (0::Int)),
+                                      ("pageCurrent", showJSON (0::Int)),
+                                      ("itemMin",showJSON $ (0::Int)),
+                                      ("itemMax",showJSON $ (length statsByMonth) - 1),
+                                      ("itemTotal",showJSON $ (length statsByMonth))])]
+
 
 handleGetUserMailAPI :: Kontrakcja m => m (Either KontraLink Response)
 handleGetUserMailAPI = withUserGet $ do

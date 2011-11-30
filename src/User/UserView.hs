@@ -63,7 +63,10 @@ module User.UserView (
     userBasicFields,
 
     -- friends list
-    friendSortSearchPage
+    friendSortSearchPage,
+    
+    userStatsDayToJSON,
+    userStatsMonthToJSON
     ) where
 
 import Control.Applicative ((<$>))
@@ -87,6 +90,9 @@ import Util.HasSomeUserInfo
 import User.Model
 import Data.List
 import MinutesTime
+import Util.JSON
+import Text.JSON
+import Data.Either
 
 showUser :: TemplatesMonad m => User -> Maybe Company -> Bool -> m String
 showUser user mcompany createcompany = renderTemplateFM "showUser" $ do
@@ -156,8 +162,8 @@ showUserMailAPI user mapi =
         field "mapisenttoday" $ show . umapiSentToday <$> mapi
         menuFields user
 
-usageStatisticsFieldsByDay :: (Functor m, MonadIO m) => [(Int, [Int])] -> [Fields m]
-usageStatisticsFieldsByDay stats = map f stats
+_usageStatisticsFieldsByDay :: (Functor m, MonadIO m) => [(Int, [Int])] -> [Fields m]
+_usageStatisticsFieldsByDay stats = map f stats
   where f (ct, s:c:i:_) = do
                 field "date" $ showAsDate ct
                 field "closed" c
@@ -165,8 +171,8 @@ usageStatisticsFieldsByDay stats = map f stats
                 field "sent" i
         f _ = error $ "statisticsFieldsByDay: bad stats"
 
-usageStatisticsFieldsByMonth :: (Functor m, MonadIO m) => [(Int, [Int])] -> [Fields m]
-usageStatisticsFieldsByMonth stats = map f stats
+_usageStatisticsFieldsByMonth :: (Functor m, MonadIO m) => [(Int, [Int])] -> [Fields m]
+_usageStatisticsFieldsByMonth stats = map f stats
   where f (ct, s:c:i:_) = do
                 field "date" $ showAsMonth ct
                 field "closed" c
@@ -174,11 +180,28 @@ usageStatisticsFieldsByMonth stats = map f stats
                 field "sent" i
         f _ = error $ "statisticsFieldsByMonth: bad stats"
 
-showUsageStats :: TemplatesMonad m => User -> [(Int, [Int])] -> [(Int, [Int])] -> m String
-showUsageStats user statsByDay statsByMonth =
+userStatsDayToJSON :: [(Int, [Int])] -> JSValue
+userStatsDayToJSON = JSArray . rights . map f
+  where f (d, s:c:i:_) = Right jsempty >>=
+                         jsset ["fields", "date"] (showAsDate d) >>=
+                         jsset ["fields", "closed"] c >>=
+                         jsset ["fields", "sent"] i >>=
+                         jsset ["fields", "signatures"] s
+        f _ = Left "Bad stat"
+
+userStatsMonthToJSON :: [(Int, [Int])] -> JSValue
+userStatsMonthToJSON = JSArray . rights . map f
+  where f (d, s:c:i:_) = Right jsempty >>=
+                         jsset ["fields", "date"] (showAsMonth d) >>=
+                         jsset ["fields", "closed"] c >>=
+                         jsset ["fields", "sent"] i >>=
+                         jsset ["fields", "signatures"] s
+        f _ = Left "Bad stat"
+
+
+showUsageStats :: TemplatesMonad m => User -> m String
+showUsageStats user =
     renderTemplateFM "showUsageStats" $ do
-      fieldFL "statisticsbyday" $ usageStatisticsFieldsByDay statsByDay
-      fieldFL "statisticsbymonth" $ usageStatisticsFieldsByMonth statsByMonth
       menuFields user
 
 pageAcceptTOS :: TemplatesMonad m => m String

@@ -12,39 +12,48 @@ showUsageStats =
       <li><a href="/account/mailapi">$_HeadMailApi()$</a></li>
       <li class="active"><a href="/account/usagestats">$_HeadUsageStats()$</a></li>
     </ul>
+
+<script>
+var DayTable = KontraList().init({
+    name : "Past Month Table",
+    schema: new Schema({
+    url: "/account/usagestats/days/json",
+    cells : [
+        new Cell({name: "$_usageStatsDate()$",   width:"100px", field:"date"}),
+        new Cell({name: "$_closedDocuments()$",  width:"70px",  field:"closed", class: 'num'}),
+        new Cell({name: "$_sentDocuments()$",    width:"70px",  field:"sent", class: 'num'}),
+        new Cell({name: "$_closedSignatures()$", width:"70px",  field:"signatures", class: 'num'})
+    ]})});
+
+jQuery(function(){
+    jQuery("#jsdaytable").append(DayTable.view.el);
+});
+
+var MonthTable = KontraList().init({
+    name : "Past 6 Month Table",
+    schema: new Schema({
+    url: "/account/usagestats/months/json",
+    cells : [
+        new Cell({name: "$_usageStatsDate()$",   width:"100px", field:"date"}),
+        new Cell({name: "$_closedDocuments()$",  width:"70px",  field:"closed", class: 'num'}),
+        new Cell({name: "$_sentDocuments()$",    width:"70px",  field:"sent", class: 'num'}),
+        new Cell({name: "$_closedSignatures()$", width:"70px",  field:"signatures", class: 'num'})
+    ]})});
+
+jQuery(function(){
+    jQuery("#jsmonthtable").append(MonthTable.view.el);
+});
+
+</script>
     <div class="tab-container">
       <div class="tab-content account usagestats">
 
         <h2>$_last30Days()$</h2>
-	    <table>
-          <thead>
-            <td >$_usageStatsDate()$</td>
-            <td >$_closedDocuments()$</td>
-            <td >$_sentDocuments()$</td>
-            <td >$_closedSignatures()$</td>
-	      </thead>
-          $statisticsbyday:{stat|<tr>
-            <td class="date">$stat.date$</td>
-            <td class="num">$stat.closed$ </td>
-            <td class="num">$stat.sent$ </td>
-            <td class="num">$stat.signatures$ </td>
-	      </tr>}$
-	    </table>
+
+        <div id="jsdaytable"> </div>
         <h2>$_last6Months()$</h2>
-	    <table>
-          <thead>
-            <td >$_usageStatsMonth()$</td>
-            <td >$_closedDocuments()$</td>
-            <td >$_sentDocuments()$</td>
-            <td >$_closedSignatures()$</td>
-	      </thead>
-          $statisticsbymonth:{stat|<tr>
-            <td class="date">$stat.date$</td>
-            <td class="num">$stat.closed$ </td>
-            <td class="num">$stat.sent$ </td>
-            <td class="num">$stat.signatures$ </td>
-	      </tr>}$
-	    </table>
+
+        <div id="jsmonthtable"> </div>
 
         <div class="clearfix"></div>
 

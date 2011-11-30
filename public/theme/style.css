@@ -3005,32 +3005,27 @@ a#attachmentback {
     margin: 10px;
 }
 
-.usagestats table {
-    font-size: 12px;
+.usagestats .tab-content {
+    display: none;
+}
+
+.usagestats #jsdaytable .tab-container, .usagestats #jsmonthtable .tab-container, .usagestats .tab-table {
+    -moz-border-radius: 5px 5px 5px 5px;
+	-webkit-border-radius: 5px 5px 5px 5px;
+}
+
+.usagestats #jsdaytable, .usagestats #jsmonthtable {
     margin-top: 20px;
-    margin-bottom: 20px;
+    margin-bottom: 40px;
 }
 
-.usagestats thead {
-    border-bottom: 2px solid black;
+.usagestats h2 {
+    text-align: center;
 }
 
-.usagestats td {
-    padding: 5px;
-    padding-right: 20px;
-}
+.usagestats td.num {
 
-.usagestats td.date {
-    width: 100px;
-}
-
-.usagestats tbody td.num {
-    text-align:right;
     font-weight: bold;
     font-family: "Courier New", Courier, monospace;
-    font-size: 14px;
-}
 
-.usagestats tbody tr {
-    border-bottom: 1px solid #6D6E70;
 }
