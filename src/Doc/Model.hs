@@ -40,7 +40,6 @@ module Doc.Model
   , AddDocumentAttachment(..)
   , AddInvitationEvidence(..)
   , AdminOnlySaveForUser(..)
-  -- , ArchiveDocumentForAll(..)
   , ArchiveDocumentForAuthor(..)
   , ArchiveDocuments(..)
   , AttachCSVUpload(..)
@@ -802,12 +801,6 @@ data AdminOnlySaveForUser = AdminOnlySaveForUser DocumentID User
 instance DBUpdate AdminOnlySaveForUser (Either String Document) where
   dbUpdate (AdminOnlySaveForUser docid user) = wrapDB $ \conn -> do
     unimplemented "AdminOnlySaveForUser"
-
-data ArchiveDocumentForAll = ArchiveDocumentForAll DocumentID
-                             deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate ArchiveDocumentForAll (Either String Document) where
-  dbUpdate (ArchiveDocumentForAll docid) = wrapDB $ \conn -> do
-    unimplemented "ArchiveDocumentForAll"
 
 data ArchiveDocumentForAuthor = ArchiveDocumentForAuthor DocumentID
                              deriving (Eq, Ord, Show, Typeable)
