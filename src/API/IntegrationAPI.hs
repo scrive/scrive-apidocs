@@ -48,6 +48,7 @@ import Routing
 import API.Service.Model
 import API.APICommons
 import Doc.DocUtils
+import Doc.DocProcess
 import Company.Model
 import User.Model
 import Data.Foldable (fold)
