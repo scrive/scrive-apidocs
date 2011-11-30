@@ -1498,8 +1498,12 @@ instance DBUpdate SetInvitationDeliveryStatus (Either String Document) where
 data ShareDocument = ShareDocument DocumentID
                      deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate ShareDocument (Either String Document) where
-  dbUpdate (ShareDocument docid) = wrapDB $ \conn -> do
-    unimplemented "ShareDocument"
+  dbUpdate (ShareDocument did) = do
+    r <- runUpdateStatement "documents"
+         [ sqlField "sharing" $ Shared
+         ]
+         "WHERE id = ? AND deleted = FALSE" [ toSql did ]
+    getOneDocumentAffected "ShareDocument" r did
 
 
 data SignDocument = SignDocument DocumentID SignatoryLinkID MagicHash MinutesTime Word32 (Maybe SignatureInfo)
