@@ -966,8 +966,16 @@ instance DBUpdate CloseDocument (Either String Document) where
 data DeleteSigAttachment = DeleteSigAttachment DocumentID BS.ByteString FileID
                            deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate DeleteSigAttachment (Either String Document) where
-  dbUpdate (DeleteSigAttachment docid email fid) = wrapDB $ \conn -> do
-    unimplemented "DeleteSigAttachment"
+  dbUpdate (DeleteSigAttachment did email fid) = do
+    r <- runUpdateStatement "signatory_attachments" 
+                         [ sqlField "file_id" SqlNull
+                         ]
+                         "WHERE document_id = ? AND email = ? AND file_id = ?"
+                         [ toSql did
+                         , toSql email
+                         , toSql fid
+                         ]
+    getOneDocumentAffected "DeleteSigAttachment" r did
 
 data DocumentFromSignatoryData = DocumentFromSignatoryData DocumentID Int BS.ByteString BS.ByteString BS.ByteString BS.ByteString BS.ByteString BS.ByteString [BS.ByteString]
                                  deriving (Eq, Ord, Show, Typeable)
