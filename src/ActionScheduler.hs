@@ -39,6 +39,7 @@ import qualified AppLogger as Log
 import System.Time
 import Util.HasSomeUserInfo
 import Doc.Invariants
+import Stats.Control
 
 type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaGlobalTemplates))
 
@@ -256,6 +257,11 @@ timeoutDocuments :: MinutesTime -> ActionScheduler ()
 timeoutDocuments now = do
     docs <- query $ GetTimeoutedButPendingDocuments now
     forM_ docs $ \doc -> do
-        _ <- update $ TimeoutDocument (documentid doc) now
+        edoc <- update $ TimeoutDocument (documentid doc) now
+        case edoc of
+          Left _ -> return ()
+          Right doc' -> do
+            _ <- addDocumentTimeoutStatEvents doc'
+            return ()
         Log.debug $ "Document timedout " ++ (show $ documenttitle doc)
 

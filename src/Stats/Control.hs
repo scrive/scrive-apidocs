@@ -8,6 +8,7 @@ module Stats.Control
          addDocumentSendStatEvents,
          addDocumentCancelStatEvents,
          addDocumentRejectStatEvents,
+         addDocumentTimeoutStatEvents,
          addUserIDSignTOSStatEvent,
          addUserSignTOSStatEvent,
          addUserSaveAfterSignStatEvent,
@@ -254,7 +255,7 @@ calculateCompanyDocStats events =
 --   2. Count the number of signatures in StatDocumentSignatures
 -- Note that this will roll over (using mplus) in case there is
 -- an error.
-addDocumentCloseStatEvents :: Kontrakcja m => Document -> m Bool
+addDocumentCloseStatEvents :: (DBMonad m, MonadPlus m) => Document -> m Bool
 addDocumentCloseStatEvents doc = msum [
   do
     if not (isClosed doc)
@@ -296,7 +297,7 @@ addDocumentCloseStatEvents doc = msum [
       return (a && b)
   , return False]
 
-addDocumentSendStatEvents :: Kontrakcja m => Document -> m Bool
+addDocumentSendStatEvents :: (DBMonad m, MonadPlus m) => Document -> m Bool
 addDocumentSendStatEvents doc = msum [
   do
     if isNothing $ documentinvitetime doc
@@ -336,7 +337,7 @@ addDocumentSendStatEvents doc = msum [
       return (a && b)
   , return False]
 
-addDocumentCancelStatEvents :: Kontrakcja m => Document -> m Bool
+addDocumentCancelStatEvents :: (DBMonad m, MonadPlus m) => Document -> m Bool
 addDocumentCancelStatEvents doc = msum [
   do
     if not $ isCanceled doc
@@ -375,7 +376,7 @@ addDocumentCancelStatEvents doc = msum [
       return (a && b)
   , return False]
 
-addDocumentRejectStatEvents :: Kontrakcja m => Document -> m Bool
+addDocumentRejectStatEvents :: (DBMonad m, MonadPlus m) => Document -> m Bool
 addDocumentRejectStatEvents doc = msum [
   do
     if not $ isRejected doc
@@ -414,7 +415,7 @@ addDocumentRejectStatEvents doc = msum [
       return (a && b)
   , return False]
 
-addDocumentCreateStatEvents :: Kontrakcja m => Document -> m Bool
+addDocumentCreateStatEvents :: (DBMonad m, MonadPlus m) => Document -> m Bool
 addDocumentCreateStatEvents doc = msum [
   do
       sl  <- guardJust $ getAuthorSigLink doc
@@ -434,21 +435,26 @@ addDocumentCreateStatEvents doc = msum [
       return a
   , return False]
                                   
-addDocumentTimeoutStatEvents :: Kontrakcja m => Document -> m Bool
-addDocumentTimeoutStatEvents doc = msum [
-  do
-    if not $ isTimedout doc
-      then do
+addDocumentTimeoutStatEvents :: (DBMonad m) => Document -> m Bool
+addDocumentTimeoutStatEvents doc = do
+  case (isTimedout doc, getAuthorSigLink doc, maybesignatory =<< getAuthorSigLink doc, documenttimeouttime doc) of
+    (False,_,_,_) -> do
       Log.stats $ "Cannot add Timeout stat because document is not timed out: " ++ show (documentid doc)
       return False
-      else do
-      sl  <- guardJust $ getAuthorSigLink doc
-      uid <- guardJust $ maybesignatory sl
-      (rejecttime,_,_) <- guardJust $ documentrejectioninfo doc
+    (_,Nothing,_,_) -> do
+      Log.stats $ "Cannot add Timeout stat because document has no author: " ++ show (documentid doc)
+      return False
+    (_,_,Nothing,_) -> do
+      Log.stats $ "Cannot add Timeout stat because document author has no user: " ++ show (documentid doc)
+      return False
+    (_,_,_,Nothing) -> do
+      Log.stats $ "Cannot add Timeout stat because document has no timeout time: " ++ show (documentid doc)
+      return False
+    (True, Just sl, Just uid, Just (TimeoutTime ttime)) -> do
       let did = documentid doc
           sigs = countSignatories doc
       a <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
-                                                        , seTime       = rejecttime
+                                                        , seTime       = ttime
                                                         , seQuantity   = DocStatTimeout
                                                         , seAmount     = 1
                                                         , seDocumentID = did
@@ -461,7 +467,7 @@ addDocumentTimeoutStatEvents doc = msum [
             [ELegitimationIdentification] -> DocStatElegSignatureTimeout
             _ -> DocStatEmailSignatureTimeout
       b <- runDBUpdate $ AddDocStatEvent $ DocStatEvent { seUserID     = uid
-                                                        , seTime       = rejecttime
+                                                        , seTime       = ttime
                                                         , seQuantity   = q
                                                         , seAmount     = sigs
                                                         , seCompanyID  = maybecompany sl
@@ -471,10 +477,9 @@ addDocumentTimeoutStatEvents doc = msum [
                                                         }
       unless b $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show q
       return (a && b)
-  , return False]
 
 
-allDocStats :: Kontrakcja m => Document -> m ()
+allDocStats ::  (DBMonad m, MonadPlus m) => Document -> m ()
 allDocStats doc = do
     _ <- addDocumentSendStatEvents doc
     _ <- addDocumentCloseStatEvents doc
