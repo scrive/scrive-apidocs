@@ -1004,11 +1004,6 @@ instance DBUpdate ErrorDocument (Either String Document) where
   dbUpdate (ErrorDocument docid errmsg) = wrapDB $ \conn -> do
     unimplemented "ErrorDocument"
 
-data FileModTime = FileModTime FileID deriving (Eq, Ord, Show, Typeable)
-instance DBQuery FileModTime MinutesTime where
-  dbQuery (FileModTime fid) = wrapDB $ \conn -> do
-    unimplemented "FileModTime"
-
 data GetDeletedDocumentsByCompany = GetDeletedDocumentsByCompany User
                                     deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDeletedDocumentsByCompany [Document] where
