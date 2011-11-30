@@ -66,11 +66,9 @@ module Doc.Model
   , GetDocumentsBySignatory(..)
   , GetDocumentsByUser(..)
   , GetDocumentsSharedInCompany(..)
-  -- , GetMagicHash(..)
   -- , GetNumberOfDocumentsOfUser(..)
   , GetSignatoryLinkIDs(..)
   , GetTimeoutedButPendingDocuments(..)
-  -- , GetUniqueSignatoryLinkID(..)
   , MarkDocumentSeen(..)
   , MarkInvitationRead(..)
   -- , MigrateDocumentSigLinkCompanies(..)
@@ -1115,12 +1113,6 @@ instance DBQuery GetDocumentsSharedInCompany [Document] where
   dbQuery (GetDocumentsSharedInCompany user) = wrapDB $ \conn -> do
     unimplemented "GetDocumentsSharedInCompany"
 
-data GetMagicHash = GetMagicHash
-                    deriving (Eq, Ord, Show, Typeable)
-instance DBQuery GetMagicHash MagicHash where
-  dbQuery (GetMagicHash) = wrapDB $ \conn -> do
-    unimplemented "GetMagicHash"
-
 data GetNumberOfDocumentsOfUser = GetNumberOfDocumentsOfUser User
                                   deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetNumberOfDocumentsOfUser Int where
@@ -1138,12 +1130,6 @@ data GetTimeoutedButPendingDocuments = GetTimeoutedButPendingDocuments MinutesTi
 instance DBQuery GetTimeoutedButPendingDocuments [Document] where
   dbQuery (GetTimeoutedButPendingDocuments mtime) = wrapDB $ \conn -> do
     unimplemented "GetTimeoutedButPendingDocuments"
-
-data GetUniqueSignatoryLinkID = GetUniqueSignatoryLinkID
-                                deriving (Eq, Ord, Show, Typeable)
-instance DBQuery GetUniqueSignatoryLinkID SignatoryLinkID where
-  dbQuery (GetUniqueSignatoryLinkID) = wrapDB $ \conn -> do
-    unimplemented "GetUniqueSignatoryLinkID"
 
 data MarkDocumentSeen = MarkDocumentSeen DocumentID SignatoryLinkID MagicHash MinutesTime Word32
                         deriving (Eq, Ord, Show, Typeable)
