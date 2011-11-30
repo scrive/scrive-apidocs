@@ -161,21 +161,6 @@ getDocumentByDocumentID documentid = queryDocs $ \documents ->
     getOne $ documents @= documentid
 
 {- |
-    Filter documents according to whether the given indicated sig link has even been deleted.
-    The first param should be True to get the docs which have been deleted,
-    and so would appear in the recycle bin//trash can.  It should be False to get docs which
-    have never been deleted.
--}
-filterDocsWhereDeleted :: (SignatoryLinkIdentity a) => Bool -> a -> [Document] -> [Document]
-filterDocsWhereDeleted deleted siglinkidentifier docs =
-  filter isIncludedDoc docs
-  where
-    isIncludedDoc Document{documentsignatorylinks} = 
-      not . Prelude.null $ filter isIncludedSigLink documentsignatorylinks
-    isIncludedSigLink sl@SignatoryLink{signatorylinkdeleted} =
-      isSigLinkFor siglinkidentifier sl && signatorylinkdeleted==deleted
-
-{- |
     All documents authored by the user that have never been deleted.
 -}
 getDocumentsByAuthor :: UserID -> Query Documents [Document]
@@ -191,24 +176,6 @@ getDocumentsByUser :: User -> Query Documents [Document]
 getDocumentsByUser User{userid, userservice} = queryDocs $ \documents ->
   filterDocsWhereDeleted False userid $ IxSet.toList $ (documents @= userid) @= userservice
 
-{- |
-    Filter documents according to whether the indicated signatory link has been activated
-    according to the sign order.  Author links are included either way.
--}
-filterDocsWhereActivated :: SignatoryLinkIdentity a => a -> [Document] -> [Document]
-filterDocsWhereActivated siglinkidentifier docs =
-  filter isIncludedDoc docs
-  where
-    isIncludedDoc doc@Document{documentsignatorylinks} = 
-      not . Prelude.null $ filter (isIncludedSigLink doc) documentsignatorylinks
-    isIncludedSigLink doc 
-                      sl@SignatoryLink{signatorylinkdeleted, 
-                                       signatoryroles, 
-                                       signatorydetails} =
-      let isRelevant = isSigLinkFor siglinkidentifier sl && not signatorylinkdeleted
-          isAuthorLink = SignatoryAuthor `elem` signatoryroles
-          isActivatedForSig = (documentcurrentsignorder doc) >= (signatorysignorder signatorydetails)
-      in  isRelevant && (isAuthorLink || isActivatedForSig)
 
 {- |
     All documents where the user is a signatory that are not deleted.  An author is a type

@@ -1128,8 +1128,21 @@ instance DBQuery GetDocumentsByUser [Document] where
 data GetDocumentsSharedInCompany = GetDocumentsSharedInCompany User
                                    deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsSharedInCompany [Document] where
-  dbQuery (GetDocumentsSharedInCompany user) = wrapDB $ \conn -> do
-    unimplemented "GetDocumentsSharedInCompany"
+  dbQuery (GetDocumentsSharedInCompany User{usercompany, userservice}) = do
+    case usercompany of
+      Just companyid -> do
+        documents <- selectDocuments (selectDocumentsSQL ++ 
+                                      " WHERE deleted = FALSE" ++
+                                      "   AND sharing = ?" ++
+                                      "   AND service_id = ?" ++
+                                      "   AND EXISTS (SELECT 1 FROM signatory_links WHERE document_id = id AND company_id = ?)")
+                       [ toSql Shared
+                       , toSql (userservice)
+                       , toSql companyid
+                       ]
+        
+        return $ filter ((== Shared) . documentsharing) . filterDocsWhereActivated companyid . filterDocsWhereDeleted False companyid $ documents
+      _ -> return []
 
 data GetNumberOfDocumentsOfUser = GetNumberOfDocumentsOfUser User
                                   deriving (Eq, Ord, Show, Typeable)
