@@ -1722,8 +1722,25 @@ instance DBUpdate UpdateFields (Either String Document) where
 data PendingToAwaitingAuthor = PendingToAwaitingAuthor DocumentID MinutesTime
                       deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate PendingToAwaitingAuthor (Either String Document) where
-  dbUpdate (PendingToAwaitingAuthor docid time) = wrapDB $ \conn -> do
-    unimplemented "PendingToAwaitingAuthor"
+  dbUpdate (PendingToAwaitingAuthor docid time) = do
+    mdocument <- dbQuery $ GetDocumentByDocumentID docid
+    case mdocument of
+      Nothing -> return $ Left $ "Cannot PendingToAwaitingAuthor document " ++ show docid ++ " because it does not exist"
+      Just document ->
+        case checkPendingToAwaitingAuthor document of
+          [] -> do
+            r <- runUpdateStatement "AwaitingAuthor"
+                 [ sqlField "status" $ Closed
+                 , sqlFieldType "mtime" "timestamp" $ time
+                 ]
+                "WHERE id = ? AND type = ?" [ toSql docid, toSql (toDocumentSimpleType (Signable undefined)) ]
+            getOneDocumentAffected "PendingToAwaitingAuthor" r docid
+
+            -- return $ Right $ document { documentstatus = Closed 
+            --                          , documentmtime  = time
+            --                          } `appendHistory` [DocumentHistoryClosed time ipaddress]
+          s -> return $ Left $ "Cannot PendingToAwaitingAuthor document " ++ show docid ++ " because " ++ concat s
+
 
 
 data UpdateDocumentAttachments = UpdateDocumentAttachments DocumentID [DocumentID] [FileID]

@@ -262,3 +262,13 @@ checkAddEvidence doc slid = catMaybes $
   [ trueOrMessage (documentstatus doc == Pending) "Document is not in pending"
   , trueOrMessage (isSignatory (doc, slid)) "Given signatorylinkid is not a signatory"
   ]
+
+
+checkPendingToAwaitingAuthor :: Document -> [String]
+checkPendingToAwaitingAuthor doc = catMaybes $
+  [ trueOrMessage (documentstatus doc == Pending) 
+                    ("document should be pending but it is " ++ (show $ documentstatus doc))
+  , trueOrMessage (all ((isSignatory &&^ (not . isAuthor)) =>>^ hasSigned) (documentsignatorylinks doc)) 
+                    ("Not all non-author signatories have signed")
+  , trueOrMessage (not $ hasSigned $ getAuthorSigLink doc) "Author has already signed"
+  ]
