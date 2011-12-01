@@ -1048,11 +1048,11 @@ instance Show DocumentID where
          showsPrec prec val
 
 instance Read DocumentID where
-    readsPrec prec = let makeDocumentID (i,v) = (DocumentID i,v)
+    readsPrec _prec = let makeDocumentID (i,v) = (DocumentID i,v)
                      in map makeDocumentID . readDec
 
 instance Read SignatoryLinkID where
-    readsPrec prec = let make (i,v) = (SignatoryLinkID i,v)
+    readsPrec _prec = let make (i,v) = (SignatoryLinkID i,v)
                      in map make . readDec
 
 instance FromReqURI DocumentID where

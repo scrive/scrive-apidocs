@@ -17,7 +17,7 @@ instance Show FileID where
     showsPrec prec (FileID val) = showsPrec prec val
 
 instance Read FileID where
-    readsPrec prec = let make (i,v) = (FileID i,v)
+    readsPrec _prec = let make (i,v) = (FileID i,v)
                      in map make . readDec
 
 instance FromReqURI FileID where
