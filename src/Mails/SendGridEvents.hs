@@ -65,7 +65,14 @@ handleSendgridEvent = do
     }
     Log.mail $ "Sendgrid event received: " ++ show ev
     now <- liftIO getMinutesTime
-    maction <- checkValidity now <$> query (GetAction $ ActionID mid)
+    maction' <- query $ GetAction $ ActionID mid
+    when (isNothing maction') $ do
+       Log.mail $ "Action does not exist " ++ show mid
+       return ()
+
+    --let maction = checkValidity now maction'
+
+    let maction = maction'
 
     case maction of
          -- we update SentEmailInfo of given email. if email is reported
@@ -89,7 +96,7 @@ handleSendgridEvent = do
                  when_ removeAction $ do
                      update $ UpdateActionEvalTime actionID now
          _ -> do
-             Log.mail $ "Mail #" ++ show mid ++ " is not known to system, ignoring"
+             Log.mail $ "Mail #" ++ show mid ++ " is not known to system, ignoring (not valid)"
              return ()
     routeToHandler ev
     ok $ toResponse "Thanks"

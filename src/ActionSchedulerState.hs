@@ -624,7 +624,7 @@ newEmailSendoutAction mail = do
     let action = EmailSendout {
         esMail = mail
     }
-    _ <- update $ NewAction action $ now
+    _ <- update $ NewAction action $  now
     return ()
 
 -- Migrations and old stuff --
