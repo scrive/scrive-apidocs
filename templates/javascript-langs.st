@@ -156,11 +156,12 @@ javascriptLocalisation =
                    uploadprompt: "$_orderuploadprompttext()$",
                    name: "$_ordername()$"
                 }
-                
+
               }
            , searchTemplate : "$_SearchTemplate()$"
            , sortTemplate : "$_SortTemplate()$"
            , infoSelectTemplate : "$_InfoSelectTemplate()$"
            , goBack : "$_GoBack()$"
+           , uploadButton: "$_signStepsBodyUploadBoxStepButtonChooseFile()$"
    }
 ####
