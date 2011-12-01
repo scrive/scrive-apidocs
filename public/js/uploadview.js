@@ -56,7 +56,7 @@
             var upbutton = UploadButton.init({
                 name: "file",
                 width: 125,
-                text: "Choose file",
+                text: localization.uploadButton,
                 submitOnUpload: true,
                 onClick : function () {
                     LoadingDialog.open();
@@ -138,9 +138,9 @@
                     paging: new Paging({}),
                     filtering: new Filtering({text: "", infotext: localization.searchTemplate}),
                     cells : [
-                        new Cell({name: localization.searchTemplate, 
+                        new Cell({name: localization.searchTemplate,
                                   width:"400px",
-                                  field:"title",  
+                                  field:"title",
                                   special: "rendered",
                                   rendering : function(title, _mainrow, listobject) {
                                       var link = jQuery("<a/>").text(title);
@@ -162,10 +162,10 @@
                     .append($("<br>"))
                     .append($("<p>").append($("<a href='#' />").addClass("jsback1 backicon float-left boo").html(" &nbsp;"))
                             .append(" &nbsp;" + localization.goBack))
-                
+
             });
             documentsTable.view.render();
-            
+
             el.children().detach();
             el.append($("<td>").append(documentsTable.view.el));
 
@@ -216,4 +216,4 @@
         wizardview.render();
 
     };
-})(window); 
+})(window);
