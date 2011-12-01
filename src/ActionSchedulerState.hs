@@ -481,7 +481,7 @@ newEmailSendoutAction mail = do
     let action = EmailSendout {
         esMail = mail
     }
-    _ <- update $ NewAction action $ (30 * 24 * 60) `minutesAfter` now
+    _ <- update $ NewAction action $  now
     return ()
 
 -- Migrations and old stuff --
