@@ -69,7 +69,9 @@ handleSendgridEvent = do
        Log.mail $ "Action does not exist " ++ show mid
        return ()
 
-    let maction = checkValidity now maction'
+    --let maction = checkValidity now maction'
+
+    let maction = maction'
 
     case maction of
          -- we update SentEmailInfo of given email. if email is reported
