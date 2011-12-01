@@ -1986,7 +1986,7 @@ _orderexpirywarntext,"Varning: Om du väljer ett förfallodatum kan du inte åte
  the invitation before the expiration. This is controlled by
  the Swedish Law of Contracts."
 _orderhassignedformailtext,"Har bekräftat",,"Has confirmed"
-_ordername,Orderbekräftelse,,"Order confirmation"
+_ordername,Order-bekräftelse,,"Order confirmation"
 _orderpendingauthorinfoheader,"Väntar på bekräftelse",,"Waiting for confirmation"
 _orderpendingauthorinfotext,"Du har skickat orderbekräftelsen. Orderbekräftelsen har ännu
  inte bekräftats av din mottagare.",,"You have sent the order confirmation. It has not yet been confirmed
