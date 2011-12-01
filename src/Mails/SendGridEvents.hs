@@ -65,7 +65,9 @@ handleSendgridEvent = do
     Log.mail $ "Sendgrid event received: " ++ show ev
     now <- liftIO getMinutesTime
     maction' <- query $ GetAction $ ActionID mid
-    when (isNothing maction') Log.mail $ "Action does not exist " ++ show mid
+    when (isNothing maction') $ do
+       Log.mail $ "Action does not exist " ++ show mid
+       return ()
 
     maction <- checkValidity now <$> maction'
 
