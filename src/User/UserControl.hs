@@ -408,19 +408,6 @@ isUserDeletable user = do
   userdocs <- doc_query $ GetDocumentsByUser user
   return $ all isDeletableDocument userdocs
 
-{- |
-    This looks up all the users relevant for the given docid.
-    This is the dodgy link between documents and users and is required
-    when deleting a user or deleting a doc.  Bleurgh.
--}
-lookupUsersRelevantToDoc :: Kontrakcja m => DocumentID -> m (DocumentID, [User])
-lookupUsersRelevantToDoc docid = do
-  doc <- queryOrFail $ GetDocumentByDocumentID docid
-  musers <- mapM (runDBQuery . GetUserByID) (linkedUserIDs doc)
-  return $ (docid, catMaybes musers)
-  where
-    linkedUserIDs = catMaybes . map maybesignatory . documentsignatorylinks
-
 handleViralInvite :: Kontrakcja m => m KontraLink
 handleViralInvite = withUserPost $ do
   getOptionalField asValidEmail "invitedemail" >>= maybe (return ())
@@ -893,7 +880,7 @@ handleAccountRemovalGet aid hash = do
 handleAccountRemovalFromSign :: Kontrakcja m => User -> SignatoryLink -> ActionID -> MagicHash -> m ()
 handleAccountRemovalFromSign user siglink aid hash = do
   doc <- removeAccountFromSignAction aid hash
-  _ <- guardRightM $ doc_update . ArchiveDocuments user $ [documentid doc]
+  _ <- guardRightM $ doc_update . ArchiveDocument user $ documentid doc
   _ <- addUserRefuseSaveAfterSignStatEvent user siglink
   return ()
 
@@ -989,7 +976,7 @@ handleFriends = do
                                            (list friendsPage)),
                                   ("paging", pagingParamsJSON friendsPage)]
 
-                                  
+
 
 
 {- |

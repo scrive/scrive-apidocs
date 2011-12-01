@@ -103,8 +103,8 @@ integrationService = do
 
 integrationAPI :: Route (Kontra Response)
 integrationAPI = dir "integration" $ choice [
-      dir "api" $ 
-        choice 
+      dir "api" $
+        choice
           [ apiCall "embed_document_frame" embeddDocumentFrame
           , apiCall "new_document" createDocument
           , apiCall "documents" getDocuments
@@ -163,7 +163,7 @@ createDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 createDocument = do
    sid <- serviceid <$> service <$> ask
    mcompany_id <- fmap ExternalCompanyID <$> fromJSONField "company_id"
-   when (isNothing mcompany_id) $ 
+   when (isNothing mcompany_id) $
      throwApiError API_ERROR_MISSING_VALUE "No company id provided"
    company <- runDBUpdate $ GetOrCreateCompanyWithExternalID  (Just sid) (fromJust mcompany_id)
    mtitle <- fromJSONField "title"
@@ -171,7 +171,7 @@ createDocument = do
    let title = fromJust mtitle
    files <- getFiles
    mtype <- liftMM (return . toSafeEnumInt) (fromJSONField "type")
-   when (isNothing mtype) $ 
+   when (isNothing mtype) $
      throwApiError API_ERROR_MISSING_VALUE "BAD DOCUMENT TYPE"
    let doctype = toDocumentType $ fromJust mtype
    mtemplateids <- fromJSONField "template_id"
@@ -188,10 +188,10 @@ createDocument = do
        case maybeRead templateids of
          Nothing -> throwApiError API_ERROR_PARSING $ "Invalid documentid " ++ templateids
          Just templateid -> do
-           mtemplate <- doc_query $ GetDocumentByDocumentID templateid                 
+           mtemplate <- doc_query $ GetDocumentByDocumentID templateid
            case mtemplate of
              Nothing -> throwApiError API_ERROR_NO_DOCUMENT $ "The template you requested does not exits " ++ show templateids
-             Just _template -> 
+             Just _template ->
                return $ createDocFromTemplate templateid title
      Nothing -> return $ createDocFromFiles title doctype files
    d <- createAPIDocument company involved tags mlocale createFun
@@ -211,7 +211,7 @@ createDocFromTemplate templateid title user mcompany time = do
     throwApiError API_ERROR_OTHER $ "Cannot create document!"
   let doc = fromRight edoc
   edoc' <- doc_update $ SetDocumentTitle (documentid doc) title time
-  when (isLeft edoc') $ 
+  when (isLeft edoc') $
     Log.integration $ "Could not set title on doc " ++ show (documentid doc)
   return $ either (const $ Just doc) Just edoc'
 
@@ -250,17 +250,17 @@ createAPIDocument :: Kontrakcja m
 createAPIDocument _ [] _ _ _  =
     throwApiError API_ERROR_OTHER "One involved person must be provided"
 createAPIDocument company' (authorTMP:signTMPS) tags mlocale createFun = do
-  
+
     when (maybe False (notElem SignatoryAuthor) $ toSignatoryRoles authorTMP) $
       throwApiError API_ERROR_ILLEGAL_VALUE "The first involved must be an author role."
-  
+
     when (any (maybe False (elem SignatoryAuthor) . toSignatoryRoles) signTMPS) $
       throwApiError API_ERROR_ILLEGAL_VALUE "Only one author is allowed."
 
     now <- liftIO $ getMinutesTime
     company <- setCompanyInfoFromTMP authorTMP company'
     author <- userFromTMP authorTMP company
-    
+
     ctx <- getContext
     mdoc <- createFun author (Just company) now
     when (isNothing mdoc) $ throwApiError API_ERROR_OTHER "Problem creating a document | This may be because the company and author don't match"
@@ -350,7 +350,7 @@ getDocuments = do
     let documents = filter (isAuthoredByCompany $ companyid company) linkeddocuments
     let notDeleted doc =  any (not . signatorylinkdeleted) $ documentsignatorylinks doc
     -- We support only offers and contracts by API calls
-    let supportedType  = not . isAttachment 
+    let supportedType  = not . isAttachment
     api_docs <- sequence $  map (api_document_read False) $ filter (\d -> notDeleted d && supportedType d) documents
     return $ toJSObject [("documents",JSArray $ api_docs)]
 
@@ -379,7 +379,11 @@ removeDocument  :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 removeDocument = do
     doc <- documentFromParam
     -- we only control the author through the integration api
-    res <- doc_update $ ArchiveDocumentForAuthor $ documentid doc
+    mauthor <- maybe (return Nothing)
+                     (runDBQuery . GetUserByID)
+                     (getAuthorSigLink doc >>= maybesignatory)
+    when (isNothing mauthor) $ throwApiError API_ERROR_NO_USER $ "Error while removing a document: Failed to find author"
+    res <- doc_update $ ArchiveDocument (fromJust mauthor) $ documentid doc
     when (isLeft res) $ throwApiError API_ERROR_NO_DOCUMENT $ "Error while removing a document: " ++ fromLeft res
     return $ toJSObject []
 
