@@ -66,7 +66,9 @@ module User.UserView (
     friendSortSearchPage,
     
     userStatsDayToJSON,
-    userStatsMonthToJSON
+    userStatsMonthToJSON,
+    companyStatsDayToJSON,
+    companyStatsMonthToJSON
     ) where
 
 import Control.Applicative ((<$>))
@@ -93,6 +95,7 @@ import MinutesTime
 import Util.JSON
 import Text.JSON
 import Data.Either
+import Misc
 
 showUser :: TemplatesMonad m => User -> Maybe Company -> Bool -> m String
 showUser user mcompany createcompany = renderTemplateFM "showUser" $ do
@@ -198,6 +201,47 @@ userStatsMonthToJSON = JSArray . rights . map f
                          jsset ["fields", "signatures"] s
         f _ = Left "Bad stat"
 
+companyStatsDayToJSON :: String -> [(Int, String, [Int])] -> JSValue
+companyStatsDayToJSON ts ls = JSArray $ rights $ [f e | e@(_,n,_) <- ls, n=="Total"]
+  where f (d, _, s:c:i:_) = Right jsempty >>=
+                            jsset ["fields", "date"] (showAsDate d) >>=
+                            jsset ["fields", "closed"] c >>=
+                            jsset ["fields", "sent"] i >>=
+                            jsset ["fields", "name"] ts >>=
+                            jsset ["fields", "signatures"] s >>=
+                            jsset "subfields" [fromRight $ 
+                                               Right jsempty >>=
+                                               jsset "date" (showAsDate d') >>=
+                                               jsset "closed" c' >>=
+                                               jsset "sent"   i' >>=
+                                               jsset "name"   n' >>=
+                                               jsset "signatures" s' |
+                                               (d',n',s':c':i':_) <- ls,
+                                               d' == d,
+                                               n' /= "Total"]
+                                              
+                                              
+        f _ = Left "Bad stat"
+
+companyStatsMonthToJSON :: String -> [(Int, String, [Int])] -> JSValue
+companyStatsMonthToJSON ts ls = JSArray $ rights $ [f e | e@(_,n,_) <- ls, n=="Total"]
+  where f (d, _, s:c:i:_) = Right jsempty >>=
+                            jsset ["fields", "date"] (showAsMonth d) >>=
+                            jsset ["fields", "closed"] c >>=
+                            jsset ["fields", "sent"] i >>=
+                            jsset ["fields", "name"] ts >>=
+                            jsset ["fields", "signatures"] s >>=
+                            jsset "subfields" [fromRight $ 
+                                               Right jsempty >>=
+                                               jsset "date" (showAsMonth d') >>=
+                                               jsset "closed" c' >>=
+                                               jsset "sent"   i' >>=
+                                               jsset "name"   n' >>=
+                                               jsset "signatures" s' |
+                                               (d',n',s':c':i':_) <- ls,
+                                               d' == d,
+                                               n' /= "Total"]
+        f _ = Left "Bad stat"
 
 showUsageStats :: TemplatesMonad m => User -> m String
 showUsageStats user =

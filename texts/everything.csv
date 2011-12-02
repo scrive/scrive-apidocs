@@ -3291,3 +3291,5 @@ _closedDocuments,"Stängda Dokument ",,"Closed Documents"
 _sentDocuments,"Skickade Dokument ",,"Sent Documents"
 _closedSignatures,"Stängda Signaturer ",,"Closed Signatures"
 _usageStatsMonth,Månad,,Month
+_statsOrgTotal,"Totalt för Organisationen",,"Organization Total"
+_statsSender,Avsändare,,Sender

@@ -246,35 +246,59 @@ handleUsageStatsForUser = withUserGet $ do
 
 handleUsageStatsJSONForUserDays :: Kontrakcja m => m JSValue
 handleUsageStatsJSONForUserDays = do
-  Context{ctxtime, ctxmaybeuser } <- getContext
+  Context{ctxtime, ctxmaybeuser, ctxtemplates } <- getContext
+  totalS <- renderTemplate ctxtemplates "_statsOrgTotal" () 
   user <- guardJust ctxmaybeuser
   let today = asInt ctxtime
       som = 100 * (today `div` 100) -- start of month
       sixm = ((today `div` 100) - 5) * 100
-  (statsByDay, _) <- getUsageStatsForUser (userid user) som sixm
-  return $ JSObject $ toJSObject [("list", userStatsDayToJSON statsByDay),
-                                  ("paging", JSObject $ toJSObject [
-                                      ("pageMax",showJSON (0::Int)),
-                                      ("pageCurrent", showJSON (0::Int)),
-                                      ("itemMin",showJSON $ (0::Int)),
-                                      ("itemMax",showJSON $ (length statsByDay) - 1),
-                                      ("itemTotal",showJSON $ (length statsByDay))])]
+  if useriscompanyadmin user && isJust (usercompany user)
+    then do
+      (statsByDay, _) <- getUsageStatsForCompany (fromJust $ usercompany user) som sixm
+      return $ JSObject $ toJSObject [("list", companyStatsDayToJSON totalS statsByDay),
+                                      ("paging", JSObject $ toJSObject [
+                                          ("pageMax",showJSON (0::Int)),
+                                          ("pageCurrent", showJSON (0::Int)),
+                                          ("itemMin",showJSON $ (0::Int)),
+                                          ("itemMax",showJSON $ (length statsByDay) - 1),
+                                          ("itemTotal",showJSON $ (length statsByDay))])]
+    else do
+      (statsByDay, _) <- getUsageStatsForUser (userid user) som sixm
+      return $ JSObject $ toJSObject [("list", userStatsDayToJSON statsByDay),
+                                      ("paging", JSObject $ toJSObject [
+                                          ("pageMax",showJSON (0::Int)),
+                                          ("pageCurrent", showJSON (0::Int)),
+                                          ("itemMin",showJSON $ (0::Int)),
+                                          ("itemMax",showJSON $ (length statsByDay) - 1),
+                                          ("itemTotal",showJSON $ (length statsByDay))])]
 
 handleUsageStatsJSONForUserMonths :: Kontrakcja m => m JSValue
 handleUsageStatsJSONForUserMonths = do
-  Context{ctxtime, ctxmaybeuser } <- getContext
+  Context{ctxtime, ctxmaybeuser, ctxtemplates } <- getContext
+  totalS <- renderTemplate ctxtemplates "_statsOrgTotal" ()
   user <- guardJust ctxmaybeuser
   let today = asInt ctxtime
       som = 100 * (today `div` 100) -- start of month
       sixm = ((today `div` 100) - 5) * 100
-  (_, statsByMonth) <- getUsageStatsForUser (userid user) som sixm
-  return $ JSObject $ toJSObject [("list", userStatsMonthToJSON statsByMonth),
-                                  ("paging", JSObject $ toJSObject [
-                                      ("pageMax",showJSON (0::Int)),
-                                      ("pageCurrent", showJSON (0::Int)),
-                                      ("itemMin",showJSON $ (0::Int)),
-                                      ("itemMax",showJSON $ (length statsByMonth) - 1),
-                                      ("itemTotal",showJSON $ (length statsByMonth))])]
+  if useriscompanyadmin user && isJust (usercompany user)
+    then do
+    (_, statsByMonth) <- getUsageStatsForCompany (fromJust $ usercompany user) som sixm
+    return $ JSObject $ toJSObject [("list", companyStatsMonthToJSON totalS statsByMonth),
+                                    ("paging", JSObject $ toJSObject [
+                                        ("pageMax",showJSON (0::Int)),
+                                        ("pageCurrent", showJSON (0::Int)),
+                                        ("itemMin",showJSON $ (0::Int)),
+                                        ("itemMax",showJSON $ (length statsByMonth) - 1),
+                                        ("itemTotal",showJSON $ (length statsByMonth))])]
+    else do
+    (_, statsByMonth) <- getUsageStatsForUser (userid user) som sixm
+    return $ JSObject $ toJSObject [("list", userStatsMonthToJSON statsByMonth),
+                                    ("paging", JSObject $ toJSObject [
+                                        ("pageMax",showJSON (0::Int)),
+                                        ("pageCurrent", showJSON (0::Int)),
+                                        ("itemMin",showJSON $ (0::Int)),
+                                        ("itemMax",showJSON $ (length statsByMonth) - 1),
+                                        ("itemTotal",showJSON $ (length statsByMonth))])]
 
 
 handleGetUserMailAPI :: Kontrakcja m => m (Either KontraLink Response)
