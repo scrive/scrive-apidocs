@@ -1254,8 +1254,8 @@ instance DBUpdate NewDocument (Either String Document) where
                          maybesignatory = Just $ userid user,
                          maybecompany = usercompany user }
 
-      let doc = blankDocument {
-                  documenttitle                = title
+      let doc = blankDocument
+                { documenttitle                = title
                 , documentsignatorylinks       = [authorlink]
                 , documenttype                 = documenttype
                 , documentregion               = getRegion user
@@ -1272,39 +1272,11 @@ instance DBUpdate NewDocument (Either String Document) where
       -- FIXME: should use time given from above (I think)
       now <- liftIO $ getMinutesTime
 
-      let simpletype = toDocumentSimpleType documenttype
-      let process = toDocumentProcess documenttype
+      midoc <- insertDocumentAsIs doc { mtime = now }
+      case midoc of
+        Just doc' -> return $ Right doc'
+        Nothing -> return $ Left "insertDocumentAsIs could not insert document in NewDocument"
 
-      runInsertStatement "documents"
-            [ sqlField "id" did
-            , sqlField "status" Preparation
-            , sqlField "functionality" $ newDocumentFunctionality documenttype user
-            , sqlField "title" title
-            , sqlField "log" "[]"
-            , sqlField "invite_text" ""
-            , sqlField "allowed_id_types" (1::Int)
-            , sqlField "type" $ toSql simpletype
-            , sqlField "process" $ toSql process
-            , sqlField "sharing" (1::Int)
-            , sqlField "tags" "[]"
-            , sqlField "region" $ getRegion user
-            , sqlField "deleted" False
-            , sqlFieldType "mtime" "timestamp" $ now
-            , sqlFieldType "ctime" "timestamp" $ now
-            , sqlField "service_id" $ userservice user
-            ]
-      slid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
-      _ <- runInsertStatement "signatory_links"
-                      [ sqlField "id" slid
-                      , sqlField "document_id" did
-                      , sqlField "user_id" (userid user)
-                      , sqlField "roles" authorRoles
-                      , sqlField "company_id" (companyid `fmap` mcompany)
-                      , sqlField "token" magichash
-                      , sqlField "fields" $ signatoryfields $ signatorydetails authorlink
-                      ]
-      v <- dbQuery $ GetDocumentByDocumentID did
-      return $ maybe (Left "no such document") Right v
 
 
 data ReallyDeleteDocument = ReallyDeleteDocument User DocumentID
