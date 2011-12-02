@@ -3,8 +3,6 @@
 module FileTest (fileTests) where
 
 import DB.Classes
-import Doc.Transitory
-import Doc.DocStateData()
 import TestingUtil
 
 import Database.HDBC.PostgreSQL

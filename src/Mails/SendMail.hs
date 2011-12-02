@@ -54,6 +54,7 @@ import InputValidation
 import User.Region
 import Util.SignatoryLinkUtils
 import Doc.Transitory
+import Doc.DocStateData
 
 -- from simple utf-8 to =?UTF-8?Q?zzzzzzz?=
 mailEncode :: BS.ByteString -> String

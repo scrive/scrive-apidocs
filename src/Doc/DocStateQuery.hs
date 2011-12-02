@@ -34,6 +34,7 @@ import DB.Types
 import DB.Classes
 import DBError
 import Doc.Transitory
+import Doc.DocStateData
 import Doc.DocUtils
 import Company.Model
 import Kontra

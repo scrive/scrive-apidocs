@@ -64,6 +64,7 @@ import Doc.DocProcess
 import Util.SignatoryLinkUtils
 #endif
 import Doc.Transitory
+import Doc.DocStateData
 import Data.ByteString.UTF8 (fromString,toString)
 import Data.ByteString (ByteString, hGetContents)
 import qualified Data.ByteString.Char8 as BSC

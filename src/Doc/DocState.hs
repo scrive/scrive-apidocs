@@ -21,8 +21,7 @@ $(mkMethods ''Documents [ 'getAllDocuments
                         ])
 
 #else
-    ( module Doc.DocStateData
-    , isTemplate -- fromUtils
+    ( isTemplate -- fromUtils
     , isShared -- fromUtils
     , isDeletableDocument -- fromUtils
     , anyInvitationUndelivered

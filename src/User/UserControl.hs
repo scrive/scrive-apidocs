@@ -17,6 +17,7 @@ import AppView
 import DB.Classes
 import DB.Types
 import Doc.Transitory
+import Doc.DocStateData
 import Company.Model
 import InputValidation
 import Kontra

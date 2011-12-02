@@ -32,6 +32,7 @@ import qualified AppLogger as Log
 import StateHelper
 import Mails.MailsUtil
 import Doc.Transitory
+import Doc.DocStateData
 import Doc.DocStateCommon
 import KontraMonad
 import MinutesTime

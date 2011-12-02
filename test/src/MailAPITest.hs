@@ -16,6 +16,7 @@ import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
 import qualified Codec.MIME.Type as MIME
 import Control.Concurrent
+import Doc.DocStateData
 import Control.Monad.Trans
 import Data.List
 

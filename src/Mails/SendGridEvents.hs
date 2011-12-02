@@ -23,6 +23,7 @@ import Misc
 import Data.Maybe
 import qualified Mails.MailsUtil as Mail
 import Doc.Transitory
+import Doc.DocStateData
 import ActionSchedulerState
 import Happstack.State
 import Mails.SendMail

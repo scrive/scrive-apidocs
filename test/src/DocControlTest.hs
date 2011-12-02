@@ -15,6 +15,7 @@ import Misc
 import Context
 import Database.HDBC.PostgreSQL
 import Doc.Transitory
+import Doc.DocStateData
 import Doc.DocControl
 import Company.Model
 import User.Locale

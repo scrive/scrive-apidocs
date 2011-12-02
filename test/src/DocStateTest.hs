@@ -6,7 +6,7 @@ import DB.Classes
 import User.Model
 import Doc.Transitory
 import Doc.DocUtils
-import Doc.DocStateData()
+import Doc.DocStateData
 import Misc
 import Util.SignatoryLinkUtils
 import Doc.DocInfo

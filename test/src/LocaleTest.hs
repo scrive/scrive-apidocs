@@ -12,6 +12,7 @@ import AppControl
 import DB.Classes
 import Doc.DocControl (handleIssueLocaleChangeAfterUpdate)
 import Doc.Transitory
+import Doc.DocStateData
 import Context
 import MinutesTime
 import Redirect
