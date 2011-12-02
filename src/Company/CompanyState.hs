@@ -124,7 +124,7 @@ instance Show CompanyID where
 
 instance Read CompanyID where
     readsPrec _prec = let make (i,v) = (CompanyID i,v)
-                      in map make . readDec
+                      in map make . readSigned readDec
 
 instance FromReqURI CompanyID where
     fromReqURI = readM
@@ -140,7 +140,7 @@ instance Show CompanyUser where
 
 instance Read CompanyUser where
     readsPrec _prec = let make (i,v) = (CompanyUser i,v)
-                      in map make . readDec
+                      in map make . readSigned readDec
 
 type Companies = IxSet Company
 

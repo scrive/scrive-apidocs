@@ -58,7 +58,7 @@ instance Show SessionId where
 
 instance Read SessionId where
     readsPrec _prec string =
-        [(SessionId k,v) | (k,v) <- readDec string]
+        [(SessionId k,v) | (k,v) <- readSigned readDec string]
 
 instance FromReqURI SessionId where
     fromReqURI = readM
