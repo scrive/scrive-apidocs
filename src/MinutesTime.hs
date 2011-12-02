@@ -3,6 +3,7 @@ module MinutesTime
        , KontraTimeLocale (..)
        , asInt
        , fromSeconds
+       , fromMinutes
        , getMinuteTimeDB
        , getMinutesTime
        , minutesAfter
@@ -20,12 +21,14 @@ module MinutesTime
        , toUTCTime
        , showAsMonth
        , showAsDate
+       , parseMinutesTimeISO
        ) where
 
 import Control.Monad.IO.Class
 import Data.Char
 import Data.Data 
 import Data.Time
+import Data.Time.Clock.POSIX
 import Happstack.Data
 import Happstack.State
 import System.Locale
@@ -86,12 +89,16 @@ showDateOnly :: MinutesTime -> String
 showDateOnly mt | toSeconds mt == 0 = ""
                 | otherwise = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d" mt
 
+parseMinutesTimeISO :: String -> Maybe MinutesTime
+parseMinutesTimeISO = parseMinutesTime "%Y-%m-%d %H:%M:%S"
+
+parseMinutesTime :: String -> String -> Maybe MinutesTime
+parseMinutesTime format string = do
+    time <- parseTime defaultTimeLocale format string
+    return $ fromSeconds $ floor $ utcTimeToPOSIXSeconds time
+
 parseDateOnly :: String -> Maybe MinutesTime 
-parseDateOnly s =  do
-    t <- parseTime defaultTimeLocale "%Y-%m-%d" s
-    startOfTime <- parseTime defaultTimeLocale "%d-%m-%Y" "01-01-1970"
-    let val = diffDays t startOfTime
-    return $ fromMinutes (fromIntegral $ val *24*60)
+parseDateOnly = parseMinutesTime "%Y-%m-%d"
 
 {- |
     Use this to tell formatting functions the locale
@@ -206,11 +213,7 @@ formatMinutesTime ktl fmt mt = formatCalendarTime (getTimeLocale ktl) fmt (Syste
 
 -- | Parse format %d-%m-%Y.
 parseMinutesTimeDMY :: String -> Maybe MinutesTime
-parseMinutesTimeDMY s = do
-    t <- parseTime defaultTimeLocale "%d-%m-%Y" s
-    startOfTime <- parseTime defaultTimeLocale "%d-%m-%Y" "01-01-1970"
-    let val = diffDays t startOfTime
-    return $ fromMinutes (fromIntegral $ val *24*60)
+parseMinutesTimeDMY = parseMinutesTime "%d-%m-%Y"
 
 -- | Show date as %d-%m-%y.
 showDateDMY :: MinutesTime -> String
