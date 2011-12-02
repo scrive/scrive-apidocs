@@ -106,13 +106,17 @@ testNewFileThatShouldBeMovedToAWS  = do
         
 
 testUncheckedStoring :: DB ()
-testUncheckedStoring  = do
+testUncheckedStoring  = sequence_ $ replicate 10 $ do
   (name,content) <- fileData
   fid <- fmap FileID $ rand 10 arbitrary
-  let f1 = File {fileid = fid, filename = name, filestorage = FileStorageMemory content}
-  dbUpdate $  PutFileUnchecked File {fileid = fid, filename = name, filestorage = FileStorageMemory content}
-  mf1 <-  dbQuery $ GetFileByFileID (fid)
-  assertBool "We can put file in db with mem starage" ( Just f1 == mf1 ) 
+  mf <-  dbQuery $ GetFileByFileID (fid)
+  case mf of 
+    Just _ -> return ()
+    Nothing -> do
+        let f1 = File {fileid = fid, filename = name, filestorage = FileStorageMemory content}
+        dbUpdate $  PutFileUnchecked File {fileid = fid, filename = name, filestorage = FileStorageMemory content}
+        mf1 <-  dbQuery $ GetFileByFileID (fid)
+        assertBool "We can put file in db with mem starage" ( Just f1 == mf1 ) 
 
 viewableBS :: (MonadIO m) => m BS.ByteString
 viewableBS = rand 10 $  liftM BS.fromString (arbString 10 100)
