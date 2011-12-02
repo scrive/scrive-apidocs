@@ -45,7 +45,6 @@ import Doc.DocInfo
 import Doc.DocProcess
 import ActionSchedulerState
 import Text.JSON
-import Doc.DocStateData
 
 instance Arbitrary DocumentTag where
   arbitrary = do
