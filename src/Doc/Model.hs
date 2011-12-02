@@ -138,7 +138,7 @@ import Util.SignatoryLinkUtils
 --import Doc.DocStateUtils
 import Doc.DocProcess
 import Doc.DocStateCommon
-import qualified AppLogger as Log
+import qualified AppLogger as Log()
 import System.Random
 --import Happstack.Server
 --import Happstack.State
@@ -236,7 +236,6 @@ mkInsertStatementWhereReturning tableName fields xwhere _values returnFields =
 
 runInsertStatementWhereReturning :: String -> [SqlField] -> String -> [SqlValue] -> [String] -> DB (Integer, Statement)
 runInsertStatementWhereReturning tableName fields xwhere values returnFields = do
-  Log.debug $ statement
   wrapDB $ \conn -> (doit conn `E.catch` handle)
 
   where
@@ -270,7 +269,6 @@ mkUpdateStatement tableName fields =
 
 runUpdateStatement :: String -> [SqlField] -> String -> [SqlValue] -> DB Integer
 runUpdateStatement tableName fields whereClause whereValues = do
-  Log.debug $ statement
   wrapDB $ \conn -> (run conn statement (concatMap value fields ++ whereValues)) `E.catch`
         (\e -> liftIO $ E.throwIO $ SQLError { DB.Classes.originalQuery = statement
                                              , sqlError = e
@@ -1037,15 +1035,21 @@ instance DBQuery GetDeletedDocumentsByUser [Document] where
 
 selectDocuments :: String -> [SqlValue] -> DB [Document]
 selectDocuments select values = wrapDB $ \conn -> do
-    Log.debug $ select
-    st <- prepare conn $ select
-    _ <- execute st values
-    docs <- fetchDocuments st
+    docs <- (do
+              st <- prepare conn select
+              _ <- execute st values
+              fetchDocuments st) `E.catch` handle select
+    let slselect = selectSignatoryLinksSQL ++ " WHERE document_id = ?"
     flip mapM docs $ \doc -> do
-      stx <- prepare conn $ selectSignatoryLinksSQL ++ " WHERE document_id = ?"
-      _ <- execute stx [toSql (documentid doc)]
-      sls <- fetchSignatoryLinks stx
+      sls <- (do
+               stx <- prepare conn slselect
+               _ <- execute stx [toSql (documentid doc)]
+               fetchSignatoryLinks stx) `E.catch` handle select
       return (doc { documentsignatorylinks = sls })
+  where
+    handle statement e = E.throwIO $ SQLError { DB.Classes.originalQuery = statement
+                                              , sqlError = e
+                                              }
 
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
                                deriving (Eq, Ord, Show, Typeable)
