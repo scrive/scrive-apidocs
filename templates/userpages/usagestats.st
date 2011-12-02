@@ -20,6 +20,7 @@ var DayTable = KontraList().init({
     url: "/account/usagestats/days/json",
     cells : [
         new Cell({name: "$_usageStatsDate()$",   width:"100px", field:"date"}),
+  $if(iscompanyadmin)$new Cell({name: "$_statsSender()$", width:"100px", field:"name", special:"expandable"}),$endif$
         new Cell({name: "$_closedDocuments()$",  width:"70px",  field:"closed", class: 'num'}),
         new Cell({name: "$_sentDocuments()$",    width:"70px",  field:"sent", class: 'num'}),
         new Cell({name: "$_closedSignatures()$", width:"70px",  field:"signatures", class: 'num'})
@@ -35,6 +36,7 @@ var MonthTable = KontraList().init({
     url: "/account/usagestats/months/json",
     cells : [
         new Cell({name: "$_usageStatsMonth()$",   width:"100px", field:"date"}),
+  $if(iscompanyadmin)$new Cell({name: "$_statsSender()$", width:"100px", field:"name", special:"expandable"}),$endif$
         new Cell({name: "$_closedDocuments()$",  width:"70px",  field:"closed", class: 'num'}),
         new Cell({name: "$_sentDocuments()$",    width:"70px",  field:"sent", class: 'num'}),
         new Cell({name: "$_closedSignatures()$", width:"70px",  field:"signatures", class: 'num'})

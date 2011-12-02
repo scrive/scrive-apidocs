@@ -20,7 +20,8 @@ module Stats.Control
          handleDocStatsCSV,
          handleMigrate1To2,
          handleUserStatsCSV,  
-         getUsageStatsForUser
+         getUsageStatsForUser,
+         getUsageStatsForCompany
        )
 
        where
@@ -214,30 +215,17 @@ userEventToDocStatTuple (UserStatEvent {usTime, usQuantity, usAmount}) = case us
   UserSignTOS -> Just (asInt usTime, [0, 0, 0, usAmount])
   _           -> Nothing
 
--- | Stats are very simple:
--- Date
--- list of quantities
 calculateStatsByDay :: [(Int, [Int])] -> [(Int, [Int])]
 calculateStatsByDay events =
   let byDay = groupWith fst $ reverse $ sortWith fst events
   in map sumStats byDay
 
--- | User Stats are very simple:
--- Date
--- list of quantities
 calculateStatsByMonth :: [(Int, [Int])] -> [(Int, [Int])]
 calculateStatsByMonth events =
   let monthOnly = [(100 * (a `div` 100), b) | (a, b) <- events]
       byMonth = groupWith fst $ reverse $ sortWith fst monthOnly
   in map sumStats byMonth
 
-
--- | Company Stats are very simple:
--- Date
--- UserID
--- # of documents Closed that date
--- # of signatures on documents closed that date
--- # of documents sent that date
 calculateCompanyDocStats :: [(Int, UserID, [Int])] -> [(Int, UserID, [Int])]
 calculateCompanyDocStats events =
   let byDay = groupWith (\(a,_,_)->a) $ reverse $ sortWith (\(a,_,_)->a) events
@@ -247,6 +235,15 @@ calculateCompanyDocStats events =
       totalByDay = map (setUID0 . sumCStats) byDay
   in concat $ zipWith (\a b->a++[b]) userTotalsByDay totalByDay
 
+calculateCompanyDocStatsByMonth :: [(Int, UserID, [Int])] -> [(Int, UserID, [Int])]
+calculateCompanyDocStatsByMonth events =
+  let monthOnly = [((100 * a `div` 100), b, c) | (a, b, c) <- events]
+      byMonth = groupWith (\(a,_,_) -> a) $ reverse $ sortWith  (\(a,_,_) -> a) monthOnly
+      byUser = map (groupWith (\(_,a,_) ->a) . sortWith (\(_,a,_)->a)) byMonth
+      userTotalsByMonth = map (map sumCStats) byUser
+      setUID0 (a,_,s) = (a,UserID 0, s)
+      totalByMonth = map (setUID0 . sumCStats) byMonth
+  in concat $ zipWith (\a b->a++[b]) userTotalsByMonth totalByMonth 
 
 -- some utility functions
 
@@ -599,7 +596,15 @@ getUsageStatsForUser uid som sixm = do
   let statsByDay = calculateStatsByDay $ filter (\s -> (fst s) >= som) statEvents
       statsByMonth = calculateStatsByMonth $ filter (\s -> (fst s) >= sixm) statEvents
   return (statsByDay, statsByMonth)
-
+  
+getUsageStatsForCompany :: Kontrakcja m => CompanyID -> Int -> Int -> m ([(Int, String, [Int])], [(Int, String, [Int])])
+getUsageStatsForCompany cid som sixm = do
+  statEvents <- tuplesFromUsageStatsForCompany <$> runDBQuery (GetDocStatEventsByCompanyID cid)
+  let statsByDay = calculateCompanyDocStats $ filter (\(t,_,_)-> t >= som) statEvents
+      statsByMonth = calculateCompanyDocStatsByMonth $ filter (\(t,_,_) -> t >= sixm) statEvents
+  fullnamesDay <- convertUserIDToFullName [] statsByDay
+  fullnamesMonth <- convertUserIDToFullName [] statsByMonth
+  return (fullnamesDay, fullnamesMonth)
 
 tuplesFromUsageStatsForUser :: [DocStatEvent] -> [(Int, [Int])]
 tuplesFromUsageStatsForUser = catMaybes . map toTuple
@@ -608,4 +613,13 @@ tuplesFromUsageStatsForUser = catMaybes . map toTuple
           DocStatElegSignatures  -> Just (asInt seTime, [seAmount, 0, 0])
           DocStatClose           -> Just (asInt seTime, [0, seAmount, 0])
           DocStatSend            -> Just (asInt seTime, [0, 0, seAmount])
+          _                      -> Nothing
+
+tuplesFromUsageStatsForCompany :: [DocStatEvent] -> [(Int, UserID, [Int])]
+tuplesFromUsageStatsForCompany = catMaybes . map toTuple
+  where toTuple (DocStatEvent {seTime, seUserID, seQuantity, seAmount}) = case seQuantity of
+          DocStatEmailSignatures -> Just (asInt seTime, seUserID, [seAmount, 0, 0])
+          DocStatElegSignatures  -> Just (asInt seTime, seUserID, [seAmount, 0, 0])
+          DocStatClose           -> Just (asInt seTime, seUserID, [0, seAmount, 0])
+          DocStatSend            -> Just (asInt seTime, seUserID, [0, 0, seAmount])
           _                      -> Nothing
