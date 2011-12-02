@@ -48,14 +48,10 @@ import ActionSchedulerState
 import Text.JSON
 
 instance Arbitrary DocumentTag where
-  arbitrary = do
-    (k, v) <- arbitrary
-    return $ DocumentTag k v
+  arbitrary = DocumentTag <$> arbitrary <*> arbitrary
 
 instance Arbitrary UserID where
-  arbitrary = do
-    a <- arbitrary
-    return $ UserID a
+  arbitrary = UserID <$> arbitrary
 
 instance Arbitrary Company where
   arbitrary = do
@@ -70,14 +66,10 @@ instance Arbitrary Company where
                      }
 
 instance Arbitrary CompanyID where
-  arbitrary = do
-    a <- arbitrary
-    return $ CompanyID a
+  arbitrary = CompanyID <$> arbitrary
 
 instance Arbitrary ExternalCompanyID where
-  arbitrary = do
-    a <- arbitrary
-    return $ ExternalCompanyID a
+  arbitrary = ExternalCompanyID <$> arbitrary
 
 instance Arbitrary CompanyInfo where
   arbitrary = do
@@ -96,35 +88,26 @@ instance Arbitrary CompanyInfo where
                          }
 
 instance Arbitrary ServiceID where
-  arbitrary = do
-    a <- arbitrary
-    return $ ServiceID a
+  arbitrary = ServiceID <$> arbitrary
 
 instance Arbitrary MagicHash where
-  arbitrary = do
-    a <- arbitrary
-    return $ MagicHash a
+  arbitrary = MagicHash <$> arbitrary
 
 instance Arbitrary MailsDeliveryStatus where
   arbitrary = elements [ Delivered
                        , Undelivered
                        , Unknown
-                       , Deferred]
+                       , Deferred
+                       ]
 
 instance Arbitrary TimeoutTime where
-  arbitrary = do
-    a <- arbitrary
-    return $ TimeoutTime a
+  arbitrary = TimeoutTime <$> arbitrary
 
 instance Arbitrary MinutesTime where
-  arbitrary = do
-    a <- arbitrary
-    return $ fromSeconds a
+  arbitrary = fromSeconds <$> arbitrary
 
 instance Arbitrary DocumentUI where
-  arbitrary = do
-    a <- arbitrary
-    return $ DocumentUI a
+  arbitrary = DocumentUI <$> arbitrary
 
 instance Arbitrary ActionID where
   arbitrary = ActionID <$> arbitrary
@@ -144,9 +127,7 @@ instance ExtendWithRandomnes SignatoryDetails where
     moreRandom sl = return sl
 
 instance Arbitrary SignatoryLinkID where
-  arbitrary = do
-    si <- arbitrary
-    return $ SignatoryLinkID si
+  arbitrary = SignatoryLinkID <$> arbitrary
 
 instance Arbitrary SignatoryLink where
   arbitrary = do
@@ -207,9 +188,7 @@ instance Arbitrary CSVUpload where
                        }
 
 instance Arbitrary DocumentID where
-  arbitrary = do
-    ds <- arbitrary
-    return $ DocumentID ds
+  arbitrary = DocumentID <$> arbitrary
 
 documentAllTypes :: [DocumentType]
 documentAllTypes = [ Signable Contract
@@ -394,30 +373,27 @@ signatoryLinkExample1 = SignatoryLink { signatorylinkid = SignatoryLinkID 0
                                       }
 
 blankUser :: User
-blankUser = User {
-                   userid                  =  UserID 0
-                 , userpassword            =  Nothing
-                 , useriscompanyadmin = False
-                 , useraccountsuspended    =  False
+blankUser = User { userid                        = UserID 0
+                 , userpassword                  = Nothing
+                 , useriscompanyadmin            = False
+                 , useraccountsuspended          = False
                  , userhasacceptedtermsofservice = Nothing
-                 , usersignupmethod = AccountRequest
-                 , userinfo = UserInfo {
-                                    userfstname = BS.empty
-                                  , usersndname = BS.empty
-                                  , userpersonalnumber = BS.empty
-                                  , usercompanyposition =  BS.empty
-                                  , userphone = BS.empty
-                                  , usermobile = BS.empty
-                                  , useremail =  Email BS.empty
-                                   }
-                , usersettings  = UserSettings {
-                                    preferreddesignmode = Nothing
-                                  , locale = mkLocaleFromRegion Misc.defaultValue
-                                  , customfooter = Nothing
-                                  }
-              , userservice = Nothing
-              , usercompany = Nothing
-              }
+                 , usersignupmethod              = AccountRequest
+                 , userinfo = UserInfo { userfstname = BS.empty
+                                       , usersndname = BS.empty
+                                       , userpersonalnumber = BS.empty
+                                       , usercompanyposition =  BS.empty
+                                       , userphone = BS.empty
+                                       , usermobile = BS.empty
+                                       , useremail = Email BS.empty
+                                       }
+                 , usersettings  = UserSettings { preferreddesignmode = Nothing
+                                                , locale = mkLocaleFromRegion Misc.defaultValue
+                                                , customfooter = Nothing
+                                                }
+                 , userservice = Nothing
+                 , usercompany = Nothing
+                 }
 
 {-
 blankDocument :: Document
@@ -772,9 +748,7 @@ instance Arbitrary File where
                   }
 
 instance Arbitrary SignInfo where
-  arbitrary = do
-    (a, b) <- arbitrary
-    return $ SignInfo a b
+  arbitrary = SignInfo <$> arbitrary <*> arbitrary
 
 
 instance Arbitrary JSValue where
