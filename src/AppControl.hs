@@ -92,7 +92,7 @@ data AppGlobals
 getDocumentLocale :: Connection -> (ServerMonad m, Functor m, MonadIO m) => m (Maybe Locale)
 getDocumentLocale conn = do
   rq <- askRq
-  let docids = catMaybes . map (fmap fst . listToMaybe . readDec) $ rqPaths rq
+  let docids = catMaybes . map (fmap fst . listToMaybe . readSigned readDec) $ rqPaths rq
   mdoclocales <- runReaderT (mapM (DocControl.getDocumentLocale . DocumentID) docids) conn
   return . listToMaybe $ catMaybes mdoclocales
 
@@ -129,7 +129,7 @@ getUserLocale conn muser = do
       mkLocaleFromRegion $ regionFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
     -- try and get the locale from the current activation user by checking the path for action ids, and giving them a go
     getActivationLocale rq = do
-      let actionids = catMaybes . map (fmap fst . listToMaybe . readDec) $ rqPaths rq
+      let actionids = catMaybes . map (fmap fst . listToMaybe . readSigned readDec) $ rqPaths rq
       mactionlocales <- mapM (getActivationLocaleFromAction . ActionID) actionids
       return . listToMaybe $ catMaybes mactionlocales
     getActivationLocaleFromAction aid = do
