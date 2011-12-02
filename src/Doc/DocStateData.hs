@@ -784,11 +784,11 @@ instance Show DocumentID where
 
 instance Read DocumentID where
     readsPrec _prec = let makeDocumentID (i,v) = (DocumentID i,v)
-                      in map makeDocumentID . readDec
+                      in map makeDocumentID . readSigned readDec
 
 instance Read SignatoryLinkID where
     readsPrec _prec = let make (i,v) = (SignatoryLinkID i,v)
-                      in map make . readDec
+                      in map make . readSigned readDec
 
 instance FromReqURI DocumentID where
     fromReqURI = readM
