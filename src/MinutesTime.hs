@@ -21,6 +21,7 @@ module MinutesTime
        , toUTCTime
        , showAsMonth
        , showAsDate
+       , formatMinutesTimeISO
        , parseMinutesTimeISO
        ) where
 
@@ -88,6 +89,9 @@ showMinutesTimeForFileName mt = formatMinutesTime defaultKontraTimeLocale "%Y-%m
 showDateOnly :: MinutesTime -> String
 showDateOnly mt | toSeconds mt == 0 = ""
                 | otherwise = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d" mt
+
+formatMinutesTimeISO :: MinutesTime -> String
+formatMinutesTimeISO = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d %H:%M:%S"
 
 parseMinutesTimeISO :: String -> Maybe MinutesTime
 parseMinutesTimeISO = parseMinutesTime "%Y-%m-%d %H:%M:%S"
