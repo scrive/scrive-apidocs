@@ -1089,7 +1089,7 @@ instance Show UserID where
 
 instance Read UserID where
     readsPrec _prec = let make (i,v) = (UserID i,v)
-                      in map make . readDec
+                      in map make . readSigned readDec
 
 instance FromReqURI UserID where
     fromReqURI = readM
@@ -1099,7 +1099,7 @@ instance Show SupervisorID where
 
 instance Read SupervisorID where
     readsPrec _prec = let make (i,v) = (SupervisorID i,v)
-                      in map make . readDec
+                      in map make . readSigned readDec
 
 instance FromReqURI SupervisorID where
     fromReqURI = readM
