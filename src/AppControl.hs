@@ -20,7 +20,7 @@ import API.Service.Model
 import ActionSchedulerState
 import AppView as V
 import DB.Classes
-import Doc.DocState
+import Doc.DocStateData
 import InputValidation
 import Kontra
 import KontraLink

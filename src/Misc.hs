@@ -266,7 +266,7 @@ curl_exe :: String
 #ifdef WINDOWS
 curl_exe = "curl.exe"
 #else
-curl_exe = "./curl"
+curl_exe = "curl"
 #endif
 
 {-| This function executes curl as external program. Args are args.
@@ -689,4 +689,4 @@ indentLinesMore nspaces sublines =
     [] -> []
   where 
     spaces = replicate nspaces ' '
-    
+

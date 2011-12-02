@@ -10,6 +10,10 @@ Description:
 Cabal-version: >= 1.6.0.0
 Build-type: Simple
 
+Flag documents-in-postgres
+  Description: New database layout for documents
+  Default: False
+
 Flag pdfseal
   Description: Build pdfseal
   Default: True
@@ -124,6 +128,10 @@ Executable kontrakcja-server
     cpp-options: -DWINDOWS
   if impl(ghc >= 7)
     ghc-options: -rtsopts
+
+  if flag(documents-in-postgres)
+    cpp-options: -DDOCUMENTS_IN_POSTGRES
+
   Build-depends: filepath
   Build-depends: base64-bytestring
   Build-depends: convertible
@@ -241,6 +249,9 @@ Executable kontrakcja-test
     GHC-Options: -threaded
   if os(windows)
     cpp-options: -DWINDOWS
+
+  if flag(documents-in-postgres)
+    cpp-options: -DDOCUMENTS_IN_POSTGRES
 
   if !flag(test-companystate)
     cpp-options: -DNO_COMPANYSTATE

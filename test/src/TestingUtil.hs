@@ -45,6 +45,7 @@ import Doc.DocInfo
 import Doc.DocProcess
 import ActionSchedulerState
 import Text.JSON
+import Doc.DocStateData
 
 instance Arbitrary DocumentTag where
   arbitrary = do
@@ -500,6 +501,14 @@ addNewRandomAdvancedUser = do
   Just user <- dbQuery $ GetUserByID userid
   return user
 
+addNewRandomCompanyUser :: CompanyID -> Bool -> DB User
+addNewRandomCompanyUser cid isadmin = do
+  User{userid} <- addNewRandomUser
+  _ <- dbUpdate $ SetUserCompany userid (Just cid)
+  _ <- dbUpdate $ SetUserCompanyAdmin userid isadmin
+  Just user <- dbQuery $ GetUserByID userid
+  return user
+
 addService :: String -> UserID -> DB (Maybe Service)
 addService name uid =
   dbUpdate $ CreateService (ServiceID $ BS.fromString name) Nothing uid
@@ -559,7 +568,7 @@ getPossibleAuthorRoles doc = [SignatoryAuthor] :
 
 
 addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> DB Document
-addRandomDocumentWithAuthorAndCondition user p = 
+addRandomDocumentWithAuthorAndCondition user p =
   addRandomDocument ((randomDocumentAllowsDefault user) { randomDocumentCondition = p})
 
 addRandomDocument :: RandomDocumentAllows -> DB Document
@@ -585,7 +594,7 @@ addRandomDocument rda = do
       let doc = doc' { documenttype = xtype, documentstatus = status }
 
       roles <- getRandomAuthorRoles doc
-    
+
       mcompany <- case usercompany user of
                     Nothing -> return Nothing
                     Just cid -> dbQuery $ GetCompany cid
@@ -600,7 +609,7 @@ addRandomDocument rda = do
 
       let siglinks = documentsignatorylinks doc ++
                      [ asl' { maybesignatory = Just (userid user)
-                            , maybecompany = usercompany user 
+                            , maybecompany = usercompany user
                             }
                      ]
       let unsignedsiglinks = map (\sl -> sl { maybesigninfo = Nothing,
@@ -842,12 +851,12 @@ getFlashType (FlashMessage ft _) = ft
 getFlashType (FlashTemplate ft _ _) = ft
 
 instance Arbitrary Locale where
-  arbitrary = do  
+  arbitrary = do
     (a, b) <- arbitrary
     return $ mkLocale a b
 
 instance Arbitrary Region where
   arbitrary = elements [REGION_SE, REGION_GB]
-  
+
 instance Arbitrary Lang where
   arbitrary = elements [LANG_SE, LANG_EN]

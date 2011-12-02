@@ -6,7 +6,7 @@ module Archive.Invariants (
 import Data.List
 import Data.Maybe
 
-import Doc.DocState
+import Doc.DocStateData
 import User.Model
 import Util.SignatoryLinkUtils
 

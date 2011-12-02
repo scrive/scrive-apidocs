@@ -589,6 +589,12 @@ instance Read DocumentLogEntry where
       where
        (timepart, restpart) = splitAt 19 text
 
+instance Convertible [DocumentLogEntry] SqlValue where
+    safeConvert logs = return (toSql (unlines (map show logs)))
+
+instance Convertible SqlValue [DocumentLogEntry] where
+    safeConvert sql = return $ map read $ lines $ fromSql sql
+
 $(deriveSerialize ''DocumentLogEntry)
 instance Version DocumentLogEntry
 
@@ -1472,9 +1478,7 @@ $(deriveSerialize ''DocStats)
 instance Version DocStats where
 
 
-
 type Documents = IxSet Document
-
 
 instance Indexable Document where
   empty =

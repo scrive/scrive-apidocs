@@ -34,7 +34,8 @@ import DB.Classes
 import Data.List
 import Data.Maybe
 import Doc.DocInfo
-import Doc.DocState
+import Doc.DocStateData
+import Doc.Transitory
 import Kontra
 import KontraLink
 import MinutesTime
@@ -51,7 +52,6 @@ import qualified AppLogger as Log
 
 import qualified Data.ByteString.UTF8 as BS
 import Happstack.Server
-import Happstack.State
 import Control.Monad
 import Control.Applicative
 
@@ -503,7 +503,7 @@ addAllDocsToStats = onlySuperUser $ do
   stats <- runDBQuery GetDocStatEvents
   let stats' = sort $ map seDocumentID stats
   _ <- forM allservices $ \s -> do
-    docs <- query $ GetDocuments s
+    docs <- doc_query $ GetDocuments s
     let docs' = sortBy (\d1 d2 -> compare (documentid d1) (documentid d2)) docs
         docs'' = filterMissing stats' docs'
     mapM allDocStats docs''

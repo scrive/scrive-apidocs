@@ -31,8 +31,7 @@ import User.Model
 import DB.Classes
 import Company.Model
 import Doc.DocUtils
-import Happstack.State hiding (extension)
-import Doc.DocState
+import Doc.Transitory
 import Data.Either
 import qualified Doc.DocControl as DocControl
 import Templates.Templates
@@ -189,7 +188,7 @@ handleScriveByMail = do
   
   let userDetails = signatoryDetailsFromUser user mcompany
 
-  edoc <- update $ NewDocument user mcompany (BS.fromString title) doctype ctxtime
+  edoc <- doc_update $ NewDocument user mcompany (BS.fromString title) doctype ctxtime
   
   when (isLeft edoc) $ do
     let Left msg = edoc
@@ -204,9 +203,9 @@ handleScriveByMail = do
       
   _ <- DocControl.handleDocumentUploadNoLogin (documentid doc) pdfBinary (BS.fromString title)
   
-  errs <- lefts <$> (sequence $ [update $ SetEmailIdentification (documentid doc) ctxtime,
-                                 update $ SetDocumentAdvancedFunctionality (documentid doc) ctxtime,
-                                 update $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) ctxtime])
+  errs <- lefts <$> (sequence $ [doc_update $ SetEmailIdentification (documentid doc) ctxtime,
+                                 doc_update $ SetDocumentAdvancedFunctionality (documentid doc) ctxtime,
+                                 doc_update $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) ctxtime])
           
   when ([] /= errs) $ do
     Log.scrivebymail $ "Could not set up document: " ++ (intercalate "; " errs)
@@ -216,7 +215,7 @@ handleScriveByMail = do
     
     mzero
 
-  edoc2 <- update $ PreparationToPending (documentid doc) ctxtime
+  edoc2 <- doc_update $ PreparationToPending (documentid doc) ctxtime
   
   when (isLeft edoc2) $ do
     Log.scrivebymail $ "Could not got to pending document: " ++ (intercalate "; " errs)

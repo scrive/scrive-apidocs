@@ -36,7 +36,7 @@ module API.APICommons (
         ) where
 
 
-import Doc.DocState
+import Doc.DocStateData
 import Text.JSON
 import MinutesTime
 import qualified Data.ByteString as BS
@@ -55,7 +55,7 @@ import Data.Functor
 import Control.Monad
 import Util.SignatoryLinkUtils
 import DB.Classes
-import qualified AppLogger as Log
+import qualified AppLogger as Log ()
 import Util.JSON
 import User.Lang
 import User.Region
@@ -282,7 +282,6 @@ emptySignatoryTMP = SignatoryTMP {
 
 getSignatoryTMP :: (APIContext c, Kontrakcja m) => APIFunction m c (Maybe SignatoryTMP)
 getSignatoryTMP = do
-    Log.debug "getSignatoryTMP"
     fstname        <- fromJSONField "fstname"
     sndname        <- fromJSONField "sndname"
     company        <- fromJSONField "company"

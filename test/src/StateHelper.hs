@@ -37,12 +37,16 @@ withTestDB conn f = do
 clearTables :: DB ()
 clearTables = wrapDB $ \conn -> do
   runRaw conn "UPDATE users SET service_id = NULL, company_id = NULL"
+  runRaw conn "DELETE FROM author_attachments"
+  runRaw conn "DELETE FROM signatory_links"
   runRaw conn "DELETE FROM doc_stat_events"
   runRaw conn "DELETE FROM user_stat_events"
   runRaw conn "DELETE FROM companyinvites"
+  runRaw conn "DELETE FROM documents"
   runRaw conn "DELETE FROM companies"
   runRaw conn "DELETE FROM services"
   runRaw conn "DELETE FROM users"
+  runRaw conn "DELETE FROM files"
   return ()
 
 -- happstack-state --
