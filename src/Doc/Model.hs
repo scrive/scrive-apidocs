@@ -750,6 +750,7 @@ insertDocumentAsIs document = do
 
 insertNewDocument :: Document -> DB Document
 insertNewDocument doc = do
+  wrapDB $ \conn -> runRaw conn "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
   docid <- DocumentID <$> getUniqueID tableDocuments
   now <- liftIO $ getMinutesTime
   let docWithId = doc {documentid = docid, documentmtime  = now, documentctime = now}
@@ -991,7 +992,7 @@ instance DBQuery GetDeletedDocumentsByCompany [Document] where
   dbQuery (GetDeletedDocumentsByCompany user) = do
     case useriscompanyadmin user of
       True ->
-        selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE deleted = TRUE AND company_id = ? AND service_id = ? AND documents.id = document_id)")
+        selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE signatory_links.deleted = TRUE AND company_id = ? AND really_deleted = FALSE AND service_id = ? AND documents.id = document_id)")
                       [ toSql (usercompany user)
                       , toSql (userservice user)
                       ]
@@ -1002,7 +1003,7 @@ data GetDeletedDocumentsByUser = GetDeletedDocumentsByUser User
 instance DBQuery GetDeletedDocumentsByUser [Document] where
   dbQuery (GetDeletedDocumentsByUser user) = do
     selectDocuments (selectDocumentsSQL ++
-                     " WHERE EXISTS (SELECT * FROM signatory_links WHERE deleted = TRUE AND user_id = ? AND documents.id = id)")
+                     " WHERE EXISTS (SELECT * FROM signatory_links WHERE signatory_links.deleted = TRUE AND really_deleted = FALSE AND user_id = ? AND documents.id = document_id)")
                       [ toSql (userid user)
                       ]
 
@@ -1054,7 +1055,7 @@ instance DBQuery GetDocuments [Document] where
 
 selectDocumentsBySignatoryLink :: String -> [SqlValue] -> DB [Document]
 selectDocumentsBySignatoryLink condition values = do
-    selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE documents.id = document_id AND " ++ condition ++ ")") values
+    selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT TRUE FROM signatory_links WHERE documents.id = document_id AND " ++ condition ++ ")") values
 
 {- |
     All documents authored by the user that have never been deleted.
@@ -1063,19 +1064,19 @@ data GetDocumentsByAuthor = GetDocumentsByAuthor UserID
                             deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsByAuthor [Document] where
   dbQuery (GetDocumentsByAuthor uid) = do
-    selectDocumentsBySignatoryLink ("deleted = FALSE AND user_id = ? AND ((roles & ?)<>0)") [toSql uid, toSql [SignatoryAuthor]]
+    selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?)<>0)") [toSql uid, toSql [SignatoryAuthor]]
 
 data GetDocumentsByCompany = GetDocumentsByCompany User
                              deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsByCompany [Document] where
   dbQuery (GetDocumentsByCompany user) = do
-    case useriscompanyadmin user of
-      True ->
-        selectDocumentsBySignatoryLink ("deleted = FALSE AND company_id = ? AND service_id = ?")
+    case (useriscompanyadmin user, usercompany user) of
+      (True, Just companyid) -> do
+        docs <- selectDocumentsBySignatoryLink ("signatory_links.company_id = ?")
                       [ toSql (usercompany user)
-                      , toSql (userservice user)
                       ]
-      False -> return []
+        return $ filterDocsWhereActivated companyid . filterDocsWhereDeleted False companyid $ docs
+      _ -> return []
 
 {- |
     Fetches documents by company and tags, this won't return documents that have been deleted (so ones
@@ -1086,11 +1087,11 @@ data GetDocumentsByCompanyAndTags = GetDocumentsByCompanyAndTags (Maybe ServiceI
                                     deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsByCompanyAndTags [Document] where
   dbQuery (GetDocumentsByCompanyAndTags mservice companyid doctags) = do
-        docs <- selectDocumentsBySignatoryLink ("deleted = FALSE AND company_id = ? AND service_id = ?")
+        docs <- selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND signatory_links.company_id = ?")
                       [ toSql companyid
-                      , toSql mservice
                       ]
-        return (filter hasTags docs)
+        let docs' = filterDocsWhereActivated companyid . filterDocsWhereDeleted False companyid $ docs
+        return docs' -- (filter hasTags docs')
     where hasTags doc = not (null (intersect (documenttags doc) doctags))
 
 {- |
@@ -1103,7 +1104,7 @@ data GetDocumentsBySignatory = GetDocumentsBySignatory User
                                deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsBySignatory [Document] where
   dbQuery (GetDocumentsBySignatory user) = do
-    docs <- selectDocumentsBySignatoryLink ("deleted = FALSE AND user_id = ? AND ((roles & ?)<>0)")
+    docs <- selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?)<>0)")
                                      [toSql (userid user), {- toSql [SignatoryPartner] -} iToSql 255]
     return $ filterDocsWhereActivated (userid user) docs
 
@@ -1116,7 +1117,7 @@ data GetDocumentsByUser = GetDocumentsByUser User
                           deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsByUser [Document] where
   dbQuery (GetDocumentsByUser user) = do
-        selectDocumentsBySignatoryLink ("deleted = FALSE AND user_id = ? AND ((roles & ?)<>0)")
+        selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?)<>0)")
                                          [toSql (userid user), toSql [SignatoryAuthor]]
 
 data GetDocumentsSharedInCompany = GetDocumentsSharedInCompany User
@@ -1235,7 +1236,8 @@ instance DBUpdate NewDocument (Either String Document) where
                          maybecompany = usercompany user }
 
       let doc = blankDocument
-                { documenttitle                = title
+                { documentid                   = did
+                , documenttitle                = title
                 , documentsignatorylinks       = [authorlink]
                 , documenttype                 = documenttype
                 , documentregion               = getRegion user
@@ -1253,7 +1255,7 @@ instance DBUpdate NewDocument (Either String Document) where
            midoc <- insertDocumentAsIs doc
            case midoc of
              Just doc' -> return $ Right doc'
-             Nothing -> return $ Left "insertDocumentAsIs could not insert document in NewDocument"
+             Nothing -> return $ Left $ "insertDocumentAsIs could not insert document #" ++ show (documentid doc) ++ " in NewDocument"
         Just a -> return $ Left $ "insertDocumentAsIs invariants violated: " ++ show a
 
 
