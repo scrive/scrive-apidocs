@@ -97,6 +97,7 @@ docStateTests conn = testGroup "DocState" [
   testThat "create document and check invariants" conn testNewDocumentDependencies,
   testThat "can create new document and read it back with the returned id" conn testDocumentCanBeCreatedAndFetchedByID,
   testThat "can create new document and read it back with GetDocuments" conn testDocumentCanBeCreatedAndFetchedByAllDocs,
+
 {-
   testThat "when I call update document, it doesn't change the document id" conn testDocumentUpdateDoesNotChangeID,
   testThat "when I call update document, i can change the title" conn testDocumentUpdateCanChangeTitle,
@@ -153,6 +154,7 @@ docStateTests conn = testGroup "DocState" [
   testThat "ReallyDeleteDocument fails if the deleting user is just another standard company user" conn testReallyDeleteDocumentCompanyStandardLeft,
   testThat "ReallyDeleteDocument fails if the document hasn't been archived" conn testReallyDeleteNotArchivedLeft,
 #endif
+
   testThat "GetDocumentsByAuthor doesn't return archived docs" conn testGetDocumentsByAuthorNoArchivedDocs,
   testThat "GetDocumentsByCompany doesn't return archived docs" conn testGetDocumentsByCompanyNoArchivedDocs,
   testThat "GetDocumentsByCompanyAndTags doesn't return archived docs" conn testGetDocumentsByCompanyAndTagsNoArchivedDocs,
@@ -432,7 +434,11 @@ testDocumentCanBeCreatedAndFetchedByID = doTimes 10 $ do
   -- setup
   author <- addNewRandomAdvancedUser
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
-  Right doc <- randomUpdate $ NewDocument author mcompany
+  now <- liftIO $ getMinutesTime
+  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany title doctype now)
+  let doc = case edoc of
+          Left msg -> error $ show msg
+          Right d -> d
   -- execute
   mdoc <- doc_query $ GetDocumentByDocumentID (documentid doc)
   -- assert
@@ -447,7 +453,12 @@ testDocumentCanBeCreatedAndFetchedByAllDocs = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
   -- execute
-  Right doc <- randomUpdate $ NewDocument author mcompany
+  now <- liftIO $ getMinutesTime
+  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany title doctype now)
+  
+  let doc = case edoc of
+          Left msg -> error $ show msg
+          Right d -> d
   docs <- doc_query $ GetDocuments Nothing
   -- assert
   validTest $ do
