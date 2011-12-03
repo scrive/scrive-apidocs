@@ -95,6 +95,7 @@ import User.Model
 import Company.Model
 import MinutesTime
 import Doc.DocStateData
+import Doc.Invariants
 import Data.Data
 import Database.HDBC
 import Data.Word
@@ -990,7 +991,7 @@ instance DBQuery GetDeletedDocumentsByCompany [Document] where
   dbQuery (GetDeletedDocumentsByCompany user) = do
     case useriscompanyadmin user of
       True ->
-        selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE deleted = TRUE AND company_id = ? AND service_id = ?)")
+        selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE deleted = TRUE AND company_id = ? AND service_id = ? AND documents.id = document_id)")
                       [ toSql (usercompany user)
                       , toSql (userservice user)
                       ]
@@ -1001,7 +1002,7 @@ data GetDeletedDocumentsByUser = GetDeletedDocumentsByUser User
 instance DBQuery GetDeletedDocumentsByUser [Document] where
   dbQuery (GetDeletedDocumentsByUser user) = do
     selectDocuments (selectDocumentsSQL ++
-                     " WHERE EXISTS (SELECT * FROM signatory_links WHERE deleted = TRUE AND user_id = ?)")
+                     " WHERE EXISTS (SELECT * FROM signatory_links WHERE deleted = TRUE AND user_id = ? AND documents.id = id)")
                       [ toSql (userid user)
                       ]
 
@@ -1051,6 +1052,10 @@ instance DBQuery GetDocuments [Document] where
   dbQuery (GetDocuments mserviceid) = do
     selectDocuments selectDocumentsSQL []
 
+selectDocumentsBySignatoryLink :: String -> [SqlValue] -> DB [Document]
+selectDocumentsBySignatoryLink condition values = do
+    selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE documents.id = document_id AND " ++ condition ++ ")") values
+
 {- |
     All documents authored by the user that have never been deleted.
 -}
@@ -1058,7 +1063,7 @@ data GetDocumentsByAuthor = GetDocumentsByAuthor UserID
                             deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsByAuthor [Document] where
   dbQuery (GetDocumentsByAuthor uid) = do
-    selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE deleted = FALSE AND user_id = ? AND ((roles & ?)<>0))") [toSql uid, toSql [SignatoryAuthor]]
+    selectDocumentsBySignatoryLink ("deleted = FALSE AND user_id = ? AND ((roles & ?)<>0)") [toSql uid, toSql [SignatoryAuthor]]
 
 data GetDocumentsByCompany = GetDocumentsByCompany User
                              deriving (Eq, Ord, Show, Typeable)
@@ -1066,7 +1071,7 @@ instance DBQuery GetDocumentsByCompany [Document] where
   dbQuery (GetDocumentsByCompany user) = do
     case useriscompanyadmin user of
       True ->
-        selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE deleted = FALSE AND company_id = ? AND service_id = ?)")
+        selectDocumentsBySignatoryLink ("deleted = FALSE AND company_id = ? AND service_id = ?")
                       [ toSql (usercompany user)
                       , toSql (userservice user)
                       ]
@@ -1081,7 +1086,7 @@ data GetDocumentsByCompanyAndTags = GetDocumentsByCompanyAndTags (Maybe ServiceI
                                     deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsByCompanyAndTags [Document] where
   dbQuery (GetDocumentsByCompanyAndTags mservice companyid doctags) = do
-        docs <- selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE deleted = FALSE AND company_id = ? AND service_id = ?)")
+        docs <- selectDocumentsBySignatoryLink ("deleted = FALSE AND company_id = ? AND service_id = ?")
                       [ toSql companyid
                       , toSql mservice
                       ]
@@ -1098,7 +1103,9 @@ data GetDocumentsBySignatory = GetDocumentsBySignatory User
                                deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsBySignatory [Document] where
   dbQuery (GetDocumentsBySignatory user) = do
-    selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE deleted = FALSE AND user_id = ? AND ((roles & ?)<>0))") [toSql (userid user), toSql [SignatoryPartner]]
+    docs <- selectDocumentsBySignatoryLink ("deleted = FALSE AND user_id = ? AND ((roles & ?)<>0)")
+                                     [toSql (userid user), {- toSql [SignatoryPartner] -} iToSql 255]
+    return $ filterDocsWhereActivated (userid user) docs
 
 {- |
     All documents which are saved for the user which have never been deleted.
@@ -1109,7 +1116,8 @@ data GetDocumentsByUser = GetDocumentsByUser User
                           deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsByUser [Document] where
   dbQuery (GetDocumentsByUser user) = do
-    selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE deleted = FALSE AND user_id = ? AND ((roles & ?)<>0))") [toSql (userid user), toSql [SignatoryAuthor]]
+        selectDocumentsBySignatoryLink ("deleted = FALSE AND user_id = ? AND ((roles & ?)<>0)")
+                                         [toSql (userid user), toSql [SignatoryAuthor]]
 
 data GetDocumentsSharedInCompany = GetDocumentsSharedInCompany User
                                    deriving (Eq, Ord, Show, Typeable)
@@ -1239,11 +1247,14 @@ instance DBUpdate NewDocument (Either String Document) where
                 , documentsignatoryattachments = []
                 } `appendHistory` [DocumentHistoryCreated ctime]
 
+      case invariantProblems ctime doc of
+        Nothing -> do
 
-      midoc <- insertDocumentAsIs doc
-      case midoc of
-        Just doc' -> return $ Right doc'
-        Nothing -> return $ Left "insertDocumentAsIs could not insert document in NewDocument"
+           midoc <- insertDocumentAsIs doc
+           case midoc of
+             Just doc' -> return $ Right doc'
+             Nothing -> return $ Left "insertDocumentAsIs could not insert document in NewDocument"
+        Just a -> return $ Left $ "insertDocumentAsIs invariants violated: " ++ show a
 
 
 
