@@ -212,7 +212,7 @@ handleScriveByMail = do
     Log.scrivebymail $ "Could not set up document: " ++ (intercalate "; " errs)
     
     -- send sorry email
-    sendMailAPIErrorEmail ctx username $ "<p>I'm really sorry, but I could not forward your document. I don't know what's wrong. I created it in Scrive, but I can't get it ready. If you want to see your document, you can <a href=\"https://" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
+    sendMailAPIErrorEmail ctx username $ "<p>I'm really sorry, but I could not forward your document. I don't know what's wrong. I created it in Scrive, but I can't get it ready. If you want to see your document, you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
     
     mzero
 
@@ -222,7 +222,7 @@ handleScriveByMail = do
     Log.scrivebymail $ "Could not got to pending document: " ++ (intercalate "; " errs)
     
     -- send sorry email
-    sendMailAPIErrorEmail ctx username $ "<p>I'm really sorry, but I could not forward your document. I don't know what's wrong. It is created and ready to go. To see your document and send it yourself, <a href=\"https://" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
+    sendMailAPIErrorEmail ctx username $ "<p>I'm really sorry, but I could not forward your document. I don't know what's wrong. It is created and ready to go. To see your document and send it yourself, <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
     
     mzero
   
