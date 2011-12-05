@@ -62,7 +62,7 @@
 "_NewPassword","Nytt lösenord:",,"New password:"
 "_OfferReminderBodyMulti","Är du säker att du vill skicka en påminnelse til berörda parter för",,"Are you sure you want to send reminders to the parties involved in the"
 "_OfferReminderBodyMulti2","offerter.",,"offers?"
-"_OfferReminderBodySingel","Är du säker att du vill skicka en påminnelse til berörda parter i offerter",,"Are you sure you want to send a reminder to the parties involved in the offer"
+"_OfferReminderBodySingel","Är du säker att du vill skicka en påminnelse till berörda parter i offerter",,"Are you sure you want to send a reminder to the parties involved in the offer"
 "_OfferReminderHead","Skicka påminnelse",,"Send reminder"
 "_PartnersHead","Partners",,"Partners"
 "_PleaseAcceptTOS","Vänligen acceptera användarvillkoren",,"Please accept the Terms of Service"
@@ -254,7 +254,11 @@
  Enterprise"
 "_QuotesHead","Kunder berättar",,"What our customers think"
 "_ReadUnderstoodTOS","Jag har läst och accepterar Scrive Allmänna Villkor",,"I have read and accept the Scrive Terms of Service"
+<<<<<<< HEAD
 "_ReminderBodyIfMulti","Är du säker att du vill skicka en påminnelse til berörda parter för",,"Are you sure you want to send reminders to the parties involved in the"
+=======
+"_ReminderBodyIfMulti","Är du säker att du vill skicka en påminnelse till berörda parter för",,"Are you sure you want to send reminders to the parties involved in the"
+>>>>>>> staging
 "_ReminderBodyIfMulti2","dokument.",,"documents?"
 "_ReminderBodyIfSingel","Är du säker att du vill skicka en påminnelse til berörda parter i dokumentet",,"Are you sure you want to send a reminder to the parties involved in the document"
 "_ReminderBodyMulti","Är du säker att du vill skicka en påminnelse til berörda parter för",,"Are you sure you want to send reminders to the parties involved in the"
@@ -522,7 +526,7 @@ profits and reduce frustration.</p>                                             
 "_dialogConfirmAdvancedChangeToHead","Vill du byta till avancerad process?",,"Do you want to change to advanced process?"
 "_dialogConfirmBasicChangeToBody","Du kan byta till förenklad process för att göra processen ännu
  smidigare.            Vid betalplan Business eller Enterprise
- kan du givetvis byta tillbaks när du vill, även vid fri testperiod.",,"Change to simplified process to make the process even smoother.
+ kan du givetvis byta tillbaka när du vill, även vid fri testperiod.",,"Change to simplified process to make the process even smoother.
  You can of course change back whenever you want to if you have
  price plan Business or Enterprise, or if you are in a trial period."
 "_dialogConfirmBasicChangeToBody2","När du byter kommer alla ändringar du gjort förutom de för part
@@ -714,7 +718,7 @@ profits and reduce frustration.</p>                                             
 "_flashMessageNeedsLetterAndDigit","$fieldnametitlecase$ måste innehålla åtminstone två bokstäver
  och två nummer.",,"$fieldnametitlecase$ must contain at least two letters and two
  digits."
-"_flashMessageNewActivationLinkSend","Vi har skickat din kontoinbjudan igen. Vänligen gå tillbaks till
+"_flashMessageNewActivationLinkSend","Vi har skickat din kontoinbjudan igen. Vänligen gå tillbaka till
  din inkorg och klicka på länken i mailet för att aktivera ditt
  konto.",,"We have resent your account activation link. Please go to your inbox
  and click the link in the email to activate your account."
@@ -814,7 +818,7 @@ profits and reduce frustration.</p>                                             
        <br/>       3. Klicka ""Starta om""<br/>       4. Skriv
  in rätt e-postadress och skicka igen",,"1. Confirm the counterpart's address<br/>  2. Access the document from the Archive or by clicking the following link<br/> <a href=""$ctxhostpart$$unsigneddoclink$"">$ctxhostpart$$unsigneddoclink$</a><br/> <br/> 3. Click ""Restart""<br/> 4. Correct the email address and send again"
 "_invitationMailUndeliveredTitle","Felaktig e-post",,"Incorrect email"
-"_mailNewCompanyUserInviteContentBodyFirst","<strong>$invitername$</strong> har bjudit in dig till Scrive genom vilket du kan skriva avtal för organisationen $companyname$och samtliga arkiverade dokument kommer att tillhöra $companyname$. Vänligen notera därför att kontot inte bör användas för privat bruk.",,"<strong>$invitername$</strong> has made you an account in Scrive.  You can use this to get documents signed online.  This account is intended to be used only in relation to $companyname$ and all saved documents will belong to $companyname$.  This account is not for private use."
+"_mailNewCompanyUserInviteContentBodyFirst","<strong>$invitername$</strong> har bjudit in dig till Scrive genom vilket du kan skriva avtal för organisationen $companyname$ och samtliga arkiverade dokument kommer att tillhöra $companyname$. Vänligen notera därför att kontot inte bör användas för privat bruk.",,"<strong>$invitername$</strong> has made you an account in Scrive.  You can use this to get documents signed online.  This account is intended to be used only in relation to $companyname$ and all saved documents will belong to $companyname$.  This account is not for private use."
 "_mailNewCompanyUserInviteContentBodyUserName","Användarnamn:",,"Username:"
 "_mailNewCompanyUserInviteContentClickLink","Vänligen klicka på länken för att aktivera kontot:<br/>",,"Please click to activate your account:<br/>"
 "_mailNewCompanyUserInviteTitle","Inbjudan från $invitername$ till $companyname$",,"Invitation from $invitername$ to join $companyname$"
@@ -926,7 +930,7 @@ profits and reduce frustration. The following mateials shall only
  När konflikten tas upp i domstol ligger bevisbördan i första
  hand hos parten som hävdar att dokumentet skrivits på av samtliga
  parter. När denna part uppfyllt sin bevisbörda åligger det bestridande
- part att bevisa motsatsen och så vidare fram och tillbaks tills
+ part att bevisa motsatsen och så vidare fram och tillbaka tills
  domstolen baserat på framlagt bevismaterial slutligen fäller
  ett avgörande huruvida dokumentet är giltigt eller inte.",,"When a conflict occurs as to whether a document has been signed
  or not, it is important to show independent proof
@@ -2072,7 +2076,7 @@ use free of charge."
 "_pageFooterPrivacy","Sekretesspolicy",,"Privacy Policy"
 "_pageFooterSecurity","Säkerhet",,"Security"
 "_pageFooterSupportFeedback","Support &amp; Feedback",,"Support &amp; Feedback"
-"_pageFooterTOS","Allmäna Villkor",,"Terms of Service"
+"_pageFooterTOS","Allmänna Villkor",,"Terms of Service"
 "_pageFooterTerms","TRYGGHET OCH VILLKOR",,"SECURITY AND TERMS"
 "_pageFooterTheService","TJÄNSTEN",,"THE SERVICE"
 "_pageFooterTwitter","Scrive PÅ TWITTER",,"Scrive ON TWITTER"
@@ -2605,7 +2609,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_save","Spara",,"Save"
 "_searchBoxButtonText","Sök",,"Search"
 "_searchBoxSearch","Sök",,"Search"
-"_secretaryCantSign","Du kan inte underteckna när du är sekreterare. Om du vill underteckna, gå tillbaks till steg 2 och byt roll.",,"You cannot sign when you have the role Secretary. If you want to sign, please go back to step 2 and change role."
+"_secretaryCantSign","Du kan inte underteckna när du är sekreterare. Om du vill underteckna, gå tillbaka till steg 2 och byt roll.",,"You cannot sign when you have the role Secretary. If you want to sign, please go back to step 2 and change role."
 "_securityPageH1","SÄKERHET",,"SECURITY"
 "_securityPageH2Chalmers","Partnerskap med Chalmers datasäkerhetsgrupp",,"Partnership with data security group at Chalmers Technical University"
 "_securityPageH2ChalmersBody","Tillsammans med Google, Intel och Klarna har vi blivit utvalda
@@ -2629,7 +2633,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
  kärnan i systemet från oönskade systemmodifieringar. Skyddet
  är aktivt i multipla nivåer; i stadier av systemdesign, implementering,
  ändringar och underhåll. Vi lagrar all historisk data och kan
- spåra alla ändringar enda tillbaks till företagets start.",,"Our internal processes requires several different layers of approval
+ spåra alla ändringar ända tillbaka till företagets start.",,"Our internal processes requires several different layers of approval
  when being changed. Each change is carefully validated, checked,
  approved, logged and defined. An automatic mechanism protects
  the core of the system from unwanted system changes. the protection
@@ -2888,7 +2892,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_tbsGenerationMessage3",". Undertecknande parter är:",,". Signing parties are:"
 "_tbsYouSignWithEleg","Du undertecknar ""$documentname$"" med transaktionsnummer ""$documentnumber$"".
  Undertecknande parter är:$tbssigentries$",,"You are signing  ""$documentname$"" with transactional number ""$documentnumber$"". The signing parties are: $tbssigentries$"
-"_termsPageH1","Scrive ALLMÄNNA VILLKOR (2011:02)",,"Scrive TERMS OF SERVICE (2011:02)"
+"_termsPageH1","Scrive Allmänna VILLKOR (2011:02)",,"Scrive TERMS OF SERVICE (2011:02)"
 "_termsPageH1Body","Scrive CM AB tillhandahåller en tjänst som äntligen löser de
  problem med pappershantering och organisering som de traditionella
  metoderna att underteckna dokument på distans – brev, fax och
