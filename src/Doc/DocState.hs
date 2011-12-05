@@ -601,12 +601,6 @@ signDocument documentid slid mh time ipnumber msiginfo = do
             in Right signeddocument
       s -> Left $ "Cannot sign for signatory " ++ show slid ++ " because " ++ concat s
 
-checkUpdateFields :: Document -> SignatoryLinkID -> [String]
-checkUpdateFields doc slid = catMaybes $
-  [trueOrMessage (documentstatus doc == Pending) $ "Document is not in Pending (is " ++ (show $ documentstatus doc) ++ ")",
-   trueOrMessage (isJust $ getSigLinkFor doc slid) $ "Signatory does not exist",
-   trueOrMessage (not $ hasSigned (doc, slid)) "Signatory has already signed."]
-
 updateFields :: DocumentID ->
                 SignatoryLinkID ->
                 [(BS.ByteString, BS.ByteString)] ->

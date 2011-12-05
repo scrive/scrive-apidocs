@@ -268,6 +268,13 @@ replaceSignatoryUser siglink user mcompany =
   newsl { maybesignatory = Just $ userid user,
           maybecompany = usercompany user }
 
+checkUpdateFields :: Document -> SignatoryLinkID -> [String]
+checkUpdateFields doc slid = catMaybes $
+  [ trueOrMessage (documentstatus doc == Pending) $ "Document is not in Pending (is " ++ (show $ documentstatus doc) ++ ")"
+  , trueOrMessage (isJust $ getSigLinkFor doc slid) $ "Signatory does not exist"
+  , trueOrMessage (not $ hasSigned (doc, slid)) "Signatory has already signed."
+  ]
+
 checkAddEvidence :: Document -> SignatoryLinkID -> [String]
 checkAddEvidence doc slid = catMaybes $
   [ trueOrMessage (documentstatus doc == Pending) "Document is not in pending"

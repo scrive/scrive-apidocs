@@ -380,6 +380,7 @@ decodeRowAsDocument :: DocumentID
                     -> [DocumentTag]
                     -> Maybe ServiceID
                     -> Bool
+                    -> Maybe BS.ByteString
                     -> Region
                     -> Either DBException Document
 decodeRowAsDocument did
@@ -413,6 +414,7 @@ decodeRowAsDocument did
                     deleted
                     --authorattachments
                     --signatoryattachments
+                    mail_footer
                     region = (Right $ Document { documentid = did
                                                , documenttitle = title
                                                , documentsignatorylinks = []
@@ -452,7 +454,7 @@ decodeRowAsDocument did
                                                , documentdeleted = deleted
                                                , documentauthorattachments = []
                                                , documentsignatoryattachments = []
-                                               , documentui = emptyDocumentUI
+                                               , documentui = DocumentUI mail_footer
                                                , documentregion = region
                                                }) :: Either DBException Document
 
@@ -488,7 +490,7 @@ selectDocumentsSelectors = [ "id"
                            , "deleted"
                            --authorattachments
                            --signatoryattachments
-                           --, "ui"
+                           , "mail_footer"
                            , "region"
                            ]
 
@@ -659,6 +661,100 @@ insertSignatoryLinkAsIs documentid link = do
     [] -> return Nothing
     _ -> return Nothing -- should throw an exception probably
 
+selectAuthorAttachmentsSelectors :: [String]
+selectAuthorAttachmentsSelectors = [ "document_id"
+                                   , "file_id"
+                                   ]
+
+selectAuthorAttachmentsSQL :: String
+selectAuthorAttachmentsSQL = "SELECT " ++ concat (intersperse "," selectAuthorAttachmentsSelectors) ++ " FROM author_attachments "
+
+
+decodeRowAsAuthorAttachment :: DocumentID
+                            -> FileID
+                            -> Either DBException AuthorAttachment
+decodeRowAsAuthorAttachment _document_id
+                            file_id =
+    (return $ AuthorAttachment
+    { authorattachmentfile = file_id
+    }) :: Either DBException AuthorAttachment
+
+
+fetchAuthorAttachments :: Statement -> IO [AuthorAttachment]
+fetchAuthorAttachments st = do
+  fetchValues st decodeRowAsAuthorAttachment
+
+insertAuthorAttachmentAsIs :: DocumentID -> AuthorAttachment -> DB (Maybe AuthorAttachment)
+insertAuthorAttachmentAsIs documentid attach = do
+  (_, st) <- runInsertStatementWhereReturning "author_attachments"
+                            [ sqlField "file_id" $ authorattachmentfile attach
+                            , sqlField "document_id" documentid
+                            ]
+                            "NOT EXISTS (SELECT * FROM author_attachments WHERE file_id = ? AND document_id = ?)"
+                            [ toSql (authorattachmentfile attach), toSql documentid ]
+                            selectAuthorAttachmentsSelectors
+
+  links <- liftIO $ fetchAuthorAttachments st
+
+  case links of
+    [newattach] -> return (Just newattach)
+    [] -> return Nothing
+    _ -> return Nothing -- should throw an exception probably
+
+
+
+selectSignatoryAttachmentsSelectors :: [String]
+selectSignatoryAttachmentsSelectors = [ "file_id"
+                                      , "email"
+                                      , "name"
+                                      , "description"
+                                      ]
+
+selectSignatoryAttachmentsSQL :: String
+selectSignatoryAttachmentsSQL = "SELECT " ++ concat (intersperse "," selectAuthorAttachmentsSelectors) ++ " FROM author_attachments "
+
+
+decodeRowAsSignatoryAttachment :: Maybe FileID
+                               -> BS.ByteString
+                               -> BS.ByteString
+                               -> BS.ByteString
+                               -> Either DBException SignatoryAttachment
+decodeRowAsSignatoryAttachment file_id
+                               email 
+                               name 
+                               description =
+    (return $ SignatoryAttachment { signatoryattachmentfile = file_id
+                                  , signatoryattachmentemail = email
+                                  , signatoryattachmentname = name
+                                  , signatoryattachmentdescription = description
+                                  }) :: Either DBException SignatoryAttachment
+
+
+fetchSignatoryAttachments :: Statement -> IO [SignatoryAttachment]
+fetchSignatoryAttachments st = do
+  fetchValues st decodeRowAsSignatoryAttachment
+
+insertSignatoryAttachmentAsIs :: DocumentID -> SignatoryAttachment -> DB (Maybe SignatoryAttachment)
+insertSignatoryAttachmentAsIs documentid attach = do
+  (_, st) <- runInsertStatementWhereReturning "signatory_attachments"
+                            [ sqlField "file_id" $ signatoryattachmentfile attach
+                            , sqlField "email" $ signatoryattachmentemail attach
+                            , sqlField "name" $ signatoryattachmentname attach
+                            , sqlField "description" $ signatoryattachmentdescription attach
+                            ]
+                            "NOT EXISTS (SELECT * FROM signatory_attachments WHERE file_id = ? AND email = ?)"
+                            [ toSql $ signatoryattachmentfile attach
+                            , toSql $ signatoryattachmentemail attach
+                            ]
+                            selectSignatoryAttachmentsSelectors
+
+  links <- liftIO $ fetchSignatoryAttachments st
+
+  case links of
+    [newattach] -> return (Just newattach)
+    [] -> return Nothing
+    _ -> return Nothing -- should throw an exception probably
+
 
 insertDocumentAsIs :: Document -> DB (Maybe Document)
 insertDocumentAsIs document = do
@@ -728,7 +824,7 @@ insertDocumentAsIs document = do
                                      , sqlField "deleted" documentdeleted
                                      -- , toSql documentauthorattachments      -- many to many
                                      -- , toSql documentsignatoryattachments   -- many to many
-                                     -- , toSql documentui  -- should go into separate table?
+                                     , sqlField "mail_footer" $ documentmailfooter $ documentui  -- should go into separate table?
                                      , sqlField "region" documentregion
                                      ]
                                      "NOT EXISTS (SELECT * FROM documents WHERE id = ?)"
@@ -741,10 +837,15 @@ insertDocumentAsIs document = do
       [] -> return Nothing
       [doc] -> do
         mlinks <- mapM (insertSignatoryLinkAsIs documentid) documentsignatorylinks
-        if any isNothing mlinks
+        mauthorattachments <- mapM (insertAuthorAttachmentAsIs documentid) documentauthorattachments
+        msignatoryattachments <- mapM (insertSignatoryAttachmentAsIs documentid) documentsignatoryattachments
+        if any isNothing mlinks || any isNothing mauthorattachments || any isNothing msignatoryattachments
          then return Nothing
          else do
-          let newdocument = doc { documentsignatorylinks = catMaybes mlinks }
+          let newdocument = doc { documentsignatorylinks = catMaybes mlinks
+                                , documentauthorattachments = catMaybes mauthorattachments
+                                , documentsignatoryattachments = catMaybes msignatoryattachments
+                                }
           assertEqualDocuments document newdocument
           return (Just newdocument)
       _ -> error "XXX"
@@ -1006,8 +1107,21 @@ instance DBUpdate DocumentFromSignatoryData (Either String Document) where
 data ErrorDocument = ErrorDocument DocumentID String
                      deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate ErrorDocument (Either String Document) where
-  dbUpdate (ErrorDocument docid errmsg) = wrapDB $ \conn -> do
-    unimplemented "ErrorDocument"
+  dbUpdate (ErrorDocument docid errmsg) = do
+    mdocument <- dbQuery $ GetDocumentByDocumentID docid
+    case mdocument of
+      Nothing -> return $ Left $ "Cannot ErrorDocument document " ++ show docid ++ " because it does not exist"
+      Just document ->
+        case [] of
+          [] -> do
+            r <- runUpdateStatement "documents"
+                 [ sqlField "status" $ DocumentError errmsg
+                 , sqlField "error_text" $ errmsg
+                 ]
+                "WHERE id = ?" [ toSql docid ]
+            getOneDocumentAffected "ErrorDocument" r docid
+
+          s -> return $ Left $ "Cannot ErrorDocument document " ++ show docid ++ " because " ++ concat s
 
 data GetDeletedDocumentsByCompany = GetDeletedDocumentsByCompany User
                                     deriving (Eq, Ord, Show, Typeable)
@@ -1383,18 +1497,44 @@ instance DBUpdate RestoreArchivedDocument (Either String Document) where
                               [ toSql did
                               , toSql did
                               ])
-
+{- |
+    Links up a signatory link to a user account.  This should happen when
+      \1. a document moves from preparation to pending more
+      \2. a signer creates an account after signing to save their document
+      \3. the email of a signatory is corrected to that of an existing user
+-}
 data SaveDocumentForUser = SaveDocumentForUser DocumentID User SignatoryLinkID
                            deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SaveDocumentForUser (Either String Document) where
-  dbUpdate (SaveDocumentForUser documentid User{userid, usercompany} signatorylinkid1) = wrapDB $ \conn -> do
-    unimplemented "SaveDocumentForUser"
+  dbUpdate (SaveDocumentForUser did User{userid, usercompany} slid) = do
+    r <- runUpdateStatement "signatory_links"
+                          [ sqlField "user_id" userid
+                          , sqlField "company_id" usercompany
+                          ]
+                          ("WHERE document_id = ? AND id = ?")
+                          [ toSql did
+                          , toSql slid
+                          ]
+    getOneDocumentAffected "SaveDocumentForUser" r did
 
+{- |
+    Saves a signatory attachment to a document.
+    If there's a problem such as the document isn't in a pending or awaiting author state,
+    or the document does not exist a Left is returned.
+-}
 data SaveSigAttachment = SaveSigAttachment DocumentID BS.ByteString BS.ByteString FileID
                          deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SaveSigAttachment (Either String Document) where
-  dbUpdate (SaveSigAttachment docid name email fid) = wrapDB $ \conn -> do
-    unimplemented "SaveSigAttachment"
+  dbUpdate (SaveSigAttachment did name email fid) = do
+    r <- runUpdateStatement "signatory_attachments"
+                         [ sqlField "file_id" fid
+                         ]
+                         "WHERE document_id = ? AND email = ? AND file_id IS NULL AND name = ? "
+                         [ toSql did
+                         , toSql email
+                         , toSql name
+                         ]
+    getOneDocumentAffected "UpdateSigAttachments" r did
 
 
 data SetDocumentTags = SetDocumentTags DocumentID [DocumentTag]
@@ -1781,8 +1921,39 @@ instance DBUpdate SetElegitimationIdentification (Either String Document) where
 data UpdateFields  = UpdateFields DocumentID SignatoryLinkID [(BS.ByteString, BS.ByteString)]
                       deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate UpdateFields (Either String Document) where
-  dbUpdate (UpdateFields docid slid fields) = wrapDB $ \conn -> do
-    unimplemented "UpdateFields"
+  dbUpdate (UpdateFields did slid fields) = do
+  Just document <- dbQuery $ GetDocumentByDocumentID did
+  case checkUpdateFields document slid of
+    [] -> do
+      
+      let updateSigField sf =
+                let updateF n = case lookup n fields of
+                      Just v  -> sf { sfValue = v }
+                      Nothing -> sf
+                in case sfType sf of
+                  CompanyFT        -> updateF $ BS.fromString "sigco"
+                  PersonalNumberFT -> updateF $ BS.fromString "sigpersnr"
+                  CompanyNumberFT  -> updateF $ BS.fromString "sigcompnr"
+                  CustomFT label _ -> updateF label
+                  _                -> sf
+
+      let signlinks = documentsignatorylinks document
+          Just sl = find ((== slid) . signatorylinkid) signlinks
+
+      r <- runUpdateStatement "signatory_links" 
+                       [ sqlField "fields" $ map updateSigField $ signatoryfields $ signatorydetails sl
+                       ]
+                       ("EXITS (SELECT * FROM documents WHERE documents.id = signatory_links.document_id AND (documents.status = ? OR documents.status = ?))" ++ 
+                        " AND document_id = ? " ++
+                        " AND id = ? ")
+                       [ toSql Pending, toSql AwaitingAuthor
+                       , toSql did
+                       , toSql slid
+                       ]
+                        
+      getOneDocumentAffected "ChangeSignatoryEmailWhenUndelivered" r did
+
+    s -> return $ Left $ "Cannot updateFields on document " ++ show did ++ " because " ++ concat s
 
 data PendingToAwaitingAuthor = PendingToAwaitingAuthor DocumentID MinutesTime
                       deriving (Eq, Ord, Show, Typeable)
@@ -1794,8 +1965,8 @@ instance DBUpdate PendingToAwaitingAuthor (Either String Document) where
       Just document ->
         case checkPendingToAwaitingAuthor document of
           [] -> do
-            r <- runUpdateStatement "AwaitingAuthor"
-                 [ sqlField "status" $ Closed
+            r <- runUpdateStatement "documents"
+                 [ sqlField "status" $ AwaitingAuthor
                  , sqlFieldType "mtime" "timestamp" $ time
                  ]
                 "WHERE id = ? AND type = ?" [ toSql docid, toSql (toDocumentSimpleType (Signable undefined)) ]
@@ -1843,5 +2014,21 @@ instance DBUpdate RemoveDocumentAttachment (Either String Document) where
 data UpdateSigAttachments = UpdateSigAttachments DocumentID [SignatoryAttachment] MinutesTime
                             deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate UpdateSigAttachments (Either String Document) where
-  dbUpdate (UpdateSigAttachments docid sigatts time) = wrapDB $ \conn -> do
-    unimplemented "UpdateSigAttachments"
+  dbUpdate (UpdateSigAttachments did sigatts time) = do
+    wrapDB $ \conn -> run conn "DELETE FROM signatory_attachments WHERE document_id = ?" [toSql did]
+    docs <- flip mapM sigatts doInsert
+    return $ head docs
+    where
+         doInsert (SignatoryAttachment { signatoryattachmentfile
+                                       , signatoryattachmentemail
+                                       , signatoryattachmentname
+                                       , signatoryattachmentdescription
+                                       }) = do
+           r <- runInsertStatement "signatory_attachments"
+                [ sqlField "file_id" $ signatoryattachmentfile
+                , sqlField "email" $ signatoryattachmentemail
+                , sqlField "name" $ signatoryattachmentname
+                , sqlField "description" $ signatoryattachmentdescription
+                , sqlField "document_id" $ did
+                ]
+           getOneDocumentAffected "UpdateSigAttachments" r did
