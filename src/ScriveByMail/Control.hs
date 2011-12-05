@@ -203,10 +203,10 @@ handleScriveByMail = do
   let Right doc = edoc
       
   _ <- DocControl.handleDocumentUploadNoLogin (documentid doc) pdfBinary (BS.fromString title)
+  _ <- update $ SetDocumentAdvancedFunctionality (documentid doc) ctxtime
+  _ <- update $ SetEmailIdentification (documentid doc) ctxtime
   
-  errs <- lefts <$> (sequence $ [update $ SetEmailIdentification (documentid doc) ctxtime,
-                                 update $ SetDocumentAdvancedFunctionality (documentid doc) ctxtime,
-                                 update $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) ctxtime])
+  errs <- lefts <$> (sequence $ [update $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) ctxtime])
           
   when ([] /= errs) $ do
     Log.scrivebymail $ "Could not set up document: " ++ (intercalate "; " errs)
