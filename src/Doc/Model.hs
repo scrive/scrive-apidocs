@@ -105,6 +105,7 @@ import Data.Maybe
 import Misc
 import Data.Convertible
 import Data.List
+import Mails.MailsUtil
 import Doc.Tables
 import Control.Applicative
 import Util.SignatoryLinkUtils
@@ -891,9 +892,31 @@ instance DBUpdate ChangeMainfile (Either String Document) where
 data ChangeSignatoryEmailWhenUndelivered = ChangeSignatoryEmailWhenUndelivered DocumentID SignatoryLinkID (Maybe User) BS.ByteString
                                            deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate ChangeSignatoryEmailWhenUndelivered (Either String Document) where
-  dbUpdate (ChangeSignatoryEmailWhenUndelivered docid siglinkid muser email) = wrapDB $ \conn -> do
-    unimplemented "ChangeSignatoryEmailWhenUndelivered"
+  dbUpdate (ChangeSignatoryEmailWhenUndelivered did slid muser email) = do
+    Just doc <- dbQuery $ GetDocumentByDocumentID did
+    let setEmail signatoryfields = 
+         map (\sf -> case sfType sf of
+                               EmailFT -> sf { sfValue = email }
+                               _       -> sf) signatoryfields
 
+    let signlinks = documentsignatorylinks doc
+        Just sl = find ((== slid) . signatorylinkid) signlinks
+
+    r <- runUpdateStatement "signatory_links" 
+                       [ sqlField "invitation_delivery_status" Unknown
+                       , sqlField "fields" $ setEmail $ signatoryfields $ signatorydetails sl
+                       , sqlField "signatory" $ fmap userid muser
+                       , sqlField "company" $ muser >>= usercompany
+                       ]
+                       ("EXITS (SELECT * FROM documents WHERE documents.id = signatory_links.document_id AND (documents.status = ? OR documents.status = ?))" ++ 
+                        " AND document_id = ? " ++
+                        " AND id = ? ")
+                       [ toSql Pending, toSql AwaitingAuthor
+                       , toSql did
+                       , toSql slid
+                       ]
+                        
+    getOneDocumentAffected "ChangeSignatoryEmailWhenUndelivered" r did
 
 data PreparationToPending = PreparationToPending DocumentID MinutesTime
                      deriving (Eq, Ord, Show, Typeable)
@@ -1305,8 +1328,41 @@ instance DBUpdate RejectDocument (Either String Document) where
 data RestartDocument = RestartDocument Document User MinutesTime Word32
                        deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate RestartDocument (Either String Document) where
-  dbUpdate (RestartDocument doc user time ipnumber) = wrapDB $ \conn -> do
-    unimplemented "RestartDocument"
+  dbUpdate (RestartDocument doc user time ipnumber) = do
+    mndoc <- tryToGetRestarted
+    case mndoc of
+      Right newdoc -> newFromDocument (const newdoc) (documentid doc)
+      other -> return other
+   where
+    tryToGetRestarted :: DB (Either String Document)
+    tryToGetRestarted =
+      if (documentstatus doc `notElem` [Canceled, Timedout, Rejected])
+      then return $ Left $ "Can't restart document with " ++ (show $ documentstatus doc) ++ " status"
+      else if (not $ isAuthor (doc, user))
+           then return $ Left $ "Can't restart document if you are not it's author"
+           else do
+             doc' <- clearSignInfofromDoc
+             let doc'' = doc' `appendHistory` [DocumentHistoryRestarted time ipnumber]
+             return $ Right doc''
+    clearSignInfofromDoc :: DB Document
+    clearSignInfofromDoc = do
+      let signatoriesDetails = map (\x -> (signatorydetails x, signatoryroles x, signatorylinkid x)) $ documentsignatorylinks doc
+          Just asl = getAuthorSigLink doc
+      newSignLinks <- flip mapM signatoriesDetails $ do \(a,b,c) -> do
+                                                             magichash <- liftIO $ MagicHash <$> randomRIO (0,maxBound)
+
+                                                             return $ signLinkFromDetails' a b c magichash 
+      let Just authorsiglink0 = find isAuthor newSignLinks
+          authorsiglink = authorsiglink0 {
+                            maybesignatory = maybesignatory asl,
+                            maybecompany = maybecompany asl
+                          }
+          othersiglinks = filter (not . isAuthor) newSignLinks
+          newsiglinks = authorsiglink : othersiglinks
+      return doc {documentstatus = Preparation,
+                  documenttimeouttime = Nothing,
+                  documentsignatorylinks = newsiglinks
+                 }
 
 data RestoreArchivedDocument = RestoreArchivedDocument User DocumentID
                                 deriving (Eq, Ord, Show, Typeable)
