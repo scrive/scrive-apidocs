@@ -110,7 +110,7 @@ $loadingdialog()$
                                 rejectText: "$_cancel()$",
                                 title: "$_delete()$",
                                 content: confirmtext
-                              })
+                              });
                           }
                 }
               ]
