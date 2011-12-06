@@ -110,7 +110,7 @@ var documentsTable = KontraList().init({
                                 rejectText: "$_cancel()$",
                                 title: "$_delete()$",
                                 content: confirmtext
-                              })
+                              });
                           }
                 }
               ]
