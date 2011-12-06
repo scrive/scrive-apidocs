@@ -1,4 +1,4 @@
-####		
+####
 pageOffersList=
 $loadingdialog()$
 <div>
@@ -33,7 +33,7 @@ $loadingdialog()$
                     if ((listobject.field("anyinvitationundelivered") == "True" &&  idx == undefined)
                        || (idx != undefined && listobject.subfield(idx,"invitationundelivered") == "True"))
                        icon = jQuery.merge( icon, jQuery("<span style='color:#000000;position:relative;top:-2px'>!</span>"));
-                        
+
                     return icon;
                  }
         }),
@@ -74,7 +74,7 @@ $loadingdialog()$
                                 title: "$_OfferReminderHead()$",
                                 content: content
                               })
-                          }                         
+                          }
                },
                {name : "$_delete()$",
                 onSelect: function(docs){
@@ -96,19 +96,21 @@ $loadingdialog()$
                                                 archive: "true",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");})
                                           });
-                             var text = "$_listLocalDialogsBody()$"
-                             if (docs.length == 1)
-                               text += docs[0].field("title") + "."
-                             else
-                               text += docs.length + (" $_docListTabsOffers()$.").toLowerCase();
-                             var content = jQuery("<p/>").text(text);
+                             var confirmtext = jQuery("<p/>").append("$_listLocalDialogsBody()$ ");
+                             var label = jQuery("<strong/>");
+                             if (docs.length == 1) {
+                               confirmtext.append(jQuery("<strong/>").text(docs[0].field("title")));
+                             } else {
+                               confirmtext.append(docs.length + (" $_docListTabsOffers()$").toLowerCase());
+                             }
+                             confirmtext.append("?");
                              Confirmation.popup({
                                 submit: submit,
                                 acceptText: "$_ok()$",
                                 rejectText: "$_cancel()$",
                                 title: "$_delete()$",
-                                content: content
-                              })
+                                content: confirmtext
+                              });
                           }
                 }
               ]

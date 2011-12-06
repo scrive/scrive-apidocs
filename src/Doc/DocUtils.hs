@@ -41,7 +41,6 @@ import File.Model
 isDeletableDocument :: Document -> Bool
 isDeletableDocument doc =
     (not  $ (documentstatus doc) `elem` [Pending, AwaitingAuthor]) -- We dont allow to delete pending documents
-    || (isAttachment doc || isTemplate doc)  -- But attachments and templates never can be pending (it they are this is a bug somewere else)
 
 {- |
    Given a Document, return all of the signatory details for all signatories (exclude viewers but include author if he must sign).
@@ -360,7 +359,7 @@ samenameanddescription n d (nn, dd, _) = n == nn && d == dd
 getSignatoryAttachment :: BS.ByteString -> BS.ByteString -> Document -> Maybe SignatoryAttachment
 getSignatoryAttachment email name doc =
   find (\sl -> email == signatoryattachmentemail sl &&
-               name  == signatoryattachmentname sl) $ 
+               name  == signatoryattachmentname sl) $
   documentsignatoryattachments doc
 
 buildattach :: String -> Document -> [SignatoryAttachment]
@@ -401,8 +400,8 @@ documentsealedfilesM Document{documentsealedfiles} = do
     liftM catMaybes $ mapM (runDBQuery . GetFileByFileID) documentsealedfiles
 
 fileInDocument :: Document -> FileID -> Bool
-fileInDocument doc fid = 
-    elem fid $      (documentfiles doc) 
-                 ++ (documentsealedfiles doc) 
+fileInDocument doc fid =
+    elem fid $      (documentfiles doc)
+                 ++ (documentsealedfiles doc)
                  ++ (fmap authorattachmentfile $ documentauthorattachments doc)
                  ++ (catMaybes $ fmap signatoryattachmentfile $ documentsignatoryattachments doc)
