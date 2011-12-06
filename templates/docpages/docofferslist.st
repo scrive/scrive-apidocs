@@ -61,17 +61,19 @@ $loadingdialog()$
                                                 remind: "true",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");})
                                           });
-                             var text;
-                             if (docs.length == 1)
-                               text = "$_OfferReminderBodySingel()$ "+ docs[0].field("title") + "."
-                             else
-                               text = "$_OfferReminderBodyMulti()$ "+ docs.length + (" $_docListTabsOffers()$.").toLowerCase() + " $_OfferReminderBodyMulti2()$";
-                             var content = jQuery("<p/>").text(text);
+                             var content = jQuery("<p/>");
+                             if (docs.length == 1) {
+                               content.append("$_OfferReminderBodySingel()$ ");
+                               content.append(jQuery("<strong/>").text(docs[0].field("title")));
+                               content.append("?");
+                             } else {
+                               content.text("$_OfferReminderBodyMulti()$ "+ docs.length + (" $_docListTabsOffers()$?").toLowerCase());
+                             }
                              Confirmation.popup({
                                 submit: submit,
                                 acceptText: "$_ok()$",
                                 rejectText: "$_cancel()$",
-                                title: "$_OfferReminderHead()$",
+                                title: "$_SendReminder()$",
                                 content: content
                               })
                           }
