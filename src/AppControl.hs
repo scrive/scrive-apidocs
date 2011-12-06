@@ -257,8 +257,7 @@ appHandler handleRoutes appConf appGlobals = do
       let newelegtrans = ctxelegtransactions ctx'
       F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
       updateSessionWithContextData session newsessionuser newelegtrans
-      when (ctxdbconnclose ctx') $
-        liftIO $ disconnect $ ctxdbconn ctx'
+      liftIO $ disconnect $ ctxdbconn ctx'
       return res
 
     createContext rq session = do
@@ -310,7 +309,6 @@ appHandler handleRoutes appConf appGlobals = do
                 , ctxnormalizeddocuments = docscache appGlobals
                 , ctxipnumber = peerip
                 , ctxdbconn = conn
-                , ctxdbconnclose = True
                 , ctxdocstore = docstore appConf
                 , ctxs3action = defaultAWSAction appConf
                 , ctxgscmd = gsCmd appConf
@@ -335,7 +333,6 @@ appHandler handleRoutes appConf appGlobals = do
                 , ctxservice = mservice
                 , ctxlocation = location
                 , ctxadminaccounts = admins appConf
-                , ctxdbconnstring = dbConfig appConf
                 }
       return ctx
 
