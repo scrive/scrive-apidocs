@@ -43,6 +43,7 @@ documentInvariants = [ documentHasOneAuthor
                      , maxLengthOnFields
                      , maxNumberOfPlacements
                      , awaitingAuthorAuthorNotSigned
+                     , atLeaseOneIdentification
                      , atLeastOneSignatory
                      , notSignatoryNotSigned
                      , maxCustomFields
@@ -212,6 +213,15 @@ atLeastOneSignatory _ document =
     (isPending document || isAwaitingAuthor document || isClosed document) =>>
     (any isSignatory (documentsignatorylinks document))
     
+
+{- |
+   Al least one identification method is specified.
+-}
+atLeaseOneIdentification :: MinutesTime -> Document -> Maybe String
+atLeaseOneIdentification _ document =
+  assertInvariant "no identification methods specified" $
+    (not (null (documentallowedidtypes document)))
+
 {- |
    If you're not a signatory, you shouldn't be signed
  -}
