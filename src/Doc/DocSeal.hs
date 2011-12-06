@@ -35,11 +35,12 @@ import qualified AppLogger as Log
 import System.IO.Temp
 import System.IO hiding (stderr)
 import Util.HasSomeCompanyInfo
+import Control.Exception (bracket)
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import File.Model
 import DB.Classes
-import Database.HDBC.PostgreSQL
+import Database.HDBC
 import Control.Applicative
 
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
@@ -272,7 +273,7 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplat
                                       return result
               Log.debug $ "Addeing new sealed file to DB"
               File{fileid = sealedfileid} <-
-                  withPostgreSQL (ctxdbconnstring ctx) $ \conn ->
+                  bracket (clone $ ctxdbconn ctx) (disconnect) $ \conn ->
                       ioRunDB conn $ dbUpdate $ NewFile filename newfilepdf
               Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
               res <- update $ AttachSealedFile documentid sealedfileid (ctxtime ctx)

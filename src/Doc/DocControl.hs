@@ -53,6 +53,7 @@ import Data.Either
 import Data.List
 import Data.Maybe
 import Data.Word
+import Control.Exception (bracket)
 import Happstack.Server hiding (simpleHTTP)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
@@ -61,7 +62,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import Text.JSON hiding (Result)
-import Database.HDBC.PostgreSQL
+import Database.HDBC
 import ForkAction
 import qualified ELegitimation.BankID as BankID
 {-
@@ -132,7 +133,7 @@ postDocumentChangeAction document@Document  { documentstatus
         ctx@Context{ctxlocale, ctxglobaltemplates} <- getContext
         forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
           threadDelay 5000
-          withPostgreSQL (ctxdbconnstring ctx) $ \conn -> do
+          bracket (clone $ ctxdbconn ctx) (disconnect)$ \conn -> do
 
            enewdoc <- runReaderT (sealDocument ctx document) conn
            case enewdoc of
@@ -157,7 +158,7 @@ postDocumentChangeAction document@Document  { documentstatus
         ctx@Context{ctxlocale, ctxglobaltemplates} <- getContext
         author <- getDocAuthor
         forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $
-         withPostgreSQL (ctxdbconnstring ctx) $ \conn -> do
+         bracket (clone $ ctxdbconn ctx) (disconnect) $ \conn -> do
           enewdoc <- runReaderT (sealDocument ctx document) conn
           case enewdoc of
             Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails ctx newdoc
