@@ -45,7 +45,7 @@ jsonDocumentStatus (DocumentError _) = showJSON (40 :: Int)
 jsonIdentificationType :: [IdentificationType] -> JSValue
 jsonIdentificationType [EmailIdentification] = showJSON (1 :: Int)
 jsonIdentificationType [ELegitimationIdentification] = showJSON (10 :: Int)
-jsonIdentificationType x = error $ "Unknown id type " ++ show x
+jsonIdentificationType x = error $ "Unknown IdentificationType list " ++ show x
 
 jsonDocumentMetadata :: Document -> JSValue
 jsonDocumentMetadata doc = fromRight $
