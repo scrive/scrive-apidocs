@@ -61,9 +61,7 @@
 "_MailAPISettings","Inställningar",,"Settings"
 "_NewPassword","Nytt lösenord:",,"New password:"
 "_OfferReminderBodyMulti","Är du säker att du vill skicka en påminnelse til berörda parter för",,"Are you sure you want to send reminders to the parties involved in the"
-"_OfferReminderBodyMulti2","offerter.",,"offers?"
 "_OfferReminderBodySingel","Är du säker att du vill skicka en påminnelse till berörda parter i offerter",,"Are you sure you want to send a reminder to the parties involved in the offer"
-"_OfferReminderHead","Skicka påminnelse",,"Send reminder"
 "_PartnersHead","Partners",,"Partners"
 "_PleaseAcceptTOS","Vänligen acceptera användarvillkoren",,"Please accept the Terms of Service"
 "_PresentPassword","Nuvarande lösenord:",,"Present password:"
@@ -255,6 +253,7 @@
 "_QuotesHead","Kunder berättar",,"What our customers think"
 "_ReadUnderstoodTOS","Jag har läst och accepterar Scrive Allmänna Villkor",,"I have read and accept the Scrive Terms of Service"
 <<<<<<< HEAD
+<<<<<<< HEAD
 "_ReminderBodyIfMulti","Är du säker att du vill skicka en påminnelse til berörda parter för",,"Are you sure you want to send reminders to the parties involved in the"
 =======
 "_ReminderBodyIfMulti","Är du säker att du vill skicka en påminnelse till berörda parter för",,"Are you sure you want to send reminders to the parties involved in the"
@@ -264,6 +263,12 @@
 "_ReminderBodyMulti","Är du säker att du vill skicka en påminnelse til berörda parter för",,"Are you sure you want to send reminders to the parties involved in the"
 "_ReminderBodyMulti2","orderbekräftelse.",,"order confirmations?"
 "_ReminderBodySingel","Är du säker att du vill skicka en påminnelse til berörda parter i orderbekräftelse",,"Are you sure you want to send a reminder to the parties involved in the order confirmation"
+=======
+"_ContractReminderBodyMulti","Är du säker att du vill skicka en påminnelse till berörda parter för",,"Are you sure you want to send reminders to the parties involved in the"
+"_ContractReminderBodySingel","Är du säker att du vill skicka en påminnelse til berörda parter i dokumentet",,"Are you sure you want to send a reminder to the parties involved in the document"
+"_OrderReminderBodyMulti","Är du säker att du vill skicka en påminnelse til berörda parter för",,"Are you sure you want to send reminders to the parties involved in the"
+"_OrderReminderBodySingel","Är du säker att du vill skicka en påminnelse til berörda parter i orderbekräftelse",,"Are you sure you want to send a reminder to the parties involved in the order confirmation"
+>>>>>>> staging
 "_RepeatNewPassword","Upprepa nytt lösenord:",,"Repeat new password:"
 "_RequestedAttachments","Bägarda bilagor:",,"Requested attachments:"
 "_SaveChanges","Spara ändringar",,"Save changes"

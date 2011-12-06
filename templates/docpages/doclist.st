@@ -60,12 +60,14 @@ var documentsTable = KontraList().init({
                                                 remind: "true",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");})
                                           });
-                             var text;
-                             if (docs.length == 1)
-                               text = "$_ReminderBodyIfSingel()$ "+ docs[0].field("title") + "."
-                             else
-                               text = "$_ReminderBodyIfMulti()$ "+ docs.length + (" $_docListTabsDocs()$.").toLowerCase() + " $_ReminderBodyIfMulti2()$";
-                             var content = jQuery("<p/>").text(text);
+                             var content = jQuery("<p/>");
+                             if (docs.length == 1) {
+                               content.append("$_ContractReminderBodySingel()$ ");
+                               content.append(jQuery("<strong/>").text(docs[0].field("title")));
+                               content.append("?");
+                             } else {
+                               content.text("$_ContractReminderBodyMulti()$ "+ docs.length + (" $_docListTabsDocs()$?").toLowerCase());
+                             }
                              Confirmation.popup({
                                 submit: submit,
                                 acceptText: "$_ok()$",
