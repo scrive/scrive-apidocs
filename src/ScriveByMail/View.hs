@@ -40,12 +40,15 @@ mailMailAPIConfirm ctx document siglink = do
         field "issignatory" $ issignatory
         field "isattachments" $ False
         field "hassigattachments" $ False
+        field "ctxhostpart" $ ctxhostpart ctx
         field "link" $ ctxhostpart ctx ++ (show $  LinkIssueDoc (documentid document))
 
 
 mailMailApiError:: TemplatesMonad m =>
+                   Context ->
                    String -> 
                    m Mail
-mailMailApiError err =
+mailMailApiError ctx err =
   kontramail "mailMailAPIError" $ do
     field "errormsg" err
+    field "ctxhostpart" (ctxhostpart ctx)

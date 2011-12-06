@@ -30,6 +30,9 @@ elif [ "$rv" -eq 51 ]; then
 exit 69
 elif [ "$rv" -eq 0 ]; then
 exit 0
+# don't know why it would ever return 1, but it does
+elif [ "$rv" -eq 1 ]; then
+exit 0
 else
 echo "Mail API error $rv" >> ${LOG}
 exit 70

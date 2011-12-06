@@ -660,7 +660,7 @@ img.waiting
     font-weight:normal;
 }
 
-.doctablecontainer {
+.templateslist {
     background:url("images/ui-bg_glass_100_f6f6f6_1x400.png") repeat-x scroll 50% 50% #F6F6F6;
     border-top:1px solid #D0D0D0;
     border-bottom:1px solid #C0C0C0;
@@ -668,8 +668,10 @@ img.waiting
     border-right:1px solid #BDBDBD;
     width:958px;
 }
-#signStepsContainer .doctablecontainer {
-    width:918px;
+
+.templateslist .searchBox {
+    padding-top: 48px;
+    padding-right: 30px;
 }
 
 .doctable {
@@ -2713,7 +2715,7 @@ input#cancel {
 }
 
 .searchBox{
-    
+
 }
 .centered {
     margin: 10%;
