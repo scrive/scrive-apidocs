@@ -177,7 +177,6 @@ maybeScheduleRendering :: Kontrakcja m
                        -> DocumentID
                        -> m JpegPages
 maybeScheduleRendering fileid docid = do
-  doNotCloseDBConnectionExplicitly
   ctx@Context{ ctxnormalizeddocuments = mvar } <- getContext
   liftIO $ modifyMVar mvar $ \setoffilesrenderednow ->
       case Map.lookup fileid setoffilesrenderednow of

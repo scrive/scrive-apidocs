@@ -21,16 +21,14 @@ import API.Service.Model
 import Company.Model
 import DB.Types
 
-data Context = Context {
-      ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
+data Context = Context
+    { ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
     , ctxhostpart            :: String -- ^ The hostname of the URL for the request.
     , ctxflashmessages       :: [FlashMessage] -- ^ The flash messages for the NEXT request.
     , ctxtime                :: MinutesTime -- ^ The time of the request.
     , ctxnormalizeddocuments :: MVar (Map.Map FileID JpegPages) -- ^
     , ctxipnumber            :: Word32 -- ^ The ip number of the client.
     , ctxdbconn              :: Connection -- ^ PostgreSQL database connection
-    , ctxdbconnclose         :: Bool -- ^ Indicates whether we want to close connection explicitly or let it be closed by GC
-    , ctxdbconnstring        :: String -- ^ sometimes we need to make connection to postgress again
     , ctxdocstore            :: FilePath -- ^ The temporary document directory.
     , ctxs3action            :: AWS.S3Action -- ^
     , ctxgscmd               :: String -- ^
@@ -49,4 +47,4 @@ data Context = Context {
     , ctxservice             :: Maybe Service -- ^
     , ctxlocation            :: String -- ^
     , ctxadminaccounts       :: [Email] -- ^
-}
+    }
