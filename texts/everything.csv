@@ -554,7 +554,7 @@ profits and reduce frustration.</p>                                             
 "_dialogConfirmSigninviteBody2","När du undertecknat kommer en automatisk inbjudan att skickas
  till",,"When you have signed, an invitation will be automatically sent
  to"
-"_dialogConfirmSigninviteBody2OnlyAuthor","När du undertecknat kommer det färdigställda dokumentet att skickas till samtliga parter med e-post.",,
+"_dialogConfirmSigninviteBody2OnlyAuthor","När du undertecknat kommer det färdigställda dokumentet att skickas till samtliga parter med e-post.",,"Once signed the completed document will be emailed to all parties."
 "_dialogConfirmSigninviteBody3","med e-post.",,"by e-mail."
 "_dialogConfirmSigninviteHead","Underteckna",,"Sign"
 "_dialogConfirmSigninviteSubBody","Har du ingen e-legitimation? Du kan ladda ned en
