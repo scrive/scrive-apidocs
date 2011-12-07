@@ -114,7 +114,7 @@ function listString(names) {
 function listStringMany(names) {
     var name0 = names.shift();
     if (names.length === 1)
-        return "<strong>" + name0 + "</strong>" + localization.listand + "<strong>" + names[0] + "</strong>";
+        return "<strong>" + name0 + "</strong> " + localization.listand + " <strong>" + names[0] + "</strong>";
     return "<strong>" + name0 + "</strong>, " + listStringMany(names);
 }
 
@@ -1513,7 +1513,7 @@ function renumberParts() {
         if (isMultiPart) {
             console.log("is multipart");
             $(this).find(".partnumber").text(localization.multipleSignatory.toUpperCase());
-        } 
+        }
 
         // I'm leaving the following as a stub in case we want
         // different logic for the author as signatory, which I
