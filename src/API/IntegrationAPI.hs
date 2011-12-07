@@ -179,7 +179,7 @@ createDocument = do
    tags <- fmap (fromMaybe []) $ fromJSONLocal "tags" $ fromJSONLocalMap $ do
      n <- fromJSONField "name"
      v <- fromJSONField "value"
-     when (isNothing n || isNothing v) $ throwApiError API_ERROR_MISSING_VALUE "MIssing tag name or value"
+     when (isNothing n || isNothing v) $ throwApiError API_ERROR_MISSING_VALUE "Missing tag name or value"
      return $ Just $ DocumentTag (fromJust n) (fromJust v)
    createFun <- case mtemplateids of
      Just templateids -> -- they want a template
