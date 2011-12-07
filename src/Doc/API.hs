@@ -28,8 +28,6 @@ import Happstack.Server (FromReqURI(..))
 import Doc.DocUtils
 import User.Model
 import Company.Model
-import Control.Applicative
-import API.APICommons
 import Happstack.Server.Monads
 import API.Monad
 
@@ -87,7 +85,7 @@ documentNew = api $ do
   when (isNothing mdoctypei)
     apiBadInput
   let Just doctypei = mdoctypei
-  let mdoctype = toDocumentType <$> toSafeEnumInt doctypei
+  let mdoctype = toSafeEnumInt doctypei
   when (isNothing mdoctype)
     apiBadInput
   let Just doctype = mdoctype

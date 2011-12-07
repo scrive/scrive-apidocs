@@ -171,7 +171,7 @@ createDocument = do
    mtype <- liftMM (return . toSafeEnumInt) (fromJSONField "type")
    when (isNothing mtype) $
      throwApiError API_ERROR_MISSING_VALUE "BAD DOCUMENT TYPE"
-   let doctype = toDocumentType $ fromJust mtype
+   let doctype = fromJust mtype
    mtemplateids <- fromJSONField "template_id"
    Log.integration $ "got this template from json " ++ show mtemplateids
    involved  <- fmap (fromMaybe []) $ fromJSONLocal "involved" $ fromJSONLocalMap $ getSignatoryTMP
