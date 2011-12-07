@@ -58,8 +58,7 @@ instance SafeEnum DocumentStatus where
 instance SafeEnum [IdentificationType] where
     fromSafeEnum [EmailIdentification]            = 1
     fromSafeEnum [ELegitimationIdentification]    = 10
-    fromSafeEnum a | EmailIdentification `elem` a = 1 -- just in case
-    fromSafeEnum _                                = -1 -- should never happen
+    fromSafeEnum ls                               = error $ "Unknown list of IdentificationType: " ++ show ls
     toSafeEnum 1  =  Just [EmailIdentification]
     toSafeEnum 10 = Just [ELegitimationIdentification]
     toSafeEnum _  = Nothing
