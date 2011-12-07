@@ -112,7 +112,7 @@ import Util.SignatoryLinkUtils
 --import Doc.DocStateUtils
 import Doc.DocProcess
 import Doc.DocStateCommon
-import qualified AppLogger as Log()
+import qualified AppLogger as Log
 import System.Random
 --import Happstack.Server
 --import Happstack.State
@@ -293,9 +293,11 @@ checkEqualBy name func obj1 obj2
   | func obj1 /= func obj2 = Just (name, show (func obj1), show (func obj2))
   | otherwise              = Nothing
 
-assertEqualDocuments :: (Monad m) => Document -> Document -> m ()
+assertEqualDocuments :: (Monad m, MonadIO m) => Document -> Document -> m ()
 assertEqualDocuments d1 d2 | null inequalities = return ()
-                           | otherwise = error message
+                           | otherwise = do
+                                Log.debug message
+                                error message
   where
     message = "Documents aren't equal in " ++ concat (map showInequality inequalities)
     showInequality (name,obj1,obj2) = name ++ ": \n" ++ obj1 ++ "\n" ++ obj2 ++ "\n"
@@ -1009,7 +1011,7 @@ instance DBUpdate ChangeSignatoryEmailWhenUndelivered (Either String Document) w
                        , sqlField "signatory" $ fmap userid muser
                        , sqlField "company" $ muser >>= usercompany
                        ]
-                       ("EXITS (SELECT * FROM documents WHERE documents.id = signatory_links.document_id AND (documents.status = ? OR documents.status = ?))" ++ 
+                       ("WHERE EXISTS (SELECT * FROM documents WHERE documents.id = signatory_links.document_id AND (documents.status = ? OR documents.status = ?))" ++ 
                         " AND document_id = ? " ++
                         " AND id = ? ")
                        [ toSql Pending, toSql AwaitingAuthor
@@ -1384,6 +1386,8 @@ instance DBUpdate NewDocument (Either String Document) where
                 , documentservice              = userservice user
                 , documentauthorattachments    = []
                 , documentsignatoryattachments = []
+                , documentallowedidtypes       = [EmailIdentification]
+                , documentui                   = (documentui blankDocument) {documentmailfooter = BS.fromString <$> (customfooter $ usersettings user)}
                 } `appendHistory` [DocumentHistoryCreated ctime]
 
       case invariantProblems ctime doc of
@@ -1392,8 +1396,12 @@ instance DBUpdate NewDocument (Either String Document) where
            midoc <- insertDocumentAsIs doc
            case midoc of
              Just doc' -> return $ Right doc'
-             Nothing -> return $ Left $ "insertDocumentAsIs could not insert document #" ++ show (documentid doc) ++ " in NewDocument"
-        Just a -> return $ Left $ "insertDocumentAsIs invariants violated: " ++ show a
+             Nothing -> do
+                        Log.debug $ "insertDocumentAsIs could not insert document #" ++ show (documentid doc) ++ " in NewDocument"
+                        return $ Left $ "insertDocumentAsIs could not insert document #" ++ show (documentid doc) ++ " in NewDocument"
+        Just a -> do
+           Log.debug $ "insertDocumentAsIs invariants violated: " ++ show a
+           return $ Left $ "insertDocumentAsIs invariants violated: " ++ show a
 
 
 
@@ -1943,7 +1951,7 @@ instance DBUpdate UpdateFields (Either String Document) where
       r <- runUpdateStatement "signatory_links" 
                        [ sqlField "fields" $ map updateSigField $ signatoryfields $ signatorydetails sl
                        ]
-                       ("EXITS (SELECT * FROM documents WHERE documents.id = signatory_links.document_id AND (documents.status = ? OR documents.status = ?))" ++ 
+                       ("WHERE EXISTS (SELECT * FROM documents WHERE documents.id = signatory_links.document_id AND (documents.status = ? OR documents.status = ?))" ++ 
                         " AND document_id = ? " ++
                         " AND id = ? ")
                        [ toSql Pending, toSql AwaitingAuthor

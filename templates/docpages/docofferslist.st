@@ -1,4 +1,4 @@
-####		
+####
 pageOffersList=
 $loadingdialog()$
 <div>
@@ -33,7 +33,7 @@ $loadingdialog()$
                     if ((listobject.field("anyinvitationundelivered") == "True" &&  idx == undefined)
                        || (idx != undefined && listobject.subfield(idx,"invitationundelivered") == "True"))
                        icon = jQuery.merge( icon, jQuery("<span style='color:#000000;position:relative;top:-2px'>!</span>"));
-                        
+
                     return icon;
                  }
         }),
@@ -61,20 +61,22 @@ $loadingdialog()$
                                                 remind: "true",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");})
                                           });
-                             var text;
-                             if (docs.length == 1)
-                               text = "$_OfferReminderBodySingel()$ "+ docs[0].field("title") + "."
-                             else
-                               text = "$_OfferReminderBodyMulti()$ "+ docs.length + (" $_docListTabsOffers()$.").toLowerCase() + " $_OfferReminderBodyMulti2()$";
-                             var content = jQuery("<p/>").text(text);
+                             var content = jQuery("<p/>");
+                             if (docs.length == 1) {
+                               content.append("$_OfferReminderBodySingel()$ ");
+                               content.append(jQuery("<strong/>").text(docs[0].field("title")));
+                               content.append("?");
+                             } else {
+                               content.text("$_OfferReminderBodyMulti()$ "+ docs.length + (" $_docListTabsOffers()$?").toLowerCase());
+                             }
                              Confirmation.popup({
                                 submit: submit,
                                 acceptText: "$_ok()$",
                                 rejectText: "$_cancel()$",
-                                title: "$_OfferReminderHead()$",
+                                title: "$_SendReminder()$",
                                 content: content
                               })
-                          }                         
+                          }
                },
                {name : "$_delete()$",
                 onSelect: function(docs){
@@ -96,19 +98,21 @@ $loadingdialog()$
                                                 archive: "true",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");})
                                           });
-                             var text = "$_listLocalDialogsBody()$"
-                             if (docs.length == 1)
-                               text += docs[0].field("title") + "."
-                             else
-                               text += docs.length + (" $_docListTabsOffers()$.").toLowerCase();
-                             var content = jQuery("<p/>").text(text);
+                             var confirmtext = jQuery("<p/>").append("$_listLocalDialogsBody()$ ");
+                             var label = jQuery("<strong/>");
+                             if (docs.length == 1) {
+                               confirmtext.append(jQuery("<strong/>").text(docs[0].field("title")));
+                             } else {
+                               confirmtext.append(docs.length + (" $_docListTabsOffers()$").toLowerCase());
+                             }
+                             confirmtext.append("?");
                              Confirmation.popup({
                                 submit: submit,
                                 acceptText: "$_ok()$",
                                 rejectText: "$_cancel()$",
                                 title: "$_delete()$",
-                                content: content
-                              })
+                                content: confirmtext
+                              });
                           }
                 }
               ]
