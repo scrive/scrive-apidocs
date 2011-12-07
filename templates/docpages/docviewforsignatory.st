@@ -23,11 +23,29 @@ offersignatorysignmodalcontentnotlast=<p> $_offersignatorysignmodalcontentnotlas
 ####
 ordersignatorysignmodalcontentnotlast= <p> $_ordersignatorysignmodalcontentnotlast()$ </p>         
 ####
+contractsignatorysignmodalcontentauthorlast=<p> $_contractsignatorysignmodalcontentauthorlast()$ </p>
+####
+offersignatorysignmodalcontentauthorlast=<p> $_offersignatorysignmodalcontentauthorlast()$ </p>
+####
+ordersignatorysignmodalcontentauthorlast= <p> $_ordersignatorysignmodalcontentauthorlast()$ </p>  
+####
+contractauthorsignlastbuttontext=$_contractauthorsignlastbuttontext()$
+####
+offerauthorsignlastbuttontext=$_offerauthorsignlastbuttontext()$
+####
+orderauthorsignlastbuttontext=$_orderauthorsignlastbuttontext()$
+####
 contractsignbuttontext=$_contractsignbuttontext()$
 ####
 offersignbuttontext=$_offersignbuttontext()$
 ####
 ordersignbuttontext=$_ordersignbuttontext()$
+####
+contractsignbuttontextauthor=$_contractsignbuttontextauthor()$
+####
+offersignbuttontextauthor=$_offersignbuttontextauthor()$
+####
+ordersignbuttontextauthor=$_ordersignbuttontextauthor()$
 ####
 contractsignatorycancelmodaltitle=
           <h2>$_contractsignatorycancelmodaltitleHead()$</h2>
@@ -47,6 +65,32 @@ offersignguardwarntext=$_offersignguardwarntext()$
 ######
 ordersignguardwarntext=$_ordersignguardwarntext()$
 ######
+###### PART INFO IN DESIGN VIEW
+######
+contractauthorname=$_contractauthorname()$
+#####
+contractauthorsignatoryname=$_contractauthorsignatoryname()$
+#####
+contractsignatoryname=$_contractsignatoryname()$
+#####
+contractnonsignatoryname=$_contractnonsignatoryname()$
+######
+offerauthorname=$_offerauthorname()$
+#####
+offerauthorsignatoryname=$_offerauthorsignatoryname()$
+#####
+offersignatoryname=$_offersignatoryname()$
+#####
+offernonsignatoryname=$_offernonsignatoryname()$
+######
+orderauthorname=$_orderauthorname()$
+#####
+orderauthorsignatoryname=$_orderauthorsignatoryname()$
+#####
+ordersignatoryname=$_ordersignatoryname()$
+#####
+ordernonsignatoryname=$_ordernonsignatoryname()$
+######
 pageDocumentForSignContent=
 <script>
 jQuery(function(){
@@ -57,7 +101,7 @@ var docview = KontraStandardDocument.init({
 				magichash : "$sigmagichash$"
 			})
 	});
-jQuery("#body-container").replaceWith(docview.view.el)
+jQuery(".body-container").replaceWith(docview.view.el)
 })
 </script>
 #####

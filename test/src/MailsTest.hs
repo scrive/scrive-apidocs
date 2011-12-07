@@ -3,7 +3,6 @@ module MailsTest (mailsTests) where
 import Control.Applicative
 import Database.HDBC.PostgreSQL
 import Happstack.Server
-import Happstack.State (update)
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit (Assertion)
@@ -16,7 +15,7 @@ import TestingUtil
 import TestKontra as T
 import User.Model
 import Misc
-import Doc.DocState
+import Doc.Transitory
 import Doc.DocViewMail
 import Mails.SendMail
 import Company.Model
@@ -60,16 +59,19 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
         ctx <- mailingContext l conn
         _ <- runDBUpdate $ SetUserSettings (userid author) $ (usersettings author) { locale = l }
         d' <- gRight $ randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype)
-        d <- gRight . update $ SetDocumentLocale (documentid d') l (ctxtime ctx)
+        d <- gRight . doc_update $ SetDocumentLocale (documentid d') l (ctxtime ctx)
 
         let docid = documentid d
         let asl = head $ documentsignatorylinks d
         let authordetails = signatorydetails asl
-        _ <- gRight $ randomUpdate $ AttachFile docid
+        file <- addNewRandomFile
+        _ <- gRight $ randomUpdate $ AttachFile docid (fileid file)
 
         isl <- rand 10 arbitrary
         now <- getMinutesTime
-        _ <- gRight $ randomUpdate $ UpdateDocumentSimple docid (authordetails,author) [isl]
+        let authorrole = [SignatoryAuthor, SignatoryPartner]
+            sigs = [(authordetails,authorrole), (isl,[SignatoryPartner])]
+        _ <- gRight $ randomUpdate $ ResetSignatoryDetails docid sigs now
         d2 <- gRight $ randomUpdate $ PreparationToPending docid now
         let asl2 = head $ documentsignatorylinks d2
         _ <- gRight $ randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2) now
@@ -176,7 +178,7 @@ sendoutForManualChecking titleprefix req ctx (Just email) m = do
 testMailer:: Mailer
 testMailer = createSendgridMailer $ MailsSendgrid {
         mailbackdooropen = False,
-        ourInfoEmail = "test@skrivapa.se",
+        ourInfoEmail = "test@scrive.com",
         ourInfoEmailNiceName = "test",
         sendgridSMTP = "smtps://smtp.sendgrid.net",
         sendgridRestAPI = "https://sendgrid.com/api",

@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module File.Model
-    ( FileMovedToAWS(..)
+    ( FileID
+    , FileMovedToAWS(..)
     , FileMovedToDisk(..)
     , GetFileByFileID(..)
     , GetFileThatShouldBeMovedToAmazon(..)

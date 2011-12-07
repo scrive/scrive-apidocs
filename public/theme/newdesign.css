@@ -58,25 +58,27 @@
         float: right;
         font: 14px/18px "Helvetica Neue";
         margin-right: 38px;
+        margin-left: 30px;
         margin-top: 17px;
         padding-bottom: 5px;
         padding-left: 28px;
         text-shadow: #000 0 1px 3px;
         text-decoration: none;
+        font-weight: bold;
 }
-#top-slim-container .document-button {
+#top-slim-container .toplink {
         color: #999;
         float: right;
         font: 14px/18px "Helvetica Neue";
         margin-top: 17px;
         padding-bottom: 5px;
-        padding-left: 25px;
+        padding-left: 30px;
         text-shadow: #000 0 1px 3px;
         text-decoration: none;
         font-weight: bold;
 }
 
-#top-slim-container .document-button:hover,
+#top-slim-container .toplink:hover,
 #top-slim-container .login-button:hover
 {
   color: #FFFFFF;
@@ -631,6 +633,7 @@
    z-index: -1;
 }
 
+.account-body,
 .tab-viewer .account-body {
    background: #f7f7f7;
    border: 1px solid #dedede;
@@ -642,6 +645,8 @@
    min-height: 150px;
 }
 
+
+.account-body h2,
 .tab-viewer .account-body h2 {
    color: #000;
    font: 14px/24px "Helvetica Neue";
@@ -672,6 +677,8 @@
     width: 70px !important;
 }
 
+
+.account-body table,
 .tab-viewer .account-body table {
    color: #666;
    margin-top: 10px;
@@ -687,13 +694,9 @@
    width: 120px;
 }
 
-.tab-viewer .account-body table input {
-   border: 1px solid #6f89aa;
-   /* color: #666; */
-   font: 12px "Lucida Grande";
-   padding: 5px 4px 3px;
-   text-transform: none;
-   width: 200px;
+.account-body table td,
+.tab-viewer .account-body table td {
+   padding: 4px;
 }
 
 .tab-viewer .account-footer {
@@ -946,18 +949,3 @@
 a.submit{
     cursor:pointer
 }
-.newSubaccount input:text {
-    border: 1px solid #e4e4e4;
-    border-radius: 3px;
-    height: 17px;
-    margin: 0 10px 0 0 !important;
-    padding: 3px 6px 3px 6px;
-    width: 180px;
-    -moz-border-radius: 3px;
-    -webkit-border-radius: 3px;
-}
-
-.tab-table table tr.newSubaccount td{
-    height: 36px;
-}
-

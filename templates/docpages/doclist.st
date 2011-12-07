@@ -1,4 +1,4 @@
-####		
+####
 pageContractsList=
 $loadingdialog()$
 <div>
@@ -16,7 +16,7 @@ var documentsTable = KontraList.init({
     schema: new Schema({
     url: "/docs",
     extraParams : { documentType : "Contract" },
-    sorting: new Sorting({ fields: ["title", "status", "time","party"]}),
+    sorting: new Sorting({ fields: ["title", "status", "time","party","author"]}),
     paging: new Paging({}),
     filtering: new Filtering({text: "", infotext: "$_SearchDoc()$"}),
     cells : [
@@ -33,13 +33,14 @@ var documentsTable = KontraList.init({
                     if ((listobject.field("anyinvitationundelivered") == "True" &&  idx == undefined)
                        || (idx != undefined && listobject.subfield(idx,"invitationundelivered") == "True"))
                        icon = jQuery.merge( icon, jQuery("<span style='color:#000000;position:relative;top:-2px'>!</span>"));
-                        
+
                     return icon;
                  }
         }),
         new Cell({name: "$_SortTime()$", width:"140px", field:"time"}),
-        new Cell({name: "$_SortParty()$", width:"300px", field:"party", special: "expandable", subfield : "name"}),
-        new Cell({name: "$_SortDoc()$", width:"300px", field:"title",  special: "link"})
+        new Cell({name: "$_SortParty()$", width:"240px", field:"party", special: "expandable", subfield : "name"}),
+        new Cell({name: "$_SortSender()$", width:"100px", field:"author",  special: "link"}),
+        new Cell({name: "$_SortDoc()$", width:"240px", field:"title",  special: "link"})
         ],
     options : [{name : "$_SendReminder()$",
                 onSelect: function(docs){

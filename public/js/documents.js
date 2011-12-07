@@ -14,9 +14,10 @@ window.DocumentViewer = Backbone.Model.extend({
     },
     urlPart : function() {
         if (this.signatoryid() != undefined && this.magichash() != undefined)
-            return "/" + this.signatoryid() + "/" + this.magichash();
+            return "?signatorylinkid=" + this.signatoryid() + "&magichash=" + this.magichash();
         else return "";
     },
+    
     forFetch : function() {
         return {
             signatoryid : this.signatoryid(),
@@ -55,6 +56,17 @@ window.Document = Backbone.Model.extend({
     signatories: function(){
         return this.get("signatories");
     },
+    fixForBasic: function() {
+        while (this.signatories().length <2 ) {
+              this.addSignatory();
+        }
+    },
+    addSignatory : function(){
+        var document = this;
+        var signatories = this.signatories();
+        signatories[signatories.length] = new Signatory({"document": document, signs: true});
+        document.set({"signatories" : signatories});
+    },
     mainfile: function(){
         var file;
         if (this.closed())
@@ -78,11 +90,20 @@ window.Document = Backbone.Model.extend({
     process: function(){
         return this.get("process");
     },
+    region: function(){
+        return this.get("region");
+    },
     title : function(){
         return this.get("title");
     },
     setTitle : function(title) {
         this.set({title: title}, {silent: true});
+    },
+    daystosign : function() {
+          return this.get("daystosign");
+    },
+    setDaystosign : function(daystosign) {
+         this.set({daystosign: daystosign}, {silent: true});
     },
     infotext : function(){
         return this.get("infotext");
@@ -103,11 +124,21 @@ window.Document = Backbone.Model.extend({
 			  customtext : customtext
           });
     },
-	cancelMail : function(){
+    cancelMail : function(){
           	return new Mail({
 						document: this,
 						type: "cancel"
 			});
+    },
+    setInvitationMessage : function(customtext)
+    {
+        this.set({invitationmessage: customtext},{silent: true});
+    },
+    inviteMail : function(){
+                return new Mail({
+                                                document: this,
+                                                type: "invite"
+                        });
     },
     sign : function() {
         var fieldnames = [];
@@ -120,9 +151,13 @@ window.Document = Backbone.Model.extend({
           return new Submit({
               sign : "YES",
               method: "POST",
+              magichash : this.viewer().magichash(),
               fieldname : fieldnames,
               fieldvalue : fieldvalues
           });
+    },
+    send : function() {
+        return this.sign().remove("sign").add("send","YES");
     },
     save : function() {
          return new Submit({
@@ -134,13 +169,16 @@ window.Document = Backbone.Model.extend({
     draftData : function() {
       return { 
           title : this.title(),
-          functionality : this.get("functionality") 
+          functionality : this.get("functionality"),
+          invitationmessage : this.get("invitationmessage"),
+          daystosign : this.get("daystosign"),
+          authorization : this.get("authorization"),
+          signatories : _.map(this.signatories(), function(sig) {return sig.draftData()}),
       };  
     },
-    switchFunctionality : function() {
+    switchFunctionalityToAdvanced : function() {
           var newfunctionality = this.isBasic() ? "advanced" : "basic";
-          this.set({functionality: newfunctionality});
-          return this.save()
+          this.set({functionality: newfunctionality}, {silent : true});
     },
     saveAsTemplate : function() {
           return this.save().add("template", "YES");
@@ -203,6 +241,12 @@ window.Document = Backbone.Model.extend({
     elegAuthorization : function() {
           return this.get("authorization") == "eleg";
     },
+    setElegVerification : function() {
+          this.set({"authorization":"eleg"}, {silent: true});
+    },
+    setEmailVerification : function() {
+          this.set({"authorization":"email"}, {silent: true});
+    },
     elegTBS : function() {
         var text = this.title() + " "+  this.documentid() ;
         _.each(this.signatories(),function(signatory) {
@@ -232,6 +276,11 @@ window.Document = Backbone.Model.extend({
                         }, 1000);
         }
     },
+    author: function() {
+      for(var i=0;i<this.signatories().length;i++)
+          if (this.signatories()[i].author())
+              return this.signatories()[i];
+    },
     parse: function(args) {
      var document = this;   
      setTimeout(function() {
@@ -256,6 +305,7 @@ window.Document = Backbone.Model.extend({
                 return new Signatory(extendedWithDocument(signatoryargs));
       }),
       process: new Process(args.process),
+      region: new Region(args.region),
       infotext : args.infotext,
       canberestarted : args.canberestarted,
       status : args.status,
@@ -264,6 +314,8 @@ window.Document = Backbone.Model.extend({
       authorization : args.authorization,
       template : args.template,
       functionality : args.functionality,
+      daystosign: args.daystosign,
+      invitationmessage : args.invitationmessage,
       ready: true
       };
     }
@@ -288,6 +340,7 @@ window.DocumentDataFiller = {
             unsignedpartynotcurrent.push(signatories[i].smartname());
         var ls = listString(unsignedpartynotcurrent);
         $(".unsignedpartynotcurrent", object).html(ls);
+        return object;
         // Something more can come up
     }
 }

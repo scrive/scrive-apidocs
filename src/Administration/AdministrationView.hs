@@ -76,28 +76,25 @@ adminUsersPage users params =
         adminListFields LinkUserAdmin users params
 
 {- | Manage companies page - can find a company here -}
-adminCompaniesPage :: TemplatesMonad m => [Company] -> AdminListPageParams -> m String
-adminCompaniesPage companies params =
+adminCompaniesPage :: TemplatesMonad m => m String
+adminCompaniesPage =
     renderTemplateFM "admincompanies" $ do
-        fieldFL "companies" $ map (companyFields . Just) $ visibleItems params companies
-        adminListFields LinkCompanyAdmin companies params
+        field "adminlink" $ show $ LinkAdminOnly
 
 {- | Manage company users page - can find a company user here -}
-adminCompanyUsersPage :: TemplatesMonad m => Company -> [User] -> AdminListPageParams -> m String
-adminCompanyUsersPage company users params =
+adminCompanyUsersPage :: TemplatesMonad m => CompanyID -> m String
+adminCompanyUsersPage cid =
     renderTemplateFM "admincompanyusers" $ do
-        field "companyid" $ show $ companyid company
+        field "adminlink" $ show $ LinkAdminOnly
         field "admincompanieslink" $ show $ LinkCompanyAdmin Nothing
         field "adminuserslink" $ show $ LinkUserAdmin Nothing
-        fieldFL "users" $ map (uncurry userBasicFields) . visibleItems params $ zip users (repeat $ Just company)
-        adminListFields (const $ LinkCompanyUserAdmin (companyid company)) users params
+        field "companyid" $ show cid
 
 {-| Manage users page - can find user here -}
-adminUsersPageForSales :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> AdminListPageParams -> m String
-adminUsersPageForSales users params =
+adminUsersPageForSales :: TemplatesMonad m => m String
+adminUsersPageForSales =
     renderTemplateFM "adminUsersForSales" $ do
-        fieldFL "users" $ map mkUserInfoView $ visibleItems params users
-        adminListFields LinkUserAdmin users params
+            field "adminlink" $ show $ LinkAdminOnly
 
 {-| Manage users page - can find user here -}
 adminUsersPageForPayments :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> AdminListPageParams -> m String
@@ -138,7 +135,7 @@ adminUserStatisticsPage morefields =
   renderTemplateFM "statisticsPage" $ do
     morefields
     field "adminlink" $ show $ LinkAdminOnly
- 
+
 adminFunctionalityStatsPage :: TemplatesMonad m => [(String, Int)]
                                               -> [(String, Int)]
                                               -> m String

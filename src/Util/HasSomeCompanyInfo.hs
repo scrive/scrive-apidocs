@@ -10,31 +10,37 @@
 -----------------------------------------------------------------------------
 module Util.HasSomeCompanyInfo (
   getCompanyName,
-  getCompanyNumber
+  getCompanyNumber,
+  HasSomeCompanyInfo
   ) where
 
 import Doc.DocStateData
 import Company.Model
+import Util.SignatoryLinkUtils
 
 import qualified Data.ByteString as BS
 
 -- | Anything that might have a company name and number
-class HasSomeUserInfo a where
+class HasSomeCompanyInfo a where
   getCompanyName   :: a -> BS.ByteString
   getCompanyNumber :: a -> BS.ByteString
 
-instance HasSomeUserInfo Company where
+instance HasSomeCompanyInfo Company where
   getCompanyName   = companyname . companyinfo
   getCompanyNumber = companynumber . companyinfo
-  
-instance HasSomeUserInfo (Maybe Company) where
+
+instance HasSomeCompanyInfo (Maybe Company) where
   getCompanyName   = maybe BS.empty getCompanyName
   getCompanyNumber = maybe BS.empty getCompanyNumber
 
-instance HasSomeUserInfo SignatoryDetails where
+instance HasSomeCompanyInfo SignatoryDetails where
   getCompanyName   = getValueOfType CompanyFT
   getCompanyNumber = getValueOfType CompanyNumberFT
 
-instance HasSomeUserInfo SignatoryLink where
+instance HasSomeCompanyInfo SignatoryLink where
   getCompanyName   = getCompanyName . signatorydetails
   getCompanyNumber = getCompanyNumber . signatorydetails
+
+instance HasSomeCompanyInfo Document where
+  getCompanyName  doc  = maybe BS.empty getCompanyName   $ getAuthorSigLink doc
+  getCompanyNumber doc = maybe BS.empty getCompanyNumber $ getAuthorSigLink doc

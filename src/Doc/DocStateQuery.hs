@@ -33,15 +33,16 @@ module Doc.DocStateQuery
 import DB.Types
 import DB.Classes
 import DBError
-import Doc.DocState
+import Doc.Transitory
 import Doc.DocUtils
 import Company.Model
 import Kontra
-import Happstack.State (query)
 import Util.SignatoryLinkUtils
 import qualified AppLogger as Log
 import Doc.DocInfo
 import User.Model
+import Data.Maybe
+import Data.Semantic
 
 {- |
    Assuming user is the logged in user, can he view the Document?
@@ -62,7 +63,7 @@ canUserViewDoc user doc
     docIsSavedFor u =
       any (isSigLinkSavedFor u) $ documentsignatorylinks doc
     isSharedWithinCompany = isDocumentShared doc && isAuthoredWithinCompany
-    isAuthoredWithinCompany = isSigLinkFor (usercompany user) (getAuthorSigLink doc)
+    isAuthoredWithinCompany = isJust $ getSigLinkFor doc (And SignatoryAuthor $ usercompany user)
 
 {- |
    Securely find a document by documentid for the author or his friends.
@@ -76,7 +77,7 @@ getDocByDocID docid = do
   case (ctxmaybeuser, ctxcompany) of
     (Nothing, Nothing) -> return $ Left DBNotLoggedIn
     (Just user, _) -> do
-      mdoc <- query $ GetDocumentByDocumentID docid
+      mdoc <- doc_query $ GetDocumentByDocumentID docid
       case mdoc of
         Nothing  -> do
           Log.debug "Does not exist"
@@ -88,12 +89,12 @@ getDocByDocID docid = do
             True  -> return $ Right doc
     (_, Just company) -> do
       Log.debug "Logged in as company"
-      mdoc <- query $ GetDocumentByDocumentID docid
+      mdoc <- doc_query $ GetDocumentByDocumentID docid
       case mdoc of
         Nothing  -> return $ Left DBResourceNotAvailable
-        Just doc -> if any ((== (Just . companyid $ company)) . maybecompany) (documentsignatorylinks doc)
-                     then return $ Right doc
-                     else return $ Left DBResourceNotAvailable
+        Just doc -> if isJust $ getSigLinkFor doc (companyid company)
+                    then return $ Right doc
+                    else return $ Left DBResourceNotAvailable
 
 {- |
    Get all of the documents a user can view.
@@ -107,7 +108,7 @@ getDocsByLoggedInUser = do
   case ctxmaybeuser ctx of
     Nothing   -> return $ Left DBNotLoggedIn
     Just user -> do
-      docs <- query $ GetDocuments (currentServiceID ctx)
+      docs <- doc_query $ GetDocuments (currentServiceID ctx)
       usersImFriendsWith <- runDBQuery $ GetUsersByFriendUserID (userid user)
       return $ Right [ doc | doc <- docs
                            , any (\u -> canUserViewDirectly u doc) (user : usersImFriendsWith) ]
@@ -125,8 +126,8 @@ getDocByDocIDSigLinkIDAndMagicHash :: Kontrakcja m
                                    -> MagicHash
                                    -> m (Either DBError Document)
 getDocByDocIDSigLinkIDAndMagicHash docid sigid mh = do
-  mdoc <- query $ GetDocumentByDocumentID docid
+  mdoc <- doc_query $ GetDocumentByDocumentID docid
   case mdoc of
-    Just doc | isSigLinkFor mh (getSigLinkFor doc sigid) -> return $ Right doc
+    Just doc | isJust $ getSigLinkFor doc (And mh sigid) -> return $ Right doc
     _ -> return $ Left DBResourceNotAvailable
 

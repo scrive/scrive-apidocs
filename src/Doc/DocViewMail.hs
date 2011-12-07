@@ -14,14 +14,15 @@ module Doc.DocViewMail (
     , mailMismatchAuthor
     , mailMismatchSignatory
     , mailRejectMailContent
-    , mailMailAPIConfirm
-    , mailMailApiError
+    , documentMailWithDocLocale
+    , mailFooter
     ) where
 
 import API.Service.Model
 import Doc.DocProcess
 import Doc.DocState
 import Doc.DocUtils
+import File.FileID
 import Kontra
 import KontraLink
 import Mails.SendMail
@@ -42,6 +43,7 @@ import File.Model
 import Control.Monad.Trans
 import AppView
 import User.Locale
+import Util.HasSomeCompanyInfo
 
 mailDocumentRemind :: TemplatesMonad m
                    => Maybe BS.ByteString
@@ -110,6 +112,8 @@ remindMailNotSigned forMail customMessage ctx document signlink = do
                         (BS.toString $ signatoryattachmentname sa, BS.toString <$> getSmartName <$> getMaybeSignatoryLink (document, signatoryattachmentemail sa))
         field "nojavascriptmagic" $ True
         field "javascriptmagic" $ False
+        field "companyname" $ nothingIfEmpty $ getCompanyName document                
+
 
 remindMailSigned :: TemplatesMonad m
                  => Bool
@@ -170,6 +174,7 @@ remindMailNotSignedStandardHeader document signlink =
         field "author" $ BS.toString creatorname
         field "personname" $ BS.toString $ getSmartName signlink
         field "service" $ isJust $ documentservice document
+        
 
 mailDocumentRejected :: TemplatesMonad m
                      => Maybe String
@@ -182,6 +187,8 @@ mailDocumentRejected customMessage ctx document rejector = do
         field "rejectorName" $ getSmartName rejector
         fieldM "footer" $ mailFooter ctx document
         field "customMessage" $ customMessage
+        field "companyname" $ nothingIfEmpty $ getCompanyName document                
+
 
 
 mailRejectMailContent :: TemplatesMonad m
@@ -271,6 +278,7 @@ mailInvitation forMail
         -- We try to use generic templates and this is why we return a tuple
         field "sigattachments" $ for (documentsignatoryattachments document) $ \sa ->
                         (BS.toString $ signatoryattachmentname sa, BS.toString <$> getSmartName <$> getMaybeSignatoryLink (document, signatoryattachmentemail sa))
+        field "companyname" $ nothingIfEmpty $ getCompanyName document                
 
 
 
@@ -290,6 +298,8 @@ mailDocumentClosed ctx document= do
    documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailclosed) $ do
         field "partylist" $ partylist
         fieldM "footer" $ mailFooter ctx document
+        field "companyname" $ nothingIfEmpty $ getCompanyName document                
+
 
 mailDocumentAwaitingForAuthor :: (HasLocale a, TemplatesMonad m) => Context -> Document -> a -> m Mail
 mailDocumentAwaitingForAuthor ctx document authorlocale = do
@@ -298,6 +308,8 @@ mailDocumentAwaitingForAuthor ctx document authorlocale = do
         field "authorname" $ BS.toString $ getSmartName $ fromJust $ getAuthorSigLink document
         field "documentlink" $ (ctxhostpart ctx) ++ (show $ LinkIssueDoc $ documentid document)
         field "partylist" signatories
+        field "companyname" $ nothingIfEmpty $ getCompanyName document                
+
 
 mailCancelDocumentByAuthorContent :: TemplatesMonad m
                                   => Bool
@@ -334,6 +346,7 @@ mailCancelDocumentByAuthor forMail customMessage ctx document = do
                         with <- renderLocalTemplateFM document "customFooter" $
                             field "creatorname" creatorname
                         replaceOnEdit this with
+        field "companyname" $ nothingIfEmpty $ getCompanyName document                
     return $ mail { from = documentservice document}
 
 mailMismatchSignatory :: TemplatesMonad m
@@ -397,41 +410,6 @@ makeFullLink ctx doc link = do
          Just (ServiceLocation location) -> return $ BS.toString location ++ link
          Nothing -> return $ ctxhostpart ctx ++ link
 
-mailMailAPIConfirm :: TemplatesMonad m
-                      => Context
-                      -> Document
-                      -> SignatoryLink
-                      -> m Mail
-mailMailAPIConfirm ctx document siglink = do
-  let issignatory = (elem SignatoryPartner . signatoryroles) siglink
-  documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailconfirmbymailapi)  $ do
-        fieldM "footer" $ mailFooter ctx document
-        fieldM "timetosigninfo" $ do
-            case (documenttimeouttime document) of
-                 Just time -> renderLocalTemplateFM document "timetosigninfo" $ do
-                                  field "time" $ show time
-                 Nothing -> return ""
-        fieldM "partnersinfo" $ do
-             renderLocalListTemplate document $ map (BS.toString . getSmartName) $ partyList document
-        fieldM "whohadsignedinfo" $ do
-             do
-                   signedlist <- if (not $ null $ partySignedList document)
-                                    then fmap Just $ renderLocalListTemplate document $  map (BS.toString . getSmartName) $ partySignedList document
-                                    else return Nothing
-                   renderLocalTemplateForProcess document processwhohadsignedinfoformail $ do
-                       field "signedlist" signedlist
-        field "issignatory" $ issignatory
-        field "isattachments" $ False
-        field "hassigattachments" $ False
-        field "link" $ ctxhostpart ctx ++ (show $  LinkIssueDoc (documentid document))
-
-
-mailMailApiError:: MailAddress -> String -> Mail
-mailMailApiError from err =
-      emptyMail  {  to = [from]
-                  , title   = BS.fromString "Error while parsing request"
-                  , content = BS.fromString err
-                 }
 
 documentMailWithDocLocale :: (MonadIO m,Functor m,TemplatesMonad m) => Context -> Document -> String -> Fields m -> m Mail
 documentMailWithDocLocale ctx doc mailname otherfields = documentMail doc ctx doc mailname otherfields

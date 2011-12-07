@@ -27,7 +27,8 @@ import System.Console.GetOpt
 import System.Directory (createDirectoryIfMissing)
 import qualified AppLogger as Log
 import AppState (AppState)
-import AppControl (staticRoutes,appHandler,defaultAWSAction,AppConf(..),AppGlobals(..))
+import RoutingTable (staticRoutes)
+import AppControl (appHandler,defaultAWSAction,AppConf(..),AppGlobals(..))
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Map as Map
@@ -56,6 +57,7 @@ import qualified MemCache
 import File.Model
 import Doc.DocState
 import Happstack.State (query)
+import qualified System.Mem as System.Mem
 
 {- | Getting application configuration. Reads 'kontrakcja.conf' from current directory
      Setting production param can change default setting (not to send mails)
@@ -68,7 +70,8 @@ readAppConfig = readConf `catch` printDefault
         h <- openFile filepath ReadMode
         hSetEncoding h utf8
         c <- hGetContents h
-        conf <- readIO c
+        let c' = unwords (lines c)
+        conf <- readIO c'
         hClose h
         Log.server $ "App config file " ++ filepath ++" read and parsed"
         case verifyAESConf $ aesConfig conf of
@@ -232,10 +235,12 @@ runKontrakcjaServer = Log.withLogger $ do
                               t3 <- forkIO $ cron 600 $ runScheduler (actionScheduler LeisureAction) scheddata
                               t4 <- forkIO $ runEnforceableScheduler 300 es_enforcer (actionScheduler EmailSendoutAction) scheddata
                               t5 <- forkIO $ cron (60 * 60 * 4) $ runScheduler runDocumentProblemsCheck scheddata
-                              t6 <- forkIO $ cron (60) $ (let loop = (do
+                              t6 <- forkIO $ cron (60 * 60 * 24) $ runScheduler runArchiveProblemsCheck scheddata
+                              t7 <- forkIO $ cron (60) $ (let loop = (do
                                                                         r <- uploadFileToAmazon appConf
                                                                         if r then loop else return ()) in loop)
-                              return [t1, t2, t3, t4, t5, t6]
+                              t8 <- forkIO $ cron (60*60) System.Mem.performGC
+                              return [t1, t2, t3, t4, t5, t6, t7, t8]
                            )
                            (mapM_ killThread) $ \_ -> E.bracket
                                         -- checkpoint the state once a day

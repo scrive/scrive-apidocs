@@ -36,7 +36,7 @@ tableUserFriends = Table {
 tableUsers :: Table
 tableUsers = Table {
     tblName = "users"
-  , tblVersion = 3
+  , tblVersion = 4
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -58,6 +58,7 @@ tableUsers = Table {
        , ("lang", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})
        , ("region", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
+       , ("customfooter", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
         runRaw conn $ "CREATE TABLE users ("
@@ -81,6 +82,7 @@ tableUsers = Table {
           ++ ", lang SMALLINT NOT NULL"
           ++ ", deleted BOOL NOT NULL"
           ++ ", region SMALLINT NOT NULL"
+          ++ ", customfooter TEXT NULL"
           ++ ", CONSTRAINT pk_users PRIMARY KEY (id)"
           ++ ")"
         return TVRcreated

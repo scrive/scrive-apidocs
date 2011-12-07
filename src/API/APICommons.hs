@@ -22,10 +22,7 @@
 module API.APICommons (
             api_document_read
           , api_document
-          , SignatoryTMP(..)
           , getSignatoryTMP
-          , mergeSignatoryWithTMP
-          , toSignatoryDetails
           , toDocumentType
           , getFiles
           , api_document_tag
@@ -42,13 +39,11 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Base64 as Base64 
 import API.API
 import Doc.DocStorage
-import Doc.DocControl
 import Doc.DocUtils
 import Control.Monad.Trans
 import Kontra
 import Misc
 import Data.Maybe
-import Data.Foldable (fold)
 import Data.Functor
 import Control.Monad
 import Util.SignatoryLinkUtils
@@ -58,7 +53,7 @@ import Util.JSON
 import User.Lang
 import User.Region
 import User.Locale
-
+import Doc.SignatoryTMP
 {- -}
 
 data DOCUMENT_AUTHORISATION =
@@ -88,7 +83,12 @@ instance SafeEnum DOCUMENT_RELATION where
     fromSafeEnum DOCUMENT_RELATION_SIGNATORY = 5
     fromSafeEnum DOCUMENT_RELATION_VIEWER = 10
     fromSafeEnum DOCUMENT_RELATION_OTHER = 20
-    toSafeEnum _ = Nothing
+    toSafeEnum 1  = Just DOCUMENT_RELATION_AUTHOR_SECRETARY
+    toSafeEnum 2  = Just DOCUMENT_RELATION_AUTHOR_SIGNATORY
+    toSafeEnum 5  = Just DOCUMENT_RELATION_SIGNATORY
+    toSafeEnum 10 = Just DOCUMENT_RELATION_VIEWER
+    toSafeEnum 20 = Just DOCUMENT_RELATION_OTHER
+    toSafeEnum _  = Nothing
 
 data DOCUMENT_STATUS =
       DOCUMENT_STATUS_PREPARATION
@@ -187,7 +187,7 @@ api_signatory sl = JSObject $ toJSObject $
      Just signinfo ->  [("sign", api_date $ signtime signinfo)]
      Nothing -> []
     ++
-    [("relation",showJSON $ fromSafeEnum $ api_document_relation sl)]
+    [("relation",showJSON $ fromSafeEnumInt $ api_document_relation sl)]
     ++
     [("fields", JSArray $ for (filterCustomField $ signatoryfields $ signatorydetails sl) $ \(s, label, _) -> JSObject $ toJSObject [
         ("name",  JSString $ toJSString $ BS.toString label)
@@ -227,11 +227,11 @@ api_document :: Maybe [JSValue] -> Document -> JSValue
 api_document mfiles doc = JSObject $ toJSObject $ [
   ("document_id", showJSON  $ show $ unDocumentID $ documentid doc)
   , ("title", showJSON  $ BS.toString $ documenttitle doc)
-  , ("type", showJSON  $ fromSafeEnum $ api_document_type doc)
-  , ("state", showJSON  $ fromSafeEnum $ api_document_status doc)
+  , ("type", showJSON  $ fromSafeEnumInt $ api_document_type doc)
+  , ("state", showJSON  $ fromSafeEnumInt $ api_document_status doc)
   , ("involved", JSArray $ map api_signatory $ documentsignatorylinks doc)
   , ("tags", JSArray $ map api_document_tag $ documenttags doc)
-  , ("authorization", showJSON  $ fromSafeEnum $ api_document_authorisation doc)
+  , ("authorization", showJSON  $ fromSafeEnumInt $ api_document_authorisation doc)
   , ("mdate", api_date $ documentmtime doc)
   , ("locale", jsonFromLocale $ getLocale doc)
   ] ++ case mfiles of
@@ -249,77 +249,38 @@ api_document_read True doc = do
 api_date :: MinutesTime -> JSValue
 api_date = showJSON  . showMinutesTimeForAPI
 
-
-data SignatoryTMP = SignatoryTMP {
-                fstname::Maybe BS.ByteString,
-                sndname::Maybe BS.ByteString,
-                company::Maybe BS.ByteString,
-                personalnumber::Maybe BS.ByteString,
-                companynumber::Maybe BS.ByteString,
-                email::Maybe BS.ByteString,
-                fields :: [(BS.ByteString,Maybe BS.ByteString)]
-            } deriving Show
-
+                      
 getSignatoryTMP :: (APIContext c, Kontrakcja m) => APIFunction m c (Maybe SignatoryTMP)
 getSignatoryTMP = do
     Log.debug "getSignatoryTMP"
-    fstname        <- fromJSONField "fstname"
-    sndname        <- fromJSONField "sndname"
-    company        <- fromJSONField "company"
-    personalnumber <- fromJSONField "personalnr"
-    companynumber  <- fromJSONField "companynr"
-    email          <- fromJSONField "email"
-    fields <- fromJSONLocal "fields" $ fromJSONLocalMap $ do
+    fstname'        <- fromJSONField "fstname"
+    sndname'        <- fromJSONField "sndname"
+    company'        <- fromJSONField "company"
+    personalnumber' <- fromJSONField "personalnr"
+    companynumber'  <- fromJSONField "companynr"
+    email'          <- fromJSONField "email"
+    relation'       <- fromJSONField "relation"
+    fields' <- fromJSONLocal "fields" $ fromJSONLocalMap $ do
                                         name <- fromJSONField "name"
                                         value <- fromJSONField "value"
                                         return $ (, value) <$> name
-    return $ Just $ SignatoryTMP
-                { fstname = fstname
-                , sndname = sndname
-                , company = company
-                , personalnumber = personalnumber
-                , companynumber = companynumber
-                , email = email
-                , fields = concat $ maybeToList fields
-                }
+    return $ Just $ 
+     (setFstname <$> fstname') $^
+     (setSndname <$> sndname') $^
+     (setCompany <$> company') $^
+     (setPersonalnumber <$> personalnumber') $^
+     (setCompanynumber <$> companynumber') $^
+     (setEmail <$> email') $^
+     (map (\(n,v) -> setCustomField n (fromMaybe BS.empty v)) (concat $ maybeToList fields')) $^^ 
+     (applyRelation <$> relation') $^
+     emptySignatoryTMP 
 
-toSignatoryDetails :: SignatoryTMP -> SignatoryDetails
-toSignatoryDetails sTMP =
-    let sig = makeSignatory [] [] BS.empty
-                 (fold $ fstname sTMP)
-                 (fold $ sndname sTMP)
-                 (fold $ email sTMP)
-                 (SignOrder 1)
-                 (fold $ company sTMP)
-                 (fold $ personalnumber sTMP)
-                 (fold $ companynumber sTMP)
-    in sig { signatoryfields = signatoryfields sig ++ customfields }
-    where
-      customfields = for (fields sTMP) $ \(name, mvalue) ->
-        SignatoryField {
-            sfType = CustomFT name $ isJust mvalue
-          , sfValue = fromMaybe BS.empty mvalue
-          , sfPlacements = []
-          }
-
-mergeSignatoryWithTMP :: (APIContext c, Kontrakcja m) => SignatoryTMP -> SignatoryLink-> APIFunction m c SignatoryLink
-mergeSignatoryWithTMP sTMP sl@(SignatoryLink{signatorydetails=sd}) = do
-  return $ sl {
-    signatorydetails = sd { signatoryfields = replaceValues $ signatoryfields sd }
-  }
-  where
-    replaceValues = map $ \sf -> case sfType sf of
-      FirstNameFT -> replace sf fstname
-      LastNameFT -> replace sf sndname
-      CompanyFT -> replace sf company
-      CompanyNumberFT -> replace sf companynumber
-      PersonalNumberFT -> replace sf personalnumber
-      EmailFT -> replace sf email
-      CustomFT label _ -> case join $ lookup label (fields sTMP) of
-                            Just nv -> sf { sfValue = nv }
-                            Nothing -> sf
-      where
-        replace sf f = sf { sfValue = fromMaybe (sfValue sf) (f sTMP) }
+applyRelation :: DOCUMENT_RELATION -> SignatoryTMP -> SignatoryTMP
+applyRelation DOCUMENT_RELATION_AUTHOR_SECRETARY = makeAuthor
+applyRelation DOCUMENT_RELATION_AUTHOR_SIGNATORY = makeAuthor . makeSigns
+applyRelation DOCUMENT_RELATION_SIGNATORY        = makeSigns
+applyRelation DOCUMENT_RELATION_VIEWER           = id
+applyRelation DOCUMENT_RELATION_OTHER            = id
 
 -- High level commons. Used buy some simmilar API's, but not all of them
 getFiles :: (APIContext c, Kontrakcja m) => APIFunction m c [(BS.ByteString, BS.ByteString)]

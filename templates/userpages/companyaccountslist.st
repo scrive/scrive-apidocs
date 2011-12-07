@@ -1,145 +1,198 @@
 ####    Pages for users - usual from my account
 viewCompanyAccounts =
-<script>
-  var companyAccountsTable = KontraList.init({
-  name : "CompanyAccountsTable",
-  schema: new Schema({
-  url: "/companyaccounts",
-  sorting: new Sorting({ fields: ["firstname",
-                                  "lastname",
-                                  "position",
-                                  "phone",
-                                  "email"]}),
-  paging: new Paging({}),
-  filtering: new Filtering({text: "", infotext: "$_SearchCompanyAccount()$"}),
-  cells : [
-  new Cell({name: "ID", width:"20px", field:"id", special: "select"}),
-  new Cell({name: "$_firstname()$", width:"65px", field:"firstname"}),
-  new Cell({name: "$_lastname()$", width:"80px", field:"lastname" }),
-  new Cell({name: "$_companyposition()$", width:"50px", field:"position" }),
-  new Cell({name: "$_phone()$", width:"105px", field:"phone" }),
-  new Cell({name: "$_email()$", width:"100px", field:"email" })
-,
-  new Cell({name: "adder", width:"40px", field:"isunsaved", special: "adder"})
-  ]})
-  });
-    
-  jQuery(function(){
-  //uncomment this to add it
-  // but it's still not done!
-  //jQuery("#tab-viewer").append(companyAccountsTable.view.el);
-  });
-</script>
-
-<div>
-  <form method="post" action="$currentlink$" class="listForm">
-    <div class="tab-viewer">
-	  <div class="tab-header"></div>
-	  <ul class="tabs">
-	    <li><a href="/account">$_HeadUserInfo()$</a></li>
+<div class="tab-viewer">
+      <div class="tab-header"></div>
+      <ul class="tabs">
+        <li><a href="/account">$_HeadUserInfo()$</a></li>
         <li><a href="/account/security">$_HeadAccountSettings()$</a></li>
-        <li class="active"><a href="/account/companyaccounts" class="listtype">$_CompanyAccounts()$</a></li>
+        <li class="active"><a href="/account/companyaccounts">$_CompanyAccounts()$</a></li>
         <li><a href="/account/sharing">$_sharing()$</a></li>
         <li><a href="/account/mailapi">$_HeadMailApi()$</a></li>
-	  </ul>
-	  <div class="tab-container">
-	    <div class="tab-content">
-	      <div class="col float-left">
-	        <div class="tab-dd">
-              <div class="tab-dd-button">
-		        <a href="javascript:;"><p>$_options()$</p></a>
-              </div>
-		      <ul class="tab-dd-opts">
-		        <li><a href="javascript:;" class="subaccount-add-sub">$_AddCompanyAccount()$</a></li>
-		        <li><a href="javascript:;" rel="#dialog-list-delete-confirm" class="listDelete">$_delete()$</a></li>
-		      </ul>
-	        </div>
-	      </div>
-	      <div class="col float-right">
-	        $searchBox(infotext=_SearchCompanyAccount())$
-	      </div>
-	      <div class="clearfix"></div>
-	    </div>
-	    <div class="tab-table">
-	      <table>
-	        <thead>
-		      <tr>
-		        <th style="width: 20px;"><input type="checkbox" name="" id="all" /></th>
-		        <th style="width: 75px;">
-                  $if(params.sorting.fstnameREV)$
-                  <a href="$currentlink$&amp;sorting=fstname">$_firstname()$<em> ▲</em></a>
-                  $elseif(params.sorting.fstname)$
-                  <a href="$currentlink$&amp;sorting=fstnameREV">$_firstname()$<em> ▼</em></a>
-                  $else$
-                  <a href="$currentlink$&amp;sorting=fstname">$_firstname()$</a>
-                  $endif$
-                </th>
-		        <th style="width: 90px;">
-                  $if(params.sorting.sndnameREV)$
-                  <a href="$currentlink$&amp;sorting=sndname">$_lastname()$<em> ▲</em></a>
-                  $elseif(params.sorting.sndname)$
-                  <a href="$currentlink$&amp;sorting=sndnameREV">$_lastname()$<em> ▼</em></a>
-                  $else$
-                  <a href="$currentlink$&amp;sorting=sndname">$_lastname()$</a>
-                  $endif$   
-                </th>
-		        <th style="width: 60px;">
-                  $if(params.sorting.companypositionREV)$
-                  <a href="$currentlink$&amp;sorting=companyposition">$_companyposition()$<em> ▲</em></a>
-                  $elseif(params.sorting.companyposition)$
-                  <a href="$currentlink$&amp;sorting=companypositionREV">$_companyposition()$<em> ▼</em></a>
-                  $else$
-                  <a href="$currentlink$&amp;sorting=companyposition">$_companyposition()$</a>
-                  $endif$ 
-                </th>
-		        <th style="width: 115px;">
-                  $if(params.sorting.phoneREV)$
-                  <a href="$currentlink$&amp;sorting=phone">$_phone()$<em> ▲</em></a>
-                  $elseif(params.sorting.phone)$
-                  <a href="$currentlink$&amp;sorting=phoneREV">$_phone()$<em> ▼</em></a>
-                  $else$
-                  <a href="$currentlink$&amp;sorting=phone">$_phone()$</a>
-                  $endif$ 
-                </th>
-		        <th style="width: 110px;">
-                  $if(params.sorting.emailREV)$
-                  <a href="$currentlink$&amp;sorting=email">$_email()$<em> ▲</em></a>
-                  $elseif(params.sorting.email)$
-                  <a href="$currentlink$&amp;sorting=emailREV">$_email()$<em> ▼</em></a>
-                  $else$
-                  <a href="$currentlink$&amp;sorting=email">$_email()$</a>
-                  $endif$ 
-                </th>
-		        <th style="width: 52px;text-align:center"> <a class="icon small add subaccount-add-sub"> </a></th>
-		      </tr>
-	        </thead>
-	        <tbody id="selectable">
-		      $companyaccounts:{companyaccount |
-		      <!-- Every other row should have class="odd" (Begin with first row) -->
-		      <tr $if(companyaccount.odd)$class="odd"$endif$>
-		        <td><input type="checkbox" name="acccheck" value="$companyaccount.id$" class="check" />
-                  <span class="listname" style="display:none;">
-                    $companyaccount.fstname$ $companyaccount.sndname$ &lt;$companyaccount.email$&gt;
-                  </span>
-                </td>
-		        <td>$companyaccount.fstname$</td>
-		        <td>$companyaccount.sndname$</td>
-		        <td>$companyaccount.companyposition$</td>
-		        <td>$companyaccount.phone$</td>
-		        <td>$companyaccount.email$</td>
-		        <td class="right">
-		          <!-- <em>▼</em> -->
-		        </td>
-		      </tr>
-		      }$
-	        </tbody>
-	      </table>
-	      $pagingFooter()$
-	    </div>
-      </div>
-    </div>
-  </form>
-  $listLocalDialogs()$
-  <script> var useremail = "$user.email$"; </script>
+      </ul>
+  </div>
 </div>
-###
+
+<script>
+ jQuery(function(){
+    var addCompanyAccountButton = Button.init({
+        color: "green",
+        size: "tiny",
+        text: "$_newCompanyAccountButtonText()$",
+        onClick: function() {
+            var body = jQuery("<div class='account-body'>");
+            body.append("<p>$_modalAddCompanyAccountBody()$</p>");
+            var table = jQuery("<table/>");
+
+            var tr1 = jQuery("<tr/>").append(jQuery("<td/>").text("$_firstname()$:"));
+            var fstname = jQuery("<input type='text' name='fstname' autocomplete='off' />");
+            tr1.append(jQuery("<td/>").append(fstname));
+            table.append(tr1);
+
+            var tr2 = jQuery("<tr/>").append(jQuery("<td/>").text("$_lastname()$:"));
+            var sndname = jQuery("<input type='text' name='sndname' autocomplete='off' />");
+            tr2.append(jQuery("<td/>").append(sndname));
+            table.append(tr2);
+
+            var tr5 = jQuery("<tr/>").append(jQuery("<td/>").text("$_email()$"));
+            var email = jQuery("<input type='text' name='email' autocomplete='off' />");
+            tr5.append(jQuery("<td/>").append(email));
+            table.append(tr5);
+
+            body.append(table);
+
+
+            Confirmation.popup({
+              onAccept : function() {
+                            new Submit({
+                                method: "POST",
+                                add : "true",
+                                fstname : fstname.val(),
+                                sndname : sndname.val(),
+                                email : email.val(),
+                                }).send();
+                         },
+              title : "$_modalAddCompanyAccountTitle()$",
+              acceptButtonText : "$_modalAddCompanyAccountInviteButtonText()$",
+              content  : body
+            });
+            }
+      });
+
+
+  var getFullname = function(user) {
+    var fullname = user.field("fullname");
+    if (user.field("fullname") == undefined || user.field("fullname").length < 2) {
+      fullname = user.field("email");
+    }
+    return fullname;
+  };
+
+  var companyAccountsTable = KontraList.init({
+    name : "CompanyAccountsTable",
+    schema: new Schema({
+      url: "/companyaccounts",
+      sorting: new Sorting({ fields: ["fullname",
+                                      "email",
+                                      "role",
+                                      "activated",
+                                      "deletable"] }),
+      paging: new Paging({}),
+      filtering: new Filtering({ text: "", infotext: "$_SearchCompanyAccount()$" }),
+      cells : [
+        new Cell({name: "$_name()$", width: "100px", field:"fullname"}),
+        new Cell({name: "$_email()$", width: "100px", field:"email" }),
+        new Cell({name: "$_role()$", width: "100px", field:"role", special: "rendered",
+                  rendering: function(value, idx, user) {
+                    var label = "$_standard()$";
+                    if (user.field("role")=="RoleAdmin") {
+                      label = "$_admin()$";
+                    } else if (user.field("role")=="RoleStandard") {
+                      label = "$_standard()$";
+                    } else if (user.field("role")=="RolePending") {
+                      label = "$_pendingcompanyaccount()$";
+                    }
+
+                    if (user.field("isctxuser") || user.field("role")=="RolePending") {
+                      var role = jQuery("<span>");
+                      role.text(label);
+                      return role;
+                    } else {
+                      var role = jQuery("<a>");
+                      role.text(label);
+
+                      var submitRoleChange = function() {
+                        (new Submit({
+                          url: "$currentlink$",
+                          method: "POST",
+                          changerole: true,
+                          makeadmin: user.field("role")=="RoleStandard",
+                          changeid: user.field("id")
+                        })).send();
+                      }
+                      role.click(submitRoleChange);
+                      return role;
+                    }
+                  }}),
+        new Cell({width: "16px", field:"activated", special: "rendered",
+                  rendering: function(value, idx, user) {
+                    if (!user.field("activated")) {
+                      var icon = jQuery("<a>");
+                      icon.addClass("reminderForSendIcon");
+
+                      var popupResendConfirmation = function() {
+                        var submit = new Submit({
+                          url: "$currentlink$",
+                          method: "POST",
+                          resend: "true",
+                          resendid: user.field("id"),
+                          resendemail: user.field("email")
+                        });
+                        var text = "$_modalResendCompanyAccountInviteBody()$ " + getFullname(user) + "?";
+                        var content = jQuery("<p/>").text(text);
+                        console.log("text: " + text);
+                        Confirmation.popup({
+                          submit: submit,
+                          acceptText: "$_modalResendCompanyAccountInviteConfirm()$",
+                          rejectText: "$_cancel()$",
+                          title: "$_modalResendCompanyAccountInviteHeader()$",
+                          content: content
+                        });
+                      };
+                      icon.click(popupResendConfirmation);
+
+                      return icon;
+                    }
+                    return jQuery("<span>");
+                  }}),
+        new Cell({width: "16px", field:"deletable", special: "rendered",
+                  rendering: function(value, idx, user) {
+                    if (!user.field("isctxuser")) {
+                      if (user.field("deletable")) {
+                        var icon = jQuery("<a>");
+                        icon.addClass("icon");
+                        icon.addClass("delete");
+
+                        var popupDeleteConfirmation = function() {
+                          var submit = new Submit({
+                            url: "$currentlink$",
+                            method: "POST",
+                            remove: "true",
+                            removeid: user.field("id"),
+                            removeemail: user.field("email")
+                          });
+                          var text = "$_listLocalDialogsBody()$ " + getFullname(user) + "?";
+                          var content = jQuery("<p/>").text(text);
+                          console.log("text: " + text);
+                          Confirmation.popup({
+                            submit: submit,
+                            acceptText: "$_ok()$",
+                            rejectText: "$_cancel()$",
+                            title: "$_delete()$",
+                            content: content
+                          });
+                        };
+                        icon.click(popupDeleteConfirmation);
+
+                        return icon;
+                      } else {
+                        var icon = jQuery("<span>");
+                        icon.addClass("icon");
+                        icon.addClass("delete");
+                        icon.addClass("gray");
+
+                        ToolTip.set({ on: icon,
+                                      tip: "$flashMessageUserHasLiveDocs()$" });
+                        return icon;
+                      }
+                    } else {
+                      return jQuery("<span>");
+                    }
+                 }})
+      ]
+    }),
+    headerExtras: addCompanyAccountButton.input()
+  });
+    jQuery(".tab-viewer").append(companyAccountsTable.view.el);
+  });
+</script>
+####

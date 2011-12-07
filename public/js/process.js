@@ -78,6 +78,9 @@ window.Process = Backbone.Model.extend({
     signatorysignmodalcontentnotlast:  function() {
         return this.get("signatorysignmodalcontentnotlast");
     },
+    signatorysignmodalcontentauthorlast:  function() {
+        return this.get("signatorysignmodalcontentauthorlast");
+    },
     signatorysignmodalcontentlast:  function() {
         return this.get("signatorysignmodalcontentlast");
     },
@@ -86,9 +89,41 @@ window.Process = Backbone.Model.extend({
     },
     step1text : function() {
         return this.get("step1text");
+    },
+    authorsignlastbutton : function() {
+        return this.get("authorsignlastbutton");
+    },
+    authorname : function() {
+        return this.get("authorname");
+    },
+    authorsignatoryname : function() {
+        return this.get("authorsignatoryname");
+    },  
+    signatoryname : function() {
+        return this.get("signatoryname");
+    },
+    nonsignatoryname : function() {
+        return this.get("nonsignatoryname");
+    },
+    numberedsignatories : function() {
+        return this.get("numberedsignatories");
     }
-
+    
 });
 
+window.Region = Backbone.Model.extend({
+    haspeopleids : function(){
+        return this.get("haspeopleids");
+    },
+    iselegavailable : function(){
+        return this.get("iselegavailable");
+    },
+    gb : function(){
+        return this.get("gb");
+    },
+    se : function(){
+        return this.get("se");
+    }
+});
 
 })(window); 

@@ -222,10 +222,13 @@ modalWelcomeToSkrivaPa=
       </div>
     </div>
     <div class="modal-footer">
+      <div class="float-left">
+        <a class="cancel close">$_modalWelcomeToSkrivaPaFooterReject()$</a>
+      </div>
       <a class="btn-small green float-right submit">
         <div class="left"></div>
         <div class="label">
-          <p>$_modalWelcomeToSkrivaPaFooter()$</p>
+          <p>$_modalWelcomeToSkrivaPaFooterAccept()$</p>
           <div class="btn-symbol green arrow-left"></div>
         </div>
         <div class="right"></div>
@@ -922,17 +925,14 @@ modalNewPasswordView=
   </div>
 </form>
 ####
-modalInviteUserAsCompanyAccount=
+####
+modalDoYouWantToBeCompanyAccount=
 <form action="" method="post">
-  <input type="hidden" name="takeover" value="really" />
-  <input type="hidden" name="email" value="$email$" />
-  <input type="hidden" name="fstname" value="$fstname$" />
-  <input type="hidden" name="sndname" value="$sndname$" />
   <div class="modal-container">
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
-	    <h1>$_modalInviteUserAsSubaccountHeaderSendRequest()$</h1>
+	    <h1>$_modalDoYouWantToBeCompanyAccountHeader()$</h1>
       </span>
       <a class="modal-close close"> </a>
     </div>
@@ -940,8 +940,7 @@ modalInviteUserAsCompanyAccount=
       <div class="modal-content">
 	    <div class="recovery-container">
 	      <div class="body">
-	        <p>$_modalInviteUserAsSubaccountBodySendRequest()$</p>
-	        <p>$_modalInviteUserAsSubaccountBodySendSure()$</p>
+	        <p>$_modalDoYouWantToBeCompanyAccountBody()$</p>
 	      </div>
 	    </div>
       </div>
@@ -953,7 +952,7 @@ modalInviteUserAsCompanyAccount=
       <a href="#" class="btn-small blue float-right submit">
 	    <div class="left"></div>
 	    <div class="label">
-	      <p>$_modalInviteUserAsSubaccountFooterSendRequest()$</p>
+	      <p>$_modalDoYouWantToBeCompanyAccountFooterAccept()$</p>
 	    </div>
 	    <div class="right"></div>
       </a>
@@ -962,35 +961,38 @@ modalInviteUserAsCompanyAccount=
 </form>
 ####
 ####
-modalDoYouWantToBeCompanyAccount=
+modalDoYouWantToChangeEmail=
 <form action="" method="post">
   <div class="modal-container">
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
-	    <h1>$_modalDoYouWantToBeSubaccountHeader()$</h1>
+            <h1>$_modalDoYouWantToChangeEmailHeader()$</h1>
       </span>
       <a class="modal-close close"> </a>
     </div>
     <div class="modal-body">
       <div class="modal-content">
-	    <div class="recovery-container">
-	      <div class="body">
-	        <p>$_modalDoYouWantToBeSubaccountBody()$</p>
-	      </div>
-	    </div>
+            <div class="recovery-container">
+              <div class="body">
+                <p>$_modalDoYouWantToChangeEmailBody()$</p>
+                <p>
+                  <input type="password" name="password" autocomplete="off"/>
+                </p>
+              </div>
+            </div>
       </div>
     </div>
     <div class="modal-footer">
       <div class="float-left">
-	    <a class="close cancel">$_cancel()$</a>
+            <a class="close cancel">$_cancel()$</a>
       </div>
       <a href="#" class="btn-small blue float-right submit">
-	    <div class="left"></div>
-	    <div class="label">
-	      <p>$_modalDoYouWantToBeSubaccountFooterAccept()$</p>
-	    </div>
-	    <div class="right"></div>
+            <div class="left"></div>
+            <div class="label">
+              <p>$_modalDoYouWantToChangeEmailAccept()$</p>
+            </div>
+            <div class="right"></div>
       </a>
     </div>
   </div>

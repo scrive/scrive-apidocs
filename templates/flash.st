@@ -234,11 +234,7 @@ flashMessageSingleAttachmentShareDone=	$_flashMessageSingleAttachmentShareDone()
 ###
 flashMessageMultipleAttachmentShareDone=	$_flashMessageMultipleAttachmentShareDone()$
 ###
-flashUserIsAlreadyCompanyAccount = $_flashUserIsAlreadyCompanyAccount()$
-###
-flashMessageUserInvitedAsCompanyAccount=	$_flashMessageUserInvitedAsSubaccount()$
-###
-flashMessageUserHasBecomeCompanyAccount=	$_flashMessageUserHasBecomeSubaccount()$
+flashMessageUserHasBecomeCompanyAccount=$_flashMessageUserHasBecomeCompanyAccount()$
 ###
 flashMessageAccountActivatedFromSign=	$_flashMessageAccountActivatedFromSign()$
 ###
@@ -254,7 +250,21 @@ flashMessagePleaseSignOffer=	$_flashMessagePleaseSignOffer()$
 ###
 flashMessagePleaseSignOrder=Du kan bekräfta ordern längst ned på sidan.
 ###
-flashMessageUserHasLiveDocs=	$_flashMessageUserHasLiveDocs()$
+flashMessageUserHasLiveDocs=$_flashMessageUserHasLiveDocs()$
 ###
-flashMessageAccountsDeleted=	$_flashMessageAccountsDeleted()$
+flashMessageCompanyAccountDeleted=$_flashMessageCompanyAccountDeleted()$
+###
+flashCompanyAccountInviteSent=$_flashCompanyAccountInviteSent()$
+###
+flashCompanyAccountInviteResent=$_flashCompanyAccountInviteResent()$
+###
+flashMessageChangeEmailMailSent=$_flashMessageChangeEmailMailSent()$
+###
+flashMessageMismatchedEmails=$_flashMessageMismatchedEmails()$
+###
+flashMessageProblemWithEmailChange=$_flashMessageProblemWithEmailChange()$
+###
+flashMessageYourEmailHasChanged=$_flashMessageYourEmailHasChanged()$
+###
+flashMessageProblemWithPassword=$_flashMessageProblemWithPassword()$
 ###

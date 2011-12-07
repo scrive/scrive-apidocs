@@ -30,6 +30,7 @@ module Doc.DocView (
   , flashRemindMailSent
   , getDataMismatchMessage
   , isNotLinkForUserID
+  , modalMismatch
   , modalPdfTooLarge
   , mailCancelDocumentByAuthor
   , mailCancelDocumentByAuthorContent
@@ -83,7 +84,8 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import User.Model
-
+import Doc.JSON
+import Doc.DocInfo
 import Control.Applicative ((<$>))
 import Control.Monad.Reader
 import Data.Char (toUpper)
@@ -98,6 +100,15 @@ import File.Model
 import DB.Classes
 import Text.JSON.Fields as JSON (json)
 import qualified Text.JSON.Fields as JSON (field)
+
+
+
+modalMismatch :: TemplatesMonad m => String -> SignatoryLink -> m FlashMessage
+modalMismatch msg author = toModal <$>  do 
+    renderTemplateFM "signCanceledDataMismatchModal" $ do
+                    field "authorname"  $ getSmartName author
+                    field "authoremail" $ getEmail author
+                    field "message"     $ concatMap para $ lines msg
 
 modalPdfTooLarge :: TemplatesMonad m => m FlashMessage
 modalPdfTooLarge = toModal <$> renderTemplateM "pdfTooBigModal" ()
@@ -296,6 +307,7 @@ documentJSON msl _crttime doc = do
        ("authorattachments", return $ JSArray $ jsonPack <$> fileJSON <$> catMaybes authorattachmentfiles),
        --("signatoryattachments", return $ JSArray $ jsonPack <$> fileJSON <$> catMaybes ),
        ("process", processJSON doc ),
+       ("region",  liftIO $ regionJSON doc ),
        ("infotext", JSString <$> toJSString <$> documentInfoText ctx doc msl),
        ("canberestarted", return $ JSBool $  isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])),
        ("timeouttime", return $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc),
@@ -304,7 +316,9 @@ documentJSON msl _crttime doc = do
        ("signorder", return $ JSRational True (toRational $ unSignOrder $ documentcurrentsignorder doc)),
        ("authorization", return $ authorizationJSON $ head $ (documentallowedidtypes doc) ++ [EmailIdentification] ),
        ("template", return $ JSBool $ isTemplate doc),
-       ("functionality", return $ JSString $ toJSString $ "basic" <| documentfunctionality doc == BasicFunctionality |> "advanced")
+       ("functionality", return $ JSString $ toJSString $ "basic" <| documentfunctionality doc == BasicFunctionality |> "advanced"),
+       ("daystosign", return $ maybe JSNull (JSRational True . toRational) $ documentdaystosign doc),
+       ("invitationmessage", return $ if (BS.null $ documentinvitetext doc ) then JSNull else JSString $ toJSString $ BS.toString $ documentinvitetext doc)
      ]
 
 authorizationJSON :: IdentificationType -> JSValue
@@ -351,18 +365,18 @@ signatoryAttachmentJSON files sa = JSObject $ toJSObject $
 
 
 signatoryFieldsJSON:: Document -> SignatoryLink -> IO JSValue
-signatoryFieldsJSON doc SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}} = fmap JSArray $
+signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}}) = fmap JSArray $
   forM signatoryfields $ \sf@SignatoryField{sfType, sfValue, sfPlacements} ->
     case sfType of
-      FirstNameFT -> fieldJSON doc "fstname" sfValue True sfPlacements
-      LastNameFT -> fieldJSON doc "sndname" sfValue True sfPlacements
-      EmailFT -> fieldJSON doc "email" sfValue True sfPlacements
-      PersonalNumberFT -> fieldJSON doc "sigpersnr" sfValue (closedF sf) sfPlacements
-      CompanyFT -> fieldJSON doc "sigco" sfValue (closedF sf) sfPlacements
-      CompanyNumberFT -> fieldJSON doc "sigco" sfValue (closedF sf) sfPlacements
-      CustomFT label closed -> fieldJSON doc (BS.toString label) sfValue closed sfPlacements
+      FirstNameFT -> fieldJSON doc "fstname" sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      LastNameFT -> fieldJSON doc "sndname" sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      EmailFT -> fieldJSON doc "email" sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      PersonalNumberFT -> fieldJSON doc "sigpersnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      CompanyFT -> fieldJSON doc "sigco" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      CompanyNumberFT -> fieldJSON doc "sigcompnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      CustomFT label closed -> fieldJSON doc (BS.toString label) sfValue (closed  && (not $ isPreparation doc))  sfPlacements
   where
-    closedF sf = (not $ BS.null $ sfValue sf) || (null $ sfPlacements sf)
+    closedF sf = ((not $ BS.null $ sfValue sf) || (null $ sfPlacements sf))
 
 fieldJSON :: Document -> String -> BS.ByteString -> Bool -> [FieldPlacement] -> IO JSValue
 fieldJSON  doc name value closed placements = json $ do
@@ -383,38 +397,6 @@ placementJSON doc placement = JSObject $ toJSObject $
 jsonDate :: Maybe MinutesTime -> JSValue
 jsonDate mdate = fromMaybe JSNull $ JSString <$> toJSString <$> showDateYMD <$> mdate
 
-{-
-, signatorysndnameplacements        = []
-    , signatorycompanyplacements        = []
-    , signatorypersonalnumberplacements = []
-    , signatorycompanynumberplacements  = []
-    , signatoryemailplacements          = []
-    , signatoryotherfields
-
-
-      field "current" $ current
-      field "fstname" $ packToMString $ getFirstName signatorydetails
-      field "sndname" $ packToMString $ getLastName  signatorydetails
-      field "company" $ packToMString $ signatorycompany $ signatorydetails
-      field "personalnumber" $ packToMString $ signatorypersonalnumber $ signatorydetails
-      field "companynumber"  $ packToMString $ signatorycompanynumber $ signatorydetails
-      field "email" $ packToMString $ getEmail signatorydetails
-      fieldFL "fields" $ for (signatoryotherfields signatorydetails) $ \sof -> do
-        field "fieldlabel" $ fieldlabel sof
-        field "fieldvalue" $ fieldvalue sof
-      field "signorder" $ unSignOrder $ signatorysignorder signatorydetails
-      field "allowRemindForm" $ isEligibleForReminder muser document siglnk
-      field "linkremind" $ show (LinkRemind document siglnk)
-      field "linkchangeemail" $  show $ LinkChangeSignatoryEmail (documentid document) signatorylinkid
-      field "allowEmailChange" $ (isCurrentUserAuthor && (invitationdeliverystatus == Undelivered || invitationdeliverystatus == Deferred) && isActiveDoc)
-      fieldM "reminderMessage" $ mailDocumentRemindContent Nothing ctx document siglnk
-      field "role" $ if isSignatory siglnk
-                     then "signatory"
-                     else "viewer"
-      field "secretary"  $ (isAuthor siglnk) &&  not (isSignatory siglnk)
-      field "author" $ (isAuthor siglnk)
-      ]
-      -}
 
 processJSON :: (TemplatesMonad m) => Document -> m JSValue
 processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
@@ -427,10 +409,10 @@ processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
       , ("validationchoiceforbasic", bool processvalidationchoiceforbasic)
       , ("expiryforbasic", bool processexpiryforbasic)
       , ("step1text", text processstep1text )
-      , ("expirywarntext ", text processexpirywarntext )
+      , ("expirywarntext", text processexpirywarntext )
       , ("sendbuttontext", text processsendbuttontext )
       , ("confirmsendtitle", text processconfirmsendtitle )
-      , ("confirmsendtext ", text processconfirmsendtext )
+      , ("confirmsendtext", text processconfirmsendtext )
       , ("expirytext", text processexpirytext )
       -- some buttons texts
       , ("restartbuttontext", text processrestartbuttontext)
@@ -446,12 +428,31 @@ processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
       , ("signguardwarntext", text processsignguardwarntext)
       , ("signatorysignmodalcontentlast", text processsignatorysignmodalcontentlast)
       , ("signatorysignmodalcontentnotlast", text processsignatorysignmodalcontentnotlast)
+      , ("signatorysignmodalcontentauthorlast", text processsignatorysignmodalcontentauthorlast)
       , ("signbuttontext", text processsignbuttontext)
+      , ("signbuttontextauthor", text processsignbuttontextauthor)        
       , ("signatorysignmodaltitle", text processsignatorysignmodaltitle)
+      , ("authorsignlastbutton", text processauthorsignlastbuttontext)
+      
+      , ("authorname", text processauthorname)
+      , ("authorsignatoryname", text processauthorsignatoryname)
+      , ("signatoryname", text processsignatoryname)
+      , ("nonsignatoryname", text processnonsignatoryname)
+      , ("numberedsignatories", bool processnumberedsignatories)
+
      ]
     where
         text  k = JSString <$> toJSString <$> renderTextForProcess doc k
         bool k = return $ JSBool <$> fromMaybe False $ getValueForProcess doc k
+
+        
+regionJSON  :: Document -> IO JSValue
+regionJSON doc = json $ do
+      JSON.field "haspeopleids" $ regionhaspeopleids $ getRegionInfo doc 
+      JSON.field "iselegavailable" $ regionelegavailable $ getRegionInfo doc 
+      JSON.field "gb" $ REGION_GB == getRegion doc
+      JSON.field "se" $ REGION_SE == getRegion doc
+
 
 fileJSON :: File ->  [(String,String)]
 fileJSON file =
@@ -710,6 +711,7 @@ pageDocumentDesign :: TemplatesMonad m
                    => Context
                    -> Document
                    -> (Maybe DesignStep)
+                   -> Bool
                    -> [Document]
                    -> [(FileID, File)]
                    -> m String
@@ -721,6 +723,7 @@ pageDocumentDesign ctx
     , documentinvitetext
   }
   step
+  showadvancedoption
   attachments 
   files =
    let
@@ -745,6 +748,7 @@ pageDocumentDesign ctx
        field "documentdaystosignboxvalue" $ documentdaystosignboxvalue
        field "docstate" (buildDocState (signatorydetails authorsiglink) documentsignatorylinks)
        field "fromservice" (isJust $ ctxservice ctx)
+       field "showadvancedoption" showadvancedoption
        documentAuthorInfo document
        csvfields
        documentFunctionalityFields document
@@ -769,6 +773,7 @@ pageDocumentDesign ctx
        fieldM "expirywarntext" $ getProcessText processexpirywarntext
        fieldM "sendbuttontext" $ getProcessText processsendbuttontext
        fieldM "signbuttontext" $ getProcessText processsignbuttontext
+       fieldM "signbuttontextauthor" $ getProcessText processsignbuttontextauthor       
        fieldM "expirywarntext" $ getProcessText processexpirywarntext
        fieldM "confirmsendtitle" $ getProcessText processconfirmsendtitle
        fieldM "confirmsendtext" $ getProcessText processconfirmsendtext
@@ -1135,6 +1140,7 @@ uploadPage mdocprocess showTemplates = renderTemplateFM "uploadPage" $ do
         field "selected" $ (Just process == mdocprocess)
         fieldM "name" $ renderTextForProcess (Signable process) processuploadname
         fieldM "uploadprompttext" $ renderTextForProcess (Signable process) processuploadprompttext
+        field "apiid" $ apiDocumentType (Signable process)
 
 buildCustomJS :: SignatoryField -> Int -> JSValue
 buildCustomJS SignatoryField{sfType = CustomFT label _, sfValue, sfPlacements} i =

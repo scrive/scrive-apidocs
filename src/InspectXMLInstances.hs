@@ -20,6 +20,7 @@ import User.Model
 import KontraLink
 import FlashMessage
 import qualified Data.ByteString.UTF8 as BS
+import File.FileID
 
 instance (InspectXML a, Show a) => InspectXML [a] where
     inspectXML l = "[" ++ (concatMap (\s -> (inspectXML s) ++ "<BR/>") l) ++ "]"

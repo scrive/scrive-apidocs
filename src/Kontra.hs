@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 module Kontra
     ( Context(..)
     , Kontrakcja
@@ -31,9 +33,11 @@ import Control.Monad.State
 import DB.Classes
 import DB.Types
 import Doc.DocState
-import ELegitimation.ELeg
+import ELegitimation.ELegTransaction
 import Happstack.Server
+#ifndef DOCUMENTS_IN_POSTGRES
 import Happstack.State (query, QueryEvent)
+#endif
 import KontraLink
 import KontraMonad
 import Mails.SendMail
@@ -146,6 +150,7 @@ scheduleEmailSendout enforcer mail = do
         tryPutMVar enforcer ()
     return ()
 
+#ifndef DOCUMENTS_IN_POSTGRES
 {- |
    Perform a query (like with query) but if it returns Nothing, mzero; otherwise, return fromJust
  -}
@@ -153,6 +158,15 @@ queryOrFail :: (MonadPlus m,Monad m, MonadIO m) => (QueryEvent ev (Maybe res)) =
 queryOrFail q = do
   mres <- query q
   guardJust mres
+#else
+{- |
+   Perform a query (like with query) but if it returns Nothing, mzero; otherwise, return fromJust
+ -}
+queryOrFail :: (MonadPlus m, DBMonad m, Monad m, MonadIO m, DBQuery ev (Maybe res)) => ev -> m res
+queryOrFail q = do
+  mres <- runDBQuery q
+  guardJust mres
+#endif
 
 -- | Current service id
 

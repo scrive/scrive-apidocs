@@ -92,6 +92,10 @@ Flag test-locale
   Description: Build locale testsuite
   Default: True
 
+Flag test-companyaccounts
+  Description: Build company accounts testsuite
+  Default: True
+
 Flag allow-warnings
   Description: Disable -Werror flag
   Default: False
@@ -266,6 +270,8 @@ Executable kontrakcja-test
     cpp-options: -DNO_CSVUTIL
   if !flag(test-locale)
     cpp-options: -DNO_LOCALE
+  if !flag(test-companyaccounts)
+    cpp-options: -DNO_COMPANYACCOUNTS
   if !flag(test-redirect)
     cpp-options: -DNO_REDIRECT
   if !flag(test-docstatequery)

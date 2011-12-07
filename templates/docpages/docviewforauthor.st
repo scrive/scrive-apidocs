@@ -25,9 +25,9 @@ ordercancelbyauthormodaltitle=
 ###
 pageDocumentForAuthor=
 <script>
-
+var docview;
 jQuery(function(){
-var docview = KontraStandardDocument.init({
+docview = KontraStandardDocument.init({
     id:"$documentid$"
      $if(siglinkid)$
     , viewer : new DocumentViewer({
@@ -36,7 +36,7 @@ var docview = KontraStandardDocument.init({
         })
     $endif$
 });
-jQuery("#body-container").replaceWith(docview.view.el)
+jQuery(".body-container").replaceWith(docview.view.el)
 })
 </script>
 

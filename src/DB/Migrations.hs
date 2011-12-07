@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module DB.Migrations (
     checkDBConsistency
   ) where
@@ -17,7 +18,10 @@ import qualified AppLogger as Log
 
 import API.Service.Tables
 import Company.Tables
---import Doc.Tables
+import CompanyAccounts.Tables
+#ifdef DOCUMENTS_IN_POSTGRES
+import Doc.Tables
+#endif
 import User.Migrations
 import User.Tables
 import Stats.Tables
@@ -26,7 +30,8 @@ import File.Tables
 import File.Model ()
 
 migrationsList :: [Migration]
-migrationsList = [addRegionToUserSettings
+migrationsList = [addUserCustomFooter
+                 ,addRegionToUserSettings
                  ,addServiceAndCompanyToStats
                  ,removeSystemServer]
 
@@ -39,15 +44,19 @@ tablesList = [
   , tableUserInviteInfos
   , tableServices
   , tableCompanies
+  , tableCompanyInvites
   , tableDocStatEvents
   , tableUserStatEvents
   , tableFiles
+#ifdef DOCUMENTS_IN_POSTGRES
+  , tableDocuments
+  , tableSignatoryLinks
   -- this is not ready yet
-  {-, tableDocuments
-  , tableFiles
+  {-
   , tableAuthorAttachments
   , tableSignatoryAttachments
-  , tableSignatoryLinks-}
+  -}
+#endif
   ]
 
 checkDBConsistency :: DB ()

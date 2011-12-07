@@ -8,11 +8,11 @@ import User.Model
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
 import qualified Data.ByteString.UTF8 as BS
-import PayEx.PayExState
 import ListUtil
 import Session
 import API.Service.Model
 import Company.Model
+import File.FileID
 
 {- |
    Defines the reason why we are redirected to login page
@@ -51,6 +51,9 @@ data KontraLink
     | LinkAbout Locale
     | LinkPartners Locale
     | LinkClients Locale
+    | LinkContactUs Locale
+    | LinkAPIPage Locale
+    | LinkScriveByMailPage Locale
     | LinkLogin Locale LoginRedirectReason
     | LinkLogout
     | LinkSignup
@@ -63,11 +66,10 @@ data KontraLink
     | LinkOrders
     | LinkAttachments
     | LinkRubbishBin
-    | LinkNew (Maybe DocumentProcess) Bool
     | LinkAccount Bool -- show create company modal?
+    | LinkChangeUserEmail ActionID MagicHash
     | LinkAccountSecurity
     | LinkUserMailAPI
-    | LinkLandpageSaved Document SignatoryLink
     | LinkSignDoc Document SignatoryLink
     | LinkAccountFromSign Document SignatoryLink ActionID MagicHash
     | LinkIssueDoc DocumentID
@@ -75,6 +77,7 @@ data KontraLink
     | LinkRenameAttachment DocumentID
     | LinkIssueDocPDF (Maybe SignatoryLink) Document {- Which file? -}
     | LinkCompanyAccounts ListParams
+    | LinkCompanyTakeover CompanyID
     | LinkSharing ListParams
     | LinkRemind Document SignatoryLink
     | LinkCancel Document
@@ -103,7 +106,6 @@ data KontraLink
     | LinkAskQuestion
     | LinkRequestPhoneCall
     | LinkInvite
-    | LinkPayExView (Maybe PaymentId)
     | LinkSignCanceledDataMismatch DocumentID SignatoryLinkID
     | LinkConnectUserSession ServiceID UserID SessionId KontraLink
     | LinkConnectCompanySession ServiceID CompanyID SessionId KontraLink
@@ -114,6 +116,8 @@ data KontraLink
     | LinkServiceButtonsRest ServiceID
     | LinkCSVLandPage Int
     | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID
+    | LinkAPIDocumentMetadata DocumentID
+    | LinkAPIDocumentSignatoryAttachment DocumentID SignatoryLinkID String
     deriving (Eq)
 
 localeFolder :: Locale -> String
@@ -148,6 +152,15 @@ instance Show KontraLink where
     showsPrec _ (LinkClients locale)
       | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/kunder"
       | otherwise = (++) $ localeFolder locale ++ "/clients"
+    showsPrec _ (LinkContactUs locale)
+      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/kontakta"
+      | otherwise = (++) $ localeFolder locale ++ "/contact"
+    showsPrec _ (LinkAPIPage locale)
+      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/scriveapi"
+      | otherwise = (++) $ localeFolder locale ++ "/scriveapi"
+    showsPrec _ (LinkScriveByMailPage locale)
+      | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/scrivebymail"
+      | otherwise = (++) $ localeFolder locale ++ "/scrivebymail"
     showsPrec _ (LinkLogin locale LoginTry) = (++) $ localeFolder locale ++ "/login"
     showsPrec _ (LinkLogin locale (InvalidLoginInfo email)) = (++) $ localeFolder locale ++ "/?logging&email=" ++ (URL.encode . UTF.encode $ email)
     showsPrec _ (LinkLogin locale _) = (++) $ localeFolder locale ++ "/?logging"
@@ -162,16 +175,16 @@ instance Show KontraLink where
     showsPrec _ (LinkOrders) = (++) $ "/or"
     showsPrec _ (LinkAttachments) = (++) $ "/a"
     showsPrec _ (LinkRubbishBin) = (++) $ "/r"
-    showsPrec _ (LinkNew mdocprocess templates) = (++) $ "/?" ++ (if (templates) then "showTemplates=Yes&" else "") ++ "doctype="++ (maybe "" show mdocprocess)
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
     showsPrec _ (LinkAccount False) = (++) "/account"
     showsPrec _ (LinkAccount True) = (++) "/account/?createcompany"
+    showsPrec _ (LinkChangeUserEmail actionid magichash) =
+        (++) $ "/account/" ++ show actionid ++  "/" ++ show magichash
     showsPrec _ (LinkCompanyAccounts params) = (++) $ "/account/companyaccounts" ++ "?" ++ show params
+    showsPrec _ (LinkCompanyTakeover companyid) = (++) $ "/companyaccounts/join/" ++ show companyid
     showsPrec _ (LinkSharing params) = (++) $ "/account/sharing" ++ "?" ++ show params
     showsPrec _ LinkAccountSecurity = (++) "/account/security"
     showsPrec _ LinkUserMailAPI = (++) "/account/mailapi"
-    showsPrec _ (LinkLandpageSaved document signatorylink) =
-        (++) $ "/landpage/signedsave/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink)
     showsPrec _ (LinkIssueDoc documentid) =
         (++) $ "/d/" ++ show documentid
     showsPrec _ (LinkDesignDoc designstep) =  (++) $ "/" ++ show designstep
@@ -184,7 +197,7 @@ instance Show KontraLink where
         (++) $ "/df/" ++ show fileid ++ "/" ++ BS.toString filename
     showsPrec _ (LinkSignDoc document signatorylink) =
         (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++
-                 "/" ++ show (signatorymagichash signatorylink)
+                 "?" ++ "magichash="++ show (signatorymagichash signatorylink)
     showsPrec _ (LinkAccountFromSign document signatorylink actionid magichash) =
         (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++
                  "/" ++ show (signatorymagichash signatorylink) ++
@@ -217,15 +230,13 @@ instance Show KontraLink where
     showsPrec _ (LinkAskQuestion) = (++) ("/question")
     showsPrec _ (LinkRequestPhoneCall) = (++) "/phone"
     showsPrec _ (LinkInvite) = (++) "/invite"
-    showsPrec _ (LinkPayExView Nothing) = (++) $ "/payex"
-    showsPrec _ (LinkPayExView (Just pid)) = (++) $ "/payex/" ++ show pid
     showsPrec _ (LinkSignCanceledDataMismatch docid sigid) = (++) $ "/landpage/signcanceleddatamismatch/" ++ show docid ++ "/" ++ show sigid
     showsPrec _ (LinkConnectUserSession sid uid ssid referer) = (++) $ "/integration/connectuser/" ++ encodeForURL sid ++ "/" ++ show uid  ++ "/" ++ show ssid
                                                                         ++ "?referer=" ++ (URL.encode $ UTF.encode  $ show referer)
     showsPrec _ (LinkConnectCompanySession sid cid ssid referer) = (++) $ "/integration/connectcompany/" ++ encodeForURL sid ++ "/" ++ show cid  ++ "/" ++ show ssid
                                                                         ++ "?referer=" ++ (URL.encode $ UTF.encode  $ show referer)
-    showsPrec _ (LinkAttachmentForAuthor did fid) = (++) $ "/d/" ++ show did ++ "/" ++ show fid
-    showsPrec _ (LinkAttachmentForViewer did sid mh fid) = (++) $ "/s/" ++ show did ++ "/" ++ show sid ++ "/" ++ show mh ++ "/" ++ show fid
+    showsPrec _ (LinkAttachmentForAuthor did fid) = (++) $ "/download/" ++ show did ++ "/" ++ show fid ++ "/" ++ "file.pdf"
+    showsPrec _ (LinkAttachmentForViewer did sid mh fid) = (++) $ "/download/" ++ show did ++ "/" ++ show fid ++ "/file.pdf?signatorylinkid=" ++ show sid ++ "&magichash=" ++ show mh 
     showsPrec _ (LinkServiceLogo sid) = (++) $ "/services/logo/" ++ encodeForURL sid
     showsPrec _ (LinkServiceButtonsBody sid) = (++) $ "/services/buttons_body/" ++ encodeForURL sid
     showsPrec _ (LinkServiceButtonsRest sid) = (++) $ "/services/buttons_rest/" ++ encodeForURL sid
@@ -236,3 +247,6 @@ instance Show KontraLink where
                  "/" ++ show fid)
     showsPrec _ (LinkDocumentPreview did Nothing fid) = (++) ("/preview/" ++ show did ++
                  "/" ++ show fid)
+    showsPrec _ (LinkAPIDocumentMetadata did) = (++) ("/api/document/" ++ show did ++ "/metadata")
+    showsPrec _ (LinkAPIDocumentSignatoryAttachment did sid name) =
+      (++) ("/api/document/" ++ show did ++ "/signatory/" ++ show sid ++ "/attachment/" ++ name)

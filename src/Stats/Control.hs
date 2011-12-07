@@ -13,6 +13,7 @@ module Stats.Control
          addUserSaveAfterSignStatEvent,
          addUserRefuseSaveAfterSignStatEvent,
          addUserPhoneAfterTOS,
+         addUserCreateCompanyStatEvent,
          addAllDocsToStats,
          addAllUsersToStats,
          handleDocStatsCSV,
@@ -260,8 +261,10 @@ calculateCompanyDocStats events =
 addDocumentCloseStatEvents :: Kontrakcja m => Document -> m Bool
 addDocumentCloseStatEvents doc = msum [
   do
-    if not (isClosed doc) || none hasSigned (documentsignatorylinks doc)
-      then return False
+    if not (isClosed doc)
+      then do
+      Log.stats $ "Cannot log CloseStat because document is not closed: " ++ show (documentid doc)
+      return False
       else do
       sl  <- guardJust $ getAuthorSigLink doc
       uid <- guardJust $ maybesignatory sl
@@ -300,7 +303,10 @@ addDocumentCloseStatEvents doc = msum [
 addDocumentSendStatEvents :: Kontrakcja m => Document -> m Bool
 addDocumentSendStatEvents doc = msum [
   do
-    if isNothing $ documentinvitetime doc then return False
+    if isNothing $ documentinvitetime doc
+      then do
+      Log.stats $ "Cannot add send stat because there is not invite time: " ++ show (documentid doc)
+      return False
       else do
       sl  <- guardJust $ getAuthorSigLink doc
       uid <- guardJust $ maybesignatory sl
@@ -337,7 +343,10 @@ addDocumentSendStatEvents doc = msum [
 addDocumentCancelStatEvents :: Kontrakcja m => Document -> m Bool
 addDocumentCancelStatEvents doc = msum [
   do
-    if not $ isCanceled doc then return False
+    if not $ isCanceled doc
+      then do
+      Log.stats $ "Cannot add Cancel event because doc is not canceled: " ++ show (documentid doc)
+      return False
       else do
       sl  <- guardJust $ getAuthorSigLink doc
       uid <- guardJust $ maybesignatory sl
@@ -374,7 +383,10 @@ addDocumentCancelStatEvents doc = msum [
 addDocumentRejectStatEvents :: Kontrakcja m => Document -> m Bool
 addDocumentRejectStatEvents doc = msum [
   do
-    if not $ isRejected doc then return False
+    if not $ isRejected doc
+      then do
+      Log.stats $ "Cannot add Reject stat because document is not rejected: " ++ show (documentid doc)
+      return False
       else do
       sl  <- guardJust $ getAuthorSigLink doc
       uid <- guardJust $ maybesignatory sl
@@ -411,8 +423,6 @@ addDocumentRejectStatEvents doc = msum [
 addDocumentCreateStatEvents :: Kontrakcja m => Document -> m Bool
 addDocumentCreateStatEvents doc = msum [
   do
-    if isNothing $ documentinvitetime doc then return False
-      else do
       sl  <- guardJust $ getAuthorSigLink doc
       uid <- guardJust $ maybesignatory sl
       let createtime = documentctime doc
@@ -485,6 +495,15 @@ addUserRefuseSaveAfterSignStatEvent user siglink = msum [
       Nothing -> return False
       Just SignInfo{ signtime } -> do
         addUserIDStatEvent UserRefuseSaveAfterSign (userid user) signtime (usercompany user) (userservice user)
+  , return False]
+
+addUserCreateCompanyStatEvent :: Kontrakcja m => MinutesTime -> User -> m Bool
+addUserCreateCompanyStatEvent time user = msum [
+    do
+      case usercompany user of
+        Nothing -> return False
+        Just cid ->
+          addUserIDStatEvent UserCreateCompany (userid user) time (Just cid) (userservice user)
   , return False]
 
 addUserSignTOSStatEvent :: Kontrakcja m => User -> m Bool

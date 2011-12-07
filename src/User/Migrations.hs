@@ -30,3 +30,14 @@ addRegionToUserSettings =
       return ()
   }
 
+addUserCustomFooter :: Migration
+addUserCustomFooter =
+  Migration {
+    mgrTable = tableUsers
+  , mgrFrom = 3
+  , mgrDo = wrapDB $ \conn -> do
+      _ <- run conn "ALTER TABLE users ADD COLUMN customfooter TEXT" []
+      _ <- run conn "UPDATE users SET customfooter = ?" [toSql (Nothing :: Maybe String)]
+      return ()
+  }
+

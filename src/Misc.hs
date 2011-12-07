@@ -46,6 +46,12 @@ import Data.Bits
 
 foreign import ccall unsafe "htonl" htonl :: Word32 -> Word32
 
+-- We want this operators to bind strongly but weeker then . to do cond1 &&^ not . cond2
+infixl 8  &&^
+infixl 8  ||^
+infixr 9 $^ 
+infixr 9 $^^
+
 selectFormAction :: (HasRqData m, MonadIO m,MonadPlus m,ServerMonad m) => [(String,m a)] -> m a
 selectFormAction [] = mzero
 selectFormAction ((button,action):rest) = do
@@ -308,8 +314,14 @@ instance (Bounded a) => HasDefaultValue a where
 
 -- | Extra classes for one way enums
 class SafeEnum a where
-    fromSafeEnum::a -> Integer
-    toSafeEnum::Integer -> Maybe a
+    fromSafeEnum::(Integral b) =>  a -> b
+    toSafeEnum::(Integral b) =>  b -> Maybe a
+
+fromSafeEnumInt :: (SafeEnum a) => a -> Int
+fromSafeEnumInt = fromSafeEnum
+
+toSafeEnumInt :: (SafeEnum a) => Int -> Maybe a
+toSafeEnumInt = toSafeEnum
 
 -- | Just @flip map@.
 for :: [a] -> (a -> b) -> [b]
@@ -665,3 +677,25 @@ mapassoc f l = map (\a -> pair a $ f a) l
 
 mapassocM :: Monad m => (a -> m b) -> [a] -> m [(a, b)]
 mapassocM f l = mapM (\a -> (return . pair a) =<< f a) l
+
+basename :: String -> String
+basename filename =
+  case break (\x -> (x=='\\') || (x=='/')) filename of
+    (_,(_:rest)) -> basename rest
+    _            -> takeWhile ((/=) '.') filename
+
+indentLinesMore :: Int -> String -> String
+indentLinesMore nspaces sublines =
+  case lines sublines of
+    (x:xs) -> unlines $ x : map (spaces ++) xs
+    [] -> []
+  where 
+    spaces = replicate nspaces ' '
+    
+($^) :: Maybe (a -> a) -> a -> a
+($^) Nothing  a = a
+($^) (Just f) a = f a
+
+($^^) :: [a -> a] -> a -> a
+($^^) []  a = a
+($^^) (f : fs) a = fs $^^ f a

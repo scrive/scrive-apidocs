@@ -13,7 +13,7 @@
 module API.UserAPI (userAPI) where
 
 import API.API
-import API.APICommons hiding (SignatoryTMP(..))
+import API.APICommons 
 import DB.Classes
 import Doc.DocControl
 import Doc.DocState
@@ -39,6 +39,8 @@ import Util.SignatoryLinkUtils
 import Util.MonadUtils
 import Util.JSON
 import Text.JSON.String
+import Doc.SignatoryTMP hiding (email)
+
 data UserAPIContext = UserAPIContext {wsbody :: APIRequestBody ,user :: User}
 type UserAPIFunction m a = APIFunction m UserAPIContext a
 
@@ -120,7 +122,7 @@ sendFromTemplate = do
   doc <- update $ SignableFromDocument temp
   let mauthorsiglink = getAuthorSigLink doc
   when (isNothing mauthorsiglink) $ throwApiError API_ERROR_OTHER "Template has no author."
-  _ <- update $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality (ctxtime ctx)
+  _ <- update $ SetDocumentAdvancedFunctionality (documentid doc) (ctxtime ctx)
   _ <- update $ SetEmailIdentification (documentid doc) (ctxtime ctx)
   medoc <- update $ ResetSignatoryDetails (documentid doc) (((signatoryDetailsFromUser author mcompany) { signatorysignorder = SignOrder 0 }, 
                                                              [SignatoryPartner, SignatoryAuthor]): 
@@ -159,7 +161,7 @@ sendNewDocument = do
   let (filename, content) = head files
   signatories <- getSignatories
   when (Data.List.null signatories) $ throwApiError API_ERROR_MISSING_VALUE "There were no involved parties. At least one is needed."
-  mtype <- liftMM (return . toSafeEnum) (fromJSONField "type")
+  mtype <- liftMM (return . toSafeEnumInt) (fromJSONField "type")
   when (isNothing mtype) $ throwApiError API_ERROR_MISSING_VALUE "BAD DOCUMENT TYPE"
   let doctype = toDocumentType $ fromJust mtype
   --_msignedcallback <- fromJSONField "signed_callback"
@@ -169,7 +171,7 @@ sendNewDocument = do
   when (isLeft mnewdoc) $ throwApiError API_ERROR_OTHER "Problem making doc, maybe company and user don't match."
   let newdoc = fromRight mnewdoc
   _ <- liftKontra $ handleDocumentUpload (documentid newdoc) content filename
-  _ <- update $ SetDocumentFunctionality (documentid newdoc) AdvancedFunctionality (ctxtime ctx)
+  _ <- update $ SetDocumentAdvancedFunctionality (documentid newdoc) (ctxtime ctx)
   _ <- update $ SetEmailIdentification (documentid newdoc) (ctxtime ctx)
   edoc <- update $ ResetSignatoryDetails (documentid newdoc) (((signatoryDetailsFromUser author mcompany) { signatorysignorder = SignOrder 0 }, 
                                                              [SignatoryPartner, SignatoryAuthor]): 

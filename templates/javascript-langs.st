@@ -18,7 +18,7 @@ javascriptLocalisation =
              , addRequiredAttachments : "$_addRequiredAttachments()$"
              , setAllFields : "$_setAllFields()$"
              , multipleSignatory : "$_multipleSignatory()$"
-             , contractSignatory : function(idx) {return "$_contractSignatory()$" + idx}
+             , contractSignatory : function(idx) {return "$_contractSignatory()$ " + idx;}
              , nonsignatory : "$_nonsignatory()$"
              , offerAuthor : "$_offerAuthor()$"
              , author : "$_sender()$"
@@ -150,13 +150,40 @@ javascriptLocalisation =
                     , content : "$_dialogConfirmAdvancedBody()$"
                     , button : "$_dialogConfirmAdvancedChangeToFooterChangeProcess()$"
                     }
-            , switchToBasic : { 
-                      option: "$_signStepsFunctionalityChangeToSimplified()$"
-                    , title : "$_dialogConfirmBasicChangeToHead()$"
-                    , content : "<p> $_dialogConfirmBasicChangeToBody()$</p> <p> $_dialogConfirmBasicChangeToBody2()$</p>"
-                    , button : "$_dialogConfirmBasicChangeToChangeProcess()$"
-                    }
             , skrivapa : "$_skrivapa()$"
+
+
             , tweetAccount : "$_tweetAccount()$"
+            , onlyPDFAllowed: "$_onlyPDFAllowed()$"
+            , fileTooLarge: "$_fileTooLarge()$"
+            , couldNotUpload: "$_couldNotUpload()$"
+            , process : {
+                contract: {
+                   uploadprompt: "$_contractuploadprompttext()$",
+                   name: "$_contractname()$"
+                },
+                offer: {
+                   uploadprompt: "$_offeruploadprompttext()$",
+                   name: "$_offername()$"
+                },
+                order: {
+                   uploadprompt: "$_orderuploadprompttext()$",
+                   name: "$_ordername()$"
+                }
+                
+              }
+           , searchTemplate : "$_SearchTemplate()$"
+           , sortTemplate : "$_SortTemplate()$"
+           , infoSelectTemplate : "$_InfoSelectTemplate()$"
+           , goBack : "$_GoBack()$"
+           , verification : {
+                    selectmethod: "$_signStepsBodyFunctionsBoxChooseVerification()$"
+                }
+           , eleg : "$_eleg()$"
+           , finalDateCheckboxLabel : "$_daystosigncheckboxExpDate()$"
+           , editInviteText :"$_editinvitetextlinkInviteText()$"
+           , editInviteDialogHead : "$_editInviteTextDialogHead()$"
+           , days : "$_days()$"
+           , to : "$_to()$"
    }
 ####

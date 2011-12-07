@@ -52,7 +52,16 @@ window.FieldPlacement = Backbone.Model.extend({
     },
     file : function(){
         return this.get("file");
-    }
+    },
+    draftData : function() {
+        return { 
+            x : this.x(),
+            y : this.y(),
+            pagewidth : this.page().width(),
+            pageheight : this.page().height(),
+            page : this.page().number(),                               
+        }
+    }    
 });
 
 window.Field = Backbone.Model.extend({
@@ -100,6 +109,12 @@ window.Field = Backbone.Model.extend({
     },
     nicename : function() {
         var name = this.name();
+        if (name == "fstname")
+            return localization.fstname;
+        if (name == "sndname" )     
+            return localization.sndname;
+        if (name == "email") 
+            return localization.email;
         if (name == "sigco")
             return localization.company;
         if (name == "sigpersnr" )     
@@ -107,6 +122,12 @@ window.Field = Backbone.Model.extend({
         if (name == "sigcompnr") 
             return localization.companyNumber;
         return name;
+    },
+    draftData : function() {
+      return {   name : this.name()
+               , value : this.value()
+               , placements : _.map(this.placements(), function(placement) {return placement.draftData();})
+             }  
     }
    
 });
@@ -167,6 +188,36 @@ window.FieldStandardView = Backbone.View.extend({
     cleanredborder : function() {
         if (this.redborderhere != undefined)
             this.redborderhere.css("border","");
+    }
+});
+
+window.FieldBasicDesignView = Backbone.View.extend({
+    initialize: function (args) {
+        _.bindAll(this, 'render');
+        this.model.view = this;
+        this.render();
+    },
+    render: function(){
+        var field = this.model;
+        this.el.empty();
+        var signatory = field.signatory();
+        this.el.addClass("field");
+        var input = InfoTextInput.init({
+                                 infotext: field.nicename(),
+                                 value: field.value(),
+                                 cssClass :'fieldvalue',       
+                                 onChange : function(value) {
+                                    field.setValue(value);    
+                                  }
+                            }).input();
+                  
+        if (field.isClosed())  
+        { 
+            this.el.addClass('closed');
+            input.attr("readonly","yes");
+        }    
+        this.el.append(input);    
+        return this;
     }
 });
 

@@ -21,6 +21,7 @@ import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Company.Model
 import DB.Classes
+import Data.Semantic
 import Misc
 
 import Control.Monad
@@ -131,15 +132,17 @@ sameUser u1 u2 = getUserID u1 == getUserID u2
 class MaybeTemplate a where
    isTemplate :: a -> Bool
    isSignable :: a -> Bool
-   isSignable = not . isTemplate
 
 instance  MaybeTemplate DocumentType where
    isTemplate (Template _) = True
    isTemplate AttachmentTemplate = True
    isTemplate _ = False
+   isSignable (Signable _) = True
+   isSignable _ = False
 
 instance  MaybeTemplate Document where
-   isTemplate =  isTemplate . documenttype
+   isTemplate = isTemplate . documenttype
+   isSignable = isSignable . documenttype
 
 class MaybeAttachment a where
    isAttachment :: a -> Bool
@@ -155,6 +158,42 @@ class MaybeShared a where
 
 instance  MaybeShared Document where
     isShared doc = documentsharing doc == Shared
+
+class HasFieldType a where
+    fieldType :: a -> FieldType
+
+instance HasFieldType FieldType where
+    fieldType = id
+    
+instance HasFieldType SignatoryField where
+    fieldType = sfType
+        
+matchingFieldType:: (HasFieldType a, HasFieldType b) => a -> b -> Bool
+matchingFieldType a b = case (fieldType a, fieldType b) of
+                        (CustomFT a' _, CustomFT b' _) -> a' == b'
+                        (a',b') -> a' == b'
+
+class HasFields a where
+    replaceField :: SignatoryField -> a -> a
+    getAllFields:: a ->  [SignatoryField]
+    
+instance HasFields  [SignatoryField] where
+    getAllFields = id
+    replaceField f fs = if (any (matchingFieldType f) fs) 
+                                then map (\f' ->  f <| (matchingFieldType f f') |> f' )  fs
+                                else fs  ++ [f]
+               
+instance HasFields SignatoryDetails where
+    getAllFields = getAllFields . signatoryfields
+    replaceField f s = s {signatoryfields = replaceField f (signatoryfields s) } 
+    
+instance HasFields SignatoryLink where
+    getAllFields =  getAllFields . signatorydetails
+    replaceField f s = s {signatorydetails = replaceField f (signatorydetails s) }     
+            
+replaceFieldValue::(HasFields a) =>  FieldType -> BS.ByteString -> a -> a
+replaceFieldValue ft v = replaceField $ SignatoryField { sfType = ft, sfValue = v, sfPlacements =[]}
+
 
 -- does this need to change now? -EN
 checkCSVSigIndex :: [SignatoryLink] -> Int -> Either String Int
@@ -304,7 +343,7 @@ replaceSignOrder signorder sd = sd { signatorysignorder = signorder }
  -}
 canUserInfoViewDirectly :: UserID -> BS.ByteString -> Document -> Bool
 canUserInfoViewDirectly userid email doc =
-  case getSigLinkFor doc (userid, email) of
+  case getSigLinkFor doc (Or userid email) of
     Nothing                                                                    -> False
     Just siglink | signatorylinkdeleted siglink                                -> False
     Just siglink | isAuthor siglink                                            -> True
@@ -344,6 +383,9 @@ isFieldCustom :: SignatoryField -> Bool
 isFieldCustom SignatoryField{sfType = CustomFT{}} = True
 isFieldCustom _ = False
 
+findCustomField :: BS.ByteString -> SignatoryLink -> Maybe SignatoryField
+findCustomField name = find (matchingFieldType (CustomFT name False) ) . signatoryfields . signatorydetails
+
 {- | Add a tag to tag list -}
 addTag:: [DocumentTag] -> (BS.ByteString,BS.ByteString) -> [DocumentTag]
 addTag ((DocumentTag n v):ts) (n',v') = if n == n'
@@ -353,6 +395,12 @@ addTag _ (n,v) = [DocumentTag n v]
 
 samenameanddescription :: BS.ByteString -> BS.ByteString -> (BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)]) -> Bool
 samenameanddescription n d (nn, dd, _) = n == nn && d == dd
+
+getSignatoryAttachment :: BS.ByteString -> BS.ByteString -> Document -> Maybe SignatoryAttachment
+getSignatoryAttachment email name doc =
+  find (\sl -> email == signatoryattachmentemail sl &&
+               name  == signatoryattachmentname sl) $ 
+  documentsignatoryattachments doc
 
 buildattach :: String -> Document -> [SignatoryAttachment]
                -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])]
@@ -390,3 +438,154 @@ documentfilesM Document{documentfiles} = do
 documentsealedfilesM :: (MonadIO m, DBMonad m) => Document -> m [File]
 documentsealedfilesM Document{documentsealedfiles} = do
     liftM catMaybes $ mapM (runDBQuery . GetFileByFileID) documentsealedfiles
+
+fileInDocument :: Document -> FileID -> Bool
+fileInDocument doc fid = 
+    elem fid $      (documentfiles doc) 
+                 ++ (documentsealedfiles doc) 
+                 ++ (fmap authorattachmentfile $ documentauthorattachments doc)
+                 ++ (catMaybes $ fmap signatoryattachmentfile $ documentsignatoryattachments doc)
+                 
+makePlacements :: [BS.ByteString]
+               -> [BS.ByteString]
+               -> [Int]
+               -> [Int]
+               -> [Int]
+               -> [Int]
+               -> [Int]
+               -> [(BS.ByteString, BS.ByteString, FieldPlacement)]
+makePlacements placedsigids
+               placedfieldids
+               placedxs
+               placedys
+               placedpages
+               placedwidths
+               placedheights =
+    let placements = zipWith5 FieldPlacement
+                        placedxs
+                        placedys
+                        placedpages
+                        placedwidths
+                        placedheights
+    in zip3 placedsigids placedfieldids placements
+
+filterPlacementsByID :: [(BS.ByteString, BS.ByteString, FieldPlacement)]
+                        -> BS.ByteString
+                        -> BS.ByteString
+                        -> [FieldPlacement]
+filterPlacementsByID placements sigid fieldid =
+    [x | (s, f, x) <- placements, s == sigid, f == fieldid]
+
+fieldDefAndSigID :: [(BS.ByteString, BS.ByteString, FieldPlacement)]
+                    -> BS.ByteString
+                    -> BS.ByteString
+                    -> BS.ByteString
+                    -> BS.ByteString
+                    -> (BS.ByteString, SignatoryField)
+fieldDefAndSigID placements fn fv fid sigid = (sigid,
+  SignatoryField {
+      sfType = CustomFT fn $ not $ BS.null fv
+    , sfValue = fv
+    , sfPlacements = filterPlacementsByID placements sigid fid
+  })
+
+makeFieldDefs :: [(BS.ByteString, BS.ByteString, FieldPlacement)]
+              -> [BS.ByteString]
+              -> [BS.ByteString]
+              -> [BS.ByteString]
+              -> [BS.ByteString]
+              -> [(BS.ByteString, SignatoryField)]
+makeFieldDefs placements = zipWith4 (fieldDefAndSigID placements)
+
+filterFieldDefsByID :: [(BS.ByteString, SignatoryField)]
+                    -> BS.ByteString
+                    -> [SignatoryField]
+filterFieldDefsByID fielddefs sigid =
+    [x | (s, x) <- fielddefs, s == sigid]
+
+makeSignatory ::[(BS.ByteString, BS.ByteString, FieldPlacement)]
+                -> [(BS.ByteString, SignatoryField)]
+                -> BS.ByteString
+                -> BS.ByteString
+                -> BS.ByteString
+                -> BS.ByteString
+                -> SignOrder
+                -> BS.ByteString
+                -> BS.ByteString
+                -> BS.ByteString
+                -> SignatoryDetails
+makeSignatory pls fds sid sfn  ssn  se  sso  sc  spn  scn = SignatoryDetails {
+    signatorysignorder = sso
+  , signatoryfields = [
+      sf FirstNameFT sfn "fstname"
+    , sf LastNameFT ssn "sndname"
+    , sf EmailFT se "email"
+    , sf CompanyFT sc "company"
+    , sf PersonalNumberFT spn "personalnumber"
+    , sf CompanyNumberFT scn "companynumber"
+    ] ++ filterFieldDefsByID fds sid
+  }
+  where
+    sf ftype value texttype = SignatoryField {
+        sfType = ftype
+      , sfValue = value
+      , sfPlacements = filterPlacementsByID pls sid (BS.fromString texttype)
+    }
+
+makeSignatories :: [(BS.ByteString, BS.ByteString, FieldPlacement)]
+                   -> [(BS.ByteString, SignatoryField)]
+                   -> [BS.ByteString]
+                   -> [BS.ByteString]
+                   -> [SignOrder]
+                   -> [BS.ByteString]
+                   -> [BS.ByteString]
+                   -> [BS.ByteString]
+                   -> [BS.ByteString]
+                   -> [BS.ByteString]
+                   -> [SignatoryDetails]
+makeSignatories placements fielddefs
+                sigids
+                signatoriesemails
+                signatoriessignorders
+                signatoriescompanies
+                signatoriespersonalnumbers
+                signatoriescompanynumbers
+                signatoriesfstnames
+                signatoriessndnames
+  = zipWith8 (makeSignatory placements fielddefs)
+    sigids
+    signatoriesfstnames
+    signatoriessndnames
+    signatoriesemails
+    signatoriessignorders
+    signatoriescompanies
+    signatoriespersonalnumbers
+    signatoriescompanynumbers
+    where
+        zipWith8 z (a:as) (b:bs) (c:cs) (d:ds) (e:es) (f:fs) (g:gs) (h:hs)
+            = z a b c d e f g h : zipWith8 z as bs cs ds es fs gs hs
+        zipWith8 _ _ _ _ _ _ _ _ _ = []
+
+
+-- NEED FIX !!!!  Reverse engineering is not a good design pattern | MR
+-- I will fix this when doing backbone anyway.
+makeAuthorDetails :: [(BS.ByteString, BS.ByteString, FieldPlacement)]
+                     -> [(BS.ByteString, SignatoryField)]
+                     -> SignatoryDetails
+                     -> SignatoryDetails
+makeAuthorDetails pls fielddefs sigdetails@SignatoryDetails{signatoryfields = sigfields} =
+  sigdetails {
+    signatoryfields =
+      concatMap f sigfields ++ filterFieldDefsByID fielddefs (BS.fromString "author")
+  }
+  where
+    f sf = case sfType sf of
+      EmailFT -> [g "email"]
+      FirstNameFT -> [g "fstname"]
+      LastNameFT -> [g "sndname"]
+      CompanyFT -> [g "company"]
+      PersonalNumberFT -> [g "personalnumber"]
+      CompanyNumberFT -> [g "companynumber"]
+      CustomFT _ _ -> []
+      where
+        g ftype = sf { sfPlacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString ftype) }                 

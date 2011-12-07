@@ -26,6 +26,7 @@ standardHeaderContents=
         <meta http-equiv="content-language" content="$ctxlang$" />
         <link href='$protocol$//fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css"/>
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/newdesign.css" media="screen"/>
+        <link rel="stylesheet" type="text/css" href="$prefix$/theme/designview.css" media="screen"/>
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/style.css" media="screen"/>
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/calendar.css" media="screen"/>
 		<link rel="stylesheet" type="text/css" href="$prefix$/theme/symbols.css" media="screen"/>
@@ -71,6 +72,8 @@ standardHeaderContents=
                 type="text/javascript"></script>
         <script src="$prefix$/js/tooltips.js"
                 type="text/javascript"></script>
+        <script src="$prefix$/js/calendar.js"
+                type="text/javascript"></script>
         <script src="$prefix$/js/submits.js"
                 type="text/javascript"></script>
         <script src="$prefix$/js/confirmations.js"
@@ -101,6 +104,13 @@ standardHeaderContents=
                 type="text/javascript"></script>  
         <script src="$prefix$/js/bankid.js"
                 type="text/javascript"></script>
+        <script src="/js/jquery.form.js"
+                type="text/javascript"></script>
+        <script src="/js/wizard.js"
+                type="text/javascript"></script>
+        <script src="/js/uploadview.js"
+                type="text/javascript"></script>
+
        $if(publicsafe)$
         <script src="/js/jquery.tweet.js"
                 type="text/javascript"></script>
@@ -138,7 +148,7 @@ standardBodyWrapper=
         <div class="mainContainer960" >
           $flashmessages()$
           $loginModal()$
-        <div id="body-container">
+        <div class="body-container">
           $unwrappedbody:noescape()$
                                         <div class="clearfix"></div>
                                         <div class="spacer40"></div>
@@ -236,7 +246,7 @@ pageFooter=
         <li><a href="$linkabout$">$_pageFooterAbout()$</a></li>
         <li><a href="$linkpartners$">$_pageFooterPartners()$</a></li>
         <li><a href="$linkclients$">$_pageFooterCustomers()$</a></li>
-        <!--<li><a href="/board.html">Board of Advisors</a></li>-->
+        <li><a href="$linkcontactus$">$_pageFooterContactUs()$</a></li>
       </ul>
     </div>
     $if(publicsafe)$
@@ -343,21 +353,18 @@ header=
                                  </form>
                                 </span>
                                  -->
-                               <a href="$linklogout$" class="document-button logout">$_headerLogOut()$</a>
-                               <a href="$linkaccount$" class="document-button">$_headerAccount()$</a>
-                               <a href="$linkissue$" class="document-button">$_headerArchive()$</a>
-                               <a href="$linkupload$" class="document-button">$_headerSend()$</a>
+                               <a href="$linklogout$" class="toplink logout">$_headerLogOut()$</a>
+                               <a href="$linkaccount$" class="toplink">$_headerAccount()$</a>
+                               <a href="$linkissue$" class="toplink">$_headerArchive()$</a>
+                               <a href="$linkupload$" class="toplink">$_headerSend()$</a>
                                 $localeSwitcher()$
                                 $else$
-
-                                <a href="#" class="login-button"><p>$_login()$</p></a>
-
-                                  <span id="moveleft2">
-                                <a href="$linkabout$"
-                                  class="document-button">$_pageFooterAbout()$</a>
-                                  <a href="$linklegal$" class="document-button">$_pageFooterLaw()$</a>
-                                  <a href="$linkpriceplan$"
-                                  class="document-button">$_pageFooterPrices()$</a>
+                                <span id="moveleft2">
+                                    <a href="#" class="login-button"><p>$_login()$</p></a>
+                                    <a href="$linkcontactus$" class="toplink">$_pageHeaderContactUs()$</a>
+                                    <a href="$linkabout$" class="toplink">$_pageFooterAbout()$</a>
+                                    <a href="$linklegal$" class="toplink">$_pageFooterLaw()$</a>
+                                    <a href="$linkpriceplan$" class="toplink">$_pageFooterPrices()$</a>
                                 $localeSwitcher()$
                                   </span>
 

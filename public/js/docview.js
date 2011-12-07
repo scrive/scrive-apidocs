@@ -5,7 +5,7 @@
 
 (function(window){
 
-var DocumentStandarView = Backbone.View.extend({
+window.DocumentStandarView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
         this.model.bind('reset', this.render);
@@ -18,7 +18,7 @@ var DocumentStandarView = Backbone.View.extend({
     prerender: function(){
         this.contrainer = $("<div class='mainContainer' />");
         this.el.append(this.contrainer);
-        this.el.attr("id","body-container");
+        this.el.addClass("body-container");
         this.el.append("<div class='clearfix'/>");
         this.el.append("<div class='spacer40'/>");
        
@@ -126,6 +126,7 @@ var DocumentStandarView = Backbone.View.extend({
                             onAccept : function(customtext)
                             {
                                 document.cancel(customtext).send();
+                                return true;
                             }
                             });
                         }
@@ -174,7 +175,7 @@ var DocumentStandarView = Backbone.View.extend({
                                 size:"small",
                                 color: "red",
                                 text: document.process().rejectbuttontext(),
-                                style : "width: 140px;margin-right: 12px;",
+                                style : "width: 150px;margin-right: 12px;",
                                 onClick : function(){
                                     ConfirmationWithEmail.popup({
                                         title : document.process().signatorycancelmodaltitle(), 
@@ -194,22 +195,24 @@ var DocumentStandarView = Backbone.View.extend({
       box.append (leftbox); 
       var guardbox;
       var checkbox;
+        console.log("xxx");
       if (document.process().requiressignguard())
       {
-            var middlebox = $("<div id='signViewBottomBoxContainerMiddle'/>");
-            guardbox = $("<div id='signGuardField'/>");
-            var checkboxwrapper =  $("<div class='float-left'/>");
-            checkbox =  $("<input type='checkbox'  id='signGuardCBox' class='signGuard' autocomplete='off'/>");
-            checkbox.click(function() {guardbox.css("border","");});
-            checkboxwrapper.append(checkbox);
-            guardbox.append(checkboxwrapper);
-            var labelwrapper =  $("<div class='float-left' id='signGuardLabel'/>");
-            var label =  $("<label for='signGuardCBox'/>").append(localization.sign.guardCBox);
-            labelwrapper.append(label);
-            guardbox.append(labelwrapper);
-            middlebox.append(guardbox);
-            box.append(middlebox);  
-           
+          console.log("requires sign guard");
+          var middlebox = $("<div id='signViewBottomBoxContainerMiddle'/>");
+          guardbox = $("<div id='signGuardField'/>");
+          var checkboxwrapper =  $("<div class='float-left'/>");
+          checkbox =  $("<input type='checkbox'  id='signGuardCBox' class='signGuard' autocomplete='off'/>");
+          checkbox.click(function() {guardbox.css("border","");});
+          checkboxwrapper.append(checkbox);
+          guardbox.append(checkboxwrapper);
+          var labelwrapper =  $("<div class='float-left' id='signGuardLabel'/>");
+          var label =  $("<label for='signGuardCBox'/>").append(localization.sign.guardCBox);
+          labelwrapper.append(label);
+          guardbox.append(labelwrapper);
+          middlebox.append(guardbox);
+          box.append(middlebox);  
+          
             
       }
            
@@ -258,10 +261,10 @@ var DocumentStandarView = Backbone.View.extend({
         var acceptButton; 
         if (document.elegAuthorization())
         {
-            acceptButton = $("<span class='eleghidden'/>");
-            var bankid = $("<a href='#' class='btn-small green float-right author2 bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
-            var telia = $("<a href='#' class='btn-small green float-right author2 telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
-            var nordea = $("<a href='#' class='btn-small green float-right author2 nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
+            acceptButton = $("<span/>");
+            var bankid = $("<a href='#' class='bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
+            var telia = $("<a href='#' class='author2 telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
+            var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
             bankid.click(function() {
                     Eleg.bankidSign(document,signatory, document.sign()); 
                     return false;
@@ -309,14 +312,14 @@ var DocumentStandarView = Backbone.View.extend({
     popupSignConfirmationByAuthor : function() {
         var document = this.model;
         var signatory = document.currentSignatory();
-        var content = document.lastSignatoryLeft() ? $(document.process().signatorysignmodalcontentlast()) : $(document.process().signatorysignmodalcontentnotlast());
+        var content = document.lastSignatoryLeft() ? $(document.process().signatorysignmodalcontentauthorlast()) : $(document.process().signatorysignmodalcontentnotlast());
         var acceptButton;
         if (document.elegAuthorization())
         {
-            acceptButton = $("<span class='eleghidden'/>");
-            var bankid = $("<a href='#' class='btn-small green float-right author2 bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
-            var telia = $("<a href='#' class='btn-small green float-right author2 telia'><img src='/img/telia.png' alt='Telia Eleg' /></a>");
-            var nordea = $("<a href='#' class='btn-small green float-right author2 nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
+            acceptButton = $("<span/>");
+            var bankid = $("<a href='#' class='bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
+            var telia = $("<a href='#' class='telia'><img src='/img/telia.png' alt='Telia Eleg' /></a>");
+            var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
             bankid.click(function() {
                     Eleg.bankidSign(document,signatory, document.sign()); 
                     return false;
@@ -338,7 +341,7 @@ var DocumentStandarView = Backbone.View.extend({
                   size: "small",
                   color : "blue",
                   icon : $("<span class='btn-symbol cross' style='margin-left: 10px'/>"),
-                  text :  localization.skrivapa,
+                    text :  document.process().authorsignlastbutton(),
                   onClick : function() {                    
                       document.sign().send();
                     }
@@ -370,26 +373,31 @@ var DocumentStandarView = Backbone.View.extend({
       leftbox.append(this.cancelByAuthorButton().input());
       box.append (leftbox);
  
-      var middlebox = $("<div id='signViewBottomBoxContainerMiddle'/>");
-      var guardbox = $("<div id='signGuardField'/>");
-      var checkboxwrapper =  $("<div class='float-left'/>");
-      var checkbox =  $("<input type='checkbox'  id='signGuardCBox' class='signGuard' autocomplete='off'/>");
-      checkbox.click(function() {guardbox.css("border","");});
-      checkboxwrapper.append(checkbox);
-      guardbox.append(checkboxwrapper);
-      var labelwrapper =  $("<div class='float-left' id='signGuardLabel'/>");
-      var label =  $("<label for='signGuardCBox'/>").append(localization.signByAuthor.guardCBoxForAuthorLabel);
-      labelwrapper.append(label);
-      guardbox.append(labelwrapper);
-      guardbox.append(localization.signByAuthor.guardCBoxForAuthorAfterLabel);
-      middlebox.append(guardbox);
-      box.append(middlebox);   
-           
+        console.log("xxx");
+        if (document.process().requiressignguard())
+        {
+            var middlebox = $("<div id='signViewBottomBoxContainerMiddle'/>");
+            console.log("requires sign guard");
+            
+            var guardbox = $("<div id='signGuardField'/>");
+            var checkboxwrapper =  $("<div class='float-left'/>");
+            var checkbox =  $("<input type='checkbox'  id='signGuardCBox' class='signGuard' autocomplete='off'/>");
+            checkbox.click(function() {guardbox.css("border","");});
+            checkboxwrapper.append(checkbox);
+            guardbox.append(checkboxwrapper);
+            var labelwrapper =  $("<div class='float-left' id='signGuardLabel'/>");
+            var label =  $("<label for='signGuardCBox'/>").append(localization.signByAuthor.guardCBoxForAuthorLabel);
+            labelwrapper.append(label);
+            guardbox.append(labelwrapper);
+            guardbox.append(localization.signByAuthor.guardCBoxForAuthorAfterLabel);
+            middlebox.append(guardbox);
+            box.append(middlebox);   
+        }
       var rightbox = $("<div id='signViewBottomBoxContainerRight'/>"); 
       var acceptButton = Button.init({
                                 size:"big",
                                 color: "blue",
-                                text: localization.skrivapa,
+          text: document.process().authorsignlastbutton(),
                                 icon : jQuery("<span class='icon cross' style='margin-left:5px'/>"),
                                 labelstyle :  "width:120px" ,
                                 cssClass : "center" ,

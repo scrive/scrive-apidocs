@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, OverlappingInstances, IncoherentInstances #-}
+{-# LANGUAGE OverloadedStrings, OverlappingInstances, IncoherentInstances, CPP #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module TestingUtil where
 
@@ -9,7 +9,11 @@ import Control.Applicative
 import System.Random
 import Test.QuickCheck
 import Happstack.Server
+#ifndef DOCUMENTS_IN_POSTGRES
 import Happstack.State
+#else
+import Doc.DocUtils
+#endif
 import Test.QuickCheck.Gen
 import Control.Monad.Trans
 import Data.Maybe
@@ -18,6 +22,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import qualified Test.HUnit as T
 
+import File.FileID
 import API.API
 import DB.Classes
 import DB.Types
@@ -26,11 +31,13 @@ import FlashMessage
 import qualified AppLogger as Log
 import StateHelper
 import Mails.MailsUtil
-import Doc.DocState
+import Doc.Transitory
+import Doc.DocStateCommon
 import KontraMonad
 import MinutesTime
 import User.Model
 import Misc
+import File.Model
 import API.Service.Model
 import Data.Typeable
 import Doc.Invariants
@@ -203,16 +210,31 @@ instance Arbitrary DocumentID where
     ds <- arbitrary
     return $ DocumentID ds
 
+documentAllTypes :: [DocumentType]
+documentAllTypes = [ Signable Contract
+                   , Signable Order
+                   , Signable Offer
+                   , Template Contract
+                   , Template Order
+                   , Template Offer
+                   , Attachment
+                   , AttachmentTemplate
+                   ]
+
+documentSignableTypes :: [DocumentType]
+documentSignableTypes = [ Signable Contract
+                        , Signable Order
+                        , Signable Offer
+                        ]
+
+documentTemplateTypes :: [DocumentType]
+documentTemplateTypes = [ Template Contract
+                        , Template Order
+                        , Template Offer
+                        ]
+
 instance Arbitrary DocumentType where
-  arbitrary = elements [ Signable Contract
-                       , Signable Order
-                       , Signable Offer
-                       , Template Contract
-                       , Template Order
-                       , Template Offer
-                       , Attachment
-                       , AttachmentTemplate
-                       ]
+  arbitrary = elements documentAllTypes
 
 
 instance Arbitrary Document where
@@ -220,25 +242,28 @@ instance Arbitrary Document where
     ds <- arbitrary
     dt <- arbitrary
     sls <- arbitrary
-    f <- arbitrary
     ids <- arbitrary
+    fnc <- arbitrary
     return $ blankDocument { documentstatus = ds
                            , documenttype = dt
                            , documentsignatorylinks = sls
-                           , documentfiles = [f]
                            , documentallowedidtypes = [ids]
+                           , documentfunctionality = fnc
                            }
 
+documentAllStatuses :: [DocumentStatus]
+documentAllStatuses = [ Preparation
+                      , Pending
+                      , Closed
+                      , Canceled
+                      , Timedout
+                      , Rejected
+                      , AwaitingAuthor
+                      , DocumentError "Bad document."
+                      ]
+
 instance Arbitrary DocumentStatus where
-  arbitrary = elements [ Preparation
-                       , Pending
-                       , Closed
-                       , Canceled
-                       , Timedout
-                       , Rejected
-                       , AwaitingAuthor
-                       , DocumentError "Bad document."
-                       ]
+  arbitrary = elements documentAllStatuses
 
 nonemptybs :: Gen BS.ByteString
 nonemptybs = do
@@ -387,11 +412,13 @@ blankUser = User {
                 , usersettings  = UserSettings {
                                     preferreddesignmode = Nothing
                                   , locale = mkLocaleFromRegion Misc.defaultValue
+                                  , customfooter = Nothing
                                   }
               , userservice = Nothing
               , usercompany = Nothing
               }
 
+{-
 blankDocument :: Document
 blankDocument =
           Document
@@ -426,6 +453,7 @@ blankDocument =
           , documentregion               = REGION_SE
           }
 
+-}
 
 testThat :: String -> Connection -> DB () -> Test
 testThat s conn a = testCase s (withTestEnvironment conn a)
@@ -434,6 +462,16 @@ addNewCompany ::  DB Company
 addNewCompany = do
     eid <- rand 10 arbitrary
     dbUpdate $ CreateCompany Nothing eid
+
+addNewFile :: String -> BS.ByteString -> DB File
+addNewFile filename content =
+  dbUpdate $ NewFile (BS.fromString filename) content
+
+addNewRandomFile :: DB File
+addNewRandomFile = do
+  fn <- rand 10 $ arbString 3 30
+  cnt <- rand 10 $ arbString 3 30
+  addNewFile fn (BS.fromString cnt)
 
 addNewUser :: String -> String -> String -> DB (Maybe User)
 addNewUser firstname secondname email =
@@ -472,28 +510,41 @@ emptySignatoryDetails = SignatoryDetails
     , signatorysignorder = SignOrder 1
     }
 
+data RandomDocumentAllows = RandomDocumentAllows
+                          { randomDocumentAllowedTypes :: [DocumentType]
+                          , randomDocumentAllowedStatuses :: [DocumentStatus]
+                          , randomDocumentAuthor :: User
+                          , randomDocumentCondition :: Document -> Bool
+                          }
+
+randomDocumentAllowsDefault :: User -> RandomDocumentAllows
+randomDocumentAllowsDefault user = RandomDocumentAllows
+                              { randomDocumentAllowedTypes = [ Signable Contract
+                                                             , Signable Order
+                                                             , Signable Offer
+                                                             , Template Contract
+                                                             , Template Order
+                                                             , Template Offer
+                                                             , Attachment
+                                                             , AttachmentTemplate
+                                                             ]
+                              , randomDocumentAllowedStatuses = [ Preparation
+                                                                , Pending
+                                                                , Closed
+                                                                , Canceled
+                                                                , Timedout
+                                                                , Rejected
+                                                                , AwaitingAuthor
+                                                                , DocumentError "Bad document."
+                                                                ]
+                              , randomDocumentAuthor = user
+                              , randomDocumentCondition = const True
+                              }
+
 addRandomDocumentWithAuthor :: User -> DB DocumentID
-addRandomDocumentWithAuthor user = do
-  rs <- rand 10 arbitrary
-  let roles = SignatoryAuthor : rs
-  doc <- rand 10 arbitrary
-  slsab <- rand 10 arbitrary
-  let sls = 1 + abs slsab
-  sldets <- rand 10 (vectorOf sls arbitrary)
-  slr <- rand 1000 (vectorOf sls $ elements [[], [SignatoryPartner]])
-  slinks <- sequence $ zipWith (\a r -> update $ (SignLinkFromDetailsForTest a r)) sldets slr
+addRandomDocumentWithAuthor user = documentid <$> addRandomDocument (randomDocumentAllowsDefault user)
 
-  mcompany <- case usercompany user of
-    Nothing -> return Nothing
-    Just cid -> dbQuery $ GetCompany cid
 
-  asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
-  asl <- update $ SignLinkFromDetailsForTest asd roles
-  let adoc = doc { documentsignatorylinks = slinks ++
-                                            [asl { maybesignatory = Just (userid user) }]
-                 , documentregion = getRegion user
-                 }
-  update $ StoreDocumentForTesting adoc
 
 getRandomAuthorRoles :: MonadIO m => Document -> m [SignatoryRole]
 getRandomAuthorRoles doc =
@@ -505,52 +556,72 @@ getPossibleAuthorRoles doc = [SignatoryAuthor] :
     Just True -> []
     _ ->  [[SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]]
 
+
+
 addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> DB Document
-addRandomDocumentWithAuthorAndCondition user p =  do
-  doc <- rand 10 arbitrary
-  roles <- getRandomAuthorRoles doc
+addRandomDocumentWithAuthorAndCondition user p = 
+  addRandomDocument ((randomDocumentAllowsDefault user) { randomDocumentCondition = p})
 
-  mcompany <- case usercompany user of
-    Nothing -> return Nothing
-    Just cid -> dbQuery $ GetCompany cid
-
+addRandomDocument :: RandomDocumentAllows -> DB Document
+addRandomDocument rda = do
+  file <- addNewRandomFile
   now <- liftIO getMinutesTime
+  document <- worker file now
+  docid <- doc_update $ StoreDocumentForTesting document
+  mdoc <- doc_query $ GetDocumentByDocumentID docid
+  case mdoc of
+    Nothing -> do
+              assertFailure "Could not store document."
+              return document
+    Just doc' -> do
+              return doc'
+  where
+    worker file now = do
+      let user = randomDocumentAuthor rda
+          p = randomDocumentCondition rda
+      doc' <- rand 10 arbitrary
+      xtype <- rand 10 (elements $ randomDocumentAllowedTypes rda)
+      status <- rand 10 (elements $ randomDocumentAllowedStatuses rda)
+      let doc = doc' { documenttype = xtype, documentstatus = status }
 
-  (signinfo, seeninfo) <- rand 10 arbitrary
-  asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
-  asl <- update $ SignLinkFromDetailsForTest asd roles
-  let asl' = asl { maybeseeninfo = seeninfo
-                 , maybesigninfo = signinfo
-                 }
+      roles <- getRandomAuthorRoles doc
+    
+      mcompany <- case usercompany user of
+                    Nothing -> return Nothing
+                    Just cid -> dbQuery $ GetCompany cid
 
-  let siglinks = documentsignatorylinks doc ++ [asl' { maybesignatory = Just (userid user), maybecompany = usercompany user }]
-  let unsignedsiglinks = map (\sl -> sl { maybesigninfo = Nothing,
-                                          maybeseeninfo = Nothing }) siglinks
-  let siglinksandauthor = (if isPreparation doc then unsignedsiglinks else siglinks)
-  let adoc = doc { documentsignatorylinks = siglinksandauthor
-                 , documentregion = getRegion user
-                 }
-  if p adoc
-    then do
-    let d = (invariantProblems now adoc)
-    if isNothing d
-      then do
-        docid <- update $ StoreDocumentForTesting adoc
-        mdoc <- query $ GetDocumentByDocumentID docid
-        case mdoc of
-          Nothing -> do
-            assertFailure "Could not store document."
-            return doc
-          Just doc' -> do
-            return doc'
-      else do
-        --uncomment this to find out why the doc was rejected
-        --print adoc
-        --print $ "rejecting doc: " ++ fromJust d
-        addRandomDocumentWithAuthorAndCondition user p
-    else do
-      --print adoc
-      addRandomDocumentWithAuthorAndCondition user p
+
+      (signinfo, seeninfo) <- rand 10 arbitrary
+      asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
+      asl <- doc_update $ SignLinkFromDetailsForTest asd roles
+      let asl' = asl { maybeseeninfo = seeninfo
+                     , maybesigninfo = signinfo
+                     }
+
+      let siglinks = documentsignatorylinks doc ++
+                     [ asl' { maybesignatory = Just (userid user)
+                            , maybecompany = usercompany user 
+                            }
+                     ]
+      let unsignedsiglinks = map (\sl -> sl { maybesigninfo = Nothing,
+                                              maybeseeninfo = Nothing }) siglinks
+      let siglinksandauthor = if isPreparation doc
+                              then unsignedsiglinks
+                              else siglinks
+      let adoc = doc { documentsignatorylinks = siglinksandauthor
+                     , documentregion = getRegion user
+                     , documentfiles = [fileid file]
+                     }
+      case (p adoc, invariantProblems now adoc) of
+        (True, Nothing) -> return adoc
+        (False, _)  -> do
+                        worker file now
+        (_, Just _problems) -> do
+               -- am I right that random document should not have invariantProblems?
+               --uncomment this to find out why the doc was rejected
+               --print adoc
+               --print $ "rejecting doc: " ++ _problems
+               worker file now
 
 rand :: MonadIO m => Int -> Gen a -> m a
 rand i a = do
@@ -592,10 +663,15 @@ validTest = return . Just
 
 --Random query
 class RandomQuery a b where
-  randomQuery :: MonadIO m => a -> m b
+  randomQuery :: (MonadIO m, DBMonad m) => a -> m b
 
+#ifndef DOCUMENTS_IN_POSTGRES
 instance (QueryEvent ev res) => RandomQuery ev res where
   randomQuery = query
+#else
+instance (DBQuery ev res) => RandomQuery ev res where
+  randomQuery = runDBQuery
+#endif
 
 instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
   randomQuery f = do
@@ -604,10 +680,15 @@ instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
 
 --Random update
 class RandomUpdate a b where
-  randomUpdate :: MonadIO m => a -> m b
+  randomUpdate :: (MonadIO m, DBMonad m) => a -> m b
 
+#ifndef DOCUMENTS_IN_POSTGRES
 instance (UpdateEvent ev res) => RandomUpdate ev res where
   randomUpdate = update
+#else
+instance (DBUpdate ev res) => RandomUpdate ev res where
+  randomUpdate = runDBUpdate
+#endif
 
 instance (Arbitrary a, RandomUpdate c b) => RandomUpdate (a -> c) b where
   randomUpdate f = do

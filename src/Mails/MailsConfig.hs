@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Mails.MailsConfig
@@ -14,6 +15,8 @@ module Mails.MailsConfig
     , defaultMailConfig
     , isBackdoorOpen
     ) where
+
+import Misc
 
 -- | Configuration of mails
 data MailsConfig
@@ -36,7 +39,34 @@ data MailsConfig
       , ourInfoEmail         :: String
       , ourInfoEmailNiceName :: String
       }
-      deriving (Show, Read, Eq, Ord)
+      deriving (Read, Eq, Ord)
+
+instance Show MailsConfig where
+    show (MailsSendgrid{..}) = indentLinesMore 2 $ unlines
+      [ "MailsSendgrid"
+      , "{ mailbackdooropen = " ++ show mailbackdooropen
+      , ", ourInfoEmail = " ++ show ourInfoEmail
+      , ", ourInfoEmailNiceName = " ++ show ourInfoEmailNiceName
+      , ", sendgridSMTP = " ++ show sendgridSMTP
+      , ", sendgridRestAPI = " ++ show sendgridRestAPI
+      , ", sendgridUser = " ++ show sendgridUser
+      , ", sendgridPassword = " ++ show sendgridPassword
+      , "}"
+      ]
+    show (MailsSendmail{..}) = indentLinesMore 2 $ unlines
+      [ "MailsSendmail"
+      , "{ mailbackdooropen = " ++ show mailbackdooropen
+      , ", ourInfoEmail = " ++ show ourInfoEmail
+      , ", ourInfoEmailNiceName = " ++ show ourInfoEmailNiceName
+      , "}"
+      ]
+    show (MailsLocalOpen{..}) = indentLinesMore 2 $ unlines
+      [ "MailsLocalOpen"
+      , "{ mailbackdooropen = " ++ show mailbackdooropen
+      , ", ourInfoEmail = " ++ show ourInfoEmail
+      , ", ourInfoEmailNiceName = " ++ show ourInfoEmailNiceName
+      , "}"
+      ]
 
 isBackdoorOpen :: MailsConfig -> Bool
 isBackdoorOpen MailsSendgrid{mailbackdooropen} = mailbackdooropen

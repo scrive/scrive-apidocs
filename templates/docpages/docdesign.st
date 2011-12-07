@@ -9,7 +9,7 @@ var docview = KontraDesignDocument.init({
     basic : $if(isbasic)$ true $else$ false $endif$
 
 });
-jQuery("#body-container").replaceWith(docview.view.el)
+jQuery(".body-container").replaceWith(docview.view.el)
 })
 </script>
 ###
@@ -91,10 +91,6 @@ designoldtemplate=
         <div class="signStepsFunctionalityChange  extraLink">
           <small><a id="toadvanced" class="switchIcon" rel="#dialog-confirm-advanced" style="padding-right:19px;">$_signStepsFunctionalityChangeToAdvanced()$</a></small>
         </div>
-        $else$
-        <div class="signStepsFunctionalityChange extraLink">
-          <small><a id="tobasic" class="switchIcon" rel="#dialog-confirm-basic">$_signStepsFunctionalityChangeToSimplified()$</a></small>
-        </div>
         $endif$
         $endif$
       </div>
@@ -143,9 +139,9 @@ designoldtemplate=
                 <div class="signStepsBodyIcons">
                   <span class="partnumber">$_personpanePart1()$</span>
                   $if(!isbasic)$
-                  
+
                   <a href="#man2" class="man"></a>
-                  
+
                   <a href="#" class="signingOrder"></a>
                   <select id="authorsignorder" name="authorsignorder" class="float-right">
                     <option value="1">1</option>
@@ -302,13 +298,11 @@ designoldtemplate=
                   </a>
                 </div>
                 $elseif(process.isauthorsend)$
-                <input type="hidden" value="email" name="validationmethod" />
-                <div class="signStepButton" style="display:inline-block;padding-top:4px;">
-                  <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"class="btn-small green center">
+                <div class="signbutton" style="display:inline-block;">
+                  <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  style="display:inline-block;padding-left:0px" class="btn-small green center">
                     <div class="left"></div>
-                    <div class="label" style="">
-                      <span>$process.sendbuttontext$</span>
-                      <span class="btn-symbol green arrow-left" ></span>
+                    <div class="label" style="width:120px;">
+                       <span style="padding-left:9px;padding-right:9px">$process.sendbuttontext$</span>
                     </div>
                     <div class="right"></div>
                   </a>
@@ -318,7 +312,7 @@ designoldtemplate=
                   <a type="button" id="signinvite" rel="#dialog-confirm-signinvite"  style="display:inline-block" class="btn-small blue center">
                     <div class="left"></div>
                     <div class="label" style="width:134px;">
-                       <span style="padding-left:9px;padding-right:9px">$process.signbuttontext$</span>
+                       <span style="padding-left:9px;padding-right:9px">$process.signbuttontextauthor$</span>
                       <span class="btn-symbol cross"></span>
                     </div>
                     <div class="right"></div>
@@ -375,10 +369,21 @@ designoldtemplate=
                      -->
 >>>>>>> 307f84f417dd2c68766de13fd5e9959834fc2147
               </div>
+              <div>
+                <label for="docregionselector">$_documentLanguageLabel()$:</label>
+                <select id="docregionselector">
+                  <option value="REGION_GB" $if(region.gb)$selected="selected"$endif$ rel="#dialog-confirm-region-gb">$_English()$</option>
+                  <option value="REGION_SE" $if(region.se)$selected="selected"$endif$  rel="#dialog-confirm-region-se">$_Swedish()$</option>
+                </select>
+              </div>
               <div class="signStepsBodyInvation">
                 <small><a rel="#edit-invite-text-dialog" id="editinvitetextlink" href="#" style="padding-top:3px">$_editinvitetextlink()$</a></small>
                 <input type="hidden" id="invitetext" name="invitetext" value="$documentinvitetext$" />
               </div>
+            </div>
+
+            <div class="border"></div>
+            <div id="signStepsBodyRight" class="step3">
               <div class="signStepsBodyAttachments">
                 <small>
                   <a rel="#update-attachments-dialog" href="#"
@@ -401,6 +406,7 @@ designoldtemplate=
               </div>
             </div>
 <<<<<<< HEAD
+<<<<<<< HEAD
             
             <div class="border"></div>   
             <div id="signStepsBodyRight" class="step3">      
@@ -416,6 +422,8 @@ designoldtemplate=
               </select>
 >>>>>>> 307f84f417dd2c68766de13fd5e9959834fc2147
             </div>
+=======
+>>>>>>> 17b3eb5e0abf6290a4f5cf1d8cf6ddb37ad39595
             <div class="border"></div>
 
             <div id="signStepsBodyFunctions" class="step3">
@@ -453,7 +461,6 @@ designoldtemplate=
                 $if(region.iselegavailable)$
                 $validationdropdown()$
                 $endif$
-                $if(!process.isauthorsend)$
                 <div style="padding-bottom:8px; $if(region.iselegavailable)$padding-top: 2px;$else$padding-top: 20px;$endif$">
                   <input id="switchercheckbox"
                   style="position:relative;top:2px" type="checkbox"
@@ -464,8 +471,7 @@ designoldtemplate=
                   <label class="secretary"
                   style="margin-left:3px;display:none;">$_switchercheckboxNotSignatory()$</label></input>
                 </div>
-                $endif$
-                <div class="sendbutton" style="$if(!process.isauthorsend)$display:none;$else$padding-top:20px;$endif$">
+                <div class="sendbutton" style="display:none;">
                   <a type="button" id="sendinvite" rel="#dialog-confirm-sendinvite"  class="btn-big green center">
                     <div class="left"></div>
                     <div class="label" style="width: 120px;">
@@ -476,18 +482,16 @@ designoldtemplate=
                     <div class="right"></div>
                   </a>
                 </div>
-                $if(!process.isauthorsend)$
                 <div class="signbutton">
                   <a type="button"  id="signinvite" rel="#dialog-confirm-signinvite" class="btn-big blue center" style="float:none">
                     <div class="left"></div>
                     <div class="label" style="width: 120px;">
-                    <span>$process.signbuttontext$</span>
+                    <span>$process.signbuttontextauthor$</span>
                       <span class="icon cross"></span>
                     </div>
                     <div class="right"></div>
                   </a>
                 </div>
-                $endif$
               </div>
               $endif$
 
@@ -510,7 +514,6 @@ designoldtemplate=
     var csvrowcount = $csvrowcount$;
     var initialperson = $initialperson$;
     var isaftercsvupload = $if(isaftercsvupload)$true$else$false$endif$;
-    var issendonly = $if(process.isauthorsend)$true$else$false$endif$;
     $if(step3)$ safeReady(function(){showStep3()});$endif$
   </script>
   <script src="/js/templates.js" type="text/javascript"></script>
@@ -652,7 +655,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
 
   <form method="post" name="form" action="" class="overlay redirectsubmitform" id="update-sigattachments-dialog" rel=".stepForm">
     <input type="hidden" name="sigattachments" value="true" />
-
+    
     <div class="modal-container" style="width:740px;left:-50px;">
       <div class="modal-header">
         <span class="modal-icon message"></span>
@@ -667,50 +670,50 @@ pageDocumentForAuthorHelpersLocalDialogs=
             <a href="#" class="plus" >  </a>$_pageDocumentForAuthorHelpersLocalDialogsAddAttachment()$
           </div>
           <div class="sigattachmentlist">
-          <table id="sigattachmenttable">
-            <thead>
-              <tr>
-                <th class="minusbutton"></th>
-                <th class="attachmentname">$_pageDocumentForAuthorHelpersLocalDialogsAttachmentname()$</th>
-                <th class="attachmentdesc">$_pageDocumentForAuthorHelpersLocalDialogsAttachmentdesc()$</th>
-                <th class="attachmentsigs">$_pageDocumentForAuthorHelpersLocalDialogsAttachmentsigs()$</th>
-                <th class="attachmentsels"></th>
-              </tr>
-            </thead>
-            <tbody>
-              $sigattachments:{a|
-              <tr>
-                <td class="centralised"><a href="#" class="minus"></a></td>
-                <td><input type="text" name="sigattachname"
-                           value="$a.attachmentname$" /></td>
-                <td><textarea name="sigattachdesc" value="$a.attachmentdescription$" >$a.attachmentdescription$</textarea></td>
-                <td>
-                  <select class="signatoryselector">
-                    <option selected="selected">$_pageDocumentForAuthorHelpersLocalDialogsRecipient()$</option>
-                    $if(isvalidcsv)$
-                    <option value="csv">Massutskick</option>
-                    $endif$
-                  </select>
-                </td>
-                <td class="centralised">
-                  <span class="selectedsigspan">
-                    <ul class="selectedsigs">
-                      $a.signatories:{s|
-                      <li>
-                        $s.signame$
-                        <a href="#" class="remove">x</a>
-                        <span style="display:none" class="sigemail">$s.sigemail$</span>
-                      </li>
-                      }$
-                    </ul>
-                    <input type="hidden" name="sigattachemails"
-                           value="$a.signatories:{s | $s.sigemail$}; separator=", "$" />
-                  </span>
-                </td>
-              </tr>
-              }$
-            </tbody>
-          </table>
+            <table id="sigattachmenttable">
+              <thead>
+                <tr>
+                  <th class="minusbutton"></th>
+                  <th class="attachmentname">$_pageDocumentForAuthorHelpersLocalDialogsAttachmentname()$</th>
+                  <th class="attachmentdesc">$_pageDocumentForAuthorHelpersLocalDialogsAttachmentdesc()$</th>
+                  <th class="attachmentsigs">$_pageDocumentForAuthorHelpersLocalDialogsAttachmentsigs()$</th>
+                  <th class="attachmentsels"></th>
+                </tr>
+              </thead>
+              <tbody>
+                $sigattachments:{a|
+                <tr>
+                  <td class="centralised"><a href="#" class="minus"></a></td>
+                  <td><input type="text" name="sigattachname"
+                             value="$a.attachmentname$" /></td>
+                  <td><textarea name="sigattachdesc" value="$a.attachmentdescription$" >$a.attachmentdescription$</textarea></td>
+                  <td>
+                    <select class="signatoryselector">
+                      <option selected="selected">$_pageDocumentForAuthorHelpersLocalDialogsRecipient()$</option>
+                      $if(isvalidcsv)$
+                      <option value="csv">Massutskick</option>
+                      $endif$
+                    </select>
+                  </td>
+                  <td class="centralised">
+                    <span class="selectedsigspan">
+                      <ul class="selectedsigs">
+                        $a.signatories:{s|
+                        <li>
+                          $s.signame$
+                          <a href="#" class="remove">x</a>
+                          <span style="display:none" class="sigemail">$s.sigemail$</span>
+                        </li>
+                        }$
+                      </ul>
+                      <input type="hidden" name="sigattachemails"
+                             value="$a.signatories:{s | $s.sigemail$}; separator=", "$" />
+                    </span>
+                  </td>
+                </tr>
+                }$
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -797,21 +800,21 @@ pageDocumentForAuthorHelpersLocalDialogs=
           </div>
           $endif$
           <div id="attachedList">
-          <div id="alreadyattached">
-            $attachments:{attachment |
-            <div class="alreadyattacheditem">
-              <div class="display">
-                <a href="#" class="removesig">x</a><span style="padding-left:5px;"><a target="_blank" href="$attachment.linkattachment$">$attachment.attachmentname$</a></span>
+            <div id="alreadyattached">
+              $attachments:{attachment |
+              <div class="alreadyattacheditem">
+                <div class="display">
+                  <a href="#" class="removesig">x</a><span style="padding-left:5px;"><a target="_blank" href="$attachment.linkattachment$">$attachment.attachmentname$</a></span>
+                </div>
+                <div class="data">
+                  <input type="hidden" name="attachmentid" value="$attachment.attachmentid$" />
+                  <input type="hidden" name="removeattachment" value="false" />
+                </div>
               </div>
-              <div class="data">
-                <input type="hidden" name="attachmentid" value="$attachment.attachmentid$" />
-                <input type="hidden" name="removeattachment" value="false" />
-              </div>
+              }$
             </div>
-            }$
-          </div>
-          <div id="tobeattached">
-          </div>
+            <div id="tobeattached">
+            </div>
           </div>
         </div>
       </div>
@@ -899,7 +902,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
                   <div class="left"></div>
                   <div class="label">
                     <span class="btn-symbol black arrow-right"></span>
-                        <span>$_dialogCsvupload2FooterBack()$</span>
+                    <span>$_dialogCsvupload2FooterBack()$</span>
                   </div>
                   <div class="right"></div>
                 </a>
@@ -908,7 +911,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
                 <a class="btn-tiny black float-right nextproblem" href="#">
                   <div class="left"></div>
                   <div class="label">
-                        <span>$_dialogCsvupload2FooterNext()$</span>
+                    <span>$_dialogCsvupload2FooterNext()$</span>
                     <span class="btn-symbol black arrow-left"></span>
                   </div>
                   <div class="right"></div>
@@ -926,12 +929,12 @@ pageDocumentForAuthorHelpersLocalDialogs=
                   <theader>
                     <tr>
                       <th class="rownumbercol">&nbsp;</th>
-                        <th>$_firstname()$</th>
-                        <th>$_lastname()$</th>
-                        <th>$_email()$</th>
-                        <th>$_company()$</th>
-                        <th>$_personnumber()$</th>
-                        <th>$_orgnumber()$</th>
+                      <th>$_firstname()$</th>
+                      <th>$_lastname()$</th>
+                      <th>$_email()$</th>
+                      <th>$_company()$</th>
+                      <th>$_personnumber()$</th>
+                      <th>$_orgnumber()$</th>
                       $csvcustomfields: {csvcustomfield |
                       <th>$csvcustomfield$</th>
                       }$
@@ -955,7 +958,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
     <div class="left"></div>
     <div class="label">
       <span class="btn-symbol black arrow-right"></span>
-                        <span>$_dialogCsvupload2CSVProblemBack()$</span>
+      <span>$_dialogCsvupload2CSVProblemBack()$</span>
     </div>
     <div class="right"></div>
   </a>
@@ -964,7 +967,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
   <a class="btn-tiny black float-right nextcsvpage" href="#">
     <div class="left"></div>
     <div class="label">
-                        <span>$_dialogCsvupload2CSVProblemNext()$</span>
+      <span>$_dialogCsvupload2CSVProblemNext()$</span>
       <span class="btn-symbol black arrow-left"></span>
     </div>
     <div class="right"></div>
@@ -979,14 +982,14 @@ pageDocumentForAuthorHelpersLocalDialogs=
 <div class="modal-footer">
 
   <a class="cancel float-left" style="height:40px;">
-          <div class="label">$_dialogCsvupload2CSVMultiChooseFile()$</div>
+    <div class="label">$_dialogCsvupload2CSVMultiChooseFile()$</div>
     <input class="multiFileInput submitOnUpload" style="width:50px;" maxlength="1" type="file" name="csv" accept="application/csv" rel=".filelist"/>
     <div class="filelist" style="display:none;"></div>
   </a>
 
   <a class="btn-small green float-right close" href="#">
     <div class="left"></div>
-          <div class="label"><p>$_save()$</p></div>
+    <div class="label"><p>$_save()$</p></div>
     <div class="right"></div>
   </a>
 </div>
@@ -1000,7 +1003,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
-          <h2 id="dialog-title">$_signInEnglish()$</h2>
+        <h2 id="dialog-title">$_signInEnglish()$</h2>
       </span>
       <a class="modal-close close"> </a>
     </div>
@@ -1010,11 +1013,11 @@ pageDocumentForAuthorHelpersLocalDialogs=
       </div>
     </div>
     <div class="modal-footer">
-        <a  class="close cancel float-left">$_cancel()$</a>
+      <a  class="close cancel float-left">$_cancel()$</a>
       <a href="#" class="btn-small green float-right submit">
         <div class="left"></div>
         <div class="label">
-            <span>$_signInEnglish()$</span>
+          <span>$_signInEnglish()$</span>
         </div>
         <div class="right"></div>
       </a>
@@ -1029,7 +1032,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
-          <h2 id="dialog-title">$_signInSwedish()$</h2>
+        <h2 id="dialog-title">$_signInSwedish()$</h2>
       </span>
       <a class="modal-close close"> </a>
     </div>
@@ -1039,11 +1042,11 @@ pageDocumentForAuthorHelpersLocalDialogs=
       </div>
     </div>
     <div class="modal-footer">
-        <a  class="close cancel float-left">$_cancel()$</a>
+      <a  class="close cancel float-left">$_cancel()$</a>
       <a href="#" class="btn-small green float-right submit">
         <div class="left"></div>
         <div class="label">
-            <span>$_signInSwedish()$</span>
+          <span>$_signInSwedish()$</span>
         </div>
         <div class="right"></div>
       </a>
@@ -1058,85 +1061,27 @@ pageDocumentForAuthorHelpersLocalDialogs=
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
-          <h2 id="dialog-title">$_dialogConfirmAdvancedChangeToHead()$</h2>
+        <h2 id="dialog-title">$_dialogConfirmAdvancedChangeToHead()$</h2>
       </span>
       <a class="modal-close close"> </a>
     </div>
     <div class="modal-body">
       <div class="modal-content">
         <p>$_dialogConfirmAdvancedBody()$</p>
+        $if(showadvancedoption)$
+        <p>
+          <input type="checkbox" name="defaultadvanced"
+                 id="defaultadvancedcheck" /> <label for="defaultadvancedcheck">$_dialogConfirmAdvancedCheck()$</label>
+        </p>
+        $endif$
       </div>
     </div>
     <div class="modal-footer">
-        <a  class="close cancel float-left">$_cancel()$</a>
+      <a  class="close cancel float-left">$_cancel()$</a>
       <a href="#" class="btn-small green float-right submiter toadvanced">
         <div class="left"></div>
         <div class="label">
-            <span>$_dialogConfirmAdvancedChangeToFooterChangeProcess()$</span>
-        </div>
-        <div class="right"></div>
-      </a>
-    </div>
-  </div>
-</form>
-
-<form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-basic" rel=".stepForm">
-  <input type="hidden" name="changefunctionality" value="true" />
-  <input type="hidden" name="tobasic" value="true" />
-  <div class="modal-container">
-    <div class="modal-header">
-      <span class="modal-icon message"></span>
-      <span class="modal-title">
-          <h2 id="dialog-title">$_dialogConfirmBasicChangeToHead()$</h2>
-      </span>
-      <a class="modal-close close"> </a>
-    </div>
-    <div class="modal-body">
-      <div class="modal-content">
-        <p>
-            $_dialogConfirmBasicChangeToBody()$</p>
-        <p>
-            $_dialogConfirmBasicChangeToBody2()$</p>
-      </div>
-    </div>
-    <div class="modal-footer">
-        <a  class="close cancel float-left">$_cancel()$</a>
-      <a href="#" class="btn-small green float-right submiter tobasic">
-        <div class="left"></div>
-        <div class="label">
-            <span>$_dialogConfirmBasicChangeToChangeProcess()$</span>
-        </div>
-        <div class="right"></div>
-      </a>
-    </div>
-  </div>
-</form>
-
-<form method="post" name="form" action="$linkissuedoc$" class="overlay redirectsubmitform" id="dialog-confirm-basic" rel=".stepForm">
-  <input type="hidden" name="changefunctionality" value="true" />
-  <input type="hidden" name="tobasic" value="true" />
-  <div class="modal-container">
-    <div class="modal-header">
-      <span class="modal-icon message"></span>
-      <span class="modal-title">
-          <h2 id="dialog-title">$_dialogConfirmBasicChangeToHead()$</h2>
-      </span>
-      <a class="modal-close close"> </a>
-    </div>
-    <div class="modal-body">
-      <div class="modal-content">
-        <p>
-            $_dialogConfirmBasicChangeToBody()$</p>
-        <p>
-            $_dialogConfirmBasicChangeToBody2()$</p>
-      </div>
-    </div>
-    <div class="modal-footer">
-        <a  class="close cancel float-left">$_cancel()$</a>
-      <a href="#" class="btn-small green float-right submiter tobasic">
-        <div class="left"></div>
-        <div class="label">
-            <span>$_dialogConfirmBasicChangeToChangeProcess()$</span>
+          <span>$_dialogConfirmAdvancedChangeToFooterChangeProcess()$</span>
         </div>
         <div class="right"></div>
       </a>
@@ -1151,34 +1096,35 @@ pageDocumentForAuthorHelpersLocalDialogs=
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
-          <h2 id="dialog-title-sign">$_dialogConfirmSigninviteHead()$</h2>
+        <h2 id="dialog-title-sign">$_dialogConfirmSigninviteHead()$</h2>
       </span>
       <a class="modal-close close"> </a>
     </div>
     <div class="modal-body">
       <div class="modal-content">
-          <p>$_dialogConfirmSigninviteBody()$<strong class="visible-docname">$documenttitle$</strong>?</p>
-          <span id="multipleinvite"><p>$_dialogConfirmSigninviteBody2()$<span class="Xinvited">Invited</span>$_dialogConfirmSigninviteBody3()$</p></span>
-          <span id="onlyauthor" style="display:none"><p>$_dialogConfirmSigninviteBody2OnlyAuthor()$</p></span>
+        <p>$_dialogConfirmSigninviteBody()$<strong class="visible-docname">$documenttitle$</strong>?</p>
+        <span id="multipleinvite"><p>$_dialogConfirmSigninviteBody2()$<span class="Xinvited">Invited</span>$_dialogConfirmSigninviteBody3()$</p></span>
+        <span id="onlyauthor" style="display:none"><p>$_dialogConfirmSigninviteBody2OnlyAuthor()$</p></span>
         <span class="eleghidden" style="display:none;">
-            <h3>$_dialogConfirmSigninviteSubHead()$</h3>
-            <p>$_dialogConfirmSigninviteSubBody()$<a href="http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86"
-                        target="_new">$_dialogConfirmSigninviteSubBody2ClickHere()$</a>$_dialogConfirmSigninviteSubBody3()$</p>
+          <h3>$_dialogConfirmSigninviteSubHead()$</h3>
+          <p>$_dialogConfirmSigninviteSubBody()$<a href="http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86"
+                                                   target="_new">$_dialogConfirmSigninviteSubBody2ClickHere()$</a>$_dialogConfirmSigninviteSubBody3()$</p>
         </span>
       </div>
     </div>
     <div class="modal-footer">
       <input type="hidden" name="sign" value="automatic" id="signauto" />
-        <a class="close cancel float-left">$_cancel()$</a>
+      <a class="close cancel float-left">$_cancel()$</a>
       <a href="#" class="btn-small blue float-right submiter signhidden">
         <div class="left"></div>
         <div class="label">
-            <p>$process.signbuttontext$</p>
+          <p>$process.signbuttontextauthor$</p>
           <span class="btn-symbol cross"></span>
         </div>
         <div class="right"></div>
       </a>
       <span class="eleghidden" style="display: none;">
+        <input type="hidden" name="sign" value="automatic" id="signauto" />
         <input type="hidden" name="changetoeleg" id="elegprovider" value="" />
         <input type="hidden" name="signature" value="" id="signatureinput" />
         <input type="hidden" name="transactionid" value="" id="transactionidinput" />
@@ -1210,32 +1156,18 @@ pageDocumentForAuthorHelpersLocalDialogs=
     </div>
     <div class="modal-body">
       <div class="modal-content">
-        $if(!process.isauthorsend)$
         <div id="dialog-confirm-text-send">
-            <p>$_dialogConfirmSendinviteBody()$<strong class="visible-docname">$documenttitle$</strong>$_dialogConfirmSendinviteBody2To()$<span class="Xinvited">Invited</span>?</p>
+          <p>$process.confirmsendtext$ <strong class="visible-docname">$documenttitle$</strong>$_dialogConfirmTextSendIfNotNormalOrFieldsTo()$<span class="Xinvited">Invited</span>?</p>
         </div>
-        <div id="dialog-confirm-text-send-fields">
-            <p>$_dialogConfirmSendinviteBody3()$</p>
-            <p>$_dialogConfirmSendinviteBody4()$<strong class="visible-docname">$documenttitle$</strong>$_dialogConfirmSendinviteBody5()$	<span class="Xinvited">Invited</span>?  </p>
-        </div>
-
-        <div id="dialog-confirm-text-send-normal">
-            <p>$_dialogConfirmTextSendNormalBody1()$<span class="Xinvited">Invited</span>$_dialogConfirmTextSendNormalBody2()$</p>
-        </div>
-        $else$
-        <div id="dialog-confirm-text-send">
-              <p>$process.confirmsendtext$ <strong class="visible-docname">$documenttitle$</strong>$_dialogConfirmTextSendIfNotNormalOrFieldsTo()$<span class="Xinvited">Invited</span>?</p>
-        </div>
-        $endif$
       </div>
     </div>
     <div class="modal-footer">
       <input type="hidden" name="final" value="automatic" />
-        <a  class="close cancel float-left">$_cancel()$</a>
+      <a  class="close cancel float-left">$_cancel()$</a>
       <a href="#" class="btn-small green float-right submiter">
         <div class="left"></div>
         <div class="label">
-            <span>$_send()$</span>
+          <span>$_send()$</span>
           <div class="btn-symbol green arrow-left"></div></div>
         <div class="right"></div>
       </a>
@@ -1248,7 +1180,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
     <div class="modal-header">
       <span class="modal-icon message"></span>
       <span class="modal-title">
-          <h2>$_editInviteTextDialogHead()$</h2>
+        <h2>$_editInviteTextDialogHead()$</h2>
       </span>
       <a class="modal-close close"> </a>
     </div>
@@ -1265,7 +1197,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
       <a href="#" class="btn-small green float-right close" id="editing-invite-text-finished">
         <div class="left"></div>
         <div class="label">
-            <p>$_ok()$</p>
+          <p>$_ok()$</p>
           <div class="btn-symbol green arrow-left"></div>
         </div>
         <div class="right"></div>
@@ -1277,7 +1209,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
 <div class="hidden" id="hiddenttimestuffbox">
   <div id="daystosignbox">
     <span>
-        $process.expirytext$ <input class="signStepsBodyDaysLeftInput" type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off" />$_signStepsBodyDaysLeftToSign()$</span>
+      $process.expirytext$ <input class="signStepsBodyDaysLeftInput" type="text" id="daystosign" name="daystosign" value="$documentdaystosignboxvalue$" maxlength="2" size="2" autocomplete="off" />$_signStepsBodyDaysLeftToSign()$</span>
     <div  class="datetodaystip signStepsBodyCalendar" rel="#daystosign"> </div>
   </div>
 </div>

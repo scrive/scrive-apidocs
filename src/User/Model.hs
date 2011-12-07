@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# OPTIONS_GHC -fno-warn-orphans -fcontext-stack=50 #-}
 module User.Model (
     module User.Lang
   , module User.Region
@@ -26,6 +26,7 @@ module User.Model (
   , SetUserCompany(..)
   , DeleteUser(..)
   , AddUser(..)
+  , SetUserEmail(..)
   , SetUserPassword(..)
   , SetInviteInfo(..)
   , SetUserMailAPI(..)
@@ -55,7 +56,6 @@ import DB.Derive
 import DB.Types
 import DB.Utils
 import MinutesTime
-import Misc
 import User.Lang
 import User.Locale
 import User.Password
@@ -121,6 +121,7 @@ data UserMailAPI = UserMailAPI {
 data UserSettings  = UserSettings {
     preferreddesignmode :: Maybe DesignMode
   , locale              :: Locale
+  , customfooter        :: Maybe String
   } deriving (Eq, Ord, Show)
 
 instance HasLocale User where
@@ -174,7 +175,7 @@ instance DBQuery GetUserFriends [User] where
 data GetCompanyAccounts = GetCompanyAccounts CompanyID
 instance DBQuery GetCompanyAccounts [User] where
   dbQuery (GetCompanyAccounts cid) = wrapDB $ \conn -> do
-    st <- prepare conn $ selectUsersSQL ++ " WHERE u.company_id = ? ORDER BY u.email DESC"
+    st <- prepare conn $ selectUsersSQL ++ " WHERE u.company_id = ? AND u.deleted = FALSE ORDER BY u.email DESC"
     _ <- execute st [toSql cid]
     fetchUsers st
 
@@ -216,7 +217,7 @@ instance DBQuery GetUserMailAPI (Maybe UserMailAPI) where
 data ExportUsersDetailsToCSV = ExportUsersDetailsToCSV
 instance DBQuery ExportUsersDetailsToCSV BS.ByteString where
   dbQuery ExportUsersDetailsToCSV = wrapDB $ \conn -> do
-    quickQuery conn "SELECT first_name || ' ' || last_name, email FROM users" []
+    quickQuery conn "SELECT first_name || ' ' || last_name, email FROM users WHERE deleted = FALSE" []
       >>= return . toCSV
     where
       toCSV = BS.unlines . map (BS.intercalate (BS.pack ", ") . map fromSql)
@@ -234,43 +235,23 @@ instance DBUpdate SetUserCompany Bool where
         r <- execute st [toSql cid, toSql uid]
         oneRowAffectedGuard r
 
+{- |
+    Marks a user as deleted so that queries won't return them any more.
+
+    TODO: change deleted to time
+-}
 data DeleteUser = DeleteUser UserID
 instance DBUpdate DeleteUser Bool where
   dbUpdate (DeleteUser uid) = wrapDB $ \conn -> do
-    runRaw conn "LOCK TABLE users IN ACCESS EXCLUSIVE MODE"
-    -- it removes a user and all its references from database.
-    -- however, it'll fail if this user is a service admin.
-    r <- run conn "DELETE FROM users WHERE id = ?" [toSql uid]
-    res <- oneRowAffectedGuard r
-    if res
-      then do
-        _ <- run conn ("INSERT INTO users ("
-          ++ "  id"
-          ++ ", deleted"
-          ++ ", is_company_admin"
-          ++ ", account_suspended"
-          ++ ", signup_method"
-          ++ ", first_name"
-          ++ ", last_name"
-          ++ ", personal_number"
-          ++ ", company_position"
-          ++ ", phone"
-          ++ ", mobile"
-          ++ ", email"
-          ++ ", lang"
-          ++ ", region) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") $ [
-            toSql uid
-          , toSql True
-          , toSql False
-          , toSql False
-          , toSql AccountRequest
-          ] ++ replicate 7 (toSql "") ++ [
-            toSql (defaultValue::Lang)
-          , toSql (defaultValue::Region)
-          ]
-        return True
-      else return False
+    st <- prepare conn $
+            "UPDATE users SET deleted = ?"
+            ++ " WHERE id = ? AND deleted = FALSE"
+    r <- execute st [ toSql True, toSql uid ]
+    oneRowAffectedGuard r
 
+{- |
+    TODO: Fix this AddUser, it has a race condition on the email and it shouldn't lock.
+-}
 data AddUser = AddUser (BS.ByteString, BS.ByteString) BS.ByteString (Maybe Password) Bool (Maybe ServiceID) (Maybe CompanyID) Locale
 instance DBUpdate AddUser (Maybe User) where
   dbUpdate (AddUser (fname, lname) email mpwd iscompadmin msid mcid l) = do
@@ -325,6 +306,16 @@ instance DBUpdate AddUser (Maybe User) where
               ]
           return ()
         dbQuery $ GetUserByID uid
+
+data SetUserEmail = SetUserEmail (Maybe ServiceID) UserID Email
+instance DBUpdate SetUserEmail Bool where
+  dbUpdate (SetUserEmail msid uid email) = wrapDB $ \conn -> do
+    st <- prepare conn $
+            "UPDATE users SET email = ?"
+            ++ " WHERE id = ? AND deleted = FALSE"
+            ++ " AND NOT EXISTS (SELECT * FROM users WHERE deleted = FALSE AND ((?::TEXT IS NULL AND service_id IS NULL) OR service_id = ?) AND email = ?)"
+    r <- execute st [toSql email, toSql uid, toSql msid, toSql msid, toSql email]
+    oneRowAffectedGuard r
 
 data SetUserPassword = SetUserPassword UserID Password
 instance DBUpdate SetUserPassword Bool where
@@ -429,7 +420,7 @@ instance DBUpdate SetUserInfo Bool where
       ++ ", phone = ?"
       ++ ", mobile = ?"
       ++ ", email = ?"
-      ++ "  WHERE id = ?") [
+      ++ "  WHERE id = ? AND deleted = FALSE") [
         toSql $ userfstname info
       , toSql $ usersndname info
       , toSql $ userpersonalnumber info
@@ -448,10 +439,12 @@ instance DBUpdate SetUserSettings Bool where
       ++ "  preferred_design_mode = ?"
       ++ ", lang = ?"
       ++ ", region = ?"
-      ++ "  WHERE id = ?") [
+      ++ ", customfooter = ?"
+      ++ "  WHERE id = ? AND deleted = FALSE") [
         toSql $ preferreddesignmode us
       , toSql $ getLang us
       , toSql $ getRegion us
+      , toSql $ customfooter us
       , toSql uid
       ]
     oneRowAffectedGuard r
@@ -459,14 +452,14 @@ instance DBUpdate SetUserSettings Bool where
 data SetPreferredDesignMode = SetPreferredDesignMode UserID (Maybe DesignMode)
 instance DBUpdate SetPreferredDesignMode Bool where
   dbUpdate (SetPreferredDesignMode uid mmode) = wrapDB $ \conn -> do
-    r <- run conn "UPDATE users SET preferred_design_mode = ? WHERE id = ?"
+    r <- run conn "UPDATE users SET preferred_design_mode = ? WHERE id = ? AND deleted = FALSE"
       [toSql mmode, toSql uid]
     oneRowAffectedGuard r
-
+    
 data AddViewerByEmail = AddViewerByEmail UserID Email
 instance DBUpdate AddViewerByEmail Bool where
   dbUpdate (AddViewerByEmail uid email) = wrapDB $ \conn -> do
-    mfid <- quickQuery' conn "SELECT id FROM users WHERE service_id IS NULL AND email = ?" [toSql email]
+    mfid <- quickQuery' conn "SELECT id FROM users WHERE service_id IS NULL AND email = ? AND deleted = FALSE" [toSql email]
       >>= oneObjectReturnedGuard . join
       >>= return . fmap (UserID . fromSql)
     case mfid of
@@ -546,7 +539,8 @@ selectUsersSQL = "SELECT "
  ++ ", u.preferred_design_mode"
  ++ ", u.lang"
  ++ ", u.region"
- ++ "  FROM users u"
+ ++ ", u.customfooter"
+  ++ "  FROM users u"
  ++ " "
 
 fetchUsers :: Statement -> IO [User]
@@ -555,8 +549,8 @@ fetchUsers st = do
   where decoder uid password salt is_company_admin account_suspended has_accepted_terms_of_service
                 signup_method service_id company_id first_name
                 last_name personal_number company_position phone mobile email
-                preferred_design_mode lang region
-                = (return $ User 
+                preferred_design_mode lang region customfooter
+                = (return $ User
                   { userid = uid
                   , userpassword = case (password, salt) of
                                      (Just pwd, Just salt') -> Just Password
@@ -580,6 +574,7 @@ fetchUsers st = do
                   , usersettings = UserSettings
                                    { preferreddesignmode = preferred_design_mode
                                    , locale = mkLocale (region) (lang)
+                                   , customfooter = customfooter
                                    }
                   , userservice = service_id
                   , usercompany = company_id

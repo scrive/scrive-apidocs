@@ -21,10 +21,10 @@ module Doc.DocStateData
     , FieldDefinition(..)
     , FieldPlacement(..)
     , File(..)
-    , FileID(..)
     , FileStorage(..)
     , IdentificationType(..)
     , JpegPages(..)
+    , SignatureProvider(..)
     , SignInfo(..)
     , SignOrder(..)
     , Signatory(..)
@@ -35,7 +35,6 @@ module Doc.DocStateData
     , SignatoryLinkID(..)
     , SignatoryRole(..)
     , SignatureInfo(..)
-    , SignatureProvider(..)
     , TimeoutTime(..)
     , AuthorAttachment(..)
     , SignatoryAttachment(..)
@@ -69,16 +68,25 @@ import qualified Data.ByteString.UTF8 as BS
 import File.FileID
 import File.File
 import Doc.JpegPages
-
+import Database.HDBC
+import Data.List
+import ELegitimation.SignatureProvider 
 newtype Author = Author { unAuthor :: UserID }
     deriving (Eq, Ord, Typeable)
 
 newtype DocumentID = DocumentID { unDocumentID :: Int64 }
     deriving (Eq, Ord, Typeable, Data) -- Data needed by PayEx modules
-newtype SignatoryLinkID = SignatoryLinkID { unSignatoryLinkID :: Int }
+newtype SignatoryLinkID = SignatoryLinkID { unSignatoryLinkID :: Int64 }
     deriving (Eq, Ord, Typeable, Data)
 newtype TimeoutTime = TimeoutTime { unTimeoutTime :: MinutesTime }
     deriving (Eq, Ord, Typeable)
+
+instance Convertible TimeoutTime SqlValue where
+    safeConvert tm = safeConvert (unTimeoutTime tm)
+
+instance Convertible SqlValue TimeoutTime where
+    safeConvert sv = TimeoutTime `fmap` safeConvert sv
+
 newtype SignOrder = SignOrder { unSignOrder :: Integer }
     deriving (Eq, Ord, Typeable)
 
@@ -88,11 +96,6 @@ instance Show SignOrder where
 data IdentificationType = EmailIdentification
                         | ELegitimationIdentification
     deriving (Eq, Ord, Bounded, Enum, Typeable)
-
-data SignatureProvider = BankIDProvider
-                       | TeliaProvider
-                       | NordeaProvider
-    deriving (Eq, Ord, Typeable)
 
 data SignatureInfo0 = SignatureInfo0 { signatureinfotext0        :: String
                                      , signatureinfosignature0   :: String
@@ -128,13 +131,17 @@ data FieldDefinition = FieldDefinition
     }
     deriving (Eq, Ord, Typeable)
 
-data FieldType =
-    FirstNameFT | LastNameFT | CompanyFT | PersonalNumberFT
-  | CompanyNumberFT | EmailFT | CustomFT BS.ByteString Bool -- label filledbyauthor
+data FieldType = FirstNameFT
+               | LastNameFT
+               | CompanyFT
+               | PersonalNumberFT
+               | CompanyNumberFT
+               | EmailFT
+               | CustomFT BS.ByteString Bool -- label filledbyauthor
     deriving (Eq, Ord, Data, Typeable)
 
-data SignatoryField = SignatoryField {
-    sfType       :: FieldType
+data SignatoryField = SignatoryField
+  { sfType       :: FieldType
   , sfValue      :: BS.ByteString
   , sfPlacements :: [FieldPlacement]
   } deriving (Eq, Ord, Data, Typeable)
@@ -245,7 +252,12 @@ data SignatoryDetails = SignatoryDetails
     -- for templates
     , signatoryfields    :: [SignatoryField]
     }
-    deriving (Eq, Ord, Typeable)
+    deriving (Ord, Typeable)
+             
+instance Eq SignatoryDetails where
+  SignatoryDetails {signatorysignorder=so1, signatoryfields=sf1} ==
+    SignatoryDetails {signatorysignorder=so2, signatoryfields=sf2} =
+      so1 == so2 && (sort sf2) == (sort sf1)
 
 data SignatoryLink1 = SignatoryLink1
     { signatorylinkid1    :: SignatoryLinkID
@@ -562,7 +574,7 @@ data DocumentHistoryEntry
     deriving (Eq, Ord, Typeable)
 
 data DocumentLogEntry = DocumentLogEntry MinutesTime BS.ByteString
-    deriving (Typeable, Show, Data)
+    deriving (Typeable, Show, Data, Eq, Ord)
 
 $(deriveSerialize ''DocumentLogEntry)
 instance Version DocumentLogEntry
@@ -701,6 +713,7 @@ $(deriveSerialize ''SignatoryAttachment)
 $(deriveSerialize ''AuthorAttachment)
 
 
+#ifndef DOCUMENTS_IN_POSTGRES
 instance Eq Document where
     a == b = documentid a == documentid b
 
@@ -709,6 +722,12 @@ instance Ord Document where
                 | otherwise = compare (documentmtime b,documenttitle a,documentid a)
                                       (documentmtime a,documenttitle b,documentid b)
                               -- see above: we use reverse time here!
+#else
+
+deriving instance Eq Document
+deriving instance Ord Document
+
+#endif
 
 instance Show SignatoryLinkID where
     showsPrec prec (SignatoryLinkID x) = showsPrec prec x
@@ -749,7 +768,6 @@ deriving instance Show SignatoryDetails0
 deriving instance Show DocumentHistoryEntry
 deriving instance Show IdentificationType
 deriving instance Show CancelationReason
-deriving instance Show SignatureProvider
 deriving instance Show SignatureInfo0
 deriving instance Show SignatureInfo
 
@@ -814,9 +832,6 @@ instance Version IdentificationType
 
 $(deriveSerialize ''CancelationReason)
 instance Version CancelationReason
-
-$(deriveSerialize ''SignatureProvider)
-instance Version SignatureProvider
 
 $(deriveSerialize ''SignatureInfo0)
 instance Version SignatureInfo0
@@ -1487,14 +1502,14 @@ $(deriveSerialize ''SignatoryRole)
 -- stuff for converting to pgsql
 
 $(bitfieldDeriveConvertible ''SignatoryRole)
-$(enumDeriveConvertible ''SignatureProvider)
 $(enumDeriveConvertible ''MailsDeliveryStatus)
 $(newtypeDeriveConvertible ''SignOrder)
 $(jsonableDeriveConvertible [t| [SignatoryField] |])
 $(jsonableDeriveConvertible [t| [DocumentLogEntry] |])
 $(enumDeriveConvertible ''DocumentFunctionality)
 $(enumDeriveConvertible ''DocumentProcess)
-$(jsonableDeriveConvertible [t| DocumentStatus |])
+-- $(jsonableDeriveConvertible [t| DocumentStatus |])
+$(enumDeriveConvertibleIgnoreFields ''DocumentStatus)
 $(bitfieldDeriveConvertible ''IdentificationType)
 $(newtypeDeriveConvertible ''DocumentID)
 $(enumDeriveConvertible ''DocumentSharing)

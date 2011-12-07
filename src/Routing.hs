@@ -10,13 +10,15 @@
 module Routing ( hGet
                , hGetWrap
                , hPost
+               , hDelete
+               , hPut
                , hPostNoXToken
                , hPostAllowHttp
                , hGetAllowHttp
                , hGetAjax
                , https
                , RedirectOrContent, allowHttp
-               , toK0, toK1, toK2, toK3, toK4, toK5
+               , toK0, toK1, toK2, toK3, toK4, toK5, toK6
                , ToResp, toResp
                  )where
 
@@ -25,7 +27,7 @@ import Control.Monad.IO.Class()
 import Data.Functor
 import AppView as V
 import Data.Maybe
-import Happstack.Server(Response, Method(GET,POST), FromReqURI, rsCode)
+import Happstack.Server(Response, Method(GET,POST,DELETE,PUT), FromReqURI, rsCode)
 import qualified Happstack.Server as H
 import Happstack.StaticRouting(Route)
 import Happstack.StaticRouting.Internal(Route(Handler))
@@ -80,6 +82,13 @@ hPostWrap f = path POST f
 hGetWrap :: Path a => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
 hGetWrap f = path GET f
 
+hDeleteWrap :: Path a => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
+hDeleteWrap f x = path DELETE f x
+
+hPutWrap :: Path a => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
+hPutWrap f x = path PUT f x
+
+
 {- To change standard string to page-}
 page:: Kontra String -> Kontra Response
 page pageBody = do
@@ -116,6 +125,12 @@ hPost = hPostWrap (https . guardXToken)
 
 hGet :: Path a => a -> Route (Kontra Response)
 hGet = hGetWrap https
+
+hDelete :: Path a => a -> Route (Kontra Response)
+hDelete = hDeleteWrap https
+
+hPut :: Path a => a -> Route (Kontra Response)
+hPut = hPutWrap https
 
 hGetAllowHttp :: Path a => a -> Route (Kontra Response)
 hGetAllowHttp = hGetWrap allowHttp
@@ -166,3 +181,5 @@ toK4 = id
 toK5 :: (a -> b -> c -> d -> e -> Kontra f) -> (a -> b -> c -> d -> e -> Kontra f)
 toK5 = id
 
+toK6 :: (a -> b -> c -> d -> e -> f -> Kontra g) -> (a -> b -> c -> d -> e -> f -> Kontra g)
+toK6 = id

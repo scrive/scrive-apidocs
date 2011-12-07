@@ -35,6 +35,10 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
 import Data.Either
 
+import ScriveByMail.Control
+import ScriveByMail.View
+import ScriveByMail.Parse
+
 import qualified Codec.Text.IConv as IConv
 import InspectXMLInstances ()
 import API.API
@@ -44,6 +48,7 @@ import Mails.MailsData as MD
 import Data.String.Utils
 import Util.StringUtil
 import Doc.DocViewMail
+import Doc.DocProcess
 
 import Util.JSON
 data MailAPIContext = MailAPIContext { ibody :: APIRequestBody
@@ -86,6 +91,8 @@ apiContextForMail = do
                                         , ifrom    = from
                                         , ito      = to
                                         }
+
+
 
 mailAPI :: (Kontrakcja m, Path m (m Response) Response Response) => Route (m Response)
 mailAPI = apiCall "mailapi" handleMailCommand
@@ -215,6 +222,7 @@ handleMailCommand = do
                   Just companyid -> runDBQuery $ GetCompany companyid
                   Nothing -> return Nothing
     let userDetails = signatoryDetailsFromUser user mcompany
+    let authorrole = [SignatoryAuthor] <| Just True == getValueForProcess doctype processauthorsend |> [SignatoryAuthor, SignatoryPartner]
 
     (eitherdoc :: Either String Document) <- liftIO $ update $ NewDocument user mcompany title doctype ctxtime
     (doc :: Document) <- case eitherdoc of
@@ -223,8 +231,8 @@ handleMailCommand = do
     (_ :: ()) <- liftKontra $ DocControl.handleDocumentUploadNoLogin (documentid doc) content title
     _errs <- lefts <$> (liftIO $ sequence $ [update $ SetEmailIdentification (documentid doc) ctxtime,
                                             update $ SetDocumentTitle (documentid doc) title ctxtime,
-                                            update $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality ctxtime,
-                                            update $ ResetSignatoryDetails (documentid doc) ((userDetails, [SignatoryPartner, SignatoryAuthor]):signatories) ctxtime])
+                                            update $ SetDocumentAdvancedFunctionality (documentid doc) ctxtime,
+                                            update $ ResetSignatoryDetails (documentid doc) ((userDetails, authorrole):signatories) ctxtime])
 
     (eithernewdocument :: Either String Document) <- update $ PreparationToPending (documentid doc) ctxtime
     (newdocument :: Document) <- case eithernewdocument of
@@ -235,7 +243,7 @@ handleMailCommand = do
     (_ :: ()) <- liftKontra $ DocControl.postDocumentChangeAction newdocument doc Nothing
     let docid = documentid doc
 
-    _ <- DocControl.sendMailAPIConfirmEmail ctxx newdocument
+    _ <- sendMailAPIConfirmEmail ctxx newdocument
 
     let (rjson :: JSObject JSValue) = toJSObject [ ("status", JSString (toJSString "success"))
                                                  , ("message", JSString (toJSString ("Document #" ++ show docid ++ " created")))
@@ -244,130 +252,3 @@ handleMailCommand = do
     return rjson
 
 
--- Simple Mail API
-
--- | like lookup, but compares with maxLev 2 instead
---     of ==
-levLookup :: String -> [(String, a)] -> Maybe a
-levLookup _ []                                    = Nothing
-levLookup k1 ((k2, v):_) | maxLev k1 k2 2         = Just v
-levLookup k1 (_:ps)                               = levLookup k1 ps
-  
-data SimpleMailError = NoColon String
-                     | UnknownKey String
-                     | MissingField String
-                     | NoSignatory
-                       
-instance Show SimpleMailError where
-  show (NoColon l) = "Each line must be of the form key:value; this line had no colon " ++ l
-  show (UnknownKey k) = "This key was not recognized: " ++ k
-  show (MissingField k) = "This required key was missing: " ++ k
-  show NoSignatory = "The body of the email was empty; we cannot send a contract with no signatories"
-
-noColonCheck :: String -> Maybe SimpleMailError
-noColonCheck l | isNothing $ find (== ':') l = Just $ NoColon l
-noColonCheck _ = Nothing
-
-allStrings :: [[String]]
-allStrings = [firstNameStrings 
-             ,lastNameStrings
-             ,emailStrings
-             ,companyStrings
-             ,orgStrings
-             ,persStrings]
-
-firstNameStrings :: [String] 
-firstNameStrings = ["first name"]
-
-lastNameStrings :: [String]
-lastNameStrings = ["last name"]
-
-emailStrings :: [String]
-emailStrings = ["email"]
-
-companyStrings :: [String]
-companyStrings = ["company"]
-
-orgStrings :: [String]
-orgStrings = [a ++ s ++ b | a <- ["org", "cmp"]
-                          , s <- [" ", ""]
-                          , b <- ["number", "num", "nr"]]
-             ++ [a ++ " number" | a <- ["organization", "company"]]
-                                    
-             
-persStrings :: [String]
-persStrings = [a ++ s ++ b | a <- ["personal", "pers"]
-                           , s <- [" ", ""]
-                           , b <- ["number", "num", "nr"]]
-
-unknownKeyCheck :: String -> Maybe SimpleMailError
-unknownKeyCheck l | isJust $ find (== ':') l = 
-  let (k, _) = break (== ':') l
-  in if none (\a -> maxLev (map toLower k) a 2) (concat allStrings)
-     then Just $ UnknownKey k
-     else Nothing
-unknownKeyCheck _ = Nothing
-
--- | Takes one line of a simple email and returns the errors                                                    
--- in that line
-getParseErrorsLine :: String -> [SimpleMailError]
-getParseErrorsLine l = catMaybes $ map ($ l) [unknownKeyCheck
-                                             ,noColonCheck
-                                             ]
-                       
-getParseErrorsSig :: [String] -> [SimpleMailError]
-getParseErrorsSig ls = concatMap getParseErrorsLine ls ++
-                       let pairs = [(strip $ toLower <$> k, strip $ (drop 1) v)| (k, v) <- map (break (== ':')) ls]
-                           fstname = levLookup "first name"          pairs
-                           sndname = levLookup "last name"           pairs
-                           email   = levLookup "email"               pairs
-                       in [MissingField s | (s, Nothing) <- [("First name", fstname), 
-                                                             ("Last name",  sndname),
-                                                             ("Email",      email)]]
-
-splitSignatories :: String -> [[String]]
-splitSignatories mailbody =
-  let sigstrings' = map strip $ lines $ strip mailbody
-      sigstrings  = takeWhile ((== "") ||^ (elem ':')) sigstrings'           
-      lss = filter (/= []) $ split [""] sigstrings
-  in lss
-
-getParseErrorsEmail :: String -> [SimpleMailError]
-getParseErrorsEmail mailbody = 
-  if strip mailbody == ""
-  then [NoSignatory]
-  else concatMap getParseErrorsSig $ splitSignatories mailbody
-
-parseSignatory :: [String] -> Maybe APIRequestBody
-parseSignatory sig = 
-  let ls = sig
-      pairs = [(strip $ toLower <$> k, strip $ (drop 1) v)| (k, v) <- map (break (== ':')) ls]
-      fstname = msum $ map (flip levLookup $ pairs) firstNameStrings
-      sndname = msum $ map (flip levLookup $ pairs) lastNameStrings
-      email   = msum $ map (flip levLookup $ pairs) emailStrings
-      company = msum $ map (flip levLookup $ pairs) companyStrings
-      cmpnr   = msum $ map (flip levLookup $ pairs) orgStrings
-      prsnr   = msum $ map (flip levLookup $ pairs) persStrings
-  in
-   if all isJust [fstname, sndname, email]
-   then let ss = ([("fstname", JSString $ toJSString $ fromJust fstname),
-                   ("sndname", JSString $ toJSString $ fromJust sndname),
-                   ("email"  , JSString $ toJSString $ fromJust email)] ++ 
-                  [("company"   , JSString $ toJSString a) | Just a <- [company]] ++ 
-                  [("companynumber" , JSString $ toJSString a) | Just a <- [cmpnr]] ++ 
-                  [("personalnumber", JSString $ toJSString a) | Just a <- [prsnr]]) 
-        in if length ss == length pairs 
-           then Just $ JSObject $ toJSObject ss
-           else Nothing
-   else Nothing
-       
-parseSimpleEmail :: String -> String -> Either String APIRequestBody
-parseSimpleEmail subject mailbody =  
-  case getParseErrorsEmail mailbody of
-    [] -> if strip subject == ""
-          then Left "The subject of the email becomes the title. The subject you sent was blank. Please add a subject."
-          else let sigs = map parseSignatory $ splitSignatories mailbody
-               in Right $ JSObject $ toJSObject [("title", JSString $ toJSString $ strip subject),
-                                                 ("involved", JSArray (catMaybes sigs))]
-    es -> Left $ intercalate "<br />\n" (map show es)
-                           

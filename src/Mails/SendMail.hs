@@ -49,6 +49,12 @@ import DB.Classes
 import Util.MonadUtils
 import InputValidation
 
+-- Needed only for FROM address
+import User.Region
+import Util.SignatoryLinkUtils
+import Doc.DocState
+import Happstack.State (query)
+
 -- from simple utf-8 to =?UTF-8?Q?zzzzzzz?=
 mailEncode :: BS.ByteString -> String
 mailEncode source = unwords (map encodeWord w)
@@ -179,7 +185,9 @@ createWholeContent (boundaryMixed, boundaryAlternative) ourInfoEmail ourInfoEmai
       otheraddres <- (fmap (servicemailfromaddress . servicesettings))
         <$> liftMM (runDBQuery . GetService) (return from)
       case join otheraddres of
-         Nothing -> return $ "From: " ++ mailEncode1 ourInfoEmailNiceName ++ " <" ++ ourInfoEmail ++ ">\r\n"
+         Nothing -> do
+             niceAddress <- fromNiceAddress mailInfo ourInfoEmailNiceName
+             return $ "From: " ++ mailEncode1 niceAddress ++ " <" ++ ourInfoEmail ++ ">\r\n"
          Just address ->  return $ "From: <"++ BS.toString address ++ ">\r\n"
   let mailtos = createMailTos mail
       -- FIXME: add =?UTF8?B= everywhere it is needed here
@@ -310,3 +318,17 @@ wrapMail body = "<html>"++
                        body ++ 
                     "</body>" ++ 
                 "</html>"          
+  
+  
+-- Prototyped. This is why texts are here. But the propper way to do that is not to add some extra info in Mail data structure
+-- Propper way is to hold as abstract data there.
+fromNiceAddress ::  DBMonad m =>  MailInfo -> String -> m String
+fromNiceAddress (None) servicename = return servicename
+fromNiceAddress (Invitation did _) servicename = do
+    mdoc <- query $ GetDocumentByDocumentID did
+    case mdoc of
+         Nothing -> return $ servicename
+         Just doc -> case (documentregion doc, BS.toString $ getAuthorName doc) of 
+                          (_,[]) -> return $  servicename 
+                          (REGION_SE, an) -> return $ an ++ " genom " ++ servicename
+                          (REGION_GB, an) -> return $ an ++ " through " ++ servicename

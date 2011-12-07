@@ -91,7 +91,9 @@ data DocProcessInfo =
   , processsignatorysignmodaltitle :: String
   , processsignatorysignmodalcontentlast :: String
   , processsignatorysignmodalcontentnotlast :: String
+  , processsignatorysignmodalcontentauthorlast :: String    
   , processsignbuttontext :: String
+  , processsignbuttontextauthor :: String
   , processsignatorycancelmodaltitle :: String
   , processauthorissecretarytext :: String
   , processremindagainbuttontext :: String
@@ -142,6 +144,14 @@ data DocProcessInfo =
   , processsignedinfoheader :: String
   , processsignedinfotext :: String
   , processstatusinfotext :: String
+  , processauthorsignlastbuttontext :: String
+  
+  -- process specific design view titles of parties
+  , processauthorname :: String
+  , processauthorsignatoryname :: String
+  , processsignatoryname :: String
+  , processnonsignatoryname :: String
+  , processnumberedsignatories :: Bool
   }
 
 contractProcess :: DocProcessInfo
@@ -178,7 +188,9 @@ contractProcess =
   , processsignatorysignmodaltitle = "contractsignatorysignmodaltitle"
   , processsignatorysignmodalcontentlast = "contractsignatorysignmodalcontentlast"
   , processsignatorysignmodalcontentnotlast = "contractsignatorysignmodalcontentnotlast"
+  , processsignatorysignmodalcontentauthorlast = "contractsignatorysignmodalcontentauthorlast"
   , processsignbuttontext = "contractsignbuttontext"
+  , processsignbuttontextauthor = "contractsignbuttontextauthor"
   , processsignatorycancelmodaltitle = "contractsignatorycancelmodaltitle"
   , processauthorissecretarytext = "contractauthorissecretarytext"
   , processremindagainbuttontext = "contractremindagainbuttontext"
@@ -229,6 +241,13 @@ contractProcess =
   , processsignedinfoheader = "contractsignedinfoheader"
   , processsignedinfotext = "contractsignedinfotext"
   , processstatusinfotext = "contractstatusinfotext"
+  , processauthorsignlastbuttontext = "contractauthorsignlastbuttontext"
+  
+  , processauthorname = "contractauthorname"
+  , processauthorsignatoryname = "contractauthorsignatoryname"
+  , processsignatoryname = "contractsignatoryname"
+  , processnonsignatoryname = "contractnonsignatoryname"
+  , processnumberedsignatories = True
   }
 
 offerProcess :: DocProcessInfo
@@ -265,7 +284,9 @@ offerProcess =
   , processsignatorysignmodaltitle = "offersignatorysignmodaltitle"
   , processsignatorysignmodalcontentlast = "offersignatorysignmodalcontentlast"
   , processsignatorysignmodalcontentnotlast = "offersignatorysignmodalcontentnotlast"
+  , processsignatorysignmodalcontentauthorlast = "offersignatorysignmodalcontentauthorlast"
   , processsignbuttontext = "offersignbuttontext"
+  , processsignbuttontextauthor = "offersignbuttontextauthor"                            
   , processsignatorycancelmodaltitle = "offersignatorycancelmodaltitle"
   , processauthorissecretarytext = "offerauthorissecretarytext"
   , processremindagainbuttontext = "offerremindagainbuttontext"
@@ -316,6 +337,13 @@ offerProcess =
   , processsignedinfoheader = "offersignedinfoheader"
   , processsignedinfotext = "offersignedinfotext"
   , processstatusinfotext = "offerstatusinfotext"
+  , processauthorsignlastbuttontext = "offerauthorsignlastbuttontext"  
+  
+  , processauthorname = "offerauthorname"
+  , processauthorsignatoryname = "offerauthorsignatoryname"
+  , processsignatoryname = "offersignatoryname"
+  , processnonsignatoryname = "offernonsignatoryname"
+  , processnumberedsignatories = True
   }
 
 orderProcess :: DocProcessInfo
@@ -352,7 +380,9 @@ orderProcess =
   , processsignatorysignmodaltitle = "ordersignatorysignmodaltitle"
   , processsignatorysignmodalcontentlast = "ordersignatorysignmodalcontentlast"
   , processsignatorysignmodalcontentnotlast = "ordersignatorysignmodalcontentnotlast"
+  , processsignatorysignmodalcontentauthorlast = "ordersignatorysignmodalcontentauthorlast"  
   , processsignbuttontext = "ordersignbuttontext"
+  , processsignbuttontextauthor = "ordersignbuttontextauthor"                            
   , processsignatorycancelmodaltitle = "ordersignatorycancelmodaltitle"
   , processauthorissecretarytext = "orderauthorissecretarytext"
   , processremindagainbuttontext = "orderremindagainbuttontext"
@@ -403,5 +433,13 @@ orderProcess =
   , processsignedinfoheader = "ordersignedinfoheader"
   , processsignedinfotext = "ordersignedinfotext"
   , processstatusinfotext = "orderstatusinfotext"
+  , processauthorsignlastbuttontext = "orderauthorsignlastbuttontext"    
+  
+  , processauthorname = "orderauthorname"
+  , processauthorsignatoryname = "orderauthorsignatoryname"
+  , processsignatoryname = "ordersignatoryname"
+  , processnonsignatoryname = "ordernonsignatoryname"
+  , processnumberedsignatories = True
+  
   }
 

@@ -20,6 +20,9 @@ module AppView( TopMenu(..)
               , aboutPage
               , partnersPage
               , clientsPage
+              , contactUsPage
+              , apiPage
+              , scriveByMailPage              
               , modalError
               , embeddedErrorPage
               , serviceFields
@@ -167,6 +170,15 @@ partnersPage = getContext >>= \ctx -> renderTemplateAsPage ctx "partnersPage" (J
 clientsPage :: Kontra String
 clientsPage = getContext >>= \ctx -> renderTemplateAsPage ctx "clientsPage" (Just LinkClients) True
 
+contactUsPage:: Kontra String
+contactUsPage = getContext >>= \ctx -> renderTemplateAsPage ctx "contactUsPage" (Just LinkContactUs) True
+
+apiPage:: Kontra String
+apiPage = getContext >>= \ctx -> renderTemplateAsPage ctx "apiPage" (Just LinkAPIPage) True
+
+scriveByMailPage :: Kontra String
+scriveByMailPage = getContext >>= \ctx -> renderTemplateAsPage ctx "scrivebymailPage" (Just LinkScriveByMailPage) True
+
 {- |
     Render a template as an entire page.
 -}
@@ -284,6 +296,7 @@ staticLinksFields locale = do
     field "linkabout"  $ show $ LinkAbout locale
     field "linkpartners"  $ show $ LinkPartners locale
     field "linkclients"  $ show $ LinkClients locale
+    field "linkcontactus" $ show $ LinkContactUs locale
 
 {- |
    Defines some standard context information as fields handy for substitution

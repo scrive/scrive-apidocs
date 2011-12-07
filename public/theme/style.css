@@ -420,7 +420,6 @@ table .selectable tr.ui-selected, table .selectable tr.ui-selected td
     /* overflow: auto; 004 remove */
     /* margin-bottom: 25px; */
     margin-bottom: 0px;
-    margin-top: 25px;
 }
 
 .mainContainer a
@@ -964,6 +963,10 @@ input[type=submit].hidden
 {
     display: inherit;
     visibility: hidden;
+    height:0px;
+    width:0px;
+    padding:0px;
+    margin:0px;
 }
 
 .transparent
@@ -2228,6 +2231,7 @@ form {
     padding-top:3px;
     padding-right:4px;
     padding-bottom:3px;
+    display: block;
 }
 
 #signViewBottomBoxContainerRight
@@ -2827,14 +2831,32 @@ width: 340px;
     font-weight: bold;
 }
 
-.eleghidden .btn-small, #elegbuttons .btn-small {
+
+.nordea {
+    padding-top: 11px;
     margin-left: 15px;
     margin-right: 15px;
+    float: right;
+    height: 33px;
+    overflow:none;
+}
+.telia {
+    margin-left: 15px;
+    margin-right: 15px;
+    float: right;
+    height: 33px;
+    overflow:none;
 }
 
-.eleghidden .nordea, #elegbuttons .nordea {
-    padding-top: 13px;
+.bankid {
+    padding-top: 3px;
+    margin-left: 15px;
+    margin-right: 15px;
+    float: right;
+    height: 33px;
+    overflow:none;
 }
+
 
 .templatedDialogContainer{
     margin-top: 16px;
@@ -2977,8 +2999,10 @@ a#attachmentback {
     height: 2em;
 }
 
-.uploading .searchBox {
-    margin-right: 330px;
-    
+.account-body.advancedview {
+    font-size: 12px;
 }
 
+.account-body.advancedview p {
+    margin: 10px;
+}

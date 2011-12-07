@@ -14,6 +14,7 @@ module Administration.AdministrationControl(
           , showAdminUserAdvanced
           , showAdminUsers
           , showAdminCompanies
+          , showAdminCompany
           , showAdminCompanyUsers
           , showAdminUsersForSales
           , showAdminUsersForPayments
@@ -30,7 +31,7 @@ module Administration.AdministrationControl(
           , handleCompanyChange
           , handleDatabaseCleanup
           , handleCreateUser
-          , handleCreateCompanyUser
+          , handlePostAdminCompanyUsers
           , handleCreateService
           , handleStatistics
           , showFunctionalityStats
@@ -45,6 +46,8 @@ module Administration.AdministrationControl(
           , daveCompany
           , sysdump
           , serveLogDirectory
+          , jsonUsersList
+          , jsonCompanies
           ) where
 import Control.Monad.State
 import Data.Functor
@@ -54,10 +57,13 @@ import Happstack.State (query)
 import Misc
 import Kontra
 import Administration.AdministrationView
+#ifndef DOCUMENTS_IN_POSTGRES
 import Doc.DocControl (postDocumentChangeAction) -- required for 510 bug fix migration
 import Happstack.State (update) -- required for 510 bug fix migration
-import Doc.DocState
 import Doc.DocProcess
+import Util.SignatoryLinkUtils
+#endif
+import Doc.Transitory
 import Data.ByteString.UTF8 (fromString,toString)
 import Data.ByteString (ByteString, hGetContents)
 import qualified Data.ByteString.Char8 as BSC
@@ -67,7 +73,7 @@ import KontraLink
 import MinutesTime
 import System.Directory
 import DB.Classes
-import User.UserControl hiding (handleCreateCompanyUser)
+import User.UserControl
 import User.UserView
 import User.Model
 import Data.Maybe
@@ -87,7 +93,6 @@ import Util.MonadUtils
 import qualified AppLogger as Log
 import Doc.DocSeal (sealDocument)
 import Util.HasSomeUserInfo
-import Util.SignatoryLinkUtils
 import Redirect
 import ActionSchedulerState
 import Doc.DocInfo
@@ -97,8 +102,13 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
 import InspectXMLInstances ()
 import InspectXML
-import ForkAction 
+import ForkAction
 import File.Model
+import ListUtil
+import Text.JSON
+import Util.HasSomeCompanyInfo
+import CompanyAccounts.CompanyAccountsControl
+import CompanyAccounts.Model
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m Response
@@ -133,32 +143,139 @@ showAdminUsers (Just userId) = onlySuperUser $ do
       content <- adminUserPage user mcompany
       renderFromBody TopEmpty kontrakcja content
 
-showAdminCompanies :: Kontrakcja m => Maybe CompanyID -> m Response
-showAdminCompanies Nothing = onlySuperUser $ do
-  companies <- runDBQuery $ GetCompanies Nothing
-  params <- getAdminListPageParams
-  content <- adminCompaniesPage companies params
-  renderFromBody TopEmpty kontrakcja content
+showAdminCompanies :: Kontrakcja m => m String
+showAdminCompanies = onlySuperUser $  adminCompaniesPage
 
-showAdminCompanies (Just companyid) = onlySuperUser $ do
-  company <- guardJustM . runDBQuery $ GetCompany companyid
-  content <- adminCompanyPage company
-  renderFromBody TopEmpty kontrakcja content
+showAdminCompany :: Kontrakcja m => CompanyID -> m String
+showAdminCompany companyid = onlySuperUser $ adminCompanyPage =<< (guardJustM . runDBQuery $ GetCompany companyid)
+
+jsonCompanies :: Kontrakcja m => m JSValue
+jsonCompanies = onlySuperUser $ do
+    params <- getListParamsNew
+    allCompanies <- runDBQuery $ GetCompanies Nothing
+    let companies = companiesSortSearchPage params allCompanies
+    return . JSObject . toJSObject $
+        [("list", JSArray $ map (\company ->
+            JSObject . toJSObject $
+                [("fields", JSObject . toJSObject $
+                    [("id",             jsFromString . show . companyid $ company)
+                    ,("companyname",    jsFromBString . getCompanyName $ company)
+                    ,("companynumber",  jsFromBString . getCompanyNumber $ company)
+                    ,("companyaddress", jsFromBString . companyaddress . companyinfo $ company)
+                    ,("companyzip",     jsFromBString . companyzip . companyinfo $ company)
+                    ,("companycity",    jsFromBString . companycity . companyinfo $ company)
+                    ,("companycountry", jsFromBString . companycountry . companyinfo $ company)
+                    ]
+                 )
+                ,("link", jsFromString . show . LinkCompanyAdmin . Just . companyid $ company)
+                ]) (list companies) )
+        ,("paging", pagingParamsJSON companies)
+        ]
+  where
+    jsFromString = JSString . toJSString
+    jsFromBString = JSString . toJSString . BS.toString
+
+companiesSortSearchPage :: ListParams -> [Company] -> PagedList Company
+companiesSortSearchPage =
+    listSortSearchPage companiesSortFunc companiesSearchFunc companiesPageSize
+
+companiesSortFunc :: SortingFunction Company
+companiesSortFunc "companyname"       = viewComparing    (companyname    . companyinfo)
+companiesSortFunc "companynameREV"    = viewComparingRev (companyname    . companyinfo)
+companiesSortFunc "companynumber"     = viewComparing    (companynumber  . companyinfo)
+companiesSortFunc "companynumberREV"  = viewComparingRev (companynumber  . companyinfo)
+companiesSortFunc "companyaddress"    = viewComparing    (companyaddress . companyinfo)
+companiesSortFunc "companyaddressREV" = viewComparingRev (companyaddress . companyinfo)
+companiesSortFunc "companyzip"        = viewComparing    (companyzip     . companyinfo)
+companiesSortFunc "companyzipREV"     = viewComparingRev (companyzip     . companyinfo)
+companiesSortFunc "companycity"       = viewComparing    (companycity    . companyinfo)
+companiesSortFunc "companycityREV"    = viewComparingRev (companycity    . companyinfo)
+companiesSortFunc "companycountry"    = viewComparing    (companycountry . companyinfo)
+companiesSortFunc "companycountryREV" = viewComparingRev (companycountry . companyinfo)
+companiesSortFunc _                   = const $ const EQ
+
+companiesSearchFunc :: SearchingFunction Company
+companiesSearchFunc search_str company =
+     any (isInfixOf (map toUpper search_str) . (map toUpper))
+    $ [
+        show $ companyid company
+      , BS.toString $ companyname    $ companyinfo $ company
+      , BS.toString $ companynumber  $ companyinfo $ company
+      , BS.toString $ companyaddress $ companyinfo $ company
+      , BS.toString $ companyzip     $ companyinfo $ company
+      , BS.toString $ companycity    $ companyinfo $ company
+      , BS.toString $ companycountry $ companyinfo $ company
+      ]
+
+
+companiesPageSize :: Int
+companiesPageSize = 100
 
 showAdminCompanyUsers :: Kontrakcja m => CompanyID -> m Response
-showAdminCompanyUsers companyid = onlySuperUser $ do
-  company <- guardJustM . runDBQuery $ GetCompany companyid
-  users <- runDBQuery $ GetCompanyAccounts companyid
-  params <- getAdminListPageParams
-  content <- adminCompanyUsersPage company users params
+showAdminCompanyUsers cid = onlySuperUser $ do
+  content <- adminCompanyUsersPage cid
   renderFromBody TopEmpty kontrakcja content
 
-showAdminUsersForSales :: Kontrakcja m => m Response
-showAdminUsersForSales = onlySuperUser $ do
-  users <- getUsersAndStats
-  params <- getAdminListPageParams
-  content <- adminUsersPageForSales users params
-  renderFromBody TopEmpty kontrakcja content
+showAdminUsersForSales :: Kontrakcja m => m String
+showAdminUsersForSales = onlySuperUser $ adminUsersPageForSales
+
+jsonUsersList ::Kontrakcja m => m JSValue
+jsonUsersList = do
+    params <- getListParamsNew
+    allUsers <- getUsersAndStats
+    let users = usersSortSearchPage params allUsers
+    return $ JSObject
+           $ toJSObject
+            [("list", JSArray $ map (\(user,mcompany,docstats) ->
+                JSObject $ toJSObject
+                    [("fields", JSObject $ toJSObject
+                        [("id",       jsFromString . show $ userid user)
+                        ,("username", jsFromBString $ getFullName user)
+                        ,("email",    jsFromBString $ getEmail user)
+                        ,("company",  jsFromBString $ getCompanyName mcompany)
+                        ,("phone",    jsFromBString $ userphone $ userinfo user)
+                        ,("tos",      jsFromString $ maybe "-" show (userhasacceptedtermsofservice user))
+                        ,("signed_docs", jsFromString . show $ doccount docstats)
+                        ,("subaccounts", jsFromString "")
+                        ])
+                    ,("link", jsFromString . show $ LinkUserAdmin $ Just $ userid user)
+                    ]) (list users)),
+             ("paging", pagingParamsJSON users)]
+  where
+    jsFromString = JSString . toJSString
+    jsFromBString = JSString . toJSString . BS.toString
+
+usersSortSearchPage :: ListParams -> [(User, Maybe Company, DocStats)]
+                       -> PagedList (User, Maybe Company, DocStats)
+usersSortSearchPage =
+    listSortSearchPage usersSortFunc usersSearchFunc usersPageSize
+
+usersSortFunc :: SortingFunction (User, Maybe Company, DocStats)
+usersSortFunc "username"    = viewComparing (getFullName . (\(u,_,_) -> u))
+usersSortFunc "usernameREV" = viewComparingRev (getFullName . (\(u,_,_) -> u))
+usersSortFunc "email"       = viewComparing (getEmail . (\(u,_,_) -> u))
+usersSortFunc "emailREV"    = viewComparingRev (getEmail . (\(u,_,_) -> u))
+usersSortFunc "company"     = viewComparing (getCompanyName . (\(_,c,_) -> c))
+usersSortFunc "companyREV"  = viewComparingRev (getCompanyName . (\(_,c,_) -> c))
+usersSortFunc "phone"       = viewComparing (userphone . userinfo . (\(u,_,_) -> u))
+usersSortFunc "phoneREV"    = viewComparingRev (userphone . userinfo . (\(u,_,_) -> u))
+usersSortFunc "tos"         = viewComparing ((maybe "-" show) . (userhasacceptedtermsofservice . (\(u,_,_) -> u)))
+usersSortFunc "tosREV"      = viewComparingRev ((maybe "-" show) . (userhasacceptedtermsofservice . (\(u,_,_) -> u)))
+usersSortFunc "signed_docs" = viewComparing (doccount . (\(_,_,d) -> d))
+usersSortFunc "signed_docsREV" = viewComparingRev (doccount . (\(_,_,d) -> d))
+usersSortFunc _             = const $ const EQ
+
+usersSearchFunc :: SearchingFunction (User, Maybe Company, DocStats)
+usersSearchFunc s userdata = userMatch userdata s
+  where
+      match s' m = isInfixOf (map toUpper s') (map toUpper (BS.toString m))
+      userMatch (u,mc,_) s' = match s' (getCompanyName mc)
+                            || match s' (getFirstName u)
+                            || match s' (getLastName  u)
+                            || match s' (getEmail u)
+
+usersPageSize :: Int
+usersPageSize = 100
 
 showAdminUsersForPayments :: Kontrakcja m => m Response
 showAdminUsersForPayments = onlySuperUser $ do
@@ -167,20 +284,21 @@ showAdminUsersForPayments = onlySuperUser $ do
   content <- adminUsersPageForPayments users params
   renderFromBody TopEmpty kontrakcja content
 
-getUsersAndStats :: Kontrakcja m => m [(User,Maybe Company, DocStats)]
+getUsersAndStats :: Kontrakcja m => m [(User, Maybe Company, DocStats)]
 getUsersAndStats = do
     Context{ctxtime} <- getContext
     users <- runDBQuery GetUsers
     let queryStats user = do
           mcompany <- getCompanyForUser user
-          docstats <- query $ GetDocumentStatsByUser user ctxtime
+          docstats <- doc_query $ GetDocumentStatsByUser user ctxtime
           return (user, mcompany, docstats)
     users2 <- mapM queryStats users
     return users2
 
+
 showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
 showAdminUserUsageStats userid = onlySuperUser $ do
-  documents <- query $ GetDocumentsByAuthor userid
+  documents <- doc_query $ GetDocumentsByAuthor userid
   Just user <- runDBQuery $ GetUserByID userid
   mcompany <- getCompanyForUser user
   content <- adminUserUsageStatsPage user mcompany $ do
@@ -190,7 +308,7 @@ showAdminUserUsageStats userid = onlySuperUser $ do
 showAdminCompanyUsageStats :: Kontrakcja m => CompanyID -> m Response
 showAdminCompanyUsageStats companyid = onlySuperUser $ do
   users <- runDBQuery $ GetCompanyAccounts companyid
-  userdocs <- mapM (query . GetDocumentsByAuthor . userid) users
+  userdocs <- mapM (doc_query . GetDocumentsByAuthor . userid) users
   let documents = concat userdocs
   Log.debug $ "There are " ++ (show $ length documents) ++ " docs related to company " ++ (show companyid)
   content <- adminCompanyUsageStatsPage companyid $ do
@@ -219,7 +337,7 @@ read_df = do
 
 showStats :: Kontrakcja m => m Response
 showStats = onlySuperUser $ do
-    docstats <- query GetDocumentStats
+    docstats <- doc_query GetDocumentStats
 #ifndef WINDOWS
     df <- liftIO read_df
 #else
@@ -299,8 +417,8 @@ handleUserChange uid = onlySuperUser $ do
 resaveDocsForUser :: Kontrakcja m => UserID -> m ()
 resaveDocsForUser uid = onlySuperUser $ do
   user <- runDBOrFail $ dbQuery $ GetUserByID uid
-  userdocs <- query $ GetDocumentsByUser user
-  mapM_ (\doc -> update $ AdminOnlySaveForUser (documentid doc) user) userdocs
+  userdocs <- doc_query $ GetDocumentsByUser user
+  mapM_ (\doc -> doc_update $ AdminOnlySaveForUser (documentid doc) user) userdocs
   return ()
 
 {- | Handling company details change. It reads user info change -}
@@ -349,7 +467,30 @@ handleCreateUser = onlySuperUser $ do
     -- FIXME: where to redirect?
     return LinkStats
 
-handleCreateCompanyUser :: Kontrakcja m => CompanyID -> m KontraLink
+handlePostAdminCompanyUsers :: Kontrakcja m => CompanyID -> m KontraLink
+handlePostAdminCompanyUsers companyid = onlySuperUser $ do
+  privateinvite <- isFieldSet "privateinvite"
+  if privateinvite
+    then handlePrivateUserCompanyInvite companyid
+    else handleCreateCompanyUser companyid
+  return $ LinkCompanyUserAdmin companyid
+
+handlePrivateUserCompanyInvite :: Kontrakcja m => CompanyID -> m ()
+handlePrivateUserCompanyInvite companyid = onlySuperUser $ do
+  ctx <- getContext
+  user <- guardJust $ ctxmaybeuser ctx
+  email <- Email <$> getCriticalField asValidEmail "email"
+  existinguser <- guardJustM $ runDBQuery $ GetUserByEmail Nothing email
+  _ <- runDBUpdate $ AddCompanyInvite CompanyInvite{
+          invitedemail = email
+        , invitedfstname = getFirstName existinguser
+        , invitedsndname = getLastName existinguser
+        , invitingcompany = companyid
+        }
+  company <- guardJustM $ runDBQuery $ GetCompany companyid
+  sendTakeoverPrivateUserMail user company existinguser
+
+handleCreateCompanyUser :: Kontrakcja m => CompanyID -> m ()
 handleCreateCompanyUser companyid = onlySuperUser $ do
   ctx <- getContext
   email <- getCriticalField asValidEmail "email"
@@ -366,7 +507,7 @@ handleCreateCompanyUser companyid = onlySuperUser $ do
         _ <- runDBUpdate $ SetUserCompanyAdmin userid True
         return ()
     Nothing -> addFlashM flashMessageUserWithSameEmailExists
-  return $ LinkCompanyUserAdmin companyid
+  return ()
 
 {- | Reads params and returns function for conversion of company info.  With no param leaves fields unchanged -}
 getCompanyInfoChange :: Kontrakcja m => m (CompanyInfo -> CompanyInfo)
@@ -397,12 +538,8 @@ getCompanyInfoChange = do
 getUserSettingsChange :: Kontrakcja m => m (UserSettings -> UserSettings)
 getUserSettingsChange = do
   mregion <- readField "userregion"
-  return $ \UserSettings {
-    preferreddesignmode
-  , locale
-  } -> UserSettings {
-    preferreddesignmode
-  , locale = maybe locale mkLocaleFromRegion mregion
+  return $ \settings -> settings {
+     locale = maybe (locale settings) mkLocaleFromRegion mregion
   }
 
 {- | Reads params and returns function for conversion of user info. With no param leaves fields unchanged -}
@@ -669,7 +806,7 @@ handleStatistics :: Kontrakcja m => m Response
 handleStatistics =
   onlySuperUser $ do
     ctx <- getContext
-    documents <- query $ GetDocuments $ currentServiceID ctx
+    documents <- doc_query $ GetDocuments $ currentServiceID ctx
     users <- runDBQuery GetUsers
     content <- renderTemplateFM "statisticsPage" $ do
       fieldsFromStats users documents
@@ -691,7 +828,7 @@ showFunctionalityStats :: Kontrakcja m => m Response
 showFunctionalityStats = onlySuperUser $ do
   ctx@Context{ ctxtime } <- getContext
   users <- runDBQuery GetUsers
-  documents <- query $ GetDocuments $ currentServiceID ctx
+  documents <- doc_query $ GetDocuments $ currentServiceID ctx
   content <- adminFunctionalityStatsPage (mkStats ctxtime users)
                                          (mkStats ctxtime documents)
   renderFromBody TopEmpty kontrakcja content
@@ -755,14 +892,14 @@ handleFixForAdminOnlyBug = onlySuperUser $ do
   sendRedirect LinkUpload
   where
     maybeFixForUser user = do
-      userdocs <- query $ GetDocumentsByUser user
+      userdocs <- doc_query $ GetDocumentsByUser user
       mapM_ (maybeFixForUserAndDoc user) userdocs
       return ()
     maybeFixForUserAndDoc user doc =
       if isFixNeeded user doc
         then do
           Log.debug $ "fixing for doc " ++ (show $ documentid doc) ++ " and user " ++ (show $ userid user) ++ " " ++ (show $ getEmail user)
-          _ <- update $ AdminOnlySaveForUser (documentid doc) user
+          _ <- doc_update $ AdminOnlySaveForUser (documentid doc) user
           return ()
         else return ()
     isFixNeeded user doc =
@@ -776,13 +913,14 @@ handleFixForAdminOnlyBug = onlySuperUser $ do
 -}
 handleFixForBug510 :: Kontrakcja m => m Response
 handleFixForBug510 = onlySuperUser $ do
+#ifndef DOCUMENTS_IN_POSTGRES
   services <- runDBQuery $ GetServices
   mapM_ fixForService $ Nothing : map (Just . serviceid) services
   sendRedirect LinkUpload
   where
     fixForService :: Kontrakcja m => Maybe ServiceID -> m ()
     fixForService service = do
-      docs <- query $ GetDocuments service
+      docs <- doc_query $ GetDocuments service
       mapM_ maybeFixForDocument docs
       return ()
     maybeFixForDocument :: Kontrakcja m => Document -> m ()
@@ -814,12 +952,15 @@ handleFixForBug510 = onlySuperUser $ do
                     " doc " ++ (show $ documentid doc) ++
                     " with type " ++ (show $ documenttype doc) ++
                     " and author " ++ (show . getEmail . fromJust $ getAuthorSigLink doc) ++ " : " ++ msg
+#else
+   mzero
+#endif
 
 -- This method can be used do reseal a document
 resealFile :: Kontrakcja m => DocumentID -> m KontraLink
 resealFile docid = onlySuperUser $ do
   Log.debug $ "Trying to reseal document "++ show docid ++" | Only superadmin can do that"
-  mdoc <- query $ GetDocumentByDocumentID docid
+  mdoc <- doc_query $ GetDocumentByDocumentID docid
   case mdoc of
     Nothing -> mzero
     Just doc -> do
@@ -830,20 +971,20 @@ resealFile docid = onlySuperUser $ do
             Left  _ -> Log.debug "We failed to reseal the document"
             Right _ -> Log.debug "Ok, so the document has been resealed"
         return LoopBack
-        
+
 replaceMainFile :: Kontrakcja m => DocumentID -> m KontraLink
 replaceMainFile did = onlySuperUser $ do
   Log.debug $ "Replaing main file | SUPER CRITICAL | If you see this check who did this ask who did this and why"
-  doc <- guardJustM $ query $ GetDocumentByDocumentID did  
+  doc <- guardJustM $ doc_query $ GetDocumentByDocumentID did
   input <- getDataFnM (lookInput "file")
   case (input, documentfiles doc) of
        (Input contentspec _ _contentType, cf:_)  -> do
             content <- case contentspec of
                 Left filepath -> liftIO $ BSL.readFile filepath
                 Right c -> return c
-            fn <- fromMaybe (BS.fromString "file") <$> fmap filename <$> (runDB $ dbQuery $ GetFileByFileID cf)    
+            fn <- fromMaybe (BS.fromString "file") <$> fmap filename <$> (runDB $ dbQuery $ GetFileByFileID cf)
             file <- runDB $ dbUpdate $ NewFile fn (concatChunks content)
-            _ <- update $ ChangeMainfile did (fileid file)
+            _ <- doc_update $ ChangeMainfile did (fileid file)
             return LoopBack
        _ -> mzero
 
@@ -851,7 +992,7 @@ replaceMainFile did = onlySuperUser $ do
 
 handleCheckSigLinkIDUniqueness :: Kontrakcja m => m String
 handleCheckSigLinkIDUniqueness = do
-  siglinkids <- query GetSignatoryLinkIDs
+  siglinkids <- doc_query GetSignatoryLinkIDs
   if length siglinkids == length (nub siglinkids)
      then return "Signatory link ids are unique globally."
      else return "Signatory link ids are NOT unique globally."
@@ -861,16 +1002,16 @@ showDocumentsDaylyList = onlySuperUserGet $ do
     now <- getMinutesTime
     day <- fromMaybe now <$> parseDateOnly <$> getFieldWithDefault "" "day"
     srvs  <- runDBQuery $ GetServices
-    documents <- join <$> (sequence $ map (query . GetDocuments) (Nothing:(map (Just . serviceid) srvs)))
+    documents <- join <$> (sequence $ map (doc_query . GetDocuments) (Nothing:(map (Just . serviceid) srvs)))
     liftIO $ putStrLn $ show documents
     adminDocumentsDaylyList day $ filter (dayMatch day) documents
- where    
+ where
     dayMatch day doc = (documentctime doc >= day) && (documentctime doc <= ((24*60) `minutesAfter` day))
                        || ((documentctime doc <= day) && (documentmtime doc >= day))
-                       
-                       
-                       
-                       
+
+
+
+
 {- |
    Used by super users to inspect a particular document.
 -}
@@ -879,9 +1020,9 @@ daveDocument documentid = onlySuperUserGet $ do
     document <- queryOrFail $ GetDocumentByDocumentID documentid
     renderTemplateFM  "daveDocument" $ do
         field "daveBody" $  inspectXML document
-        field "id" $ show documentid 
+        field "id" $ show documentid
         field "closed" $ documentstatus document == Closed
-        
+
 
 
 {- |
@@ -891,17 +1032,17 @@ daveUser :: Kontrakcja m => UserID ->  m (Either KontraLink String)
 daveUser userid = onlySuperUserGet $ do
     user <- runDBOrFail $ dbQuery $ GetUserByID userid
     return $ inspectXML user
-    
+
 {- |
     Used by super users to inspect a company in xml.
 -}
 daveCompany :: Kontrakcja m => CompanyID -> m (Either KontraLink String)
 daveCompany companyid = onlySuperUserGet $ do
   company <- runDBOrFail $ dbQuery $ GetCompany companyid
-  return $ inspectXML company                       
-  
-  
-  
+  return $ inspectXML company
+
+
+
 {- |
    Ensures logged in as a super user
 -}
@@ -921,10 +1062,10 @@ sysdump = onlySuperUserGet $ do
 serveLogDirectory :: (WebMonad Response m, ServerMonad m, FilterMonad Response m, MonadIO m, MonadPlus m) =>
                    String
                   -> m Response
-serveLogDirectory filename = do 
+serveLogDirectory filename = do
     contents <- liftIO $ getDirectoryContents "log"
     when (filename `notElem` contents) $ do
         Log.debug $ "Log '" ++ filename ++ "' not found"
         mzero
     (_,bsstdout,_) <- liftIO $ readProcessWithExitCode' "tail" ["log/" ++ filename, "-n", "40"] BSL.empty
-    ok $ addHeader "Refresh" "5" $ toResponseBS (BS.fromString "text/plain; charset=utf-8") $ bsstdout  
+    ok $ addHeader "Refresh" "5" $ toResponseBS (BS.fromString "text/plain; charset=utf-8") $ bsstdout
