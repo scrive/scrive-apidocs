@@ -1,6 +1,5 @@
 module User.UserView (
     -- pages
-    viewFriends,
     showUser,
     showUserSecurity,
     showUserMailAPI,
@@ -62,9 +61,6 @@ module User.UserView (
     --utils
     userBasicFields,
 
-    -- friends list
-    friendSortSearchPage,
-    
     userStatsDayToJSON,
     userStatsMonthToJSON,
     companyStatsDayToJSON,
@@ -85,12 +81,10 @@ import Templates.TemplatesUtils
 import Text.StringTemplate.GenericStandard()
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-import ListUtil
 import FlashMessage
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import User.Model
-import Data.List
 import MinutesTime
 import Util.JSON
 import Text.JSON
@@ -152,7 +146,7 @@ showUserSecurity user = renderTemplateFM "showUserSecurity" $ do
         field "en" $ LANG_EN == (getLang user)
         field "se" $ LANG_SE == (getLang user)
     field "footer" $ customfooter $ usersettings user
-    field "advancedMode" $ Just AdvancedMode == (preferreddesignmode $ usersettings user)    
+    field "advancedMode" $ Just AdvancedMode == (preferreddesignmode $ usersettings user)
     menuFields user
 
 showUserMailAPI :: TemplatesMonad m => User -> Maybe UserMailAPI -> m String
@@ -209,7 +203,7 @@ companyStatsDayToJSON ts ls = JSArray $ rights $ [f e | e@(_,n,_) <- ls, n=="Tot
                             jsset ["fields", "sent"] i >>=
                             jsset ["fields", "name"] ts >>=
                             jsset ["fields", "signatures"] s >>=
-                            jsset "subfields" [fromRight $ 
+                            jsset "subfields" [fromRight $
                                                Right jsempty >>=
                                                jsset "date" (showAsDate d') >>=
                                                jsset "closed" c' >>=
@@ -219,8 +213,8 @@ companyStatsDayToJSON ts ls = JSArray $ rights $ [f e | e@(_,n,_) <- ls, n=="Tot
                                                (d',n',s':c':i':_) <- ls,
                                                d' == d,
                                                n' /= "Total"]
-                                              
-                                              
+
+
         f _ = Left "Bad stat"
 
 companyStatsMonthToJSON :: String -> [(Int, String, [Int])] -> JSValue
@@ -231,7 +225,7 @@ companyStatsMonthToJSON ts ls = JSArray $ rights $ [f e | e@(_,n,_) <- ls, n=="T
                             jsset ["fields", "sent"] i >>=
                             jsset ["fields", "name"] ts >>=
                             jsset ["fields", "signatures"] s >>=
-                            jsset "subfields" [fromRight $ 
+                            jsset "subfields" [fromRight $
                                                Right jsempty >>=
                                                jsset "date" (showAsMonth d') >>=
                                                jsset "closed" c' >>=
@@ -250,14 +244,6 @@ showUsageStats user =
 
 pageAcceptTOS :: TemplatesMonad m => m String
 pageAcceptTOS = renderTemplateM "pageAcceptTOS" ()
-
-viewFriends :: TemplatesMonad m => PagedList User -> User -> m String
-viewFriends friends user =
-  renderTemplateFM "viewFriends" $ do
-    fieldFL "friends" $ markParity $ map userFields $ list friends
-    field "currentlink" $ show $ LinkSharing $ params friends
-    menuFields user
-    pagedListFields friends
 
 menuFields :: MonadIO m => User -> Fields m
 menuFields user = do
@@ -515,20 +501,3 @@ userBasicFields u mc = do
     field "phone" $ userphone $ userinfo u
     field "iscompanyadmin" $ useriscompanyadmin u
     field "TOSdate" $ maybe "-" show (userhasacceptedtermsofservice u)
-
--- list stuff for friends
-
--- Friends currently only use the email
-friendSortSearchPage :: ListParams -> [User] -> PagedList User
-friendSortSearchPage = listSortSearchPage friendSortFunc friendSearchFunc friendPageSize
-
-friendPageSize :: Int
-friendPageSize = 20
-
-friendSortFunc :: SortingFunction User
-friendSortFunc _ u1 u2 = compare (getEmail u1) (getEmail u2)
-
-friendSearchFunc :: SearchingFunction User
-friendSearchFunc s u = s `isInfixOf` (BS.toString $ getEmail u)
-
-

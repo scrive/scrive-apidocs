@@ -1,16 +1,14 @@
 module User.UserControl where
 
 import Control.Monad.State
-import Data.Char
 import Data.Functor
-import Data.List
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (update, query)
 import System.Random
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS
-import Text.JSON (JSValue(..), toJSObject, toJSString, showJSON)
+import Text.JSON (JSValue(..), toJSObject, showJSON)
 
 import ActionSchedulerState
 import AppView
@@ -248,7 +246,7 @@ handleUsageStatsForUser = withUserGet $ do
 handleUsageStatsJSONForUserDays :: Kontrakcja m => m JSValue
 handleUsageStatsJSONForUserDays = do
   Context{ctxtime, ctxmaybeuser, ctxtemplates } <- getContext
-  totalS <- renderTemplate ctxtemplates "_statsOrgTotal" () 
+  totalS <- renderTemplate ctxtemplates "_statsOrgTotal" ()
   user <- guardJust ctxmaybeuser
   let today = asInt ctxtime
       som = 100 * (today `div` 100) -- start of month
@@ -403,65 +401,6 @@ handlePostUserSecurity = do
            }
       return LinkAccountSecurity
     Nothing -> return $ LinkLogin (ctxlocale ctx) NotLogged
-
-handleGetSharing :: Kontrakcja m => m (Either KontraLink Response)
-handleGetSharing = withUserGet $ do
-    Context{ctxmaybeuser = Just user@User{userid}} <- getContext
-    friends <- runDBQuery $ GetUserFriends userid
-    params <- getListParams
-    viewFriends (friendsSortSearchPage params friends) user
-        >>= renderFromBody TopAccount kontrakcja
-
--- Searching, sorting and paging
-friendsSortSearchPage :: ListParams -> [User] -> PagedList User
-friendsSortSearchPage  =
-    listSortSearchPage friendsSortFunc friendsSearchFunc friendsPageSize
-
-friendsSearchFunc :: SearchingFunction User
-friendsSearchFunc s user = userMatch user s -- split s so we support spaces
-    where
-        match s' m = isInfixOf (map toUpper s') (map toUpper (BS.toString m))
-        userMatch u s' = match s' (usercompanyposition $ userinfo u)
-                      || match s' (getFirstName u)
-                      || match s' (getLastName  u)
-                      || match s' (getPersonalNumber u)
-                      || match s' (getEmail u)
-
-friendsSortFunc :: SortingFunction User
-friendsSortFunc "fullname" = viewComparing getFullName
-friendsSortFunc "fullnameREV" = viewComparingRev getFullName
-friendsSortFunc "email" = viewComparing getEmail
-friendsSortFunc "emailREV" = viewComparingRev getEmail
-friendsSortFunc "iscompanyadmin" = viewComparing useriscompanyadmin
-friendsSortFunc "iscompanyadminREV" = viewComparingRev useriscompanyadmin
-friendsSortFunc _ = const $ const EQ
-
-friendsPageSize :: Int
-friendsPageSize = 20
-
-----
-
-handlePostSharing :: Kontrakcja m => m KontraLink
-handlePostSharing = do
-    ctx <- getContext
-    case ctxmaybeuser ctx of
-         Just user -> do
-             memail <- getOptionalField asValidEmail "email"
-             remove <- isFieldSet "remove"
-             case (memail,remove) of
-                  (Just email,_) -> do
-                      handleAddFriend user email
-                      return $ LinkSharing emptyListParams
-                  (_,True) -> return $ LinkSharing emptyListParams
-                  _ -> LinkSharing <$> getListParamsForSearch
-         Nothing -> return $ LinkLogin (ctxlocale ctx) NotLogged
-
-handleAddFriend :: Kontrakcja m => User -> BS.ByteString -> m ()
-handleAddFriend User{userid} email = do
-    avereturn <- runDBUpdate $ AddViewerByEmail userid $ Email email
-    when (not avereturn) $ do
-      -- FIXME: display sane error msg here (as template)
-      addFlash (OperationFailed, "operation failed")
 
 {- |
     Checks for live documents owned by the user.
@@ -1021,26 +960,6 @@ dropExistingAction :: Kontrakcja m => ActionID -> m ()
 dropExistingAction aid = do
   _ <- update $ DeleteAction aid
   return ()
-
-handleFriends :: Kontrakcja m => m JSValue
-handleFriends = do
-  Context{ctxmaybeuser} <- getContext
-  user <- guardJust ctxmaybeuser
-  friends <- runDBQuery $ GetUserFriends $ userid user
-  params <- getListParamsNew
-  let friendsPage = friendSortSearchPage params friends
-  return $ JSObject $ toJSObject [("list",
-                                   JSArray $
-                                   map (\f -> JSObject $
-                                              toJSObject [("fields",
-                                                           JSObject $ toJSObject [("email",
-                                                                                   JSString $ toJSString $ BS.toString $ getEmail f)
-                                                                                 ,("id", JSString $ toJSString (show (userid f)))])])
-                                           (list friendsPage)),
-                                  ("paging", pagingParamsJSON friendsPage)]
-
-
-
 
 {- |
    Fetch the xtoken param and double read it. Once as String and once as MagicHash.

@@ -49,7 +49,6 @@
 "_HeadMailApi","Scrive by Mail",,"Scrive by Mail"
 "_HeadUserInfo","Mina uppgifter",,"My info"
 "_InfoSelectTemplate","Klicka på den mall du vill använda för att starta processen",,"Click a template you want to use to start the process"
-"_InviteBox","Skriv e-post för att lägga till fler",,"Enter email, and invite a friend"
 "_LanguageSettings","Regioninställningar",,"Region settings"
 "_MailAPIActiveEmail","Aktiva e-postadresser:",,"Active email addresses:"
 "_MailAPIEnable","Aktivera Scrive by Mail",,"Enable Scrive by Mail"
@@ -782,7 +781,6 @@ profits and reduce frustration.</p>                                             
 "_flashRemindMailSentSigned","Dokumentet har skickats till",,"The document has been sent to"
 "_flashUserIsAlreadyCompanyAccount","Du har redan skickat en inbjudan till denna e-post!",,"You've already sent an invite to that e-mail!"
 "_forgotpassword","Glömt lösenord",,"Forgot password"
-"_friends","Vänner",,"Friends"
 "_from","från",,"from"
 "_h1","Signera offerter och avtal med Scrive",,"Sign tenders and contracts with Scrive"
 "_h1Body","Stäng affärer snabbare. Mindre administration. Nöjdare kunder.",,"Close deals faster. Less administration. More satisfied customers."
@@ -2792,7 +2790,6 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_setAllFields","Var vänlig namnge alla skapade fält",,"Please name all created fields"
 "_share","Dela",,"Share"
 "_shared","Delad",,"Shared"
-"_sharing","Delning",,"Sharing"
 "_showFileImagesError","Vi beklagar, det var något problem med formateringen på din PDF.
  Vänligen kontrollera dokumentet och försök igen.",,"We are sorry, something was wrong with the format in your PDF.
  Please check the document and try again."

@@ -6,7 +6,7 @@
 -- Portability :  portable
 --
 -- Each exported function is a middle-man between the Controller and the Model.
--- It handles HTTP-related security, including checking whether a user is logged 
+-- It handles HTTP-related security, including checking whether a user is logged
 -- in.
 --
 -- They provide these extra features over the Model:
@@ -19,7 +19,7 @@
 -- This module should control access centrally (instead of inside each Controller)
 -- This module should aggregate results from multiple queries (such as a join)
 -- This module should filter results from queries (as necessary)
--- 
+--
 -- Please put failures first.
 -----------------------------------------------------------------------------
 
@@ -31,7 +31,6 @@ module Doc.DocStateQuery
     ) where
 
 import DB.Types
-import DB.Classes
 import DBError
 import Doc.Transitory
 import Doc.DocStateData
@@ -51,26 +50,22 @@ import Data.Semantic
    They can if:
      the document is saved for them or their company if they are a company admin
      the document is authored within the user's company and shared
-     the document is saved for one of the user's friends, or saved for their friend's company if their friend is a company admin
  -}
-canUserViewDoc :: Kontrakcja m => User -> Document -> m Bool
-canUserViewDoc user doc 
-  | docIsSavedFor user = return True --the doc is saved for the user (or the user's company if they are an admin)
-  | isSharedWithinCompany = return True --the doc is shared within the user's company
-  | otherwise = do --the doc is saved for one of the user's friends (or the user's friend's company if their friend is an admin)
-      friends <- runDBQuery $ GetUsersByFriendUserID (userid user)
-      return $ any docIsSavedFor friends
+canUserViewDoc :: User -> Document -> Bool
+canUserViewDoc user doc =
+  docIsSavedForUser --the doc is saved for the user (or the user's company if they are an admin)
+  || isSharedWithinCompany --the doc is shared within the user's company
   where
-    docIsSavedFor u =
-      any (isSigLinkSavedFor u) $ documentsignatorylinks doc
+    docIsSavedForUser =
+      any (isSigLinkSavedFor user) $ documentsignatorylinks doc
     isSharedWithinCompany = isDocumentShared doc && isAuthoredWithinCompany
     isAuthoredWithinCompany = isJust $ getSigLinkFor doc (And SignatoryAuthor $ usercompany user)
 
 {- |
-   Securely find a document by documentid for the author or his friends.
+   Securely find a document by documentid for the author or within their company.
    User must be logged in (otherwise Left DBNotLoggedIn).
    Document must exist (otherwise Left DBNotAvailable).
-   Logged in user is author OR logged in user is friend of author (otherwise LeftDBNotAvailable).
+   Logged in user is author OR logged in user is in the company of the author (otherwise LeftDBNotAvailable).
  -}
 getDocByDocID :: Kontrakcja m => DocumentID -> m (Either DBError Document)
 getDocByDocID docid = do
@@ -84,8 +79,7 @@ getDocByDocID docid = do
           Log.debug "Does not exist"
           return $ Left DBResourceNotAvailable
         Just doc -> do
-          canAccess <- canUserViewDoc user doc
-          case canAccess of
+          case canUserViewDoc user doc of
             False -> return $ Left DBResourceNotAvailable
             True  -> return $ Right doc
     (_, Just company) -> do
@@ -100,7 +94,7 @@ getDocByDocID docid = do
 {- |
    Get all of the documents a user can view.
    User must be logged in.
-   Logged in user is in the documentsignatorylinks or a friend of someone with the documentsignatorylinks
+   Logged in user is in the documentsignatorylinks
    What about companies?
  -}
 getDocsByLoggedInUser :: Kontrakcja m => m (Either DBError [Document])
@@ -110,9 +104,7 @@ getDocsByLoggedInUser = do
     Nothing   -> return $ Left DBNotLoggedIn
     Just user -> do
       docs <- doc_query $ GetDocuments (currentServiceID ctx)
-      usersImFriendsWith <- runDBQuery $ GetUsersByFriendUserID (userid user)
-      return $ Right [ doc | doc <- docs
-                           , any (\u -> canUserViewDirectly u doc) (user : usersImFriendsWith) ]
+      return $ Right $ filter (canUserViewDirectly user) docs
 
 {- |
    Get a document using docid, siglink, and magichash.

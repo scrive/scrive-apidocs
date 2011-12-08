@@ -34,20 +34,20 @@ import ELegitimation.BankIDRequests
 {- |
    Handle the Ajax request for initiating a BankID transaction.
  -}
- 
+
 generateBankIDTransaction :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 generateBankIDTransaction docid signid = do
     magic <- guardJustM $ readField "magichash"
     provider <- guardJustM $ readField "provider"
     Context{ctxtime} <- getContext
-    let seconds = toSeconds ctxtime 
+    let seconds = toSeconds ctxtime
 
     -- sanity check
     document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
 
     unless (document `allowsIdentification` ELegitimationIdentification) mzero
     -- request a nonce
-    
+
     nonceresponse <- generateChallenge provider
     case nonceresponse of
         Left (ImplStatus _a _b code msg) -> generationFailed "Generate Challenge failed" code msg
@@ -88,7 +88,7 @@ generateBankIDTransactionForAuthor  docid = do
         AwaitingAuthor -> getTBS document         -- tbs is stored in document
         _              -> mzero
 
-    guard $ isAuthor (document, author) -- necessary because friend of author cannot initiate eleg
+    guard $ isAuthor (document, author) -- necessary because someone other than author cannot initiate eleg
 
     nonceresponse <- generateChallenge provider
     case nonceresponse of
@@ -116,30 +116,30 @@ generateBankIDTransactionForAuthor  docid = do
                         field "servertime"  $ show $ toSeconds time
                         field "nonce" nonce
                         field "tbs" txt
-                        field "transactionid"  transactionid   
-      
-      
-generationFailed:: Kontrakcja m => String -> Int -> String -> m JSValue    
+                        field "transactionid"  transactionid
+
+
+generationFailed:: Kontrakcja m => String -> Int -> String -> m JSValue
 generationFailed desc code msg = do
   Log.eleg $ desc ++  " | code: " ++ show code ++" msg: "++ msg ++ " |"
-  liftIO $ json $ do 
+  liftIO $ json $ do
                 field "status" code
                 field "msg" msg
 {- |
    Validating eleg-data passed when signing
  -}
- 
-data VerifySignatureResult  = Problem String 
-                            | Mismatch String BS.ByteString BS.ByteString BS.ByteString 
+
+data VerifySignatureResult  = Problem String
+                            | Mismatch String BS.ByteString BS.ByteString BS.ByteString
                             | Sign SignatureInfo
- 
-verifySignatureAndGetSignInfo ::  Kontrakcja m => 
-                                   DocumentID 
-                                   -> SignatoryLinkID  
-                                   -> MagicHash  
-                                   -> SignatureProvider  
-                                   -> String  
-                                   -> String  
+
+verifySignatureAndGetSignInfo ::  Kontrakcja m =>
+                                   DocumentID
+                                   -> SignatoryLinkID
+                                   -> MagicHash
+                                   -> SignatureProvider
+                                   -> String
+                                   -> String
                                    -> m VerifySignatureResult
 verifySignatureAndGetSignInfo docid signid magic provider signature transactionid = do
     elegtransactions  <- ctxelegtransactions <$> getContext
@@ -216,7 +216,7 @@ verifySignatureAndGetSignInfo docid signid magic provider signature transactioni
 
  -}
 
- 
+
 verifySignatureAndGetSignInfoForAuthor :: Kontrakcja m => DocumentID -> SignatureProvider -> String  -> String -> m VerifySignatureResult
 verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = do
     Log.eleg $ ("Document " ++ show docid ) ++ ": Author is signing with eleg for document "
@@ -224,8 +224,8 @@ verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = 
     author   <- guardJustM  $ ctxmaybeuser <$> getContext
     doc <- guardRightM $ getDocByDocID docid
 
-    guard $ isAuthor (doc, author) -- necessary because friend of author cannot initiate eleg
-    Log.eleg $ ("Document " ++ show docid ) ++ ": Author verified"   
+    guard $ isAuthor (doc, author) -- necessary because someone other than author cannot initiate eleg
+    Log.eleg $ ("Document " ++ show docid ) ++ ": Author verified"
     ELegTransaction { transactiondocumentid
                     , transactiontbs
                     , transactionencodedtbs
@@ -233,10 +233,10 @@ verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = 
                     } <- findTransactionByIDOrFail elegtransactions transactionid
 
     guard $ transactiondocumentid == docid
-    Log.eleg $ ("Document " ++ show docid ) ++ ": Transaction validated"    
-    Log.eleg $ ("Document " ++ show docid ) ++ ": Document matched"   
+    Log.eleg $ ("Document " ++ show docid ) ++ ": Transaction validated"
+    Log.eleg $ ("Document " ++ show docid ) ++ ": Document matched"
     guard (doc `allowsIdentification` ELegitimationIdentification)
-    Log.eleg $ ("Document " ++ show docid ) ++ ": Document allows eleg"   
+    Log.eleg $ ("Document " ++ show docid ) ++ ": Document allows eleg"
     res <- verifySignature provider
                     transactionencodedtbs
                     signature

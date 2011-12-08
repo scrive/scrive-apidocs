@@ -302,7 +302,7 @@ replaceSignOrder :: SignOrder -> SignatoryDetails -> SignatoryDetails
 replaceSignOrder signorder sd = sd { signatorysignorder = signorder }
 
 {- |
-   Can the user view this document directly? (not counting friends)
+   Can the user view this document directly?
  -}
 canUserInfoViewDirectly :: UserID -> BS.ByteString -> Document -> Bool
 canUserInfoViewDirectly userid email doc =

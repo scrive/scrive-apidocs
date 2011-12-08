@@ -641,7 +641,7 @@ maybeAddDocumentCancelationMessage document = do
    Handles the request to show a document to a user.
    There are two cases:
     1. author in which case they get pageDocumentForAuthor
-    2. Friend of author in which case they get pageDocumentForViewer
+    2. Within company of author in which case they get pageDocumentForViewer
    URL: /d/{documentid}
    Method: GET
  -}
@@ -679,7 +679,7 @@ handleIssueShowGet docid =
                   Right attachments -> Right <$> pageDocumentDesign ctx2 document step showadvancedoption (filter isAttachment attachments) filesforattachments
               _ ->  Right <$> pageDocumentForAuthor ctx2 document
           (_, Just invitedlink, _, _) -> Right <$> pageDocumentForSignatory (LinkSignDoc document invitedlink) document ctx invitedlink
-          -- friends can just look (but not touch)
+          -- others in company can just look (but not touch)
           (False, _, _, _) -> Right <$> pageDocumentForViewer ctx document Nothing
      where
        maybeInvitedLink :: Document -> User -> Maybe SignatoryLink
@@ -719,7 +719,7 @@ handleIssueShowPost :: Kontrakcja m => DocumentID -> m KontraLink
 handleIssueShowPost docid = withUserPost $ do
   document <- guardRightM $ getDocByDocID docid
   Context { ctxmaybeuser = muser } <- getContext
-  guard (isAuthor (document, muser)) -- still need this because friend can read document
+  guard (isAuthor (document, muser)) -- still need this because others can read document
   sign              <- isFieldSet "sign"
   send              <- isFieldSet "final"
   template          <- isFieldSet "template"
@@ -1091,9 +1091,9 @@ handleIssueSignByAuthor doc = do
              return $ LinkIssueDoc (documentid doc)
          _ -> return LoopBack
 
--- | Check if current user is author or friend so he can view the document
-withAuthorOrFriend :: Kontrakcja m => DocumentID -> m (Either KontraLink a) -> m (Either KontraLink a)
-withAuthorOrFriend docid action = do
+-- | Check if current user is author or has company rights to view the document
+withAuthorisedViewer :: Kontrakcja m => DocumentID -> m (Either KontraLink a) -> m (Either KontraLink a)
+withAuthorisedViewer docid action = do
   _ <- guardRightM $ getDocByDocID docid
   action
 
@@ -1413,11 +1413,8 @@ getDocumentsForUserByType doctype user = do
                      mycompanydocs <- doc_query $ GetDocumentsByCompany user
                      return $ union mysigdocs mycompanydocs
                    else return mysigdocs
-  usersICanView <- runDBQuery $ GetUsersByFriendUserID $ userid user
-  friends'Documents <- mapM (doc_query . GetDocumentsBySignatory) usersICanView
 
-  return . filter ((\d -> documenttype d == doctype)) $ nub $
-          mydocuments ++ concat friends'Documents
+  return . filter ((\d -> documenttype d == doctype)) $ nub mydocuments
 
 
 handleAttachmentViewForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
@@ -1708,7 +1705,7 @@ showPage docid fileid pageno = do
 
 
 showPreview:: Kontrakcja m => DocumentID -> FileID -> m (Either KontraLink Response)
-showPreview docid fileid = withAuthorOrFriend docid $ do
+showPreview docid fileid = withAuthorisedViewer docid $ do
     iprev <- preview docid fileid 0
     case iprev of
          Just res -> return $ Right res
