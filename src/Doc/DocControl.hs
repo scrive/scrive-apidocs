@@ -17,7 +17,6 @@ import Doc.DocStorage
 import Doc.DocUtils
 import Doc.DocView
 import Doc.DocViewMail
-import Doc.DocProcess
 import Doc.DocRegion
 import InputValidation
 import File.Model
@@ -1321,7 +1320,6 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
   docfunctionality <- getCriticalField (return . maybe documentfunctionality fst . listToMaybe . reads) "docfunctionality"
 
   validmethods <- getAndConcat "validationmethod"
-
   let docallowedidtypes =
         case mapJust (idmethodFromString . BS.toString) validmethods of
           [] -> [EmailIdentification]
@@ -1364,16 +1362,6 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
       roles2 = map guessRoles signatoriesroles
       guessRoles x | x == BS.fromString "signatory" = [SignatoryPartner]
                    | otherwise = []
-  --if they are switching to basic we want to lose information
-  let basicauthorroles =
-        if getValueForProcess document processauthorsend == Just True
-        then [SignatoryAuthor]
-        else [SignatoryPartner, SignatoryAuthor]
-      basicauthordetails = (removeFieldsAndPlacements authordetails, basicauthorroles)
-      basicsignatories = zip (map (replaceSignOrder (SignOrder 1) . removeFieldsAndPlacements) signatories)
-                         [[SignatoryPartner]]
-
-
   -- FIXME: tell the user what happened!
   -- when (daystosign<1 || daystosign>99) mzero
 
@@ -1387,21 +1375,15 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
     return ()
   _ <- doc_update $ SetDocumentTitle documentid docname ctxtime
   _ <- doc_update $ SetInviteText documentid invitetext ctxtime
-  if docfunctionality == BasicFunctionality
-    then do
-     Log.debug $ "basic functionality so author roles are " ++ (show basicauthorroles)
-     _ <- doc_update $ SetEmailIdentification documentid ctxtime
-     doc_update $ ResetSignatoryDetails documentid (basicauthordetails : basicsignatories) ctxtime
-    else do
-     when (isJust mcsvsigindex) $ ignore $ doc_update $ SetCSVSigIndex documentid (fromJust mcsvsigindex) ctxtime
-     case docallowedidtypes of
+  when (isJust mcsvsigindex) $ ignore $ doc_update $ SetCSVSigIndex documentid (fromJust mcsvsigindex) ctxtime
+  case docallowedidtypes of
        [ELegitimationIdentification] -> ignore $ doc_update $ SetElegitimationIdentification documentid ctxtime
        [EmailIdentification] -> ignore $ doc_update $ SetEmailIdentification documentid ctxtime
        i -> Log.debug $ "I don't know how to set this kind of identificaiton: " ++ show i
-     when (isJust daystosign) $ ignore $ doc_update $ SetDaysToSign documentid (fromJust daystosign) ctxtime
-     aa <- doc_update $ ResetSignatoryDetails documentid (authordetails2 : signatories2) ctxtime
-     Log.debug $ "final document returned " ++ show aa
-     return aa
+  when (isJust daystosign) $ ignore $ doc_update $ SetDaysToSign documentid (fromJust daystosign) ctxtime
+  aa <- doc_update $ ResetSignatoryDetails documentid (authordetails2 : signatories2) ctxtime
+  Log.debug $ "final document returned " ++ show aa
+  return aa
 
 getDocumentsForUserByType :: Kontrakcja m => DocumentType -> User -> m [Document]
 getDocumentsForUserByType doctype user = do
