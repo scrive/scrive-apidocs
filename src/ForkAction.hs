@@ -16,6 +16,9 @@ import System.IO.Unsafe
 import Control.Concurrent.MVar
 import System.Time
 import Numeric
+import qualified Database.HDBC as HDBC
+import qualified Database.HDBC.PostgreSQL as HDBC
+import Context
 
 data ForkedAction = ForkedActionStarted  { title     :: String
                                          , start     :: ClockTime
@@ -54,16 +57,17 @@ allActions = unsafePerformIO $ newMVar Map.empty
 -- | Use only in IO monad and when you know that forked action won't
 -- try to get access to db using 'Connection' object taken from 'Context'.
 -- Preferable use 'clone' on 'Connection' and the pass it around.
-forkActionIO :: String -> IO () -> IO ()
-forkActionIO title' action = do
-  _ <- C.forkIO $ do
+forkActionIO :: HDBC.Connection -> String -> (HDBC.Connection -> IO ()) -> IO ()
+forkActionIO conn title' action = do
+  conn' <- HDBC.clone conn
+  _ <- C.forkIO $ flip C.finally (HDBC.disconnect conn') $ do
     startTime <- getClockTime
     key <- modifyMVar allActions $ \themap -> do
       let newkey = case Map.maxViewWithKey themap of
             Nothing -> 0
             Just ((k,_),_) -> k + 1
       return (Map.insert newkey (ForkedActionStarted title' startTime) themap, newkey)
-    result <- C.try action
+    result <- C.try (action conn')
     endTime <- getClockTime
     case result of
       Left someException ->
@@ -76,9 +80,10 @@ forkActionIO title' action = do
 -- to False guarantees that Connection won't be closed after we're done with
 -- the request that called that function, so you can safely use Connection
 -- object taken from current Context there.
-forkAction :: (KontraMonad m, MonadIO m) => String -> IO () -> m ()
+forkAction :: (KontraMonad m, MonadIO m) => String -> (HDBC.Connection -> IO ()) -> m ()
 forkAction title action = do
-  liftIO $ forkActionIO title action
+  ctx <- getContext
+  liftIO $ forkActionIO (ctxdbconn ctx) title action
 
 getAllActionAsString :: IO String
 getAllActionAsString = 

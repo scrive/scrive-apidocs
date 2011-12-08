@@ -52,7 +52,6 @@ import Data.Either
 import Data.List
 import Data.Maybe
 import Data.Word
-import Control.Exception (bracket)
 import Happstack.Server hiding (simpleHTTP)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
@@ -61,7 +60,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import Text.JSON hiding (Result)
-import Database.HDBC
 import ForkAction
 import qualified ELegitimation.BankID as BankID
 {-
@@ -130,13 +128,12 @@ postDocumentChangeAction document@Document  { documentstatus
         Log.docevent $ "Preparation -> Closed; Sealing document, sending emails: " ++ show documentid
         _ <- addDocumentCloseStatEvents document
         ctx@Context{ctxlocale, ctxglobaltemplates} <- getContext
-        forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
+        forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ \conn -> do
+          let newctx = ctx {ctxdbconn = conn}
           threadDelay 5000
-          bracket (clone $ ctxdbconn ctx) (disconnect)$ \conn -> do
-
-           enewdoc <- runReaderT (sealDocument ctx document) conn
-           case enewdoc of
-             Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails ctx newdoc
+          enewdoc <- runReaderT (sealDocument newctx document) conn
+          case enewdoc of
+             Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails newctx newdoc
              Left errmsg -> Log.error $ "Sealing of document #" ++ show documentid ++ " failed, could not send document confirmations: " ++ errmsg
         return ()
     -- Pending -> AwaitingAuthor
@@ -156,15 +153,15 @@ postDocumentChangeAction document@Document  { documentstatus
         _ <- addDocumentCloseStatEvents document
         ctx@Context{ctxlocale, ctxglobaltemplates} <- getContext
         author <- getDocAuthor
-        forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $
-         bracket (clone $ ctxdbconn ctx) (disconnect) $ \conn -> do
-          enewdoc <- runReaderT (sealDocument ctx document) conn
+        forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ \conn -> do
+          let newctx = ctx {ctxdbconn = conn}
+          enewdoc <- runReaderT (sealDocument newctx document) conn
           case enewdoc of
-            Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails ctx newdoc
+            Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails newctx newdoc
             Left errmsg -> do
               _ <- runReaderT (doc_update $ ErrorDocument documentid errmsg) conn
               Log.server $ "Sending seal error emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
-              runWithTemplates ctxlocale ctxglobaltemplates $ sendDocumentErrorEmail ctx document author
+              runWithTemplates ctxlocale ctxglobaltemplates $ sendDocumentErrorEmail newctx document author
               return ()
         return ()
     -- Pending -> Rejected
