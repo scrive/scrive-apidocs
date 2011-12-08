@@ -51,11 +51,8 @@ tablesList = [
 #ifdef DOCUMENTS_IN_POSTGRES
   , tableDocuments
   , tableSignatoryLinks
-  -- this is not ready yet
-  {-
   , tableAuthorAttachments
   , tableSignatoryAttachments
-  -}
 #endif
   ]
 

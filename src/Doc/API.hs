@@ -5,10 +5,10 @@ import Text.JSON
 import KontraMonad
 import Util.JSON
 import Happstack.Server.Types
-import Happstack.State
 import Routing
 import Doc.DocStateQuery
 import Doc.DocStateData
+import Doc.Transitory
 import Doc.JSON
 import Control.Monad
 import Control.Monad.Trans
@@ -21,7 +21,6 @@ import Util.HasSomeUserInfo
 import Happstack.Server.RqData
 import Doc.DocStorage
 import DB.Classes
-import Doc.DocState
 import File.Model
 import DB.Types
 import Kontra
@@ -29,8 +28,6 @@ import Happstack.Server (FromReqURI(..))
 import Doc.DocUtils
 import User.Model
 import Company.Model
-import Control.Applicative
-import API.APICommons
 import Happstack.Server.Monads
 import API.Monad
 
@@ -88,7 +85,7 @@ documentNew = api $ do
   when (isNothing mdoctypei)
     apiBadInput
   let Just doctypei = mdoctypei
-  let mdoctype = toDocumentType <$> toSafeEnumInt doctypei
+  let mdoctype = toSafeEnumInt doctypei
   when (isNothing mdoctype)
     apiBadInput
   let Just doctype = mdoctype
@@ -109,19 +106,19 @@ documentNew = api $ do
   ctx <- lift $ getContext
   let now = ctxtime ctx
   
-  d1 <- apiGuardL $ update $ NewDocument user mcompany filename doctype now
+  d1 <- apiGuardL $ doc_update $ NewDocument user mcompany filename doctype now
   
   content <- lift $ liftIO $ preprocessPDF ctx (concatChunks content1) (documentid d1)
   file <- lift $ runDB $ dbUpdate $ NewFile filename content
 
-  d2 <- apiGuardL $ update $ AttachFile (documentid d1) (fileid file) now
+  d2 <- apiGuardL $ doc_update $ AttachFile (documentid d1) (fileid file) now
   
   apiCreated $ jsonDocumentForAuthor d2
 
 documentChangeMetadata :: Kontrakcja m => DocumentID -> MetadataResource -> m Response
 documentChangeMetadata docid _ = api $ do
   user <- getAPIUser  
-  doc <- apiGuardL $ query $ GetDocumentByDocumentID docid
+  doc <- apiGuardL $ doc_query $ GetDocumentByDocumentID docid
   
   asl <- apiGuard $ getAuthorSigLink doc
   
@@ -142,7 +139,7 @@ documentChangeMetadata docid _ = api $ do
   d <- case jsget "title" json of
     Left _ -> return doc
     Right (JSString s) ->
-      apiGuardL $ update $ SetDocumentTitle docid (BS.fromString $ fromJSString s) now
+      apiGuardL $ doc_update $ SetDocumentTitle docid (BS.fromString $ fromJSString s) now
     Right _ -> apiBadInput
       
   apiOK $ jsonDocumentMetadata d
@@ -212,7 +209,7 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   content <- lift $ liftIO $ preprocessPDF ctx (concatChunks content1) (documentid doc)
   
   file <- lift $ runDB $ dbUpdate $ NewFile (BS.fromString $ basename filename) content
-  d <- apiGuardL $ update $ SaveSigAttachment (documentid doc) (BS.fromString aname) email (fileid file)
+  d <- apiGuardL $ doc_update $ SaveSigAttachment (documentid doc) (BS.fromString aname) email (fileid file)
   
   -- let's dig the attachment out again
   sigattach' <- apiGuard $ getSignatoryAttachment email (BS.fromString aname) d
@@ -243,7 +240,7 @@ documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
 
   let Just fileid = signatoryattachmentfile sigattach
 
-  d <- apiGuardL $ update $ DeleteSigAttachment (documentid doc) email fileid
+  d <- apiGuardL $ doc_update $ DeleteSigAttachment (documentid doc) email fileid
   
   -- let's dig the attachment out again
   sigattach' <- apiGuard $ getSignatoryAttachment email (BS.fromString aname) d

@@ -3,7 +3,6 @@ module LocaleTest (localeTests) where
 import Control.Applicative
 import Database.HDBC.PostgreSQL
 import Happstack.Server
-import Happstack.State (update,query)
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit (Assertion)
@@ -12,7 +11,8 @@ import qualified Data.ByteString.Char8 as BS
 import AppControl
 import DB.Classes
 import Doc.DocControl (handleIssueLocaleChangeAfterUpdate)
-import Doc.DocState
+import Doc.Transitory
+import Doc.DocStateData
 import Context
 import MinutesTime
 import Redirect
@@ -126,7 +126,7 @@ testDocumentLocaleSwitchToBritain conn = withTestEnvironment conn $ do
 
   -- check the region was successfully changed to se
   assertEqual "Response code is 303" 303 (rsCode res)
-  udoc <- guardJustM $ query $ GetDocumentByDocumentID (documentid doc)
+  udoc <- guardJustM $ doc_query $ GetDocumentByDocumentID (documentid doc)
   assertEqual "Switched region is Britain" REGION_GB (getRegion udoc)
   assertEqual "Switched lang is English" LANG_EN (getLang udoc)
 
@@ -151,7 +151,7 @@ testDocumentLocaleSwitchToSweden conn = withTestEnvironment conn $ do
 
   -- check the region was successfully changed to gb
   assertEqual "Response code is 303" 303 (rsCode res)
-  udoc <- guardJustM $ query $ GetDocumentByDocumentID (documentid doc)
+  udoc <- guardJustM $ doc_query $ GetDocumentByDocumentID (documentid doc)
   assertEqual "Switched region is Sweden" REGION_SE (getRegion udoc)
   assertEqual "Switched lang is Swedish" LANG_SE (getLang udoc)
 
@@ -160,7 +160,7 @@ createTestElegDoc user ctxtime = do
   doc <- addRandomDocumentWithAuthorAndCondition user
            (\d -> documentstatus d == Preparation
                   && documentfunctionality d == AdvancedFunctionality)
-  (Right elegdoc) <- update $ SetElegitimationIdentification (documentid doc) ctxtime
+  (Right elegdoc) <- doc_update $ SetElegitimationIdentification (documentid doc) ctxtime
   return elegdoc
 
 createTestUser :: Region -> Lang -> DB User

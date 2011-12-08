@@ -18,6 +18,7 @@ module Doc.DocStateUpdate
 import DB.Types
 import DBError
 import Doc.Transitory
+import Doc.DocStateData
 import Kontra
 import MinutesTime
 import GHC.Word

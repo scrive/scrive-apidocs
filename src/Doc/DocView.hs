@@ -69,7 +69,7 @@ import DB.Types
 import Doc.CSVUtils
 import Doc.DocProcess
 import Doc.DocRegion
-import Doc.DocState
+import Doc.DocStateData
 import Doc.DocUtils
 import Doc.DocViewMail
 import FlashMessage
@@ -84,7 +84,7 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import User.Model
-import Doc.JSON
+import Doc.JSON()
 
 import Control.Applicative ((<$>))
 import Control.Monad.Reader
@@ -1120,7 +1120,7 @@ uploadPage mdocprocess showTemplates = renderTemplateFM "uploadPage" $ do
         field "selected" $ (Just process == mdocprocess)
         fieldM "name" $ renderTextForProcess (Signable process) processuploadname
         fieldM "uploadprompttext" $ renderTextForProcess (Signable process) processuploadprompttext
-        field "apiid" $ apiDocumentType (Signable process)
+        field "apiid" $ fromSafeEnumInt (Signable process)
 
 buildCustomJS :: SignatoryField -> Int -> JSValue
 buildCustomJS SignatoryField{sfType = CustomFT label _, sfValue, sfPlacements} i =

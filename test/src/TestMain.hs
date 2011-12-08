@@ -59,7 +59,7 @@ import RedirectTest
 import ServiceStateTest
 #endif
 #ifndef NO_TRUSTWEAVER
---import TrustWeaverTest
+import TrustWeaverTest
 #endif
 #ifndef NO_USERSTATE
 import UserStateTest
@@ -143,7 +143,7 @@ allTests conn = tail tests
 #endif
 #ifndef NO_TRUSTWEAVER
       -- everything fails for trustweaver, so commenting out for now
-      --("trustweaver", trustWeaverTest)
+      , ("trustweaver", const $ trustWeaverTests)
 #endif
 #ifndef NO_USERSTATE
       , ("userstate", const $ userStateTests conn)

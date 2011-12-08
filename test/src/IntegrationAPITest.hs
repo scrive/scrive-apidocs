@@ -30,6 +30,7 @@ integrationAPITests :: Connection -> Test
 integrationAPITests conn = testGroup "Integration API" [
       testCase "Test creating a offer from template" $ testDocumentCreationFromTemplate conn      
     , testCase "Test creating a contract from template" $ testDocumentCreationFromTemplateContract conn
+    , testCase "Test creating an order from template" $ testDocumentCreationFromTemplateOrder conn
     , testCase "Testing if we can create sample document" $ testDocumentCreation conn
     , testCase "Accessing documents created by the API" $ testDocumentsAccess conn
     , testCase "Accessing documents in embedded frame" $ testDocumentAccessEmbeddedPage conn
@@ -95,16 +96,16 @@ testDocumentsAccess conn = withTestEnvironment conn $ do
     _ <- makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz+1@skrivapa.se" 
     apiReqDocs1 <- getDocumentsJSON "test_company1" "mariusz@skrivapa.se"
     apiRespDocs1 <- makeAPIRequest getDocuments $ apiReqDocs1
-    assertBool ("Two document was created by  this company but " ++ (show $ docsCount apiRespDocs1) ++ " were found") $ (docsCount apiRespDocs1) == 2
+    assertBool ("Two documents were created by this company but " ++ (show $ docsCount apiRespDocs1) ++ " were found") $ (docsCount apiRespDocs1) == 2
     apiReqDocs2 <- getDocumentsJSON "test_company2" "mariusz@skrivapa.se"
     apiRespDocs2 <- makeAPIRequest getDocuments $ apiReqDocs2
-    assertBool ("One document was created by  this company but " ++ (show $ docsCount apiRespDocs2) ++ " were found") $ (docsCount apiRespDocs2) == 1
+    assertBool ("One document was created by this company but " ++ (show $ docsCount apiRespDocs2) ++ " were found") $ (docsCount apiRespDocs2) == 1
     apiReqDocs3 <- getDocumentsJSON "test_company3" "mariusz+1@skrivapa.se"
     apiRespDocs3 <- makeAPIRequest getDocuments $ apiReqDocs3
     assertBool ("No document was created for this company but " ++ (show $ docsCount apiRespDocs3) ++ " were found") $ (docsCount apiRespDocs3) == 0
     let Ok ard = decode "{\"company_id\":\"test_company1\"}"
     arspd <- makeAPIRequest getDocuments $ ard
-    assertBool ("Example from doc. Two document was created by  this company but " ++ (show $ docsCount arspd) ++ " were found") $ (docsCount arspd) == 2
+    assertBool ("Example from doc. Two documents were created by this company but " ++ (show $ docsCount arspd) ++ " were found") $ (docsCount arspd) == 2
 
 
 testDocumentAccessEmbeddedPage :: Connection -> Assertion
@@ -475,6 +476,31 @@ testDocumentCreationFromTemplateContract conn = withTestEnvironment conn $ do
                 a -> assertFailure $ "What the hell is this? " ++ show a
             x -> error $ "huh? " ++ show x
 
+testDocumentCreationFromTemplateOrder :: Connection -> Assertion
+testDocumentCreationFromTemplateOrder conn = withTestEnvironment conn $ do
+  createTestService
+  let Ok rq = decode "{\"company_id\":\"Scrive\",\"title\":\"test_complex\",\"type\":6,\"involved\":[    {\"email\":\"mariusz@scrive.com\",\"fstname\":\"Mariusz\",\"sndname\":\"Rak\", \"personalnr\" : \"1234\", \"fields\" : [{\"name\" : \"prs1\", \"value\" : \"val1\"}, {\"name\" : \"prs2\", \"value\" : \"val2\"}]} ], \"locale\" : {\"region\" : \"gb\", \"language\" : \"sv\"},  \"files\": [{\"name\":\"Empty.pdf\",\"content\":\"JVBERi0xLjQKJcOkw7zDtsOfCjIgMCBvYmoKPDwvTGVuZ3RoIDMgMCBSL0ZpbHRlci9GbGF0ZURlY29kZT4+CnN0cmVhbQp4nDPQM1Qo5ypUMABCU0tTPRMFCxMjhaJUhXAthTyuQAUAbSUGxgplbmRzdHJlYW0KZW5kb2JqCgozIDAgb2JqCjM4CmVuZG9iagoKNSAwIG9iago8PAo+PgplbmRvYmoKCjYgMCBvYmoKPDwvRm9udCA1IDAgUgovUHJvY1NldFsvUERGL1RleHRdCj4+CmVuZG9iagoKMSAwIG9iago8PC9UeXBlL1BhZ2UvUGFyZW50IDQgMCBSL1Jlc291cmNlcyA2IDAgUi9NZWRpYUJveFswIDAgNTk1IDg0Ml0vR3JvdXA8PC9TL1RyYW5zcGFyZW5jeS9DUy9EZXZpY2VSR0IvSSB0cnVlPj4vQ29udGVudHMgMiAwIFI+PgplbmRvYmoKCjQgMCBvYmoKPDwvVHlwZS9QYWdlcwovUmVzb3VyY2VzIDYgMCBSCi9NZWRpYUJveFsgMCAwIDU5NSA4NDIgXQovS2lkc1sgMSAwIFIgXQovQ291bnQgMT4+CmVuZG9iagoKNyAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgNCAwIFIKL09wZW5BY3Rpb25bMSAwIFIgL1hZWiBudWxsIG51bGwgMF0KL0xhbmcocGwtUEwpCj4+CmVuZG9iagoKOCAwIG9iago8PC9BdXRob3I8RkVGRjAwNkQwMDYxMDA3MjAwNjkwMDc1MDA3MzAwN0EwMDIwPgovQ3JlYXRvcjxGRUZGMDA1NzAwNzIwMDY5MDA3NDAwNjUwMDcyPgovUHJvZHVjZXI8RkVGRjAwNEYwMDcwMDA2NTAwNkUwMDRGMDA2NjAwNjYwMDY5MDA2MzAwNjUwMDJFMDA2RjAwNzIwMDY3MDAyMDAwMzMwMDJFMDAzMj4KL0NyZWF0aW9uRGF0ZShEOjIwMTEwNzAxMTIwMTQwKzAyJzAwJyk+PgplbmRvYmoKCnhyZWYKMCA5CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDIyMiAwMDAwMCBuIAowMDAwMDAwMDE5IDAwMDAwIG4gCjAwMDAwMDAxMjggMDAwMDAgbiAKMDAwMDAwMDM2NCAwMDAwMCBuIAowMDAwMDAwMTQ3IDAwMDAwIG4gCjAwMDAwMDAxNjkgMDAwMDAgbiAKMDAwMDAwMDQ2MiAwMDAwMCBuIAowMDAwMDAwNTU4IDAwMDAwIG4gCnRyYWlsZXIKPDwvU2l6ZSA5L1Jvb3QgNyAwIFIKL0luZm8gOCAwIFIKL0lEIFsgPEYxRDY1NzQ3RTIyOEVGNzI0OTQ0OTIwMkFERjI3NDQ2Pgo8RjFENjU3NDdFMjI4RUY3MjQ5NDQ5MjAyQURGMjc0NDY+IF0KL0RvY0NoZWNrc3VtIC9DNjgxNEY1QTVCRjgwQjJEOEYwMEM4MUQyRDA5RUMxRAo+PgpzdGFydHhyZWYKNzkwCiUlRU9GCg==\"}]}"
+  rsp <- makeAPIRequest createDocument rq
+  case getJSONField "document_id" rsp of
+    Nothing -> error $ "Could not get document_id from response " ++ show rsp
+    Just jsdid -> do
+      let did = encode jsdid
+      let Ok rq2 = decode $ "{\"company_id\":\"Scrive\",\"title\":\"test_complex\",\"type\":5, \"involved\":[    {\"email\":\"mariusz@scrive.com\",\"fstname\":\"Mariusz\",\"sndname\":\"Rak\", \"personalnr\" : \"1234\", \"fields\" : [{\"name\" : \"prs1\", \"value\" : \"val1\"}, {\"name\" : \"prs2\", \"value\" : \"val2\"}]} ], \"locale\" : {\"region\" : \"gb\", \"language\" : \"sv\"}, \"template_id\" : " ++ did ++ "}"
+      rsp2 <- makeAPIRequest createDocument rq2
+      case getJSONField "document_id" rsp2 of
+        Nothing -> error $ "Could not get document_id from response " ++ show rsp2
+        Just d -> do
+          res <- makeAPIRequest getDocument $ JSObject $ toJSObject [("document_id", d)]
+          case getJSONField "document" res of
+            Nothing -> error $ "What? document not created " ++ show res
+            Just (JSObject doc) -> do
+              assertBool ("Was not contract; was " ++ show (getJSONField "type" doc) ++ " json " ++ show doc ) $ getJSONField "type" doc == Just (showJSON (5::Int))
+              case getJSONField "files" doc of
+                Nothing -> assertFailure "Could not find any files"
+                Just (JSArray [JSObject f]) -> assertBool ("Wrong filename " ++ show f) $ 
+                                               getJSONField "name" f == Just (showJSON "Empty.pdf")
+                a -> assertFailure $ "What the hell is this? " ++ show a
+            x -> error $ "huh? " ++ show x
 
 -- Utils
 isError :: JSObject JSValue -> Bool

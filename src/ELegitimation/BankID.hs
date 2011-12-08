@@ -10,7 +10,7 @@ module ELegitimation.BankID
 import Redirect
 import qualified AppLogger as Log
 import Control.Monad.State
-import Doc.Transitory as D
+import Doc.DocStateData as D
 import Doc.DocUtils
 import ELegitimation.ELegTransaction
 import Happstack.Server

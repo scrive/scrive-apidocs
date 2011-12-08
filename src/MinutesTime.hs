@@ -3,6 +3,7 @@ module MinutesTime
        , KontraTimeLocale (..)
        , asInt
        , fromSeconds
+       , fromMinutes
        , getMinuteTimeDB
        , getMinutesTime
        , minutesAfter
@@ -20,15 +21,17 @@ module MinutesTime
        , toUTCTime
        , showAsMonth
        , showAsDate
+       , formatMinutesTimeISO
+       , parseMinutesTimeISO
        ) where
 
 import Control.Monad.IO.Class
 import Data.Char
-import Data.Data
+import Data.Data 
 import Data.Time
+import Data.Time.Clock.POSIX
 import Happstack.Data
 import Happstack.State
-import System.IO.Unsafe
 import System.Locale
 import System.Time hiding (toClockTime, toUTCTime)
 import qualified System.Time as System.Time (toUTCTime)
@@ -48,6 +51,7 @@ data MinutesTime1 = MinutesTime1
     deriving (Eq, Ord, Typeable)
 
 -- | Time in seconds from 1970-01-01 00:00:00 in UTC coordinates
+-- Same as POSIX seconds and what every other database uses as TIMESTAMP time type.
 newtype MinutesTime = MinutesTime Int
     deriving (Eq, Ord, Typeable, Data)
 $(newtypeDeriveConvertible ''MinutesTime)
@@ -72,7 +76,7 @@ instance Migrate MinutesTime1 MinutesTime where
 instance Show MinutesTime where
     showsPrec _prec mt = (++) $ formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d, %H:%M:%S %Z" mt
 
--- | Show time in %Y-%m-%d %H:%M format. Warning: system needs to run in UTC time!
+-- | Show time in %Y-%m-%d %H:%M format.
 showMinutesTimeForAPI :: MinutesTime -> String
 showMinutesTimeForAPI mt = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d %H:%M" mt
 
@@ -81,17 +85,24 @@ showMinutesTimeForFileName :: MinutesTime -> String
 showMinutesTimeForFileName mt = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d-%H-%M" mt
 
 
--- | Show time in "%Y-%m-%d" format.  Warning: system needs to run in UTC time!
+-- | Show time in "%Y-%m-%d" format.
 showDateOnly :: MinutesTime -> String
 showDateOnly mt | toSeconds mt == 0 = ""
                 | otherwise = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d" mt
 
+formatMinutesTimeISO :: MinutesTime -> String
+formatMinutesTimeISO = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d %H:%M:%S"
+
+parseMinutesTimeISO :: String -> Maybe MinutesTime
+parseMinutesTimeISO = parseMinutesTime "%Y-%m-%d %H:%M:%S"
+
+parseMinutesTime :: String -> String -> Maybe MinutesTime
+parseMinutesTime format string = do
+    time <- parseTime defaultTimeLocale format string
+    return $ fromSeconds $ floor $ utcTimeToPOSIXSeconds time
+
 parseDateOnly :: String -> Maybe MinutesTime 
-parseDateOnly s =  do
-    t <- parseTime defaultTimeLocale "%Y-%m-%d" s
-    startOfTime <- parseTime defaultTimeLocale "%d-%m-%Y" "01-01-1970"
-    let val = diffDays t startOfTime
-    return $ fromMinutes (fromIntegral $ val *24*60)
+parseDateOnly = parseMinutesTime "%Y-%m-%d"
 
 {- |
     Use this to tell formatting functions the locale
@@ -154,8 +165,8 @@ showDateAbbrev locale current time
                | otherwise =
                    formatMinutesTime locale "%Y-%m-%d" time
                where
-                 ct1 = unsafePerformIO $ toCalendarTime $ toClockTime current
-                 ct = unsafePerformIO $ toCalendarTime $ toClockTime time
+                 ct1 = System.Time.toUTCTime $ toClockTime current
+                 ct = System.Time.toUTCTime $ toClockTime time
 
 -- | Get current time as 'MinutesTime'. Warning: server should work in UTC time.
 getMinutesTime :: MonadIO m => m MinutesTime
@@ -201,22 +212,14 @@ toSeconds (MinutesTime s) = s
 
 
 -- | Format time according to Swedish rules of time formating.
---
--- This is probably as wrong as it gets. We use current time zone (of the server!) to show correct time.
---
--- FIXME: Fix all of this. We need proper user timezone handling, not such hacks as these.
 formatMinutesTime :: KontraTimeLocale -> String -> MinutesTime -> String
-formatMinutesTime ktl fmt mt = formatCalendarTime (getTimeLocale ktl) fmt (unsafePerformIO $ toCalendarTime $ toClockTime mt)
+formatMinutesTime ktl fmt mt = formatCalendarTime (getTimeLocale ktl) fmt (System.Time.toUTCTime $ toClockTime mt)
 
 -- | Parse format %d-%m-%Y.
 parseMinutesTimeDMY :: String -> Maybe MinutesTime
-parseMinutesTimeDMY s = do
-    t <- parseTime defaultTimeLocale "%d-%m-%Y" s
-    startOfTime <- parseTime defaultTimeLocale "%d-%m-%Y" "01-01-1970"
-    let val = diffDays t startOfTime
-    return $ fromMinutes (fromIntegral $ val *24*60)
+parseMinutesTimeDMY = parseMinutesTime "%d-%m-%Y"
 
--- | Show date as %d-%m-%y. As you see name lies.
+-- | Show date as %d-%m-%y.
 showDateDMY :: MinutesTime -> String
 showDateDMY = formatMinutesTime defaultKontraTimeLocale "%d-%m-%y"
 
@@ -235,7 +238,7 @@ minutesBefore :: Int -> MinutesTime -> MinutesTime
 minutesBefore i (MinutesTime s) = MinutesTime (s - i * 60)
 
 -- | Convert a date representation to integer. For date like
--- "2010-06-12" result will bee 20100612. Useful in IntMap for
+-- "2010-06-12" result will be 20100612. Useful in IntMap for
 -- example.
 asInt :: MinutesTime -> Int
 asInt m = ctYear*10000 + (fromEnum ctMonth+1)*100 + ctDay
