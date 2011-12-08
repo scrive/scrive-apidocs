@@ -41,7 +41,7 @@ import qualified MemCache
 import ForkAction
 import File.Model
 import DB.Classes
-
+import Database.HDBC
 
 {- Gets file content from somewere (Amazon for now), putting it to cache and returning as BS -}
 getFileContents :: Context -> File -> IO (BS.ByteString)
@@ -182,8 +182,10 @@ maybeScheduleRendering fileid docid = do
       case Map.lookup fileid setoffilesrenderednow of
          Just pages -> return (setoffilesrenderednow, pages)
          Nothing -> do
+           conn' <- clone (ctxdbconn ctx)
+           let newctx = ctx { ctxdbconn = conn' }
            forkActionIO ("Rendering file #" ++ show fileid ++ " of doc #" ++ show docid) $ do
-                jpegpages <- convertPdfToJpgPages ctx fileid docid
+                jpegpages <- convertPdfToJpgPages newctx fileid docid
                 case jpegpages of
                      JpegPagesError errmsg -> do
                          _ <- update $ ErrorDocument docid $ BS.toString errmsg
