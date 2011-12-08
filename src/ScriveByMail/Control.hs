@@ -203,16 +203,16 @@ handleScriveByMail = do
   let Right doc = edoc
       
   _ <- DocControl.handleDocumentUploadNoLogin (documentid doc) pdfBinary (BS.fromString title)
+  _ <- update $ SetDocumentAdvancedFunctionality (documentid doc) ctxtime
+  _ <- update $ SetEmailIdentification (documentid doc) ctxtime
   
-  errs <- lefts <$> (sequence $ [update $ SetEmailIdentification (documentid doc) ctxtime,
-                                 update $ SetDocumentAdvancedFunctionality (documentid doc) ctxtime,
-                                 update $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) ctxtime])
+  errs <- lefts <$> (sequence $ [update $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) ctxtime])
           
   when ([] /= errs) $ do
     Log.scrivebymail $ "Could not set up document: " ++ (intercalate "; " errs)
     
     -- send sorry email
-    sendMailAPIErrorEmail ctx username $ "<p>I'm really sorry, but I could not forward your document. I don't know what's wrong. I created it in Scrive, but I can't get it ready. If you want to see your document, you can click here: " ++ (show $ LinkIssueDoc (documentid doc)) ++ " .</p>"
+    sendMailAPIErrorEmail ctx username $ "<p>I'm really sorry, but I could not forward your document. I don't know what's wrong. I created it in Scrive, but I can't get it ready. If you want to see your document, you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
     
     mzero
 
@@ -222,7 +222,7 @@ handleScriveByMail = do
     Log.scrivebymail $ "Could not got to pending document: " ++ (intercalate "; " errs)
     
     -- send sorry email
-    sendMailAPIErrorEmail ctx username $ "<p>I'm really sorry, but I could not forward your document. I don't know what's wrong. It is created and ready to go. To see your document and send it yourself, click here: " ++ (show $  LinkIssueDoc (documentid doc)) ++ ".</p>"
+    sendMailAPIErrorEmail ctx username $ "<p>I'm really sorry, but I could not forward your document. I don't know what's wrong. It is created and ready to go. To see your document and send it yourself, <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
     
     mzero
   
@@ -249,5 +249,5 @@ sendMailAPIConfirmEmail ctx document =
 
 sendMailAPIErrorEmail :: TemplatesMonad m => Context -> String -> String -> m ()
 sendMailAPIErrorEmail ctx email msg = do
-  mail <- mailMailApiError msg
+  mail <- mailMailApiError ctx msg
   scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress (BS.fromString email) (BS.fromString email)] }

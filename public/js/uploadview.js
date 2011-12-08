@@ -138,7 +138,7 @@
                     paging: new Paging({}),
                     filtering: new Filtering({text: "", infotext: localization.searchTemplate}),
                     cells : [
-                        new Cell({name: localization.searchTemplate,
+                        new Cell({name: localization.sortTemplate,
                                   width:"400px",
                                   field:"title",
                                   special: "rendered",
@@ -167,7 +167,7 @@
             documentsTable.view.render();
 
             el.children().detach();
-            el.append($("<td>").append(documentsTable.view.el));
+            el.append($("<td>").addClass("templateslist").append(documentsTable.view.el));
 
 
         }

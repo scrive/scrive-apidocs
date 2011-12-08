@@ -2,11 +2,9 @@
 module ForkAction 
     ( forkActionIO
     , forkAction
-    , doNotCloseDBConnectionExplicitly
     , getAllActionAsString
     ) where
 
-import Context
 import KontraMonad
 
 import Control.Monad.Trans
@@ -54,12 +52,8 @@ allActions :: MVar (Map.Map Int ForkedAction)
 allActions = unsafePerformIO $ newMVar Map.empty
 
 -- | Use only in IO monad and when you know that forked action won't
--- try to get access to db using Connection object taken from Context.
--- If you really need to do that though, use before that function
--- doNotCloseDBConnectionExplicitly. The reason is that Context Connection
--- gets closed after we're done with the request. Will it be closed before
--- we want to use it in forked action or not? Nobody knows, so we can't
--- close it there.
+-- try to get access to db using 'Connection' object taken from 'Context'.
+-- Preferable use 'clone' on 'Connection' and the pass it around.
 forkActionIO :: String -> IO () -> IO ()
 forkActionIO title' action = do
   _ <- C.forkIO $ do
@@ -78,17 +72,12 @@ forkActionIO title' action = do
         modifyMVar_ allActions $ return . Map.insert key (ForkedActionDone title' startTime endTime)
   return ()
 
-doNotCloseDBConnectionExplicitly :: KontraMonad m => m ()
-doNotCloseDBConnectionExplicitly =
-  modifyContext $ \ctx -> ctx { ctxdbconnclose = False }
-
 -- | Standard forkAction to be used in KontraMonad. Setting ctxdbconnclose
 -- to False guarantees that Connection won't be closed after we're done with
 -- the request that called that function, so you can safely use Connection
 -- object taken from current Context there.
 forkAction :: (KontraMonad m, MonadIO m) => String -> IO () -> m ()
 forkAction title action = do
-  doNotCloseDBConnectionExplicitly
   liftIO $ forkActionIO title action
 
 getAllActionAsString :: IO String
