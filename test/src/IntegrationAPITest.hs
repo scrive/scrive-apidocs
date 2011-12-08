@@ -24,11 +24,13 @@ import Data.Maybe
 import Database.HDBC.PostgreSQL
 import Util.JSON
 import Test.QuickCheck.Gen
-
+import Control.Exception
+import System.Timeout
 
 integrationAPITests :: Connection -> Test
 integrationAPITests conn = testGroup "Integration API" [
-      testCase "Test creating a offer from template" $ testDocumentCreationFromTemplate conn      
+      testCase "Test crazy exponent in JSON" $ testLargeExponent 
+    , testCase "Test creating a offer from template" $ testDocumentCreationFromTemplate conn      
     , testCase "Test creating a contract from template" $ testDocumentCreationFromTemplateContract conn
     , testCase "Test creating an order from template" $ testDocumentCreationFromTemplateOrder conn
     , testCase "Testing if we can create sample document" $ testDocumentCreation conn
@@ -565,3 +567,10 @@ testCreateFromTemplate conn = withTestEnvironment conn $ do
   assertBool ("Failed to get doc: " ++ show apiRes2) $ not (isError apiRes2)
   assertBool ("doctype is not contract: " ++ show apiRes2) $ (Right (showJSON (1 :: Int))) == jsget ["document", "type"] (showJSON apiRes2)
   
+testLargeExponent :: Assertion
+testLargeExponent = do
+  res :: Maybe (Result Int) <- System.Timeout.timeout 1000000 $ evaluate $ decode "7e10000000000"
+  case res of
+    Nothing -> assertFailure "Should not timeout"
+    Just (Error _) -> assertSuccess
+    Just (Ok _) -> assertFailure $ "Should not parse bad json but I can't show you what I got (it takes too much memory)"
