@@ -332,7 +332,7 @@
 "_aboutPagePerson7Contact","mariusz@scrive.com",,"mariusz@scrive.com"
 "_aboutPagePerson7Position","LEAD DEVELOPER",,"LEAD DEVELOPER"
 "_aboutPagePerson8","Magnus Carlsson",,"Magnus Carlsson"
-"_aboutPagePerson8Body","Magnus har en bakgrund från Chalmers Tekniska Högskola som PhD i funktionella språk och från konsultföretaget Galois som bland annat utvecklat säkra e-arkiveringssystem åt USA:s regering. Magnus har över 30 års erfarenhet med funktionella språk. Magnus är utvecklare på Scrive med fokus på arkitektur och säkerhet.",,"Magnus has a background from Chalmers University of Technology as PhD in functional programming and from Galois, that, among other things, has developed secure e-archiving systems for the US government. Magnus has over 30 years of experience in functional languages. Magnus is a developer at Scrive with a focus on architecture and security."
+"_aboutPagePerson8Body","Magnus har en bakgrund från Chalmers Tekniska Högskola som PhD i funktionella språk och från konsultföretaget Galois som bland annat utvecklat säkra e-arkiveringssystem åt USA:s regering. Magnus har över 20 års erfarenhet med funktionella språk. Magnus är utvecklare på Scrive med fokus på arkitektur och säkerhet.",,"Magnus has a background from Chalmers University of Technology as PhD in functional programming and from Galois, that, among other things, has developed secure e-archiving systems for the US government. Magnus has over 20 years of experience in functional languages. Magnus is a developer at Scrive with a focus on architecture and security."
 "_aboutPagePerson8Contact","magnus@scrive.com",,"magnus@scrive.com"
 "_aboutPagePerson8Position","SENIOR DEVELOPER",,"SENIOR DEVELOPER"
 "_aboutPagePerson9","Eric Normand",,"Eric Normand"
@@ -3302,3 +3302,4 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_usageStatsMonth","Månad",,"Month"
 "_statsOrgTotal","Totalt för Organisationen",,"Organization Total"
 "_statsSender","Avsändare",,"Sender"
+
