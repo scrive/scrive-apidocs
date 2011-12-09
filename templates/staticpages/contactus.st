@@ -17,29 +17,29 @@ contactUsPage=
 ###
 contactUsPageContents=
                                         <div class="opaque wide box" style="height:453px;">
-                                           <iframe width="662" height="453" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://maps.google.com/maps/ms?hl=pl&amp;vpsrc=6&amp;ctz=-60&amp;ie=UTF8&amp;msa=0&amp;msid=205547184844428702344.0004b14dc25651f3f922a&amp;t=m&amp;ll=59.334765,18.06221&amp;spn=0.079496,0.226936&amp;z=12&amp;output=embed"></iframe>
-                                           
+                                           <iframe width="662" height="453" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://maps.google.com/maps/ms?$if(localesweden)$hl=sv$endif$$if(localebritain)$hl=en$endif$&amp;vpsrc=6&amp;ctz=-60&amp;ie=UTF8&amp;msa=0&amp;msid=205547184844428702344.0004b14dc25651f3f922a&amp;t=m&amp;ll=59.334765,18.06221&amp;spn=0.079496,0.226936&amp;z=12&amp;output=embed"></iframe>
+
                                         </div>
                                         <br />
                                         <div class="opaque wide box smaller" style="min-height: 0px;">
                                         <div style="margin-left:auto;margin-right:auto;width:500px">
                                         <h3>   $_pageFooterContact1()$ </h3>
                                         <BR/>
-                                        <table class="contactus" style="margin-left:auto;margin-right:auto;width:500px"> 
-                                            <tbody> 
-                                                <tr> 
-                                                    <td style="width:200px;vertical-align:top">  $_pageFooterContact2()$ </td> 
-                                                    <td style="width:200px;vertical-align:top">  $_pageFooterContact3()$ </td> 
+                                        <table class="contactus" style="margin-left:auto;margin-right:auto;width:500px">
+                                            <tbody>
+                                                <tr>
+                                                    <td style="width:200px;vertical-align:top">  $_pageFooterContact2()$ </td>
+                                                    <td style="width:200px;vertical-align:top">  $_pageFooterContact3()$ </td>
                                                 </tr>
-                                                <tr> 
-                                                    <td style="width:200px;vertical-align:top">  <BR/></td> 
-                                                    <td style="width:200px;vertical-align:top">  <BR/></td> 
+                                                <tr>
+                                                    <td style="width:200px;vertical-align:top">  <BR/></td>
+                                                    <td style="width:200px;vertical-align:top">  <BR/></td>
                                                 </tr>
                                                 <tr>
                                                     <td style="width:200px;vertical-align:top">  $_pageFooterContact4()$ </td>
-                                                    <td style="width:200px;vertical-align:top">  $_pageFooterContact5()$ </td> 
+                                                    <td style="width:200px;vertical-align:top">  $_pageFooterContact5()$ </td>
                                                 </tr>
-                                            </tbody> 
+                                            </tbody>
                                         </table>
                                         </div>
                                         </div>
