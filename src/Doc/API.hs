@@ -10,6 +10,7 @@ import Doc.DocStateQuery
 import Doc.DocStateData
 import Doc.Transitory
 import Doc.JSON
+import Control.Applicative
 --import Control.Monad
 import Control.Monad.Trans
 import Misc
@@ -121,7 +122,7 @@ documentChangeMetadata docid _ = api $ do
   bdy <- apiGuardL $ liftIO $ takeRequestBody rq
   let jstring = BS.toString $ concatChunks $ unBody bdy
   
-  json <- apiGuard$ decode jstring
+  json <- apiGuard $ decode jstring
   
   ctx <- getContext
   let now = ctxtime ctx
@@ -164,23 +165,19 @@ getSigLinkID = do
 documentUploadSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryResource -> SignatoryLinkID -> AttachmentResource -> String -> FileResource -> m Response
 documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   (slid, magichash) <- getSigLinkID
-  -- doc exists
-  -- doc magichash/siglink match
   doc <- apiGuardL $ getDocByDocIDSigLinkIDAndMagicHash did slid magichash
-  -- siglink exists
-  siglink :: SignatoryLink <- apiGuard $ getSigLinkFor doc sid
-  let email = getEmail siglink
-  -- sigattachexists
+  email <- apiGuard $ getEmail <$> getSigLinkFor doc sid
+
   sigattach <- apiGuard' Forbidden $ getSignatoryAttachment email (BS.fromString aname) doc
 
   -- attachment must have no file
   apiGuard' ActionNotAvailable (isJust $ signatoryattachmentfile sigattach)
 
-  -- pdf exists  
+  -- pdf exists in input param "file"
   (Input contentspec (Just filename) _contentType) <- apiGuardL' BadInput $ getDataFn' (lookInput "file")
 
   content1 <- case contentspec of
-    Left filepath -> lift $ liftIO $ BSL.readFile filepath
+    Left filepath -> liftIO $ BSL.readFile filepath
     Right content -> return content
   
   -- we need to downgrade the PDF to 1.4 that has uncompressed structure
@@ -199,13 +196,9 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
 documentDeleteSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryResource -> SignatoryLinkID -> AttachmentResource -> String -> FileResource -> m Response
 documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
   (slid, magichash) <- getSigLinkID
-  -- doc exists
-  -- doc magichash/siglink match
   doc <- apiGuardL $ getDocByDocIDSigLinkIDAndMagicHash did slid magichash
   
-  -- siglink exists
-  siglink :: SignatoryLink <- apiGuard $ getSigLinkFor doc sid
-  let email = getEmail siglink
+  email <- apiGuard $ getEmail <$> getSigLinkFor doc sid
   
   -- sigattachexists
   sigattach <- apiGuard $ getSignatoryAttachment email (BS.fromString aname) doc

@@ -43,14 +43,11 @@ instance ToAPIResponse a => ToAPIResponse (Created a) where
   toAPIResponse (Created a) = (toAPIResponse a) { rsCode = 201 }
   
 newtype APIMonad m a = AM { runAPIMonad :: ErrorT APIError m a }
-                     deriving (MonadTrans, Monad, MonadError APIError, Functor, Applicative)
+                     deriving (MonadTrans, Monad, MonadError APIError, Functor, Applicative, MonadIO)
                               
 instance KontraMonad m => KontraMonad (APIMonad m) where
   getContext = lift getContext
   modifyContext = lift . modifyContext
-  
-instance MonadIO m => MonadIO (APIMonad m) where
-  liftIO = lift . liftIO
   
 {-
 instance ServerMonad m => ServerMonad (APIMonad m) where
@@ -66,9 +63,8 @@ instance (Monad m, HasRqData m) => HasRqData (APIMonad m) where
 --instance MonadTrans APIMonad where
 --  lift = AM . (liftM )
 
-jsonError :: Either String JSValue
-jsonError = (Right jsempty) >>=
-            jsset "status" "error"
+jsonError :: JSValue
+jsonError = fromRight $ jsset "status" "error" jsempty
             
 -- | convert the return type to the appropriate response
 -- This defines the possible outputs of the api.
@@ -78,25 +74,20 @@ api acc = do
   case r of 
     Left BadInput ->
       badRequest (toAPIResponse $ fromRight $
-                  jsonError >>=
-                  jsset "message" "The input sent was invalid. Please try again.")
+                  jsset "message" "The input sent was invalid. Please try again." jsonError)
     Left Forbidden ->
       forbidden (toAPIResponse $ fromRight $ 
-                 jsonError >>=
-                 jsset "message" "The resource you are trying to access does not exist or you do not have permission to access it.")
+                 jsset "message" "The resource you are trying to access does not exist or you do not have permission to access it." jsonError)
     Left NotLoggedIn -> 
       unauthorized (toAPIResponse $ fromRight $
-                    jsonError >>=
-                    jsset "message" "You must identify yourself to access this resource." >>=
+                    jsset "message" "You must identify yourself to access this resource." jsonError >>=
                     jsset "url" "http://scrive.com/api/user/login")
     Left ServerError ->
       internalServerError (toAPIResponse $ fromRight $
-                           jsonError >>=
-                           jsset "message" "We're sorry. The server just does not know what to do.")
+                           jsset "message" "We're sorry. The server just does not know what to do." jsonError)
     Left ActionNotAvailable ->
       forbidden (toAPIResponse $ fromRight $
-                 jsonError >>=
-                 jsset "message" "The action you requested is not available on this resource.")
+                 jsset "message" "The action you requested is not available on this resource." jsonError)
     Right v -> return $ toAPIResponse v
 
 apiErrorFromDBError :: DBError -> APIError
@@ -142,15 +133,6 @@ instance Monad m => APIGuard m (Either String b) b where
 instance Monad m => APIGuard m Bool () where
   guardEither False = return $ Left $ ServerError
   guardEither True  = return $ Right ()
-  
-instance (Monad m, APIGuard m a b) => APIGuard m (APIMonad m a) b where
-  guardEither acc = acc >>= guardEither
-  
---instance (Kontrakcja m, APIGuard m a b) => APIGuard m (m a) b where
---  guardEither acc = lift acc >>= guardEither
-  
-instance (Kontrakcja m, APIGuard m a b) => APIGuard m (m a) b where
-  guardEither acc = lift acc >>= guardEither
   
 instance (Monad m, JSON b) => APIGuard m (Result b) b where
   guardEither (Error _) = return $ Left BadInput
