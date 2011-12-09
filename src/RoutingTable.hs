@@ -99,7 +99,7 @@ staticRoutes = choice
      , dir "s" $ hGet $ toK3    $ DocControl.handleSignShowOldRedirectToNew -- Redirect for old version to version above, remove not earlier then 31.12.2012.
      
      , dir "s" $ param "sign"           $ hPostNoXToken $ toK2 $ DocControl.signDocument
-     , dir "s" $ param "cancel"         $ hPostNoXToken $ toK2 $ DocControl.rejectDocument
+     , dir "s" $ param "reject"         $ hPostNoXToken $ toK2 $ DocControl.rejectDocument
      , dir "s" $ param "acceptaccount"  $ hPostNoXToken $ toK5 $ DocControl.handleAcceptAccountFromSign
      , dir "s" $ param "declineaccount" $ hPostNoXToken $ toK5 $ DocControl.handleDeclineAccountFromSign
      , dir "s" $ param "sigattachment"  $ hPostNoXToken $ toK2 $ DocControl.handleSigAttach
