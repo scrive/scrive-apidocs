@@ -10,7 +10,7 @@ import Doc.DocStateQuery
 import Doc.DocStateData
 import Doc.Transitory
 import Doc.JSON
-import Control.Monad
+--import Control.Monad
 import Control.Monad.Trans
 import Misc
 import Data.Maybe
@@ -30,12 +30,13 @@ import User.Model
 import Company.Model
 import Happstack.Server.Monads
 import API.Monad
+import Control.Monad.Error
 
 documentAPI :: Route (Kontra Response)
 documentAPI = choice [
   dir "api" $ dir "document" $ hGet          $ toK0 $ documentList,
   dir "api" $ dir "document" $ hPostNoXToken $ toK0 $ documentNew,
-  dir "api" $ dir "document" $ hGet          $ toK1 $ documentView,
+--  dir "api" $ dir "document" $ hGet          $ toK1 $ documentView,
   dir "api" $ dir "document" $ hPostNoXToken $ toK6 $ documentUploadSignatoryAttachment,
   dir "api" $ dir "document" $ hDelete       $ toK6 $ documentDeleteSignatoryAttachment,
   dir "api" $ dir "document" $ hPostNoXToken $ toK2 $ documentChangeMetadata
@@ -63,10 +64,10 @@ _apiLogin = api $ do
 
 -- | Return a list of documents the logged in user can see
 documentList :: Kontrakcja m => m Response
-documentList = api $
-  apiGuardL getDocsByLoggedInUser >>=
-  lift . mapM jsonDocumentAndFiles >>=
-  apiOK . showJSON
+documentList = api $ do
+  docs <- apiGuardL getDocsByLoggedInUser
+  jdocs <- lift $ mapM jsonDocumentAndFiles docs
+  return $ showJSON jdocs
 
 documentNew :: Kontrakcja m => m Response
 documentNew = api $ do
@@ -77,43 +78,34 @@ documentNew = api $ do
       a <- apiGuardL $ runDBQuery $ GetCompany cid
       return $ Just a
   
-  mdoctypes <- lift $ getDataFn' (look "type")
-  when (isNothing mdoctypes)
-    apiBadInput
-  let Just doctypes = mdoctypes
-  let mdoctypei = maybeRead doctypes
-  when (isNothing mdoctypei)
-    apiBadInput
-  let Just doctypei = mdoctypei
-  let mdoctype = toSafeEnumInt doctypei
-  when (isNothing mdoctype)
-    apiBadInput
-  let Just doctype = mdoctype
+  doctypes <- apiGuardL' BadInput $ getDataFn' (look "type")
+  
+  doctypei <- apiGuard' BadInput $ maybeRead doctypes
+  
+  doctype <- apiGuard' BadInput $ toSafeEnumInt doctypei
   
   -- pdf exists  
-  mfile <- lift $ getDataFn' (lookInput "file")
-  when (isNothing mfile) $
-    apiBadInput
-  let Just (Input contentspec (Just filename') _contentType) = mfile
+  (Input contentspec (Just filename') _contentType) <- apiGuardL' BadInput $ getDataFn' (lookInput "file")
+  
   let filename = (BS.fromString $ basename filename')
       
   content1 <- case contentspec of
-    Left filepath -> lift $ liftIO $ BSL.readFile filepath
+    Left filepath -> liftIO $ BSL.readFile filepath
     Right content -> return content
   
   -- we need to downgrade the PDF to 1.4 that has uncompressed structure
   -- we use gs to do that of course
-  ctx <- lift $ getContext
+  ctx <- getContext
   let now = ctxtime ctx
   
   d1 <- apiGuardL $ doc_update $ NewDocument user mcompany filename doctype now
   
-  content <- lift $ liftIO $ preprocessPDF ctx (concatChunks content1) (documentid d1)
+  content <- liftIO $ preprocessPDF ctx (concatChunks content1) (documentid d1)
   file <- lift $ runDB $ dbUpdate $ NewFile filename content
 
   d2 <- apiGuardL $ doc_update $ AttachFile (documentid d1) (fileid file) now
   
-  apiCreated $ jsonDocumentForAuthor d2
+  return $ Created $ jsonDocumentForAuthor d2
 
 documentChangeMetadata :: Kontrakcja m => DocumentID -> MetadataResource -> m Response
 documentChangeMetadata docid _ = api $ do
@@ -122,30 +114,27 @@ documentChangeMetadata docid _ = api $ do
   
   asl <- apiGuard $ getAuthorSigLink doc
   
-  when (Just (userid user) /= maybesignatory asl)
-    apiForbidden
+  apiGuard' Forbidden (Just (userid user) == maybesignatory asl)
     
   rq <- lift askRq
     
   bdy <- apiGuardL $ liftIO $ takeRequestBody rq
   let jstring = BS.toString $ concatChunks $ unBody bdy
   
-  json <- case decode jstring of
-    Error _ -> apiBadInput
-    Ok a -> return a
-    
-  ctx <- lift $ getContext
+  json <- apiGuard$ decode jstring
+  
+  ctx <- getContext
   let now = ctxtime ctx
   d <- case jsget "title" json of
     Left _ -> return doc
     Right (JSString s) ->
       apiGuardL $ doc_update $ SetDocumentTitle docid (BS.fromString $ fromJSString s) now
-    Right _ -> apiBadInput
+    Right _ -> throwError BadInput
       
-  apiOK $ jsonDocumentMetadata d
+  return $ jsonDocumentMetadata d
 
-documentView :: (Kontrakcja m) => DocumentID -> m Response
-documentView (_ :: DocumentID) = api $  undefined
+--documentView :: (Kontrakcja m) => DocumentID -> m Response
+--documentView (_ :: DocumentID) = api $  undefined
 
 
 data SignatoryResource = SignatoryResource
@@ -170,7 +159,7 @@ getSigLinkID = do
   mmagichash <- lift $ readField "magichash"
   case (msignatorylink, mmagichash) of
        (Just sl, Just mh) -> return (sl,mh)
-       _ -> apiBadInput
+       _ -> throwError BadInput
   
 documentUploadSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryResource -> SignatoryLinkID -> AttachmentResource -> String -> FileResource -> m Response
 documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
@@ -178,26 +167,17 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   -- doc exists
   -- doc magichash/siglink match
   doc <- apiGuardL $ getDocByDocIDSigLinkIDAndMagicHash did slid magichash
-  
   -- siglink exists
   siglink :: SignatoryLink <- apiGuard $ getSigLinkFor doc sid
   let email = getEmail siglink
-  
   -- sigattachexists
-  let msigattach = getSignatoryAttachment email (BS.fromString aname) doc
-
-  when (isNothing msigattach)
-    apiForbidden
+  sigattach <- apiGuard' Forbidden $ getSignatoryAttachment email (BS.fromString aname) doc
 
   -- attachment must have no file
-  when (isJust $ signatoryattachmentfile $ fromJust msigattach)
-    apiActionNotAvailable
+  apiGuard' ActionNotAvailable (isJust $ signatoryattachmentfile sigattach)
 
   -- pdf exists  
-  mfile <- lift $ getDataFn' (lookInput "file")
-  when (isNothing mfile) $
-    apiBadInput
-  let Just (Input contentspec (Just filename) _contentType) = mfile
+  (Input contentspec (Just filename) _contentType) <- apiGuardL' BadInput $ getDataFn' (lookInput "file")
 
   content1 <- case contentspec of
     Left filepath -> lift $ liftIO $ BSL.readFile filepath
@@ -205,8 +185,8 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   
   -- we need to downgrade the PDF to 1.4 that has uncompressed structure
   -- we use gs to do that of course
-  ctx <- lift $ getContext
-  content <- lift $ liftIO $ preprocessPDF ctx (concatChunks content1) (documentid doc)
+  ctx <- getContext
+  content <- liftIO $ preprocessPDF ctx (concatChunks content1) (documentid doc)
   
   file <- lift $ runDB $ dbUpdate $ NewFile (BS.fromString $ basename filename) content
   d <- apiGuardL $ doc_update $ SaveSigAttachment (documentid doc) (BS.fromString aname) email (fileid file)
@@ -214,7 +194,7 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   -- let's dig the attachment out again
   sigattach' <- apiGuard $ getSignatoryAttachment email (BS.fromString aname) d
   
-  apiCreated $ jsonSigAttachmentWithFile sigattach' (Just file)
+  return $ Created $ jsonSigAttachmentWithFile sigattach' (Just file)
 
 documentDeleteSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryResource -> SignatoryLinkID -> AttachmentResource -> String -> FileResource -> m Response
 documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
@@ -228,24 +208,17 @@ documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
   let email = getEmail siglink
   
   -- sigattachexists
-  let msigattach = getSignatoryAttachment email (BS.fromString aname) doc
-  when (isNothing msigattach)
-    apiForbidden
-
-  let Just sigattach = msigattach
+  sigattach <- apiGuard $ getSignatoryAttachment email (BS.fromString aname) doc
 
   -- attachment must have a file
-  when (isNothing $ signatoryattachmentfile sigattach)
-    apiActionNotAvailable
-
-  let Just fileid = signatoryattachmentfile sigattach
+  fileid <- apiGuard' ActionNotAvailable $ signatoryattachmentfile sigattach
 
   d <- apiGuardL $ doc_update $ DeleteSigAttachment (documentid doc) email fileid
   
   -- let's dig the attachment out again
   sigattach' <- apiGuard $ getSignatoryAttachment email (BS.fromString aname) d
   
-  apiOK $ jsonSigAttachmentWithFile sigattach' Nothing
+  return $ jsonSigAttachmentWithFile sigattach' Nothing
 
   
 -- helpers
