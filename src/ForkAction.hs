@@ -19,6 +19,7 @@ import Numeric
 import qualified Database.HDBC as HDBC
 import qualified Database.HDBC.PostgreSQL as HDBC
 import Context
+import qualified AppLogger as Log
 
 data ForkedAction = ForkedActionStarted  { title     :: String
                                          , start     :: ClockTime
@@ -70,7 +71,8 @@ forkActionIO conn title' action = do
     result <- C.try (action conn')
     endTime <- getClockTime
     case result of
-      Left someException ->
+      Left someException -> do
+        Log.error $ "forkActionIO: " ++ title' ++ ": " ++ show someException
         modifyMVar_ allActions $ return . Map.insert key (ForkedActionError title' startTime endTime someException)
       Right _ ->
         modifyMVar_ allActions $ return . Map.insert key (ForkedActionDone title' startTime endTime)
