@@ -19,7 +19,6 @@ import Doc.DocStorage
 import Doc.DocUtils
 import Doc.DocView
 import Doc.DocViewMail
-import Doc.DocProcess
 import Doc.DocRegion
 import InputValidation
 import File.Model
@@ -55,7 +54,6 @@ import Data.Either
 import Data.List
 import Data.Maybe
 import Data.Word
-import Control.Exception (bracket)
 import Happstack.Server hiding (simpleHTTP)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
@@ -64,7 +62,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import Text.JSON hiding (Result)
-import Database.HDBC
 import ForkAction
 import qualified ELegitimation.BankID as BankID
 {-
@@ -133,13 +130,12 @@ postDocumentChangeAction document@Document  { documentstatus
         Log.docevent $ "Preparation -> Closed; Sealing document, sending emails: " ++ show documentid
         _ <- addDocumentCloseStatEvents document
         ctx@Context{ctxlocale, ctxglobaltemplates} <- getContext
-        forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ do
+        forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ \conn -> do
+          let newctx = ctx {ctxdbconn = conn}
           threadDelay 5000
-          bracket (clone $ ctxdbconn ctx) (disconnect)$ \conn -> do
-
-           enewdoc <- runReaderT (sealDocument ctx document) conn
-           case enewdoc of
-             Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails ctx newdoc
+          enewdoc <- runReaderT (sealDocument newctx document) conn
+          case enewdoc of
+             Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails newctx newdoc
              Left errmsg -> Log.error $ "Sealing of document #" ++ show documentid ++ " failed, could not send document confirmations: " ++ errmsg
         return ()
     -- Pending -> AwaitingAuthor
@@ -159,15 +155,15 @@ postDocumentChangeAction document@Document  { documentstatus
         _ <- addDocumentCloseStatEvents document
         ctx@Context{ctxlocale, ctxglobaltemplates} <- getContext
         author <- getDocAuthor
-        forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $
-         bracket (clone $ ctxdbconn ctx) (disconnect) $ \conn -> do
-          enewdoc <- runReaderT (sealDocument ctx document) conn
+        forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ \conn -> do
+          let newctx = ctx {ctxdbconn = conn}
+          enewdoc <- runReaderT (sealDocument newctx document) conn
           case enewdoc of
-            Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails ctx newdoc
+            Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails newctx newdoc
             Left errmsg -> do
               _ <- runReaderT (doc_update $ ErrorDocument documentid errmsg) conn
               Log.server $ "Sending seal error emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
-              runWithTemplates ctxlocale ctxglobaltemplates $ sendDocumentErrorEmail ctx document author
+              runWithTemplates ctxlocale ctxglobaltemplates $ sendDocumentErrorEmail newctx document author
               return ()
         return ()
     -- Pending -> Rejected
@@ -1323,7 +1319,6 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
   docfunctionality <- getCriticalField (return . maybe documentfunctionality fst . listToMaybe . reads) "docfunctionality"
 
   validmethods <- getAndConcat "validationmethod"
-
   let docallowedidtypes =
         case mapJust (idmethodFromString . BS.toString) validmethods of
           [] -> [EmailIdentification]
@@ -1366,16 +1361,6 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
       roles2 = map guessRoles signatoriesroles
       guessRoles x | x == BS.fromString "signatory" = [SignatoryPartner]
                    | otherwise = []
-  --if they are switching to basic we want to lose information
-  let basicauthorroles =
-        if getValueForProcess document processauthorsend == Just True
-        then [SignatoryAuthor]
-        else [SignatoryPartner, SignatoryAuthor]
-      basicauthordetails = (removeFieldsAndPlacements authordetails, basicauthorroles)
-      basicsignatories = zip (map (replaceSignOrder (SignOrder 1) . removeFieldsAndPlacements) signatories)
-                         [[SignatoryPartner]]
-
-
   -- FIXME: tell the user what happened!
   -- when (daystosign<1 || daystosign>99) mzero
 
@@ -1389,21 +1374,15 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
     return ()
   _ <- doc_update $ SetDocumentTitle documentid docname ctxtime
   _ <- doc_update $ SetInviteText documentid invitetext ctxtime
-  if docfunctionality == BasicFunctionality
-    then do
-     Log.debug $ "basic functionality so author roles are " ++ (show basicauthorroles)
-     _ <- doc_update $ SetEmailIdentification documentid ctxtime
-     doc_update $ ResetSignatoryDetails documentid (basicauthordetails : basicsignatories) ctxtime
-    else do
-     when (isJust mcsvsigindex) $ ignore $ doc_update $ SetCSVSigIndex documentid (fromJust mcsvsigindex) ctxtime
-     case docallowedidtypes of
+  when (isJust mcsvsigindex) $ ignore $ doc_update $ SetCSVSigIndex documentid (fromJust mcsvsigindex) ctxtime
+  case docallowedidtypes of
        [ELegitimationIdentification] -> ignore $ doc_update $ SetElegitimationIdentification documentid ctxtime
        [EmailIdentification] -> ignore $ doc_update $ SetEmailIdentification documentid ctxtime
        i -> Log.debug $ "I don't know how to set this kind of identificaiton: " ++ show i
-     when (isJust daystosign) $ ignore $ doc_update $ SetDaysToSign documentid (fromJust daystosign) ctxtime
-     aa <- doc_update $ ResetSignatoryDetails documentid (authordetails2 : signatories2) ctxtime
-     Log.debug $ "final document returned " ++ show aa
-     return aa
+  when (isJust daystosign) $ ignore $ doc_update $ SetDaysToSign documentid (fromJust daystosign) ctxtime
+  aa <- doc_update $ ResetSignatoryDetails documentid (authordetails2 : signatories2) ctxtime
+  Log.debug $ "final document returned " ++ show aa
+  return aa
 
 getDocumentsForUserByType :: Kontrakcja m => DocumentType -> User -> m [Document]
 getDocumentsForUserByType doctype user = do
