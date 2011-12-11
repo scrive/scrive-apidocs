@@ -49,6 +49,7 @@
 "_HeadMailApi","Scrive by Mail",,"Scrive by Mail"
 "_HeadUserInfo","Mina uppgifter",,"My info"
 "_InfoSelectTemplate","Klicka på den mall du vill använda för att starta processen",,"Click a template you want to use to start the process"
+"_InviteBox","Skriv e-post för att lägga till fler",,"Enter email, and invite a friend"
 "_LanguageSettings","Regioninställningar",,"Region settings"
 "_MailAPIActiveEmail","Aktiva e-postadresser:",,"Active email addresses:"
 "_MailAPIEnable","Aktivera Scrive by Mail",,"Enable Scrive by Mail"
@@ -251,23 +252,16 @@
  Enterprise"
 "_QuotesHead","Kunder berättar",,"What our customers think"
 "_ReadUnderstoodTOS","Jag har läst och accepterar Scrive Allmänna Villkor",,"I have read and accept the Scrive Terms of Service"
-<<<<<<< HEAD
-<<<<<<< HEAD
-"_ReminderBodyIfMulti","Är du säker att du vill skicka en påminnelse til berörda parter för",,"Are you sure you want to send reminders to the parties involved in the"
-=======
 "_ReminderBodyIfMulti","Är du säker att du vill skicka en påminnelse till berörda parter för",,"Are you sure you want to send reminders to the parties involved in the"
->>>>>>> staging
 "_ReminderBodyIfMulti2","dokument.",,"documents?"
 "_ReminderBodyIfSingel","Är du säker att du vill skicka en påminnelse til berörda parter i dokumentet",,"Are you sure you want to send a reminder to the parties involved in the document"
 "_ReminderBodyMulti","Är du säker att du vill skicka en påminnelse til berörda parter för",,"Are you sure you want to send reminders to the parties involved in the"
 "_ReminderBodyMulti2","orderbekräftelse.",,"order confirmations?"
 "_ReminderBodySingel","Är du säker att du vill skicka en påminnelse til berörda parter i orderbekräftelse",,"Are you sure you want to send a reminder to the parties involved in the order confirmation"
-=======
 "_ContractReminderBodyMulti","Är du säker att du vill skicka en påminnelse till berörda parter för",,"Are you sure you want to send reminders to the parties involved in the"
 "_ContractReminderBodySingel","Är du säker att du vill skicka en påminnelse til berörda parter i dokumentet",,"Are you sure you want to send a reminder to the parties involved in the document"
 "_OrderReminderBodyMulti","Är du säker att du vill skicka en påminnelse til berörda parter för",,"Are you sure you want to send reminders to the parties involved in the"
 "_OrderReminderBodySingel","Är du säker att du vill skicka en påminnelse til berörda parter i orderbekräftelse",,"Are you sure you want to send a reminder to the parties involved in the order confirmation"
->>>>>>> staging
 "_RepeatNewPassword","Upprepa nytt lösenord:",,"Repeat new password:"
 "_RequestedAttachments","Bägarda bilagor:",,"Requested attachments:"
 "_SaveChanges","Spara ändringar",,"Save changes"
@@ -1611,8 +1605,8 @@ profits and reduce frustration. The following mateials shall only
  dokumentet är färdigställt.",,"The document <strong>$documenttitle$</strong> has been signed  by $partylist:noescape()$.  Therefore it only remains for you sign before the document is final."
 "_mailDocumentAwaitingForAuthorTitle","Din tur att e-signera $documenttitle$",,"Please sign $documenttitle$"
 "_mailDocumentClosedTitleContract","Bekräftelse: e-signerat avtal $documenttitle$",,"Confirmation: $documenttitle$"
-"_mailDocumentClosedTitleOffer","Bekräftelse: e-signerat offert $documenttitle$",,"Confirmation: $documenttitle$"
-"_mailDocumentClosedTitleOrder","Bekräftelse: e-signerat orderbekräftelse $documenttitle$",,"Confirmation: $documenttitle$"
+"_mailDocumentClosedTitleOffer","Bekräftelse: e-signerad offert $documenttitle$",,"Confirmation: $documenttitle$"
+"_mailDocumentClosedTitleOrder","Bekräftelse: e-signerad orderbekräftelse $documenttitle$",,"Confirmation: $documenttitle$"
 "_mailDocumentErrorContentBodyFirst","Vi är ledsna, men vi kunde inte hantera dokumentet <strong>$documenttitle$</strong>.
       Problem uppstod relaterade till formatet på PDF-filen.",,"We are sorry, but we could not handle document <strong>$documenttitle$</strong>.
   There were problems related to the format of the document contents."
@@ -3287,8 +3281,8 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_flashMessageProblemWithPassword","Felaktig lösenord.",,"Incorrect password."
 "_apiPageMetaDescription",,,
 "_scrivebymailPageMetaDescription",,,
-"_userDocumentsSettings","Dokument inställningar",,"Document settings"
-"_userDocumentSettingsMailFooter","Personlig e-post signatur","Personal email signature",
+"_userDocumentsSettings","Dokumentinställningar",,"Document settings"
+"_userDocumentSettingsMailFooter","Personlig e-postsignatur","Personal email signature",
 "_HeadUsageStats","Användarstatistik",,"Usage Stats"
 "_last30Days","Senaste 30 dagarna",,"Last 30 Days"
 "_last6Months","Senaste 6 månade",,"Last 6 Months"
