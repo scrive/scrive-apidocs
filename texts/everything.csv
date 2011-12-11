@@ -50,7 +50,7 @@
 "_HeadUserInfo","Mina uppgifter",,"My info"
 "_InfoSelectTemplate","Klicka på den mall du vill använda för att starta processen",,"Click a template you want to use to start the process"
 "_InviteBox","Skriv e-post för att lägga till fler",,"Enter email, and invite a friend"
-"_LanguageSettings","Regioninställningar",,"Region settings"
+"_LanguageSettings","Regionsinställningar",,"Region settings"
 "_MailAPIActiveEmail","Aktiva e-postadresser:",,"Active email addresses:"
 "_MailAPIEnable","Aktivera Scrive by Mail",,"Enable Scrive by Mail"
 "_MailAPILimitHead","Begränsningar",,"Limits"
@@ -1600,8 +1600,8 @@ profits and reduce frustration. The following mateials shall only
  dokumentet är färdigställt.",,"The document <strong>$documenttitle$</strong> has been signed  by $partylist:noescape()$.  Therefore it only remains for you sign before the document is final."
 "_mailDocumentAwaitingForAuthorTitle","Din tur att e-signera $documenttitle$",,"Please sign $documenttitle$"
 "_mailDocumentClosedTitleContract","Bekräftelse: e-signerat avtal $documenttitle$",,"Confirmation: $documenttitle$"
-"_mailDocumentClosedTitleOffer","Bekräftelse: e-signerat offert $documenttitle$",,"Confirmation: $documenttitle$"
-"_mailDocumentClosedTitleOrder","Bekräftelse: e-signerat orderbekräftelse $documenttitle$",,"Confirmation: $documenttitle$"
+"_mailDocumentClosedTitleOffer","Bekräftelse: e-signerad offert $documenttitle$",,"Confirmation: $documenttitle$"
+"_mailDocumentClosedTitleOrder","Bekräftelse: e-signerad orderbekräftelse $documenttitle$",,"Confirmation: $documenttitle$"
 "_mailDocumentErrorContentBodyFirst","Vi är ledsna, men vi kunde inte hantera dokumentet <strong>$documenttitle$</strong>.
       Problem uppstod relaterade till formatet på PDF-filen.",,"We are sorry, but we could not handle document <strong>$documenttitle$</strong>.
   There were problems related to the format of the document contents."
@@ -3277,5 +3277,5 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_flashMessageProblemWithPassword","Felaktig lösenord.",,"Incorrect password."
 "_apiPageMetaDescription",,,
 "_scrivebymailPageMetaDescription",,,
-"_userDocumentsSettings","Dokument inställningar",,"Document settings"
-"_userDocumentSettingsMailFooter","Personlig e-post signatur","Personal email signature",
+"_userDocumentsSettings","Dokumentinställningar",,"Document settings"
+"_userDocumentSettingsMailFooter","Personlig e-postsignatur","Personal email signature",
