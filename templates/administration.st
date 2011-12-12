@@ -192,7 +192,7 @@ admincompanies=
        <div id="companies-viewer"></div>
     </div>
 <script>
-  var companiesTable = KontraList.init({
+  var companiesTable = KontraList().init({
     name : "CompaniesTable",
     schema: new Schema({
       url: "/adminonly/companies",
@@ -233,7 +233,7 @@ adminUsersForSales=
        <div id="users-viewer"></div>
     </div>
     <script>
-    var usersTable = KontraList.init({
+    var usersTable = KontraList().init({
         name : "Users Table",
         schema: new Schema({
             url: "/adminonly/userslist",
@@ -524,7 +524,7 @@ admincompanyusers=
 <script>
   jQuery(function() {
 
-    var companyAccountsTable = KontraList.init({
+    var companyAccountsTable = KontraList().init({
       name : "CompanyAccountsTable",
       schema: new Schema({
         url: "/adminonly/companyaccounts/$companyid$",

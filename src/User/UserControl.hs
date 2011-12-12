@@ -1,22 +1,21 @@
 module User.UserControl where
 
 import Control.Monad.State
-import Data.Char
 import Data.Functor
-import Data.List
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (update, query)
 import System.Random
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS
-import Text.JSON (JSValue(..), toJSObject, toJSString)
+import Text.JSON (JSValue(..), toJSObject, showJSON)
 
 import ActionSchedulerState
 import AppView
 import DB.Classes
 import DB.Types
 import Doc.Transitory
+import Doc.DocStateData
 import Company.Model
 import InputValidation
 import Kontra
@@ -239,6 +238,68 @@ getCompanyInfoUpdate = do
   where
     getValidField = getDefaultedField BS.empty
 
+handleUsageStatsForUser :: Kontrakcja m => m (Either KontraLink Response)
+handleUsageStatsForUser = withUserGet $ do
+  Context{ctxmaybeuser = Just user} <- getContext
+  showUsageStats user >>= renderFromBody TopAccount kontrakcja
+
+handleUsageStatsJSONForUserDays :: Kontrakcja m => m JSValue
+handleUsageStatsJSONForUserDays = do
+  Context{ctxtime, ctxmaybeuser, ctxtemplates } <- getContext
+  totalS <- renderTemplate ctxtemplates "_statsOrgTotal" ()
+  user <- guardJust ctxmaybeuser
+  let today = asInt ctxtime
+      som = 100 * (today `div` 100) -- start of month
+      sixm = ((today `div` 100) - 5) * 100
+  if useriscompanyadmin user && isJust (usercompany user)
+    then do
+      (statsByDay, _) <- getUsageStatsForCompany (fromJust $ usercompany user) som sixm
+      return $ JSObject $ toJSObject [("list", companyStatsDayToJSON totalS statsByDay),
+                                      ("paging", JSObject $ toJSObject [
+                                          ("pageMax",showJSON (0::Int)),
+                                          ("pageCurrent", showJSON (0::Int)),
+                                          ("itemMin",showJSON $ (0::Int)),
+                                          ("itemMax",showJSON $ (length statsByDay) - 1),
+                                          ("itemTotal",showJSON $ (length statsByDay))])]
+    else do
+      (statsByDay, _) <- getUsageStatsForUser (userid user) som sixm
+      return $ JSObject $ toJSObject [("list", userStatsDayToJSON statsByDay),
+                                      ("paging", JSObject $ toJSObject [
+                                          ("pageMax",showJSON (0::Int)),
+                                          ("pageCurrent", showJSON (0::Int)),
+                                          ("itemMin",showJSON $ (0::Int)),
+                                          ("itemMax",showJSON $ (length statsByDay) - 1),
+                                          ("itemTotal",showJSON $ (length statsByDay))])]
+
+handleUsageStatsJSONForUserMonths :: Kontrakcja m => m JSValue
+handleUsageStatsJSONForUserMonths = do
+  Context{ctxtime, ctxmaybeuser, ctxtemplates } <- getContext
+  totalS <- renderTemplate ctxtemplates "_statsOrgTotal" ()
+  user <- guardJust ctxmaybeuser
+  let today = asInt ctxtime
+      som = 100 * (today `div` 100) -- start of month
+      sixm = ((today `div` 100) - 5) * 100
+  if useriscompanyadmin user && isJust (usercompany user)
+    then do
+    (_, statsByMonth) <- getUsageStatsForCompany (fromJust $ usercompany user) som sixm
+    return $ JSObject $ toJSObject [("list", companyStatsMonthToJSON totalS statsByMonth),
+                                    ("paging", JSObject $ toJSObject [
+                                        ("pageMax",showJSON (0::Int)),
+                                        ("pageCurrent", showJSON (0::Int)),
+                                        ("itemMin",showJSON $ (0::Int)),
+                                        ("itemMax",showJSON $ (length statsByMonth) - 1),
+                                        ("itemTotal",showJSON $ (length statsByMonth))])]
+    else do
+    (_, statsByMonth) <- getUsageStatsForUser (userid user) som sixm
+    return $ JSObject $ toJSObject [("list", userStatsMonthToJSON statsByMonth),
+                                    ("paging", JSObject $ toJSObject [
+                                        ("pageMax",showJSON (0::Int)),
+                                        ("pageCurrent", showJSON (0::Int)),
+                                        ("itemMin",showJSON $ (0::Int)),
+                                        ("itemMax",showJSON $ (length statsByMonth) - 1),
+                                        ("itemTotal",showJSON $ (length statsByMonth))])]
+
+
 handleGetUserMailAPI :: Kontrakcja m => m (Either KontraLink Response)
 handleGetUserMailAPI = withUserGet $ do
     Context{ctxmaybeuser = Just user@User{userid}} <- getContext
@@ -341,85 +402,13 @@ handlePostUserSecurity = do
       return LinkAccountSecurity
     Nothing -> return $ LinkLogin (ctxlocale ctx) NotLogged
 
-handleGetSharing :: Kontrakcja m => m (Either KontraLink Response)
-handleGetSharing = withUserGet $ do
-    Context{ctxmaybeuser = Just user@User{userid}} <- getContext
-    friends <- runDBQuery $ GetUserFriends userid
-    params <- getListParams
-    viewFriends (friendsSortSearchPage params friends) user
-        >>= renderFromBody TopAccount kontrakcja
-
--- Searching, sorting and paging
-friendsSortSearchPage :: ListParams -> [User] -> PagedList User
-friendsSortSearchPage  =
-    listSortSearchPage friendsSortFunc friendsSearchFunc friendsPageSize
-
-friendsSearchFunc :: SearchingFunction User
-friendsSearchFunc s user = userMatch user s -- split s so we support spaces
-    where
-        match s' m = isInfixOf (map toUpper s') (map toUpper (BS.toString m))
-        userMatch u s' = match s' (usercompanyposition $ userinfo u)
-                      || match s' (getFirstName u)
-                      || match s' (getLastName  u)
-                      || match s' (getPersonalNumber u)
-                      || match s' (getEmail u)
-
-friendsSortFunc :: SortingFunction User
-friendsSortFunc "fullname" = viewComparing getFullName
-friendsSortFunc "fullnameREV" = viewComparingRev getFullName
-friendsSortFunc "email" = viewComparing getEmail
-friendsSortFunc "emailREV" = viewComparingRev getEmail
-friendsSortFunc "iscompanyadmin" = viewComparing useriscompanyadmin
-friendsSortFunc "iscompanyadminREV" = viewComparingRev useriscompanyadmin
-friendsSortFunc _ = const $ const EQ
-
-friendsPageSize :: Int
-friendsPageSize = 20
-
-----
-
-handlePostSharing :: Kontrakcja m => m KontraLink
-handlePostSharing = do
-    ctx <- getContext
-    case ctxmaybeuser ctx of
-         Just user -> do
-             memail <- getOptionalField asValidEmail "email"
-             remove <- isFieldSet "remove"
-             case (memail,remove) of
-                  (Just email,_) -> do
-                      handleAddFriend user email
-                      return $ LinkSharing emptyListParams
-                  (_,True) -> return $ LinkSharing emptyListParams
-                  _ -> LinkSharing <$> getListParamsForSearch
-         Nothing -> return $ LinkLogin (ctxlocale ctx) NotLogged
-
-handleAddFriend :: Kontrakcja m => User -> BS.ByteString -> m ()
-handleAddFriend User{userid} email = do
-    avereturn <- runDBUpdate $ AddViewerByEmail userid $ Email email
-    when (not avereturn) $ do
-      -- FIXME: display sane error msg here (as template)
-      addFlash (OperationFailed, "operation failed")
-
 {- |
     Checks for live documents owned by the user.
 -}
 isUserDeletable :: Kontrakcja m => User -> m Bool
 isUserDeletable user = do
-  userdocs <- query $ GetDocumentsByUser user
+  userdocs <- doc_query $ GetDocumentsByUser user
   return $ all isDeletableDocument userdocs
-
-{- |
-    This looks up all the users relevant for the given docid.
-    This is the dodgy link between documents and users and is required
-    when deleting a user or deleting a doc.  Bleurgh.
--}
-lookupUsersRelevantToDoc :: Kontrakcja m => DocumentID -> m (DocumentID, [User])
-lookupUsersRelevantToDoc docid = do
-  doc <- queryOrFail $ GetDocumentByDocumentID docid
-  musers <- mapM (runDBQuery . GetUserByID) (linkedUserIDs doc)
-  return $ (docid, catMaybes musers)
-  where
-    linkedUserIDs = catMaybes . map maybesignatory . documentsignatorylinks
 
 handleViralInvite :: Kontrakcja m => m KontraLink
 handleViralInvite = withUserPost $ do
@@ -893,7 +882,7 @@ handleAccountRemovalGet aid hash = do
 handleAccountRemovalFromSign :: Kontrakcja m => User -> SignatoryLink -> ActionID -> MagicHash -> m ()
 handleAccountRemovalFromSign user siglink aid hash = do
   doc <- removeAccountFromSignAction aid hash
-  _ <- guardRightM $ doc_update . ArchiveDocuments user $ [documentid doc]
+  _ <- guardRightM $ doc_update . ArchiveDocument user $ documentid doc
   _ <- addUserRefuseSaveAfterSignStatEvent user siglink
   return ()
 
@@ -971,26 +960,6 @@ dropExistingAction :: Kontrakcja m => ActionID -> m ()
 dropExistingAction aid = do
   _ <- update $ DeleteAction aid
   return ()
-
-handleFriends :: Kontrakcja m => m JSValue
-handleFriends = do
-  Context{ctxmaybeuser} <- getContext
-  user <- guardJust ctxmaybeuser
-  friends <- runDBQuery $ GetUserFriends $ userid user
-  params <- getListParamsNew
-  let friendsPage = friendSortSearchPage params friends
-  return $ JSObject $ toJSObject [("list",
-                                   JSArray $
-                                   map (\f -> JSObject $
-                                              toJSObject [("fields",
-                                                           JSObject $ toJSObject [("email",
-                                                                                   JSString $ toJSString $ BS.toString $ getEmail f)
-                                                                                 ,("id", JSString $ toJSString (show (userid f)))])])
-                                           (list friendsPage)),
-                                  ("paging", pagingParamsJSON friendsPage)]
-
-                                  
-
 
 {- |
    Fetch the xtoken param and double read it. Once as String and once as MagicHash.

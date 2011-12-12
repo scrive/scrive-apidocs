@@ -69,7 +69,7 @@ import DB.Types
 import Doc.CSVUtils
 import Doc.DocProcess
 import Doc.DocRegion
-import Doc.DocState
+import Doc.DocStateData
 import Doc.DocUtils
 import Doc.DocViewMail
 import FlashMessage
@@ -84,7 +84,7 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import User.Model
-import Doc.JSON
+import Doc.JSON()
 
 import Control.Applicative ((<$>))
 import Control.Monad.Reader
@@ -102,7 +102,7 @@ import DB.Classes
 
 
 modalMismatch :: TemplatesMonad m => String -> SignatoryLink -> m FlashMessage
-modalMismatch msg author = toModal <$>  do 
+modalMismatch msg author = toModal <$>  do
     renderTemplateFM "signCanceledDataMismatchModal" $ do
                     field "authorname"  $ getSmartName author
                     field "authoremail" $ getEmail author
@@ -424,7 +424,7 @@ processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
       , ("signatorysignmodalcontentnotlast", text processsignatorysignmodalcontentnotlast)
       , ("signatorysignmodalcontentauthorlast", text processsignatorysignmodalcontentauthorlast)
       , ("signbuttontext", text processsignbuttontext)
-      , ("signbuttontextauthor", text processsignbuttontextauthor)        
+      , ("signbuttontextauthor", text processsignbuttontextauthor)
       , ("signatorysignmodaltitle", text processsignatorysignmodaltitle)
       , ("authorsignlastbutton", text processauthorsignlastbuttontext)
      ]
@@ -704,7 +704,7 @@ pageDocumentDesign ctx
   }
   step
   showadvancedoption
-  attachments 
+  attachments
   files =
    let
        documentdaystosignboxvalue = maybe 7 id documentdaystosign
@@ -753,7 +753,7 @@ pageDocumentDesign ctx
        fieldM "expirywarntext" $ getProcessText processexpirywarntext
        fieldM "sendbuttontext" $ getProcessText processsendbuttontext
        fieldM "signbuttontext" $ getProcessText processsignbuttontext
-       fieldM "signbuttontextauthor" $ getProcessText processsignbuttontextauthor       
+       fieldM "signbuttontextauthor" $ getProcessText processsignbuttontextauthor
        fieldM "expirywarntext" $ getProcessText processexpirywarntext
        fieldM "confirmsendtitle" $ getProcessText processconfirmsendtitle
        fieldM "confirmsendtext" $ getProcessText processconfirmsendtext
@@ -777,9 +777,9 @@ documentAttachmentDesignFields docid atts files = do
   field "attachmentcount" $ length atts
   fieldFL "attachments" $ catMaybes $ map attachmentFields atts
   where
-    attachmentFields AuthorAttachment{authorattachmentfile = fileid} = 
+    attachmentFields AuthorAttachment{authorattachmentfile = fileid} =
       case lookup fileid files of
-        Nothing -> Nothing 
+        Nothing -> Nothing
         Just file -> Just $ do
           field "attachmentid" $ show fileid
           field "attachmentname" $ filename file
@@ -872,7 +872,7 @@ csvLandPage count = renderTemplateFM "csvlandpage" $ do
   field "doccount" (show count)
 
 {- |
-   Show the document for Viewers (friends of author or signatory).
+   Show the document for Viewers (others in company, author or signatory).
    Show no buttons or other controls
  -}
 
@@ -1120,7 +1120,7 @@ uploadPage mdocprocess showTemplates = renderTemplateFM "uploadPage" $ do
         field "selected" $ (Just process == mdocprocess)
         fieldM "name" $ renderTextForProcess (Signable process) processuploadname
         fieldM "uploadprompttext" $ renderTextForProcess (Signable process) processuploadprompttext
-        field "apiid" $ apiDocumentType (Signable process)
+        field "apiid" $ fromSafeEnumInt (Signable process)
 
 buildCustomJS :: SignatoryField -> Int -> JSValue
 buildCustomJS SignatoryField{sfType = CustomFT label _, sfValue, sfPlacements} i =

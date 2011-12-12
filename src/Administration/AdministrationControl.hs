@@ -64,6 +64,7 @@ import Doc.DocProcess
 import Util.SignatoryLinkUtils
 #endif
 import Doc.Transitory
+import Doc.DocStateData
 import Data.ByteString.UTF8 (fromString,toString)
 import Data.ByteString (ByteString, hGetContents)
 import qualified Data.ByteString.Char8 as BSC
@@ -773,10 +774,6 @@ fieldsFromStats :: (Functor m, MonadIO m) => [User] -> [Document] -> Fields m
 fieldsFromStats _users documents = do
     let userStats = IntMap.empty -- calculateStatsFromUsers users
         documentStats = calculateStatsFromDocuments documents
-        showAsDate :: Int -> String
-        showAsDate int = printf "%04d-%02d-%02d" (int `div` 10000) (int `div` 100 `mod` 100) (int `mod` 100)
-        showAsMonth :: Int -> String
-        showAsMonth int = printf "%04d-%02d" (int `div` 10000) (int `div` 100 `mod` 100)
         stats' = IntMap.toList (IntMap.unionWith addStats userStats documentStats)
         lastMonthStats = take 30 (reverse stats')
         allMonthsStats = reverse $ IntMap.toList $ IntMap.fromListWith addStats (map ( \(k,v) -> (k `div` 100 * 100, v)) stats')

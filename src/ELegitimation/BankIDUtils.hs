@@ -15,7 +15,7 @@ module ELegitimation.BankIDUtils (
     ) where
 
 import Data.List
-import Doc.Transitory as D
+import Doc.DocStateData as D
 import ELegitimation.ELegTransaction 
 import Kontra
 import qualified Data.ByteString as BS

@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 module StateHelper(
       withTestEnvironment
     , withTestDB
@@ -40,9 +42,18 @@ clearTables = wrapDB $ \conn -> do
   runRaw conn "DELETE FROM doc_stat_events"
   runRaw conn "DELETE FROM user_stat_events"
   runRaw conn "DELETE FROM companyinvites"
+
+#ifdef DOCUMENTS_IN_POSTGRES
+  runRaw conn "DELETE FROM author_attachments"
+  runRaw conn "DELETE FROM signatory_attachments"
+  runRaw conn "DELETE FROM signatory_links"
+  runRaw conn "DELETE FROM documents"
+#endif
+
   runRaw conn "DELETE FROM companies"
   runRaw conn "DELETE FROM services"
   runRaw conn "DELETE FROM users"
+  runRaw conn "DELETE FROM files"
   return ()
 
 -- happstack-state --

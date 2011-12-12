@@ -7,7 +7,7 @@ module ELegitimation.BankIDRequests (
 
 import Control.Monad.State
 import Data.Maybe
-import Doc.Transitory as D
+import Doc.DocStateData as D
 import Kontra
 import Misc
 import SOAP.SOAP

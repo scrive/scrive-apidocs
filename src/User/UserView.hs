@@ -1,9 +1,9 @@
 module User.UserView (
     -- pages
-    viewFriends,
     showUser,
     showUserSecurity,
     showUserMailAPI,
+    showUsageStats,
     pageAcceptTOS,
     activatePageViewNotValidLink,
 
@@ -61,8 +61,10 @@ module User.UserView (
     --utils
     userBasicFields,
 
-    -- friends list
-    friendSortSearchPage
+    userStatsDayToJSON,
+    userStatsMonthToJSON,
+    companyStatsDayToJSON,
+    companyStatsMonthToJSON
     ) where
 
 import Control.Applicative ((<$>))
@@ -79,12 +81,15 @@ import Templates.TemplatesUtils
 import Text.StringTemplate.GenericStandard()
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-import ListUtil
 import FlashMessage
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import User.Model
-import Data.List
+import MinutesTime
+import Util.JSON
+import Text.JSON
+import Data.Either
+import Misc
 
 showUser :: TemplatesMonad m => User -> Maybe Company -> Bool -> m String
 showUser user mcompany createcompany = renderTemplateFM "showUser" $ do
@@ -141,7 +146,7 @@ showUserSecurity user = renderTemplateFM "showUserSecurity" $ do
         field "en" $ LANG_EN == (getLang user)
         field "se" $ LANG_SE == (getLang user)
     field "footer" $ customfooter $ usersettings user
-    field "advancedMode" $ Just AdvancedMode == (preferreddesignmode $ usersettings user)    
+    field "advancedMode" $ Just AdvancedMode == (preferreddesignmode $ usersettings user)
     menuFields user
 
 showUserMailAPI :: TemplatesMonad m => User -> Maybe UserMailAPI -> m String
@@ -154,16 +159,91 @@ showUserMailAPI user mapi =
         field "mapisenttoday" $ show . umapiSentToday <$> mapi
         menuFields user
 
+_usageStatisticsFieldsByDay :: (Functor m, MonadIO m) => [(Int, [Int])] -> [Fields m]
+_usageStatisticsFieldsByDay stats = map f stats
+  where f (ct, s:c:i:_) = do
+                field "date" $ showAsDate ct
+                field "closed" c
+                field "signatures" s
+                field "sent" i
+        f _ = error $ "statisticsFieldsByDay: bad stats"
+
+_usageStatisticsFieldsByMonth :: (Functor m, MonadIO m) => [(Int, [Int])] -> [Fields m]
+_usageStatisticsFieldsByMonth stats = map f stats
+  where f (ct, s:c:i:_) = do
+                field "date" $ showAsMonth ct
+                field "closed" c
+                field "signatures" s
+                field "sent" i
+        f _ = error $ "statisticsFieldsByMonth: bad stats"
+
+userStatsDayToJSON :: [(Int, [Int])] -> JSValue
+userStatsDayToJSON = JSArray . rights . map f
+  where f (d, s:c:i:_) = Right jsempty >>=
+                         jsset ["fields", "date"] (showAsDate d) >>=
+                         jsset ["fields", "closed"] c >>=
+                         jsset ["fields", "sent"] i >>=
+                         jsset ["fields", "signatures"] s
+        f _ = Left "Bad stat"
+
+userStatsMonthToJSON :: [(Int, [Int])] -> JSValue
+userStatsMonthToJSON = JSArray . rights . map f
+  where f (d, s:c:i:_) = Right jsempty >>=
+                         jsset ["fields", "date"] (showAsMonth d) >>=
+                         jsset ["fields", "closed"] c >>=
+                         jsset ["fields", "sent"] i >>=
+                         jsset ["fields", "signatures"] s
+        f _ = Left "Bad stat"
+
+companyStatsDayToJSON :: String -> [(Int, String, [Int])] -> JSValue
+companyStatsDayToJSON ts ls = JSArray $ rights $ [f e | e@(_,n,_) <- ls, n=="Total"]
+  where f (d, _, s:c:i:_) = Right jsempty >>=
+                            jsset ["fields", "date"] (showAsDate d) >>=
+                            jsset ["fields", "closed"] c >>=
+                            jsset ["fields", "sent"] i >>=
+                            jsset ["fields", "name"] ts >>=
+                            jsset ["fields", "signatures"] s >>=
+                            jsset "subfields" [fromRight $
+                                               Right jsempty >>=
+                                               jsset "date" (showAsDate d') >>=
+                                               jsset "closed" c' >>=
+                                               jsset "sent"   i' >>=
+                                               jsset "name"   n' >>=
+                                               jsset "signatures" s' |
+                                               (d',n',s':c':i':_) <- ls,
+                                               d' == d,
+                                               n' /= "Total"]
+
+
+        f _ = Left "Bad stat"
+
+companyStatsMonthToJSON :: String -> [(Int, String, [Int])] -> JSValue
+companyStatsMonthToJSON ts ls = JSArray $ rights $ [f e | e@(_,n,_) <- ls, n=="Total"]
+  where f (d, _, s:c:i:_) = Right jsempty >>=
+                            jsset ["fields", "date"] (showAsMonth d) >>=
+                            jsset ["fields", "closed"] c >>=
+                            jsset ["fields", "sent"] i >>=
+                            jsset ["fields", "name"] ts >>=
+                            jsset ["fields", "signatures"] s >>=
+                            jsset "subfields" [fromRight $
+                                               Right jsempty >>=
+                                               jsset "date" (showAsMonth d') >>=
+                                               jsset "closed" c' >>=
+                                               jsset "sent"   i' >>=
+                                               jsset "name"   n' >>=
+                                               jsset "signatures" s' |
+                                               (d',n',s':c':i':_) <- ls,
+                                               d' == d,
+                                               n' /= "Total"]
+        f _ = Left "Bad stat"
+
+showUsageStats :: TemplatesMonad m => User -> m String
+showUsageStats user =
+    renderTemplateFM "showUsageStats" $ do
+      menuFields user
+
 pageAcceptTOS :: TemplatesMonad m => m String
 pageAcceptTOS = renderTemplateM "pageAcceptTOS" ()
-
-viewFriends :: TemplatesMonad m => PagedList User -> User -> m String
-viewFriends friends user =
-  renderTemplateFM "viewFriends" $ do
-    fieldFL "friends" $ markParity $ map userFields $ list friends
-    field "currentlink" $ show $ LinkSharing $ params friends
-    menuFields user
-    pagedListFields friends
 
 menuFields :: MonadIO m => User -> Fields m
 menuFields user = do
@@ -421,20 +501,3 @@ userBasicFields u mc = do
     field "phone" $ userphone $ userinfo u
     field "iscompanyadmin" $ useriscompanyadmin u
     field "TOSdate" $ maybe "-" show (userhasacceptedtermsofservice u)
-
--- list stuff for friends
-
--- Friends currently only use the email
-friendSortSearchPage :: ListParams -> [User] -> PagedList User
-friendSortSearchPage = listSortSearchPage friendSortFunc friendSearchFunc friendPageSize
-
-friendPageSize :: Int
-friendPageSize = 20
-
-friendSortFunc :: SortingFunction User
-friendSortFunc _ u1 u2 = compare (getEmail u1) (getEmail u2)
-
-friendSearchFunc :: SearchingFunction User
-friendSearchFunc s u = s `isInfixOf` (BS.toString $ getEmail u)
-
-
