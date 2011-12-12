@@ -1645,9 +1645,9 @@ profits and reduce frustration. The following mateials shall only
 "_mailInvitationToSignOrderContentSender","Avsändare:",,"Sender:"
 "_mailInvitationToSignOrderDefaultHeader","<strong>$creatorname$</strong> har skickat orderbekräftelsen  <strong>$documenttitle$</strong> till dig och önskar din bekräftelse. Bekräfta eller avvisa ordern genom att
  följa instruktionerna nedan.",,"<strong>$creatorname$</strong> has sent the order confirmation <strong>$documenttitle$</strong> to you and wants your confirmation. To confirm or return the order:"
-"_mailInvitationToSignTitleContract","Avtal att e-signera $if(companyname)$från  $companyname$ $endif$ ",,"Contract to e-sign $if(companyname)$ from $companyname$ $endif$"
-"_mailInvitationToSignTitleOffer","Offert att e-signera $if(companyname)$från  $companyname$ $endif$ ",,"Offer to e-sign $if(companyname)$ from $companyname$ $endif$"
-"_mailInvitationToSignTitleOrder","Orderbekräftelse att e-signera $if(companyname)$från  $companyname$ $endif$ ",,"Order confirmation to e-sign $if(companyname)$ from $companyname$ $endif$"
+"_mailInvitationToSignTitleContract","Avtal att e-signera $if(companyname)$från $companyname$ $endif$ ",,"Contract to e-sign $if(companyname)$ from $companyname$ $endif$"
+"_mailInvitationToSignTitleOffer","Offert att e-signera $if(companyname)$från $companyname$ $endif$ ",,"Offer to e-sign $if(companyname)$ from $companyname$ $endif$"
+"_mailInvitationToSignTitleOrder","Orderbekräftelse att e-signera $if(companyname)$från $companyname$ $endif$ ",,"Order confirmation to e-sign $if(companyname)$ from $companyname$ $endif$"
 "_mailInvitationToViewDefaultHeader","<strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong>.",,"<strong>$creatorname$</strong> has invited you to view the document <strong>$creatorname$</strong>."
 "_mailInvitationToViewDefaultHeaderWithService","<strong>$creatorname$</strong> har bjudit in dig att se dokumentet <strong>$documenttitle$</strong>.",,"<strong>$creatorname$</strong> has invited you to view the document <strong>$creatorname$</strong>."
 "_mailInvitationToViewTitleContract","Inbjudan från $creatorname$ till $documenttitle$",,"Invite from $creatorname$ for $documenttitle$"
