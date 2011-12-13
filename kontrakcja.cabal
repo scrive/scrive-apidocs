@@ -146,6 +146,7 @@ Executable kontrakcja-server
   Build-depends: happstack-ixset==6.*
   Build-depends: happstack-data==6.*
   Build-depends: happstack-util==6.*
+  Build-depends: happstack-static-routing==0.1
   Build-depends: hslogger==1.1.*
   Build-depends: time
   Build-depends: utf8-string, random
