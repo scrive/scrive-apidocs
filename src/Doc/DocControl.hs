@@ -160,7 +160,7 @@ postDocumentChangeAction document@Document  { documentstatus
           case enewdoc of
             Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails newctx newdoc
             Left errmsg -> do
-              _ <- runReaderT (doc_update $ ErrorDocument documentid errmsg) conn
+              _ <- ioRunDB conn $ doc_update' $ ErrorDocument documentid errmsg
               Log.server $ "Sending seal error emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
               runWithTemplates ctxlocale ctxglobaltemplates $ sendDocumentErrorEmail newctx document author
               return ()
@@ -352,7 +352,7 @@ sendInvitationEmail1 ctx document signatorylink = do
       , mailInfo = Invitation documentid signatorylinkid
       , from = documentservice document
   }
-  runReaderT (doc_update $ AddInvitationEvidence documentid signatorylinkid (ctxtime ctx) (ctxipnumber ctx)) (ctxdbconn ctx)
+  ioRunDB (ctxdbconn ctx) $ doc_update' $ AddInvitationEvidence documentid signatorylinkid (ctxtime ctx) (ctxipnumber ctx) 
 
 {- |
     Send a reminder email
@@ -583,7 +583,7 @@ rejectDocument documentid
 
 getDocumentLocale :: DocumentID -> DB (Maybe Locale)
 getDocumentLocale documentid = do
-  mdoc <- doc_query $ GetDocumentByDocumentID documentid
+  mdoc <- doc_query' $ GetDocumentByDocumentID documentid
   return $ fmap getLocale mdoc --TODO: store lang on doc
 
 {- |

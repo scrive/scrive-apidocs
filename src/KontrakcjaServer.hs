@@ -34,7 +34,7 @@ import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Map as Map
 import System.IO
 import Control.Concurrent.MVar
-import Control.Monad.Reader
+--import Control.Monad.Reader
 
 import Crypto
 import DB.Classes
