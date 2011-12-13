@@ -30,7 +30,7 @@ doc_update' = update
 doc_query :: (MonadIO m, QueryEvent ev res) => ev -> m res
 doc_query = query
 
-doc_query' :: ev -> DB res
+doc_query' :: (MonadIO m, QueryEvent ev res) => ev -> m res
 doc_query' = query
 
 #else
