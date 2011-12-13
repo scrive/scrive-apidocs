@@ -936,8 +936,7 @@ instance DBUpdate AttachFile (Either String Document) where
          [ sqlFieldType "mtime" "timestamp" $ time
          , sqlField "file_id" $ fid
          ]
-         -- "WHERE id = ? AND status = ?" [ toSql did, toSql Preparation ]
-        "WHERE id = ?" [ toSql did ]
+         "WHERE id = ? AND status = ?" [ toSql did, toSql Preparation ]
     getOneDocumentAffected "AttachFile" r did
 
 data AttachSealedFile = AttachSealedFile DocumentID FileID MinutesTime
