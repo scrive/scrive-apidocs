@@ -567,7 +567,11 @@ addRandomDocument rda = do
       doc' <- rand 10 arbitrary
       xtype <- rand 10 (elements $ randomDocumentAllowedTypes rda)
       status <- rand 10 (elements $ randomDocumentAllowedStatuses rda)
-      let doc = doc' { documenttype = xtype, documentstatus = status }
+      title <- rand 10 (elements ["title", "a b c", "123.123"])
+      let doc = doc' { documenttype = xtype
+                     , documentstatus = status
+                     , documenttitle = BS.fromString title
+                     }
 
       roles <- getRandomAuthorRoles doc
 
