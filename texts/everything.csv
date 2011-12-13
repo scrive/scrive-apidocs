@@ -2551,7 +2551,7 @@ simply better."
 "_remindMailNotSignedContractContentPartys","Parter:",,"Parties:"
 "_remindMailNotSignedContractStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte undertecknat eller avvisat
  dokument <strong>$documenttitle$</strong> ännu.",,"<strong>$author$</strong> wants to remind you that you haven't
-Confirmed the order  <strong>$documenttitle$</strong> yet."
+signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_remindMailNotSignedOfferContentInfo","Översiktlig information",,"General information"
 "_remindMailNotSignedOfferContentInstruction","1. Klicka på länken        <a href=""$link$"">$link$</a><br/>
         2. Granska online<br/>        3.  Acceptera offert (eller
@@ -2562,7 +2562,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_remindMailNotSignedOfferContentSender","Avsändare:",,"Sender:"
 "_remindMailNotSignedOfferStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte accepterat
  offerten <strong>$documenttitle$</strong> ännu.        Acceptera eller avvisa
- offerten genom att följa instruktionerna nedan.",,"<strong>$author$</strong>  wants to remind you that you haven't  confirmed or returned the order  <strong>$documenttitle$</strong> yet. To do so:"
+ offerten genom att följa instruktionerna nedan.",,"<strong>$author$</strong>  wants to remind you that you haven't  confirmed or returned the offer  <strong>$documenttitle$</strong> yet. To do so:"
 "_remindMailNotSignedOrderContentInfo","Översiktlig information",,"General information"
 "_remindMailNotSignedOrderContentInstruction","1. Klicka på länken      <a href=""$link$"">$link$</a><br/>
         2. Granska online<br/>        3. Bekräfta ordern (eller
