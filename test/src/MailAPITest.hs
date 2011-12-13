@@ -15,7 +15,7 @@ import System.IO.Temp
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
 import qualified Codec.MIME.Type as MIME
-import Control.Concurrent
+--import Control.Concurrent
 import Doc.DocStateData
 import Control.Monad.Trans
 import Data.List
@@ -30,7 +30,7 @@ import User.Model
 import TestingUtil
 import Templates.TemplatesLoader
 import TestKontra as T
-import Doc.DocControl
+--import Doc.DocControl
 import Doc.DocInfo
 import qualified AppLogger as Log
 
@@ -49,6 +49,7 @@ mailApiTests conn = testGroup "MailAPI" [
     , testCase "test lukas's error email" $ testSuccessfulDocCreation conn "test/mailapi/lukas_mail_error.eml" 2
     , testCase "test eric's error email" $ testSuccessfulDocCreation conn "test/mailapi/eric_email_error.eml" 2    
     , testCase "test lukas's funny title" $ testSuccessfulDocCreation conn "test/mailapi/email_weird_subject.eml" 2
+    , testCase "test exchange email" $ testSuccessfulDocCreation conn "test/mailapi/email_exchange.eml" 2
     , testCase "test 2 sig model from outlook mac" $ testSuccessfulDocCreation conn "test/mailapi/email_outlook_viktor.eml" 3
     ]
 
@@ -85,24 +86,11 @@ testSuccessfulDocCreation conn emlfile sigs = withMyTestEnvironment conn $ \tmpd
     mdoc <- doc_query $ GetDocumentByDocumentID $ fromJust mdocid
     assertBool "document was really created" $ isJust mdoc
     let doc = fromJust mdoc
-    assertBool ("document should have " ++ show sigs ++ " signatories has " ++ show (length (documentsignatorylinks doc))) $ length (documentsignatorylinks doc) == sigs
+    assertBool ("document should have " ++ show sigs ++ " signatories has " ++ show (length (documentsignatorylinks doc)) ++": " ++ show (documentsignatorylinks doc)) $ length (documentsignatorylinks doc) == sigs
+    
     assertBool ("document status should be pending, is " ++ show (documentstatus doc)) $ documentstatus doc == Pending
     assertBool "document has file no attached" $ (length $ documentfiles doc) == 1
     assertBool ("doc has iso encoded title " ++ show (documenttitle doc)) $ not $ "=?iso" `isInfixOf` (BS.toString $ documenttitle doc)
-    imgreq <- mkRequest GET []
-    let keepTrying 0 = return ()
-        keepTrying (n::Int) = do
-              (imgres, _) <- runTestKontra imgreq ctx $ showPreview (documentid doc) (head $ documentfiles doc)
-              case imgres of
-               Left _ -> do
-                 Log.debug $ "retrying img req . . ."
-                 --Log.debug $ "Code was " ++ show (rsCode imgres)
-                 threadDelay (1000::Int)
-                 keepTrying (n - 1)
-               Right _ -> do
-                 return ()
-    Log.debug $ "doing img request"
-    liftIO $ keepTrying 100
     Just doc' <- doc_query $ GetDocumentByDocumentID $ fromJust mdocid
     assertBool "document is in error!" $ not $ isDocumentError doc'
 

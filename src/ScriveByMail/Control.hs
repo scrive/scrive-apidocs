@@ -67,7 +67,7 @@ handleScriveByMail = do
   
   let (mime, allParts) = parseEmailMessageToParts content
       
-      isPDF (tp,_) = MIME.mimeType tp == MIME.Application "pdf"
+      isPDF (tp,_) = MIME.mimeType tp == MIME.Application "pdf" || MIME.mimeType tp == MIME.Application "octet-stream"
       isPlain (tp,_) = MIME.mimeType tp == MIME.Text "plain"
   
       typesOfParts = map fst allParts
@@ -77,7 +77,8 @@ handleScriveByMail = do
       from = fromMaybe "" $ lookup "from" (MIME.mime_val_headers mime)
       to   = fromMaybe "" $ lookup "to"   (MIME.mime_val_headers mime)
   
-      isOutlook = maybe False ("Outlook" `isInfixOf`) $ lookup "x-mailer" (MIME.mime_val_headers mime) 
+      isOutlook = maybe False ("Outlook" `isInfixOf`) (lookup "x-mailer" (MIME.mime_val_headers mime)) ||
+                  maybe False ("Exchange" `isInfixOf`) (lookup "x-mimeole" (MIME.mime_val_headers mime))
       
       subject = decodeWords $ BS.toString $ maybe BS.empty BS.fromString $ lookup "subject" (MIME.mime_val_headers mime)
       
