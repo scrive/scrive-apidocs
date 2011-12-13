@@ -55,7 +55,7 @@ instance (Monad m, Functor m, MonadIO m) => DBMonad (ReaderT Connection m) where
 -- (DB/unDB is not exposed so functions may enter DB wrapper, but they
 -- can't escape it in any other way than by runDB function).
 newtype DB a = DB { unDB :: ReaderT Connection IO a }
-  deriving (Applicative, Functor, Monad, MonadPlus, MonadIO, DBMonad)
+  deriving (Applicative, Functor, Monad, MonadPlus, MonadIO)
 
 -- | Wraps IO action in DB
 wrapDB :: (Connection -> IO a) -> DB a

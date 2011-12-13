@@ -648,14 +648,14 @@ validTest = return . Just
 
 --Random query
 class RandomQuery a b where
-  randomQuery :: (MonadIO m, DBMonad m) => a -> m b
+  randomQuery :: a -> DB b
 
 #ifndef DOCUMENTS_IN_POSTGRES
 instance (QueryEvent ev res) => RandomQuery ev res where
   randomQuery = query
 #else
 instance (DBQuery ev res) => RandomQuery ev res where
-  randomQuery = runDBQuery
+  randomQuery = dbQuery
 #endif
 
 instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
@@ -665,14 +665,14 @@ instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
 
 --Random update
 class RandomUpdate a b where
-  randomUpdate :: (MonadIO m, DBMonad m) => a -> m b
+  randomUpdate :: a -> DB b
 
 #ifndef DOCUMENTS_IN_POSTGRES
 instance (UpdateEvent ev res) => RandomUpdate ev res where
   randomUpdate = update
 #else
 instance (DBUpdate ev res) => RandomUpdate ev res where
-  randomUpdate = runDBUpdate
+  randomUpdate = dbUpdate
 #endif
 
 instance (Arbitrary a, RandomUpdate c b) => RandomUpdate (a -> c) b where
