@@ -71,6 +71,13 @@ Retrieving Invoices from TrustWeaver-Archiving™ (test case F1.8) [OK]
 
 -}
 
+testFile :: String
+testFile = "files/sealmarker.pdf"
+
+testFileSigned :: String
+testFileSigned = "files/sealmarker-twsigned.pdf"
+
+
 twconf = TW.TrustWeaverConf
     { TW.signConf = Just ("https://tseiod-dev.trustweaver.com/ts/svs.asmx",
                           "certs/dev.pem",
@@ -99,55 +106,74 @@ twconf_bad = TW.TrustWeaverConf
     , TW.timeout = 10
     }
 
-trustWeaverTests :: Test
-trustWeaverTests = testGroup "TrustWeaver" [ testGroup "TrustWeaver"
-                     [ testCase "Signing and validation (F1.1 and F1.2) (1.1 and 2.1)" $ 
-                                testSignAndValidate twconf
-                     , testCase "Register and enable section (F1.6) (6.1.1, 6.1.2, 6.1.3)" $
-                                testRegisterAndEnableSection twconf
-                     , testCase "Store and retrieve invoice (F1.7 and F1.8) (7.1, 7.1.1, 8.1)" $
-                                testStoreAndRetrieveInvoice twconf
-                     ]
-                   , testGroup "TrustWeaver_badurls" 
-                     [ testCase "Signing and validation (F1.1 and F1.2) (retries and fails) (1.3.2 and 2.5.2)" $
-                                testSignAndValidateFail twconf_bad
-                     , testCase "Register and enable section (F1.6) (retries and fails) (6.3.1)" $
-                                testRegisterAndEnableSectionFail twconf_bad
-                     , testCase "Store and retrieve invoice (F1.7 and F1.8) (retries and fails) (7.3.1, 8.3.1)" $
-                                testStoreAndRetrieveInvoiceFail twconf_bad
-                     ]  
-                   , testGroup "TrustWeaver user errors"
-                               [ testCase "Could not find associated sign policy (1.2.1)" $
-                                          testSignBadSignPolicy twconf
-                               , testCase "Could not find associated certificate(s) (1.2.2)" $
-                                          testSignNoSignCertificates twconf
-                               , testCase "Provide an incomplete RegisterSectionRequest, e.g. by not setting the parameter Name. (6.2.1)" $
-                                          testIncompleteRegisterSection twconf
-                               , testCase "Provide an EnableSectionRequest with a Name that has not been registered. (6.2.2)" $
-                                          testEnableSectionUnknownName twconf
-                               , testCase "Provide an EnableSectionRequest with the Name of Organization X. (6.2.3)" $
-                                          testEnableSectionSecondTime twconf
-                               , testCase "Provide an incomplete StoreInvoiceRequest, e.g. by not setting the parameter DocumentFormat. (7.2.1)" $
-                                          testIncompleteStoreInvoice twconf
-                               , testCase "Provide an invalid StoreInvoiceRequest, e.g. by setting the parameter SignatureType=XYZ. (7.2.2)" $
-                                          testInvalidStoreInvoice twconf
-                               , testCase "Provide an incomplete GetInvoiceRequest, e.g. by not setting the parameter Reference. (8.2.1)" $
-                                          testIncompleteGetInvoice twconf
-                               , testCase "Provide an invalid StoreInvoiceRequest, e.g. by setting the parameter Reference=XYZ. (8.2.2)" $
-                                          testInvalidGetInvoice twconf
 
-                               ]
-                   ] 
+trustWeaverTests :: Test
+trustWeaverTests = testGroup "TrustWeaver" 
+                   [ trustWeaverSigningTests
+                     -- , trustWeaverStorageTests -- these do not work as they have changed the certificate
+                   ]
+
+trustWeaverSigningTests :: Test
+trustWeaverSigningTests =
+  testGroup "TrustWeaver Signing"
+              [ testGroup "TrustWeaver correct behaviour"
+                [ testCase "Signing and validation (F1.1 and F1.2) (1.1 and 2.1)" $ 
+                           testSignAndValidate twconf
+                ]
+              , testGroup "TrustWeaver bad urls" 
+                [ testCase "Signing and validation (F1.1 and F1.2) (retries and fails) (1.3.2 and 2.5.2)" $
+                           testSignAndValidateFail twconf_bad
+                ]  
+              , testGroup "TrustWeaver user errors"
+                [ testCase "Could not find associated sign policy (1.2.1)" $
+                           testSignBadSignPolicy twconf
+                , testCase "Could not find associated certificate(s) (1.2.2)" $
+                           testSignNoSignCertificates twconf
+                ]
+              ] 
+
+trustWeaverStorageTests :: Test
+trustWeaverStorageTests =
+  testGroup "TrustWeaver Storage"
+              [ testGroup "TrustWeaver correct behaviour"
+                [ testCase "Register and enable section (F1.6) (6.1.1, 6.1.2, 6.1.3)" $
+                           testRegisterAndEnableSection twconf
+                , testCase "Store and retrieve invoice (F1.7 and F1.8) (7.1, 7.1.1, 8.1)" $
+                           testStoreAndRetrieveInvoice twconf
+                ]
+              , testGroup "TrustWeaver_badurls" 
+                [ testCase "Register and enable section (F1.6) (retries and fails) (6.3.1)" $
+                           testRegisterAndEnableSectionFail twconf_bad
+                , testCase "Store and retrieve invoice (F1.7 and F1.8) (retries and fails) (7.3.1, 8.3.1)" $
+                           testStoreAndRetrieveInvoiceFail twconf_bad
+                ]  
+              , testGroup "TrustWeaver user errors"
+                [ testCase "Provide an incomplete RegisterSectionRequest, e.g. by not setting the parameter Name. (6.2.1)" $
+                           testIncompleteRegisterSection twconf
+                , testCase "Provide an EnableSectionRequest with a Name that has not been registered. (6.2.2)" $
+                           testEnableSectionUnknownName twconf
+                , testCase "Provide an EnableSectionRequest with the Name of Organization X. (6.2.3)" $
+                           testEnableSectionSecondTime twconf
+                , testCase "Provide an incomplete StoreInvoiceRequest, e.g. by not setting the parameter DocumentFormat. (7.2.1)" $
+                           testIncompleteStoreInvoice twconf
+                , testCase "Provide an invalid StoreInvoiceRequest, e.g. by setting the parameter SignatureType=XYZ. (7.2.2)" $
+                           testInvalidStoreInvoice twconf
+                , testCase "Provide an incomplete GetInvoiceRequest, e.g. by not setting the parameter Reference. (8.2.1)" $
+                           testIncompleteGetInvoice twconf
+                , testCase "Provide an invalid StoreInvoiceRequest, e.g. by setting the parameter Reference=XYZ. (8.2.2)" $
+                           testInvalidGetInvoice twconf
+                ]
+              ] 
 
 testSignAndValidate :: TW.TrustWeaverConf -> IO ()
 testSignAndValidate twconf = do
-  pdfdata <- BS.readFile "nda.pdf"
+  pdfdata <- BS.readFile testFile
   result1 <- TW.signDocument twconf pdfdata
   case result1 of
     Left errmsg1 -> error $ "SignDocument: " ++ errmsg1
     Right signeddoc -> 
         do
-          BS.writeFile "nda-signed.pdf" signeddoc
+          BS.writeFile testFileSigned signeddoc
           result2 <- TW.validateDocument twconf signeddoc
           case result2 of
             Left errmsg2 -> error $ "ValidateDocument: " ++ errmsg2
@@ -156,7 +182,7 @@ testSignAndValidate twconf = do
 
 testSignAndValidateFail :: TW.TrustWeaverConf -> IO ()
 testSignAndValidateFail twconf = do
-  pdfdata <- BS.readFile "nda.pdf"
+  pdfdata <- BS.readFile testFile
   result1 <- TW.signDocument twconf pdfdata
   case result1 of
     Left errmsg1 -> return ()
@@ -166,7 +192,7 @@ testSignAndValidateFail twconf = do
 
 testSignBadSignPolicy :: TW.TrustWeaverConf -> IO ()
 testSignBadSignPolicy twconf = do
-  pdfdata <- BS.readFile "nda.pdf"
+  pdfdata <- BS.readFile testFile
   result1 <- TW.signDocumentEx twconf pdfdata "TV" "TV"
   case result1 of
     Left errmsg1 -> return ()
@@ -176,7 +202,7 @@ testSignBadSignPolicy twconf = do
 
 testSignNoSignCertificates :: TW.TrustWeaverConf -> IO ()
 testSignNoSignCertificates twconf = do
-  pdfdata <- BS.readFile "nda.pdf"
+  pdfdata <- BS.readFile testFile
   result1 <- TW.signDocumentEx twconf pdfdata "BS" "BS"
   case result1 of
     Left errmsg1 -> return ()
@@ -204,7 +230,7 @@ testRegisterAndEnableSectionFail twconf = do
 
 testStoreAndRetrieveInvoice :: TW.TrustWeaverConf -> IO ()
 testStoreAndRetrieveInvoice twconf = do
-  pdfdata <- BS.readFile "nda-signed.pdf"
+  pdfdata <- BS.readFile testFile
   result <- TW.storeInvoice twconf "11111111" "2010-12-12T00:00:00" "skrivapa-test-section" pdfdata
   case result of
     Left errmsg -> error $ "StoreInvoice: " ++ errmsg
@@ -217,7 +243,7 @@ testStoreAndRetrieveInvoice twconf = do
 
 testStoreAndRetrieveInvoiceFail :: TW.TrustWeaverConf -> IO ()
 testStoreAndRetrieveInvoiceFail twconf = do
-  pdfdata <- BS.readFile "nda-signed.pdf"
+  pdfdata <- BS.readFile testFile
   result <- TW.storeInvoice twconf "11111111" "2010-12-12T00:00:00" "skrivapa-test-section" pdfdata
   case result of
     Left errmsg -> return ()
@@ -244,14 +270,14 @@ testEnableSectionSecondTime twconf = do
 
                
 testIncompleteStoreInvoice twconf = do
-  pdfdata <- BS.readFile "nda-signed.pdf"
+  pdfdata <- BS.readFile testFileSigned
   result <- TW.storeInvoice twconf "" "2010-12-12T00:00:00" "skrivapa-test-section" pdfdata
   case result of
     Left errmsg -> return ()
     Right reference -> error "Should fail"
 
 testInvalidStoreInvoice twconf = do
-  pdfdata <- BS.readFile "nda-signed.pdf"
+  pdfdata <- BS.readFile testFileSigned
   result <- TW.storeInvoice twconf "11111111" "2010-12-12T00:00:00" "there should be no spaces" pdfdata
   case result of
     Left errmsg -> return ()

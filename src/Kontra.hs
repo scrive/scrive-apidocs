@@ -32,8 +32,8 @@ import Control.Monad.Reader
 import Control.Monad.State
 import DB.Classes
 import DB.Types
-import Doc.DocState
 import ELegitimation.ELegTransaction
+import Doc.DocStateData
 import Happstack.Server
 #ifndef DOCUMENTS_IN_POSTGRES
 import Happstack.State (query, QueryEvent)

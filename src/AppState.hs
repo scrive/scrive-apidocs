@@ -5,7 +5,8 @@ module AppState
     ( AppState
     ) where
 
-import Doc.DocState
+import Doc.DocStateData
+import Doc.DocState ()
 import Happstack.Data
 import Happstack.State
 import Payments.PaymentsState

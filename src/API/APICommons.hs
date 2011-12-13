@@ -26,7 +26,6 @@ module API.APICommons (
           , getSignatoryTMP
           , mergeSignatoryWithTMP
           , toSignatoryDetails
-          , toDocumentType
           , getFiles
           , api_document_tag
           , api_signatory
@@ -36,7 +35,7 @@ module API.APICommons (
         ) where
 
 
-import Doc.DocState
+import Doc.DocStateData
 import Text.JSON
 import MinutesTime
 import qualified Data.ByteString as BS
@@ -55,26 +54,15 @@ import Data.Functor
 import Control.Monad
 import Util.SignatoryLinkUtils
 import DB.Classes
-import qualified AppLogger as Log
+import qualified AppLogger as Log ()
 import Util.JSON
 import User.Lang
 import User.Region
+import Doc.JSON()
 import User.Locale
 
 {- -}
 
-data DOCUMENT_AUTHORISATION =
-      DOCUMENT_AUTHORISATION_BASIC_EMAIL
-    | DOCUMENT_AUTHORISATION_BASIC_ELEG
-     deriving (Bounded,Ord,Eq)
-
-
-instance SafeEnum DOCUMENT_AUTHORISATION where
-    fromSafeEnum DOCUMENT_AUTHORISATION_BASIC_EMAIL = 1
-    fromSafeEnum DOCUMENT_AUTHORISATION_BASIC_ELEG = 10
-    toSafeEnum 1 =  Just DOCUMENT_AUTHORISATION_BASIC_EMAIL
-    toSafeEnum 10 = Just DOCUMENT_AUTHORISATION_BASIC_ELEG
-    toSafeEnum _ = Nothing
 
 
 data DOCUMENT_RELATION =
@@ -96,84 +84,6 @@ instance SafeEnum DOCUMENT_RELATION where
     toSafeEnum 10 = Just DOCUMENT_RELATION_VIEWER
     toSafeEnum 20 = Just DOCUMENT_RELATION_OTHER
     toSafeEnum _  = Nothing
-
-data DOCUMENT_STATUS =
-      DOCUMENT_STATUS_PREPARATION
-    | DOCUMENT_STATUS_PENDING
-    | DOCUMENT_STATUS_STOPED
-    | DOCUMENT_STATUS_CLOSED
-    | DOCUMENT_STATUS_ERROR
-
-instance SafeEnum DOCUMENT_STATUS where
-    fromSafeEnum DOCUMENT_STATUS_PREPARATION = 0
-    fromSafeEnum DOCUMENT_STATUS_PENDING = 10
-    fromSafeEnum DOCUMENT_STATUS_STOPED = 20
-    fromSafeEnum DOCUMENT_STATUS_CLOSED = 30
-    fromSafeEnum DOCUMENT_STATUS_ERROR = 40
-    toSafeEnum _ = Nothing
-
-data DOCUMENT_TYPE =
-      DOCUMENT_TYPE_CONTRACT
-    | DOCUMENT_TYPE_OFFER
-    | DOCUMENT_TYPE_CONTRACT_TEMPLATE
-    | DOCUMENT_TYPE_OFFER_TEMPLATE
-    | DOCUMENT_TYPE_ORDER
-    | DOCUMENT_TYPE_ORDER_TEMPLATE
-    deriving (Bounded,Ord,Eq)
-
-instance SafeEnum DOCUMENT_TYPE where
-    fromSafeEnum DOCUMENT_TYPE_CONTRACT          = 1
-    fromSafeEnum DOCUMENT_TYPE_CONTRACT_TEMPLATE = 2
-    fromSafeEnum DOCUMENT_TYPE_OFFER             = 3
-    fromSafeEnum DOCUMENT_TYPE_OFFER_TEMPLATE    = 4
-    fromSafeEnum DOCUMENT_TYPE_ORDER             = 5
-    fromSafeEnum DOCUMENT_TYPE_ORDER_TEMPLATE    = 6
-    toSafeEnum 1 = Just DOCUMENT_TYPE_CONTRACT
-    toSafeEnum 2 = Just DOCUMENT_TYPE_CONTRACT_TEMPLATE
-    toSafeEnum 3 = Just DOCUMENT_TYPE_OFFER
-    toSafeEnum 4 = Just DOCUMENT_TYPE_OFFER_TEMPLATE
-    toSafeEnum 5 = Just DOCUMENT_TYPE_ORDER
-    toSafeEnum 6 = Just DOCUMENT_TYPE_ORDER_TEMPLATE
-    toSafeEnum _ = Nothing
-
-toDocumentType :: DOCUMENT_TYPE -> DocumentType
-toDocumentType DOCUMENT_TYPE_CONTRACT          = Signable Contract
-toDocumentType DOCUMENT_TYPE_OFFER             = Signable Offer
-toDocumentType DOCUMENT_TYPE_CONTRACT_TEMPLATE = Template Contract
-toDocumentType DOCUMENT_TYPE_OFFER_TEMPLATE    = Template Offer
-toDocumentType DOCUMENT_TYPE_ORDER             = Signable Order
-toDocumentType DOCUMENT_TYPE_ORDER_TEMPLATE    = Template Order
-
-{- Building JSON structure representing object in any API response
-   TODO: Something is WRONG FOR ATTACHMENTS HERE
--}
-api_document_type :: Document ->  DOCUMENT_TYPE
-api_document_type doc
-    | Template Contract == documenttype doc = DOCUMENT_TYPE_CONTRACT_TEMPLATE
-    | Template Offer    == documenttype doc = DOCUMENT_TYPE_OFFER_TEMPLATE
-    | Template Order    == documenttype doc = DOCUMENT_TYPE_ORDER_TEMPLATE
-    | Signable Contract == documenttype doc = DOCUMENT_TYPE_CONTRACT
-    | Signable Offer    == documenttype doc = DOCUMENT_TYPE_OFFER
-    | Signable Order    == documenttype doc = DOCUMENT_TYPE_ORDER
-    | otherwise                             = error "Not matching type" -- TO DO WITH NEXT INTEGRATION API FIXES
-
-
-api_document_status :: Document -> DOCUMENT_STATUS
-api_document_status doc =
-    case documentstatus doc of
-         Preparation        -> DOCUMENT_STATUS_PREPARATION
-         Pending            -> DOCUMENT_STATUS_PENDING
-         AwaitingAuthor     -> DOCUMENT_STATUS_PENDING
-         Closed             -> DOCUMENT_STATUS_CLOSED
-         Timedout           -> DOCUMENT_STATUS_STOPED
-         Rejected           -> DOCUMENT_STATUS_STOPED
-         Canceled           -> DOCUMENT_STATUS_STOPED
-         DocumentError _    -> DOCUMENT_STATUS_ERROR
-
-api_document_authorisation :: Document -> DOCUMENT_AUTHORISATION
-api_document_authorisation doc
-    | ELegitimationIdentification `elem` documentallowedidtypes doc = DOCUMENT_AUTHORISATION_BASIC_ELEG
-    | otherwise = DOCUMENT_AUTHORISATION_BASIC_EMAIL
 
 api_document_relation :: SignatoryLink -> DOCUMENT_RELATION
 api_document_relation sl
@@ -234,11 +144,11 @@ api_document :: Maybe [JSValue] -> Document -> JSValue
 api_document mfiles doc = JSObject $ toJSObject $ [
   ("document_id", showJSON  $ show $ unDocumentID $ documentid doc)
   , ("title", showJSON  $ BS.toString $ documenttitle doc)
-  , ("type", showJSON  $ fromSafeEnumInt $ api_document_type doc)
-  , ("state", showJSON  $ fromSafeEnumInt $ api_document_status doc)
+  , ("type", showJSON  $ fromSafeEnumInt $ documenttype doc)
+  , ("state", showJSON  $ fromSafeEnumInt $ documentstatus doc)
   , ("involved", JSArray $ map api_signatory $ documentsignatorylinks doc)
   , ("tags", JSArray $ map api_document_tag $ documenttags doc)
-  , ("authorization", showJSON  $ fromSafeEnumInt $ api_document_authorisation doc)
+  , ("authorization", showJSON  $ fromSafeEnumInt $ documentallowedidtypes doc)
   , ("mdate", api_date $ documentmtime doc)
   , ("locale", jsonFromLocale $ getLocale doc)
   ] ++ case mfiles of
@@ -282,7 +192,6 @@ emptySignatoryTMP = SignatoryTMP {
 
 getSignatoryTMP :: (APIContext c, Kontrakcja m) => APIFunction m c (Maybe SignatoryTMP)
 getSignatoryTMP = do
-    Log.debug "getSignatoryTMP"
     fstname        <- fromJSONField "fstname"
     sndname        <- fromJSONField "sndname"
     company        <- fromJSONField "company"

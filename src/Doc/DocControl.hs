@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 {- |
    DocControl represents the controler (in MVC) of the document.
  -}
@@ -11,6 +12,7 @@ import DBError
 import Doc.CSVUtils
 import Doc.DocSeal
 import Doc.Transitory
+import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocStateUpdate
 import Doc.DocStorage
@@ -477,7 +479,7 @@ signDocument :: Kontrakcja m
              -> m KontraLink
 signDocument documentid
              signatorylinkid = do
-  magichash <- guardJustM $ readField "magichash"               
+  magichash <- guardJustM $ readField "magichash"
   fieldnames <- getAndConcat "fieldname"
   fieldvalues <- getAndConcat "fieldvalue"
   let fields = zip fieldnames fieldvalues
@@ -509,7 +511,7 @@ signDocument documentid
     Left msg -> do
       addFlash  (OperationFailed, msg)
       return LoopBack
-    _ -> mzero  
+    _ -> mzero
 
 handleMismatch :: Kontrakcja m =>  Document -> SignatoryLinkID -> String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> m ()
 handleMismatch doc sid msg sfn sln spn = do
@@ -562,7 +564,7 @@ rejectDocument :: Kontrakcja m
                -> m KontraLink
 rejectDocument documentid
                signatorylinkid1 = do
-  magichash <- guardJustM $ readField "magichash"                    
+  magichash <- guardJustM $ readField "magichash"
   customtext <- getCustomTextField "customtext"
 
   edocs <- rejectDocumentWithChecks documentid signatorylinkid1 magichash customtext
@@ -593,7 +595,7 @@ handleSignShowOldRedirectToNew did sid mh = do
   doc<- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
   invitedlink <- guardJust $ getSigLinkFor doc sid
   return $ LinkSignDoc doc invitedlink
- 
+
 handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m String
 handleSignShow documentid
                signatorylinkid = do
@@ -635,7 +637,7 @@ maybeAddDocumentCancelationMessage document = do
    Handles the request to show a document to a user.
    There are two cases:
     1. author in which case they get pageDocumentForAuthor
-    2. Friend of author in which case they get pageDocumentForViewer
+    2. Within company of author in which case they get pageDocumentForViewer
    URL: /d/{documentid}
    Method: GET
  -}
@@ -673,7 +675,7 @@ handleIssueShowGet docid =
                   Right attachments -> Right <$> pageDocumentDesign ctx2 document step showadvancedoption (filter isAttachment attachments) filesforattachments
               _ ->  Right <$> pageDocumentForAuthor ctx2 document
           (_, Just invitedlink, _, _) -> Right <$> pageDocumentForSignatory (LinkSignDoc document invitedlink) document ctx invitedlink
-          -- friends can just look (but not touch)
+          -- others in company can just look (but not touch)
           (False, _, _, _) -> Right <$> pageDocumentForViewer ctx document Nothing
      where
        maybeInvitedLink :: Document -> User -> Maybe SignatoryLink
@@ -713,7 +715,7 @@ handleIssueShowPost :: Kontrakcja m => DocumentID -> m KontraLink
 handleIssueShowPost docid = withUserPost $ do
   document <- guardRightM $ getDocByDocID docid
   Context { ctxmaybeuser = muser } <- getContext
-  guard (isAuthor (document, muser)) -- still need this because friend can read document
+  guard (isAuthor (document, muser)) -- still need this because others can read document
   sign              <- isFieldSet "sign"
   send              <- isFieldSet "final"
   template          <- isFieldSet "template"
@@ -773,9 +775,9 @@ handleIssueSign document = do
     where
       forIndividual :: Kontrakcja m => Document -> Document -> m (Either KontraLink Document)
       forIndividual udoc doc = do
-        mprovider <- readField "eleg"  
+        mprovider <- readField "eleg"
         mndoc <- case mprovider of
-                   Nothing ->  Right <$> authorSignDocument (documentid doc) Nothing   
+                   Nothing ->  Right <$> authorSignDocument (documentid doc) Nothing
                    Just provider -> do
                       signature     <- getDataFnM $ look "signature"
                       transactionid <- getDataFnM $ look "transactionid"
@@ -783,7 +785,7 @@ handleIssueSign document = do
                       case esinfo of
                         BankID.Problem msg -> return $ Left msg
                         BankID.Mismatch msg _ _ _ -> return $ Left msg
-                        BankID.Sign sinfo -> Right <$>  authorSignDocument (documentid doc) (Just sinfo)   
+                        BankID.Sign sinfo -> Right <$>  authorSignDocument (documentid doc) (Just sinfo)
         case mndoc of
           Right (Right newdocument) -> do
             postDocumentChangeAction newdocument udoc Nothing
@@ -1066,9 +1068,9 @@ handleIssueSave document = do
 
 handleIssueSignByAuthor :: Kontrakcja m => Document -> m KontraLink
 handleIssueSignByAuthor doc = do
-     mprovider <- readField "eleg"  
+     mprovider <- readField "eleg"
      mndoc <- case mprovider of
-                   Nothing ->  Right <$> authorSignDocumentFinal (documentid doc) Nothing   
+                   Nothing ->  Right <$> authorSignDocumentFinal (documentid doc) Nothing
                    Just provider -> do
                       signature     <- getDataFnM $ look "signature"
                       transactionid <- getDataFnM $ look "transactionid"
@@ -1076,18 +1078,18 @@ handleIssueSignByAuthor doc = do
                       case esinfo of
                         BankID.Problem msg -> return $ Left msg
                         BankID.Mismatch msg _ _ _ -> return $ Left msg
-                        BankID.Sign sinfo -> Right <$>  authorSignDocumentFinal (documentid doc) (Just sinfo)   
-    
-     case mndoc of 
+                        BankID.Sign sinfo -> Right <$>  authorSignDocumentFinal (documentid doc) (Just sinfo)
+
+     case mndoc of
          Right (Right ndoc) -> do
-             postDocumentChangeAction ndoc doc Nothing                     
+             postDocumentChangeAction ndoc doc Nothing
              addFlashM flashAuthorSigned
              return $ LinkIssueDoc (documentid doc)
          _ -> return LoopBack
 
--- | Check if current user is author or friend so he can view the document
-withAuthorOrFriend :: Kontrakcja m => DocumentID -> m (Either KontraLink a) -> m (Either KontraLink a)
-withAuthorOrFriend docid action = do
+-- | Check if current user is author or has company rights to view the document
+withAuthorisedViewer :: Kontrakcja m => DocumentID -> m (Either KontraLink a) -> m (Either KontraLink a)
+withAuthorisedViewer docid action = do
   _ <- guardRightM $ getDocByDocID docid
   action
 
@@ -1390,11 +1392,8 @@ getDocumentsForUserByType doctype user = do
                      mycompanydocs <- doc_query $ GetDocumentsByCompany user
                      return $ union mysigdocs mycompanydocs
                    else return mysigdocs
-  usersICanView <- runDBQuery $ GetUsersByFriendUserID $ userid user
-  friends'Documents <- mapM (doc_query . GetDocumentsBySignatory) usersICanView
 
-  return . filter ((\d -> documenttype d == doctype)) $ nub $
-          mydocuments ++ concat friends'Documents
+  return . filter ((\d -> documenttype d == doctype)) $ nub mydocuments
 
 
 handleAttachmentViewForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
@@ -1524,14 +1523,16 @@ handleDocumentUploadNoLogin docid content1 filename = do
 
 handleIssueNewDocument :: Kontrakcja m => m KontraLink
 handleIssueNewDocument = withUserPost $ do
+    Log.debug $ "Creating a new document"
     input <- getDataFnM (lookInput "doc")
     mdocprocess <- getDocProcess
     let docprocess = fromMaybe (Contract) mdocprocess
+    Log.debug $ "Creating new document of process : " ++ show docprocess
     mdoc <- makeDocumentFromFile (Signable docprocess) input
-    liftIO $ print mdoc
     case mdoc of
       Nothing -> return LinkUpload
       Just doc -> do
+        Log.debug $ "Document #" ++ show (documentid doc) ++ " created"
         _ <- addDocumentCreateStatEvents doc
         return $ LinkIssueDoc $ documentid doc
 
@@ -1556,13 +1557,14 @@ handleCreateNewAttachment = withUserPost $ do
 
 makeDocumentFromFile :: Kontrakcja m => DocumentType -> Input -> m (Maybe Document)
 makeDocumentFromFile doctype (Input contentspec (Just filename) _contentType) = do
+    Log.debug $ "makeDocumentFromFile: beggining"
     guardLoggedIn
     content <- case contentspec of
         Left filepath -> liftIO $ BSL.readFile filepath
         Right content -> return content
     if BSL.null content
       then do
-        Log.debug "No content"
+        Log.debug "makeDocumentFromFile: no content"
         return Nothing
       else do
           Log.debug "Got the content, creating document"
@@ -1577,7 +1579,7 @@ handleRubbishRestore :: Kontrakcja m => m KontraLink
 handleRubbishRestore = do
   Context { ctxmaybeuser = Just user } <- getContext
   docids <- getCriticalFieldList asValidDocID "doccheck"
-  _ <- guardRightM . doc_update . RestoreArchivedDocuments user $ map DocumentID docids
+  mapM_ (guardRightM . doc_update . RestoreArchivedDocument user) $ map DocumentID docids
   addFlashM flashMessageRubbishRestoreDone
   return $ LinkRubbishBin
 
@@ -1585,8 +1587,7 @@ handleRubbishReallyDelete :: Kontrakcja m => m KontraLink
 handleRubbishReallyDelete = do
   Context { ctxmaybeuser = Just user } <- getContext
   docids <- getCriticalFieldList asValidDocID "doccheck"
-  idsAndUsers <- mapM (lookupUsersRelevantToDoc . DocumentID) docids
-  _ <- guardRightM . doc_update . ReallyDeleteDocuments user $ idsAndUsers
+  mapM_ (guardRightM . doc_update . ReallyDeleteDocument user) $ map DocumentID docids
   addFlashM flashMessageRubbishHardDeleteDone
   return $ LinkRubbishBin
 
@@ -1670,8 +1671,8 @@ handleIssueBulkRemind doctype = do
  -}
 showPage :: Kontrakcja m => DocumentID -> FileID -> Int -> m (Either KontraLink Response)
 showPage docid fileid pageno = do
-  msid <- readField "signatorylinkid"   
-  mmh <- readField "magichash"   
+  msid <- readField "signatorylinkid"
+  mmh <- readField "magichash"
   edoc <- case (msid, mmh) of
            (Just sid, Just mh) -> Right <$> guardRightM (getDocByDocIDSigLinkIDAndMagicHash docid sid mh)
            _ ->  checkUserTOSGet $ guardRightM (getDocByDocID docid)
@@ -1679,11 +1680,11 @@ showPage docid fileid pageno = do
        Right doc -> do
            unless (fileInDocument doc fileid) mzero
            Right <$> showPage' fileid pageno
-       Left rdir -> return $ Left rdir    
+       Left rdir -> return $ Left rdir
 
 
 showPreview:: Kontrakcja m => DocumentID -> FileID -> m (Either KontraLink Response)
-showPreview docid fileid = withAuthorOrFriend docid $ do
+showPreview docid fileid = withAuthorisedViewer docid $ do
     iprev <- preview docid fileid 0
     case iprev of
          Just res -> return $ Right res
@@ -1900,12 +1901,12 @@ sigAttachmentHasFileID fid attachment =
 
 handleDownloadFile :: Kontrakcja m => DocumentID -> FileID -> String -> m Response
 handleDownloadFile did fid _nameForBrowser = do
-  msid <- readField "signatorylinkid"   
-  mmh <- readField "magichash"   
+  msid <- readField "signatorylinkid"
+  mmh <- readField "magichash"
   doc <- case (msid, mmh) of
            (Just sid, Just mh) -> guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
            _ ->                   guardRightM $ getDocByDocID did
-  unless (fileInDocument doc fid) mzero         
+  unless (fileInDocument doc fid) mzero
   respondWithFile doc fid
 
 respondWithFile :: Kontrakcja m =>  Document -> FileID -> m Response
@@ -1942,7 +1943,7 @@ showDocumentsToFix = onlySuperUser $ do
 
 handleDeleteSigAttach :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  m KontraLink
 handleDeleteSigAttach docid siglinkid = do
-  mh <- guardJustM $ readField "magichash"     
+  mh <- guardJustM $ readField "magichash"
   doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
   siglink <- guardJust $ getSigLinkFor doc siglinkid
   fid <- (read . BS.toString) <$> getCriticalField asValidID "deletesigattachment"
@@ -1953,7 +1954,7 @@ handleDeleteSigAttach docid siglinkid = do
 
 handleSigAttach :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleSigAttach docid siglinkid = do
-  mh <- guardJustM $ readField "magichash"    
+  mh <- guardJustM $ readField "magichash"
   doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
   siglink <- guardJust $ getSigLinkFor doc siglinkid
   attachname <- getCriticalField asValidFieldValue "attachname"

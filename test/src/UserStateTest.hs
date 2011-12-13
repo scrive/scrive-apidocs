@@ -36,8 +36,6 @@ userStateTests conn = testGroup "UserState" [
   , testGroup "addUser" [
       testThat "adding a repeated email returns nothing" conn test_addUser_repeatedEmailReturnsNothing
     ]
-  , testThat "AddViewerByEmail/GetUserFriends works" conn test_addViewerByEmail
-  , testThat "GetUsersByFriendUserID works" conn test_getUsersByFriendUserID
   , testThat "SetUserCompanyAdmin/GetCompanyAccounts works" conn test_getCompanyAccounts
   , testThat "GetInviteInfo/SetInviteInfo works" conn test_getInviteInfo
   , testThat "GetUserMailAPI/SetUserMailAPI works" conn test_getUserMailAPI
@@ -97,31 +95,6 @@ test_addUser_repeatedEmailReturnsNothing = do
   Just _ <- addNewUser "Emily" "Green" "emily@green.com"
   result <- addNewUser "Emily" "Green Again" "emily@green.com"
   assert $ isNothing result
-
-test_addViewerByEmail :: DB ()
-test_addViewerByEmail = do
-  Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  let emails = ["emily1@green.com", "emily2@green.com"]
-  friends <- forM emails $ \email -> do
-    Just user <- addNewUser "Emily" "Green" email
-    res <- dbUpdate $ AddViewerByEmail userid (Email $ BS.fromString email)
-    assertBool "User was successfully added as a friend" res
-    return user
-  users <- dbQuery $ GetUserFriends userid
-  assertBool "User's friends list contains correct users" $ sortByUserID users == sortByUserID friends
-
-test_getUsersByFriendUserID :: DB ()
-test_getUsersByFriendUserID = do
-  let friend_email = "andrzej@skrivapa.se"
-  Just User{userid = fid} <- addNewUser "Andrzej" "Rybczak" friend_email
-  users <- forM ["emily1@green.com", "emily2@green.com"] $ \email -> do
-    Just user@User{userid} <- addNewUser "Emily" "Green" email
-    res <- dbUpdate $ AddViewerByEmail userid (Email $ BS.fromString friend_email)
-    assertBool "User was successfully added as a friend" res
-    return user
-  have_as_friend <- dbQuery $ GetUsersByFriendUserID fid
-  assertBool "User's 'have as friends' list contains correct users" $ sortByUserID users == sortByUserID have_as_friend
-  return ()
 
 test_getCompanyAccounts :: DB ()
 test_getCompanyAccounts = do

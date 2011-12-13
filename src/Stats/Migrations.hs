@@ -4,7 +4,7 @@ import Database.HDBC
 
 import DB.Classes
 import Stats.Tables
-import Doc.DocState
+import Doc.DocStateData
 import DB.Model
 
 mapStatement :: ([SqlValue] -> a) -> Statement -> IO [a]

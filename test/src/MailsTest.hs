@@ -17,6 +17,7 @@ import User.Model
 import Misc
 import Doc.Transitory
 import Doc.DocViewMail
+import Doc.DocStateData
 import Mails.SendMail
 import Company.Model
 import Mails.MailsConfig

@@ -20,8 +20,8 @@ module Doc.DocStorage
 import Control.Concurrent
 import Control.Monad
 import Control.Monad.IO.Class
-import Doc.DocState
-import Happstack.State (update)
+import Doc.DocStateData
+--import Doc.Transitory
 --import MinutesTime
 --import Misc
 import System.Directory
@@ -32,7 +32,7 @@ import Kontra
 import qualified Amazon as AWS
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.UTF8 as BS hiding (length)
+--import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import qualified TrustWeaver as TW
 import qualified AppLogger as Log
@@ -191,8 +191,9 @@ maybeScheduleRendering fileid docid = do
                 let newctx = ctx { ctxdbconn = conn' }
                 jpegpages <- convertPdfToJpgPages newctx fileid docid
                 case jpegpages of
-                     JpegPagesError errmsg -> do
-                         _ <- update $ ErrorDocument docid $ BS.toString errmsg
+                     JpegPagesError _errmsg -> do
+                                        -- FIXME: need to report this error somewhere
+                         -- _ <- doc_update $ ErrorDocument docid $ BS.toString errmsg
                          return ()
                      _                     -> return ()
                 modifyMVar_ mvar (\filesrenderednow -> return (Map.insert fileid jpegpages filesrenderednow))

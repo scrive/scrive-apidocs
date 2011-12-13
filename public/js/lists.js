@@ -2,7 +2,7 @@
  * Example usage can be found in doclist.st. There is version tat uses almoust all futures offered by this module.
  *
  * Introduction:
- *   To use list create KontraList object by using var list = KontraList.init({...}) and doing an append of
+ *   To use list create KontraList object by using var list = KontraList().init({...}) and doing an append of
  *  list.view.el somewere on page. This is just the jQuery object so this should be easy, but css is brobably expecting
  *  some more structure around insered elem, so please check this out with example.
  *
@@ -59,6 +59,9 @@
         },
         rendering: function(value, mainrow, model) {
             return this.get("rendering")(value, mainrow, model);
+        },
+        tdclass: function() {
+            return this.get('class') || "";
         }
     });
 
@@ -420,6 +423,7 @@
             for (var i = 0; i < this.schema.size(); i++) {
                 var td = $("<td class='row'></td>");
                 var cell = this.schema.cell(i);
+                td.addClass(cell.tdclass());
                 var value = this.model.field(cell.field());
                 if (cell.isSpecial()) {
                     if (cell.isSelect()) {
@@ -722,7 +726,7 @@
         }
     });
 
-    window.KontraList = {
+    window.KontraList = function() { return {
         init: function(args) {
             _.bindAll(this, 'recall', 'beforeFetch', 'afterFetch');
             this.schema = args.schema;
@@ -761,5 +765,5 @@
                                success: this.afterFetch
             });
         }
-    };
+    };};
 })(window);

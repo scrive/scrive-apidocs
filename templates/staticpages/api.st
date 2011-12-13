@@ -123,9 +123,14 @@ apiPageContents=
   <h2>Technical Details</h2>
   <br />
   <p>
-    The Scrive API follows standard HTTP REST best-practices, making it
-    <strong>simple to integrate</strong> with any system, regardless
-    of programming language.
+    You can find technical documentation related to the all of our API
+    offerings <a href="http://api.scrive.com/">here</a>.
+  </p>
+  <br />
+  <p>
+    The upcoming Scrive API follows standard HTTP REST best-practices,
+    making it <strong>simple to integrate</strong> with any system,
+    regardless of programming language.
   </p>
   <br />
   <p>
