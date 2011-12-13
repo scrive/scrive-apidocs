@@ -12,54 +12,67 @@ Build-type: Simple
 
 Flag documents-in-postgres
   Description: New database layout for documents
+  Manual: True
   Default: False
 
 Flag pdfseal
   Description: Build pdfseal
+  Manual: True
   Default: True
 
 Flag dbdump
   Description: Build dbdump
+  Manual: True
   Default: False
 
 Flag server
   Description: Build server
+  Manual: True
   Default: True
 
 Flag server-coverage
   Description: Build server with coverage instrumentation
+  Manual: True
   Default: False
 
 Flag test
   Description: Build tests
+  Manual: True
   Default: True
 
 Flag test-companystate
   Description: Build companystate testsuite
+  Manual: True
   Default: True
 
 Flag test-docstate
   Description: Build docstate testsuite
+  Manual: True
   Default: True
 
 Flag test-docstatequery
   Description: Build DocStateQuery testsuite
+  Manual: True
   Default: True
 
 Flag test-html
   Description: Build html testsuite
+  Manual: True
   Default: True
 
 Flag test-input-validation
   Description: Build input-validation testsuite
+  Manual: True
   Default: True
 
 Flag test-integrationapi
   Description: Build integrationapi testsuite
+  Manual: True
   Default: True
 
 Flag test-login
   Description: Build login testsuite
+  Manual: True
   Default: True
 
 Flag test-signup
@@ -70,42 +83,52 @@ Flag test-accountinfo
 
 Flag test-mailapi
   Description: Build mailapi testsuite
+  Manual: True
   Default: True
 
 Flag test-redirect
   Description: Build redirect testsuite
+  Manual: True
   Default: True
 
 Flag test-servicestate
   Description: Build servicestate testsuite
+  Manual: True
   Default: True
 
 Flag test-trust-weaver
   Description: Build trust-weaver testsuite
+  Manual: True
   Default: True
 
 Flag test-userstate
   Description: Build userstate testsuite
+  Manual: True
   Default: True
 
 Flag test-csvutil
   Description: Build csvutil testsuite
+  Manual: True
   Default: True
 
 Flag test-locale
   Description: Build locale testsuite
+  Manual: True
   Default: True
 
 Flag test-companyaccounts
   Description: Build company accounts testsuite
+  Manual: True
   Default: True
 
 Flag allow-warnings
   Description: Disable -Werror flag
+  Manual: True
   Default: False
 
 Flag test-coverage
   Description: Collects tests coverage status
+  Manual: True
   Default: False
 
 Executable kontrakcja-server
@@ -146,6 +169,7 @@ Executable kontrakcja-server
   Build-depends: happstack-ixset==6.*
   Build-depends: happstack-data==6.*
   Build-depends: happstack-util==6.*
+  Build-depends: happstack-static-routing==0.1
   Build-depends: hslogger==1.1.*
   Build-depends: time
   Build-depends: utf8-string, random
