@@ -391,13 +391,13 @@ getFilesByStatus doc
   where
       doGet fid = runDBQuery $ GetFileByFileID fid
 
-documentfilesM :: (MonadIO m, DBMonad m) => Document -> m [File]
+documentfilesM :: Document -> DB [File]
 documentfilesM Document{documentfiles} = do
-    liftM catMaybes $ mapM (runDBQuery . GetFileByFileID) documentfiles
+    liftM catMaybes $ mapM (dbQuery . GetFileByFileID) documentfiles
 
-documentsealedfilesM :: (MonadIO m, DBMonad m) => Document -> m [File]
+documentsealedfilesM :: Document -> DB [File]
 documentsealedfilesM Document{documentsealedfiles} = do
-    liftM catMaybes $ mapM (runDBQuery . GetFileByFileID) documentsealedfiles
+    liftM catMaybes $ mapM (dbQuery . GetFileByFileID) documentsealedfiles
 
 fileInDocument :: Document -> FileID -> Bool
 fileInDocument doc fid =

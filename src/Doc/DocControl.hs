@@ -132,8 +132,7 @@ postDocumentChangeAction document@Document  { documentstatus
         ctx@Context{ctxlocale, ctxglobaltemplates} <- getContext
         forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ \conn -> do
           let newctx = ctx {ctxdbconn = conn}
-          threadDelay 5000
-          enewdoc <- runReaderT (sealDocument newctx document) conn
+          enewdoc <- ioRunDB conn $ sealDocument newctx document
           case enewdoc of
              Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails newctx newdoc
              Left errmsg -> Log.error $ "Sealing of document #" ++ show documentid ++ " failed, could not send document confirmations: " ++ errmsg
@@ -157,7 +156,7 @@ postDocumentChangeAction document@Document  { documentstatus
         author <- getDocAuthor
         forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ \conn -> do
           let newctx = ctx {ctxdbconn = conn}
-          enewdoc <- runReaderT (sealDocument newctx document) conn
+          enewdoc <- ioRunDB conn $ sealDocument newctx document
           case enewdoc of
             Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails newctx newdoc
             Left errmsg -> do
@@ -582,7 +581,7 @@ rejectDocument documentid
       addFlashM $ modalRejectedView document
       return $ LoopBack
 
-getDocumentLocale :: (MonadIO m, DBMonad m) => DocumentID -> m (Maybe Locale)
+getDocumentLocale :: DocumentID -> DB (Maybe Locale)
 getDocumentLocale documentid = do
   mdoc <- doc_query $ GetDocumentByDocumentID documentid
   return $ fmap getLocale mdoc --TODO: store lang on doc
@@ -1932,7 +1931,7 @@ handleFixDocument docid = onlySuperUser $ do
        Nothing -> return LoopBack
        Just doc -> if (isBroken doc)
                     then do
-                        _ <- liftIO $ runReaderT (sealDocument ctx doc) (ctxdbconn ctx)
+                        runDB $ sealDocument ctx doc
                         return LoopBack
                     else return LoopBack
 

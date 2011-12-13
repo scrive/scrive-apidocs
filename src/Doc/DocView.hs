@@ -288,11 +288,11 @@ flashMessagePleaseSign document = do
 documentJSON :: (TemplatesMonad m, KontraMonad m, DBMonad m) => Maybe SignatoryLink -> MinutesTime -> Document -> m (JSObject JSValue)
 documentJSON msl _crttime doc = do
     ctx <- getContext
-    files <- documentfilesM doc
-    sealedfiles <- documentsealedfilesM doc
-    authorattachmentfiles <- mapM (runDB . dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
+    files <- runDB $ documentfilesM doc
+    sealedfiles <- runDB $ documentsealedfilesM doc
+    authorattachmentfiles <- mapM (runDBQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
     signatoryattachmentsfiles <- catMaybes <$> (sequence [do
-                                             file <- runDB $ dbQuery $ GetFileByFileID fid
+                                             file <- runDBQuery $ GetFileByFileID fid
                                              case file of
                                                Nothing -> return Nothing
                                                Just f -> return $ Just (fid, f)

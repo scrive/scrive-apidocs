@@ -28,6 +28,7 @@ import System.Exit
 import Kontra
 import Templates.LocalTemplates
 import Templates.Templates
+import qualified Control.Exception as E
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
@@ -37,12 +38,10 @@ import qualified AppLogger as Log
 import System.IO.Temp
 import System.IO hiding (stderr)
 import Util.HasSomeCompanyInfo
-import Control.Exception (bracket)
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import File.Model
 import DB.Classes
-import Database.HDBC
 import Control.Applicative
 
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
@@ -204,10 +203,9 @@ sealSpecFromDocument hostpart document inputpath outputpath =
             , Seal.staticTexts    = readtexts
             }
 
-sealDocument :: (MonadIO m, DBMonad m)
-             => Context
+sealDocument :: Context
              -> Document
-             -> m (Either String Document)
+             -> DB (Either String Document)
 sealDocument ctx document = do
   files <- documentfilesM document
   Log.debug $ "Sealing document"
@@ -232,75 +230,74 @@ sealDocument ctx document = do
  -}
 
 
-sealDocumentFile :: (MonadIO m, DBMonad m)
-                 => Context
+sealDocumentFile :: Context
                  -> Document
                  -> File
-                 -> m (Either String Document)
+                 -> DB (Either String Document)
 sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplates}
-                 document@Document{documentid,documenttitle}
-                 file@File {fileid,filename} =
-  liftIO $ withSystemTempDirectory ("seal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
+                 document@Document{documentid, documenttitle}
+                 file@File{fileid, filename} = do
+  tmppath <- liftIO $ do
+    tmpdir <- getTemporaryDirectory
+    createTempDirectory tmpdir $ "seal-" ++ show documentid ++ "-" ++ show fileid ++ "-"
+  result <- tryDB $ do
     Log.debug ("sealing: " ++ show fileid)
     let tmpin = tmppath ++ "/input.pdf"
     let tmpout = tmppath ++ "/output.pdf"
-    content <- getFileContents ctx file
-    BS.writeFile tmpin content
-    config <- runWithTemplates ctxlocale ctxglobaltemplates $ sealSpecFromDocument ctxhostpart document tmpin tmpout
-    (code,_stdout,stderr) <- readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
+    content <- liftIO $ getFileContents ctx file
+    liftIO $ BS.writeFile tmpin content
+    config <- liftIO $ runWithTemplates ctxlocale ctxglobaltemplates $ sealSpecFromDocument ctxhostpart document tmpin tmpout
+    (code,_stdout,stderr) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
     Log.debug $ "Sealing completed with " ++ show code
     case code of
-      ExitSuccess ->
-          do
-              newfilepdf1 <- BS.readFile tmpout
-              newfilepdf <-
-                  case TW.signConf ctxtwconf of
-                      Nothing -> do
-                          Log.debug $ "TrustWeaver configuration empty, not doing TrustWeaver signing"
-                          return newfilepdf1
-                      Just _ -> do
-                          Log.debug $ "About to TrustWeaver sign doc #" ++ show documentid ++ " file #" ++ show fileid
-                          x <- TW.signDocument ctxtwconf newfilepdf1
-                          case x of
-                              Left errmsg ->
-                                  do
-                                      let msg = "Cannot TrustWeaver sign doc #" ++ show documentid ++ " file #" ++ show fileid ++ ": " ++ errmsg
-                                      Log.error $ msg
-                                      Log.trustWeaver $ msg
-                                      return newfilepdf1
-                              Right result ->
-                                  do
-                                      let msg = "TrustWeaver signed doc #" ++ show documentid ++ " file #" ++ show fileid ++ ": " ++ BS.toString documenttitle
-                                      Log.trustWeaver msg
-                                      return result
-              Log.debug $ "Addeing new sealed file to DB"
-              File{fileid = sealedfileid} <-
-                  bracket (clone $ ctxdbconn ctx) (disconnect) $ \conn ->
-                      ioRunDB conn $ dbUpdate $ NewFile filename newfilepdf
-              Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
+      ExitSuccess -> do
+        newfilepdf1 <- liftIO $ BS.readFile tmpout
+        newfilepdf <- case TW.signConf ctxtwconf of
+          Nothing -> do
+            Log.debug $ "TrustWeaver configuration empty, not doing TrustWeaver signing"
+            return newfilepdf1
+          Just _ -> do
+            Log.debug $ "About to TrustWeaver sign doc #" ++ show documentid ++ " file #" ++ show fileid
+            x <- liftIO $ TW.signDocument ctxtwconf newfilepdf1
+            case x of
+              Left errmsg -> do
+                let msg = "Cannot TrustWeaver sign doc #" ++ show documentid ++ " file #" ++ show fileid ++ ": " ++ errmsg
+                Log.error $ msg
+                Log.trustWeaver $ msg
+                return newfilepdf1
+              Right result -> do
+                let msg = "TrustWeaver signed doc #" ++ show documentid ++ " file #" ++ show fileid ++ ": " ++ BS.toString documenttitle
+                Log.trustWeaver msg
+                return result
+        Log.debug $ "Adding new sealed file to DB"
+        File{fileid = sealedfileid} <- dbUpdate $ NewFile filename newfilepdf
+        Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
 #ifdef DOCUMENTS_IN_POSTGRES
-              res <- withPostgreSQL (ctxdbconnstring ctx) $ \conn ->
-                      ioRunDB conn $ dbUpdate $ AttachSealedFile documentid sealedfileid (ctxtime ctx)
+        res <- dbUpdate $ AttachSealedFile documentid sealedfileid (ctxtime ctx)
 #else
-              res <- doc_update $ AttachSealedFile documentid sealedfileid (ctxtime ctx)
+        res <- doc_update $ AttachSealedFile documentid sealedfileid (ctxtime ctx)
 #endif
-              Log.debug $ "Should be attached to document; is it? " ++ show ((elem sealedfileid . documentsealedfiles) <$> res)
-              return res
-      ExitFailure _ ->
-          do
-              -- error handling
-              systmp <- getTemporaryDirectory
-              (path,handle) <- openTempFile systmp ("seal-failed-" ++ show documentid ++ "-" ++ show fileid ++ "-.pdf")
-              let msg = "Cannot seal document #" ++ show documentid ++ " because of file #" ++ show fileid
-              Log.error $ msg ++ ": " ++ path
-              Log.error $ BSL.toString stderr
-              Log.error $ "Sealing configuration: " ++ show config
-              BS.hPutStr handle content
-              hClose handle
+        Log.debug $ "Should be attached to document; is it? " ++ show ((elem sealedfileid . documentsealedfiles) <$> res)
+        return res
+      ExitFailure _ -> do
+        -- error handling
+        msg <- liftIO $ do
+          systmp <- getTemporaryDirectory
+          (path,handle) <- openTempFile systmp ("seal-failed-" ++ show documentid ++ "-" ++ show fileid ++ "-.pdf")
+          let msg = "Cannot seal document #" ++ show documentid ++ " because of file #" ++ show fileid
+          Log.error $ msg ++ ": " ++ path
+          Log.error $ BSL.toString stderr
+          Log.error $ "Sealing configuration: " ++ show config
+          BS.hPutStr handle content
+          hClose handle
+          return msg
 #ifdef DOCUMENTS_IN_POSTGRES
-              _ <- withPostgreSQL (ctxdbconnstring ctx) $ \conn ->
-                      ioRunDB conn $ dbUpdate $ ErrorDocument documentid $ "Could not seal document because of file #" ++ show fileid
+        _ <- dbUpdate $ ErrorDocument documentid $ "Could not seal document because of file #" ++ show fileid
 #else
-              _ <- doc_update $ ErrorDocument documentid $ "Could not seal document because of file #" ++ show fileid
+        _ <- doc_update $ ErrorDocument documentid $ "Could not seal document because of file #" ++ show fileid
 #endif
-              return $ Left msg
+        return $ Left msg
+  liftIO $ removeDirectoryRecursive tmppath
+  case result of
+    Right res -> return res
+    Left (e::E.SomeException) -> E.throw e

@@ -963,7 +963,7 @@ resealFile docid = onlySuperUser $ do
     Just doc -> do
         ctx <- getContext
         Log.debug "Document is valid for resealing sealing"
-        res <- sealDocument ctx doc
+        res <- runDB $ sealDocument ctx doc
         case res of
             Left  _ -> Log.debug "We failed to reseal the document"
             Right _ -> Log.debug "Ok, so the document has been resealed"

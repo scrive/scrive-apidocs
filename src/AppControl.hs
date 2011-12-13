@@ -48,7 +48,6 @@ import File.FileID
 
 import Control.Concurrent
 import Control.Monad.Error
-import Control.Monad.Reader
 import Data.Functor
 import Data.List
 import Data.Maybe
@@ -93,7 +92,7 @@ getDocumentLocale :: Connection -> (ServerMonad m, Functor m, MonadIO m) => m (M
 getDocumentLocale conn = do
   rq <- askRq
   let docids = catMaybes . map (fmap fst . listToMaybe . readSigned readDec) $ rqPaths rq
-  mdoclocales <- runReaderT (mapM (DocControl.getDocumentLocale . DocumentID) docids) conn
+  mdoclocales <- ioRunDB conn $ mapM (DocControl.getDocumentLocale . DocumentID) docids
   return . listToMaybe $ catMaybes mdoclocales
 
 {- |
