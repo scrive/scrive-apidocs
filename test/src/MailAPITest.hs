@@ -82,7 +82,7 @@ testSuccessfulDocCreation conn emlfile sigs = withMyTestEnvironment conn $ \tmpd
     Log.debug $ "Here's what I got back from handleMailCommand: " ++ show res
     let mdocid = maybeRead res
     assertBool ("documentid is not given: " ++ show mdocid) $ isJust mdocid
-    mdoc <- doc_query $ GetDocumentByDocumentID $ fromJust mdocid
+    mdoc <- doc_query' $ GetDocumentByDocumentID $ fromJust mdocid
     assertBool "document was really created" $ isJust mdoc
     let doc = fromJust mdoc
     assertBool ("document should have " ++ show sigs ++ " signatories has " ++ show (length (documentsignatorylinks doc))) $ length (documentsignatorylinks doc) == sigs
@@ -103,7 +103,7 @@ testSuccessfulDocCreation conn emlfile sigs = withMyTestEnvironment conn $ \tmpd
                  return ()
     Log.debug $ "doing img request"
     liftIO $ keepTrying 100
-    Just doc' <- doc_query $ GetDocumentByDocumentID $ fromJust mdocid
+    Just doc' <- doc_query' $ GetDocumentByDocumentID $ fromJust mdocid
     assertBool "document is in error!" $ not $ isDocumentError doc'
 
 

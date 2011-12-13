@@ -60,7 +60,7 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
         ctx <- mailingContext l conn
         _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { locale = l }
         d' <- gRight $ randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype)
-        d <- gRight . doc_update $ SetDocumentLocale (documentid d') l (ctxtime ctx)
+        d <- gRight . doc_update' $ SetDocumentLocale (documentid d') l (ctxtime ctx)
 
         let docid = documentid d
         let asl = head $ documentsignatorylinks d
