@@ -40,6 +40,7 @@ import ScriveByMail.View
 import Util.SignatoryLinkUtils
 import Mails.MailsData
 import KontraLink
+import Data.Char
 
 import Control.Applicative
 
@@ -67,7 +68,9 @@ handleScriveByMail = do
   
   let (mime, allParts) = parseEmailMessageToParts content
       
-      isPDF (tp,_) = MIME.mimeType tp == MIME.Application "pdf" || MIME.mimeType tp == MIME.Application "octet-stream"
+      isPDF (tp,_) = MIME.mimeType tp == MIME.Application "pdf" || 
+                     (MIME.mimeType tp == MIME.Application "octet-stream" &&
+                      maybe False (isSuffixOf ".pdf" . map toLower) (lookup "name" (MIME.mimeParams tp)))
       isPlain (tp,_) = MIME.mimeType tp == MIME.Text "plain"
   
       typesOfParts = map fst allParts
