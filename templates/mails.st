@@ -356,8 +356,8 @@ remindMailNotSignedContract=
     $nicemail(
         mailheader=_remindMailNotSignedTitleContract();
         mailp1=header;
-        mailp2=contractInfo();
-        mailp3=_remindMailNotSignedContractContentInstruction();
+        mailp2=_remindMailNotSignedContractContentInstruction();
+        mailp3=contractInfo();
         mailp4= legalparagraph()
     )$
 #####
