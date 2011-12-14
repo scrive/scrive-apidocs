@@ -29,7 +29,7 @@ instance DocumentAuthorization a => DBUpdate (DocumentsUpdate a) Bool where
   dbUpdate a = wrapDB $ \conn -> do
     let (s, vs) = stringFromUpdateStatement $ 
                   UpdateStatement { usTableName = "documents"
-                                  , usSetFields = (SetField "mtime = to_timestamp(?)" (toSql $ docUpdateTime a)):(docUpdateFields a)
+                                  , usSetFields = (SetField "mtime = ?" (toSql $ docUpdateTime a)):(docUpdateFields a)
                                   , usWhereClause = combineWhereAnd 
                                                     (Just $ WhereSimple "id = ?" [toSql $ docUpdateID a]) $
                                                     combineWhereAnd
@@ -75,7 +75,7 @@ instance DBUpdate SignatoriesUpdate Bool where
                                   }
     let (s2, vs2) = stringFromUpdateStatement $ 
                     UpdateStatement { usTableName = "documents"
-                                    , usSetFields = [SetField "mtime = to_timestamp(?)" (toSql $ sigUpdateTime a)]
+                                    , usSetFields = [SetField "mtime = ?" (toSql $ sigUpdateTime a)]
                                     , usWhereClause = Just $ WhereSimple "id = ?" [toSql $ sigUpdateID a]
                                     }
     r1 <- run conn s1 vs1

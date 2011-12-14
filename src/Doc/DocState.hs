@@ -1435,7 +1435,7 @@ populateDBWithDocumentsIfEmpty = do
         ++ ", tags"
         ++ ", mail_footer"
         ++ ", region"
-        ++ ", deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, to_timestamp(?), to_timestamp(?), ?, to_timestamp(?), to_timestamp(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, to_timestamp(?), ?, ?, ?, ?, ?, ?)") [
+        ++ ", deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") [
             toSql $ documentid doc
           , toSql $ documentservice doc
           , toSql $ fileid `fmap` mdocfile
@@ -1492,7 +1492,7 @@ populateDBWithDocumentsIfEmpty = do
           ++ ", signinfo_personal_number_verified"
           ++ ", roles"
           ++ ", deleted"
-          ++ ", really_deleted) VALUES (?, ?, ?, ?, ?, ?, ?, to_timestamp(?), ?, to_timestamp(?), ?, to_timestamp(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") [
+          ++ ", really_deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") [
               toSql $ signatorylinkid sl
             , toSql $ documentid doc
             , toSql $ maybesignatory sl

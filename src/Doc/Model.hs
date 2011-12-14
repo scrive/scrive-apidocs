@@ -152,7 +152,7 @@ mkInsertStatement tableName fields =
      xtype (SqlField _ x _) = insertType x
      xtype (SqlFieldFunction _ f) = f
      insertType "" = "?"
-     insertType "timestamp" = "to_timestamp(?)"
+     insertType "timestamp" = "?"
      insertType "base64" = "decode(?, 'base64')"
      insertType ytype = error $ "mkInsertStatement: invalid insert type " ++ ytype
 -}
@@ -175,7 +175,7 @@ mkInsertStatementWhere tableName fields xwhere _values =
      name (SqlField x _ _) = x
      xtype (SqlField _ x _) = insertType x
      insertType "" = "?"
-     insertType "timestamp" = "to_timestamp(?)"
+     insertType "timestamp" = "?"
      insertType "base64" = "decode(?, 'base64')"
      insertType ytype = error $ "mkInsertStatement: invalid insert type " ++ ytype
 -}
@@ -203,7 +203,7 @@ mkInsertStatementWhereReturning tableName fields xwhere _values returnFields =
      xtype (SqlField _ x _) = insertType x
      xtype (SqlFieldFunction _ f) = f
      insertType "" = "?"
-     insertType "timestamp" = "to_timestamp(?)"
+     insertType "timestamp" = "?"
      insertType "base64" = "decode(?, 'base64')"
      insertType ytype = error $ "mkInsertStatement: invalid insert type " ++ ytype
 
@@ -235,7 +235,7 @@ mkUpdateStatement tableName fields =
      xtype (SqlField _ x _) = insertType x
      xtype (SqlFieldFunction _ f) = f
      insertType "" = "?"
-     insertType "timestamp" = "to_timestamp(?)"
+     insertType "timestamp" = "?"
      insertType "base64" = "decode(?, 'base64')"
      insertType ytype = error $ "mkUpdateStatement: invalid insert type " ++ ytype
      one field = name field ++ "=" ++ xtype field
@@ -470,11 +470,11 @@ selectDocumentsSelectors = [ "id"
                            , "type"
                            , "process"
                            , "functionality"
-                           , "EXTRACT(EPOCH FROM ctime)"
-                           , "EXTRACT(EPOCH FROM mtime)"
+                           , "ctime"
+                           , "mtime"
                            , "days_to_sign"
-                           , "EXTRACT(EPOCH FROM timeout_time)"
-                           , "EXTRACT(EPOCH FROM invite_time)"
+                           , "timeout_time"
+                           , "invite_time"
                            , "invite_ip"
                            , "log"
                            , "invite_text"
@@ -484,7 +484,7 @@ selectDocumentsSelectors = [ "id"
                            , "csv_signatory_index"
                            , "cancelation_reason"
                            , "sharing"
-                           , "EXTRACT(EPOCH FROM rejection_time)"
+                           , "rejection_time"
                            , "rejection_signatory_link_id"
                            , "rejection_reason"
                            , "tags"
@@ -636,9 +636,9 @@ insertSignatoryLinkAsIs documentid link = do
                             , sqlField "token" $ signatorymagichash link
                             , sqlField "fields" $ signatoryfields $ signatorydetails link
                             , sqlField "sign_order"$ signatorysignorder $ signatorydetails link
-                            , sqlFieldType "sign_time" "timestamp" $ signtime `fmap` maybesigninfo link
+                            , sqlField "sign_time" $ signtime `fmap` maybesigninfo link
                             , sqlField "sign_ip" $ signipnumber `fmap` maybesigninfo link
-                            , sqlFieldType "seen_time" "timestamp" $ signtime `fmap` maybeseeninfo link
+                            , sqlField "seen_time" $ signtime `fmap` maybeseeninfo link
                             , sqlField "seen_ip" $ signipnumber `fmap` maybeseeninfo link
                             , sqlField "read_invitation" $ maybereadinvite link
                             , sqlField "invitation_delivery_status" $ invitationdeliverystatus link
@@ -805,11 +805,11 @@ insertDocumentAsIs document = do
                                      , sqlField "process" process
 
                                      , sqlField "functionality" documentfunctionality
-                                     , sqlFieldType "ctime" "timestamp" $ toSeconds documentctime
-                                     , sqlFieldType "mtime" "timestamp" $ toSeconds documentmtime
+                                     , sqlField "ctime" documentctime
+                                     , sqlField "mtime" documentmtime
                                      , sqlField "days_to_sign" documentdaystosign
-                                     , sqlFieldType "timeout_time" "timestamp" $ fmap (toSeconds . unTimeoutTime) documenttimeouttime
-                                     , sqlFieldType "invite_time" "timestamp" $ fmap (toSeconds . signtime) documentinvitetime
+                                     , sqlField "timeout_time" documenttimeouttime
+                                     , sqlField "invite_time" $ signtime `fmap` documentinvitetime
                                      , sqlField "invite_ip" (fmap signipnumber documentinvitetime)
                                      , sqlField "invite_text" documentinvitetext
                                      , sqlField "log" $ unlines (map show documentlog)
@@ -819,7 +819,7 @@ insertDocumentAsIs document = do
                                      , sqlField "csv_signatory_index" $ csvsignatoryindex `fmap` documentcsvupload
                                      , sqlField "cancelation_reason" documentcancelationreason
                                      , sqlField "sharing" documentsharing
-                                     , sqlFieldType "rejection_time" "timestamp" $ fmap toSeconds $ fst3 `fmap` documentrejectioninfo
+                                     , sqlField "rejection_time" $ fst3 `fmap` documentrejectioninfo
                                      , sqlField "rejection_signatory_link_id" $ snd3 `fmap` documentrejectioninfo
                                      , sqlField "rejection_reason" $ thd3 `fmap` documentrejectioninfo
                                      , sqlField "service_id" documentservice
@@ -931,7 +931,7 @@ instance DBUpdate AttachCSVUpload (Either String Document) where
           (Left s, _) -> return $ Left s
           (Right _, Preparation) -> do
                      r <- runUpdateStatement "documents"
-                          [ {- sqlFieldType "mtime" "timestamp" $ time
+                          [ {- sqlField "mtime" time
                           , -} sqlField "csv_title" $ csvtitle csvupload
                           , sqlField "csv_signatory_index" $ csvsignatoryindex csvupload
                           , sqlField "csv_contents" $ show $ csvcontents csvupload
@@ -947,7 +947,7 @@ data AttachFile = AttachFile DocumentID FileID MinutesTime
 instance DBUpdate AttachFile (Either String Document) where
   dbUpdate (AttachFile did fid time) = do
     r <- runUpdateStatement "documents"
-         [ sqlFieldType "mtime" "timestamp" $ time
+         [ sqlField "mtime" time
          , sqlField "file_id" $ fid
          ]
          "WHERE id = ? AND status = ?" [ toSql did, toSql Preparation ]
@@ -958,7 +958,7 @@ data AttachSealedFile = AttachSealedFile DocumentID FileID MinutesTime
 instance DBUpdate AttachSealedFile (Either String Document) where
   dbUpdate (AttachSealedFile did fid time) = do
     r <- runUpdateStatement "documents"
-         [ sqlFieldType "mtime" "timestamp" $ time
+         [ sqlField "mtime" $ time
          , sqlField "sealed_file_id" $ fid
          ]
          "WHERE id = ? AND status = ?" [ toSql did, toSql Closed ]
@@ -976,7 +976,7 @@ instance DBUpdate CancelDocument (Either String Document) where
           [] -> do
             r <- runUpdateStatement "documents"
                  [ sqlField "status" $ Canceled
-                 , sqlFieldType "mtime" "timestamp" $ mtime
+                 , sqlField "mtime" mtime
                  , sqlField "cancelation_reason" $ reason
                  ]
                 "WHERE id = ? AND type = ?" [ toSql did, toSql (toDocumentSimpleType (Signable undefined)) ]
@@ -1046,8 +1046,8 @@ instance DBUpdate PreparationToPending (Either String Document) where
           [] -> do
             r <- runUpdateStatement "documents"
                  [ sqlField "status" $ Pending
-                 , sqlFieldType "mtime" "timestamp" $ time
-                 , sqlFieldType "timeout_time" "timestamp" $ (\days -> (days * 24 *60) `minutesAfter` time) <$> documentdaystosign document
+                 , sqlField "mtime" time
+                 , sqlField "timeout_time" $ (\days -> (days * 24 *60) `minutesAfter` time) <$> documentdaystosign document
                  ]
                 "WHERE id = ? AND type = ?" [ toSql docid, toSql (toDocumentSimpleType (Signable undefined))]
             getOneDocumentAffected "PreparationToPending" r docid
@@ -1066,7 +1066,7 @@ instance DBUpdate CloseDocument (Either String Document) where
           [] -> do
             r <- runUpdateStatement "documents"
                  [ sqlField "status" $ Closed
-                 , sqlFieldType "mtime" "timestamp" $ time
+                 , sqlField "mtime" time
                  ]
                 "WHERE id = ? AND type = ?" [ toSql docid, toSql (toDocumentSimpleType (Signable undefined)) ]
             getOneDocumentAffected "PreparationToPending" r docid
@@ -1307,7 +1307,7 @@ data GetTimeoutedButPendingDocuments = GetTimeoutedButPendingDocuments MinutesTi
                                        deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetTimeoutedButPendingDocuments [Document] where
   dbQuery (GetTimeoutedButPendingDocuments mtime) = do
-        selectDocuments (selectDocumentsSQL ++ " WHERE status = ? AND timeout_time IS NOT NULL AND timeout_time < to_timestamp(?)")
+        selectDocuments (selectDocumentsSQL ++ " WHERE status = ? AND timeout_time IS NOT NULL AND timeout_time < ?")
                       [ toSql Pending
                       , toSql mtime
                       ]
@@ -1317,7 +1317,7 @@ data MarkDocumentSeen = MarkDocumentSeen DocumentID SignatoryLinkID MagicHash Mi
 instance DBUpdate MarkDocumentSeen (Either String Document) where
   dbUpdate (MarkDocumentSeen did signatorylinkid1 mh time ipnumber) = do
     r <- runUpdateStatement "signatory_links"
-                         [ sqlFieldType "seen_time" "timestamp" time
+                         [ sqlField "seen_time" time
                          , sqlField "seen_ip" ipnumber
                          ]
                          "WHERE id = ? AND document_id = ? AND token = ? AND EXISTS (SELECT * FROM documents WHERE id = ? AND type = ? AND status <> ? AND status <> ?)"
@@ -1354,7 +1354,7 @@ data MarkInvitationRead = MarkInvitationRead DocumentID SignatoryLinkID MinutesT
 instance DBUpdate MarkInvitationRead (Either String Document) where
   dbUpdate (MarkInvitationRead did linkid time) = do
     r <- runUpdateStatement "signatory_links"
-                         [ sqlFieldType "read_invitation" "timestamp" time
+                         [ sqlField "read_invitation" time
                          ]
                          "WHERE id = ? AND document_id = ? AND read_invitation = NULL"
                          [ toSql linkid
@@ -1452,8 +1452,8 @@ instance DBUpdate RejectDocument (Either String Document) where
             do
               r <- runUpdateStatement "documents"
                                                [ sqlField "status" Rejected
-                                               , sqlFieldType "mtime" "timestamp" time
-                                               , sqlFieldType "rejection_time" "timestamp" time
+                                               , sqlField "mtime" time
+                                               , sqlField "rejection_time" time
                                                , sqlField "rejection_reason" customtext
                                                , sqlField "rejection_signatory_link_id" slid
                                                ]
@@ -1565,7 +1565,7 @@ instance DBUpdate SetDocumentTags (Either String Document) where
   dbUpdate (SetDocumentTags did doctags) = do
     r <- runUpdateStatement "documents"
          [ sqlField "tags" $ doctags
-         -- , sqlFieldType "mtime" "timestamp" $ time
+         -- , sqlField "mtime" time
          ]
          "WHERE id = ?" [ toSql did ]
     getOneDocumentAffected "SetDocumentTags" r did
@@ -1576,7 +1576,7 @@ data SetDocumentTimeoutTime = SetDocumentTimeoutTime DocumentID MinutesTime
 instance DBUpdate SetDocumentTimeoutTime (Either String Document) where
   dbUpdate (SetDocumentTimeoutTime did timeouttime) = do
     r <- runUpdateStatement "documents"
-                         [ sqlFieldType "timeout_time" "timestamp" timeouttime
+                         [ sqlField "timeout_time" timeouttime
                          ]
                          "WHERE id = ? AND deleted = FALSE AND type = ?"
                          [ toSql did
@@ -1642,7 +1642,7 @@ instance DBUpdate SetInviteText (Either String Document) where
   dbUpdate (SetInviteText did text time) = do
     r <- runUpdateStatement "documents"
          [ sqlField "invite_text" $ text
-         , sqlFieldType "mtime" "timestamp" $ time
+         , sqlField "mtime" time
          ]
          "WHERE id = ?" [ toSql did ]
     getOneDocumentAffected "SetInviteText" r did
@@ -1653,7 +1653,7 @@ instance DBUpdate SetDaysToSign (Either String Document) where
   dbUpdate (SetDaysToSign did days time) = do
     r <- runUpdateStatement "documents"
          [ sqlField "days_to_sign" $ days
-         , sqlFieldType "mtime" "timestamp" $ time
+         , sqlField "mtime" time
          ]
          "WHERE id = ?" [ toSql did ]
     getOneDocumentAffected "SetDaysToSign" r did
@@ -1664,7 +1664,7 @@ instance DBUpdate RemoveDaysToSign (Either String Document) where
   dbUpdate (RemoveDaysToSign did time) = do
     r <- runUpdateStatement "documents"
          [ sqlField "days_to_sign" $ SqlNull
-         , sqlFieldType "mtime" "timestamp" $ time
+         , sqlField "mtime" time
          ]
          "WHERE id = ?" [ toSql did ]
     getOneDocumentAffected "RemoveDaysToSign" r did
@@ -1675,7 +1675,7 @@ instance DBUpdate SetDocumentAdvancedFunctionality (Either String Document) wher
   dbUpdate (SetDocumentAdvancedFunctionality did time) = do
     r <- runUpdateStatement "documents"
          [ sqlField "functionality" AdvancedFunctionality
-         , sqlFieldType "mtime" "timestamp" $ time
+         , sqlField "mtime" time
          ]
          "WHERE id = ? AND functionality <> ?" [ toSql did, toSql AdvancedFunctionality ]
     getOneDocumentAffected "SetDocumentAdvancedFunctionality" r did
@@ -1687,7 +1687,7 @@ instance DBUpdate SetDocumentTitle (Either String Document) where
   dbUpdate (SetDocumentTitle did doctitle time) = do
     r <- runUpdateStatement "documents"
          [ sqlField "title" $ doctitle
-         , sqlFieldType "mtime" "timestamp" $ time
+         , sqlField "mtime" time
          ]
          "WHERE id = ?" [ toSql did ]
     getOneDocumentAffected "SetDocumentTitle" r did
@@ -1698,7 +1698,7 @@ instance DBUpdate SetDocumentLocale (Either String Document) where
   dbUpdate (SetDocumentLocale did locale time) = do
     r <- runUpdateStatement "documents"
          [ sqlField "region" $ getRegion locale
-         , sqlFieldType "mtime" "timestamp" $ time
+         , sqlField "mtime" time
          ]
          "WHERE id = ?" [ toSql did ]
     getOneDocumentAffected "SetDocumentLocale" r did
@@ -1709,7 +1709,7 @@ instance DBUpdate SetDocumentUI (Either String Document) where
   dbUpdate (SetDocumentUI did documentui) = do
     r <- runUpdateStatement "documents"
          [ sqlField "mail_footer" $ documentmailfooter documentui
-         -- , sqlFieldType "mtime" "timestamp" $ time
+         -- , sqlField "mtime" time
          ]
          "WHERE id = ?" [ toSql did ]
     getOneDocumentAffected "SetDocumentUI" r did
@@ -1754,7 +1754,7 @@ instance DBUpdate SignDocument (Either String Document) where
           [] -> do
             r <- runUpdateStatement "signatory_links"
                       [ sqlField "sign_ip" $ ipnumber
-                      , sqlFieldType "sign_time" "timestamp" $ time
+                      , sqlField "sign_time" time
                       , sqlField "signinfo_text" $ signatureinfotext `fmap` msiginfo
                       , sqlField "signinfo_signature" $ signatureinfosignature `fmap` msiginfo
                       , sqlField "signinfo_certificate" $ signatureinfocertificate `fmap` msiginfo
@@ -1805,9 +1805,9 @@ instance DBUpdate ResetSignatoryDetails (Either String Document) where
                            , sqlField "token" $ signatorymagichash link
                            , sqlField "fields" $ signatoryfields $ signatorydetails link
                            , sqlField "sign_order"$ signatorysignorder $ signatorydetails link
-                           , sqlFieldType "sign_time" "timestamp" $ signtime `fmap` maybesigninfo link
+                           , sqlField "sign_time" $ signtime `fmap` maybesigninfo link
                            , sqlField "sign_ip" $ signipnumber `fmap` maybesigninfo link
-                           , sqlFieldType "seen_time" "timestamp" $ signtime `fmap` maybeseeninfo link
+                           , sqlField "seen_time" $ signtime `fmap` maybeseeninfo link
                            , sqlField "seen_ip" $ signipnumber `fmap` maybeseeninfo link
                            , sqlField "read_invitation" $ maybereadinvite link
                            , sqlField "invitation_delivery_status" $ invitationdeliverystatus link
@@ -1903,7 +1903,7 @@ instance DBUpdate TimeoutDocument (Either String Document) where
   dbUpdate (TimeoutDocument did time) = do
     r <- runUpdateStatement "documents"
          [ sqlField "status" $ Timedout
-         , sqlFieldType "mtime" "timestamp" $ time
+         , sqlField "mtime" time
          ]
          "WHERE id = ? AND type = ? AND status = ?" [ toSql did
                                                     , toSql (toDocumentSimpleType (Signable undefined))
@@ -1923,7 +1923,7 @@ instance DBUpdate SetEmailIdentification (Either String Document) where
   dbUpdate (SetEmailIdentification did time) = do
     r <- runUpdateStatement "documents"
          [ sqlField "allowed_id_types" $ [EmailIdentification]
-         , sqlFieldType "mtime" "timestamp" $ time
+         , sqlField "mtime" time
          ]
          "WHERE id = ?" [ toSql did ]
     getOneDocumentAffected "SetEmailIdentification" r did
@@ -1934,7 +1934,7 @@ instance DBUpdate SetElegitimationIdentification (Either String Document) where
   dbUpdate (SetElegitimationIdentification did time) = do
     r <- runUpdateStatement "documents"
          [ sqlField "allowed_id_types" $ [ELegitimationIdentification]
-         , sqlFieldType "mtime" "timestamp" $ time
+         , sqlField "mtime" time
          ]
          "WHERE id = ?" [ toSql did ]
     getOneDocumentAffected "SetElegitimationIdentification" r did
@@ -1989,7 +1989,7 @@ instance DBUpdate PendingToAwaitingAuthor (Either String Document) where
           [] -> do
             r <- runUpdateStatement "documents"
                  [ sqlField "status" $ AwaitingAuthor
-                 , sqlFieldType "mtime" "timestamp" $ time
+                 , sqlField "mtime" time
                  ]
                 "WHERE id = ? AND type = ?" [ toSql docid, toSql (toDocumentSimpleType (Signable undefined)) ]
             getOneDocumentAffected "PendingToAwaitingAuthor" r docid
