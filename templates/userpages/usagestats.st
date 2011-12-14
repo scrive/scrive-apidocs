@@ -63,3 +63,5 @@ jQuery(function(){
   </div>
 </form>
 ####
+statsOrgTotal=$_statsOrgTotal()$
+###

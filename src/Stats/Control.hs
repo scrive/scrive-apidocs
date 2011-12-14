@@ -237,7 +237,7 @@ calculateCompanyDocStats events =
 
 calculateCompanyDocStatsByMonth :: [(Int, UserID, [Int])] -> [(Int, UserID, [Int])]
 calculateCompanyDocStatsByMonth events =
-  let monthOnly = [((100 * a `div` 100), b, c) | (a, b, c) <- events]
+  let monthOnly = [((100 * (a `div` 100)), b, c) | (a, b, c) <- events]
       byMonth = groupWith (\(a,_,_) -> a) $ reverse $ sortWith  (\(a,_,_) -> a) monthOnly
       byUser = map (groupWith (\(_,a,_) ->a) . sortWith (\(_,a,_)->a)) byMonth
       userTotalsByMonth = map (map sumCStats) byUser

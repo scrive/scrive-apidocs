@@ -246,7 +246,7 @@ handleUsageStatsForUser = withUserGet $ do
 handleUsageStatsJSONForUserDays :: Kontrakcja m => m JSValue
 handleUsageStatsJSONForUserDays = do
   Context{ctxtime, ctxmaybeuser, ctxtemplates } <- getContext
-  totalS <- renderTemplate ctxtemplates "_statsOrgTotal" ()
+  totalS <- renderTemplate ctxtemplates "statsOrgTotal" ()
   user <- guardJust ctxmaybeuser
   let today = asInt ctxtime
       som = 100 * (today `div` 100) -- start of month
@@ -274,7 +274,7 @@ handleUsageStatsJSONForUserDays = do
 handleUsageStatsJSONForUserMonths :: Kontrakcja m => m JSValue
 handleUsageStatsJSONForUserMonths = do
   Context{ctxtime, ctxmaybeuser, ctxtemplates } <- getContext
-  totalS <- renderTemplate ctxtemplates "_statsOrgTotal" ()
+  totalS <- renderTemplate ctxtemplates "statsOrgTotal" ()
   user <- guardJust ctxmaybeuser
   let today = asInt ctxtime
       som = 100 * (today `div` 100) -- start of month
