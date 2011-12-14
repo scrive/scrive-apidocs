@@ -32,6 +32,7 @@ import Company.Model
 import Happstack.Server.Monads
 import API.Monad
 import Control.Monad.Error
+import qualified AppLogger as Log
 
 documentAPI :: Route (Kontra Response)
 documentAPI = choice [
@@ -164,18 +165,19 @@ getSigLinkID = do
   
 documentUploadSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryResource -> SignatoryLinkID -> AttachmentResource -> String -> FileResource -> m Response
 documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
+  Log.debug $ "sigattachment ajax"
   (slid, magichash) <- getSigLinkID
   doc <- apiGuardL $ getDocByDocIDSigLinkIDAndMagicHash did slid magichash
   email <- apiGuard $ getEmail <$> getSigLinkFor doc sid
-
+  
   sigattach <- apiGuard' Forbidden $ getSignatoryAttachment email (BS.fromString aname) doc
-
+  
   -- attachment must have no file
-  apiGuard' ActionNotAvailable (isJust $ signatoryattachmentfile sigattach)
-
+  apiGuard' ActionNotAvailable (isNothing $ signatoryattachmentfile sigattach)
+  
   -- pdf exists in input param "file"
   (Input contentspec (Just filename) _contentType) <- apiGuardL' BadInput $ getDataFn' (lookInput "file")
-
+  
   content1 <- case contentspec of
     Left filepath -> liftIO $ BSL.readFile filepath
     Right content -> return content
@@ -186,6 +188,7 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   content <- liftIO $ preprocessPDF ctx (concatChunks content1) (documentid doc)
   
   file <- lift $ runDB $ dbUpdate $ NewFile (BS.fromString $ basename filename) content
+  
   d <- apiGuardL $ doc_update $ SaveSigAttachment (documentid doc) (BS.fromString aname) email (fileid file)
   
   -- let's dig the attachment out again
