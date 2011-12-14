@@ -56,7 +56,7 @@ testUserEnteringPhoneNumber conn = withTestEnvironment conn $ do
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool ("Flash message has type indicating success, was "  ++ show (getFlashType $ head $ ctxflashmessages ctx')) $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
-  uuser <- guardJustM $ runDBQuery $ GetUserByID (userid user)
+  uuser <- guardJustM $ dbQuery $ GetUserByID (userid user)
   assertEqual "Phone number was saved" "12345" (BS.toString . userphone $ userinfo uuser)
 
   emailactions <- getEmailActions

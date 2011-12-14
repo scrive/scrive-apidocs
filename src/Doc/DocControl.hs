@@ -132,8 +132,7 @@ postDocumentChangeAction document@Document  { documentstatus
         ctx@Context{ctxlocale, ctxglobaltemplates} <- getContext
         forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ \conn -> do
           let newctx = ctx {ctxdbconn = conn}
-          threadDelay 5000
-          enewdoc <- runReaderT (sealDocument newctx document) conn
+          enewdoc <- ioRunDB conn $ sealDocument newctx document
           case enewdoc of
              Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails newctx newdoc
              Left errmsg -> Log.error $ "Sealing of document #" ++ show documentid ++ " failed, could not send document confirmations: " ++ errmsg
@@ -157,11 +156,11 @@ postDocumentChangeAction document@Document  { documentstatus
         author <- getDocAuthor
         forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ \conn -> do
           let newctx = ctx {ctxdbconn = conn}
-          enewdoc <- runReaderT (sealDocument newctx document) conn
+          enewdoc <- ioRunDB conn $ sealDocument newctx document
           case enewdoc of
             Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails newctx newdoc
             Left errmsg -> do
-              _ <- runReaderT (doc_update $ ErrorDocument documentid errmsg) conn
+              _ <- ioRunDB conn $ doc_update' $ ErrorDocument documentid errmsg
               Log.server $ "Sending seal error emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
               runWithTemplates ctxlocale ctxglobaltemplates $ sendDocumentErrorEmail newctx document author
               return ()
@@ -353,7 +352,7 @@ sendInvitationEmail1 ctx document signatorylink = do
       , mailInfo = Invitation documentid signatorylinkid
       , from = documentservice document
   }
-  runReaderT (doc_update $ AddInvitationEvidence documentid signatorylinkid (ctxtime ctx) (ctxipnumber ctx)) (ctxdbconn ctx)
+  ioRunDB (ctxdbconn ctx) $ doc_update' $ AddInvitationEvidence documentid signatorylinkid (ctxtime ctx) (ctxipnumber ctx) 
 
 {- |
     Send a reminder email
@@ -582,9 +581,9 @@ rejectDocument documentid
       addFlashM $ modalRejectedView document
       return $ LoopBack
 
-getDocumentLocale :: (MonadIO m, DBMonad m) => DocumentID -> m (Maybe Locale)
+getDocumentLocale :: DocumentID -> DB (Maybe Locale)
 getDocumentLocale documentid = do
-  mdoc <- doc_query $ GetDocumentByDocumentID documentid
+  mdoc <- doc_query' $ GetDocumentByDocumentID documentid
   return $ fmap getLocale mdoc --TODO: store lang on doc
 
 {- |
@@ -1932,7 +1931,7 @@ handleFixDocument docid = onlySuperUser $ do
        Nothing -> return LoopBack
        Just doc -> if (isBroken doc)
                     then do
-                        _ <- liftIO $ runReaderT (sealDocument ctx doc) (ctxdbconn ctx)
+                        runDB $ sealDocument ctx doc
                         return LoopBack
                     else return LoopBack
 

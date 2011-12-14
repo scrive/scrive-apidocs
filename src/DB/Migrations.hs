@@ -29,11 +29,14 @@ import Stats.Migrations
 import File.Tables
 import File.Model ()
 
+-- Note: ALWAYS append new migrations TO THE END of this list.
 migrationsList :: [Migration]
-migrationsList = [addUserCustomFooter
-                 ,addRegionToUserSettings
-                 ,addServiceAndCompanyToStats
-                 ,removeSystemServer]
+migrationsList = [
+    addRegionToUserSettings
+  , addServiceAndCompanyToStats
+  , removeSystemServer
+  , addUserCustomFooter
+  ]
 
 tablesList :: [Table]
 tablesList = [
@@ -71,6 +74,7 @@ checkDBConsistency = do
       error $ "The following tables were not migrated to their latest versions: " ++ concatMap descNotMigrated to_migration_again
   where
     descNotMigrated (t, from) = "\n * " ++ tblName t ++ ", current version: " ++ show from ++ ", needed version: " ++ show (tblVersion t)
+
     checkTables = second catMaybes . partitionEithers <$> mapM checkTable tablesList
     checkTable table = do
       desc <- wrapDB $ \conn -> describeTable conn $ tblName table
@@ -79,7 +83,7 @@ checkDBConsistency = do
       case tvr of
         TVRvalid -> do
           Log.debug "Table structure is valid, checking table version..."
-          ver <- checkVersion
+          ver <- checkVersion table
           if ver == tblVersion table
              then do
                Log.debug "Version of table in application matches database version."
@@ -97,25 +101,28 @@ checkDBConsistency = do
           return $ Left table
         TVRinvalid -> do
           Log.debug $ "Table structure is invalid, checking version..."
-          ver <- checkVersion
+          ver <- checkVersion table
           if ver == tblVersion table
              then do
-             Log.debug $ "Existing table: " ++ show desc
-             error $ "Existing '" ++ tblName table ++ "' table structure is invalid"
+               error $ "Existing '" ++ tblName table ++ "' table structure is invalid"
              else do
                Log.debug "Table is outdated, scheduling for migration."
                return $ Right $ Just (table, ver)
-      where
-        checkVersion = wrapDB $ \conn -> do
-          mver <- quickQuery' conn "SELECT version FROM table_versions WHERE name = ?"
-            [toSql $ tblName table] >>= oneObjectReturnedGuard . join
-          case mver of
-            Just ver -> return $ fromSql ver
-            _ -> error $ "No version information about table '" ++ tblName table ++ "' was found in database"
+
+    checkVersion table = wrapDB $ \conn -> do
+      mver <- quickQuery' conn "SELECT version FROM table_versions WHERE name = ?"
+        [toSql $ tblName table] >>= oneObjectReturnedGuard . join
+      case mver of
+        Just ver -> return $ fromSql ver
+        _ -> error $ "No version information about table '" ++ tblName table ++ "' was found in database"
+
     migrate ms ts = forM_ ms $ \m -> forM_ ts $ \(t, from) -> do
       if tblName (mgrTable m) == tblName t && mgrFrom m >= from
          then do
            Log.debug $ "Migrating table '" ++ tblName t ++ "' from version " ++ show (mgrFrom m) ++ "..."
+           ver <- checkVersion $ mgrTable m
+           when (ver /= mgrFrom m) $
+             error $ "Migration can't be performed because current table version (" ++ show ver ++ ") doesn't match parameter mgrFrom of next migration to be run (" ++ show (mgrFrom m) ++ "). Make sure that migrations were put in migrationsList in correct order."
            mgrDo m
            wrapDB $ \conn -> do
              _ <- run conn "UPDATE table_versions SET version = ? WHERE name = ?"

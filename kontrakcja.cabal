@@ -13,7 +13,7 @@ Build-type: Simple
 Flag documents-in-postgres
   Description: New database layout for documents
   Manual: True
-  Default: False
+  Default: True
 
 Flag pdfseal
   Description: Build pdfseal

@@ -552,8 +552,8 @@ addRandomDocument rda = do
   file <- addNewRandomFile
   now <- liftIO getMinutesTime
   document <- worker file now
-  docid <- doc_update $ StoreDocumentForTesting document
-  mdoc <- doc_query $ GetDocumentByDocumentID docid
+  docid <- doc_update' $ StoreDocumentForTesting document
+  mdoc <- doc_query' $ GetDocumentByDocumentID docid
   case mdoc of
     Nothing -> do
               assertFailure "Could not store document."
@@ -567,7 +567,11 @@ addRandomDocument rda = do
       doc' <- rand 10 arbitrary
       xtype <- rand 10 (elements $ randomDocumentAllowedTypes rda)
       status <- rand 10 (elements $ randomDocumentAllowedStatuses rda)
-      let doc = doc' { documenttype = xtype, documentstatus = status }
+      title <- rand 10 (elements ["title", "a b c", "123.123"])
+      let doc = doc' { documenttype = xtype
+                     , documentstatus = status
+                     , documenttitle = BS.fromString title
+                     }
 
       roles <- getRandomAuthorRoles doc
 
@@ -578,7 +582,7 @@ addRandomDocument rda = do
 
       (signinfo, seeninfo) <- rand 10 arbitrary
       asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
-      asl <- doc_update $ SignLinkFromDetailsForTest asd roles
+      asl <- doc_update' $ SignLinkFromDetailsForTest asd roles
       let asl' = asl { maybeseeninfo = seeninfo
                      , maybesigninfo = signinfo
                      }
@@ -648,14 +652,14 @@ validTest = return . Just
 
 --Random query
 class RandomQuery a b where
-  randomQuery :: (MonadIO m, DBMonad m) => a -> m b
+  randomQuery :: a -> DB b
 
 #ifndef DOCUMENTS_IN_POSTGRES
 instance (QueryEvent ev res) => RandomQuery ev res where
   randomQuery = query
 #else
 instance (DBQuery ev res) => RandomQuery ev res where
-  randomQuery = runDBQuery
+  randomQuery = dbQuery
 #endif
 
 instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
@@ -665,14 +669,14 @@ instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
 
 --Random update
 class RandomUpdate a b where
-  randomUpdate :: (MonadIO m, DBMonad m) => a -> m b
+  randomUpdate :: a -> DB b
 
 #ifndef DOCUMENTS_IN_POSTGRES
 instance (UpdateEvent ev res) => RandomUpdate ev res where
   randomUpdate = update
 #else
 instance (DBUpdate ev res) => RandomUpdate ev res where
-  randomUpdate = runDBUpdate
+  randomUpdate = dbUpdate
 #endif
 
 instance (Arbitrary a, RandomUpdate c b) => RandomUpdate (a -> c) b where

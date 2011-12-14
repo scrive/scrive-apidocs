@@ -34,7 +34,7 @@ import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Map as Map
 import System.IO
 import Control.Concurrent.MVar
-import Control.Monad.Reader
+--import Control.Monad.Reader
 
 import Crypto
 import DB.Classes
@@ -135,13 +135,13 @@ initDatabaseEntries conn iusers = do
 
 uploadFileToAmazon :: AppConf -> IO Bool
 uploadFileToAmazon appConf = do
-  withPostgreSQL (dbConfig appConf) $ \conn -> do
-    mfile <- ioRunDB conn $ dbQuery $ GetFileThatShouldBeMovedToAmazon
+  withPostgreSQL (dbConfig appConf) $ \conn -> ioRunDB conn $ do
+    mfile <- dbQuery $ GetFileThatShouldBeMovedToAmazon
     case mfile of
-        Just file -> do
-                   runReaderT (AWS.uploadFile (docstore appConf) (defaultAWSAction appConf) file) conn
-                   return True
-        _ -> return False
+      Just file -> do
+        AWS.uploadFile (docstore appConf) (defaultAWSAction appConf) file
+        return True
+      _ -> return False
 
 runKontrakcjaServer :: IO ()
 runKontrakcjaServer = Log.withLogger $ do

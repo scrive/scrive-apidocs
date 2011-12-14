@@ -872,12 +872,26 @@ newFromDocument f docid = do
       Just doc -> fmap Right $ insertNewDocument $ f doc
       Nothing -> return $ Left $ "Document " ++ show docid ++ " does not exist"
 
-
+{- |
+    The existance of this function is wrong.  What it means is that storing
+    maybesignatory and maybecompany on the signatory links is the wrong way of doing it,
+    and there should be something else for hooking accounts to sig links that doesn't
+    involve editing all the docs as a user moves between private and company accounts.
+-}
 data AdminOnlySaveForUser = AdminOnlySaveForUser DocumentID User
                             deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate AdminOnlySaveForUser (Either String Document) where
-  dbUpdate (AdminOnlySaveForUser docid user) = wrapDB $ \conn -> do
-    unimplemented "AdminOnlySaveForUser"
+  dbUpdate (AdminOnlySaveForUser did user) = do
+    r <- runUpdateStatement "signatory_links" 
+                       [ sqlField "company_id" $ usercompany user
+                       ]
+                       ("WHERE document_id = ? " ++
+                        " AND user_id = ? ")
+                       [ toSql did
+                       , toSql (userid user)
+                       ]
+                        
+    getOneDocumentAffected "AdminOnlySaveForUser" r did
 
 data ArchiveDocument = ArchiveDocument User DocumentID
                          deriving (Eq, Ord, Show, Typeable)
@@ -936,8 +950,7 @@ instance DBUpdate AttachFile (Either String Document) where
          [ sqlFieldType "mtime" "timestamp" $ time
          , sqlField "file_id" $ fid
          ]
-         -- "WHERE id = ? AND status = ?" [ toSql did, toSql Preparation ]
-        "WHERE id = ?" [ toSql did ]
+         "WHERE id = ? AND status = ?" [ toSql did, toSql Preparation ]
     getOneDocumentAffected "AttachFile" r did
 
 data AttachSealedFile = AttachSealedFile DocumentID FileID MinutesTime
@@ -1008,8 +1021,8 @@ instance DBUpdate ChangeSignatoryEmailWhenUndelivered (Either String Document) w
     r <- runUpdateStatement "signatory_links" 
                        [ sqlField "invitation_delivery_status" Unknown
                        , sqlField "fields" $ setEmail $ signatoryfields $ signatorydetails sl
-                       , sqlField "signatory" $ fmap userid muser
-                       , sqlField "company" $ muser >>= usercompany
+                       , sqlField "user_id" $ fmap userid muser
+                       , sqlField "company_id" $ muser >>= usercompany
                        ]
                        ("WHERE EXISTS (SELECT * FROM documents WHERE documents.id = signatory_links.document_id AND (documents.status = ? OR documents.status = ?))" ++ 
                         " AND document_id = ? " ++

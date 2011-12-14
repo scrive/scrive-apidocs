@@ -58,9 +58,9 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
     forM_ [Contract,Offer,Order] $ \doctype -> do
         -- make  the context, user and document all use the same locale
         ctx <- mailingContext l conn
-        _ <- runDBUpdate $ SetUserSettings (userid author) $ (usersettings author) { locale = l }
+        _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { locale = l }
         d' <- gRight $ randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype)
-        d <- gRight . doc_update $ SetDocumentLocale (documentid d') l (ctxtime ctx)
+        d <- gRight . doc_update' $ SetDocumentLocale (documentid d') l (ctxtime ctx)
 
         let docid = documentid d
         let asl = head $ documentsignatorylinks d
@@ -148,10 +148,10 @@ validMail name m = do
 addNewRandomAdvancedUserWithLocale :: Locale -> DB User
 addNewRandomAdvancedUserWithLocale l = do
   user <- addNewRandomAdvancedUser
-  _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
+  _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
            locale = l
          }
-  (Just uuser) <- runDBQuery $ GetUserByID (userid user)
+  (Just uuser) <- dbQuery $ GetUserByID (userid user)
   return uuser
 
 mailingContext :: Locale -> Connection -> DB Context
