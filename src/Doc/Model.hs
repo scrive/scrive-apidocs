@@ -1173,6 +1173,7 @@ selectDocuments select values = wrapDB $ \conn -> do
                fetchSignatoryLinks stx) `E.catch` handle select
       return (doc { documentsignatorylinks = sls })
   where
+    handle :: String -> SqlError -> IO a
     handle statement e = E.throwIO $ SQLError { DB.Classes.originalQuery = statement
                                               , sqlError = e
                                               }
