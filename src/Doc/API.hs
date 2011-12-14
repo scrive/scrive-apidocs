@@ -25,7 +25,6 @@ import DB.Classes
 import File.Model
 import DB.Types
 import Kontra
-import Happstack.Server (FromReqURI(..))
 import Doc.DocUtils
 import User.Model
 import Company.Model
