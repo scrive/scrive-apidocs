@@ -86,7 +86,7 @@ api acc = do
       internalServerError (toAPIResponse $ fromRight $
                            jsset "message" "We're sorry. The server just does not know what to do." jsonError)
     Left ActionNotAvailable ->
-      forbidden (toAPIResponse $ fromRight $
+      resp 405 (toAPIResponse $ fromRight $
                  jsset "message" "The action you requested is not available on this resource." jsonError)
     Right v -> return $ toAPIResponse v
 
