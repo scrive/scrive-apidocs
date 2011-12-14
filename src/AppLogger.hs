@@ -222,7 +222,7 @@ scrivebymailfailure msg = liftIO $ errorM "Kontrakcja.ScriveByMailFailures" msg
 docevent :: (MonadIO m) => String -> m ()
 docevent msg = liftIO $ noticeM "Kontrakcja.DocEvent" msg
 
- -- | FIXME: use forkAction
+-- | FIXME: use forkAction
 forkIOLogWhenError :: (MonadIO m) => String -> IO () -> m ()
 forkIOLogWhenError errmsg action =
   liftIO $ do
