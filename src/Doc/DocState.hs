@@ -339,11 +339,9 @@ attachSealedFile :: DocumentID
                  -> Update Documents (Either String Document)
 attachSealedFile documentid fid time = do
   modifySignable documentid $ \document -> 
-    Right $ document { documentsealedfiles = documentsealedfiles document ++ [fid] 
-                          , documentmtime = time }
-
-                                          
-      
+    Right $ document { documentsealedfiles = [fid] 
+                     , documentmtime = time
+                     }
 
 changeMainfile :: DocumentID -> FileID -> Update Documents (Either String Document)
 changeMainfile did fid = do
