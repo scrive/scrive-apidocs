@@ -1,4 +1,4 @@
-{-# LANGUAGE DoRec, PatternGuards #-}
+{-# LANGUAGE DoRec, PatternGuards, CPP #-}
 {-# OPTIONS_GHC -funbox-strict-fields #-}
 
 module PdfModel where
@@ -29,8 +29,16 @@ import Data.Monoid
 import Control.Monad.Writer.Class
 import qualified Control.Monad.Writer.Strict as Strict
 import qualified Control.Monad.State.Strict as Strict
--- import Debug.Trace
 
+#ifdef _DEBUG
+import Debug.Trace
+#else
+trace :: P.String -> a -> a
+trace _ x = x
+#endif
+
+traceM :: (Monad m) => P.String -> m ()
+traceM msg = trace msg (return ())
 
 
 type MyReadP a = P.ReadP a
@@ -799,6 +807,7 @@ parse bin = do
 -- parseBodyList :: IntSet.IntSet -> BinaryData -> Int -> Maybe [(Body,IntSet.IntSet)]
 parseBodyList :: BS.ByteString -> Int -> Maybe [Body]
 parseBodyList bin start = do
+    traceM ("Parse body at offset " ++ show start)
     body <- parseBody bin start
     let Body trailer' _ = body
     rest <- case Prelude.lookup (BSC.pack "Prev") trailer' of
@@ -827,9 +836,13 @@ mapM2 f xs = sequence2 (map f xs)
 xparse :: Body -> BS.ByteString -> P.ReadP Body
 xparse body bin = do
     _ <- parseOperatorEq "xref"
+    traceM "Got past xref"
     p <- P.manyRev parseXRefSection
+    traceM "Got past xref section"
     _ <- parseOperatorEq "trailer"
+    traceM "Got past xref trailer token"
     e <- parseDict
+    traceM ("Got past xref trailer dict " ++ show e)
     let entries = IntMap.fromList (map (\(a,_,c) -> (a,c)) (concat p))
     return (Body e entries)
     where
@@ -883,7 +896,7 @@ xparse body bin = do
                 other -> error (show other ++ BSC.unpack (BS.take 100 dat))
         -}
         parseIndirA :: BS.ByteString -> Int -> Indir
-        parseIndirA bin' off =
+        parseIndirA bin' off = trace ("Indir at offset " ++ show off) $
             --case P.readP_to_S parseIndir1 (BS.unpack (BS.drop (fromIntegral off) bin')) of
             case head $ P.readP_to_S parseIndir1 (BS.drop (fromIntegral off) bin') of
                 ((_,      Indir e Nothing),_) -> Indir e Nothing
@@ -1015,30 +1028,28 @@ parseString = do
     _ <- P.char (BSB.c2w ')')
     return (BS.concat x)
     where
-        string_p1 = fmap reverse $ P.manyRev (P.choice [string_char_p, string_bs_p,
-                                      string_string_p])
+        string_p1 = fmap reverse $ P.manyRev (string_char_p P.<++ string_bs_p P.<++ string_string_p)
         string_char_p = P.munch1 (\x -> x/=BSB.c2w '(' &&
-                                   x/= BSB.c2w '\\' &&
+                                   x/=BSB.c2w '\\' &&
                                    x/=BSB.c2w ')')
-        string_bs_p = P.choice [ P.string (o "\\f") >> return (o "\f")
-                               , P.string (o "\\r") >> return (o "\r")
-                               , P.string (o "\\n") >> return (o "\n")
-                               , P.string (o "\\t") >> return (o "\t")
-                               , P.char (BSB.c2w '\\') >> 
-                                    ((do 
-                                                  o1 <- octDigit
-                                                  o2 <- octDigit
-                                                  o3 <- octDigit
-                                                  return $ BS.singleton ((o1-48)*8*8 + (o2-48)*8 + (o3-48))) P.<++
-                                             (P.get >>= return . BS.singleton)
-                                             )
-                               ]
+        string_bs_p = do
+                _ <- P.char (o '\\')
+                P.choice [ P.char (o 'f') >> return (BSC.singleton '\f')
+                         , P.char (o 'r') >> return (BSC.singleton '\r')
+                         , P.char (o 'n') >> return (BSC.singleton '\n')
+                         , P.char (o 't') >> return (BSC.singleton '\t')
+                         , do 
+                             o1 <- octDigit
+                             o2 <- octDigit
+                             o3 <- octDigit
+                             return $ BS.singleton ((o1-48)*8*8 + (o2-48)*8 + (o3-48))
+                         ] P.<++ return (BSC.singleton '\\')
         string_string_p = do
-             _ <- P.string (o "(")
+             _ <- P.char (o '(')
              x <- string_p1
-             _ <- P.string (o ")")
-             return (BS.concat ([o "("] ++ x ++ [o ")"]))
-        o = BSC.pack
+             _ <- P.char (o ')')
+             return (BS.concat ([BSC.singleton '('] ++ x ++ [BSC.singleton ')']))
+        o = BSB.c2w
         octDigit = P.satisfy (\x -> BSB.c2w '0' <= x && x <= BSB.c2w '7')
 
 parseHexString :: MyReadP BS.ByteString
