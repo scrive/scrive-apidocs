@@ -11,7 +11,6 @@ import Control.Exception
 import Numeric
 import Data.Bits
 import Data.Word
-import Data.List(find)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as  BSL
 import qualified Data.ByteString.Char8 as BSC
@@ -337,11 +336,12 @@ bin_builder_char :: Char -> Bin.Builder
 bin_builder_char x = bin_builder_word8 (BSB.c2w x)
 
 bin_builder_word8_escape :: Word8 -> Bin.Builder
-bin_builder_word8_escape x | x<32 || isdelim x = mconcat [ Bin.singleton (BSB.c2w '\\')
-                                                  , Bin.singleton (((x `div` 64) `mod` 8)  + 48)
-                                                  , Bin.singleton (((x `div` 8) `mod` 8) + 48)
-                                                  , Bin.singleton ((x `mod` 8) + 48)
-                                                  ]
+bin_builder_word8_escape x | x<32 || x >=127 || x == BSB.c2w '\\' || isdelim x
+                             = mconcat [ Bin.singleton (BSB.c2w '\\')
+                                       , Bin.singleton (((x `div` 64) `mod` 8)  + 48)
+                                       , Bin.singleton (((x `div` 8) `mod` 8) + 48)
+                                       , Bin.singleton ((x `mod` 8) + 48)
+                                       ]
                     | otherwise = Bin.singleton x
 
 bin_builder_char_escape :: Char -> Bin.Builder
@@ -795,14 +795,20 @@ devicen_array colorants base func = array [ value "DeviceN", array colorants, va
 -- | Parse document from binary data
 parse :: BS.ByteString -> Maybe Document
 parse bin = do
-    lstart <- find (BS.isPrefixOf (BSC.pack "startxref"))
-                          (reverse (BS.tails l300))
-    [(istart,_)] <- return (reads (drop 9 (BSC.unpack lstart)))
-    {- bodys <- parseBodyList bin istart -}
+    traceM (show (take 20 startxreftext))
+    [(istart,_)] <- return (readDec startxreftext)
+    traceM (show istart)
     bodies <- parseBodyList bin istart
     return (Document (BSC.pack "PDF-1.4") bodies)
-    where l = BS.length bin
-          l300 = BS.drop (l-300) bin
+    where
+      startxreftext = dropWhile (\x -> x <= ' ') $ BSC.unpack $ findLastStartXref bin
+      startxref = BSC.pack "startxref"
+      findLastStartXref bytes =
+        case BS.breakSubstring startxref bytes of
+          (h,t) | BS.null t -> h
+                | otherwise -> findLastStartXref (BS.drop 9 t)
+      
+
 
 -- parseBodyList :: IntSet.IntSet -> BinaryData -> Int -> Maybe [(Body,IntSet.IntSet)]
 parseBodyList :: BS.ByteString -> Int -> Maybe [Body]
@@ -835,7 +841,11 @@ mapM2 f xs = sequence2 (map f xs)
 -- the body should be the parsed body, kind of fixed point operator
 xparse :: Body -> BS.ByteString -> P.ReadP Body
 xparse body bin = do
-    _ <- parseOperatorEq "xref"
+    xref <- parseRegular
+    when (xref/=BSC.pack "xref") $ do
+                    traceM ("In place of 'xref' got " ++ show xref)
+                    P.pfail
+
     traceM "Got past xref"
     p <- P.manyRev parseXRefSection
     traceM "Got past xref section"
@@ -843,7 +853,7 @@ xparse body bin = do
     traceM "Got past xref trailer token"
     e <- parseDict
     traceM ("Got past xref trailer dict " ++ show e)
-    let entries = IntMap.fromList (map (\(a,_,c) -> (a,c)) (concat p))
+    let entries = IntMap.fromList (map (\(a,_,c) -> (a,c)) ((0,0,FreeEntry 65535) : concat p))
     return (Body e entries)
     where
         parseXRefSection = {-# SCC "xparse.parseXRefSection" #-} do
@@ -860,9 +870,11 @@ xparse body bin = do
                then return (objno',0,FreeEntry gener')
                else if nf==BSC.pack "n"
                     then let
-                             indir = parseIndir bin offset'
-                             usedEntry = UsedEntry gener' indir
-                         in return (objno',offset',usedEntry)
+                             (obj,gen,indir) = parseIndir bin offset'
+                             --usedEntry = UsedEntry gener' indir
+                             usedEntry = UsedEntry gen indir
+                         in -- return (objno',offset',usedEntry)
+                           return (obj,offset',usedEntry)
                     else P.pfail
 
         findLength :: Body -> Value -> Int
@@ -881,7 +893,7 @@ xparse body bin = do
         findLength _ _ =  error "/Length not found case 3"
 
 
-        parseIndir :: BS.ByteString -> Int -> Indir
+        parseIndir :: BS.ByteString -> Int -> (Int,Int,Indir)
         parseIndir = {-# SCC "xparse.parseIndir" #-} parseIndirA
 
         {-
@@ -895,25 +907,28 @@ xparse body bin = do
                     in (Indir obj (Just (dt `seq` toWrite $ dt)))
                 other -> error (show other ++ BSC.unpack (BS.take 100 dat))
         -}
-        parseIndirA :: BS.ByteString -> Int -> Indir
-        parseIndirA bin' off = trace ("Indir at offset " ++ show off) $
+        parseIndirA :: BS.ByteString -> Int -> (Int,Int,Indir)
+        parseIndirA bin' off = -- trace ("Indir at offset " ++ show off) $
             --case P.readP_to_S parseIndir1 (BS.unpack (BS.drop (fromIntegral off) bin')) of
-            case head $ P.readP_to_S parseIndir1 (BS.drop (fromIntegral off) bin') of
-                ((_,      Indir e Nothing),_) -> Indir e Nothing
-                ((ntokens,Indir e (Just _)),_) ->
+            let bin'' = BS.drop (fromIntegral off) bin' in
+            case P.readP_to_S parseIndir1 bin'' of
+                ((_,      thing@(_obj,_gen,Indir _e Nothing)),_):_ -> thing
+                ((ntokens,(obj,gen,Indir e (Just _))),_):_ ->
                     let len = findLength body e
-                        dt = cut (off + ntokens) len bin'
-                        indir = Indir e (Just (BSL.fromChunks [dt]))
+                        dt = cut ntokens len bin''
+                        indir = (obj,gen,Indir e (Just (BSL.fromChunks [dt])))
                     in indir
+                _ -> error $ "Cannot parse Indir at offset " ++ show off ++ ", beginning: " ++ take 300 (BSC.unpack bin'')
         cut off len = BS.take (fromIntegral len) . BS.drop (fromIntegral off)
 
-        parseIndir1 :: MyReadP (Int,Indir)
+        parseIndir1 :: MyReadP (Int,(Int,Int,Indir))
         parseIndir1 = P.countsym $ do
-            _ <- parseNatural -- should check if naturals match with reference
-            _ <- parseNatural
+            obj <- parseNatural -- should check if naturals match with reference
+            gen <- parseNatural
             _ <- parseOperatorEq "obj"
             e <- parseValue
-            (parseOperatorEq "endobj" >> return (Indir e Nothing)) `mplus` withStream e
+            (parseOperatorEq "endobj" >> return (obj, gen, Indir e Nothing)) `mplus`
+                             (withStream e >>= \indir -> return (obj,gen,indir))
         withStream e = do
             _ <- parseOperatorEq "stream"
             _ <- P.munch isspacenoteol
@@ -942,7 +957,7 @@ parseValue :: MyReadP Value
 parseValue = P.choice [ (P.<++) (parseRef >>= return . Ref) (parseRegular >>= return . mkop)
                , parseDict >>= return . Dict
                , parseArray >>= return . Array
-               , parseString >>= return . String False
+               , parseString >>= \raw -> let str = String False raw in traceM (show str) >> return str
                , parseHexString >>= return . String True
                , parseName >>= return . Name
                -- , parse_execarray >>= return . ExecArray
@@ -1038,12 +1053,16 @@ parseString = do
                          , P.char (o 'r') >> return (BSC.singleton '\r')
                          , P.char (o 'n') >> return (BSC.singleton '\n')
                          , P.char (o 't') >> return (BSC.singleton '\t')
+                         , P.char (o 'b') >> return (BSC.singleton '\b')
                          , do 
                              o1 <- octDigit
                              o2 <- octDigit
                              o3 <- octDigit
                              return $ BS.singleton ((o1-48)*8*8 + (o2-48)*8 + (o3-48))
-                         ] P.<++ return (BSC.singleton '\\')
+                         ] P.<++ do
+                              next <- P.get
+                              traceM ("Backslash used before " ++ show (BSB.w2c next))
+                              return (BS.singleton next)
         string_string_p = do
              _ <- P.char (o '(')
              x <- string_p1

@@ -1,12 +1,17 @@
-module SealMain where
+{-# LANGUAGE ScopedTypeVariables #-}
+
+module Main where
 
 import Seal
 import SealSpec
+import System.Directory
+import Data.List
+import Control.Exception
 
-simple_text_test :: SealSpec
-simple_text_test = SealSpec
-    { input = "test/simple text test.pdf"
-    , output = "test/simple text test sealed.pdf"
+sealspec :: String -> SealSpec
+sealspec filename = SealSpec
+    { input = filename
+    , output = filename ++ "-sealed.pdf"
     , documentNumber = "0000001234"
     , hostpart = "http://host.skrivapa"
     , secretaries = [Person
@@ -62,6 +67,25 @@ sampleSealingTexts = SealingTexts
         , "av parterna och är juridiskt bindande. Kursiverad information är säkert verifierad genom vår tjänst."
         , "Kontrollera dokumentet mot vår databas genom följande länk: $hostpart$/d/$documentid$."]
     }
+
+processFile :: String -> IO ()
+processFile filename = do
+  process (sealspec filename)
+
+sealAllInTest :: IO ()
+sealAllInTest = do
+  contents <- getDirectoryContents "test"
+  mapM_ p contents
+  where p filename | "sealed.pdf" `isSuffixOf` filename = return ()
+                   | ".pdf" `isSuffixOf` filename = do
+                       putStrLn $ "Doing " ++ filename
+                       processa ("test/" ++ filename)
+                   | otherwise = return ()
+        processa filename = do
+                  result <- try (processFile filename)
+                  case result of
+                    Left (thing :: SomeException) -> putStrLn (show thing)
+                    Right thing -> putStrLn (show thing)
 
 simple_upsales_confirmation :: SealSpec
 simple_upsales_confirmation = SealSpec
