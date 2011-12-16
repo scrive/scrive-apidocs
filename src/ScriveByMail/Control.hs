@@ -198,7 +198,7 @@ handleScriveByMail = do
     Log.scrivebymail $ "Could not create document: " ++ msg
     
     -- send email saying sorry, there was some weird error
-    sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not create your document. I do not know what is wrong. You can try again or you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkUpload (documentid doc)) ++ "\">click here</a> to use the web interface.</p>"
+    sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not create your document. I do not know what is wrong. You can try again or you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkUpload) ++ "\">click here</a> to use the web interface.</p>"
     
     mzero
     
