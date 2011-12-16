@@ -43,6 +43,7 @@ import Util.MonadUtils
 import Doc.Invariants
 import Stats.Control
 import User.Utils
+import API.Service.Model
 
 import Control.Applicative
 import Control.Concurrent
@@ -2087,3 +2088,15 @@ handleCSVLandpage c = do
   text <- csvLandPage c
   return text
 
+-- for upsales bug
+handleUpsalesDeleted :: Kontrakcja m => m Response
+handleUpsalesDeleted = onlySuperUser $ do
+  docs <- doc_query $ GetDocuments $ Just $ ServiceID $ BS.fromString "upsales"
+  let deleteddocs = [[show $ documentid d, showDateYMD $ documentctime d]
+                    | d <- docs
+                    , isDeletedFor $ getAuthorSigLink d]
+  let header = ["document_id", "date created"]
+  let csv = toCSV header deleteddocs
+  ok $ setHeader "Content-Disposition" "attachment;filename=upsalesdocsdeleted.csv"
+     $ setHeader "Content-Type" "text/csv"
+     $ toResponse csv

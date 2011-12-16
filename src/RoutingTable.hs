@@ -268,6 +268,10 @@ staticRoutes = choice
 
      , dir "adminonly" $ dir "siglinkids_test_uniqueness" $ hGet $ toK0 $ Administration.handleCheckSigLinkIDUniqueness
 
+       
+     , dir "adminonly" $ dir "upsalesdeleted" $ hGet $ toK0 $ DocControl.handleUpsalesDeleted
+       
+       
      , dir "services" $ hGet $ toK0 $ handleShowServiceList
      , dir "services" $ hGet $ toK1 $ handleShowService
      , dir "services" $ dir "ui" $ hPost $ toK1 $ handleChangeServiceUI
