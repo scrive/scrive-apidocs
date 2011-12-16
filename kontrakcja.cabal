@@ -155,57 +155,71 @@ Executable kontrakcja-server
   if flag(documents-in-postgres)
     cpp-options: -DDOCUMENTS_IN_POSTGRES
 
-  Build-depends: filepath
-  Build-depends: base64-bytestring
-  Build-depends: convertible
+  Build-depends: Crypto == 4.2.*
   Build-depends: HDBC
   Build-depends: HDBC-postgresql
-  Build-depends: tagsoup
-  Build-depends: zlib
+  Build-depends: HPDF
+  Build-depends: HStringTemplate >= 0.6.5
+  Build-depends: HTTP
+  Build-depends: HUnit
+  Build-depends: HaXml == 1.20.*
+  Build-depends: MissingH
+  Build-depends: QuickCheck
+  Build-depends: array
+  Build-depends: base >= 4 && < 5
+  Build-depends: base64-bytestring
+  Build-depends: binary
+  Build-depends: bytestring
+  Build-depends: containers
+  Build-depends: convertible
   Build-depends: cryptocipher==0.2.*
-  Build-depends: happstack==6.0.5
+  Build-depends: dataenc >= 0.13.0.2
+  Build-depends: directory
+  Build-depends: explicit-exception
+  Build-depends: extensible-exceptions
+  Build-depends: fields-json==0.1
+  Build-depends: filepath
+  Build-depends: hS3
+  Build-depends: happstack-data==6.*
+  Build-depends: happstack-ixset==6.*
   Build-depends: happstack-server==6.4.5
   Build-depends: happstack-state==6.*
-  Build-depends: happstack-ixset==6.*
-  Build-depends: happstack-data==6.*
-  Build-depends: happstack-util==6.*
   Build-depends: happstack-static-routing==0.1
+  Build-depends: happstack-util==6.*
+  Build-depends: happstack==6.0.5
   Build-depends: hslogger==1.1.*
-  Build-depends: time
-  Build-depends: utf8-string, random
-  Build-depends: extensible-exceptions, containers
-  Build-depends: directory, process
-  Build-depends: base >= 4 && < 5, syb, dataenc >= 0.13.0.2
-  Build-depends: syb-with-class, binary, old-locale, old-time
-  Build-depends: network, HTTP, bytestring
-  Build-depends: Crypto == 4.2.*
-  Build-depends: HaXml == 1.20.*
-  Build-depends: parallel == 2.2.*
-  Build-depends: HStringTemplate >= 0.6.5
-  Build-depends: template-haskell
-  Build-depends: mtl == 2.*
-  Build-depends: hS3
-  Build-depends: hxt
-  Build-depends: mmap==0.5.*
-  Build-depends: array
   Build-depends: html
-  Build-depends: MissingH
-  Build-depends: temporary==1.1.1
-  Build-depends: regex-tdfa
-  Build-depends: parsec
+  Build-depends: hxt
+  Build-depends: hxt
+  Build-depends: hxt-xpath
   Build-depends: iconv
   Build-depends: json==0.4.*
-  Build-depends: fields-json==0.1
-  Build-depends: HPDF
-  Build-depends: test-framework, test-framework-hunit, test-framework-quickcheck2
-  Build-depends: HUnit, QuickCheck
-  Build-depends: hxt, hxt-xpath
+  Build-depends: list-tries
+  Build-depends: mmap==0.5.*
+  Build-depends: mtl == 2.*
+  Build-depends: network
+  Build-depends: old-locale
+  Build-depends: old-time
+  Build-depends: parallel == 2.2.*
+  Build-depends: parsec
+  Build-depends: process
+  Build-depends: random
+  Build-depends: regex-tdfa
+  Build-depends: spreadsheet
+  Build-depends: syb
+  Build-depends: syb-with-class
+  Build-depends: tagsoup
+  Build-depends: template-haskell
+  Build-depends: temporary==1.1.1
+  Build-depends: test-framework
+  Build-depends: test-framework-hunit
+  Build-depends: test-framework-quickcheck2
   Build-depends: text
+  Build-depends: time
   Build-depends: transformers
   Build-depends: unix
-  Build-depends: spreadsheet
-  Build-depends: explicit-exception
-  Build-depends: list-tries
+  Build-depends: utf8-string
+  Build-depends: zlib
 
   Main-Is: Main.hs
 
