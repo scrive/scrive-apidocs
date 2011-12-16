@@ -689,4 +689,8 @@ indentLinesMore nspaces sublines =
     [] -> []
   where 
     spaces = replicate nspaces ' '
-
+    
+toCSV :: [String] -> [[String]] -> String
+toCSV header ls =
+  concatMap csvline (header:ls)
+    where csvline line = "\"" ++ intercalate "\",\"" line ++ "\"\n"

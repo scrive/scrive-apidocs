@@ -346,10 +346,11 @@ getDocuments = do
                     when (isNothing n || isNothing v) $ throwApiError API_ERROR_MISSING_VALUE "Missing tag name or value"
                     return $ Just $ DocumentTag (fromJust n) (fromJust v)
     linkeddocuments <- doc_query $ GetDocumentsByCompanyAndTags (Just sid) (companyid company) tags
-    let documents = filter (isAuthoredByCompany $ companyid company) linkeddocuments
-    let notDeleted doc =  any (not . signatorylinkdeleted) $ documentsignatorylinks doc
-    let supportedType  = not . isAttachment
-    api_docs <- sequence $  map (api_document_read False) $ filter (\d -> notDeleted d && supportedType d) documents
+    api_docs <- sequence [api_document_read False d | d <- linkeddocuments
+                                                    , isAuthoredByCompany (companyid company) d
+                                                    , not $ isDeletedFor $ getAuthorSigLink d
+                                                    , not $ isAttachment d
+                                                    ]
     return $ toJSObject [("documents",JSArray $ api_docs)]
 
 

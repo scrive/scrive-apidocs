@@ -150,10 +150,6 @@ dbCompanyIDLookup cid tbl =
     Just name -> return (name, tbl)
 
 
-toCSV :: [String] -> [[String]] -> String
-toCSV header ls =
-  concatMap csvline (header:ls)
-    where csvline line = "\"" ++ intercalate "\",\"" line ++ "\"\n"
 
 {- |
    What a beast! This must be stopped! Oh, the humanity!
