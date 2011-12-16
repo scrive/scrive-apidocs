@@ -134,6 +134,7 @@ var FilePageView = Backbone.View.extend({
         _.each(model.placements(), function(placement) {
             var val = $("<span class='value'/>");
             var field =  placement.field();
+            if (placement.page()==model.number()) {
             if (placement.field().value() != "")
                     val.text(field.value());
                 else
@@ -151,6 +152,7 @@ var FilePageView = Backbone.View.extend({
             });
             place.append(val);
             container.append(place);
+            }
         })
         return this;
 
