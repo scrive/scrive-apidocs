@@ -1028,8 +1028,8 @@ mailMailAPIError=
     Scrive by Mail Error
     $nicemail(
         mailheader= "ScriveBy Mail Error";
-        mailp1 = "<p>Greetings from Scrive by Mail!</p>";
-        mailp2 = "<p>I'm sorry, but I was unable to process the mail you just sent me and I have not forwarded the document to anyone.</p>";
+        mailp1 = "<p>Greetings from Scrive by Mail,</p>";
+        mailp2 = "<p>I was unable to process the mail you just sent me and I have not forwarded the document to anyone.</p>";
         mailp3 = errormsg;
         mailp4 = "<p>Thanks for using Scrive by Mail</p>"
     )$
