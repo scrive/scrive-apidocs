@@ -155,7 +155,7 @@ handleScriveByMail = do
       Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content
           
       -- send error email          
-      sendMailAPIErrorEmail ctx username $ "<p>I don't know what the problem is. Perhaps try again with a different email program.</p>"
+      sendMailAPIErrorEmail ctx username $ "<p>I do not know what the problem is. Perhaps try again with a different email program.</p>"
       mzero
       
   let recodedPlain = (replace "\r\n\r\n" "\r\n" $ BS.toString recodedPlain') <| isOutlook |> BS.toString recodedPlain'
@@ -168,7 +168,7 @@ handleScriveByMail = do
     Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content
     
     -- send error mail
-    sendMailAPIErrorEmail ctx username $ "<p>I'm only a little smart :(. I couldn't understand the email you sent me. Here are the things I didn't understand: <br /><br />\n" ++ msg ++ "<br /><br />\nIf you correct them and send me the email again, maybe I can understand it!</p>"
+    sendMailAPIErrorEmail ctx username $ "<p>I could not understand the email you sent me. Here are the things I did not understand: <br /><br />\n" ++ msg ++ "<br /><br />\nPlease correct the problems and try again.</p>"
     
     mzero
     
@@ -197,6 +197,7 @@ handleScriveByMail = do
     Log.scrivebymail $ "Could not create document: " ++ msg
     
     -- send email saying sorry, there was some weird error
+    sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not create your document. I do not know what is wrong. You can try again or you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkUpload) ++ "\">click here</a> to use the web interface.</p>"
     
     mzero
     
@@ -212,7 +213,7 @@ handleScriveByMail = do
     Log.scrivebymail $ "Could not set up document: " ++ (intercalate "; " errs)
     
     -- send sorry email
-    sendMailAPIErrorEmail ctx username $ "<p>I'm really sorry, but I could not forward your document. I don't know what's wrong. I created it in Scrive, but I can't get it ready. If you want to see your document, you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
+    sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what is wrong. I created it in Scrive, but I cannot get it ready to send. If you want to see your document, you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
     
     mzero
 
@@ -222,7 +223,7 @@ handleScriveByMail = do
     Log.scrivebymail $ "Could not got to pending document: " ++ (intercalate "; " errs)
     
     -- send sorry email
-    sendMailAPIErrorEmail ctx username $ "<p>I'm really sorry, but I could not forward your document. I don't know what's wrong. It is created and ready to go. To see your document and send it yourself, <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
+    sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what's wrong. Your document is created and ready to be sent. To see your document and send it yourself, <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
     
     mzero
   
