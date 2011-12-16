@@ -20,6 +20,7 @@ module API.IntegrationAPI (
     , getDocument
     , setDocumentTag
     , removeDocument
+    , getDaveDoc
     ) where
 
 import Control.Monad.State
@@ -347,7 +348,6 @@ getDocuments = do
     linkeddocuments <- doc_query $ GetDocumentsByCompanyAndTags (Just sid) (companyid company) tags
     let documents = filter (isAuthoredByCompany $ companyid company) linkeddocuments
     let notDeleted doc =  any (not . signatorylinkdeleted) $ documentsignatorylinks doc
-    -- We support only offers and contracts by API calls
     let supportedType  = not . isAttachment
     api_docs <- sequence $  map (api_document_read False) $ filter (\d -> notDeleted d && supportedType d) documents
     return $ toJSObject [("documents",JSArray $ api_docs)]
@@ -372,7 +372,6 @@ setDocumentTag =  do
     return $ toJSObject []
 
 
---TODO this will not work since we don't have real document removal
 removeDocument  :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 removeDocument = do
     doc <- documentFromParam
@@ -417,3 +416,10 @@ connectCompanyToSession sid cid ssid = do
     if (loaded)
      then return $ BackToReferer
      else mzero
+
+getDaveDoc :: Kontrakcja m => IntegrationAPIFunction m APIResponse
+getDaveDoc = do
+  Just (JSString document_id) <- fromJSONField "document_id"
+  let Just did = maybeRead $ fromJSString document_id
+  doc <- doc_query $ GetDocumentByDocumentID $ DocumentID did
+  return $ toJSObject [("document", showJSON $ show doc)]

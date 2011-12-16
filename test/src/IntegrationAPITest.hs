@@ -26,11 +26,16 @@ import Util.JSON
 import Test.QuickCheck.Gen
 import Control.Exception
 import System.Timeout
+--import Doc.DocStateData
+import qualified AppLogger as Log
+--import Doc.Transitory
 
 integrationAPITests :: Connection -> Test
 integrationAPITests conn = testGroup "Integration API" [
     --  testCase "Test crazy exponent in JSON" $ testLargeExponent 
      testCase "Test creating a offer from template" $ testDocumentCreationFromTemplate conn      
+    , testCase "Test send to friend delete scenario" $ testFriendDeleteScenario conn
+    , testCase "Test connect to existing service user" $ testSignatoryNoCompany conn
     , testCase "Test creating a contract from template" $ testDocumentCreationFromTemplateContract conn
     , testCase "Test creating an order from template" $ testDocumentCreationFromTemplateOrder conn
     , testCase "Testing if we can create sample document" $ testDocumentCreation conn
@@ -57,10 +62,48 @@ integrationAPITests conn = testGroup "Integration API" [
       
     , testCase "Test that you can set the relation for a signatory and read it back" $ testNewDocumentRelations conn
     , testCase "Test that we can create from templates" $ testCreateFromTemplate conn
-
     ]
 
 -- Main tests
+
+testFriendDeleteScenario :: Connection -> Assertion
+testFriendDeleteScenario conn = withTestEnvironment conn $ do
+  createTestService
+  -- this will create a user for eric@scrive.com in test_company1
+  x <- createDocumentJSON "test_company1" "eric@scrive.com"
+  x' <- makeAPIRequest createDocument x
+  let Right (JSString docid') = jsget "document_id" $ JSObject x'
+  doc' <- makeAPIRequest getDaveDoc $ fromRight $ jsset "document_id" docid' jsempty
+  Log.debug $ "document: " ++ show doc'
+  -- this will create a user mariusz@skrivapa.se in test_company1
+  -- and also find the old user eric@scrive.com and set his company
+  apiReq1 <- createDocumentJSONFriend "test_company1" "mariusz@skrivapa.se" "eric@scrive.com"
+  apiRes1 <- makeAPIRequest createDocument $ apiReq1
+  assertBool ("Failed to create document :" ++ show apiRes1)  $ not (isError apiRes1)
+  let Right (JSString docid) = jsget "document_id" $ JSObject apiRes1
+  doc <- makeAPIRequest getDaveDoc $ fromRight $ jsset "document_id" docid jsempty
+  Log.debug $ "document: " ++ show doc
+  _rsp <- makeAPIRequest removeDocument $ fromRight $ jsset "document_id" docid jsempty
+  _rsp' <- makeAPIRequest removeDocument $ fromRight $ jsset "document_id" docid' jsempty
+  doclist <- makeAPIRequest getDocuments $ fromRight $ jsset "company_id" "test_company1" jsempty
+  assertBool ("Should have no documents, but got: " ++ show doclist) $ Right (JSArray []) == jsget "documents" (JSObject doclist)
+
+testSignatoryNoCompany :: Connection -> Assertion
+testSignatoryNoCompany conn = withTestEnvironment conn $ do
+  createTestService
+  -- this will create a user for eric@scrive.com in test_company2
+  x <- createDocumentJSON "test_company2" "eric@scrive.com"
+  x' <- makeAPIRequest createDocument x
+  let Right (JSString docid') = jsget "document_id" $ JSObject x'
+  -- this will create a user mariusz@skrivapa.se in test_company1
+  -- and also find the old user eric@scrive.com and set his company
+  apiReq1 <- createDocumentJSONFriend "test_company1" "mariusz@skrivapa.se" "eric@scrive.com"
+  apiRes1 <- makeAPIRequest createDocument $ apiReq1
+  assertBool ("Failed to create document :" ++ show apiRes1)  $ not (isError apiRes1)
+  _rsp' <- makeAPIRequest removeDocument $ fromRight $ jsset "document_id" docid' jsempty
+  doclist <- makeAPIRequest getDocuments $ fromRight $ jsset "company_id" "test_company2" jsempty
+  assertBool ("Should have no documents, but got: " ++ show doclist) $ Right (JSArray []) == jsget "documents" (JSObject doclist)
+
 
 testNewDocumentOrder :: Connection -> Assertion
 testNewDocumentOrder conn = withTestEnvironment conn $ do
@@ -74,7 +117,7 @@ testNewDocumentOrder conn = withTestEnvironment conn $ do
   assertBool ("Failed to get doc: " ++ show apiRes2) $ not (isError apiRes2)
   assertBool ("doctype is not order: " ++ show apiRes2) $ (Right (showJSON (5 :: Int))) == jsget ["document", "type"] (showJSON apiRes2)
   let Right (JSArray (authorjson:_)) = jsget ["document", "involved"] (showJSON apiRes2)
-      
+  
   assertEqual "relation for author is should be secretary" (Right (JSRational False (1%1))) (jsget ["relation"] authorjson)
 
 testDocumentCreation :: Connection -> Assertion
@@ -211,6 +254,29 @@ createDocumentJSON company author = do
                                 ]
         )]
         
+createDocumentJSONFriend :: String -> String -> String -> DB JSValue
+createDocumentJSONFriend company author friend = do
+     dt <- rand 10 $  elements [1,3,5]
+     randomCall $ \title fname sname fname2 sname2 -> JSObject $ toJSObject $
+        [ ("company_id", JSString $ toJSString company)
+         ,("title" , JSString $ toJSString  title)
+         ,("type" , JSRational True (dt%1))
+         ,("involved" , JSArray [ JSObject $ toJSObject $
+                                    [ ("fstname", JSString $ toJSString fname),
+                                      ("sndname", JSString $ toJSString sname),
+                                      ("email",   JSString $ toJSString author),
+                                      ("companynr", JSString $ toJSString company)
+                                    ],
+                                  JSObject $ toJSObject $
+                                  [ ("fstname", JSString $ toJSString fname2),
+                                      ("sndname", JSString $ toJSString sname2),
+                                      ("email",   JSString $ toJSString friend),
+                                      ("companynr", JSString $ toJSString company)
+                                    ]
+
+                                ]
+        )]
+
 
 createOrderJSON :: String -> String -> DB JSValue
 createOrderJSON company author = randomCall $ \title fname sname fname2 sname2 em2 -> JSObject $ toJSObject $
