@@ -1047,6 +1047,7 @@ parseString = do
         string_char_p = P.munch1 (\x -> x/=BSB.c2w '(' &&
                                    x/=BSB.c2w '\\' &&
                                    x/=BSB.c2w ')')
+
         string_bs_p = do
                 _ <- P.char (o '\\')
                 P.choice [ P.char (o 'f') >> return (BSC.singleton '\f')
@@ -1054,11 +1055,24 @@ parseString = do
                          , P.char (o 'n') >> return (BSC.singleton '\n')
                          , P.char (o 't') >> return (BSC.singleton '\t')
                          , P.char (o 'b') >> return (BSC.singleton '\b')
-                         , do 
+                           -- \\\n or \\\r or \\\r\n all result in \n
+                         , P.char (o '\r') >> 
+                                  (P.char (o '\n') P.<++ return (o '\n')) >> return (BSC.singleton '\n')
+                         , P.char (o '\n') >> return (BSC.singleton '\n')
+                         , (do 
                              o1 <- octDigit
                              o2 <- octDigit
                              o3 <- octDigit
-                             return $ BS.singleton ((o1-48)*8*8 + (o2-48)*8 + (o3-48))
+                             return $ BS.singleton ((o1-48)*8*8 + (o2-48)*8 + (o3-48)))
+                            P.<++
+                           (do 
+                             o2 <- octDigit
+                             o3 <- octDigit
+                             return $ BS.singleton ((o2-48)*8 + (o3-48)))
+                            P.<++
+                           (do 
+                             o3 <- octDigit
+                             return $ BS.singleton ((o3-48)))
                          ] P.<++ do
                               next <- P.get
                               traceM ("Backslash used before " ++ show (BSB.w2c next))
@@ -1184,3 +1198,27 @@ isspacenoteol 0x0C = True
 isspacenoteol 0x00 = True
 isspacenoteol _ = False
 
+printIfParsedDifferent :: P.String -> P.String -> IO ()
+printIfParsedDifferent ainput aoutput = do
+  let input = BSC.pack ainput
+      output = BSC.pack aoutput
+  case P.readP_to_S parseString input of
+    [(output',_)] -> do
+      when (output/=output') $
+           putStrLn $ "Parsed " ++ BSC.unpack input ++ " as " ++ show output' ++ " expected " ++ show output
+    [] -> do
+      putStrLn $ "Cannot at all parse " ++ BSC.unpack input
+    xs -> do
+      putStrLn $ "Many parses for " ++ BSC.unpack input ++ ": " ++ show (map fst xs)
+
+testReadParseString :: IO ()
+testReadParseString = do
+  printIfParsedDifferent "()" ""
+  printIfParsedDifferent "(abc)" "abc"
+  printIfParsedDifferent "(())" "()"
+  printIfParsedDifferent "(\\()" "("
+  printIfParsedDifferent "(\\(\\)\\)\\))" "()))"
+  printIfParsedDifferent "(\\n\\r\\t\\b\\f)" "\n\r\t\b\f"
+  printIfParsedDifferent "(\\1q\\01q\\001q\\1)" "\x01q\x01q\x01q\x01"
+  printIfParsedDifferent "(\\\rA\\\nA\\\r\nA)" "\nA\nA\nA"
+  printIfParsedDifferent "(\\q\\h\\p\\v)" "qhpv"
