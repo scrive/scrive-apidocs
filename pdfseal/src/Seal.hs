@@ -25,13 +25,15 @@ sealFileName = "files/seal3.pdf"
 listPageRefIDSFromPages :: Document -> RefID -> [RefID]
 listPageRefIDSFromPages document' pagesrefid =
     let
-       Just (Indir (Dict pages) _) = PdfModel.lookup pagesrefid document'
+       pages = case PdfModel.lookup pagesrefid document' of
+                 Just (Indir (Dict pages') _) -> pages'
+                 x -> error ("lookup of " ++ show pagesrefid ++ " as /Page returned " ++ show x)
        unKids (Ref r) = r
-       unKids _ = error "unKids only for Ref"
+       unKids x = error ("element of /Kids array is not Ref, it is " ++ show x)
        list = case Prelude.lookup (BS.pack "Kids") pages of
                 Just (Array kids) -> concatMap (listPageRefIDSFromPages document' . unKids) kids
                 Nothing -> [pagesrefid]
-                _ -> error "Broken case in listPageRefIDSFromPages"
+                x -> error ("/Kids key in " ++ show pagesrefid ++ " is not array of refs, it is " ++ show x)
     in list
 
 addPageToDocument :: Value -> State Document RefID
@@ -41,17 +43,25 @@ addPageToDocument (Dict newpagevalue) = do
     let
         firstBody = head (documentBodies document)
         trailer' = bodyTrailer firstBody
-        Just (Ref root) = Prelude.lookup (BS.pack "Root") trailer'
-        Just (Indir (Dict catalog) _) = PdfModel.lookup root document
-        Just (Ref pagesrefid) = Prelude.lookup (BS.pack "Pages") catalog
-        Just (Indir (Dict pages) _) = PdfModel.lookup pagesrefid document
+        root = case Prelude.lookup (BS.pack "Root") trailer' of
+                 Just (Ref root') -> root'
+                 x -> error ("/Root is wrong: " ++ show x)
+        catalog = case PdfModel.lookup root document of
+                    Just (Indir (Dict catalog') _) -> catalog'
+                    x -> error ("lookup of " ++ show root ++ " returned " ++ show x)
+        pagesrefid = case Prelude.lookup (BS.pack "Pages") catalog of
+                       Just (Ref pagesrefid') -> pagesrefid'
+                       x -> error ("lookup of /Pages in catalog returned " ++ show x)
+        pages = case PdfModel.lookup pagesrefid document of
+                  Just (Indir (Dict pages') _) -> pages'
+                  x -> error ("lookup of root pages dict at " ++ show pagesrefid ++ " returned " ++ show x)
 --      unKids (Ref r) = r
         newkids = case Prelude.lookup (BS.pack "Kids") pages of
                 Just (Array kids) -> Array (kids ++ [Ref newpageid])
-                _ -> error "/Kids key must be there and must be an array"
+                x -> error ("lookup for /Kids returned " ++ show x)
         newcount = case Prelude.lookup (BS.pack "Count") pages of
                 Just (Number count) -> count + 1
-                _ -> error "/Count key must be there and must be an array"
+                x -> error ("lookup for /Count returned " ++ show x)
         skipkeys list = filter (\(a,_) -> a/=BS.pack "Count" && a/=BS.pack "Kids") list
         skipkeys2 list = filter (\(a,_) -> a/=BS.pack "Parent") list
         newpagesindir = Indir (Dict ([(BS.pack "Count", Number newcount),(BS.pack "Kids",newkids)] ++ skipkeys pages)) Nothing
@@ -65,9 +75,16 @@ listPageRefIDs document' =
     let
         firstBody = head (documentBodies document')
         trailer' = bodyTrailer firstBody
-        Just (Ref root) = Prelude.lookup (BS.pack "Root") trailer'
-        Just (Indir (Dict catalog) _) = PdfModel.lookup root document'
-        Just (Ref pagesrefid) = Prelude.lookup (BS.pack "Pages") catalog
+        root = case Prelude.lookup (BS.pack "Root") trailer' of
+                 Just (Ref root') -> root'
+                 x -> error ("/Root is wrong: " ++ show x)
+        catalog = case PdfModel.lookup root document' of
+                    Just (Indir (Dict catalog') _) -> catalog'
+                    x -> error ("lookup of /Catalog at " ++ show root ++ " in document returned " ++ show x)
+        pagesrefid = case Prelude.lookup (BS.pack "Pages") catalog of
+                       Just (Ref pagesrefid') -> pagesrefid'
+                       x -> error ("lookup of /Pages in catalog at " ++ show root ++ " returned " ++ show x ++ " catalog is " ++ show catalog)
+                       
     in listPageRefIDSFromPages document' pagesrefid
 
 getResDict :: Document -> RefID -> DictData
