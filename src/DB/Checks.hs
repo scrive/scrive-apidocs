@@ -82,11 +82,10 @@ checkDBConsistency = do
                Log.debug "Table is outdated, scheduling for migration."
                return $ Right $ Just (table, ver)
 
-    checkVersion table = wrapDB $ \conn -> do
-      mver <- quickQuery' conn "SELECT version FROM table_versions WHERE name = ?"
-        [toSql $ tblName table] >>= oneObjectReturnedGuard . join
+    checkVersion table = do
+      mver <- getOne "SELECT version FROM table_versions WHERE name = ?" [toSql $ tblName table]
       case mver of
-        Just ver -> return $ fromSql ver
+        Just ver -> return ver
         _ -> error $ "No version information about table '" ++ tblName table ++ "' was found in database"
 
     migrate ms ts = forM_ ms $ \m -> forM_ ts $ \(t, from) -> do

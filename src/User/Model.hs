@@ -455,13 +455,11 @@ instance DBUpdate SetSignupMethod Bool where
 
 data SetUserCompanyAdmin = SetUserCompanyAdmin UserID Bool
 instance DBUpdate SetUserCompanyAdmin Bool where
-  dbUpdate (SetUserCompanyAdmin uid iscompanyadmin) = wrapDB $ \conn -> do
-    mcid <- quickQuery' conn "SELECT company_id FROM users WHERE id = ? AND deleted = FALSE FOR UPDATE" [toSql uid]
-      >>= oneObjectReturnedGuard . join
-      >>= return . join . fmap fromSql
+  dbUpdate (SetUserCompanyAdmin uid iscompanyadmin) = do
+    mcid <- getOne "SELECT company_id FROM users WHERE id = ? AND deleted = FALSE FOR UPDATE" [toSql uid]
     case mcid :: Maybe CompanyID of
       Nothing -> return False
-      Just _ -> do
+      Just _ -> wrapDB $ \conn -> do
         run conn "UPDATE users SET is_company_admin = ? WHERE id = ? AND deleted = FALSE" [toSql iscompanyadmin, toSql uid]
           >>= oneRowAffectedGuard
 
