@@ -38,7 +38,6 @@ module User.Model (
   ) where
 
 import Control.Applicative
-import Control.Monad
 import Data.Data
 import Data.Int
 import Database.HDBC
