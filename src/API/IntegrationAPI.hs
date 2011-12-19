@@ -265,8 +265,8 @@ createAPIDocument comp' (authorTMP:signTMPS) tags mlocale createFun = do
     _ <- update $ SetDocumentTags (documentid doc) tags
     when (isJust mlocale) $
       ignore $ update $ SetDocumentLocale (documentid doc) (fromJust mlocale) now
-    let sigdetails s =  (toSignatoryDetails s,[SignatoryPartner] <| (isSignatory s) |> [])
-        authordetails s = (toSignatoryDetails s,[SignatoryAuthor,SignatoryPartner] <| (isSignatory s) |> [SignatoryAuthor])
+    let sigdetails s =  (fst $ toSignatoryDetails s,[SignatoryPartner] <| (isSignatory s) |> [])
+        authordetails s = (fst $ toSignatoryDetails s,[SignatoryAuthor,SignatoryPartner] <| (isSignatory s) |> [SignatoryAuthor])
         sigs = (authordetails authorTMP):(sigdetails <$> signTMPS)
     doc' <- update $ ResetSignatoryDetails (documentid doc) sigs (ctxtime ctx)
     when (isLeft doc') $ Log.integration $ "error creating document: " ++ fromLeft doc'

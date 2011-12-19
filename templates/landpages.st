@@ -11,7 +11,7 @@ csvlandpage=
       </span>
     </div>
   </div>
-  <div id="signStepsBody">
+  <div class="signStepsBody">
     <div class="signStepsBodyUploadBox" style="border:0px;text-align:left;width: 250px;font-weight:bold"> 
       <p class="text" style="padding-top:40px">
         $flashMessageCSVSent()$

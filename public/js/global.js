@@ -1345,7 +1345,7 @@ function nextStep() {
 
 function checkPersonPaneMode() {
     var personpane = $('#personpane');
-    var signStepsBody = $("#signStepsBody");
+    var signStepsBody = $(".signStepsBody");
 
     if (personpane.children().size() > 2) {
         signStepsBody.removeClass("personPaneSmallNumberMode");

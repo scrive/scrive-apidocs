@@ -72,6 +72,14 @@ var Tabs = Backbone.Model.extend({
             tabs[i].setActive(newtab === tabs[i]);
         this.trigger("change");
    },
+   activateNext : function() {
+        var tabs = this.tabs();
+        var next = this.activeTab();
+        for(var i=tabs.length-1;i>=0 && !tabs[i].active() ;i--)
+            if (!tabs[i].disabled())
+                next = tabs[i];
+        this.activate(next);
+   },
    hideAll: function()
    {    var tabs = this.tabs();
         for(var i=0;i<tabs.length;i++)
@@ -184,6 +192,9 @@ window.KontraTabs = {
                         el : $("<div/>")
                     })
         return this;
+    },
+    next : function() {
+        this.model.activateNext();
     }
 }
 

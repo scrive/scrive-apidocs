@@ -35,7 +35,7 @@ $loadingdialog()$
             <span class="numbericon3"></span><a href="#">$_step3select()$</a>
       </li>   
   </ul>
-  <div id="signStepsBody"> 
+  <div class="signStepsBody"> 
  
 <!-- MAIN FORM STARTS HERE -->
 <!-- Templates -->

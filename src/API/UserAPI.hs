@@ -188,7 +188,7 @@ sendNewDocument = do
 
 getSignatories :: Kontrakcja m => UserAPIFunction m [SignatoryDetails]
 getSignatories = do
-    minvolved  <- fromJSONLocal "involved" $ fromJSONLocalMap $ fmap toSignatoryDetails <$> getSignatoryTMP
+    minvolved  <- fromJSONLocal "involved" $ fromJSONLocalMap $ fmap (fst . toSignatoryDetails) <$> getSignatoryTMP
     case minvolved of
         Nothing -> throwApiError API_ERROR_MISSING_VALUE "Problems with involved."
         Just involved -> return involved

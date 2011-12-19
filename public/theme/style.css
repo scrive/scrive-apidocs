@@ -1269,14 +1269,17 @@ input[type=submit].hidden
 }
 
 /**/
-#signStepsBody
+.signStepsBody
 {
     color: #414241;
     background-image: url(images/signStepsBodyBorder.png);
     background-repeat: repeat-y;
     overflow: hidden;
     min-height: 100px;
-
+    padding:8px 19px;
+    border-left: 1px solid #BDBDBD;
+    border-right: 1px solid #BDBDBD;
+    border-bottom: 1px solid #C0C0C0;
 }
 
 .postSignStepBody {
@@ -2280,13 +2283,6 @@ form {
     float: left;
     height: 24px;
     width: 24px;
-}
-
-#signStepsBody {
-    padding:8px 19px;
-    border-left: 1px solid #BDBDBD;
-    border-right: 1px solid #BDBDBD;
-    border-bottom: 1px solid #C0C0C0;
 }
 
 #signStepsBody.ericfix {

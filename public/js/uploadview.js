@@ -176,7 +176,7 @@
     window.UploadProcessMain = function(){
         var wizard = new Wizard;
         var wizardview = new WizardView({model: wizard});
-        wizardview.el = $("#signStepsBody table tbody");
+        wizardview.el = $(".signStepsBody table tbody");
         window.UploadWizardView = wizardview;
 
         var sp = new WizardStep;

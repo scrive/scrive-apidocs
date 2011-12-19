@@ -185,5 +185,6 @@ javascriptLocalisation =
            , editInviteDialogHead : "$_editInviteTextDialogHead()$"
            , days : "$_days()$"
            , to : "$_to()$"
+           , nextStep : "$_signStepsBodyFunctionsNextStep()$"
    }
 ####

@@ -747,12 +747,10 @@ handleIssueSign :: Kontrakcja m => Document -> m KontraLink
 handleIssueSign document = do
     Log.debug "handleIssueSign"
     ctx <- getContext
-    -- unless (document `allowsIdentification` EmailIdentification) mzero | This need to be refactored | Breaks templates
-    udoc <- guardRightM $ updateDocument ctx document
-    mdocs <- splitUpDocument udoc
+    mdocs <- splitUpDocument document
     case mdocs of
       Right docs -> do
-        mndocs <- mapM (forIndividual udoc) docs
+        mndocs <- mapM (forIndividual document) docs
         case (lefts mndocs, rights mndocs) of
           ([], [d]) -> do
             addFlashM $ modalSendConfirmationView d
@@ -800,11 +798,10 @@ handleIssueSend :: Kontrakcja m => Document -> m KontraLink
 handleIssueSend document = do
     Log.debug "handleIssueSend"
     ctx <- getContext
-    udoc <- guardRightM $ updateDocument ctx document
-    mdocs <- splitUpDocument udoc
+    mdocs <- splitUpDocument document
     case mdocs of
       Right docs -> do
-        mndocs <- mapM (forIndividual udoc) docs
+        mndocs <- mapM (forIndividual document) docs
         case (lefts mndocs, rights mndocs) of
           ([], [d]) -> do
             addFlashM $ modalSendConfirmationView d
@@ -1974,7 +1971,7 @@ handleSaveDraft did = do
     liftIO $ putStrLn $ show draftData
     (jsss :: Maybe JSValue) <- withJSONFromField "draft" $ fromJSON
     liftIO $ putStrLn $ show jsss
-    res <- doc_update $ UpdateDraft did (applyDraftDataToDocument doc draftData)
+    res <- applyDraftDataToDocument doc draftData
     case res of
          Right _ -> return $ JSObject $ toJSObject []
          Left s -> do
