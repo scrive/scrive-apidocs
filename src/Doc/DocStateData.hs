@@ -160,7 +160,7 @@ data FieldPlacement = FieldPlacement
 
 data SignatoryDetails0 = SignatoryDetails0
     { signatoryname00      :: BS.ByteString  -- "Gracjan Polak"
-    , signatorycompany00   :: BS.ByteString  -- SkrivaPå
+    , signatorycompany00   :: BS.ByteString  -- Scrive
     , signatorynumber00    :: BS.ByteString  -- 123456789
     , signatoryemail00     :: BS.ByteString  -- "gracjanpolak@skrivapa.se"
     }
