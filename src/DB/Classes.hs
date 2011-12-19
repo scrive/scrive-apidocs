@@ -52,6 +52,12 @@ class (Functor m, MonadIO m) => DBMonad m where
 -- can't escape it in any other way than by runDB function).
 newtype DB a = DB { unDB :: ReaderT Connection IO a }
   deriving (Applicative, Functor, Monad, MonadPlus, MonadIO)
+-- Note: Do NOT try to provide DBMonad instance for DB. DBMonad instance
+-- allows you to call runDB function, which executes a statement within
+-- transaction. But, since we are in DB monad, we are already in such
+-- transaction! And because there is no such thing as nested transactions,
+-- this basically kills its 'transactional' character.
+
 
 -- | Wraps IO action in DB
 wrapDB :: (Connection -> IO a) -> DB a
