@@ -46,7 +46,7 @@ import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
 
 import DB.Types
-import Doc.DocState
+import Doc.DocStateData
 import Misc
 import MinutesTime
 import Mails.MailsData
@@ -624,7 +624,7 @@ newEmailSendoutAction mail = do
     let action = EmailSendout {
         esMail = mail
     }
-    _ <- update $ NewAction action $ now
+    _ <- update $ NewAction action $  now
     return ()
 
 -- Migrations and old stuff --

@@ -62,34 +62,34 @@ checkIfOneObjectReturned xs =
     >>= return . maybe False (const True)
 
 
-class FetcherArity a where
-    type FetcherResult a :: *
-    executeFetcher' :: Int -> a -> [SqlValue] -> Either DBException (FetcherResult a)
-    fetcherArity :: a -> Int
+class Fetcher a where
+    type FetchResult a :: *
+    fetchWorker :: Int -> a -> [SqlValue] -> Either DBException (FetchResult a)
+    fetchArity :: a -> Int
 
-instance FetcherArity (Either DBException r) where
-    type FetcherResult (Either DBException r) = r
+instance Fetcher (Either DBException r) where
+    type FetchResult (Either DBException r) = r
 
-    executeFetcher' _ action [] = action
-    executeFetcher' n _ xs = 
+    fetchWorker _ action [] = action
+    fetchWorker n _ xs = 
       Left $ RowLengthMismatch "" n (n + length xs)
 
-    fetcherArity _ = 0
+    fetchArity _ = 0
 
-instance (FetcherArity b, Convertible SqlValue t) => FetcherArity (t -> b) where
-    type FetcherResult (t -> b) = FetcherResult b
+instance (Fetcher b, Convertible SqlValue t) => Fetcher (t -> b) where
+    type FetchResult (t -> b) = FetchResult b
 
-    executeFetcher' n action (x:xs) = 
+    fetchWorker n action (x:xs) = 
       case safeFromSql x of
-        Right value -> executeFetcher' (n+1) (action value) xs
+        Right value -> fetchWorker (n+1) (action value) xs
         Left cnvError -> Left $ CannotConvertSqlValue "" n cnvError
 
-    executeFetcher' n action _ = do
-      Left $ RowLengthMismatch "" (n + fetcherArity action) n
+    fetchWorker n action _ = do
+      Left $ RowLengthMismatch "" (n + fetchArity action) n
 
-    fetcherArity action = 1 + fetcherArity (action undefined) 
+    fetchArity action = 1 + fetchArity (action undefined) 
 
-fetchValues :: (MonadIO m, FetcherArity fetcher) => Statement -> fetcher -> m [FetcherResult fetcher]
+fetchValues :: (MonadIO m, Fetcher fetcher) => Statement -> fetcher -> m [FetchResult fetcher]
 fetchValues st decoder = liftM reverse (worker [])
   where
     worker acc = do
@@ -97,7 +97,7 @@ fetchValues st decoder = liftM reverse (worker [])
       case mrow of
         Nothing -> return acc
         Just row -> 
-          case executeFetcher' 0 decoder row of
+          case fetchWorker 0 decoder row of
             Right value -> worker (value : acc)
             Left left -> do
                    liftIO $ finish st

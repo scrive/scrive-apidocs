@@ -302,10 +302,11 @@ window.Signatory = Backbone.Model.extend({
     },
     reject: function(customtext) {
         return new Submit({
-              url: "/s/" + this.document().documentid() + this.document().viewer().urlPart(),
+              url: "/s/" + this.document().documentid() + "/"+ this.document().viewer().signatoryid(),
+              magichash: this.document().viewer().magichash(),
               method: "POST",
               customtext : customtext,
-              cancel : "YES"
+              reject : "YES"
           });
     },
     

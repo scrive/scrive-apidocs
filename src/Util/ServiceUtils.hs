@@ -14,7 +14,7 @@ module Util.ServiceUtils (
 
 import API.Service.Model
 import User.Model
-import Doc.DocState
+import Doc.DocStateData
 import Company.Model
 import Control.Monad
 import Misc

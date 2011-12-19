@@ -5,7 +5,7 @@ module Doc.DocStateCommon
 where
 
 --import API.Service.Model
---import Company.Model
+import Company.Model
 --import Control.Monad
 --import Control.Monad.Reader (ask)
 --import Database.HDBC
@@ -17,7 +17,7 @@ import DB.Types
 import Doc.DocProcess
 import Doc.DocStateData
 --import Doc.DocStateUtils
---import Doc.DocUtils
+import Doc.DocUtils
 --import Happstack.Data.IxSet as IxSet hiding (null)
 --import Happstack.State
 import Mails.MailsUtil
@@ -25,18 +25,29 @@ import MinutesTime
 import Misc
 import User.Model
 import qualified Data.ByteString.Char8 as BS
---import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString.UTF8 as BS
 --import Util.SignatoryLinkUtils
---import Util.HasSomeCompanyInfo
---import Util.HasSomeUserInfo
---import InputValidation
+import Util.HasSomeCompanyInfo
+import Util.HasSomeUserInfo
+import InputValidation
 --import Control.Applicative
---import Doc.DocInfo
+import Doc.DocInfo
 --import Data.List
 --import File.FileID
 --import qualified AppLogger as Log
 --import qualified Doc.Model as D
 --import qualified Doc.Tables as D
+import Data.Maybe
+import Util.SignatoryLinkUtils
+
+                  
+{- |
+
+ -}
+trueOrMessage :: Bool -> String -> Maybe String
+trueOrMessage False s = Just s
+trueOrMessage True  _ = Nothing
+
 
 signLinkFromDetails' :: SignatoryDetails
                      -> [SignatoryRole]
@@ -110,3 +121,208 @@ newDocumentFunctionality documenttype user =
     (Just True, Nothing) -> BasicFunctionality
     (Just True, Just BasicMode) -> BasicFunctionality
     _ -> AdvancedFunctionality
+
+{- |
+
+-}
+checkCloseDocument :: Document -> [String]
+checkCloseDocument doc = catMaybes $
+  [ trueOrMessage (isSignable doc) ("document is not signable")
+  , trueOrMessage (documentstatus doc == Pending || documentstatus doc == AwaitingAuthor)
+                    ("document should be pending or awaiting author but it is " ++ (show $ documentstatus doc))
+  , trueOrMessage (all (isSignatory =>>^ hasSigned) (documentsignatorylinks doc)) 
+                    ("Not all signatories have signed")
+  ]
+
+{- |
+
+-}
+checkCancelDocument :: Document -> [String]
+checkCancelDocument doc = catMaybes $
+  [ trueOrMessage (isSignable doc) ("document is not signable")
+  , trueOrMessage (documentstatus doc == Pending || documentstatus doc == AwaitingAuthor)
+                    ("document should be pending or awaiting author but it is " ++ (show $ documentstatus doc))
+  ]
+
+
+{- | Preconditions for moving a document from Preparation to Pending.
+ -}
+checkPreparationToPending :: Document -> [String]
+checkPreparationToPending document = catMaybes $
+  [ trueOrMessage (isSignable document) ("document is not signable")
+  , trueOrMessage (documentstatus document == Preparation)
+                    ("Document status is not pending (is " ++ (show . documentstatus) document ++ ")")
+  , trueOrMessage (length (filter isAuthor $ documentsignatorylinks document) == 1)
+                    ("Number of authors was not 1")
+  , trueOrMessage (length (filter isSignatory $ documentsignatorylinks document) >= 1)
+                    ("There are no signatories")
+  , trueOrMessage (all (isSignatory =>>^ (isGood . asValidEmail . BS.toString . getEmail)) (documentsignatorylinks document))
+                    ("Not all signatories have valid email")
+  , trueOrMessage (length (documentfiles document) == 1) "Did not have exactly one file"
+  ]
+  -- NOTE: Should add stuff about first/last name, though currently the author may have his full name
+  -- stored in the first name field. OOPS!
+
+
+-- FIXME: check magic hash token
+-- FIXME: check proper role
+checkRejectDocument :: Document -> SignatoryLinkID -> [String]
+checkRejectDocument doc slid = catMaybes $
+  [ trueOrMessage (isSignable doc) ("document is not signable")
+  , trueOrMessage (documentstatus doc == Pending || documentstatus doc == AwaitingAuthor)
+                    ("document should be pending or awaiting author but it is " ++ (show $ documentstatus doc))
+  , trueOrMessage (any ((== slid) . signatorylinkid) (documentsignatorylinks doc))
+                  ("signatory #" ++ show slid ++ " is not in the list of document signatories")
+  ]
+
+checkSignDocument :: Document -> SignatoryLinkID -> MagicHash -> [String]
+checkSignDocument doc slid mh = catMaybes $
+  [ trueOrMessage (isPending doc || isAwaitingAuthor doc) "Document is not in pending"
+  , trueOrMessage (not $ hasSigned (doc, slid)) "Signatory has already signed"
+  , trueOrMessage (hasSeen (doc, slid)) "Signatory has not seen"
+  , trueOrMessage (isJust $ getSigLinkFor doc slid) "Signatory does not exist"
+  , trueOrMessage (validSigLink slid mh (Just doc)) "Magic Hash does not match"
+  ]
+
+checkResetSignatoryData :: Document -> [(SignatoryDetails, [SignatoryRole])] -> [String]
+checkResetSignatoryData doc sigs = 
+  let authors    = [ r | (_, r) <- sigs, SignatoryAuthor `elem` r]
+      nonauthors = [ r | (_, r) <- sigs, SignatoryAuthor `notElem` r]
+      isbasic = documentfunctionality doc == BasicFunctionality
+      disallowspartner _ = getValueForProcess doc processauthorsend /= Just True
+  in catMaybes $
+      [ trueOrMessage (documentstatus doc == Preparation) $ "Document is not in preparation, is in " ++ show (documentstatus doc)
+      , trueOrMessage (length authors == 1) $ "Should have exactly one author, had " ++ show (length authors)
+      , trueOrMessage (isbasic =>> (length nonauthors <= 1)) $ "Should be at most one signatory since it's basic functionality"
+      , trueOrMessage (isbasic =>> all (disallowspartner =>>^ (SignatoryPartner `notElem`)) authors) 
+                        ("The author should not be a signatory with doc type " ++ show (documenttype doc) ++ " and basic functionality: " ++ show authors)
+      , trueOrMessage (isbasic =>> none (hasFieldsAndPlacements . fst) sigs) "The signatories should have no custom fields or placements" 
+      ]
+
+{- |
+    Pumps data into a signatory link
+-}
+replaceSignatoryData :: SignatoryLink
+                        -> BS.ByteString
+                        -> BS.ByteString
+                        -> BS.ByteString
+                        -> BS.ByteString
+                        -> BS.ByteString
+                        -> BS.ByteString
+                        -> [BS.ByteString]
+                        -> SignatoryLink
+replaceSignatoryData siglink@SignatoryLink{signatorydetails} fstname sndname email company personalnumber companynumber fieldvalues =
+  siglink { signatorydetails = signatorydetails { signatoryfields = pumpData (signatoryfields signatorydetails) fieldvalues } }
+  where
+    pumpData [] _ = []
+    pumpData (sf:rest) vs = (case sfType sf of
+      FirstNameFT      -> sf { sfValue = fstname }
+      LastNameFT       -> sf { sfValue = sndname }
+      CompanyFT        -> sf { sfValue = company }
+      PersonalNumberFT -> sf { sfValue = personalnumber }
+      CompanyNumberFT  -> sf { sfValue = companynumber }
+      EmailFT          -> sf { sfValue = email }
+      CustomFT label _ -> sf { sfType = CustomFT label (not $ BS.null v), sfValue = v })
+        : pumpData rest vs'
+      where
+        (v, vs') = case sfType sf of
+          CustomFT{} -> if null vs
+                           then (BS.empty, [])
+                           else (head vs, tail vs)
+          _          -> (error "you can't use it", vs)
+
+
+
+{- |
+    Creates a signable document from a template document.
+    The new signable will have the same process as the template,
+    and it will be in preparation mode.  It won't be shared.
+-}
+templateToDocument :: Document -> Document
+templateToDocument doc =
+    let Template process = documenttype doc in
+    doc {
+          documentstatus = Preparation
+        , documenttype =  Signable process
+        , documentsharing = Private
+    }
+
+
+
+{- |
+    Replaces signatory data with given user's data.
+-}
+replaceSignatoryUser :: SignatoryLink
+                        -> User
+                        -> Maybe Company
+                        -> SignatoryLink
+replaceSignatoryUser siglink user mcompany =
+  let newsl = replaceSignatoryData
+                       siglink
+                       (getFirstName      user)
+                       (getLastName       user)
+                       (getEmail          user)
+                       (getCompanyName    mcompany)
+                       (getPersonalNumber user)
+                       (getCompanyNumber  mcompany)
+                       (map sfValue $ filter isFieldCustom $ signatoryfields $ signatorydetails siglink) in
+  newsl { maybesignatory = Just $ userid user,
+          maybecompany = usercompany user }
+
+checkUpdateFields :: Document -> SignatoryLinkID -> [String]
+checkUpdateFields doc slid = catMaybes $
+  [ trueOrMessage (documentstatus doc == Pending) $ "Document is not in Pending (is " ++ (show $ documentstatus doc) ++ ")"
+  , trueOrMessage (isJust $ getSigLinkFor doc slid) $ "Signatory does not exist"
+  , trueOrMessage (not $ hasSigned (doc, slid)) "Signatory has already signed."
+  ]
+
+checkAddEvidence :: Document -> SignatoryLinkID -> [String]
+checkAddEvidence doc slid = catMaybes $
+  [ trueOrMessage (documentstatus doc == Pending) "Document is not in pending"
+  , trueOrMessage (isSignatory (doc, slid)) "Given signatorylinkid is not a signatory"
+  ]
+
+
+checkPendingToAwaitingAuthor :: Document -> [String]
+checkPendingToAwaitingAuthor doc = catMaybes $
+  [ trueOrMessage (documentstatus doc == Pending) 
+                    ("document should be pending but it is " ++ (show $ documentstatus doc))
+  , trueOrMessage (all ((isSignatory &&^ (not . isAuthor)) =>>^ hasSigned) (documentsignatorylinks doc)) 
+                    ("Not all non-author signatories have signed")
+  , trueOrMessage (not $ hasSigned $ getAuthorSigLink doc) "Author has already signed"
+  ]
+
+{- |
+    Filter documents according to whether the given indicated sig link has even been deleted.
+    The first param should be True to get the docs which have been deleted,
+    and so would appear in the recycle bin//trash can.  It should be False to get docs which
+    have never been deleted.
+-}
+filterDocsWhereDeleted :: (SignatoryLinkIdentity a) => Bool -> a -> [Document] -> [Document]
+filterDocsWhereDeleted deleted siglinkidentifier docs =
+  filter isIncludedDoc docs
+  where
+    isIncludedDoc Document{documentsignatorylinks} = 
+      not . Prelude.null $ filter isIncludedSigLink documentsignatorylinks
+    isIncludedSigLink sl@SignatoryLink{signatorylinkdeleted} =
+      isSigLinkFor siglinkidentifier sl && signatorylinkdeleted==deleted
+
+
+{- |
+    Filter documents according to whether the indicated signatory link has been activated
+    according to the sign order.  Author links are included either way.
+-}
+filterDocsWhereActivated :: SignatoryLinkIdentity a => a -> [Document] -> [Document]
+filterDocsWhereActivated siglinkidentifier docs =
+  filter isIncludedDoc docs
+  where
+    isIncludedDoc doc@Document{documentsignatorylinks} = 
+      not . Prelude.null $ filter (isIncludedSigLink doc) documentsignatorylinks
+    isIncludedSigLink doc 
+                      sl@SignatoryLink{signatorylinkdeleted, 
+                                       signatoryroles, 
+                                       signatorydetails} =
+      let isRelevant = isSigLinkFor siglinkidentifier sl && not signatorylinkdeleted
+          isAuthorLink = SignatoryAuthor `elem` signatoryroles
+          isActivatedForSig = (documentcurrentsignorder doc) >= (signatorysignorder signatorydetails)
+      in  isRelevant && (isAuthorLink || isActivatedForSig)

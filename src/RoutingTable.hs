@@ -82,24 +82,24 @@ staticRoutes = choice
      , publicDir "kontakta" "contact" LinkContactUs handleContactUsPage
      , publicDir "scriveapi" "scriveapi" LinkAPIPage handleApiPage
      , publicDir "scrivebymail" "scrivebymail" LinkScriveByMailPage handleScriveByMailPage
-       
+
      -- sitemap
      , dir "webbkarta"       $ hGetAllowHttp $ handleSitemapPage
      , dir "sitemap"         $ hGetAllowHttp $ handleSitemapPage
 
      -- this is SMTP to HTTP gateway
      , dir "mailapi" $ hPostNoXToken $ toK0 $ ScriveByMail.handleScriveByMail
-     
+
      -- Only download function | unified for author and signatories
      , dir "download"                     $ hGet  $ toK3 $ DocControl.handleDownloadFile
-     
+
      , dir "s" $ dir "eleg" $ hGet $ toK2 $ BankID.generateBankIDTransaction
      , dir "s" $ hGet $ toK0    $ sendRedirect $ LinkContracts
      , dir "s" $ hGet $ toK2    $ DocControl.handleSignShow
      , dir "s" $ hGet $ toK3    $ DocControl.handleSignShowOldRedirectToNew -- Redirect for old version to version above, remove not earlier then 31.12.2012.
-     
+
      , dir "s" $ param "sign"           $ hPostNoXToken $ toK2 $ DocControl.signDocument
-     , dir "s" $ param "cancel"         $ hPostNoXToken $ toK2 $ DocControl.rejectDocument
+     , dir "s" $ param "reject"         $ hPostNoXToken $ toK2 $ DocControl.rejectDocument
      , dir "s" $ param "acceptaccount"  $ hPostNoXToken $ toK5 $ DocControl.handleAcceptAccountFromSign
      , dir "s" $ param "declineaccount" $ hPostNoXToken $ toK5 $ DocControl.handleDeclineAccountFromSign
      , dir "s" $ param "sigattachment"  $ hPostNoXToken $ toK2 $ DocControl.handleSigAttach
@@ -150,8 +150,6 @@ staticRoutes = choice
      , dir "save"                  $ hPost $ toK1 $ DocControl.handleSaveDraft 
      , dir "mailpreview"           $ hGet  $ toK2 $ DocControl.prepareEmailPreview
 
-     , dir "friends"               $ hGet  $ toK0 $ UserControl.handleFriends
-
      , dir "df"                    $ hGet  $ toK2 $ DocControl.handleFileGet
      , dir "dv"                    $ hGet  $ toK1 $ DocControl.handleAttachmentViewForAuthor
 
@@ -180,12 +178,13 @@ staticRoutes = choice
      , dir "account"                    $ hPost $ toK0 $ UserControl.handleUserPost
      , dir "account" $ hGet $ toK2 $ UserControl.handleGetChangeEmail
      , dir "account" $ hPost $ toK2 $ UserControl.handlePostChangeEmail
-     , dir "account" $ dir "sharing" $ hGet $ toK0 $ UserControl.handleGetSharing
-     , dir "account" $ dir "sharing" $ hPost $ toK0 $ UserControl.handlePostSharing
      , dir "account" $ dir "security" $ hGet $ toK0 $ UserControl.handleGetUserSecurity
      , dir "account" $ dir "security" $ hPost $ toK0 $ UserControl.handlePostUserSecurity
      , dir "account" $ dir "mailapi" $ hGet $ toK0 $ UserControl.handleGetUserMailAPI
      , dir "account" $ dir "mailapi" $ hPost $ toK0 $ UserControl.handlePostUserMailAPI
+     , dir "account" $ dir "usagestats" $ hGet $ toK0 $ UserControl.handleUsageStatsForUser
+     , dir "account" $ dir "usagestats" $ dir "days"   $ dir "json" $ hGet $ toK0 $ UserControl.handleUsageStatsJSONForUserDays
+     , dir "account" $ dir "usagestats" $ dir "months" $ dir "json" $ hGet $ toK0 $ UserControl.handleUsageStatsJSONForUserMonths
      , dir "contacts"  $ hGet  $ toK0 $ Contacts.showContacts
      , dir "contacts"  $ hPost $ toK0 $ Contacts.handleContactsChange
      , dir "accepttos" $ hGet  $ toK0 $ UserControl.handleAcceptTOSGet
@@ -269,6 +268,10 @@ staticRoutes = choice
 
      , dir "adminonly" $ dir "siglinkids_test_uniqueness" $ hGet $ toK0 $ Administration.handleCheckSigLinkIDUniqueness
 
+       
+     , dir "adminonly" $ dir "upsalesdeleted" $ hGet $ toK0 $ DocControl.handleUpsalesDeleted
+       
+       
      , dir "services" $ hGet $ toK0 $ handleShowServiceList
      , dir "services" $ hGet $ toK1 $ handleShowService
      , dir "services" $ dir "ui" $ hPost $ toK1 $ handleChangeServiceUI

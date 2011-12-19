@@ -24,12 +24,20 @@ import Data.Maybe
 import Database.HDBC.PostgreSQL
 import Util.JSON
 import Test.QuickCheck.Gen
-
+import Control.Exception
+import System.Timeout
+--import Doc.DocStateData
+import qualified AppLogger as Log
+--import Doc.Transitory
 
 integrationAPITests :: Connection -> Test
 integrationAPITests conn = testGroup "Integration API" [
-      testCase "Test creating a offer from template" $ testDocumentCreationFromTemplate conn      
+    --  testCase "Test crazy exponent in JSON" $ testLargeExponent 
+     testCase "Test creating a offer from template" $ testDocumentCreationFromTemplate conn      
+    , testCase "Test send to friend delete scenario" $ testFriendDeleteScenario conn
+    , testCase "Test connect to existing service user" $ testSignatoryNoCompany conn
     , testCase "Test creating a contract from template" $ testDocumentCreationFromTemplateContract conn
+    , testCase "Test creating an order from template" $ testDocumentCreationFromTemplateOrder conn
     , testCase "Testing if we can create sample document" $ testDocumentCreation conn
     , testCase "Accessing documents created by the API" $ testDocumentsAccess conn
     , testCase "Accessing documents in embedded frame" $ testDocumentAccessEmbeddedPage conn
@@ -54,10 +62,48 @@ integrationAPITests conn = testGroup "Integration API" [
       
     , testCase "Test that you can set the relation for a signatory and read it back" $ testNewDocumentRelations conn
     , testCase "Test that we can create from templates" $ testCreateFromTemplate conn
-
     ]
 
 -- Main tests
+
+testFriendDeleteScenario :: Connection -> Assertion
+testFriendDeleteScenario conn = withTestEnvironment conn $ do
+  createTestService
+  -- this will create a user for eric@scrive.com in test_company1
+  x <- createDocumentJSON "test_company1" "eric@scrive.com"
+  x' <- makeAPIRequest createDocument x
+  let Right (JSString docid') = jsget "document_id" $ JSObject x'
+  doc' <- makeAPIRequest getDaveDoc $ fromRight $ jsset "document_id" docid' jsempty
+  Log.debug $ "document: " ++ show doc'
+  -- this will create a user mariusz@skrivapa.se in test_company1
+  -- and also find the old user eric@scrive.com and set his company
+  apiReq1 <- createDocumentJSONFriend "test_company1" "mariusz@skrivapa.se" "eric@scrive.com"
+  apiRes1 <- makeAPIRequest createDocument $ apiReq1
+  assertBool ("Failed to create document :" ++ show apiRes1)  $ not (isError apiRes1)
+  let Right (JSString docid) = jsget "document_id" $ JSObject apiRes1
+  doc <- makeAPIRequest getDaveDoc $ fromRight $ jsset "document_id" docid jsempty
+  Log.debug $ "document: " ++ show doc
+  _rsp <- makeAPIRequest removeDocument $ fromRight $ jsset "document_id" docid jsempty
+  _rsp' <- makeAPIRequest removeDocument $ fromRight $ jsset "document_id" docid' jsempty
+  doclist <- makeAPIRequest getDocuments $ fromRight $ jsset "company_id" "test_company1" jsempty
+  assertBool ("Should have no documents, but got: " ++ show doclist) $ Right (JSArray []) == jsget "documents" (JSObject doclist)
+
+testSignatoryNoCompany :: Connection -> Assertion
+testSignatoryNoCompany conn = withTestEnvironment conn $ do
+  createTestService
+  -- this will create a user for eric@scrive.com in test_company2
+  x <- createDocumentJSON "test_company2" "eric@scrive.com"
+  x' <- makeAPIRequest createDocument x
+  let Right (JSString docid') = jsget "document_id" $ JSObject x'
+  -- this will create a user mariusz@skrivapa.se in test_company1
+  -- and also find the old user eric@scrive.com and set his company
+  apiReq1 <- createDocumentJSONFriend "test_company1" "mariusz@skrivapa.se" "eric@scrive.com"
+  apiRes1 <- makeAPIRequest createDocument $ apiReq1
+  assertBool ("Failed to create document :" ++ show apiRes1)  $ not (isError apiRes1)
+  _rsp' <- makeAPIRequest removeDocument $ fromRight $ jsset "document_id" docid' jsempty
+  doclist <- makeAPIRequest getDocuments $ fromRight $ jsset "company_id" "test_company2" jsempty
+  assertBool ("Should have no documents, but got: " ++ show doclist) $ Right (JSArray []) == jsget "documents" (JSObject doclist)
+
 
 testNewDocumentOrder :: Connection -> Assertion
 testNewDocumentOrder conn = withTestEnvironment conn $ do
@@ -71,8 +117,8 @@ testNewDocumentOrder conn = withTestEnvironment conn $ do
   assertBool ("Failed to get doc: " ++ show apiRes2) $ not (isError apiRes2)
   assertBool ("doctype is not order: " ++ show apiRes2) $ (Right (showJSON (5 :: Int))) == jsget ["document", "type"] (showJSON apiRes2)
   let Right (JSArray (authorjson:_)) = jsget ["document", "involved"] (showJSON apiRes2)
-      
-  assertBool ("relation for author is not secretary: " ++ show apiRes2) $ (Right (JSRational False (1%1))) == jsget ["relation"] authorjson
+  
+  assertEqual "relation for author is should be secretary" (Right (JSRational False (1%1))) (jsget ["relation"] authorjson)
 
 testDocumentCreation :: Connection -> Assertion
 testDocumentCreation conn = withTestEnvironment conn $ do
@@ -95,16 +141,16 @@ testDocumentsAccess conn = withTestEnvironment conn $ do
     _ <- makeAPIRequest createDocument =<< createDocumentJSON "test_company1" "mariusz+1@skrivapa.se" 
     apiReqDocs1 <- getDocumentsJSON "test_company1" "mariusz@skrivapa.se"
     apiRespDocs1 <- makeAPIRequest getDocuments $ apiReqDocs1
-    assertBool ("Two document was created by  this company but " ++ (show $ docsCount apiRespDocs1) ++ " were found") $ (docsCount apiRespDocs1) == 2
+    assertBool ("Two documents were created by this company but " ++ (show $ docsCount apiRespDocs1) ++ " were found") $ (docsCount apiRespDocs1) == 2
     apiReqDocs2 <- getDocumentsJSON "test_company2" "mariusz@skrivapa.se"
     apiRespDocs2 <- makeAPIRequest getDocuments $ apiReqDocs2
-    assertBool ("One document was created by  this company but " ++ (show $ docsCount apiRespDocs2) ++ " were found") $ (docsCount apiRespDocs2) == 1
+    assertBool ("One document was created by this company but " ++ (show $ docsCount apiRespDocs2) ++ " were found") $ (docsCount apiRespDocs2) == 1
     apiReqDocs3 <- getDocumentsJSON "test_company3" "mariusz+1@skrivapa.se"
     apiRespDocs3 <- makeAPIRequest getDocuments $ apiReqDocs3
     assertBool ("No document was created for this company but " ++ (show $ docsCount apiRespDocs3) ++ " were found") $ (docsCount apiRespDocs3) == 0
     let Ok ard = decode "{\"company_id\":\"test_company1\"}"
     arspd <- makeAPIRequest getDocuments $ ard
-    assertBool ("Example from doc. Two document was created by  this company but " ++ (show $ docsCount arspd) ++ " were found") $ (docsCount arspd) == 2
+    assertBool ("Example from doc. Two documents were created by this company but " ++ (show $ docsCount arspd) ++ " were found") $ (docsCount arspd) == 2
 
 
 testDocumentAccessEmbeddedPage :: Connection -> Assertion
@@ -196,7 +242,8 @@ testNewDocumentWithCompanyNr conn = withTestEnvironment conn $ do
 createDocumentJSON :: String -> String -> DB JSValue
 createDocumentJSON company author = do
      dt <- rand 10 $  elements [1,3,5]
-     randomCall $ \title fname sname -> JSObject $ toJSObject $
+     title <- rand 10 $ elements ["title1", "abc", "dog"]
+     randomCall $ \fname sname -> JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
          ,("title" , JSString $ toJSString  title)
          ,("type" , JSRational True (dt%1))
@@ -208,6 +255,29 @@ createDocumentJSON company author = do
                                 ]
         )]
         
+createDocumentJSONFriend :: String -> String -> String -> DB JSValue
+createDocumentJSONFriend company author friend = do
+     dt <- rand 10 $  elements [1,3,5]
+     randomCall $ \title fname sname fname2 sname2 -> JSObject $ toJSObject $
+        [ ("company_id", JSString $ toJSString company)
+         ,("title" , JSString $ toJSString  title)
+         ,("type" , JSRational True (dt%1))
+         ,("involved" , JSArray [ JSObject $ toJSObject $
+                                    [ ("fstname", JSString $ toJSString fname),
+                                      ("sndname", JSString $ toJSString sname),
+                                      ("email",   JSString $ toJSString author),
+                                      ("companynr", JSString $ toJSString company)
+                                    ],
+                                  JSObject $ toJSObject $
+                                  [ ("fstname", JSString $ toJSString fname2),
+                                      ("sndname", JSString $ toJSString sname2),
+                                      ("email",   JSString $ toJSString friend),
+                                      ("companynr", JSString $ toJSString company)
+                                    ]
+
+                                ]
+        )]
+
 
 createOrderJSON :: String -> String -> DB JSValue
 createOrderJSON company author = randomCall $ \title fname sname fname2 sname2 em2 -> JSObject $ toJSObject $
@@ -475,6 +545,31 @@ testDocumentCreationFromTemplateContract conn = withTestEnvironment conn $ do
                 a -> assertFailure $ "What the hell is this? " ++ show a
             x -> error $ "huh? " ++ show x
 
+testDocumentCreationFromTemplateOrder :: Connection -> Assertion
+testDocumentCreationFromTemplateOrder conn = withTestEnvironment conn $ do
+  createTestService
+  let Ok rq = decode "{\"company_id\":\"Scrive\",\"title\":\"test_complex\",\"type\":6,\"involved\":[    {\"email\":\"mariusz@scrive.com\",\"fstname\":\"Mariusz\",\"sndname\":\"Rak\", \"personalnr\" : \"1234\", \"fields\" : [{\"name\" : \"prs1\", \"value\" : \"val1\"}, {\"name\" : \"prs2\", \"value\" : \"val2\"}]} ], \"locale\" : {\"region\" : \"gb\", \"language\" : \"sv\"},  \"files\": [{\"name\":\"Empty.pdf\",\"content\":\"JVBERi0xLjQKJcOkw7zDtsOfCjIgMCBvYmoKPDwvTGVuZ3RoIDMgMCBSL0ZpbHRlci9GbGF0ZURlY29kZT4+CnN0cmVhbQp4nDPQM1Qo5ypUMABCU0tTPRMFCxMjhaJUhXAthTyuQAUAbSUGxgplbmRzdHJlYW0KZW5kb2JqCgozIDAgb2JqCjM4CmVuZG9iagoKNSAwIG9iago8PAo+PgplbmRvYmoKCjYgMCBvYmoKPDwvRm9udCA1IDAgUgovUHJvY1NldFsvUERGL1RleHRdCj4+CmVuZG9iagoKMSAwIG9iago8PC9UeXBlL1BhZ2UvUGFyZW50IDQgMCBSL1Jlc291cmNlcyA2IDAgUi9NZWRpYUJveFswIDAgNTk1IDg0Ml0vR3JvdXA8PC9TL1RyYW5zcGFyZW5jeS9DUy9EZXZpY2VSR0IvSSB0cnVlPj4vQ29udGVudHMgMiAwIFI+PgplbmRvYmoKCjQgMCBvYmoKPDwvVHlwZS9QYWdlcwovUmVzb3VyY2VzIDYgMCBSCi9NZWRpYUJveFsgMCAwIDU5NSA4NDIgXQovS2lkc1sgMSAwIFIgXQovQ291bnQgMT4+CmVuZG9iagoKNyAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgNCAwIFIKL09wZW5BY3Rpb25bMSAwIFIgL1hZWiBudWxsIG51bGwgMF0KL0xhbmcocGwtUEwpCj4+CmVuZG9iagoKOCAwIG9iago8PC9BdXRob3I8RkVGRjAwNkQwMDYxMDA3MjAwNjkwMDc1MDA3MzAwN0EwMDIwPgovQ3JlYXRvcjxGRUZGMDA1NzAwNzIwMDY5MDA3NDAwNjUwMDcyPgovUHJvZHVjZXI8RkVGRjAwNEYwMDcwMDA2NTAwNkUwMDRGMDA2NjAwNjYwMDY5MDA2MzAwNjUwMDJFMDA2RjAwNzIwMDY3MDAyMDAwMzMwMDJFMDAzMj4KL0NyZWF0aW9uRGF0ZShEOjIwMTEwNzAxMTIwMTQwKzAyJzAwJyk+PgplbmRvYmoKCnhyZWYKMCA5CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDIyMiAwMDAwMCBuIAowMDAwMDAwMDE5IDAwMDAwIG4gCjAwMDAwMDAxMjggMDAwMDAgbiAKMDAwMDAwMDM2NCAwMDAwMCBuIAowMDAwMDAwMTQ3IDAwMDAwIG4gCjAwMDAwMDAxNjkgMDAwMDAgbiAKMDAwMDAwMDQ2MiAwMDAwMCBuIAowMDAwMDAwNTU4IDAwMDAwIG4gCnRyYWlsZXIKPDwvU2l6ZSA5L1Jvb3QgNyAwIFIKL0luZm8gOCAwIFIKL0lEIFsgPEYxRDY1NzQ3RTIyOEVGNzI0OTQ0OTIwMkFERjI3NDQ2Pgo8RjFENjU3NDdFMjI4RUY3MjQ5NDQ5MjAyQURGMjc0NDY+IF0KL0RvY0NoZWNrc3VtIC9DNjgxNEY1QTVCRjgwQjJEOEYwMEM4MUQyRDA5RUMxRAo+PgpzdGFydHhyZWYKNzkwCiUlRU9GCg==\"}]}"
+  rsp <- makeAPIRequest createDocument rq
+  case getJSONField "document_id" rsp of
+    Nothing -> error $ "Could not get document_id from response " ++ show rsp
+    Just jsdid -> do
+      let did = encode jsdid
+      let Ok rq2 = decode $ "{\"company_id\":\"Scrive\",\"title\":\"test_complex\",\"type\":5, \"involved\":[    {\"email\":\"mariusz@scrive.com\",\"fstname\":\"Mariusz\",\"sndname\":\"Rak\", \"personalnr\" : \"1234\", \"fields\" : [{\"name\" : \"prs1\", \"value\" : \"val1\"}, {\"name\" : \"prs2\", \"value\" : \"val2\"}]} ], \"locale\" : {\"region\" : \"gb\", \"language\" : \"sv\"}, \"template_id\" : " ++ did ++ "}"
+      rsp2 <- makeAPIRequest createDocument rq2
+      case getJSONField "document_id" rsp2 of
+        Nothing -> error $ "Could not get document_id from response " ++ show rsp2
+        Just d -> do
+          res <- makeAPIRequest getDocument $ JSObject $ toJSObject [("document_id", d)]
+          case getJSONField "document" res of
+            Nothing -> error $ "What? document not created " ++ show res
+            Just (JSObject doc) -> do
+              assertBool ("Was not contract; was " ++ show (getJSONField "type" doc) ++ " json " ++ show doc ) $ getJSONField "type" doc == Just (showJSON (5::Int))
+              case getJSONField "files" doc of
+                Nothing -> assertFailure "Could not find any files"
+                Just (JSArray [JSObject f]) -> assertBool ("Wrong filename " ++ show f) $ 
+                                               getJSONField "name" f == Just (showJSON "Empty.pdf")
+                a -> assertFailure $ "What the hell is this? " ++ show a
+            x -> error $ "huh? " ++ show x
 
 -- Utils
 isError :: JSObject JSValue -> Bool
@@ -539,3 +634,10 @@ testCreateFromTemplate conn = withTestEnvironment conn $ do
   assertBool ("Failed to get doc: " ++ show apiRes2) $ not (isError apiRes2)
   assertBool ("doctype is not contract: " ++ show apiRes2) $ (Right (showJSON (1 :: Int))) == jsget ["document", "type"] (showJSON apiRes2)
   
+_testLargeExponent :: Assertion
+_testLargeExponent = do
+  res :: Maybe (Result Int) <- System.Timeout.timeout 1000000 $ evaluate $ decode "7e10000000000"
+  case res of
+    Nothing -> assertFailure "Should not timeout"
+    Just (Error _) -> assertSuccess
+    Just (Ok _) -> assertFailure $ "Should not parse bad json but I can't show you what I got (it takes too much memory)"

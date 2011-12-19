@@ -62,6 +62,7 @@ import Happstack.Util.Common
 import Mails.MailsUtil
 import MinutesTime
 import Misc
+import Numeric
 import User.Model
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
@@ -574,7 +575,25 @@ data DocumentHistoryEntry
     deriving (Eq, Ord, Typeable)
 
 data DocumentLogEntry = DocumentLogEntry MinutesTime BS.ByteString
-    deriving (Typeable, Show, Data, Eq, Ord)
+    deriving (Typeable, Data, Eq, Ord)
+
+instance Show DocumentLogEntry where
+    showsPrec _ (DocumentLogEntry time rest) = (++) (formatMinutesTimeISO time ++ " " ++ BS.toString rest)
+
+instance Read DocumentLogEntry where
+    readsPrec _ text =
+      -- 2011-01-02 13:45:22 = 19 chars
+      case parseMinutesTimeISO timepart of
+        Just time -> [(DocumentLogEntry time (BS.fromString (drop 1 restpart)),"")]
+        Nothing -> []
+      where
+       (timepart, restpart) = splitAt 19 text
+
+instance Convertible [DocumentLogEntry] SqlValue where
+    safeConvert logs = return (toSql (unlines (map show logs)))
+
+instance Convertible SqlValue [DocumentLogEntry] where
+    safeConvert sql = return $ map read $ lines $ fromSql sql
 
 $(deriveSerialize ''DocumentLogEntry)
 instance Version DocumentLogEntry
@@ -782,12 +801,12 @@ instance Show DocumentID where
          showsPrec prec val
 
 instance Read DocumentID where
-    readsPrec prec = let makeDocumentID (i,v) = (DocumentID i,v)
-                     in map makeDocumentID . readsPrec prec
+    readsPrec _prec = let makeDocumentID (i,v) = (DocumentID i,v)
+                      in map makeDocumentID . readSigned readDec
 
 instance Read SignatoryLinkID where
-    readsPrec prec = let make (i,v) = (SignatoryLinkID i,v)
-                     in map make . readsPrec prec
+    readsPrec _prec = let make (i,v) = (SignatoryLinkID i,v)
+                      in map make . readSigned readDec
 
 instance FromReqURI DocumentID where
     fromReqURI = readM
@@ -1459,9 +1478,7 @@ $(deriveSerialize ''DocStats)
 instance Version DocStats where
 
 
-
 type Documents = IxSet Document
-
 
 instance Indexable Document where
   empty =
@@ -1505,7 +1522,6 @@ $(bitfieldDeriveConvertible ''SignatoryRole)
 $(enumDeriveConvertible ''MailsDeliveryStatus)
 $(newtypeDeriveConvertible ''SignOrder)
 $(jsonableDeriveConvertible [t| [SignatoryField] |])
-$(jsonableDeriveConvertible [t| [DocumentLogEntry] |])
 $(enumDeriveConvertible ''DocumentFunctionality)
 $(enumDeriveConvertible ''DocumentProcess)
 -- $(jsonableDeriveConvertible [t| DocumentStatus |])

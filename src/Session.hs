@@ -33,6 +33,7 @@ import Happstack.Data.IxSet
 import qualified Happstack.Data.IxSet as IxSet
 import Happstack.State
 import User.Model
+import Numeric
 import MinutesTime
 import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie, readCookieValue, withDataFn, ServerPartT, HasRqData, CookieLife(MaxAge), FromReqURI(..))
 import System.Random
@@ -56,8 +57,8 @@ instance Show SessionId where
     showsPrec prec (SessionId v) = showsPrec prec v
 
 instance Read SessionId where
-    readsPrec prec string =
-        [(SessionId k,v) | (k,v) <- readsPrec prec string]
+    readsPrec _prec string =
+        [(SessionId k,v) | (k,v) <- readSigned readDec string]
 
 instance FromReqURI SessionId where
     fromReqURI = readM
@@ -439,6 +440,9 @@ instance Read (SessionCookieInfo) where
         sid' <- readM sid  --if need to understand that just read about list monad
         sh' <- readM (drop 1 sh)
         return $ (SessionCookieInfo {cookieSessionId = sid', cookieSessionHash=sh'},"")
+
+instance FromReqURI SessionCookieInfo where
+    fromReqURI = readM
 
 -- | Extract cookie from session.
 cookieInfoFromSession :: Session -> SessionCookieInfo

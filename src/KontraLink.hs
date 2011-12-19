@@ -1,7 +1,7 @@
 module KontraLink(KontraLink(..), LoginRedirectReason(..), DesignStep(..), DesignStep2Flag(..)) where
 
 import DB.Types
-import Doc.DocState
+import Doc.DocStateData
 import Misc
 import ActionSchedulerState (ActionID)
 import User.Model
@@ -78,7 +78,6 @@ data KontraLink
     | LinkIssueDocPDF (Maybe SignatoryLink) Document {- Which file? -}
     | LinkCompanyAccounts ListParams
     | LinkCompanyTakeover CompanyID
-    | LinkSharing ListParams
     | LinkRemind Document SignatoryLink
     | LinkCancel Document
     | LinkRestart DocumentID
@@ -182,7 +181,6 @@ instance Show KontraLink where
         (++) $ "/account/" ++ show actionid ++  "/" ++ show magichash
     showsPrec _ (LinkCompanyAccounts params) = (++) $ "/account/companyaccounts" ++ "?" ++ show params
     showsPrec _ (LinkCompanyTakeover companyid) = (++) $ "/companyaccounts/join/" ++ show companyid
-    showsPrec _ (LinkSharing params) = (++) $ "/account/sharing" ++ "?" ++ show params
     showsPrec _ LinkAccountSecurity = (++) "/account/security"
     showsPrec _ LinkUserMailAPI = (++) "/account/mailapi"
     showsPrec _ (LinkIssueDoc documentid) =
@@ -236,7 +234,7 @@ instance Show KontraLink where
     showsPrec _ (LinkConnectCompanySession sid cid ssid referer) = (++) $ "/integration/connectcompany/" ++ encodeForURL sid ++ "/" ++ show cid  ++ "/" ++ show ssid
                                                                         ++ "?referer=" ++ (URL.encode $ UTF.encode  $ show referer)
     showsPrec _ (LinkAttachmentForAuthor did fid) = (++) $ "/download/" ++ show did ++ "/" ++ show fid ++ "/" ++ "file.pdf"
-    showsPrec _ (LinkAttachmentForViewer did sid mh fid) = (++) $ "/download/" ++ show did ++ "/" ++ show fid ++ "/file.pdf?signatorylinkid=" ++ show sid ++ "&magichash=" ++ show mh 
+    showsPrec _ (LinkAttachmentForViewer did sid mh fid) = (++) $ "/download/" ++ show did ++ "/" ++ show fid ++ "/file.pdf?signatorylinkid=" ++ show sid ++ "&magichash=" ++ show mh
     showsPrec _ (LinkServiceLogo sid) = (++) $ "/services/logo/" ++ encodeForURL sid
     showsPrec _ (LinkServiceButtonsBody sid) = (++) $ "/services/buttons_body/" ++ encodeForURL sid
     showsPrec _ (LinkServiceButtonsRest sid) = (++) $ "/services/buttons_rest/" ++ encodeForURL sid

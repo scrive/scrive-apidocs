@@ -31,8 +31,7 @@ import User.Model
 import DB.Classes
 import Company.Model
 import Doc.DocUtils
-import Happstack.State hiding (extension)
-import Doc.DocState
+import Doc.Transitory
 import Data.Either
 import qualified Doc.DocControl as DocControl
 import Templates.Templates
@@ -68,7 +67,7 @@ handleScriveByMail = do
   
   let (mime, allParts) = parseEmailMessageToParts content
       
-      isPDF (tp,_) = MIME.mimeType tp == MIME.Application "pdf"
+      isPDF (tp,_) = MIME.mimeType tp == MIME.Application "pdf" || MIME.mimeType tp == MIME.Application "octet-stream"
       isPlain (tp,_) = MIME.mimeType tp == MIME.Text "plain"
   
       typesOfParts = map fst allParts
@@ -78,7 +77,8 @@ handleScriveByMail = do
       from = fromMaybe "" $ lookup "from" (MIME.mime_val_headers mime)
       to   = fromMaybe "" $ lookup "to"   (MIME.mime_val_headers mime)
   
-      isOutlook = maybe False ("Outlook" `isInfixOf`) $ lookup "x-mailer" (MIME.mime_val_headers mime) 
+      isOutlook = maybe False ("Outlook" `isInfixOf`) (lookup "x-mailer" (MIME.mime_val_headers mime)) ||
+                  maybe False ("Exchange" `isInfixOf`) (lookup "x-mimeole" (MIME.mime_val_headers mime))
       
       subject = decodeWords $ BS.toString $ maybe BS.empty BS.fromString $ lookup "subject" (MIME.mime_val_headers mime)
       
@@ -155,7 +155,7 @@ handleScriveByMail = do
       Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content
           
       -- send error email          
-      sendMailAPIErrorEmail ctx username $ "<p>I don't know what the problem is. Perhaps try again with a different email program.</p>"
+      sendMailAPIErrorEmail ctx username $ "<p>I do not know what the problem is. Perhaps try again with a different email program.</p>"
       mzero
       
   let recodedPlain = (replace "\r\n\r\n" "\r\n" $ BS.toString recodedPlain') <| isOutlook |> BS.toString recodedPlain'
@@ -168,7 +168,7 @@ handleScriveByMail = do
     Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content
     
     -- send error mail
-    sendMailAPIErrorEmail ctx username $ "<p>I'm only a little smart :(. I couldn't understand the email you sent me. Here are the things I didn't understand: <br /><br />\n" ++ msg ++ "<br /><br />\nIf you correct them and send me the email again, maybe I can understand it!</p>"
+    sendMailAPIErrorEmail ctx username $ "<p>I could not understand the email you sent me. Here are the things I did not understand: <br /><br />\n" ++ msg ++ "<br /><br />\nPlease correct the problems and try again.</p>"
     
     mzero
     
@@ -189,7 +189,7 @@ handleScriveByMail = do
   
   let userDetails = signatoryDetailsFromUser user mcompany
 
-  edoc <- update $ NewDocument user mcompany (BS.fromString title) doctype ctxtime
+  edoc <- doc_update $ NewDocument user mcompany (BS.fromString title) doctype ctxtime
   
   when (isLeft edoc) $ do
     let Left msg = edoc
@@ -197,32 +197,33 @@ handleScriveByMail = do
     Log.scrivebymail $ "Could not create document: " ++ msg
     
     -- send email saying sorry, there was some weird error
+    sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not create your document. I do not know what is wrong. You can try again or you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkUpload) ++ "\">click here</a> to use the web interface.</p>"
     
     mzero
     
   let Right doc = edoc
       
   _ <- DocControl.handleDocumentUploadNoLogin (documentid doc) pdfBinary (BS.fromString title)
+  _ <- doc_update $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality ctxtime
+  _ <- doc_update $ SetDocumentIdentification (documentid doc) [EmailIdentification] ctxtime
   
-  errs <- lefts <$> (sequence $ [update $ SetEmailIdentification (documentid doc) ctxtime,
-                                 update $ SetDocumentAdvancedFunctionality (documentid doc) ctxtime,
-                                 update $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) ctxtime])
+  errs <- lefts <$> (sequence $ [doc_update $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) ctxtime])
           
   when ([] /= errs) $ do
     Log.scrivebymail $ "Could not set up document: " ++ (intercalate "; " errs)
     
     -- send sorry email
-    sendMailAPIErrorEmail ctx username $ "<p>I'm really sorry, but I could not forward your document. I don't know what's wrong. I created it in Scrive, but I can't get it ready. If you want to see your document, you can click here: " ++ (show $ LinkIssueDoc (documentid doc)) ++ " .</p>"
+    sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what is wrong. I created it in Scrive, but I cannot get it ready to send. If you want to see your document, you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
     
     mzero
 
-  edoc2 <- update $ PreparationToPending (documentid doc) ctxtime
+  edoc2 <- doc_update $ PreparationToPending (documentid doc) ctxtime
   
   when (isLeft edoc2) $ do
     Log.scrivebymail $ "Could not got to pending document: " ++ (intercalate "; " errs)
     
     -- send sorry email
-    sendMailAPIErrorEmail ctx username $ "<p>I'm really sorry, but I could not forward your document. I don't know what's wrong. It is created and ready to go. To see your document and send it yourself, click here: " ++ (show $  LinkIssueDoc (documentid doc)) ++ ".</p>"
+    sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what's wrong. Your document is created and ready to be sent. To see your document and send it yourself, <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
     
     mzero
   
@@ -249,5 +250,5 @@ sendMailAPIConfirmEmail ctx document =
 
 sendMailAPIErrorEmail :: TemplatesMonad m => Context -> String -> String -> m ()
 sendMailAPIErrorEmail ctx email msg = do
-  mail <- mailMailApiError msg
+  mail <- mailMailApiError ctx msg
   scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress (BS.fromString email) (BS.fromString email)] }

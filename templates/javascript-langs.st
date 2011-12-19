@@ -170,7 +170,7 @@ javascriptLocalisation =
                    uploadprompt: "$_orderuploadprompttext()$",
                    name: "$_ordername()$"
                 }
-                
+
               }
            , searchTemplate : "$_SearchTemplate()$"
            , sortTemplate : "$_SortTemplate()$"
@@ -186,5 +186,6 @@ javascriptLocalisation =
            , days : "$_days()$"
            , to : "$_to()$"
            , nextStep : "$_signStepsBodyFunctionsNextStep()$"
+           , uploadButton: "$_signStepsBodyUploadBoxStepButtonChooseFile()$"
    }
 ####

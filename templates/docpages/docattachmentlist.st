@@ -1,4 +1,4 @@
-####		
+####
 pageAttachmentList=
 $loadingdialog()$
 <div> 
@@ -11,7 +11,7 @@ $loadingdialog()$
 </div>
 
 <script>
-var documentsTable = KontraList.init({
+var documentsTable = KontraList().init({
     name : "Attachments Table",
     schema: new Schema({
     url: "/docs",
@@ -57,18 +57,21 @@ var documentsTable = KontraList.init({
                                                 archive: "true",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");})
                                           });
-                             var text = "$_listLocalDialogsBody()$"
-                             if (docs.length == 1)
-                               text += docs[0].field("title") + "."
-                             else
-                               text += docs.length + (" $_docListTabsAttachemtns()$.").toLowerCase();
+                             var confirmtext = jQuery("<p/>").append("$_listLocalDialogsBody()$ ");
+                             var label = jQuery("<strong/>");
+                             if (docs.length == 1) {
+                               confirmtext.append(jQuery("<strong/>").text(docs[0].field("title")));
+                             } else {
+                               confirmtext.append(docs.length + (" $_docListTabsAttachemtns()$").toLowerCase());
+                             }
+                             confirmtext.append("?");
                              Confirmation.popup({
                                 submit: submit,
                                 acceptText: "$_ok()$",
                                 rejectText: "$_cancel()$",
                                 title: "$_delete()$",
-                                content: jQuery("<p/>").text(text)
-                              })
+                                content: confirmtext
+                              });
                           }
                 }
               ]

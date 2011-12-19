@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Doc.JSON 
        (
          jsonDocumentForSignatory
@@ -6,7 +8,6 @@ module Doc.JSON
        , jsonSigAttachmentWithFile
        , jsonDocumentMetadata
        , jsonDocumentForAuthor
-       , apiDocumentType
        )
 where
 
@@ -16,36 +17,51 @@ import Util.JSON
 import Misc
 import KontraLink
 
-apiDocumentType :: DocumentType -> Int
-apiDocumentType (Signable Contract) = 1
-apiDocumentType (Signable Offer)    = 3
-apiDocumentType (Template Contract) = 2
-apiDocumentType (Template Offer)    = 4
-apiDocumentType (Signable Order)    = 5
-apiDocumentType (Template Order)    = 6
-apiDocumentType (Attachment)        = 20
-apiDocumentType (AttachmentTemplate)= error $ "Unsupported document type AttachmentTemplate"
+instance SafeEnum DocumentType where
+  fromSafeEnum (Signable Contract) = 1
+  fromSafeEnum (Template Contract) = 2
+  fromSafeEnum (Signable Offer)    = 3
+  fromSafeEnum (Template Offer)    = 4
+  fromSafeEnum (Signable Order)    = 5
+  fromSafeEnum (Template Order)    = 6
+  fromSafeEnum (Attachment)        = 20
+  -- what to do with AttachmentTemplate?
+  fromSafeEnum (AttachmentTemplate)= 21
+  
+  toSafeEnum 1  = Just (Signable Contract)
+  toSafeEnum 2  = Just (Template Contract)
+  toSafeEnum 3  = Just (Signable Offer)
+  toSafeEnum 4  = Just (Template Offer)
+  toSafeEnum 5  = Just (Signable Order)
+  toSafeEnum 6  = Just (Template Order)
+  toSafeEnum 20 = Just (Attachment)
+  toSafeEnum 21 = Just (AttachmentTemplate)
+  toSafeEnum _  = Nothing
 
 jsonDocumentType :: DocumentType -> JSValue
-jsonDocumentType = showJSON . apiDocumentType
+jsonDocumentType = showJSON . fromSafeEnumInt
 
 jsonDocumentID :: DocumentID -> JSValue
 jsonDocumentID = showJSON . show
 
-jsonDocumentStatus :: DocumentStatus -> JSValue
-jsonDocumentStatus Preparation       = showJSON (0  :: Int)
-jsonDocumentStatus Pending           = showJSON (10 :: Int)
-jsonDocumentStatus AwaitingAuthor    = showJSON (10 :: Int)
-jsonDocumentStatus Rejected          = showJSON (20 :: Int)
-jsonDocumentStatus Canceled          = showJSON (20 :: Int)
-jsonDocumentStatus Timedout          = showJSON (20 :: Int)
-jsonDocumentStatus Closed            = showJSON (30 :: Int)
-jsonDocumentStatus (DocumentError _) = showJSON (40 :: Int)
+instance SafeEnum DocumentStatus where
+    fromSafeEnum Preparation       = 0
+    fromSafeEnum Pending           = 10
+    fromSafeEnum AwaitingAuthor    = 10
+    fromSafeEnum Timedout          = 20
+    fromSafeEnum Rejected          = 20
+    fromSafeEnum Canceled          = 20
+    fromSafeEnum Closed            = 30
+    fromSafeEnum (DocumentError _) = 40
+    toSafeEnum _                   = Nothing
 
-jsonIdentificationType :: [IdentificationType] -> JSValue
-jsonIdentificationType [EmailIdentification] = showJSON (1 :: Int)
-jsonIdentificationType [ELegitimationIdentification] = showJSON (10 :: Int)
-jsonIdentificationType x = error $ "Unknown id type " ++ show x
+instance SafeEnum [IdentificationType] where
+    fromSafeEnum [EmailIdentification]            = 1
+    fromSafeEnum [ELegitimationIdentification]    = 10
+    fromSafeEnum ls                               = error $ "Unknown list of IdentificationType: " ++ show ls
+    toSafeEnum 1  =  Just [EmailIdentification]
+    toSafeEnum 10 = Just [ELegitimationIdentification]
+    toSafeEnum _  = Nothing
 
 jsonDocumentMetadata :: Document -> JSValue
 jsonDocumentMetadata doc = fromRight $
@@ -59,20 +75,20 @@ jsonDocumentForAuthor doc =
   (jsset "designurl"   $ show $ LinkIssueDoc (documentid doc))    >>=
   (jsset "document_id" $ jsonDocumentID $ documentid doc)         >>=    
   (jsset "title"       $ documenttitle doc)                       >>=                        
-  (jsset "type"        $ apiDocumentType $ documenttype doc)     >>=       
-  (jsset "status"      $ jsonDocumentStatus $ documentstatus doc) >>=
+  (jsset "type"        $ fromSafeEnumInt $ documenttype doc)     >>=       
+  (jsset "status"      $ fromSafeEnumInt $ documentstatus doc) >>=
   (jsset "metadata"    $ jsonDocumentMetadata doc) >>=
-  (jsset "authorization" $ jsonIdentificationType $ documentallowedidtypes doc)
+  (jsset "authorization" $ fromSafeEnumInt $ documentallowedidtypes doc)
 
 jsonDocumentForSignatory :: Document -> JSValue
 jsonDocumentForSignatory doc = 
   fromRight            $ (Right jsempty)                          >>=                                
   (jsset "document_id" $ jsonDocumentID $ documentid doc)         >>=    
   (jsset "title"       $ documenttitle doc)                       >>=                        
-  (jsset "type"        $ apiDocumentType $ documenttype doc)     >>=       
-  (jsset "status"      $ jsonDocumentStatus $ documentstatus doc) >>=
+  (jsset "type"        $ fromSafeEnumInt $ documenttype doc)     >>=       
+  (jsset "status"      $ fromSafeEnumInt $ documentstatus doc) >>=
   (jsset "metadata"    $ jsonDocumentMetadata doc) >>=
-  (jsset "authorization" $ jsonIdentificationType $ documentallowedidtypes doc)
+  (jsset "authorization" $ fromSafeEnumInt $ documentallowedidtypes doc)
 
 
 -- I really want to add a url to the file in the json, but the only

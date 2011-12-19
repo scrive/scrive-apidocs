@@ -41,7 +41,6 @@ import File.Model
 isDeletableDocument :: Document -> Bool
 isDeletableDocument doc =
     (not  $ (documentstatus doc) `elem` [Pending, AwaitingAuthor]) -- We dont allow to delete pending documents
-    || (isAttachment doc || isTemplate doc)  -- But attachments and templates never can be pending (it they are this is a bug somewere else)
 
 {- |
    Given a Document, return all of the signatory details for all signatories (exclude viewers but include author if he must sign).
@@ -133,14 +132,14 @@ class MaybeTemplate a where
    isTemplate :: a -> Bool
    isSignable :: a -> Bool
 
-instance  MaybeTemplate DocumentType where
+instance MaybeTemplate DocumentType where
    isTemplate (Template _) = True
    isTemplate AttachmentTemplate = True
    isTemplate _ = False
    isSignable (Signable _) = True
    isSignable _ = False
 
-instance  MaybeTemplate Document where
+instance MaybeTemplate Document where
    isTemplate = isTemplate . documenttype
    isSignable = isSignable . documenttype
 
@@ -339,7 +338,7 @@ replaceSignOrder :: SignOrder -> SignatoryDetails -> SignatoryDetails
 replaceSignOrder signorder sd = sd { signatorysignorder = signorder }
 
 {- |
-   Can the user view this document directly? (not counting friends)
+   Can the user view this document directly?
  -}
 canUserInfoViewDirectly :: UserID -> BS.ByteString -> Document -> Bool
 canUserInfoViewDirectly userid email doc =
@@ -399,7 +398,7 @@ samenameanddescription n d (nn, dd, _) = n == nn && d == dd
 getSignatoryAttachment :: BS.ByteString -> BS.ByteString -> Document -> Maybe SignatoryAttachment
 getSignatoryAttachment email name doc =
   find (\sl -> email == signatoryattachmentemail sl &&
-               name  == signatoryattachmentname sl) $ 
+               name  == signatoryattachmentname sl) $
   documentsignatoryattachments doc
 
 buildattach :: String -> Document -> [SignatoryAttachment]
@@ -431,21 +430,21 @@ getFilesByStatus doc
   where
       doGet fid = runDBQuery $ GetFileByFileID fid
 
-documentfilesM :: (MonadIO m, DBMonad m) => Document -> m [File]
+documentfilesM :: Document -> DB [File]
 documentfilesM Document{documentfiles} = do
-    liftM catMaybes $ mapM (runDBQuery . GetFileByFileID) documentfiles
+    liftM catMaybes $ mapM (dbQuery . GetFileByFileID) documentfiles
 
-documentsealedfilesM :: (MonadIO m, DBMonad m) => Document -> m [File]
+documentsealedfilesM :: Document -> DB [File]
 documentsealedfilesM Document{documentsealedfiles} = do
-    liftM catMaybes $ mapM (runDBQuery . GetFileByFileID) documentsealedfiles
+    liftM catMaybes $ mapM (dbQuery . GetFileByFileID) documentsealedfiles
 
 fileInDocument :: Document -> FileID -> Bool
-fileInDocument doc fid = 
-    elem fid $      (documentfiles doc) 
-                 ++ (documentsealedfiles doc) 
+fileInDocument doc fid =
+    elem fid $      (documentfiles doc)
+                 ++ (documentsealedfiles doc)
                  ++ (fmap authorattachmentfile $ documentauthorattachments doc)
                  ++ (catMaybes $ fmap signatoryattachmentfile $ documentsignatoryattachments doc)
-                 
+
 makePlacements :: [BS.ByteString]
                -> [BS.ByteString]
                -> [Int]
@@ -589,3 +588,4 @@ makeAuthorDetails pls fielddefs sigdetails@SignatoryDetails{signatoryfields = si
       CustomFT _ _ -> []
       where
         g ftype = sf { sfPlacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString ftype) }                 
+

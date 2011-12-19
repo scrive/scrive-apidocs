@@ -8,8 +8,8 @@ showUser =
         <li class="active"><a href="/account">$_HeadUserInfo()$</a></li>
         <li><a href="/account/security">$_HeadAccountSettings()$</a></li>
         $if(iscompanyadmin)$<li><a href="/account/companyaccounts">$_CompanyAccounts()$</a></li>$endif$
-        <li><a href="/account/sharing">$_sharing()$</a></li>
         <li><a href="/account/mailapi">$_HeadMailApi()$</a></li>
+        <li><a href="/account/usagestats">$_HeadUsageStats()$</a></li>
     </ul>
     <div class="tab-container">
         <div class="tab-content account">
@@ -184,9 +184,7 @@ modalCreateCompany=
       </div>
     </div>
   </form>
-<<<<<<< HEAD
-#####
-=======
+
 <script>
   jQuery(function() {
     var changeEmailRequestButton = Button.init({
@@ -304,4 +302,3 @@ modalCreateCompany=
   });
 </script>
 #####
->>>>>>> 17b3eb5e0abf6290a4f5cf1d8cf6ddb37ad39595

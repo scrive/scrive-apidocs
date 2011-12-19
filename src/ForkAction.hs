@@ -2,11 +2,9 @@
 module ForkAction 
     ( forkActionIO
     , forkAction
-    , doNotCloseDBConnectionExplicitly
     , getAllActionAsString
     ) where
 
-import Context
 import KontraMonad
 
 import Control.Monad.Trans
@@ -18,6 +16,10 @@ import System.IO.Unsafe
 import Control.Concurrent.MVar
 import System.Time
 import Numeric
+import qualified Database.HDBC as HDBC
+import qualified Database.HDBC.PostgreSQL as HDBC
+import Context
+import qualified AppLogger as Log
 
 data ForkedAction = ForkedActionStarted  { title     :: String
                                          , start     :: ClockTime
@@ -54,42 +56,36 @@ allActions :: MVar (Map.Map Int ForkedAction)
 allActions = unsafePerformIO $ newMVar Map.empty
 
 -- | Use only in IO monad and when you know that forked action won't
--- try to get access to db using Connection object taken from Context.
--- If you really need to do that though, use before that function
--- doNotCloseDBConnectionExplicitly. The reason is that Context Connection
--- gets closed after we're done with the request. Will it be closed before
--- we want to use it in forked action or not? Nobody knows, so we can't
--- close it there.
-forkActionIO :: String -> IO () -> IO ()
-forkActionIO title' action = do
-  _ <- C.forkIO $ do
+-- try to get access to db using 'Connection' object taken from 'Context'.
+-- Preferable use 'clone' on 'Connection' and the pass it around.
+forkActionIO :: HDBC.Connection -> String -> (HDBC.Connection -> IO ()) -> IO ()
+forkActionIO conn title' action = do
+  conn' <- HDBC.clone conn
+  _ <- C.forkIO $ flip C.finally (HDBC.disconnect conn') $ do
     startTime <- getClockTime
     key <- modifyMVar allActions $ \themap -> do
       let newkey = case Map.maxViewWithKey themap of
             Nothing -> 0
             Just ((k,_),_) -> k + 1
       return (Map.insert newkey (ForkedActionStarted title' startTime) themap, newkey)
-    result <- C.try action
+    result <- C.try (action conn')
     endTime <- getClockTime
     case result of
-      Left someException ->
+      Left someException -> do
+        Log.error $ "forkActionIO: " ++ title' ++ ": " ++ show someException
         modifyMVar_ allActions $ return . Map.insert key (ForkedActionError title' startTime endTime someException)
       Right _ ->
         modifyMVar_ allActions $ return . Map.insert key (ForkedActionDone title' startTime endTime)
   return ()
 
-doNotCloseDBConnectionExplicitly :: KontraMonad m => m ()
-doNotCloseDBConnectionExplicitly =
-  modifyContext $ \ctx -> ctx { ctxdbconnclose = False }
-
 -- | Standard forkAction to be used in KontraMonad. Setting ctxdbconnclose
 -- to False guarantees that Connection won't be closed after we're done with
 -- the request that called that function, so you can safely use Connection
 -- object taken from current Context there.
-forkAction :: (KontraMonad m, MonadIO m) => String -> IO () -> m ()
+forkAction :: (KontraMonad m, MonadIO m) => String -> (HDBC.Connection -> IO ()) -> m ()
 forkAction title action = do
-  doNotCloseDBConnectionExplicitly
-  liftIO $ forkActionIO title action
+  ctx <- getContext
+  liftIO $ forkActionIO (ctxdbconn ctx) title action
 
 getAllActionAsString :: IO String
 getAllActionAsString = 

@@ -11,7 +11,7 @@ $loadingdialog()$
 
 </div>
 <script>
-var documentsTable = KontraList.init({
+var documentsTable = KontraList().init({
     name : "Contracts Table",
     schema: new Schema({
     url: "/docs",
@@ -60,12 +60,14 @@ var documentsTable = KontraList.init({
                                                 remind: "true",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");})
                                           });
-                             var text;
-                             if (docs.length == 1)
-                               text = "$_ReminderBodyIfSingel()$ "+ docs[0].field("title") + "."
-                             else
-                               text = "$_ReminderBodyIfMulti()$ "+ docs.length + (" $_docListTabsDocs()$.").toLowerCase() + " $_ReminderBodyIfMulti2()$";
-                             var content = jQuery("<p/>").text(text);
+                             var content = jQuery("<p/>");
+                             if (docs.length == 1) {
+                               content.append("$_ContractReminderBodySingel()$ ");
+                               content.append(jQuery("<strong/>").text(docs[0].field("title")));
+                               content.append("?");
+                             } else {
+                               content.text("$_ContractReminderBodyMulti()$ "+ docs.length + (" $_docListTabsDocs()$?").toLowerCase());
+                             }
                              Confirmation.popup({
                                 submit: submit,
                                 acceptText: "$_ok()$",
@@ -95,19 +97,21 @@ var documentsTable = KontraList.init({
                                                 archive: "true",
                                                 doccheck: _.map(docs, function(doc){return doc.field("id");})
                                           });
-                             var text = "$_listLocalDialogsBody()$"
-                             if (docs.length == 1)
-                               text += docs[0].field("title") + "."
-                             else
-                               text += docs.length + (" $_docListTabsDocs()$.").toLowerCase();
-                             var content = jQuery("<p/>").text(text);
+                             var confirmtext = jQuery("<p/>").append("$_listLocalDialogsBody()$ ");
+                             var label = jQuery("<strong/>");
+                             if (docs.length == 1) {
+                               confirmtext.append(jQuery("<strong/>").text(docs[0].field("title")));
+                             } else {
+                               confirmtext.append(docs.length + (" $_docListTabsDocs()$").toLowerCase());
+                             }
+                             confirmtext.append("?");
                              Confirmation.popup({
                                 submit: submit,
                                 acceptText: "$_ok()$",
                                 rejectText: "$_cancel()$",
                                 title: "$_delete()$",
-                                content: content
-                              })
+                                content: confirmtext
+                              });
                           }
                 }
               ]

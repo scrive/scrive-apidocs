@@ -655,7 +655,7 @@ pageDocumentForAuthorHelpersLocalDialogs=
 
   <form method="post" name="form" action="" class="overlay redirectsubmitform" id="update-sigattachments-dialog" rel=".stepForm">
     <input type="hidden" name="sigattachments" value="true" />
-    
+
     <div class="modal-container" style="width:740px;left:-50px;">
       <div class="modal-header">
         <span class="modal-icon message"></span>
@@ -1102,8 +1102,8 @@ pageDocumentForAuthorHelpersLocalDialogs=
     </div>
     <div class="modal-body">
       <div class="modal-content">
-        <p>$_dialogConfirmSigninviteBody()$<strong class="visible-docname">$documenttitle$</strong>?</p>
-        <span id="multipleinvite"><p>$_dialogConfirmSigninviteBody2()$<span class="Xinvited">Invited</span>$_dialogConfirmSigninviteBody3()$</p></span>
+        <p>$_dialogConfirmSigninviteBody()$ <strong class="visible-docname">$documenttitle$</strong>?</p>
+        <span id="multipleinvite"><p>$_dialogConfirmSigninviteBody2()$ <span class="Xinvited">Invited</span> $_dialogConfirmSigninviteBody3()$</p></span>
         <span id="onlyauthor" style="display:none"><p>$_dialogConfirmSigninviteBody2OnlyAuthor()$</p></span>
         <span class="eleghidden" style="display:none;">
           <h3>$_dialogConfirmSigninviteSubHead()$</h3>

@@ -32,6 +32,7 @@ import qualified AppLogger as Log
 import StateHelper
 import Mails.MailsUtil
 import Doc.Transitory
+import Doc.DocStateData
 import Doc.DocStateCommon
 import KontraMonad
 import MinutesTime
@@ -47,14 +48,10 @@ import ActionSchedulerState
 import Text.JSON
 
 instance Arbitrary DocumentTag where
-  arbitrary = do
-    (k, v) <- arbitrary
-    return $ DocumentTag k v
+  arbitrary = DocumentTag <$> arbitrary <*> arbitrary
 
 instance Arbitrary UserID where
-  arbitrary = do
-    a <- arbitrary
-    return $ UserID a
+  arbitrary = UserID <$> arbitrary
 
 instance Arbitrary Company where
   arbitrary = do
@@ -69,14 +66,10 @@ instance Arbitrary Company where
                      }
 
 instance Arbitrary CompanyID where
-  arbitrary = do
-    a <- arbitrary
-    return $ CompanyID a
+  arbitrary = CompanyID <$> arbitrary
 
 instance Arbitrary ExternalCompanyID where
-  arbitrary = do
-    a <- arbitrary
-    return $ ExternalCompanyID a
+  arbitrary = ExternalCompanyID <$> arbitrary
 
 instance Arbitrary CompanyInfo where
   arbitrary = do
@@ -95,35 +88,26 @@ instance Arbitrary CompanyInfo where
                          }
 
 instance Arbitrary ServiceID where
-  arbitrary = do
-    a <- arbitrary
-    return $ ServiceID a
+  arbitrary = ServiceID <$> arbitrary
 
 instance Arbitrary MagicHash where
-  arbitrary = do
-    a <- arbitrary
-    return $ MagicHash a
+  arbitrary = MagicHash <$> arbitrary
 
 instance Arbitrary MailsDeliveryStatus where
   arbitrary = elements [ Delivered
                        , Undelivered
                        , Unknown
-                       , Deferred]
+                       , Deferred
+                       ]
 
 instance Arbitrary TimeoutTime where
-  arbitrary = do
-    a <- arbitrary
-    return $ TimeoutTime a
+  arbitrary = TimeoutTime <$> arbitrary
 
 instance Arbitrary MinutesTime where
-  arbitrary = do
-    a <- arbitrary
-    return $ fromSeconds a
+  arbitrary = fromSeconds <$> arbitrary
 
 instance Arbitrary DocumentUI where
-  arbitrary = do
-    a <- arbitrary
-    return $ DocumentUI a
+  arbitrary = DocumentUI <$> arbitrary
 
 instance Arbitrary ActionID where
   arbitrary = ActionID <$> arbitrary
@@ -143,9 +127,7 @@ instance ExtendWithRandomnes SignatoryDetails where
     moreRandom sl = return sl
 
 instance Arbitrary SignatoryLinkID where
-  arbitrary = do
-    si <- arbitrary
-    return $ SignatoryLinkID si
+  arbitrary = SignatoryLinkID <$> arbitrary
 
 instance Arbitrary SignatoryLink where
   arbitrary = do
@@ -206,9 +188,7 @@ instance Arbitrary CSVUpload where
                        }
 
 instance Arbitrary DocumentID where
-  arbitrary = do
-    ds <- arbitrary
-    return $ DocumentID ds
+  arbitrary = DocumentID <$> arbitrary
 
 documentAllTypes :: [DocumentType]
 documentAllTypes = [ Signable Contract
@@ -393,30 +373,27 @@ signatoryLinkExample1 = SignatoryLink { signatorylinkid = SignatoryLinkID 0
                                       }
 
 blankUser :: User
-blankUser = User {
-                   userid                  =  UserID 0
-                 , userpassword            =  Nothing
-                 , useriscompanyadmin = False
-                 , useraccountsuspended    =  False
+blankUser = User { userid                        = UserID 0
+                 , userpassword                  = Nothing
+                 , useriscompanyadmin            = False
+                 , useraccountsuspended          = False
                  , userhasacceptedtermsofservice = Nothing
-                 , usersignupmethod = AccountRequest
-                 , userinfo = UserInfo {
-                                    userfstname = BS.empty
-                                  , usersndname = BS.empty
-                                  , userpersonalnumber = BS.empty
-                                  , usercompanyposition =  BS.empty
-                                  , userphone = BS.empty
-                                  , usermobile = BS.empty
-                                  , useremail =  Email BS.empty
-                                   }
-                , usersettings  = UserSettings {
-                                    preferreddesignmode = Nothing
-                                  , locale = mkLocaleFromRegion Misc.defaultValue
-                                  , customfooter = Nothing
-                                  }
-              , userservice = Nothing
-              , usercompany = Nothing
-              }
+                 , usersignupmethod              = AccountRequest
+                 , userinfo = UserInfo { userfstname = BS.empty
+                                       , usersndname = BS.empty
+                                       , userpersonalnumber = BS.empty
+                                       , usercompanyposition =  BS.empty
+                                       , userphone = BS.empty
+                                       , usermobile = BS.empty
+                                       , useremail = Email BS.empty
+                                       }
+                 , usersettings  = UserSettings { preferreddesignmode = Nothing
+                                                , locale = mkLocaleFromRegion Misc.defaultValue
+                                                , customfooter = Nothing
+                                                }
+                 , userservice = Nothing
+                 , usercompany = Nothing
+                 }
 
 {-
 blankDocument :: Document
@@ -500,6 +477,14 @@ addNewRandomAdvancedUser = do
   Just user <- dbQuery $ GetUserByID userid
   return user
 
+addNewRandomCompanyUser :: CompanyID -> Bool -> DB User
+addNewRandomCompanyUser cid isadmin = do
+  User{userid} <- addNewRandomUser
+  _ <- dbUpdate $ SetUserCompany userid (Just cid)
+  _ <- dbUpdate $ SetUserCompanyAdmin userid isadmin
+  Just user <- dbQuery $ GetUserByID userid
+  return user
+
 addService :: String -> UserID -> DB (Maybe Service)
 addService name uid =
   dbUpdate $ CreateService (ServiceID $ BS.fromString name) Nothing uid
@@ -559,7 +544,7 @@ getPossibleAuthorRoles doc = [SignatoryAuthor] :
 
 
 addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> DB Document
-addRandomDocumentWithAuthorAndCondition user p = 
+addRandomDocumentWithAuthorAndCondition user p =
   addRandomDocument ((randomDocumentAllowsDefault user) { randomDocumentCondition = p})
 
 addRandomDocument :: RandomDocumentAllows -> DB Document
@@ -567,8 +552,8 @@ addRandomDocument rda = do
   file <- addNewRandomFile
   now <- liftIO getMinutesTime
   document <- worker file now
-  docid <- doc_update $ StoreDocumentForTesting document
-  mdoc <- doc_query $ GetDocumentByDocumentID docid
+  docid <- doc_update' $ StoreDocumentForTesting document
+  mdoc <- doc_query' $ GetDocumentByDocumentID docid
   case mdoc of
     Nothing -> do
               assertFailure "Could not store document."
@@ -582,10 +567,14 @@ addRandomDocument rda = do
       doc' <- rand 10 arbitrary
       xtype <- rand 10 (elements $ randomDocumentAllowedTypes rda)
       status <- rand 10 (elements $ randomDocumentAllowedStatuses rda)
-      let doc = doc' { documenttype = xtype, documentstatus = status }
+      title <- rand 10 (elements ["title", "a b c", "123.123"])
+      let doc = doc' { documenttype = xtype
+                     , documentstatus = status
+                     , documenttitle = BS.fromString title
+                     }
 
       roles <- getRandomAuthorRoles doc
-    
+
       mcompany <- case usercompany user of
                     Nothing -> return Nothing
                     Just cid -> dbQuery $ GetCompany cid
@@ -593,14 +582,14 @@ addRandomDocument rda = do
 
       (signinfo, seeninfo) <- rand 10 arbitrary
       asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
-      asl <- doc_update $ SignLinkFromDetailsForTest asd roles
+      asl <- doc_update' $ SignLinkFromDetailsForTest asd roles
       let asl' = asl { maybeseeninfo = seeninfo
                      , maybesigninfo = signinfo
                      }
 
       let siglinks = documentsignatorylinks doc ++
                      [ asl' { maybesignatory = Just (userid user)
-                            , maybecompany = usercompany user 
+                            , maybecompany = usercompany user
                             }
                      ]
       let unsignedsiglinks = map (\sl -> sl { maybesigninfo = Nothing,
@@ -663,14 +652,14 @@ validTest = return . Just
 
 --Random query
 class RandomQuery a b where
-  randomQuery :: (MonadIO m, DBMonad m) => a -> m b
+  randomQuery :: a -> DB b
 
 #ifndef DOCUMENTS_IN_POSTGRES
 instance (QueryEvent ev res) => RandomQuery ev res where
   randomQuery = query
 #else
 instance (DBQuery ev res) => RandomQuery ev res where
-  randomQuery = runDBQuery
+  randomQuery = dbQuery
 #endif
 
 instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
@@ -680,14 +669,14 @@ instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
 
 --Random update
 class RandomUpdate a b where
-  randomUpdate :: (MonadIO m, DBMonad m) => a -> m b
+  randomUpdate :: a -> DB b
 
 #ifndef DOCUMENTS_IN_POSTGRES
 instance (UpdateEvent ev res) => RandomUpdate ev res where
   randomUpdate = update
 #else
 instance (DBUpdate ev res) => RandomUpdate ev res where
-  randomUpdate = runDBUpdate
+  randomUpdate = dbUpdate
 #endif
 
 instance (Arbitrary a, RandomUpdate c b) => RandomUpdate (a -> c) b where
@@ -763,21 +752,17 @@ instance Arbitrary File where
                   }
 
 instance Arbitrary SignInfo where
-  arbitrary = do
-    (a, b) <- arbitrary
-    return $ SignInfo a b
+  arbitrary = SignInfo <$> arbitrary <*> arbitrary
 
 
 instance Arbitrary JSValue where
-  arbitrary = do
-    (v :: Int) <- (arbitrary :: Gen Int)
-    case (v `mod` 10) of
-         0 -> JSObject <$> toJSObject <$> (\(f,s) -> (maybeToList f) ++ (maybeToList s)) <$> arbitrary
-         1 -> JSArray <$> (\(f,s) -> (maybeToList f) ++ (maybeToList s)) <$> arbitrary
-         2 -> JSRational True <$> toRational <$> (arbitrary :: Gen Integer)
-         3 -> JSBool <$> arbitrary
-         _ -> JSString <$> toJSString <$> arbitrary
-
+  arbitrary =
+    oneof [ JSObject <$> toJSObject <$> (\(f,s) -> (maybeToList f) ++ (maybeToList s)) <$> arbitrary
+          , JSArray <$> (\(f,s) -> (maybeToList f) ++ (maybeToList s)) <$> arbitrary
+          , JSRational True <$> toRational <$> (arbitrary :: Gen Integer)
+          , JSBool <$> arbitrary
+          , JSString <$> toJSString <$> arbitrary
+          ]
 
 
 -- our asserts
@@ -842,12 +827,12 @@ getFlashType (FlashMessage ft _) = ft
 getFlashType (FlashTemplate ft _ _) = ft
 
 instance Arbitrary Locale where
-  arbitrary = do  
+  arbitrary = do
     (a, b) <- arbitrary
     return $ mkLocale a b
 
 instance Arbitrary Region where
   arbitrary = elements [REGION_SE, REGION_GB]
-  
+
 instance Arbitrary Lang where
   arbitrary = elements [LANG_SE, LANG_EN]

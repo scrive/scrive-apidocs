@@ -20,8 +20,8 @@ module Doc.DocStorage
 import Control.Concurrent
 import Control.Monad
 import Control.Monad.IO.Class
-import Doc.DocState
-import Happstack.State (update)
+import Doc.DocStateData
+--import Doc.Transitory
 --import MinutesTime
 --import Misc
 import System.Directory
@@ -32,7 +32,7 @@ import Kontra
 import qualified Amazon as AWS
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.UTF8 as BS hiding (length)
+--import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import qualified TrustWeaver as TW
 import qualified AppLogger as Log
@@ -41,7 +41,6 @@ import qualified MemCache
 import ForkAction
 import File.Model
 import DB.Classes
-
 
 {- Gets file content from somewere (Amazon for now), putting it to cache and returning as BS -}
 getFileContents :: Context -> File -> IO (BS.ByteString)
@@ -171,27 +170,35 @@ convertPdfToJpgPages ctx fid docid = withSystemTempDirectory "pdf2jpeg" $ \tmppa
                   return (JpegPages x)
   return result
 
-{- | Shedules rendering od a file. After forked process is done, images will be put in shared memory. -}
+{- | Shedules rendering od a file. After forked process is done, images will be put in shared memory.
+ FIXME: this is so convoluted that I'm getting lost in this function. Make it clear.
+ -}
 maybeScheduleRendering :: Kontrakcja m
                        => FileID
                        -> DocumentID
                        -> m JpegPages
 maybeScheduleRendering fileid docid = do
-  doNotCloseDBConnectionExplicitly
   ctx@Context{ ctxnormalizeddocuments = mvar } <- getContext
-  liftIO $ modifyMVar mvar $ \setoffilesrenderednow ->
+  (p, start) <- liftIO $ modifyMVar mvar $ \setoffilesrenderednow ->
       case Map.lookup fileid setoffilesrenderednow of
-         Just pages -> return (setoffilesrenderednow, pages)
+         Just pages ->
+           return (setoffilesrenderednow, (pages, False))
          Nothing -> do
-           forkActionIO ("Rendering file #" ++ show fileid ++ " of doc #" ++ show docid) $ do
-                jpegpages <- convertPdfToJpgPages ctx fileid docid
+           return (Map.insert fileid JpegPagesPending setoffilesrenderednow, (JpegPagesPending, True))
+
+  when start $
+       forkAction ("Rendering file #" ++ show fileid ++ " of doc #" ++ show docid) $ \conn' -> do
+                let newctx = ctx { ctxdbconn = conn' }
+                jpegpages <- convertPdfToJpgPages newctx fileid docid
                 case jpegpages of
-                     JpegPagesError errmsg -> do
-                         _ <- update $ ErrorDocument docid $ BS.toString errmsg
+                     JpegPagesError _errmsg -> do
+                                        -- FIXME: need to report this error somewhere
+                         -- _ <- doc_update $ ErrorDocument docid $ BS.toString errmsg
                          return ()
                      _                     -> return ()
                 modifyMVar_ mvar (\filesrenderednow -> return (Map.insert fileid jpegpages filesrenderednow))
-           return (Map.insert fileid JpegPagesPending setoffilesrenderednow, JpegPagesPending)
+  return p
+
 
 {- |  Convert PDF to uncompress it. -}
 preprocessPDF :: Context

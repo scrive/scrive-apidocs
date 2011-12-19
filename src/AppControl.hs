@@ -20,12 +20,13 @@ import API.Service.Model
 import ActionSchedulerState
 import AppView as V
 import DB.Classes
-import Doc.DocState
+import Doc.DocStateData
 import InputValidation
 import Kontra
 import KontraLink
 import Mails.MailsConfig
 import Mails.SendMail
+import Numeric
 import MinutesTime
 import Misc
 --import PayEx.PayExInterface ()-- Import so at least we check if it compiles
@@ -47,7 +48,6 @@ import File.FileID
 
 import Control.Concurrent
 import Control.Monad.Error
-import Control.Monad.Reader
 import Data.Functor
 import Data.List
 import Data.Maybe
@@ -91,8 +91,8 @@ data AppGlobals
 getDocumentLocale :: Connection -> (ServerMonad m, Functor m, MonadIO m) => m (Maybe Locale)
 getDocumentLocale conn = do
   rq <- askRq
-  let docids = catMaybes . map (fmap fst . listToMaybe . reads) $ rqPaths rq
-  mdoclocales <- runReaderT (mapM (DocControl.getDocumentLocale . DocumentID) docids) conn
+  let docids = catMaybes . map (fmap fst . listToMaybe . readSigned readDec) $ rqPaths rq
+  mdoclocales <- ioRunDB conn $ mapM (DocControl.getDocumentLocale . DocumentID) docids
   return . listToMaybe $ catMaybes mdoclocales
 
 {- |
@@ -128,7 +128,7 @@ getUserLocale conn muser = do
       mkLocaleFromRegion $ regionFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
     -- try and get the locale from the current activation user by checking the path for action ids, and giving them a go
     getActivationLocale rq = do
-      let actionids = catMaybes . map (fmap fst . listToMaybe . reads) $ rqPaths rq
+      let actionids = catMaybes . map (fmap fst . listToMaybe . readSigned readDec) $ rqPaths rq
       mactionlocales <- mapM (getActivationLocaleFromAction . ActionID) actionids
       return . listToMaybe $ catMaybes mactionlocales
     getActivationLocaleFromAction aid = do
@@ -256,8 +256,7 @@ appHandler handleRoutes appConf appGlobals = do
       let newelegtrans = ctxelegtransactions ctx'
       F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
       updateSessionWithContextData session newsessionuser newelegtrans
-      when (ctxdbconnclose ctx') $
-        liftIO $ disconnect $ ctxdbconn ctx'
+      liftIO $ disconnect $ ctxdbconn ctx'
       return res
 
     createContext rq session = do
@@ -309,7 +308,6 @@ appHandler handleRoutes appConf appGlobals = do
                 , ctxnormalizeddocuments = docscache appGlobals
                 , ctxipnumber = peerip
                 , ctxdbconn = conn
-                , ctxdbconnclose = True
                 , ctxdocstore = docstore appConf
                 , ctxs3action = defaultAWSAction appConf
                 , ctxgscmd = gsCmd appConf
@@ -334,7 +332,6 @@ appHandler handleRoutes appConf appGlobals = do
                 , ctxservice = mservice
                 , ctxlocation = location
                 , ctxadminaccounts = admins appConf
-                , ctxdbconnstring = dbConfig appConf
                 }
       return ctx
 
