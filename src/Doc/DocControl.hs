@@ -44,6 +44,8 @@ import Doc.Invariants
 import Stats.Control
 import User.Utils
 import API.Service.Model
+import Data.Semantic
+import Company.Model
 
 import Control.Applicative
 import Control.Concurrent
@@ -2094,7 +2096,8 @@ handleUpsalesDeleted = onlySuperUser $ do
   docs <- doc_query $ GetDocuments $ Just $ ServiceID $ BS.fromString "upsales"
   let deleteddocs = [[show $ documentid d, showDateYMD $ documentctime d]
                     | d <- docs
-                    , isDeletedFor $ getAuthorSigLink d]
+                    , isDeletedFor $ getAuthorSigLink d
+                    , isJust $ getSigLinkFor d $ And SignatoryAuthor $ CompanyID 1849610088]
   let header = ["document_id", "date created"]
   let csv = toCSV header deleteddocs
   ok $ setHeader "Content-Disposition" "attachment;filename=upsalesdocsdeleted.csv"
