@@ -79,6 +79,12 @@ type DBInside a = RWST Connection () (Maybe Statement) IO a
 --
 -- In future we are going to remove the MonadIO instance so that DB
 -- does not cause troublesome side effects.
+--
+-- Note: Do NOT try to provide DBMonad instance for DB. DBMonad instance
+-- allows you to call runDB function, which executes a statement within
+-- transaction. But, since we are in DB monad, we are already in such
+-- transaction! And because there is no such thing as nested transactions,
+-- this basically kills its 'transactional' character.
 newtype DB a = DB { unDB :: DBInside a }
   deriving (Applicative, Functor, Monad, MonadPlus, MonadIO)
 
