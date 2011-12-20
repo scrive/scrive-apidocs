@@ -51,6 +51,7 @@ import User.Model
 import qualified Amazon as AWS
 import Mails.MailsConfig
 import Mails.SendMail
+import Text.Show.Pretty
 import Templates.Templates (readGlobalTemplates, getTemplatesModTime)
 import Misc
 import qualified MemCache
@@ -80,7 +81,7 @@ readAppConfig = readConf `catch` printDefault
         Log.server $ "No app config provided. Exiting now. Error: " ++ show ex
         Log.server $ "Please provide application config file " ++ filepath
         Log.server $ "Example configuration:"
-        Log.server $ show (defaultConf "kontrakcja")
+        Log.server $ ppShow (defaultConf "kontrakcja")
         error "Config file error"
 
 

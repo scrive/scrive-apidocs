@@ -16,8 +16,6 @@ module Mails.MailsConfig
     , isBackdoorOpen
     ) where
 
-import Misc
-
 -- | Configuration of mails
 data MailsConfig
     = MailsSendgrid
@@ -39,34 +37,7 @@ data MailsConfig
       , ourInfoEmail         :: String
       , ourInfoEmailNiceName :: String
       }
-      deriving (Read, Eq, Ord)
-
-instance Show MailsConfig where
-    show (MailsSendgrid{..}) = indentLinesMore 2 $ unlines
-      [ "MailsSendgrid"
-      , "{ mailbackdooropen = " ++ show mailbackdooropen
-      , ", ourInfoEmail = " ++ show ourInfoEmail
-      , ", ourInfoEmailNiceName = " ++ show ourInfoEmailNiceName
-      , ", sendgridSMTP = " ++ show sendgridSMTP
-      , ", sendgridRestAPI = " ++ show sendgridRestAPI
-      , ", sendgridUser = " ++ show sendgridUser
-      , ", sendgridPassword = " ++ show sendgridPassword
-      , "}"
-      ]
-    show (MailsSendmail{..}) = indentLinesMore 2 $ unlines
-      [ "MailsSendmail"
-      , "{ mailbackdooropen = " ++ show mailbackdooropen
-      , ", ourInfoEmail = " ++ show ourInfoEmail
-      , ", ourInfoEmailNiceName = " ++ show ourInfoEmailNiceName
-      , "}"
-      ]
-    show (MailsLocalOpen{..}) = indentLinesMore 2 $ unlines
-      [ "MailsLocalOpen"
-      , "{ mailbackdooropen = " ++ show mailbackdooropen
-      , ", ourInfoEmail = " ++ show ourInfoEmail
-      , ", ourInfoEmailNiceName = " ++ show ourInfoEmailNiceName
-      , "}"
-      ]
+      deriving (Read, Eq, Ord, Show)
 
 isBackdoorOpen :: MailsConfig -> Bool
 isBackdoorOpen MailsSendgrid{mailbackdooropen} = mailbackdooropen

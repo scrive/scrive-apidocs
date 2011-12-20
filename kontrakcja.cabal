@@ -164,6 +164,7 @@ Executable kontrakcja-server
   Build-depends: HUnit
   Build-depends: HaXml == 1.20.*
   Build-depends: MissingH
+  Build-depends: pretty-show
   Build-depends: QuickCheck
   Build-depends: array
   Build-depends: base >= 4 && < 5

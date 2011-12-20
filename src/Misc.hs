@@ -682,14 +682,6 @@ basename filename =
     (_,(_:rest)) -> basename rest
     _            -> takeWhile ((/=) '.') filename
 
-indentLinesMore :: Int -> String -> String
-indentLinesMore nspaces sublines =
-  case lines sublines of
-    (x:xs) -> unlines $ x : map (spaces ++) xs
-    [] -> []
-  where 
-    spaces = replicate nspaces ' '
-    
 toCSV :: [String] -> [[String]] -> String
 toCSV header ls =
   concatMap csvline (header:ls)
