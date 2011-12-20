@@ -46,7 +46,7 @@ function get_templates {
     # using '=', so we get template name in first field. then we check
     # if whole record contains '=' (to filter out invalid stuff) and
     # we print first field, ie. template name.
-    cat "$file" | grep -v '^#[^#]' | awk --posix '
+    grep -v '^#[^#]' "$file" | awk --posix '
       BEGIN {
         RS="[#]{2,}[^\n]*[\n]";
         FS="[ \t\n]*="
