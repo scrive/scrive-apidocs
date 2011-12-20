@@ -178,7 +178,7 @@ sendoutForManualChecking titleprefix req ctx (Just email) m = do
 
 testMailer:: Mailer
 testMailer = createSendgridMailer $ MailsSendgrid {
-        mailbackdooropen = False,
+        isBackdoorOpen = False,
         ourInfoEmail = "test@scrive.com",
         ourInfoEmailNiceName = "test",
         sendgridSMTP = "smtps://smtp.sendgrid.net",
