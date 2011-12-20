@@ -1144,7 +1144,7 @@ instance DBQuery GetDeletedDocumentsByCompany [Document] where
   dbQuery (GetDeletedDocumentsByCompany user) = do
     case useriscompanyadmin user of
       True ->
-        selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE signatory_links.deleted = TRUE AND company_id = ? AND really_deleted = FALSE AND service_id = ? AND documents.id = document_id)")
+        selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE signatory_links.deleted = TRUE AND company_id = ? AND really_deleted = FALSE AND service_id = ? AND documents.id = document_id) ORDER BY mtime DESC")
                       [ toSql (usercompany user)
                       , toSql (userservice user)
                       ]
@@ -1155,7 +1155,7 @@ data GetDeletedDocumentsByUser = GetDeletedDocumentsByUser User
 instance DBQuery GetDeletedDocumentsByUser [Document] where
   dbQuery (GetDeletedDocumentsByUser user) = do
     selectDocuments (selectDocumentsSQL ++
-                     " WHERE EXISTS (SELECT * FROM signatory_links WHERE signatory_links.deleted = TRUE AND really_deleted = FALSE AND user_id = ? AND documents.id = document_id)")
+                     " WHERE EXISTS (SELECT * FROM signatory_links WHERE signatory_links.deleted = TRUE AND really_deleted = FALSE AND user_id = ? AND documents.id = document_id) ORDER BY mtime DESC")
                       [ toSql (userid user)
                       ]
 
@@ -1208,7 +1208,7 @@ instance DBQuery GetDocuments [Document] where
 
 selectDocumentsBySignatoryLink :: String -> [SqlValue] -> DB [Document]
 selectDocumentsBySignatoryLink condition values = do
-    selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT TRUE FROM signatory_links WHERE documents.id = document_id AND " ++ condition ++ ")") values
+    selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT TRUE FROM signatory_links WHERE documents.id = document_id AND " ++ condition ++ ") ORDER BY mtime DESC") values
 
 {- |
     All documents authored by the user that have never been deleted.
@@ -1217,7 +1217,7 @@ data GetDocumentsByAuthor = GetDocumentsByAuthor UserID
                             deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsByAuthor [Document] where
   dbQuery (GetDocumentsByAuthor uid) = do
-    selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?)<>0)") [toSql uid, toSql [SignatoryAuthor]]
+    selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?)<>0) ORDER BY mtime DESC") [toSql uid, toSql [SignatoryAuthor]]
 
 data GetDocumentsByCompany = GetDocumentsByCompany User
                              deriving (Eq, Ord, Show, Typeable)
@@ -1283,7 +1283,7 @@ instance DBQuery GetDocumentsSharedInCompany [Document] where
                                       " WHERE deleted = FALSE" ++
                                       "   AND sharing = ?" ++
                                       "   AND service_id = ?" ++
-                                      "   AND EXISTS (SELECT 1 FROM signatory_links WHERE document_id = id AND company_id = ?)")
+                                      "   AND EXISTS (SELECT 1 FROM signatory_links WHERE document_id = id AND company_id = ?) ORDER BY mtime DESC")
                        [ toSql Shared
                        , toSql (userservice)
                        , toSql companyid
