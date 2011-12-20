@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, ForeignFunctionInterface #-}
+{-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-| Dump bin for things that do not fit anywhere else
 
@@ -42,9 +42,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS
 import qualified GHC.Conc
 import Data.Bits
-
-
-foreign import ccall unsafe "htonl" htonl :: Word32 -> Word32
 
 -- We want this operators to bind strongly but weeker then . to do cond1 &&^ not . cond2
 infixl 8  &&^

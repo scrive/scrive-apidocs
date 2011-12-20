@@ -1,5 +1,5 @@
 :set -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
-:set -isrc -ipdfseal/src -ipdfseal/inc -itest/src
+:set -isrc -ipdfseal/src -ipdfseal/inc -itest/src -imailer
 :set -XBangPatterns
 :set -XDeriveDataTypeable
 :set -XFlexibleContexts
