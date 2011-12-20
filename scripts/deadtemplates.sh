@@ -40,12 +40,13 @@ fi
 # extract names of all templates from a given file
 function get_templates {
   while read file; do
-    # we split file with templates using ##..\n as record separator
+    # we strip a file with templates from comments (lines that start
+    # with single '#'), then we split it using ##..\n as record separator
     # and we get templates (well, mostly). then we separate fields
     # using '=', so we get template name in first field. then we check
     # if whole record contains '=' (to filter out invalid stuff) and
     # we print first field, ie. template name.
-    cat "$file" | awk --posix '
+    cat "$file" | grep -v '^#[^#]' | awk --posix '
       BEGIN {
         RS="[#]{2,}[^\n]*[\n]";
         FS="[ \t\n]*="
