@@ -113,7 +113,7 @@ instance DBUpdate CreateAccessToken AccessToken where
     accesstoken <- AccessToken <$> getUniqueIDField tableAccessToken "access_token"
     wrapDB $ \conn -> do
       n <- run conn ("INSERT INTO auth_access_token (access_token, user_id, api_token, expires)"
-                     ++ " VALUES (?, ?, ?, to_timestamp(?))" )
+                     ++ " VALUES (?, ?, ?, ?)" )
            [toSql accesstoken,
             toSql uid,
             toSql token,

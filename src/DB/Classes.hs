@@ -253,7 +253,6 @@ class (Functor m, MonadIO m) => DBMonad m where
   -- 'fail'.
   handleDBError :: DBException -> m a
 
-
 -- | Wraps IO action in DB
 wrapDB :: (Connection -> IO a) -> DB a
 wrapDB f = DB ask >>= liftIO . f

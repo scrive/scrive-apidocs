@@ -38,7 +38,6 @@ module User.Model (
   ) where
 
 import Control.Applicative
-import Control.Monad
 import Data.Data
 import Data.Int
 import Database.HDBC
@@ -161,7 +160,7 @@ instance DBQuery GetCompanyAccounts [User] where
 data GetInviteInfo = GetInviteInfo UserID
 instance DBQuery GetInviteInfo (Maybe InviteInfo) where
   dbQuery (GetInviteInfo uid) = wrapDB $ \conn -> do
-    st <- prepare conn "SELECT inviter_id, EXTRACT(EPOCH FROM invite_time), invite_type FROM user_invite_infos WHERE user_id = ?"
+    st <- prepare conn "SELECT inviter_id, invite_time, invite_type FROM user_invite_infos WHERE user_id = ?"
     _ <- execute st [toSql uid]
     is <- fetchInviteInfos st []
     oneObjectReturnedGuard is
@@ -321,7 +320,7 @@ instance DBUpdate SetInviteInfo Bool where
               then do
                 run conn ("UPDATE user_invite_infos SET"
                   ++ "  inviter_id = ?"
-                  ++ ", invite_time = to_timestamp(?)"
+                  ++ ", invite_time = ?"
                   ++ ", invite_type = ?"
                   ++ "  WHERE user_id = ?") [
                     toSql inviterid
@@ -334,7 +333,7 @@ instance DBUpdate SetInviteInfo Bool where
                   ++ "  user_id"
                   ++ ", inviter_id"
                   ++ ", invite_time"
-                  ++ ", invite_type) VALUES (?, ?, to_timestamp(?), ?)") [
+                  ++ ", invite_type) VALUES (?, ?, ?, ?)") [
                     toSql uid
                   , toSql inviterid
                   , toSql invitetime
@@ -439,7 +438,7 @@ data AcceptTermsOfService = AcceptTermsOfService UserID MinutesTime
 instance DBUpdate AcceptTermsOfService Bool where
   dbUpdate (AcceptTermsOfService uid time) = wrapDB $ \conn -> do
     r <- run conn ("UPDATE users SET"
-      ++ "  has_accepted_terms_of_service = to_timestamp(?)"
+      ++ "  has_accepted_terms_of_service = ?"
       ++ "  WHERE id = ? AND deleted = FALSE") [
         toSql time
       , toSql uid
@@ -455,13 +454,11 @@ instance DBUpdate SetSignupMethod Bool where
 
 data SetUserCompanyAdmin = SetUserCompanyAdmin UserID Bool
 instance DBUpdate SetUserCompanyAdmin Bool where
-  dbUpdate (SetUserCompanyAdmin uid iscompanyadmin) = wrapDB $ \conn -> do
-    mcid <- quickQuery' conn "SELECT company_id FROM users WHERE id = ? AND deleted = FALSE FOR UPDATE" [toSql uid]
-      >>= oneObjectReturnedGuard . join
-      >>= return . join . fmap fromSql
+  dbUpdate (SetUserCompanyAdmin uid iscompanyadmin) = do
+    mcid <- getOne "SELECT company_id FROM users WHERE id = ? AND deleted = FALSE FOR UPDATE" [toSql uid]
     case mcid :: Maybe CompanyID of
       Nothing -> return False
-      Just _ -> do
+      Just _ -> wrapDB $ \conn -> do
         run conn "UPDATE users SET is_company_admin = ? WHERE id = ? AND deleted = FALSE" [toSql iscompanyadmin, toSql uid]
           >>= oneRowAffectedGuard
 
@@ -485,7 +482,7 @@ selectUsersSQL = "SELECT "
  ++ ", encode(u.salt, 'base64')"
  ++ ", u.is_company_admin"
  ++ ", u.account_suspended"
- ++ ", EXTRACT(EPOCH FROM u.has_accepted_terms_of_service)"
+ ++ ", u.has_accepted_terms_of_service"
  ++ ", u.signup_method"
  ++ ", u.service_id"
  ++ ", u.company_id"

@@ -37,8 +37,8 @@ import Control.Concurrent.MVar
 --import Control.Monad.Reader
 
 import Crypto
+import DB.Checks
 import DB.Classes
-import DB.Migrations
 import Database.HDBC.PostgreSQL
 import Network.BSD
 import Network.Socket hiding ( accept, socketPort, recvFrom, sendTo )
@@ -179,7 +179,7 @@ runKontrakcjaServer = Log.withLogger $ do
      else createDirectoryIfMissing True $ docstore appConf
 
   withPostgreSQL (dbConfig appConf) $ \conn -> do
-    res <- ioRunDB conn $ tryDB checkDBConsistency
+    res <- ioRunDB conn $ tryDB performDBChecks
     case res of
       Left (e::E.SomeException) -> do
         Log.error $ "Error while checking DB consistency: " ++ show e

@@ -1,5 +1,6 @@
-module DB.Utils
-  ( getUniqueID
+module DB.Utils (
+    getOne
+  , getUniqueID
   , getUniqueIDField
   , oneRowAffectedGuard
   , oneObjectReturnedGuard
@@ -17,6 +18,8 @@ import DB.Classes as DB
 import DB.Model
 import Happstack.State()
 import DB.Fetcher
+import Data.Convertible
+import Control.Monad
 
 class GetUniqueID m where
     getUniqueIDField :: Table -> String -> m Int64
@@ -59,3 +62,9 @@ checkIfOneObjectReturned xs =
   oneObjectReturnedGuard xs
     >>= return . maybe False (const True)
 
+getOne :: Convertible SqlValue a => String -> [SqlValue] -> DB (Maybe a)
+getOne query values = wrapDB $ \c ->
+  quickQuery' c query values
+    >>= oneObjectReturnedGuard . join
+    >>= return . fmap fromSql
+    

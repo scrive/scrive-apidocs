@@ -1,4 +1,5 @@
 /* The process for uploading a new document.
+   Written by Eric Normand
  */
 (function(window){
     window.SelectProcessView = Backbone.View.extend({
@@ -129,7 +130,7 @@
             var model = view.model;
             var wiz = model.wizard();
 
-            var documentsTable = KontraList.init({
+            var documentsTable = KontraList().init({
                 name : "Templates table",
                 schema: new Schema({
                     url: "/docs",

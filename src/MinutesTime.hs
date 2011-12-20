@@ -27,17 +27,17 @@ module MinutesTime
 
 import Control.Monad.IO.Class
 import Data.Char
+import Data.Convertible
 import Data.Data 
 import Data.Time
 import Data.Time.Clock.POSIX
+import Database.HDBC
 import Happstack.Data
 import Happstack.State
 import System.Locale
 import System.Time hiding (toClockTime, toUTCTime)
 import qualified System.Time as System.Time (toUTCTime)
 import Text.Printf
-
-import DB.Derive
 
 -- | Time in minutes from 1970-01-01 00:00 in UTC coordinates
 newtype MinutesTime0 = MinutesTime0 Int
@@ -54,7 +54,6 @@ data MinutesTime1 = MinutesTime1
 -- Same as POSIX seconds and what every other database uses as TIMESTAMP time type.
 newtype MinutesTime = MinutesTime Int
     deriving (Eq, Ord, Typeable, Data)
-$(newtypeDeriveConvertible ''MinutesTime)
 
 instance Version MinutesTime0
 $(deriveSerialize ''MinutesTime0)
@@ -251,3 +250,9 @@ showAsDate int = printf "%04d-%02d-%02d" (int `div` 10000) (int `div` 100 `mod` 
 
 showAsMonth :: Int -> String
 showAsMonth int = printf "%04d-%02d" (int `div` 10000) (int `div` 100 `mod` 100)
+
+instance Convertible SqlValue MinutesTime where
+  safeConvert = either Left (Right . fromClockTime) . safeConvert
+
+instance Convertible MinutesTime SqlValue where
+  safeConvert = safeConvert . toUTCTime

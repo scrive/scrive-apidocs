@@ -10,8 +10,8 @@ import System.IO
 import Test.Framework
 import qualified AppLogger as Log
 
+import DB.Checks
 import DB.Classes
-import DB.Migrations
 
 -- Note: if you add new testsuites here, please add them in a similar
 -- manner to existing ones, i.e. wrap them around ifdefs and add appropriate
@@ -199,6 +199,6 @@ main = Log.withLogger $ do
   hSetEncoding stderr utf8
   pgconf <- readFile "kontrakcja_test.conf"
   withPostgreSQL pgconf $ \conn -> do
-    ioRunDB conn checkDBConsistency
+    ioRunDB conn performDBChecks
     (args, tests) <- partitionEithers . testsToRun conn <$> getArgs
     defaultMainWithArgs tests args

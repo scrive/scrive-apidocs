@@ -126,7 +126,7 @@ instance DBUpdate AddDocStatEvent Bool where
           ++ ", service_id"
           ++ ", company_id"
           ++ ", document_type"
-          ++ ") SELECT ?, to_timestamp(?), ?, ?, ?, ?, ?, ? "
+          ++ ") SELECT ?, ?, ?, ?, ?, ?, ?, ? "
           -- want to avoid an error, so check if exists
           ++ " WHERE NOT EXISTS (SELECT 1 FROM doc_stat_events WHERE"
           ++ " document_id = ? AND quantity = ?)"
@@ -159,7 +159,7 @@ instance DBUpdate AddUserStatEvent Bool where
           ++ ", amount"
           ++ ", service_id"
           ++ ", company_id"
-          ++ ") SELECT ?, to_timestamp(?), ?, ?, ?, ? "
+          ++ ") SELECT ?, ?, ?, ?, ?, ? "
           -- want to avoid an error, so check if exists
           ++ " WHERE NOT EXISTS (SELECT 1 FROM user_stat_events WHERE"
           ++ " user_id = ? AND quantity = ?)"
