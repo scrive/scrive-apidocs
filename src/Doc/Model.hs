@@ -1190,15 +1190,48 @@ instance DBQuery GetDocumentByDocumentID (Maybe Document) where
 data GetDocumentStats = GetDocumentStats
                         deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentStats DocStats where
-  dbQuery (GetDocumentStats) = wrapDB $ \conn -> do
-    unimplemented "GetDocumentStats"
+  dbQuery (GetDocumentStats) = do
+  undeleteddocs <- selectDocuments (selectDocumentsSQL ++ " WHERE deleted=FALSE") []
+  let signatureCountForDoc :: Document -> Int
+      signatureCountForDoc doc = length $ filter (isJust . maybesigninfo) (documentsignatorylinks doc)
+  return $ DocStats
+      { doccount = (length undeleteddocs)
+      , signaturecount = sum $ map signatureCountForDoc undeleteddocs
+      , signaturecount1m = 0
+      , signaturecount2m = 0
+      , signaturecount3m = 0
+      , signaturecount6m = 0
+      , signaturecount12m = 0
+      }
 
 
 data GetDocumentStatsByUser = GetDocumentStatsByUser User MinutesTime
                               deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentStatsByUser DocStats where
-  dbQuery (GetDocumentStatsByUser user time) = wrapDB $ \conn -> do
-    unimplemented "GetDocumentStatsByUser"
+  dbQuery (GetDocumentStatsByUser user time) = do
+  docs <- dbQuery $ GetDocumentsByUser user
+  sigdocs <- dbQuery $ GetDocumentsBySignatory user
+  let signaturecount' = length $ allsigns
+      signaturecount1m' = length $ filter (isSignedNotLaterThanMonthsAgo 1) $ allsigns
+      signaturecount2m' = length $ filter (isSignedNotLaterThanMonthsAgo 2) $ allsigns
+      signaturecount3m' = length $ filter (isSignedNotLaterThanMonthsAgo 3) $ allsigns
+      signaturecount6m' = length $ filter (isSignedNotLaterThanMonthsAgo 6) $ allsigns
+      signaturecount12m' = length $ filter (isSignedNotLaterThanMonthsAgo 12) $ allsigns
+      timeMonthsAgo m = (-m * 30 * 24 * 60) `minutesAfter` time
+      isSignedNotLaterThanMonthsAgo m = (timeMonthsAgo m <) . documentmtime
+      allsigns = filter (isSigned . relevantSigLink) sigdocs
+      relevantSigLink :: Document -> Maybe SignatoryLink
+      relevantSigLink doc = listToMaybe $ filter (isSigLinkFor $ userid user) (documentsignatorylinks doc)
+      isSigned :: Maybe SignatoryLink -> Bool
+      isSigned = maybe False (isJust . maybesigninfo)
+  return DocStats { doccount          = length docs
+                  , signaturecount    = signaturecount'
+                  , signaturecount1m  = signaturecount1m'
+                  , signaturecount2m  = signaturecount2m'
+                  , signaturecount3m  = signaturecount3m'
+                  , signaturecount6m  = signaturecount6m'
+                  , signaturecount12m = signaturecount12m'
+                  }
 
 data GetDocuments = GetDocuments (Maybe ServiceID)
                     deriving (Eq, Ord, Show, Typeable)
@@ -1914,8 +1947,23 @@ instance DBUpdate TimeoutDocument (Either String Document) where
 data SetCSVSigIndex = SetCSVSigIndex DocumentID Int MinutesTime
                       deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetCSVSigIndex (Either String Document) where
-  dbUpdate (SetCSVSigIndex did csvsigindex time) = wrapDB $ \conn -> do
-    unimplemented "SetCSVSigIndex"
+  dbUpdate (SetCSVSigIndex did csvsigindex time) = do
+    Just doc <- dbQuery $ GetDocumentByDocumentID did
+    case documentfunctionality doc of
+      BasicFunctionality -> return $ Left $ "Cannot set csvindex on basic functionality document " ++ show did
+      AdvancedFunctionality -> 
+        case documentcsvupload doc of
+          Nothing -> return $ Left $ "There is no csv upload for document " ++ show did
+          Just cu -> 
+            case checkCSVSigIndex (documentsignatorylinks doc) csvsigindex of
+              Left s -> return $ Left s
+              Right i -> do
+                r <- runUpdateStatement "documents"
+                     [ sqlField "csv_signatory_index" $ csvsigindex
+                     , sqlField "mtime" time
+                     ]
+                    "WHERE id = ?" [ toSql did ]
+                getOneDocumentAffected "SetCSVSigIndex" r did
 
 data SetEmailIdentification = SetEmailIdentification DocumentID MinutesTime
                       deriving (Eq, Ord, Show, Typeable)
