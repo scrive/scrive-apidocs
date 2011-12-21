@@ -13,30 +13,20 @@ data MailingServerConf = MailingServerConf {
   } deriving (Read, Show)
 
 data MailsConfig = MailsSendgrid {
-    ourInfoEmail         :: String
-  , ourInfoEmailNiceName :: String
-  , sendgridSMTP         :: String
+    sendgridSMTP         :: String
   , sendgridRestAPI      :: String
   , sendgridUser         :: String
   , sendgridPassword     :: String
   }
-  | MailsSendmail {
-    ourInfoEmail         :: String
-  , ourInfoEmailNiceName :: String
-  }
-  | MailsLocalOpen {
-    ourInfoEmail         :: String
-  , ourInfoEmailNiceName :: String
-  } deriving (Read, Show)
+  | MailsSendmail
+  | MailsLocalOpen
+    deriving (Read, Show)
 
 instance Configuration MailingServerConf where
   confDefault = MailingServerConf {
       mscHttpBindAddress = (0x7f000001, 6666)
     , mscDBConfig = "user='kontra' password='kontra' dbname='kontrakcja'"
-    , mscMailsConfig = MailsLocalOpen {
-        ourInfoEmail          = "development-system@skrivapa.se"
-      , ourInfoEmailNiceName  = "Development"
-      }
-    }
+    , mscMailsConfig = MailsLocalOpen
+  }
   confOptions = []
   confVerify _ = return $ Right ()

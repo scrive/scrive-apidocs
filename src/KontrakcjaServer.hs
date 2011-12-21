@@ -33,6 +33,7 @@ import System.IO
 import Control.Concurrent.MVar
 --import Control.Monad.Reader
 
+import AppDB
 import Configuration
 import DB.Checks
 import DB.Classes
@@ -125,7 +126,7 @@ runKontrakcjaServer = Log.withLogger $ do
      else createDirectoryIfMissing True $ docstore appConf
 
   withPostgreSQL (dbConfig appConf) $ \conn -> do
-    res <- ioRunDB conn $ tryDB performDBChecks
+    res <- ioRunDB conn $ tryDB $ performDBChecks kontraTables kontraMigrations
     case res of
       Left (e::E.SomeException) -> do
         Log.error $ "Error while checking DB consistency: " ++ show e

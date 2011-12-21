@@ -10,6 +10,7 @@ import System.IO
 import Test.Framework
 import qualified AppLogger as Log
 
+import AppDB
 import DB.Checks
 import DB.Classes
 
@@ -199,6 +200,6 @@ main = Log.withLogger $ do
   hSetEncoding stderr utf8
   pgconf <- readFile "kontrakcja_test.conf"
   withPostgreSQL pgconf $ \conn -> do
-    ioRunDB conn performDBChecks
+    ioRunDB conn $ performDBChecks kontraTables kontraMigrations
     (args, tests) <- partitionEithers . testsToRun conn <$> getArgs
     defaultMainWithArgs tests args

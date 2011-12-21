@@ -100,8 +100,8 @@ getUnique64 ixset constr = do
      else getUnique64 ixset constr
 
 -- | Generate random string of specified length that contains allowed chars
-randomString :: Int -> [Char] -> IO String
-randomString n allowed_chars =
+randomString :: MonadIO m => Int -> [Char] -> m String
+randomString n allowed_chars = liftIO $
     sequence $ replicate n $ ((!!) allowed_chars <$> randomRIO (0, len))
     where
         len = length allowed_chars - 1

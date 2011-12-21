@@ -11,16 +11,15 @@ import Data.Time.LocalTime
 import Database.HDBC
 
 import DB.Classes
-import DB.Migrations
 import DB.Model
 import DB.Utils
 import qualified AppLogger as Log
 
 -- | Runs all checks on a database
-performDBChecks :: DB ()
-performDBChecks = do
+performDBChecks :: [Table] -> [Migration] -> DB ()
+performDBChecks tables migrations = do
   checkDBTimeZone
-  checkDBConsistency
+  checkDBConsistency tables migrations
 
 -- | Checks whether database returns timestamps in UTC
 checkDBTimeZone :: DB ()
@@ -32,23 +31,23 @@ checkDBTimeZone = do
      else error $ "Database returns timestamps using time zone " ++ show tz ++ ". Execute query \"ALTER DATABASE your_database SET TIMEZONE = 'UTC'\" and try again."
 
 -- | Checks whether database is consistent (performs migrations if necessary)
-checkDBConsistency :: DB ()
-checkDBConsistency = do
-  (created, to_migration) <- checkTables
+checkDBConsistency :: [Table] -> [Migration] -> DB ()
+checkDBConsistency tables migrations = do
+  (created, to_migration) <- checkTables tables
   forM_ created $ \table -> do
     Log.debug $ "Putting properties on table '" ++ tblName table ++ "'..."
     tblPutProperties table
   when (not $ null to_migration) $ do
     Log.debug "Running migrations..."
-    migrate migrationsList to_migration
+    migrate migrations to_migration
     Log.debug "Done."
-    (_, to_migration_again) <- checkTables
+    (_, to_migration_again) <- checkTables tables
     when (not $ null to_migration_again) $
       error $ "The following tables were not migrated to their latest versions: " ++ concatMap descNotMigrated to_migration_again
   where
     descNotMigrated (t, from) = "\n * " ++ tblName t ++ ", current version: " ++ show from ++ ", needed version: " ++ show (tblVersion t)
 
-    checkTables = second catMaybes . partitionEithers <$> mapM checkTable tablesList
+    checkTables tables = second catMaybes . partitionEithers <$> mapM checkTable tables
     checkTable table = do
       desc <- wrapDB $ \conn -> describeTable conn $ tblName table
       Log.debug $ "Checking table '" ++ tblName table ++ "'..."
