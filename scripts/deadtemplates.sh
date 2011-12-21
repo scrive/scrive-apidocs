@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [ $# -lt 2 ]; then
-  echo "Usage:" "$0" "SRC_DIR TEMPLATES_DIR [--show-all]"
+if [ $# -lt 3 ]; then
+  echo "Usage:" "$0" "SRC_DIR TEMPLATES_DIR TEXTS_DIR [--show-all]"
   echo
   echo "Check for dead templates by searching both src and templates"
   echo "directories for their occurences and print the ones that were"
@@ -31,7 +31,14 @@ else
   exit 1
 fi
 
-if [ "$3" = "--show-all" ]; then
+if [ -d "$3" ]; then
+  texts_dir="$3"
+else
+  echo "$3 is not a directory"
+  exit 1
+fi
+
+if [ "$4" = "--show-all" ]; then
   show_all=true
 else
   show_all=false
@@ -69,9 +76,10 @@ function check_occurences {
     # template name with non-alnum character at the beginning (to prevent matches
     # like otherTEMPLATE...), optional :noescape after template name and parentheses
     # with arbirary amount of text between them (ie. arguments or lack of them).
-    templates_occ=`grep "[^A-Za-z0-9_]${template}\(:noescape\)\{0,1\}(.*)" "$templates_dir" -R | wc -l`
-    if [ $show_all = true -o $(($src_occ + $templates_occ)) = "0" ]; then
-      printf "src: %2d, templates: %2d - %s\n" $src_occ $templates_occ $template
+    templates_occ=`grep "[^A-Za-z0-9_]${template}\(:noescape\)\{0,1\}(" "$templates_dir" -R | wc -l`
+    texts_occ=`grep "[^A-Za-z0-9_]${template}\(:noescape\)\{0,1\}(" "$texts_dir" -R | wc -l`
+    if [ $show_all = true -o $(($src_occ + $templates_occ + $texts_occ)) = "0" ]; then
+      printf "src: %2d, templates: %2d, texts: %2d - %s\n" $src_occ $templates_occ $texts_occ $template
     fi
   done
 }
