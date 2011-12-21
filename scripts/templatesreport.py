@@ -140,16 +140,28 @@ while len(graylist.keys()) > 0:
 
 if len(blacklist) > 0:
     print "The following templates are not used:"
+    totallines = 0
+    totaltemplates = 0
     for t in sorted(blacklist.keys()):
         if t in alltemplates:
             for x in alltemplates[t]:
-                print "  %s in %s" % (x['name'], x['file'])
+                lines = len(x['definition'].split("\n"))
+                totallines = totallines + lines
+                totaltemplates = totaltemplates +1
+                print "  %s in %s with %s lines" % (x['name'], x['file'], lines)
+    print " %s templates and %s lines" % (totaltemplates, totallines)
     print ""
     print "The following texts are not used:"
+    totallines = 0
+    totaltexts = 0
     for t in sorted(blacklist.keys()):
         if t in textsbyname:
             for x in textsbyname[t]:
-                print "  %s in %s" % (x['name'], x['file'])
+                lines = len("|".join(x['definition']).split("\n"))
+                totallines = totallines + lines
+                totaltexts = totaltexts +1
+                print "  %s in %s with %s lines" % (x['name'], x['file'], lines)
+    print " %s texts and %s lines" % (totaltexts, totallines)
     ec = 1
 
 if len(duplicatetextnames) > 0:
