@@ -33,9 +33,10 @@ import Data.Time.Clock.POSIX
 import Happstack.Data
 import Happstack.State
 import System.Locale
-import System.Time hiding (toClockTime, toUTCTime)
-import qualified System.Time as System.Time (toUTCTime)
+import System.Time hiding (toClockTime, toUTCTime, toCalendarTime)
+import qualified System.Time as System.Time (toUTCTime, toCalendarTime)
 import Text.Printf
+import System.IO.Unsafe
 
 import DB.Derive
 
@@ -165,8 +166,8 @@ showDateAbbrev locale current time
                | otherwise =
                    formatMinutesTime locale "%Y-%m-%d" time
                where
-                 ct1 = System.Time.toUTCTime $ toClockTime current
-                 ct = System.Time.toUTCTime $ toClockTime time
+                 ct1 = toCalendarTime current
+                 ct = toCalendarTime time
 
 -- | Get current time as 'MinutesTime'. Warning: server should work in UTC time.
 getMinutesTime :: MonadIO m => m MinutesTime
@@ -194,6 +195,10 @@ toClockTime mt = (TOD (fromIntegral $ toSeconds mt) 0)
 toUTCTime :: MinutesTime -> CalendarTime
 toUTCTime = System.Time.toUTCTime . toClockTime
 
+-- | This is wrong on so many different levels, kill this function, use something sensible.
+toCalendarTime :: MinutesTime -> CalendarTime
+toCalendarTime mt = unsafePerformIO (System.Time.toCalendarTime (toClockTime mt))
+
 -- | Convert minutes to proper 'MinutesTime'.
 fromMinutes :: Int -> MinutesTime
 fromMinutes m = MinutesTime (m*60)
@@ -213,7 +218,7 @@ toSeconds (MinutesTime s) = s
 
 -- | Format time according to Swedish rules of time formating.
 formatMinutesTime :: KontraTimeLocale -> String -> MinutesTime -> String
-formatMinutesTime ktl fmt mt = formatCalendarTime (getTimeLocale ktl) fmt (System.Time.toUTCTime $ toClockTime mt)
+formatMinutesTime ktl fmt mt = formatCalendarTime (getTimeLocale ktl) fmt (toCalendarTime mt)
 
 -- | Parse format %d-%m-%Y.
 parseMinutesTimeDMY :: String -> Maybe MinutesTime
