@@ -81,6 +81,7 @@ window.Field = Backbone.Model.extend({
                 return new FieldPlacement(extendedWithField(placement));
         });
         this.set({"placements": placements});
+        this.bind("change", function() {this.signatory().change()})
     },
     name : function() {
         return this.get("name");

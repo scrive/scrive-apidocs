@@ -66,6 +66,7 @@ window.Document = Backbone.Model.extend({
         var signatories = this.signatories();
         signatories[signatories.length] = new Signatory({"document": document, signs: true});
         document.set({"signatories" : signatories});
+        document.change();
     },
     mainfile: function(){
         var file;
@@ -197,6 +198,21 @@ window.Document = Backbone.Model.extend({
            return !signatory.current();
        });
     },
+    removeSignatory : function(sig) {
+       if (this.signatories().length < 2) 
+           return;
+       var newsigs = new Array();    
+       newsigs.push(this.signatories()[0]);
+       var removed = false;
+       for(var i=1;i<this.signatories().length;i++)
+          if ((sig !== this.signatories()[i] && i < this.signatories().length -1)
+              || removed)
+             newsigs.push(this.signatories()[i]);
+          else 
+             removed = true;
+       this.set({signatories : newsigs});
+
+    },
     currentViewerIsAuthor : function() {
         var csig  = this.currentSignatory();
         return  (csig != undefined && csig.author());
@@ -270,11 +286,6 @@ window.Document = Backbone.Model.extend({
     },
     needRecall : function() {
         return this.mainfile() == undefined;
-        {   var document = this;
-            setTimeout(function() {
-                        document.fetch({data: document.viewer().forFetch(),   processData:  true, cache : false});
-                        }, 1000);
-        }
     },
     author: function() {
       for(var i=0;i<this.signatories().length;i++)

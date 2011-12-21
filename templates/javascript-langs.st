@@ -187,5 +187,8 @@ javascriptLocalisation =
            , to : "$_to()$"
            , nextStep : "$_signStepsBodyFunctionsNextStep()$"
            , uploadButton: "$_signStepsBodyUploadBoxStepButtonChooseFile()$"
+           , ok : "$_ok()$" 
+           , addSignatory : "$_signStepsBodyFunctionsAddPerson()$"
+           , removeSignatory : "$_signStepsBodyFunctionsRemovePerson()$"
    }
 ####

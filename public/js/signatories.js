@@ -149,25 +149,26 @@ window.Signatory = Backbone.Model.extend({
         signed : false,
         signs : false,
         author : false,
-        fields : [new Field({name : "fstname"}),
-                  new Field({name : "sndname"}),
-                  new Field({name : "email"}),
-                  new Field({name : "sigpersnr"}),
-                  new Field({name : "sigco"}),
-                  new Field({name : "sigcompnr"}),
+        fields : [{name : "fstname"},
+                  {name : "sndname"},
+                  {name : "email"},
+                  {name : "sigpersnr"},
+                  {name : "sigco"},
+                  {name : "sigcompnr"},
                 
         ],
         current : false,
         attachments : []
     },
     
-    initialize : function(args){
+    initialize : function(args){   
         var signatory = this;
         var extendedWithSignatory =   function(hash){
                     hash.signatory = signatory;
                     return hash;
         };
         var fields =  _.map(args.fields, function(field){
+                var field = new Field(extendedWithSignatory(field));
                 return new Field(extendedWithSignatory(field));
         });
         var attachments =  _.map(args.attachments, function(attachment){
@@ -223,7 +224,7 @@ window.Signatory = Backbone.Model.extend({
     },
     name : function(){
         var name = this.fstname() + " "+ this.sndname();
-        if (name != undefined)
+        if (name != undefined && name != " ")
             return name;
         else
             return "";                                    
@@ -231,7 +232,11 @@ window.Signatory = Backbone.Model.extend({
     smartname : function() {
         if (this.current()) 
          return localization.you;
-        if (this.name() != "")
+        else
+         return this.nameOrEmail();
+    },
+    nameOrEmail : function() {
+         if (this.name() != "")
          return this.name();
         else 
          return this.email();
@@ -476,5 +481,5 @@ window.SignatoryStandarView = Backbone.View.extend({
         return this;
     }
 })
-    
+
 })(window); 
