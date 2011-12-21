@@ -366,7 +366,7 @@ signatoryFieldsJSON doc SignatoryLink{signatorydetails = SignatoryDetails{signat
       EmailFT -> fieldJSON doc "email" sfValue True sfPlacements
       PersonalNumberFT -> fieldJSON doc "sigpersnr" sfValue (closedF sf) sfPlacements
       CompanyFT -> fieldJSON doc "sigco" sfValue (closedF sf) sfPlacements
-      CompanyNumberFT -> fieldJSON doc "sigco" sfValue (closedF sf) sfPlacements
+      CompanyNumberFT -> fieldJSON doc "sigcompnr" sfValue (closedF sf) sfPlacements
       CustomFT label closed -> fieldJSON doc (BS.toString label) sfValue closed sfPlacements
   where
     closedF sf = (not $ BS.null $ sfValue sf) || (null $ sfPlacements sf)

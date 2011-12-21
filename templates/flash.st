@@ -248,7 +248,7 @@ flashMessagePleaseSignContract=	$_flashMessagePleaseSignContract()$
 ###
 flashMessagePleaseSignOffer=	$_flashMessagePleaseSignOffer()$
 ###
-flashMessagePleaseSignOrder=Du kan bekräfta ordern längst ned på sidan.
+flashMessagePleaseSignOrder=   $_flashMessagePleaseSignOrder()$
 ###
 flashMessageUserHasLiveDocs=$_flashMessageUserHasLiveDocs()$
 ###
