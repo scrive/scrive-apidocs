@@ -110,6 +110,7 @@ import Text.JSON
 import Util.HasSomeCompanyInfo
 import CompanyAccounts.CompanyAccountsControl
 import CompanyAccounts.Model
+import Stats.Model
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m Response
@@ -223,11 +224,11 @@ showAdminUsersForSales = onlySuperUser $ adminUsersPageForSales
 jsonUsersList ::Kontrakcja m => m JSValue
 jsonUsersList = do
     params <- getListParamsNew
-    allUsers <- getUsersAndStats
+    allUsers <- getUsersAndStatsNew
     let users = usersSortSearchPage params allUsers
     return $ JSObject
            $ toJSObject
-            [("list", JSArray $ map (\(user,mcompany,docstats) ->
+            [("list", JSArray $ map (\(user,mcompany,docstatevents) ->
                 JSObject $ toJSObject
                     [("fields", JSObject $ toJSObject
                         [("id",       jsFromString . show $ userid user)
@@ -236,7 +237,8 @@ jsonUsersList = do
                         ,("company",  jsFromBString $ getCompanyName mcompany)
                         ,("phone",    jsFromBString $ userphone $ userinfo user)
                         ,("tos",      jsFromString $ maybe "-" show (userhasacceptedtermsofservice user))
-                        ,("signed_docs", jsFromString . show $ doccount docstats)
+                        ,("signed_docs", jsFromString $ show $ sum [seAmount dse | dse <- docstatevents
+                                                                                 , DocStatClose == seQuantity dse])
                         ,("subaccounts", jsFromString "")
                         ])
                     ,("link", jsFromString . show $ LinkUserAdmin $ Just $ userid user)
@@ -246,12 +248,12 @@ jsonUsersList = do
     jsFromString = JSString . toJSString
     jsFromBString = JSString . toJSString . BS.toString
 
-usersSortSearchPage :: ListParams -> [(User, Maybe Company, DocStats)]
-                       -> PagedList (User, Maybe Company, DocStats)
+usersSortSearchPage :: ListParams -> [(User, Maybe Company, [DocStatEvent])]
+                       -> PagedList (User, Maybe Company, [DocStatEvent])
 usersSortSearchPage =
     listSortSearchPage usersSortFunc usersSearchFunc usersPageSize
 
-usersSortFunc :: SortingFunction (User, Maybe Company, DocStats)
+usersSortFunc :: SortingFunction (User, Maybe Company, [DocStatEvent])
 usersSortFunc "username"    = viewComparing (getFullName . (\(u,_,_) -> u))
 usersSortFunc "usernameREV" = viewComparingRev (getFullName . (\(u,_,_) -> u))
 usersSortFunc "email"       = viewComparing (getEmail . (\(u,_,_) -> u))
@@ -262,11 +264,13 @@ usersSortFunc "phone"       = viewComparing (userphone . userinfo . (\(u,_,_) ->
 usersSortFunc "phoneREV"    = viewComparingRev (userphone . userinfo . (\(u,_,_) -> u))
 usersSortFunc "tos"         = viewComparing ((maybe "-" show) . (userhasacceptedtermsofservice . (\(u,_,_) -> u)))
 usersSortFunc "tosREV"      = viewComparingRev ((maybe "-" show) . (userhasacceptedtermsofservice . (\(u,_,_) -> u)))
-usersSortFunc "signed_docs" = viewComparing (doccount . (\(_,_,d) -> d))
-usersSortFunc "signed_docsREV" = viewComparingRev (doccount . (\(_,_,d) -> d))
+usersSortFunc "signed_docs" = viewComparing (\(_,_,d) -> sum [seAmount dse | dse <- d
+                                                                           , DocStatClose == seQuantity dse])
+usersSortFunc "signed_docsREV" = viewComparingRev (\(_,_,d) -> sum [seAmount dse | dse <- d
+                                                                                 , DocStatClose == seQuantity dse])
 usersSortFunc _             = const $ const EQ
 
-usersSearchFunc :: SearchingFunction (User, Maybe Company, DocStats)
+usersSearchFunc :: SearchingFunction (User, Maybe Company, [DocStatEvent])
 usersSearchFunc s userdata = userMatch userdata s
   where
       match s' m = isInfixOf (map toUpper s') (map toUpper (BS.toString m))
@@ -296,6 +300,15 @@ getUsersAndStats = do
     users2 <- mapM queryStats users
     return users2
 
+-- Eric: I added this to ease transition from old DocStats system
+getUsersAndStatsNew :: Kontrakcja m => m [(User, Maybe Company, [DocStatEvent])]
+getUsersAndStatsNew = do
+    users <- runDBQuery GetUsers
+    let queryStats user = do
+          mcompany <- getCompanyForUser user
+          docstats <- runDBQuery $ GetDocStatEventsByUserID (userid user)
+          return (user, mcompany, docstats)
+    mapM queryStats users
 
 showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
 showAdminUserUsageStats userid = onlySuperUser $ do
