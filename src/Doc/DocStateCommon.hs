@@ -189,7 +189,6 @@ checkResetSignatoryData doc sigs =
   let authors    = [ r | (_, r) <- sigs, SignatoryAuthor `elem` r]
       nonauthors = [ r | (_, r) <- sigs, SignatoryAuthor `notElem` r]
       isbasic = documentfunctionality doc == BasicFunctionality
-      disallowspartner _ = getValueForProcess doc processauthorsend /= Just True
   in catMaybes $
       [ trueOrMessage (documentstatus doc == Preparation) $ "Document is not in preparation, is in " ++ show (documentstatus doc)
       , trueOrMessage (length authors == 1) $ "Should have exactly one author, had " ++ show (length authors)

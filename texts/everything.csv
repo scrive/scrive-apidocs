@@ -745,6 +745,7 @@ profits and reduce frustration.</p>                                             
 "_flashMessagePasswordsDontMatch","<strong>Nytt lösenord</strong> matchar inte med <strong>Upprepa lösenord</strong>",,"The two passwords do not match."
 "_flashMessagePleaseSignContract","Underteckna dokumentet längst ned på sidan.",,"Sign the document at the bottom of the page."
 "_flashMessagePleaseSignOffer","Du kan acceptera offerten längst ned på sidan.",,"Accept the offer at the bottom of the page."
+"_flashMessagePleaseSignOrder","Du kan bekräfta ordern längst ned på sidan.",,"Confirm the order at the bottom of the page."
 "_flashMessagePleaseSignWithEleg","Du undertecknar dokumentet längst ned. Det krävs e-legitimation
  för att underteckna.",,"Sign the document at the bottom of the page. E-ID is required
  to sign."
