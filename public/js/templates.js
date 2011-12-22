@@ -350,6 +350,7 @@ function docstateToHTML() {
     });
     $("#signStepsWrapper").show();
     $("input").blur();
+    showProperSignButtons();
     stayontop($('#signStepsContainer.follow'));
 }
 
