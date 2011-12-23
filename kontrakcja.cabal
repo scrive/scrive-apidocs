@@ -358,6 +358,9 @@ Executable dbdump
   GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind -Wall
   Hs-source-dirs: dbdump/src src pdfseal/inc
 
+  if flag(documents-in-postgres)
+    cpp-options: -DDOCUMENTS_IN_POSTGRES
+
   cpp-options: -DDBDumper=Main
   Main-is: DBDumper.hs
 

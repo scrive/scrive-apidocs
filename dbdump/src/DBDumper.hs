@@ -4,6 +4,7 @@ module DBDumper(main) where
 import KontrakcjaServer
 import AppConf
 import Misc
+import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.Lazy as BSL
 import Data.Functor
 import Control.Monad
@@ -68,7 +69,7 @@ getDBDump = do
     db <- dbConfig <$> readAppConfig
     (code,pgd,stderror) <- readProcessWithExitCode' "pg_dump" ["-Ft", "--no-owner" ,db] BSL.empty
     when (code /= ExitSuccess) $
-        error $ "Failed to pg_dump database \"" ++ db ++ "\" with " ++ show stderror 
+        error $ "Failed to pg_dump database \"" ++ db ++ "\" with: \n" ++ BSL.toString stderror 
     putStrLn $ "Postgres:" ++ db   
     putStrLn "Postgres dumping successfull"    
     lastCheckpoint <- find ("checkpoint" `isPrefixOf`) <$> reverse <$> sort <$> getDirectoryContents happstackStoreDir
@@ -93,7 +94,7 @@ loadDBDump dump = do
     db <- dbConfig <$> readAppConfig
     (code,_,stderror) <- readProcessWithExitCode' "pg_restore" ["-c","-d",db] (pgdump dump)
     when (code /= ExitSuccess) $
-        error $ "Failed to pg_restore database \"" ++ db ++ "\" with " ++ show stderror 
+        error $ "Failed to pg_restore database \"" ++ db ++ "\" with: \n" ++ BSL.toString stderror 
     putStrLn "Postgress restored"            
     files <- getDirectoryContents happstackStoreDir  
     forM_ files $ \n -> when (not $ "." `isPrefixOf` n) $ do
