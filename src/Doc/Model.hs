@@ -134,6 +134,9 @@ sqlField name value = SqlField name "" (toSql value)
 sqlFieldType :: (Convertible v SqlValue) => String -> String -> v -> SqlField
 sqlFieldType name xtype value = SqlField name xtype (toSql value)
 
+sqlLogAppend :: MinutesTime -> String -> SqlField
+sqlLogAppend time text = sqlFieldType "log" "append" text
+
 runInsertStatement :: String -> [SqlField] -> DB Integer
 runInsertStatement tableName fields =
   runInsertStatementWhere tableName fields "" []
@@ -186,11 +189,11 @@ mkUpdateStatement tableName fields =
    " SET " ++ concat (intersperse "," (map one fields)) ++ " "
    where
      name (SqlField x _ _) = x
-     xtype (SqlField _ x _) = insertType x
-     insertType "" = "?"
-     insertType "timestamp" = "?"
-     insertType "base64" = "decode(?, 'base64')"
-     insertType ytype = error $ "mkUpdateStatement: invalid insert type " ++ ytype
+     xtype (SqlField _ "" _) = "?"
+     xtype (SqlField _ "timestamp" _) = "?"
+     xtype (SqlField _ "base64" _) = "decode(?, 'base64')"
+     xtype (SqlField name' "append" _) = name' ++ "||?"
+     xtype (SqlField _ x _) = error $ "mkUpdateStatement: invalid insert type " ++ x
      one field = name field ++ "=" ++ xtype field
 
 
@@ -901,6 +904,7 @@ instance DBUpdate AttachFile (Either String Document) where
     r <- runUpdateStatement "documents"
          [ sqlField "mtime" time
          , sqlField "file_id" $ fid
+         , sqlLogAppend time ("Attached main file " ++ show fid)
          ]
          "WHERE id = ? AND status = ?" [ toSql did, toSql Preparation ]
     getOneDocumentAffected "AttachFile" r did
@@ -912,6 +916,7 @@ instance DBUpdate AttachSealedFile (Either String Document) where
     r <- runUpdateStatement "documents"
          [ sqlField "mtime" $ time
          , sqlField "sealed_file_id" $ fid
+         , sqlLogAppend time ("Attached sealed file " ++ show fid)
          ]
          "WHERE id = ? AND status = ?" [ toSql did, toSql Closed ]
     getOneDocumentAffected "AttachSealedFile" r did
@@ -919,7 +924,7 @@ instance DBUpdate AttachSealedFile (Either String Document) where
 data CancelDocument = CancelDocument DocumentID CancelationReason MinutesTime Word32
                       deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate CancelDocument (Either String Document) where
-  dbUpdate (CancelDocument did reason mtime _ipaddress) = do
+  dbUpdate (CancelDocument did reason mtime ipaddress) = do
     mdocument <- dbQuery $ GetDocumentByDocumentID did
     case mdocument of
       Nothing -> return $ Left $ "Cannot CancelDocument document " ++ show did ++ " because it does not exist"
@@ -930,6 +935,7 @@ instance DBUpdate CancelDocument (Either String Document) where
                  [ sqlField "status" $ Canceled
                  , sqlField "mtime" mtime
                  , sqlField "cancelation_reason" $ reason
+                 , sqlLogAppend mtime ("Document canceled from " ++ formatIP ipaddress)
                  ]
                 "WHERE id = ? AND type = ?" [ toSql did, toSql (toDocumentSimpleType (Signable undefined)) ]
             getOneDocumentAffected "CancelDocument" r did
@@ -1000,6 +1006,7 @@ instance DBUpdate PreparationToPending (Either String Document) where
                  [ sqlField "status" $ Pending
                  , sqlField "mtime" time
                  , sqlField "timeout_time" $ (\days -> (days * 24 *60) `minutesAfter` time) <$> documentdaystosign document
+                 , sqlLogAppend time ("Document put into Pending state")
                  ]
                 "WHERE id = ? AND type = ?" [ toSql docid, toSql (toDocumentSimpleType (Signable undefined))]
             getOneDocumentAffected "PreparationToPending" r docid
@@ -1019,14 +1026,15 @@ instance DBUpdate CloseDocument (Either String Document) where
             r <- runUpdateStatement "documents"
                  [ sqlField "status" $ Closed
                  , sqlField "mtime" time
+                 , sqlLogAppend time ("Document closed")
                  ]
                 "WHERE id = ? AND type = ?" [ toSql docid, toSql (toDocumentSimpleType (Signable undefined)) ]
-            getOneDocumentAffected "PreparationToPending" r docid
+            getOneDocumentAffected "CloseDocument" r docid
 
             -- return $ Right $ document { documentstatus = Closed
             --                          , documentmtime  = time
             --                          } `appendHistory` [DocumentHistoryClosed time ipaddress]
-          s -> return $ Left $ "Cannot Close document " ++ show docid ++ " because " ++ concat s
+          s -> return $ Left $ "Cannot CloseDocument " ++ show docid ++ " because " ++ concat s
 
 data DeleteSigAttachment = DeleteSigAttachment DocumentID BS.ByteString FileID
                            deriving (Eq, Ord, Show, Typeable)
@@ -1441,6 +1449,7 @@ instance DBUpdate RejectDocument (Either String Document) where
                                                , sqlField "rejection_time" time
                                                , sqlField "rejection_reason" customtext
                                                , sqlField "rejection_signatory_link_id" slid
+                                               , sqlLogAppend time ("Document rejected")
                                                ]
                                                "WHERE id = ?" [toSql docid]
               getOneDocumentAffected "RejectDocument" r docid
@@ -1628,6 +1637,7 @@ instance DBUpdate SetInviteText (Either String Document) where
     r <- runUpdateStatement "documents"
          [ sqlField "invite_text" $ text
          , sqlField "mtime" time
+         , sqlLogAppend time ("Invite text set")
          ]
          "WHERE id = ?" [ toSql did ]
     getOneDocumentAffected "SetInviteText" r did
@@ -1639,6 +1649,7 @@ instance DBUpdate SetDaysToSign (Either String Document) where
     r <- runUpdateStatement "documents"
          [ sqlField "days_to_sign" $ days
          , sqlField "mtime" time
+         , sqlLogAppend time ("Days to sign set to " ++ show days)
          ]
          "WHERE id = ?" [ toSql did ]
     getOneDocumentAffected "SetDaysToSign" r did
@@ -1650,6 +1661,7 @@ instance DBUpdate RemoveDaysToSign (Either String Document) where
     r <- runUpdateStatement "documents"
          [ sqlField "days_to_sign" $ SqlNull
          , sqlField "mtime" time
+         , sqlLogAppend time ("Removed days to sign")
          ]
          "WHERE id = ?" [ toSql did ]
     getOneDocumentAffected "RemoveDaysToSign" r did
@@ -1661,6 +1673,7 @@ instance DBUpdate SetDocumentAdvancedFunctionality (Either String Document) wher
     r <- runUpdateStatement "documents"
          [ sqlField "functionality" AdvancedFunctionality
          , sqlField "mtime" time
+         , sqlLogAppend time ("Document changed to advanced functionality")
          ]
          "WHERE id = ? AND functionality <> ?" [ toSql did, toSql AdvancedFunctionality ]
     getOneDocumentAffected "SetDocumentAdvancedFunctionality" r did
@@ -1673,6 +1686,7 @@ instance DBUpdate SetDocumentTitle (Either String Document) where
     r <- runUpdateStatement "documents"
          [ sqlField "title" $ doctitle
          , sqlField "mtime" time
+         , sqlLogAppend time ("Document title changed")
          ]
          "WHERE id = ?" [ toSql did ]
     getOneDocumentAffected "SetDocumentTitle" r did
@@ -1684,6 +1698,7 @@ instance DBUpdate SetDocumentLocale (Either String Document) where
     r <- runUpdateStatement "documents"
          [ sqlField "region" $ getRegion locale
          , sqlField "mtime" time
+         , sqlLogAppend time ("Document locale changed")
          ]
          "WHERE id = ?" [ toSql did ]
     getOneDocumentAffected "SetDocumentLocale" r did
@@ -1889,6 +1904,7 @@ instance DBUpdate TimeoutDocument (Either String Document) where
     r <- runUpdateStatement "documents"
          [ sqlField "status" $ Timedout
          , sqlField "mtime" time
+         , sqlLogAppend time ("Document timed out")
          ]
          "WHERE id = ? AND type = ? AND status = ?" [ toSql did
                                                     , toSql (toDocumentSimpleType (Signable undefined))
@@ -1924,6 +1940,7 @@ instance DBUpdate SetEmailIdentification (Either String Document) where
     r <- runUpdateStatement "documents"
          [ sqlField "allowed_id_types" $ [EmailIdentification]
          , sqlField "mtime" time
+         , sqlLogAppend time ("Email identification set")
          ]
          "WHERE id = ?" [ toSql did ]
     getOneDocumentAffected "SetEmailIdentification" r did
@@ -1935,6 +1952,7 @@ instance DBUpdate SetElegitimationIdentification (Either String Document) where
     r <- runUpdateStatement "documents"
          [ sqlField "allowed_id_types" $ [ELegitimationIdentification]
          , sqlField "mtime" time
+         , sqlLogAppend time ("E-leg identification set")
          ]
          "WHERE id = ?" [ toSql did ]
     getOneDocumentAffected "SetElegitimationIdentification" r did
@@ -1990,6 +2008,7 @@ instance DBUpdate PendingToAwaitingAuthor (Either String Document) where
             r <- runUpdateStatement "documents"
                  [ sqlField "status" $ AwaitingAuthor
                  , sqlField "mtime" time
+                 , sqlLogAppend time ("Changed to AwaitingAuthor status")
                  ]
                 "WHERE id = ? AND type = ?" [ toSql docid, toSql (toDocumentSimpleType (Signable undefined)) ]
             getOneDocumentAffected "PendingToAwaitingAuthor" r docid
