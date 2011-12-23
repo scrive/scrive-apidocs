@@ -8,6 +8,7 @@ module Doc.Model
   , isDeletableDocument -- fromUtils
   , anyInvitationUndelivered
   , undeliveredSignatoryLinks
+  , insertDocumentAsIs
 
   , AddDocumentAttachment(..)
   , AddInvitationEvidence(..)
@@ -98,13 +99,14 @@ import Doc.DocStateData
 import Doc.Invariants
 import Data.Data
 import Database.HDBC
-import Data.Word
 import qualified Data.ByteString.UTF8 as BS
 import qualified Mails.MailsUtil as Mail
 import Data.Maybe
 import Misc
 import Data.Convertible
 import Data.List
+import Data.Int
+import Data.Word
 import Mails.MailsUtil
 import Doc.Tables
 import Control.Applicative
@@ -248,6 +250,11 @@ checkEqualBy name func obj1 obj2
   | func obj1 /= func obj2 = Just (name, show (func obj1), show (func obj2))
   | otherwise              = Nothing
 
+checkEqualByAllowSecondNothing :: (Eq b, Show b) => String -> (a -> Maybe b) -> a -> a -> Maybe (String, String, String)
+checkEqualByAllowSecondNothing name func obj1 obj2
+  | func obj1 /= func obj2 && (not (isNothing (func obj2))) = Just (name, show (func obj1), show (func obj2))
+  | otherwise              = Nothing
+
 assertEqualDocuments :: (Monad m, MonadIO m) => Document -> Document -> m ()
 assertEqualDocuments d1 d2 | null inequalities = return ()
                            | otherwise = do
@@ -262,8 +269,8 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                          [ checkEqualBy "signatorylinkid" signatorylinkid
                          , checkEqualBy "signatorydetails" signatorydetails
                          , checkEqualBy "signatorymagichash" signatorymagichash
-                         , checkEqualBy "maybesignatory" maybesignatory
-                         , checkEqualBy "maybesupervisor" maybesupervisor
+                         , checkEqualByAllowSecondNothing "maybesignatory" maybesignatory
+                         , checkEqualByAllowSecondNothing "maybesupervisor" maybesupervisor
                          , checkEqualBy "maybecompany" maybecompany
                          , checkEqualBy "maybesigninfo" maybesigninfo
                          , checkEqualBy "maybeseeninfo" maybeseeninfo
@@ -290,7 +297,7 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documentinvitetime" documentinvitetime
                    , checkEqualBy "documentlog" documentlog
                    , checkEqualBy "documentinvitetext" documentinvitetext
-                   , checkEqualBy "documentallowedidtypes" documentallowedidtypes
+                   , checkEqualBy "documentallowedidtypes" (nub . documentallowedidtypes)
                    , checkEqualBy "documentcsvupload" documentcsvupload
                    , checkEqualBy "documentcancelationreason" documentcancelationreason
                    , checkEqualBy "documentsharing" documentsharing
@@ -322,7 +329,7 @@ decodeRowAsDocument :: DocumentID
                     -> Maybe Int
                     -> Maybe TimeoutTime
                     -> Maybe MinutesTime
-                    -> Maybe Word32
+                    -> Maybe Int32
                     -> [DocumentLogEntry]
                     -> BS.ByteString
                     -> [IdentificationType]
@@ -394,7 +401,7 @@ decodeRowAsDocument did
                                                , documenttimeouttime = timeout_time
                                                , documentinvitetime = case invite_time of
                                                                         Nothing -> Nothing
-                                                                        Just t -> Just (SignInfo t (maybe 0 id invite_ip))
+                                                                        Just t -> Just (SignInfo t (maybe 0 fromIntegral invite_ip))
                                                , documentlog = dlog
                                                , documentinvitetext = invite_text
                                                , documentallowedidtypes = allowed_id_types
@@ -497,9 +504,9 @@ decodeRowAsSignatoryLink :: SignatoryLinkID
                          -> SignOrder
                          -> MagicHash
                          -> Maybe MinutesTime
-                         -> Maybe Word32
+                         -> Maybe Int32
                          -> Maybe MinutesTime
-                         -> Maybe Word32
+                         -> Maybe Int32
                          -> Maybe MinutesTime
                          -> Mail.MailsDeliveryStatus
                          -> Maybe String
@@ -547,10 +554,10 @@ decodeRowAsSignatoryLink slid
     , maybesupervisor    = Nothing
     , maybecompany       = company_id
     , maybesigninfo      = case (sign_time, sign_ip) of
-                             (Just st, Just sip) -> Just (SignInfo st sip)
+                             (Just st, Just sip) -> Just (SignInfo st (fromIntegral sip))
                              _ -> Nothing
     , maybeseeninfo      = case (seen_time, seen_ip) of
-                             (Just st, Just sip) -> Just (SignInfo st sip)
+                             (Just st, Just sip) -> Just (SignInfo st (fromIntegral sip))
                              _ -> Nothing
     , maybereadinvite    = read_invitation
     , invitationdeliverystatus = invitation_delivery_status
@@ -582,19 +589,36 @@ fetchSignatoryLinks st = do
 
 insertSignatoryLinkAsIs :: DocumentID -> SignatoryLink -> DB (Maybe SignatoryLink)
 insertSignatoryLinkAsIs documentid link = do
+  let toSigned :: Word32 -> Int32 
+      toSigned = fromIntegral
+
+  ruserid <- case maybesignatory link of
+    Nothing -> return Nothing
+    Just userid1 -> do
+      muser <- dbQuery $ GetUserByID userid1
+      case muser of
+        Nothing -> 
+          do
+            Just doc <- dbQuery $ GetDocumentByDocumentID documentid
+            Log.server $ "User " ++ show (maybesignatory link) ++ " of document #" ++ 
+               show documentid ++ " '" ++ BS.toString (documenttitle doc) ++ "' does not exist, setting to NULL"
+            return Nothing
+        Just _ -> return (Just userid1)
+ 
+  --liftIO $ print link
   (_, st) <- runInsertStatementWhereReturning "signatory_links"
                             [ sqlField "id" $ signatorylinkid link
                             , sqlField "document_id" documentid
-                            , sqlField "user_id" $ maybesignatory link
+                            , sqlField "user_id" $ ruserid
                             , sqlField "roles" $ signatoryroles link
                             , sqlField "company_id" $ maybecompany link
                             , sqlField "token" $ signatorymagichash link
                             , sqlField "fields" $ signatoryfields $ signatorydetails link
                             , sqlField "sign_order"$ signatorysignorder $ signatorydetails link
                             , sqlField "sign_time" $ signtime `fmap` maybesigninfo link
-                            , sqlField "sign_ip" $ signipnumber `fmap` maybesigninfo link
+                            , sqlField "sign_ip" $ (toSigned . signipnumber) `fmap` maybesigninfo link
                             , sqlField "seen_time" $ signtime `fmap` maybeseeninfo link
-                            , sqlField "seen_ip" $ signipnumber `fmap` maybeseeninfo link
+                            , sqlField "seen_ip" $ (toSigned . signipnumber) `fmap` maybeseeninfo link
                             , sqlField "read_invitation" $ maybereadinvite link
                             , sqlField "invitation_delivery_status" $ invitationdeliverystatus link
                             , sqlField "signinfo_text" $ signatureinfotext `fmap` signatorysignatureinfo link
@@ -695,6 +719,7 @@ insertSignatoryAttachmentAsIs :: DocumentID -> SignatoryAttachment -> DB (Maybe 
 insertSignatoryAttachmentAsIs documentid attach = do
   (_, st) <- runInsertStatementWhereReturning "signatory_attachments"
                             [ sqlField "file_id" $ signatoryattachmentfile attach
+                            , sqlField "document_id" $ documentid
                             , sqlField "email" $ signatoryattachmentemail attach
                             , sqlField "name" $ signatoryattachmentname attach
                             , sqlField "description" $ signatoryattachmentdescription attach
@@ -715,6 +740,8 @@ insertSignatoryAttachmentAsIs documentid attach = do
 
 insertDocumentAsIs :: Document -> DB (Maybe Document)
 insertDocumentAsIs document = do
+    let toSigned :: Word32 -> Int32 
+        toSigned = fromIntegral
     let Document { documentid
                  , documenttitle
                  , documentsignatorylinks
@@ -765,7 +792,7 @@ insertDocumentAsIs document = do
                                      , sqlField "days_to_sign" documentdaystosign
                                      , sqlField "timeout_time" documenttimeouttime
                                      , sqlField "invite_time" $ signtime `fmap` documentinvitetime
-                                     , sqlField "invite_ip" (fmap signipnumber documentinvitetime)
+                                     , sqlField "invite_ip" (fmap (toSigned . signipnumber) documentinvitetime)
                                      , sqlField "invite_text" documentinvitetext
                                      , sqlField "log" $ unlines (map show documentlog)
                                      , sqlField "allowed_id_types" documentallowedidtypes

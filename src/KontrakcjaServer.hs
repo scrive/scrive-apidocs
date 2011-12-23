@@ -57,6 +57,7 @@ import Misc
 import qualified MemCache
 import File.Model
 import qualified System.Mem as System.Mem
+import qualified Doc.Import as D
 
 {- | Getting application configuration. Reads 'kontrakcja.conf' from current directory
      Setting production param can change default setting (not to send mails)
@@ -208,14 +209,7 @@ runKontrakcjaServer = Log.withLogger $ do
                   -- start the http server
                   E.bracket
                            (do
-                              -- populate db with entries from happstack-state
-                              ioRunDB conn $ do
-                                  -- U.populateDBWithUsersIfEmpty
-
-                                  -- this is not ready yet
-                                  --populateDBWithDocumentsIfEmpty
-
-                                  return ()
+                              D.populateDBWithDocumentsIfEmpty conn
 
                               let (iface,port) = httpBindAddress appConf
                               listensocket <- listenOn (htonl iface) (fromIntegral port)

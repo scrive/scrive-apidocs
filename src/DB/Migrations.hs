@@ -12,6 +12,7 @@ import Company.Tables
 import CompanyAccounts.Tables
 #ifdef DOCUMENTS_IN_POSTGRES
 import Doc.Tables
+import Doc.Migrations
 #endif
 import User.Migrations
 import User.Tables
@@ -26,6 +27,9 @@ migrationsList = [
   , addServiceAndCompanyToStats
   , removeSystemServer
   , addUserCustomFooter
+#ifdef DOCUMENTS_IN_POSTGRES
+  , addNameColumnInSignatoryAttachments
+#endif
   ]
 
 tablesList :: [Table]

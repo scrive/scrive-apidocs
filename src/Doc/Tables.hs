@@ -130,24 +130,29 @@ tableAuthorAttachments = Table {
 tableSignatoryAttachments :: Table
 tableSignatoryAttachments = Table {
     tblName = "signatory_attachments"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
       [  ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("email", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("description", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
+        print "creating tableSignatoryAttachments"
         runRaw conn $ "CREATE TABLE signatory_attachments "
           ++ "( file_id BIGINT NULL"
           ++ ", document_id BIGINT NOT NULL"
           ++ ", email TEXT NOT NULL"
           ++ ", description TEXT NOT NULL"
-          ++ ", CONSTRAINT pk_signatory_attachments PRIMARY KEY (document_id, email)"
+          ++ ", name TEXT NOT NULL"
+          ++ ", CONSTRAINT pk_signatory_attachments PRIMARY KEY (document_id, name, email)"
           ++ ")"
         return TVRcreated
-      _ -> return TVRinvalid
+      _ -> do
+        print desc
+        return TVRinvalid
   , tblPutProperties = wrapDB $ \conn -> do
     runRaw conn $ "CREATE INDEX idx_signatory_attachments_document_id ON signatory_attachments(document_id)"
     runRaw conn $ "ALTER TABLE signatory_attachments"
