@@ -124,7 +124,6 @@ import Control.Monad
 import qualified Control.Exception as E
 
 data SqlField = SqlField String String SqlValue
-              | SqlFieldFunction String String
 
 instance Convertible SqlValue SqlValue where
     safeConvert = return . id
@@ -135,50 +134,9 @@ sqlField name value = SqlField name "" (toSql value)
 sqlFieldType :: (Convertible v SqlValue) => String -> String -> v -> SqlField
 sqlFieldType name xtype value = SqlField name xtype (toSql value)
 
-sqlFieldFunction :: String -> String -> SqlField
-sqlFieldFunction name func = SqlFieldFunction name func
-
--- here we can add encoding and better error reporting in case conversion fails
-
-{-
-mkInsertStatement :: String -> [SqlField] -> String
-mkInsertStatement tableName fields =
-   "INSERT INTO " ++ tableName ++
-   " (" ++ concat (intersperse "," (map name fields)) ++ ")" ++
-   " SELECT " ++ concat (intersperse "," (map xtype fields))
-   where
-     name (SqlField x _ _) = x
-     name (SqlFieldFunction x _) = x
-     xtype (SqlField _ x _) = insertType x
-     xtype (SqlFieldFunction _ f) = f
-     insertType "" = "?"
-     insertType "timestamp" = "?"
-     insertType "base64" = "decode(?, 'base64')"
-     insertType ytype = error $ "mkInsertStatement: invalid insert type " ++ ytype
--}
-
-
 runInsertStatement :: String -> [SqlField] -> DB Integer
 runInsertStatement tableName fields =
   runInsertStatementWhere tableName fields "" []
-
-{-
-mkInsertStatementWhere :: String -> [SqlField] -> String -> [SqlValue] -> String
-mkInsertStatementWhere tableName fields xwhere _values =
-   "INSERT INTO " ++ tableName ++
-   " (" ++ concat (intersperse "," (map name fields)) ++ ")" ++
-   " SELECT " ++ concat (intersperse "," (map xtype fields))  ++
-   case xwhere of
-     [] -> ""
-     _ -> " WHERE " ++ xwhere
-   where
-     name (SqlField x _ _) = x
-     xtype (SqlField _ x _) = insertType x
-     insertType "" = "?"
-     insertType "timestamp" = "?"
-     insertType "base64" = "decode(?, 'base64')"
-     insertType ytype = error $ "mkInsertStatement: invalid insert type " ++ ytype
--}
 
 
 runInsertStatementWhere :: String -> [SqlField] -> String -> [SqlValue] -> DB Integer
@@ -199,9 +157,7 @@ mkInsertStatementWhereReturning tableName fields xwhere _values returnFields =
       _ -> " RETURNING " ++ concat (intersperse ", " returnFields))
    where
      name (SqlField x _ _) = x
-     name (SqlFieldFunction x _) = x
      xtype (SqlField _ x _) = insertType x
-     xtype (SqlFieldFunction _ f) = f
      insertType "" = "?"
      insertType "timestamp" = "?"
      insertType "base64" = "decode(?, 'base64')"
@@ -221,7 +177,6 @@ runInsertStatementWhereReturning tableName fields xwhere values returnFields = d
                                     , sqlError = e
                                     }
     value (SqlField _ _ v) = [v]
-    value _ = []
     statement = mkInsertStatementWhereReturning tableName fields xwhere values returnFields
 
 -- here we can add encoding and better error reporting in case conversion fails
@@ -231,9 +186,7 @@ mkUpdateStatement tableName fields =
    " SET " ++ concat (intersperse "," (map one fields)) ++ " "
    where
      name (SqlField x _ _) = x
-     name (SqlFieldFunction x _) = x
      xtype (SqlField _ x _) = insertType x
-     xtype (SqlFieldFunction _ f) = f
      insertType "" = "?"
      insertType "timestamp" = "?"
      insertType "base64" = "decode(?, 'base64')"
@@ -249,7 +202,6 @@ runUpdateStatement tableName fields whereClause whereValues = do
                                              })
   where
     value (SqlField _ _ v) = [v]
-    value _ = []
     statement = mkUpdateStatement tableName fields ++ whereClause
 
 
