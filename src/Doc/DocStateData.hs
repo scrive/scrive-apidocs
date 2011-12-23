@@ -578,12 +578,12 @@ data DocumentLogEntry = DocumentLogEntry MinutesTime BS.ByteString
     deriving (Typeable, Data, Eq, Ord)
 
 instance Show DocumentLogEntry where
-    showsPrec _ (DocumentLogEntry time rest) = (++) (formatMinutesTimeISO time ++ " " ++ BS.toString rest)
+    showsPrec _ (DocumentLogEntry time rest) = (++) (formatMinutesTimeUTC time ++ " " ++ BS.toString rest)
 
 instance Read DocumentLogEntry where
     readsPrec _ text =
       -- 2011-01-02 13:45:22 = 19 chars
-      case parseMinutesTimeISO timepart of
+      case parseMinutesTimeUTC timepart of
         Just time -> [(DocumentLogEntry time (BS.fromString (drop 1 restpart)),"")]
         Nothing -> []
       where

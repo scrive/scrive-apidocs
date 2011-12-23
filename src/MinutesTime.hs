@@ -22,7 +22,9 @@ module MinutesTime
        , showAsMonth
        , showAsDate
        , formatMinutesTimeISO
+       , formatMinutesTimeUTC
        , parseMinutesTimeISO
+       , parseMinutesTimeUTC
        ) where
 
 import Control.Monad.IO.Class
@@ -95,6 +97,9 @@ formatMinutesTimeISO = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d %H:%M
 
 parseMinutesTimeISO :: String -> Maybe MinutesTime
 parseMinutesTimeISO = parseMinutesTime "%Y-%m-%d %H:%M:%S"
+
+parseMinutesTimeUTC :: String -> Maybe MinutesTime
+parseMinutesTimeUTC = parseMinutesTime "%Y-%m-%d %H:%M:%S"
 
 parseMinutesTime :: String -> String -> Maybe MinutesTime
 parseMinutesTime format string = do
@@ -218,6 +223,9 @@ toSeconds (MinutesTime s) = s
 -- | Format time according to Swedish rules of time formating.
 formatMinutesTime :: KontraTimeLocale -> String -> MinutesTime -> String
 formatMinutesTime ktl fmt mt = formatCalendarTime (getTimeLocale ktl) fmt (toCalendarTime mt)
+
+formatMinutesTimeUTC :: MinutesTime -> String
+formatMinutesTimeUTC mt = formatCalendarTime defaultTimeLocale "%Y-%m-%d %H:%M:%S" (toUTCTime mt)
 
 -- | Parse format %d-%m-%Y.
 parseMinutesTimeDMY :: String -> Maybe MinutesTime
