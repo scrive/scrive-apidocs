@@ -201,7 +201,7 @@ enumDeriveConvertibleIgnoreFields = enumDeriveConvertible' False
 --
 
 bitFieldToSqlValue :: Enum a => [a] -> ConvertResult SqlValue
-bitFieldToSqlValue = Right . SqlInteger . foldl' (\acc n -> acc + 2^fromEnum n) 0
+bitFieldToSqlValue = Right . SqlInteger . foldl' (\acc n -> acc .|. (1 `shiftL` fromEnum n)) 0
  
 bitFieldFromSqlValue :: (Bounded a, Enum a) => SqlValue -> ConvertResult [a]
 bitFieldFromSqlValue = fmap conv . (safeConvert :: SqlValue -> ConvertResult Integer)
