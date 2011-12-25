@@ -30,7 +30,6 @@ module ActionSchedulerState (
     ) where
 
 import Control.Applicative
-import Control.Concurrent.MVar
 import Control.Monad.State
 import Control.Monad.Reader
 import qualified Data.ByteString as BS
@@ -55,9 +54,8 @@ import File.FileID
 
 data SchedulerData a b c = SchedulerData {
       sdAppConf      :: a
-    , sdMailer       :: b
-    , sdTemplates    :: c
-    , sdMailEnforcer :: MVar ()
+    , sdTemplates    :: b
+    , sdMailsConfig  :: c
 }
 
 newtype ActionID = ActionID Integer

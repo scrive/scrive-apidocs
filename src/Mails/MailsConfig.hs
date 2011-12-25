@@ -12,39 +12,22 @@
 -----------------------------------------------------------------------------
 module Mails.MailsConfig
     ( MailsConfig(..)
-    , defaultMailConfig
+    , defaultMailsConfig
     ) where
 
 -- | Configuration of mails
-data MailsConfig
-    = MailsSendgrid
-      { isBackdoorOpen       :: Bool
-      , ourInfoEmail         :: String
-      , ourInfoEmailNiceName :: String
-      , sendgridSMTP         :: String
-      , sendgridRestAPI      :: String
-      , sendgridUser         :: String
-      , sendgridPassword     :: String
-      }
-    | MailsSendmail
-      { isBackdoorOpen       :: Bool
-      , ourInfoEmail         :: String
-      , ourInfoEmailNiceName :: String
-      }
-    | MailsLocalOpen
-      { isBackdoorOpen       :: Bool
-      , ourInfoEmail         :: String
-      , ourInfoEmailNiceName :: String
-      }
-      deriving (Read, Eq, Ord, Show)
+data MailsConfig = MailsConfig {
+    isBackdoorOpen       :: Bool
+  , ourInfoEmail         :: String
+  , ourInfoEmailNiceName :: String
+  } deriving (Read, Eq, Ord, Show)
 
-defaultMailConfig :: MailsConfig
-defaultMailConfig = MailsLocalOpen
-      { isBackdoorOpen        = False
-      , ourInfoEmail          = "development-system@skrivapa.se"
-      , ourInfoEmailNiceName  = "Development"
-      }
-
+defaultMailsConfig :: MailsConfig
+defaultMailsConfig = MailsConfig {
+    isBackdoorOpen        = False
+  , ourInfoEmail          = "development-system@skrivapa.se"
+  , ourInfoEmailNiceName  = "Development"
+}
 
 {-
     MailsConfig { ourInfoEmail = "mariusz@skrivapa.se"

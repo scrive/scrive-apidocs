@@ -17,7 +17,6 @@ module Kontra
     , newViralInvitationSentLink
     , newAccountCreatedLink
     , newAccountCreatedBySigningLink
-    , scheduleEmailSendout
     , queryOrFail
     , currentService
     , currentServiceID
@@ -29,7 +28,6 @@ import API.Service.Model
 import ActionSchedulerState
 import Context
 import Control.Applicative
-import Control.Concurrent.MVar
 import Control.Monad.Reader
 import Control.Monad.State
 import DB.Classes
@@ -42,7 +40,7 @@ import Happstack.State (query, QueryEvent)
 #endif
 import KontraLink
 import KontraMonad
-import Mails.SendMail
+import Mails.MailsConfig
 import Templates.Templates
 import User.Model
 import Util.HasSomeUserInfo
@@ -99,8 +97,8 @@ onlySalesOrAdmin = guardTrueM $ (isAdmin ||^ isSales) <$> getContext
 -}
 onlyBackdoorOpen :: Kontrakcja m => m a -> m a
 onlyBackdoorOpen a = do
-  ctx <- getContext
-  if ctxbackdooropen ctx
+  backdoorOpen <- isBackdoorOpen . ctxmailsconfig <$> getContext
+  if backdoorOpen
     then a
     else mzero
 
@@ -150,14 +148,6 @@ newAccountCreatedBySigningLink user doclinkdata = do
     let aid = actionID action
         token = acbsToken $ actionType action
     return $ (aid, token)
-
--- | Schedule mail for send out and awake scheduler
-scheduleEmailSendout :: MonadIO m => MVar () -> Mail -> m ()
-scheduleEmailSendout enforcer mail = do
-    _ <- liftIO $ do
-        newEmailSendoutAction mail
-        tryPutMVar enforcer ()
-    return ()
 
 #ifndef DOCUMENTS_IN_POSTGRES
 {- |

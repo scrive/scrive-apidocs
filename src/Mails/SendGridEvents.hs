@@ -160,7 +160,7 @@ handleDeliveredInvitation docid signlinkid = do
              when (invitationdeliverystatus signlink == Mail.Deferred) $ do
                  ctx <- getContext
                  mail <- mailDeliveredInvitation doc signlink
-                 scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress $ fromJust $ getAuthorSigLink doc] }
+                 scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress $ fromJust $ getAuthorSigLink doc] }
          Nothing -> return ()
     _ <- doc_update $ SetInvitationDeliveryStatus docid signlinkid Mail.Delivered
     return ()
@@ -184,7 +184,7 @@ handleDeferredInvitation docid signlinkid = do
          Right doc -> do
              ctx <- getContext
              mail <- mailDeferredInvitation ctx doc
-             scheduleEmailSendout (ctxesenforcer ctx) $ mail {  to = [getMailAddress $ fromJust $ getAuthorSigLink doc] }
+             scheduleEmailSendout (ctxmailsconfig ctx) $ mail {  to = [getMailAddress $ fromJust $ getAuthorSigLink doc] }
          Left _ -> return ()
 
 mailDeferredInvitation:: Kontrakcja m => Context -> Document -> m Mail
@@ -202,7 +202,7 @@ handleUndeliveredInvitation docid signlinkid = do
          Just signlink -> do
              _ <- doc_update $ SetInvitationDeliveryStatus docid signlinkid Mail.Undelivered
              mail <- mailUndeliveredInvitation ctx doc signlink
-             scheduleEmailSendout (ctxesenforcer ctx) $ mail {  to = [getMailAddress $ fromJust $ getAuthorSigLink doc]  }
+             scheduleEmailSendout (ctxmailsconfig ctx) $ mail {  to = [getMailAddress $ fromJust $ getAuthorSigLink doc]  }
          Nothing -> return ()
 
 mailUndeliveredInvitation :: Kontrakcja m => Context -> Document -> SignatoryLink -> m Mail

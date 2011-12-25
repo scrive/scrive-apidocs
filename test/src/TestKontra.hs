@@ -34,6 +34,7 @@ import qualified Network.HTTP as HTTP
 import Context
 import DB.Classes
 import KontraMonad
+import Mails.MailsConfig
 import MinutesTime
 import Templates.Templates
 import qualified MemCache
@@ -192,7 +193,6 @@ mkRequest method vars = liftIO $ do
 mkContext :: MonadIO m => Locale -> KontrakcjaGlobalTemplates -> m Context
 mkContext locale globaltemplates = liftIO $ do
     docs <- newMVar M.empty
-    enforcer <- newEmptyMVar
     memcache <- MemCache.new BS.length 52428800
     time <- getMinutesTime
     return Context {
@@ -215,12 +215,11 @@ mkContext locale globaltemplates = liftIO $ do
         }
         , ctxgscmd = "gs"
         , ctxproduction = False
-        , ctxbackdooropen = False
         , ctxtemplates = localizedVersion locale globaltemplates
         , ctxglobaltemplates = globaltemplates
         , ctxlocale = locale
         , ctxlocaleswitch = False
-        , ctxesenforcer = enforcer
+        , ctxmailsconfig = defaultMailsConfig
         , ctxtwconf = error "twconf is not defined"
         , ctxelegtransactions = []
         , ctxfilecache = memcache

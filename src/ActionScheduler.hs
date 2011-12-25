@@ -25,7 +25,6 @@ import Archive.Invariants
 import DB.Classes
 import Doc.DocStateData
 import Doc.Transitory
-import Kontra
 import KontraLink
 import MinutesTime
 import Mails.MailsData
@@ -42,7 +41,7 @@ import Util.HasSomeUserInfo
 import Doc.Invariants
 import Stats.Control
 
-type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaGlobalTemplates))
+type SchedulerData' = SchedulerData AppConf (MVar (ClockTime, KontrakcjaGlobalTemplates)) MailsConfig
 
 newtype ActionScheduler a = AS { unAS :: ReaderT SchedulerData' (ReaderT Connection IO) a }
     deriving (Monad, Functor, MonadIO, MonadReader SchedulerData')
@@ -134,7 +133,7 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
                 globaltemplates <- getGlobalTemplates
                 mail <- liftIO $ runWithTemplates (getLocale user) globaltemplates $
                           mailfunc (hostpart $ sdAppConf sd) doctitle (getFullName user) (LinkAccountCreatedBySigning actionID token)
-                scheduleEmailSendout (sdMailEnforcer sd) $ mail { to = [getMailAddress user]})
+                scheduleEmailSendout (sdMailsConfig sd) $ mail { to = [getMailAddress user]})
             _ <- update $ UpdateActionType actionID $ AccountCreatedBySigning {
                   acbsState = ReminderSent
                 , acbsUserID = uid
@@ -147,6 +146,10 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
 evaluateAction Action{actionID, actionType = RequestEmailChange{}} =
   deleteAction actionID
 
+evaluateAction Action{actionType = EmailSendout{}} =
+  error "Sending emails was moved out of kontrakcja"
+
+{-
 evaluateAction Action{actionID, actionType = EmailSendout mail@Mail{mailInfo}} =
  if (unsendable mail)
   then do -- Due to next block, bad emails were alive in queue, and making logs unreadable.
@@ -178,7 +181,7 @@ evaluateAction Action{actionID, actionType = EmailSendout mail@Mail{mailInfo}} =
            now <- liftIO $ getMinutesTime
            _ <- update $ UpdateActionEvalTime actionID $ 5 `minutesAfter` now
            return ()
-
+-}
 evaluateAction Action{actionID, actionType = SentEmailInfo{}} = do
     deleteAction actionID
 
@@ -198,7 +201,7 @@ runDocumentProblemsCheck = do
 mailDocumentProblemsCheck :: String -> ActionScheduler ()
 mailDocumentProblemsCheck msg = do
   sd <- ask
-  scheduleEmailSendout (sdMailEnforcer sd) $ Mail { to = zipWith MailAddress documentProblemsCheckEmails documentProblemsCheckEmails
+  scheduleEmailSendout (sdMailsConfig sd) $ Mail { to = zipWith MailAddress documentProblemsCheckEmails documentProblemsCheckEmails
                                                   , title = BS.fromString $ "Document problems report " ++ (hostpart $ sdAppConf sd)
                                                   , content = BS.fromString msg
                                                   , attachments = []
@@ -231,7 +234,7 @@ runArchiveProblemsCheck = do
 mailArchiveProblemsCheck :: String -> ActionScheduler ()
 mailArchiveProblemsCheck msg = do
   sd <- ask
-  scheduleEmailSendout (sdMailEnforcer sd) $ Mail { to = zipWith MailAddress archiveProblemsCheckEmails archiveProblemsCheckEmails
+  scheduleEmailSendout (sdMailsConfig sd) $ Mail { to = zipWith MailAddress archiveProblemsCheckEmails archiveProblemsCheckEmails
                                                   , title = BS.fromString $ "Archive problems report " ++ (hostpart $ sdAppConf sd)
                                                   , content = BS.fromString msg
                                                   , attachments = []

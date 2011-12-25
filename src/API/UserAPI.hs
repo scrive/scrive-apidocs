@@ -24,7 +24,7 @@ import User.Model
 import Kontra
 import Misc
 import Doc.DocViewMail
-import Mails.MailsData
+import Mails.SendMail
 
 import Happstack.Server(Response)
 import Happstack.StaticRouting(Route, dir, choice)
@@ -87,7 +87,7 @@ sendReminder = do
                              , not $ hasSigned sl]
   _ <- forM siglinkstoremind $ (\signlink -> do
                               mail <- mailDocumentRemind Nothing ctx doc signlink
-                              scheduleEmailSendout (ctxesenforcer ctx) $ mail {
+                              scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
                                 to = [getMailAddress signlink]
                                 , mailInfo = Invitation  (documentid doc) (signatorylinkid signlink)
                                 })

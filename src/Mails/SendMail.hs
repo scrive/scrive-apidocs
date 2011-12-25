@@ -15,11 +15,9 @@ module Mails.SendMail
     , emptyMail
     , unsendable 
     , MailAddress(..)
-    , Mailer(..)
-    , createSendgridMailer
-    , createLocalOpenMailer
-    , createSendmailMailer
     , MailInfo(..)
+    , scheduleEmailSendout'
+    , scheduleEmailSendout
     ) where
 
 import qualified Data.ByteString as BS
@@ -28,8 +26,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL  hiding (length)
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.Char8 as BSLC
 import qualified Data.ByteString.UTF8 as BS hiding (length)
-import System.Exit
-import System.Directory
 import qualified Data.ByteString.Base64 as Base64
 import qualified Codec.Binary.QuotedPrintable as QuotedPrintable
 import Control.Applicative
@@ -37,24 +33,37 @@ import Control.Arrow (first)
 import Control.Monad
 import Control.Monad.IO.Class
 import Data.Char (isSpace, toLower)
-import ActionSchedulerState (ActionID)
 import Mails.MailsConfig
 import Mails.MailsData
 import Text.HTML.TagSoup
 import Misc
-import qualified AppLogger as Log
 import Data.ByteString.Internal (c2w,w2c)
 import Data.List
 import API.Service.Model
+--import Context
+--import KontraMonad
 import DB.Classes
 import Util.MonadUtils
 import InputValidation
+
+import Mails.Public
 
 -- Needed only for FROM address
 import User.Region
 import Util.SignatoryLinkUtils
 import Doc.Transitory
 import Doc.DocStateData
+
+scheduleEmailSendout :: DBMonad m => MailsConfig -> Mail -> m ()
+scheduleEmailSendout mc = runDB . scheduleEmailSendout' mc
+
+scheduleEmailSendout' :: MailsConfig -> Mail -> DB ()
+scheduleEmailSendout' mc mail@Mail{to} = do
+  boundaries <- createBoundaries
+  mailId <- dbUpdate $ CreateEmail $ map (BS.toString . email) to
+  content <- createWholeContent boundaries (ourInfoEmail mc) (ourInfoEmailNiceName mc) mailId mail
+  _ <- dbUpdate $ AddContentToEmail mailId content
+  return ()
 
 -- from simple utf-8 to =?UTF-8?Q?zzzzzzz?=
 mailEncode :: BS.ByteString -> String
@@ -88,7 +97,6 @@ emptyMail = Mail
     , mailInfo       = None
 }
 
-
 -- Mail is unsendable if there is no to adress provided
 unsendable :: Mail -> Bool
 unsendable mail = any (not . valid) (email <$> to mail)
@@ -96,76 +104,6 @@ unsendable mail = any (not . valid) (email <$> to mail)
         valid x = case asValidEmail (BS.toString x) of
                         Good _ -> True
                         _ -> False
-
---
-newtype Mailer = Mailer { sendMail :: DBMonad m => ActionID -> Mail -> m Bool }
-
-createExternalMailer :: String -> (Mail -> [String]) -> MailsConfig -> Mailer
-createExternalMailer program createargs config = Mailer{sendMail = reallySend}
-    where
-        reallySend :: DBMonad m => ActionID -> Mail -> m Bool
-        reallySend aid mail@Mail{title, attachments, content} = do
-            boundaries <- createBoundaries
-            wholeContent <- createWholeContent boundaries (ourInfoEmail config) (ourInfoEmailNiceName config) aid mail
-            let mailtos = createMailTos mail
-                args = createargs mail
-
-            (code, _, bsstderr) <- liftIO $ readProcessWithExitCode' program args wholeContent
-            case code of
-                ExitFailure retcode -> do
-                  Log.mail $ "Sending failed '" ++ BS.toString title ++ "' to " ++ mailtos ++ " (#" ++ show aid ++ "), cannot execute " ++ program ++ " to send email (code " ++ show retcode ++ ") stderr: \n" ++ BSL.toString bsstderr
-                  return False
-                ExitSuccess -> do
-                  Log.mail $ "Sent '" ++ BS.toString title ++ "' to " ++ mailtos ++ " (#" ++ show aid ++ ")"
-                  Log.mailContent $ 
-                         "Subject: " ++ BS.toString title ++ "\n" ++
-                         "To: " ++ createMailTos mail ++ "\n" ++
-                         "Attachments: " ++ show (length attachments) ++ "\n" ++
-                         "\n" ++
-                         htmlToTxt (BS.toString content)
-                  return True
-
-
-createSendgridMailer :: MailsConfig -> Mailer
-createSendgridMailer config = createExternalMailer "curl" createargs config
-    where
-        mailRcpt MailAddress{email} = [ "--mail-rcpt"
-                                      , "<" ++ BS.toString email ++ ">"
-                                      ]
-        createargs Mail{to} =
-                    [ "--user"
-                    , sendgridUser config ++ ":" ++ sendgridPassword config
-                    , sendgridSMTP config
-                    , "-k", "--ssl", "--mail-from"
-                    , "<" ++ ourInfoEmail config ++ ">"
-                    ] ++ concatMap mailRcpt to
-
-
-createSendmailMailer :: MailsConfig -> Mailer
-createSendmailMailer config = createExternalMailer "sendmail" createargs config
-    where
-        createargs _mail =
-                    [ "-t" -- get the addresses from the content
-                    , "-i" -- ignore single dots in input
-                    ]
-
-
-createLocalOpenMailer :: String -> String -> Mailer
-createLocalOpenMailer ourInfoEmail ourInfoEmailNiceName = Mailer{sendMail = sendToTempFile}
-    where
-        sendToTempFile :: DBMonad m => ActionID -> Mail -> m Bool
-        sendToTempFile aid mail@Mail{to} = do
-            let email' = email $ head to
-            tmp <- liftIO getTemporaryDirectory
-            boundaries <- createBoundaries
-            wholeContent <- createWholeContent boundaries ourInfoEmail ourInfoEmailNiceName aid mail
-            let mailtos = createMailTos mail
-                filename = tmp ++ "/Email-" ++ BS.toString email' ++ "-" ++ show aid ++ ".eml"
-            Log.mail $ show aid ++ " " ++ mailtos ++ "  [staging: saved to file " ++ filename ++ "]"
-            liftIO $ do
-              BSL.writeFile filename wholeContent
-              openDocument filename
-              return True
 
 createMailTos :: Mail -> String
 createMailTos (Mail {to}) =
@@ -175,16 +113,16 @@ createMailTos' :: MailAddress -> String
 createMailTos' (MailAddress {fullname, email}) =
     mailEncode fullname ++ " <" ++ BS.toString email ++ ">"
 
-createBoundaries :: DBMonad m => m (String, String)
+createBoundaries :: MonadIO m => m (String, String)
 createBoundaries = liftIO $ (,) <$> f <*> f
     where
         f = randomString 32 $ ['0'..'9'] ++ ['a'..'z']
 
-createWholeContent :: DBMonad m => (String, String) -> String -> String -> ActionID -> Mail -> m BSLC.ByteString
+createWholeContent :: Show a => (String, String) -> String -> String -> a -> Mail -> DB BSLC.ByteString
 createWholeContent (boundaryMixed, boundaryAlternative) ourInfoEmail ourInfoEmailNiceName mailId mail@(Mail {title,content,attachments,from,mailInfo}) = do
   fromHeader <- do
       otheraddres <- (fmap (servicemailfromaddress . servicesettings))
-        <$> liftMM (runDBQuery . GetService) (return from)
+        <$> liftMM (dbQuery . GetService) (return from)
       case join otheraddres of
          Nothing -> do
              niceAddress <- fromNiceAddress mailInfo ourInfoEmailNiceName
@@ -323,10 +261,10 @@ wrapMail body = "<html>"++
   
 -- Prototyped. This is why texts are here. But the propper way to do that is not to add some extra info in Mail data structure
 -- Propper way is to hold as abstract data there.
-fromNiceAddress ::  DBMonad m =>  MailInfo -> String -> m String
+fromNiceAddress ::  MailInfo -> String -> DB String
 fromNiceAddress (None) servicename = return servicename
 fromNiceAddress (Invitation did _) servicename = do
-    mdoc <- doc_query $ GetDocumentByDocumentID did
+    mdoc <- doc_query' $ GetDocumentByDocumentID did
     case mdoc of
          Nothing -> return $ servicename
          Just doc -> case (documentregion doc, BS.toString $ getAuthorName doc) of 

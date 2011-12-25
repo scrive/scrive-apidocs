@@ -431,7 +431,7 @@ forgotPasswordPagePost = do
 sendResetPasswordMail :: Kontrakcja m => Context -> KontraLink -> User -> m ()
 sendResetPasswordMail ctx link user = do
   mail <- UserView.resetPasswordMail (ctxhostpart ctx) user link
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress user] }
+  scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress user] }
 
 {- |
    Handles viewing of the signup page
@@ -490,11 +490,11 @@ signup vip _freetill =  do
    Sends a new activation link mail, which is really just a new user mail.
 -}
 _sendNewActivationLinkMail:: Context -> User -> Kontra ()
-_sendNewActivationLinkMail Context{ctxhostpart, ctxesenforcer} user = do
+_sendNewActivationLinkMail Context{ctxhostpart, ctxmailsconfig} user = do
     let email = getEmail user
     al <- newAccountCreatedLink user
     mail <- newUserMail ctxhostpart email email al False
-    scheduleEmailSendout ctxesenforcer $ mail { to = [MailAddress {fullname = email, email = email}] }
+    scheduleEmailSendout ctxmailsconfig $ mail { to = [MailAddress {fullname = email, email = email}] }
 
 {- |
    Handles viewing of the login page

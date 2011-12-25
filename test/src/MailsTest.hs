@@ -20,7 +20,7 @@ import Doc.DocViewMail
 import Doc.DocStateData
 import Mails.SendMail
 import Company.Model
-import Mails.MailsConfig
+--import Mails.MailsConfig
 import qualified Data.ByteString.UTF8 as BS
 import Test.QuickCheck
 import Control.Monad
@@ -165,6 +165,8 @@ mailingContext locale conn = do
 
 
 sendoutForManualChecking ::  String -> Request -> Context ->  Maybe String -> Mail -> DB ()
+sendoutForManualChecking _ _ _ _ _ = assertSuccess
+{-
 sendoutForManualChecking _ _ _ Nothing _ = assertSuccess
 sendoutForManualChecking titleprefix req ctx (Just email) m = do
     _ <- runTestKontra req ctx $ do
@@ -185,6 +187,7 @@ testMailer = createSendgridMailer $ MailsSendgrid {
         sendgridRestAPI = "https://sendgrid.com/api",
         sendgridUser = "duzyrak@gmail.com",
         sendgridPassword = "zimowisko"}
+-}
 
 toMailAddress :: [String] -> Maybe String
 toMailAddress [] = Nothing

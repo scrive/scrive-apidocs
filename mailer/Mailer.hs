@@ -50,12 +50,11 @@ createSendGridMailer config = createExternalMailer "curl" createargs
         "--mail-rcpt"
       , "<" ++ email ++ ">"
       ]
-    createargs Mail{mailTo, mailFrom} = [
+    createargs Mail{mailTo} = [
         "--user"
       , sendgridUser config ++ ":" ++ sendgridPassword config
       , sendgridSMTP config
-      , "-k", "--ssl", "--mail-from"
-      , "<" ++ mailFrom ++ ">"
+      , "-k", "--ssl"
       ] ++ concatMap mailRcpt mailTo
 
 createSendmailMailer :: Mailer

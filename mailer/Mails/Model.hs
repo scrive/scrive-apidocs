@@ -14,7 +14,6 @@ $(newtypeDeriveUnderlyingReadShow ''MailID)
 
 data Mail = Mail {
     mailID      :: MailID
-  , mailFrom    :: String
   , mailTo      :: [String]
   , mailContent :: BSL.ByteString
   } deriving (Eq, Ord, Show)
@@ -25,8 +24,4 @@ instance DBQuery GetIncomingEmails [Mail] where
 
 data MarkEmailAsSent = MarkEmailAsSent MailID
 instance DBUpdate MarkEmailAsSent Bool where
-  dbUpdate = undefined
-
-data ScheduleEmailForSendout = ScheduleEmailForSendout String [String] BSL.ByteString
-instance DBUpdate ScheduleEmailForSendout Bool where
   dbUpdate = undefined

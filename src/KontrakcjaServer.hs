@@ -46,8 +46,6 @@ import ActionSchedulerState (ActionImportance(..), SchedulerData(..))
 import User.Model
 -- import qualified User.UserState as U
 import qualified Amazon as AWS
-import Mails.MailsConfig
-import Mails.SendMail
 import Templates.Templates (readGlobalTemplates, getTemplatesModTime)
 import Misc
 import qualified MemCache
@@ -109,16 +107,8 @@ runKontrakcjaServer = Log.withLogger $ do
 
   filecache' <- MemCache.new (BS.length) 50000000
 
-  let mailer' = case cfg of
-                   MailsSendgrid{} -> createSendgridMailer cfg
-                   MailsSendmail{} -> createSendmailMailer cfg
-                   MailsLocalOpen{} -> createLocalOpenMailer (ourInfoEmail cfg) (ourInfoEmailNiceName cfg)
-                 where cfg = mailsConfig appConf
-
   -- variable for cached documents
   docs <- newMVar Map.empty
-  -- variable for enforcing emails sendout
-  es_enforcer <- newEmptyMVar
 
   -- try to create directory for storing documents locally
   if null $ docstore appConf
@@ -134,10 +124,7 @@ runKontrakcjaServer = Log.withLogger $ do
         let appGlobals = AppGlobals {
             templates = templates
           , filecache = filecache'
-          , mailer = mailer'
-          , appbackdooropen = isBackdoorOpen $ mailsConfig appConf
           , docscache = docs
-          , esenforcer = es_enforcer
         }
         E.bracket
                  -- start the state system
@@ -162,17 +149,16 @@ runKontrakcjaServer = Log.withLogger $ do
                               maybe (return ()) Log.server overlaps
                               t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port })
                                     (appHandler routes appConf appGlobals)
-                              let scheddata = SchedulerData appConf mailer' templates es_enforcer
+                              let scheddata = SchedulerData appConf templates (mailsConfig appConf)
                               t2 <- forkIO $ cron 60 $ runScheduler (oldScheduler >> actionScheduler UrgentAction) scheddata
                               t3 <- forkIO $ cron 600 $ runScheduler (actionScheduler LeisureAction) scheddata
-                              t4 <- forkIO $ runEnforceableScheduler 300 es_enforcer (actionScheduler EmailSendoutAction) scheddata
-                              t5 <- forkIO $ cron (60 * 60 * 4) $ runScheduler runDocumentProblemsCheck scheddata
-                              t6 <- forkIO $ cron (60 * 60 * 24) $ runScheduler runArchiveProblemsCheck scheddata
-                              t7 <- forkIO $ cron (60) $ (let loop = (do
+                              t4 <- forkIO $ cron (60 * 60 * 4) $ runScheduler runDocumentProblemsCheck scheddata
+                              t5 <- forkIO $ cron (60 * 60 * 24) $ runScheduler runArchiveProblemsCheck scheddata
+                              t6 <- forkIO $ cron (60) $ (let loop = (do
                                                                         r <- uploadFileToAmazon appConf
                                                                         if r then loop else return ()) in loop)
-                              t8 <- forkIO $ cron (60*60) System.Mem.performGC
-                              return [t1, t2, t3, t4, t5, t6, t7, t8]
+                              t7 <- forkIO $ cron (60*60) System.Mem.performGC
+                              return [t1, t2, t3, t4, t5, t6, t7]
                            )
                            (mapM_ killThread) $ \_ -> E.bracket
                                         -- checkpoint the state once a day
