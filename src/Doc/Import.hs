@@ -1,4 +1,7 @@
-
+{-# LANGUAGE CPP #-}
+#ifndef DOCUMENTS_IN_POSTGRES
+{-# OPTIONS_GHC -w #-}
+#endif
 
 module Doc.Import where
 
@@ -14,6 +17,7 @@ import Doc.DocStateData
 
 populateDBWithDocumentsIfEmpty :: Connection -> IO ()
 populateDBWithDocumentsIfEmpty conn = do
+#ifdef DOCUMENTS_IN_POSTGRES
   ioRunDB conn $ do
     mrow <- wrapDB $ \conn' -> do
               st <- prepare conn' $ "SELECT * FROM documents LIMIT 1"
@@ -33,4 +37,6 @@ populateDBWithDocumentsIfEmpty conn = do
                       return ()
                 mapM_ imp (zip [1..] alldocuments)
                 Log.server $ "All " ++ show l ++ " documents imported into PostgreSQL"
-                
+#else
+  return ()
+#endif
