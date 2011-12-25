@@ -102,7 +102,7 @@ runKontrakcjaServer = Log.withLogger $ do
 
   appname <- getProgName
   args <- getArgs
-  appConf <- readConfig appname args "kontrakcja.conf"
+  appConf <- readConfig Log.server appname args "kontrakcja.conf"
   templates' <- readGlobalTemplates
   templateModTime <- getTemplatesModTime
   templates <- newMVar (templateModTime, templates')
@@ -126,7 +126,7 @@ runKontrakcjaServer = Log.withLogger $ do
      else createDirectoryIfMissing True $ docstore appConf
 
   withPostgreSQL (dbConfig appConf) $ \conn -> do
-    res <- ioRunDB conn $ tryDB $ performDBChecks kontraTables kontraMigrations
+    res <- ioRunDB conn $ tryDB $ performDBChecks Log.server kontraTables kontraMigrations
     case res of
       Left (e::E.SomeException) -> do
         Log.error $ "Error while checking DB consistency: " ++ show e

@@ -8,7 +8,7 @@ import qualified Control.Exception as E
 import DB.Classes
 import Mailer
 import Mails.Model
-import qualified AppLogger as Log
+import qualified AppLogger as Log (mailingServer)
 
 sender :: Mailer -> String -> IO ()
 sender mailer dbconf = withPostgreSQL dbconf send
@@ -27,7 +27,7 @@ sender mailer dbconf = withPostgreSQL dbconf send
       case res of
         Right () -> threadDelay second
         Left (e::E.SomeException) -> do
-          Log.error $ "Exception '" ++ show e ++ "' thrown while sending emails, sleeping for 10 minutes"
-          threadDelay $ 10 * 60 * second
+          Log.mailingServer $ "Exception '" ++ show e ++ "' thrown while sending emails, sleeping for 5 minutes"
+          threadDelay $ 5 * 60 * second
       send conn
     second = 1000000

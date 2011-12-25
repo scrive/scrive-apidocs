@@ -12,8 +12,7 @@ data SendGridEventType =
     deriving (Eq, Ord, Show)
 
 data SendGridEvent = SendgridEvent {
-    seID      :: Int64
-  , seAddress :: String
+    seAddress :: String
   , seType    :: SendGridEventType
   , seData    :: String
   } deriving Show

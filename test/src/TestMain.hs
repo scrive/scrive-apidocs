@@ -200,6 +200,6 @@ main = Log.withLogger $ do
   hSetEncoding stderr utf8
   pgconf <- readFile "kontrakcja_test.conf"
   withPostgreSQL pgconf $ \conn -> do
-    ioRunDB conn $ performDBChecks kontraTables kontraMigrations
+    ioRunDB conn $ performDBChecks Log.debug kontraTables kontraMigrations
     (args, tests) <- partitionEithers . testsToRun conn <$> getArgs
     defaultMainWithArgs tests args

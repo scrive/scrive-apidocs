@@ -14,7 +14,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import MailingServerConf
 import Mails.Model
 import Misc
-import qualified AppLogger as Log
+import qualified AppLogger as Log (mailingServer)
 
 newtype Mailer = Mailer { sendMail :: MonadIO m => Mail -> m Bool }
 
@@ -32,10 +32,10 @@ createExternalMailer program createargs = Mailer { sendMail = reallySend }
       (code, _, bsstderr) <- readProcessWithExitCode' program (createargs mail) mailContent
       case code of
         ExitFailure retcode -> do
-          Log.mail $ "Error while sending email #" ++ show mailID ++ ", cannot execute " ++ program ++ " to send email (code " ++ show retcode ++ ") stderr: \n" ++ BSLU.toString bsstderr
+          Log.mailingServer $ "Error while sending email #" ++ show mailID ++ ", cannot execute " ++ program ++ " to send email (code " ++ show retcode ++ ") stderr: \n" ++ BSLU.toString bsstderr
           return False
         ExitSuccess -> do
-          Log.mail $ "Email #" ++ show mailID ++ " sent correctly to: " ++ intercalate ", " mailTo
+          Log.mailingServer $ "Email #" ++ show mailID ++ " sent correctly to: " ++ intercalate ", " mailTo
           --Log.mailContent $
           --  "Subject: " ++ BS.toString title ++ "\n" ++
           --  "To: " ++ createMailTos mail ++ "\n" ++
@@ -74,6 +74,6 @@ createLocalOpenMailer = Mailer { sendMail = sendToTempFile }
       tmp <- getTemporaryDirectory
       let filename = tmp ++ "/Email-" ++ head mailTo ++ "-" ++ show mailID ++ ".eml"
       BSL.writeFile filename mailContent
-      Log.mail $ "Email #" ++ show mailID ++ " saved to file " ++ filename
+      Log.mailingServer $ "Email #" ++ show mailID ++ " saved to file " ++ filename
       openDocument filename
       return True
