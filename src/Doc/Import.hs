@@ -4,21 +4,24 @@
 #endif
 
 module Doc.Import where
+import Database.HDBC.PostgreSQL
 
+#ifdef DOCUMENTS_IN_POSTGRES
 import Doc.Model
 import qualified Doc.DocState as Old
 import qualified Data.ByteString.UTF8 as BS
 import Happstack.State
 import qualified AppLogger as Log
 import Database.HDBC
-import Database.HDBC.PostgreSQL
 import DB.Classes
 import Doc.DocStateData
 
+#endif
+
 populateDBWithDocumentsIfEmpty :: Connection -> IO ()
-populateDBWithDocumentsIfEmpty conn = do
+populateDBWithDocumentsIfEmpty _conn = do
 #ifdef DOCUMENTS_IN_POSTGRES
-  ioRunDB conn $ do
+  ioRunDB _conn $ do
     mrow <- wrapDB $ \conn' -> do
               st <- prepare conn' $ "SELECT * FROM documents LIMIT 1"
               _ <- execute st []
