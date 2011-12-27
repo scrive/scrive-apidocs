@@ -712,7 +712,6 @@ admindocumentslist =
           </strong>
           </div>
          <div id="documents-viewer"></div>
-    </div>
     <script>
     var docTable = KontraList().init({
         name : "Documents Table",
