@@ -49,6 +49,7 @@ module Doc.DocStateData
 import API.Service.Model
 import Company.Model
 import Data.Data (Data)
+import Data.Either
 import Data.Int
 import Data.Maybe
 import Data.Word
@@ -590,10 +591,23 @@ instance Read DocumentLogEntry where
        (timepart, restpart) = splitAt 19 text
 
 instance Convertible [DocumentLogEntry] SqlValue where
-    safeConvert logs = return (toSql (intercalate "\n" (map show logs)))
+    safeConvert = return . toSql . intercalate "\n" . map show
 
 instance Convertible SqlValue [DocumentLogEntry] where
-    safeConvert sql = return $ map read $ lines $ fromSql sql
+    safeConvert = check . partitionEithers . map parse . lines . fromSql
+      where
+        check ((x:_), _) = Left x
+        check ([], x) = Right x
+        parse s = maybe (Left ConvertError {
+            convSourceValue = s
+          , convSourceType = "String"
+          , convDestType = "DocumentLogEntry"
+          , convErrorMessage = "Convertion error: reads returned " ++ show parsedS
+          }) Right $ do
+            [(v, "")] <- return parsedS
+            return v
+          where
+            parsedS = reads s
 
 $(deriveSerialize ''DocumentLogEntry)
 instance Version DocumentLogEntry
