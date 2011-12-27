@@ -137,7 +137,7 @@ sqlFieldType :: (Convertible v SqlValue) => String -> String -> v -> SqlField
 sqlFieldType name xtype value = SqlField name xtype (toSql value)
 
 sqlLogAppend :: MinutesTime -> String -> SqlField
-sqlLogAppend time text = sqlFieldType "log" "append" text
+sqlLogAppend time text = sqlFieldType "log" "append" $ "\n" ++ show (DocumentLogEntry time $ BS.fromString text)
 
 runInsertStatement :: String -> [SqlField] -> DB Integer
 runInsertStatement tableName fields =
@@ -794,7 +794,7 @@ insertDocumentAsIs document = do
                                      , sqlField "invite_time" $ signtime `fmap` documentinvitetime
                                      , sqlField "invite_ip" (fmap (toSigned . signipnumber) documentinvitetime)
                                      , sqlField "invite_text" documentinvitetext
-                                     , sqlField "log" $ unlines (map show documentlog)
+                                     , sqlField "log" documentlog
                                      , sqlField "allowed_id_types" documentallowedidtypes
                                      , sqlField "csv_title" $ csvtitle `fmap` documentcsvupload
                                      , sqlField "csv_contents" $ csvcontents `fmap` documentcsvupload

@@ -181,7 +181,7 @@ companyAccountsSortFunc "idREV" = viewComparingRev camaybeuserid
 companyAccountsSortFunc _ = const $ const EQ
 
 companyAccountsPageSize :: Int
-companyAccountsPageSize = 20
+companyAccountsPageSize = 100
 
 --
 
