@@ -166,9 +166,16 @@ admincompanies=
 ###
 adminUsersForSales=
    <div class='create-user'>
-    <form method="post" action="/createuser">
-        Create user:<br/>
-        <table style="width:600px">
+    <table> 
+     <tbody>
+      <tr>
+      <td style="width: 300px">
+         <h1> Create user -----></h1> <BR/>
+         If someone will make me I'll do it nicer. Mariusz
+      </td>
+      <td>
+        <form method="post" action="/createuser">
+        <table style="width:500px">
           <tr>
             <td>First name:</td>
             <td><input type="text" name="fstname"/></td>
@@ -189,13 +196,6 @@ adminUsersForSales=
                 </select>
             </td>
           </tr>
-          <tr>
-            <td>Free till:</td>
-            <td> <input type="checkbox" value="off" autocomplete="off" oldlocation="#hiddenfreetill" location="#freetillcontainer" rel="#freetillbox" class="addremovecheckbox"/>
-                 <span id="freetillcontainer">
-                 </span>
-           </td>
-         </tr>
          <tr>
             <td>Header:</td>
             <td> <input type="button" class="editer" value="Default"/>
@@ -206,6 +206,10 @@ adminUsersForSales=
         </table><br/>
         <input type="submit" value="Create user" />
       </form>
+    </td>
+    </tr>
+   </tbody>
+   </table>
    </div>
    <div id="tab-viewer">
          <div class="tab-header">

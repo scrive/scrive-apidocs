@@ -403,9 +403,8 @@ handleCreateUser = onlySuperUser $ do
     fstname <- getAsStrictBS "fstname"
     sndname <- getAsStrictBS "sndname"
     custommessage <- getField "custommessage"
-    freetill <- fmap (join . (fmap parseMinutesTimeDMY)) $ getField "freetill"
     region <- guardJustM $ readField "region"
-    muser <- createNewUserByAdmin ctx (fstname, sndname) email freetill custommessage (mkLocaleFromRegion region)
+    muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage (mkLocaleFromRegion region)
     when (isNothing muser) $
       addFlashM flashMessageUserWithSameEmailExists
     -- FIXME: where to redirect?
