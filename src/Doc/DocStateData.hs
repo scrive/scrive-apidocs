@@ -590,7 +590,7 @@ instance Read DocumentLogEntry where
        (timepart, restpart) = splitAt 19 text
 
 instance Convertible [DocumentLogEntry] SqlValue where
-    safeConvert logs = return (toSql (unlines (map show logs)))
+    safeConvert logs = return (toSql (intercalate "\n" (map show logs)))
 
 instance Convertible SqlValue [DocumentLogEntry] where
     safeConvert sql = return $ map read $ lines $ fromSql sql
