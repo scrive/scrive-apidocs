@@ -2,7 +2,6 @@
 module ForkAction 
     ( forkActionIO
     , forkAction
-    , getAllActionAsString
     ) where
 
 import KontraMonad
@@ -39,11 +38,6 @@ instance Show ForkedAction where
     show (ForkedActionDone {title, start, finish}) = title ++ ", done (" ++ showDiffTime finish start ++ "s)"
     show (ForkedActionError {title, start, finish, exception}) = title ++ ", error (" ++ showDiffTime finish start ++ "s): " ++ show exception
 
-
-showInTime :: ClockTime -> ForkedAction -> String
-showInTime current (ForkedActionStarted {title, start}) = title ++ ",  (" ++ showDiffTime current start ++ "s)"
-showInTime _current (ForkedActionDone {title, start, finish}) = title ++ ", done (" ++ showDiffTime finish start ++ "s)"
-showInTime _current (ForkedActionError {title, start, finish, exception}) = title ++ ", error (" ++ showDiffTime finish start ++ "s): " ++ show exception
 
 diffClockTimeMiliSeconds :: ClockTime -> ClockTime -> Integer
 diffClockTimeMiliSeconds (TOD sec1 pico1) (TOD sec2 pico2) = 
@@ -87,8 +81,3 @@ forkAction title action = do
   ctx <- getContext
   liftIO $ forkActionIO (ctxdbconn ctx) title action
 
-getAllActionAsString :: IO String
-getAllActionAsString = 
-    withMVar allActions $ \actions -> do
-        current <- getClockTime
-        return $ unlines $ map (showInTime current) $ Map.elems actions

@@ -9,39 +9,28 @@
 --
 -----------------------------------------------------------------------------
 module Administration.AdministrationView(
-            adminMainPage
-          , adminUsersAdvancedPage
-          , adminUsersPage
-          , adminCompaniesPage
-          , adminCompanyUsersPage
-          , adminUsersPageForSales
-          , adminUsersPageForPayments
-          , adminUserPage
-          , adminCompanyPage
-          , allUsersTable
-          , databaseContent
-          , statsPage
-          , servicesAdminPage
-          , adminDocuments
-          , adminTranslationsPage
-          , adminUserUsageStatsPage
-          , adminCompanyUsageStatsPage
-          , adminUserStatisticsPage
-          , adminFunctionalityStatsPage
-          , AdminListPageParams(..)
-          , StatsView(..)) where
+              adminMainPage
+            , adminUserPage
+            , adminUsersPage
+            , adminCompanyPage
+            , adminCompaniesPage
+            , adminCompanyUsersPage
+            , adminUsersPageForSales
+            , allUsersTable
+            , servicesAdminPage
+            , adminFunctionalityStatsPage
+            , adminDocuments
+            , adminUserUsageStatsPage
+            , adminCompanyUsageStatsPage
+            , adminUserStatisticsPage
+          ) where
 
 import KontraLink
 import Templates.Templates
-import Templates.TemplatesUtils
 import Text.StringTemplate.GenericStandard()
 import Control.Applicative
 import Control.Monad.IO.Class
 import Data.ByteString.UTF8 (toString)
-import Data.List (isPrefixOf, isInfixOf)
-import Data.Char
-import Data.Typeable
-import Data.Data
 import Data.Maybe
 import Database.HDBC.PostgreSQL
 import DB.Classes
@@ -57,14 +46,6 @@ import Util.HasSomeCompanyInfo
 {-| Main admin page - can go from here to other pages -}
 adminMainPage :: TemplatesMonad m => m String
 adminMainPage = renderTemplateM "adminsmain" ()
-
-{-| Manage users page  - advanced, will be changed-}
-adminUsersAdvancedPage :: TemplatesMonad m => [(User,Maybe Company)] -> AdminListPageParams -> m String
-adminUsersAdvancedPage users params =
-    renderTemplateFM "adminsmanageall" $ do
-        fieldFL "users" $ map (uncurry userBasicFields) $ visibleItems params users
-        field "adminlistlink" $ show $ LinkUserAdmin Nothing
-        adminListFields LinkUserAdmin users params
 
 {-| Manage users page - can find user here -}
 adminUsersPage :: TemplatesMonad m => m String
@@ -92,22 +73,6 @@ adminUsersPageForSales :: TemplatesMonad m => m String
 adminUsersPageForSales =
     renderTemplateFM "adminUsersForSales" $ do
             field "adminlink" $ show $ LinkAdminOnly
-
-{-| Manage users page - can find user here -}
-adminUsersPageForPayments :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> AdminListPageParams -> m String
-adminUsersPageForPayments users params =
-    renderTemplateFM "adminUsersForPayments" $ do
-        fieldFL "users" $ map mkUserInfoView $ visibleItems params users
-        adminListFields LinkUserAdmin users params
-
-adminListFields :: (TemplatesMonad m, AdminListable a) => (Maybe b -> KontraLink) -> [a] -> AdminListPageParams -> Fields m
-adminListFields listlink items params = do
-  field "adminlistlink" $ show (listlink Nothing)
-  field "adminlink" $ show $ LinkAdminOnly
-  field "letters" $ letters
-  field "intervals" $ intervals $ availableItems params items
-  field "search" $ search params
-  field "startletter" $ startletter params
 
 {-| Manage user page - can change user info and settings here -}
 adminUserPage :: TemplatesMonad m => User -> Maybe Company -> m String
@@ -168,7 +133,7 @@ adminCompanyUsageStatsPage companyid morefields =
 
 adminDocuments:: TemplatesMonad m => m String
 adminDocuments = do
-    renderTemplateFM "daylydocumentinfo" $ do
+    renderTemplateFM "admindocumentslist" $ do
        field "adminlink" $ show $ LinkAdminOnly
 
 
@@ -176,19 +141,6 @@ allUsersTable :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> m String
 allUsersTable users =
     renderTemplateFM "allUsersTable" $ do
         fieldFL "users" $ map mkUserInfoView $ users
-        field "adminlink" $ show $ LinkAdminOnly
-
-databaseContent :: TemplatesMonad m => [String] -> m String
-databaseContent filenames =
-    renderTemplateFM "databaseContents" $ do
-        field "files" $ filenames
-        field "adminlink" $ show $ LinkAdminOnly
-
-statsPage :: TemplatesMonad m => StatsView -> String -> m String
-statsPage stats sysinfo =
-    renderTemplateFM "pageStats" $ do
-        field "stats" $ stats
-        field "sysinfo" $ sysinfo
         field "adminlink" $ show $ LinkAdminOnly
 
 servicesAdminPage :: TemplatesMonad m => Connection -> [Service] -> m String
@@ -200,77 +152,12 @@ servicesAdminPage conn services = do
             fieldM "admin" $ fmap getSmartName <$> (ioRunDB conn $ dbQuery $ GetUserByID $ serviceadmin $ servicesettings service)
             field "location" $ show $ servicelocation $ servicesettings service
 
-adminTranslationsPage::TemplatesMonad m => m String
-adminTranslationsPage = renderTemplateFM  "adminTranslations" (return ())
-
 mkUserInfoView :: (Functor m, MonadIO m) => (User, Maybe Company, DocStats) -> Fields m
 mkUserInfoView (user, mcompany, docstats) = do
   fieldF "userdetails" $ userBasicFields user mcompany
   field "docstats" $ docstats
   fieldF "adminview" $ do userFields user
                           companyFields mcompany
-
-
-data StatsView = StatsView
-                 { svDoccount          :: Int
-                 , svSignaturecount    :: Int
-                 } deriving (Data, Typeable)
-
-{-| Paging list as options [1..21] -> [1-5,6-10,11-15,16-20,21-21]  -}
-intervals::[a] ->  [Option]
-intervals items =  intervals' $ (filter (\x-> 0 == x `rem` pageSize) [0..((length items) - 1)]) ++ [length items]
-  where
-    intervals' (a:(a':as))  = (Option {oValue= show a , oText = (show $ a+1) ++"-"++(show a'), oSelected=False}):intervals' (a':as)
-    intervals' _ = []
-
-pageSize :: Int
-pageSize = 500
-
-{-| Users on current page-}
-visibleItems :: (AdminListable a) => AdminListPageParams -> [a] -> [a]
-visibleItems params@(AdminListPageParams {page}) = (take pageSize) . (drop page) . (availableItems params)
-
-{-| filtering users by search string or first letter -}
-availableItems :: (AdminListable a) => AdminListPageParams -> [a] -> [a]
-availableItems (AdminListPageParams {search=Just searchString,startletter=Just startLetter}) =  (searchItems searchString) . (startLetterItems startLetter)
-availableItems (AdminListPageParams {search=Just searchString}) =  searchItems searchString
-availableItems (AdminListPageParams {startletter=Just startLetter}) =  startLetterItems startLetter
-availableItems _  = id
-
-startLetterItems :: (AdminListable a) => String -> [a] -> [a]
-startLetterItems startletter = filter (startsWith startletter)
-
-searchItems :: (AdminListable a) => String -> [a] -> [a]
-searchItems searchString =  filter (matches searchString)
-
-class AdminListable a where
-  startsWith :: String -> a -> Bool
-  matches :: String -> a -> Bool
-
-instance AdminListable User where
-  startsWith s u = (isPrefixOf (map toUpper s)  . map toUpper . toString $ getFullName u)
-                   || (isPrefixOf (map toUpper s)  . map toUpper . toString $ getEmail u)
-  matches s u = (isInfixOf (map toUpper s) $ map toUpper $ toString $ getFullName u)
-                || (isInfixOf (map toUpper s) $ map toUpper $ toString $ getEmail u)
-
-instance AdminListable (User, Maybe Company) where
-  startsWith s (u, _) = startsWith s u
-  matches s (u, _) = matches s u
-
-instance AdminListable (User, Maybe Company, DocStats) where
-  startsWith s (u, _, _) = startsWith s u
-  matches s (u, _, _) = matches s u
-
-instance AdminListable (Company ) where
-  startsWith s c = isPrefixOf (map toUpper s)  . map toUpper . toString $ getCompanyName c
-  matches s c = isInfixOf (map toUpper s)  . map toUpper . toString $ getCompanyName c
-
-{-| Structure for params when searching users list (also for templates)-}
-data AdminListPageParams = AdminListPageParams {
-                             search::Maybe String,
-                             startletter::Maybe String,
-                             page::Int
-                            }
 
 companyFields :: MonadIO m => Maybe Company -> Fields m
 companyFields mc = do
@@ -298,26 +185,5 @@ userFields u =  do
         field "langen" $ LANG_EN == getLang u
         field "iscompanyaccount" $ isJust $ usercompany u
         field "iscompanyadmin" $ useriscompanyadmin u
-{-
-        field "accountplan" $ for (allValues::[UserAccountPlan]) (\x -> if (x == (accountplan $ usersettings u))
-                                                                                 then soption show show x
-                                                                                 else option show show x)
-        field "signeddocstorage" $ show (signeddocstorage $ usersettings u)
-        field "paymentmethod" $ for (allValues::[PaymentMethod ]) (\x -> if (x == (userpaymentmethod $ usersettings u))
-                                                                                 then soption show show x
-                                                                                 else option show show x)
-        field "paymentaccounttype" $ for (allValues::[PaymentAccountType])
-                                                                         (\x -> if (x == userpaymentaccounttype u)
-                                                                                 then soption show show x
-                                                                                 else option show show x)
-        field "freetrialexpirationdate" $ showDateOnly <$> userfreetrialexpirationdate u
--}
-        --field "paymentaccountfreesignatures" $ show $ paymentaccountfreesignatures $ userpaymentaccount u
-        --field "tmppaymentchangeenddate" $ fmap (showDateOnly .  fst) $ temppaymentchange $ userpaymentpolicy  u
-        --field "temppaymentchange" $ fmap (getChangeView .  snd) $ temppaymentchange $ userpaymentpolicy  u
-        --field "custompaymentchange" $ getChangeView $ custompaymentchange $ userpaymentpolicy  u
         field "id" $ show (userid u)
 
-
-letters :: [String]
-letters = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","X","Y","Z","Å","Ä","Ö"]

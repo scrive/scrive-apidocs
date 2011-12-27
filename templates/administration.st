@@ -1,26 +1,16 @@
 ###
 adminsmain=
 <strong>Stats CSVs</strong>
-<p><a href="/adminonly/allstatscsv">Download the CSV containing
-    all signature stats</a></p>
-<p><a href="/adminonly/userstatscsv">Download the CSV containing
-    all user stats</a></p>
-
+<p><a href="/adminonly/allstatscsv">Download the CSV containing  all signature stats</a></p>
+<p><a href="/adminonly/userstatscsv">Download the CSV containing all user stats</a></p>
     <strong>Sales Tools</strong>
     <table><tbody>
         <tr>
           <td style="height:50px;width:200px">
             <a href="/adminonly/useradminforsales">
-              <button style="width:150px"> User Admin </button>
+              <button style="width:150px"> Sales user admin</button>
             </a>
           </td>
-         <td style="height:50px;width:200px">
-            <a href="/adminonly/useradminforpayments">
-              <button style="width:150px"> User Payments </button>
-            </a>
-          </td>
-       </tr>
-        <tr>
           <td style="height:50px;width:200px">
             <a href="/adminonly/companyadmin">
               <button style="width:150px"> Company Admin </button>
@@ -45,10 +35,6 @@ adminsmain=
           </td>
         </tr>
         <tr>
-          <td style="height:50px;width:200px"><a href="/stats"><button style="width:150px"> Create User </button> </a> </td>
-          <td style="height:50px;width:200px"> <a href="/adminonly/useradmin"><button style="width:150px"> User Admin </button> </a></td>
-        </tr>
-        <tr>
           <td style="height:50px;">
             <a href="/adminonly/functionalitystats">
               <button style="width:150px">Functionality Stats</button>
@@ -60,18 +46,19 @@ adminsmain=
             </a>
           </td>
         </tr>
+        <tr>
+          <td style="height:50px;width:200px"> <a href="/adminonly/useradmin"><button style="width:150px"> User Admin </button> </a></td>
+        </tr>
     </tbody></table>
     <br/>
     <br/>
     <strong> Super Admin Tools Only </strong>
     <table><tbody>
         <tr>
-          <td style="height:50px;width:200px"><a href="/adminonly/advuseradmin"><button style="width:150px"> Adv. User Admin </button> </a> </td>
           <td style="height:50px;width:200px"> <a href="/adminonly/advpayments"><button style="width:150px"> App Admin </button> </a></td>
+          <td style="height:50px;width:200px"><a href="/adminonly/services"><button style="width:150px"> Services </button> </a> </td>
         </tr>
         <tr>
-          <td style="height:50px;width:200px"><a href="/adminonly/services"><button style="width:150px"> Services </button> </a> </td>
-          <td style="height:50px;width:200px"><!--<a href="/adminonly/translations"><button style="width:150px"> Translations </button> </a> --> </td>
         </tr>
     </tbody></table>
     <br/>
@@ -82,79 +69,7 @@ adminsmain=
       <li><a href="/adminonly/log/mail.log">mail.log</a></li>
       <li><a href="/adminonly/log/error.log">error.log</a></li>
     </ul>
-###
-adminsmanageall =
-    $backtoadminmainlink()$
-    <div><strong>SkrivaPa admin only page</strong></div>
-    <br/>
-    <div>
-      <h3>Database files</h3>
-      <a href="/adminonly/db/">Show list of database files</a><br/>
-      <form method="post" action="/adminonly/cleanup">
-        Database incrementally stores backups of itself. Old copies aren't useful in normal situations,
-        just in case of failure. It is good to remove old files from time to time.<br/>
-        <input type="submit" value="Cleanup" /><br/>
-      </form>
-      <h3>Users</h3>
-     Here is a CSV version of this table: <a href="/adminonly/skrivapausers.csv">skrivapausers.csv</a>.
-   <div id="tab-viewer">
-         <div class="tab-header">
-          <strong>
-           <span>USERS LIST</span>
-           <span style="margin-left:20px">  $backtoadminmainlink()$</span>
-          </strong>
-          </div>
-       <div id="users-viewer"></div>
-    </div>
-    <script>
-    var usersTable = KontraList().init({
-        name : "Users Table",
-        schema: new Schema({
-            url: "/adminonly/userslist",
-            sorting: new Sorting({ 
-                fields: [
-                      "username"
-                    , "email" 
-                    ]}),
-            paging: new Paging({}),
-            filtering: new Filtering({text: "", infotext: "Username, email or company name."}),
-            cells : [
-                new Cell({name: "Fullname", width:"200px", field:"username", special:"link"}),
-                new Cell({name: "Email"   , width:"200px", field:"email", special:"link"})
-                ]
-        })
-    });
-
-    jQuery(function(){
-        jQuery("#users-viewer").append(usersTable.view.el)
-    });
-    </script>
-    </div>
-###
-adminlistfilter=
-    <form action="$link$" method="GET">
-      <div style="border:1px solid #DDDDDD;padding:5px;margin-top:5px">
-        Find $item$:
-        <input type="text" style="width:200px;margin-left:5px;margin-right:5px" name="search" value="$search$" />
-        <input type="submit" value="Search"/>
-      </div>
-    </form>
-    <br/><br/>
-    <a href="$link$">View list of $items$ </a>
-    <br/><br/>
-    <form action="$link$" method="GET">
-      Find by name:
-      $letters:{letter |<button type="submit" name="startletter" class="transparent" value="$letter$"><a>$letter$</a> </button>}$
-    </form>
-###
-adminlistpaging=
-    <form action="$link$" method="GET">
-      View page:
-      $intervals:{interval |<button type="submit" name="page" class="transparent" value="$interval.oValue$"><a>$interval.oText$</a> </button>}$
-      <input type="hidden" name="startletter" value="$startletter$" />
-      <input type="hidden" name="search" value="$search$" />
-    </form>
-###
+#####
 adminusers=
    <div id="tab-viewer">
          <div class="tab-header">
@@ -250,6 +165,48 @@ admincompanies=
 </script>
 ###
 adminUsersForSales=
+   <div class='create-user'>
+    <form method="post" action="/createuser">
+        Create user:<br/>
+        <table style="width:600px">
+          <tr>
+            <td>First name:</td>
+            <td><input type="text" name="fstname"/></td>
+          </tr>
+          <tr>
+            <td>Second name:</td>
+            <td><input type="text" name="sndname"/></td>
+          </tr>
+          <tr>
+            <td>Email address:</td>
+            <td><input type="email" name="email"/></td>
+          </tr>
+          <tr>
+            <td>Region:</td>
+            <td><select name="region">
+              <option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>
+              <option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>
+                </select>
+            </td>
+          </tr>
+          <tr>
+            <td>Free till:</td>
+            <td> <input type="checkbox" value="off" autocomplete="off" oldlocation="#hiddenfreetill" location="#freetillcontainer" rel="#freetillbox" class="addremovecheckbox"/>
+                 <span id="freetillcontainer">
+                 </span>
+           </td>
+         </tr>
+         <tr>
+            <td>Header:</td>
+            <td> <input type="button" class="editer" value="Default"/>
+                 <span class="editable" name="custommessage" style="display:none">$mailNewAccountCreatedByAdminContentHeader()$</span>
+
+           </td>
+          </tr>
+        </table><br/>
+        <input type="submit" value="Create user" />
+      </form>
+   </div>
    <div id="tab-viewer">
          <div class="tab-header">
           <strong>
@@ -283,42 +240,6 @@ adminUsersForSales=
         jQuery("#users-viewer").append(usersTable.view.el)
     });
     </script>
-###
-adminUsersForPayments=
-    <strong>USER ADMIN FOR PAYMENTS</strong>
-    <br/>
-    $backtoadminmainlink()$
-    $adminlistfilter(link=adminlistlink;item="user";items="users")$
-    $adminlistpaging()$
-    <br/><br/>
-    <table>
-        <thead>
-          <td style="width:200px">Username</td>
-          <td style="width:200px">Email</td>
-	  <td style="width:200px">Company name</td>
-	  <td style="width:200px">Payment plan</td>
-	  <td style="width:200px">Next billing date</td>
-	  <td style="width:200px">Last billing date</td>
-	  <td style="width:200px">Last billing total fee</td>
-	  <td style="width:200px">Current plan price</td>
-	  <td style="width:200px">Current per signature price</td>
-	  <td style="width:200px">Current TW storage price</td>
-	</thead>
-        $users:{user|<tr>
-          <td><a href="$adminlistlink$/$user.userdetails.id$">$user.userdetails.fullname$</a> </td>
-          <td><a href="$adminlistlink$/$user.userdetails.id$">$user.userdetails.email$</a> </td>
-          <td> $user.userdetails.company$
-          </td>
-	  <td><select autocomplete="off">$user.adminview.paymentaccounttype:options()$</select></td>
-	  <td>?</td>
-	  <td>?</td>
-	  <td>?</td>
-	  <td>0</td>
-	  <td>0</td>
-	  <td>0</td>
-      </tr>}$
-      </table>
-
 ###
 adminuser=
     <a href="$adminlink$">Go back to main admin page</a>
@@ -734,95 +655,6 @@ adminFunctionalityStatsPage=
 	    </table>
     </div>
 ###
-###
-databaseContents=
-    $backtoadminmainlink()$
-    <div>
-      <h1>All database files</h1>
-      <ul>
-        $files:{file| <li><a href="$file$">$file$</a></li>}$
-      </ul>
-      <form method="POST" action="cleanup">
-         <input type="submit" value="Remove old database files"> </input>
-      </form>
-    </div>
-####
-pageStats=
-    $backtoadminmainlink()$
-    <div>
-      <h1>Stats page</h1>
-      <table>
-        <thead>
-          <td style="width:50px"></td>
-          <td style="width:100px">Documents</td>
-          <td style="width:100px">Signatures</td>
-          <td style="width:100px">Users</td>
-          <td style="width:100px">Viral Invites</td>
-          <td style="width:100px">Admin Invites</td>
-        </thead>
-        <tr>
-          <td>Totals</td>
-          <td>$stats.svDoccount$</td>
-          <td>$stats.svSignaturecount$</td>
-          <td>$stats.svUsercount$</td>
-          <td>$stats.svViralinvitecount$</td>
-          <td>$stats.svAdmininvitecount$</td>
-        </tr>
-      </table>
-      <br/>
-      <form method="post" action="/createuser">
-        Create user:<br/>
-        <table style="width:600px">
-          <tr>
-            <td>First name:</td>
-            <td><input type="text" name="fstname"/></td>
-          </tr>
-          <tr>
-            <td>Second name:</td>
-            <td><input type="text" name="sndname"/></td>
-          </tr>
-          <tr>
-            <td>Email address:</td>
-            <td><input type="email" name="email"/></td>
-          </tr>
-          <tr>
-            <td>Region:</td>
-            <td><select name="region">
-              <option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>
-              <option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>
-                </select>
-            </td>
-          </tr>
-          <tr>
-            <td>Free till:</td>
-            <td> <input type="checkbox" value="off" autocomplete="off" oldlocation="#hiddenfreetill" location="#freetillcontainer" rel="#freetillbox" class="addremovecheckbox"/>
-                 <span id="freetillcontainer">
-                 </span>
-           </td>
-         </tr>
-         <tr>
-            <td>Header:</td>
-            <td> <input type="button" class="editer" value="Default"/>
-                 <span class="editable" name="custommessage" style="display:none">$mailNewAccountCreatedByAdminContentHeader()$</span>
-
-           </td>
-          </tr>
-        </table><br/>
-        <input type="submit" value="Create user" />
-      </form>
-
-     <div id="hiddenfreetill" style="display:none">
-      <span id="freetillbox">
-        <a class="datetodate date" rel="[name='freetill']"> </a>
-        <input type="hidden" autocomplete="off" name="freetill" value=""/>
-      </span>
-     </div>
-      <br/>
-      Disk status:<br/>
-
-      <pre>$sysinfo$</pre>
-    </div>
-####
 backtoadminmainlink=
    <a href="$adminlink$">Go back to main admin page</a>
     <br/><br/>
@@ -866,19 +698,7 @@ $services:{service |<tr>
 <BR/>
 <BR/>
 ###
-adminTranslations =
-
-
-<center><h2> Translation stats </h2>
-
-<div style="width: 500px;padding:20px; ">
-    If you see this page then all csv files have been updated.
-    All not used any more texts will be marked with *****.
-</div>
-</center>
-
-####
-daylydocumentinfo =
+admindocumentslist =
 
    <div id="tab-viewer">
          <div class="tab-header">

@@ -11,40 +11,29 @@
 -----------------------------------------------------------------------------
 module Administration.AdministrationControl(
             showAdminMainPage
-          , showAdminUserAdvanced
           , showAdminUsers
           , showAdminCompanies
           , showAdminCompany
           , showAdminCompanyUsers
           , showAdminUsersForSales
-          , showAdminUsersForPayments
           , showAdminUserUsageStats
           , showAdminCompanyUsageStats
           , showAllUsersTable
-          , showStats
           , showServicesPage
-          , showAdminTranslations
           , showDocuments
-          , indexDB
-          , getUsersDetailsToCSV
           , handleUserChange
           , handleCompanyChange
-          , handleDatabaseCleanup
           , handleCreateUser
           , handlePostAdminCompanyUsers
           , handleCreateService
           , handleStatistics
           , showFunctionalityStats
           , handleBackdoorQuery
-          , handleFixForBug510
-          , handleFixForAdminOnlyBug
           , resealFile
           , replaceMainFile
-          , handleCheckSigLinkIDUniqueness
           , daveDocument
           , daveUser
           , daveCompany
-          , sysdump
           , serveLogDirectory
           , jsonUsersList
           , jsonCompanies
@@ -67,9 +56,7 @@ import Util.SignatoryLinkUtils
 import Doc.Transitory
 import Doc.DocStateData
 import Data.ByteString.UTF8 (fromString,toString)
-import Data.ByteString (ByteString, hGetContents)
 import qualified Data.ByteString.Char8 as BSC
-import qualified Data.ByteString.Lazy  as L
 import Company.Model
 import KontraLink
 import MinutesTime
@@ -79,10 +66,7 @@ import User.UserControl
 import User.UserView
 import User.Model
 import Data.Maybe
-import System.Process
-import System.IO (hClose)
 import Data.Char
-import Happstack.Util.Common
 import API.Service.Model
 import Data.Monoid
 import qualified Data.IntMap as IntMap
@@ -90,12 +74,10 @@ import Templates.Templates
 import Text.Printf
 import Util.FlashUtil
 import Data.List
-import Templates.TextTemplates
 import Util.MonadUtils
 import qualified AppLogger as Log
 import Doc.DocSeal (sealDocument)
 import Util.HasSomeUserInfo
-import Redirect
 import ActionSchedulerState
 import Doc.DocInfo
 import InputValidation
@@ -104,7 +86,6 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
 import InspectXMLInstances ()
 import InspectXML
-import ForkAction
 import File.Model
 import ListUtil
 import Text.JSON
@@ -117,15 +98,6 @@ import Util.SignatoryLinkUtils
 showAdminMainPage :: Kontrakcja m => m Response
 showAdminMainPage = onlySuperUser $ do
   content <- adminMainPage
-  renderFromBody TopEmpty kontrakcja content
-
-{- | Process view for advanced user administration -}
-showAdminUserAdvanced :: Kontrakcja m => m Response
-showAdminUserAdvanced = onlySuperUser $ do
-  users <- runDBQuery GetUsers
-  mcompanies <- mapM getCompanyForUser users
-  params <- getAdminListPageParams
-  content <- adminUsersAdvancedPage (zip users mcompanies) params
   renderFromBody TopEmpty kontrakcja content
 
 {- | Process view for finding a user in basic administration. If provided with userId string as param
@@ -304,13 +276,6 @@ usersSearchFunc s userdata = userMatch userdata s
 usersPageSize :: Int
 usersPageSize = 100
 
-showAdminUsersForPayments :: Kontrakcja m => m Response
-showAdminUsersForPayments = onlySuperUser $ do
-  users <- getUsersAndStats
-  params <- getAdminListPageParams
-  content <- adminUsersPageForPayments users params
-  renderFromBody TopEmpty kontrakcja content
-
 getUsersAndStats :: Kontrakcja m => m [(User, Maybe Company, DocStats)]
 getUsersAndStats = do
     Context{ctxtime} <- getContext
@@ -359,44 +324,6 @@ showAllUsersTable = onlySuperUser $ do
     users <- getUsersAndStats
     content <- allUsersTable users
     renderFromBody TopEmpty kontrakcja content
-
-
-#ifndef WINDOWS
-read_df :: IO ByteString
-read_df = do
-  (_,Just handle_out,_,handle_process) <-
-      createProcess (proc "df" []) { std_out = CreatePipe, env = Just [("LANG","C")] }
-  s <- hGetContents handle_out
-  hClose handle_out
-  _ <- waitForProcess handle_process
-  return s
-#endif
-
-
-showStats :: Kontrakcja m => m Response
-showStats = onlySuperUser $ do
-    docstats <- doc_query GetDocumentStats
-#ifndef WINDOWS
-    df <- liftIO read_df
-#else
-    let df = empty
-#endif
-    let stats = StatsView { svDoccount = doccount docstats,
-                            svSignaturecount = signaturecount docstats }
-    content <- statsPage stats $ toString df
-    renderFromBody TopEmpty kontrakcja content
-
-indexDB :: Kontrakcja m => m Response
-indexDB = onlySuperUser $ do
-    files <- liftIO $ getDirectoryContents "_local/kontrakcja_state"
-    content <- databaseContent $ sort files
-    renderFromBody TopEmpty kontrakcja content
-
-getUsersDetailsToCSV :: Kontrakcja m => m Response
-getUsersDetailsToCSV = onlySuperUser $ do
-      x <- runDBQuery ExportUsersDetailsToCSV
-      let response = toResponseBS (fromString "text/csv") (L.fromChunks [x])
-      return response
 
 {- | Handling user details change. It reads user info change -}
 handleUserChange :: Kontrakcja m => UserID -> m KontraLink
@@ -468,27 +395,6 @@ handleCompanyChange companyid = onlySuperUser $ do
   _ <- runDBUpdate $ SetCompanyInfo companyid (companyInfoChange $ companyinfo company)
   return $ LinkCompanyAdmin $ Just companyid
 
-{-| Cleaning the database -}
-handleDatabaseCleanup :: Kontrakcja m => m KontraLink
-handleDatabaseCleanup = onlySuperUser $  do
-    -- dangerous, cleanup all old files, where old means chechpoints but the last one
-    -- and all events that have numbers less than last checkpoint
-    _ <- liftIO databaseCleanupWorker
-    return LinkAdminOnlyIndexDB
-
-databaseCleanupWorker :: IO [FilePath]
-databaseCleanupWorker = do
-  contents <- getDirectoryContents "_local/kontrakcja_state"
-  let checkpoints = filter ("checkpoints-" `isPrefixOf`) contents
-  let events = filter ("events-" `isPrefixOf`) contents
-  let lastcheckpoint = last (sort checkpoints)
-  let cutoffevent = "events-" ++ drop 12 lastcheckpoint
-  let eventsToRemove = filter (< cutoffevent) events
-  let checkpointsToRemove = filter (< lastcheckpoint) checkpoints
-  mapM_ (\x -> removeFile ("_local/kontrakcja_state/" ++ x)) (eventsToRemove ++ checkpointsToRemove)
-  getDirectoryContents "_local/kontrakcja_state" --This can be dropped
-
-
 handleCreateUser :: Kontrakcja m => m KontraLink
 handleCreateUser = onlySuperUser $ do
     ctx <- getContext
@@ -503,7 +409,7 @@ handleCreateUser = onlySuperUser $ do
     when (isNothing muser) $
       addFlashM flashMessageUserWithSameEmailExists
     -- FIXME: where to redirect?
-    return LinkStats
+    return LoopBack
 
 handlePostAdminCompanyUsers :: Kontrakcja m => CompanyID -> m KontraLink
 handlePostAdminCompanyUsers companyid = onlySuperUser $ do
@@ -607,15 +513,6 @@ getUserInfoChange = do
       , usermobile = fromMaybe usermobile musermobile
       , useremail =  fromMaybe useremail museremail
     }
-
-{- | Reads params and returns structured params for user managment pages. -}
-getAdminListPageParams :: Kontrakcja m => m AdminListPageParams
-getAdminListPageParams = do
-  search <- getDataFn' (look "search")
-  startletter <-  getDataFn' (look "startletter")
-  mpage <-  getDataFn' (look "page")
-  let (mpage'::Maybe Int) = join $ fmap readM mpage
-  return $ AdminListPageParams {search = search, startletter=startletter, page = maybe 0 id mpage'}
 
 
 {- Create service-}
@@ -902,93 +799,11 @@ instance HasFunctionalityStats User where
       Nothing -> False
   getStatDefinitions = []
 
-showAdminTranslations :: Kontrakcja m => m String
-showAdminTranslations = do
-    liftIO $ updateCSV
-    adminTranslationsPage
-
 handleBackdoorQuery :: Kontrakcja m => String -> m Response
 handleBackdoorQuery email = onlySuperUser $ onlyBackdoorOpen $ do
   minfo <- query $ GetBackdoorInfoByEmail (Email $ fromString email)
   let mailcontent = maybe "No email found" (toString . bdContent) minfo
   renderFromBody TopEmpty kontrakcja mailcontent
-
-{- |
-    There was a bug where the adminonly upgrade from private to company user
-    wasn't connecting the new company to the user's existing docs.
-    This should fix any of those docs affected by that bug.
--}
-handleFixForAdminOnlyBug :: Kontrakcja m => m Response
-handleFixForAdminOnlyBug = onlySuperUser $ do
-  users <- runDBQuery GetUsers
-  mapM_ maybeFixForUser users
-  Log.debug $ "finished adminonly bug fix"
-  sendRedirect LinkUpload
-  where
-    maybeFixForUser user = do
-      userdocs <- doc_query $ GetDocumentsByUser user
-      mapM_ (maybeFixForUserAndDoc user) userdocs
-      return ()
-    maybeFixForUserAndDoc user doc =
-      if isFixNeeded user doc
-        then do
-          Log.debug $ "fixing for doc " ++ (show $ documentid doc) ++ " and user " ++ (show $ userid user) ++ " " ++ (show $ getEmail user)
-          _ <- doc_update $ AdminOnlySaveForUser (documentid doc) user
-          return ()
-        else return ()
-    isFixNeeded user doc =
-      any (isBadSigLink user) (documentsignatorylinks doc)
-    isBadSigLink user siglink =
-      Just (userid user) == maybesignatory siglink && usercompany user /= maybecompany siglink
-
-{- |
-    This handles fixing of documents broken by bug 510, which means
-    that the authors were mistakenly made signatories of offers or orders.
--}
-handleFixForBug510 :: Kontrakcja m => m Response
-handleFixForBug510 = onlySuperUser $ do
-#ifndef DOCUMENTS_IN_POSTGRES
-  services <- runDBQuery $ GetServices
-  mapM_ fixForService $ Nothing : map (Just . serviceid) services
-  sendRedirect LinkUpload
-  where
-    fixForService :: Kontrakcja m => Maybe ServiceID -> m ()
-    fixForService service = do
-      docs <- doc_query $ GetDocuments service
-      mapM_ maybeFixForDocument docs
-      return ()
-    maybeFixForDocument :: Kontrakcja m => Document -> m ()
-    maybeFixForDocument doc =
-      let isauthorsendonly = Just True == getValueForProcess doc processauthorsend
-          isauthorsigning = maybe False (elem SignatoryPartner . signatoryroles) (getAuthorSigLink doc)
-          nonauthorpartisgood = nonAuthorPartLooksGood doc
-          hasauthorsigned = maybe False (isJust . maybesigninfo) (getAuthorSigLink doc) in
-      case (isauthorsendonly && isauthorsigning,
-            nonauthorpartisgood,
-            hasauthorsigned) of
-        (True, False, _) -> Log.debug $ mkMsg doc
-          "broken, but because of counterparts looks like it was broken by something else, leaving for now"
-        (True, _, True) -> Log.debug $ mkMsg doc
-          "broken, but the author has already signed, so unsure how to fix, leaving for now"
-        (True, True, False) -> do
-          Log.debug $ mkMsg doc "fixing"
-          udoc <- guardRightM . update $ FixBug510ForDocument (documentid doc)
-          postDocumentChangeAction udoc doc Nothing
-        _ -> return ()
-    nonAuthorPartLooksGood :: Document -> Bool
-    nonAuthorPartLooksGood doc =
-      let nonauthorparts = filter (not . isAuthor) $ documentsignatorylinks doc
-      in case nonauthorparts of
-        (nonauthorpart:[]) | SignatoryPartner `elem` (signatoryroles nonauthorpart) -> True
-        _ -> False
-    mkMsg :: Document -> String -> String
-    mkMsg doc msg = "Handling 510 bug fix for " ++
-                    " doc " ++ (show $ documentid doc) ++
-                    " with type " ++ (show $ documenttype doc) ++
-                    " and author " ++ (show . getEmail . fromJust $ getAuthorSigLink doc) ++ " : " ++ msg
-#else
-   mzero
-#endif
 
 -- This method can be used do reseal a document
 resealFile :: Kontrakcja m => DocumentID -> m KontraLink
@@ -1023,16 +838,8 @@ replaceMainFile did = onlySuperUser $ do
        _ -> mzero
 
 
-
-handleCheckSigLinkIDUniqueness :: Kontrakcja m => m String
-handleCheckSigLinkIDUniqueness = do
-  siglinkids <- doc_query GetSignatoryLinkIDs
-  if length siglinkids == length (nub siglinkids)
-     then return "Signatory link ids are unique globally."
-     else return "Signatory link ids are NOT unique globally."
-
-showDocuments ::  Kontrakcja m => m (Either KontraLink String)
-showDocuments = onlySuperUserGet $ adminDocuments
+showDocuments ::  Kontrakcja m => m  String
+showDocuments = onlySuperUser $ adminDocuments
 
 jsonDocuments :: Kontrakcja m => m JSValue
 jsonDocuments = onlySuperUser $ do
@@ -1091,16 +898,14 @@ documentsSearchFunc s doc =  nameMatch doc || signMatch doc
     nameMatch = match . BS.toString . documenttitle
     signMatch d = any (match . BS.toString . getSmartName) (documentsignatorylinks d)
 
-
-
 documentsPageSize :: Int
 documentsPageSize = 100
 
 {- |
    Used by super users to inspect a particular document.
 -}
-daveDocument :: Kontrakcja m => DocumentID -> m (Either KontraLink String)
-daveDocument documentid = onlySuperUserGet $ do
+daveDocument :: Kontrakcja m => DocumentID -> m  String
+daveDocument documentid = onlySuperUser $ do
     document <- queryOrFail $ GetDocumentByDocumentID documentid
     renderTemplateFM  "daveDocument" $ do
         field "daveBody" $  inspectXML document
@@ -1112,35 +917,18 @@ daveDocument documentid = onlySuperUserGet $ do
 {- |
    Used by super users to inspect a particular user.
 -}
-daveUser :: Kontrakcja m => UserID ->  m (Either KontraLink String)
-daveUser userid = onlySuperUserGet $ do
+daveUser :: Kontrakcja m => UserID ->  m String
+daveUser userid = onlySuperUser $ do
     user <- runDBOrFail $ dbQuery $ GetUserByID userid
     return $ inspectXML user
 
 {- |
     Used by super users to inspect a company in xml.
 -}
-daveCompany :: Kontrakcja m => CompanyID -> m (Either KontraLink String)
-daveCompany companyid = onlySuperUserGet $ do
+daveCompany :: Kontrakcja m => CompanyID -> m String
+daveCompany companyid = onlySuperUser $ do
   company <- runDBOrFail $ dbQuery $ GetCompany companyid
   return $ inspectXML company
-
-
-
-{- |
-   Ensures logged in as a super user
--}
-onlySuperUserGet :: Kontrakcja m => m a -> m (Either KontraLink a)
-onlySuperUserGet action = do
-    Context{ ctxadminaccounts, ctxmaybeuser, ctxlocale } <- getContext
-    if isSuperUser ctxadminaccounts ctxmaybeuser
-        then Right <$> action
-        else return $ Left $ LinkLogin ctxlocale NotLoggedAsSuperUser
-
-sysdump :: Kontrakcja m => m (Either KontraLink Response)
-sysdump = onlySuperUserGet $ do
-    dump <- liftIO getAllActionAsString
-    ok $ addHeader "refresh" "5" $ toResponse dump
 
 
 serveLogDirectory :: (WebMonad Response m, ServerMonad m, FilterMonad Response m, MonadIO m, MonadPlus m) =>

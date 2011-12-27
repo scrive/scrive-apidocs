@@ -83,8 +83,6 @@ data KontraLink
     | LinkRestart DocumentID
     | LinkAcceptTOS
     | LinkAdminOnly
-    | LinkAdminOnlyIndexDB
-    | LinkStats
     | LinkPaymentsAdmin
     | LinkUserAdmin (Maybe UserID)
     | LinkCompanyAdmin (Maybe CompanyID)
@@ -205,8 +203,6 @@ instance Show KontraLink where
     showsPrec _ (LinkCancel document) = (++) $ "/cancel/"++(show $ documentid document)
     showsPrec _ (LinkRestart documentid) = (++) $ "/restart/"++(show  documentid)
     showsPrec _ LinkAdminOnly = (++) $ "/adminonly/"
-    showsPrec _ LinkAdminOnlyIndexDB = (++) $ "/adminonly/db"
-    showsPrec _ LinkStats = (++) $ "/stats"
     showsPrec _ (LinkPaymentsAdmin ) = (++) $ "/adminonly/advpayments"
     showsPrec _ (LinkUserAdmin Nothing) = (++) $ "/adminonly/useradmin"
     showsPrec _ (LinkUserAdmin (Just userId)) = (++) $ "/adminonly/useradmin/"++show userId
