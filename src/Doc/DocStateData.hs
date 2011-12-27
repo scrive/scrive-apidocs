@@ -72,7 +72,7 @@ import File.File
 import Doc.JpegPages
 import Database.HDBC
 import Data.List
-import ELegitimation.SignatureProvider 
+import ELegitimation.SignatureProvider
 newtype Author = Author { unAuthor :: UserID }
     deriving (Eq, Ord, Typeable)
 
@@ -591,7 +591,7 @@ instance Read DocumentLogEntry where
        (timepart, restpart) = splitAt 19 text
 
 instance Convertible [DocumentLogEntry] SqlValue where
-    safeConvert = return . toSql . intercalate "\n" . map show
+    safeConvert = return . toSql . unlines . map show
 
 instance Convertible SqlValue [DocumentLogEntry] where
     safeConvert = check . partitionEithers . map parse . lines . fromSql
