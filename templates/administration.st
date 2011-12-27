@@ -97,24 +97,38 @@ adminsmanageall =
       </form>
       <h3>Users</h3>
      Here is a CSV version of this table: <a href="/adminonly/skrivapausers.csv">skrivapausers.csv</a>.
-      <div>
-        $adminlistfilter(link="/adminonly/advuseradmin")$
-      </div>
-      <div>
-        $adminlistpaging(link="/adminonly/advuseradmin")$
-        <table><tbody>
-            $users:{user|
-            <tr>
-              <td>
-                $user.fullname$
-              </td>
-              <td>
-                &lt;$user.email$&gt;
-              </td>
-            </tr>
-            }$
-        </tbody></table>
-      </div>
+   <div id="tab-viewer">
+         <div class="tab-header">
+          <strong>
+           <span>USERS LIST</span>
+           <span style="margin-left:20px">  $backtoadminmainlink()$</span>
+          </strong>
+          </div>
+       <div id="users-viewer"></div>
+    </div>
+    <script>
+    var usersTable = KontraList().init({
+        name : "Users Table",
+        schema: new Schema({
+            url: "/adminonly/userslist",
+            sorting: new Sorting({ 
+                fields: [
+                      "username"
+                    , "email" 
+                    ]}),
+            paging: new Paging({}),
+            filtering: new Filtering({text: "", infotext: "Username, email or company name."}),
+            cells : [
+                new Cell({name: "Fullname", width:"200px", field:"username", special:"link"}),
+                new Cell({name: "Email"   , width:"200px", field:"email", special:"link"})
+                ]
+        })
+    });
+
+    jQuery(function(){
+        jQuery("#users-viewer").append(usersTable.view.el)
+    });
+    </script>
     </div>
 ###
 adminlistfilter=
@@ -142,44 +156,57 @@ adminlistpaging=
     </form>
 ###
 adminusers=
-    <strong>USER ADMIN</strong>
-    <br/>
-    $backtoadminmainlink()$
-    $adminlistfilter(link=adminlistlink;item="user";items="users")$
-    $adminlistpaging()$
-    <br/><br/>
-    <table>
-        <thead>
-         <td style="width:200px">Username</td>
-          <td style="width:200px">Email</td>
-          <td style="width:200px">Company</td>
-          <td style="width:200px">Phone</td>
-          <td style="width:50px">Uploaded Docs</td>
-          <td style="width:50px">Signed (tot)</td>
-          <td style="width:50px">Signed (1m)</td>
-          <td style="width:50px">Signed (2m)</td>
-          <td style="width:50px">Signed (3m)</td>
-          <td style="width:50px">Signed (6m)</td>
-          <td style="width:50px">Signed (12m)</td>
-          <td style="width:50px">Viral Invites</td>
-          <td style="width:50px">Admin Invites</td>
-        </thead>
-        $users:{user|<tr>
-          <td><a href="$adminlistlink$/$user.userdetails.id$">$user.userdetails.fullname$</a> </td>
-          <td><a href="$adminlistlink$/$user.userdetails.id$">$user.userdetails.email$</a> </td>
-          <td> $user.userdetails.company$ </td>
-          <td> $user.userdetails.phone$ </td>
-          <td> $user.docstats.doccount$ </td>
-          <td> $user.docstats.signaturecount$ </td>
-          <td> $user.docstats.signaturecount1m$ </td>
-          <td> $user.docstats.signaturecount2m$ </td>
-          <td> $user.docstats.signaturecount3m$ </td>
-          <td> $user.docstats.signaturecount6m$ </td>
-          <td> $user.docstats.signaturecount12m$ </td>
-          <td> $user.userstats.viralinvitecount$ </td>
-          <td> $user.userstats.admininvitecount$ </td>
-        </tr>}$
-      </table>
+   <div id="tab-viewer">
+         <div class="tab-header">
+          <strong>
+           <span>USER ADMIN</span>
+           <span style="margin-left:20px">  $backtoadminmainlink()$</span>
+          </strong>
+          </div>
+       <div id="adminusers-viewer"></div>
+    </div>
+    <script>
+    var adminUsersTable = KontraList().init({
+        name : "Admin Users Table",
+        schema: new Schema({
+            url: "/adminonly/userslist",
+            sorting: new Sorting({ 
+                fields: [
+                      "username"
+                    , "email" 
+                    , "company"
+                    , "uploaded_docs"
+                    , "signed_docs"
+                    , "signed_1m"
+                    , "signed_2m"
+                    , "signed_3m"
+                    , "signed_6m"
+                    , "signed_12m"
+                    ]}),
+            paging: new Paging({}),
+            filtering: new Filtering({text: "", infotext: "Username, email or company name."}),
+            cells : [
+                new Cell({name: "Username"     , width:"100px", field:"username", special:"link"}),
+                new Cell({name: "Email"        , width:"140px", field:"email", special:"link"}),
+                new Cell({name: "Company"      , width:"120px", field:"company", special:"link"}),
+                new Cell({name: "Uploaded Docs", width:"50px",  field:"uploaded_docs", special:"link"}),
+                new Cell({name: "Signed (tot)" , width:"40px",  field:"signed_docs", special:"link"}),
+                new Cell({name: "Signed (1m)"  , width:"40px",  field:"signed_1m", special:"link"}),
+                new Cell({name: "Signed (2m)"  , width:"40px",  field:"signed_2m", special:"link"}),
+                new Cell({name: "Signed (3m)"  , width:"40px",  field:"signed_3m", special:"link"}),
+                new Cell({name: "Signed (6m)"  , width:"40px",  field:"signed_6m", special:"link"}),
+                new Cell({name: "Signed (12m)" , width:"40px",  field:"signed_12m", special:"link"}),
+                new Cell({name: "Viral Invites", width:"40px",  field:"viral_invites", special:"bool"}),
+                new Cell({name: "Admin Invites", width:"40px",  field:"admin_invites", special:"bool"})
+                ]
+        })
+    });
+
+    jQuery(function(){
+        jQuery("#adminusers-viewer").append(adminUsersTable.view.el)
+    });
+    </script>
+
 ###
 admincompanies=
    <div id="tab-viewer">
@@ -853,48 +880,89 @@ adminTranslations =
 ####
 daylydocumentinfo =
 
+   <div id="tab-viewer">
+         <div class="tab-header">
+          <strong>
+           <span>DOCUMENTS</span>
+           <span style="margin-left:20px">  $backtoadminmainlink()$</span>
+          </strong>
+          </div>
+         <div id="documents-viewer"></div>
+    </div>
+    <script>
+    var docTable = KontraList().init({
+        name : "Documents Table",
+        schema: new Schema({
+            url: "/adminonly/documentslist",
+            sorting: new Sorting({ 
+                fields: [
+                      "ctime"
+                    , "mtime"
+                    , "id"
+                    , "author"
+                    , "title"
+                    , "service"
+                    , "status"
+                    , "type"
+                    , "signs"
+                    ]}),
+            paging: new Paging({}),
+            filtering: new Filtering({infotext: "Filter documents"}),
+            cells : [
+                new Cell({name: "Dates", width:"80px", field: "mtime", special: "rendered",
+                        rendering: function(_, _, doc) {
+                               return jQuery("<small><span>"
+                                          + doc.field("ctime") + " <BR/> " 
+                                          + doc.field("mtime") +
+                                       " </small>");
+                          }}),
+                new Cell({name: "Author", width:"120px", field:"author", special: "rendered",
+                        rendering: function(value, idx, doc) {
+                            if (value != undefined) 
+                                return jQuery("<small><span>" + value.name    + " <BR/> " 
+                                                   + value.email   + " <BR/> " 
+                                                   + value.company + "</span></small>");
+                          }}),
+                new Cell({name: "Title", width:"120px", field:"title",  special: "rendered", 
+                        rendering: function(value, idx, doc) {
+                                return jQuery("<small>"+value+"</small>");
+                          }}),
+                new Cell({name: "Service", width:"40px", field:"service", special: "rendered", 
+                          rendering: function(value, idx, doc) {
+                            if (value == undefined) 
+                                return jQuery("<small>" + value + "</small>");
 
-$backtoadminmainlink()$
-<div>
-<h4 style="margin-left:200px">Documents </h4>
-<p> Lists documents that could be touched durring this time, check dave for more details. Time can be moved +- 2h midnight due to timezones </p>
+                            return jQuery("<small>Scrive</small>");
+                          }}),
+                new Cell({name: "Status", width:"40px", field:"status",  special: "rendered", 
+                        rendering: function(value, idx, doc) {
+                                return jQuery("<small>"+value+"</small>");
+                          }}),
+                new Cell({name: "Type", width:"40px", field:"type",  special: "rendered", 
+                        rendering: function(value, idx, doc) {
+                                return jQuery("<small>"+value+"</small>");
+                          }}),
+                new Cell({name: "Signatories", width:"120px", field:"signs", special: "rendered",
+                          rendering: function(value, idx, doc) {
+                            if (value == undefined) 
+                                return ;
 
-<BR/>
-<form>
-<BR/>
- <input type='text' name='day' value='$day$'/> <input type='submit' value='Reload'/>
-<BR/>
-<BR/>
-</form>
-<table style="text-align:left;">
-<thead>
-  <tr>
-      <th style="width: 160px;"> Dates (Creation / Change)</th>
-      <th style="width: 160px;"> Author </th>
-      <th style="width: 100px;"> Title </th>
-      <th style="width: 100px;"> Service </th>
-      <th style="width: 100px;"> Status </th>
-      <th style="width: 100px;"> Type </th>
-      <th style="width: 160px;"> Signatories </th>
-      <th style="width: 80px;"> Admin </th>
-  </tr>
-</thead>
-<tbody>
-$documents:{document |<tr style="border:4px solid #DDDDDD">
-    <td style="border:2px solid #DDDDDD"> $document.ctime$ <BR/>
-                                          $document.mtime$
-    </td>
-    <td style="border:2px solid #DDDDDD">$document.author.name$ <BR/> $document.author.email$ <BR/> $document.author.company$ </td>
-    <td style="border:2px solid #DDDDDD">$document.title$ </td>
-    <td style="border:2px solid #DDDDDD"> $if(document.service)$ $document.service$ $else$ Scrive $endif$</td>
-    <td style="border:2px solid #DDDDDD">$document.status$ </td>
-    <td style="border:2px solid #DDDDDD">$document.type$ </td>
-    <td style="border:2px solid #DDDDDD">$document.signatories: {sig | $sig$ <br/>}$ </td>
-    <td style="border:2px solid #DDDDDD"><a href='/dave/document/$document.id$'> DAVE </a> </td>
-</tr>}$
-</tbody>
-</table>
-</div>
+                            return jQuery("<small>" + value.join('<BR/>') + "</small>");
+                          }}),
+                new Cell({name: "DAVE", width:"30px", field:"id", special:"rendered",
+                          rendering: function(value, idx, doc) {
+                            return jQuery("<a href='/dave/document/" + value + "' class='gotodave'>");
+                          }})
+                ]
+        })
+    });
+
+    jQuery(function(){
+        jQuery("#documents-viewer").append(docTable.view.el)
+    });
+    </script>
+    </div>
+
 ####
 daveDocument=
 $daveBody:noescape()$

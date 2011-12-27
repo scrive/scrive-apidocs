@@ -57,6 +57,10 @@
         isRendered: function() {
             return this.get("special") != undefined && this.get("special") == "rendered";
         },
+        isBool : function() {
+            return this.get("special") != undefined && this.get("special") == "bool";
+
+        },
         rendering: function(value, mainrow, model) {
             return this.get("rendering")(value, mainrow, model);
         },
@@ -179,6 +183,8 @@
         },
         updateWithServerResponse: function(resp) {
             this.set(resp);
+            if (this.pageCurrent() > this.pageMax()+1)
+                this.changePage(this.pageMax()+1);
         }
     });
 
@@ -196,9 +202,9 @@
             var pages = $("<div />");
             for (var i = 0; i <= paging.pageMax(); i++) {
                 if (i == paging.pageCurrent()) {
-                    pages.append($("<span>" + (i + 1) + "</span>"));
+                    pages.append($("<span class='page-change current'>" + (i + 1) + "</span>"));
                 } else {
-                    var a = $("<a>" + (i + 1) + "</a>");
+                    var a = $("<span class='page-change'>" + (i + 1) + "</span>");
                     a.click(paging.changePageFunction(i));
                     pages.append(a);
                 }
@@ -432,13 +438,15 @@
                         td.append(cell.rendering(value, undefined, this.model));
                     } else if (cell.isExpandable() && value != undefined) {
                         td.html($("<a href='#' class='expand'>" + value + "</a>"));
-                    } else if (cell.isLink() && this.model.hasLink() && value != undefined) {
-                        td.append($("<a href='" + this.model.link() + "'>" + value + "</a>"));
+                    } else if (cell.isBool()) {
+                        if (value)  td.append("<center><a href='" + this.model.link() + "'>&#10003;</a></center>");
+                    } else 
+                            td.append($("<a href='" + this.model.link() + "'>" + value + "</a>"));
+                    } 
+                   else if (value != undefined) {
+                        var span = $("<span >" + value + "</span>");
+                        td.html(span);
                     }
-                } else if (value != undefined) {
-                    var span = $("<span >" + value + "</span>");
-                    td.html(span);
-                }
                 mainrow.append(td);
             }
             for (var j = 0; j < this.model.subfieldsSize(); j++) {

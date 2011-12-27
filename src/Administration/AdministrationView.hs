@@ -22,7 +22,7 @@ module Administration.AdministrationView(
           , databaseContent
           , statsPage
           , servicesAdminPage
-          , adminDocumentsDaylyList
+          , adminDocuments
           , adminTranslationsPage
           , adminUserUsageStatsPage
           , adminCompanyUsageStatsPage
@@ -53,8 +53,6 @@ import Company.Model
 import API.Service.Model
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
-import Util.SignatoryLinkUtils
-import MinutesTime
 
 {-| Main admin page - can go from here to other pages -}
 adminMainPage :: TemplatesMonad m => m String
@@ -69,11 +67,10 @@ adminUsersAdvancedPage users params =
         adminListFields LinkUserAdmin users params
 
 {-| Manage users page - can find user here -}
-adminUsersPage :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> AdminListPageParams -> m String
-adminUsersPage users params =
+adminUsersPage :: TemplatesMonad m => m String
+adminUsersPage =
     renderTemplateFM "adminusers" $ do
-        fieldFL "users" $ map mkUserInfoView $ visibleItems params users
-        adminListFields LinkUserAdmin users params
+        field "adminlink" $ show $ LinkAdminOnly
 
 {- | Manage companies page - can find a company here -}
 adminCompaniesPage :: TemplatesMonad m => m String
@@ -169,24 +166,10 @@ adminCompanyUsageStatsPage companyid morefields =
         field "companyid" $ show companyid
         morefields
 
-adminDocumentsDaylyList :: TemplatesMonad m => MinutesTime -> [Document] -> m String
-adminDocumentsDaylyList t docs = do
+adminDocuments:: TemplatesMonad m => m String
+adminDocuments = do
     renderTemplateFM "daylydocumentinfo" $ do
-       fieldFL "documents" $ for docs $ \doc -> do
-           field "id" $ show $ documentid doc
-           field "title" $ documenttitle doc
-           field "service" $ fmap show $ documentservice doc
-           field "type" $ show $ documenttype doc
-           field "status" $ take 20 $ show $ documentstatus doc
-           field "signatories" $ map getSmartName $ documentsignatorylinks doc
-           fieldF "author" $ do
-               field "name"    $ fmap getSmartName    $ getAuthorSigLink doc
-               field "email"   $ fmap getEmail        $ getAuthorSigLink doc
-               field "company" $ fmap getCompanyName  $ getAuthorSigLink doc
-           field "ctime" $ showMinutesTimeForAPI $ documentctime doc
-           field "mtime" $ showMinutesTimeForAPI $ documentmtime doc
        field "adminlink" $ show $ LinkAdminOnly
-       field "day" $ showDateOnly t
 
 
 allUsersTable :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> m String

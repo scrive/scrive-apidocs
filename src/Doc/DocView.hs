@@ -531,13 +531,11 @@ docSortSearchPage :: ListParams -> [Document] -> PagedList Document
 docSortSearchPage  = listSortSearchPage docSortFunc docSearchFunc docsPageSize
 
 docSearchFunc::SearchingFunction Document
-docSearchFunc s doc =  nameMatch doc || signMatch doc || authorMatch doc
+docSearchFunc s doc =  nameMatch doc || signMatch doc
     where
     match m = isInfixOf (map toUpper s) (map toUpper m)
     nameMatch = match . BS.toString . documenttitle
-    signMatch d = any (match . BS.toString . getSmartName) (getSignatoryPartnerLinks d)
-    -- we need author because in orders and offers, the author is usually not a signatory
-    authorMatch d = match $ fromMaybe "" $ BS.toString <$> getSmartName <$> getAuthorSigLink d
+    signMatch d = any (match . BS.toString . getSmartName) (documentsignatorylinks d)
 
 
 docSortFunc:: SortingFunction Document

@@ -328,6 +328,7 @@
 
 .tab-table .table-paginate .pages a {
 	color: #666;
+    padding-left: 5px;
 	text-decoration: none;
 }
 

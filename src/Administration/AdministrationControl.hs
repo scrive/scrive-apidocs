@@ -24,7 +24,7 @@ module Administration.AdministrationControl(
           , showStats
           , showServicesPage
           , showAdminTranslations
-          , showDocumentsDaylyList
+          , showDocuments
           , indexDB
           , getUsersDetailsToCSV
           , handleUserChange
@@ -48,6 +48,7 @@ module Administration.AdministrationControl(
           , serveLogDirectory
           , jsonUsersList
           , jsonCompanies
+          , jsonDocuments
           ) where
 import Control.Monad.State
 import Data.Functor
@@ -110,7 +111,7 @@ import Text.JSON
 import Util.HasSomeCompanyInfo
 import CompanyAccounts.CompanyAccountsControl
 import CompanyAccounts.Model
-import Stats.Model
+import Util.SignatoryLinkUtils
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m Response
@@ -131,10 +132,8 @@ showAdminUserAdvanced = onlySuperUser $ do
 it allows to edit user details -}
 showAdminUsers :: Kontrakcja m => Maybe UserID -> m Response
 showAdminUsers Nothing = onlySuperUser $ do
-  users <- getUsersAndStats
-  params <- getAdminListPageParams
-  content <- adminUsersPage users params
-  renderFromBody TopEmpty kontrakcja content
+      content <- adminUsersPage
+      renderFromBody TopEmpty kontrakcja content
 
 showAdminUsers (Just userId) = onlySuperUser $ do
   muser <- runDBQuery $ GetUserByID userId
@@ -173,9 +172,6 @@ jsonCompanies = onlySuperUser $ do
                 ]) (list companies) )
         ,("paging", pagingParamsJSON companies)
         ]
-  where
-    jsFromString = JSString . toJSString
-    jsFromBString = JSString . toJSString . BS.toString
 
 companiesSortSearchPage :: ListParams -> [Company] -> PagedList Company
 companiesSortSearchPage =
@@ -224,11 +220,11 @@ showAdminUsersForSales = onlySuperUser $ adminUsersPageForSales
 jsonUsersList ::Kontrakcja m => m JSValue
 jsonUsersList = do
     params <- getListParamsNew
-    allUsers <- getUsersAndStatsNew
+    allUsers <- getUsersAndStatsInv
     let users = usersSortSearchPage params allUsers
     return $ JSObject
            $ toJSObject
-            [("list", JSArray $ map (\(user,mcompany,docstatevents) ->
+            [("list", JSArray $ map (\(user,mcompany,docstats,itype) ->
                 JSObject $ toJSObject
                     [("fields", JSObject $ toJSObject
                         [("id",       jsFromString . show $ userid user)
@@ -237,47 +233,73 @@ jsonUsersList = do
                         ,("company",  jsFromBString $ getCompanyName mcompany)
                         ,("phone",    jsFromBString $ userphone $ userinfo user)
                         ,("tos",      jsFromString $ maybe "-" show (userhasacceptedtermsofservice user))
-                        ,("signed_docs", jsFromString $ show $ sum [seAmount dse | dse <- docstatevents
-                                                                                 , DocStatClose == seQuantity dse])
+                        ,("signed_1m",     jsFromString . show $ signaturecount1m docstats)
+                        ,("signed_2m",     jsFromString . show $ signaturecount2m docstats)
+                        ,("signed_3m",     jsFromString . show $ signaturecount3m docstats)
+                        ,("signed_6m",     jsFromString . show $ signaturecount6m docstats)
+                        ,("signed_12m",    jsFromString . show $ signaturecount12m docstats)
+                        ,("signed_docs",   jsFromString . show $ signaturecount docstats)
+                        ,("uploaded_docs", jsFromString . show $ doccount docstats)
+                        ,("viral_invites", JSBool $ not $ isAdminInvite itype)
+                        ,("admin_invites", JSBool $ isAdminInvite itype)
                         ,("subaccounts", jsFromString "")
                         ])
                     ,("link", jsFromString . show $ LinkUserAdmin $ Just $ userid user)
                     ]) (list users)),
              ("paging", pagingParamsJSON users)]
-  where
-    jsFromString = JSString . toJSString
-    jsFromBString = JSString . toJSString . BS.toString
 
-usersSortSearchPage :: ListParams -> [(User, Maybe Company, [DocStatEvent])]
-                       -> PagedList (User, Maybe Company, [DocStatEvent])
+jsFromString :: String -> JSValue
+jsFromString = JSString . toJSString
+
+jsFromBString :: BS.ByteString -> JSValue
+jsFromBString = JSString . toJSString . BS.toString
+
+isAdminInvite :: InviteType -> Bool
+isAdminInvite Viral = False
+isAdminInvite Admin = True
+
+usersSortSearchPage :: ListParams -> [(User, Maybe Company, DocStats, InviteType)]
+                       -> PagedList (User, Maybe Company, DocStats, InviteType)
 usersSortSearchPage =
     listSortSearchPage usersSortFunc usersSearchFunc usersPageSize
 
-usersSortFunc :: SortingFunction (User, Maybe Company, [DocStatEvent])
-usersSortFunc "username"    = viewComparing (getFullName . (\(u,_,_) -> u))
-usersSortFunc "usernameREV" = viewComparingRev (getFullName . (\(u,_,_) -> u))
-usersSortFunc "email"       = viewComparing (getEmail . (\(u,_,_) -> u))
-usersSortFunc "emailREV"    = viewComparingRev (getEmail . (\(u,_,_) -> u))
-usersSortFunc "company"     = viewComparing (getCompanyName . (\(_,c,_) -> c))
-usersSortFunc "companyREV"  = viewComparingRev (getCompanyName . (\(_,c,_) -> c))
-usersSortFunc "phone"       = viewComparing (userphone . userinfo . (\(u,_,_) -> u))
-usersSortFunc "phoneREV"    = viewComparingRev (userphone . userinfo . (\(u,_,_) -> u))
-usersSortFunc "tos"         = viewComparing ((maybe "-" show) . (userhasacceptedtermsofservice . (\(u,_,_) -> u)))
-usersSortFunc "tosREV"      = viewComparingRev ((maybe "-" show) . (userhasacceptedtermsofservice . (\(u,_,_) -> u)))
-usersSortFunc "signed_docs" = viewComparing (\(_,_,d) -> sum [seAmount dse | dse <- d
-                                                                           , DocStatClose == seQuantity dse])
-usersSortFunc "signed_docsREV" = viewComparingRev (\(_,_,d) -> sum [seAmount dse | dse <- d
-                                                                                 , DocStatClose == seQuantity dse])
-usersSortFunc _             = const $ const EQ
+usersSortFunc :: SortingFunction (User, Maybe Company, DocStats, InviteType)
+usersSortFunc "username"       = viewComparing (getFullName . (\(u,_,_,_) -> u))
+usersSortFunc "usernameREV"    = viewComparingRev (getFullName . (\(u,_,_,_) -> u))
+usersSortFunc "email"          = viewComparing (getEmail . (\(u,_,_,_) -> u))
+usersSortFunc "emailREV"       = viewComparingRev (getEmail . (\(u,_,_,_) -> u))
+usersSortFunc "company"        = viewComparing (getCompanyName . (\(_,c,_,_) -> c))
+usersSortFunc "companyREV"     = viewComparingRev (getCompanyName . (\(_,c,_,_) -> c))
+usersSortFunc "phone"          = viewComparing (userphone . userinfo . (\(u,_,_,_) -> u))
+usersSortFunc "phoneREV"       = viewComparingRev (userphone . userinfo . (\(u,_,_,_) -> u))
+usersSortFunc "tos"            = viewComparing ((maybe "-" show) . (userhasacceptedtermsofservice . (\(u,_,_,_) -> u)))
+usersSortFunc "tosREV"         = viewComparingRev ((maybe "-" show) . (userhasacceptedtermsofservice . (\(u,_,_,_) -> u)))
+usersSortFunc "signed_docs"    = viewComparing (signaturecount . (\(_,_,d,_) -> d))
+usersSortFunc "signed_docsREV" = viewComparingRev (signaturecount . (\(_,_,d,_) -> d))
+usersSortFunc "signed_1m"      = viewComparing (signaturecount1m . (\(_,_,d,_) -> d))
+usersSortFunc "signed_1mREV"   = viewComparingRev (signaturecount1m . (\(_,_,d,_) -> d))
+usersSortFunc "signed_2m"      = viewComparing (signaturecount2m . (\(_,_,d,_) -> d))
+usersSortFunc "signed_2mREV"   = viewComparingRev (signaturecount2m . (\(_,_,d,_) -> d))
+usersSortFunc "signed_3m"      = viewComparing (signaturecount3m . (\(_,_,d,_) -> d))
+usersSortFunc "signed_3mREV"   = viewComparingRev (signaturecount3m . (\(_,_,d,_) -> d))
+usersSortFunc "signed_6m"      = viewComparing (signaturecount6m . (\(_,_,d,_) -> d))
+usersSortFunc "signed_6mREV"   = viewComparingRev (signaturecount6m . (\(_,_,d,_) -> d))
+usersSortFunc "signed_12m"     = viewComparing (signaturecount12m . (\(_,_,d,_) -> d))
+usersSortFunc "signed_12mREV"  = viewComparingRev (signaturecount12m . (\(_,_,d,_) -> d))
+usersSortFunc "uploaded_docs"    = viewComparing (doccount . (\(_,_,d,_) -> d))
+usersSortFunc "uploaded_docsREV" = viewComparingRev (doccount . (\(_,_,d,_) -> d))
+usersSortFunc "viral_invites"    = viewComparing (isAdminInvite . (\(_,_,_,i) -> i))
+usersSortFunc "viral_invitesREV" = viewComparingRev (not . isAdminInvite . (\(_,_,_,i) -> i))
+usersSortFunc _                = const $ const EQ
 
-usersSearchFunc :: SearchingFunction (User, Maybe Company, [DocStatEvent])
+usersSearchFunc :: SearchingFunction (User, Maybe Company, DocStats, InviteType)
 usersSearchFunc s userdata = userMatch userdata s
   where
       match s' m = isInfixOf (map toUpper s') (map toUpper (BS.toString m))
-      userMatch (u,mc,_) s' = match s' (getCompanyName mc)
-                            || match s' (getFirstName u)
-                            || match s' (getLastName  u)
-                            || match s' (getEmail u)
+      userMatch (u,mc,_,_) s' = match s' (getCompanyName mc)
+                             || match s' (getFirstName u)
+                             || match s' (getLastName  u)
+                             || match s' (getEmail u)
 
 usersPageSize :: Int
 usersPageSize = 100
@@ -300,15 +322,17 @@ getUsersAndStats = do
     users2 <- mapM queryStats users
     return users2
 
--- Eric: I added this to ease transition from old DocStats system
-getUsersAndStatsNew :: Kontrakcja m => m [(User, Maybe Company, [DocStatEvent])]
-getUsersAndStatsNew = do
-    users <- runDBQuery GetUsers
-    let queryStats user = do
-          mcompany <- getCompanyForUser user
-          docstats <- runDBQuery $ GetDocStatEventsByUserID (userid user)
-          return (user, mcompany, docstats)
-    mapM queryStats users
+getUsersAndStatsInv :: Kontrakcja m => m [(User, Maybe Company, DocStats, InviteType)]
+getUsersAndStatsInv = do
+    users <- getUsersAndStats
+    mapM addInviteType users
+  where
+    addInviteType = \(user,mcompany,docstats) -> do
+        invite <- runDBQuery $ GetInviteInfo (userid user)
+        let invitestype = case invite of
+                          Nothing                     -> Admin
+                          Just (InviteInfo _ _ mtype) -> fromMaybe Admin mtype
+        return (user,mcompany,docstats,invitestype)
 
 showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
 showAdminUserUsageStats userid = onlySuperUser $ do
@@ -1007,20 +1031,70 @@ handleCheckSigLinkIDUniqueness = do
      then return "Signatory link ids are unique globally."
      else return "Signatory link ids are NOT unique globally."
 
-showDocumentsDaylyList ::  Kontrakcja m => m (Either KontraLink String)
-showDocumentsDaylyList = onlySuperUserGet $ do
-    now <- getMinutesTime
-    day <- fromMaybe now <$> parseDateOnly <$> getFieldWithDefault "" "day"
-    srvs  <- runDBQuery $ GetServices
-    documents <- join <$> (sequence $ map (doc_query . GetDocuments) (Nothing:(map (Just . serviceid) srvs)))
-    liftIO $ putStrLn $ show documents
-    adminDocumentsDaylyList day $ filter (dayMatch day) documents
- where
-    dayMatch day doc = (documentctime doc >= day) && (documentctime doc <= ((24*60) `minutesAfter` day))
-                       || ((documentctime doc <= day) && (documentmtime doc >= day))
+showDocuments ::  Kontrakcja m => m (Either KontraLink String)
+showDocuments = onlySuperUserGet $ adminDocuments
+
+jsonDocuments :: Kontrakcja m => m JSValue
+jsonDocuments = onlySuperUser $ do
+    srvs <- runDBQuery $ GetServices
+    docs <- join <$> (sequence $ map (doc_query . GetDocuments) (Nothing:(map (Just . serviceid) srvs)))
+    params <- getListParamsNew
+    let documents = documentsSortSearchPage params docs
+    return $ JSObject
+           $ toJSObject
+            [("list", JSArray $ map (\doc -> 
+                JSObject $ toJSObject
+                    [("fields", JSObject $ toJSObject
+                        [ ("id", jsFromString $ show $ documentid doc)
+                        , ("ctime", jsFromString . showMinutesTimeForAPI $ documentctime doc) 
+                        , ("mtime", jsFromString . showMinutesTimeForAPI $ documentmtime doc) 
+                        , ("author", JSObject $ toJSObject [
+                              ("name", jsFromBString $ maybe (BS.fromString "") getSmartName $ getAuthorSigLink doc)
+                            , ("email", jsFromBString $ maybe (BS.fromString "") getEmail $ getAuthorSigLink doc)
+                            , ("company", jsFromBString $ maybe (BS.fromString "") getCompanyName $ getAuthorSigLink doc)
+                            ])
+                        , ("title", jsFromBString $ documenttitle doc)
+                        , ("service", jsFromString $ maybe "" show $ documentservice doc)
+                        , ("status", jsFromString $ take 20 $ show $ documentstatus doc)
+                        , ("type", jsFromString . show $ documenttype doc)
+                        , ("signs", JSArray $ map (jsFromBString . getSmartName) $ documentsignatorylinks doc)
+                        ])
+                    ]) (list documents))
+            , ("paging", pagingParamsJSON documents)
+            ]
+
+documentsSortSearchPage :: ListParams -> [Document] -> PagedList Document
+documentsSortSearchPage = 
+    listSortSearchPage documentsSortFunc documentsSearchFunc documentsPageSize
+
+documentsSortFunc :: SortingFunction Document
+documentsSortFunc "ctime"      = viewComparing documentctime
+documentsSortFunc "ctimeREV"   = viewComparingRev documentctime
+documentsSortFunc "author"     = viewComparing ((maybe (BS.fromString "") getSmartName) . getAuthorSigLink)
+documentsSortFunc "authorREV"  = viewComparingRev ((maybe (BS.fromString "") getSmartName) . getAuthorSigLink)
+documentsSortFunc "title"      = viewComparing documenttitle
+documentsSortFunc "titleREV"   = viewComparingRev documenttitle
+documentsSortFunc "service"    = viewComparing ((maybe "" show) . documentservice)
+documentsSortFunc "serviceREV" = viewComparingRev ((maybe "" show) . documentservice)
+documentsSortFunc "status"     = viewComparing ((take 20) . show . documentstatus)
+documentsSortFunc "statusREV"  = viewComparingRev ((take 20) . show . documentstatus)
+documentsSortFunc "type"       = viewComparing documenttype
+documentsSortFunc "typeREV"    = viewComparingRev documenttype
+documentsSortFunc "signs"      = viewComparing ((map getSmartName) . documentsignatorylinks)
+documentsSortFunc "signsREV"   = viewComparingRev ((map getSmartName) . documentsignatorylinks)
+documentsSortFunc _            = const $ const EQ
+
+documentsSearchFunc :: SearchingFunction Document
+documentsSearchFunc s doc =  nameMatch doc || signMatch doc
+    where
+    match m = isInfixOf (map toUpper s) (map toUpper m)
+    nameMatch = match . BS.toString . documenttitle
+    signMatch d = any (match . BS.toString . getSmartName) (documentsignatorylinks d)
 
 
 
+documentsPageSize :: Int
+documentsPageSize = 100
 
 {- |
    Used by super users to inspect a particular document.

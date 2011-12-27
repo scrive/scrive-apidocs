@@ -226,7 +226,8 @@ staticRoutes = choice
                , onlySuperUser $ serveDirectory DisableBrowsing [] "_local/kontrakcja_state"
                ]
 
-     , dir "adminonly" $ dir "documents" $ hGet $ toK0 $ Administration.showDocumentsDaylyList
+     , dir "adminonly" $ dir "documents" $ hGet $ toK0 $ Administration.showDocuments
+     , dir "adminonly" $ dir "documentslist" $ hGet $ toK0 $ Administration.jsonDocuments
 
      , dir "adminonly" $ dir "allstatscsv" $ path GET id $ Stats.handleDocStatsCSV
      , dir "adminonly" $ dir "userstatscsv" $ path GET id $ Stats.handleUserStatsCSV
