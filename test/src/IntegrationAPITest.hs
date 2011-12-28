@@ -112,12 +112,14 @@ testNewDocumentOrder conn = withTestEnvironment conn $ do
   apiRes <- makeAPIRequest createDocument $ apiReq
   assertBool ("Failed to create doc: " ++ show apiRes) $ not (isError apiRes)
   let Right did = jsget ["document_id"] (showJSON apiRes)
-  let Right apiReq2 = (Right jsempty) >>= jsset "document_id" did
+  let Right apiReq2 = jsset "document_id" did jsempty
   apiRes2 <- makeAPIRequest getDocument apiReq2
   assertBool ("Failed to get doc: " ++ show apiRes2) $ not (isError apiRes2)
   assertBool ("doctype is not order: " ++ show apiRes2) $ (Right (showJSON (5 :: Int))) == jsget ["document", "type"] (showJSON apiRes2)
   let Right (JSArray (authorjson:_)) = jsget ["document", "involved"] (showJSON apiRes2)
-  
+  if ((Right (JSRational False (1%1))) /= (jsget ["relation"] authorjson))
+    then Log.debug $ "document with author not secretary: " ++ show apiRes2
+    else return ()
   assertEqual "relation for author is should be secretary" (Right (JSRational False (1%1))) (jsget ["relation"] authorjson)
 
 testDocumentCreation :: Connection -> Assertion
