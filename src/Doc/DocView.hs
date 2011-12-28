@@ -297,7 +297,10 @@ documentJSON msl _crttime doc = do
                                                Nothing -> return Nothing
                                                Just f -> return $ Just (fid, f)
                                           | SignatoryAttachment { signatoryattachmentfile = Just fid } <- documentsignatoryattachments doc])
-
+    let isauthoradmin = maybe False and $ sequence
+          [ useriscompanyadmin <$> ctxmaybeuser ctx
+          , flip isAuthoredByCompany doc <$> (ctxmaybeuser ctx >>= usercompany)
+          ]
     fmap toJSObject $ propagateMonad  $
      [ ("title",return $ JSString $ toJSString $ BS.toString $ documenttitle doc),
        ("files", return $ JSArray $ jsonPack <$> fileJSON <$> files ),
@@ -307,7 +310,7 @@ documentJSON msl _crttime doc = do
        ("process", processJSON doc ),
        ("infotext", JSString <$> toJSString <$> documentInfoText ctx doc msl),
        ("canberestarted", return $ JSBool $  isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])),
-       ("canbecanceled", return $ JSBool $ isAuthor msl && documentstatus doc == Pending && isNothing (documenttimeouttime doc)),
+       ("canbecanceled", return $ JSBool $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending && isNothing (documenttimeouttime doc)),
        ("timeouttime", return $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc),
        ("status", return $ JSString $ toJSString $ show $ documentstatus doc),
        ("signatories", JSArray <$>  mapM (signatoryJSON doc msl signatoryattachmentsfiles) (documentsignatorylinks doc)),
