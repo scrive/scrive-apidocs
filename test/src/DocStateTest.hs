@@ -423,7 +423,7 @@ testNewDocumentDependencies = doTimes 10 $ do
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
   -- execute
   now <- liftIO $ getMinutesTime
-  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany (BS.fromString title) doctype now)
+  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany title doctype now)
   -- assert
   validTest $ do
     assertRight edoc
