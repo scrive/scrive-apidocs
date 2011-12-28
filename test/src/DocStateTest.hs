@@ -423,7 +423,7 @@ testNewDocumentDependencies = doTimes 10 $ do
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
   -- execute
   now <- liftIO $ getMinutesTime
-  edoc <- randomUpdate $ (\doctype -> NewDocument author mcompany (BS.fromString "title") doctype now)
+  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany (BS.fromString title) doctype now)
   -- assert
   validTest $ do
     assertRight edoc
@@ -435,7 +435,7 @@ testDocumentCanBeCreatedAndFetchedByID = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
   now <- liftIO $ getMinutesTime
-  edoc <- randomUpdate $ (\doctype -> NewDocument author mcompany (BS.fromString "title") doctype now)
+  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany (BS.fromString title) doctype now)
   let doc = case edoc of
           Left msg -> error $ show msg
           Right d -> d
@@ -454,7 +454,7 @@ testDocumentCanBeCreatedAndFetchedByAllDocs = doTimes 10 $ do
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
   -- execute
   now <- liftIO $ getMinutesTime
-  edoc <- randomUpdate $ (\doctype -> NewDocument author mcompany (BS.fromString "title") doctype now)
+  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany (BS.fromString title) doctype now)
   
   let doc = case edoc of
           Left msg -> error $ show msg
