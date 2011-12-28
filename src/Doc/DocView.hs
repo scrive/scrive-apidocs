@@ -32,8 +32,8 @@ module Doc.DocView (
   , isNotLinkForUserID
   , modalMismatch
   , modalPdfTooLarge
-  , mailCancelDocumentByAuthor
-  , mailCancelDocumentByAuthorContent
+  , mailCancelDocument
+  , mailCancelDocumentContent
   , mailDocumentAwaitingForAuthor
   , mailDocumentClosed
   , mailDocumentRejected
@@ -412,7 +412,7 @@ processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
       , ("restartbuttontext", text processrestartbuttontext)
       , ("cancelbuttontext", text processcancelbuttontext)
       , ("rejectbuttontext", text processrejectbuttontext)
-      , ("cancelbyauthormodaltitle", text processcancelbyauthormodaltitle)
+      , ("cancelmodaltitle", text processcancelmodaltitle)
       , ("authorissecretarytext", text processauthorissecretarytext)
       , ("remindagainbuttontext", text processremindagainbuttontext)
       -- And more

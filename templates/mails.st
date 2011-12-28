@@ -5,39 +5,39 @@
 ##### CANCEL MAIL
 #####
 ####
-mailCancelContractByAuthorStandardHeader=
+mailCancelContractStandardHeader=
     <p>$_hi()$,</p>
 ######
-mailCancelOfferByAuthorStandardHeader=
+mailCancelOfferStandardHeader=
     <p>$_hi()$,</p>
 ######
-mailCancelOrderByAuthorStandardHeader=
+mailCancelOrderStandardHeader=
     <p>$_hi()$,</p>
 ######
-mailCancelContractByAuthor=
-    $_mailCancelDocumentByAuthorTitleContract()$
+mailCancelContract=
+    $_mailCancelDocumentTitleContract()$
     $nicemail(
-        mailheader= _mailCancelDocumentByAuthorTitleContract();
+        mailheader= _mailCancelDocumentTitleContract();
         mailp1 = header;
-        mailp2 = _mailCancelContractByAuthorContentBody();
+        mailp2 = _mailCancelContractContentBody();
         mailp3 = footer
     )$
 #####
-mailCancelOfferByAuthor=
-    $_mailCancelDocumentByAuthorTitleOffer()$
+mailCancelOffer=
+    $_mailCancelDocumentTitleOffer()$
     $nicemail(
-        mailheader= _mailCancelDocumentByAuthorTitleOffer();
+        mailheader= _mailCancelDocumentTitleOffer();
         mailp1 = header;
-        mailp2 = _mailCancelOfferByAuthorContentBody();
+        mailp2 = _mailCancelOfferContentBody();
         mailp3 = footer
     )$
 #####
-mailCancelOrderByAuthor=
-    $_mailCancelDocumentByAuthorTitleOrder()$
+mailCancelOrder=
+    $_mailCancelDocumentTitleOrder()$
     $nicemail(
-        mailheader= _mailCancelDocumentByAuthorTitleOrder();
+        mailheader= _mailCancelDocumentTitleOrder();
         mailp1 = header;
-        mailp2 = _mailCancelOrderByAuthorContentBody();
+        mailp2 = _mailCancelOrderContentBody();
         mailp3 = footer
     )$
 #####

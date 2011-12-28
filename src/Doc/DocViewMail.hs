@@ -1,6 +1,6 @@
 module Doc.DocViewMail (
-      mailCancelDocumentByAuthor
-    , mailCancelDocumentByAuthorContent
+      mailCancelDocument
+    , mailCancelDocumentContent
     , mailDocumentAwaitingForAuthor
     , mailDocumentClosed
     , mailDocumentErrorForAuthor
@@ -292,27 +292,27 @@ mailDocumentAwaitingForAuthor ctx document authorlocale = do
         field "companyname" $ nothingIfEmpty $ getCompanyName document
 
 
-mailCancelDocumentByAuthorContent :: TemplatesMonad m
+mailCancelDocumentContent :: TemplatesMonad m
                                   => Bool
                                   -> (Maybe BS.ByteString)
                                   -> Context
                                   -> Document
                                   -> m String
-mailCancelDocumentByAuthorContent forMail customMessage ctx document =
-    (BS.toString . content) <$> mailCancelDocumentByAuthor forMail customMessage ctx document
+mailCancelDocumentContent forMail customMessage ctx document =
+    (BS.toString . content) <$> mailCancelDocument forMail customMessage ctx document
 
-mailCancelDocumentByAuthor :: TemplatesMonad m
+mailCancelDocument :: TemplatesMonad m
                            => Bool
                            -> Maybe BS.ByteString
                            -> Context
                            -> Document
                            -> m Mail
-mailCancelDocumentByAuthor _forMail customMessage ctx document = do
-    mail <- documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailcancelbyauthor) $ do
+mailCancelDocument _forMail customMessage ctx document = do
+    mail <- documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailcancel) $ do
         fieldM "header" $ do
             header <- case customMessage of
                            Just c -> return $ BS.toString c
-                           Nothing -> renderLocalTemplateForProcess document processmailcancelbyauthorstandardheader $ do
+                           Nothing -> renderLocalTemplateForProcess document processmailcancelstandardheader $ do
                                field "partylist" $ map (BS.toString . getSmartName) $ partyList document
             makeEditable "customtext" header
         fieldM "footer" $ mailFooterForInviter ctx document

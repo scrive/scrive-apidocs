@@ -86,12 +86,12 @@ data DocProcessInfo =
   , processsignguardwarntext :: String
   , processrestartbuttontext :: String
   , processcancelbuttontext :: String
-  , processcancelbyauthormodaltitle :: String
+  , processcancelmodaltitle :: String
   , processrejectbuttontext :: String
   , processsignatorysignmodaltitle :: String
   , processsignatorysignmodalcontentlast :: String
   , processsignatorysignmodalcontentnotlast :: String
-  , processsignatorysignmodalcontentauthorlast :: String    
+  , processsignatorysignmodalcontentauthorlast :: String
   , processsignbuttontext :: String
   , processsignbuttontextauthor :: String
   , processsignatorycancelmodaltitle :: String
@@ -99,8 +99,8 @@ data DocProcessInfo =
   , processremindagainbuttontext :: String
 
   -- process specific doc mail template names
-  , processmailcancelbyauthorstandardheader :: String
-  , processmailcancelbyauthor :: String
+  , processmailcancelstandardheader :: String
+  , processmailcancel :: String
   , processmailclosed :: String
   , processmailreject :: String
   , processmailinvitationtosign :: String
@@ -176,7 +176,7 @@ contractProcess =
   , processsignguardwarntext = "contractsignguardwarntext"
   , processrestartbuttontext = "contractrestartbuttontext"
   , processcancelbuttontext = "contractcancelbuttontext"
-  , processcancelbyauthormodaltitle = "contractcancelbyauthormodaltitle"
+  , processcancelmodaltitle = "contractcancelmodaltitle"
   , processrejectbuttontext = "contractrejectbuttontext"
   , processsignatorysignmodaltitle = "contractsignatorysignmodaltitle"
   , processsignatorysignmodalcontentlast = "contractsignatorysignmodalcontentlast"
@@ -189,8 +189,8 @@ contractProcess =
   , processremindagainbuttontext = "contractremindagainbuttontext"
 
   -- process specific doc mail template names
-  , processmailcancelbyauthorstandardheader = "mailCancelContractByAuthorStandardHeader"
-  , processmailcancelbyauthor = "mailCancelContractByAuthor"
+  , processmailcancelstandardheader = "mailCancelContractStandardHeader"
+  , processmailcancel = "mailCancelContract"
   , processmailclosed= "mailContractClosed"
   , processmailreject = "mailRejectContractMail"
   , processmailinvitationtosign = "mailInvitationToSignContract"
@@ -266,21 +266,21 @@ offerProcess =
   , processsignguardwarntext = "offersignguardwarntext"
   , processrestartbuttontext = "offerrestartbuttontext"
   , processcancelbuttontext = "offercancelbuttontext"
-  , processcancelbyauthormodaltitle = "offercancelbyauthormodaltitle"
+  , processcancelmodaltitle = "offercancelmodaltitle"
   , processrejectbuttontext = "offerrejectbuttontext"
   , processsignatorysignmodaltitle = "offersignatorysignmodaltitle"
   , processsignatorysignmodalcontentlast = "offersignatorysignmodalcontentlast"
   , processsignatorysignmodalcontentnotlast = "offersignatorysignmodalcontentnotlast"
   , processsignatorysignmodalcontentauthorlast = "offersignatorysignmodalcontentauthorlast"
   , processsignbuttontext = "offersignbuttontext"
-  , processsignbuttontextauthor = "offersignbuttontextauthor"                            
+  , processsignbuttontextauthor = "offersignbuttontextauthor"
   , processsignatorycancelmodaltitle = "offersignatorycancelmodaltitle"
   , processauthorissecretarytext = "offerauthorissecretarytext"
   , processremindagainbuttontext = "offerremindagainbuttontext"
 
   -- process specific doc mail template names
-  , processmailcancelbyauthorstandardheader = "mailCancelOfferByAuthorStandardHeader"
-  , processmailcancelbyauthor = "mailCancelOfferByAuthor"
+  , processmailcancelstandardheader = "mailCancelOfferStandardHeader"
+  , processmailcancel = "mailCancelOffer"
   , processmailclosed = "mailOfferClosed"
   , processmailreject = "mailRejectOfferMail"
   , processmailinvitationtosign = "mailInvitationToSignOffer"
@@ -324,7 +324,7 @@ offerProcess =
   , processsignedinfoheader = "offersignedinfoheader"
   , processsignedinfotext = "offersignedinfotext"
   , processstatusinfotext = "offerstatusinfotext"
-  , processauthorsignlastbuttontext = "offerauthorsignlastbuttontext"  
+  , processauthorsignlastbuttontext = "offerauthorsignlastbuttontext"
   }
 
 orderProcess :: DocProcessInfo
@@ -356,21 +356,21 @@ orderProcess =
   , processsignguardwarntext = "ordersignguardwarntext"
   , processrestartbuttontext = "orderrestartbuttontext"
   , processcancelbuttontext = "ordercancelbuttontext"
-  , processcancelbyauthormodaltitle = "ordercancelbyauthormodaltitle"
+  , processcancelmodaltitle = "ordercancelmodaltitle"
   , processrejectbuttontext = "orderrejectbuttontext"
   , processsignatorysignmodaltitle = "ordersignatorysignmodaltitle"
   , processsignatorysignmodalcontentlast = "ordersignatorysignmodalcontentlast"
   , processsignatorysignmodalcontentnotlast = "ordersignatorysignmodalcontentnotlast"
-  , processsignatorysignmodalcontentauthorlast = "ordersignatorysignmodalcontentauthorlast"  
+  , processsignatorysignmodalcontentauthorlast = "ordersignatorysignmodalcontentauthorlast"
   , processsignbuttontext = "ordersignbuttontext"
-  , processsignbuttontextauthor = "ordersignbuttontextauthor"                            
+  , processsignbuttontextauthor = "ordersignbuttontextauthor"
   , processsignatorycancelmodaltitle = "ordersignatorycancelmodaltitle"
   , processauthorissecretarytext = "orderauthorissecretarytext"
   , processremindagainbuttontext = "orderremindagainbuttontext"
 
   -- process specific doc mail template names
-  , processmailcancelbyauthorstandardheader = "mailCancelOrderByAuthorStandardHeader"
-  , processmailcancelbyauthor = "mailCancelOrderByAuthor"
+  , processmailcancelstandardheader = "mailCancelOrderStandardHeader"
+  , processmailcancel = "mailCancelOrder"
   , processmailclosed = "mailOrderClosed"
   , processmailreject = "mailRejectOrderMail"
   , processmailinvitationtosign = "mailInvitationToSignOrder"
@@ -414,6 +414,6 @@ orderProcess =
   , processsignedinfoheader = "ordersignedinfoheader"
   , processsignedinfotext = "ordersignedinfotext"
   , processstatusinfotext = "orderstatusinfotext"
-  , processauthorsignlastbuttontext = "orderauthorsignlastbuttontext"    
+  , processauthorsignlastbuttontext = "orderauthorsignlastbuttontext"
   }
 

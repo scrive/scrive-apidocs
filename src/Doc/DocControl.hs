@@ -353,7 +353,7 @@ sendInvitationEmail1 ctx document signatorylink = do
       , mailInfo = Invitation documentid signatorylinkid
       , from = documentservice document
   }
-  ioRunDB (ctxdbconn ctx) $ doc_update' $ AddInvitationEvidence documentid signatorylinkid (ctxtime ctx) (ctxipnumber ctx) 
+  ioRunDB (ctxdbconn ctx) $ doc_update' $ AddInvitationEvidence documentid signatorylinkid (ctxtime ctx) (ctxipnumber ctx)
 
 {- |
     Send a reminder email
@@ -1815,7 +1815,7 @@ sendCancelMailsForDocument :: Kontrakcja m => (Maybe BS.ByteString) -> Context -
 sendCancelMailsForDocument customMessage ctx document = do
   let activated_signatories = filter (isActivatedSignatory $ documentcurrentsignorder document) $ documentsignatorylinks document
   forM_ activated_signatories $ \slnk -> do
-      m <- mailCancelDocumentByAuthor True customMessage ctx document
+      m <- mailCancelDocument True customMessage ctx document
       let mail = m {to = [getMailAddress slnk]}
       scheduleEmailSendout (ctxesenforcer ctx) mail
 
@@ -2068,7 +2068,7 @@ prepareEmailPreview docid slid = do
     when (isNothing mdoc) $ (Log.debug "No document found") >> mzero
     let doc = fromJust mdoc
     content <- case mailtype of
-         "cancel" -> mailCancelDocumentByAuthorContent True Nothing ctx doc
+         "cancel" -> mailCancelDocumentContent True Nothing ctx doc
          "remind" -> do
              let msl = find ((== slid) . signatorylinkid) $ documentsignatorylinks doc
              case msl of
