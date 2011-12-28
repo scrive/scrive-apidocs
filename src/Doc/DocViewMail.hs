@@ -15,7 +15,9 @@ module Doc.DocViewMail (
     , mailMismatchSignatory
     , mailRejectMailContent
     , documentMailWithDocLocale
-    , mailFooter
+    , mailFooterForInviter
+    , mailFooterForInvitee
+    , mailFooterForService
     ) where
 
 import API.Service.Model
@@ -42,7 +44,7 @@ import qualified Data.ByteString.UTF8 as BS
 import File.Model
 import Control.Monad.Trans
 import AppView
-import User.Locale
+import User.Model
 import Util.HasSomeCompanyInfo
 
 mailDocumentRemind :: TemplatesMonad m
@@ -83,7 +85,7 @@ remindMailNotSigned forMail customMessage ctx document signlink = do
                          then remindMailNotSignedStandardHeader document signlink
                          else return $ BS.toString $ fromJust customMessage
             makeEditable "customtext" header
-        fieldM "footer" $ mailFooter ctx document
+        fieldM "footer" $ mailFooterForInviter ctx document
         field "partners" $ map (BS.toString . getSmartName) $ partyList document
         field "partnerswhosigned" $ map (BS.toString . getSmartName) $ partySignedList document
         field "someonesigned" $ not $ null $ partySignedList document
@@ -115,7 +117,7 @@ remindMailSigned _forMail customMessage ctx document signlink = do
     sheader <- remindMailSignedStandardHeader document signlink
     documentMailWithDocLocale ctx document "remindMailSigned" $ do
             fieldM "header" $ makeEditable "customtext" $  fromMaybe sheader (BS.toString <$> customMessage)
-            fieldM "footer" $ mailFooter ctx document
+            fieldM "footer" $ mailFooterForInviter ctx document
 
 
 remindMailNotSignedContent :: TemplatesMonad m
@@ -174,7 +176,7 @@ mailDocumentRejected :: TemplatesMonad m
 mailDocumentRejected customMessage ctx document rejector = do
    documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailreject) $ do
         field "rejectorName" $ getSmartName rejector
-        fieldM "footer" $ mailFooter ctx document
+        fieldM "footer" $ mailFooterForInvitee ctx document
         field "customMessage" $ customMessage
         field "companyname" $ nothingIfEmpty $ getCompanyName document
 
@@ -241,7 +243,7 @@ mailInvitation forMail
                                      field "service" $ isJust $ documentservice document
                          else return $ BS.toString documentinvitetext
             makeEditable "customtext" header
-        fieldM "footer" $ mailFooter ctx document
+        fieldM "footer" $ mailFooterForInviter ctx document
         fieldM "link" $ do
             case msiglink of
                  Just siglink -> makeFullLink ctx document $ show (LinkSignDoc document siglink)
@@ -276,7 +278,7 @@ mailDocumentClosed ctx document= do
    partylist <- renderLocalListTemplate document $ map (BS.toString . getSmartName) $ partyList document
    documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailclosed) $ do
         field "partylist" $ partylist
-        fieldM "footer" $ mailFooter ctx document
+        fieldM "footer" $ mailFooterForService ctx document
         field "companyname" $ nothingIfEmpty $ getCompanyName document
 
 
@@ -313,7 +315,7 @@ mailCancelDocumentByAuthor _forMail customMessage ctx document = do
                            Nothing -> renderLocalTemplateForProcess document processmailcancelbyauthorstandardheader $ do
                                field "partylist" $ map (BS.toString . getSmartName) $ partyList document
             makeEditable "customtext" header
-        fieldM "footer" $ mailFooter ctx document
+        fieldM "footer" $ mailFooterForInviter ctx document
         field "companyname" $ nothingIfEmpty $ getCompanyName document
     return $ mail { from = documentservice document}
 
@@ -358,12 +360,69 @@ makeEditable name this =
         field "name" name
         field "this" this
 
-mailFooter :: TemplatesMonad m => Context -> Document -> m String
-mailFooter ctx doc = do
-    mservice <- liftMM (ioRunDB (ctxdbconn ctx) . dbQuery . GetService) (return $ documentservice doc)
-    case (documentmailfooter $ documentui doc) `mplus` (join $ servicemailfooter <$> serviceui <$> mservice) of
-         Just footer -> return $ BS.toString footer
-         Nothing -> renderLocalTemplateFM doc "poweredBySkrivaPaPara" $ field "ctxhostpart" $ ctxhostpart ctx
+{- |
+    Use for anyone sending a mail as a person from the inviting side.  This could be the author
+    in the case of the invitation mails, and it could be a company admin withdrawing a document
+    that was authored within their company by another person.
+    The footer is in order of preference
+      1. a custom footer configured on context user (there should be one!)
+      2. the custom footer saved on the document itself (setup for Upsales originally)
+      3. a custom footer configured for the document's service
+      4. the default powered by scrive footer
+-}
+mailFooterForInviter :: TemplatesMonad m => Context -> Document -> m String
+mailFooterForInviter ctx doc = do
+  servicefooter <- getServiceFooter ctx doc
+  firstOrDefaultFooter ctx doc [ ctxmaybeuser ctx >>= getUserFooter
+                               , getDocumentFooter doc
+                               , servicefooter
+                               ]
+
+{- |
+    Use for anyone sending a mail as a person invited to that document.  For example when rejecting
+    a document.
+    The footer is in order of preference:
+      1. a custom footer configured on the context user (if there is one)
+      3. the default powered by scrive footer
+-}
+mailFooterForInvitee :: TemplatesMonad m => Context -> Document -> m String
+mailFooterForInvitee ctx doc =
+  firstOrDefaultFooter ctx doc [ ctxmaybeuser ctx >>= getUserFooter
+                               ]
+
+{- |
+    Use when the mail about the document is from the service rather than from a specific person.
+    For example when sending out document close confirmations.
+    The footer is in order of preferece:
+      1. the custom footer saved on the document itself (setup for Upsales originally)
+      2. a custom footer configured for the document's service
+      3. the default powered by scrive footer
+-}
+mailFooterForService :: TemplatesMonad m => Context -> Document -> m String
+mailFooterForService ctx doc = do
+  servicefooter <- getServiceFooter ctx doc
+  firstOrDefaultFooter ctx doc [ getDocumentFooter doc
+                               , servicefooter
+                               ]
+
+firstOrDefaultFooter :: TemplatesMonad m => Context -> Document -> [Maybe String] -> m String
+firstOrDefaultFooter ctx doc mfooters = do
+  poweredbyscrivefooter <- getPoweredByScriveFooter ctx doc
+  return . fromMaybe poweredbyscrivefooter $ msum mfooters
+
+getUserFooter :: User -> Maybe String
+getUserFooter = customfooter . usersettings
+
+getDocumentFooter :: Document -> Maybe String
+getDocumentFooter = fmap BS.toString . documentmailfooter . documentui
+
+getServiceFooter :: MonadIO m => Context -> Document -> m (Maybe String)
+getServiceFooter ctx doc = do
+  mservice <- liftMM (ioRunDB (ctxdbconn ctx) . dbQuery . GetService) (return $ documentservice doc)
+  return . fmap BS.toString $ mservice >>= servicemailfooter . serviceui
+
+getPoweredByScriveFooter :: TemplatesMonad m => Context -> Document -> m String
+getPoweredByScriveFooter ctx doc = renderLocalTemplateFM doc "poweredBySkrivaPaPara" $ field "ctxhostpart" $ ctxhostpart ctx
 
 makeFullLink :: TemplatesMonad m => Context -> Document -> String -> m String
 makeFullLink ctx doc link = do
