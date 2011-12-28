@@ -78,7 +78,7 @@ var DocumentStandarView = Backbone.View.extend({
             firstbox.append(restartbutton.input());
           }
           // Making cancel button
-           if (document.currentViewerIsAuthor() && document.pending() && (document.timeouttime() == undefined))
+           if (document.canbecanceled())
            {
              firstbox.append("<BR/>");
              firstbox.append(this.cancelButton().input());

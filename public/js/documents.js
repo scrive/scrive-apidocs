@@ -1,4 +1,4 @@
-/* Document model 
+/* Document model
  * Also document viewer (person thet is looking at document so we can hold current signatory magic hash somewere)
  */
 
@@ -17,15 +17,15 @@ window.DocumentViewer = Backbone.Model.extend({
             return "?signatorylinkid=" + this.signatoryid() + "&magichash=" + this.magichash();
         else return "";
     },
-    
+
     forFetch : function() {
         return {
             signatoryid : this.signatoryid(),
-            magichash :  this.magichash()                                             
+            magichash :  this.magichash()
         };
     }
 });
-    
+
 window.Document = Backbone.Model.extend({
     defaults: {
         id : 0,
@@ -39,7 +39,7 @@ window.Document = Backbone.Model.extend({
         viewer: new DocumentViewer(),
         infotext: "",
         authorization: "email"
-        
+
     },
     initialize: function (args) {
         this.url = "/doc/" + args.id;
@@ -94,6 +94,9 @@ window.Document = Backbone.Model.extend({
               method: "POST"
           });
     },
+    canbecanceled : function() {
+        return this.get("canbecanceled");
+    },
     cancel : function(customtext){
           return new Submit({
               url: "/cancel/" + this.documentid(),
@@ -112,8 +115,8 @@ window.Document = Backbone.Model.extend({
         var fieldvalues = [];
         _.each(this.currentSignatory().fields(),function(field){
             if (field.isClosed()) return;
-            fieldnames.push(field.name());  
-            fieldvalues.push(field.value());   
+            fieldnames.push(field.name());
+            fieldvalues.push(field.value());
         });
           return new Submit({
               sign : "YES",
@@ -124,7 +127,7 @@ window.Document = Backbone.Model.extend({
           });
     },
     status : function() {
-          return this.get("status");  
+          return this.get("status");
     },
     currentSignatory : function() {
        return _.detect(this.signatories(), function(signatory) {
@@ -190,11 +193,11 @@ window.Document = Backbone.Model.extend({
     },
     lastSignatoryLeft : function() {
         return _.all(this.signatories(), function(signatory) {
-          return (signatory.signs() && signatory.hasSigned()) || !signatory.signs() || signatory.current(); 
+          return (signatory.signs() && signatory.hasSigned()) || !signatory.signs() || signatory.current();
         });
     },
     recall : function() {
-       this.fetch({data: this.viewer().forFetch(),   processData:  true, cache : false});  
+       this.fetch({data: this.viewer().forFetch(),   processData:  true, cache : false});
     },
     needRecall : function() {
         return this.mainfile() == undefined;
@@ -205,24 +208,24 @@ window.Document = Backbone.Model.extend({
         }
     },
     parse: function(args) {
-     var document = this;   
+     var document = this;
      setTimeout(function() {
          if (document.needRecall())
             document.recall();
-     },1000);                                              
+     },1000);
      var extendedWithDocument = function(hash){
                 hash.document = document;
-                return hash; };     
+                return hash; };
      return {
       title : args.title,
       files : _.map(args.files, function(fileargs) {
                 return new File(extendedWithDocument(fileargs));
               }),
       sealedfiles : _.map(args.sealedfiles, function(fileargs) {
-                return new File(extendedWithDocument(fileargs));   
+                return new File(extendedWithDocument(fileargs));
               }),
       authorattachments : _.map(args.authorattachments, function(fileargs) {
-                return new File(extendedWithDocument(fileargs));   
+                return new File(extendedWithDocument(fileargs));
               }),
       signatories : _.map(args.signatories, function(signatoryargs){
                 return new Signatory(extendedWithDocument(signatoryargs));
@@ -230,6 +233,7 @@ window.Document = Backbone.Model.extend({
       process: new Process(args.process),
       infotext : args.infotext,
       canberestarted : args.canberestarted,
+      canbecanceled : args.canbecanceled,
       status : args.status,
       timeouttime  : args.timeouttime  == undefined ? undefined :  new Date(args.timeouttime),
       signorder : args.signorder,
@@ -237,7 +241,7 @@ window.Document = Backbone.Model.extend({
       ready: true
       };
     }
-    
+
 });
 
 
@@ -247,13 +251,13 @@ window.DocumentDataFiller = {
         // Filling title
         var title = document.title();
         $(".documenttitle", object).text(title);
-        
+
         // Filling unsigned signatories
         var unsignedpartynotcurrent = [localization.you];
         var signatories = _.select(document.signatories(), function(signatory){
             return signatory.signs() && !signatory.hasSigned() && !signatory.current();
         });
-        
+
         for(var i=0;i<signatories.length;i++)
             unsignedpartynotcurrent.push(signatories[i].smartname());
         var ls = listString(unsignedpartynotcurrent);
@@ -262,4 +266,4 @@ window.DocumentDataFiller = {
     }
 }
 
-})(window); 
+})(window);
