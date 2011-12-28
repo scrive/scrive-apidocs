@@ -1577,7 +1577,7 @@ profits and reduce frustration. The following mateials shall only
 "_mailAccountBySigningOrderReminderContentInstruction","Gör så här:<br/>1. Klicka på länken<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.
  Definiera lösenord och acceptera villkoren<br/>3. Färdig",,"To save:<br/>1. Click the link<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.  Define passwords and accept the terms of agreement <br/>3. Done"
 "_mailAccountBySigningOrderReminderTitle","Du har inte sparat ditt original",,"You have not saved your original"
-"_mailCancelContractContentBody","<strong>$creatorname$</strong> har valt att återkalla sin
+"_mailCancelContractContentBody","<strong>$canceller$</strong> har valt att återkalla sin
  inbjudan att underteckna dokument <strong>$documenttitle$</strong>.      Därmed
  är avtalsprocessen avbruten och du kan inte längre underteckna
  dokumentet.",,"<strong>$creatorname$</strong> has chosen to withdraw

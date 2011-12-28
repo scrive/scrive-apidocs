@@ -317,6 +317,7 @@ mailCancelDocument _forMail customMessage ctx document = do
             makeEditable "customtext" header
         fieldM "footer" $ mailFooterForInviter ctx document
         field "companyname" $ nothingIfEmpty $ getCompanyName document
+        field "canceller" $ maybe BS.empty getSmartName (ctxmaybeuser ctx)
     return $ mail { from = documentservice document}
 
 mailMismatchSignatory :: TemplatesMonad m
