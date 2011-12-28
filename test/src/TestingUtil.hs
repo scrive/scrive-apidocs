@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, OverlappingInstances, IncoherentInstances, CPP #-}
+{-# LANGUAGE OverlappingInstances, IncoherentInstances, CPP #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module TestingUtil where
 
@@ -6,6 +6,8 @@ import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 
 import Control.Applicative
+import Data.Char
+import Data.Word
 import System.Random
 import Test.QuickCheck
 import Happstack.Server
@@ -46,6 +48,22 @@ import Doc.DocInfo
 import Doc.DocProcess
 import ActionSchedulerState
 import Text.JSON
+
+newtype NotNullWord8 = NotNullWord8 { fromNNW8 :: Word8 }
+  deriving (Enum, Eq, Integral, Num, Ord, Real)
+
+instance Show NotNullWord8 where
+  show = show . fromNNW8
+
+instance Bounded NotNullWord8 where
+  minBound = 1
+  maxBound = NotNullWord8 maxBound
+
+instance Arbitrary NotNullWord8 where
+  arbitrary = arbitrarySizedBoundedIntegral
+  shrink = shrinkIntegral
+
+newtype StringWithoutNUL = StringWithoutNUL { fromSNN :: String }
 
 instance Arbitrary DocumentTag where
   arbitrary = DocumentTag <$> arbitrary <*> arbitrary
@@ -323,15 +341,20 @@ instance Arbitrary UserInfo where
     return $ UserInfo { userfstname     = fn
                       , usersndname     = ln
                       , userpersonalnumber  = pn
-                      , usercompanyposition = ""
-                      , userphone           = ""
-                      , usermobile          = ""
+                      , usercompanyposition = BS.pack []
+                      , userphone           = BS.pack []
+                      , usermobile          = BS.pack []
                       , useremail           = Email em
                       }
 
-
+-- generate (byte)strings without \NUL in them since
+-- hdbc-postgresql plays around with these chars and
+-- fucks them up
 instance Arbitrary BS.ByteString where
-  arbitrary = fmap BS.fromString arbitrary
+  arbitrary = BS.pack . map fromNNW8 <$> arbitrary
+
+instance Arbitrary StringWithoutNUL where
+  arbitrary = StringWithoutNUL . map (chr . fromIntegral . fromNNW8) <$> arbitrary
 
 arbString :: Int -> Int -> Gen String
 arbString minl maxl = do

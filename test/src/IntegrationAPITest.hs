@@ -120,7 +120,7 @@ testNewDocumentOrder conn = withTestEnvironment conn $ do
   if ((Right (JSRational False (1%1))) /= (jsget ["relation"] authorjson))
     then Log.debug $ "document with author not secretary: " ++ show apiRes2
     else return ()
-  assertEqual "relation for author is should be secretary" (Right (JSRational False (1%1))) (jsget ["relation"] authorjson)
+  assertEqual "relation for author should be secretary" (Right (JSRational False (1%1))) (jsget ["relation"] authorjson)
 
 testDocumentCreation :: Connection -> Assertion
 testDocumentCreation conn = withTestEnvironment conn $ do
@@ -244,10 +244,9 @@ testNewDocumentWithCompanyNr conn = withTestEnvironment conn $ do
 createDocumentJSON :: String -> String -> DB JSValue
 createDocumentJSON company author = do
      dt <- rand 10 $  elements [1,3,5]
-     title <- rand 10 $ elements ["title1", "abc", "dog"]
-     randomCall $ \fname sname -> JSObject $ toJSObject $
+     randomCall $ \title fname sname -> JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
-         ,("title" , JSString $ toJSString  title)
+         ,("title" , JSString $ toJSString $ fromSNN title)
          ,("type" , JSRational True (dt%1))
          ,("involved" , JSArray [ JSObject $ toJSObject $
                                     [ ("fstname", JSString $ toJSString fname),
@@ -262,7 +261,7 @@ createDocumentJSONFriend company author friend = do
      dt <- rand 10 $  elements [1,3,5]
      randomCall $ \title fname sname fname2 sname2 -> JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
-         ,("title" , JSString $ toJSString  title)
+         ,("title" , JSString $ toJSString $ fromSNN title)
          ,("type" , JSRational True (dt%1))
          ,("involved" , JSArray [ JSObject $ toJSObject $
                                     [ ("fstname", JSString $ toJSString fname),
@@ -284,7 +283,7 @@ createDocumentJSONFriend company author friend = do
 createOrderJSON :: String -> String -> DB JSValue
 createOrderJSON company author = randomCall $ \title fname sname fname2 sname2 em2 -> JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
-         ,("title" , JSString $ toJSString  title)
+         ,("title" , JSString $ toJSString $ fromSNN title)
          ,("type" , JSRational True (5%1))
          ,("involved" , JSArray [ JSObject $ toJSObject $
                                     [ ("fstname", JSString $ toJSString fname),
