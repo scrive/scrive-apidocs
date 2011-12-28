@@ -1580,17 +1580,17 @@ profits and reduce frustration. The following mateials shall only
 "_mailCancelContractContentBody","<strong>$canceller$</strong> har valt att återkalla sin
  inbjudan att underteckna dokument <strong>$documenttitle$</strong>.      Därmed
  är avtalsprocessen avbruten och du kan inte längre underteckna
- dokumentet.",,"<strong>$creatorname$</strong> has chosen to withdraw
+ dokumentet.",,"<strong>$canceller$</strong> has chosen to withdraw
  the invitation to sign <strong>$documenttitle$</strong>. Therefore the
  agreement process has been cancelled."
 "_mailCancelDocumentTitleContract","Återkallat avtal från $if(companyname)$$companyname$ $else$$creatorname$$endif$",,"Contract cancellation from $if(companyname)$$companyname$ $else$$creatorname$$endif$"
 "_mailCancelDocumentTitleOffer","Återkallad offert från $if(companyname)$$companyname$ $else$$creatorname$$endif$",,"Offer cancellation from  $if(companyname)$$companyname$ $else$$creatorname$$endif$"
 "_mailCancelDocumentTitleOrder","Återkallad orderbekräftelse från $if(companyname)$$companyname$ $else$$creatorname$$endif$",,"Order confirmation cancellation from $if(companyname)$$companyname$ $else$$creatorname$$endif$"
-"_mailCancelOfferContentBody","<strong>$creatorname$</strong>   har valt att återkalla
- offerten  $documenttitle$.",,"<strong>$creatorname$</strong>   has chosen to withdraw
+"_mailCancelOfferContentBody","<strong>$canceller$</strong>   har valt att återkalla
+ offerten  $documenttitle$.",,"<strong>$canceller$</strong>   has chosen to withdraw
  the offer  $documenttitle$."
-"_mailCancelOrderContentBody","<strong>$creatorname$</strong>   har valt att återkalla
- orderbekräftelsen  $documenttitle$.",,"<strong>$creatorname$</strong>   has chosen to withdraw
+"_mailCancelOrderContentBody","<strong>$canceller$</strong>   har valt att återkalla
+ orderbekräftelsen  $documenttitle$.",,"<strong>$canceller$</strong>   has chosen to withdraw
  the order confirmation  $documenttitle$."
 "_mailCompanyAccountAcceptedContentBody","$invited.fullnameOrEmail$ har accepterat att bli ett underkonto.",,"$invited.fullnameOrEmail$ has agreed to become a sub account."
 "_mailCompanyAccountAcceptedTitle","Kontoförfrågan",,"Account enquiry"
