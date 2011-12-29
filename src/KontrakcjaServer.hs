@@ -267,6 +267,7 @@ defaultConf progName
                   , aesIV = BS.pack "\205\168\250\172\CAN\177\213\EOT\254\190\157SY3i\160"
                   }
               , admins             = map (Email . BSU.fromString) ["gracjanpolak@gmail.com", "lukas@skrivapa.se"]
+              , sales              = []
               , initialUsers       = []
               }
 

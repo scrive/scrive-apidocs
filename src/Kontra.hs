@@ -4,12 +4,13 @@ module Kontra
     ( Context(..)
     , Kontrakcja
     , KontraMonad(..)
-    , isSuperUser
+    , isAdminUser
     , Kontra(runKontra)
     , clearFlashMsgs
     , addELegTransaction
     , logUserToContext
-    , onlySuperUser
+    , onlyAdmin
+    , onlySales
     , onlyBackdoorOpen
     , newPasswordReminderLink
     , newViralInvitationSentLink
@@ -71,17 +72,27 @@ instance TemplatesMonad Kontra where
 {- |
    Whether the user is an administrator.
 -}
-isSuperUser :: [Email] -> Maybe User -> Bool
-isSuperUser admins (Just user) = (useremail $ userinfo user) `elem` admins
-isSuperUser _ _ = False
+isAdminUser :: [Email] -> Maybe User -> Bool
+isAdminUser admins (Just user) = (useremail $ userinfo user) `elem` admins
+isAdminUser _ _ = False
 
 {- |
-   Will mzero if not logged in as a super user.
+   Will mzero if not logged in as an admin.
 -}
-onlySuperUser :: Kontrakcja m => m a -> m a
-onlySuperUser a = do
+onlyAdmin :: Kontrakcja m => m a -> m a
+onlyAdmin a = do
     ctx <- getContext
-    if isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)
+    if isAdminUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)
+        then a
+        else mzero
+
+{- |
+   Will mzero if not logged in as a sales admin.
+-}
+onlySales :: Kontrakcja m => m a -> m a
+onlySales a = do
+    ctx <- getContext
+    if isAdminUser (ctxsalesaccounts ctx ++ ctxadminaccounts ctx) (ctxmaybeuser ctx)
         then a
         else mzero
 

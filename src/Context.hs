@@ -47,4 +47,5 @@ data Context = Context
     , ctxservice             :: Maybe Service -- ^
     , ctxlocation            :: String -- ^
     , ctxadminaccounts       :: [Email] -- ^
+    , ctxsalesaccounts       :: [Email] -- ^
     }

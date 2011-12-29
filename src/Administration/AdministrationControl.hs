@@ -90,18 +90,18 @@ import Util.SignatoryLinkUtils
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m Response
-showAdminMainPage = onlySuperUser $ do
+showAdminMainPage = onlyAdmin $ do
   content <- adminMainPage
   renderFromBody TopEmpty kontrakcja content
 
 {- | Process view for finding a user in basic administration. If provided with userId string as param
 it allows to edit user details -}
 showAdminUsers :: Kontrakcja m => Maybe UserID -> m Response
-showAdminUsers Nothing = onlySuperUser $ do
+showAdminUsers Nothing = onlyAdmin $ do
       content <- adminUsersPage
       renderFromBody TopEmpty kontrakcja content
 
-showAdminUsers (Just userId) = onlySuperUser $ do
+showAdminUsers (Just userId) = onlyAdmin $ do
   muser <- runDBQuery $ GetUserByID userId
   case muser of
     Nothing -> mzero
@@ -111,13 +111,13 @@ showAdminUsers (Just userId) = onlySuperUser $ do
       renderFromBody TopEmpty kontrakcja content
 
 showAdminCompanies :: Kontrakcja m => m String
-showAdminCompanies = onlySuperUser $  adminCompaniesPage
+showAdminCompanies = onlyAdmin $  adminCompaniesPage
 
 showAdminCompany :: Kontrakcja m => CompanyID -> m String
-showAdminCompany companyid = onlySuperUser $ adminCompanyPage =<< (guardJustM . runDBQuery $ GetCompany companyid)
+showAdminCompany companyid = onlyAdmin $ adminCompanyPage =<< (guardJustM . runDBQuery $ GetCompany companyid)
 
 jsonCompanies :: Kontrakcja m => m JSValue
-jsonCompanies = onlySuperUser $ do
+jsonCompanies = onlyAdmin $ do
     params <- getListParamsNew
     allCompanies <- runDBQuery $ GetCompanies Nothing
     let companies = companiesSortSearchPage params allCompanies
@@ -176,12 +176,12 @@ companiesPageSize :: Int
 companiesPageSize = 100
 
 showAdminCompanyUsers :: Kontrakcja m => CompanyID -> m Response
-showAdminCompanyUsers cid = onlySuperUser $ do
+showAdminCompanyUsers cid = onlyAdmin $ do
   content <- adminCompanyUsersPage cid
   renderFromBody TopEmpty kontrakcja content
 
 showAdminUsersForSales :: Kontrakcja m => m String
-showAdminUsersForSales = onlySuperUser $ adminUsersPageForSales
+showAdminUsersForSales = onlyAdmin $ adminUsersPageForSales
 
 jsonUsersList ::Kontrakcja m => m JSValue
 jsonUsersList = do
@@ -294,7 +294,7 @@ getUsersAndStatsInv = do
         return (user,mcompany,docstats,invitestype)
 
 showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
-showAdminUserUsageStats userid = onlySuperUser $ do
+showAdminUserUsageStats userid = onlyAdmin $ do
   documents <- doc_query $ GetDocumentsByAuthor userid
   Just user <- runDBQuery $ GetUserByID userid
   mcompany <- getCompanyForUser user
@@ -303,7 +303,7 @@ showAdminUserUsageStats userid = onlySuperUser $ do
   renderFromBody TopEmpty kontrakcja content
 
 showAdminCompanyUsageStats :: Kontrakcja m => CompanyID -> m Response
-showAdminCompanyUsageStats companyid = onlySuperUser $ do
+showAdminCompanyUsageStats companyid = onlyAdmin $ do
   users <- runDBQuery $ GetCompanyAccounts companyid
   userdocs <- mapM (doc_query . GetDocumentsByAuthor . userid) users
   let documents = concat userdocs
@@ -314,14 +314,14 @@ showAdminCompanyUsageStats companyid = onlySuperUser $ do
 
 {- Shows table of all users-}
 showAllUsersTable :: Kontrakcja m => m Response
-showAllUsersTable = onlySuperUser $ do
+showAllUsersTable = onlyAdmin $ do
     users <- getUsersAndStats
     content <- allUsersTable users
     renderFromBody TopEmpty kontrakcja content
 
 {- | Handling user details change. It reads user info change -}
 handleUserChange :: Kontrakcja m => UserID -> m KontraLink
-handleUserChange uid = onlySuperUser $ do
+handleUserChange uid = onlyAdmin $ do
   _ <- getAsStrictBS "change"
   museraccounttype <- getFieldUTF "useraccounttype"
   olduser <- runDBOrFail $ dbQuery $ GetUserByID uid
@@ -374,7 +374,7 @@ handleUserChange uid = onlySuperUser $ do
   return $ LinkUserAdmin $ Just uid
 
 resaveDocsForUser :: Kontrakcja m => UserID -> m ()
-resaveDocsForUser uid = onlySuperUser $ do
+resaveDocsForUser uid = onlyAdmin $ do
   user <- runDBOrFail $ dbQuery $ GetUserByID uid
   userdocs <- doc_query $ GetDocumentsByUser user
   mapM_ (\doc -> doc_update $ AdminOnlySaveForUser (documentid doc) user) userdocs
@@ -382,7 +382,7 @@ resaveDocsForUser uid = onlySuperUser $ do
 
 {- | Handling company details change. It reads user info change -}
 handleCompanyChange :: Kontrakcja m => CompanyID -> m KontraLink
-handleCompanyChange companyid = onlySuperUser $ do
+handleCompanyChange companyid = onlyAdmin $ do
   _ <- getAsStrictBS "change"
   company <- runDBOrFail $ dbQuery $ GetCompany companyid
   companyInfoChange <- getCompanyInfoChange
@@ -390,7 +390,7 @@ handleCompanyChange companyid = onlySuperUser $ do
   return $ LinkCompanyAdmin $ Just companyid
 
 handleCreateUser :: Kontrakcja m => m KontraLink
-handleCreateUser = onlySuperUser $ do
+handleCreateUser = onlyAdmin $ do
     ctx <- getContext
     email' <- getAsStrictBS "email"
     let email = BSC.map toLower email'
@@ -405,7 +405,7 @@ handleCreateUser = onlySuperUser $ do
     return LoopBack
 
 handlePostAdminCompanyUsers :: Kontrakcja m => CompanyID -> m KontraLink
-handlePostAdminCompanyUsers companyid = onlySuperUser $ do
+handlePostAdminCompanyUsers companyid = onlyAdmin $ do
   privateinvite <- isFieldSet "privateinvite"
   if privateinvite
     then handlePrivateUserCompanyInvite companyid
@@ -413,7 +413,7 @@ handlePostAdminCompanyUsers companyid = onlySuperUser $ do
   return $ LinkCompanyUserAdmin companyid
 
 handlePrivateUserCompanyInvite :: Kontrakcja m => CompanyID -> m ()
-handlePrivateUserCompanyInvite companyid = onlySuperUser $ do
+handlePrivateUserCompanyInvite companyid = onlyAdmin $ do
   ctx <- getContext
   user <- guardJust $ ctxmaybeuser ctx
   email <- Email <$> getCriticalField asValidEmail "email"
@@ -428,7 +428,7 @@ handlePrivateUserCompanyInvite companyid = onlySuperUser $ do
   sendTakeoverPrivateUserMail user company existinguser
 
 handleCreateCompanyUser :: Kontrakcja m => CompanyID -> m ()
-handleCreateCompanyUser companyid = onlySuperUser $ do
+handleCreateCompanyUser companyid = onlyAdmin $ do
   ctx <- getContext
   email <- getCriticalField asValidEmail "email"
   fstname <- getCriticalField asValidName "fstname"
@@ -510,7 +510,7 @@ getUserInfoChange = do
 
 {- Create service-}
 handleCreateService :: Kontrakcja m => m KontraLink
-handleCreateService = onlySuperUser $ do
+handleCreateService = onlyAdmin $ do
     name <- guardJustM $ getFieldUTF "name"
     Log.debug $ "name: " ++ show name
     admin <- guardJustM $ liftMM  (runDBQuery . GetUserByEmail Nothing . Email) (getFieldUTF "admin")
@@ -529,7 +529,7 @@ handleCreateService = onlySuperUser $ do
 
 {- Services page-}
 showServicesPage :: Kontrakcja m => m Response
-showServicesPage = onlySuperUser $ do
+showServicesPage = onlyAdmin $ do
   conn <- getConnection
   services <- runDBQuery GetServices
   content <- servicesAdminPage conn services
@@ -728,7 +728,7 @@ fieldsFromStats _users documents = do
 
 handleStatistics :: Kontrakcja m => m Response
 handleStatistics =
-  onlySuperUser $ do
+  onlyAdmin $ do
     ctx <- getContext
     documents <- doc_query $ GetDocuments $ currentServiceID ctx
     users <- runDBQuery GetUsers
@@ -749,7 +749,7 @@ handleStatistics =
     So you should add a pair to the list to add a statistic.
 -}
 showFunctionalityStats :: Kontrakcja m => m Response
-showFunctionalityStats = onlySuperUser $ do
+showFunctionalityStats = onlyAdmin $ do
   ctx@Context{ ctxtime } <- getContext
   users <- runDBQuery GetUsers
   documents <- doc_query $ GetDocuments $ currentServiceID ctx
@@ -793,14 +793,14 @@ instance HasFunctionalityStats User where
   getStatDefinitions = []
 
 handleBackdoorQuery :: Kontrakcja m => String -> m Response
-handleBackdoorQuery email = onlySuperUser $ onlyBackdoorOpen $ do
+handleBackdoorQuery email = onlyAdmin $ onlyBackdoorOpen $ do
   minfo <- query $ GetBackdoorInfoByEmail (Email $ fromString email)
   let mailcontent = maybe "No email found" (toString . bdContent) minfo
   renderFromBody TopEmpty kontrakcja mailcontent
 
 -- This method can be used do reseal a document
 resealFile :: Kontrakcja m => DocumentID -> m KontraLink
-resealFile docid = onlySuperUser $ do
+resealFile docid = onlyAdmin $ do
   Log.debug $ "Trying to reseal document "++ show docid ++" | Only superadmin can do that"
   mdoc <- doc_query $ GetDocumentByDocumentID docid
   case mdoc of
@@ -815,7 +815,7 @@ resealFile docid = onlySuperUser $ do
         return LoopBack
 
 replaceMainFile :: Kontrakcja m => DocumentID -> m KontraLink
-replaceMainFile did = onlySuperUser $ do
+replaceMainFile did = onlyAdmin $ do
   Log.debug $ "Replaing main file | SUPER CRITICAL | If you see this check who did this ask who did this and why"
   doc <- guardJustM $ doc_query $ GetDocumentByDocumentID did
   input <- getDataFnM (lookInput "file")
@@ -832,10 +832,10 @@ replaceMainFile did = onlySuperUser $ do
 
 
 showDocuments ::  Kontrakcja m => m  String
-showDocuments = onlySuperUser $ adminDocuments
+showDocuments = onlyAdmin $ adminDocuments
 
 jsonDocuments :: Kontrakcja m => m JSValue
-jsonDocuments = onlySuperUser $ do
+jsonDocuments = onlyAdmin $ do
     srvs <- runDBQuery $ GetServices
     docs <- join <$> (sequence $ map (doc_query . GetDocuments) (Nothing:(map (Just . serviceid) srvs)))
     params <- getListParamsNew
@@ -898,7 +898,7 @@ documentsPageSize = 100
    Used by super users to inspect a particular document.
 -}
 daveDocument :: Kontrakcja m => DocumentID -> m  String
-daveDocument documentid = onlySuperUser $ do
+daveDocument documentid = onlyAdmin $ do
     document <- queryOrFail $ GetDocumentByDocumentID documentid
     renderTemplateFM  "daveDocument" $ do
         field "daveBody" $  inspectXML document
@@ -911,7 +911,7 @@ daveDocument documentid = onlySuperUser $ do
    Used by super users to inspect a particular user.
 -}
 daveUser :: Kontrakcja m => UserID ->  m String
-daveUser userid = onlySuperUser $ do
+daveUser userid = onlyAdmin $ do
     user <- runDBOrFail $ dbQuery $ GetUserByID userid
     return $ inspectXML user
 
@@ -919,7 +919,7 @@ daveUser userid = onlySuperUser $ do
     Used by super users to inspect a company in xml.
 -}
 daveCompany :: Kontrakcja m => CompanyID -> m String
-daveCompany companyid = onlySuperUser $ do
+daveCompany companyid = onlyAdmin $ do
   company <- runDBOrFail $ dbQuery $ GetCompany companyid
   return $ inspectXML company
 

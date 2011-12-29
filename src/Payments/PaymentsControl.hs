@@ -23,14 +23,14 @@ import Payments.PaymentsUtils
 
 {- | View of payment models (not editable) -}
 handlePaymentsModelForViewView :: Kontrakcja m => m Response
-handlePaymentsModelForViewView = onlySuperUser $ do
+handlePaymentsModelForViewView = onlyAdmin $ do
     models <- query $ GetPaymentModels
     content <- adminView models
     renderFromBody TopEmpty kontrakcja content
 
 {- | View of payment models (editable) -}
 handlePaymentsModelForEditView :: Kontrakcja m => m Response
-handlePaymentsModelForEditView =  onlySuperUser $ do
+handlePaymentsModelForEditView =  onlyAdmin $ do
     models <- query $ GetPaymentModels
     content <- adminViewForSuperuser models
     renderFromBody TopEmpty kontrakcja content
@@ -42,7 +42,7 @@ handlePaymentsModelForEditView =  onlySuperUser $ do
 handleAccountModelsChange :: Kontrakcja m => m KontraLink
 handleAccountModelsChange= do
                             ctx<- getContext
-                            if isSuperUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)
+                            if isAdminUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)
                              then do
                                   mapM_ getAndApplyAccountModelChange (allValues::[PaymentAccountType])
                                   return $ LinkPaymentsAdmin

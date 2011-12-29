@@ -1100,7 +1100,7 @@ withAuthorisedViewer docid action = do
  -}
 handleFileGet :: Kontrakcja m => FileID -> String -> m (Either KontraLink Response)
 handleFileGet fileid' _title = do
-  withUserGet $ onlySuperUser $ do
+  withUserGet $ onlyAdmin $ do
    ctx <- getContext
    contents <- liftIO $ getFileIDContents ctx fileid'
 
@@ -1925,7 +1925,7 @@ isBroken :: Document -> Bool
 isBroken doc = isClosed doc && (not $ Data.List.null $ documentfiles doc)  && (Data.List.null $ documentsealedfiles doc)
 
 handleFixDocument :: Kontrakcja m => DocumentID -> m KontraLink
-handleFixDocument docid = onlySuperUser $ do
+handleFixDocument docid = onlyAdmin $ do
     ctx <- getContext
     mdoc <- doc_query $ GetDocumentByDocumentID docid
     case (mdoc) of
@@ -1937,7 +1937,7 @@ handleFixDocument docid = onlySuperUser $ do
                     else return LoopBack
 
 showDocumentsToFix :: Kontrakcja m => m String
-showDocumentsToFix = onlySuperUser $ do
+showDocumentsToFix = onlyAdmin $ do
     docs <- doc_query $ GetDocuments Nothing
     documentsToFixView $ filter isBroken docs
 
@@ -2048,7 +2048,7 @@ jsonDocumentGetterWithPermissionCheck did = do
 
 
 handleInvariantViolations :: Kontrakcja m => m Response
-handleInvariantViolations = onlySuperUser $ do
+handleInvariantViolations = onlyAdmin $ do
   Context{ ctxtime } <- getContext
   docs <- doc_query $ GetDocuments Nothing
   let probs = listInvariantProblems ctxtime docs
@@ -2090,7 +2090,7 @@ handleCSVLandpage c = do
 
 -- for upsales bug
 handleUpsalesDeleted :: Kontrakcja m => m Response
-handleUpsalesDeleted = onlySuperUser $ do
+handleUpsalesDeleted = onlyAdmin $ do
   docs <- doc_query $ GetDocuments $ Just $ ServiceID $ BS.fromString "upsales"
   let deleteddocs = [[show $ documentid d, showDateYMD $ documentctime d]
                     | d <- docs

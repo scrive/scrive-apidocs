@@ -67,7 +67,7 @@ handleCompanyAccounts = withCompanyAdmin $ \(_user, company) -> do
     Gets the ajax data for the company accounts list.
 -}
 handleCompanyAccountsForAdminOnly :: Kontrakcja m => CompanyID -> m JSValue
-handleCompanyAccountsForAdminOnly cid = onlySuperUser $ do
+handleCompanyAccountsForAdminOnly cid = onlyAdmin $ do
   handleCompanyAccountsInternal cid
 
 {- |
