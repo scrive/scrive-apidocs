@@ -165,52 +165,6 @@ admincompanies=
 </script>
 ###
 adminUsersForSales=
-   <div class='create-user'>
-    <table> 
-     <tbody>
-      <tr>
-      <td style="width: 300px">
-         <h1> Create user -----></h1> <BR/>
-         If someone will make me I'll do it nicer. Mariusz
-      </td>
-      <td>
-        <form method="post" action="/createuser">
-        <table style="width:500px">
-          <tr>
-            <td>First name:</td>
-            <td><input type="text" name="fstname"/></td>
-          </tr>
-          <tr>
-            <td>Second name:</td>
-            <td><input type="text" name="sndname"/></td>
-          </tr>
-          <tr>
-            <td>Email address:</td>
-            <td><input type="email" name="email"/></td>
-          </tr>
-          <tr>
-            <td>Region:</td>
-            <td><select name="region">
-              <option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>
-              <option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>
-                </select>
-            </td>
-          </tr>
-         <tr>
-            <td>Header:</td>
-            <td> <input type="button" class="editer" value="Default"/>
-                 <span class="editable" name="custommessage" style="display:none">$mailNewAccountCreatedByAdminContentHeader()$</span>
-
-           </td>
-          </tr>
-        </table><br/>
-        <input type="submit" value="Create user" />
-      </form>
-    </td>
-    </tr>
-   </tbody>
-   </table>
-   </div>
    <div id="tab-viewer">
          <div class="tab-header">
           <strong>
@@ -220,7 +174,75 @@ adminUsersForSales=
           </div>
        <div id="users-viewer"></div>
     </div>
+    <div id="message" style="display: none">$mailNewAccountCreatedByAdminContentHeader()$</div>
     <script>
+    var createUserBtn = Button.init({
+        color: "green",
+        size: "tiny",
+        text: "Create user",
+        onClick: function() {
+            var body = jQuery("<div class='account-body'>");
+            body.append("<p>Create new user account</p>");
+            var table = jQuery("<table/>");
+
+            var tr1 = jQuery("<tr/>").append(jQuery("<td/>").text("First name:"));
+            var fstname = jQuery("<input type='text' name='fstname' autocomplete='off' />");
+            tr1.append(jQuery("<td/>").append(fstname));
+            table.append(tr1);
+
+            var tr2 = jQuery("<tr/>").append(jQuery("<td/>").text("Second name:"));
+            var sndname = jQuery("<input type='text' name='sndname' autocomplete='off' />");
+            tr2.append(jQuery("<td/>").append(sndname));
+            table.append(tr2);
+
+            var tr5 = jQuery("<tr/>").append(jQuery("<td/>").text("Email address:"));
+            var email = jQuery("<input type='text' name='email' autocomplete='off' />");
+            tr5.append(jQuery("<td/>").append(email));
+            table.append(tr5);
+
+            var tr6 = jQuery("<tr/>").append(jQuery("<td/>").text("Region:"));
+            var region = jQuery("<select name='region'>" 
+                                + '<option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>'
+                                + '<option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>'
+                                + "</select>");
+            tr6.append(jQuery("<td/>").append(region));
+            table.append(tr6);
+
+            var tr7 = jQuery("<tr/>").append(jQuery("<td/>").text("Header:"));
+            var btnHeader = jQuery('<input type="button" class="editer" value="Default"/>').click(function(){
+                prepareForEdit(jQuery(this).parents("div"), '300');
+                jQuery(this).hide();
+            });
+            var header = jQuery('<span class="editable" name="custommessage" style="display: none">'
+                                + jQuery('#message').html()
+                                + '</span>');
+
+            tr7.append(jQuery("<td/>").append(btnHeader).append(header));
+            table.append(tr7);
+
+            body.append(table);
+
+
+            Confirmation.popup({
+              onAccept : function() {
+                            new Submit({
+                                method: "POST",
+                                add : "true",
+                                url: "/createuser",
+                                fstname : fstname.val(),
+                                sndname : sndname.val(),
+                                email : email.val(),
+                                region : region.val(),
+                                custommessage : header.val(),
+                                }).send();
+                         },
+              title : "Create user",
+              acceptButtonText : "OK",
+              content  : body
+            });
+        }
+    });
+            
     var usersTable = KontraList().init({
         name : "Users Table",
         schema: new Schema({
@@ -237,7 +259,8 @@ adminUsersForSales=
                 new Cell({name: "Signed Docs", width:"100px", field:"signed_docs", special:"link"}),
                 new Cell({name: "Subaccounts", width:"100px", field:"subaccounts", special:"link"})
                 ]
-        })
+        }),
+        headerExtras: createUserBtn.input()
     });
 
     jQuery(function(){

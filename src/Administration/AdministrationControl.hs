@@ -47,12 +47,6 @@ import Happstack.State (query)
 import Misc
 import Kontra
 import Administration.AdministrationView
-#ifndef DOCUMENTS_IN_POSTGRES
-import Doc.DocControl (postDocumentChangeAction) -- required for 510 bug fix migration
-import Happstack.State (update) -- required for 510 bug fix migration
-import Doc.DocProcess
-import Util.SignatoryLinkUtils
-#endif
 import Doc.Transitory
 import Doc.DocStateData
 import Data.ByteString.UTF8 (fromString,toString)
