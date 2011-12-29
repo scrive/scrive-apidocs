@@ -29,11 +29,11 @@ offercancelledinfoheader=$_offercancelledinfoheader()$
 ###
 ordercancelledinfoheader=$_ordercancelledinfoheader()$
 ###
-contractcancelledinfotext=$authorfstname$ $authorsndname$ $_contractcancelledinfotext()$
+contractcancelledinfotext=$_contractcancelledinfotext()$
 ###
-offercancelledinfotext=$authorfstname$ $authorsndname$ $_offercancelledinfotext()$
+offercancelledinfotext=$_offercancelledinfotext()$
 ###
-ordercancelledinfotext=$authorfstname$ $authorsndname$ $_ordercancelledinfotext()$
+ordercancelledinfotext=$_ordercancelledinfotext()$
 ###
 contractsignedinfoheader=$_contractsignedinfoheader()$
 ###
