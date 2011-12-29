@@ -7,50 +7,48 @@ module API.MailAPI (
     ) where
 
 import MinutesTime
-import DB.Classes
 --import Doc.DocState
-import Company.Model
-import User.Model
+--import Doc.DocState
+--import User.Model
 import Kontra
 import Misc
 import qualified AppLogger as Log (jsonMailAPI, mailAPI, scrivebymailfailure)
-import qualified Doc.DocControl as DocControl
+--import qualified Doc.DocControl as DocControl
 --import Control.Monad.Reader
 --import InputValidation
 --import Control.Monad.Error
 --import Data.Functor
 import Control.Monad
 import Control.Monad.IO.Class
-import Data.List
-import Data.Maybe
+--import Happstack.Server hiding (simpleHTTP, host)
+--import Happstack.StaticRouting(Route, Path)
 import Control.Applicative
-import Happstack.Server hiding (simpleHTTP, host)
 --import Happstack.StaticRouting(Route, Path)
 --import Happstack.State (update)
 import Text.JSON
-import Text.JSON.String
-import Codec.MIME.Decode
-import qualified Codec.MIME.Parse as MIME
-import qualified Codec.MIME.Type as MIME
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as BSC
-import qualified Data.ByteString.Lazy as BSL
+--import Text.JSON.String
+--import Codec.MIME.Decode
+--import qualified Codec.MIME.Parse as MIME
+--import qualified Codec.MIME.Type as MIME
+--import qualified Data.ByteString as BS
+--import qualified Data.ByteString.Char8 as BSC
+--import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
-import Data.Either
+--import Data.Either
 import Doc.DocUtils
 import ScriveByMail.Control
 import Doc.Transitory
 --import ScriveByMail.View
 --import ScriveByMail.Parse
 
-import qualified Codec.Text.IConv as IConv
+--import qualified Codec.Text.IConv as IConv
 import InspectXMLInstances ()
 --import KontraLink
 --import API.API
 --import API.APICommons
-import Data.Char
 --import Mails.MailsData as MD
-import Data.String.Utils
+--import Mails.MailsData as MD
+--import Util.StringUtil
 --import Util.StringUtil
 --import Doc.DocViewMail
 --import Doc.DocProcess
