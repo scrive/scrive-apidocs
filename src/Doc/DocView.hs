@@ -297,10 +297,7 @@ documentJSON msl _crttime doc = do
                                                Nothing -> return Nothing
                                                Just f -> return $ Just (fid, f)
                                           | SignatoryAttachment { signatoryattachmentfile = Just fid } <- documentsignatoryattachments doc])
-    let isauthoradmin = maybe False and $ sequence
-          [ useriscompanyadmin <$> ctxmaybeuser ctx
-          , flip isAuthoredByCompany doc <$> (ctxmaybeuser ctx >>= usercompany)
-          ]
+    let isauthoradmin = maybe False (flip isAuthorAdmin document) (ctxmaybeuser ctx)
     fmap toJSObject $ propagateMonad  $
      [ ("title",return $ JSString $ toJSString $ BS.toString $ documenttitle doc),
        ("files", return $ JSArray $ jsonPack <$> fileJSON <$> files ),

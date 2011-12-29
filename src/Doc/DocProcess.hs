@@ -137,8 +137,7 @@ data DocProcessInfo =
   -- doctexts templates
   , processpendingauthornotsignedinfoheader :: String
   , processpendingauthornotsignedinfotext :: String
-  , processpendingauthorinfoheader :: String
-  , processpendingauthorinfotext :: String
+  , processpendinginfotext :: String
   , processcancelledinfoheader :: String
   , processcancelledinfotext :: String
   , processsignedinfoheader :: String
@@ -227,8 +226,7 @@ contractProcess =
   -- doctexts templates
   , processpendingauthornotsignedinfoheader = "contractpendingauthornotsignedinfoheader"
   , processpendingauthornotsignedinfotext = "contractpendingauthornotsignedinfotext"
-  , processpendingauthorinfoheader = "contractpendingauthorinfoheader"
-  , processpendingauthorinfotext = "contractpendingauthorinfotext"
+  , processpendinginfotext = "contractpendinginfotext"
   , processcancelledinfoheader = "contractcancelledinfoheader"
   , processcancelledinfotext = "contractcancelledinfotext"
   , processsignedinfoheader = "contractsignedinfoheader"
@@ -317,8 +315,7 @@ offerProcess =
   -- doctexts templates
   , processpendingauthornotsignedinfoheader = "offerpendingauthornotsignedinfoheader"
   , processpendingauthornotsignedinfotext = "offerpendingauthornotsignedinfotext"
-  , processpendingauthorinfoheader = "offerpendingauthorinfoheader"
-  , processpendingauthorinfotext = "offerpendingauthorinfotext"
+  , processpendinginfotext = "offerpendinginfotext"
   , processcancelledinfoheader = "offercancelledinfoheader"
   , processcancelledinfotext = "offercancelledinfotext"
   , processsignedinfoheader = "offersignedinfoheader"
@@ -407,8 +404,7 @@ orderProcess =
   -- doctexts templates
   , processpendingauthornotsignedinfoheader = "orderpendingauthornotsignedinfoheader"
   , processpendingauthornotsignedinfotext = "orderpendingauthornotsignedinfotext"
-  , processpendingauthorinfoheader = "orderpendingauthorinfoheader"
-  , processpendingauthorinfotext = "orderpendingauthorinfotext"
+  , processpendinginfotext = "orderpendinginfotext"
   , processcancelledinfoheader = "ordercancelledinfoheader"
   , processcancelledinfotext = "ordercancelledinfotext"
   , processsignedinfoheader = "ordersignedinfoheader"

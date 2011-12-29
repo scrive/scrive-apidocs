@@ -17,21 +17,11 @@ offerpendingauthornotsignedinfotext=
 orderpendingauthornotsignedinfotext=
   $_orderpendingauthornotsignedinfotext()$
 ###
-contractpendingauthorinfoheader=$_contractpendingauthorinfoheader()$
+contractpendinginfotext=$_contractpendinginfotext()$
 ###
-offerpendingauthorinfoheader=$_offerpendingauthorinfoheader()$
+offerpendinginfotext=$_offerpendinginfotext()$
 ###
-orderpendingauthorinfoheader=$_orderpendingauthorinfoheader()$
-###
-contractpendingauthorinfotext=$if(iamauthor)$
-                              $_contractpendingauthorinfotextIfiamauthor()$
-                           $else$
-                           $_contractpendingauthorinfotextIfElse()$
-                           $endif$
-###
-offerpendingauthorinfotext=$_offerpendingauthorinfotext()$
-###
-orderpendingauthorinfotext=$_orderpendingauthorinfotext()$
+orderpendinginfotext=$_orderpendinginfotext()$
 ###
 contractcancelledinfoheader=$_contractcancelledinfoheader()$
 ###
@@ -70,7 +60,7 @@ orderstatusinfotext=$_orderstatusinfotext()$
 ##########
 documentInfoText=
                 $if(pending)$
-                     $if(notsignedbyme)$    
+                     $if(notsignedbyme)$
                         $if(iamauthor)$
                             <span class="header">
                                  $_documentInfoTextPendingNotsignedbymeImauthorHead()$
@@ -96,10 +86,13 @@ documentInfoText=
                         </span>
                      $else$
                          <span class="header">
-                           $process.pendingauthorinfoheader$
+                           $_documentpendinginfoheader()$
                         </span><br/>
                         <span class="text">
-                           $process.pendingauthorinfotext$
+                           $process.pendinginfotext$
+                           $if(isviewonly)$
+                             $_documentpendingviewonly()$
+                           $endif$
                         </span>
                      $endif$
 
@@ -111,15 +104,15 @@ documentInfoText=
                      <span class="text">
                         $process.cancelledinfotext$
                      </span>
- 
+
                   $elseif(datamismatch)$
 
-                     $if(notsignedbyme)$    
+                     $if(notsignedbyme)$
                         <span class="header">
                              $_documentInfoTextDatamismatchNotsignedbymeImauthorHead()$
                         </span><br/>
                         <span class="text">
-                        
+
                                 $_documentInfoTextDatamismatchNotsignedbymeImauthorBody()$
 
                         </span>
@@ -143,12 +136,12 @@ documentInfoText=
                               $_documentInfoTextDatamismatchElseImauthorBody()$
 
                         </span>
- 
+
                      $endif$
- 
+
                  $elseif(timedout)$
 
-                     $if(notsignedbyme)$    
+                     $if(notsignedbyme)$
                         <span class="header">
                              $_documentInfoTextTimedoutNotsignedbymeImauthorHead()$
                         </span><br/>
@@ -177,7 +170,7 @@ documentInfoText=
                   $elseif(rejected)$
 
 
-                     $if(notsignedbyme)$    
+                     $if(notsignedbyme)$
                         <span class="header">
                              $_documentInfoTextRejectedNotsignedbymeImauthorHead()$
                         </span><br/>
@@ -212,7 +205,7 @@ documentInfoText=
                         </span>
                  $elseif(awaitingauthor)$
 
-                     $if(notsignedbyme)$    
+                     $if(notsignedbyme)$
                             <span class="header">
                                  $_documentInfoTextNotsignedbymeAwaitingauthorHead()$
                             </span><br/>
@@ -242,14 +235,14 @@ documentInfoText=
                         <span class="text">
                               $_documentInfoTextPreparationBody()$
                         </span>
-                  $else$ 
+                  $else$
                         <span class="header">
                              $_documentInfoTextElseHead()$
                         </span><br/>
                         <span class="text">
                         $_documentInfoTextElseBody()$<a href="mailto:support@scrive.com">$_documentInfoTextElseBodyMailSupport()$</a>
                         </span>
-                  
+
                   $endif$
-######                  
-                
+######
+
