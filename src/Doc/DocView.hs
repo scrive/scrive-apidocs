@@ -297,7 +297,7 @@ documentJSON msl _crttime doc = do
                                                Nothing -> return Nothing
                                                Just f -> return $ Just (fid, f)
                                           | SignatoryAttachment { signatoryattachmentfile = Just fid } <- documentsignatoryattachments doc])
-    let isauthoradmin = maybe False (flip isAuthorAdmin document) (ctxmaybeuser ctx)
+    let isauthoradmin = maybe False (flip isAuthorAdmin doc) (ctxmaybeuser ctx)
     fmap toJSObject $ propagateMonad  $
      [ ("title",return $ JSString $ toJSString $ BS.toString $ documenttitle doc),
        ("files", return $ JSArray $ jsonPack <$> fileJSON <$> files ),
@@ -1011,13 +1011,13 @@ documentInfoText ctx document siglnk =
       documentAuthorInfo document
       fieldFL "signatories" $ map (signatoryLinkFields ctx document Nothing) $ documentsignatorylinks document
       signedByMeFields document siglnk
+      field "isviewonly" $ not $ isAuthor siglnk || maybe False (flip isAuthorAdmin document) (ctxmaybeuser ctx)
     getProcessText = renderTextForProcess document
     getProcessTextWithFields f = renderTemplateForProcess document f mainFields
     processFields = do
       fieldM "pendingauthornotsignedinfoheader" $ getProcessText processpendingauthornotsignedinfoheader
       fieldM "pendingauthornotsignedinfotext" $ getProcessText processpendingauthornotsignedinfotext
-      fieldM "pendingauthorinfoheader" $ getProcessText processpendingauthorinfoheader
-      fieldM "pendingauthorinfotext" $ getProcessTextWithFields processpendingauthorinfotext
+      fieldM "pendinginfotext" $ getProcessTextWithFields processpendinginfotext
       fieldM "cancelledinfoheader" $ getProcessText processcancelledinfoheader
       fieldM "cancelledinfotext" $ getProcessTextWithFields processcancelledinfotext
       fieldM "signedinfoheader" $ getProcessText processsignedinfoheader
