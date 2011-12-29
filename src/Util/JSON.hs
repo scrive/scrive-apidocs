@@ -8,6 +8,7 @@ module Util.JSON (
     ,  JSONContainer(..)
     -- | Interface for structures that can bve read from JSON
     ,  FromJSON(..) 
+    , eitherJSValue
     -- | Diggers - Asking local envirement about JSON object
     , fromJSONLocal
     , fromJSONLocalMap 
@@ -103,6 +104,8 @@ fromJSONFieldBase64 s =  liftM dc (fromJSONField s)
                             Just (Right r) -> Just r
                             _ -> Nothing
     
+eitherJSValue :: FromJSON a => JSValue -> Either String a
+eitherJSValue j = maybe (Left $ "Could not convert value : " ++ show j) Right $ fromJSValue j
 
 instance FromJSON JSValue where
     fromJSValue = Just
