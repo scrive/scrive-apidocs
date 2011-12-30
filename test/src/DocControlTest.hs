@@ -3,7 +3,9 @@ module DocControlTest(
 ) where
 
 import Control.Applicative
+import Control.Monad.State
 import Happstack.Server
+import Happstack.State (query)
 import Test.HUnit (Assertion)
 import Test.Framework
 import Test.Framework.Providers.HUnit
@@ -11,16 +13,18 @@ import StateHelper
 import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
+import MinutesTime
 import Misc
 import Context
+import ActionSchedulerState
 import Database.HDBC.PostgreSQL
+import DB.Classes
 import Doc.Transitory
 import Doc.DocStateData
 import Doc.DocControl
 import Company.Model
-import User.Model
 import KontraLink
-import DB.Classes
+import User.Model
 
 
 docControlTests :: Connection -> Test
@@ -31,6 +35,7 @@ docControlTests conn =  testGroup "Templates"
                              , testCase "Uploading file as contract makes doc" $ testUploadingFileAsContract conn
                              , testCase "Uploading file as offer makes doc" $ testUploadingFileAsOffer conn
                              , testCase "Uploading file as order makes doc" $ testUploadingFileAsOrder conn
+                             , testCase "Sending document sends invites" $ testSendingDocumentSendsInvites conn
                            ]
 
 {-
@@ -91,6 +96,42 @@ uploadDocAsNewUser conn doctype = do
   (link, _ctx') <- runTestKontra req ctx $ handleIssueNewDocument
   return (user, link)
 
+testSendingDocumentSendsInvites :: Connection -> Assertion
+testSendingDocumentSendsInvites conn = withTestEnvironment conn $ do
+  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  globaltemplates <- readGlobalTemplates
+  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+
+  doc <- addRandomDocumentWithAuthorAndCondition user (\d -> case documenttype d of
+                                                               Signable _ -> True
+                                                               _ -> False)
+
+  req <- mkRequest POST [ ("final", inText "True")
+                        -- this stuff is for updateDocument function, which I believe
+                        -- is being deleted.
+                        , ("docname", inText "Test Doc")
+                        , ("allowedsignaturetypes", inText "Email")
+                        , ("docfunctionality", inText "BasicFunctionality")
+                        , ("authorrole", inText "secretary")
+                        , ("signatoryrole", inText "signatory")
+                        , ("sigid", inText "EDF92AA6-3595-451D-B5D1-04C823A616FF")
+                        , ("signatoryfstname", inText "Fred")
+                        , ("signatorysndname", inText "Frog")
+                        , ("signatorycompany", inText "")
+                        , ("signatorypersonalnumber", inText "")
+                        , ("signatorycompanynumber", inText "")
+                        , ("signatoriessignorder", inText "1")
+                        , ("signatoryemail", inText "fred@frog.com")
+                        , ("signatoryrole", inText "signatory")
+                        ]
+  (_link, _ctx') <- runTestKontra req ctx $ handleIssueShowPost (documentid doc)
+
+  Just sentdoc <- doc_query' $ GetDocumentByDocumentID (documentid doc)
+  assertEqual "In pending state" Pending (documentstatus sentdoc)
+  emails <- getEmailActions
+  assertBool "Emails sent" (length emails > 0)
+
 testDocumentFromTemplate :: Connection -> Assertion
 testDocumentFromTemplate conn =  withTestEnvironment conn $ do
     (Just user) <- addNewUser "aaa" "bbb" "xxx@xxx.pl"
@@ -123,3 +164,16 @@ testDocumentFromTemplateShared conn = withTestEnvironment conn $ do
     _ <- runTestKontra req ctx $ handleCreateFromTemplate
     docs2 <- randomQuery $ GetDocumentsByUser user
     assertBool "No new document" (length docs2 == 1+ length docs1)
+
+getEmailActions :: MonadIO m => m [Action]
+getEmailActions = do
+  now <- getMinutesTime
+  let expirytime = 1 `minutesAfter` now
+  allactions <- query $ GetExpiredActions EmailSendoutAction expirytime
+  return $ filter isEmailAction allactions
+
+isEmailAction :: Action -> Bool
+isEmailAction action =
+  case actionType action of
+    (EmailSendout _) -> True
+    _ -> False
