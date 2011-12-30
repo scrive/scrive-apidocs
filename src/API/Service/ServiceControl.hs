@@ -46,7 +46,7 @@ handleChangeServiceUI sid = do
     mservice <- runDBQuery $ GetService sid
     clear <- isFieldSet "clear"
     case (mservice,sameUser (ctxmaybeuser ctx) (serviceadmin . servicesettings <$> mservice)
-                   || isAdminUser (ctxadminaccounts ctx) (ctxmaybeuser ctx),clear) of
+                   || isAdmin ctx,clear) of
         (Just service,True,False) -> do
            mailfooter <- getFieldUTF "mailfooter"
            buttonBody <- fmap Binary <$> getFileField "button-body"
@@ -90,7 +90,7 @@ handleChangeServicePassword sid = do
     ctx <- getContext
     mservice <- runDBQuery $ GetService sid
     case (mservice,sameUser (ctxmaybeuser ctx) (serviceadmin . servicesettings <$> mservice)
-                   || isAdminUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) of
+                   || isAdmin ctx) of
      (Just service,True) -> do
             password <- getFieldUTFWithDefault BS.empty "oldpassword"
             newpassword1 <- getFieldUTFWithDefault BS.empty "newpassword1"
@@ -113,7 +113,7 @@ handleChangeServicePasswordAdminOnly sid passwordString = do
     let password = BS.fromString passwordString
     ctx <- getContext
     mservice <- runDBQuery $ GetService sid
-    case (mservice, isAdminUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) of
+    case (mservice, isAdmin ctx) of
      (Just service,True) -> do
        pwd <- liftIO $ createPassword password
        _ <- runDBUpdate $ UpdateServiceSettings sid $ (servicesettings service) {servicepassword = Just pwd}
@@ -125,7 +125,7 @@ handleChangeServiceSettings :: Kontrakcja m => ServiceID -> m KontraLink
 handleChangeServiceSettings sid = do
     ctx <- getContext
     mservice <- runDBQuery $ GetService sid
-    case (mservice, isAdminUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) of
+    case (mservice, isAdmin ctx) of
      (Just service,True) -> do
             location <- getFieldUTF "location"
             admin <- liftMM (runDBQuery . GetUserByEmail Nothing) (fmap Email <$> getFieldUTF "admin")
@@ -150,8 +150,8 @@ handleShowService sid = do
     mservice <- runDBQuery $ GetService sid
     if ((isJust mservice)
         && (sameUser (ctxmaybeuser ctx) (serviceadmin . servicesettings <$> mservice)
-            || isAdminUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)))
-       then Right <$> serviceAdminPage conn (isAdminUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) (fromJust mservice)
+            || isAdmin ctx))
+       then Right <$> serviceAdminPage conn (isAdmin ctx) (fromJust mservice)
        else do
               linkmain <- getHomeOrUploadLink
               return $ Left linkmain
@@ -159,7 +159,7 @@ handleShowService sid = do
 handleShowServiceList :: Kontrakcja m => m String
 handleShowServiceList = do
     ctx <- getContext
-    case (ctxmaybeuser ctx, isAdminUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)) of
+    case (ctxmaybeuser ctx, isAdmin ctx) of
          (Just user, False) -> do
              srvs <- runDBQuery $ GetServicesForAdmin $ userid user
              servicesListPage srvs
