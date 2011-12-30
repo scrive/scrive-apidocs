@@ -36,6 +36,7 @@ docControlTests conn =  testGroup "Templates"
                              , testCase "Uploading file as offer makes doc" $ testUploadingFileAsOffer conn
                              , testCase "Uploading file as order makes doc" $ testUploadingFileAsOrder conn
                              , testCase "Sending document sends invites" $ testSendingDocumentSendsInvites conn
+                             , testCase "Signing document from design view sends invites" $ testSigningDocumentFromDesignViewSendsInvites conn
                            ]
 
 {-
@@ -103,9 +104,10 @@ testSendingDocumentSendsInvites conn = withTestEnvironment conn $ do
   ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
-  doc <- addRandomDocumentWithAuthorAndCondition user (\d -> case documenttype d of
-                                                               Signable _ -> True
-                                                               _ -> False)
+  doc <- addRandomDocumentWithAuthorAndCondition user (\d -> documentstatus d == Preparation
+                                                               && case documenttype d of
+                                                                    Signable _ -> True
+                                                                    _ -> False)
 
   req <- mkRequest POST [ ("final", inText "True")
                         -- this stuff is for updateDocument function, which I believe
@@ -114,6 +116,43 @@ testSendingDocumentSendsInvites conn = withTestEnvironment conn $ do
                         , ("allowedsignaturetypes", inText "Email")
                         , ("docfunctionality", inText "BasicFunctionality")
                         , ("authorrole", inText "secretary")
+                        , ("signatoryrole", inText "signatory")
+                        , ("sigid", inText "EDF92AA6-3595-451D-B5D1-04C823A616FF")
+                        , ("signatoryfstname", inText "Fred")
+                        , ("signatorysndname", inText "Frog")
+                        , ("signatorycompany", inText "")
+                        , ("signatorypersonalnumber", inText "")
+                        , ("signatorycompanynumber", inText "")
+                        , ("signatoriessignorder", inText "1")
+                        , ("signatoryemail", inText "fred@frog.com")
+                        , ("signatoryrole", inText "signatory")
+                        ]
+  (_link, _ctx') <- runTestKontra req ctx $ handleIssueShowPost (documentid doc)
+
+  Just sentdoc <- doc_query' $ GetDocumentByDocumentID (documentid doc)
+  assertEqual "In pending state" Pending (documentstatus sentdoc)
+  emails <- getEmailActions
+  assertBool "Emails sent" (length emails > 0)
+
+testSigningDocumentFromDesignViewSendsInvites :: Connection -> Assertion
+testSigningDocumentFromDesignViewSendsInvites conn = withTestEnvironment conn $ do
+  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  globaltemplates <- readGlobalTemplates
+  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+
+  doc <- addRandomDocumentWithAuthorAndCondition user (\d -> documentstatus d == Preparation
+                                                               && case documenttype d of
+                                                                    Signable Contract -> True
+                                                                    _ -> False)
+
+  req <- mkRequest POST [ ("final", inText "sign")
+                        -- this stuff is for updateDocument function, which I believe
+                        -- is being deleted.
+                        , ("docname", inText "Test Doc")
+                        , ("allowedsignaturetypes", inText "Email")
+                        , ("docfunctionality", inText "BasicFunctionality")
+                        , ("authorrole", inText "signatory")
                         , ("signatoryrole", inText "signatory")
                         , ("sigid", inText "EDF92AA6-3595-451D-B5D1-04C823A616FF")
                         , ("signatoryfstname", inText "Fred")
