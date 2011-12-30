@@ -11,7 +11,7 @@ import MinutesTime
 --import Doc.DocState
 --import User.Model
 import Kontra
-import Misc
+--import Misc
 import qualified AppLogger as Log (jsonMailAPI, mailAPI, scrivebymailfailure)
 --import qualified Doc.DocControl as DocControl
 --import Control.Monad.Reader
@@ -25,7 +25,7 @@ import Control.Monad.IO.Class
 import Control.Applicative
 --import Happstack.StaticRouting(Route, Path)
 --import Happstack.State (update)
-import Text.JSON
+--import Text.JSON
 --import Text.JSON.String
 --import Codec.MIME.Decode
 --import qualified Codec.MIME.Parse as MIME
@@ -33,7 +33,7 @@ import Text.JSON
 --import qualified Data.ByteString as BS
 --import qualified Data.ByteString.Char8 as BSC
 --import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.UTF8 as BS
+--import qualified Data.ByteString.UTF8 as BS
 --import Data.Either
 import Doc.DocUtils
 import ScriveByMail.Control
@@ -52,7 +52,7 @@ import InspectXMLInstances ()
 --import Util.StringUtil
 --import Doc.DocViewMail
 --import Doc.DocProcess
-import Doc.DocStateData
+--import Doc.DocStateData
 --import Doc.Model
 --import Doc.DocState
 
@@ -84,10 +84,8 @@ handleMailAPI = do
                      (MIME.mimeType tp == MIME.Application "octet-stream" &&
                       maybe False (isSuffixOf ".pdf" . map toLower) (lookup "name" (MIME.mimeParams tp)))
       isPlain (tp,_) = MIME.mimeType tp == MIME.Text "plain"
-  
       pdfs = filter isPDF allParts
       plains = filter isPlain allParts
-  
       from = fromMaybe "" $ lookup "from" (MIME.mime_val_headers mime)
       to   = fromMaybe "" $ lookup "to"   (MIME.mime_val_headers mime)
   

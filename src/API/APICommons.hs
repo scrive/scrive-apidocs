@@ -32,7 +32,6 @@ module API.APICommons (
           , api_file
           , toSignatoryRoles
           , emptySignatoryTMP
-          , rolesFromRelation
         ) where
 
 
