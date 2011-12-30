@@ -120,8 +120,8 @@ sendChangeToExistingEmailInternalWarningMail user newemail = do
   Log.security securitymsg
   scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
       to = [MailAddress { fullname = BS.fromString "info@skrivapa.se", email = BS.fromString "info@skrivapa.se" }]
-    , title = BS.fromString "Request to Change Email to Existing Account"
-    , content = BS.fromString content
+    , title = "Request to Change Email to Existing Account"
+    , content = content
     }
 
 sendRequestChangeEmailMail :: Kontrakcja m => User -> Email -> m ()
@@ -588,8 +588,8 @@ handleQuestion = do
                         ++ "message: " ++ fromMaybe "" message
              scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
                    to = [MailAddress { fullname = BS.fromString "info@skrivapa.se", email = BS.fromString "info@skrivapa.se" }]
-                 , title = BS.fromString $ "Question"
-                 , content = BS.fromString $ content
+                 , title = "Question"
+                 , content = content
              }
              addFlashM flashMessageThanksForTheQuestion
              return LoopBack
@@ -612,8 +612,8 @@ handlePhoneCallRequest = do
                     ++ "&lt;" ++ (codeFromLang $ getLang user) ++ "&gt;.</p>"
       scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
             to = [MailAddress { fullname = BS.fromString "info@skrivapa.se", email = BS.fromString "info@skrivapa.se" }]
-          , title = BS.fromString $ "Phone Call Request"
-          , content = BS.fromString $ content
+          , title = "Phone Call Request"
+          , content = content
       }
       _ <- runDBUpdate $ SetUserInfo (userid user) $ (userinfo user){
               userphone = phone

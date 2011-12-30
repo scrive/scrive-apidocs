@@ -312,8 +312,8 @@ sendTakeoverCompanyInternalWarningMail inviter company user = do
                 ++ " has been emailed about the problem and advised to contact us if they want to move accounts."
   scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
         to = [MailAddress { fullname = BS.fromString "info@skrivapa.se", email = BS.fromString "info@skrivapa.se" }]
-      , title = BS.fromString "Attempted Company Account Takeover"
-      , content = BS.fromString content
+      , title = "Attempted Company Account Takeover"
+      , content = content
   }
 
 {- |

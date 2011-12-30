@@ -136,9 +136,9 @@ testUserMails conn mailTo = withTestEnvironment conn $ do
 -- MAIL TESTING UTILS
 validMail :: String -> Mail -> DB ()
 validMail name m = do
-    let c = BS.toString $ content m
+    let c = content m
     let exml = xmlParse' name c
-    case (any isAlphaNum $ BS.toString $ title m) of
+    case (any isAlphaNum $ title m) of
          True -> assertSuccess
          False -> assertFailure ("Empty title of mail " ++ name)
     case exml of

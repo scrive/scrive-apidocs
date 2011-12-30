@@ -26,9 +26,9 @@ data MailAddress = MailAddress
 -- as SkrivaPa admin (fromMails Config).
 data Mail = Mail
     { to          :: [MailAddress]
-    , title       :: BS.ByteString
-    , content     :: BS.ByteString
-    , attachments :: [(BS.ByteString, BS.ByteString)] -- list of attachments (name,content)
+    , title       :: String
+    , content     :: String
+    , attachments :: [(String, BS.ByteString)] -- list of attachments (name,content)
     , from        :: Maybe ServiceID
     , mailInfo    :: MailInfo
     } deriving (Eq, Ord, Show, Typeable)

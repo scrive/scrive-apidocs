@@ -202,8 +202,8 @@ mailDocumentProblemsCheck :: String -> ActionScheduler ()
 mailDocumentProblemsCheck msg = do
   sd <- ask
   scheduleEmailSendout (sdMailsConfig sd) $ Mail { to = zipWith MailAddress documentProblemsCheckEmails documentProblemsCheckEmails
-                                                  , title = BS.fromString $ "Document problems report " ++ (hostpart $ sdAppConf sd)
-                                                  , content = BS.fromString msg
+                                                  , title = "Document problems report " ++ (hostpart $ sdAppConf sd)
+                                                  , content = msg
                                                   , attachments = []
                                                   , from = Nothing
                                                   , mailInfo = None
@@ -235,8 +235,8 @@ mailArchiveProblemsCheck :: String -> ActionScheduler ()
 mailArchiveProblemsCheck msg = do
   sd <- ask
   scheduleEmailSendout (sdMailsConfig sd) $ Mail { to = zipWith MailAddress archiveProblemsCheckEmails archiveProblemsCheckEmails
-                                                  , title = BS.fromString $ "Archive problems report " ++ (hostpart $ sdAppConf sd)
-                                                  , content = BS.fromString msg
+                                                  , title = "Archive problems report " ++ (hostpart $ sdAppConf sd)
+                                                  , content = msg
                                                   , attachments = []
                                                   , from = Nothing
                                                   , mailInfo = None

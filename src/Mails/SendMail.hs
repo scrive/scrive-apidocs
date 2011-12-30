@@ -14,7 +14,6 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Data.List
 import Text.JSON.Fields
-import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BSU
 import qualified Text.JSON as J
 
@@ -49,7 +48,7 @@ scheduleEmailSendout' MailsConfig{..} Mail{..} = do
   xsmtpapi <- liftIO $ json $ field "unique_args" $ do
     field "mailinfo" $ show mailInfo
     field "id" $ show mid
-  _ <- dbUpdate $ AddContentToEmail mid (BSU.toString title) (wrapHTML content) (map toAttachment attachments) (J.encode xsmtpapi)
+  _ <- dbUpdate $ AddContentToEmail mid title (wrapHTML content) (map toAttachment attachments) (J.encode xsmtpapi)
   return ()
   where
     toAddress MailAddress{..} = Address {
@@ -57,18 +56,18 @@ scheduleEmailSendout' MailsConfig{..} Mail{..} = do
       , addrEmail = BSU.toString email
     }
     toAttachment (name, cont) = M.Attachment {
-        attName = BSU.toString name
+        attName = name
       , attContent = cont
     }
 
-wrapHTML :: BS.ByteString -> String
+wrapHTML :: String -> String
 wrapHTML body = concat [
     "<html>"
   , "<head>"
   , "<meta http-equiv='content-type' content='text/html; charset=utf-8'/>"
   , "</head>"
   , "<body style='background-color: #f5f5f5;'>"
-  , BSU.toString body
+  , body
   , "</body>"
   , "</html>"
   ]
@@ -76,8 +75,8 @@ wrapHTML body = concat [
 emptyMail :: Mail
 emptyMail = Mail
     { to             = []
-    , title          = BS.empty
-    , content        = BS.empty
+    , title          = []
+    , content        = []
     , attachments    = []
     , from           = Nothing
     , mailInfo       = None

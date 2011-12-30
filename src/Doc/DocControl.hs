@@ -394,7 +394,7 @@ sendAwaitingEmail ctx document author = do
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress authorsiglink]
                                                   , from = documentservice document  }
 
-makeMailAttachments :: Context -> Document -> IO [(BS.ByteString,BS.ByteString)]
+makeMailAttachments :: Context -> Document -> IO [(String, BS.ByteString)]
 makeMailAttachments ctx document = do
   let mainfile = head $ case documentsealedfiles document of
         [] -> documentfiles document
@@ -404,8 +404,7 @@ makeMailAttachments ctx document = do
       sattachments = concatMap (maybeToList . signatoryattachmentfile) $ documentsignatoryattachments document
       allfiles' = [mainfile] ++ aattachments ++ sattachments
   allfiles <- liftM catMaybes $ mapM (ioRunDB (ctxdbconn ctx) . dbQuery . GetFileByFileID) allfiles'
-  let
-      filenames = map filename allfiles
+  let filenames = map (BS.toString . filename) allfiles
   filecontents <- sequence $ map (getFileContents ctx) allfiles
   return $ zip filenames filecontents
 
