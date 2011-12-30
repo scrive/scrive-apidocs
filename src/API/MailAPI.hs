@@ -7,52 +7,57 @@ module API.MailAPI (
     ) where
 
 import MinutesTime
+import DB.Classes
 --import Doc.DocState
---import Doc.DocState
---import User.Model
+import Company.Model
+import User.Model
 import Kontra
---import Misc
+import Misc
 import qualified AppLogger as Log (jsonMailAPI, mailAPI, scrivebymailfailure)
---import qualified Doc.DocControl as DocControl
+import qualified Doc.DocControl as DocControl
 --import Control.Monad.Reader
 --import InputValidation
 --import Control.Monad.Error
 --import Data.Functor
 import Control.Monad
 import Control.Monad.IO.Class
---import Happstack.Server hiding (simpleHTTP, host)
+import Data.List
+import Data.Maybe
+import Control.Applicative
+import Happstack.Server hiding (simpleHTTP, host)
 --import Happstack.StaticRouting(Route, Path)
 import Control.Applicative
 --import Happstack.StaticRouting(Route, Path)
 --import Happstack.State (update)
---import Text.JSON
---import Text.JSON.String
---import Codec.MIME.Decode
---import qualified Codec.MIME.Parse as MIME
---import qualified Codec.MIME.Type as MIME
---import qualified Data.ByteString as BS
---import qualified Data.ByteString.Char8 as BSC
---import qualified Data.ByteString.Lazy as BSL
---import qualified Data.ByteString.UTF8 as BS
---import Data.Either
+import Text.JSON
+import Text.JSON.String
+import Codec.MIME.Decode
+import qualified Codec.MIME.Parse as MIME
+import qualified Codec.MIME.Type as MIME
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BSC
+import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.UTF8 as BS
+import Data.Either
 import Doc.DocUtils
 import ScriveByMail.Control
 import Doc.Transitory
 --import ScriveByMail.View
 --import ScriveByMail.Parse
 
---import qualified Codec.Text.IConv as IConv
+import qualified Codec.Text.IConv as IConv
 import InspectXMLInstances ()
 --import KontraLink
 --import API.API
 --import API.APICommons
+import Data.Char
 --import Mails.MailsData as MD
---import Mails.MailsData as MD
+import Data.String.Utils
 --import Util.StringUtil
 --import Util.StringUtil
 --import Doc.DocViewMail
 --import Doc.DocProcess
---import Doc.DocStateData
+import Doc.DocStateData
 --import Doc.Model
 --import Doc.DocState
 
@@ -84,8 +89,10 @@ handleMailAPI = do
                      (MIME.mimeType tp == MIME.Application "octet-stream" &&
                       maybe False (isSuffixOf ".pdf" . map toLower) (lookup "name" (MIME.mimeParams tp)))
       isPlain (tp,_) = MIME.mimeType tp == MIME.Text "plain"
+  
       pdfs = filter isPDF allParts
       plains = filter isPlain allParts
+  
       from = fromMaybe "" $ lookup "from" (MIME.mime_val_headers mime)
       to   = fromMaybe "" $ lookup "to"   (MIME.mime_val_headers mime)
   
