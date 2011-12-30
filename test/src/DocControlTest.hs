@@ -18,7 +18,9 @@ import Doc.Transitory
 import Doc.DocStateData
 import Doc.DocControl
 import Company.Model
-import User.Locale
+import User.Model
+import KontraLink
+import DB.Classes
 
 
 docControlTests :: Connection -> Test
@@ -26,6 +28,9 @@ docControlTests conn =  testGroup "Templates"
                            [
                                testCase "Create document from template" $ testDocumentFromTemplate conn
                              , testCase "Create document from template | Shared" $ testDocumentFromTemplateShared conn
+                             , testCase "Uploading file as contract makes doc" $ testUploadingFileAsContract conn
+                             , testCase "Uploading file as offer makes doc" $ testUploadingFileAsOffer conn
+                             , testCase "Uploading file as order makes doc" $ testUploadingFileAsOrder conn
                            ]
 
 {-
@@ -49,6 +54,42 @@ countingMailer counter mail = do
     modifyIORef counter $ (+) 1
 
  -}
+
+testUploadingFileAsContract :: Connection -> Assertion
+testUploadingFileAsContract conn = withTestEnvironment conn $ do
+  (user, link) <- uploadDocAsNewUser conn Contract
+  docs <- randomQuery $ GetDocumentsByUser user
+  assertEqual "New doc" 1 (length docs)
+  let newdoc = head docs
+  assertEqual "Links to /d/docid" ("/d/" ++ (show $ documentid newdoc)) (show link)
+
+testUploadingFileAsOffer :: Connection -> Assertion
+testUploadingFileAsOffer conn = withTestEnvironment conn $ do
+  (user, link) <- uploadDocAsNewUser conn Offer
+  docs <- randomQuery $ GetDocumentsByUser user
+  assertEqual "New doc" 1 (length docs)
+  let newdoc = head docs
+  assertEqual "Links to /d/docid" ("/d/" ++ (show $ documentid newdoc)) (show link)
+
+testUploadingFileAsOrder :: Connection -> Assertion
+testUploadingFileAsOrder conn = withTestEnvironment conn $ do
+  (user, link) <- uploadDocAsNewUser conn Order
+  docs <- randomQuery $ GetDocumentsByUser user
+  assertEqual "New doc" 1 (length docs)
+  let newdoc = head docs
+  assertEqual "Links to /d/docid" ("/d/" ++ (show $ documentid newdoc)) (show link)
+
+uploadDocAsNewUser :: Connection -> DocumentProcess -> DB (User, KontraLink)
+uploadDocAsNewUser conn doctype = do
+  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  globaltemplates <- readGlobalTemplates
+  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+
+  req <- mkRequest POST [ ("doctype", inText (show doctype))
+                        , ("doc", inFile "test/pdfs/simple.pdf") ]
+  (link, _ctx') <- runTestKontra req ctx $ handleIssueNewDocument
+  return (user, link)
 
 testDocumentFromTemplate :: Connection -> Assertion
 testDocumentFromTemplate conn =  withTestEnvironment conn $ do
