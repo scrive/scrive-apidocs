@@ -13,6 +13,7 @@ import Configuration
 import DB.Classes
 import DB.Checks
 import Mailer
+import Mails.Tables
 import MailingServerConf
 import Network
 import Sender
@@ -23,7 +24,7 @@ main = Log.withLogger $ do
   appname <- getProgName
   conf <- readConfig Log.mailingServer appname [] "mailing_server.conf"
   withPostgreSQL (mscDBConfig conf) $ \conn ->
-    ioRunDB conn $ performDBChecks Log.mailingServer [] []
+    ioRunDB conn $ performDBChecks Log.mailingServer [tableMails] []
   E.bracket (do
     let (iface, port) = mscHttpBindAddress conf
         handlerConf = nullConf { port = fromIntegral port }

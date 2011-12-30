@@ -1,21 +1,22 @@
-module Mails.Model where
-
-import Data.Int
-import qualified Data.ByteString.Lazy.Char8 as BSL
+module Mails.Model (
+    module Mails.Public
+  , Mail(..)
+  , GetIncomingEmails(..)
+  , MarkEmailAsSent(..)
+  ) where
 
 import DB.Classes
-import DB.Derive
-import Mails.Tables ()
+import Mails.Public
 import Mails.SendGrid ()
 
-newtype MailID = MailID Int64
-  deriving (Eq, Ord)
-$(newtypeDeriveUnderlyingReadShow ''MailID)
-
 data Mail = Mail {
-    mailID      :: MailID
-  , mailTo      :: [String]
-  , mailContent :: BSL.ByteString
+    mailID          :: MailID
+  , mailFrom        :: Address
+  , mailTo          :: [Address]
+  , mailTitle       :: String
+  , mailContent     :: String
+  , mailAttachments :: [Attachment]
+  , mailXSMTPAPI    :: String
   } deriving (Eq, Ord, Show)
 
 data GetIncomingEmails = GetIncomingEmails

@@ -32,7 +32,6 @@ import System.IO.Temp
 import System.Process
 import System.Random
 import System.Time
-import Text.HTML.TagSoup.Entity (lookupEntity)
 import qualified AppLogger as Log
 import qualified Codec.Binary.Url as URL
 import qualified Control.Exception as C
@@ -634,16 +633,6 @@ _ <| Just y  = y
 
 infixr 0 <|
 infixr 0 |>
-
-unescapeEntities :: String -> String
-unescapeEntities [] = []
-unescapeEntities ('&':xs) = 
-  let (b, a) = break (== ';') xs in
-  case lookupEntity b of
-    Just c | "" /=  a && 
-             head a == ';' ->  c  : unescapeEntities (tail a)    
-    _                      -> '&' : unescapeEntities xs
-unescapeEntities (x:xs) = x : unescapeEntities xs
 
 sortWith :: Ord b => (a -> b) -> [a] -> [a]
 sortWith k ls = sortBy (\a b-> compare (k a) (k b)) ls
