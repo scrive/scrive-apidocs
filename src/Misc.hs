@@ -105,55 +105,6 @@ randomString n allowed_chars = liftIO $
     where
         len = length allowed_chars - 1
 
--- | Open external document in default application. Useful to open
--- *.eml in email program for example. Windows version.
-openDocumentWindows :: String -> IO ()
-openDocumentWindows filename = do
-    let cmd = "cmd"
-    let args = ["/c", filename]
-    (_, _, _, _pid) <-
-        createProcess (proc cmd args){ std_in  = Inherit,
-                                       std_out = Inherit,
-                                       std_err = Inherit
-                                     }
-    return ()
-
--- | Open external document in default application. Useful to open
--- *.eml in email program for example. Gnome version.
-openDocumentGnome :: String -> IO ()
-openDocumentGnome filename = do
-    let cmd = "gnome-open"
-    let args = [filename]
-    (_, _, _, _pid) <-
-        createProcess (proc cmd args){ std_in  = Inherit,
-                                       std_out = Inherit,
-                                       std_err = Inherit
-                                     }
-    return ()
-
--- | Open external document in default application. Useful to open
--- *.eml in email program for example. Mac version.
-openDocumentMac :: String -> IO ()
-openDocumentMac filename = do
-    let cmd = "open"
-    let args = [filename]
-    (_, _, _, _pid) <-
-        createProcess (proc cmd args){ std_in  = Inherit,
-                                       std_out = Inherit,
-                                       std_err = Inherit
-                                     }
-    return ()
-
-openDocument :: String -> IO ()
-openDocument filename =
-  openDocumentMac filename `catch`
-  (\_e ->
-    openDocumentWindows filename `catch`
-    (\_e ->
-      openDocumentGnome filename `catch`
-      (\_e ->
-        return ())))
-
 toIO :: Monad m => s -> ServerPartT (StateT s m) a -> ServerPartT m a
 toIO astate = mapServerPartT f
   where

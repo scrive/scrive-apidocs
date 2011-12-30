@@ -15,8 +15,9 @@ import Assembler
 import MailingServerConf
 import Mails.Model
 import Misc
+import OpenDocument
 import OurPrelude
-import qualified AppLogger as Log (mailingServer)
+import qualified AppLogger as Log (mailingServer, mailContent)
 
 newtype Mailer = Mailer { sendMail :: MonadIO m => Mail -> m Bool }
 
@@ -33,17 +34,20 @@ createExternalMailer program createargs = Mailer { sendMail = reallySend }
     reallySend mail@Mail{..} = liftIO $ do
       content <- assembleContent mail
       (code, _, bsstderr) <- readProcessWithExitCode' program (createargs mail) content
+      let receivers = intercalate ", " (map addrEmail mailTo)
       case code of
         ExitFailure retcode -> do
           Log.mailingServer $ "Error while sending email #" ++ show mailID ++ ", cannot execute " ++ program ++ " to send email (code " ++ show retcode ++ ") stderr: \n" ++ BSLU.toString bsstderr
           return False
         ExitSuccess -> do
-          Log.mailingServer $ "Email #" ++ show mailID ++ " sent correctly to: " ++ intercalate ", " (map addrEmail mailTo)
-          --Log.mailContent $
-          --  "Subject: " ++ BS.toString title ++ "\n" ++
-          --  "To: " ++ createMailTos mail ++ "\n" ++
-          --  "Attachments: " ++ show (length attachments) ++ "\n" ++
-          --  "\n" ++ htmlToTxt (BS.toString mailContent)
+          let subject = filter (/= '\n') mailTitle
+          Log.mailingServer $ "Email #" ++ show mailID ++ " with subject '" ++ subject ++ "' sent correctly to: " ++ receivers
+          Log.mailContent $ unlines [
+              "Subject: " ++ subject
+            , "To: " ++ intercalate ", " (map addrEmail mailTo)
+            , "Attachments: " ++ show (length mailAttachments)
+            , htmlToTxt mailContent
+            ]
           return True
 
 createSendGridMailer :: MailsConfig -> Mailer
@@ -78,5 +82,5 @@ createLocalOpenMailer = Mailer { sendMail = sendToTempFile }
       content <- assembleContent mail
       BSL.writeFile filename content
       Log.mailingServer $ "Email #" ++ show mailID ++ " saved to file " ++ filename
-      openDocument filename
+      _ <- openDocument filename
       return True

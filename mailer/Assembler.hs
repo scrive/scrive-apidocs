@@ -1,6 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 module Assembler (
     assembleContent
+  , htmlToTxt
   ) where
 
 import Control.Applicative
