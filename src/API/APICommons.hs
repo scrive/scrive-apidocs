@@ -32,7 +32,6 @@ module API.APICommons (
           , api_file
           , toSignatoryRoles
           , emptySignatoryTMP
-          , rolesFromRelation
         ) where
 
 
@@ -53,7 +52,7 @@ import Data.Maybe
 import Data.Foldable (fold)
 import Data.Functor
 import Control.Monad
-import Util.SignatoryLinkUtils
+--import Util.SignatoryLinkUtils
 import DB.Classes
 import qualified AppLogger as Log ()
 import Util.JSON
@@ -66,32 +65,6 @@ import User.Locale
 
 
 
-data DOCUMENT_RELATION =
-      DOCUMENT_RELATION_AUTHOR_SECRETARY
-    | DOCUMENT_RELATION_AUTHOR_SIGNATORY
-    | DOCUMENT_RELATION_SIGNATORY
-    | DOCUMENT_RELATION_VIEWER
-    | DOCUMENT_RELATION_OTHER
-
-instance SafeEnum DOCUMENT_RELATION where
-    fromSafeEnum DOCUMENT_RELATION_AUTHOR_SECRETARY = 1
-    fromSafeEnum DOCUMENT_RELATION_AUTHOR_SIGNATORY = 2
-    fromSafeEnum DOCUMENT_RELATION_SIGNATORY = 5
-    fromSafeEnum DOCUMENT_RELATION_VIEWER = 10
-    fromSafeEnum DOCUMENT_RELATION_OTHER = 20
-    toSafeEnum 1  = Just DOCUMENT_RELATION_AUTHOR_SECRETARY
-    toSafeEnum 2  = Just DOCUMENT_RELATION_AUTHOR_SIGNATORY
-    toSafeEnum 5  = Just DOCUMENT_RELATION_SIGNATORY
-    toSafeEnum 10 = Just DOCUMENT_RELATION_VIEWER
-    toSafeEnum 20 = Just DOCUMENT_RELATION_OTHER
-    toSafeEnum _  = Nothing
-
-api_document_relation :: SignatoryLink -> DOCUMENT_RELATION
-api_document_relation sl
-    | isAuthor sl && isSignatory sl = DOCUMENT_RELATION_AUTHOR_SIGNATORY
-    | isAuthor sl                   = DOCUMENT_RELATION_AUTHOR_SECRETARY
-    | isSignatory sl                = DOCUMENT_RELATION_SIGNATORY
-    | otherwise                     = DOCUMENT_RELATION_VIEWER
 
 api_signatory :: SignatoryLink -> JSValue
 api_signatory sl = JSObject $ toJSObject $ 
@@ -105,7 +78,7 @@ api_signatory sl = JSObject $ toJSObject $
      Just signinfo ->  [("sign", api_date $ signtime signinfo)]
      Nothing -> []
     ++
-    [("relation",showJSON $ fromSafeEnumInt $ api_document_relation sl)]
+    [("relation",showJSON $ fromSafeEnumInt $ signatoryroles sl)]
     ++
     [("fields", JSArray $ for (filterCustomField $ signatoryfields $ signatorydetails sl) $ \(s, label, _) -> JSObject $ toJSObject [
         ("name",  JSString $ toJSString $ BS.toString label)
@@ -215,18 +188,10 @@ getSignatoryTMP = do
                 , relation = relation
                 }
 
-rolesFromRelation :: DOCUMENT_RELATION -> [SignatoryRole]
-rolesFromRelation DOCUMENT_RELATION_AUTHOR_SECRETARY = [SignatoryAuthor]
-rolesFromRelation DOCUMENT_RELATION_AUTHOR_SIGNATORY = [SignatoryAuthor, SignatoryPartner]
-rolesFromRelation DOCUMENT_RELATION_SIGNATORY        = [SignatoryPartner]
-rolesFromRelation DOCUMENT_RELATION_VIEWER           = []
-rolesFromRelation DOCUMENT_RELATION_OTHER            = []
-
-
 toSignatoryRoles :: SignatoryTMP -> Maybe [SignatoryRole]
 toSignatoryRoles sTMP = case relation sTMP of
   Nothing -> Nothing
-  Just bs -> rolesFromRelation <$> (toSafeEnum bs)
+  Just bs -> toSafeEnum bs
     
 
 toSignatoryDetails :: SignatoryTMP -> SignatoryDetails
