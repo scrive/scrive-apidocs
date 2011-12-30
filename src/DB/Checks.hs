@@ -32,7 +32,7 @@ checkDBTimeZone logger = do
 -- | Checks whether database is consistent (performs migrations if necessary)
 checkDBConsistency :: (String -> DB ()) -> [Table] -> [Migration] -> DB ()
 checkDBConsistency logger tables migrations = do
-  (created, to_migration) <- checkTables tables
+  (created, to_migration) <- checkTables
   forM_ created $ \table -> do
     logger $ "Putting properties on table '" ++ tblName table ++ "'..."
     tblPutProperties table
@@ -40,13 +40,13 @@ checkDBConsistency logger tables migrations = do
     logger "Running migrations..."
     migrate migrations to_migration
     logger "Done."
-    (_, to_migration_again) <- checkTables tables
+    (_, to_migration_again) <- checkTables
     when (not $ null to_migration_again) $
       error $ "The following tables were not migrated to their latest versions: " ++ concatMap descNotMigrated to_migration_again
   where
     descNotMigrated (t, from) = "\n * " ++ tblName t ++ ", current version: " ++ show from ++ ", needed version: " ++ show (tblVersion t)
 
-    checkTables tables = second catMaybes . partitionEithers <$> mapM checkTable tables
+    checkTables = second catMaybes . partitionEithers <$> mapM checkTable tables
     checkTable table = do
       desc <- wrapDB $ \conn -> describeTable conn $ tblName table
       logger $ "Checking table '" ++ tblName table ++ "'..."

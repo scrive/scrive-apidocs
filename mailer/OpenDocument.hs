@@ -1,4 +1,6 @@
-module OpenDocument where
+module OpenDocument (
+    openDocument
+  ) where
 
 import Control.Monad
 import System.Exit

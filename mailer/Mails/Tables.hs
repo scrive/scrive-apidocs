@@ -1,4 +1,6 @@
-module Mails.Tables where
+module Mails.Tables (
+    tableMails
+  ) where
 
 import Database.HDBC
 

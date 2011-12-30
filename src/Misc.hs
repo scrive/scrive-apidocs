@@ -105,11 +105,6 @@ randomString n allowed_chars = liftIO $
     where
         len = length allowed_chars - 1
 
-toIO :: Monad m => s -> ServerPartT (StateT s m) a -> ServerPartT m a
-toIO astate = mapServerPartT f
-  where
-    f m = evalStateT m astate
-
 -- | Extract data from GET or POST request. Fail with 'mzero' if param
 -- variable not present or when it cannot be read.
 getDataFnM :: (HasRqData m, MonadIO m, ServerMonad m, MonadPlus m) => RqData a -> m a

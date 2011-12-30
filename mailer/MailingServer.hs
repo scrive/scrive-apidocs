@@ -7,12 +7,14 @@ import Database.HDBC.PostgreSQL
 import System.Environment
 import Happstack.Server
 import Happstack.State
+import qualified Happstack.StaticRouting as R
 import qualified Control.Exception as E
 
 import Configuration
+import Dispatcher
 import DB.Classes
 import DB.Checks
-import Mailer
+import Handlers
 import Mails.Tables
 import MailingServerConf
 import Network
@@ -28,15 +30,14 @@ main = Log.withLogger $ do
   E.bracket (do
     let (iface, port) = mscHttpBindAddress conf
         handlerConf = nullConf { port = fromIntegral port }
-        mailer = createMailer $ mscMailsConfig conf
+        sender = createSender $ mscMailsConfig conf
+        (routes, overlaps) = R.compile handlers
+    maybe (return ()) Log.mailingServer overlaps
     socket <- listenOn (htonl iface) $ fromIntegral port
-    t1 <- forkIO $ simpleHTTPWithSocket socket handlerConf mailerHandler
-    t2 <- forkIO $ sender mailer $ mscDBConfig conf
+    t1 <- forkIO $ simpleHTTPWithSocket socket handlerConf (router conf routes)
+    t2 <- forkIO $ dispatcher sender $ mscDBConfig conf
     return [t1, t2]
    ) (mapM_ killThread) (\_ -> do
      waitForTermination
      Log.mailingServer $ "Termination request received"
    )
-
-mailerHandler :: ServerPartT IO String
-mailerHandler = return "Dummy handler"

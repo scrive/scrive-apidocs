@@ -9,8 +9,8 @@ import Database.HDBC
 
 import DB.Classes
 import DB.Utils
+import Mails.Data
 import Mails.Public
-import Mails.SendGrid ()
 import MinutesTime
 
 data Mail = Mail {
@@ -59,3 +59,7 @@ instance DBUpdate MarkEmailAsSent Bool where
     t <- getMinutesTime
     r <- run conn "UPDATE mails SET sent = ? WHERE id = ?" [toSql t, toSql mid]
     oneRowAffectedGuard r
+
+data UpdateWithSendgridEvent = UpdateWithSendgridEvent MailID SendGridEvent
+instance DBUpdate UpdateWithSendgridEvent Bool where
+  dbUpdate (UpdateWithSendgridEvent _mid _ev) = undefined

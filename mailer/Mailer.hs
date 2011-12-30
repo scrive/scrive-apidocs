@@ -1,86 +1,24 @@
-{-# LANGUAGE RecordWildCards, NoImplicitPrelude, TemplateHaskell #-}
 module Mailer (
-    Mailer(..)
-  , createMailer
+    Mailer
+  , runMailer
   ) where
 
-import Control.Monad.IO.Class
-import Data.List hiding (head)
-import System.Directory
-import System.Exit
-import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.Lazy.UTF8 as BSLU
+import Control.Applicative
+import Control.Monad.Reader
+import Database.HDBC.PostgreSQL
+import Happstack.Server
 
-import Assembler
-import MailingServerConf
-import Mails.Model
-import Misc
-import OpenDocument
-import OurPrelude
-import qualified AppLogger as Log (mailingServer, mailContent)
+import DB.Classes
+import qualified AppLogger as Log (mailingServer)
 
-newtype Mailer = Mailer { sendMail :: MonadIO m => Mail -> m Bool }
+newtype Mailer a = Mailer { unMailer :: ServerPartT (ReaderT Connection IO) a }
+  deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadIO, MonadPlus, ServerMonad, WebMonad Response)
 
-createMailer :: MailsConfig -> Mailer
-createMailer mc = case mc of
-  MailsSendgrid{} -> createSendGridMailer mc
-  MailsSendmail   -> createSendmailMailer
-  MailsLocalOpen  -> createLocalOpenMailer
+instance DBMonad Mailer where
+  getConnection = Mailer ask
+  handleDBError e = do
+    Log.mailingServer $ "SQL error: " ++ show e
+    finishWith =<< internalServerError (toResponse "Internal server error")
 
-createExternalMailer :: String -> (Mail -> [String]) -> Mailer
-createExternalMailer program createargs = Mailer { sendMail = reallySend }
-  where
-    reallySend :: MonadIO m => Mail -> m Bool
-    reallySend mail@Mail{..} = liftIO $ do
-      content <- assembleContent mail
-      (code, _, bsstderr) <- readProcessWithExitCode' program (createargs mail) content
-      let receivers = intercalate ", " (map addrEmail mailTo)
-      case code of
-        ExitFailure retcode -> do
-          Log.mailingServer $ "Error while sending email #" ++ show mailID ++ ", cannot execute " ++ program ++ " to send email (code " ++ show retcode ++ ") stderr: \n" ++ BSLU.toString bsstderr
-          return False
-        ExitSuccess -> do
-          let subject = filter (/= '\n') mailTitle
-          Log.mailingServer $ "Email #" ++ show mailID ++ " with subject '" ++ subject ++ "' sent correctly to: " ++ receivers
-          Log.mailContent $ unlines [
-              "Subject: " ++ subject
-            , "To: " ++ intercalate ", " (map addrEmail mailTo)
-            , "Attachments: " ++ show (length mailAttachments)
-            , htmlToTxt mailContent
-            ]
-          return True
-
-createSendGridMailer :: MailsConfig -> Mailer
-createSendGridMailer config = createExternalMailer "curl" createargs
-  where
-    mailRcpt addr = [
-        "--mail-rcpt"
-      , "<" ++ addrEmail addr ++ ">"
-      ]
-    createargs Mail{mailTo} = [
-        "--user"
-      , sendgridUser config ++ ":" ++ sendgridPassword config
-      , sendgridSMTP config
-      , "-k", "--ssl"
-      ] ++ concatMap mailRcpt mailTo
-
-createSendmailMailer :: Mailer
-createSendmailMailer = createExternalMailer "sendmail" createargs
-  where
-    createargs _ = [
-        "-t" -- get the addresses from the content
-      , "-i" -- ignore single dots in input
-      ]
-
-createLocalOpenMailer :: Mailer
-createLocalOpenMailer = Mailer { sendMail = sendToTempFile }
-  where
-    sendToTempFile :: MonadIO m => Mail -> m Bool
-    sendToTempFile mail@Mail{..} = liftIO $ do
-      tmp <- getTemporaryDirectory
-      let filename = tmp ++ "/Email-" ++ addrEmail ($(head) mailTo) ++ "-" ++ show mailID ++ ".eml"
-      content <- assembleContent mail
-      BSL.writeFile filename content
-      Log.mailingServer $ "Email #" ++ show mailID ++ " saved to file " ++ filename
-      _ <- openDocument filename
-      return True
+runMailer :: Connection -> Mailer a -> ServerPartT IO a
+runMailer conn = mapServerPartT (\r -> runReaderT r conn) . unMailer

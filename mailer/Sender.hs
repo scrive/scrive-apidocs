@@ -1,33 +1,86 @@
-module Sender where
+{-# LANGUAGE RecordWildCards, NoImplicitPrelude, TemplateHaskell #-}
+module Sender (
+    Sender(..)
+  , createSender
+  ) where
 
-import Control.Concurrent
-import Control.Monad
-import Database.HDBC.PostgreSQL
-import qualified Control.Exception as E
+import Control.Monad.IO.Class
+import Data.List hiding (head)
+import System.Directory
+import System.Exit
+import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.Lazy.UTF8 as BSLU
 
-import DB.Classes
-import Mailer
+import Assembler
+import MailingServerConf
 import Mails.Model
-import qualified AppLogger as Log (mailingServer)
+import Misc
+import OpenDocument
+import OurPrelude
+import qualified AppLogger as Log (mailingServer, mailContent)
 
-sender :: Mailer -> String -> IO ()
-sender mailer dbconf = withPostgreSQL dbconf send
+newtype Sender = Sender { sendMail :: MonadIO m => Mail -> m Bool }
+
+createSender :: MailsConfig -> Sender
+createSender mc = case mc of
+  MailsSendgrid{} -> createSendGridSender mc
+  MailsSendmail   -> createSendmailSender
+  MailsLocalOpen  -> createLocalOpenSender
+
+createExternalSender :: String -> (Mail -> [String]) -> Sender
+createExternalSender program createargs = Sender { sendMail = send }
   where
-    send conn = do
-      res <- E.try $ ioRunDB conn $ do
-        mails <- dbQuery GetIncomingEmails
-        forM_ mails $ \mail -> do
-          success <- sendMail mailer mail
-          if success
-            then do
-              res <- dbUpdate $ MarkEmailAsSent $ mailID mail
-              when (not res) $
-                error $ "Marking email #" ++ show (mailID mail) ++ " as sent failed"
-            else error "Sending email failed"
-      case res of
-        Right () -> threadDelay second
-        Left (e::E.SomeException) -> do
-          Log.mailingServer $ "Exception '" ++ show e ++ "' thrown while sending emails, sleeping for 10 minutes"
-          threadDelay $ 10 * 60 * second
-      send conn
-    second = 1000000
+    send :: MonadIO m => Mail -> m Bool
+    send mail@Mail{..} = liftIO $ do
+      content <- assembleContent mail
+      (code, _, bsstderr) <- readProcessWithExitCode' program (createargs mail) content
+      let receivers = intercalate ", " (map addrEmail mailTo)
+      case code of
+        ExitFailure retcode -> do
+          Log.mailingServer $ "Error while sending email #" ++ show mailID ++ ", cannot execute " ++ program ++ " to send email (code " ++ show retcode ++ ") stderr: \n" ++ BSLU.toString bsstderr
+          return False
+        ExitSuccess -> do
+          let subject = filter (/= '\n') mailTitle
+          Log.mailingServer $ "Email #" ++ show mailID ++ " with subject '" ++ subject ++ "' sent correctly to: " ++ receivers
+          Log.mailContent $ unlines [
+              "Subject: " ++ subject
+            , "To: " ++ intercalate ", " (map addrEmail mailTo)
+            , "Attachments: " ++ show (length mailAttachments)
+            , htmlToTxt mailContent
+            ]
+          return True
+
+createSendGridSender :: MailsConfig -> Sender
+createSendGridSender config = createExternalSender "curl" createargs
+  where
+    mailRcpt addr = [
+        "--mail-rcpt"
+      , "<" ++ addrEmail addr ++ ">"
+      ]
+    createargs Mail{mailTo} = [
+        "--user"
+      , sendgridUser config ++ ":" ++ sendgridPassword config
+      , sendgridSMTP config
+      , "-k", "--ssl"
+      ] ++ concatMap mailRcpt mailTo
+
+createSendmailSender :: Sender
+createSendmailSender = createExternalSender "sendmail" createargs
+  where
+    createargs _ = [
+        "-t" -- get the addresses from the content
+      , "-i" -- ignore single dots in input
+      ]
+
+createLocalOpenSender :: Sender
+createLocalOpenSender = Sender { sendMail = send }
+  where
+    send :: MonadIO m => Mail -> m Bool
+    send mail@Mail{..} = liftIO $ do
+      tmp <- getTemporaryDirectory
+      let filename = tmp ++ "/Email-" ++ addrEmail ($(head) mailTo) ++ "-" ++ show mailID ++ ".eml"
+      content <- assembleContent mail
+      BSL.writeFile filename content
+      Log.mailingServer $ "Email #" ++ show mailID ++ " saved to file " ++ filename
+      _ <- openDocument filename
+      return True

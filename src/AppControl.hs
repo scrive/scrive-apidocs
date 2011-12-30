@@ -235,8 +235,7 @@ appHandler handleRoutes appConf appGlobals = do
   where
     handle :: Request -> Session -> Context -> ServerPartT IO Response
     handle rq session ctx = do
-      (res,ctx') <- toIO ctx . runKontra $
-         do
+      (res, ctx') <- runKontra ctx $ do
           res <- handleRoutes  `mplus` do
              rqcontent <- liftIO $ tryTakeMVar (rqInputsBody rq)
              when (isJust rqcontent) $
