@@ -8,19 +8,19 @@ module API.MailAPI (
 --import Company.Model
 --import User.Model
 import Kontra
-import Misc
+--import Misc
 --import qualified AppLogger as Log (debug)
 --import qualified Doc.DocControl as DocControl
 --import Control.Monad.Reader
 --import InputValidation
 --import Control.Monad.Error
-import Data.Functor
+--import Data.Functor
 --import Data.List
 --import Data.Maybe
 --import Happstack.Server hiding (simpleHTTP, host)
 --import Happstack.StaticRouting(Route, Path)
 --import Happstack.State (update)
-import Text.JSON
+--import Text.JSON
 --import Text.JSON.String
 --import Codec.MIME.Decode
 --import qualified Codec.MIME.Parse as MIME
@@ -28,7 +28,7 @@ import Text.JSON
 --import qualified Data.ByteString as BS
 --import qualified Data.ByteString.Char8 as BSC
 --import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.UTF8 as BS
+--import qualified Data.ByteString.UTF8 as BS
 --import Data.Either
 
 import ScriveByMail.Control
@@ -38,103 +38,22 @@ import ScriveByMail.Control
 --import qualified Codec.Text.IConv as IConv
 import InspectXMLInstances ()
 --import API.API
-import API.APICommons
+--import API.APICommons
 --import Data.Char
 --import Mails.MailsData as MD
 --import Data.String.Utils
 --import Util.StringUtil
 --import Doc.DocViewMail
 --import Doc.DocProcess
-import Doc.DocStateData
+--import Doc.DocStateData
 --import Doc.DocState
 
 --import ScriveByMail.Control
 
-import Text.JSON.Types
+--import Text.JSON.Types
 import Util.JSON
---import Doc.JSON
+import Doc.JSON
 
-data DocumentCreationRequest = DocumentCreationRequest {
-  dcrTitle    :: String,
-  dcrType     :: DocumentType,
-  dcrTags     :: [DocumentTag],
-  dcrInvolved :: [InvolvedRequest],
-  dcrMainFile :: String -- filename
-  }
-                               
-data InvolvedRequest = InvolvedRequest {
-  irRole        :: [SignatoryRole],
-  irData        :: [SignatoryField],
-  irAttachments :: [AttachmentRequest]
-  }
-                       
-data AttachmentRequest = AttachmentRequest {
-  arName        :: String,
-  arDescription :: String
-  }
-
-arFromJSON :: JSValue -> Either String AttachmentRequest
-arFromJSON jsv = do
-  JSString (JSONString name) <- jsget "name" jsv
-  JSString (JSONString description) <- jsgetdef "description" (showJSON "") jsv
-  return $ AttachmentRequest { arName = name, arDescription = description}
-  
-sfFromJSON :: (String, JSValue) -> Either String SignatoryField
-sfFromJSON (name, jsv) = do
-  JSString (JSONString value) <- jsgetdef "value" (showJSON "") jsv
-  JSBool req <- jsgetdef "requested" (showJSON False) jsv
-  tp <- case name of
-    "email" -> Right EmailFT
-    "fstname" -> Right FirstNameFT
-    "sndname" -> Right LastNameFT
-    "company" -> Right CompanyFT
-    "companynr" -> Right CompanyNumberFT
-    "personalnr" -> Right PersonalNumberFT
-    s -> Right $ CustomFT (BS.fromString s) req
-  -- do placements later /Eric
-  return $ SignatoryField { sfType = tp, sfValue = BS.fromString value, sfPlacements = [] }
-  
-irFromJSON :: JSValue -> Either String InvolvedRequest
-irFromJSON jsv = do
-  i'@(JSRational _ _) <- jsgetdef "role" (showJSON (1::Int)) jsv
-  let Just (i::Int) = fromJSON i'
-  JSObject dat' <- jsget "data" jsv
-  let dat = fromJSObject dat'
-  JSArray attachmentjs <- jsgetdef "attachments" (showJSON ([]::[JSValue])) jsv
-  attachments <- mapM arFromJSON attachmentjs
-  role <- maybe (Left $ "Not a valid role: " ++ show i)
-          Right $ rolesFromRelation <$> (toSafeEnum i)
-  hisData <- mapM sfFromJSON dat
-  return $ InvolvedRequest { irRole = role, irData = hisData, irAttachments = attachments }
-
-fileNameFromJSON :: JSValue -> Either String String
-fileNameFromJSON jsv = do
-  JSString (JSONString name) <- jsget "name" jsv
-  return name
-  
-tagFromJSON :: JSValue -> Either String DocumentTag
-tagFromJSON jsv = do
-  JSString (JSONString name) <- jsget "name" jsv
-  JSString (JSONString value) <- jsget "value" jsv
-  return $ DocumentTag { tagname = BS.fromString name, tagvalue = BS.fromString value }
-
-dcrFromJSON :: JSValue -> Either String DocumentCreationRequest
-dcrFromJSON jsv = do
-  f <- fileNameFromJSON =<< jsget "mainfile" jsv
-  JSString (JSONString title) <- jsgetdef "title" (showJSON f) jsv
-  tp''@(JSRational _ _) <- jsgetdef "type" (showJSON (1::Int)) jsv
-  let Just (tp'::Int) = fromJSON tp''
-  tp <- maybe (Left $ "Unrecognized document type: " ++ show tp') Right $ toSafeEnum tp'
-  JSArray tags' <- jsgetdef "tags" (showJSON ([]::[JSValue])) jsv
-  tags <- mapM tagFromJSON tags'
-  JSArray inv' <- jsget "involved" jsv
-  inv <- mapM irFromJSON inv'
-  return $ DocumentCreationRequest { dcrTitle    = title
-                                   , dcrType     = tp
-                                   , dcrTags     = tags
-                                   , dcrInvolved = inv
-                                   , dcrMainFile = f
-                                   }
                                      
 handleMailAPI :: Kontrakcja m => m String
 handleMailAPI = do
