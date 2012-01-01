@@ -85,6 +85,7 @@ module Doc.Model
 import API.Service.Model
 import DB.Classes
 --import DB.Derive
+import DB.Fetcher
 import DB.Types
 import DB.Utils
 import File.File
