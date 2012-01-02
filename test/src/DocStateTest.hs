@@ -120,6 +120,11 @@ docStateTests conn = testGroup "DocState" [
 
   testThat "when I attach a sealed file to a bad docid, it always returns left" conn testNoDocumentAttachSealedAlwaysLeft,
   testThat "when I attach a sealed file to a real doc, it always returns Right" conn testDocumentAttachSealedPendingRight,
+
+
+  testThat "when I ChangeMainFile of a real document returns Right" conn testDocumentChangeMainFileRight,
+  testThat "when I ChangeMainFile of a bad docid, it ALWAYS returns Left" conn testNoDocumentChangeMainFileAlwaysLeft,
+
   {-
   testThat "when I call updateDocument, it fails when the doc doesn't exist" conn testNoDocumentUpdateDocumentAlwaysLeft,
   testThat "When I call updateDocument with a doc that is not in Preparation, always returns left" conn testNotPreparationUpdateDocumentAlwaysLeft,
@@ -589,6 +594,34 @@ testDocumentAttachSealedPendingRight = doTimes 10 $ do
   validTest $ do
     assertRight edoc
     assertBool "Should have new file attached, but it's not" $ (fileid file) `elem` documentsealedfiles (fromRight edoc)
+
+
+testDocumentChangeMainFileRight :: DB ()
+testDocumentChangeMainFileRight = doTimes 10 $ do
+  -- setup
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (const True)
+  file <- addNewRandomFile
+  --execute
+  edoc <- randomUpdate $ ChangeMainfile (documentid doc) (fileid file)
+  --assert
+  validTest $ do
+    assertRight edoc
+    let doc1 = fromRight edoc
+    assertBool "New file is attached" (fileid file `elem` (documentfiles doc1 ++ documentsealedfiles doc1))
+    assertInvariants $ fromRight edoc
+
+
+testNoDocumentChangeMainFileAlwaysLeft :: DB ()
+testNoDocumentChangeMainFileAlwaysLeft = doTimes 10 $ do
+  -- setup
+  file <- addNewRandomFile
+  --execute
+  -- non-existent docid
+  edoc <- randomUpdate $ (\docid -> ChangeMainfile docid (fileid file))
+  --assert
+  validTest $ do
+    assertLeft edoc
 
 
 {-
