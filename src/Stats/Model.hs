@@ -7,10 +7,16 @@ module Stats.Model
          GetDocStatEvents(..),
          GetDocStatEventsByCompanyID(..),
          GetDocStatEventsByUserID(..),
+         
          UserStatEvent(..),
          AddUserStatEvent(..),
          GetUserStatEvents(..),
-         UserStatQuantity(..)
+         UserStatQuantity(..),
+         
+         SignStatQuantity(..),
+         SignStatEvent(..),
+         AddSignStatEvent(..),
+         GetSignStatEvents(..)
        )
 
        where
@@ -233,7 +239,10 @@ data SignStatQuantity = SignStatInvite     -- Invitation Sent
                       | SignStatReceive    -- Invitation Received
                       | SignStatOpen       -- Invitation Opened
                       | SignStatLink       -- Secret Link Clicked
-                      | SignStatClose      -- Document signed or rejected
+                      | SignStatSign       -- Document signed
+                      | SignStatReject     -- Document rejected
+                      | SignStatDelete     -- Signatory deletes
+                      | SignStatPurge      -- Signatory really deletes
                       deriving (Eq, Ord, Show)
 $(enumDeriveConvertible ''SignStatQuantity)
                         
@@ -255,10 +264,10 @@ selectSignStatEventsSQL = "SELECT "
 fetchSignStats :: Statement -> [SignStatEvent] -> IO [SignStatEvent]
 fetchSignStats st acc = fetchRow st >>= maybe (return acc) f
   where f [docid, slid, time, quantity] =
-          fetchSignStats st $ SignStatEvent { ssDocumentID      = docid
-                                            , ssSignatoryLinkID = slid
-                                            , ssTime            = time
-                                            , ssQuantity        = quantity
+          fetchSignStats st $ SignStatEvent { ssDocumentID      = fromSql docid
+                                            , ssSignatoryLinkID = fromSql slid
+                                            , ssTime            = fromSql time
+                                            , ssQuantity        = fromSql quantity
                                             } : acc
         f l = error $ "fetchSignStats: unexpected row: "++show l
 
