@@ -229,6 +229,7 @@ staticRoutes = choice
      , dir "adminonly" $ dir "stats1to2" $ hGet $ toK0 $ Stats.handleMigrate1To2
 
      , dir "adminonly" $ dir "runstatsonallusers" $ hGet $ toK0 $ Stats.addAllUsersToStats
+     , dir "adminonly" $ dir "runstatssigs" $ hGet $ toK0 $ Stats.addAllSigsToStats
 
      , dir "adminonly" $ dir "statistics"        $ hGet  $ toK0 $ Stats.showAdminSystemUsageStats
      , dir "adminonly" $ dir "payments"          $ hGet  $ toK0 $ Payments.handlePaymentsModelForViewView
