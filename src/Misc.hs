@@ -691,3 +691,11 @@ toCSV header ls =
 melem :: (Eq a) => Maybe a -> [a] -> Bool
 melem Nothing   _  = False
 melem (Just  e) es = elem e es
+
+firstWithDefault :: (Monad m) => [m (Maybe a)] -> m a -> m a
+firstWithDefault [] da = da
+firstWithDefault (ma:mas) da = do
+    a <- ma
+    case a of
+         Just a' -> return a'
+         Nothing -> firstWithDefault mas da
