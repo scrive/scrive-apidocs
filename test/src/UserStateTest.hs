@@ -14,8 +14,9 @@ import User.Model
 import TestingUtil
 import Data.List
 
-sortByUserID :: [User] -> [User]
-sortByUserID = sortBy (\a b -> compare (userid a) (userid b))
+sortByEmail :: [User] -> [User]
+sortByEmail = sortBy (\a b -> compare (f a) (f b))
+  where f = useremail . userinfo
 
 userStateTests :: Connection -> Test
 userStateTests conn = testGroup "UserState" [
@@ -99,11 +100,12 @@ test_addUser_repeatedEmailReturnsNothing = do
 test_getCompanyAccounts :: DB ()
 test_getCompanyAccounts = do
   Company{companyid = cid} <- dbUpdate $ CreateCompany Nothing Nothing
-  users <- forM ["emily1@green.com", "emily2@green.com"] $ \email -> do
+  let emails = ["emily@green.com", "emily2@green.com", "andrzej@skrivapa.se"]
+  users <- forM emails $ \email -> do
     Just user <- addNewCompanyUser "Emily" "Green" email cid
     return user
   company_accounts <- dbQuery $ GetCompanyAccounts cid
-  assertBool "Company accounts returned correctly" $ sortByUserID users == sortByUserID company_accounts
+  assertBool "Company accounts returned in proper order (sorted by email)" $ sortByEmail users == company_accounts
 
 test_getInviteInfo :: DB ()
 test_getInviteInfo = do

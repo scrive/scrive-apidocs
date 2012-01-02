@@ -686,3 +686,8 @@ toCSV :: [String] -> [[String]] -> String
 toCSV header ls =
   concatMap csvline (header:ls)
     where csvline line = "\"" ++ intercalate "\",\"" line ++ "\"\n"
+
+{- Version of elem that as a value takes Maybe-}    
+melem :: (Eq a) => Maybe a -> [a] -> Bool
+melem Nothing   _  = False
+melem (Just  e) es = elem e es

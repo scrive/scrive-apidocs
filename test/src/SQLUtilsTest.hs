@@ -5,7 +5,7 @@ import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertEqual, Assertion)
 
-import DB.Utils
+import DB.Fetcher
 import Database.HDBC
 import Database.HDBC.Statement as HDBC
 import Data.IORef

@@ -332,6 +332,7 @@ appHandler handleRoutes appConf appGlobals = do
                 , ctxservice = mservice
                 , ctxlocation = location
                 , ctxadminaccounts = admins appConf
+                , ctxsalesaccounts = sales appConf
                 }
       return ctx
 

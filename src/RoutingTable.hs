@@ -260,9 +260,9 @@ staticRoutes = choice
      , dir "services" $ dir "buttons_rest" $ hGet $ toK1 $ handleServiceButtonsRest
 
      -- never ever use this
-     , dir "adminonly" $ dir "neveruser" $ dir "resetservicepassword" $ hGetWrap (onlySuperUser . https) $ toK2 $ handleChangeServicePasswordAdminOnly
+     , dir "adminonly" $ dir "neveruser" $ dir "resetservicepassword" $ hGetWrap (onlyAdmin . https) $ toK2 $ handleChangeServicePasswordAdminOnly
 
-     , dir "adminonly" $ dir "log" $ hGetWrap (onlySuperUser . https) $ toK1 $ Administration.serveLogDirectory
+     , dir "adminonly" $ dir "log" $ hGetWrap (onlyAdmin . https) $ toK1 $ Administration.serveLogDirectory
 
 
      , dir "dave" $ dir "document" $ hGet $ toK1 $ Administration.daveDocument

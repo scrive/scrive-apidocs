@@ -26,7 +26,7 @@ class DocHelper
       (@wait.until { @driver.find_element :id => "toadvanced" }).click
       @wait.until { @driver.find_element :css => "form#dialog-confirm-advanced" }
       (@wait.until { @driver.find_element :css => "a.toadvanced" }).click
-      @wait.until { @driver.find_element :id => "tobasic" }
+      @wait.until { @driver.find_element :id => "nextstep" }
     end
   end
 

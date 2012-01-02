@@ -58,7 +58,7 @@ import Control.Applicative
 import User.Utils
 
 showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
-showAdminUserUsageStats userid = onlySuperUser $ do
+showAdminUserUsageStats userid = onlySalesOrAdmin $ do
   statEvents <- runDBQuery $ GetDocStatEventsByUserID userid
   Just user <- runDBQuery $ GetUserByID userid
   mcompany <- getCompanyForUser user
@@ -69,7 +69,7 @@ showAdminUserUsageStats userid = onlySuperUser $ do
   renderFromBody TopEmpty kontrakcja content
 
 showAdminCompanyUsageStats :: Kontrakcja m => CompanyID -> m Response
-showAdminCompanyUsageStats companyid = onlySuperUser $ do
+showAdminCompanyUsageStats companyid = onlySalesOrAdmin $ do
   statCompanyEvents <- runDBQuery $ GetDocStatEventsByCompanyID companyid
   let rawevents = catMaybes $ map statCompanyEventToDocStatTuple statCompanyEvents
   let stats = calculateCompanyDocStats rawevents
@@ -79,7 +79,7 @@ showAdminCompanyUsageStats companyid = onlySuperUser $ do
   renderFromBody TopEmpty kontrakcja content
 
 showAdminSystemUsageStats :: Kontrakcja m => m Response
-showAdminSystemUsageStats = onlySuperUser $ do
+showAdminSystemUsageStats = onlySalesOrAdmin $ do
   Context{ctxtime} <- getContext
   let today = asInt ctxtime
       som = 100 * (today `div` 100) -- start of month
@@ -95,7 +95,7 @@ showAdminSystemUsageStats = onlySuperUser $ do
   renderFromBody TopEmpty kontrakcja content
 
 handleDocStatsCSV :: Kontrakcja m => m Response
-handleDocStatsCSV = onlySuperUser $ do
+handleDocStatsCSV = onlySalesOrAdmin $ do
   stats <- runDBQuery GetDocStatEvents
   let docstatsheader = ["userid", "user", "date", "event", "count", "docid", "serviceid", "company", "companyid", "doctype"]
   csvstrings <- docStatsToString stats [] []
@@ -493,7 +493,7 @@ filterMissing dids (doc:docs) = doc : filterMissing dids docs
 
 
 addAllDocsToStats :: Kontrakcja m => m KontraLink
-addAllDocsToStats = onlySuperUser $ do
+addAllDocsToStats = onlyAdmin $ do
   services <- runDBQuery GetServices
   let allservices = Nothing : map (Just . serviceid) services
   stats <- runDBQuery GetDocStatEvents
@@ -507,14 +507,14 @@ addAllDocsToStats = onlySuperUser $ do
   return LinkUpload
 
 handleMigrate1To2 :: Kontrakcja m => m KontraLink
-handleMigrate1To2 = onlySuperUser $ do
+handleMigrate1To2 = onlyAdmin $ do
   _ <- runDBUpdate FlushDocStats
   _ <- addAllDocsToStats
   addFlash (OperationDone, "Table migrated")
   return LinkUpload
 
 addAllUsersToStats :: Kontrakcja m => m KontraLink
-addAllUsersToStats = onlySuperUser $ do
+addAllUsersToStats = onlyAdmin $ do
   docs <- runDBQuery $ GetUsers
   _ <- mapM addUserSignTOSStatEvent docs
   return ()
@@ -578,7 +578,7 @@ addUserIDStatEvent qty uid mt mcid msid =  do
 
 
 handleUserStatsCSV :: Kontrakcja m => m Response
-handleUserStatsCSV = onlySuperUser $ do
+handleUserStatsCSV = onlySalesOrAdmin $ do
   stats <- runDBQuery GetUserStatEvents
   Log.debug $ "All user stats length: " ++ (show $ length stats)
   ok $ setHeader "Content-Disposition" "attachment;filename=userstats.csv"

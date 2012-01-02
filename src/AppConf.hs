@@ -32,5 +32,6 @@ data AppConf = AppConf {
   , mailsConfig        :: MailsConfig                  -- ^ mail sendout configuration
   , aesConfig          :: AESConf                      -- ^ aes key/iv for encryption
   , admins             :: [Email]                      -- ^ email addresses of people regarded as admins
+  , sales              :: [Email]                      -- ^ email addresses of people regarded as sales admins
   , initialUsers       :: [(Email,String)]             -- ^ email and passwords for initial users
   } deriving (Read, Eq, Ord, Show)

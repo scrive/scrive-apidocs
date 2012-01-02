@@ -229,4 +229,5 @@ mkContext locale globaltemplates = liftIO $ do
         , ctxservice = Nothing
         , ctxlocation = error "location is not defined"
         , ctxadminaccounts = []
+        , ctxsalesaccounts = []
     }

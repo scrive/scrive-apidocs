@@ -42,10 +42,12 @@ import Company.Model
 import API.Service.Model
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
+import Kontra
 
 {-| Main admin page - can go from here to other pages -}
-adminMainPage :: TemplatesMonad m => m String
-adminMainPage = renderTemplateM "adminsmain" ()
+adminMainPage :: TemplatesMonad m => Context -> m String
+adminMainPage ctx = renderTemplateFM "adminsmain" $ do
+    field "admin" $ (isAdmin) ctx
 
 {-| Manage users page - can find user here -}
 adminUsersPage :: TemplatesMonad m => m String
@@ -131,10 +133,12 @@ adminCompanyUsageStatsPage companyid morefields =
         field "companyid" $ show companyid
         morefields
 
-adminDocuments:: TemplatesMonad m => m String
-adminDocuments = do
+adminDocuments:: TemplatesMonad m => Context -> m String
+adminDocuments ctx = do
     renderTemplateFM "admindocumentslist" $ do
        field "adminlink" $ show $ LinkAdminOnly
+       field "admin" $ (isAdmin) ctx
+
 
 
 allUsersTable :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> m String

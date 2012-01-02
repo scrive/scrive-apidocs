@@ -5,7 +5,6 @@ module DB.Utils (
   , oneRowAffectedGuard
   , oneObjectReturnedGuard
   , checkIfOneObjectReturned
-  , fetchValues
   , GetUniqueID
   ) where
 
@@ -16,8 +15,6 @@ import qualified Control.Exception as E
 
 import DB.Classes as DB
 import DB.Model
-import Happstack.State()
-import DB.Fetcher
 import Data.Convertible
 import Control.Monad
 
