@@ -26,6 +26,8 @@ import Doc.DocStateData
 import Company.Model
 import API.Service.Model
 
+{------ Doc Stats ------}
+
 -- | A named quantity in the statistics events
 -- please maintain the order on this (only add to the bottom)
 data DocStatQuantity = DocStatClose       -- ^ A Close Document event
@@ -58,21 +60,7 @@ data DocStatEvent = DocStatEvent { seUserID     :: UserID          -- ^ User who
                                  , seDocumentType :: DocumentType
                                  }
 
-data UserStatQuantity = UserSignTOS  -- When user signs TOS
-                        | UserSaveAfterSign -- when user accepts the save option after signing
-                        | UserRefuseSaveAfterSign -- when user refuses the save option after signing
-                        | UserPhoneAfterTOS -- when a user requests a phone call after accepting the TOS
-                        | UserCreateCompany -- when a user creates a company
-                      deriving (Eq, Ord, Show)
-$(enumDeriveConvertible ''UserStatQuantity)
-
-data UserStatEvent = UserStatEvent { usUserID    :: UserID
-                                   , usTime      :: MinutesTime
-                                   , usQuantity  :: UserStatQuantity
-                                   , usAmount    :: Int
-                                   , usServiceID :: Maybe ServiceID
-                                   , usCompanyID :: Maybe CompanyID
-                                   }
+{-------- Doc Stat Queries ---}
 
 selectDocStatEventsSQL :: String
 selectDocStatEventsSQL = "SELECT "
@@ -87,17 +75,19 @@ selectDocStatEventsSQL = "SELECT "
  ++ "  FROM doc_stat_events e"
  ++ " " -- always end in space to avoid problems
 
-selectUserStatEventsSQL :: String
-selectUserStatEventsSQL = "SELECT "
- ++ "  e.user_id"
- ++ ", e.time"
- ++ ", e.quantity"
- ++ ", e.amount"
- ++ ", e.service_id"
- ++ ", e.company_id"
- ++ "  FROM user_stat_events e"
- ++ " " -- always end in space to avoid problems
-
+fetchDocStats :: Statement -> [DocStatEvent] -> IO [DocStatEvent]
+fetchDocStats st acc = fetchRow st >>= maybe (return acc) f
+  where f [uid, time, quantity, amount, documentid, serviceid, companyid, documenttype] =
+          fetchDocStats st $ DocStatEvent { seUserID       = fromSql uid
+                                          , seTime         = fromSql time
+                                          , seQuantity     = fromSql quantity
+                                          , seAmount       = fromSql amount
+                                          , seDocumentID   = DocumentID (fromSql documentid)
+                                          , seServiceID    = fromSql serviceid
+                                          , seCompanyID    = fromSql companyid
+                                          , seDocumentType = doctypeFromString $ fromSql documenttype
+                                          } : acc
+        f l = error $ "fetchDocStats: unexpected row: "++show l
 
 data GetDocStatEvents = GetDocStatEvents
 instance DBQuery GetDocStatEvents [DocStatEvent] where
@@ -114,6 +104,17 @@ instance DBQuery GetDocStatEventsByUserID [DocStatEvent] where
     _ <- execute st [toSql userid]
     fetchDocStats st []
 
+data GetDocStatEventsByCompanyID = GetDocStatEventsByCompanyID CompanyID
+instance DBQuery GetDocStatEventsByCompanyID [DocStatEvent] where
+  dbQuery (GetDocStatEventsByCompanyID companyid) = wrapDB $ \conn -> do
+    st <- prepare conn $ selectDocStatEventsSQL
+      ++ " WHERE e.company_id = ?"
+    _ <- execute st [toSql companyid]
+    fetchDocStats st []
+
+
+{-------- Doc Stat Updates --}
+    
 data AddDocStatEvent = AddDocStatEvent DocStatEvent
 instance DBUpdate AddDocStatEvent Bool where
   dbUpdate (AddDocStatEvent event) = wrapDB $ \conn -> do
@@ -141,6 +142,57 @@ instance DBUpdate AddDocStatEvent Bool where
                     ,toSql $ unDocumentID $ seDocumentID event
                     ,toSql $ seQuantity event]
     oneRowAffectedGuard r
+
+
+data FlushDocStats = FlushDocStats
+instance DBUpdate FlushDocStats Bool where
+  dbUpdate FlushDocStats = wrapDB $ \conn -> do
+    st <- prepare conn $ "DELETE FROM doc_stat_events"
+    _ <- execute st []
+    return True
+
+
+
+{------ User Stats ------}
+
+data UserStatQuantity = UserSignTOS  -- When user signs TOS
+                        | UserSaveAfterSign -- when user accepts the save option after signing
+                        | UserRefuseSaveAfterSign -- when user refuses the save option after signing
+                        | UserPhoneAfterTOS -- when a user requests a phone call after accepting the TOS
+                        | UserCreateCompany -- when a user creates a company
+                      deriving (Eq, Ord, Show)
+$(enumDeriveConvertible ''UserStatQuantity)
+
+data UserStatEvent = UserStatEvent { usUserID    :: UserID
+                                   , usTime      :: MinutesTime
+                                   , usQuantity  :: UserStatQuantity
+                                   , usAmount    :: Int
+                                   , usServiceID :: Maybe ServiceID
+                                   , usCompanyID :: Maybe CompanyID
+                                   }
+
+selectUserStatEventsSQL :: String
+selectUserStatEventsSQL = "SELECT "
+ ++ "  e.user_id"
+ ++ ", e.time"
+ ++ ", e.quantity"
+ ++ ", e.amount"
+ ++ ", e.service_id"
+ ++ ", e.company_id"
+ ++ "  FROM user_stat_events e"
+ ++ " " -- always end in space to avoid problems
+
+fetchUserStats :: Statement -> [UserStatEvent] -> IO [UserStatEvent]
+fetchUserStats st acc = fetchRow st >>= maybe (return acc) f
+  where f [uid, time, quantity, amount, serviceid, companyid] =
+          fetchUserStats st $ UserStatEvent { usUserID       = fromSql uid
+                                            , usTime         = fromSql time
+                                            , usQuantity     = fromSql quantity
+                                            , usAmount       = fromSql amount
+                                            , usServiceID    = fromSql serviceid
+                                            , usCompanyID    = fromSql companyid
+                                            } : acc
+        f l = error $ "fetchUserStats: unexpected row: "++show l
 
 data GetUserStatEvents = GetUserStatEvents
 instance DBQuery GetUserStatEvents [UserStatEvent] where
@@ -173,45 +225,6 @@ instance DBUpdate AddUserStatEvent Bool where
                     ,toSql $ usQuantity event]
     oneRowAffectedGuard r
 
-fetchDocStats :: Statement -> [DocStatEvent] -> IO [DocStatEvent]
-fetchDocStats st acc = fetchRow st >>= maybe (return acc) f
-  where f [uid, time, quantity, amount, documentid, serviceid, companyid, documenttype] =
-          fetchDocStats st $ DocStatEvent { seUserID       = fromSql uid
-                                          , seTime         = fromSql time
-                                          , seQuantity     = fromSql quantity
-                                          , seAmount       = fromSql amount
-                                          , seDocumentID   = DocumentID (fromSql documentid)
-                                          , seServiceID    = fromSql serviceid
-                                          , seCompanyID    = fromSql companyid
-                                          , seDocumentType = doctypeFromString $ fromSql documenttype
-                                          } : acc
-        f l = error $ "fetchDocStats: unexpected row: "++show l
-
-fetchUserStats :: Statement -> [UserStatEvent] -> IO [UserStatEvent]
-fetchUserStats st acc = fetchRow st >>= maybe (return acc) f
-  where f [uid, time, quantity, amount, serviceid, companyid] =
-          fetchUserStats st $ UserStatEvent { usUserID       = fromSql uid
-                                            , usTime         = fromSql time
-                                            , usQuantity     = fromSql quantity
-                                            , usAmount       = fromSql amount
-                                            , usServiceID    = fromSql serviceid
-                                            , usCompanyID    = fromSql companyid
-                                            } : acc
-        f l = error $ "fetchUserStats: unexpected row: "++show l
 
 
-data GetDocStatEventsByCompanyID = GetDocStatEventsByCompanyID CompanyID
-instance DBQuery GetDocStatEventsByCompanyID [DocStatEvent] where
-  dbQuery (GetDocStatEventsByCompanyID companyid) = wrapDB $ \conn -> do
-    st <- prepare conn $ selectDocStatEventsSQL
-      ++ " WHERE e.company_id = ?"
-    _ <- execute st [toSql companyid]
-    fetchDocStats st []
-
-data FlushDocStats = FlushDocStats
-instance DBUpdate FlushDocStats Bool where
-  dbUpdate FlushDocStats = wrapDB $ \conn -> do
-    st <- prepare conn $ "DELETE FROM doc_stat_events"
-    _ <- execute st []
-    return True
 
