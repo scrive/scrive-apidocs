@@ -69,6 +69,8 @@ docStateTests conn = testGroup "DocState" [
   testThat "SetDocumentTimeoutTime fails when not signable" conn testSetDocumentTimeoutTimeNotSignableLeft,
   testThat "SetDocumentTimeoutTime succeeds when signable" conn testSetDocumentTimeoutTimeSignableRight,
 
+  testThat "GetTimeoutedButPendingDocuments works as expected" conn testGetTimedOutButPendingDocuments,
+
   testThat "SetInvitationDeliveryStatus fails when not signable" conn testSetInvitationDeliveryStatusNotSignableLeft,
   testThat "SetInvitationDeliveryStatus fails when doc does not exist" conn testSetInvitationDeliveryStatusNotLeft,
   testThat "SetInvitationDeliveryStatus succeeds if signable" conn testSetInvitationDeliveryStatusSignableRight,
@@ -622,6 +624,23 @@ testNoDocumentChangeMainFileAlwaysLeft = doTimes 10 $ do
   --assert
   validTest $ do
     assertLeft edoc
+
+testGetTimedOutButPendingDocuments :: DB ()
+testGetTimedOutButPendingDocuments = doTimes 1 $ do
+  -- setup
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (isPending &&^ (isJust . documenttimeouttime))
+  _doc2 <- addRandomDocumentWithAuthorAndCondition author (not . (isPending ||^ isAwaitingAuthor))
+
+  let t = unTimeoutTime $ fromJust $ documenttimeouttime doc
+  --execute
+  docsA <- dbQuery $ GetTimeoutedButPendingDocuments ((-10) `minutesAfter` t)
+  docsB <- dbQuery $ GetTimeoutedButPendingDocuments (10 `minutesAfter` t)
+
+  --assert
+  validTest $ do
+    assertEqual "Documents do not timeout before time" [] (map documentstatus docsA)
+    assertEqual "Documents timeout after time" [Pending] (map documentstatus docsB)
 
 
 {-
