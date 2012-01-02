@@ -3,7 +3,8 @@ module Mails.Public (
     module Mails.Data
   , CreateEmail(..)
   , AddContentToEmail(..)
-  , GetSendgridEvents(..)
+  , GetEvents(..)
+  , MarkEventAsRead(..)
   , DeleteEmail(..)
   ) where
 
@@ -37,9 +38,13 @@ instance DBUpdate AddContentToEmail Bool where
         ]
     oneRowAffectedGuard r
 
-data GetSendgridEvents = GetSendgridEvents
-instance DBQuery GetSendgridEvents [(MailID, SendGridEvent)] where
-  dbQuery GetSendgridEvents = undefined
+data GetEvents = GetEvents
+instance DBQuery GetEvents [(MailID, Event)] where
+  dbQuery GetEvents = undefined
+
+data MarkEventAsRead = MarkEventAsRead MailID
+instance DBUpdate MarkEventAsRead Bool where
+  dbUpdate (MarkEventAsRead _mid) = undefined
 
 data DeleteEmail = DeleteEmail MailID
 instance DBUpdate DeleteEmail Bool where

@@ -4,7 +4,7 @@ module Mails.Data (
   , Attachment(..)
   , Address(..)
   , SendGridEventType(..)
-  , SendGridEvent(..)
+  , Event(..)
   ) where
 
 import Data.Data
@@ -59,10 +59,9 @@ data SendGridEventType =
   | Bounce String String String -- ^ status, reason, type
     deriving (Eq, Ord, Show, Data, Typeable)
 
-data SendGridEvent = SendgridEvent {
+data Event = SendgridEvent {
     seAddress :: String
   , seType    :: SendGridEventType
   , seData    :: String
   } deriving (Eq, Ord, Show, Data, Typeable)
-
-$(jsonableDeriveConvertible [t| SendGridEvent |])
+$(jsonableDeriveConvertible [t| Event |])

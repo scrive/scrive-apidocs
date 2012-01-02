@@ -21,7 +21,8 @@ tableMails = Table {
        , ("attachments", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("x_smtpapi", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("sent", SqlColDesc { colType = SqlTimestampWithZoneT, colNullable = Just True})
-       , ("sendgrid_event", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("event", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("event_read", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
         runRaw conn $ "CREATE TABLE mails ("
@@ -33,7 +34,8 @@ tableMails = Table {
           ++ ", attachments TEXT NULL"
           ++ ", x_smtpapi TEXT NULL"
           ++ ", sent TIMESTAMPTZ NULL"
-          ++ ", sendgrid_event TEXT NULL"
+          ++ ", event TEXT NULL"
+          ++ ", event_read TIMESTAMPTZ NULL"
           ++ ", CONSTRAINT pk_mails PRIMARY KEY (id)"
           ++ ")"
         return TVRcreated
