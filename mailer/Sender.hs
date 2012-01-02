@@ -6,8 +6,8 @@ module Sender (
 
 import Control.Monad.IO.Class
 import Data.List hiding (head)
-import System.Directory
 import System.Exit
+import System.Process
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
 
@@ -15,7 +15,6 @@ import Assembler
 import MailingServerConf
 import Mails.Model
 import Misc
-import OpenDocument
 import OurPrelude
 import qualified AppLogger as Log (mailingServer, mailContent)
 
@@ -25,7 +24,7 @@ createSender :: MailsConfig -> Sender
 createSender mc = case mc of
   MailsSendgrid{} -> createSendGridSender mc
   MailsSendmail   -> createSendmailSender
-  MailsLocalOpen  -> createLocalOpenSender
+  MailsLocal{}    -> createLocalOpenSender mc
 
 createExternalSender :: String -> (Mail -> [String]) -> Sender
 createExternalSender program createargs = Sender { sendMail = send }
@@ -72,15 +71,22 @@ createSendmailSender = createExternalSender "sendmail" createargs
       , "-i" -- ignore single dots in input
       ]
 
-createLocalOpenSender :: Sender
-createLocalOpenSender = Sender { sendMail = send }
+createLocalOpenSender :: MailsConfig -> Sender
+createLocalOpenSender config = Sender { sendMail = send }
   where
     send :: MonadIO m => Mail -> m Bool
     send mail@Mail{..} = liftIO $ do
-      tmp <- getTemporaryDirectory
-      let filename = tmp ++ "/Email-" ++ addrEmail ($(head) mailTo) ++ "-" ++ show mailID ++ ".eml"
+      let filename = localDirectory config ++ "/Email-" ++ addrEmail ($(head) mailTo) ++ "-" ++ show mailID ++ ".eml"
       content <- assembleContent mail
       BSL.writeFile filename content
       Log.mailingServer $ "Email #" ++ show mailID ++ " saved to file " ++ filename
-      _ <- openDocument filename
+      case localOpenCommand config of
+        Nothing  -> return ()
+        Just cmd -> do
+          _ <- createProcess (proc cmd [filename]) {
+              std_in  = Inherit
+            , std_out = Inherit
+            , std_err = Inherit
+          }
+          return ()
       return True

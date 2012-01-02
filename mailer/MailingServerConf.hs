@@ -19,14 +19,20 @@ data MailsConfig = MailsSendgrid {
   , sendgridPassword     :: String
   }
   | MailsSendmail
-  | MailsLocalOpen
+  | MailsLocal {
+    localDirectory       :: FilePath
+  , localOpenCommand     :: Maybe String
+  }
     deriving (Read, Show)
 
 instance Configuration MailingServerConf where
   confDefault = MailingServerConf {
       mscHttpBindAddress = (0x7f000001, 6666)
     , mscDBConfig = "user='kontra' password='kontra' dbname='kontrakcja'"
-    , mscMailsConfig = MailsLocalOpen
+    , mscMailsConfig = MailsLocal {
+        localDirectory = "/tmp"
+      , localOpenCommand = Nothing
+    }
   }
   confOptions = []
   confVerify _ = return $ Right ()
