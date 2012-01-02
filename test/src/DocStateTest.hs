@@ -53,6 +53,12 @@ docStateTests conn = testGroup "DocState" [
   testThat "CancelDocument succeeds when doc is signable and awaiting author" conn testCancelDocumentSignableAwaitingAuthorJust,
   testThat "CancelDocument fails when doc is signable and awaiting author" conn testCancelDocumentSignableNotAwaitingAuthorNothing,
 
+  testThat "PendingToAwaitingAuthor fails when doc is not signable" conn testPendingToAwaitingAuthorDocumentNotSignableNothing,
+  testThat "PendingToAwaitingAuthor fails when doc doesn't exist" conn testPendingToAwaitingAuthorDocumentNotNothing,
+  testThat "PendingToAwaitingAuthor succeeds when doc is signable and awaiting author" conn testPendingToAwaitingAuthorDocumentSignableAwaitingAuthorJust,
+  testThat "PendingToAwaitingAuthor fails when doc is signable and awaiting author" conn testPendingToAwaitingAuthorDocumentSignableNotAwaitingAuthorNothing,
+
+
   testThat "SetDocumentTags fails when does not exist" conn testSetDocumentTagsNotLeft,
   testThat "SetDocumentTags succeeds" conn testSetDocumentTagsRight,
 
@@ -1175,6 +1181,47 @@ testCancelDocumentNotNothing = doTimes 10 $ do
   etdoc <- randomUpdate $ (\did -> CancelDocument did ManualCancel)
   validTest $ assertLeft etdoc
 
+
+testPendingToAwaitingAuthorDocumentSignableAwaitingAuthorJust :: DB ()
+testPendingToAwaitingAuthorDocumentSignableAwaitingAuthorJust = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocument (randomDocumentAllowsDefault author)
+         { randomDocumentAllowedTypes = documentSignableTypes
+         , randomDocumentAllowedStatuses = [Pending]
+         , randomDocumentCondition = ((hasSeen . getAuthorSigLink) &&^ (all (((not . isAuthor) &&^ isSignatory) =>>^ hasSigned) . documentsignatorylinks))
+         }
+
+  let Just sl = getAuthorSigLink doc
+  etdoc <- msum [randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl),
+                 randomUpdate $ PendingToAwaitingAuthor (documentid doc)]
+  validTest $ assertRight etdoc
+
+testPendingToAwaitingAuthorDocumentSignableNotAwaitingAuthorNothing :: DB ()
+testPendingToAwaitingAuthorDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocument (randomDocumentAllowsDefault author)
+         { randomDocumentAllowedTypes = documentSignableTypes
+         , randomDocumentAllowedStatuses = [Pending]
+         , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
+         }
+
+  etdoc <- msum [randomUpdate $ PendingToAwaitingAuthor (documentid doc)]
+  validTest $ assertRight etdoc
+
+testPendingToAwaitingAuthorDocumentNotSignableNothing :: DB ()
+testPendingToAwaitingAuthorDocumentNotSignableNothing = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocument (randomDocumentAllowsDefault author)
+         { randomDocumentAllowedTypes = documentAllTypes \\ documentSignableTypes
+         , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
+         }
+  etdoc <- randomUpdate $ PendingToAwaitingAuthor (documentid doc)
+  validTest $ assertLeft etdoc
+
+testPendingToAwaitingAuthorDocumentNotNothing :: DB ()
+testPendingToAwaitingAuthorDocumentNotNothing = doTimes 10 $ do
+  etdoc <- randomUpdate $ (\did -> PendingToAwaitingAuthor did)
+  validTest $ assertLeft etdoc
 
 
 testSetDocumentTitleNotLeft :: DB ()
