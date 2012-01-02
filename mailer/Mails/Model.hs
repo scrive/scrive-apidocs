@@ -8,6 +8,7 @@ module Mails.Model (
 import Database.HDBC
 
 import DB.Classes
+import DB.Fetcher2
 import DB.Utils
 import Mails.Data
 import Mails.Public
@@ -36,22 +37,19 @@ instance DBQuery GetIncomingEmails [Mail] where
       ++ ", x_smtpapi"
       ++ " FROM mails WHERE"
       ++ "  title IS NOT NULL AND content IS NOT NULL AND sent IS NULL"
+      ++ " ORDER BY id DESC"
     _ <- execute st []
-    fetchMails st []
+    foldDB st fetchMails []
     where
-      fetchMails st acc = fetchRow st >>= maybe (return acc) f
-        where
-          f [id', sender, receivers, title, content, attachments, x_smtpapi] =
-            fetchMails st $ Mail {
-                mailID = fromSql id'
-              , mailFrom = fromSql sender
-              , mailTo = fromSql receivers
-              , mailTitle = fromSql title
-              , mailContent = fromSql content
-              , mailAttachments = fromSql attachments
-              , mailXSMTPAPI = fromSql x_smtpapi
-              } : acc
-          f r = error $ "fetchMails: unexpected row: " ++ show r
+      fetchMails acc id' sender receivers title content attachments x_smtpapi = Mail {
+          mailID = id'
+        , mailFrom = sender
+        , mailTo = receivers
+        , mailTitle = title
+        , mailContent = content
+        , mailAttachments = attachments
+        , mailXSMTPAPI = x_smtpapi
+        } : acc
 
 data MarkEmailAsSent = MarkEmailAsSent MailID
 instance DBUpdate MarkEmailAsSent Bool where
