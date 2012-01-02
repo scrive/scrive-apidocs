@@ -140,3 +140,38 @@ tableUserStatEvents = Table {
       ++ " REFERENCES services(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
+
+tableSignStatEvents :: Table
+tableSignStatEvents = Table {
+  tblName = "sign_stat_events"
+  , tblVersion = 2
+  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
+    case desc of
+      [("document_id",       SqlColDesc { colType     = SqlBigIntT
+                                        , colNullable = Just False}),
+       ("signatory_link_id", SqlColDesc { colType     = SqlBigIntT
+                                        , colNullable = Just False}),
+       ("time",              SqlColDesc { colType     = SqlTimestampWithZoneT
+                                        , colNullable = Just False}),
+       ("quantity",          SqlColDesc { colType     = SqlSmallIntT
+                                        , colNullable = Just False})] -> return TVRvalid
+      [] -> do
+        runRaw conn $ "CREATE TABLE sign_stat_events ("
+          ++ "  document_id        BIGINT      NOT NULL"          
+          ++ ", signatory_link_id  BIGINT      NOT NULL"
+          ++ ", time               TIMESTAMPTZ NOT NULL"
+          ++ ", quantity           SMALLINT    NOT NULL"
+          ++ ", CONSTRAINT pk_sign_stat_events PRIMARY KEY (quantity, document_id, signatory_link_id)"
+          ++ ")"
+        return TVRcreated
+      _ -> return TVRinvalid
+  , tblPutProperties = wrapDB $ \conn -> do
+    runRaw conn $ "ALTER TABLE sign_stat_events"
+      ++ " ADD CONSTRAINT fk_sign_stat_events_signatory_link FOREIGN KEY(signatory_link_id)"
+      ++ " REFERENCES signatory_links(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
+    runRaw conn $ "ALTER TABLE sign_stat_events"
+      ++ " ADD CONSTRAINT fk_sign_stat_events_documents FOREIGN KEY(document_id)"
+      ++ " REFERENCES documents(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
+  }
