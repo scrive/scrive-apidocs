@@ -44,6 +44,7 @@ tablesList = [
   , tableCompanyInvites
   , tableDocStatEvents
   , tableUserStatEvents
+  , tableSignStatEvents
   , tableFiles
 #ifdef DOCUMENTS_IN_POSTGRES
   , tableDocuments
