@@ -1,9 +1,10 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Mails.Data (
     MailID
+  , XSMTPAttrs(..)
   , Attachment(..)
   , Address(..)
-  , SendGridEventType(..)
+  , SendGridEvent(..)
   , Event(..)
   ) where
 
@@ -20,6 +21,10 @@ newtype MailID = MailID Int64
   deriving (Eq, Ord)
 $(newtypeDeriveUnderlyingReadShow ''MailID)
 $(newtypeDeriveConvertible ''MailID)
+
+newtype XSMTPAttrs = XSMTPAttrs { fromXSMTPAttrs :: [(String, String)] }
+  deriving (Eq, Ord, Show, Data, Typeable)
+$(jsonableDeriveConvertible [t| XSMTPAttrs |])
 
 data Attachment = Attachment {
     attName    :: String
@@ -50,7 +55,7 @@ data Address = Address {
 $(jsonableDeriveConvertible [t| Address |])
 $(jsonableDeriveConvertible [t| [Address] |])
 
-data SendGridEventType =
+data SendGridEvent =
     Processed
   | Opened
   | Dropped String              -- ^ drop reason
@@ -59,9 +64,6 @@ data SendGridEventType =
   | Bounce String String String -- ^ status, reason, type
     deriving (Eq, Ord, Show, Data, Typeable)
 
-data Event = SendgridEvent {
-    seAddress :: String
-  , seType    :: SendGridEventType
-  , seData    :: String
-  } deriving (Eq, Ord, Show, Data, Typeable)
+data Event = SendGridEvent SendGridEvent
+  deriving (Eq, Ord, Show, Data, Typeable)
 $(jsonableDeriveConvertible [t| Event |])

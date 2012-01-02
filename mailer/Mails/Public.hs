@@ -12,24 +12,25 @@ import Control.Applicative
 import Database.HDBC
 
 import DB.Classes
+import DB.Types
 import DB.Utils
 import Mails.Data
 import OurPrelude
 
-data CreateEmail = CreateEmail Address [Address]
+data CreateEmail = CreateEmail MagicHash Address [Address]
 instance DBUpdate CreateEmail MailID where
-  dbUpdate (CreateEmail sender to) = $(fromJust)
-    <$> getOne "INSERT INTO mails (sender, receivers) VALUES (?, ?) RETURNING id"
-      [toSql sender, toSql to]
+  dbUpdate (CreateEmail token sender to) = $(fromJust)
+    <$> getOne "INSERT INTO mails (token, sender, receivers) VALUES (?, ?, ?) RETURNING id"
+      [toSql token, toSql sender, toSql to]
 
-data AddContentToEmail = AddContentToEmail MailID String String [Attachment] String
+data AddContentToEmail = AddContentToEmail MailID String String [Attachment] XSMTPAttrs
 instance DBUpdate AddContentToEmail Bool where
   dbUpdate (AddContentToEmail mid title content attachments xsmtpapi) = wrapDB $ \conn -> do
     r <- run conn ("UPDATE mails SET"
       ++ "  title = ?"
       ++ ", content = ?"
       ++ ", attachments = ?"
-      ++ ", x_smtpapi = ? WHERE id = ?") [
+      ++ ", x_smtp_attrs = ? WHERE id = ?") [
           toSql title
         , toSql content
         , toSql attachments

@@ -13,9 +13,8 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.IO.Class
 import Data.List
-import Text.JSON.Fields
+import System.Random
 import qualified Data.ByteString.UTF8 as BSU
-import qualified Text.JSON as J
 
 import API.Service.Model
 import DB.Classes
@@ -44,11 +43,10 @@ scheduleEmailSendout' MailsConfig{..} Mail{..} = do
         niceAddress <- fromNiceAddress mailInfo ourInfoEmailNiceName
         return Address {addrName = niceAddress, addrEmail = ourInfoEmail }
       Just address -> return Address { addrName = "", addrEmail = BSU.toString address }
-  mid <- dbUpdate $ CreateEmail fromAddr (map toAddress to)
-  xsmtpapi <- liftIO $ json $ field "unique_args" $ do
-    field "mailinfo" $ show mailInfo
-    field "id" $ show mid
-  _ <- dbUpdate $ AddContentToEmail mid title (wrapHTML content) (map toAttachment attachments) (J.encode xsmtpapi)
+  token <- liftIO randomIO
+  mid <- dbUpdate $ CreateEmail token fromAddr (map toAddress to)
+  let xsmtpapi = XSMTPAttrs [("mailinfo", show mailInfo)]
+  _ <- dbUpdate $ AddContentToEmail mid title (wrapHTML content) (map toAttachment attachments) xsmtpapi
   return ()
   where
     toAddress MailAddress{..} = Address {

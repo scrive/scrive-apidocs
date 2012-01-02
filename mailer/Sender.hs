@@ -39,7 +39,7 @@ createExternalSender program createargs = Sender { sendMail = send }
           Log.mailingServer $ "Error while sending email #" ++ show mailID ++ ", cannot execute " ++ program ++ " to send email (code " ++ show retcode ++ ") stderr: \n" ++ BSLU.toString bsstderr
           return False
         ExitSuccess -> do
-          let subject = filter (/= '\n') mailTitle
+          let subject = filter (not . (`elem` "\r\n")) mailTitle
           Log.mailingServer $ "Email #" ++ show mailID ++ " with subject '" ++ subject ++ "' sent correctly to: " ++ receivers
           Log.mailContent $ unlines [
               "Subject: " ++ subject

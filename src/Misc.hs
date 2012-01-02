@@ -433,9 +433,13 @@ querystring = do
 pureString::String -> String
 pureString s = unwords $ words $ filter (not . isControl) s
 
-pairMaybe::Maybe a -> Maybe b -> Maybe (a,b)
-pairMaybe (Just a) (Just b) = Just (a,b)
+pairMaybe :: Maybe a -> Maybe b -> Maybe (a, b)
+pairMaybe (Just a) (Just b) = Just (a, b)
 pairMaybe _ _ = Nothing
+
+pairMaybe3 :: Maybe a -> Maybe b -> Maybe c -> Maybe (a, b, c)
+pairMaybe3 (Just a) (Just b) (Just c) = Just (a, b, c)
+pairMaybe3 _ _ _ = Nothing
 
 maybeReadM::(Monad m,Read a,Functor m) =>  m (Maybe String) -> m (Maybe a)
 maybeReadM c = join <$> fmap maybeRead <$> c

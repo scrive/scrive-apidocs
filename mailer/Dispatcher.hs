@@ -10,6 +10,7 @@ import qualified Control.Exception as E
 import DB.Classes
 import Sender
 import Mails.Model
+import MinutesTime
 import qualified AppLogger as Log (mailingServer)
 
 dispatcher :: Sender -> String -> IO ()
@@ -22,7 +23,8 @@ dispatcher sender dbconf = withPostgreSQL dbconf send
           success <- sendMail sender mail
           if success
             then do
-              res <- dbUpdate $ MarkEmailAsSent $ mailID mail
+              time <- getMinutesTime
+              res <- dbUpdate $ MarkEmailAsSent (mailID mail) time
               when (not res) $
                 error $ "Marking email #" ++ show (mailID mail) ++ " as sent failed"
             else error "Sending email failed"

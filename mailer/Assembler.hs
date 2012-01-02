@@ -14,13 +14,15 @@ import Data.List
 import Data.Maybe
 import Text.HTML.TagSoup
 import Text.HTML.TagSoup.Entity
+import Text.JSON.Fields
+import qualified Codec.Binary.QuotedPrintable as QP
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import qualified Data.ByteString.Base64 as Base64
-import qualified Codec.Binary.QuotedPrintable as QP
+import qualified Text.JSON as J
 
 import Mails.Model
 import Misc (randomString)
@@ -28,13 +30,17 @@ import Misc (randomString)
 assembleContent :: MonadIO m => Mail -> m BSL.ByteString
 assembleContent Mail{..} = do
   (boundaryMixed, boundaryAlternative) <- createBoundaries
+  xsmtpapi <- liftIO $ json $ field "unique_args" $ do
+    field "id" $ show mailID
+    field "token" $ show mailToken
+    forM_ (fromXSMTPAttrs mailXSMTPAttrs) $ uncurry field
   let -- FIXME: add =?UTF8?B= everywhere it is needed here
       headerEmail =
         -- FIXME: encoded word should not be longer than 75 bytes including everything
         "Subject: " ++ mailEncode mailTitle ++ "\r\n" ++
         "To: " ++ createMailTos mailTo ++ "\r\n" ++
         "From: " ++ mailEncode (addrName mailFrom) ++ " <" ++ addrEmail mailFrom ++ ">\r\n" ++
-        "X-SMTPAPI: " ++ mailXSMTPAPI ++ "\r\n" ++
+        "X-SMTPAPI: " ++ J.encode xsmtpapi ++ "\r\n" ++
         "MIME-Version: 1.0\r\n" ++
         "Content-Type: multipart/mixed; boundary=" ++ boundaryMixed ++ "\r\n" ++
         "\r\n"
