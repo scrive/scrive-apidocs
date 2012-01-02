@@ -69,6 +69,8 @@ docStateTests conn = testGroup "DocState" [
   testThat "SetDocumentTimeoutTime fails when not signable" conn testSetDocumentTimeoutTimeNotSignableLeft,
   testThat "SetDocumentTimeoutTime succeeds when signable" conn testSetDocumentTimeoutTimeSignableRight,
 
+  testThat "GetTimeoutedButPendingDocuments works as expected" conn testGetTimedOutButPendingDocuments,
+
   testThat "SetInvitationDeliveryStatus fails when not signable" conn testSetInvitationDeliveryStatusNotSignableLeft,
   testThat "SetInvitationDeliveryStatus fails when doc does not exist" conn testSetInvitationDeliveryStatusNotLeft,
   testThat "SetInvitationDeliveryStatus succeeds if signable" conn testSetInvitationDeliveryStatusSignableRight,
@@ -120,6 +122,11 @@ docStateTests conn = testGroup "DocState" [
 
   testThat "when I attach a sealed file to a bad docid, it always returns left" conn testNoDocumentAttachSealedAlwaysLeft,
   testThat "when I attach a sealed file to a real doc, it always returns Right" conn testDocumentAttachSealedPendingRight,
+
+
+  testThat "when I ChangeMainFile of a real document returns Right" conn testDocumentChangeMainFileRight,
+  testThat "when I ChangeMainFile of a bad docid, it ALWAYS returns Left" conn testNoDocumentChangeMainFileAlwaysLeft,
+
   {-
   testThat "when I call updateDocument, it fails when the doc doesn't exist" conn testNoDocumentUpdateDocumentAlwaysLeft,
   testThat "When I call updateDocument with a doc that is not in Preparation, always returns left" conn testNotPreparationUpdateDocumentAlwaysLeft,
@@ -589,6 +596,51 @@ testDocumentAttachSealedPendingRight = doTimes 10 $ do
   validTest $ do
     assertRight edoc
     assertBool "Should have new file attached, but it's not" $ (fileid file) `elem` documentsealedfiles (fromRight edoc)
+
+
+testDocumentChangeMainFileRight :: DB ()
+testDocumentChangeMainFileRight = doTimes 10 $ do
+  -- setup
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (const True)
+  file <- addNewRandomFile
+  --execute
+  edoc <- randomUpdate $ ChangeMainfile (documentid doc) (fileid file)
+  --assert
+  validTest $ do
+    assertRight edoc
+    let doc1 = fromRight edoc
+    assertBool "New file is attached" (fileid file `elem` (documentfiles doc1 ++ documentsealedfiles doc1))
+    assertInvariants $ fromRight edoc
+
+
+testNoDocumentChangeMainFileAlwaysLeft :: DB ()
+testNoDocumentChangeMainFileAlwaysLeft = doTimes 10 $ do
+  -- setup
+  file <- addNewRandomFile
+  --execute
+  -- non-existent docid
+  edoc <- randomUpdate $ (\docid -> ChangeMainfile docid (fileid file))
+  --assert
+  validTest $ do
+    assertLeft edoc
+
+testGetTimedOutButPendingDocuments :: DB ()
+testGetTimedOutButPendingDocuments = doTimes 1 $ do
+  -- setup
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (isPending &&^ (isJust . documenttimeouttime))
+  _doc2 <- addRandomDocumentWithAuthorAndCondition author (not . (isPending ||^ isAwaitingAuthor))
+
+  let t = unTimeoutTime $ fromJust $ documenttimeouttime doc
+  --execute
+  docsA <- dbQuery $ GetTimeoutedButPendingDocuments ((-10) `minutesAfter` t)
+  docsB <- dbQuery $ GetTimeoutedButPendingDocuments (10 `minutesAfter` t)
+
+  --assert
+  validTest $ do
+    assertEqual "Documents do not timeout before time" [] (map documentstatus docsA)
+    assertEqual "Documents timeout after time" [Pending] (map documentstatus docsB)
 
 
 {-
