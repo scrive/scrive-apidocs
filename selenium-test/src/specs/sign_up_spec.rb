@@ -33,75 +33,75 @@ describe "sign up" do
 
     @driver.get(@ctx.createKontrakcjaURL "/")
 
-    #request an account and make sure you get a green flash back
+    puts "request an account and make sure you get a green flash back"
     (@wait.until { @driver.find_element :css => ".requestAccount input" }).send_keys random_email
     (@wait.until { @driver.find_element :css => ".requestAccount .submit" }).click
     (@wait.until { @driver.find_element :css => ".modal-container .close" }).click
 
-    #we should get an email to a page where we can accept the tos
+    puts "we should get an email to a page where we can accept the tos" 
     @emailhelper.follow_link_in_latest_mail_for random_email
     @wait.until { @driver.find_element :id => "tosCBox" }
 
-    #make sure we get a red flash if we try to activate without signing the tos
+    puts "make sure we get a red flash if we try to activate without signing the tos" 
     (@wait.until { @driver.find_element :css => ".modalcontainer .submit" }).click
     @wait.until { @driver.find_element :css => ".flash-container.red" }
     @wait.until { @driver.find_element :id => "tosCBox" }
 
-    #accept the tos
+    puts "accept the tos" 
     (@wait.until { @driver.find_element :id => "tosCBox" }).click
 
-    #make sure we get a red flash if we try to activate without filling in a name
+    puts "make sure we get a red flash if we try to activate without filling in a name"
     (@wait.until { @driver.find_element :css => ".modalcontainer .submit" }).click
     @wait.until { @driver.find_element :css => ".flash-container.red" }
     @wait.until { @driver.find_element :id => "tosCBox" }
 
-    #accept the tos again
+    puts "accept the tos again"
     (@wait.until { @driver.find_element :id => "tosCBox" }).click
 
-    #fill in a name
+    puts "fill in a name"
     (@wait.until { @driver.find_element :name => "fstname" }).send_keys "Random"
     (@wait.until { @driver.find_element :name => "sndname" }).send_keys "Person"
 
-    #make sure we get a red flash if we try to activate without filling in the password details
+    puts "make sure we get a red flash if we try to activate without filling in the password details"
     (@wait.until { @driver.find_element :css => ".modalcontainer .submit" }).click
     @wait.until { @driver.find_element :css => ".flash-container.red" }
     @wait.until { @driver.find_element :id => "tosCBox" }
 
-    #accept the tos again
+    puts "accept the tos again"
     (@wait.until { @driver.find_element :id => "tosCBox" }).click
 
-    #fill in a name again
+    puts "fill in a name again"
     (@wait.until { @driver.find_element :name => "fstname" }).send_keys "Random"
     (@wait.until { @driver.find_element :name => "sndname" }).send_keys "Person"
 
-    #fill in the password details incorrectly and make sure we get red flash message
+    puts "fill in the password details incorrectly and make sure we get red flash message"
     (@wait.until { @driver.find_element :name => "password" }).send_keys "password-12"
     (@wait.until { @driver.find_element :name => "password2" }).send_keys "password-123"
     (@wait.until { @driver.find_element :css => ".modalcontainer .submit" }).click
     @wait.until { @driver.find_element :css => ".flash-container.red" }
     @wait.until { @driver.find_element :id => "tosCBox" }
 
-    #accept the tos yet again
+    puts "accept the tos yet again"
     (@wait.until { @driver.find_element :id => "tosCBox" }).click
 
-    #fill in a name for the last time
+    puts "fill in a name for the last time"
     (@wait.until { @driver.find_element :name => "fstname" }).send_keys "Random"
     (@wait.until { @driver.find_element :name => "sndname" }).send_keys "Person"
 
-    #fill in the password details correctly
+    puts "fill in the password details correctly"
     (@wait.until { @driver.find_element :name => "password" }).send_keys "password-12"
     (@wait.until { @driver.find_element :name => "password2" }).send_keys "password-12"
 
-    #submit the signup form
+    puts "submit the signup form"
     (@wait.until { @driver.find_element :css => ".modalcontainer .submit" }).click
 
-    #should be logged in and able to upload a document
+    puts "should be logged in and able to upload a document"
     @wait.until { @driver.find_element :css => "a.logout" }
     @wait.until { @driver.find_element :css => "a.documenticon" }
 
     @loginhelper.logout
 
-    #make sure we can login and out as our new user
+    puts "make sure we can login and out as our new user"
     @loginhelper.login_as(random_email, "password-12")
     @loginhelper.logout
   end
