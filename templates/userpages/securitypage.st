@@ -8,8 +8,8 @@ showUserSecurity =
        <li><a href="/account">$_HeadUserInfo()$</a></li>
        <li class="active"><a href="/account/security">$_HeadAccountSettings()$</a></li>
        $if(iscompanyadmin)$<li><a href="/account/companyaccounts">$_CompanyAccounts()$</a></li>$endif$
-       <li><a href="/account/sharing">$_sharing()$</a></li>
        <li><a href="/account/mailapi">$_HeadMailApi()$</a></li>
+        <li><a href="/account/usagestats">$_HeadUsageStats()$</a></li>
    </ul>
    <div class="tab-container">
        <div class="tab-content account">
@@ -62,7 +62,7 @@ showUserSecurity =
                  </tr>
                  -->
                </table>
-             </div> 
+             </div>
            </div>
            <div class="col">
              <div class="account-header">
@@ -72,19 +72,19 @@ showUserSecurity =
                <p>
                  <input type="checkbox" id="advancedMode"
                         name="advancedMode"
-                        $if(advancedMode)$checked="checked"$endif$ /> 
+                        $if(advancedMode)$checked="checked"$endif$ />
                  <label for="advancedMode">$_dialogConfirmAdvancedCheck()$</label>
                </p>
               <p>
                  <input type="checkbox" id="footerCheckbox"
                         name="footerCheckbox"
-                        $if(footer)$checked="checked"$endif$ /> 
+                        $if(footer)$checked="checked"$endif$ />
                  <label for="footerCheckbox">$_userDocumentSettingsMailFooter()$</label>
                  <div class="customfooterbox" style="display:none">
                     <textarea id="customfooter" name="customfooter" style="width:350px;height:110px">$footer$</textarea>
                  </div>
                  <script>
-                   jQuery(function() { 
+                   jQuery(function() {
                    function toogleFooterBox() {
                     if (jQuery('#footerCheckbox').attr("checked"))
                             jQuery('.customfooterbox').show();
@@ -104,11 +104,11 @@ showUserSecurity =
                         });
                   toogleFooterBox();
                   });
-                 </script>  
+                 </script>
 
                </p>
              </div>
-             
+
            </div>
            <div class="clearfix"></div>
 

@@ -70,7 +70,7 @@ testFileJSON = do
   
 testDocumentJSON :: Assertion
 testDocumentJSON = do
-  let doc = blankDocument { documenttitle = BS.fromString "Cool Contract" }
+  let doc = blankDocument { documenttitle = BS.fromString "Cool Contract", documentallowedidtypes = [EmailIdentification] }
       jsv = api_document (Just []) doc
   testJSONStringLookup "title" jsv "Cool Contract"
   testJSONStringLookup "document_id" jsv "0"

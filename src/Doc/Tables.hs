@@ -133,18 +133,18 @@ tableSignatoryAttachments = Table {
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
-      [  ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+      [  ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("email", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("description", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
-        runRaw conn $ "CREATE TABLE signatory_attachments ("
-          ++ "  file_id BIGINT NOT NULL"
+        runRaw conn $ "CREATE TABLE signatory_attachments "
+          ++ "( file_id BIGINT NULL"
           ++ ", document_id BIGINT NOT NULL"
           ++ ", email TEXT NOT NULL"
           ++ ", description TEXT NOT NULL"
-          ++ ", CONSTRAINT pk_signatory_attachments PRIMARY KEY (file_id)"
+          ++ ", CONSTRAINT pk_signatory_attachments PRIMARY KEY (document_id, email)"
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid
@@ -204,7 +204,7 @@ tableSignatoryLinks = Table {
           ++ ", seen_time TIMESTAMPTZ NULL DEFAULT NULL"
           ++ ", seen_ip INTEGER NULL DEFAULT NULL"
           ++ ", read_invitation TIMESTAMPTZ NULL DEFAULT NULL"
-          ++ ", invitation_delivery_status SMALLINT NOT NULL DEFAULT 1"
+          ++ ", invitation_delivery_status SMALLINT NOT NULL DEFAULT 3"     -- this is Unknown
           ++ ", signinfo_text TEXT NULL DEFAULT NULL"
           ++ ", signinfo_signature TEXT NULL DEFAULT NULL"
           ++ ", signinfo_certificate TEXT NULL DEFAULT NULL"

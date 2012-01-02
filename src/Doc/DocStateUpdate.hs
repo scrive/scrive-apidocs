@@ -18,6 +18,7 @@ module Doc.DocStateUpdate
 import DB.Types
 import DBError
 import Doc.Transitory
+import Doc.DocStateData
 import Kontra
 import MinutesTime
 import GHC.Word
@@ -83,8 +84,8 @@ signDocumentWithEmail did slid mh fields = do
               Left message -> return $ Left (DBActionNotAvailable message)
               Right doc -> return $ Right (doc, olddoc)
 
-              
-signDocumentWithEleg :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(BS.ByteString, BS.ByteString)] -> SignatureInfo -> m (Either DBError (Document, Document))    
+
+signDocumentWithEleg :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(BS.ByteString, BS.ByteString)] -> SignatureInfo -> m (Either DBError (Document, Document))
 signDocumentWithEleg did slid mh fields sinfo = do
   edoc <- getDocByDocIDSigLinkIDAndMagicHash did slid mh
   case edoc of
@@ -124,7 +125,7 @@ authorSignDocument :: (Kontrakcja m) => DocumentID -> Maybe SignatureInfo -> m (
 authorSignDocument did msigninfo = onlyAuthor did $ do
   ctx <- getContext
   edoc <- getDocByDocID did
-  case edoc of 
+  case edoc of
     Left m -> return $ Left m
     Right doc -> do
       let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink doc
@@ -136,7 +137,7 @@ authorSignDocument did msigninfo = onlyAuthor did $ do
           ed2 <- doc_update $ MarkDocumentSeen did signatorylinkid signatorymagichash (ctxtime ctx) (ctxipnumber ctx)
           case ed2 of
             Left m -> return $ Left $ DBActionNotAvailable m
-            Right _ -> 
+            Right _ ->
               transActionNotAvailable <$> doc_update (SignDocument did signatorylinkid signatorymagichash (ctxtime ctx) (ctxipnumber ctx) msigninfo)
 
 {- |
@@ -146,7 +147,7 @@ authorSendDocument :: (Kontrakcja m) => DocumentID -> m (Either DBError Document
 authorSendDocument did = onlyAuthor did $ do
   ctx <- getContext
   edoc <- getDocByDocID did
-  case edoc of 
+  case edoc of
     Left m -> return $ Left m
     Right doc -> do
       let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink doc
@@ -156,7 +157,7 @@ authorSendDocument did = onlyAuthor did $ do
         Right _ -> do
           _ <- doc_update $ MarkInvitationRead did signatorylinkid (ctxtime ctx)
           transActionNotAvailable <$> doc_update (MarkDocumentSeen did signatorylinkid signatorymagichash (ctxtime ctx) (ctxipnumber ctx))
-  
+
 {- |
   The Author can add new SigAttachments.
  -}
@@ -164,7 +165,7 @@ updateSigAttachments :: (Kontrakcja m) => DocumentID -> [SignatoryAttachment] ->
 updateSigAttachments did sigatts = onlyAuthor did $ do
   Context{ctxtime} <- getContext
   transActionNotAvailable <$> doc_update (UpdateSigAttachments did sigatts ctxtime)
-        
+
 {- |
    Only the author can Close a document when its in AwaitingAuthor status.
  -}
@@ -180,12 +181,12 @@ authorSignDocumentFinal did msigninfo = onlyAuthor did $ do
       case ed1 of
         Left m -> return $ Left $ DBActionNotAvailable m
         Right _ -> transActionNotAvailable <$> doc_update (CloseDocument did (ctxtime ctx) (ctxipnumber ctx))
-          
+
 
 -- | Make sure we're logged in as the author before taking action.
 onlyAuthor :: (Kontrakcja m) => DocumentID -> m (Either DBError a) -> m (Either DBError a)
 onlyAuthor did action = do
-  edoc <- getDocByDocID did -- this makes sure we're the author or his friend
+  edoc <- getDocByDocID did -- this makes sure we're the author or someone else with permissions in the company
   case edoc of
     Left e -> return $ Left e -- this checks if we're logged in
     Right doc -> do

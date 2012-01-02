@@ -439,6 +439,7 @@ var DocumentStandarView = Backbone.View.extend({
         if (document.currentSignatory() != undefined && 
             document.currentSignatory().signs() && 
             !document.currentSignatory().hasSigned() && 
+            !document.currentSignatory().author() &&
             document.authorattachments().length > 0 &&
             document.signingInProcess())
         {
@@ -489,7 +490,8 @@ var DocumentStandarView = Backbone.View.extend({
                                ( document.currentSignatory() != undefined &&
                                  document.currentSignatory().signs() &&
                                  !document.currentSignatory().hasSigned() &&
-                                 document.signingInProcess()
+                                 document.signingInProcess() &&
+                                 !document.currentSignatory().author()
                                )
                   })
                 ]

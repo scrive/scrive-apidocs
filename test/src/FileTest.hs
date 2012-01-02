@@ -3,8 +3,6 @@
 module FileTest (fileTests) where
 
 import DB.Classes
-import Doc.DocState
-import Doc.DocStateData()
 import TestingUtil
 
 import Database.HDBC.PostgreSQL
@@ -19,24 +17,25 @@ import qualified Data.ByteString.UTF8 as BS
 import Happstack.Server.SimpleHTTP
 import Control.Monad.Trans
 import File.FileID
+import File.File
 
 fileTests :: Connection -> Test
 fileTests conn = testGroup "Files" [
   
   -- Primitive properties
   testCase "FileID read - show works" testFileIDReadShow,
-  testCase "FileID from uri matches getter matches show implementation" testFileIDUriShow,
+  testCase "FileID from uri getter matches show implementation" testFileIDUriShow,
   testCase "File are equal when they have equal ids" testFileEquality,
   
   --Basic DB operations
-  testThat "File insterting persists content"  conn testFileNewFile,
+  testThat "File insert persists content"  conn testFileNewFile,
   testThat "File move to disk works"  conn testFileMovedToDisc,
   testThat "File move to AWS works"  conn testFileMovedToAWS,
   testThat "We can put file unchecked in db"  conn testUncheckedStoring,
   
   
   -- Advanced tests
-  testThat "Newly created files as suposed to be moved to amazon"  conn testNewFileThatShouldBeMovedToAWS
+  testThat "Newly created files are supposed to be moved to amazon"  conn testNewFileThatShouldBeMovedToAWS
   ]
   
   
@@ -62,7 +61,8 @@ testFileNewFile ::   DB ()
 testFileNewFile  = doNTimes 100 $ do
   (name,content) <- fileData 
   File { fileid = fileid , filename = fname1 , filestorage = FileStorageMemory fcontent1} <- dbUpdate $  NewFile name content
-  assertBool ("File data doesn't change " ++ show name ++ "xxxxx"++ show fname1) (name == fname1 && content == fcontent1)
+  assertBool ("File content doesn't change " ++ show content ++ " vs "++ show fcontent1) (content == fcontent1)
+  assertBool ("File name doesn't change " ++ show name ++ " vs "++ show fname1) (name == fname1)
   Just (File { filename = fname2 , filestorage = FileStorageMemory fcontent2}) <- dbQuery $ GetFileByFileID fileid
   assertBool "File data doesn't change after storing" ( name == fname2 && content == fcontent2) 
   
@@ -106,13 +106,17 @@ testNewFileThatShouldBeMovedToAWS  = do
         
 
 testUncheckedStoring :: DB ()
-testUncheckedStoring  = do
+testUncheckedStoring  = sequence_ $ replicate 10 $ do
   (name,content) <- fileData
   fid <- fmap FileID $ rand 10 arbitrary
-  let f1 = File {fileid = fid, filename = name, filestorage = FileStorageMemory content}
-  dbUpdate $  PutFileUnchecked File {fileid = fid, filename = name, filestorage = FileStorageMemory content}
-  mf1 <-  dbQuery $ GetFileByFileID (fid)
-  assertBool "We can put file in db with mem starage" ( Just f1 == mf1 ) 
+  mf <-  dbQuery $ GetFileByFileID (fid)
+  case mf of 
+    Just _ -> return ()
+    Nothing -> do
+        let f1 = File {fileid = fid, filename = name, filestorage = FileStorageMemory content}
+        dbUpdate $  PutFileUnchecked File {fileid = fid, filename = name, filestorage = FileStorageMemory content}
+        mf1 <-  dbQuery $ GetFileByFileID (fid)
+        assertBool "We can put file in db with mem starage" ( Just f1 == mf1 ) 
 
 viewableBS :: (MonadIO m) => m BS.ByteString
 viewableBS = rand 10 $  liftM BS.fromString (arbString 10 100)

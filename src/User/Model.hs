@@ -17,8 +17,6 @@ module User.Model (
   , GetUsers(..)
   , GetUserByID(..)
   , GetUserByEmail(..)
-  , GetUsersByFriendUserID(..)
-  , GetUserFriends(..)
   , GetCompanyAccounts(..)
   , GetInviteInfo(..)
   , GetUserMailAPI(..)
@@ -33,7 +31,6 @@ module User.Model (
   , SetUserInfo(..)
   , SetUserSettings(..)
   , SetPreferredDesignMode(..)
-  , AddViewerByEmail(..)
   , AcceptTermsOfService(..)
   , SetSignupMethod(..)
   , SetUserCompanyAdmin(..)
@@ -153,24 +150,6 @@ instance DBQuery GetUserByEmail (Maybe User) where
     _ <- execute st [toSql msid, toSql msid, toSql email]
     us <- fetchUsers st
     oneObjectReturnedGuard us
-
--- | Name may be confusing, but this just returns a list of
--- users who have user with given id marked as their friend
-data GetUsersByFriendUserID = GetUsersByFriendUserID UserID
-instance DBQuery GetUsersByFriendUserID [User] where
-  dbQuery (GetUsersByFriendUserID uid) = wrapDB $ \conn -> do
-    st <- prepare conn $ selectUsersSQL
-      ++ " JOIN user_friends uf ON (u.id = uf.user_id) WHERE uf.friend_id = ? AND u.deleted = FALSE ORDER BY u.email DESC"
-    _ <- execute st [toSql uid]
-    fetchUsers st
-
-data GetUserFriends = GetUserFriends UserID
-instance DBQuery GetUserFriends [User] where
-  dbQuery (GetUserFriends uid) = wrapDB $ \conn -> do
-    st <- prepare conn $ selectUsersSQL
-      ++ " JOIN user_friends uf ON (u.id = uf.friend_id) WHERE uf.user_id = ? AND u.deleted = FALSE ORDER BY u.email DESC"
-    _ <- execute st [toSql uid]
-    fetchUsers st
 
 data GetCompanyAccounts = GetCompanyAccounts CompanyID
 instance DBQuery GetCompanyAccounts [User] where
@@ -455,25 +434,6 @@ instance DBUpdate SetPreferredDesignMode Bool where
     r <- run conn "UPDATE users SET preferred_design_mode = ? WHERE id = ? AND deleted = FALSE"
       [toSql mmode, toSql uid]
     oneRowAffectedGuard r
-    
-data AddViewerByEmail = AddViewerByEmail UserID Email
-instance DBUpdate AddViewerByEmail Bool where
-  dbUpdate (AddViewerByEmail uid email) = wrapDB $ \conn -> do
-    mfid <- quickQuery' conn "SELECT id FROM users WHERE service_id IS NULL AND email = ? AND deleted = FALSE" [toSql email]
-      >>= oneObjectReturnedGuard . join
-      >>= return . fmap (UserID . fromSql)
-    case mfid of
-      Just fid -> do
-        runRaw conn "LOCK TABLE user_friends IN ACCESS EXCLUSIVE MODE"
-        rec_exists <- quickQuery' conn "SELECT 1 FROM user_friends WHERE user_id = ? AND friend_id = ?" [toSql uid, toSql fid]
-          >>= checkIfOneObjectReturned
-        if rec_exists
-          then return True
-          else do
-            _ <- run conn "INSERT INTO user_friends (user_id, friend_id) VALUES (?, ?)"
-              [toSql uid, toSql fid]
-            return True
-      Nothing -> return False
 
 data AcceptTermsOfService = AcceptTermsOfService UserID MinutesTime
 instance DBUpdate AcceptTermsOfService Bool where

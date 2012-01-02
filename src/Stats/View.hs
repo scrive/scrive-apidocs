@@ -10,7 +10,6 @@ module Stats.View
 
 import Control.Monad.Trans
 import Templates.Templates
-import Text.Printf
 import Misc
 import Stats.Model
 import MinutesTime
@@ -29,7 +28,7 @@ statisticsFieldsByDay stats = for stats f
                 field "sent" i
                 field "users" u
                 field "avg" (if c == 0 then 0 else ((fromIntegral s / fromIntegral c) :: Double))
-        f _ = error $ "statisticsFieldsByDay: bad stats: "++show stats
+        f _ = error $ "statisticsFieldsByDay: bad stats"
 
 statisticsFieldsByMonth :: (Functor m, MonadIO m) => [(Int, [Int])] -> [Fields m]
 statisticsFieldsByMonth stats = for stats f
@@ -40,7 +39,7 @@ statisticsFieldsByMonth stats = for stats f
                 field "sent" i
                 field "users" u
                 field "avg" (if c == 0 then 0 else ((fromIntegral s / fromIntegral c) :: Double))
-        f _ = error $ "statisticsFieldsByMonth: bad stats: "++show stats
+        f _ = error $ "statisticsFieldsByMonth: bad stats"
 
 
 statisticsCompanyFieldsByDay :: (Functor m, MonadIO m) => [(Int, String, [Int])] -> [Fields m]
@@ -53,7 +52,7 @@ statisticsCompanyFieldsByDay stats = for stats f
                 field "signatures" s
                 field "sent" i
                 field "avg" (if c == 0 then 0 else ((fromIntegral s / fromIntegral c) :: Double))
-        f _ = error $ "statisticsCompanyFieldsByDay: bad stats: "++show stats
+        f _ = error $ "statisticsCompanyFieldsByDay: bad stats"
 
 statisticsCSV :: [DocStatEvent] -> String
 statisticsCSV events = 
@@ -90,8 +89,3 @@ userStatisticsCSV events =
                           ++ "\"\n"
 
 
-showAsDate :: Int -> String
-showAsDate int = printf "%04d-%02d-%02d" (int `div` 10000) (int `div` 100 `mod` 100) (int `mod` 100)
-
-showAsMonth :: Int -> String
-showAsMonth int = printf "%04d-%02d" (int `div` 10000) (int `div` 100 `mod` 100)

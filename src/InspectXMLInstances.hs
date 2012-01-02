@@ -10,7 +10,7 @@
 
 module InspectXMLInstances() where
 import API.Service.Model
-import Doc.DocState
+import Doc.DocStateData
 import Company.Model
 import DB.Types
 import MinutesTime

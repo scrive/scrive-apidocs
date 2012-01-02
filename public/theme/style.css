@@ -3006,3 +3006,28 @@ a#attachmentback {
 .account-body.advancedview p {
     margin: 10px;
 }
+
+.usagestats .tab-content {
+    display: none;
+}
+
+.usagestats #jsdaytable .tab-container, .usagestats #jsmonthtable .tab-container, .usagestats .tab-table {
+    -moz-border-radius: 5px 5px 5px 5px;
+	-webkit-border-radius: 5px 5px 5px 5px;
+}
+
+.usagestats #jsdaytable, .usagestats #jsmonthtable {
+    margin-top: 20px;
+    margin-bottom: 40px;
+}
+
+.usagestats h2 {
+    text-align: center;
+}
+
+.usagestats td.num {
+
+    font-weight: bold;
+    font-family: "Courier New", Courier, monospace;
+
+}

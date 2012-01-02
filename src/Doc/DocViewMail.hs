@@ -20,7 +20,7 @@ module Doc.DocViewMail (
 
 import API.Service.Model
 import Doc.DocProcess
-import Doc.DocState
+import Doc.DocStateData
 import Doc.DocUtils
 import File.FileID
 import Kontra

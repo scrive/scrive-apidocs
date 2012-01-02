@@ -34,7 +34,6 @@ module User.UserState
     , GetUserByUserID(..)
     , GetUserStats(..)
     , GetUserStatsByUser(..)
-    , GetUserFriends(..)
     , SetUserInfo(..)
     , SetUserMailAPI(..)
     , SetInviteInfo(..)
@@ -43,8 +42,6 @@ module User.UserState
     , SetUserPaymentAccount(..)
     , SetUserPaymentPolicyChange(..)
     , SetUserPassword(..)
-    , GetUsersByFriendUserID(..)
-    , AddViewerByEmail(..)
     --, FreeUserFromPayments(..)
     --, AddFreePaymentsForInviter(..)
     , RecordFailedLogin(..)
@@ -231,7 +228,7 @@ data UserSettings  = UserSettings {
              , systemserver :: SystemServer
       }
     deriving (Eq, Ord, Typeable)
-    
+
 data DesignMode = BasicMode | AdvancedMode
     deriving (Eq, Ord, Typeable)
 $(enumDeriveConvertible ''DesignMode)
@@ -975,7 +972,7 @@ instance Indexable User where
                 , ixFun $ ifUserNotDeleted userfriends
                 , ixFun $ ifUserNotDeleted (\x -> [userservice x] :: [Maybe ServiceID])
                 , ixFun $ ifUserNotDeleted (\x -> (catMaybes [usercompany x]) :: [CompanyID])
-                
+
                 -- need to keep this hanging around until the company migration is done.  don't
                 -- use it for anything else
                 , ixFun (\x -> maybe [] return (usersupervisor x) :: [SupervisorID])
@@ -1135,19 +1132,6 @@ getUserByUserID :: UserID -> Query Users (Maybe User)
 getUserByUserID userid = queryUsers $ \users ->
   getOne (users @= userid)
 
-getUsersByFriendUserID :: UserID -> Query Users [User]
-getUsersByFriendUserID uid = queryUsers $ \users ->
-  toList $ users @= (Friend $ unUserID uid)
-
-getUserFriends :: UserID -> Query Users [User]
-getUserFriends uid = do
-  muser <- getUserByUserID uid
-  case muser of
-    Nothing -> return []
-    Just user -> do
-      mfriends <- sequence . map (getUserByUserID . UserID . unFriend) $ userfriends user
-      return $ catMaybes mfriends
-
 {- |
     Fetches all of the accounts with a matching company id
     that this user can see.  If they're not an admin then this will
@@ -1160,12 +1144,12 @@ getCompanyAccounts userid = queryUsers $ \users ->
     (Just user, Just companyid, Just True) ->
       toList $ IxSet.delete user (users @= companyid)
     _ -> []
-    
+
 {- |
     Sets the user as a member of a company.
 -}
 setUserCompany :: UserID -> CompanyID -> Update Users (Either String User)
-setUserCompany userid companyid = modifyUser userid $ \user -> 
+setUserCompany userid companyid = modifyUser userid $ \user ->
   return $ user {
     usercompany = Just companyid,
     useriscompanyadmin = False
@@ -1391,18 +1375,6 @@ recordSuccessfulLogin userid time = do
             , consecutivefails = 0
             }
 
-{- |
-   Add a new viewer (friend) given the email address
- -}
-addViewerByEmail :: UserID -> Email -> Update Users (Either String User)
-addViewerByEmail uid vieweremail = do
-  mms <- do users <- ask
-            return $ getOne (users @= vieweremail)
-  case mms of
-    Just ms -> modifyUser uid $ \user ->
-                                      Right $ user { userfriends = (Friend (unUserID $ userid ms) : (userfriends user)) }
-    Nothing -> return $ Left $ "Användaren existerar ej: " ++ (BS.toString $ unEmail vieweremail)
-
 acceptTermsOfService :: UserID -> MinutesTime -> Update Users (Either String User)
 acceptTermsOfService userid minutestime =
     modifyUser userid $ \user ->
@@ -1471,7 +1443,7 @@ requiresCompanyForMigration userid = queryUsers $ \users ->
     Just user ->
       let islive = not $ userdeleted user
           nocompany = isNothing $ usercompany user
-          hascompanyinfo = BS.empty /= usercompanyname (userinfo user) 
+          hascompanyinfo = BS.empty /= usercompanyname (userinfo user)
                              || BS.empty /= usercompanynumber (userinfo user)
           issubaccount = isJust $ usersupervisor user
           issupervisor = not $ IxSet.null (users @= SupervisorID (unUserID userid))
@@ -1508,13 +1480,10 @@ $(mkMethods ''Users [ 'getUserByUserID
                     --, 'freeUserFromPayments
                     , 'recordFailedLogin
                     , 'recordSuccessfulLogin
-                    , 'getUsersByFriendUserID
-                    , 'getUserFriends
                     , 'acceptTermsOfService
                     , 'setFreeTrialExpirationDate
                     , 'setSignupMethod
                     , 'exportUsersDetailsToCSV
-                    , 'addViewerByEmail
                     , 'getCompanyAccounts
                     , 'setUserCompany
                     , 'makeUserACompanyAdmin
