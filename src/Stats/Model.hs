@@ -246,7 +246,7 @@ data SignStatEvent = SignStatEvent { ssDocumentID      :: DocumentID
 selectSignStatEventsSQL :: String
 selectSignStatEventsSQL = "SELECT "
  ++ "  e.document_id"
- ++ "  e.signatory_link_id"
+ ++ ", e.signatory_link_id"
  ++ ", e.time"
  ++ ", e.quantity"
  ++ "  FROM sign_stat_events e"
@@ -274,7 +274,7 @@ instance DBUpdate AddSignStatEvent Bool where
   dbUpdate (AddSignStatEvent event) = wrapDB $ \conn -> do
     st <- prepare conn $ "INSERT INTO sign_stat_events ("
           ++ "  document_id"
-          ++ "  signatory_link_id"
+          ++ ", signatory_link_id"
           ++ ", time"
           ++ ", quantity"
           ++ ") SELECT ?, ?, ?, ? "
