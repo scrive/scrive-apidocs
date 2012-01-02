@@ -949,7 +949,6 @@ signatoryStatusClass
   } =
   caseOf [
       (errorStatus documentstatus, SCCancelled)
-    , (invitationdeliverystatus==Undelivered,  SCCancelled)
     , (documentstatus==Preparation, SCDraft)
     , (documentstatus==Canceled, SCCancelled)
     , (documentstatus==Rejected, SCCancelled)
@@ -957,6 +956,7 @@ signatoryStatusClass
     , (isJust maybesigninfo, SCSigned)
     , (isJust maybeseeninfo, SCOpened)
     , (isJust maybereadinvite, SCRead)
+    , (invitationdeliverystatus==Undelivered,  SCCancelled)
     , (invitationdeliverystatus==Delivered, SCDelivered)
     ] SCSent
   where
