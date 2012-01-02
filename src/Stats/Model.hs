@@ -139,6 +139,7 @@ instance DBUpdate AddDocStatEvent Bool where
                     ,toSql $ seServiceID event
                     ,toSql $ seCompanyID event
                     ,toSql $ show $ seDocumentType event
+                    
                     ,toSql $ unDocumentID $ seDocumentID event
                     ,toSql $ seQuantity event]
     oneRowAffectedGuard r
@@ -221,10 +222,71 @@ instance DBUpdate AddUserStatEvent Bool where
                     ,toSql $ usAmount event
                     ,toSql $ usServiceID event
                     ,toSql $ usCompanyID event
+                    
                     ,toSql $ usUserID event
                     ,toSql $ usQuantity event]
     oneRowAffectedGuard r
 
+{------ Signatory Stats ------}
+    
+data SignStatQuantity = SignStatInvite     -- Invitation Sent
+                      | SignStatReceive    -- Invitation Received
+                      | SignStatOpen       -- Invitation Opened
+                      | SignStatLink       -- Secret Link Clicked
+                      | SignStatClose      -- Document signed or rejected
+                      deriving (Eq, Ord, Show)
+$(enumDeriveConvertible ''SignStatQuantity)
+                        
+data SignStatEvent = SignStatEvent { ssDocumentID      :: DocumentID
+                                   , ssSignatoryLinkID :: SignatoryLinkID                                   
+                                   , ssTime            :: MinutesTime
+                                   , ssQuantity        :: SignStatQuantity
+                                   }
 
+selectSignStatEventsSQL :: String
+selectSignStatEventsSQL = "SELECT "
+ ++ "  e.document_id"
+ ++ "  e.signatory_link_id"
+ ++ ", e.time"
+ ++ ", e.quantity"
+ ++ "  FROM sign_stat_events e"
+ ++ " " -- always end in space to avoid problems
 
+fetchSignStats :: Statement -> [SignStatEvent] -> IO [SignStatEvent]
+fetchSignStats st acc = fetchRow st >>= maybe (return acc) f
+  where f [docid, slid, time, quantity] =
+          fetchSignStats st $ SignStatEvent { ssDocumentID      = docid
+                                            , ssSignatoryLinkID = slid
+                                            , ssTime            = time
+                                            , ssQuantity        = quantity
+                                            } : acc
+        f l = error $ "fetchSignStats: unexpected row: "++show l
 
+data GetSignStatEvents = GetSignStatEvents
+instance DBQuery GetSignStatEvents [SignStatEvent] where
+  dbQuery GetSignStatEvents = wrapDB $ \conn -> do
+    st <- prepare conn $ selectSignStatEventsSQL
+    _ <- execute st []
+    fetchSignStats st []
+
+data AddSignStatEvent = AddSignStatEvent SignStatEvent
+instance DBUpdate AddSignStatEvent Bool where
+  dbUpdate (AddSignStatEvent event) = wrapDB $ \conn -> do
+    st <- prepare conn $ "INSERT INTO sign_stat_events ("
+          ++ "  document_id"
+          ++ "  signatory_link_id"
+          ++ ", time"
+          ++ ", quantity"
+          ++ ") SELECT ?, ?, ?, ? "
+          -- want to avoid an error, so check if exists
+          ++ " WHERE NOT EXISTS (SELECT 1 FROM sign_stat_events WHERE"
+          ++ " document_id = ? AND quantity = ? AND signatory_link_id = ?)"
+    r <- execute st [toSql $ ssDocumentID      event
+                    ,toSql $ ssSignatoryLinkID event
+                    ,toSql $ ssTime            event
+                    ,toSql $ ssQuantity        event
+                    
+                    ,toSql $ ssDocumentID      event
+                    ,toSql $ ssQuantity        event
+                    ,toSql $ ssSignatoryLinkID event]
+    oneRowAffectedGuard r
