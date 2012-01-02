@@ -166,10 +166,13 @@ tableSignStatEvents = Table {
         return TVRcreated
       _ -> return TVRinvalid
   , tblPutProperties = wrapDB $ \conn -> do
+    {-
+     -- I wanted to add this but apparently signatory_link_id is not unique, so I could not.
     runRaw conn $ "ALTER TABLE sign_stat_events"
       ++ " ADD CONSTRAINT fk_sign_stat_events_signatory_link FOREIGN KEY(signatory_link_id)"
       ++ " REFERENCES signatory_links(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
+    -}
     runRaw conn $ "ALTER TABLE sign_stat_events"
       ++ " ADD CONSTRAINT fk_sign_stat_events_documents FOREIGN KEY(document_id)"
       ++ " REFERENCES documents(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
