@@ -148,6 +148,8 @@ docStateTests conn = testGroup "DocState" [
   testThat "removeDocumentAttachment fails if not in preparation" conn testRemoveDocumentAttachmentFailsIfNotPreparation,
   testThat "removeDocumentAttachment doesn't fail if there's no attachments" conn testRemoveDocumentAttachmentOk,
 
+  testThat "UpdateSigAttachments works as advertised" conn testUpdateSigAttachmentsAttachmentsOk,
+
   -- we need to do one that tests updateDocumentAttachment where there is an attachment
   testThat "documentFromSignatoryData fails when document doesn't exist" conn testDocumentFromSignatoryDataFailsDoesntExist,
   testThat "documentFromSignatoryData succeeds when document exists" conn testDocumentFromSignatoryDataSucceedsExists,
@@ -821,7 +823,11 @@ testAddDocumentAttachmentOk = doTimes 10 $ do
   --execute
   edoc <- randomUpdate $ AddDocumentAttachment (documentid doc) (fileid file)
   --assert
-  validTest $ assertRight edoc
+  validTest $ do
+    assertRight edoc
+    let doc1 = fromRight edoc
+    assertEqual "Author attachment was really attached" [fileid file]
+                  (map authorattachmentfile $ documentauthorattachments doc1)
 
 testRemoveDocumentAttachmentFailsIfNotPreparation :: DB ()
 testRemoveDocumentAttachmentFailsIfNotPreparation = doTimes 10 $ do
@@ -841,6 +847,83 @@ testRemoveDocumentAttachmentOk = doTimes 10 $ do
   --assert
   validTest $ assertRight edoc
 
+---------------------------------------------------------------------
+
+-- DeleteSigAttachment, SaveSigAttachment, UpdateSigAttachments
+
+{-
+testUpdateSigAttachmentsFailsIfNotPreparation :: DB ()
+testAddDocumentAttachmentFailsIfNotPreparation = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
+  file <- addNewRandomFile
+  --execute
+  edoc <- randomUpdate $ AddDocumentAttachment (documentid doc) (fileid file)
+  --assert
+  validTest $ assertLeft edoc
+-}
+
+testUpdateSigAttachmentsAttachmentsOk :: DB ()
+testUpdateSigAttachmentsAttachmentsOk = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
+  file1 <- addNewRandomFile
+  file2 <- addNewRandomFile
+  --execute
+  let email1 = BS.fromString "g1@g.com"
+      name1 = BS.fromString "att1"
+  let att1 = SignatoryAttachment { signatoryattachmentfile = Just (fileid file1)
+                                 , signatoryattachmentemail = email1
+                                 , signatoryattachmentname = name1
+                                 , signatoryattachmentdescription = BS.fromString "att1 description"
+                                 }
+  let att2 = SignatoryAttachment { signatoryattachmentfile = Nothing
+                                 , signatoryattachmentemail = BS.fromString "g2@g.com"
+                                 , signatoryattachmentname = BS.fromString "att2"
+                                 , signatoryattachmentdescription = BS.fromString "att2 description"
+                                 }
+  edoc1 <- randomUpdate $ UpdateSigAttachments (documentid doc) [att1, att2]
+
+  edoc2 <- randomUpdate $ DeleteSigAttachment (documentid doc) email1 (fileid file1)
+
+  edoc3 <- randomUpdate $ SaveSigAttachment (documentid doc) name1 email1 (fileid file2)
+
+  --assert
+  validTest $ do
+    assertRight edoc1
+    let doc1 = fromRight edoc1
+    assertEqual "Both attachments were attached" 2 (length (documentsignatoryattachments doc1))
+    assertRight edoc2
+    let doc2 = fromRight edoc2
+    assertBool "All signatory attachments are not connected to files" (all (isNothing . signatoryattachmentfile) (documentsignatoryattachments doc2))
+
+    assertRight edoc3
+    let doc3 = fromRight edoc3
+    assertBool "Attachment connected to signatory" 
+                 (Just (fileid file2) `elem` map signatoryattachmentfile (documentsignatoryattachments doc3))
+    
+
+{-
+testRemoveDocumentAttachmentFailsIfNotPreparation :: DB ()
+testRemoveDocumentAttachmentFailsIfNotPreparation = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
+  --execute
+  edoc <- randomUpdate $ RemoveDocumentAttachment (documentid doc) (FileID 0)
+  --assert
+  validTest $ assertLeft edoc
+
+testRemoveDocumentAttachmentOk :: DB ()
+testRemoveDocumentAttachmentOk = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
+  --execute
+  edoc <- randomUpdate $ RemoveDocumentAttachment (documentid doc) (FileID 0)
+  --assert
+  validTest $ assertRight edoc
+-}
+
+------------------------------------------------
 
 testDocumentFromSignatoryDataFailsDoesntExist :: DB ()
 testDocumentFromSignatoryDataFailsDoesntExist = doTimes 10 $ do
