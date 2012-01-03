@@ -41,7 +41,6 @@ import System.Time hiding (toClockTime, toUTCTime, toCalendarTime)
 import qualified System.Time as System.Time (toUTCTime, toCalendarTime)
 import Text.Printf
 import System.IO.Unsafe
-import DB.Derive
 
 
 -- | Time in minutes from 1970-01-01 00:00 in UTC coordinates
