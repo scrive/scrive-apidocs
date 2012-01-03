@@ -41,6 +41,7 @@ import Util.MonadUtils
 import User.Model
 import Happstack.Server
 import DB.Classes
+import Stats.Control
 
 data SendgridEvent =
     SendgridEvent {
@@ -162,7 +163,12 @@ handleDeliveredInvitation docid signlinkid = do
                  mail <- mailDeliveredInvitation doc signlink
                  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress $ fromJust $ getAuthorSigLink doc] }
          Nothing -> return ()
-    _ <- doc_update $ SetInvitationDeliveryStatus docid signlinkid Mail.Delivered
+    edoc <- doc_update $ SetInvitationDeliveryStatus docid signlinkid Mail.Delivered
+    Context{ctxtime} <- getContext
+    _ <- case (edoc, getSigLinkFor doc signlinkid, getSigLinkFor (fromRight edoc) signlinkid) of
+      (Left _, Just sl, _)  -> addSignStatReceiveEvent doc sl ctxtime
+      (Right d, _, Just sl) -> addSignStatReceiveEvent d sl ctxtime
+      _                     -> return False
     return ()
 
 mailDeliveredInvitation :: Kontrakcja m =>  Document -> SignatoryLink -> m Mail
@@ -174,7 +180,10 @@ mailDeliveredInvitation doc signlink = kontramail  "invitationMailDeliveredAfter
 handleOpenedInvitation :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m ()
 handleOpenedInvitation docid signlinkid = do
     now <- liftIO $ getMinutesTime
-    _ <- doc_update $ MarkInvitationRead docid signlinkid now
+    edoc <- doc_update $ MarkInvitationRead docid signlinkid now
+    _ <- case (edoc, getSigLinkFor (fromRight edoc) signlinkid) of
+      (Right doc, Just sl) -> addSignStatOpenEvent doc sl
+      _ -> return False
     return ()
 
 handleDeferredInvitation :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m ()

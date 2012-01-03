@@ -122,8 +122,14 @@ postDocumentChangeAction document@Document  { documentstatus
         Log.server $ "Sending invitation emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
         edoc <- sendInvitationEmails ctx document'
         _ <- case edoc of
-          Left _ -> addDocumentSendStatEvents document'
-          Right doc2 -> addDocumentSendStatEvents doc2
+          Left _ -> do
+            _ <- addDocumentSendStatEvents document'
+            forM (documentsignatorylinks document') $ \sl ->
+              addSignStatInviteEvent document' sl (ctxtime ctx)
+          Right doc2 -> do
+            _ <- addDocumentSendStatEvents doc2
+            forM (documentsignatorylinks doc2) $ \sl ->
+              addSignStatInviteEvent doc2 sl (ctxtime ctx)
         return ()
     -- Preparation -> Closed (only author signs)
     -- main action: sealDocument and sendClosedEmails
@@ -606,6 +612,7 @@ handleSignShow documentid
   _ <- markDocumentSeen documentid signatorylinkid magichash ctxtime ctxipnumber
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
   invitedlink <- guardJust $ getSigLinkFor document signatorylinkid
+  _ <- addSignStatLinkEvent document invitedlink
   let isFlashNeeded = Data.List.null ctxflashmessages
                         && not (hasSigned invitedlink)
   -- add a flash if needed
@@ -1585,9 +1592,14 @@ handleRubbishRestore = do
 
 handleRubbishReallyDelete :: Kontrakcja m => m KontraLink
 handleRubbishReallyDelete = do
-  Context { ctxmaybeuser = Just user } <- getContext
+  Context { ctxmaybeuser = Just user, ctxtime } <- getContext
   docids <- getCriticalFieldList asValidDocID "doccheck"
-  mapM_ (guardRightM . doc_update . ReallyDeleteDocument user) $ map DocumentID docids
+  mapM_ (\did -> do
+            doc <- guardRightM $ doc_update $ ReallyDeleteDocument user did
+            case getSigLinkFor doc user of
+              Just sl -> addSignStatPurgeEvent doc sl ctxtime
+              _ -> return False) 
+    $ map DocumentID docids
   addFlashM flashMessageRubbishHardDeleteDone
   return $ LinkRubbishBin
 
