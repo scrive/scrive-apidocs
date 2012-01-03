@@ -786,3 +786,12 @@ addAllSigsToStats = onlyAdmin $ do
                , sl <- documentsignatorylinks d]
   addFlash (OperationDone, "Added all docs to stats")
   return LinkUpload
+
+--CSV for sign stats
+handleSignStatsCSV :: Kontrakcja m => m Response
+handleSignStatsCSV = do
+  stats <- runDBQuery GetSignStatEvents
+  Log.debug $ "All sign stats length: " ++ (show $ length stats)
+  ok $ setHeader "Content-Disposition" "attachment;filename=signstats.csv"
+     $ setHeader "Content-Type" "text/csv"
+     $ toResponse (signStatsCSV stats)
