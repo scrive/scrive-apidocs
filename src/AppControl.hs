@@ -32,6 +32,7 @@ import Misc
 --import PayEx.PayExInterface ()-- Import so at least we check if it compiles
 import Redirect
 import Session
+import Stats.Control
 import Templates.Templates
 import User.Model
 import User.UserView as UserView
@@ -420,6 +421,7 @@ handleLoginPost = do
                           locale = ctxlocale ctx
                         }
                         muuser <- runDBQuery $ GetUserByID (userid user)
+                        _ <- addUserLoginStatEvent (ctxtime ctx) (fromJust muuser)
                         logUserToContext muuser
                         return BackToReferer
                 Just _ -> do

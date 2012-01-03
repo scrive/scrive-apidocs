@@ -15,11 +15,12 @@ module Stats.Control
          addUserRefuseSaveAfterSignStatEvent,
          addUserPhoneAfterTOS,
          addUserCreateCompanyStatEvent,
+         addUserLoginStatEvent,
          addAllDocsToStats,
          addAllUsersToStats,
          handleDocStatsCSV,
          handleMigrate1To2,
-         handleUserStatsCSV,  
+         handleUserStatsCSV,
          getUsageStatsForUser,
          getUsageStatsForCompany
        )
@@ -239,7 +240,7 @@ calculateCompanyDocStatsByMonth events =
       userTotalsByMonth = map (map sumCStats) byUser
       setUID0 (a,_,s) = (a,UserID 0, s)
       totalByMonth = map (setUID0 . sumCStats) byMonth
-  in concat $ zipWith (\a b->a++[b]) userTotalsByMonth totalByMonth 
+  in concat $ zipWith (\a b->a++[b]) userTotalsByMonth totalByMonth
 
 -- some utility functions
 
@@ -427,7 +428,7 @@ addDocumentCreateStatEvents doc = msum [
       unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatCreate
       return a
   , return False]
-                                  
+
 addDocumentTimeoutStatEvents :: (DBMonad m) => Document -> m Bool
 addDocumentTimeoutStatEvents doc = do
   case (isTimedout doc, getAuthorSigLink doc, maybesignatory =<< getAuthorSigLink doc, documenttimeouttime doc) of
@@ -521,6 +522,11 @@ addAllUsersToStats = onlyAdmin $ do
   addFlash (OperationDone, "Added all users to stats")
   return LinkUpload
 
+addUserLoginStatEvent :: Kontrakcja m => MinutesTime -> User -> m Bool
+addUserLoginStatEvent time user = msum [
+    addUserIDStatEvent UserLogin (userid user) time (usercompany user) (userservice user)
+  , return False]
+
 addUserRefuseSaveAfterSignStatEvent :: Kontrakcja m => User -> SignatoryLink -> m Bool
 addUserRefuseSaveAfterSignStatEvent user siglink = msum [
   do
@@ -592,7 +598,7 @@ getUsageStatsForUser uid som sixm = do
   let statsByDay = calculateStatsByDay $ filter (\s -> (fst s) >= som) statEvents
       statsByMonth = calculateStatsByMonth $ filter (\s -> (fst s) >= sixm) statEvents
   return (statsByDay, statsByMonth)
-  
+
 getUsageStatsForCompany :: Kontrakcja m => CompanyID -> Int -> Int -> m ([(Int, String, [Int])], [(Int, String, [Int])])
 getUsageStatsForCompany cid som sixm = do
   statEvents <- tuplesFromUsageStatsForCompany <$> runDBQuery (GetDocStatEventsByCompanyID cid)
