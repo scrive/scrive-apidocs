@@ -335,28 +335,28 @@ setCompanyInfoFromTMP uTMP company = do
 
 getDocuments :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocuments = do
-    Log.debug $ "Get Documents"
+    Log.integration $ "Get Documents"
     sid <- serviceid <$> service <$> ask
-    Log.debug $ "Get Documents: Service id: " ++ show sid
+    Log.integration $ "Get Documents: Service id: " ++ show sid
     mcompany_id <- fmap ExternalCompanyID <$> fromJSONField "company_id"
-    Log.debug $ "Get Documents: mcompany_id: " ++ show mcompany_id
+    Log.integration $ "Get Documents: mcompany_id: " ++ show mcompany_id
     when (isNothing mcompany_id) $ throwApiError API_ERROR_MISSING_VALUE "No company id provided"
     company <- runDBUpdate $ GetOrCreateCompanyWithExternalID  (Just sid) (fromJust mcompany_id)
-    Log.debug $ "Get Documents: company: " ++ show company
+    Log.integration $ "Get Documents: company: " ++ show company
     tags <- fmap (fromMaybe []) $ fromJSONLocal "tags" $ fromJSONLocalMap $ do
                     n <- fromJSONField "name"
                     v <- fromJSONField "value"
                     when (isNothing n || isNothing v) $ throwApiError API_ERROR_MISSING_VALUE "Missing tag name or value"
                     return $ Just $ DocumentTag (fromJust n) (fromJust v)
-    Log.debug $ "get documents: tags: " ++ show tags
+    Log.integration $ "get documents: tags: " ++ show tags
     linkeddocuments <- doc_query $ GetDocumentsByCompanyAndTags (Just sid) (companyid company) tags
-    Log.debug $ "get documents: linkeddocuments : " ++ show linkeddocuments
+    Log.integration $ "get documents: linkeddocuments : " ++ show linkeddocuments
     api_docs <- sequence [api_document_read False d | d <- linkeddocuments
                                                     , isAuthoredByCompany (companyid company) d
                                                     , not $ isDeletedFor $ getAuthorSigLink d
                                                     , not $ isAttachment d
                                                     ]
-    Log.debug $ "get documents: api_docs: " ++ show api_docs
+    Log.integration $ "get documents: api_docs: " ++ show api_docs
     return $ toJSObject [("documents",JSArray $ api_docs)]
 
 
