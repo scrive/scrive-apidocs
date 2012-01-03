@@ -351,11 +351,13 @@ getDocuments = do
     Log.integration $ "get documents: tags: " ++ show tags
     linkeddocuments <- doc_query $ GetDocumentsByCompanyAndTags (Just sid) (companyid company) tags
     Log.integration $ "get documents: linkeddocuments : " ++ show linkeddocuments
-    api_docs <- sequence [api_document_read False d | d <- linkeddocuments
-                                                    , isAuthoredByCompany (companyid company) d
-                                                    , not $ isDeletedFor $ getAuthorSigLink d
-                                                    , not $ isAttachment d
-                                                    ]
+    let linkeddocuments1 = filter (isAuthoredByCompany (companyid company)) linkeddocuments
+    Log.integration $ "get documents: linkeddocuments1 : " ++ show (length linkeddocuments1)
+    let linkeddocuments2 = filter (not . isDeletedFor . getAuthorSigLink) linkeddocuments1
+    Log.integration $ "get documents: linkeddocuments2 : " ++ show (length linkeddocuments2)
+    let linkeddocuments3 = filter (not . isAttachment) linkeddocuments2
+    Log.integration $ "get documents: linkedocuments3 : " ++ show (length linkeddocuments3)
+    api_docs <- mapM (api_document_read False) linkeddocuments3
     Log.integration $ "get documents: api_docs: " ++ show api_docs
     return $ toJSObject [("documents",JSArray $ api_docs)]
 
