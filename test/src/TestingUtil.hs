@@ -150,24 +150,25 @@ instance Arbitrary SignatoryLinkID where
 instance Arbitrary SignatoryLink where
   arbitrary = do
     (slid, sd, mh) <- arbitrary
-    (signinfo) <- arbitrary
     seeninfo <- arbitrary
-    return $  SignatoryLink { signatorylinkid            = slid
-                            , signatorydetails           = sd
-                            , signatorymagichash         = mh
-                            , maybesignatory             = Nothing
-                            , maybesupervisor            = Nothing
-                            , maybecompany               = Nothing
-                            , maybesigninfo              = signinfo
-                                                           -- we don't want seeninfo if we don't have signinfo
-                            , maybeseeninfo              = maybe Nothing (\_ -> Just seeninfo) signinfo
-                            , maybereadinvite            = Nothing
-                            , invitationdeliverystatus   = Unknown
-                            , signatorysignatureinfo     = Nothing
-                            , signatoryroles             = []
-                            , signatorylinkdeleted       = False
-                            , signatorylinkreallydeleted = False
-                            }
+    signinfo <- if isJust seeninfo
+                then arbitrary
+                else return Nothing
+    return $ SignatoryLink { signatorylinkid            = slid
+                           , signatorydetails           = sd
+                           , signatorymagichash         = mh
+                           , maybesignatory             = Nothing
+                           , maybesupervisor            = Nothing
+                           , maybecompany               = Nothing
+                           , maybesigninfo              = signinfo
+                           , maybeseeninfo              = seeninfo
+                           , maybereadinvite            = Nothing
+                           , invitationdeliverystatus   = Unknown
+                           , signatorysignatureinfo     = Nothing
+                           , signatoryroles             = []
+                           , signatorylinkdeleted       = False
+                           , signatorylinkreallydeleted = False
+                           }
 
 instance Arbitrary SignatureProvider where
   arbitrary = elements [ BankIDProvider
@@ -237,20 +238,28 @@ instance Arbitrary DocumentType where
 
 instance Arbitrary Document where
   arbitrary = do
-    ds <- arbitrary
-    dt <- arbitrary
+    -- we can have any document type here
+    dtype <- arbitrary
+    -- status has meaning only for signables
+    dstatus <- if isSignable dtype
+               then arbitrary
+               else return Preparation
     sls <- arbitrary
     ids <- arbitrary
     fnc <- arbitrary
-    tmt <- arbitrary
-    dts <- arbitrary
-    return $ blankDocument { documentstatus = ds
-                           , documenttype = dt
+    -- we can have any days to sign. almost
+    ddaystosign <- elements [Nothing, Just 1, Just 10, Just 99]
+    -- document timeout time makes sense only when days to sign was set for this document
+    dtimeouttime <- if isJust ddaystosign
+                    then arbitrary
+                    else return Nothing
+    return $ blankDocument { documentstatus = dstatus
+                           , documenttype = dtype
                            , documentsignatorylinks = sls
                            , documentallowedidtypes = [ids]
                            , documentfunctionality = fnc
-                           , documenttimeouttime = TimeoutTime <$> tmt
-                           , documentdaystosign = dts
+                           , documenttimeouttime = TimeoutTime <$> dtimeouttime
+                           , documentdaystosign = ddaystosign
                            }
 
 documentAllStatuses :: [DocumentStatus]
