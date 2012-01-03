@@ -47,7 +47,6 @@ import Routing
 import API.Service.Model
 import API.APICommons
 import Doc.DocUtils
-import Doc.DocProcess
 import Company.Model
 import User.Model
 import Data.Foldable (fold)
@@ -277,15 +276,11 @@ createAPIDocument company' (authorTMP:signTMPS) tags mlocale createFun = do
         nonauthordetails = map toSignatoryDetails signTMPS
         nonauthorroles = map (fromMaybe defsigroles . toSignatoryRoles) signTMPS
         sigs = (toSignatoryDetails authorTMP, authorroles):zip nonauthordetails nonauthorroles
-        disallowspartner = getValueForProcess doc processauthorsend /= Just True
-    when (any hasFieldsAndPlacements (toSignatoryDetails authorTMP : nonauthordetails) ||
-          length nonauthordetails > 1 ||
-          (disallowspartner && SignatoryPartner `elem` authorroles)) $
-      ignore $ doc_update $ SetDocumentAdvancedFunctionality (documentid doc) (ctxtime ctx)
     doc' <- doc_update $ ResetSignatoryDetails (documentid doc) sigs (ctxtime ctx)
 
-    when (isLeft doc') $ Log.integration $ "error creating document: " ++ fromLeft doc'
-    when (isLeft doc') $ throwApiError API_ERROR_OTHER "Problem creating a document (SIGUPDATE) | This should never happend"
+    when (isLeft doc') $ do
+        Log.integration $ "error creating document: " ++ fromLeft doc'
+        throwApiError API_ERROR_OTHER "Problem creating a document (SIGUPDATE) | This should never happend"
     return $ fromRight doc'
 
 userFromTMP :: Kontrakcja m => SignatoryTMP -> Company -> IntegrationAPIFunction m User
