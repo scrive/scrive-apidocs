@@ -4,7 +4,10 @@ module Stats.View
          statisticsCSV,
          userStatisticsCSV,
          statisticsFieldsByDay,
-         statisticsFieldsByMonth         
+         statisticsFieldsByMonth,
+         
+         signStatsCSV
+         
        )
        where
 
@@ -85,6 +88,20 @@ userStatisticsCSV events =
                           , show                                 $ usAmount    event                                    
                           , maybe "" (BS.toString . unServiceID) $ usServiceID event 
                           , maybe "" show                        $ usCompanyID event                        
+                          ]
+                          ++ "\"\n"
+
+signStatsCSV :: [SignStatEvent] -> String
+signStatsCSV events = 
+  "\"" ++ intercalate "\";\""  
+  ["documentid", "signatorylinkid", "date", "event"]
+  ++ "\"\n" ++
+  (concat $ map csvline events)
+    where csvline event = "\"" ++ intercalate "\";\""
+                          [ show        $ ssDocumentID      event 
+                          , show        $ ssSignatoryLinkID event                               
+                          , showDateYMD $ ssTime            event     
+                          , show        $ ssQuantity        event     
                           ]
                           ++ "\"\n"
 
