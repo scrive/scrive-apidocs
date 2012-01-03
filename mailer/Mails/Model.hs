@@ -52,8 +52,8 @@ instance DBUpdate MarkEmailAsSent Bool where
 data UpdateWithEvent = UpdateWithEvent MailID Event
 instance DBUpdate UpdateWithEvent Bool where
   dbUpdate (UpdateWithEvent mid ev) = wrapDB $ \conn -> do
-    r <- run conn "UPDATE mails SET event = ?, event_read = NULL WHERE id = ?"
-      [toSql ev, toSql mid]
+    r <- run conn "INSERT INTO mail_events (mail_id, event) VALUES (?, ?)"
+      [toSql mid, toSql ev]
     oneRowAffectedGuard r
 
 selectMailsSQL :: String

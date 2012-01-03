@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Mails.Data (
     MailID
+  , EventID
   , XSMTPAttrs(..)
   , Attachment(..)
   , Address(..)
@@ -22,6 +23,11 @@ newtype MailID = MailID Int64
   deriving (Eq, Ord)
 $(newtypeDeriveUnderlyingReadShow ''MailID)
 $(newtypeDeriveConvertible ''MailID)
+
+newtype EventID = EventID Int64
+  deriving (Eq, Ord)
+$(newtypeDeriveUnderlyingReadShow ''EventID)
+$(newtypeDeriveConvertible ''EventID)
 
 newtype XSMTPAttrs = XSMTPAttrs { fromXSMTPAttrs :: [(String, String)] }
   deriving (Eq, Ord, Show, Data, Typeable)

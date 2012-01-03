@@ -12,9 +12,11 @@ import Control.Applicative
 import Database.HDBC
 
 import DB.Classes
+import DB.Fetcher2
 import DB.Types
 import DB.Utils
 import Mails.Data
+import MinutesTime
 import OurPrelude
 
 data CreateEmail = CreateEmail MagicHash Address [Address]
@@ -40,13 +42,30 @@ instance DBUpdate AddContentToEmail Bool where
     oneRowAffectedGuard r
 
 data GetEvents = GetEvents
-instance DBQuery GetEvents [(MailID, Event)] where
-  dbQuery GetEvents = undefined
+instance DBQuery GetEvents [(EventID, MailID, XSMTPAttrs, Event)] where
+  dbQuery GetEvents = wrapDB $ \conn -> do
+    st <- prepare conn $ "SELECT "
+      ++ "  e.id"
+      ++ ", e.mail_id"
+      ++ ", m.x_smtp_attrs"
+      ++ ", e.event"
+      ++ " FROM mails m JOIN mail_events e ON (m.id = e.mail_id)"
+      ++ " ORDER BY m.id DESC, e.id DESC"
+    _ <- execute st []
+    foldDB st fetchEvents []
+    where
+      fetchEvents acc eid mid attrs event = (eid, mid, attrs, event) : acc
 
-data MarkEventAsRead = MarkEventAsRead MailID
+data MarkEventAsRead = MarkEventAsRead EventID MinutesTime
 instance DBUpdate MarkEventAsRead Bool where
-  dbUpdate (MarkEventAsRead _mid) = undefined
+  dbUpdate (MarkEventAsRead eid time) = wrapDB $ \conn -> do
+    r <- run conn "UPDATE mail_events SET event_read = ? WHERE id = ?"
+      [toSql time, toSql eid]
+    oneRowAffectedGuard r
 
 data DeleteEmail = DeleteEmail MailID
 instance DBUpdate DeleteEmail Bool where
-  dbUpdate (DeleteEmail _mid) = undefined
+  dbUpdate (DeleteEmail mid) = wrapDB $ \conn -> do
+    r <- run conn "DELETE FROM mails WHERE id = ?"
+      [toSql mid]
+    oneRowAffectedGuard r
