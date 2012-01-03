@@ -16,6 +16,7 @@ import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 
 import DB.Derive
+import Undefined
 
 newtype MailID = MailID Int64
   deriving (Eq, Ord)
@@ -62,8 +63,17 @@ data SendGridEvent =
   | Deferred String Int32       -- ^ response, delivery attempt
   | Delivered String            -- ^ response from mta
   | Bounce String String String -- ^ status, reason, type
+  | SpamReport
+  | Unsubscribe
     deriving (Eq, Ord, Show, Data, Typeable)
 
-data Event = SendGridEvent SendGridEvent
+-- we define additional constructor UnusedEvent there, because if
+-- data has only one, jsoned output doesn't contain its name and would
+-- require us to write migration when we add another one. by defining
+-- additional, dummy costructor we bypass it.
+
+data Event =
+    SendGridEvent String SendGridEvent String -- ^ email, event, category
+  | UnusedEvent Undefined -- ^ unused
   deriving (Eq, Ord, Show, Data, Typeable)
 $(jsonableDeriveConvertible [t| Event |])

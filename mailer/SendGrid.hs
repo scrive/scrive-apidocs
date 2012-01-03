@@ -6,6 +6,7 @@ module SendGrid (
 import Control.Applicative
 import Control.Arrow
 import Control.Monad
+import Data.Maybe
 import Happstack.Server
 
 import DB.Classes
@@ -32,13 +33,16 @@ handleSendgridEvents = do
             else do
               mevent <- readEventType =<< getField "event"
               case mevent of
-                Nothing -> logMsg "No event object provided"
+                Nothing -> logMsg "No event object received"
                 Just event -> do
-                  res <- runDBUpdate $ UpdateWithEvent mailID $ SendGridEvent event
+                  email <- fromMaybe "" <$> getField "email"
+                  category <- fromMaybe "" <$> getField "category"
+                  let ev = SendGridEvent email event category
+                  res <- runDBUpdate $ UpdateWithEvent mailID ev
                   logMsg $ if not res
                     then "UpdateWithEvent didn't update anything"
                     else "Event '" ++ show event ++ "' for email #" ++ show mailID ++ " received."
-    (mid, token) -> logMsg $ "Invalid id (" ++ show mid ++ " and token (" ++ show token ++ "provided."
+    (mid, token) -> logMsg $ "Invalid id (" ++ show mid ++ ") or token (" ++ show token ++ ") received."
   ok $ toResponse "Thanks"
 
 logMsg :: String -> Mailer ()
@@ -67,4 +71,6 @@ readEventType (Just "bounce") = do
   return $ case attrs of
     Just (status, reason, btype) -> Just $ Bounce status reason btype
     _                            -> Nothing
+readEventType (Just "spamreport") = return $ Just SpamReport
+readEventType (Just "unsubscribe") = return $ Just Unsubscribe
 readEventType _ = return Nothing
