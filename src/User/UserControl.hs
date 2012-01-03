@@ -879,8 +879,12 @@ handleAccountRemovalGet aid hash = do
 
 handleAccountRemovalFromSign :: Kontrakcja m => User -> SignatoryLink -> ActionID -> MagicHash -> m ()
 handleAccountRemovalFromSign user siglink aid hash = do
+  Context{ctxtime} <- getContext
   doc <- removeAccountFromSignAction aid hash
-  _ <- guardRightM $ doc_update . ArchiveDocument user $ documentid doc
+  doc1 <- guardRightM $ doc_update . ArchiveDocument user $ documentid doc
+  _ <- case getSigLinkFor doc1 (signatorylinkid siglink) of
+    Just sl -> addSignStatDeleteEvent doc1 sl ctxtime
+    _       -> return False
   _ <- addUserRefuseSaveAfterSignStatEvent user siglink
   return ()
 

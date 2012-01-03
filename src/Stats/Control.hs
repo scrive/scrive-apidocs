@@ -633,34 +633,30 @@ tuplesFromUsageStatsForCompany = catMaybes . map toTuple
 
 {------ Sign Stats ------}
           
-addSignStatInviteEvent :: DBMonad m => Document -> SignatoryLink -> m Bool
-addSignStatInviteEvent doc sl =
-  case documentinvitetime doc of
-    Just (SignInfo {signtime}) -> do
-      a <- runDBUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
-                                                          , ssSignatoryLinkID = signatorylinkid sl
-                                                          , ssTime            = signtime
-                                                          , ssQuantity        = SignStatInvite
-                                                          }
-      unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++ 
-        show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatInvite
-      return a
-    _ -> do
-      Log.stats $ "Cannot add invite stat because document is not invited: " ++ show (documentid doc)
-      return False
+addSignStatInviteEvent :: DBMonad m => Document -> SignatoryLink -> MinutesTime -> m Bool
+addSignStatInviteEvent doc sl time = do
+  a <- runDBUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
+                                                      , ssSignatoryLinkID = signatorylinkid sl
+                                                      , ssTime            = time
+                                                      , ssQuantity        = SignStatInvite
+                                                      }
+  unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++ 
+    show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatInvite
+  return a
+
       
 addSignStatReceiveEvent :: DBMonad m => Document -> SignatoryLink -> MinutesTime -> m Bool
 addSignStatReceiveEvent doc sl time =
-  case documentinvitetime doc of
-    Just _ | Delivered == invitationdeliverystatus sl -> do
-        a <- runDBUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
-                                                            , ssSignatoryLinkID = signatorylinkid sl
-                                                            , ssTime            = time
-                                                            , ssQuantity        = SignStatReceive
-                                                            }
-        unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++ 
-          show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatReceive
-        return a
+  case invitationdeliverystatus sl of
+    Delivered -> do
+      a <- runDBUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
+                                                          , ssSignatoryLinkID = signatorylinkid sl
+                                                          , ssTime            = time
+                                                          , ssQuantity        = SignStatReceive
+                                                          }
+      unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++ 
+        show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatReceive
+      return a
     _ -> do
       Log.stats $ "Cannot add receive stat because document is not delivered: " ++ show (signatorylinkid sl)
       return False
@@ -742,7 +738,7 @@ addSignStatDeleteEvent doc sl time =
       show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatDelete
     return a
   else do
-    Log.stats $ "Cannot add delete stat because document is not seen: " ++ show (signatorylinkid sl)
+    Log.stats $ "Cannot add delete stat because document is not deleted: " ++ show (signatorylinkid sl)
     return False
 
 addSignStatPurgeEvent :: DBMonad m => Document -> SignatoryLink -> MinutesTime -> m Bool
@@ -758,13 +754,13 @@ addSignStatPurgeEvent doc sl time =
       show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatPurge
     return a
   else do
-    Log.stats $ "Cannot add purge stat because document is not seen: " ++ show (signatorylinkid sl)
+    Log.stats $ "Cannot add purge stat because document is not really deleted: " ++ show (signatorylinkid sl)
     return False
 
 allSignStats :: DBMonad m => Document -> SignatoryLink -> MinutesTime -> m ()
 allSignStats doc sl _time = do
   -- commented out lines are those that don't record time
-  _ <- addSignStatInviteEvent  doc sl
+  --_ <- addSignStatInviteEvent  doc sl time
   --_ <- addSignStatReceiveEvent doc sl time
   _ <- addSignStatOpenEvent    doc sl
   _ <- addSignStatLinkEvent    doc sl
