@@ -54,7 +54,7 @@ import Data.Functor
 import Control.Monad
 import Util.SignatoryLinkUtils
 import DB.Classes
-import qualified AppLogger as Log (integration)
+import qualified AppLogger as Log ()
 import Util.JSON
 import User.Lang
 import User.Region
@@ -158,17 +158,6 @@ api_document mfiles doc = JSObject $ toJSObject $ [
 
 api_document_read :: (APIContext c, Kontrakcja m, DBMonad m) => Bool -> Document -> APIFunction m c JSValue
 api_document_read False doc = do
-  Log.integration $ "api_document_read: docid " ++ show (documentid doc)
-  Log.integration $ "api_document_read: document_id " ++ ( show $ unDocumentID $ documentid doc)
-  Log.integration $ "api_document_read: title " ++ (show $ BS.toString $ documenttitle doc)
-  Log.integration $ "document type " ++ (show  $ fromSafeEnumInt $ documenttype doc)
-  Log.integration $ " state" ++ (show  $ fromSafeEnumInt $ documentstatus doc)
-  Log.integration $ "involved" ++ (show $ JSArray $ map api_signatory $ documentsignatorylinks doc)
-  Log.integration $ "tags" ++ (show $ JSArray $ map api_document_tag $ documenttags doc)
-  Log.integration $ "authorization" ++ (show $ showJSON  $ fromSafeEnumInt $ documentallowedidtypes doc)
-  Log.integration $ "mdate" ++ (show $ api_date $ documentmtime doc)
-  Log.integration $ "locale" ++ (show $ jsonFromLocale $ getLocale doc)
-
   return $ api_document Nothing doc
 api_document_read True doc = do
   files <- mapM api_document_file_read =<< getFilesByStatus doc
