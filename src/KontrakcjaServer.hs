@@ -155,7 +155,7 @@ runKontrakcjaServer = Log.withLogger $ do
                               t3 <- forkIO $ cron 600 $ runScheduler (actionScheduler LeisureAction) scheddata
                               t4 <- forkIO $ cron (60 * 60 * 4) $ runScheduler runDocumentProblemsCheck scheddata
                               t5 <- forkIO $ cron (60 * 60 * 24) $ runScheduler runArchiveProblemsCheck scheddata
-                              t6 <- forkIO $ cron 1 $ runScheduler processEvents scheddata
+                              t6 <- forkIO $ cron 5 $ runScheduler processEvents scheddata
                               t7 <- forkIO $ cron (60) $ (let loop = (do
                                                                         r <- uploadFileToAmazon appConf
                                                                         if r then loop else return ()) in loop)

@@ -29,7 +29,7 @@ dispatcher sender dbconf = withPostgreSQL dbconf send
                 error $ "Marking email #" ++ show (mailID mail) ++ " as sent failed"
             else error "Sending email failed"
       case res of
-        Right () -> threadDelay second
+        Right () -> threadDelay $ 5 * second
         Left (e::E.SomeException) -> do
           Log.mailingServer $ "Exception '" ++ show e ++ "' thrown while sending emails, sleeping for 10 minutes"
           threadDelay $ 10 * 60 * second
