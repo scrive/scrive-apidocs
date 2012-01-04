@@ -329,8 +329,12 @@ setCompanyInfoFromTMP uTMP company = do
     Just company' <- runDBQuery $ GetCompany $ companyid company
     return company'
 
+beginningOfTime :: MinutesTime
+beginningOfTime = fromSeconds 0
+
 getDocuments :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocuments = do
+    Context{ctxtime} <- getContext
     sid <- serviceid <$> service <$> ask
     mcompany_id <- fmap ExternalCompanyID <$> fromJSONField "company_id"
     when (isNothing mcompany_id) $ throwApiError API_ERROR_MISSING_VALUE "No company id provided"
@@ -340,12 +344,35 @@ getDocuments = do
                     v <- fromJSONField "value"
                     when (isNothing n || isNothing v) $ throwApiError API_ERROR_MISSING_VALUE "Missing tag name or value"
                     return $ Just $ DocumentTag (fromJust n) (fromJust v)
+    mfromDate  <- fromJSONField "from_date"
+    mtoDate    <- fromJSONField "to_date"
+    stateFrom :: Int  <- fromMaybe 0   <$> fromJSONField "from_state"
+    stateTo   :: Int  <- fromMaybe 100 <$> fromJSONField "to_state"
+    fromDate <- case mfromDate of
+      Nothing -> return beginningOfTime
+      Just s  -> case parseMinutesTimeISO s of
+        Just t  -> return t
+        Nothing -> throwApiError API_ERROR_PARSING $ "from_date unrecognized format: " ++ show s
+    toDate <- case mtoDate of
+      Nothing -> return ctxtime
+      Just s  -> case parseMinutesTimeISO s of
+        Just t  -> return t
+        Nothing -> throwApiError API_ERROR_PARSING $ "to_date unrecognized format: " ++ show s
     linkeddocuments <- doc_query $ GetDocumentsByCompanyAndTags (Just sid) (companyid company) tags
-    let linkeddocuments1 = filter (isAuthoredByCompany (companyid company)) linkeddocuments
-    let linkeddocuments2 = filter (not . isDeletedFor . getAuthorSigLink) linkeddocuments1
-    let linkeddocuments3 = filter (not . isAttachment) linkeddocuments2
-    api_docs <- mapM (api_document_read False) linkeddocuments3
-    return $ toJSObject [("documents",JSArray $ api_docs)]
+    api_docs <- sequence [api_document_read False d  
+                         | d <- linkeddocuments
+                         , isAuthoredByCompany (companyid company) d
+                         , not $ isDeletedFor $ getAuthorSigLink d
+                         , not $ isAttachment d
+                         , documentmtime d >= fromDate
+                         , documentmtime d <= toDate
+                         , (fromSafeEnum $ documentstatus d) >= stateFrom
+                         , (fromSafeEnum $ documentstatus d) <= stateTo]
+    return $ toJSObject [("documents"  , JSArray $ api_docs)
+                        ,("from_date"  , showJSON $ showMinutesTimeForAPI fromDate)
+                        ,("to_date"    , showJSON $ showMinutesTimeForAPI toDate)
+                        ,("from_state" , showJSON stateFrom)
+                        ,("to_state"   , showJSON stateTo)]
 
 getDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocument = do
