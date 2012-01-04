@@ -908,7 +908,7 @@ csvRowFromDocHist (s:ss) csv' =
 handleDocHistoryCSV :: Kontrakcja m => m Response
 handleDocHistoryCSV = do
   stats <- runDBQuery GetDocStatEvents
-  let byDoc = groupWith seDocumentID stats
+  let byDoc = groupWith seDocumentID $ reverse $ sortWith seDocumentID stats
       rows = map (\es -> csvRowFromDocHist es []) byDoc
   ok $ setHeader "Content-Disposition" "attachment;filename=dochist.csv"
      $ setHeader "Content-Type" "text/csv"
@@ -940,7 +940,7 @@ csvRowFromSignHist (s:ss) csv' =
 handleSignHistoryCSV :: Kontrakcja m => m Response
 handleSignHistoryCSV = do
   stats <- runDBQuery GetSignStatEvents
-  let bySig = groupWith (\s-> (ssDocumentID s, ssSignatoryLinkID s)) stats
+  let bySig = groupWith (\s-> (ssDocumentID s, ssSignatoryLinkID s)) $ reverse $ sortWith (\s-> (ssDocumentID s, ssSignatoryLinkID s)) stats
       rows = map (\es -> csvRowFromSignHist es []) bySig
   ok $ setHeader "Content-Disposition" "attachment;filename=signhist.csv"
      $ setHeader "Content-Type" "text/csv"
