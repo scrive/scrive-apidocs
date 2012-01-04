@@ -48,6 +48,17 @@ docStateTests conn = testGroup "DocState" [
   testThat "CloseDocument succeeds when doc is signable and awaiting author" conn testCloseDocumentSignableAwaitingAuthorJust,
   testThat "CloseDocument fails when doc is signable and awaiting author" conn testCloseDocumentSignableNotAwaitingAuthorNothing,
 
+  testThat "CancelDocument fails when doc is not signable" conn testCancelDocumentNotSignableNothing,
+  testThat "CancelDocument fails when doc doesn't exist" conn testCancelDocumentNotNothing,
+  testThat "CancelDocument succeeds when doc is signable and awaiting author" conn testCancelDocumentSignableAwaitingAuthorJust,
+  testThat "CancelDocument fails when doc is signable and awaiting author" conn testCancelDocumentSignableNotAwaitingAuthorNothing,
+
+  testThat "PendingToAwaitingAuthor fails when doc is not signable" conn testPendingToAwaitingAuthorDocumentNotSignableNothing,
+  testThat "PendingToAwaitingAuthor fails when doc doesn't exist" conn testPendingToAwaitingAuthorDocumentNotNothing,
+  testThat "PendingToAwaitingAuthor succeeds when doc is signable and awaiting author" conn testPendingToAwaitingAuthorDocumentSignableAwaitingAuthorJust,
+  testThat "PendingToAwaitingAuthor fails when doc is signable and awaiting author" conn testPendingToAwaitingAuthorDocumentSignableNotAwaitingAuthorNothing,
+
+
   testThat "SetDocumentTags fails when does not exist" conn testSetDocumentTagsNotLeft,
   testThat "SetDocumentTags succeeds" conn testSetDocumentTagsRight,
 
@@ -57,6 +68,8 @@ docStateTests conn = testGroup "DocState" [
   testThat "SetDocumentTimeoutTime fails when does not exist" conn testSetDocumentTimeoutTimeNotLeft,
   testThat "SetDocumentTimeoutTime fails when not signable" conn testSetDocumentTimeoutTimeNotSignableLeft,
   testThat "SetDocumentTimeoutTime succeeds when signable" conn testSetDocumentTimeoutTimeSignableRight,
+
+  testThat "GetTimeoutedButPendingDocuments works as expected" conn testGetTimedOutButPendingDocuments,
 
   testThat "SetInvitationDeliveryStatus fails when not signable" conn testSetInvitationDeliveryStatusNotSignableLeft,
   testThat "SetInvitationDeliveryStatus fails when doc does not exist" conn testSetInvitationDeliveryStatusNotLeft,
@@ -109,6 +122,11 @@ docStateTests conn = testGroup "DocState" [
 
   testThat "when I attach a sealed file to a bad docid, it always returns left" conn testNoDocumentAttachSealedAlwaysLeft,
   testThat "when I attach a sealed file to a real doc, it always returns Right" conn testDocumentAttachSealedPendingRight,
+
+
+  testThat "when I ChangeMainFile of a real document returns Right" conn testDocumentChangeMainFileRight,
+  testThat "when I ChangeMainFile of a bad docid, it ALWAYS returns Left" conn testNoDocumentChangeMainFileAlwaysLeft,
+
   {-
   testThat "when I call updateDocument, it fails when the doc doesn't exist" conn testNoDocumentUpdateDocumentAlwaysLeft,
   testThat "When I call updateDocument with a doc that is not in Preparation, always returns left" conn testNotPreparationUpdateDocumentAlwaysLeft,
@@ -129,6 +147,8 @@ docStateTests conn = testGroup "DocState" [
 
   testThat "removeDocumentAttachment fails if not in preparation" conn testRemoveDocumentAttachmentFailsIfNotPreparation,
   testThat "removeDocumentAttachment doesn't fail if there's no attachments" conn testRemoveDocumentAttachmentOk,
+
+  testThat "UpdateSigAttachments works as advertised" conn testUpdateSigAttachmentsAttachmentsOk,
 
   -- we need to do one that tests updateDocumentAttachment where there is an attachment
   testThat "documentFromSignatoryData fails when document doesn't exist" conn testDocumentFromSignatoryDataFailsDoesntExist,
@@ -580,6 +600,51 @@ testDocumentAttachSealedPendingRight = doTimes 10 $ do
     assertBool "Should have new file attached, but it's not" $ (fileid file) `elem` documentsealedfiles (fromRight edoc)
 
 
+testDocumentChangeMainFileRight :: DB ()
+testDocumentChangeMainFileRight = doTimes 10 $ do
+  -- setup
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (const True)
+  file <- addNewRandomFile
+  --execute
+  edoc <- randomUpdate $ ChangeMainfile (documentid doc) (fileid file)
+  --assert
+  validTest $ do
+    assertRight edoc
+    let doc1 = fromRight edoc
+    assertBool "New file is attached" (fileid file `elem` (documentfiles doc1 ++ documentsealedfiles doc1))
+    assertInvariants $ fromRight edoc
+
+
+testNoDocumentChangeMainFileAlwaysLeft :: DB ()
+testNoDocumentChangeMainFileAlwaysLeft = doTimes 10 $ do
+  -- setup
+  file <- addNewRandomFile
+  --execute
+  -- non-existent docid
+  edoc <- randomUpdate $ (\docid -> ChangeMainfile docid (fileid file))
+  --assert
+  validTest $ do
+    assertLeft edoc
+
+testGetTimedOutButPendingDocuments :: DB ()
+testGetTimedOutButPendingDocuments = doTimes 1 $ do
+  -- setup
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (isPending &&^ (isJust . documenttimeouttime))
+  _doc2 <- addRandomDocumentWithAuthorAndCondition author (not . (isPending ||^ isAwaitingAuthor))
+
+  let t = unTimeoutTime $ fromJust $ documenttimeouttime doc
+  --execute
+  docsA <- dbQuery $ GetTimeoutedButPendingDocuments ((-10) `minutesAfter` t)
+  docsB <- dbQuery $ GetTimeoutedButPendingDocuments (10 `minutesAfter` t)
+
+  --assert
+  validTest $ do
+    assertEqual "Documents do not timeout before time" [] (map documentstatus docsA)
+    assertEqual "Documents timeout after time" [Pending] (map documentstatus docsB)
+
+
 {-
 testNotPreparationUpdateDocumentAlwaysLeft :: DB ()
 testNotPreparationUpdateDocumentAlwaysLeft = doTimes 10 $ do
@@ -758,7 +823,11 @@ testAddDocumentAttachmentOk = doTimes 10 $ do
   --execute
   edoc <- randomUpdate $ AddDocumentAttachment (documentid doc) (fileid file)
   --assert
-  validTest $ assertRight edoc
+  validTest $ do
+    assertRight edoc
+    let doc1 = fromRight edoc
+    assertEqual "Author attachment was really attached" [fileid file]
+                  (map authorattachmentfile $ documentauthorattachments doc1)
 
 testRemoveDocumentAttachmentFailsIfNotPreparation :: DB ()
 testRemoveDocumentAttachmentFailsIfNotPreparation = doTimes 10 $ do
@@ -778,6 +847,83 @@ testRemoveDocumentAttachmentOk = doTimes 10 $ do
   --assert
   validTest $ assertRight edoc
 
+---------------------------------------------------------------------
+
+-- DeleteSigAttachment, SaveSigAttachment, UpdateSigAttachments
+
+{-
+testUpdateSigAttachmentsFailsIfNotPreparation :: DB ()
+testAddDocumentAttachmentFailsIfNotPreparation = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
+  file <- addNewRandomFile
+  --execute
+  edoc <- randomUpdate $ AddDocumentAttachment (documentid doc) (fileid file)
+  --assert
+  validTest $ assertLeft edoc
+-}
+
+testUpdateSigAttachmentsAttachmentsOk :: DB ()
+testUpdateSigAttachmentsAttachmentsOk = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
+  file1 <- addNewRandomFile
+  file2 <- addNewRandomFile
+  --execute
+  let email1 = BS.fromString "g1@g.com"
+      name1 = BS.fromString "att1"
+  let att1 = SignatoryAttachment { signatoryattachmentfile = Just (fileid file1)
+                                 , signatoryattachmentemail = email1
+                                 , signatoryattachmentname = name1
+                                 , signatoryattachmentdescription = BS.fromString "att1 description"
+                                 }
+  let att2 = SignatoryAttachment { signatoryattachmentfile = Nothing
+                                 , signatoryattachmentemail = BS.fromString "g2@g.com"
+                                 , signatoryattachmentname = BS.fromString "att2"
+                                 , signatoryattachmentdescription = BS.fromString "att2 description"
+                                 }
+  edoc1 <- randomUpdate $ UpdateSigAttachments (documentid doc) [att1, att2]
+
+  edoc2 <- randomUpdate $ DeleteSigAttachment (documentid doc) email1 (fileid file1)
+
+  edoc3 <- randomUpdate $ SaveSigAttachment (documentid doc) name1 email1 (fileid file2)
+
+  --assert
+  validTest $ do
+    assertRight edoc1
+    let doc1 = fromRight edoc1
+    assertEqual "Both attachments were attached" 2 (length (documentsignatoryattachments doc1))
+    assertRight edoc2
+    let doc2 = fromRight edoc2
+    assertBool "All signatory attachments are not connected to files" (all (isNothing . signatoryattachmentfile) (documentsignatoryattachments doc2))
+
+    assertRight edoc3
+    let doc3 = fromRight edoc3
+    assertBool "Attachment connected to signatory" 
+                 (Just (fileid file2) `elem` map signatoryattachmentfile (documentsignatoryattachments doc3))
+    
+
+{-
+testRemoveDocumentAttachmentFailsIfNotPreparation :: DB ()
+testRemoveDocumentAttachmentFailsIfNotPreparation = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
+  --execute
+  edoc <- randomUpdate $ RemoveDocumentAttachment (documentid doc) (FileID 0)
+  --assert
+  validTest $ assertLeft edoc
+
+testRemoveDocumentAttachmentOk :: DB ()
+testRemoveDocumentAttachmentOk = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
+  --execute
+  edoc <- randomUpdate $ RemoveDocumentAttachment (documentid doc) (FileID 0)
+  --assert
+  validTest $ assertRight edoc
+-}
+
+------------------------------------------------
 
 testDocumentFromSignatoryDataFailsDoesntExist :: DB ()
 testDocumentFromSignatoryDataFailsDoesntExist = doTimes 10 $ do
@@ -1127,6 +1273,91 @@ testCloseDocumentNotNothing :: DB ()
 testCloseDocumentNotNothing = doTimes 10 $ do
   etdoc <- randomUpdate $ CloseDocument
   validTest $ assertLeft etdoc
+
+
+testCancelDocumentSignableAwaitingAuthorJust :: DB ()
+testCancelDocumentSignableAwaitingAuthorJust = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocument (randomDocumentAllowsDefault author)
+         { randomDocumentAllowedTypes = documentSignableTypes
+         , randomDocumentAllowedStatuses = [AwaitingAuthor]
+         , randomDocumentCondition = ((hasSeen . getAuthorSigLink) &&^ (all (((not . isAuthor) &&^ isSignatory) =>>^ hasSigned) . documentsignatorylinks))
+         }
+
+  let Just sl = getAuthorSigLink doc
+  etdoc <- msum [randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl),
+                 randomUpdate $ CancelDocument (documentid doc) ManualCancel]
+  validTest $ assertRight etdoc
+
+testCancelDocumentSignableNotAwaitingAuthorNothing :: DB ()
+testCancelDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocument (randomDocumentAllowsDefault author)
+         { randomDocumentAllowedTypes = documentSignableTypes
+         , randomDocumentAllowedStatuses = [AwaitingAuthor, Pending]
+         , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
+         }
+
+  etdoc <- msum [randomUpdate $ CancelDocument (documentid doc) ManualCancel]
+  validTest $ assertRight etdoc
+
+testCancelDocumentNotSignableNothing :: DB ()
+testCancelDocumentNotSignableNothing = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocument (randomDocumentAllowsDefault author)
+         { randomDocumentAllowedTypes = documentAllTypes \\ documentSignableTypes
+         , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
+         }
+  etdoc <- randomUpdate $ CancelDocument (documentid doc) ManualCancel
+  validTest $ assertLeft etdoc
+
+testCancelDocumentNotNothing :: DB ()
+testCancelDocumentNotNothing = doTimes 10 $ do
+  etdoc <- randomUpdate $ (\did -> CancelDocument did ManualCancel)
+  validTest $ assertLeft etdoc
+
+
+testPendingToAwaitingAuthorDocumentSignableAwaitingAuthorJust :: DB ()
+testPendingToAwaitingAuthorDocumentSignableAwaitingAuthorJust = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocument (randomDocumentAllowsDefault author)
+         { randomDocumentAllowedTypes = documentSignableTypes
+         , randomDocumentAllowedStatuses = [Pending]
+         , randomDocumentCondition = ((hasSeen . getAuthorSigLink) &&^ (all (((not . isAuthor) &&^ isSignatory) =>>^ hasSigned) . documentsignatorylinks))
+         }
+
+  let Just sl = getAuthorSigLink doc
+  etdoc <- msum [randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl),
+                 randomUpdate $ PendingToAwaitingAuthor (documentid doc)]
+  validTest $ assertRight etdoc
+
+testPendingToAwaitingAuthorDocumentSignableNotAwaitingAuthorNothing :: DB ()
+testPendingToAwaitingAuthorDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocument (randomDocumentAllowsDefault author)
+         { randomDocumentAllowedTypes = documentSignableTypes
+         , randomDocumentAllowedStatuses = [Pending]
+         , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
+         }
+
+  etdoc <- msum [randomUpdate $ PendingToAwaitingAuthor (documentid doc)]
+  validTest $ assertRight etdoc
+
+testPendingToAwaitingAuthorDocumentNotSignableNothing :: DB ()
+testPendingToAwaitingAuthorDocumentNotSignableNothing = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocument (randomDocumentAllowsDefault author)
+         { randomDocumentAllowedTypes = documentAllTypes \\ documentSignableTypes
+         , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
+         }
+  etdoc <- randomUpdate $ PendingToAwaitingAuthor (documentid doc)
+  validTest $ assertLeft etdoc
+
+testPendingToAwaitingAuthorDocumentNotNothing :: DB ()
+testPendingToAwaitingAuthorDocumentNotNothing = doTimes 10 $ do
+  etdoc <- randomUpdate $ (\did -> PendingToAwaitingAuthor did)
+  validTest $ assertLeft etdoc
+
 
 testSetDocumentTitleNotLeft :: DB ()
 testSetDocumentTitleNotLeft = doTimes 10 $ do

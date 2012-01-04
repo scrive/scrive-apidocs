@@ -49,6 +49,7 @@ import API.Service.Model
 import Company.Model
 import DB.Classes
 import DB.Derive
+import DB.Fetcher2
 import DB.Types
 import DB.Utils
 import MinutesTime
@@ -162,18 +163,14 @@ instance DBQuery GetInviteInfo (Maybe InviteInfo) where
   dbQuery (GetInviteInfo uid) = wrapDB $ \conn -> do
     st <- prepare conn "SELECT inviter_id, invite_time, invite_type FROM user_invite_infos WHERE user_id = ?"
     _ <- execute st [toSql uid]
-    is <- fetchInviteInfos st []
+    is <- foldDB st fetchInviteInfos []
     oneObjectReturnedGuard is
     where
-      fetchInviteInfos st acc = fetchRow st >>= maybe (return acc) f
-        where f [inviter_id, invite_time, invite_type
-               ] = fetchInviteInfos st $ InviteInfo {
-                   userinviter = fromSql inviter_id
-                 , invitetime = fromSql invite_time
-                 , invitetype = fromSql invite_type
-               } : acc
-              f l = error $ "fetchInviteInfos: unexpected row: "++show l
-
+      fetchInviteInfos acc inviter_id invite_time invite_type = InviteInfo {
+          userinviter = inviter_id
+        , invitetime = invite_time
+        , invitetype = invite_type
+        } : acc
 
 data GetUserMailAPI = GetUserMailAPI UserID
 instance DBQuery GetUserMailAPI (Maybe UserMailAPI) where
@@ -497,45 +494,46 @@ selectUsersSQL = "SELECT "
  ++ ", u.lang"
  ++ ", u.region"
  ++ ", u.customfooter"
-  ++ "  FROM users u"
+ ++ "  FROM users u"
  ++ " "
 
 fetchUsers :: Statement -> IO [User]
-fetchUsers st = do
-  fetchValues st decoder
-  where decoder uid password salt is_company_admin account_suspended has_accepted_terms_of_service
-                signup_method service_id company_id first_name
-                last_name personal_number company_position phone mobile email
-                preferred_design_mode lang region customfooter
-                = (return $ User
-                  { userid = uid
-                  , userpassword = case (password, salt) of
-                                     (Just pwd, Just salt') -> Just Password
-                                                               { pwdHash = pwd
-                                                               , pwdSalt = salt'
-                                                               }
-                                     _ -> Nothing
-                  , useriscompanyadmin = is_company_admin
-                  , useraccountsuspended = account_suspended
-                  , userhasacceptedtermsofservice = has_accepted_terms_of_service
-                  , usersignupmethod = signup_method
-                  , userinfo = UserInfo
-                               { userfstname = first_name
-                               , usersndname = last_name
-                               , userpersonalnumber = personal_number
-                               , usercompanyposition = company_position
-                               , userphone = phone
-                               , usermobile = mobile
-                               , useremail = email
-                               }
-                  , usersettings = UserSettings
-                                   { preferreddesignmode = preferred_design_mode
-                                   , locale = mkLocale (region) (lang)
-                                   , customfooter = customfooter
-                                   }
-                  , userservice = service_id
-                  , usercompany = company_id
-                  }) :: Either DBException User
+fetchUsers st = foldDB st decoder []
+  where
+    -- Note: this function gets users in reversed order, but all queries
+    -- use ORDER BY DESC, so in the end everything is properly ordered.
+    decoder acc uid password salt is_company_admin account_suspended
+      has_accepted_terms_of_service signup_method service_id company_id
+      first_name last_name personal_number company_position phone mobile
+      email preferred_design_mode lang region customfooter = User {
+          userid = uid
+        , userpassword = case (password, salt) of
+                           (Just pwd, Just salt') -> Just Password {
+                               pwdHash = pwd
+                             , pwdSalt = salt'
+                           }
+                           _ -> Nothing
+        , useriscompanyadmin = is_company_admin
+        , useraccountsuspended = account_suspended
+        , userhasacceptedtermsofservice = has_accepted_terms_of_service
+        , usersignupmethod = signup_method
+        , userinfo = UserInfo {
+            userfstname = first_name
+          , usersndname = last_name
+          , userpersonalnumber = personal_number
+          , usercompanyposition = company_position
+          , userphone = phone
+          , usermobile = mobile
+          , useremail = email
+          }
+        , usersettings = UserSettings {
+            preferreddesignmode = preferred_design_mode
+          , locale = mkLocale region lang
+          , customfooter = customfooter
+          }
+        , userservice = service_id
+        , usercompany = company_id
+        } : acc
 
 -- this will not be needed when we move documents to pgsql. for now it's needed
 -- for document handlers - it seems that types of arguments that handlers take

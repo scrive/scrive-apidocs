@@ -11,32 +11,32 @@ offercancelbuttontext=$_offercancelbuttontext()$
 ###
 ordercancelbuttontext=$_ordercancelbuttontext()$
 ###
-contractcancelbyauthormodaltitle=
-         <h2>$_contractcancelbyauthormodaltitleHead()$</h2>
-          <p>$_contractcancelbyauthormodaltitleBody()$</p>
+contractcancelmodaltitle=
+         <h2>$_contractcancelmodaltitleHead()$</h2>
+          <p>$_contractcancelmodaltitleBody()$</p>
 ###
-offercancelbyauthormodaltitle=
-         <h2>$_offercancelbyauthormodaltitleHead()$</h2>
-          <p>$_offercancelbyauthormodaltitleBody()$</p>
+offercancelmodaltitle=
+         <h2>$_offercancelmodaltitleHead()$</h2>
+          <p>$_offercancelmodaltitleBody()$</p>
 ###
-ordercancelbyauthormodaltitle=
-         <h2>$_ordercancelbyauthormodaltitleHead()$</h2>
-          <p>$_ordercancelbyauthormodaltitleBody()$</p>
+ordercancelmodaltitle=
+         <h2>$_ordercancelmodaltitleHead()$</h2>
+          <p>$_ordercancelmodaltitleBody()$</p>
 ###
 pageDocumentForAuthor=
 
 <!--
 <div class="localdialogs">
   <div style="display: none">
-    <script type="text/javascript"> 
+    <script type="text/javascript">
       var documentid = "$documentid$";
     </script>
   </div>
 </div>
 <div id="tab-viewer">
-  <div id="signStepsContainer"> 
-    <div id="signStepsTitleRow"> 
-      <span id="signStepsTitleRowTextContainer"> 
+  <div id="signStepsContainer">
+    <div id="signStepsTitleRow">
+      <span id="signStepsTitleRowTextContainer">
         <span class="title">
           $process.title$ #$documentid$:
         </span>
@@ -57,7 +57,7 @@ pageDocumentForAuthor=
   </div>
   $if(hasanyattachments)$
   <span id="attachmenttabview" style="display:none">
-    <div id="signStepsBody" class="ericfix forauthor"> 
+    <div id="signStepsBody" class="ericfix forauthor">
        <div class="attachmentListContainer">
             <div class="float-left">
              <div class="subheader">$_Attachment()$</div>
@@ -90,9 +90,9 @@ pageDocumentForAuthor=
   </span>
   $endif$
   <span id="documenttabview">
-    <div id="signStepsBody" class="ericfix forauthor"> 
+    <div id="signStepsBody" class="ericfix forauthor">
       <div id="signViewBodyLeft" >
-        <span id="signViewBodyLeftTextContainer"> 
+        <span id="signViewBodyLeftTextContainer">
           $documentinfotext:noescape()$
           $if(canberestarted)$
           <BR/><BR/>
@@ -101,9 +101,9 @@ pageDocumentForAuthor=
               <div class="left"></div>
               <div class="label">
                 $process.restartbuttontext$
-              </div> 
+              </div>
               <div class="right"></div>
-            </a> 
+            </a>
           </form>
           $endif$
           $if(pending)$
@@ -113,13 +113,13 @@ pageDocumentForAuthor=
             <div class="left"></div>
             <div class="label">
               $process.cancelbuttontext$
-            </div> 
+            </div>
             <div class="right"></div>
-          </a> 
+          </a>
           $endif$
           $endif$
           $endif$
-        </span> 
+        </span>
       </div>
       $signatoriesBox()$
     </div>
@@ -128,16 +128,16 @@ pageDocumentForAuthor=
     <script type="text/javascript">
       var docstate = $docstate:noescape()$;
     </script>
-    
+
     <div class="waiting4page"></div>
   </div>
-  
+
   $if(awaitingauthor)$
   <script type="text/javascript" src="/js/bankid.js"> </script>
   <div style="display:none;">
     $validationdropdown()$
   </div>
-  <div id="signViewBottomBox"> 
+  <div id="signViewBottomBox">
     <div id="signViewBottomBoxContainerLeft">
       <a class="float-right btn-small red cancel" name="cancel" rel="#cancel-by-author-dialog" id="cancel">
         <div class="left"></div>
@@ -153,7 +153,7 @@ pageDocumentForAuthor=
         </div>
       </div>
     </div>
-    <div id="signViewBottomBoxContainerRight"> 
+    <div id="signViewBottomBoxContainerRight">
       <a class="btn-big blue center submiter" id="sign" rel="#dialog-confirm-sign-by-author" name="sign">
         <div class="left"></div>
         <div class="label" style="width:120px">
@@ -164,7 +164,7 @@ pageDocumentForAuthor=
       </a>
     </div>
   </div>
-  $endif$   
+  $endif$
   <div class="localdialogs">
     $loadingdialog()$
     <form method="post" action="$linkcancel$" class="overlay" id="cancel-by-author-dialog">
@@ -172,24 +172,24 @@ pageDocumentForAuthor=
         <div class="modal-header">
           <span class="modal-icon message"></span>
           <span class="modal-title">
-            $process.cancelbyauthormodaltitle:noescape()$ 
+            $process.cancelmodaltitle:noescape()$
           </span>
           <a class="modal-close close"> </a>
         </div>
         <div class="modal-body">
-          <div class="modal-content">     
+          <div class="modal-content">
             $cancelMailContent:noescape()$
           </div>
         </div>
         <div class="modal-footer">
           <div class="float-left">
             <a class="close cancel">$_cancel()$</a>
-            <a class="editer message">$_cancelByAuthorDialogOwnMessage()$</a>
+            <a class="editer message">$_cancelDialogOwnMessage()$</a>
           </div>
           <a class="btn-small red float-right submiter">
             <div class="left"></div>
             <div class="label">
-              <p> $process.cancelbuttontext$ 
+              <p> $process.cancelbuttontext$
               </p>
               <div class="btn-symbol red arrow-left"></div>
             </div>
@@ -198,7 +198,7 @@ pageDocumentForAuthor=
         </div>
       </div>
     </form>
-    <form method="post" name="form" action="$action$" id="dialog-confirm-sign-by-author" class="overlay">     
+    <form method="post" name="form" action="$action$" id="dialog-confirm-sign-by-author" class="overlay">
       <div class="modal-container">
         <div class="modal-header">
           <span class="modal-icon message"></span>
@@ -208,7 +208,7 @@ pageDocumentForAuthor=
           <a class="modal-close close"> </a>
         </div>
         <div class="modal-body">
-          <div class="modal-content">     
+          <div class="modal-content">
             <p>$_dialogConfirmSignByAuthorBody1()$<strong>$documenttitle$</strong>?</p>
             <p>$_dialogConfirmSignByAuthorBody2()$ $partyUnsigned:noescape()$ $_dialogConfirmSignByAuthorBody3()$</p>
             <span class="eleghidden" style="display:none;">

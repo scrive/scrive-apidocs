@@ -47,7 +47,6 @@ import Routing
 import API.Service.Model
 import API.APICommons
 import Doc.DocUtils
-import Doc.DocProcess
 import Company.Model
 import User.Model
 import Data.Foldable (fold)
@@ -277,15 +276,11 @@ createAPIDocument company' (authorTMP:signTMPS) tags mlocale createFun = do
         nonauthordetails = map toSignatoryDetails signTMPS
         nonauthorroles = map (fromMaybe defsigroles . toSignatoryRoles) signTMPS
         sigs = (toSignatoryDetails authorTMP, authorroles):zip nonauthordetails nonauthorroles
-        disallowspartner = getValueForProcess doc processauthorsend /= Just True
-    when (any hasFieldsAndPlacements (toSignatoryDetails authorTMP : nonauthordetails) ||
-          length nonauthordetails > 1 ||
-          (disallowspartner && SignatoryPartner `elem` authorroles)) $
-      ignore $ doc_update $ SetDocumentAdvancedFunctionality (documentid doc) (ctxtime ctx)
     doc' <- doc_update $ ResetSignatoryDetails (documentid doc) sigs (ctxtime ctx)
 
-    when (isLeft doc') $ Log.integration $ "error creating document: " ++ fromLeft doc'
-    when (isLeft doc') $ throwApiError API_ERROR_OTHER "Problem creating a document (SIGUPDATE) | This should never happend"
+    when (isLeft doc') $ do
+        Log.integration $ "error creating document: " ++ fromLeft doc'
+        throwApiError API_ERROR_OTHER "Problem creating a document (SIGUPDATE) | This should never happend"
     return $ fromRight doc'
 
 userFromTMP :: Kontrakcja m => SignatoryTMP -> Company -> IntegrationAPIFunction m User
@@ -346,14 +341,11 @@ getDocuments = do
                     when (isNothing n || isNothing v) $ throwApiError API_ERROR_MISSING_VALUE "Missing tag name or value"
                     return $ Just $ DocumentTag (fromJust n) (fromJust v)
     linkeddocuments <- doc_query $ GetDocumentsByCompanyAndTags (Just sid) (companyid company) tags
-    api_docs <- sequence [api_document_read False d | d <- linkeddocuments
-                                                    , isAuthoredByCompany (companyid company) d
-                                                    , not $ isDeletedFor $ getAuthorSigLink d
-                                                    , not $ isAttachment d
-                                                    ]
+    let linkeddocuments1 = filter (isAuthoredByCompany (companyid company)) linkeddocuments
+    let linkeddocuments2 = filter (not . isDeletedFor . getAuthorSigLink) linkeddocuments1
+    let linkeddocuments3 = filter (not . isAttachment) linkeddocuments2
+    api_docs <- mapM (api_document_read False) linkeddocuments3
     return $ toJSObject [("documents",JSArray $ api_docs)]
-
-
 
 getDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocument = do

@@ -5,39 +5,39 @@
 ##### CANCEL MAIL
 #####
 ####
-mailCancelContractByAuthorStandardHeader=
+mailCancelContractStandardHeader=
     <p>$_hi()$,</p>
 ######
-mailCancelOfferByAuthorStandardHeader=
+mailCancelOfferStandardHeader=
     <p>$_hi()$,</p>
 ######
-mailCancelOrderByAuthorStandardHeader=
+mailCancelOrderStandardHeader=
     <p>$_hi()$,</p>
 ######
-mailCancelContractByAuthor=
-    $_mailCancelDocumentByAuthorTitleContract()$
+mailCancelContract=
+    $_mailCancelDocumentTitleContract()$
     $nicemail(
-        mailheader= _mailCancelDocumentByAuthorTitleContract();
+        mailheader= _mailCancelDocumentTitleContract();
         mailp1 = header;
-        mailp2 = _mailCancelContractByAuthorContentBody();
+        mailp2 = _mailCancelContractContentBody();
         mailp3 = footer
     )$
 #####
-mailCancelOfferByAuthor=
-    $_mailCancelDocumentByAuthorTitleOffer()$
+mailCancelOffer=
+    $_mailCancelDocumentTitleOffer()$
     $nicemail(
-        mailheader= _mailCancelDocumentByAuthorTitleOffer();
+        mailheader= _mailCancelDocumentTitleOffer();
         mailp1 = header;
-        mailp2 = _mailCancelOfferByAuthorContentBody();
+        mailp2 = _mailCancelOfferContentBody();
         mailp3 = footer
     )$
 #####
-mailCancelOrderByAuthor=
-    $_mailCancelDocumentByAuthorTitleOrder()$
+mailCancelOrder=
+    $_mailCancelDocumentTitleOrder()$
     $nicemail(
-        mailheader= _mailCancelDocumentByAuthorTitleOrder();
+        mailheader= _mailCancelDocumentTitleOrder();
         mailp1 = header;
-        mailp2 = _mailCancelOrderByAuthorContentBody();
+        mailp2 = _mailCancelOrderContentBody();
         mailp3 = footer
     )$
 #####
@@ -393,7 +393,7 @@ $_newUserMailTitle()$
 $nicemail(
         mailheader=_newUserMailTitle();
         mailp1=newUserMailMainP();
-        mailp2=poweredBySkrivaPaPara()
+        mailp2=poweredByScrive()
     )$
 ####
 newUserMailMainP=
@@ -410,7 +410,7 @@ mailNewCompanyUserInvite=
     $nicemail(
         mailheader=_mailNewCompanyUserInviteTitle();
         mailp1=mailNewCompanyUserInviteMainP();
-        mailp2=poweredBySkrivaPaPara()
+        mailp2=poweredByScrive()
     )$
 ####
 mailNewCompanyUserInviteMainP=
@@ -430,7 +430,7 @@ $_mailAccountBySigningContractReminderTitle()$
 $nicemail(
         mailheader=_mailAccountBySigningContractReminderTitle();
         mailp1=mailAccountBySigningContractReminderMainP();
-        mailp2=poweredBySkrivaPaPara()
+        mailp2=poweredByScrive()
     )$
 ###
 mailAccountBySigningContractReminderMainP=
@@ -445,7 +445,7 @@ $_mailAccountBySigningOfferReminderTitle()$
 $nicemail(
         mailheader=_mailAccountBySigningOfferReminderTitle();
         mailp1=mailAccountBySigningOfferReminderMainP();
-        mailp2=poweredBySkrivaPaPara()
+        mailp2=poweredByScrive()
     )$
 ###
 mailAccountBySigningOfferReminderMainP =
@@ -460,7 +460,7 @@ $_mailAccountBySigningOrderReminderTitle()$
 $nicemail(
         mailheader=_mailAccountBySigningOrderReminderMainP();
         mailp1=mailAccountBySigningOrderReminderMainP();
-        mailp2=poweredBySkrivaPaPara()
+        mailp2=poweredByScrive()
     )$
 ###
 mailAccountBySigningOrderReminderMainP=
@@ -479,7 +479,7 @@ mailViralInvite=
     $nicemail(
         mailheader=_mailViralInviteTitle();
         mailp1=mailViralInviteMainP();
-        mailp2=poweredBySkrivaPaPara()
+        mailp2=poweredByScrive()
     )$
 ####
 mailViralInviteMainP =
@@ -512,7 +512,7 @@ mailNewAccountCreatedByAdmin=
         mailheader=_mailNewAccountCreatedByAdminTitle();
         mailp1=mailNewAccountCreatedByAdminContentHeader();
         mailp2=mailNewAccountCreatedByAdminMainP();
-        mailp3=poweredBySkrivaPaPara()
+        mailp3=poweredByScrive()
     )$
 ####
 mailNewAccountCreatedByAdminMainP=
@@ -526,7 +526,7 @@ invitationMailDeferred=
     $nicemail(
         mailheader=_invitationMailDeferredTitle();
         mailp1=invitationMailDeferredMainP();
-        mailp2=poweredBySkrivaPaPara()
+        mailp2=poweredByScrive()
     )$
 ###
 invitationMailDeferredMainP=
@@ -541,7 +541,7 @@ invitationMailDeliveredAfterDeferred=
     $nicemail(
         mailheader=_invitationMailDeliveredAfterDeferredTitle();
         mailp1=invitationMailDeliveredAfterDeferredMainP();
-        mailp2=poweredBySkrivaPaPara()
+        mailp2=poweredByScrive()
     )$
 ###
 invitationMailDeliveredAfterDeferredMainP =
@@ -555,7 +555,7 @@ invitationMailUndelivered=
     $nicemail(
         mailheader=_invitationMailUndeliveredTitle();
         mailp1=invitationMailUndeliveredMainP();
-        mailp2=poweredBySkrivaPaPara()
+        mailp2=poweredByScrive()
     )$
 ####
 ####
@@ -571,7 +571,7 @@ mailDocumentError=
     $nicemail(
         mailheader=_mailDocumentErrorTitle();
         mailp1=mailDocumentErrorMainP();
-        mailp2=poweredBySkrivaPaPara()
+        mailp2=poweredByScrive()
     )$
 ###
 mailDocumentErrorMainP =
@@ -588,7 +588,7 @@ passwordChangeLinkMail=
     $nicemail(
         mailheader=_passwordChangeLinkMailTitle();
         mailp1=passwordChangeLinkMailMainP();
-        mailp2=poweredBySkrivaPaPara()
+        mailp2=poweredByScrive()
     )$
 ###
 passwordChangeLinkMailMainP=
@@ -603,7 +603,7 @@ $_mailMismatchSignatoryTitle()$
     $nicemail(
         mailheader=_mailMismatchSignatoryTitle();
         mailp1=mailMismatchSignatoryMainP();
-        mailp2=poweredBySkrivaPaPara()
+        mailp2=poweredByScrive()
     )$
 #####
 mailMismatchSignatoryMainP=
@@ -625,7 +625,7 @@ $_mailMismatchAuthorTitle()$
 $nicemail(
         mailheader=_mailMismatchAuthorTitle();
         mailp1=mailMismatchAuthorMainP();
-        mailp2=poweredBySkrivaPaPara()
+        mailp2=poweredByScrive()
     )$
 ####
 mailMismatchAuthorMainP =
@@ -642,7 +642,7 @@ mailTakeoverPrivateUserInvite=
   $nicemail(
       mailheader=_mailTakeoverPrivateUserInviteTitle();
       mailp1=mailTakeoverPrivateUserInviteP();
-      mailp2=poweredBySkrivaPaPara()
+      mailp2=poweredByScrive()
     )$
 ####
 mailTakeoverPrivateUserInviteP=
@@ -661,7 +661,7 @@ mailRequestChangeEmail=
   $nicemail(
     mailheader=_mailRequestChangeEmailTitle();
     mailp1=mailRequestChangeEmailP();
-    mailp2=poweredBySkrivaPaPara()
+    mailp2=poweredByScrive()
   )$
 ####
 mailRequestChangeEmailP=

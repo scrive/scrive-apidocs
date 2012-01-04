@@ -46,6 +46,8 @@ import Doc.Invariants
 import Stats.Control
 import User.Utils
 import API.Service.Model
+import Data.Semantic
+import Company.Model
 
 import Control.Applicative
 import Control.Concurrent
@@ -353,7 +355,7 @@ sendInvitationEmail1 ctx document signatorylink = do
       , mailInfo = Invitation documentid signatorylinkid
       , from = documentservice document
   }
-  ioRunDB (ctxdbconn ctx) $ doc_update' $ AddInvitationEvidence documentid signatorylinkid (ctxtime ctx) (ctxipnumber ctx) 
+  ioRunDB (ctxdbconn ctx) $ doc_update' $ AddInvitationEvidence documentid signatorylinkid (ctxtime ctx) (ctxipnumber ctx)
 
 {- |
     Send a reminder email
@@ -1815,7 +1817,7 @@ sendCancelMailsForDocument :: Kontrakcja m => (Maybe BS.ByteString) -> Context -
 sendCancelMailsForDocument customMessage ctx document = do
   let activated_signatories = filter (isActivatedSignatory $ documentcurrentsignorder document) $ documentsignatorylinks document
   forM_ activated_signatories $ \slnk -> do
-      m <- mailCancelDocumentByAuthor True customMessage ctx document
+      m <- mailCancelDocument True customMessage ctx document
       let mail = m {to = [getMailAddress slnk]}
       scheduleEmailSendout (ctxesenforcer ctx) mail
 
@@ -2068,7 +2070,7 @@ prepareEmailPreview docid slid = do
     when (isNothing mdoc) $ (Log.debug "No document found") >> mzero
     let doc = fromJust mdoc
     content <- case mailtype of
-         "cancel" -> mailCancelDocumentByAuthorContent True Nothing ctx doc
+         "cancel" -> mailCancelDocumentContent True Nothing ctx doc
          "remind" -> do
              let msl = find ((== slid) . signatorylinkid) $ documentsignatorylinks doc
              case msl of
@@ -2092,10 +2094,11 @@ handleCSVLandpage c = do
 handleUpsalesDeleted :: Kontrakcja m => m Response
 handleUpsalesDeleted = onlyAdmin $ do
   docs <- doc_query $ GetDocuments $ Just $ ServiceID $ BS.fromString "upsales"
-  let deleteddocs = [[show $ documentid d, showDateYMD $ documentctime d]
+  let deleteddocs = [[show $ documentid d, showDateYMD $ documentctime d, BS.toString $ documenttitle d]
                     | d <- docs
-                    , isDeletedFor $ getAuthorSigLink d]
-  let header = ["document_id", "date created"]
+                    , isDeletedFor $ getAuthorSigLink d
+                    , isJust $ getSigLinkFor d $ And SignatoryAuthor $ CompanyID 1849610088]
+  let header = ["document_id", "date created", "document_title"]
   let csv = toCSV header deleteddocs
   ok $ setHeader "Content-Disposition" "attachment;filename=upsalesdocsdeleted.csv"
      $ setHeader "Content-Type" "text/csv"

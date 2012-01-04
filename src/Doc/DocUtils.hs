@@ -384,6 +384,11 @@ sameDocID doc1 doc2 = (documentid doc1) == (documentid doc2)
 isAuthoredByCompany :: CompanyID -> Document -> Bool
 isAuthoredByCompany companyid doc = (getAuthorSigLink doc >>= maybecompany) == Just companyid
 
+isAuthorAdmin :: User -> Document -> Bool
+isAuthorAdmin user doc =
+  useriscompanyadmin user
+  && maybe False (flip isAuthoredByCompany doc) (usercompany user)
+
 getFilesByStatus :: (MonadIO m, DBMonad m) => Document -> m [File]
 getFilesByStatus doc
   | isClosed doc = liftM catMaybes $ mapM doGet $ documentsealedfiles doc

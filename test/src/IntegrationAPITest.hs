@@ -27,7 +27,7 @@ import Test.QuickCheck.Gen
 import Control.Exception
 import System.Timeout
 --import Doc.DocStateData
-import qualified AppLogger as Log
+--import qualified AppLogger as Log
 --import Doc.Transitory
 
 integrationAPITests :: Connection -> Test
@@ -73,16 +73,14 @@ testFriendDeleteScenario conn = withTestEnvironment conn $ do
   x <- createDocumentJSON "test_company1" "eric@scrive.com"
   x' <- makeAPIRequest createDocument x
   let Right (JSString docid') = jsget "document_id" $ JSObject x'
-  doc' <- makeAPIRequest getDaveDoc $ fromRight $ jsset "document_id" docid' jsempty
-  Log.debug $ "document: " ++ show doc'
+  _ <- makeAPIRequest getDaveDoc $ fromRight $ jsset "document_id" docid' jsempty
   -- this will create a user mariusz@skrivapa.se in test_company1
   -- and also find the old user eric@scrive.com and set his company
   apiReq1 <- createDocumentJSONFriend "test_company1" "mariusz@skrivapa.se" "eric@scrive.com"
   apiRes1 <- makeAPIRequest createDocument $ apiReq1
   assertBool ("Failed to create document :" ++ show apiRes1)  $ not (isError apiRes1)
   let Right (JSString docid) = jsget "document_id" $ JSObject apiRes1
-  doc <- makeAPIRequest getDaveDoc $ fromRight $ jsset "document_id" docid jsempty
-  Log.debug $ "document: " ++ show doc
+  _ <- makeAPIRequest getDaveDoc $ fromRight $ jsset "document_id" docid jsempty
   _rsp <- makeAPIRequest removeDocument $ fromRight $ jsset "document_id" docid jsempty
   _rsp' <- makeAPIRequest removeDocument $ fromRight $ jsset "document_id" docid' jsempty
   doclist <- makeAPIRequest getDocuments $ fromRight $ jsset "company_id" "test_company1" jsempty
@@ -116,12 +114,10 @@ testNewDocumentOrder conn = withTestEnvironment conn $ do
   apiRes2 <- makeAPIRequest getDocument apiReq2
   assertBool ("Failed to get doc: " ++ show apiRes2) $ not (isError apiRes2)
   assertBool ("doctype is not order: " ++ show apiRes2) $ (Right (showJSON (5 :: Int))) == jsget ["document", "type"] (showJSON apiRes2)
-  let Right (JSArray (authorjson:_)) = jsget ["document", "involved"] (showJSON apiRes2)
-  if ((Right (JSRational False (1%1))) /= (jsget ["relation"] authorjson))
-    then Log.debug $ "document with author not secretary: " ++ show apiRes2
-    else return ()
-  assertEqual "relation for author should be secretary" (Right (JSRational False (1%1))) (jsget ["relation"] authorjson)
-
+  let ar1 = (jsget "relation" $ fromRight $ jsgetA 0 $ fromRight $ jsget "involved"  (showJSON apiReq))
+  let ar2 = (jsget "relation" $ fromRight $ jsgetA 0 $ fromRight $ jsget "involved" $ fromRight $ jsget "document" (showJSON apiRes2))
+  assertBool "relation for author is as expected" (ar1 == ar2 || (isLeft ar1 && ar2 == Right (JSRational False (1%1))))
+  
 testDocumentCreation :: Connection -> Assertion
 testDocumentCreation conn = withTestEnvironment conn $ do
     createTestService

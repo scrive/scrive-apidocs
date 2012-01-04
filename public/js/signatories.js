@@ -421,7 +421,7 @@ window.SignatoryStandarView = Backbone.View.extend({
         var textsummary = $("<div class='text'/>");
         if (signatory.signs()) {
             textsummary.append($("<div class='icon status'/>").addClass(signatory.status()));
-            if (signatory.undeliveredEmail()) textsummary.append("<span style='color:#000000;position:relative;left:-4px;'>!</span> ");
+            if (signatory.undeliveredEmail() && signatory.seendate() == undefined) textsummary.append("<span style='color:#000000;position:relative;left:-4px;'>!</span> ");
             textsummary.append($("<span class='textstatus'/>").text(this.signatorySummary()));
         } 
         else {

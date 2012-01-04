@@ -42,6 +42,7 @@ import qualified System.Time as System.Time (toUTCTime, toCalendarTime)
 import Text.Printf
 import System.IO.Unsafe
 
+
 -- | Time in minutes from 1970-01-01 00:00 in UTC coordinates
 newtype MinutesTime0 = MinutesTime0 Int
        deriving (Eq, Ord, Typeable)
@@ -78,9 +79,10 @@ instance Migrate MinutesTime1 MinutesTime where
 instance Show MinutesTime where
     showsPrec _prec mt = (++) $ formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d, %H:%M:%S %Z" mt
 
--- | Show time in %Y-%m-%d %H:%M format.
+-- | Show time in %Y-%m-%d %H:%M:%S format.
+-- This change was requested by Upsales. Should not affect much.
 showMinutesTimeForAPI :: MinutesTime -> String
-showMinutesTimeForAPI mt = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d %H:%M" mt
+showMinutesTimeForAPI mt = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d %H:%M:%S" mt
 
 -- | Show time for files creation
 showMinutesTimeForFileName :: MinutesTime -> String
@@ -226,6 +228,7 @@ formatMinutesTime ktl fmt mt = formatCalendarTime (getTimeLocale ktl) fmt (toCal
 
 formatMinutesTimeUTC :: MinutesTime -> String
 formatMinutesTimeUTC mt = formatCalendarTime defaultTimeLocale "%Y-%m-%d %H:%M:%S" (toUTCTime mt)
+
 
 -- | Parse format %d-%m-%Y.
 parseMinutesTimeDMY :: String -> Maybe MinutesTime

@@ -17,11 +17,6 @@ adminsmain=
             </a>
           </td>
        </tr>
-   </tbody></table>
-    <br/>
-    <br/>
-    <strong>Admin Tools</strong>
-    <table><tbody>
         <tr>
           <td style="height:50px;width:200px">
             <a href="/adminonly/statistics">
@@ -51,8 +46,8 @@ adminsmain=
         </tr>
     </tbody></table>
     <br/>
-    <br/>
-    <strong> Super Admin Tools Only </strong>
+$if(admin)$
+    <strong> Admin Tools  </strong>
     <table><tbody>
         <tr>
           <td style="height:50px;width:200px"> <a href="/adminonly/advpayments"><button style="width:150px"> App Admin </button> </a></td>
@@ -61,6 +56,7 @@ adminsmain=
         <tr>
         </tr>
     </tbody></table>
+
     <br/>
     <br/>
     <strong> Log Files </strong>
@@ -69,6 +65,8 @@ adminsmain=
       <li><a href="/adminonly/log/mail.log">mail.log</a></li>
       <li><a href="/adminonly/log/error.log">error.log</a></li>
     </ul>
+$endif$
+
 #####
 adminusers=
    <div id="tab-viewer">
@@ -755,7 +753,7 @@ admindocumentslist =
             paging: new Paging({}),
             filtering: new Filtering({infotext: "Filter documents"}),
             cells : [
-                new Cell({name: "Dates", width:"80px", field: "mtime", special: "rendered",
+                new Cell({name: "Dates", width:"80px", field: "ctime", special: "rendered",
                         rendering: function(_, _, doc) {
                                return jQuery("<small><span>"
                                           + doc.field("ctime") + " <BR/> " 
@@ -795,10 +793,13 @@ admindocumentslist =
 
                             return jQuery("<small>" + value.join('<BR/>') + "</small>");
                           }}),
+                $if(admin)$
                 new Cell({name: "DAVE", width:"30px", field:"id", special:"rendered",
                           rendering: function(value, idx, doc) {
                             return jQuery("<a href='/dave/document/" + value + "' class='gotodave'>");
                           }})
+                $endif$
+
                 ]
         })
     });

@@ -13,9 +13,24 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
 import Data.Traversable (sequenceA)
-
 import qualified AppLogger as Log
+
+
     
+{- |
+   Guards true
+ -}
+guardTrue :: (MonadPlus m) => Bool -> m a -> m a
+guardTrue b a = if b then a else mzero 
+
+{- |
+   Guards true in moad
+ -}
+guardTrueM :: (MonadPlus m) => m Bool -> m a -> m a
+guardTrueM  mb a = do 
+    b <- mb 
+    guardTrue b a
+
 {- |
    Get the value from a Just or mzero if it is Nothing
  -}

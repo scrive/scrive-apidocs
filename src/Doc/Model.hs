@@ -85,6 +85,7 @@ module Doc.Model
 import API.Service.Model
 import DB.Classes
 --import DB.Derive
+import DB.Fetcher
 import DB.Types
 import DB.Utils
 import File.File
@@ -730,17 +731,22 @@ selectAuthorAttachmentsSQL = "SELECT " ++ concat (intersperse "," selectAuthorAt
 
 decodeRowAsAuthorAttachment :: DocumentID
                             -> FileID
-                            -> Either DBException AuthorAttachment
-decodeRowAsAuthorAttachment _document_id
+                            -> Either DBException (DocumentID, AuthorAttachment)
+decodeRowAsAuthorAttachment document_id
                             file_id =
-    (return $ AuthorAttachment
-    { authorattachmentfile = file_id
-    }) :: Either DBException AuthorAttachment
+  return ( document_id 
+         , AuthorAttachment
+           { authorattachmentfile = file_id
+           })
 
+fetchAuthorAttachmentsWithDocumentID :: Statement -> IO [(DocumentID,AuthorAttachment)]
+fetchAuthorAttachmentsWithDocumentID st = do
+  fetchValues st decodeRowAsAuthorAttachment
 
 fetchAuthorAttachments :: Statement -> IO [AuthorAttachment]
 fetchAuthorAttachments st = do
-  fetchValues st decodeRowAsAuthorAttachment
+  values <- fetchAuthorAttachmentsWithDocumentID st
+  return (map snd values)
 
 insertAuthorAttachmentAsIs :: DocumentID -> AuthorAttachment -> DB (Maybe AuthorAttachment)
 insertAuthorAttachmentAsIs documentid attach = do
@@ -762,7 +768,8 @@ insertAuthorAttachmentAsIs documentid attach = do
 
 
 selectSignatoryAttachmentsSelectors :: [String]
-selectSignatoryAttachmentsSelectors = [ "file_id"
+selectSignatoryAttachmentsSelectors = [ "document_id"
+                                      , "file_id"
                                       , "email"
                                       , "name"
                                       , "description"
@@ -772,25 +779,32 @@ selectSignatoryAttachmentsSQL :: String
 selectSignatoryAttachmentsSQL = "SELECT " ++ concat (intersperse "," selectAuthorAttachmentsSelectors) ++ " FROM author_attachments "
 
 
-decodeRowAsSignatoryAttachment :: Maybe FileID
+decodeRowAsSignatoryAttachment :: DocumentID
+                               -> Maybe FileID
                                -> BS.ByteString
                                -> BS.ByteString
                                -> BS.ByteString
-                               -> Either DBException SignatoryAttachment
-decodeRowAsSignatoryAttachment file_id
+                               -> Either DBException (DocumentID, SignatoryAttachment)
+decodeRowAsSignatoryAttachment document_id
+                               file_id
                                email 
                                name 
                                description =
-    (return $ SignatoryAttachment { signatoryattachmentfile = file_id
-                                  , signatoryattachmentemail = email
-                                  , signatoryattachmentname = name
-                                  , signatoryattachmentdescription = description
-                                  }) :: Either DBException SignatoryAttachment
+   return ( document_id
+          , SignatoryAttachment { signatoryattachmentfile = file_id
+                                , signatoryattachmentemail = email
+                                , signatoryattachmentname = name
+                                , signatoryattachmentdescription = description
+                                })
 
+fetchSignatoryAttachmentsWithDocumentID :: Statement -> IO [(DocumentID,SignatoryAttachment)]
+fetchSignatoryAttachmentsWithDocumentID st = do
+  fetchValues st decodeRowAsSignatoryAttachment
 
 fetchSignatoryAttachments :: Statement -> IO [SignatoryAttachment]
 fetchSignatoryAttachments st = do
-  fetchValues st decodeRowAsSignatoryAttachment
+  values <- fetchValues st decodeRowAsSignatoryAttachment
+  return (map snd values)
 
 insertSignatoryAttachmentAsIs :: DocumentID -> SignatoryAttachment -> DB (Maybe SignatoryAttachment)
 insertSignatoryAttachmentAsIs documentid attach = do
@@ -1237,7 +1251,15 @@ selectDocuments select values = wrapDB $ \conn -> do
                stx <- prepare conn $ "SELECT " ++ concat (intersperse "," selectSignatoryLinksSelectors) ++ " FROM signatory_links WHERE document_id IN (SELECT id FROM ("++select++") AS doc)"
                _ <- execute stx values
                fetchSignatoryLinksWithDocuments stx) `E.catch` handle select                      
-    return $ joinDocuments docs sls
+    ats <- (do
+               stx <- prepare conn $ "SELECT " ++ concat (intersperse "," selectAuthorAttachmentsSelectors) ++ " FROM author_attachments WHERE document_id IN (SELECT id FROM ("++select++") AS doc)"
+               _ <- execute stx values
+               fetchAuthorAttachmentsWithDocumentID stx) `E.catch` handle select                      
+    sas <- (do
+               stx <- prepare conn $ "SELECT " ++ concat (intersperse "," selectSignatoryAttachmentsSelectors) ++ " FROM signatory_attachments WHERE document_id IN (SELECT id FROM ("++select++") AS doc)"
+               _ <- execute stx values
+               fetchSignatoryAttachmentsWithDocumentID stx) `E.catch` handle select                      
+    return $ joinDocuments3 (joinDocuments2 (joinDocuments docs sls) ats) sas
   where
     handle :: String -> SqlError -> IO a
     handle statement e = E.throwIO $ SQLError { DB.Classes.originalQuery = statement
@@ -1250,6 +1272,22 @@ selectDocuments select values = wrapDB $ \conn -> do
     addToOne (d:ds) did s = if (documentid d == did)
                              then (d {documentsignatorylinks = documentsignatorylinks d ++ [s] } : ds)
                              else d:(addToOne ds did s)
+
+    joinDocuments2::[Document] -> [(DocumentID,AuthorAttachment)] -> [Document]
+    joinDocuments2 docs ((did,s):sl) = joinDocuments2 (addToOne2 docs did s) sl
+    joinDocuments2 docs [] = docs
+    addToOne2 [] did s = []
+    addToOne2 (d:ds) did s = if (documentid d == did)
+                             then (d {documentauthorattachments = documentauthorattachments d ++ [s] } : ds)
+                             else d:(addToOne2 ds did s)
+
+    joinDocuments3::[Document] -> [(DocumentID,SignatoryAttachment)] -> [Document]
+    joinDocuments3 docs ((did,s):sl) = joinDocuments3 (addToOne3 docs did s) sl
+    joinDocuments3 docs [] = docs
+    addToOne3 [] did s = []
+    addToOne3 (d:ds) did s = if (documentid d == did)
+                             then (d {documentsignatoryattachments = documentsignatoryattachments d ++ [s] } : ds)
+                             else d:(addToOne3 ds did s)
                              
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
                                deriving (Eq, Ord, Show, Typeable)
@@ -1663,7 +1701,7 @@ instance DBUpdate SaveSigAttachment (Either String Document) where
                          , toSql email
                          , toSql name
                          ]
-    getOneDocumentAffected "UpdateSigAttachments" r did
+    getOneDocumentAffected "SaveSigAttachment" r did
 
 
 data SetDocumentTags = SetDocumentTags DocumentID [DocumentTag]
@@ -2170,8 +2208,8 @@ data UpdateSigAttachments = UpdateSigAttachments DocumentID [SignatoryAttachment
 instance DBUpdate UpdateSigAttachments (Either String Document) where
   dbUpdate (UpdateSigAttachments did sigatts time) = do
     wrapDB $ \conn -> run conn "DELETE FROM signatory_attachments WHERE document_id = ?" [toSql did]
-    docs <- flip mapM sigatts doInsert
-    return $ head docs
+    flip mapM sigatts doInsert
+    getOneDocumentAffected "UpdateSigAttachments" 1 did
     where
          doInsert (SignatoryAttachment { signatoryattachmentfile
                                        , signatoryattachmentemail
@@ -2185,4 +2223,4 @@ instance DBUpdate UpdateSigAttachments (Either String Document) where
                 , sqlField "description" $ signatoryattachmentdescription
                 , sqlField "document_id" $ did
                 ]
-           getOneDocumentAffected "UpdateSigAttachments" r did
+           return r

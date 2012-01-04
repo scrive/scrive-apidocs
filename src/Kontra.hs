@@ -4,13 +4,14 @@ module Kontra
     ( Context(..)
     , Kontrakcja
     , KontraMonad(..)
-    , isAdminUser
     , Kontra(runKontra)
     , clearFlashMsgs
     , addELegTransaction
     , logUserToContext
+    , isAdmin
+    , isSales
     , onlyAdmin
-    , onlySales
+    , onlySalesOrAdmin
     , onlyBackdoorOpen
     , newPasswordReminderLink
     , newViralInvitationSentLink
@@ -48,6 +49,7 @@ import Util.HasSomeUserInfo
 import qualified AppLogger as Log
 import qualified Data.ByteString.UTF8 as BS
 import Util.MonadUtils
+import Misc
 
 newtype Kontra a = Kontra { runKontra :: ServerPartT (StateT Context IO) a }
     deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadIO, MonadPlus, ServerMonad, WebMonad Response)
@@ -69,32 +71,28 @@ instance TemplatesMonad Kontra where
     getLocalTemplates locale = do
       Context{ctxglobaltemplates} <- getContext
       return $ localizedVersion locale ctxglobaltemplates
-{- |
-   Whether the user is an administrator.
--}
-isAdminUser :: [Email] -> Maybe User -> Bool
-isAdminUser admins (Just user) = (useremail $ userinfo user) `elem` admins
-isAdminUser _ _ = False
+
+{- Logged in user is admin-}      
+isAdmin :: Context -> Bool 
+isAdmin ctx = (useremail <$> userinfo <$> ctxmaybeuser ctx) `melem` (ctxadminaccounts ctx) && scriveService ctx
+      
+{- Logged in user is sales -}           
+isSales :: Context -> Bool
+isSales ctx = (useremail <$> userinfo <$> ctxmaybeuser ctx) `melem` (ctxsalesaccounts ctx) && scriveService ctx
 
 {- |
    Will mzero if not logged in as an admin.
 -}
 onlyAdmin :: Kontrakcja m => m a -> m a
-onlyAdmin a = do
-    ctx <- getContext
-    if isAdminUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)
-        then a
-        else mzero
+onlyAdmin = guardTrueM $ isAdmin <$> getContext
 
 {- |
    Will mzero if not logged in as a sales admin.
 -}
-onlySales :: Kontrakcja m => m a -> m a
-onlySales a = do
-    ctx <- getContext
-    if isAdminUser (ctxsalesaccounts ctx ++ ctxadminaccounts ctx) (ctxmaybeuser ctx)
-        then a
-        else mzero
+onlySalesOrAdmin :: Kontrakcja m => m a -> m a
+onlySalesOrAdmin = guardTrueM $ (isAdmin ||^ isSales) <$> getContext
+
+
 
 {- |
     Will mzero if the testing backdoor isn't open.
@@ -187,6 +185,8 @@ currentService  ctx = ctxservice ctx
 currentServiceID :: Context -> Maybe ServiceID
 currentServiceID  ctx = serviceid <$> currentService ctx
 
+scriveService :: (HasService a) => a -> Bool
+scriveService a = Nothing ==  getService a
 
 class HasService a where
     getService:: a -> Maybe ServiceID
@@ -194,4 +194,5 @@ class HasService a where
 instance HasService Document where
     getService = documentservice
 
-
+instance HasService Context where
+    getService ctx = serviceid <$> ctxservice ctx

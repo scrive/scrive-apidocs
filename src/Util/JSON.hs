@@ -19,6 +19,7 @@ module Util.JSON (
     , withJSON
     , jsempty
     , jsget
+    , jsgetA
     , jsmodify
     , jsgetdef
     , jsmodifydef
@@ -192,6 +193,11 @@ jsset path val obj = let (p:ps) = pathList path in
 
 jsget :: JSONPath path => path -> JSValue -> Either String JSValue
 jsget path obj = foldl (\a b -> a >>= getStr b) (Right obj) $ pathList path
+
+jsgetA :: Int -> JSValue ->  Either String JSValue
+jsgetA 0 (JSArray (h:_)) = Right h
+jsgetA v (JSArray (_:hs)) = jsgetA (v-1) (JSArray hs)
+jsgetA _ _ = Left "No index found"
 
 jsgetdef :: JSONPath path => path -> JSValue -> JSValue -> Either String JSValue
 jsgetdef path _ val | pathList path == [] = Right val

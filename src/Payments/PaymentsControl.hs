@@ -42,7 +42,7 @@ handlePaymentsModelForEditView =  onlyAdmin $ do
 handleAccountModelsChange :: Kontrakcja m => m KontraLink
 handleAccountModelsChange= do
                             ctx<- getContext
-                            if isAdminUser (ctxadminaccounts ctx) (ctxmaybeuser ctx)
+                            if isAdmin ctx
                              then do
                                   mapM_ getAndApplyAccountModelChange (allValues::[PaymentAccountType])
                                   return $ LinkPaymentsAdmin

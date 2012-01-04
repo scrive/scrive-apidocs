@@ -2,8 +2,11 @@ module DocControlTest(
     docControlTests
 ) where
 
+
+import qualified Data.ByteString.UTF8 as BS
 import Control.Applicative
 import Control.Monad.State
+import Data.Maybe
 import Happstack.Server
 import Happstack.State (query)
 import Test.HUnit (Assertion)
@@ -22,9 +25,11 @@ import DB.Classes
 import Doc.Transitory
 import Doc.DocStateData
 import Doc.DocControl
+import Doc.DocUtils
 import Company.Model
 import KontraLink
 import User.Model
+import Util.SignatoryLinkUtils
 
 
 docControlTests :: Connection -> Test
@@ -37,6 +42,8 @@ docControlTests conn =  testGroup "Templates"
                              , testCase "Uploading file as order makes doc" $ testUploadingFileAsOrder conn
                              , testCase "Sending document sends invites" $ testSendingDocumentSendsInvites conn
                              , testCase "Signing document from design view sends invites" $ testSigningDocumentFromDesignViewSendsInvites conn
+                             , testCase "Person who isn't last signing a doc leaves it pending" $ testNonLastPersonSigningADocumentRemainsPending conn
+                             , testCase "Last person signing a doc closes it" $ testLastPersonSigningADocumentClosesIt conn
                            ]
 
 {-
@@ -146,7 +153,7 @@ testSigningDocumentFromDesignViewSendsInvites conn = withTestEnvironment conn $ 
                                                                     Signable Contract -> True
                                                                     _ -> False)
 
-  req <- mkRequest POST [ ("final", inText "sign")
+  req <- mkRequest POST [ ("sign", inText "True")
                         -- this stuff is for updateDocument function, which I believe
                         -- is being deleted.
                         , ("docname", inText "Test Doc")
@@ -170,6 +177,89 @@ testSigningDocumentFromDesignViewSendsInvites conn = withTestEnvironment conn $ 
   assertEqual "In pending state" Pending (documentstatus sentdoc)
   emails <- getEmailActions
   assertBool "Emails sent" (length emails > 0)
+
+testNonLastPersonSigningADocumentRemainsPending :: Connection -> Assertion
+testNonLastPersonSigningADocumentRemainsPending conn = withTestEnvironment conn $ do
+  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  globaltemplates <- readGlobalTemplates
+  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+
+  doc' <- addRandomDocumentWithAuthorAndCondition
+            user
+            (\d -> documentstatus d == Preparation
+                     && case documenttype d of
+                         Signable _ -> True
+                         _ -> False
+                     && d `allowsIdentification` EmailIdentification
+                     && documentfunctionality d == AdvancedFunctionality)
+
+  Right _ <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
+                   (signatorydetails . fromJust $ getAuthorSigLink doc', [SignatoryAuthor])
+                 , (mkSigDetails "Fred" "Frog" "fred@frog.com", [SignatoryPartner])
+                 , (mkSigDetails "Gordon" "Gecko" "gord@geck.com", [SignatoryPartner])
+               ]) (documentctime doc')
+
+  Right doc'' <- randomUpdate $ PreparationToPending (documentid doc') (documentctime doc')
+
+  let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
+      siglink = head $ filter isUnsigned (documentsignatorylinks doc'')
+
+  Right doc <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink) (documentctime doc') (ctxipnumber ctx)
+
+  assertEqual "Two left to sign" 2 (length $ filter isUnsigned (documentsignatorylinks doc))
+
+  req <- mkRequest POST [ ("magichash", inText $ show $ signatorymagichash siglink)
+                        ]
+  (_link, _ctx') <- runTestKontra req ctx $ signDocument (documentid doc) (signatorylinkid siglink)
+
+  Just signeddoc <- doc_query' $ GetDocumentByDocumentID (documentid doc)
+  assertEqual "In pending state" Pending (documentstatus signeddoc)
+  assertEqual "One left to sign" 1 (length $ filter isUnsigned (documentsignatorylinks signeddoc))
+  emails <- getEmailActions
+  assertEqual "No email sent" 0 (length emails)
+
+testLastPersonSigningADocumentClosesIt :: Connection -> Assertion
+testLastPersonSigningADocumentClosesIt conn = withTestEnvironment conn $ do
+  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  globaltemplates <- readGlobalTemplates
+  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+
+  doc' <- addRandomDocumentWithAuthorAndCondition
+            user
+            (\d -> documentstatus d == Preparation
+                     && case documenttype d of
+                         Signable _ -> True
+                         _ -> False
+                     && d `allowsIdentification` EmailIdentification
+                     && documentfunctionality d == AdvancedFunctionality)
+
+  Right _ <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
+                   (signatorydetails . fromJust $ getAuthorSigLink doc', [SignatoryAuthor])
+                 , (mkSigDetails "Fred" "Frog" "fred@frog.com", [SignatoryPartner])
+               ]) (documentctime doc')
+
+
+  Right doc'' <- randomUpdate $ PreparationToPending (documentid doc') (documentctime doc')
+
+  let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
+      siglink = head $ filter isUnsigned (documentsignatorylinks doc'')
+
+  Right doc <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink) (documentctime doc') (ctxipnumber ctx)
+
+  assertEqual "One left to sign" 1 (length $ filter isUnsigned (documentsignatorylinks doc))
+
+  req <- mkRequest POST [ ("magichash", inText $ show $ signatorymagichash siglink)
+                        ]
+  (_link, _ctx') <- runTestKontra req ctx $ signDocument (documentid doc) (signatorylinkid siglink)
+
+  Just signeddoc <- doc_query' $ GetDocumentByDocumentID (documentid doc)
+  assertEqual "In closed state" Closed (documentstatus signeddoc)
+  --TODO: this should be commented out really, I guess it's a bug
+  --assertEqual "None left to sign" 0 (length $ filter isUnsigned (documentsignatorylinks doc))
+  --emails <- getEmailActions
+  --assertEqual "Confirmation email sent" 1 (length emails)
 
 testDocumentFromTemplate :: Connection -> Assertion
 testDocumentFromTemplate conn =  withTestEnvironment conn $ do
@@ -203,6 +293,22 @@ testDocumentFromTemplateShared conn = withTestEnvironment conn $ do
     _ <- runTestKontra req ctx $ handleCreateFromTemplate
     docs2 <- randomQuery $ GetDocumentsByUser user
     assertBool "No new document" (length docs2 == 1+ length docs1)
+
+mkSigDetails :: String -> String -> String -> SignatoryDetails
+mkSigDetails fstname sndname email = SignatoryDetails {
+    signatorysignorder = SignOrder 1
+  , signatoryfields = [
+      toSF FirstNameFT . BS.fromString $ fstname
+    , toSF LastNameFT . BS.fromString $ sndname
+    , toSF EmailFT . BS.fromString $ email
+    ]
+  }
+  where
+    toSF t v = SignatoryField {
+        sfType = t
+      , sfValue = v
+      , sfPlacements = []
+    }
 
 getEmailActions :: MonadIO m => m [Action]
 getEmailActions = do

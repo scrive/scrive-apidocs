@@ -32,8 +32,8 @@ module Doc.DocView (
   , isNotLinkForUserID
   , modalMismatch
   , modalPdfTooLarge
-  , mailCancelDocumentByAuthor
-  , mailCancelDocumentByAuthorContent
+  , mailCancelDocument
+  , mailCancelDocumentContent
   , mailDocumentAwaitingForAuthor
   , mailDocumentClosed
   , mailDocumentRejected
@@ -297,7 +297,7 @@ documentJSON msl _crttime doc = do
                                                Nothing -> return Nothing
                                                Just f -> return $ Just (fid, f)
                                           | SignatoryAttachment { signatoryattachmentfile = Just fid } <- documentsignatoryattachments doc])
-
+    let isauthoradmin = maybe False (flip isAuthorAdmin doc) (ctxmaybeuser ctx)
     fmap toJSObject $ propagateMonad  $
      [ ("title",return $ JSString $ toJSString $ BS.toString $ documenttitle doc),
        ("files", return $ JSArray $ jsonPack <$> fileJSON <$> files ),
@@ -307,6 +307,7 @@ documentJSON msl _crttime doc = do
        ("process", processJSON doc ),
        ("infotext", JSString <$> toJSString <$> documentInfoText ctx doc msl),
        ("canberestarted", return $ JSBool $  isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])),
+       ("canbecanceled", return $ JSBool $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending && isNothing (documenttimeouttime doc)),
        ("timeouttime", return $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc),
        ("status", return $ JSString $ toJSString $ show $ documentstatus doc),
        ("signatories", JSArray <$>  mapM (signatoryJSON doc msl signatoryattachmentsfiles) (documentsignatorylinks doc)),
@@ -412,7 +413,7 @@ processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
       , ("restartbuttontext", text processrestartbuttontext)
       , ("cancelbuttontext", text processcancelbuttontext)
       , ("rejectbuttontext", text processrejectbuttontext)
-      , ("cancelbyauthormodaltitle", text processcancelbyauthormodaltitle)
+      , ("cancelmodaltitle", text processcancelmodaltitle)
       , ("authorissecretarytext", text processauthorissecretarytext)
       , ("remindagainbuttontext", text processremindagainbuttontext)
       -- And more
@@ -948,7 +949,6 @@ signatoryStatusClass
   } =
   caseOf [
       (errorStatus documentstatus, SCCancelled)
-    , (invitationdeliverystatus==Undelivered,  SCCancelled)
     , (documentstatus==Preparation, SCDraft)
     , (documentstatus==Canceled, SCCancelled)
     , (documentstatus==Rejected, SCCancelled)
@@ -956,6 +956,7 @@ signatoryStatusClass
     , (isJust maybesigninfo, SCSigned)
     , (isJust maybeseeninfo, SCOpened)
     , (isJust maybereadinvite, SCRead)
+    , (invitationdeliverystatus==Undelivered,  SCCancelled)
     , (invitationdeliverystatus==Delivered, SCDelivered)
     ] SCSent
   where
@@ -1010,13 +1011,13 @@ documentInfoText ctx document siglnk =
       documentAuthorInfo document
       fieldFL "signatories" $ map (signatoryLinkFields ctx document Nothing) $ documentsignatorylinks document
       signedByMeFields document siglnk
+      field "isviewonly" $ not $ isAuthor siglnk || maybe False (flip isAuthorAdmin document) (ctxmaybeuser ctx)
     getProcessText = renderTextForProcess document
     getProcessTextWithFields f = renderTemplateForProcess document f mainFields
     processFields = do
       fieldM "pendingauthornotsignedinfoheader" $ getProcessText processpendingauthornotsignedinfoheader
       fieldM "pendingauthornotsignedinfotext" $ getProcessText processpendingauthornotsignedinfotext
-      fieldM "pendingauthorinfoheader" $ getProcessText processpendingauthorinfoheader
-      fieldM "pendingauthorinfotext" $ getProcessTextWithFields processpendingauthorinfotext
+      fieldM "pendinginfotext" $ getProcessTextWithFields processpendinginfotext
       fieldM "cancelledinfoheader" $ getProcessText processcancelledinfoheader
       fieldM "cancelledinfotext" $ getProcessTextWithFields processcancelledinfotext
       fieldM "signedinfoheader" $ getProcessText processsignedinfoheader

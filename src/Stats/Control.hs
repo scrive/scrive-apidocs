@@ -58,7 +58,7 @@ import Control.Applicative
 import User.Utils
 
 showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
-showAdminUserUsageStats userid = onlyAdmin $ do
+showAdminUserUsageStats userid = onlySalesOrAdmin $ do
   statEvents <- runDBQuery $ GetDocStatEventsByUserID userid
   Just user <- runDBQuery $ GetUserByID userid
   mcompany <- getCompanyForUser user
@@ -69,7 +69,7 @@ showAdminUserUsageStats userid = onlyAdmin $ do
   renderFromBody TopEmpty kontrakcja content
 
 showAdminCompanyUsageStats :: Kontrakcja m => CompanyID -> m Response
-showAdminCompanyUsageStats companyid = onlyAdmin $ do
+showAdminCompanyUsageStats companyid = onlySalesOrAdmin $ do
   statCompanyEvents <- runDBQuery $ GetDocStatEventsByCompanyID companyid
   let rawevents = catMaybes $ map statCompanyEventToDocStatTuple statCompanyEvents
   let stats = calculateCompanyDocStats rawevents
@@ -79,7 +79,7 @@ showAdminCompanyUsageStats companyid = onlyAdmin $ do
   renderFromBody TopEmpty kontrakcja content
 
 showAdminSystemUsageStats :: Kontrakcja m => m Response
-showAdminSystemUsageStats = onlyAdmin $ do
+showAdminSystemUsageStats = onlySalesOrAdmin $ do
   Context{ctxtime} <- getContext
   let today = asInt ctxtime
       som = 100 * (today `div` 100) -- start of month
@@ -95,7 +95,7 @@ showAdminSystemUsageStats = onlyAdmin $ do
   renderFromBody TopEmpty kontrakcja content
 
 handleDocStatsCSV :: Kontrakcja m => m Response
-handleDocStatsCSV = onlyAdmin $ do
+handleDocStatsCSV = onlySalesOrAdmin $ do
   stats <- runDBQuery GetDocStatEvents
   let docstatsheader = ["userid", "user", "date", "event", "count", "docid", "serviceid", "company", "companyid", "doctype"]
   csvstrings <- docStatsToString stats [] []
@@ -578,7 +578,7 @@ addUserIDStatEvent qty uid mt mcid msid =  do
 
 
 handleUserStatsCSV :: Kontrakcja m => m Response
-handleUserStatsCSV = onlyAdmin $ do
+handleUserStatsCSV = onlySalesOrAdmin $ do
   stats <- runDBQuery GetUserStatEvents
   Log.debug $ "All user stats length: " ++ (show $ length stats)
   ok $ setHeader "Content-Disposition" "attachment;filename=userstats.csv"

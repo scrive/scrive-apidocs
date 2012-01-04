@@ -22,7 +22,7 @@ mailMailAPIConfirm :: TemplatesMonad m
 mailMailAPIConfirm ctx document siglink = do
   let issignatory = (elem SignatoryPartner . signatoryroles) siglink
   documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailconfirmbymailapi)  $ do
-        fieldM "footer" $ mailFooter ctx document
+        fieldM "footer" $ mailFooterForDocument ctx document
         fieldM "timetosigninfo" $ do
             case (documenttimeouttime document) of
                  Just time -> renderLocalTemplateFM document "timetosigninfo" $ do
@@ -46,7 +46,7 @@ mailMailAPIConfirm ctx document siglink = do
 
 mailMailApiError:: TemplatesMonad m =>
                    Context ->
-                   String -> 
+                   String ->
                    m Mail
 mailMailApiError ctx err =
   kontramail "mailMailAPIError" $ do
