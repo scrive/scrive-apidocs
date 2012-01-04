@@ -22,8 +22,14 @@ data MailsConfig = MailsSendgrid {
   | MailsLocal {
     localDirectory       :: FilePath
   , localOpenCommand     :: Maybe String
-  }
-    deriving (Read, Show)
+  } deriving (Read, Show)
+
+-- MailsSendgrid  {
+--     sendgridSMTP = "smtps://smtp.sendgrid.net"
+--   , sendgridRestAPI = "https://sendgrid.com/api"
+--   , sendgridUser= "duzyrak@gmail.com"
+--   , sendgridPassword = "zimowisko"
+-- }
 
 instance Configuration MailingServerConf where
   confDefault = MailingServerConf {

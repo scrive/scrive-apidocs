@@ -59,8 +59,8 @@ testUserEnteringPhoneNumber conn = withTestEnvironment conn $ do
   uuser <- guardJustM $ dbQuery $ GetUserByID (userid user)
   assertEqual "Phone number was saved" "12345" (BS.toString . userphone $ userinfo uuser)
 
-  emailactions <- getEmailActions
-  assertEqual "An email was sent" 1 (length emailactions)
+  --emailactions <- getEmailActions
+  --assertEqual "An email was sent" 1 (length emailactions)
 
 testUserNotEnteringPhoneNumber :: Connection -> Assertion
 testUserNotEnteringPhoneNumber conn = withTestEnvironment conn $ do
@@ -76,8 +76,8 @@ testUserNotEnteringPhoneNumber conn = withTestEnvironment conn $ do
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "No flash message was added" 0 (length $ ctxflashmessages ctx')
 
-  emailactions <- getEmailActions
-  assertEqual "No email was sent" 0 (length emailactions)
+  --emailactions <- getEmailActions
+  --assertEqual "No email was sent" 0 (length emailactions)
 
 testSignupAndActivate :: Connection -> Assertion
 testSignupAndActivate conn = withTestEnvironment conn $ do
@@ -290,18 +290,18 @@ assertAccountActivationFailed (res, ctx) = do
   assertBool "One flash has type indicating a failure or signing related" $ any (\f -> f `isFlashOfType` OperationFailed || f `isFlashOfType` SigningRelated) (ctxflashmessages ctx)
   assertBool "One flash has type indicating a modal (the tos modal)" $ any (`isFlashOfType` Modal) (ctxflashmessages ctx)
 
-getEmailActions :: MonadIO m => m [Action]
-getEmailActions = do
-  now <- getMinutesTime
-  let expirytime = 1 `minutesAfter` now
-  allactions <- query $ GetExpiredActions EmailSendoutAction expirytime
-  return $ filter isEmailAction allactions
-
-isEmailAction :: Action -> Bool
-isEmailAction action =
-  case actionType action of
-    (EmailSendout _) -> True
-    _ -> False
+-- getEmailActions :: MonadIO m => m [Action]
+-- getEmailActions = do
+--   now <- getMinutesTime
+--   let expirytime = 1 `minutesAfter` now
+--   allactions <- query $ GetExpiredActions EmailSendoutAction expirytime
+--   return $ filter isEmailAction allactions
+-- 
+-- isEmailAction :: Action -> Bool
+-- isEmailAction action =
+--   case actionType action of
+--     (EmailSendout _) -> True
+--     _ -> False
 
 getViralInviteActions :: MonadIO m => m [Action]
 getViralInviteActions = do

@@ -44,6 +44,7 @@ import Happstack.State.Saver
 import ActionScheduler
 import ActionSchedulerState (ActionImportance(..), SchedulerData(..))
 import User.Model
+import Mails.Events
 -- import qualified User.UserState as U
 import qualified Amazon as AWS
 import Templates.Templates (readGlobalTemplates, getTemplatesModTime)
@@ -154,11 +155,12 @@ runKontrakcjaServer = Log.withLogger $ do
                               t3 <- forkIO $ cron 600 $ runScheduler (actionScheduler LeisureAction) scheddata
                               t4 <- forkIO $ cron (60 * 60 * 4) $ runScheduler runDocumentProblemsCheck scheddata
                               t5 <- forkIO $ cron (60 * 60 * 24) $ runScheduler runArchiveProblemsCheck scheddata
-                              t6 <- forkIO $ cron (60) $ (let loop = (do
+                              t6 <- forkIO $ cron 1 $ runScheduler processEvents scheddata
+                              t7 <- forkIO $ cron (60) $ (let loop = (do
                                                                         r <- uploadFileToAmazon appConf
                                                                         if r then loop else return ()) in loop)
-                              t7 <- forkIO $ cron (60*60) System.Mem.performGC
-                              return [t1, t2, t3, t4, t5, t6, t7]
+                              t8 <- forkIO $ cron (60*60) System.Mem.performGC
+                              return [t1, t2, t3, t4, t5, t6, t7, t8]
                            )
                            (mapM_ killThread) $ \_ -> E.bracket
                                         -- checkpoint the state once a day

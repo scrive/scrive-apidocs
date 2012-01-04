@@ -42,13 +42,11 @@ module Administration.AdministrationControl(
 import Control.Monad.State
 import Data.Functor
 import Happstack.Server hiding (simpleHTTP)
-import Happstack.State (query)
 import Misc
 import Kontra
 import Administration.AdministrationView
 import Doc.Transitory
 import Doc.DocStateData
-import Data.ByteString.UTF8 (fromString,toString)
 import qualified Data.ByteString.Char8 as BSC
 import Company.Model
 import KontraLink
@@ -71,7 +69,6 @@ import Util.MonadUtils
 import qualified AppLogger as Log
 import Doc.DocSeal (sealDocument)
 import Util.HasSomeUserInfo
-import ActionSchedulerState
 import Doc.DocInfo
 import InputValidation
 import User.Utils
@@ -318,7 +315,7 @@ handleUserChange uid = onlySalesOrAdmin $ do
   _ <- getAsStrictBS "change"
   museraccounttype <- getFieldUTF "useraccounttype"
   olduser <- runDBOrFail $ dbQuery $ GetUserByID uid
-  user <- case (fmap toString museraccounttype, usercompany olduser, useriscompanyadmin olduser) of
+  user <- case (fmap BS.toString museraccounttype, usercompany olduser, useriscompanyadmin olduser) of
     (Just "companyadminaccount", Just _companyid, False) -> do
       --then we just want to make this account an admin
       newuser <- runDBOrFail $ do
@@ -849,9 +846,10 @@ documentsPageSize = 100
 
 
 handleBackdoorQuery :: Kontrakcja m => String -> m String
-handleBackdoorQuery email = onlySalesOrAdmin $ onlyBackdoorOpen $ do
-  minfo <- query $ GetBackdoorInfoByEmail (Email $ fromString email)
-  return $ maybe "No email found" (toString . bdContent) minfo
+handleBackdoorQuery _email = onlySalesOrAdmin $ onlyBackdoorOpen $ do
+  undefined
+  --minfo <- runDBQuery $ undefined $ fromString email
+  --return $ maybe "No email found" (toString . bdContent) minfo
 
 
 -- This method can be used do reseal a document

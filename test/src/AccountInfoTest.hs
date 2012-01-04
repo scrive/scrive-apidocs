@@ -152,8 +152,8 @@ testChangeEmailAddress conn = withTestEnvironment conn $ do
   assertEqual "Inviter id is correct" (userid user) inviterid
   assertEqual "Action email is correct" (Email $ BS.fromString "jim@bob.com") invitedemail
 
-  emailactions <- getEmailActions
-  assertEqual "An email was sent" 1 (length emailactions)
+  --emailactions <- getEmailActions
+  --assertEqual "An email was sent" 1 (length emailactions)
 
   req2 <- mkRequest POST [("password", inText "abc123")]
   (res2, ctx2) <- runTestKontra req2 ctx1 $ handlePostChangeEmail (actionID action) token >>= sendRedirect
@@ -329,18 +329,18 @@ testEmailChangeFailsIfNoPassword conn = withTestEnvironment conn $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
-getEmailActions :: MonadIO m => m [Action]
-getEmailActions = do
-  now <- getMinutesTime
-  let expirytime = 1 `minutesAfter` now
-  allactions <- query $ GetExpiredActions EmailSendoutAction expirytime
-  return $ filter isEmailAction allactions
+-- getEmailActions :: MonadIO m => m [Action]
+-- getEmailActions = do
+--   now <- getMinutesTime
+--   let expirytime = 1 `minutesAfter` now
+--   allactions <- query $ GetExpiredActions EmailSendoutAction expirytime
+--   return $ filter isEmailAction allactions
 
-isEmailAction :: Action -> Bool
-isEmailAction action =
-  case actionType action of
-    (EmailSendout _) -> True
-    _ -> False
+-- isEmailAction :: Action -> Bool
+-- isEmailAction action =
+--   case actionType action of
+--     (EmailSendout _) -> True
+--     _ -> False
 
 getRequestChangeEmailActions :: MonadIO m => m [Action]
 getRequestChangeEmailActions = do

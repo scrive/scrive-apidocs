@@ -70,23 +70,13 @@ wrapHTML body = concat [
   , "</html>"
   ]
 
-emptyMail :: Mail
-emptyMail = Mail
-    { to             = []
-    , title          = []
-    , content        = []
-    , attachments    = []
-    , from           = Nothing
-    , mailInfo       = None
-}
-
 -- Mail is unsendable if there is no to adress provided
 unsendable :: Mail -> Bool
 unsendable mail = any (not . valid) (email <$> to mail)
   where
     valid x = case asValidEmail $ BSU.toString x of
-                Good _ -> True
-                _ -> False
+      Good _ -> True
+      _ -> False
 
 -- Prototyped. This is why texts are here. But the propper way to do
 -- that is not to add some extra info in Mail data structure
@@ -98,6 +88,6 @@ fromNiceAddress (Invitation did _) servicename = do
   case mdoc of
     Nothing -> return $ servicename
     Just doc -> case (documentregion doc, BSU.toString $ getAuthorName doc) of
-                  (_,         []) -> return $ servicename
-                  (REGION_SE, an) -> return $ an ++ " genom " ++ servicename
-                  (REGION_GB, an) -> return $ an ++ " through " ++ servicename
+      (_,         []) -> return $ servicename
+      (REGION_SE, an) -> return $ an ++ " genom " ++ servicename
+      (REGION_GB, an) -> return $ an ++ " through " ++ servicename

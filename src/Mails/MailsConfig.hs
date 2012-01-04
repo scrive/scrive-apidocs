@@ -28,14 +28,3 @@ defaultMailsConfig = MailsConfig {
   , ourInfoEmail          = "development-system@skrivapa.se"
   , ourInfoEmailNiceName  = "Development"
 }
-
-{-
-    MailsConfig { ourInfoEmail = "mariusz@skrivapa.se"
-                , ourInfoEmailNiceName = "SkrivaPå"
-                , sendgridSMTP = "smtp://smtp.sendgrid.net"
-                , sendgridRestAPI = "https://sendgrid.com/api"
-                , sendgridUser= "duzyrak@gmail.com"
-                , sendgridPassword = "zimowisko"
-                , sendMails = False
-                }
--}

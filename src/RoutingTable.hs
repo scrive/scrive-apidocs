@@ -15,7 +15,6 @@ import DB.Classes
 import InputValidation
 import Kontra
 import KontraLink
-import Mails.SendGridEvents
 import Mails.SendMail
 import MinutesTime
 import Misc
@@ -203,7 +202,6 @@ staticRoutes = choice
 
      -- super user only
      , dir "createuser" $ hPost $ toK0 $ Administration.handleCreateUser
-     , dir "sendgrid" $ dir "events" $ remainingPath POST $ handleSendgridEvent
      , dir "adminonly" $ hGet $ toK0 $ Administration.showAdminMainPage
      , dir "adminonly" $ dir "useradminforsales" $ hGet $ toK0 $ Administration.showAdminUsersForSales
      , dir "adminonly" $ dir "userslist" $ hGet $ toK0 $ Administration.jsonUsersList

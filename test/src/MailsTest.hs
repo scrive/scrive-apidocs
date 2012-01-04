@@ -29,7 +29,7 @@ import Util.SignatoryLinkUtils
 import User.UserView
 import Kontra
 import Util.HasSomeUserInfo
-import Mails.SendGridEvents
+import Mails.Events
 import Data.Char
 import Text.XML.HaXml.Parse (xmlParse')
 import Control.Monad.Trans
@@ -86,8 +86,8 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
                               sendoutForManualChecking (s ++ " " ++ show doctype ) req ctx mailTo m
         checkMail "Invitation" $ mailInvitation True ctx Sign doc (Just sl)
         -- DELIVERY MAILS
-        checkMail "Deferred invitation"    $  mailDeferredInvitation ctx doc
-        checkMail "Undelivered invitation" $  mailUndeliveredInvitation ctx doc sl
+        checkMail "Deferred invitation"    $  mailDeferredInvitation (ctxhostpart ctx) doc
+        checkMail "Undelivered invitation" $  mailUndeliveredInvitation (ctxhostpart ctx) doc sl
         checkMail "Delivered invitation"   $  mailDeliveredInvitation doc sl
         --remind mails
         checkMail "Reminder notsigned" $ mailDocumentRemind Nothing ctx doc sl

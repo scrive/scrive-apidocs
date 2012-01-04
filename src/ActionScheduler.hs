@@ -95,12 +95,6 @@ oldScheduler = do
 
 -- | Evaluates one action depending on its type
 evaluateAction :: Action -> ActionScheduler ()
-evaluateAction Action{actionType = TrustWeaverUpload{}} =
-    error "TrustWeaverUpload not yet implemented"
-
-evaluateAction Action{actionType = AmazonUpload{}} =
-    error "AmazonUpload not yet implemented"
-
 evaluateAction Action{actionID, actionType = PasswordReminder{}} =
     deleteAction actionID
 
@@ -146,44 +140,8 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
 evaluateAction Action{actionID, actionType = RequestEmailChange{}} =
   deleteAction actionID
 
-evaluateAction Action{actionType = EmailSendout{}} =
-  error "Sending emails was moved out of kontrakcja"
-
-{-
-evaluateAction Action{actionID, actionType = EmailSendout mail@Mail{mailInfo}} =
- if (unsendable mail)
-  then do -- Due to next block, bad emails were alive in queue, and making logs unreadable.
-      Log.error $ "Unsendable email found: " ++ show mail
-      _ <- update $ DeleteAction actionID
-      Log.error $ "Email was removed from the queue"
-  else do
-    mailer <- sdMailer <$> ask
-    appconf <- sdAppConf <$> ask
-    let backdooropen = isBackdoorOpen $ mailsConfig appconf
-    success <- sendMail mailer actionID mail
-    if success
-       then do
-           -- morph action type into SentEmailInfo
-           let email' = email (head (to mail))
-           now <- liftIO getMinutesTime
-           _ <- update $ UpdateActionType actionID $ SentEmailInfo {
-                 seiEmail            = Email email'
-               , seiMailInfo         = mailInfo
-               , seiEventType        = Other "passed to sendgrid"
-               , seiLastModification = now
-               , seiBackdoorInfo     = if backdooropen
-                                         then Just $ ActionBackdoorInfo { bdContent = content mail }
-                                         else Nothing
-           }
-           _ <- update $ UpdateActionEvalTime actionID $ (60*24*30) `minutesAfter` now
-           return ()
-       else do
-           now <- liftIO $ getMinutesTime
-           _ <- update $ UpdateActionEvalTime actionID $ 5 `minutesAfter` now
-           return ()
--}
-evaluateAction Action{actionID, actionType = SentEmailInfo{}} = do
-    deleteAction actionID
+evaluateAction Action{actionID, actionType = DummyActionType} =
+  deleteAction actionID
 
 runDocumentProblemsCheck :: ActionScheduler ()
 runDocumentProblemsCheck = do
