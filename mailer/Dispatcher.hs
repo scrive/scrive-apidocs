@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 module Dispatcher (
     dispatcher
   ) where
@@ -20,14 +21,21 @@ dispatcher sender dbconf = withPostgreSQL dbconf send
       res <- E.try $ ioRunDB conn $ do
         mails <- dbQuery GetIncomingEmails
         forM_ mails $ \mail -> do
-          success <- sendMail sender mail
-          if success
+          if mailIsNotSendable mail
             then do
-              time <- getMinutesTime
-              res <- dbUpdate $ MarkEmailAsSent (mailID mail) time
-              when (not res) $
-                error $ "Marking email #" ++ show (mailID mail) ++ " as sent failed"
-            else error "Sending email failed"
+              Log.mailingServer $ "Email " ++ show mail ++ " is not sendable, discarding."
+              success <- dbUpdate $ DeleteEmail $ mailID mail
+              when (not success) $
+                Log.mailingServer $ "Couldn't remove email #" ++ show mailID ++ " from database."
+            else do
+              success <- sendMail sender mail
+              if success
+                then do
+                  time <- getMinutesTime
+                  success <- dbUpdate $ MarkEmailAsSent (mailID mail) time
+                  when (not success) $
+                    error $ "Marking email #" ++ show (mailID mail) ++ " as sent failed"
+                else error "Sending email failed"
       case res of
         Right () -> threadDelay $ 5 * second
         Left (e::E.SomeException) -> do
@@ -35,3 +43,5 @@ dispatcher sender dbconf = withPostgreSQL dbconf send
           threadDelay $ 10 * 60 * second
       send conn
     second = 1000000
+    mailIsNotSendable Mail{..} =
+      null (addrEmail mailFrom) || null mailTo || any (null . addrEmail) mailTo
