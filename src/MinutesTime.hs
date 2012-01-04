@@ -79,9 +79,10 @@ instance Migrate MinutesTime1 MinutesTime where
 instance Show MinutesTime where
     showsPrec _prec mt = (++) $ formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d, %H:%M:%S %Z" mt
 
--- | Show time in %Y-%m-%d %H:%M format.
+-- | Show time in %Y-%m-%d %H:%M:%S format.
+-- This change was requested by Upsales. Should not affect much.
 showMinutesTimeForAPI :: MinutesTime -> String
-showMinutesTimeForAPI mt = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d %H:%M" mt
+showMinutesTimeForAPI mt = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d %H:%M:%S" mt
 
 -- | Show time for files creation
 showMinutesTimeForFileName :: MinutesTime -> String

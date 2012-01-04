@@ -341,14 +341,11 @@ getDocuments = do
                     when (isNothing n || isNothing v) $ throwApiError API_ERROR_MISSING_VALUE "Missing tag name or value"
                     return $ Just $ DocumentTag (fromJust n) (fromJust v)
     linkeddocuments <- doc_query $ GetDocumentsByCompanyAndTags (Just sid) (companyid company) tags
-    api_docs <- sequence [api_document_read False d | d <- linkeddocuments
-                                                    , isAuthoredByCompany (companyid company) d
-                                                    , not $ isDeletedFor $ getAuthorSigLink d
-                                                    , not $ isAttachment d
-                                                    ]
+    let linkeddocuments1 = filter (isAuthoredByCompany (companyid company)) linkeddocuments
+    let linkeddocuments2 = filter (not . isDeletedFor . getAuthorSigLink) linkeddocuments1
+    let linkeddocuments3 = filter (not . isAttachment) linkeddocuments2
+    api_docs <- mapM (api_document_read False) linkeddocuments3
     return $ toJSObject [("documents",JSArray $ api_docs)]
-
-
 
 getDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocument = do
