@@ -244,7 +244,7 @@ adminUsersForSales=
                             var vresult = [
                                 fstname.validate(new NameValidation(callback, "Wrong first name format!")),
                                 sndname.validate(new NameValidation(callback, "Wrong second name format!")),
-                                email.validate(new EmailValidation(callback)),
+                                email.validate((new NotEmptyValidation(callback, "Email cannot be empty!")).concat(new EmailValidation(callback))),
                                 region.validate(new NotEmptyValidation(callback, "Region cannot be empty!")),
                                 ];
 
