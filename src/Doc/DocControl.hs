@@ -35,7 +35,7 @@ import Util.HasSomeUserInfo
 import Util.StringUtil
 import qualified AppLogger as Log
 import Templates.Templates
-import Templates.LocalTemplates
+import Templates.Trans
 import Util.CSVUtil
 import Util.FlashUtil
 import Util.KontraLinkUtils
@@ -137,7 +137,7 @@ postDocumentChangeAction document@Document  { documentstatus
           let newctx = ctx {ctxdbconn = conn}
           enewdoc <- ioRunDB conn $ sealDocument newctx document
           case enewdoc of
-             Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails newctx newdoc
+             Right newdoc -> runTemplatesT (ctxlocale, ctxglobaltemplates) $ sendClosedEmails newctx newdoc
              Left errmsg -> Log.error $ "Sealing of document #" ++ show documentid ++ " failed, could not send document confirmations: " ++ errmsg
         return ()
     -- Pending -> AwaitingAuthor
@@ -161,11 +161,11 @@ postDocumentChangeAction document@Document  { documentstatus
           let newctx = ctx {ctxdbconn = conn}
           enewdoc <- ioRunDB conn $ sealDocument newctx document
           case enewdoc of
-            Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails newctx newdoc
+            Right newdoc -> runTemplatesT (ctxlocale, ctxglobaltemplates) $ sendClosedEmails newctx newdoc
             Left errmsg -> do
               _ <- ioRunDB conn $ doc_update' $ ErrorDocument documentid errmsg
               Log.server $ "Sending seal error emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
-              runWithTemplates ctxlocale ctxglobaltemplates $ sendDocumentErrorEmail newctx document author
+              runTemplatesT (ctxlocale, ctxglobaltemplates) $ sendDocumentErrorEmail newctx document author
               return ()
         return ()
     -- Pending -> Rejected

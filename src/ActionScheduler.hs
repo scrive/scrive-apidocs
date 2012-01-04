@@ -31,7 +31,7 @@ import Mails.MailsData
 import Mails.MailsConfig
 import Mails.SendMail
 import Session
-import Templates.LocalTemplates
+import Templates.Trans
 import Templates.Templates
 import User.Model
 import User.UserView
@@ -125,7 +125,7 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
                       Just (Signable Order) -> mailAccountCreatedBySigningOrderReminder
                       t -> error $ "Something strange happened (document with a type " ++ show t ++ " was signed and now reminder wants to be sent)"
                 globaltemplates <- getGlobalTemplates
-                mail <- liftIO $ runWithTemplates (getLocale user) globaltemplates $
+                mail <- liftIO $ runTemplatesT (getLocale user, globaltemplates) $
                           mailfunc (hostpart $ sdAppConf sd) doctitle (getFullName user) (LinkAccountCreatedBySigning actionID token)
                 scheduleEmailSendout (sdMailsConfig sd) $ mail { to = [getMailAddress user]})
             _ <- update $ UpdateActionType actionID $ AccountCreatedBySigning {
