@@ -6,6 +6,7 @@ module ActionScheduler (
     , oldScheduler
     , runDocumentProblemsCheck
     , runArchiveProblemsCheck
+    , getGlobalTemplates
     ) where
 
 import Control.Applicative
