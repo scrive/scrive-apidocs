@@ -21,6 +21,7 @@ import DB.Classes
 import Doc.DocStateData
 import Doc.Transitory
 import FlashMessage
+import Mails.Public
 import MinutesTime
 import Misc
 import Redirect
@@ -117,8 +118,8 @@ test_addingANewCompanyAccount conn = withTestEnvironment conn $ do
   actions <- getAccountCreatedActions
   assertEqual "An AccountCreated action was made" 1 (length $ actions)
 
-  --emailactions <- getEmailActions
-  --assertEqual "An email was sent" 1 (length emailactions)
+  emails <- dbQuery GetIncomingEmails
+  assertEqual "An email was sent" 1 (length emails)
 
 test_addingExistingPrivateUserAsCompanyAccount :: Connection -> Assertion
 test_addingExistingPrivateUserAsCompanyAccount conn = withTestEnvironment conn $ do
@@ -145,8 +146,8 @@ test_addingExistingPrivateUserAsCompanyAccount conn = withTestEnvironment conn $
 
   assertCompanyInvitesAre company [mkInvite company "bob@blue.com" "Bob" "Blue"]
 
-  --emailactions <- getEmailActions
-  --assertEqual "An email was sent" 1 (length emailactions)
+  emails <- dbQuery GetIncomingEmails
+  assertEqual "An email was sent" 1 (length emails)
 
 test_addingExistingCompanyUserAsCompanyAccount :: Connection -> Assertion
 test_addingExistingCompanyUserAsCompanyAccount conn = withTestEnvironment conn $ do
@@ -174,8 +175,8 @@ test_addingExistingCompanyUserAsCompanyAccount conn = withTestEnvironment conn $
 
   assertCompanyInvitesAre company [mkInvite company "bob@blue.com" "Bob" "Blue"]
 
-  --emailactions <- getEmailActions
-  --assertEqual "An email was sent" 1 (length emailactions)
+  emails <- dbQuery GetIncomingEmails
+  assertEqual "An email was sent" 1 (length emails)
 
 test_resendingInviteToNewCompanyAccount :: Connection -> Assertion
 test_resendingInviteToNewCompanyAccount conn = withTestEnvironment conn $ do
@@ -201,8 +202,8 @@ test_resendingInviteToNewCompanyAccount conn = withTestEnvironment conn $ do
   actions <- getAccountCreatedActions
   assertEqual "An AccountCreated action was made" 1 (length $ actions)
 
-  --emailactions <- getEmailActions
-  --assertEqual "An email was sent" 1 (length emailactions)
+  emails <- dbQuery GetIncomingEmails
+  assertEqual "An email was sent" 1 (length emails)
 
 test_resendingInviteToPrivateUser :: Connection -> Assertion
 test_resendingInviteToPrivateUser conn = withTestEnvironment conn $ do
@@ -225,8 +226,8 @@ test_resendingInviteToPrivateUser conn = withTestEnvironment conn $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
 
-  --emailactions <- getEmailActions
-  --assertEqual "An email was sent" 1 (length emailactions)
+  emails <- dbQuery GetIncomingEmails
+  assertEqual "An email was sent" 1 (length emails)
 
 test_resendingInviteToCompanyUser :: Connection -> Assertion
 test_resendingInviteToCompanyUser conn = withTestEnvironment conn $ do
@@ -249,8 +250,8 @@ test_resendingInviteToCompanyUser conn = withTestEnvironment conn $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
 
-  --emailactions <- getEmailActions
-  --assertEqual "An email was sent" 1 (length emailactions)
+  emails <- dbQuery GetIncomingEmails
+  assertEqual "An email was sent" 1 (length emails)
 
 test_switchingStandardToAdminUser :: Connection -> Assertion
 test_switchingStandardToAdminUser conn = withTestEnvironment conn $ do
@@ -420,19 +421,6 @@ mkInvite company email fstname sndname =
     , invitedsndname = BS.fromString sndname
     , invitingcompany = companyid company
   }
-
--- getEmailActions :: MonadIO m => m [Action]
--- getEmailActions = do
---   now <- getMinutesTime
---   let expirytime = 1 `minutesAfter` now
---   allactions <- query $ GetExpiredActions EmailSendoutAction expirytime
---   return $ filter isEmailAction allactions
--- 
--- isEmailAction :: Action -> Bool
--- isEmailAction action =
---   case actionType action of
---     (EmailSendout _) -> True
---     _ -> False
 
 getAccountCreatedActions :: MonadIO m => m [Action]
 getAccountCreatedActions = do

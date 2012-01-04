@@ -15,6 +15,7 @@ import StateHelper
 import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
+import Mails.Public
 import Misc
 import Context
 import Database.HDBC.PostgreSQL
@@ -135,8 +136,8 @@ testSendingDocumentSendsInvites conn = withTestEnvironment conn $ do
 
   Just sentdoc <- doc_query' $ GetDocumentByDocumentID (documentid doc)
   assertEqual "In pending state" Pending (documentstatus sentdoc)
-  --emails <- getEmailActions
-  --assertBool "Emails sent" (length emails > 0)
+  emails <- dbQuery GetIncomingEmails
+  assertBool "Emails sent" (length emails > 0)
 
 testSigningDocumentFromDesignViewSendsInvites :: Connection -> Assertion
 testSigningDocumentFromDesignViewSendsInvites conn = withTestEnvironment conn $ do
@@ -172,8 +173,8 @@ testSigningDocumentFromDesignViewSendsInvites conn = withTestEnvironment conn $ 
 
   Just sentdoc <- doc_query' $ GetDocumentByDocumentID (documentid doc)
   assertEqual "In pending state" Pending (documentstatus sentdoc)
-  --emails <- getEmailActions
-  --assertBool "Emails sent" (length emails > 0)
+  emails <- dbQuery GetIncomingEmails
+  assertBool "Emails sent" (length emails > 0)
 
 testNonLastPersonSigningADocumentRemainsPending :: Connection -> Assertion
 testNonLastPersonSigningADocumentRemainsPending conn = withTestEnvironment conn $ do
@@ -213,8 +214,8 @@ testNonLastPersonSigningADocumentRemainsPending conn = withTestEnvironment conn 
   Just signeddoc <- doc_query' $ GetDocumentByDocumentID (documentid doc)
   assertEqual "In pending state" Pending (documentstatus signeddoc)
   assertEqual "One left to sign" 1 (length $ filter isUnsigned (documentsignatorylinks signeddoc))
-  --emails <- getEmailActions
-  --assertEqual "No email sent" 0 (length emails)
+  emails <- dbQuery GetIncomingEmails
+  assertEqual "No email sent" 0 (length emails)
 
 testLastPersonSigningADocumentClosesIt :: Connection -> Assertion
 testLastPersonSigningADocumentClosesIt conn = withTestEnvironment conn $ do
@@ -255,7 +256,7 @@ testLastPersonSigningADocumentClosesIt conn = withTestEnvironment conn $ do
   assertEqual "In closed state" Closed (documentstatus signeddoc)
   --TODO: this should be commented out really, I guess it's a bug
   --assertEqual "None left to sign" 0 (length $ filter isUnsigned (documentsignatorylinks doc))
-  --emails <- getEmailActions
+  --emails <- dbQuery GetIncomingEmails
   --assertEqual "Confirmation email sent" 1 (length emails)
 
 testDocumentFromTemplate :: Connection -> Assertion
@@ -306,16 +307,3 @@ mkSigDetails fstname sndname email = SignatoryDetails {
       , sfValue = v
       , sfPlacements = []
     }
-
--- getEmailActions :: MonadIO m => m [Action]
--- getEmailActions = do
---   now <- getMinutesTime
---   let expirytime = 1 `minutesAfter` now
---   allactions <- query $ GetExpiredActions EmailSendoutAction expirytime
---   return $ filter isEmailAction allactions
--- 
--- isEmailAction :: Action -> Bool
--- isEmailAction action =
---   case actionType action of
---     (EmailSendout _) -> True
---     _ -> False

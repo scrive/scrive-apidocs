@@ -6,7 +6,8 @@ module Mails.Data (
   , Attachment(..)
   , Address(..)
   , SendGridEvent(..)
-  , Event(..)
+  , Event(SendGridEvent)
+  , Mail(..)
   ) where
 
 import Data.Data
@@ -17,6 +18,7 @@ import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 
 import DB.Derive
+import DB.Types
 import Undefined
 
 newtype MailID = MailID Int64
@@ -83,3 +85,14 @@ data Event =
   | UnusedEvent Undefined -- ^ unused
   deriving (Eq, Ord, Show, Data, Typeable)
 $(jsonableDeriveConvertible [t| Event |])
+
+data Mail = Mail {
+    mailID          :: MailID
+  , mailToken       :: MagicHash
+  , mailFrom        :: Address
+  , mailTo          :: [Address]
+  , mailTitle       :: String
+  , mailContent     :: String
+  , mailAttachments :: [Attachment]
+  , mailXSMTPAttrs  :: XSMTPAttrs
+  } deriving (Eq, Ord, Show)

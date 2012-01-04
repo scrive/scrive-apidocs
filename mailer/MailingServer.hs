@@ -14,7 +14,6 @@ import Configuration
 import Dispatcher
 import DB.Classes
 import DB.Checks
-import DB.Model
 import Handlers
 import Mails.Tables
 import MailingServerConf
@@ -27,7 +26,7 @@ main = Log.withLogger $ do
   appname <- getProgName
   conf <- readConfig Log.mailingServer appname [] "mailing_server.conf"
   withPostgreSQL (mscDBConfig conf) $ \conn ->
-    ioRunDB conn $ performDBChecks Log.mailingServer mailingServerTables []
+    ioRunDB conn $ performDBChecks Log.mailingServer mailerTables []
   E.bracket (do
     let (iface, port) = mscHttpBindAddress conf
         handlerConf = nullConf { port = fromIntegral port }
@@ -42,9 +41,3 @@ main = Log.withLogger $ do
      waitForTermination
      Log.mailingServer $ "Termination request received"
    )
-
-mailingServerTables :: [Table]
-mailingServerTables = [
-    tableMails
-  , tableMailEvents
-  ]

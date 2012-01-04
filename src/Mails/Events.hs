@@ -1,11 +1,11 @@
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Mails.SendGridEvents
+-- Module      :  Mails.Events
 -- Maintainer  :  mariusz@skrivapa.se
 -- Stability   :  development
 -- Portability :  portable
 --
--- Sendgrid events interface. 'handleSendgridEvent' is used when sendgrid contacts us.
+-- Sendgrid events interface. 'processEvents' is used when sendgrid contacts us.
 -- mailinfo param is set when we are sending mails.
 -----------------------------------------------------------------------------
 module Mails.Events (
@@ -30,7 +30,7 @@ import Doc.DocStateData
 import KontraLink
 import Mails.MailsConfig
 import Mails.MailsData
-import Mails.Public
+import Mails.Public hiding (Mail)
 import Mails.SendMail
 import MinutesTime
 import Misc
@@ -48,11 +48,13 @@ processEvents = runDBQuery GetEvents >>= mapM_ processEvent
   where
     processEvent (eid, mid, XSMTPAttrs [("mailinfo", mi)], SendGridEvent email ev _) = do
       case maybeRead mi of
-        Nothing -> Log.error $ "Invalid MailInfo object received: " ++ show mi
+        Nothing -> deleteEmail mid
         Just (Invitation docid signlinkid) -> do
           mdoc <- doc_query $ GetDocumentByDocumentID docid
           case mdoc of
-            Nothing -> Log.debug $ "No document with id = " ++ show docid
+            Nothing -> do
+              Log.debug $ "No document with id = " ++ show docid
+              deleteEmail mid
             Just doc -> do
               let signemail = fromMaybe "" (BS.toString . getEmail <$> getSignatoryLinkFromDocumentByID doc signlinkid)
               Log.debug $ signemail ++ " == " ++ email
@@ -96,7 +98,8 @@ processEvents = runDBQuery GetEvents >>= mapM_ processEvent
     deleteEmail :: DBMonad m => MailID -> m ()
     deleteEmail mid = do
       success <- runDBUpdate $ DeleteEmail mid
-      when (not success) $ Log.error $ "Couldn't delete email #" ++ show mid
+      when (not success) $
+        Log.error $ "Couldn't delete email #" ++ show mid
 
 handleDeliveredInvitation :: (DBMonad m, TemplatesMonad m) => MailsConfig -> Document -> SignatoryLinkID -> m ()
 handleDeliveredInvitation mc doc signlinkid = do

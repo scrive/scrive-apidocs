@@ -3,9 +3,11 @@ module Mails.Public (
     module Mails.Data
   , CreateEmail(..)
   , AddContentToEmail(..)
-  , GetEvents(..)
   , MarkEventAsRead(..)
   , DeleteEmail(..)
+  , GetEvents(..)
+  , GetIncomingEmails(..)
+  , GetEmail(..)
   ) where
 
 import Control.Applicative
@@ -41,6 +43,20 @@ instance DBUpdate AddContentToEmail Bool where
         ]
     oneRowAffectedGuard r
 
+data MarkEventAsRead = MarkEventAsRead EventID MinutesTime
+instance DBUpdate MarkEventAsRead Bool where
+  dbUpdate (MarkEventAsRead eid time) = wrapDB $ \conn -> do
+    r <- run conn "UPDATE mail_events SET event_read = ? WHERE id = ?"
+      [toSql time, toSql eid]
+    oneRowAffectedGuard r
+
+data DeleteEmail = DeleteEmail MailID
+instance DBUpdate DeleteEmail Bool where
+  dbUpdate (DeleteEmail mid) = wrapDB $ \conn -> do
+    r <- run conn "DELETE FROM mails WHERE id = ?"
+      [toSql mid]
+    oneRowAffectedGuard r
+
 data GetEvents = GetEvents
 instance DBQuery GetEvents [(EventID, MailID, XSMTPAttrs, Event)] where
   dbQuery GetEvents = wrapDB $ \conn -> do
@@ -56,16 +72,46 @@ instance DBQuery GetEvents [(EventID, MailID, XSMTPAttrs, Event)] where
     where
       fetchEvents acc eid mid attrs event = (eid, mid, attrs, event) : acc
 
-data MarkEventAsRead = MarkEventAsRead EventID MinutesTime
-instance DBUpdate MarkEventAsRead Bool where
-  dbUpdate (MarkEventAsRead eid time) = wrapDB $ \conn -> do
-    r <- run conn "UPDATE mail_events SET event_read = ? WHERE id = ?"
-      [toSql time, toSql eid]
-    oneRowAffectedGuard r
+data GetIncomingEmails = GetIncomingEmails
+instance DBQuery GetIncomingEmails [Mail] where
+  dbQuery GetIncomingEmails = wrapDB $ \conn -> do
+    st <- prepare conn $ selectMailsSQL ++ "WHERE title IS NOT NULL AND content IS NOT NULL AND sent IS NULL ORDER BY id DESC"
+    _ <- execute st []
+    fetchMails st
 
-data DeleteEmail = DeleteEmail MailID
-instance DBUpdate DeleteEmail Bool where
-  dbUpdate (DeleteEmail mid) = wrapDB $ \conn -> do
-    r <- run conn "DELETE FROM mails WHERE id = ?"
-      [toSql mid]
-    oneRowAffectedGuard r
+data GetEmail = GetEmail MailID MagicHash
+instance DBQuery GetEmail (Maybe Mail) where
+  dbQuery (GetEmail mid token) = wrapDB $ \conn -> do
+    st <- prepare conn $ selectMailsSQL ++ "WHERE id = ? AND token = ?"
+    _ <- execute st [toSql mid, toSql token]
+    fetchMails st >>= oneObjectReturnedGuard
+
+selectMailsSQL :: String
+selectMailsSQL = "SELECT"
+  ++ "  id"
+  ++ ", token"
+  ++ ", sender"
+  ++ ", receivers"
+  ++ ", title"
+  ++ ", content"
+  ++ ", attachments"
+  ++ ", x_smtp_attrs"
+  ++ " FROM mails"
+  ++ " "
+
+fetchMails :: Statement -> IO [Mail]
+fetchMails st = foldDB st decoder []
+  where
+    -- Note: this function gets mails in reversed order, but all queries
+    -- use ORDER BY DESC, so in the end everything is properly ordered.
+    decoder acc id' token sender receivers title
+      content attachments x_smtp_attrs = Mail {
+          mailID = id'
+        , mailToken = token
+        , mailFrom = sender
+        , mailTo = receivers
+        , mailTitle = title
+        , mailContent = content
+        , mailAttachments = attachments
+        , mailXSMTPAttrs = x_smtp_attrs
+        } : acc

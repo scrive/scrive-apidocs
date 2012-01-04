@@ -2,7 +2,6 @@
 module Mails.SendMail
     ( Mail(..)
     , emptyMail
-    , unsendable
     , MailAddress(..)
     , MailInfo(..)
     , scheduleEmailSendout'
@@ -22,7 +21,9 @@ import InputValidation
 import Mails.MailsConfig
 import Mails.MailsData
 import Util.MonadUtils
-import Mails.Public as M
+import Mails.Public hiding (Mail)
+import qualified AppLogger as Log
+import qualified Mails.Public as M
 
 -- Needed only for FROM address
 import User.Region
@@ -34,20 +35,23 @@ scheduleEmailSendout :: DBMonad m => MailsConfig -> Mail -> m ()
 scheduleEmailSendout mc = runDB . scheduleEmailSendout' mc
 
 scheduleEmailSendout' :: MailsConfig -> Mail -> DB ()
-scheduleEmailSendout' MailsConfig{..} Mail{..} = do
-  fromAddr <- do
-    addr <- join . fmap (servicemailfromaddress . servicesettings)
-      <$> liftMM (dbQuery . GetService) (return from)
-    case addr of
-      Nothing -> do
-        niceAddress <- fromNiceAddress mailInfo ourInfoEmailNiceName
-        return Address {addrName = niceAddress, addrEmail = ourInfoEmail }
-      Just address -> return Address { addrName = "", addrEmail = BSU.toString address }
-  token <- liftIO randomIO
-  mid <- dbUpdate $ CreateEmail token fromAddr (map toAddress to)
-  let xsmtpapi = XSMTPAttrs [("mailinfo", show mailInfo)]
-  _ <- dbUpdate $ AddContentToEmail mid title (wrapHTML content) (map toAttachment attachments) xsmtpapi
-  return ()
+scheduleEmailSendout' MailsConfig{..} mail@Mail{..} = do
+  if unsendable to
+    then Log.error $ "Email " ++ show mail ++ " is unsendable, discarding."
+    else do
+      fromAddr <- do
+        addr <- join . fmap (servicemailfromaddress . servicesettings)
+          <$> liftMM (dbQuery . GetService) (return from)
+        case addr of
+          Nothing -> do
+            niceAddress <- fromNiceAddress mailInfo ourInfoEmailNiceName
+            return Address {addrName = niceAddress, addrEmail = ourInfoEmail }
+          Just address -> return Address { addrName = "", addrEmail = BSU.toString address }
+      token <- liftIO randomIO
+      mid <- dbUpdate $ CreateEmail token fromAddr (map toAddress to)
+      let xsmtpapi = XSMTPAttrs [("mailinfo", show mailInfo)]
+      _ <- dbUpdate $ AddContentToEmail mid title (wrapHTML content) (map toAttachment attachments) xsmtpapi
+      return ()
   where
     toAddress MailAddress{..} = Address {
         addrName  = BSU.toString fullname
@@ -57,6 +61,13 @@ scheduleEmailSendout' MailsConfig{..} Mail{..} = do
         attName = name
       , attContent = cont
     }
+
+    -- Mail is unsendable if there is no to adress provided
+    unsendable = any (not . valid) . map email
+      where
+        valid x = case asValidEmail $ BSU.toString x of
+          Good _ -> True
+          _ -> False
 
 wrapHTML :: String -> String
 wrapHTML body = concat [
@@ -69,14 +80,6 @@ wrapHTML body = concat [
   , "</body>"
   , "</html>"
   ]
-
--- Mail is unsendable if there is no to adress provided
-unsendable :: Mail -> Bool
-unsendable mail = any (not . valid) (email <$> to mail)
-  where
-    valid x = case asValidEmail $ BSU.toString x of
-      Good _ -> True
-      _ -> False
 
 -- Prototyped. This is why texts are here. But the propper way to do
 -- that is not to add some extra info in Mail data structure

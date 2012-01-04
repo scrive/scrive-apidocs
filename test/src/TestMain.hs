@@ -13,6 +13,7 @@ import qualified AppLogger as Log
 import AppDB
 import DB.Checks
 import DB.Classes
+import Mails.Tables
 
 -- Note: if you add new testsuites here, please add them in a similar
 -- manner to existing ones, i.e. wrap them around ifdefs and add appropriate
@@ -200,6 +201,8 @@ main = Log.withLogger $ do
   hSetEncoding stderr utf8
   pgconf <- readFile "kontrakcja_test.conf"
   withPostgreSQL pgconf $ \conn -> do
-    ioRunDB conn $ performDBChecks Log.debug kontraTables kontraMigrations
+    let tables = mailerTables ++ kontraTables
+        migrations = kontraMigrations
+    ioRunDB conn $ performDBChecks Log.debug tables migrations
     (args, tests) <- partitionEithers . testsToRun conn <$> getArgs
     defaultMainWithArgs tests args

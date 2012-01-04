@@ -1,5 +1,6 @@
 module Mails.Tables (
-    tableMails
+    mailerTables
+  , tableMails
   , tableMailEvents
   ) where
 
@@ -7,6 +8,12 @@ import Database.HDBC
 
 import DB.Classes
 import DB.Model
+
+mailerTables :: [Table]
+mailerTables = [
+    tableMails
+  , tableMailEvents
+  ]
 
 tableMails :: Table
 tableMails = Table {
