@@ -58,7 +58,7 @@ instance SafeEnum DocumentStatus where
 instance SafeEnum [IdentificationType] where
     fromSafeEnum [EmailIdentification]            = 1
     fromSafeEnum [ELegitimationIdentification]    = 10
-    fromSafeEnum ls                               = 1
+    fromSafeEnum _                                = 1
     toSafeEnum 1  =  Just [EmailIdentification]
     toSafeEnum 10 = Just [ELegitimationIdentification]
     toSafeEnum _  = Nothing
