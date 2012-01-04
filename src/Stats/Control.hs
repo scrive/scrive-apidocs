@@ -31,7 +31,9 @@ module Stats.Control
          addSignStatRejectEvent,
          addSignStatDeleteEvent,
          addSignStatPurgeEvent,
-         handleSignStatsCSV
+         handleSignStatsCSV,
+         handleDocHistoryCSV,
+         handleSignHistoryCSV
        )
 
        where
@@ -882,3 +884,65 @@ handleSignStatsCSV = do
   ok $ setHeader "Content-Disposition" "attachment;filename=signstats.csv"
      $ setHeader "Content-Type" "text/csv"
      $ toResponse (signStatsCSV stats)
+
+csvRowFromDocHist :: [DocStatEvent] -> [String] -> [String]
+csvRowFromDocHist [] csv = csv
+csvRowFromDocHist (s:ss) csv' =
+  let csvtail = take 6 $ drop 4 $ csv' ++ repeat ""
+      csv2 = case seQuantity s of
+        DocStatCreate  -> chng csvtail 0 $ formatMinutesTimeISO (seTime s)
+        DocStatSend    -> chng csvtail 1 $ formatMinutesTimeISO (seTime s)
+        DocStatClose   -> chng csvtail 2 $ formatMinutesTimeISO (seTime s)
+        DocStatReject  -> chng csvtail 3 $ formatMinutesTimeISO (seTime s)
+        DocStatCancel  -> chng csvtail 4 $ formatMinutesTimeISO (seTime s)
+        DocStatTimeout -> chng csvtail 5 $ formatMinutesTimeISO (seTime s)
+        _ -> csvtail
+  in csvRowFromDocHist ss
+     $ [show $ seDocumentID s,
+        maybe "scrive" show $ seServiceID s,
+        maybe "" show $ seCompanyID s,
+        show $ seDocumentType s
+       ] ++ csv2
+
+-- CSV for document history
+handleDocHistoryCSV :: Kontrakcja m => m Response
+handleDocHistoryCSV = do
+  stats <- runDBQuery GetDocStatEvents
+  let byDoc = groupWith seDocumentID stats
+      rows = map (\es -> csvRowFromDocHist es []) byDoc
+  ok $ setHeader "Content-Disposition" "attachment;filename=dochist.csv"
+     $ setHeader "Content-Type" "text/csv"
+     $ toResponse (docHistCSV rows)
+  
+-- CSV for sig history
+csvRowFromSignHist :: [SignStatEvent] -> [String] -> [String]
+csvRowFromSignHist [] csv = csv
+csvRowFromSignHist (s:ss) csv' =
+  let csvtail = take 8 $ drop 5 $ csv' ++ repeat ""
+      csv2 = case ssQuantity s of
+        SignStatInvite  -> chng csvtail 0 $ formatMinutesTimeISO (ssTime s)
+        SignStatReceive -> chng csvtail 1 $ formatMinutesTimeISO (ssTime s)
+        SignStatOpen    -> chng csvtail 2 $ formatMinutesTimeISO (ssTime s)
+        SignStatLink    -> chng csvtail 3 $ formatMinutesTimeISO (ssTime s)
+        SignStatSign    -> chng csvtail 4 $ formatMinutesTimeISO (ssTime s)
+        SignStatReject  -> chng csvtail 5 $ formatMinutesTimeISO (ssTime s)
+        SignStatDelete  -> chng csvtail 6 $ formatMinutesTimeISO (ssTime s)
+        SignStatPurge   -> chng csvtail 7 $ formatMinutesTimeISO (ssTime s)
+  in csvRowFromSignHist ss $ 
+     [show                $ ssDocumentID s,
+      show                $ ssSignatoryLinkID s,
+      maybe "scrive" show $ ssServiceID s,
+      maybe ""       show $ ssCompanyID s,
+      show                $ ssDocumentProcess s
+     ] ++ csv2
+
+-- CSV for document history
+handleSignHistoryCSV :: Kontrakcja m => m Response
+handleSignHistoryCSV = do
+  stats <- runDBQuery GetSignStatEvents
+  let bySig = groupWith (\s-> (ssDocumentID s, ssSignatoryLinkID s)) stats
+      rows = map (\es -> csvRowFromSignHist es []) bySig
+  ok $ setHeader "Content-Disposition" "attachment;filename=signhist.csv"
+     $ setHeader "Content-Type" "text/csv"
+     $ toResponse (signHistCSV rows)
+
