@@ -4,7 +4,12 @@ adminsmain=
 <p><a href="/adminonly/allstatscsv">Download the CSV containing  all signature stats</a></p>
 <p><a href="/adminonly/userstatscsv">Download the CSV containing all
     user stats</a></p>
-<p><a href="/adminonly/signstatscsv">Download the CSV containing all sign stats</a></p>
+<p><a href="/adminonly/signstatscsv">Download the CSV containing all
+    sign stats</a></p>
+<p><a href="/adminonly/dochistorycsv">Download the CSV containing
+    document histories</a></p>
+<p><a href="/adminonly/signhistorycsv">Download the CSV containing
+    sign histories</a></p>
     <strong>Sales Tools</strong>
     <table><tbody>
         <tr>

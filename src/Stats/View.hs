@@ -6,7 +6,10 @@ module Stats.View
          statisticsFieldsByDay,
          statisticsFieldsByMonth,
          
-         signStatsCSV
+         signStatsCSV,
+         
+         docHistCSV,
+         signHistCSV
          
        )
        where
@@ -107,5 +110,21 @@ signStatsCSV events =
                           , show        $ ssCompanyID       event
                           ]
                           ++ "\"\n"
+
+docHistCSV :: [[String]] -> String
+docHistCSV rows = 
+  "\"" ++ intercalate "\";\""  
+  ["documentid", "serviceid", "companyid", "doctype", "create", "send", "close", "reject", "cancel", "timeout"]
+  ++ "\"\n" ++ 
+  (concat $ map csvline rows)
+    where csvline row = "\"" ++ intercalate "\";\"" row ++ "\"\n"
+
+signHistCSV :: [[String]] -> String
+signHistCSV rows = 
+  "\"" ++ intercalate "\";\""  
+  ["documentid", "signatoryid", "serviceid", "companyid", "doctype", "invite", "receive", "open", "link", "sign", "reject", "delete", "purge"]
+  ++ "\"\n" ++ 
+  (concat $ map csvline rows)
+    where csvline row = "\"" ++ intercalate "\";\"" row ++ "\"\n"
 
 

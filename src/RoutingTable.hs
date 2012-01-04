@@ -225,6 +225,8 @@ staticRoutes = choice
      , dir "adminonly" $ dir "allstatscsv" $ path GET id $ Stats.handleDocStatsCSV
      , dir "adminonly" $ dir "userstatscsv" $ path GET id $ Stats.handleUserStatsCSV
      , dir "adminonly" $ dir "signstatscsv" $ path GET id $ Stats.handleSignStatsCSV
+     , dir "adminonly" $ dir "dochistorycsv" $ path GET id $ Stats.handleDocHistoryCSV
+     , dir "adminonly" $ dir "signhistorycsv" $ path GET id $ Stats.handleSignHistoryCSV
 
      , dir "adminonly" $ dir "runstatsonalldocs" $ hGet $ toK0 $ Stats.addAllDocsToStats
      , dir "adminonly" $ dir "stats1to2" $ hGet $ toK0 $ Stats.handleMigrate1To2
