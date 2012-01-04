@@ -82,7 +82,7 @@ showAdminSystemUsageStats :: Kontrakcja m => m Response
 showAdminSystemUsageStats = onlySuperUser $ do
   Context{ctxtime} <- getContext
   let today = asInt ctxtime
-      som = 100 * (today `div` 100) -- start of month
+      som   = 100 * (today `div` 100) -- start of month
   statEvents <- runDBQuery $ GetDocStatEvents
   userEvents <- runDBQuery $ GetUserStatEvents
   let rawstats = (catMaybes $ map statEventToDocStatTuple statEvents)

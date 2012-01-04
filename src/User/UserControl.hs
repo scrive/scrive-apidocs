@@ -248,9 +248,8 @@ handleUsageStatsJSONForUserDays = do
   Context{ctxtime, ctxmaybeuser, ctxtemplates } <- getContext
   totalS <- renderTemplate ctxtemplates "statsOrgTotal" ()
   user <- guardJust ctxmaybeuser
-  let today = asInt ctxtime
-      som = 100 * (today `div` 100) -- start of month
-      sixm = ((today `div` 100) - 5) * 100
+  let som  = asInt $ daysBefore 30 ctxtime
+      sixm = asInt $ monthsBefore 6 ctxtime
   if useriscompanyadmin user && isJust (usercompany user)
     then do
       (statsByDay, _) <- getUsageStatsForCompany (fromJust $ usercompany user) som sixm
@@ -276,9 +275,8 @@ handleUsageStatsJSONForUserMonths = do
   Context{ctxtime, ctxmaybeuser, ctxtemplates } <- getContext
   totalS <- renderTemplate ctxtemplates "statsOrgTotal" ()
   user <- guardJust ctxmaybeuser
-  let today = asInt ctxtime
-      som = 100 * (today `div` 100) -- start of month
-      sixm = ((today `div` 100) - 5) * 100
+  let som  = asInt $ daysBefore 30 ctxtime
+      sixm = asInt $ monthsBefore 6 ctxtime
   if useriscompanyadmin user && isJust (usercompany user)
     then do
     (_, statsByMonth) <- getUsageStatsForCompany (fromJust $ usercompany user) som sixm
