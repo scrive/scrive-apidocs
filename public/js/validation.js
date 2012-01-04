@@ -1,7 +1,6 @@
 var Validation = Backbone.Model.extend({
-    addCustomValidation: function(f, c) { 
-        var c = c || this.vlist[this.vlist.length - 1].callback; 
-        this.vlist.push({validates: f, callback: c}); 
+    addCustomValidation: function(f, c, m) { 
+        this.vlist.push({validates: f, callback: c, message: m}); 
     },
     concat: function(validateObjList) { 
             var newVList = [];
@@ -23,7 +22,7 @@ var Validation = Backbone.Model.extend({
             for (var i in this.vlist) {
                 if (!this.vlist[i].validates(text)) {
                     if (this.vlist[i].callback)
-                        this.vlist[i].callback(text, elem);
+                        this.vlist[i].callback(text, elem, this.vlist[i].message);
 
                     return false;
                 }
@@ -31,11 +30,10 @@ var Validation = Backbone.Model.extend({
 
             return true;
     },
-    fail: function(f) {
-        if (typeof f == "function") {
-            for (var i in this.vlist) {
-                this.vlist[i].callback = f;
-            }
+    fail: function(f, m) {
+        for (var i in this.vlist) {
+            if (typeof f == "function") this.vlist[i].callback = f;
+            if (m) this.vlist[i].message = m;
         }
     }
 });
@@ -44,43 +42,84 @@ var Validation = Backbone.Model.extend({
 //are shared by the reference. If we don't do this there will be always the
 //same callbacks at all instances.
 var NotEmptyValidation = Validation.extend({
-        initialize: function() {
-            this.vlist = [{
-                    validates: function(t) {
-                        if (!t || t == "")
-                            return false;
-
-                        if (t.length != undefined && t.length == 0)
-                            return false;
-                        
-                        return true;
-                    }, 
-                    callback: function(t,e) {}
-                }];
-        }
-    });
-
-var EmailFormatValidation = Validation.extend({
-        initialize: function() {
-            this.vlist = [{
-                    validates: function(t) {
-                        if (/^[\w._%+-]+@[\w.-]+[.][a-z]{2,4}$/i.test(t))
-                            return true;
+    initialize: function(c, m) {
+        this.vlist = [{
+                validates: function(t) {
+                    if (/^\s*$/.test(t))
                         return false;
-                    },
-                    callback: function(t,e) {}
-               }];
-        }
-    });
+                    
+                    return true;
+                }, 
+                callback: c,
+                message: m || "The value cannot be empty!"
+        }];
+    }
+});
+
+var EmailValidation = Validation.extend({
+    initialize: function(c, m) {
+        this.vlist = [{
+            validates: function(t) {
+                if (/^[\w._%+-]+@[\w.-]+[.][a-z]{2,4}$/i.test(t))
+                    return true;
+                return false;
+            },
+            callback: c,
+            message: m || "Wrong email format!"
+       }];
+    }
+});
+
+var PasswordValidation = Validation.extend({
+    initialize: function(c, m) {
+        this.vlist = [{
+            validates: function(t) {
+                if (t.length < 8 || t.length > 250)
+                    return false;
+                
+                if (!/([a-z]+[0-9]+)|([0-9]+[a-z]+)/.test(t))
+                    return false;
+                
+                return true;
+            },
+            callback: c,
+            message: m || "Password must contain one digit and one letter and must be 8 characters long at least!"
+        }];
+    }
+});
+
+var NameValidation = Validation.extend({
+    initialize: function(c, m) {
+        this.vlist = [{
+            validates: function(t) {
+                var t = $.trim(t);
+
+                if (t.length == 0 || t.length > 100)
+                    return false;
+
+                if (/[^a-z-' ]/i.test(t))
+                    return false;
+
+                return true;
+            },
+            callback: c,
+            message: m || "Name may contain only alphabetic characters, apostrophe, hyphen or space!"
+        }];
+    }
+});
 
 jQuery.fn.validate = function(validationObject){
     var validationObject = validationObject || (new NotEmptyValidation);
+    var validates = true;
 
-    return this.each(function(){
+    this.each(function(){
             if (!validationObject.validate($(this).val(), $(this))) {
+                validates = false;
                 return false;
             }
         });
+
+    return validates;
 };
 
 String.prototype.validate = function(validationObject) {
