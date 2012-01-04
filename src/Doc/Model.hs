@@ -9,6 +9,7 @@ module Doc.Model
   , anyInvitationUndelivered
   , undeliveredSignatoryLinks
   , insertDocumentAsIs
+  , toDocumentProcess
 
   , AddDocumentAttachment(..)
   , AddInvitationEvidence(..)

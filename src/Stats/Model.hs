@@ -250,6 +250,9 @@ data SignStatEvent = SignStatEvent { ssDocumentID      :: DocumentID
                                    , ssSignatoryLinkID :: SignatoryLinkID                                   
                                    , ssTime            :: MinutesTime
                                    , ssQuantity        :: SignStatQuantity
+                                   , ssServiceID       :: Maybe ServiceID
+                                   , ssCompanyID       :: Maybe CompanyID
+                                   , ssDocumentProcess :: DocumentProcess
                                    }
 
 selectSignStatEventsSQL :: String
@@ -258,16 +261,22 @@ selectSignStatEventsSQL = "SELECT "
  ++ ", e.signatory_link_id"
  ++ ", e.time"
  ++ ", e.quantity"
+ ++ ", e.service_id"
+ ++ ", e.company_id"
+ ++ ", e.document_process"
  ++ "  FROM sign_stat_events e"
  ++ " " -- always end in space to avoid problems
 
 fetchSignStats :: Statement -> [SignStatEvent] -> IO [SignStatEvent]
 fetchSignStats st acc = fetchRow st >>= maybe (return acc) f
-  where f [docid, slid, time, quantity] =
+  where f [docid, slid, time, quantity, serviceid, companyid, documentprocess] =
           fetchSignStats st $ SignStatEvent { ssDocumentID      = fromSql docid
                                             , ssSignatoryLinkID = fromSql slid
                                             , ssTime            = fromSql time
                                             , ssQuantity        = fromSql quantity
+                                            , ssServiceID       = fromSql serviceid
+                                            , ssCompanyID       = fromSql companyid
+                                            , ssDocumentProcess = fromSql documentprocess
                                             } : acc
         f l = error $ "fetchSignStats: unexpected row: "++show l
 
@@ -286,7 +295,10 @@ instance DBUpdate AddSignStatEvent Bool where
           ++ ", signatory_link_id"
           ++ ", time"
           ++ ", quantity"
-          ++ ") SELECT ?, ?, ?, ? "
+          ++ ", service_id"
+          ++ ", company_id"
+          ++ ", document_process"
+          ++ ") SELECT ?, ?, ?, ?, ?, ?, ? "
           -- want to avoid an error, so check if exists
           ++ " WHERE NOT EXISTS (SELECT 1 FROM sign_stat_events WHERE"
           ++ " document_id = ? AND quantity = ? AND signatory_link_id = ?)"
@@ -294,6 +306,9 @@ instance DBUpdate AddSignStatEvent Bool where
                     ,toSql $ ssSignatoryLinkID event
                     ,toSql $ ssTime            event
                     ,toSql $ ssQuantity        event
+                    ,toSql $ ssServiceID       event
+                    ,toSql $ ssCompanyID       event
+                    ,toSql $ ssDocumentProcess event
                     
                     ,toSql $ ssDocumentID      event
                     ,toSql $ ssQuantity        event
