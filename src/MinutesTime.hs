@@ -25,6 +25,8 @@ module MinutesTime
        , formatMinutesTimeUTC
        , parseMinutesTimeISO
        , parseMinutesTimeUTC
+       , monthsBefore
+       , daysBefore
        ) where
 
 import Control.Monad.IO.Class
@@ -251,6 +253,12 @@ minutesAfter i (MinutesTime s) = MinutesTime (s + i*60)
 
 minutesBefore :: Int -> MinutesTime -> MinutesTime
 minutesBefore i (MinutesTime s) = MinutesTime (s - i * 60)
+
+monthsBefore :: Int -> MinutesTime -> MinutesTime
+monthsBefore i mt = daysBefore (i * 31) mt
+
+daysBefore :: Int -> MinutesTime -> MinutesTime
+daysBefore i mt = minutesBefore (i * 60 * 24) mt
 
 -- | Convert a date representation to integer. For date like
 -- "2010-06-12" result will be 20100612. Useful in IntMap for
