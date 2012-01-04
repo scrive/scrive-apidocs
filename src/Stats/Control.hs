@@ -580,7 +580,7 @@ addUserIDStatEvent qty uid mt mcid msid =  do
 handleUserStatsCSV :: Kontrakcja m => m Response
 handleUserStatsCSV = onlySuperUser $ do
   stats <- runDBQuery GetUserStatEvents
-  Log.debug $ "All user stats length: " ++ (show $ length stats)
+  Log.stats $ "All user stats length: " ++ (show $ length stats)
   ok $ setHeader "Content-Disposition" "attachment;filename=userstats.csv"
      $ setHeader "Content-Type" "text/csv"
      $ toResponse (userStatisticsCSV stats)
@@ -589,8 +589,11 @@ handleUserStatsCSV = onlySuperUser $ do
 getUsageStatsForUser :: Kontrakcja m => UserID -> Int -> Int -> m ([(Int, [Int])], [(Int, [Int])])
 getUsageStatsForUser uid som sixm = do
   statEvents <- tuplesFromUsageStatsForUser <$> runDBQuery (GetDocStatEventsByUserID uid)
+  Log.stats $ "sixm: " ++ show sixm
+  Log.stats $ "stat events: " ++ show (length statEvents)
   let statsByDay = calculateStatsByDay $ filter (\s -> (fst s) >= som) statEvents
       statsByMonth = calculateStatsByMonth $ filter (\s -> (fst s) >= sixm) statEvents
+  Log.stats $ "stats by month: " ++ show (length statsByMonth)
   return (statsByDay, statsByMonth)
   
 getUsageStatsForCompany :: Kontrakcja m => CompanyID -> Int -> Int -> m ([(Int, String, [Int])], [(Int, String, [Int])])
