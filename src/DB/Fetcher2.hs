@@ -3,6 +3,7 @@ module DB.Fetcher2 (
   , foldDB
   ) where
 
+
 import Control.Monad.IO.Class
 import Data.Convertible
 import Database.HDBC as HDBC

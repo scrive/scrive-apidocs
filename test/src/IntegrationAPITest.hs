@@ -116,7 +116,7 @@ testNewDocumentOrder conn = withTestEnvironment conn $ do
   assertBool ("doctype is not order: " ++ show apiRes2) $ (Right (showJSON (5 :: Int))) == jsget ["document", "type"] (showJSON apiRes2)
   let ar1 = (jsget "relation" $ fromRight $ jsgetA 0 $ fromRight $ jsget "involved"  (showJSON apiReq))
   let ar2 = (jsget "relation" $ fromRight $ jsgetA 0 $ fromRight $ jsget "involved" $ fromRight $ jsget "document" (showJSON apiRes2))
-  assertBool "relation for author is as expected" (ar1 == ar2 || (isLeft ar1 && ar2 == Right (JSRational False (1%1))))
+  assertBool ("relation for author is as expected " ++ show (ar1,ar2)) (ar1 == ar2 || (isLeft ar1 && ar2 == Right (JSRational False (1%1))))
   
 testDocumentCreation :: Connection -> Assertion
 testDocumentCreation conn = withTestEnvironment conn $ do
