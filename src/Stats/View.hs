@@ -94,14 +94,17 @@ userStatisticsCSV events =
 signStatsCSV :: [SignStatEvent] -> String
 signStatsCSV events = 
   "\"" ++ intercalate "\";\""  
-  ["documentid", "signatorylinkid", "date", "event"]
+  ["documentid", "signatorylinkid", "date", "event", "doctype", "service (author)", "company (author)"]
   ++ "\"\n" ++
   (concat $ map csvline events)
     where csvline event = "\"" ++ intercalate "\";\""
                           [ show        $ ssDocumentID      event 
                           , show        $ ssSignatoryLinkID event                               
                           , showDateYMD $ ssTime            event     
-                          , show        $ ssQuantity        event     
+                          , show        $ ssQuantity        event
+                          , show        $ ssDocumentProcess event
+                          , show        $ ssServiceID       event
+                          , show        $ ssCompanyID       event
                           ]
                           ++ "\"\n"
 
