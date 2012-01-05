@@ -15,8 +15,6 @@ import qualified Doc.DocControl as DocControl
 
 import Control.Monad
 import Control.Monad.IO.Class
-import Control.Monad
-import Control.Monad.IO.Class
 import Data.List
 import Data.Maybe
 import Control.Applicative
@@ -35,17 +33,12 @@ import Data.Either
 import Doc.DocUtils
 import ScriveByMail.Control
 import Doc.Transitory
-
---import ScriveByMail.Parse
-
 import qualified Codec.Text.IConv as IConv
 import InspectXMLInstances ()
---import API.APICommons
+import Data.String.Utils
 import Data.Char
 import Doc.DocStateData
---import Doc.Model
---import Doc.DocState
---import Util.JSON
+
 import Doc.JSON
 
 parseEmailMessageToParts :: BS.ByteString -> (MIME.MIMEValue, [(MIME.Type, BS.ByteString)])

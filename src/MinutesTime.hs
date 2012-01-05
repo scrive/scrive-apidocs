@@ -25,8 +25,6 @@ module MinutesTime
        , formatMinutesTimeISO
        , parseMinutesTimeUTC
        , parseMinutesTimeISO
-       , formatMinutesTimeUTC
-       , parseMinutesTimeUTC
        , monthsBefore
        , daysBefore
        ) where
@@ -34,7 +32,7 @@ module MinutesTime
 import Control.Monad.IO.Class
 import Data.Char
 import Data.Convertible
-import Data.Data 
+import Data.Data
 import Data.Time
 import Data.Time.Clock.POSIX
 import Database.HDBC
@@ -112,7 +110,7 @@ parseMinutesTime format string = do
     time <- parseTime defaultTimeLocale format string
     return $ fromSeconds $ floor $ utcTimeToPOSIXSeconds time
 
-parseDateOnly :: String -> Maybe MinutesTime 
+parseDateOnly :: String -> Maybe MinutesTime
 parseDateOnly = parseMinutesTime "%Y-%m-%d"
 
 {- |
@@ -188,7 +186,7 @@ getMinutesTime = liftIO $ (return . fromClockTime) =<< getClockTime
 -- Avoid this function. Soon we will need virtual time, not time taken
 -- globally. Simulation and unit testing requires time to be specified
 -- explicitely.
--- 
+--
 -- FIXME: rename to 'getMinutesTimeDB'
 getMinuteTimeDB :: AnyEv MinutesTime
 getMinuteTimeDB = (return . fromClockTime) =<< getEventClockTime
