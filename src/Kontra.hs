@@ -18,6 +18,7 @@ module Kontra
     , newViralInvitationSentLink
     , newAccountCreatedLink
     , newAccountCreatedBySigningLink
+    , runDBOrFail
     , queryOrFail
     , currentService
     , currentServiceID
@@ -152,6 +153,10 @@ newAccountCreatedBySigningLink user doclinkdata = do
     let aid = actionID action
         token = acbsToken $ actionType action
     return $ (aid, token)
+
+-- | Runs DB action and mzeroes if it returned Nothing
+runDBOrFail :: (DBMonad m, MonadPlus m) => DB (Maybe r) -> m r
+runDBOrFail f = runDB f >>= guardJust
 
 #ifndef DOCUMENTS_IN_POSTGRES
 {- |

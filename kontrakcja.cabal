@@ -144,7 +144,7 @@ Executable kontrakcja-server
   else
     Buildable: False
 
-  Hs-source-dirs: src pdfseal/inc mailer
+  Hs-source-dirs: inc src pdfseal/inc mailer/inc
 
   GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
   if !flag(allow-warnings)
@@ -281,7 +281,7 @@ Executable mailing-server
   else
     Buildable: False
 
-  Hs-source-dirs: mailer src
+  Hs-source-dirs: inc mailer/src mailer/inc
 
   GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
   if !flag(allow-warnings)
@@ -325,7 +325,7 @@ Executable kontrakcja-test
   if impl(ghc >= 7)
     ghc-options: -rtsopts
 
-  Hs-source-dirs: test/src src pdfseal/inc mailer
+  Hs-source-dirs: inc test/src src pdfseal/inc mailer/inc
 
   GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
   if flag(test-coverage)
