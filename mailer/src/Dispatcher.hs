@@ -15,33 +15,32 @@ import MinutesTime
 import qualified Log (mailingServer)
 
 dispatcher :: Sender -> String -> IO ()
-dispatcher sender dbconf = withPostgreSQL dbconf send
+dispatcher sender dbconf = do
+  res <- withPostgreSQL dbconf $ \conn -> E.try $ ioRunDB conn $ do
+    mails <- dbQuery GetIncomingEmails
+    forM_ mails $ \mail -> do
+      if isNotSendable mail
+       then do
+         Log.mailingServer $ "Email " ++ show mail ++ " is not sendable, discarding."
+         success <- dbUpdate $ DeleteEmail $ mailID mail
+         when (not success) $
+           Log.mailingServer $ "Couldn't remove email #" ++ show mailID ++ " from database."
+       else do
+         success <- sendMail sender mail
+         if success
+           then do
+             time <- getMinutesTime
+             res <- dbUpdate $ MarkEmailAsSent (mailID mail) time
+             when (not res) $
+               error $ "Marking email #" ++ show (mailID mail) ++ " as sent failed"
+           else error "Sending email failed"
+  case res of
+    Right () -> threadDelay $ 5 * second
+    Left (e::E.SomeException) -> do
+      Log.mailingServer $ "Exception '" ++ show e ++ "' thrown while sending emails, sleeping for 10 minutes"
+      threadDelay $ 10 * 60 * second
+  dispatcher sender dbconf
   where
-    send conn = do
-      res <- E.try $ ioRunDB conn $ do
-        mails <- dbQuery GetIncomingEmails
-        forM_ mails $ \mail -> do
-          if mailIsNotSendable mail
-            then do
-              Log.mailingServer $ "Email " ++ show mail ++ " is not sendable, discarding."
-              success <- dbUpdate $ DeleteEmail $ mailID mail
-              when (not success) $
-                Log.mailingServer $ "Couldn't remove email #" ++ show mailID ++ " from database."
-            else do
-              success <- sendMail sender mail
-              if success
-                then do
-                  time <- getMinutesTime
-                  res <- dbUpdate $ MarkEmailAsSent (mailID mail) time
-                  when (not res) $
-                    error $ "Marking email #" ++ show (mailID mail) ++ " as sent failed"
-                else error "Sending email failed"
-      case res of
-        Right () -> threadDelay $ 5 * second
-        Left (e::E.SomeException) -> do
-          Log.mailingServer $ "Exception '" ++ show e ++ "' thrown while sending emails, sleeping for 10 minutes"
-          threadDelay $ 10 * 60 * second
-      send conn
     second = 1000000
-    mailIsNotSendable Mail{..} =
+    isNotSendable Mail{..} =
       null (addrEmail mailFrom) || null mailTo || any (null . addrEmail) mailTo
