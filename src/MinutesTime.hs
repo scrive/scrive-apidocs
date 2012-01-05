@@ -25,8 +25,6 @@ module MinutesTime
        , formatMinutesTimeISO
        , parseMinutesTimeUTC
        , parseMinutesTimeISO
-       , formatMinutesTimeUTC
-       , parseMinutesTimeUTC
        , monthsBefore
        , daysBefore
        ) where
@@ -255,6 +253,9 @@ minutesAfter i (MinutesTime s) = MinutesTime (s + i*60)
 
 minutesBefore :: Int -> MinutesTime -> MinutesTime
 minutesBefore i (MinutesTime s) = MinutesTime (s - i * 60)
+
+daysBefore :: Int -> MinutesTime -> MinutesTime
+daysBefore i mt = minutesBefore (i * 60 * 24) mt
 
 monthsBefore :: Int -> MinutesTime -> MinutesTime
 monthsBefore i mt = daysBefore (i * 31) mt
