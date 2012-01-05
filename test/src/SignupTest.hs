@@ -17,6 +17,7 @@ import Context
 import DB.Classes
 import DB.Types
 import FlashMessage
+import LoginTest (assertLoginEventRecordedFor)
 import MinutesTime
 import Misc
 import Redirect
@@ -40,6 +41,7 @@ signupTests conn = testGroup "Signup" [
     , testCase "passwords must match to activate an account" $ testPasswordsMatchToActivate conn
     , testCase "if users enter phone number a mail is sent" $ testUserEnteringPhoneNumber conn
     , testCase "if users don't enter phone number a mail isn't sent" $ testUserNotEnteringPhoneNumber conn
+    , testCase "login event recorded when logged in after activation" $ testLoginEventRecordedWhenLoggedInAfterActivation conn
     ]
 
 testUserEnteringPhoneNumber :: Connection -> Assertion
@@ -98,6 +100,23 @@ testSignupAndActivate conn = withTestEnvironment conn $ do
   -- activate the account using the signup details
   (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12"
   assertAccountActivatedFor uid "Andrzej" "Rybczak" (res3, ctx3)
+
+testLoginEventRecordedWhenLoggedInAfterActivation :: Connection -> Assertion
+testLoginEventRecordedWhenLoggedInAfterActivation conn = withTestEnvironment conn $ do
+  globaltemplates <- readGlobalTemplates
+  ctx <- (\c -> c { ctxdbconn = conn })
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+
+  -- enter the email to signup
+  (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
+  action <- assertSignupSuccessful (res1, ctx1)
+  let aid = actionID action
+      (AccountCreated uid token) = actionType action
+
+  -- activate the account using the signup details
+  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12"
+  assertAccountActivatedFor uid "Andrzej" "Rybczak" (res3, ctx3)
+  assertLoginEventRecordedFor uid
 
 testViralInviteAndActivate :: Connection -> Assertion
 testViralInviteAndActivate conn = withTestEnvironment conn $ do
