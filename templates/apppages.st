@@ -273,6 +273,9 @@ pageFooter=
         <li>
           $_pageFooterContact7()$
         </li>
+        <li>
+          $_pageFooterContact8()$
+        </li>
       </ul>
     </div>
   </div>
