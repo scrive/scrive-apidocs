@@ -30,7 +30,7 @@ import Doc.DocStateData
 import KontraLink
 import Mails.MailsConfig
 import Mails.MailsData
-import Mails.Public hiding (Mail)
+import Mails.Model hiding (Mail)
 import Mails.SendMail
 import MinutesTime
 import Misc

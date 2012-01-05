@@ -21,7 +21,7 @@ import DB.Classes
 import Doc.DocStateData
 import Doc.Transitory
 import FlashMessage
-import Mails.Public
+import Mails.Model
 import MinutesTime
 import Misc
 import Redirect

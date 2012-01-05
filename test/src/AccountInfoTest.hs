@@ -16,7 +16,7 @@ import Context
 import DB.Classes
 import DB.Types
 import FlashMessage
-import Mails.Public
+import Mails.Model
 import MinutesTime
 import Misc
 import Redirect

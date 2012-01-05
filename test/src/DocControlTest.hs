@@ -15,7 +15,7 @@ import StateHelper
 import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
-import Mails.Public
+import Mails.Model
 import Misc
 import Context
 import Database.HDBC.PostgreSQL

@@ -79,7 +79,7 @@ import InspectXML
 import File.Model
 import ListUtil
 import Text.JSON
-import Mails.Public
+import Mails.Model
 import Util.HasSomeCompanyInfo
 import CompanyAccounts.CompanyAccountsControl
 import CompanyAccounts.Model

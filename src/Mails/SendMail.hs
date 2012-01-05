@@ -21,9 +21,9 @@ import InputValidation
 import Mails.MailsConfig
 import Mails.MailsData
 import Util.MonadUtils
-import Mails.Public hiding (Mail)
+import Mails.Model hiding (Mail)
 import qualified AppLogger as Log
-import qualified Mails.Public as M
+import qualified Mails.Model as M
 
 -- Needed only for FROM address
 import User.Region
