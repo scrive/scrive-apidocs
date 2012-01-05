@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  API.API
--- Maintainer  :  mariusz@skrivapa.se
+-- Maintainer  :  eric@scrive.com
 -- Stability   :  development
 -- Portability :  portable
 --

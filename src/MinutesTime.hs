@@ -25,6 +25,8 @@ module MinutesTime
        , formatMinutesTimeISO
        , parseMinutesTimeUTC
        , parseMinutesTimeISO
+       , formatMinutesTimeUTC
+       , parseMinutesTimeUTC
        , monthsBefore
        , daysBefore
        ) where
