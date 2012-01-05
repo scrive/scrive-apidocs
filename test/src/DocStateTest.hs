@@ -15,8 +15,11 @@ import Company.Model
 import Doc.Invariants
 import MinutesTime
 import Test.HUnit.Base (Assertion)
+import Util.HasSomeUserInfo
+import Util.HasSomeCompanyInfo
 import qualified Data.ByteString.UTF8 as BS
 
+import Data.Functor
 import Data.Maybe
 import Data.Convertible(convert)
 import Database.HDBC(SqlValue)
@@ -38,6 +41,14 @@ import File.FileID
 docStateTests :: Connection -> Test
 docStateTests conn = testGroup "DocState" [
   dataStructureProperties,
+
+  testThat "NewDocument inserts a new contract for a single user successfully" conn testNewDocumentForNonCompanyUserInsertsANewContract,
+  testThat "NewDocument inserts a new contract for a company user successfully" conn testNewDocumentForACompanyUserInsertsANewContract,
+  testThat "NewDocument inserts a new offer for a single user successfully" conn testNewDocumentForNonCompanyUserInsertsANewOffer,
+  testThat "NewDocument inserts a new offer for a company user successfully" conn testNewDocumentForACompanyUserInsertsANewOffer,
+  testThat "NewDocument inserts a new order for a single user successfully" conn testNewDocumentForNonCompanyUserInsertsANewOrder,
+  testThat "NewDocument inserts a new order for a company user successfully" conn testNewDocumentForACompanyUserInsertsANewOrder,
+  testThat "NewDocument with mismatching user & company results in left" conn testNewDocumentForMismatchingUserAndCompanyFails,
 
   testThat "SetDocumentLocale fails when doc doesn't exist" conn testSetDocumentLocaleNotLeft,
 
@@ -190,6 +201,95 @@ dataStructureProperties = testGroup "data structure properties" [
   testProperty "signatories are different with different fields" propSignatoryDetailsNEq,
   testCase "given example" testSignatories1
   ]
+
+testNewDocumentForNonCompanyUserInsertsANewContract :: DB ()
+testNewDocumentForNonCompanyUserInsertsANewContract = doTimes 10 $ do
+  result <- performNewDocumentWithRandomUser Nothing (Signable Contract) "doc title"
+  assertGoodNewDocument Nothing (Signable Contract) "doc title" True result
+
+testNewDocumentForACompanyUserInsertsANewContract :: DB ()
+testNewDocumentForACompanyUserInsertsANewContract = doTimes 10 $ do
+  company <- addNewCompany
+  result <- performNewDocumentWithRandomUser (Just company) (Signable Contract) "doc title"
+  assertGoodNewDocument (Just company) (Signable Contract) "doc title" True result
+
+testNewDocumentForNonCompanyUserInsertsANewOffer :: DB ()
+testNewDocumentForNonCompanyUserInsertsANewOffer = doTimes 10 $ do
+  result <- performNewDocumentWithRandomUser Nothing (Signable Offer) "doc title"
+  assertGoodNewDocument Nothing (Signable Offer) "doc title" False result
+
+testNewDocumentForACompanyUserInsertsANewOffer :: DB ()
+testNewDocumentForACompanyUserInsertsANewOffer = doTimes 10 $ do
+  company <- addNewCompany
+  result <- performNewDocumentWithRandomUser (Just company) (Signable Offer) "doc title"
+  assertGoodNewDocument (Just company) (Signable Offer) "doc title" False result
+
+testNewDocumentForNonCompanyUserInsertsANewOrder :: DB ()
+testNewDocumentForNonCompanyUserInsertsANewOrder = doTimes 10 $ do
+  result <- performNewDocumentWithRandomUser Nothing (Signable Order) "doc title"
+  assertGoodNewDocument Nothing (Signable Order) "doc title" False result
+
+testNewDocumentForACompanyUserInsertsANewOrder :: DB ()
+testNewDocumentForACompanyUserInsertsANewOrder = doTimes 10 $ do
+  company <- addNewCompany
+  result <- performNewDocumentWithRandomUser (Just company) (Signable Offer) "doc title"
+  assertGoodNewDocument (Just company) (Signable Offer) "doc title" False result
+
+testNewDocumentForMismatchingUserAndCompanyFails :: DB ()
+testNewDocumentForMismatchingUserAndCompanyFails = doTimes 10 $ do
+  company <- addNewCompany
+  singleuser <- addNewRandomUser
+  companyuser <- addNewRandomCompanyUser (companyid company) False
+  time <- getMinutesTime
+  edoc1 <- randomUpdate $ NewDocument singleuser (Just company) (BS.fromString "doc title") (Signable Contract) time
+  assertLeft edoc1
+  edoc2 <- randomUpdate $ NewDocument companyuser Nothing (BS.fromString "doc title") (Signable Contract) time
+  validTest $ assertLeft edoc2
+
+performNewDocumentWithRandomUser :: Maybe Company -> DocumentType -> String -> DB (User, MinutesTime, Either String Document)
+performNewDocumentWithRandomUser Nothing doctype title = do
+  user <- addNewRandomUser
+  time <- getMinutesTime
+  edoc <- randomUpdate $ NewDocument user Nothing (BS.fromString title) doctype time
+  return (user, time, edoc)
+performNewDocumentWithRandomUser (Just company) doctype title = do
+  user <- addNewRandomCompanyUser (companyid company) False
+  time <- getMinutesTime
+  edoc <- randomUpdate $ NewDocument user (Just company) (BS.fromString title) doctype time
+  return (user, time, edoc)
+
+assertGoodNewDocument :: Maybe Company -> DocumentType -> String -> Bool -> (User, MinutesTime, Either String Document) -> DB (Maybe (DB ()))
+assertGoodNewDocument mcompany doctype title authorsigns (user, time, edoc) = do
+  assertRight edoc
+  let (Right doc) = edoc
+  assertEqual "Correct title" (BS.fromString title) (documenttitle doc)
+  assertEqual "Correct type" doctype (documenttype doc)
+  assertEqual "Doc has user's region" (getRegion user) (getRegion doc)
+  assertEqual "Doc creation time" time (documentctime doc)
+  assertEqual "Doc modification time" time (documentmtime doc)
+  assertEqual "Doc has user's service" (userservice user) (documentservice doc)
+  assertEqual "No author attachments" [] (documentauthorattachments doc)
+  assertEqual "No sig attachments" [] (documentsignatoryattachments doc)
+  assertEqual "Uses email identification only" [EmailIdentification] (documentallowedidtypes doc)
+  assertEqual "Doc has user's footer" (customfooter $ usersettings user) (fmap BS.toString <$> documentmailfooter $ documentui doc)
+  assertEqual "In preparation" Preparation (documentstatus doc)
+  assertEqual "1 signatory" 1 (length $ documentsignatorylinks doc)
+  let siglink = head $ documentsignatorylinks doc
+  if authorsigns
+    then
+      assertEqual "link is author and signer" [SignatoryPartner,SignatoryAuthor] (signatoryroles siglink)
+    else
+      assertEqual "link is just author" [SignatoryAuthor] (signatoryroles siglink)
+  assertEqual "link first name matches author's" (getFirstName user) (getFirstName siglink)
+  assertEqual "link last name matches author's" (getLastName user) (getLastName siglink)
+  assertEqual "link email matches author's" (getEmail user) (getEmail siglink)
+  assertEqual "link personal number matches author's" (getPersonalNumber user) (getPersonalNumber siglink)
+  assertEqual "link company name matches company's" (getCompanyName mcompany) (getCompanyName siglink)
+  assertEqual "link company number matches company's" (getCompanyNumber mcompany) (getCompanyNumber siglink)
+  assertEqual "link signatory matches author id" (Just $ userid user) (maybesignatory siglink)
+  assertEqual "link signatory matches author company" (companyid <$> mcompany) (maybecompany siglink)
+  validTest $ assertBool "success" True
+
 
 testSignatories1 :: Assertion
 testSignatories1 =
@@ -475,7 +575,7 @@ testDocumentCanBeCreatedAndFetchedByAllDocs = doTimes 10 $ do
   -- execute
   now <- liftIO $ getMinutesTime
   edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany title doctype now)
-  
+
   let doc = case edoc of
           Left msg -> error $ show msg
           Right d -> d
@@ -899,9 +999,9 @@ testUpdateSigAttachmentsAttachmentsOk = doTimes 10 $ do
 
     assertRight edoc3
     let doc3 = fromRight edoc3
-    assertBool "Attachment connected to signatory" 
+    assertBool "Attachment connected to signatory"
                  (Just (fileid file2) `elem` map signatoryattachmentfile (documentsignatoryattachments doc3))
-    
+
 
 {-
 testRemoveDocumentAttachmentFailsIfNotPreparation :: DB ()
