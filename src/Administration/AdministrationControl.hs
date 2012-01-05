@@ -79,6 +79,7 @@ import InspectXML
 import File.Model
 import ListUtil
 import Text.JSON
+import Mails.Public
 import Util.HasSomeCompanyInfo
 import CompanyAccounts.CompanyAccountsControl
 import CompanyAccounts.Model
@@ -843,14 +844,11 @@ documentsSearchFunc s doc =  nameMatch doc || signMatch doc
 documentsPageSize :: Int
 documentsPageSize = 100
 
-
-
 handleBackdoorQuery :: Kontrakcja m => String -> m String
-handleBackdoorQuery _email = onlySalesOrAdmin $ onlyBackdoorOpen $ do
-  undefined
-  --minfo <- runDBQuery $ undefined $ fromString email
-  --return $ maybe "No email found" (toString . bdContent) minfo
-
+handleBackdoorQuery email = onlySalesOrAdmin $ onlyBackdoorOpen $ do
+  minfo <- listToMaybe . filter ((email `elem`) . map addrEmail . mailTo)
+    <$> runDBQuery GetIncomingEmails
+  return $ maybe "No email found" mailContent minfo
 
 -- This method can be used do reseal a document
 resealFile :: Kontrakcja m => DocumentID -> m KontraLink
