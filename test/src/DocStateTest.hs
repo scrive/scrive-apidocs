@@ -50,6 +50,9 @@ docStateTests conn = testGroup "DocState" [
   testThat "NewDocument inserts a new order for a company user successfully" conn testNewDocumentForACompanyUserInsertsANewOrder,
   testThat "NewDocument with mismatching user & company results in left" conn testNewDocumentForMismatchingUserAndCompanyFails,
 
+  testThat "CancelDocument cancels a document" conn testCancelDocumentCancelsDocument,
+  testThat "CancelDocument fails if doc not pending or awaiting author" conn testCancelDocumentReturnsLeftIfDocInWrongState,
+
   testThat "SetDocumentLocale fails when doc doesn't exist" conn testSetDocumentLocaleNotLeft,
 
   testThat "SetDocumentTitle fails when doc doesn't exist" conn testSetDocumentTitleNotLeft,
@@ -290,6 +293,28 @@ assertGoodNewDocument mcompany doctype title authorsigns (user, time, edoc) = do
   assertEqual "link signatory matches author company" (companyid <$> mcompany) (maybecompany siglink)
   validTest $ assertBool "success" True
 
+testCancelDocumentCancelsDocument :: DB ()
+testCancelDocumentCancelsDocument = doTimes 10 $ do
+  user <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition user (\d -> isSignable d && documentstatus d `elem` [AwaitingAuthor, Pending])
+  time <- getMinutesTime
+  edoc <- randomUpdate $ CancelDocument (documentid doc) ManualCancel time
+  assertRight edoc
+  let (Right canceleddoc) = edoc
+  assertEqual "In canceled state" Canceled (documentstatus canceleddoc)
+  assertEqual "Updated modification time" time (documentmtime canceleddoc)
+  assertEqual "Matching cancellation reason" (Just ManualCancel) (documentcancelationreason canceleddoc)
+  assertEqual "Siglinks are unchanged" (documentsignatorylinks doc) (documentsignatorylinks canceleddoc)
+  assertEqual "Doc title is unchanged" (documenttitle doc) (documenttitle canceleddoc)
+  validTest $ assertBool "successful" True
+
+testCancelDocumentReturnsLeftIfDocInWrongState :: DB ()
+testCancelDocumentReturnsLeftIfDocInWrongState = doTimes 10 $ do
+  user <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition user (\d -> isSignable d && not (documentstatus d `elem` [AwaitingAuthor, Pending]))
+  time <- getMinutesTime
+  edoc <- randomUpdate $ CancelDocument (documentid doc) ManualCancel time
+  validTest $ assertLeft edoc
 
 testSignatories1 :: Assertion
 testSignatories1 =
