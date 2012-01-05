@@ -32,8 +32,8 @@ dispatcher sender dbconf = withPostgreSQL dbconf send
               if success
                 then do
                   time <- getMinutesTime
-                  success <- dbUpdate $ MarkEmailAsSent (mailID mail) time
-                  when (not success) $
+                  res <- dbUpdate $ MarkEmailAsSent (mailID mail) time
+                  when (not res) $
                     error $ "Marking email #" ++ show (mailID mail) ++ " as sent failed"
                 else error "Sending email failed"
       case res of
