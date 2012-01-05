@@ -3,7 +3,8 @@ module Doc.TestJSON where
 import qualified Data.ByteString.UTF8 as BS
 import Test.Framework
 import Test.QuickCheck
-import Text.JSON()
+import Text.JSON
+--import Text.JSON.String
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 
 import Util.JSON
@@ -12,9 +13,13 @@ import Doc.JSON
 import TestingUtil()
 import Doc.DocStateData
 import Doc.DocInfo
+import Test.HUnit (Assertion)
+import Test.Framework.Providers.HUnit (testCase);
+import TestingUtil
 
 documentJSONTests :: Test
 documentJSONTests = testGroup "Document JSON tests" [
+  testCase "test general api document json creation" dcrTest,
   testProperty "document_id must be equal" 
   (\doc -> True ==> 
            documentid doc == (read $ fromJSONString $ fromRight $ jsget "document_id" (jsonDocumentForSignatory doc))),
@@ -72,3 +77,30 @@ documentJSONTests = testGroup "Document JSON tests" [
       ]
   ]
 
+dcrTest :: Assertion
+dcrTest = doNTimes 100 $ do
+  (mainfile, title, fn, sn, em) <- rand 10 arbitrary
+  let o = dcrFromJSON $ JSObject $ toJSObject $
+          [("mainfile", JSObject $ toJSObject $ 
+                        [("name", JSString $ toJSString mainfile)])
+          ,("title"   , JSString $ toJSString title)
+          ,("involved", JSArray [JSObject $ toJSObject $
+                                 [("data", JSObject $ toJSObject $
+                                           [("fstname", JSObject $ toJSObject $
+                                                        [("value", JSString $ toJSString fn)]),
+                                            ("sndname", JSObject $ toJSObject $
+                                                        [("value", JSString $ toJSString sn)]),
+                                            ("email",   JSObject $ toJSObject $
+                                                        [("value", JSString $ toJSString em)])])]])]
+      dcr :: Either String DocumentCreationRequest = Right $ DocumentCreationRequest {
+        dcrTitle = title,
+        dcrType  = Signable Contract,
+        dcrTags  = [],
+        dcrInvolved = [InvolvedRequest { irRole = [SignatoryPartner],
+                                         irData = [SignatoryField FirstNameFT (BS.fromString fn) [],
+                                                   SignatoryField LastNameFT  (BS.fromString sn) [],
+                                                   SignatoryField EmailFT     (BS.fromString em) []],
+                                         irAttachments = [] }],
+        dcrMainFile = mainfile
+        }
+  assertEqual ("Are not the same! " ++ show o ++ " and " ++ show dcr) o dcr

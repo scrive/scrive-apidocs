@@ -35,7 +35,8 @@ import qualified Archive.Control as ArchiveControl
 import qualified ELegitimation.BankID as BankID
 import qualified Payments.PaymentsControl as Payments
 import qualified User.UserControl as UserControl
-import qualified ScriveByMail.Control as ScriveByMail
+--import qualified ScriveByMail.Control as ScriveByMail
+import qualified API.MailAPI as MailAPI
 import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Doc.API
@@ -90,7 +91,7 @@ staticRoutes = choice
      , dir "sitemap"         $ hGetAllowHttp $ handleSitemapPage
 
      -- this is SMTP to HTTP gateway
-     , dir "mailapi" $ hPostNoXToken $ toK0 $ ScriveByMail.handleScriveByMail
+     , dir "mailapi" $ hPostNoXToken $ toK0 $ MailAPI.handleMailAPI
 
      -- Only download function | unified for author and signatories
      , dir "download"                     $ hGet  $ toK3 $ DocControl.handleDownloadFile

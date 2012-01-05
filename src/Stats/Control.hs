@@ -83,7 +83,7 @@ showAdminSystemUsageStats :: Kontrakcja m => m Response
 showAdminSystemUsageStats = onlySalesOrAdmin $ do
   Context{ctxtime} <- getContext
   let today = asInt ctxtime
-      som = 100 * (today `div` 100) -- start of month
+      som   = 100 * (today `div` 100) -- start of month
   statEvents <- runDBQuery $ GetDocStatEvents
   userEvents <- runDBQuery $ GetUserStatEvents
   let rawstats = (catMaybes $ map statEventToDocStatTuple statEvents)
@@ -586,7 +586,7 @@ addUserIDStatEvent qty uid mt mcid msid =  do
 handleUserStatsCSV :: Kontrakcja m => m Response
 handleUserStatsCSV = onlySalesOrAdmin $ do
   stats <- runDBQuery GetUserStatEvents
-  Log.debug $ "All user stats length: " ++ (show $ length stats)
+  Log.stats $ "All user stats length: " ++ (show $ length stats)
   ok $ setHeader "Content-Disposition" "attachment;filename=userstats.csv"
      $ setHeader "Content-Type" "text/csv"
      $ toResponse (userStatisticsCSV stats)
@@ -595,8 +595,11 @@ handleUserStatsCSV = onlySalesOrAdmin $ do
 getUsageStatsForUser :: Kontrakcja m => UserID -> Int -> Int -> m ([(Int, [Int])], [(Int, [Int])])
 getUsageStatsForUser uid som sixm = do
   statEvents <- tuplesFromUsageStatsForUser <$> runDBQuery (GetDocStatEventsByUserID uid)
+  Log.stats $ "sixm: " ++ show sixm
+  Log.stats $ "stat events: " ++ show (length statEvents)
   let statsByDay = calculateStatsByDay $ filter (\s -> (fst s) >= som) statEvents
       statsByMonth = calculateStatsByMonth $ filter (\s -> (fst s) >= sixm) statEvents
+  Log.stats $ "stats by month: " ++ show (length statsByMonth)
   return (statsByDay, statsByMonth)
 
 getUsageStatsForCompany :: Kontrakcja m => CompanyID -> Int -> Int -> m ([(Int, String, [Int])], [(Int, String, [Int])])
