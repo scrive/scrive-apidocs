@@ -36,7 +36,7 @@ import Test.Framework.Providers.HUnit (testCase)
 import Test.QuickCheck
 import File.FileID
 
---import qualified AppLogger as Log
+--import qualified Log
 
 docStateTests :: Connection -> Test
 docStateTests conn = testGroup "DocState" [

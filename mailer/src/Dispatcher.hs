@@ -12,7 +12,7 @@ import DB.Classes
 import Sender
 import Mails.Model
 import MinutesTime
-import qualified AppLogger as Log (mailingServer)
+import qualified Log (mailingServer)
 
 dispatcher :: Sender -> String -> IO ()
 dispatcher sender dbconf = withPostgreSQL dbconf send

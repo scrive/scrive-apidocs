@@ -27,7 +27,7 @@ import Test.QuickCheck.Gen
 import Control.Exception
 import System.Timeout
 --import Doc.DocStateData
---import qualified AppLogger as Log
+--import qualified Log
 --import Doc.Transitory
 
 integrationAPITests :: Connection -> Test

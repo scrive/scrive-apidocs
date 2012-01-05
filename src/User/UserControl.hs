@@ -31,7 +31,7 @@ import User.UserView
 import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import qualified AppLogger as Log
+import qualified Log
 import Util.KontraLinkUtils
 import Util.MonadUtils
 import Stats.Control

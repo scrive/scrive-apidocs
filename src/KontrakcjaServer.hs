@@ -23,7 +23,7 @@ import Happstack.State
   )
 import System.Environment
 import System.Directory (createDirectoryIfMissing)
-import qualified AppLogger as Log
+import qualified Log
 import AppState (AppState)
 import RoutingTable (staticRoutes)
 import AppControl

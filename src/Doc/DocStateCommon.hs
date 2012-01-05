@@ -34,7 +34,7 @@ import InputValidation
 import Doc.DocInfo
 --import Data.List
 --import File.FileID
---import qualified AppLogger as Log
+--import qualified Log
 --import qualified Doc.Model as D
 --import qualified Doc.Tables as D
 import Data.Maybe

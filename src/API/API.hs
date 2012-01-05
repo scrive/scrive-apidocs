@@ -40,7 +40,7 @@ import Control.Monad.Reader
 import Control.Monad.Error
 import DB.Classes
 import Templates.Templates
-import qualified AppLogger as Log
+import qualified Log
 import Util.JSON
 
 {- | API calls user JSPO object as a response and work within json value as a context-}

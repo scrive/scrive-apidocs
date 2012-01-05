@@ -66,7 +66,7 @@ import Text.Printf
 import Util.FlashUtil
 import Data.List
 import Util.MonadUtils
-import qualified AppLogger as Log
+import qualified Log
 import Doc.DocSeal (sealDocument)
 import Util.HasSomeUserInfo
 import Doc.DocInfo

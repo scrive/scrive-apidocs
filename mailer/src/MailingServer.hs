@@ -19,7 +19,7 @@ import Mails.Tables
 import MailingServerConf
 import Network
 import Sender
-import qualified AppLogger as Log (withLogger, mailingServer)
+import qualified Log (withLogger, mailingServer)
 
 main :: IO ()
 main = Log.withLogger $ do

@@ -32,7 +32,7 @@ import System.IO.Temp
 import System.Process
 import System.Random
 import System.Time
-import qualified AppLogger as Log
+import qualified Log
 import qualified Codec.Binary.Url as URL
 import qualified Control.Exception as C
 import qualified Data.ByteString as BS

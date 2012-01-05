@@ -34,7 +34,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified SealSpec as Seal
 import qualified TrustWeaver as TW
-import qualified AppLogger as Log
+import qualified Log
 import System.IO.Temp
 import System.IO hiding (stderr)
 import Util.HasSomeCompanyInfo

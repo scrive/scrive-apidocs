@@ -136,7 +136,7 @@ import Data.List
 import File.FileID
 import Doc.DocStateCommon
 
---import qualified AppLogger as Log
+--import qualified Log
 --import qualified Doc.Model as D
 --import qualified Doc.Tables as D
 

@@ -46,7 +46,7 @@ import Mails.MailsConfig
 import Templates.Templates
 import User.Model
 import Util.HasSomeUserInfo
-import qualified AppLogger as Log
+import qualified Log
 import qualified Data.ByteString.UTF8 as BS
 import Util.MonadUtils
 import Misc

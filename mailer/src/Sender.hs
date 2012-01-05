@@ -16,7 +16,7 @@ import MailingServerConf
 import Mails.Model
 import Misc
 import OurPrelude
-import qualified AppLogger as Log (mailingServer, mailContent)
+import qualified Log (mailingServer, mailContent)
 
 newtype Sender = Sender { sendMail :: MonadIO m => Mail -> m Bool }
 

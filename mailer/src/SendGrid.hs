@@ -13,7 +13,7 @@ import DB.Classes
 import Mails.Model
 import Mailer
 import Misc
-import qualified AppLogger as Log (mailingServer)
+import qualified Log (mailingServer)
 
 handleSendgridEvents :: Mailer Response
 handleSendgridEvents = do

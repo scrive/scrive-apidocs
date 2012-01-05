@@ -28,7 +28,7 @@ import Control.Monad
 import Control.Monad.IO.Class
 import qualified Data.Map as Map
 import Data.Map ((!))
-import AppLogger as Log
+import qualified Log
 import Text.Html (stringToHtmlString)
 import System.Directory
 import System.Time

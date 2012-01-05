@@ -18,7 +18,7 @@ import Templates.Templates
 import Mails.SendMail
 import Misc
 import Data.Char
-import qualified AppLogger as Log ()
+import qualified Log ()
 import Kontra
 import User.Locale
 

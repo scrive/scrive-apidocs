@@ -48,7 +48,7 @@ import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
-import qualified AppLogger as Log
+import qualified Log
 
 import qualified Data.ByteString.UTF8 as BS
 import Happstack.Server

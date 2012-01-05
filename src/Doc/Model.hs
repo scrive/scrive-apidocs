@@ -115,7 +115,7 @@ import Util.SignatoryLinkUtils
 --import Doc.DocStateUtils
 import Doc.DocProcess
 import Doc.DocStateCommon
-import qualified AppLogger as Log
+import qualified Log
 import System.Random
 --import Happstack.Server
 --import Happstack.State

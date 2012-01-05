@@ -9,7 +9,7 @@ import Database.HDBC.PostgreSQL
 import Happstack.Server
 
 import DB.Classes
-import qualified AppLogger as Log (mailingServer)
+import qualified Log (mailingServer)
 
 newtype Mailer a = Mailer { unMailer :: ServerPartT (ReaderT Connection IO) a }
   deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadIO, MonadPlus, ServerMonad, WebMonad Response)

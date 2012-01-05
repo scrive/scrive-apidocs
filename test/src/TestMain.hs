@@ -8,7 +8,7 @@ import Database.HDBC.PostgreSQL
 import System.Environment.UTF8
 import System.IO
 import Test.Framework
-import qualified AppLogger as Log
+import qualified Log
 
 import AppDB
 import DB.Checks

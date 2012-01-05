@@ -34,7 +34,7 @@ import Session
 import Templates.Templates
 import User.Model
 import User.UserView as UserView
-import qualified AppLogger as Log (error, debug)
+import qualified Log (error, debug)
 import qualified Doc.DocControl as DocControl
 import qualified FlashMessage as F
 import qualified MemCache

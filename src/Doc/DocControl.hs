@@ -33,7 +33,7 @@ import User.Model
 import User.UserControl
 import Util.HasSomeUserInfo
 import Util.StringUtil
-import qualified AppLogger as Log
+import qualified Log
 import Templates.Templates
 import Templates.Trans
 import Util.CSVUtil

@@ -33,7 +33,7 @@ import Doc.DocUtils
 import Doc.Transitory
 import Data.Either
 import qualified Doc.DocControl as DocControl
-import qualified AppLogger as Log (scrivebymail, scrivebymailfailure)
+import qualified Log (scrivebymail, scrivebymailfailure)
 import ScriveByMail.View
 import Util.SignatoryLinkUtils
 import Mails.SendMail

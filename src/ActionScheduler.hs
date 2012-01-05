@@ -36,7 +36,7 @@ import Templates.Trans
 import Templates.Templates
 import User.Model
 import User.UserView
-import qualified AppLogger as Log
+import qualified Log
 import System.Time
 import Util.HasSomeUserInfo
 import Doc.Invariants

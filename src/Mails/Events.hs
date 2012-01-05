@@ -40,7 +40,7 @@ import Templates.Trans
 import User.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import qualified AppLogger as Log
+import qualified Log
 import qualified Mails.MailsUtil as Mail
 
 processEvents :: ActionScheduler ()

@@ -1,25 +1,26 @@
-module AppLogger ( amazon
-                 , stats
-                 , eleg
-                 , debug
-                 , error
-                 , forkIOLogWhenError
-                 , mail
-                 , mailContent
-                 , mailingServer
-                 , security
-                 , server
-                 , integration
-                 , teardownLogger
-                 , trustWeaver
-                 , withLogger
-                 , setupLogger
-                 , scrivebymail
-                 , scrivebymailfailure
-                 , docevent
-                 , jsonMailAPI
-                 , mailAPI
-                 ) where
+module Log (
+    amazon
+  , stats
+  , eleg
+  , debug
+  , error
+  , forkIOLogWhenError
+  , mail
+  , mailContent
+  , mailingServer
+  , security
+  , server
+  , integration
+  , teardownLogger
+  , trustWeaver
+  , withLogger
+  , setupLogger
+  , scrivebymail
+  , scrivebymailfailure
+  , docevent
+  , jsonMailAPI
+  , mailAPI
+  ) where
 
 import Control.Exception.Extensible (bracket)
 import Control.Monad.Trans

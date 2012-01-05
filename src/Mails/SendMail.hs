@@ -22,7 +22,7 @@ import Mails.MailsConfig
 import Mails.MailsData
 import Util.MonadUtils
 import Mails.Model hiding (Mail)
-import qualified AppLogger as Log
+import qualified Log
 import qualified Mails.Model as M
 
 -- Needed only for FROM address

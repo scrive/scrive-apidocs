@@ -38,7 +38,7 @@ import Doc.DocUtils
 import Company.Model
 import Kontra
 import Util.SignatoryLinkUtils
-import qualified AppLogger as Log
+import qualified Log
 import Doc.DocInfo
 import User.Model
 import Data.Maybe

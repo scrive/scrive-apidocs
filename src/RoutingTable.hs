@@ -26,7 +26,7 @@ import User.Model
 import User.UserView as UserView
 import qualified Stats.Control as Stats
 import qualified Administration.AdministrationControl as Administration
-import qualified AppLogger as Log (security, debug)
+import qualified Log (security, debug)
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import qualified Contacts.ContactsControl as Contacts
 import qualified Doc.DocControl as DocControl
