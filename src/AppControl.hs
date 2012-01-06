@@ -276,8 +276,8 @@ appHandler handleRoutes appConf appGlobals = do
       addrs <- liftIO $ getAddrInfo (Just hints) (Just peerhost) Nothing
       let addr = head addrs
       let peerip = case addrAddress addr of
-                     SockAddrInet _ hostip -> hostip
-                     _ -> 0
+                     SockAddrInet _ hostip -> IPAddress hostip
+                     _ -> unknownIPAddress
 
       conn <- liftIO $ connectPostgreSQL $ dbConfig appConf
       minutestime <- liftIO getMinutesTime

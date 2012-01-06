@@ -377,8 +377,8 @@ signatoryLinkExample1 = SignatoryLink { signatorylinkid = SignatoryLinkID 0
                                       , maybesignatory = Nothing
                                       , maybesupervisor = Nothing
                                       , maybecompany = Nothing
-                                      , maybesigninfo = Just $ SignInfo (fromSeconds 0) 0
-                                      , maybeseeninfo = Just $ SignInfo (fromSeconds 0) 0
+                                      , maybesigninfo = Just $ SignInfo (fromSeconds 0) unknownIPAddress
+                                      , maybeseeninfo = Just $ SignInfo (fromSeconds 0) unknownIPAddress
                                       , maybereadinvite = Nothing
                                       , invitationdeliverystatus = Delivered
                                       , signatorysignatureinfo = Nothing
@@ -773,6 +773,9 @@ instance Arbitrary File where
                   , filename = b
                   , filestorage = FileStorageMemory c
                   }
+
+instance Arbitrary IPAddress where
+  arbitrary = fmap IPAddress arbitrary
 
 instance Arbitrary SignInfo where
   arbitrary = SignInfo <$> arbitrary <*> arbitrary
