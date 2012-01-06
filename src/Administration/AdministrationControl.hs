@@ -86,6 +86,7 @@ import Util.HasSomeCompanyInfo
 import CompanyAccounts.CompanyAccountsControl
 import CompanyAccounts.Model
 import Util.SignatoryLinkUtils
+import Stats.Control (getPeriodStatsForUser)
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m String
@@ -177,6 +178,7 @@ showAdminCompanyUsers cid = onlySalesOrAdmin $ adminCompanyUsersPage cid
 showAdminUsersForSales :: Kontrakcja m => m String
 showAdminUsersForSales = onlySalesOrAdmin $ adminUsersPageForSales
 
+{-
 jsonUsersList ::Kontrakcja m => m JSValue
 jsonUsersList = do
     params <- getListParamsNew
@@ -207,6 +209,38 @@ jsonUsersList = do
                     ,("link", jsFromString . show $ LinkUserAdmin $ Just $ userid user)
                     ]) (list users)),
              ("paging", pagingParamsJSON users)]
+-}
+
+jsonUsersList ::Kontrakcja m => m JSValue
+jsonUsersList = do
+    params <- getListParamsNew
+    allUsers <- getUsersAndStatsInv
+    let users = usersSortSearchPage params allUsers
+    return $ JSObject
+           $ toJSObject
+            [("list", JSArray $ map (\(user,mcompany,docstats,itype) ->
+                JSObject $ toJSObject
+                    [("fields", JSObject $ toJSObject
+                        [("id",       jsFromString . show $ userid user)
+                        ,("username", jsFromBString $ getFullName user)
+                        ,("email",    jsFromBString $ getEmail user)
+                        ,("company",  jsFromBString $ getCompanyName mcompany)
+                        ,("phone",    jsFromBString $ userphone $ userinfo user)
+                        ,("tos",      jsFromString $ maybe "-" show (userhasacceptedtermsofservice user))
+                        ,("signed_1m",     jsFromString . show $ (!!0) $ snd $ docstats!!0)
+                        ,("signed_2m",     jsFromString . show $ (!!0) $ snd $ docstats!!1)
+                        ,("signed_3m",     jsFromString . show $ (!!0) $ snd $ docstats!!2)
+                        ,("signed_6m",     jsFromString . show $ (!!0) $ snd $ docstats!!3)
+                        ,("signed_12m",    jsFromString . show $ (!!0) $ snd $ docstats!!4)
+                        ,("signed_docs",   jsFromString . show $ (!!0) $ snd $ docstats!!5)
+                        ,("uploaded_docs", jsFromString . show $ (!!3) $ snd $ docstats!!5)
+                        ,("viral_invites", JSBool $ not $ isAdminInvite itype)
+                        ,("admin_invites", JSBool $ isAdminInvite itype)
+                        ,("subaccounts", jsFromString "")
+                        ])
+                    ,("link", jsFromString . show $ LinkUserAdmin $ Just $ userid user)
+                    ]) (list users)),
+             ("paging", pagingParamsJSON users)]
 
 jsFromString :: String -> JSValue
 jsFromString = JSString . toJSString
@@ -218,12 +252,12 @@ isAdminInvite :: InviteType -> Bool
 isAdminInvite Viral = False
 isAdminInvite Admin = True
 
-usersSortSearchPage :: ListParams -> [(User, Maybe Company, DocStats, InviteType)]
-                       -> PagedList (User, Maybe Company, DocStats, InviteType)
+usersSortSearchPage :: ListParams -> [(User, Maybe Company, [(Int, [Int])], InviteType)]
+                       -> PagedList (User, Maybe Company, [(Int, [Int])], InviteType)
 usersSortSearchPage =
     listSortSearchPage usersSortFunc usersSearchFunc usersPageSize
 
-usersSortFunc :: SortingFunction (User, Maybe Company, DocStats, InviteType)
+usersSortFunc :: SortingFunction (User, Maybe Company, [(Int, [Int])], InviteType)
 usersSortFunc "username"       = viewComparing (getFullName . (\(u,_,_,_) -> u))
 usersSortFunc "usernameREV"    = viewComparingRev (getFullName . (\(u,_,_,_) -> u))
 usersSortFunc "email"          = viewComparing (getEmail . (\(u,_,_,_) -> u))
@@ -234,25 +268,25 @@ usersSortFunc "phone"          = viewComparing (userphone . userinfo . (\(u,_,_,
 usersSortFunc "phoneREV"       = viewComparingRev (userphone . userinfo . (\(u,_,_,_) -> u))
 usersSortFunc "tos"            = viewComparing ((maybe "-" show) . (userhasacceptedtermsofservice . (\(u,_,_,_) -> u)))
 usersSortFunc "tosREV"         = viewComparingRev ((maybe "-" show) . (userhasacceptedtermsofservice . (\(u,_,_,_) -> u)))
-usersSortFunc "signed_docs"    = viewComparing (signaturecount . (\(_,_,d,_) -> d))
-usersSortFunc "signed_docsREV" = viewComparingRev (signaturecount . (\(_,_,d,_) -> d))
-usersSortFunc "signed_1m"      = viewComparing (signaturecount1m . (\(_,_,d,_) -> d))
-usersSortFunc "signed_1mREV"   = viewComparingRev (signaturecount1m . (\(_,_,d,_) -> d))
-usersSortFunc "signed_2m"      = viewComparing (signaturecount2m . (\(_,_,d,_) -> d))
-usersSortFunc "signed_2mREV"   = viewComparingRev (signaturecount2m . (\(_,_,d,_) -> d))
-usersSortFunc "signed_3m"      = viewComparing (signaturecount3m . (\(_,_,d,_) -> d))
-usersSortFunc "signed_3mREV"   = viewComparingRev (signaturecount3m . (\(_,_,d,_) -> d))
-usersSortFunc "signed_6m"      = viewComparing (signaturecount6m . (\(_,_,d,_) -> d))
-usersSortFunc "signed_6mREV"   = viewComparingRev (signaturecount6m . (\(_,_,d,_) -> d))
-usersSortFunc "signed_12m"     = viewComparing (signaturecount12m . (\(_,_,d,_) -> d))
-usersSortFunc "signed_12mREV"  = viewComparingRev (signaturecount12m . (\(_,_,d,_) -> d))
-usersSortFunc "uploaded_docs"    = viewComparing (doccount . (\(_,_,d,_) -> d))
-usersSortFunc "uploaded_docsREV" = viewComparingRev (doccount . (\(_,_,d,_) -> d))
+-- usersSortFunc "signed_docs"    = viewComparing (signaturecount . (\(_,_,d,_) -> d))
+-- usersSortFunc "signed_docsREV" = viewComparingRev (signaturecount . (\(_,_,d,_) -> d))
+-- usersSortFunc "signed_1m"      = viewComparing (signaturecount1m . (\(_,_,d,_) -> d))
+-- usersSortFunc "signed_1mREV"   = viewComparingRev (signaturecount1m . (\(_,_,d,_) -> d))
+-- usersSortFunc "signed_2m"      = viewComparing (signaturecount2m . (\(_,_,d,_) -> d))
+-- usersSortFunc "signed_2mREV"   = viewComparingRev (signaturecount2m . (\(_,_,d,_) -> d))
+-- usersSortFunc "signed_3m"      = viewComparing (signaturecount3m . (\(_,_,d,_) -> d))
+-- usersSortFunc "signed_3mREV"   = viewComparingRev (signaturecount3m . (\(_,_,d,_) -> d))
+-- usersSortFunc "signed_6m"      = viewComparing (signaturecount6m . (\(_,_,d,_) -> d))
+-- usersSortFunc "signed_6mREV"   = viewComparingRev (signaturecount6m . (\(_,_,d,_) -> d))
+-- usersSortFunc "signed_12m"     = viewComparing (signaturecount12m . (\(_,_,d,_) -> d))
+-- usersSortFunc "signed_12mREV"  = viewComparingRev (signaturecount12m . (\(_,_,d,_) -> d))
+-- usersSortFunc "uploaded_docs"    = viewComparing (doccount . (\(_,_,d,_) -> d))
+-- usersSortFunc "uploaded_docsREV" = viewComparingRev (doccount . (\(_,_,d,_) -> d))
 usersSortFunc "viral_invites"    = viewComparing (isAdminInvite . (\(_,_,_,i) -> i))
 usersSortFunc "viral_invitesREV" = viewComparingRev (not . isAdminInvite . (\(_,_,_,i) -> i))
 usersSortFunc _                = const $ const EQ
 
-usersSearchFunc :: SearchingFunction (User, Maybe Company, DocStats, InviteType)
+usersSearchFunc :: SearchingFunction (User, Maybe Company, [(Int, [Int])], InviteType)
 usersSearchFunc s userdata = userMatch userdata s
   where
       match s' m = isInfixOf (map toUpper s') (map toUpper (BS.toString m))
@@ -275,9 +309,19 @@ getUsersAndStats = do
     users2 <- mapM queryStats users
     return users2
 
-getUsersAndStatsInv :: Kontrakcja m => m [(User, Maybe Company, DocStats, InviteType)]
+getUsersAndStatsNew  :: Kontrakcja m => m [(User, Maybe Company, [(Int, [Int])])]
+getUsersAndStatsNew  = do
+    users <- runDBQuery GetUsers
+    let queryStats user = do
+          mcompany <- getCompanyForUser user
+          docstats <- getPeriodStatsForUser $ userid user
+          return (user, mcompany, docstats)
+    users2 <- mapM queryStats users
+    return users2
+
+getUsersAndStatsInv :: Kontrakcja m => m [(User, Maybe Company, [(Int, [Int])], InviteType)]
 getUsersAndStatsInv = do
-    users <- getUsersAndStats
+    users <- getUsersAndStatsNew
     mapM addInviteType users
   where
     addInviteType = \(user,mcompany,docstats) -> do
