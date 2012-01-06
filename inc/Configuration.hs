@@ -23,7 +23,7 @@ readConfig logger appname args path = do
     Right app_conf -> do
       logger "Configuration file read and parsed."
       if not $ null args
-        then case parseArgs args of
+        then case parseArgs of
           Right f -> retVerified (f app_conf)
           Left errs -> do
             logger $ "Errors while parsing command line options:"
@@ -40,6 +40,6 @@ readConfig logger appname args path = do
   where
     retVerified c = confVerify c
       >>= either (error . (++) "Error while verifying configuration: ") (\_ -> return c)
-    parseArgs args = case getOpt Permute confOptions args of
+    parseArgs = case getOpt Permute confOptions args of
       (flags, _, []) -> Right $ \c -> foldr ($) c flags
       (_, _, errs)   -> Left $ map (filter (/= '\n')) errs
