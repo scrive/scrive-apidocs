@@ -9,9 +9,9 @@ window.Validation = Backbone.Model.extend({
     },
     concat: function(nextValidation) {
         if (this.get("next") == undefined)
-            this.set({"next": nextValidation})
+            this.set({"next": nextValidation});
         else
-            this.get("next").concat(nextValidation)
+            this.get("next").concat(nextValidation);
         return this;
     },
     validateData: function(text, elem) {
