@@ -5,7 +5,6 @@ module DocControlTest(
 
 import qualified Data.ByteString.UTF8 as BS
 import Control.Applicative
-import Control.Monad.State
 import Data.Maybe
 import Happstack.Server
 import Test.HUnit (Assertion)
