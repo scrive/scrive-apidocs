@@ -31,8 +31,6 @@ import Control.Applicative
 import Control.Monad.State
 import Control.Monad.Reader
 import qualified Data.ByteString as BS
-import Data.Maybe
-import Data.Ord
 import Data.Typeable
 import Happstack.Data.IxSet
 import Happstack.State

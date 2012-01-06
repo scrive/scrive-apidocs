@@ -6,7 +6,6 @@ module Configuration (
 import Control.Monad
 import System.Console.GetOpt
 import System.Exit
-import System.IO
 import Text.Show.Pretty
 import qualified Control.Exception as E
 
