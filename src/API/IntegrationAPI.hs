@@ -366,10 +366,10 @@ getDocuments = do
                          , maybe True ((fromSafeEnum $ documentstatus d) >=) mFromState
                          , maybe True ((fromSafeEnum $ documentstatus d) <=) mToState]
     return $ toJSObject $ [("documents"  , JSArray $ api_docs)] ++
-                          [] <| isNothing mFromDate  |> [("from_date",  showJSON $ showMinutesTimeForAPI (fromJust mFromDate ))] ++
-                          [] <| isNothing mToDate    |> [("to_date",    showJSON $ showMinutesTimeForAPI (fromJust mToDate   ))] ++
-                          [] <| isNothing mFromState |> [("from_state", showJSON $                       (fromJust mFromState))] ++
-                          [] <| isNothing mToState   |> [("to_state",   showJSON $                       (fromJust mToState  ))]
+                          ([] <| isNothing mFromDate  |> [("from_date",  showJSON $ showMinutesTimeForAPI (fromJust mFromDate ))]) ++
+                          ([] <| isNothing mToDate    |> [("to_date",    showJSON $ showMinutesTimeForAPI (fromJust mToDate   ))]) ++
+                          ([] <| isNothing mFromState |> [("from_state", showJSON $                       (fromJust mFromState))]) ++
+                          ([] <| isNothing mToState   |> [("to_state",   showJSON $                       (fromJust mToState  ))])
 
 getDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocument = do
