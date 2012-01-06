@@ -7,12 +7,12 @@ module Stats.Model
          GetDocStatEvents(..),
          GetDocStatEventsByCompanyID(..),
          GetDocStatEventsByUserID(..),
-         
+
          UserStatEvent(..),
          AddUserStatEvent(..),
          GetUserStatEvents(..),
          UserStatQuantity(..),
-         
+
          SignStatQuantity(..),
          SignStatEvent(..),
          AddSignStatEvent(..),
@@ -120,7 +120,7 @@ instance DBQuery GetDocStatEventsByCompanyID [DocStatEvent] where
 
 
 {-------- Doc Stat Updates --}
-    
+
 data AddDocStatEvent = AddDocStatEvent DocStatEvent
 instance DBUpdate AddDocStatEvent Bool where
   dbUpdate (AddDocStatEvent event) = wrapDB $ \conn -> do
@@ -145,7 +145,7 @@ instance DBUpdate AddDocStatEvent Bool where
                     ,toSql $ seServiceID event
                     ,toSql $ seCompanyID event
                     ,toSql $ show $ seDocumentType event
-                    
+
                     ,toSql $ unDocumentID $ seDocumentID event
                     ,toSql $ seQuantity event]
     oneRowAffectedGuard r
@@ -167,6 +167,7 @@ data UserStatQuantity = UserSignTOS  -- When user signs TOS
                         | UserRefuseSaveAfterSign -- when user refuses the save option after signing
                         | UserPhoneAfterTOS -- when a user requests a phone call after accepting the TOS
                         | UserCreateCompany -- when a user creates a company
+                        | UserLogin -- when a user logs in
                       deriving (Eq, Ord, Show)
 $(enumDeriveConvertible ''UserStatQuantity)
 
@@ -228,13 +229,13 @@ instance DBUpdate AddUserStatEvent Bool where
                     ,toSql $ usAmount event
                     ,toSql $ usServiceID event
                     ,toSql $ usCompanyID event
-                    
+
                     ,toSql $ usUserID event
                     ,toSql $ usQuantity event]
     oneRowAffectedGuard r
 
 {------ Signatory Stats ------}
-    
+
 data SignStatQuantity = SignStatInvite     -- Invitation Sent
                       | SignStatReceive    -- Invitation Received
                       | SignStatOpen       -- Invitation Opened
@@ -245,9 +246,9 @@ data SignStatQuantity = SignStatInvite     -- Invitation Sent
                       | SignStatPurge      -- Signatory really deletes
                       deriving (Eq, Ord, Show)
 $(enumDeriveConvertible ''SignStatQuantity)
-                        
+
 data SignStatEvent = SignStatEvent { ssDocumentID      :: DocumentID
-                                   , ssSignatoryLinkID :: SignatoryLinkID                                   
+                                   , ssSignatoryLinkID :: SignatoryLinkID
                                    , ssTime            :: MinutesTime
                                    , ssQuantity        :: SignStatQuantity
                                    , ssServiceID       :: Maybe ServiceID
@@ -309,7 +310,7 @@ instance DBUpdate AddSignStatEvent Bool where
                     ,toSql $ ssServiceID       event
                     ,toSql $ ssCompanyID       event
                     ,toSql $ ssDocumentProcess event
-                    
+
                     ,toSql $ ssDocumentID      event
                     ,toSql $ ssQuantity        event
                     ,toSql $ ssSignatoryLinkID event]

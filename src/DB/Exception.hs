@@ -14,6 +14,7 @@ import qualified Control.Exception as E
 data DBException 
   = SQLError 
     { originalQuery :: String
+    , queryParams :: [HDBC.SqlValue]
     , sqlError :: HDBC.SqlError
     }
   | NoObject
@@ -21,6 +22,7 @@ data DBException
     }
   | TooManyObjects 
     { originalQuery :: String
+    , queryParams :: [HDBC.SqlValue]
     , tmoExpected :: Integer
     , tmoGiven :: Integer
     }
@@ -43,10 +45,10 @@ data DBException
 instance E.Exception DBException
 
 instance Show DBException where
-  show SQLError{sqlError, originalQuery} = "SQL error: " ++ HDBC.seErrorMsg sqlError ++ " in " ++ originalQuery
+  show SQLError{sqlError, originalQuery, queryParams} = "SQL error: " ++ HDBC.seErrorMsg sqlError ++ " in " ++ originalQuery ++ show queryParams
   show NoObject{originalQuery} = "Query result error: No object returned when there had to be one in " ++ originalQuery
   show RowLengthMismatch{originalQuery, expected,delivered} = "Expected row length of " ++ show expected ++ " got " ++ show delivered ++ " in " ++ originalQuery
   show CannotConvertSqlValue{originalQuery,position,convertError} = "Cannot convert param " ++ show position ++ " because of " ++ show convertError ++ " in " ++ originalQuery
   show CannotParseRow{originalQuery, message} = message ++ " in " ++ originalQuery
-  show TooManyObjects{originalQuery, tmoExpected, tmoGiven} =
-    "Query result error: Too many objects returned/affected by query (" ++ show tmoExpected ++ " expected, " ++ show tmoGiven ++ " given) in " ++ originalQuery
+  show TooManyObjects{originalQuery, queryParams, tmoExpected, tmoGiven} =
+    "Query result error: Too many objects returned/affected by query (" ++ show tmoExpected ++ " expected, " ++ show tmoGiven ++ " given) in " ++ originalQuery ++ show queryParams

@@ -230,16 +230,43 @@ adminUsersForSales=
 
             Confirmation.popup({
               onAccept : function() {
-                            new Submit({
-                                method: "POST",
-                                add : "true",
-                                url: "/createuser",
-                                fstname : fstname.val(),
-                                sndname : sndname.val(),
-                                email : email.val(),
-                                region : region.val(),
-                                custommessage : header.val(),
-                                }).send();
+                            var callback = function(t,e,v) {
+                                e.css("background", "red"); 
+                                jQuery(document.createElement('div'))
+                                    .attr("name", "validate-message")
+                                    .css({"font-size": 8, "font-weight": "bold", "color": "red"})
+                                    .append(v.message())
+                                    .appendTo(e.parent());
+                            };
+
+                            //reset red background
+                            fstname.css("background", "white");
+                            sndname.css("background", "white");
+                            email.css("background", "white");
+                            region.css("background", "white");
+
+                            //delete messages
+                            jQuery('[name=validate-message]').remove();
+
+                            var vresult = [
+                                fstname.validate(new NameValidation({callback: callback, message: "Wrong first name format!"})),
+                                sndname.validate(new NameValidation({callback: callback, message: "Wrong second name format!"})),
+                                email.validate((new NotEmptyValidation({callback: callback, message: "Email cannot be empty!"})).concat(new EmailValidation({callback: callback}))),
+                                region.validate(new NotEmptyValidation({callback: callback, message:"Region cannot be empty!"}))
+                                ];
+
+                            if (vresult.every(function(a) {return a;})) {
+                                new Submit({
+                                    method: "POST",
+                                    add : "true",
+                                    url: "/createuser",
+                                    fstname : fstname.val(),
+                                    sndname : sndname.val(),
+                                    email : email.val(),
+                                    region : region.val(),
+                                    custommessage : header.val()
+                                    }).send();
+                            }
                          },
               title : "Create user",
               acceptButtonText : "OK",

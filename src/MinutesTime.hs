@@ -21,10 +21,10 @@ module MinutesTime
        , toUTCTime
        , showAsMonth
        , showAsDate
-       , formatMinutesTimeISO
        , formatMinutesTimeUTC
-       , parseMinutesTimeISO
+       , formatMinutesTimeISO
        , parseMinutesTimeUTC
+       , parseMinutesTimeISO
        , monthsBefore
        , daysBefore
        ) where
@@ -32,7 +32,7 @@ module MinutesTime
 import Control.Monad.IO.Class
 import Data.Char
 import Data.Convertible
-import Data.Data 
+import Data.Data
 import Data.Time
 import Data.Time.Clock.POSIX
 import Database.HDBC
@@ -110,7 +110,7 @@ parseMinutesTime format string = do
     time <- parseTime defaultTimeLocale format string
     return $ fromSeconds $ floor $ utcTimeToPOSIXSeconds time
 
-parseDateOnly :: String -> Maybe MinutesTime 
+parseDateOnly :: String -> Maybe MinutesTime
 parseDateOnly = parseMinutesTime "%Y-%m-%d"
 
 {- |
@@ -186,7 +186,7 @@ getMinutesTime = liftIO $ (return . fromClockTime) =<< getClockTime
 -- Avoid this function. Soon we will need virtual time, not time taken
 -- globally. Simulation and unit testing requires time to be specified
 -- explicitely.
--- 
+--
 -- FIXME: rename to 'getMinutesTimeDB'
 getMinuteTimeDB :: AnyEv MinutesTime
 getMinuteTimeDB = (return . fromClockTime) =<< getEventClockTime
@@ -254,11 +254,11 @@ minutesAfter i (MinutesTime s) = MinutesTime (s + i*60)
 minutesBefore :: Int -> MinutesTime -> MinutesTime
 minutesBefore i (MinutesTime s) = MinutesTime (s - i * 60)
 
-monthsBefore :: Int -> MinutesTime -> MinutesTime
-monthsBefore i mt = daysBefore (i * 31) mt
-
 daysBefore :: Int -> MinutesTime -> MinutesTime
 daysBefore i mt = minutesBefore (i * 60 * 24) mt
+
+monthsBefore :: Int -> MinutesTime -> MinutesTime
+monthsBefore i mt = daysBefore (i * 31) mt
 
 -- | Convert a date representation to integer. For date like
 -- "2010-06-12" result will be 20100612. Useful in IntMap for

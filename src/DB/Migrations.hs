@@ -27,6 +27,7 @@ migrationsList = [
   , addServiceAndCompanyToStats
   , removeSystemServer
   , addUserCustomFooter
+  , makeUserStatsRepeatableByChangingPK
 #ifdef DOCUMENTS_IN_POSTGRES
   , addNameColumnInSignatoryAttachments
 #endif
