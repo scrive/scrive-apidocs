@@ -32,6 +32,8 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 type="text/javascript"></script>
                <script src="$prefix$/js/flashmessages.js"
                 type="text/javascript"></script>
+               <script src="$prefix$/js/validation.js"
+                type="text/javascript"></script>
                 <script src="/js/jquery.tweet.js" type="text/javascript"></script>
                 <script src="/js/main.js" type="text/javascript"></script>
                 $if(production)$
