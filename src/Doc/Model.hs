@@ -178,12 +178,14 @@ runInsertStatementWhereReturning tableName fields xwhere values returnFields = d
   where
     doit conn = do
       st <- prepare conn statement
-      r <- execute st (concatMap value fields ++ values)
+      r <- execute st params
       return (r, st)
     handle e = E.throwIO $ SQLError { DB.Classes.originalQuery = statement
                                     , sqlError = e
+                                    , queryParams = params
                                     }
     value (SqlField _ _ v) = [v]
+    params = concatMap value fields ++ values
     statement = mkInsertStatementWhereReturning tableName fields xwhere values returnFields
 
 -- here we can add encoding and better error reporting in case conversion fails
@@ -203,12 +205,14 @@ mkUpdateStatement tableName fields =
 
 runUpdateStatement :: String -> [SqlField] -> String -> [SqlValue] -> DB Integer
 runUpdateStatement tableName fields whereClause whereValues = do
-  wrapDB $ \conn -> (run conn statement (concatMap value fields ++ whereValues)) `E.catch`
+  wrapDB $ \conn -> (run conn statement params) `E.catch`
         (\e -> liftIO $ E.throwIO $ SQLError { DB.Classes.originalQuery = statement
                                              , sqlError = e
+                                             , queryParams = params
                                              })
   where
     value (SqlField _ _ v) = [v]
+    params = concatMap value fields ++ whereValues
     statement = mkUpdateStatement tableName fields ++ whereClause
 
 
@@ -226,6 +230,7 @@ getOneDocumentAffected text r did =
       -- here we really want to abort transaction, as we have affected more rows that we wanted
       -- something is seriously wrong!
       liftIO $ E.throwIO TooManyObjects { DB.Classes.originalQuery = ""
+                                        , queryParams = []
                                         , tmoExpected = 1
                                         , tmoGiven = fromIntegral r
                                         }
@@ -1263,6 +1268,7 @@ selectDocuments select values = wrapDB $ \conn -> do
   where
     handle :: String -> SqlError -> IO a
     handle statement e = E.throwIO $ SQLError { DB.Classes.originalQuery = statement
+                                              , queryParams = values
                                               , sqlError = e
                                               }
     joinDocuments::[Document] -> [(DocumentID,SignatoryLink)] -> [Document]
