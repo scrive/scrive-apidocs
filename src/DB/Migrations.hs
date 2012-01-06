@@ -30,6 +30,8 @@ migrationsList = [
   , makeUserStatsRepeatableByChangingPK
 #ifdef DOCUMENTS_IN_POSTGRES
   , addNameColumnInSignatoryAttachments
+  , changeIPAddressTypeInDocuments
+  , changeIPAddressTypeInSignatoryLinks
 #endif
   ]
 

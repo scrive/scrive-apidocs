@@ -8,7 +8,7 @@ import DB.Model
 tableDocuments :: Table
 tableDocuments = Table {
     tblName = "documents"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -61,7 +61,7 @@ tableDocuments = Table {
           ++ ", days_to_sign INTEGER NULL"
           ++ ", timeout_time TIMESTAMPTZ NULL"
           ++ ", invite_time TIMESTAMPTZ NULL"
-          ++ ", invite_ip INTEGER NULL"
+          ++ ", invite_ip BIGINT NULL"
           ++ ", log TEXT NOT NULL"
           ++ ", invite_text TEXT NOT NULL"
           ++ ", trust_weaver_reference TEXT NULL"
@@ -168,7 +168,7 @@ tableSignatoryAttachments = Table {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = Table {
     tblName = "signatory_links"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -205,9 +205,9 @@ tableSignatoryLinks = Table {
           ++ ", sign_order INTEGER NOT NULL DEFAULT 1"
           ++ ", token BIGINT NOT NULL"
           ++ ", sign_time TIMESTAMPTZ NULL DEFAULT NULL"
-          ++ ", sign_ip INTEGER NULL DEFAULT NULL"
+          ++ ", sign_ip BIGINT NULL DEFAULT NULL"
           ++ ", seen_time TIMESTAMPTZ NULL DEFAULT NULL"
-          ++ ", seen_ip INTEGER NULL DEFAULT NULL"
+          ++ ", seen_ip BIGINT NULL DEFAULT NULL"
           ++ ", read_invitation TIMESTAMPTZ NULL DEFAULT NULL"
           ++ ", invitation_delivery_status SMALLINT NOT NULL DEFAULT 3"     -- this is Unknown
           ++ ", signinfo_text TEXT NULL DEFAULT NULL"
