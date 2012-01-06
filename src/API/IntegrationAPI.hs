@@ -329,12 +329,8 @@ setCompanyInfoFromTMP uTMP company = do
     Just company' <- runDBQuery $ GetCompany $ companyid company
     return company'
 
-beginningOfTime :: MinutesTime
-beginningOfTime = fromSeconds 0
-
 getDocuments :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocuments = do
-    Context{ctxtime} <- getContext
     sid <- serviceid <$> service <$> ask
     mcompany_id <- fmap ExternalCompanyID <$> fromJSONField "company_id"
     when (isNothing mcompany_id) $ throwApiError API_ERROR_MISSING_VALUE "No company id provided"
@@ -344,19 +340,19 @@ getDocuments = do
                     v <- fromJSONField "value"
                     when (isNothing n || isNothing v) $ throwApiError API_ERROR_MISSING_VALUE "Missing tag name or value"
                     return $ Just $ DocumentTag (fromJust n) (fromJust v)
-    mfromDate  <- fromJSONField "from_date"
-    mtoDate    <- fromJSONField "to_date"
-    stateFrom :: Int  <- fromMaybe 0   <$> fromJSONField "from_state"
-    stateTo   :: Int  <- fromMaybe 100 <$> fromJSONField "to_state"
-    fromDate <- case mfromDate of
-      Nothing -> return beginningOfTime
+    mFromDateString <- fromJSONField "from_date"
+    mToDateString   <- fromJSONField "to_date"
+    mFromState :: Maybe Int <- fromJSONField "from_state"
+    mToState   :: Maybe Int <- fromJSONField "to_state"
+    mFromDate <- case mFromDateString of
+      Nothing -> return Nothing
       Just s  -> case parseMinutesTimeISO s of
-        Just t  -> return t
+        Just t  -> return $ Just t
         Nothing -> throwApiError API_ERROR_PARSING $ "from_date unrecognized format: " ++ show s
-    toDate <- case mtoDate of
-      Nothing -> return ctxtime
+    mToDate <- case mToDateString of
+      Nothing -> return Nothing
       Just s  -> case parseMinutesTimeISO s of
-        Just t  -> return t
+        Just t  -> return $ Just t
         Nothing -> throwApiError API_ERROR_PARSING $ "to_date unrecognized format: " ++ show s
     linkeddocuments <- doc_query $ GetDocumentsByCompanyAndTags (Just sid) (companyid company) tags
     api_docs <- sequence [api_document_read False d  
@@ -364,15 +360,16 @@ getDocuments = do
                          , isAuthoredByCompany (companyid company) d
                          , not $ isDeletedFor $ getAuthorSigLink d
                          , not $ isAttachment d
-                         , documentmtime d >= fromDate
-                         , documentmtime d <= toDate
-                         , (fromSafeEnum $ documentstatus d) >= stateFrom
-                         , (fromSafeEnum $ documentstatus d) <= stateTo]
-    return $ toJSObject [("documents"  , JSArray $ api_docs)
-                        ,("from_date"  , showJSON $ showMinutesTimeForAPI fromDate)
-                        ,("to_date"    , showJSON $ showMinutesTimeForAPI toDate)
-                        ,("from_state" , showJSON stateFrom)
-                        ,("to_state"   , showJSON stateTo)]
+                         -- we avoid filtering when the filter is not defined
+                         , maybe True (documentmtime d >=) mFromDate
+                         , maybe True (documentmtime d <=) mToDate
+                         , maybe True ((fromSafeEnum $ documentstatus d) >=) mFromState
+                         , maybe True ((fromSafeEnum $ documentstatus d) <=) mToState]
+    return $ toJSObject $ [("documents"  , JSArray $ api_docs)] ++
+                          ([] <| isNothing mFromDate  |> [("from_date",  showJSON $ showMinutesTimeForAPI (fromJust mFromDate ))]) ++
+                          ([] <| isNothing mToDate    |> [("to_date",    showJSON $ showMinutesTimeForAPI (fromJust mToDate   ))]) ++
+                          ([] <| isNothing mFromState |> [("from_state", showJSON $                       (fromJust mFromState))]) ++
+                          ([] <| isNothing mToState   |> [("to_state",   showJSON $                       (fromJust mToState  ))])
 
 getDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocument = do
