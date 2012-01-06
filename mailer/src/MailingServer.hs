@@ -2,7 +2,6 @@
 module MailingServer where
 
 import Control.Concurrent
-import Control.Monad
 import Database.HDBC.PostgreSQL
 import System.Environment
 import Happstack.Server
