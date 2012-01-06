@@ -340,12 +340,36 @@ getDocuments = do
                     v <- fromJSONField "value"
                     when (isNothing n || isNothing v) $ throwApiError API_ERROR_MISSING_VALUE "Missing tag name or value"
                     return $ Just $ DocumentTag (fromJust n) (fromJust v)
+    mFromDateString <- fromJSONField "from_date"
+    mToDateString   <- fromJSONField "to_date"
+    mFromState :: Maybe Int <- fromJSONField "from_state"
+    mToState   :: Maybe Int <- fromJSONField "to_state"
+    mFromDate <- case mFromDateString of
+      Nothing -> return Nothing
+      Just s  -> case parseMinutesTimeISO s of
+        Just t  -> return $ Just t
+        Nothing -> throwApiError API_ERROR_PARSING $ "from_date unrecognized format: " ++ show s
+    mToDate <- case mToDateString of
+      Nothing -> return Nothing
+      Just s  -> case parseMinutesTimeISO s of
+        Just t  -> return $ Just t
+        Nothing -> throwApiError API_ERROR_PARSING $ "to_date unrecognized format: " ++ show s
     linkeddocuments <- doc_query $ GetDocumentsByCompanyAndTags (Just sid) (companyid company) tags
-    let linkeddocuments1 = filter (isAuthoredByCompany (companyid company)) linkeddocuments
-    let linkeddocuments2 = filter (not . isDeletedFor . getAuthorSigLink) linkeddocuments1
-    let linkeddocuments3 = filter (not . isAttachment) linkeddocuments2
-    api_docs <- mapM (api_document_read False) linkeddocuments3
-    return $ toJSObject [("documents",JSArray $ api_docs)]
+    api_docs <- sequence [api_document_read False d  
+                         | d <- linkeddocuments
+                         , isAuthoredByCompany (companyid company) d
+                         , not $ isDeletedFor $ getAuthorSigLink d
+                         , not $ isAttachment d
+                         -- we avoid filtering when the filter is not defined
+                         , maybe True (documentmtime d >=) mFromDate
+                         , maybe True (documentmtime d <=) mToDate
+                         , maybe True ((fromSafeEnum $ documentstatus d) >=) mFromState
+                         , maybe True ((fromSafeEnum $ documentstatus d) <=) mToState]
+    return $ toJSObject $ [("documents"  , JSArray $ api_docs)] ++
+                          ([] <| isNothing mFromDate  |> [("from_date",  showJSON $ showMinutesTimeForAPI (fromJust mFromDate ))]) ++
+                          ([] <| isNothing mToDate    |> [("to_date",    showJSON $ showMinutesTimeForAPI (fromJust mToDate   ))]) ++
+                          ([] <| isNothing mFromState |> [("from_state", showJSON $                       (fromJust mFromState))]) ++
+                          ([] <| isNothing mToState   |> [("to_state",   showJSON $                       (fromJust mToState  ))])
 
 getDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocument = do
