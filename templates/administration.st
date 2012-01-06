@@ -223,12 +223,12 @@ adminUsersForSales=
 
             Confirmation.popup({
               onAccept : function() {
-                            var callback = function(t,e,m) {
+                            var callback = function(t,e,v) {
                                 e.css("background", "red"); 
                                 jQuery(document.createElement('div'))
                                     .attr("name", "validate-message")
                                     .css({"font-size": 8, "font-weight": "bold", "color": "red"})
-                                    .append(m)
+                                    .append(v.message())
                                     .appendTo(e.parent());
                             };
 
@@ -242,10 +242,10 @@ adminUsersForSales=
                             jQuery('[name=validate-message]').remove();
 
                             var vresult = [
-                                fstname.validate(new NameValidation(callback, "Wrong first name format!")),
-                                sndname.validate(new NameValidation(callback, "Wrong second name format!")),
-                                email.validate((new NotEmptyValidation(callback, "Email cannot be empty!")).concat(new EmailValidation(callback))),
-                                region.validate(new NotEmptyValidation(callback, "Region cannot be empty!")),
+                                fstname.validate(new NameValidation({callback: callback, message: "Wrong first name format!"})),
+                                sndname.validate(new NameValidation({callback: callback, message: "Wrong second name format!"})),
+                                email.validate((new NotEmptyValidation({callback: callback, message: "Email cannot be empty!"})).concat(new EmailValidation({callback: callback}))),
+                                region.validate(new NotEmptyValidation({callback: callback, message:"Region cannot be empty!"}))
                                 ];
 
                             if (vresult.every(function(a) {return a;})) {
@@ -257,7 +257,7 @@ adminUsersForSales=
                                     sndname : sndname.val(),
                                     email : email.val(),
                                     region : region.val(),
-                                    custommessage : header.val(),
+                                    custommessage : header.val()
                                     }).send();
                             }
                          },
