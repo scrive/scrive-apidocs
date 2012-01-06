@@ -32,5 +32,5 @@ hpc:
 reset-test-db:
 	-PGUSER=$(DBUSER) dropdb $(DBNAME)
 	PGUSER=$(DBUSER) createdb $(DBNAME)
-	psql $(DBNAME) $(DBUSER) -c "ALTER DATABASE kontrakcja SET TIMEZONE = 'UTC';"
+	psql $(DBNAME) $(DBUSER) -c "ALTER DATABASE $(DBNAME) SET TIMEZONE = 'UTC';"
 

@@ -40,6 +40,7 @@ oneRowAffectedGuard 1 = return True
 oneRowAffectedGuard n =
   E.throw TooManyObjects 
      { DB.originalQuery = ""
+     , queryParams = []
      , tmoExpected = 1
      , tmoGiven = n
      }
@@ -50,6 +51,7 @@ oneObjectReturnedGuard [x] = return $ Just x
 oneObjectReturnedGuard xs  =
   E.throw TooManyObjects 
      { DB.originalQuery = ""
+     , queryParams = []
      , tmoExpected = 1
      , tmoGiven = fromIntegral $ length xs
      }
