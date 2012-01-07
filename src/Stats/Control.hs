@@ -22,7 +22,7 @@ module Stats.Control
          handleUserStatsCSV,  
          getUsageStatsForUser,
          getUsageStatsForCompany,
-         getPeriodStatsForUser
+         getDocStatsForUser
        )
 
        where
@@ -212,17 +212,29 @@ userEventToDocStatTuple (UserStatEvent {usTime, usQuantity, usAmount}) = case us
   UserSignTOS -> Just (asInt usTime, [0, 0, 0, usAmount])
   _           -> Nothing
 
-calculatePeriodStats :: (Int, Int, Int, Int, Int) -> [(Int, [Int])] -> [(Int, [Int])]
-calculatePeriodStats (m1, m2, m3, m6, m12) events = 
-  let sortedEvents = reverse $ sortWith fst events
+calculateDocStats :: MinutesTime -> [(Int, [Int])] -> DocStats
+calculateDocStats ctxtime events = 
+  let m1  = asInt $ monthsBefore 1 ctxtime
+      m2  = asInt $ monthsBefore 3 ctxtime
+      m3  = asInt $ monthsBefore 3 ctxtime
+      m6  = asInt $ monthsBefore 6 ctxtime
+      m12 = asInt $ monthsBefore 12 ctxtime
+      sortedEvents = reverse $ sortWith fst events
       fstSumStats = (\prev (a1,a2) -> let a3 = prev++a1 
-                                      in (sumStats $ if null a3 then [(0,[0,0,0,0])] else a3, a2))
+                                      in (sumStats $ if null a3 then [(0,[0,0])] else a3, a2))
       (s1, r1) = fstSumStats [] $ span (\(m, _) -> m >= m1) sortedEvents 
       (s2, r2) = fstSumStats [s1] $ span (\(m, _) -> m >= m2) r1 
       (s3, r3) = fstSumStats [s2] $ span (\(m, _) -> m >= m3) r2
       (s6, r6) = fstSumStats [s3] $ span (\(m, _) -> m >= m6) r3
       (s12, r12) = fstSumStats [s6] $ span (\(m, _) -> m >= m12) r6  
-  in [s1, s2, s3, s6, s12, sumStats $ s12:r12]
+      sAll = sumStats $ s12:r12
+  in DocStats ((!!1) . snd $ sAll) -- doccount
+              ((!!0) . snd $ sAll) -- signaturecount
+              ((!!0) . snd $ s1)   -- signaturecount1m
+              ((!!0) . snd $ s2)   -- signaturecount2m
+              ((!!0) . snd $ s3)   -- signaturecount3m
+              ((!!0) . snd $ s6)   -- signaturecount6m
+              ((!!0) . snd $ s12)  -- signaturecount12m
 
 calculateStatsByDay :: [(Int, [Int])] -> [(Int, [Int])]
 calculateStatsByDay events =
@@ -599,25 +611,20 @@ handleUserStatsCSV = onlySalesOrAdmin $ do
      $ toResponse (userStatisticsCSV stats)
 
 -- For User Admin tab in adminsonly
-getPeriodStatsForUser :: Kontrakcja m => UserID -> m ([(Int, [Int])])
-getPeriodStatsForUser uid = do
+getDocStatsForUser :: Kontrakcja m => UserID -> m DocStats
+getDocStatsForUser uid = do
   Context{ctxtime} <- getContext
-  statEvents <- tuplesFromPeriodStatsForUser <$> runDBQuery (GetDocStatEventsByUserID uid)
-  let m1  = asInt $ monthsBefore 1 ctxtime
-      m2  = asInt $ monthsBefore 3 ctxtime
-      m3  = asInt $ monthsBefore 3 ctxtime
-      m6  = asInt $ monthsBefore 6 ctxtime
-      m12 = asInt $ monthsBefore 12 ctxtime
-  return $ calculatePeriodStats (m1, m2, m3, m6, m12) statEvents
+  statEvents <- tuplesFromDocStatsForUser <$> runDBQuery (GetDocStatEventsByUserID uid)
+  return $ calculateDocStats ctxtime statEvents
 
-tuplesFromPeriodStatsForUser :: [DocStatEvent] -> [(Int, [Int])]
-tuplesFromPeriodStatsForUser = catMaybes . map toTuple
+tuplesFromDocStatsForUser :: [DocStatEvent] -> [(Int, [Int])]
+tuplesFromDocStatsForUser = catMaybes . map toTuple
   where toTuple (DocStatEvent {seTime, seQuantity, seAmount}) = case seQuantity of
-          DocStatEmailSignatures -> Just (asInt seTime, [seAmount, 0, 0, 0])
-          DocStatElegSignatures  -> Just (asInt seTime, [seAmount, 0, 0, 0])
-          DocStatClose           -> Just (asInt seTime, [0, seAmount, 0, 0])
-          DocStatSend            -> Just (asInt seTime, [0, 0, seAmount, 0])
-          DocStatCreate          -> Just (asInt seTime, [0, 0, 0, seAmount])
+          DocStatEmailSignatures -> Just (asInt seTime, [seAmount, 0])
+          DocStatElegSignatures  -> Just (asInt seTime, [seAmount, 0])
+--           DocStatClose           -> Just (asInt seTime, [0, seAmount, 0, 0])
+--           DocStatSend            -> Just (asInt seTime, [0, 0, seAmount, 0])
+          DocStatCreate          -> Just (asInt seTime, [0, seAmount])
           _                      -> Nothing
 
 -- For Usage Stats tab in Account
