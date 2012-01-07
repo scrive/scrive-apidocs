@@ -56,11 +56,12 @@ createSendGridSender config = createExternalSender "curl" createargs
         "--mail-rcpt"
       , "<" ++ addrEmail addr ++ ">"
       ]
-    createargs Mail{mailTo} = [
+    createargs Mail{mailFrom, mailTo} = [
         "--user"
       , sendgridUser config ++ ":" ++ sendgridPassword config
       , sendgridSMTP config
-      , "-k", "--ssl"
+      , "-k", "--ssl", "--mail-from"
+      , "<" ++ addrEmail mailFrom ++ ">"
       ] ++ concatMap mailRcpt mailTo
 
 createSendmailSender :: Sender
