@@ -67,6 +67,7 @@ data DocStatEvent = DocStatEvent { seUserID     :: UserID          -- ^ User who
                                  }
 
 {-------- Doc Stat Queries ---}
+                        | UserLogin -- when a user logs in
 
 selectDocStatEventsSQL :: String
 selectDocStatEventsSQL = "SELECT "

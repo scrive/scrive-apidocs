@@ -3,7 +3,6 @@ module Context (
     ) where
 
 import Control.Concurrent.MVar
-import Data.Word
 import Database.HDBC.PostgreSQL
 import File.FileID
 import Doc.JpegPages
@@ -20,6 +19,7 @@ import FlashMessage
 import API.Service.Model
 import Company.Model
 import DB.Types
+import Misc (IPAddress)
 
 data Context = Context
     { ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
@@ -27,7 +27,7 @@ data Context = Context
     , ctxflashmessages       :: [FlashMessage] -- ^ The flash messages for the NEXT request.
     , ctxtime                :: MinutesTime -- ^ The time of the request.
     , ctxnormalizeddocuments :: MVar (Map.Map FileID JpegPages) -- ^
-    , ctxipnumber            :: Word32 -- ^ The ip number of the client.
+    , ctxipnumber            :: IPAddress -- ^ The ip number of the client.
     , ctxdbconn              :: Connection -- ^ PostgreSQL database connection
     , ctxdocstore            :: FilePath -- ^ The temporary document directory.
     , ctxs3action            :: AWS.S3Action -- ^

@@ -35,14 +35,17 @@ import qualified Archive.Control as ArchiveControl
 import qualified ELegitimation.BankID as BankID
 import qualified Payments.PaymentsControl as Payments
 import qualified User.UserControl as UserControl
-import qualified ScriveByMail.Control as ScriveByMail
+--import qualified ScriveByMail.Control as ScriveByMail
+import qualified API.MailAPI as MailAPI
 import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Doc.API
+import Stats.Control
 
 import Control.Monad.Error
 import Data.Functor
 import Data.List
+import Data.Maybe
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Happstack.State (query, update)
 
@@ -88,7 +91,7 @@ staticRoutes = choice
      , dir "sitemap"         $ hGetAllowHttp $ handleSitemapPage
 
      -- this is SMTP to HTTP gateway
-     , dir "mailapi" $ hPostNoXToken $ toK0 $ ScriveByMail.handleScriveByMail
+     , dir "mailapi" $ hPostNoXToken $ toK0 $ MailAPI.handleMailAPI
 
      -- Only download function | unified for author and signatories
      , dir "download"                     $ hGet  $ toK3 $ DocControl.handleDownloadFile
@@ -241,7 +244,7 @@ staticRoutes = choice
 
      , dir "adminonly" $ dir "services" $ hGet $ toK0 $ Administration.showServicesPage
      , dir "adminonly" $ dir "services" $ param "create" $ hPost $ toK0 $ Administration.handleCreateService
-     
+
      , dir "adminonly" $ dir "companies" $ hGet $ toK0 $ Administration.jsonCompanies
 
      , dir "adminonly" $ dir "reseal" $ hPost $ toK1 $ Administration.resealFile
@@ -250,10 +253,10 @@ staticRoutes = choice
      , dir "adminonly" $ dir "docproblems" $ hGet $ toK0 $ DocControl.handleInvariantViolations
 
      , dir "adminonly" $ dir "backdoor" $ hGet $ toK1 $ Administration.handleBackdoorQuery
-      
+
      , dir "adminonly" $ dir "upsalesdeleted" $ hGet $ toK0 $ DocControl.handleUpsalesDeleted
-       
-       
+
+
      , dir "services" $ hGet $ toK0 $ handleShowServiceList
      , dir "services" $ hGet $ toK1 $ handleShowService
      , dir "services" $ dir "ui" $ hPost $ toK1 $ handleChangeServiceUI
@@ -534,6 +537,7 @@ handleLoginPost = do
                           locale = ctxlocale ctx
                         }
                         muuser <- runDBQuery $ GetUserByID (userid user)
+                        _ <- addUserLoginStatEvent (ctxtime ctx) (fromJust muuser)
                         logUserToContext muuser
                         return BackToReferer
                 Just _ -> do

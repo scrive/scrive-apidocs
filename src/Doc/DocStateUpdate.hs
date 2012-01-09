@@ -21,7 +21,7 @@ import Doc.Transitory
 import Doc.DocStateData
 import Kontra
 import MinutesTime
-import GHC.Word
+import Misc
 import Util.SignatoryLinkUtils
 import Doc.DocStateQuery
 import qualified Data.ByteString as BS
@@ -44,7 +44,7 @@ markDocumentSeen :: Kontrakcja m
                  -> SignatoryLinkID
                  -> MagicHash
                  -> MinutesTime.MinutesTime
-                 -> GHC.Word.Word32
+                 -> IPAddress
                  -> m (Either String Document)
 markDocumentSeen docid sigid mh time ipnum =
   doc_update $ MarkDocumentSeen docid sigid mh time ipnum
@@ -146,6 +146,7 @@ authorSignDocument did msigninfo = onlyAuthor did $ do
       case ed1 of
         Left m -> return $ Left $ DBActionNotAvailable m
         Right _ -> do
+          _ <- doc_update $ SetDocumentInviteTime did (ctxtime ctx) (ctxipnumber ctx)
           _ <- doc_update $ MarkInvitationRead did signatorylinkid (ctxtime ctx)
           ed2 <- doc_update $ MarkDocumentSeen did signatorylinkid signatorymagichash (ctxtime ctx) (ctxipnumber ctx)
           case ed2 of
@@ -175,6 +176,7 @@ authorSendDocument did = onlyAuthor did $ do
       case ed1 of
         Left m -> return $ Left $ DBActionNotAvailable m
         Right _ -> do
+          _ <- doc_update $ SetDocumentInviteTime did (ctxtime ctx) (ctxipnumber ctx)          
           _ <- doc_update $ MarkInvitationRead did signatorylinkid (ctxtime ctx)
           transActionNotAvailable <$> doc_update (MarkDocumentSeen did signatorylinkid signatorymagichash (ctxtime ctx) (ctxipnumber ctx))
 
