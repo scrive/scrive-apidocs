@@ -29,6 +29,7 @@ tableMails = Table {
        , ("content", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("attachments", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("x_smtp_attrs", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("to_be_sent", SqlColDesc { colType = SqlTimestampWithZoneT, colNullable = Just False})
        , ("sent", SqlColDesc { colType = SqlTimestampWithZoneT, colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
@@ -41,6 +42,7 @@ tableMails = Table {
           ++ ", content TEXT NULL"
           ++ ", attachments TEXT NULL"
           ++ ", x_smtp_attrs TEXT NULL"
+          ++ ", to_be_sent TIMESTAMPTZ NOT NULL"
           ++ ", sent TIMESTAMPTZ NULL"
           ++ ", CONSTRAINT pk_mails PRIMARY KEY (id)"
           ++ ")"

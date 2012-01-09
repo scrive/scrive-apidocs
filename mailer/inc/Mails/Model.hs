@@ -8,6 +8,7 @@ module Mails.Model (
   , GetEvents(..)
   , GetIncomingEmails(..)
   , GetEmail(..)
+  , DeferEmail(..)
   , MarkEmailAsSent(..)
   , UpdateWithEvent(..)
   ) where
@@ -23,11 +24,19 @@ import Mails.Data
 import MinutesTime
 import OurPrelude
 
-data CreateEmail = CreateEmail MagicHash Address [Address]
+data CreateEmail = CreateEmail MagicHash Address [Address] MinutesTime
 instance DBUpdate CreateEmail MailID where
-  dbUpdate (CreateEmail token sender to) = $(fromJust)
-    <$> getOne "INSERT INTO mails (token, sender, receivers) VALUES (?, ?, ?) RETURNING id"
-      [toSql token, toSql sender, toSql to]
+  dbUpdate (CreateEmail token sender to to_be_sent) = $(fromJust)
+    <$> getOne ("INSERT INTO mails ("
+      ++ "  token"
+      ++ ", sender"
+      ++ ", receivers"
+      ++ ", to_be_sent) VALUES (?, ?, ?, ?) RETURNING id") [
+          toSql token
+        , toSql sender
+        , toSql to
+        , toSql to_be_sent
+        ]
 
 data AddContentToEmail = AddContentToEmail MailID String String [Attachment] XSMTPAttrs
 instance DBUpdate AddContentToEmail Bool where
@@ -77,7 +86,7 @@ instance DBQuery GetEvents [(EventID, MailID, XSMTPAttrs, Event)] where
 data GetIncomingEmails = GetIncomingEmails
 instance DBQuery GetIncomingEmails [Mail] where
   dbQuery GetIncomingEmails = wrapDB $ \conn -> do
-    st <- prepare conn $ selectMailsSQL ++ "WHERE title IS NOT NULL AND content IS NOT NULL AND sent IS NULL ORDER BY id DESC"
+    st <- prepare conn $ selectMailsSQL ++ "WHERE title IS NOT NULL AND content IS NOT NULL AND to_be_sent <= now() AND sent IS NULL ORDER BY id DESC"
     _ <- execute st []
     fetchMails st
 
@@ -91,6 +100,13 @@ instance DBQuery GetEmail (Maybe Mail) where
     st <- prepare conn $ selectMailsSQL ++ "WHERE id = ? AND token = ?"
     _ <- execute st [toSql mid, toSql token]
     fetchMails st >>= oneObjectReturnedGuard
+
+data DeferEmail = DeferEmail MailID MinutesTime
+instance DBUpdate DeferEmail Bool where
+  dbUpdate (DeferEmail mid time) = wrapDB $ \conn -> do
+    r <- run conn "UPDATE mails SET to_be_sent = ? WHERE id = ?"
+      [toSql time, toSql mid]
+    oneRowAffectedGuard r
 
 data MarkEmailAsSent = MarkEmailAsSent MailID MinutesTime
 instance DBUpdate MarkEmailAsSent Bool where

@@ -19,8 +19,9 @@ import DB.Classes
 import InputValidation
 import Mails.MailsConfig
 import Mails.MailsData
-import Util.MonadUtils
 import Mails.Model hiding (Mail)
+import MinutesTime
+import Util.MonadUtils
 import qualified Log
 import qualified Mails.Model as M
 
@@ -47,7 +48,8 @@ scheduleEmailSendout' MailsConfig{..} mail@Mail{..} = do
             return Address {addrName = niceAddress, addrEmail = ourInfoEmail }
           Just address -> return Address { addrName = "", addrEmail = BSU.toString address }
       token <- liftIO randomIO
-      mid <- dbUpdate $ CreateEmail token fromAddr (map toAddress to)
+      now <- getMinutesTime
+      mid <- dbUpdate $ CreateEmail token fromAddr (map toAddress to) now
       let xsmtpapi = XSMTPAttrs [("mailinfo", show mailInfo)]
       _ <- dbUpdate $ AddContentToEmail mid title (wrapHTML content) (map toAttachment attachments) xsmtpapi
       return ()
