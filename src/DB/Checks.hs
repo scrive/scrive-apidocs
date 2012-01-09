@@ -16,6 +16,10 @@ import DB.Model
 import DB.Utils
 import qualified AppLogger as Log
 
+getDatabaseName :: DB String
+getDatabaseName = do
+  maybe "<database>" id <$> getOne "SELECT current_catalog" []
+
 -- | Runs all checks on a database
 performDBChecks :: DB ()
 performDBChecks = do
@@ -29,7 +33,9 @@ checkDBTimeZone = do
   tz <- maybe (error "'SELECT now()' returned nothing") zonedTimeZone <$> getOne "SELECT now()" []
   if timeZoneMinutes tz == 0
      then return ()
-     else error $ "Database returns timestamps using time zone " ++ show tz ++ ". Execute query \"ALTER DATABASE your_database SET TIMEZONE = 'UTC'\" and try again."
+     else do
+       dbname <- getDatabaseName
+       error $ "Database returns timestamps using time zone " ++ show tz ++ ". Execute query \"ALTER DATABASE " ++ dbname ++ " SET TIMEZONE = 'UTC'\" and try again."
 
 -- | Checks whether database is consistent (performs migrations if necessary)
 checkDBConsistency :: DB ()

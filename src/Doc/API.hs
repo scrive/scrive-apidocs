@@ -32,6 +32,7 @@ import Happstack.Server.Monads
 import API.Monad
 import Control.Monad.Error
 import qualified AppLogger as Log
+import Stats.Control
 
 documentAPI :: Route (Kontra Response)
 documentAPI = choice [
@@ -70,6 +71,9 @@ documentList = api $ do
   jdocs <- lift $ mapM jsonDocumentAndFiles docs
   return $ showJSON jdocs
 
+-- this one must be standard post with post params because it needs to
+-- be posted from a browser form; we will have a better one for more
+-- capable clients that follows the api standards
 documentNew :: Kontrakcja m => m Response
 documentNew = api $ do
   user <- getAPIUser
@@ -105,7 +109,7 @@ documentNew = api $ do
   file <- lift $ runDB $ dbUpdate $ NewFile filename content
 
   d2 <- apiGuardL $ doc_update $ AttachFile (documentid d1) (fileid file) now
-  
+  _ <- lift $ addDocumentCreateStatEvents d2
   return $ Created $ jsonDocumentForAuthor d2
 
 documentChangeMetadata :: Kontrakcja m => DocumentID -> MetadataResource -> m Response

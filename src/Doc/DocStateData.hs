@@ -52,7 +52,6 @@ import Data.Data (Data)
 import Data.Either
 import Data.Int
 import Data.Maybe
-import Data.Word
 import DB.Derive
 import DB.Types
 import Happstack.Data
@@ -414,7 +413,7 @@ instance Version SignatoryRole
 
 data SignInfo = SignInfo
     { signtime :: MinutesTime
-    , signipnumber :: Word32
+    , signipnumber :: IPAddress
     }
     deriving (Eq, Ord, Typeable)
 
@@ -534,7 +533,7 @@ emptyDocumentUI = DocumentUI {
 
 data DocumentHistoryEntry0 = DocumentHistoryCreated0 { dochisttime0 :: MinutesTime }
                           | DocumentHistoryInvitationSent0 { dochisttime0 :: MinutesTime
-                                                          , ipnumber0 :: Word32
+                                                          , ipnumber0 :: IPAddress
                                                           }    -- changed state from Preparatio to Pending
     deriving (Eq, Ord, Typeable)
 
@@ -544,7 +543,7 @@ data DocumentHistoryEntry
       }
     | DocumentHistoryInvitationSent
       { dochisttime :: MinutesTime
-      , ipnumber :: Word32
+      , ipnumber :: IPAddress
       , dochistsignatories :: [SignatoryDetails]
       }    -- changed state from Preparatio to Pending
     | DocumentHistoryTimedOut
@@ -552,26 +551,26 @@ data DocumentHistoryEntry
       }
     | DocumentHistorySigned
       { dochisttime :: MinutesTime
-      , ipnumber :: Word32
+      , ipnumber :: IPAddress
       , dochistsignatorydetails :: SignatoryDetails
       }
     | DocumentHistoryRejected
       { dochisttime :: MinutesTime
-      , ipnumber :: Word32
+      , ipnumber :: IPAddress
       , dochistsignatorydetails :: SignatoryDetails
       }
     | DocumentHistoryClosed
       { dochisttime :: MinutesTime
-      , ipnumber :: Word32
+      , ipnumber :: IPAddress
       }
     | DocumentHistoryCanceled
       { dochisttime :: MinutesTime
-      , ipnumber :: Word32
+      , ipnumber :: IPAddress
       -- , dochistsignatorydetails :: SignatoryDetails
       }
     | DocumentHistoryRestarted
       { dochisttime :: MinutesTime
-      , ipnumber :: Word32
+      , ipnumber :: IPAddress
       }
     deriving (Eq, Ord, Typeable)
 
@@ -894,7 +893,7 @@ instance Migrate SignInfo0 SignInfo where
              { signtime0
              }) = SignInfo
                 { signtime = signtime0
-                , signipnumber = 0 -- mean unknown
+                , signipnumber = unknownIPAddress
                 }
 
 $(deriveSerialize ''SignatoryDetails0)
@@ -1201,7 +1200,7 @@ instance Migrate SignatoryLink2 SignatoryLink3 where
           , signatorymagichash3 = signatorymagichash2
           , maybesignatory3     = maybesignatory2
           , maybesigninfo3      = maybesigninfo2
-          , maybeseeninfo3      = maybe Nothing (\t -> Just (SignInfo t 0)) maybeseentime2
+          , maybeseeninfo3      = maybe Nothing (\t -> Just (SignInfo t unknownIPAddress)) maybeseentime2
           }
 
 
