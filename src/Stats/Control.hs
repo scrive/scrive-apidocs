@@ -626,12 +626,9 @@ getDocStatsForUser uid = do
 tuplesFromDocStatsForUser :: [DocStatEvent] -> [(Int, [Int])]
 tuplesFromDocStatsForUser = catMaybes . map toTuple
   where toTuple (DocStatEvent {seTime, seQuantity, seAmount}) = case seQuantity of
-          DocStatEmailSignatures -> Just (asInt seTime, [seAmount, 0])
-          DocStatElegSignatures  -> Just (asInt seTime, [seAmount, 0])
---           DocStatClose           -> Just (asInt seTime, [0, seAmount, 0, 0])
---           DocStatSend            -> Just (asInt seTime, [0, 0, seAmount, 0])
-          DocStatCreate          -> Just (asInt seTime, [0, seAmount])
-          _                      -> Nothing
+          DocStatClose   -> Just (asInt seTime, [seAmount, 0])
+          DocStatCreate  -> Just (asInt seTime, [0, seAmount])
+          _              -> Nothing
 
 -- For Usage Stats tab in Account
 getUsageStatsForUser :: Kontrakcja m => UserID -> Int -> Int -> m ([(Int, [Int])], [(Int, [Int])])
