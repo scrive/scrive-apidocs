@@ -41,7 +41,10 @@ import File.FileID
 docStateTests :: Connection -> Test
 docStateTests conn = testGroup "DocState" [
   dataStructureProperties,
-
+  testThat "GetDocumentsByCompanyAndTags filters" conn testGetDocumentsByCompanyAndTagsFilters,
+  testThat "GetDocumentsByCompanyAndTags finds" conn testGetDocumentsByCompanyAndTagsFinds,
+  testThat "GetDocumentsByCompanyAndTags finds with multiple" conn testGetDocumentsByCompanyAndTagsFindsMultiple,  
+  testThat "GetDocumentsByCompanyAndTags finds with company filter" conn testGetDocumentsByCompanyAndTagsCompany,
   testThat "NewDocument inserts a new contract for a single user successfully" conn testNewDocumentForNonCompanyUserInsertsANewContract,
   testThat "NewDocument inserts a new contract for a company user successfully" conn testNewDocumentForACompanyUserInsertsANewContract,
   testThat "NewDocument inserts a new offer for a single user successfully" conn testNewDocumentForNonCompanyUserInsertsANewOffer,
@@ -196,6 +199,7 @@ docStateTests conn = testGroup "DocState" [
   testThat "GetDocumentsByUser doesn't return archived docs" conn testGetDocumentsByUserNoArchivedDocs,
   testThat "GetDeletedDocumentsByUser returns archived docs" conn testGetDeletedDocumentsByUserArchivedDocs,
   testThat "GetDeletedDocumentsByCompany returns archived docs" conn testGetDeletedDocumentsByCompanyArchivedDocs
+
   ]
 
 dataStructureProperties :: Test
@@ -1343,8 +1347,11 @@ testSetDocumentTagsRight :: DB ()
 testSetDocumentTagsRight = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthor' author
-  edoc <- randomUpdate $ SetDocumentTags (documentid doc)
-  validTest $ assertRight edoc
+  tags <- rand 10 arbitrary
+  edoc <- randomUpdate $ SetDocumentTags (documentid doc) tags
+  validTest $ do
+    assertRight edoc
+    assertEqual "Tags should be equal" tags $ documenttags (fromRight edoc)
 
 testSetDocumentUINotLeft :: DB ()
 testSetDocumentUINotLeft = doTimes 10 $ do
@@ -1500,3 +1507,74 @@ propbitfieldDeriveConvertibleId :: [SignatoryRole] -> Bool
 propbitfieldDeriveConvertibleId ss =
   let ss' = nub (sort ss)
   in ss' == convert (convert ss' :: SqlValue)
+     
+     
+testGetDocumentsByCompanyAndTagsCompany :: DB ()
+testGetDocumentsByCompanyAndTagsCompany = doTimes 10 $ do
+  (name, value) <- rand 10 arbitrary
+  company <- addNewCompany
+  company2 <- addNewCompany
+  author <- addNewRandomUser
+  _ <- dbUpdate $ SetUserCompany (userid author) (Just (companyid company))
+  Just author' <- dbQuery $ GetUserByID (userid author)
+  did <- addRandomDocumentWithAuthor author'
+  _ <- doc_update' $ SetDocumentTags did [DocumentTag name value]
+  docs <- doc_query' $ GetDocumentsByCompanyAndTags Nothing (companyid company2) []
+  docs' <- doc_query' $ GetDocumentsByCompanyAndTags Nothing (companyid company) []
+  validTest $ do
+    assertEqual "Should have no documents returned" docs []
+    assertEqual "Should have 1 document returned" (length docs') 1    
+     
+
+testGetDocumentsByCompanyAndTagsFilters :: DB ()
+testGetDocumentsByCompanyAndTagsFilters = doTimes 10 $ do
+  (name, value) <- rand 10 arbitrary
+  company <- addNewCompany
+  author <- addNewRandomUser
+  _ <- dbUpdate $ SetUserCompany (userid author) (Just (companyid company))
+  Just author' <- dbQuery $ GetUserByID (userid author)
+  _ <- addRandomDocumentWithAuthor author'
+  docs <- doc_query' $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name value]
+  docs' <- doc_query' $ GetDocumentsByCompanyAndTags Nothing (companyid company) []
+  validTest $ do
+    assertEqual "Should have no documents returned" docs []
+    assertEqual "Should have 1 document returned" (length docs') 1    
+    
+
+testGetDocumentsByCompanyAndTagsFinds :: DB ()
+testGetDocumentsByCompanyAndTagsFinds = doTimes 10 $ do
+  (name, value) <- rand 10 arbitrary
+  company <- addNewCompany
+  author <- addNewRandomUser
+  _ <- dbUpdate $ SetUserCompany (userid author) (Just (companyid company))
+  Just author' <- dbQuery $ GetUserByID (userid author)
+  did <- addRandomDocumentWithAuthor author'
+  _ <- doc_update' $ SetDocumentTags did [DocumentTag name value]
+  docs <- doc_query' $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name value]
+  docs' <- doc_query' $ GetDocumentsByCompanyAndTags Nothing (companyid company) []
+  validTest $ do
+    assertEqual "Should have one document returned" (length docs) 1
+    assertEqual "Should have one document returned" (length docs') 1
+  
+testGetDocumentsByCompanyAndTagsFindsMultiple :: DB ()
+testGetDocumentsByCompanyAndTagsFindsMultiple = doTimes 10 $ do
+  (name1, value1) <- rand 10 arbitrary
+  (name2, value2) <- rand 10 arbitrary
+  (name3, value3) <- rand 10 arbitrary
+  company <- addNewCompany
+  author <- addNewRandomUser
+  _ <- dbUpdate $ SetUserCompany (userid author) (Just (companyid company))
+  Just author' <- dbQuery $ GetUserByID (userid author)
+  did <- addRandomDocumentWithAuthor author'
+  _ <- doc_update' $ SetDocumentTags did [DocumentTag name1 value1, DocumentTag name2 value2]
+  docs <- doc_query' $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name1 value1]  
+  docs' <- doc_query' $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name2 value2]
+  docs'' <- doc_query' $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name1 value1, DocumentTag name2 value2]  
+  docs''' <- doc_query' $ GetDocumentsByCompanyAndTags Nothing (companyid company) []
+  docs'''' <- doc_query' $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name1 value1, DocumentTag name2 value2, DocumentTag name3 value3]  
+  validTest $ do
+    assertEqual "Should have one document returned" (length docs) 1  
+    assertEqual "Should have one document returned" (length docs') 1
+    assertEqual "Should have one document returned" (length docs'') 1
+    assertEqual "Should have one document returned" (length docs''') 1
+    assertEqual "Should have zero documents returned" (length docs'''') 0    

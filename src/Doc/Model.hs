@@ -1383,12 +1383,19 @@ data GetDocumentsByCompanyAndTags = GetDocumentsByCompanyAndTags (Maybe ServiceI
                                     deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsByCompanyAndTags [Document] where
   dbQuery (GetDocumentsByCompanyAndTags mservice companyid doctags) = do
-        docs <- selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND signatory_links.company_id = ?")
-                      [ toSql companyid
-                      ]
+        docs <- selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND " ++
+                                                "signatory_links.company_id = ? AND " ++
+                                                "(signatory_links.roles = ? OR signatory_links.roles = ?) AND " ++
+                                                "((?::TEXT IS NULL AND service_id IS NULL) OR (service_id = ?)) ") 
+                [ toSql companyid,
+                  toSql [SignatoryAuthor],
+                  toSql [SignatoryAuthor, SignatoryPartner],
+                  toSql mservice,
+                  toSql mservice                  
+                ]
         let docs' = filterDocsWhereActivated companyid . filterDocsWhereDeleted False companyid $ docs
-        return docs' -- (filter hasTags docs')
-    where hasTags doc = not (null (intersect (documenttags doc) doctags))
+        return (filter hasTags docs')
+    where hasTags doc = all (`elem` (documenttags doc)) doctags
 
 {- |
     All documents where the user is a signatory that are not deleted.  An author is a type
