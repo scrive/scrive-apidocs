@@ -1725,7 +1725,7 @@ instance DBUpdate SetDocumentTags (Either String Document) where
 data SetDocumentInviteTime = SetDocumentInviteTime DocumentID MinutesTime IPAddress
                        deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentInviteTime (Either String Document) where
-  dbUpdate (SetDocumentTags did invitetime ipaddress) = do
+  dbUpdate (SetDocumentInviteTime did invitetime ipaddress) = do
     r <- runUpdateStatement "documents"
          [ sqlField "invite_time" invitetime,
            sqlField "invite_ip" ipaddress
