@@ -85,7 +85,7 @@ type DBInside a = RWST Connection () (Maybe Statement) IO a
 -- transaction! And because there is no such thing as nested transactions,
 -- this basically kills its 'transactional' character.
 newtype DB a = DB { unDB :: DBInside a }
-  deriving (Applicative, Functor, Monad, MonadPlus, MonadIO)
+  deriving (Applicative, Functor, Monad, MonadIO)
 
 -- | Protected 'liftIO'. Properly catches 'SqlError' and converts it
 -- to 'DBException'. Adds 'HDBC.originalQuery' that should help a lot.

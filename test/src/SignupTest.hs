@@ -29,7 +29,6 @@ import TestKontra as T
 import User.Model
 import User.UserControl
 import Util.HasSomeUserInfo
-import Util.MonadUtils
 
 signupTests :: Connection -> Test
 signupTests conn = testGroup "Signup" [
@@ -59,7 +58,7 @@ testUserEnteringPhoneNumber conn = withTestEnvironment conn $ do
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool ("Flash message has type indicating success, was "  ++ show (getFlashType $ head $ ctxflashmessages ctx')) $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
-  uuser <- guardJustM $ dbQuery $ GetUserByID (userid user)
+  Just uuser <- dbQuery $ GetUserByID (userid user)
   assertEqual "Phone number was saved" "12345" (BS.toString . userphone $ userinfo uuser)
 
   emails <- dbQuery GetIncomingEmails

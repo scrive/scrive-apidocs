@@ -30,7 +30,6 @@ import User.UserControl
 import User.Utils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
-import Util.MonadUtils
 
 accountInfoTests :: Connection -> Test
 accountInfoTests conn = testGroup "AccountInfo" [
@@ -129,7 +128,7 @@ testChangeEmailAddress conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
-  user <- guardJustM $ dbQuery $ GetUserByID (userid user')
+  Just user <- dbQuery $ GetUserByID (userid user')
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
@@ -143,7 +142,7 @@ testChangeEmailAddress conn = withTestEnvironment conn $ do
   assertEqual "Location is /account" (Just "/account") (T.getHeader "location" (rsHeaders res1))
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx1)
   assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx1) `isFlashOfType` OperationDone
-  uuser <- guardJustM $ dbQuery $ GetUserByID (userid user)
+  Just uuser <- dbQuery $ GetUserByID (userid user)
   assertEqual "Email hasn't changed yet" (BS.fromString "bob@blue.com") (getEmail uuser)
 
   actions <- getRequestChangeEmailActions
@@ -162,7 +161,7 @@ testChangeEmailAddress conn = withTestEnvironment conn $ do
   assertEqual "Location is /account" (Just "/account") (T.getHeader "location" (rsHeaders res2))
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx2)
   assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx2) `isFlashOfType` OperationDone
-  uuuser <- guardJustM $ dbQuery $ GetUserByID (userid user)
+  Just uuuser <- dbQuery $ GetUserByID (userid user)
   assertEqual "Email has changed" (BS.fromString "jim@bob.com") (getEmail uuuser)
 
 testAddressesMustMatchToRequestEmailChange :: Connection -> Assertion
@@ -224,7 +223,7 @@ testEmailChangeFailsIfActionIDIsWrong conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
-  user <- guardJustM $ dbQuery $ GetUserByID (userid user')
+  Just user <- dbQuery $ GetUserByID (userid user')
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
@@ -242,7 +241,7 @@ testEmailChangeFailsIfMagicHashIsWrong conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
-  user <- guardJustM $ dbQuery $ GetUserByID (userid user')
+  Just user <- dbQuery $ GetUserByID (userid user')
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
@@ -259,7 +258,7 @@ testEmailChangeIfForAnotherUser conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
-  user <- guardJustM $ dbQuery $ GetUserByID (userid user')
+  Just user <- dbQuery $ GetUserByID (userid user')
   Just anotheruser <- addNewUser "Fred" "Frog" "fred@frog.com"
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
@@ -278,7 +277,7 @@ testEmailChangeFailsIfEmailInUse conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
-  user <- guardJustM $ dbQuery $ GetUserByID (userid user')
+  Just user <- dbQuery $ GetUserByID (userid user')
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
@@ -297,7 +296,7 @@ testEmailChangeFailsIfPasswordWrong conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
-  user <- guardJustM $ dbQuery $ GetUserByID (userid user')
+  Just user <- dbQuery $ GetUserByID (userid user')
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
@@ -316,7 +315,7 @@ testEmailChangeFailsIfNoPassword conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
-  user <- guardJustM $ dbQuery $ GetUserByID (userid user')
+  Just user <- dbQuery $ GetUserByID (userid user')
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
