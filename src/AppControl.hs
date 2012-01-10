@@ -250,8 +250,9 @@ appHandler handleRoutes appConf appGlobals = do
       let newsessionuser = fmap userid $ ctxmaybeuser ctx'
       let newflashmessages = ctxflashmessages ctx'
       let newelegtrans = ctxelegtransactions ctx'
+      let newmagichashes = ctxmagichashes ctx'
       F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
-      updateSessionWithContextData session newsessionuser newelegtrans
+      updateSessionWithContextData session newsessionuser newelegtrans newmagichashes
       liftIO $ disconnect $ ctxdbconn ctx'
       return res
 
@@ -328,6 +329,7 @@ appHandler handleRoutes appConf appGlobals = do
                 , ctxlocation = location
                 , ctxadminaccounts = admins appConf
                 , ctxsalesaccounts = sales appConf
+                , ctxmagichashes = getMagicHashes session
                 }
       return ctx
 

@@ -6,6 +6,7 @@ import Control.Concurrent.MVar
 import Database.HDBC.PostgreSQL
 import File.FileID
 import Doc.JpegPages
+import Doc.SignatoryLinkID
 import MinutesTime
 import User.Model
 import qualified Data.ByteString as BS
@@ -48,4 +49,5 @@ data Context = Context
     , ctxlocation            :: String -- ^
     , ctxadminaccounts       :: [Email] -- ^
     , ctxsalesaccounts       :: [Email] -- ^
+    , ctxmagichashes         :: Map.Map SignatoryLinkID MagicHash
     }

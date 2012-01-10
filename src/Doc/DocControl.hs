@@ -597,13 +597,23 @@ handleSignShowOldRedirectToNew did sid mh = do
   invitedlink <- guardJust $ getSigLinkFor doc sid
   return $ LinkSignDoc doc invitedlink
 
-handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m String
+handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleSignShow documentid
                signatorylinkid = do
-  magichash <- guardJustM $ readField "magichash"
+  mh <- guardJustM $ readField "magichash"
+  modifyContext (\ctx -> ctx { ctxmagichashes = Map.insert signatorylinkid mh (ctxmagichashes ctx) })
+  return (LinkSignDocNoMagicHash documentid signatorylinkid)    
+      
+
+handleSignShow2 :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m String
+handleSignShow2 documentid
+                signatorylinkid = do
   Context { ctxtime
           , ctxipnumber
-          , ctxflashmessages } <- getContext
+          , ctxflashmessages
+          , ctxmagichashes } <- getContext
+  magichash <- guardJustM $ (return (Map.lookup signatorylinkid ctxmagichashes))
+
   _ <- markDocumentSeen documentid signatorylinkid magichash ctxtime ctxipnumber
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
   invitedlink <- guardJust $ getSigLinkFor document signatorylinkid
