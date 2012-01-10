@@ -12,9 +12,14 @@ module User.Locale (
 import Misc
 import User.Lang
 import User.Region
+import Happstack.Server
+import Happstack.Util.Common ( readM)
 
 data Locale = Locale Region Lang
   deriving (Bounded, Show, Read, Ord, Eq)
+
+instance FromReqURI Locale where
+    fromReqURI = readM
 
 -- I suggest that this returns Maybe Locale, where Nothing 
 -- signals an invalid combo; or it could be an error - EN

@@ -20,7 +20,7 @@ import Doc.DocStateData
 import Control.Monad.Trans
 import Data.List
 
-import ScriveByMail.Control
+--import ScriveByMail.Control
 import DB.Classes
 import Context
 import Doc.Transitory
@@ -33,6 +33,8 @@ import TestKontra as T
 --import Doc.DocControl
 import Doc.DocInfo
 import qualified AppLogger as Log
+
+import API.MailAPI
 
 mailApiTests :: Connection -> Test
 mailApiTests conn = testGroup "MailAPI" [
@@ -51,6 +53,7 @@ mailApiTests conn = testGroup "MailAPI" [
     , testCase "test lukas's funny title" $ testSuccessfulDocCreation conn "test/mailapi/email_weird_subject.eml" 2
     , testCase "test exchange email" $ testSuccessfulDocCreation conn "test/mailapi/email_exchange.eml" 2
     , testCase "test 2 sig model from outlook mac" $ testSuccessfulDocCreation conn "test/mailapi/email_outlook_viktor.eml" 3
+    , testCase "test json with 2 sigs" $ testSuccessfulDocCreation conn "test/mailapi/email_onesig_json.eml" 2
     ]
 
 testParseMimes :: String -> Assertion
@@ -78,12 +81,12 @@ testSuccessfulDocCreation conn emlfile sigs = withMyTestEnvironment conn $ \tmpd
         , umapiDailyLimit = 1
         , umapiSentToday = 0
     }
-    (res, _) <- runTestKontra req ctx handleScriveByMail
+    (res, _) <- runTestKontra req ctx handleMailAPI
     wrapDB rollback 
     Log.debug $ "Here's what I got back from handleMailCommand: " ++ show res
     let mdocid = maybeRead res
     assertBool ("documentid is not given: " ++ show mdocid) $ isJust mdocid
-    mdoc <- doc_query $ GetDocumentByDocumentID $ fromJust mdocid
+    mdoc <- doc_query' $ GetDocumentByDocumentID $ fromJust mdocid
     assertBool "document was really created" $ isJust mdoc
     let doc = fromJust mdoc
     assertBool ("document should have " ++ show sigs ++ " signatories has " ++ show (length (documentsignatorylinks doc)) ++": " ++ show (documentsignatorylinks doc)) $ length (documentsignatorylinks doc) == sigs
@@ -91,7 +94,7 @@ testSuccessfulDocCreation conn emlfile sigs = withMyTestEnvironment conn $ \tmpd
     assertBool ("document status should be pending, is " ++ show (documentstatus doc)) $ documentstatus doc == Pending
     assertBool "document has file no attached" $ (length $ documentfiles doc) == 1
     assertBool ("doc has iso encoded title " ++ show (documenttitle doc)) $ not $ "=?iso" `isInfixOf` (BS.toString $ documenttitle doc)
-    Just doc' <- doc_query $ GetDocumentByDocumentID $ fromJust mdocid
+    Just doc' <- doc_query' $ GetDocumentByDocumentID $ fromJust mdocid
     assertBool "document is in error!" $ not $ isDocumentError doc'
 
 
@@ -101,7 +104,7 @@ _testFailureNoSuchUser conn = withMyTestEnvironment conn $ \tmpdir -> do
     globaltemplates <- readGlobalTemplates
     ctx <- (\c -> c { ctxdbconn = conn, ctxdocstore = tmpdir })
       <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
-    liftIO $ catch (do _ <- runTestKontra req ctx  handleScriveByMail
+    liftIO $ catch (do _ <- runTestKontra req ctx  handleMailAPI
                        assertFailure "Should not work"
                        return ())
       (\_ -> do assertSuccess

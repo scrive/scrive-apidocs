@@ -42,12 +42,12 @@ urlFromFile File{filename, fileid} =
 -- - upload a file to Amazon storage
 -- - save a file in a local directory
 -- - do nothing and keep it in memory database
-uploadFile :: (MonadIO m, DBMonad m) => FilePath -> S3Action -> File ->  m ()
+uploadFile :: FilePath -> S3Action -> File -> DB ()
 uploadFile docstore@(_:_) AWS.S3Action{AWS.s3bucket = ""} File{fileid, filename, filestorage = FileStorageMemory content} = do
     let filepath = docstore </> show fileid ++ '-' : BSC.unpack filename ++ ".pdf"
     liftIO $ BS.writeFile filepath content
     Log.debug $ "Document file #" ++ show fileid ++ " saved as " ++ filepath
-    runDBUpdate $ FileMovedToDisk fileid filepath
+    dbUpdate $ FileMovedToDisk fileid filepath
     return ()
 
 uploadFile _ ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)} file@File{fileid, filestorage = FileStorageMemory content} = do
@@ -62,7 +62,7 @@ uploadFile _ ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)} file@File{fileid, fi
     case result of
          Right _ -> do
              Log.debug $ "AWS uploaded " ++ bucket </> url
-             _ <- runDBUpdate $ FileMovedToAWS fileid (BS.fromString bucket) (BS.fromString url)
+             _ <- dbUpdate $ FileMovedToAWS fileid (BS.fromString bucket) (BS.fromString url)
              return ()
          Left err -> do -- FIXME: do much better error handling
              Log.debug $ "AWS failed to upload of " ++ bucket </> url ++ " failed with error: " ++ show err

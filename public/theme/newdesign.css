@@ -317,7 +317,7 @@
 	font: 12px/18px "Lucida Grande";
 	margin: 0 auto;
 	text-align: center;
-	width: 220px;
+	width: 600px;
 }
 
 .tab-table .table-paginate .pages strong {
@@ -328,6 +328,7 @@
 
 .tab-table .table-paginate .pages a {
 	color: #666;
+    padding-left: 5px;
 	text-decoration: none;
 }
 

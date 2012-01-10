@@ -25,7 +25,6 @@ import DB.Classes
 import File.Model
 import DB.Types
 import Kontra
-import Happstack.Server (FromReqURI(..))
 import Doc.DocUtils
 import User.Model
 import Company.Model
@@ -71,6 +70,9 @@ documentList = api $ do
   jdocs <- lift $ mapM jsonDocumentAndFiles docs
   return $ showJSON jdocs
 
+-- this one must be standard post with post params because it needs to
+-- be posted from a browser form; we will have a better one for more
+-- capable clients that follows the api standards
 documentNew :: Kontrakcja m => m Response
 documentNew = api $ do
   user <- getAPIUser

@@ -32,6 +32,7 @@ import Misc
 --import PayEx.PayExInterface ()-- Import so at least we check if it compiles
 import Redirect
 import Session
+import Stats.Control
 import Templates.Templates
 import User.Model
 import User.UserView as UserView
@@ -48,7 +49,6 @@ import File.FileID
 
 import Control.Concurrent
 import Control.Monad.Error
-import Control.Monad.Reader
 import Data.Functor
 import Data.List
 import Data.Maybe
@@ -93,7 +93,7 @@ getDocumentLocale :: Connection -> (ServerMonad m, Functor m, MonadIO m) => m (M
 getDocumentLocale conn = do
   rq <- askRq
   let docids = catMaybes . map (fmap fst . listToMaybe . readSigned readDec) $ rqPaths rq
-  mdoclocales <- runReaderT (mapM (DocControl.getDocumentLocale . DocumentID) docids) conn
+  mdoclocales <- ioRunDB conn $ mapM (DocControl.getDocumentLocale . DocumentID) docids
   return . listToMaybe $ catMaybes mdoclocales
 
 {- |
@@ -276,8 +276,8 @@ appHandler handleRoutes appConf appGlobals = do
       addrs <- liftIO $ getAddrInfo (Just hints) (Just peerhost) Nothing
       let addr = head addrs
       let peerip = case addrAddress addr of
-                     SockAddrInet _ hostip -> hostip
-                     _ -> 0
+                     SockAddrInet _ hostip -> IPAddress hostip
+                     _ -> unknownIPAddress
 
       conn <- liftIO $ connectPostgreSQL $ dbConfig appConf
       minutestime <- liftIO getMinutesTime
@@ -333,6 +333,7 @@ appHandler handleRoutes appConf appGlobals = do
                 , ctxservice = mservice
                 , ctxlocation = location
                 , ctxadminaccounts = admins appConf
+                , ctxsalesaccounts = sales appConf
                 }
       return ctx
 
@@ -420,6 +421,7 @@ handleLoginPost = do
                           locale = ctxlocale ctx
                         }
                         muuser <- runDBQuery $ GetUserByID (userid user)
+                        _ <- addUserLoginStatEvent (ctxtime ctx) (fromJust muuser)
                         logUserToContext muuser
                         return BackToReferer
                 Just _ -> do

@@ -8,6 +8,7 @@ module Util.JSON (
     ,  JSONContainer(..)
     -- | Interface for structures that can bve read from JSON
     ,  FromJSON(..) 
+    , eitherJSValue
     -- | Diggers - Asking local envirement about JSON object
     , fromJSONLocal
     , fromJSONLocalMap 
@@ -18,6 +19,7 @@ module Util.JSON (
     , withJSON
     , jsempty
     , jsget
+    , jsgetA
     , jsmodify
     , jsgetdef
     , jsmodifydef
@@ -103,6 +105,8 @@ fromJSONFieldBase64 s =  liftM dc (fromJSONField s)
                             Just (Right r) -> Just r
                             _ -> Nothing
     
+eitherJSValue :: FromJSON a => JSValue -> Either String a
+eitherJSValue j = maybe (Left $ "Could not convert value : " ++ show j) Right $ fromJSValue j
 
 instance FromJSON JSValue where
     fromJSValue = Just
@@ -189,6 +193,11 @@ jsset path val obj = let (p:ps) = pathList path in
 
 jsget :: JSONPath path => path -> JSValue -> Either String JSValue
 jsget path obj = foldl (\a b -> a >>= getStr b) (Right obj) $ pathList path
+
+jsgetA :: Int -> JSValue ->  Either String JSValue
+jsgetA 0 (JSArray (h:_)) = Right h
+jsgetA v (JSArray (_:hs)) = jsgetA (v-1) (JSArray hs)
+jsgetA _ _ = Left "No index found"
 
 jsgetdef :: JSONPath path => path -> JSValue -> JSValue -> Either String JSValue
 jsgetdef path _ val | pathList path == [] = Right val

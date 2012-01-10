@@ -56,7 +56,6 @@ import Control.Monad.Reader
 import Data.Either
 import Data.List
 import Data.Maybe
-import Data.Word
 import Happstack.Server hiding (simpleHTTP)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
@@ -135,8 +134,7 @@ postDocumentChangeAction document@Document  { documentstatus
         ctx@Context{ctxlocale, ctxglobaltemplates} <- getContext
         forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ \conn -> do
           let newctx = ctx {ctxdbconn = conn}
-          threadDelay 5000
-          enewdoc <- runReaderT (sealDocument newctx document) conn
+          enewdoc <- ioRunDB conn $ sealDocument newctx document
           case enewdoc of
              Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails newctx newdoc
              Left errmsg -> Log.error $ "Sealing of document #" ++ show documentid ++ " failed, could not send document confirmations: " ++ errmsg
@@ -160,11 +158,11 @@ postDocumentChangeAction document@Document  { documentstatus
         author <- getDocAuthor
         forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ \conn -> do
           let newctx = ctx {ctxdbconn = conn}
-          enewdoc <- runReaderT (sealDocument newctx document) conn
+          enewdoc <- ioRunDB conn $ sealDocument newctx document
           case enewdoc of
             Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails newctx newdoc
             Left errmsg -> do
-              _ <- runReaderT (doc_update $ ErrorDocument documentid errmsg) conn
+              _ <- ioRunDB conn $ doc_update' $ ErrorDocument documentid errmsg
               Log.server $ "Sending seal error emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
               runWithTemplates ctxlocale ctxglobaltemplates $ sendDocumentErrorEmail newctx document author
               return ()
@@ -356,7 +354,7 @@ sendInvitationEmail1 ctx document signatorylink = do
       , mailInfo = Invitation documentid signatorylinkid
       , from = documentservice document
   }
-  runReaderT (doc_update $ AddInvitationEvidence documentid signatorylinkid (ctxtime ctx) (ctxipnumber ctx)) (ctxdbconn ctx)
+  ioRunDB (ctxdbconn ctx) $ doc_update' $ AddInvitationEvidence documentid signatorylinkid (ctxtime ctx) (ctxipnumber ctx)
 
 {- |
     Send a reminder email
@@ -585,9 +583,9 @@ rejectDocument documentid
       addFlashM $ modalRejectedView document
       return $ LoopBack
 
-getDocumentLocale :: (MonadIO m, DBMonad m) => DocumentID -> m (Maybe Locale)
+getDocumentLocale :: DocumentID -> DB (Maybe Locale)
 getDocumentLocale documentid = do
-  mdoc <- doc_query $ GetDocumentByDocumentID documentid
+  mdoc <- doc_query' $ GetDocumentByDocumentID documentid
   return $ fmap getLocale mdoc --TODO: store lang on doc
 
 {- |
@@ -845,7 +843,7 @@ handleIssueSaveAsTemplate document = do
   addFlashM flashDocumentTemplateSaved
   return $ LinkTemplates
 
-markDocumentAuthorReadAndSeen :: Kontrakcja m => Document -> MinutesTime -> Word32 -> m ()
+markDocumentAuthorReadAndSeen :: Kontrakcja m => Document -> MinutesTime -> IPAddress -> m ()
 markDocumentAuthorReadAndSeen Document{documentid, documentsignatorylinks} time ipnumber =
   mapM_ mark $ filter isAuthor documentsignatorylinks
   where
@@ -1103,7 +1101,7 @@ withAuthorisedViewer docid action = do
  -}
 handleFileGet :: Kontrakcja m => FileID -> String -> m (Either KontraLink Response)
 handleFileGet fileid' _title = do
-  withUserGet $ onlySuperUser $ do
+  withUserGet $ onlyAdmin $ do
    ctx <- getContext
    contents <- liftIO $ getFileIDContents ctx fileid'
 
@@ -1818,7 +1816,7 @@ sendCancelMailsForDocument :: Kontrakcja m => (Maybe BS.ByteString) -> Context -
 sendCancelMailsForDocument customMessage ctx document = do
   let activated_signatories = filter (isActivatedSignatory $ documentcurrentsignorder document) $ documentsignatorylinks document
   forM_ activated_signatories $ \slnk -> do
-      m <- mailCancelDocumentByAuthor True customMessage ctx document
+      m <- mailCancelDocument True customMessage ctx document
       let mail = m {to = [getMailAddress slnk]}
       scheduleEmailSendout (ctxesenforcer ctx) mail
 
@@ -1928,19 +1926,19 @@ isBroken :: Document -> Bool
 isBroken doc = isClosed doc && (not $ Data.List.null $ documentfiles doc)  && (Data.List.null $ documentsealedfiles doc)
 
 handleFixDocument :: Kontrakcja m => DocumentID -> m KontraLink
-handleFixDocument docid = onlySuperUser $ do
+handleFixDocument docid = onlyAdmin $ do
     ctx <- getContext
     mdoc <- doc_query $ GetDocumentByDocumentID docid
     case (mdoc) of
        Nothing -> return LoopBack
        Just doc -> if (isBroken doc)
                     then do
-                        _ <- liftIO $ runReaderT (sealDocument ctx doc) (ctxdbconn ctx)
+                        runDB $ sealDocument ctx doc
                         return LoopBack
                     else return LoopBack
 
 showDocumentsToFix :: Kontrakcja m => m String
-showDocumentsToFix = onlySuperUser $ do
+showDocumentsToFix = onlyAdmin $ do
     docs <- doc_query $ GetDocuments Nothing
     documentsToFixView $ filter isBroken docs
 
@@ -2051,7 +2049,7 @@ jsonDocumentGetterWithPermissionCheck did = do
 
 
 handleInvariantViolations :: Kontrakcja m => m Response
-handleInvariantViolations = onlySuperUser $ do
+handleInvariantViolations = onlyAdmin $ do
   Context{ ctxtime } <- getContext
   docs <- doc_query $ GetDocuments Nothing
   let probs = listInvariantProblems ctxtime docs
@@ -2071,7 +2069,7 @@ prepareEmailPreview docid slid = do
     when (isNothing mdoc) $ (Log.debug "No document found") >> mzero
     let doc = fromJust mdoc
     content <- case mailtype of
-         "cancel" -> mailCancelDocumentByAuthorContent True Nothing ctx doc
+         "cancel" -> mailCancelDocumentContent True Nothing ctx doc
          "remind" -> do
              let msl = find ((== slid) . signatorylinkid) $ documentsignatorylinks doc
              case msl of
@@ -2093,7 +2091,7 @@ handleCSVLandpage c = do
 
 -- for upsales bug
 handleUpsalesDeleted :: Kontrakcja m => m Response
-handleUpsalesDeleted = onlySuperUser $ do
+handleUpsalesDeleted = onlyAdmin $ do
   docs <- doc_query $ GetDocuments $ Just $ ServiceID $ BS.fromString "upsales"
   let deleteddocs = [[show $ documentid d, showDateYMD $ documentctime d, BS.toString $ documenttitle d]
                     | d <- docs

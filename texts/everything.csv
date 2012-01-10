@@ -373,7 +373,7 @@
 "_authorsignatoryradioSenderSign","Undertecknande part",,"Signing party"
 "_backToStepTwoAndFillPersonNumber","Var vänlig gå tillbaka till steg 2 och fyll i personnummer.",,"Please go back to step 2 and enter personal security number."
 "_cancel","Avbryt",,"Cancel"
-"_cancelByAuthorDialogOwnMessage","Skriv eget meddelande",,"Write your own message"
+"_cancelDialogOwnMessage","Skriv eget meddelande",,"Write your own message"
 "_cantSendReminder1","Det går inte att skicka påminnelser för",,"It is impossible to send reminders for"
 "_cantSendReminder2","som inte är skickade eller öppna.",,"which has not been sent or opened."
 "_checkBoxFieldName","check box",,"check box"
@@ -443,10 +443,10 @@ profits and reduce frustration.</p>                                             
 "_contractSignatory","Part",,"Party"
 "_contractauthorissecretarytext","Avsändare: Ej undertecknande part",,"Sender: Non-signing party"
 "_contractcancelbuttontext","Återkalla inbjudan",,"Withdraw invitation"
-"_contractcancelbyauthormodaltitleBody","Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?            <br/> När du återkallat inbjudan kommer nedanstående meddelande att skickas till dina motparter.",,"Are you sure you want to withdraw the invitation to sign the document? <br/> When you have withdrawn it, the following message will be sent to your counterparts."
-"_contractcancelbyauthormodaltitleHead","Återkalla inbjudan",,"Withdraw invitation"
+"_contractcancelmodaltitleBody","Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?            <br/> När du återkallat inbjudan kommer nedanstående meddelande att skickas till dina motparter.",,"Are you sure you want to withdraw the invitation to sign the document? <br/> When you have withdrawn it, the following message will be sent to your counterparts."
+"_contractcancelmodaltitleHead","Återkalla inbjudan",,"Withdraw invitation"
 "_contractcancelledinfoheader","Dokument återkallat",,"Document withdrawn"
-"_contractcancelledinfotext","har återkallat sin inbjudan att underteckna dokumentet.",,"has withdrawn the invitation to sign the document."
+"_contractcancelledinfotext","Inbjudan att signera dokumentet har dragits tillbaka.",,"The invitation to sign this document has been withdrawn."
 "_contractconfirmsendtext","Är du säker på att du vill skicka dokumentet",,"Are you sure you want to send the contract"
 "_contractconfirmsendtitle","Skicka inbjudan",,"Send invitation"
 "_contractexpirytext","Undertecknas inom",,"Expiration in"
@@ -456,17 +456,9 @@ profits and reduce frustration.</p>                                             
  the Swedish Law of Contracts."
 "_contracthassignedformailtext","Har undertecknat",,"Has signed"
 "_contractname","Avtal",,"Contract"
-"_contractpendingauthorinfoheader","Väntar",,"Waiting"
-"_contractpendingauthorinfotextIfElse","Du har endast behörighet att se detta
-    dokumentet. Dokumentet har ännu inte
-       undertecknats av samtliga parter.",,"You only have permission to see this
-   document. The document has not yet
-    been signed by all signatories."
-"_contractpendingauthorinfotextIfiamauthor","Du har skickat inbjudan att                           underteckna.
- Dokumentet har ännu inte                           undertecknats
- av samtliga parter.",,"You have sent an invitation to sign.
- The document has not yet been signed
-    by all signatories."
+"_documentpendinginfoheader","Väntar",,"Waiting"
+"_documentpendingviewonly","Detta är ett bara visa, och inga åtgärder kan vidtas.",,"This is a view only, and no actions can be taken."
+"_contractpendinginfotext","Dokumentet har ännu inte undertecknats av samtliga parter.",,"The document has not yet been signed by all signatories."
 "_contractpendingauthornotsignedinfoheader","Granska",,"Please review"
 "_contractpendingauthornotsignedinfotext","Vänligen var noga med att granska dokumentet och kontrollera
  parterna till höger innan du undertecknar.",,"Please review the document thoroughly and verify that the parties
@@ -1577,20 +1569,20 @@ profits and reduce frustration. The following mateials shall only
 "_mailAccountBySigningOrderReminderContentInstruction","Gör så här:<br/>1. Klicka på länken<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.
  Definiera lösenord och acceptera villkoren<br/>3. Färdig",,"To save:<br/>1. Click the link<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.  Define passwords and accept the terms of agreement <br/>3. Done"
 "_mailAccountBySigningOrderReminderTitle","Du har inte sparat ditt original",,"You have not saved your original"
-"_mailCancelContractByAuthorContentBody","<strong>$creatorname$</strong> har valt att återkalla sin
+"_mailCancelContractContentBody","<strong>$canceller$</strong> har valt att återkalla sin
  inbjudan att underteckna dokument <strong>$documenttitle$</strong>.      Därmed
  är avtalsprocessen avbruten och du kan inte längre underteckna
- dokumentet.",,"<strong>$creatorname$</strong> has chosen to withdraw
+ dokumentet.",,"<strong>$canceller$</strong> has chosen to withdraw
  the invitation to sign <strong>$documenttitle$</strong>. Therefore the
  agreement process has been cancelled."
-"_mailCancelDocumentByAuthorTitleContract","Återkallat avtal från $if(companyname)$$companyname$ $else$$creatorname$$endif$",,"Contract cancellation from $if(companyname)$$companyname$ $else$$creatorname$$endif$"
-"_mailCancelDocumentByAuthorTitleOffer","Återkallad offert från $if(companyname)$$companyname$ $else$$creatorname$$endif$",,"Offer cancellation from  $if(companyname)$$companyname$ $else$$creatorname$$endif$"
-"_mailCancelDocumentByAuthorTitleOrder","Återkallad orderbekräftelse från $if(companyname)$$companyname$ $else$$creatorname$$endif$",,"Order confirmation cancellation from $if(companyname)$$companyname$ $else$$creatorname$$endif$"
-"_mailCancelOfferByAuthorContentBody","<strong>$creatorname$</strong>   har valt att återkalla
- offerten  $documenttitle$.",,"<strong>$creatorname$</strong>   has chosen to withdraw
+"_mailCancelDocumentTitleContract","Återkallat avtal från $if(companyname)$$companyname$ $else$$creatorname$$endif$",,"Contract cancellation from $if(companyname)$$companyname$ $else$$creatorname$$endif$"
+"_mailCancelDocumentTitleOffer","Återkallad offert från $if(companyname)$$companyname$ $else$$creatorname$$endif$",,"Offer cancellation from  $if(companyname)$$companyname$ $else$$creatorname$$endif$"
+"_mailCancelDocumentTitleOrder","Återkallad orderbekräftelse från $if(companyname)$$companyname$ $else$$creatorname$$endif$",,"Order confirmation cancellation from $if(companyname)$$companyname$ $else$$creatorname$$endif$"
+"_mailCancelOfferContentBody","<strong>$canceller$</strong>   har valt att återkalla
+ offerten  $documenttitle$.",,"<strong>$canceller$</strong>   has chosen to withdraw
  the offer  $documenttitle$."
-"_mailCancelOrderByAuthorContentBody","<strong>$creatorname$</strong>   har valt att återkalla
- orderbekräftelsen  $documenttitle$.",,"<strong>$creatorname$</strong>   has chosen to withdraw
+"_mailCancelOrderContentBody","<strong>$canceller$</strong>   har valt att återkalla
+ orderbekräftelsen  $documenttitle$.",,"<strong>$canceller$</strong>   has chosen to withdraw
  the order confirmation  $documenttitle$."
 "_mailCompanyAccountAcceptedContentBody","$invited.fullnameOrEmail$ har accepterat att bli ett underkonto.",,"$invited.fullnameOrEmail$ has agreed to become a sub account."
 "_mailCompanyAccountAcceptedTitle","Kontoförfrågan",,"Account enquiry"
@@ -1903,11 +1895,11 @@ use free of charge."
 "_offerSignatory","Mottagare",,"Recipient"
 "_offerauthorissecretarytext","Avsändare",,"Sender"
 "_offercancelbuttontext","Återkalla offert ",,"Withdraw offer "
-"_offercancelbyauthormodaltitleBody","När du återkallat offerten kommer nedanstående meddelande att
+"_offercancelmodaltitleBody","När du återkallat offerten kommer nedanstående meddelande att
  skickas till din motpart.",,"When you have withdrawn the offer, the following message will be sent to your counterpart."
-"_offercancelbyauthormodaltitleHead","Är du säker att du vill återkalla offerten?",,"Are you sure you want to withdraw the offer?"
+"_offercancelmodaltitleHead","Är du säker att du vill återkalla offerten?",,"Are you sure you want to withdraw the offer?"
 "_offercancelledinfoheader","Offert återkallad ",,"Offer withdrawn "
-"_offercancelledinfotext"," har återkallat offerten. Den går således inte att acceptera. ",," has withdrawn the offer. You can no longer accept it. "
+"_offercancelledinfotext","Inbjudan att bekräfta ordern har dragits tillbaka.",,"The invitation to accept this offer has been withdrawn."
 "_offerconfirmsendtext","Är du säker på att du vill skicka offerten ",,"Are you sure you want to send the offer "
 "_offerconfirmsendtitle","Skicka offert ",,"Send offer "
 "_offerexpirytext","Förfallodatum",,"Expiration date"
@@ -1917,10 +1909,7 @@ use free of charge."
  the Swedish Law of Contracts."
 "_offerhassignedformailtext","Har accepterat ",,"Has accepted "
 "_offername","Offert",,"Offer"
-"_offerpendingauthorinfoheader","Väntar på accept ",,"Waiting for acceptance "
-"_offerpendingauthorinfotext","Du har skickat offerten. Offerten har ännu inte accepterats av
- mottagaren.",,"You have sent the offer. It has not yet been accepted by the
- recipient."
+"_offerpendinginfotext","Offerten har ännu inte accepterats av alla mottagare.",,"The offer has not yet been accepted by all receipients."
 "_offerpendingauthornotsignedinfoheader","Granska innan accept",,"Please review before you accept"
 "_offerpendingauthornotsignedinfotext","Vänligen var noga med att granska offerten innan du accepterar.",,"Please review the offer thoroughly before you accept it."
 "_offerrejectbuttontext","Avvisa offert",,"Return offer"
@@ -1974,12 +1963,12 @@ use free of charge."
 "_orderSignHistEntry","bekräftar ordern online med",,"confirms the order online with"
 "_orderauthorissecretarytext","Avsändare",,"Sender"
 "_ordercancelbuttontext","Återkalla order",,"Withdraw order"
-"_ordercancelbyauthormodaltitleBody","När du återkallat orderbekräftelsen kommer nedanstående meddelande
+"_ordercancelmodaltitleBody","När du återkallat orderbekräftelsen kommer nedanstående meddelande
  att skickas till din motpart.",,"When you have withdrawn the order confirmation, the following
  message will be sent to your counterpart."
-"_ordercancelbyauthormodaltitleHead","Är du säker att du vill återkalla orderbekräftelsen?",,"Are you sure you want to withdraw the order confirmation?"
+"_ordercancelmodaltitleHead","Är du säker att du vill återkalla orderbekräftelsen?",,"Are you sure you want to withdraw the order confirmation?"
 "_ordercancelledinfoheader","Order återkallad",,"Order withdrawn"
-"_ordercancelledinfotext","har återkallat ordern. Den går således in att bekräfta.",,"has withdrawn the order. You can no longer confirm it."
+"_ordercancelledinfotext","Inbjudan att bekräfta ordern har dragits tillbaka.",,"The invitation to confirm this order has been withdrawn."
 "_orderconfirmsendtext","Är du säker att du vill skicka orderbekräftelsen",,"Are you sure you want to send the order confirmation"
 "_orderconfirmsendtitle","Skicka orderbekräftelse",,"Send order confirmation"
 "_orderexpirytext","Förfallodatum",,"Expiration date"
@@ -1989,10 +1978,7 @@ use free of charge."
  the Swedish Law of Contracts."
 "_orderhassignedformailtext","Har bekräftat",,"Has confirmed"
 "_ordername","Order-bekräftelse",,"Order confirmation"
-"_orderpendingauthorinfoheader","Väntar på bekräftelse",,"Waiting for confirmation"
-"_orderpendingauthorinfotext","Du har skickat orderbekräftelsen. Orderbekräftelsen har ännu
- inte bekräftats av din mottagare.",,"You have sent the order confirmation. It has not yet been confirmed
- by the recipient."
+"_orderpendinginfotext","Orderbekräftelsen har ännu inte bekräftats av alla mottagare.",,"The order has not yet been confirmed by all receipients."
 "_orderpendingauthornotsignedinfoheader","Granska innan bekräftelse",,"Please review before you confirm"
 "_orderpendingauthornotsignedinfotext","Vänligen var noga med att granska ordern innan du bekräftar.",,"Please review the order thoroughly before you confirm it."
 "_orderrejectbuttontext","Avvisa order",,"Return order"
@@ -2065,6 +2051,7 @@ use free of charge."
 "_pageFooterContact5","<strong>Adress</strong>  <BR/>   Scrive<BR/>Saltmätargatan 19<BR/>113 59 Stockholm",,"<strong>Address</strong>  <BR/>     Scrive<BR/>Saltmätargatan 19<BR/>113 59 Stockholm"
 "_pageFooterContact6","<strong>Bloggar</strong>  <BR/>   <a href='http://blogg.scrive.com'>Svenska</a><BR/><a href='http://blog.scrive.com'>Engelska</a><br/><a href='http://labs.scrive.com'>Tekniska</a>",,"<strong>Blogs</strong>   <BR/>  <a href='http://blog.scrive.com'>English</a><br/><a href='http://blogg.scrive.com'>Swedish</a><BR/><a href='http://labs.scrive.com'>Technical</a>"
 "_pageFooterContact7","<strong>Twitter</strong><BR/><a href='http://twitter.com/scrive'>Sverige</a><br /><a href='http://twitter.com/scriveuk'>Storbritannien</a>",,"<strong>Twitter</strong><BR/><a href='http://twitter.com/scriveuk'>UK</a><br /><a href='http://twitter.com/scrive'>Sweden</a>"
+"_pageFooterContact8","<strong>Företagsinformation</strong><br />SkrivaPå CM AB<BR />556816-6804<br />Stockholm",,"<strong>Company Information</strong><br />SkrivaPå CM AB<BR />556816-6804<br />Stockholm"
 "_pageFooterCustomers","Kunder",,"Customers"
 "_pageFooterContactUs","Kontakta Scrive",,"Contact Scrive"
 "_pageFooterHome","Hem",,"Home"
@@ -2171,7 +2158,7 @@ use free of charge."
 "_personpanePart1","PART 1",,"PARTY 1"
 "_phone","Telefonnummer",,"Phone"
 "_placeFieldName","place",,"place"
-"_poweredBySkrivaPaPara","Med vänliga hälsningar",,"Best regards"
+"_poweredByScrive","Med vänliga hälsningar",,"Best regards"
 "_priceplanPageBelowTable1","<h2>Vi tar bara betalt när du tjänar pengar</h2>
                     <p>Vi tar betalt per signatur. Vi tror dock
  på att bara ta betalt när vi tillför som mest värde. Därför
@@ -2552,7 +2539,7 @@ simply better."
 "_remindMailNotSignedContractContentPartys","Parter:",,"Parties:"
 "_remindMailNotSignedContractStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte undertecknat eller avvisat
  dokument <strong>$documenttitle$</strong> ännu.",,"<strong>$author$</strong> wants to remind you that you haven't
-Confirmed the order  <strong>$documenttitle$</strong> yet."
+signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_remindMailNotSignedOfferContentInfo","Översiktlig information",,"General information"
 "_remindMailNotSignedOfferContentInstruction","1. Klicka på länken        <a href=""$link$"">$link$</a><br/>
         2. Granska online<br/>        3.  Acceptera offert (eller
@@ -2563,7 +2550,7 @@ Confirmed the order  <strong>$documenttitle$</strong> yet."
 "_remindMailNotSignedOfferContentSender","Avsändare:",,"Sender:"
 "_remindMailNotSignedOfferStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte accepterat
  offerten <strong>$documenttitle$</strong> ännu.        Acceptera eller avvisa
- offerten genom att följa instruktionerna nedan.",,"<strong>$author$</strong>  wants to remind you that you haven't  confirmed or returned the order  <strong>$documenttitle$</strong> yet. To do so:"
+ offerten genom att följa instruktionerna nedan.",,"<strong>$author$</strong>  wants to remind you that you haven't  confirmed or returned the offer  <strong>$documenttitle$</strong> yet. To do so:"
 "_remindMailNotSignedOrderContentInfo","Översiktlig information",,"General information"
 "_remindMailNotSignedOrderContentInstruction","1. Klicka på länken      <a href=""$link$"">$link$</a><br/>
         2. Granska online<br/>        3. Bekräfta ordern (eller

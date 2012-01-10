@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  API.API
--- Maintainer  :  mariusz@skrivapa.se
+-- Maintainer  :  eric@scrive.com
 -- Stability   :  development
 -- Portability :  portable
 --
@@ -88,7 +88,7 @@ apiResponse action = action >>= simpleResponse . encode
 
 -}
 
-apiCall :: (APIContext c, Kontrakcja m, Path m (m Response) Response Response) => 
+apiCall :: (APIContext c, Kontrakcja m, Path m (m Response) Response) => 
            String -> APIFunction m c APIResponse -> Route (m Response)
 apiCall s f = dir s $ path POST id $ do
     Log.debug $ "API call " ++ s ++ " matched"
@@ -102,7 +102,7 @@ apiCall s f = dir s $ path POST id $ do
              Left emsg -> return $ uncurry apiError emsg
 
 {- | Also for routing tables, to mark that api calls did not match and not to fall to mzero-}
-apiUnknownCall :: (Kontrakcja m, Path m (m Response) Response Response) => Route (m Response)
+apiUnknownCall :: (Kontrakcja m, Path m (m Response) Response) => Route (m Response)
 apiUnknownCall = remainingPath POST $ apiResponse $ return $ apiError API_ERROR_UNNOWN_CALL "Bad request"
 
 

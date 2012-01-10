@@ -35,6 +35,7 @@ import Context
 import DB.Classes
 import KontraMonad
 import MinutesTime
+import Misc (unknownIPAddress)
 import Templates.Templates
 import qualified MemCache
 import User.Locale
@@ -201,7 +202,7 @@ mkContext locale globaltemplates = liftIO $ do
         , ctxflashmessages = []
         , ctxtime = time
         , ctxnormalizeddocuments = docs
-        , ctxipnumber = 0
+        , ctxipnumber = unknownIPAddress
         , ctxdbconn = error "dbconn is not defined"
         , ctxdocstore = error "docstore is not defined"
         , ctxs3action = AWS.S3Action {
@@ -229,4 +230,5 @@ mkContext locale globaltemplates = liftIO $ do
         , ctxservice = Nothing
         , ctxlocation = error "location is not defined"
         , ctxadminaccounts = []
+        , ctxsalesaccounts = []
     }

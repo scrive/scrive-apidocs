@@ -58,9 +58,9 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
     forM_ [Contract,Offer,Order] $ \doctype -> do
         -- make  the context, user and document all use the same locale
         ctx <- mailingContext l conn
-        _ <- runDBUpdate $ SetUserSettings (userid author) $ (usersettings author) { locale = l }
+        _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { locale = l }
         d' <- gRight $ randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype)
-        d <- gRight . doc_update $ SetDocumentLocale (documentid d') l (ctxtime ctx)
+        d <- gRight . doc_update' $ SetDocumentLocale (documentid d') l (ctxtime ctx)
 
         let docid = documentid d
         let asl = head $ documentsignatorylinks d
@@ -92,7 +92,7 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
         --remind mails
         checkMail "Reminder notsigned" $ mailDocumentRemind Nothing ctx doc sl
         --cancel by author mail
-        checkMail "Cancel" $ mailCancelDocumentByAuthor True Nothing  ctx doc
+        checkMail "Cancel" $ mailCancelDocument True Nothing  ctx doc
         --reject mail
         checkMail "Reject"  $ mailDocumentRejected  Nothing  ctx doc sl
         -- awaiting author email
@@ -148,10 +148,10 @@ validMail name m = do
 addNewRandomAdvancedUserWithLocale :: Locale -> DB User
 addNewRandomAdvancedUserWithLocale l = do
   user <- addNewRandomAdvancedUser
-  _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
+  _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
            locale = l
          }
-  (Just uuser) <- runDBQuery $ GetUserByID (userid user)
+  (Just uuser) <- dbQuery $ GetUserByID (userid user)
   return uuser
 
 mailingContext :: Locale -> Connection -> DB Context
@@ -178,7 +178,7 @@ sendoutForManualChecking titleprefix req ctx (Just email) m = do
 
 testMailer:: Mailer
 testMailer = createSendgridMailer $ MailsSendgrid {
-        mailbackdooropen = False,
+        isBackdoorOpen = False,
         ourInfoEmail = "test@scrive.com",
         ourInfoEmailNiceName = "test",
         sendgridSMTP = "smtps://smtp.sendgrid.net",

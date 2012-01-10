@@ -63,6 +63,7 @@ data UserStatQuantity = UserSignTOS  -- When user signs TOS
                         | UserRefuseSaveAfterSign -- when user refuses the save option after signing
                         | UserPhoneAfterTOS -- when a user requests a phone call after accepting the TOS
                         | UserCreateCompany -- when a user creates a company
+                        | UserLogin -- when a user logs in
                       deriving (Eq, Ord, Show)
 $(enumDeriveConvertible ''UserStatQuantity)
 
@@ -126,7 +127,7 @@ instance DBUpdate AddDocStatEvent Bool where
           ++ ", service_id"
           ++ ", company_id"
           ++ ", document_type"
-          ++ ") SELECT ?, to_timestamp(?), ?, ?, ?, ?, ?, ? "
+          ++ ") SELECT ?, ?, ?, ?, ?, ?, ?, ? "
           -- want to avoid an error, so check if exists
           ++ " WHERE NOT EXISTS (SELECT 1 FROM doc_stat_events WHERE"
           ++ " document_id = ? AND quantity = ?)"
@@ -159,7 +160,7 @@ instance DBUpdate AddUserStatEvent Bool where
           ++ ", amount"
           ++ ", service_id"
           ++ ", company_id"
-          ++ ") SELECT ?, to_timestamp(?), ?, ?, ?, ? "
+          ++ ") SELECT ?, ?, ?, ?, ?, ? "
           -- want to avoid an error, so check if exists
           ++ " WHERE NOT EXISTS (SELECT 1 FROM user_stat_events WHERE"
           ++ " user_id = ? AND quantity = ?)"

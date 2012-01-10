@@ -16,6 +16,8 @@ module AppLogger ( amazon
                  , scrivebymail
                  , scrivebymailfailure
                  , docevent
+                 , jsonMailAPI
+                 , mailAPI
                  ) where
 
 import Control.Exception.Extensible (bracket)
@@ -62,6 +64,8 @@ setupLogger = do
     mailContentLog <- fileHandler' "log/mailcontent.log" INFO >>= \lh -> return $ setFormatter lh fmt
     integrationLog <- fileHandler' "log/integrationapi.log" INFO >>= \lh -> return $ setFormatter lh fmt
     scriveByMailLog<- fileHandler' "log/scrivebymail.log" INFO >>= \lh -> return $ setFormatter lh fmt
+    jsonMailAPILog <- fileHandler' "log/jsonmailapi.log" INFO >>= \lh -> return $ setFormatter lh fmt    
+    mailAPILog     <- fileHandler' "log/mailapi.log" INFO >>= \lh -> return $ setFormatter lh fmt    
     scriveByMailFailuresLog <- fileHandler' "log/scrivebymail.failures.log" INFO >>= \lh -> return $ setFormatter lh nullFormatter
     doceventLog <- fileHandler' "log/docevent.log" INFO >>= \lh -> return $ setFormatter lh fmt
     stdoutLog <- streamHandler stdout NOTICE
@@ -82,6 +86,8 @@ setupLogger = do
                      , scriveByMailLog
                      , scriveByMailFailuresLog
                      , doceventLog
+                     , jsonMailAPILog
+                     , mailAPILog
                      ]
 
     mapM_ (\lg -> hSetEncoding (privData lg) utf8) allLoggers
@@ -166,6 +172,15 @@ setupLogger = do
         "Kontrakcja.DocEvent"
         (setLevel NOTICE . setHandlers [doceventLog])
 
+    -- JSONMailAPI Log
+    updateGlobalLogger
+        "Kontrakcja.JSONMailAPI"
+        (setLevel NOTICE . setHandlers [jsonMailAPILog])
+
+    -- MailAPI Log
+    updateGlobalLogger
+        "Kontrakcja.MailAPI"
+        (setLevel NOTICE . setHandlers [mailAPILog])
 
     return $ LoggerHandle allLoggers
 
@@ -216,13 +231,19 @@ integration msg = liftIO $ noticeM "Kontrakcja.Integration" msg
 scrivebymail :: (MonadIO m) => String -> m ()
 scrivebymail msg = liftIO $ noticeM "Kontrakcja.ScriveByMail" msg
 
+jsonMailAPI :: (MonadIO m) => String -> m ()
+jsonMailAPI msg = liftIO $ noticeM "Kontrakcja.JSONMailAPI" msg
+
+mailAPI :: (MonadIO m) => String -> m ()
+mailAPI msg = liftIO $ noticeM "Kontrakcja.MailAPI" msg
+
 scrivebymailfailure :: (MonadIO m) => String -> m ()
 scrivebymailfailure msg = liftIO $ errorM "Kontrakcja.ScriveByMailFailures" msg
 
 docevent :: (MonadIO m) => String -> m ()
 docevent msg = liftIO $ noticeM "Kontrakcja.DocEvent" msg
 
- -- | FIXME: use forkAction
+-- | FIXME: use forkAction
 forkIOLogWhenError :: (MonadIO m) => String -> IO () -> m ()
 forkIOLogWhenError errmsg action =
   liftIO $ do

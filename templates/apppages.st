@@ -103,6 +103,8 @@ standardHeaderContents=
                 type="text/javascript"></script>
         <script src="/js/uploadview.js"
                 type="text/javascript"></script>
+        <script src="/js/validation.js"
+                type="text/javascript"></script>
 
        $if(publicsafe)$
         <script src="/js/jquery.tweet.js"
@@ -270,6 +272,9 @@ pageFooter=
         </li>
         <li>
           $_pageFooterContact7()$
+        </li>
+        <li>
+          $_pageFooterContact8()$
         </li>
       </ul>
     </div>

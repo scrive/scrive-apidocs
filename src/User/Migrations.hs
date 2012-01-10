@@ -8,6 +8,17 @@ import Misc
 import User.Region
 import User.Tables
 
+addUserCustomFooter :: Migration
+addUserCustomFooter =
+  Migration {
+    mgrTable = tableUsers
+  , mgrFrom = 3
+  , mgrDo = wrapDB $ \conn -> do
+      _ <- run conn "ALTER TABLE users ADD COLUMN customfooter TEXT" []
+      _ <- run conn "UPDATE users SET customfooter = ?" [toSql (Nothing :: Maybe String)]
+      return ()
+  }
+
 removeSystemServer :: Migration
 removeSystemServer =
   Migration {
@@ -29,15 +40,3 @@ addRegionToUserSettings =
       _ <- run conn "ALTER TABLE users ALTER COLUMN region SET NOT NULL" []
       return ()
   }
-
-addUserCustomFooter :: Migration
-addUserCustomFooter =
-  Migration {
-    mgrTable = tableUsers
-  , mgrFrom = 3
-  , mgrDo = wrapDB $ \conn -> do
-      _ <- run conn "ALTER TABLE users ADD COLUMN customfooter TEXT" []
-      _ <- run conn "UPDATE users SET customfooter = ?" [toSql (Nothing :: Maybe String)]
-      return ()
-  }
-

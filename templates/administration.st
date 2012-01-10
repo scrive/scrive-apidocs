@@ -1,37 +1,22 @@
 ###
 adminsmain=
 <strong>Stats CSVs</strong>
-<p><a href="/adminonly/allstatscsv">Download the CSV containing
-    all signature stats</a></p>
-<p><a href="/adminonly/userstatscsv">Download the CSV containing
-    all user stats</a></p>
-
+<p><a href="/adminonly/allstatscsv">Download the CSV containing  all signature stats</a></p>
+<p><a href="/adminonly/userstatscsv">Download the CSV containing all user stats</a></p>
     <strong>Sales Tools</strong>
     <table><tbody>
         <tr>
           <td style="height:50px;width:200px">
             <a href="/adminonly/useradminforsales">
-              <button style="width:150px"> User Admin </button>
+              <button style="width:150px"> Sales user admin</button>
             </a>
           </td>
-         <td style="height:50px;width:200px">
-            <a href="/adminonly/useradminforpayments">
-              <button style="width:150px"> User Payments </button>
-            </a>
-          </td>
-       </tr>
-        <tr>
           <td style="height:50px;width:200px">
             <a href="/adminonly/companyadmin">
               <button style="width:150px"> Company Admin </button>
             </a>
           </td>
        </tr>
-   </tbody></table>
-    <br/>
-    <br/>
-    <strong>Admin Tools</strong>
-    <table><tbody>
         <tr>
           <td style="height:50px;width:200px">
             <a href="/adminonly/statistics">
@@ -45,10 +30,6 @@ adminsmain=
           </td>
         </tr>
         <tr>
-          <td style="height:50px;width:200px"><a href="/stats"><button style="width:150px"> Create User </button> </a> </td>
-          <td style="height:50px;width:200px"> <a href="/adminonly/useradmin"><button style="width:150px"> User Admin </button> </a></td>
-        </tr>
-        <tr>
           <td style="height:50px;">
             <a href="/adminonly/functionalitystats">
               <button style="width:150px">Functionality Stats</button>
@@ -60,20 +41,22 @@ adminsmain=
             </a>
           </td>
         </tr>
+        <tr>
+          <td style="height:50px;width:200px"> <a href="/adminonly/useradmin"><button style="width:150px"> User Admin </button> </a></td>
+        </tr>
     </tbody></table>
     <br/>
-    <br/>
-    <strong> Super Admin Tools Only </strong>
+$if(admin)$
+    <strong> Admin Tools  </strong>
     <table><tbody>
         <tr>
-          <td style="height:50px;width:200px"><a href="/adminonly/advuseradmin"><button style="width:150px"> Adv. User Admin </button> </a> </td>
           <td style="height:50px;width:200px"> <a href="/adminonly/advpayments"><button style="width:150px"> App Admin </button> </a></td>
+          <td style="height:50px;width:200px"><a href="/adminonly/services"><button style="width:150px"> Services </button> </a> </td>
         </tr>
         <tr>
-          <td style="height:50px;width:200px"><a href="/adminonly/services"><button style="width:150px"> Services </button> </a> </td>
-          <td style="height:50px;width:200px"><!--<a href="/adminonly/translations"><button style="width:150px"> Translations </button> </a> --> </td>
         </tr>
     </tbody></table>
+
     <br/>
     <br/>
     <strong> Log Files </strong>
@@ -82,104 +65,61 @@ adminsmain=
       <li><a href="/adminonly/log/mail.log">mail.log</a></li>
       <li><a href="/adminonly/log/error.log">error.log</a></li>
     </ul>
-###
-adminsmanageall =
-    $backtoadminmainlink()$
-    <div><strong>SkrivaPa admin only page</strong></div>
-    <br/>
-    <div>
-      <h3>Database files</h3>
-      <a href="/adminonly/db/">Show list of database files</a><br/>
-      <form method="post" action="/adminonly/cleanup">
-        Database incrementally stores backups of itself. Old copies aren't useful in normal situations,
-        just in case of failure. It is good to remove old files from time to time.<br/>
-        <input type="submit" value="Cleanup" /><br/>
-      </form>
-      <h3>Users</h3>
-     Here is a CSV version of this table: <a href="/adminonly/skrivapausers.csv">skrivapausers.csv</a>.
-      <div>
-        $adminlistfilter(link="/adminonly/advuseradmin")$
-      </div>
-      <div>
-        $adminlistpaging(link="/adminonly/advuseradmin")$
-        <table><tbody>
-            $users:{user|
-            <tr>
-              <td>
-                $user.fullname$
-              </td>
-              <td>
-                &lt;$user.email$&gt;
-              </td>
-            </tr>
-            }$
-        </tbody></table>
-      </div>
-    </div>
-###
-adminlistfilter=
-    <form action="$link$" method="GET">
-      <div style="border:1px solid #DDDDDD;padding:5px;margin-top:5px">
-        Find $item$:
-        <input type="text" style="width:200px;margin-left:5px;margin-right:5px" name="search" value="$search$" />
-        <input type="submit" value="Search"/>
-      </div>
-    </form>
-    <br/><br/>
-    <a href="$link$">View list of $items$ </a>
-    <br/><br/>
-    <form action="$link$" method="GET">
-      Find by name:
-      $letters:{letter |<button type="submit" name="startletter" class="transparent" value="$letter$"><a>$letter$</a> </button>}$
-    </form>
-###
-adminlistpaging=
-    <form action="$link$" method="GET">
-      View page:
-      $intervals:{interval |<button type="submit" name="page" class="transparent" value="$interval.oValue$"><a>$interval.oText$</a> </button>}$
-      <input type="hidden" name="startletter" value="$startletter$" />
-      <input type="hidden" name="search" value="$search$" />
-    </form>
-###
+$endif$
+
+#####
 adminusers=
-    <strong>USER ADMIN</strong>
-    <br/>
-    $backtoadminmainlink()$
-    $adminlistfilter(link=adminlistlink;item="user";items="users")$
-    $adminlistpaging()$
-    <br/><br/>
-    <table>
-        <thead>
-         <td style="width:200px">Username</td>
-          <td style="width:200px">Email</td>
-          <td style="width:200px">Company</td>
-          <td style="width:200px">Phone</td>
-          <td style="width:50px">Uploaded Docs</td>
-          <td style="width:50px">Signed (tot)</td>
-          <td style="width:50px">Signed (1m)</td>
-          <td style="width:50px">Signed (2m)</td>
-          <td style="width:50px">Signed (3m)</td>
-          <td style="width:50px">Signed (6m)</td>
-          <td style="width:50px">Signed (12m)</td>
-          <td style="width:50px">Viral Invites</td>
-          <td style="width:50px">Admin Invites</td>
-        </thead>
-        $users:{user|<tr>
-          <td><a href="$adminlistlink$/$user.userdetails.id$">$user.userdetails.fullname$</a> </td>
-          <td><a href="$adminlistlink$/$user.userdetails.id$">$user.userdetails.email$</a> </td>
-          <td> $user.userdetails.company$ </td>
-          <td> $user.userdetails.phone$ </td>
-          <td> $user.docstats.doccount$ </td>
-          <td> $user.docstats.signaturecount$ </td>
-          <td> $user.docstats.signaturecount1m$ </td>
-          <td> $user.docstats.signaturecount2m$ </td>
-          <td> $user.docstats.signaturecount3m$ </td>
-          <td> $user.docstats.signaturecount6m$ </td>
-          <td> $user.docstats.signaturecount12m$ </td>
-          <td> $user.userstats.viralinvitecount$ </td>
-          <td> $user.userstats.admininvitecount$ </td>
-        </tr>}$
-      </table>
+   <div id="tab-viewer">
+         <div class="tab-header">
+          <strong>
+           <span>USER ADMIN</span>
+           <span style="margin-left:20px">  $backtoadminmainlink()$</span>
+          </strong>
+          </div>
+       <div id="adminusers-viewer"></div>
+    </div>
+    <script>
+    var adminUsersTable = KontraList().init({
+        name : "Admin Users Table",
+        schema: new Schema({
+            url: "/adminonly/userslist",
+            sorting: new Sorting({ 
+                fields: [
+                      "username"
+                    , "email" 
+                    , "company"
+                    , "uploaded_docs"
+                    , "signed_docs"
+                    , "signed_1m"
+                    , "signed_2m"
+                    , "signed_3m"
+                    , "signed_6m"
+                    , "signed_12m"
+                    ]}),
+            paging: new Paging({}),
+            filtering: new Filtering({text: "", infotext: "Username, email or company name."}),
+            cells : [
+                new Cell({name: "Username"     , width:"100px", field:"username", special:"link"}),
+                new Cell({name: "Email"        , width:"140px", field:"email", special:"link"}),
+                new Cell({name: "Company"      , width:"120px", field:"company", special:"link"}),
+                new Cell({name: "Uploaded Docs", width:"50px",  field:"uploaded_docs", special:"link"}),
+                new Cell({name: "Signed (tot)" , width:"40px",  field:"signed_docs", special:"link"}),
+                new Cell({name: "Signed (1m)"  , width:"40px",  field:"signed_1m", special:"link"}),
+                new Cell({name: "Signed (2m)"  , width:"40px",  field:"signed_2m", special:"link"}),
+                new Cell({name: "Signed (3m)"  , width:"40px",  field:"signed_3m", special:"link"}),
+                new Cell({name: "Signed (6m)"  , width:"40px",  field:"signed_6m", special:"link"}),
+                new Cell({name: "Signed (12m)" , width:"40px",  field:"signed_12m", special:"link"}),
+                new Cell({name: "Viral Invites", width:"40px",  field:"viral_invites", special:"bool"}),
+                new Cell({name: "Admin Invites", width:"40px",  field:"admin_invites", special:"bool"})
+                ]
+        })
+    });
+
+    jQuery(function(){
+        jQuery("#adminusers-viewer").append(adminUsersTable.view.el)
+    });
+    </script>
+
 ###
 admincompanies=
    <div id="tab-viewer">
@@ -232,7 +172,102 @@ adminUsersForSales=
           </div>
        <div id="users-viewer"></div>
     </div>
+    <div id="message" style="display: none">$mailNewAccountCreatedByAdminContentHeader()$</div>
     <script>
+    var createUserBtn = Button.init({
+        color: "green",
+        size: "tiny",
+        text: "Create user",
+        onClick: function() {
+            var body = jQuery("<div class='account-body'>");
+            body.append("<p>Create new user account</p>");
+            var table = jQuery("<table/>");
+
+            var tr1 = jQuery("<tr/>").append(jQuery("<td/>").text("First name:"));
+            var fstname = jQuery("<input type='text' name='fstname' autocomplete='off' />");
+            tr1.append(jQuery("<td/>").append(fstname));
+            table.append(tr1);
+
+            var tr2 = jQuery("<tr/>").append(jQuery("<td/>").text("Second name:"));
+            var sndname = jQuery("<input type='text' name='sndname' autocomplete='off' />");
+            tr2.append(jQuery("<td/>").append(sndname));
+            table.append(tr2);
+
+            var tr5 = jQuery("<tr/>").append(jQuery("<td/>").text("Email address:"));
+            var email = jQuery("<input type='text' name='email' autocomplete='off' />");
+            tr5.append(jQuery("<td/>").append(email));
+            table.append(tr5);
+
+            var tr6 = jQuery("<tr/>").append(jQuery("<td/>").text("Region:"));
+            var region = jQuery("<select name='region'>" 
+                                + '<option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>'
+                                + '<option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>'
+                                + "</select>");
+            tr6.append(jQuery("<td/>").append(region));
+            table.append(tr6);
+
+            var tr7 = jQuery("<tr/>").append(jQuery("<td/>").text("Header:"));
+            var btnHeader = jQuery('<input type="button" class="editer" value="Default"/>').click(function(){
+                prepareForEdit(jQuery(this).parents("div"), '300');
+                jQuery(this).hide();
+            });
+            var header = jQuery('<span class="editable" name="custommessage" style="display: none">'
+                                + jQuery('#message').html()
+                                + '</span>');
+
+            tr7.append(jQuery("<td/>").append(btnHeader).append(header));
+            table.append(tr7);
+
+            body.append(table);
+
+
+            Confirmation.popup({
+              onAccept : function() {
+                            var callback = function(t,e,v) {
+                                e.css("background", "red"); 
+                                jQuery(document.createElement('div'))
+                                    .attr("name", "validate-message")
+                                    .css({"font-size": 8, "font-weight": "bold", "color": "red"})
+                                    .append(v.message())
+                                    .appendTo(e.parent());
+                            };
+
+                            //reset red background
+                            fstname.css("background", "white");
+                            sndname.css("background", "white");
+                            email.css("background", "white");
+                            region.css("background", "white");
+
+                            //delete messages
+                            jQuery('[name=validate-message]').remove();
+
+                            var vresult = [
+                                fstname.validate(new NameValidation({callback: callback, message: "Wrong first name format!"})),
+                                sndname.validate(new NameValidation({callback: callback, message: "Wrong second name format!"})),
+                                email.validate((new NotEmptyValidation({callback: callback, message: "Email cannot be empty!"})).concat(new EmailValidation({callback: callback}))),
+                                region.validate(new NotEmptyValidation({callback: callback, message:"Region cannot be empty!"}))
+                                ];
+
+                            if (vresult.every(function(a) {return a;})) {
+                                new Submit({
+                                    method: "POST",
+                                    add : "true",
+                                    url: "/createuser",
+                                    fstname : fstname.val(),
+                                    sndname : sndname.val(),
+                                    email : email.val(),
+                                    region : region.val(),
+                                    custommessage : header.val()
+                                    }).send();
+                            }
+                         },
+              title : "Create user",
+              acceptButtonText : "OK",
+              content  : body
+            });
+        }
+    });
+            
     var usersTable = KontraList().init({
         name : "Users Table",
         schema: new Schema({
@@ -249,49 +284,14 @@ adminUsersForSales=
                 new Cell({name: "Signed Docs", width:"100px", field:"signed_docs", special:"link"}),
                 new Cell({name: "Subaccounts", width:"100px", field:"subaccounts", special:"link"})
                 ]
-        })
+        }),
+        headerExtras: createUserBtn.input()
     });
 
     jQuery(function(){
         jQuery("#users-viewer").append(usersTable.view.el)
     });
     </script>
-###
-adminUsersForPayments=
-    <strong>USER ADMIN FOR PAYMENTS</strong>
-    <br/>
-    $backtoadminmainlink()$
-    $adminlistfilter(link=adminlistlink;item="user";items="users")$
-    $adminlistpaging()$
-    <br/><br/>
-    <table>
-        <thead>
-          <td style="width:200px">Username</td>
-          <td style="width:200px">Email</td>
-	  <td style="width:200px">Company name</td>
-	  <td style="width:200px">Payment plan</td>
-	  <td style="width:200px">Next billing date</td>
-	  <td style="width:200px">Last billing date</td>
-	  <td style="width:200px">Last billing total fee</td>
-	  <td style="width:200px">Current plan price</td>
-	  <td style="width:200px">Current per signature price</td>
-	  <td style="width:200px">Current TW storage price</td>
-	</thead>
-        $users:{user|<tr>
-          <td><a href="$adminlistlink$/$user.userdetails.id$">$user.userdetails.fullname$</a> </td>
-          <td><a href="$adminlistlink$/$user.userdetails.id$">$user.userdetails.email$</a> </td>
-          <td> $user.userdetails.company$
-          </td>
-	  <td><select autocomplete="off">$user.adminview.paymentaccounttype:options()$</select></td>
-	  <td>?</td>
-	  <td>?</td>
-	  <td>?</td>
-	  <td>0</td>
-	  <td>0</td>
-	  <td>0</td>
-      </tr>}$
-      </table>
-
 ###
 adminuser=
     <a href="$adminlink$">Go back to main admin page</a>
@@ -707,95 +707,6 @@ adminFunctionalityStatsPage=
 	    </table>
     </div>
 ###
-###
-databaseContents=
-    $backtoadminmainlink()$
-    <div>
-      <h1>All database files</h1>
-      <ul>
-        $files:{file| <li><a href="$file$">$file$</a></li>}$
-      </ul>
-      <form method="POST" action="cleanup">
-         <input type="submit" value="Remove old database files"> </input>
-      </form>
-    </div>
-####
-pageStats=
-    $backtoadminmainlink()$
-    <div>
-      <h1>Stats page</h1>
-      <table>
-        <thead>
-          <td style="width:50px"></td>
-          <td style="width:100px">Documents</td>
-          <td style="width:100px">Signatures</td>
-          <td style="width:100px">Users</td>
-          <td style="width:100px">Viral Invites</td>
-          <td style="width:100px">Admin Invites</td>
-        </thead>
-        <tr>
-          <td>Totals</td>
-          <td>$stats.svDoccount$</td>
-          <td>$stats.svSignaturecount$</td>
-          <td>$stats.svUsercount$</td>
-          <td>$stats.svViralinvitecount$</td>
-          <td>$stats.svAdmininvitecount$</td>
-        </tr>
-      </table>
-      <br/>
-      <form method="post" action="/createuser">
-        Create user:<br/>
-        <table style="width:600px">
-          <tr>
-            <td>First name:</td>
-            <td><input type="text" name="fstname"/></td>
-          </tr>
-          <tr>
-            <td>Second name:</td>
-            <td><input type="text" name="sndname"/></td>
-          </tr>
-          <tr>
-            <td>Email address:</td>
-            <td><input type="email" name="email"/></td>
-          </tr>
-          <tr>
-            <td>Region:</td>
-            <td><select name="region">
-              <option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>
-              <option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>
-                </select>
-            </td>
-          </tr>
-          <tr>
-            <td>Free till:</td>
-            <td> <input type="checkbox" value="off" autocomplete="off" oldlocation="#hiddenfreetill" location="#freetillcontainer" rel="#freetillbox" class="addremovecheckbox"/>
-                 <span id="freetillcontainer">
-                 </span>
-           </td>
-         </tr>
-         <tr>
-            <td>Header:</td>
-            <td> <input type="button" class="editer" value="Default"/>
-                 <span class="editable" name="custommessage" style="display:none">$mailNewAccountCreatedByAdminContentHeader()$</span>
-
-           </td>
-          </tr>
-        </table><br/>
-        <input type="submit" value="Create user" />
-      </form>
-
-     <div id="hiddenfreetill" style="display:none">
-      <span id="freetillbox">
-        <a class="datetodate date" rel="[name='freetill']"> </a>
-        <input type="hidden" autocomplete="off" name="freetill" value=""/>
-      </span>
-     </div>
-      <br/>
-      Disk status:<br/>
-
-      <pre>$sysinfo$</pre>
-    </div>
-####
 backtoadminmainlink=
    <a href="$adminlink$">Go back to main admin page</a>
     <br/><br/>
@@ -839,62 +750,93 @@ $services:{service |<tr>
 <BR/>
 <BR/>
 ###
-adminTranslations =
+admindocumentslist =
 
+   <div id="tab-viewer">
+         <div class="tab-header">
+          <strong>
+           <span>DOCUMENTS</span>
+           <span style="margin-left:20px">  $backtoadminmainlink()$</span>
+          </strong>
+          </div>
+         <div id="documents-viewer"></div>
+    <script>
+    var docTable = KontraList().init({
+        name : "Documents Table",
+        schema: new Schema({
+            url: "/adminonly/documentslist",
+            sorting: new Sorting({ 
+                fields: [
+                      "ctime"
+                    , "mtime"
+                    , "id"
+                    , "author"
+                    , "title"
+                    , "service"
+                    , "status"
+                    , "type"
+                    , "signs"
+                    ]}),
+            paging: new Paging({}),
+            filtering: new Filtering({infotext: "Filter documents"}),
+            cells : [
+                new Cell({name: "Dates", width:"80px", field: "ctime", special: "rendered",
+                        rendering: function(_, _, doc) {
+                               return jQuery("<small><span>"
+                                          + doc.field("ctime") + " <BR/> " 
+                                          + doc.field("mtime") +
+                                       " </small>");
+                          }}),
+                new Cell({name: "Author", width:"120px", field:"author", special: "rendered",
+                        rendering: function(value, idx, doc) {
+                            if (value != undefined) 
+                                return jQuery("<small><span>" + value.name    + " <BR/> " 
+                                                   + value.email   + " <BR/> " 
+                                                   + value.company + "</span></small>");
+                          }}),
+                new Cell({name: "Title", width:"120px", field:"title",  special: "rendered", 
+                        rendering: function(value, idx, doc) {
+                                return jQuery("<small>"+value+"</small>");
+                          }}),
+                new Cell({name: "Service", width:"40px", field:"service", special: "rendered", 
+                          rendering: function(value, idx, doc) {
+                            if (value == undefined) 
+                                return jQuery("<small>" + value + "</small>");
 
-<center><h2> Translation stats </h2>
+                            return jQuery("<small>Scrive</small>");
+                          }}),
+                new Cell({name: "Status", width:"40px", field:"status",  special: "rendered", 
+                        rendering: function(value, idx, doc) {
+                                return jQuery("<small>"+value+"</small>");
+                          }}),
+                new Cell({name: "Type", width:"40px", field:"type",  special: "rendered", 
+                        rendering: function(value, idx, doc) {
+                                return jQuery("<small>"+value+"</small>");
+                          }}),
+                new Cell({name: "Signatories", width:"120px", field:"signs", special: "rendered",
+                          rendering: function(value, idx, doc) {
+                            if (value == undefined) 
+                                return ;
 
-<div style="width: 500px;padding:20px; ">
-    If you see this page then all csv files have been updated.
-    All not used any more texts will be marked with *****.
-</div>
-</center>
+                            return jQuery("<small>" + value.join('<BR/>') + "</small>");
+                          }}),
+                $if(admin)$
+                new Cell({name: "DAVE", width:"30px", field:"id", special:"rendered",
+                          rendering: function(value, idx, doc) {
+                            return jQuery("<a href='/dave/document/" + value + "' class='gotodave'>");
+                          }})
+                $endif$
 
-####
-daylydocumentinfo =
+                ]
+        })
+    });
 
+    jQuery(function(){
+        jQuery("#documents-viewer").append(docTable.view.el)
+    });
+    </script>
+    </div>
 
-$backtoadminmainlink()$
-<div>
-<h4 style="margin-left:200px">Documents </h4>
-<p> Lists documents that could be touched durring this time, check dave for more details. Time can be moved +- 2h midnight due to timezones </p>
-
-<BR/>
-<form>
-<BR/>
- <input type='text' name='day' value='$day$'/> <input type='submit' value='Reload'/>
-<BR/>
-<BR/>
-</form>
-<table style="text-align:left;">
-<thead>
-  <tr>
-      <th style="width: 160px;"> Dates (Creation / Change)</th>
-      <th style="width: 160px;"> Author </th>
-      <th style="width: 100px;"> Title </th>
-      <th style="width: 100px;"> Service </th>
-      <th style="width: 100px;"> Status </th>
-      <th style="width: 100px;"> Type </th>
-      <th style="width: 160px;"> Signatories </th>
-      <th style="width: 80px;"> Admin </th>
-  </tr>
-</thead>
-<tbody>
-$documents:{document |<tr style="border:4px solid #DDDDDD">
-    <td style="border:2px solid #DDDDDD"> $document.ctime$ <BR/>
-                                          $document.mtime$
-    </td>
-    <td style="border:2px solid #DDDDDD">$document.author.name$ <BR/> $document.author.email$ <BR/> $document.author.company$ </td>
-    <td style="border:2px solid #DDDDDD">$document.title$ </td>
-    <td style="border:2px solid #DDDDDD"> $if(document.service)$ $document.service$ $else$ Scrive $endif$</td>
-    <td style="border:2px solid #DDDDDD">$document.status$ </td>
-    <td style="border:2px solid #DDDDDD">$document.type$ </td>
-    <td style="border:2px solid #DDDDDD">$document.signatories: {sig | $sig$ <br/>}$ </td>
-    <td style="border:2px solid #DDDDDD"><a href='/dave/document/$document.id$'> DAVE </a> </td>
-</tr>}$
-</tbody>
-</table>
-</div>
 ####
 daveDocument=
 $daveBody:noescape()$
@@ -903,10 +845,6 @@ $daveBody:noescape()$
 <center> <h1>This option is extreme. Use this only if really needed </h1></center>
 <BR/>
 <BR/>
-<BR/>
-<form method="post" action="/adminonly/preprocess/$id$" >
-      <input type="submit" value="Preprocess"> </input>
-</form>
 <BR/>
 $if(closed)$
   <form method="post" action="/adminonly/reseal/$id$">

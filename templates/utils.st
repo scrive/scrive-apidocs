@@ -15,9 +15,9 @@ listyou=
 ###
 customFooter= <span/>
 ###
-poweredBySkrivaPaPara=
+poweredByScrive=
     <p>
-      <small> $_poweredBySkrivaPaPara()$ <br/><a href="$ctxhostpart$">Scrive</a></small>
+      <small> $_poweredByScrive()$ <br/><a href="$ctxhostpart$">Scrive</a></small>
     </p>
 #####
 wrapHTML=

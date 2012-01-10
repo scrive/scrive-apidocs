@@ -34,11 +34,11 @@ import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Map as Map
 import System.IO
 import Control.Concurrent.MVar
-import Control.Monad.Reader
+--import Control.Monad.Reader
 
 import Crypto
+import DB.Checks
 import DB.Classes
-import DB.Migrations
 import Database.HDBC.PostgreSQL
 import Network.BSD
 import Network.Socket hiding ( accept, socketPort, recvFrom, sendTo )
@@ -51,11 +51,13 @@ import User.Model
 import qualified Amazon as AWS
 import Mails.MailsConfig
 import Mails.SendMail
+import Text.Show.Pretty
 import Templates.Templates (readGlobalTemplates, getTemplatesModTime)
 import Misc
 import qualified MemCache
 import File.Model
 import qualified System.Mem as System.Mem
+import qualified Doc.Import as D
 
 {- | Getting application configuration. Reads 'kontrakcja.conf' from current directory
      Setting production param can change default setting (not to send mails)
@@ -80,7 +82,7 @@ readAppConfig = readConf `catch` printDefault
         Log.server $ "No app config provided. Exiting now. Error: " ++ show ex
         Log.server $ "Please provide application config file " ++ filepath
         Log.server $ "Example configuration:"
-        Log.server $ show (defaultConf "kontrakcja")
+        Log.server $ ppShow (defaultConf "kontrakcja")
         error "Config file error"
 
 
@@ -135,13 +137,13 @@ initDatabaseEntries conn iusers = do
 
 uploadFileToAmazon :: AppConf -> IO Bool
 uploadFileToAmazon appConf = do
-  withPostgreSQL (dbConfig appConf) $ \conn -> do
-    mfile <- ioRunDB conn $ dbQuery $ GetFileThatShouldBeMovedToAmazon
+  withPostgreSQL (dbConfig appConf) $ \conn -> ioRunDB conn $ do
+    mfile <- dbQuery $ GetFileThatShouldBeMovedToAmazon
     case mfile of
-        Just file -> do
-                   runReaderT (AWS.uploadFile (docstore appConf) (defaultAWSAction appConf) file) conn
-                   return True
-        _ -> return False
+      Just file -> do
+        AWS.uploadFile (docstore appConf) (defaultAWSAction appConf) file
+        return True
+      _ -> return False
 
 runKontrakcjaServer :: IO ()
 runKontrakcjaServer = Log.withLogger $ do
@@ -179,7 +181,7 @@ runKontrakcjaServer = Log.withLogger $ do
      else createDirectoryIfMissing True $ docstore appConf
 
   withPostgreSQL (dbConfig appConf) $ \conn -> do
-    res <- ioRunDB conn $ tryDB checkDBConsistency
+    res <- ioRunDB conn $ tryDB performDBChecks
     case res of
       Left (e::E.SomeException) -> do
         Log.error $ "Error while checking DB consistency: " ++ show e
@@ -207,14 +209,7 @@ runKontrakcjaServer = Log.withLogger $ do
                   -- start the http server
                   E.bracket
                            (do
-                              -- populate db with entries from happstack-state
-                              ioRunDB conn $ do
-                                  -- U.populateDBWithUsersIfEmpty
-
-                                  -- this is not ready yet
-                                  --populateDBWithDocumentsIfEmpty
-
-                                  return ()
+                              D.populateDBWithDocumentsIfEmpty conn
 
                               let (iface,port) = httpBindAddress appConf
                               listensocket <- listenOn (htonl iface) (fromIntegral port)
@@ -272,6 +267,7 @@ defaultConf progName
                   , aesIV = BS.pack "\205\168\250\172\CAN\177\213\EOT\254\190\157SY3i\160"
                   }
               , admins             = map (Email . BSU.fromString) ["gracjanpolak@gmail.com", "lukas@skrivapa.se"]
+              , sales              = []
               , initialUsers       = []
               }
 

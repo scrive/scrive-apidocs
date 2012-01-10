@@ -49,9 +49,9 @@ module Doc.DocStateData
 import API.Service.Model
 import Company.Model
 import Data.Data (Data)
+import Data.Either
 import Data.Int
 import Data.Maybe
-import Data.Word
 import DB.Derive
 import DB.Types
 import Happstack.Data
@@ -71,7 +71,7 @@ import File.File
 import Doc.JpegPages
 import Database.HDBC
 import Data.List
-import ELegitimation.SignatureProvider 
+import ELegitimation.SignatureProvider
 newtype Author = Author { unAuthor :: UserID }
     deriving (Eq, Ord, Typeable)
 
@@ -160,7 +160,7 @@ data FieldPlacement = FieldPlacement
 
 data SignatoryDetails0 = SignatoryDetails0
     { signatoryname00      :: BS.ByteString  -- "Gracjan Polak"
-    , signatorycompany00   :: BS.ByteString  -- SkrivaPå
+    , signatorycompany00   :: BS.ByteString  -- Scrive
     , signatorynumber00    :: BS.ByteString  -- 123456789
     , signatoryemail00     :: BS.ByteString  -- "gracjanpolak@skrivapa.se"
     }
@@ -413,7 +413,7 @@ instance Version SignatoryRole
 
 data SignInfo = SignInfo
     { signtime :: MinutesTime
-    , signipnumber :: Word32
+    , signipnumber :: IPAddress
     }
     deriving (Eq, Ord, Typeable)
 
@@ -533,7 +533,7 @@ emptyDocumentUI = DocumentUI {
 
 data DocumentHistoryEntry0 = DocumentHistoryCreated0 { dochisttime0 :: MinutesTime }
                           | DocumentHistoryInvitationSent0 { dochisttime0 :: MinutesTime
-                                                          , ipnumber0 :: Word32
+                                                          , ipnumber0 :: IPAddress
                                                           }    -- changed state from Preparatio to Pending
     deriving (Eq, Ord, Typeable)
 
@@ -543,7 +543,7 @@ data DocumentHistoryEntry
       }
     | DocumentHistoryInvitationSent
       { dochisttime :: MinutesTime
-      , ipnumber :: Word32
+      , ipnumber :: IPAddress
       , dochistsignatories :: [SignatoryDetails]
       }    -- changed state from Preparatio to Pending
     | DocumentHistoryTimedOut
@@ -551,26 +551,26 @@ data DocumentHistoryEntry
       }
     | DocumentHistorySigned
       { dochisttime :: MinutesTime
-      , ipnumber :: Word32
+      , ipnumber :: IPAddress
       , dochistsignatorydetails :: SignatoryDetails
       }
     | DocumentHistoryRejected
       { dochisttime :: MinutesTime
-      , ipnumber :: Word32
+      , ipnumber :: IPAddress
       , dochistsignatorydetails :: SignatoryDetails
       }
     | DocumentHistoryClosed
       { dochisttime :: MinutesTime
-      , ipnumber :: Word32
+      , ipnumber :: IPAddress
       }
     | DocumentHistoryCanceled
       { dochisttime :: MinutesTime
-      , ipnumber :: Word32
+      , ipnumber :: IPAddress
       -- , dochistsignatorydetails :: SignatoryDetails
       }
     | DocumentHistoryRestarted
       { dochisttime :: MinutesTime
-      , ipnumber :: Word32
+      , ipnumber :: IPAddress
       }
     deriving (Eq, Ord, Typeable)
 
@@ -578,22 +578,35 @@ data DocumentLogEntry = DocumentLogEntry MinutesTime BS.ByteString
     deriving (Typeable, Data, Eq, Ord)
 
 instance Show DocumentLogEntry where
-    showsPrec _ (DocumentLogEntry time rest) = (++) (formatMinutesTimeISO time ++ " " ++ BS.toString rest)
+    showsPrec _ (DocumentLogEntry time rest) = (++) (formatMinutesTimeUTC time ++ " " ++ BS.toString rest)
 
 instance Read DocumentLogEntry where
     readsPrec _ text =
       -- 2011-01-02 13:45:22 = 19 chars
-      case parseMinutesTimeISO timepart of
+      case parseMinutesTimeUTC timepart of
         Just time -> [(DocumentLogEntry time (BS.fromString (drop 1 restpart)),"")]
         Nothing -> []
       where
        (timepart, restpart) = splitAt 19 text
 
 instance Convertible [DocumentLogEntry] SqlValue where
-    safeConvert logs = return (toSql (unlines (map show logs)))
+    safeConvert = return . toSql . unlines . map show
 
 instance Convertible SqlValue [DocumentLogEntry] where
-    safeConvert sql = return $ map read $ lines $ fromSql sql
+    safeConvert = check . partitionEithers . map parse . lines . fromSql
+      where
+        check ((x:_), _) = Left x
+        check ([], x) = Right x
+        parse s = maybe (Left ConvertError {
+            convSourceValue = s
+          , convSourceType = "String"
+          , convDestType = "DocumentLogEntry"
+          , convErrorMessage = "Convertion error: reads returned " ++ show parsedS
+          }) Right $ do
+            [(v, "")] <- return parsedS
+            return v
+          where
+            parsedS = reads s
 
 $(deriveSerialize ''DocumentLogEntry)
 instance Version DocumentLogEntry
@@ -880,7 +893,7 @@ instance Migrate SignInfo0 SignInfo where
              { signtime0
              }) = SignInfo
                 { signtime = signtime0
-                , signipnumber = 0 -- mean unknown
+                , signipnumber = unknownIPAddress
                 }
 
 $(deriveSerialize ''SignatoryDetails0)
@@ -1187,7 +1200,7 @@ instance Migrate SignatoryLink2 SignatoryLink3 where
           , signatorymagichash3 = signatorymagichash2
           , maybesignatory3     = maybesignatory2
           , maybesigninfo3      = maybesigninfo2
-          , maybeseeninfo3      = maybe Nothing (\t -> Just (SignInfo t 0)) maybeseentime2
+          , maybeseeninfo3      = maybe Nothing (\t -> Just (SignInfo t unknownIPAddress)) maybeseentime2
           }
 
 

@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, OverlappingInstances, IncoherentInstances, CPP #-}
+{-# LANGUAGE OverlappingInstances, IncoherentInstances, CPP #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module TestingUtil where
 
@@ -6,6 +6,8 @@ import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 
 import Control.Applicative
+import Data.Char
+import Data.Word
 import System.Random
 import Test.QuickCheck
 import Happstack.Server
@@ -46,6 +48,22 @@ import Doc.DocInfo
 import Doc.DocProcess
 import ActionSchedulerState
 import Text.JSON
+
+newtype NotNullWord8 = NotNullWord8 { fromNNW8 :: Word8 }
+  deriving (Enum, Eq, Integral, Num, Ord, Real)
+
+instance Show NotNullWord8 where
+  show = show . fromNNW8
+
+instance Bounded NotNullWord8 where
+  minBound = 1
+  maxBound = NotNullWord8 maxBound
+
+instance Arbitrary NotNullWord8 where
+  arbitrary = arbitrarySizedBoundedIntegral
+  shrink = shrinkIntegral
+
+newtype StringWithoutNUL = StringWithoutNUL { fromSNN :: String }
 
 instance Arbitrary DocumentTag where
   arbitrary = DocumentTag <$> arbitrary <*> arbitrary
@@ -224,11 +242,15 @@ instance Arbitrary Document where
     sls <- arbitrary
     ids <- arbitrary
     fnc <- arbitrary
+    tmt <- arbitrary
+    dts <- arbitrary
     return $ blankDocument { documentstatus = ds
                            , documenttype = dt
                            , documentsignatorylinks = sls
                            , documentallowedidtypes = [ids]
                            , documentfunctionality = fnc
+                           , documenttimeouttime = TimeoutTime <$> tmt
+                           , documentdaystosign = dts
                            }
 
 documentAllStatuses :: [DocumentStatus]
@@ -323,15 +345,20 @@ instance Arbitrary UserInfo where
     return $ UserInfo { userfstname     = fn
                       , usersndname     = ln
                       , userpersonalnumber  = pn
-                      , usercompanyposition = ""
-                      , userphone           = ""
-                      , usermobile          = ""
+                      , usercompanyposition = BS.pack []
+                      , userphone           = BS.pack []
+                      , usermobile          = BS.pack []
                       , useremail           = Email em
                       }
 
-
+-- generate (byte)strings without \NUL in them since
+-- hdbc-postgresql plays around with these chars and
+-- fucks them up
 instance Arbitrary BS.ByteString where
-  arbitrary = fmap BS.fromString arbitrary
+  arbitrary = BS.pack . map fromNNW8 <$> arbitrary
+
+instance Arbitrary StringWithoutNUL where
+  arbitrary = StringWithoutNUL . map (chr . fromIntegral . fromNNW8) <$> arbitrary
 
 arbString :: Int -> Int -> Gen String
 arbString minl maxl = do
@@ -350,8 +377,8 @@ signatoryLinkExample1 = SignatoryLink { signatorylinkid = SignatoryLinkID 0
                                       , maybesignatory = Nothing
                                       , maybesupervisor = Nothing
                                       , maybecompany = Nothing
-                                      , maybesigninfo = Just $ SignInfo (fromSeconds 0) 0
-                                      , maybeseeninfo = Just $ SignInfo (fromSeconds 0) 0
+                                      , maybesigninfo = Just $ SignInfo (fromSeconds 0) unknownIPAddress
+                                      , maybeseeninfo = Just $ SignInfo (fromSeconds 0) unknownIPAddress
                                       , maybereadinvite = Nothing
                                       , invitationdeliverystatus = Delivered
                                       , signatorysignatureinfo = Nothing
@@ -552,8 +579,8 @@ addRandomDocument rda = do
   file <- addNewRandomFile
   now <- liftIO getMinutesTime
   document <- worker file now
-  docid <- doc_update $ StoreDocumentForTesting document
-  mdoc <- doc_query $ GetDocumentByDocumentID docid
+  docid <- doc_update' $ StoreDocumentForTesting document
+  mdoc <- doc_query' $ GetDocumentByDocumentID docid
   case mdoc of
     Nothing -> do
               assertFailure "Could not store document."
@@ -578,7 +605,7 @@ addRandomDocument rda = do
 
       (signinfo, seeninfo) <- rand 10 arbitrary
       asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
-      asl <- doc_update $ SignLinkFromDetailsForTest asd roles
+      asl <- doc_update' $ SignLinkFromDetailsForTest asd roles
       let asl' = asl { maybeseeninfo = seeninfo
                      , maybesigninfo = signinfo
                      }
@@ -648,14 +675,14 @@ validTest = return . Just
 
 --Random query
 class RandomQuery a b where
-  randomQuery :: (MonadIO m, DBMonad m) => a -> m b
+  randomQuery :: a -> DB b
 
 #ifndef DOCUMENTS_IN_POSTGRES
 instance (QueryEvent ev res) => RandomQuery ev res where
   randomQuery = query
 #else
 instance (DBQuery ev res) => RandomQuery ev res where
-  randomQuery = runDBQuery
+  randomQuery = dbQuery
 #endif
 
 instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
@@ -665,14 +692,14 @@ instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
 
 --Random update
 class RandomUpdate a b where
-  randomUpdate :: (MonadIO m, DBMonad m) => a -> m b
+  randomUpdate :: a -> DB b
 
 #ifndef DOCUMENTS_IN_POSTGRES
 instance (UpdateEvent ev res) => RandomUpdate ev res where
   randomUpdate = update
 #else
 instance (DBUpdate ev res) => RandomUpdate ev res where
-  randomUpdate = runDBUpdate
+  randomUpdate = dbUpdate
 #endif
 
 instance (Arbitrary a, RandomUpdate c b) => RandomUpdate (a -> c) b where
@@ -746,6 +773,9 @@ instance Arbitrary File where
                   , filename = b
                   , filestorage = FileStorageMemory c
                   }
+
+instance Arbitrary IPAddress where
+  arbitrary = fmap IPAddress arbitrary
 
 instance Arbitrary SignInfo where
   arbitrary = SignInfo <$> arbitrary <*> arbitrary

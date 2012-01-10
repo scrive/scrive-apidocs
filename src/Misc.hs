@@ -21,6 +21,7 @@ import Data.List
 import Data.Maybe
 import Data.Monoid
 import Data.Word
+import Numeric (readDec)
 import Happstack.Data.IxSet as IxSet
 import Happstack.Server hiding (simpleHTTP,dir)
 import Happstack.State
@@ -654,11 +655,24 @@ sortWith k ls = sortBy (\a b-> compare (k a) (k b)) ls
 groupWith :: Eq b => (a -> b) -> [a] -> [[a]]
 groupWith k ls = Data.List.groupBy (\a b -> k a == k b) ls
 
+newtype IPAddress = IPAddress Word32
+  deriving (Eq, Ord, Typeable, Serialize, Version)
+
+unknownIPAddress :: IPAddress
+unknownIPAddress = IPAddress 0
+
+instance Show IPAddress where
+  showsPrec p (IPAddress n) = showsPrec p n
+
+instance Read IPAddress where
+  readsPrec _ = map (first IPAddress) . readDec
+
 -- oh boy, this is really network byte order!
-formatIP :: Word32 -> String
-formatIP 0 = ""
+formatIP :: IPAddress -> String
+formatIP (IPAddress 0) = ""
 -- formatIP 0x7f000001 = ""
-formatIP x = " (IP: " ++ show ((x `shiftR` 0) .&. 255) ++
+formatIP (IPAddress x) =
+              " (IP: " ++ show ((x `shiftR` 0) .&. 255) ++
                    "." ++ show ((x `shiftR` 8) .&. 255) ++
                    "." ++ show ((x `shiftR` 16) .&. 255) ++
                    "." ++ show ((x `shiftR` 24) .&. 255) ++ ")"
@@ -682,15 +696,20 @@ basename filename =
     (_,(_:rest)) -> basename rest
     _            -> takeWhile ((/=) '.') filename
 
-indentLinesMore :: Int -> String -> String
-indentLinesMore nspaces sublines =
-  case lines sublines of
-    (x:xs) -> unlines $ x : map (spaces ++) xs
-    [] -> []
-  where 
-    spaces = replicate nspaces ' '
-    
 toCSV :: [String] -> [[String]] -> String
 toCSV header ls =
   concatMap csvline (header:ls)
     where csvline line = "\"" ++ intercalate "\",\"" line ++ "\"\n"
+
+{- Version of elem that as a value takes Maybe-}    
+melem :: (Eq a) => Maybe a -> [a] -> Bool
+melem Nothing   _  = False
+melem (Just  e) es = elem e es
+
+firstWithDefault :: (Monad m) => [m (Maybe a)] -> m a -> m a
+firstWithDefault [] da = da
+firstWithDefault (ma:mas) da = do
+    a <- ma
+    case a of
+         Just a' -> return a'
+         Nothing -> firstWithDefault mas da

@@ -441,6 +441,9 @@ instance Read (SessionCookieInfo) where
         sh' <- readM (drop 1 sh)
         return $ (SessionCookieInfo {cookieSessionId = sid', cookieSessionHash=sh'},"")
 
+instance FromReqURI SessionCookieInfo where
+    fromReqURI = readM
+
 -- | Extract cookie from session.
 cookieInfoFromSession :: Session -> SessionCookieInfo
 cookieInfoFromSession s = SessionCookieInfo

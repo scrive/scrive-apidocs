@@ -591,7 +591,7 @@ signDocument :: DocumentID
              -> SignatoryLinkID
              -> MagicHash
              -> MinutesTime
-             -> Word32
+             -> IPAddress
              -> Maybe SignatureInfo
              -> Update Documents (Either String Document)
 signDocument documentid slid mh time ipnumber msiginfo = do
@@ -656,7 +656,7 @@ preparationToPending documentid time =
      Store the invite time + a history log message;
      NOTE: This currently does not store a very good evidence message.
  -}
-addInvitationEvidence :: DocumentID -> SignatoryLinkID -> MinutesTime -> Word32 -> Update Documents (Either String Document)
+addInvitationEvidence :: DocumentID -> SignatoryLinkID -> MinutesTime -> IPAddress -> Update Documents (Either String Document)
 addInvitationEvidence docid slid time ipnumber =
   modifySignable docid $ \document ->
   case checkAddEvidence document slid of
@@ -669,7 +669,7 @@ addInvitationEvidence docid slid time ipnumber =
 
 {- | Close a document
  -}
-closeDocument :: DocumentID -> MinutesTime -> Word32 -> Update Documents (Either String Document)
+closeDocument :: DocumentID -> MinutesTime -> IPAddress -> Update Documents (Either String Document)
 closeDocument docid time ipnumber =
   modifySignable docid $ \document ->
   case checkCloseDocument document of
@@ -701,7 +701,7 @@ getMagicHash = getRandom
 rejectDocument :: DocumentID
                -> SignatoryLinkID
                -> MinutesTime
-               -> Word32
+               -> IPAddress
                -> Maybe BS.ByteString
                -> Update Documents (Either String Document)
 rejectDocument documentid signatorylinkid1 time ipnumber customtext = do
@@ -754,7 +754,7 @@ markDocumentSeen :: DocumentID
                  -> SignatoryLinkID
                  -> MagicHash
                  -> MinutesTime
-                 -> Word32
+                 -> IPAddress
                  -> Update Documents (Either String Document)
 markDocumentSeen documentid signatorylinkid1 mh time ipnumber = do
     modifySignable documentid $ \document -> case documentstatus document of
@@ -988,7 +988,7 @@ setDocumentTitle docid doctitle time =
     Cancels a document that is either in pending or awaiting autor state.
     If it's in the wrong state, doesn't exist, or isn't a signable then a Left will be returned.
 -}
-cancelDocument :: DocumentID -> CancelationReason -> MinutesTime -> Word32 -> Update Documents (Either String Document)
+cancelDocument :: DocumentID -> CancelationReason -> MinutesTime -> IPAddress -> Update Documents (Either String Document)
 cancelDocument docid cr time ipnumber = modifySignable docid $ \document -> do
     let canceledDocument =  document { documentstatus = Canceled
                                      , documentcancelationreason = Just cr}
@@ -1006,7 +1006,7 @@ cancelDocument docid cr time ipnumber = modifySignable docid $ \document -> do
     so that it has a different document id.
     In the event of problems it returns a Left.
 -}
-restartDocument :: Document -> User -> MinutesTime -> Word32 -> Update Documents (Either String Document)
+restartDocument :: Document -> User -> MinutesTime -> IPAddress -> Update Documents (Either String Document)
 restartDocument doc user time ipnumber = do
   mndoc <- tryToGetRestarted
   case mndoc of
@@ -1446,7 +1446,7 @@ populateDBWithDocumentsIfEmpty = do
         ++ ", tags"
         ++ ", mail_footer"
         ++ ", region"
-        ++ ", deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, to_timestamp(?), to_timestamp(?), ?, to_timestamp(?), to_timestamp(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, to_timestamp(?), ?, ?, ?, ?, ?, ?)") [
+        ++ ", deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") [
             toSql $ documentid doc
           , toSql $ documentservice doc
           , toSql $ fileid `fmap` mdocfile
@@ -1503,7 +1503,7 @@ populateDBWithDocumentsIfEmpty = do
           ++ ", signinfo_personal_number_verified"
           ++ ", roles"
           ++ ", deleted"
-          ++ ", really_deleted) VALUES (?, ?, ?, ?, ?, ?, ?, to_timestamp(?), ?, to_timestamp(?), ?, to_timestamp(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") [
+          ++ ", really_deleted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") [
               toSql $ signatorylinkid sl
             , toSql $ documentid doc
             , toSql $ maybesignatory sl

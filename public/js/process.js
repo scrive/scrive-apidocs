@@ -54,8 +54,8 @@ window.Process = Backbone.Model.extend({
     rejectbuttontext : function(){
         return this.get("rejectbuttontext");
     },
-    cancelbyauthormodaltitle : function(){
-        return this.get("cancelbyauthormodaltitle");
+    cancelmodaltitle : function(){
+        return this.get("cancelmodaltitle");
     },
     authorissecretarytext : function(){
         return this.get("authorissecretarytext");
@@ -90,9 +90,9 @@ window.Process = Backbone.Model.extend({
     authorsignlastbutton : function() {
         return this.get("authorsignlastbutton");
     }
-    
+
 
 });
 
 
-})(window); 
+})(window);

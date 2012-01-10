@@ -32,8 +32,8 @@ module Doc.DocView (
   , isNotLinkForUserID
   , modalMismatch
   , modalPdfTooLarge
-  , mailCancelDocumentByAuthor
-  , mailCancelDocumentByAuthorContent
+  , mailCancelDocument
+  , mailCancelDocumentContent
   , mailDocumentAwaitingForAuthor
   , mailDocumentClosed
   , mailDocumentRejected
@@ -288,16 +288,16 @@ flashMessagePleaseSign document = do
 documentJSON :: (TemplatesMonad m, KontraMonad m, DBMonad m) => Maybe SignatoryLink -> MinutesTime -> Document -> m (JSObject JSValue)
 documentJSON msl _crttime doc = do
     ctx <- getContext
-    files <- documentfilesM doc
-    sealedfiles <- documentsealedfilesM doc
-    authorattachmentfiles <- mapM (runDB . dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
+    files <- runDB $ documentfilesM doc
+    sealedfiles <- runDB $ documentsealedfilesM doc
+    authorattachmentfiles <- mapM (runDBQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
     signatoryattachmentsfiles <- catMaybes <$> (sequence [do
-                                             file <- runDB $ dbQuery $ GetFileByFileID fid
+                                             file <- runDBQuery $ GetFileByFileID fid
                                              case file of
                                                Nothing -> return Nothing
                                                Just f -> return $ Just (fid, f)
                                           | SignatoryAttachment { signatoryattachmentfile = Just fid } <- documentsignatoryattachments doc])
-
+    let isauthoradmin = maybe False (flip isAuthorAdmin doc) (ctxmaybeuser ctx)
     fmap toJSObject $ propagateMonad  $
      [ ("title",return $ JSString $ toJSString $ BS.toString $ documenttitle doc),
        ("files", return $ JSArray $ jsonPack <$> fileJSON <$> files ),
@@ -307,6 +307,7 @@ documentJSON msl _crttime doc = do
        ("process", processJSON doc ),
        ("infotext", JSString <$> toJSString <$> documentInfoText ctx doc msl),
        ("canberestarted", return $ JSBool $  isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])),
+       ("canbecanceled", return $ JSBool $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending && isNothing (documenttimeouttime doc)),
        ("timeouttime", return $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc),
        ("status", return $ JSString $ toJSString $ show $ documentstatus doc),
        ("signatories", JSArray <$>  mapM (signatoryJSON doc msl signatoryattachmentsfiles) (documentsignatorylinks doc)),
@@ -412,7 +413,7 @@ processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
       , ("restartbuttontext", text processrestartbuttontext)
       , ("cancelbuttontext", text processcancelbuttontext)
       , ("rejectbuttontext", text processrejectbuttontext)
-      , ("cancelbyauthormodaltitle", text processcancelbyauthormodaltitle)
+      , ("cancelmodaltitle", text processcancelmodaltitle)
       , ("authorissecretarytext", text processauthorissecretarytext)
       , ("remindagainbuttontext", text processremindagainbuttontext)
       -- And more
@@ -531,13 +532,11 @@ docSortSearchPage :: ListParams -> [Document] -> PagedList Document
 docSortSearchPage  = listSortSearchPage docSortFunc docSearchFunc docsPageSize
 
 docSearchFunc::SearchingFunction Document
-docSearchFunc s doc =  nameMatch doc || signMatch doc || authorMatch doc
+docSearchFunc s doc =  nameMatch doc || signMatch doc
     where
     match m = isInfixOf (map toUpper s) (map toUpper m)
     nameMatch = match . BS.toString . documenttitle
-    signMatch d = any (match . BS.toString . getSmartName) (getSignatoryPartnerLinks d)
-    -- we need author because in orders and offers, the author is usually not a signatory
-    authorMatch d = match $ fromMaybe "" $ BS.toString <$> getSmartName <$> getAuthorSigLink d
+    signMatch d = any (match . BS.toString . getSmartName) (documentsignatorylinks d)
 
 
 docSortFunc:: SortingFunction Document
@@ -1012,13 +1011,13 @@ documentInfoText ctx document siglnk =
       documentAuthorInfo document
       fieldFL "signatories" $ map (signatoryLinkFields ctx document Nothing) $ documentsignatorylinks document
       signedByMeFields document siglnk
+      field "isviewonly" $ not $ isAuthor siglnk || maybe False (flip isAuthorAdmin document) (ctxmaybeuser ctx)
     getProcessText = renderTextForProcess document
     getProcessTextWithFields f = renderTemplateForProcess document f mainFields
     processFields = do
       fieldM "pendingauthornotsignedinfoheader" $ getProcessText processpendingauthornotsignedinfoheader
       fieldM "pendingauthornotsignedinfotext" $ getProcessText processpendingauthornotsignedinfotext
-      fieldM "pendingauthorinfoheader" $ getProcessText processpendingauthorinfoheader
-      fieldM "pendingauthorinfotext" $ getProcessTextWithFields processpendingauthorinfotext
+      fieldM "pendinginfotext" $ getProcessTextWithFields processpendinginfotext
       fieldM "cancelledinfoheader" $ getProcessText processcancelledinfoheader
       fieldM "cancelledinfotext" $ getProcessTextWithFields processcancelledinfotext
       fieldM "signedinfoheader" $ getProcessText processsignedinfoheader

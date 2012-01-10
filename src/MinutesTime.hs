@@ -21,7 +21,9 @@ module MinutesTime
        , toUTCTime
        , showAsMonth
        , showAsDate
+       , formatMinutesTimeUTC
        , formatMinutesTimeISO
+       , parseMinutesTimeUTC
        , parseMinutesTimeISO
        , monthsBefore
        , daysBefore
@@ -29,9 +31,11 @@ module MinutesTime
 
 import Control.Monad.IO.Class
 import Data.Char
-import Data.Data 
+import Data.Convertible
+import Data.Data
 import Data.Time
 import Data.Time.Clock.POSIX
+import Database.HDBC
 import Happstack.Data
 import Happstack.State
 import System.Locale
@@ -40,7 +44,6 @@ import qualified System.Time as System.Time (toUTCTime, toCalendarTime)
 import Text.Printf
 import System.IO.Unsafe
 
-import DB.Derive
 
 -- | Time in minutes from 1970-01-01 00:00 in UTC coordinates
 newtype MinutesTime0 = MinutesTime0 Int
@@ -57,7 +60,6 @@ data MinutesTime1 = MinutesTime1
 -- Same as POSIX seconds and what every other database uses as TIMESTAMP time type.
 newtype MinutesTime = MinutesTime Int
     deriving (Eq, Ord, Typeable, Data)
-$(newtypeDeriveConvertible ''MinutesTime)
 
 instance Version MinutesTime0
 $(deriveSerialize ''MinutesTime0)
@@ -100,12 +102,15 @@ formatMinutesTimeISO = formatMinutesTime defaultKontraTimeLocale "%Y-%m-%d %H:%M
 parseMinutesTimeISO :: String -> Maybe MinutesTime
 parseMinutesTimeISO = parseMinutesTime "%Y-%m-%d %H:%M:%S"
 
+parseMinutesTimeUTC :: String -> Maybe MinutesTime
+parseMinutesTimeUTC = parseMinutesTime "%Y-%m-%d %H:%M:%S"
+
 parseMinutesTime :: String -> String -> Maybe MinutesTime
 parseMinutesTime format string = do
     time <- parseTime defaultTimeLocale format string
     return $ fromSeconds $ floor $ utcTimeToPOSIXSeconds time
 
-parseDateOnly :: String -> Maybe MinutesTime 
+parseDateOnly :: String -> Maybe MinutesTime
 parseDateOnly = parseMinutesTime "%Y-%m-%d"
 
 {- |
@@ -181,7 +186,7 @@ getMinutesTime = liftIO $ (return . fromClockTime) =<< getClockTime
 -- Avoid this function. Soon we will need virtual time, not time taken
 -- globally. Simulation and unit testing requires time to be specified
 -- explicitely.
--- 
+--
 -- FIXME: rename to 'getMinutesTimeDB'
 getMinuteTimeDB :: AnyEv MinutesTime
 getMinuteTimeDB = (return . fromClockTime) =<< getEventClockTime
@@ -223,6 +228,10 @@ toSeconds (MinutesTime s) = s
 formatMinutesTime :: KontraTimeLocale -> String -> MinutesTime -> String
 formatMinutesTime ktl fmt mt = formatCalendarTime (getTimeLocale ktl) fmt (toCalendarTime mt)
 
+formatMinutesTimeUTC :: MinutesTime -> String
+formatMinutesTimeUTC mt = formatCalendarTime defaultTimeLocale "%Y-%m-%d %H:%M:%S" (toUTCTime mt)
+
+
 -- | Parse format %d-%m-%Y.
 parseMinutesTimeDMY :: String -> Maybe MinutesTime
 parseMinutesTimeDMY = parseMinutesTime "%d-%m-%Y"
@@ -245,11 +254,11 @@ minutesAfter i (MinutesTime s) = MinutesTime (s + i*60)
 minutesBefore :: Int -> MinutesTime -> MinutesTime
 minutesBefore i (MinutesTime s) = MinutesTime (s - i * 60)
 
-monthsBefore :: Int -> MinutesTime -> MinutesTime
-monthsBefore i mt = daysBefore (i * 31) mt
-
 daysBefore :: Int -> MinutesTime -> MinutesTime
 daysBefore i mt = minutesBefore (i * 60 * 24) mt
+
+monthsBefore :: Int -> MinutesTime -> MinutesTime
+monthsBefore i mt = daysBefore (i * 31) mt
 
 -- | Convert a date representation to integer. For date like
 -- "2010-06-12" result will be 20100612. Useful in IntMap for
@@ -265,3 +274,9 @@ showAsDate int = printf "%04d-%02d-%02d" (int `div` 10000) (int `div` 100 `mod` 
 
 showAsMonth :: Int -> String
 showAsMonth int = printf "%04d-%02d" (int `div` 10000) (int `div` 100 `mod` 100)
+
+instance Convertible SqlValue MinutesTime where
+  safeConvert = either Left (Right . fromClockTime) . safeConvert
+
+instance Convertible MinutesTime SqlValue where
+  safeConvert = safeConvert . toUTCTime

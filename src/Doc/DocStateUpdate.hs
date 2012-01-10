@@ -21,7 +21,7 @@ import Doc.Transitory
 import Doc.DocStateData
 import Kontra
 import MinutesTime
-import GHC.Word
+import Misc
 import Util.SignatoryLinkUtils
 import Doc.DocStateQuery
 import qualified Data.ByteString as BS
@@ -43,7 +43,7 @@ markDocumentSeen :: Kontrakcja m
                  -> SignatoryLinkID
                  -> MagicHash
                  -> MinutesTime.MinutesTime
-                 -> GHC.Word.Word32
+                 -> IPAddress
                  -> m (Either String Document)
 markDocumentSeen docid sigid mh time ipnum =
   doc_update $ MarkDocumentSeen docid sigid mh time ipnum

@@ -15,11 +15,12 @@ module Stats.Control
          addUserRefuseSaveAfterSignStatEvent,
          addUserPhoneAfterTOS,
          addUserCreateCompanyStatEvent,
+         addUserLoginStatEvent,
          addAllDocsToStats,
          addAllUsersToStats,
          handleDocStatsCSV,
          handleMigrate1To2,
-         handleUserStatsCSV,  
+         handleUserStatsCSV,
          getUsageStatsForUser,
          getUsageStatsForCompany
        )
@@ -58,7 +59,7 @@ import Control.Applicative
 import User.Utils
 
 showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
-showAdminUserUsageStats userid = onlySuperUser $ do
+showAdminUserUsageStats userid = onlySalesOrAdmin $ do
   statEvents <- runDBQuery $ GetDocStatEventsByUserID userid
   Just user <- runDBQuery $ GetUserByID userid
   mcompany <- getCompanyForUser user
@@ -69,7 +70,7 @@ showAdminUserUsageStats userid = onlySuperUser $ do
   renderFromBody TopEmpty kontrakcja content
 
 showAdminCompanyUsageStats :: Kontrakcja m => CompanyID -> m Response
-showAdminCompanyUsageStats companyid = onlySuperUser $ do
+showAdminCompanyUsageStats companyid = onlySalesOrAdmin $ do
   statCompanyEvents <- runDBQuery $ GetDocStatEventsByCompanyID companyid
   let rawevents = catMaybes $ map statCompanyEventToDocStatTuple statCompanyEvents
   let stats = calculateCompanyDocStats rawevents
@@ -79,7 +80,7 @@ showAdminCompanyUsageStats companyid = onlySuperUser $ do
   renderFromBody TopEmpty kontrakcja content
 
 showAdminSystemUsageStats :: Kontrakcja m => m Response
-showAdminSystemUsageStats = onlySuperUser $ do
+showAdminSystemUsageStats = onlySalesOrAdmin $ do
   Context{ctxtime} <- getContext
   let today = asInt ctxtime
       som   = 100 * (today `div` 100) -- start of month
@@ -95,7 +96,7 @@ showAdminSystemUsageStats = onlySuperUser $ do
   renderFromBody TopEmpty kontrakcja content
 
 handleDocStatsCSV :: Kontrakcja m => m Response
-handleDocStatsCSV = onlySuperUser $ do
+handleDocStatsCSV = onlySalesOrAdmin $ do
   stats <- runDBQuery GetDocStatEvents
   let docstatsheader = ["userid", "user", "date", "event", "count", "docid", "serviceid", "company", "companyid", "doctype"]
   csvstrings <- docStatsToString stats [] []
@@ -239,7 +240,7 @@ calculateCompanyDocStatsByMonth events =
       userTotalsByMonth = map (map sumCStats) byUser
       setUID0 (a,_,s) = (a,UserID 0, s)
       totalByMonth = map (setUID0 . sumCStats) byMonth
-  in concat $ zipWith (\a b->a++[b]) userTotalsByMonth totalByMonth 
+  in concat $ zipWith (\a b->a++[b]) userTotalsByMonth totalByMonth
 
 -- some utility functions
 
@@ -427,7 +428,7 @@ addDocumentCreateStatEvents doc = msum [
       unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatCreate
       return a
   , return False]
-                                  
+
 addDocumentTimeoutStatEvents :: (DBMonad m) => Document -> m Bool
 addDocumentTimeoutStatEvents doc = do
   case (isTimedout doc, getAuthorSigLink doc, maybesignatory =<< getAuthorSigLink doc, documenttimeouttime doc) of
@@ -493,7 +494,7 @@ filterMissing dids (doc:docs) = doc : filterMissing dids docs
 
 
 addAllDocsToStats :: Kontrakcja m => m KontraLink
-addAllDocsToStats = onlySuperUser $ do
+addAllDocsToStats = onlyAdmin $ do
   services <- runDBQuery GetServices
   let allservices = Nothing : map (Just . serviceid) services
   stats <- runDBQuery GetDocStatEvents
@@ -507,19 +508,24 @@ addAllDocsToStats = onlySuperUser $ do
   return LinkUpload
 
 handleMigrate1To2 :: Kontrakcja m => m KontraLink
-handleMigrate1To2 = onlySuperUser $ do
+handleMigrate1To2 = onlyAdmin $ do
   _ <- runDBUpdate FlushDocStats
   _ <- addAllDocsToStats
   addFlash (OperationDone, "Table migrated")
   return LinkUpload
 
 addAllUsersToStats :: Kontrakcja m => m KontraLink
-addAllUsersToStats = onlySuperUser $ do
+addAllUsersToStats = onlyAdmin $ do
   docs <- runDBQuery $ GetUsers
   _ <- mapM addUserSignTOSStatEvent docs
   return ()
   addFlash (OperationDone, "Added all users to stats")
   return LinkUpload
+
+addUserLoginStatEvent :: Kontrakcja m => MinutesTime -> User -> m Bool
+addUserLoginStatEvent time user = msum [
+    addUserIDStatEvent UserLogin (userid user) time (usercompany user) (userservice user)
+  , return False]
 
 addUserRefuseSaveAfterSignStatEvent :: Kontrakcja m => User -> SignatoryLink -> m Bool
 addUserRefuseSaveAfterSignStatEvent user siglink = msum [
@@ -578,7 +584,7 @@ addUserIDStatEvent qty uid mt mcid msid =  do
 
 
 handleUserStatsCSV :: Kontrakcja m => m Response
-handleUserStatsCSV = onlySuperUser $ do
+handleUserStatsCSV = onlySalesOrAdmin $ do
   stats <- runDBQuery GetUserStatEvents
   Log.stats $ "All user stats length: " ++ (show $ length stats)
   ok $ setHeader "Content-Disposition" "attachment;filename=userstats.csv"
@@ -595,7 +601,7 @@ getUsageStatsForUser uid som sixm = do
       statsByMonth = calculateStatsByMonth $ filter (\s -> (fst s) >= sixm) statEvents
   Log.stats $ "stats by month: " ++ show (length statsByMonth)
   return (statsByDay, statsByMonth)
-  
+
 getUsageStatsForCompany :: Kontrakcja m => CompanyID -> Int -> Int -> m ([(Int, String, [Int])], [(Int, String, [Int])])
 getUsageStatsForCompany cid som sixm = do
   statEvents <- tuplesFromUsageStatsForCompany <$> runDBQuery (GetDocStatEventsByCompanyID cid)

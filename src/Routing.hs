@@ -29,8 +29,7 @@ import AppView as V
 import Data.Maybe
 import Happstack.Server(Response, Method(GET,POST,DELETE,PUT), FromReqURI, rsCode)
 import qualified Happstack.Server as H
-import Happstack.StaticRouting(Route)
-import Happstack.StaticRouting.Internal(Route(Handler))
+import Happstack.StaticRouting(Route, handler)
 import KontraLink
 import Misc
 import Kontra
@@ -74,7 +73,7 @@ instance ToResp a => Path (Kontra a) where
 
 -- | Expect the given method, and exactly 'n' more segments, where 'n' is the arity of the handler
 path :: Path a => H.Method -> (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
-path m w h = Handler (Just (arity' h),m) (pathHandler' w h)
+path m w h = handler (Just (arity' h),m) (pathHandler' w h)
 
 hPostWrap :: Path a => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
 hPostWrap f = path POST f
