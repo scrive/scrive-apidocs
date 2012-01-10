@@ -72,13 +72,17 @@ import Doc.JpegPages
 import Database.HDBC
 import Data.List
 import ELegitimation.SignatureProvider
+import Doc.SignatoryLinkID
+
+
+
+
 newtype Author = Author { unAuthor :: UserID }
     deriving (Eq, Ord, Typeable)
 
 newtype DocumentID = DocumentID { unDocumentID :: Int64 }
     deriving (Eq, Ord, Typeable, Data) -- Data needed by PayEx modules
-newtype SignatoryLinkID = SignatoryLinkID { unSignatoryLinkID :: Int64 }
-    deriving (Eq, Ord, Typeable, Data)
+
 newtype TimeoutTime = TimeoutTime { unTimeoutTime :: MinutesTime }
     deriving (Eq, Ord, Typeable)
 
@@ -761,10 +765,6 @@ deriving instance Ord Document
 
 #endif
 
-instance Show SignatoryLinkID where
-    showsPrec prec (SignatoryLinkID x) = showsPrec prec x
-
-
 deriving instance Show Document
 deriving instance Show DocumentStatus
 deriving instance Show DocumentType
@@ -817,14 +817,7 @@ instance Read DocumentID where
     readsPrec _prec = let makeDocumentID (i,v) = (DocumentID i,v)
                       in map makeDocumentID . readSigned readDec
 
-instance Read SignatoryLinkID where
-    readsPrec _prec = let make (i,v) = (SignatoryLinkID i,v)
-                      in map make . readSigned readDec
-
 instance FromReqURI DocumentID where
-    fromReqURI = readM
-
-instance FromReqURI SignatoryLinkID where
     fromReqURI = readM
 
 $(deriveSerialize ''FieldDefinition0)
@@ -1402,9 +1395,6 @@ instance Migrate SignatoryLink10 SignatoryLink where
                 , signatoryroles             = signatoryroles10
                 }
 
-$(deriveSerialize ''SignatoryLinkID)
-instance Version SignatoryLinkID
-
 $(deriveSerialize ''DocumentID)
 instance Version DocumentID
 
@@ -1542,7 +1532,6 @@ $(enumDeriveConvertibleIgnoreFields ''DocumentStatus)
 $(bitfieldDeriveConvertible ''IdentificationType)
 $(newtypeDeriveConvertible ''DocumentID)
 $(enumDeriveConvertible ''DocumentSharing)
-$(newtypeDeriveConvertible ''SignatoryLinkID)
 $(jsonableDeriveConvertible [t| [DocumentTag] |])
 $(jsonableDeriveConvertible [t| CancelationReason |])
 $(jsonableDeriveConvertible [t| [[BS.ByteString ]] |])

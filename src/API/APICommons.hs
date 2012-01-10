@@ -54,7 +54,7 @@ import Data.Functor
 import Control.Monad
 --import Util.SignatoryLinkUtils
 import DB.Classes
-import qualified AppLogger as Log ()
+import qualified Log ()
 import Util.JSON
 import User.Lang
 import User.Region

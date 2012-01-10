@@ -32,7 +32,7 @@ import Templates.TemplatesLoader
 import TestKontra as T
 --import Doc.DocControl
 import Doc.DocInfo
-import qualified AppLogger as Log
+import qualified Log
 
 import API.MailAPI
 

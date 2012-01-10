@@ -11,7 +11,7 @@ import Doc.Model
 import qualified Doc.DocState as Old
 import qualified Data.ByteString.UTF8 as BS
 import Happstack.State
-import qualified AppLogger as Log
+import qualified Log
 import Database.HDBC
 import DB.Classes
 import Doc.DocStateData

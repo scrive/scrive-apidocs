@@ -64,7 +64,7 @@ import Text.XML.HaXml.Types
 import KontraMonad
 import Context
 import Numeric
-import AppLogger as Log (security)
+import qualified Log (security)
 import Misc hiding (getFields)
 import Templates.Templates
 import Util.FlashUtil

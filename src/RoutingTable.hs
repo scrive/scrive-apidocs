@@ -15,7 +15,6 @@ import DB.Classes
 import InputValidation
 import Kontra
 import KontraLink
-import Mails.SendGridEvents
 import Mails.SendMail
 import MinutesTime
 import Misc
@@ -27,7 +26,7 @@ import User.Model
 import User.UserView as UserView
 import qualified Stats.Control as Stats
 import qualified Administration.AdministrationControl as Administration
-import qualified AppLogger as Log (security, debug)
+import qualified Log (security, debug)
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import qualified Contacts.ContactsControl as Contacts
 import qualified Doc.DocControl as DocControl
@@ -205,7 +204,6 @@ staticRoutes = choice
 
      -- super user only
      , dir "createuser" $ hPost $ toK0 $ Administration.handleCreateUser
-     , dir "sendgrid" $ dir "events" $ remainingPath POST $ handleSendgridEvent
      , dir "adminonly" $ hGet $ toK0 $ Administration.showAdminMainPage
      , dir "adminonly" $ dir "useradminforsales" $ hGet $ toK0 $ Administration.showAdminUsersForSales
      , dir "adminonly" $ dir "userslist" $ hGet $ toK0 $ Administration.jsonUsersList
@@ -437,7 +435,7 @@ forgotPasswordPagePost = do
 sendResetPasswordMail :: Kontrakcja m => Context -> KontraLink -> User -> m ()
 sendResetPasswordMail ctx link user = do
   mail <- UserView.resetPasswordMail (ctxhostpart ctx) user link
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress user] }
+  scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress user] }
 
 {- |
    Handles viewing of the signup page
@@ -496,11 +494,11 @@ signup vip _freetill =  do
    Sends a new activation link mail, which is really just a new user mail.
 -}
 _sendNewActivationLinkMail:: Context -> User -> Kontra ()
-_sendNewActivationLinkMail Context{ctxhostpart, ctxesenforcer} user = do
+_sendNewActivationLinkMail Context{ctxhostpart, ctxmailsconfig} user = do
     let email = getEmail user
     al <- newAccountCreatedLink user
     mail <- newUserMail ctxhostpart email email al False
-    scheduleEmailSendout ctxesenforcer $ mail { to = [MailAddress {fullname = email, email = email}] }
+    scheduleEmailSendout ctxmailsconfig $ mail { to = [MailAddress {fullname = email, email = email}] }
 
 {- |
    Handles viewing of the login page

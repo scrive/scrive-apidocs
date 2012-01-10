@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, ForeignFunctionInterface #-}
+{-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-| Dump bin for things that do not fit anywhere else
 
@@ -33,8 +33,7 @@ import System.IO.Temp
 import System.Process
 import System.Random
 import System.Time
-import Text.HTML.TagSoup.Entity (lookupEntity)
-import qualified AppLogger as Log
+import qualified Log
 import qualified Codec.Binary.Url as URL
 import qualified Control.Exception as C
 import qualified Data.ByteString as BS
@@ -43,9 +42,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS
 import qualified GHC.Conc
 import Data.Bits
-
-
-foreign import ccall unsafe "htonl" htonl :: Word32 -> Word32
 
 -- We want this operators to bind strongly but weeker then . to do cond1 &&^ not . cond2
 infixl 8  &&^
@@ -104,65 +100,11 @@ getUnique64 ixset constr = do
      else getUnique64 ixset constr
 
 -- | Generate random string of specified length that contains allowed chars
-randomString :: Int -> [Char] -> IO String
-randomString n allowed_chars =
+randomString :: MonadIO m => Int -> [Char] -> m String
+randomString n allowed_chars = liftIO $
     sequence $ replicate n $ ((!!) allowed_chars <$> randomRIO (0, len))
     where
         len = length allowed_chars - 1
-
--- | Open external document in default application. Useful to open
--- *.eml in email program for example. Windows version.
-openDocumentWindows :: String -> IO ()
-openDocumentWindows filename = do
-    let cmd = "cmd"
-    let args = ["/c", filename]
-    (_, _, _, _pid) <-
-        createProcess (proc cmd args){ std_in  = Inherit,
-                                       std_out = Inherit,
-                                       std_err = Inherit
-                                     }
-    return ()
-
--- | Open external document in default application. Useful to open
--- *.eml in email program for example. Gnome version.
-openDocumentGnome :: String -> IO ()
-openDocumentGnome filename = do
-    let cmd = "gnome-open"
-    let args = [filename]
-    (_, _, _, _pid) <-
-        createProcess (proc cmd args){ std_in  = Inherit,
-                                       std_out = Inherit,
-                                       std_err = Inherit
-                                     }
-    return ()
-
--- | Open external document in default application. Useful to open
--- *.eml in email program for example. Mac version.
-openDocumentMac :: String -> IO ()
-openDocumentMac filename = do
-    let cmd = "open"
-    let args = [filename]
-    (_, _, _, _pid) <-
-        createProcess (proc cmd args){ std_in  = Inherit,
-                                       std_out = Inherit,
-                                       std_err = Inherit
-                                     }
-    return ()
-
-openDocument :: String -> IO ()
-openDocument filename =
-  openDocumentMac filename `catch`
-  (\_e ->
-    openDocumentWindows filename `catch`
-    (\_e ->
-      openDocumentGnome filename `catch`
-      (\_e ->
-        return ())))
-
-toIO :: Monad m => s -> ServerPartT (StateT s m) a -> ServerPartT m a
-toIO astate = mapServerPartT f
-  where
-    f m = evalStateT m astate
 
 -- | Extract data from GET or POST request. Fail with 'mzero' if param
 -- variable not present or when it cannot be read.
@@ -492,9 +434,13 @@ querystring = do
 pureString::String -> String
 pureString s = unwords $ words $ filter (not . isControl) s
 
-pairMaybe::Maybe a -> Maybe b -> Maybe (a,b)
-pairMaybe (Just a) (Just b) = Just (a,b)
+pairMaybe :: Maybe a -> Maybe b -> Maybe (a, b)
+pairMaybe (Just a) (Just b) = Just (a, b)
 pairMaybe _ _ = Nothing
+
+pairMaybe3 :: Maybe a -> Maybe b -> Maybe c -> Maybe (a, b, c)
+pairMaybe3 (Just a) (Just b) (Just c) = Just (a, b, c)
+pairMaybe3 _ _ _ = Nothing
 
 maybeReadM::(Monad m,Read a,Functor m) =>  m (Maybe String) -> m (Maybe a)
 maybeReadM c = join <$> fmap maybeRead <$> c
@@ -638,16 +584,6 @@ _ <| Just y  = y
 
 infixr 0 <|
 infixr 0 |>
-
-unescapeEntities :: String -> String
-unescapeEntities [] = []
-unescapeEntities ('&':xs) = 
-  let (b, a) = break (== ';') xs in
-  case lookupEntity b of
-    Just c | "" /=  a && 
-             head a == ';' ->  c  : unescapeEntities (tail a)    
-    _                      -> '&' : unescapeEntities xs
-unescapeEntities (x:xs) = x : unescapeEntities xs
 
 sortWith :: Ord b => (a -> b) -> [a] -> [a]
 sortWith k ls = sortBy (\a b-> compare (k a) (k b)) ls

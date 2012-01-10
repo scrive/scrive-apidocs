@@ -13,7 +13,7 @@ import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
 import Data.Traversable (sequenceA)
-import qualified AppLogger as Log
+import qualified Log
 
 
     

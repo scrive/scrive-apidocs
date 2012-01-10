@@ -36,7 +36,8 @@ import Test.Framework.Providers.HUnit (testCase)
 import Test.QuickCheck
 import File.FileID
 
---import qualified AppLogger as Log
+import qualified Log
+
 
 docStateTests :: Connection -> Test
 docStateTests conn = testGroup "DocState" [
@@ -98,7 +99,7 @@ docStateTests conn = testGroup "DocState" [
   testThat "MarkDocumentSeen succeeds when siglink and magichash match" conn testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight,
   testThat "MarkDocumentSeen fails when the siglink matches but magichash does not" conn testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft,
 
-  testThat "MarkInvitationRead never fails" conn testMarkInvitationRead,
+  testThat "MarkInvitationRead when has not read" conn testMarkInvitationRead,
   testThat "MarkInvitationRead never fails when doc doesn't exist" conn testMarkInvitationReadDocDoesntExist,
 
   testThat "RejectDocument succeeds when signable and pending" conn testRejectDocumentSignablePendingRight,
@@ -1233,9 +1234,16 @@ testRejectDocumentSignablePendingRight = doTimes 10 $ do
 testMarkInvitationRead :: DB ()
 testMarkInvitationRead = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
-  doc <- addRandomDocumentWithAuthor' author
-  _edoc <- randomUpdate $ MarkInvitationRead (documentid doc)
-  validTest $ assertSuccess
+  doc <- addRandomDocumentWithAuthorAndCondition author 
+         (isPending &&^ (all (isNothing . maybereadinvite) . documentsignatorylinks))
+  forM_ (documentsignatorylinks doc) $ \sl -> Log.debug $ "maybereadinvite: " ++ show (maybereadinvite sl)
+  slid <- rand 10 $ elements (map signatorylinkid (documentsignatorylinks doc))
+  time <- getMinutesTime
+  edoc <- dbUpdate $ MarkInvitationRead (documentid doc) slid time
+  validTest $ do
+    assertRight edoc
+    let Just sl = getSigLinkFor (fromRight edoc) slid
+    assertEqual "Invitation read time should be set." (Just time) (maybereadinvite sl)
 
 testMarkInvitationReadDocDoesntExist :: DB ()
 testMarkInvitationReadDocDoesntExist = doTimes 10 $ do

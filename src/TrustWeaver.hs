@@ -29,7 +29,7 @@ import Control.Concurrent
 import Data.List
 import SOAP.SOAP
 
-import qualified AppLogger as Log
+import qualified Log
 import qualified Data.ByteString as BS
 
 data TrustWeaverConf = TrustWeaverConf

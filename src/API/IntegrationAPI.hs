@@ -62,7 +62,7 @@ import File.Model
 import Util.JSON
 import Text.JSON.String
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
-import qualified AppLogger as Log (integration)
+import qualified Log (integration)
 
 {- |
   Definition of integration API

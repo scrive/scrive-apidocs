@@ -33,11 +33,10 @@ import Doc.DocUtils
 import Doc.Transitory
 import Data.Either
 import qualified Doc.DocControl as DocControl
-import Templates.Templates
-import qualified AppLogger as Log (scrivebymail, scrivebymailfailure)
+import qualified Log (scrivebymail, scrivebymailfailure)
 import ScriveByMail.View
 import Util.SignatoryLinkUtils
-import Mails.MailsData
+import Mails.SendMail
 import KontraLink
 import qualified Codec.MIME.Type as MIME
 
@@ -195,15 +194,15 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
 
   return $ show docid
 
-sendMailAPIConfirmEmail :: TemplatesMonad m => Context -> Document -> m ()
+sendMailAPIConfirmEmail :: Kontrakcja m => Context -> Document -> m ()
 sendMailAPIConfirmEmail ctx document =
   case getAuthorSigLink document of
     Nothing -> error "No author in Document"
     Just authorsl -> do
       mail <- mailMailAPIConfirm ctx document authorsl
-      scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress authorsl] }
+      scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress authorsl] }
 
-sendMailAPIErrorEmail :: TemplatesMonad m => Context -> String -> String -> m ()
+sendMailAPIErrorEmail :: Kontrakcja m => Context -> String -> String -> m ()
 sendMailAPIErrorEmail ctx email msg = do
   mail <- mailMailApiError ctx msg
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress (BS.fromString email) (BS.fromString email)] }
+  scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress (BS.fromString email) (BS.fromString email)] }

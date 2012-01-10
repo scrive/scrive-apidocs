@@ -24,7 +24,6 @@ import Doc.DocStateData
 import InputValidation
 import Kontra
 import KontraLink
-import Mails.MailsConfig
 import Mails.SendMail
 import Numeric
 import MinutesTime
@@ -36,7 +35,7 @@ import Stats.Control
 import Templates.Templates
 import User.Model
 import User.UserView as UserView
-import qualified AppLogger as Log (error, debug)
+import qualified Log (error, debug)
 import qualified Doc.DocControl as DocControl
 import qualified FlashMessage as F
 import qualified MemCache
@@ -79,10 +78,7 @@ import qualified Network.HTTP as HTTP
 data AppGlobals
     = AppGlobals { templates       :: MVar (ClockTime, KontrakcjaGlobalTemplates)
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
-                 , mailer          :: Mailer
-                 , appbackdooropen    :: Bool --whether a backdoor used to get email content is open or not
                  , docscache       :: MVar (Map.Map FileID JpegPages)
-                 , esenforcer      :: MVar ()
                  }
 
 {- |
@@ -240,8 +236,7 @@ appHandler handleRoutes appConf appGlobals = do
   where
     handle :: Request -> Session -> Context -> ServerPartT IO Response
     handle rq session ctx = do
-      (res,ctx') <- toIO ctx . runKontra $
-         do
+      (res, ctx') <- runKontra ctx $ do
           res <- handleRoutes  `mplus` do
              rqcontent <- liftIO $ tryTakeMVar (rqInputsBody rq)
              when (isJust rqcontent) $
@@ -313,12 +308,11 @@ appHandler handleRoutes appConf appGlobals = do
                 , ctxs3action = defaultAWSAction appConf
                 , ctxgscmd = gsCmd appConf
                 , ctxproduction = production appConf
-                , ctxbackdooropen = isBackdoorOpen $ mailsConfig appConf
                 , ctxtemplates = localizedVersion userlocale templates2
                 , ctxglobaltemplates = templates2
                 , ctxlocale = userlocale
                 , ctxlocaleswitch = isNothing $ doclocale
-                , ctxesenforcer = esenforcer appGlobals
+                , ctxmailsconfig = mailsConfig appConf
                 , ctxtwconf = TW.TrustWeaverConf
                               { TW.signConf = trustWeaverSign appConf
                               , TW.adminConf = trustWeaverAdmin appConf
@@ -394,11 +388,11 @@ signup vip _freetill =  do
    Sends a new activation link mail, which is really just a new user mail.
 -}
 _sendNewActivationLinkMail:: Context -> User -> Kontra ()
-_sendNewActivationLinkMail Context{ctxhostpart, ctxesenforcer} user = do
+_sendNewActivationLinkMail Context{ctxhostpart, ctxmailsconfig} user = do
     let email = getEmail user
     al <- newAccountCreatedLink user
     mail <- newUserMail ctxhostpart email email al False
-    scheduleEmailSendout ctxesenforcer $ mail { to = [MailAddress {fullname = email, email = email}] }
+    scheduleEmailSendout ctxmailsconfig $ mail { to = [MailAddress {fullname = email, email = email}] }
 
 {- |
    Handles submission of a login form.  On failure will redirect back to referer, if there is one.

@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP #-}
-module DB.Migrations (
-    migrationsList
-  , tablesList
+module AppDB (
+    kontraMigrations
+  , kontraTables
   ) where
 
 import DB.Model
@@ -21,8 +21,8 @@ import Stats.Migrations
 import File.Tables
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
-migrationsList :: [Migration]
-migrationsList = [
+kontraMigrations :: [Migration]
+kontraMigrations = [
     addRegionToUserSettings
   , addServiceAndCompanyToStats
   , removeSystemServer
@@ -33,8 +33,8 @@ migrationsList = [
 #endif
   ]
 
-tablesList :: [Table]
-tablesList = [
+kontraTables :: [Table]
+kontraTables = [
     tableVersions
   , tableUsers
   , tableUserFriends

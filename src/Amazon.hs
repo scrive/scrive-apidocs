@@ -22,7 +22,7 @@ import qualified Network.HTTP as HTTP
 import File.File
 import File.Model
 import Misc (concatChunks)
-import qualified AppLogger as Log
+import qualified Log
 import DB.Classes
 import Control.Monad.IO.Class
 

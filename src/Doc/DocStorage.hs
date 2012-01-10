@@ -35,7 +35,7 @@ import qualified Data.ByteString.Lazy as BSL
 --import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import qualified TrustWeaver as TW
-import qualified AppLogger as Log
+import qualified Log
 import System.IO.Temp
 import qualified MemCache
 import ForkAction
