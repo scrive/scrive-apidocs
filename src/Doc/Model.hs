@@ -1507,7 +1507,7 @@ instance DBUpdate MarkInvitationRead (Either String Document) where
     r <- runUpdateStatement "signatory_links"
                          [ sqlField "read_invitation" time
                          ]
-                         "WHERE id = ? AND document_id = ? AND read_invitation = NULL"
+                         "WHERE id = ? AND document_id = ? AND read_invitation IS NULL"
                          [ toSql linkid
                          , toSql did
                          ]
