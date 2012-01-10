@@ -768,7 +768,7 @@ addSignStatSignEvent doc sl =
           show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatSign
         return a
     (Nothing, _) -> do
-      Log.stats $ "Cannot add sign stat because document is not seen: " ++ show (signatorylinkid sl)
+      Log.stats $ "Cannot add sign stat because document is not signed: " ++ show (signatorylinkid sl)
       return False
     (_, Nothing) -> do
       Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
@@ -794,10 +794,10 @@ addSignStatRejectEvent doc sl =
         show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatReject
       return a
     (Just _, Just _) -> do
-      Log.stats $ "Cannot add reject stat because document is not seen by this sl: " ++ show (signatorylinkid sl)
+      Log.stats $ "Cannot add reject stat because document is not rejected by this sl: " ++ show (signatorylinkid sl)
       return False
     (Nothing, _) -> do
-      Log.stats $ "Cannot add reject stat because document is not seen: " ++ show (signatorylinkid sl)
+      Log.stats $ "Cannot add reject stat because document is not rejected: " ++ show (signatorylinkid sl)
       return False
     (_, Nothing) -> do
       Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
