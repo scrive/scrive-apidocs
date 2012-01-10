@@ -37,6 +37,9 @@ import Control.Concurrent.MVar
 --import Control.Monad.Reader
 
 import Crypto
+import qualified Paths_kontrakcja as Paths
+import Data.Version
+import Data.List
 import DB.Checks
 import DB.Classes
 import Database.HDBC.PostgreSQL
@@ -150,6 +153,9 @@ runKontrakcjaServer = Log.withLogger $ do
   -- progname effects where state is stored and what the logfile is named
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
+
+
+  Log.server $ "Starting kontrakcja-server build " ++ concat (intersperse " " (versionTags Paths.version))
 
   args <- getArgs
   appConf1 <- readAppConfig
