@@ -63,6 +63,7 @@ import Util.JSON
 import Text.JSON.String
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified Log (integration)
+import Doc.DocStorage
 
 {- |
   Definition of integration API
@@ -222,12 +223,14 @@ createDocFromFiles :: (Kontrakcja m, APIContext c) =>
                       -> MinutesTime
                       -> APIFunction m c (Maybe Document)
 createDocFromFiles title doctype files user mcompany time = do
+  ctx <- getContext
   edoc <- doc_update $ NewDocument user mcompany title doctype time
   case edoc of
     Left _ -> throwApiError API_ERROR_OTHER $ "Cannot create document"
     Right doc -> do
       let addAndAttachFile name content = do
-            file <- runDB $ dbUpdate $ NewFile name content
+            content14 <- liftIO $ preprocessPDF ctx content (documentid doc)
+            file <- runDB $ dbUpdate $ NewFile name content14
             doc_update $ AttachFile (documentid doc) (fileid file) time
       mapM_ (uncurry addAndAttachFile) files
       return $ Just doc
