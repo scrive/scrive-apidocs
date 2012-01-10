@@ -867,6 +867,7 @@ resealFile docid = onlyAdmin $ do
       Right _ -> Log.debug "Ok, so the document has been resealed"
   return LoopBack
 
+
 replaceMainFile :: Kontrakcja m => DocumentID -> m KontraLink
 replaceMainFile did = onlyAdmin $ do
   Log.debug $ "Replaing main file | SUPER CRITICAL | If you see this check who did this ask who did this and why"
