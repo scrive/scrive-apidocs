@@ -56,7 +56,6 @@ import Control.Monad.Reader
 import Data.Either
 import Data.List
 import Data.Maybe
-import Data.Word
 import Happstack.Server hiding (simpleHTTP)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
@@ -838,7 +837,7 @@ handleIssueSaveAsTemplate document = do
   addFlashM flashDocumentTemplateSaved
   return $ LinkTemplates
 
-markDocumentAuthorReadAndSeen :: Kontrakcja m => Document -> MinutesTime -> Word32 -> m ()
+markDocumentAuthorReadAndSeen :: Kontrakcja m => Document -> MinutesTime -> IPAddress -> m ()
 markDocumentAuthorReadAndSeen Document{documentid, documentsignatorylinks} time ipnumber =
   mapM_ mark $ filter isAuthor documentsignatorylinks
   where

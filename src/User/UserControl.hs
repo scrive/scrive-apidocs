@@ -801,6 +801,7 @@ handleActivate aid hash signupmethod actvuser = do
               tosuser <- guardJustM $ runDBQuery $ GetUserByID (userid actvuser)
               _ <- addUserSignTOSStatEvent tosuser
               dropExistingAction aid
+              _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
               logUserToContext $ Just tosuser
               return $ Just tosuser
             else do
@@ -856,6 +857,8 @@ handlePasswordReminderPost aid hash = do
                               passwordhash <- liftIO $ createPassword password
                               _ <- runDBUpdate $ SetUserPassword (userid user) passwordhash
                               addFlashM flashMessageUserPasswordChanged
+                              Context{ctxtime} <- getContext
+                              _ <- addUserLoginStatEvent ctxtime user
                               logUserToContext $ Just user
                               return LinkUpload
                           Left flash -> do

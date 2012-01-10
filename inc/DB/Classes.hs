@@ -94,7 +94,7 @@ protIO query action = do
   conn <- ask
   liftIO (actionWithCatch conn)
   where
-    setOriginalQuery e = SQLError query e
+    setOriginalQuery e = SQLError query [] e
     actionWithCatch conn = do
       action `E.catch` \e -> do
         -- for some unknown reason we need to do rollback here
@@ -140,6 +140,7 @@ kExecute1 values = do
           mst <- get
           E.throw TooManyObjects
              { originalQuery = fromMaybe "" (fmap HDBC.originalQuery mst)
+             , queryParams = values
              , tmoExpected = 1
              , tmoGiven = result
              }
@@ -157,6 +158,7 @@ kExecute01 values = do
           mst <- get
           E.throw TooManyObjects
              { originalQuery = fromMaybe "" (fmap HDBC.originalQuery mst)
+             , queryParams = values
              , tmoExpected = 1
              , tmoGiven = result
              })
@@ -173,6 +175,7 @@ kExecute1P values = do
           mst <- get
           E.throw TooManyObjects
              { originalQuery = fromMaybe "" (fmap HDBC.originalQuery mst)
+             , queryParams = values
              , tmoExpected = 1
              , tmoGiven = result
              })
@@ -286,7 +289,7 @@ runDB f = do
   where
     -- we catch only SqlError/DBException here
     handlers = [
-        E.Handler (return . Left . SQLError "<unknown SQL query>")
+        E.Handler (return . Left . SQLError "<unknown SQL query>" [])
       , E.Handler (return . Left)
       ]
 

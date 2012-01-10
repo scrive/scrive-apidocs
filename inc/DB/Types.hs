@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module DB.Types (
     MagicHash(..)
   , Binary(..)
@@ -5,6 +6,7 @@ module DB.Types (
 
 import Control.Applicative
 import Control.Arrow
+import Control.Monad (liftM)
 import Data.Convertible
 import Data.Data
 import Data.Int
@@ -57,3 +59,11 @@ instance Convertible Binary SqlValue where
 -- decode is too strict for PostgreSQL taste, so we use decodeLenient instead
 instance Convertible SqlValue Binary where
   safeConvert = either Left (Right . Binary . B64.decodeLenient) . safeConvert
+
+-- IP addresses are currently cast to signed Int32 in DB
+instance Convertible IPAddress SqlValue where
+  safeConvert = safeConvert . (\(IPAddress a) -> fromIntegral a :: Int32)
+
+instance Convertible SqlValue IPAddress where
+  safeConvert = liftM (IPAddress . (fromIntegral :: Int32 -> Word32)) . safeConvert
+

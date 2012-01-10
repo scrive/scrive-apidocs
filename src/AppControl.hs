@@ -31,6 +31,7 @@ import Misc
 --import PayEx.PayExInterface ()-- Import so at least we check if it compiles
 import Redirect
 import Session
+import Stats.Control
 import Templates.Templates
 import User.Model
 import User.UserView as UserView
@@ -270,8 +271,8 @@ appHandler handleRoutes appConf appGlobals = do
       addrs <- liftIO $ getAddrInfo (Just hints) (Just peerhost) Nothing
       let addr = head addrs
       let peerip = case addrAddress addr of
-                     SockAddrInet _ hostip -> hostip
-                     _ -> 0
+                     SockAddrInet _ hostip -> IPAddress hostip
+                     _ -> unknownIPAddress
 
       conn <- liftIO $ connectPostgreSQL $ dbConfig appConf
       minutestime <- liftIO getMinutesTime
@@ -414,6 +415,7 @@ handleLoginPost = do
                           locale = ctxlocale ctx
                         }
                         muuser <- runDBQuery $ GetUserByID (userid user)
+                        _ <- addUserLoginStatEvent (ctxtime ctx) (fromJust muuser)
                         logUserToContext muuser
                         return BackToReferer
                 Just _ -> do
