@@ -19,7 +19,6 @@ import qualified Data.ByteString.Char8 as BS
 
 import DB.Derive
 import DB.Types
-import Undefined
 
 newtype MailID = MailID Int64
   deriving (Eq, Ord)
@@ -82,7 +81,7 @@ data SendGridEvent =
 
 data Event =
     SendGridEvent String SendGridEvent String -- ^ email, event, category
-  | UnusedEvent Undefined -- ^ unused
+  | UnusedEvent -- ^ unused
   deriving (Eq, Ord, Show, Data, Typeable)
 $(jsonableDeriveConvertible [t| Event |])
 
