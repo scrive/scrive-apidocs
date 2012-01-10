@@ -886,7 +886,7 @@ handleAccountRemovalFromSign user siglink aid hash = do
   doc <- removeAccountFromSignAction aid hash
   doc1 <- guardRightM $ doc_update . ArchiveDocument user $ documentid doc
   _ <- case getSigLinkFor doc1 (signatorylinkid siglink) of
-    Just sl -> addSignStatDeleteEvent doc1 sl ctxtime
+    Just sl -> runDB $ addSignStatDeleteEvent doc1 sl ctxtime
     _       -> return False
   _ <- addUserRefuseSaveAfterSignStatEvent user siglink
   return ()

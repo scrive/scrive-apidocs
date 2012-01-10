@@ -85,7 +85,7 @@ signDocumentWithEmail did slid mh fields = do
               Left message -> return $ Left (DBActionNotAvailable message)
               Right doc -> do
                 _ <- case getSigLinkFor doc slid of
-                  Just sl -> addSignStatSignEvent doc sl
+                  Just sl -> runDB $ addSignStatSignEvent doc sl
                   _ -> return False
                 return $ Right (doc, olddoc)
 
@@ -108,7 +108,7 @@ signDocumentWithEleg did slid mh fields sinfo = do
               Left message -> return $ Left (DBActionNotAvailable message)
               Right doc -> do
                 _ <- case getSigLinkFor doc slid of
-                  Just sl -> addSignStatSignEvent doc sl
+                  Just sl -> runDB $ addSignStatSignEvent doc sl
                   _ -> return False
                 return $ Right (doc, olddoc)
 
@@ -127,7 +127,7 @@ rejectDocumentWithChecks did slid mh customtext = do
         Left msg -> return $ Left (DBActionNotAvailable msg)
         Right document -> do
           _ <- case getSigLinkFor document slid of
-            Just sl -> addSignStatRejectEvent document sl
+            Just sl -> runDB $ addSignStatRejectEvent document sl
             _       -> return False
           return $ Right (document, olddocument)
 
@@ -157,7 +157,7 @@ authorSignDocument did msigninfo = onlyAuthor did $ do
                 Left m -> return $ Left $ DBActionNotAvailable m
                 Right d3 -> do
                   _ <- case getSigLinkFor d3 signatorylinkid of
-                    Just sl -> addSignStatSignEvent d3 sl
+                    Just sl -> runDB $ addSignStatSignEvent d3 sl
                     _ -> return False
                   return $ Right d3
 
@@ -204,7 +204,7 @@ authorSignDocumentFinal did msigninfo = onlyAuthor did $ do
         Left m -> return $ Left $ DBActionNotAvailable m
         Right d1 -> do
           _ <- case getSigLinkFor d1 signatorylinkid of
-            Just sl -> addSignStatSignEvent d1 sl
+            Just sl -> runDB $ addSignStatSignEvent d1 sl
             _ -> return False
           transActionNotAvailable <$> doc_update (CloseDocument did (ctxtime ctx) (ctxipnumber ctx))
 

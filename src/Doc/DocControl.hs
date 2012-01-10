@@ -125,11 +125,11 @@ postDocumentChangeAction document@Document  { documentstatus
         _ <- case edoc of
           Left _ -> do
             _ <- addDocumentSendStatEvents document'
-            forM (documentsignatorylinks document') $ \sl ->
+            runDB $ forM (documentsignatorylinks document') $ \sl ->
               addSignStatInviteEvent document' sl (ctxtime ctx)
           Right doc2 -> do
             _ <- addDocumentSendStatEvents doc2
-            forM (documentsignatorylinks doc2) $ \sl ->
+            runDB $ forM (documentsignatorylinks doc2) $ \sl ->
               addSignStatInviteEvent doc2 sl (ctxtime ctx)
         return ()
     -- Preparation -> Closed (only author signs)
@@ -607,7 +607,7 @@ handleSignShow documentid
   _ <- markDocumentSeen documentid signatorylinkid magichash ctxtime ctxipnumber
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
   invitedlink <- guardJust $ getSigLinkFor document signatorylinkid
-  _ <- addSignStatLinkEvent document invitedlink
+  _ <- runDB $ addSignStatLinkEvent document invitedlink
   let isFlashNeeded = Data.List.null ctxflashmessages
                         && not (hasSigned invitedlink)
   -- add a flash if needed
@@ -1592,7 +1592,7 @@ handleRubbishReallyDelete = do
   mapM_ (\did -> do
             doc <- guardRightM $ doc_update $ ReallyDeleteDocument user did
             case getSigLinkFor doc user of
-              Just sl -> addSignStatPurgeEvent doc sl ctxtime
+              Just sl -> runDB $ addSignStatPurgeEvent doc sl ctxtime
               _ -> return False) 
     $ map DocumentID docids
   addFlashM flashMessageRubbishHardDeleteDone

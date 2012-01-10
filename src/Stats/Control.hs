@@ -645,7 +645,7 @@ tuplesFromUsageStatsForCompany = catMaybes . map toTuple
 
 {------ Sign Stats ------}
           
-addSignStatInviteEvent :: DBMonad m => Document -> SignatoryLink -> MinutesTime -> m Bool
+addSignStatInviteEvent :: Document -> SignatoryLink -> MinutesTime -> DB Bool
 addSignStatInviteEvent doc sl time =
   let mdp = toDocumentProcess $ documenttype doc
       mal = getAuthorSigLink doc
@@ -653,7 +653,7 @@ addSignStatInviteEvent doc sl time =
       cid = maybe Nothing maybecompany mal
   in case mdp of
     Just dp -> do
-      a <- runDBUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
+      a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
                                                           , ssSignatoryLinkID = signatorylinkid sl
                                                           , ssTime            = time
                                                           , ssQuantity        = SignStatInvite
@@ -669,7 +669,7 @@ addSignStatInviteEvent doc sl time =
       return False
  
       
-addSignStatReceiveEvent :: DBMonad m => Document -> SignatoryLink -> MinutesTime -> m Bool
+addSignStatReceiveEvent :: Document -> SignatoryLink -> MinutesTime -> DB Bool
 addSignStatReceiveEvent doc sl time =
   let mdp = toDocumentProcess $ documenttype doc
       mal = getAuthorSigLink doc
@@ -677,7 +677,7 @@ addSignStatReceiveEvent doc sl time =
       cid = maybe Nothing maybecompany mal
   in case (invitationdeliverystatus sl, mdp) of
     (Delivered, Just dp) -> do
-      a <- runDBUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
+      a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
                                                           , ssSignatoryLinkID = signatorylinkid sl
                                                           , ssTime            = time
                                                           , ssQuantity        = SignStatReceive
@@ -696,7 +696,7 @@ addSignStatReceiveEvent doc sl time =
       return False
 
       
-addSignStatOpenEvent :: DBMonad m => Document -> SignatoryLink -> m Bool
+addSignStatOpenEvent :: Document -> SignatoryLink -> DB Bool
 addSignStatOpenEvent doc sl =
   let mdp = toDocumentProcess $ documenttype doc
       mal = getAuthorSigLink doc
@@ -704,7 +704,7 @@ addSignStatOpenEvent doc sl =
       cid = maybe Nothing maybecompany mal
   in case (maybereadinvite sl, mdp) of
     (Just time, Just dp) -> do
-        a <- runDBUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
+        a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
                                                             , ssSignatoryLinkID = signatorylinkid sl
                                                             , ssTime            = time
                                                             , ssQuantity        = SignStatOpen
@@ -722,7 +722,7 @@ addSignStatOpenEvent doc sl =
       Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
       return False
       
-addSignStatLinkEvent :: DBMonad m => Document -> SignatoryLink -> m Bool
+addSignStatLinkEvent :: Document -> SignatoryLink -> DB Bool
 addSignStatLinkEvent doc sl =
   let mdp = toDocumentProcess $ documenttype doc
       mal = getAuthorSigLink doc
@@ -730,7 +730,7 @@ addSignStatLinkEvent doc sl =
       cid = maybe Nothing maybecompany mal
   in case (maybeseeninfo sl, mdp) of
     (Just (SignInfo {signtime}), Just dp) -> do
-        a <- runDBUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
+        a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
                                                             , ssSignatoryLinkID = signatorylinkid sl
                                                             , ssTime            = signtime
                                                             , ssQuantity        = SignStatLink
@@ -748,7 +748,7 @@ addSignStatLinkEvent doc sl =
       Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
       return False
   
-addSignStatSignEvent :: DBMonad m => Document -> SignatoryLink -> m Bool
+addSignStatSignEvent :: Document -> SignatoryLink -> DB Bool
 addSignStatSignEvent doc sl =
   let mdp = toDocumentProcess $ documenttype doc
       mal = getAuthorSigLink doc
@@ -756,7 +756,7 @@ addSignStatSignEvent doc sl =
       cid = maybe Nothing maybecompany mal
   in case (maybesigninfo sl, mdp) of
     (Just (SignInfo {signtime}), Just dp) -> do
-        a <- runDBUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
+        a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
                                                             , ssSignatoryLinkID = signatorylinkid sl
                                                             , ssTime            = signtime
                                                             , ssQuantity        = SignStatSign
@@ -774,7 +774,7 @@ addSignStatSignEvent doc sl =
       Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
       return False
 
-addSignStatRejectEvent :: DBMonad m => Document -> SignatoryLink -> m Bool
+addSignStatRejectEvent :: Document -> SignatoryLink -> DB Bool
 addSignStatRejectEvent doc sl =
   let mdp = toDocumentProcess $ documenttype doc
       mal = getAuthorSigLink doc
@@ -782,7 +782,7 @@ addSignStatRejectEvent doc sl =
       cid = maybe Nothing maybecompany mal
   in case (documentrejectioninfo doc, mdp) of
     (Just (signtime, slid, _), Just dp) | slid == signatorylinkid sl -> do
-      a <- runDBUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
+      a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
                                                           , ssSignatoryLinkID = signatorylinkid sl
                                                           , ssTime            = signtime
                                                           , ssQuantity        = SignStatReject
@@ -803,7 +803,7 @@ addSignStatRejectEvent doc sl =
       Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
       return False
 
-addSignStatDeleteEvent :: DBMonad m => Document -> SignatoryLink -> MinutesTime -> m Bool
+addSignStatDeleteEvent :: Document -> SignatoryLink -> MinutesTime -> DB Bool
 addSignStatDeleteEvent doc sl time =
   let mdp = toDocumentProcess $ documenttype doc
       mal = getAuthorSigLink doc
@@ -811,7 +811,7 @@ addSignStatDeleteEvent doc sl time =
       cid = maybe Nothing maybecompany mal
   in case (signatorylinkdeleted sl, mdp) of
     (True, Just dp) -> do
-      a <- runDBUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
+      a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
                                                           , ssSignatoryLinkID = signatorylinkid sl
                                                           , ssTime            = time
                                                           , ssQuantity        = SignStatDelete
@@ -829,7 +829,7 @@ addSignStatDeleteEvent doc sl time =
       Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
       return False
 
-addSignStatPurgeEvent :: DBMonad m => Document -> SignatoryLink -> MinutesTime -> m Bool
+addSignStatPurgeEvent :: Document -> SignatoryLink -> MinutesTime -> DB Bool
 addSignStatPurgeEvent doc sl time =
   let mdp = toDocumentProcess $ documenttype doc
       mal = getAuthorSigLink doc
@@ -837,7 +837,7 @@ addSignStatPurgeEvent doc sl time =
       cid = maybe Nothing maybecompany mal
   in case (signatorylinkreallydeleted sl, mdp) of
     (True, Just dp) -> do
-      a <- runDBUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
+      a <- dbUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
                                                           , ssSignatoryLinkID = signatorylinkid sl
                                                           , ssTime            = time
                                                           , ssQuantity        = SignStatPurge
@@ -855,7 +855,7 @@ addSignStatPurgeEvent doc sl time =
       Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
       return False
 
-allSignStats :: DBMonad m => Document -> SignatoryLink -> MinutesTime -> m ()
+allSignStats :: Document -> SignatoryLink -> MinutesTime -> DB ()
 allSignStats doc sl _time = do
   -- commented out lines are those that don't record time
   --_ <- addSignStatInviteEvent  doc sl time
@@ -879,7 +879,7 @@ addAllSigsToStats = onlyAdmin $ do
     docs <- doc_query $ GetDocuments s
     let docs' = sortBy (\d1 d2 -> compare (documentid d1) (documentid d2)) docs
         docs'' = filterMissing stats' docs'
-    sequence $ [allSignStats d sl ctxtime
+    sequence $ [runDB $ allSignStats d sl ctxtime
                | d  <- docs'' 
                , sl <- documentsignatorylinks d]
   addFlash (OperationDone, "Added all docs to stats")

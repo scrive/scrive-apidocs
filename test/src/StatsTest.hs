@@ -21,8 +21,6 @@ import Test.Framework.Providers.HUnit (testCase)
 import Stats.Control
 import Stats.Model
 import StateHelper
-import Control.Monad.Reader
-import Log
 import Mails.MailsUtil
 
 statsTests :: Connection -> Test
@@ -205,15 +203,3 @@ testPurgeStat conn = withTestEnvironment conn $ do
   stats'' <- dbQuery $ GetSignStatEvents
   assertEqual "Should have saved stat." 1 (length stats'')
   forM_ stats'' (\s->assertEqual "Wrong stat type" SignStatPurge (ssQuantity s))
-
-
-
-
-
-
-instance DBMonad DB where
-  getConnection = DB $ ask
-    
-  handleDBError e = do
-    Log.error $ show e
-    mzero

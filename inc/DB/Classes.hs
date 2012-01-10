@@ -29,7 +29,7 @@ module DB.Classes
   ( DBQuery(..)
   , DBUpdate(..)
   , DBMonad(..)
-  , DB(..)
+  , DB
   , wrapDB
   , ioRunDB
   , runDB
@@ -38,7 +38,6 @@ module DB.Classes
   , DBException(..)
   , catchDB
   , tryDB
-
   , kPrepare
   , kExecute
   , kExecute1

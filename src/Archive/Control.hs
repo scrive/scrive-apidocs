@@ -21,6 +21,7 @@ import Archive.View
 import InputValidation
 import KontraLink
 import Kontra
+import DB.Classes
 import Doc.DocStateData
 import Doc.Transitory
 import User.UserControl
@@ -72,7 +73,7 @@ handleIssueArchive = do
     mapM_ (\did -> do 
               doc <- guardRightM' $ doc_update $ ArchiveDocument user did
               case getSigLinkFor doc user of
-                Just sl -> addSignStatDeleteEvent doc sl ctxtime
+                Just sl -> runDB $ addSignStatDeleteEvent doc sl ctxtime
                 _ -> return False) 
       $ map DocumentID docids
 
