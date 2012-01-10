@@ -629,7 +629,7 @@ handleUserStatsCSV = onlySalesOrAdmin $ do
      $ setHeader "Content-Type" "text/csv"
      $ toResponse (userStatisticsCSV stats)
 
--- For User Admin tab in adminsonly
+-- For User Admin tab in adminonly
 getDocStatsForUser :: Kontrakcja m => UserID -> m DocStats
 getDocStatsForUser uid = do
   Context{ctxtime} <- getContext
