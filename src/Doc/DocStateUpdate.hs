@@ -34,6 +34,7 @@ import User.Utils
 import File.Model
 import DB.Classes
 import Data.Either
+import Stats.Control
 
 {- |
    Mark document seen securely.
@@ -82,7 +83,11 @@ signDocumentWithEmail did slid mh fields = do
             newdocument <- doc_update $ SignDocument did slid mh ctxtime ctxipnumber Nothing
             case newdocument of
               Left message -> return $ Left (DBActionNotAvailable message)
-              Right doc -> return $ Right (doc, olddoc)
+              Right doc -> do
+                _ <- case getSigLinkFor doc slid of
+                  Just sl -> addSignStatSignEvent doc sl
+                  _ -> return False
+                return $ Right (doc, olddoc)
 
 
 signDocumentWithEleg :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(BS.ByteString, BS.ByteString)] -> SignatureInfo -> m (Either DBError (Document, Document))
@@ -101,7 +106,11 @@ signDocumentWithEleg did slid mh fields sinfo = do
             newdocument <- doc_update $ SignDocument did slid mh ctxtime ctxipnumber (Just sinfo)
             case newdocument of
               Left message -> return $ Left (DBActionNotAvailable message)
-              Right doc -> return $ Right (doc, olddoc)
+              Right doc -> do
+                _ <- case getSigLinkFor doc slid of
+                  Just sl -> addSignStatSignEvent doc sl
+                  _ -> return False
+                return $ Right (doc, olddoc)
 
 {- |
    Reject a document with security checks.
@@ -116,7 +125,11 @@ rejectDocumentWithChecks did slid mh customtext = do
       mdocument <- doc_update $ RejectDocument did slid ctxtime ctxipnumber customtext
       case mdocument of
         Left msg -> return $ Left (DBActionNotAvailable msg)
-        Right document -> return $ Right (document, olddocument)
+        Right document -> do
+          _ <- case getSigLinkFor document slid of
+            Just sl -> addSignStatRejectEvent document sl
+            _       -> return False
+          return $ Right (document, olddocument)
 
 {- |
   The Author signs a document with security checks.
@@ -138,8 +151,15 @@ authorSignDocument did msigninfo = onlyAuthor did $ do
           ed2 <- doc_update $ MarkDocumentSeen did signatorylinkid signatorymagichash (ctxtime ctx) (ctxipnumber ctx)
           case ed2 of
             Left m -> return $ Left $ DBActionNotAvailable m
-            Right _ ->
-              transActionNotAvailable <$> doc_update (SignDocument did signatorylinkid signatorymagichash (ctxtime ctx) (ctxipnumber ctx) msigninfo)
+            Right _ -> do
+              ed3 <- doc_update (SignDocument did signatorylinkid signatorymagichash (ctxtime ctx) (ctxipnumber ctx) msigninfo)
+              case ed3 of
+                Left m -> return $ Left $ DBActionNotAvailable m
+                Right d3 -> do
+                  _ <- case getSigLinkFor d3 signatorylinkid of
+                    Just sl -> addSignStatSignEvent d3 sl
+                    _ -> return False
+                  return $ Right d3
 
 {- |
   The Author sends a document with security checks.
@@ -182,7 +202,11 @@ authorSignDocumentFinal did msigninfo = onlyAuthor did $ do
       ed1 <- doc_update (SignDocument did signatorylinkid signatorymagichash (ctxtime ctx) (ctxipnumber ctx) msigninfo)
       case ed1 of
         Left m -> return $ Left $ DBActionNotAvailable m
-        Right _ -> transActionNotAvailable <$> doc_update (CloseDocument did (ctxtime ctx) (ctxipnumber ctx))
+        Right d1 -> do
+          _ <- case getSigLinkFor d1 signatorylinkid of
+            Just sl -> addSignStatSignEvent d1 sl
+            _ -> return False
+          transActionNotAvailable <$> doc_update (CloseDocument did (ctxtime ctx) (ctxipnumber ctx))
 
 
 -- | Make sure we're logged in as the author before taking action.

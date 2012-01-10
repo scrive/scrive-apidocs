@@ -9,6 +9,7 @@ module Doc.Model
   , anyInvitationUndelivered
   , undeliveredSignatoryLinks
   , insertDocumentAsIs
+  , toDocumentProcess
 
   , AddDocumentAttachment(..)
   , AddInvitationEvidence(..)
@@ -101,6 +102,7 @@ import Doc.DocStateData
 import Doc.Invariants
 import Data.Data
 import Database.HDBC
+import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import qualified Mails.MailsUtil as Mail
 import Data.Maybe
@@ -417,7 +419,7 @@ decodeRowAsDocument did
                                                , documentcancelationreason = cancelationreason
                                                , documentsharing = sharing
                                                , documentrejectioninfo = case (rejection_time, rejection_signatory_link_id, rejection_reason) of
-                                                                           (Just t, Just r, Just sl) -> Just (t, r, sl)
+                                                                           (Just t, Just sl, mr) -> Just (t, sl, fromMaybe BS.empty mr)
                                                                            _ -> Nothing
                                                , documenttags = tags
                                                , documentservice = service
@@ -1476,7 +1478,7 @@ instance DBUpdate MarkDocumentSeen (Either String Document) where
                          , toSql did
                          , toSql mh
                          , toSql did
-                         , toSql (toDocumentSimpleType (Signable undefined))
+                         , toSql (toDocumentSimpleType (Signable Contract)) -- Contract part should be ignored
                          , toSql Preparation
                          , toSql Closed
                          ]

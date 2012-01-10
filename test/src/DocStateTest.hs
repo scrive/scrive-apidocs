@@ -1294,7 +1294,10 @@ testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight = doTi
   validTest (forEachSignatoryLink doc $ \sl ->
               when (not $ hasSeen sl) $ do
                 etdoc <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
-                assertRight etdoc)
+                assertRight etdoc
+                let Right tdoc = etdoc
+                    Just  tsl  = getSigLinkFor tdoc (signatorylinkid sl)
+                assertBool "Signatorylink should be marked seen now." (hasSeen tsl))
 
 testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft :: DB ()
 testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft = doTimes 10 $ do

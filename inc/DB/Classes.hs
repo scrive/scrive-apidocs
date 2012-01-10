@@ -29,7 +29,7 @@ module DB.Classes
   ( DBQuery(..)
   , DBUpdate(..)
   , DBMonad(..)
-  , DB
+  , DB(..)
   , wrapDB
   , ioRunDB
   , runDB

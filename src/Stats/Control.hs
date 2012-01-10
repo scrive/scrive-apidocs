@@ -22,7 +22,19 @@ module Stats.Control
          handleMigrate1To2,
          handleUserStatsCSV,
          getUsageStatsForUser,
-         getUsageStatsForCompany
+         getUsageStatsForCompany,
+         addAllSigsToStats,
+         addSignStatInviteEvent,
+         addSignStatReceiveEvent,
+         addSignStatOpenEvent,
+         addSignStatLinkEvent,
+         addSignStatSignEvent,
+         addSignStatRejectEvent,
+         addSignStatDeleteEvent,
+         addSignStatPurgeEvent,
+         handleSignStatsCSV,
+         handleDocHistoryCSV,
+         handleSignHistoryCSV
        )
 
        where
@@ -50,6 +62,7 @@ import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import qualified Log
+import Mails.MailsUtil
 
 import qualified Data.ByteString.UTF8 as BS
 import Happstack.Server
@@ -628,3 +641,317 @@ tuplesFromUsageStatsForCompany = catMaybes . map toTuple
           DocStatClose           -> Just (asInt seTime, seUserID, [0, seAmount, 0])
           DocStatSend            -> Just (asInt seTime, seUserID, [0, 0, seAmount])
           _                      -> Nothing
+
+
+{------ Sign Stats ------}
+          
+addSignStatInviteEvent :: DBMonad m => Document -> SignatoryLink -> MinutesTime -> m Bool
+addSignStatInviteEvent doc sl time =
+  let mdp = toDocumentProcess $ documenttype doc
+      mal = getAuthorSigLink doc
+      sid = documentservice doc
+      cid = maybe Nothing maybecompany mal
+  in case mdp of
+    Just dp -> do
+      a <- runDBUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
+                                                          , ssSignatoryLinkID = signatorylinkid sl
+                                                          , ssTime            = time
+                                                          , ssQuantity        = SignStatInvite
+                                                          , ssDocumentProcess = dp
+                                                          , ssServiceID       = sid
+                                                          , ssCompanyID       = cid
+                                                          }
+      unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++ 
+        show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatInvite
+      return a
+    _ -> do
+      Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
+      return False
+ 
+      
+addSignStatReceiveEvent :: DBMonad m => Document -> SignatoryLink -> MinutesTime -> m Bool
+addSignStatReceiveEvent doc sl time =
+  let mdp = toDocumentProcess $ documenttype doc
+      mal = getAuthorSigLink doc
+      sid = documentservice doc
+      cid = maybe Nothing maybecompany mal
+  in case (invitationdeliverystatus sl, mdp) of
+    (Delivered, Just dp) -> do
+      a <- runDBUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
+                                                          , ssSignatoryLinkID = signatorylinkid sl
+                                                          , ssTime            = time
+                                                          , ssQuantity        = SignStatReceive
+                                                          , ssDocumentProcess = dp
+                                                          , ssServiceID       = sid
+                                                          , ssCompanyID       = cid
+                                                          }
+      unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++ 
+        show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatReceive
+      return a
+    (_, Just _) -> do
+      Log.stats $ "Cannot add receive stat because document is not delivered: " ++ show (signatorylinkid sl)
+      return False
+    (_, Nothing) -> do
+      Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
+      return False
+
+      
+addSignStatOpenEvent :: DBMonad m => Document -> SignatoryLink -> m Bool
+addSignStatOpenEvent doc sl =
+  let mdp = toDocumentProcess $ documenttype doc
+      mal = getAuthorSigLink doc
+      sid = documentservice doc
+      cid = maybe Nothing maybecompany mal
+  in case (maybereadinvite sl, mdp) of
+    (Just time, Just dp) -> do
+        a <- runDBUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
+                                                            , ssSignatoryLinkID = signatorylinkid sl
+                                                            , ssTime            = time
+                                                            , ssQuantity        = SignStatOpen
+                                                            , ssDocumentProcess = dp
+                                                            , ssServiceID       = sid
+                                                            , ssCompanyID       = cid
+                                                            }
+        unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++ 
+          show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatOpen
+        return a
+    (Nothing, _) -> do
+      Log.stats $ "Cannot add open stat because document is not opened: " ++ show (signatorylinkid sl)
+      return False
+    (_, Nothing) -> do
+      Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
+      return False
+      
+addSignStatLinkEvent :: DBMonad m => Document -> SignatoryLink -> m Bool
+addSignStatLinkEvent doc sl =
+  let mdp = toDocumentProcess $ documenttype doc
+      mal = getAuthorSigLink doc
+      sid = documentservice doc
+      cid = maybe Nothing maybecompany mal
+  in case (maybeseeninfo sl, mdp) of
+    (Just (SignInfo {signtime}), Just dp) -> do
+        a <- runDBUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
+                                                            , ssSignatoryLinkID = signatorylinkid sl
+                                                            , ssTime            = signtime
+                                                            , ssQuantity        = SignStatLink
+                                                            , ssDocumentProcess = dp
+                                                            , ssServiceID       = sid
+                                                            , ssCompanyID       = cid
+                                                            }
+        unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++ 
+          show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatLink
+        return a
+    (Nothing, _) -> do
+      Log.stats $ "Cannot add link stat because document is not seen: " ++ show (signatorylinkid sl)
+      return False
+    (_, Nothing) -> do
+      Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
+      return False
+  
+addSignStatSignEvent :: DBMonad m => Document -> SignatoryLink -> m Bool
+addSignStatSignEvent doc sl =
+  let mdp = toDocumentProcess $ documenttype doc
+      mal = getAuthorSigLink doc
+      sid = documentservice doc
+      cid = maybe Nothing maybecompany mal
+  in case (maybesigninfo sl, mdp) of
+    (Just (SignInfo {signtime}), Just dp) -> do
+        a <- runDBUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
+                                                            , ssSignatoryLinkID = signatorylinkid sl
+                                                            , ssTime            = signtime
+                                                            , ssQuantity        = SignStatSign
+                                                            , ssDocumentProcess = dp
+                                                            , ssServiceID       = sid
+                                                            , ssCompanyID       = cid
+                                                            }
+        unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++ 
+          show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatSign
+        return a
+    (Nothing, _) -> do
+      Log.stats $ "Cannot add sign stat because document is not signed: " ++ show (signatorylinkid sl)
+      return False
+    (_, Nothing) -> do
+      Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
+      return False
+
+addSignStatRejectEvent :: DBMonad m => Document -> SignatoryLink -> m Bool
+addSignStatRejectEvent doc sl =
+  let mdp = toDocumentProcess $ documenttype doc
+      mal = getAuthorSigLink doc
+      sid = documentservice doc
+      cid = maybe Nothing maybecompany mal
+  in case (documentrejectioninfo doc, mdp) of
+    (Just (signtime, slid, _), Just dp) | slid == signatorylinkid sl -> do
+      a <- runDBUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
+                                                          , ssSignatoryLinkID = signatorylinkid sl
+                                                          , ssTime            = signtime
+                                                          , ssQuantity        = SignStatReject
+                                                          , ssDocumentProcess = dp
+                                                          , ssServiceID       = sid
+                                                          , ssCompanyID       = cid
+                                                          }
+      unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++ 
+        show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatReject
+      return a
+    (Just _, Just _) -> do
+      Log.stats $ "Cannot add reject stat because document is not rejected by this sl: " ++ show (signatorylinkid sl)
+      return False
+    (Nothing, _) -> do
+      Log.stats $ "Cannot add reject stat because document is not rejected: " ++ show (signatorylinkid sl)
+      return False
+    (_, Nothing) -> do
+      Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
+      return False
+
+addSignStatDeleteEvent :: DBMonad m => Document -> SignatoryLink -> MinutesTime -> m Bool
+addSignStatDeleteEvent doc sl time =
+  let mdp = toDocumentProcess $ documenttype doc
+      mal = getAuthorSigLink doc
+      sid = documentservice doc
+      cid = maybe Nothing maybecompany mal
+  in case (signatorylinkdeleted sl, mdp) of
+    (True, Just dp) -> do
+      a <- runDBUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
+                                                          , ssSignatoryLinkID = signatorylinkid sl
+                                                          , ssTime            = time
+                                                          , ssQuantity        = SignStatDelete
+                                                          , ssDocumentProcess = dp
+                                                          , ssServiceID       = sid
+                                                          , ssCompanyID       = cid
+                                                          }
+      unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++ 
+        show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatDelete
+      return a
+    (False, _) -> do
+      Log.stats $ "Cannot add delete stat because document is not deleted: " ++ show (signatorylinkid sl)
+      return False
+    (_, Nothing) -> do
+      Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
+      return False
+
+addSignStatPurgeEvent :: DBMonad m => Document -> SignatoryLink -> MinutesTime -> m Bool
+addSignStatPurgeEvent doc sl time =
+  let mdp = toDocumentProcess $ documenttype doc
+      mal = getAuthorSigLink doc
+      sid = documentservice doc
+      cid = maybe Nothing maybecompany mal
+  in case (signatorylinkreallydeleted sl, mdp) of
+    (True, Just dp) -> do
+      a <- runDBUpdate $ AddSignStatEvent $ SignStatEvent { ssDocumentID      = documentid doc
+                                                          , ssSignatoryLinkID = signatorylinkid sl
+                                                          , ssTime            = time
+                                                          , ssQuantity        = SignStatPurge
+                                                          , ssDocumentProcess = dp
+                                                          , ssServiceID       = sid
+                                                          , ssCompanyID       = cid
+                                                          }
+      unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++ 
+        show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatPurge
+      return a
+    (False, _) -> do
+      Log.stats $ "Cannot add purge stat because document is not really deleted: " ++ show (signatorylinkid sl)
+      return False
+    (_, Nothing) -> do
+      Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
+      return False
+
+allSignStats :: DBMonad m => Document -> SignatoryLink -> MinutesTime -> m ()
+allSignStats doc sl _time = do
+  -- commented out lines are those that don't record time
+  --_ <- addSignStatInviteEvent  doc sl time
+  --_ <- addSignStatReceiveEvent doc sl time
+  _ <- addSignStatOpenEvent    doc sl
+  _ <- addSignStatLinkEvent    doc sl
+  _ <- addSignStatSignEvent    doc sl
+  _ <- addSignStatRejectEvent  doc sl
+  --_ <- addSignStatDeleteEvent  doc sl time
+  --_ <- addSignStatPurgeEvent   doc sl time
+  return ()
+
+addAllSigsToStats :: Kontrakcja m => m KontraLink
+addAllSigsToStats = onlyAdmin $ do
+  services <- runDBQuery GetServices
+  let allservices = Nothing : map (Just . serviceid) services
+  stats <- runDBQuery GetSignStatEvents
+  let stats' = sort $ map ssDocumentID stats
+  Context{ctxtime} <- getContext
+  _ <- forM allservices $ \s -> do
+    docs <- doc_query $ GetDocuments s
+    let docs' = sortBy (\d1 d2 -> compare (documentid d1) (documentid d2)) docs
+        docs'' = filterMissing stats' docs'
+    sequence $ [allSignStats d sl ctxtime
+               | d  <- docs'' 
+               , sl <- documentsignatorylinks d]
+  addFlash (OperationDone, "Added all docs to stats")
+  return LinkUpload
+
+--CSV for sign stats
+handleSignStatsCSV :: Kontrakcja m => m Response
+handleSignStatsCSV = do
+  stats <- runDBQuery GetSignStatEvents
+  Log.debug $ "All sign stats length: " ++ (show $ length stats)
+  ok $ setHeader "Content-Disposition" "attachment;filename=signstats.csv"
+     $ setHeader "Content-Type" "text/csv"
+     $ toResponse (signStatsCSV stats)
+
+csvRowFromDocHist :: [DocStatEvent] -> [String] -> [String]
+csvRowFromDocHist [] csv = csv
+csvRowFromDocHist (s:ss) csv' =
+  let csvtail = take 6 $ drop 4 $ csv' ++ repeat ""
+      csv2 = case seQuantity s of
+        DocStatCreate  -> chng csvtail 0 $ formatMinutesTimeISO (seTime s)
+        DocStatSend    -> chng csvtail 1 $ formatMinutesTimeISO (seTime s)
+        DocStatClose   -> chng csvtail 2 $ formatMinutesTimeISO (seTime s)
+        DocStatReject  -> chng csvtail 3 $ formatMinutesTimeISO (seTime s)
+        DocStatCancel  -> chng csvtail 4 $ formatMinutesTimeISO (seTime s)
+        DocStatTimeout -> chng csvtail 5 $ formatMinutesTimeISO (seTime s)
+        _ -> csvtail
+  in csvRowFromDocHist ss
+     $ [show $ seDocumentID s,
+        maybe "scrive" show $ seServiceID s,
+        maybe "" show $ seCompanyID s,
+        show $ seDocumentType s
+       ] ++ csv2
+
+-- CSV for document history
+handleDocHistoryCSV :: Kontrakcja m => m Response
+handleDocHistoryCSV = do
+  stats <- runDBQuery GetDocStatEvents
+  let byDoc = groupWith seDocumentID $ reverse $ sortWith seDocumentID stats
+      rows = map (\es -> csvRowFromDocHist es []) byDoc
+  ok $ setHeader "Content-Disposition" "attachment;filename=dochist.csv"
+     $ setHeader "Content-Type" "text/csv"
+     $ toResponse (docHistCSV rows)
+  
+-- CSV for sig history
+csvRowFromSignHist :: [SignStatEvent] -> [String] -> [String]
+csvRowFromSignHist [] csv = csv
+csvRowFromSignHist (s:ss) csv' =
+  let csvtail = take 8 $ drop 5 $ csv' ++ repeat ""
+      csv2 = case ssQuantity s of
+        SignStatInvite  -> chng csvtail 0 $ formatMinutesTimeISO (ssTime s)
+        SignStatReceive -> chng csvtail 1 $ formatMinutesTimeISO (ssTime s)
+        SignStatOpen    -> chng csvtail 2 $ formatMinutesTimeISO (ssTime s)
+        SignStatLink    -> chng csvtail 3 $ formatMinutesTimeISO (ssTime s)
+        SignStatSign    -> chng csvtail 4 $ formatMinutesTimeISO (ssTime s)
+        SignStatReject  -> chng csvtail 5 $ formatMinutesTimeISO (ssTime s)
+        SignStatDelete  -> chng csvtail 6 $ formatMinutesTimeISO (ssTime s)
+        SignStatPurge   -> chng csvtail 7 $ formatMinutesTimeISO (ssTime s)
+  in csvRowFromSignHist ss $ 
+     [show                $ ssDocumentID s,
+      show                $ ssSignatoryLinkID s,
+      maybe "scrive" show $ ssServiceID s,
+      maybe ""       show $ ssCompanyID s,
+      show                $ ssDocumentProcess s
+     ] ++ csv2
+
+-- CSV for document history
+handleSignHistoryCSV :: Kontrakcja m => m Response
+handleSignHistoryCSV = do
+  stats <- runDBQuery GetSignStatEvents
+  let bySig = groupWith (\s-> (ssDocumentID s, ssSignatoryLinkID s)) $ reverse $ sortWith (\s-> (ssDocumentID s, ssSignatoryLinkID s)) stats
+      rows = map (\es -> csvRowFromSignHist es []) bySig
+  ok $ setHeader "Content-Disposition" "attachment;filename=signhist.csv"
+     $ setHeader "Content-Type" "text/csv"
+     $ toResponse (signHistCSV rows)
+
