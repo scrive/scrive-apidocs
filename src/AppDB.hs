@@ -5,7 +5,6 @@ module AppDB (
   ) where
 
 import DB.Model
-import DB.Versions
 
 import API.Service.Tables
 import Company.Tables
@@ -35,8 +34,7 @@ kontraMigrations = [
 
 kontraTables :: [Table]
 kontraTables = [
-    tableVersions
-  , tableUsers
+    tableUsers
   , tableUserFriends
   , tableUserMailAPIs
   , tableUserInviteInfos
