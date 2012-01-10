@@ -904,6 +904,10 @@ $daveBody:noescape()$
 <BR/>
 <BR/>
 <BR/>
+<form method="post" action="/adminonly/preprocess/$id$" >
+      <input type="submit" value="Preprocess"> </input>
+</form>
+<BR/>
 $if(closed)$
   <form method="post" action="/adminonly/reseal/$id$">
     <input type="submit" value="Reseal"> </input>
