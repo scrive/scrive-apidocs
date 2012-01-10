@@ -20,7 +20,7 @@ import Doc.DocViewMail
 import Doc.DocStateData
 import Mails.SendMail
 import Company.Model
-import Mails.MailsConfig
+--import Mails.MailsConfig
 import qualified Data.ByteString.UTF8 as BS
 import Test.QuickCheck
 import Control.Monad
@@ -29,7 +29,7 @@ import Util.SignatoryLinkUtils
 import User.UserView
 import Kontra
 import Util.HasSomeUserInfo
-import Mails.SendGridEvents
+import Mails.Events
 import Data.Char
 import Text.XML.HaXml.Parse (xmlParse')
 import Control.Monad.Trans
@@ -86,8 +86,8 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
                               sendoutForManualChecking (s ++ " " ++ show doctype ) req ctx mailTo m
         checkMail "Invitation" $ mailInvitation True ctx Sign doc (Just sl)
         -- DELIVERY MAILS
-        checkMail "Deferred invitation"    $  mailDeferredInvitation ctx doc
-        checkMail "Undelivered invitation" $  mailUndeliveredInvitation ctx doc sl
+        checkMail "Deferred invitation"    $  mailDeferredInvitation (ctxhostpart ctx) doc
+        checkMail "Undelivered invitation" $  mailUndeliveredInvitation (ctxhostpart ctx) doc sl
         checkMail "Delivered invitation"   $  mailDeliveredInvitation doc sl
         --remind mails
         checkMail "Reminder notsigned" $ mailDocumentRemind Nothing ctx doc sl
@@ -136,9 +136,9 @@ testUserMails conn mailTo = withTestEnvironment conn $ do
 -- MAIL TESTING UTILS
 validMail :: String -> Mail -> DB ()
 validMail name m = do
-    let c = BS.toString $ content m
+    let c = content m
     let exml = xmlParse' name c
-    case (any isAlphaNum $ BS.toString $ title m) of
+    case (any isAlphaNum $ title m) of
          True -> assertSuccess
          False -> assertFailure ("Empty title of mail " ++ name)
     case exml of
@@ -165,6 +165,8 @@ mailingContext locale conn = do
 
 
 sendoutForManualChecking ::  String -> Request -> Context ->  Maybe String -> Mail -> DB ()
+sendoutForManualChecking _ _ _ _ _ = assertSuccess
+{-
 sendoutForManualChecking _ _ _ Nothing _ = assertSuccess
 sendoutForManualChecking titleprefix req ctx (Just email) m = do
     _ <- runTestKontra req ctx $ do
@@ -185,6 +187,7 @@ testMailer = createSendgridMailer $ MailsSendgrid {
         sendgridRestAPI = "https://sendgrid.com/api",
         sendgridUser = "duzyrak@gmail.com",
         sendgridPassword = "zimowisko"}
+-}
 
 toMailAddress :: [String] -> Maybe String
 toMailAddress [] = Nothing

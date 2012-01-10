@@ -11,25 +11,24 @@ import Data.Time.LocalTime
 import Database.HDBC
 
 import DB.Classes
-import DB.Migrations
 import DB.Model
 import DB.Utils
-import qualified AppLogger as Log
+import DB.Versions
 
 getDatabaseName :: DB String
 getDatabaseName = do
   maybe "<database>" id <$> getOne "SELECT current_catalog" []
 
 -- | Runs all checks on a database
-performDBChecks :: DB ()
-performDBChecks = do
-  checkDBTimeZone
-  checkDBConsistency
+performDBChecks :: (String -> DB ()) -> [Table] -> [Migration] -> DB ()
+performDBChecks logger tables migrations = do
+  checkDBTimeZone logger
+  checkDBConsistency logger (tableVersions : tables) migrations
 
 -- | Checks whether database returns timestamps in UTC
-checkDBTimeZone :: DB ()
-checkDBTimeZone = do
-  Log.debug "Checking whether database returns timestamps in UTC..."
+checkDBTimeZone :: (String -> DB ()) -> DB ()
+checkDBTimeZone logger = do
+  logger "Checking whether database returns timestamps in UTC..."
   tz <- maybe (error "'SELECT now()' returned nothing") zonedTimeZone <$> getOne "SELECT now()" []
   if timeZoneMinutes tz == 0
      then return ()
@@ -38,40 +37,40 @@ checkDBTimeZone = do
        error $ "Database returns timestamps using time zone " ++ show tz ++ ". Execute query \"ALTER DATABASE " ++ dbname ++ " SET TIMEZONE = 'UTC'\" and try again."
 
 -- | Checks whether database is consistent (performs migrations if necessary)
-checkDBConsistency :: DB ()
-checkDBConsistency = do
+checkDBConsistency :: (String -> DB ()) -> [Table] -> [Migration] -> DB ()
+checkDBConsistency logger tables migrations = do
   (created, to_migration) <- checkTables
   forM_ created $ \table -> do
-    Log.debug $ "Putting properties on table '" ++ tblName table ++ "'..."
+    logger $ "Putting properties on table '" ++ tblName table ++ "'..."
     tblPutProperties table
   when (not $ null to_migration) $ do
-    Log.debug "Running migrations..."
-    migrate migrationsList to_migration
-    Log.debug "Done."
+    logger "Running migrations..."
+    migrate migrations to_migration
+    logger "Done."
     (_, to_migration_again) <- checkTables
     when (not $ null to_migration_again) $
       error $ "The following tables were not migrated to their latest versions: " ++ concatMap descNotMigrated to_migration_again
   where
     descNotMigrated (t, from) = "\n * " ++ tblName t ++ ", current version: " ++ show from ++ ", needed version: " ++ show (tblVersion t)
 
-    checkTables = second catMaybes . partitionEithers <$> mapM checkTable tablesList
+    checkTables = second catMaybes . partitionEithers <$> mapM checkTable tables
     checkTable table = do
       desc <- wrapDB $ \conn -> describeTable conn $ tblName table
-      Log.debug $ "Checking table '" ++ tblName table ++ "'..."
+      logger $ "Checking table '" ++ tblName table ++ "'..."
       tvr <- tblCreateOrValidate table desc
       case tvr of
         TVRvalid -> do
-          Log.debug "Table structure is valid, checking table version..."
+          logger "Table structure is valid, checking table version..."
           ver <- checkVersion table
           if ver == tblVersion table
              then do
-               Log.debug "Version of table in application matches database version."
+               logger "Version of table in application matches database version."
                return $ Right Nothing
              else do
-               Log.debug $ "Versions differ (application: " ++ show (tblVersion table) ++ ", database: " ++ show ver ++ "), scheduling for migration."
+               logger $ "Versions differ (application: " ++ show (tblVersion table) ++ ", database: " ++ show ver ++ "), scheduling for migration."
                return $ Right $ Just (table, ver)
         TVRcreated -> do
-          Log.debug $ "Table created, writing version information..."
+          logger $ "Table created, writing version information..."
           wrapDB $ \conn -> do
             _ <- run conn "INSERT INTO table_versions (name, version) VALUES (?, ?)"
               [toSql $ tblName table, toSql $ tblVersion table]
@@ -79,13 +78,13 @@ checkDBConsistency = do
           _ <- checkTable table
           return $ Left table
         TVRinvalid -> do
-          Log.debug $ "Table structure is invalid, checking version..."
+          logger $ "Table structure is invalid, checking version..."
           ver <- checkVersion table
           if ver == tblVersion table
              then do
                error $ "Existing '" ++ tblName table ++ "' table structure is invalid"
              else do
-               Log.debug "Table is outdated, scheduling for migration."
+               logger "Table is outdated, scheduling for migration."
                return $ Right $ Just (table, ver)
 
     checkVersion table = do
@@ -97,7 +96,7 @@ checkDBConsistency = do
     migrate ms ts = forM_ ms $ \m -> forM_ ts $ \(t, from) -> do
       if tblName (mgrTable m) == tblName t && mgrFrom m >= from
          then do
-           Log.debug $ "Migrating table '" ++ tblName t ++ "' from version " ++ show (mgrFrom m) ++ "..."
+           logger $ "Migrating table '" ++ tblName t ++ "' from version " ++ show (mgrFrom m) ++ "..."
            ver <- checkVersion $ mgrTable m
            when (ver /= mgrFrom m) $
              error $ "Migration can't be performed because current table version (" ++ show ver ++ ") doesn't match parameter mgrFrom of next migration to be run (" ++ show (mgrFrom m) ++ "). Make sure that migrations were put in migrationsList in correct order."

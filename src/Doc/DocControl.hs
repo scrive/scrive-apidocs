@@ -33,9 +33,9 @@ import User.Model
 import User.UserControl
 import Util.HasSomeUserInfo
 import Util.StringUtil
-import qualified AppLogger as Log
+import qualified Log
 import Templates.Templates
-import Templates.LocalTemplates
+import Templates.Trans
 import Util.CSVUtil
 import Util.FlashUtil
 import Util.KontraLinkUtils
@@ -123,8 +123,14 @@ postDocumentChangeAction document@Document  { documentstatus
         Log.server $ "Sending invitation emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
         edoc <- sendInvitationEmails ctx document'
         _ <- case edoc of
-          Left _ -> addDocumentSendStatEvents document'
-          Right doc2 -> addDocumentSendStatEvents doc2
+          Left _ -> do
+            _ <- addDocumentSendStatEvents document'
+            runDB $ forM (documentsignatorylinks document') $ \sl ->
+              addSignStatInviteEvent document' sl (ctxtime ctx)
+          Right doc2 -> do
+            _ <- addDocumentSendStatEvents doc2
+            runDB $ forM (documentsignatorylinks doc2) $ \sl ->
+              addSignStatInviteEvent doc2 sl (ctxtime ctx)
         return ()
     -- Preparation -> Closed (only author signs)
     -- main action: sealDocument and sendClosedEmails
@@ -136,7 +142,7 @@ postDocumentChangeAction document@Document  { documentstatus
           let newctx = ctx {ctxdbconn = conn}
           enewdoc <- ioRunDB conn $ sealDocument newctx document
           case enewdoc of
-             Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails newctx newdoc
+             Right newdoc -> runTemplatesT (ctxlocale, ctxglobaltemplates) $ sendClosedEmails newctx newdoc
              Left errmsg -> Log.error $ "Sealing of document #" ++ show documentid ++ " failed, could not send document confirmations: " ++ errmsg
         return ()
     -- Pending -> AwaitingAuthor
@@ -160,11 +166,11 @@ postDocumentChangeAction document@Document  { documentstatus
           let newctx = ctx {ctxdbconn = conn}
           enewdoc <- ioRunDB conn $ sealDocument newctx document
           case enewdoc of
-            Right newdoc -> runWithTemplates ctxlocale ctxglobaltemplates $ sendClosedEmails newctx newdoc
+            Right newdoc -> runTemplatesT (ctxlocale, ctxglobaltemplates) $ sendClosedEmails newctx newdoc
             Left errmsg -> do
               _ <- ioRunDB conn $ doc_update' $ ErrorDocument documentid errmsg
               Log.server $ "Sending seal error emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
-              runWithTemplates ctxlocale ctxglobaltemplates $ sendDocumentErrorEmail newctx document author
+              runTemplatesT (ctxlocale, ctxglobaltemplates) $ sendDocumentErrorEmail newctx document author
               return ()
         return ()
     -- Pending -> Rejected
@@ -246,7 +252,7 @@ saveDocumentForSignatories doc@Document{documentsignatorylinks} =
 
 -- EMAILS
 
-sendElegDataMismatchEmails :: TemplatesMonad m => Context -> Document -> User -> m ()
+sendElegDataMismatchEmails :: Kontrakcja m => Context -> Document -> User -> m ()
 sendElegDataMismatchEmails ctx document author = do
     let signlinks = [sl | sl <- documentsignatorylinks document
                         , isActivatedSignatory (documentcurrentsignorder document) sl
@@ -258,7 +264,7 @@ sendElegDataMismatchEmails ctx document author = do
     forM_ signlinks $ sendDataMismatchEmailSignatory ctx document badid badname msg
     sendDataMismatchEmailAuthor ctx document author badname bademail
 
-sendDataMismatchEmailSignatory :: TemplatesMonad m => Context -> Document -> SignatoryLinkID -> String -> String -> SignatoryLink -> m ()
+sendDataMismatchEmailSignatory :: Kontrakcja m => Context -> Document -> SignatoryLinkID -> String -> String -> SignatoryLink -> m ()
 sendDataMismatchEmailSignatory ctx document badid badname msg signatorylink = do
     let SignatoryLink { signatorylinkid, signatorydetails = sigdets } = signatorylink
         isbad = badid == signatorylinkid
@@ -275,14 +281,14 @@ sendDataMismatchEmailSignatory ctx document badid badname msg signatorylink = do
                 badname
                 msg
                 isbad
-        scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress sigdets]}
+        scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress sigdets]}
 
-sendDataMismatchEmailAuthor :: TemplatesMonad m => Context -> Document -> User -> String -> String -> m ()
+sendDataMismatchEmailAuthor :: Kontrakcja m => Context -> Document -> User -> String -> String -> m ()
 sendDataMismatchEmailAuthor ctx document author badname bademail = do
     let authorname = getFullName $ fromJust $ getAuthorSigLink document
         authoremail = getEmail $ fromJust $ getAuthorSigLink document
     mail <- mailMismatchAuthor ctx document (BS.toString authorname) badname bademail (getLocale author)
-    scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress {fullname = authorname, email = authoremail }]}
+    scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress {fullname = authorname, email = authoremail }]}
 
 {- |
    Send emails to all of the invited parties saying that we fucked up the process.
@@ -293,39 +299,34 @@ sendDocumentErrorEmail :: TemplatesMonad m => Context -> Document -> User -> m (
 sendDocumentErrorEmail ctx document author = do
   let signlinks = documentsignatorylinks document
   forM_ signlinks (\sl -> if isAuthor sl
-                            then sendDocumentErrorEmailToAuthor ctx document author
-                            else sendDocumentErrorEmailToSignatory ctx document sl)
-
-sendDocumentErrorEmailToAuthor :: TemplatesMonad m => Context -> Document -> User -> m ()
-sendDocumentErrorEmailToAuthor ctx document author = do
-  let authorlink = fromJust $ getAuthorSigLink document
-  mail <- mailDocumentErrorForAuthor ctx document (getLocale author)
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail
-    { to = [getMailAddress authorlink]
-    , from = documentservice document
-    }
-
-{- |
-   Helper function to send emails to invited parties
-   ??: Should this be in DocControl or in an email-specific file?
- -}
-sendDocumentErrorEmailToSignatory :: TemplatesMonad m => Context -> Document -> SignatoryLink -> m ()
-sendDocumentErrorEmailToSignatory ctx document signatorylink = do
-  let SignatoryLink { signatorylinkid
-                    , signatorydetails } = signatorylink
-      Document { documentid } = document
-  mail <- mailDocumentErrorForSignatory ctx document
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail {
-        to = [getMailAddress signatorydetails]
-      , mailInfo = Invitation documentid  signatorylinkid
-      , from = documentservice document
-  }
+                            then sendDocumentErrorEmailToAuthor
+                            else sendDocumentErrorEmailToSignatory sl)
+  where
+    sendDocumentErrorEmailToAuthor = do
+      let authorlink = fromJust $ getAuthorSigLink document
+      mail <- mailDocumentErrorForAuthor ctx document (getLocale author)
+      ioRunDB (ctxdbconn ctx) $ scheduleEmailSendout' (ctxmailsconfig ctx) $ mail {
+          to = [getMailAddress authorlink]
+        , from = documentservice document
+      }
+    -- | Helper function to send emails to invited parties
+    -- ??: Should this be in DocControl or in an email-specific file?
+    sendDocumentErrorEmailToSignatory signatorylink = do
+      let SignatoryLink { signatorylinkid
+                        , signatorydetails } = signatorylink
+          Document { documentid } = document
+      mail <- mailDocumentErrorForSignatory ctx document
+      ioRunDB (ctxdbconn ctx) $ scheduleEmailSendout' (ctxmailsconfig ctx) $ mail {
+            to = [getMailAddress signatorydetails]
+          , mailInfo = Invitation documentid  signatorylinkid
+          , from = documentservice document
+      }
 
 {- |
    Send emails to all of the invited parties.
    ??: Should this be in DocControl or in an email-sepecific file?
  -}
-sendInvitationEmails :: TemplatesMonad m => Context -> Document -> m (Either String Document)
+sendInvitationEmails :: Kontrakcja m => Context -> Document -> m (Either String Document)
 sendInvitationEmails ctx document = do
   let signlinks = [sl | sl <- documentsignatorylinks document
                       , isCurrentSignatory (documentcurrentsignorder document) sl
@@ -341,7 +342,7 @@ sendInvitationEmails ctx document = do
    Helper function to send emails to invited parties
    ??: Should this be in DocControl or in an email-specific file?
  -}
-sendInvitationEmail1 :: TemplatesMonad m => Context -> Document -> SignatoryLink -> m (Either String Document)
+sendInvitationEmail1 :: Kontrakcja m => Context -> Document -> SignatoryLink -> m (Either String Document)
 sendInvitationEmail1 ctx document signatorylink = do
   let SignatoryLink { signatorylinkid
                     , signatorydetails } = signatorylink
@@ -349,7 +350,7 @@ sendInvitationEmail1 ctx document signatorylink = do
   mail <- mailInvitation True ctx (Sign <| isSignatory signatorylink |> View) document (Just signatorylink)
   -- ?? Do we need to read in the contents? -EN
   -- _attachmentcontent <- liftIO $ getFileContents ctx $ head $ documentfiles document
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail {
+  scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
         to = [getMailAddress signatorydetails]
       , mailInfo = Invitation documentid signatorylinkid
       , from = documentservice document
@@ -363,7 +364,7 @@ sendReminderEmail :: Kontrakcja m => Maybe BS.ByteString -> Context -> Document 
 sendReminderEmail custommessage ctx doc siglink = do
   mail <- mailDocumentRemind custommessage ctx doc siglink
   mailattachments <- liftIO $ makeMailAttachments ctx doc
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail {
+  scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
       to = [getMailAddress siglink]
     , mailInfo = Invitation (documentid doc) (signatorylinkid siglink)
     , attachments = if isJust $ maybesigninfo siglink
@@ -381,7 +382,7 @@ sendClosedEmails ctx document = do
     let signatorylinks = documentsignatorylinks document
     mail <- mailDocumentClosed ctx document
     mailattachments <- liftIO $ makeMailAttachments ctx document
-    scheduleEmailSendout (ctxesenforcer ctx) $
+    ioRunDB (ctxdbconn ctx) $ scheduleEmailSendout' (ctxmailsconfig ctx) $
       mail { to = map getMailAddress signatorylinks
            , attachments = mailattachments
            , from = documentservice document
@@ -391,14 +392,14 @@ sendClosedEmails ctx document = do
 {- |
    Send an email to the author when the document is awaiting approval
  -}
-sendAwaitingEmail :: TemplatesMonad m => Context -> Document -> User -> m ()
+sendAwaitingEmail :: Kontrakcja m => Context -> Document -> User -> m ()
 sendAwaitingEmail ctx document author = do
   let Just authorsiglink = getAuthorSigLink document
   mail <- mailDocumentAwaitingForAuthor ctx document (getLocale author)
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress authorsiglink]
+  scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress authorsiglink]
                                                   , from = documentservice document  }
 
-makeMailAttachments :: Context -> Document -> IO [(BS.ByteString,BS.ByteString)]
+makeMailAttachments :: Context -> Document -> IO [(String, BS.ByteString)]
 makeMailAttachments ctx document = do
   let mainfile = head $ case documentsealedfiles document of
         [] -> documentfiles document
@@ -408,21 +409,20 @@ makeMailAttachments ctx document = do
       sattachments = concatMap (maybeToList . signatoryattachmentfile) $ documentsignatoryattachments document
       allfiles' = [mainfile] ++ aattachments ++ sattachments
   allfiles <- liftM catMaybes $ mapM (ioRunDB (ctxdbconn ctx) . dbQuery . GetFileByFileID) allfiles'
-  let
-      filenames = map filename allfiles
+  let filenames = map (BS.toString . filename) allfiles
   filecontents <- sequence $ map (getFileContents ctx) allfiles
   return $ zip filenames filecontents
 
 {- |
    Send an email to the author and to all signatories who were sent an invitation  when the document is rejected
  -}
-sendRejectEmails :: TemplatesMonad m => Maybe String -> Context -> Document -> SignatoryLink -> m ()
+sendRejectEmails :: Kontrakcja m => Maybe String -> Context -> Document -> SignatoryLink -> m ()
 sendRejectEmails customMessage ctx document signalink = do
   let activatedSignatories = [sl | sl <- documentsignatorylinks document
                                  , isActivatedSignatory (documentcurrentsignorder document) sl || isAuthor sl]
   forM_ activatedSignatories $ \sl -> do
     mail <- mailDocumentRejected customMessage ctx document signalink
-    scheduleEmailSendout (ctxesenforcer ctx) $ mail {   to = [getMailAddress sl]
+    scheduleEmailSendout (ctxmailsconfig ctx) $ mail {   to = [getMailAddress sl]
                                                       , from = documentservice document }
 
 
@@ -607,6 +607,7 @@ handleSignShow documentid
   _ <- markDocumentSeen documentid signatorylinkid magichash ctxtime ctxipnumber
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
   invitedlink <- guardJust $ getSigLinkFor document signatorylinkid
+  _ <- runDB $ addSignStatLinkEvent document invitedlink
   let isFlashNeeded = Data.List.null ctxflashmessages
                         && not (hasSigned invitedlink)
   -- add a flash if needed
@@ -1586,9 +1587,14 @@ handleRubbishRestore = do
 
 handleRubbishReallyDelete :: Kontrakcja m => m KontraLink
 handleRubbishReallyDelete = do
-  Context { ctxmaybeuser = Just user } <- getContext
+  Context { ctxmaybeuser = Just user, ctxtime } <- getContext
   docids <- getCriticalFieldList asValidDocID "doccheck"
-  mapM_ (guardRightM . doc_update . ReallyDeleteDocument user) $ map DocumentID docids
+  mapM_ (\did -> do
+            doc <- guardRightM $ doc_update $ ReallyDeleteDocument user did
+            case getSigLinkFor doc user of
+              Just sl -> runDB $ addSignStatPurgeEvent doc sl ctxtime
+              _ -> return False) 
+    $ map DocumentID docids
   addFlashM flashMessageRubbishHardDeleteDone
   return $ LinkRubbishBin
 
@@ -1818,7 +1824,7 @@ sendCancelMailsForDocument customMessage ctx document = do
   forM_ activated_signatories $ \slnk -> do
       m <- mailCancelDocument True customMessage ctx document
       let mail = m {to = [getMailAddress slnk]}
-      scheduleEmailSendout (ctxesenforcer ctx) mail
+      scheduleEmailSendout (ctxmailsconfig ctx) mail
 
 failIfNotAuthor :: Kontrakcja m => Document -> User -> m ()
 failIfNotAuthor document user = guard (isAuthor (document, user))

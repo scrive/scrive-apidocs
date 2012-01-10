@@ -22,7 +22,7 @@ import Text.XML.HaXml.XmlContent.Parser
 import Text.XML.HaXml.XmlContent
 import Text.XML.HaXml.Posn
 import qualified Control.Exception as E
--- import qualified AppLogger as Log
+-- import qualified Log
 import Prelude hiding (print, putStrLn, putStr)
 
 data SOAP a = SOAP a

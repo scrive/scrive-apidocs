@@ -10,7 +10,7 @@ import Company.Model
 import User.Model
 import Kontra
 import Misc
-import qualified AppLogger as Log (jsonMailAPI, mailAPI, scrivebymailfailure)
+import qualified Log (jsonMailAPI, mailAPI, scrivebymailfailure)
 import qualified Doc.DocControl as DocControl
 
 import Control.Monad

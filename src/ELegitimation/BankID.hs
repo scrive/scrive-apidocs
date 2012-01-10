@@ -8,7 +8,7 @@ module ELegitimation.BankID
     where
 
 import Redirect
-import qualified AppLogger as Log
+import qualified Log
 import Control.Monad.State
 import Doc.DocStateData as D
 import Doc.DocUtils

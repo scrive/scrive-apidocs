@@ -18,7 +18,7 @@ import Numeric
 import qualified Database.HDBC as HDBC
 import qualified Database.HDBC.PostgreSQL as HDBC
 import Context
-import qualified AppLogger as Log
+import qualified Log
 
 data ForkedAction = ForkedActionStarted  { title     :: String
                                          , start     :: ClockTime

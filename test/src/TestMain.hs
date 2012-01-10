@@ -8,10 +8,12 @@ import Database.HDBC.PostgreSQL
 import System.Environment.UTF8
 import System.IO
 import Test.Framework
-import qualified AppLogger as Log
+import qualified Log
 
+import AppDB
 import DB.Checks
 import DB.Classes
+import Mails.Tables
 
 -- Note: if you add new testsuites here, please add them in a similar
 -- manner to existing ones, i.e. wrap them around ifdefs and add appropriate
@@ -97,6 +99,10 @@ import FileTest
 import Doc.TestJSON
 #endif
 
+#ifndef NO_STATS
+import StatsTest
+#endif
+
 allTests :: Connection -> [(String, [String] -> Test)]
 allTests conn = tail tests
   where
@@ -178,6 +184,9 @@ allTests conn = tail tests
 #ifndef NO_SQLUTILS
       , ("sqlutil", const $ sqlUtilsTests )
 #endif
+#ifndef NO_STATS
+      , ("stats", const $ statsTests conn)
+#endif
       ]
 
 testsToRun :: Connection -> [String] -> [Either String Test]
@@ -199,6 +208,8 @@ main = Log.withLogger $ do
   hSetEncoding stderr utf8
   pgconf <- readFile "kontrakcja_test.conf"
   withPostgreSQL pgconf $ \conn -> do
-    ioRunDB conn performDBChecks
+    let tables = mailerTables ++ kontraTables
+        migrations = kontraMigrations
+    ioRunDB conn $ performDBChecks Log.debug tables migrations
     (args, tests) <- partitionEithers . testsToRun conn <$> getArgs
     defaultMainWithArgs tests args

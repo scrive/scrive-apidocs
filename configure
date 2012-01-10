@@ -4,7 +4,10 @@
 # kontrakcja-server so we won't have to compile things twice
 mkdir -p ./dist/build/kontrakcja-server/kontrakcja-server-tmp
 mkdir -p ./dist/build/kontrakcja-test
+mkdir -p ./dist/build/mailing-server
 ln -sf ../kontrakcja-server/kontrakcja-server-tmp \
        ./dist/build/kontrakcja-test/kontrakcja-test-tmp
+ln -sf ../kontrakcja-server/kontrakcja-server-tmp \
+       ./dist/build/mailing-server/mailing-server-tmp
 
 cabal configure "$@"

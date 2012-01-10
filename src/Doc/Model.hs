@@ -9,6 +9,7 @@ module Doc.Model
   , anyInvitationUndelivered
   , undeliveredSignatoryLinks
   , insertDocumentAsIs
+  , toDocumentProcess
 
   , AddDocumentAttachment(..)
   , AddInvitationEvidence(..)
@@ -101,6 +102,7 @@ import Doc.DocStateData
 import Doc.Invariants
 import Data.Data
 import Database.HDBC
+import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import qualified Mails.MailsUtil as Mail
 import Data.Maybe
@@ -114,7 +116,7 @@ import Util.SignatoryLinkUtils
 --import Doc.DocStateUtils
 import Doc.DocProcess
 import Doc.DocStateCommon
-import qualified AppLogger as Log
+import qualified Log
 import System.Random
 --import Happstack.Server
 --import Happstack.State
@@ -138,7 +140,7 @@ sqlFieldType :: (Convertible v SqlValue) => String -> String -> v -> SqlField
 sqlFieldType name xtype value = SqlField name xtype (toSql value)
 
 sqlLogAppend :: MinutesTime -> String -> SqlField
-sqlLogAppend time text = sqlFieldType "log" "append" $ show $ DocumentLogEntry time $ BS.fromString text
+sqlLogAppend time text = sqlFieldType "log" "append" $ unlines [show $ DocumentLogEntry time $ BS.fromString text]
 
 runInsertStatement :: String -> [SqlField] -> DB Integer
 runInsertStatement tableName fields =
@@ -417,7 +419,7 @@ decodeRowAsDocument did
                                                , documentcancelationreason = cancelationreason
                                                , documentsharing = sharing
                                                , documentrejectioninfo = case (rejection_time, rejection_signatory_link_id, rejection_reason) of
-                                                                           (Just t, Just r, Just sl) -> Just (t, r, sl)
+                                                                           (Just t, Just sl, mr) -> Just (t, sl, fromMaybe BS.empty mr)
                                                                            _ -> Nothing
                                                , documenttags = tags
                                                , documentservice = service
@@ -1476,7 +1478,7 @@ instance DBUpdate MarkDocumentSeen (Either String Document) where
                          , toSql did
                          , toSql mh
                          , toSql did
-                         , toSql (toDocumentSimpleType (Signable undefined))
+                         , toSql (toDocumentSimpleType (Signable Contract)) -- Contract part should be ignored
                          , toSql Preparation
                          , toSql Closed
                          ]
@@ -1507,7 +1509,7 @@ instance DBUpdate MarkInvitationRead (Either String Document) where
     r <- runUpdateStatement "signatory_links"
                          [ sqlField "read_invitation" time
                          ]
-                         "WHERE id = ? AND document_id = ? AND read_invitation = NULL"
+                         "WHERE id = ? AND document_id = ? AND read_invitation IS NULL"
                          [ toSql linkid
                          , toSql did
                          ]

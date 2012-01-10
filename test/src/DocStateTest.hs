@@ -36,7 +36,8 @@ import Test.Framework.Providers.HUnit (testCase)
 import Test.QuickCheck
 import File.FileID
 
---import qualified AppLogger as Log
+import qualified Log
+
 
 docStateTests :: Connection -> Test
 docStateTests conn = testGroup "DocState" [
@@ -98,7 +99,7 @@ docStateTests conn = testGroup "DocState" [
   testThat "MarkDocumentSeen succeeds when siglink and magichash match" conn testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight,
   testThat "MarkDocumentSeen fails when the siglink matches but magichash does not" conn testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft,
 
-  testThat "MarkInvitationRead never fails" conn testMarkInvitationRead,
+  testThat "MarkInvitationRead when has not read" conn testMarkInvitationRead,
   testThat "MarkInvitationRead never fails when doc doesn't exist" conn testMarkInvitationReadDocDoesntExist,
 
   testThat "RejectDocument succeeds when signable and pending" conn testRejectDocumentSignablePendingRight,
@@ -1233,9 +1234,16 @@ testRejectDocumentSignablePendingRight = doTimes 10 $ do
 testMarkInvitationRead :: DB ()
 testMarkInvitationRead = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
-  doc <- addRandomDocumentWithAuthor' author
-  _edoc <- randomUpdate $ MarkInvitationRead (documentid doc)
-  validTest $ assertSuccess
+  doc <- addRandomDocumentWithAuthorAndCondition author 
+         (isPending &&^ (all (isNothing . maybereadinvite) . documentsignatorylinks))
+  forM_ (documentsignatorylinks doc) $ \sl -> Log.debug $ "maybereadinvite: " ++ show (maybereadinvite sl)
+  slid <- rand 10 $ elements (map signatorylinkid (documentsignatorylinks doc))
+  time <- getMinutesTime
+  edoc <- dbUpdate $ MarkInvitationRead (documentid doc) slid time
+  validTest $ do
+    assertRight edoc
+    let Just sl = getSigLinkFor (fromRight edoc) slid
+    assertEqual "Invitation read time should be set." (Just time) (maybereadinvite sl)
 
 testMarkInvitationReadDocDoesntExist :: DB ()
 testMarkInvitationReadDocDoesntExist = doTimes 10 $ do
@@ -1286,7 +1294,10 @@ testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight = doTi
   validTest (forEachSignatoryLink doc $ \sl ->
               when (not $ hasSeen sl) $ do
                 etdoc <- randomUpdate $ MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
-                assertRight etdoc)
+                assertRight etdoc
+                let Right tdoc = etdoc
+                    Just  tsl  = getSigLinkFor tdoc (signatorylinkid sl)
+                assertBool "Signatorylink should be marked seen now." (hasSeen tsl))
 
 testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft :: DB ()
 testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft = doTimes 10 $ do
@@ -1375,8 +1386,10 @@ testCloseDocumentSignableAwaitingAuthorJust = doTimes 10 $ do
          }
 
   let Just sl = getAuthorSigLink doc
-  etdoc <- msum [randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl),
-                 randomUpdate $ CloseDocument (documentid doc)]
+  etdoc <- liftM msum $ sequence 
+           [ randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
+           , randomUpdate $ CloseDocument (documentid doc)
+           ]
   validTest $ assertRight etdoc
 
 testCloseDocumentSignableNotAwaitingAuthorNothing :: DB ()
@@ -1388,7 +1401,9 @@ testCloseDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
          , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
          }
 
-  etdoc <- msum [randomUpdate $ CloseDocument (documentid doc)]
+  etdoc <- liftM msum $ sequence
+           [ randomUpdate $ CloseDocument (documentid doc)
+           ]
   validTest $ assertLeft etdoc
 
 testCloseDocumentNotSignableNothing :: DB ()
@@ -1417,8 +1432,10 @@ testCancelDocumentSignableAwaitingAuthorJust = doTimes 10 $ do
          }
 
   let Just sl = getAuthorSigLink doc
-  etdoc <- msum [randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl),
-                 randomUpdate $ CancelDocument (documentid doc) ManualCancel]
+  etdoc <- liftM msum $ sequence 
+           [ randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
+           , randomUpdate $ CancelDocument (documentid doc) ManualCancel
+           ]
   validTest $ assertRight etdoc
 
 testCancelDocumentSignableNotAwaitingAuthorNothing :: DB ()
@@ -1430,7 +1447,9 @@ testCancelDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
          , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
          }
 
-  etdoc <- msum [randomUpdate $ CancelDocument (documentid doc) ManualCancel]
+  etdoc <- liftM msum $ sequence 
+           [ randomUpdate $ CancelDocument (documentid doc) ManualCancel
+           ]
   validTest $ assertRight etdoc
 
 testCancelDocumentNotSignableNothing :: DB ()
@@ -1459,8 +1478,10 @@ testPendingToAwaitingAuthorDocumentSignableAwaitingAuthorJust = doTimes 10 $ do
          }
 
   let Just sl = getAuthorSigLink doc
-  etdoc <- msum [randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl),
-                 randomUpdate $ PendingToAwaitingAuthor (documentid doc)]
+  etdoc <- liftM msum $ sequence 
+           [ randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
+           , randomUpdate $ PendingToAwaitingAuthor (documentid doc)
+           ]
   validTest $ assertRight etdoc
 
 testPendingToAwaitingAuthorDocumentSignableNotAwaitingAuthorNothing :: DB ()
@@ -1472,7 +1493,9 @@ testPendingToAwaitingAuthorDocumentSignableNotAwaitingAuthorNothing = doTimes 10
          , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
          }
 
-  etdoc <- msum [randomUpdate $ PendingToAwaitingAuthor (documentid doc)]
+  etdoc <- liftM msum $ sequence 
+           [ randomUpdate $ PendingToAwaitingAuthor (documentid doc)
+           ]
   validTest $ assertRight etdoc
 
 testPendingToAwaitingAuthorDocumentNotSignableNothing :: DB ()

@@ -127,7 +127,7 @@ remindMailNotSignedContent :: TemplatesMonad m
                            -> SignatoryLink
                            -> m String
 remindMailNotSignedContent forMail customMessage ctx document signlink =
-    (BS.toString . content) <$> remindMailNotSigned forMail customMessage ctx document signlink
+    content <$> remindMailNotSigned forMail customMessage ctx document signlink
 
 remindMailSignedContent :: TemplatesMonad m
                         => Bool
@@ -137,7 +137,7 @@ remindMailSignedContent :: TemplatesMonad m
                         -> SignatoryLink
                         -> m String
 remindMailSignedContent forMail customMessage ctx document signlink = do
-    (BS.toString . content) <$> remindMailSigned forMail customMessage ctx document signlink
+    content <$> remindMailSigned forMail customMessage ctx document signlink
 
 remindMailSignedStandardHeader :: TemplatesMonad m
                                => Document
@@ -188,7 +188,7 @@ mailRejectMailContent :: TemplatesMonad m
                       -> SignatoryLink
                       -> m String
 mailRejectMailContent customMessage ctx  document rejector =
-     (BS.toString . content) <$> mailDocumentRejected customMessage ctx document rejector
+     content <$> mailDocumentRejected customMessage ctx document rejector
 
 mailDocumentErrorForAuthor :: (HasLocale a, TemplatesMonad m) => Context -> Document -> a -> m Mail
 mailDocumentErrorForAuthor ctx document authorlocale = do
@@ -270,7 +270,7 @@ mailInvitationContent :: TemplatesMonad m
                      -> Maybe SignatoryLink
                      -> m String
 mailInvitationContent  forMail ctx invitationto document msiglink = do
-     (BS.toString . content) <$> mailInvitation forMail ctx invitationto document msiglink
+     content <$> mailInvitation forMail ctx invitationto document msiglink
 
 mailDocumentClosed :: TemplatesMonad m => Context -> Document -> m Mail
 mailDocumentClosed ctx document= do
@@ -298,7 +298,7 @@ mailCancelDocumentContent :: TemplatesMonad m
                                   -> Document
                                   -> m String
 mailCancelDocumentContent forMail customMessage ctx document =
-    (BS.toString . content) <$> mailCancelDocument forMail customMessage ctx document
+    content <$> mailCancelDocument forMail customMessage ctx document
 
 mailCancelDocument :: TemplatesMonad m
                            => Bool
