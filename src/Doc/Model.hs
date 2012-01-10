@@ -138,7 +138,7 @@ sqlFieldType :: (Convertible v SqlValue) => String -> String -> v -> SqlField
 sqlFieldType name xtype value = SqlField name xtype (toSql value)
 
 sqlLogAppend :: MinutesTime -> String -> SqlField
-sqlLogAppend time text = sqlFieldType "log" "append" $ show $ DocumentLogEntry time $ BS.fromString text
+sqlLogAppend time text = sqlFieldType "log" "append" $ unlines [show $ DocumentLogEntry time $ BS.fromString text]
 
 runInsertStatement :: String -> [SqlField] -> DB Integer
 runInsertStatement tableName fields =
