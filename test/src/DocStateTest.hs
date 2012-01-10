@@ -1386,8 +1386,10 @@ testCloseDocumentSignableAwaitingAuthorJust = doTimes 10 $ do
          }
 
   let Just sl = getAuthorSigLink doc
-  etdoc <- msum [randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl),
-                 randomUpdate $ CloseDocument (documentid doc)]
+  etdoc <- liftM msum $ sequence 
+           [ randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
+           , randomUpdate $ CloseDocument (documentid doc)
+           ]
   validTest $ assertRight etdoc
 
 testCloseDocumentSignableNotAwaitingAuthorNothing :: DB ()
@@ -1399,7 +1401,9 @@ testCloseDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
          , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
          }
 
-  etdoc <- msum [randomUpdate $ CloseDocument (documentid doc)]
+  etdoc <- liftM msum $ sequence
+           [ randomUpdate $ CloseDocument (documentid doc)
+           ]
   validTest $ assertLeft etdoc
 
 testCloseDocumentNotSignableNothing :: DB ()
@@ -1428,8 +1432,10 @@ testCancelDocumentSignableAwaitingAuthorJust = doTimes 10 $ do
          }
 
   let Just sl = getAuthorSigLink doc
-  etdoc <- msum [randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl),
-                 randomUpdate $ CancelDocument (documentid doc) ManualCancel]
+  etdoc <- liftM msum $ sequence 
+           [ randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
+           , randomUpdate $ CancelDocument (documentid doc) ManualCancel
+           ]
   validTest $ assertRight etdoc
 
 testCancelDocumentSignableNotAwaitingAuthorNothing :: DB ()
@@ -1441,7 +1447,9 @@ testCancelDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
          , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
          }
 
-  etdoc <- msum [randomUpdate $ CancelDocument (documentid doc) ManualCancel]
+  etdoc <- liftM msum $ sequence 
+           [ randomUpdate $ CancelDocument (documentid doc) ManualCancel
+           ]
   validTest $ assertRight etdoc
 
 testCancelDocumentNotSignableNothing :: DB ()
@@ -1470,8 +1478,10 @@ testPendingToAwaitingAuthorDocumentSignableAwaitingAuthorJust = doTimes 10 $ do
          }
 
   let Just sl = getAuthorSigLink doc
-  etdoc <- msum [randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl),
-                 randomUpdate $ PendingToAwaitingAuthor (documentid doc)]
+  etdoc <- liftM msum $ sequence 
+           [ randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
+           , randomUpdate $ PendingToAwaitingAuthor (documentid doc)
+           ]
   validTest $ assertRight etdoc
 
 testPendingToAwaitingAuthorDocumentSignableNotAwaitingAuthorNothing :: DB ()
@@ -1483,7 +1493,9 @@ testPendingToAwaitingAuthorDocumentSignableNotAwaitingAuthorNothing = doTimes 10
          , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
          }
 
-  etdoc <- msum [randomUpdate $ PendingToAwaitingAuthor (documentid doc)]
+  etdoc <- liftM msum $ sequence 
+           [ randomUpdate $ PendingToAwaitingAuthor (documentid doc)
+           ]
   validTest $ assertRight etdoc
 
 testPendingToAwaitingAuthorDocumentNotSignableNothing :: DB ()
