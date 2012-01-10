@@ -38,6 +38,7 @@ module Administration.AdministrationControl(
           , handleBackdoorQuery
           , handleFixForBug510
           , handleFixForAdminOnlyBug
+          , fixMainFileWithPDFPreprocess
           , resealFile
           , replaceMainFile
           , handleCheckSigLinkIDUniqueness
@@ -110,6 +111,7 @@ import Text.JSON
 import Util.HasSomeCompanyInfo
 import CompanyAccounts.CompanyAccountsControl
 import CompanyAccounts.Model
+import Doc.DocStorage
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m Response
@@ -968,6 +970,23 @@ resealFile docid = onlySuperUser $ do
             Left  _ -> Log.debug "We failed to reseal the document"
             Right _ -> Log.debug "Ok, so the document has been resealed"
         return LoopBack
+
+
+fixMainFileWithPDFPreprocess :: Kontrakcja m => DocumentID -> m KontraLink
+fixMainFileWithPDFPreprocess did = onlySuperUser $ do
+  Log.debug $ "Fixing main document file with preprocess PDF"
+  ctx <- getContext
+  doc <- guardJustM $ doc_query $ GetDocumentByDocumentID did
+  case (documentfiles doc) of
+       [fid] -> do
+          file <- guardJustM $ runDB $ dbQuery $ GetFileByFileID fid
+          content <- liftIO $ getFileContents ctx file
+          newcontent <- liftIO $ preprocessPDF ctx content did
+          newfile <- runDB $ dbUpdate $ NewFile (filename file) (newcontent)
+          _ <- doc_update $ AttachFixedFile did (fileid newfile)
+          return LoopBack
+       _ -> mzero
+
 
 replaceMainFile :: Kontrakcja m => DocumentID -> m KontraLink
 replaceMainFile did = onlySuperUser $ do

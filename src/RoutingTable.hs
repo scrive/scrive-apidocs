@@ -256,6 +256,7 @@ staticRoutes = choice
 
      , dir "adminonly" $ dir "reseal" $ hPost $ toK1 $ Administration.resealFile
      , dir "adminonly" $ dir "replacemainfile" $ hPost $ toK1 $ Administration.replaceMainFile
+     , dir "adminonly" $ dir "preprocess" $ hPost $ toK1 $ Administration.fixMainFileWithPDFPreprocess
 
      , dir "adminonly" $ dir "docproblems" $ hGet $ toK0 $ DocControl.handleInvariantViolations
 
