@@ -1,4 +1,4 @@
-{-# LANGUAGE OverlappingInstances, IncoherentInstances, FunctionalDependencies #-}
+{-# LANGUAGE FunctionalDependencies #-}
 
 module API.Monad where
 
@@ -6,8 +6,6 @@ import Control.Monad.Trans
 import Happstack.Server.Types
 import Text.JSON
 import Happstack.Server.Response
---import Happstack.Server.Monads
---import Happstack.Server.RqData
 import Control.Monad.Error
 import Control.Applicative
 
