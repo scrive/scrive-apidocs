@@ -38,7 +38,6 @@ module DB.Classes
   , DBException(..)
   , catchDB
   , tryDB
-
   , kPrepare
   , kExecute
   , kExecute1

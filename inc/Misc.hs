@@ -649,3 +649,8 @@ firstWithDefault (ma:mas) da = do
     case a of
          Just a' -> return a'
          Nothing -> firstWithDefault mas da
+         
+-- changing an element in a list
+chng :: [a] -> Int -> a -> [a]
+chng ls i v = let (h, t) = splitAt i ls
+              in h ++ [v] ++ (drop 1 t)

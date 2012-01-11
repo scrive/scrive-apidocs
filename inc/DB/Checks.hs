@@ -13,6 +13,7 @@ import Database.HDBC
 import DB.Classes
 import DB.Model
 import DB.Utils
+import DB.Versions
 
 getDatabaseName :: DB String
 getDatabaseName = do
@@ -22,7 +23,7 @@ getDatabaseName = do
 performDBChecks :: (String -> DB ()) -> [Table] -> [Migration] -> DB ()
 performDBChecks logger tables migrations = do
   checkDBTimeZone logger
-  checkDBConsistency logger tables migrations
+  checkDBConsistency logger (tableVersions : tables) migrations
 
 -- | Checks whether database returns timestamps in UTC
 checkDBTimeZone :: (String -> DB ()) -> DB ()

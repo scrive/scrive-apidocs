@@ -99,6 +99,10 @@ import FileTest
 import Doc.TestJSON
 #endif
 
+#ifndef NO_STATS
+import StatsTest
+#endif
+
 allTests :: Connection -> [(String, [String] -> Test)]
 allTests conn = tail tests
   where
@@ -179,6 +183,9 @@ allTests conn = tail tests
 #endif
 #ifndef NO_SQLUTILS
       , ("sqlutil", const $ sqlUtilsTests )
+#endif
+#ifndef NO_STATS
+      , ("stats", const $ statsTests conn)
 #endif
       ]
 
