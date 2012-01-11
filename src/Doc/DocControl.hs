@@ -1054,7 +1054,7 @@ getCSVFile fieldname = do
                    | length contents > rowlimit -> return $ Bad $ flashMessageCSVHasTooManyRows rowlimit
                    | otherwise -> return $ Good (title, map (map BS.fromString) contents)
         _ -> return Empty
-    rowlimit :: Int = 500
+    rowlimit :: Int = 1000
 
 handleIssueSave :: Kontrakcja m => Document -> m KontraLink
 handleIssueSave document = do
