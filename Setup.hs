@@ -56,18 +56,16 @@ scriveConfHook a b = do
 
   buildNumber <- catch (getEnv "BUILD_NUMBER" >>= readIO) (const (return 0))
   buildVcsNumber <- catch (getEnv "BUILD_VCS_NUMBER") (const (return ""))
+  buildDate <- catch (getEnv "BUILD_DATE") (const (return ""))
 
-  now <- getClockTime
-  let utc = toUTCTime now
-
-  let dateStr = formatCalendarTime defaultTimeLocale "%Y-%m-%d %H%:%M:%S" utc
+  let Just utc = parseCalendarTime defaultTimeLocale "%Y-%m-%d %H%:%M:%S" buildDate
 
   let pkgVersion'' = pkgVersion' { versionBranch = 
                                      take 3 (versionBranch pkgVersion' ++ [0,0,0]) ++
                                      [ buildNumber
                                      , ctYear utc, fromEnum (ctMonth utc) + 1, ctDay utc
                                      , ctHour utc, ctMin utc, ctSec utc ]
-                                 , versionTags = [show buildNumber, dateStr, buildVcsNumber]
+                                 , versionTags = [buildDate, show buildNumber, buildVcsNumber]
                                  }
       package'' = package' { pkgVersion = pkgVersion'' }
       localPkgDescr'' = localPkgDescr' { package = package'' }
