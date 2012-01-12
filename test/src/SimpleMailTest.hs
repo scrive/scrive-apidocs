@@ -5,7 +5,7 @@ import ScriveByMail.Parse
 
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
-import qualified AppLogger as Log
+import qualified Log
 import Util.StringUtil
 
 import Data.Maybe

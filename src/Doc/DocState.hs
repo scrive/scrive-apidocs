@@ -30,6 +30,7 @@ $(mkMethods ''Documents [ 'getAllDocuments
     , RestoreArchivedDocument(..)
     , ReallyDeleteDocument(..)
     , AttachFile(..)
+    , AttachFixedFile(..)
     , AttachSealedFile(..)
     , ChangeMainfile(..)
     , RejectDocument(..)
@@ -136,7 +137,7 @@ import Data.List
 import File.FileID
 import Doc.DocStateCommon
 
---import qualified AppLogger as Log
+--import qualified Log
 --import qualified Doc.Model as D
 --import qualified Doc.Tables as D
 
@@ -308,6 +309,15 @@ attachFile documentid fid time = do
     Right $ document { documentfiles = documentfiles document ++ [fid]
                      , documentmtime = time}
 
+
+{- Fix for files that had not been PDF preprocessed-}
+attachFixedFile :: DocumentID
+           -> FileID
+           -> Update Documents (Either String Document)
+attachFixedFile documentid fid = do
+  modifySignableOrTemplate documentid $ \document ->
+    Right $ document { documentfiles = [fid] }
+                     
 {- |
     Attaches a sealed file to the indicated document.
     If there is a problem, such as the document not existing,
@@ -1336,6 +1346,7 @@ $(mkMethods ''Documents [ 'getDocuments
                         , 'resetSignatoryDetails
                         , 'rejectDocument
                         , 'attachFile
+                        , 'attachFixedFile
                         , 'attachSealedFile
                         , 'changeMainfile
                         , 'markDocumentSeen

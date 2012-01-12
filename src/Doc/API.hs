@@ -31,7 +31,7 @@ import Company.Model
 import Happstack.Server.Monads
 import API.Monad
 import Control.Monad.Error
-import qualified AppLogger as Log
+import qualified Log
 import Stats.Control
 
 documentAPI :: Route (Kontra Response)

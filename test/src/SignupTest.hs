@@ -17,6 +17,7 @@ import Context
 import DB.Classes
 import DB.Types
 import FlashMessage
+import Mails.Model
 import LoginTest (assertLoginEventRecordedFor)
 import MinutesTime
 import Misc
@@ -28,7 +29,6 @@ import TestKontra as T
 import User.Model
 import User.UserControl
 import Util.HasSomeUserInfo
-import Util.MonadUtils
 
 signupTests :: Connection -> Test
 signupTests conn = testGroup "Signup" [
@@ -58,11 +58,11 @@ testUserEnteringPhoneNumber conn = withTestEnvironment conn $ do
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool ("Flash message has type indicating success, was "  ++ show (getFlashType $ head $ ctxflashmessages ctx')) $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
-  uuser <- guardJustM $ dbQuery $ GetUserByID (userid user)
+  Just uuser <- dbQuery $ GetUserByID (userid user)
   assertEqual "Phone number was saved" "12345" (BS.toString . userphone $ userinfo uuser)
 
-  emailactions <- getEmailActions
-  assertEqual "An email was sent" 1 (length emailactions)
+  emails <- dbQuery GetIncomingEmails
+  assertEqual "An email was sent" 1 (length emails)
 
 testUserNotEnteringPhoneNumber :: Connection -> Assertion
 testUserNotEnteringPhoneNumber conn = withTestEnvironment conn $ do
@@ -78,8 +78,8 @@ testUserNotEnteringPhoneNumber conn = withTestEnvironment conn $ do
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "No flash message was added" 0 (length $ ctxflashmessages ctx')
 
-  emailactions <- getEmailActions
-  assertEqual "No email was sent" 0 (length emailactions)
+  emails <- dbQuery GetIncomingEmails
+  assertEqual "No email was sent" 0 (length emails)
 
 testSignupAndActivate :: Connection -> Assertion
 testSignupAndActivate conn = withTestEnvironment conn $ do
@@ -308,19 +308,6 @@ assertAccountActivationFailed (res, ctx) = do
   -- if they don't accept the tos then the flash is signing related, not sure why
   assertBool "One flash has type indicating a failure or signing related" $ any (\f -> f `isFlashOfType` OperationFailed || f `isFlashOfType` SigningRelated) (ctxflashmessages ctx)
   assertBool "One flash has type indicating a modal (the tos modal)" $ any (`isFlashOfType` Modal) (ctxflashmessages ctx)
-
-getEmailActions :: MonadIO m => m [Action]
-getEmailActions = do
-  now <- getMinutesTime
-  let expirytime = 1 `minutesAfter` now
-  allactions <- query $ GetExpiredActions EmailSendoutAction expirytime
-  return $ filter isEmailAction allactions
-
-isEmailAction :: Action -> Bool
-isEmailAction action =
-  case actionType action of
-    (EmailSendout _) -> True
-    _ -> False
 
 getViralInviteActions :: MonadIO m => m [Action]
 getViralInviteActions = do

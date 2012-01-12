@@ -23,7 +23,6 @@ import TestKontra as T
 import User.Locale
 import User.Model
 import User.UserControl
-import Util.MonadUtils
 import Misc
 
 
@@ -126,7 +125,7 @@ testDocumentLocaleSwitchToBritain conn = withTestEnvironment conn $ do
 
   -- check the region was successfully changed to se
   assertEqual "Response code is 303" 303 (rsCode res)
-  udoc <- guardJustM $ doc_query' $ GetDocumentByDocumentID (documentid doc)
+  Just udoc <- doc_query' $ GetDocumentByDocumentID (documentid doc)
   assertEqual "Switched region is Britain" REGION_GB (getRegion udoc)
   assertEqual "Switched lang is English" LANG_EN (getLang udoc)
 
@@ -151,7 +150,7 @@ testDocumentLocaleSwitchToSweden conn = withTestEnvironment conn $ do
 
   -- check the region was successfully changed to gb
   assertEqual "Response code is 303" 303 (rsCode res)
-  udoc <- guardJustM $ doc_query' $ GetDocumentByDocumentID (documentid doc)
+  Just udoc <- doc_query' $ GetDocumentByDocumentID (documentid doc)
   assertEqual "Switched region is Sweden" REGION_SE (getRegion udoc)
   assertEqual "Switched lang is Swedish" LANG_SE (getLang udoc)
 
@@ -166,4 +165,5 @@ createTestElegDoc user ctxtime = do
 createTestUser :: Region -> Lang -> DB User
 createTestUser region lang = do
     pwd <- createPassword $ BS.pack "admin"
-    guardJustM . dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") (Just pwd) False Nothing Nothing (mkLocale region lang)
+    Just user <- dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") (Just pwd) False Nothing Nothing (mkLocale region lang)
+    return user

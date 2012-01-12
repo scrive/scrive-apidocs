@@ -1,24 +1,26 @@
-module AppLogger ( amazon
-                 , stats
-                 , eleg
-                 , debug
-                 , error
-                 , forkIOLogWhenError
-                 , mail
-                 , mailContent
-                 , security
-                 , server
-                 , integration
-                 , teardownLogger
-                 , trustWeaver
-                 , withLogger
-                 , setupLogger
-                 , scrivebymail
-                 , scrivebymailfailure
-                 , docevent
-                 , jsonMailAPI
-                 , mailAPI
-                 ) where
+module Log (
+    amazon
+  , stats
+  , eleg
+  , debug
+  , error
+  , forkIOLogWhenError
+  , mail
+  , mailContent
+  , mailingServer
+  , security
+  , server
+  , integration
+  , teardownLogger
+  , trustWeaver
+  , withLogger
+  , setupLogger
+  , scrivebymail
+  , scrivebymailfailure
+  , docevent
+  , jsonMailAPI
+  , mailAPI
+  ) where
 
 import Control.Exception.Extensible (bracket)
 import Control.Monad.Trans
@@ -62,6 +64,7 @@ setupLogger = do
     elegLog        <- fileHandler' "log/eleg.log"        INFO >>= \lh -> return $ setFormatter lh fmt
     statsLog       <- fileHandler' "log/stats.log"       INFO >>= \lh -> return $ setFormatter lh fmt
     mailContentLog <- fileHandler' "log/mailcontent.log" INFO >>= \lh -> return $ setFormatter lh fmt
+    mailingServerLog <- fileHandler' "log/mailingserver.log" INFO >>= \lh -> return $ setFormatter lh fmt
     integrationLog <- fileHandler' "log/integrationapi.log" INFO >>= \lh -> return $ setFormatter lh fmt
     scriveByMailLog<- fileHandler' "log/scrivebymail.log" INFO >>= \lh -> return $ setFormatter lh fmt
     jsonMailAPILog <- fileHandler' "log/jsonmailapi.log" INFO >>= \lh -> return $ setFormatter lh fmt    
@@ -111,6 +114,11 @@ setupLogger = do
     updateGlobalLogger
         "Kontrakcja.MailContent"
         (setLevel NOTICE . setHandlers [mailContentLog])
+
+    -- Mailing Server Log
+    updateGlobalLogger
+        "Kontrakcja.MailingServer"
+        (setLevel NOTICE . setHandlers [mailingServerLog, stdoutLog])
 
     -- Amazon Log
     updateGlobalLogger
@@ -206,6 +214,9 @@ mail msg = liftIO $ noticeM "Kontrakcja.Mail" msg
 
 mailContent :: (MonadIO m) => String -> m ()
 mailContent msg = liftIO $ noticeM "Kontrakcja.MailContent" msg
+
+mailingServer :: (MonadIO m) => String -> m ()
+mailingServer msg = liftIO $ noticeM "Kontrakcja.MailingServer" msg
 
 amazon :: (MonadIO m) => String -> m ()
 amazon msg = liftIO $ noticeM "Kontrakcja.Amazon" msg

@@ -12,7 +12,6 @@ module ActionSchedulerState (
     , GetExpiredActions(..)
     , GetPasswordReminder(..)
     , GetViralInvitationByEmail(..)
-    , GetBackdoorInfoByEmail(..)
     , NewAction(..)
     , UpdateActionType(..)
     , UpdateActionEvalTime(..)
@@ -26,17 +25,12 @@ module ActionSchedulerState (
     , newAccountCreated
     , newAccountCreatedBySigning
     , newRequestEmailChange
-    , newEmailSendoutAction
     ) where
 
 import Control.Applicative
-import Control.Concurrent.MVar
 import Control.Monad.State
 import Control.Monad.Reader
 import qualified Data.ByteString as BS
-import Data.List
-import Data.Maybe
-import Data.Ord
 import Data.Typeable
 import Happstack.Data.IxSet
 import Happstack.State
@@ -55,9 +49,8 @@ import File.FileID
 
 data SchedulerData a b c = SchedulerData {
       sdAppConf      :: a
-    , sdMailer       :: b
-    , sdTemplates    :: c
-    , sdMailEnforcer :: MVar ()
+    , sdTemplates    :: b
+    , sdMailsConfig  :: c
 }
 
 newtype ActionID = ActionID Integer
@@ -69,9 +62,299 @@ instance Show ActionID where
 instance FromReqURI ActionID where
     fromReqURI s = ActionID <$> readM s
 
-data ActionBackdoorInfo =
-  ActionBackdoorInfo { bdContent :: BS.ByteString
+data ActionType = PasswordReminder {
+                      prUserID         :: UserID
+                    , prRemainedEmails :: Int
+                    , prToken          :: MagicHash
+                }
+                | ViralInvitationSent {
+                      visEmail          :: Email
+                    , visTime           :: MinutesTime
+                    , visInviterID      :: UserID
+                    , visRemainedEmails :: Int
+                    , visToken          :: MagicHash
+                }
+                | AccountCreated {
+                      acUserID :: UserID
+                    , acToken  :: MagicHash
+                }
+                | AccountCreatedBySigning {
+                      acbsState         :: InactiveAccountState
+                    , acbsUserID        :: UserID
+                    , acbsDocLinkDataID :: (DocumentID, SignatoryLinkID)
+                    , acbsToken         :: MagicHash
+                }
+                | RequestEmailChange {
+                      recUser :: UserID
+                    , recNewEmail :: Email
+                    , recToken :: MagicHash
+                }
+                | DummyActionType
+                  deriving (Eq, Ord, Show, Typeable)
+
+data InactiveAccountState = NothingSent
+                          | ReminderSent
+                            deriving (Eq, Ord, Show, Typeable)
+
+-- | Used for comparing action types since we can't compare type constructors
+data ActionTypeID = PasswordReminderID
+                  | ViralInvitationSentID
+                  | AccountCreatedID
+                  | AccountCreatedBySigningID
+                  | RequestEmailChangeID
+                  | DummyActionTypeID
+                    deriving (Eq, Ord, Show, Typeable)
+
+-- | Convert ActionType to its type identifier
+actionTypeID :: ActionType -> ActionTypeID
+actionTypeID (PasswordReminder _ _ _) = PasswordReminderID
+actionTypeID (ViralInvitationSent _ _ _ _ _) = ViralInvitationSentID
+actionTypeID (AccountCreated _ _) = AccountCreatedID
+actionTypeID (AccountCreatedBySigning _ _ _ _) = AccountCreatedBySigningID
+actionTypeID (RequestEmailChange _ _ _) = RequestEmailChangeID
+actionTypeID DummyActionType = DummyActionTypeID
+
+-- | Determines how often we should check if there's an action to evaluate
+data ActionImportance = UrgentAction
+                      | LeisureAction
+                        deriving (Eq, Ord, Show, Typeable)
+
+actionImportance :: ActionType -> ActionImportance
+actionImportance (PasswordReminder _ _ _) = LeisureAction
+actionImportance (ViralInvitationSent _ _ _ _ _) = LeisureAction
+actionImportance (AccountCreated _ _) = LeisureAction
+actionImportance (AccountCreatedBySigning _ _ _ _) = LeisureAction
+actionImportance (RequestEmailChange _ _ _) = LeisureAction
+actionImportance DummyActionType = LeisureAction
+
+data Action = Action {
+      actionID       :: ActionID
+    , actionType     :: ActionType
+    , actionEvalTime :: MinutesTime
+    } deriving (Eq, Ord, Show)
+
+instance Typeable Action where
+    typeOf _ = mkTypeOf "Action"
+
+$(deriveSerialize ''ActionID)
+instance Version ActionID
+
+$(deriveSerialize ''ActionImportance)
+instance Version ActionImportance
+
+$(deriveSerialize ''Action)
+instance Version Action
+
+type Actions = IxSet Action
+
+instance Indexable Action where
+    empty = ixSet
+        [ ixFun (\a -> [actionID a])
+        , ixFun (\a -> [actionEvalTime a])
+        , ixFun (\a -> [actionImportance $ actionType a])
+        , ixFun (\a -> [actionTypeID $ actionType a])
+        , ixFun (\a -> case actionType a of
+                            ViralInvitationSent email _ _ _ _ -> [email]
+                            _                                 -> [])
+        , ixFun (\a -> case actionType a of
+                            PasswordReminder uid _ _          -> [uid]
+                            ViralInvitationSent _ _ uid _ _   -> [uid]
+                            AccountCreated uid _              -> [uid]
+                            AccountCreatedBySigning _ uid _ _ -> [uid]
+                            RequestEmailChange uid _ _        -> [uid]
+                            _                                 -> [])
+        ]
+
+instance Component Actions where
+    type Dependencies Actions = End
+    initialValue = IxSet.empty
+
+-- | Get action by its ID
+getAction :: ActionID -> Query Actions (Maybe Action)
+getAction aid = return . getOne . (@= aid) =<< ask
+
+-- | Get expired actions
+getExpiredActions :: ActionImportance -> MinutesTime -> Query Actions [Action]
+getExpiredActions imp now = return . IxSet.toList . (@<= now) . (@= imp) =<< ask
+
+-- | Get password reminder action by user id
+getPasswordReminder :: UserID -> Query Actions (Maybe Action)
+getPasswordReminder uid =
+    return . getOne . (@= uid) . (@= PasswordReminderID) =<< ask
+
+-- | Get viral invitation action by invited person's email address
+getViralInvitationByEmail :: Email -> Query Actions (Maybe Action)
+getViralInvitationByEmail email =
+    return . getOne . (@= email) . (@= ViralInvitationSentID) =<< ask
+
+-- | Insert new action
+newAction :: ActionType -> MinutesTime -> Update Actions Action
+newAction atype time = do
+    actions <- ask
+    aid <- ActionID <$> getRandomR (0, 1000000000)
+    case getOne $ actions @= aid of
+         Just _  -> newAction atype time
+         Nothing -> do
+             let action = Action aid atype time
+             modify $ IxSet.updateIx aid action
+             return action
+
+-- | Update action's type. Returns Nothing if there is no action with given id.
+updateActionType :: ActionID -> ActionType -> Update Actions (Maybe Action)
+updateActionType aid atype = do
+    actions <- ask
+    case getOne $ actions @= aid of
+         Nothing     -> return Nothing
+         Just action -> do
+             let new_action = action { actionType = atype }
+             modify $ IxSet.updateIx aid new_action
+             return $ Just new_action
+
+-- | Update action's expiration date. Returns Nothing
+-- if there is no action with given id.
+updateActionEvalTime :: ActionID -> MinutesTime -> Update Actions (Maybe Action)
+updateActionEvalTime aid time = do
+    actions <- ask
+    case getOne $ actions @= aid of
+         Nothing     -> return Nothing
+         Just action -> do
+             let new_action = action { actionEvalTime = time }
+             modify $ IxSet.updateIx aid new_action
+             return $ Just new_action
+
+-- | Delete existing action. Returns Nothing if there is
+-- no action with given id, otherwise deleted action.
+deleteAction :: ActionID -> Update Actions (Maybe Action)
+deleteAction aid = do
+    actions <- ask
+    case getOne $ actions @= aid of
+         Nothing     -> return Nothing
+         Just action -> do
+             modify $ IxSet.deleteIx aid
+             return $ Just action
+
+$(mkMethods ''Actions
+  [ 'getAction
+  , 'getExpiredActions
+  , 'getPasswordReminder
+  , 'getViralInvitationByEmail
+  , 'newAction
+  , 'updateActionType
+  , 'updateActionEvalTime
+  , 'deleteAction
+  ])
+
+-- | Check if action is of given type
+checkTypeID :: ActionTypeID -> Maybe Action -> Maybe Action
+checkTypeID atypeid maction = maction >>= \action ->
+    if actionTypeID (actionType action) == atypeid
+       then Just action
+       else Nothing
+
+-- | Check if action hasn't expired yet
+checkValidity :: MinutesTime -> Maybe Action -> Maybe Action
+checkValidity now maction = maction >>= \action ->
+    if now < actionEvalTime action
+       then Just action
+       else Nothing
+
+-- | Create new 'password reminder' action
+newPasswordReminder :: User -> IO Action
+newPasswordReminder user = do
+    hash <- randomIO
+    now <- getMinutesTime
+    let action = PasswordReminder {
+          prUserID         = userid user
+        , prRemainedEmails = 9
+        , prToken          = hash
+    }
+    update $ NewAction action $ (12*60) `minutesAfter` now
+
+-- | Create new 'invitation sent' action
+newViralInvitationSent :: Email -> UserID -> IO Action
+newViralInvitationSent email inviterid = do
+    hash <- randomIO
+    now <- getMinutesTime
+    let action = ViralInvitationSent {
+          visEmail          = email
+        , visTime           = now
+        , visInviterID      = inviterid
+        , visRemainedEmails = 9
+        , visToken          = hash
+    }
+    update $ NewAction action $ (7*24*60) `minutesAfter` now
+
+-- | Create new 'account created' action
+newAccountCreated :: User -> IO Action
+newAccountCreated user = do
+    hash <- randomIO
+    now <- getMinutesTime
+    let action = AccountCreated {
+          acUserID = userid user
+        , acToken  = hash
+    }
+    update $ NewAction action $ (24*60) `minutesAfter` now
+
+-- | Create new 'account created by signing' action
+newAccountCreatedBySigning :: User -> (DocumentID, SignatoryLinkID) -> IO Action
+newAccountCreatedBySigning user doclinkdata = do
+    hash <- randomIO
+    now <- getMinutesTime
+    let action = AccountCreatedBySigning {
+          acbsState         = NothingSent
+        , acbsUserID        = userid user
+        , acbsDocLinkDataID = doclinkdata
+        , acbsToken         = hash
+    }
+    update $ NewAction action $ (24 * 60) `minutesAfter` now
+
+newRequestEmailChange :: User -> Email -> IO Action
+newRequestEmailChange user newemail = do
+  hash <- randomIO
+  now <- getMinutesTime
+  let action = RequestEmailChange {
+    recUser = userid user
+  , recNewEmail = newemail
+  , recToken = hash
+  }
+  update $ NewAction action $ (24 * 60) `minutesAfter` now
+
+-- Migrations and old stuff --
+
+data InactiveAccountState0 = JustCreated
+                          | FirstReminderSent
+                          | SecondReminderSent
+                          | ThirdReminderSent
+                            deriving (Eq, Ord, Show, Typeable)
+
+$(deriveSerialize ''InactiveAccountState0)
+instance Version InactiveAccountState0
+
+$(deriveSerialize ''InactiveAccountState)
+instance Version InactiveAccountState where
+    mode = extension 1 (Proxy :: Proxy InactiveAccountState0)
+
+instance Migrate InactiveAccountState0 InactiveAccountState where
+    migrate JustCreated = NothingSent
+    migrate FirstReminderSent = ReminderSent
+    migrate SecondReminderSent = ReminderSent
+    migrate ThirdReminderSent = ReminderSent
+
+data ActionBackdoorInfo = ActionBackdoorInfo { bdContent :: BS.ByteString
                      } deriving (Eq, Ord, Show, Typeable)
+
+data SendGridEventType =
+      Processed
+    | Opened
+    | Dropped String              -- ^ drop reason
+    | Deferred String Int         -- ^ response, delivery attempt
+    | Delivered String            -- ^ response from mta
+    | Bounce String String String -- ^ status, reason, type
+    | Other String                -- ^ type
+      deriving (Eq, Ord, Show, Typeable)
+
+$(deriveSerialize ''SendGridEventType)
+instance Version SendGridEventType
 
 data ActionType0 = TrustWeaverUpload0 {
                       twuOwner0 :: String
@@ -156,50 +439,50 @@ data ActionType1 = TrustWeaverUpload1 {
                 }
                   deriving (Eq, Ord, Show, Typeable)
 
-data ActionType = TrustWeaverUpload {
-                      twuOwner :: String
-                    , twuDocID :: DocumentID
+data ActionType2 = TrustWeaverUpload2 {
+                      twuOwner2 :: String
+                    , twuDocID2 :: DocumentID
                 }
-                | AmazonUpload {
-                      auDocID  :: DocumentID
-                    , uaFileID :: FileID
+                | AmazonUpload2 {
+                      auDocID2  :: DocumentID
+                    , uaFileID2 :: FileID
                 }
-                | PasswordReminder {
-                      prUserID         :: UserID
-                    , prRemainedEmails :: Int
-                    , prToken          :: MagicHash
+                | PasswordReminder2 {
+                      prUserID2         :: UserID
+                    , prRemainedEmails2 :: Int
+                    , prToken2          :: MagicHash
                 }
-                | ViralInvitationSent {
-                      visEmail          :: Email
-                    , visTime           :: MinutesTime
-                    , visInviterID      :: UserID
-                    , visRemainedEmails :: Int
-                    , visToken          :: MagicHash
+                | ViralInvitationSent2 {
+                      visEmail2          :: Email
+                    , visTime2           :: MinutesTime
+                    , visInviterID2      :: UserID
+                    , visRemainedEmails2 :: Int
+                    , visToken2          :: MagicHash
                 }
-                | AccountCreated {
-                      acUserID :: UserID
-                    , acToken  :: MagicHash
+                | AccountCreated2 {
+                      acUserID2 :: UserID
+                    , acToken2  :: MagicHash
                 }
-                | AccountCreatedBySigning {
-                      acbsState         :: InactiveAccountState
-                    , acbsUserID        :: UserID
-                    , acbsDocLinkDataID :: (DocumentID, SignatoryLinkID)
-                    , acbsToken         :: MagicHash
+                | AccountCreatedBySigning2 {
+                      acbsState2         :: InactiveAccountState
+                    , acbsUserID2        :: UserID
+                    , acbsDocLinkDataID2 :: (DocumentID, SignatoryLinkID)
+                    , acbsToken2         :: MagicHash
                 }
-                | RequestEmailChange {
-                      recUser :: UserID
-                    , recNewEmail :: Email
-                    , recToken :: MagicHash
+                | RequestEmailChange2 {
+                      recUser2 :: UserID
+                    , recNewEmail2 :: Email
+                    , recToken2 :: MagicHash
                 }
-                | EmailSendout {
-                      esMail :: Mail
+                | EmailSendout2 {
+                      esMail2 :: Mail
                 }
-                | SentEmailInfo {
-                      seiEmail            :: Email
-                    , seiMailInfo         :: MailInfo
-                    , seiEventType        :: SendGridEventType
-                    , seiLastModification :: MinutesTime
-                    , seiBackdoorInfo     :: Maybe ActionBackdoorInfo
+                | SentEmailInfo2 {
+                      seiEmail2            :: Email
+                    , seiMailInfo2         :: MailInfo
+                    , seiEventType2        :: SendGridEventType
+                    , seiLastModification2 :: MinutesTime
+                    , seiBackdoorInfo2     :: Maybe ActionBackdoorInfo
                 }
                   deriving (Eq, Ord, Show, Typeable)
 
@@ -277,29 +560,29 @@ instance Migrate ActionType0 ActionType1 where
                   }
 
 
-instance Migrate ActionType1 ActionType where
+instance Migrate ActionType1 ActionType2 where
   migrate (TrustWeaverUpload1
              { twuOwner1
              , twuDocID1
-             }) = TrustWeaverUpload {
-                    twuOwner = twuOwner1
-                  , twuDocID = twuDocID1
+             }) = TrustWeaverUpload2 {
+                    twuOwner2 = twuOwner1
+                  , twuDocID2 = twuDocID1
                   }
   migrate (AmazonUpload1
              { auDocID1
              , uaFileID1
-             }) = AmazonUpload {
-                    auDocID = auDocID1
-                  , uaFileID = uaFileID1
+             }) = AmazonUpload2 {
+                    auDocID2 = auDocID1
+                  , uaFileID2 = uaFileID1
                   }
   migrate (PasswordReminder1
              { prUserID1
              , prRemainedEmails1
              , prToken1
-             }) = PasswordReminder {
-                    prUserID = prUserID1
-                  , prRemainedEmails = prRemainedEmails1
-                  , prToken = prToken1
+             }) = PasswordReminder2 {
+                    prUserID2 = prUserID1
+                  , prRemainedEmails2 = prRemainedEmails1
+                  , prToken2 = prToken1
                   }
   migrate (ViralInvitationSent1
              { visEmail1
@@ -307,35 +590,35 @@ instance Migrate ActionType1 ActionType where
              , visInviterID1
              , visRemainedEmails1
              , visToken1
-             }) = ViralInvitationSent {
-                    visEmail = visEmail1
-                  , visTime = visTime1
-                  , visInviterID = visInviterID1
-                  , visRemainedEmails = visRemainedEmails1
-                  , visToken = visToken1
+             }) = ViralInvitationSent2 {
+                    visEmail2 = visEmail1
+                  , visTime2 = visTime1
+                  , visInviterID2 = visInviterID1
+                  , visRemainedEmails2 = visRemainedEmails1
+                  , visToken2 = visToken1
                   }
   migrate (AccountCreated1
              { acUserID1
              , acToken1
-             }) = AccountCreated {
-                    acUserID = acUserID1
-                  , acToken = acToken1
+             }) = AccountCreated2 {
+                    acUserID2 = acUserID1
+                  , acToken2 = acToken1
                   }
   migrate (AccountCreatedBySigning1
              { acbsState1
              , acbsUserID1
              , acbsDocLinkDataID1
              , acbsToken1
-             }) = AccountCreatedBySigning {
-                    acbsState = acbsState1
-                  , acbsUserID = acbsUserID1
-                  , acbsDocLinkDataID = acbsDocLinkDataID1
-                  , acbsToken = acbsToken1
+             }) = AccountCreatedBySigning2 {
+                    acbsState2 = acbsState1
+                  , acbsUserID2 = acbsUserID1
+                  , acbsDocLinkDataID2 = acbsDocLinkDataID1
+                  , acbsToken2 = acbsToken1
                   }
   migrate (EmailSendout1
              { esMail1
-             }) = EmailSendout {
-                    esMail = esMail1
+             }) = EmailSendout2 {
+                    esMail2 = esMail1
                   }
   migrate (SentEmailInfo1
              { seiEmail1
@@ -343,70 +626,68 @@ instance Migrate ActionType1 ActionType where
              , seiEventType1
              , seiLastModification1
              , seiBackdoorInfo1
-             }) = SentEmailInfo {
-                    seiEmail = seiEmail1
-                  , seiMailInfo = seiMailInfo1
-                  , seiEventType = seiEventType1
-                  , seiLastModification = seiLastModification1
-                  , seiBackdoorInfo = seiBackdoorInfo1
+             }) = SentEmailInfo2 {
+                    seiEmail2 = seiEmail1
+                  , seiMailInfo2 = seiMailInfo1
+                  , seiEventType2 = seiEventType1
+                  , seiLastModification2 = seiLastModification1
+                  , seiBackdoorInfo2 = seiBackdoorInfo1
                   }
 
-data InactiveAccountState = NothingSent
-                          | ReminderSent
-                            deriving (Eq, Ord, Show, Typeable)
+instance Migrate ActionType2 ActionType where
+  migrate (PasswordReminder2
+             { prUserID2
+             , prRemainedEmails2
+             , prToken2
+             }) = PasswordReminder {
+                    prUserID = prUserID2
+                  , prRemainedEmails = prRemainedEmails2
+                  , prToken = prToken2
+                  }
+  migrate (ViralInvitationSent2
+             { visEmail2
+             , visTime2
+             , visInviterID2
+             , visRemainedEmails2
+             , visToken2
+             }) = ViralInvitationSent {
+                    visEmail = visEmail2
+                  , visTime = visTime2
+                  , visInviterID = visInviterID2
+                  , visRemainedEmails = visRemainedEmails2
+                  , visToken = visToken2
+                  }
+  migrate (AccountCreated2
+             { acUserID2
+             , acToken2
+             }) = AccountCreated {
+                    acUserID = acUserID2
+                  , acToken = acToken2
+                  }
+  migrate (AccountCreatedBySigning2
+             { acbsState2
+             , acbsUserID2
+             , acbsDocLinkDataID2
+             , acbsToken2
+             }) = AccountCreatedBySigning {
+                    acbsState = acbsState2
+                  , acbsUserID = acbsUserID2
+                  , acbsDocLinkDataID = acbsDocLinkDataID2
+                  , acbsToken = acbsToken2
+                  }
+  migrate (RequestEmailChange2 {
+      recUser2
+    , recNewEmail2
+    , recToken2
+    }) = RequestEmailChange {
+      recUser = recUser2
+    , recNewEmail = recNewEmail2
+    , recToken = recToken2
+    }
+  migrate _ = DummyActionType
 
--- | Used for comparing action types since we can't compare type constructors
-data ActionTypeID = TrustWeaverUploadID
-                  | AmazonUploadID
-                  | PasswordReminderID
-                  | ViralInvitationSentID
-                  | AccountCreatedID
-                  | AccountCreatedBySigningID
-                  | RequestEmailChangeID
-                  | EmailSendoutID
-                  | SentEmailInfoID
-                    deriving (Eq, Ord, Show, Typeable)
-
--- | Convert ActionType to its type identifier
-actionTypeID :: ActionType -> ActionTypeID
-actionTypeID (TrustWeaverUpload _ _) = TrustWeaverUploadID
-actionTypeID (AmazonUpload _ _) = AmazonUploadID
-actionTypeID (PasswordReminder _ _ _) = PasswordReminderID
-actionTypeID (ViralInvitationSent _ _ _ _ _) = ViralInvitationSentID
-actionTypeID (AccountCreated _ _) = AccountCreatedID
-actionTypeID (AccountCreatedBySigning _ _ _ _) = AccountCreatedBySigningID
-actionTypeID (RequestEmailChange _ _ _) = RequestEmailChangeID
-actionTypeID (EmailSendout _) = EmailSendoutID
-actionTypeID (SentEmailInfo _ _ _ _ _) = SentEmailInfoID
-
--- | Determines how often we should check if there's an action to evaluate
-data ActionImportance = UrgentAction
-                      | LeisureAction
-                      | EmailSendoutAction
-                        deriving (Eq, Ord, Show, Typeable)
-
-actionImportance :: ActionType -> ActionImportance
-actionImportance (TrustWeaverUpload _ _) = UrgentAction
-actionImportance (AmazonUpload _ _) = UrgentAction
-actionImportance (PasswordReminder _ _ _) = LeisureAction
-actionImportance (ViralInvitationSent _ _ _ _ _) = LeisureAction
-actionImportance (AccountCreated _ _) = LeisureAction
-actionImportance (AccountCreatedBySigning _ _ _ _) = LeisureAction
-actionImportance (RequestEmailChange _ _ _) = LeisureAction
-actionImportance (EmailSendout _) = EmailSendoutAction
-actionImportance (SentEmailInfo _ _ _ _ _) = LeisureAction
-
-data Action = Action {
-      actionID       :: ActionID
-    , actionType     :: ActionType
-    , actionEvalTime :: MinutesTime
-    } deriving (Eq, Ord, Show)
-
-instance Typeable Action where
-    typeOf _ = mkTypeOf "Action"
-
-$(deriveSerialize ''ActionID)
-instance Version ActionID
+$(deriveSerialize ''ActionBackdoorInfo)
+instance Version ActionBackdoorInfo
 
 $(deriveSerialize ''ActionType0)
 instance Version ActionType0
@@ -415,235 +696,10 @@ $(deriveSerialize ''ActionType1)
 instance Version ActionType1 where
     mode = extension 1 (Proxy :: Proxy ActionType0)
 
-$(deriveSerialize ''ActionType)
-instance Version ActionType where
+$(deriveSerialize ''ActionType2)
+instance Version ActionType2 where
     mode = extension 2 (Proxy :: Proxy ActionType1)
 
-$(deriveSerialize ''ActionBackdoorInfo)
-instance Version ActionBackdoorInfo
-
-$(deriveSerialize ''ActionImportance)
-instance Version ActionImportance
-
-$(deriveSerialize ''Action)
-instance Version Action
-
-type Actions = IxSet Action
-
-instance Indexable Action where
-    empty = ixSet
-        [ ixFun (\a -> [actionID a])
-        , ixFun (\a -> [actionEvalTime a])
-        , ixFun (\a -> [actionImportance $ actionType a])
-        , ixFun (\a -> [actionTypeID $ actionType a])
-        , ixFun (\a -> case actionType a of
-                            ViralInvitationSent email _ _ _ _ -> [email]
-                            SentEmailInfo email _ _ _ _       -> [email]
-                            _                                 -> [])
-        , ixFun (\a -> case actionType a of
-                            PasswordReminder uid _ _          -> [uid]
-                            ViralInvitationSent _ _ uid _ _   -> [uid]
-                            AccountCreated uid _              -> [uid]
-                            AccountCreatedBySigning _ uid _ _ -> [uid]
-                            RequestEmailChange uid _ _        -> [uid]
-                            _                                 -> [])
-        ]
-
-instance Component Actions where
-    type Dependencies Actions = End
-    initialValue = IxSet.empty
-
--- | Get action by its ID
-getAction :: ActionID -> Query Actions (Maybe Action)
-getAction aid = return . getOne . (@= aid) =<< ask
-
--- | Get expired actions
-getExpiredActions :: ActionImportance -> MinutesTime -> Query Actions [Action]
-getExpiredActions imp now = return . IxSet.toList . (@<= now) . (@= imp) =<< ask
-
--- | Get password reminder action by user id
-getPasswordReminder :: UserID -> Query Actions (Maybe Action)
-getPasswordReminder uid =
-    return . getOne . (@= uid) . (@= PasswordReminderID) =<< ask
-
--- | Get viral invitation action by invited person's email address
-getViralInvitationByEmail :: Email -> Query Actions (Maybe Action)
-getViralInvitationByEmail email =
-    return . getOne . (@= email) . (@= ViralInvitationSentID) =<< ask
-
-{- |
-    Gets the backdoor information for the last email sent.  This can be used
-    for running tests.  It shouldn't be used for normal functionality.
--}
-getBackdoorInfoByEmail :: Email -> Query Actions (Maybe ActionBackdoorInfo)
-getBackdoorInfoByEmail email = do
-  return . listToMaybe . catMaybes . map getBackdoorInfo . reverse . sortBy (comparing actionEvalTime) . toList . (@= email) =<< ask
-  where
-    getBackdoorInfo action =
-      case actionType action of
-        SentEmailInfo{seiBackdoorInfo} -> seiBackdoorInfo
-        _ -> Nothing
-
--- | Insert new action
-newAction :: ActionType -> MinutesTime -> Update Actions Action
-newAction atype time = do
-    actions <- ask
-    aid <- ActionID <$> getRandomR (0, 1000000000)
-    case getOne $ actions @= aid of
-         Just _  -> newAction atype time
-         Nothing -> do
-             let action = Action aid atype time
-             modify $ IxSet.updateIx aid action
-             return action
-
--- | Update action's type. Returns Nothing if there is no action with given id.
-updateActionType :: ActionID -> ActionType -> Update Actions (Maybe Action)
-updateActionType aid atype = do
-    actions <- ask
-    case getOne $ actions @= aid of
-         Nothing     -> return Nothing
-         Just action -> do
-             let new_action = action { actionType = atype }
-             modify $ IxSet.updateIx aid new_action
-             return $ Just new_action
-
--- | Update action's expiration date. Returns Nothing
--- if there is no action with given id.
-updateActionEvalTime :: ActionID -> MinutesTime -> Update Actions (Maybe Action)
-updateActionEvalTime aid time = do
-    actions <- ask
-    case getOne $ actions @= aid of
-         Nothing     -> return Nothing
-         Just action -> do
-             let new_action = action { actionEvalTime = time }
-             modify $ IxSet.updateIx aid new_action
-             return $ Just new_action
-
--- | Delete existing action. Returns Nothing if there is
--- no action with given id, otherwise deleted action.
-deleteAction :: ActionID -> Update Actions (Maybe Action)
-deleteAction aid = do
-    actions <- ask
-    case getOne $ actions @= aid of
-         Nothing     -> return Nothing
-         Just action -> do
-             modify $ IxSet.deleteIx aid
-             return $ Just action
-
-$(mkMethods ''Actions
-  [ 'getAction
-  , 'getExpiredActions
-  , 'getPasswordReminder
-  , 'getViralInvitationByEmail
-  , 'getBackdoorInfoByEmail
-  , 'newAction
-  , 'updateActionType
-  , 'updateActionEvalTime
-  , 'deleteAction
-  ])
-
--- | Check if action is of given type
-checkTypeID :: ActionTypeID -> Maybe Action -> Maybe Action
-checkTypeID atypeid maction = maction >>= \action ->
-    if actionTypeID (actionType action) == atypeid
-       then Just action
-       else Nothing
-
--- | Check if action hasn't expired yet
-checkValidity :: MinutesTime -> Maybe Action -> Maybe Action
-checkValidity now maction = maction >>= \action ->
-    if now < actionEvalTime action
-       then Just action
-       else Nothing
-
--- | Create new 'password reminder' action
-newPasswordReminder :: User -> IO Action
-newPasswordReminder user = do
-    hash <- randomIO
-    now <- getMinutesTime
-    let action = PasswordReminder {
-          prUserID         = userid user
-        , prRemainedEmails = 9
-        , prToken          = hash
-    }
-    update $ NewAction action $ (12*60) `minutesAfter` now
-
--- | Create new 'invitation sent' action
-newViralInvitationSent :: Email -> UserID -> IO Action
-newViralInvitationSent email inviterid = do
-    hash <- randomIO
-    now <- getMinutesTime
-    let action = ViralInvitationSent {
-          visEmail          = email
-        , visTime           = now
-        , visInviterID      = inviterid
-        , visRemainedEmails = 9
-        , visToken          = hash
-    }
-    update $ NewAction action $ (7*24*60) `minutesAfter` now
-
--- | Create new 'account created' action
-newAccountCreated :: User -> IO Action
-newAccountCreated user = do
-    hash <- randomIO
-    now <- getMinutesTime
-    let action = AccountCreated {
-          acUserID = userid user
-        , acToken  = hash
-    }
-    update $ NewAction action $ (24*60) `minutesAfter` now
-
--- | Create new 'account created by signing' action
-newAccountCreatedBySigning :: User -> (DocumentID, SignatoryLinkID) -> IO Action
-newAccountCreatedBySigning user doclinkdata = do
-    hash <- randomIO
-    now <- getMinutesTime
-    let action = AccountCreatedBySigning {
-          acbsState         = NothingSent
-        , acbsUserID        = userid user
-        , acbsDocLinkDataID = doclinkdata
-        , acbsToken         = hash
-    }
-    update $ NewAction action $ (24 * 60) `minutesAfter` now
-
-newRequestEmailChange :: User -> Email -> IO Action
-newRequestEmailChange user newemail = do
-  hash <- randomIO
-  now <- getMinutesTime
-  let action = RequestEmailChange {
-    recUser = userid user
-  , recNewEmail = newemail
-  , recToken = hash
-  }
-  update $ NewAction action $ (24 * 60) `minutesAfter` now
-
--- | Create new 'email sendout' action
-newEmailSendoutAction :: Mail -> IO ()
-newEmailSendoutAction mail = do
-    now <- getMinutesTime
-    let action = EmailSendout {
-        esMail = mail
-    }
-    _ <- update $ NewAction action $  now
-    return ()
-
--- Migrations and old stuff --
-
-data InactiveAccountState0 = JustCreated
-                          | FirstReminderSent
-                          | SecondReminderSent
-                          | ThirdReminderSent
-                            deriving (Eq, Ord, Show, Typeable)
-
-$(deriveSerialize ''InactiveAccountState0)
-instance Version InactiveAccountState0
-
-$(deriveSerialize ''InactiveAccountState)
-instance Version InactiveAccountState where
-    mode = extension 1 (Proxy :: Proxy InactiveAccountState0)
-
-instance Migrate InactiveAccountState0 InactiveAccountState where
-    migrate JustCreated = NothingSent
-    migrate FirstReminderSent = ReminderSent
-    migrate SecondReminderSent = ReminderSent
-    migrate ThirdReminderSent = ReminderSent
+$(deriveSerialize ''ActionType)
+instance Version ActionType where
+    mode = extension 3 (Proxy :: Proxy ActionType2)

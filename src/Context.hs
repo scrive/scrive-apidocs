@@ -16,6 +16,7 @@ import qualified TrustWeaver as TW
 import ELegitimation.ELegTransaction
 import qualified MemCache
 import FlashMessage
+import Mails.MailsConfig
 import API.Service.Model
 import Company.Model
 import DB.Types
@@ -33,12 +34,11 @@ data Context = Context
     , ctxs3action            :: AWS.S3Action -- ^
     , ctxgscmd               :: String -- ^
     , ctxproduction          :: Bool -- ^ Is this server the production server?
-    , ctxbackdooropen        :: Bool -- ^ Whether the testing backdoor is open?
     , ctxtemplates           :: KontrakcjaTemplates -- ^ The set of templates to render text for the ctxlocale
     , ctxglobaltemplates     :: KontrakcjaGlobalTemplates -- ^ All of the templates for all valid locales
     , ctxlocale              :: Locale -- ^ The current context locale
     , ctxlocaleswitch        :: Bool -- ^ Whether locale switching is available on this page
-    , ctxesenforcer          :: MVar () -- ^
+    , ctxmailsconfig         :: MailsConfig
     , ctxtwconf              :: TW.TrustWeaverConf -- ^ TrustWeaver configuration
     , ctxelegtransactions    :: [ELegTransaction] -- ^ Transactions for connections to the Logica server
     , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString -- ^

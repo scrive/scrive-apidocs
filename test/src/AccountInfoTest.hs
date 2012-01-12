@@ -16,6 +16,7 @@ import Context
 import DB.Classes
 import DB.Types
 import FlashMessage
+import Mails.Model
 import MinutesTime
 import Misc
 import Redirect
@@ -29,7 +30,6 @@ import User.UserControl
 import User.Utils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
-import Util.MonadUtils
 
 accountInfoTests :: Connection -> Test
 accountInfoTests conn = testGroup "AccountInfo" [
@@ -128,7 +128,7 @@ testChangeEmailAddress conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
-  user <- guardJustM $ dbQuery $ GetUserByID (userid user')
+  Just user <- dbQuery $ GetUserByID (userid user')
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
@@ -142,7 +142,7 @@ testChangeEmailAddress conn = withTestEnvironment conn $ do
   assertEqual "Location is /account" (Just "/account") (T.getHeader "location" (rsHeaders res1))
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx1)
   assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx1) `isFlashOfType` OperationDone
-  uuser <- guardJustM $ dbQuery $ GetUserByID (userid user)
+  Just uuser <- dbQuery $ GetUserByID (userid user)
   assertEqual "Email hasn't changed yet" (BS.fromString "bob@blue.com") (getEmail uuser)
 
   actions <- getRequestChangeEmailActions
@@ -152,8 +152,8 @@ testChangeEmailAddress conn = withTestEnvironment conn $ do
   assertEqual "Inviter id is correct" (userid user) inviterid
   assertEqual "Action email is correct" (Email $ BS.fromString "jim@bob.com") invitedemail
 
-  emailactions <- getEmailActions
-  assertEqual "An email was sent" 1 (length emailactions)
+  emails <- dbQuery GetIncomingEmails
+  assertEqual "An email was sent" 1 (length emails)
 
   req2 <- mkRequest POST [("password", inText "abc123")]
   (res2, ctx2) <- runTestKontra req2 ctx1 $ handlePostChangeEmail (actionID action) token >>= sendRedirect
@@ -161,7 +161,7 @@ testChangeEmailAddress conn = withTestEnvironment conn $ do
   assertEqual "Location is /account" (Just "/account") (T.getHeader "location" (rsHeaders res2))
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx2)
   assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx2) `isFlashOfType` OperationDone
-  uuuser <- guardJustM $ dbQuery $ GetUserByID (userid user)
+  Just uuuser <- dbQuery $ GetUserByID (userid user)
   assertEqual "Email has changed" (BS.fromString "jim@bob.com") (getEmail uuuser)
 
 testAddressesMustMatchToRequestEmailChange :: Connection -> Assertion
@@ -223,7 +223,7 @@ testEmailChangeFailsIfActionIDIsWrong conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
-  user <- guardJustM $ dbQuery $ GetUserByID (userid user')
+  Just user <- dbQuery $ GetUserByID (userid user')
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
@@ -241,7 +241,7 @@ testEmailChangeFailsIfMagicHashIsWrong conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
-  user <- guardJustM $ dbQuery $ GetUserByID (userid user')
+  Just user <- dbQuery $ GetUserByID (userid user')
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
@@ -258,7 +258,7 @@ testEmailChangeIfForAnotherUser conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
-  user <- guardJustM $ dbQuery $ GetUserByID (userid user')
+  Just user <- dbQuery $ GetUserByID (userid user')
   Just anotheruser <- addNewUser "Fred" "Frog" "fred@frog.com"
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
@@ -277,7 +277,7 @@ testEmailChangeFailsIfEmailInUse conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
-  user <- guardJustM $ dbQuery $ GetUserByID (userid user')
+  Just user <- dbQuery $ GetUserByID (userid user')
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
@@ -296,7 +296,7 @@ testEmailChangeFailsIfPasswordWrong conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
-  user <- guardJustM $ dbQuery $ GetUserByID (userid user')
+  Just user <- dbQuery $ GetUserByID (userid user')
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
@@ -315,7 +315,7 @@ testEmailChangeFailsIfNoPassword conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
-  user <- guardJustM $ dbQuery $ GetUserByID (userid user')
+  Just user <- dbQuery $ GetUserByID (userid user')
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
@@ -328,19 +328,6 @@ testEmailChangeFailsIfNoPassword conn = withTestEnvironment conn $ do
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
-
-getEmailActions :: MonadIO m => m [Action]
-getEmailActions = do
-  now <- getMinutesTime
-  let expirytime = 1 `minutesAfter` now
-  allactions <- query $ GetExpiredActions EmailSendoutAction expirytime
-  return $ filter isEmailAction allactions
-
-isEmailAction :: Action -> Bool
-isEmailAction action =
-  case actionType action of
-    (EmailSendout _) -> True
-    _ -> False
 
 getRequestChangeEmailActions :: MonadIO m => m [Action]
 getRequestChangeEmailActions = do

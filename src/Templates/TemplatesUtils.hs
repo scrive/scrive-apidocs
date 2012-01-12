@@ -18,8 +18,7 @@ import Templates.Templates
 import Mails.SendMail
 import Misc
 import Data.Char
-import qualified AppLogger as Log ()
-import qualified Data.ByteString.UTF8 as BS
+import qualified Log ()
 import Kontra
 import User.Locale
 
@@ -87,8 +86,8 @@ kontramail' renderFunc tname fields = do
     wholemail <- renderFunc tname fields
     let (title,content) = span (/= '\n') $ dropWhile (isControl ||^ isSpace) wholemail
     -- Log.debug $ "kontramail'->Title:" ++ title
-    return $ emptyMail  {   title   = BS.fromString title
-                          , content = BS.fromString content
+    return $ emptyMail  {   title   = title
+                          , content = content
                         }
 
 contextFields ::(MonadIO m) => Context -> Fields m

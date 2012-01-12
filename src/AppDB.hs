@@ -1,11 +1,10 @@
 {-# LANGUAGE CPP #-}
-module DB.Migrations (
-    migrationsList
-  , tablesList
+module AppDB (
+    kontraMigrations
+  , kontraTables
   ) where
 
 import DB.Model
-import DB.Versions
 
 import API.Service.Tables
 import Company.Tables
@@ -21,8 +20,8 @@ import Stats.Migrations
 import File.Tables
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
-migrationsList :: [Migration]
-migrationsList = [
+kontraMigrations :: [Migration]
+kontraMigrations = [
     addRegionToUserSettings
   , addServiceAndCompanyToStats
   , removeSystemServer
@@ -33,10 +32,9 @@ migrationsList = [
 #endif
   ]
 
-tablesList :: [Table]
-tablesList = [
-    tableVersions
-  , tableUsers
+kontraTables :: [Table]
+kontraTables = [
+    tableUsers
   , tableUserFriends
   , tableUserMailAPIs
   , tableUserInviteInfos
@@ -45,6 +43,7 @@ tablesList = [
   , tableCompanyInvites
   , tableDocStatEvents
   , tableUserStatEvents
+  , tableSignStatEvents
   , tableFiles
 #ifdef DOCUMENTS_IN_POSTGRES
   , tableDocuments

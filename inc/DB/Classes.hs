@@ -33,13 +33,11 @@ module DB.Classes
   , wrapDB
   , ioRunDB
   , runDB
-  , runDBOrFail
   , runDBQuery
   , runDBUpdate
   , DBException(..)
   , catchDB
   , tryDB
-
   , kPrepare
   , kExecute
   , kExecute1
@@ -57,7 +55,7 @@ import DB.Fetcher
 import Data.Maybe
 import Database.HDBC hiding (originalQuery)
 import Database.HDBC.PostgreSQL
-import Util.MonadUtils
+
 import qualified Control.Exception as E
 -- import qualified DB.Utils as DB
 import qualified Database.HDBC as HDBC
@@ -86,7 +84,7 @@ type DBInside a = RWST Connection () (Maybe Statement) IO a
 -- transaction! And because there is no such thing as nested transactions,
 -- this basically kills its 'transactional' character.
 newtype DB a = DB { unDB :: DBInside a }
-  deriving (Applicative, Functor, Monad, MonadPlus, MonadIO)
+  deriving (Applicative, Functor, Monad, MonadIO)
 
 -- | Protected 'liftIO'. Properly catches 'SqlError' and converts it
 -- to 'DBException'. Adds 'HDBC.originalQuery' that should help a lot.
@@ -294,10 +292,6 @@ runDB f = do
       , E.Handler (return . Left)
       ]
 
--- | Runs DB action and mzeroes if it returned Nothing
-runDBOrFail :: (DBMonad m, MonadPlus m) => DB (Maybe r) -> m r
-runDBOrFail f = runDB f >>= guardJust
-
 -- | Runs single db query (provided for convenience).
 runDBQuery :: (DBMonad m, DBQuery q r) => q -> m r
 runDBQuery = runDB . dbQuery
@@ -305,7 +299,6 @@ runDBQuery = runDB . dbQuery
 -- | Runs single db update (provided for convenience).
 runDBUpdate :: (DBMonad m, DBUpdate q r) => q -> m r
 runDBUpdate = runDB . dbUpdate
-
 
 -- | Catch in DB monad
 catchDB :: E.Exception e => DB a -> (e -> DB a) -> DB a

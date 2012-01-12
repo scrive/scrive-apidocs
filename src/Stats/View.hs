@@ -4,7 +4,13 @@ module Stats.View
          statisticsCSV,
          userStatisticsCSV,
          statisticsFieldsByDay,
-         statisticsFieldsByMonth         
+         statisticsFieldsByMonth,
+         
+         signStatsCSV,
+         
+         docHistCSV,
+         signHistCSV
+         
        )
        where
 
@@ -87,5 +93,38 @@ userStatisticsCSV events =
                           , maybe "" show                        $ usCompanyID event                        
                           ]
                           ++ "\"\n"
+
+signStatsCSV :: [SignStatEvent] -> String
+signStatsCSV events = 
+  "\"" ++ intercalate "\";\""  
+  ["documentid", "signatorylinkid", "date", "event", "doctype", "service (author)", "company (author)"]
+  ++ "\"\n" ++
+  (concat $ map csvline events)
+    where csvline event = "\"" ++ intercalate "\";\""
+                          [ show        $ ssDocumentID      event 
+                          , show        $ ssSignatoryLinkID event                               
+                          , showDateYMD $ ssTime            event     
+                          , show        $ ssQuantity        event
+                          , show        $ ssDocumentProcess event
+                          , show        $ ssServiceID       event
+                          , show        $ ssCompanyID       event
+                          ]
+                          ++ "\"\n"
+
+docHistCSV :: [[String]] -> String
+docHistCSV rows = 
+  "\"" ++ intercalate "\";\""  
+  ["documentid", "serviceid", "companyid", "doctype", "create", "send", "close", "reject", "cancel", "timeout"]
+  ++ "\"\n" ++ 
+  (concat $ map csvline rows)
+    where csvline row = "\"" ++ intercalate "\";\"" row ++ "\"\n"
+
+signHistCSV :: [[String]] -> String
+signHistCSV rows = 
+  "\"" ++ intercalate "\";\""  
+  ["documentid", "signatoryid", "serviceid", "companyid", "doctype", "invite", "receive", "open", "link", "sign", "reject", "delete", "purge"]
+  ++ "\"\n" ++ 
+  (concat $ map csvline rows)
+    where csvline row = "\"" ++ intercalate "\";\"" row ++ "\"\n"
 
 

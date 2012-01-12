@@ -21,6 +21,7 @@ import Archive.View
 import InputValidation
 import KontraLink
 import Kontra
+import DB.Classes
 import Doc.DocStateData
 import Doc.Transitory
 import User.UserControl
@@ -29,6 +30,8 @@ import Util.FlashUtil
 import Util.MonadUtils
 
 import Control.Applicative
+import Util.SignatoryLinkUtils
+import Stats.Control
 
 handleContractArchive :: Kontrakcja m => m KontraLink
 handleContractArchive = do
@@ -65,9 +68,14 @@ handleAttachmentArchive = do
 
 handleIssueArchive :: Kontrakcja m => m ()
 handleIssueArchive = do
-    Context { ctxmaybeuser = Just user } <- getContext
+    Context { ctxmaybeuser = Just user, ctxtime } <- getContext
     docids <- getCriticalFieldList asValidDocID "doccheck"
-    mapM_ (guardRightM' . doc_update . ArchiveDocument user) $ map DocumentID docids
+    mapM_ (\did -> do 
+              doc <- guardRightM' $ doc_update $ ArchiveDocument user did
+              case getSigLinkFor doc user of
+                Just sl -> runDB $ addSignStatDeleteEvent doc sl ctxtime
+                _ -> return False) 
+      $ map DocumentID docids
 
 {- |
    Constructs a list of documents (Arkiv) to show to the user.
