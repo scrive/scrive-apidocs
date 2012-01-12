@@ -42,6 +42,7 @@ import Distribution.PackageDescription
 import Distribution.Simple.LocalBuildInfo
 import System.Environment (getEnv)
 import System.Time
+import System.Time.ParseDate
 import System.Locale
 import System
 
@@ -87,7 +88,7 @@ scriveConfHook a b = do
 
   flip mapM_ otherThings $ \thing -> do
      system $ "mkdir -p " ++ buildDir' ++ "/" ++ mainThing
-     system $ "ln -s -F -f -h " ++ mainBuildTmpDir ++ " " ++ buildDir' ++ "/" ++ thing ++ "/" ++ thing ++ "-tmp"
+     system $ "ln -s -f " ++ mainBuildTmpDir ++ " " ++ buildDir' ++ "/" ++ thing ++ "/" ++ thing ++ "-tmp"
 
   return localBuildInfo''
 

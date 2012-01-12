@@ -56,6 +56,8 @@ import File.Model
 import qualified System.Mem as System.Mem
 import qualified Doc.Import as D
 
+import qualified Paths_kontrakcja as Paths
+
 startTestSystemState' :: (Component st, Methods st) => Proxy st -> IO (MVar TxControl)
 startTestSystemState' proxy = do
   runTxSystem NullSaver proxy
