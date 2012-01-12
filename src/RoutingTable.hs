@@ -97,7 +97,6 @@ staticRoutes = choice
 
      , dir "s" $ dir "eleg" $ hGet $ toK2 $ BankID.generateBankIDTransaction
      , dir "s" $ hGet $ toK0    $ sendRedirect $ LinkContracts
-     , dir "s" $ param "magichash" $ hGet $ toK2    $ DocControl.handleSignShow2
      , dir "s" $ hGet $ toK2    $ DocControl.handleSignShow
      , dir "s" $ hGet $ toK3    $ DocControl.handleSignShowOldRedirectToNew -- Redirect for old version to version above, remove not earlier then 31.12.2012.
 

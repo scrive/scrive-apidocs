@@ -29,6 +29,7 @@ import Mails.SendMail
 import MinutesTime
 import Misc
 import Redirect
+import Routing(toResp)
 import User.Model
 import User.UserControl
 import Util.HasSomeUserInfo
@@ -597,12 +598,17 @@ handleSignShowOldRedirectToNew did sid mh = do
   invitedlink <- guardJust $ getSigLinkFor doc sid
   return $ LinkSignDoc doc invitedlink
 
-handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
+handleSignShow :: DocumentID -> SignatoryLinkID -> Kontra Response
 handleSignShow documentid
                signatorylinkid = do
-  mh <- guardJustM $ readField "magichash"
-  modifyContext (\ctx -> ctx { ctxmagichashes = Map.insert signatorylinkid mh (ctxmagichashes ctx) })
-  return (LinkSignDocNoMagicHash documentid signatorylinkid)    
+  mmh <- readField "magichash"
+  case mmh of
+    Just mh -> do
+      modifyContext (\ctx -> ctx { ctxmagichashes = Map.insert signatorylinkid mh (ctxmagichashes ctx) })
+      toResp (LinkSignDocNoMagicHash documentid signatorylinkid)    
+    Nothing -> do
+      v <- handleSignShow2 documentid signatorylinkid
+      (toResp v)
       
 
 handleSignShow2 :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m String
@@ -612,7 +618,13 @@ handleSignShow2 documentid
           , ctxipnumber
           , ctxflashmessages
           , ctxmagichashes } <- getContext
-  magichash <- guardJustM $ (return (Map.lookup signatorylinkid ctxmagichashes))
+  let mmagichash = Map.lookup signatorylinkid ctxmagichashes
+
+  magichash <- case mmagichash of
+                 Just x -> return x
+                 Nothing -> do
+                   Log.debug $ "magichash for " ++ show documentid ++ "/" ++ show signatorylinkid ++ " not found"
+                   mzero
 
   _ <- markDocumentSeen documentid signatorylinkid magichash ctxtime ctxipnumber
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
