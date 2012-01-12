@@ -102,7 +102,7 @@ runKontrakcjaServer = Log.withLogger $ do
   hSetEncoding stderr utf8
 
 
-  Log.server $ "Starting kontrakcja-server build " ++ concat (intersperse " " (versionTags Paths.version))
+  Log.server $ "Starting kontrakcja-server build " ++ concat (intersperse "." (versionTags Paths.version))
 
   appname <- getProgName
   args <- getArgs
