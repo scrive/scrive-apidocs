@@ -23,13 +23,11 @@ module Routing ( hGet
                  )where
 
 import Control.Monad.State
-import Control.Monad.IO.Class()
 import Data.Functor
 import AppView as V
 import Data.Maybe
-import Happstack.Server(Response, Method(GET,POST,DELETE,PUT), FromReqURI, rsCode)
-import qualified Happstack.Server as H
-import Happstack.StaticRouting(Route, handler)
+import Happstack.Server(Response, Method(GET, POST, DELETE, PUT), rsCode)
+import Happstack.StaticRouting
 import KontraLink
 import Misc
 import Kontra
@@ -57,35 +55,17 @@ instance ToResp JSValue where
 instance (ToResp a , ToResp b) => ToResp (Either a b) where
     toResp = either toResp toResp
 
--- Workaround for GHC 6.12.3:
+hPostWrap :: Path Kontra a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
+hPostWrap = path POST
 
-class Path a where
-  pathHandler' :: (Kontra Response -> Kontra Response) -> a -> Kontra Response
-  arity' :: a -> Int
+hGetWrap :: Path Kontra a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
+hGetWrap = path GET
 
-instance (FromReqURI d, Path a) => Path (d -> a) where
-  pathHandler' w f = H.path (pathHandler' w . f)
-  arity' f = 1 + arity' (f undefined)
+hDeleteWrap :: Path Kontra a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
+hDeleteWrap = path DELETE
 
-instance ToResp a => Path (Kontra a) where
-  pathHandler' w m = w (m >>= toResp)
-  arity' _ = 0
-
--- | Expect the given method, and exactly 'n' more segments, where 'n' is the arity of the handler
-path :: Path a => H.Method -> (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
-path m w h = handler (Just (arity' h),m) (pathHandler' w h)
-
-hPostWrap :: Path a => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
-hPostWrap f = path POST f
-
-hGetWrap :: Path a => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
-hGetWrap f = path GET f
-
-hDeleteWrap :: Path a => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
-hDeleteWrap f x = path DELETE f x
-
-hPutWrap :: Path a => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
-hPutWrap f x = path PUT f x
+hPutWrap :: Path Kontra a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
+hPutWrap = path PUT
 
 
 {- To change standard string to page-}
@@ -106,7 +86,7 @@ page pageBody = do
    Ajax request should not contain redirect
 -}
 
-hGetAjax :: Path a => a -> Route (Kontra Response)
+hGetAjax :: Path Kontra a Response => a -> Route (Kontra Response)
 hGetAjax = hGetWrap wrapAjax
 
 wrapAjax :: Kontra Response -> Kontra Response
@@ -119,25 +99,25 @@ noRedirect action = do
        then return response
        else mzero
 
-hPost :: Path a => a -> Route (Kontra Response)
+hPost :: Path Kontra a Response => a -> Route (Kontra Response)
 hPost = hPostWrap (https . guardXToken)
 
-hGet :: Path a => a -> Route (Kontra Response)
+hGet :: Path Kontra a Response => a -> Route (Kontra Response)
 hGet = hGetWrap https
 
-hDelete :: Path a => a -> Route (Kontra Response)
+hDelete :: Path Kontra a Response => a -> Route (Kontra Response)
 hDelete = hDeleteWrap https
 
-hPut :: Path a => a -> Route (Kontra Response)
+hPut :: Path Kontra a Response => a -> Route (Kontra Response)
 hPut = hPutWrap https
 
-hGetAllowHttp :: Path a => a -> Route (Kontra Response)
+hGetAllowHttp :: Path Kontra a Response => a -> Route (Kontra Response)
 hGetAllowHttp = hGetWrap allowHttp
 
-hPostAllowHttp :: Path a => a -> Route (Kontra Response)
+hPostAllowHttp :: Path Kontra a Response => a -> Route (Kontra Response)
 hPostAllowHttp = hPostWrap allowHttp
 
-hPostNoXToken :: Path a => a -> Route (Kontra Response)
+hPostNoXToken :: Path Kontra a Response => a -> Route (Kontra Response)
 hPostNoXToken = hPostWrap https
 
 https:: Kontra Response -> Kontra Response
@@ -161,24 +141,24 @@ guardXToken:: Kontra Response -> Kontra Response
 guardXToken = (>>) UserControl.guardXToken
 
 -- | Use to enforce a specific arity of a handler to make it explicit
--- how requests are routed (also needed with GHC-6.12.3)
-toK0 :: Kontra a -> Kontra a
-toK0 = id
+-- how requests are routed and convert returned value to Responses
+toK0 :: ToResp r => Kontra r -> Kontra Response
+toK0 m = m >>= toResp
 
-toK1 :: (a -> Kontra b) -> (a -> Kontra b)
-toK1 = id
+toK1 :: ToResp r => (a -> Kontra r) -> (a -> Kontra Response)
+toK1 m a = m a >>= toResp
 
-toK2 :: (a -> b -> Kontra c) -> (a -> b -> Kontra c)
-toK2 = id
+toK2 :: ToResp r => (a -> b -> Kontra r) -> (a -> b -> Kontra Response)
+toK2 m a b = m a b >>= toResp
 
-toK3 :: (a -> b -> c -> Kontra d) -> (a -> b -> c -> Kontra d)
-toK3 = id
+toK3 :: ToResp r => (a -> b -> c -> Kontra r) -> (a -> b -> c -> Kontra Response)
+toK3 m a b c = m a b c >>= toResp
 
-toK4 :: (a -> b -> c -> d -> Kontra e) -> (a -> b -> c -> d -> Kontra e)
-toK4 = id
+toK4 :: ToResp r => (a -> b -> c -> d -> Kontra r) -> (a -> b -> c -> d -> Kontra Response)
+toK4 m a b c d = m a b c d >>= toResp
 
-toK5 :: (a -> b -> c -> d -> e -> Kontra f) -> (a -> b -> c -> d -> e -> Kontra f)
-toK5 = id
+toK5 :: ToResp r => (a -> b -> c -> d -> e -> Kontra r) -> (a -> b -> c -> d -> e -> Kontra Response)
+toK5 m a b c d e = m a b c d e >>= toResp
 
-toK6 :: (a -> b -> c -> d -> e -> f -> Kontra g) -> (a -> b -> c -> d -> e -> f -> Kontra g)
-toK6 = id
+toK6 :: ToResp r => (a -> b -> c -> d -> e -> f -> Kontra r) -> (a -> b -> c -> d -> e -> f -> Kontra Response)
+toK6 m a b c d e f = m a b c d e f >>= toResp
