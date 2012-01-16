@@ -1227,8 +1227,16 @@ instance DBQuery GetDeletedDocumentsByCompany [Document] where
   dbQuery (GetDeletedDocumentsByCompany user) = do
     case useriscompanyadmin user of
       True ->
-        selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE signatory_links.deleted = TRUE AND company_id = ? AND really_deleted = FALSE AND service_id = ? AND documents.id = document_id) ORDER BY mtime DESC")
+        selectDocuments (selectDocumentsSQL ++
+                         " WHERE EXISTS (SELECT * FROM signatory_links " ++
+                         "               WHERE signatory_links.deleted = TRUE" ++
+                         "                 AND company_id = ?" ++
+                         "                 AND really_deleted = FALSE" ++
+                         "                 AND ((?::TEXT IS NULL AND service_id IS NULL) OR (service_id = ?))" ++
+                         "                 AND documents.id = document_id)" ++
+                         " ORDER BY mtime DESC")
                       [ toSql (usercompany user)
+                      , toSql (userservice user)
                       , toSql (userservice user)
                       ]
       False -> return []
@@ -1429,16 +1437,17 @@ instance DBQuery GetDocumentsByUser [Document] where
 data GetDocumentsSharedInCompany = GetDocumentsSharedInCompany User
                                    deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsSharedInCompany [Document] where
-  dbQuery (GetDocumentsSharedInCompany User{usercompany, userservice}) = do
+  dbQuery (GetDocumentsSharedInCompany User{usercompany}) = do
     case usercompany of
       Just companyid -> do
         documents <- selectDocuments (selectDocumentsSQL ++
-                                      " WHERE deleted = FALSE" ++
+                                      " WHERE deleted IS FALSE" ++
                                       "   AND sharing = ?" ++
-                                      "   AND service_id = ?" ++
-                                      "   AND EXISTS (SELECT 1 FROM signatory_links WHERE document_id = id AND company_id = ?) ORDER BY mtime DESC")
+                                      "   AND EXISTS (SELECT 1 FROM signatory_links " ++
+                                      "               WHERE document_id = documents.id" ++
+                                      "               AND company_id = ?)" ++
+                                      "   ORDER BY mtime DESC")
                        [ toSql Shared
-                       , toSql (userservice)
                        , toSql companyid
                        ]
 
