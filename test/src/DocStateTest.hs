@@ -60,6 +60,7 @@ docStateTests conn = testGroup "DocState" [
   testThat "SetDocumentLocale fails when doc doesn't exist" conn testSetDocumentLocaleNotLeft,
 
   testThat "SetDocumentTitle fails when doc doesn't exist" conn testSetDocumentTitleNotLeft,
+  testThat "SetDocumentTitle succeeds when doc exists and has proper status" conn testSetDocumentTitleRight,
 
   testThat "CloseDocument fails when doc is not signable" conn testCloseDocumentNotSignableNothing,
   testThat "CloseDocument fails when doc doesn't exist" conn testCloseDocumentNotNothing,
@@ -1509,6 +1510,19 @@ testSetDocumentTitleNotLeft :: DB ()
 testSetDocumentTitleNotLeft = doTimes 10 $ do
   etdoc <- randomUpdate $ SetDocumentTitle
   validTest $ assertLeft etdoc
+
+testSetDocumentTitleRight :: DB ()
+testSetDocumentTitleRight = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocument (randomDocumentAllowsDefault author)
+         { randomDocumentCondition = (not . isClosed)
+         }
+  let title = BS.fromString "my new cool title"
+  etdoc <- randomUpdate $ SetDocumentTitle (documentid doc) title
+  validTest $ do
+    assertRight etdoc
+    let Right doc' = etdoc
+    assertEqual "Title is set properly" title (documenttitle doc')
 
 assertInvariants :: Document -> DB ()
 assertInvariants document = do
