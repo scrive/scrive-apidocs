@@ -62,6 +62,10 @@ docStateTests conn = testGroup "DocState" [
   testThat "SetDocumentTitle fails when doc doesn't exist" conn testSetDocumentTitleNotLeft,
   testThat "SetDocumentTitle succeeds when doc exists and has proper status" conn testSetDocumentTitleRight,
 
+  testThat "SetDaysToSign fails when doc doesn't exist" conn testSetDocumentDaysToSignNotLeft,
+  testThat "RemoveDaysToSign fails when doc doesn't exist" conn testRemoveDocumentDaysToSignNotLeft,
+  testThat "SetDaysToSign and RemoveDaysToSign succeed when doc exist and has proper status" conn testSetDocumentDaysToSignRight,
+
   testThat "CloseDocument fails when doc is not signable" conn testCloseDocumentNotSignableNothing,
   testThat "CloseDocument fails when doc doesn't exist" conn testCloseDocumentNotNothing,
   testThat "CloseDocument succeeds when doc is signable and awaiting author" conn testCloseDocumentSignableAwaitingAuthorJust,
@@ -1523,6 +1527,33 @@ testSetDocumentTitleRight = doTimes 10 $ do
     assertRight etdoc
     let Right doc' = etdoc
     assertEqual "Title is set properly" title (documenttitle doc')
+
+testSetDocumentDaysToSignNotLeft :: DB ()
+testSetDocumentDaysToSignNotLeft = doTimes 10 $ do
+  etdoc <- randomUpdate $ SetDaysToSign
+  validTest $ assertLeft etdoc
+
+testRemoveDocumentDaysToSignNotLeft :: DB ()
+testRemoveDocumentDaysToSignNotLeft = doTimes 10 $ do
+  etdoc <- randomUpdate $ RemoveDaysToSign
+  validTest $ assertLeft etdoc
+
+testSetDocumentDaysToSignRight :: DB ()
+testSetDocumentDaysToSignRight = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocument (randomDocumentAllowsDefault author)
+         { randomDocumentCondition = (not . isClosed) &&^ (isNothing . documentdaystosign)
+         }
+  let daystosign = 15
+  etdoc1 <- randomUpdate $ SetDaysToSign (documentid doc) daystosign
+  etdoc2 <- randomUpdate $ RemoveDaysToSign (documentid doc)
+  validTest $ do
+    assertRight etdoc1
+    assertRight etdoc2
+    let Right doc1' = etdoc1
+    let Right doc2' = etdoc2
+    assertEqual "Days to sign is set properly" (Just daystosign) (documentdaystosign doc1')
+    assertEqual "Days to sign removed properly" (Nothing) (documentdaystosign doc2')
 
 assertInvariants :: Document -> DB ()
 assertInvariants document = do
