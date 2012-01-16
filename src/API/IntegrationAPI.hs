@@ -331,6 +331,16 @@ setCompanyInfoFromTMP uTMP company = do
     when (not info_set) $ throwApiError API_ERROR_OTHER "Problem create a user (COMPANY INFO) | This should never happen"
     Just company' <- runDBQuery $ GetCompany $ companyid company
     return company'
+    
+recentDate :: Document -> MinutesTime
+recentDate doc = 
+  maximum $ [documentctime doc, documentmtime doc] ++
+  (maybeToList $ signtime <$> documentinvitetime doc) ++
+  (maybeToList $ (\(a,_,_) -> a) <$> documentrejectioninfo doc) ++
+  concat (for (documentsignatorylinks doc) (\sl ->
+                                             (maybeToList $ signtime <$> maybeseeninfo sl) ++
+                                             (maybeToList $ signtime <$> maybesigninfo sl) ++
+                                             (maybeToList $ id       <$> maybereadinvite sl)))
 
 getDocuments :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocuments = do
@@ -364,8 +374,8 @@ getDocuments = do
                          , not $ isDeletedFor $ getAuthorSigLink d
                          , not $ isAttachment d
                          -- we avoid filtering when the filter is not defined
-                         , maybe True (documentmtime d >=) mFromDate
-                         , maybe True (documentmtime d <=) mToDate
+                         , maybe True (recentDate d >=) mFromDate
+                         , maybe True (recentDate d <=) mToDate
                          , maybe True ((fromSafeEnum $ documentstatus d) >=) mFromState
                          , maybe True ((fromSafeEnum $ documentstatus d) <=) mToState]
     return $ toJSObject $ [("documents"  , JSArray $ api_docs)] ++
