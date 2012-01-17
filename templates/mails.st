@@ -904,7 +904,7 @@ nicemailbodywithpreview=
        </td>
        <td>
 
-        <table style="font-family:'Lucida Grande', sans-serif;font-size:12px;margin: auto;">
+        <table style="font-family:'Lucida Grande', sans-serif;font-size:12px;margin: auto;display: block; max-width: 300px; overflow: auto;">
             <tr>
                 <td><span style="color:#212121;font-size:1.5em;">$documenttitle$</span></td>
             </tr>
