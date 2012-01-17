@@ -30,6 +30,9 @@ import System.Timeout
 import qualified Log
 --import Doc.Transitory
 import MinutesTime
+import Doc.Model
+import Control.Monad
+import Doc.DocStateData
 
 integrationAPITests :: Connection -> Test
 integrationAPITests conn = testGroup "Integration API" [
@@ -39,6 +42,7 @@ integrationAPITests conn = testGroup "Integration API" [
     , testCase "Test to state filtering" $ testDocumentsFilteringToState conn
     , testCase "Test to date filtering" $ testDocumentsFilteringToDate conn
     , testCase "Test from date filtering" $ testDocumentsFilteringFromDate conn      
+    , testCase "Test from date filtering with viewing" $ testDocumentsFilteringFromDate2 conn      
     , testCase "Test send to friend delete scenario" $ testFriendDeleteScenario conn
     , testCase "Test connect to existing service user" $ testSignatoryNoCompany conn
     , testCase "Test creating a contract from template" $ testDocumentCreationFromTemplateContract conn
@@ -249,6 +253,47 @@ testDocumentsFilteringFromDate conn = withTestEnvironment conn $ do
       else return ()
     assertBool ("Should be one document but got " ++ (show $ docsCount apiRespDocsFilter2) ++ " were found") $ (docsCount apiRespDocsFilter2) == 1
 
+testDocumentsFilteringFromDate2 :: Connection -> Assertion
+testDocumentsFilteringFromDate2 conn = withTestEnvironment conn $ do
+    createTestService
+    dids <- getJSONStringField "document_id" <$> (makeAPIRequest createDocument =<< createDocumentJSONFriend "test_company1" "mariusz@skrivapa.se" "eric@scrive.com")
+    let Just did = maybeRead dids
+    apiReqDocs3 <- getDocumentsJSON "test_company1" "mariusz@skrivapa.se"
+    apiRespDocs3 <- makeAPIRequest getDocuments $ apiReqDocs3
+    assertBool ("Should have 1 document but " ++ (show $ docsCount apiRespDocs3) ++ " were found") $ (docsCount apiRespDocs3) == 1
+    ctxtime <- getMinutesTime
+    let tm = minutesAfter 1000 ctxtime
+        tms = showMinutesTimeForAPI tm
+        tmbefore = showMinutesTimeForAPI $ minutesBefore 1000 ctxtime    
+    
+    Right apiReqDocsFilter <- jsset "from_date" tms <$> getDocumentsJSON "test_company1" "mariusz@skrivapa.se"
+    apiRespDocsFilter <- makeAPIRequest getDocuments apiReqDocsFilter
+    if docsCount apiRespDocsFilter == -1 
+      then Log.debug $ "got a weird response: " ++ show apiRespDocsFilter
+      else return ()
+    assertBool ("All documents should be filtered out but " ++ (show $ docsCount apiRespDocsFilter) ++ " were found") $ (docsCount apiRespDocsFilter) == 0
+
+    Right apiReqDocsFilter2 <- jsset "from_date" tmbefore <$> getDocumentsJSON "test_company1" "mariusz@skrivapa.se"
+    apiRespDocsFilter2 <- makeAPIRequest getDocuments apiReqDocsFilter2
+    if docsCount apiRespDocsFilter2 == -1 
+      then Log.debug $ "got a weird response: " ++ show apiRespDocsFilter2
+      else return ()
+    assertBool ("Should be one document but got " ++ (show $ docsCount apiRespDocsFilter2) ++ " were found") $ (docsCount apiRespDocsFilter2) == 1
+    
+    Just doc <- dbQuery $ GetDocumentByDocumentID did
+    _ <- dbUpdate $ PreparationToPending did ctxtime
+
+    _ <- forM (documentsignatorylinks doc) $ \sl ->
+      dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl) (minutesAfter 10 tm) (IPAddress 0)
+
+    Just _doc' <- dbQuery $ GetDocumentByDocumentID did
+    Right apiReqDocsFilter3 <- jsset "from_date" tms <$> getDocumentsJSON "test_company1" "mariusz@skrivapa.se"
+    apiRespDocsFilter3 <- makeAPIRequest getDocuments apiReqDocsFilter3
+    if docsCount apiRespDocsFilter3 == -1 
+      then Log.debug $ "got a weird response: " ++ show apiRespDocsFilter3
+      else return ()
+    assertBool ("Should be one document but got " ++ (show $ docsCount apiRespDocsFilter3) ++ "") $ (docsCount apiRespDocsFilter3) == 1
+
 
 testNewDocumentWithSpecificExample :: Connection -> Assertion
 testNewDocumentWithSpecificExample conn = withTestEnvironment conn $ do
@@ -345,6 +390,11 @@ createDocumentJSONFriend company author friend = do
         [ ("company_id", JSString $ toJSString company)
          ,("title" , JSString $ toJSString $ fromSNN title)
          ,("type" , JSRational True (dt%1))
+         ,("files", JSArray [JSObject $ toJSObject $
+                             [("name", JSString $ toJSString "file.pdf")
+                             ,("content", JSString $ toJSString "JVBERi0xLjQKJcOkw7zDtsOfCjIgMCBvYmoKPDwvTGVuZ3RoIDMgMCBSL0ZpbHRlci9GbGF0ZURlY29kZT4+CnN0cmVhbQp4nDPQM1Qo5ypUMABCU0tTPRMFCxMjhaJUhXAthTyuQAUAbSUGxgplbmRzdHJlYW0KZW5kb2JqCgozIDAgb2JqCjM4CmVuZG9iagoKNSAwIG9iago8PAo+PgplbmRvYmoKCjYgMCBvYmoKPDwvRm9udCA1IDAgUgovUHJvY1NldFsvUERGL1RleHRdCj4+CmVuZG9iagoKMSAwIG9iago8PC9UeXBlL1BhZ2UvUGFyZW50IDQgMCBSL1Jlc291cmNlcyA2IDAgUi9NZWRpYUJveFswIDAgNTk1IDg0Ml0vR3JvdXA8PC9TL1RyYW5zcGFyZW5jeS9DUy9EZXZpY2VSR0IvSSB0cnVlPj4vQ29udGVudHMgMiAwIFI+PgplbmRvYmoKCjQgMCBvYmoKPDwvVHlwZS9QYWdlcwovUmVzb3VyY2VzIDYgMCBSCi9NZWRpYUJveFsgMCAwIDU5NSA4NDIgXQovS2lkc1sgMSAwIFIgXQovQ291bnQgMT4+CmVuZG9iagoKNyAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgNCAwIFIKL09wZW5BY3Rpb25bMSAwIFIgL1hZWiBudWxsIG51bGwgMF0KL0xhbmcocGwtUEwpCj4+CmVuZG9iagoKOCAwIG9iago8PC9BdXRob3I8RkVGRjAwNkQwMDYxMDA3MjAwNjkwMDc1MDA3MzAwN0EwMDIwPgovQ3JlYXRvcjxGRUZGMDA1NzAwNzIwMDY5MDA3NDAwNjUwMDcyPgovUHJvZHVjZXI8RkVGRjAwNEYwMDcwMDA2NTAwNkUwMDRGMDA2NjAwNjYwMDY5MDA2MzAwNjUwMDJFMDA2RjAwNzIwMDY3MDAyMDAwMzMwMDJFMDAzMj4KL0NyZWF0aW9uRGF0ZShEOjIwMTEwNzAxMTIwMTQwKzAyJzAwJyk+PgplbmRvYmoKCnhyZWYKMCA5CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDIyMiAwMDAwMCBuIAowMDAwMDAwMDE5IDAwMDAwIG4gCjAwMDAwMDAxMjggMDAwMDAgbiAKMDAwMDAwMDM2NCAwMDAwMCBuIAowMDAwMDAwMTQ3IDAwMDAwIG4gCjAwMDAwMDAxNjkgMDAwMDAgbiAKMDAwMDAwMDQ2MiAwMDAwMCBuIAowMDAwMDAwNTU4IDAwMDAwIG4gCnRyYWlsZXIKPDwvU2l6ZSA5L1Jvb3QgNyAwIFIKL0luZm8gOCAwIFIKL0lEIFsgPEYxRDY1NzQ3RTIyOEVGNzI0OTQ0OTIwMkFERjI3NDQ2Pgo8RjFENjU3NDdFMjI4RUY3MjQ5NDQ5MjAyQURGMjc0NDY+IF0KL0RvY0NoZWNrc3VtIC9DNjgxNEY1QTVCRjgwQjJEOEYwMEM4MUQyRDA5RUMxRAo+PgpzdGFydHhyZWYKNzkwCiUlRU9GCg==")
+                             ]
+                            ])
          ,("involved" , JSArray [ JSObject $ toJSObject $
                                     [ ("fstname", JSString $ toJSString fname),
                                       ("sndname", JSString $ toJSString sname),
