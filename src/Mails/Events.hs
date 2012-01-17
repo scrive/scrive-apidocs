@@ -44,7 +44,7 @@ import qualified Log
 import qualified Mails.MailsUtil as Mail
 
 processEvents :: ActionScheduler ()
-processEvents = runDBQuery GetEvents >>= mapM_ processEvent
+processEvents = runDBQuery GetUnreadEvents >>= mapM_ processEvent
   where
     processEvent (eid, mid, XSMTPAttrs [("mailinfo", mi)], SendGridEvent email ev _) = do
       markEventAsRead eid  
