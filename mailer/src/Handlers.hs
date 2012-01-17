@@ -26,7 +26,7 @@ router conf routes = do
 
 handlers :: Route (Mailer Response)
 handlers = choice [
-    dir "sendgrid" $ hPost handleSendgridEvents
+    dir "mail" dir "sendgrid" $ hPost handleSendgridEvents
   ]
   where
     hPost = path POST id
