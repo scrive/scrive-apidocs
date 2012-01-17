@@ -77,7 +77,7 @@ instance DBQuery GetUnreadEvents [(EventID, MailID, XSMTPAttrs, Event)] where
       ++ ", m.x_smtp_attrs"
       ++ ", e.event"
       ++ " FROM mails m JOIN mail_events e ON (m.id = e.mail_id)"
-      ++ " WHERE e.event_read IS NULL"
+      ++ " WHERE e.event_read IS NOT NULL"
       ++ " ORDER BY m.id DESC, e.id DESC"
     _ <- execute st []
     foldDB st fetchEvents []
