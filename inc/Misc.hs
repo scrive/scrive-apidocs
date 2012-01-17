@@ -617,6 +617,7 @@ ignore :: Monad m => m a -> m ()
 ignore acc = do
   _ <- acc
   return ()
+  
 pair :: a -> b -> (a, b)
 pair a b = (a, b)
 
@@ -654,3 +655,7 @@ firstWithDefault (ma:mas) da = do
 chng :: [a] -> Int -> a -> [a]
 chng ls i v = let (h, t) = splitAt i ls
               in h ++ [v] ++ (drop 1 t)
+
+-- get the length with a filter
+lengthWith :: (a -> Bool) -> [a] -> Int
+lengthWith f l = length $ filter f l
