@@ -1323,21 +1323,16 @@ data GetDocumentStatsByUser = GetDocumentStatsByUser User MinutesTime
                               deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentStatsByUser DocStats where
   dbQuery (GetDocumentStatsByUser user time) = do
-  docs <- dbQuery $ GetDocumentsByUser user
+  docs    <- dbQuery $ GetDocumentsByUser user
   sigdocs <- dbQuery $ GetDocumentsBySignatory user
-  let signaturecount' = length $ allsigns
-      signaturecount1m' = length $ filter (isSignedNotLaterThanMonthsAgo 1) $ allsigns
-      signaturecount2m' = length $ filter (isSignedNotLaterThanMonthsAgo 2) $ allsigns
-      signaturecount3m' = length $ filter (isSignedNotLaterThanMonthsAgo 3) $ allsigns
-      signaturecount6m' = length $ filter (isSignedNotLaterThanMonthsAgo 6) $ allsigns
+  let signaturecount'    = length $ allsigns
+      signaturecount1m'  = length $ filter (isSignedNotLaterThanMonthsAgo 1)  $ allsigns
+      signaturecount2m'  = length $ filter (isSignedNotLaterThanMonthsAgo 2)  $ allsigns
+      signaturecount3m'  = length $ filter (isSignedNotLaterThanMonthsAgo 3)  $ allsigns
+      signaturecount6m'  = length $ filter (isSignedNotLaterThanMonthsAgo 6)  $ allsigns
       signaturecount12m' = length $ filter (isSignedNotLaterThanMonthsAgo 12) $ allsigns
-      timeMonthsAgo m = (-m * 30 * 24 * 60) `minutesAfter` time
-      isSignedNotLaterThanMonthsAgo m = (timeMonthsAgo m <) . documentmtime
-      allsigns = filter (isJust . relevantSigLink) sigdocs
-      relevantSigLink :: Document -> Maybe SignatoryLink
-      relevantSigLink doc = listToMaybe $ filter (\s -> (isSigned s) && (isSigLinkFor (userid user) s)) 
-                                                 (documentsignatorylinks doc)
-      isSigned = isJust . maybesigninfo
+      isSignedNotLaterThanMonthsAgo m d = monthsBefore m time < documentmtime d
+      allsigns = filter (\d -> hasSigned $ getSigLinkFor d (userid user)) sigdocs
   return DocStats { doccount          = length docs
                   , signaturecount    = signaturecount'
                   , signaturecount1m  = signaturecount1m'
@@ -2426,7 +2421,7 @@ sumUserStats :: [(User, Maybe Company, ( Maybe MinutesTime
              -> MinutesTime
              -> [(User, Maybe Company, DocStats)]
 sumUserStats [] _ = []
-sumUserStats list time = map transform' $ groupBy sameUserID' list
+sumUserStats list time = map transform' $ groupBy sameUserID' $ sortWith (\(a,_,_)->a) list
   where
     sameUserID' = (\(user,_,_) (user2,_,_) -> userid user == userid user2)
     transform' []                  = error "sumUserStats: empty list grouped"
@@ -2445,7 +2440,7 @@ sumUserStats list time = map transform' $ groupBy sameUserID' list
                 -> (DocumentID,DocStats)
     addToStats' (DocStats cnt scnt s1cnt s2cnt s3cnt s6cnt s12cnt) 
                 (Just mtime, Just docid, sign_time, Just role) lastid = 
-        ( if isSigned then docid else lastid
+        ( if isJust sign_time then docid else lastid
         , DocStats {
               doccount           = cnt + (if SignatoryAuthor `elem` role then 1 else 0)
             , signaturecount     = if isDiffrentSignedDoc then scnt + 1 else scnt
@@ -2456,11 +2451,9 @@ sumUserStats list time = map transform' $ groupBy sameUserID' list
             , signaturecount12m  = if isDiffrentSignedDoc && isSignedNotLaterThanMonthsAgo 12 mtime then s12cnt + 1 else s12cnt
          })
       where
-        isSigned = isJust sign_time
-        isDiffrentSignedDoc = isSigned && docid /= lastid
+        isDiffrentSignedDoc = isJust sign_time && docid /= lastid
     addToStats' docstats _ lastid = (lastid, docstats)
-    isSignedNotLaterThanMonthsAgo m = (timeMonthsAgo m <) 
-    timeMonthsAgo m = (-m * 30 * 24 * 60) `minutesAfter` time
+    isSignedNotLaterThanMonthsAgo m t = monthsBefore m time < t 
 
 data GetUsersAndStats = GetUsersAndStats MinutesTime
 instance DBQuery GetUsersAndStats [(User, Maybe Company, DocStats)] where
