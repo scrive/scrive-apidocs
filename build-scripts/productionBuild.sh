@@ -1,28 +1,40 @@
 #!/bin/sh -e
 
 # This script assumes the existence of BUILD_NUMBER from TeamCity
+# This script assumes the existence of DIR as the path to the repo
+# example:
+#DIR=/home/eric/haskell/kontrakcja
 
-BUILD_DATE=`date "+%Y-%m-%d %H:%M:%S"`
+cd $DIR
+
+BUILD_DATE=`date "+%Y-%m-%d-%H-%M-%S"`
 BUILD_VCS_NUMBER=`git log -1 --pretty=oneline|awk '{print $1;}'`
 
-#build-scripts/runCleanCompile.sh
-#build-scripts/runAllUnitTests.sh > test-report.txt
+build-scripts/runCleanCompile.sh
+
+echo "Computing checksums of all binaries"
+
+rm -rf checksums
+mkdir checksums
+
+find dist/build -executable -type f -exec sh -c 'md5sum {} > checksums/`basename {}`.md5' \;
+
+echo "Running unit tests"
+build-scripts/runAllUnitTests.sh > test-report.txt
 
 BUILD_ID=$BUILD_DATE"."$BUILD_NUMBER"."$BUILD_VCS_NUMBER
 
 ZIP=$BUILD_ID".production.tar.gz"
-#DIR=/home/prod/kontrakcja
-DIR=/home/eric/haskell/kontrakcja
 
 echo "Creating zip file"
-cd /tmp
-tar zcf "$zipfile"                    \
+
+tar zcf "/tmp/$ZIP"                   \
     --exclude=.git*                   \
     --exclude=_local*                 \
     --exclude=_darcs*                 \
-    --exclude=.hpc*                   \
     --exclude=_locakal_ticket_backup* \
-    $DIR/
+    *
+cd /tmp
 ls -lh "$ZIP"
 
 echo "Generating signature hash"
@@ -36,14 +48,22 @@ echo "Build Number: $BUILD_NUMBER"     >> "$hashdoc"
 echo "Commit ID:    $BUILD_VCS_NUMBER" >> "$hashdoc"
 echo "Filename:     $ZIP"              >> "$hashdoc"
 echo "MD5SUM:       $m"                >> "$hashdoc"
-# TODO: Also put in md5 sums of all binaries
 
-#SIGN WITH TRUSTWEAVER
+echo ""                                 >> "$hashdoc"
+echo "MD5SUMS of Binaries"              >> "$hashdoc"
+echo "--------------------------------" >> "$hashdoc"
 
-echo "Building soap message"
+cd $DIR
+find dist/build -executable -type f -exec md5sum {} \; >> "/tmp/$hashdoc"
+cd /tmp
+echo "------END------" >> "$hashdoc"
+
+echo "Building soap request for Trustweaver signing"
+
 echo "Multipart MIME"
 mimefile=hash-$BUILD_ID.mime
 python $DIR/scripts/genmime.py "$hashdoc" "$mimefile"
+
 echo "Constructing SOAP Message"
 soaprequest=request-$BUILD_ID.xml
 base64 "$hashdoc" | cat $DIR/scripts/top - $DIR/scripts/bottom > "$soaprequest"
@@ -64,11 +84,11 @@ curl -X POST --verbose --show-error                           \
     -o "$soapresponse"                                        \
     $twurl
 
-echo "Parsing XML"
+echo "Parsing XML response"
 signed64=signed-$BUILD_ID.b64
 python $DIR/scripts/parsesignresponse.py "$soapresponse" "$signed64"
 
-echo "Decoding base64"
+echo "Decoding base64 response"
 finalfile=$BUILD_ID.production.enhanced.tar.gz
 signedmime=$BUILD_ID.signature.mime
 base64 -d "$signed64" > "$signedmime"
@@ -76,6 +96,22 @@ base64 -d "$signed64" > "$signedmime"
 echo "Creating final enhanced deployment file"
 tar zcf "$finalfile" "$signedmime" "$ZIP"
 
-# TODO Back up $finalfile
+echo "Pushing to amazon"
+s3cmd --acl-private put "$finalfile" s3://kontrakcja-production
 
-# TODO Print out path to amazon
+echo "Checking amazon md5 sum"
+md5amazon=`s3cmd info "s3://kontrakcja-production/$finalfile" | grep MD5 | awk '{print $3}'`
+echo "MD5SUM from Amazon S3: "$md5amazon
+md5local=`md5sum "$finalfile" | awk 'BEGIN { FS = " +" } ; { print $1 }'`
+echo "MD5SUM from local    : "$md5local
+if [ "$md5amazon" = "$md5local" ]
+then
+    echo "MD5 sum matches!"
+else
+    echo "MD5 sum does not match. Please try again."
+    exit 1
+fi
+
+echo "s3://kontrakcja-production/$finalfile"
+
+exit 0
