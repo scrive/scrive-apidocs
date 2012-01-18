@@ -66,7 +66,7 @@ window.ExposeMaskFixer =  Backbone.Model.extend({
     initialize: function(args){
         var fixer = this;
         this.object = args.object;
-        setTimeout(function() {fixer.fixer()},1000);
+        setTimeout(function() {fixer.fixer();},1000);
     },
     fixer: function() {
         var fixer = this;
@@ -75,11 +75,11 @@ window.ExposeMaskFixer =  Backbone.Model.extend({
             var em = $("#exposeMask");
             var body = $("body");
             if (em.size() == 1 && (body.height() != em.height()))
-                em.height(body.height())
-            setTimeout(function() {fixer.fixer()},1000);
+                em.height(body.height());
+            setTimeout(function() {fixer.fixer();},1000);
         }
     }
-})
+});
 
 var ConfirmationView = Backbone.View.extend({
   events: {
