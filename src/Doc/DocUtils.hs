@@ -31,6 +31,8 @@ import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import File.Model
+import Control.Applicative
+import MinutesTime
 
 --import Happstack.State
 
@@ -410,3 +412,13 @@ fileInDocument doc fid =
                  ++ (documentsealedfiles doc)
                  ++ (fmap authorattachmentfile $ documentauthorattachments doc)
                  ++ (catMaybes $ fmap signatoryattachmentfile $ documentsignatoryattachments doc)
+
+recentDate :: Document -> MinutesTime
+recentDate doc = 
+  maximum $ [documentctime doc, documentmtime doc] ++
+  (maybeToList $ signtime <$> documentinvitetime doc) ++
+  (maybeToList $ (\(a,_,_) -> a) <$> documentrejectioninfo doc) ++
+  concat (for (documentsignatorylinks doc) (\sl ->
+                                             (maybeToList $ signtime <$> maybeseeninfo sl) ++
+                                             (maybeToList $ signtime <$> maybesigninfo sl) ++
+                                             (maybeToList $ id       <$> maybereadinvite sl)))

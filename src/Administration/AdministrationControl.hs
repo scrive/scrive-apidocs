@@ -264,14 +264,8 @@ usersPageSize = 100
 
 getUsersAndStats :: Kontrakcja m => m [(User, Maybe Company, DocStats)]
 getUsersAndStats = do
-    Context{ctxtime} <- getContext
-    users <- runDBQuery GetUsers
-    let queryStats user = do
-          mcompany <- getCompanyForUser user
-          docstats <- doc_query $ GetDocumentStatsByUser user ctxtime
-          return (user, mcompany, docstats)
-    users2 <- mapM queryStats users
-    return users2
+  Context{ctxtime} <- getContext
+  doc_query $ GetUsersAndStats ctxtime
 
 getUsersAndStatsInv :: Kontrakcja m => m [(User, Maybe Company, DocStats, InviteType)]
 getUsersAndStatsInv = do

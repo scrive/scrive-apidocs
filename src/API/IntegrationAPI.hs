@@ -332,15 +332,6 @@ setCompanyInfoFromTMP uTMP company = do
     Just company' <- runDBQuery $ GetCompany $ companyid company
     return company'
     
-recentDate :: Document -> MinutesTime
-recentDate doc = 
-  maximum $ [documentctime doc, documentmtime doc] ++
-  (maybeToList $ signtime <$> documentinvitetime doc) ++
-  (maybeToList $ (\(a,_,_) -> a) <$> documentrejectioninfo doc) ++
-  concat (for (documentsignatorylinks doc) (\sl ->
-                                             (maybeToList $ signtime <$> maybeseeninfo sl) ++
-                                             (maybeToList $ signtime <$> maybesigninfo sl) ++
-                                             (maybeToList $ id       <$> maybereadinvite sl)))
 
 getDocuments :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocuments = do

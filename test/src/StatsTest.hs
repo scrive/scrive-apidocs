@@ -23,17 +23,27 @@ import Stats.Model
 import StateHelper
 import Mails.MailsUtil
 
+import qualified Data.ByteString.UTF8 as BS
+
+import qualified Log
+
+import Control.Applicative
+import Data.Ix
+
+import Data.Maybe
+
 statsTests :: Connection -> Test
 statsTests conn = testGroup "Stats" 
   [
-    testCase "test invite stat" $ testInviteStat conn
-  , testCase "test receive stat" $ testReceiveStat conn
-  , testCase "test open stat" $ testOpenStat conn   
-  , testCase "test link stat" $ testLinkStat conn
-  , testCase "test sign stat" $ testSignStat conn
-  , testCase "test reject stat" $ testRejectStat conn
-  , testCase "test delete stat" $ testDeleteStat conn
-  , testCase "test purge stat" $ testPurgeStat conn
+    testCase "test invite stat"                  $ testInviteStat       conn                        
+  , testCase "test receive stat"                 $ testReceiveStat      conn                      
+  , testCase "test open stat"                    $ testOpenStat         conn                            
+  , testCase "test link stat"                    $ testLinkStat         conn                            
+  , testCase "test sign stat"                    $ testSignStat         conn                            
+  , testCase "test reject stat"                  $ testRejectStat       conn                        
+  , testCase "test delete stat"                  $ testDeleteStat       conn                        
+  , testCase "test purge stat"                   $ testPurgeStat        conn                          
+  , testCase "test time efficiency of userstats" $ testGetUsersAndStats conn 
   ]
 
 testInviteStat :: Connection -> Assertion
@@ -203,3 +213,23 @@ testPurgeStat conn = withTestEnvironment conn $ do
   stats'' <- dbQuery $ GetSignStatEvents
   assertEqual "Should have saved stat." 1 (length stats'')
   forM_ stats'' (\s->assertEqual "Wrong stat type" SignStatPurge (ssQuantity s))
+
+-- tests for old stats
+
+testGetUsersAndStats :: Connection -> Assertion
+testGetUsersAndStats conn = withTestEnvironment conn $ do
+  time <- getMinutesTime
+  us <- catMaybes <$> (forM (range (0, 100::Int)) $ \i->
+                        dbUpdate $ AddUser (BS.fromString "F", BS.fromString "L") (BS.fromString $ "e" ++ show i ++ "@yoyo.com")
+                        Nothing False Nothing Nothing (mkLocale REGION_SE LANG_SE))
+  _ <- forM [(u, i) | u <- us, i <- range (0, 10::Int)] $ \(u,_) ->
+    dbUpdate $ NewDocument u Nothing (BS.fromString "doc!") (Signable Contract) time
+  
+  Log.debug $ "Set up test, now running query."
+  t0 <- getMinutesTime
+  stats <- dbQuery $ GetUsersAndStats t0
+  Log.debug $ "Number of stats returned: " ++ show (length stats)
+  t1 <- getMinutesTime
+  
+  let td = toSeconds t1 - toSeconds t0
+  assertBool ("Should take less than one second, but took " ++ show td ++ " seconds.") $ td <= 1
