@@ -762,7 +762,7 @@ instance HasFunctionalityStats Document where
     [ ("drag n drop", anyField hasPlacement)
     , ("custom fields", anyField isCustom)
     , ("custom sign order", any ((/=) (SignOrder 1) . signatorysignorder . signatorydetails) . documentsignatorylinks)
-    , ("csv", isJust . documentcsvupload)
+    , ("csv", isJust . msum . fmap signatorylinkcsvupload . documentsignatorylinks)
     ]
     where
       anyField p doc =

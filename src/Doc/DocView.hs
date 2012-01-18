@@ -790,13 +790,17 @@ documentFunctionalityFields Document{documentfunctionality} = do
   field "isbasic" $ documentfunctionality==BasicFunctionality
 
 documentCsvFields :: TemplatesMonad m => Document -> m (Fields m)
-documentCsvFields document@Document{documentallowedidtypes, documentcsvupload} =  do
+documentCsvFields document@Document{documentallowedidtypes} =  do
   let csvcustomfields = either (const [BS.fromString ""]) id $ getCSVCustomFields document
-      mcleancsv = (cleanCSVContents documentallowedidtypes (length csvcustomfields) . csvcontents) <$> documentcsvupload
+      mcleancsv = (cleanCSVContents documentallowedidtypes (length csvcustomfields) . csvcontents) <$> (snd <$> mcsvupload)
       csvproblems = maybe [] fst mcleancsv
       csvdata = maybe [] (csvbody . snd) mcleancsv
       csvPageSize :: Int = 10
       csvpages = splitCSVDataIntoPages csvPageSize csvdata
+      mcsvupload = msum (zipWith check [0::Int ..] (documentsignatorylinks document))
+      check idx sl = case signatorylinkcsvupload sl of
+                       Just c -> Just (idx, c)
+                       Nothing -> Nothing
   csvproblemfields <- sequence $ zipWith (csvProblemFields (length csvproblems)) [1..] csvproblems
   return $ do
     fieldFL "csvproblems" $ csvproblemfields
@@ -805,7 +809,7 @@ documentCsvFields document@Document{documentallowedidtypes, documentcsvupload} =
     field "csvrowcount" $ length csvdata
     field "csvcustomfields" $ csvcustomfields
     field "isvalidcsv" $ null csvproblems
-    field "csvsigindex" $ fmap csvsignatoryindex documentcsvupload
+    field "csvsigindex" $ (fst <$> mcsvupload)
 
 csvPageFields :: TemplatesMonad m => [CSVProblem] -> Int -> Int -> [[BS.ByteString]] -> Fields m
 csvPageFields problems totalrowcount firstrowindex xs = do

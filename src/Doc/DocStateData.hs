@@ -390,6 +390,24 @@ data SignatoryLink10 = SignatoryLink10
     }
     deriving (Eq, Ord, Typeable)
 
+data SignatoryLink11 = SignatoryLink11
+    { signatorylinkid11            :: SignatoryLinkID     -- ^ a random number id, unique in th escope of a document only
+    , signatorydetails11           :: SignatoryDetails    -- ^ details of this person as filled in invitation
+    , signatorymagichash11         :: MagicHash           -- ^ authentication code
+    , maybesignatory11             :: Maybe UserID        -- ^ if this document has been saved to an account, that is the user id
+    , maybesupervisor11            :: Maybe UserID        -- ^ THIS IS NOW DEPRECATED - use maybecompany instead
+    , maybecompany11               :: Maybe CompanyID     -- ^ if this document has been saved to a company account this is the companyid
+    , maybesigninfo11              :: Maybe SignInfo      -- ^ when a person has signed this document
+    , maybeseeninfo11              :: Maybe SignInfo      -- ^ when a person has first seen this document
+    , maybereadinvite11            :: Maybe MinutesTime   -- ^ when we receive confirmation that a user has read
+    , invitationdeliverystatus11   :: MailsDeliveryStatus -- ^ status of email delivery
+    , signatorysignatureinfo11     :: Maybe SignatureInfo -- ^ info about what fields have been filled for this person
+    , signatoryroles11             :: [SignatoryRole]
+    , signatorylinkdeleted11       :: Bool -- ^ when true sends the doc to the recycle bin for that sig
+    , signatorylinkreallydeleted11 :: Bool -- ^ when true it means that the doc has been removed from the recycle bin
+    }
+    deriving (Eq, Ord, Typeable)
+
 data SignatoryLink = SignatoryLink
     { signatorylinkid            :: SignatoryLinkID     -- ^ a random number id, unique in th escope of a document only
     , signatorydetails           :: SignatoryDetails    -- ^ details of this person as filled in invitation
@@ -405,6 +423,7 @@ data SignatoryLink = SignatoryLink
     , signatoryroles             :: [SignatoryRole]
     , signatorylinkdeleted       :: Bool -- ^ when true sends the doc to the recycle bin for that sig
     , signatorylinkreallydeleted :: Bool -- ^ when true it means that the doc has been removed from the recycle bin
+    , signatorylinkcsvupload     :: Maybe CSVUpload
     }
     deriving (Eq, Ord, Typeable)
 
@@ -413,6 +432,12 @@ data SignatoryRole = SignatoryPartner | SignatoryAuthor
 
 instance Version SignatoryRole
 
+data CSVUpload = CSVUpload
+    { csvtitle :: BS.ByteString
+    , csvcontents  :: [[BS.ByteString]]
+    , csvsignatoryindex :: Int
+    }
+    deriving (Eq, Ord, Typeable)
 
 
 data SignInfo = SignInfo
@@ -668,6 +693,37 @@ data DocStats = DocStats
     deriving (Eq, Ord, Typeable, Data) -- Data instance used for View modules (quite incorrectly there, please remove ASAP)
 
 
+data Document31 = Document31
+    { documentid31                     :: DocumentID
+    , documenttitle31                  :: BS.ByteString
+    , documentsignatorylinks31         :: [SignatoryLink]
+    , documentfiles31                  :: [FileID]
+    , documentsealedfiles31            :: [FileID]
+    , documentstatus31                 :: DocumentStatus
+    , documenttype31                   :: DocumentType
+    , documentfunctionality31          :: DocumentFunctionality
+    , documentctime31                  :: MinutesTime
+    , documentmtime31                  :: MinutesTime
+    , documentdaystosign31             :: Maybe Int
+    , documenttimeouttime31            :: Maybe TimeoutTime
+    , documentinvitetime31             :: Maybe SignInfo
+    , documentlog31                    :: [DocumentLogEntry]      -- to be made into plain text
+    , documentinvitetext31             :: BS.ByteString
+    , documentallowedidtypes31         :: [IdentificationType]
+    , documentcsvupload31              :: Maybe CSVUpload
+    , documentcancelationreason31      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.
+    , documentsharing31                :: DocumentSharing
+    , documentrejectioninfo31          :: Maybe (MinutesTime, SignatoryLinkID, BS.ByteString)
+    , documenttags31                   :: [DocumentTag]
+    , documentservice31                :: Maybe ServiceID
+    , documentdeleted31                :: Bool -- set to true when doc is deleted - the other fields will be cleared too, so it is really truely deleting, it's just we want to avoid re-using the docid.
+    , documentauthorattachments31      :: [AuthorAttachment]
+    , documentsignatoryattachments31   :: [SignatoryAttachment]
+    , documentui31                     :: DocumentUI
+    , documentregion31                 :: Region
+    }
+    deriving (Typeable)
+
 data Document = Document
     { documentid                     :: DocumentID
     , documenttitle                  :: BS.ByteString
@@ -685,7 +741,6 @@ data Document = Document
     , documentlog                    :: [DocumentLogEntry]      -- to be made into plain text
     , documentinvitetext             :: BS.ByteString
     , documentallowedidtypes         :: [IdentificationType]
-    , documentcsvupload              :: Maybe CSVUpload
     , documentcancelationreason      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.
     , documentsharing                :: DocumentSharing
     , documentrejectioninfo          :: Maybe (MinutesTime, SignatoryLinkID, BS.ByteString)
@@ -714,12 +769,6 @@ data CancelationReason =  ManualCancel
 
 instance Typeable Document where typeOf _ = mkTypeOf "Document"
 
-data CSVUpload = CSVUpload
-    { csvtitle :: BS.ByteString
-    , csvcontents  :: [[BS.ByteString]]
-    , csvsignatoryindex :: Int
-    }
-    deriving (Eq, Ord, Typeable)
 
 data AuthorAttachment = AuthorAttachment { authorattachmentfile :: FileID }
                       deriving (Eq, Ord, Typeable)
@@ -962,9 +1011,13 @@ $(deriveSerialize ''SignatoryLink10)
 instance Version SignatoryLink10 where
     mode = extension 10 (Proxy :: Proxy SignatoryLink9)
 
+$(deriveSerialize ''SignatoryLink11)
+instance Version SignatoryLink11 where
+    mode = extension 11 (Proxy :: Proxy SignatoryLink10)
+
 $(deriveSerialize ''SignatoryLink)
 instance Version SignatoryLink where
-    mode = extension 11 (Proxy :: Proxy SignatoryLink10)
+    mode = extension 12 (Proxy :: Proxy SignatoryLink11)
 
 instance Migrate SignatoryDetails0 SignatoryDetails1 where
     migrate (SignatoryDetails0
@@ -1363,7 +1416,7 @@ instance Migrate SignatoryLink9 SignatoryLink10 where
                 , signatoryroles10             = signatoryroles9
                 }
 
-instance Migrate SignatoryLink10 SignatoryLink where
+instance Migrate SignatoryLink10 SignatoryLink11 where
     migrate (SignatoryLink10
              { signatorylinkid10
              , signatorydetails10
@@ -1378,22 +1431,56 @@ instance Migrate SignatoryLink10 SignatoryLink where
              , signatorylinkdeleted10
              , signatorylinkreallydeleted10
              , signatoryroles10
-             }) = SignatoryLink
-                { signatorylinkid            = signatorylinkid10
-                , signatorydetails           = signatorydetails10
-                , signatorymagichash         = signatorymagichash10
-                , maybesignatory             = maybesignatory10
-                , maybesupervisor            = maybesupervisor10
-                , maybecompany               = Nothing
-                , maybesigninfo              = maybesigninfo10
-                , maybeseeninfo              = maybeseeninfo10
-                , maybereadinvite            = maybereadinvite10
-                , invitationdeliverystatus   = invitationdeliverystatus10
-                , signatorysignatureinfo     = signatorysignatureinfo10
-                , signatorylinkdeleted       = signatorylinkdeleted10
-                , signatorylinkreallydeleted = signatorylinkreallydeleted10
-                , signatoryroles             = signatoryroles10
+             }) = SignatoryLink11
+                { signatorylinkid11            = signatorylinkid10
+                , signatorydetails11           = signatorydetails10
+                , signatorymagichash11         = signatorymagichash10
+                , maybesignatory11             = maybesignatory10
+                , maybesupervisor11            = maybesupervisor10
+                , maybecompany11               = Nothing
+                , maybesigninfo11              = maybesigninfo10
+                , maybeseeninfo11              = maybeseeninfo10
+                , maybereadinvite11            = maybereadinvite10
+                , invitationdeliverystatus11   = invitationdeliverystatus10
+                , signatorysignatureinfo11     = signatorysignatureinfo10
+                , signatorylinkdeleted11       = signatorylinkdeleted10
+                , signatorylinkreallydeleted11 = signatorylinkreallydeleted10
+                , signatoryroles11             = signatoryroles10
                 }
+
+instance Migrate SignatoryLink11 SignatoryLink where
+  migrate (SignatoryLink11
+    { signatorylinkid11
+    , signatorydetails11
+    , signatorymagichash11
+    , maybesignatory11
+    , maybesupervisor11
+    , maybecompany11
+    , maybesigninfo11
+    , maybeseeninfo11
+    , maybereadinvite11
+    , invitationdeliverystatus11
+    , signatorysignatureinfo11
+    , signatoryroles11
+    , signatorylinkdeleted11
+    , signatorylinkreallydeleted11
+    }) = SignatoryLink
+    { signatorylinkid            = signatorylinkid11
+    , signatorydetails           = signatorydetails11
+    , signatorymagichash         = signatorymagichash11
+    , maybesignatory             = maybesignatory11
+    , maybesupervisor            = maybesupervisor11
+    , maybecompany               = maybecompany11
+    , maybesigninfo              = maybesigninfo11
+    , maybeseeninfo              = maybeseeninfo11
+    , maybereadinvite            = maybereadinvite11
+    , invitationdeliverystatus   = invitationdeliverystatus11
+    , signatorysignatureinfo     = signatorysignatureinfo11
+    , signatoryroles             = signatoryroles11
+    , signatorylinkdeleted       = signatorylinkdeleted11
+    , signatorylinkreallydeleted = signatorylinkreallydeleted11
+    , signatorylinkcsvupload     = Nothing -- will be filled in by Document migration in case it is needed here
+    }
 
 $(deriveSerialize ''DocumentID)
 instance Version DocumentID
@@ -1421,9 +1508,79 @@ $(deriveSerialize ''CSVUpload)
 instance Version CSVUpload
 
 
+$(deriveSerialize ''Document31)
+instance Version Document31 where
+    mode = extension 31 (Proxy :: Proxy ())
+
+instance Migrate () Document31 where
+    migrate _ = error "Cannot migrate Document anymore"
+
 $(deriveSerialize ''Document)
 instance Version Document where
-    mode = extension 31 (Proxy :: Proxy ())
+    mode = extension 32 (Proxy :: Proxy Document31)
+
+instance Migrate Document31 Document where
+  migrate (Document31
+    { documentid31
+    , documenttitle31
+    , documentsignatorylinks31
+    , documentfiles31
+    , documentsealedfiles31
+    , documentstatus31
+    , documenttype31
+    , documentfunctionality31
+    , documentctime31
+    , documentmtime31
+    , documentdaystosign31
+    , documenttimeouttime31
+    , documentinvitetime31
+    , documentlog31
+    , documentinvitetext31
+    , documentallowedidtypes31
+    , documentcsvupload31
+    , documentcancelationreason31
+    , documentsharing31
+    , documentrejectioninfo31
+    , documenttags31
+    , documentservice31
+    , documentdeleted31
+    , documentauthorattachments31
+    , documentsignatoryattachments31
+    , documentui31
+    , documentregion31
+    }) = Document
+    { documentid                   = documentid31
+    , documenttitle                = documenttitle31
+    , documentsignatorylinks       = attachCSVUpload documentcsvupload31 documentsignatorylinks31
+    , documentfiles                = documentfiles31
+    , documentsealedfiles          = documentsealedfiles31
+    , documentstatus               = documentstatus31
+    , documenttype                 = documenttype31
+    , documentfunctionality        = documentfunctionality31
+    , documentctime                = documentctime31
+    , documentmtime                = documentmtime31
+    , documentdaystosign           = documentdaystosign31
+    , documenttimeouttime          = documenttimeouttime31
+    , documentinvitetime           = documentinvitetime31
+    , documentlog                  = documentlog31
+    , documentinvitetext           = documentinvitetext31
+    , documentallowedidtypes       = documentallowedidtypes31
+    , documentcancelationreason    = documentcancelationreason31
+    , documentsharing              = documentsharing31
+    , documentrejectioninfo        = documentrejectioninfo31
+    , documenttags                 = documenttags31
+    , documentservice              = documentservice31
+    , documentdeleted              = documentdeleted31
+    , documentauthorattachments    = documentauthorattachments31
+    , documentsignatoryattachments = documentsignatoryattachments31
+    , documentui                   = documentui31
+    , documentregion               = documentregion31
+    } where
+        attachCSVUpload Nothing sls = sls
+        attachCSVUpload (Just csvupload) sls = attachCSVUpload' (csvsignatoryindex csvupload) csvupload sls
+        attachCSVUpload' 0 csvupload (sl:sls) = sl { signatorylinkcsvupload = Just csvupload } : sls
+        attachCSVUpload' n csvupload (sl:sls) = sl : attachCSVUpload' (n-1) csvupload sls
+        attachCSVUpload' n csvupload _ = error $ "attachCSVUpload: index " ++ show n ++ " out of range for '" ++ BS.toString (csvtitle csvupload) ++ "'"
 
 
 instance Migrate DocumentHistoryEntry0 DocumentHistoryEntry where
@@ -1434,8 +1591,6 @@ instance Migrate DocumentHistoryEntry0 DocumentHistoryEntry where
                                                 })
             = DocumentHistoryInvitationSent dochisttime0 ipnumber0 []
 
-instance Migrate () Document where
-    migrate _ = error "Cannot migrate Document anymore"
 
 $(deriveSerialize ''DocumentStatus)
 instance Version DocumentStatus where

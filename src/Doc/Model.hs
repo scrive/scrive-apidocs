@@ -51,11 +51,11 @@ module Doc.Model
   -- , RemoveSignatoryCompany(..)
   -- , RemoveSignatoryUser(..)
   , ResetSignatoryDetails(..)
+  , ResetSignatoryDetails2(..)
   , RestartDocument(..)
   , RestoreArchivedDocument(..)
   , SaveDocumentForUser(..)
   , SaveSigAttachment(..)
-  , SetCSVSigIndex(..)
   , SetDaysToSign(..)
   , SetDocumentAdvancedFunctionality(..)
   , SetDocumentInviteTime(..)
@@ -288,6 +288,7 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                          , checkEqualBy "signatoryroles" (sort . signatoryroles)
                          , checkEqualBy "signatorylinkdeleted" signatorylinkdeleted
                          , checkEqualBy "signatorylinkreallydeleted" signatorylinkreallydeleted
+                         , checkEqualBy "signatorylinkcsvupload" signatorylinkcsvupload
                          ]
 
     inequalities = catMaybes $ map (\f -> f d1 d2)
@@ -306,7 +307,6 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documentlog" documentlog
                    , checkEqualBy "documentinvitetext" documentinvitetext
                    , checkEqualBy "documentallowedidtypes" (nub . documentallowedidtypes)
-                   , checkEqualBy "documentcsvupload" documentcsvupload
                    , checkEqualBy "documentcancelationreason" documentcancelationreason
                    , checkEqualBy "documentsharing" documentsharing
                    , checkEqualBy "documentrejectioninfo" documentrejectioninfo
@@ -341,9 +341,6 @@ decodeRowAsDocument :: DocumentID
                     -> [DocumentLogEntry]
                     -> BS.ByteString
                     -> [IdentificationType]
-                    -> Maybe BS.ByteString
-                    -> Maybe [[BS.ByteString]]
-                    -> Maybe Int
                     -> Maybe CancelationReason
                     -> DocumentSharing
                     -> Maybe MinutesTime
@@ -373,9 +370,6 @@ decodeRowAsDocument did
                     dlog
                     invite_text
                     allowed_id_types
-                    csv_title
-                    csv_contents
-                    csv_signatory_index
                     cancelationreason
                     sharing
                     rejection_time
@@ -413,9 +407,6 @@ decodeRowAsDocument did
                                                , documentlog = dlog
                                                , documentinvitetext = invite_text
                                                , documentallowedidtypes = allowed_id_types
-                                               , documentcsvupload = case (csv_title, csv_contents, csv_signatory_index) of
-                                                                       (Just t, Just c, Just si) -> Just (CSVUpload t c si)
-                                                                       _ -> Nothing
                                                , documentcancelationreason = cancelationreason
                                                , documentsharing = sharing
                                                , documentrejectioninfo = case (rejection_time, rejection_signatory_link_id, rejection_reason) of
@@ -449,9 +440,6 @@ selectDocumentsSelectors = [ "id"
                            , "log"
                            , "invite_text"
                            , "allowed_id_types"
-                           , "csv_title"
-                           , "csv_contents"
-                           , "csv_signatory_index"
                            , "cancelation_reason"
                            , "sharing"
                            , "rejection_time"
@@ -496,6 +484,9 @@ selectSignatoryLinksSelectors = [ "id"
                                 , "signinfo_last_name_verified"
                                 , "signinfo_personal_number_verified"
                                 , "roles"
+                                , "csv_title"
+                                , "csv_contents"
+                                , "csv_signatory_index"
                                 , "deleted"
                                 , "really_deleted"
                                 ]
@@ -503,7 +494,7 @@ selectSignatoryLinksSelectors = [ "id"
 selectSignatoryLinksSQL :: String
 selectSignatoryLinksSQL = "SELECT " ++ concat (intersperse "," selectSignatoryLinksSelectors) ++ " FROM signatory_links "
 
-decodeRowAsSignatoryLinkWithDocumnetID :: SignatoryLinkID
+decodeRowAsSignatoryLinkWithDocumentID :: SignatoryLinkID
                          -> DocumentID
                          -> Maybe UserID
                          -> Maybe CompanyID
@@ -524,10 +515,13 @@ decodeRowAsSignatoryLinkWithDocumnetID :: SignatoryLinkID
                          -> Maybe Bool
                          -> Maybe Bool
                          -> [SignatoryRole]
+                         -> Maybe BS.ByteString
+                         -> Maybe [[BS.ByteString]]
+                         -> Maybe Int
                          -> Bool
                          -> Bool
                          -> Either DBException (DocumentID,SignatoryLink)                        
-decodeRowAsSignatoryLinkWithDocumnetID slid
+decodeRowAsSignatoryLinkWithDocumentID slid
                          document_id
                          user_id
                          company_id
@@ -548,6 +542,9 @@ decodeRowAsSignatoryLinkWithDocumnetID slid
                          signinfo_last_name_verified
                          signinfo_personal_number_verified
                          roles
+                         csv_title
+                         csv_contents
+                         csv_signatory_index
                          deleted
                          really_deleted =
     (return $ (document_id,SignatoryLink
@@ -588,88 +585,22 @@ decodeRowAsSignatoryLinkWithDocumnetID slid
     , signatoryroles     = roles
     , signatorylinkdeleted  = deleted
     , signatorylinkreallydeleted = really_deleted
+    , signatorylinkcsvupload = 
+      case (csv_title, csv_contents, csv_signatory_index) of
+        (Just t, Just c, Just si) -> Just (CSVUpload t c si)
+        _ -> Nothing
     })) :: Either DBException (DocumentID,SignatoryLink)         
 
     
-decodeRowAsSignatoryLink :: SignatoryLinkID
-                         -> DocumentID
-                         -> Maybe UserID
-                         -> Maybe CompanyID
-                         -> [SignatoryField]
-                         -> SignOrder
-                         -> MagicHash
-                         -> Maybe MinutesTime
-                         -> Maybe IPAddress
-                         -> Maybe MinutesTime
-                         -> Maybe IPAddress
-                         -> Maybe MinutesTime
-                         -> Mail.MailsDeliveryStatus
-                         -> Maybe String
-                         -> Maybe String
-                         -> Maybe String
-                         -> Maybe SignatureProvider
-                         -> Maybe Bool
-                         -> Maybe Bool
-                         -> Maybe Bool
-                         -> [SignatoryRole]
-                         -> Bool
-                         -> Bool
-                         -> Either DBException SignatoryLink    
-decodeRowAsSignatoryLink slid
-                         document_id
-                         user_id
-                         company_id
-                         fields
-                         sign_order
-                         token
-                         sign_time
-                         sign_ip
-                         seen_time
-                         seen_ip
-                         read_invitation
-                         invitation_delivery_status
-                         signinfo_text
-                         signinfo_signature
-                         signinfo_certificate
-                         signinfo_provider
-                         signinfo_first_name_verified
-                         signinfo_last_name_verified
-                         signinfo_personal_number_verified
-                         roles
-                         deleted
-                         really_deleted =
-  snd <$> decodeRowAsSignatoryLinkWithDocumnetID  slid
-                         document_id
-                         user_id
-                         company_id
-                         fields
-                         sign_order
-                         token
-                         sign_time
-                         sign_ip
-                         seen_time
-                         seen_ip
-                         read_invitation
-                         invitation_delivery_status
-                         signinfo_text
-                         signinfo_signature
-                         signinfo_certificate
-                         signinfo_provider
-                         signinfo_first_name_verified
-                         signinfo_last_name_verified
-                         signinfo_personal_number_verified
-                         roles
-                         deleted
-                         really_deleted
-
 
 fetchSignatoryLinks :: Statement -> IO [SignatoryLink]
 fetchSignatoryLinks st = do
-  fetchValues st decodeRowAsSignatoryLink
+  values <- fetchValues st decodeRowAsSignatoryLinkWithDocumentID
+  return (map snd values)
 
 fetchSignatoryLinksWithDocuments :: Statement -> IO [(DocumentID,SignatoryLink)]
 fetchSignatoryLinksWithDocuments st = do
-  fetchValues st decodeRowAsSignatoryLinkWithDocumnetID
+  fetchValues st decodeRowAsSignatoryLinkWithDocumentID
   
 insertSignatoryLinkAsIs :: DocumentID -> SignatoryLink -> DB (Maybe SignatoryLink)
 insertSignatoryLinkAsIs documentid link = do
@@ -709,6 +640,9 @@ insertSignatoryLinkAsIs documentid link = do
                             , sqlField "signinfo_first_name_verified" $ signaturefstnameverified `fmap` signatorysignatureinfo link
                             , sqlField "signinfo_last_name_verified" $ signaturelstnameverified `fmap` signatorysignatureinfo link
                             , sqlField "signinfo_personal_number_verified" $ signaturepersnumverified `fmap` signatorysignatureinfo link
+                            , sqlField "csv_title" $ csvtitle `fmap` signatorylinkcsvupload link
+                            , sqlField "csv_contents" $ csvcontents `fmap` signatorylinkcsvupload link
+                            , sqlField "csv_signatory_index" $ csvsignatoryindex `fmap` signatorylinkcsvupload link
                             , sqlField "deleted" $ signatorylinkdeleted link
                             , sqlField "really_deleted" $ signatorylinkreallydeleted link
                             ]
@@ -850,7 +784,6 @@ insertDocumentAsIs document = do
                  , documentlog
                  , documentinvitetext
                  , documentallowedidtypes
-                 , documentcsvupload
                  , documentcancelationreason
                  , documentsharing
                  , documentrejectioninfo
@@ -892,9 +825,6 @@ insertDocumentAsIs document = do
                                      , sqlField "invite_text" documentinvitetext
                                      , sqlField "log" documentlog
                                      , sqlField "allowed_id_types" documentallowedidtypes
-                                     , sqlField "csv_title" $ csvtitle `fmap` documentcsvupload
-                                     , sqlField "csv_contents" $ csvcontents `fmap` documentcsvupload
-                                     , sqlField "csv_signatory_index" $ csvsignatoryindex `fmap` documentcsvupload
                                      , sqlField "cancelation_reason" documentcancelationreason
                                      , sqlField "sharing" documentsharing
                                      , sqlField "rejection_time" $ fst3 `fmap` documentrejectioninfo
@@ -994,30 +924,30 @@ instance DBUpdate ArchiveDocument (Either String Document) where
                               ])
 
 
-data AttachCSVUpload = AttachCSVUpload DocumentID CSVUpload
+data AttachCSVUpload = AttachCSVUpload DocumentID SignatoryLinkID CSVUpload
                        deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate AttachCSVUpload (Either String Document) where
-  dbUpdate (AttachCSVUpload did csvupload) = do
+  dbUpdate (AttachCSVUpload did slid csvupload) = do
     mdocument <- dbQuery $ GetDocumentByDocumentID did
     case mdocument of
-      Nothing -> return $ Left $ "Cannot PreparationToPending document " ++ show did ++ " because it does not exist"
+      Nothing -> return $ Left $ "Cannot AttachCSVUpload document " ++ show did ++ " because it does not exist"
       Just document -> do
-        let msigindex = checkCSVSigIndex
-                    (documentsignatorylinks document)
-                    (csvsignatoryindex csvupload)
-        case (msigindex, documentstatus document) of
-          (Left s, _) -> return $ Left s
-          (Right _, Preparation) -> do
-                     r <- runUpdateStatement "documents"
+        case documentstatus document of
+          Preparation -> do
+                     r <- runUpdateStatement "signatory_links"
                           [ {- sqlField "mtime" time
                           , -} sqlField "csv_title" $ csvtitle csvupload
                           , sqlField "csv_signatory_index" $ csvsignatoryindex csvupload
                           , sqlField "csv_contents" $ show $ csvcontents csvupload
                           ]
-                         "WHERE id = ? AND status = ? AND deleted = FALSE" [ toSql did, toSql Preparation ]
+                         "WHERE document_id = ? AND signatory_links.id = ? AND deleted = FALSE AND ((roles & ?)=0)" 
+                         [ toSql did
+                         , toSql slid 
+                         , toSql [SignatoryAuthor]
+                         ]
                      getOneDocumentAffected "AttachCSVUpload" r did
 
-          _ -> return $ Left $ "Document #" ++ show documentid ++ " is in " ++ show (documentstatus document) ++ " state, must be"
+          _ -> return $ Left $ "Document #" ++ show documentid ++ " is in " ++ show (documentstatus document) ++ " state, must be Preparation"
 
 
 data AttachFile = AttachFile DocumentID FileID MinutesTime
@@ -1180,8 +1110,7 @@ instance DBUpdate DocumentFromSignatoryData (Either String Document) where
         newFromDocument toNewDoc docid
    where
     toNewDoc :: Document -> Document
-    toNewDoc d = d { documentsignatorylinks = map snd . map toNewSigLink . zip [0..] $ (documentsignatorylinks d)
-                    , documentcsvupload = Nothing
+    toNewDoc d = d { documentsignatorylinks = map toNewSigLink (documentsignatorylinks d)
                     , documentsharing = Private
                     , documenttype = newDocType $ documenttype d
                     , documentsignatoryattachments = map replaceCSV (documentsignatoryattachments d)
@@ -1195,10 +1124,10 @@ instance DBUpdate DocumentFromSignatoryData (Either String Document) where
     newDocType (Signable p) = Signable p
     newDocType (Template p) = Signable p
     newDocType dt = dt
-    toNewSigLink :: (Int, SignatoryLink) -> (Int, SignatoryLink)
-    toNewSigLink (i, sl)
-      | i==sigindex = (i, pumpData sl)
-      | otherwise = (i, sl)
+    toNewSigLink :: SignatoryLink -> SignatoryLink
+    toNewSigLink sl
+      | isJust (signatorylinkcsvupload sl) = pumpData sl { signatorylinkcsvupload = Nothing }
+      | otherwise = sl
     pumpData :: SignatoryLink -> SignatoryLink
     pumpData siglink = replaceSignatoryData siglink fstname sndname email company personalnumber companynumber fieldvalues
 
@@ -1949,62 +1878,53 @@ instance DBUpdate SignDocument (Either String Document) where
             getOneDocumentAffected "SignDocument" r docid
           s -> return $ Left $ "Cannot SignDocument document " ++ show docid ++ " because " ++ concat s
 
-
 data ResetSignatoryDetails = ResetSignatoryDetails DocumentID [(SignatoryDetails, [SignatoryRole])] MinutesTime
                                   deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate ResetSignatoryDetails (Either String Document) where
-  dbUpdate (ResetSignatoryDetails documentid signatories time) = do
+  dbUpdate (ResetSignatoryDetails documentid signatories time) = 
+    dbUpdate (ResetSignatoryDetails2 documentid (map (\(a,b) -> (a,b,Nothing)) signatories) time)
+
+
+data ResetSignatoryDetails2 = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryRole], Maybe CSVUpload)] MinutesTime
+                                  deriving (Eq, Ord, Show, Typeable)
+instance DBUpdate ResetSignatoryDetails2 (Either String Document) where
+  dbUpdate (ResetSignatoryDetails2 documentid signatories time) = do
     mdocument <- dbQuery $ GetDocumentByDocumentID documentid
     case mdocument of
-      Nothing -> return $ Left "document does not exist"
+      Nothing -> return $ Left $ "ResetSignatoryDetails: document #" ++ show documentid ++ " does not exist"
       Just document ->
         case checkResetSignatoryData document signatories of
           [] -> do
 
-            wrapDB $ \conn -> runRaw conn "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
-            wrapDB $ \conn -> run conn "DELETE FROM signatory_links WHERE document_id = ?" [toSql documentid]
+            kPrepare "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
+            kExecute []
+            kPrepare "DELETE FROM signatory_links WHERE document_id = ?"
+            kExecute [toSql documentid]
 
             let mauthorsiglink = getAuthorSigLink document
-            flip mapM signatories $ \(details, roles) -> do
+            flip mapM signatories $ \(details, roles, mcsvupload) -> do
                      linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
 
                      magichash <- liftIO $ MagicHash <$> randomRIO (0,maxBound)
 
-                     let link' = signLinkFromDetails' details roles linkid magichash
+                     let link' = (signLinkFromDetails' details roles linkid magichash)
+                                 { signatorylinkcsvupload = mcsvupload }
                          link = if isAuthor link'
                                 then link' { maybesignatory = maybe Nothing maybesignatory mauthorsiglink
                                            , maybecompany   = maybe Nothing maybecompany   mauthorsiglink
                                            }
                                 else link'
-                     r1 <- runInsertStatement "signatory_links"
-                           [ sqlField "id" $ signatorylinkid link
-                           , sqlField "document_id" documentid
-                           , sqlField "user_id" $ maybesignatory link
-                           , sqlField "roles" $ signatoryroles link
-                           , sqlField "company_id" $ maybecompany link
-                           , sqlField "token" $ signatorymagichash link
-                           , sqlField "fields" $ signatoryfields $ signatorydetails link
-                           , sqlField "sign_order"$ signatorysignorder $ signatorydetails link
-                           , sqlField "sign_time" $ signtime `fmap` maybesigninfo link
-                           , sqlField "sign_ip" $ signipnumber `fmap` maybesigninfo link
-                           , sqlField "seen_time" $ signtime `fmap` maybeseeninfo link
-                           , sqlField "seen_ip" $ signipnumber `fmap` maybeseeninfo link
-                           , sqlField "read_invitation" $ maybereadinvite link
-                           , sqlField "invitation_delivery_status" $ invitationdeliverystatus link
-                           , sqlField "signinfo_text" $ signatureinfotext `fmap` signatorysignatureinfo link
-                           , sqlField "signinfo_signature" $ signatureinfosignature `fmap` signatorysignatureinfo link
-                           , sqlField "signinfo_certificate" $ signatureinfocertificate `fmap` signatorysignatureinfo link
-                           , sqlField "signinfo_provider" $ signatureinfoprovider `fmap` signatorysignatureinfo link
-                           , sqlField "signinfo_first_name_verified" $ signaturefstnameverified `fmap` signatorysignatureinfo link
-                           , sqlField "signinfo_last_name_verified" $ signaturelstnameverified `fmap` signatorysignatureinfo link
-                           , sqlField "signinfo_personal_number_verified" $ signaturepersnumverified `fmap` signatorysignatureinfo link
-                           , sqlField "deleted" $ signatorylinkdeleted link
-                           , sqlField "really_deleted" $ signatorylinkreallydeleted link
-                           ]
-                     when (r1 /= 1) $
+                     r1 <- insertSignatoryLinkAsIs documentid link
+                     when (not (isJust r1)) $
                           error "ResetSignatoryDetails signatory_links did not manage to insert a row"
 
             Just newdocument <- dbQuery $ GetDocumentByDocumentID documentid
+            let moldcvsupload = msum (map (\(_,_,a) -> a) signatories)
+            let mnewcsvupload = msum (map (signatorylinkcsvupload) (documentsignatorylinks newdocument))
+
+            when (moldcvsupload /= mnewcsvupload) $ do
+                     Log.error $ "ResetSignatoryDetails2 csvupload differs: " ++ show moldcvsupload ++ " vs " ++ show mnewcsvupload
+                     error $ "error in ResetSignatoryDetails2"
             return $ Right newdocument
 
           s -> return $ Left $ "cannot reset signatory details on document " ++ show documentid ++ " because " ++ intercalate ";" s
@@ -2091,27 +2011,6 @@ instance DBUpdate TimeoutDocument (Either String Document) where
                                                     , toSql Pending
                                                     ]
     getOneDocumentAffected "TimeoutDocument" r did
-
-data SetCSVSigIndex = SetCSVSigIndex DocumentID Int MinutesTime
-                      deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate SetCSVSigIndex (Either String Document) where
-  dbUpdate (SetCSVSigIndex did csvsigindex time) = do
-    Just doc <- dbQuery $ GetDocumentByDocumentID did
-    case documentfunctionality doc of
-      BasicFunctionality -> return $ Left $ "Cannot set csvindex on basic functionality document " ++ show did
-      AdvancedFunctionality -> 
-        case documentcsvupload doc of
-          Nothing -> return $ Left $ "There is no csv upload for document " ++ show did
-          Just cu -> 
-            case checkCSVSigIndex (documentsignatorylinks doc) csvsigindex of
-              Left s -> return $ Left s
-              Right i -> do
-                r <- runUpdateStatement "documents"
-                     [ sqlField "csv_signatory_index" $ csvsigindex
-                     , sqlField "mtime" time
-                     ]
-                    "WHERE id = ?" [ toSql did ]
-                getOneDocumentAffected "SetCSVSigIndex" r did
 
 data SetEmailIdentification = SetEmailIdentification DocumentID MinutesTime
                       deriving (Eq, Ord, Show, Typeable)
