@@ -165,8 +165,8 @@ docStateTests conn = testGroup "DocState" [
   testThat "when I call attachcsvupload with a doc that does not exist, always returns left" conn testNoDocumentAttachCSVUploadAlwaysLeft,
   testThat "when I call attachcsvupload with a doc that is not in preparation, always returns left" conn testNotPreparationAttachCSVUploadAlwaysLeft,
   testThat "when I call attachcsvupload and the csvindex is the author, return left" conn testPreparationAttachCSVUploadAuthorIndexLeft,
-  testThat "when I call attachcsvupload and the csvindex is negative, return left" conn testPreparationAttachCSVUploadIndexNeg,
-  testThat "when I call attachcsvupload and the csvindex is too large, return Left" conn testPreparationAttachCSVUploadIndexGreaterThanLength,
+  testThat "when I call attachcsvupload and not existing signatory link, return left" conn testPreparationAttachCSVUploadNonExistingSignatoryLink,
+
   testThat "addDocumentAttachment fails if not in preparation" conn testAddDocumentAttachmentFailsIfNotPreparation,
   testThat "addDocumentAttachment doesn't fail if there's no attachments" conn testAddDocumentAttachmentOk,
 
@@ -887,7 +887,9 @@ testPreparationAttachCSVUploadAuthorIndexLeft = doTimes 10 $ do
   csvupload <- rand 10 arbitrary
   let Just ai = authorIndex (documentsignatorylinks doc)
   --execute
-  edoc <- doc_update' $ AttachCSVUpload (documentid doc) (csvupload { csvsignatoryindex = ai })
+  edoc <- doc_update' $ AttachCSVUpload (documentid doc)
+          (signatorylinkid ((documentsignatorylinks doc) !! ai))
+          (csvupload { csvsignatoryindex = ai })
   --assert
   validTest $ assertLeft edoc
 
@@ -896,31 +898,17 @@ authorIndex sls = case catMaybes $ zipWith (\sl i -> if isAuthor sl then Just i 
   [] -> Nothing
   x:_ -> Just x
 
-testPreparationAttachCSVUploadIndexNeg :: DB ()
-testPreparationAttachCSVUploadIndexNeg = doTimes 10 $ do
+testPreparationAttachCSVUploadNonExistingSignatoryLink :: DB ()
+testPreparationAttachCSVUploadNonExistingSignatoryLink = doTimes 3 $ do
   -- setup
-  csvupload <- untilCondition (\c -> (csvsignatoryindex c) < 0) $ rand 10 arbitrary
+  csvupload <- rand 10 arbitrary
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   --execute
-  edoc <- doc_update' $ AttachCSVUpload (documentid doc) csvupload
+  edoc <- doc_update' $ AttachCSVUpload (documentid doc) 
+          (SignatoryLinkID 0) csvupload
   --assert
   validTest $ assertLeft edoc
-
-testPreparationAttachCSVUploadIndexGreaterThanLength :: DB ()
-testPreparationAttachCSVUploadIndexGreaterThanLength = doTimes 10 $ do
-  -- setup
-  author <- addNewRandomAdvancedUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  if length (documentsignatorylinks doc) > 10
-    then invalidateTest
-    else do
-    csvupload <- untilCondition (\c -> (csvsignatoryindex c) >= length (documentsignatorylinks doc))
-                  $ rand 10 arbitrary
-    --execute
-    edoc <- doc_update' $ AttachCSVUpload (documentid doc) csvupload
-    --assert
-    validTest $ assertLeft edoc
 
 testGetDocumentsSharedInCompany :: DB ()
 testGetDocumentsSharedInCompany = doTimes 10 $ do

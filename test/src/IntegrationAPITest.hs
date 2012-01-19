@@ -284,7 +284,7 @@ testDocumentsFilteringFromDate2 conn = withTestEnvironment conn $ do
     _ <- dbUpdate $ PreparationToPending did ctxtime
 
     _ <- forM (documentsignatorylinks doc) $ \sl ->
-      dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl) (minutesAfter 10 tm) (IPAddress 0)
+      dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl) (minutesAfter 100 tm) (IPAddress 0)
 
     Just _doc' <- dbQuery $ GetDocumentByDocumentID did
     Right apiReqDocsFilter3 <- jsset "from_date" tms <$> getDocumentsJSON "test_company1" "mariusz@skrivapa.se"

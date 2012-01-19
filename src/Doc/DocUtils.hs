@@ -163,8 +163,8 @@ instance  MaybeShared Document where
 -- does this need to change now? -EN
 checkCSVSigIndex :: [SignatoryLink] -> Int -> Either String Int
 checkCSVSigIndex sls n
-  | n < 0 || n >= length sls = Left $ "signatory with index " ++ show n ++ " doesn't exist."
-  | isAuthor (sls !! n) = Left "author can't be set from csv"
+  | n < 0 || n >= length sls = Left $ "checkCSVSigIndex: signatory with index " ++ show n ++ " doesn't exist."
+  | isAuthor (sls !! n) = Left $ "checkCSVSigIndex: signatory at index " ++ show n ++ " is an author and can't be set from csv"
   | otherwise = Right n
 
 {- |

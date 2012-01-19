@@ -31,6 +31,7 @@ kontraMigrations = [
   , makeUserStatsRepeatableByChangingPK
 #ifdef DOCUMENTS_IN_POSTGRES
   , addNameColumnInSignatoryAttachments
+  , addCSVUploadDataFromDocumentToSignatoryLink
 #endif
   ] ++ mailerMigrations
 

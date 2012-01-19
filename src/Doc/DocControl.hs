@@ -894,21 +894,32 @@ handleIssueChangeToContract document = do
     I feel like this is quite dangerous to do all at once, maybe need a transaction?!
 -}
 splitUpDocument :: Kontrakcja m => Document -> m (Either KontraLink [Document])
-splitUpDocument doc =
-  case (documentcsvupload doc, getCSVCustomFields doc) of
-    (Just _, Left _) -> mzero
-    (Nothing, _) -> return $ Right [doc]
-    (Just csvupload, Right csvcustomfields) ->
+splitUpDocument doc = do
+  let Just csvidx = findIndex (isJust . signatorylinkcsvupload) (documentsignatorylinks doc)
+  case (msum (signatorylinkcsvupload <$> documentsignatorylinks doc), getCSVCustomFields doc) of
+    (Just _, Left msg) -> do
+      Log.debug $ "splitUpDocument: got csvupload, but getCSVCustomFields returned issues: " ++ show msg
+      mzero
+    (Nothing, _) -> do
+      Log.debug $ "splitUpDocument called on document without csvupload, that is ok"
+      return $ Right [doc]
+    (Just csvupload, Right csvcustomfields) -> do
+      Log.debug $ "splitUpDocument called on document with csvupload and we managed to split fields properly"
       case (cleanCSVContents (documentallowedidtypes doc) (length csvcustomfields) $ csvcontents csvupload) of
         (_prob:_, _) -> do
           signlast <- isFieldSet "signlast"
           addFlashM flashMessageInvalidCSV
-          return $ Left $ LinkDesignDoc $ DesignStep2 (documentid doc) (Just (1 + csvsignatoryindex csvupload)) (Just AfterCSVUpload) signlast
+          Log.debug $ "splitUpDocument: going to DesignStep2"
+          return $ Left $ LinkDesignDoc $ DesignStep2 (documentid doc) (Just (1 + csvidx)) (Just AfterCSVUpload) signlast
         ([], CleanCSVData{csvbody}) -> do
-          mdocs <- mapM (createDocFromRow doc (csvsignatoryindex csvupload)) csvbody
+          mdocs <- mapM (createDocFromRow doc (csvidx)) csvbody
           if Data.List.null (lefts mdocs)
-            then return $ Right (rights mdocs)
-            else mzero
+            then do
+              Log.debug $ "splitUpDocument: finishing properly"
+              return $ Right (rights mdocs)
+            else do
+              Log.debug $ "splitUpDocument: createDocFromRow returned some Lefts: " ++ show (lefts mdocs)
+              mzero
   where createDocFromRow :: Kontrakcja m => Document -> Int -> [BS.ByteString] -> m (Either String Document)
         createDocFromRow udoc sigindex xs =
           doc_update $ DocumentFromSignatoryData (documentid udoc) sigindex (item 0) (item 1) (item 2) (item 3) (item 4) (item 5) (drop 6 xs)
@@ -937,7 +948,8 @@ handleIssueCSVUpload document = do
                                 , csvcontents = contents
                                 , csvsignatoryindex = csvsigindex
                                 }
-      ndoc <- guardRightM $ doc_update $ AttachCSVUpload (documentid udoc) csvupload
+      ndoc <- guardRightM $ doc_update $ AttachCSVUpload (documentid udoc) 
+              (signatorylinkid ((documentsignatorylinks udoc) !! csvsigindex)) csvupload
       return $ LinkDesignDoc $ DesignStep2 (documentid ndoc) (Just $ csvsigindex + 1) (Just AfterCSVUpload) signlast
 
 makeSigAttachment :: BS.ByteString -> BS.ByteString -> BS.ByteString -> SignatoryAttachment
@@ -1302,10 +1314,13 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
   signatoriespersonalnumbers <- getAndConcat "signatorypersonalnumber"
   signatoriescompanynumbers  <- getAndConcat "signatorycompanynumber"
   signatoriesemails          <- map (fromMaybe BS.empty) <$> getOptionalFieldList asValidEmail "signatoryemail"
-  signatoriessignorders      <- map (SignOrder . fromMaybe 1 . fmap (max 1 . fst) . BSC.readInteger) <$> getAndConcat "signatorysignorder" -- a little filtering here, but we want signatories to have sign order > 0
+  signatoriessignorders      <- map (SignOrder . fromMaybe 1 . fmap (max 1 . fst) . BSC.readInteger) <$> 
+                                getAndConcat "signatorysignorder"
+                                -- a little filtering here, but we want signatories to have sign order > 0
   signatoriesroles           <- getAndConcat "signatoryrole"
-  liftIO $ print signatoriesroles
-  liftIO $ print signatoriessignorders
+
+  Log.debug $ "signatoriesroles #" ++ show documentid ++ ": " ++ show signatoriesroles
+  Log.debug $ "signatoriessignorders #" ++ show documentid ++ ": " ++ show signatoriessignorders
 
 
   -- if the post doesn't contain this one, we parse the old way
@@ -1316,6 +1331,10 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
   invitetext <- fmap (fromMaybe defaultInviteMessage) $ getCustomTextField "invitetext"
 
   mcsvsigindex <- getOptionalField asValidNumber "csvsigindex"
+  
+  let moldcsvupload = msum (map signatorylinkcsvupload (documentsignatorylinks document))
+
+  Log.debug $ "updateDocument: " ++ show mcsvsigindex ++ "/" ++ show (csvtitle <$> moldcsvupload) ++ " for #" ++ show documentid
 
   docname <- getCriticalField (return . BS.fromString) "docname"
 
@@ -1334,8 +1353,7 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
   placedsigids   <- getAndConcat "placedsigid"
   placedfieldids <- getAndConcat "placedfieldid"
 
-  Log.debug $ show placedfieldids
-
+  Log.debug $ "placedfieldids #" ++ show documentid ++ ": " ++ show placedfieldids
 
   authorrole <- getFieldWithDefault "" "authorrole"
   authorsignorder <- (SignOrder . fromMaybe 1) <$> getValidateAndHandle asValidNumber asMaybe "authorsignorder"
@@ -1371,17 +1389,29 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
                         signatoriescompanynumbers
                         signatoriesfstnames
                         signatoriessndnames
-  Log.debug $ "signatories " ++ show signatories
+  Log.debug $ "signatories #" ++ show documentid ++ ": " ++ show signatories
                         -- authornote: we need to store the author info somehow!
   let Just authorsiglink = getAuthorSigLink document
-      authordetails = (makeAuthorDetails placements fielddefs $ signatorydetails authorsiglink) { signatorysignorder = authorsignorder }
-  Log.debug $ "set author sign order to " ++ (show authorsignorder)
+      authordetails = (makeAuthorDetails placements fielddefs $ signatorydetails authorsiglink)
+                      { signatorysignorder = authorsignorder
+                      }
+  Log.debug $ "set author sign order to " ++ show authorsignorder ++ ", #" ++ show documentid
 
   let isauthorsig = authorrole == "signatory"
-      signatories2 = zip signatories roles2
+      --signatories' = case mcsvsigindex of
+      --                 Just i -> zipWith (repl i) [0..] signatories
+      --                 Nothing -> signatories
+      --repl i idx sl | idx==i = sl { signatorylinkcsvupload = msum (map (signatorylinkcsvupload) (documentsignatorylinks document)) }
+      signatories2 = zipWith3 bundle [1 :: Int ..] signatories roles2
+      bundle idx sig roles = ( sig, roles
+                             , if Just idx == mcsvsigindex
+                                  then moldcsvupload
+                                  else Nothing
+                             )
+                              
       authordetails2 = (authordetails, if isauthorsig
                                        then [SignatoryPartner, SignatoryAuthor]
-                                       else [SignatoryAuthor])
+                                       else [SignatoryAuthor], Nothing)
       roles2 = map guessRoles signatoriesroles
       guessRoles x | x == BS.fromString "signatory" = [SignatoryPartner]
                    | otherwise = []
@@ -1398,14 +1428,19 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
     return ()
   _ <- doc_update $ SetDocumentTitle documentid docname ctxtime
   _ <- doc_update $ SetInviteText documentid invitetext ctxtime
-  when (isJust mcsvsigindex) $ ignore $ doc_update $ SetCSVSigIndex documentid (fromJust mcsvsigindex) ctxtime
+
   case docallowedidtypes of
        [ELegitimationIdentification] -> ignore $ doc_update $ SetElegitimationIdentification documentid ctxtime
        [EmailIdentification] -> ignore $ doc_update $ SetEmailIdentification documentid ctxtime
        i -> Log.debug $ "I don't know how to set this kind of identificaiton: " ++ show i
   when (isJust daystosign) $ ignore $ doc_update $ SetDaysToSign documentid (fromJust daystosign) ctxtime
-  aa <- doc_update $ ResetSignatoryDetails documentid (authordetails2 : signatories2) ctxtime
-  Log.debug $ "final document returned " ++ show aa
+
+  let mnewcsvupload = msum (map (\(_,_,a) -> a) signatories2)
+  when (mnewcsvupload /= moldcsvupload) $ do
+    error $ "updateDocument logic error: lost csv upload data in transit"
+
+  aa <- doc_update $ ResetSignatoryDetails2 documentid (authordetails2 : signatories2) ctxtime
+  Log.debug $ "ResetSignatoryDetails2 #" ++ show documentid ++ " returned " ++ show aa
   return aa
 
 getDocumentsForUserByType :: Kontrakcja m => DocumentType -> User -> m [Document]
