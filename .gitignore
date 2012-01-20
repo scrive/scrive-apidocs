@@ -1,7 +1,11 @@
 _local/
 dist/
+coverage-reports/
 log/
 kontrakcja.conf
+mailing_server.conf
+_mailer_pid
+_server_pid
 kontrakcja_test.conf
 kontrakcja-server
 *.cookies

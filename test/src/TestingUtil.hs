@@ -8,7 +8,7 @@ import Test.Framework.Providers.HUnit (testCase)
 import Control.Applicative
 import Data.Char
 import Data.Word
-import System.Random
+import System.Random (newStdGen)
 import Test.QuickCheck
 import Happstack.Server
 #ifndef DOCUMENTS_IN_POSTGRES

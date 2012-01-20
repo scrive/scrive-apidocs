@@ -118,7 +118,7 @@ import Util.SignatoryLinkUtils
 import Doc.DocProcess
 import Doc.DocStateCommon
 import qualified Log
-import System.Random
+import System.Random (randomRIO)
 --import Happstack.Server
 --import Happstack.State
 --import Happstack.Util.Common
