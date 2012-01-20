@@ -31,7 +31,7 @@ import System.Exit
 import System.IO
 import System.IO.Temp
 import System.Process
-import System.Random
+import System.Random (randomRIO)
 import System.Time
 import qualified Log
 import qualified Codec.Binary.Url as URL
