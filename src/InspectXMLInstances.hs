@@ -12,7 +12,7 @@ module InspectXMLInstances() where
 import API.Service.Model
 import Doc.DocStateData
 import Company.Model
-import DB.Types
+import MagicHash (MagicHash)
 import MinutesTime
 import InspectXML
 import Mails.MailsUtil

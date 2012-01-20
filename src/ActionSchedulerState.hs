@@ -30,17 +30,17 @@ module ActionSchedulerState (
 import Control.Applicative
 import Control.Monad.State
 import Control.Monad.Reader
+import Crypto.GlobalRandom(genIO)
 import qualified Data.ByteString as BS
 import Data.Typeable
 import Happstack.Data.IxSet
 import Happstack.State
-import System.Random (randomIO)
 import qualified Happstack.Data.IxSet as IxSet
 import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
 
-import DB.Types
 import Doc.DocStateData
+import MagicHash (MagicHash)
 import Misc
 import MinutesTime
 import Mails.MailsData
@@ -261,7 +261,7 @@ checkValidity now maction = maction >>= \action ->
 -- | Create new 'password reminder' action
 newPasswordReminder :: User -> IO Action
 newPasswordReminder user = do
-    hash <- randomIO
+    hash <- genIO
     now <- getMinutesTime
     let action = PasswordReminder {
           prUserID         = userid user
@@ -273,7 +273,7 @@ newPasswordReminder user = do
 -- | Create new 'invitation sent' action
 newViralInvitationSent :: Email -> UserID -> IO Action
 newViralInvitationSent email inviterid = do
-    hash <- randomIO
+    hash <- genIO
     now <- getMinutesTime
     let action = ViralInvitationSent {
           visEmail          = email
@@ -287,7 +287,7 @@ newViralInvitationSent email inviterid = do
 -- | Create new 'account created' action
 newAccountCreated :: User -> IO Action
 newAccountCreated user = do
-    hash <- randomIO
+    hash <- genIO
     now <- getMinutesTime
     let action = AccountCreated {
           acUserID = userid user
@@ -298,7 +298,7 @@ newAccountCreated user = do
 -- | Create new 'account created by signing' action
 newAccountCreatedBySigning :: User -> (DocumentID, SignatoryLinkID) -> IO Action
 newAccountCreatedBySigning user doclinkdata = do
-    hash <- randomIO
+    hash <- genIO
     now <- getMinutesTime
     let action = AccountCreatedBySigning {
           acbsState         = NothingSent
@@ -310,7 +310,7 @@ newAccountCreatedBySigning user doclinkdata = do
 
 newRequestEmailChange :: User -> Email -> IO Action
 newRequestEmailChange user newemail = do
-  hash <- randomIO
+  hash <- genIO
   now <- getMinutesTime
   let action = RequestEmailChange {
     recUser = userid user

@@ -65,7 +65,6 @@ module Doc.DocView (
   ) where
 
 import ActionSchedulerState (ActionID)
-import DB.Types
 import Doc.CSVUtils
 import Doc.DocProcess
 import Doc.DocRegion
@@ -76,6 +75,7 @@ import FlashMessage
 import Kontra
 import KontraLink
 import ListUtil
+import MagicHash (MagicHash)
 import Mails.MailsUtil
 import MinutesTime
 import Misc

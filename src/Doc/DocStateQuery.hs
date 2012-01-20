@@ -30,13 +30,13 @@ module Doc.DocStateQuery
     , canUserViewDoc
     ) where
 
-import DB.Types
 import DBError
 import Doc.Transitory
 import Doc.DocStateData
 import Doc.DocUtils
 import Company.Model
 import Kontra
+import MagicHash (MagicHash)
 import Util.SignatoryLinkUtils
 import qualified Log
 import Doc.DocInfo

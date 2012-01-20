@@ -5,15 +5,14 @@ import Data.Functor
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (update, query)
-import System.Random (randomIO)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS
 import Text.JSON (JSValue(..), toJSObject, showJSON)
 
 import ActionSchedulerState
 import AppView
+import Crypto.GlobalRandom (genIO)
 import DB.Classes
-import DB.Types
 import Doc.Transitory
 import Doc.DocStateData
 import Company.Model
@@ -21,6 +20,7 @@ import InputValidation
 import Kontra
 import KontraLink
 import ListUtil
+import MagicHash (MagicHash)
 import Mails.SendMail
 import MinutesTime
 import Misc
@@ -313,7 +313,7 @@ handlePostUserMailAPI = withUserPost $ do
         case mapi of
              Nothing -> do
                  when enabledapi $ do
-                     apikey <- liftIO randomIO
+                     apikey <- liftIO genIO
                      _ <- runDBUpdate $ SetUserMailAPI userid $ Just UserMailAPI {
                            umapiKey = apikey
                          , umapiDailyLimit = 50
@@ -332,7 +332,7 @@ handlePostUserMailAPI = withUserPost $ do
                         case (mresetkey, mresetsenttoday, mdailylimit) of
                              (Just resetkey, Just resetsenttoday, Just dailylimit) -> do
                                  newkey <- if resetkey
-                                   then liftIO randomIO
+                                   then liftIO genIO
                                    else return $ umapiKey api
                                  _ <- runDBUpdate $ SetUserMailAPI userid $ Just api {
                                        umapiKey = newkey

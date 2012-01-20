@@ -14,8 +14,8 @@ import qualified Data.ByteString.UTF8 as BS
 import ActionSchedulerState
 import Context
 import DB.Classes
-import DB.Types
 import FlashMessage
+import MagicHash (unsafeMagicHash)
 import Mails.Model
 import MinutesTime
 import Misc
@@ -248,7 +248,7 @@ testEmailChangeFailsIfMagicHashIsWrong conn = withTestEnvironment conn $ do
 
   req <- mkRequest POST [("password", inText "abc123")]
   action <- liftIO $ newRequestEmailChange user (Email $ BS.fromString "jim@bob.com")
-  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) (MagicHash 123) >>= sendRedirect
+  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) (unsafeMagicHash 123) >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
@@ -286,7 +286,7 @@ testEmailChangeFailsIfEmailInUse conn = withTestEnvironment conn $ do
   action <- liftIO $ newRequestEmailChange user (Email $ BS.fromString "jim@bob.com")
 
   Just _ <- addNewUser "Jim" "Bob" "jim@bob.com"
-  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) (MagicHash 123) >>= sendRedirect
+  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) (unsafeMagicHash 123) >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
@@ -305,7 +305,7 @@ testEmailChangeFailsIfPasswordWrong conn = withTestEnvironment conn $ do
   action <- liftIO $ newRequestEmailChange user (Email $ BS.fromString "jim@bob.com")
 
   Just _ <- addNewUser "Jim" "Bob" "jim@bob.com"
-  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) (MagicHash 123) >>= sendRedirect
+  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) (unsafeMagicHash 123) >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
@@ -324,7 +324,7 @@ testEmailChangeFailsIfNoPassword conn = withTestEnvironment conn $ do
   action <- liftIO $ newRequestEmailChange user (Email $ BS.fromString "jim@bob.com")
 
   Just _ <- addNewUser "Jim" "Bob" "jim@bob.com"
-  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) (MagicHash 123) >>= sendRedirect
+  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) (unsafeMagicHash 123) >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed

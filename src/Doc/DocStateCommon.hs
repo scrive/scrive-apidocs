@@ -12,7 +12,7 @@ import Company.Model
 --import Data.Maybe
 --import Data.Word
 --import DB.Classes
-import DB.Types
+import MagicHash (MagicHash)
 --import DB.Utils
 import Doc.DocProcess
 import Doc.DocStateData

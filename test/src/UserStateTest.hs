@@ -8,7 +8,7 @@ import qualified Data.ByteString.UTF8 as BS
 
 import Company.Model
 import DB.Classes
-import DB.Types
+import MagicHash (unsafeMagicHash)
 import MinutesTime
 import User.Model
 import TestingUtil
@@ -133,7 +133,7 @@ test_getUserMailAPI :: DB ()
 test_getUserMailAPI = do
   Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   let mapi = UserMailAPI {
-      umapiKey = MagicHash 0
+      umapiKey = unsafeMagicHash 0
     , umapiDailyLimit = 1
     , umapiSentToday = 0
   }

@@ -53,12 +53,12 @@ import Data.Either
 import Data.Int
 import Data.Maybe
 import DB.Derive
-import DB.Types
 import Happstack.Data
 import Happstack.Data.IxSet as IxSet
 import Happstack.Server.SimpleHTTP
 import Happstack.State
 import Happstack.Util.Common
+import MagicHash (MagicHash, unsafeMagicHash)
 import Mails.MailsUtil
 import MinutesTime
 import Misc
@@ -1173,7 +1173,7 @@ instance Migrate SignatoryLink1 SignatoryLink2 where
                 , maybesignatory2 = maybesignatory1
                 , maybesigninfo2 = maybesigninfo1
                 , maybeseentime2 = maybeseentime1
-                , signatorymagichash2 = MagicHash $
+                , signatorymagichash2 = unsafeMagicHash $
                                        fromIntegral (unSignatoryLinkID signatorylinkid1) +
                                                         0xcde156781937458e37
                 }

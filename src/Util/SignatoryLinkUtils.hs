@@ -38,8 +38,8 @@ module Util.SignatoryLinkUtils (
        ) where
 
 import Company.Model
-import DB.Types
 import Doc.DocStateData
+import MagicHash (MagicHash)
 import Mails.MailsUtil
 import User.Model
 import Util.HasSomeUserInfo

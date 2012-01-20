@@ -37,7 +37,7 @@ import User.Model
 import Numeric
 import MinutesTime
 import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie, readCookieValue, withDataFn, ServerPartT, HasRqData, CookieLife(MaxAge), FromReqURI(..))
-import System.Random (randomIO)
+import Crypto.GlobalRandom (genIO)
 import Happstack.Util.Common ( readM)
 import Misc (mkTypeOf, isSecure, isHTTPS)
 import ELegitimation.ELegTransaction
@@ -46,7 +46,7 @@ import API.Service.Model
 import Cookies
 import Company.Model
 import DB.Classes
-import DB.Types
+import MagicHash (MagicHash, unsafeMagicHash)
 import Util.MonadUtils
 import Doc.SignatoryLinkID
 import qualified Data.Map as Map
@@ -257,7 +257,7 @@ instance Migrate SessionData1 SessionData2 where
         SessionData2 { userID2 = Nothing
                      , flashMessages2 = []
                      , expires2 = fromSeconds 0
-                     , hash2 = MagicHash 0
+                     , hash2 = unsafeMagicHash 0
                      }
 
 instance Migrate SessionData2 SessionData3 where
@@ -268,7 +268,7 @@ instance Migrate SessionData2 SessionData3 where
         SessionData3 { userID3 = Nothing
                     , flashMessages3 = []
                     , expires3 = fromSeconds 0
-                    , hash3 = MagicHash 0
+                    , hash3 = unsafeMagicHash 0
                     , elegtransactions3 = []
                     }
 
@@ -281,27 +281,27 @@ instance Migrate SessionData3 SessionData4 where
         SessionData4 { userID4           = Nothing
                     , flashMessages4    = []
                     , expires4          = fromSeconds 0
-                    , hash4             = MagicHash 0
+                    , hash4             = unsafeMagicHash 0
                     , elegtransactions4 = []
-                    , xtoken4           = MagicHash 0
+                    , xtoken4           = unsafeMagicHash 0
                     }
 
 instance Migrate SessionData4 SessionData5 where
     migrate SessionData4{} =
         SessionData5 { userID5           = Nothing
                     , expires5          = fromSeconds 0
-                    , hash5             = MagicHash 0
+                    , hash5             = unsafeMagicHash 0
                     , elegtransactions5 = []
-                    , xtoken5           = MagicHash 0
+                    , xtoken5           = unsafeMagicHash 0
                     }
 
 instance Migrate SessionData5 SessionData6 where
     migrate SessionData5{} =
         SessionData6 { userID6           = Nothing
                     , expires6          = fromSeconds 0
-                    , hash6             = MagicHash 0
+                    , hash6             = unsafeMagicHash 0
                     , elegtransactions6 = []
-                    , xtoken6           = MagicHash 0
+                    , xtoken6           = unsafeMagicHash 0
                     , service6          = Nothing
                     }
 
@@ -309,9 +309,9 @@ instance Migrate SessionData6 SessionData7 where
     migrate SessionData6{} =
         SessionData7 { userID7           = Nothing
                     , expires7          = fromSeconds 0
-                    , hash7             = MagicHash 0
+                    , hash7             = unsafeMagicHash 0
                     , elegtransactions7 = []
-                    , xtoken7           = MagicHash 0
+                    , xtoken7           = unsafeMagicHash 0
                     , service7          = Nothing
                     }
 
@@ -319,9 +319,9 @@ instance Migrate SessionData7 SessionData8 where
     migrate SessionData7{} =
         SessionData8 { userID8           = Nothing
                     , expires8          = fromSeconds 0
-                    , hash8             = MagicHash 0
+                    , hash8             = unsafeMagicHash 0
                     , elegtransactions8 = []
-                    , xtoken8           = MagicHash 0
+                    , xtoken8           = unsafeMagicHash 0
                     , service8          = Nothing
                     , company8          = Nothing
                     }
@@ -330,9 +330,9 @@ instance Migrate SessionData8 SessionData9 where
     migrate SessionData8{} =
         SessionData9 { userID9           = Nothing
                      , expires9          = fromSeconds 0
-                     , hash9             = MagicHash 0
+                     , hash9             = unsafeMagicHash 0
                      , elegtransactions9 = []
-                     , xtoken9           = MagicHash 0
+                     , xtoken9           = unsafeMagicHash 0
                      , location9         = ""
                      , company9          = Nothing
                      }
@@ -530,8 +530,8 @@ currentSession =
 emptySessionData :: IO SessionData
 emptySessionData = do
     now       <- getMinutesTime
-    magicHash <- randomIO
-    xhash     <- randomIO
+    magicHash <- genIO
+    xhash     <- genIO
     return $ SessionData { userID = Nothing
                          , expires = 60 `minutesAfter` now
                          , hash = magicHash

@@ -1,7 +1,7 @@
 module KontraLink(KontraLink(..), LoginRedirectReason(..), DesignStep(..), DesignStep2Flag(..)) where
 
-import DB.Types
 import Doc.DocStateData
+import MagicHash (MagicHash)
 import Misc
 import ActionSchedulerState (ActionID)
 import User.Model

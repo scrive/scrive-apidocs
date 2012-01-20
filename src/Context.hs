@@ -20,7 +20,7 @@ import FlashMessage
 import Mails.MailsConfig
 import API.Service.Model
 import Company.Model
-import DB.Types
+import MagicHash (MagicHash)
 import Misc (IPAddress)
 
 data Context = Context

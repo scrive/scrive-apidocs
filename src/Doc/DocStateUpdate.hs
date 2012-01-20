@@ -15,7 +15,7 @@ module Doc.DocStateUpdate
     , shareDocuments
     ) where
 
-import DB.Types
+import MagicHash (MagicHash)
 import DBError
 import Doc.Transitory
 import Doc.DocStateData

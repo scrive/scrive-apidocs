@@ -15,8 +15,8 @@ import ActionSchedulerState
 import AppControl
 import Context
 import DB.Classes
-import DB.Types
 import FlashMessage
+import MagicHash (MagicHash)
 import Mails.Model
 import LoginTest (assertLoginEventRecordedFor)
 import MinutesTime

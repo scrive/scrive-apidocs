@@ -163,6 +163,7 @@ Executable kontrakcja-server
     cpp-options: -DDOCUMENTS_IN_POSTGRES
 
   Build-depends: Crypto == 4.2.*
+  Build-depends: DRBG == 0.2.3
   Build-depends: HDBC
   Build-depends: HDBC-postgresql
   Build-depends: HPDF
@@ -180,6 +181,7 @@ Executable kontrakcja-server
   Build-depends: bytestring
   Build-depends: containers
   Build-depends: convertible
+  Build-depends: crypto-api==0.7
   Build-depends: cryptocipher==0.2.*
   Build-depends: dataenc >= 0.13.0.2
   Build-depends: directory
