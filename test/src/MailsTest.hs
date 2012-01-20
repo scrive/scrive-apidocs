@@ -91,8 +91,6 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
         checkMail "Delivered invitation"   $  mailDeliveredInvitation doc sl
         --remind mails
         checkMail "Reminder notsigned" $ mailDocumentRemind Nothing ctx doc sl
-        --cancel by author mail
-        checkMail "Cancel" $ mailCancelDocument True Nothing  ctx doc
         --reject mail
         checkMail "Reject"  $ mailDocumentRejected  Nothing  ctx doc sl
         -- awaiting author email

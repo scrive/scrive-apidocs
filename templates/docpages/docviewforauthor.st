@@ -11,17 +11,18 @@ offercancelbuttontext=$_offercancelbuttontext()$
 ###
 ordercancelbuttontext=$_ordercancelbuttontext()$
 ###
-contractcancelmodaltitle=
-         <h2>$_contractcancelmodaltitleHead()$</h2>
-          <p>$_contractcancelmodaltitleBody()$</p>
+contractcancelmodaltitle=$_contractcancelmodaltitle()$
 ###
-offercancelmodaltitle=
-         <h2>$_offercancelmodaltitleHead()$</h2>
-          <p>$_offercancelmodaltitleBody()$</p>
+offercancelmodaltitle=$_offercancelmodaltitle()$
 ###
-ordercancelmodaltitle=
-         <h2>$_ordercancelmodaltitleHead()$</h2>
-          <p>$_ordercancelmodaltitleBody()$</p>
+ordercancelmodaltitle=$_ordercancelmodaltitle()$
+###
+###
+contractcancelmodaltext=$_contractcancelmodaltext()$
+###
+offercancelmodaltext=$_offercancelmodaltext()$
+###
+ordercancelmodaltext=$_ordercancelmodaltext()$
 ###
 pageDocumentForAuthor=
 
