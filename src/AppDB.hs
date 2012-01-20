@@ -21,6 +21,8 @@ import File.Tables
 import Mails.Tables
 import Mails.Migrations
 
+import EvidenceLog.Tables
+
 -- Note: ALWAYS append new migrations TO THE END of this list.
 kontraMigrations :: [Migration]
 kontraMigrations = [
@@ -53,4 +55,5 @@ kontraTables = [
   , tableAuthorAttachments
   , tableSignatoryAttachments
 #endif
+  , tableEvidenceLog
   ] ++ mailerTables

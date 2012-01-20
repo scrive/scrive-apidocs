@@ -73,7 +73,6 @@ import qualified ELegitimation.BankID as BankID
   Here are all actions associated with transitions.
 -}
 
-
 {- |
    Perform the appropriate action when transitioning between documentstatuses.
    This function should always be called after changing the document.
