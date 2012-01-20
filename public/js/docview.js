@@ -117,15 +117,15 @@ var DocumentStandarView = Backbone.View.extend({
                     size:   "small",
                     text:  document.process().cancelbuttontext(),
                     onClick : function(){
-                         ConfirmationWithEmail.popup({
+                         Confirmation.popup({
                             title : document.process().cancelmodaltitle(),
-                            mail : document.cancelMail(),
+                            content : document.process().cancelmodaltext(),
                             acceptText : document.process().cancelbuttontext(),
-                            editText :  localization.reminder.formOwnMessage,
                             rejectText : localization.cancel,
-                            onAccept : function(customtext)
+                            acceptColor : "red",
+                            onAccept : function()
                             {
-                                document.cancel(customtext).send();
+                                document.cancel().send();
                             }
                             });
                         }

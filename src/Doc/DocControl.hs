@@ -1798,15 +1798,12 @@ showPage' fileid pageno = do
 handleCancel :: Kontrakcja m => DocumentID -> m KontraLink
 handleCancel docid = withUserPost $ do
   doc <- guardRightM $ getDocByDocID docid
-  ctx@Context { ctxtime, ctxipnumber } <- getContext
+  Context { ctxtime, ctxipnumber } <- getContext
   if isPending doc || isAwaitingAuthor doc
     then do
-    customMessage <- getCustomTextField "customtext"
     mdoc' <- doc_update $ CancelDocument (documentid doc) ManualCancel ctxtime ctxipnumber
     case mdoc' of
-      Right doc' -> do
-        sendCancelMailsForDocument customMessage ctx doc
-        addFlashM $ flashMessageCanceled doc'
+      Right doc' ->  addFlashM $ flashMessageCanceled doc'
       Left errmsg -> addFlash (OperationFailed, errmsg)
     else addFlashM flashMessageCannotCancel
   return (LinkIssueDoc $ documentid doc)
@@ -1874,14 +1871,6 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
               return $ LoopBack
             _ -> return LoopBack
     _ -> return LoopBack
-
-sendCancelMailsForDocument :: Kontrakcja m => (Maybe BS.ByteString) -> Context -> Document -> m ()
-sendCancelMailsForDocument customMessage ctx document = do
-  let activated_signatories = filter (isActivatedSignatory $ documentcurrentsignorder document) $ documentsignatorylinks document
-  forM_ activated_signatories $ \slnk -> do
-      m <- mailCancelDocument True customMessage ctx document
-      let mail = m {to = [getMailAddress slnk]}
-      scheduleEmailSendout (ctxmailsconfig ctx) mail
 
 failIfNotAuthor :: Kontrakcja m => Document -> User -> m ()
 failIfNotAuthor document user = guard (isAuthor (document, user))
@@ -2132,7 +2121,6 @@ prepareEmailPreview docid slid = do
     when (isNothing mdoc) $ (Log.debug "No document found") >> mzero
     let doc = fromJust mdoc
     content <- case mailtype of
-         "cancel" -> mailCancelDocumentContent True Nothing ctx doc
          "remind" -> do
              let msl = find ((== slid) . signatorylinkid) $ documentsignatorylinks doc
              case msl of
@@ -2141,7 +2129,7 @@ prepareEmailPreview docid slid = do
          "reject" -> do
              let msl = find ((== slid) . signatorylinkid) $ documentsignatorylinks doc
              case msl of
-               Just sl -> mailRejectMailContent Nothing ctx  doc sl
+               Just sl -> mailDocumentRejectedContent Nothing ctx  doc sl
                Nothing -> return ""
          _ -> return ""
     return $ JSObject $ toJSObject [("content",JSString $ toJSString $ content)]

@@ -57,6 +57,9 @@ window.Process = Backbone.Model.extend({
     cancelmodaltitle : function(){
         return this.get("cancelmodaltitle");
     },
+    cancelmodaltext : function(){
+        return this.get("cancelmodaltext");
+    },
     authorissecretarytext : function(){
         return this.get("authorissecretarytext");
     },
