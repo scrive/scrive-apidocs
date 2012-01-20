@@ -23,7 +23,7 @@ import Happstack.Server.RqData
 import Doc.DocStorage
 import DB.Classes
 import File.Model
-import DB.Types
+import MagicHash (MagicHash)
 import Kontra
 import Doc.DocUtils
 import User.Model

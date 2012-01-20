@@ -33,12 +33,12 @@ import Control.Applicative
 import Control.Monad.Reader
 import Control.Monad.State
 import DB.Classes
-import DB.Types
 import ELegitimation.ELegTransaction
 import Doc.DocStateData
 import Happstack.Server
 import KontraLink
 import KontraMonad
+import MagicHash (MagicHash)
 import Mails.MailsConfig
 import Templates.Templates
 import User.Model

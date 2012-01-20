@@ -15,6 +15,7 @@ import Doc.DocUtils
 import ELegitimation.ELegTransaction
 import Happstack.Server
 import Kontra
+import MagicHash (MagicHash)
 import MinutesTime
 import Misc
 import Text.XML.HaXml.XmlContent.Parser
@@ -22,7 +23,6 @@ import qualified Data.ByteString as BS
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
 import Doc.DocStateQuery
-import DB.Types
 import Text.JSON
 import Text.JSON.Fields
 import ELegitimation.BankIDUtils

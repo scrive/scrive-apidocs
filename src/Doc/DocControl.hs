@@ -7,7 +7,6 @@ module Doc.DocControl where
 import ActionSchedulerState
 import AppView
 import DB.Classes
-import DB.Types
 import DBError
 import Doc.CSVUtils
 import Doc.DocSeal
@@ -25,6 +24,7 @@ import File.Model
 import Kontra
 import KontraLink
 import ListUtil
+import MagicHash (MagicHash)
 import Mails.SendMail
 import MinutesTime
 import Misc

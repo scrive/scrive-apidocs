@@ -11,11 +11,11 @@ module Mails.SendMail
 import Control.Applicative
 import Control.Monad
 import Control.Monad.IO.Class
-import System.Random (randomIO)
 import qualified Data.ByteString.UTF8 as BSU
 
 import API.Service.Model
 import DB.Classes
+import Crypto.GlobalRandom(genIO)
 import InputValidation
 import Mails.MailsConfig
 import Mails.MailsData
@@ -47,7 +47,7 @@ scheduleEmailSendout' MailsConfig{..} mail@Mail{..} = do
             niceAddress <- fromNiceAddress mailInfo ourInfoEmailNiceName
             return Address {addrName = niceAddress, addrEmail = ourInfoEmail }
           Just address -> return Address { addrName = "", addrEmail = BSU.toString address }
-      token <- liftIO randomIO
+      token <- liftIO genIO
       now <- getMinutesTime
       mid <- dbUpdate $ CreateEmail token fromAddr (map toAddress to) now
       let xsmtpapi = XSMTPAttrs [("mailinfo", show mailInfo)]
