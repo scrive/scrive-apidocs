@@ -17,7 +17,7 @@ echo "Computing checksums of all binaries"
 rm -rf checksums
 mkdir checksums
 
-find dist/build -executable -type f -exec sh -c 'md5sum {} > checksums/`basename {}`.md5' \;
+find dist/build -executable -type f -exec sh -c 'sha512sum {} > checksums/`basename {}`.sha512' \;
 
 echo "Running unit tests"
 build-scripts/runAllUnitTests.sh > test-report.txt
@@ -39,7 +39,7 @@ ls -lh "$ZIP"
 
 echo "Generating signature hash"
 hashdoc=hash-$BUILD_ID.txt
-m=`md5sum "$ZIP" | awk 'BEGIN { FS = " +" } ; { print $1 }'`
+m=`sha512sum "$ZIP" | awk 'BEGIN { FS = " +" } ; { print $1 }'`
 echo "Scrive Production Build"         >  "$hashdoc"
 echo "--------------------------------">> "$hashdoc"
 echo "Build_ID:     $BUILD_ID"         >> "$hashdoc"
@@ -47,14 +47,14 @@ echo "Date:         $BUILD_DATE"       >> "$hashdoc"
 echo "Build Number: $BUILD_NUMBER"     >> "$hashdoc"
 echo "Commit ID:    $BUILD_VCS_NUMBER" >> "$hashdoc"
 echo "Filename:     $ZIP"              >> "$hashdoc"
-echo "MD5SUM:       $m"                >> "$hashdoc"
+echo "SHA512SUM:    $m"                >> "$hashdoc"
 
 echo ""                                 >> "$hashdoc"
-echo "MD5SUMS of Binaries"              >> "$hashdoc"
+echo "SHA512SUMS of Binaries"           >> "$hashdoc"
 echo "--------------------------------" >> "$hashdoc"
 
 cd $DIR
-find dist/build -executable -type f -exec md5sum {} \; >> "/tmp/$hashdoc"
+find dist/build -executable -type f -exec sha512sum {} \; >> "/tmp/$hashdoc"
 cd /tmp
 echo "------END------" >> "$hashdoc"
 

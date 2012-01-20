@@ -21,16 +21,16 @@ tar zxf "$FILE"
 BUILD_ID=`cat *.mime | python $DIR/build-scripts/getBuildInfo.py | grep BUILD_ID: | awk '{print $2}'`
 echo "Validating deployment zip with Build ID $BUILD_ID"
 
-echo "Checking zip file signed md5sum"
+echo "Checking zip file signed sha512sum"
 
-m=`cat *.mime | python $DIR/build-scripts/getBuildInfo.py | grep MD5SUM: | awk '{print $2}'`
-lm=`md5sum *.tar.gz | awk 'BEGIN { FS = " +" } ; { print $1 }'`
+m=`cat *.mime | python $DIR/build-scripts/getBuildInfo.py | grep SHA512SUM: | awk '{print $2}'`
+lm=`sha512sum *.tar.gz | awk 'BEGIN { FS = " +" } ; { print $1 }'`
 
 if [ "$m" = "$lm" ]
 then
-    echo "Zip file md5 sum passed"
+    echo "Zip file sha512 sum passed"
 else
-    echo "Zip file md5 sum FAILED"
+    echo "Zip file sha512 sum FAILED"
     exit 1
 fi
 
@@ -42,11 +42,11 @@ cd deployment
 
 tar zxf ../*.tar.gz
 
-echo "Checking binary md5 sums from signed mime"
-cat ../*.mime | python $DIR/build-scripts/getBuildInfo.py | grep "dist/build" | md5sum -c
+echo "Checking binary sha512 sums from signed mime"
+cat ../*.mime | python $DIR/build-scripts/getBuildInfo.py | grep "dist/build" | sha512sum -c
 
-echo "Checking binary md5 sums from files"
-find checksums -type f -exec md5sum -c {} \;
+echo "Checking binary sha512 sums from files"
+find checksums -type f -exec sha512sum -c {} \;
 
 # TODO check signature with Trustweaver
 
