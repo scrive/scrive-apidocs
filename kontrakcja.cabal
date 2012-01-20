@@ -8,7 +8,7 @@ Synopsis: Ultimate signing solution
 Description:
         Sign documents online
 Cabal-version: >= 1.6.0.0
-Build-type: Simple
+Build-type: Custom
 
 Flag documents-in-postgres
   Description: New database layout for documents
