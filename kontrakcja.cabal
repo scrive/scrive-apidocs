@@ -20,11 +20,6 @@ Flag pdfseal
   Manual: True
   Default: True
 
-Flag dbdump
-  Description: Build dbdump
-  Manual: True
-  Default: False
-
 Flag mailing-server
   Description: Build mailing server
   Manual: True
@@ -395,38 +390,3 @@ Executable kontrakcja-test
               TypeOperators,
               TypeSynonymInstances,
               UndecidableInstances
-
-Executable dbdump
-  if flag(dbdump)
-    Buildable: True
-  else
-    Buildable: False
-  if impl(ghc >= 7)
-    ghc-options: -rtsopts
-
-  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind -Wall
-  Hs-source-dirs: dbdump/src src pdfseal/inc
-
-  if flag(documents-in-postgres)
-    cpp-options: -DDOCUMENTS_IN_POSTGRES
-
-  cpp-options: -DDBDumper=Main
-  Main-is: DBDumper.hs
-
-  Extensions: BangPatterns,
-              DeriveDataTypeable,
-              FlexibleContexts,
-              FlexibleInstances,
-              GeneralizedNewtypeDeriving,
-              MultiParamTypeClasses,
-              NamedFieldPuns,
-              PatternGuards,
-              RankNTypes,
-              ScopedTypeVariables,
-              StandaloneDeriving,
-              TemplateHaskell,
-              TypeFamilies,
-              TypeOperators,
-              TypeSynonymInstances,
-              UndecidableInstances
-
