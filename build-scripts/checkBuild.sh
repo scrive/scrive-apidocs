@@ -2,12 +2,13 @@
 
 # This script assumes a command-line arg which is the enhanced deployment zip
 # This script assumes DIR which is the directory where scripts can be found
+# This script assumes TMP which is the directory as a temporary workspace
 # example:
 # DIR=/home/eric/haskell/kontrakcja
 
 FILE=$1
 
-cd /tmp
+cd $TMP
 
 rm -rf deployment_check
 

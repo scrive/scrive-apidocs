@@ -2,6 +2,7 @@
 
 # This script assumes the existence of BUILD_NUMBER from TeamCity
 # This script assumes the existence of DIR as the path to the repo
+# This script assumes TMP which is the directory as a temporary workspace
 # example:
 #DIR=/home/eric/haskell/kontrakcja
 
@@ -28,13 +29,13 @@ ZIP=$BUILD_ID".production.tar.gz"
 
 echo "Creating zip file"
 
-tar zcf "/tmp/$ZIP"                   \
+tar zcf "$TMP/$ZIP"                   \
     --exclude=.git*                   \
     --exclude=_local*                 \
     --exclude=_darcs*                 \
     --exclude=_locakal_ticket_backup* \
     *
-cd /tmp
+cd $TMP
 ls -lh "$ZIP"
 
 echo "Generating signature hash"
@@ -54,8 +55,8 @@ echo "SHA512SUMS of Binaries"           >> "$hashdoc"
 echo "--------------------------------" >> "$hashdoc"
 
 cd $DIR
-find dist/build -executable -type f -exec sha512sum {} \; >> "/tmp/$hashdoc"
-cd /tmp
+find dist/build -executable -type f -exec sha512sum {} \; >> "$TMP/$hashdoc"
+cd $TMP
 echo "------END------" >> "$hashdoc"
 
 echo "Building soap request for Trustweaver signing"
