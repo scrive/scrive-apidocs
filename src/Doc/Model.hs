@@ -939,7 +939,7 @@ instance DBUpdate AttachCSVUpload (Either String Document) where
                           [ {- sqlField "mtime" time
                           , -} sqlField "csv_title" $ csvtitle csvupload
                           , sqlField "csv_signatory_index" $ csvsignatoryindex csvupload
-                          , sqlField "csv_contents" $ show $ csvcontents csvupload
+                          , sqlField "csv_contents" $ csvcontents csvupload
                           ]
                          "WHERE document_id = ? AND signatory_links.id = ? AND deleted = FALSE AND ((roles & ?)=0)" 
                          [ toSql did
