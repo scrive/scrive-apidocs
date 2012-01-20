@@ -104,8 +104,7 @@ documentNew = api $ do
   let now = ctxtime ctx
   
   d1 <- apiGuardL $ doc_update $ NewDocument user mcompany filename doctype now
-  
-  content <- liftIO $ preprocessPDF ctx (concatChunks content1) (documentid d1)
+  content <- apiGuardL' BadInput $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
   file <- lift $ runDB $ dbUpdate $ NewFile filename content
 
   d2 <- apiGuardL $ doc_update $ AttachFile (documentid d1) (fileid file) now
@@ -188,7 +187,8 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   -- we need to downgrade the PDF to 1.4 that has uncompressed structure
   -- we use gs to do that of course
   ctx <- getContext
-  content <- liftIO $ preprocessPDF ctx (concatChunks content1) (documentid doc)
+
+  content <- apiGuardL' BadInput $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
   
   file <- lift $ runDB $ dbUpdate $ NewFile (BS.fromString $ basename filename) content
   
