@@ -110,6 +110,7 @@ import Data.Maybe
 import Misc
 import Data.Convertible
 import Data.List
+import qualified Data.Map as Map
 import Mails.MailsUtil
 import Doc.Tables
 import Control.Applicative
@@ -1181,53 +1182,46 @@ instance DBQuery GetDeletedDocumentsByUser [Document] where
                       ]
 
 selectDocuments :: String -> [SqlValue] -> DB [Document]
-selectDocuments select values = wrapDB $ \conn -> do
-    docs <- (do
-              st <- prepare conn select
-              _ <- execute st values
-              fetchDocuments st) `E.catch` handle select     
-    sls <- (do
-               stx <- prepare conn $ "SELECT " ++ concat (intersperse "," selectSignatoryLinksSelectors) ++ " FROM signatory_links WHERE document_id IN (SELECT id FROM ("++select++") AS doc)"
-               _ <- execute stx values
-               fetchSignatoryLinksWithDocuments stx) `E.catch` handle select                      
-    ats <- (do
-               stx <- prepare conn $ "SELECT " ++ concat (intersperse "," selectAuthorAttachmentsSelectors) ++ " FROM author_attachments WHERE document_id IN (SELECT id FROM ("++select++") AS doc)"
-               _ <- execute stx values
-               fetchAuthorAttachmentsWithDocumentID stx) `E.catch` handle select                      
-    sas <- (do
-               stx <- prepare conn $ "SELECT " ++ concat (intersperse "," selectSignatoryAttachmentsSelectors) ++ " FROM signatory_attachments WHERE document_id IN (SELECT id FROM ("++select++") AS doc)"
-               _ <- execute stx values
-               fetchSignatoryAttachmentsWithDocumentID stx) `E.catch` handle select                      
-    return $ joinDocuments3 (joinDocuments2 (joinDocuments docs sls) ats) sas
-  where
-    handle :: String -> SqlError -> IO a
-    handle statement e = E.throwIO $ SQLError { DB.Classes.originalQuery = statement
-                                              , queryParams = values
-                                              , sqlError = e
-                                              }
-    joinDocuments::[Document] -> [(DocumentID,SignatoryLink)] -> [Document]
-    joinDocuments docs ((did,s):sl) = joinDocuments (addToOne docs did s) sl
-    joinDocuments docs [] = docs
-    addToOne [] did s = []
-    addToOne (d:ds) did s = if (documentid d == did)
-                             then (d {documentsignatorylinks = documentsignatorylinks d ++ [s] } : ds)
-                             else d:(addToOne ds did s)
+selectDocuments select values = do
+    kPrepare $ "CREATE TEMP TABLE docs AS " ++ select
+    _ <- kExecute values
+    
+    kPrepare "SELECT * FROM docs"
+    _ <- kExecute []
+    
+    docs <- kFetchAll decodeRowAsDocument
 
-    joinDocuments2::[Document] -> [(DocumentID,AuthorAttachment)] -> [Document]
-    joinDocuments2 docs ((did,s):sl) = joinDocuments2 (addToOne2 docs did s) sl
-    joinDocuments2 docs [] = docs
-    addToOne2 [] did s = []
-    addToOne2 (d:ds) did s = if (documentid d == did)
-                             then (d {documentauthorattachments = documentauthorattachments d ++ [s] } : ds)
-                             else d:(addToOne2 ds did s)
+    kPrepare $ "SELECT " ++ concat (intersperse "," selectSignatoryLinksSelectors) ++
+               " FROM signatory_links WHERE document_id IN (SELECT id FROM docs) ORDER BY document_id"
+    _ <- kExecute []
+    sls <- kFetchAll decodeRowAsSignatoryLinkWithDocumentID
 
-    joinDocuments3::[Document] -> [(DocumentID,SignatoryAttachment)] -> [Document]
-    joinDocuments3 docs ((did,s):sl) = joinDocuments3 (addToOne3 docs did s) sl
-    joinDocuments3 docs [] = docs
-    addToOne3 [] did s = []
-    addToOne3 (d:ds) did s = if (documentid d == did)
-                             then (d {documentsignatoryattachments = documentsignatoryattachments d ++ [s] } : ds)
-                             else d:(addToOne3 ds did s)
+    kPrepare $ "SELECT " ++ concat (intersperse "," selectAuthorAttachmentsSelectors) ++
+               " FROM author_attachments WHERE document_id IN (SELECT id FROM docs) ORDER BY document_id"
+    _ <- kExecute []
+    ats <- kFetchAll decodeRowAsAuthorAttachment
+
+    kPrepare $ "SELECT " ++ concat (intersperse "," selectSignatoryAttachmentsSelectors) ++
+               " FROM signatory_attachments WHERE document_id IN (SELECT id FROM docs) ORDER BY document_id"
+    _ <- kExecute []
+
+    sas <- kFetchAll decodeRowAsSignatoryAttachment
+
+    let makeListOfSecond (a,b) = (a,[b])
+        makeMap x = Map.fromAscListWith (++) $ map makeListOfSecond x
+        sls_map = makeMap sls
+        ats_map = makeMap ats
+        sas_map = makeMap sas
+
+        findEmpty doc mapx = maybe [] id (Map.lookup (documentid doc) mapx)
+   
+        fillIn doc = doc { documentsignatorylinks       = findEmpty doc sls_map
+                         , documentauthorattachments    = findEmpty doc ats_map
+                         , documentsignatoryattachments = findEmpty doc sas_map
+                         }
+
+    return $ map fillIn docs
+
                              
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
                                deriving (Eq, Ord, Show, Typeable)
