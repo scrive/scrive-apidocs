@@ -32,6 +32,7 @@ import Control.Monad.Trans
 import Doc.DocStorage
 import User.Utils
 import File.Model
+import Redirect
 import DB.Classes
 import Data.Either
 import Stats.Control
@@ -249,7 +250,7 @@ attachFile docid filename content = onlyAuthor docid $ do
   -- we need to downgrade the PDF to 1.4 that has uncompressed structure
   -- we use gs to do that of course
   ctx <- getContext
-  content14 <- liftIO $ preprocessPDF ctx content docid
+  content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) content
   file <- runDB $ dbUpdate $ NewFile filename content14
   transActionNotAvailable <$> doc_update (AttachFile docid (fileid file) (ctxtime ctx))
 

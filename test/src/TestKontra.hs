@@ -40,6 +40,7 @@ import Misc (unknownIPAddress)
 import Templates.Templates
 import qualified MemCache
 import User.Locale
+import qualified Data.Map as Map
 
 -- | Monad that emulates the server
 newtype TestKontra a = TK { unTK :: ErrorT Response (ReaderT Request (StateT (Context, Response -> Response) IO)) a }
@@ -230,4 +231,5 @@ mkContext locale globaltemplates = liftIO $ do
         , ctxlocation = error "location is not defined"
         , ctxadminaccounts = []
         , ctxsalesaccounts = []
+        , ctxmagichashes = Map.empty
     }

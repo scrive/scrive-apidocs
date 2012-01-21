@@ -57,6 +57,29 @@ var ConfirmationModel = Backbone.Model.extend({
   }
 });
 
+/* Fixer for background overlay
+   We need to extend it if the page is changing dinamicly in backgroud, else it may only match half screen.
+   It gets initialized by confirmation view on confirmation object, and will self-destroy when confirmation will loose connection to view 
+ */
+
+window.ExposeMaskFixer =  Backbone.Model.extend({
+    initialize: function(args){
+        var fixer = this;
+        this.object = args.object;
+        setTimeout(function() {fixer.fixer();},1000);
+    },
+    fixer: function() {
+        var fixer = this;
+        if (this.object.view != undefined)
+        {
+            var em = $("#exposeMask");
+            var body = $("body");
+            if (em.size() == 1 && (body.height() != em.height()))
+                em.height(body.height());
+            setTimeout(function() {fixer.fixer();},1000);
+        }
+    }
+});
 
 var ConfirmationView = Backbone.View.extend({
   events: {
@@ -66,6 +89,7 @@ var ConfirmationView = Backbone.View.extend({
         _.bindAll(this, 'render', 'reject');
         this.model.view = this;
         this.render();
+        this.fixer = new ExposeMaskFixer({object : this.model});
     },
     render: function () {
        var model = this.model;
@@ -104,6 +128,7 @@ var ConfirmationView = Backbone.View.extend({
     },
     clear: function(){
         this.model.destroy();
+        this.model.view = undefined;
         this.el.remove();
     }
 

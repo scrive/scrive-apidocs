@@ -16,7 +16,7 @@ module MemCache (MemCache, new, put, get, size)
 where
 
 import Control.Concurrent.MVar
-import System.Random
+import System.Random (randomRIO)
 import qualified Data.Map as Map
 
 data MemCache' k v = MemCache' (v -> Int) Int Int (Map.Map k v)

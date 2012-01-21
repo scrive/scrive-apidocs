@@ -16,7 +16,7 @@ import Happstack.Server
 import Happstack.State
 import Happstack.Util.Common
 import Numeric
-import System.Random
+import System.Random (Random)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
 

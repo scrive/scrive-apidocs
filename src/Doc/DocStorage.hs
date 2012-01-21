@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Doc.DocStorage
@@ -13,34 +12,40 @@ module Doc.DocStorage
     ( getFileContents
     , getFileIDContents
     , maybeScheduleRendering
-    , preprocessPDF
     , scaleForPreview
+    , FileError(..)
+    , preCheckPDF
     ) where
 
 import Control.Concurrent
 import Control.Monad
-import Control.Monad.IO.Class
+import Control.Monad.Error
+import Data.Typeable
+import DB.Classes
 import Doc.DocStateData
---import Doc.Transitory
---import MinutesTime
---import Misc
+import File.Model
+import ForkAction
+import Kontra
+import Misc
 import System.Directory
 import System.Exit
 import System.IO
-import System.Process
-import Kontra
-import qualified Amazon as AWS
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as BSL
---import qualified Data.ByteString.UTF8 as BS hiding (length)
-import qualified Data.Map as Map
-import qualified TrustWeaver as TW
-import qualified Log
 import System.IO.Temp
+import System.Process
+import qualified Amazon as AWS
+import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Lazy.Char8 as BSL
+import qualified Data.Map as Map
+import qualified Log
 import qualified MemCache
-import ForkAction
-import File.Model
-import DB.Classes
+import qualified SealSpec as Seal
+import Redirect
+
+instance GuardRight FileError where
+  guardRight (Right b)            = return b
+  guardRight (Left fe)            = do
+                                     Log.error $ show fe
+                                     mzero
 
 {- Gets file content from somewere (Amazon for now), putting it to cache and returning as BS -}
 getFileContents :: Context -> File -> IO (BS.ByteString)
@@ -62,13 +67,16 @@ getFileIDContents ctx fid = do
 
 
 {- Upload document to TW-}
+
+{-  This function was implemented the other day, but bitrotted. Rescue it if needed.
+ 
 _uploadDocumentFilesToTrustWeaver :: TW.TrustWeaverConf
                                  -> String
                                  -> DocumentID
                                  -> IO ()
 _uploadDocumentFilesToTrustWeaver _ctxtwconf _twownername _documentid = do
   error "uploadDocumentFilesToTrustWeaver is unimplemented"
-#if 0
+
   Just document <- query $ GetDocumentByDocumentID documentid
   let twdocumentid = show documentid
   let twdocumentdate = showDateOnly (documentmtime document)
@@ -79,7 +87,7 @@ _uploadDocumentFilesToTrustWeaver _ctxtwconf _twownername _documentid = do
   reference <- eitherLog $ TW.storeInvoice ctxtwconf twdocumentid twdocumentdate twownername pdfdata
   _ <- update $ SetDocumentTrustWeaverReference documentid reference
   return ()
-#endif
+-}
 
 resizeImageAndReturnOriginalSize :: String -> IO (BS.ByteString, Int, Int)
 resizeImageAndReturnOriginalSize filepath = do
@@ -199,43 +207,132 @@ maybeScheduleRendering fileid docid = do
                 modifyMVar_ mvar (\filesrenderednow -> return (Map.insert fileid jpegpages filesrenderednow))
   return p
 
+data FileError = FileSizeError Int Int
+               | FileFormatError
+               | FileNormalizeError BSL.ByteString
+               | FileSealingError BSL.ByteString
+               | FileOtherError String
+               deriving (Eq, Ord, Show, Read, Typeable)
 
-{- |  Convert PDF to uncompress it. -}
-preprocessPDF :: Context
-              -> BS.ByteString
-              -> DocumentID
-              -> IO BS.ByteString
-preprocessPDF ctx content docid = withSystemTempDirectory "preprocess_gs" $ \tmppath -> do
-  let sourcepath = tmppath ++ "/source.pdf"
-  let outputpath = tmppath ++ "/output.pdf"
+instance Error FileError where
+    strMsg = FileOtherError
 
-  BS.writeFile sourcepath content
+preCheckPDF' :: String
+             -> BS.ByteString
+             -> String
+             -> IO (Either FileError BS.ByteString)
+preCheckPDF' gscmd content tmppath = 
+    runErrorT $ do
+      checkSize
+      checkHeader
+      checkNormalize
+      checkSealing
+      readOutput
+  where
+    sourcepath = tmppath ++ "/source.pdf"
+    normalizedpath = tmppath ++ "/normalized.pdf"
+    sealedpath = tmppath ++ "/sealed.pdf"
 
-  let gs = ctxgscmd ctx
-      gsproc = (proc gs [ "-sDEVICE=pdfwrite"
-                        , "-sOutputFile=" ++ outputpath
-                        , "-dSAFER"
-                        , "-dBATCH"
-                        , "-dNOPAUSE"
-                        , sourcepath
-                        ]) { std_out = CreatePipe
-                           , std_err = CreatePipe
-                           }
-  (_, Just outhandle, Just errhandle, gsProcHandle) <- createProcess gsproc
-  _errcontent <- BSL.hGetContents errhandle
-  _outcontent <- BSL.hGetContents outhandle
+    sizeLimit = 10 * 1000 * 1000
+    contentLength = BS.length content
 
-  exitcode <- waitForProcess gsProcHandle
+    headerPattern = BS.pack "%PDF-1."
 
-  result <- case exitcode of
-    ExitFailure _ -> do
-        systmp <- getTemporaryDirectory
-        (path,handle) <- openTempFile systmp ("preprocess-failed-" ++ show docid ++ "-.pdf")
-        Log.error $ "Cannot preprocess pdf (doc #" ++ show docid ++ "): " ++ path
-        BS.hPutStr handle content
-        hClose handle
-        return content
-    ExitSuccess -> do
-        BS.readFile outputpath
+    sealSpec = Seal.SealSpec
+               { Seal.input          = normalizedpath
+               , Seal.output         = sealedpath
+               , Seal.documentNumber = "An example text"
+               , Seal.persons        = []
+               , Seal.secretaries    = []
+               , Seal.history        = []
+               , Seal.initials       = "An example text"
+               , Seal.hostpart       = "An example text"
+               , Seal.fields         = []
+               , Seal.staticTexts    = sealingTexts
+               }
 
-  return result
+    sealingTexts = Seal.SealingTexts
+                   { Seal.verificationTitle  = "An example text"
+                   , Seal.docPrefix          = "An example text"
+                   , Seal.signedText         = "An example text"
+                   , Seal.partnerText        = "An example text"
+                   , Seal.secretaryText      = "An example text"
+                   , Seal.orgNumberText      = "An example text"
+                   , Seal.eventsText         = "An example text"
+                   , Seal.dateText           = "An example text"
+                   , Seal.historyText        = "An example text"
+                   , Seal.verificationFooter = ["An example text", "An example text", "An example text"]
+                   }
+
+    checkSize = do
+      when (contentLength > sizeLimit) $
+           throwError (FileSizeError sizeLimit contentLength)
+
+    checkHeader = do
+      when (not $ headerPattern `BS.isPrefixOf` content) $ do
+        throwError (FileFormatError)
+
+    checkNormalize = do
+      liftIO $ BS.writeFile sourcepath content
+    
+      (exitcode,_stdout,stderr1) <- liftIO $ readProcessWithExitCode' gscmd 
+                                   [ "-sDEVICE=pdfwrite"
+                                   , "-sOutputFile=" ++ normalizedpath
+                                   , "-dSAFER"
+                                   , "-dBATCH"
+                                   , "-dNOPAUSE"
+                                   , sourcepath
+                                   ] BSL.empty
+      when (exitcode /= ExitSuccess ) $ do
+        liftIO $ do
+          systmp <- getTemporaryDirectory
+          (_path,handle) <- openTempFile systmp ("pre-normalize-failed-.pdf")
+          BS.hPutStr handle content
+          hClose handle
+
+        throwError (FileNormalizeError stderr1)
+
+
+    checkSealing = do
+      (exitcode,_stdout,stderr1) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal" 
+                                   [] (BSL.pack (show sealSpec))
+      when (exitcode /= ExitSuccess ) $ do
+        liftIO $ do
+          systmp <- getTemporaryDirectory
+          (_path,handle) <- openTempFile systmp ("pre-sealing-failed-.pdf")
+          BS.hPutStr handle content
+          hClose handle
+
+        throwError (FileSealingError stderr1)
+      
+    readOutput = liftIO $ BS.readFile normalizedpath
+
+-- | The 'preCheckPDF' function should be invoked just after receiving
+-- uploaded document from user and before it gets into the
+-- database. It does the following:
+--
+-- - Checks if the file is not too large
+--
+-- - Checks if beggining bytes
+-- are '%PDF-1.' designating a PDF format
+--
+-- - Normalizes using GhostScript pdfwrite command. This is required
+-- as we need to process 1.4 version documents maksimum and pdfwrite
+-- ensures PDF files are in 1.4 (uncompressed structure) form.
+--
+-- - Tries to do pdfseal process with empty data, so we know in
+-- advance if it did work or not
+--
+-- Return value is either a 'BS.ByteString' with normalized document
+-- content or 'FileError' enumeration stating what is going on.
+--
+preCheckPDF :: String
+            -> BS.ByteString
+            -> IO (Either FileError BS.ByteString)
+preCheckPDF gscmd content = 
+  withSystemTempDirectory "precheck" $ \tmppath -> do
+    value <- preCheckPDF' gscmd content tmppath `Prelude.catch` \e -> return (Left (FileOtherError (show e)))
+    case value of
+      Left x -> Log.error $ "preCheckPDF: " ++ show x
+      Right _ -> return ()
+    return value

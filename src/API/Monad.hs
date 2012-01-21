@@ -1,4 +1,4 @@
-{-# LANGUAGE OverlappingInstances, IncoherentInstances, FunctionalDependencies #-}
+{-# LANGUAGE FunctionalDependencies #-}
 
 module API.Monad where
 
@@ -6,8 +6,6 @@ import Control.Monad.Trans
 import Happstack.Server.Types
 import Text.JSON
 import Happstack.Server.Response
---import Happstack.Server.Monads
---import Happstack.Server.RqData
 import Control.Monad.Error
 import Control.Applicative
 
@@ -16,6 +14,8 @@ import Misc
 import Kontra
 import DBError
 import User.Model
+
+import Doc.DocStorage
 
 data Created a = Created a
                     
@@ -129,6 +129,10 @@ instance Monad m => APIGuard m (Maybe b) b where
 instance Monad m => APIGuard m (Either String b) b where
   guardEither (Left _) = return $ Left $ ServerError
   guardEither (Right v) = return $ Right v
+
+instance (Monad m) => APIGuard m (Either FileError b) b where
+  guardEither (Left _) = return $ Left $ ServerError
+  guardEither (Right v) = return $ Right v
   
 instance Monad m => APIGuard m Bool () where
   guardEither False = return $ Left $ ServerError
@@ -137,6 +141,7 @@ instance Monad m => APIGuard m Bool () where
 instance (Monad m, JSON b) => APIGuard m (Result b) b where
   guardEither (Error _) = return $ Left BadInput
   guardEither (Ok v) = return $ Right v
+
 
 getAPIUser :: Kontrakcja m => APIMonad m User
 getAPIUser = do
