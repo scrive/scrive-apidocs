@@ -1183,7 +1183,7 @@ instance DBQuery GetDeletedDocumentsByUser [Document] where
 
 selectDocuments :: String -> [SqlValue] -> DB [Document]
 selectDocuments select values = do
-    kPrepare $ "CREATE TEMP TABLE docs AS " ++ select
+    kPrepare $ "CREATE TEMP TABLE docs ON COMMIT DROP AS " ++ select
     _ <- kExecute values
     
     kPrepare "SELECT * FROM docs"
