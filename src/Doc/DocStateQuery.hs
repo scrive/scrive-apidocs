@@ -43,6 +43,7 @@ import Doc.DocInfo
 import User.Model
 import Data.Maybe
 import Data.Semantic
+import Data.List (nub)
 
 {- |
    Assuming user is the logged in user, can he view the Document?
@@ -103,8 +104,9 @@ getDocsByLoggedInUser = do
   case ctxmaybeuser ctx of
     Nothing   -> return $ Left DBNotLoggedIn
     Just user -> do
-      docs <- doc_query $ GetDocuments (currentServiceID ctx)
-      return $ Right $ filter (canUserViewDirectly user) docs
+      docs <-  doc_query $ GetDocumentsByAuthor (userid user)
+      shareddocs <- doc_query $ GetDocumentsSharedInCompany user
+      return $ Right $ filter (canUserViewDirectly user) $ nub $ docs ++ shareddocs
 
 {- |
    Get a document using docid, siglink, and magichash.
