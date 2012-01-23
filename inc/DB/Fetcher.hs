@@ -50,7 +50,7 @@ fetchValues st decoder = liftM reverse (worker [])
           case fetchWorker 0 decoder row of
             Right value -> worker (value : acc)
             Left left@CannotConvertSqlValue{position = pos} -> do
-                   columns <- liftIO $ getColumnNames st
+                   columns <- liftIO $ (getColumnNames st `Prelude.catch` \_ -> return [])
                    let column = if pos<0 || pos>= length columns
                                 then ""
                                 else columns !! pos
