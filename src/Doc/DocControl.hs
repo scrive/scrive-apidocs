@@ -67,6 +67,9 @@ import qualified Data.Map as Map
 import Text.JSON hiding (Result)
 import ForkAction
 import qualified ELegitimation.BankID as BankID
+
+import EvidenceLog.Model
+
 {-
   Document state transitions are described in DocState.
 
@@ -99,6 +102,17 @@ postDocumentChangeAction document@Document  { documentstatus
           Log.docevent $ "All have signed; " ++ show documentstatus ++ " -> Closed: " ++ show documentid
           ctx <- getContext
           d <- guardRightM $ doc_update $ CloseDocument documentid (ctxtime ctx) (ctxipnumber ctx)
+          _ <- doc_update $ InsertEvidenceEvent
+               DocumentClosedEvidence
+               "The document was closed by the system after all signatories had signed."
+               (ctxtime ctx)
+               (Just documentid)
+               Nothing
+               Nothing
+               Nothing
+               Nothing
+               Nothing
+               Nothing               
           postDocumentChangeAction d olddocument msignalinkid
     -- No status change ;
     | documentstatus == oldstatus = do
@@ -514,11 +528,23 @@ signDocument documentid
       return LoopBack
     _ -> mzero
 
-handleMismatch :: Kontrakcja m =>  Document -> SignatoryLinkID -> String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> m ()
+handleMismatch :: Kontrakcja m => Document -> SignatoryLinkID -> String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> m ()
 handleMismatch doc sid msg sfn sln spn = do
         ctx <- getContext
         Log.eleg $ "Information from eleg did not match information stored for signatory in document." ++ show msg
         Right newdoc <- doc_update $ CancelDocument (documentid doc) (ELegDataMismatch msg sid sfn sln spn) (ctxtime ctx) (ctxipnumber ctx)
+        let Just sl = getSigLinkFor doc sid
+        _ <- doc_update $ InsertEvidenceEvent
+             CancelDocBadElegEvidence
+             "The document was canceled because information from the elegitimation servers did not match."
+             (ctxtime ctx)
+             (Just $ documentid doc)
+             (maybesignatory sl)
+             (Just $ BS.toString $ getEmail sl)
+             (Just sid)
+             (Just $ ctxipnumber ctx)
+             Nothing
+             Nothing
         postDocumentChangeAction newdoc doc (Just sid)
 
 {- |
@@ -909,8 +935,27 @@ splitUpDocument doc =
             then return $ Right (rights mdocs)
             else mzero
   where createDocFromRow :: Kontrakcja m => Document -> Int -> [BS.ByteString] -> m (Either String Document)
-        createDocFromRow udoc sigindex xs =
-          doc_update $ DocumentFromSignatoryData (documentid udoc) sigindex (item 0) (item 1) (item 2) (item 3) (item 4) (item 5) (drop 6 xs)
+        createDocFromRow udoc sigindex xs = do
+          now <- ctxtime <$> getContext
+          muser <- ctxmaybeuser <$> getContext
+          ip4 <- ctxipnumber <$> getContext
+          md <- doc_update $ DocumentFromSignatoryData (documentid udoc) sigindex (item 0) (item 1) (item 2) (item 3) (item 4) (item 5) (drop 6 xs)
+          case md of
+            Right d -> do
+              _ <- doc_update $ InsertEvidenceEvent
+                           AuthorUsesCSVEvidence
+                           "The author used a CSV file to populate signatory data."
+                           now
+                           (Just $ documentid d)
+                           (userid <$> muser)
+                           (BS.toString <$> getEmail <$> muser)
+                           Nothing
+                           (Just ip4)
+                           Nothing
+                           Nothing
+              return ()
+            _ -> return ()
+          return md
           where item n | n<(length xs) = xs !! n
                        | otherwise = BS.empty
 {- |
@@ -1762,11 +1807,23 @@ showPage' fileid pageno = do
 handleCancel :: Kontrakcja m => DocumentID -> m KontraLink
 handleCancel docid = withUserPost $ do
   doc <- guardRightM $ getDocByDocID docid
-  ctx@Context { ctxtime, ctxipnumber } <- getContext
+  ctx@Context { ctxtime, ctxipnumber, ctxmaybeuser } <- getContext
   if isPending doc || isAwaitingAuthor doc
     then do
+    let Just asl = getAuthorSigLink doc
     customMessage <- getCustomTextField "customtext"
     mdoc' <- doc_update $ CancelDocument (documentid doc) ManualCancel ctxtime ctxipnumber
+    _ <- doc_update $ InsertEvidenceEvent
+         DocumentCancelEvidence
+         "The document was canceled by the author."
+         ctxtime
+         (Just docid)
+         (userid <$> ctxmaybeuser)
+         (BS.toString <$> getEmail <$> ctxmaybeuser)
+         (Just $ signatorylinkid asl)
+         (Just ctxipnumber)
+         Nothing
+         Nothing
     case mdoc' of
       Right doc' -> do
         sendCancelMailsForDocument customMessage ctx doc
@@ -1833,6 +1890,18 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
           case mnewdoc of
             Right newdoc -> do
               -- get (updated) siglink from updated document
+              let Just oldemail = getEmail <$> getSigLinkFor doc slid
+              _ <- doc_update $ InsertEvidenceEvent
+                   AuthorChangeSigEmailEvidence
+                   ("The author changed the email address for a signatory from \"" ++ BS.toString oldemail ++ "\" to \"" ++ BS.toString email ++ "\".")
+                   (ctxtime ctx)
+                   (Just docid)
+                   (Just $ userid user)
+                   (Just $ BS.toString $ getEmail user)
+                   (Just slid)
+                   (Just $ ctxipnumber ctx)
+                   Nothing
+                   Nothing
               sl <- guardJust (getSigLinkFor newdoc slid)
               _ <- sendInvitationEmail1 ctx newdoc sl
               return $ LoopBack

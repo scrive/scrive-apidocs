@@ -23,12 +23,6 @@ import Data.List
 import Database.HDBC.PostgreSQL
 import Data.Version (Version(..))
 
--- | A machine-readable event code for different types of events.
-data EvidenceEventType = A
-                       | B
-                       | C
-                       deriving (Eq, Show, Read, Ord)
-$(enumDeriveConvertible ''EvidenceEventType)
 
 insertEvidenceEvent' :: Maybe DocumentID 
                         -> Maybe UserID
@@ -37,12 +31,13 @@ insertEvidenceEvent' :: Maybe DocumentID
                         -> Maybe IPAddress
                         -> Maybe IPAddress
                         -> Maybe SignatoryLinkID
-                        -> String
+                        -> String -- text
                         -> EvidenceEventType
                         -> String -- versionid
+                        -> Maybe String -- apiuser
                         -> Connection
                         -> IO Bool
-insertEvidenceEvent' mdid muid meml time mip4 mip6 mslid text event vid conn = do
+insertEvidenceEvent' mdid muid meml time mip4 mip6 mslid text event vid mapi conn = do
   st <- prepare conn $ "INSERT INTO evidence_log ("
         ++ "  document_id"
         ++ ", user_id"
@@ -54,7 +49,8 @@ insertEvidenceEvent' mdid muid meml time mip4 mip6 mslid text event vid conn = d
         ++ ", text"
         ++ ", event_type"
         ++ ", version_id"
-        ++ ") VALUES (?,?,?,?,?,?,?,?,?,?)"
+        ++ ", api_user"
+        ++ ") VALUES (?,?,?,?,?,?,?,?,?,?,?)"
   res <- execute st [toSql mdid
                     ,toSql muid
                     ,toSql meml
@@ -64,7 +60,9 @@ insertEvidenceEvent' mdid muid meml time mip4 mip6 mslid text event vid conn = d
                     ,toSql mslid
                     ,toSql text
                     ,toSql event
-                    ,toSql vid]
+                    ,toSql vid
+                    ,toSql mapi
+                    ]
   oneRowAffectedGuard res
 
 versionID :: String
@@ -72,7 +70,7 @@ versionID = concat $ intersperse "." $ versionTags Paths.version
 
 data InsertEvidenceEvent = InsertEvidenceEvent 
                              EvidenceEventType       -- A code for the event
-                             String                  -- The textual representation of the event
+                             String                  -- Text for evidence
                              MinutesTime             -- The time of the event
                              (Maybe DocumentID)      -- The documentid if this event is about a document
                              (Maybe UserID)          -- If this event was enacted by a user
@@ -80,6 +78,42 @@ data InsertEvidenceEvent = InsertEvidenceEvent
                              (Maybe SignatoryLinkID) -- The signatorylinkid of the person enacting this event, if known
                              (Maybe IPAddress)       -- The ipv4 address of the request that enacted this event, if there was one
                              (Maybe IPAddress)       -- The ipv6 address of the request that enacted thsi event, if there was one
+                             (Maybe String)          -- The api user (email address); Nothing if web interface, Just "Upsales", or Just "email@email.com"
 instance DBUpdate InsertEvidenceEvent Bool where
-  dbUpdate (InsertEvidenceEvent tp txt tm mdid muid meml mslid mip4 mip6) = 
-    wrapDB (insertEvidenceEvent' mdid muid meml tm mip4 mip6 mslid txt tp versionID)
+  dbUpdate (InsertEvidenceEvent tp txt tm mdid muid meml mslid mip4 mip6 mapi) = 
+    wrapDB (insertEvidenceEvent' mdid muid meml tm mip4 mip6 mslid txt tp versionID mapi)
+
+-- | A machine-readable event code for different types of events.
+data EvidenceEventType = DocumentCreateEvidence
+                       | SignatoryAddInformationEvidence
+                       | AuthorAddInformationEvidence
+                       | UserAccountAddInformationEvidence
+                       | InvitationSentEvidence
+                       | InvitationReceivedEvidence
+                       | InvitationOpenedEvidence
+                       | ClickSecretLinkEvidence
+                       | ClickSignEvidence
+                       | ClickRejectEvidence
+                       | ElegConfirmEvidence
+                       | DocumentClosedEvidence
+                       | DocumentCancelEvidence
+                       | ReminderSendEvidence
+                       | CustomInviteTextEvidence
+                       | AuthorRequestAttachmentEvidence
+                       | AuthorAddAttachmentEvidence
+                       | AuthorSetsDueDateEvidence
+                       | SystemSetsDueDateEvidence
+                       | AuthorAddsViewerEvidence
+                       | AuthorAddsSignatoryEvidence
+                       | AuthorSetsToSecretaryEvidence
+                       | AuthorSetsToSignatoryEvidence
+                       | AuthorUsesCSVEvidence
+                       | AuthorChoosesSignLastEvidence
+                       | DocSignedByTrustweaverEvidence
+                       | ClosedDocDeliveredEvidence
+                       | SignatoryUploadAttachmentEvidence
+                       | CancelDocBadElegEvidence
+                       | AuthorChangeSigEmailEvidence
+                       deriving (Eq, Show, Read, Ord)
+$(enumDeriveConvertible ''EvidenceEventType)
+

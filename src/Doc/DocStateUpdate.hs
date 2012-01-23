@@ -36,7 +36,10 @@ import Redirect
 import DB.Classes
 import Data.Either
 import Stats.Control
+import EvidenceLog.Model
+import Util.HasSomeUserInfo
 
+import qualified Data.ByteString.UTF8 as BS hiding (length)
 {- |
    Mark document seen securely.
  -}
@@ -207,7 +210,23 @@ authorSignDocumentFinal did msigninfo = onlyAuthor did $ do
           _ <- case getSigLinkFor d1 signatorylinkid of
             Just sl -> runDB $ addSignStatSignEvent d1 sl
             _ -> return False
-          transActionNotAvailable <$> doc_update (CloseDocument did (ctxtime ctx) (ctxipnumber ctx))
+          ed2 <- doc_update (CloseDocument did (ctxtime ctx) (ctxipnumber ctx))
+          case ed2 of
+            Right d -> do
+              _ <- doc_update $ InsertEvidenceEvent
+                   DocumentClosedEvidence
+                   "The document was closed by the system after all signatories had signed."
+                   (ctxtime ctx)
+                   (Just did)
+                   (maybe Nothing maybesignatory $ getSigLinkFor d signatorylinkid)
+                   (BS.toString <$> getEmail <$> getSigLinkFor d signatorylinkid)
+                   Nothing
+                   (Just $ ctxipnumber ctx)
+                   Nothing
+                   Nothing
+              return ()
+            _ -> return ()
+          return $ transActionNotAvailable ed2
 
 
 -- | Make sure we're logged in as the author before taking action.

@@ -17,6 +17,8 @@ The main principle of this table is that it should be as independent
 as possible from other tables to avoid migration conflicts. Hence the
 lack of foreign keys.
 
+Also, it is insert only. No updates, no deletes.
+
 -}
 tableEvidenceLog :: Table
 tableEvidenceLog = Table {
@@ -45,7 +47,9 @@ tableEvidenceLog = Table {
        ("event_type",        SqlColDesc { colType     = SqlIntegerT
                                         , colNullable = Just False}),
        ("version_id",        SqlColDesc { colType     = SqlVarCharT
-                                        , colNullable = Just False})] -> return TVRvalid
+                                        , colNullable = Just False}),
+       ("api_user",          SqlColDesc { colType     = SqlVarCharT
+                                        , colNullable = Just True})] -> return TVRvalid
       [] -> do
         runRaw conn $ "CREATE TABLE evidence_log ("
           ++ "  id            BIGSERIAL   NOT NULL"
@@ -59,6 +63,7 @@ tableEvidenceLog = Table {
           ++ ", text          VARCHAR     NOT NULL"
           ++ ", event_type    INT         NOT NULL"
           ++ ", version_id    VARCHAR     NOT NULL"
+          ++ ", api_user      VARCHAR         NULL"
           ++ ", CONSTRAINT pk_evidence_log PRIMARY KEY (id)"
           ++ ")"
         return TVRcreated
