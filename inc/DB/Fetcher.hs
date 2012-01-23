@@ -50,7 +50,10 @@ fetchValues st decoder = liftM reverse (worker [])
           case fetchWorker 0 decoder row of
             Right value -> worker (value : acc)
             Left left@CannotConvertSqlValue{position = pos} -> do
-                   columns <- liftIO $ (getColumnNames st `Prelude.catch` \_ -> return [])
+                   -- getColumnNames is not defined... I cannot find
+                   -- why, but lets catch this exception here and
+                   -- ignore it for now
+                   columns <- liftIO $ (getColumnNames st `E.catch` \(e :: E.SomeException) -> return [])
                    let column = if pos<0 || pos>= length columns
                                 then ""
                                 else columns !! pos
