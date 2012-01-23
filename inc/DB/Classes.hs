@@ -44,6 +44,7 @@ module DB.Classes
   , kExecute01
   , kExecute1P
   , kFetchRow
+  , kFetchAll
   , kFetchSqlRow
   , kFinish
   ) where
@@ -224,6 +225,18 @@ kFetchRow decode =
               Left left -> do
                    unDB kFinish
                    liftIO $ E.throwIO $ left { originalQuery = HDBC.originalQuery statement }
+
+-- | Uses 'kFetchRow' to fetch rows until it returns 'Nothing' and
+-- return a list of results.
+kFetchAll :: (Fetcher a) => a -> DB [FetchResult a]
+kFetchAll decode = worker []
+  where
+    worker acc = do
+      m <- kFetchRow decode
+      case m of
+        Just v -> worker (v:acc)
+        Nothing -> return (reverse acc)
+
         
 -- | Finish current statement. 'kPrepare' and 'kExecute' call
 -- 'kFinish' before they alter query.
