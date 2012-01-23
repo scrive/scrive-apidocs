@@ -1206,6 +1206,10 @@ selectDocuments select values = do
     _ <- kExecute []
 
     sas <- kFetchAll decodeRowAsSignatoryAttachment
+    
+    kPrepare $ "DROP TABLE docs"
+    _ <- kExecute []
+
 
     let makeListOfSecond :: (a,b) -> (a,[b])
         makeListOfSecond (a,b) = (a,[b])
