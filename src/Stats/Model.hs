@@ -16,7 +16,9 @@ module Stats.Model
          SignStatQuantity(..),
          SignStatEvent(..),
          AddSignStatEvent(..),
-         GetSignStatEvents(..)
+         GetSignStatEvents(..),
+
+         GetUsersAndStats(..)
        )
 
        where
@@ -26,11 +28,15 @@ import Database.HDBC
 import DB.Classes
 import DB.Derive
 import DB.Utils
+import DB.Fetcher
+import DB.Types
 import MinutesTime
 import User.Model
 import Doc.DocStateData
 import Company.Model
 import API.Service.Model
+import Data.Maybe
+import qualified Data.ByteString as BS
 
 {------ Doc Stats ------}
 
@@ -118,6 +124,177 @@ instance DBQuery GetDocStatEventsByCompanyID [DocStatEvent] where
     _ <- execute st [toSql companyid]
     fetchDocStats st []
 
+selectUsersAndStatsSQL :: String
+selectUsersAndStatsSQL = "SELECT "
+  -- User:
+  ++ "  u.id AS userid"
+  ++ ", encode(u.password, 'base64')"
+  ++ ", encode(u.salt, 'base64')"
+  ++ ", u.is_company_admin"
+  ++ ", u.account_suspended"
+  ++ ", u.has_accepted_terms_of_service"
+  ++ ", u.signup_method"
+  ++ ", u.service_id"
+  ++ ", u.company_id"
+  ++ ", u.first_name"
+  ++ ", u.last_name"
+  ++ ", u.personal_number"
+  ++ ", u.company_position"
+  ++ ", u.phone"
+  ++ ", u.mobile"
+  ++ ", u.email"
+  ++ ", u.preferred_design_mode"
+  ++ ", u.lang"
+  ++ ", u.region"
+  ++ ", u.customfooter"
+  -- Company:
+  ++ ", c.id AS company_id"
+  ++ ", c.external_id"
+  ++ ", c.service_id"
+  ++ ", c.name"
+  ++ ", c.number"
+  ++ ", c.address"
+  ++ ", c.zip"
+  ++ ", c.city"
+  ++ ", c.country"
+  -- Events:
+  ++ ", e.time"
+  ++ ", e.quantity"
+  ++ ", e.amount"
+  ++ "  FROM users u"
+  ++ "  LEFT JOIN companies c ON u.company_id = c.id"
+  ++ "  LEFT JOIN doc_stat_events e ON u.id = e.user_id"
+  ++ "      AND e.quantity IN (?,?)"
+  ++ "  WHERE u.deleted = FALSE"
+  ++ "  ORDER BY u.first_name || ' ' || u.last_name ASC, u.email ASC, userid ASC"
+
+fetchUsersAndStats :: Statement 
+                   -> IO [(User, Maybe Company, ( Maybe MinutesTime
+                                                , Maybe DocStatQuantity
+                                                , Maybe Int))]
+fetchUsersAndStats st = fetchValues st decoder
+  where
+    decoder :: UserID                   -- u.id 
+            -> Maybe Binary             -- encode(u.password, 'base64')
+            -> Maybe Binary             -- encode(u.salt, 'base64')
+            -> Bool                     -- u.is_company_admin
+            -> Bool                     -- u.account_suspended
+            -> Maybe MinutesTime        -- u.has_accepted_terms_of_service
+            -> SignupMethod             -- u.signup_method
+            -> Maybe ServiceID          -- u.service_id
+            -> Maybe CompanyID          -- u.company_id
+            -> BS.ByteString            -- u.first_name
+            -> BS.ByteString            -- u.last_name
+            -> BS.ByteString            -- u.personal_number
+            -> BS.ByteString            -- u.company_position
+            -> BS.ByteString            -- u.phone
+            -> BS.ByteString            -- u.mobile
+            -> Email                    -- u.email
+            -> Maybe DesignMode         -- u.preferred_design_mode
+            -> Lang                     -- u.lang
+            -> Region                   -- u.region
+            -> Maybe String             -- u.customfooter
+            -> Maybe CompanyID          -- c.id AS company_id
+            -> Maybe ExternalCompanyID  -- c.external_id
+            -> Maybe ServiceID          -- c.service_id
+            -> Maybe BS.ByteString      -- c.name
+            -> Maybe BS.ByteString      -- c.number
+            -> Maybe BS.ByteString      -- c.address
+            -> Maybe BS.ByteString      -- c.zip
+            -> Maybe BS.ByteString      -- c.city
+            -> Maybe BS.ByteString      -- c.country
+            -> Maybe MinutesTime        -- e.time
+            -> Maybe DocStatQuantity    -- e.quantity
+            -> Maybe Int                -- e.amount
+            -> Either DBException (User, Maybe Company, ( Maybe MinutesTime
+                                                        , Maybe DocStatQuantity
+                                                        , Maybe Int))
+    decoder uid 
+            password 
+            salt 
+            is_company_admin 
+            account_suspended
+            has_accepted_terms_of_service 
+            signup_method 
+            service_id 
+            company_id
+            first_name 
+            last_name 
+            personal_number 
+            company_position 
+            phone 
+            mobile
+            email 
+            preferred_design_mode 
+            lang 
+            region 
+            customfooter
+            cid 
+            eid 
+            sid 
+            name 
+            number 
+            address 
+            zip' 
+            city 
+            country
+            time
+            quantity
+            amount = return (
+                User {
+                       userid = uid
+                     , userpassword = case (password, salt) of
+                         (Just pwd, Just salt') -> Just Password {
+                                                       pwdHash = pwd
+                                                     , pwdSalt = salt'
+                                                     }
+                         _                      -> Nothing
+                     , useriscompanyadmin = is_company_admin
+                     , useraccountsuspended = account_suspended
+                     , userhasacceptedtermsofservice = has_accepted_terms_of_service
+                     , usersignupmethod = signup_method
+                     , userinfo = UserInfo { userfstname = first_name
+                                           , usersndname = last_name
+                                           , userpersonalnumber = personal_number
+                                           , usercompanyposition = company_position
+                                           , userphone = phone
+                                           , usermobile = mobile
+                                           , useremail = email
+                                           }
+                     , usersettings = UserSettings { preferreddesignmode = preferred_design_mode
+                                                   , locale = mkLocale region lang
+                                                   , customfooter = customfooter
+                                                   }
+                     , userservice = service_id
+                     , usercompany = company_id
+                     }
+        , case cid of 
+            (Just _) -> Just Company { companyid = fromJust cid
+                                     , companyexternalid = eid
+                                     , companyservice = sid
+                                     , companyinfo = CompanyInfo {
+                                           companyname = fromJust name
+                                         , companynumber = fromJust number
+                                         , companyaddress = fromJust address
+                                         , companyzip = fromJust zip'
+                                         , companycity = fromJust city
+                                         , companycountry = fromJust country
+                                         }
+                                     }
+            _        -> Nothing
+        , case time of
+            (Just _) -> (time, quantity, amount)
+            _        -> (Nothing, Nothing, Nothing)
+        )
+
+data GetUsersAndStats = GetUsersAndStats
+instance DBQuery GetUsersAndStats [(User, Maybe Company, ( Maybe MinutesTime
+                                                         , Maybe DocStatQuantity
+                                                         , Maybe Int))] where
+  dbQuery GetUsersAndStats = wrapDB $ \conn -> do
+    st  <- prepare conn $ selectUsersAndStatsSQL 
+    _   <- execute st [toSql DocStatCreate, toSql DocStatClose]
+    fetchUsersAndStats st
 
 {-------- Doc Stat Updates --}
 
@@ -162,12 +339,12 @@ instance DBUpdate FlushDocStats Bool where
 
 {------ User Stats ------}
 
-data UserStatQuantity = UserSignTOS  -- When user signs TOS
-                        | UserSaveAfterSign -- when user accepts the save option after signing
-                        | UserRefuseSaveAfterSign -- when user refuses the save option after signing
-                        | UserPhoneAfterTOS -- when a user requests a phone call after accepting the TOS
-                        | UserCreateCompany -- when a user creates a company
-                        | UserLogin -- when a user logs in
+data UserStatQuantity = UserSignTOS             -- When user signs TOS
+                      | UserSaveAfterSign       -- when user accepts the save option after signing
+                      | UserRefuseSaveAfterSign -- when user refuses the save option after signing
+                      | UserPhoneAfterTOS       -- when a user requests a phone call after accepting the TOS
+                      | UserCreateCompany       -- when a user creates a company
+                      | UserLogin               -- when a user logs in
                       deriving (Eq, Ord, Show)
 $(enumDeriveConvertible ''UserStatQuantity)
 

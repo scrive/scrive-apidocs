@@ -23,6 +23,8 @@ module Stats.Control
          handleUserStatsCSV,
          getUsageStatsForUser,
          getUsageStatsForCompany,
+         getDocStatsForUser,
+         getUsersAndStats,
          addAllSigsToStats,
          addSignStatInviteEvent,
          addSignStatReceiveEvent,
@@ -224,6 +226,30 @@ userEventToDocStatTuple :: UserStatEvent -> Maybe (Int, [Int])
 userEventToDocStatTuple (UserStatEvent {usTime, usQuantity, usAmount}) = case usQuantity of
   UserSignTOS -> Just (asInt usTime, [0, 0, 0, usAmount])
   _           -> Nothing
+
+calculateDocStats :: MinutesTime -> [(Int, [Int])] -> DocStats
+calculateDocStats ctxtime events = 
+  let m1  = asInt $ monthsBefore 1 ctxtime
+      m2  = asInt $ monthsBefore 3 ctxtime
+      m3  = asInt $ monthsBefore 3 ctxtime
+      m6  = asInt $ monthsBefore 6 ctxtime
+      m12 = asInt $ monthsBefore 12 ctxtime
+      sortedEvents = reverse $ sortWith fst events
+      fstSumStats = (\prev (a1,a2) -> let a3 = prev++a1 
+                                      in (sumStats $ if null a3 then [(0,[0,0])] else a3, a2))
+      (s1, r1) = fstSumStats [] $ span (\(m, _) -> m >= m1) sortedEvents 
+      (s2, r2) = fstSumStats [s1] $ span (\(m, _) -> m >= m2) r1 
+      (s3, r3) = fstSumStats [s2] $ span (\(m, _) -> m >= m3) r2
+      (s6, r6) = fstSumStats [s3] $ span (\(m, _) -> m >= m6) r3
+      (s12, r12) = fstSumStats [s6] $ span (\(m, _) -> m >= m12) r6  
+      sAll = sumStats $ s12:r12
+  in DocStats ((!!1) . snd $ sAll) -- doccount
+              ((!!0) . snd $ sAll) -- signaturecount
+              ((!!0) . snd $ s1)   -- signaturecount1m
+              ((!!0) . snd $ s2)   -- signaturecount2m
+              ((!!0) . snd $ s3)   -- signaturecount3m
+              ((!!0) . snd $ s6)   -- signaturecount6m
+              ((!!0) . snd $ s12)  -- signaturecount12m
 
 calculateStatsByDay :: [(Int, [Int])] -> [(Int, [Int])]
 calculateStatsByDay events =
@@ -603,6 +629,49 @@ handleUserStatsCSV = onlySalesOrAdmin $ do
   ok $ setHeader "Content-Disposition" "attachment;filename=userstats.csv"
      $ setHeader "Content-Type" "text/csv"
      $ toResponse (userStatisticsCSV stats)
+
+-- For User Admin tab in adminonly
+getUsersAndStats :: Kontrakcja m => m [(User, Maybe Company, DocStats)]
+getUsersAndStats = do
+  Context{ctxtime} <- getContext
+  list <- runDBQuery GetUsersAndStats
+  return $ convert' ctxtime list
+  where
+    convert' _ []   = []
+    convert' ctxtime list = map (innerGroup' ctxtime) 
+             $ groupBy (\(u1,_,_) (u2,_,_) -> u1 == u2) list
+    innerGroup' _ [] = error "empty list grouped"
+    innerGroup' ctxtime l@((u,m,_):_) =
+        transform' ctxtime $ foldr (\(_,_,r) (au,ac,al) -> 
+                           (au,ac,r:al)) (u,m,[]) l
+    transform' :: MinutesTime
+               -> (User, Maybe Company, [( Maybe MinutesTime
+                                         , Maybe DocStatQuantity
+                                         , Maybe Int)])
+               -> (User, Maybe Company, DocStats)
+    transform' ctxtime (u,mc,l) = (u,mc,calculateDocStats ctxtime $ tuples' l)
+    tuples' :: [(Maybe MinutesTime, Maybe DocStatQuantity, Maybe Int)]
+            -> [(Int, [Int])]
+    tuples' l = map toTuple' l
+    toTuple' (Just time, Just quantity, Just amount) = 
+        case quantity of
+            DocStatClose  -> (asInt time, [amount, 0])
+            DocStatCreate -> (asInt time, [0, amount])
+            _             -> (asInt time, [0,      0])
+    toTuple' (_, _, _) = (0, [0, 0])
+
+getDocStatsForUser :: Kontrakcja m => UserID -> m DocStats
+getDocStatsForUser uid = do
+  Context{ctxtime} <- getContext
+  statEvents <- tuplesFromDocStatsForUser <$> runDBQuery (GetDocStatEventsByUserID uid)
+  return $ calculateDocStats ctxtime statEvents
+
+tuplesFromDocStatsForUser :: [DocStatEvent] -> [(Int, [Int])]
+tuplesFromDocStatsForUser = catMaybes . map toTuple
+  where toTuple (DocStatEvent {seTime, seQuantity, seAmount}) = case seQuantity of
+          DocStatClose   -> Just (asInt seTime, [seAmount, 0])
+          DocStatCreate  -> Just (asInt seTime, [0, seAmount])
+          _              -> Nothing
 
 -- For Usage Stats tab in Account
 getUsageStatsForUser :: Kontrakcja m => UserID -> Int -> Int -> m ([(Int, [Int])], [(Int, [Int])])
