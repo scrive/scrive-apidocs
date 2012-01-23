@@ -1,7 +1,7 @@
 module LocaleTest (localeTests) where
 
 import Control.Applicative
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import Happstack.Server
 import Test.Framework
 import Test.Framework.Providers.HUnit
@@ -26,7 +26,7 @@ import User.UserControl
 import Misc
 
 
-localeTests :: Connection -> Test
+localeTests :: Nexus -> Test
 localeTests conn = testGroup "Locale" [
       testCase "restricts allowed locales" $ testRestrictsAllowedLocales
     , testCase "logged in locale switching" $ testLoggedInLocaleSwitching conn
@@ -57,7 +57,7 @@ testRestrictsAllowedLocales = do
     Checks along the way that the user has the correct locale, and also that the
     context has the correct locale.
 -}
-testLoggedInLocaleSwitching :: Connection -> Assertion
+testLoggedInLocaleSwitching :: Nexus -> Assertion
 testLoggedInLocaleSwitching conn = withTestEnvironment conn $ do
     --create a new uk user and login
     user <- createTestUser REGION_GB LANG_EN
@@ -104,7 +104,7 @@ testLoggedInLocaleSwitching conn = withTestEnvironment conn $ do
       assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx) == Just uid
       assertBool "No flash messages were added" $ null $ ctxflashmessages ctx
 
-testDocumentLocaleSwitchToBritain :: Connection -> Assertion
+testDocumentLocaleSwitchToBritain :: Nexus -> Assertion
 testDocumentLocaleSwitchToBritain conn = withTestEnvironment conn $ do
   user <- createTestUser REGION_SE LANG_SE
   globaltemplates <- readGlobalTemplates
@@ -132,7 +132,7 @@ testDocumentLocaleSwitchToBritain conn = withTestEnvironment conn $ do
   -- check that eleg is no longer used
   assertEqual "Eleg use should be removed" [EmailIdentification] (documentallowedidtypes udoc)
 
-testDocumentLocaleSwitchToSweden :: Connection -> Assertion
+testDocumentLocaleSwitchToSweden :: Nexus -> Assertion
 testDocumentLocaleSwitchToSweden conn = withTestEnvironment conn $ do
   user <- createTestUser REGION_GB LANG_EN
   globaltemplates <- readGlobalTemplates

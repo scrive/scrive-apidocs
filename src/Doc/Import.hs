@@ -4,7 +4,7 @@
 #endif
 
 module Doc.Import where
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 
 #ifdef DOCUMENTS_IN_POSTGRES
 import Doc.Model
@@ -18,7 +18,7 @@ import Doc.DocStateData
 
 #endif
 
-populateDBWithDocumentsIfEmpty :: Connection -> IO ()
+populateDBWithDocumentsIfEmpty :: Nexus -> IO ()
 populateDBWithDocumentsIfEmpty _conn = do
 #ifdef DOCUMENTS_IN_POSTGRES
   ioRunDB _conn $ do

@@ -4,7 +4,7 @@ import Control.Applicative
 --import Control.Arrow
 import Data.Maybe
 import Database.HDBC
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import Happstack.Server
 import Test.Framework
 import Test.Framework.Providers.HUnit
@@ -36,7 +36,7 @@ import qualified Log
 
 import API.MailAPI
 
-mailApiTests :: Connection -> Test
+mailApiTests :: Nexus -> Test
 mailApiTests conn = testGroup "MailAPI" [
       --some tests are for JSON, which we don't use anymore
       --testCase "create proper document with one signatory" $ testSuccessfulDocCreation conn "test/mailapi/email_onesig_ok.eml" 2
@@ -68,7 +68,7 @@ testParseMimes mimepath = do
   assertBool ("Should be exactly one pdf, found " ++ show pdfs) (length pdfs == 1)
   assertBool ("Should be exactly one plaintext, found " ++ show plains) (length plains == 1)
 
-testSuccessfulDocCreation :: Connection -> String -> Int -> Assertion
+testSuccessfulDocCreation :: Nexus -> String -> Int -> Assertion
 testSuccessfulDocCreation conn emlfile sigs = withMyTestEnvironment conn $ \tmpdir -> do
     req <- mkRequest POST [("mail", inFile emlfile)]
     uid <- createTestUser
@@ -98,7 +98,7 @@ testSuccessfulDocCreation conn emlfile sigs = withMyTestEnvironment conn $ \tmpd
     assertBool "document is in error!" $ not $ isDocumentError doc'
 
 
-_testFailureNoSuchUser :: Connection -> Assertion
+_testFailureNoSuchUser :: Nexus -> Assertion
 _testFailureNoSuchUser conn = withMyTestEnvironment conn $ \tmpdir -> do
     req <- mkRequest POST [("mail", inFile "test/mailapi/email_simple_onesig.eml")]
     globaltemplates <- readGlobalTemplates
@@ -137,7 +137,7 @@ jsonToStringList = (mapSnd toString) . fromJSObject
         toString (JSString s) = fromJSString s
         toString _ = error "Pattern not matched -> Waiting for JSON string, but other structure found"
 -}
-withMyTestEnvironment :: Connection -> (FilePath -> DB ()) -> Assertion
+withMyTestEnvironment :: Nexus -> (FilePath -> DB ()) -> Assertion
 withMyTestEnvironment conn f =
   withSystemTempDirectory "mailapi-test-" (\d -> withTestEnvironment conn (f d))
 

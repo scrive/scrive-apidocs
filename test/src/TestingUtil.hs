@@ -19,7 +19,7 @@ import Doc.DocUtils
 import Test.QuickCheck.Gen
 import Control.Monad.Trans
 import Data.Maybe
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import qualified Test.HUnit as T
@@ -470,7 +470,7 @@ blankDocument =
 
 -}
 
-testThat :: String -> Connection -> DB () -> Test
+testThat :: String -> Nexus -> DB () -> Test
 testThat s conn a = testCase s (withTestEnvironment conn a)
 
 addNewCompany ::  DB Company

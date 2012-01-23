@@ -17,7 +17,7 @@ import TestKontra as T
 import Mails.Model
 import Misc
 import Context
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import DB.Classes
 import Doc.Transitory
 import Doc.DocStateData
@@ -29,7 +29,7 @@ import User.Model
 import Util.SignatoryLinkUtils
 
 
-docControlTests :: Connection -> Test
+docControlTests :: Nexus -> Test
 docControlTests conn =  testGroup "Templates"
                            [
                                testCase "Create document from template" $ testDocumentFromTemplate conn
@@ -65,7 +65,7 @@ countingMailer counter mail = do
 
  -}
 
-testUploadingFileAsContract :: Connection -> Assertion
+testUploadingFileAsContract :: Nexus -> Assertion
 testUploadingFileAsContract conn = withTestEnvironment conn $ do
   (user, link) <- uploadDocAsNewUser conn Contract
   docs <- randomQuery $ GetDocumentsByUser user
@@ -73,7 +73,7 @@ testUploadingFileAsContract conn = withTestEnvironment conn $ do
   let newdoc = head docs
   assertEqual "Links to /d/docid" ("/d/" ++ (show $ documentid newdoc)) (show link)
 
-testUploadingFileAsOffer :: Connection -> Assertion
+testUploadingFileAsOffer :: Nexus -> Assertion
 testUploadingFileAsOffer conn = withTestEnvironment conn $ do
   (user, link) <- uploadDocAsNewUser conn Offer
   docs <- randomQuery $ GetDocumentsByUser user
@@ -81,7 +81,7 @@ testUploadingFileAsOffer conn = withTestEnvironment conn $ do
   let newdoc = head docs
   assertEqual "Links to /d/docid" ("/d/" ++ (show $ documentid newdoc)) (show link)
 
-testUploadingFileAsOrder :: Connection -> Assertion
+testUploadingFileAsOrder :: Nexus -> Assertion
 testUploadingFileAsOrder conn = withTestEnvironment conn $ do
   (user, link) <- uploadDocAsNewUser conn Order
   docs <- randomQuery $ GetDocumentsByUser user
@@ -89,7 +89,7 @@ testUploadingFileAsOrder conn = withTestEnvironment conn $ do
   let newdoc = head docs
   assertEqual "Links to /d/docid" ("/d/" ++ (show $ documentid newdoc)) (show link)
 
-uploadDocAsNewUser :: Connection -> DocumentProcess -> DB (User, KontraLink)
+uploadDocAsNewUser :: Nexus -> DocumentProcess -> DB (User, KontraLink)
 uploadDocAsNewUser conn doctype = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   globaltemplates <- readGlobalTemplates
@@ -101,7 +101,7 @@ uploadDocAsNewUser conn doctype = do
   (link, _ctx') <- runTestKontra req ctx $ handleIssueNewDocument
   return (user, link)
 
-testSendingDocumentSendsInvites :: Connection -> Assertion
+testSendingDocumentSendsInvites :: Nexus -> Assertion
 testSendingDocumentSendsInvites conn = withTestEnvironment conn $ do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   globaltemplates <- readGlobalTemplates
@@ -138,7 +138,7 @@ testSendingDocumentSendsInvites conn = withTestEnvironment conn $ do
   emails <- dbQuery GetIncomingEmails
   assertBool "Emails sent" (length emails > 0)
 
-testSigningDocumentFromDesignViewSendsInvites :: Connection -> Assertion
+testSigningDocumentFromDesignViewSendsInvites :: Nexus -> Assertion
 testSigningDocumentFromDesignViewSendsInvites conn = withTestEnvironment conn $ do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   globaltemplates <- readGlobalTemplates
@@ -175,7 +175,7 @@ testSigningDocumentFromDesignViewSendsInvites conn = withTestEnvironment conn $ 
   emails <- dbQuery GetIncomingEmails
   assertBool "Emails sent" (length emails > 0)
 
-testNonLastPersonSigningADocumentRemainsPending :: Connection -> Assertion
+testNonLastPersonSigningADocumentRemainsPending :: Nexus -> Assertion
 testNonLastPersonSigningADocumentRemainsPending conn = withTestEnvironment conn $ do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   globaltemplates <- readGlobalTemplates
@@ -216,7 +216,7 @@ testNonLastPersonSigningADocumentRemainsPending conn = withTestEnvironment conn 
   emails <- dbQuery GetIncomingEmails
   assertEqual "No email sent" 0 (length emails)
 
-testLastPersonSigningADocumentClosesIt :: Connection -> Assertion
+testLastPersonSigningADocumentClosesIt :: Nexus -> Assertion
 testLastPersonSigningADocumentClosesIt conn = withTestEnvironment conn $ do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   globaltemplates <- readGlobalTemplates
@@ -258,7 +258,7 @@ testLastPersonSigningADocumentClosesIt conn = withTestEnvironment conn $ do
   --emails <- dbQuery GetIncomingEmails
   --assertEqual "Confirmation email sent" 1 (length emails)
 
-testDocumentFromTemplate :: Connection -> Assertion
+testDocumentFromTemplate :: Nexus -> Assertion
 testDocumentFromTemplate conn =  withTestEnvironment conn $ do
     (Just user) <- addNewUser "aaa" "bbb" "xxx@xxx.pl"
     doc <- addRandomDocumentWithAuthorAndCondition user (\d -> case documenttype d of
@@ -273,7 +273,7 @@ testDocumentFromTemplate conn =  withTestEnvironment conn $ do
     docs2 <- randomQuery $ GetDocumentsByUser user
     assertBool "No new document" (length docs2 == 1+ length docs1)
 
-testDocumentFromTemplateShared :: Connection -> Assertion
+testDocumentFromTemplateShared :: Nexus -> Assertion
 testDocumentFromTemplateShared conn = withTestEnvironment conn $ do
     (Company {companyid}) <- addNewCompany
     (Just author) <- addNewCompanyUser "aaa" "bbb" "xxx@xxx.pl" companyid

@@ -53,6 +53,7 @@ import Data.List
 import Data.Maybe
 import Database.HDBC
 import Database.HDBC.PostgreSQL
+import DB.Nexus
 import GHC.Int (Int64(..))
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Happstack.Server.Internal.Cookie
@@ -85,7 +86,7 @@ data AppGlobals
     If the current request is referring to a document then this will
     return the locale of that document.
 -}
-getDocumentLocale :: Connection -> (ServerMonad m, Functor m, MonadIO m) => m (Maybe Locale)
+getDocumentLocale :: Nexus -> (ServerMonad m, Functor m, MonadIO m) => m (Maybe Locale)
 getDocumentLocale conn = do
   rq <- askRq
   let docids = catMaybes . map (fmap fst . listToMaybe . readSigned readDec) $ rqPaths rq
@@ -97,7 +98,7 @@ getDocumentLocale conn = do
     their settings, the request, and cookies.
 -}
 getUserLocale :: (MonadPlus m, MonadIO m, ServerMonad m, FilterMonad Response m, Functor m, HasRqData m) =>
-                   Connection -> Maybe User -> m Locale
+                   Nexus -> Maybe User -> m Locale
 getUserLocale conn muser = do
   rq <- askRq
   currentcookielocale <- optional (readCookieValue "locale")
@@ -253,6 +254,13 @@ appHandler handleRoutes appConf appGlobals = do
       let newmagichashes = ctxmagichashes ctx'
       F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
       updateSessionWithContextData session newsessionuser newelegtrans newmagichashes
+      stats <- liftIO $ getNexusStats (ctxdbconn ctx')
+      
+      Log.debug $ "SQL for " ++ rqUri rq ++ ": queries " ++ show (nexusQueries stats) ++ 
+           ", params " ++ show (nexusInValues stats) ++
+                         ", rows " ++ show (nexusRows stats) ++
+                                     ", values " ++ show (nexusValues stats)
+
       liftIO $ disconnect $ ctxdbconn ctx'
       return res
 
@@ -275,7 +283,8 @@ appHandler handleRoutes appConf appGlobals = do
                      SockAddrInet _ hostip -> IPAddress hostip
                      _ -> unknownIPAddress
 
-      conn <- liftIO $ connectPostgreSQL $ dbConfig appConf
+      psqlconn <- liftIO $ connectPostgreSQL $ dbConfig appConf
+      conn <- liftIO $ mkNexus psqlconn
       minutestime <- liftIO getMinutesTime
       muser <- getUserFromSession conn session
       mcompany <- getCompanyFromSession conn session

@@ -15,7 +15,7 @@ import Control.Monad.Reader
 import Data.List
 import Data.Maybe
 import Happstack.State
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length)
@@ -41,10 +41,11 @@ import System.Time
 import Util.HasSomeUserInfo
 import Doc.Invariants
 import Stats.Control
+import Database.HDBC.PostgreSQL
 
 type SchedulerData' = SchedulerData AppConf (MVar (ClockTime, KontrakcjaGlobalTemplates)) MailsConfig
 
-newtype ActionScheduler a = AS { unAS :: ReaderT SchedulerData' (ReaderT Connection IO) a }
+newtype ActionScheduler a = AS { unAS :: ReaderT SchedulerData' (ReaderT Nexus IO) a }
     deriving (Monad, Functor, MonadIO, MonadReader SchedulerData')
 
 instance DBMonad ActionScheduler where
@@ -59,7 +60,9 @@ instance DBMonad ActionScheduler where
 
 runScheduler :: ActionScheduler () -> SchedulerData' -> IO ()
 runScheduler sched sd =
-    withPostgreSQL (dbConfig $ sdAppConf sd) $ runReaderT (runReaderT (unAS sched) sd)
+    withPostgreSQL (dbConfig $ sdAppConf sd) $ \conn -> do
+      nexus <- mkNexus conn
+      runReaderT (runReaderT (unAS sched) sd) nexus
 
 -- | Creates scheduler that may be forced to look up for actions to execute
 runEnforceableScheduler :: Int -> MVar () -> ActionScheduler () -> SchedulerData' -> IO ()
