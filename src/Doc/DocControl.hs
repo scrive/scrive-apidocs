@@ -2143,4 +2143,3 @@ handleUpsalesDeleted = onlyAdmin $ do
   ok $ setHeader "Content-Disposition" "attachment;filename=upsalesdocsdeleted.csv"
      $ setHeader "Content-Type" "text/csv"
      $ toResponse csv
-

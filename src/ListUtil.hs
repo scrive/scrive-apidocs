@@ -180,8 +180,7 @@ listSortSearchPage sortFunc searchFunc pageSize params list =
     in  PagedList {list=paged , params = params, totalCount = length searched, pageSize = pageSize}
 
 doSorting::SortingFunction a -> [String] -> [a] -> [a]
-doSorting _ [] = id
-doSorting sortFunc sortParams = sortBy $ compareList $  map sortFunc $ sortParams
+doSorting sortFunc  = sortBy . compareList .  map sortFunc
     where compareList l a1 a2 = foldMap (\f -> f a1 a2) l
 
 
