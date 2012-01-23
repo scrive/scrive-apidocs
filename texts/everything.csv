@@ -443,7 +443,11 @@ profits and reduce frustration.</p>                                             
 "_contractSignatory","Part",,"Party"
 "_contractauthorissecretarytext","Avsändare: Ej undertecknande part",,"Sender: Non-signing party"
 "_contractcancelbuttontext","Återkalla inbjudan",,"Withdraw invitation"
-"_contractcancelmodaltext","Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?            <br/> När du återkallat inbjudan kommer nedanstående meddelande att skickas till dina motparter.",,"Are you sure you want to withdraw the invitation to sign the document? <br/> When you have withdrawn it, the following message will be sent to your counterparts."
+"_contractcancelflashmessage", "Dokumentet återkallat.",,"Document withdrawn."
+"_contractcancelmodaltext","Är du säker att du vill återkalla inbjudan att signera?
+<BR/><BR/>Om motparten klickar på signeringslänken efter att du återkallat kommer de att få information om att det inte längre går att signera. Inget meddelande kommer att skickas till din motpart.",,"Are you sure you want to withdraw the invitation to sign?
+<BR/><BR/>
+If the other party clicks on the signing link after you withdrawn the invitation, they will be informed that it's no longer possible to sign. No message will be sent to your counterpart."
 "_contractcancelmodaltitle","Återkalla inbjudan",,"Withdraw invitation"
 "_contractcancelledinfoheader","Dokument återkallat",,"Document withdrawn"
 "_contractcancelledinfotext","Inbjudan att signera dokumentet har dragits tillbaka.",,"The invitation to sign this document has been withdrawn."
@@ -1880,8 +1884,11 @@ use free of charge."
 "_offerSignatory","Mottagare",,"Recipient"
 "_offerauthorissecretarytext","Avsändare",,"Sender"
 "_offercancelbuttontext","Återkalla offert ",,"Withdraw offer "
-"_offercancelmodaltext","När du återkallat offerten kommer nedanstående meddelande att
- skickas till din motpart.",,"When you have withdrawn the offer, the following message will be sent to your counterpart."
+"_offercancelflashmessage","Dokumentet återkallat.",,"Document withdrawn."
+"_offercancelmodaltext","Är du säker att du vill återkalla inbjudan att signera?
+<BR/><BR/>Om motparten klickar på signeringslänken efter att du återkallat kommer de att få information om att det inte längre går att signera. Inget meddelande kommer att skickas till din motpart.",,"Are you sure you want to withdraw the invitation to sign?
+<BR/><BR/>
+If the other party clicks on the signing link after you withdrawn the invitation, they will be informed that it's no longer possible to sign. No message will be sent to your counterpart."
 "_offercancelmodaltitle","Är du säker att du vill återkalla offerten?",,"Are you sure you want to withdraw the offer?"
 "_offercancelledinfoheader","Offert återkallad ",,"Offer withdrawn "
 "_offercancelledinfotext","Inbjudan att bekräfta ordern har dragits tillbaka.",,"The invitation to accept this offer has been withdrawn."
@@ -1948,9 +1955,11 @@ use free of charge."
 "_orderSignHistEntry","bekräftar ordern online med",,"confirms the order online with"
 "_orderauthorissecretarytext","Avsändare",,"Sender"
 "_ordercancelbuttontext","Återkalla order",,"Withdraw order"
-"_ordercancelmodaltext","När du återkallat orderbekräftelsen kommer nedanstående meddelande
- att skickas till din motpart.",,"When you have withdrawn the order confirmation, the following
- message will be sent to your counterpart."
+"_ordercancelflashmessage","Dokumentet återkallat.",,"Document withdrawn."
+"_ordercancelmodaltext","Är du säker att du vill återkalla inbjudan att signera?
+<BR/><BR/>Om motparten klickar på signeringslänken efter att du återkallat kommer de att få information om att det inte längre går att signera. Inget meddelande kommer att skickas till din motpart.",,"Are you sure you want to withdraw the invitation to sign?
+<BR/><BR/>
+If the other party clicks on the signing link after you withdrawn the invitation, they will be informed that it's no longer possible to sign. No message will be sent to your counterpart."
 "_ordercancelmodaltitle","Är du säker att du vill återkalla orderbekräftelsen?",,"Are you sure you want to withdraw the order confirmation?"
 "_ordercancelledinfoheader","Order återkallad",,"Order withdrawn"
 "_ordercancelledinfotext","Inbjudan att bekräfta ordern har dragits tillbaka.",,"The invitation to confirm this order has been withdrawn."

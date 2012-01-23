@@ -1803,7 +1803,9 @@ handleCancel docid = withUserPost $ do
     then do
     mdoc' <- doc_update $ CancelDocument (documentid doc) ManualCancel ctxtime ctxipnumber
     case mdoc' of
-      Right doc' ->  addFlashM $ flashMessageCanceled doc'
+      Right doc' ->  do
+          Log.debug $ "Canceling document #" ++ show docid
+          addFlashM $ flashMessageCanceled doc'
       Left errmsg -> addFlash (OperationFailed, errmsg)
     else addFlashM flashMessageCannotCancel
   return (LinkIssueDoc $ documentid doc)
