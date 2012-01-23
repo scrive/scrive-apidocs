@@ -1206,13 +1206,20 @@ selectDocuments select values = do
     _ <- kExecute []
 
     sas <- kFetchAll decodeRowAsSignatoryAttachment
+    
+    kPrepare $ "DROP TABLE docs"
+    _ <- kExecute []
 
-    let makeListOfSecond (a,b) = (a,[b])
+
+    let makeListOfSecond :: (a,b) -> (a,[b])
+        makeListOfSecond (a,b) = (a,[b])
+        makeMap::(Eq a) => [(a,b)] -> Map.Map a [b]
         makeMap x = Map.fromAscListWith (++) $ map makeListOfSecond x
         sls_map = makeMap sls
         ats_map = makeMap ats
         sas_map = makeMap sas
-
+        
+        findEmpty :: Document -> Map.Map DocumentID [a] -> [a]
         findEmpty doc mapx = maybe [] id (Map.lookup (documentid doc) mapx)
    
         fillIn doc = doc { documentsignatorylinks       = findEmpty doc sls_map
