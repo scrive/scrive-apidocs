@@ -1,7 +1,7 @@
 module User.Password where
 
 import Control.Monad.IO.Class
-import System.Random
+import System.Random (newStdGen, randoms)
 import qualified Data.ByteString as BS
 import qualified Data.Digest.SHA256 as D
 

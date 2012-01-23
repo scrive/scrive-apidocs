@@ -5,7 +5,7 @@ import Data.Functor
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (update, query)
-import System.Random
+import System.Random (randomIO)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS
 import Text.JSON (JSValue(..), toJSObject, showJSON)

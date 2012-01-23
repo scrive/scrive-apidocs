@@ -229,7 +229,10 @@ createDocFromFiles title doctype files user mcompany time = do
     Left _ -> throwApiError API_ERROR_OTHER $ "Cannot create document"
     Right doc -> do
       let addAndAttachFile name content = do
-            content14 <- liftIO $ preprocessPDF ctx content (documentid doc)
+            econtent14 <- liftIO $ preCheckPDF (ctxgscmd ctx) content
+            content14 <- case econtent14 of
+                         Left _ -> throwApiError API_ERROR_OTHER $ "Cannot handle uploaded data"
+                         Right x -> return x
             file <- runDB $ dbUpdate $ NewFile name content14
             doc_update $ AttachFile (documentid doc) (fileid file) time
       mapM_ (uncurry addAndAttachFile) files

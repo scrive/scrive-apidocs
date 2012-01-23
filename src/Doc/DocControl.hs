@@ -1531,7 +1531,7 @@ handleDocumentUploadNoLogin :: Kontrakcja m => DocumentID -> BS.ByteString -> BS
 handleDocumentUploadNoLogin docid content1 filename = do
   Log.debug $ "Uploading file for doc " ++ show docid
   ctx <- getContext
-  content14 <- liftIO $ preprocessPDF ctx content1 docid
+  content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) content1
   file <- runDB $ dbUpdate $ NewFile filename content14
   fileresult <- doc_update (AttachFile docid (fileid file) (ctxtime ctx))
   case fileresult of
@@ -1996,7 +1996,7 @@ handleSigAttach docid siglinkid = do
   -- we need to downgrade the PDF to 1.4 that has uncompressed structure
   -- we use gs to do that of course
   ctx <- getContext
-  content <- liftIO $ preprocessPDF ctx (concatChunks content1) docid
+  content <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
   file <- runDB $ dbUpdate $ NewFile attachname content
   d <- guardRightM $ doc_update $ SaveSigAttachment docid attachname email (fileid file)
   return $ LinkSignDoc d siglink
