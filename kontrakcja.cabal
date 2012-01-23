@@ -146,7 +146,7 @@ Executable kontrakcja-server
 
   Hs-source-dirs: inc src pdfseal/inc mailer/inc
 
-  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fcontext-stack=33
+  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fcontext-stack=34
   if !flag(allow-warnings)
     GHC-Options: -Werror
   if flag(server-coverage)
@@ -327,7 +327,7 @@ Executable kontrakcja-test
 
   Hs-source-dirs: inc test/src src pdfseal/inc mailer/inc
 
-  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fcontext-stack=33
+  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fcontext-stack=34
   if flag(test-coverage)
     GHC-Options: -fhpc
   if !flag(allow-warnings)
