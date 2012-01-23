@@ -32,7 +32,7 @@ instance (Fetcher b, Convertible SqlValue t) => Fetcher (t -> b) where
     fetchWorker n action (x:xs) = 
       case safeFromSql x of
         Right value -> fetchWorker (n+1) (action value) xs
-        Left cnvError -> Left $ CannotConvertSqlValue "" n cnvError
+        Left cnvError -> Left $ CannotConvertSqlValue "" n "" cnvError
 
     fetchWorker n action _ = do
       Left $ RowLengthMismatch "" (n + fetchArity action) n
@@ -49,6 +49,18 @@ fetchValues st decoder = liftM reverse (worker [])
         Just row -> 
           case fetchWorker 0 decoder row of
             Right value -> worker (value : acc)
+            Left left@CannotConvertSqlValue{position = pos} -> do
+                   columns <- liftIO $ getColumnNames st
+                   let column = if pos<0 || pos>= length columns
+                                then ""
+                                else columns !! pos
+                   liftIO $ finish st
+                   liftIO $ E.throwIO $ CannotConvertSqlValue
+                            { DB.originalQuery = HDBC.originalQuery st
+                            , DB.columnName    = column
+                            , DB.position      = DB.position left
+                            , DB.convertError  = DB.convertError left
+                            }
             Left left -> do
                    liftIO $ finish st
                    liftIO $ E.throwIO $ left { DB.originalQuery = HDBC.originalQuery st }
