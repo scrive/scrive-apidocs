@@ -11,7 +11,7 @@ module Mails.SendMail
 import Control.Applicative
 import Control.Monad
 import Control.Monad.IO.Class
-import System.Random
+import System.Random (randomIO)
 import qualified Data.ByteString.UTF8 as BSU
 
 import API.Service.Model

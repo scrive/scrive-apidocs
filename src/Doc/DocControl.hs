@@ -29,6 +29,7 @@ import Mails.SendMail
 import MinutesTime
 import Misc
 import Redirect
+import Routing(toResp)
 import User.Model
 import User.UserControl
 import Util.HasSomeUserInfo
@@ -597,13 +598,34 @@ handleSignShowOldRedirectToNew did sid mh = do
   invitedlink <- guardJust $ getSigLinkFor doc sid
   return $ LinkSignDoc doc invitedlink
 
-handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m String
+handleSignShow :: DocumentID -> SignatoryLinkID -> Kontra Response
 handleSignShow documentid
                signatorylinkid = do
-  magichash <- guardJustM $ readField "magichash"
+  mmh <- readField "magichash"
+  case mmh of
+    Just mh -> do
+      modifyContext (\ctx -> ctx { ctxmagichashes = Map.insert signatorylinkid mh (ctxmagichashes ctx) })
+      toResp (LinkSignDocNoMagicHash documentid signatorylinkid)    
+    Nothing -> do
+      v <- handleSignShow2 documentid signatorylinkid
+      (toResp v)
+      
+
+handleSignShow2 :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m String
+handleSignShow2 documentid
+                signatorylinkid = do
   Context { ctxtime
           , ctxipnumber
-          , ctxflashmessages } <- getContext
+          , ctxflashmessages
+          , ctxmagichashes } <- getContext
+  let mmagichash = Map.lookup signatorylinkid ctxmagichashes
+
+  magichash <- case mmagichash of
+                 Just x -> return x
+                 Nothing -> do
+                   Log.debug $ "magichash for " ++ show documentid ++ "/" ++ show signatorylinkid ++ " not found"
+                   mzero
+
   _ <- markDocumentSeen documentid signatorylinkid magichash ctxtime ctxipnumber
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
   invitedlink <- guardJust $ getSigLinkFor document signatorylinkid
@@ -1510,7 +1532,7 @@ handleDocumentUploadNoLogin :: Kontrakcja m => DocumentID -> BS.ByteString -> BS
 handleDocumentUploadNoLogin docid content1 filename = do
   Log.debug $ "Uploading file for doc " ++ show docid
   ctx <- getContext
-  content14 <- liftIO $ preprocessPDF ctx content1 docid
+  content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) content1
   file <- runDB $ dbUpdate $ NewFile filename content14
   fileresult <- doc_update (AttachFile docid (fileid file) (ctxtime ctx))
   case fileresult of
@@ -1975,7 +1997,7 @@ handleSigAttach docid siglinkid = do
   -- we need to downgrade the PDF to 1.4 that has uncompressed structure
   -- we use gs to do that of course
   ctx <- getContext
-  content <- liftIO $ preprocessPDF ctx (concatChunks content1) docid
+  content <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
   file <- runDB $ dbUpdate $ NewFile attachname content
   d <- guardRightM $ doc_update $ SaveSigAttachment docid attachname email (fileid file)
   return $ LinkSignDoc d siglink

@@ -1,4 +1,11 @@
-module Redirect (sendRedirect,sendSecureLoopBack,redirectKontraResponse,guardRight,guardRightM,guardLoggedIn) where
+module Redirect
+  ( sendRedirect
+  , sendSecureLoopBack
+  , redirectKontraResponse
+  , guardRightM
+  , guardLoggedIn
+  , GuardRight(..)
+  ) where
 
 
 import Control.Applicative ((<$>))

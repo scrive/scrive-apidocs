@@ -229,7 +229,10 @@ createDocFromFiles title doctype files user mcompany time = do
     Left _ -> throwApiError API_ERROR_OTHER $ "Cannot create document"
     Right doc -> do
       let addAndAttachFile name content = do
-            content14 <- liftIO $ preprocessPDF ctx content (documentid doc)
+            econtent14 <- liftIO $ preCheckPDF (ctxgscmd ctx) content
+            content14 <- case econtent14 of
+                         Left _ -> throwApiError API_ERROR_OTHER $ "Cannot handle uploaded data"
+                         Right x -> return x
             file <- runDB $ dbUpdate $ NewFile name content14
             doc_update $ AttachFile (documentid doc) (fileid file) time
       mapM_ (uncurry addAndAttachFile) files
@@ -331,6 +334,7 @@ setCompanyInfoFromTMP uTMP company = do
     when (not info_set) $ throwApiError API_ERROR_OTHER "Problem create a user (COMPANY INFO) | This should never happen"
     Just company' <- runDBQuery $ GetCompany $ companyid company
     return company'
+    
 
 getDocuments :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocuments = do
@@ -364,8 +368,8 @@ getDocuments = do
                          , not $ isDeletedFor $ getAuthorSigLink d
                          , not $ isAttachment d
                          -- we avoid filtering when the filter is not defined
-                         , maybe True (documentmtime d >=) mFromDate
-                         , maybe True (documentmtime d <=) mToDate
+                         , maybe True (recentDate d >=) mFromDate
+                         , maybe True (recentDate d <=) mToDate
                          , maybe True ((fromSafeEnum $ documentstatus d) >=) mFromState
                          , maybe True ((fromSafeEnum $ documentstatus d) <=) mToState]
     return $ toJSObject $ [("documents"  , JSArray $ api_docs)] ++

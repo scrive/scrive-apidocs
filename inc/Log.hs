@@ -53,7 +53,7 @@ setupLogger = do
 
     let fmt = tfLogFormatter "%F %T" "$time $msg"
 
-    appLog         <- fileHandler' "log/app.log"         INFO
+    appLog         <- fileHandler' "log/app.log"         INFO >>= \lh -> return $ setFormatter lh fmt
     accessLog      <- fileHandler' "log/access.log"      INFO
     mailLog        <- fileHandler' "log/mail.log"        INFO >>= \lh -> return $ setFormatter lh fmt
     debugLog       <- fileHandler' "log/debug.log"       INFO >>= \lh -> return $ setFormatter lh fmt

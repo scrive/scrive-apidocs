@@ -70,7 +70,7 @@ import Util.MonadUtils
 -}
 staticRoutes :: Route (Kontra Response)
 staticRoutes = choice
-     [ allLocaleDirs $ const $ hGetAllowHttp $ handleHomepage
+     [ allLocaleDirs $ const $ hGetAllowHttp $ toK0 handleHomepage
      , hGetAllowHttp $ getContext >>= (redirectKontraResponse . LinkHome . ctxlocale)
 
      , publicDir "priser" "pricing" LinkPriceplan handlePriceplanPage

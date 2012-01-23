@@ -60,6 +60,11 @@ docStateTests conn = testGroup "DocState" [
   testThat "SetDocumentLocale fails when doc doesn't exist" conn testSetDocumentLocaleNotLeft,
 
   testThat "SetDocumentTitle fails when doc doesn't exist" conn testSetDocumentTitleNotLeft,
+  testThat "SetDocumentTitle succeeds when doc exists and has proper status" conn testSetDocumentTitleRight,
+
+  testThat "SetDaysToSign fails when doc doesn't exist" conn testSetDocumentDaysToSignNotLeft,
+  testThat "RemoveDaysToSign fails when doc doesn't exist" conn testRemoveDocumentDaysToSignNotLeft,
+  testThat "SetDaysToSign and RemoveDaysToSign succeed when doc exist and has proper status" conn testSetDocumentDaysToSignRight,
 
   testThat "CloseDocument fails when doc is not signable" conn testCloseDocumentNotSignableNothing,
   testThat "CloseDocument fails when doc doesn't exist" conn testCloseDocumentNotNothing,
@@ -128,6 +133,8 @@ docStateTests conn = testGroup "DocState" [
   testThat "create document and check invariants" conn testNewDocumentDependencies,
   testThat "can create new document and read it back with the returned id" conn testDocumentCanBeCreatedAndFetchedByID,
   testThat "can create new document and read it back with GetDocuments" conn testDocumentCanBeCreatedAndFetchedByAllDocs,
+
+  testThat "GetDocumentsSharedInCompany works as expected" conn testGetDocumentsSharedInCompany,
 
 {-
   testThat "when I call update document, it doesn't change the document id" conn testDocumentUpdateDoesNotChangeID,
@@ -915,6 +922,52 @@ testPreparationAttachCSVUploadIndexGreaterThanLength = doTimes 10 $ do
     --assert
     validTest $ assertLeft edoc
 
+testGetDocumentsSharedInCompany :: DB ()
+testGetDocumentsSharedInCompany = doTimes 10 $ do
+  -- two companies, two users per company, two users outside of company
+  -- each having a document here
+  company1 <- addNewCompany
+  company2 <- addNewCompany
+  user1' <- addNewRandomAdvancedUser
+  user2' <- addNewRandomAdvancedUser
+  _ <- dbUpdate $ SetUserCompany (userid user1') (Just (companyid company1))
+  Just user1 <- dbQuery $ GetUserByID (userid user1')
+  _ <- dbUpdate $ SetUserCompany (userid user2') (Just (companyid company1))
+  Just user2 <- dbQuery $ GetUserByID (userid user2')
+  user3' <- addNewRandomAdvancedUser
+  user4' <- addNewRandomAdvancedUser
+  _ <- dbUpdate $ SetUserCompany (userid user3') (Just (companyid company2))
+  Just user3 <- dbQuery $ GetUserByID (userid user3')
+  _ <- dbUpdate $ SetUserCompany (userid user4') (Just (companyid company2))
+  Just user4 <- dbQuery $ GetUserByID (userid user4')
+  user5 <- addNewRandomAdvancedUser
+  user6 <- addNewRandomAdvancedUser
+
+  docid1 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user1 (not . isAttachment)
+  docid2 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user2 (not . isAttachment)
+  docid3 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user3 (not . isAttachment)
+  _docid4 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user4 (not . isAttachment)
+  docid5 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user5 (not . isAttachment)
+  docid6 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user6 (not . isAttachment)
+
+  -- docid4 is not shared
+  mapM_ (dbUpdate . ShareDocument) [docid1, docid2, docid3, docid5, docid6]
+
+  dlist1 <- dbQuery $ GetDocumentsSharedInCompany user1
+  dlist2 <- dbQuery $ GetDocumentsSharedInCompany user2
+  dlist3 <- dbQuery $ GetDocumentsSharedInCompany user3
+  dlist4 <- dbQuery $ GetDocumentsSharedInCompany user4
+  dlist5 <- dbQuery $ GetDocumentsSharedInCompany user5
+  dlist6 <- dbQuery $ GetDocumentsSharedInCompany user6
+
+  validTest $ do 
+    assertEqual "Documents properly shared in company (1)" 2 (length dlist1)
+    assertEqual "Documents properly shared in company (1)" 2 (length dlist2)
+    assertEqual "Documents properly shared in company (2)" 1 (length dlist3)
+    assertEqual "Documents properly shared in company (2)" 1 (length dlist4)
+    assertEqual "Documents not shared in user without company (X)" 0 (length dlist5)
+    assertEqual "Documents not shared in user without company (Y)" 0 (length dlist6)
+
 testCreateFromSharedTemplate :: DB ()
 testCreateFromSharedTemplate = do
   user <- addNewRandomAdvancedUser
@@ -1509,6 +1562,46 @@ testSetDocumentTitleNotLeft :: DB ()
 testSetDocumentTitleNotLeft = doTimes 10 $ do
   etdoc <- randomUpdate $ SetDocumentTitle
   validTest $ assertLeft etdoc
+
+testSetDocumentTitleRight :: DB ()
+testSetDocumentTitleRight = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocument (randomDocumentAllowsDefault author)
+         { randomDocumentCondition = (not . isClosed)
+         }
+  let title = BS.fromString "my new cool title"
+  etdoc <- randomUpdate $ SetDocumentTitle (documentid doc) title
+  validTest $ do
+    assertRight etdoc
+    let Right doc' = etdoc
+    assertEqual "Title is set properly" title (documenttitle doc')
+
+testSetDocumentDaysToSignNotLeft :: DB ()
+testSetDocumentDaysToSignNotLeft = doTimes 10 $ do
+  etdoc <- randomUpdate $ SetDaysToSign
+  validTest $ assertLeft etdoc
+
+testRemoveDocumentDaysToSignNotLeft :: DB ()
+testRemoveDocumentDaysToSignNotLeft = doTimes 10 $ do
+  etdoc <- randomUpdate $ RemoveDaysToSign
+  validTest $ assertLeft etdoc
+
+testSetDocumentDaysToSignRight :: DB ()
+testSetDocumentDaysToSignRight = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocument (randomDocumentAllowsDefault author)
+         { randomDocumentCondition = (not . isClosed) &&^ (isNothing . documentdaystosign)
+         }
+  let daystosign = 15
+  etdoc1 <- randomUpdate $ SetDaysToSign (documentid doc) daystosign
+  etdoc2 <- randomUpdate $ RemoveDaysToSign (documentid doc)
+  validTest $ do
+    assertRight etdoc1
+    assertRight etdoc2
+    let Right doc1' = etdoc1
+    let Right doc2' = etdoc2
+    assertEqual "Days to sign is set properly" (Just daystosign) (documentdaystosign doc1')
+    assertEqual "Days to sign removed properly" (Nothing) (documentdaystosign doc2')
 
 assertInvariants :: Document -> DB ()
 assertInvariants document = do

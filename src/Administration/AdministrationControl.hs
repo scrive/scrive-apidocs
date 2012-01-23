@@ -78,7 +78,7 @@ import Util.HasSomeCompanyInfo
 import CompanyAccounts.CompanyAccountsControl
 import CompanyAccounts.Model
 import Util.SignatoryLinkUtils
-import Stats.Control (getDocStatsForUser)
+import Stats.Control (getUsersAndStats)
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m String
@@ -256,16 +256,6 @@ usersSearchFunc s userdata = userMatch userdata s
 
 usersPageSize :: Int
 usersPageSize = 100
-
-getUsersAndStats :: Kontrakcja m => m [(User, Maybe Company, DocStats)]
-getUsersAndStats = do
-    users <- runDBQuery GetUsers
-    let queryStats user = do
-          mcompany <- getCompanyForUser user
-          docstats <- getDocStatsForUser $ userid user
-          return (user, mcompany, docstats)
-    users2 <- mapM queryStats users
-    return users2
 
 getUsersAndStatsInv :: Kontrakcja m => m [(User, Maybe Company, DocStats, InviteType)]
 getUsersAndStatsInv = do

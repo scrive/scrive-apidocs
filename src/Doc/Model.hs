@@ -117,7 +117,7 @@ import Util.SignatoryLinkUtils
 import Doc.DocProcess
 import Doc.DocStateCommon
 import qualified Log
-import System.Random
+import System.Random (randomRIO)
 --import Happstack.Server
 --import Happstack.State
 --import Happstack.Util.Common
@@ -1227,8 +1227,16 @@ instance DBQuery GetDeletedDocumentsByCompany [Document] where
   dbQuery (GetDeletedDocumentsByCompany user) = do
     case useriscompanyadmin user of
       True ->
-        selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT * FROM signatory_links WHERE signatory_links.deleted = TRUE AND company_id = ? AND really_deleted = FALSE AND service_id = ? AND documents.id = document_id) ORDER BY mtime DESC")
+        selectDocuments (selectDocumentsSQL ++
+                         " WHERE EXISTS (SELECT * FROM signatory_links " ++
+                         "               WHERE signatory_links.deleted = TRUE" ++
+                         "                 AND company_id = ?" ++
+                         "                 AND really_deleted = FALSE" ++
+                         "                 AND ((?::TEXT IS NULL AND service_id IS NULL) OR (service_id = ?))" ++
+                         "                 AND documents.id = document_id)" ++
+                         " ORDER BY mtime DESC")
                       [ toSql (usercompany user)
+                      , toSql (userservice user)
                       , toSql (userservice user)
                       ]
       False -> return []
@@ -1322,21 +1330,16 @@ data GetDocumentStatsByUser = GetDocumentStatsByUser User MinutesTime
                               deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentStatsByUser DocStats where
   dbQuery (GetDocumentStatsByUser user time) = do
-  docs <- dbQuery $ GetDocumentsByUser user
+  docs    <- dbQuery $ GetDocumentsByUser user
   sigdocs <- dbQuery $ GetDocumentsBySignatory user
-  let signaturecount' = length $ allsigns
-      signaturecount1m' = length $ filter (isSignedNotLaterThanMonthsAgo 1) $ allsigns
-      signaturecount2m' = length $ filter (isSignedNotLaterThanMonthsAgo 2) $ allsigns
-      signaturecount3m' = length $ filter (isSignedNotLaterThanMonthsAgo 3) $ allsigns
-      signaturecount6m' = length $ filter (isSignedNotLaterThanMonthsAgo 6) $ allsigns
+  let signaturecount'    = length $ allsigns
+      signaturecount1m'  = length $ filter (isSignedNotLaterThanMonthsAgo 1)  $ allsigns
+      signaturecount2m'  = length $ filter (isSignedNotLaterThanMonthsAgo 2)  $ allsigns
+      signaturecount3m'  = length $ filter (isSignedNotLaterThanMonthsAgo 3)  $ allsigns
+      signaturecount6m'  = length $ filter (isSignedNotLaterThanMonthsAgo 6)  $ allsigns
       signaturecount12m' = length $ filter (isSignedNotLaterThanMonthsAgo 12) $ allsigns
-      timeMonthsAgo m = (-m * 30 * 24 * 60) `minutesAfter` time
-      isSignedNotLaterThanMonthsAgo m = (timeMonthsAgo m <) . documentmtime
-      allsigns = filter (isSigned . relevantSigLink) sigdocs
-      relevantSigLink :: Document -> Maybe SignatoryLink
-      relevantSigLink doc = listToMaybe $ filter (isSigLinkFor $ userid user) (documentsignatorylinks doc)
-      isSigned :: Maybe SignatoryLink -> Bool
-      isSigned = maybe False (isJust . maybesigninfo)
+      isSignedNotLaterThanMonthsAgo m d = monthsBefore m time < documentmtime d
+      allsigns = filter (\d -> hasSigned $ getSigLinkFor d (userid user)) sigdocs
   return DocStats { doccount          = length docs
                   , signaturecount    = signaturecount'
                   , signaturecount1m  = signaturecount1m'
@@ -1429,16 +1432,17 @@ instance DBQuery GetDocumentsByUser [Document] where
 data GetDocumentsSharedInCompany = GetDocumentsSharedInCompany User
                                    deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsSharedInCompany [Document] where
-  dbQuery (GetDocumentsSharedInCompany User{usercompany, userservice}) = do
+  dbQuery (GetDocumentsSharedInCompany User{usercompany}) = do
     case usercompany of
       Just companyid -> do
         documents <- selectDocuments (selectDocumentsSQL ++
-                                      " WHERE deleted = FALSE" ++
+                                      " WHERE deleted IS FALSE" ++
                                       "   AND sharing = ?" ++
-                                      "   AND service_id = ?" ++
-                                      "   AND EXISTS (SELECT 1 FROM signatory_links WHERE document_id = id AND company_id = ?) ORDER BY mtime DESC")
+                                      "   AND EXISTS (SELECT 1 FROM signatory_links " ++
+                                      "               WHERE document_id = documents.id" ++
+                                      "               AND company_id = ?)" ++
+                                      "   ORDER BY mtime DESC")
                        [ toSql Shared
-                       , toSql (userservice)
                        , toSql companyid
                        ]
 
@@ -2244,3 +2248,4 @@ instance DBUpdate UpdateSigAttachments (Either String Document) where
                 , sqlField "document_id" $ did
                 ]
            return r
+

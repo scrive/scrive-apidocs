@@ -17,7 +17,7 @@ class Fetcher a r where
 
 instance (Fetcher b r, Convertible SqlValue t) => Fetcher (t -> b) r where
   apply n (x:xs) f = either
-    (Left . CannotConvertSqlValue "" n)
+    (Left . CannotConvertSqlValue "" n "")
     (apply (n+1) xs . f)
     (safeFromSql x)
   apply n _ f = Left RowLengthMismatch {

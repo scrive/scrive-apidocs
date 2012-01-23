@@ -10,7 +10,7 @@ module DB.Utils (
 
 import Data.Int
 import Database.HDBC as HDBC
-import System.Random
+import System.Random (randomRIO)
 import qualified Control.Exception as E
 
 import DB.Classes as DB
