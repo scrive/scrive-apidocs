@@ -53,7 +53,7 @@ fetchValues st decoder = liftM reverse (worker [])
                    -- getColumnNames is not defined... I cannot find
                    -- why, but lets catch this exception here and
                    -- ignore it for now
-                   columns <- liftIO $ (getColumnNames st `E.catch` \(e :: E.SomeException) -> return [])
+                   columns <- liftIO $ (getColumnNames st `E.catch` \(_ :: E.SomeException) -> return [])
                    let column = if pos<0 || pos>= length columns
                                 then ""
                                 else columns !! pos
