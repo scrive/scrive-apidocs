@@ -25,7 +25,7 @@ import AppConf
 import ActionScheduler
 import ActionSchedulerState
 import DB.Classes
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStateData
 import KontraLink
 import Mails.MailsConfig

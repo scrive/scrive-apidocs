@@ -27,7 +27,7 @@ import Control.Monad.State
 import Data.Functor
 import Data.Maybe
 import DB.Classes
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStateData
 import Happstack.Server (Response, finishWith, askRq, rqUri, look, toResponseBS)
 import Happstack.StaticRouting(Route, dir, choice)

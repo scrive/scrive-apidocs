@@ -14,7 +14,7 @@ import ActionSchedulerState
 import AppView
 import DB.Classes
 import DB.Types
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStateData
 import Company.Model
 import InputValidation

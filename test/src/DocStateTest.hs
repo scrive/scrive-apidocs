@@ -4,7 +4,7 @@ module DocStateTest (docStateTests) where
 
 import DB.Classes
 import User.Model
-import Doc.Transitory
+import Doc.Model
 import Doc.DocUtils
 import Doc.DocStateData
 import Misc

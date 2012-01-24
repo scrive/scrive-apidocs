@@ -29,7 +29,7 @@ import FlashMessage
 import qualified Log
 import StateHelper
 import Mails.MailsUtil
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStateData
 import Doc.DocStateCommon
 import KontraMonad

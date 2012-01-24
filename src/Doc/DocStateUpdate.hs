@@ -17,7 +17,7 @@ module Doc.DocStateUpdate
 
 import DB.Types
 import DBError
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStateData
 import Kontra
 import MinutesTime

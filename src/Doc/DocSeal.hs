@@ -18,7 +18,7 @@ import Data.Ord
 import Debug.Trace
 import Doc.DocProcess
 import Doc.DocStateData
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStorage
 import Doc.DocView
 import Doc.DocUtils

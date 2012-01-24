@@ -32,7 +32,7 @@ import qualified Data.ByteString.UTF8 as BS
 import Data.Either
 import Doc.DocUtils
 import ScriveByMail.Control
-import Doc.Transitory
+import Doc.Model
 import qualified Codec.Text.IConv as IConv
 import InspectXMLInstances ()
 import Data.String.Utils

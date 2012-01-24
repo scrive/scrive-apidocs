@@ -30,7 +30,7 @@ import User.Model
 import DB.Classes
 import Company.Model
 import Doc.DocUtils
-import Doc.Transitory
+import Doc.Model
 import Data.Either
 import qualified Doc.DocControl as DocControl
 import qualified Log (scrivebymail, scrivebymailfailure)

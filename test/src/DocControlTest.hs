@@ -19,7 +19,7 @@ import Misc
 import Context
 import DB.Nexus
 import DB.Classes
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStateData
 import Doc.DocControl
 import Doc.DocUtils

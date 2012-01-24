@@ -50,7 +50,7 @@ import Data.List
 import Data.Maybe
 import Doc.DocInfo
 import Doc.DocStateData
-import Doc.Transitory
+import Doc.Model
 import Kontra
 import KontraLink
 import MinutesTime

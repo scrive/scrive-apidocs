@@ -42,7 +42,7 @@ import Happstack.Server hiding (simpleHTTP)
 import Misc
 import Kontra
 import Administration.AdministrationView
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStateData
 import qualified Data.ByteString.Char8 as BSC
 import Company.Model

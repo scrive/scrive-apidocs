@@ -15,7 +15,7 @@ import TestingUtil
 import TestKontra as T
 import User.Model
 import Misc
-import Doc.Transitory
+import Doc.Model
 import Doc.DocViewMail
 import Doc.DocStateData
 import Mails.SendMail

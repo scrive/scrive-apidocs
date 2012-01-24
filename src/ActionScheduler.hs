@@ -25,7 +25,7 @@ import ActionSchedulerState
 import Archive.Invariants
 import DB.Classes
 import Doc.DocStateData
-import Doc.Transitory
+import Doc.Model
 import KontraLink
 import MinutesTime
 import Mails.MailsData

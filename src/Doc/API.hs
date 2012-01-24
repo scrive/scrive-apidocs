@@ -8,7 +8,7 @@ import Happstack.Server.Types
 import Routing
 import Doc.DocStateQuery
 import Doc.DocStateData
-import Doc.Transitory
+import Doc.Model
 import Doc.JSON
 import Control.Applicative
 --import Control.Monad

@@ -23,7 +23,7 @@ import KontraLink
 import Kontra
 import DB.Classes
 import Doc.DocStateData
-import Doc.Transitory
+import Doc.Model
 import User.UserControl
 import User.Model
 import Util.FlashUtil

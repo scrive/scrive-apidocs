@@ -23,7 +23,7 @@ import Data.List
 --import ScriveByMail.Control
 import DB.Classes
 import Context
-import Doc.Transitory
+import Doc.Model
 import Misc
 import StateHelper
 import User.Model

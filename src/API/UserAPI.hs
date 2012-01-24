@@ -18,7 +18,7 @@ import DB.Classes
 import Doc.DocControl
 import Doc.DocStateData
 import Doc.DocUtils
-import Doc.Transitory
+import Doc.Model
 import Company.Model
 import User.Model
 import Kontra

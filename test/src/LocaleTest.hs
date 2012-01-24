@@ -11,7 +11,7 @@ import qualified Data.ByteString.Char8 as BS
 import AppControl
 import DB.Classes
 import Doc.DocControl (handleIssueLocaleChangeAfterUpdate)
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStateData
 import Context
 import MinutesTime

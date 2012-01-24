@@ -29,7 +29,7 @@ import DB.Classes
 import Company.Model
 import CompanyAccounts.Model
 import CompanyAccounts.CompanyAccountsView
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStateData
 import InputValidation
 import Kontra

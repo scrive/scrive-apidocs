@@ -28,7 +28,7 @@ import qualified Mails.Model as M
 -- Needed only for FROM address
 import User.Region
 import Util.SignatoryLinkUtils
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStateData
 
 scheduleEmailSendout :: DBMonad m => MailsConfig -> Mail -> m ()
