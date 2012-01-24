@@ -82,7 +82,7 @@ makeSoapCall :: (XmlContent request, XmlContent result)
              -> request
              -> IO (Either String result)
 makeSoapCall url action cert certpwd request = tryAndJoinEither $ do
-  Log.debug $ show request
+  Log.debug $ "request"
   let input = fpsShowXml False (SOAP request)
   Log.debug $ show input
   -- BSL.appendFile "soap.xml" input
