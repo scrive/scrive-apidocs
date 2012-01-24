@@ -121,6 +121,29 @@ data UserSettings  = UserSettings {
   , customfooter        :: Maybe String
   } deriving (Eq, Ord, Show)
 
+data UserHistory = UserHistory {
+    uhuserid           :: UserID
+  , uhevent            :: UserHistoryEvent
+  , uhip               :: Maybe IPAddress
+  , uhtime             :: MinutesTime
+  , uhsystemversion    :: 
+  , uhperforminguserid :: Maybe UserID
+  }
+
+data UserHistoryEvent = UserHistoryEvent {
+    uheventtype :: UserHistoryEventType
+  , uheventdata :: Maybe JObject
+  }
+
+data UserHistoryEventType = UserLoginAttempt 
+                          | UserLoginSuccess 
+                          | UserPasswordSetup 
+                          | UserPasswordSetupReq 
+                          | UserAccountCreated 
+                          | UserDetailsChange 
+                          | UserTOSAccept
+$(enumDeriveConvertible ''UserHistoryEventType)
+
 instance HasLocale User where
   getLocale = getLocale . usersettings
 
