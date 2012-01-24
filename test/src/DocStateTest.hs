@@ -27,9 +27,6 @@ import DB.Nexus
 import Control.Monad
 import Control.Monad.Trans
 import Data.List
-#ifndef DOCUMENTS_IN_POSTGRES
-import Happstack.State
-#endif
 import Test.Framework
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.Framework.Providers.HUnit (testCase)
@@ -190,7 +187,7 @@ docStateTests conn = testGroup "DocState" [
   testThat "ReallyDeleteDocument succeeds if deleted by the author who is a private user" conn testReallyDeleteDocumentPrivateAuthorRight,
   testThat "ReallyDeleteDocument succeeds if deleted by a company admin user" conn testReallyDeleteDocumentCompanyAdminRight,
 -- for this stuff postgres implementation is stricter, with happstack it just left the doc unchanged
-#ifdef DOCUMENTS_IN_POSTGRES
+
   testThat "ArchiveDocument fails if the archiving user is an unrelated user" conn testArchiveDocumentUnrelatedUserLeft,
   testThat "ArchiveDocument fails if the archiving user is just another standard company user" conn testArchiveDocumentCompanyStandardLeft,
   testThat "RestoreArchivedDocument fails if the storing user is an unrlated user" conn testRestoreArchivedDocumentUnrelatedUserLeft,
@@ -198,7 +195,6 @@ docStateTests conn = testGroup "DocState" [
   testThat "ReallyDeleteDocument fails if deleted by the author who is a standard company user" conn testReallyDeleteDocumentCompanyAuthorLeft,
   testThat "ReallyDeleteDocument fails if the deleting user is just another standard company user" conn testReallyDeleteDocumentCompanyStandardLeft,
   testThat "ReallyDeleteDocument fails if the document hasn't been archived" conn testReallyDeleteNotArchivedLeft,
-#endif
 
   testThat "GetDocumentsByAuthor doesn't return archived docs" conn testGetDocumentsByAuthorNoArchivedDocs,
   testThat "GetDocumentsByCompany doesn't return archived docs" conn testGetDocumentsByCompanyNoArchivedDocs,
@@ -438,7 +434,6 @@ testReallyDeleteDocumentCompanyAdminRight = doTimes 10 $ do
   validTest $ assertOneReallyDeletedSigLink etdoc
 
 -- for this stuff postgres implementation is stricter, with happstack it just left the doc unchanged
-#ifdef DOCUMENTS_IN_POSTGRES
 testArchiveDocumentUnrelatedUserLeft :: DB ()
 testArchiveDocumentUnrelatedUserLeft = doTimes 10 $ do
   author <- addNewRandomUser
@@ -501,7 +496,6 @@ testReallyDeleteNotArchivedLeft = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
   etdoc <- randomUpdate $ ReallyDeleteDocument author (documentid doc)
   validTest $ assertLeft etdoc
-#endif
 
 testGetDocumentsByAuthorNoArchivedDocs :: DB ()
 testGetDocumentsByAuthorNoArchivedDocs =
@@ -523,11 +517,7 @@ testGetDocumentsByUserNoArchivedDocs :: DB ()
 testGetDocumentsByUserNoArchivedDocs =
   checkQueryDoesntContainArchivedDocs GetDocumentsByUser
 
-#ifndef DOCUMENTS_IN_POSTGRES
-checkQueryDoesntContainArchivedDocs :: QueryEvent q [Document] => (User -> q) -> DB ()
-#else
 checkQueryDoesntContainArchivedDocs :: DBQuery q [Document] => (User -> q) -> DB ()
-#endif
 checkQueryDoesntContainArchivedDocs qry = doTimes 10 $ do
   company <- addNewCompany
   author <- addNewRandomCompanyUser (companyid company) True
@@ -549,11 +539,7 @@ testGetDeletedDocumentsByCompanyArchivedDocs :: DB ()
 testGetDeletedDocumentsByCompanyArchivedDocs =
   checkQueryContainsArchivedDocs GetDeletedDocumentsByCompany
 
-#ifndef DOCUMENTS_IN_POSTGRES
-checkQueryContainsArchivedDocs :: QueryEvent q [Document] => (User -> q) -> DB ()
-#else
 checkQueryContainsArchivedDocs :: DBQuery q [Document] => (User -> q) -> DB ()
-#endif
 checkQueryContainsArchivedDocs qry = doTimes 10 $ do
   company <- addNewCompany
   author <- addNewRandomCompanyUser (companyid company) True

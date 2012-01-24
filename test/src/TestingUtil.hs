@@ -11,11 +11,7 @@ import Data.Word
 import System.Random (newStdGen)
 import Test.QuickCheck
 import Happstack.Server
-#ifndef DOCUMENTS_IN_POSTGRES
-import Happstack.State
-#else
 import Doc.DocUtils
-#endif
 import Test.QuickCheck.Gen
 import Control.Monad.Trans
 import Data.Maybe
@@ -688,13 +684,8 @@ validTest = return . Just
 class RandomQuery a b where
   randomQuery :: a -> DB b
 
-#ifndef DOCUMENTS_IN_POSTGRES
-instance (QueryEvent ev res) => RandomQuery ev res where
-  randomQuery = query
-#else
 instance (DBQuery ev res) => RandomQuery ev res where
   randomQuery = dbQuery
-#endif
 
 instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
   randomQuery f = do
@@ -705,13 +696,8 @@ instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
 class RandomUpdate a b where
   randomUpdate :: a -> DB b
 
-#ifndef DOCUMENTS_IN_POSTGRES
-instance (UpdateEvent ev res) => RandomUpdate ev res where
-  randomUpdate = update
-#else
 instance (DBUpdate ev res) => RandomUpdate ev res where
   randomUpdate = dbUpdate
-#endif
 
 instance (Arbitrary a, RandomUpdate c b) => RandomUpdate (a -> c) b where
   randomUpdate f = do

@@ -798,21 +798,8 @@ $(deriveSerialize ''SignatoryAttachment)
 $(deriveSerialize ''AuthorAttachment)
 
 
-#ifndef DOCUMENTS_IN_POSTGRES
-instance Eq Document where
-    a == b = documentid a == documentid b
-
-instance Ord Document where
-    compare a b | documentid a == documentid b = EQ
-                | otherwise = compare (documentmtime b,documenttitle a,documentid a)
-                                      (documentmtime a,documenttitle b,documentid b)
-                              -- see above: we use reverse time here!
-#else
-
 deriving instance Eq Document
 deriving instance Ord Document
-
-#endif
 
 deriving instance Show Document
 deriving instance Show DocumentStatus
