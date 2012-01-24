@@ -243,12 +243,7 @@ fetchUsersAndStats st = fetchValues st decoder
             amount = return (
                 User {
                        userid = uid
-                     , userpassword = case (password, salt) of
-                         (Just pwd, Just salt') -> Just Password {
-                                                       pwdHash = pwd
-                                                     , pwdSalt = salt'
-                                                     }
-                         _                      -> Nothing
+                     , userpassword = maybePassword (password, salt)
                      , useriscompanyadmin = is_company_admin
                      , useraccountsuspended = account_suspended
                      , userhasacceptedtermsofservice = has_accepted_terms_of_service

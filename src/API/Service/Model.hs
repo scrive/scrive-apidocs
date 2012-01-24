@@ -210,12 +210,7 @@ fetchServices st acc = fetchRow st >>= maybe (return acc) f
           ] = fetchServices st $ Service {
              serviceid = fromSql sid
            , servicesettings = ServiceSettings {
-               servicepassword = case (fromSql password, fromSql salt) of
-                                      (Just pwd, Just salt') -> Just Password {
-                                          pwdHash = pwd
-                                        , pwdSalt = salt'
-                                      }
-                                      _ -> Nothing
+               servicepassword = maybePassword (fromSql password, fromSql salt)
                , serviceadmin = fromSql admin_id
                , servicelocation = fromSql location
                , servicemailfromaddress = fromSql email_from_address
