@@ -22,7 +22,7 @@ import Text.XML.HaXml.XmlContent.Parser
 import Text.XML.HaXml.XmlContent
 import Text.XML.HaXml.Posn
 import qualified Control.Exception as E
--- import qualified Log
+import qualified Log
 import Prelude hiding (print, putStrLn, putStr)
 
 data SOAP a = SOAP a
@@ -82,7 +82,9 @@ makeSoapCall :: (XmlContent request, XmlContent result)
              -> request
              -> IO (Either String result)
 makeSoapCall url action cert certpwd request = tryAndJoinEither $ do
+  Log.debug $ show request
   let input = fpsShowXml False (SOAP request)
+  Log.debug $ show input
   -- BSL.appendFile "soap.xml" input
 
   let args = [ "-X", "POST",
@@ -97,6 +99,7 @@ makeSoapCall url action cert certpwd request = tryAndJoinEither $ do
              ]
 
   (code,stdout,stderr) <- readCurl args input
+  Log.debug $ show code
   -- BSL.appendFile "soap.xml" stdout
 
   {-
@@ -125,7 +128,7 @@ makeSoapCall url action cert certpwd request = tryAndJoinEither $ do
   let xml = if BSL.fromString "\r\n--" `BSL.isPrefixOf` stdout
             then BSL.fromChunks [xml1]
             else stdout
-
+  Log.debug $ show xml
   case code of
     ExitFailure _ -> do
        return (Left $ "Cannot execute 'curl' for TrustWeaver: " ++ show args ++ BSL.toString stderr)
