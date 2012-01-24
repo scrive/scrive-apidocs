@@ -3,7 +3,7 @@ module ServiceStateTest (serviceStateTests) where
 import Control.Applicative
 import Control.Monad
 import Data.Maybe
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import Test.Framework
 import qualified Data.ByteString.UTF8 as BS
 
@@ -12,7 +12,7 @@ import DB.Classes
 import User.Model
 import TestingUtil
 
-serviceStateTests :: Connection -> Test
+serviceStateTests :: Nexus -> Test
 serviceStateTests conn = testGroup "ServiceState" [
     testThat "CreateService works" conn test_createService
   , testThat "GetService works" conn test_getService

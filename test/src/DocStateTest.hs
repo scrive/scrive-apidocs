@@ -23,7 +23,7 @@ import Data.Functor
 import Data.Maybe
 import Data.Convertible(convert)
 import Database.HDBC(SqlValue)
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import Control.Monad
 import Control.Monad.Trans
 import Data.List
@@ -39,7 +39,7 @@ import File.FileID
 import qualified Log
 
 
-docStateTests :: Connection -> Test
+docStateTests :: Nexus -> Test
 docStateTests conn = testGroup "DocState" [
   dataStructureProperties,
   testThat "GetDocumentsByCompanyAndTags filters" conn testGetDocumentsByCompanyAndTagsFilters,

@@ -16,7 +16,7 @@ import Control.Concurrent.MVar
 import System.Time
 import Numeric
 import qualified Database.HDBC as HDBC
-import qualified Database.HDBC.PostgreSQL as HDBC
+import DB.Nexus
 import Context
 import qualified Log
 
@@ -52,7 +52,7 @@ allActions = unsafePerformIO $ newMVar Map.empty
 -- | Use only in IO monad and when you know that forked action won't
 -- try to get access to db using 'Connection' object taken from 'Context'.
 -- Preferable use 'clone' on 'Connection' and the pass it around.
-forkActionIO :: HDBC.Connection -> String -> (HDBC.Connection -> IO ()) -> IO ()
+forkActionIO :: Nexus -> String -> (Nexus -> IO ()) -> IO ()
 forkActionIO conn title' action = do
   conn' <- HDBC.clone conn
   _ <- C.forkIO $ flip C.finally (HDBC.disconnect conn') $ do
@@ -76,7 +76,7 @@ forkActionIO conn title' action = do
 -- to False guarantees that Connection won't be closed after we're done with
 -- the request that called that function, so you can safely use Connection
 -- object taken from current Context there.
-forkAction :: (KontraMonad m, MonadIO m) => String -> (HDBC.Connection -> IO ()) -> m ()
+forkAction :: (KontraMonad m, MonadIO m) => String -> (Nexus -> IO ()) -> m ()
 forkAction title action = do
   ctx <- getContext
   liftIO $ forkActionIO (ctxdbconn ctx) title action

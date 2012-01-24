@@ -19,14 +19,14 @@ import Misc
 import API.Service.Model
 import Util.HasSomeUserInfo
 import Data.Maybe
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import User.Model
 import Data.Functor
 import KontraLink
 import DB.Classes
 import qualified Data.ByteString.UTF8 as BS
 
-serviceAdminPage :: TemplatesMonad m => Connection -> Bool -> Service -> m String
+serviceAdminPage :: TemplatesMonad m => Nexus -> Bool -> Service -> m String
 serviceAdminPage conn superuser service =
     renderTemplateFM "serviceAdminPage" $ do
        field "name" $ show $ serviceid service

@@ -1,7 +1,7 @@
 module MailsTest (mailsTests) where
 
 import Control.Applicative
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import Happstack.Server
 import Test.Framework
 import Test.Framework.Providers.HUnit
@@ -34,7 +34,7 @@ import Data.Char
 import Text.XML.HaXml.Parse (xmlParse')
 import Control.Monad.Trans
 
-mailsTests :: Connection -> [String] -> Test
+mailsTests :: Nexus -> [String] -> Test
 mailsTests conn params  = testGroup "Mails" [
     testCase "Document emails" $ testDocumentMails conn (toMailAddress params),
     testCase "User emails" $ testUserMails conn (toMailAddress params)
@@ -50,7 +50,7 @@ gRight ac = do
     Right d -> return d
 
 
-testDocumentMails  :: Connection -> Maybe String -> Assertion
+testDocumentMails  :: Nexus -> Maybe String -> Assertion
 testDocumentMails  conn mailTo = withTestEnvironment conn $ do
   author <- addNewRandomAdvancedUser
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
@@ -105,7 +105,7 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
         checkMail "Reminder signed" $ mailDocumentRemind Nothing ctx doc (head $ documentsignatorylinks sdoc)
 
 
-testUserMails :: Connection -> Maybe String -> Assertion
+testUserMails :: Nexus -> Maybe String -> Assertion
 testUserMails conn mailTo = withTestEnvironment conn $ do
   forM_ allLocales $ \l ->  do
     -- make a user and context that use the same locale
@@ -152,7 +152,7 @@ addNewRandomAdvancedUserWithLocale l = do
   (Just uuser) <- dbQuery $ GetUserByID (userid user)
   return uuser
 
-mailingContext :: Locale -> Connection -> DB Context
+mailingContext :: Locale -> Nexus -> DB Context
 mailingContext locale conn = do
     globaltemplates <- readGlobalTemplates
     ctx <- mkContext locale globaltemplates
