@@ -138,7 +138,7 @@ makeSoapCall url action cert certpwd request = tryAndJoinEither $ do
       Log.debug $ "length of xml string: " ++ (show $ length s)
       let rx = readXml s
       Log.debug $ "length of xml read: " ++ (show $ length $ show rx)
-      case readXml (BSL.toString xml) of
+      case rx of
         Right (SOAP result) -> return (Right result)
         Right (SOAPFault soapcode string actor) -> return (Left (soapcode ++":" ++ string ++":" ++ actor))
         Left errmsg -> return (Left (errmsg ++ ": " ++ BSL.toString stdout))
