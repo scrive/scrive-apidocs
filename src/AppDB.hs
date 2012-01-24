@@ -41,6 +41,7 @@ kontraTables = [
   , tableUserFriends
   , tableUserMailAPIs
   , tableUserInviteInfos
+  , tableUsersHistory
   , tableServices
   , tableCompanies
   , tableCompanyInvites
