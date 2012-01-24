@@ -257,7 +257,7 @@ appHandler handleRoutes appConf appGlobals = do
       stats <- liftIO $ getNexusStats (ctxdbconn ctx')
       
       Log.debug $ "SQL for " ++ rqUri rq ++ ": queries " ++ show (nexusQueries stats) ++ 
-           ", params " ++ show (nexusInValues stats) ++
+           ", params " ++ show (nexusParams stats) ++
                          ", rows " ++ show (nexusRows stats) ++
                                      ", values " ++ show (nexusValues stats)
 
