@@ -82,9 +82,7 @@ makeSoapCall :: (XmlContent request, XmlContent result)
              -> request
              -> IO (Either String result)
 makeSoapCall url action cert certpwd request = tryAndJoinEither $ do
-  Log.debug $ "request"
   let input = fpsShowXml False (SOAP request)
-  Log.debug $ show input
   -- BSL.appendFile "soap.xml" input
 
   let args = [ "-X", "POST",
@@ -99,7 +97,6 @@ makeSoapCall url action cert certpwd request = tryAndJoinEither $ do
              ]
 
   (code,stdout,stderr) <- readCurl args input
-  Log.debug $ show code
   -- BSL.appendFile "soap.xml" stdout
 
   {-
@@ -124,20 +121,15 @@ makeSoapCall url action cert certpwd request = tryAndJoinEither $ do
   let (boundary,rest) = BS.breakSubstring (BS.fromString "\r\n") (BS.concat (BSL.toChunks (BSL.drop 2 stdout)))
       (_,rest2) = BS.breakSubstring (BS.fromString "\r\n\r\n") rest
       (xml1,_) = BS.breakSubstring boundary rest2
-  Log.debug $ "eric09"
   let xml = if BSL.fromString "\r\n--" `BSL.isPrefixOf` stdout
             then BSL.fromChunks [xml1]
             else stdout
-  Log.debug $ "eric10"
-  Log.debug $ show xml
   case code of
     ExitFailure _ -> do
        return (Left $ "Cannot execute 'curl' for TrustWeaver: " ++ show args ++ BSL.toString stderr)
     ExitSuccess -> do
       let s = BSL.toString xml
-      Log.debug $ "length of xml string from Trustweaver: " ++ (show $ length s)
       let rx = readXml s
-      Log.debug $ "left or right: " ++ if isLeft rx then "Left" else "Right"
       case rx of
         Right (SOAP result) -> return (Right result)
         Right (SOAPFault soapcode string actor) -> return (Left (soapcode ++":" ++ string ++":" ++ actor))
