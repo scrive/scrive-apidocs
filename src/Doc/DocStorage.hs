@@ -201,7 +201,7 @@ maybeScheduleRendering fileid docid = do
                 case jpegpages of
                      JpegPagesError _errmsg -> do
                                         -- FIXME: need to report this error somewhere
-                         -- _ <- doc_update $ ErrorDocument docid $ BS.toString errmsg
+                         -- _ <- (runDB . dbUpdate) $ ErrorDocument docid $ BS.toString errmsg
                          return ()
                      _                     -> return ()
                 modifyMVar_ mvar (\filesrenderednow -> return (Map.insert fileid jpegpages filesrenderednow))

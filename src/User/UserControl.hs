@@ -405,7 +405,7 @@ handlePostUserSecurity = do
 -}
 isUserDeletable :: Kontrakcja m => User -> m Bool
 isUserDeletable user = do
-  userdocs <- doc_query $ GetDocumentsByUser user
+  userdocs <- (runDB . dbQuery) $ GetDocumentsByUser user
   return $ all isDeletableDocument userdocs
 
 handleViralInvite :: Kontrakcja m => m KontraLink
@@ -884,7 +884,7 @@ handleAccountRemovalFromSign :: Kontrakcja m => User -> SignatoryLink -> ActionI
 handleAccountRemovalFromSign user siglink aid hash = do
   Context{ctxtime} <- getContext
   doc <- removeAccountFromSignAction aid hash
-  doc1 <- guardRightM $ doc_update . ArchiveDocument user $ documentid doc
+  doc1 <- guardRightM $ (runDB . dbUpdate) . ArchiveDocument user $ documentid doc
   _ <- case getSigLinkFor doc1 (signatorylinkid siglink) of
     Just sl -> runDB $ addSignStatDeleteEvent doc1 sl ctxtime
     _       -> return False

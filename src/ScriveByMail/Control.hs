@@ -143,7 +143,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   
   let userDetails = signatoryDetailsFromUser user mcompany
 
-  edoc <- doc_update $ NewDocument user mcompany (BS.fromString title) doctype ctxtime
+  edoc <- (runDB . dbUpdate) $ NewDocument user mcompany (BS.fromString title) doctype ctxtime
   
   when (isLeft edoc) $ do
     let Left msg = edoc
@@ -158,10 +158,10 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   let Right doc = edoc
       
   _ <- DocControl.handleDocumentUploadNoLogin (documentid doc) pdfBinary (BS.fromString title)
-  _ <- doc_update $ SetDocumentAdvancedFunctionality (documentid doc) ctxtime
-  _ <- doc_update $ SetEmailIdentification (documentid doc) ctxtime
+  _ <- (runDB . dbUpdate) $ SetDocumentAdvancedFunctionality (documentid doc) ctxtime
+  _ <- (runDB . dbUpdate) $ SetEmailIdentification (documentid doc) ctxtime
   
-  errs <- lefts <$> (sequence $ [doc_update $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) ctxtime])
+  errs <- lefts <$> (sequence $ [(runDB . dbUpdate) $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) ctxtime])
           
   when ([] /= errs) $ do
     Log.scrivebymail $ "Could not set up document: " ++ (intercalate "; " errs)
@@ -171,7 +171,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
     
     mzero
 
-  edoc2 <- doc_update $ PreparationToPending (documentid doc) ctxtime
+  edoc2 <- (runDB . dbUpdate) $ PreparationToPending (documentid doc) ctxtime
   
   when (isLeft edoc2) $ do
     Log.scrivebymail $ "Could not got to pending document: " ++ (intercalate "; " errs)

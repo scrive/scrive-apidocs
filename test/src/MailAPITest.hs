@@ -121,7 +121,7 @@ successChecks sigs res = do
         equalsKey (=~ "^Document #[0-9]+ created$") "message" res
     let mdocid = lookup "documentid" res
     assertBool "documentid is given" $ isJust mdocid
-    mdoc <- doc_query $ GetDocumentByDocumentID $ read $ fromJust mdocid
+    mdoc <- (runDB . dbQuery) $ GetDocumentByDocumentID $ read $ fromJust mdocid
     assertBool "document was really created" $ isJust mdoc
     let doc = fromJust mdoc
     assertBool ("document should have " ++ show sigs ++ " signatories has " ++ show (length (documentsignatorylinks doc))) $ length (documentsignatorylinks doc) == sigs

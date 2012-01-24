@@ -50,7 +50,7 @@ processEvents = runDBQuery GetUnreadEvents >>= mapM_ processEvent
       markEventAsRead eid  
       case maybeRead mi of
         Just (Invitation docid signlinkid) -> do
-          mdoc <- doc_query $ GetDocumentByDocumentID docid
+          mdoc <- (runDB . dbQuery) $ GetDocumentByDocumentID docid
           case mdoc of
             Nothing -> do
               Log.debug $ "No document with id = " ++ show docid
@@ -101,18 +101,18 @@ handleDeliveredInvitation mc doc signlinkid = do
           to = [getMailAddress $ fromJust $ getAuthorSigLink doc]
         }
     Nothing -> return ()
-  _ <- doc_update $ SetInvitationDeliveryStatus (documentid doc) signlinkid Mail.Delivered
+  _ <- (runDB . dbUpdate) $ SetInvitationDeliveryStatus (documentid doc) signlinkid Mail.Delivered
   return ()
 
 handleOpenedInvitation :: DBMonad m => DocumentID -> SignatoryLinkID -> m ()
 handleOpenedInvitation docid signlinkid = do
   now <- getMinutesTime
-  _ <- doc_update $ MarkInvitationRead docid signlinkid now
+  _ <- (runDB . dbUpdate) $ MarkInvitationRead docid signlinkid now
   return ()
 
 handleDeferredInvitation :: (DBMonad m, TemplatesMonad m) => (String, MailsConfig) -> DocumentID -> SignatoryLinkID -> m ()
 handleDeferredInvitation (hostpart, mc) docid signlinkid = do
-  mdoc <- doc_update $ SetInvitationDeliveryStatus docid signlinkid Mail.Deferred
+  mdoc <- (runDB . dbUpdate) $ SetInvitationDeliveryStatus docid signlinkid Mail.Deferred
   case mdoc of
     Right doc -> do
       mail <- mailDeferredInvitation hostpart doc
@@ -125,7 +125,7 @@ handleUndeliveredInvitation :: (DBMonad m, TemplatesMonad m) => (String, MailsCo
 handleUndeliveredInvitation (hostpart, mc) doc signlinkid = do
   case getSignatoryLinkFromDocumentByID doc signlinkid of
     Just signlink -> do
-      _ <- doc_update $ SetInvitationDeliveryStatus (documentid doc) signlinkid Mail.Undelivered
+      _ <- (runDB . dbUpdate) $ SetInvitationDeliveryStatus (documentid doc) signlinkid Mail.Undelivered
       mail <- mailUndeliveredInvitation hostpart doc signlink
       scheduleEmailSendout mc $ mail {
         to = [getMailAddress $ fromJust $ getAuthorSigLink doc]

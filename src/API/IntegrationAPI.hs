@@ -121,7 +121,7 @@ integrationAPI = dir "integration" $ choice [
 documentFromParam:: Kontrakcja m => IntegrationAPIFunction m Document
 documentFromParam = do
     srvs <- service <$> ask
-    mdocument <- liftMM (doc_query . GetDocumentByDocumentID) $ maybeReadM $ fromJSONField "document_id"
+    mdocument <- liftMM ((runDB . dbQuery) . GetDocumentByDocumentID) $ maybeReadM $ fromJSONField "document_id"
     when (isNothing mdocument || (not $ sameService srvs mdocument)) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists"
     return $ fromJust mdocument
 
@@ -187,7 +187,7 @@ createDocument = do
        case maybeRead templateids of
          Nothing -> throwApiError API_ERROR_PARSING $ "Invalid documentid " ++ templateids
          Just templateid -> do
-           mtemplate <- doc_query $ GetDocumentByDocumentID templateid
+           mtemplate <- (runDB . dbQuery) $ GetDocumentByDocumentID templateid
            case mtemplate of
              Nothing -> throwApiError API_ERROR_NO_DOCUMENT $ "The template you requested does not exits " ++ show templateids
              Just _template ->
@@ -205,11 +205,11 @@ createDocFromTemplate ::(APIContext c, Kontrakcja m) =>
                         -> MinutesTime
                         -> APIFunction m c (Maybe Document)
 createDocFromTemplate templateid title user mcompany time = do
-  edoc <- doc_update $ SignableFromDocumentIDWithUpdatedAuthor user mcompany templateid time
+  edoc <- (runDB . dbUpdate) $ SignableFromDocumentIDWithUpdatedAuthor user mcompany templateid time
   when (isLeft edoc) $
     throwApiError API_ERROR_OTHER $ "Cannot create document!"
   let doc = fromRight edoc
-  edoc' <- doc_update $ SetDocumentTitle (documentid doc) title time
+  edoc' <- (runDB . dbUpdate) $ SetDocumentTitle (documentid doc) title time
   when (isLeft edoc') $
     Log.integration $ "Could not set title on doc " ++ show (documentid doc)
   return $ either (const $ Just doc) Just edoc'
@@ -224,7 +224,7 @@ createDocFromFiles :: (Kontrakcja m, APIContext c) =>
                       -> APIFunction m c (Maybe Document)
 createDocFromFiles title doctype files user mcompany time = do
   ctx <- getContext
-  edoc <- doc_update $ NewDocument user mcompany title doctype time
+  edoc <- (runDB . dbUpdate) $ NewDocument user mcompany title doctype time
   case edoc of
     Left _ -> throwApiError API_ERROR_OTHER $ "Cannot create document"
     Right doc -> do
@@ -234,14 +234,14 @@ createDocFromFiles title doctype files user mcompany time = do
                          Left _ -> throwApiError API_ERROR_OTHER $ "Cannot handle uploaded data"
                          Right x -> return x
             file <- runDB $ dbUpdate $ NewFile name content14
-            doc_update $ AttachFile (documentid doc) (fileid file) time
+            (runDB . dbUpdate) $ AttachFile (documentid doc) (fileid file) time
       mapM_ (uncurry addAndAttachFile) files
       return $ Just doc
 
 updateDocumentWithDocumentUI :: Kontrakcja m => Document -> IntegrationAPIFunction m Document
 updateDocumentWithDocumentUI doc = do
     mailfooter <- fromJSONField "mailfooter"
-    ndoc <- doc_update $ SetDocumentUI (documentid doc) $ (documentui doc) {documentmailfooter = mailfooter}
+    ndoc <- (runDB . dbUpdate) $ SetDocumentUI (documentid doc) $ (documentui doc) {documentmailfooter = mailfooter}
     return $ either (const doc) id ndoc
 
 createAPIDocument :: Kontrakcja m
@@ -269,11 +269,11 @@ createAPIDocument company' (authorTMP:signTMPS) tags mlocale createFun = do
     mdoc <- createFun author (Just company) now
     when (isNothing mdoc) $ throwApiError API_ERROR_OTHER "Problem creating a document | This may be because the company and author don't match"
     let doc = fromJust mdoc
-    _ <- doc_update $ SetDocumentAdvancedFunctionality (documentid doc) now
-    _ <- doc_update $ SetDocumentTags (documentid doc) tags
+    _ <- (runDB . dbUpdate) $ SetDocumentAdvancedFunctionality (documentid doc) now
+    _ <- (runDB . dbUpdate) $ SetDocumentTags (documentid doc) tags
 
     when (isJust mlocale) $
-      ignore $ doc_update $ SetDocumentLocale (documentid doc) (fromJust mlocale) now
+      ignore $ (runDB . dbUpdate) $ SetDocumentLocale (documentid doc) (fromJust mlocale) now
     let mauthorsiglink = getAuthorSigLink doc
     when (isNothing mauthorsiglink) $ throwApiError API_ERROR_OTHER "Problem creating document."
     let authorsiglink = fromJust mauthorsiglink
@@ -282,7 +282,7 @@ createAPIDocument company' (authorTMP:signTMPS) tags mlocale createFun = do
         nonauthordetails = map toSignatoryDetails signTMPS
         nonauthorroles = map (fromMaybe defsigroles . toSignatoryRoles) signTMPS
         sigs = (toSignatoryDetails authorTMP, authorroles):zip nonauthordetails nonauthorroles
-    doc' <- doc_update $ ResetSignatoryDetails (documentid doc) sigs (ctxtime ctx)
+    doc' <- (runDB . dbUpdate) $ ResetSignatoryDetails (documentid doc) sigs (ctxtime ctx)
 
     when (isLeft doc') $ do
         Log.integration $ "error creating document: " ++ fromLeft doc'
@@ -361,7 +361,7 @@ getDocuments = do
       Just s  -> case parseMinutesTimeISO s of
         Just t  -> return $ Just t
         Nothing -> throwApiError API_ERROR_PARSING $ "to_date unrecognized format: " ++ show s
-    linkeddocuments <- doc_query $ GetDocumentsByCompanyAndTags (Just sid) (companyid company) tags
+    linkeddocuments <- (runDB . dbQuery) $ GetDocumentsByCompanyAndTags (Just sid) (companyid company) tags
     api_docs <- sequence [api_document_read False d  
                          | d <- linkeddocuments
                          , isAuthoredByCompany (companyid company) d
@@ -391,7 +391,7 @@ setDocumentTag =  do
               liftM2 pairMaybe (fromJSONField "name") (fromJSONField "value")
     when (isNothing mtag) $ throwApiError API_ERROR_MISSING_VALUE "Could not read tag name or value"
     let tags = addTag (documenttags doc) (fromJust mtag)
-    res <- doc_update $ SetDocumentTags (documentid doc) tags
+    res <- (runDB . dbUpdate) $ SetDocumentTags (documentid doc) tags
     when (isLeft res) $ throwApiError API_ERROR_NO_USER $ "Changing tag problem:" ++ fromLeft res
     return $ toJSObject []
 
@@ -404,7 +404,7 @@ removeDocument = do
                      (runDBQuery . GetUserByID)
                      (getAuthorSigLink doc >>= maybesignatory)
     when (isNothing mauthor) $ throwApiError API_ERROR_NO_USER $ "Error while removing a document: Failed to find author"
-    res <- doc_update $ ArchiveDocument (fromJust mauthor) $ documentid doc
+    res <- (runDB . dbUpdate) $ ArchiveDocument (fromJust mauthor) $ documentid doc
     when (isLeft res) $ throwApiError API_ERROR_NO_DOCUMENT $ "Error while removing a document: " ++ fromLeft res
     return $ toJSObject []
 
@@ -445,5 +445,5 @@ getDaveDoc :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDaveDoc = do
   Just (JSString document_id) <- fromJSONField "document_id"
   let Just did = maybeRead $ fromJSString document_id
-  doc <- doc_query $ GetDocumentByDocumentID $ DocumentID did
+  doc <- (runDB . dbQuery) $ GetDocumentByDocumentID $ DocumentID did
   return $ toJSObject [("document", showJSON $ show doc)]

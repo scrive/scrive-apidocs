@@ -71,7 +71,7 @@ handleIssueArchive = do
     Context { ctxmaybeuser = Just user, ctxtime } <- getContext
     docids <- getCriticalFieldList asValidDocID "doccheck"
     mapM_ (\did -> do 
-              doc <- guardRightM' $ doc_update $ ArchiveDocument user did
+              doc <- guardRightM' $ (runDB . dbUpdate) $ ArchiveDocument user did
               case getSigLinkFor doc user of
                 Just sl -> runDB $ addSignStatDeleteEvent doc sl ctxtime
                 _ -> return False) 

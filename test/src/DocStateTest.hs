@@ -619,7 +619,7 @@ testDocumentUpdateDoesNotChangeID = doTimes 10 $ do
 
   let sd = signatoryDetailsFromUser author Nothing
   -- execute
-  enewdoc <- doc_update $ Reset mt (documentid doc) a b c d (sd, r, userid author, Nothing) e f AdvancedFunctionality
+  enewdoc <- (runDB . dbUpdate) $ Reset mt (documentid doc) a b c d (sd, r, userid author, Nothing) e f AdvancedFunctionality
   --assert
   validTest $ do
     assertRight enewdoc
@@ -636,7 +636,7 @@ testDocumentUpdateCanChangeTitle = doTimes 10 $ do
 
   --execute
   let sd = signatoryDetailsFromUser author Nothing
-  enewdoc <- doc_update $ UpdateDocument mt (documentid doc) a b c d (sd, r, userid author, Nothing) e f AdvancedFunctionality
+  enewdoc <- (runDB . dbUpdate) $ UpdateDocument mt (documentid doc) a b c d (sd, r, userid author, Nothing) e f AdvancedFunctionality
   --assert
   validTest $ do
     assertRight enewdoc
@@ -778,7 +778,7 @@ testNotPreparationUpdateDocumentAlwaysLeft = doTimes 10 $ do
 
   let sd = signatoryDetailsFromUser author Nothing
   -- execute
-  enewdoc <- doc_update $ UpdateDocument mt (documentid doc) a b c d (sd, [SignatoryAuthor, SignatoryPartner], userid author, Nothing) e f AdvancedFunctionality
+  enewdoc <- (runDB . dbUpdate) $ UpdateDocument mt (documentid doc) a b c d (sd, [SignatoryAuthor, SignatoryPartner], userid author, Nothing) e f AdvancedFunctionality
 
   --assert
   validTest $ assertLeft enewdoc
@@ -794,7 +794,7 @@ testPreparationUpdateDocumentAlwaysRight = doTimes 10 $ do
   let sd = signatoryDetailsFromUser author Nothing
 
   --execute
-  enewdoc <- doc_update $ UpdateDocument mt (documentid doc) a b c d (sd, r, userid author, Nothing) e f AdvancedFunctionality
+  enewdoc <- (runDB . dbUpdate) $ UpdateDocument mt (documentid doc) a b c d (sd, r, userid author, Nothing) e f AdvancedFunctionality
 
   --assert
   validTest $ do
