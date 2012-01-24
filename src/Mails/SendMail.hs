@@ -88,7 +88,7 @@ wrapHTML body = concat [
 fromNiceAddress :: MailInfo -> String -> DB String
 fromNiceAddress (None) servicename = return servicename
 fromNiceAddress (Invitation did _) servicename = do
-  mdoc <- doc_query' $ GetDocumentByDocumentID did
+  mdoc <- dbQuery $ GetDocumentByDocumentID did
   case mdoc of
     Nothing -> return $ servicename
     Just doc -> case (documentregion doc, BSU.toString $ getAuthorName doc) of

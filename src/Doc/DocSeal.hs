@@ -211,7 +211,7 @@ sealDocument ctx document = do
   Log.debug $ "Sealing document"
   mapM_ (sealDocumentFile ctx document) files
   Log.debug $ "Sealing should be done now"
-  Just newdocument <- doc_query' $ GetDocumentByDocumentID (documentid document)
+  Just newdocument <- dbQuery $ GetDocumentByDocumentID (documentid document)
   return $ Right newdocument
 
 

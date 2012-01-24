@@ -586,8 +586,8 @@ addRandomDocument rda = do
   file <- addNewRandomFile
   now <- liftIO getMinutesTime
   document <- worker file now
-  docid <- doc_update' $ StoreDocumentForTesting document
-  mdoc <- doc_query' $ GetDocumentByDocumentID docid
+  docid <- dbUpdate $ StoreDocumentForTesting document
+  mdoc <- dbQuery $ GetDocumentByDocumentID docid
   case mdoc of
     Nothing -> do
               assertFailure "Could not store document."
@@ -612,7 +612,7 @@ addRandomDocument rda = do
 
       (signinfo, seeninfo) <- rand 10 arbitrary
       asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
-      asl <- doc_update' $ SignLinkFromDetailsForTest asd roles
+      asl <- dbUpdate $ SignLinkFromDetailsForTest asd roles
       let asl' = asl { maybeseeninfo = seeninfo
                      , maybesigninfo = signinfo
                      }
