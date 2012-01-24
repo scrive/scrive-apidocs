@@ -705,8 +705,6 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_flashMessageLoginPageRedirectReasonNotLoggedIn","Du är inte inloggad.",,"You are not logged in."
 "_flashMessageLoginPageRedirectReasonWrongMailOrPassword","Felaktig e-post eller lösenord.",,"Incorrect email or password."
 "_flashMessageMissingRequiredField","Du har missat att fylla i ett obligatoriskt fält.",,"You missed some mandatory fields."
-"_flashMessageMultipleAttachmentShareDone","Valda bilagor har blivit delade inom din organisation.",,"The selected attachments have been shared with your organisation."
-"_flashMessageMultipleTemplateShareDone","Valda mallar har blivit delade inom din organisation.",,"The selected templates have been shared with your organisation."
 "_flashMessageMustAcceptTOS","För att kunna använda tjänsten måste du acceptera Scrive Allmänna
  Villkor.",,"Please accept the Scrive Terms of Service to get started."
 "_flashMessageNeedsLetterAndDigit","$fieldnametitlecase$ måste innehålla åtminstone två bokstäver
@@ -750,8 +748,6 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_flashMessageRubbishHardDeleteDone","The selected documents have been permanently deleted.""The selected documents have been permanently deleted.",,
 "_flashMessageRubbishRestoreDone","The selected documents have been restored to your archive.""The selected documents have been restored to your archive.",,
 "_flashMessageSecondNameIsRequired","Efternamn krävs.",,"Last name required."
-"_flashMessageSingleAttachmentShareDone","$docname$ har blivit delad inom din organisation.",,"$docname$ has been shared with your organisation."
-"_flashMessageSingleTemplateShareDone","$docname$ har blivit delad inom din organisation.",,"$docname$ has been shared with your organisation."
 "_flashMessageTemplateArchiveDone","Valda mallar har blivit raderade.",,"The selected templates have been deleted."
 "_flashMessageThanksForTheQuestion","Ditt meddelande har skickats! Vi återkommer inom 24h.",,"Your message has been sent! We will get back to you within 24
  hours."
@@ -1546,8 +1542,6 @@ profits and reduce frustration. The following mateials shall only
 "_listReallyDeleteDialogHead","Radera permanent",,"Permanent Delete"
 "_listRestoreDialogBody","Vill du återsätlla följande dokument?",,"Would you like to restore the selected documents?"
 "_listRestoreDialogHead","Återställ",,"Restore"
-"_listShareDialogBody","Vill du dela detta med alla i din organisation.",,"Do you want to share this with everyone on your organisation?"
-"_listShareDialogHead","Dela",,"Share"
 "_listand","och",,"and"
 "_listyou","du",,"you"
 "_loadingFile","Laddar upp . . .",,"Uploading . . ."
@@ -2020,10 +2014,8 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_orgnumber","Org. nr",,"Company Reg No"
 "_pageAttachmentAttachments","BILAGOR:",,"ATTACHMENTS:"
 "_pageAttachmentDownloadPDF","Ladda ned PDF",,"Download PDF"
-"_pageAttachmentListIfShared","Delad",,"Shared"
 "_pageAttachmentListNewAttachment","Nya Bilagor",,"New attachments"
 "_pageAttachmentListSearchInfo","Sök dokument",,"Search document"
-"_pageAttachmentListShare","Dela",,"Share"
 "_pageDocumentForAuthorHelpersLocalDialogsAddAttachment","Lägg till bilaga",,"Add attachment"
 "_pageDocumentForAuthorHelpersLocalDialogsAttachmentdesc","Beskrivning",,"Description"
 "_pageDocumentForAuthorHelpersLocalDialogsAttachmentname","Bilaga",,"Attachment"
@@ -2764,8 +2756,6 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_senderNumber","Avsändarens Orgnr/Persnr",,"Sender's Company Reg No"
 "_senderTitle","Avsändarens  titel, företag",,"Sender's position, company"
 "_setAllFields","Var vänlig namnge alla skapade fält",,"Please name all created fields"
-"_share","Dela",,"Share"
-"_shared","Delad",,"Shared"
 "_showFileImagesError","Vi beklagar, det var något problem med formateringen på din PDF.
  Vänligen kontrollera dokumentet och försök igen.",,"We are sorry, something was wrong with the format in your PDF.
  Please check the document and try again."

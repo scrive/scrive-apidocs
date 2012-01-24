@@ -23,7 +23,6 @@ import Doc.Transitory
 import Doc.DocStateData
 import Doc.DocControl
 import Doc.DocUtils
-import Company.Model
 import KontraLink
 import User.Model
 import Util.SignatoryLinkUtils
@@ -33,7 +32,6 @@ docControlTests :: Nexus -> Test
 docControlTests conn =  testGroup "Templates"
                            [
                                testCase "Create document from template" $ testDocumentFromTemplate conn
-                             , testCase "Create document from template | Shared" $ testDocumentFromTemplateShared conn
                              , testCase "Uploading file as contract makes doc" $ testUploadingFileAsContract conn
                              , testCase "Uploading file as offer makes doc" $ testUploadingFileAsOffer conn
                              , testCase "Uploading file as order makes doc" $ testUploadingFileAsOrder conn
@@ -264,24 +262,6 @@ testDocumentFromTemplate conn =  withTestEnvironment conn $ do
     doc <- addRandomDocumentWithAuthorAndCondition user (\d -> case documenttype d of
                                                             Template _ -> True
                                                             _ -> False)
-    docs1 <- randomQuery $ GetDocumentsByUser user
-    globaltemplates <- readGlobalTemplates
-    ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
-      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
-    req <- mkRequest POST [("template", inText (show $ documentid doc))]
-    _ <- runTestKontra req ctx $ handleCreateFromTemplate
-    docs2 <- randomQuery $ GetDocumentsByUser user
-    assertBool "No new document" (length docs2 == 1+ length docs1)
-
-testDocumentFromTemplateShared :: Nexus -> Assertion
-testDocumentFromTemplateShared conn = withTestEnvironment conn $ do
-    (Company {companyid}) <- addNewCompany
-    (Just author) <- addNewCompanyUser "aaa" "bbb" "xxx@xxx.pl" companyid
-    doc <- addRandomDocumentWithAuthorAndCondition author (\d -> case documenttype d of
-                                                            Template _ -> True
-                                                            _ -> False)
-    _ <- randomUpdate $ ShareDocument $ documentid doc
-    (Just user) <- addNewCompanyUser "ccc" "ddd" "zzz@zzz.pl" companyid
     docs1 <- randomQuery $ GetDocumentsByUser user
     globaltemplates <- readGlobalTemplates
     ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })

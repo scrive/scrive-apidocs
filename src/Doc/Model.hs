@@ -4,7 +4,6 @@
 module Doc.Model
   ( module File.File
   , isTemplate -- fromUtils
-  , isShared -- fromUtils
   , isDeletableDocument -- fromUtils
   , anyInvitationUndelivered
   , undeliveredSignatoryLinks
@@ -36,7 +35,6 @@ module Doc.Model
   , GetDocumentsByCompanyAndTags(..)
   , GetDocumentsBySignatory(..)
   , GetDocumentsByUser(..)
-  , GetDocumentsSharedInCompany(..)
   , GetSignatoryLinkIDs(..)
   , GetTimeoutedButPendingDocuments(..)
   , MarkDocumentSeen(..)
@@ -70,7 +68,6 @@ module Doc.Model
   , SetInviteText(..)
   -- , SetSignatoryCompany(..)
   -- , SetSignatoryUser(..)
-  , ShareDocument(..)
   , SignDocument(..)
   , SignLinkFromDetailsForTest(..)
   , SignableFromDocument(..)
@@ -309,7 +306,6 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documentinvitetext" documentinvitetext
                    , checkEqualBy "documentallowedidtypes" (nub . documentallowedidtypes)
                    , checkEqualBy "documentcancelationreason" documentcancelationreason
-                   , checkEqualBy "documentsharing" documentsharing
                    , checkEqualBy "documentrejectioninfo" documentrejectioninfo
                    , checkEqualBy "documenttags" documenttags
                    , checkEqualBy "documentservice" documentservice
@@ -343,7 +339,6 @@ decodeRowAsDocument :: DocumentID
                     -> BS.ByteString
                     -> [IdentificationType]
                     -> Maybe CancelationReason
-                    -> DocumentSharing
                     -> Maybe MinutesTime
                     -> Maybe SignatoryLinkID
                     -> Maybe BS.ByteString
@@ -372,7 +367,6 @@ decodeRowAsDocument did
                     invite_text
                     allowed_id_types
                     cancelationreason
-                    sharing
                     rejection_time
                     rejection_signatory_link_id
                     rejection_reason
@@ -409,7 +403,7 @@ decodeRowAsDocument did
                                                , documentinvitetext = invite_text
                                                , documentallowedidtypes = allowed_id_types
                                                , documentcancelationreason = cancelationreason
-                                               , documentsharing = sharing
+                                               , documentsharing = Private
                                                , documentrejectioninfo = case (rejection_time, rejection_signatory_link_id, rejection_reason) of
                                                                            (Just t, Just sl, mr) -> Just (t, sl, fromMaybe BS.empty mr)
                                                                            _ -> Nothing
@@ -442,7 +436,6 @@ selectDocumentsSelectors = [ "id"
                            , "invite_text"
                            , "allowed_id_types"
                            , "cancelation_reason"
-                           , "sharing"
                            , "rejection_time"
                            , "rejection_signatory_link_id"
                            , "rejection_reason"
@@ -786,7 +779,6 @@ insertDocumentAsIs document = do
                  , documentinvitetext
                  , documentallowedidtypes
                  , documentcancelationreason
-                 , documentsharing
                  , documentrejectioninfo
                  , documenttags
                  , documentservice
@@ -827,7 +819,6 @@ insertDocumentAsIs document = do
                                      , sqlField "log" documentlog
                                      , sqlField "allowed_id_types" documentallowedidtypes
                                      , sqlField "cancelation_reason" documentcancelationreason
-                                     , sqlField "sharing" documentsharing
                                      , sqlField "rejection_time" $ fst3 `fmap` documentrejectioninfo
                                      , sqlField "rejection_signatory_link_id" $ snd3 `fmap` documentrejectioninfo
                                      , sqlField "rejection_reason" $ thd3 `fmap` documentrejectioninfo
@@ -837,6 +828,7 @@ insertDocumentAsIs document = do
                                      -- , toSql documentsignatoryattachments   -- many to many
                                      , sqlField "mail_footer" $ documentmailfooter $ documentui  -- should go into separate table?
                                      , sqlField "region" documentregion
+                                     , sqlField "sharing" (iToSql 1) -- this is unused, but does not have default and needs to be specifed here
                                      ]
                                      "NOT EXISTS (SELECT * FROM documents WHERE id = ?)"
                                      [toSql documentid]
@@ -1112,7 +1104,6 @@ instance DBUpdate DocumentFromSignatoryData (Either String Document) where
    where
     toNewDoc :: Document -> Document
     toNewDoc d = d { documentsignatorylinks = map toNewSigLink (documentsignatorylinks d)
-                    , documentsharing = Private
                     , documenttype = newDocType $ documenttype d
                     , documentsignatoryattachments = map replaceCSV (documentsignatoryattachments d)
                     }
@@ -1358,26 +1349,6 @@ instance DBQuery GetDocumentsByUser [Document] where
   dbQuery (GetDocumentsByUser user) = do
         selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?)<>0)")
                                          [toSql (userid user), toSql [SignatoryAuthor]]
-
-data GetDocumentsSharedInCompany = GetDocumentsSharedInCompany User
-                                   deriving (Eq, Ord, Show, Typeable)
-instance DBQuery GetDocumentsSharedInCompany [Document] where
-  dbQuery (GetDocumentsSharedInCompany User{usercompany}) = do
-    case usercompany of
-      Just companyid -> do
-        documents <- selectDocuments (selectDocumentsSQL ++
-                                      " WHERE deleted IS FALSE" ++
-                                      "   AND sharing = ?" ++
-                                      "   AND EXISTS (SELECT 1 FROM signatory_links " ++
-                                      "               WHERE document_id = documents.id" ++
-                                      "               AND company_id = ?)" ++
-                                      "   ORDER BY mtime DESC")
-                       [ toSql Shared
-                       , toSql companyid
-                       ]
-
-        return $ filter ((== Shared) . documentsharing) . filterDocsWhereActivated companyid . filterDocsWhereDeleted False companyid $ documents
-      _ -> return []
 
 data GetSignatoryLinkIDs = GetSignatoryLinkIDs
                            deriving (Eq, Ord, Show, Typeable)
@@ -1834,17 +1805,6 @@ instance DBUpdate SetInvitationDeliveryStatus (Either String Document) where
                          , toSql (toDocumentSimpleType (Signable undefined))
                          ]
     getOneDocumentAffected "SetInvitationDeliveryStatus" r did
-
-
-data ShareDocument = ShareDocument DocumentID
-                     deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate ShareDocument (Either String Document) where
-  dbUpdate (ShareDocument did) = do
-    r <- runUpdateStatement "documents"
-         [ sqlField "sharing" $ Shared
-         ]
-         "WHERE id = ? AND deleted = FALSE" [ toSql did ]
-    getOneDocumentAffected "ShareDocument" r did
 
 
 data SignDocument = SignDocument DocumentID SignatoryLinkID MagicHash MinutesTime IPAddress (Maybe SignatureInfo)

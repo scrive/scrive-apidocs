@@ -12,7 +12,6 @@ module Doc.DocStateUpdate
     , updateDocAuthorAttachments
     , attachFile
     , newDocument
-    , shareDocuments
     ) where
 
 import DB.Types
@@ -259,17 +258,6 @@ newDocument title doctype = withUser $ \user -> do
   Context{ ctxtime } <- getContext
   mcompany <- getCompanyForUser user
   transActionNotAvailable <$> doc_update (NewDocument user mcompany title doctype ctxtime)
-
--- | Share documents where logged in user is author
-shareDocuments :: Kontrakcja m => [DocumentID] -> m (Either DBError [Document])
-shareDocuments dids = sequence <$> mapM shareDocument dids
-
-shareDocument :: Kontrakcja m => DocumentID -> m (Either DBError Document)
-shareDocument did = onlyAuthor did $ do
-  edoc <- doc_update $ ShareDocument did
-  either (\_ -> return $ Left $ DBResourceNotAvailable)
-         (return . Right)
-         edoc
 
 withUser :: Kontrakcja m => (User -> m (Either DBError a)) -> m (Either DBError a)
 withUser action = do

@@ -1655,28 +1655,6 @@ handleRubbishReallyDelete = do
   addFlashM flashMessageRubbishHardDeleteDone
   return $ LinkRubbishBin
 
-handleTemplateShare :: Kontrakcja m => m KontraLink
-handleTemplateShare = withUserPost $ do
-    docs <- handleIssueShare
-    case docs of
-      (d:[]) -> addFlashM $ flashMessageSingleTemplateShareDone $ documenttitle d
-      _ -> addFlashM flashMessageMultipleTemplateShareDone
-    return $ LinkTemplates
-
-handleAttachmentShare :: Kontrakcja m => m KontraLink
-handleAttachmentShare = withUserPost $ do
-    docs <- handleIssueShare
-    case docs of
-      (d:[]) -> addFlashM $ flashMessageSingleAttachmentShareDone $ documenttitle d
-      _ -> addFlashM  flashMessageMultipleAttachmentShareDone
-    return $ LinkAttachments
-
-handleIssueShare :: Kontrakcja m => m [Document]
-handleIssueShare = do
-  idnumbers <- getCriticalFieldList asValidDocID "doccheck"
-  let ids = map DocumentID idnumbers
-  guardRightM $ shareDocuments ids
-
 handleAttachmentRename :: Kontrakcja m => DocumentID -> m KontraLink
 handleAttachmentRename docid = withUserPost $ do
   Context {ctxtime} <- getContext
@@ -1918,9 +1896,7 @@ handleCreateFromTemplate = withUserPost $ do
       document <- queryOrFail $ GetDocumentByDocumentID $ did
       Log.debug $ show "Matching document found"
       let haspermission = maybe False
-                                (\sl -> isSigLinkFor (userid user) sl
-                                        || (isSigLinkFor (usercompany user) sl
-                                              && isShared document))
+                                (\sl -> isSigLinkFor (userid user) sl)
                                 $ getAuthorSigLink document
       enewdoc <- if haspermission
                     then do
@@ -2050,18 +2026,15 @@ jsonDocumentsList = do
         "Template|Contract" -> do
             let tfilter doc = (Template Contract == documenttype doc)
             userdocs <- doc_query $ GetDocumentsByAuthor (userid user)
-            shareddocs <- doc_query $ GetDocumentsSharedInCompany user
-            return $ nub . filter tfilter $ userdocs ++ shareddocs
+            return $ filter tfilter $ userdocs
         "Template|Offer" -> do
             let tfilter doc = (Template Offer == documenttype doc)
             userdocs <- doc_query $ GetDocumentsByAuthor (userid user)
-            shareddocs <- doc_query $ GetDocumentsSharedInCompany user
-            return $ nub . filter tfilter $ userdocs ++ shareddocs
+            return $ filter tfilter $ userdocs
         "Template|Order" -> do
             let tfilter doc = (Template Order == documenttype doc)
             userdocs <- doc_query $ GetDocumentsByAuthor (userid user)
-            shareddocs <- doc_query $ GetDocumentsSharedInCompany user
-            return $ nub . filter tfilter $ userdocs ++ shareddocs
+            return $ filter tfilter $ userdocs
         _ -> do
             Log.error "Documents list : No valid document type provided"
             return []

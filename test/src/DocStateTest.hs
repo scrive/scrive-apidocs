@@ -134,8 +134,6 @@ docStateTests conn = testGroup "DocState" [
   testThat "can create new document and read it back with the returned id" conn testDocumentCanBeCreatedAndFetchedByID,
   testThat "can create new document and read it back with GetDocuments" conn testDocumentCanBeCreatedAndFetchedByAllDocs,
 
-  testThat "GetDocumentsSharedInCompany works as expected" conn testGetDocumentsSharedInCompany,
-
 {-
   testThat "when I call update document, it doesn't change the document id" conn testDocumentUpdateDoesNotChangeID,
   testThat "when I call update document, i can change the title" conn testDocumentUpdateCanChangeTitle,
@@ -910,51 +908,6 @@ testPreparationAttachCSVUploadNonExistingSignatoryLink = doTimes 3 $ do
   --assert
   validTest $ assertLeft edoc
 
-testGetDocumentsSharedInCompany :: DB ()
-testGetDocumentsSharedInCompany = doTimes 10 $ do
-  -- two companies, two users per company, two users outside of company
-  -- each having a document here
-  company1 <- addNewCompany
-  company2 <- addNewCompany
-  user1' <- addNewRandomAdvancedUser
-  user2' <- addNewRandomAdvancedUser
-  _ <- dbUpdate $ SetUserCompany (userid user1') (Just (companyid company1))
-  Just user1 <- dbQuery $ GetUserByID (userid user1')
-  _ <- dbUpdate $ SetUserCompany (userid user2') (Just (companyid company1))
-  Just user2 <- dbQuery $ GetUserByID (userid user2')
-  user3' <- addNewRandomAdvancedUser
-  user4' <- addNewRandomAdvancedUser
-  _ <- dbUpdate $ SetUserCompany (userid user3') (Just (companyid company2))
-  Just user3 <- dbQuery $ GetUserByID (userid user3')
-  _ <- dbUpdate $ SetUserCompany (userid user4') (Just (companyid company2))
-  Just user4 <- dbQuery $ GetUserByID (userid user4')
-  user5 <- addNewRandomAdvancedUser
-  user6 <- addNewRandomAdvancedUser
-
-  docid1 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user1 (not . isAttachment)
-  docid2 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user2 (not . isAttachment)
-  docid3 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user3 (not . isAttachment)
-  _docid4 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user4 (not . isAttachment)
-  docid5 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user5 (not . isAttachment)
-  docid6 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user6 (not . isAttachment)
-
-  -- docid4 is not shared
-  mapM_ (dbUpdate . ShareDocument) [docid1, docid2, docid3, docid5, docid6]
-
-  dlist1 <- dbQuery $ GetDocumentsSharedInCompany user1
-  dlist2 <- dbQuery $ GetDocumentsSharedInCompany user2
-  dlist3 <- dbQuery $ GetDocumentsSharedInCompany user3
-  dlist4 <- dbQuery $ GetDocumentsSharedInCompany user4
-  dlist5 <- dbQuery $ GetDocumentsSharedInCompany user5
-  dlist6 <- dbQuery $ GetDocumentsSharedInCompany user6
-
-  validTest $ do 
-    assertEqual "Documents properly shared in company (1)" 2 (length dlist1)
-    assertEqual "Documents properly shared in company (1)" 2 (length dlist2)
-    assertEqual "Documents properly shared in company (2)" 1 (length dlist3)
-    assertEqual "Documents properly shared in company (2)" 1 (length dlist4)
-    assertEqual "Documents not shared in user without company (X)" 0 (length dlist5)
-    assertEqual "Documents not shared in user without company (Y)" 0 (length dlist6)
 
 testCreateFromSharedTemplate :: DB ()
 testCreateFromSharedTemplate = do
