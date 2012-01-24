@@ -186,7 +186,7 @@ Executable kontrakcja-server
   Build-depends: happstack-data==6.0.0
   Build-depends: happstack-ixset==6.0.1
   Build-depends: happstack-server==6.4.5
-  Build-depends: happstack-state==6.1.2
+  Build-depends: happstack-state==6.1.1
   Build-depends: happstack-static-routing==0.2
   Build-depends: happstack-util==6.0.2
   Build-depends: happstack==6.0.5
