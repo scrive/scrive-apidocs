@@ -124,10 +124,11 @@ makeSoapCall url action cert certpwd request = tryAndJoinEither $ do
   let (boundary,rest) = BS.breakSubstring (BS.fromString "\r\n") (BS.concat (BSL.toChunks (BSL.drop 2 stdout)))
       (_,rest2) = BS.breakSubstring (BS.fromString "\r\n\r\n") rest
       (xml1,_) = BS.breakSubstring boundary rest2
-
+  Log.debug $ "eric09"
   let xml = if BSL.fromString "\r\n--" `BSL.isPrefixOf` stdout
             then BSL.fromChunks [xml1]
             else stdout
+  Log.debug $ "eric10"
   Log.debug $ show xml
   case code of
     ExitFailure _ -> do
