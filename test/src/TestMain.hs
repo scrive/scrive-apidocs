@@ -219,7 +219,7 @@ main = Log.withLogger $ do
              (do 
                stats <- getNexusStats conn
                putStrLn $ "SQL: queries " ++ show (nexusQueries stats) ++ 
-                          ", params " ++ show (nexusInValues stats) ++
+                          ", params " ++ show (nexusParams stats) ++
                           ", rows " ++ show (nexusRows stats) ++
                           ", values " ++ show (nexusValues stats))
 
