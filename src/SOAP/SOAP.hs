@@ -135,9 +135,9 @@ makeSoapCall url action cert certpwd request = tryAndJoinEither $ do
        return (Left $ "Cannot execute 'curl' for TrustWeaver: " ++ show args ++ BSL.toString stderr)
     ExitSuccess -> do
       let s = BSL.toString xml
-      Log.debug $ "length of xml string: " ++ length s
+      Log.debug $ "length of xml string: " ++ (show $ length s)
       let rx = readXml s
-      Log.debug $ "length of xml read: " ++ (length $ show rx)
+      Log.debug $ "length of xml read: " ++ (show $ length $ show rx)
       case readXml (BSL.toString xml) of
         Right (SOAP result) -> return (Right result)
         Right (SOAPFault soapcode string actor) -> return (Left (soapcode ++":" ++ string ++":" ++ actor))
