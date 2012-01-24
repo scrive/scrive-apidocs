@@ -919,7 +919,6 @@ a.button {
     height: 1px;
     background: #dedede;
     position: relative;
-    display: none;
 }
 
 .pagediv .vline {
@@ -927,7 +926,6 @@ a.button {
     height: 100%;
     background: #dedede;
     position: relative;
-    display: none;
 }
 
 .placedfield, .placedfieldhelper {

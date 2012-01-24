@@ -191,7 +191,9 @@ instance HasFields SignatoryLink where
     replaceField f s = s {signatorydetails = replaceField f (signatorydetails s) }     
             
 replaceFieldValue::(HasFields a) =>  FieldType -> BS.ByteString -> a -> a
-replaceFieldValue ft v = replaceField $ SignatoryField { sfType = ft, sfValue = v, sfPlacements =[]}
+replaceFieldValue ft v a = case (find (matchingFieldType ft) $ getAllFields a) of
+                            Just f  -> replaceField (f { sfValue = v}) a
+                            Nothing -> replaceField (SignatoryField { sfType = ft, sfValue = v, sfPlacements =[]}) a
 
 
 -- does this need to change now? -EN

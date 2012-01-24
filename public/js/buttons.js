@@ -21,7 +21,8 @@ var ButtonModel = Backbone.Model.extend({
       text  : "",
       onClick : function() {return false;},
       icon : jQuery(""),
-      labelstyle : ""
+      labelstyle : undefined,
+      width: undefined
   },
   color : function(){
        return this.get("color");
@@ -40,8 +41,10 @@ var ButtonModel = Backbone.Model.extend({
   },
   labelstyle :  function() {
        return this.get("labelstyle");
+  },
+  width: function() {
+       return this.get("width")   
   }
-  
 });
 
 /* View controls bechavior of real input vs. InfoTextInput model
@@ -62,8 +65,11 @@ var ButtonView = Backbone.View.extend({
         this.el.append("<div class='left'/>");
         
         var label = $("<div class='label'/>").text(this.model.text());
+        if (this.model.width() != undefined)
+            label.css("width",(this.model.width() - 2 * Button.borderWidth(this.model.size())) + "px");
         label.append(this.model.icon());
-        label.attr("style",this.model.labelstyle());
+        if (this.model.labelstyle() != undefined)
+            label.attr("style",this.model.labelstyle());
         this.el.append(label);
         
         this.el.append("<div class='right'/>");
@@ -84,7 +90,8 @@ window.Button = {
                        text  : args.text,
                        onClick : args.onClick,
                        icon : args.icon,
-                       labelstyle : args.labelstyle
+                       labelstyle : args.labelstyle,
+                       width: args.width
                     });
           var input = $("<a/>");
           if (args.cssClass != undefined)
@@ -95,7 +102,15 @@ window.Button = {
           return new Object({
               input : function() {return input;}
             });
-        }
+        },
+   borderWidth : function(size){
+    if (size == "small")
+        return 16;
+    else if (size == "tiny")
+        return 6;
+    else if (size == "big")
+        return 22;
+  }    
 };
 
 })(window); 

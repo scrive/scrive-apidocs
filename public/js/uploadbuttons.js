@@ -29,7 +29,7 @@ var UploadButtonModel = Backbone.Model.extend({
       submitOnUpload : false,
       size : "small",
       showLoadingDialog : true,
-      onError: function() {}
+      onAppend: undefined // If set no files will be stored in this upload box
   },
   width : function(){
        return this.get("width");
@@ -58,13 +58,8 @@ var UploadButtonModel = Backbone.Model.extend({
   hasSubmit : function(){
         return this.submit() != undefined;
   },
-  borderWidth : function(){
-    if (this.size() == "small")
-        return 16;
-    else if (this.size() == "tiny")
-        return 6;
-    else if (this.size() == "big")
-        return 22;    
+  onAppend : function() {
+             return this.get("onAppend");  
   }
 });
 
@@ -82,13 +77,13 @@ var UploadButtonView = Backbone.View.extend({
     render: function () {
         var button = $("<a/>");
         var model = this.model;
-        button .addClass("green").addClass("btn-" + model.size()).css("overflow", "hidden").css("width",model.width() + "px");
+        button.addClass("green").addClass("btn-" + model.size()).css("overflow", "hidden").css("width",model.width() + "px");
         var left  = $("<div class='left'/>");
-        var label = $("<div class='label' style='text-align: center;'/>").text(model.text()).css("width",(model.width() - 2 * model.borderWidth()) + "px");
+        var label = $("<div class='label' style='text-align: center;'/>").text(model.text()).css("width",(model.width() - 2 * Button.borderWidth(model.size())) + "px");
         var right = $("<div class='right'/>");
-        button .append(left);
-        button .append(label);
-        button .append(right);
+        button.append(left);
+        button.append(label);
+        button.append(right);
         var fileinput = $("<input class='multiFileInput' type='file'/>");
         fileinput.attr("accept","application/pdf").attr("maxlength",model.maxlength()).attr("name",model.name());
         fileinput.css("width",model.width()  + "px");
@@ -101,10 +96,23 @@ var UploadButtonView = Backbone.View.extend({
             list: list,
             onError: function(a,b,c,d) {
                 FlashMessages.add({content: localization.onlyPDFAllowed, color: "red"});
-                return model.get('onError')(a,b,c,d);
+                if (model.get('onError'))
+                    model.get('onError')(a,b,c,d);
             },
-            onFileAppend: function() {
-                if (model.submitOnUpload()) {
+            afterFileAppend : function(input,title,fileinput) {
+                if (model.onAppend() != undefined)
+                {
+                    model.onAppend()(input,title,fileinput);
+                    fileinput.n--;
+                    _.each(fileinput.slaves, function(slave) {
+                        $(slave).remove();
+                    })
+                    fileinput.slaves = [];
+                    return false;
+                }
+            },
+            onFileAppend: function(input,title,fileinput) {
+                  if (model.submitOnUpload()) {
                     if(model.get('showLoadingDialog'))
                         LoadingDialog.open(localization.loadingFile);
                     if (model.hasSubmit()) {
@@ -117,7 +125,7 @@ var UploadButtonView = Backbone.View.extend({
                 }
             }
         });
-        button.append(fileinput);
+        button.append($("<span>").append(fileinput)); // This span is bugfix for error cases
         this.el.append(button);
         return this;
     }

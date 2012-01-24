@@ -158,7 +158,8 @@ window.Signatory = Backbone.Model.extend({
                 
         ],
         current : false,
-        attachments : []
+        attachments : [],
+        signorder : 1
     },
     
     initialize : function(args){   
@@ -168,7 +169,6 @@ window.Signatory = Backbone.Model.extend({
                     return hash;
         };
         var fields =  _.map(args.fields, function(field){
-                var field = new Field(extendedWithSignatory(field));
                 return new Field(extendedWithSignatory(field));
         });
         var attachments =  _.map(args.attachments, function(attachment){
@@ -272,12 +272,23 @@ window.Signatory = Backbone.Model.extend({
     signorder : function() {
          return this.get("signorder");
     },
+    setSignOrder : function(i) {
+         this.set({signorder: parseInt(i+"")});
+    },
     signs : function() {
          return this.get("signs");
     },
-	hasSigned: function() {
+    makeSignatory : function() {
+        this.set({signs: true})
+        this.trigger("change:role");
+    },
+    makeViewer : function() {
+        this.set({signs: false})
+        this.trigger("change:role");
+    },
+    hasSigned: function() {
 		return this.signdate() != undefined;
-	},
+    },
     attachments: function() {
         return this.get("attachments");
     },
@@ -298,7 +309,7 @@ window.Signatory = Backbone.Model.extend({
             return field.readyForSign();
         })      
     },
-	remind: function(customtext) {
+    remind: function(customtext) {
         return new Submit({
               url: "/resend/" + this.document().documentid() + "/" + this.signatoryid(),
               method: "POST",
@@ -336,12 +347,28 @@ window.Signatory = Backbone.Model.extend({
                         type: "reject"
                        })
     },
+    addNewField : function() {
+        var signatory = this;
+        var fields = this.fields();
+        fields.push(new Field({signatory: signatory, fresh: true}))
+        this.set({"fields": fields});
+        this.trigger("change:fields");
+    },
+    deleteField : function(field) {
+       var newfields = new Array();    
+       for(var i=0;i<this.fields().length;i++)
+          if (field !== this.fields()[i])
+             newfields.push(this.fields()[i]);
+       this.set({fields : newfields});
+
+    },
     draftData : function() {
         return {
               fields: _.map(this.fields(), function(field) {
                   return field.draftData();} )
             , author: this.author()
             , signs: this.signs()
+            , signorder : this.signorder()
             
         }
     }

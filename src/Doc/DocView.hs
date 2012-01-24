@@ -488,7 +488,8 @@ docFieldsListForJSON tl crtime doc =  propagateMonad [
     ("process", renderTextForProcess doc processname),
     ("type", renderDocType),
     ("anyinvitationundelivered", return $ show $ anyInvitationUndelivered  doc && Pending == documentstatus doc),
-    ("shared", return $ show $ (documentsharing doc)==Shared)
+    ("shared", return $ show $ (documentsharing doc)==Shared),
+    ("file", return $ fromMaybe "" $ show <$> (listToMaybe $ (documentsealedfiles doc) ++ (documentfiles doc)))
     ]
   where
     renderDocType :: (TemplatesMonad m) => m String

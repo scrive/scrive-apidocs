@@ -23,7 +23,9 @@ window.FieldPlacement = Backbone.Model.extend({
     addToPage : function() {
          if (this.placed()) return;
          var placement = this;
-         var document = placement.field().signatory().document();
+         var field = placement.field();
+         var signatory = field.signatory();
+         var document = signatory.document();
          var fileid = this.get("fileid");
          if ( document.getFile(fileid) != undefined)
          {
@@ -53,13 +55,23 @@ window.FieldPlacement = Backbone.Model.extend({
     file : function(){
         return this.get("file");
     },
+    remove : function() {
+       var document = this.field().signatory().document();
+       var fileid = this.get("fileid");
+       var page = document.getFile(fileid).page(this.get("page"));
+       page.removePlacement(this);
+       this.field().removePlacement(this);
+    },
     draftData : function() {
+        var document = this.field().signatory().document();
+        var fileid = this.get("fileid");
+        var page = document.getFile(fileid).page(this.get("page"));
         return { 
             x : this.x(),
             y : this.y(),
-            pagewidth : this.page().width(),
-            pageheight : this.page().height(),
-            page : this.page().number(),                               
+            pagewidth : page.width(),
+            pageheight : page.height(),
+            page : page.number(),                               
         }
     }    
 });
@@ -69,7 +81,8 @@ window.Field = Backbone.Model.extend({
         name : "",
         value : "",
         closed : false,
-        placements : []
+        placements : [],
+        fresh : false
     },
     initialize : function(args){
         var field = this;
@@ -91,6 +104,9 @@ window.Field = Backbone.Model.extend({
     },
     setValue : function(value) {
         return this.set({value : value});
+    },
+    setName : function(name) {
+        return this.set({name : name});
     },
     isClosed : function() {
         return this.get("closed");
@@ -124,13 +140,51 @@ window.Field = Backbone.Model.extend({
             return localization.companyNumber;
         return name;
     },
+    nicetext : function() {
+        if (this.value() != "")
+          return this.value();
+        else
+          return this.nicename();
+    },
+    isStandard: function() {
+        var name = this.name();
+        return  (name == "fstname")
+             || (name == "sndname" )     
+             || (name == "email") 
+             || (name == "sigco")
+             || (name == "sigpersnr" )     
+             || (name == "sigcompnr") 
+    },
+    isReady: function(){
+      return this.get("fresh") == false;  
+    },
+    makeReady : function() {
+      this.set({fresh: false});
+      this.trigger("ready");
+    },
+    delete: function(){
+      _.each(this.placements(),function(placement) {
+            placement.remove();
+        });
+      this.signatory().deleteField(this);
+    },
     draftData : function() {
       return {   name : this.name()
                , value : this.value()
                , placements : _.map(this.placements(), function(placement) {return placement.draftData();})
              }  
+    },
+   addPlacement : function(placement) {
+     this.placements().push(placement);
+    },
+   removePlacement : function(placement) {
+       var newplacements = new Array();
+       for(var i=0;i<this.placements().length;i++)
+          if (placement !== this.placements()[i])
+             newplacements.push(this.placements()[i]);
+       this.set({placements : newplacements});
+
     }
-   
 });
 
 
@@ -222,5 +276,113 @@ window.FieldBasicDesignView = Backbone.View.extend({
     }
 });
 
+window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
+    initialize: function (args) {
+        _.bindAll(this, 'render');
+        this.model.bind('ready', this.render);
+        this.model.view = this;
+        this.render();
+    },
+    ddIcon : function() {
+        var icon =  $("<a class='ddIcon' href='#'/>")
+        var field = this.model;
+        var document = field.signatory().document();
+        if (document.mainfile() != undefined && document.mainfile().view != undefined)
+        {   var fileview = field.signatory().document().mainfile().view;
+            icon.draggable({
+                    handle: ".ddIcon",
+                    appendTo: "body",
+                    helper: function(event) {
+                        return $("<span class='placedfieldhelper'/>").text(field.nicetext());
+                    },
+                    start: function(event, ui) {
+                        fileview.showCoordinateAxes(ui.helper);
+                    },
+                    stop: function() {
+                        fileview.hideCoordinateAxes();
+                    },
+                    drag: function(event, ui) {
+                        fileview.moveCoordinateAxes(ui.helper);
+                    },
+                    onDrop: function(page, x,y ){
+                          field.addPlacement(new FieldPlacement({
+                              page: page.number(),
+                              fileid: page.file().fileid(),                                  
+                              field: field,
+                              x : x,
+                              y : y  
+                            }))
+                    } 
+            });
+        }
+        return icon;
+    },
+    prepIcon : function() {
+        return $("<a class='prepIcon' href='#'/>")
+    },
+    setNameIcon : function() {
+        var field = this.model;
+        var icon =  $("<a class='setNameIcon' href='#'/>")
+        icon.click(function(){
+            field.makeReady();
+            return false;
+        })
+        return icon;
+    },
+    removeIcon: function() {
+        var field = this.model;
+        var icon = $("<a class='removeField' href='#'/>")
+        icon.click(function(){
+            field.delete();
+            return false;
+        })
+        return icon;
+    },
+    render: function(){
+        var field = this.model;
+        this.el.empty();
+        var signatory = field.signatory();
+        this.el.addClass("field");
+        if (field.isReady()) {
+          this.el.append(this.ddIcon());
+          this.input = InfoTextInput.init({
+                                 infotext: field.nicename(),
+                                 value: field.value(),
+                                 cssClass :'fieldvalue',       
+                                 onChange : function(value) {
+                                    field.setValue(value);    
+                                  }
+                            });
+          if (field.isClosed())  
+            { 
+                this.el.addClass('closed');
+                this.input.input().attr("readonly","yes");
+            }
+          else if (!field.isStandard())
+           {
+               this.input.input().addClass("shorter");  
+               this.el.append(this.removeIcon())  
+           }
+          this.el.append(this.input.input());
+        }
+        else {
+           this.el.append(this.prepIcon());
+           this.input = InfoTextInput.init({
+                                 infotext: localization.fieldName,
+                                 value: field.name(),
+                                 cssClass :'fieldvalue',
+                                 onChange : function(value) {
+                                    field.setName(value);    
+                                  }
+               })
+           this.input.input().addClass("much-shorter");  
+           this.el.append(this.input.input());
+           this.el.append(this.removeIcon());
+           this.el.append(this.setNameIcon());
+
+        }
+        return this;
+    }
+});
     
 })(window); 

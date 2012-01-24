@@ -154,6 +154,7 @@ javascriptLocalisation =
 
 
             , tweetAccount : "$_tweetAccount()$"
+            , selectFileToUpload : "$_selectFileToUpload()$"
             , onlyPDFAllowed: "$_onlyPDFAllowed()$"
             , fileTooLarge: "$_fileTooLarge()$"
             , couldNotUpload: "$_couldNotUpload()$"
@@ -190,5 +191,19 @@ javascriptLocalisation =
            , ok : "$_ok()$" 
            , addSignatory : "$_signStepsBodyFunctionsAddPerson()$"
            , removeSignatory : "$_signStepsBodyFunctionsRemovePerson()$"
+           , isSigningParty : "$_authorsignatoryradioSenderSign()$"
+           , isNotSigningParty : "$_authorsignatoryradioSenderNotSign()$"
+           , signatoryListPartner : "$_signStep2ContentPersons()$"
+           , signatoryListSignOrder : "$_signStep2ContentSignOrder()$"
+           , attachments: {
+                  changeAuthorAttachments : "$_addattachmentlink()$"
+                , attach: "$_updateAttachmentsDialogUpLoadFooterAttach()$"
+                , selectAttachments: "$_updateAttachmentsDialogHead()$"
+                , selectAttachment : "$_updateAttachmentsDialogUpLoadChooseAttachment()$"
+                , selectAttachmentsDescription: "$_updateAttachmentsDialogChooseAttachment()$"
+                , storedInScrive: "$_updateAttachmentsDialogUpLoadSaved()$"
+                , selectFile: "$_updateAttachmentsDialogUpLoadChooseFile()$"
+                , selectedAttachments : "Selected attachments"
+            }
    }
 ####

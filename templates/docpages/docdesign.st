@@ -1,6 +1,5 @@
 #####
 pageDocumentDesign=
-
 <script>
 
 jQuery(function(){

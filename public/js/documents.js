@@ -167,6 +167,12 @@ window.Document = Backbone.Model.extend({
               draft: JSON.stringify(this.draftData())
           });
     },
+    setAttachments: function() {
+        return new Submit({
+              url: "/setattachments/" + this.documentid(),
+              method: "POST",
+          });
+    },
     draftData : function() {
       return { 
           title : this.title(),
@@ -216,6 +222,9 @@ window.Document = Backbone.Model.extend({
     currentViewerIsAuthor : function() {
         var csig  = this.currentSignatory();
         return  (csig != undefined && csig.author());
+    },
+    preparation: function() {
+        return this.status() == "Preparation";
     },
     pending: function() {
         return this.status() == "Pending";
@@ -291,6 +300,9 @@ window.Document = Backbone.Model.extend({
       for(var i=0;i<this.signatories().length;i++)
           if (this.signatories()[i].author())
               return this.signatories()[i];
+    },
+    allowsDD : function() {
+        return this.preparation() && !this.isBasic();
     },
     parse: function(args) {
      var document = this;   

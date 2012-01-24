@@ -1956,7 +1956,39 @@ handleSaveDraft did = do
          Left s -> do
              return $ JSObject $ toJSObject [("error",JSString $ toJSString $ "Document saving failed with ("++s++") - unless someone is experimenting this should never happend")] 
     
-    
+
+handleSetAttachments :: Kontrakcja m => DocumentID -> m KontraLink
+handleSetAttachments did = do
+    doc <- guardRightM $ getDocByDocID did
+    attachments <- getAttachments 0
+    Log.debug $ "Setting attachments to " ++ show attachments
+    forM_ (documentauthorattachments doc) $ \att -> runDB $ dbUpdate $ RemoveDocumentAttachment did $ authorattachmentfile att
+    forM_ attachments $ \att -> do
+        res <- runDB $ dbUpdate $ AddDocumentAttachment did att
+        Log.debug $ "Attaching res " ++ show res
+    return LoopBack
+   where
+        getAttachments :: Kontrakcja m => Int -> m [FileID]
+        getAttachments i = do
+            mf <- tryGetFile i
+            case mf of
+                 Just f -> (f:) <$> getAttachments (i+1)
+                 Nothing -> return []
+        tryGetFile ::  Kontrakcja m => Int -> m (Maybe FileID)
+        tryGetFile i = do
+            inp <- getDataFn' (lookInput $ "attachment_" ++ show i)
+            case inp of
+                 Just (Input contentspec (Just filename) _contentType) -> do
+                    content <- case contentspec of
+                        Left filepath -> liftIO $ BSL.readFile filepath
+                        Right c -> return c
+                    let title = BS.fromString (basename filename)
+                    file <- runDB $ dbUpdate $ NewFile title (concatChunks content)
+                    return $ Just $  fileid file
+                 Just (Input name (Nothing) _contentType) -> return $ maybeRead  $ BS.toString $ concatChunks name
+                 _ -> return Nothing
+
+                 
 handleUpsalesDeleted :: Kontrakcja m => m Response
 handleUpsalesDeleted = onlySuperUser $ do
   docs <- doc_query $ GetDocuments $ Just $ ServiceID $ BS.fromString "upsales"
