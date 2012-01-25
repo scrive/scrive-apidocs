@@ -242,7 +242,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
   let doctype = dcrType dcr
       title = dcrTitle dcr
 
-  edoc <- (runDB . dbUpdate) $ NewDocument user mcompany (BS.fromString title) doctype ctxtime
+  edoc <- runDBUpdate $ NewDocument user mcompany (BS.fromString title) doctype ctxtime
 
   when (isLeft edoc) $ do
     let Left msg = edoc
@@ -254,21 +254,21 @@ jsonMailAPI mailapi username user pdfs plains content = do
   let Right doc = edoc
 
   _ <- DocControl.handleDocumentUploadNoLogin (documentid doc) pdfBinary (BS.fromString title)
-  _ <- (runDB . dbUpdate) $ SetDocumentAdvancedFunctionality (documentid doc) ctxtime
-  _ <- (runDB . dbUpdate) $ SetEmailIdentification (documentid doc) ctxtime
+  _ <- runDBUpdate $ SetDocumentAdvancedFunctionality (documentid doc) ctxtime
+  _ <- runDBUpdate $ SetEmailIdentification (documentid doc) ctxtime
 
   let signatories = for (dcrInvolved dcr) $ \InvolvedRequest{irRole,irData} ->
         (SignatoryDetails{signatorysignorder = SignOrder 0, signatoryfields = irData},
          irRole)
 
-  errs <- lefts <$> (sequence $ [(runDB . dbUpdate) $ ResetSignatoryDetails (documentid doc) signatories ctxtime])
+  errs <- lefts <$> (sequence $ [runDBUpdate $ ResetSignatoryDetails (documentid doc) signatories ctxtime])
 
   when ([] /= errs) $ do
     Log.jsonMailAPI $ "Could not set up document: " ++ (intercalate "; " errs)
 
     mzero
 
-  edoc2 <- (runDB . dbUpdate) $ PreparationToPending (documentid doc) ctxtime
+  edoc2 <- runDBUpdate $ PreparationToPending (documentid doc) ctxtime
 
   when (isLeft edoc2) $ do
     Log.jsonMailAPI $ "Could not got to pending document: " ++ (intercalate "; " errs)

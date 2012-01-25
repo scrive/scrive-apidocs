@@ -104,7 +104,7 @@ getDocument = do
 getUserDoc :: Kontrakcja m => UserAPIFunction m Document
 getUserDoc = do
   author <- user <$> ask
-  mdocument <- liftMM ((runDB . dbQuery) . GetDocumentByDocumentID) $ maybeReadM $ fromJSONField "document_id"
+  mdocument <- liftMM (runDBQuery . GetDocumentByDocumentID) $ maybeReadM $ fromJSONField "document_id"
   when (isNothing mdocument || (not $ isAuthor ((fromJust mdocument), author))) $
         throwApiError API_ERROR_NO_DOCUMENT "No document"
   return (fromJust mdocument)
@@ -118,18 +118,18 @@ sendFromTemplate = do
   ctx <- getContext
   temp <- getTemplate
   signatories <- getSignatories
-  doc <- (runDB . dbUpdate) $ SignableFromDocument temp
+  doc <- runDBUpdate $ SignableFromDocument temp
   let mauthorsiglink = getAuthorSigLink doc
   when (isNothing mauthorsiglink) $ throwApiError API_ERROR_OTHER "Template has no author."
-  _ <- (runDB . dbUpdate) $ SetDocumentAdvancedFunctionality (documentid doc) (ctxtime ctx)
-  _ <- (runDB . dbUpdate) $ SetEmailIdentification (documentid doc) (ctxtime ctx)
-  medoc <- (runDB . dbUpdate) $ ResetSignatoryDetails (documentid doc) (((signatoryDetailsFromUser author mcompany) { signatorysignorder = SignOrder 0 }, 
+  _ <- runDBUpdate $ SetDocumentAdvancedFunctionality (documentid doc) (ctxtime ctx)
+  _ <- runDBUpdate $ SetEmailIdentification (documentid doc) (ctxtime ctx)
+  medoc <- runDBUpdate $ ResetSignatoryDetails (documentid doc) (((signatoryDetailsFromUser author mcompany) { signatorysignorder = SignOrder 0 }, 
                                                              [SignatoryPartner, SignatoryAuthor]): 
                                                             (zip signatories (repeat [SignatoryPartner]))) (ctxtime ctx)
   case medoc of
     Left _msg  -> throwApiError API_ERROR_OTHER "Problem with saving document."
     Right edoc -> do
-      esdoc <- (runDB . dbUpdate) $ PreparationToPending (documentid edoc) (ctxtime ctx)
+      esdoc <- runDBUpdate $ PreparationToPending (documentid edoc) (ctxtime ctx)
       case esdoc of
         Left _msg   -> throwApiError API_ERROR_OTHER "Problem with sending document."
         Right sdoc -> do
@@ -139,7 +139,7 @@ sendFromTemplate = do
 getTemplate :: Kontrakcja m => UserAPIFunction m Document
 getTemplate = do
   author <- user <$> ask
-  mtemplate <- liftMM ((runDB . dbQuery) . GetDocumentByDocumentID) $ maybeReadM $ fromJSONField "template_id"
+  mtemplate <- liftMM (runDBQuery . GetDocumentByDocumentID) $ maybeReadM $ fromJSONField "template_id"
   when (isNothing mtemplate) $ throwApiError API_ERROR_NO_DOCUMENT "No template exists with this ID"
   let Just temp = mtemplate
   when (not $ isAuthor (temp, author)) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists with this ID"
@@ -166,19 +166,19 @@ sendNewDocument = do
   --_msignedcallback <- fromJSONField "signed_callback"
   --_mnotsignedcallback <- fromJSONField "notsigned_callback"
   ctx <- getContext
-  mnewdoc <- (runDB . dbUpdate) $ NewDocument author mcompany title doctype (ctxtime ctx)
+  mnewdoc <- runDBUpdate $ NewDocument author mcompany title doctype (ctxtime ctx)
   when (isLeft mnewdoc) $ throwApiError API_ERROR_OTHER "Problem making doc, maybe company and user don't match."
   let newdoc = fromRight mnewdoc
   _ <- liftKontra $ handleDocumentUpload (documentid newdoc) content filename
-  _ <- (runDB . dbUpdate) $ SetDocumentAdvancedFunctionality (documentid newdoc) (ctxtime ctx)
-  _ <- (runDB . dbUpdate) $ SetEmailIdentification (documentid newdoc) (ctxtime ctx)
-  edoc <- (runDB . dbUpdate) $ ResetSignatoryDetails (documentid newdoc) (((signatoryDetailsFromUser author mcompany) { signatorysignorder = SignOrder 0 }, 
+  _ <- runDBUpdate $ SetDocumentAdvancedFunctionality (documentid newdoc) (ctxtime ctx)
+  _ <- runDBUpdate $ SetEmailIdentification (documentid newdoc) (ctxtime ctx)
+  edoc <- runDBUpdate $ ResetSignatoryDetails (documentid newdoc) (((signatoryDetailsFromUser author mcompany) { signatorysignorder = SignOrder 0 }, 
                                                              [SignatoryPartner, SignatoryAuthor]): 
                                                             (zip signatories (repeat [SignatoryPartner]))) (ctxtime ctx)
   case edoc of
     Left _msg  -> throwApiError API_ERROR_OTHER "Problem with saving document."
     Right doc -> do
-      esdoc <- (runDB . dbUpdate) $ PreparationToPending (documentid doc) (ctxtime ctx)
+      esdoc <- runDBUpdate $ PreparationToPending (documentid doc) (ctxtime ctx)
       case esdoc of
         Left _msg   -> throwApiError API_ERROR_OTHER "Problem with sending document."
         Right sdoc -> do
