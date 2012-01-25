@@ -35,6 +35,8 @@ import Control.Concurrent.MVar
 
 import AppDB
 import Configuration
+import Data.Version
+import Data.List
 import DB.Checks
 import DB.Classes
 import Database.HDBC.PostgreSQL
@@ -54,6 +56,8 @@ import qualified MemCache
 import File.Model
 import qualified System.Mem as System.Mem
 import qualified Doc.Import as D
+
+import qualified Paths_kontrakcja as Paths
 
 startTestSystemState' :: (Component st, Methods st) => Proxy st -> IO (MVar TxControl)
 startTestSystemState' proxy = do
@@ -99,6 +103,9 @@ runKontrakcjaServer = Log.withLogger $ do
   -- progname effects where state is stored and what the logfile is named
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
+
+
+  Log.server $ "Starting kontrakcja-server build " ++ concat (intersperse "." (versionTags Paths.version))
 
   appname <- getProgName
   args <- getArgs
