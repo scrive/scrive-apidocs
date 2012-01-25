@@ -35,7 +35,6 @@ instance (InspectXML a, InspectXML b, InspectXML c, Show a, Show b, Show c) => I
 $(deriveInspectXML ''Document)
 $(deriveInspectXML ''AuthorAttachment)
 $(deriveInspectXML ''SignatoryAttachment)
-$(deriveInspectXML ''FieldDefinition)
 $(deriveInspectXML ''FieldPlacement)
 $(deriveInspectXML ''User)
 $(deriveInspectXML ''SignatoryLink)
@@ -64,7 +63,6 @@ instance InspectXML BS.ByteString where
   inspectXML = inspectXML . BS.toString
 instance InspectXML Bool where
 instance InspectXML Int where
-instance InspectXML Author where
 instance InspectXML ServiceID where
 instance InspectXML Integer where
 instance InspectXML SignOrder where
@@ -73,14 +71,12 @@ instance InspectXML DocumentStatus where
 instance InspectXML CSVUpload where
 instance InspectXML DocumentType where
 instance InspectXML DocumentFunctionality where
-instance InspectXML ChargeMode where
 instance InspectXML DocumentTag where
 instance InspectXML DocumentUI where
 instance InspectXML TimeoutTime where
 instance InspectXML SignInfo where
 instance InspectXML DocumentHistoryEntry where
 instance InspectXML MagicHash where
-instance InspectXML Signatory where
 instance InspectXML MinutesTime where
 instance InspectXML Password where
 instance InspectXML FlashMessage where

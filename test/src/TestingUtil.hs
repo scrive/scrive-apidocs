@@ -321,17 +321,6 @@ instance Arbitrary SignatoryField where
                             , sfPlacements = p
                             }
 
-instance Arbitrary FieldDefinition where
-   arbitrary = do
-    name <- arbitrary
-    value <- arbitrary
-    filledByAuthor <- arbitrary
-    return $ FieldDefinition { fieldlabel = name,
-                               fieldvalue = value,
-                               fieldplacements = [],
-                               fieldfilledbyauthor = filledByAuthor
-                             }
-
 instance Arbitrary SignatoryRole where
   arbitrary = return SignatoryPartner
 

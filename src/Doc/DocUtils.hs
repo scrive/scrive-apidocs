@@ -114,9 +114,6 @@ class MaybeUser u where
 instance MaybeUser SignatoryLink where
   getUserID  = maybesignatory
 
-instance MaybeUser  Author where
-  getUserID = Just . unAuthor
-
 instance MaybeUser User where
   getUserID = Just . userid
 
