@@ -1456,8 +1456,8 @@ instance DBUpdate NewDocument (Either String Document) where
   if fmap companyid mcompany /= usercompany user
     then return $ Left "company and user don't match"
     else do
-      wrapDB $ \conn -> runRaw conn "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
       wrapDB $ \conn -> runRaw conn "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
+      wrapDB $ \conn -> runRaw conn "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
       did <- DocumentID <$> getUniqueID tableDocuments
 
       let authorRoles = if ((Just True) == getValueForProcess documenttype processauthorsend)

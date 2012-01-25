@@ -507,12 +507,7 @@ fetchUsers st = foldDB st decoder []
       first_name last_name personal_number company_position phone mobile
       email preferred_design_mode lang region customfooter = User {
           userid = uid
-        , userpassword = case (password, salt) of
-                           (Just pwd, Just salt') -> Just Password {
-                               pwdHash = pwd
-                             , pwdSalt = salt'
-                           }
-                           _ -> Nothing
+        , userpassword = maybePassword (password, salt)
         , useriscompanyadmin = is_company_admin
         , useraccountsuspended = account_suspended
         , userhasacceptedtermsofservice = has_accepted_terms_of_service

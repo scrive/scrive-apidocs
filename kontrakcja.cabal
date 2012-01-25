@@ -157,7 +157,7 @@ Executable kontrakcja-server
   Build-depends: HTTP == 4000.*
   Build-depends: HUnit 
   Build-depends: HaXml == 1.20.*
-  Build-depends: MissingH == 1.1.0.3
+  Build-depends: MissingH == 1.1.1.0
   Build-depends: pretty-show == 1.2
   Build-depends: QuickCheck
   Build-depends: array
@@ -167,8 +167,8 @@ Executable kontrakcja-server
   Build-depends: bytestring
   Build-depends: containers
   Build-depends: convertible == 1.0.11.0
-  Build-depends: cryptocipher == 0.2.13
-  Build-depends: dataenc == 0.14
+  Build-depends: cryptocipher == 0.2.14
+  Build-depends: dataenc == 0.14.0.2
   Build-depends: directory
   Build-depends: explicit-exception == 0.1.6
   Build-depends: extensible-exceptions 
@@ -180,12 +180,11 @@ Executable kontrakcja-server
   Build-depends: happstack-server==6.4.5
   Build-depends: happstack-state==6.1.1
   Build-depends: happstack-static-routing==0.2
-  Build-depends: happstack-util==6.0.0
+  Build-depends: happstack-util==6.0.2
   Build-depends: happstack==6.0.5
   Build-depends: hslogger==1.1.4
   Build-depends: html == 1.0.1.2
-  Build-depends: hxt == 9.1.2
-  Build-depends: hxt
+  Build-depends: hxt == 9.1.5
   Build-depends: hxt-xpath == 9.1.1
   Build-depends: iconv == 0.4.1.0
   Build-depends: json == 0.4.4
@@ -203,8 +202,8 @@ Executable kontrakcja-server
   Build-depends: spreadsheet == 0.1.2
   Build-depends: syb
   Build-depends: syb-with-class
-  Build-depends: tagsoup == 0.12.2
-  Build-depends: template-haskell 
+  Build-depends: tagsoup == 0.12.3
+  Build-depends: template-haskell
   Build-depends: temporary==1.1.1
   Build-depends: test-framework
   Build-depends: test-framework-hunit

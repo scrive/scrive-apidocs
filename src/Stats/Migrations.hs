@@ -7,10 +7,6 @@ import Stats.Tables
 import Doc.DocStateData
 import DB.Model
 
-mapStatement :: ([SqlValue] -> a) -> Statement -> IO [a]
-mapStatement f st = mapStatement' []
-  where mapStatement' acc = fetchRow st >>= maybe (return acc) (\a -> mapStatement' $ f a : acc)
-
 addServiceAndCompanyToStats :: Migration
 addServiceAndCompanyToStats =
   Migration {
