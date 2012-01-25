@@ -11,7 +11,7 @@ import qualified Data.ByteString.Char8 as BS
 import AppControl
 import DB.Classes
 import Doc.DocControl (handleIssueLocaleChangeAfterUpdate)
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStateData
 import Context
 import MinutesTime
@@ -125,7 +125,7 @@ testDocumentLocaleSwitchToBritain conn = withTestEnvironment conn $ do
 
   -- check the region was successfully changed to se
   assertEqual "Response code is 303" 303 (rsCode res)
-  Just udoc <- doc_query' $ GetDocumentByDocumentID (documentid doc)
+  Just udoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "Switched region is Britain" REGION_GB (getRegion udoc)
   assertEqual "Switched lang is English" LANG_EN (getLang udoc)
 
@@ -150,7 +150,7 @@ testDocumentLocaleSwitchToSweden conn = withTestEnvironment conn $ do
 
   -- check the region was successfully changed to gb
   assertEqual "Response code is 303" 303 (rsCode res)
-  Just udoc <- doc_query' $ GetDocumentByDocumentID (documentid doc)
+  Just udoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "Switched region is Sweden" REGION_SE (getRegion udoc)
   assertEqual "Switched lang is Swedish" LANG_SE (getLang udoc)
 
@@ -159,7 +159,7 @@ createTestElegDoc user ctxtime = do
   doc <- addRandomDocumentWithAuthorAndCondition user
            (\d -> documentstatus d == Preparation
                   && documentfunctionality d == AdvancedFunctionality)
-  (Right elegdoc) <- doc_update' $ SetElegitimationIdentification (documentid doc) ctxtime
+  (Right elegdoc) <- dbUpdate $ SetElegitimationIdentification (documentid doc) ctxtime
   return elegdoc
 
 createTestUser :: Region -> Lang -> DB User

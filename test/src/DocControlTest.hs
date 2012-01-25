@@ -19,7 +19,7 @@ import Misc
 import Context
 import DB.Nexus
 import DB.Classes
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStateData
 import Doc.DocControl
 import Doc.DocUtils
@@ -131,7 +131,7 @@ testSendingDocumentSendsInvites conn = withTestEnvironment conn $ do
                         ]
   (_link, _ctx') <- runTestKontra req ctx $ handleIssueShowPost (documentid doc)
 
-  Just sentdoc <- doc_query' $ GetDocumentByDocumentID (documentid doc)
+  Just sentdoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "In pending state" Pending (documentstatus sentdoc)
   emails <- dbQuery GetIncomingEmails
   assertBool "Emails sent" (length emails > 0)
@@ -168,7 +168,7 @@ testSigningDocumentFromDesignViewSendsInvites conn = withTestEnvironment conn $ 
                         ]
   (_link, _ctx') <- runTestKontra req ctx $ handleIssueShowPost (documentid doc)
 
-  Just sentdoc <- doc_query' $ GetDocumentByDocumentID (documentid doc)
+  Just sentdoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "In pending state" Pending (documentstatus sentdoc)
   emails <- dbQuery GetIncomingEmails
   assertBool "Emails sent" (length emails > 0)
@@ -208,7 +208,7 @@ testNonLastPersonSigningADocumentRemainsPending conn = withTestEnvironment conn 
                         ]
   (_link, _ctx') <- runTestKontra req ctx $ signDocument (documentid doc) (signatorylinkid siglink)
 
-  Just signeddoc <- doc_query' $ GetDocumentByDocumentID (documentid doc)
+  Just signeddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "In pending state" Pending (documentstatus signeddoc)
   assertEqual "One left to sign" 1 (length $ filter isUnsigned (documentsignatorylinks signeddoc))
   emails <- dbQuery GetIncomingEmails
@@ -249,7 +249,7 @@ testLastPersonSigningADocumentClosesIt conn = withTestEnvironment conn $ do
                         ]
   (_link, _ctx') <- runTestKontra req ctx $ signDocument (documentid doc) (signatorylinkid siglink)
 
-  Just signeddoc <- doc_query' $ GetDocumentByDocumentID (documentid doc)
+  Just signeddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "In closed state" Closed (documentstatus signeddoc)
   --TODO: this should be commented out really, I guess it's a bug
   --assertEqual "None left to sign" 0 (length $ filter isUnsigned (documentsignatorylinks doc))
