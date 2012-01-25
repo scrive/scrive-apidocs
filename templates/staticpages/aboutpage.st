@@ -46,32 +46,32 @@ aboutPageContents=
 								</li>
 								<li>
 									<div class="portrait-image">
-                                                                          <a class="fredrica"></a>
+								          <a class="daniel"></a>
 									</div>
 									<h2>$_aboutPagePerson3()$</h2>
 									<em>$_aboutPagePerson3Position()$</em>
 									<p>$_aboutPagePerson3Body()$</p>
 									$_aboutPagePerson3Contact()$
 								</li>
-								<li>
+                                                                <li>
+                                                                        <div class="portrait-image">
+                                                                          <a class="marcus"></a>
+                                                                        </div>
+                                                                        <h2>$_aboutPagePerson4()$</h2>
+                                                                        <em>$_aboutPagePerson4Position()$</em>
+                                                                        <p>$_aboutPagePerson4Body()$</p>
+                                                                        $_aboutPagePerson4Contact()$
+                                                                </li>
+								<!--<li>
 									<div class="portrait-image">
-								          <a class="daniel"></a>
-									</div>
-									<h2>$_aboutPagePerson4()$</h2>
-									<em>$_aboutPagePerson4Position()$</em>
-									<p>$_aboutPagePerson4Body()$</p>
-									$_aboutPagePerson4Contact()$
-								</li>
-								<li>
-									<div class="portrait-image">
-								          <a class="josef"></a>
+								          <a class="placeholder"></a>
 									</div>
 									<h2>$_aboutPagePerson5()$</h2>
 									<em>$_aboutPagePerson5Position()$</em>
 									<p>$_aboutPagePerson5Body()$</p>
 									$_aboutPagePerson5Contact()$
-									
-								</li>
+
+								</li>-->
 								<li>
 									<div class="portrait-image">
 								          <a class="gracjan"></a>
