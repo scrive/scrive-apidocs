@@ -826,7 +826,7 @@ insertDocumentAsIs document = do
                                      -- , toSql documentsignatoryattachments   -- many to many
                                      , sqlField "mail_footer" $ documentmailfooter $ documentui  -- should go into separate table?
                                      , sqlField "region" documentregion
-                                     , sqlField "sharing" (iToSql 1) -- this is unused, but does not have default and needs to be specifed here
+                                     , sqlField "sharing" Private -- this is unused, but does not have default and needs to be specifed here
                                      ]
                                      "NOT EXISTS (SELECT * FROM documents WHERE id = ?)"
                                      [toSql documentid]
