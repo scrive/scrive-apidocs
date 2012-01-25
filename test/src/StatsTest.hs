@@ -21,7 +21,6 @@ import Test.Framework.Providers.HUnit (testCase)
 import Stats.Control
 import Stats.Model
 import StateHelper
-import Mails.MailsUtil
 
 import qualified Data.ByteString.UTF8 as BS
 

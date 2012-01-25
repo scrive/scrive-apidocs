@@ -64,7 +64,6 @@ import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import qualified Log
-import Mails.MailsUtil
 
 import qualified Data.ByteString.UTF8 as BS
 import Happstack.Server

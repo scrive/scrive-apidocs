@@ -101,13 +101,11 @@ import Data.Data
 import Database.HDBC
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-import qualified Mails.MailsUtil as Mail
 import Data.Maybe
 import Misc
 import Data.Convertible
 import Data.List
 import qualified Data.Map as Map
-import Mails.MailsUtil
 import Doc.Tables
 import Control.Applicative
 import Util.SignatoryLinkUtils
@@ -500,7 +498,7 @@ decodeRowAsSignatoryLinkWithDocumentID :: SignatoryLinkID
                          -> Maybe MinutesTime
                          -> Maybe IPAddress
                          -> Maybe MinutesTime
-                         -> Mail.MailsDeliveryStatus
+                         -> MailsDeliveryStatus
                          -> Maybe String
                          -> Maybe String
                          -> Maybe String
@@ -1791,7 +1789,7 @@ instance DBUpdate SetDocumentUI (Either String Document) where
     getOneDocumentAffected "SetDocumentUI" r did
 
 
-data SetInvitationDeliveryStatus = SetInvitationDeliveryStatus DocumentID SignatoryLinkID Mail.MailsDeliveryStatus
+data SetInvitationDeliveryStatus = SetInvitationDeliveryStatus DocumentID SignatoryLinkID MailsDeliveryStatus
                                    deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetInvitationDeliveryStatus (Either String Document) where
   dbUpdate (SetInvitationDeliveryStatus did slid status) = do

@@ -20,6 +20,7 @@ module Doc.DocStateData
     , FileStorage(..)
     , IdentificationType(..)
     , JpegPages(..)
+    , MailsDeliveryStatus(..)
     , SignatureProvider(..)
     , SignInfo(..)
     , SignOrder(..)
@@ -51,7 +52,6 @@ import DB.Types
 import Happstack.Data
 import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
-import Mails.MailsUtil
 import MinutesTime
 import Misc
 import Numeric
@@ -479,6 +479,8 @@ deriving instance Show IdentificationType
 deriving instance Show CancelationReason
 deriving instance Show SignatureInfo
 
+data MailsDeliveryStatus = Delivered | Undelivered | Unknown | Deferred
+                           deriving (Eq, Ord, Typeable, Show, Read, Data)
 
 -- stuff for converting to pgsql
 

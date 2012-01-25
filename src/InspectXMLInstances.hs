@@ -15,7 +15,6 @@ import Company.Model
 import DB.Types
 import MinutesTime
 import InspectXML
-import Mails.MailsUtil
 import User.Model
 import KontraLink
 import FlashMessage
