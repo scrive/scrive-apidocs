@@ -40,15 +40,20 @@ module User.Model (
 import Control.Applicative
 import Data.Data
 import Data.Int
+import Data.List (intersperse)
 import Database.HDBC
 import Happstack.State
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
+import Text.JSON
+import qualified Paths_kontrakcja as Paths
+import qualified Data.Version as Ver
 
 import API.Service.Model
 import Company.Model
 import DB.Classes
 import DB.Derive
+import DB.Fetcher
 import DB.Fetcher2
 import DB.Types
 import DB.Utils
@@ -59,6 +64,7 @@ import User.Password
 import User.Region
 import User.Tables
 import User.UserID
+import Misc (IPAddress)
 
 -- newtypes
 newtype Email = Email { unEmail :: BS.ByteString }
@@ -126,13 +132,13 @@ data UserHistory = UserHistory {
   , uhevent            :: UserHistoryEvent
   , uhip               :: Maybe IPAddress
   , uhtime             :: MinutesTime
-  , uhsystemversion    :: 
+  , uhsystemversion    :: BS.ByteString
   , uhperforminguserid :: Maybe UserID
   }
 
 data UserHistoryEvent = UserHistoryEvent {
     uheventtype :: UserHistoryEventType
-  , uheventdata :: Maybe JObject
+  , uheventdata :: Maybe JSValue
   }
 
 data UserHistoryEventType = UserLoginAttempt 
@@ -304,6 +310,39 @@ instance DBUpdate AddUser (Maybe User) where
               ]
           return ()
         dbQuery $ GetUserByID uid
+
+data AddUserHistory = AddUserHistory UserID UserHistoryEvent (Maybe IPAddress) MinutesTime (Maybe UserID) 
+instance DBUpdate AddUserHistory (Maybe UserHistory) where
+  dbUpdate (AddUserHistory user event mip time mpuser) = do
+    wrapDB $ \conn -> do
+      _ <- run conn ("INSERT INTO users_history("
+        ++ "  user_id"
+        ++ ", event_type"
+        ++ ", event_data"
+        ++ ", ip"
+        ++ ", time"
+        ++ ", system_version"
+        ++ ", performing_user_id)"
+        ++ " VALUES (?, ?, ?, ?, ?, ?, ?)") $ [
+            toSql user
+          , toSql $ uheventtype event
+          , toSql $ maybe "" encode $ uheventdata event
+          , maybe SqlNull toSql mip
+          , toSql $ time
+          , toSql $ concat $ intersperse "." $ Ver.versionTags Paths.version
+          , toSql mpuser
+        ]
+      return ()
+    dbQuery $ GetUserHistoryByEventTime user (uheventtype event) time
+
+data GetUserHistoryByEventTime = GetUserHistoryByEventTime UserID UserHistoryEventType MinutesTime
+instance DBQuery GetUserHistoryByEventTime (Maybe UserHistory) where
+  dbQuery (GetUserHistoryByEventTime userid eventtype time) = wrapDB $ \conn -> do
+    st <- prepare conn $ selectUserHistorySQL 
+            ++ " WHERE user_id = ? AND event_type = ? AND time = ?"
+    _  <- execute st [toSql userid, toSql eventtype, toSql time]
+    uh <- fetchUserHistory st
+    oneObjectReturnedGuard uh
 
 data SetUserEmail = SetUserEmail (Maybe ServiceID) UserID Email
 instance DBUpdate SetUserEmail Bool where
@@ -494,6 +533,44 @@ checkIfUserExists :: UserID -> DB Bool
 checkIfUserExists uid = wrapDB $ \conn -> do
   quickQuery' conn "SELECT 1 FROM users WHERE id = ? AND deleted = FALSE" [toSql uid]
     >>= checkIfOneObjectReturned
+
+selectUserHistorySQL :: String
+selectUserHistorySQL = "SELECT "
+ ++ "  user_id"
+ ++ ", event_type"
+ ++ ", event_data"
+ ++ ", ip"
+ ++ ", time"
+ ++ ", system_version"
+ ++ ", performing_user_id"
+ ++ "  FROM users_history"
+ ++ " "
+
+fetchUserHistory :: Statement -> IO [UserHistory]
+fetchUserHistory st = fetchValues st decodeRowAsUserHistory
+
+decodeRowAsUserHistory :: UserID
+                       -> UserHistoryEventType
+                       -> Maybe BS.ByteString
+                       -> Maybe IPAddress
+                       -> MinutesTime
+                       -> BS.ByteString
+                       -> Maybe UserID
+                       -> Either DBException UserHistory
+decodeRowAsUserHistory userid eventtype meventdata mip time sysver mpuser = (
+  Right $ UserHistory {
+      uhuserid = userid
+    , uhevent = UserHistoryEvent { 
+          uheventtype = eventtype
+        , uheventdata = maybe Nothing (\d -> case decode $ BS.unpack d of
+                                             Ok a -> Just a
+                                             _    -> Nothing) meventdata
+        }
+    , uhip = mip
+    , uhtime = time
+    , uhsystemversion = sysver
+    , uhperforminguserid = mpuser
+  }):: Either DBException UserHistory
 
 selectUsersSQL :: String
 selectUsersSQL = "SELECT "
