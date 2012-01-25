@@ -1,44 +1,24 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# LANGUAGE CPP #-}
 
 module Doc.DocStateCommon
 where
 
---import API.Service.Model
 import Company.Model
---import Control.Monad
---import Control.Monad.Reader (ask)
---import Database.HDBC
---import Data.Maybe
---import Data.Word
---import DB.Classes
 import DB.Types
---import DB.Utils
+import Data.Maybe
+import Doc.DocInfo
 import Doc.DocProcess
 import Doc.DocStateData
---import Doc.DocStateUtils
 import Doc.DocUtils
---import Happstack.Data.IxSet as IxSet hiding (null)
---import Happstack.State
+import InputValidation
 import Mails.MailsUtil
 import MinutesTime
 import Misc
 import User.Model
-import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.UTF8 as BS
---import Util.SignatoryLinkUtils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
-import InputValidation
---import Control.Applicative
-import Doc.DocInfo
---import Data.List
---import File.FileID
---import qualified Log
---import qualified Doc.Model as D
---import qualified Doc.Tables as D
-import Data.Maybe
 import Util.SignatoryLinkUtils
+import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.UTF8 as BS
 
                   
 {- |
