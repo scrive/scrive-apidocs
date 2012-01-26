@@ -537,9 +537,11 @@ handleLoginPost = do
                         muuser <- runDBQuery $ GetUserByID (userid user)
                         _ <- addUserLoginStatEvent (ctxtime ctx) (fromJust muuser)
                         logUserToContext muuser
+                        _ <- runDBUpdate $ LogHistoryLoginSuccess (userid user) (ctxipnumber ctx) (ctxtime ctx)
                         return BackToReferer
-                Just _ -> do
+                Just u -> do
                         Log.debug $ "User " ++ show email ++ " login failed (invalid password)"
+                        _ <- runDBUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
                         return $ LinkLogin (ctxlocale ctx) $ InvalidLoginInfo linkemail
                 Nothing -> do
                     Log.debug $ "User " ++ show email ++ " login failed (user not found)"

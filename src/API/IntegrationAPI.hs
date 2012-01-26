@@ -308,8 +308,9 @@ userFromTMP uTMP company = do
                 when (isNothing mtosuser) $ throwApiError API_ERROR_OTHER "Problem reading a user (BASE) | This should never happend"
                 let tosuser = fromJust mtosuser
 
-                Context{ctxtime} <- getContext
+                Context{ctxtime,ctxipnumber} <- getContext
                 _ <- addUserIDSignTOSStatEvent (userid u) ctxtime (usercompany u) (userservice u)
+                _ <- runDBUpdate $ LogHistoryTOSAccept (userid u) ctxipnumber ctxtime
 
                 return tosuser
     info_set <- runDBUpdate $ SetUserInfo (userid user) (userinfo user)

@@ -14,6 +14,9 @@ module User.Model (
   , UserInfo(..)
   , UserMailAPI(..)
   , UserSettings(..)
+  , UserHistory(..)
+  , UserHistoryEvent(..)
+  , UserHistoryEventType(..)
   , GetUsers(..)
   , GetUserByID(..)
   , GetUserByEmail(..)
@@ -34,6 +37,14 @@ module User.Model (
   , AcceptTermsOfService(..)
   , SetSignupMethod(..)
   , SetUserCompanyAdmin(..)
+  , AddUserHistory(..)
+  , GetUserHistoryByID(..)
+  , LogHistoryLoginAttempt(..)
+  , LogHistoryLoginSuccess(..)
+  , LogHistoryPasswordSetup(..)
+  , LogHistoryPasswordSetupReq(..)
+  , LogHistoryAccountCreated(..)
+  , LogHistoryTOSAccept(..)
   , composeFullName
   ) where
 
@@ -127,10 +138,18 @@ data UserSettings  = UserSettings {
   , customfooter        :: Maybe String
   } deriving (Eq, Ord, Show)
 
+newtype UserHistoryID = UserHistoryID Int64
+  deriving (Eq, Ord, Data, Typeable)
+$(newtypeDeriveConvertible ''UserHistoryID)
+$(newtypeDeriveUnderlyingReadShow ''UserHistoryID)
+$(deriveSerialize ''UserHistoryID)
+instance Version UserHistoryID
+
 data UserHistory = UserHistory {
-    uhuserid           :: UserID
+    uhid               :: UserHistoryID
+  , uhuserid           :: UserID
   , uhevent            :: UserHistoryEvent
-  , uhip               :: Maybe IPAddress
+  , uhip               :: IPAddress
   , uhtime             :: MinutesTime
   , uhsystemversion    :: BS.ByteString
   , uhperforminguserid :: Maybe UserID
@@ -311,38 +330,104 @@ instance DBUpdate AddUser (Maybe User) where
           return ()
         dbQuery $ GetUserByID uid
 
-data AddUserHistory = AddUserHistory UserID UserHistoryEvent (Maybe IPAddress) MinutesTime (Maybe UserID) 
+data AddUserHistory = AddUserHistory UserID UserHistoryEvent IPAddress MinutesTime (Maybe UserID) 
 instance DBUpdate AddUserHistory (Maybe UserHistory) where
-  dbUpdate (AddUserHistory user event mip time mpuser) = do
-    wrapDB $ \conn -> do
+  dbUpdate (AddUserHistory user event ip time mpuser) = do
+    wrapDB $ \conn -> do runRaw conn "LOCK TABLE users IN ACCESS EXCLUSIVE MODE"
+    uid <- UserHistoryID <$> getUniqueID tableUsersHistory
+    wrapDB $ \conn -> do 
       _ <- run conn ("INSERT INTO users_history("
-        ++ "  user_id"
+        ++ "  id"
+        ++ ", user_id"
         ++ ", event_type"
         ++ ", event_data"
         ++ ", ip"
         ++ ", time"
         ++ ", system_version"
         ++ ", performing_user_id)"
-        ++ " VALUES (?, ?, ?, ?, ?, ?, ?)") $ [
-            toSql user
+        ++ " VALUES (?, ?, ?, ?, ?, ?, ?, ?)") $ [
+            toSql uid
+          , toSql user
           , toSql $ uheventtype event
           , toSql $ maybe "" encode $ uheventdata event
-          , maybe SqlNull toSql mip
+          , toSql ip
           , toSql $ time
           , toSql $ concat $ intersperse "." $ Ver.versionTags Paths.version
           , toSql mpuser
-        ]
+          ]
       return ()
-    dbQuery $ GetUserHistoryByEventTime user (uheventtype event) time
+    dbQuery $ GetUserHistoryByID uid
 
-data GetUserHistoryByEventTime = GetUserHistoryByEventTime UserID UserHistoryEventType MinutesTime
-instance DBQuery GetUserHistoryByEventTime (Maybe UserHistory) where
-  dbQuery (GetUserHistoryByEventTime userid eventtype time) = wrapDB $ \conn -> do
+data GetUserHistoryByID = GetUserHistoryByID UserHistoryID
+instance DBQuery GetUserHistoryByID (Maybe UserHistory) where
+  dbQuery (GetUserHistoryByID uid) = wrapDB $ \conn -> do
     st <- prepare conn $ selectUserHistorySQL 
-            ++ " WHERE user_id = ? AND event_type = ? AND time = ?"
-    _  <- execute st [toSql userid, toSql eventtype, toSql time]
+            ++ " WHERE id = ?"
+    _  <- execute st [toSql uid]
     uh <- fetchUserHistory st
     oneObjectReturnedGuard uh
+
+data LogHistoryLoginAttempt = LogHistoryLoginAttempt UserID IPAddress MinutesTime
+instance DBUpdate LogHistoryLoginAttempt (Maybe UserHistory) where
+  dbUpdate (LogHistoryLoginAttempt userid ip time) = dbUpdate $ 
+    AddUserHistory userid 
+                   (UserHistoryEvent {uheventtype = UserLoginAttempt, uheventdata = Nothing})
+                   ip
+                   time
+                   Nothing
+
+data LogHistoryLoginSuccess = LogHistoryLoginSuccess UserID IPAddress MinutesTime
+instance DBUpdate LogHistoryLoginSuccess (Maybe UserHistory) where
+  dbUpdate (LogHistoryLoginSuccess userid ip time) = dbUpdate $ 
+    AddUserHistory userid 
+                   (UserHistoryEvent {uheventtype = UserLoginSuccess, uheventdata = Nothing})
+                   ip
+                   time
+                   Nothing
+
+data LogHistoryPasswordSetup = LogHistoryPasswordSetup UserID IPAddress MinutesTime
+instance DBUpdate LogHistoryPasswordSetup (Maybe UserHistory) where
+  dbUpdate (LogHistoryPasswordSetup userid ip time) = dbUpdate $ 
+    AddUserHistory userid 
+                   (UserHistoryEvent {uheventtype = UserPasswordSetup, uheventdata = Nothing})
+                   ip
+                   time
+                   Nothing
+
+data LogHistoryPasswordSetupReq = LogHistoryPasswordSetupReq UserID IPAddress MinutesTime
+instance DBUpdate LogHistoryPasswordSetupReq (Maybe UserHistory) where
+  dbUpdate (LogHistoryPasswordSetupReq userid ip time) = dbUpdate $ 
+    AddUserHistory userid 
+                   (UserHistoryEvent {uheventtype = UserPasswordSetupReq, uheventdata = Nothing})
+                   ip
+                   time
+                   Nothing
+
+data LogHistoryAccountCreated = LogHistoryAccountCreated UserID IPAddress MinutesTime Email
+instance DBUpdate LogHistoryAccountCreated (Maybe UserHistory) where
+  dbUpdate (LogHistoryAccountCreated userid ip time email) = dbUpdate $ 
+    AddUserHistory userid 
+                   (UserHistoryEvent {
+                       uheventtype = UserAccountCreated
+                     , uheventdata = Just $ JSArray $ [JSObject . toJSObject $ [
+                        ("field", JSString $ toJSString "email")
+                      , ("oldval", JSNull)
+                      , ("newval", JSString $ toJSString $ BS.unpack $ unEmail email)
+                      ]]})
+                   ip
+                   time
+                   Nothing
+
+data LogHistoryTOSAccept = LogHistoryTOSAccept UserID IPAddress MinutesTime
+instance DBUpdate LogHistoryTOSAccept (Maybe UserHistory) where
+  dbUpdate (LogHistoryTOSAccept userid ip time) = dbUpdate $ 
+    AddUserHistory userid 
+                   (UserHistoryEvent {
+                       uheventtype = UserTOSAccept
+                     , uheventdata = Nothing})
+                   ip
+                   time
+                   Nothing
 
 data SetUserEmail = SetUserEmail (Maybe ServiceID) UserID Email
 instance DBUpdate SetUserEmail Bool where
@@ -536,7 +621,8 @@ checkIfUserExists uid = wrapDB $ \conn -> do
 
 selectUserHistorySQL :: String
 selectUserHistorySQL = "SELECT "
- ++ "  user_id"
+ ++ "  id"
+ ++ ", user_id"
  ++ ", event_type"
  ++ ", event_data"
  ++ ", ip"
@@ -549,24 +635,26 @@ selectUserHistorySQL = "SELECT "
 fetchUserHistory :: Statement -> IO [UserHistory]
 fetchUserHistory st = fetchValues st decodeRowAsUserHistory
 
-decodeRowAsUserHistory :: UserID
+decodeRowAsUserHistory :: UserHistoryID
+                       -> UserID
                        -> UserHistoryEventType
                        -> Maybe BS.ByteString
-                       -> Maybe IPAddress
+                       -> IPAddress
                        -> MinutesTime
                        -> BS.ByteString
                        -> Maybe UserID
                        -> Either DBException UserHistory
-decodeRowAsUserHistory userid eventtype meventdata mip time sysver mpuser = (
+decodeRowAsUserHistory uid userid eventtype meventdata ip time sysver mpuser = (
   Right $ UserHistory {
-      uhuserid = userid
+      uhid = uid
+    , uhuserid = userid
     , uhevent = UserHistoryEvent { 
           uheventtype = eventtype
         , uheventdata = maybe Nothing (\d -> case decode $ BS.unpack d of
                                              Ok a -> Just a
                                              _    -> Nothing) meventdata
         }
-    , uhip = mip
+    , uhip = ip
     , uhtime = time
     , uhsystemversion = sysver
     , uhperforminguserid = mpuser
