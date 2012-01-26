@@ -33,6 +33,7 @@ import Mails.Events
 import Data.Char
 import Text.XML.HaXml.Parse (xmlParse')
 import Control.Monad.Trans
+import EvidenceLog.Model
 
 mailsTests :: Connection -> [String] -> Test
 mailsTests conn params  = testGroup "Mails" [
@@ -73,9 +74,10 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
         let authorrole = [SignatoryAuthor, SignatoryPartner]
             sigs = [(authordetails,authorrole), (isl,[SignatoryPartner])]
         _ <- gRight $ randomUpdate $ ResetSignatoryDetails docid sigs now
-        d2 <- gRight $ randomUpdate $ PreparationToPending docid now
+        d2 <- gRight $ randomUpdate $ PreparationToPending docid (SystemActor now)
         let asl2 = head $ documentsignatorylinks d2
-        _ <- gRight $ randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2) now
+        _ <- gRight $ randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2) 
+             (SignatoryActor now (IPAddress 0) (maybesignatory asl2) (BS.toString $ getEmail asl2) (signatorylinkid asl2))
         doc <- gRight $ randomUpdate $ SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) now
         let [sl] = filter (not . isAuthor) (documentsignatorylinks doc)
         req <- mkRequest POST []

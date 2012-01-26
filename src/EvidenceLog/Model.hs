@@ -1,12 +1,12 @@
 module EvidenceLog.Model 
        (
          EvidenceEventType(..),
-         InsertEvidenceEvent(..)
+         InsertEvidenceEvent(..),
+         Actor(..),
+         actorTime
        )
        
        where
-
-import qualified Paths_kontrakcja as Paths
 
 import Doc.DocStateData
 import User.UserID
@@ -18,70 +18,121 @@ import MinutesTime
 
 import Database.HDBC
 import Misc
-import Data.List
 
 import Database.HDBC.PostgreSQL
-import Data.Version (Version(..))
+import Version
 
+data Actor = SystemActor    MinutesTime
+           | AuthorActor    MinutesTime IPAddress        UserID  String SignatoryLinkID
+           | SignatoryActor MinutesTime IPAddress (Maybe UserID) String SignatoryLinkID
+           | MailAPIActor   MinutesTime                  UserID  String SignatoryLinkID
+           deriving (Show, Eq, Ord)
+                    
+actorTime :: Actor -> MinutesTime
+actorTime (SystemActor time) = time
+actorTime (AuthorActor time _ _ _ _) = time
+actorTime (SignatoryActor time _ _ _ _) = time
+actorTime (MailAPIActor time _ _ _ ) = time
 
-insertEvidenceEvent' :: Maybe DocumentID 
-                        -> Maybe UserID
-                        -> Maybe String
-                        -> MinutesTime
-                        -> Maybe IPAddress
-                        -> Maybe IPAddress
-                        -> Maybe SignatoryLinkID
-                        -> String -- text
-                        -> EvidenceEventType
-                        -> String -- versionid
-                        -> Maybe String -- apiuser
-                        -> Connection
-                        -> IO Bool
-insertEvidenceEvent' mdid muid meml time mip4 mip6 mslid text event vid mapi conn = do
+insertEvidenceEvent :: EvidenceEventType
+                       -> String       -- text
+                       -> Maybe DocumentID 
+                       -> Actor
+                       -> Connection
+                       -> IO Bool
+insertEvidenceEvent event text mdid (SystemActor time) conn = do
   st <- prepare conn $ "INSERT INTO evidence_log ("
         ++ "  document_id"
-        ++ ", user_id"
-        ++ ", email"
         ++ ", time"
-        ++ ", request_ip_v4"
-        ++ ", request_ip_v6"
-        ++ ", signatory_link_id"
         ++ ", text"
         ++ ", event_type"
         ++ ", version_id"
-        ++ ", api_user"
-        ++ ") VALUES (?,?,?,?,?,?,?,?,?,?,?)"
+        ++ ") VALUES (?,?,?,?,?)"
   res <- execute st [toSql mdid
-                    ,toSql muid
-                    ,toSql meml
                     ,toSql time
-                    ,toSql mip4
-                    ,toSql mip6
-                    ,toSql mslid
                     ,toSql text
                     ,toSql event
-                    ,toSql vid
-                    ,toSql mapi
+                    ,toSql versionID
                     ]
   oneRowAffectedGuard res
-
-versionID :: String
-versionID = concat $ intersperse "." $ versionTags Paths.version
+insertEvidenceEvent event text mdid (AuthorActor time ip uid eml slid) conn = do
+  st <- prepare conn $ "INSERT INTO evidence_log ("
+        ++ "  document_id"
+        ++ ", time"
+        ++ ", text"
+        ++ ", event_type"
+        ++ ", version_id"
+        ++ ", user_id"
+        ++ ", email"
+        ++ ", request_ip_v4"
+        ++ ", signatory_link_id"
+        ++ ") VALUES (?,?,?,?,?,?,?,?,?,?,?)"
+  res <- execute st [toSql mdid
+                    ,toSql time
+                    ,toSql text
+                    ,toSql event
+                    ,toSql versionID
+                    ,toSql $ Just uid
+                    ,toSql $ Just eml
+                    ,toSql ip
+                    ,toSql $ Just slid
+                    ]
+  oneRowAffectedGuard res
+insertEvidenceEvent event text mdid (SignatoryActor time ip muid eml slid) conn = do
+  st <- prepare conn $ "INSERT INTO evidence_log ("
+        ++ "  document_id"
+        ++ ", time"
+        ++ ", text"
+        ++ ", event_type"
+        ++ ", version_id"
+        ++ ", user_id"
+        ++ ", email"
+        ++ ", request_ip_v4"
+        ++ ", signatory_link_id"
+        ++ ") VALUES (?,?,?,?,?,?,?,?,?)"
+  res <- execute st [toSql mdid
+                    ,toSql time
+                    ,toSql text
+                    ,toSql event
+                    ,toSql versionID
+                    ,toSql muid
+                    ,toSql $ Just eml
+                    ,toSql ip
+                    ,toSql $ Just slid
+                    ]
+  oneRowAffectedGuard res
+insertEvidenceEvent event text mdid (MailAPIActor time uid eml slid) conn = do
+  st <- prepare conn $ "INSERT INTO evidence_log ("
+        ++ "  document_id"
+        ++ ", time"
+        ++ ", text"
+        ++ ", event_type"
+        ++ ", version_id"
+        ++ ", user_id"
+        ++ ", email"
+        ++ ", signatory_link_id"
+        ++ ", api_user"
+        ++ ") VALUES (?,?,?,?,?,?,?,?,?)"
+  res <- execute st [toSql mdid
+                    ,toSql time
+                    ,toSql text
+                    ,toSql event
+                    ,toSql versionID
+                    ,toSql $ Just uid
+                    ,toSql $ Just eml
+                    ,toSql $ Just slid
+                    ,toSql $ Just "mailapi"
+                    ]
+  oneRowAffectedGuard res
 
 data InsertEvidenceEvent = InsertEvidenceEvent 
                              EvidenceEventType       -- A code for the event
                              String                  -- Text for evidence
-                             MinutesTime             -- The time of the event
                              (Maybe DocumentID)      -- The documentid if this event is about a document
-                             (Maybe UserID)          -- If this event was enacted by a user
-                             (Maybe String)          -- The email address of the person enacting this event, if known
-                             (Maybe SignatoryLinkID) -- The signatorylinkid of the person enacting this event, if known
-                             (Maybe IPAddress)       -- The ipv4 address of the request that enacted this event, if there was one
-                             (Maybe IPAddress)       -- The ipv6 address of the request that enacted thsi event, if there was one
-                             (Maybe String)          -- The api user (email address); Nothing if web interface, Just "Upsales", or Just "email@email.com"
+                             Actor
 instance DBUpdate InsertEvidenceEvent Bool where
-  dbUpdate (InsertEvidenceEvent tp txt tm mdid muid meml mslid mip4 mip6 mapi) = 
-    wrapDB (insertEvidenceEvent' mdid muid meml tm mip4 mip6 mslid txt tp versionID mapi)
+  dbUpdate (InsertEvidenceEvent tp txt mdid md) = 
+    wrapDB (insertEvidenceEvent tp txt mdid md)
 
 -- | A machine-readable event code for different types of events.
 data EvidenceEventType = DocumentCreateEvidence
@@ -114,6 +165,10 @@ data EvidenceEventType = DocumentCreateEvidence
                        | SignatoryUploadAttachmentEvidence
                        | CancelDocBadElegEvidence
                        | AuthorChangeSigEmailEvidence
+                       | AttachSealedFileEvidence
+                       | PreparationToPendingEvidence
+                       | DeleteSigAttachmentEvidence
+                       | ErrorDocumentEvidence
                        deriving (Eq, Show, Read, Ord)
 $(enumDeriveConvertible ''EvidenceEventType)
 

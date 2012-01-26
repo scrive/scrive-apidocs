@@ -38,6 +38,7 @@ import File.FileID
 
 import qualified Log
 
+import EvidenceLog.Model
 
 docStateTests :: Connection -> Test
 docStateTests conn = testGroup "DocState" [
@@ -310,7 +311,8 @@ testCancelDocumentCancelsDocument = doTimes 10 $ do
   user <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition user (\d -> isSignable d && documentstatus d `elem` [AwaitingAuthor, Pending])
   time <- getMinutesTime
-  edoc <- randomUpdate $ CancelDocument (documentid doc) ManualCancel time
+  let Just asl = getAuthorSigLink doc
+  edoc <- randomUpdate $ CancelDocument (documentid doc) ManualCancel (AuthorActor time (IPAddress 0) (userid user) (BS.toString $ getEmail user) (signatorylinkid asl))
   assertRight edoc
   let (Right canceleddoc) = edoc
   assertEqual "In canceled state" Canceled (documentstatus canceleddoc)
@@ -325,7 +327,8 @@ testCancelDocumentReturnsLeftIfDocInWrongState = doTimes 10 $ do
   user <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition user (\d -> isSignable d && not (documentstatus d `elem` [AwaitingAuthor, Pending]))
   time <- getMinutesTime
-  edoc <- randomUpdate $ CancelDocument (documentid doc) ManualCancel time
+  let Just asl = getAuthorSigLink doc
+  edoc <- randomUpdate $ CancelDocument (documentid doc) ManualCancel (AuthorActor time (IPAddress 0) (userid user) (BS.toString $ getEmail user) (signatorylinkid asl)) 
   validTest $ assertLeft edoc
 
 testSignatories1 :: Assertion

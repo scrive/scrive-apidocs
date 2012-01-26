@@ -34,6 +34,8 @@ import Control.Monad.Error
 import qualified Log
 import Stats.Control
 
+import EvidenceLog.Model
+
 documentAPI :: Route (Kontra Response)
 documentAPI = choice [
   dir "api" $ dir "document" $ hGet          $ toK0 $ documentList,
@@ -201,10 +203,14 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
 
 documentDeleteSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryResource -> SignatoryLinkID -> AttachmentResource -> String -> FileResource -> m Response
 documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
+  Context{ctxtime, ctxipnumber} <- getContext
   (slid, magichash) <- getSigLinkID
   doc <- apiGuardL $ getDocByDocIDSigLinkIDAndMagicHash did slid magichash
   
-  email <- apiGuard $ getEmail <$> getSigLinkFor doc sid
+  sl <- apiGuard $ getSigLinkFor doc sid
+  let email = getEmail sl
+      muid  = maybesignatory sl
+  
   
   -- sigattachexists
   sigattach <- apiGuard $ getSignatoryAttachment email (BS.fromString aname) doc
@@ -212,7 +218,8 @@ documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
   -- attachment must have a file
   fileid <- apiGuard' ActionNotAvailable $ signatoryattachmentfile sigattach
 
-  d <- apiGuardL $ doc_update $ DeleteSigAttachment (documentid doc) email fileid
+  d <- apiGuardL $ doc_update $ DeleteSigAttachment (documentid doc) email fileid 
+       (SignatoryActor ctxtime ctxipnumber muid (BS.toString email) sid)
   
   -- let's dig the attachment out again
   sigattach' <- apiGuard $ getSignatoryAttachment email (BS.fromString aname) d

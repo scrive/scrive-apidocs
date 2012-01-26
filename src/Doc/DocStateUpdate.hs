@@ -1,6 +1,5 @@
 module Doc.DocStateUpdate
     ( restartDocument
-    , markDocumentSeen
     , signDocumentWithEmail
     , signDocumentWithEleg
     , rejectDocumentWithChecks
@@ -20,8 +19,8 @@ import DBError
 import Doc.Transitory
 import Doc.DocStateData
 import Kontra
-import MinutesTime
-import Misc
+--import MinutesTime
+--import Misc
 import Util.SignatoryLinkUtils
 import Doc.DocStateQuery
 import qualified Data.ByteString as BS
@@ -40,18 +39,6 @@ import EvidenceLog.Model
 import Util.HasSomeUserInfo
 
 import qualified Data.ByteString.UTF8 as BS hiding (length)
-{- |
-   Mark document seen securely.
- -}
-markDocumentSeen :: Kontrakcja m
-                 => DocumentID
-                 -> SignatoryLinkID
-                 -> MagicHash
-                 -> MinutesTime.MinutesTime
-                 -> IPAddress
-                 -> m (Either String Document)
-markDocumentSeen docid sigid mh time ipnum =
-  doc_update $ MarkDocumentSeen docid sigid mh time ipnum
 
 {- |
    Securely
@@ -141,18 +128,20 @@ rejectDocumentWithChecks did slid mh customtext = do
 authorSignDocument :: (Kontrakcja m) => DocumentID -> Maybe SignatureInfo -> m (Either DBError Document)
 authorSignDocument did msigninfo = onlyAuthor did $ do
   ctx <- getContext
+  let Just author = ctxmaybeuser ctx
   edoc <- getDocByDocID did
   case edoc of
     Left m -> return $ Left m
     Right doc -> do
       let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink doc
-      ed1 <- doc_update (PreparationToPending did (ctxtime ctx))
+      ed1 <- doc_update (PreparationToPending did (SystemActor (ctxtime ctx)))
       case ed1 of
         Left m -> return $ Left $ DBActionNotAvailable m
         Right _ -> do
           _ <- doc_update $ SetDocumentInviteTime did (ctxtime ctx) (ctxipnumber ctx)
           _ <- doc_update $ MarkInvitationRead did signatorylinkid (ctxtime ctx)
-          ed2 <- doc_update $ MarkDocumentSeen did signatorylinkid signatorymagichash (ctxtime ctx) (ctxipnumber ctx)
+          ed2 <- doc_update $ MarkDocumentSeen did signatorylinkid signatorymagichash 
+                 (AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid author) (BS.toString $ getEmail author) signatorylinkid)
           case ed2 of
             Left m -> return $ Left $ DBActionNotAvailable m
             Right _ -> do
@@ -171,18 +160,20 @@ authorSignDocument did msigninfo = onlyAuthor did $ do
 authorSendDocument :: (Kontrakcja m) => DocumentID -> m (Either DBError Document)
 authorSendDocument did = onlyAuthor did $ do
   ctx <- getContext
+  let Just author = ctxmaybeuser ctx
   edoc <- getDocByDocID did
   case edoc of
     Left m -> return $ Left m
     Right doc -> do
       let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink doc
-      ed1 <- doc_update (PreparationToPending did (ctxtime ctx))
+      ed1 <- doc_update (PreparationToPending did (SystemActor (ctxtime ctx)))
       case ed1 of
         Left m -> return $ Left $ DBActionNotAvailable m
         Right _ -> do
           _ <- doc_update $ SetDocumentInviteTime did (ctxtime ctx) (ctxipnumber ctx)          
           _ <- doc_update $ MarkInvitationRead did signatorylinkid (ctxtime ctx)
-          transActionNotAvailable <$> doc_update (MarkDocumentSeen did signatorylinkid signatorymagichash (ctxtime ctx) (ctxipnumber ctx))
+          transActionNotAvailable <$> doc_update (MarkDocumentSeen did signatorylinkid signatorymagichash 
+                                                  (AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid author) (BS.toString $ getEmail author) signatorylinkid))
 
 {- |
   The Author can add new SigAttachments.
@@ -210,22 +201,7 @@ authorSignDocumentFinal did msigninfo = onlyAuthor did $ do
           _ <- case getSigLinkFor d1 signatorylinkid of
             Just sl -> runDB $ addSignStatSignEvent d1 sl
             _ -> return False
-          ed2 <- doc_update (CloseDocument did (ctxtime ctx) (ctxipnumber ctx))
-          case ed2 of
-            Right d -> do
-              _ <- doc_update $ InsertEvidenceEvent
-                   DocumentClosedEvidence
-                   "The document was closed by the system after all signatories had signed."
-                   (ctxtime ctx)
-                   (Just did)
-                   (maybe Nothing maybesignatory $ getSigLinkFor d signatorylinkid)
-                   (BS.toString <$> getEmail <$> getSigLinkFor d signatorylinkid)
-                   Nothing
-                   (Just $ ctxipnumber ctx)
-                   Nothing
-                   Nothing
-              return ()
-            _ -> return ()
+          ed2 <- doc_update (CloseDocument did (SystemActor (ctxtime ctx)))
           return $ transActionNotAvailable ed2
 
 

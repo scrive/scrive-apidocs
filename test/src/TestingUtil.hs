@@ -49,6 +49,8 @@ import Doc.DocProcess
 import ActionSchedulerState
 import Text.JSON
 
+import EvidenceLog.Model
+
 newtype NotNullWord8 = NotNullWord8 { fromNNW8 :: Word8 }
   deriving (Enum, Eq, Integral, Num, Ord, Real)
 
@@ -143,6 +145,14 @@ class ExtendWithRandomnes a where
 
 instance ExtendWithRandomnes SignatoryDetails where
     moreRandom sl = return sl
+
+instance Arbitrary Actor where
+  arbitrary = do
+    (time, ip, uid, eml, slid) <- arbitrary
+    elements [SystemActor time, 
+              AuthorActor time ip uid eml slid,
+              SignatoryActor time ip (Just uid) eml slid,
+              MailAPIActor time uid eml slid]
 
 instance Arbitrary SignatoryLinkID where
   arbitrary = SignatoryLinkID <$> arbitrary

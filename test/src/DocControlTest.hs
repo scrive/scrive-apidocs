@@ -27,7 +27,8 @@ import Company.Model
 import KontraLink
 import User.Model
 import Util.SignatoryLinkUtils
-
+import EvidenceLog.Model
+import Util.HasSomeUserInfo
 
 docControlTests :: Connection -> Test
 docControlTests conn =  testGroup "Templates"
@@ -197,12 +198,13 @@ testNonLastPersonSigningADocumentRemainsPending conn = withTestEnvironment conn 
                  , (mkSigDetails "Gordon" "Gecko" "gord@geck.com", [SignatoryPartner])
                ]) (documentctime doc')
 
-  Right doc'' <- randomUpdate $ PreparationToPending (documentid doc') (documentctime doc')
+  Right doc'' <- randomUpdate $ PreparationToPending (documentid doc') (SystemActor (documentctime doc'))
 
   let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
       siglink = head $ filter isUnsigned (documentsignatorylinks doc'')
 
-  Right doc <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink) (documentctime doc') (ctxipnumber ctx)
+  Right doc <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink) 
+               (SignatoryActor (documentctime doc') (ctxipnumber ctx) (maybesignatory siglink) (BS.toString $ getEmail $ siglink) (signatorylinkid siglink))
 
   assertEqual "Two left to sign" 2 (length $ filter isUnsigned (documentsignatorylinks doc))
 
@@ -238,12 +240,13 @@ testLastPersonSigningADocumentClosesIt conn = withTestEnvironment conn $ do
                ]) (documentctime doc')
 
 
-  Right doc'' <- randomUpdate $ PreparationToPending (documentid doc') (documentctime doc')
+  Right doc'' <- randomUpdate $ PreparationToPending (documentid doc') (SystemActor (documentctime doc'))
 
   let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
       siglink = head $ filter isUnsigned (documentsignatorylinks doc'')
 
-  Right doc <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink) (documentctime doc') (ctxipnumber ctx)
+  Right doc <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink) 
+               (SignatoryActor (documentctime doc') (ctxipnumber ctx) (maybesignatory siglink) (BS.toString $ getEmail siglink) (signatorylinkid siglink))
 
   assertEqual "One left to sign" 1 (length $ filter isUnsigned (documentsignatorylinks doc))
 

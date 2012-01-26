@@ -43,6 +43,7 @@ import Util.SignatoryLinkUtils
 import File.Model
 import DB.Classes
 import Control.Applicative
+import EvidenceLog.Model
 
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
@@ -273,9 +274,9 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplat
         File{fileid = sealedfileid} <- dbUpdate $ NewFile filename newfilepdf
         Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
 #ifdef DOCUMENTS_IN_POSTGRES
-        res <- dbUpdate $ AttachSealedFile documentid sealedfileid (ctxtime ctx)
+        res <- dbUpdate $ AttachSealedFile documentid sealedfileid (SystemActor (ctxtime ctx))
 #else
-        res <- doc_update $ AttachSealedFile documentid sealedfileid (ctxtime ctx)
+        res <- doc_update $ AttachSealedFile documentid sealedfileid (SystemActor (ctxtime ctx))
 #endif
         Log.debug $ "Should be attached to document; is it? " ++ show ((elem sealedfileid . documentsealedfiles) <$> res)
         return res
@@ -292,9 +293,9 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplat
           hClose handle
           return msg
 #ifdef DOCUMENTS_IN_POSTGRES
-        _ <- dbUpdate $ ErrorDocument documentid $ "Could not seal document because of file #" ++ show fileid
+        _ <- dbUpdate $ ErrorDocument documentid ("Could not seal document because of file #" ++ show fileid) (SystemActor (ctxtime ctx))
 #else
-        _ <- doc_update $ ErrorDocument documentid $ "Could not seal document because of file #" ++ show fileid
+        _ <- doc_update $ ErrorDocument documentid ("Could not seal document because of file #" ++ show fileid) (SystemActor (ctxtime ctx)) 
 #endif
         return $ Left msg
   liftIO $ removeDirectoryRecursive tmppath

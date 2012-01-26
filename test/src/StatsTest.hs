@@ -29,8 +29,9 @@ import qualified Log
 
 import Control.Applicative
 import Data.Ix
-
+import Util.HasSomeUserInfo
 import Data.Maybe
+import EvidenceLog.Model
 
 statsTests :: Connection -> Test
 statsTests conn = testGroup "Stats" 
@@ -58,7 +59,7 @@ testInviteStat conn = withTestEnvironment conn $ do
                                                           isPreparation &&^
                                                           (any isSignatory . documentsignatorylinks))
   time <- getMinutesTime
-  _ <- dbUpdate $ PreparationToPending (documentid doc') time
+  _ <- dbUpdate $ PreparationToPending (documentid doc') (SystemActor time)
   Right doc <- dbUpdate $ SetDocumentInviteTime (documentid doc') time (IPAddress 0)
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatInviteEvent doc sl time)
   stats'' <- dbQuery $ GetSignStatEvents
@@ -77,7 +78,7 @@ testReceiveStat conn = withTestEnvironment conn $ do
                                                            isPreparation &&^
                                                            (any isSignatory . documentsignatorylinks))
   time <- getMinutesTime
-  _ <- dbUpdate $ PreparationToPending (documentid doc') time
+  _ <- dbUpdate $ PreparationToPending (documentid doc') (SystemActor time)
   _ <- forM (documentsignatorylinks doc') (\sl -> dbUpdate $ SetInvitationDeliveryStatus (documentid doc') (signatorylinkid sl) Delivered)
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatReceiveEvent doc sl time)
@@ -97,7 +98,7 @@ testOpenStat conn = withTestEnvironment conn $ do
                                                            isPreparation &&^
                                                            (any isSignatory . documentsignatorylinks))
   time <- getMinutesTime
-  _ <- dbUpdate $ PreparationToPending (documentid doc') time
+  _ <- dbUpdate $ PreparationToPending (documentid doc') (SystemActor time)
   _ <- forM (documentsignatorylinks doc') (\sl -> dbUpdate $ MarkInvitationRead (documentid doc') (signatorylinkid sl) time)
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatOpenEvent doc sl)
@@ -117,8 +118,12 @@ testLinkStat conn = withTestEnvironment conn $ do
                                                            isPreparation &&^
                                                            (any isSignatory . documentsignatorylinks))
   time <- getMinutesTime
-  _ <- dbUpdate $ PreparationToPending (documentid doc') time
-  _ <- forM (documentsignatorylinks doc') (\sl -> dbUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid sl) (signatorymagichash sl) time (IPAddress 0))
+  _ <- dbUpdate $ PreparationToPending (documentid doc') (SystemActor time)
+  _ <- forM (documentsignatorylinks doc') 
+       (\sl -> dbUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid sl) (signatorymagichash sl) 
+               (if isAuthor sl 
+                then (AuthorActor time (IPAddress 0) (fromJust $ maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl))
+                else (SignatoryActor time (IPAddress 0) (maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl))))
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatLinkEvent doc sl)
   stats'' <- dbQuery $ GetSignStatEvents
@@ -137,8 +142,12 @@ testSignStat conn = withTestEnvironment conn $ do
                                                            isPreparation &&^
                                                            (any isSignatory . documentsignatorylinks))
   time <- getMinutesTime
-  _ <- dbUpdate $ PreparationToPending (documentid doc') time
-  _ <- forM (documentsignatorylinks doc') (\sl -> dbUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid sl) (signatorymagichash sl) time (IPAddress 0))
+  _ <- dbUpdate $ PreparationToPending (documentid doc') (SystemActor time)
+  _ <- forM (documentsignatorylinks doc') 
+       (\sl -> dbUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid sl) (signatorymagichash sl) 
+               (if isAuthor sl 
+                then (AuthorActor time (IPAddress 0) (fromJust $ maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl))
+                else (SignatoryActor time (IPAddress 0) (maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl))))
   _ <- forM (filter isSignatory $ documentsignatorylinks doc') (\sl -> dbUpdate $ SignDocument (documentid doc') (signatorylinkid sl) (signatorymagichash sl) time (IPAddress 0) Nothing)
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatSignEvent doc sl)
@@ -158,7 +167,7 @@ testRejectStat conn = withTestEnvironment conn $ do
                                                            isPreparation &&^
                                                            (any isSignatory . documentsignatorylinks))
   time <- getMinutesTime
-  _ <- dbUpdate $ PreparationToPending (documentid doc') time
+  _ <- dbUpdate $ PreparationToPending (documentid doc') (SystemActor time)
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   let Just asl' = getAuthorSigLink doc
   _ <- dbUpdate $ RejectDocument (documentid doc) 

@@ -40,6 +40,9 @@ import Util.SignatoryLinkUtils
 import Util.MonadUtils
 import Util.JSON
 import Text.JSON.String
+
+import EvidenceLog.Model
+
 data UserAPIContext = UserAPIContext {wsbody :: APIRequestBody ,user :: User}
 type UserAPIFunction m a = APIFunction m UserAPIContext a
 
@@ -129,7 +132,7 @@ sendFromTemplate = do
   case medoc of
     Left _msg  -> throwApiError API_ERROR_OTHER "Problem with saving document."
     Right edoc -> do
-      esdoc <- doc_update $ PreparationToPending (documentid edoc) (ctxtime ctx)
+      esdoc <- doc_update $ PreparationToPending (documentid edoc) (SystemActor (ctxtime ctx))
       case esdoc of
         Left _msg   -> throwApiError API_ERROR_OTHER "Problem with sending document."
         Right sdoc -> do
@@ -178,7 +181,7 @@ sendNewDocument = do
   case edoc of
     Left _msg  -> throwApiError API_ERROR_OTHER "Problem with saving document."
     Right doc -> do
-      esdoc <- doc_update $ PreparationToPending (documentid doc) (ctxtime ctx)
+      esdoc <- doc_update $ PreparationToPending (documentid doc) (SystemActor (ctxtime ctx))
       case esdoc of
         Left _msg   -> throwApiError API_ERROR_OTHER "Problem with sending document."
         Right sdoc -> do

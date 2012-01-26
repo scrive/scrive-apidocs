@@ -41,6 +41,10 @@ import Doc.DocStateData
 
 import Doc.JSON
 
+import EvidenceLog.Model
+import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
+
 parseEmailMessageToParts :: BS.ByteString -> (MIME.MIMEValue, [(MIME.Type, BS.ByteString)])
 parseEmailMessageToParts content = (mime, parts mime)
   where
@@ -129,7 +133,7 @@ jsonMailAPI :: (Kontrakcja m) =>
                 -> BS.ByteString
                 -> m String
 jsonMailAPI mailapi username user pdfs plains content = do
-  Context{ctxtime, ctxipnumber} <- getContext
+  Context{ctxtime} <- getContext
   when (umapiDailyLimit mailapi <= umapiSentToday mailapi) $ do
     Log.jsonMailAPI $ "Daily limit of documents for user '" ++ username ++ "' has been reached"
     -- ignore it
@@ -268,8 +272,10 @@ jsonMailAPI mailapi username user pdfs plains content = do
 
     mzero
 
-  edoc2 <- doc_update $ PreparationToPending (documentid doc) ctxtime
+  let Just asl = getAuthorSigLink doc
 
+  edoc2 <- doc_update $ PreparationToPending (documentid doc)
+           (MailAPIActor ctxtime (userid user) (BS.toString $ getEmail user) (signatorylinkid asl))
   when (isLeft edoc2) $ do
     Log.jsonMailAPI $ "Could not got to pending document: " ++ (intercalate "; " errs)
 
@@ -277,7 +283,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
 
   let Right doc2 = edoc2
       docid = documentid doc2
-  _ <- DocControl.markDocumentAuthorReadAndSeen doc2 ctxtime ctxipnumber
+  markDocumentAuthorReadAndSeen doc2
   _ <- DocControl.postDocumentChangeAction doc2 doc Nothing
 
   _ <- runDBUpdate $ SetUserMailAPI (userid user) $ Just mailapi {
