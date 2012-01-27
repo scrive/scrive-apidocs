@@ -18,7 +18,7 @@ import Doc.DocUtils
 import FlashMessage
 import InputValidation
 import Templates.Templates
-
+import Util.SignatoryLinkUtils
 
 data CSVProblem = CSVProblem
                   { problemrowindex :: Maybe Int
@@ -37,13 +37,15 @@ data CleanCSVData = CleanCSVData
 -}
 getCSVCustomFields :: Document -> Either String [BS.ByteString]
 getCSVCustomFields doc@Document{ documentsignatorylinks } =
-  case fmap csvsignatoryindex $ documentcsvupload doc of
-    Nothing -> Right []
-    Just csvsignatoryindex ->
-      case checkCSVSigIndex documentsignatorylinks csvsignatoryindex of
-        Left msg -> Left msg
-        Right _ ->
-          Right $ map sfValue . filter isFieldCustom . signatoryfields . signatorydetails $ documentsignatorylinks !! csvsignatoryindex
+  case filter (isJust . signatorylinkcsvupload) documentsignatorylinks of
+    [] -> Right []
+    [sl] ->
+      case isAuthor sl of
+        True -> Left $ "getCSVCustomFields: signatory link #" ++ show (signatorylinkid sl) ++ " of document #" ++ 
+                show (documentid doc) ++ " cannot be both csvupload and author"
+        False -> 
+          Right $ map sfValue . filter isFieldCustom . signatoryfields . signatorydetails $ sl
+    _ -> Left $ "getCSVCustomFields: only one signatory per document can be csv upload in document #" ++ show (documentid doc)
 
 {- |
     Cleans up csv contents. You get a list of all the problems alongside all the data

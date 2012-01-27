@@ -33,9 +33,6 @@ standardHeaderContents=
 		<link rel="stylesheet" type="text/css" href="$prefix$/theme/buttons.css" media="screen"/>
         <link href="$prefix$/theme/flash.css" rel="stylesheet" type="text/css" media="screen" />
         <link href="/css/main.css" rel="stylesheet" type="text/css" />
-        <link rel="stylesheet" type="text/css"
-              href="$if(production)$$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/themes$else$/css$endif$/ui-lightness/jquery-ui.css"
-                   media="screen" />
         <script src="$if(production)$$protocol$//ajax.googleapis.com/ajax/libs/jquery/1.5.1$else$/js$endif$/jquery.min.js"
                 type="text/javascript"></script>
         <script src="$if(production)$$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.11$else$/js$endif$/jquery-ui.min.js"
@@ -111,6 +108,8 @@ standardHeaderContents=
         <script src="/js/uploadview.js"
                 type="text/javascript"></script>
         <script src="/js/attachmentsdesignview.js"
+                type="text/javascript"></script>
+        <script src="/js/validation.js"
                 type="text/javascript"></script>
        $if(publicsafe)$
         <script src="/js/jquery.tweet.js"
@@ -278,6 +277,9 @@ pageFooter=
         </li>
         <li>
           $_pageFooterContact7()$
+        </li>
+        <li>
+          $_pageFooterContact8()$
         </li>
       </ul>
     </div>

@@ -62,8 +62,10 @@ import File.Model
 import Util.JSON
 import Text.JSON.String
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
-import qualified AppLogger as Log (integration)
 import Doc.SignatoryTMP
+import qualified Log (integration)
+import Doc.DocStorage
+
 {- |
   Definition of integration API
 -}
@@ -175,7 +177,7 @@ createDocument = do
    mtemplateids <- fromJSONField "template_id"
    Log.integration $ "got this template from json " ++ show mtemplateids
    involved  <- fmap (fromMaybe []) $ fromJSONLocal "involved" $ fromJSONLocalMapList $ 
-        (getSignatoryTMP DOCUMENT_RELATION_AUTHOR_SIGNATORY) : (repeat $ getSignatoryTMP DOCUMENT_RELATION_SIGNATORY)
+        (getSignatoryTMP [SignatoryAuthor, SignatoryPartner]) : (repeat $ getSignatoryTMP [SignatoryPartner])
    
    mlocale <- fromJSONField "locale"
    tags <- fmap (fromMaybe []) $ fromJSONLocal "tags" $ fromJSONLocalMap $ do
@@ -224,12 +226,17 @@ createDocFromFiles :: (Kontrakcja m, APIContext c) =>
                       -> MinutesTime
                       -> APIFunction m c (Maybe Document)
 createDocFromFiles title doctype files user mcompany time = do
+  ctx <- getContext
   edoc <- doc_update $ NewDocument user mcompany title doctype time
   case edoc of
     Left _ -> throwApiError API_ERROR_OTHER $ "Cannot create document"
     Right doc -> do
       let addAndAttachFile name content = do
-            file <- runDB $ dbUpdate $ NewFile name content
+            econtent14 <- liftIO $ preCheckPDF (ctxgscmd ctx) content
+            content14 <- case econtent14 of
+                         Left _ -> throwApiError API_ERROR_OTHER $ "Cannot handle uploaded data"
+                         Right x -> return x
+            file <- runDB $ dbUpdate $ NewFile name content14
             doc_update $ AttachFile (documentid doc) (fileid file) time
       mapM_ (uncurry addAndAttachFile) files
       return $ Just doc
@@ -251,10 +258,10 @@ createAPIDocument _ [] _ _ _  =
     throwApiError API_ERROR_OTHER "One involved person must be provided"
 createAPIDocument comp' (authorTMP:signTMPS) tags mlocale createFun = do
   
-    when (not $ isAuthor authorTMP) $
+    when (not $ isAuthorTMP authorTMP) $
       throwApiError API_ERROR_ILLEGAL_VALUE "The first involved must be an author role."
   
-    when (any isAuthor signTMPS) $
+    when (any isAuthorTMP signTMPS) $
       throwApiError API_ERROR_ILLEGAL_VALUE "Only one author is allowed."
 
     now <- liftIO $ getMinutesTime
@@ -268,8 +275,8 @@ createAPIDocument comp' (authorTMP:signTMPS) tags mlocale createFun = do
     _ <- doc_update $ SetDocumentTags (documentid doc) tags
     when (isJust mlocale) $
       ignore $ doc_update $ SetDocumentLocale (documentid doc) (fromJust mlocale) now
-    let sigdetails s =  (fst $ toSignatoryDetails s,[SignatoryPartner] <| (isSignatory s) |> [])
-        authordetails s = (fst $ toSignatoryDetails s,[SignatoryAuthor,SignatoryPartner] <| (isSignatory s) |> [SignatoryAuthor])
+    let sigdetails s =  (fst $ toSignatoryDetails s,[SignatoryPartner] <| (isSignatoryTMP s) |> [])
+        authordetails s = (fst $ toSignatoryDetails s,[SignatoryAuthor,SignatoryPartner] <| (isSignatoryTMP s) |> [SignatoryAuthor])
         sigs = (authordetails authorTMP):(sigdetails <$> signTMPS)
     doc' <- doc_update $ ResetSignatoryDetails (documentid doc) sigs (ctxtime ctx)
     when (any (hasFieldsAndPlacements . fst) sigs ||
@@ -324,6 +331,7 @@ setCompanyInfoFromTMP uTMP cmp = do
     when (not info_set) $ throwApiError API_ERROR_OTHER "Problem create a user (COMPANY INFO) | This should never happen"
     Just cmp' <- runDBQuery $ GetCompany $ companyid cmp
     return cmp'
+    
 
 getDocuments :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocuments = do
@@ -336,15 +344,36 @@ getDocuments = do
                     v <- fromJSONField "value"
                     when (isNothing n || isNothing v) $ throwApiError API_ERROR_MISSING_VALUE "Missing tag name or value"
                     return $ Just $ DocumentTag (fromJust n) (fromJust v)
+    mFromDateString <- fromJSONField "from_date"
+    mToDateString   <- fromJSONField "to_date"
+    mFromState :: Maybe Int <- fromJSONField "from_state"
+    mToState   :: Maybe Int <- fromJSONField "to_state"
+    mFromDate <- case mFromDateString of
+      Nothing -> return Nothing
+      Just s  -> case parseMinutesTimeISO s of
+        Just t  -> return $ Just t
+        Nothing -> throwApiError API_ERROR_PARSING $ "from_date unrecognized format: " ++ show s
+    mToDate <- case mToDateString of
+      Nothing -> return Nothing
+      Just s  -> case parseMinutesTimeISO s of
+        Just t  -> return $ Just t
+        Nothing -> throwApiError API_ERROR_PARSING $ "to_date unrecognized format: " ++ show s
     linkeddocuments <- doc_query $ GetDocumentsByCompanyAndTags (Just sid) (companyid comp) tags
-    api_docs <- sequence [api_document_read False d | d <- linkeddocuments
-                                                    , isAuthoredByCompany (companyid comp) d
-                                                    , not $ isDeletedFor $ getAuthorSigLink d
-                                                    , not $ isAttachment d
-                                                    ]
-    return $ toJSObject [("documents",JSArray $ api_docs)]
-
-
+    api_docs <- sequence [api_document_read False d  
+                         | d <- linkeddocuments
+                         , isAuthoredByCompany (companyid comp) d
+                         , not $ isDeletedFor $ getAuthorSigLink d
+                         , not $ isAttachment d
+                         -- we avoid filtering when the filter is not defined
+                         , maybe True (recentDate d >=) mFromDate
+                         , maybe True (recentDate d <=) mToDate
+                         , maybe True ((fromSafeEnum $ documentstatus d) >=) mFromState
+                         , maybe True ((fromSafeEnum $ documentstatus d) <=) mToState]
+    return $ toJSObject $ [("documents"  , JSArray $ api_docs)] ++
+                          ([] <| isNothing mFromDate  |> [("from_date",  showJSON $ showMinutesTimeForAPI (fromJust mFromDate ))]) ++
+                          ([] <| isNothing mToDate    |> [("to_date",    showJSON $ showMinutesTimeForAPI (fromJust mToDate   ))]) ++
+                          ([] <| isNothing mFromState |> [("from_state", showJSON $                       (fromJust mFromState))]) ++
+                          ([] <| isNothing mToState   |> [("to_state",   showJSON $                       (fromJust mToState  ))])
 
 getDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDocument = do

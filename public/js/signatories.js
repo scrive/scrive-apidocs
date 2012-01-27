@@ -44,6 +44,12 @@ window.SignatoryAttachment = Backbone.Model.extend({
     },
     document : function() {
         return this.signatory().document();
+    },
+    draftData : function() {
+        return {
+              name: this.name(),
+              description: this.description()
+        }
     }
 });
 
@@ -177,6 +183,8 @@ window.Signatory = Backbone.Model.extend({
         this.set({"fields": fields ,
                   "attachments" : attachments
         });
+        
+        this.bind("change",function() {signatory.document().trigger("change:signatories")});
     },
     document : function(){
         return this.get("document");
@@ -292,6 +300,12 @@ window.Signatory = Backbone.Model.extend({
     attachments: function() {
         return this.get("attachments");
     },
+    addAttachment: function(att) {
+        this.get("attachments").push(att);
+    },
+    clearAttachments: function() {
+        this.set({attachments: []});
+    },
     canSign : function() {
         var canSign = this.document().pending() &&  
             this.signs() &&  
@@ -369,6 +383,8 @@ window.Signatory = Backbone.Model.extend({
             , author: this.author()
             , signs: this.signs()
             , signorder : this.signorder()
+            , attachments : _.map(this.attachments(), function(att) {
+                  return att.draftData();} )
             
         }
     }
@@ -488,7 +504,7 @@ window.SignatoryStandarView = Backbone.View.extend({
         var textsummary = $("<div class='text'/>");
         if (signatory.signs()) {
             textsummary.append($("<div class='icon status'/>").addClass(signatory.status()));
-            if (signatory.undeliveredEmail()) textsummary.append("<span style='color:#000000;position:relative;left:-4px;'>!</span> ");
+            if (signatory.undeliveredEmail() && signatory.seendate() == undefined) textsummary.append("<span style='color:#000000;position:relative;left:-4px;'>!</span> ");
             textsummary.append($("<span class='textstatus'/>").text(this.signatorySummary()));
         } 
         else {

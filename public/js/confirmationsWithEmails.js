@@ -98,7 +98,6 @@ var ConfirmationWithEmailModel = Backbone.Model.extend({
       acceptColor : "green"
   },
   initialize : function() {
-	  
   },
   title : function(){
        return this.get("title");
@@ -134,6 +133,8 @@ var ConfirmationWithEmailView = Backbone.View.extend({
         _.bindAll(this, 'render', 'reject');
         this.model.view = this;
         this.render();
+        this.fixer = new ExposeMaskFixer({object : this.model});
+
     },
     render: function () {
        var model = this.model;
@@ -190,6 +191,7 @@ var ConfirmationWithEmailView = Backbone.View.extend({
     },
     clear: function(){
         this.model.destroy();
+        this.model.view = undefined;
         this.el.remove();
     }
 

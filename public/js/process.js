@@ -54,8 +54,11 @@ window.Process = Backbone.Model.extend({
     rejectbuttontext : function(){
         return this.get("rejectbuttontext");
     },
-    cancelbyauthormodaltitle : function(){
-        return this.get("cancelbyauthormodaltitle");
+    cancelmodaltitle : function(){
+        return this.get("cancelmodaltitle");
+    },
+    cancelmodaltext : function(){
+        return this.get("cancelmodaltext");
     },
     authorissecretarytext : function(){
         return this.get("authorissecretarytext");
@@ -108,7 +111,6 @@ window.Process = Backbone.Model.extend({
     numberedsignatories : function() {
         return this.get("numberedsignatories");
     }
-    
 });
 
 window.Region = Backbone.Model.extend({
@@ -123,7 +125,18 @@ window.Region = Backbone.Model.extend({
     },
     se : function(){
         return this.get("se");
+    },
+    setGB : function() {
+        this.set({gb: true, se: false})
+    },
+    setSE : function() {
+        this.set({gb: false, se: true})
+    },
+    draftData : function() {
+        if (this.gb())
+            return "gb";
+        return "se";    
     }
 });
 
-})(window); 
+})(window);

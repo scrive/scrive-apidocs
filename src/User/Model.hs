@@ -38,7 +38,6 @@ module User.Model (
   ) where
 
 import Control.Applicative
-import Control.Monad
 import Data.Data
 import Data.Int
 import Database.HDBC
@@ -50,6 +49,7 @@ import API.Service.Model
 import Company.Model
 import DB.Classes
 import DB.Derive
+import DB.Fetcher2
 import DB.Types
 import DB.Utils
 import MinutesTime
@@ -161,20 +161,16 @@ instance DBQuery GetCompanyAccounts [User] where
 data GetInviteInfo = GetInviteInfo UserID
 instance DBQuery GetInviteInfo (Maybe InviteInfo) where
   dbQuery (GetInviteInfo uid) = wrapDB $ \conn -> do
-    st <- prepare conn "SELECT inviter_id, EXTRACT(EPOCH FROM invite_time), invite_type FROM user_invite_infos WHERE user_id = ?"
+    st <- prepare conn "SELECT inviter_id, invite_time, invite_type FROM user_invite_infos WHERE user_id = ?"
     _ <- execute st [toSql uid]
-    is <- fetchInviteInfos st []
+    is <- foldDB st fetchInviteInfos []
     oneObjectReturnedGuard is
     where
-      fetchInviteInfos st acc = fetchRow st >>= maybe (return acc) f
-        where f [inviter_id, invite_time, invite_type
-               ] = fetchInviteInfos st $ InviteInfo {
-                   userinviter = fromSql inviter_id
-                 , invitetime = fromSql invite_time
-                 , invitetype = fromSql invite_type
-               } : acc
-              f l = error $ "fetchInviteInfos: unexpected row: "++show l
-
+      fetchInviteInfos acc inviter_id invite_time invite_type = InviteInfo {
+          userinviter = inviter_id
+        , invitetime = invite_time
+        , invitetype = invite_type
+        } : acc
 
 data GetUserMailAPI = GetUserMailAPI UserID
 instance DBQuery GetUserMailAPI (Maybe UserMailAPI) where
@@ -321,7 +317,7 @@ instance DBUpdate SetInviteInfo Bool where
               then do
                 run conn ("UPDATE user_invite_infos SET"
                   ++ "  inviter_id = ?"
-                  ++ ", invite_time = to_timestamp(?)"
+                  ++ ", invite_time = ?"
                   ++ ", invite_type = ?"
                   ++ "  WHERE user_id = ?") [
                     toSql inviterid
@@ -334,7 +330,7 @@ instance DBUpdate SetInviteInfo Bool where
                   ++ "  user_id"
                   ++ ", inviter_id"
                   ++ ", invite_time"
-                  ++ ", invite_type) VALUES (?, ?, to_timestamp(?), ?)") [
+                  ++ ", invite_type) VALUES (?, ?, ?, ?)") [
                     toSql uid
                   , toSql inviterid
                   , toSql invitetime
@@ -439,7 +435,7 @@ data AcceptTermsOfService = AcceptTermsOfService UserID MinutesTime
 instance DBUpdate AcceptTermsOfService Bool where
   dbUpdate (AcceptTermsOfService uid time) = wrapDB $ \conn -> do
     r <- run conn ("UPDATE users SET"
-      ++ "  has_accepted_terms_of_service = to_timestamp(?)"
+      ++ "  has_accepted_terms_of_service = ?"
       ++ "  WHERE id = ? AND deleted = FALSE") [
         toSql time
       , toSql uid
@@ -455,13 +451,11 @@ instance DBUpdate SetSignupMethod Bool where
 
 data SetUserCompanyAdmin = SetUserCompanyAdmin UserID Bool
 instance DBUpdate SetUserCompanyAdmin Bool where
-  dbUpdate (SetUserCompanyAdmin uid iscompanyadmin) = wrapDB $ \conn -> do
-    mcid <- quickQuery' conn "SELECT company_id FROM users WHERE id = ? AND deleted = FALSE FOR UPDATE" [toSql uid]
-      >>= oneObjectReturnedGuard . join
-      >>= return . join . fmap fromSql
+  dbUpdate (SetUserCompanyAdmin uid iscompanyadmin) = do
+    mcid <- getOne "SELECT company_id FROM users WHERE id = ? AND deleted = FALSE FOR UPDATE" [toSql uid]
     case mcid :: Maybe CompanyID of
       Nothing -> return False
-      Just _ -> do
+      Just _ -> wrapDB $ \conn -> do
         run conn "UPDATE users SET is_company_admin = ? WHERE id = ? AND deleted = FALSE" [toSql iscompanyadmin, toSql uid]
           >>= oneRowAffectedGuard
 
@@ -485,7 +479,7 @@ selectUsersSQL = "SELECT "
  ++ ", encode(u.salt, 'base64')"
  ++ ", u.is_company_admin"
  ++ ", u.account_suspended"
- ++ ", EXTRACT(EPOCH FROM u.has_accepted_terms_of_service)"
+ ++ ", u.has_accepted_terms_of_service"
  ++ ", u.signup_method"
  ++ ", u.service_id"
  ++ ", u.company_id"
@@ -500,45 +494,46 @@ selectUsersSQL = "SELECT "
  ++ ", u.lang"
  ++ ", u.region"
  ++ ", u.customfooter"
-  ++ "  FROM users u"
+ ++ "  FROM users u"
  ++ " "
 
 fetchUsers :: Statement -> IO [User]
-fetchUsers st = do
-  fetchValues st decoder
-  where decoder uid password salt is_company_admin account_suspended has_accepted_terms_of_service
-                signup_method service_id company_id first_name
-                last_name personal_number company_position phone mobile email
-                preferred_design_mode lang region customfooter
-                = (return $ User
-                  { userid = uid
-                  , userpassword = case (password, salt) of
-                                     (Just pwd, Just salt') -> Just Password
-                                                               { pwdHash = pwd
-                                                               , pwdSalt = salt'
-                                                               }
-                                     _ -> Nothing
-                  , useriscompanyadmin = is_company_admin
-                  , useraccountsuspended = account_suspended
-                  , userhasacceptedtermsofservice = has_accepted_terms_of_service
-                  , usersignupmethod = signup_method
-                  , userinfo = UserInfo
-                               { userfstname = first_name
-                               , usersndname = last_name
-                               , userpersonalnumber = personal_number
-                               , usercompanyposition = company_position
-                               , userphone = phone
-                               , usermobile = mobile
-                               , useremail = email
-                               }
-                  , usersettings = UserSettings
-                                   { preferreddesignmode = preferred_design_mode
-                                   , locale = mkLocale (region) (lang)
-                                   , customfooter = customfooter
-                                   }
-                  , userservice = service_id
-                  , usercompany = company_id
-                  }) :: Either DBException User
+fetchUsers st = foldDB st decoder []
+  where
+    -- Note: this function gets users in reversed order, but all queries
+    -- use ORDER BY DESC, so in the end everything is properly ordered.
+    decoder acc uid password salt is_company_admin account_suspended
+      has_accepted_terms_of_service signup_method service_id company_id
+      first_name last_name personal_number company_position phone mobile
+      email preferred_design_mode lang region customfooter = User {
+          userid = uid
+        , userpassword = case (password, salt) of
+                           (Just pwd, Just salt') -> Just Password {
+                               pwdHash = pwd
+                             , pwdSalt = salt'
+                           }
+                           _ -> Nothing
+        , useriscompanyadmin = is_company_admin
+        , useraccountsuspended = account_suspended
+        , userhasacceptedtermsofservice = has_accepted_terms_of_service
+        , usersignupmethod = signup_method
+        , userinfo = UserInfo {
+            userfstname = first_name
+          , usersndname = last_name
+          , userpersonalnumber = personal_number
+          , usercompanyposition = company_position
+          , userphone = phone
+          , usermobile = mobile
+          , useremail = email
+          }
+        , usersettings = UserSettings {
+            preferreddesignmode = preferred_design_mode
+          , locale = mkLocale region lang
+          , customfooter = customfooter
+          }
+        , userservice = service_id
+        , usercompany = company_id
+        } : acc
 
 -- this will not be needed when we move documents to pgsql. for now it's needed
 -- for document handlers - it seems that types of arguments that handlers take

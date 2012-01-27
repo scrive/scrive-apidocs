@@ -21,7 +21,7 @@ import Doc.Transitory
 import Doc.DocStateData
 import Kontra
 import MinutesTime
-import GHC.Word
+import Misc
 import Util.SignatoryLinkUtils
 import Doc.DocStateQuery
 import qualified Data.ByteString as BS
@@ -32,8 +32,10 @@ import Control.Monad.Trans
 import Doc.DocStorage
 import User.Utils
 import File.Model
+import Redirect
 import DB.Classes
 import Data.Either
+import Stats.Control
 
 {- |
    Mark document seen securely.
@@ -43,7 +45,7 @@ markDocumentSeen :: Kontrakcja m
                  -> SignatoryLinkID
                  -> MagicHash
                  -> MinutesTime.MinutesTime
-                 -> GHC.Word.Word32
+                 -> IPAddress
                  -> m (Either String Document)
 markDocumentSeen docid sigid mh time ipnum =
   doc_update $ MarkDocumentSeen docid sigid mh time ipnum
@@ -82,7 +84,11 @@ signDocumentWithEmail did slid mh fields = do
             newdocument <- doc_update $ SignDocument did slid mh ctxtime ctxipnumber Nothing
             case newdocument of
               Left message -> return $ Left (DBActionNotAvailable message)
-              Right doc -> return $ Right (doc, olddoc)
+              Right doc -> do
+                _ <- case getSigLinkFor doc slid of
+                  Just sl -> runDB $ addSignStatSignEvent doc sl
+                  _ -> return False
+                return $ Right (doc, olddoc)
 
 
 signDocumentWithEleg :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(BS.ByteString, BS.ByteString)] -> SignatureInfo -> m (Either DBError (Document, Document))
@@ -101,7 +107,11 @@ signDocumentWithEleg did slid mh fields sinfo = do
             newdocument <- doc_update $ SignDocument did slid mh ctxtime ctxipnumber (Just sinfo)
             case newdocument of
               Left message -> return $ Left (DBActionNotAvailable message)
-              Right doc -> return $ Right (doc, olddoc)
+              Right doc -> do
+                _ <- case getSigLinkFor doc slid of
+                  Just sl -> runDB $ addSignStatSignEvent doc sl
+                  _ -> return False
+                return $ Right (doc, olddoc)
 
 {- |
    Reject a document with security checks.
@@ -116,7 +126,11 @@ rejectDocumentWithChecks did slid mh customtext = do
       mdocument <- doc_update $ RejectDocument did slid ctxtime ctxipnumber customtext
       case mdocument of
         Left msg -> return $ Left (DBActionNotAvailable msg)
-        Right document -> return $ Right (document, olddocument)
+        Right document -> do
+          _ <- case getSigLinkFor document slid of
+            Just sl -> runDB $ addSignStatRejectEvent document sl
+            _       -> return False
+          return $ Right (document, olddocument)
 
 {- |
   The Author signs a document with security checks.
@@ -133,12 +147,20 @@ authorSignDocument did msigninfo = onlyAuthor did $ do
       case ed1 of
         Left m -> return $ Left $ DBActionNotAvailable m
         Right _ -> do
+          _ <- doc_update $ SetDocumentInviteTime did (ctxtime ctx) (ctxipnumber ctx)
           _ <- doc_update $ MarkInvitationRead did signatorylinkid (ctxtime ctx)
           ed2 <- doc_update $ MarkDocumentSeen did signatorylinkid signatorymagichash (ctxtime ctx) (ctxipnumber ctx)
           case ed2 of
             Left m -> return $ Left $ DBActionNotAvailable m
-            Right _ ->
-              transActionNotAvailable <$> doc_update (SignDocument did signatorylinkid signatorymagichash (ctxtime ctx) (ctxipnumber ctx) msigninfo)
+            Right _ -> do
+              ed3 <- doc_update (SignDocument did signatorylinkid signatorymagichash (ctxtime ctx) (ctxipnumber ctx) msigninfo)
+              case ed3 of
+                Left m -> return $ Left $ DBActionNotAvailable m
+                Right d3 -> do
+                  _ <- case getSigLinkFor d3 signatorylinkid of
+                    Just sl -> runDB $ addSignStatSignEvent d3 sl
+                    _ -> return False
+                  return $ Right d3
 
 {- |
   The Author sends a document with security checks.
@@ -155,6 +177,7 @@ authorSendDocument did = onlyAuthor did $ do
       case ed1 of
         Left m -> return $ Left $ DBActionNotAvailable m
         Right _ -> do
+          _ <- doc_update $ SetDocumentInviteTime did (ctxtime ctx) (ctxipnumber ctx)          
           _ <- doc_update $ MarkInvitationRead did signatorylinkid (ctxtime ctx)
           transActionNotAvailable <$> doc_update (MarkDocumentSeen did signatorylinkid signatorymagichash (ctxtime ctx) (ctxipnumber ctx))
 
@@ -180,7 +203,11 @@ authorSignDocumentFinal did msigninfo = onlyAuthor did $ do
       ed1 <- doc_update (SignDocument did signatorylinkid signatorymagichash (ctxtime ctx) (ctxipnumber ctx) msigninfo)
       case ed1 of
         Left m -> return $ Left $ DBActionNotAvailable m
-        Right _ -> transActionNotAvailable <$> doc_update (CloseDocument did (ctxtime ctx) (ctxipnumber ctx))
+        Right d1 -> do
+          _ <- case getSigLinkFor d1 signatorylinkid of
+            Just sl -> runDB $ addSignStatSignEvent d1 sl
+            _ -> return False
+          transActionNotAvailable <$> doc_update (CloseDocument did (ctxtime ctx) (ctxipnumber ctx))
 
 
 -- | Make sure we're logged in as the author before taking action.
@@ -223,7 +250,7 @@ attachFile docid filename content = onlyAuthor docid $ do
   -- we need to downgrade the PDF to 1.4 that has uncompressed structure
   -- we use gs to do that of course
   ctx <- getContext
-  content14 <- liftIO $ preprocessPDF ctx content docid
+  content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) content
   file <- runDB $ dbUpdate $ NewFile filename content14
   transActionNotAvailable <$> doc_update (AttachFile docid (fileid file) (ctxtime ctx))
 

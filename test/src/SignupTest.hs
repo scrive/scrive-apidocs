@@ -3,7 +3,7 @@ module SignupTest (signupTests) where
 import Control.Applicative
 import Control.Monad.State
 import Data.Maybe
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import Happstack.Server
 import Happstack.State (query)
 import Test.Framework
@@ -17,6 +17,8 @@ import Context
 import DB.Classes
 import DB.Types
 import FlashMessage
+import Mails.Model
+import LoginTest (assertLoginEventRecordedFor)
 import MinutesTime
 import Misc
 import Redirect
@@ -27,9 +29,8 @@ import TestKontra as T
 import User.Model
 import User.UserControl
 import Util.HasSomeUserInfo
-import Util.MonadUtils
 
-signupTests :: Connection -> Test
+signupTests :: Nexus -> Test
 signupTests conn = testGroup "Signup" [
       testCase "can self signup and activate an account" $ testSignupAndActivate conn
     , testCase "can send viral invite which can be used to activate an account" $ testViralInviteAndActivate conn
@@ -40,9 +41,10 @@ signupTests conn = testGroup "Signup" [
     , testCase "passwords must match to activate an account" $ testPasswordsMatchToActivate conn
     , testCase "if users enter phone number a mail is sent" $ testUserEnteringPhoneNumber conn
     , testCase "if users don't enter phone number a mail isn't sent" $ testUserNotEnteringPhoneNumber conn
+    , testCase "login event recorded when logged in after activation" $ testLoginEventRecordedWhenLoggedInAfterActivation conn
     ]
 
-testUserEnteringPhoneNumber :: Connection -> Assertion
+testUserEnteringPhoneNumber :: Nexus -> Assertion
 testUserEnteringPhoneNumber conn = withTestEnvironment conn $ do
   Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   globaltemplates <- readGlobalTemplates
@@ -56,13 +58,13 @@ testUserEnteringPhoneNumber conn = withTestEnvironment conn $ do
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool ("Flash message has type indicating success, was "  ++ show (getFlashType $ head $ ctxflashmessages ctx')) $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
-  uuser <- guardJustM $ dbQuery $ GetUserByID (userid user)
+  Just uuser <- dbQuery $ GetUserByID (userid user)
   assertEqual "Phone number was saved" "12345" (BS.toString . userphone $ userinfo uuser)
 
-  emailactions <- getEmailActions
-  assertEqual "An email was sent" 1 (length emailactions)
+  emails <- dbQuery GetIncomingEmails
+  assertEqual "An email was sent" 1 (length emails)
 
-testUserNotEnteringPhoneNumber :: Connection -> Assertion
+testUserNotEnteringPhoneNumber :: Nexus -> Assertion
 testUserNotEnteringPhoneNumber conn = withTestEnvironment conn $ do
   Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   globaltemplates <- readGlobalTemplates
@@ -76,10 +78,10 @@ testUserNotEnteringPhoneNumber conn = withTestEnvironment conn $ do
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "No flash message was added" 0 (length $ ctxflashmessages ctx')
 
-  emailactions <- getEmailActions
-  assertEqual "No email was sent" 0 (length emailactions)
+  emails <- dbQuery GetIncomingEmails
+  assertEqual "No email was sent" 0 (length emails)
 
-testSignupAndActivate :: Connection -> Assertion
+testSignupAndActivate :: Nexus -> Assertion
 testSignupAndActivate conn = withTestEnvironment conn $ do
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
@@ -99,7 +101,24 @@ testSignupAndActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12"
   assertAccountActivatedFor uid "Andrzej" "Rybczak" (res3, ctx3)
 
-testViralInviteAndActivate :: Connection -> Assertion
+testLoginEventRecordedWhenLoggedInAfterActivation :: Nexus -> Assertion
+testLoginEventRecordedWhenLoggedInAfterActivation conn = withTestEnvironment conn $ do
+  globaltemplates <- readGlobalTemplates
+  ctx <- (\c -> c { ctxdbconn = conn })
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+
+  -- enter the email to signup
+  (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
+  action <- assertSignupSuccessful (res1, ctx1)
+  let aid = actionID action
+      (AccountCreated uid token) = actionType action
+
+  -- activate the account using the signup details
+  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12"
+  assertAccountActivatedFor uid "Andrzej" "Rybczak" (res3, ctx3)
+  assertLoginEventRecordedFor uid
+
+testViralInviteAndActivate :: Nexus -> Assertion
 testViralInviteAndActivate conn = withTestEnvironment conn $ do
   Just inviter <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   globaltemplates <- readGlobalTemplates
@@ -121,7 +140,7 @@ testViralInviteAndActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12"
   assertAccountActivated "Andrzej" "Rybczak" (res3, ctx3)
 
-testAcceptTOSToActivate :: Connection -> Assertion
+testAcceptTOSToActivate :: Nexus -> Assertion
 testAcceptTOSToActivate conn = withTestEnvironment conn $ do
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
@@ -137,7 +156,7 @@ testAcceptTOSToActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token False "Andrzej" "Rybczak" "password12" "password12"
   assertAccountActivationFailed (res3, ctx3)
 
-testNeedFirstNameToActivate :: Connection -> Assertion
+testNeedFirstNameToActivate :: Nexus -> Assertion
 testNeedFirstNameToActivate conn = withTestEnvironment conn $ do
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
@@ -153,7 +172,7 @@ testNeedFirstNameToActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token True "" "Rybczak" "" ""
   assertAccountActivationFailed (res3, ctx3)
 
-testNeedLastNameToActivate :: Connection -> Assertion
+testNeedLastNameToActivate :: Nexus -> Assertion
 testNeedLastNameToActivate conn = withTestEnvironment conn $ do
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
@@ -169,7 +188,7 @@ testNeedLastNameToActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "" "" ""
   assertAccountActivationFailed (res3, ctx3)
 
-testNeedPasswordToActivate :: Connection -> Assertion
+testNeedPasswordToActivate :: Nexus -> Assertion
 testNeedPasswordToActivate conn = withTestEnvironment conn $ do
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
@@ -185,7 +204,7 @@ testNeedPasswordToActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "" ""
   assertAccountActivationFailed (res3, ctx3)
 
-testPasswordsMatchToActivate :: Connection -> Assertion
+testPasswordsMatchToActivate :: Nexus -> Assertion
 testPasswordsMatchToActivate conn = withTestEnvironment conn $ do
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
@@ -289,19 +308,6 @@ assertAccountActivationFailed (res, ctx) = do
   -- if they don't accept the tos then the flash is signing related, not sure why
   assertBool "One flash has type indicating a failure or signing related" $ any (\f -> f `isFlashOfType` OperationFailed || f `isFlashOfType` SigningRelated) (ctxflashmessages ctx)
   assertBool "One flash has type indicating a modal (the tos modal)" $ any (`isFlashOfType` Modal) (ctxflashmessages ctx)
-
-getEmailActions :: MonadIO m => m [Action]
-getEmailActions = do
-  now <- getMinutesTime
-  let expirytime = 1 `minutesAfter` now
-  allactions <- query $ GetExpiredActions EmailSendoutAction expirytime
-  return $ filter isEmailAction allactions
-
-isEmailAction :: Action -> Bool
-isEmailAction action =
-  case actionType action of
-    (EmailSendout _) -> True
-    _ -> False
 
 getViralInviteActions :: MonadIO m => m [Action]
 getViralInviteActions = do

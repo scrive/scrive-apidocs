@@ -15,7 +15,6 @@ import DB.Classes
 import InputValidation
 import Kontra
 import KontraLink
-import Mails.SendGridEvents
 import Mails.SendMail
 import MinutesTime
 import Misc
@@ -27,7 +26,7 @@ import User.Model
 import User.UserView as UserView
 import qualified Stats.Control as Stats
 import qualified Administration.AdministrationControl as Administration
-import qualified AppLogger as Log (security, debug)
+import qualified Log (security, debug)
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import qualified Contacts.ContactsControl as Contacts
 import qualified Doc.DocControl as DocControl
@@ -35,14 +34,17 @@ import qualified Archive.Control as ArchiveControl
 import qualified ELegitimation.BankID as BankID
 import qualified Payments.PaymentsControl as Payments
 import qualified User.UserControl as UserControl
-import qualified ScriveByMail.Control as ScriveByMail
+--import qualified ScriveByMail.Control as ScriveByMail
+import qualified API.MailAPI as MailAPI
 import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Doc.API
+import Stats.Control
 
 import Control.Monad.Error
 import Data.Functor
 import Data.List
+import Data.Maybe
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Happstack.State (query, update)
 
@@ -68,7 +70,7 @@ import Util.MonadUtils
 -}
 staticRoutes :: Route (Kontra Response)
 staticRoutes = choice
-     [ allLocaleDirs $ const $ hGetAllowHttp $ handleHomepage
+     [ allLocaleDirs $ const $ hGetAllowHttp $ toK0 handleHomepage
      , hGetAllowHttp $ getContext >>= (redirectKontraResponse . LinkHome . ctxlocale)
 
      , publicDir "priser" "pricing" LinkPriceplan handlePriceplanPage
@@ -88,7 +90,7 @@ staticRoutes = choice
      , dir "sitemap"         $ hGetAllowHttp $ handleSitemapPage
 
      -- this is SMTP to HTTP gateway
-     , dir "mailapi" $ hPostNoXToken $ toK0 $ ScriveByMail.handleScriveByMail
+     , dir "mailapi" $ hPostNoXToken $ toK0 $ MailAPI.handleMailAPI
 
      -- Only download function | unified for author and signatories
      , dir "download"                     $ hGet  $ toK3 $ DocControl.handleDownloadFile
@@ -203,14 +205,10 @@ staticRoutes = choice
      , dir "account" $ dir "bsa" $ hPost $ toK1 $ CompanyAccounts.handlePostBecomeCompanyAccountOld
 
      -- super user only
-     , dir "stats"      $ hGet  $ toK0 $ Administration.showStats
      , dir "createuser" $ hPost $ toK0 $ Administration.handleCreateUser
-     , dir "sendgrid" $ dir "events" $ remainingPath POST $ handleSendgridEvent
      , dir "adminonly" $ hGet $ toK0 $ Administration.showAdminMainPage
-     , dir "adminonly" $ dir "advuseradmin" $ hGet $ toK0 $ Administration.showAdminUserAdvanced
      , dir "adminonly" $ dir "useradminforsales" $ hGet $ toK0 $ Administration.showAdminUsersForSales
      , dir "adminonly" $ dir "userslist" $ hGet $ toK0 $ Administration.jsonUsersList
-     , dir "adminonly" $ dir "useradminforpayments" $ hGet $ toK0 $ Administration.showAdminUsersForPayments
      , dir "adminonly" $ dir "useradmin" $ hGet $ toK1 $ Administration.showAdminUsers . Just
      , dir "adminonly" $ dir "useradmin" $ hGet $ toK0 $ Administration.showAdminUsers Nothing
      , dir "adminonly" $ dir "useradmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminUserUsageStats
@@ -218,43 +216,36 @@ staticRoutes = choice
      , dir "adminonly" $ dir "companyadmin" $ hGet $ toK0 $ Administration.showAdminCompanies
      , dir "adminonly" $ dir "companyadmin" $ hGet $ toK1 $ Administration.showAdminCompany
      , dir "adminonly" $ dir "companyadmin" $ dir "users" $ hGet $ toK1 $ Administration.showAdminCompanyUsers
-     , dir "adminonly" $ dir "companyadmin" $ dir "users" $ hPost $ toK1 $ Administration.handlePostAdminCompanyUsers, dir "adminonly" $ dir "companyaccounts" $ hGet  $ toK1 $ CompanyAccounts.handleCompanyAccountsForAdminOnly
+     , dir "adminonly" $ dir "companyadmin" $ dir "users" $ hPost $ toK1 $ Administration.handlePostAdminCompanyUsers
      , dir "adminonly" $ dir "companyaccounts" $ hGet  $ toK1 $ CompanyAccounts.handleCompanyAccountsForAdminOnly
      , dir "adminonly" $ dir "companyadmin" $ dir "usagestats" $ hGet $ toK1 $ Stats.showAdminCompanyUsageStats
      , dir "adminonly" $ dir "companyadmin" $ hPost $ toK1 $ Administration.handleCompanyChange
      , dir "adminonly" $ dir "functionalitystats" $ hGet $ toK0 $ Administration.showFunctionalityStats
-     , dir "adminonly" $ dir "db" $ remainingPath GET $ https $ msum
-               [ Administration.indexDB >>= toResp
-               , onlySuperUser $ serveDirectory DisableBrowsing [] "_local/kontrakcja_state"
-               ]
 
-     , dir "adminonly" $ dir "documents" $ hGet $ toK0 $ Administration.showDocumentsDaylyList
+     , dir "adminonly" $ dir "documents" $ hGet $ toK0 $ Administration.showDocuments
+     , dir "adminonly" $ dir "documentslist" $ hGet $ toK0 $ Administration.jsonDocuments
 
      , dir "adminonly" $ dir "allstatscsv" $ path GET id $ Stats.handleDocStatsCSV
      , dir "adminonly" $ dir "userstatscsv" $ path GET id $ Stats.handleUserStatsCSV
+     , dir "adminonly" $ dir "signstatscsv" $ path GET id $ Stats.handleSignStatsCSV
+     , dir "adminonly" $ dir "dochistorycsv" $ path GET id $ Stats.handleDocHistoryCSV
+     , dir "adminonly" $ dir "signhistorycsv" $ path GET id $ Stats.handleSignHistoryCSV
 
      , dir "adminonly" $ dir "runstatsonalldocs" $ hGet $ toK0 $ Stats.addAllDocsToStats
      , dir "adminonly" $ dir "stats1to2" $ hGet $ toK0 $ Stats.handleMigrate1To2
 
      , dir "adminonly" $ dir "runstatsonallusers" $ hGet $ toK0 $ Stats.addAllUsersToStats
+     , dir "adminonly" $ dir "runstatssigs" $ hGet $ toK0 $ Stats.addAllSigsToStats
 
-     , dir "adminonly" $ dir "cleanup"           $ hPost $ toK0 $ Administration.handleDatabaseCleanup
      , dir "adminonly" $ dir "statistics"        $ hGet  $ toK0 $ Stats.showAdminSystemUsageStats
-     , dir "adminonly" $ dir "skrivapausers.csv" $ hGet  $ toK0 $ Administration.getUsersDetailsToCSV
      , dir "adminonly" $ dir "payments"          $ hGet  $ toK0 $ Payments.handlePaymentsModelForViewView
      , dir "adminonly" $ dir "advpayments"       $ hGet  $ toK0 $ Payments.handlePaymentsModelForEditView
      , dir "adminonly" $ dir "advpayments"       $ hPost $ toK0 $ Payments.handleAccountModelsChange
 
      , dir "adminonly" $ dir "services" $ hGet $ toK0 $ Administration.showServicesPage
      , dir "adminonly" $ dir "services" $ param "create" $ hPost $ toK0 $ Administration.handleCreateService
-     , dir "adminonly" $ dir "translations" $ hGet $ toK0 $ Administration.showAdminTranslations
+
      , dir "adminonly" $ dir "companies" $ hGet $ toK0 $ Administration.jsonCompanies
-
-     -- a temporary service to help migration
-     --, dir "adminonly" $ dir "migratesigaccounts" $ hGet $ toK0 $ Administration.migrateSigAccounts
-     --, dir "adminonly" $ dir "migratecompanies" $ hGet $ toK0 $ Administration.migrateCompanies
-
-     , dir "adminonly" $ dir "sysdump" $ hGet $ toK0 $ Administration.sysdump
 
      , dir "adminonly" $ dir "reseal" $ hPost $ toK1 $ Administration.resealFile
      , dir "adminonly" $ dir "replacemainfile" $ hPost $ toK1 $ Administration.replaceMainFile
@@ -263,16 +254,9 @@ staticRoutes = choice
 
      , dir "adminonly" $ dir "backdoor" $ hGet $ toK1 $ Administration.handleBackdoorQuery
 
-     -- this stuff is for a fix
-     , dir "adminonly" $ dir "510bugfix" $ hGet $ toK0 $ Administration.handleFixForBug510
-     , dir "adminonly" $ dir "adminonlybugfix" $ hGet $ toK0 $ Administration.handleFixForAdminOnlyBug
-
-     , dir "adminonly" $ dir "siglinkids_test_uniqueness" $ hGet $ toK0 $ Administration.handleCheckSigLinkIDUniqueness
-
-       
      , dir "adminonly" $ dir "upsalesdeleted" $ hGet $ toK0 $ DocControl.handleUpsalesDeleted
-       
-       
+
+
      , dir "services" $ hGet $ toK0 $ handleShowServiceList
      , dir "services" $ hGet $ toK1 $ handleShowService
      , dir "services" $ dir "ui" $ hPost $ toK1 $ handleChangeServiceUI
@@ -283,9 +267,9 @@ staticRoutes = choice
      , dir "services" $ dir "buttons_rest" $ hGet $ toK1 $ handleServiceButtonsRest
 
      -- never ever use this
-     , dir "adminonly" $ dir "neveruser" $ dir "resetservicepassword" $ hGetWrap (onlySuperUser . https) $ toK2 $ handleChangeServicePasswordAdminOnly
+     , dir "adminonly" $ dir "neveruser" $ dir "resetservicepassword" $ hGetWrap (onlyAdmin . https) $ toK2 $ handleChangeServicePasswordAdminOnly
 
-     , dir "adminonly" $ dir "log" $ hGetWrap (onlySuperUser . https) $ toK1 $ Administration.serveLogDirectory
+     , dir "adminonly" $ dir "log" $ hGetWrap (onlyAdmin . https) $ toK1 $ Administration.serveLogDirectory
 
 
      , dir "dave" $ dir "document" $ hGet $ toK1 $ Administration.daveDocument
@@ -296,10 +280,7 @@ staticRoutes = choice
      , dir "logout"      $ hGet  $ toK0 $ handleLogout
      , allLocaleDirs $ const $ dir "login" $ hGet  $ toK0 $ handleLoginGet
      , allLocaleDirs $ const $ dir "login" $ hPostNoXToken $ toK0 $ handleLoginPost
-     --, dir "signup"      $ hGet  $ signupPageGet
      , dir "signup"      $ hPostAllowHttp $ toK0 $ signupPagePost
-     --, dir "vip"         $ hGet  $ signupVipPageGet
-     --, dir "vip"         $ hPostNoXToken $ signupVipPagePost
      , dir "amnesia"     $ hPostNoXToken $ toK0 $ forgotPasswordPagePost
      , dir "amnesia"     $ hGet $ toK2 $ UserControl.handlePasswordReminderGet
      , dir "amnesia"     $ hPostNoXToken $ toK2 UserControl.handlePasswordReminderPost
@@ -314,9 +295,6 @@ staticRoutes = choice
 
      -- someone wants a phone call
      , dir "phone" $ hPostAllowHttp $ toK0 $ UserControl.handlePhoneCallRequest
-
-     -- a general purpose blank page
-     --, dir "/blank" $ hGet $ toK0 $ simpleResponse ""
 
      , userAPI
      , integrationAPI
@@ -459,7 +437,7 @@ forgotPasswordPagePost = do
 sendResetPasswordMail :: Kontrakcja m => Context -> KontraLink -> User -> m ()
 sendResetPasswordMail ctx link user = do
   mail <- UserView.resetPasswordMail (ctxhostpart ctx) user link
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress user] }
+  scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress user] }
 
 {- |
    Handles viewing of the signup page
@@ -518,11 +496,11 @@ signup vip _freetill =  do
    Sends a new activation link mail, which is really just a new user mail.
 -}
 _sendNewActivationLinkMail:: Context -> User -> Kontra ()
-_sendNewActivationLinkMail Context{ctxhostpart, ctxesenforcer} user = do
+_sendNewActivationLinkMail Context{ctxhostpart, ctxmailsconfig} user = do
     let email = getEmail user
     al <- newAccountCreatedLink user
     mail <- newUserMail ctxhostpart email email al False
-    scheduleEmailSendout ctxesenforcer $ mail { to = [MailAddress {fullname = email, email = email}] }
+    scheduleEmailSendout ctxmailsconfig $ mail { to = [MailAddress {fullname = email, email = email}] }
 
 {- |
    Handles viewing of the login page
@@ -559,6 +537,7 @@ handleLoginPost = do
                           locale = ctxlocale ctx
                         }
                         muuser <- runDBQuery $ GetUserByID (userid user)
+                        _ <- addUserLoginStatEvent (ctxtime ctx) (fromJust muuser)
                         logUserToContext muuser
                         return BackToReferer
                 Just _ -> do

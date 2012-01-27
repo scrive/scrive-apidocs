@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, OverlappingInstances, IncoherentInstances, CPP #-}
+{-# LANGUAGE OverlappingInstances, IncoherentInstances, CPP #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module TestingUtil where
 
@@ -6,7 +6,9 @@ import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 
 import Control.Applicative
-import System.Random
+import Data.Char
+import Data.Word
+import System.Random (newStdGen)
 import Test.QuickCheck
 import Happstack.Server
 #ifndef DOCUMENTS_IN_POSTGRES
@@ -17,7 +19,7 @@ import Doc.DocUtils
 import Test.QuickCheck.Gen
 import Control.Monad.Trans
 import Data.Maybe
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import qualified Test.HUnit as T
@@ -28,7 +30,7 @@ import DB.Classes
 import DB.Types
 import Company.Model
 import FlashMessage
-import qualified AppLogger as Log
+import qualified Log
 import StateHelper
 import Mails.MailsUtil
 import Doc.Transitory
@@ -46,6 +48,22 @@ import Doc.DocInfo
 import Doc.DocProcess
 import ActionSchedulerState
 import Text.JSON
+
+newtype NotNullWord8 = NotNullWord8 { fromNNW8 :: Word8 }
+  deriving (Enum, Eq, Integral, Num, Ord, Real)
+
+instance Show NotNullWord8 where
+  show = show . fromNNW8
+
+instance Bounded NotNullWord8 where
+  minBound = 1
+  maxBound = NotNullWord8 maxBound
+
+instance Arbitrary NotNullWord8 where
+  arbitrary = arbitrarySizedBoundedIntegral
+  shrink = shrinkIntegral
+
+newtype StringWithoutNUL = StringWithoutNUL { fromSNN :: String }
 
 instance Arbitrary DocumentTag where
   arbitrary = DocumentTag <$> arbitrary <*> arbitrary
@@ -132,24 +150,26 @@ instance Arbitrary SignatoryLinkID where
 instance Arbitrary SignatoryLink where
   arbitrary = do
     (slid, sd, mh) <- arbitrary
-    (signinfo) <- arbitrary
     seeninfo <- arbitrary
-    return $  SignatoryLink { signatorylinkid            = slid
-                            , signatorydetails           = sd
-                            , signatorymagichash         = mh
-                            , maybesignatory             = Nothing
-                            , maybesupervisor            = Nothing
-                            , maybecompany               = Nothing
-                            , maybesigninfo              = signinfo
-                                                           -- we don't want seeninfo if we don't have signinfo
-                            , maybeseeninfo              = maybe Nothing (\_ -> Just seeninfo) signinfo
-                            , maybereadinvite            = Nothing
-                            , invitationdeliverystatus   = Unknown
-                            , signatorysignatureinfo     = Nothing
-                            , signatoryroles             = []
-                            , signatorylinkdeleted       = False
-                            , signatorylinkreallydeleted = False
-                            }
+    signinfo <- if isJust seeninfo
+                then arbitrary
+                else return Nothing
+    return $ SignatoryLink { signatorylinkid            = slid
+                           , signatorydetails           = sd
+                           , signatorymagichash         = mh
+                           , maybesignatory             = Nothing
+                           , maybesupervisor            = Nothing
+                           , maybecompany               = Nothing
+                           , maybesigninfo              = signinfo
+                           , maybeseeninfo              = seeninfo
+                           , maybereadinvite            = Nothing
+                           , invitationdeliverystatus   = Unknown
+                           , signatorysignatureinfo     = Nothing
+                           , signatoryroles             = []
+                           , signatorylinkdeleted       = False
+                           , signatorylinkreallydeleted = False
+                           , signatorylinkcsvupload     = Nothing
+                           }
 
 instance Arbitrary SignatureProvider where
   arbitrary = elements [ BankIDProvider
@@ -219,16 +239,28 @@ instance Arbitrary DocumentType where
 
 instance Arbitrary Document where
   arbitrary = do
-    ds <- arbitrary
-    dt <- arbitrary
+    -- we can have any document type here
+    dtype <- arbitrary
+    -- status has meaning only for signables
+    dstatus <- if isSignable dtype
+               then arbitrary
+               else return Preparation
     sls <- arbitrary
     ids <- arbitrary
     fnc <- arbitrary
-    return $ blankDocument { documentstatus = ds
-                           , documenttype = dt
+    -- we can have any days to sign. almost
+    ddaystosign <- elements [Nothing, Just 1, Just 10, Just 99]
+    -- document timeout time makes sense only when days to sign was set for this document
+    dtimeouttime <- if isJust ddaystosign
+                    then arbitrary
+                    else return Nothing
+    return $ blankDocument { documentstatus = dstatus
+                           , documenttype = dtype
                            , documentsignatorylinks = sls
                            , documentallowedidtypes = [ids]
                            , documentfunctionality = fnc
+                           , documenttimeouttime = TimeoutTime <$> dtimeouttime
+                           , documentdaystosign = ddaystosign
                            }
 
 documentAllStatuses :: [DocumentStatus]
@@ -323,15 +355,20 @@ instance Arbitrary UserInfo where
     return $ UserInfo { userfstname     = fn
                       , usersndname     = ln
                       , userpersonalnumber  = pn
-                      , usercompanyposition = ""
-                      , userphone           = ""
-                      , usermobile          = ""
+                      , usercompanyposition = BS.pack []
+                      , userphone           = BS.pack []
+                      , usermobile          = BS.pack []
                       , useremail           = Email em
                       }
 
-
+-- generate (byte)strings without \NUL in them since
+-- hdbc-postgresql plays around with these chars and
+-- fucks them up
 instance Arbitrary BS.ByteString where
-  arbitrary = fmap BS.fromString arbitrary
+  arbitrary = BS.pack . map fromNNW8 <$> arbitrary
+
+instance Arbitrary StringWithoutNUL where
+  arbitrary = StringWithoutNUL . map (chr . fromIntegral . fromNNW8) <$> arbitrary
 
 arbString :: Int -> Int -> Gen String
 arbString minl maxl = do
@@ -350,8 +387,8 @@ signatoryLinkExample1 = SignatoryLink { signatorylinkid = SignatoryLinkID 0
                                       , maybesignatory = Nothing
                                       , maybesupervisor = Nothing
                                       , maybecompany = Nothing
-                                      , maybesigninfo = Just $ SignInfo (fromSeconds 0) 0
-                                      , maybeseeninfo = Just $ SignInfo (fromSeconds 0) 0
+                                      , maybesigninfo = Just $ SignInfo (fromSeconds 0) unknownIPAddress
+                                      , maybeseeninfo = Just $ SignInfo (fromSeconds 0) unknownIPAddress
                                       , maybereadinvite = Nothing
                                       , invitationdeliverystatus = Delivered
                                       , signatorysignatureinfo = Nothing
@@ -370,6 +407,7 @@ signatoryLinkExample1 = SignatoryLink { signatorylinkid = SignatoryLinkID 0
                                                                                                 ]
 
                                                                             }
+                                      , signatorylinkcsvupload = Nothing
                                       }
 
 blankUser :: User
@@ -432,7 +470,7 @@ blankDocument =
 
 -}
 
-testThat :: String -> Connection -> DB () -> Test
+testThat :: String -> Nexus -> DB () -> Test
 testThat s conn a = testCase s (withTestEnvironment conn a)
 
 addNewCompany ::  DB Company
@@ -567,11 +605,7 @@ addRandomDocument rda = do
       doc' <- rand 10 arbitrary
       xtype <- rand 10 (elements $ randomDocumentAllowedTypes rda)
       status <- rand 10 (elements $ randomDocumentAllowedStatuses rda)
-      title <- rand 10 (elements ["title", "a b c", "123.123"])
-      let doc = doc' { documenttype = xtype
-                     , documentstatus = status
-                     , documenttitle = BS.fromString title
-                     }
+      let doc = doc' { documenttype = xtype, documentstatus = status }
 
       roles <- getRandomAuthorRoles doc
 
@@ -750,6 +784,9 @@ instance Arbitrary File where
                   , filename = b
                   , filestorage = FileStorageMemory c
                   }
+
+instance Arbitrary IPAddress where
+  arbitrary = fmap IPAddress arbitrary
 
 instance Arbitrary SignInfo where
   arbitrary = SignInfo <$> arbitrary <*> arbitrary

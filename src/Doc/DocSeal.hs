@@ -26,7 +26,7 @@ import Misc
 import System.Directory
 import System.Exit
 import Kontra
-import Templates.LocalTemplates
+import Templates.Trans
 import Templates.Templates
 import qualified Control.Exception as E
 import qualified Data.ByteString as BS
@@ -34,7 +34,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified SealSpec as Seal
 import qualified TrustWeaver as TW
-import qualified AppLogger as Log
+import qualified Log
 import System.IO.Temp
 import System.IO hiding (stderr)
 import Util.HasSomeCompanyInfo
@@ -246,7 +246,7 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplat
     let tmpout = tmppath ++ "/output.pdf"
     content <- liftIO $ getFileContents ctx file
     liftIO $ BS.writeFile tmpin content
-    config <- liftIO $ runWithTemplates ctxlocale ctxglobaltemplates $ sealSpecFromDocument ctxhostpart document tmpin tmpout
+    config <- runTemplatesT (ctxlocale, ctxglobaltemplates) $ sealSpecFromDocument ctxhostpart document tmpin tmpout
     (code,_stdout,stderr) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
     Log.debug $ "Sealing completed with " ++ show code
     case code of

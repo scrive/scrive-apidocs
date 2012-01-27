@@ -24,7 +24,7 @@ import User.Model
 import Kontra
 import Misc
 import Doc.DocViewMail
-import Mails.MailsData
+import Mails.SendMail
 
 import Happstack.Server(Response)
 import Happstack.StaticRouting(Route, dir, choice)
@@ -88,7 +88,7 @@ sendReminder = do
                              , not $ hasSigned sl]
   _ <- forM siglinkstoremind $ (\signlink -> do
                               mail <- mailDocumentRemind Nothing ctx doc signlink
-                              scheduleEmailSendout (ctxesenforcer ctx) $ mail {
+                              scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
                                 to = [getMailAddress signlink]
                                 , mailInfo = Invitation  (documentid doc) (signatorylinkid signlink)
                                 })
@@ -188,7 +188,7 @@ sendNewDocument = do
 
 getSignatories :: Kontrakcja m => UserAPIFunction m [SignatoryDetails]
 getSignatories = do
-    minvolved  <- fromJSONLocal "involved" $ fromJSONLocalMapList $ (getSignatoryTMP DOCUMENT_RELATION_AUTHOR_SIGNATORY) : (repeat $ getSignatoryTMP DOCUMENT_RELATION_SIGNATORY)
+    minvolved  <- fromJSONLocal "involved" $ fromJSONLocalMapList $ (getSignatoryTMP [SignatoryAuthor,SignatoryPartner]) : (repeat $ getSignatoryTMP [SignatoryPartner])
     case minvolved of
         Nothing -> throwApiError API_ERROR_MISSING_VALUE "Problems with involved."
         Just involved -> return $ fmap (fst . toSignatoryDetails) involved

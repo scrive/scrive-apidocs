@@ -98,7 +98,7 @@ tableDocStatEvents1 = Table {
 tableUserStatEvents :: Table
 tableUserStatEvents = Table {
   tblName = "user_stat_events"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
       [("user_id",     SqlColDesc { colType        = SqlBigIntT
@@ -112,8 +112,11 @@ tableUserStatEvents = Table {
        ("service_id",  SqlColDesc { colType = SqlVarCharT
                                   , colNullable = Just True}),
        ("company_id",  SqlColDesc { colType = SqlBigIntT
-                                 , colNullable = Just True})] -> return TVRvalid
+                                 , colNullable = Just True}),
+       ("id",          SqlColDesc { colType        = SqlBigIntT
+                                  , colNullable    = Just False})] -> return TVRvalid
       [] -> do
+        runRaw conn $ "CREATE SEQUENCE user_stat_events_id_seq"
         runRaw conn $ "CREATE TABLE user_stat_events ("
           ++ "  user_id       BIGINT      NOT NULL"
           ++ ", time          TIMESTAMPTZ NOT NULL"
@@ -121,11 +124,13 @@ tableUserStatEvents = Table {
           ++ ", amount        INTEGER     NOT NULL"
           ++ ", service_id    TEXT            NULL"
           ++ ", company_id    BIGINT          NULL"
-          ++ ", CONSTRAINT pk_user_stat_events PRIMARY KEY (user_id, quantity)"
+          ++ ", id            BIGINT      NOT NULL      DEFAULT nextval('user_stat_events_id_seq')"
+          ++ ", CONSTRAINT pk_user_stat_events PRIMARY KEY (id)"
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid
   , tblPutProperties = wrapDB $ \conn -> do
+    runRaw conn "CREATE INDEX idx_user_stat_events_user_id ON user_stat_events(user_id)"
     -- we don't want to delete the stats if a user gets deleted
     runRaw conn $ "ALTER TABLE user_stat_events"
       ++ " ADD CONSTRAINT fk_user_stat_events_users FOREIGN KEY(user_id)"
@@ -137,6 +142,61 @@ tableUserStatEvents = Table {
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
     runRaw conn $ "ALTER TABLE user_stat_events"
       ++ " ADD CONSTRAINT fk_user_stat_events_service FOREIGN KEY(service_id)"
+      ++ " REFERENCES services(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
+  }
+
+tableSignStatEvents :: Table
+tableSignStatEvents = Table {
+  tblName = "sign_stat_events"
+  , tblVersion = 2
+  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
+    case desc of
+      [("document_id",       SqlColDesc { colType     = SqlBigIntT
+                                        , colNullable = Just False}),
+       ("signatory_link_id", SqlColDesc { colType     = SqlBigIntT
+                                        , colNullable = Just False}),
+       ("time",              SqlColDesc { colType     = SqlTimestampWithZoneT
+                                        , colNullable = Just False}),
+       ("quantity",          SqlColDesc { colType     = SqlSmallIntT
+                                        , colNullable = Just False}),
+       ("service_id",        SqlColDesc { colType     = SqlVarCharT
+                                        , colNullable = Just True}),
+       ("company_id",        SqlColDesc { colType     = SqlBigIntT
+                                        , colNullable = Just True}),
+       ("document_process",  SqlColDesc { colType     = SqlSmallIntT
+                                        , colNullable = Just False})] -> return TVRvalid
+      [] -> do
+        runRaw conn $ "CREATE TABLE sign_stat_events ("
+          ++ "  document_id        BIGINT      NOT NULL"          
+          ++ ", signatory_link_id  BIGINT      NOT NULL"
+          ++ ", time               TIMESTAMPTZ NOT NULL"
+          ++ ", quantity           SMALLINT    NOT NULL"
+          ++ ", service_id         TEXT            NULL"
+          ++ ", company_id         BIGINT          NULL"
+          ++ ", document_process   SMALLINT    NOT NULL"
+          ++ ", CONSTRAINT pk_sign_stat_events PRIMARY KEY (quantity, document_id, signatory_link_id)"
+          ++ ")"
+        return TVRcreated
+      _ -> return TVRinvalid
+  , tblPutProperties = wrapDB $ \conn -> do
+    {-
+     -- I wanted to add this but apparently signatory_link_id is not unique, so I could not.
+    runRaw conn $ "ALTER TABLE sign_stat_events"
+      ++ " ADD CONSTRAINT fk_sign_stat_events_signatory_link FOREIGN KEY(signatory_link_id)"
+      ++ " REFERENCES signatory_links(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
+    -}
+    runRaw conn $ "ALTER TABLE sign_stat_events"
+      ++ " ADD CONSTRAINT fk_sign_stat_events_documents FOREIGN KEY(document_id)"
+      ++ " REFERENCES documents(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
+    runRaw conn $ "ALTER TABLE sign_stat_events"
+      ++ " ADD CONSTRAINT fk_sign_stat_events_company FOREIGN KEY(company_id)"
+      ++ " REFERENCES companies(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
+    runRaw conn $ "ALTER TABLE sign_stat_events"
+      ++ " ADD CONSTRAINT fk_sign_stat_events_service FOREIGN KEY(service_id)"
       ++ " REFERENCES services(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }

@@ -130,24 +130,29 @@ tableAuthorAttachments = Table {
 tableSignatoryAttachments :: Table
 tableSignatoryAttachments = Table {
     tblName = "signatory_attachments"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
       [  ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("email", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("description", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
+        print "creating tableSignatoryAttachments"
         runRaw conn $ "CREATE TABLE signatory_attachments "
           ++ "( file_id BIGINT NULL"
           ++ ", document_id BIGINT NOT NULL"
           ++ ", email TEXT NOT NULL"
           ++ ", description TEXT NOT NULL"
-          ++ ", CONSTRAINT pk_signatory_attachments PRIMARY KEY (document_id, email)"
+          ++ ", name TEXT NOT NULL"
+          ++ ", CONSTRAINT pk_signatory_attachments PRIMARY KEY (document_id, name, email)"
           ++ ")"
         return TVRcreated
-      _ -> return TVRinvalid
+      _ -> do
+        print desc
+        return TVRinvalid
   , tblPutProperties = wrapDB $ \conn -> do
     runRaw conn $ "CREATE INDEX idx_signatory_attachments_document_id ON signatory_attachments(document_id)"
     runRaw conn $ "ALTER TABLE signatory_attachments"
@@ -163,7 +168,7 @@ tableSignatoryAttachments = Table {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = Table {
     tblName = "signatory_links"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -189,6 +194,9 @@ tableSignatoryLinks = Table {
        , ("roles", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})
        , ("really_deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})
+       , ("csv_title", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("csv_contents", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("csv_signatory_index", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
         runRaw conn $ "CREATE TABLE signatory_links"
@@ -215,6 +223,9 @@ tableSignatoryLinks = Table {
           ++ ", roles INTEGER NOT NULL"
           ++ ", deleted BOOL NOT NULL DEFAULT false"
           ++ ", really_deleted BOOL NOT NULL DEFAULT false"
+          ++ ", csv_title TEXT NULL"
+          ++ ", csv_contents TEXT NULL"
+          ++ ", csv_signatory_index INTEGER NULL"
           ++ ", CONSTRAINT pk_signatory_links PRIMARY KEY (id, document_id)"
           ++ ")"
         return TVRcreated

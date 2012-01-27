@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  API.API
--- Maintainer  :  mariusz@skrivapa.se
+-- Maintainer  :  eric@scrive.com
 -- Stability   :  development
 -- Portability :  portable
 --
@@ -40,7 +40,7 @@ import Control.Monad.Reader
 import Control.Monad.Error
 import DB.Classes
 import Templates.Templates
-import qualified AppLogger as Log
+import qualified Log
 import Util.JSON
 
 {- | API calls user JSPO object as a response and work within json value as a context-}
@@ -91,13 +91,13 @@ apiResponse action = action >>= simpleResponse . encode
 apiCall :: (APIContext c, Kontrakcja m, Path m (m Response) Response) => 
            String -> APIFunction m c APIResponse -> Route (m Response)
 apiCall s f = dir s $ path POST id $ do
-    Log.debug $ "API call " ++ s ++ " matched"
+    --Log.debug $ "API call " ++ s ++ " matched"
     apiResponse $ do
         mcontext <- apiContext
         case mcontext  of
              Right apictx -> do
                  res <- either (uncurry apiError) id <$> runApiFunction f apictx
-                 Log.debug $ "API call result: " ++ encode res
+                 --Log.debug $ "API call result: " ++ encode res
                  return res
              Left emsg -> return $ uncurry apiError emsg
 

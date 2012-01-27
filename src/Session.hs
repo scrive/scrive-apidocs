@@ -10,6 +10,7 @@ module Session
     , updateSessionWithContextData
     , getELegTransactions
     , getSessionXToken
+    , getMagicHashes
 
     -- | Functions usefull when we do remember passwords emails
     --, createLongTermSession
@@ -28,7 +29,7 @@ import Control.Monad.Reader (ask)
 import Control.Monad.State hiding (State)
 import qualified Data.ByteString.UTF8 as BS
 import Data.Maybe (isNothing,isJust, fromJust)
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import Happstack.Data.IxSet
 import qualified Happstack.Data.IxSet as IxSet
 import Happstack.State
@@ -36,7 +37,7 @@ import User.Model
 import Numeric
 import MinutesTime
 import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie, readCookieValue, withDataFn, ServerPartT, HasRqData, CookieLife(MaxAge), FromReqURI(..))
-import System.Random
+import System.Random (randomIO)
 import Happstack.Util.Common ( readM)
 import Misc (mkTypeOf, isSecure, isHTTPS)
 import ELegitimation.ELegTransaction
@@ -47,6 +48,8 @@ import Company.Model
 import DB.Classes
 import DB.Types
 import Util.MonadUtils
+import Doc.SignatoryLinkID
+import qualified Data.Map as Map
 
 -- | Session ID is a wrapped 'Integer' really
 newtype SessionId = SessionId Integer
@@ -178,14 +181,30 @@ data SessionData8 = SessionData8
     , company8        :: Maybe CompanyID
     } deriving (Ord,Eq,Show,Typeable)
 
+data SessionData9 = SessionData9
+    { userID9           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
+    , expires9          :: MinutesTime       -- ^ when does this session expire
+    , hash9             :: MagicHash         -- ^ session security token
+    , elegtransactions9 :: [ELegTransaction] -- ^ ELeg transaction stuff
+    , xtoken9           :: MagicHash         -- ^ Random string to prevent CSRF
+    , location9         :: String            -- ^ Id of the service that we are now working with. Also link to page that embeds it (hash location hack)
+    , company9          :: Maybe CompanyID
+    } deriving (Ord,Eq,Show,Typeable)
+
 data SessionData = SessionData
     { userID           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
     , expires          :: MinutesTime       -- ^ when does this session expire
     , hash             :: MagicHash         -- ^ session security token
     , elegtransactions :: [ELegTransaction] -- ^ ELeg transaction stuff
     , xtoken           :: MagicHash         -- ^ Random string to prevent CSRF
-    , location         :: String   -- ^ Id of the service that we are now working with. Also lint to page that embeds it (hash location hack)
+    , location         :: String            -- ^ Id of the service
+                                            -- that we are now working
+                                            -- with. Also link to page
+                                            -- that embeds it (hash
+                                            -- location hack)
     , company          :: Maybe CompanyID
+    , magichashes      :: Map.Map SignatoryLinkID MagicHash
+
     } deriving (Ord,Eq,Show,Typeable)
 
 $(deriveSerialize ''SessionData3)
@@ -212,9 +231,13 @@ $(deriveSerialize ''SessionData8)
 instance Version (SessionData8) where
     mode = extension 8 (Proxy :: Proxy SessionData7)
 
+$(deriveSerialize ''SessionData9)
+instance Version (SessionData9) where
+    mode = extension 9 (Proxy :: Proxy SessionData8)
+
 $(deriveSerialize ''SessionData)
 instance Version (SessionData) where
-    mode = extension 9 (Proxy :: Proxy SessionData8)
+    mode = extension 10 (Proxy :: Proxy SessionData9)
 
 
 instance Migrate SessionData0 SessionData1 where
@@ -303,16 +326,37 @@ instance Migrate SessionData7 SessionData8 where
                     , company8          = Nothing
                     }
 
-instance Migrate SessionData8 SessionData where
+instance Migrate SessionData8 SessionData9 where
     migrate SessionData8{} =
-        SessionData { userID           = Nothing
-                    , expires          = fromSeconds 0
-                    , hash             = MagicHash 0
-                    , elegtransactions = []
-                    , xtoken           = MagicHash 0
-                    , location         = ""
-                    , company          = Nothing
+        SessionData9 { userID9           = Nothing
+                     , expires9          = fromSeconds 0
+                     , hash9             = MagicHash 0
+                     , elegtransactions9 = []
+                     , xtoken9           = MagicHash 0
+                     , location9         = ""
+                     , company9          = Nothing
+                     }
+
+instance Migrate SessionData9 SessionData where
+    migrate SessionData9 
+              { userID9
+              , expires9
+              , hash9
+              , elegtransactions9
+              , xtoken9
+              , location9
+              , company9
+              } =
+        SessionData { userID           = userID9
+                    , expires          = expires9
+                    , hash             = hash9
+                    , elegtransactions = elegtransactions9
+                    , xtoken           = xtoken9
+                    , location         = location9
+                    , company          = company9
+                    , magichashes      = Map.empty
                     }
+
 -- | 'Session' data as we keep it in our database
 data Session = Session { sessionId::SessionId
                        , sessionData::SessionData
@@ -495,13 +539,15 @@ emptySessionData = do
                          , xtoken = xhash
                          , location = ""
                          , company = Nothing
+                         , magichashes = Map.empty
                          }
 
 -- | Check if session data is empty
 isSessionDataEmpty :: SessionData -> Bool
-isSessionDataEmpty SessionData{userID, elegtransactions, location, company} =
+isSessionDataEmpty SessionData{userID, elegtransactions, location, company, magichashes} =
        userID == Nothing
     && Prelude.null elegtransactions && location == "" && company == Nothing
+    && Map.null magichashes
 
 -- | Return ID for temporary session (not written to db)
 tempSessionID :: SessionId
@@ -512,11 +558,11 @@ startSession :: (FilterMonad Response m, ServerMonad m, MonadIO m, MonadPlus m) 
 startSession = liftIO emptySessionData >>= return . Session tempSessionID
 
 -- | Get 'User' record from database based on userid in session
-getUserFromSession :: Connection -> Session -> ServerPartT IO (Maybe User)
+getUserFromSession :: Nexus -> Session -> ServerPartT IO (Maybe User)
 getUserFromSession conn s =
   liftMM (ioRunDB conn . dbQuery . GetUserByID) (return $ userID $ sessionData s)
 
-getCompanyFromSession :: Connection -> Session -> ServerPartT IO (Maybe Company)
+getCompanyFromSession :: Nexus -> Session -> ServerPartT IO (Maybe Company)
 getCompanyFromSession conn s =
   liftMM (ioRunDB conn . dbQuery . GetCompany) (return $ company $ sessionData s)
 
@@ -542,14 +588,19 @@ handleSession = do
 -- session data is non-empty, register session in the system
 -- and add a cookie. Is user loggs in, check whether there is
 -- an old session with his userid and throw it away.
-updateSessionWithContextData :: Session -> Maybe UserID -> [ELegTransaction] -> ServerPartT IO ()
-updateSessionWithContextData (Session i sd) u trans = do
+updateSessionWithContextData :: Session
+                             -> Maybe UserID
+                             -> [ELegTransaction]
+                             -> Map.Map SignatoryLinkID MagicHash
+                             -> ServerPartT IO ()
+updateSessionWithContextData (Session i sd) u trans magichashes' = do
     now <- liftIO getMinutesTime
-    let newsd = sd {
-        userID = u
-        , expires = 60 `minutesAfter` now
-        , elegtransactions = trans
-    }
+    let newsd = sd
+                { userID = u
+                , expires = 60 `minutesAfter` now
+                , elegtransactions = trans
+                , magichashes = magichashes'
+                }
     if i == tempSessionID && not (isSessionDataEmpty newsd)
        then do
            when (isNothing (userID sd) && isJust u) $ do
@@ -618,6 +669,10 @@ dropExpiredSessions = update . DropExpired
 -- | Get e-leg from session.
 getELegTransactions :: Session -> [ELegTransaction]
 getELegTransactions = elegtransactions . sessionData
+
+-- | Get recorded magic hashes from session object.
+getMagicHashes :: Session -> Map.Map SignatoryLinkID MagicHash
+getMagicHashes = magichashes . sessionData
 
 -- | Get the xtoken from the session data
 getSessionXToken :: Session -> MagicHash

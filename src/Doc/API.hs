@@ -31,7 +31,8 @@ import Company.Model
 import Happstack.Server.Monads
 import API.Monad
 import Control.Monad.Error
-import qualified AppLogger as Log
+import qualified Log
+import Stats.Control
 
 documentAPI :: Route (Kontra Response)
 documentAPI = choice [
@@ -70,6 +71,9 @@ documentList = api $ do
   jdocs <- lift $ mapM jsonDocumentAndFiles docs
   return $ showJSON jdocs
 
+-- this one must be standard post with post params because it needs to
+-- be posted from a browser form; we will have a better one for more
+-- capable clients that follows the api standards
 documentNew :: Kontrakcja m => m Response
 documentNew = api $ do
   user <- getAPIUser
@@ -100,12 +104,11 @@ documentNew = api $ do
   let now = ctxtime ctx
   
   d1 <- apiGuardL $ doc_update $ NewDocument user mcompany filename doctype now
-  
-  content <- liftIO $ preprocessPDF ctx (concatChunks content1) (documentid d1)
+  content <- apiGuardL' BadInput $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
   file <- lift $ runDB $ dbUpdate $ NewFile filename content
 
   d2 <- apiGuardL $ doc_update $ AttachFile (documentid d1) (fileid file) now
-  
+  _ <- lift $ addDocumentCreateStatEvents d2
   return $ Created $ jsonDocumentForAuthor d2
 
 documentChangeMetadata :: Kontrakcja m => DocumentID -> MetadataResource -> m Response
@@ -184,7 +187,8 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   -- we need to downgrade the PDF to 1.4 that has uncompressed structure
   -- we use gs to do that of course
   ctx <- getContext
-  content <- liftIO $ preprocessPDF ctx (concatChunks content1) (documentid doc)
+
+  content <- apiGuardL' BadInput $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
   
   file <- lift $ runDB $ dbUpdate $ NewFile (BS.fromString $ basename filename) content
   

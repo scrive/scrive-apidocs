@@ -32,8 +32,6 @@ module Doc.DocView (
   , isNotLinkForUserID
   , modalMismatch
   , modalPdfTooLarge
-  , mailCancelDocumentByAuthor
-  , mailCancelDocumentByAuthorContent
   , mailDocumentAwaitingForAuthor
   , mailDocumentClosed
   , mailDocumentRejected
@@ -299,7 +297,7 @@ documentJSON msl _crttime doc = do
                                                Nothing -> return Nothing
                                                Just f -> return $ Just (fid, f)
                                           | SignatoryAttachment { signatoryattachmentfile = Just fid } <- documentsignatoryattachments doc])
-
+    let isauthoradmin = maybe False (flip isAuthorAdmin doc) (ctxmaybeuser ctx)
     fmap toJSObject $ propagateMonad  $
      [ ("title",return $ JSString $ toJSString $ BS.toString $ documenttitle doc),
        ("files", return $ JSArray $ jsonPack <$> fileJSON <$> files ),
@@ -310,6 +308,7 @@ documentJSON msl _crttime doc = do
        ("region",  liftIO $ regionJSON doc ),
        ("infotext", JSString <$> toJSString <$> documentInfoText ctx doc msl),
        ("canberestarted", return $ JSBool $  isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])),
+       ("canbecanceled", return $ JSBool $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending && isNothing (documenttimeouttime doc)),
        ("timeouttime", return $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc),
        ("status", return $ JSString $ toJSString $ show $ documentstatus doc),
        ("signatories", JSArray <$>  mapM (signatoryJSON doc msl signatoryattachmentsfiles) (documentsignatorylinks doc)),
@@ -318,7 +317,7 @@ documentJSON msl _crttime doc = do
        ("template", return $ JSBool $ isTemplate doc),
        ("functionality", return $ JSString $ toJSString $ "basic" <| documentfunctionality doc == BasicFunctionality |> "advanced"),
        ("daystosign", return $ maybe JSNull (JSRational True . toRational) $ documentdaystosign doc),
-       ("invitationmessage", return $ if (BS.null $ documentinvitetext doc ) then JSNull else JSString $ toJSString $ BS.toString $ documentinvitetext doc)
+       ("invitationmessage", return $ if (BS.null $ documentinvitetext doc ) then JSNull else JSString $ toJSString $ BS.toString $ documentinvitetext doc)  
      ]
 
 authorizationJSON :: IdentificationType -> JSValue
@@ -418,7 +417,9 @@ processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
       , ("restartbuttontext", text processrestartbuttontext)
       , ("cancelbuttontext", text processcancelbuttontext)
       , ("rejectbuttontext", text processrejectbuttontext)
-      , ("cancelbyauthormodaltitle", text processcancelbyauthormodaltitle)
+      , ("cancelmodaltitle", text processcancelmodaltitle)
+      , ("cancelmodaltext", text processcancelmodaltext)
+
       , ("authorissecretarytext", text processauthorissecretarytext)
       , ("remindagainbuttontext", text processremindagainbuttontext)
       -- And more
@@ -554,13 +555,11 @@ docSortSearchPage :: ListParams -> [Document] -> PagedList Document
 docSortSearchPage  = listSortSearchPage docSortFunc docSearchFunc docsPageSize
 
 docSearchFunc::SearchingFunction Document
-docSearchFunc s doc =  nameMatch doc || signMatch doc || authorMatch doc
+docSearchFunc s doc =  nameMatch doc || signMatch doc
     where
     match m = isInfixOf (map toUpper s) (map toUpper m)
     nameMatch = match . BS.toString . documenttitle
-    signMatch d = any (match . BS.toString . getSmartName) (getSignatoryPartnerLinks d)
-    -- we need author because in orders and offers, the author is usually not a signatory
-    authorMatch d = match $ fromMaybe "" $ BS.toString <$> getSmartName <$> getAuthorSigLink d
+    signMatch d = any (match . BS.toString . getSmartName) (documentsignatorylinks d)
 
 
 docSortFunc:: SortingFunction Document
@@ -814,13 +813,17 @@ documentFunctionalityFields Document{documentfunctionality} = do
   field "isbasic" $ documentfunctionality==BasicFunctionality
 
 documentCsvFields :: TemplatesMonad m => Document -> m (Fields m)
-documentCsvFields document@Document{documentallowedidtypes, documentcsvupload} =  do
+documentCsvFields document@Document{documentallowedidtypes} =  do
   let csvcustomfields = either (const [BS.fromString ""]) id $ getCSVCustomFields document
-      mcleancsv = (cleanCSVContents documentallowedidtypes (length csvcustomfields) . csvcontents) <$> documentcsvupload
+      mcleancsv = (cleanCSVContents documentallowedidtypes (length csvcustomfields) . csvcontents) <$> (snd <$> mcsvupload)
       csvproblems = maybe [] fst mcleancsv
       csvdata = maybe [] (csvbody . snd) mcleancsv
       csvPageSize :: Int = 10
       csvpages = splitCSVDataIntoPages csvPageSize csvdata
+      mcsvupload = msum (zipWith check [0::Int ..] (documentsignatorylinks document))
+      check idx sl = case signatorylinkcsvupload sl of
+                       Just c -> Just (idx, c)
+                       Nothing -> Nothing
   csvproblemfields <- sequence $ zipWith (csvProblemFields (length csvproblems)) [1..] csvproblems
   return $ do
     fieldFL "csvproblems" $ csvproblemfields
@@ -829,7 +832,7 @@ documentCsvFields document@Document{documentallowedidtypes, documentcsvupload} =
     field "csvrowcount" $ length csvdata
     field "csvcustomfields" $ csvcustomfields
     field "isvalidcsv" $ null csvproblems
-    field "csvsigindex" $ fmap csvsignatoryindex documentcsvupload
+    field "csvsigindex" $ (fst <$> mcsvupload)
 
 csvPageFields :: TemplatesMonad m => [CSVProblem] -> Int -> Int -> [[BS.ByteString]] -> Fields m
 csvPageFields problems totalrowcount firstrowindex xs = do
@@ -973,7 +976,6 @@ signatoryStatusClass
   } =
   caseOf [
       (errorStatus documentstatus, SCCancelled)
-    , (invitationdeliverystatus==Undelivered,  SCCancelled)
     , (documentstatus==Preparation, SCDraft)
     , (documentstatus==Canceled, SCCancelled)
     , (documentstatus==Rejected, SCCancelled)
@@ -981,6 +983,7 @@ signatoryStatusClass
     , (isJust maybesigninfo, SCSigned)
     , (isJust maybeseeninfo, SCOpened)
     , (isJust maybereadinvite, SCRead)
+    , (invitationdeliverystatus==Undelivered,  SCCancelled)
     , (invitationdeliverystatus==Delivered, SCDelivered)
     ] SCSent
   where
@@ -1035,13 +1038,13 @@ documentInfoText ctx document siglnk =
       documentAuthorInfo document
       fieldFL "signatories" $ map (signatoryLinkFields ctx document Nothing) $ documentsignatorylinks document
       signedByMeFields document siglnk
+      field "isviewonly" $ not $ isAuthor siglnk || maybe False (flip isAuthorAdmin document) (ctxmaybeuser ctx)
     getProcessText = renderTextForProcess document
     getProcessTextWithFields f = renderTemplateForProcess document f mainFields
     processFields = do
       fieldM "pendingauthornotsignedinfoheader" $ getProcessText processpendingauthornotsignedinfoheader
       fieldM "pendingauthornotsignedinfotext" $ getProcessText processpendingauthornotsignedinfotext
-      fieldM "pendingauthorinfoheader" $ getProcessText processpendingauthorinfoheader
-      fieldM "pendingauthorinfotext" $ getProcessTextWithFields processpendingauthorinfotext
+      fieldM "pendinginfotext" $ getProcessTextWithFields processpendinginfotext
       fieldM "cancelledinfoheader" $ getProcessText processcancelledinfoheader
       fieldM "cancelledinfotext" $ getProcessTextWithFields processcancelledinfotext
       fieldM "signedinfoheader" $ getProcessText processsignedinfoheader

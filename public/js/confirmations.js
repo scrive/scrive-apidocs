@@ -38,6 +38,14 @@ var ConfirmationModel = Backbone.Model.extend({
       var submit = this.get("submit");
       return function() {submit.send();};
   },
+  onReject : function() {
+      if (this.get("onReject") != undefined )
+          return this.get("onReject");
+      return function() {};
+  },
+  reject : function() {
+      return this.onReject()();
+  },
   accept : function(){
        return this.onAccept()();
   },
@@ -61,6 +69,29 @@ var ConfirmationModel = Backbone.Model.extend({
   }
 });
 
+/* Fixer for background overlay
+   We need to extend it if the page is changing dinamicly in backgroud, else it may only match half screen.
+   It gets initialized by confirmation view on confirmation object, and will self-destroy when confirmation will loose connection to view 
+ */
+
+window.ExposeMaskFixer =  Backbone.Model.extend({
+    initialize: function(args){
+        var fixer = this;
+        this.object = args.object;
+        setTimeout(function() {fixer.fixer();},1000);
+    },
+    fixer: function() {
+        var fixer = this;
+        if (this.object.view != undefined)
+        {
+            var em = $("#exposeMask");
+            var body = $("body");
+            if (em.size() == 1 && (body.height() != em.height()))
+                em.height(body.height());
+            setTimeout(function() {fixer.fixer();},1000);
+        }
+    }
+});
 
 var ConfirmationView = Backbone.View.extend({
   events: {
@@ -70,8 +101,10 @@ var ConfirmationView = Backbone.View.extend({
         _.bindAll(this, 'render', 'reject');
         this.model.view = this;
         this.render();
+        this.fixer = new ExposeMaskFixer({object : this.model});
     },
     render: function () {
+       var view = this;
        var model = this.model;
        this.el.addClass("modal-container");
        this.el.css("width",model.width());
@@ -96,7 +129,11 @@ var ConfirmationView = Backbone.View.extend({
                                  size: "small",
                                  cssClass: "float-right",
                                  text: this.model.acceptText(),
-                                 onClick : function() { model.accept(); }
+                                 onClick : function() {
+                                     if (model.accept() == true)
+                                         view.clear();
+                                     
+                                }
             }).input();
        footer.append(accept);
        this.el.append(header);
@@ -105,11 +142,15 @@ var ConfirmationView = Backbone.View.extend({
        return this;
     },
     reject: function(){
+        this.model.reject()
         this.clear();
     },
     clear: function(){
+        this.el.data('overlay').close();
         this.model.destroy();
+        this.model.view = undefined;
         this.el.remove();
+      
     }
 
 });
@@ -121,6 +162,7 @@ window.Confirmation = {
                       submit : args.submit,
                       title  : args.title,
                       onAccept : args.onAccept,
+                      onReject : args.onReject,
                       acceptText: args.acceptText,
                       acceptColor : args.acceptColor,
                       rejectText: args.rejectText,

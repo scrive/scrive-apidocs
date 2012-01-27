@@ -31,6 +31,8 @@ import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import File.Model
+import Control.Applicative
+import MinutesTime
 
 --import Happstack.State
 
@@ -199,8 +201,8 @@ replaceFieldValue ft v a = case (find (matchingFieldType ft) $ getAllFields a) o
 -- does this need to change now? -EN
 checkCSVSigIndex :: [SignatoryLink] -> Int -> Either String Int
 checkCSVSigIndex sls n
-  | n < 0 || n >= length sls = Left $ "signatory with index " ++ show n ++ " doesn't exist."
-  | isAuthor (sls !! n) = Left "author can't be set from csv"
+  | n < 0 || n >= length sls = Left $ "checkCSVSigIndex: signatory with index " ++ show n ++ " doesn't exist."
+  | isAuthor (sls !! n) = Left $ "checkCSVSigIndex: signatory at index " ++ show n ++ " is an author and can't be set from csv"
   | otherwise = Right n
 
 {- |
@@ -384,8 +386,8 @@ isFieldCustom :: SignatoryField -> Bool
 isFieldCustom SignatoryField{sfType = CustomFT{}} = True
 isFieldCustom _ = False
 
-findCustomField :: BS.ByteString -> SignatoryLink -> Maybe SignatoryField
-findCustomField name = find (matchingFieldType (CustomFT name False) ) . signatoryfields . signatorydetails
+findCustomField :: (HasFields a ) => BS.ByteString -> a -> Maybe SignatoryField
+findCustomField name = find (matchingFieldType (CustomFT name False) ) . getAllFields
 
 {- | Add a tag to tag list -}
 addTag:: [DocumentTag] -> (BS.ByteString,BS.ByteString) -> [DocumentTag]
@@ -425,12 +427,19 @@ sameDocID doc1 doc2 = (documentid doc1) == (documentid doc2)
 isAuthoredByCompany :: CompanyID -> Document -> Bool
 isAuthoredByCompany companyid doc = (getAuthorSigLink doc >>= maybecompany) == Just companyid
 
+isAuthorAdmin :: User -> Document -> Bool
+isAuthorAdmin user doc =
+  useriscompanyadmin user
+  && maybe False (flip isAuthoredByCompany doc) (usercompany user)
+
+getFileIDsByStatus :: Document -> [FileID]
+getFileIDsByStatus doc
+  | isClosed doc =  documentsealedfiles doc
+  | otherwise    =  documentfiles doc
+
 getFilesByStatus :: (MonadIO m, DBMonad m) => Document -> m [File]
-getFilesByStatus doc
-  | isClosed doc = liftM catMaybes $ mapM doGet $ documentsealedfiles doc
-  | otherwise    = liftM catMaybes $ mapM doGet $ documentfiles doc
-  where
-      doGet fid = runDBQuery $ GetFileByFileID fid
+getFilesByStatus doc = liftM catMaybes $ mapM runDBQuery (GetFileByFileID <$> (getFileIDsByStatus doc))
+
 
 documentfilesM :: Document -> DB [File]
 documentfilesM Document{documentfiles} = do
@@ -590,4 +599,15 @@ makeAuthorDetails pls fielddefs sigdetails@SignatoryDetails{signatoryfields = si
       CustomFT _ _ -> []
       where
         g ftype = sf { sfPlacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString ftype) }                 
+
+
+recentDate :: Document -> MinutesTime
+recentDate doc = 
+  maximum $ [documentctime doc, documentmtime doc] ++
+  (maybeToList $ signtime <$> documentinvitetime doc) ++
+  (maybeToList $ (\(a,_,_) -> a) <$> documentrejectioninfo doc) ++
+  concat (for (documentsignatorylinks doc) (\sl ->
+                                             (maybeToList $ signtime <$> maybeseeninfo sl) ++
+                                             (maybeToList $ signtime <$> maybesigninfo sl) ++
+                                             (maybeToList $ id       <$> maybereadinvite sl)))
 

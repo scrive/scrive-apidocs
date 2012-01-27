@@ -1,4 +1,11 @@
-module Redirect (sendRedirect,sendSecureLoopBack,redirectKontraResponse,guardRight,guardRightM,guardLoggedIn) where
+module Redirect
+  ( sendRedirect
+  , sendSecureLoopBack
+  , redirectKontraResponse
+  , guardRightM
+  , guardLoggedIn
+  , GuardRight(..)
+  ) where
 
 
 import Control.Applicative ((<$>))
@@ -12,7 +19,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 
 import Kontra
 import KontraLink
-import qualified AppLogger as Log
+import qualified Log
 import Misc
 import Util.FlashUtil
 import DBError

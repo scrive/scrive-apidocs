@@ -28,7 +28,6 @@ module API.APICommons (
           , api_document_tag
           , api_signatory
           , api_file
-          , DOCUMENT_RELATION(..)
         ) where
 
 
@@ -47,9 +46,9 @@ import Misc
 import Data.Maybe
 import Data.Functor
 import Control.Monad
-import Util.SignatoryLinkUtils
+--import Util.SignatoryLinkUtils
 import DB.Classes
-import qualified AppLogger as Log ()
+import qualified Log ()
 import Util.JSON
 import User.Lang
 import User.Region
@@ -60,32 +59,6 @@ import Doc.SignatoryTMP
 
 
 
-data DOCUMENT_RELATION =
-      DOCUMENT_RELATION_AUTHOR_SECRETARY
-    | DOCUMENT_RELATION_AUTHOR_SIGNATORY
-    | DOCUMENT_RELATION_SIGNATORY
-    | DOCUMENT_RELATION_VIEWER
-    | DOCUMENT_RELATION_OTHER
-
-instance SafeEnum DOCUMENT_RELATION where
-    fromSafeEnum DOCUMENT_RELATION_AUTHOR_SECRETARY = 1
-    fromSafeEnum DOCUMENT_RELATION_AUTHOR_SIGNATORY = 2
-    fromSafeEnum DOCUMENT_RELATION_SIGNATORY = 5
-    fromSafeEnum DOCUMENT_RELATION_VIEWER = 10
-    fromSafeEnum DOCUMENT_RELATION_OTHER = 20
-    toSafeEnum 1  = Just DOCUMENT_RELATION_AUTHOR_SECRETARY
-    toSafeEnum 2  = Just DOCUMENT_RELATION_AUTHOR_SIGNATORY
-    toSafeEnum 5  = Just DOCUMENT_RELATION_SIGNATORY
-    toSafeEnum 10 = Just DOCUMENT_RELATION_VIEWER
-    toSafeEnum 20 = Just DOCUMENT_RELATION_OTHER
-    toSafeEnum _  = Nothing
-
-api_document_relation :: SignatoryLink -> DOCUMENT_RELATION
-api_document_relation sl
-    | isAuthor sl && isSignatory sl = DOCUMENT_RELATION_AUTHOR_SIGNATORY
-    | isAuthor sl                   = DOCUMENT_RELATION_AUTHOR_SECRETARY
-    | isSignatory sl                = DOCUMENT_RELATION_SIGNATORY
-    | otherwise                     = DOCUMENT_RELATION_VIEWER
 
 api_signatory :: SignatoryLink -> JSValue
 api_signatory sl = JSObject $ toJSObject $ 
@@ -99,7 +72,7 @@ api_signatory sl = JSObject $ toJSObject $
      Just signinfo ->  [("sign", api_date $ signtime signinfo)]
      Nothing -> []
     ++
-    [("relation",showJSON $ fromSafeEnumInt $ api_document_relation sl)]
+    [("relation",showJSON $ fromSafeEnumInt $ signatoryroles sl)]
     ++
     [("fields", JSArray $ for (filterCustomField $ signatoryfields $ signatorydetails sl) $ \(s, label, _) -> JSObject $ toJSObject [
         ("name",  JSString $ toJSString $ BS.toString label)
@@ -145,6 +118,7 @@ api_document mfiles doc = JSObject $ toJSObject $ [
   , ("tags", JSArray $ map api_document_tag $ documenttags doc)
   , ("authorization", showJSON  $ fromSafeEnumInt $ documentallowedidtypes doc)
   , ("mdate", api_date $ documentmtime doc)
+  , ("edate", api_date $ recentDate doc)
   , ("locale", jsonFromLocale $ getLocale doc)
   ] ++ case mfiles of
   Nothing -> []
@@ -152,7 +126,8 @@ api_document mfiles doc = JSObject $ toJSObject $ [
 
 
 api_document_read :: (APIContext c, Kontrakcja m, DBMonad m) => Bool -> Document -> APIFunction m c JSValue
-api_document_read False doc = return $ api_document Nothing doc
+api_document_read False doc = do
+  return $ api_document Nothing doc
 api_document_read True doc = do
   files <- mapM api_document_file_read =<< getFilesByStatus doc
   return $ api_document (Just files) doc
@@ -162,8 +137,8 @@ api_date :: MinutesTime -> JSValue
 api_date = showJSON  . showMinutesTimeForAPI
 
                       
-getSignatoryTMP :: (APIContext c, Kontrakcja m) => DOCUMENT_RELATION -> APIFunction m c (Maybe SignatoryTMP)
-getSignatoryTMP defaultRelation  = do
+getSignatoryTMP :: (APIContext c, Kontrakcja m) => [SignatoryRole] -> APIFunction m c (Maybe SignatoryTMP)
+getSignatoryTMP defaultRoles = do
     fstname'        <- fromJSONField "fstname"
     sndname'        <- fromJSONField "sndname"
     company'        <- fromJSONField "company"
@@ -183,15 +158,14 @@ getSignatoryTMP defaultRelation  = do
      (setCompanynumber <$> companynumber') $^
      (setEmail <$> email') $^
      (map (\(n,v) -> setCustomField n (fromMaybe BS.empty v)) (concat $ maybeToList fields')) $^^ 
-     (applyRelation (fromMaybe defaultRelation relation') emptySignatoryTMP ) 
+     (applyRelation (fromMaybe defaultRoles $ join $ toSafeEnumInt <$> relation') emptySignatoryTMP )
 
 
-applyRelation :: DOCUMENT_RELATION -> SignatoryTMP -> SignatoryTMP
-applyRelation DOCUMENT_RELATION_AUTHOR_SECRETARY = makeAuthor
-applyRelation DOCUMENT_RELATION_AUTHOR_SIGNATORY = makeAuthor . makeSigns
-applyRelation DOCUMENT_RELATION_SIGNATORY        = makeSigns
-applyRelation DOCUMENT_RELATION_VIEWER           = id
-applyRelation DOCUMENT_RELATION_OTHER            = id
+applyRelation :: [SignatoryRole] -> SignatoryTMP -> SignatoryTMP
+applyRelation (SignatoryAuthor  : r) = makeAuthor . (applyRelation r)
+applyRelation (SignatoryPartner : r) = makeSigns  . (applyRelation r)
+applyRelation _                      = id
+
 
 -- High level commons. Used buy some simmilar API's, but not all of them
 getFiles :: (APIContext c, Kontrakcja m) => APIFunction m c [(BS.ByteString, BS.ByteString)]

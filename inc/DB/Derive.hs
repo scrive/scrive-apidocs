@@ -8,6 +8,8 @@ module DB.Derive (
   , enumDeriveConvertibleIgnoreFields
   , bitfieldDeriveConvertible
   , jsonableDeriveConvertible
+  , jsonFromSqlValue
+  , jsonToSqlValue
   ) where
 
 import Control.Arrow
@@ -39,8 +41,11 @@ newtypeDeriveUnderlyingReadShow t = do
   case info of
     TyConI (NewtypeD _ name _ tcon _) -> do
       let (con,typename) = case tcon of
-            RecC c    [(_,_,ConT n)] -> (c,n)
-            NormalC c [(_,ConT n)]   -> (c,n)
+            RecC c    [(_, _, ConT n)] -> (c, n)
+            NormalC c [(_, ConT n)]    -> (c, n)
+            -- for nested types, like [a]
+            RecC c    _                -> (c, name)
+            NormalC c _                -> (c, name)
             _ -> error $ "Wrong constructor: " ++ show tcon
       p' <- newName "_p"
       s' <- newName "s"
@@ -201,7 +206,7 @@ enumDeriveConvertibleIgnoreFields = enumDeriveConvertible' False
 --
 
 bitFieldToSqlValue :: Enum a => [a] -> ConvertResult SqlValue
-bitFieldToSqlValue = Right . SqlInteger . foldl' (\acc n -> acc + 2^fromEnum n) 0
+bitFieldToSqlValue = Right . SqlInteger . foldl' (\acc n -> acc .|. (1 `shiftL` fromEnum n)) 0
  
 bitFieldFromSqlValue :: (Bounded a, Enum a) => SqlValue -> ConvertResult [a]
 bitFieldFromSqlValue = fmap conv . (safeConvert :: SqlValue -> ConvertResult Integer)

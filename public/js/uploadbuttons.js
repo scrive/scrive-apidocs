@@ -110,14 +110,13 @@ var UploadButtonView = Backbone.View.extend({
                     fileinput.slaves = [];
                     return false;
                 }
-            },
-            onFileAppend: function(input,title,fileinput) {
-                  if (model.submitOnUpload()) {
+
+                if (model.submitOnUpload()) {
                     if(model.get('showLoadingDialog'))
                         LoadingDialog.open(localization.loadingFile);
                     if (model.hasSubmit()) {
                         model.submit().addInputs(list);
-                        model.submit().addInputs(fileinput);
+                        model.submit().addInputs(input);
                         model.submit().send();
                     } else {
                         button.parents("form").submit();

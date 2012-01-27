@@ -24,7 +24,6 @@ import Doc.DocStateData
 import InputValidation
 import Kontra
 import KontraLink
-import Mails.MailsConfig
 import Mails.SendMail
 import Numeric
 import MinutesTime
@@ -32,10 +31,11 @@ import Misc
 --import PayEx.PayExInterface ()-- Import so at least we check if it compiles
 import Redirect
 import Session
+import Stats.Control
 import Templates.Templates
 import User.Model
 import User.UserView as UserView
-import qualified AppLogger as Log (error, debug)
+import qualified Log (error, debug)
 import qualified Doc.DocControl as DocControl
 import qualified FlashMessage as F
 import qualified MemCache
@@ -53,6 +53,7 @@ import Data.List
 import Data.Maybe
 import Database.HDBC
 import Database.HDBC.PostgreSQL
+import DB.Nexus
 import GHC.Int (Int64(..))
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Happstack.Server.Internal.Cookie
@@ -78,17 +79,14 @@ import qualified Network.HTTP as HTTP
 data AppGlobals
     = AppGlobals { templates       :: MVar (ClockTime, KontrakcjaGlobalTemplates)
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
-                 , mailer          :: Mailer
-                 , appbackdooropen    :: Bool --whether a backdoor used to get email content is open or not
                  , docscache       :: MVar (Map.Map FileID JpegPages)
-                 , esenforcer      :: MVar ()
                  }
 
 {- |
     If the current request is referring to a document then this will
     return the locale of that document.
 -}
-getDocumentLocale :: Connection -> (ServerMonad m, Functor m, MonadIO m) => m (Maybe Locale)
+getDocumentLocale :: Nexus -> (ServerMonad m, Functor m, MonadIO m) => m (Maybe Locale)
 getDocumentLocale conn = do
   rq <- askRq
   let docids = catMaybes . map (fmap fst . listToMaybe . readSigned readDec) $ rqPaths rq
@@ -100,7 +98,7 @@ getDocumentLocale conn = do
     their settings, the request, and cookies.
 -}
 getUserLocale :: (MonadPlus m, MonadIO m, ServerMonad m, FilterMonad Response m, Functor m, HasRqData m) =>
-                   Connection -> Maybe User -> m Locale
+                   Nexus -> Maybe User -> m Locale
 getUserLocale conn muser = do
   rq <- askRq
   currentcookielocale <- optional (readCookieValue "locale")
@@ -239,8 +237,7 @@ appHandler handleRoutes appConf appGlobals = do
   where
     handle :: Request -> Session -> Context -> ServerPartT IO Response
     handle rq session ctx = do
-      (res,ctx') <- toIO ctx . runKontra $
-         do
+      (res, ctx') <- runKontra ctx $ do
           res <- handleRoutes  `mplus` do
              rqcontent <- liftIO $ tryTakeMVar (rqInputsBody rq)
              when (isJust rqcontent) $
@@ -254,8 +251,16 @@ appHandler handleRoutes appConf appGlobals = do
       let newsessionuser = fmap userid $ ctxmaybeuser ctx'
       let newflashmessages = ctxflashmessages ctx'
       let newelegtrans = ctxelegtransactions ctx'
+      let newmagichashes = ctxmagichashes ctx'
       F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
-      updateSessionWithContextData session newsessionuser newelegtrans
+      updateSessionWithContextData session newsessionuser newelegtrans newmagichashes
+      stats <- liftIO $ getNexusStats (ctxdbconn ctx')
+      
+      Log.debug $ "SQL for " ++ rqUri rq ++ ": queries " ++ show (nexusQueries stats) ++ 
+           ", params " ++ show (nexusParams stats) ++
+                         ", rows " ++ show (nexusRows stats) ++
+                                     ", values " ++ show (nexusValues stats)
+
       liftIO $ disconnect $ ctxdbconn ctx'
       return res
 
@@ -275,10 +280,11 @@ appHandler handleRoutes appConf appGlobals = do
       addrs <- liftIO $ getAddrInfo (Just hints) (Just peerhost) Nothing
       let addr = head addrs
       let peerip = case addrAddress addr of
-                     SockAddrInet _ hostip -> hostip
-                     _ -> 0
+                     SockAddrInet _ hostip -> IPAddress hostip
+                     _ -> unknownIPAddress
 
-      conn <- liftIO $ connectPostgreSQL $ dbConfig appConf
+      psqlconn <- liftIO $ connectPostgreSQL $ dbConfig appConf
+      conn <- liftIO $ mkNexus psqlconn
       minutestime <- liftIO getMinutesTime
       muser <- getUserFromSession conn session
       mcompany <- getCompanyFromSession conn session
@@ -312,12 +318,11 @@ appHandler handleRoutes appConf appGlobals = do
                 , ctxs3action = defaultAWSAction appConf
                 , ctxgscmd = gsCmd appConf
                 , ctxproduction = production appConf
-                , ctxbackdooropen = isBackdoorOpen $ mailsConfig appConf
                 , ctxtemplates = localizedVersion userlocale templates2
                 , ctxglobaltemplates = templates2
                 , ctxlocale = userlocale
                 , ctxlocaleswitch = isNothing $ doclocale
-                , ctxesenforcer = esenforcer appGlobals
+                , ctxmailsconfig = mailsConfig appConf
                 , ctxtwconf = TW.TrustWeaverConf
                               { TW.signConf = trustWeaverSign appConf
                               , TW.adminConf = trustWeaverAdmin appConf
@@ -332,6 +337,8 @@ appHandler handleRoutes appConf appGlobals = do
                 , ctxservice = mservice
                 , ctxlocation = location
                 , ctxadminaccounts = admins appConf
+                , ctxsalesaccounts = sales appConf
+                , ctxmagichashes = getMagicHashes session
                 }
       return ctx
 
@@ -392,11 +399,11 @@ signup vip _freetill =  do
    Sends a new activation link mail, which is really just a new user mail.
 -}
 _sendNewActivationLinkMail:: Context -> User -> Kontra ()
-_sendNewActivationLinkMail Context{ctxhostpart, ctxesenforcer} user = do
+_sendNewActivationLinkMail Context{ctxhostpart, ctxmailsconfig} user = do
     let email = getEmail user
     al <- newAccountCreatedLink user
     mail <- newUserMail ctxhostpart email email al False
-    scheduleEmailSendout ctxesenforcer $ mail { to = [MailAddress {fullname = email, email = email}] }
+    scheduleEmailSendout ctxmailsconfig $ mail { to = [MailAddress {fullname = email, email = email}] }
 
 {- |
    Handles submission of a login form.  On failure will redirect back to referer, if there is one.
@@ -419,6 +426,7 @@ handleLoginPost = do
                           locale = ctxlocale ctx
                         }
                         muuser <- runDBQuery $ GetUserByID (userid user)
+                        _ <- addUserLoginStatEvent (ctxtime ctx) (fromJust muuser)
                         logUserToContext muuser
                         return BackToReferer
                 Just _ -> do

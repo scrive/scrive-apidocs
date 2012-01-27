@@ -1,25 +1,24 @@
 module ScriveByMail.Control 
        (
-         handleScriveByMail,
-         sendMailAPIConfirmEmail,
-         parseEmailMessageToParts
+         scriveByMail,
+         sendMailAPIConfirmEmail       
        )
        
        where
 
 import Kontra
-import Happstack.Server.Types 
-import Control.Monad.Trans
+--import Happstack.Server.Types 
+--import Control.Monad.Trans
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as BSC
+--import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
-import qualified Codec.MIME.Parse as MIME
-import qualified Codec.MIME.Type as MIME
-import Happstack.Server
+--import qualified Codec.MIME.Parse as MIME
+--import qualified Codec.MIME.Type as MIME
+--import Happstack.Server
 import Misc
 import Data.List
-import Codec.MIME.Decode
+--import Codec.MIME.Decode
 import MinutesTime
 import Data.String.Utils
 import Data.Maybe
@@ -34,12 +33,14 @@ import Doc.DocUtils
 import Doc.Transitory
 import Data.Either
 import qualified Doc.DocControl as DocControl
-import Templates.Templates
-import qualified AppLogger as Log (scrivebymail, scrivebymailfailure)
+import qualified Log (scrivebymail, scrivebymailfailure)
 import ScriveByMail.View
 import Util.SignatoryLinkUtils
-import Mails.MailsData
+import Mails.SendMail
 import KontraLink
+import qualified Codec.MIME.Type as MIME
+
+--import Data.Char
 
 import Control.Applicative
 
@@ -48,85 +49,38 @@ import Control.Monad
 checkThat :: String -> Bool -> Maybe String
 checkThat s b = Nothing <| b |> Just s
 
-parseEmailMessageToParts :: BS.ByteString -> (MIME.MIMEValue, [(MIME.Type, BS.ByteString)])
-parseEmailMessageToParts content = (mime, parts mime)
-  where
-    mime = MIME.parseMIMEMessage (BSC.unpack content)
-    parts mimevalue = case MIME.mime_val_content mimevalue of
-        MIME.Single value -> [(MIME.mime_val_type mimevalue, BSC.pack value)]
-        MIME.Multi more -> concatMap parts more
+charset :: MIME.Type -> String
+charset mimetype = fromMaybe "us-ascii" $ lookup "charset" (MIME.mimeParams mimetype)        
 
-handleScriveByMail :: Kontrakcja m => m String
-handleScriveByMail = do
-  Input contentspec _ _ <- getDataFnM (lookInput "mail")
-  content <- concatChunks <$> case contentspec of
-    Left filepath -> liftIO $ BSL.readFile filepath
-    Right content -> return content
-    
+scriveByMail :: (Kontrakcja m) =>
+                UserMailAPI
+                -> String
+                -> User
+                -> String
+                -> String
+                -> Bool
+                -> [(MIME.Type, BS.ByteString)]
+                -> [(MIME.Type, BS.ByteString)]
+                -> BS.ByteString
+                -> m String
+scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   ctx@Context{ctxtime, ctxipnumber} <- getContext
-  
-  let (mime, allParts) = parseEmailMessageToParts content
-      
-      isPDF (tp,_) = MIME.mimeType tp == MIME.Application "pdf" || MIME.mimeType tp == MIME.Application "octet-stream"
-      isPlain (tp,_) = MIME.mimeType tp == MIME.Text "plain"
-  
-      typesOfParts = map fst allParts
-      pdfs = filter isPDF allParts
-      plains = filter isPlain allParts
-  
-      from = fromMaybe "" $ lookup "from" (MIME.mime_val_headers mime)
-      to   = fromMaybe "" $ lookup "to"   (MIME.mime_val_headers mime)
-  
-      isOutlook = maybe False ("Outlook" `isInfixOf`) (lookup "x-mailer" (MIME.mime_val_headers mime)) ||
-                  maybe False ("Exchange" `isInfixOf`) (lookup "x-mimeole" (MIME.mime_val_headers mime))
-      
-      subject = decodeWords $ BS.toString $ maybe BS.empty BS.fromString $ lookup "subject" (MIME.mime_val_headers mime)
-      
-      charset mimetype = maybe "us-ascii" id $ lookup "charset" (MIME.mimeParams mimetype)
-      
-  -- access control
-  
-  let username = takeWhile (/= '>') $ dropWhile (== '<') $ dropWhile (/= '<') from
-    -- 'extension' is a piece of data that is after + sign in email
-    -- addres. example: api+1234@api.skrivapa.se here '1234' is
-    -- extension and can be used as for example password
-  let extension = takeWhile (/= '@') $ dropWhile (== '+') $ dropWhile (/= '+') to
-
-  muser <- runDBQuery (GetUserByEmail Nothing (Email $ BS.fromString username))
-  when (isNothing muser) $ do
-    Log.scrivebymail $ "User does not exist: " ++ username
-    mzero
-
-  let Just user = muser
-      
-  mmailapi <- runDBQuery $ GetUserMailAPI $ userid user
-  when (isNothing mmailapi) $ do
-    Log.scrivebymail $ "User has not enabled api: " ++ username
-    mzero
-  
-  let Just mailapi = mmailapi
-  
-  when (maybeRead extension /= Just (umapiKey mailapi)) $ do
-    Log.scrivebymail $ "User api key does not match: " ++ username ++ " key: " ++ extension
-    mzero
-    
   -- at this point, the user has been authenticated
   -- we can start sending him emails about errors
   
+  let (doctype, arole) = caseOf [ ("contract" `isInfixOf` to, (Signable Contract, [SignatoryAuthor, SignatoryPartner]))
+                                , ("offer"    `isInfixOf` to, (Signable Offer,    [SignatoryAuthor]))
+                                , ("order"    `isInfixOf` to, (Signable Order,    [SignatoryAuthor]))
+                                ]                             (Signable Contract, [SignatoryAuthor, SignatoryPartner])
+      
   when (umapiDailyLimit mailapi <= umapiSentToday mailapi) $ do
     Log.scrivebymail $ "Daily limit of documents for user '" ++ username ++ "' has been reached"
     
     sendMailAPIErrorEmail ctx username $ "<p>For your own protection, Scrive by Mail sets a daily limit on how many emails you can send out. Your daily Scrive by Mail limit has been reached. To reset your daily limit, please visit " ++ show LinkUserMailAPI ++ " .<p>"
     
     mzero
-
   
-  let (doctype, arole) = caseOf [ ("contract" `isInfixOf` to, (Signable Contract, [SignatoryAuthor, SignatoryPartner]))
-                                , ("offer"    `isInfixOf` to, (Signable Offer,    [SignatoryAuthor]))
-                                , ("order"    `isInfixOf` to, (Signable Order,    [SignatoryAuthor]))
-                                ]                             (Signable Contract, [SignatoryAuthor, SignatoryPartner])
-  
-  Log.scrivebymail $ "Types of mime parts: " ++ show typesOfParts
+  --Log.scrivebymail $ "Types of mime parts: " ++ show typesOfParts
   let errors1 = catMaybes [
         checkThat "Exactly one PDF should be attached."        $ length pdfs   == 1,
         checkThat "Exactly one text should be in the message." $ length plains == 1
@@ -240,15 +194,15 @@ handleScriveByMail = do
 
   return $ show docid
 
-sendMailAPIConfirmEmail :: TemplatesMonad m => Context -> Document -> m ()
+sendMailAPIConfirmEmail :: Kontrakcja m => Context -> Document -> m ()
 sendMailAPIConfirmEmail ctx document =
   case getAuthorSigLink document of
     Nothing -> error "No author in Document"
     Just authorsl -> do
       mail <- mailMailAPIConfirm ctx document authorsl
-      scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress authorsl] }
+      scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress authorsl] }
 
-sendMailAPIErrorEmail :: TemplatesMonad m => Context -> String -> String -> m ()
+sendMailAPIErrorEmail :: Kontrakcja m => Context -> String -> String -> m ()
 sendMailAPIErrorEmail ctx email msg = do
   mail <- mailMailApiError ctx msg
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress (BS.fromString email) (BS.fromString email)] }
+  scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress (BS.fromString email) (BS.fromString email)] }

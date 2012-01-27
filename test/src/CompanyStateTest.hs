@@ -1,7 +1,7 @@
 module CompanyStateTest (companyStateTests) where
 
 import Control.Monad
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import Test.Framework
 import qualified Data.ByteString.UTF8 as BS
 
@@ -9,7 +9,7 @@ import Company.Model
 import DB.Classes
 import TestingUtil
 
-companyStateTests :: Connection -> Test
+companyStateTests :: Nexus -> Test
 companyStateTests conn = testGroup "CompanyState" [
     testThat "CreateCompany works" conn test_createCompany
   , testThat "GetCompanies works" conn test_getCompanies

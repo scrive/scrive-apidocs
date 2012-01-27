@@ -3,10 +3,10 @@ module Context (
     ) where
 
 import Control.Concurrent.MVar
-import Data.Word
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import File.FileID
 import Doc.JpegPages
+import Doc.SignatoryLinkID
 import MinutesTime
 import User.Model
 import qualified Data.ByteString as BS
@@ -17,9 +17,11 @@ import qualified TrustWeaver as TW
 import ELegitimation.ELegTransaction
 import qualified MemCache
 import FlashMessage
+import Mails.MailsConfig
 import API.Service.Model
 import Company.Model
 import DB.Types
+import Misc (IPAddress)
 
 data Context = Context
     { ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
@@ -27,18 +29,17 @@ data Context = Context
     , ctxflashmessages       :: [FlashMessage] -- ^ The flash messages for the NEXT request.
     , ctxtime                :: MinutesTime -- ^ The time of the request.
     , ctxnormalizeddocuments :: MVar (Map.Map FileID JpegPages) -- ^
-    , ctxipnumber            :: Word32 -- ^ The ip number of the client.
-    , ctxdbconn              :: Connection -- ^ PostgreSQL database connection
+    , ctxipnumber            :: IPAddress -- ^ The ip number of the client.
+    , ctxdbconn              :: Nexus -- ^ PostgreSQL database connection
     , ctxdocstore            :: FilePath -- ^ The temporary document directory.
     , ctxs3action            :: AWS.S3Action -- ^
     , ctxgscmd               :: String -- ^
     , ctxproduction          :: Bool -- ^ Is this server the production server?
-    , ctxbackdooropen        :: Bool -- ^ Whether the testing backdoor is open?
     , ctxtemplates           :: KontrakcjaTemplates -- ^ The set of templates to render text for the ctxlocale
     , ctxglobaltemplates     :: KontrakcjaGlobalTemplates -- ^ All of the templates for all valid locales
     , ctxlocale              :: Locale -- ^ The current context locale
     , ctxlocaleswitch        :: Bool -- ^ Whether locale switching is available on this page
-    , ctxesenforcer          :: MVar () -- ^
+    , ctxmailsconfig         :: MailsConfig
     , ctxtwconf              :: TW.TrustWeaverConf -- ^ TrustWeaver configuration
     , ctxelegtransactions    :: [ELegTransaction] -- ^ Transactions for connections to the Logica server
     , ctxfilecache           :: MemCache.MemCache FileID BS.ByteString -- ^
@@ -47,4 +48,6 @@ data Context = Context
     , ctxservice             :: Maybe Service -- ^
     , ctxlocation            :: String -- ^
     , ctxadminaccounts       :: [Email] -- ^
+    , ctxsalesaccounts       :: [Email] -- ^
+    , ctxmagichashes         :: Map.Map SignatoryLinkID MagicHash
     }

@@ -67,7 +67,7 @@ handleCompanyAccounts = withCompanyAdmin $ \(_user, company) -> do
     Gets the ajax data for the company accounts list.
 -}
 handleCompanyAccountsForAdminOnly :: Kontrakcja m => CompanyID -> m JSValue
-handleCompanyAccountsForAdminOnly cid = onlySuperUser $ do
+handleCompanyAccountsForAdminOnly cid = onlyAdmin $ do
   handleCompanyAccountsInternal cid
 
 {- |
@@ -181,7 +181,7 @@ companyAccountsSortFunc "idREV" = viewComparingRev camaybeuserid
 companyAccountsSortFunc _ = const $ const EQ
 
 companyAccountsPageSize :: Int
-companyAccountsPageSize = 20
+companyAccountsPageSize = 100
 
 --
 
@@ -290,14 +290,14 @@ sendNewCompanyUserMail inviter company user = do
   ctx <- getContext
   al <- newAccountCreatedLink user
   mail <- mailNewCompanyUserInvite (ctxhostpart ctx) user inviter company al
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = getFullName user, email = getEmail user }]}
+  scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getFullName user, email = getEmail user }]}
   return ()
 
 sendTakeoverPrivateUserMail :: Kontrakcja m => User -> Company -> User -> m ()
 sendTakeoverPrivateUserMail inviter company user = do
   ctx <- getContext
   mail <- mailTakeoverPrivateUserInvite (ctxhostpart ctx) user inviter company (LinkCompanyTakeover (companyid company))
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [getMailAddress user] }
+  scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress user] }
 
 sendTakeoverCompanyInternalWarningMail :: Kontrakcja m => User -> Company -> User -> m ()
 sendTakeoverCompanyInternalWarningMail inviter company user = do
@@ -310,10 +310,10 @@ sendTakeoverCompanyInternalWarningMail inviter company user = do
                 ++ " who is already in a company."
                 ++ "  " ++ BS.toString (getFullName user)
                 ++ " has been emailed about the problem and advised to contact us if they want to move accounts."
-  scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail {
+  scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
         to = [MailAddress { fullname = BS.fromString "info@skrivapa.se", email = BS.fromString "info@skrivapa.se" }]
-      , title = BS.fromString "Attempted Company Account Takeover"
-      , content = BS.fromString content
+      , title = "Attempted Company Account Takeover"
+      , content = content
   }
 
 {- |

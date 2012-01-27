@@ -216,7 +216,19 @@ modalCreateCompany=
                         method: "POST",
                         changeemail: "true",
                         newemail: newemail.val(),
-                        newemailagain: newemailagain.val()
+                        newemailagain: newemailagain.val(),
+                        fstname: jQuery("input[name='fstname']").val(),
+                        sndname: jQuery("input[name='sndname']").val(),
+                        personalnumber: jQuery("input[name='personalnumber']").val(),
+                        phone: jQuery("input[name='phone']").val(),
+                        companyposition: jQuery("input[name='companyposition']").val(),
+                        companynumber: jQuery("input[name='companynumber']").val(),
+                        companyname: jQuery("input[name='companyname']").val(),
+                        orgnumber: jQuery("input[name='orgnumber']").val(),
+                        companyaddress: jQuery("input[name='companyaddress']").val(),
+                        companyzip: jQuery("input[name='companyzip']").val(),
+                        copanycity: jQuery("input[name='copanycity']").val(),
+                        companycountry: jQuery("input[name='companycountry']").val()
                         }).send();
                       },
           title: "$_changeEmailRequestTitle()$",
@@ -282,7 +294,12 @@ modalCreateCompany=
               companyaddress: companyaddress.val(),
               companyzip: companyzip.val(),
               companycity: companycity.val(),
-              companycountry: companycountry.val()
+              companycountry: companycountry.val(),
+              fstname: jQuery("input[name='fstname']").val(),
+              sndname: jQuery("input[name='sndname']").val(),
+              personalnumber: jQuery("input[name='personalnumber']").val(),
+              phone: jQuery("input[name='phone']").val(),
+              companyposition: jQuery("input[name='companyposition']").val()
               }).send();
             },
           title: "$_createCompany()$",

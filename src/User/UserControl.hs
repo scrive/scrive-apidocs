@@ -5,7 +5,7 @@ import Data.Functor
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (update, query)
-import System.Random
+import System.Random (randomIO)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS
 import Text.JSON (JSValue(..), toJSObject, showJSON)
@@ -31,7 +31,7 @@ import User.UserView
 import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import qualified AppLogger as Log
+import qualified Log
 import Util.KontraLinkUtils
 import Util.MonadUtils
 import Stats.Control
@@ -118,10 +118,10 @@ sendChangeToExistingEmailInternalWarningMail user newemail = do
         ++ "Maybe they're trying to attempt to merge accounts and need help, "
         ++ "or maybe they're a hacker trying to figure out who is and isn't a user."
   Log.security securitymsg
-  scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail {
+  scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
       to = [MailAddress { fullname = BS.fromString "info@skrivapa.se", email = BS.fromString "info@skrivapa.se" }]
-    , title = BS.fromString "Request to Change Email to Existing Account"
-    , content = BS.fromString content
+    , title = "Request to Change Email to Existing Account"
+    , content = content
     }
 
 sendRequestChangeEmailMail :: Kontrakcja m => User -> Email -> m ()
@@ -129,7 +129,7 @@ sendRequestChangeEmailMail user newemail = do
   ctx <- getContext
   changeemaillink <- newRequestChangeEmailLink user newemail
   mail <- mailRequestChangeEmail (ctxhostpart ctx) user newemail changeemaillink
-  scheduleEmailSendout (ctxesenforcer ctx)
+  scheduleEmailSendout (ctxmailsconfig ctx)
                         (mail{to = [MailAddress{
                                     fullname = getFullName user
                                   , email = unEmail newemail }]})
@@ -248,9 +248,8 @@ handleUsageStatsJSONForUserDays = do
   Context{ctxtime, ctxmaybeuser, ctxtemplates } <- getContext
   totalS <- renderTemplate ctxtemplates "statsOrgTotal" ()
   user <- guardJust ctxmaybeuser
-  let today = asInt ctxtime
-      som = 100 * (today `div` 100) -- start of month
-      sixm = ((today `div` 100) - 5) * 100
+  let som  = asInt $ daysBefore 30 ctxtime
+      sixm = asInt $ monthsBefore 6 ctxtime
   if useriscompanyadmin user && isJust (usercompany user)
     then do
       (statsByDay, _) <- getUsageStatsForCompany (fromJust $ usercompany user) som sixm
@@ -276,9 +275,8 @@ handleUsageStatsJSONForUserMonths = do
   Context{ctxtime, ctxmaybeuser, ctxtemplates } <- getContext
   totalS <- renderTemplate ctxtemplates "statsOrgTotal" ()
   user <- guardJust ctxmaybeuser
-  let today = asInt ctxtime
-      som = 100 * (today `div` 100) -- start of month
-      sixm = ((today `div` 100) - 5) * 100
+  let som  = asInt $ daysBefore 30 ctxtime
+      sixm = asInt $ monthsBefore 6 ctxtime
   if useriscompanyadmin user && isJust (usercompany user)
     then do
     (_, statsByMonth) <- getUsageStatsForCompany (fromJust $ usercompany user) som sixm
@@ -449,7 +447,7 @@ handleViralInvite = withUserPost $ do
       sendInvitation ctx link invitedemail = do
         addFlashM flashMessageViralInviteSent
         mail <- viralInviteMail ctx invitedemail link
-        scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = BS.empty, email = invitedemail }]}
+        scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = BS.empty, email = invitedemail }]}
 
 randomPassword :: IO BS.ByteString
 randomPassword =
@@ -473,7 +471,7 @@ sendNewUserMail vip user = do
   ctx <- getContext
   al <- newAccountCreatedLink user
   mail <- newUserMail (ctxhostpart ctx) (getEmail user) (getSmartName user) al vip
-  scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]}
+  scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]}
   return ()
 
 createUserBySigning :: Kontrakcja m => (BS.ByteString, BS.ByteString) -> BS.ByteString -> (DocumentID, SignatoryLinkID) -> m (Maybe (User, ActionID, MagicHash))
@@ -493,7 +491,7 @@ createNewUserByAdmin ctx names email _freetill custommessage locale = do
              _ <- runDBUpdate $ SetInviteInfo (userid <$> ctxmaybeuser ctx) now Admin (userid user)
              chpwdlink <- newAccountCreatedLink user
              mail <- mailNewAccountCreatedByAdmin ctx (getLocale user) fullname email chpwdlink custommessage
-             scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
+             scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
              return muser
          Nothing -> return muser
 
@@ -588,10 +586,10 @@ handleQuestion = do
                         ++ "email: "   ++ BS.toString email ++ "<BR/>"
                         ++ "phone "    ++ fromMaybe "" phone ++ "<BR/>"
                         ++ "message: " ++ fromMaybe "" message
-             scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail {
+             scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
                    to = [MailAddress { fullname = BS.fromString "info@skrivapa.se", email = BS.fromString "info@skrivapa.se" }]
-                 , title = BS.fromString $ "Question"
-                 , content = BS.fromString $ content
+                 , title = "Question"
+                 , content = content
              }
              addFlashM flashMessageThanksForTheQuestion
              return LoopBack
@@ -612,10 +610,10 @@ handlePhoneCallRequest = do
                     ++ "They have just signed the TOS, "
                     ++ "and they're setup with lang "
                     ++ "&lt;" ++ (codeFromLang $ getLang user) ++ "&gt;.</p>"
-      scheduleEmailSendout (ctxesenforcer ctx) $ emptyMail {
+      scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
             to = [MailAddress { fullname = BS.fromString "info@skrivapa.se", email = BS.fromString "info@skrivapa.se" }]
-          , title = BS.fromString $ "Phone Call Request"
-          , content = BS.fromString $ content
+          , title = "Phone Call Request"
+          , content = content
       }
       _ <- runDBUpdate $ SetUserInfo (userid user) $ (userinfo user){
               userphone = phone
@@ -729,7 +727,7 @@ handleAccountSetupPost aid hash = do
           ctx <- getContext
           al <- newAccountCreatedLink user
           mail <- newUserMail (ctxhostpart ctx) email email al False
-          scheduleEmailSendout (ctxesenforcer ctx) $ mail { to = [MailAddress { fullname = email, email = email}] }
+          scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = email, email = email}] }
           addFlashM flashMessageNewActivationLinkSend
           getHomeOrUploadLink
         else mzero
@@ -803,6 +801,7 @@ handleActivate aid hash signupmethod actvuser = do
               tosuser <- guardJustM $ runDBQuery $ GetUserByID (userid actvuser)
               _ <- addUserSignTOSStatEvent tosuser
               dropExistingAction aid
+              _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
               logUserToContext $ Just tosuser
               return $ Just tosuser
             else do
@@ -858,6 +857,8 @@ handlePasswordReminderPost aid hash = do
                               passwordhash <- liftIO $ createPassword password
                               _ <- runDBUpdate $ SetUserPassword (userid user) passwordhash
                               addFlashM flashMessageUserPasswordChanged
+                              Context{ctxtime} <- getContext
+                              _ <- addUserLoginStatEvent ctxtime user
                               logUserToContext $ Just user
                               return LinkUpload
                           Left flash -> do
@@ -881,8 +882,12 @@ handleAccountRemovalGet aid hash = do
 
 handleAccountRemovalFromSign :: Kontrakcja m => User -> SignatoryLink -> ActionID -> MagicHash -> m ()
 handleAccountRemovalFromSign user siglink aid hash = do
+  Context{ctxtime} <- getContext
   doc <- removeAccountFromSignAction aid hash
-  _ <- guardRightM $ doc_update . ArchiveDocument user $ documentid doc
+  doc1 <- guardRightM $ doc_update . ArchiveDocument user $ documentid doc
+  _ <- case getSigLinkFor doc1 (signatorylinkid siglink) of
+    Just sl -> runDB $ addSignStatDeleteEvent doc1 sl ctxtime
+    _       -> return False
   _ <- addUserRefuseSaveAfterSignStatEvent user siglink
   return ()
 

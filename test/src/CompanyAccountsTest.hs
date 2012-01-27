@@ -2,7 +2,7 @@ module CompanyAccountsTest (companyAccountsTests) where
 
 import Control.Applicative
 import Control.Monad.State
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import Data.List
 import Data.Ord
 import Happstack.Server hiding (simpleHTTP)
@@ -21,6 +21,7 @@ import DB.Classes
 import Doc.DocStateData
 import Doc.Transitory
 import FlashMessage
+import Mails.Model
 import MinutesTime
 import Misc
 import Redirect
@@ -32,7 +33,7 @@ import User.Model
 import Util.HasSomeUserInfo
 
 
-companyAccountsTests :: Connection -> Test
+companyAccountsTests :: Nexus -> Test
 companyAccountsTests conn = testGroup "CompanyAccounts" [
     testGroup "Model" [
         testThat "Adding an invite for a new email works" conn test_addInviteForNewEmail
@@ -88,7 +89,7 @@ test_removingNonExistantInvite = do
   _ <- dbUpdate $ RemoveCompanyInvite (companyid company) (Email $ BS.fromString "a@a.com")
   assertCompanyInvitesAre company []
 
-test_addingANewCompanyAccount :: Connection -> Assertion
+test_addingANewCompanyAccount :: Nexus -> Assertion
 test_addingANewCompanyAccount conn = withTestEnvironment conn $ do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
@@ -117,10 +118,10 @@ test_addingANewCompanyAccount conn = withTestEnvironment conn $ do
   actions <- getAccountCreatedActions
   assertEqual "An AccountCreated action was made" 1 (length $ actions)
 
-  emailactions <- getEmailActions
-  assertEqual "An email was sent" 1 (length emailactions)
+  emails <- dbQuery GetIncomingEmails
+  assertEqual "An email was sent" 1 (length emails)
 
-test_addingExistingPrivateUserAsCompanyAccount :: Connection -> Assertion
+test_addingExistingPrivateUserAsCompanyAccount :: Nexus -> Assertion
 test_addingExistingPrivateUserAsCompanyAccount conn = withTestEnvironment conn $ do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   Just existinguser <- addNewUser "Bob" "Blue" "bob@blue.com"
@@ -145,10 +146,10 @@ test_addingExistingPrivateUserAsCompanyAccount conn = withTestEnvironment conn $
 
   assertCompanyInvitesAre company [mkInvite company "bob@blue.com" "Bob" "Blue"]
 
-  emailactions <- getEmailActions
-  assertEqual "An email was sent" 1 (length emailactions)
+  emails <- dbQuery GetIncomingEmails
+  assertEqual "An email was sent" 1 (length emails)
 
-test_addingExistingCompanyUserAsCompanyAccount :: Connection -> Assertion
+test_addingExistingCompanyUserAsCompanyAccount :: Nexus -> Assertion
 test_addingExistingCompanyUserAsCompanyAccount conn = withTestEnvironment conn $ do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   (existinguser, existingcompany) <- addNewAdminUserAndCompany "Bob" "Blue" "bob@blue.com"
@@ -174,10 +175,10 @@ test_addingExistingCompanyUserAsCompanyAccount conn = withTestEnvironment conn $
 
   assertCompanyInvitesAre company [mkInvite company "bob@blue.com" "Bob" "Blue"]
 
-  emailactions <- getEmailActions
-  assertEqual "An email was sent" 1 (length emailactions)
+  emails <- dbQuery GetIncomingEmails
+  assertEqual "An email was sent" 1 (length emails)
 
-test_resendingInviteToNewCompanyAccount :: Connection -> Assertion
+test_resendingInviteToNewCompanyAccount :: Nexus -> Assertion
 test_resendingInviteToNewCompanyAccount conn = withTestEnvironment conn $ do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   Just newuser <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
@@ -201,10 +202,10 @@ test_resendingInviteToNewCompanyAccount conn = withTestEnvironment conn $ do
   actions <- getAccountCreatedActions
   assertEqual "An AccountCreated action was made" 1 (length $ actions)
 
-  emailactions <- getEmailActions
-  assertEqual "An email was sent" 1 (length emailactions)
+  emails <- dbQuery GetIncomingEmails
+  assertEqual "An email was sent" 1 (length emails)
 
-test_resendingInviteToPrivateUser :: Connection -> Assertion
+test_resendingInviteToPrivateUser :: Nexus -> Assertion
 test_resendingInviteToPrivateUser conn = withTestEnvironment conn $ do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   Just _existinguser <- addNewUser "Bob" "Blue" "bob@blue.com"
@@ -225,10 +226,10 @@ test_resendingInviteToPrivateUser conn = withTestEnvironment conn $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
 
-  emailactions <- getEmailActions
-  assertEqual "An email was sent" 1 (length emailactions)
+  emails <- dbQuery GetIncomingEmails
+  assertEqual "An email was sent" 1 (length emails)
 
-test_resendingInviteToCompanyUser :: Connection -> Assertion
+test_resendingInviteToCompanyUser :: Nexus -> Assertion
 test_resendingInviteToCompanyUser conn = withTestEnvironment conn $ do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   (_existinguser, _existingcompany) <- addNewAdminUserAndCompany "Bob" "Blue" "bob@blue.com"
@@ -249,10 +250,10 @@ test_resendingInviteToCompanyUser conn = withTestEnvironment conn $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
 
-  emailactions <- getEmailActions
-  assertEqual "An email was sent" 1 (length emailactions)
+  emails <- dbQuery GetIncomingEmails
+  assertEqual "An email was sent" 1 (length emails)
 
-test_switchingStandardToAdminUser :: Connection -> Assertion
+test_switchingStandardToAdminUser :: Nexus -> Assertion
 test_switchingStandardToAdminUser conn = withTestEnvironment conn $ do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   Just standarduser <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
@@ -274,7 +275,7 @@ test_switchingStandardToAdminUser conn = withTestEnvironment conn $ do
   assertEqual "User belongs to the same company" (usercompany updateduser)
                                                  (Just $ companyid company)
 
-test_switchingAdminToStandardUser :: Connection -> Assertion
+test_switchingAdminToStandardUser :: Nexus -> Assertion
 test_switchingAdminToStandardUser conn = withTestEnvironment conn $ do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   Just standarduser <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
@@ -298,7 +299,7 @@ test_switchingAdminToStandardUser conn = withTestEnvironment conn $ do
   assertEqual "User belongs to the same company" (usercompany updateduser)
                                                  (Just $ companyid company)
 
-test_removingCompanyAccountInvite :: Connection -> Assertion
+test_removingCompanyAccountInvite :: Nexus -> Assertion
 test_removingCompanyAccountInvite conn = withTestEnvironment conn $ do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "bob@blue.com" "Bob" "Blue"
@@ -317,7 +318,7 @@ test_removingCompanyAccountInvite conn = withTestEnvironment conn $ do
 
   assertCompanyInvitesAre company []
 
-test_removingCompanyAccountWorks :: Connection -> Assertion
+test_removingCompanyAccountWorks :: Nexus -> Assertion
 test_removingCompanyAccountWorks conn = withTestEnvironment conn $ do
   (adminuser, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
   Just standarduser <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
@@ -347,7 +348,7 @@ test_removingCompanyAccountWorks conn = withTestEnvironment conn $ do
   assertEqual "Company still owns users docs" 1 (length companydocs)
   assertEqual "Docid matches" docid (documentid $ head companydocs)
 
-test_privateUserTakoverWorks :: Connection -> Assertion
+test_privateUserTakoverWorks :: Nexus -> Assertion
 test_privateUserTakoverWorks conn = withTestEnvironment conn $ do
   (adminuser, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
@@ -376,7 +377,7 @@ test_privateUserTakoverWorks conn = withTestEnvironment conn $ do
   assertEqual "User is still linked to their docs" 1 (length userdocs)
   assertEqual "Docid matches" docid (documentid $ head userdocs)
 
-test_mustBeInvitedForTakeoverToWork :: Connection -> Assertion
+test_mustBeInvitedForTakeoverToWork :: Nexus -> Assertion
 test_mustBeInvitedForTakeoverToWork conn = withTestEnvironment conn $ do
   company <- addNewCompany
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
@@ -420,19 +421,6 @@ mkInvite company email fstname sndname =
     , invitedsndname = BS.fromString sndname
     , invitingcompany = companyid company
   }
-
-getEmailActions :: MonadIO m => m [Action]
-getEmailActions = do
-  now <- getMinutesTime
-  let expirytime = 1 `minutesAfter` now
-  allactions <- query $ GetExpiredActions EmailSendoutAction expirytime
-  return $ filter isEmailAction allactions
-
-isEmailAction :: Action -> Bool
-isEmailAction action =
-  case actionType action of
-    (EmailSendout _) -> True
-    _ -> False
 
 getAccountCreatedActions :: MonadIO m => m [Action]
 getAccountCreatedActions = do

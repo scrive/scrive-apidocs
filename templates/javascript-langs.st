@@ -205,5 +205,24 @@ javascriptLocalisation =
                 , selectFile: "$_updateAttachmentsDialogUpLoadChooseFile()$"
                 , selectedAttachments : "Selected attachments"
             }
+          , signatoryAttachments : {
+                addAttachment:      "$_pageDocumentForAuthorHelpersLocalDialogsAddAttachment()$"
+              , description:        "$_pageDocumentForAuthorHelpersLocalDialogsAttachmentdesc()$"
+              , attachment:         "$_pageDocumentForAuthorHelpersLocalDialogsAttachmentname()$"
+              , from :              "$_pageDocumentForAuthorHelpersLocalDialogsAttachmentsigs()$"
+              , requestAttachments : "$_pageDocumentForAuthorHelpersLocalDialogsHead()$"
+              , select            : "$_pageDocumentForAuthorHelpersLocalDialogsRecipient()$"
+            }
+          , save : "$_save()$"
+          , signLast : "$_switchercheckboxSignLast()$"
+          , languages : {
+                selectLanguage : "$_documentLanguageLabel()$"
+              , en : "$_English()$"
+              , se : "$_Swedish()$"
+              , changeEnglishToSwedishText :  "$_signInEnglishConfirmText()$"
+              , signInSwedish : "$_signInSwedish()$"
+              , changeSwedishToEnglishText: "$_signInSwedishConfirmText()$"
+              , signInEnglish:  "$_signInEnglish()$"
+            }
    }
 ####

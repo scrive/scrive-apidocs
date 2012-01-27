@@ -1,7 +1,7 @@
 module MailsTest (mailsTests) where
 
 import Control.Applicative
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import Happstack.Server
 import Test.Framework
 import Test.Framework.Providers.HUnit
@@ -20,7 +20,7 @@ import Doc.DocViewMail
 import Doc.DocStateData
 import Mails.SendMail
 import Company.Model
-import Mails.MailsConfig
+--import Mails.MailsConfig
 import qualified Data.ByteString.UTF8 as BS
 import Test.QuickCheck
 import Control.Monad
@@ -29,12 +29,12 @@ import Util.SignatoryLinkUtils
 import User.UserView
 import Kontra
 import Util.HasSomeUserInfo
-import Mails.SendGridEvents
+import Mails.Events
 import Data.Char
 import Text.XML.HaXml.Parse (xmlParse')
 import Control.Monad.Trans
 
-mailsTests :: Connection -> [String] -> Test
+mailsTests :: Nexus -> [String] -> Test
 mailsTests conn params  = testGroup "Mails" [
     testCase "Document emails" $ testDocumentMails conn (toMailAddress params),
     testCase "User emails" $ testUserMails conn (toMailAddress params)
@@ -50,7 +50,7 @@ gRight ac = do
     Right d -> return d
 
 
-testDocumentMails  :: Connection -> Maybe String -> Assertion
+testDocumentMails  :: Nexus -> Maybe String -> Assertion
 testDocumentMails  conn mailTo = withTestEnvironment conn $ do
   author <- addNewRandomAdvancedUser
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
@@ -86,13 +86,11 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
                               sendoutForManualChecking (s ++ " " ++ show doctype ) req ctx mailTo m
         checkMail "Invitation" $ mailInvitation True ctx Sign doc (Just sl)
         -- DELIVERY MAILS
-        checkMail "Deferred invitation"    $  mailDeferredInvitation ctx doc
-        checkMail "Undelivered invitation" $  mailUndeliveredInvitation ctx doc sl
+        checkMail "Deferred invitation"    $  mailDeferredInvitation (ctxhostpart ctx) doc
+        checkMail "Undelivered invitation" $  mailUndeliveredInvitation (ctxhostpart ctx) doc sl
         checkMail "Delivered invitation"   $  mailDeliveredInvitation doc sl
         --remind mails
         checkMail "Reminder notsigned" $ mailDocumentRemind Nothing ctx doc sl
-        --cancel by author mail
-        checkMail "Cancel" $ mailCancelDocumentByAuthor True Nothing  ctx doc
         --reject mail
         checkMail "Reject"  $ mailDocumentRejected  Nothing  ctx doc sl
         -- awaiting author email
@@ -107,7 +105,7 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
         checkMail "Reminder signed" $ mailDocumentRemind Nothing ctx doc (head $ documentsignatorylinks sdoc)
 
 
-testUserMails :: Connection -> Maybe String -> Assertion
+testUserMails :: Nexus -> Maybe String -> Assertion
 testUserMails conn mailTo = withTestEnvironment conn $ do
   forM_ allLocales $ \l ->  do
     -- make a user and context that use the same locale
@@ -136,9 +134,9 @@ testUserMails conn mailTo = withTestEnvironment conn $ do
 -- MAIL TESTING UTILS
 validMail :: String -> Mail -> DB ()
 validMail name m = do
-    let c = BS.toString $ content m
+    let c = content m
     let exml = xmlParse' name c
-    case (any isAlphaNum $ BS.toString $ title m) of
+    case (any isAlphaNum $ title m) of
          True -> assertSuccess
          False -> assertFailure ("Empty title of mail " ++ name)
     case exml of
@@ -154,7 +152,7 @@ addNewRandomAdvancedUserWithLocale l = do
   (Just uuser) <- dbQuery $ GetUserByID (userid user)
   return uuser
 
-mailingContext :: Locale -> Connection -> DB Context
+mailingContext :: Locale -> Nexus -> DB Context
 mailingContext locale conn = do
     globaltemplates <- readGlobalTemplates
     ctx <- mkContext locale globaltemplates
@@ -165,6 +163,8 @@ mailingContext locale conn = do
 
 
 sendoutForManualChecking ::  String -> Request -> Context ->  Maybe String -> Mail -> DB ()
+sendoutForManualChecking _ _ _ _ _ = assertSuccess
+{-
 sendoutForManualChecking _ _ _ Nothing _ = assertSuccess
 sendoutForManualChecking titleprefix req ctx (Just email) m = do
     _ <- runTestKontra req ctx $ do
@@ -178,13 +178,14 @@ sendoutForManualChecking titleprefix req ctx (Just email) m = do
 
 testMailer:: Mailer
 testMailer = createSendgridMailer $ MailsSendgrid {
-        mailbackdooropen = False,
+        isBackdoorOpen = False,
         ourInfoEmail = "test@scrive.com",
         ourInfoEmailNiceName = "test",
         sendgridSMTP = "smtps://smtp.sendgrid.net",
         sendgridRestAPI = "https://sendgrid.com/api",
         sendgridUser = "duzyrak@gmail.com",
         sendgridPassword = "zimowisko"}
+-}
 
 toMailAddress :: [String] -> Maybe String
 toMailAddress [] = Nothing

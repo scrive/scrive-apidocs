@@ -34,10 +34,13 @@ import qualified Network.HTTP as HTTP
 import Context
 import DB.Classes
 import KontraMonad
+import Mails.MailsConfig
 import MinutesTime
+import Misc (unknownIPAddress)
 import Templates.Templates
 import qualified MemCache
 import User.Locale
+import qualified Data.Map as Map
 
 -- | Monad that emulates the server
 newtype TestKontra a = TK { unTK :: ErrorT Response (ReaderT Request (StateT (Context, Response -> Response) IO)) a }
@@ -192,7 +195,6 @@ mkRequest method vars = liftIO $ do
 mkContext :: MonadIO m => Locale -> KontrakcjaGlobalTemplates -> m Context
 mkContext locale globaltemplates = liftIO $ do
     docs <- newMVar M.empty
-    enforcer <- newEmptyMVar
     memcache <- MemCache.new BS.length 52428800
     time <- getMinutesTime
     return Context {
@@ -201,7 +203,7 @@ mkContext locale globaltemplates = liftIO $ do
         , ctxflashmessages = []
         , ctxtime = time
         , ctxnormalizeddocuments = docs
-        , ctxipnumber = 0
+        , ctxipnumber = unknownIPAddress
         , ctxdbconn = error "dbconn is not defined"
         , ctxdocstore = error "docstore is not defined"
         , ctxs3action = AWS.S3Action {
@@ -215,12 +217,11 @@ mkContext locale globaltemplates = liftIO $ do
         }
         , ctxgscmd = "gs"
         , ctxproduction = False
-        , ctxbackdooropen = False
         , ctxtemplates = localizedVersion locale globaltemplates
         , ctxglobaltemplates = globaltemplates
         , ctxlocale = locale
         , ctxlocaleswitch = False
-        , ctxesenforcer = enforcer
+        , ctxmailsconfig = defaultMailsConfig
         , ctxtwconf = error "twconf is not defined"
         , ctxelegtransactions = []
         , ctxfilecache = memcache
@@ -229,4 +230,6 @@ mkContext locale globaltemplates = liftIO $ do
         , ctxservice = Nothing
         , ctxlocation = error "location is not defined"
         , ctxadminaccounts = []
+        , ctxsalesaccounts = []
+        , ctxmagichashes = Map.empty
     }

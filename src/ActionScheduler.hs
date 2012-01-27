@@ -6,6 +6,7 @@ module ActionScheduler (
     , oldScheduler
     , runDocumentProblemsCheck
     , runArchiveProblemsCheck
+    , getGlobalTemplates
     ) where
 
 import Control.Applicative
@@ -14,7 +15,7 @@ import Control.Monad.Reader
 import Data.List
 import Data.Maybe
 import Happstack.State
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length)
@@ -25,26 +26,26 @@ import Archive.Invariants
 import DB.Classes
 import Doc.DocStateData
 import Doc.Transitory
-import Kontra
 import KontraLink
 import MinutesTime
 import Mails.MailsData
 import Mails.MailsConfig
 import Mails.SendMail
 import Session
-import Templates.LocalTemplates
+import Templates.Trans
 import Templates.Templates
 import User.Model
 import User.UserView
-import qualified AppLogger as Log
+import qualified Log
 import System.Time
 import Util.HasSomeUserInfo
 import Doc.Invariants
 import Stats.Control
+import Database.HDBC.PostgreSQL
 
-type SchedulerData' = SchedulerData AppConf Mailer (MVar (ClockTime, KontrakcjaGlobalTemplates))
+type SchedulerData' = SchedulerData AppConf (MVar (ClockTime, KontrakcjaGlobalTemplates)) MailsConfig
 
-newtype ActionScheduler a = AS { unAS :: ReaderT SchedulerData' (ReaderT Connection IO) a }
+newtype ActionScheduler a = AS { unAS :: ReaderT SchedulerData' (ReaderT Nexus IO) a }
     deriving (Monad, Functor, MonadIO, MonadReader SchedulerData')
 
 instance DBMonad ActionScheduler where
@@ -59,7 +60,9 @@ instance DBMonad ActionScheduler where
 
 runScheduler :: ActionScheduler () -> SchedulerData' -> IO ()
 runScheduler sched sd =
-    withPostgreSQL (dbConfig $ sdAppConf sd) $ runReaderT (runReaderT (unAS sched) sd)
+    withPostgreSQL (dbConfig $ sdAppConf sd) $ \conn -> do
+      nexus <- mkNexus conn
+      runReaderT (runReaderT (unAS sched) sd) nexus
 
 -- | Creates scheduler that may be forced to look up for actions to execute
 runEnforceableScheduler :: Int -> MVar () -> ActionScheduler () -> SchedulerData' -> IO ()
@@ -96,12 +99,6 @@ oldScheduler = do
 
 -- | Evaluates one action depending on its type
 evaluateAction :: Action -> ActionScheduler ()
-evaluateAction Action{actionType = TrustWeaverUpload{}} =
-    error "TrustWeaverUpload not yet implemented"
-
-evaluateAction Action{actionType = AmazonUpload{}} =
-    error "AmazonUpload not yet implemented"
-
 evaluateAction Action{actionID, actionType = PasswordReminder{}} =
     deleteAction actionID
 
@@ -132,9 +129,9 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
                       Just (Signable Order) -> mailAccountCreatedBySigningOrderReminder
                       t -> error $ "Something strange happened (document with a type " ++ show t ++ " was signed and now reminder wants to be sent)"
                 globaltemplates <- getGlobalTemplates
-                mail <- liftIO $ runWithTemplates (getLocale user) globaltemplates $
+                mail <- liftIO $ runTemplatesT (getLocale user, globaltemplates) $
                           mailfunc (hostpart $ sdAppConf sd) doctitle (getFullName user) (LinkAccountCreatedBySigning actionID token)
-                scheduleEmailSendout (sdMailEnforcer sd) $ mail { to = [getMailAddress user]})
+                scheduleEmailSendout (sdMailsConfig sd) $ mail { to = [getMailAddress user]})
             _ <- update $ UpdateActionType actionID $ AccountCreatedBySigning {
                   acbsState = ReminderSent
                 , acbsUserID = uid
@@ -147,40 +144,8 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
 evaluateAction Action{actionID, actionType = RequestEmailChange{}} =
   deleteAction actionID
 
-evaluateAction Action{actionID, actionType = EmailSendout mail@Mail{mailInfo}} =
- if (unsendable mail)
-  then do -- Due to next block, bad emails were alive in queue, and making logs unreadable.
-      Log.error $ "Unsendable email found: " ++ show mail
-      _ <- update $ DeleteAction actionID
-      Log.error $ "Email was removed from the queue"
-  else do
-    mailer <- sdMailer <$> ask
-    appconf <- sdAppConf <$> ask
-    let backdooropen = isBackdoorOpen $ mailsConfig appconf
-    success <- sendMail mailer actionID mail
-    if success
-       then do
-           -- morph action type into SentEmailInfo
-           let email' = email (head (to mail))
-           now <- liftIO getMinutesTime
-           _ <- update $ UpdateActionType actionID $ SentEmailInfo {
-                 seiEmail            = Email email'
-               , seiMailInfo         = mailInfo
-               , seiEventType        = Other "passed to sendgrid"
-               , seiLastModification = now
-               , seiBackdoorInfo     = if backdooropen
-                                         then Just $ ActionBackdoorInfo { bdContent = content mail }
-                                         else Nothing
-           }
-           _ <- update $ UpdateActionEvalTime actionID $ (60*24*30) `minutesAfter` now
-           return ()
-       else do
-           now <- liftIO $ getMinutesTime
-           _ <- update $ UpdateActionEvalTime actionID $ 5 `minutesAfter` now
-           return ()
-
-evaluateAction Action{actionID, actionType = SentEmailInfo{}} = do
-    deleteAction actionID
+evaluateAction Action{actionID, actionType = DummyActionType} =
+  deleteAction actionID
 
 runDocumentProblemsCheck :: ActionScheduler ()
 runDocumentProblemsCheck = do
@@ -198,9 +163,9 @@ runDocumentProblemsCheck = do
 mailDocumentProblemsCheck :: String -> ActionScheduler ()
 mailDocumentProblemsCheck msg = do
   sd <- ask
-  scheduleEmailSendout (sdMailEnforcer sd) $ Mail { to = zipWith MailAddress documentProblemsCheckEmails documentProblemsCheckEmails
-                                                  , title = BS.fromString $ "Document problems report " ++ (hostpart $ sdAppConf sd)
-                                                  , content = BS.fromString msg
+  scheduleEmailSendout (sdMailsConfig sd) $ Mail { to = zipWith MailAddress documentProblemsCheckEmails documentProblemsCheckEmails
+                                                  , title = "Document problems report " ++ (hostpart $ sdAppConf sd)
+                                                  , content = msg
                                                   , attachments = []
                                                   , from = Nothing
                                                   , mailInfo = None
@@ -231,9 +196,9 @@ runArchiveProblemsCheck = do
 mailArchiveProblemsCheck :: String -> ActionScheduler ()
 mailArchiveProblemsCheck msg = do
   sd <- ask
-  scheduleEmailSendout (sdMailEnforcer sd) $ Mail { to = zipWith MailAddress archiveProblemsCheckEmails archiveProblemsCheckEmails
-                                                  , title = BS.fromString $ "Archive problems report " ++ (hostpart $ sdAppConf sd)
-                                                  , content = BS.fromString msg
+  scheduleEmailSendout (sdMailsConfig sd) $ Mail { to = zipWith MailAddress archiveProblemsCheckEmails archiveProblemsCheckEmails
+                                                  , title = "Archive problems report " ++ (hostpart $ sdAppConf sd)
+                                                  , content = msg
                                                   , attachments = []
                                                   , from = Nothing
                                                   , mailInfo = None

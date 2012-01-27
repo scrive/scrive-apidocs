@@ -8,14 +8,36 @@ module Doc.JSON
        , jsonSigAttachmentWithFile
        , jsonDocumentMetadata
        , jsonDocumentForAuthor
+       , dcrFromJSON
+       , DocumentCreationRequest(..)
+       , InvolvedRequest(..)
        )
 where
 
 import Doc.DocStateData
 import Text.JSON
+import Text.JSON.Types
 import Util.JSON
 import Misc
 import KontraLink
+import qualified Data.ByteString.UTF8 as BS
+--import Control.Applicative
+
+instance SafeEnum [SignatoryRole] where
+  fromSafeEnum srs =
+    case srs of
+      [SignatoryAuthor]                   -> 1
+      [SignatoryPartner, SignatoryAuthor] -> 2
+      [SignatoryAuthor, SignatoryPartner] -> 2      
+      [SignatoryPartner]                  -> 5
+      []                                  -> 10
+      _                                   -> 20
+  toSafeEnum 1  = Just [SignatoryAuthor]
+  toSafeEnum 2  = Just [SignatoryPartner, SignatoryAuthor]
+  toSafeEnum 5  = Just [SignatoryPartner]
+  toSafeEnum 10 = Just []
+  toSafeEnum 20 = Just []
+  toSafeEnum _  = Nothing
 
 instance SafeEnum DocumentType where
   fromSafeEnum (Signable Contract) = 1
@@ -58,7 +80,7 @@ instance SafeEnum DocumentStatus where
 instance SafeEnum [IdentificationType] where
     fromSafeEnum [EmailIdentification]            = 1
     fromSafeEnum [ELegitimationIdentification]    = 10
-    fromSafeEnum ls                               = error $ "Unknown list of IdentificationType: " ++ show ls
+    fromSafeEnum _                                = 1
     toSafeEnum 1  =  Just [EmailIdentification]
     toSafeEnum 10 = Just [ELegitimationIdentification]
     toSafeEnum _  = Nothing
@@ -103,3 +125,88 @@ jsonSigAttachmentWithFile sa mfile =
       Just file -> jsset "file" $ fromRight ((Right jsempty) >>=
                                              (jsset "id" $ show (fileid file)) >>=
                                              (jsset "name" $ (filename file))))
+
+data DocumentCreationRequest = DocumentCreationRequest {
+  dcrTitle    :: String,
+  dcrType     :: DocumentType,
+  dcrTags     :: [DocumentTag],
+  dcrInvolved :: [InvolvedRequest],
+  dcrMainFile :: String -- filename
+  }
+                             deriving (Show, Eq)
+                               
+data InvolvedRequest = InvolvedRequest {
+  irRole        :: [SignatoryRole],
+  irData        :: [SignatoryField],
+  irAttachments :: [AttachmentRequest]
+  }
+                     deriving (Show, Eq)
+                       
+data AttachmentRequest = AttachmentRequest {
+  arName        :: String,
+  arDescription :: String
+  }
+                       deriving (Show, Eq)
+
+arFromJSON :: JSValue -> Either String AttachmentRequest
+arFromJSON jsv = do
+  JSString (JSONString name) <- jsget "name" jsv
+  JSString (JSONString description) <- jsgetdef "description" (showJSON "") jsv
+  return $ AttachmentRequest { arName = name, arDescription = description}
+  
+sfFromJSON :: (String, JSValue) -> Either String SignatoryField
+sfFromJSON (name, jsv) = do
+  JSString (JSONString value) <- jsgetdef "value" (showJSON "") jsv
+  JSBool req <- jsgetdef "requested" (showJSON False) jsv
+  tp <- case name of
+    "email"      -> Right EmailFT
+    "fstname"    -> Right FirstNameFT
+    "sndname"    -> Right LastNameFT
+    "company"    -> Right CompanyFT
+    "companynr"  -> Right CompanyNumberFT
+    "personalnr" -> Right PersonalNumberFT
+    s            -> Right $ CustomFT (BS.fromString s) req
+  -- do placements later /Eric
+  return $ SignatoryField { sfType = tp, sfValue = BS.fromString value, sfPlacements = [] }
+  
+irFromJSON :: JSValue -> Either String InvolvedRequest
+irFromJSON jsv = do
+  i'@(JSRational _ _) <- jsgetdef "role" (showJSON (5::Int)) jsv
+  let Just (i::Int) = fromJSON i'
+  JSObject dat' <- jsget "data" jsv
+  let dat = fromJSObject dat'
+  JSArray attachmentjs <- jsgetdef "attachments" (showJSON ([]::[JSValue])) jsv
+  attachments <- mapM arFromJSON attachmentjs
+  role <- maybe (Left $ "Not a valid role: " ++ show i)
+          Right $ toSafeEnum i
+  hisData <- mapM sfFromJSON dat
+  return $ InvolvedRequest { irRole = role, irData = hisData, irAttachments = attachments }
+
+fileNameFromJSON :: JSValue -> Either String String
+fileNameFromJSON jsv = do
+  JSString (JSONString name) <- jsget "name" jsv
+  return name
+  
+tagFromJSON :: JSValue -> Either String DocumentTag
+tagFromJSON jsv = do
+  JSString (JSONString name)  <- jsget "name"  jsv
+  JSString (JSONString value) <- jsget "value" jsv
+  return $ DocumentTag { tagname = BS.fromString name, tagvalue = BS.fromString value }
+
+dcrFromJSON :: JSValue -> Either String DocumentCreationRequest
+dcrFromJSON jsv = do
+  f <- fileNameFromJSON =<< jsget "mainfile" jsv
+  JSString (JSONString title) <- jsgetdef "title" (showJSON f) jsv
+  tp''@(JSRational _ _) <- jsgetdef "type" (showJSON (1::Int)) jsv
+  let Just (tp'::Int) = fromJSON tp''
+  tp <- maybe (Left $ "Unrecognized document type: " ++ show tp') Right $ toSafeEnum tp'
+  JSArray tags' <- jsgetdef "tags" (showJSON ([]::[JSValue])) jsv
+  tags <- mapM tagFromJSON tags'
+  JSArray inv' <- jsget "involved" jsv
+  inv <- mapM irFromJSON inv'
+  return $ DocumentCreationRequest { dcrTitle    = title
+                                   , dcrType     = tp
+                                   , dcrTags     = tags
+                                   , dcrInvolved = inv
+                                   , dcrMainFile = f
+                                   }

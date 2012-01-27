@@ -1202,9 +1202,11 @@ safeReady(function() {
     });
 });
 
-function prepareForEdit(form) {
+function prepareForEdit(form, width) {
+    var width = width == undefined ? 540 : width;
+
     $(".editable", form).each(function() {
-        var textarea = $("<textarea style='width:540px;height:0px;border:0px;padding:0px;margin:0px'  name='" + $(this).attr('name') + "'> " + $(this).html() + "</textarea>");
+        var textarea = $("<textarea style='width:"+ width +"px;height:0px;border:0px;padding:0px;margin:0px'  name='" + $(this).attr('name') + "'> " + $(this).html() + "</textarea>");
         var wrapper = $("<div></div>").css("min-height", ($(this).height()) + 15 + "px");
         wrapper.append(textarea);
         $(this).replaceWith(wrapper);
