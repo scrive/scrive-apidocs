@@ -280,6 +280,8 @@ showAllUsersTable = onlySalesOrAdmin $ do
 {- | Handling user details change. It reads user info change -}
 handleUserChange :: Kontrakcja m => UserID -> m KontraLink
 handleUserChange uid = onlySalesOrAdmin $ do
+  ctx <- getContext
+  let muserid = maybe Nothing (Just . userid) (ctxmaybeuser ctx)
   _ <- getAsStrictBS "change"
   museraccounttype <- getFieldUTF "useraccounttype"
   olduser <- runDBOrFail $ dbQuery $ GetUserByID uid
@@ -288,6 +290,10 @@ handleUserChange uid = onlySalesOrAdmin $ do
       --then we just want to make this account an admin
       newuser <- runDBOrFail $ do
         _ <- dbUpdate $ SetUserCompanyAdmin uid True
+        _ <- dbUpdate 
+                 $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
+                                            [("is_company_admin", "false", "true")] 
+                                            muserid
         dbQuery $ GetUserByID uid
       return newuser
     (Just "companyadminaccount", Nothing, False) -> do
@@ -296,7 +302,15 @@ handleUserChange uid = onlySalesOrAdmin $ do
       newuser <- runDBOrFail $ do
         company <- dbUpdate $ CreateCompany Nothing Nothing
         _ <- dbUpdate $ SetUserCompany uid (Just $ companyid company)
+        _ <- dbUpdate 
+                  $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
+                                             [("company_id", "null", show $ companyid company)] 
+                                             muserid
         _ <- dbUpdate $ SetUserCompanyAdmin uid True
+        _ <- dbUpdate 
+                  $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
+                                             [("is_company_admin", "false", "true")] 
+                                             muserid
         dbQuery $ GetUserByID uid
       _ <- resaveDocsForUser uid
       return newuser
@@ -304,6 +318,10 @@ handleUserChange uid = onlySalesOrAdmin $ do
       --then we just want to downgrade this account to a standard
       newuser <- runDBOrFail $ do
         _ <- dbUpdate $ SetUserCompanyAdmin uid False
+        _ <- dbUpdate 
+                 $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
+                                            [("is_company_admin", "true", "false")] 
+                                            muserid
         dbQuery $ GetUserByID uid
       return newuser
     (Just "companystandardaccount", Nothing, False) -> do
@@ -312,6 +330,10 @@ handleUserChange uid = onlySalesOrAdmin $ do
       newuser <- runDBOrFail $ do
         company <- dbUpdate $ CreateCompany Nothing Nothing
         _ <- dbUpdate $ SetUserCompany uid (Just $ companyid company)
+        _ <- dbUpdate 
+                 $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
+                                            [("company_id", "null", show $ companyid company)] 
+                                            muserid
         dbQuery $ GetUserByID uid
       _ <- resaveDocsForUser uid
       return newuser
@@ -321,12 +343,20 @@ handleUserChange uid = onlySalesOrAdmin $ do
       --we may also need to delete the company if it's empty, but i haven't implemented this bit
       newuser <- runDBOrFail $ do
         _ <- dbUpdate $ SetUserCompany uid Nothing
+        _ <- dbUpdate 
+                 $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
+                                            [("company_id", show _companyid, "null")] 
+                                            muserid
         dbQuery $ GetUserByID uid
       _ <-resaveDocsForUser uid
       return newuser
     _ -> return olduser
   infoChange <- getUserInfoChange
   _ <- runDBUpdate $ SetUserInfo uid $ infoChange $ userinfo user
+  _ <- runDBUpdate
+           $ LogHistoryUserInfoChanged uid (ctxipnumber ctx) (ctxtime ctx) 
+                                       (userinfo user) (infoChange $ userinfo user)
+                                       muserid
   settingsChange <- getUserSettingsChange
   _ <- runDBUpdate $ SetUserSettings uid $ settingsChange $ usersettings user
   return $ LinkUserAdmin $ Just uid

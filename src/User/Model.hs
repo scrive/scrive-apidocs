@@ -45,6 +45,8 @@ module User.Model (
   , LogHistoryPasswordSetupReq(..)
   , LogHistoryAccountCreated(..)
   , LogHistoryTOSAccept(..)
+  , LogHistoryDetailsChanged(..)
+  , LogHistoryUserInfoChanged(..)
   , composeFullName
   ) where
 
@@ -385,27 +387,27 @@ instance DBUpdate LogHistoryLoginSuccess (Maybe UserHistory) where
                    time
                    Nothing
 
-data LogHistoryPasswordSetup = LogHistoryPasswordSetup UserID IPAddress MinutesTime
+data LogHistoryPasswordSetup = LogHistoryPasswordSetup UserID IPAddress MinutesTime (Maybe UserID)
 instance DBUpdate LogHistoryPasswordSetup (Maybe UserHistory) where
-  dbUpdate (LogHistoryPasswordSetup userid ip time) = dbUpdate $ 
+  dbUpdate (LogHistoryPasswordSetup userid ip time mpuser) = dbUpdate $ 
     AddUserHistory userid 
                    (UserHistoryEvent {uheventtype = UserPasswordSetup, uheventdata = Nothing})
                    ip
                    time
-                   Nothing
+                   mpuser
 
-data LogHistoryPasswordSetupReq = LogHistoryPasswordSetupReq UserID IPAddress MinutesTime
+data LogHistoryPasswordSetupReq = LogHistoryPasswordSetupReq UserID IPAddress MinutesTime (Maybe UserID)
 instance DBUpdate LogHistoryPasswordSetupReq (Maybe UserHistory) where
-  dbUpdate (LogHistoryPasswordSetupReq userid ip time) = dbUpdate $ 
+  dbUpdate (LogHistoryPasswordSetupReq userid ip time mpuser) = dbUpdate $ 
     AddUserHistory userid 
                    (UserHistoryEvent {uheventtype = UserPasswordSetupReq, uheventdata = Nothing})
                    ip
                    time
-                   Nothing
+                   mpuser
 
-data LogHistoryAccountCreated = LogHistoryAccountCreated UserID IPAddress MinutesTime Email
+data LogHistoryAccountCreated = LogHistoryAccountCreated UserID IPAddress MinutesTime Email (Maybe UserID)
 instance DBUpdate LogHistoryAccountCreated (Maybe UserHistory) where
-  dbUpdate (LogHistoryAccountCreated userid ip time email) = dbUpdate $ 
+  dbUpdate (LogHistoryAccountCreated userid ip time email mpuser) = dbUpdate $ 
     AddUserHistory userid 
                    (UserHistoryEvent {
                        uheventtype = UserAccountCreated
@@ -416,18 +418,73 @@ instance DBUpdate LogHistoryAccountCreated (Maybe UserHistory) where
                       ]]})
                    ip
                    time
-                   Nothing
+                   mpuser
 
-data LogHistoryTOSAccept = LogHistoryTOSAccept UserID IPAddress MinutesTime
+data LogHistoryTOSAccept = LogHistoryTOSAccept UserID IPAddress MinutesTime (Maybe UserID)
 instance DBUpdate LogHistoryTOSAccept (Maybe UserHistory) where
-  dbUpdate (LogHistoryTOSAccept userid ip time) = dbUpdate $ 
+  dbUpdate (LogHistoryTOSAccept userid ip time mpuser) = dbUpdate $ 
     AddUserHistory userid 
                    (UserHistoryEvent {
                        uheventtype = UserTOSAccept
                      , uheventdata = Nothing})
                    ip
                    time
-                   Nothing
+                   mpuser
+
+data LogHistoryDetailsChanged = LogHistoryDetailsChanged UserID IPAddress MinutesTime [(String, String, String)] (Maybe UserID)
+instance DBUpdate LogHistoryDetailsChanged (Maybe UserHistory) where
+  dbUpdate (LogHistoryDetailsChanged userid ip time details mpuser) = dbUpdate $ 
+    AddUserHistory userid 
+                   (UserHistoryEvent {
+                       uheventtype = UserDetailsChange
+                     , uheventdata = Just $ JSArray $ map (\(field, oldv, newv) -> 
+                                        JSObject . toJSObject $ [
+                                            ("field", JSString $ toJSString field)
+                                          , ("oldval", JSString $ toJSString oldv)
+                                          , ("newval", JSString $ toJSString newv)
+                                          ]) details})
+                   ip
+                   time
+                   mpuser
+
+data LogHistoryUserInfoChanged = LogHistoryUserInfoChanged UserID IPAddress MinutesTime UserInfo UserInfo (Maybe UserID)
+instance DBUpdate LogHistoryUserInfoChanged (Maybe UserHistory) where
+  dbUpdate (LogHistoryUserInfoChanged userid ip time oldinfo newinfo mpuser) = do
+    let diff = diffUserInfos oldinfo newinfo
+    case diff of 
+      [] -> return Nothing
+      _  -> dbUpdate $ LogHistoryDetailsChanged userid ip time diff mpuser
+
+diffUserInfos :: UserInfo -> UserInfo -> [(String, String, String)]
+diffUserInfos old new = fstNameDiff 
+  ++ sndNameDiff 
+  ++ personalNumberDiff 
+  ++ companyPositionDiff 
+  ++ phoneDiff 
+  ++ mobileDiff 
+  ++ emailDiff
+  where
+    fstNameDiff = if (userfstname old) /= (userfstname new) 
+                    then [("first_name", BS.unpack $ userfstname old, BS.unpack $ userfstname new)] 
+                    else []
+    sndNameDiff = if (usersndname old) /= (usersndname new) 
+                    then [("last_name", BS.unpack $ usersndname old, BS.unpack $ usersndname new)] 
+                    else []
+    personalNumberDiff = if (userpersonalnumber old) /= (userpersonalnumber new) 
+                            then [("personal_number", BS.unpack $ userpersonalnumber old, BS.unpack $ userpersonalnumber new)] 
+                            else []
+    companyPositionDiff = if (usercompanyposition old) /= (usercompanyposition new) 
+                            then [("company_position", BS.unpack $ usercompanyposition old, BS.unpack $ usercompanyposition new)] 
+                            else []
+    phoneDiff = if (userphone old) /= (userphone new) 
+                            then [("phone", BS.unpack $ userphone old, BS.unpack $ userphone new)] 
+                            else []
+    mobileDiff = if (usermobile old) /= (usermobile new) 
+                            then [("mobile", BS.unpack $ usermobile old, BS.unpack $ usermobile new)] 
+                            else []
+    emailDiff = if (useremail old) /= (useremail new) 
+                            then [("email", BS.unpack $ unEmail $ useremail old, BS.unpack $ unEmail $ useremail new)] 
+                            else []
 
 data SetUserEmail = SetUserEmail (Maybe ServiceID) UserID Email
 instance DBUpdate SetUserEmail Bool where

@@ -295,6 +295,8 @@ userFromTMP uTMP company = do
     let remail = fold $ asValidEmail . BS.toString <$> email uTMP
     when (not $ isGood $ remail) $ throwApiError API_ERROR_OTHER "NOT valid email for first involved person"
     muser <- runDBQuery $ GetUserByEmail (Just sid) $ Email $ fromGood remail
+    Context{ctxtime,ctxipnumber,ctxmaybeuser} <- getContext
+    let muserid = maybe Nothing (Just . userid) ctxmaybeuser
     user <- case muser of
               Just u -> return u
               Nothing -> do
@@ -308,9 +310,9 @@ userFromTMP uTMP company = do
                 when (isNothing mtosuser) $ throwApiError API_ERROR_OTHER "Problem reading a user (BASE) | This should never happend"
                 let tosuser = fromJust mtosuser
 
-                Context{ctxtime,ctxipnumber} <- getContext
                 _ <- addUserIDSignTOSStatEvent (userid u) ctxtime (usercompany u) (userservice u)
-                _ <- runDBUpdate $ LogHistoryTOSAccept (userid u) ctxipnumber ctxtime
+                _ <- runDBUpdate $ LogHistoryAccountCreated (userid u) ctxipnumber ctxtime (Email $ fromGood remail) muserid
+                _ <- runDBUpdate $ LogHistoryTOSAccept (userid u) ctxipnumber ctxtime muserid
 
                 return tosuser
     info_set <- runDBUpdate $ SetUserInfo (userid user) (userinfo user)
@@ -320,6 +322,12 @@ userFromTMP uTMP company = do
             , userpersonalnumber = fromMaybe (getPersonalNumber user) $ personalnumber uTMP
             }
     when (not info_set) $ throwApiError API_ERROR_OTHER "Problem creating a user (INFO) | This should never happend"
+    _ <- runDBUpdate $ LogHistoryUserInfoChanged (userid user) ctxipnumber ctxtime (userinfo user) 
+                                                 ((userinfo user) { userfstname = fromMaybe (getFirstName user) $ fstname uTMP
+                                                                  , usersndname = fromMaybe (getFirstName user) $ sndname uTMP
+                                                                  , userpersonalnumber = fromMaybe (getPersonalNumber user) $ personalnumber uTMP
+                                                                  }) 
+                                                  muserid
     company_set <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid company)
     when (not company_set) $ throwApiError API_ERROR_OTHER "Problem creating a user (COMPANY) | This should never happend"
     Just user' <- runDBQuery $ GetUserByID $ userid user

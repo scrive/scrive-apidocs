@@ -210,6 +210,8 @@ handlePostCompanyAccounts = withCompanyAdmin $ \_ -> do
 -}
 handleAddCompanyAccount :: Kontrakcja m => m ()
 handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
+  ctx <- getContext
+  let muserid = maybe Nothing (Just . userid) (ctxmaybeuser ctx)
   memail <- getOptionalField asValidEmail "email"
   fstname <- fromMaybe BS.empty <$> getOptionalField asValidName "fstname"
   sndname <- fromMaybe BS.empty <$> getOptionalField asValidName "sndname"
@@ -225,6 +227,11 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
                             userfstname = fstname
                           , usersndname = sndname
                           }
+        _ <- runDBUpdate $ 
+             LogHistoryUserInfoChanged (userid newuser') (ctxipnumber ctx) (ctxtime ctx) 
+                                       (userinfo newuser') 
+                                       ((userinfo newuser') { userfstname = fstname , usersndname = sndname })
+                                       muserid
         newuser <- guardJustM $ runDBQuery $ GetUserByID (userid newuser')
         _ <- sendNewCompanyUserMail user company newuser
         return $ Just newuser
