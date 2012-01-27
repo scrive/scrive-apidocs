@@ -912,7 +912,6 @@ splitUpDocument doc =
             else mzero
   where createDocFromRow :: Kontrakcja m => Document -> Int -> [BS.ByteString] -> m (Either String Document)
         createDocFromRow udoc sigindex xs = do
-          let Just asl = getAuthorSigLink udoc
           now <- ctxtime <$> getContext
           Just author <- ctxmaybeuser <$> getContext
           ip4 <- ctxipnumber <$> getContext
@@ -920,8 +919,7 @@ splitUpDocument doc =
             (AuthorActor now
              ip4
              (userid author)
-             (BS.toString $ getEmail author) 
-             (signatorylinkid asl))
+             (BS.toString $ getEmail author))
           where item n | n<(length xs) = xs !! n
                        | otherwise = BS.empty
 {- |
@@ -1779,7 +1777,7 @@ handleCancel docid = withUserPost $ do
     let Just asl = getAuthorSigLink doc
     customMessage <- getCustomTextField "customtext"
     mdoc' <- doc_update $ CancelDocument (documentid doc) ManualCancel 
-             (AuthorActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail asl) (signatorylinkid asl))
+             (AuthorActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail asl))
     case mdoc' of
       Right doc' -> do
         sendCancelMailsForDocument customMessage ctx doc
@@ -1841,10 +1839,9 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
         Left _ -> return LoopBack
         Right doc -> do
           guard $ isAuthor (doc, user)
-          let Just asl = getAuthorSigLink doc
           muser <- runDBQuery $ GetUserByEmail (documentservice doc) (Email email)
           mnewdoc <- doc_update $ ChangeSignatoryEmailWhenUndelivered docid slid muser email 
-                     (AuthorActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail user) (signatorylinkid asl))
+                     (AuthorActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail user))
           case mnewdoc of
             Right newdoc -> do
               -- get (updated) siglink from updated document

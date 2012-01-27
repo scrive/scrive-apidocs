@@ -1035,9 +1035,9 @@ instance DBUpdate AttachFile (Either String Document) where
          "WHERE id = ? AND status = ?" [ toSql did, toSql Preparation ]
     getOneDocumentAffected "AttachFile" r did
 
-data AttachSealedFile = AttachSealedFile DocumentID FileID Actor
-                        deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate AttachSealedFile (Either String Document) where
+data (Actor a, Show a, Eq a, Ord a) => AttachSealedFile a = AttachSealedFile DocumentID FileID a
+                                                          deriving (Eq, Ord, Show, Typeable)
+instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (AttachSealedFile a) (Either String Document) where
   dbUpdate (AttachSealedFile did fid actor) = do
     let time = actorTime actor
     r <- runUpdateStatement "documents"
@@ -1054,9 +1054,9 @@ instance DBUpdate AttachSealedFile (Either String Document) where
       actor
     getOneDocumentAffected "AttachSealedFile" r did
 
-data CancelDocument = CancelDocument DocumentID CancelationReason Actor
+data (Actor a, Show a, Eq a, Ord a) => CancelDocument a = CancelDocument DocumentID CancelationReason a
                       deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate CancelDocument (Either String Document) where
+instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (CancelDocument a) (Either String Document) where
   dbUpdate (CancelDocument did reason actor) = do
     let mtime = actorTime actor
     mdocument <- dbQuery $ GetDocumentByDocumentID did
@@ -1065,14 +1065,9 @@ instance DBUpdate CancelDocument (Either String Document) where
       Just document ->
         case checkCancelDocument document of
           [] -> do
-            let logmsg = case actor of
-                  SystemActor _ -> "Document canceled by system."
-                  AuthorActor _ ipaddress _ _ _ ->
-                    "Document canceled from " ++ formatIP ipaddress ++ " ."
-                  SignatoryActor _ ipaddress _ _ _ ->
-                    "Document canceled from " ++ formatIP ipaddress ++ " ."
-                  MailAPIActor _ _ eml _ ->
-                    "Document canceled using MailAPI from " ++ show eml ++ "."
+            let logmsg = case actorIP actor of
+                  Just ipaddress -> "Document canceled from " ++ formatIP ipaddress ++ " ."
+                  Nothing        -> "Document canceled."
             r <- runUpdateStatement "documents"
                  [ sqlField "status" Canceled
                  , sqlField "mtime" mtime
@@ -1123,9 +1118,9 @@ instance DBUpdate ChangeMainfile (Either String Document) where
     where
         allHadSigned doc = all (hasSigned ||^ (not . isSignatory)) $ documentsignatorylinks doc
 
-data ChangeSignatoryEmailWhenUndelivered = ChangeSignatoryEmailWhenUndelivered DocumentID SignatoryLinkID (Maybe User) BS.ByteString Actor
+data (Actor a, Show a, Eq a, Ord a) => ChangeSignatoryEmailWhenUndelivered a = ChangeSignatoryEmailWhenUndelivered DocumentID SignatoryLinkID (Maybe User) BS.ByteString a
                                            deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate ChangeSignatoryEmailWhenUndelivered (Either String Document) where
+instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (ChangeSignatoryEmailWhenUndelivered a) (Either String Document) where
   dbUpdate (ChangeSignatoryEmailWhenUndelivered did slid muser email actor) = do
     Just doc <- dbQuery $ GetDocumentByDocumentID did
     let setEmail signatoryfields = 
@@ -1158,9 +1153,9 @@ instance DBUpdate ChangeSignatoryEmailWhenUndelivered (Either String Document) w
    
     getOneDocumentAffected "ChangeSignatoryEmailWhenUndelivered" r did
 
-data PreparationToPending = PreparationToPending DocumentID Actor
+data (Actor a, Show a, Eq a, Ord a) => PreparationToPending a = PreparationToPending DocumentID a
                      deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate PreparationToPending (Either String Document) where
+instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (PreparationToPending a) (Either String Document) where
   dbUpdate (PreparationToPending docid actor) = do
     let time = actorTime actor
     mdocument <- dbQuery $ GetDocumentByDocumentID docid
@@ -1186,9 +1181,9 @@ instance DBUpdate PreparationToPending (Either String Document) where
           s -> return $ Left $ "Cannot PreparationToPending document " ++ show docid ++ " because " ++ concat s
 
 
-data CloseDocument = CloseDocument DocumentID Actor
+data (Actor a, Show a, Eq a, Ord a) => CloseDocument a = CloseDocument DocumentID a
                      deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate CloseDocument (Either String Document) where
+instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (CloseDocument a) (Either String Document) where
   dbUpdate (CloseDocument docid actor) = do
     let time = actorTime actor
     mdocument <- dbQuery $ GetDocumentByDocumentID docid
@@ -1216,16 +1211,10 @@ instance DBUpdate CloseDocument (Either String Document) where
             --                          } `appendHistory` [DocumentHistoryClosed time ipaddress]
           s -> return $ Left $ "Cannot CloseDocument " ++ show docid ++ " because " ++ concat s
 
-data DeleteSigAttachment = DeleteSigAttachment DocumentID BS.ByteString FileID Actor
+data (Actor a, Show a, Eq a, Ord a) => DeleteSigAttachment a = DeleteSigAttachment DocumentID BS.ByteString FileID a
                            deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate DeleteSigAttachment (Either String Document) where
-  dbUpdate (DeleteSigAttachment _ _ _ (SystemActor _)) =
-    return $ Left $ "Only a signatory can delete an attachment."
-  dbUpdate (DeleteSigAttachment _ _ _ (AuthorActor _ _ _ _ _)) =
-    return $ Left $ "Author cannot delete signatory attachment."
-  dbUpdate (DeleteSigAttachment _ _ _ (MailAPIActor _ _ _ _)) =
-    return $ Left $ "DeleteSigAttachment from mail api is not supported."
-  dbUpdate (DeleteSigAttachment _ email _ (SignatoryActor _ _ _ eml _)) | eml /= BS.toString email = 
+instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (DeleteSigAttachment a) (Either String Document) where
+  dbUpdate (DeleteSigAttachment _ email _ actor) | Just (BS.toString email) /= actorEmail actor =
     return $ Left $ "A signatory must delete his own attachment."
   dbUpdate (DeleteSigAttachment did email fid actor) = do
     r <- runUpdateStatement "signatory_attachments"
@@ -1244,9 +1233,9 @@ instance DBUpdate DeleteSigAttachment (Either String Document) where
       actor
     getOneDocumentAffected "DeleteSigAttachment" r did
 
-data DocumentFromSignatoryData = DocumentFromSignatoryData DocumentID Int BS.ByteString BS.ByteString BS.ByteString BS.ByteString BS.ByteString BS.ByteString [BS.ByteString] Actor
+data (Actor a, Show a, Eq a, Ord a) => DocumentFromSignatoryData a = DocumentFromSignatoryData DocumentID Int BS.ByteString BS.ByteString BS.ByteString BS.ByteString BS.ByteString BS.ByteString [BS.ByteString] a
                                  deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate DocumentFromSignatoryData (Either String Document) where
+instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (DocumentFromSignatoryData a) (Either String Document) where
   dbUpdate (DocumentFromSignatoryData docid sigindex fstname sndname email company personalnumber companynumber fieldvalues actor) = do
     ed <- newFromDocument toNewDoc docid    
     when (isRight ed) $ 
@@ -1285,9 +1274,9 @@ instance DBUpdate DocumentFromSignatoryData (Either String Document) where
     pumpData :: SignatoryLink -> SignatoryLink
     pumpData siglink = replaceSignatoryData siglink fstname sndname email company personalnumber companynumber fieldvalues
 
-data ErrorDocument = ErrorDocument DocumentID String Actor
+data (Actor a, Show a, Eq a, Ord a) => ErrorDocument a = ErrorDocument DocumentID String a
                      deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate ErrorDocument (Either String Document) where
+instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (ErrorDocument a) (Either String Document) where
   dbUpdate (ErrorDocument docid errmsg actor) = do
     mdocument <- dbQuery $ GetDocumentByDocumentID docid
     case mdocument of
@@ -1558,18 +1547,17 @@ instance DBQuery GetTimeoutedButPendingDocuments [Document] where
                       , toSql mtime
                       ]
 
-data MarkDocumentSeen = MarkDocumentSeen DocumentID SignatoryLinkID MagicHash Actor
+data (Actor a, Show a, Eq a, Ord a) => MarkDocumentSeen a = MarkDocumentSeen DocumentID SignatoryLinkID MagicHash a
                         deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate MarkDocumentSeen (Either String Document) where
-  dbUpdate (MarkDocumentSeen _ _ _ (SystemActor _)) =
-    return $ Left "Cannot mark document seen from SystemActor."
+instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (MarkDocumentSeen a) (Either String Document) where
   dbUpdate (MarkDocumentSeen did signatorylinkid1 mh actor) = do
     let time = actorTime actor
-    let (ipnumber, eml) = case actor of       
-          AuthorActor    _ i _ e _ -> (i, e)
-          SignatoryActor _ i _ e _ -> (i, e)
-          MailAPIActor   _   _ e _ -> (IPAddress 0, e)
-          SystemActor _ -> error "Impossible!"
+        ipnumber = fromMaybe (IPAddress 0) $ actorIP actor
+        txt = case actorEmail actor of
+          Just eml ->
+            "GET Request made to secret link for signatory with email " ++ show eml ++ "."
+          Nothing ->
+            "Marking document seen for signatory with id " ++ show signatorylinkid1 ++ "."
     r <- runUpdateStatement "signatory_links"
                          [ sqlField "seen_time" time
                          , sqlField "seen_ip" ipnumber
@@ -1586,14 +1574,14 @@ instance DBUpdate MarkDocumentSeen (Either String Document) where
     when (r == 1) $
       ignore $ dbUpdate $ InsertEvidenceEvent
       ClickSecretLinkEvidence
-      ("GET Request made to secret link for signatory with email " ++ show eml ++ ".")
+      txt
       (Just did)
       actor
     getOneDocumentAffected "MarkDocumentSeen" r did
 
-data AddInvitationEvidence = AddInvitationEvidence DocumentID SignatoryLinkID Actor
+data (Actor a, Show a, Eq a, Ord a) => AddInvitationEvidence a = AddInvitationEvidence DocumentID SignatoryLinkID a
                           deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate AddInvitationEvidence (Either String Document) where
+instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (AddInvitationEvidence a) (Either String Document) where
   dbUpdate (AddInvitationEvidence docid slid actor) = do
   -- modifySignable docid $ \document ->
   -- case checkAddEvidence document slid of
@@ -1616,9 +1604,6 @@ instance DBUpdate AddInvitationEvidence (Either String Document) where
             return $ Right doc
           Nothing -> 
             return $ Left $ "SignatoryLinkID " ++ show slid ++ " does not exist in document with id " ++ show docid
-
-
-
 
 data MarkInvitationRead = MarkInvitationRead DocumentID SignatoryLinkID MinutesTime
                           deriving (Eq, Ord, Show, Typeable)

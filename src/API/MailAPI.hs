@@ -43,7 +43,7 @@ import Doc.JSON
 
 import EvidenceLog.Model
 import Util.HasSomeUserInfo
-import Util.SignatoryLinkUtils
+--import Util.SignatoryLinkUtils
 
 parseEmailMessageToParts :: BS.ByteString -> (MIME.MIMEValue, [(MIME.Type, BS.ByteString)])
 parseEmailMessageToParts content = (mime, parts mime)
@@ -272,10 +272,8 @@ jsonMailAPI mailapi username user pdfs plains content = do
 
     mzero
 
-  let Just asl = getAuthorSigLink doc
-
   edoc2 <- doc_update $ PreparationToPending (documentid doc)
-           (MailAPIActor ctxtime (userid user) (BS.toString $ getEmail user) (signatorylinkid asl))
+           (MailAPIActor ctxtime (userid user) (BS.toString $ getEmail user))
   when (isLeft edoc2) $ do
     Log.jsonMailAPI $ "Could not got to pending document: " ++ (intercalate "; " errs)
 

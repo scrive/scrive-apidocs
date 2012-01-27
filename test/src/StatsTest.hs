@@ -120,10 +120,11 @@ testLinkStat conn = withTestEnvironment conn $ do
   time <- getMinutesTime
   _ <- dbUpdate $ PreparationToPending (documentid doc') (SystemActor time)
   _ <- forM (documentsignatorylinks doc') 
-       (\sl -> dbUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid sl) (signatorymagichash sl) 
-               (if isAuthor sl 
-                then (AuthorActor time (IPAddress 0) (fromJust $ maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl))
-                else (SignatoryActor time (IPAddress 0) (maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl))))
+       (\sl -> if isAuthor sl 
+               then dbUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid sl) (signatorymagichash sl) 
+                    (AuthorActor time (IPAddress 0) (fromJust $ maybesignatory sl) (BS.toString $ getEmail sl))
+               else dbUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid sl) (signatorymagichash sl) 
+                    (SignatoryActor time (IPAddress 0) (maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl)))
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatLinkEvent doc sl)
   stats'' <- dbQuery $ GetSignStatEvents
@@ -144,10 +145,11 @@ testSignStat conn = withTestEnvironment conn $ do
   time <- getMinutesTime
   _ <- dbUpdate $ PreparationToPending (documentid doc') (SystemActor time)
   _ <- forM (documentsignatorylinks doc') 
-       (\sl -> dbUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid sl) (signatorymagichash sl) 
-               (if isAuthor sl 
-                then (AuthorActor time (IPAddress 0) (fromJust $ maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl))
-                else (SignatoryActor time (IPAddress 0) (maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl))))
+       (\sl -> if isAuthor sl 
+               then dbUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid sl) (signatorymagichash sl) 
+                    (AuthorActor time (IPAddress 0) (fromJust $ maybesignatory sl) (BS.toString $ getEmail sl))
+               else dbUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid sl) (signatorymagichash sl) 
+                    (SignatoryActor time (IPAddress 0) (maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl)))
   _ <- forM (filter isSignatory $ documentsignatorylinks doc') (\sl -> dbUpdate $ SignDocument (documentid doc') (signatorylinkid sl) (signatorymagichash sl) time (IPAddress 0) Nothing)
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatSignEvent doc sl)

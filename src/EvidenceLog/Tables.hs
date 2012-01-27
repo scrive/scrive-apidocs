@@ -36,15 +36,15 @@ tableEvidenceLog = Table {
                                         , colNullable = Just True}),
        ("time",              SqlColDesc { colType     = SqlTimestampWithZoneT
                                         , colNullable = Just False}),
-       ("request_ip_v4",      SqlColDesc { colType     = SqlBigIntT
+       ("request_ip_v4",     SqlColDesc { colType     = SqlBigIntT
                                         , colNullable = Just True}),
-       ("request_ip_v6",      SqlColDesc { colType     = SqlBigIntT
+       ("request_ip_v6",     SqlColDesc { colType     = SqlBigIntT
                                         , colNullable = Just True}),
        ("signatory_link_id", SqlColDesc { colType     = SqlBigIntT
                                         , colNullable = Just True}),
        ("text",              SqlColDesc { colType     = SqlVarCharT
                                         , colNullable = Just False}),
-       ("event_type",        SqlColDesc { colType     = SqlIntegerT
+       ("event_type",        SqlColDesc { colType     = SqlSmallIntT
                                         , colNullable = Just False}),
        ("version_id",        SqlColDesc { colType     = SqlVarCharT
                                         , colNullable = Just False}),
@@ -61,7 +61,7 @@ tableEvidenceLog = Table {
           ++ ", request_ip_v6 BIGINT          NULL"          
           ++ ", signatory_link_id BIGINT      NULL"
           ++ ", text          VARCHAR     NOT NULL"
-          ++ ", event_type    INT         NOT NULL"
+          ++ ", event_type    SMALLINT    NOT NULL"
           ++ ", version_id    VARCHAR     NOT NULL"
           ++ ", api_user      VARCHAR         NULL"
           ++ ", CONSTRAINT pk_evidence_log PRIMARY KEY (id)"

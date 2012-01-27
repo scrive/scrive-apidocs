@@ -3,7 +3,10 @@ module EvidenceLog.Model
          EvidenceEventType(..),
          InsertEvidenceEvent(..),
          Actor(..),
-         actorTime
+         AuthorActor(..),
+         SignatoryActor(..),
+         SystemActor(..),
+         MailAPIActor(..)       
        )
        
        where
@@ -22,63 +25,54 @@ import Misc
 import Database.HDBC.PostgreSQL
 import Version
 
-data Actor = SystemActor    MinutesTime
-           | AuthorActor    MinutesTime IPAddress        UserID  String SignatoryLinkID
-           | SignatoryActor MinutesTime IPAddress (Maybe UserID) String SignatoryLinkID
-           | MailAPIActor   MinutesTime                  UserID  String SignatoryLinkID
-           deriving (Show, Eq, Ord)
-                    
-actorTime :: Actor -> MinutesTime
-actorTime (SystemActor time) = time
-actorTime (AuthorActor time _ _ _ _) = time
-actorTime (SignatoryActor time _ _ _ _) = time
-actorTime (MailAPIActor time _ _ _ ) = time
+class Actor a where
+  actorTime      :: a -> MinutesTime
+  actorIP        :: a -> Maybe IPAddress
+  actorIP _      = Nothing
+  actorUserID    :: a -> Maybe UserID
+  actorUserID _  = Nothing
+  actorEmail     :: a -> Maybe String
+  actorEmail _   = Nothing
+  actorSigLinkID :: a -> Maybe SignatoryLinkID
+  actorSigLinkID _ = Nothing
 
-insertEvidenceEvent :: EvidenceEventType
+data SystemActor = SystemActor MinutesTime
+                   deriving (Eq, Ord, Show)
+instance Actor SystemActor where
+  actorTime (SystemActor t) = t
+
+data AuthorActor = AuthorActor MinutesTime IPAddress UserID String
+                   deriving (Eq, Ord, Show)
+instance Actor AuthorActor where
+  actorTime   (AuthorActor t _ _ _) = t
+  actorIP     (AuthorActor _ i _ _) = Just i
+  actorUserID (AuthorActor _ _ u _) = Just u
+  actorEmail  (AuthorActor _ _ _ e) = Just e
+
+data SignatoryActor = SignatoryActor MinutesTime IPAddress (Maybe UserID) String SignatoryLinkID
+                   deriving (Eq, Ord, Show)
+instance Actor SignatoryActor where
+  actorTime      (SignatoryActor t _ _ _ _) = t
+  actorIP        (SignatoryActor _ i _ _ _) = Just i
+  actorUserID    (SignatoryActor _ _ u _ _) = u
+  actorEmail     (SignatoryActor _ _ _ e _) = Just e
+  actorSigLinkID (SignatoryActor _ _ _ _ s) = Just s
+  
+data MailAPIActor = MailAPIActor MinutesTime UserID String
+                   deriving (Eq, Ord, Show)
+instance Actor MailAPIActor where
+  actorTime   (MailAPIActor t _ _) = t
+  actorUserID (MailAPIActor _ u _) = Just u
+  actorEmail  (MailAPIActor _ _ e) = Just e
+                    
+insertEvidenceEvent :: Actor a 
+                       => EvidenceEventType
                        -> String       -- text
                        -> Maybe DocumentID 
-                       -> Actor
+                       -> a
                        -> Connection
                        -> IO Bool
-insertEvidenceEvent event text mdid (SystemActor time) conn = do
-  st <- prepare conn $ "INSERT INTO evidence_log ("
-        ++ "  document_id"
-        ++ ", time"
-        ++ ", text"
-        ++ ", event_type"
-        ++ ", version_id"
-        ++ ") VALUES (?,?,?,?,?)"
-  res <- execute st [toSql mdid
-                    ,toSql time
-                    ,toSql text
-                    ,toSql event
-                    ,toSql versionID
-                    ]
-  oneRowAffectedGuard res
-insertEvidenceEvent event text mdid (AuthorActor time ip uid eml slid) conn = do
-  st <- prepare conn $ "INSERT INTO evidence_log ("
-        ++ "  document_id"
-        ++ ", time"
-        ++ ", text"
-        ++ ", event_type"
-        ++ ", version_id"
-        ++ ", user_id"
-        ++ ", email"
-        ++ ", request_ip_v4"
-        ++ ", signatory_link_id"
-        ++ ") VALUES (?,?,?,?,?,?,?,?,?,?,?)"
-  res <- execute st [toSql mdid
-                    ,toSql time
-                    ,toSql text
-                    ,toSql event
-                    ,toSql versionID
-                    ,toSql $ Just uid
-                    ,toSql $ Just eml
-                    ,toSql ip
-                    ,toSql $ Just slid
-                    ]
-  oneRowAffectedGuard res
-insertEvidenceEvent event text mdid (SignatoryActor time ip muid eml slid) conn = do
+insertEvidenceEvent event text mdid actor conn = do
   st <- prepare conn $ "INSERT INTO evidence_log ("
         ++ "  document_id"
         ++ ", time"
@@ -91,48 +85,25 @@ insertEvidenceEvent event text mdid (SignatoryActor time ip muid eml slid) conn 
         ++ ", signatory_link_id"
         ++ ") VALUES (?,?,?,?,?,?,?,?,?)"
   res <- execute st [toSql mdid
-                    ,toSql time
+                    ,toSql $ actorTime      actor
                     ,toSql text
                     ,toSql event
                     ,toSql versionID
-                    ,toSql muid
-                    ,toSql $ Just eml
-                    ,toSql ip
-                    ,toSql $ Just slid
-                    ]
-  oneRowAffectedGuard res
-insertEvidenceEvent event text mdid (MailAPIActor time uid eml slid) conn = do
-  st <- prepare conn $ "INSERT INTO evidence_log ("
-        ++ "  document_id"
-        ++ ", time"
-        ++ ", text"
-        ++ ", event_type"
-        ++ ", version_id"
-        ++ ", user_id"
-        ++ ", email"
-        ++ ", signatory_link_id"
-        ++ ", api_user"
-        ++ ") VALUES (?,?,?,?,?,?,?,?,?)"
-  res <- execute st [toSql mdid
-                    ,toSql time
-                    ,toSql text
-                    ,toSql event
-                    ,toSql versionID
-                    ,toSql $ Just uid
-                    ,toSql $ Just eml
-                    ,toSql $ Just slid
-                    ,toSql $ Just "mailapi"
+                    ,toSql $ actorUserID    actor
+                    ,toSql $ actorEmail     actor
+                    ,toSql $ actorIP        actor
+                    ,toSql $ actorSigLinkID actor
                     ]
   oneRowAffectedGuard res
 
-data InsertEvidenceEvent = InsertEvidenceEvent 
-                             EvidenceEventType       -- A code for the event
-                             String                  -- Text for evidence
-                             (Maybe DocumentID)      -- The documentid if this event is about a document
-                             Actor
-instance DBUpdate InsertEvidenceEvent Bool where
-  dbUpdate (InsertEvidenceEvent tp txt mdid md) = 
-    wrapDB (insertEvidenceEvent tp txt mdid md)
+data Actor a => InsertEvidenceEvent a = InsertEvidenceEvent 
+                                        EvidenceEventType       -- A code for the event
+                                        String                  -- Text for evidence
+                                        (Maybe DocumentID)      -- The documentid if this event is about a document
+                                        a
+instance Actor a => DBUpdate (InsertEvidenceEvent a) Bool where
+  dbUpdate (InsertEvidenceEvent tp txt mdid a) = 
+    wrapDB (insertEvidenceEvent tp txt mdid a)
 
 -- | A machine-readable event code for different types of events.
 data EvidenceEventType = DocumentCreateEvidence

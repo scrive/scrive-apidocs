@@ -145,14 +145,26 @@ class ExtendWithRandomnes a where
 
 instance ExtendWithRandomnes SignatoryDetails where
     moreRandom sl = return sl
-
-instance Arbitrary Actor where
+    
+instance Arbitrary AuthorActor where
+  arbitrary = do
+    (time, ip, uid, eml) <- arbitrary
+    return $ AuthorActor time ip uid eml
+    
+instance Arbitrary SystemActor where
+  arbitrary = do
+    time <- arbitrary
+    return $ SystemActor time
+    
+instance Arbitrary SignatoryActor where
   arbitrary = do
     (time, ip, uid, eml, slid) <- arbitrary
-    elements [SystemActor time, 
-              AuthorActor time ip uid eml slid,
-              SignatoryActor time ip (Just uid) eml slid,
-              MailAPIActor time uid eml slid]
+    return $ SignatoryActor time ip uid eml slid
+    
+instance Arbitrary MailAPIActor where
+  arbitrary = do
+    (time, uid, eml) <- arbitrary
+    return $ MailAPIActor time uid eml
 
 instance Arbitrary SignatoryLinkID where
   arbitrary = SignatoryLinkID <$> arbitrary

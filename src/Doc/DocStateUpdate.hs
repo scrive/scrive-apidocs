@@ -141,7 +141,7 @@ authorSignDocument did msigninfo = onlyAuthor did $ do
           _ <- doc_update $ SetDocumentInviteTime did (ctxtime ctx) (ctxipnumber ctx)
           _ <- doc_update $ MarkInvitationRead did signatorylinkid (ctxtime ctx)
           ed2 <- doc_update $ MarkDocumentSeen did signatorylinkid signatorymagichash 
-                 (AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid author) (BS.toString $ getEmail author) signatorylinkid)
+                 (AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid author) (BS.toString $ getEmail author))
           case ed2 of
             Left m -> return $ Left $ DBActionNotAvailable m
             Right _ -> do
@@ -173,7 +173,7 @@ authorSendDocument did = onlyAuthor did $ do
           _ <- doc_update $ SetDocumentInviteTime did (ctxtime ctx) (ctxipnumber ctx)          
           _ <- doc_update $ MarkInvitationRead did signatorylinkid (ctxtime ctx)
           transActionNotAvailable <$> doc_update (MarkDocumentSeen did signatorylinkid signatorymagichash 
-                                                  (AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid author) (BS.toString $ getEmail author) signatorylinkid))
+                                                  (AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid author) (BS.toString $ getEmail author)))
 
 {- |
   The Author can add new SigAttachments.

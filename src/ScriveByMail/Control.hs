@@ -174,10 +174,8 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
     
     mzero
     
-  let Just asl = getAuthorSigLink doc
-
   edoc2 <- doc_update $ PreparationToPending (documentid doc)
-           (MailAPIActor ctxtime (userid user) (BS.toString $ getEmail user) (signatorylinkid asl))
+           (MailAPIActor ctxtime (userid user) (BS.toString $ getEmail user))
   
   when (isLeft edoc2) $ do
     Log.scrivebymail $ "Could not got to pending document: " ++ (intercalate "; " errs)
@@ -220,5 +218,5 @@ markDocumentAuthorReadAndSeen doc@Document{documentid} = do
   time <- ctxtime <$> getContext
   _ <- doc_update $ MarkInvitationRead documentid signatorylinkid time
   _ <- doc_update $ MarkDocumentSeen documentid signatorylinkid signatorymagichash 
-       (MailAPIActor time (fromJust maybesignatory) (BS.toString $ getEmail sl) signatorylinkid)
+       (MailAPIActor time (fromJust maybesignatory) (BS.toString $ getEmail sl))
   return ()
