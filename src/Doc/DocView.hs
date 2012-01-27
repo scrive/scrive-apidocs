@@ -32,8 +32,6 @@ module Doc.DocView (
   , isNotLinkForUserID
   , modalMismatch
   , modalPdfTooLarge
-  , mailCancelDocument
-  , mailCancelDocumentContent
   , mailDocumentAwaitingForAuthor
   , mailDocumentClosed
   , mailDocumentRejected
@@ -76,7 +74,6 @@ import FlashMessage
 import Kontra
 import KontraLink
 import ListUtil
-import Mails.MailsUtil
 import MinutesTime
 import Misc
 import Templates.Templates
@@ -414,6 +411,8 @@ processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
       , ("cancelbuttontext", text processcancelbuttontext)
       , ("rejectbuttontext", text processrejectbuttontext)
       , ("cancelmodaltitle", text processcancelmodaltitle)
+      , ("cancelmodaltext", text processcancelmodaltext)
+
       , ("authorissecretarytext", text processauthorissecretarytext)
       , ("remindagainbuttontext", text processremindagainbuttontext)
       -- And more
@@ -790,13 +789,17 @@ documentFunctionalityFields Document{documentfunctionality} = do
   field "isbasic" $ documentfunctionality==BasicFunctionality
 
 documentCsvFields :: TemplatesMonad m => Document -> m (Fields m)
-documentCsvFields document@Document{documentallowedidtypes, documentcsvupload} =  do
+documentCsvFields document@Document{documentallowedidtypes} =  do
   let csvcustomfields = either (const [BS.fromString ""]) id $ getCSVCustomFields document
-      mcleancsv = (cleanCSVContents documentallowedidtypes (length csvcustomfields) . csvcontents) <$> documentcsvupload
+      mcleancsv = (cleanCSVContents documentallowedidtypes (length csvcustomfields) . csvcontents) <$> (snd <$> mcsvupload)
       csvproblems = maybe [] fst mcleancsv
       csvdata = maybe [] (csvbody . snd) mcleancsv
       csvPageSize :: Int = 10
       csvpages = splitCSVDataIntoPages csvPageSize csvdata
+      mcsvupload = msum (zipWith check [0::Int ..] (documentsignatorylinks document))
+      check idx sl = case signatorylinkcsvupload sl of
+                       Just c -> Just (idx, c)
+                       Nothing -> Nothing
   csvproblemfields <- sequence $ zipWith (csvProblemFields (length csvproblems)) [1..] csvproblems
   return $ do
     fieldFL "csvproblems" $ csvproblemfields
@@ -805,7 +808,7 @@ documentCsvFields document@Document{documentallowedidtypes, documentcsvupload} =
     field "csvrowcount" $ length csvdata
     field "csvcustomfields" $ csvcustomfields
     field "isvalidcsv" $ null csvproblems
-    field "csvsigindex" $ fmap csvsignatoryindex documentcsvupload
+    field "csvsigindex" $ (fst <$> mcsvupload)
 
 csvPageFields :: TemplatesMonad m => [CSVProblem] -> Int -> Int -> [[BS.ByteString]] -> Fields m
 csvPageFields problems totalrowcount firstrowindex xs = do

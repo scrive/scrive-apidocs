@@ -443,8 +443,12 @@ profits and reduce frustration.</p>                                             
 "_contractSignatory","Part",,"Party"
 "_contractauthorissecretarytext","Avsändare: Ej undertecknande part",,"Sender: Non-signing party"
 "_contractcancelbuttontext","Återkalla inbjudan",,"Withdraw invitation"
-"_contractcancelmodaltitleBody","Är du säker att du vill återkalla din inbjudan att underteckna dokumentet?            <br/> När du återkallat inbjudan kommer nedanstående meddelande att skickas till dina motparter.",,"Are you sure you want to withdraw the invitation to sign the document? <br/> When you have withdrawn it, the following message will be sent to your counterparts."
-"_contractcancelmodaltitleHead","Återkalla inbjudan",,"Withdraw invitation"
+"_contractcancelflashmessage", "Dokumentet återkallat.",,"Document withdrawn."
+"_contractcancelmodaltext","Är du säker att du vill återkalla inbjudan att signera?
+<BR/><BR/>Om motparten klickar på signeringslänken efter att du återkallat kommer de att få information om att det inte längre går att signera. Inget meddelande kommer att skickas till din motpart.",,"Are you sure you want to withdraw the invitation to sign?
+<BR/><BR/>
+If the other party clicks on the signing link after you withdrawn the invitation, they will be informed that it's no longer possible to sign. No message will be sent to your counterpart."
+"_contractcancelmodaltitle","Återkalla inbjudan",,"Withdraw invitation"
 "_contractcancelledinfoheader","Dokument återkallat",,"Document withdrawn"
 "_contractcancelledinfotext","Inbjudan att signera dokumentet har dragits tillbaka.",,"The invitation to sign this document has been withdrawn."
 "_contractconfirmsendtext","Är du säker på att du vill skicka dokumentet",,"Are you sure you want to send the contract"
@@ -701,8 +705,6 @@ profits and reduce frustration.</p>                                             
 "_flashMessageLoginPageRedirectReasonNotLoggedIn","Du är inte inloggad.",,"You are not logged in."
 "_flashMessageLoginPageRedirectReasonWrongMailOrPassword","Felaktig e-post eller lösenord.",,"Incorrect email or password."
 "_flashMessageMissingRequiredField","Du har missat att fylla i ett obligatoriskt fält.",,"You missed some mandatory fields."
-"_flashMessageMultipleAttachmentShareDone","Valda bilagor har blivit delade inom din organisation.",,"The selected attachments have been shared with your organisation."
-"_flashMessageMultipleTemplateShareDone","Valda mallar har blivit delade inom din organisation.",,"The selected templates have been shared with your organisation."
 "_flashMessageMustAcceptTOS","För att kunna använda tjänsten måste du acceptera Scrive Allmänna
  Villkor.",,"Please accept the Scrive Terms of Service to get started."
 "_flashMessageNeedsLetterAndDigit","$fieldnametitlecase$ måste innehålla åtminstone två bokstäver
@@ -746,8 +748,6 @@ profits and reduce frustration.</p>                                             
 "_flashMessageRubbishHardDeleteDone","The selected documents have been permanently deleted.""The selected documents have been permanently deleted.",,
 "_flashMessageRubbishRestoreDone","The selected documents have been restored to your archive.""The selected documents have been restored to your archive.",,
 "_flashMessageSecondNameIsRequired","Efternamn krävs.",,"Last name required."
-"_flashMessageSingleAttachmentShareDone","$docname$ har blivit delad inom din organisation.",,"$docname$ has been shared with your organisation."
-"_flashMessageSingleTemplateShareDone","$docname$ har blivit delad inom din organisation.",,"$docname$ has been shared with your organisation."
 "_flashMessageTemplateArchiveDone","Valda mallar har blivit raderade.",,"The selected templates have been deleted."
 "_flashMessageThanksForTheQuestion","Ditt meddelande har skickats! Vi återkommer inom 24h.",,"Your message has been sent! We will get back to you within 24
  hours."
@@ -1542,8 +1542,6 @@ profits and reduce frustration. The following mateials shall only
 "_listReallyDeleteDialogHead","Radera permanent",,"Permanent Delete"
 "_listRestoreDialogBody","Vill du återsätlla följande dokument?",,"Would you like to restore the selected documents?"
 "_listRestoreDialogHead","Återställ",,"Restore"
-"_listShareDialogBody","Vill du dela detta med alla i din organisation.",,"Do you want to share this with everyone on your organisation?"
-"_listShareDialogHead","Dela",,"Share"
 "_listand","och",,"and"
 "_listyou","du",,"you"
 "_loadingFile","Laddar upp . . .",,"Uploading . . ."
@@ -1569,21 +1567,6 @@ profits and reduce frustration. The following mateials shall only
 "_mailAccountBySigningOrderReminderContentInstruction","Gör så här:<br/>1. Klicka på länken<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.
  Definiera lösenord och acceptera villkoren<br/>3. Färdig",,"To save:<br/>1. Click the link<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.  Define passwords and accept the terms of agreement <br/>3. Done"
 "_mailAccountBySigningOrderReminderTitle","Du har inte sparat ditt original",,"You have not saved your original"
-"_mailCancelContractContentBody","<strong>$canceller$</strong> har valt att återkalla sin
- inbjudan att underteckna dokument <strong>$documenttitle$</strong>.      Därmed
- är avtalsprocessen avbruten och du kan inte längre underteckna
- dokumentet.",,"<strong>$canceller$</strong> has chosen to withdraw
- the invitation to sign <strong>$documenttitle$</strong>. Therefore the
- agreement process has been cancelled."
-"_mailCancelDocumentTitleContract","Återkallat avtal från $if(companyname)$$companyname$ $else$$creatorname$$endif$",,"Contract cancellation from $if(companyname)$$companyname$ $else$$creatorname$$endif$"
-"_mailCancelDocumentTitleOffer","Återkallad offert från $if(companyname)$$companyname$ $else$$creatorname$$endif$",,"Offer cancellation from  $if(companyname)$$companyname$ $else$$creatorname$$endif$"
-"_mailCancelDocumentTitleOrder","Återkallad orderbekräftelse från $if(companyname)$$companyname$ $else$$creatorname$$endif$",,"Order confirmation cancellation from $if(companyname)$$companyname$ $else$$creatorname$$endif$"
-"_mailCancelOfferContentBody","<strong>$canceller$</strong>   har valt att återkalla
- offerten  $documenttitle$.",,"<strong>$canceller$</strong>   has chosen to withdraw
- the offer  $documenttitle$."
-"_mailCancelOrderContentBody","<strong>$canceller$</strong>   har valt att återkalla
- orderbekräftelsen  $documenttitle$.",,"<strong>$canceller$</strong>   has chosen to withdraw
- the order confirmation  $documenttitle$."
 "_mailCompanyAccountAcceptedContentBody","$invited.fullnameOrEmail$ har accepterat att bli ett underkonto.",,"$invited.fullnameOrEmail$ has agreed to become a sub account."
 "_mailCompanyAccountAcceptedTitle","Kontoförfrågan",,"Account enquiry"
 "_mailContractClosedContentAttached","Det färdigställda dokumentet bifogas med detta mail.",,"The finalised document is attached."
@@ -1895,9 +1878,12 @@ use free of charge."
 "_offerSignatory","Mottagare",,"Recipient"
 "_offerauthorissecretarytext","Avsändare",,"Sender"
 "_offercancelbuttontext","Återkalla offert ",,"Withdraw offer "
-"_offercancelmodaltitleBody","När du återkallat offerten kommer nedanstående meddelande att
- skickas till din motpart.",,"When you have withdrawn the offer, the following message will be sent to your counterpart."
-"_offercancelmodaltitleHead","Är du säker att du vill återkalla offerten?",,"Are you sure you want to withdraw the offer?"
+"_offercancelflashmessage","Dokumentet återkallat.",,"Document withdrawn."
+"_offercancelmodaltext","Är du säker att du vill återkalla inbjudan att signera?
+<BR/><BR/>Om motparten klickar på signeringslänken efter att du återkallat kommer de att få information om att det inte längre går att signera. Inget meddelande kommer att skickas till din motpart.",,"Are you sure you want to withdraw the invitation to sign?
+<BR/><BR/>
+If the other party clicks on the signing link after you withdrawn the invitation, they will be informed that it's no longer possible to sign. No message will be sent to your counterpart."
+"_offercancelmodaltitle","Är du säker att du vill återkalla offerten?",,"Are you sure you want to withdraw the offer?"
 "_offercancelledinfoheader","Offert återkallad ",,"Offer withdrawn "
 "_offercancelledinfotext","Inbjudan att bekräfta ordern har dragits tillbaka.",,"The invitation to accept this offer has been withdrawn."
 "_offerconfirmsendtext","Är du säker på att du vill skicka offerten ",,"Are you sure you want to send the offer "
@@ -1963,10 +1949,12 @@ use free of charge."
 "_orderSignHistEntry","bekräftar ordern online med",,"confirms the order online with"
 "_orderauthorissecretarytext","Avsändare",,"Sender"
 "_ordercancelbuttontext","Återkalla order",,"Withdraw order"
-"_ordercancelmodaltitleBody","När du återkallat orderbekräftelsen kommer nedanstående meddelande
- att skickas till din motpart.",,"When you have withdrawn the order confirmation, the following
- message will be sent to your counterpart."
-"_ordercancelmodaltitleHead","Är du säker att du vill återkalla orderbekräftelsen?",,"Are you sure you want to withdraw the order confirmation?"
+"_ordercancelflashmessage","Dokumentet återkallat.",,"Document withdrawn."
+"_ordercancelmodaltext","Är du säker att du vill återkalla inbjudan att signera?
+<BR/><BR/>Om motparten klickar på signeringslänken efter att du återkallat kommer de att få information om att det inte längre går att signera. Inget meddelande kommer att skickas till din motpart.",,"Are you sure you want to withdraw the invitation to sign?
+<BR/><BR/>
+If the other party clicks on the signing link after you withdrawn the invitation, they will be informed that it's no longer possible to sign. No message will be sent to your counterpart."
+"_ordercancelmodaltitle","Är du säker att du vill återkalla orderbekräftelsen?",,"Are you sure you want to withdraw the order confirmation?"
 "_ordercancelledinfoheader","Order återkallad",,"Order withdrawn"
 "_ordercancelledinfotext","Inbjudan att bekräfta ordern har dragits tillbaka.",,"The invitation to confirm this order has been withdrawn."
 "_orderconfirmsendtext","Är du säker att du vill skicka orderbekräftelsen",,"Are you sure you want to send the order confirmation"
@@ -2026,10 +2014,8 @@ use free of charge."
 "_orgnumber","Org. nr",,"Company Reg No"
 "_pageAttachmentAttachments","BILAGOR:",,"ATTACHMENTS:"
 "_pageAttachmentDownloadPDF","Ladda ned PDF",,"Download PDF"
-"_pageAttachmentListIfShared","Delad",,"Shared"
 "_pageAttachmentListNewAttachment","Nya Bilagor",,"New attachments"
 "_pageAttachmentListSearchInfo","Sök dokument",,"Search document"
-"_pageAttachmentListShare","Dela",,"Share"
 "_pageDocumentForAuthorHelpersLocalDialogsAddAttachment","Lägg till bilaga",,"Add attachment"
 "_pageDocumentForAuthorHelpersLocalDialogsAttachmentdesc","Beskrivning",,"Description"
 "_pageDocumentForAuthorHelpersLocalDialogsAttachmentname","Bilaga",,"Attachment"
@@ -2770,8 +2756,6 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_senderNumber","Avsändarens Orgnr/Persnr",,"Sender's Company Reg No"
 "_senderTitle","Avsändarens  titel, företag",,"Sender's position, company"
 "_setAllFields","Var vänlig namnge alla skapade fält",,"Please name all created fields"
-"_share","Dela",,"Share"
-"_shared","Delad",,"Shared"
 "_showFileImagesError","Vi beklagar, det var något problem med formateringen på din PDF.
  Vänligen kontrollera dokumentet och försök igen.",,"We are sorry, something was wrong with the format in your PDF.
  Please check the document and try again."

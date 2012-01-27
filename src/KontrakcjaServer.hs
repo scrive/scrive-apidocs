@@ -46,6 +46,7 @@ import Happstack.State.Saver
 import ActionScheduler
 import ActionSchedulerState (ActionImportance(..), SchedulerData(..))
 import User.Model
+import DB.Nexus
 import Mails.Events
 -- import qualified User.UserState as U
 import qualified Amazon as AWS
@@ -54,7 +55,6 @@ import Misc
 import qualified MemCache
 import File.Model
 import qualified System.Mem as System.Mem
-import qualified Doc.Import as D
 
 import qualified Paths_kontrakcja as Paths
 
@@ -75,7 +75,7 @@ runTest test = do
 stateProxy :: Proxy AppState
 stateProxy = Proxy
 
-initDatabaseEntries :: Connection -> [(Email,String)] -> IO ()
+initDatabaseEntries :: Nexus -> [(Email,String)] -> IO ()
 initDatabaseEntries conn iusers = do
   -- create initial database entries
   flip mapM_ iusers $ \(email,passwordstring) -> do
@@ -89,7 +89,7 @@ initDatabaseEntries conn iusers = do
 
 uploadFileToAmazon :: AppConf -> IO Bool
 uploadFileToAmazon appConf = do
-  withPostgreSQL (dbConfig appConf) $ \conn -> ioRunDB conn $ do
+  withPostgreSQL (dbConfig appConf) $ \conn' -> mkNexus conn' >>= \conn -> ioRunDB conn $ do
     mfile <- dbQuery $ GetFileThatShouldBeMovedToAmazon
     case mfile of
       Just file -> do
@@ -123,7 +123,8 @@ runKontrakcjaServer = Log.withLogger $ do
      then return ()
      else createDirectoryIfMissing True $ docstore appConf
 
-  withPostgreSQL (dbConfig appConf) $ \conn -> do
+  withPostgreSQL (dbConfig appConf) $ \conn' -> do
+    conn <- mkNexus conn'                                     
     res <- ioRunDB conn $ tryDB $ performDBChecks Log.server kontraTables kontraMigrations
     case res of
       Left (e::E.SomeException) -> do
@@ -149,8 +150,6 @@ runKontrakcjaServer = Log.withLogger $ do
                   -- start the http server
                   E.bracket
                            (do
-                              D.populateDBWithDocumentsIfEmpty conn
-
                               let (iface,port) = httpBindAddress appConf
                               listensocket <- listenOn (htonl iface) (fromIntegral port)
                               let (routes,overlaps) = compile staticRoutes

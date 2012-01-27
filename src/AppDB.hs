@@ -9,10 +9,8 @@ import DB.Model
 import API.Service.Tables
 import Company.Tables
 import CompanyAccounts.Tables
-#ifdef DOCUMENTS_IN_POSTGRES
 import Doc.Tables
 import Doc.Migrations
-#endif
 import User.Migrations
 import User.Tables
 import Stats.Tables
@@ -31,9 +29,8 @@ kontraMigrations = [
   , removeSystemServer
   , addUserCustomFooter
   , makeUserStatsRepeatableByChangingPK
-#ifdef DOCUMENTS_IN_POSTGRES
   , addNameColumnInSignatoryAttachments
-#endif
+  , addCSVUploadDataFromDocumentToSignatoryLink
   ] ++ mailerMigrations
 
 kontraTables :: [Table]
@@ -49,11 +46,9 @@ kontraTables = [
   , tableUserStatEvents
   , tableSignStatEvents
   , tableFiles
-#ifdef DOCUMENTS_IN_POSTGRES
   , tableDocuments
   , tableSignatoryLinks
   , tableAuthorAttachments
   , tableSignatoryAttachments
-#endif
   , tableEvidenceLog
   ] ++ mailerTables

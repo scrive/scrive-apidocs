@@ -25,8 +25,8 @@ import AppConf
 import ActionScheduler
 import ActionSchedulerState
 import DB.Classes
-import Doc.Transitory
-import Doc.DocStateData
+import Doc.Model
+import Doc.DocStateData hiding (MailsDeliveryStatus(..))
 import KontraLink
 import Mails.MailsConfig
 import Mails.MailsData
@@ -40,8 +40,8 @@ import Templates.Trans
 import User.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
+import qualified Doc.DocStateData as D
 import qualified Log
-import qualified Mails.MailsUtil as Mail
 
 processEvents :: ActionScheduler ()
 processEvents = runDBQuery GetUnreadEvents >>= mapM_ processEvent
@@ -50,7 +50,7 @@ processEvents = runDBQuery GetUnreadEvents >>= mapM_ processEvent
       markEventAsRead eid  
       case maybeRead mi of
         Just (Invitation docid signlinkid) -> do
-          mdoc <- doc_query $ GetDocumentByDocumentID docid
+          mdoc <- runDBQuery $ GetDocumentByDocumentID docid
           case mdoc of
             Nothing -> do
               Log.debug $ "No document with id = " ++ show docid
@@ -95,24 +95,24 @@ handleDeliveredInvitation mc doc signlinkid = do
   case getSignatoryLinkFromDocumentByID doc signlinkid of
     Just signlink -> do
       -- send it only if email was reported deferred earlier
-      when (invitationdeliverystatus signlink == Mail.Deferred) $ do
+      when (invitationdeliverystatus signlink == D.Deferred) $ do
         mail <- mailDeliveredInvitation doc signlink
         scheduleEmailSendout mc $ mail {
           to = [getMailAddress $ fromJust $ getAuthorSigLink doc]
         }
     Nothing -> return ()
-  _ <- doc_update $ SetInvitationDeliveryStatus (documentid doc) signlinkid Mail.Delivered
+  _ <- runDBUpdate $ SetInvitationDeliveryStatus (documentid doc) signlinkid D.Delivered
   return ()
 
 handleOpenedInvitation :: DBMonad m => DocumentID -> SignatoryLinkID -> m ()
 handleOpenedInvitation docid signlinkid = do
   now <- getMinutesTime
-  _ <- doc_update $ MarkInvitationRead docid signlinkid now
+  _ <- runDBUpdate $ MarkInvitationRead docid signlinkid now
   return ()
 
 handleDeferredInvitation :: (DBMonad m, TemplatesMonad m) => (String, MailsConfig) -> DocumentID -> SignatoryLinkID -> m ()
 handleDeferredInvitation (hostpart, mc) docid signlinkid = do
-  mdoc <- doc_update $ SetInvitationDeliveryStatus docid signlinkid Mail.Deferred
+  mdoc <- runDBUpdate $ SetInvitationDeliveryStatus docid signlinkid D.Deferred
   case mdoc of
     Right doc -> do
       mail <- mailDeferredInvitation hostpart doc
@@ -125,7 +125,7 @@ handleUndeliveredInvitation :: (DBMonad m, TemplatesMonad m) => (String, MailsCo
 handleUndeliveredInvitation (hostpart, mc) doc signlinkid = do
   case getSignatoryLinkFromDocumentByID doc signlinkid of
     Just signlink -> do
-      _ <- doc_update $ SetInvitationDeliveryStatus (documentid doc) signlinkid Mail.Undelivered
+      _ <- runDBUpdate $ SetInvitationDeliveryStatus (documentid doc) signlinkid D.Undelivered
       mail <- mailUndeliveredInvitation hostpart doc signlink
       scheduleEmailSendout mc $ mail {
         to = [getMailAddress $ fromJust $ getAuthorSigLink doc]

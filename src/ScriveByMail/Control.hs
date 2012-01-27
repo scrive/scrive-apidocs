@@ -31,7 +31,7 @@ import User.Model
 import DB.Classes
 import Company.Model
 import Doc.DocUtils
-import Doc.Transitory
+import Doc.Model
 import Data.Either
 import qualified Doc.DocControl as DocControl
 import qualified Log (scrivebymail, scrivebymailfailure)
@@ -146,7 +146,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   
   let userDetails = signatoryDetailsFromUser user mcompany
 
-  edoc <- doc_update $ NewDocument user mcompany (BS.fromString title) doctype ctxtime
+  edoc <- runDBUpdate $ NewDocument user mcompany (BS.fromString title) doctype ctxtime
   
   when (isLeft edoc) $ do
     let Left msg = edoc
@@ -161,10 +161,10 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   let Right doc = edoc
       
   _ <- DocControl.handleDocumentUploadNoLogin (documentid doc) pdfBinary (BS.fromString title)
-  _ <- doc_update $ SetDocumentAdvancedFunctionality (documentid doc) ctxtime
-  _ <- doc_update $ SetEmailIdentification (documentid doc) ctxtime
+  _ <- runDBUpdate $ SetDocumentAdvancedFunctionality (documentid doc) ctxtime
+  _ <- runDBUpdate $ SetEmailIdentification (documentid doc) ctxtime
   
-  errs <- lefts <$> (sequence $ [doc_update $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) ctxtime])
+  errs <- lefts <$> (sequence $ [runDBUpdate $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) ctxtime])
           
   when ([] /= errs) $ do
     Log.scrivebymail $ "Could not set up document: " ++ (intercalate "; " errs)
@@ -174,7 +174,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
     
     mzero
     
-  edoc2 <- doc_update $ PreparationToPending (documentid doc)
+  edoc2 <- runDBUpdate $ PreparationToPending (documentid doc)
            (MailAPIActor ctxtime (userid user) (BS.toString $ getEmail user))
   
   when (isLeft edoc2) $ do
@@ -216,7 +216,7 @@ markDocumentAuthorReadAndSeen doc@Document{documentid} = do
   let Just sl@SignatoryLink{signatorylinkid, signatorymagichash, maybesignatory} =
         getAuthorSigLink doc
   time <- ctxtime <$> getContext
-  _ <- doc_update $ MarkInvitationRead documentid signatorylinkid time
-  _ <- doc_update $ MarkDocumentSeen documentid signatorylinkid signatorymagichash 
+  _ <- runDBUpdate $ MarkInvitationRead documentid signatorylinkid time
+  _ <- runDBUpdate $ MarkDocumentSeen documentid signatorylinkid signatorymagichash 
        (MailAPIActor time (fromJust maybesignatory) (BS.toString $ getEmail sl))
   return ()

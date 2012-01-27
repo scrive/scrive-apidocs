@@ -32,7 +32,7 @@ import Control.Applicative
 import Control.Monad.IO.Class
 import Data.ByteString.UTF8 (toString)
 import Data.Maybe
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import DB.Classes
 import Misc
 import User.UserView
@@ -147,7 +147,7 @@ allUsersTable users =
         fieldFL "users" $ map mkUserInfoView $ users
         field "adminlink" $ show $ LinkAdminOnly
 
-servicesAdminPage :: TemplatesMonad m => Connection -> [Service] -> m String
+servicesAdminPage :: TemplatesMonad m => Nexus -> [Service] -> m String
 servicesAdminPage conn services = do
     renderTemplateFM "servicesAdmin" $ do
         field "adminlink" $ show $ LinkAdminOnly

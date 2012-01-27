@@ -32,7 +32,7 @@ import qualified Data.ByteString.UTF8 as BS
 import Data.Either
 import Doc.DocUtils
 import ScriveByMail.Control
-import Doc.Transitory
+import Doc.Model
 import qualified Codec.Text.IConv as IConv
 import InspectXMLInstances ()
 import Data.String.Utils
@@ -246,7 +246,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
   let doctype = dcrType dcr
       title = dcrTitle dcr
 
-  edoc <- doc_update $ NewDocument user mcompany (BS.fromString title) doctype ctxtime
+  edoc <- runDBUpdate $ NewDocument user mcompany (BS.fromString title) doctype ctxtime
 
   when (isLeft edoc) $ do
     let Left msg = edoc
@@ -258,21 +258,21 @@ jsonMailAPI mailapi username user pdfs plains content = do
   let Right doc = edoc
 
   _ <- DocControl.handleDocumentUploadNoLogin (documentid doc) pdfBinary (BS.fromString title)
-  _ <- doc_update $ SetDocumentAdvancedFunctionality (documentid doc) ctxtime
-  _ <- doc_update $ SetEmailIdentification (documentid doc) ctxtime
+  _ <- runDBUpdate $ SetDocumentAdvancedFunctionality (documentid doc) ctxtime
+  _ <- runDBUpdate $ SetEmailIdentification (documentid doc) ctxtime
 
   let signatories = for (dcrInvolved dcr) $ \InvolvedRequest{irRole,irData} ->
         (SignatoryDetails{signatorysignorder = SignOrder 0, signatoryfields = irData},
          irRole)
 
-  errs <- lefts <$> (sequence $ [doc_update $ ResetSignatoryDetails (documentid doc) signatories ctxtime])
+  errs <- lefts <$> (sequence $ [runDBUpdate $ ResetSignatoryDetails (documentid doc) signatories ctxtime])
 
   when ([] /= errs) $ do
     Log.jsonMailAPI $ "Could not set up document: " ++ (intercalate "; " errs)
 
     mzero
 
-  edoc2 <- doc_update $ PreparationToPending (documentid doc)
+  edoc2 <- runDBUpdate $ PreparationToPending (documentid doc)
            (MailAPIActor ctxtime (userid user) (BS.toString $ getEmail user))
   when (isLeft edoc2) $ do
     Log.jsonMailAPI $ "Could not got to pending document: " ++ (intercalate "; " errs)

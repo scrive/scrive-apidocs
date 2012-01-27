@@ -3,7 +3,7 @@ module LoginTest (loginTests, assertLoginEventRecordedFor) where
 import Control.Applicative
 import Control.Monad.Reader
 import Data.List
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import Happstack.Server
 import Test.Framework
 import Test.Framework.Providers.HUnit
@@ -25,7 +25,7 @@ import User.Model
 import User.UserControl
 import Misc
 
-loginTests :: Connection -> Test
+loginTests :: Nexus -> Test
 loginTests conn = testGroup "Login" [
       testCase "can login with valid user and password" $ testSuccessfulLogin conn
     , testCase "can't login with invalid user" $ testCantLoginWithInvalidUser conn
@@ -35,7 +35,7 @@ loginTests conn = testGroup "Login" [
     , testCase "when you're logged in after resetting a password a user login stat event is recorded" $ assertResettingPasswordRecordsALoginEvent conn
     ]
 
-testSuccessfulLogin :: Connection -> Assertion
+testSuccessfulLogin :: Nexus -> Assertion
 testSuccessfulLogin conn = withTestEnvironment conn $ do
     uid <- createTestUser
     globaltemplates <- readGlobalTemplates
@@ -48,7 +48,7 @@ testSuccessfulLogin conn = withTestEnvironment conn $ do
     assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx') == Just uid
     assertBool "No flash messages were added" $ null $ ctxflashmessages ctx'
 
-testCantLoginWithInvalidUser :: Connection -> Assertion
+testCantLoginWithInvalidUser :: Nexus -> Assertion
 testCantLoginWithInvalidUser conn = withTestEnvironment conn $ do
     _ <- createTestUser
     globaltemplates <- readGlobalTemplates
@@ -58,7 +58,7 @@ testCantLoginWithInvalidUser conn = withTestEnvironment conn $ do
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
     loginFailureChecks res ctx'
 
-testCantLoginWithInvalidPassword :: Connection -> Assertion
+testCantLoginWithInvalidPassword :: Nexus -> Assertion
 testCantLoginWithInvalidPassword conn = withTestEnvironment conn $ do
     _ <- createTestUser
     globaltemplates <- readGlobalTemplates
@@ -68,7 +68,7 @@ testCantLoginWithInvalidPassword conn = withTestEnvironment conn $ do
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
     loginFailureChecks res ctx'
 
-testSuccessfulLoginSavesAStatEvent :: Connection -> Assertion
+testSuccessfulLoginSavesAStatEvent :: Nexus -> Assertion
 testSuccessfulLoginSavesAStatEvent conn = withTestEnvironment conn $ do
   uid <- createTestUser
   globaltemplates <- readGlobalTemplates
@@ -79,18 +79,18 @@ testSuccessfulLoginSavesAStatEvent conn = withTestEnvironment conn $ do
   assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx') == Just uid
   assertLoginEventRecordedFor uid
 
-assertResettingPasswordLogsIn :: Connection -> Assertion
+assertResettingPasswordLogsIn :: Nexus -> Assertion
 assertResettingPasswordLogsIn conn = withTestEnvironment conn $ do
   (user, _res, ctx) <- createUserAndResetPassword conn
   assertEqual "User was logged into context" (Just $ userid user) (userid <$> ctxmaybeuser ctx)
 
-assertResettingPasswordRecordsALoginEvent :: Connection -> Assertion
+assertResettingPasswordRecordsALoginEvent :: Nexus -> Assertion
 assertResettingPasswordRecordsALoginEvent conn = withTestEnvironment conn $ do
   (user, _res, ctx) <- createUserAndResetPassword conn
   assertEqual "User was logged into context" (Just $ userid user) (userid <$> ctxmaybeuser ctx)
   assertLoginEventRecordedFor (userid user)
 
-createUserAndResetPassword :: Connection -> DB (User, Response, Context)
+createUserAndResetPassword :: Nexus -> DB (User, Response, Context)
 createUserAndResetPassword conn = do
   pwd <- createPassword $ BS.pack "admin"
   Just user <- dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") (Just pwd) False Nothing Nothing (mkLocaleFromRegion defaultValue)

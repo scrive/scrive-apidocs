@@ -11,15 +11,11 @@ import Data.Word
 import System.Random (newStdGen)
 import Test.QuickCheck
 import Happstack.Server
-#ifndef DOCUMENTS_IN_POSTGRES
-import Happstack.State
-#else
 import Doc.DocUtils
-#endif
 import Test.QuickCheck.Gen
 import Control.Monad.Trans
 import Data.Maybe
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import qualified Test.HUnit as T
@@ -32,8 +28,7 @@ import Company.Model
 import FlashMessage
 import qualified Log
 import StateHelper
-import Mails.MailsUtil
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStateData
 import Doc.DocStateCommon
 import KontraMonad
@@ -190,6 +185,7 @@ instance Arbitrary SignatoryLink where
                            , signatoryroles             = []
                            , signatorylinkdeleted       = False
                            , signatorylinkreallydeleted = False
+                           , signatorylinkcsvupload     = Nothing
                            }
 
 instance Arbitrary SignatureProvider where
@@ -346,17 +342,6 @@ instance Arbitrary SignatoryField where
                             , sfPlacements = p
                             }
 
-instance Arbitrary FieldDefinition where
-   arbitrary = do
-    name <- arbitrary
-    value <- arbitrary
-    filledByAuthor <- arbitrary
-    return $ FieldDefinition { fieldlabel = name,
-                               fieldvalue = value,
-                               fieldplacements = [],
-                               fieldfilledbyauthor = filledByAuthor
-                             }
-
 instance Arbitrary SignatoryRole where
   arbitrary = return SignatoryPartner
 
@@ -428,6 +413,7 @@ signatoryLinkExample1 = SignatoryLink { signatorylinkid = SignatoryLinkID 0
                                                                                                 ]
 
                                                                             }
+                                      , signatorylinkcsvupload = Nothing
                                       }
 
 blankUser :: User
@@ -490,7 +476,7 @@ blankDocument =
 
 -}
 
-testThat :: String -> Connection -> DB () -> Test
+testThat :: String -> Nexus -> DB () -> Test
 testThat s conn a = testCase s (withTestEnvironment conn a)
 
 addNewCompany ::  DB Company
@@ -610,8 +596,8 @@ addRandomDocument rda = do
   file <- addNewRandomFile
   now <- liftIO getMinutesTime
   document <- worker file now
-  docid <- doc_update' $ StoreDocumentForTesting document
-  mdoc <- doc_query' $ GetDocumentByDocumentID docid
+  docid <- dbUpdate $ StoreDocumentForTesting document
+  mdoc <- dbQuery $ GetDocumentByDocumentID docid
   case mdoc of
     Nothing -> do
               assertFailure "Could not store document."
@@ -636,7 +622,7 @@ addRandomDocument rda = do
 
       (signinfo, seeninfo) <- rand 10 arbitrary
       asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
-      asl <- doc_update' $ SignLinkFromDetailsForTest asd roles
+      asl <- dbUpdate $ SignLinkFromDetailsForTest asd roles
       let asl' = asl { maybeseeninfo = seeninfo
                      , maybesigninfo = signinfo
                      }
@@ -708,13 +694,8 @@ validTest = return . Just
 class RandomQuery a b where
   randomQuery :: a -> DB b
 
-#ifndef DOCUMENTS_IN_POSTGRES
-instance (QueryEvent ev res) => RandomQuery ev res where
-  randomQuery = query
-#else
 instance (DBQuery ev res) => RandomQuery ev res where
   randomQuery = dbQuery
-#endif
 
 instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
   randomQuery f = do
@@ -725,13 +706,8 @@ instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
 class RandomUpdate a b where
   randomUpdate :: a -> DB b
 
-#ifndef DOCUMENTS_IN_POSTGRES
-instance (UpdateEvent ev res) => RandomUpdate ev res where
-  randomUpdate = update
-#else
 instance (DBUpdate ev res) => RandomUpdate ev res where
   randomUpdate = dbUpdate
-#endif
 
 instance (Arbitrary a, RandomUpdate c b) => RandomUpdate (a -> c) b where
   randomUpdate f = do

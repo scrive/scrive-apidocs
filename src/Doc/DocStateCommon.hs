@@ -1,44 +1,23 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# LANGUAGE CPP #-}
 
 module Doc.DocStateCommon
 where
 
---import API.Service.Model
 import Company.Model
---import Control.Monad
---import Control.Monad.Reader (ask)
---import Database.HDBC
---import Data.Maybe
---import Data.Word
---import DB.Classes
 import DB.Types
---import DB.Utils
+import Data.Maybe
+import Doc.DocInfo
 import Doc.DocProcess
 import Doc.DocStateData
---import Doc.DocStateUtils
 import Doc.DocUtils
---import Happstack.Data.IxSet as IxSet hiding (null)
---import Happstack.State
-import Mails.MailsUtil
+import InputValidation
 import MinutesTime
 import Misc
 import User.Model
-import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.UTF8 as BS
---import Util.SignatoryLinkUtils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
-import InputValidation
---import Control.Applicative
-import Doc.DocInfo
---import Data.List
---import File.FileID
---import qualified Log
---import qualified Doc.Model as D
---import qualified Doc.Tables as D
-import Data.Maybe
 import Util.SignatoryLinkUtils
+import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.UTF8 as BS
 
                   
 {- |
@@ -69,6 +48,7 @@ signLinkFromDetails' details roles linkid magichash =
                 , signatoryroles = roles
                 , signatorylinkdeleted = False
                 , signatorylinkreallydeleted = False
+                , signatorylinkcsvupload = Nothing
                 }
 
 {- |
@@ -94,7 +74,6 @@ blankDocument =
           , documentsealedfiles          = []
           -- , documenttrustweaverreference = Nothing
           , documentallowedidtypes       = []
-          , documentcsvupload            = Nothing
           , documentcancelationreason    = Nothing
           , documentinvitetime           = Nothing
           , documentsharing              = Private
@@ -184,16 +163,16 @@ checkSignDocument doc slid mh = catMaybes $
   , trueOrMessage (validSigLink slid mh (Just doc)) "Magic Hash does not match"
   ]
 
-checkResetSignatoryData :: Document -> [(SignatoryDetails, [SignatoryRole])] -> [String]
+checkResetSignatoryData :: Document -> [(SignatoryDetails, [SignatoryRole], Maybe CSVUpload)] -> [String]
 checkResetSignatoryData doc sigs = 
-  let authors    = [ r | (_, r) <- sigs, SignatoryAuthor `elem` r]
-      nonauthors = [ r | (_, r) <- sigs, SignatoryAuthor `notElem` r]
+  let authors    = [ r | (_, r, _) <- sigs, SignatoryAuthor `elem` r]
+      nonauthors = [ r | (_, r, _) <- sigs, SignatoryAuthor `notElem` r]
       isbasic = documentfunctionality doc == BasicFunctionality
   in catMaybes $
       [ trueOrMessage (documentstatus doc == Preparation) $ "Document is not in preparation, is in " ++ show (documentstatus doc)
       , trueOrMessage (length authors == 1) $ "Should have exactly one author, had " ++ show (length authors)
       , trueOrMessage (isbasic =>> (length nonauthors <= 1)) $ "Should be at most one signatory since it's basic functionality"
-      , trueOrMessage (isbasic =>> none (hasFieldsAndPlacements . fst) sigs) "The signatories should have no custom fields or placements" 
+      , trueOrMessage (isbasic =>> none (hasFieldsAndPlacements . (\(a,_,_) -> a)) sigs) "The signatories should have no custom fields or placements" 
       ]
 
 {- |

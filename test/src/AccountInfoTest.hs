@@ -2,7 +2,7 @@ module AccountInfoTest (accountInfoTests) where
 
 import Control.Applicative
 import Control.Monad.State
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import Data.Maybe
 import Happstack.Server
 import Happstack.State (query)
@@ -31,7 +31,7 @@ import User.Utils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 
-accountInfoTests :: Connection -> Test
+accountInfoTests :: Nexus -> Test
 accountInfoTests conn = testGroup "AccountInfo" [
       testCase "lets private account upgrade to company account" $ testPrivateToCompanyUpgrade conn
     , testCase "company upgrade requires a company name" $ testCompanyUpgradeRequiresCompanyName conn
@@ -47,7 +47,7 @@ accountInfoTests conn = testGroup "AccountInfo" [
     , testCase "need the password to be entered to complete the email change" $ testEmailChangeFailsIfNoPassword conn
     ]
 
-testPrivateToCompanyUpgrade :: Connection -> Assertion
+testPrivateToCompanyUpgrade :: Nexus -> Assertion
 testPrivateToCompanyUpgrade conn = withTestEnvironment conn $ do
   Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   let upgradeinfo = UpgradeInfo "Test Corp"
@@ -59,7 +59,7 @@ testPrivateToCompanyUpgrade conn = withTestEnvironment conn $ do
 
   assertCompanyUpgradeSuccessful (userid user) upgradeinfo (res1, ctx1)
 
-testCompanyUpgradeRequiresCompanyName :: Connection -> Assertion
+testCompanyUpgradeRequiresCompanyName :: Nexus -> Assertion
 testCompanyUpgradeRequiresCompanyName conn = withTestEnvironment conn $ do
   Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   let upgradeinfo = UpgradeInfo ""
@@ -74,7 +74,7 @@ testCompanyUpgradeRequiresCompanyName conn = withTestEnvironment conn $ do
 data UpgradeInfo = UpgradeInfo String String String String String
 
 upgradeCompanyForUser :: (MonadIO m, Functor m) =>
-                               Connection
+                               Nexus
                             -> User
                             -> UpgradeInfo
                             -> m (Response, Context)
@@ -123,7 +123,7 @@ assertCompanyUpgradeFailed uid (res, ctx) = do
   assertBool "User isn't a company admin" (not $ useriscompanyadmin user)
   assertEqual "There is no company" Nothing mcompany
 
-testChangeEmailAddress :: Connection -> Assertion
+testChangeEmailAddress :: Nexus -> Assertion
 testChangeEmailAddress conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
@@ -164,7 +164,7 @@ testChangeEmailAddress conn = withTestEnvironment conn $ do
   Just uuuser <- dbQuery $ GetUserByID (userid user)
   assertEqual "Email has changed" (BS.fromString "jim@bob.com") (getEmail uuuser)
 
-testAddressesMustMatchToRequestEmailChange :: Connection -> Assertion
+testAddressesMustMatchToRequestEmailChange :: Nexus -> Assertion
 testAddressesMustMatchToRequestEmailChange conn = withTestEnvironment conn $ do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   globaltemplates <- readGlobalTemplates
@@ -181,7 +181,7 @@ testAddressesMustMatchToRequestEmailChange conn = withTestEnvironment conn $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx1)
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx1) `isFlashOfType` OperationFailed
 
-testNeedTwoAddressesToRequestEmailChange :: Connection -> Assertion
+testNeedTwoAddressesToRequestEmailChange :: Nexus -> Assertion
 testNeedTwoAddressesToRequestEmailChange conn = withTestEnvironment conn $ do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   globaltemplates <- readGlobalTemplates
@@ -198,7 +198,7 @@ testNeedTwoAddressesToRequestEmailChange conn = withTestEnvironment conn $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx1)
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx1) `isFlashOfType` OperationFailed
 
-testNeedEmailToBeUniqueToRequestChange :: Connection -> Assertion
+testNeedEmailToBeUniqueToRequestChange :: Nexus -> Assertion
 testNeedEmailToBeUniqueToRequestChange conn = withTestEnvironment conn $ do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   _ <- addNewUser "Jim" "Bob" "jim@bob.com"
@@ -218,7 +218,7 @@ testNeedEmailToBeUniqueToRequestChange conn = withTestEnvironment conn $ do
   actions <- getRequestChangeEmailActions
   assertEqual "No request email action was made" 0 (length $ actions)
 
-testEmailChangeFailsIfActionIDIsWrong :: Connection -> Assertion
+testEmailChangeFailsIfActionIDIsWrong :: Nexus -> Assertion
 testEmailChangeFailsIfActionIDIsWrong conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
@@ -236,7 +236,7 @@ testEmailChangeFailsIfActionIDIsWrong conn = withTestEnvironment conn $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
-testEmailChangeFailsIfMagicHashIsWrong :: Connection -> Assertion
+testEmailChangeFailsIfMagicHashIsWrong :: Nexus -> Assertion
 testEmailChangeFailsIfMagicHashIsWrong conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
@@ -253,7 +253,7 @@ testEmailChangeFailsIfMagicHashIsWrong conn = withTestEnvironment conn $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
-testEmailChangeIfForAnotherUser :: Connection -> Assertion
+testEmailChangeIfForAnotherUser :: Nexus -> Assertion
 testEmailChangeIfForAnotherUser conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
@@ -272,7 +272,7 @@ testEmailChangeIfForAnotherUser conn = withTestEnvironment conn $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
-testEmailChangeFailsIfEmailInUse:: Connection -> Assertion
+testEmailChangeFailsIfEmailInUse:: Nexus -> Assertion
 testEmailChangeFailsIfEmailInUse conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
@@ -291,7 +291,7 @@ testEmailChangeFailsIfEmailInUse conn = withTestEnvironment conn $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
-testEmailChangeFailsIfPasswordWrong :: Connection -> Assertion
+testEmailChangeFailsIfPasswordWrong :: Nexus -> Assertion
 testEmailChangeFailsIfPasswordWrong conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
@@ -310,7 +310,7 @@ testEmailChangeFailsIfPasswordWrong conn = withTestEnvironment conn $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
-testEmailChangeFailsIfNoPassword :: Connection -> Assertion
+testEmailChangeFailsIfNoPassword :: Nexus -> Assertion
 testEmailChangeFailsIfNoPassword conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- liftIO $ createPassword (BS.fromString "abc123")

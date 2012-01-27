@@ -11,7 +11,7 @@ import DB.Types
 import DBError
 import Doc.CSVUtils
 import Doc.DocSeal
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocStateUpdate
@@ -94,14 +94,14 @@ postDocumentChangeAction document@Document  { documentstatus
       (isSignatory $ getAuthorSigLink document) = do
           Log.docevent $ "All have signed but author; Pending -> AwaitingAuthor: " ++ show documentid
           ctx <- getContext
-          d <- guardRightM $ doc_update $ PendingToAwaitingAuthor documentid (ctxtime ctx)
+          d <- guardRightM $ runDBUpdate $ PendingToAwaitingAuthor documentid (ctxtime ctx)
           postDocumentChangeAction d olddocument msignalinkid
     | (documentstatus == Pending ||
        documentstatus == AwaitingAuthor) &&
       (all (isSignatory =>>^ hasSigned) $ documentsignatorylinks document) = do
           Log.docevent $ "All have signed; " ++ show documentstatus ++ " -> Closed: " ++ show documentid
           ctx <- getContext
-          d <- guardRightM $ doc_update $ CloseDocument documentid (SystemActor (ctxtime ctx))
+          d <- guardRightM $ runDBUpdate $ CloseDocument documentid (SystemActor (ctxtime ctx))
           postDocumentChangeAction d olddocument msignalinkid
     -- No status change ;
     | documentstatus == oldstatus = do
@@ -171,7 +171,7 @@ postDocumentChangeAction document@Document  { documentstatus
           case enewdoc of
             Right newdoc -> runTemplatesT (ctxlocale, ctxglobaltemplates) $ sendClosedEmails newctx newdoc
             Left errmsg -> do
-              _ <- ioRunDB conn $ doc_update' $ ErrorDocument documentid errmsg
+              _ <- ioRunDB conn $ dbUpdate $ ErrorDocument documentid errmsg
                    (SystemActor (ctxtime ctx))
               Log.server $ "Sending seal error emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
               runTemplatesT (ctxlocale, ctxglobaltemplates) $ sendDocumentErrorEmail newctx document author
@@ -251,7 +251,7 @@ saveDocumentForSignatories doc@Document{documentsignatorylinks} =
       case muser of
         Nothing -> return $ Right doc'
         Just user -> do
-          udoc <- doc_update $ SaveDocumentForUser documentid user signatorylinkid
+          udoc <- runDBUpdate $ SaveDocumentForUser documentid user signatorylinkid
           return udoc
 
 -- EMAILS
@@ -359,7 +359,7 @@ sendInvitationEmail1 ctx document signatorylink = do
       , mailInfo = Invitation documentid signatorylinkid
       , from = documentservice document
   }
-  ioRunDB (ctxdbconn ctx) $ doc_update' $ AddInvitationEvidence documentid signatorylinkid (SystemActor (ctxtime ctx))
+  ioRunDB (ctxdbconn ctx) $ dbUpdate $ AddInvitationEvidence documentid signatorylinkid (SystemActor (ctxtime ctx))
 
 {- |
     Send a reminder email
@@ -505,7 +505,7 @@ signDocument documentid
   case edoc of
     Right (Right (doc, olddoc)) -> do
       postDocumentChangeAction doc olddoc (Just signatorylinkid)
-      udoc <- guardJustM $ doc_query $ GetDocumentByDocumentID documentid
+      udoc <- guardJustM $ runDBQuery $ GetDocumentByDocumentID documentid
       handleAfterSigning udoc signatorylinkid
     Right (Left (DBActionNotAvailable message)) -> do
       addFlash (OperationFailed, message)
@@ -523,7 +523,7 @@ handleMismatch doc sid msg sfn sln spn = do
         ctx <- getContext
         let Just sl = getSigLinkFor doc sid        
         Log.eleg $ "Information from eleg did not match information stored for signatory in document." ++ show msg
-        Right newdoc <- doc_update $ CancelDocument (documentid doc) (ELegDataMismatch msg sid sfn sln spn) 
+        Right newdoc <- runDBUpdate $ CancelDocument (documentid doc) (ELegDataMismatch msg sid sfn sln spn) 
                         (SignatoryActor (ctxtime ctx) 
                          (ctxipnumber ctx) 
                          (maybesignatory sl) 
@@ -549,7 +549,7 @@ handleAfterSigning document@Document{documentid} signatorylinkid = do
       muser <- createUserBySigning fullname email (documentid, signatorylinkid)
       case muser of
         Just (user, actionid, magichash) -> do
-          _ <- doc_update $ SaveDocumentForUser documentid user signatorylinkid
+          _ <- runDBUpdate $ SaveDocumentForUser documentid user signatorylinkid
           Log.debug $ "the doc " ++ (show $ documentid) ++ ".isClosed = " ++ (show $ isClosed document)
           Log.debug $ "doc " ++ (show document)
           if isClosed document
@@ -558,7 +558,7 @@ handleAfterSigning document@Document{documentid} signatorylinkid = do
           return ()
         _ -> return ()
     Just user -> do
-     _ <- doc_update $ SaveDocumentForUser documentid user signatorylinkid
+     _ <- runDBUpdate $ SaveDocumentForUser documentid user signatorylinkid
      let userlocale = locale $ usersettings user
      if isClosed document
        then addFlashM $ modalSignedClosedHasAccount userlocale document signatorylink (isJust $ ctxmaybeuser ctx)
@@ -595,7 +595,7 @@ rejectDocument documentid
 
 getDocumentLocale :: DocumentID -> DB (Maybe Locale)
 getDocumentLocale documentid = do
-  mdoc <- doc_query' $ GetDocumentByDocumentID documentid
+  mdoc <- dbQuery $ GetDocumentByDocumentID documentid
   return $ fmap getLocale mdoc --TODO: store lang on doc
 
 {- |
@@ -637,7 +637,7 @@ handleSignShow2 documentid
 
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
   invitedlink <- guardJust $ getSigLinkFor document signatorylinkid
-  _ <- doc_update $ MarkDocumentSeen documentid signatorylinkid magichash 
+  _ <- runDBUpdate $ MarkDocumentSeen documentid signatorylinkid magichash 
        (SignatoryActor ctxtime ctxipnumber (maybesignatory invitedlink) (BS.toString $ getEmail invitedlink) signatorylinkid)
   _ <- runDB $ addSignStatLinkEvent document invitedlink
   let isFlashNeeded = Data.List.null ctxflashmessages
@@ -872,7 +872,7 @@ handleIssueSaveAsTemplate :: Kontrakcja m => Document -> m KontraLink
 handleIssueSaveAsTemplate document = do
   ctx <- getContext
   udoc <- guardRightM $ updateDocument ctx document
-  _ndoc <- guardRightM $ doc_update $ TemplateFromDocument $ documentid udoc
+  _ndoc <- guardRightM $ runDBUpdate $ TemplateFromDocument $ documentid udoc
   addFlashM flashDocumentTemplateSaved
   return $ LinkTemplates
 
@@ -895,27 +895,38 @@ handleIssueChangeToContract document = do
     I feel like this is quite dangerous to do all at once, maybe need a transaction?!
 -}
 splitUpDocument :: Kontrakcja m => Document -> m (Either KontraLink [Document])
-splitUpDocument doc =
-  case (documentcsvupload doc, getCSVCustomFields doc) of
-    (Just _, Left _) -> mzero
-    (Nothing, _) -> return $ Right [doc]
-    (Just csvupload, Right csvcustomfields) ->
+splitUpDocument doc = do
+  let Just csvidx = findIndex (isJust . signatorylinkcsvupload) (documentsignatorylinks doc)
+  case (msum (signatorylinkcsvupload <$> documentsignatorylinks doc), getCSVCustomFields doc) of
+    (Just _, Left msg) -> do
+      Log.debug $ "splitUpDocument: got csvupload, but getCSVCustomFields returned issues: " ++ show msg
+      mzero
+    (Nothing, _) -> do
+      Log.debug $ "splitUpDocument called on document without csvupload, that is ok"
+      return $ Right [doc]
+    (Just csvupload, Right csvcustomfields) -> do
+      Log.debug $ "splitUpDocument called on document with csvupload and we managed to split fields properly"
       case (cleanCSVContents (documentallowedidtypes doc) (length csvcustomfields) $ csvcontents csvupload) of
         (_prob:_, _) -> do
           signlast <- isFieldSet "signlast"
           addFlashM flashMessageInvalidCSV
-          return $ Left $ LinkDesignDoc $ DesignStep2 (documentid doc) (Just (1 + csvsignatoryindex csvupload)) (Just AfterCSVUpload) signlast
+          Log.debug $ "splitUpDocument: going to DesignStep2"
+          return $ Left $ LinkDesignDoc $ DesignStep2 (documentid doc) (Just (1 + csvidx)) (Just AfterCSVUpload) signlast
         ([], CleanCSVData{csvbody}) -> do
-          mdocs <- mapM (createDocFromRow doc (csvsignatoryindex csvupload)) csvbody
+          mdocs <- mapM (createDocFromRow doc (csvidx)) csvbody
           if Data.List.null (lefts mdocs)
-            then return $ Right (rights mdocs)
-            else mzero
+            then do
+              Log.debug $ "splitUpDocument: finishing properly"
+              return $ Right (rights mdocs)
+            else do
+              Log.debug $ "splitUpDocument: createDocFromRow returned some Lefts: " ++ show (lefts mdocs)
+              mzero
   where createDocFromRow :: Kontrakcja m => Document -> Int -> [BS.ByteString] -> m (Either String Document)
         createDocFromRow udoc sigindex xs = do
           now <- ctxtime <$> getContext
           Just author <- ctxmaybeuser <$> getContext
           ip4 <- ctxipnumber <$> getContext
-          doc_update $ DocumentFromSignatoryData (documentid udoc) sigindex (item 0) (item 1) (item 2) (item 3) (item 4) (item 5) (drop 6 xs) 
+          runDBUpdate $ DocumentFromSignatoryData (documentid udoc) sigindex (item 0) (item 1) (item 2) (item 3) (item 4) (item 5) (drop 6 xs) 
             (AuthorActor now
              ip4
              (userid author)
@@ -945,7 +956,8 @@ handleIssueCSVUpload document = do
                                 , csvcontents = contents
                                 , csvsignatoryindex = csvsigindex
                                 }
-      ndoc <- guardRightM $ doc_update $ AttachCSVUpload (documentid udoc) csvupload
+      ndoc <- guardRightM $ runDBUpdate $ AttachCSVUpload (documentid udoc) 
+              (signatorylinkid ((documentsignatorylinks udoc) !! csvsigindex)) csvupload
       return $ LinkDesignDoc $ DesignStep2 (documentid ndoc) (Just $ csvsigindex + 1) (Just AfterCSVUpload) signlast
 
 makeSigAttachment :: BS.ByteString -> BS.ByteString -> BS.ByteString -> SignatoryAttachment
@@ -981,10 +993,10 @@ handleIssueLocaleChangeAfterUpdate doc@Document{documentid} = do
 
   docregion <- getCriticalField (return . maybe (getRegion doc) fst . listToMaybe . reads) "docregion"
 
-  udoc <- guardRightM . doc_update $ SetDocumentLocale documentid (mkLocaleFromRegion docregion) ctxtime
+  udoc <- guardRightM . runDBUpdate $ SetDocumentLocale documentid (mkLocaleFromRegion docregion) ctxtime
 
   when (not . regionelegavailable $ getRegionInfo udoc) $ do
-    _ <- guardRightM . doc_update $ SetEmailIdentification documentid ctxtime
+    _ <- guardRightM . runDBUpdate $ SetEmailIdentification documentid ctxtime
     return ()
 
   signlast <- isFieldSet "signlast"
@@ -1032,7 +1044,7 @@ handleIssueUpdateAttachments doc = withUserPost $ do
                                                          , not r]
                      , not $ fid `elem` existingattachments]
                      ++ (map documentid $ catMaybes mattachments) :: [DocumentID]
-    docsforadd <- liftM catMaybes $ mapM (doc_query . GetDocumentByDocumentID) didsforadd
+    docsforadd <- liftM catMaybes $ mapM (runDBQuery . GetDocumentByDocumentID) didsforadd
     let idsforadd = concat $ map documentfiles docsforadd
 
     ndoc <- guardRightM $ updateDocAuthorAttachments (documentid udoc) idsforadd idsforremoval
@@ -1040,7 +1052,7 @@ handleIssueUpdateAttachments doc = withUserPost $ do
 
 {- |
     Deals with a switch to the document's functionality.
-    This'll also doc_update the user preferences that they would like
+    This'll also runDBUpdate the user preferences that they would like
     to continue with this functionality by default in the future.
 -}
 handleIssueChangeFunctionality :: Kontrakcja m => Document -> m KontraLink
@@ -1310,10 +1322,13 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
   signatoriespersonalnumbers <- getAndConcat "signatorypersonalnumber"
   signatoriescompanynumbers  <- getAndConcat "signatorycompanynumber"
   signatoriesemails          <- map (fromMaybe BS.empty) <$> getOptionalFieldList asValidEmail "signatoryemail"
-  signatoriessignorders      <- map (SignOrder . fromMaybe 1 . fmap (max 1 . fst) . BSC.readInteger) <$> getAndConcat "signatorysignorder" -- a little filtering here, but we want signatories to have sign order > 0
+  signatoriessignorders      <- map (SignOrder . fromMaybe 1 . fmap (max 1 . fst) . BSC.readInteger) <$> 
+                                getAndConcat "signatorysignorder"
+                                -- a little filtering here, but we want signatories to have sign order > 0
   signatoriesroles           <- getAndConcat "signatoryrole"
-  liftIO $ print signatoriesroles
-  liftIO $ print signatoriessignorders
+
+  Log.debug $ "signatoriesroles #" ++ show documentid ++ ": " ++ show signatoriesroles
+  Log.debug $ "signatoriessignorders #" ++ show documentid ++ ": " ++ show signatoriessignorders
 
 
   -- if the post doesn't contain this one, we parse the old way
@@ -1324,6 +1339,10 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
   invitetext <- fmap (fromMaybe defaultInviteMessage) $ getCustomTextField "invitetext"
 
   mcsvsigindex <- getOptionalField asValidNumber "csvsigindex"
+  
+  let moldcsvupload = msum (map signatorylinkcsvupload (documentsignatorylinks document))
+
+  Log.debug $ "updateDocument: " ++ show mcsvsigindex ++ "/" ++ show (csvtitle <$> moldcsvupload) ++ " for #" ++ show documentid
 
   docname <- getCriticalField (return . BS.fromString) "docname"
 
@@ -1342,8 +1361,7 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
   placedsigids   <- getAndConcat "placedsigid"
   placedfieldids <- getAndConcat "placedfieldid"
 
-  Log.debug $ show placedfieldids
-
+  Log.debug $ "placedfieldids #" ++ show documentid ++ ": " ++ show placedfieldids
 
   authorrole <- getFieldWithDefault "" "authorrole"
   authorsignorder <- (SignOrder . fromMaybe 1) <$> getValidateAndHandle asValidNumber asMaybe "authorsignorder"
@@ -1379,17 +1397,29 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
                         signatoriescompanynumbers
                         signatoriesfstnames
                         signatoriessndnames
-  Log.debug $ "signatories " ++ show signatories
+  Log.debug $ "signatories #" ++ show documentid ++ ": " ++ show signatories
                         -- authornote: we need to store the author info somehow!
   let Just authorsiglink = getAuthorSigLink document
-      authordetails = (makeAuthorDetails placements fielddefs $ signatorydetails authorsiglink) { signatorysignorder = authorsignorder }
-  Log.debug $ "set author sign order to " ++ (show authorsignorder)
+      authordetails = (makeAuthorDetails placements fielddefs $ signatorydetails authorsiglink)
+                      { signatorysignorder = authorsignorder
+                      }
+  Log.debug $ "set author sign order to " ++ show authorsignorder ++ ", #" ++ show documentid
 
   let isauthorsig = authorrole == "signatory"
-      signatories2 = zip signatories roles2
+      --signatories' = case mcsvsigindex of
+      --                 Just i -> zipWith (repl i) [0..] signatories
+      --                 Nothing -> signatories
+      --repl i idx sl | idx==i = sl { signatorylinkcsvupload = msum (map (signatorylinkcsvupload) (documentsignatorylinks document)) }
+      signatories2 = zipWith3 bundle [1 :: Int ..] signatories roles2
+      bundle idx sig roles = ( sig, roles
+                             , if Just idx == mcsvsigindex
+                                  then moldcsvupload
+                                  else Nothing
+                             )
+                              
       authordetails2 = (authordetails, if isauthorsig
                                        then [SignatoryPartner, SignatoryAuthor]
-                                       else [SignatoryAuthor])
+                                       else [SignatoryAuthor], Nothing)
       roles2 = map guessRoles signatoriesroles
       guessRoles x | x == BS.fromString "signatory" = [SignatoryPartner]
                    | otherwise = []
@@ -1397,31 +1427,36 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
   -- when (daystosign<1 || daystosign>99) mzero
 
   --let emails = zip signatoriesemails
-  --              (sequence $ map (doc_query . GetUserByEmail . Email) signatoriesemails)
+  --              (sequence $ map (runDBQuery . GetUserByEmail . Email) signatoriesemails)
 
   -- author is gotten above, no?
-  -- Just author <- doc_query $ GetUserByUserID $ unAuthor $ documentauthor documentis
+  -- Just author <- runDBQuery $ GetUserByUserID $ unAuthor $ documentauthor documentis
   when (docfunctionality == AdvancedFunctionality) $ do
-    _ <- doc_update $ SetDocumentAdvancedFunctionality documentid ctxtime
+    _ <- runDBUpdate $ SetDocumentAdvancedFunctionality documentid ctxtime
     return ()
-  _ <- doc_update $ SetDocumentTitle documentid docname ctxtime
-  _ <- doc_update $ SetInviteText documentid invitetext ctxtime
-  when (isJust mcsvsigindex) $ ignore $ doc_update $ SetCSVSigIndex documentid (fromJust mcsvsigindex) ctxtime
+  _ <- runDBUpdate $ SetDocumentTitle documentid docname ctxtime
+  _ <- runDBUpdate $ SetInviteText documentid invitetext ctxtime
+
   case docallowedidtypes of
-       [ELegitimationIdentification] -> ignore $ doc_update $ SetElegitimationIdentification documentid ctxtime
-       [EmailIdentification] -> ignore $ doc_update $ SetEmailIdentification documentid ctxtime
+       [ELegitimationIdentification] -> ignore $ runDBUpdate $ SetElegitimationIdentification documentid ctxtime
+       [EmailIdentification] -> ignore $ runDBUpdate $ SetEmailIdentification documentid ctxtime
        i -> Log.debug $ "I don't know how to set this kind of identificaiton: " ++ show i
-  when (isJust daystosign) $ ignore $ doc_update $ SetDaysToSign documentid (fromJust daystosign) ctxtime
-  aa <- doc_update $ ResetSignatoryDetails documentid (authordetails2 : signatories2) ctxtime
-  Log.debug $ "final document returned " ++ show aa
+  when (isJust daystosign) $ ignore $ runDBUpdate $ SetDaysToSign documentid (fromJust daystosign) ctxtime
+
+  let mnewcsvupload = msum (map (\(_,_,a) -> a) signatories2)
+  when (mnewcsvupload /= moldcsvupload) $ do
+    error $ "updateDocument logic error: lost csv upload data in transit"
+
+  aa <- runDBUpdate $ ResetSignatoryDetails2 documentid (authordetails2 : signatories2) ctxtime
+  Log.debug $ "ResetSignatoryDetails2 #" ++ show documentid ++ " returned " ++ show aa
   return aa
 
 getDocumentsForUserByType :: Kontrakcja m => DocumentType -> User -> m [Document]
 getDocumentsForUserByType doctype user = do
-  mysigdocs <- doc_query $ GetDocumentsBySignatory user
+  mysigdocs <- runDBQuery $ GetDocumentsBySignatory user
   mydocuments <- if useriscompanyadmin user
                    then do
-                     mycompanydocs <- doc_query $ GetDocumentsByCompany user
+                     mycompanydocs <- runDBQuery $ GetDocumentsByCompany user
                      return $ union mysigdocs mycompanydocs
                    else return mysigdocs
 
@@ -1542,7 +1577,7 @@ handleDocumentUploadNoLogin docid content1 filename = do
   ctx <- getContext
   content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) content1
   file <- runDB $ dbUpdate $ NewFile filename content14
-  fileresult <- doc_update (AttachFile docid (fileid file) (ctxtime ctx))
+  fileresult <- runDBUpdate (AttachFile docid (fileid file) (ctxtime ctx))
   case fileresult of
     Left err -> do
       Log.debug $ "Got an error in handleDocumentUpload: " ++ show err
@@ -1611,7 +1646,7 @@ handleRubbishRestore :: Kontrakcja m => m KontraLink
 handleRubbishRestore = do
   Context { ctxmaybeuser = Just user } <- getContext
   docids <- getCriticalFieldList asValidDocID "doccheck"
-  mapM_ (guardRightM . doc_update . RestoreArchivedDocument user) $ map DocumentID docids
+  mapM_ (guardRightM . runDBUpdate . RestoreArchivedDocument user) $ map DocumentID docids
   addFlashM flashMessageRubbishRestoreDone
   return $ LinkRubbishBin
 
@@ -1620,7 +1655,7 @@ handleRubbishReallyDelete = do
   Context { ctxmaybeuser = Just user, ctxtime } <- getContext
   docids <- getCriticalFieldList asValidDocID "doccheck"
   mapM_ (\did -> do
-            doc <- guardRightM $ doc_update $ ReallyDeleteDocument user did
+            doc <- guardRightM $ runDBUpdate $ ReallyDeleteDocument user did
             case getSigLinkFor doc user of
               Just sl -> runDB $ addSignStatPurgeEvent doc sl ctxtime
               _ -> return False) 
@@ -1628,33 +1663,11 @@ handleRubbishReallyDelete = do
   addFlashM flashMessageRubbishHardDeleteDone
   return $ LinkRubbishBin
 
-handleTemplateShare :: Kontrakcja m => m KontraLink
-handleTemplateShare = withUserPost $ do
-    docs <- handleIssueShare
-    case docs of
-      (d:[]) -> addFlashM $ flashMessageSingleTemplateShareDone $ documenttitle d
-      _ -> addFlashM flashMessageMultipleTemplateShareDone
-    return $ LinkTemplates
-
-handleAttachmentShare :: Kontrakcja m => m KontraLink
-handleAttachmentShare = withUserPost $ do
-    docs <- handleIssueShare
-    case docs of
-      (d:[]) -> addFlashM $ flashMessageSingleAttachmentShareDone $ documenttitle d
-      _ -> addFlashM  flashMessageMultipleAttachmentShareDone
-    return $ LinkAttachments
-
-handleIssueShare :: Kontrakcja m => m [Document]
-handleIssueShare = do
-  idnumbers <- getCriticalFieldList asValidDocID "doccheck"
-  let ids = map DocumentID idnumbers
-  guardRightM $ shareDocuments ids
-
 handleAttachmentRename :: Kontrakcja m => DocumentID -> m KontraLink
 handleAttachmentRename docid = withUserPost $ do
   Context {ctxtime} <- getContext
   newname <- getCriticalField (return . BS.fromString) "docname"
-  doc <- guardRightM $ doc_update $ SetDocumentTitle docid newname ctxtime
+  doc <- guardRightM $ runDBUpdate $ SetDocumentTitle docid newname ctxtime
   return $ LinkIssueDoc $ documentid doc
 
 handleBulkContractRemind :: Kontrakcja m => m KontraLink
@@ -1771,17 +1784,16 @@ showPage' fileid pageno = do
 handleCancel :: Kontrakcja m => DocumentID -> m KontraLink
 handleCancel docid = withUserPost $ do
   doc <- guardRightM $ getDocByDocID docid
-  ctx@Context { ctxtime, ctxipnumber, ctxmaybeuser = Just user } <- getContext
+  Context { ctxtime, ctxipnumber, ctxmaybeuser = Just user } <- getContext
   if isPending doc || isAwaitingAuthor doc
     then do
     let Just asl = getAuthorSigLink doc
-    customMessage <- getCustomTextField "customtext"
-    mdoc' <- doc_update $ CancelDocument (documentid doc) ManualCancel 
+    mdoc' <- runDBUpdate $ CancelDocument (documentid doc) ManualCancel 
              (AuthorActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail asl))
     case mdoc' of
-      Right doc' -> do
-        sendCancelMailsForDocument customMessage ctx doc
-        addFlashM $ flashMessageCanceled doc'
+      Right doc' ->  do
+          Log.debug $ "Canceling document #" ++ show docid
+          addFlashM $ flashMessageCanceled doc'
       Left errmsg -> addFlash (OperationFailed, errmsg)
     else addFlashM flashMessageCannotCancel
   return (LinkIssueDoc $ documentid doc)
@@ -1789,10 +1801,10 @@ handleCancel docid = withUserPost $ do
 {-
 handleWithdrawn:: DocumentID -> Kontra KontraLink
 handleWithdrawn docid = do
-  mdoc <- doc_query $ GetDocumentByDocumentID docid
+  mdoc <- runDBQuery $ GetDocumentByDocumentID docid
   case (mdoc) of
     Just doc -> withDocumentAutho doc $ do
-                          doc_update $ WithdrawnDocument $ documentid doc
+                          runDBUpdate $ WithdrawnDocument $ documentid doc
                           return (LinkIssueDoc $ documentid doc)
     Nothing -> return LinkMain
 -}
@@ -1840,7 +1852,7 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
         Right doc -> do
           guard $ isAuthor (doc, user)
           muser <- runDBQuery $ GetUserByEmail (documentservice doc) (Email email)
-          mnewdoc <- doc_update $ ChangeSignatoryEmailWhenUndelivered docid slid muser email 
+          mnewdoc <- runDBUpdate $ ChangeSignatoryEmailWhenUndelivered docid slid muser email 
                      (AuthorActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail user))
           case mnewdoc of
             Right newdoc -> do
@@ -1850,14 +1862,6 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
               return $ LoopBack
             _ -> return LoopBack
     _ -> return LoopBack
-
-sendCancelMailsForDocument :: Kontrakcja m => (Maybe BS.ByteString) -> Context -> Document -> m ()
-sendCancelMailsForDocument customMessage ctx document = do
-  let activated_signatories = filter (isActivatedSignatory $ documentcurrentsignorder document) $ documentsignatorylinks document
-  forM_ activated_signatories $ \slnk -> do
-      m <- mailCancelDocument True customMessage ctx document
-      let mail = m {to = [getMailAddress slnk]}
-      scheduleEmailSendout (ctxmailsconfig ctx) mail
 
 failIfNotAuthor :: Kontrakcja m => Document -> User -> m ()
 failIfNotAuthor document user = guard (isAuthor (document, user))
@@ -1903,15 +1907,13 @@ handleCreateFromTemplate = withUserPost $ do
       document <- queryOrFail $ GetDocumentByDocumentID $ did
       Log.debug $ show "Matching document found"
       let haspermission = maybe False
-                                (\sl -> isSigLinkFor (userid user) sl
-                                        || (isSigLinkFor (usercompany user) sl
-                                              && isShared document))
+                                (\sl -> isSigLinkFor (userid user) sl)
                                 $ getAuthorSigLink document
       enewdoc <- if haspermission
                     then do
                       Log.debug $ show "Valid persmision to create from template"
                       mcompany <- getCompanyForUser user
-                      doc_update $ SignableFromDocumentIDWithUpdatedAuthor user mcompany did ctxtime
+                      runDBUpdate $ SignableFromDocumentIDWithUpdatedAuthor user mcompany did ctxtime
                     else mzero
       case enewdoc of
         Right newdoc -> do
@@ -1967,7 +1969,7 @@ isBroken doc = isClosed doc && (not $ Data.List.null $ documentfiles doc)  && (D
 handleFixDocument :: Kontrakcja m => DocumentID -> m KontraLink
 handleFixDocument docid = onlyAdmin $ do
     ctx <- getContext
-    mdoc <- doc_query $ GetDocumentByDocumentID docid
+    mdoc <- runDBQuery $ GetDocumentByDocumentID docid
     case (mdoc) of
        Nothing -> return LoopBack
        Just doc -> if (isBroken doc)
@@ -1978,7 +1980,7 @@ handleFixDocument docid = onlyAdmin $ do
 
 showDocumentsToFix :: Kontrakcja m => m String
 showDocumentsToFix = onlyAdmin $ do
-    docs <- doc_query $ GetDocuments Nothing
+    docs <- runDBQuery $ GetDocuments Nothing
     documentsToFixView $ filter isBroken docs
 
 handleDeleteSigAttach :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  m KontraLink
@@ -1990,7 +1992,7 @@ handleDeleteSigAttach docid siglinkid = do
   Context{ctxtime, ctxipnumber} <- getContext
   let email = getEmail siglink
   Log.debug $ "delete Sig attachment " ++ (show fid) ++ "  " ++ (BS.toString email)
-  _ <- doc_update $ DeleteSigAttachment docid email fid 
+  _ <- runDBUpdate $ DeleteSigAttachment docid email fid 
        (SignatoryActor ctxtime ctxipnumber (maybesignatory siglink) (BS.toString email) siglinkid)
   return $ LinkSignDoc doc siglink
 
@@ -2012,7 +2014,7 @@ handleSigAttach docid siglinkid = do
   ctx <- getContext
   content <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
   file <- runDB $ dbUpdate $ NewFile attachname content
-  d <- guardRightM $ doc_update $ SaveSigAttachment docid attachname email (fileid file)
+  d <- guardRightM $ runDBUpdate $ SaveSigAttachment docid attachname email (fileid file)
   return $ LinkSignDoc d siglink
 
 jsonDocumentsList ::  Kontrakcja m => m JSValue
@@ -2025,30 +2027,27 @@ jsonDocumentsList = do
         "Offer" -> getDocumentsForUserByType (Signable Offer) user
         "Order" -> getDocumentsForUserByType (Signable Order) user
         "Template" -> do
-            mydocuments <- doc_query $ GetDocumentsByAuthor (userid user)
+            mydocuments <- runDBQuery $ GetDocumentsByAuthor (userid user)
             return $ filter isTemplate mydocuments
         "Attachment" -> do
-            mydocuments <- doc_query $ GetDocumentsByAuthor (userid user)
+            mydocuments <- runDBQuery $ GetDocumentsByAuthor (userid user)
             return $ filter ((==) Attachment . documenttype) mydocuments
         "Rubbish" -> do
             if useriscompanyadmin user
-                then doc_query $ GetDeletedDocumentsByCompany user
-                else doc_query $ GetDeletedDocumentsByUser user
+                then runDBQuery $ GetDeletedDocumentsByCompany user
+                else runDBQuery $ GetDeletedDocumentsByUser user
         "Template|Contract" -> do
             let tfilter doc = (Template Contract == documenttype doc)
-            userdocs <- doc_query $ GetDocumentsByAuthor (userid user)
-            shareddocs <- doc_query $ GetDocumentsSharedInCompany user
-            return $ nub . filter tfilter $ userdocs ++ shareddocs
+            userdocs <- runDBQuery $ GetDocumentsByAuthor (userid user)
+            return $ filter tfilter $ userdocs
         "Template|Offer" -> do
             let tfilter doc = (Template Offer == documenttype doc)
-            userdocs <- doc_query $ GetDocumentsByAuthor (userid user)
-            shareddocs <- doc_query $ GetDocumentsSharedInCompany user
-            return $ nub . filter tfilter $ userdocs ++ shareddocs
+            userdocs <- runDBQuery $ GetDocumentsByAuthor (userid user)
+            return $ filter tfilter $ userdocs
         "Template|Order" -> do
             let tfilter doc = (Template Order == documenttype doc)
-            userdocs <- doc_query $ GetDocumentsByAuthor (userid user)
-            shareddocs <- doc_query $ GetDocumentsSharedInCompany user
-            return $ nub . filter tfilter $ userdocs ++ shareddocs
+            userdocs <- runDBQuery $ GetDocumentsByAuthor (userid user)
+            return $ filter tfilter $ userdocs
         _ -> do
             Log.error "Documents list : No valid document type provided"
             return []
@@ -2077,7 +2076,7 @@ jsonDocumentGetterWithPermissionCheck did = do
     msignatorylink <- readField "signatoryid"
     case (msignatorylink,mmagichashh) of
         (Just slid,Just mh) -> do
-                   mdoc <- doc_query $ GetDocumentByDocumentID did
+                   mdoc <- runDBQuery $ GetDocumentByDocumentID did
                    let msiglink = join $ find ((== slid) . signatorylinkid) <$> (documentsignatorylinks <$> mdoc)
                    if (validSigLink slid mh mdoc)
                      then return (mdoc,msiglink)
@@ -2092,7 +2091,7 @@ jsonDocumentGetterWithPermissionCheck did = do
 handleInvariantViolations :: Kontrakcja m => m Response
 handleInvariantViolations = onlyAdmin $ do
   Context{ ctxtime } <- getContext
-  docs <- doc_query $ GetDocuments Nothing
+  docs <- runDBQuery $ GetDocuments Nothing
   let probs = listInvariantProblems ctxtime docs
       res = case probs of
         [] -> "No problems!"
@@ -2106,11 +2105,10 @@ prepareEmailPreview docid slid = do
     ctx <- getContext
     Log.debug "Making email preview"
     mailtype <- getFieldWithDefault "" "mailtype"
-    mdoc <- doc_query $ GetDocumentByDocumentID docid
+    mdoc <- runDBQuery $ GetDocumentByDocumentID docid
     when (isNothing mdoc) $ (Log.debug "No document found") >> mzero
     let doc = fromJust mdoc
     content <- case mailtype of
-         "cancel" -> mailCancelDocumentContent True Nothing ctx doc
          "remind" -> do
              let msl = find ((== slid) . signatorylinkid) $ documentsignatorylinks doc
              case msl of
@@ -2119,7 +2117,7 @@ prepareEmailPreview docid slid = do
          "reject" -> do
              let msl = find ((== slid) . signatorylinkid) $ documentsignatorylinks doc
              case msl of
-               Just sl -> mailRejectMailContent Nothing ctx  doc sl
+               Just sl -> mailDocumentRejectedContent Nothing ctx  doc sl
                Nothing -> return ""
          _ -> return ""
     return $ JSObject $ toJSObject [("content",JSString $ toJSString $ content)]
@@ -2133,7 +2131,7 @@ handleCSVLandpage c = do
 -- for upsales bug
 handleUpsalesDeleted :: Kontrakcja m => m Response
 handleUpsalesDeleted = onlyAdmin $ do
-  docs <- doc_query $ GetDocuments $ Just $ ServiceID $ BS.fromString "upsales"
+  docs <- runDBQuery $ GetDocuments $ Just $ ServiceID $ BS.fromString "upsales"
   let deleteddocs = [[show $ documentid d, showDateYMD $ documentctime d, BS.toString $ documenttitle d]
                     | d <- docs
                     , isDeletedFor $ getAuthorSigLink d

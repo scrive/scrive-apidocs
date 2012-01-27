@@ -97,18 +97,11 @@ window.Document = Backbone.Model.extend({
     canbecanceled : function() {
         return this.get("canbecanceled");
     },
-    cancel : function(customtext){
+    cancel : function(){
           return new Submit({
               url: "/cancel/" + this.documentid(),
-              method: "POST",
-			  customtext : customtext
+              method: "POST"
           });
-    },
-	cancelMail : function(){
-          	return new Mail({
-						document: this,
-						type: "cancel"
-			});
     },
     sign : function() {
         var fieldnames = [];

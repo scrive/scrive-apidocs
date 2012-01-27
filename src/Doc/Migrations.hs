@@ -17,3 +17,17 @@ addNameColumnInSignatoryAttachments =
       _ <- run conn "ALTER TABLE signatory_attachments ADD COLUMN name TEXT NOT NULL DEFAULT ''" []
       return ()
   }
+
+addCSVUploadDataFromDocumentToSignatoryLink :: Migration
+addCSVUploadDataFromDocumentToSignatoryLink = 
+  Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 1
+  , mgrDo = wrapDB $ \conn -> do
+      putStrLn "Migrating tableSignatoryLinks"
+      _ <- run conn ("ALTER TABLE signatory_links" ++
+                     " ADD COLUMN csv_title TEXT NULL," ++
+                     " ADD COLUMN csv_contents TEXT NULL," ++
+                     " ADD COLUMN csv_signatory_index INTEGER NULL") []
+      return ()
+  }

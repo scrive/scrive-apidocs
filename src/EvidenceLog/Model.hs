@@ -14,6 +14,7 @@ module EvidenceLog.Model
 import Doc.DocStateData
 import User.UserID
 import DB.Derive
+import DB.Nexus
 
 import DB.Classes
 import DB.Utils
@@ -22,7 +23,6 @@ import MinutesTime
 import Database.HDBC
 import Misc
 
-import Database.HDBC.PostgreSQL
 import Version
 
 class Actor a where
@@ -70,7 +70,7 @@ insertEvidenceEvent :: Actor a
                        -> String       -- text
                        -> Maybe DocumentID 
                        -> a
-                       -> Connection
+                       -> Nexus
                        -> IO Bool
 insertEvidenceEvent event text mdid actor conn = do
   st <- prepare conn $ "INSERT INTO evidence_log ("

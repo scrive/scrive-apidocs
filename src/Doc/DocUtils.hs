@@ -14,7 +14,6 @@ module Doc.DocUtils where
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Doc.DocStateData
-import Mails.MailsUtil
 import Templates.Templates
 import User.Model
 import Util.SignatoryLinkUtils
@@ -114,9 +113,6 @@ class MaybeUser u where
 instance MaybeUser SignatoryLink where
   getUserID  = maybesignatory
 
-instance MaybeUser  Author where
-  getUserID = Just . unAuthor
-
 instance MaybeUser User where
   getUserID = Just . userid
 
@@ -163,8 +159,8 @@ instance  MaybeShared Document where
 -- does this need to change now? -EN
 checkCSVSigIndex :: [SignatoryLink] -> Int -> Either String Int
 checkCSVSigIndex sls n
-  | n < 0 || n >= length sls = Left $ "signatory with index " ++ show n ++ " doesn't exist."
-  | isAuthor (sls !! n) = Left "author can't be set from csv"
+  | n < 0 || n >= length sls = Left $ "checkCSVSigIndex: signatory with index " ++ show n ++ " doesn't exist."
+  | isAuthor (sls !! n) = Left $ "checkCSVSigIndex: signatory at index " ++ show n ++ " is an author and can't be set from csv"
   | otherwise = Right n
 
 {- |

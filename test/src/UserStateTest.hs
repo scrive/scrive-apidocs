@@ -2,7 +2,7 @@ module UserStateTest (userStateTests) where
 
 import Control.Monad
 import Data.Maybe
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import Test.Framework
 import qualified Data.ByteString.UTF8 as BS
 
@@ -18,7 +18,7 @@ sortByEmail :: [User] -> [User]
 sortByEmail = sortBy (\a b -> compare (f a) (f b))
   where f = useremail . userinfo
 
-userStateTests :: Connection -> Test
+userStateTests :: Nexus -> Test
 userStateTests conn = testGroup "UserState" [
     testGroup "getUserByEmail" [
       testThat "returns nothing when there isn't a user with a matching email" conn test_getUserByEmail_returnsNothing

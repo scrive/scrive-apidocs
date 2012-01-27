@@ -87,6 +87,8 @@ data DocProcessInfo =
   , processrestartbuttontext :: String
   , processcancelbuttontext :: String
   , processcancelmodaltitle :: String
+  , processcancelmodaltext :: String
+
   , processrejectbuttontext :: String
   , processsignatorysignmodaltitle :: String
   , processsignatorysignmodalcontentlast :: String
@@ -100,7 +102,6 @@ data DocProcessInfo =
 
   -- process specific doc mail template names
   , processmailcancelstandardheader :: String
-  , processmailcancel :: String
   , processmailclosed :: String
   , processmailreject :: String
   , processmailinvitationtosign :: String
@@ -176,6 +177,7 @@ contractProcess =
   , processrestartbuttontext = "contractrestartbuttontext"
   , processcancelbuttontext = "contractcancelbuttontext"
   , processcancelmodaltitle = "contractcancelmodaltitle"
+  , processcancelmodaltext = "contractcancelmodaltext"
   , processrejectbuttontext = "contractrejectbuttontext"
   , processsignatorysignmodaltitle = "contractsignatorysignmodaltitle"
   , processsignatorysignmodalcontentlast = "contractsignatorysignmodalcontentlast"
@@ -189,7 +191,6 @@ contractProcess =
 
   -- process specific doc mail template names
   , processmailcancelstandardheader = "mailCancelContractStandardHeader"
-  , processmailcancel = "mailCancelContract"
   , processmailclosed= "mailContractClosed"
   , processmailreject = "mailRejectContractMail"
   , processmailinvitationtosign = "mailInvitationToSignContract"
@@ -265,6 +266,8 @@ offerProcess =
   , processrestartbuttontext = "offerrestartbuttontext"
   , processcancelbuttontext = "offercancelbuttontext"
   , processcancelmodaltitle = "offercancelmodaltitle"
+  , processcancelmodaltext = "offercancelmodaltext"
+  
   , processrejectbuttontext = "offerrejectbuttontext"
   , processsignatorysignmodaltitle = "offersignatorysignmodaltitle"
   , processsignatorysignmodalcontentlast = "offersignatorysignmodalcontentlast"
@@ -278,7 +281,6 @@ offerProcess =
 
   -- process specific doc mail template names
   , processmailcancelstandardheader = "mailCancelOfferStandardHeader"
-  , processmailcancel = "mailCancelOffer"
   , processmailclosed = "mailOfferClosed"
   , processmailreject = "mailRejectOfferMail"
   , processmailinvitationtosign = "mailInvitationToSignOffer"
@@ -354,6 +356,8 @@ orderProcess =
   , processrestartbuttontext = "orderrestartbuttontext"
   , processcancelbuttontext = "ordercancelbuttontext"
   , processcancelmodaltitle = "ordercancelmodaltitle"
+  , processcancelmodaltext = "ordercancelmodaltext"
+
   , processrejectbuttontext = "orderrejectbuttontext"
   , processsignatorysignmodaltitle = "ordersignatorysignmodaltitle"
   , processsignatorysignmodalcontentlast = "ordersignatorysignmodalcontentlast"
@@ -367,7 +371,6 @@ orderProcess =
 
   -- process specific doc mail template names
   , processmailcancelstandardheader = "mailCancelOrderStandardHeader"
-  , processmailcancel = "mailCancelOrder"
   , processmailclosed = "mailOrderClosed"
   , processmailreject = "mailRejectOrderMail"
   , processmailinvitationtosign = "mailInvitationToSignOrder"

@@ -44,6 +44,7 @@ module DB.Classes
   , kExecute01
   , kExecute1P
   , kFetchRow
+  , kFetchAll
   , kFetchSqlRow
   , kFinish
   ) where
@@ -54,14 +55,14 @@ import Control.Monad.RWS
 import DB.Fetcher
 import Data.Maybe
 import Database.HDBC hiding (originalQuery)
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 
 import qualified Control.Exception as E
 -- import qualified DB.Utils as DB
 import qualified Database.HDBC as HDBC
 import DB.Exception
 
-type DBInside a = RWST Connection () (Maybe Statement) IO a
+type DBInside a = RWST Nexus () (Maybe Statement) IO a
 
 -- | 'DB' is a monad that wraps access to database. It hold onto
 -- Connection and current statement. Manages to handle exceptions
@@ -224,6 +225,18 @@ kFetchRow decode =
               Left left -> do
                    unDB kFinish
                    liftIO $ E.throwIO $ left { originalQuery = HDBC.originalQuery statement }
+
+-- | Uses 'kFetchRow' to fetch rows until it returns 'Nothing' and
+-- return a list of results.
+kFetchAll :: (Fetcher a) => a -> DB [FetchResult a]
+kFetchAll decode = worker []
+  where
+    worker acc = do
+      m <- kFetchRow decode
+      case m of
+        Just v -> worker (v:acc)
+        Nothing -> return (reverse acc)
+
         
 -- | Finish current statement. 'kPrepare' and 'kExecute' call
 -- 'kFinish' before they alter query.
@@ -253,7 +266,7 @@ class DBUpdate q r | q -> r where
 -- gracefully, most likely logging an error is some way. Since a way of
 -- handling such case may vary in different monads, hence this function.
 class (Functor m, MonadIO m) => DBMonad m where
-  getConnection :: m Connection
+  getConnection :: m Nexus
   -- | From the point of view of the implementor of instances of
   -- 'DBMonad': handle a database error.  However, code that uses
   -- 'handleDBError' throws an exception - compare with 'throw', or
@@ -261,10 +274,10 @@ class (Functor m, MonadIO m) => DBMonad m where
   handleDBError :: DBException -> m a
 
 -- | Wraps IO action in DB
-wrapDB :: (Connection -> IO a) -> DB a
+wrapDB :: (Nexus -> IO a) -> DB a
 wrapDB f = DB ask >>= liftIO . f
 
-runit :: (MonadIO m) => DB a -> Connection -> m a
+runit :: (MonadIO m) => DB a -> Nexus -> m a
 runit action conn = do
   let actionWithFinish = (action >>= \result -> kFinish >> return result)
   (a,_,_) <- liftIO $ runRWST (unDB actionWithFinish) conn Nothing
@@ -274,7 +287,7 @@ runit action conn = do
 -- it runs in IO, you need to pass Connecion object explicitly. Also,
 -- sql releated exceptions are not handled, so you probably need to do
 -- it yourself. Use this function ONLY if there is no way to use runDB.
-ioRunDB :: MonadIO m => Connection -> DB a -> m a
+ioRunDB :: MonadIO m => Nexus -> DB a -> m a
 ioRunDB conn = liftIO . withTransaction conn . runit
 
 -- | Runs DB action in a DB compatible monad
