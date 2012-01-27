@@ -40,7 +40,6 @@ module Util.SignatoryLinkUtils (
 import Company.Model
 import DB.Types
 import Doc.DocStateData
-import Mails.MailsUtil
 import User.Model
 import Util.HasSomeUserInfo
 import Data.Semantic
@@ -66,9 +65,6 @@ instance SignatoryLinkIdentity Email where
 
 instance SignatoryLinkIdentity UserID where
   isJustSigLinkFor uid sl = Just uid == maybesignatory sl
-
-instance SignatoryLinkIdentity Signatory where
-  isJustSigLinkFor (Signatory uid) sl = isSigLinkFor uid sl
 
 instance SignatoryLinkIdentity (SignatoryLink -> Bool) where
   isJustSigLinkFor p sl = p sl
@@ -96,9 +92,6 @@ instance SignatoryLinkIdentity SignatoryRole where
  -}
 instance SignatoryLinkIdentity User where
   isJustSigLinkFor u sl = isSigLinkFor (Or (userid u) (getEmail u)) sl
-
-instance SignatoryLinkIdentity Author where
-  isJustSigLinkFor (Author uid) sl = isSigLinkFor (And SignatoryAuthor uid) sl
 
 instance SignatoryLinkIdentity CompanyID where
   isJustSigLinkFor cid sl = Just cid == maybecompany sl

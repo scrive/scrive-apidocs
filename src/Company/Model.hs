@@ -23,6 +23,7 @@ import qualified Data.ByteString.Char8 as BS
 
 import DB.Classes
 import DB.Derive
+import DB.Fetcher2
 import DB.Utils
 import API.Service.Model
 import Company.Tables
@@ -61,14 +62,14 @@ instance DBQuery GetCompanies [Company] where
     st <- prepare conn $ selectCompaniesSQL
       ++ "WHERE (?::TEXT IS NULL AND c.service_id IS NULL) OR c.service_id = ? ORDER BY c.id DESC"
     _ <- execute st [toSql msid, toSql msid]
-    fetchCompanies st []
+    fetchCompanies st
 
 data GetCompany = GetCompany CompanyID
 instance DBQuery GetCompany (Maybe Company) where
   dbQuery (GetCompany cid) = wrapDB $ \conn -> do
     st <- prepare conn $ selectCompaniesSQL ++ "WHERE c.id = ?"
     _ <- execute st [toSql cid]
-    cs <- fetchCompanies st []
+    cs <- fetchCompanies st
     oneObjectReturnedGuard cs
 
 data GetCompanyByExternalID = GetCompanyByExternalID (Maybe ServiceID) ExternalCompanyID
@@ -77,7 +78,7 @@ instance DBQuery GetCompanyByExternalID (Maybe Company) where
     st <- prepare conn $ selectCompaniesSQL
       ++ "WHERE ((?::TEXT IS NULL AND c.service_id IS NULL) OR c.service_id = ?) AND c.external_id = ?"
     _ <- execute st [toSql msid, toSql msid, toSql ecid]
-    cs <- fetchCompanies st []
+    cs <- fetchCompanies st
     oneObjectReturnedGuard cs
 
 data CreateCompany = CreateCompany (Maybe ServiceID) (Maybe ExternalCompanyID)
@@ -148,23 +149,22 @@ selectCompaniesSQL = "SELECT"
   ++ "  FROM companies c"
   ++ " "
 
-fetchCompanies :: Statement -> [Company] -> IO [Company]
-fetchCompanies st acc = fetchRow st >>= maybe (return acc) f
-  where f [cid, eid, sid, name, number, address, zip', city, country
-         ] = fetchCompanies st $ Company {
-             companyid = fromSql cid
-           , companyexternalid = fromSql eid
-           , companyservice = fromSql sid
-           , companyinfo = CompanyInfo {
-               companyname = fromSql name
-             , companynumber = fromSql number
-             , companyaddress = fromSql address
-             , companyzip = fromSql zip'
-             , companycity = fromSql city
-             , companycountry = fromSql country
-           }
-         } : acc
-        f l = error $ "fetchCompanies: unexpected row: "++show l
+fetchCompanies :: Statement -> IO [Company]
+fetchCompanies st = foldDB st decoder []
+  where
+    decoder acc cid eid sid name number address zip' city country = Company {
+        companyid = cid
+      , companyexternalid = eid
+      , companyservice = sid
+      , companyinfo = CompanyInfo {
+          companyname = name
+        , companynumber = number
+        , companyaddress = address
+        , companyzip = zip'
+        , companycity = city
+        , companycountry = country
+        }
+      } : acc
 
 -- this will not be needed when we move documents to pgsql. for now it's needed
 -- for document handlers - it seems that types of arguments that handlers take

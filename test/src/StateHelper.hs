@@ -44,12 +44,10 @@ clearTables = wrapDB $ \conn -> do
   runRaw conn "DELETE FROM sign_stat_events"  
   runRaw conn "DELETE FROM companyinvites"
 
-#ifdef DOCUMENTS_IN_POSTGRES
   runRaw conn "DELETE FROM author_attachments"
   runRaw conn "DELETE FROM signatory_attachments"
   runRaw conn "DELETE FROM signatory_links"
   runRaw conn "DELETE FROM documents"
-#endif
 
   runRaw conn "DELETE FROM companies"
   runRaw conn "DELETE FROM services"

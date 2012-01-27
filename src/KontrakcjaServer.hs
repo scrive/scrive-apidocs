@@ -53,7 +53,6 @@ import Misc
 import qualified MemCache
 import File.Model
 import qualified System.Mem as System.Mem
-import qualified Doc.Import as D
 
 startTestSystemState' :: (Component st, Methods st) => Proxy st -> IO (MVar TxControl)
 startTestSystemState' proxy = do
@@ -144,8 +143,6 @@ runKontrakcjaServer = Log.withLogger $ do
                   -- start the http server
                   E.bracket
                            (do
-                              D.populateDBWithDocumentsIfEmpty conn
-
                               let (iface,port) = httpBindAddress appConf
                               listensocket <- listenOn (htonl iface) (fromIntegral port)
                               let (routes,overlaps) = compile staticRoutes

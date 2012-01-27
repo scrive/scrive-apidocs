@@ -14,7 +14,6 @@ module Doc.DocUtils where
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Doc.DocStateData
-import Mails.MailsUtil
 import Templates.Templates
 import User.Model
 import Util.SignatoryLinkUtils
@@ -113,9 +112,6 @@ class MaybeUser u where
 
 instance MaybeUser SignatoryLink where
   getUserID  = maybesignatory
-
-instance MaybeUser  Author where
-  getUserID = Just . unAuthor
 
 instance MaybeUser User where
   getUserID = Just . userid

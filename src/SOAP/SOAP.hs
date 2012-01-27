@@ -22,7 +22,7 @@ import Text.XML.HaXml.XmlContent.Parser
 import Text.XML.HaXml.XmlContent
 import Text.XML.HaXml.Posn
 import qualified Control.Exception as E
--- import qualified Log
+import qualified Log
 import Prelude hiding (print, putStrLn, putStr)
 
 data SOAP a = SOAP a
@@ -121,16 +121,18 @@ makeSoapCall url action cert certpwd request = tryAndJoinEither $ do
   let (boundary,rest) = BS.breakSubstring (BS.fromString "\r\n") (BS.concat (BSL.toChunks (BSL.drop 2 stdout)))
       (_,rest2) = BS.breakSubstring (BS.fromString "\r\n\r\n") rest
       (xml1,_) = BS.breakSubstring boundary rest2
-
   let xml = if BSL.fromString "\r\n--" `BSL.isPrefixOf` stdout
             then BSL.fromChunks [xml1]
             else stdout
-
   case code of
     ExitFailure _ -> do
        return (Left $ "Cannot execute 'curl' for TrustWeaver: " ++ show args ++ BSL.toString stderr)
     ExitSuccess -> do
-      case readXml (BSL.toString xml) of
+      let s = BSL.toString xml
+      Log.debug $ "length of xml string from Trustweaver: " ++ (show $ length s)
+      let rx = readXml s
+      Log.debug $ "readXml returned left or right: " ++ if isLeft rx then "Left" else "Right"
+      case rx of
         Right (SOAP result) -> return (Right result)
         Right (SOAPFault soapcode string actor) -> return (Left (soapcode ++":" ++ string ++":" ++ actor))
         Left errmsg -> return (Left (errmsg ++ ": " ++ BSL.toString stdout))

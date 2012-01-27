@@ -4,7 +4,6 @@
 module Doc.Model
   ( module File.File
   , isTemplate -- fromUtils
-  , isShared -- fromUtils
   , isDeletableDocument -- fromUtils
   , anyInvitationUndelivered
   , undeliveredSignatoryLinks
@@ -36,7 +35,6 @@ module Doc.Model
   , GetDocumentsByCompanyAndTags(..)
   , GetDocumentsBySignatory(..)
   , GetDocumentsByUser(..)
-  , GetDocumentsSharedInCompany(..)
   , GetSignatoryLinkIDs(..)
   , GetTimeoutedButPendingDocuments(..)
   , MarkDocumentSeen(..)
@@ -68,7 +66,6 @@ module Doc.Model
   , SetInviteText(..)
   -- , SetSignatoryCompany(..)
   -- , SetSignatoryUser(..)
-  , ShareDocument(..)
   , SignDocument(..)
   , SignLinkFromDetailsForTest(..)
   , SignableFromDocument(..)
@@ -103,13 +100,11 @@ import Data.Data
 import Database.HDBC
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-import qualified Mails.MailsUtil as Mail
 import Data.Maybe
 import Misc
 import Data.Convertible
 import Data.List
 import qualified Data.Map as Map
-import Mails.MailsUtil
 import Doc.Tables
 import Control.Applicative
 import Util.SignatoryLinkUtils
@@ -117,7 +112,7 @@ import Util.SignatoryLinkUtils
 import Doc.DocProcess
 import Doc.DocStateCommon
 import qualified Log
-import System.Random (randomRIO)
+import System.Random (randomIO)
 --import Happstack.Server
 --import Happstack.State
 --import Happstack.Util.Common
@@ -308,7 +303,6 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documentinvitetext" documentinvitetext
                    , checkEqualBy "documentallowedidtypes" (nub . documentallowedidtypes)
                    , checkEqualBy "documentcancelationreason" documentcancelationreason
-                   , checkEqualBy "documentsharing" documentsharing
                    , checkEqualBy "documentrejectioninfo" documentrejectioninfo
                    , checkEqualBy "documenttags" documenttags
                    , checkEqualBy "documentservice" documentservice
@@ -342,7 +336,6 @@ decodeRowAsDocument :: DocumentID
                     -> BS.ByteString
                     -> [IdentificationType]
                     -> Maybe CancelationReason
-                    -> DocumentSharing
                     -> Maybe MinutesTime
                     -> Maybe SignatoryLinkID
                     -> Maybe BS.ByteString
@@ -371,7 +364,6 @@ decodeRowAsDocument did
                     invite_text
                     allowed_id_types
                     cancelationreason
-                    sharing
                     rejection_time
                     rejection_signatory_link_id
                     rejection_reason
@@ -408,7 +400,7 @@ decodeRowAsDocument did
                                                , documentinvitetext = invite_text
                                                , documentallowedidtypes = allowed_id_types
                                                , documentcancelationreason = cancelationreason
-                                               , documentsharing = sharing
+                                               , documentsharing = Private
                                                , documentrejectioninfo = case (rejection_time, rejection_signatory_link_id, rejection_reason) of
                                                                            (Just t, Just sl, mr) -> Just (t, sl, fromMaybe BS.empty mr)
                                                                            _ -> Nothing
@@ -441,7 +433,6 @@ selectDocumentsSelectors = [ "id"
                            , "invite_text"
                            , "allowed_id_types"
                            , "cancelation_reason"
-                           , "sharing"
                            , "rejection_time"
                            , "rejection_signatory_link_id"
                            , "rejection_reason"
@@ -506,7 +497,7 @@ decodeRowAsSignatoryLinkWithDocumentID :: SignatoryLinkID
                          -> Maybe MinutesTime
                          -> Maybe IPAddress
                          -> Maybe MinutesTime
-                         -> Mail.MailsDeliveryStatus
+                         -> MailsDeliveryStatus
                          -> Maybe String
                          -> Maybe String
                          -> Maybe String
@@ -785,7 +776,6 @@ insertDocumentAsIs document = do
                  , documentinvitetext
                  , documentallowedidtypes
                  , documentcancelationreason
-                 , documentsharing
                  , documentrejectioninfo
                  , documenttags
                  , documentservice
@@ -826,7 +816,6 @@ insertDocumentAsIs document = do
                                      , sqlField "log" documentlog
                                      , sqlField "allowed_id_types" documentallowedidtypes
                                      , sqlField "cancelation_reason" documentcancelationreason
-                                     , sqlField "sharing" documentsharing
                                      , sqlField "rejection_time" $ fst3 `fmap` documentrejectioninfo
                                      , sqlField "rejection_signatory_link_id" $ snd3 `fmap` documentrejectioninfo
                                      , sqlField "rejection_reason" $ thd3 `fmap` documentrejectioninfo
@@ -836,6 +825,7 @@ insertDocumentAsIs document = do
                                      -- , toSql documentsignatoryattachments   -- many to many
                                      , sqlField "mail_footer" $ documentmailfooter $ documentui  -- should go into separate table?
                                      , sqlField "region" documentregion
+                                     , sqlField "sharing" Private -- this is unused, but does not have default and needs to be specifed here
                                      ]
                                      "NOT EXISTS (SELECT * FROM documents WHERE id = ?)"
                                      [toSql documentid]
@@ -1111,7 +1101,6 @@ instance DBUpdate DocumentFromSignatoryData (Either String Document) where
    where
     toNewDoc :: Document -> Document
     toNewDoc d = d { documentsignatorylinks = map toNewSigLink (documentsignatorylinks d)
-                    , documentsharing = Private
                     , documenttype = newDocType $ documenttype d
                     , documentsignatoryattachments = map replaceCSV (documentsignatoryattachments d)
                     }
@@ -1358,26 +1347,6 @@ instance DBQuery GetDocumentsByUser [Document] where
         selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?)<>0)")
                                          [toSql (userid user), toSql [SignatoryAuthor]]
 
-data GetDocumentsSharedInCompany = GetDocumentsSharedInCompany User
-                                   deriving (Eq, Ord, Show, Typeable)
-instance DBQuery GetDocumentsSharedInCompany [Document] where
-  dbQuery (GetDocumentsSharedInCompany User{usercompany}) = do
-    case usercompany of
-      Just companyid -> do
-        documents <- selectDocuments (selectDocumentsSQL ++
-                                      " WHERE deleted IS FALSE" ++
-                                      "   AND sharing = ?" ++
-                                      "   AND EXISTS (SELECT 1 FROM signatory_links " ++
-                                      "               WHERE document_id = documents.id" ++
-                                      "               AND company_id = ?)" ++
-                                      "   ORDER BY mtime DESC")
-                       [ toSql Shared
-                       , toSql companyid
-                       ]
-
-        return $ filter ((== Shared) . documentsharing) . filterDocsWhereActivated companyid . filterDocsWhereDeleted False companyid $ documents
-      _ -> return []
-
 data GetSignatoryLinkIDs = GetSignatoryLinkIDs
                            deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetSignatoryLinkIDs [SignatoryLinkID] where
@@ -1455,8 +1424,8 @@ instance DBUpdate NewDocument (Either String Document) where
   if fmap companyid mcompany /= usercompany user
     then return $ Left "company and user don't match"
     else do
-      wrapDB $ \conn -> runRaw conn "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
       wrapDB $ \conn -> runRaw conn "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
+      wrapDB $ \conn -> runRaw conn "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
       did <- DocumentID <$> getUniqueID tableDocuments
 
       let authorRoles = if ((Just True) == getValueForProcess documenttype processauthorsend)
@@ -1464,7 +1433,7 @@ instance DBUpdate NewDocument (Either String Document) where
                         else [SignatoryPartner, SignatoryAuthor]
       linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
 
-      magichash <- liftIO $ MagicHash <$> randomRIO (0,maxBound)
+      magichash <- liftIO randomIO
 
       let authorlink0 = signLinkFromDetails'
                         (signatoryDetailsFromUser user mcompany)
@@ -1572,7 +1541,7 @@ instance DBUpdate RestartDocument (Either String Document) where
       let signatoriesDetails = map (\x -> (signatorydetails x, signatoryroles x, signatorylinkid x)) $ documentsignatorylinks doc
           Just asl = getAuthorSigLink doc
       newSignLinks <- flip mapM signatoriesDetails $ do \(a,b,c) -> do
-                                                             magichash <- liftIO $ MagicHash <$> randomRIO (0,maxBound)
+                                                             magichash <- liftIO randomIO
 
                                                              return $ signLinkFromDetails' a b c magichash 
       let Just authorsiglink0 = find isAuthor newSignLinks
@@ -1805,7 +1774,7 @@ instance DBUpdate SetDocumentUI (Either String Document) where
     getOneDocumentAffected "SetDocumentUI" r did
 
 
-data SetInvitationDeliveryStatus = SetInvitationDeliveryStatus DocumentID SignatoryLinkID Mail.MailsDeliveryStatus
+data SetInvitationDeliveryStatus = SetInvitationDeliveryStatus DocumentID SignatoryLinkID MailsDeliveryStatus
                                    deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetInvitationDeliveryStatus (Either String Document) where
   dbUpdate (SetInvitationDeliveryStatus did slid status) = do
@@ -1819,17 +1788,6 @@ instance DBUpdate SetInvitationDeliveryStatus (Either String Document) where
                          , toSql (toDocumentSimpleType (Signable undefined))
                          ]
     getOneDocumentAffected "SetInvitationDeliveryStatus" r did
-
-
-data ShareDocument = ShareDocument DocumentID
-                     deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate ShareDocument (Either String Document) where
-  dbUpdate (ShareDocument did) = do
-    r <- runUpdateStatement "documents"
-         [ sqlField "sharing" $ Shared
-         ]
-         "WHERE id = ? AND deleted = FALSE" [ toSql did ]
-    getOneDocumentAffected "ShareDocument" r did
 
 
 data SignDocument = SignDocument DocumentID SignatoryLinkID MagicHash MinutesTime IPAddress (Maybe SignatureInfo)
@@ -1886,7 +1844,7 @@ instance DBUpdate ResetSignatoryDetails2 (Either String Document) where
             flip mapM signatories $ \(details, roles, mcsvupload) -> do
                      linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
 
-                     magichash <- liftIO $ MagicHash <$> randomRIO (0,maxBound)
+                     magichash <- liftIO randomIO
 
                      let link' = (signLinkFromDetails' details roles linkid magichash)
                                  { signatorylinkcsvupload = mcsvupload }
@@ -1918,7 +1876,7 @@ instance DBUpdate SignLinkFromDetailsForTest SignatoryLink where
       wrapDB $ \conn -> runRaw conn "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
       linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
 
-      magichash <- liftIO $ MagicHash <$> randomRIO (0,maxBound)
+      magichash <- liftIO randomIO
 
       let link = signLinkFromDetails' details
                         roles linkid magichash
