@@ -6,7 +6,9 @@ module EvidenceLog.Model
          AuthorActor(..),
          SignatoryActor(..),
          SystemActor(..),
-         MailAPIActor(..)       
+         MailAPIActor(..),  
+         MailSystemActor(..),
+         IntegrationAPIActor(..)
        )
        
        where
@@ -35,6 +37,8 @@ class Actor a where
   actorEmail _   = Nothing
   actorSigLinkID :: a -> Maybe SignatoryLinkID
   actorSigLinkID _ = Nothing
+  actorAPIString :: a -> Maybe String
+  actorAPIString _ = Nothing
 
 data SystemActor = SystemActor MinutesTime
                    deriving (Eq, Ord, Show)
@@ -65,6 +69,22 @@ instance Actor MailAPIActor where
   actorUserID (MailAPIActor _ u _) = Just u
   actorEmail  (MailAPIActor _ _ e) = Just e
                     
+data MailSystemActor = MailSystemActor MinutesTime (Maybe UserID) String SignatoryLinkID
+                   deriving (Eq, Ord, Show)
+instance Actor MailSystemActor where
+  actorTime      (MailSystemActor t _ _ _) = t
+  actorUserID    (MailSystemActor _ u _ _) = u
+  actorEmail     (MailSystemActor _ _ e _) = Just e
+  actorSigLinkID (MailSystemActor _ _ _ s) = Just s
+
+data IntegrationAPIActor = IntegrationAPIActor MinutesTime String UserID String
+                         deriving (Eq, Ord, Show)
+instance Actor IntegrationAPIActor where
+  actorTime      (IntegrationAPIActor t _ _ _) = t
+  actorAPIString (IntegrationAPIActor _ a _ _) = Just a
+  actorUserID    (IntegrationAPIActor _ _ u _) = Just u
+  actorEmail     (IntegrationAPIActor _ _ _ e) = Just e
+
 insertEvidenceEvent :: Actor a 
                        => EvidenceEventType
                        -> String       -- text
@@ -83,6 +103,7 @@ insertEvidenceEvent event text mdid actor conn = do
         ++ ", email"
         ++ ", request_ip_v4"
         ++ ", signatory_link_id"
+        ++ ", api_user"
         ++ ") VALUES (?,?,?,?,?,?,?,?,?)"
   res <- execute st [toSql mdid
                     ,toSql $ actorTime      actor
@@ -93,6 +114,7 @@ insertEvidenceEvent event text mdid actor conn = do
                     ,toSql $ actorEmail     actor
                     ,toSql $ actorIP        actor
                     ,toSql $ actorSigLinkID actor
+                    ,toSql $ actorAPIString actor
                     ]
   oneRowAffectedGuard res
 

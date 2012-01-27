@@ -245,8 +245,9 @@ jsonMailAPI mailapi username user pdfs plains content = do
 
   let doctype = dcrType dcr
       title = dcrTitle dcr
-
-  edoc <- runDBUpdate $ NewDocument user mcompany (BS.fromString title) doctype ctxtime
+      actor = MailAPIActor ctxtime (userid user) (BS.toString $ getEmail user)
+      
+  edoc <- runDBUpdate $ NewDocument user mcompany (BS.fromString title) doctype actor
 
   when (isLeft edoc) $ do
     let Left msg = edoc
@@ -272,8 +273,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
 
     mzero
 
-  edoc2 <- runDBUpdate $ PreparationToPending (documentid doc)
-           (MailAPIActor ctxtime (userid user) (BS.toString $ getEmail user))
+  edoc2 <- runDBUpdate $ PreparationToPending (documentid doc) actor
   when (isLeft edoc2) $ do
     Log.jsonMailAPI $ "Could not got to pending document: " ++ (intercalate "; " errs)
 

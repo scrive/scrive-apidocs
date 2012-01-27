@@ -98,7 +98,12 @@ testOpenStat conn = withTestEnvironment conn $ do
                                                            (any isSignatory . documentsignatorylinks))
   time <- getMinutesTime
   _ <- dbUpdate $ PreparationToPending (documentid doc') (SystemActor time)
-  _ <- forM (documentsignatorylinks doc') (\sl -> dbUpdate $ MarkInvitationRead (documentid doc') (signatorylinkid sl) time)
+  _ <- forM (documentsignatorylinks doc') 
+       (\sl -> if isAuthor sl 
+               then dbUpdate $ MarkInvitationRead (documentid doc') (signatorylinkid sl)
+                    (AuthorActor time (IPAddress 0) (userid author) (BS.toString $ getEmail author))
+               else dbUpdate $ MarkInvitationRead (documentid doc') (signatorylinkid sl)
+                    (SignatoryActor time (IPAddress 0) (maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl)))
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatOpenEvent doc sl)
   stats'' <- dbQuery $ GetSignStatEvents
@@ -171,11 +176,11 @@ testRejectStat conn = withTestEnvironment conn $ do
   _ <- dbUpdate $ PreparationToPending (documentid doc') (SystemActor time)
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   let Just asl' = getAuthorSigLink doc
+      aa = AuthorActor time (IPAddress 0) (userid author) (BS.toString $ getEmail author)
   _ <- dbUpdate $ RejectDocument (documentid doc) 
          (signatorylinkid asl')
-         time
-         (IPAddress 0)
-         Nothing
+         Nothing         
+         aa
   Just d <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   let Just asl = getAuthorSigLink d
   _ <- addSignStatRejectEvent d asl
@@ -232,8 +237,9 @@ testGetUsersAndStats conn = withTestEnvironment conn $ do
   us <- catMaybes <$> (forM (range (0, 100::Int)) $ \i->
                         dbUpdate $ AddUser (BS.fromString "F", BS.fromString "L") (BS.fromString $ "e" ++ show i ++ "@yoyo.com")
                         Nothing False Nothing Nothing (mkLocale REGION_SE LANG_SE))
-  _ <- forM [(u, i) | u <- us, i <- range (0, 10::Int)] $ \(u,_) ->
-    dbUpdate $ NewDocument u Nothing (BS.fromString "doc!") (Signable Contract) time
+  _ <- forM [(u, i) | u <- us, i <- range (0, 10::Int)] $ \(u,_) -> do
+    let aa = AuthorActor time (IPAddress 0) (userid u) (BS.toString $ getEmail u)
+    dbUpdate $ NewDocument u Nothing (BS.fromString "doc!") (Signable Contract) aa
   
   Log.debug $ "Set up test, now running query."
   t0 <- getMinutesTime

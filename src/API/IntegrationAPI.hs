@@ -65,6 +65,8 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified Log (integration)
 import Doc.DocStorage
 
+import EvidenceLog.Model
+
 {- |
   Definition of integration API
 -}
@@ -224,7 +226,9 @@ createDocFromFiles :: (Kontrakcja m, APIContext c) =>
                       -> APIFunction m c (Maybe Document)
 createDocFromFiles title doctype files user mcompany time = do
   ctx <- getContext
-  edoc <- runDBUpdate $ NewDocument user mcompany title doctype time
+  let Just Service { serviceid = ServiceID {unServiceID = sid} } = ctxservice ctx
+  let ia = IntegrationAPIActor (ctxtime ctx) (BS.toString sid) (userid user) (BS.toString $ getEmail user)
+  edoc <- runDBUpdate $ NewDocument user mcompany title doctype ia
   case edoc of
     Left _ -> throwApiError API_ERROR_OTHER $ "Cannot create document"
     Right doc -> do

@@ -169,7 +169,7 @@ sendNewDocument = do
   --_msignedcallback <- fromJSONField "signed_callback"
   --_mnotsignedcallback <- fromJSONField "notsigned_callback"
   ctx <- getContext
-  mnewdoc <- runDBUpdate $ NewDocument author mcompany title doctype (ctxtime ctx)
+  mnewdoc <- runDBUpdate $ NewDocument author mcompany title doctype (SystemActor (ctxtime ctx))
   when (isLeft mnewdoc) $ throwApiError API_ERROR_OTHER "Problem making doc, maybe company and user don't match."
   let newdoc = fromRight mnewdoc
   _ <- liftKontra $ handleDocumentUpload (documentid newdoc) content filename

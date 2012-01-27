@@ -251,21 +251,25 @@ testNewDocumentForMismatchingUserAndCompanyFails = doTimes 10 $ do
   singleuser <- addNewRandomUser
   companyuser <- addNewRandomCompanyUser (companyid company) False
   time <- getMinutesTime
-  edoc1 <- randomUpdate $ NewDocument singleuser (Just company) (BS.fromString "doc title") (Signable Contract) time
+  let aa = AuthorActor time (IPAddress 0) (userid singleuser) (BS.toString $ getEmail singleuser)
+  edoc1 <- randomUpdate $ NewDocument singleuser (Just company) (BS.fromString "doc title") (Signable Contract) aa
   assertLeft edoc1
-  edoc2 <- randomUpdate $ NewDocument companyuser Nothing (BS.fromString "doc title") (Signable Contract) time
+  let ca = AuthorActor time (IPAddress 0) (userid companyuser) (BS.toString $ getEmail companyuser)
+  edoc2 <- randomUpdate $ NewDocument companyuser Nothing (BS.fromString "doc title") (Signable Contract) ca
   validTest $ assertLeft edoc2
 
 performNewDocumentWithRandomUser :: Maybe Company -> DocumentType -> String -> DB (User, MinutesTime, Either String Document)
 performNewDocumentWithRandomUser Nothing doctype title = do
   user <- addNewRandomUser
   time <- getMinutesTime
-  edoc <- randomUpdate $ NewDocument user Nothing (BS.fromString title) doctype time
+  let aa = AuthorActor time (IPAddress 0) (userid user) (BS.toString $ getEmail user)  
+  edoc <- randomUpdate $ NewDocument user Nothing (BS.fromString title) doctype aa
   return (user, time, edoc)
 performNewDocumentWithRandomUser (Just company) doctype title = do
   user <- addNewRandomCompanyUser (companyid company) False
   time <- getMinutesTime
-  edoc <- randomUpdate $ NewDocument user (Just company) (BS.fromString title) doctype time
+  let aa = AuthorActor time (IPAddress 0) (userid user) (BS.toString $ getEmail user)  
+  edoc <- randomUpdate $ NewDocument user (Just company) (BS.fromString title) doctype aa
   return (user, time, edoc)
 
 assertGoodNewDocument :: Maybe Company -> DocumentType -> String -> Bool -> (User, MinutesTime, Either String Document) -> DB (Maybe (DB ()))
@@ -565,7 +569,8 @@ testNewDocumentDependencies = doTimes 10 $ do
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
   -- execute
   now <- liftIO $ getMinutesTime
-  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany title doctype now)
+  let aa = AuthorActor now (IPAddress 0) (userid author) (BS.toString $ getEmail author)
+  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany title doctype aa)
   -- assert
   validTest $ do
     assertRight edoc
@@ -577,7 +582,8 @@ testDocumentCanBeCreatedAndFetchedByID = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
   now <- liftIO $ getMinutesTime
-  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany title doctype now)
+  let aa = AuthorActor now (IPAddress 0) (userid author) (BS.toString $ getEmail author)
+  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany title doctype aa)
   let doc = case edoc of
           Left msg -> error $ show msg
           Right d -> d
@@ -596,7 +602,8 @@ testDocumentCanBeCreatedAndFetchedByAllDocs = doTimes 10 $ do
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
   -- execute
   now <- liftIO $ getMinutesTime
-  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany title doctype now)
+  let aa = AuthorActor now (IPAddress 0) (userid author) (BS.toString $ getEmail author)
+  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany title doctype aa)
 
   let doc = case edoc of
           Left msg -> error $ show msg
@@ -1199,19 +1206,27 @@ testRejectDocumentNotSignableLeft :: DB ()
 testRejectDocumentNotSignableLeft = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
-  etdoc <- randomUpdate $ RejectDocument (documentid doc)
+  let Just sl = getSigLinkFor doc author
+  time <- rand 10 arbitrary
+  etdoc <- randomUpdate $ RejectDocument (documentid doc) (signatorylinkid sl) Nothing 
+           (AuthorActor time (IPAddress 0) (userid author) (BS.toString $ getEmail author))
   validTest $ assertLeft etdoc
 
 testRejectDocumentSignableNotPendingLeft :: DB ()
 testRejectDocumentSignableNotPendingLeft = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . isPending))
-  etdoc <- randomUpdate $ RejectDocument (documentid doc)
+  let Just sl = getSigLinkFor doc author
+  time <- rand 10 arbitrary
+  etdoc <- randomUpdate $ RejectDocument (documentid doc) (signatorylinkid sl) Nothing 
+           (AuthorActor time (IPAddress 0) (userid author) (BS.toString $ getEmail author))
   validTest $ assertLeft etdoc
 
 testRejectDocumentNotLeft :: DB ()
 testRejectDocumentNotLeft = doTimes 10 $ do
-  etdoc <- randomUpdate RejectDocument
+  (did, time, slid) <- rand 10 arbitrary
+  let sa = SignatoryActor time (IPAddress 0) Nothing "hello@hello.com" slid
+  etdoc <- randomUpdate $ RejectDocument did slid Nothing sa
   validTest $ assertLeft etdoc
 
 testRejectDocumentSignablePendingRight :: DB ()
@@ -1219,7 +1234,10 @@ testRejectDocumentSignablePendingRight = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
   slid <- rand 10 $ elements (map signatorylinkid (documentsignatorylinks doc))
-  edoc <- randomUpdate $ RejectDocument (documentid doc) slid
+  let Just sl = getSigLinkFor doc slid
+  time <- rand 10 arbitrary
+  let sa = SignatoryActor time (IPAddress 0) Nothing (BS.toString $ getEmail sl) slid
+  edoc <- randomUpdate $ RejectDocument (documentid doc) slid Nothing sa
   validTest $ do
     assertRight edoc
     assertInvariants $ fromRight edoc
@@ -1230,9 +1248,11 @@ testMarkInvitationRead = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author 
          (isPending &&^ (all (isNothing . maybereadinvite) . documentsignatorylinks))
   forM_ (documentsignatorylinks doc) $ \sl -> Log.debug $ "maybereadinvite: " ++ show (maybereadinvite sl)
-  slid <- rand 10 $ elements (map signatorylinkid (documentsignatorylinks doc))
+  sl' <- rand 10 $ elements $ documentsignatorylinks doc
+  let slid = signatorylinkid sl'
   time <- getMinutesTime
-  edoc <- dbUpdate $ MarkInvitationRead (documentid doc) slid time
+  edoc <- dbUpdate $ MarkInvitationRead (documentid doc) slid 
+          (SignatoryActor time (IPAddress 0) (maybesignatory sl') (BS.toString $ getEmail sl') slid)
   validTest $ do
     assertRight edoc
     let Just sl = getSigLinkFor (fromRight edoc) slid
@@ -1240,7 +1260,9 @@ testMarkInvitationRead = doTimes 10 $ do
 
 testMarkInvitationReadDocDoesntExist :: DB ()
 testMarkInvitationReadDocDoesntExist = doTimes 10 $ do
-  _ <- randomUpdate $ MarkInvitationRead
+  (did, slid, time, ip, eml) <- rand 10 arbitrary
+  _ <- randomUpdate $ MarkInvitationRead did slid 
+       (SignatoryActor time ip Nothing eml slid)
   validTest $ assertSuccess
 
 testMarkDocumentSeenNotSignableLeft :: DB ()

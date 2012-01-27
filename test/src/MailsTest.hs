@@ -60,7 +60,8 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
         -- make  the context, user and document all use the same locale
         ctx <- mailingContext l conn
         _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { locale = l }
-        d' <- gRight $ randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype)
+        let aa = AuthorActor (ctxtime ctx) (IPAddress 0) (userid author) (BS.toString $ getEmail author)
+        d' <- gRight $ randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype) aa
         d <- gRight . dbUpdate $ SetDocumentLocale (documentid d') l (ctxtime ctx)
 
         let docid = documentid d

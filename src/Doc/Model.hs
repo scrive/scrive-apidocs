@@ -1504,10 +1504,15 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (AddInvitationEvidence a) (E
           Nothing -> 
             return $ Left $ "SignatoryLinkID " ++ show slid ++ " does not exist in document with id " ++ show docid
 
-data MarkInvitationRead = MarkInvitationRead DocumentID SignatoryLinkID MinutesTime
+data (Actor a, Show a, Eq a, Ord a) => MarkInvitationRead a = MarkInvitationRead DocumentID SignatoryLinkID a
                           deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate MarkInvitationRead (Either String Document) where
-  dbUpdate (MarkInvitationRead did linkid time) = do
+instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (MarkInvitationRead a) (Either String Document) where
+  dbUpdate (MarkInvitationRead did linkid actor) = do
+    let time = actorTime actor
+        txt = case actorEmail actor of
+          Just eml -> "Our mail system reported the invitation sent to " ++ show eml ++ " was opened."
+          -- TODO: This is weird; we set invitation to read even if we don't send an invitation!
+          Nothing  -> "System set invitation to read for signatory with id " ++ show linkid ++ "."
     r <- runUpdateStatement "signatory_links"
                          [ sqlField "read_invitation" time
                          ]
@@ -1515,12 +1520,19 @@ instance DBUpdate MarkInvitationRead (Either String Document) where
                          [ toSql linkid
                          , toSql did
                          ]
+    when (r == 1) $
+      ignore $ dbUpdate $ InsertEvidenceEvent
+      InvitationOpenedEvidence
+      txt
+      (Just did)
+      actor
     getOneDocumentAffected "MarkInvitationRead" r did
 
-data NewDocument = NewDocument User (Maybe Company) BS.ByteString DocumentType MinutesTime
+data (Actor a, Show a, Eq a, Ord a) => NewDocument a = NewDocument User (Maybe Company) BS.ByteString DocumentType a
                  deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate NewDocument (Either String Document) where
-  dbUpdate (NewDocument user mcompany title documenttype ctime) = do
+instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (NewDocument a) (Either String Document) where
+  dbUpdate (NewDocument user mcompany title documenttype actor) = do
+  let ctime = actorTime actor  
   if fmap companyid mcompany /= usercompany user
     then return $ Left "company and user don't match"
     else do
@@ -1564,10 +1576,19 @@ instance DBUpdate NewDocument (Either String Document) where
 
            midoc <- insertDocumentAsIs doc
            case midoc of
-             Just doc' -> return $ Right doc'
+             Just doc' -> do
+               let txt = case actorEmail actor of
+                     Just eml -> "Document created by user with email " ++ show eml ++ "."
+                     Nothing  -> "Document created by system."
+               ignore $ dbUpdate $ InsertEvidenceEvent           
+                 DocumentCreateEvidence
+                 txt
+                 (Just $ documentid doc')
+                 actor
+               return $ Right doc'
              Nothing -> do
-                        Log.debug $ "insertDocumentAsIs could not insert document #" ++ show (documentid doc) ++ " in NewDocument"
-                        return $ Left $ "insertDocumentAsIs could not insert document #" ++ show (documentid doc) ++ " in NewDocument"
+               Log.debug $ "insertDocumentAsIs could not insert document #" ++ show (documentid doc) ++ " in NewDocument"
+               return $ Left $ "insertDocumentAsIs could not insert document #" ++ show (documentid doc) ++ " in NewDocument"
         Just a -> do
            Log.debug $ "insertDocumentAsIs invariants violated: " ++ show a
            return $ Left $ "insertDocumentAsIs invariants violated: " ++ show a
@@ -1583,6 +1604,7 @@ instance DBUpdate ReallyDeleteDocument (Either String Document) where
              runUpdateOnDeletableDoc "WHERE company_id = ?" [toSql cid]
            _ ->
              runUpdateOnDeletableDoc "WHERE user_id = ? AND company_id is NULL" [toSql $ userid user]
+    
     getOneDocumentAffected "ReallyDeleteDocument" r did
     where
       runUpdateOnDeletableDoc whereClause whereFields =
@@ -1594,10 +1616,11 @@ instance DBUpdate ReallyDeleteDocument (Either String Document) where
                               , toSql did
                               ])
 
-data RejectDocument = RejectDocument DocumentID SignatoryLinkID MinutesTime IPAddress (Maybe BS.ByteString)
+data (Actor a, Show a, Eq a, Ord a) => RejectDocument a = RejectDocument DocumentID SignatoryLinkID (Maybe BS.ByteString) a
                       deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate RejectDocument (Either String Document) where
-  dbUpdate (RejectDocument docid slid time ipnumber customtext) =do
+instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (RejectDocument a) (Either String Document) where
+  dbUpdate (RejectDocument docid slid customtext actor) = do
+    let time = actorTime actor
     mdocument <- dbQuery $ GetDocumentByDocumentID docid
     case mdocument of
       Nothing -> return $ Left $ "Cannot RejectDocument document " ++ show docid ++ " because it does not exist"
@@ -1614,6 +1637,15 @@ instance DBUpdate RejectDocument (Either String Document) where
                                                , sqlLogAppend time ("Document rejected")
                                                ]
                                                "WHERE id = ?" [toSql docid]
+              let txt = case actorEmail actor of
+                    Just eml -> "Document reject by signatory with email " ++ show eml ++ "."
+                    Nothing  -> "Document reject by system."
+              when (r == 1) $
+                ignore $ dbUpdate $ InsertEvidenceEvent
+                ClickRejectEvidence
+                txt
+                (Just docid)
+                actor
               getOneDocumentAffected "RejectDocument" r docid
           s -> return $ Left $ "Cannot RejectDocument document " ++ show docid ++ " because " ++ concat s
 
