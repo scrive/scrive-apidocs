@@ -81,6 +81,7 @@ module Doc.Model
   , TimeoutDocument(..)
   , UpdateFields(..)
   , UpdateSigAttachments(..)
+  , SetDocumentModificationData(..)
   -- , FixBug510ForDocument(..)
   --, MigrateDocumentSigAccounts(..)
   ) where
@@ -2372,3 +2373,11 @@ instance DBQuery GetUsersAndStats [(User, Maybe Company, DocStats)] where
     uas <- fetchUsersAndStats st
     return $ sumUserStats uas time
 
+data SetDocumentModificationData = SetDocumentModificationData DocumentID MinutesTime
+                      deriving (Eq, Ord, Show, Typeable)
+instance DBUpdate SetDocumentModificationData (Either String Document) where
+  dbUpdate (SetDocumentModificationData did time) = do
+    r <- runUpdateStatement "documents"
+         [ sqlField "mtime" time]
+         "WHERE id = ?" [ toSql did ]
+    getOneDocumentAffected "SetDocumentModificationData" r did

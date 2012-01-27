@@ -66,6 +66,7 @@ import qualified Data.Map as Map
 import Text.JSON hiding (Result)
 import ForkAction
 import qualified ELegitimation.BankID as BankID
+import Data.Function
 {-
   Document state transitions are described in DocState.
 
@@ -1430,7 +1431,7 @@ getDocumentsForUserByType doctype user = do
                      return $ union mysigdocs mycompanydocs
                    else return mysigdocs
 
-  return . filter ((\d -> documenttype d == doctype)) $ nub mydocuments
+  return . filter ((\d -> documenttype d == doctype)) $ (nubBy $ on (==) documentid) mydocuments
 
 
 handleAttachmentViewForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
@@ -1484,12 +1485,6 @@ handleFilePages did fid = do
       pageinfo (_,width,height) = JSObject $ toJSObject [("width",JSRational True $ toRational width),
                                                          ("height",JSRational True $ toRational height)
                                                         ]
-
--- get rid of duplicates
--- FIXME: nub is very slow
-prepareDocsForList :: [Document] -> [Document]
-prepareDocsForList =
-  sortBy (\d1 d2 -> compare (documentmtime d2) (documentmtime d1)) . nub
 
 handlePageOfDocument :: Kontrakcja m => DocumentID -> m (Either KontraLink Response)
 handlePageOfDocument docid = checkUserTOSGet $ handlePageOfDocument' docid Nothing
@@ -1809,12 +1804,13 @@ handleRestart docid = withUserPost $ do
 
 handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleResend docid signlinkid  = withUserPost $ do
-  ctx@Context { ctxmaybeuser = Just user } <- getContext
+  ctx@Context { ctxmaybeuser = Just user , ctxtime} <- getContext
   doc <- guardRightM $ getDocByDocID docid
   guard (isAuthor (doc, user)) -- only author can resend
   signlink <- guardJust $ getSigLinkFor doc signlinkid
   customMessage <- getCustomTextField "customtext"
   _ <- sendReminderEmail customMessage ctx doc signlink
+  _ <- runDBUpdate $ SetDocumentModificationData docid ctxtime
   addFlashM $ flashRemindMailSent signlink
   return (LinkIssueDoc docid)
 
@@ -2038,17 +2034,17 @@ jsonDocumentsList = do
             let tfilter doc = (Template Contract == documenttype doc)
             userdocs <- doc_query $ GetDocumentsByAuthor (userid user)
             shareddocs <- doc_query $ GetDocumentsSharedInCompany user
-            return $ nub . filter tfilter $ userdocs ++ shareddocs
+            return $ (nubBy $ on (==) documentid) . filter tfilter $ userdocs ++ shareddocs
         "Template|Offer" -> do
             let tfilter doc = (Template Offer == documenttype doc)
             userdocs <- doc_query $ GetDocumentsByAuthor (userid user)
             shareddocs <- doc_query $ GetDocumentsSharedInCompany user
-            return $ nub . filter tfilter $ userdocs ++ shareddocs
+            return $ (nubBy $ on (==) documentid) . filter tfilter $ userdocs ++ shareddocs
         "Template|Order" -> do
             let tfilter doc = (Template Order == documenttype doc)
             userdocs <- doc_query $ GetDocumentsByAuthor (userid user)
             shareddocs <- doc_query $ GetDocumentsSharedInCompany user
-            return $ nub . filter tfilter $ userdocs ++ shareddocs
+            return $ (nubBy $ on (==) documentid) . filter tfilter $ userdocs ++ shareddocs
         _ -> do
             Log.error "Documents list : No valid document type provided"
             return []
