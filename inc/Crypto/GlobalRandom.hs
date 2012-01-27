@@ -6,7 +6,7 @@
 -- sufficient entropy.
 
 module Crypto.GlobalRandom
-  ( genBytes
+  ( genBytesIO
   , Random(..)
   , boundedIntegralGenIO
   ) where
