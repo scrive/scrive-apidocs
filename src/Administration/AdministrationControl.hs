@@ -31,6 +31,7 @@ module Administration.AdministrationControl(
           , daveDocument
           , daveUser
           , daveCompany
+          , daveUserHistory
           , serveLogDirectory
           , jsonUsersList
           , jsonCompanies
@@ -775,6 +776,14 @@ daveUser :: Kontrakcja m => UserID ->  m String
 daveUser userid = onlyAdmin $ do
     user <- runDBOrFail $ dbQuery $ GetUserByID userid
     return $ inspectXML user
+
+{- |
+   Used by super users to inspect a particular user's history.
+-}
+daveUserHistory :: Kontrakcja m => UserID -> m String
+daveUserHistory userid = onlyAdmin $ do
+    history <- runDBOrFail $ dbQuery $ GetUserHistoryByUserID userid
+    return $ inspectXML history
 
 {- |
     Used by super users to inspect a company in xml.

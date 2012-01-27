@@ -15,6 +15,7 @@ module User.Model (
   , UserMailAPI(..)
   , UserSettings(..)
   , UserHistory(..)
+  , UserHistoryID(..)
   , UserHistoryEvent(..)
   , UserHistoryEventType(..)
   , GetUsers(..)
@@ -39,6 +40,7 @@ module User.Model (
   , SetUserCompanyAdmin(..)
   , AddUserHistory(..)
   , GetUserHistoryByID(..)
+  , GetUserHistoryByUserID(..)
   , LogHistoryLoginAttempt(..)
   , LogHistoryLoginSuccess(..)
   , LogHistoryPasswordSetup(..)
@@ -141,7 +143,7 @@ data UserSettings  = UserSettings {
   } deriving (Eq, Ord, Show)
 
 newtype UserHistoryID = UserHistoryID Int64
-  deriving (Eq, Ord, Data, Typeable)
+  deriving (Typeable)
 $(newtypeDeriveConvertible ''UserHistoryID)
 $(newtypeDeriveUnderlyingReadShow ''UserHistoryID)
 $(deriveSerialize ''UserHistoryID)
@@ -156,11 +158,13 @@ data UserHistory = UserHistory {
   , uhsystemversion    :: BS.ByteString
   , uhperforminguserid :: Maybe UserID
   }
+  deriving (Show)
 
 data UserHistoryEvent = UserHistoryEvent {
     uheventtype :: UserHistoryEventType
   , uheventdata :: Maybe JSValue
   }
+  deriving (Show)
 
 data UserHistoryEventType = UserLoginAttempt 
                           | UserLoginSuccess 
@@ -169,6 +173,7 @@ data UserHistoryEventType = UserLoginAttempt
                           | UserAccountCreated 
                           | UserDetailsChange 
                           | UserTOSAccept
+  deriving (Show)
 $(enumDeriveConvertible ''UserHistoryEventType)
 
 instance HasLocale User where
@@ -368,6 +373,15 @@ instance DBQuery GetUserHistoryByID (Maybe UserHistory) where
     _  <- execute st [toSql uid]
     uh <- fetchUserHistory st
     oneObjectReturnedGuard uh
+
+data GetUserHistoryByUserID = GetUserHistoryByUserID UserID
+instance DBQuery GetUserHistoryByUserID (Maybe [UserHistory]) where
+  dbQuery (GetUserHistoryByUserID uid) = wrapDB $ \conn -> do
+    st <- prepare conn $ selectUserHistorySQL 
+            ++ " WHERE user_id = ? ORDER BY time DESC "
+    _  <- execute st [toSql uid]
+    hist <- fetchUserHistory st
+    return $ if null hist then Nothing else Just hist
 
 data LogHistoryLoginAttempt = LogHistoryLoginAttempt UserID IPAddress MinutesTime
 instance DBUpdate LogHistoryLoginAttempt (Maybe UserHistory) where
