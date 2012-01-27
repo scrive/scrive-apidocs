@@ -1,7 +1,7 @@
 module User.Password where
 
 import Control.Monad.IO.Class
-import System.Random (newStdGen, randoms)
+import Crypto.GlobalRandom(genBytesIO)
 import qualified Data.ByteString as BS
 import qualified Data.Digest.SHA256 as D
 
@@ -14,15 +14,11 @@ data Password = Password {
 
 createPassword :: MonadIO m => BS.ByteString -> m Password
 createPassword password = liftIO $ do
-  salt <- makeSalt
+  salt <- Binary `fmap` genBytesIO 10
   return Password {
       pwdHash = hashPassword password salt
     , pwdSalt = salt
   }
-  where
-    makeSalt = do
-      rng <- newStdGen
-      return . Binary . BS.pack . take 10 $ map fromIntegral (randoms rng :: [Int])
 
 hashPassword :: BS.ByteString -> Binary -> Binary
 hashPassword password salt =
