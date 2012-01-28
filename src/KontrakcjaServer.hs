@@ -35,6 +35,7 @@ import Control.Concurrent.MVar
 
 import AppDB
 import Configuration
+import Crypto.RNG(CryptoRNGState, newCryptoRNGState, inIO)
 import DB.Checks
 import DB.Classes
 import Database.HDBC.PostgreSQL
@@ -75,7 +76,7 @@ initDatabaseEntries :: Nexus -> [(Email,String)] -> IO ()
 initDatabaseEntries conn iusers = do
   -- create initial database entries
   flip mapM_ iusers $ \(email,passwordstring) -> do
-      passwd <- createPassword (BS.pack passwordstring)
+      passwd <- inIO (nexusRNG conn) $ createPassword (BS.pack passwordstring)
       maybeuser <- ioRunDB conn $ dbQuery $ GetUserByEmail Nothing email
       case maybeuser of
           Nothing -> do
@@ -83,9 +84,9 @@ initDatabaseEntries conn iusers = do
               return ()
           Just _ -> return () -- user exist, do not add it
 
-uploadFileToAmazon :: AppConf -> IO Bool
-uploadFileToAmazon appConf = do
-  withPostgreSQL (dbConfig appConf) $ \conn' -> mkNexus conn' >>= \conn -> ioRunDB conn $ do
+uploadFileToAmazon :: CryptoRNGState -> AppConf -> IO Bool
+uploadFileToAmazon rng appConf = do
+  withPostgreSQL (dbConfig appConf) $ \conn' -> mkNexus rng conn' >>= \conn -> ioRunDB conn $ do
     mfile <- dbQuery $ GetFileThatShouldBeMovedToAmazon
     case mfile of
       Just file -> do
@@ -102,6 +103,7 @@ runKontrakcjaServer = Log.withLogger $ do
   appname <- getProgName
   args <- getArgs
   appConf <- readConfig Log.server appname args "kontrakcja.conf"
+  rng <- newCryptoRNGState
   templates' <- readGlobalTemplates
   templateModTime <- getTemplatesModTime
   templates <- newMVar (templateModTime, templates')
@@ -117,7 +119,7 @@ runKontrakcjaServer = Log.withLogger $ do
      else createDirectoryIfMissing True $ docstore appConf
 
   withPostgreSQL (dbConfig appConf) $ \conn' -> do
-    conn <- mkNexus conn'                                     
+    conn <- mkNexus rng conn'
     res <- ioRunDB conn $ tryDB $ performDBChecks Log.server kontraTables kontraMigrations
     case res of
       Left (e::E.SomeException) -> do
@@ -127,6 +129,7 @@ runKontrakcjaServer = Log.withLogger $ do
             templates = templates
           , filecache = filecache'
           , docscache = docs
+          , cryptorng = rng
         }
         E.bracket
                  -- start the state system
@@ -150,13 +153,13 @@ runKontrakcjaServer = Log.withLogger $ do
                               t1 <- forkIO $ simpleHTTPWithSocket listensocket (nullConf { port = fromIntegral port })
                                     (appHandler routes appConf appGlobals)
                               let scheddata = SchedulerData appConf templates (mailsConfig appConf)
-                              t2 <- forkIO $ cron 60 $ runScheduler (oldScheduler >> actionScheduler UrgentAction) scheddata
-                              t3 <- forkIO $ cron 600 $ runScheduler (actionScheduler LeisureAction) scheddata
-                              t4 <- forkIO $ cron (60 * 60 * 4) $ runScheduler runDocumentProblemsCheck scheddata
-                              t5 <- forkIO $ cron (60 * 60 * 24) $ runScheduler runArchiveProblemsCheck scheddata
-                              t6 <- forkIO $ cron 5 $ runScheduler processEvents scheddata
+                              t2 <- forkIO $ cron 60 $ runScheduler rng (oldScheduler >> actionScheduler UrgentAction) scheddata
+                              t3 <- forkIO $ cron 600 $ runScheduler rng (actionScheduler LeisureAction) scheddata
+                              t4 <- forkIO $ cron (60 * 60 * 4) $ runScheduler rng runDocumentProblemsCheck scheddata
+                              t5 <- forkIO $ cron (60 * 60 * 24) $ runScheduler rng runArchiveProblemsCheck scheddata
+                              t6 <- forkIO $ cron 5 $ runScheduler rng processEvents scheddata
                               t7 <- forkIO $ cron (60) $ (let loop = (do
-                                                                        r <- uploadFileToAmazon appConf
+                                                                        r <- uploadFileToAmazon rng appConf
                                                                         if r then loop else return ()) in loop)
                               t8 <- forkIO $ cron (60*60) System.Mem.performGC
                               return [t1, t2, t3, t4, t5, t6, t7, t8]

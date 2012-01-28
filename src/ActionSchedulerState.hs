@@ -30,7 +30,7 @@ module ActionSchedulerState (
 import Control.Applicative
 import Control.Monad.State
 import Control.Monad.Reader
-import Crypto.GlobalRandom(genIO)
+import Crypto.RNG(CryptoRNG, random)
 import qualified Data.ByteString as BS
 import Data.Typeable
 import Happstack.Data.IxSet
@@ -259,9 +259,9 @@ checkValidity now maction = maction >>= \action ->
        else Nothing
 
 -- | Create new 'password reminder' action
-newPasswordReminder :: User -> IO Action
+newPasswordReminder :: CryptoRNG m => User -> m Action
 newPasswordReminder user = do
-    hash <- genIO
+    hash <- random
     now <- getMinutesTime
     let action = PasswordReminder {
           prUserID         = userid user
@@ -271,9 +271,9 @@ newPasswordReminder user = do
     update $ NewAction action $ (12*60) `minutesAfter` now
 
 -- | Create new 'invitation sent' action
-newViralInvitationSent :: Email -> UserID -> IO Action
+newViralInvitationSent :: CryptoRNG m => Email -> UserID -> m Action
 newViralInvitationSent email inviterid = do
-    hash <- genIO
+    hash <- random
     now <- getMinutesTime
     let action = ViralInvitationSent {
           visEmail          = email
@@ -285,9 +285,9 @@ newViralInvitationSent email inviterid = do
     update $ NewAction action $ (7*24*60) `minutesAfter` now
 
 -- | Create new 'account created' action
-newAccountCreated :: User -> IO Action
+newAccountCreated :: CryptoRNG m => User -> m Action
 newAccountCreated user = do
-    hash <- genIO
+    hash <- random
     now <- getMinutesTime
     let action = AccountCreated {
           acUserID = userid user
@@ -296,9 +296,10 @@ newAccountCreated user = do
     update $ NewAction action $ (24*60) `minutesAfter` now
 
 -- | Create new 'account created by signing' action
-newAccountCreatedBySigning :: User -> (DocumentID, SignatoryLinkID) -> IO Action
+newAccountCreatedBySigning ::
+  CryptoRNG m => User -> (DocumentID, SignatoryLinkID) -> m Action
 newAccountCreatedBySigning user doclinkdata = do
-    hash <- genIO
+    hash <- random
     now <- getMinutesTime
     let action = AccountCreatedBySigning {
           acbsState         = NothingSent
@@ -308,9 +309,9 @@ newAccountCreatedBySigning user doclinkdata = do
     }
     update $ NewAction action $ (24 * 60) `minutesAfter` now
 
-newRequestEmailChange :: User -> Email -> IO Action
+newRequestEmailChange :: CryptoRNG m => User -> Email -> m Action
 newRequestEmailChange user newemail = do
-  hash <- genIO
+  hash <- random
   now <- getMinutesTime
   let action = RequestEmailChange {
     recUser = userid user

@@ -32,6 +32,7 @@ import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 
 import Context
+import Crypto.RNG (CryptoRNG, getCryptoRNGState, newCryptoRNGState)
 import DB.Classes
 import KontraMonad
 import Mails.MailsConfig
@@ -47,6 +48,9 @@ newtype TestKontra a = TK { unTK :: ErrorT Response (ReaderT Request (StateT (Co
     deriving (Applicative, Functor, Monad, MonadIO, MonadPlus)
 
 instance Kontrakcja TestKontra
+
+instance CryptoRNG TestKontra where
+  getCryptoRNGState = TK $ gets (ctxcryptorng . fst)
 
 instance DBMonad TestKontra where
   getConnection = ctxdbconn <$> getContext
@@ -197,6 +201,7 @@ mkContext locale globaltemplates = liftIO $ do
     docs <- newMVar M.empty
     memcache <- MemCache.new BS.length 52428800
     time <- getMinutesTime
+    rng <- newCryptoRNGState -- TODO: Here we could start with a deterministic seed instead
     return Context {
           ctxmaybeuser = Nothing
         , ctxhostpart = "http://testkontra.fake"
@@ -232,4 +237,5 @@ mkContext locale globaltemplates = liftIO $ do
         , ctxadminaccounts = []
         , ctxsalesaccounts = []
         , ctxmagichashes = Map.empty
+        , ctxcryptorng = rng
     }

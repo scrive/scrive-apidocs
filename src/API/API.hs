@@ -38,6 +38,7 @@ import KontraMonad
 import Text.JSON
 import Control.Monad.Reader
 import Control.Monad.Error
+import Crypto.RNG (CryptoRNG)
 import DB.Classes
 import Templates.Templates
 import qualified Log
@@ -49,9 +50,9 @@ type APIRequestBody = JSValue
 
 {- | API functions are build over Kontra with an ability to exit, and with some context -}
 newtype APIFunction m c a = AF { unAF :: ReaderT c (ErrorT (API_ERROR, String) m) a }
-    deriving (Functor, Monad, MonadError (API_ERROR, String), MonadIO, MonadReader c)
+    deriving (Functor, Monad, MonadError (API_ERROR, String), MonadIO, MonadReader c, CryptoRNG)
 
-instance (APIContext c, Kontrakcja m) => DBMonad (APIFunction m c) where
+instance (APIContext c, Kontrakcja m, CryptoRNG m) => DBMonad (APIFunction m c) where
     getConnection = liftKontra getConnection
     handleDBError e = do
       Log.error $ show e

@@ -11,7 +11,7 @@ import Text.JSON (JSValue(..), toJSObject, showJSON)
 
 import ActionSchedulerState
 import AppView
-import Crypto.GlobalRandom (genIO)
+import Crypto.RNG (CryptoRNG, random)
 import DB.Classes
 import Doc.Model
 import Doc.DocStateData
@@ -134,9 +134,9 @@ sendRequestChangeEmailMail user newemail = do
                                     fullname = getFullName user
                                   , email = unEmail newemail }]})
 
-newRequestChangeEmailLink :: MonadIO m => User -> Email -> m KontraLink
+newRequestChangeEmailLink :: CryptoRNG m => User -> Email -> m KontraLink
 newRequestChangeEmailLink user newemail = do
-    action <- liftIO $ newRequestEmailChange user newemail
+    action <- newRequestEmailChange user newemail
     return $ LinkChangeUserEmail (actionID action)
                                  (recToken $ actionType action)
 
@@ -313,7 +313,7 @@ handlePostUserMailAPI = withUserPost $ do
         case mapi of
              Nothing -> do
                  when enabledapi $ do
-                     apikey <- liftIO genIO
+                     apikey <- random
                      _ <- runDBUpdate $ SetUserMailAPI userid $ Just UserMailAPI {
                            umapiKey = apikey
                          , umapiDailyLimit = 50
@@ -332,7 +332,7 @@ handlePostUserMailAPI = withUserPost $ do
                         case (mresetkey, mresetsenttoday, mdailylimit) of
                              (Just resetkey, Just resetsenttoday, Just dailylimit) -> do
                                  newkey <- if resetkey
-                                   then liftIO genIO
+                                   then random
                                    else return $ umapiKey api
                                  _ <- runDBUpdate $ SetUserMailAPI userid $ Just api {
                                        umapiKey = newkey
@@ -382,7 +382,7 @@ handlePostUserSecurity = do
             (_, Left f) ->
               addFlashM f
             _ ->  do
-              passwordhash <- liftIO $ createPassword password
+              passwordhash <- createPassword password
               _ <- runDBUpdate $ SetUserPassword (userid user) passwordhash
               addFlashM flashMessageUserDetailsSaved
         _ | isJust moldpassword || isJust mpassword || isJust mpassword2 ->
@@ -449,9 +449,9 @@ handleViralInvite = withUserPost $ do
         mail <- viralInviteMail ctx invitedemail link
         scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = BS.empty, email = invitedemail }]}
 
-randomPassword :: IO BS.ByteString
+randomPassword :: CryptoRNG m => m BS.ByteString
 randomPassword =
-    BS.fromString <$> randomString 8 (['0'..'9'] ++ ['A'..'Z'] ++ ['a'..'z'])
+    BS.fromString `liftM` randomString 8 (['0'..'9'] ++ ['A'..'Z'] ++ ['a'..'z'])
 
 --there must be a better way than all of these weird user create functions
 -- TODO clean up
@@ -463,7 +463,7 @@ createUser :: Kontrakcja m => Email
                               -> m (Maybe User)
 createUser email fstname sndname mcompany = do
   ctx <- getContext
-  passwd <- liftIO $ createPassword =<< randomPassword
+  passwd <- createPassword =<< randomPassword
   runDBUpdate $ AddUser (fstname, sndname) (unEmail $ email) (Just passwd) False Nothing (fmap companyid mcompany) (ctxlocale ctx)
 
 sendNewUserMail :: Kontrakcja m => Bool -> User -> m ()
@@ -499,7 +499,7 @@ createInvitedUser :: Kontrakcja m => (BS.ByteString, BS.ByteString) -> BS.ByteSt
 createInvitedUser names email mlocale = do
     ctx <- getContext
     let locale = fromMaybe (ctxlocale ctx) mlocale
-    passwd <- liftIO $ createPassword =<< randomPassword
+    passwd <- createPassword =<< randomPassword
     runDBUpdate $ AddUser names email (Just passwd) False Nothing Nothing locale
 
 {- |
@@ -788,7 +788,7 @@ handleActivate aid hash signupmethod actvuser = do
         Right () ->
           if tos
             then do
-              passwordhash <- liftIO $ createPassword password
+              passwordhash <- createPassword password
               runDB $ do
                 _ <- dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser){
                          userfstname = fstname
@@ -854,7 +854,7 @@ handlePasswordReminderPost aid hash = do
                      case (checkPasswordsMatch password password2) of
                           Right () -> do
                               dropExistingAction aid
-                              passwordhash <- liftIO $ createPassword password
+                              passwordhash <- createPassword password
                               _ <- runDBUpdate $ SetUserPassword (userid user) passwordhash
                               addFlashM flashMessageUserPasswordChanged
                               Context{ctxtime} <- getContext

@@ -31,7 +31,7 @@ import System.Exit
 import System.IO
 import System.IO.Temp
 import System.Process
-import System.Random (randomRIO)
+import Crypto.RNG (CryptoRNG, randomR)
 import System.Time
 import qualified Log
 import qualified Codec.Binary.Url as URL
@@ -99,10 +99,11 @@ getUnique64 ixset constr = do
      then return v
      else getUnique64 ixset constr
 
--- | Generate random string of specified length that contains allowed chars
-randomString :: MonadIO m => Int -> [Char] -> m String
-randomString n allowed_chars = liftIO $
-    sequence $ replicate n $ ((!!) allowed_chars <$> randomRIO (0, len))
+-- | Generate random string of specified length that contains allowed
+-- chars.
+randomString :: CryptoRNG m => Int -> [Char] -> m String
+randomString n allowed_chars =
+    sequence $ replicate n $ ((!!) allowed_chars `liftM` randomR (0, len))
     where
         len = length allowed_chars - 1
 
@@ -373,9 +374,9 @@ thd3 (_,_,c) = c
 
 -- HTTPS utils
 
-isSecure::(ServerMonad m,Functor m) => m Bool
+isSecure::ServerMonad m => m Bool
 isSecure = do
-     (Just (BS.fromString "http") /=) <$> (getHeaderM "scheme")
+     (Just (BS.fromString "http") /=) `liftM` (getHeaderM "scheme")
 
 isHTTPS :: (ServerMonad m) => m Bool
 isHTTPS = do

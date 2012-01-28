@@ -52,6 +52,7 @@ module DB.Classes
 import Control.Applicative
 import Control.Monad.IO.Class
 import Control.Monad.RWS
+import Crypto.RNG (CryptoRNG, getCryptoRNGState)
 import DB.Fetcher
 import Data.Maybe
 import Database.HDBC hiding (originalQuery)
@@ -86,6 +87,9 @@ type DBInside a = RWST Nexus () (Maybe Statement) IO a
 -- this basically kills its 'transactional' character.
 newtype DB a = DB { unDB :: DBInside a }
   deriving (Applicative, Functor, Monad, MonadIO)
+
+instance CryptoRNG DB where
+  getCryptoRNGState = DB $ asks nexusRNG
 
 -- | Protected 'liftIO'. Properly catches 'SqlError' and converts it
 -- to 'DBException'. Adds 'HDBC.originalQuery' that should help a lot.
@@ -265,7 +269,7 @@ class DBUpdate q r | q -> r where
 -- In such case we want to interrupt what we're currently doing and exit
 -- gracefully, most likely logging an error is some way. Since a way of
 -- handling such case may vary in different monads, hence this function.
-class (Functor m, MonadIO m) => DBMonad m where
+class (Functor m, CryptoRNG m) => DBMonad m where
   getConnection :: m Nexus
   -- | From the point of view of the implementor of instances of
   -- 'DBMonad': handle a database error.  However, code that uses

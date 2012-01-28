@@ -42,6 +42,7 @@ import Happstack.Server hiding (simpleHTTP)
 import Misc
 import Kontra
 import Administration.AdministrationView
+import Crypto.RNG (CryptoRNG)
 import Doc.Model
 import Doc.DocStateData
 import qualified Data.ByteString.Char8 as BSC
@@ -467,7 +468,7 @@ getUserInfoChange = do
 
 
 {- Create service-}
-handleCreateService :: Kontrakcja m => m KontraLink
+handleCreateService :: (CryptoRNG m, Kontrakcja m) => m KontraLink
 handleCreateService = onlySalesOrAdmin $ do
     name <- guardJustM $ getFieldUTF "name"
     Log.debug $ "name: " ++ show name
@@ -475,7 +476,7 @@ handleCreateService = onlySalesOrAdmin $ do
     Log.debug $ "admin: " ++ show admin
     pwdBS <- getFieldUTFWithDefault mempty "password"
     Log.debug $ "password: " ++ show pwdBS
-    pwd <- liftIO $ createPassword pwdBS
+    pwd <- createPassword pwdBS
     service <- guardJustM $ runDBUpdate $ CreateService (ServiceID name) (Just pwd) (userid admin)
     Log.debug $ "service: " ++ show service
     location <- getFieldUTF "location"

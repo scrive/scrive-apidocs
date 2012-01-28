@@ -2,6 +2,7 @@ module Context (
       Context(..)
     ) where
 
+import Crypto.RNG (CryptoRNGState)
 import Control.Concurrent.MVar
 import DB.Nexus
 import File.FileID
@@ -50,4 +51,5 @@ data Context = Context
     , ctxadminaccounts       :: [Email] -- ^
     , ctxsalesaccounts       :: [Email] -- ^
     , ctxmagichashes         :: Map.Map SignatoryLinkID MagicHash
+    , ctxcryptorng           :: CryptoRNGState
     }

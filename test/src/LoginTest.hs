@@ -1,7 +1,6 @@
 module LoginTest (loginTests, assertLoginEventRecordedFor) where
 
 import Control.Applicative
-import Control.Monad.Reader
 import Data.List
 import DB.Nexus
 import Happstack.Server
@@ -94,7 +93,7 @@ createUserAndResetPassword :: Nexus -> DB (User, Response, Context)
 createUserAndResetPassword conn = do
   pwd <- createPassword $ BS.pack "admin"
   Just user <- dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") (Just pwd) False Nothing Nothing (mkLocaleFromRegion defaultValue)
-  Action{ actionID, actionType = PasswordReminder { prToken } } <- liftIO $ newPasswordReminder user
+  Action{ actionID, actionType = PasswordReminder { prToken } } <- newPasswordReminder user
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates

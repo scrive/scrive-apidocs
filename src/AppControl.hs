@@ -19,6 +19,7 @@ import API.Service.Model
 
 import ActionSchedulerState
 import AppView as V
+import Crypto.RNG (CryptoRNGState)
 import DB.Classes
 import Doc.DocStateData
 import InputValidation
@@ -80,6 +81,7 @@ data AppGlobals
     = AppGlobals { templates       :: MVar (ClockTime, KontrakcjaGlobalTemplates)
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
                  , docscache       :: MVar (Map.Map FileID JpegPages)
+                 , cryptorng       :: CryptoRNGState
                  }
 
 {- |
@@ -225,7 +227,7 @@ appHandler handleRoutes appConf appGlobals = do
 
   rq <- askRq
 
-  session <- handleSession
+  session <- handleSession (cryptorng appGlobals)
   ctx <- createContext rq session
   response <- handle rq session ctx
   finishTime <- liftIO getClockTime
@@ -284,7 +286,7 @@ appHandler handleRoutes appConf appGlobals = do
                      _ -> unknownIPAddress
 
       psqlconn <- liftIO $ connectPostgreSQL $ dbConfig appConf
-      conn <- liftIO $ mkNexus psqlconn
+      conn <- liftIO $ mkNexus (cryptorng appGlobals) psqlconn
       minutestime <- liftIO getMinutesTime
       muser <- getUserFromSession conn session
       mcompany <- getCompanyFromSession conn session
@@ -339,6 +341,7 @@ appHandler handleRoutes appConf appGlobals = do
                 , ctxadminaccounts = admins appConf
                 , ctxsalesaccounts = sales appConf
                 , ctxmagichashes = getMagicHashes session
+                , ctxcryptorng = cryptorng appGlobals
                 }
       return ctx
 

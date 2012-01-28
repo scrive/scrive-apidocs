@@ -97,7 +97,7 @@ handleChangeServicePassword sid = do
             newpassword2 <- getFieldUTFWithDefault BS.empty "newpassword2"
             if (verifyPassword (servicepassword $ servicesettings service) password) && (newpassword1 == newpassword2)
                 then do
-                    pwd <- liftIO $ createPassword newpassword1
+                    pwd <- createPassword newpassword1
                     _ <- runDBUpdate $ UpdateServiceSettings sid $ (servicesettings service) {servicepassword = Just pwd}
                     addFlash (OperationDone, "Password changed")
                     return LoopBack
@@ -115,7 +115,7 @@ handleChangeServicePasswordAdminOnly sid passwordString = do
     mservice <- runDBQuery $ GetService sid
     case (mservice, isAdmin ctx) of
      (Just service,True) -> do
-       pwd <- liftIO $ createPassword password
+       pwd <- createPassword password
        _ <- runDBUpdate $ UpdateServiceSettings sid $ (servicesettings service) {servicepassword = Just pwd}
        addFlash (OperationDone, "Password changed")
        getHomeOrUploadLink

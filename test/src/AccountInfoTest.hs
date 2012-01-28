@@ -126,7 +126,7 @@ assertCompanyUpgradeFailed uid (res, ctx) = do
 testChangeEmailAddress :: Nexus -> Assertion
 testChangeEmailAddress conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
-  passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
+  passwordhash <- createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   globaltemplates <- readGlobalTemplates
@@ -221,7 +221,7 @@ testNeedEmailToBeUniqueToRequestChange conn = withTestEnvironment conn $ do
 testEmailChangeFailsIfActionIDIsWrong :: Nexus -> Assertion
 testEmailChangeFailsIfActionIDIsWrong conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
-  passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
+  passwordhash <- createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   globaltemplates <- readGlobalTemplates
@@ -229,7 +229,7 @@ testEmailChangeFailsIfActionIDIsWrong conn = withTestEnvironment conn $ do
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [("password", inText "abc123")]
-  action <- liftIO $ newRequestEmailChange user (Email $ BS.fromString "jim@bob.com")
+  action <- newRequestEmailChange user (Email $ BS.fromString "jim@bob.com")
   let (RequestEmailChange _inviterid _invitedemail token) = actionType action
   (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (ActionID 123) token >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
@@ -239,7 +239,7 @@ testEmailChangeFailsIfActionIDIsWrong conn = withTestEnvironment conn $ do
 testEmailChangeFailsIfMagicHashIsWrong :: Nexus -> Assertion
 testEmailChangeFailsIfMagicHashIsWrong conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
-  passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
+  passwordhash <- createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   globaltemplates <- readGlobalTemplates
@@ -247,7 +247,7 @@ testEmailChangeFailsIfMagicHashIsWrong conn = withTestEnvironment conn $ do
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [("password", inText "abc123")]
-  action <- liftIO $ newRequestEmailChange user (Email $ BS.fromString "jim@bob.com")
+  action <- newRequestEmailChange user (Email $ BS.fromString "jim@bob.com")
   (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) (unsafeMagicHash 123) >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
@@ -256,7 +256,7 @@ testEmailChangeFailsIfMagicHashIsWrong conn = withTestEnvironment conn $ do
 testEmailChangeIfForAnotherUser :: Nexus -> Assertion
 testEmailChangeIfForAnotherUser conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
-  passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
+  passwordhash <- createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   Just anotheruser <- addNewUser "Fred" "Frog" "fred@frog.com"
@@ -265,7 +265,7 @@ testEmailChangeIfForAnotherUser conn = withTestEnvironment conn $ do
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [("password", inText "abc123")]
-  action <- liftIO $ newRequestEmailChange anotheruser (Email $ BS.fromString "jim@bob.com")
+  action <- newRequestEmailChange anotheruser (Email $ BS.fromString "jim@bob.com")
   let (RequestEmailChange _inviterid _invitedemail token) = actionType action
   (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) token >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
@@ -275,7 +275,7 @@ testEmailChangeIfForAnotherUser conn = withTestEnvironment conn $ do
 testEmailChangeFailsIfEmailInUse:: Nexus -> Assertion
 testEmailChangeFailsIfEmailInUse conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
-  passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
+  passwordhash <- createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   globaltemplates <- readGlobalTemplates
@@ -283,7 +283,7 @@ testEmailChangeFailsIfEmailInUse conn = withTestEnvironment conn $ do
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [("password", inText "abc123")]
-  action <- liftIO $ newRequestEmailChange user (Email $ BS.fromString "jim@bob.com")
+  action <- newRequestEmailChange user (Email $ BS.fromString "jim@bob.com")
 
   Just _ <- addNewUser "Jim" "Bob" "jim@bob.com"
   (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) (unsafeMagicHash 123) >>= sendRedirect
@@ -294,7 +294,7 @@ testEmailChangeFailsIfEmailInUse conn = withTestEnvironment conn $ do
 testEmailChangeFailsIfPasswordWrong :: Nexus -> Assertion
 testEmailChangeFailsIfPasswordWrong conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
-  passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
+  passwordhash <- createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   globaltemplates <- readGlobalTemplates
@@ -302,7 +302,7 @@ testEmailChangeFailsIfPasswordWrong conn = withTestEnvironment conn $ do
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [("password", inText "wrongpassword")]
-  action <- liftIO $ newRequestEmailChange user (Email $ BS.fromString "jim@bob.com")
+  action <- newRequestEmailChange user (Email $ BS.fromString "jim@bob.com")
 
   Just _ <- addNewUser "Jim" "Bob" "jim@bob.com"
   (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) (unsafeMagicHash 123) >>= sendRedirect
@@ -313,7 +313,7 @@ testEmailChangeFailsIfPasswordWrong conn = withTestEnvironment conn $ do
 testEmailChangeFailsIfNoPassword :: Nexus -> Assertion
 testEmailChangeFailsIfNoPassword conn = withTestEnvironment conn $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
-  passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
+  passwordhash <- createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   globaltemplates <- readGlobalTemplates
@@ -321,7 +321,7 @@ testEmailChangeFailsIfNoPassword conn = withTestEnvironment conn $ do
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [("password", inText "")]
-  action <- liftIO $ newRequestEmailChange user (Email $ BS.fromString "jim@bob.com")
+  action <- newRequestEmailChange user (Email $ BS.fromString "jim@bob.com")
 
   Just _ <- addNewUser "Jim" "Bob" "jim@bob.com"
   (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) (unsafeMagicHash 123) >>= sendRedirect

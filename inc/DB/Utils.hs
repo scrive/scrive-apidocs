@@ -10,7 +10,7 @@ module DB.Utils (
 
 import Data.Int
 import Database.HDBC as HDBC
-import System.Random (randomRIO)
+import Crypto.RNG (random)
 import qualified Control.Exception as E
 
 import DB.Classes as DB
@@ -18,6 +18,10 @@ import DB.Model
 import Data.Convertible
 import Control.Monad
 
+-- | Create unique database identifiers.  To play it safe, we use
+-- 'Crypto.RNG.random' to pick a cryptographically secure random one,
+-- instead of using sequences.  As Gracjan put it: "one more number to
+-- guess" for an attacker.
 class GetUniqueID m where
     getUniqueIDField :: Table -> String -> m Int64
 
@@ -26,8 +30,8 @@ getUniqueID table = getUniqueIDField table "id"
 
 instance GetUniqueID DB where
     getUniqueIDField table fieldname = do
+      uid <- random
       muid <- wrapDB $ \conn -> do
-        uid <- randomRIO (0, maxBound)
         st <- prepare conn $ "SELECT " ++ fieldname ++ " FROM " ++ tblName table ++ " WHERE " ++ fieldname ++ " = ?"
         _ <- execute st [toSql uid]
         fetchRow st >>= return . maybe (Just uid) (const Nothing)

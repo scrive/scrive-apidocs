@@ -86,7 +86,7 @@ import DB.Classes
 --import DB.Derive
 import DB.Fetcher
 import MagicHash (MagicHash)
-import Crypto.GlobalRandom(genIO)
+import Crypto.RNG(random)
 import DB.Utils
 import File.File
 import File.FileID
@@ -1434,7 +1434,7 @@ instance DBUpdate NewDocument (Either String Document) where
                         else [SignatoryPartner, SignatoryAuthor]
       linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
 
-      magichash <- liftIO $ genIO
+      magichash <- random
 
       let authorlink0 = signLinkFromDetails'
                         (signatoryDetailsFromUser user mcompany)
@@ -1542,7 +1542,7 @@ instance DBUpdate RestartDocument (Either String Document) where
       let signatoriesDetails = map (\x -> (signatorydetails x, signatoryroles x, signatorylinkid x)) $ documentsignatorylinks doc
           Just asl = getAuthorSigLink doc
       newSignLinks <- flip mapM signatoriesDetails $ do \(a,b,c) -> do
-                                                             magichash <- liftIO $ genIO
+                                                             magichash <- random
 
                                                              return $ signLinkFromDetails' a b c magichash 
       let Just authorsiglink0 = find isAuthor newSignLinks
@@ -1859,7 +1859,7 @@ instance DBUpdate ResetSignatoryDetails2 (Either String Document) where
             flip mapM signatories $ \(details, roles, mcsvupload) -> do
                      linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
 
-                     magichash <- liftIO $ genIO
+                     magichash <- random
 
                      let link' = (signLinkFromDetails' details roles linkid magichash)
                                  { signatorylinkcsvupload = mcsvupload }
@@ -1891,7 +1891,7 @@ instance DBUpdate SignLinkFromDetailsForTest SignatoryLink where
       wrapDB $ \conn -> runRaw conn "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
       linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
 
-      magichash <- liftIO $ genIO
+      magichash <- random
 
       let link = signLinkFromDetails' details
                         roles linkid magichash

@@ -12,13 +12,14 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
 
 import Assembler
+import Crypto.RNG (CryptoRNG)
 import MailingServerConf
 import Mails.Model
 import Misc
 import OurPrelude
 import qualified Log (mailingServer, mailContent)
 
-newtype Sender = Sender { sendMail :: MonadIO m => Mail -> m Bool }
+newtype Sender = Sender { sendMail :: CryptoRNG m => Mail -> m Bool }
 
 createSender :: MailsConfig -> Sender
 createSender mc = case mc of
@@ -29,25 +30,26 @@ createSender mc = case mc of
 createExternalSender :: String -> (Mail -> [String]) -> Sender
 createExternalSender program createargs = Sender { sendMail = send }
   where
-    send :: MonadIO m => Mail -> m Bool
-    send mail@Mail{..} = liftIO $ do
+    send :: CryptoRNG m => Mail -> m Bool
+    send mail@Mail{..} = do
       content <- assembleContent mail
-      (code, _, bsstderr) <- readProcessWithExitCode' program (createargs mail) content
-      let receivers = intercalate ", " (map addrEmail mailTo)
-      case code of
-        ExitFailure retcode -> do
-          Log.mailingServer $ "Error while sending email #" ++ show mailID ++ ", cannot execute " ++ program ++ " to send email (code " ++ show retcode ++ ") stderr: \n" ++ BSLU.toString bsstderr
-          return False
-        ExitSuccess -> do
-          let subject = filter (not . (`elem` "\r\n")) mailTitle
-          Log.mailingServer $ "Email #" ++ show mailID ++ " with subject '" ++ subject ++ "' sent correctly to: " ++ receivers
-          Log.mailContent $ unlines [
-              "Subject: " ++ subject
-            , "To: " ++ intercalate ", " (map addrEmail mailTo)
-            , "Attachments: " ++ show (length mailAttachments)
-            , htmlToTxt mailContent
-            ]
-          return True
+      liftIO $ do
+        (code, _, bsstderr) <- readProcessWithExitCode' program (createargs mail) content
+        let receivers = intercalate ", " (map addrEmail mailTo)
+        case code of
+          ExitFailure retcode -> do
+            Log.mailingServer $ "Error while sending email #" ++ show mailID ++ ", cannot execute " ++ program ++ " to send email (code " ++ show retcode ++ ") stderr: \n" ++ BSLU.toString bsstderr
+            return False
+          ExitSuccess -> do
+            let subject = filter (not . (`elem` "\r\n")) mailTitle
+            Log.mailingServer $ "Email #" ++ show mailID ++ " with subject '" ++ subject ++ "' sent correctly to: " ++ receivers
+            Log.mailContent $ unlines [
+                "Subject: " ++ subject
+              , "To: " ++ intercalate ", " (map addrEmail mailTo)
+              , "Attachments: " ++ show (length mailAttachments)
+              , htmlToTxt mailContent
+              ]
+            return True
 
 createSendGridSender :: MailsConfig -> Sender
 createSendGridSender config = createExternalSender "curl" createargs
@@ -75,19 +77,20 @@ createSendmailSender = createExternalSender "sendmail" createargs
 createLocalOpenSender :: MailsConfig -> Sender
 createLocalOpenSender config = Sender { sendMail = send }
   where
-    send :: MonadIO m => Mail -> m Bool
-    send mail@Mail{..} = liftIO $ do
-      let filename = localDirectory config ++ "/Email-" ++ addrEmail ($(head) mailTo) ++ "-" ++ show mailID ++ ".eml"
+    send :: CryptoRNG m => Mail -> m Bool
+    send mail@Mail{..} = do
       content <- assembleContent mail
-      BSL.writeFile filename content
-      Log.mailingServer $ "Email #" ++ show mailID ++ " saved to file " ++ filename
-      case localOpenCommand config of
-        Nothing  -> return ()
-        Just cmd -> do
-          _ <- createProcess (proc cmd [filename]) {
-              std_in  = Inherit
-            , std_out = Inherit
-            , std_err = Inherit
-          }
-          return ()
-      return True
+      let filename = localDirectory config ++ "/Email-" ++ addrEmail ($(head) mailTo) ++ "-" ++ show mailID ++ ".eml"
+      liftIO $ do
+        BSL.writeFile filename content
+        Log.mailingServer $ "Email #" ++ show mailID ++ " saved to file " ++ filename
+        case localOpenCommand config of
+          Nothing  -> return ()
+          Just cmd -> do
+            _ <- createProcess (proc cmd [filename]) {
+                std_in  = Inherit
+              , std_out = Inherit
+              , std_err = Inherit
+            }
+            return ()
+        return True

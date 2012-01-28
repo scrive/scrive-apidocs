@@ -16,7 +16,7 @@ import Happstack.Server (FromReqURI(..))
 import Happstack.Util.Common (readM)
 import Numeric (showHex, readHex)
 
-import Crypto.GlobalRandom(Random)
+import Crypto.RNG(Random)
 import DB.Derive(newtypeDeriveConvertible)
 import Misc (pad0)
 

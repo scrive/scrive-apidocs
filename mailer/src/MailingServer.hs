@@ -10,6 +10,7 @@ import Happstack.State
 import qualified Happstack.StaticRouting as R
 import qualified Control.Exception as E
 
+import Crypto.RNG (newCryptoRNGState)
 import Configuration
 import Dispatcher
 import DB.Classes
@@ -26,8 +27,9 @@ main :: IO ()
 main = Log.withLogger $ do
   appname <- getProgName
   conf <- readConfig Log.mailingServer appname [] "mailing_server.conf"
+  rng <- newCryptoRNGState
   withPostgreSQL (mscDBConfig conf) $ \conn' -> do
-    conn <- mkNexus conn'
+    conn <- mkNexus rng conn'
     ioRunDB conn $ performDBChecks Log.mailingServer mailerTables mailerMigrations
   E.bracket (do
     let (iface, port) = mscHttpBindAddress conf
@@ -36,8 +38,8 @@ main = Log.withLogger $ do
         (routes, overlaps) = R.compile handlers
     maybe (return ()) Log.mailingServer overlaps
     socket <- listenOn (htonl iface) $ fromIntegral port
-    t1 <- forkIO $ simpleHTTPWithSocket socket handlerConf (router conf routes)
-    t2 <- forkIO $ dispatcher sender $ mscDBConfig conf
+    t1 <- forkIO $ simpleHTTPWithSocket socket handlerConf (router rng conf routes)
+    t2 <- forkIO $ dispatcher rng sender $ mscDBConfig conf
     return [t1, t2]
    ) (mapM_ killThread) (\_ -> do
      waitForTermination

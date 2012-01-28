@@ -10,6 +10,7 @@ import System.IO
 import Test.Framework
 import qualified Log
 
+import Crypto.RNG (newCryptoRNGState)
 import AppDB
 import DB.Checks
 import DB.Classes
@@ -208,8 +209,9 @@ main = Log.withLogger $ do
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
   pgconf <- readFile "kontrakcja_test.conf"
+  rng <- newCryptoRNGState -- TODO: Here we could use a deterministic seed
   withPostgreSQL pgconf $ \conn' -> do
-    conn <- mkNexus conn'
+    conn <- mkNexus rng conn'
     ioRunDB conn $ performDBChecks Log.debug kontraTables kontraMigrations
     (args, tests) <- partitionEithers . testsToRun conn <$> getArgs
 

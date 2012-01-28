@@ -23,6 +23,7 @@ import qualified Data.ByteString.UTF8 as BS hiding (length)
 import AppControl (AppConf(..))
 import ActionSchedulerState
 import Archive.Invariants
+import Crypto.RNG (CryptoRNG, getCryptoRNGState, CryptoRNGState)
 import DB.Classes
 import Doc.DocStateData
 import Doc.Model
@@ -48,6 +49,9 @@ type SchedulerData' = SchedulerData AppConf (MVar (ClockTime, KontrakcjaGlobalTe
 newtype ActionScheduler a = AS { unAS :: ReaderT SchedulerData' (ReaderT Nexus IO) a }
     deriving (Monad, Functor, MonadIO, MonadReader SchedulerData')
 
+instance CryptoRNG ActionScheduler where
+  getCryptoRNGState = AS $ lift $ asks nexusRNG
+
 instance DBMonad ActionScheduler where
     getConnection = AS $ lift ask
     handleDBError = E.throw
@@ -58,20 +62,20 @@ instance DBMonad ActionScheduler where
 -- assigned to and since TemplatesMonad doesn't give us the way to get
 -- appropriate language version of templates, we need to do that manually.
 
-runScheduler :: ActionScheduler () -> SchedulerData' -> IO ()
-runScheduler sched sd =
+runScheduler :: CryptoRNGState -> ActionScheduler () -> SchedulerData' -> IO ()
+runScheduler r sched sd =
     withPostgreSQL (dbConfig $ sdAppConf sd) $ \conn -> do
-      nexus <- mkNexus conn
+      nexus <- mkNexus r conn
       runReaderT (runReaderT (unAS sched) sd) nexus
 
 -- | Creates scheduler that may be forced to look up for actions to execute
-runEnforceableScheduler :: Int -> MVar () -> ActionScheduler () -> SchedulerData' -> IO ()
-runEnforceableScheduler interval enforcer sched sd = listen 0
+runEnforceableScheduler :: CryptoRNGState -> Int -> MVar () -> ActionScheduler () -> SchedulerData' -> IO ()
+runEnforceableScheduler r interval enforcer sched sd = listen 0
     where
         listen delay = do
             run_now <- tryTakeMVar enforcer
             if isJust run_now || delay >= interval
-               then runScheduler sched sd >> listen 0
+               then runScheduler r sched sd >> listen 0
                else threadDelay 1000000 >> (listen $! delay+1)
 
 -- | Gets 'expired' actions and evaluates them

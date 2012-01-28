@@ -36,8 +36,9 @@ import Happstack.State
 import User.Model
 import Numeric
 import MinutesTime
-import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie, readCookieValue, withDataFn, ServerPartT, HasRqData, CookieLife(MaxAge), FromReqURI(..))
-import Crypto.GlobalRandom (genIO)
+import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie,
+  readCookieValue, withDataFn, ServerPartT, HasRqData, CookieLife(MaxAge), FromReqURI(..))
+import Crypto.RNG (CryptoRNGState, CryptoRNG, random, inIO)
 import Happstack.Util.Common ( readM)
 import Misc (mkTypeOf, isSecure, isHTTPS)
 import ELegitimation.ELegTransaction
@@ -527,11 +528,11 @@ currentSession =
             Nothing ->  return Nothing
 
 -- | Create empty session data. It has proper timeout already set.
-emptySessionData :: IO SessionData
+emptySessionData :: CryptoRNG m => m SessionData
 emptySessionData = do
     now       <- getMinutesTime
-    magicHash <- genIO
-    xhash     <- genIO
+    magicHash <- random
+    xhash     <- random
     return $ SessionData { userID = Nothing
                          , expires = 60 `minutesAfter` now
                          , hash = magicHash
@@ -554,8 +555,8 @@ tempSessionID :: SessionId
 tempSessionID = SessionId $ -1
 
 -- | Return empty, temporary session
-startSession :: (FilterMonad Response m, ServerMonad m, MonadIO m, MonadPlus m) => m Session
-startSession = liftIO emptySessionData >>= return . Session tempSessionID
+startSession :: CryptoRNG m => m Session
+startSession = emptySessionData >>= return . Session tempSessionID
 
 -- | Get 'User' record from database based on userid in session
 getUserFromSession :: Nexus -> Session -> ServerPartT IO (Maybe User)
@@ -571,8 +572,8 @@ getLocationFromSession s = return $ location $ sessionData s
 
 
 -- | Handles session timeout. Starts new session when old session timed out.
-handleSession :: ServerPartT IO Session
-handleSession = do
+handleSession :: CryptoRNGState -> ServerPartT IO Session
+handleSession r = do
     msession <- currentSession
     case msession of
         Just session ->do
@@ -580,9 +581,9 @@ handleSession = do
                       if (now >= (expires $ sessionData $ session))
                           then do
                              _ <- update $ DelSession (sessionId session)
-                             startSession
+                             liftIO $ inIO r $ startSession
                           else return session
-        Nothing -> startSession
+        Nothing -> inIO r $ startSession
 
 -- | Updates session data. If session is temporary and new
 -- session data is non-empty, register session in the system
@@ -679,7 +680,7 @@ getSessionXToken :: Session -> MagicHash
 getSessionXToken = xtoken . sessionData
 
 --- | Creates a session for user and service
-createServiceSession:: MonadIO m => Either CompanyID UserID -> String ->  m SessionId
+createServiceSession:: CryptoRNG m => Either CompanyID UserID -> String -> m SessionId
 createServiceSession userorcompany loc = do
     now <- liftIO getMinutesTime
     moldsession <- case userorcompany of
@@ -693,9 +694,9 @@ createServiceSession userorcompany loc = do
                 else return $ sessionId s
       Nothing -> newSession' userorcompany loc
 
-newSession' :: MonadIO m => Either CompanyID UserID -> String -> m SessionId
+newSession' :: CryptoRNG m => Either CompanyID UserID -> String -> m SessionId
 newSession' userorcompany loc = do
-  sd <- liftIO emptySessionData
+  sd <- emptySessionData
   session <-  update $ NewSession $  sd {
     userID = either (const Nothing) Just userorcompany
     , company = either Just (const Nothing) userorcompany
