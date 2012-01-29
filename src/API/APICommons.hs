@@ -23,7 +23,7 @@ module API.APICommons (
             api_document_read
           , api_document
           , getSignatoryTMP
-          , toSignatoryDetails
+          , toSignatoryDetails1
           , getFiles
           , api_document_tag
           , api_signatory

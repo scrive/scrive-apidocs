@@ -122,15 +122,9 @@ sendFromTemplate = do
   doc <- runDBUpdate $ SignableFromDocument temp
   let mauthorsiglink = getAuthorSigLink doc
   when (isNothing mauthorsiglink) $ throwApiError API_ERROR_OTHER "Template has no author."
-<<<<<<< HEAD
-  _ <- doc_update $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality (ctxtime ctx)
-  _ <- doc_update $ SetDocumentIdentification (documentid doc) [EmailIdentification] (ctxtime ctx)
-  medoc <- doc_update $ ResetSignatoryDetails (documentid doc) (((signatoryDetailsFromUser author mcompany) { signatorysignorder = SignOrder 0 }, 
-=======
-  _ <- runDBUpdate $ SetDocumentAdvancedFunctionality (documentid doc) (ctxtime ctx)
-  _ <- runDBUpdate $ SetEmailIdentification (documentid doc) (ctxtime ctx)
+  _ <- runDBUpdate $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality (ctxtime ctx)
+  _ <- runDBUpdate $ SetDocumentIdentification (documentid doc) [EmailIdentification] (ctxtime ctx)
   medoc <- runDBUpdate $ ResetSignatoryDetails (documentid doc) (((signatoryDetailsFromUser author mcompany) { signatorysignorder = SignOrder 0 }, 
->>>>>>> 92cc7d326f07e140a9f2c1b0a821b3d2fb7e2235
                                                              [SignatoryPartner, SignatoryAuthor]): 
                                                             (zip signatories (repeat [SignatoryPartner]))) (ctxtime ctx)
   case medoc of
@@ -197,4 +191,4 @@ getSignatories = do
     minvolved  <- fromJSONLocal "involved" $ fromJSONLocalMapList $ (getSignatoryTMP [SignatoryAuthor,SignatoryPartner]) : (repeat $ getSignatoryTMP [SignatoryPartner])
     case minvolved of
         Nothing -> throwApiError API_ERROR_MISSING_VALUE "Problems with involved."
-        Just involved -> return $ fmap (fst . toSignatoryDetails) involved
+        Just involved -> return $ fmap (fst . toSignatoryDetails1) involved

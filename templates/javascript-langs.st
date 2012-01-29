@@ -224,5 +224,13 @@ javascriptLocalisation =
               , changeSwedishToEnglishText: "$_signInSwedishConfirmText()$"
               , signInEnglish:  "$_signInEnglish()$"
             }
+         , csv : {
+                title : "$_dialogCsvupload1Head()$"
+              , selectFileHeader : "$_dialogCsvupload1ChooseFileToUpLoad()$"
+              , selectFileSubheader : "$_dialogCsvupload1CSVOnly()$"
+              , selectFile :  "$_dialogCsvupload2CSVMultiChooseFile()$"
+              , selectOtherFile: "$_dialogCsvupload2CSVMultiChooseFile()$"
+            }
+           
    }
 ####

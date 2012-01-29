@@ -165,7 +165,8 @@ window.Signatory = Backbone.Model.extend({
         ],
         current : false,
         attachments : [],
-        signorder : 1
+        signorder : 1,
+        csv : undefined
     },
     
     initialize : function(args){   
@@ -220,6 +221,13 @@ window.Signatory = Backbone.Model.extend({
         for(var i =0 ;i< fields.length; i++)
             if (fields[i].name() == name)
                 return fields[i];
+    },
+    customFields : function() {
+        var cf = new Array();
+        var fields = this.fields();
+        for(var i =0 ;i< fields.length; i++)
+            if (fields[i].isCustom()) cf.push(fields[i]);
+        return cf;                                 
     },
     email: function(){
         return  this.field("email").value();
@@ -376,6 +384,17 @@ window.Signatory = Backbone.Model.extend({
        this.set({fields : newfields});
 
     },
+    csv : function() {
+        return this.get("csv");
+    },
+    isCsv : function() {
+        return this.csv() != undefined;
+    },
+    makeCsv : function(csv) {
+         this.set({"csv":csv});
+         this.trigger("change:csv");
+
+    },
     draftData : function() {
         return {
               fields: _.map(this.fields(), function(field) {
@@ -385,6 +404,7 @@ window.Signatory = Backbone.Model.extend({
             , signorder : this.signorder()
             , attachments : _.map(this.attachments(), function(att) {
                   return att.draftData();} )
+            , csv : this.csv()
             
         }
     }

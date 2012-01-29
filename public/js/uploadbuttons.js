@@ -15,7 +15,8 @@
  *
  *  ! FOR now this module is based on MultiFile jQuery plugin, but this may change soon.
  *  We do not store internally any data about uploaded files.
- * 
+ *
+ * If you are using onAppend construct you can't submit input in first 10 ms.
 */
 
 (function( window){
@@ -29,6 +30,8 @@ var UploadButtonModel = Backbone.Model.extend({
       submitOnUpload : false,
       size : "small",
       showLoadingDialog : true,
+      type : "application/pdf",
+      color: 'green',
       onAppend: undefined // If set no files will be stored in this upload box
   },
   width : function(){
@@ -60,6 +63,12 @@ var UploadButtonModel = Backbone.Model.extend({
   },
   onAppend : function() {
              return this.get("onAppend");  
+  },
+  type : function() {
+        return this.get("type");
+  },
+  color : function() {
+        return this.get("color");
   }
 });
 
@@ -77,7 +86,7 @@ var UploadButtonView = Backbone.View.extend({
     render: function () {
         var button = $("<a/>");
         var model = this.model;
-        button.addClass("green").addClass("btn-" + model.size()).css("overflow", "hidden").css("width",model.width() + "px");
+        button.addClass(model.color()).addClass("btn-" + model.size()).css("overflow", "hidden").css("width",model.width() + "px");
         var left  = $("<div class='left'/>");
         var label = $("<div class='label' style='text-align: center;'/>").text(model.text()).css("width",(model.width() - 2 * Button.borderWidth(model.size())) + "px");
         var right = $("<div class='right'/>");
@@ -85,7 +94,7 @@ var UploadButtonView = Backbone.View.extend({
         button.append(label);
         button.append(right);
         var fileinput = $("<input class='multiFileInput' type='file'/>");
-        fileinput.attr("accept","application/pdf").attr("maxlength",model.maxlength()).attr("name",model.name());
+        fileinput.attr("accept",model.type()).attr("maxlength",model.maxlength()).attr("name",model.name());
         fileinput.css("width",model.width()  + "px");
         var list = model.list();
         if (list == undefined) {

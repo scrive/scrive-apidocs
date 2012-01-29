@@ -3,10 +3,12 @@ module Doc.CSVUtils (
     , CleanCSVData(..)
     , cleanCSVContents
     , getCSVCustomFields
+    , csvProblemToDescription
+    , problemRow
+    , problemCell
     )
 where
 
-import Control.Applicative
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import Data.Char
@@ -15,18 +17,22 @@ import Data.List
 
 import Doc.DocStateData
 import Doc.DocUtils
-import FlashMessage
 import InputValidation
 import Templates.Templates
 import Util.SignatoryLinkUtils
+import Misc
+import Control.Monad
 
-data CSVProblem = CSVProblem
-                  { problemrowindex :: Maybe Int
-                  , problemcolindex :: Maybe Int
-                  , problemdescription :: ValidationMessage
-                  , problemvalue :: Maybe BS.ByteString
-                  }
-
+data CSVProblem = NumberNotValid       Int Int    | -- Row Cell
+                  EmailNotValid        Int Int    | -- Row Cell
+                  SecondNameNotValid   Int Int    | -- Row Cell
+                  FirstNameNotValid    Int Int    | -- Row Cell
+                  ValueNotValid        Int Int    | -- Row Cell
+                  RowMoreThenMaxCol    Int Int    | -- Row Limit
+                  RowLessThenMinCol    Int Int    | -- Row Limit
+                  NoDataExceptHeader              |
+                  NoData
+                             
 data CleanCSVData = CleanCSVData
                     { csvheader :: Maybe [BS.ByteString]
                     , csvbody :: [[BS.ByteString]]
@@ -51,9 +57,9 @@ getCSVCustomFields doc@Document{ documentsignatorylinks } =
     Cleans up csv contents. You get a list of all the problems alongside all the data
     that's been scrubbed up as much as possible.
 -}
-cleanCSVContents :: [IdentificationType] -> Int -> [[BS.ByteString]] -> ([CSVProblem], CleanCSVData)
-cleanCSVContents allowedidtypes customfieldcount contents =
-  let mincols = (if isEleg then 5 else 3) :: Int
+cleanCSVContents :: Bool -> Int -> [[BS.ByteString]] -> ([CSVProblem], CleanCSVData)
+cleanCSVContents eleg customfieldcount contents =
+  let mincols = (if eleg then 5 else 3) :: Int
       maxcols = 6 + customfieldcount
       cleanData = zipWith (cleanRow mincols maxcols) [0..]
       mheader = lookForHeader . cleanData $ take 1 contents
@@ -62,8 +68,8 @@ cleanCSVContents allowedidtypes customfieldcount contents =
       rowproblems = concatMap fst rowresults
       body = map snd rowresults
       problems = case (mheader, rowresults) of
-        (Nothing, []) -> mkProblemForAll flashMessageNoDataInCSV : rowproblems
-        (Just _, []) -> mkProblemForAll flashMessageNoDataInCSVApartFromHeader : rowproblems
+        (Nothing, []) -> NoData : rowproblems
+        (Just _, []) ->  NoDataExceptHeader : rowproblems
         _ -> rowproblems in
   (problems, CleanCSVData { csvheader = mheader, csvbody = body })
   where
@@ -92,21 +98,20 @@ cleanCSVContents allowedidtypes customfieldcount contents =
     validateRowSize :: Int -> Int -> Int -> [BS.ByteString] -> [CSVProblem]
     validateRowSize row mincols maxcols xs =
       case length xs of
-        l | l<mincols -> [mkProblemForRow row $ flashMessageRowLessThanMinColCount mincols]
-          | l>maxcols -> [mkProblemForRow row $ flashMessageRowGreaterThanMaxColCount maxcols]
+        l | l<mincols -> [RowLessThenMinCol row mincols]
+          | l>maxcols -> [RowMoreThenMaxCol row maxcols]
         _ -> []
     {- |
         This cleans up a single field.  It is given the validator to use (which are mostly things from the
         InputValidation module).
     -}
-    cleanField :: Int -> Int -> (String -> Result BS.ByteString) -> BS.ByteString -> (Maybe CSVProblem, BS.ByteString)
+    cleanField :: Int -> Int -> (String -> Either (Int -> Int -> CSVProblem) BS.ByteString) -> BS.ByteString -> (Maybe CSVProblem, BS.ByteString)
     cleanField row col f x =
       let raw = BS.toString x
           failedval = BS.fromString $ minimalScrub raw in
       case f raw of
-        Empty -> (Nothing, BS.empty)
-        Good clean -> (Nothing, clean)
-        Bad msg -> (Just $ mkProblemForField row col msg failedval, failedval)
+        Right v -> (Nothing, v)
+        Left pd -> (Just $ pd row col, failedval)
       where
         minimalScrub = filter (\c -> isAlphaNum c || isPunctuation c || isSymbol c || c==' ') . stripWhitespace
         stripWhitespace = stripLeadingWhitespace . stripTrailingWhitespace
@@ -115,80 +120,51 @@ cleanCSVContents allowedidtypes customfieldcount contents =
     {- |
         All the validators that we're going to use to check the field values.
     -}
-    fieldValidators :: [String -> Result BS.ByteString]
-    fieldValidators =
-      [ badIfEmpty flashMessageFirstNameIsRequired . asValidName
-      , badIfEmpty flashMessageSecondNameIsRequired . asValidName
-      , badIfEmpty flashMessageEmailIsRequired . asValidEmail
-      , asValidCompanyName
-      , numberValidator
-      ] ++ repeat asValidFieldValue
-      where
-        numberValidator :: String -> Result BS.ByteString
-        numberValidator
-          | isEleg = badIfEmpty flashMessageNumberIsRequired . asValidCompanyNumber
-          | otherwise = asValidCompanyNumber
-        badIfEmpty :: ValidationMessage -> Result BS.ByteString -> Result BS.ByteString
-        badIfEmpty msg res =
-          case res of
-            Empty -> Bad msg
-            x -> x
-    isEleg = isJust $ find (== ELegitimationIdentification) allowedidtypes
-    {- |
-        Handy for constructing problems.
-    -}
-    mkProblemForAll :: ValidationMessage -> CSVProblem
-    mkProblemForAll msg = CSVProblem
-                      { problemrowindex = Nothing
-                      , problemcolindex = Nothing
-                      , problemdescription = msg
-                      , problemvalue = Nothing
-                      }
-    mkProblemForRow :: Int -> ValidationMessage -> CSVProblem
-    mkProblemForRow row msg = CSVProblem
-                        { problemrowindex = Just row
-                        , problemcolindex = Nothing
-                        , problemdescription = msg
-                        , problemvalue = Nothing
-                        }
-    mkProblemForField :: Int -> Int -> ValidationMessage -> BS.ByteString -> CSVProblem
-    mkProblemForField row col msg raw = CSVProblem
-                    { problemrowindex = Just row
-                    , problemcolindex = Just col
-                    , problemdescription = msg
-                    , problemvalue = Just raw
-                    }
+    fieldValidators :: [String -> Either (Int -> Int -> CSVProblem) BS.ByteString]
+    fieldValidators = map validate $ 
+      [ (checkIfEmpty >=>  asValidName,  FirstNameNotValid )
+      , (checkIfEmpty >=>  asValidName,  SecondNameNotValid )
+      , (checkIfEmpty >=>  asValidEmail, EmailNotValid )
+      , (                  asValidCompanyName, ValueNotValid)
+      , ((checkIfEmpty <| eleg |> return) >=> asValidCompanyNumber, NumberNotValid)
+       ] ++ repeat (asValidFieldValue, ValueNotValid)
+    validate :: (String -> Result a, Int -> Int -> CSVProblem) -> String -> Either (Int -> Int -> CSVProblem) BS.ByteString
+    validate (v,pd) s =  case v s of
+                           Bad _ -> Left pd
+                           _ -> Right $ BS.fromString s
 
-flashMessageNoDataInCSV :: TemplatesMonad m => m FlashMessage
-flashMessageNoDataInCSV =
-  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageNoDataInCSV" ()
+csvProblemToDescription :: (TemplatesMonad m) => CSVProblem -> m String
+csvProblemToDescription p = case p of
+   (NumberNotValid _ _ )     ->  renderTemplateM "flashMessageValueNotValid" ()
+   (EmailNotValid  _ _ )     ->  renderTemplateM "flashMessageValueNotValid" ()
+   (SecondNameNotValid _ _ ) ->  renderTemplateM "flashMessageValueNotValid" ()
+   (FirstNameNotValid _ _  ) ->  renderTemplateM "flashMessageValueNotValid" ()
+   (ValueNotValid  _ _ )     ->  renderTemplateM "flashMessageValueNotValid" ()
+   (RowMoreThenMaxCol _ l)   ->  renderTemplateFM "flashMessageRowGreaterThanMaxColCount" (field "maxcols" l)
+   (RowLessThenMinCol _ l)   ->  renderTemplateFM "flashMessageRowLessThanMinColCount" (field "mincols" l)
+   (NoDataExceptHeader)      ->  renderTemplateM "flashMessageNoDataInCSVApartFromHeader" ()
+   (NoData)                  ->  renderTemplateM "flashMessageNoDataInCSV" ()
 
-flashMessageNoDataInCSVApartFromHeader :: TemplatesMonad m => m FlashMessage
-flashMessageNoDataInCSVApartFromHeader =
-  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageNoDataInCSVApartFromHeader" ()
+problemRow :: CSVProblem -> Maybe Int
+problemRow p = case p of
+   (NumberNotValid r _ )     ->  Just r
+   (EmailNotValid  r _ )     ->  Just r
+   (SecondNameNotValid r _ ) ->  Just r
+   (FirstNameNotValid r _  ) ->  Just r
+   (ValueNotValid  r _ )     ->  Just r
+   (RowMoreThenMaxCol r _)   ->  Just r
+   (RowLessThenMinCol r _)   ->  Just r
+   (NoDataExceptHeader)      ->  Nothing
+   (NoData)                  ->  Nothing
 
-flashMessageRowLessThanMinColCount :: TemplatesMonad m => Int -> m FlashMessage
-flashMessageRowLessThanMinColCount mincols =
-  toFlashMsg OperationFailed <$>
-    renderTemplateFM "flashMessageRowLessThanMinColCount" (field "mincols" mincols)
-
-flashMessageRowGreaterThanMaxColCount :: TemplatesMonad m => Int -> m FlashMessage
-flashMessageRowGreaterThanMaxColCount maxcols =
-  toFlashMsg OperationFailed <$>
-    renderTemplateFM "flashMessageRowGreaterThanMaxColCount" (field "maxcols" maxcols)
-
-flashMessageFirstNameIsRequired :: TemplatesMonad m => m FlashMessage
-flashMessageFirstNameIsRequired =
-  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageFirstNameIsRequired" ()
-
-flashMessageSecondNameIsRequired :: TemplatesMonad m => m FlashMessage
-flashMessageSecondNameIsRequired =
-  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageSecondNameIsRequired" ()
-
-flashMessageEmailIsRequired :: TemplatesMonad m => m FlashMessage
-flashMessageEmailIsRequired =
-  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageEmailIsRequired" ()
-
-flashMessageNumberIsRequired :: TemplatesMonad m => m FlashMessage
-flashMessageNumberIsRequired =
-  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageNumberIsRequired" ()
+problemCell :: CSVProblem -> Maybe Int
+problemCell p = case p of
+   (NumberNotValid _ c)     ->  Just c
+   (EmailNotValid  _ c)     ->  Just c
+   (SecondNameNotValid _ c) ->  Just c
+   (FirstNameNotValid _ c) ->  Just c
+   (ValueNotValid  _ c)     ->  Just c
+   (RowMoreThenMaxCol _ _)   ->  Nothing
+   (RowLessThenMinCol _ _)   ->  Nothing
+   (NoDataExceptHeader)      ->  Nothing
+   (NoData)                  ->  Nothing

@@ -681,6 +681,7 @@ If the other party clicks on the signing link after you withdrawn the invitation
  fler än $maxrows$ rader.",,"We are sorry, this feature has been limited to $maxrows$ rows.
  <br/> Please contact our support if you need more than this."
 "_flashMessageCSVSent","Dokumentet är skickat till $doccount$ parter.",,"The document has been sent to $doccount$ parties."
+"_flashMessageValueNotValid", "Value is not valid",, "Value is not valid"
 "_flashMessageCannotCancel","Motparten har redan undertecknat dokumentet. Du kan inte återkalla
  inbjudan.",,"The counterpart has already signed the document. You can no
  longer withdraw the invitation."

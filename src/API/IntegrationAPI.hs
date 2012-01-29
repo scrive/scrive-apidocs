@@ -272,17 +272,14 @@ createAPIDocument comp' (authorTMP:signTMPS) tags mlocale createFun = do
     when (isNothing mdoc) $ throwApiError API_ERROR_OTHER "Problem creating a document | This may be because the company and author don't match"
     let doc = fromJust mdoc
 
-    _ <- runDBUpdate $ SetDocumentAdvancedFunctionality (documentid doc) now
+    _ <- runDBUpdate $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality now
     _ <- runDBUpdate $ SetDocumentTags (documentid doc) tags
     when (isJust mlocale) $
-      ignore $ doc_update $ SetDocumentLocale (documentid doc) (fromJust mlocale) now
-    let sigdetails s =  (fst $ toSignatoryDetails s,[SignatoryPartner] <| (isSignatoryTMP s) |> [])
-        authordetails s = (fst $ toSignatoryDetails s,[SignatoryAuthor,SignatoryPartner] <| (isSignatoryTMP s) |> [SignatoryAuthor])
+      ignore $ runDBUpdate $ SetDocumentLocale (documentid doc) (fromJust mlocale) now
+    let sigdetails s =  (fst $ toSignatoryDetails1 s,[SignatoryPartner] <| (isSignatoryTMP s) |> [])
+        authordetails s = (fst $ toSignatoryDetails1 s,[SignatoryAuthor,SignatoryPartner] <| (isSignatoryTMP s) |> [SignatoryAuthor])
         sigs = (authordetails authorTMP):(sigdetails <$> signTMPS)
-    doc' <- doc_update $ ResetSignatoryDetails (documentid doc) sigs (ctxtime ctx)
-    when (any (hasFieldsAndPlacements . fst) sigs ||
-          length sigs > 2) $
-      ignore $ doc_update $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality (ctxtime ctx)
+    doc' <- runDBUpdate $ ResetSignatoryDetails (documentid doc) sigs (ctxtime ctx)
     when (isLeft doc') $ Log.integration $ "error creating document: " ++ fromLeft doc'
     when (isLeft doc') $ throwApiError API_ERROR_OTHER "Problem creating a document (SIGUPDATE) | This should never happend"
     return $ fromRight doc'
@@ -359,7 +356,7 @@ getDocuments = do
       Just s  -> case parseMinutesTimeISO s of
         Just t  -> return $ Just t
         Nothing -> throwApiError API_ERROR_PARSING $ "to_date unrecognized format: " ++ show s
-    linkeddocuments <- runDBQuery $ GetDocumentsByCompanyAndTags (Just sid) (companyid company) tags
+    linkeddocuments <- runDBQuery $ GetDocumentsByCompanyAndTags (Just sid) (companyid comp) tags
     api_docs <- sequence [api_document_read False d  
                          | d <- linkeddocuments
                          , isAuthoredByCompany (companyid comp) d

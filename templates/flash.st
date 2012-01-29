@@ -181,6 +181,8 @@ flashMessageRowLessThanMinColCount=	$_flashMessageRowLessThanMinColCount()$
 ###
 flashMessageRowGreaterThanMaxColCount=	$_flashMessageRowGreaterThanMaxColCount()$
 ###
+flashMessageValueNotValid = $_flashMessageValueNotValid()$
+###
 flashMessageFirstNameIsRequired=	$_flashMessageFirstNameIsRequired()$
 ###
 flashMessageSecondNameIsRequired=	$_flashMessageSecondNameIsRequired()$

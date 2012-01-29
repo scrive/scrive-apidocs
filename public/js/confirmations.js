@@ -24,7 +24,8 @@ var ConfirmationModel = Backbone.Model.extend({
       acceptColor : "green",
       content  : jQuery("<p/>"),
       cantCancel : false,
-      width: "640px"
+      width: "640px",
+      acceptVisible : true
   },
   title : function(){
        return this.get("title");
@@ -66,6 +67,16 @@ var ConfirmationModel = Backbone.Model.extend({
   },
   width: function() {
       return this.get("width");
+  },
+  
+  showAccept : function() {
+      this.set({acceptVisible : true})
+  },
+  hideAccept : function() {
+      this.set({acceptVisible : false})
+  },
+  acceptVisible : function() {
+      return this.get("acceptVisible");   
   }
 });
 
@@ -98,10 +109,19 @@ var ConfirmationView = Backbone.View.extend({
         "click .close"  :  "reject"
     },
     initialize: function (args) {
-        _.bindAll(this, 'render', 'reject');
+        _.bindAll(this, 'render', 'reject', 'renderAcceptButton');
+        this.model.bind('change:acceptVisible', this.renderAcceptButton);
         this.model.view = this;
         this.render();
         this.fixer = new ExposeMaskFixer({object : this.model});
+    },
+    renderAcceptButton : function() {
+        var model = this.model;
+        if (model.acceptVisible())
+          this.acceptButton.show();
+        else
+          this.acceptButton.hide();
+       
     },
     render: function () {
        var view = this;
@@ -124,7 +144,7 @@ var ConfirmationView = Backbone.View.extend({
         cancel.text(this.model.rejectText());
         footer.append(cancel);
        } 
-       var accept = model.acceptButton() != undefined ?  model.acceptButton().addClass("float-right") :
+       this.acceptButton = model.acceptButton() != undefined ?  model.acceptButton().addClass("float-right") :
             Button.init({color:model.acceptColor(),
                                  size: "small",
                                  cssClass: "float-right",
@@ -135,7 +155,8 @@ var ConfirmationView = Backbone.View.extend({
                                      
                                 }
             }).input();
-       footer.append(accept);
+       this.renderAcceptButton();
+       footer.append( this.acceptButton);
        this.el.append(header);
        this.el.append(body);
        this.el.append(footer);
@@ -169,7 +190,8 @@ window.Confirmation = {
                       content  : args.content,
                       acceptButton : args.acceptButton,
                       cantCancel : args.cantCancel,
-                      width: args.width
+                      width: args.width,
+                      acceptVisible : args.acceptVisible
                     });
           var overlay = $("<div/>");
           var view = new ConfirmationView({model : model, el : overlay});
@@ -181,6 +203,7 @@ window.Confirmation = {
                            top: standardDialogTop,
                            fixed: false      
                           });
+          return model;
    }
     
 };

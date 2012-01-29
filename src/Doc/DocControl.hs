@@ -65,10 +65,13 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import Text.JSON hiding (Result)
+import Text.JSON.Fields as JSON (json)
+import qualified Text.JSON.Fields as JSON (field)
 import ForkAction
 import Doc.DocDraft as Draft
 import Util.JSON 
 import qualified ELegitimation.BankID as BankID
+
 {-
   Document state transitions are described in DocState.
 
@@ -746,7 +749,6 @@ handleIssueShowPost docid = withUserPost $ do
   send              <- isFieldSet "final"
   template          <- isFieldSet "template"
   contract          <- isFieldSet "contract"
-  csvupload         <- isFieldSet "csvupload"
   updateattachments <- isFieldSet "updateattachments"
   switchtoadvanced  <- isFieldSet "changefunctionality"
   sigattachments    <- isFieldSet "sigattachments"
@@ -757,7 +759,6 @@ handleIssueShowPost docid = withUserPost $ do
     Preparation | send              -> handleIssueSend                 document
     Preparation | template          -> handleIssueSaveAsTemplate       document
     Preparation | contract          -> handleIssueChangeToContract     document
-    Preparation | csvupload         -> handleIssueCSVUpload            document
     Preparation | updateattachments -> handleIssueUpdateAttachments    document
     Preparation | switchtoadvanced  -> handleIssueChangeFunctionality  document
     Preparation | sigattachments    -> handleIssueUpdateSigAttachments document
@@ -904,7 +905,7 @@ splitUpDocument doc = do
       return $ Right [doc]
     (Just csvupload, Right csvcustomfields) -> do
       Log.debug $ "splitUpDocument called on document with csvupload and we managed to split fields properly"
-      case (cleanCSVContents (documentallowedidtypes doc) (length csvcustomfields) $ csvcontents csvupload) of
+      case (cleanCSVContents (ELegitimationIdentification `elem` (documentallowedidtypes doc)) (length csvcustomfields) $ csvcontents csvupload) of
         (_prob:_, _) -> do
           signlast <- isFieldSet "signlast"
           addFlashM flashMessageInvalidCSV
@@ -924,32 +925,6 @@ splitUpDocument doc = do
           runDBUpdate $ DocumentFromSignatoryData (documentid udoc) sigindex (item 0) (item 1) (item 2) (item 3) (item 4) (item 5) (drop 6 xs)
           where item n | n<(length xs) = xs !! n
                        | otherwise = BS.empty
-{- |
-   Handles a csv file upload.  This'll parse the file, and save the info
-   on the document and relevant signatory.
--}
-handleIssueCSVUpload :: Kontrakcja m => Document -> m KontraLink
-handleIssueCSVUpload document = do
-  ctx <- getContext
-  udoc <- guardRightM $ updateDocument ctx document
-  signlast <- isFieldSet "signlast"
-
-  mcsvsigindex <- getOptionalField asValidNumber "csvsigindex"
-  mcsvfile <- getCSVFile "csv"
-  case (mcsvsigindex, mcsvfile) of
-    (Nothing, Nothing) -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) Nothing Nothing signlast
-    (Nothing, Just _) ->  do
-      Log.error "something weird happened, got csv file but there's no relevant person index"
-      mzero
-    (Just csvsigindex, Nothing) -> return $ LinkDesignDoc $ DesignStep2 (documentid udoc) (Just $ csvsigindex + 1) Nothing signlast
-    (Just csvsigindex, Just (title, contents)) ->  do
-      let csvupload = CSVUpload { csvtitle = title
-                                , csvcontents = contents
-                                , csvsignatoryindex = csvsigindex
-                                }
-      ndoc <- guardRightM $ runDBUpdate $ AttachCSVUpload (documentid udoc) 
-              (signatorylinkid ((documentsignatorylinks udoc) !! csvsigindex)) csvupload
-      return $ LinkDesignDoc $ DesignStep2 (documentid ndoc) (Just $ csvsigindex + 1) (Just AfterCSVUpload) signlast
 
 makeSigAttachment :: BS.ByteString -> BS.ByteString -> BS.ByteString -> SignatoryAttachment
 makeSigAttachment name desc email =
@@ -1064,31 +1039,6 @@ handleIssueChangeFunctionality document = do
     also deals with any flash messages.  It returns a pair
     of (title, contents).
 -}
-getCSVFile :: Kontrakcja m => String -> m (Maybe (BS.ByteString, [[BS.ByteString]]))
-getCSVFile fieldname = do
-  input <- getDataFn' (lookInput fieldname)
-  csvresult <- liftIO $ asCSVFile input
-  flashValidationMessage (Nothing, csvresult) >>= asMaybe
-  where
-    asCSVFile :: Maybe Input -> IO (Result (BS.ByteString, [[BS.ByteString]]))
-    asCSVFile input = do
-      case input of
-        Just(Input contentspec (Just filename) _ ) -> do
-          content <- case contentspec of
-                       Left filepath -> BSL.readFile filepath
-                       Right content -> return content
-          if BSL.null content
-            then return Empty
-            else do
-              let title = BS.fromString (basename filename)
-              case parseCSV content of
-                 Left _ -> return $ Bad flashMessageFailedToParseCSV
-                 Right contents
-                   | length contents > rowlimit -> return $ Bad $ flashMessageCSVHasTooManyRows rowlimit
-                   | otherwise -> return $ Good (title, map (map BS.fromString) contents)
-        _ -> return Empty
-    rowlimit :: Int = 1000
-
 handleIssueSave :: Kontrakcja m => Document -> m KontraLink
 handleIssueSave document = do
     ctx <- getContext
@@ -2026,3 +1976,70 @@ handleUpsalesDeleted = onlyAdmin $ do
      $ setHeader "Content-Type" "text/csv"
      $ toResponse csv
 
+handleParseCSV :: Kontrakcja m => m JSValue 
+handleParseCSV = do
+  ctx <- getContext
+  guardJust $ ctxmaybeuser ctx
+  Log.debug "Csv parsing"
+  customfieldscount <- guardJustM $ maybeReadIntM $ getField "customfieldscount"
+  input <- getDataFn' (lookInput "csv")
+  eleg <- isFieldSet "eleg"
+  Log.debug "Reading files"
+  res <- case input of
+        Just(Input contentspec (Just filename) _ ) -> do
+          content <- case contentspec of
+                       Left filepath -> liftIO $ BSL.readFile filepath
+                       Right content -> return content
+          let _title = BS.fromString (basename filename)
+          Log.debug "Real parsing"
+          case parseCSV content of
+                 Left _ -> oneProblemJSON $ renderTemplateM "flashMessageFailedToParseCSV" ()
+                 Right contents
+                   | length contents > 1000 -> oneProblemJSON $ renderTemplateFM "flashMessageCSVHasTooManyRows" $ field "maxrows" (1000::Int)
+                   | otherwise -> do
+                       let (problems, csvdata) = cleanCSVContents eleg customfieldscount $ fmap (fmap BS.fromString) contents
+                       liftIO $ json $ do
+                            JSON.field "problems" $ for problems $ \p -> do
+                                JSON.field "description" $ ((runTemplatesT (ctxlocale ctx, ctxglobaltemplates ctx) $ csvProblemToDescription p) :: IO String)
+                                when (isJust $ problemRow p) $
+                                    JSON.field "row" $ fromJust $ problemRow p
+                                when (isJust $ problemCell p) $
+                                    JSON.field "cell" $ fromJust $ problemCell p
+                            JSON.field "rows" $ for (csvbody csvdata) $ \row -> map BS.toString row
+                                
+        other -> do
+            Log.debug $ "Ups .. " ++ show other
+            oneProblemJSON $ renderTemplateM "flashMessageFailedToParseCSV" ()
+  Log.debug $ show res
+  return res
+  where
+      oneProblemJSON :: Kontrakcja m => m String -> m JSValue
+      oneProblemJSON ms = do
+          s <- ms
+          liftIO $ json $ do
+            JSON.field "problems" $ do
+                JSON.field "description" s
+            JSON.field "rows" ([]::[String])
+  {-  
+  flashValidationMessage (Nothing, csvresult) >>= asMaybe
+  where
+    problem :: String -> String
+    asCSVFile :: Maybe Input -> IO (Result (BS.ByteString, [[BS.ByteString]]))
+    asCSVFile input = do
+      case input of
+        Just(Input contentspec (Just filename) _ ) -> do
+          content <- case contentspec of
+                       Left filepath -> BSL.readFile filepath
+                       Right content -> return content
+          if BSL.null content
+            then return Empty
+            else do
+              let title = BS.fromString (basename filename)
+              case parseCSV content of
+                 Left _ -> return $ Bad flashMessageFailedToParseCSV
+                 Right contents
+                   | length contents > rowlimit -> return $ Bad $ flashMessageCSVHasTooManyRows rowlimit
+                   | otherwise -> return $ Good (title, map (map BS.fromString) contents)
+        _ -> return Empty
+    rowlimit :: Int = 1000
+    -}

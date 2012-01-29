@@ -6,6 +6,7 @@ module InputValidation
     , Result(..)
     , isGood
     , fromGood
+    , checkIfEmpty
     , getOptionalField
     , getOptionalFieldList
     , getDefaultedField

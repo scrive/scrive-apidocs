@@ -452,6 +452,14 @@ maybeRead s = case reads s of
             [(v,"")] -> Just v
             _        -> Nothing
 
+maybeReadIntM::(Monad m,Functor m) => m (Maybe String) -> m (Maybe Int)
+maybeReadIntM c = join <$> fmap maybeReadInt <$> c
+
+maybeReadInt::String -> Maybe Int
+maybeReadInt s = case readDec s of
+            [(v,"")] -> Just v
+            _        -> Nothing
+
 class URLAble a where
    encodeForURL::a -> String
 

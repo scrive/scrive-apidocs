@@ -109,6 +109,8 @@ standardHeaderContents=
                 type="text/javascript"></script>
         <script src="/js/attachmentsdesignview.js"
                 type="text/javascript"></script>
+        <script src="/js/csvsignatorydesign.js"
+                type="text/javascript"></script>
         <script src="/js/validation.js"
                 type="text/javascript"></script>
        $if(publicsafe)$

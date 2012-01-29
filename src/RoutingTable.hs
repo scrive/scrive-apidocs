@@ -149,6 +149,7 @@ staticRoutes = choice
      , dir "doc"                   $ hGet  $ toK1 $ DocControl.jsonDocument
      , dir "save"                  $ hPost $ toK1 $ DocControl.handleSaveDraft
      , dir "setattachments"        $ hPost $ toK1 $ DocControl.handleSetAttachments -- Since setting attachments can have file upload, we need extra handler for it.
+     , dir "parsecsv"              $ hPost $ toK0 $ DocControl.handleParseCSV
      , dir "mailpreview"           $ hGet  $ toK2 $ DocControl.prepareEmailPreview
 
      , dir "df"                    $ hGet  $ toK2 $ DocControl.handleFileGet

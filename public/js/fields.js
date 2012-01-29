@@ -155,6 +155,9 @@ window.Field = Backbone.Model.extend({
              || (name == "sigpersnr" )     
              || (name == "sigcompnr") 
     },
+    isCustom: function() {
+        return !this.isStandard();
+    },
     isReady: function(){
       return this.get("fresh") == false;  
     },

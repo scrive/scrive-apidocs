@@ -13,11 +13,9 @@ module Doc.DocView (
   , flashMessageRubbishRestoreDone
   , flashMessageRubbishHardDeleteDone
   , flashMessageBulkRemindsSent
-  , flashMessageCSVHasTooManyRows
   , flashMessageCSVSent
   , flashMessageCanceled
   , flashMessageCannotCancel
-  , flashMessageFailedToParseCSV
   , flashMessageInvalidCSV
   , flashMessageMultipleAttachmentShareDone
   , flashMessageMultipleTemplateShareDone
@@ -64,7 +62,6 @@ module Doc.DocView (
 
 import ActionSchedulerState (ActionID)
 import DB.Types
-import Doc.CSVUtils
 import Doc.DocProcess
 import Doc.DocRegion
 import Doc.DocStateData
@@ -92,7 +89,6 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import Text.JSON
 import Data.List (intercalate)
---import Happstack.State (query)
 import File.Model
 import DB.Classes
 import Text.JSON.Fields as JSON (json)
@@ -216,14 +212,6 @@ flashAuthorSigned :: TemplatesMonad m => m FlashMessage
 flashAuthorSigned =
   toFlashMsg OperationDone <$> renderTemplateM "flashAuthorSigned" ()
 
-flashMessageFailedToParseCSV :: TemplatesMonad m => m FlashMessage
-flashMessageFailedToParseCSV =
-  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageFailedToParseCSV" ()
-
-flashMessageCSVHasTooManyRows :: TemplatesMonad m => Int -> m FlashMessage
-flashMessageCSVHasTooManyRows maxrows =
-  toFlashMsg OperationFailed <$> (renderTemplateFM "flashMessageCSVHasTooManyRows" $ field "maxrows" maxrows)
-
 flashMessageBulkRemindsSent :: TemplatesMonad m => DocumentType -> m FlashMessage
 flashMessageBulkRemindsSent doctype = do
   toFlashMsg OperationDone <$> renderTextForProcess doctype processflashmessagebulkremindssent
@@ -343,6 +331,9 @@ signatoryJSON doc viewer files siglink = fmap (JSObject . toJSObject) $ propagat
       , ("status", return $ JSString $ toJSString  $ show $ signatoryStatusClass doc siglink)
       , ("attachments", return $ JSArray $ map (signatoryAttachmentJSON files) $
                         filter ((==) (getEmail siglink) . signatoryattachmentemail)  (documentsignatoryattachments doc))
+      , ("csv", case (csvcontents <$> signatorylinkcsvupload siglink) of
+                     Just a1 ->  return $ JSArray $ for a1 (\a2 -> JSArray $ map (JSString . toJSString . BS.toString) a2 )
+                     Nothing -> return $ JSNull) 
    ]
     where
     datamismatch = case documentcancelationreason doc of
@@ -739,8 +730,6 @@ pageDocumentDesign ctx
              $ zip fields ([1..]::[Int])
        authorsiglink = fromJust $ getAuthorSigLink document
    in do
-     csvstring <- renderTemplateM "csvsendoutsignatoryattachmentstring" ()
-     csvfields <- documentCsvFields document
      renderTemplateFM "pageDocumentDesign" $ do
        fieldM "authorOtherFields" $ authorotherfields $ filterCustomField $ signatoryfields $ signatorydetails authorsiglink
        field "linkissuedoc" $ show $ LinkIssueDoc documentid
@@ -751,14 +740,12 @@ pageDocumentDesign ctx
        field "fromservice" (isJust $ ctxservice ctx)
        field "showadvancedoption" showadvancedoption
        documentAuthorInfo document
-       csvfields
        documentFunctionalityFields document
        documentInfoFields document
        documentViewFields document
        designViewFields step
        documentAttachmentDesignFields documentid (documentauthorattachments document) files
        documentAuthorAttachments attachments
-       documentSignatoryAttachments csvstring document (documentsignatoryattachments document)
        fieldF "process" processFields
        documentRegionFields document
    where
@@ -811,74 +798,6 @@ documentFunctionalityFields Document{documentfunctionality} = do
   field "docfunctionality" $ show documentfunctionality
   field "isbasic" $ documentfunctionality==BasicFunctionality
 
-documentCsvFields :: TemplatesMonad m => Document -> m (Fields m)
-documentCsvFields document@Document{documentallowedidtypes} =  do
-  let csvcustomfields = either (const [BS.fromString ""]) id $ getCSVCustomFields document
-      mcleancsv = (cleanCSVContents documentallowedidtypes (length csvcustomfields) . csvcontents) <$> (snd <$> mcsvupload)
-      csvproblems = maybe [] fst mcleancsv
-      csvdata = maybe [] (csvbody . snd) mcleancsv
-      csvPageSize :: Int = 10
-      csvpages = splitCSVDataIntoPages csvPageSize csvdata
-      mcsvupload = msum (zipWith check [0::Int ..] (documentsignatorylinks document))
-      check idx sl = case signatorylinkcsvupload sl of
-                       Just c -> Just (idx, c)
-                       Nothing -> Nothing
-  csvproblemfields <- sequence $ zipWith (csvProblemFields (length csvproblems)) [1..] csvproblems
-  return $ do
-    fieldFL "csvproblems" $ csvproblemfields
-    field "csvproblemcount" $ length csvproblems
-    fieldFL "csvpages" $ zipWith (csvPageFields csvproblems (length csvdata)) [0,csvPageSize..] csvpages
-    field "csvrowcount" $ length csvdata
-    field "csvcustomfields" $ csvcustomfields
-    field "isvalidcsv" $ null csvproblems
-    field "csvsigindex" $ (fst <$> mcsvupload)
-
-csvPageFields :: TemplatesMonad m => [CSVProblem] -> Int -> Int -> [[BS.ByteString]] -> Fields m
-csvPageFields problems totalrowcount firstrowindex xs = do
-  fieldFL "csvrows" $ zipWith (csvRowFields problems) [firstrowindex..] xs
-  field "isfirstcsvpage" $ firstrowindex==0
-  field "islastcsvpage" $ (firstrowindex+(length xs))==totalrowcount
-
-splitCSVDataIntoPages :: Int -> [a] -> [[a]]
-splitCSVDataIntoPages n xs =
-  case splitAt n xs of
-    (y,[]) -> [y]
-    (y,ys) -> y : splitCSVDataIntoPages n ys
-
-csvRowFields :: TemplatesMonad m => [CSVProblem] -> Int -> [BS.ByteString] -> Fields m
-csvRowFields problems rowindex xs = do
-  field "rownumber" $ rowindex + 1
-  fieldFL "csvfields" $ zipWith (csvFieldFields problems rowindex)
-                              [0..]
-                              xs
-  field "isproblem" $ any isRelevantProblem problems
-  where
-    isRelevantProblem CSVProblem{problemrowindex, problemcolindex} =
-      case (problemrowindex, problemcolindex) of
-        (Just r, Nothing) | rowindex==r -> True
-        _ -> False
-
-csvFieldFields :: TemplatesMonad m => [CSVProblem] -> Int -> Int -> BS.ByteString -> Fields m
-csvFieldFields problems rowindex colindex val = do
-  field "value" $ val
-  field "isproblem" $ any isRelevantProblem problems
-  where
-    isRelevantProblem CSVProblem{problemrowindex, problemcolindex} =
-      case (problemrowindex, problemcolindex) of
-        (Just r, Just c) | rowindex==r && colindex==c -> True
-        _ -> False
-
-csvProblemFields :: TemplatesMonad m => Int -> Int -> CSVProblem -> m (Fields m)
-csvProblemFields probcount number csvproblem = do
-    flashMsg <- problemdescription csvproblem
-    let desc = snd $ fromJust $ unFlashMessage flashMsg
-    return $ do
-      field "problemnumber" $ number
-      field "problemrow" $ fmap (+1) $ problemrowindex csvproblem
-      field "problemcol" $ fmap (+1) $ problemcolindex csvproblem
-      field "problemdesc" $ desc
-      field "isfirstproblem" $ (number==1)
-      field "islastproblem" $ (number==probcount)
 
 {- | Showing document to author after we are done with design -}
 
@@ -1233,16 +1152,3 @@ documentAuthorAttachments attachments =
   for attachments (\doc -> do
                       field "attachmentid" $ show (documentid doc)
                       field "attachmentname" $ documenttitle doc)
-
-documentSignatoryAttachments :: (Functor m, MonadIO m) => String -> Document -> [SignatoryAttachment] -> Fields m
-documentSignatoryAttachments csvstring doc attachments =
-  let ats = buildattach csvstring doc attachments []
-  in fieldFL "sigattachments" $
-     for ats (\(n, d, sigs) -> do
-                 field "attachmentname" n
-                 field "attachmentdescription" d
-                 fieldFL "signatories" $
-                   for sigs (\(name, email) -> do
-                                field "signame" name
-                                field "sigemail" email))
-
