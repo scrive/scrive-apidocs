@@ -217,9 +217,6 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 $_PriceTableHighlightedColumn()$
                                         </div>
                                 </div>
-                                <div class="drop-shadow-container">
-                                        <div class="drop-shadow"></div>
-                                </div>
                                 <div class="price-plan-annotation">
                                 $_priceplanPageVAT()$
                                 </div>

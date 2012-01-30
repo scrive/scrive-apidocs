@@ -76,7 +76,7 @@ $endif$
 
 #####
 adminusers=
-   <div id="tab-viewer">
+   <div class="tab-viewer">
          <div class="tab-header">
           <strong>
            <span>USER ADMIN</span>
@@ -129,7 +129,7 @@ adminusers=
 
 ###
 admincompanies=
-   <div id="tab-viewer">
+   <div class="tab-viewer">
          <div class="tab-header">
           <strong>
            <span>COMPANY ADMIN</span>
@@ -170,7 +170,7 @@ admincompanies=
 </script>
 ###
 adminUsersForSales=
-   <div id="tab-viewer">
+   <div class="tab-viewer">
          <div class="tab-header">
           <strong>
            <span>USER ADMIN FOR SALES</span>
@@ -524,8 +524,8 @@ admincompanyusers=
       </table>
 	  </div>
 	</div>
-=======
-<div id="tab-viewer">
+
+<div class="tab-viewer">
   <div class="tab-header">
   </div>
   <ul class="tabs">
@@ -827,7 +827,7 @@ $services:{service |<tr>
 ###
 admindocumentslist =
 
-   <div id="tab-viewer">
+   <div class="tab-viewer">
          <div class="tab-header">
           <strong>
            <span>DOCUMENTS</span>
