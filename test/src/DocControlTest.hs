@@ -31,8 +31,8 @@ import Util.SignatoryLinkUtils
 
 docControlTests :: Nexus -> Test
 docControlTests conn =  testGroup "Templates"
-                           [
-                               testCase "Create document from template" $ testDocumentFromTemplate conn
+                           [   testCase "Sending a reminder updates last modified date on doc" $ testSendReminderEmailUpdatesLastModifiedDate conn
+                             , testCase "Create document from template" $ testDocumentFromTemplate conn
                              , testCase "Create document from template | Shared" $ testDocumentFromTemplateShared conn
                              , testCase "Uploading file as contract makes doc" $ testUploadingFileAsContract conn
                              , testCase "Uploading file as offer makes doc" $ testUploadingFileAsOffer conn
@@ -257,6 +257,30 @@ testLastPersonSigningADocumentClosesIt conn = withTestEnvironment conn $ do
   --assertEqual "None left to sign" 0 (length $ filter isUnsigned (documentsignatorylinks doc))
   --emails <- dbQuery GetIncomingEmails
   --assertEqual "Confirmation email sent" 1 (length emails)
+
+testSendReminderEmailUpdatesLastModifiedDate :: Nexus -> Assertion
+testSendReminderEmailUpdatesLastModifiedDate conn = withTestEnvironment conn $ do
+  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  globaltemplates <- readGlobalTemplates
+  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+
+  doc <- addRandomDocumentWithAuthorAndCondition
+            user
+            (\d -> documentstatus d == Pending
+                     && case documenttype d of
+                         Signable _ -> True
+                         _ -> False)
+
+  assertBool "Precondition" $ (ctxtime ctx) /= documentmtime doc
+
+  -- who cares which one, just pick the last one
+  let sl = head . reverse $ documentsignatorylinks doc
+  req <- mkRequest POST []
+  (_link, _ctx') <- runTestKontra req ctx $ sendReminderEmail Nothing ctx doc sl
+
+  Just updateddoc <- doc_query' $ GetDocumentByDocumentID (documentid doc)
+  assertEqual "Modified date is updated" (ctxtime ctx) (documentmtime updateddoc)
 
 testDocumentFromTemplate :: Nexus -> Assertion
 testDocumentFromTemplate conn =  withTestEnvironment conn $ do
