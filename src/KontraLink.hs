@@ -1,4 +1,4 @@
-module KontraLink(KontraLink(..), LoginRedirectReason(..), DesignStep(..), DesignStep2Flag(..)) where
+module KontraLink(KontraLink(..), LoginRedirectReason(..)) where
 
 import DB.Types
 import Doc.DocStateData
@@ -22,21 +22,6 @@ data LoginRedirectReason = LoginTry
                          | NotLoggedAsSuperUser
                          | InvalidLoginInfo String -- email
     deriving (Eq)
-data DesignStep2Flag = AfterCSVUpload  deriving (Eq)
-type Person = Int
-
-data DesignStep = DesignStep1
-                | DesignStep2 DocumentID (Maybe Person) (Maybe DesignStep2Flag) SignLast
-                | DesignStep3 DocumentID SignLast
-    deriving (Eq)
-type SignLast = Bool
-
-instance Show DesignStep where
-    show DesignStep1 =  ""
-    show (DesignStep2 documentid Nothing _ sl) = "d/" ++ show documentid ++ "?step2" ++ (if sl then "&authorsignlast" else "")
-    show (DesignStep2 documentid (Just person) Nothing sl) = "d/" ++ show documentid ++ "?step2&person=" ++ show person ++ (if sl then "&authorsignlast" else "")
-    show (DesignStep2 documentid (Just person) (Just AfterCSVUpload) sl) =  "d/" ++ show documentid ++ "?step2&person=" ++ show person ++ "&aftercsvupload" ++ (if sl then "&authorsignlast" else "")
-    show (DesignStep3 documentid sl) ="d/" ++ show documentid ++ "?step3" ++ (if sl then "&authorsignlast" else "")
 
 {- |
    All the links available for responses
@@ -74,7 +59,7 @@ data KontraLink
     | LinkSignDocNoMagicHash DocumentID SignatoryLinkID
     | LinkAccountFromSign Document SignatoryLink ActionID MagicHash
     | LinkIssueDoc DocumentID
-    | LinkDesignDoc DesignStep
+    | LinkDesignDoc DocumentID
     | LinkRenameAttachment DocumentID
     | LinkIssueDocPDF (Maybe SignatoryLink) Document {- Which file? -}
     | LinkCompanyAccounts ListParams
@@ -184,7 +169,7 @@ instance Show KontraLink where
     showsPrec _ LinkUserMailAPI = (++) "/account/mailapi"
     showsPrec _ (LinkIssueDoc documentid) =
         (++) $ "/d/" ++ show documentid
-    showsPrec _ (LinkDesignDoc designstep) =  (++) $ "/" ++ show designstep
+    showsPrec _ (LinkDesignDoc did) =  (++) $ "/" ++ show did
     showsPrec _ (LinkRenameAttachment documentid) = (++) $ "/a/rename/" ++ show documentid
     showsPrec _ (LinkIssueDocPDF Nothing document) =
         (++) $ "/d/" ++ show (documentid document) ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"

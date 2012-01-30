@@ -700,103 +700,12 @@ pageAttachment' iseditable msiglink doc@Document {documentid, documenttitle} =
       field "linkissuedocpdf" $ show (LinkIssueDocPDF msiglink doc)
 
 pageDocumentDesign :: TemplatesMonad m
-                   => Context
-                   -> Document
-                   -> (Maybe DesignStep)
-                   -> Bool
-                   -> [Document]
-                   -> [(FileID, File)]
+                   => Document
                    -> m String
-pageDocumentDesign ctx
-  document@Document {
-      documentsignatorylinks
-    , documentid
-    , documentdaystosign
-    , documentinvitetext
-  }
-  step
-  showadvancedoption
-  attachments
-  files =
-   let
-       documentdaystosignboxvalue = maybe 7 id documentdaystosign
-       authorotherfields fields = sequence .
-         map (\((s, label, _), i) ->
-           renderTemplateFM "customfield" $ do
-             field "otherFieldValue" $ sfValue s
-             field "otherFieldName"  $ label
-             field "otherFieldID"    $ "field" ++ show i
-             field "otherFieldOwner" "author")
-             $ zip fields ([1..]::[Int])
-       authorsiglink = fromJust $ getAuthorSigLink document
-   in do
+pageDocumentDesign document = do
      renderTemplateFM "pageDocumentDesign" $ do
-       fieldM "authorOtherFields" $ authorotherfields $ filterCustomField $ signatoryfields $ signatorydetails authorsiglink
-       field "linkissuedoc" $ show $ LinkIssueDoc documentid
-       field "documentinvitetext" $ documentinvitetext
-       fieldM "invitationMailContent" $ mailInvitationContent False ctx Sign document Nothing
-       field "documentdaystosignboxvalue" $ documentdaystosignboxvalue
-       field "docstate" (buildDocState (signatorydetails authorsiglink) documentsignatorylinks)
-       field "fromservice" (isJust $ ctxservice ctx)
-       field "showadvancedoption" showadvancedoption
-       documentAuthorInfo document
-       documentFunctionalityFields document
-       documentInfoFields document
-       documentViewFields document
-       designViewFields step
-       documentAttachmentDesignFields documentid (documentauthorattachments document) files
-       documentAuthorAttachments attachments
-       fieldF "process" processFields
-       documentRegionFields document
-   where
-     getProcessText = renderTextForProcess document
-     getProcessValue = getValueForProcess document
-     processFields = do
-       field "isbasicavailable" $ getProcessValue processbasicavailable
-       field "isauthorsend" $ getProcessValue processauthorsend
-       field "isvalidationchoiceforbasic" $ getProcessValue processvalidationchoiceforbasic
-       field "isexpiryforbasic" $ getProcessValue processexpiryforbasic
-       fieldM "title" $ getProcessText processtitle
-       fieldM "step1text" $ getProcessText processstep1text
-       fieldM "expirywarntext" $ getProcessText processexpirywarntext
-       fieldM "sendbuttontext" $ getProcessText processsendbuttontext
-       fieldM "signbuttontext" $ getProcessText processsignbuttontext
-       fieldM "signbuttontextauthor" $ getProcessText processsignbuttontextauthor
-       fieldM "expirywarntext" $ getProcessText processexpirywarntext
-       fieldM "confirmsendtitle" $ getProcessText processconfirmsendtitle
-       fieldM "confirmsendtext" $ getProcessText processconfirmsendtext
-       fieldM "expirytext" $ getProcessText processexpirytext
-
-
-documentRegionFields :: (Functor m, MonadIO m) => Document -> Fields m
-documentRegionFields document = do
-  fieldF "region" regionFields
-  where
-    getRegionValue f = f $ getRegionInfo document
-    regionFields = do
-      field "haspeopleids" $ getRegionValue regionhaspeopleids
-      field "iselegavailable" $ getRegionValue regionelegavailable
-      field "gb" $ REGION_GB == getRegion document
-      field "se" $ REGION_SE == getRegion document
-
-documentAttachmentDesignFields :: (Functor m, MonadIO m) => DocumentID -> [AuthorAttachment] -> [(FileID, File)] -> Fields m
-documentAttachmentDesignFields docid atts files = do
-  field "isattachments" $ not $ null atts
-  field "attachmentcount" $ length atts
-  fieldFL "attachments" $ catMaybes $ map attachmentFields atts
-  where
-    attachmentFields AuthorAttachment{authorattachmentfile = fileid} =
-      case lookup fileid files of
-        Nothing -> Nothing
-        Just file -> Just $ do
-          field "attachmentid" $ show fileid
-          field "attachmentname" $ filename file
-          field "linkattachment" $ show (LinkAttachmentForAuthor docid fileid)
-
-documentFunctionalityFields :: MonadIO m => Document -> Fields m
-documentFunctionalityFields Document{documentfunctionality} = do
-  field "docfunctionality" $ show documentfunctionality
-  field "isbasic" $ documentfunctionality==BasicFunctionality
+         field "isbasic" $ (documentfunctionality document) ==BasicFunctionality
+         field "documentid" $ show $ documentid document
 
 
 {- | Showing document to author after we are done with design -}
@@ -1020,33 +929,6 @@ signedByMeFields _document siglnk = do
   field "iamauthor" $ maybe False isAuthor siglnk
 
 
-documentViewFields :: MonadIO m => Document -> Fields m
-documentViewFields Document{documentstatus} = do
-  field "addSignatoryScript" $ documentstatus /= Closed
-
-
-designViewFields :: MonadIO m => Maybe DesignStep -> Fields m
-designViewFields step = do
-    case step of
-        (Just (DesignStep3 _ _)) -> field "step3" True
-        (Just (DesignStep2 _ _ _ _)) -> field "step2" True
-        (Just (DesignStep1)) -> field "step1" True
-        _ -> field "step2" True
-    field "initialperson" $
-      case step of
-        (Just (DesignStep2 _ (Just part) _ _)) -> part
-        _ -> 0
-    field "isaftercsvupload" $
-      case step of
-        (Just (DesignStep2 _ _ (Just AfterCSVUpload) _)) -> True
-        _ -> False
-    field "signlast" $
-      case step of
-        (Just (DesignStep2 _ _ _ True)) -> True
-        (Just (DesignStep3 _ True)) -> True
-        _ -> False
-
-
 uploadPage :: TemplatesMonad m => (Maybe DocumentProcess) -> Bool -> m String
 uploadPage mdocprocess showTemplates = renderTemplateFM "uploadPage" $ do
     field "isprocessselected" $ isJust mdocprocess
@@ -1066,69 +948,6 @@ uploadPage mdocprocess showTemplates = renderTemplateFM "uploadPage" $ do
         fieldM "uploadprompttext" $ renderTextForProcess (Signable process) processuploadprompttext
         field "apiid" $ fromSafeEnumInt (Signable process)
 
-buildCustomJS :: SignatoryField -> Int -> JSValue
-buildCustomJS SignatoryField{sfType = CustomFT label _, sfValue, sfPlacements} i =
-  JSObject $ toJSObject [
-      ("label", jsStringFromBS label)
-    , ("value", jsStringFromBS $ sfValue)
-    , ("id", JSString $ toJSString $ "field" ++ show i)
-    , ("placements", JSArray $ map buildPlacementJS sfPlacements)
-  ]
-buildCustomJS SignatoryField{sfType} _ = error $ "buildCustomJS: field of type " ++ show sfType ++ " passed to function that handles only custom fields"
-
-buildPlacementJS :: FieldPlacement -> JSValue
-buildPlacementJS fp = JSObject $ toJSObject [
-    ("x", jsString $ placementx fp)
-  , ("y", jsString $ placementy fp)
-  , ("page", jsString $ placementpage fp)
-  , ("h", jsString $ placementpageheight fp)
-  , ("w", jsString $ placementpagewidth fp)
-  ]
-  where
-    jsString = JSString . toJSString . show
-
-buildSigLinkJS :: SignatoryLink -> JSValue
-buildSigLinkJS SignatoryLink{signatorydetails, signatoryroles} =
-  JSObject $ addRole $ buildSigJS signatorydetails
-  where
-    addRole = toJSObject . (:) ("role", role) . fromJSObject
-    role = JSString $ toJSString $ if SignatoryPartner `elem` signatoryroles
-              then "signatory"
-              else "viewer"
-
-buildSigJS :: SignatoryDetails -> JSObject JSValue
-buildSigJS SignatoryDetails{signatorysignorder, signatoryfields} =
-  toJSObject $ signorder ++ otherfields ++ fields
-  where
-    signorder = [("signorder", JSString $ toJSString $ show signatorysignorder)]
-    otherfields = [("otherfields", JSArray $ zipWith buildCustomJS (filter isFieldCustom signatoryfields) [1..])]
-    fields = concatMap (\sf ->
-      case sfType sf of
-        FirstNameFT -> sfJS sf "fstname" "fstnameplacements"
-        LastNameFT -> sfJS sf "sndname" "sndnameplacements"
-        CompanyFT -> sfJS sf "company" "companyplacements"
-        PersonalNumberFT -> sfJS sf "personalnumber" "personalnumberplacements"
-        CompanyNumberFT -> sfJS sf "companynumber" "companynumberplacements"
-        EmailFT -> sfJS sf "email" "emailplacements"
-        CustomFT _ _ -> error $ "buildSigJS: impossible happened"
-        ) $ filter (not . isFieldCustom) signatoryfields
-      where
-        sfJS sf name pname = [
-            (name, jsStringFromBS $ sfValue sf)
-          , (pname, JSArray $ map buildPlacementJS $ sfPlacements sf)
-          ]
-
-buildDocState :: SignatoryDetails -> [SignatoryLink] -> String
-buildDocState authordetails sigdetails = Text.JSON.encode $ JSObject (
-  toJSObject [
-      ("signatories", JSArray $ map buildSigLinkJS sigdetails)
-    , ("author", JSObject $ buildSigJS authordetails)
-    ]
-  )
-
-jsStringFromBS :: BS.ByteString -> JSValue
-jsStringFromBS = JSString . toJSString . BS.toString
-
 defaultInviteMessage :: BS.ByteString
 defaultInviteMessage = BS.empty
 
@@ -1145,10 +964,3 @@ documentsToFixView docs = do
             field "id" $ show $ documentid doc
             field "involved" $ map getEmail  $ documentsignatorylinks doc
             field "cdate" $  show $ documentctime doc
-
-documentAuthorAttachments :: (Functor m, MonadIO m) => [Document] -> Fields m
-documentAuthorAttachments attachments =
-  fieldFL "existingattachments" $
-  for attachments (\doc -> do
-                      field "attachmentid" $ show (documentid doc)
-                      field "attachmentname" $ documenttitle doc)

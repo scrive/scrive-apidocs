@@ -47,9 +47,6 @@ pageAttachment=
   </div>
 </div>
 <div id="documentBox">
-  $if(!siglinkid)$
-  <script src="/js/templates.js" type="text/javascript"></script>
-  $endif$
   <div class="waiting4page"></div>
 </div>
 
