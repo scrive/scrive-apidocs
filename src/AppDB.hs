@@ -15,6 +15,7 @@ import Doc.Migrations
 #endif
 import User.Migrations
 import User.Tables
+import User.History.Tables
 import Stats.Tables
 import Stats.Migrations
 import File.Tables

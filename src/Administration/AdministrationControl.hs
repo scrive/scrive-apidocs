@@ -80,6 +80,7 @@ import CompanyAccounts.CompanyAccountsControl
 import CompanyAccounts.Model
 import Util.SignatoryLinkUtils
 import Stats.Control (getUsersAndStats)
+import User.History.Model
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m String
@@ -282,7 +283,6 @@ showAllUsersTable = onlySalesOrAdmin $ do
 handleUserChange :: Kontrakcja m => UserID -> m KontraLink
 handleUserChange uid = onlySalesOrAdmin $ do
   ctx <- getContext
-  let muserid = maybe Nothing (Just . userid) (ctxmaybeuser ctx)
   _ <- getAsStrictBS "change"
   museraccounttype <- getFieldUTF "useraccounttype"
   olduser <- runDBOrFail $ dbQuery $ GetUserByID uid
@@ -294,7 +294,7 @@ handleUserChange uid = onlySalesOrAdmin $ do
         _ <- dbUpdate 
                  $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
                                             [("is_company_admin", "false", "true")] 
-                                            muserid
+                                            (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
       return newuser
     (Just "companyadminaccount", Nothing, False) -> do
@@ -306,12 +306,12 @@ handleUserChange uid = onlySalesOrAdmin $ do
         _ <- dbUpdate 
                   $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
                                              [("company_id", "null", show $ companyid company)] 
-                                             muserid
+                                             (userid <$> ctxmaybeuser ctx)
         _ <- dbUpdate $ SetUserCompanyAdmin uid True
         _ <- dbUpdate 
                   $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
                                              [("is_company_admin", "false", "true")] 
-                                             muserid
+                                             (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
       _ <- resaveDocsForUser uid
       return newuser
@@ -322,7 +322,7 @@ handleUserChange uid = onlySalesOrAdmin $ do
         _ <- dbUpdate 
                  $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
                                             [("is_company_admin", "true", "false")] 
-                                            muserid
+                                            (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
       return newuser
     (Just "companystandardaccount", Nothing, False) -> do
@@ -334,7 +334,7 @@ handleUserChange uid = onlySalesOrAdmin $ do
         _ <- dbUpdate 
                  $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
                                             [("company_id", "null", show $ companyid company)] 
-                                            muserid
+                                            (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
       _ <- resaveDocsForUser uid
       return newuser
@@ -347,7 +347,7 @@ handleUserChange uid = onlySalesOrAdmin $ do
         _ <- dbUpdate 
                  $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
                                             [("company_id", show _companyid, "null")] 
-                                            muserid
+                                            (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
       _ <-resaveDocsForUser uid
       return newuser
@@ -357,7 +357,7 @@ handleUserChange uid = onlySalesOrAdmin $ do
   _ <- runDBUpdate
            $ LogHistoryUserInfoChanged uid (ctxipnumber ctx) (ctxtime ctx) 
                                        (userinfo user) (infoChange $ userinfo user)
-                                       muserid
+                                       (userid <$> ctxmaybeuser ctx)
   settingsChange <- getUserSettingsChange
   _ <- runDBUpdate $ SetUserSettings uid $ settingsChange $ usersettings user
   return $ LinkUserAdmin $ Just uid

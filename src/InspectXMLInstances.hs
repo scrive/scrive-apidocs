@@ -17,6 +17,7 @@ import MinutesTime
 import InspectXML
 import Mails.MailsUtil
 import User.Model
+import User.History.Model
 import KontraLink
 import FlashMessage
 import qualified Data.ByteString.UTF8 as BS

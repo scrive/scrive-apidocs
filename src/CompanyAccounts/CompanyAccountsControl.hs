@@ -45,6 +45,7 @@ import User.Model
 import User.Utils
 import User.UserControl
 import User.UserView
+import User.History.Model
 
 {- |
     Handles the showing of the company accounts page.
@@ -211,7 +212,6 @@ handlePostCompanyAccounts = withCompanyAdmin $ \_ -> do
 handleAddCompanyAccount :: Kontrakcja m => m ()
 handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
   ctx <- getContext
-  let muserid = maybe Nothing (Just . userid) (ctxmaybeuser ctx)
   memail <- getOptionalField asValidEmail "email"
   fstname <- fromMaybe BS.empty <$> getOptionalField asValidName "fstname"
   sndname <- fromMaybe BS.empty <$> getOptionalField asValidName "sndname"
@@ -231,7 +231,7 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
              LogHistoryUserInfoChanged (userid newuser') (ctxipnumber ctx) (ctxtime ctx) 
                                        (userinfo newuser') 
                                        ((userinfo newuser') { userfstname = fstname , usersndname = sndname })
-                                       muserid
+                                       (userid <$> ctxmaybeuser ctx)
         newuser <- guardJustM $ runDBQuery $ GetUserByID (userid newuser')
         _ <- sendNewCompanyUserMail user company newuser
         return $ Just newuser

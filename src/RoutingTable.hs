@@ -23,6 +23,7 @@ import Redirect
 import Routing
 import Happstack.StaticRouting(Route, choice, dir, path, param, remainingPath)
 import User.Model
+import User.History.Model
 import User.UserView as UserView
 import qualified Stats.Control as Stats
 import qualified Administration.AdministrationControl as Administration
