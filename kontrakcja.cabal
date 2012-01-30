@@ -146,6 +146,9 @@ Executable kontrakcja-server
     GHC-Options: -threaded
   if os(windows)
     cpp-options: -DWINDOWS
+  if os(darwin)
+    cc-options: -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5
+    ld-options: -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5
   if impl(ghc >= 7)
     ghc-options: -rtsopts
 
