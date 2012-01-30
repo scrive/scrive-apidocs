@@ -1,4 +1,4 @@
-{-# LANGUAGE OverlappingInstances, IncoherentInstances #-}
+{-# LANGUAGE OverlappingInstances #-}
 module Util.JSON (
     -- Stuff that was here before
       getJSONField

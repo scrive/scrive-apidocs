@@ -16,8 +16,6 @@ module Administration.AdministrationControl(
           , showAdminCompany
           , showAdminCompanyUsers
           , showAdminUsersForSales
-          , showAdminUserUsageStats
-          , showAdminCompanyUsageStats
           , showAllUsersTable
           , showServicesPage
           , showDocuments
@@ -26,7 +24,6 @@ module Administration.AdministrationControl(
           , handleCreateUser
           , handlePostAdminCompanyUsers
           , handleCreateService
-          , handleStatistics
           , showFunctionalityStats
           , handleBackdoorQuery
           , resealFile
@@ -45,7 +42,7 @@ import Happstack.Server hiding (simpleHTTP)
 import Misc
 import Kontra
 import Administration.AdministrationView
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStateData
 import qualified Data.ByteString.Char8 as BSC
 import Company.Model
@@ -60,16 +57,13 @@ import Data.Maybe
 import Data.Char
 import API.Service.Model
 import Data.Monoid
-import qualified Data.IntMap as IntMap
 import Templates.Templates
-import Text.Printf
 import Util.FlashUtil
 import Data.List
 import Util.MonadUtils
 import qualified Log
 import Doc.DocSeal (sealDocument)
 import Util.HasSomeUserInfo
-import Doc.DocInfo
 import InputValidation
 import User.Utils
 import qualified Data.ByteString.Lazy as BSL
@@ -84,6 +78,7 @@ import Util.HasSomeCompanyInfo
 import CompanyAccounts.CompanyAccountsControl
 import CompanyAccounts.Model
 import Util.SignatoryLinkUtils
+import Stats.Control (getUsersAndStats)
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m String
@@ -262,17 +257,6 @@ usersSearchFunc s userdata = userMatch userdata s
 usersPageSize :: Int
 usersPageSize = 100
 
-getUsersAndStats :: Kontrakcja m => m [(User, Maybe Company, DocStats)]
-getUsersAndStats = do
-    Context{ctxtime} <- getContext
-    users <- runDBQuery GetUsers
-    let queryStats user = do
-          mcompany <- getCompanyForUser user
-          docstats <- doc_query $ GetDocumentStatsByUser user ctxtime
-          return (user, mcompany, docstats)
-    users2 <- mapM queryStats users
-    return users2
-
 getUsersAndStatsInv :: Kontrakcja m => m [(User, Maybe Company, DocStats, InviteType)]
 getUsersAndStatsInv = do
     users <- getUsersAndStats
@@ -284,23 +268,6 @@ getUsersAndStatsInv = do
                           Nothing                     -> Admin
                           Just (InviteInfo _ _ mtype) -> fromMaybe Admin mtype
         return (user,mcompany,docstats,invitestype)
-
-showAdminUserUsageStats :: Kontrakcja m => UserID -> m String
-showAdminUserUsageStats userid = onlySalesOrAdmin $ do
-  documents <- doc_query $ GetDocumentsByAuthor userid
-  Just user <- runDBQuery $ GetUserByID userid
-  mcompany <- getCompanyForUser user
-  adminUserUsageStatsPage user mcompany $ do
-    statisticsFieldsForASingleUser documents
-
-showAdminCompanyUsageStats :: Kontrakcja m => CompanyID -> m String
-showAdminCompanyUsageStats companyid = onlySalesOrAdmin $ do
-  users <- runDBQuery $ GetCompanyAccounts companyid
-  userdocs <- mapM (doc_query . GetDocumentsByAuthor . userid) users
-  let documents = concat userdocs
-  Log.debug $ "There are " ++ (show $ length documents) ++ " docs related to company " ++ (show companyid)
-  adminCompanyUsageStatsPage companyid $ do
-    fieldsFromStats [] documents
 
 
 {- Shows table of all users-}
@@ -367,8 +334,8 @@ handleUserChange uid = onlySalesOrAdmin $ do
 resaveDocsForUser :: Kontrakcja m => UserID -> m ()
 resaveDocsForUser uid = onlySalesOrAdmin $ do
   user <- runDBOrFail $ dbQuery $ GetUserByID uid
-  userdocs <- doc_query $ GetDocumentsByUser user
-  mapM_ (\doc -> doc_update $ AdminOnlySaveForUser (documentid doc) user) userdocs
+  userdocs <- runDBQuery $ GetDocumentsByUser user
+  mapM_ (\doc -> runDBUpdate $ AdminOnlySaveForUser (documentid doc) user) userdocs
   return ()
 
 {- | Handling company details change. It reads user info change -}
@@ -605,126 +572,6 @@ Used signatures last 6 months
 Used signatures last 12 months
 -}
 
-data DocStatsL = DocStatsL
-                { dsAllDocuments :: !Int
-                , dsPreparationDocuments :: !Int
-                , dsPendingDocuments :: !Int
-                , dsCanceledDocuments :: !Int
-                , dsTimedOutDocuments :: !Int
-                , dsClosedDocuments :: !Int
-                , dsRejectedDocuments :: !Int
-                , dsAwaitingAuthorDocuments :: !Int
-                , dsErrorDocuments :: !Int
-                , dsAllSignatures :: !Int
-                , dsSignaturesInClosed :: !Int
-
-                , dsAllUsers :: !Int
-                , dsViralInvites :: !Int
-                , dsAdminInvites :: !Int
-                }
-
-docStatsZero :: DocStatsL
-docStatsZero = DocStatsL 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-
-addStats :: DocStatsL -> DocStatsL -> DocStatsL
-addStats (DocStatsL a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14) (DocStatsL b1 b2 b3 b4 b5 b6 b7 b8 b9 b10 b11 b12 b13 b14) =
-      DocStatsL (a1+b1) (a2+b2) (a3+b3) (a4+b4) (a5+b5) (a6+b6) (a7+b7) (a8+b8) (a9+b9) (a10+b10) (a11+b11) (a12+b12) (a13+b13) (a14+b14)
-
-addStats1 :: (Int, Int, Int, Int) -> (Int, Int, Int, Int) -> (Int, Int, Int, Int)
-addStats1 (_, t1, s1, i1) (t, t2, s2, i2) = (t, t1+t2, s1+s2, i1+i2)
-
-sumStats :: [(Int, Int, Int, Int)] -> (Int, Int, Int, Int)
-sumStats = foldl1 addStats1
-
--- Stats are very simple:
--- Date
--- # of documents Closed that date
--- # of signatures on documents closed that date
--- # of documents sent that date
-newCalculateStatsFromDocuments :: [Document] -> [(Int, Int, Int, Int)]
-newCalculateStatsFromDocuments docs =
-  let cls = [(asInt $ getLastSignedTime d, 1, countSignatures d, 0) | d <- docs, isClosed d]
-      pds = [(asInt $ fromJust $ getInviteTime d, 0, 0, 1)                     | d <- docs, isPending d, isJust $ getInviteTime d]
-      byDay = groupWith (\(a,_,_,_)->a) $ reverse $ sortWith (\(a,_,_,_)->a) (cls ++ pds)
-  in map sumStats byDay
-
-calculateStatsFromDocuments :: [Document] -> IntMap.IntMap DocStatsL
-calculateStatsFromDocuments documents =
-  foldl' ins IntMap.empty documents
-  where
-    ins mapfunc doc = foldl' (\m (k,v) -> IntMap.insertWith addStats k v m) mapfunc (stuff doc)
-    stuff doc = [ (asInt $ documentctime doc, docStatsZero { dsAllDocuments = 1
-                                                           , dsAllSignatures = countSignatures doc
-                                                           , dsSignaturesInClosed = if documentstatus doc == Closed
-                                                                                    then countSignatures doc
-                                                                                    else 0
-                                                           })
-                , (asInt $ documentmtime doc, case documentstatus doc of
-                      Preparation -> docStatsZero { dsPreparationDocuments = 1}
-                      Pending     -> docStatsZero { dsPendingDocuments = 1}
-                      Rejected    -> docStatsZero { dsRejectedDocuments = 1}
-                      Canceled    -> docStatsZero { dsCanceledDocuments = 1}
-                      DocumentError {}    -> docStatsZero { dsErrorDocuments = 1}
-                      Closed      -> docStatsZero { dsClosedDocuments = 1}
-                      Timedout    -> docStatsZero { dsTimedOutDocuments = 1}
-                      AwaitingAuthor -> docStatsZero {dsAwaitingAuthorDocuments = 1}
-                      --_ -> docStatsZero  -- catch all to make it run in case somebody adds new status
-                      )
-                ]
-
-showAsDate1 :: Int -> String
-showAsDate1 int = printf "%04d-%02d-%02d" (int `div` 10000) (int `div` 100 `mod` 100) (int `mod` 100)
-
-statisticsFieldsForASingleUser :: (Functor m, MonadIO m) => [Document] -> Fields m
-statisticsFieldsForASingleUser ds =
-  let stats = newCalculateStatsFromDocuments ds in
-  fieldFL "statistics" $ for stats (\(ct, c, s, i) -> do
-                                       field "date" $ showAsDate1 ct
-                                       field "closed" c
-                                       field "signatures" s
-                                       field "sent" i
-                                       field "avg" (if c == 0 then 0 else ((fromIntegral s / fromIntegral c) :: Double)))
-
-
-
-fieldsFromStats :: (Functor m, MonadIO m) => [User] -> [Document] -> Fields m
-fieldsFromStats _users documents = do
-    let userStats = IntMap.empty -- calculateStatsFromUsers users
-        documentStats = calculateStatsFromDocuments documents
-        stats' = IntMap.toList (IntMap.unionWith addStats userStats documentStats)
-        lastMonthStats = take 30 (reverse stats')
-        allMonthsStats = reverse $ IntMap.toList $ IntMap.fromListWith addStats (map ( \(k,v) -> (k `div` 100 * 100, v)) stats')
-    let fieldify showDate (date,stat) = do
-          field "date" $ showDate date
-          fieldF "documents" $ do
-            field "all" $ dsAllDocuments stat
-            field "preparation" $ dsPreparationDocuments stat
-            field "pending" $ dsPendingDocuments stat
-            field "error" $ dsErrorDocuments stat
-            field "timeout" $ dsTimedOutDocuments stat
-            field "awaitingauthor" $ dsAwaitingAuthorDocuments stat
-            field "closed" $ dsClosedDocuments stat
-            field "rejected" $ dsRejectedDocuments stat
-            field "canceled" $ dsCanceledDocuments stat
-            field "signatures" $ dsAllSignatures stat
-            field "signaturesInClosed" $ dsSignaturesInClosed stat
-          fieldF "users" $ do
-            field "all" $ dsAllUsers stat
-            field "viralInvites" $ dsViralInvites stat
-            field "adminInvites" $ dsAdminInvites stat
-
-    fieldFL "lastMonthStats" $ map (fieldify showAsDate) lastMonthStats
-    fieldFL "allMonthsStats" $ map (fieldify showAsMonth) allMonthsStats
-
-handleStatistics :: Kontrakcja m => m String
-handleStatistics =
-  onlySalesOrAdmin $ do
-    ctx <- getContext
-    documents <- doc_query $ GetDocuments $ currentServiceID ctx
-    users <- runDBQuery GetUsers
-    renderTemplateFM "statisticsPage" $ do
-      fieldsFromStats users documents
-
 {- |
     Shows statistics about functionality use.
 
@@ -741,7 +588,7 @@ showFunctionalityStats :: Kontrakcja m => m String
 showFunctionalityStats = onlySalesOrAdmin $ do
   ctx@Context{ ctxtime } <- getContext
   users <- runDBQuery GetUsers
-  documents <- doc_query $ GetDocuments $ currentServiceID ctx
+  documents <- runDBQuery $ GetDocuments $ currentServiceID ctx
   adminFunctionalityStatsPage (mkStats ctxtime users)
                               (mkStats ctxtime documents)
   where
@@ -762,7 +609,7 @@ instance HasFunctionalityStats Document where
     [ ("drag n drop", anyField hasPlacement)
     , ("custom fields", anyField isCustom)
     , ("custom sign order", any ((/=) (SignOrder 1) . signatorysignorder . signatorydetails) . documentsignatorylinks)
-    , ("csv", isJust . documentcsvupload)
+    , ("csv", isJust . msum . fmap signatorylinkcsvupload . documentsignatorylinks)
     ]
     where
       anyField p doc =
@@ -787,7 +634,7 @@ showDocuments = onlySalesOrAdmin $ adminDocuments =<< getContext
 jsonDocuments :: Kontrakcja m => m JSValue
 jsonDocuments = onlySalesOrAdmin $ do
     srvs <- runDBQuery $ GetServices
-    docs <- join <$> (sequence $ map (doc_query . GetDocuments) (Nothing:(map (Just . serviceid) srvs)))
+    docs <- join <$> (sequence $ map (runDBQuery . GetDocuments) (Nothing:(map (Just . serviceid) srvs)))
     params <- getListParamsNew
     let documents = documentsSortSearchPage params docs
     return $ JSObject
@@ -855,7 +702,7 @@ resealFile :: Kontrakcja m => DocumentID -> m KontraLink
 resealFile docid = onlyAdmin $ do
   Log.debug $ "Trying to reseal document "++ show docid ++" | Only superadmin can do that"
   ctx <- getContext
-  doc <- guardJustM $ doc_query $ GetDocumentByDocumentID docid
+  doc <- guardJustM $ runDBQuery $ GetDocumentByDocumentID docid
   Log.debug "Document is valid for resealing sealing"
   res <- runDB $ sealDocument ctx doc
   case res of
@@ -867,7 +714,7 @@ resealFile docid = onlyAdmin $ do
 replaceMainFile :: Kontrakcja m => DocumentID -> m KontraLink
 replaceMainFile did = onlyAdmin $ do
   Log.debug $ "Replaing main file | SUPER CRITICAL | If you see this check who did this ask who did this and why"
-  doc <- guardJustM $ doc_query $ GetDocumentByDocumentID did
+  doc <- guardJustM $ runDBQuery $ GetDocumentByDocumentID did
   input <- getDataFnM (lookInput "file")
   case (input, documentfiles doc) of
        (Input contentspec _ _contentType, cf:_)  -> do
@@ -876,7 +723,7 @@ replaceMainFile did = onlyAdmin $ do
                 Right c -> return c
             fn <- fromMaybe (BS.fromString "file") <$> fmap filename <$> (runDB $ dbQuery $ GetFileByFileID cf)
             file <- runDB $ dbUpdate $ NewFile fn (concatChunks content)
-            _ <- doc_update $ ChangeMainfile did (fileid file)
+            _ <- runDBUpdate $ ChangeMainfile did (fileid file)
             return LoopBack
        _ -> mzero
 

@@ -3,9 +3,10 @@ module Context (
     ) where
 
 import Control.Concurrent.MVar
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import File.FileID
 import Doc.JpegPages
+import Doc.SignatoryLinkID
 import MinutesTime
 import User.Model
 import qualified Data.ByteString as BS
@@ -29,7 +30,7 @@ data Context = Context
     , ctxtime                :: MinutesTime -- ^ The time of the request.
     , ctxnormalizeddocuments :: MVar (Map.Map FileID JpegPages) -- ^
     , ctxipnumber            :: IPAddress -- ^ The ip number of the client.
-    , ctxdbconn              :: Connection -- ^ PostgreSQL database connection
+    , ctxdbconn              :: Nexus -- ^ PostgreSQL database connection
     , ctxdocstore            :: FilePath -- ^ The temporary document directory.
     , ctxs3action            :: AWS.S3Action -- ^
     , ctxgscmd               :: String -- ^
@@ -48,4 +49,5 @@ data Context = Context
     , ctxlocation            :: String -- ^
     , ctxadminaccounts       :: [Email] -- ^
     , ctxsalesaccounts       :: [Email] -- ^
+    , ctxmagichashes         :: Map.Map SignatoryLinkID MagicHash
     }

@@ -25,6 +25,7 @@ import qualified Data.ByteString.UTF8 as BS
 
 import DB.Classes
 import DB.Derive
+import DB.Fetcher2
 import DB.Utils
 import DB.Types
 import Misc
@@ -84,7 +85,7 @@ instance DBQuery GetServiceByLocation (Maybe Service) where
     ss <- wrapDB $ \conn -> do
       st <- prepare conn $ selectServicesSQL ++ "WHERE s.location = ?"
       _ <- execute st [toSql loc]
-      fetchServices st []
+      fetchServices st
     oneObjectReturnedGuard ss
 
 data GetService = GetService ServiceID
@@ -93,7 +94,7 @@ instance DBQuery GetService (Maybe Service) where
     ss <- wrapDB $ \conn -> do
       st <- prepare conn $ selectServicesSQL ++ "WHERE s.id = ?"
       _ <- execute st [toSql sid]
-      fetchServices st []
+      fetchServices st
     oneObjectReturnedGuard ss
 
 data GetServicesForAdmin = GetServicesForAdmin UserID
@@ -101,14 +102,14 @@ instance DBQuery GetServicesForAdmin [Service] where
   dbQuery (GetServicesForAdmin aid) = wrapDB $ \conn -> do
     st <- prepare conn $ selectServicesSQL ++ "WHERE s.admin_id = ? ORDER BY s.id DESC"
     _ <- execute st [toSql aid]
-    fetchServices st []
+    fetchServices st
 
 data GetServices = GetServices
 instance DBQuery GetServices [Service] where
   dbQuery GetServices = wrapDB $ \conn -> do
     st <- prepare conn $ selectServicesSQL ++ "ORDER BY s.id DESC"
     _ <- executeRaw st
-    fetchServices st []
+    fetchServices st
 
 data CreateService = CreateService ServiceID (Maybe Password) UserID
 instance DBUpdate CreateService (Maybe Service) where
@@ -203,33 +204,26 @@ selectServicesSQL = "SELECT"
   ++ "  FROM services s"
   ++ " "
 
-fetchServices :: Statement -> [Service] -> IO [Service]
-fetchServices st acc = fetchRow st >>= maybe (return acc) f
-  where f [sid, password, salt, admin_id, location, email_from_address, mail_footer, button1
-          , button2, buttons_text_color, background, overlay_background, bars_background, logo
-          ] = fetchServices st $ Service {
-             serviceid = fromSql sid
-           , servicesettings = ServiceSettings {
-               servicepassword = case (fromSql password, fromSql salt) of
-                                      (Just pwd, Just salt') -> Just Password {
-                                          pwdHash = pwd
-                                        , pwdSalt = salt'
-                                      }
-                                      _ -> Nothing
-               , serviceadmin = fromSql admin_id
-               , servicelocation = fromSql location
-               , servicemailfromaddress = fromSql email_from_address
-             }
-           , serviceui = ServiceUI {
-               servicemailfooter = fromSql mail_footer
-             , servicebuttons = case (fromSql button1, fromSql button2) of
-                                     (Just b1, Just b2) -> Just (b1, b2)
-                                     _ -> Nothing
-             , servicebuttonstextcolor = fromSql buttons_text_color
-             , servicebackground = fromSql background
-             , serviceoverlaybackground = fromSql overlay_background
-             , servicebarsbackground = fromSql bars_background
-             , servicelogo = fromSql logo
-           }
-         } : acc
-        f l = error $ "fetchServices: unexpected row: "++show l
+fetchServices :: Statement -> IO [Service]
+fetchServices st = foldDB st decoder []
+  where
+    decoder acc sid password salt admin_id location email_from_address
+      mail_footer button1 button2 buttons_text_color background
+      overlay_background bars_background logo = Service {
+          serviceid = sid
+        , servicesettings = ServiceSettings {
+            servicepassword = maybePassword (password, salt)
+          , serviceadmin = admin_id
+          , servicelocation = location
+          , servicemailfromaddress = email_from_address
+          }
+        , serviceui = ServiceUI {
+            servicemailfooter = mail_footer
+          , servicebuttons = pairMaybe button1 button2
+          , servicebuttonstextcolor = buttons_text_color
+          , servicebackground = background
+          , serviceoverlaybackground = overlay_background
+          , servicebarsbackground = bars_background
+          , servicelogo = logo
+          }
+        } : acc

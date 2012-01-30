@@ -1,7 +1,7 @@
 module User.Password where
 
 import Control.Monad.IO.Class
-import System.Random
+import System.Random (newStdGen, randoms)
 import qualified Data.ByteString as BS
 import qualified Data.Digest.SHA256 as D
 
@@ -32,3 +32,7 @@ verifyPassword :: Maybe Password -> BS.ByteString -> Bool
 verifyPassword Nothing _ = False
 verifyPassword (Just Password{pwdHash, pwdSalt}) password =
   pwdHash == hashPassword password pwdSalt
+
+maybePassword :: (Maybe Binary, Maybe Binary) -> Maybe Password
+maybePassword (Just hash, Just salt) = Just Password { pwdHash = hash, pwdSalt = salt }
+maybePassword _ = Nothing

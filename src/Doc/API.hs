@@ -8,7 +8,7 @@ import Happstack.Server.Types
 import Routing
 import Doc.DocStateQuery
 import Doc.DocStateData
-import Doc.Transitory
+import Doc.Model
 import Doc.JSON
 import Control.Applicative
 --import Control.Monad
@@ -103,19 +103,18 @@ documentNew = api $ do
   ctx <- getContext
   let now = ctxtime ctx
   
-  d1 <- apiGuardL $ doc_update $ NewDocument user mcompany filename doctype now
-  
-  content <- liftIO $ preprocessPDF ctx (concatChunks content1) (documentid d1)
+  d1 <- apiGuardL $ runDBUpdate $ NewDocument user mcompany filename doctype now
+  content <- apiGuardL' BadInput $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
   file <- lift $ runDB $ dbUpdate $ NewFile filename content
 
-  d2 <- apiGuardL $ doc_update $ AttachFile (documentid d1) (fileid file) now
+  d2 <- apiGuardL $ runDBUpdate $ AttachFile (documentid d1) (fileid file) now
   _ <- lift $ addDocumentCreateStatEvents d2
   return $ Created $ jsonDocumentForAuthor d2
 
 documentChangeMetadata :: Kontrakcja m => DocumentID -> MetadataResource -> m Response
 documentChangeMetadata docid _ = api $ do
   user <- getAPIUser  
-  doc <- apiGuardL $ doc_query $ GetDocumentByDocumentID docid
+  doc <- apiGuardL $ runDBQuery $ GetDocumentByDocumentID docid
   
   asl <- apiGuard $ getAuthorSigLink doc
   
@@ -133,7 +132,7 @@ documentChangeMetadata docid _ = api $ do
   d <- case jsget "title" json of
     Left _ -> return doc
     Right (JSString s) ->
-      apiGuardL $ doc_update $ SetDocumentTitle docid (BS.fromString $ fromJSString s) now
+      apiGuardL $ runDBUpdate $ SetDocumentTitle docid (BS.fromString $ fromJSString s) now
     Right _ -> throwError BadInput
       
   return $ jsonDocumentMetadata d
@@ -188,11 +187,12 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   -- we need to downgrade the PDF to 1.4 that has uncompressed structure
   -- we use gs to do that of course
   ctx <- getContext
-  content <- liftIO $ preprocessPDF ctx (concatChunks content1) (documentid doc)
+
+  content <- apiGuardL' BadInput $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
   
   file <- lift $ runDB $ dbUpdate $ NewFile (BS.fromString $ basename filename) content
   
-  d <- apiGuardL $ doc_update $ SaveSigAttachment (documentid doc) (BS.fromString aname) email (fileid file)
+  d <- apiGuardL $ runDBUpdate $ SaveSigAttachment (documentid doc) (BS.fromString aname) email (fileid file)
   
   -- let's dig the attachment out again
   sigattach' <- apiGuard $ getSignatoryAttachment email (BS.fromString aname) d
@@ -212,7 +212,7 @@ documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
   -- attachment must have a file
   fileid <- apiGuard' ActionNotAvailable $ signatoryattachmentfile sigattach
 
-  d <- apiGuardL $ doc_update $ DeleteSigAttachment (documentid doc) email fileid
+  d <- apiGuardL $ runDBUpdate $ DeleteSigAttachment (documentid doc) email fileid
   
   -- let's dig the attachment out again
   sigattach' <- apiGuard $ getSignatoryAttachment email (BS.fromString aname) d

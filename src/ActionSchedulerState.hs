@@ -34,7 +34,7 @@ import qualified Data.ByteString as BS
 import Data.Typeable
 import Happstack.Data.IxSet
 import Happstack.State
-import System.Random
+import System.Random (randomIO)
 import qualified Happstack.Data.IxSet as IxSet
 import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common

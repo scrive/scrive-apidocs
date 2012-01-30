@@ -19,14 +19,11 @@ flashMessageCannotCancel=
 	$_flashMessageCannotCancel()$
 
 ######
-flashMessageContractCanceled=
-     Du har nu återkallat inbjudan att underteckna dokumentet och ett meddelande om återkallelsen har skickats till samtliga parter.
+flashMessageContractCanceled= $_contractcancelflashmessage()$
 ######
-flashMessageOfferCanceled=
-     Du har nu återkallat offerten och ett meddlande om återkallelsen har skickats till samtliga parter
+flashMessageOfferCanceled= $_offercancelflashmessage()$
 #####
-flashMessageOrderCanceled=
-     Du har nu återkallat ordern och ett meddelande om återkallelsen har skickats till samtliga parter.
+flashMessageOrderCanceled= $_ordercancelflashmessage()$
 #####
 flashMessageNoAccountType=
 	$_flashMessageNoAccountType()$
@@ -225,14 +222,6 @@ flashMessageWeWillCallYouSoon=$_flashMessageWeWillCallYouSoon()$
 flashMessageInvalidCSV=	$_flashMessageInvalidCSV()$
 ###
 flashMessageCSVSent=	$_flashMessageCSVSent()$
-###
-flashMessageSingleTemplateShareDone=	$_flashMessageSingleTemplateShareDone()$
-###
-flashMessageMultipleTemplateShareDone=	$_flashMessageMultipleTemplateShareDone()$
-###
-flashMessageSingleAttachmentShareDone=	$_flashMessageSingleAttachmentShareDone()$
-###
-flashMessageMultipleAttachmentShareDone=	$_flashMessageMultipleAttachmentShareDone()$
 ###
 flashMessageUserHasBecomeCompanyAccount=$_flashMessageUserHasBecomeCompanyAccount()$
 ###

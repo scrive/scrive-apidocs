@@ -1,7 +1,7 @@
 module MailsTest (mailsTests) where
 
 import Control.Applicative
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import Happstack.Server
 import Test.Framework
 import Test.Framework.Providers.HUnit
@@ -15,7 +15,7 @@ import TestingUtil
 import TestKontra as T
 import User.Model
 import Misc
-import Doc.Transitory
+import Doc.Model
 import Doc.DocViewMail
 import Doc.DocStateData
 import Mails.SendMail
@@ -34,7 +34,7 @@ import Data.Char
 import Text.XML.HaXml.Parse (xmlParse')
 import Control.Monad.Trans
 
-mailsTests :: Connection -> [String] -> Test
+mailsTests :: Nexus -> [String] -> Test
 mailsTests conn params  = testGroup "Mails" [
     testCase "Document emails" $ testDocumentMails conn (toMailAddress params),
     testCase "User emails" $ testUserMails conn (toMailAddress params)
@@ -50,7 +50,7 @@ gRight ac = do
     Right d -> return d
 
 
-testDocumentMails  :: Connection -> Maybe String -> Assertion
+testDocumentMails  :: Nexus -> Maybe String -> Assertion
 testDocumentMails  conn mailTo = withTestEnvironment conn $ do
   author <- addNewRandomAdvancedUser
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
@@ -60,7 +60,7 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
         ctx <- mailingContext l conn
         _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { locale = l }
         d' <- gRight $ randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype)
-        d <- gRight . doc_update' $ SetDocumentLocale (documentid d') l (ctxtime ctx)
+        d <- gRight . dbUpdate $ SetDocumentLocale (documentid d') l (ctxtime ctx)
 
         let docid = documentid d
         let asl = head $ documentsignatorylinks d
@@ -91,8 +91,6 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
         checkMail "Delivered invitation"   $  mailDeliveredInvitation doc sl
         --remind mails
         checkMail "Reminder notsigned" $ mailDocumentRemind Nothing ctx doc sl
-        --cancel by author mail
-        checkMail "Cancel" $ mailCancelDocument True Nothing  ctx doc
         --reject mail
         checkMail "Reject"  $ mailDocumentRejected  Nothing  ctx doc sl
         -- awaiting author email
@@ -107,7 +105,7 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
         checkMail "Reminder signed" $ mailDocumentRemind Nothing ctx doc (head $ documentsignatorylinks sdoc)
 
 
-testUserMails :: Connection -> Maybe String -> Assertion
+testUserMails :: Nexus -> Maybe String -> Assertion
 testUserMails conn mailTo = withTestEnvironment conn $ do
   forM_ allLocales $ \l ->  do
     -- make a user and context that use the same locale
@@ -154,7 +152,7 @@ addNewRandomAdvancedUserWithLocale l = do
   (Just uuser) <- dbQuery $ GetUserByID (userid user)
   return uuser
 
-mailingContext :: Locale -> Connection -> DB Context
+mailingContext :: Locale -> Nexus -> DB Context
 mailingContext locale conn = do
     globaltemplates <- readGlobalTemplates
     ctx <- mkContext locale globaltemplates

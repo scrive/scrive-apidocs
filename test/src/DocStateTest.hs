@@ -4,7 +4,7 @@ module DocStateTest (docStateTests) where
 
 import DB.Classes
 import User.Model
-import Doc.Transitory
+import Doc.Model
 import Doc.DocUtils
 import Doc.DocStateData
 import Misc
@@ -23,13 +23,10 @@ import Data.Functor
 import Data.Maybe
 import Data.Convertible(convert)
 import Database.HDBC(SqlValue)
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import Control.Monad
 import Control.Monad.Trans
 import Data.List
-#ifndef DOCUMENTS_IN_POSTGRES
-import Happstack.State
-#endif
 import Test.Framework
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.Framework.Providers.HUnit (testCase)
@@ -39,7 +36,7 @@ import File.FileID
 import qualified Log
 
 
-docStateTests :: Connection -> Test
+docStateTests :: Nexus -> Test
 docStateTests conn = testGroup "DocState" [
   dataStructureProperties,
   testThat "GetDocumentsByCompanyAndTags filters" conn testGetDocumentsByCompanyAndTagsFilters,
@@ -60,6 +57,11 @@ docStateTests conn = testGroup "DocState" [
   testThat "SetDocumentLocale fails when doc doesn't exist" conn testSetDocumentLocaleNotLeft,
 
   testThat "SetDocumentTitle fails when doc doesn't exist" conn testSetDocumentTitleNotLeft,
+  testThat "SetDocumentTitle succeeds when doc exists and has proper status" conn testSetDocumentTitleRight,
+
+  testThat "SetDaysToSign fails when doc doesn't exist" conn testSetDocumentDaysToSignNotLeft,
+  testThat "RemoveDaysToSign fails when doc doesn't exist" conn testRemoveDocumentDaysToSignNotLeft,
+  testThat "SetDaysToSign and RemoveDaysToSign succeed when doc exist and has proper status" conn testSetDocumentDaysToSignRight,
 
   testThat "CloseDocument fails when doc is not signable" conn testCloseDocumentNotSignableNothing,
   testThat "CloseDocument fails when doc doesn't exist" conn testCloseDocumentNotNothing,
@@ -158,8 +160,8 @@ docStateTests conn = testGroup "DocState" [
   testThat "when I call attachcsvupload with a doc that does not exist, always returns left" conn testNoDocumentAttachCSVUploadAlwaysLeft,
   testThat "when I call attachcsvupload with a doc that is not in preparation, always returns left" conn testNotPreparationAttachCSVUploadAlwaysLeft,
   testThat "when I call attachcsvupload and the csvindex is the author, return left" conn testPreparationAttachCSVUploadAuthorIndexLeft,
-  testThat "when I call attachcsvupload and the csvindex is negative, return left" conn testPreparationAttachCSVUploadIndexNeg,
-  testThat "when I call attachcsvupload and the csvindex is too large, return Left" conn testPreparationAttachCSVUploadIndexGreaterThanLength,
+  testThat "when I call attachcsvupload and not existing signatory link, return left" conn testPreparationAttachCSVUploadNonExistingSignatoryLink,
+
   testThat "addDocumentAttachment fails if not in preparation" conn testAddDocumentAttachmentFailsIfNotPreparation,
   testThat "addDocumentAttachment doesn't fail if there's no attachments" conn testAddDocumentAttachmentOk,
 
@@ -183,7 +185,7 @@ docStateTests conn = testGroup "DocState" [
   testThat "ReallyDeleteDocument succeeds if deleted by the author who is a private user" conn testReallyDeleteDocumentPrivateAuthorRight,
   testThat "ReallyDeleteDocument succeeds if deleted by a company admin user" conn testReallyDeleteDocumentCompanyAdminRight,
 -- for this stuff postgres implementation is stricter, with happstack it just left the doc unchanged
-#ifdef DOCUMENTS_IN_POSTGRES
+
   testThat "ArchiveDocument fails if the archiving user is an unrelated user" conn testArchiveDocumentUnrelatedUserLeft,
   testThat "ArchiveDocument fails if the archiving user is just another standard company user" conn testArchiveDocumentCompanyStandardLeft,
   testThat "RestoreArchivedDocument fails if the storing user is an unrlated user" conn testRestoreArchivedDocumentUnrelatedUserLeft,
@@ -191,7 +193,6 @@ docStateTests conn = testGroup "DocState" [
   testThat "ReallyDeleteDocument fails if deleted by the author who is a standard company user" conn testReallyDeleteDocumentCompanyAuthorLeft,
   testThat "ReallyDeleteDocument fails if the deleting user is just another standard company user" conn testReallyDeleteDocumentCompanyStandardLeft,
   testThat "ReallyDeleteDocument fails if the document hasn't been archived" conn testReallyDeleteNotArchivedLeft,
-#endif
 
   testThat "GetDocumentsByAuthor doesn't return archived docs" conn testGetDocumentsByAuthorNoArchivedDocs,
   testThat "GetDocumentsByCompany doesn't return archived docs" conn testGetDocumentsByCompanyNoArchivedDocs,
@@ -431,7 +432,6 @@ testReallyDeleteDocumentCompanyAdminRight = doTimes 10 $ do
   validTest $ assertOneReallyDeletedSigLink etdoc
 
 -- for this stuff postgres implementation is stricter, with happstack it just left the doc unchanged
-#ifdef DOCUMENTS_IN_POSTGRES
 testArchiveDocumentUnrelatedUserLeft :: DB ()
 testArchiveDocumentUnrelatedUserLeft = doTimes 10 $ do
   author <- addNewRandomUser
@@ -494,7 +494,6 @@ testReallyDeleteNotArchivedLeft = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
   etdoc <- randomUpdate $ ReallyDeleteDocument author (documentid doc)
   validTest $ assertLeft etdoc
-#endif
 
 testGetDocumentsByAuthorNoArchivedDocs :: DB ()
 testGetDocumentsByAuthorNoArchivedDocs =
@@ -516,22 +515,18 @@ testGetDocumentsByUserNoArchivedDocs :: DB ()
 testGetDocumentsByUserNoArchivedDocs =
   checkQueryDoesntContainArchivedDocs GetDocumentsByUser
 
-#ifndef DOCUMENTS_IN_POSTGRES
-checkQueryDoesntContainArchivedDocs :: QueryEvent q [Document] => (User -> q) -> DB ()
-#else
 checkQueryDoesntContainArchivedDocs :: DBQuery q [Document] => (User -> q) -> DB ()
-#endif
 checkQueryDoesntContainArchivedDocs qry = doTimes 10 $ do
   company <- addNewCompany
   author <- addNewRandomCompanyUser (companyid company) True
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
-  docsbeforearchive <- doc_query' (qry author)
+  docsbeforearchive <- dbQuery (qry author)
   assertEqual "Expecting one doc before archive" [documentid doc] (map documentid docsbeforearchive)
   _ <- randomUpdate $ ArchiveDocument author (documentid doc)
-  docsafterarchive <- doc_query' (qry author)
+  docsafterarchive <- dbQuery (qry author)
   _ <- validTest $ assertEqual "Expecting no docs after archive" [] (map documentid docsafterarchive)
   _ <- randomUpdate $ RestoreArchivedDocument author (documentid doc)
-  docsafterestore <- doc_query' (qry author)
+  docsafterestore <- dbQuery (qry author)
   validTest $ assertEqual "Expecting one doc after restoring" [documentid doc] (map documentid docsafterestore)
 
 testGetDeletedDocumentsByUserArchivedDocs :: DB ()
@@ -542,22 +537,18 @@ testGetDeletedDocumentsByCompanyArchivedDocs :: DB ()
 testGetDeletedDocumentsByCompanyArchivedDocs =
   checkQueryContainsArchivedDocs GetDeletedDocumentsByCompany
 
-#ifndef DOCUMENTS_IN_POSTGRES
-checkQueryContainsArchivedDocs :: QueryEvent q [Document] => (User -> q) -> DB ()
-#else
 checkQueryContainsArchivedDocs :: DBQuery q [Document] => (User -> q) -> DB ()
-#endif
 checkQueryContainsArchivedDocs qry = doTimes 10 $ do
   company <- addNewCompany
   author <- addNewRandomCompanyUser (companyid company) True
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
-  docsbeforearchive <- doc_query' (qry author)
+  docsbeforearchive <- dbQuery (qry author)
   assertEqual "Expecting no docs before archive" [] (map documentid docsbeforearchive)
   _ <- randomUpdate $ ArchiveDocument author (documentid doc)
-  docsafterarchive <- doc_query' (qry author)
+  docsafterarchive <- dbQuery (qry author)
   _ <- validTest $ assertEqual "Expecting 1 doc after archive" [documentid doc] (map documentid docsafterarchive)
   _ <- randomUpdate $ ReallyDeleteDocument author (documentid doc)
-  docsafterdelete <- doc_query' (qry author)
+  docsafterdelete <- dbQuery (qry author)
   validTest $ assertEqual "Expecting no docs after really deleting" [] (map documentid docsafterdelete)
 
 testSetDocumentLocaleNotLeft :: DB ()
@@ -590,7 +581,7 @@ testDocumentCanBeCreatedAndFetchedByID = doTimes 10 $ do
           Left msg -> error $ show msg
           Right d -> d
   -- execute
-  mdoc <- doc_query' $ GetDocumentByDocumentID (documentid doc)
+  mdoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   -- assert
   validTest $ do
     assertJust mdoc
@@ -609,7 +600,7 @@ testDocumentCanBeCreatedAndFetchedByAllDocs = doTimes 10 $ do
   let doc = case edoc of
           Left msg -> error $ show msg
           Right d -> d
-  docs <- doc_query' $ GetDocuments Nothing
+  docs <- dbQuery $ GetDocuments Nothing
   -- assert
   validTest $ do
     assertJust $ find (sameDocID doc) docs
@@ -626,7 +617,7 @@ testDocumentUpdateDoesNotChangeID = doTimes 10 $ do
 
   let sd = signatoryDetailsFromUser author Nothing
   -- execute
-  enewdoc <- doc_update $ Reset mt (documentid doc) a b c d (sd, r, userid author, Nothing) e f AdvancedFunctionality
+  enewdoc <- (runDB . dbUpdate) $ Reset mt (documentid doc) a b c d (sd, r, userid author, Nothing) e f AdvancedFunctionality
   --assert
   validTest $ do
     assertRight enewdoc
@@ -643,7 +634,7 @@ testDocumentUpdateCanChangeTitle = doTimes 10 $ do
 
   --execute
   let sd = signatoryDetailsFromUser author Nothing
-  enewdoc <- doc_update $ UpdateDocument mt (documentid doc) a b c d (sd, r, userid author, Nothing) e f AdvancedFunctionality
+  enewdoc <- (runDB . dbUpdate) $ UpdateDocument mt (documentid doc) a b c d (sd, r, userid author, Nothing) e f AdvancedFunctionality
   --assert
   validTest $ do
     assertRight enewdoc
@@ -785,7 +776,7 @@ testNotPreparationUpdateDocumentAlwaysLeft = doTimes 10 $ do
 
   let sd = signatoryDetailsFromUser author Nothing
   -- execute
-  enewdoc <- doc_update $ UpdateDocument mt (documentid doc) a b c d (sd, [SignatoryAuthor, SignatoryPartner], userid author, Nothing) e f AdvancedFunctionality
+  enewdoc <- (runDB . dbUpdate) $ UpdateDocument mt (documentid doc) a b c d (sd, [SignatoryAuthor, SignatoryPartner], userid author, Nothing) e f AdvancedFunctionality
 
   --assert
   validTest $ assertLeft enewdoc
@@ -801,7 +792,7 @@ testPreparationUpdateDocumentAlwaysRight = doTimes 10 $ do
   let sd = signatoryDetailsFromUser author Nothing
 
   --execute
-  enewdoc <- doc_update $ UpdateDocument mt (documentid doc) a b c d (sd, r, userid author, Nothing) e f AdvancedFunctionality
+  enewdoc <- (runDB . dbUpdate) $ UpdateDocument mt (documentid doc) a b c d (sd, r, userid author, Nothing) e f AdvancedFunctionality
 
   --assert
   validTest $ do
@@ -825,7 +816,7 @@ testNotPreparationResetSignatoryDetailsAlwaysLeft = doTimes 10 $ do
   mt <- rand 10 arbitrary
   let sd = signatoryDetailsFromUser author Nothing
   --execute
-  edoc <- doc_update' $ ResetSignatoryDetails (documentid doc) [(sd, [SignatoryAuthor])] mt
+  edoc <- dbUpdate $ ResetSignatoryDetails (documentid doc) [(sd, [SignatoryAuthor])] mt
   --assert
   validTest $ assertLeft edoc
 
@@ -836,7 +827,7 @@ testPreparationResetSignatoryDetailsAlwaysRight = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   mt <- rand 10 arbitrary
   --execute
-  edoc <- doc_update' $ ResetSignatoryDetails (documentid doc) [(emptySignatoryDetails, [SignatoryAuthor])] mt
+  edoc <- dbUpdate $ ResetSignatoryDetails (documentid doc) [(emptySignatoryDetails, [SignatoryAuthor])] mt
   --assert
   validTest $ do
     assertRight edoc
@@ -850,7 +841,7 @@ testNoDocumentResetSignatoryDetailsAlwaysLeft = doTimes 10 $ do
   mt <- rand 10 arbitrary
   --execute
   -- non-existent docid
-  edoc <- doc_update' $ ResetSignatoryDetails a [(emptySignatoryDetails, [SignatoryAuthor])] mt
+  edoc <- dbUpdate $ ResetSignatoryDetails a [(emptySignatoryDetails, [SignatoryAuthor])] mt
   --assert
   validTest $ assertLeft edoc
 
@@ -880,7 +871,9 @@ testPreparationAttachCSVUploadAuthorIndexLeft = doTimes 10 $ do
   csvupload <- rand 10 arbitrary
   let Just ai = authorIndex (documentsignatorylinks doc)
   --execute
-  edoc <- doc_update' $ AttachCSVUpload (documentid doc) (csvupload { csvsignatoryindex = ai })
+  edoc <- dbUpdate $ AttachCSVUpload (documentid doc)
+          (signatorylinkid ((documentsignatorylinks doc) !! ai))
+          (csvupload { csvsignatoryindex = ai })
   --assert
   validTest $ assertLeft edoc
 
@@ -889,43 +882,30 @@ authorIndex sls = case catMaybes $ zipWith (\sl i -> if isAuthor sl then Just i 
   [] -> Nothing
   x:_ -> Just x
 
-testPreparationAttachCSVUploadIndexNeg :: DB ()
-testPreparationAttachCSVUploadIndexNeg = doTimes 10 $ do
+testPreparationAttachCSVUploadNonExistingSignatoryLink :: DB ()
+testPreparationAttachCSVUploadNonExistingSignatoryLink = doTimes 3 $ do
   -- setup
-  csvupload <- untilCondition (\c -> (csvsignatoryindex c) < 0) $ rand 10 arbitrary
+  csvupload <- rand 10 arbitrary
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   --execute
-  edoc <- doc_update' $ AttachCSVUpload (documentid doc) csvupload
+  edoc <- dbUpdate $ AttachCSVUpload (documentid doc) 
+          (SignatoryLinkID 0) csvupload
   --assert
   validTest $ assertLeft edoc
 
-testPreparationAttachCSVUploadIndexGreaterThanLength :: DB ()
-testPreparationAttachCSVUploadIndexGreaterThanLength = doTimes 10 $ do
-  -- setup
-  author <- addNewRandomAdvancedUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  if length (documentsignatorylinks doc) > 10
-    then invalidateTest
-    else do
-    csvupload <- untilCondition (\c -> (csvsignatoryindex c) >= length (documentsignatorylinks doc))
-                  $ rand 10 arbitrary
-    --execute
-    edoc <- doc_update' $ AttachCSVUpload (documentid doc) csvupload
-    --assert
-    validTest $ assertLeft edoc
 
 testCreateFromSharedTemplate :: DB ()
 testCreateFromSharedTemplate = do
   user <- addNewRandomAdvancedUser
   docid <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user (not . isAttachment)
-  tmpdoc <- fmap fromJust $ doc_query' $ GetDocumentByDocumentID docid
+  tmpdoc <- fmap fromJust $ dbQuery $ GetDocumentByDocumentID docid
   doc <- if (isTemplate tmpdoc)
          then return tmpdoc
-         else fmap fromRight $ doc_update' (TemplateFromDocument docid)
+         else fmap fromRight $ dbUpdate (TemplateFromDocument docid)
   newuser <- addNewRandomAdvancedUser
   mt <- rand 10 arbitrary
-  doc' <- fmap fromRight $ doc_update' $ SignableFromDocumentIDWithUpdatedAuthor newuser Nothing (documentid doc) mt
+  doc' <- fmap fromRight $ dbUpdate $ SignableFromDocumentIDWithUpdatedAuthor newuser Nothing (documentid doc) mt
   let [author1] = filter isAuthor $ documentsignatorylinks doc
   let [author2] = filter isAuthor $ documentsignatorylinks doc'
   let isCustom (SignatoryField { sfType = CustomFT _ _ }) = True
@@ -1073,7 +1053,7 @@ testTimeoutDocumentNonSignableLeft = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
   -- execute
-  etdoc <- doc_update' $ TimeoutDocument (documentid doc) mt
+  etdoc <- dbUpdate $ TimeoutDocument (documentid doc) mt
   validTest $ assertLeft etdoc
 
 testTimeoutDocumentSignableNotPendingLeft :: DB ()
@@ -1386,10 +1366,8 @@ testCloseDocumentSignableAwaitingAuthorJust = doTimes 10 $ do
          }
 
   let Just sl = getAuthorSigLink doc
-  etdoc <- liftM msum $ sequence 
-           [ randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
-           , randomUpdate $ CloseDocument (documentid doc)
-           ]
+  etdoc <- randomUpdate (SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl)) >>
+           randomUpdate (CloseDocument (documentid doc))
   validTest $ assertRight etdoc
 
 testCloseDocumentSignableNotAwaitingAuthorNothing :: DB ()
@@ -1401,9 +1379,7 @@ testCloseDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
          , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
          }
 
-  etdoc <- liftM msum $ sequence
-           [ randomUpdate $ CloseDocument (documentid doc)
-           ]
+  etdoc <- randomUpdate $ CloseDocument (documentid doc)
   validTest $ assertLeft etdoc
 
 testCloseDocumentNotSignableNothing :: DB ()
@@ -1432,10 +1408,8 @@ testCancelDocumentSignableAwaitingAuthorJust = doTimes 10 $ do
          }
 
   let Just sl = getAuthorSigLink doc
-  etdoc <- liftM msum $ sequence 
-           [ randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
-           , randomUpdate $ CancelDocument (documentid doc) ManualCancel
-           ]
+  etdoc <- randomUpdate (SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl)) >>
+           randomUpdate (CancelDocument (documentid doc) ManualCancel)
   validTest $ assertRight etdoc
 
 testCancelDocumentSignableNotAwaitingAuthorNothing :: DB ()
@@ -1447,9 +1421,8 @@ testCancelDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
          , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
          }
 
-  etdoc <- liftM msum $ sequence 
-           [ randomUpdate $ CancelDocument (documentid doc) ManualCancel
-           ]
+  etdoc <- randomUpdate $ CancelDocument (documentid doc) ManualCancel
+
   validTest $ assertRight etdoc
 
 testCancelDocumentNotSignableNothing :: DB ()
@@ -1478,10 +1451,9 @@ testPendingToAwaitingAuthorDocumentSignableAwaitingAuthorJust = doTimes 10 $ do
          }
 
   let Just sl = getAuthorSigLink doc
-  etdoc <- liftM msum $ sequence 
-           [ randomUpdate $ SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
-           , randomUpdate $ PendingToAwaitingAuthor (documentid doc)
-           ]
+  etdoc <- randomUpdate (PendingToAwaitingAuthor (documentid doc)) >>
+           randomUpdate (SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl))
+           
   validTest $ assertRight etdoc
 
 testPendingToAwaitingAuthorDocumentSignableNotAwaitingAuthorNothing :: DB ()
@@ -1493,9 +1465,8 @@ testPendingToAwaitingAuthorDocumentSignableNotAwaitingAuthorNothing = doTimes 10
          , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
          }
 
-  etdoc <- liftM msum $ sequence 
-           [ randomUpdate $ PendingToAwaitingAuthor (documentid doc)
-           ]
+  etdoc <- randomUpdate $ PendingToAwaitingAuthor (documentid doc)
+
   validTest $ assertRight etdoc
 
 testPendingToAwaitingAuthorDocumentNotSignableNothing :: DB ()
@@ -1519,6 +1490,46 @@ testSetDocumentTitleNotLeft = doTimes 10 $ do
   etdoc <- randomUpdate $ SetDocumentTitle
   validTest $ assertLeft etdoc
 
+testSetDocumentTitleRight :: DB ()
+testSetDocumentTitleRight = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocument (randomDocumentAllowsDefault author)
+         { randomDocumentCondition = (not . isClosed)
+         }
+  let title = BS.fromString "my new cool title"
+  etdoc <- randomUpdate $ SetDocumentTitle (documentid doc) title
+  validTest $ do
+    assertRight etdoc
+    let Right doc' = etdoc
+    assertEqual "Title is set properly" title (documenttitle doc')
+
+testSetDocumentDaysToSignNotLeft :: DB ()
+testSetDocumentDaysToSignNotLeft = doTimes 10 $ do
+  etdoc <- randomUpdate $ SetDaysToSign
+  validTest $ assertLeft etdoc
+
+testRemoveDocumentDaysToSignNotLeft :: DB ()
+testRemoveDocumentDaysToSignNotLeft = doTimes 10 $ do
+  etdoc <- randomUpdate $ RemoveDaysToSign
+  validTest $ assertLeft etdoc
+
+testSetDocumentDaysToSignRight :: DB ()
+testSetDocumentDaysToSignRight = doTimes 10 $ do
+  author <- addNewRandomAdvancedUser
+  doc <- addRandomDocument (randomDocumentAllowsDefault author)
+         { randomDocumentCondition = (not . isClosed) &&^ (isNothing . documentdaystosign)
+         }
+  let daystosign = 15
+  etdoc1 <- randomUpdate $ SetDaysToSign (documentid doc) daystosign
+  etdoc2 <- randomUpdate $ RemoveDaysToSign (documentid doc)
+  validTest $ do
+    assertRight etdoc1
+    assertRight etdoc2
+    let Right doc1' = etdoc1
+    let Right doc2' = etdoc2
+    assertEqual "Days to sign is set properly" (Just daystosign) (documentdaystosign doc1')
+    assertEqual "Days to sign removed properly" (Nothing) (documentdaystosign doc2')
+
 assertInvariants :: Document -> DB ()
 assertInvariants document = do
   now <- getMinutesTime
@@ -1541,9 +1552,9 @@ testGetDocumentsByCompanyAndTagsCompany = doTimes 10 $ do
   _ <- dbUpdate $ SetUserCompany (userid author) (Just (companyid company))
   Just author' <- dbQuery $ GetUserByID (userid author)
   did <- addRandomDocumentWithAuthor author'
-  _ <- doc_update' $ SetDocumentTags did [DocumentTag name value]
-  docs <- doc_query' $ GetDocumentsByCompanyAndTags Nothing (companyid company2) []
-  docs' <- doc_query' $ GetDocumentsByCompanyAndTags Nothing (companyid company) []
+  _ <- dbUpdate $ SetDocumentTags did [DocumentTag name value]
+  docs <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company2) []
+  docs' <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) []
   validTest $ do
     assertEqual "Should have no documents returned" docs []
     assertEqual "Should have 1 document returned" (length docs') 1    
@@ -1557,8 +1568,8 @@ testGetDocumentsByCompanyAndTagsFilters = doTimes 10 $ do
   _ <- dbUpdate $ SetUserCompany (userid author) (Just (companyid company))
   Just author' <- dbQuery $ GetUserByID (userid author)
   _ <- addRandomDocumentWithAuthor author'
-  docs <- doc_query' $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name value]
-  docs' <- doc_query' $ GetDocumentsByCompanyAndTags Nothing (companyid company) []
+  docs <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name value]
+  docs' <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) []
   validTest $ do
     assertEqual "Should have no documents returned" docs []
     assertEqual "Should have 1 document returned" (length docs') 1    
@@ -1572,9 +1583,9 @@ testGetDocumentsByCompanyAndTagsFinds = doTimes 10 $ do
   _ <- dbUpdate $ SetUserCompany (userid author) (Just (companyid company))
   Just author' <- dbQuery $ GetUserByID (userid author)
   did <- addRandomDocumentWithAuthor author'
-  _ <- doc_update' $ SetDocumentTags did [DocumentTag name value]
-  docs <- doc_query' $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name value]
-  docs' <- doc_query' $ GetDocumentsByCompanyAndTags Nothing (companyid company) []
+  _ <- dbUpdate $ SetDocumentTags did [DocumentTag name value]
+  docs <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name value]
+  docs' <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) []
   validTest $ do
     assertEqual "Should have one document returned" (length docs) 1
     assertEqual "Should have one document returned" (length docs') 1
@@ -1589,12 +1600,12 @@ testGetDocumentsByCompanyAndTagsFindsMultiple = doTimes 10 $ do
   _ <- dbUpdate $ SetUserCompany (userid author) (Just (companyid company))
   Just author' <- dbQuery $ GetUserByID (userid author)
   did <- addRandomDocumentWithAuthor author'
-  _ <- doc_update' $ SetDocumentTags did [DocumentTag name1 value1, DocumentTag name2 value2]
-  docs <- doc_query' $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name1 value1]  
-  docs' <- doc_query' $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name2 value2]
-  docs'' <- doc_query' $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name1 value1, DocumentTag name2 value2]  
-  docs''' <- doc_query' $ GetDocumentsByCompanyAndTags Nothing (companyid company) []
-  docs'''' <- doc_query' $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name1 value1, DocumentTag name2 value2, DocumentTag name3 value3]  
+  _ <- dbUpdate $ SetDocumentTags did [DocumentTag name1 value1, DocumentTag name2 value2]
+  docs <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name1 value1]  
+  docs' <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name2 value2]
+  docs'' <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name1 value1, DocumentTag name2 value2]  
+  docs''' <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) []
+  docs'''' <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name1 value1, DocumentTag name2 value2, DocumentTag name3 value3]  
   validTest $ do
     assertEqual "Should have one document returned" (length docs) 1  
     assertEqual "Should have one document returned" (length docs') 1

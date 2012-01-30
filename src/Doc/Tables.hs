@@ -168,7 +168,7 @@ tableSignatoryAttachments = Table {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = Table {
     tblName = "signatory_links"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -194,6 +194,9 @@ tableSignatoryLinks = Table {
        , ("roles", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})
        , ("really_deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})
+       , ("csv_title", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("csv_contents", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("csv_signatory_index", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
         runRaw conn $ "CREATE TABLE signatory_links"
@@ -220,6 +223,9 @@ tableSignatoryLinks = Table {
           ++ ", roles INTEGER NOT NULL"
           ++ ", deleted BOOL NOT NULL DEFAULT false"
           ++ ", really_deleted BOOL NOT NULL DEFAULT false"
+          ++ ", csv_title TEXT NULL"
+          ++ ", csv_contents TEXT NULL"
+          ++ ", csv_signatory_index INTEGER NULL"
           ++ ", CONSTRAINT pk_signatory_links PRIMARY KEY (id, document_id)"
           ++ ")"
         return TVRcreated

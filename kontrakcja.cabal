@@ -10,20 +10,10 @@ Description:
 Cabal-version: >= 1.6.0.0
 Build-type: Custom
 
-Flag documents-in-postgres
-  Description: New database layout for documents
-  Manual: True
-  Default: True
-
 Flag pdfseal
   Description: Build pdfseal
   Manual: True
   Default: True
-
-Flag dbdump
-  Description: Build dbdump
-  Manual: True
-  Default: False
 
 Flag mailing-server
   Description: Build mailing server
@@ -146,7 +136,7 @@ Executable kontrakcja-server
 
   Hs-source-dirs: inc src pdfseal/inc mailer/inc
 
-  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
+  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fcontext-stack=34
   if !flag(allow-warnings)
     GHC-Options: -Werror
   if flag(server-coverage)
@@ -156,78 +146,77 @@ Executable kontrakcja-server
     GHC-Options: -threaded
   if os(windows)
     cpp-options: -DWINDOWS
+  if os(darwin)
+    cc-options: -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5
+    ld-options: -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5
   if impl(ghc >= 7)
     ghc-options: -rtsopts
 
-  if flag(documents-in-postgres)
-    cpp-options: -DDOCUMENTS_IN_POSTGRES
-
   Build-depends: Crypto == 4.2.*
-  Build-depends: HDBC
-  Build-depends: HDBC-postgresql
-  Build-depends: HPDF
+  Build-depends: HDBC == 2.3.1.0
+  Build-depends: HDBC-postgresql == 2.3.2.0
+  Build-depends: HPDF == 1.4.2
   Build-depends: HStringTemplate >= 0.6.5
-  Build-depends: HTTP
-  Build-depends: HUnit
+  Build-depends: HTTP == 4000.*
+  Build-depends: HUnit 
   Build-depends: HaXml == 1.20.*
-  Build-depends: MissingH
-  Build-depends: pretty-show
+  Build-depends: MissingH == 1.1.1.0
+  Build-depends: pretty-show == 1.2
   Build-depends: QuickCheck
   Build-depends: array
   Build-depends: base >= 4 && < 5
-  Build-depends: base64-bytestring
-  Build-depends: binary
+  Build-depends: base64-bytestring == 0.1.0.2
+  Build-depends: binary == 0.5.0.2
   Build-depends: bytestring
   Build-depends: containers
-  Build-depends: convertible
-  Build-depends: cryptocipher==0.2.*
-  Build-depends: dataenc >= 0.13.0.2
+  Build-depends: convertible == 1.0.11.0
+  Build-depends: cryptocipher == 0.2.14
+  Build-depends: dataenc == 0.14.0.2
   Build-depends: directory
-  Build-depends: explicit-exception
-  Build-depends: extensible-exceptions
+  Build-depends: explicit-exception == 0.1.6
+  Build-depends: extensible-exceptions 
   Build-depends: fields-json==0.1
   Build-depends: filepath
-  Build-depends: hS3
-  Build-depends: happstack-data==6.*
-  Build-depends: happstack-ixset==6.*
+  Build-depends: hS3 == 0.5.6
+  Build-depends: happstack-data==6.0.0
+  Build-depends: happstack-ixset==6.0.1
   Build-depends: happstack-server==6.4.5
-  Build-depends: happstack-state==6.*
-  Build-depends: happstack-static-routing==0.1
-  Build-depends: happstack-util==6.*
+  Build-depends: happstack-state==6.1.1
+  Build-depends: happstack-static-routing==0.2
+  Build-depends: happstack-util==6.0.2
   Build-depends: happstack==6.0.5
-  Build-depends: hslogger==1.1.*
-  Build-depends: html
-  Build-depends: hxt
-  Build-depends: hxt
-  Build-depends: hxt-xpath
-  Build-depends: iconv
-  Build-depends: json==0.4.*
-  Build-depends: list-tries
+  Build-depends: hslogger==1.1.4
+  Build-depends: html == 1.0.1.2
+  Build-depends: hxt == 9.1.5
+  Build-depends: hxt-xpath == 9.1.1
+  Build-depends: iconv == 0.4.1.0
+  Build-depends: json == 0.4.4
+  Build-depends: list-tries == 0.4.1
   Build-depends: mmap==0.5.*
   Build-depends: mtl == 2.*
-  Build-depends: network
+  Build-depends: network == 2.3.0.4
   Build-depends: old-locale
   Build-depends: old-time
   Build-depends: parallel == 2.2.*
-  Build-depends: parsec
+  Build-depends: parsec == 3.1.1
   Build-depends: process
   Build-depends: random
-  Build-depends: regex-tdfa
-  Build-depends: spreadsheet
+  Build-depends: regex-tdfa == 1.1.8
+  Build-depends: spreadsheet == 0.1.2
   Build-depends: syb
   Build-depends: syb-with-class
-  Build-depends: tagsoup
+  Build-depends: tagsoup == 0.12.3
   Build-depends: template-haskell
   Build-depends: temporary==1.1.1
   Build-depends: test-framework
   Build-depends: test-framework-hunit
   Build-depends: test-framework-quickcheck2
-  Build-depends: text
+  Build-depends: text == 0.11.1.5
   Build-depends: time
-  Build-depends: transformers
+  Build-depends: transformers == 0.2.2.0
   Build-depends: unix
-  Build-depends: utf8-string
-  Build-depends: zlib
+  Build-depends: utf8-string == 0.3.6
+  Build-depends: zlib == 0.5.3.1
 
   Main-Is: Main.hs
 
@@ -327,7 +316,7 @@ Executable kontrakcja-test
 
   Hs-source-dirs: inc test/src src pdfseal/inc mailer/inc
 
-  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
+  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fcontext-stack=34
   if flag(test-coverage)
     GHC-Options: -fhpc
   if !flag(allow-warnings)
@@ -337,9 +326,6 @@ Executable kontrakcja-test
     GHC-Options: -threaded
   if os(windows)
     cpp-options: -DWINDOWS
-
-  if flag(documents-in-postgres)
-    cpp-options: -DDOCUMENTS_IN_POSTGRES
 
   if !flag(test-companystate)
     cpp-options: -DNO_COMPANYSTATE
@@ -395,38 +381,3 @@ Executable kontrakcja-test
               TypeOperators,
               TypeSynonymInstances,
               UndecidableInstances
-
-Executable dbdump
-  if flag(dbdump)
-    Buildable: True
-  else
-    Buildable: False
-  if impl(ghc >= 7)
-    ghc-options: -rtsopts
-
-  GHC-Options: -fwarn-tabs -fno-warn-unused-do-bind -Wall
-  Hs-source-dirs: dbdump/src src pdfseal/inc
-
-  if flag(documents-in-postgres)
-    cpp-options: -DDOCUMENTS_IN_POSTGRES
-
-  cpp-options: -DDBDumper=Main
-  Main-is: DBDumper.hs
-
-  Extensions: BangPatterns,
-              DeriveDataTypeable,
-              FlexibleContexts,
-              FlexibleInstances,
-              GeneralizedNewtypeDeriving,
-              MultiParamTypeClasses,
-              NamedFieldPuns,
-              PatternGuards,
-              RankNTypes,
-              ScopedTypeVariables,
-              StandaloneDeriving,
-              TemplateHaskell,
-              TypeFamilies,
-              TypeOperators,
-              TypeSynonymInstances,
-              UndecidableInstances
-

@@ -71,6 +71,7 @@ data KontraLink
     | LinkAccountSecurity
     | LinkUserMailAPI
     | LinkSignDoc Document SignatoryLink
+    | LinkSignDocNoMagicHash DocumentID SignatoryLinkID
     | LinkAccountFromSign Document SignatoryLink ActionID MagicHash
     | LinkIssueDoc DocumentID
     | LinkDesignDoc DesignStep
@@ -194,6 +195,8 @@ instance Show KontraLink where
     showsPrec _ (LinkSignDoc document signatorylink) =
         (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++
                  "?" ++ "magichash="++ show (signatorymagichash signatorylink)
+    showsPrec _ (LinkSignDocNoMagicHash documentid signatorylinkid) =
+        (++) $ "/s/" ++ show documentid ++ "/" ++ show signatorylinkid
     showsPrec _ (LinkAccountFromSign document signatorylink actionid magichash) =
         (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++
                  "/" ++ show (signatorymagichash signatorylink) ++

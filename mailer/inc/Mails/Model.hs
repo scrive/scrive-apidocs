@@ -5,7 +5,7 @@ module Mails.Model (
   , AddContentToEmail(..)
   , MarkEventAsRead(..)
   , DeleteEmail(..)
-  , GetEvents(..)
+  , GetUnreadEvents(..)
   , GetIncomingEmails(..)
   , GetEmail(..)
   , DeferEmail(..)
@@ -68,15 +68,16 @@ instance DBUpdate DeleteEmail Bool where
       [toSql mid]
     oneRowAffectedGuard r
 
-data GetEvents = GetEvents
-instance DBQuery GetEvents [(EventID, MailID, XSMTPAttrs, Event)] where
-  dbQuery GetEvents = wrapDB $ \conn -> do
+data GetUnreadEvents = GetUnreadEvents
+instance DBQuery GetUnreadEvents [(EventID, MailID, XSMTPAttrs, Event)] where
+  dbQuery GetUnreadEvents = wrapDB $ \conn -> do
     st <- prepare conn $ "SELECT "
       ++ "  e.id"
       ++ ", e.mail_id"
       ++ ", m.x_smtp_attrs"
       ++ ", e.event"
       ++ " FROM mails m JOIN mail_events e ON (m.id = e.mail_id)"
+      ++ " WHERE e.event_read IS NULL"
       ++ " ORDER BY m.id DESC, e.id DESC"
     _ <- execute st []
     foldDB st fetchEvents []

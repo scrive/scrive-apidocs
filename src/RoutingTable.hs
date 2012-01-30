@@ -70,7 +70,7 @@ import Util.MonadUtils
 -}
 staticRoutes :: Route (Kontra Response)
 staticRoutes = choice
-     [ allLocaleDirs $ const $ hGetAllowHttp $ handleHomepage
+     [ allLocaleDirs $ const $ hGetAllowHttp $ toK0 handleHomepage
      , hGetAllowHttp $ getContext >>= (redirectKontraResponse . LinkHome . ctxlocale)
 
      , publicDir "priser" "pricing" LinkPriceplan handlePriceplanPage
@@ -118,13 +118,11 @@ staticRoutes = choice
      , dir "locale" $ hPost $ toK0 $ UserControl.handlePostUserLocale
      , dir "a"                     $ hGet  $ toK0 $ ArchiveControl.showAttachmentList
      , dir "a" $ param "archive"   $ hPost $ toK0 $ ArchiveControl.handleAttachmentArchive
-     , dir "a" $ param "share"     $ hPost $ toK0 $ DocControl.handleAttachmentShare
      , dir "a" $ dir "rename"      $ hPost $ toK1 $ DocControl.handleAttachmentRename
      , dir "a"                     $ hPost $ toK0 $ DocControl.handleCreateNewAttachment
 
      , dir "t" $ hGet  $ toK0 $ ArchiveControl.showTemplatesList
      , dir "t" $ param "archive" $ hPost $ toK0 $ ArchiveControl.handleTemplateArchive
-     , dir "t" $ param "share" $ hPost $ toK0 $ DocControl.handleTemplateShare
      , dir "t" $ param "template" $ hPost $ toK0 $ DocControl.handleCreateFromTemplate
      , dir "t" $ hPost $ toK0 $ DocControl.handleCreateNewTemplate
 

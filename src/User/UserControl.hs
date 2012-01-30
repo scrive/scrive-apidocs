@@ -5,7 +5,7 @@ import Data.Functor
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (update, query)
-import System.Random
+import System.Random (randomIO)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS
 import Text.JSON (JSValue(..), toJSObject, showJSON)
@@ -14,7 +14,7 @@ import ActionSchedulerState
 import AppView
 import DB.Classes
 import DB.Types
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStateData
 import Company.Model
 import InputValidation
@@ -405,7 +405,7 @@ handlePostUserSecurity = do
 -}
 isUserDeletable :: Kontrakcja m => User -> m Bool
 isUserDeletable user = do
-  userdocs <- doc_query $ GetDocumentsByUser user
+  userdocs <- runDBQuery $ GetDocumentsByUser user
   return $ all isDeletableDocument userdocs
 
 handleViralInvite :: Kontrakcja m => m KontraLink
@@ -884,7 +884,7 @@ handleAccountRemovalFromSign :: Kontrakcja m => User -> SignatoryLink -> ActionI
 handleAccountRemovalFromSign user siglink aid hash = do
   Context{ctxtime} <- getContext
   doc <- removeAccountFromSignAction aid hash
-  doc1 <- guardRightM $ doc_update . ArchiveDocument user $ documentid doc
+  doc1 <- guardRightM $ runDBUpdate . ArchiveDocument user $ documentid doc
   _ <- case getSigLinkFor doc1 (signatorylinkid siglink) of
     Just sl -> runDB $ addSignStatDeleteEvent doc1 sl ctxtime
     _       -> return False

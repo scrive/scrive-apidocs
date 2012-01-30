@@ -5,8 +5,6 @@ module AppState
     ( AppState
     ) where
 
-import Doc.DocStateData
-import Doc.DocState ()
 import Happstack.Data
 import Happstack.State
 import Payments.PaymentsState
@@ -26,7 +24,7 @@ instance Version AppState
 
 -- |top-level application component
 instance Component AppState where
-  type Dependencies AppState = Documents :+: Sessions :+: PaymentAccountModels :+: Actions :+: End
+  type Dependencies AppState = Sessions :+: PaymentAccountModels :+: Actions :+: End
   initialValue = AppState
 
 

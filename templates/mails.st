@@ -2,44 +2,6 @@
 ##### MAILS - Separated in sections
 #####
 #####
-##### CANCEL MAIL
-#####
-####
-mailCancelContractStandardHeader=
-    <p>$_hi()$,</p>
-######
-mailCancelOfferStandardHeader=
-    <p>$_hi()$,</p>
-######
-mailCancelOrderStandardHeader=
-    <p>$_hi()$,</p>
-######
-mailCancelContract=
-    $_mailCancelDocumentTitleContract()$
-    $nicemail(
-        mailheader= _mailCancelDocumentTitleContract();
-        mailp1 = header;
-        mailp2 = _mailCancelContractContentBody();
-        mailp3 = footer
-    )$
-#####
-mailCancelOffer=
-    $_mailCancelDocumentTitleOffer()$
-    $nicemail(
-        mailheader= _mailCancelDocumentTitleOffer();
-        mailp1 = header;
-        mailp2 = _mailCancelOfferContentBody();
-        mailp3 = footer
-    )$
-#####
-mailCancelOrder=
-    $_mailCancelDocumentTitleOrder()$
-    $nicemail(
-        mailheader= _mailCancelDocumentTitleOrder();
-        mailp1 = header;
-        mailp2 = _mailCancelOrderContentBody();
-        mailp3 = footer
-    )$
 #####
 #####
 ##### MAIL AWAITING AUTHOR
@@ -904,7 +866,7 @@ nicemailbodywithpreview=
        </td>
        <td>
 
-        <table style="font-family:'Lucida Grande', sans-serif;font-size:12px;margin: auto;">
+        <table style="font-family:'Lucida Grande', sans-serif;font-size:12px;margin: auto;display: block; max-width: 300px; overflow: auto;">
             <tr>
                 <td><span style="color:#212121;font-size:1.5em;">$documenttitle$</span></td>
             </tr>

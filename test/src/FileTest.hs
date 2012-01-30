@@ -5,7 +5,7 @@ module FileTest (fileTests) where
 import DB.Classes
 import TestingUtil
 
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import Control.Monad
 import Test.Framework
 import Test.QuickCheck
@@ -19,7 +19,7 @@ import Control.Monad.Trans
 import File.FileID
 import File.File
 
-fileTests :: Connection -> Test
+fileTests :: Nexus -> Test
 fileTests conn = testGroup "Files" [
   
   -- Primitive properties

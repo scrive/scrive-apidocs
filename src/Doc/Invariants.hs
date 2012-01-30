@@ -246,9 +246,9 @@ maxCustomFields _ document =
     Documents in basic mode don't have csvs
 -}
 basicDocsDontHaveCSVs :: MinutesTime -> Document -> Maybe String
-basicDocsDontHaveCSVs _ Document{documentfunctionality, documentcsvupload} =
+basicDocsDontHaveCSVs _ Document{documentfunctionality, documentsignatorylinks} =
   assertInvariant ("basic doc has csv data on it")
-                  ((documentfunctionality == BasicFunctionality) =>> (documentcsvupload == Nothing))
+                  ((documentfunctionality == BasicFunctionality) =>> (all (isNothing . signatorylinkcsvupload) documentsignatorylinks))
                   
 {- |
     Documents in basic mode don't have days to sign set

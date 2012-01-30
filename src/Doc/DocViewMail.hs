@@ -1,11 +1,10 @@
 module Doc.DocViewMail (
-      mailCancelDocument
-    , mailCancelDocumentContent
-    , mailDocumentAwaitingForAuthor
+      mailDocumentAwaitingForAuthor
     , mailDocumentClosed
     , mailDocumentErrorForAuthor
     , mailDocumentErrorForSignatory
     , mailDocumentRejected
+    , mailDocumentRejectedContent
     , mailDocumentRemind
     , mailDocumentRemindContent
     , InvitationTo(..)
@@ -13,7 +12,6 @@ module Doc.DocViewMail (
     , mailInvitationContent
     , mailMismatchAuthor
     , mailMismatchSignatory
-    , mailRejectMailContent
     , documentMailWithDocLocale
     , mailFooterForDocument
     , mailFooterForUser
@@ -181,13 +179,13 @@ mailDocumentRejected customMessage ctx document rejector = do
 
 
 
-mailRejectMailContent :: TemplatesMonad m
+mailDocumentRejectedContent :: TemplatesMonad m
                       => Maybe String
                       -> Context
                       -> Document
                       -> SignatoryLink
                       -> m String
-mailRejectMailContent customMessage ctx  document rejector =
+mailDocumentRejectedContent customMessage ctx  document rejector =
      content <$> mailDocumentRejected customMessage ctx document rejector
 
 mailDocumentErrorForAuthor :: (HasLocale a, TemplatesMonad m) => Context -> Document -> a -> m Mail
@@ -289,35 +287,6 @@ mailDocumentAwaitingForAuthor ctx document authorlocale = do
         field "documentlink" $ (ctxhostpart ctx) ++ (show $ LinkIssueDoc $ documentid document)
         field "partylist" signatories
         field "companyname" $ nothingIfEmpty $ getCompanyName document
-
-
-mailCancelDocumentContent :: TemplatesMonad m
-                                  => Bool
-                                  -> (Maybe BS.ByteString)
-                                  -> Context
-                                  -> Document
-                                  -> m String
-mailCancelDocumentContent forMail customMessage ctx document =
-    content <$> mailCancelDocument forMail customMessage ctx document
-
-mailCancelDocument :: TemplatesMonad m
-                           => Bool
-                           -> Maybe BS.ByteString
-                           -> Context
-                           -> Document
-                           -> m Mail
-mailCancelDocument _forMail customMessage ctx document = do
-    mail <- documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailcancel) $ do
-        fieldM "header" $ do
-            header <- case customMessage of
-                           Just c -> return $ BS.toString c
-                           Nothing -> renderLocalTemplateForProcess document processmailcancelstandardheader $ do
-                               field "partylist" $ map (BS.toString . getSmartName) $ partyList document
-            makeEditable "customtext" header
-        fieldM "footer" $ mailFooterForDocument ctx document
-        field "companyname" $ nothingIfEmpty $ getCompanyName document
-        field "canceller" $ maybe BS.empty getSmartName (ctxmaybeuser ctx)
-    return $ mail { from = documentservice document}
 
 mailMismatchSignatory :: TemplatesMonad m
                         => Context

@@ -37,9 +37,6 @@ import DB.Types
 import ELegitimation.ELegTransaction
 import Doc.DocStateData
 import Happstack.Server
-#ifndef DOCUMENTS_IN_POSTGRES
-import Happstack.State (query, QueryEvent)
-#endif
 import KontraLink
 import KontraMonad
 import Mails.MailsConfig
@@ -158,15 +155,6 @@ newAccountCreatedBySigningLink user doclinkdata = do
 runDBOrFail :: (DBMonad m, MonadPlus m) => DB (Maybe r) -> m r
 runDBOrFail f = runDB f >>= guardJust
 
-#ifndef DOCUMENTS_IN_POSTGRES
-{- |
-   Perform a query (like with query) but if it returns Nothing, mzero; otherwise, return fromJust
- -}
-queryOrFail :: (MonadPlus m,Monad m, MonadIO m) => (QueryEvent ev (Maybe res)) => ev -> m res
-queryOrFail q = do
-  mres <- query q
-  guardJust mres
-#else
 {- |
    Perform a query (like with query) but if it returns Nothing, mzero; otherwise, return fromJust
  -}
@@ -174,7 +162,6 @@ queryOrFail :: (MonadPlus m, DBMonad m, Monad m, MonadIO m, DBQuery ev (Maybe re
 queryOrFail q = do
   mres <- runDBQuery q
   guardJust mres
-#endif
 
 -- | Current service id
 

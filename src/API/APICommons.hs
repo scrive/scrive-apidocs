@@ -124,6 +124,7 @@ api_document mfiles doc = JSObject $ toJSObject $ [
   , ("tags", JSArray $ map api_document_tag $ documenttags doc)
   , ("authorization", showJSON  $ fromSafeEnumInt $ documentallowedidtypes doc)
   , ("mdate", api_date $ documentmtime doc)
+  , ("edate", api_date $ recentDate doc)
   , ("locale", jsonFromLocale $ getLocale doc)
   ] ++ case mfiles of
   Nothing -> []

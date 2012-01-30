@@ -3,7 +3,7 @@ module SignupTest (signupTests) where
 import Control.Applicative
 import Control.Monad.State
 import Data.Maybe
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import Happstack.Server
 import Happstack.State (query)
 import Test.Framework
@@ -30,7 +30,7 @@ import User.Model
 import User.UserControl
 import Util.HasSomeUserInfo
 
-signupTests :: Connection -> Test
+signupTests :: Nexus -> Test
 signupTests conn = testGroup "Signup" [
       testCase "can self signup and activate an account" $ testSignupAndActivate conn
     , testCase "can send viral invite which can be used to activate an account" $ testViralInviteAndActivate conn
@@ -44,7 +44,7 @@ signupTests conn = testGroup "Signup" [
     , testCase "login event recorded when logged in after activation" $ testLoginEventRecordedWhenLoggedInAfterActivation conn
     ]
 
-testUserEnteringPhoneNumber :: Connection -> Assertion
+testUserEnteringPhoneNumber :: Nexus -> Assertion
 testUserEnteringPhoneNumber conn = withTestEnvironment conn $ do
   Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   globaltemplates <- readGlobalTemplates
@@ -64,7 +64,7 @@ testUserEnteringPhoneNumber conn = withTestEnvironment conn $ do
   emails <- dbQuery GetIncomingEmails
   assertEqual "An email was sent" 1 (length emails)
 
-testUserNotEnteringPhoneNumber :: Connection -> Assertion
+testUserNotEnteringPhoneNumber :: Nexus -> Assertion
 testUserNotEnteringPhoneNumber conn = withTestEnvironment conn $ do
   Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   globaltemplates <- readGlobalTemplates
@@ -81,7 +81,7 @@ testUserNotEnteringPhoneNumber conn = withTestEnvironment conn $ do
   emails <- dbQuery GetIncomingEmails
   assertEqual "No email was sent" 0 (length emails)
 
-testSignupAndActivate :: Connection -> Assertion
+testSignupAndActivate :: Nexus -> Assertion
 testSignupAndActivate conn = withTestEnvironment conn $ do
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
@@ -101,7 +101,7 @@ testSignupAndActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12"
   assertAccountActivatedFor uid "Andrzej" "Rybczak" (res3, ctx3)
 
-testLoginEventRecordedWhenLoggedInAfterActivation :: Connection -> Assertion
+testLoginEventRecordedWhenLoggedInAfterActivation :: Nexus -> Assertion
 testLoginEventRecordedWhenLoggedInAfterActivation conn = withTestEnvironment conn $ do
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
@@ -118,7 +118,7 @@ testLoginEventRecordedWhenLoggedInAfterActivation conn = withTestEnvironment con
   assertAccountActivatedFor uid "Andrzej" "Rybczak" (res3, ctx3)
   assertLoginEventRecordedFor uid
 
-testViralInviteAndActivate :: Connection -> Assertion
+testViralInviteAndActivate :: Nexus -> Assertion
 testViralInviteAndActivate conn = withTestEnvironment conn $ do
   Just inviter <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   globaltemplates <- readGlobalTemplates
@@ -140,7 +140,7 @@ testViralInviteAndActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12"
   assertAccountActivated "Andrzej" "Rybczak" (res3, ctx3)
 
-testAcceptTOSToActivate :: Connection -> Assertion
+testAcceptTOSToActivate :: Nexus -> Assertion
 testAcceptTOSToActivate conn = withTestEnvironment conn $ do
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
@@ -156,7 +156,7 @@ testAcceptTOSToActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token False "Andrzej" "Rybczak" "password12" "password12"
   assertAccountActivationFailed (res3, ctx3)
 
-testNeedFirstNameToActivate :: Connection -> Assertion
+testNeedFirstNameToActivate :: Nexus -> Assertion
 testNeedFirstNameToActivate conn = withTestEnvironment conn $ do
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
@@ -172,7 +172,7 @@ testNeedFirstNameToActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token True "" "Rybczak" "" ""
   assertAccountActivationFailed (res3, ctx3)
 
-testNeedLastNameToActivate :: Connection -> Assertion
+testNeedLastNameToActivate :: Nexus -> Assertion
 testNeedLastNameToActivate conn = withTestEnvironment conn $ do
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
@@ -188,7 +188,7 @@ testNeedLastNameToActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "" "" ""
   assertAccountActivationFailed (res3, ctx3)
 
-testNeedPasswordToActivate :: Connection -> Assertion
+testNeedPasswordToActivate :: Nexus -> Assertion
 testNeedPasswordToActivate conn = withTestEnvironment conn $ do
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
@@ -204,7 +204,7 @@ testNeedPasswordToActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "" ""
   assertAccountActivationFailed (res3, ctx3)
 
-testPasswordsMatchToActivate :: Connection -> Assertion
+testPasswordsMatchToActivate :: Nexus -> Assertion
 testPasswordsMatchToActivate conn = withTestEnvironment conn $ do
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
