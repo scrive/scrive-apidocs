@@ -4,6 +4,9 @@ module API.MailAPI (
       charset
     ) where
 
+import Redirect
+import File.Model
+import Doc.DocStorage
 import MinutesTime
 import DB.Classes
 import Company.Model
@@ -133,7 +136,7 @@ jsonMailAPI :: (Kontrakcja m) =>
                 -> BS.ByteString
                 -> m String
 jsonMailAPI mailapi username user pdfs plains content = do
-  Context{ctxtime} <- getContext
+  ctx@Context{ctxtime} <- getContext
   when (umapiDailyLimit mailapi <= umapiSentToday mailapi) $ do
     Log.jsonMailAPI $ "Daily limit of documents for user '" ++ username ++ "' has been reached"
     -- ignore it
@@ -258,9 +261,12 @@ jsonMailAPI mailapi username user pdfs plains content = do
 
   let Right doc = edoc
 
-  _ <- DocControl.handleDocumentUploadNoLogin (documentid doc) pdfBinary (BS.fromString title)
-  _ <- runDBUpdate $ SetDocumentAdvancedFunctionality (documentid doc) ctxtime
-  _ <- runDBUpdate $ SetEmailIdentification (documentid doc) ctxtime
+  content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) pdfBinary
+  file <- runDB $ dbUpdate $ NewFile (BS.fromString title) content14
+  _ <- guardRightM $ runDBUpdate (AttachFile (documentid doc) (fileid file) actor)
+  
+  _ <- runDBUpdate $ SetDocumentAdvancedFunctionality (documentid doc) actor
+  _ <- runDBUpdate $ SetEmailIdentification (documentid doc) actor
 
   let signatories = for (dcrInvolved dcr) $ \InvolvedRequest{irRole,irData} ->
         (SignatoryDetails{signatorysignorder = SignOrder 0, signatoryfields = irData},

@@ -73,7 +73,7 @@ processEvents = runDBQuery GetUnreadEvents >>= mapM_ processEvent
                 Delivered _  -> handleDeliveredInvitation mc doc signlinkid
                 -- we send notification that email is reported deferred after fifth
                 -- attempt has failed - this happens after ~10 minutes from sendout
-                Deferred _ 5 -> handleDeferredInvitation (host, mc) docid signlinkid
+                Deferred _ 5 -> handleDeferredInvitation (host, mc) doc signlinkid email
                 Dropped _    -> when (signemail == email) $  handleUndeliveredInvitation (host, mc) doc signlinkid
                 Bounce _ _ _ -> when (signemail == email) $  handleUndeliveredInvitation (host, mc) doc signlinkid
                 _            -> return ()
@@ -103,9 +103,11 @@ handleDeliveredInvitation mc doc signlinkid = do
         scheduleEmailSendout mc $ mail {
           to = [getMailAddress $ fromJust $ getAuthorSigLink doc]
         }
+      time <- getMinutesTime
+      let actor = MailSystemActor time (maybesignatory signlink) (BS.toString $ getEmail signlink) signlinkid
+      _ <- runDBUpdate $ SetInvitationDeliveryStatus (documentid doc) signlinkid D.Delivered actor
+      return ()
     Nothing -> return ()
-  _ <- runDBUpdate $ SetInvitationDeliveryStatus (documentid doc) signlinkid D.Delivered
-  return ()
 
 handleOpenedInvitation :: DBMonad m => DocumentID -> SignatoryLinkID -> String -> Maybe UserID -> m ()
 handleOpenedInvitation docid signlinkid email muid = do
@@ -114,22 +116,30 @@ handleOpenedInvitation docid signlinkid email muid = do
          (MailSystemActor now muid email signlinkid)
   return ()
 
-handleDeferredInvitation :: (DBMonad m, TemplatesMonad m) => (String, MailsConfig) -> DocumentID -> SignatoryLinkID -> m ()
-handleDeferredInvitation (hostpart, mc) docid signlinkid = do
-  mdoc <- runDBUpdate $ SetInvitationDeliveryStatus docid signlinkid D.Deferred
-  case mdoc of
-    Right doc -> do
-      mail <- mailDeferredInvitation hostpart doc
-      scheduleEmailSendout mc $ mail {
-        to = [getMailAddress $ fromJust $ getAuthorSigLink doc]
-      }
-    Left _ -> return ()
+handleDeferredInvitation :: (DBMonad m, TemplatesMonad m) => (String, MailsConfig) -> Document -> SignatoryLinkID -> String -> m ()
+handleDeferredInvitation (hostpart, mc) doc signlinkid email = do
+  time <- getMinutesTime
+  case getSigLinkFor doc signlinkid of
+    Just sl -> do
+      let actor = MailSystemActor time (maybesignatory sl) email signlinkid
+      mdoc <- runDBUpdate $ SetInvitationDeliveryStatus (documentid doc) signlinkid D.Deferred actor
+      case mdoc of
+        Right doc' -> do
+          mail <- mailDeferredInvitation hostpart doc'
+          scheduleEmailSendout mc $ mail {
+            to = [getMailAddress $ fromJust $ getAuthorSigLink doc']
+            }
+        Left _ -> return ()
+    Nothing -> return ()
+
 
 handleUndeliveredInvitation :: (DBMonad m, TemplatesMonad m) => (String, MailsConfig) -> Document -> SignatoryLinkID -> m ()
 handleUndeliveredInvitation (hostpart, mc) doc signlinkid = do
   case getSigLinkFor doc signlinkid of
     Just signlink -> do
-      _ <- runDBUpdate $ SetInvitationDeliveryStatus (documentid doc) signlinkid D.Undelivered
+      time <- getMinutesTime
+      let actor = MailSystemActor time (maybesignatory signlink) (BS.toString $ getEmail signlink) signlinkid
+      _ <- runDBUpdate $ SetInvitationDeliveryStatus (documentid doc) signlinkid D.Undelivered actor
       mail <- mailUndeliveredInvitation hostpart doc signlink
       scheduleEmailSendout mc $ mail {
         to = [getMailAddress $ fromJust $ getAuthorSigLink doc]

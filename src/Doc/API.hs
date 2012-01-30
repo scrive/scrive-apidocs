@@ -10,7 +10,7 @@ import Doc.DocStateQuery
 import Doc.DocStateData
 import Doc.Model
 import Doc.JSON
-import Control.Applicative
+--import Control.Applicative
 --import Control.Monad
 import Control.Monad.Trans
 import Misc
@@ -110,7 +110,7 @@ documentNew = api $ do
   content <- apiGuardL' BadInput $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
   file <- lift $ runDB $ dbUpdate $ NewFile filename content
 
-  d2 <- apiGuardL $ runDBUpdate $ AttachFile (documentid d1) (fileid file) now
+  d2 <- apiGuardL $ runDBUpdate $ AttachFile (documentid d1) (fileid file) aa
   _ <- lift $ addDocumentCreateStatEvents d2
   return $ Created $ jsonDocumentForAuthor d2
 
@@ -129,13 +129,13 @@ documentChangeMetadata docid _ = api $ do
   let jstring = BS.toString $ concatChunks $ unBody bdy
   
   json <- apiGuard $ decode jstring
-  
   ctx <- getContext
   let now = ctxtime ctx
+  let actor = AuthorActor now (ctxipnumber ctx) (userid user) (BS.toString $ getEmail user)      
   d <- case jsget "title" json of
     Left _ -> return doc
     Right (JSString s) ->
-      apiGuardL $ runDBUpdate $ SetDocumentTitle docid (BS.fromString $ fromJSString s) now
+      apiGuardL $ runDBUpdate $ SetDocumentTitle docid (BS.fromString $ fromJSString s) actor
     Right _ -> throwError BadInput
       
   return $ jsonDocumentMetadata d
@@ -173,7 +173,8 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   Log.debug $ "sigattachment ajax"
   (slid, magichash) <- getSigLinkID
   doc <- apiGuardL $ getDocByDocIDSigLinkIDAndMagicHash did slid magichash
-  email <- apiGuard $ getEmail <$> getSigLinkFor doc sid
+  sl  <- apiGuard $ getSigLinkFor doc sid
+  let email = getEmail sl
   
   sigattach <- apiGuard' Forbidden $ getSignatoryAttachment email (BS.fromString aname) doc
   
@@ -194,8 +195,8 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   content <- apiGuardL' BadInput $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
   
   file <- lift $ runDB $ dbUpdate $ NewFile (BS.fromString $ basename filename) content
-  
-  d <- apiGuardL $ runDBUpdate $ SaveSigAttachment (documentid doc) (BS.fromString aname) email (fileid file)
+  let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) (BS.toString email) slid
+  d <- apiGuardL $ runDBUpdate $ SaveSigAttachment (documentid doc) (BS.fromString aname) email (fileid file) actor
   
   -- let's dig the attachment out again
   sigattach' <- apiGuard $ getSignatoryAttachment email (BS.fromString aname) d

@@ -8,7 +8,8 @@ module EvidenceLog.Model
          SystemActor(..),
          MailAPIActor(..),  
          MailSystemActor(..),
-         IntegrationAPIActor(..)
+         IntegrationAPIActor(..),
+         UserActor(..)
        )
        
        where
@@ -39,11 +40,13 @@ class Actor a where
   actorSigLinkID _ = Nothing
   actorAPIString :: a -> Maybe String
   actorAPIString _ = Nothing
+  actorWho       :: a -> String
 
 data SystemActor = SystemActor MinutesTime
                    deriving (Eq, Ord, Show)
 instance Actor SystemActor where
   actorTime (SystemActor t) = t
+  actorWho _ = "the Scrive system"
 
 data AuthorActor = AuthorActor MinutesTime IPAddress UserID String
                    deriving (Eq, Ord, Show)
@@ -52,6 +55,7 @@ instance Actor AuthorActor where
   actorIP     (AuthorActor _ i _ _) = Just i
   actorUserID (AuthorActor _ _ u _) = Just u
   actorEmail  (AuthorActor _ _ _ e) = Just e
+  actorWho    (AuthorActor _ _ _ e) = "the author (" ++ e ++ ")"
 
 data SignatoryActor = SignatoryActor MinutesTime IPAddress (Maybe UserID) String SignatoryLinkID
                    deriving (Eq, Ord, Show)
@@ -61,6 +65,7 @@ instance Actor SignatoryActor where
   actorUserID    (SignatoryActor _ _ u _ _) = u
   actorEmail     (SignatoryActor _ _ _ e _) = Just e
   actorSigLinkID (SignatoryActor _ _ _ _ s) = Just s
+  actorWho       (SignatoryActor _ _ _ e _) = "the signatory with email " ++ show e
   
 data MailAPIActor = MailAPIActor MinutesTime UserID String
                    deriving (Eq, Ord, Show)
@@ -68,6 +73,7 @@ instance Actor MailAPIActor where
   actorTime   (MailAPIActor t _ _) = t
   actorUserID (MailAPIActor _ u _) = Just u
   actorEmail  (MailAPIActor _ _ e) = Just e
+  actorWho    (MailAPIActor _ _ e) = "the user with email " ++ show e ++ " using the Mail API"
                     
 data MailSystemActor = MailSystemActor MinutesTime (Maybe UserID) String SignatoryLinkID
                    deriving (Eq, Ord, Show)
@@ -76,14 +82,27 @@ instance Actor MailSystemActor where
   actorUserID    (MailSystemActor _ u _ _) = u
   actorEmail     (MailSystemActor _ _ e _) = Just e
   actorSigLinkID (MailSystemActor _ _ _ s) = Just s
+  actorWho       (MailSystemActor _ _ e _) = "the signatory with email " ++ show e ++ " (reported by the Mail subsystem)"
 
-data IntegrationAPIActor = IntegrationAPIActor MinutesTime String UserID String
+data IntegrationAPIActor = IntegrationAPIActor MinutesTime IPAddress String (Maybe String)
                          deriving (Eq, Ord, Show)
 instance Actor IntegrationAPIActor where
   actorTime      (IntegrationAPIActor t _ _ _) = t
-  actorAPIString (IntegrationAPIActor _ a _ _) = Just a
-  actorUserID    (IntegrationAPIActor _ _ u _) = Just u
-  actorEmail     (IntegrationAPIActor _ _ _ e) = Just e
+  actorIP        (IntegrationAPIActor _ i _ _) = Just i
+  actorAPIString (IntegrationAPIActor _ _ a _) = Just a
+  actorWho       (IntegrationAPIActor _ _ _ c) = 
+    case c of
+      Just c' -> "the company " ++ show c' ++ " using the Integration API"
+      Nothing -> "the Integration API" 
+  
+data UserActor = UserActor MinutesTime IPAddress UserID String
+               deriving (Eq, Ord, Show)
+instance Actor UserActor where
+  actorTime      (UserActor t _ _ _) = t
+  actorIP        (UserActor _ i _ _) = Just i
+  actorUserID    (UserActor _ _ u _) = Just u
+  actorEmail     (UserActor _ _ _ e) = Just e
+  actorWho       (UserActor _ _ _ e) = "the user with email " ++ show e
 
 insertEvidenceEvent :: Actor a 
                        => EvidenceEventType
@@ -128,40 +147,55 @@ instance Actor a => DBUpdate (InsertEvidenceEvent a) Bool where
     wrapDB (insertEvidenceEvent tp txt mdid a)
 
 -- | A machine-readable event code for different types of events.
-data EvidenceEventType = DocumentCreateEvidence
-                       | SignatoryAddInformationEvidence
-                       | AuthorAddInformationEvidence
-                       | UserAccountAddInformationEvidence
-                       | InvitationSentEvidence
-                       | InvitationReceivedEvidence
-                       | InvitationOpenedEvidence
-                       | ClickSecretLinkEvidence
-                       | ClickSignEvidence
-                       | ClickRejectEvidence
-                       | ElegConfirmEvidence
-                       | DocumentClosedEvidence
-                       | DocumentCancelEvidence
-                       | ReminderSendEvidence
-                       | CustomInviteTextEvidence
-                       | AuthorRequestAttachmentEvidence
-                       | AuthorAddAttachmentEvidence
-                       | AuthorSetsDueDateEvidence
-                       | SystemSetsDueDateEvidence
-                       | AuthorAddsViewerEvidence
-                       | AuthorAddsSignatoryEvidence
-                       | AuthorSetsToSecretaryEvidence
-                       | AuthorSetsToSignatoryEvidence
-                       | AuthorUsesCSVEvidence
-                       | AuthorChoosesSignLastEvidence
-                       | DocSignedByTrustweaverEvidence
-                       | ClosedDocDeliveredEvidence
-                       | SignatoryUploadAttachmentEvidence
-                       | CancelDocBadElegEvidence
-                       | AuthorChangeSigEmailEvidence
-                       | AttachSealedFileEvidence
-                       | PreparationToPendingEvidence
-                       | DeleteSigAttachmentEvidence
-                       | ErrorDocumentEvidence
-                       deriving (Eq, Show, Read, Ord)
+data EvidenceEventType =
+  CreateDocumentEvidence                      |
+  AddSigAttachmentEvidence                    |
+  RemoveSigAttachmentsEvidence                |
+  RemoveDocumentAttachmentEvidence            |
+  AddDocumentAttachmentEvidence               |
+  PendingToAwaitingAuthorEvidence             |
+  UpdateFieldsEvidence                        |
+  SetElegitimationIdentificationEvidence      |
+  SetEmailIdentificationEvidence              |
+  TimeoutDocumentEvidence                     |
+  SignDocumentEvidence                        |
+  SetInvitationDeliveryStatusEvidence         |
+  SetDocumentUIEvidence                       |
+  SetDocumentLocaleEvidence                   |
+  SetDocumentTitleEvidence                    |
+  SetDocumentAdvancedFunctionalityEvidence    |
+  RemoveDaysToSignEvidence                    |
+  SetDaysToSignEvidence                       |
+  SetInvitationTextEvidence                   |
+  RemoveSignatoryUserEvidence                 |
+  SetSignatoryUserEvidence                    |
+  RemoveSignatoryCompanyEvidence              |
+  SetSignatoryCompanyEvidence                 |
+  SetDocumentTagsEvidence                     |
+  SaveSigAttachmentEvidence                   |
+  SaveDocumentForUserEvidence                 |
+  RestartDocumentEvidence                     |
+  ReallyDeleteDocumentEvidence                |
+  NewDocumentEvidence                         |
+  MarkInvitationReadEvidence                  |
+  CloseDocumentEvidence                       |
+  ChangeSignatoryEmailWhenUndeliveredEvidence |
+  ChangeMainfileEvidence                      |
+  CancelDocumenElegEvidence                   |
+  CancelDocumentEvidence                      |
+  AttachFileEvidence                          |
+  AttachSealedFileEvidence                    |
+  PreparationToPendingEvidence                |
+  DeleteSigAttachmentEvidence                 |
+  AuthorUsesCSVEvidence                       |
+  ErrorDocumentEvidence                       |
+  MarkDocumentSeenEvidence                    |
+  RejectDocumentEvidence                      |
+  SetDocumentInviteTimeEvidence               |
+  SetDocumentTimeoutTimeEvidence              |
+  RestoreArchivedDocumentEvidence             |
+  InvitationEvidence                          |
+  SignableFromDocumentIDWithUpdatedAuthorEvidence
+  deriving (Eq, Show, Read, Ord)
 $(enumDeriveConvertible ''EvidenceEventType)
 

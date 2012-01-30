@@ -48,7 +48,8 @@ restartDocument doc = withUser $ \user -> do
           , ctxipnumber } <- getContext
   if isSigLinkFor user $ getAuthorSigLink doc
     then do
-      enewdoc <- runDBUpdate $ RestartDocument doc user ctxtime ctxipnumber
+      let actor = AuthorActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail user)
+      enewdoc <- runDBUpdate $ RestartDocument doc actor
       case enewdoc of
         Left _ -> return $ Left DBResourceNotAvailable
         Right doc' -> return $ Right doc'
@@ -66,11 +67,13 @@ signDocumentWithEmail did slid mh fields = do
       False -> return $ Left (DBActionNotAvailable "This document does not allow signing using email identification.")
       True  -> do
         Context{ ctxtime, ctxipnumber } <- getContext
-        ed1 <- runDBUpdate $ UpdateFields did slid fields
+        let Just sl' = getSigLinkFor olddoc slid
+        let actor = SignatoryActor ctxtime ctxipnumber (maybesignatory sl') (BS.toString $ getEmail sl') slid
+        ed1 <- runDBUpdate $ UpdateFields did slid fields actor
         case ed1 of
           Left err -> return $ Left $ DBActionNotAvailable err
           Right _ -> do
-            newdocument <- runDBUpdate $ SignDocument did slid mh ctxtime ctxipnumber Nothing
+            newdocument <- runDBUpdate $ SignDocument did slid mh Nothing actor
             case newdocument of
               Left message -> return $ Left (DBActionNotAvailable message)
               Right doc -> do
@@ -82,18 +85,20 @@ signDocumentWithEmail did slid mh fields = do
 
 signDocumentWithEleg :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(BS.ByteString, BS.ByteString)] -> SignatureInfo -> m (Either DBError (Document, Document))
 signDocumentWithEleg did slid mh fields sinfo = do
+  Context{ ctxtime, ctxipnumber } <- getContext
   edoc <- getDocByDocIDSigLinkIDAndMagicHash did slid mh
   case edoc of
     Left err -> return $ Left err
     Right olddoc -> case olddoc `allowsIdentification` ELegitimationIdentification of
       False -> return $ Left (DBActionNotAvailable "This document does not allow signing using email identification.")
       True  -> do
-        Context{ ctxtime, ctxipnumber } <- getContext
-        ed1 <- runDBUpdate $ UpdateFields did slid fields
+        let Just sl' = getSigLinkFor olddoc slid
+        let actor = SignatoryActor ctxtime ctxipnumber (maybesignatory sl') (BS.toString $ getEmail sl') slid
+        ed1 <- runDBUpdate $ UpdateFields did slid fields actor
         case ed1 of
           Left err -> return $ Left $ DBActionNotAvailable err
           Right _ -> do
-            newdocument <- runDBUpdate $ SignDocument did slid mh ctxtime ctxipnumber (Just sinfo)
+            newdocument <- runDBUpdate $ SignDocument did slid mh (Just sinfo) actor
             case newdocument of
               Left message -> return $ Left (DBActionNotAvailable message)
               Right doc -> do
@@ -139,15 +144,14 @@ authorSignDocument did msigninfo = onlyAuthor did $ do
       case ed1 of
         Left m -> return $ Left $ DBActionNotAvailable m
         Right _ -> do
-          _ <- runDBUpdate $ SetDocumentInviteTime did (ctxtime ctx) (ctxipnumber ctx)
-          _ <- runDBUpdate $ MarkInvitationRead did signatorylinkid 
-               (SystemActor (ctxtime ctx))
-          ed2 <- runDBUpdate $ MarkDocumentSeen did signatorylinkid signatorymagichash 
-                 (AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid author) (BS.toString $ getEmail author))
+          let actor = AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid author) (BS.toString $ getEmail author)          
+          _ <- runDBUpdate $ SetDocumentInviteTime did actor
+          _ <- runDBUpdate $ MarkInvitationRead did signatorylinkid (SystemActor (ctxtime ctx))
+          ed2 <- runDBUpdate $ MarkDocumentSeen did signatorylinkid signatorymagichash actor
           case ed2 of
             Left m -> return $ Left $ DBActionNotAvailable m
             Right _ -> do
-              ed3 <- runDBUpdate (SignDocument did signatorylinkid signatorymagichash (ctxtime ctx) (ctxipnumber ctx) msigninfo)
+              ed3 <- runDBUpdate (SignDocument did signatorylinkid signatorymagichash msigninfo actor)
               case ed3 of
                 Left m -> return $ Left $ DBActionNotAvailable m
                 Right d3 -> do
@@ -172,19 +176,19 @@ authorSendDocument did = onlyAuthor did $ do
       case ed1 of
         Left m -> return $ Left $ DBActionNotAvailable m
         Right _ -> do
-          _ <- runDBUpdate $ SetDocumentInviteTime did (ctxtime ctx) (ctxipnumber ctx)          
-          _ <- runDBUpdate $ MarkInvitationRead did signatorylinkid 
-               (SystemActor (ctxtime ctx))
-          transActionNotAvailable <$> runDBUpdate (MarkDocumentSeen did signatorylinkid signatorymagichash 
-                                                  (AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid author) (BS.toString $ getEmail author)))
+          let actor = AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid author) (BS.toString $ getEmail author)
+          _ <- runDBUpdate $ SetDocumentInviteTime did actor
+          _ <- runDBUpdate $ MarkInvitationRead did signatorylinkid (SystemActor (ctxtime ctx))
+          transActionNotAvailable <$> runDBUpdate (MarkDocumentSeen did signatorylinkid signatorymagichash actor)
 
 {- |
   The Author can add new SigAttachments.
  -}
 updateSigAttachments :: (Kontrakcja m) => DocumentID -> [SignatoryAttachment] -> m (Either DBError Document)
 updateSigAttachments did sigatts = onlyAuthor did $ do
-  Context{ctxtime} <- getContext
-  transActionNotAvailable <$> runDBUpdate (UpdateSigAttachments did sigatts ctxtime)
+  Context{ctxtime, ctxipnumber, ctxmaybeuser = Just author} <- getContext
+  let actor = AuthorActor ctxtime ctxipnumber (userid author) (BS.toString $ getEmail author)
+  transActionNotAvailable <$> runDBUpdate (UpdateSigAttachments did sigatts actor)
 
 {- |
    Only the author can Close a document when its in AwaitingAuthor status.
@@ -196,8 +200,10 @@ authorSignDocumentFinal did msigninfo = onlyAuthor did $ do
   case edoc of
     Left m -> return $ Left m
     Right doc -> do
-      let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink doc
-      ed1 <- runDBUpdate (SignDocument did signatorylinkid signatorymagichash (ctxtime ctx) (ctxipnumber ctx) msigninfo)
+      let Just user = ctxmaybeuser ctx
+          Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink doc
+          actor = AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (BS.toString $ getEmail user)
+      ed1 <- runDBUpdate (SignDocument did signatorylinkid signatorymagichash msigninfo actor)
       case ed1 of
         Left m -> return $ Left $ DBActionNotAvailable m
         Right d1 -> do
@@ -226,17 +232,22 @@ onlyAuthor did action = do
  -}
 signableFromTemplateWithUpdatedAuthor :: (Kontrakcja m) => DocumentID -> m (Either DBError Document)
 signableFromTemplateWithUpdatedAuthor did = onlyAuthor did $ do
-  Context{ ctxmaybeuser = Just user, ctxtime} <- getContext
+  Context{ ctxmaybeuser = Just user, ctxtime, ctxipnumber} <- getContext
   mcompany <- getCompanyForUser user
-  transActionNotAvailable <$> runDBUpdate (SignableFromDocumentIDWithUpdatedAuthor user mcompany did ctxtime)
+  let actor = AuthorActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail user)
+  transActionNotAvailable <$> runDBUpdate (SignableFromDocumentIDWithUpdatedAuthor user mcompany did actor)
 
 updateDocAuthorAttachments :: (Kontrakcja m) => DocumentID -> [FileID] -> [FileID] -> m (Either DBError Document)
 updateDocAuthorAttachments did adds removes = onlyAuthor did $ do
   case (adds ++ removes) of
     [] -> getDocByDocID did
     _ -> do
-      res1 <- mapM (runDBUpdate . AddDocumentAttachment    did) adds
-      res2 <- mapM (runDBUpdate . RemoveDocumentAttachment did) removes
+      Just user <- ctxmaybeuser <$> getContext
+      time      <- ctxtime      <$> getContext
+      ip        <- ctxipnumber  <$> getContext
+      let actor = AuthorActor time ip (userid user) (BS.toString $ getEmail user)
+      res1 <- mapM (\a -> runDBUpdate $ AddDocumentAttachment    did a actor) adds
+      res2 <- mapM (\r -> runDBUpdate $ RemoveDocumentAttachment did r actor) removes
       let ls = lefts (res1 ++ res2)
           rs = rights (res1 ++ res2)
       case ls of
@@ -250,7 +261,9 @@ attachFile docid filename content = onlyAuthor docid $ do
   ctx <- getContext
   content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) content
   file <- runDB $ dbUpdate $ NewFile filename content14
-  transActionNotAvailable <$> runDBUpdate (AttachFile docid (fileid file) (ctxtime ctx))
+  let Just user = ctxmaybeuser ctx
+  let actor = AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (BS.toString $ getEmail user)
+  transActionNotAvailable <$> runDBUpdate (AttachFile docid (fileid file) actor)
 
 newDocument :: (Kontrakcja m) => BS.ByteString -> DocumentType -> m (Either DBError Document)
 newDocument title doctype = withUser $ \user -> do

@@ -7,9 +7,11 @@ module ScriveByMail.Control
        
        where
 
+import File.Model
 import Kontra
 --import Happstack.Server.Types 
---import Control.Monad.Trans
+import Doc.DocStorage
+import Control.Monad.Trans
 import qualified Data.ByteString as BS
 --import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
@@ -40,6 +42,7 @@ import Util.SignatoryLinkUtils
 import Mails.SendMail
 import KontraLink
 import qualified Codec.MIME.Type as MIME
+import Redirect
 
 import EvidenceLog.Model
 
@@ -161,9 +164,12 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
     
   let Right doc = edoc
       
-  _ <- DocControl.handleDocumentUploadNoLogin (documentid doc) pdfBinary (BS.fromString title)
-  _ <- runDBUpdate $ SetDocumentAdvancedFunctionality (documentid doc) ctxtime
-  _ <- runDBUpdate $ SetEmailIdentification (documentid doc) ctxtime
+  content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) pdfBinary
+  file <- runDB $ dbUpdate $ NewFile (BS.fromString title) content14
+  _ <- guardRightM $ runDBUpdate (AttachFile (documentid doc) (fileid file) actor)
+
+  _ <- runDBUpdate $ SetDocumentAdvancedFunctionality (documentid doc) actor
+  _ <- runDBUpdate $ SetEmailIdentification (documentid doc) actor
   
   errs <- lefts <$> (sequence $ [runDBUpdate $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) ctxtime])
           
@@ -221,3 +227,4 @@ markDocumentAuthorReadAndSeen doc@Document{documentid} = do
   _ <- runDBUpdate $ MarkDocumentSeen documentid signatorylinkid signatorymagichash 
        (MailAPIActor time (fromJust maybesignatory) (BS.toString $ getEmail sl))
   return ()
+

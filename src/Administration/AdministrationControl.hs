@@ -79,6 +79,7 @@ import CompanyAccounts.CompanyAccountsControl
 import CompanyAccounts.Model
 import Util.SignatoryLinkUtils
 import Stats.Control (getUsersAndStats)
+import EvidenceLog.Model
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m String
@@ -722,8 +723,10 @@ replaceMainFile did = onlyAdmin $ do
                 Left filepath -> liftIO $ BSL.readFile filepath
                 Right c -> return c
             fn <- fromMaybe (BS.fromString "file") <$> fmap filename <$> (runDB $ dbQuery $ GetFileByFileID cf)
+            Context{ctxipnumber,ctxtime, ctxmaybeuser = Just user} <- getContext
+            let actor = UserActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail user)
             file <- runDB $ dbUpdate $ NewFile fn (concatChunks content)
-            _ <- runDBUpdate $ ChangeMainfile did (fileid file)
+            _ <- runDBUpdate $ ChangeMainfile did (fileid file) actor
             return LoopBack
        _ -> mzero
 
