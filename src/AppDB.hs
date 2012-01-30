@@ -32,6 +32,7 @@ kontraMigrations = [
 #ifdef DOCUMENTS_IN_POSTGRES
   , addNameColumnInSignatoryAttachments
   , addCSVUploadDataFromDocumentToSignatoryLink
+  , addColumnToRecordInternalInsertionOrder
 #endif
   ] ++ mailerMigrations
 
