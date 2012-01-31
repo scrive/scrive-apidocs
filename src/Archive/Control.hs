@@ -32,6 +32,9 @@ import Util.MonadUtils
 import Control.Applicative
 import Util.SignatoryLinkUtils
 import Stats.Control
+import qualified Log as Log
+import DB.Nexus
+import Control.Monad.Trans
 
 handleContractArchive :: Kontrakcja m => m KontraLink
 handleContractArchive = do
@@ -81,7 +84,11 @@ handleIssueArchive = do
    Constructs a list of documents (Arkiv) to show to the user.
  -}
 showContractsList :: Kontrakcja m => m (Either KontraLink String)
-showContractsList = someArchivePage pageContractsList
+showContractsList = do
+    ctx <- getContext
+    stats <- liftIO $ getNexusStats (ctxdbconn ctx)
+    Log.debug $ " Before showing archive  ---------_>SQL for queries "++  show (nexusQueries stats)
+    someArchivePage pageContractsList
 
 showOfferList :: Kontrakcja m => m (Either KontraLink String)
 showOfferList = someArchivePage pageOffersList

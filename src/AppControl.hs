@@ -265,7 +265,7 @@ appHandler handleRoutes appConf appGlobals = do
       return res
 
     createContext rq session = do
-      hostpart <- getHostpart
+      currhostpart <- getHostpart
       -- FIXME: we should read some headers from upstream proxy, if any
       let peerhost = case getHeader "x-real-ip" rq of
                        Just name -> BS.toString name
@@ -289,7 +289,9 @@ appHandler handleRoutes appConf appGlobals = do
       muser <- getUserFromSession conn session
       mcompany <- getCompanyFromSession conn session
       location <- getLocationFromSession session
-      mservice <- ioRunDB conn . dbQuery . GetServiceByLocation . toServiceLocation =<< currentLink
+      mservice <- currentLink >>= \clink -> if (hostpart appConf `isPrefixOf` clink)
+                                             then return Nothing
+                                             else ioRunDB conn $ dbQuery $ GetServiceByLocation $ toServiceLocation clink
       flashmessages <- withDataFn F.flashDataFromCookie $ maybe (return []) $ \fval ->
           case F.fromCookieValue (aesConfig appConf) fval of
                Just flashes -> return flashes
@@ -308,7 +310,7 @@ appHandler handleRoutes appConf appGlobals = do
       let elegtrans = getELegTransactions session
           ctx = Context
                 { ctxmaybeuser = muser
-                , ctxhostpart = hostpart
+                , ctxhostpart = currhostpart
                 , ctxflashmessages = flashmessages
                 , ctxtime = minutestime
                 , ctxnormalizeddocuments = docscache appGlobals
