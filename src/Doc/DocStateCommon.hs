@@ -268,20 +268,6 @@ checkPendingToAwaitingAuthor doc = catMaybes $
   , trueOrMessage (not $ hasSigned $ getAuthorSigLink doc) "Author has already signed"
   ]
 
-{- |
-    Filter documents according to whether the given indicated sig link has even been deleted.
-    The first param should be True to get the docs which have been deleted,
-    and so would appear in the recycle bin//trash can.  It should be False to get docs which
-    have never been deleted.
--}
-filterDocsWhereDeleted :: (SignatoryLinkIdentity a) => Bool -> a -> [Document] -> [Document]
-filterDocsWhereDeleted deleted siglinkidentifier docs =
-  filter isIncludedDoc docs
-  where
-    isIncludedDoc Document{documentsignatorylinks} = 
-      not . Prelude.null $ filter isIncludedSigLink documentsignatorylinks
-    isIncludedSigLink sl@SignatoryLink{signatorylinkdeleted} =
-      isSigLinkFor siglinkidentifier sl && signatorylinkdeleted==deleted
 
 
 {- |

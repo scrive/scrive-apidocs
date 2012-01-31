@@ -1294,10 +1294,10 @@ instance DBQuery GetDocumentsByCompany [Document] where
   dbQuery (GetDocumentsByCompany user) = do
     case (useriscompanyadmin user, usercompany user) of
       (True, Just companyid) -> do
-        docs <- selectDocumentsBySignatoryLink ("signatory_links.company_id = ?")
+        docs <- selectDocumentsBySignatoryLink ("signatory_links.company_id = ? AND signatory_links.deleted = FALSE")
                       [ toSql (usercompany user)
                       ]
-        return $ filterDocsWhereActivated companyid . filterDocsWhereDeleted False companyid $ docs
+        return $ filterDocsWhereActivated companyid $ docs
       _ -> return []
 
 {- |
@@ -1319,7 +1319,7 @@ instance DBQuery GetDocumentsByCompanyAndTags [Document] where
                   toSql mservice,
                   toSql mservice
                 ]
-        let docs' = filterDocsWhereActivated companyid . filterDocsWhereDeleted False companyid $ docs
+        let docs' = filterDocsWhereActivated companyid $ docs
         return (filter hasTags docs')
     where hasTags doc = all (`elem` (documenttags doc)) doctags
 
