@@ -23,6 +23,8 @@ module Kontra
     , currentService
     , currentServiceID
     , HasService(..)
+    , disableLocalSwitch -- Turn off the flag switcher on top bar
+    , switchLocale       -- set language
     )
     where
 
@@ -127,6 +129,17 @@ logUserToContext :: Kontrakcja m => Maybe User -> m ()
 logUserToContext user =
     modifyContext $ \ctx -> ctx { ctxmaybeuser = user}
 
+disableLocalSwitch :: Kontrakcja m => m ()
+disableLocalSwitch =
+    modifyContext $ \ctx -> ctx { ctxlocaleswitch = False}
+
+switchLocale :: Kontrakcja m => Locale -> m ()
+switchLocale locale =
+     modifyContext $ \ctx -> ctx {
+         ctxlocale     = locale,
+         ctxtemplates  = localizedVersion locale (ctxglobaltemplates ctx)
+     }
+    
 newPasswordReminderLink :: MonadIO m => User -> m KontraLink
 newPasswordReminderLink user = do
     action <- liftIO $ newPasswordReminder user

@@ -50,7 +50,7 @@ import DB.Types
 import Util.MonadUtils
 import Doc.SignatoryLinkID
 import qualified Data.Map as Map
-
+import Misc (optional)
 -- | Session ID is a wrapped 'Integer' really
 newtype SessionId = SessionId Integer
     deriving (Eq, Ord, Num, Typeable)
@@ -512,7 +512,6 @@ startSessionCookie session = do
 -- | Read current session cookie from request.
 currentSessionInfoCookie:: RqData (Maybe SessionCookieInfo)
 currentSessionInfoCookie = (optional (readCookieValue "sessionId"))
- where optional c = (liftM Just c) `mplus` (return Nothing)
 
 -- | Get current session based on cookies set.
 currentSession ::(HasRqData m, MonadIO m, ServerMonad m, MonadPlus m, FilterMonad Response m) => m (Maybe Session)
