@@ -466,6 +466,7 @@ handleDeclineAccountFromSign documentid
                              actionid
                              magichash = do
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid signmagichash
+  switchLocale $ getLocale document
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
   userid <- guardJust $ maybesignatory signatorylink
   user <- guardJustM $ runDBQuery $ GetUserByID userid
@@ -587,11 +588,6 @@ rejectDocument documentid
       addFlashM $ modalRejectedView document
       return $ LoopBack
 
-getDocumentLocale :: DocumentID -> DB (Maybe Locale)
-getDocumentLocale documentid = do
-  mdoc <- dbQuery $ GetDocumentByDocumentID documentid
-  return $ fmap getLocale mdoc --TODO: store lang on doc
-
 {- |
    Show the document to be signed
  -}
@@ -603,7 +599,7 @@ handleSignShowOldRedirectToNew did sid mh = do
 
 handleSignShow :: DocumentID -> SignatoryLinkID -> Kontra Response
 handleSignShow documentid
-               signatorylinkid = do
+               signatorylinkid = do           
   mmh <- readField "magichash"
   case mmh of
     Just mh -> do
@@ -616,7 +612,7 @@ handleSignShow documentid
 
 handleSignShow2 :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m String
 handleSignShow2 documentid
-                signatorylinkid = do
+                signatorylinkid = do                  
   Context { ctxtime
           , ctxipnumber
           , ctxflashmessages
@@ -631,6 +627,8 @@ handleSignShow2 documentid
 
   _ <- markDocumentSeen documentid signatorylinkid magichash ctxtime ctxipnumber
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
+  disableLocalSwitch
+  switchLocale (getLocale document)
   invitedlink <- guardJust $ getSigLinkFor document signatorylinkid
   _ <- runDB $ addSignStatLinkEvent document invitedlink
   let isFlashNeeded = Data.List.null ctxflashmessages
@@ -669,10 +667,12 @@ maybeAddDocumentCancelationMessage document = do
    Method: GET
  -}
 handleIssueShowGet :: Kontrakcja m => DocumentID -> m (Either KontraLink (Either KontraLink String))
-handleIssueShowGet docid =
+handleIssueShowGet docid = do
   checkUserTOSGet $ do
     document <- guardRightM $ getDocByDocID docid
     ctx@Context { ctxmaybeuser } <- getContext
+    disableLocalSwitch -- Not show locale flag on this page
+    switchLocale (getLocale document)
     mdstep <- getDesignStep docid
     case (mdstep, documentfunctionality document) of
       (Just (DesignStep3 _ _), BasicFunctionality) -> return $ Left $ LinkIssueDoc docid
@@ -1461,6 +1461,8 @@ getDocumentsForUserByType doctype user = do
 handleAttachmentViewForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
 handleAttachmentViewForViewer docid siglinkid mh = do
   doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
+  disableLocalSwitch
+  switchLocale (getLocale doc)
   let pending JpegPagesPending = True
       pending _                = False
       files                    = map authorattachmentfile (documentauthorattachments doc)
@@ -2086,12 +2088,10 @@ handleInvariantViolations = onlyAdmin $ do
 
 prepareEmailPreview :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 prepareEmailPreview docid slid = do
-    ctx <- getContext
-    Log.debug "Making email preview"
     mailtype <- getFieldWithDefault "" "mailtype"
-    mdoc <- runDBQuery $ GetDocumentByDocumentID docid
-    when (isNothing mdoc) $ (Log.debug "No document found") >> mzero
-    let doc = fromJust mdoc
+    doc <- guardJustM $ runDBQuery $ GetDocumentByDocumentID docid
+    switchLocale $ getLocale doc
+    ctx <- getContext
     content <- case mailtype of
          "remind" -> do
              let msl = find ((== slid) . signatorylinkid) $ documentsignatorylinks doc

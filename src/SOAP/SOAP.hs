@@ -16,7 +16,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length, drop)
 import qualified Data.ByteString.Lazy as BSL
-import Misc
+import Misc hiding(optional)
 import System.Exit
 import Text.XML.HaXml.XmlContent.Parser
 import Text.XML.HaXml.XmlContent

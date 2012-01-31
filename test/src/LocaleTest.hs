@@ -89,10 +89,8 @@ testLoggedInLocaleSwitching conn = withTestEnvironment conn $ do
       assertLocale user region lang
     assertContextLocale uid ctx region lang = do
       emptyReq <- mkRequest GET []
-      (doclocale, _) <- runTestKontra emptyReq ctx $ getDocumentLocale conn
-      assertEqual "No doclocale" Nothing doclocale
       muser <- dbQuery $ GetUserByID uid
-      (userlocale, _) <- runTestKontra emptyReq ctx $ getUserLocale conn muser
+      (userlocale, _) <- runTestKontra emptyReq ctx $ getStandardLocale muser
       assertLocale userlocale region lang
     assertLocale :: HasLocale a => a -> Region -> Lang -> DB ()
     assertLocale locale region lang = do
