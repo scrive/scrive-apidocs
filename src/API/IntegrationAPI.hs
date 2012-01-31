@@ -297,7 +297,7 @@ createAPIDocument company' (authorTMP:signTMPS) tags mlocale createFun = do
         nonauthordetails = map toSignatoryDetails signTMPS
         nonauthorroles = map (fromMaybe defsigroles . toSignatoryRoles) signTMPS
         sigs = (toSignatoryDetails authorTMP, authorroles):zip nonauthordetails nonauthorroles
-    doc' <- runDBUpdate $ ResetSignatoryDetails (documentid doc) sigs (ctxtime ctx)
+    doc' <- runDBUpdate $ ResetSignatoryDetails (documentid doc) sigs actor
 
     when (isLeft doc') $ do
         Log.integration $ "error creating document: " ++ fromLeft doc'
@@ -415,13 +415,15 @@ setDocumentTag =  do
 
 removeDocument  :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 removeDocument = do
+    Context{ctxtime, ctxipnumber, ctxservice = Just service} <- getContext
     doc <- documentFromParam
     -- we only control the author through the integration api
     mauthor <- maybe (return Nothing)
                      (runDBQuery . GetUserByID)
                      (getAuthorSigLink doc >>= maybesignatory)
     when (isNothing mauthor) $ throwApiError API_ERROR_NO_USER $ "Error while removing a document: Failed to find author"
-    res <- runDBUpdate $ ArchiveDocument (fromJust mauthor) $ documentid doc
+    let actor = IntegrationAPIActor ctxtime ctxipnumber (BS.toString $ unServiceID $ serviceid service) Nothing
+    res <- runDBUpdate $ ArchiveDocument (fromJust mauthor) (documentid doc) actor
     when (isLeft res) $ throwApiError API_ERROR_NO_DOCUMENT $ "Error while removing a document: " ++ fromLeft res
     return $ toJSObject []
 

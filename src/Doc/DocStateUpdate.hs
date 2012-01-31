@@ -145,7 +145,7 @@ authorSignDocument did msigninfo = onlyAuthor did $ do
         Left m -> return $ Left $ DBActionNotAvailable m
         Right _ -> do
           let actor = AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid author) (BS.toString $ getEmail author)          
-          _ <- runDBUpdate $ SetDocumentInviteTime did actor
+          _ <- runDBUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
           _ <- runDBUpdate $ MarkInvitationRead did signatorylinkid (SystemActor (ctxtime ctx))
           ed2 <- runDBUpdate $ MarkDocumentSeen did signatorylinkid signatorymagichash actor
           case ed2 of
@@ -177,7 +177,7 @@ authorSendDocument did = onlyAuthor did $ do
         Left m -> return $ Left $ DBActionNotAvailable m
         Right _ -> do
           let actor = AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid author) (BS.toString $ getEmail author)
-          _ <- runDBUpdate $ SetDocumentInviteTime did actor
+          _ <- runDBUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
           _ <- runDBUpdate $ MarkInvitationRead did signatorylinkid (SystemActor (ctxtime ctx))
           transActionNotAvailable <$> runDBUpdate (MarkDocumentSeen did signatorylinkid signatorymagichash actor)
 

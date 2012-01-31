@@ -171,7 +171,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   _ <- runDBUpdate $ SetDocumentAdvancedFunctionality (documentid doc) actor
   _ <- runDBUpdate $ SetEmailIdentification (documentid doc) actor
   
-  errs <- lefts <$> (sequence $ [runDBUpdate $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) ctxtime])
+  errs <- lefts <$> (sequence $ [runDBUpdate $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) actor])
           
   when ([] /= errs) $ do
     Log.scrivebymail $ "Could not set up document: " ++ (intercalate "; " errs)

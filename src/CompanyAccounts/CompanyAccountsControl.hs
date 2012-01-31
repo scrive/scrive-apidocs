@@ -45,6 +45,7 @@ import User.Model
 import User.Utils
 import User.UserControl
 import User.UserView
+import EvidenceLog.Model
 
 {- |
     Handles the showing of the company accounts page.
@@ -417,7 +418,9 @@ resaveDocsForUser :: Kontrakcja m => UserID -> m ()
 resaveDocsForUser uid = do
   user <- runDBOrFail $ dbQuery $ GetUserByID uid
   userdocs <- runDBQuery $ GetDocumentsByUser user
-  mapM_ (\doc -> runDBUpdate $ AdminOnlySaveForUser (documentid doc) user) userdocs
+  time <- ctxtime <$> getContext
+  let actor = SystemActor time
+  mapM_ (\doc -> runDBUpdate $ AdminOnlySaveForUser (documentid doc) user actor) userdocs 
   return ()
 
 {- |

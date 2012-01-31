@@ -36,6 +36,7 @@ import Util.KontraLinkUtils
 import Util.MonadUtils
 import Stats.Control
 import User.Utils
+import EvidenceLog.Model
 
 checkPasswordsMatch :: TemplatesMonad m => BS.ByteString -> BS.ByteString -> Either (m FlashMessage) ()
 checkPasswordsMatch p1 p2 =
@@ -882,9 +883,10 @@ handleAccountRemovalGet aid hash = do
 
 handleAccountRemovalFromSign :: Kontrakcja m => User -> SignatoryLink -> ActionID -> MagicHash -> m ()
 handleAccountRemovalFromSign user siglink aid hash = do
-  Context{ctxtime} <- getContext
+  Context{ctxtime, ctxipnumber} <- getContext
   doc <- removeAccountFromSignAction aid hash
-  doc1 <- guardRightM $ runDBUpdate . ArchiveDocument user $ documentid doc
+  let actor = UserActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail user)
+  doc1 <- guardRightM $ runDBUpdate $ ArchiveDocument user (documentid doc) actor
   _ <- case getSigLinkFor doc1 (signatorylinkid siglink) of
     Just sl -> runDB $ addSignStatDeleteEvent doc1 sl ctxtime
     _       -> return False

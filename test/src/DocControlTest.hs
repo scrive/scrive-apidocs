@@ -194,7 +194,7 @@ testNonLastPersonSigningADocumentRemainsPending conn = withTestEnvironment conn 
                    (signatorydetails . fromJust $ getAuthorSigLink doc', [SignatoryAuthor])
                  , (mkSigDetails "Fred" "Frog" "fred@frog.com", [SignatoryPartner])
                  , (mkSigDetails "Gordon" "Gecko" "gord@geck.com", [SignatoryPartner])
-               ]) (documentctime doc')
+               ]) (SystemActor $ documentctime doc')
 
   Right doc'' <- randomUpdate $ PreparationToPending (documentid doc') (SystemActor (documentctime doc'))
 
@@ -235,7 +235,7 @@ testLastPersonSigningADocumentClosesIt conn = withTestEnvironment conn $ do
   Right _ <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
                    (signatorydetails . fromJust $ getAuthorSigLink doc', [SignatoryAuthor])
                  , (mkSigDetails "Fred" "Frog" "fred@frog.com", [SignatoryPartner])
-               ]) (documentctime doc')
+               ]) (SystemActor $ documentctime doc')
 
 
   Right doc'' <- randomUpdate $ PreparationToPending (documentid doc') (SystemActor (documentctime doc'))

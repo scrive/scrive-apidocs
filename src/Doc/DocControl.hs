@@ -876,7 +876,9 @@ handleIssueSaveAsTemplate :: Kontrakcja m => Document -> m KontraLink
 handleIssueSaveAsTemplate document = do
   ctx <- getContext
   udoc <- guardRightM $ updateDocument ctx document
-  _ndoc <- guardRightM $ runDBUpdate $ TemplateFromDocument $ documentid udoc
+  let Just user = ctxmaybeuser ctx
+  let actor = UserActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (BS.toString $ getEmail user)
+  _ <- guardRightM $ runDBUpdate $ TemplateFromDocument (documentid udoc) actor
   addFlashM flashDocumentTemplateSaved
   return $ LinkTemplates
 
@@ -947,6 +949,10 @@ handleIssueCSVUpload document = do
   udoc <- guardRightM $ updateDocument ctx document
   signlast <- isFieldSet "signlast"
 
+  let Just user = ctxmaybeuser ctx
+      
+  let actor = AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (BS.toString $ getEmail user)
+  
   mcsvsigindex <- getOptionalField asValidNumber "csvsigindex"
   mcsvfile <- getCSVFile "csv"
   case (mcsvsigindex, mcsvfile) of
@@ -960,8 +966,8 @@ handleIssueCSVUpload document = do
                                 , csvcontents = contents
                                 , csvsignatoryindex = csvsigindex
                                 }
-      ndoc <- guardRightM $ runDBUpdate $ AttachCSVUpload (documentid udoc) 
-              (signatorylinkid ((documentsignatorylinks udoc) !! csvsigindex)) csvupload
+      ndoc <- guardRightM $ runDBUpdate $ AttachCSVUpload (documentid udoc)
+              (signatorylinkid ((documentsignatorylinks udoc) !! csvsigindex)) csvupload actor
       return $ LinkDesignDoc $ DesignStep2 (documentid ndoc) (Just $ csvsigindex + 1) (Just AfterCSVUpload) signlast
 
 makeSigAttachment :: BS.ByteString -> BS.ByteString -> BS.ByteString -> SignatoryAttachment
@@ -1453,7 +1459,7 @@ updateDocument Context{ ctxtime, ctxipnumber, ctxmaybeuser} document@Document{ d
   when (mnewcsvupload /= moldcsvupload) $ do
     error $ "updateDocument logic error: lost csv upload data in transit"
 
-  aa <- runDBUpdate $ ResetSignatoryDetails2 documentid (authordetails2 : signatories2) ctxtime
+  aa <- runDBUpdate $ ResetSignatoryDetails2 documentid (authordetails2 : signatories2) actor
   Log.debug $ "ResetSignatoryDetails2 #" ++ show documentid ++ " returned " ++ show aa
   return aa
 

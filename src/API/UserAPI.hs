@@ -122,14 +122,14 @@ sendFromTemplate = do
   temp <- getTemplate
   signatories <- getSignatories
   let actor = SystemActor (ctxtime ctx)
-  doc <- runDBUpdate $ SignableFromDocument temp
+  doc <- runDBUpdate $ SignableFromDocument temp actor
   let mauthorsiglink = getAuthorSigLink doc
   when (isNothing mauthorsiglink) $ throwApiError API_ERROR_OTHER "Template has no author."
   _ <- runDBUpdate $ SetDocumentAdvancedFunctionality (documentid doc) actor
   _ <- runDBUpdate $ SetEmailIdentification (documentid doc) actor
   medoc <- runDBUpdate $ ResetSignatoryDetails (documentid doc) (((signatoryDetailsFromUser author mcompany) { signatorysignorder = SignOrder 0 }, 
                                                              [SignatoryPartner, SignatoryAuthor]): 
-                                                            (zip signatories (repeat [SignatoryPartner]))) (ctxtime ctx)
+                                                            (zip signatories (repeat [SignatoryPartner]))) actor
   case medoc of
     Left _msg  -> throwApiError API_ERROR_OTHER "Problem with saving document."
     Right edoc -> do
@@ -179,7 +179,7 @@ sendNewDocument = do
   _ <- runDBUpdate $ SetEmailIdentification (documentid newdoc) actor
   edoc <- runDBUpdate $ ResetSignatoryDetails (documentid newdoc) (((signatoryDetailsFromUser author mcompany) { signatorysignorder = SignOrder 0 }, 
                                                              [SignatoryPartner, SignatoryAuthor]): 
-                                                            (zip signatories (repeat [SignatoryPartner]))) (ctxtime ctx)
+                                                            (zip signatories (repeat [SignatoryPartner]))) actor
   case edoc of
     Left _msg  -> throwApiError API_ERROR_OTHER "Problem with saving document."
     Right doc -> do

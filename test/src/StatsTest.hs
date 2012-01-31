@@ -59,7 +59,7 @@ testInviteStat conn = withTestEnvironment conn $ do
                                                           (any isSignatory . documentsignatorylinks))
   time <- getMinutesTime
   _ <- dbUpdate $ PreparationToPending (documentid doc') (SystemActor time)
-  Right doc <- dbUpdate $ SetDocumentInviteTime (documentid doc') time (IPAddress 0)
+  Right doc <- dbUpdate $ SetDocumentInviteTime (documentid doc') time (SystemActor time)
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatInviteEvent doc sl time)
   stats'' <- dbQuery $ GetSignStatEvents
   assertEqual "Should have saved stat." (length $ documentsignatorylinks doc) (length stats'')
@@ -78,7 +78,7 @@ testReceiveStat conn = withTestEnvironment conn $ do
                                                            (any isSignatory . documentsignatorylinks))
   time <- getMinutesTime
   _ <- dbUpdate $ PreparationToPending (documentid doc') (SystemActor time)
-  _ <- forM (documentsignatorylinks doc') (\sl -> dbUpdate $ SetInvitationDeliveryStatus (documentid doc') (signatorylinkid sl) Delivered)
+  _ <- forM (documentsignatorylinks doc') (\sl -> dbUpdate $ SetInvitationDeliveryStatus (documentid doc') (signatorylinkid sl) Delivered (SystemActor time))
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatReceiveEvent doc sl time)
   stats'' <- dbQuery $ GetSignStatEvents
@@ -154,7 +154,7 @@ testSignStat conn = withTestEnvironment conn $ do
                     (AuthorActor time (IPAddress 0) (fromJust $ maybesignatory sl) (BS.toString $ getEmail sl))
                else dbUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid sl) (signatorymagichash sl) 
                     (SignatoryActor time (IPAddress 0) (maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl)))
-  _ <- forM (filter isSignatory $ documentsignatorylinks doc') (\sl -> dbUpdate $ SignDocument (documentid doc') (signatorylinkid sl) (signatorymagichash sl) time (IPAddress 0) Nothing)
+  _ <- forM (filter isSignatory $ documentsignatorylinks doc') (\sl -> dbUpdate $ SignDocument (documentid doc') (signatorylinkid sl) (signatorymagichash sl) Nothing (SignatoryActor time (IPAddress 0) (maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl)))
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatSignEvent doc sl)
   stats'' <- dbQuery $ GetSignStatEvents
@@ -200,7 +200,8 @@ testDeleteStat conn = withTestEnvironment conn $ do
                                                            isClosed &&^
                                                            (any isSignatory . documentsignatorylinks))
   time <- getMinutesTime
-  _ <- dbUpdate $ ArchiveDocument author' (documentid doc')
+  let actor = SystemActor time
+  _ <- dbUpdate $ ArchiveDocument author' (documentid doc') actor
 
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   let Just asl = getAuthorSigLink doc
@@ -214,14 +215,15 @@ testPurgeStat conn = withTestEnvironment conn $ do
   stats' <- dbQuery $ GetSignStatEvents
   assertEqual "Stats should be empty." 0 (length stats')
   author <- addNewRandomUser
+  time <- getMinutesTime
+  let actor = SystemActor time
   _ <- dbUpdate $ SetUserCompany (userid author) Nothing
   Just author' <- dbQuery $ GetUserByID (userid author)
   doc' <- addRandomDocumentWithAuthorAndCondition author' (isSignable &&^ 
                                                            isClosed &&^
                                                            (any isSignatory . documentsignatorylinks))
-  time <- getMinutesTime
-  _ <- dbUpdate $ ArchiveDocument author' (documentid doc')
-  _ <- dbUpdate $ ReallyDeleteDocument author' (documentid doc')
+  _ <- dbUpdate $ ArchiveDocument author' (documentid doc') actor
+  _ <- dbUpdate $ ReallyDeleteDocument author' (documentid doc') actor 
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   let Just asl = getAuthorSigLink doc
   _ <- addSignStatPurgeEvent doc asl time

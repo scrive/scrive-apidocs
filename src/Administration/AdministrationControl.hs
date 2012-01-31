@@ -334,9 +334,11 @@ handleUserChange uid = onlySalesOrAdmin $ do
 
 resaveDocsForUser :: Kontrakcja m => UserID -> m ()
 resaveDocsForUser uid = onlySalesOrAdmin $ do
+  Context{ctxmaybeuser = Just admin, ctxtime, ctxipnumber} <- getContext
+  let actor = AdminActor ctxtime ctxipnumber (userid admin) (BS.toString $ getEmail admin)
   user <- runDBOrFail $ dbQuery $ GetUserByID uid
   userdocs <- runDBQuery $ GetDocumentsByUser user
-  mapM_ (\doc -> runDBUpdate $ AdminOnlySaveForUser (documentid doc) user) userdocs
+  mapM_ (\doc -> runDBUpdate $ AdminOnlySaveForUser (documentid doc) user actor) userdocs 
   return ()
 
 {- | Handling company details change. It reads user info change -}
@@ -724,7 +726,7 @@ replaceMainFile did = onlyAdmin $ do
                 Right c -> return c
             fn <- fromMaybe (BS.fromString "file") <$> fmap filename <$> (runDB $ dbQuery $ GetFileByFileID cf)
             Context{ctxipnumber,ctxtime, ctxmaybeuser = Just user} <- getContext
-            let actor = UserActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail user)
+            let actor = AdminActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail user)
             file <- runDB $ dbUpdate $ NewFile fn (concatChunks content)
             _ <- runDBUpdate $ ChangeMainfile did (fileid file) actor
             return LoopBack

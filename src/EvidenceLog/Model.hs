@@ -9,7 +9,8 @@ module EvidenceLog.Model
          MailAPIActor(..),  
          MailSystemActor(..),
          IntegrationAPIActor(..),
-         UserActor(..)
+         UserActor(..),
+         AdminActor(..)
        )
        
        where
@@ -103,6 +104,15 @@ instance Actor UserActor where
   actorUserID    (UserActor _ _ u _) = Just u
   actorEmail     (UserActor _ _ _ e) = Just e
   actorWho       (UserActor _ _ _ e) = "the user with email " ++ show e
+  
+data AdminActor = AdminActor MinutesTime IPAddress UserID String
+                  deriving (Eq, Ord, Show)
+instance Actor AdminActor where
+  actorTime      (AdminActor t _ _ _) = t
+  actorIP        (AdminActor _ i _ _) = Just i
+  actorUserID    (AdminActor _ _ u _) = Just u
+  actorEmail     (AdminActor _ _ _ e) = Just e
+  actorWho       (AdminActor _ _ _ e) = "the admin with email " ++ show e
 
 insertEvidenceEvent :: Actor a 
                        => EvidenceEventType
@@ -195,7 +205,12 @@ data EvidenceEventType =
   SetDocumentTimeoutTimeEvidence              |
   RestoreArchivedDocumentEvidence             |
   InvitationEvidence                          |
-  SignableFromDocumentIDWithUpdatedAuthorEvidence
+  SignableFromDocumentIDWithUpdatedAuthorEvidence |
+  ArchiveDocumentEvidence                     |
+  ResetSignatoryDetailsEvidence |
+  AdminOnlySaveForUserEvidence |
+  SignableFromDocumentEvidence |
+  TemplateFromDocumentEvidence
   deriving (Eq, Show, Read, Ord)
 $(enumDeriveConvertible ''EvidenceEventType)
 

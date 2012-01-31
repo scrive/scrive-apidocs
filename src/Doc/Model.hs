@@ -880,10 +880,10 @@ newFromDocument f docid = do
     and there should be something else for hooking accounts to sig links that doesn't
     involve editing all the docs as a user moves between private and company accounts.
 -}
-data AdminOnlySaveForUser = AdminOnlySaveForUser DocumentID User
+data (Actor a, Show a, Eq a, Ord a) => AdminOnlySaveForUser a = AdminOnlySaveForUser DocumentID User a
                             deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate AdminOnlySaveForUser (Either String Document) where
-  dbUpdate (AdminOnlySaveForUser did user) = do
+instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (AdminOnlySaveForUser a) (Either String Document) where
+  dbUpdate (AdminOnlySaveForUser did user actor) = do
     r <- runUpdateStatement "signatory_links" 
                        [ sqlField "company_id" $ usercompany user
                        ]
@@ -892,18 +892,29 @@ instance DBUpdate AdminOnlySaveForUser (Either String Document) where
                        [ toSql did
                        , toSql (userid user)
                        ]
-                        
+    when (r == 1) $
+      ignore $ dbUpdate $ InsertEvidenceEvent
+      AdminOnlySaveForUserEvidence
+      ("Document saved for user with email " ++ show (getEmail user) ++ " by " ++ actorWho actor ++ ".")
+      (Just did)
+      actor
     getOneDocumentAffected "AdminOnlySaveForUser" r did
 
-data ArchiveDocument = ArchiveDocument User DocumentID
-                         deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate ArchiveDocument (Either String Document) where
-  dbUpdate (ArchiveDocument user did) = do
+data (Actor a, Show a, Eq a, Ord a) => ArchiveDocument a = ArchiveDocument User DocumentID a
+                                                         deriving (Eq, Ord, Show, Typeable)
+instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (ArchiveDocument a) (Either String Document) where
+  dbUpdate (ArchiveDocument user did actor) = do
     r <- case (usercompany user, useriscompanyadmin user) of
            (Just cid, True) ->
               runUpdateOnArchivableDoc "WHERE company_id = ?" [toSql cid]
            _ ->
               runUpdateOnArchivableDoc "WHERE user_id = ?" [toSql $ userid user]
+    when (r == 1) $
+      ignore $ dbUpdate $ InsertEvidenceEvent
+      ArchiveDocumentEvidence
+      ("Moved document to rubbish bin by " ++ actorWho actor ++ ".")
+      (Just did)
+      actor
     getOneDocumentAffected "ArchiveDocument" r did
     where
       runUpdateOnArchivableDoc whereClause whereFields =
@@ -918,10 +929,10 @@ instance DBUpdate ArchiveDocument (Either String Document) where
                               ])
 
 
-data AttachCSVUpload = AttachCSVUpload DocumentID SignatoryLinkID CSVUpload
+data (Actor a, Show a, Eq a, Ord a) => AttachCSVUpload a = AttachCSVUpload DocumentID SignatoryLinkID CSVUpload a
                        deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate AttachCSVUpload (Either String Document) where
-  dbUpdate (AttachCSVUpload did slid csvupload) = do
+instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (AttachCSVUpload a) (Either String Document) where
+  dbUpdate (AttachCSVUpload did slid csvupload actor) = do
     mdocument <- dbQuery $ GetDocumentByDocumentID did
     case mdocument of
       Nothing -> return $ Left $ "Cannot AttachCSVUpload document " ++ show did ++ " because it does not exist"
@@ -939,6 +950,12 @@ instance DBUpdate AttachCSVUpload (Either String Document) where
                          , toSql slid 
                          , toSql [SignatoryAuthor]
                          ]
+                     when (r == 1) $
+                       ignore $ dbUpdate $ InsertEvidenceEvent
+                       ArchiveDocumentEvidence
+                       ("Attached CSV to document by " ++ actorWho actor ++ ".")
+                       (Just did)
+                       actor
                      getOneDocumentAffected "AttachCSVUpload" r did
 
           _ -> return $ Left $ "Document #" ++ show documentid ++ " is in " ++ show (documentstatus document) ++ " state, must be Preparation"
@@ -1820,12 +1837,11 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SetDocumentTags a) (Either 
       actor
     getOneDocumentAffected "SetDocumentTags" r did
 
-data (Actor a, Show a, Eq a, Ord a) => SetDocumentInviteTime a = SetDocumentInviteTime DocumentID a
+data (Actor a, Show a, Eq a, Ord a) => SetDocumentInviteTime a = SetDocumentInviteTime DocumentID MinutesTime a
                        deriving (Eq, Ord, Show, Typeable)
 instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SetDocumentInviteTime a) (Either String Document) where
-  dbUpdate (SetDocumentInviteTime did actor) = do
-    let invitetime = actorTime actor
-        ipaddress  = fromMaybe (IPAddress 0) $ actorIP actor
+  dbUpdate (SetDocumentInviteTime did invitetime actor) = do
+    let ipaddress  = fromMaybe (IPAddress 0) $ actorIP actor
     r <- runUpdateStatement "documents"
          [ sqlField "invite_time" invitetime,
            sqlField "invite_ip" ipaddress
@@ -1839,11 +1855,10 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SetDocumentInviteTime a) (E
       actor
     getOneDocumentAffected "SetDocumentInviteTime" r did
 
-data (Actor a, Show a, Eq a, Ord a) => SetDocumentTimeoutTime a = SetDocumentTimeoutTime DocumentID a
+data (Actor a, Show a, Eq a, Ord a) => SetDocumentTimeoutTime a = SetDocumentTimeoutTime DocumentID MinutesTime a
                               deriving (Eq, Ord, Show, Typeable)
 instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SetDocumentTimeoutTime a) (Either String Document) where
-  dbUpdate (SetDocumentTimeoutTime did actor) = do
-    let timeouttime = actorTime actor
+  dbUpdate (SetDocumentTimeoutTime did timeouttime actor) = do
     r <- runUpdateStatement "documents"
                          [ sqlField "timeout_time" timeouttime
                          ]
@@ -2127,17 +2142,17 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SignDocument a) (Either Str
             getOneDocumentAffected "SignDocument" r docid
           s -> return $ Left $ "Cannot SignDocument document " ++ show docid ++ " because " ++ concat s
 
-data ResetSignatoryDetails = ResetSignatoryDetails DocumentID [(SignatoryDetails, [SignatoryRole])] MinutesTime
+data (Actor a, Show a, Eq a, Ord a) => ResetSignatoryDetails a = ResetSignatoryDetails DocumentID [(SignatoryDetails, [SignatoryRole])] a
                                   deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate ResetSignatoryDetails (Either String Document) where
-  dbUpdate (ResetSignatoryDetails documentid signatories time) = 
-    dbUpdate (ResetSignatoryDetails2 documentid (map (\(a,b) -> (a,b,Nothing)) signatories) time)
+instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (ResetSignatoryDetails a) (Either String Document) where
+  dbUpdate (ResetSignatoryDetails documentid signatories actor) = 
+    dbUpdate (ResetSignatoryDetails2 documentid (map (\(a,b) -> (a,b,Nothing)) signatories) actor)
 
 
-data ResetSignatoryDetails2 = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryRole], Maybe CSVUpload)] MinutesTime
+data (Actor a, Show a, Eq a, Ord a) => ResetSignatoryDetails2 a = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryRole], Maybe CSVUpload)] a
                                   deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate ResetSignatoryDetails2 (Either String Document) where
-  dbUpdate (ResetSignatoryDetails2 documentid signatories time) = do
+instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (ResetSignatoryDetails2 a) (Either String Document) where
+  dbUpdate (ResetSignatoryDetails2 documentid signatories actor) = do
     mdocument <- dbQuery $ GetDocumentByDocumentID documentid
     case mdocument of
       Nothing -> return $ Left $ "ResetSignatoryDetails: document #" ++ show documentid ++ " does not exist"
@@ -2164,6 +2179,13 @@ instance DBUpdate ResetSignatoryDetails2 (Either String Document) where
                                            }
                                 else link'
                      r1 <- insertSignatoryLinkAsIs documentid link
+                     when (isJust r1) $
+                       ignore $ dbUpdate $ InsertEvidenceEvent
+                       ResetSignatoryDetailsEvidence
+                       ("Signatory details for signatory with email " ++ show (getEmail link) ++ " by " ++ actorWho actor ++ ".")
+                       (Just documentid)
+                       actor
+
                      when (not (isJust r1)) $
                           error "ResetSignatoryDetails signatory_links did not manage to insert a row"
 
@@ -2193,11 +2215,18 @@ instance DBUpdate SignLinkFromDetailsForTest SignatoryLink where
 
       return link
 
-data SignableFromDocument = SignableFromDocument Document
-                            deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate SignableFromDocument Document where
-  dbUpdate (SignableFromDocument document) = do
-    insertNewDocument $ templateToDocument document
+data (Actor a, Show a, Eq a, Ord a) => SignableFromDocument a = SignableFromDocument Document a
+                                                              deriving (Eq, Ord, Show, Typeable)
+instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SignableFromDocument a) Document where
+  dbUpdate (SignableFromDocument document actor ) = do
+    d <- insertNewDocument $ templateToDocument document
+    ignore $ dbUpdate $ InsertEvidenceEvent
+      SignableFromDocumentEvidence
+      ("Document created from template by " ++ actorWho actor ++ ".")
+      (Just (documentid d))
+      actor
+    return d
+    
 
 
 data (Actor a, Show a, Eq a, Ord a) => SignableFromDocumentIDWithUpdatedAuthor a = SignableFromDocumentIDWithUpdatedAuthor User (Maybe Company) DocumentID a
@@ -2244,17 +2273,22 @@ instance DBUpdate StoreDocumentForTesting DocumentID where
    - should set mtime
    - should not change type or copy this doc into new doc
 -}
-data TemplateFromDocument = TemplateFromDocument DocumentID
+data (Actor a, Show a, Eq a, Ord a) => TemplateFromDocument a = TemplateFromDocument DocumentID a
                             deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate TemplateFromDocument (Either String Document) where
-  dbUpdate (TemplateFromDocument did) = do
+instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (TemplateFromDocument a) (Either String Document) where
+  dbUpdate (TemplateFromDocument did actor) = do
     r <- runUpdateStatement "documents"
          [ sqlField "status" Preparation
          , sqlField "type" $ toDocumentSimpleType (Template undefined)
          ]
          "WHERE id = ?" [ toSql did ]
+    when (r == 1) $
+      ignore $ dbUpdate $ InsertEvidenceEvent
+      TemplateFromDocumentEvidence
+      ("Template created from document by " ++ actorWho actor ++ ".")
+      (Just did)
+      actor
     getOneDocumentAffected "TemplateFromDocument" r did
-
 
 data (Actor a, Show a, Eq a, Ord a) => TimeoutDocument a = TimeoutDocument DocumentID a
                        deriving (Eq, Ord, Show, Typeable)
