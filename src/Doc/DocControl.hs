@@ -67,7 +67,7 @@ import qualified Data.Map as Map
 import Text.JSON hiding (Result)
 import ForkAction
 import qualified ELegitimation.BankID as BankID
-import Data.Function
+
 {-
   Document state transitions are described in DocState.
 
@@ -1448,14 +1448,9 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
 
 getDocumentsForUserByType :: Kontrakcja m => DocumentType -> User -> m [Document]
 getDocumentsForUserByType doctype user = do
-  mysigdocs <- runDBQuery $ GetDocumentsBySignatory user
-  mydocuments <- if useriscompanyadmin user
-                   then do
-                     mycompanydocs <- runDBQuery $ GetDocumentsByCompany user
-                     return $ union mysigdocs mycompanydocs
-                   else return mysigdocs
+  mydocuments <- runDBQuery $ GetDocumentsBySignatory user
 
-  return . filter ((\d -> documenttype d == doctype)) $ (nubBy $ on (==) documentid) mydocuments
+  return . filter ((\d -> documenttype d == doctype)) $ mydocuments
 
 
 handleAttachmentViewForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response

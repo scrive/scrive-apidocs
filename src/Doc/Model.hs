@@ -31,7 +31,6 @@ module Doc.Model
   , GetDocumentStatsByUser(..)
   , GetDocuments(..)
   , GetDocumentsByAuthor(..)
-  , GetDocumentsByCompany(..)
   , GetDocumentsByCompanyAndTags(..)
   , GetDocumentsBySignatory(..)
   , GetSignatoryLinkIDs(..)
@@ -87,6 +86,7 @@ import DB.Classes
 import DB.Fetcher
 import DB.Types
 import DB.Utils
+import Data.Semantic
 import File.File
 import File.FileID
 --import User.Region
@@ -1287,17 +1287,6 @@ instance DBQuery GetDocumentsByAuthor [Document] where
   dbQuery (GetDocumentsByAuthor uid) = do
     selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?)<>0) ORDER BY mtime DESC") [toSql uid, toSql [SignatoryAuthor]]
 
-data GetDocumentsByCompany = GetDocumentsByCompany User
-                             deriving (Eq, Ord, Show, Typeable)
-instance DBQuery GetDocumentsByCompany [Document] where
-  dbQuery (GetDocumentsByCompany user) = do
-    case (useriscompanyadmin user, usercompany user) of
-      (True, Just companyid) -> do
-        docs <- selectDocumentsBySignatoryLink ("signatory_links.company_id = ? AND signatory_links.deleted = FALSE")
-                      [ toSql (usercompany user)
-                      ]
-        return $ filterDocsWhereActivated companyid $ docs
-      _ -> return []
 
 {- |
     Fetches documents by company and tags, this won't return documents that have been deleted (so ones
@@ -1332,9 +1321,20 @@ data GetDocumentsBySignatory = GetDocumentsBySignatory User
                                deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsBySignatory [Document] where
   dbQuery (GetDocumentsBySignatory user) = do
-    docs <- selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?)<>0)")
-                                     [toSql (userid user), {- toSql [SignatoryPartner] -} iToSql 255]
-    return $ filterDocsWhereActivated (userid user) docs
+    docs <- selectDocumentsBySignatoryLink
+            ("    signatory_links.deleted = FALSE " ++
+             "AND (   signatory_links.user_id = ? " ++
+             "     OR EXISTS (SELECT TRUE FROM users " ++
+             "                WHERE users.id = ? " ++
+             "                  AND signatory_links.company_id = users.company_id " ++
+             "                  AND users.is_company_admin = TRUE))")
+             [ toSql (userid user)
+             , toSql (userid user)
+             ]
+
+    return $ if useriscompanyadmin user
+           then filterDocsWhereActivated (Or (userid user) (usercompany user)) docs
+           else filterDocsWhereActivated (userid user) docs
 
 data GetSignatoryLinkIDs = GetSignatoryLinkIDs
                            deriving (Eq, Ord, Show, Typeable)
