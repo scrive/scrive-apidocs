@@ -405,7 +405,7 @@ handlePostUserSecurity = do
 -}
 isUserDeletable :: Kontrakcja m => User -> m Bool
 isUserDeletable user = do
-  userdocs <- runDBQuery $ GetDocumentsByUser user
+  userdocs <- runDBQuery $ GetDocumentsByAuthor (userid user)
   return $ all isDeletableDocument userdocs
 
 handleViralInvite :: Kontrakcja m => m KontraLink

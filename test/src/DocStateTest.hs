@@ -198,7 +198,6 @@ docStateTests conn = testGroup "DocState" [
   testThat "GetDocumentsByCompany doesn't return archived docs" conn testGetDocumentsByCompanyNoArchivedDocs,
   testThat "GetDocumentsByCompanyAndTags doesn't return archived docs" conn testGetDocumentsByCompanyAndTagsNoArchivedDocs,
   testThat "GetDocumentsBySignatory doesn't return archived docs" conn testGetDocumentsBySignatoryNoArchivedDocs,
-  testThat "GetDocumentsByUser doesn't return archived docs" conn testGetDocumentsByUserNoArchivedDocs,
   testThat "GetDeletedDocumentsByUser returns archived docs" conn testGetDeletedDocumentsByUserArchivedDocs,
   testThat "GetDeletedDocumentsByCompany returns archived docs" conn testGetDeletedDocumentsByCompanyArchivedDocs
 
@@ -510,10 +509,6 @@ testGetDocumentsByCompanyAndTagsNoArchivedDocs =
 testGetDocumentsBySignatoryNoArchivedDocs :: DB ()
 testGetDocumentsBySignatoryNoArchivedDocs =
   checkQueryDoesntContainArchivedDocs GetDocumentsBySignatory
-
-testGetDocumentsByUserNoArchivedDocs :: DB ()
-testGetDocumentsByUserNoArchivedDocs =
-  checkQueryDoesntContainArchivedDocs GetDocumentsByUser
 
 checkQueryDoesntContainArchivedDocs :: DBQuery q [Document] => (User -> q) -> DB ()
 checkQueryDoesntContainArchivedDocs qry = doTimes 10 $ do

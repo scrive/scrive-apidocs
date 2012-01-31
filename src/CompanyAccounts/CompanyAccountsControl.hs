@@ -416,7 +416,7 @@ handlePostBecomeCompanyAccount cid = withUserPost $ do
 resaveDocsForUser :: Kontrakcja m => UserID -> m ()
 resaveDocsForUser uid = do
   user <- runDBOrFail $ dbQuery $ GetUserByID uid
-  userdocs <- runDBQuery $ GetDocumentsByUser user
+  userdocs <- runDBQuery $ GetDocumentsByAuthor uid
   mapM_ (\doc -> runDBUpdate $ AdminOnlySaveForUser (documentid doc) user) userdocs
   return ()
 

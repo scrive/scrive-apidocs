@@ -66,7 +66,7 @@ countingMailer counter mail = do
 testUploadingFileAsContract :: Nexus -> Assertion
 testUploadingFileAsContract conn = withTestEnvironment conn $ do
   (user, link) <- uploadDocAsNewUser conn Contract
-  docs <- randomQuery $ GetDocumentsByUser user
+  docs <- randomQuery $ GetDocumentsByAuthor (userid user)
   assertEqual "New doc" 1 (length docs)
   let newdoc = head docs
   assertEqual "Links to /d/docid" ("/d/" ++ (show $ documentid newdoc)) (show link)
@@ -74,7 +74,7 @@ testUploadingFileAsContract conn = withTestEnvironment conn $ do
 testUploadingFileAsOffer :: Nexus -> Assertion
 testUploadingFileAsOffer conn = withTestEnvironment conn $ do
   (user, link) <- uploadDocAsNewUser conn Offer
-  docs <- randomQuery $ GetDocumentsByUser user
+  docs <- randomQuery $ GetDocumentsByAuthor (userid user)
   assertEqual "New doc" 1 (length docs)
   let newdoc = head docs
   assertEqual "Links to /d/docid" ("/d/" ++ (show $ documentid newdoc)) (show link)
@@ -82,7 +82,7 @@ testUploadingFileAsOffer conn = withTestEnvironment conn $ do
 testUploadingFileAsOrder :: Nexus -> Assertion
 testUploadingFileAsOrder conn = withTestEnvironment conn $ do
   (user, link) <- uploadDocAsNewUser conn Order
-  docs <- randomQuery $ GetDocumentsByUser user
+  docs <- randomQuery $ GetDocumentsByAuthor (userid user)
   assertEqual "New doc" 1 (length docs)
   let newdoc = head docs
   assertEqual "Links to /d/docid" ("/d/" ++ (show $ documentid newdoc)) (show link)
@@ -286,13 +286,13 @@ testDocumentFromTemplate conn =  withTestEnvironment conn $ do
     doc <- addRandomDocumentWithAuthorAndCondition user (\d -> case documenttype d of
                                                             Template _ -> True
                                                             _ -> False)
-    docs1 <- randomQuery $ GetDocumentsByUser user
+    docs1 <- randomQuery $ GetDocumentsByAuthor (userid user)
     globaltemplates <- readGlobalTemplates
     ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
       <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     req <- mkRequest POST [("template", inText (show $ documentid doc))]
     _ <- runTestKontra req ctx $ handleCreateFromTemplate
-    docs2 <- randomQuery $ GetDocumentsByUser user
+    docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
     assertBool "No new document" (length docs2 == 1+ length docs1)
 
 mkSigDetails :: String -> String -> String -> SignatoryDetails

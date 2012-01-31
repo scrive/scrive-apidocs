@@ -34,7 +34,6 @@ module Doc.Model
   , GetDocumentsByCompany(..)
   , GetDocumentsByCompanyAndTags(..)
   , GetDocumentsBySignatory(..)
-  , GetDocumentsByUser(..)
   , GetSignatoryLinkIDs(..)
   , GetTimeoutedButPendingDocuments(..)
   , MarkDocumentSeen(..)
@@ -1250,7 +1249,7 @@ data GetDocumentStatsByUser = GetDocumentStatsByUser User MinutesTime
                               deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentStatsByUser DocStats where
   dbQuery (GetDocumentStatsByUser user time) = do
-  docs    <- dbQuery $ GetDocumentsByUser user
+  docs    <- dbQuery $ GetDocumentsByAuthor (userid user)
   sigdocs <- dbQuery $ GetDocumentsBySignatory user
   let signaturecount'    = length $ allsigns
       signaturecount1m'  = length $ filter (isSignedNotLaterThanMonthsAgo 1)  $ allsigns
@@ -1336,18 +1335,6 @@ instance DBQuery GetDocumentsBySignatory [Document] where
     docs <- selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?)<>0)")
                                      [toSql (userid user), {- toSql [SignatoryPartner] -} iToSql 255]
     return $ filterDocsWhereActivated (userid user) docs
-
-{- |
-    All documents which are saved for the user which have never been deleted.
-    This doesn't respect sign order, so should be used carefully.
-    This also makes sure that the documents match the user's service.
--}
-data GetDocumentsByUser = GetDocumentsByUser User
-                          deriving (Eq, Ord, Show, Typeable)
-instance DBQuery GetDocumentsByUser [Document] where
-  dbQuery (GetDocumentsByUser user) = do
-        selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?)<>0)")
-                                         [toSql (userid user), toSql [SignatoryAuthor]]
 
 data GetSignatoryLinkIDs = GetSignatoryLinkIDs
                            deriving (Eq, Ord, Show, Typeable)
