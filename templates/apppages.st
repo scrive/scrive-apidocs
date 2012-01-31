@@ -29,6 +29,8 @@ standardHeaderContents=
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/designview.css" media="screen"/>
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/style.css" media="screen"/>
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/calendar.css" media="screen"/>
+        <link rel="stylesheet" type="text/css" href="$prefix$/theme/signaturedrawer.css" media="screen"/>
+
 		<link rel="stylesheet" type="text/css" href="$prefix$/theme/symbols.css" media="screen"/>
 		<link rel="stylesheet" type="text/css" href="$prefix$/theme/buttons.css" media="screen"/>
         <link href="$prefix$/theme/flash.css" rel="stylesheet" type="text/css" media="screen" />
@@ -112,6 +114,8 @@ standardHeaderContents=
         <script src="/js/csvsignatorydesign.js"
                 type="text/javascript"></script>
         <script src="/js/validation.js"
+                type="text/javascript"></script>
+        <script src="/js/signaturedrawer.js"
                 type="text/javascript"></script>
        $if(publicsafe)$
         <script src="/js/jquery.tweet.js"
