@@ -67,6 +67,7 @@ import qualified Data.Map as Map
 import Text.JSON hiding (Result)
 import ForkAction
 import qualified ELegitimation.BankID as BankID
+import Data.Function
 {-
   Document state transitions are described in DocState.
 
@@ -359,7 +360,7 @@ sendInvitationEmail1 ctx document signatorylink = do
   ioRunDB (ctxdbconn ctx) $ dbUpdate $ AddInvitationEvidence documentid signatorylinkid (ctxtime ctx) (ctxipnumber ctx)
 
 {- |
-    Send a reminder email
+    Send a reminder email (and update the modification time on the document)
 -}
 sendReminderEmail :: Kontrakcja m => Maybe BS.ByteString -> Context -> Document -> SignatoryLink -> m SignatoryLink
 sendReminderEmail custommessage ctx doc siglink = do
@@ -373,6 +374,8 @@ sendReminderEmail custommessage ctx doc siglink = do
                       else []
     , from = documentservice doc
     }
+  --this is needed so the last event time in archive looks good
+  _ <- runDBUpdate $ SetDocumentModificationData (documentid doc) (ctxtime ctx)
   return siglink
 
 {- |
@@ -605,11 +608,11 @@ handleSignShow documentid
   case mmh of
     Just mh -> do
       modifyContext (\ctx -> ctx { ctxmagichashes = Map.insert signatorylinkid mh (ctxmagichashes ctx) })
-      toResp (LinkSignDocNoMagicHash documentid signatorylinkid)    
+      toResp (LinkSignDocNoMagicHash documentid signatorylinkid)
     Nothing -> do
       v <- handleSignShow2 documentid signatorylinkid
       (toResp v)
-      
+
 
 handleSignShow2 :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m String
 handleSignShow2 documentid
@@ -948,7 +951,7 @@ handleIssueCSVUpload document = do
                                 , csvcontents = contents
                                 , csvsignatoryindex = csvsigindex
                                 }
-      ndoc <- guardRightM $ runDBUpdate $ AttachCSVUpload (documentid udoc) 
+      ndoc <- guardRightM $ runDBUpdate $ AttachCSVUpload (documentid udoc)
               (signatorylinkid ((documentsignatorylinks udoc) !! csvsigindex)) csvupload
       return $ LinkDesignDoc $ DesignStep2 (documentid ndoc) (Just $ csvsigindex + 1) (Just AfterCSVUpload) signlast
 
@@ -1314,7 +1317,7 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
   signatoriespersonalnumbers <- getAndConcat "signatorypersonalnumber"
   signatoriescompanynumbers  <- getAndConcat "signatorycompanynumber"
   signatoriesemails          <- map (fromMaybe BS.empty) <$> getOptionalFieldList asValidEmail "signatoryemail"
-  signatoriessignorders      <- map (SignOrder . fromMaybe 1 . fmap (max 1 . fst) . BSC.readInteger) <$> 
+  signatoriessignorders      <- map (SignOrder . fromMaybe 1 . fmap (max 1 . fst) . BSC.readInteger) <$>
                                 getAndConcat "signatorysignorder"
                                 -- a little filtering here, but we want signatories to have sign order > 0
   signatoriesroles           <- getAndConcat "signatoryrole"
@@ -1331,7 +1334,7 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
   invitetext <- fmap (fromMaybe defaultInviteMessage) $ getCustomTextField "invitetext"
 
   mcsvsigindex <- getOptionalField asValidNumber "csvsigindex"
-  
+
   let moldcsvupload = msum (map signatorylinkcsvupload (documentsignatorylinks document))
 
   Log.debug $ "updateDocument: " ++ show mcsvsigindex ++ "/" ++ show (csvtitle <$> moldcsvupload) ++ " for #" ++ show documentid
@@ -1408,7 +1411,7 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
                                   then moldcsvupload
                                   else Nothing
                              )
-                              
+
       authordetails2 = (authordetails, if isauthorsig
                                        then [SignatoryPartner, SignatoryAuthor]
                                        else [SignatoryAuthor], Nothing)
@@ -1452,7 +1455,7 @@ getDocumentsForUserByType doctype user = do
                      return $ union mysigdocs mycompanydocs
                    else return mysigdocs
 
-  return . filter ((\d -> documenttype d == doctype)) $ nub mydocuments
+  return . filter ((\d -> documenttype d == doctype)) $ (nubBy $ on (==) documentid) mydocuments
 
 
 handleAttachmentViewForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
@@ -1506,12 +1509,6 @@ handleFilePages did fid = do
       pageinfo (_,width,height) = JSObject $ toJSObject [("width",JSRational True $ toRational width),
                                                          ("height",JSRational True $ toRational height)
                                                         ]
-
--- get rid of duplicates
--- FIXME: nub is very slow
-prepareDocsForList :: [Document] -> [Document]
-prepareDocsForList =
-  sortBy (\d1 d2 -> compare (documentmtime d2) (documentmtime d1)) . nub
 
 handlePageOfDocument :: Kontrakcja m => DocumentID -> m (Either KontraLink Response)
 handlePageOfDocument docid = checkUserTOSGet $ handlePageOfDocument' docid Nothing
@@ -1650,7 +1647,7 @@ handleRubbishReallyDelete = do
             doc <- guardRightM $ runDBUpdate $ ReallyDeleteDocument user did
             case getSigLinkFor doc user of
               Just sl -> runDB $ addSignStatPurgeEvent doc sl ctxtime
-              _ -> return False) 
+              _ -> return False)
     $ map DocumentID docids
   addFlashM flashMessageRubbishHardDeleteDone
   return $ LinkRubbishBin
