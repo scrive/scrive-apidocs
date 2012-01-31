@@ -158,6 +158,10 @@ handleCreateCompany = do
           _ <- runDBUpdate $ SetUserCompanyAdmin (userid user) True
           upgradeduser <- guardJustM $ runDBQuery $ GetUserByID $ userid user
           _ <- addUserCreateCompanyStatEvent (ctxtime ctx) upgradeduser
+          _ <- runDBUpdate 
+                   $ LogHistoryDetailsChanged (userid user) (ctxipnumber ctx) (ctxtime ctx) 
+                                              [("is_company_admin", "false", "true")] 
+                                              (Just $ userid user)
           addFlashM flashMessageCompanyCreated
           return $ LinkCompanyAccounts emptyListParams
     _ -> return $ LinkAccount True  --we could remove this ugly flag with more javascript validation
@@ -176,7 +180,7 @@ handleGetChangeEmail actionid hash = withUserGet $ do
 handlePostChangeEmail :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
 handlePostChangeEmail actionid hash = withUserPost $ do
   mnewemail <- getNewEmailFromAction actionid hash
-  Context{ctxmaybeuser = Just user} <- getContext
+  Context{ctxmaybeuser = Just user, ctxipnumber, ctxtime} <- getContext
   mpassword <- getRequiredField asDirtyPassword "password"
   case mpassword of
     Nothing -> return ()
@@ -185,7 +189,11 @@ handlePostChangeEmail actionid hash = withUserPost $ do
                       (runDBUpdate . SetUserEmail (userservice user) (userid user))
                       mnewemail
       if changed
-        then addFlashM $ flashMessageYourEmailHasChanged
+        then do
+            _ <- runDBUpdate $ LogHistoryDetailsChanged (userid user) ctxipnumber ctxtime 
+                                                     [("email", BS.unpack $ unEmail $ useremail $ userinfo user, BS.unpack $ unEmail $ fromJust mnewemail)] 
+                                                     (Just $ userid user)
+            addFlashM $ flashMessageYourEmailHasChanged
         else addFlashM $ flashMessageProblemWithEmailChange
     Just _password -> do
       addFlashM $ flashMessageProblemWithPassword

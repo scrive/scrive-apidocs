@@ -40,11 +40,11 @@ tableUsersHistory = Table {
     runRaw conn "CREATE INDEX idx_users_history_event_type ON users_history(event_type)"
     runRaw conn $ "ALTER TABLE users_history"
       ++ " ADD CONSTRAINT fk_users_history_user_id FOREIGN KEY(user_id)"
-      ++ " REFERENCES users(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
+      ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
     runRaw conn $ "ALTER TABLE users_history"
       ++ " ADD CONSTRAINT fk_users_history_performing_user_id FOREIGN KEY(performing_user_id)"
-      ++ " REFERENCES users(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
+      ++ " REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
 

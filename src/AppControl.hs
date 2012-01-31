@@ -34,6 +34,7 @@ import Session
 import Stats.Control
 import Templates.Templates
 import User.Model
+import User.History.Model
 import User.UserView as UserView
 import qualified Log (error, debug)
 import qualified Doc.DocControl as DocControl
@@ -427,10 +428,12 @@ handleLoginPost = do
                         }
                         muuser <- runDBQuery $ GetUserByID (userid user)
                         _ <- addUserLoginStatEvent (ctxtime ctx) (fromJust muuser)
+                        _ <- runDBUpdate $ LogHistoryLoginSuccess (userid user) (ctxipnumber ctx) (ctxtime ctx)
                         logUserToContext muuser
                         return BackToReferer
-                Just _ -> do
+                Just u -> do
                         Log.debug $ "User " ++ show email ++ " login failed (invalid password)"
+                        _ <- runDBUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
                         return $ LinkLogin (ctxlocale ctx) $ InvalidLoginInfo linkemail
                 Nothing -> do
                     Log.debug $ "User " ++ show email ++ " login failed (user not found)"

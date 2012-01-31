@@ -12,6 +12,7 @@ module User.History.Model (
   , LogHistoryDetailsChanged(..)
   , LogHistoryUserInfoChanged(..)
   , AddUserHistory(..)
+  , GetUserHistoryByID(..)
   , GetUserHistoryByUserID(..)
   ) where
 
@@ -40,7 +41,7 @@ import User.UserID
 import User.Model
 
 newtype UserHistoryID = UserHistoryID Int64
-  deriving (Typeable)
+  deriving (Eq, Typeable)
 $(newtypeDeriveConvertible ''UserHistoryID)
 $(newtypeDeriveUnderlyingReadShow ''UserHistoryID)
 $(deriveSerialize ''UserHistoryID)
@@ -55,13 +56,13 @@ data UserHistory = UserHistory {
   , uhsystemversion    :: BS.ByteString
   , uhperforminguserid :: Maybe UserID
   }
-  deriving (Show)
+  deriving (Eq, Show)
 
 data UserHistoryEvent = UserHistoryEvent {
     uheventtype :: UserHistoryEventType
   , uheventdata :: Maybe JSValue
   }
-  deriving (Show)
+  deriving (Eq, Show)
 
 data UserHistoryEventType = UserLoginAttempt 
                           | UserLoginSuccess 
@@ -70,7 +71,7 @@ data UserHistoryEventType = UserLoginAttempt
                           | UserAccountCreated 
                           | UserDetailsChange 
                           | UserTOSAccept
-  deriving (Show)
+  deriving (Eq, Show)
 
 instance Convertible UserHistoryEventType SqlValue where
   safeConvert UserLoginAttempt     = return . toSql $ (1 :: Int)
@@ -188,7 +189,7 @@ instance DBUpdate LogHistoryAccountCreated (Maybe UserHistory) where
                        uheventtype = UserAccountCreated
                      , uheventdata = Just $ JSArray $ [JSObject . toJSObject $ [
                         ("field", JSString $ toJSString "email")
-                      , ("oldval", JSNull)
+                      , ("oldval", JSString $ toJSString "")
                       , ("newval", JSString $ toJSString $ BS.unpack $ unEmail email)
                       ]]})
                    ip
