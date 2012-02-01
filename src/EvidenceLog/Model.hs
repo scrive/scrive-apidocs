@@ -133,7 +133,7 @@ insertEvidenceEvent event text mdid actor conn = do
         ++ ", request_ip_v4"
         ++ ", signatory_link_id"
         ++ ", api_user"
-        ++ ") VALUES (?,?,?,?,?,?,?,?,?)"
+        ++ ") VALUES (?,?,?,?,?,?,?,?,?,?)"
   res <- execute st [toSql mdid
                     ,toSql $ actorTime      actor
                     ,toSql text

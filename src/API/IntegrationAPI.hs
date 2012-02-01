@@ -199,18 +199,18 @@ createDocument = do
    doc <- updateDocumentWithDocumentUI d
    return $ toJSObject [ ("document_id",JSString $ toJSString $ show $ documentid doc)]
 
-createDocFromTemplate ::(APIContext c, Kontrakcja m) =>
+createDocFromTemplate ::(Kontrakcja m) =>
                         DocumentID
                         -> BS.ByteString
                         -> User
                         -> Maybe Company
                         -> MinutesTime
-                        -> APIFunction m c (Maybe Document)
+                        -> IntegrationAPIFunction m (Maybe Document)
 createDocFromTemplate templateid title user mcompany time = do
   ctx <- getContext
-  let Just Service { serviceid = ServiceID {unServiceID = sid} } = ctxservice ctx
-      mecid = maybe Nothing companyexternalid mcompany
-  let ia = IntegrationAPIActor time (ctxipnumber ctx) (BS.toString sid) (BS.toString . unExternalCompanyID <$> mecid)
+  sid <- serviceid <$> service <$> ask
+  let mecid = maybe Nothing companyexternalid mcompany
+  let ia = IntegrationAPIActor time (ctxipnumber ctx) (BS.toString $ unServiceID sid) (BS.toString . unExternalCompanyID <$> mecid)
   edoc <- runDBUpdate $ SignableFromDocumentIDWithUpdatedAuthor user mcompany templateid ia
   when (isLeft edoc) $
     throwApiError API_ERROR_OTHER $ "Cannot create document!"
@@ -220,19 +220,19 @@ createDocFromTemplate templateid title user mcompany time = do
     Log.integration $ "Could not set title on doc " ++ show (documentid doc)
   return $ either (const $ Just doc) Just edoc'
 
-createDocFromFiles :: (Kontrakcja m, APIContext c) =>
+createDocFromFiles :: (Kontrakcja m) =>
                       BS.ByteString
                       -> DocumentType
                       -> [(BS.ByteString, BS.ByteString)]
                       -> User
                       -> Maybe Company
                       -> MinutesTime
-                      -> APIFunction m c (Maybe Document)
+                      -> IntegrationAPIFunction m (Maybe Document)
 createDocFromFiles title doctype files user mcompany time = do
   ctx <- getContext
-  let Just Service { serviceid = ServiceID {unServiceID = sid} } = ctxservice ctx
-      mecid = maybe Nothing companyexternalid mcompany
-  let ia = IntegrationAPIActor time (ctxipnumber ctx) (BS.toString sid) (BS.toString . unExternalCompanyID <$> mecid)
+  sid <- serviceid <$> service <$> ask
+  let mecid = maybe Nothing companyexternalid mcompany
+  let ia = IntegrationAPIActor time (ctxipnumber ctx) (BS.toString $ unServiceID sid) (BS.toString . unExternalCompanyID <$> mecid)
   edoc <- runDBUpdate $ NewDocument user mcompany title doctype ia
   case edoc of
     Left _ -> throwApiError API_ERROR_OTHER $ "Cannot create document"
@@ -250,9 +250,8 @@ createDocFromFiles title doctype files user mcompany time = do
 updateDocumentWithDocumentUI :: Kontrakcja m => Document -> IntegrationAPIFunction m Document
 updateDocumentWithDocumentUI doc = do
   ctx <- getContext    
-  let Just service = ctxservice ctx
-      sid = serviceid service
-      actor = IntegrationAPIActor (ctxtime ctx) (ctxipnumber ctx) (BS.toString $ unServiceID sid) Nothing
+  sid <- serviceid <$> service <$> ask
+  let actor = IntegrationAPIActor (ctxtime ctx) (ctxipnumber ctx) (BS.toString $ unServiceID sid) Nothing
   mailfooter <- fromJSONField "mailfooter"
   ndoc <- runDBUpdate $ SetDocumentUI (documentid doc) ((documentui doc) {documentmailfooter = mailfooter}) actor
   return $ either (const doc) id ndoc
@@ -405,9 +404,10 @@ setDocumentTag =  do
   mtag <- fromJSONLocal "tag" $ do
     liftM2 pairMaybe (fromJSONField "name") (fromJSONField "value")
   when (isNothing mtag) $ throwApiError API_ERROR_MISSING_VALUE "Could not read tag name or value"
-  Context{ctxtime,ctxipnumber,ctxservice = Just (Service {serviceid = ServiceID sname})} <- getContext
+  sid <- serviceid <$> service <$> ask
+  Context{ctxtime,ctxipnumber} <- getContext
   let tags = addTag (documenttags doc) (fromJust mtag)
-      actor = IntegrationAPIActor ctxtime ctxipnumber (BS.toString sname) Nothing
+      actor = IntegrationAPIActor ctxtime ctxipnumber (BS.toString $ unServiceID sid) Nothing
   res <- runDBUpdate $ SetDocumentTags (documentid doc) tags actor
   when (isLeft res) $ throwApiError API_ERROR_NO_USER $ "Changing tag problem:" ++ fromLeft res
   return $ toJSObject []
@@ -415,14 +415,15 @@ setDocumentTag =  do
 
 removeDocument  :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 removeDocument = do
-    Context{ctxtime, ctxipnumber, ctxservice = Just service} <- getContext
+    Context{ctxtime, ctxipnumber} <- getContext
+    sid <- serviceid <$> service <$> ask
     doc <- documentFromParam
     -- we only control the author through the integration api
     mauthor <- maybe (return Nothing)
                      (runDBQuery . GetUserByID)
                      (getAuthorSigLink doc >>= maybesignatory)
     when (isNothing mauthor) $ throwApiError API_ERROR_NO_USER $ "Error while removing a document: Failed to find author"
-    let actor = IntegrationAPIActor ctxtime ctxipnumber (BS.toString $ unServiceID $ serviceid service) Nothing
+    let actor = IntegrationAPIActor ctxtime ctxipnumber (BS.toString $ unServiceID sid) Nothing
     res <- runDBUpdate $ ArchiveDocument (fromJust mauthor) (documentid doc) actor
     when (isLeft res) $ throwApiError API_ERROR_NO_DOCUMENT $ "Error while removing a document: " ++ fromLeft res
     return $ toJSObject []
