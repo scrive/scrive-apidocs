@@ -26,7 +26,7 @@ import Stats.Control
 
 import Control.Monad.Error
 import Data.Functor
-import Data.List
+--import Data.List
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Happstack.State (query, update)

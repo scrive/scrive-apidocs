@@ -1119,18 +1119,21 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (PreparationToPending a) (Ei
       Just document ->
         case checkPreparationToPending document of
           [] -> do
-            let tt = (\days -> (days * 24 *60) `minutesAfter` time) <$> documentdaystosign document
+            let mtt = (\days -> (days * 24 *60) `minutesAfter` time) <$> documentdaystosign document
+                t = case mtt of
+                  Just tt -> " Timeout time set to " ++ formatMinutesTimeUTC tt ++ " UTC."
+                  _ -> ""
             r <- runUpdateStatement "documents"
                  [ sqlField "status" $ Pending
                  , sqlField "mtime" time
-                 , sqlField "timeout_time" tt
+                 , sqlField "timeout_time" mtt
                  , sqlLogAppend time ("Document put into Pending state")
                  ]
                 "WHERE id = ? AND type = ?" [ toSql docid, toSql (toDocumentSimpleType (Signable undefined))]
             when (r == 1) $
               ignore $ dbUpdate $ InsertEvidenceEvent
               PreparationToPendingEvidence
-              ("Document was put into Pending state by " ++ actorWho actor ++ ". Timeout time set to " ++ formatMinutesTimeUTC tt ++ " UTC.")
+              ("Document was put into Pending state by " ++ actorWho actor ++ "." ++ t)
               (Just docid)
               actor
             getOneDocumentAffected "PreparationToPending" r docid

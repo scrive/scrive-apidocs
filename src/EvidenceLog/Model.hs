@@ -210,7 +210,8 @@ data EvidenceEventType =
   ResetSignatoryDetailsEvidence |
   AdminOnlySaveForUserEvidence |
   SignableFromDocumentEvidence |
-  TemplateFromDocumentEvidence
+  TemplateFromDocumentEvidence |
+  AttachCSVUploadEvidence
   deriving (Eq, Show, Read, Ord)
 $(enumDeriveConvertible ''EvidenceEventType)
 
