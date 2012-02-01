@@ -260,14 +260,13 @@ resetPasswordMail hostname user setpasslink = do
     field "passwordlink" $ show setpasslink
     field "ctxhostpart"  $ hostname
 
-newUserMail :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> Bool -> m Mail
-newUserMail hostpart emailaddress personname activatelink vip = do
+newUserMail :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
+newUserMail hostpart emailaddress personname activatelink = do
   kontramail "newUserMail" $ do
     field "personname"   $ BS.toString personname
     field "email"        $ BS.toString emailaddress
     field "activatelink" $ show activatelink
     field "ctxhostpart"  $ hostpart
-    field "vip"            vip
 
 viralInviteMail :: TemplatesMonad m => Context -> BS.ByteString -> KontraLink -> m Mail
 viralInviteMail ctx invitedemail setpasslink = do

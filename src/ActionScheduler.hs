@@ -22,7 +22,7 @@ import qualified Data.ByteString.UTF8 as BS hiding (length)
 
 import AppControl (AppConf(..))
 import ActionSchedulerState
-import Archive.Invariants
+import Archive.Invariants ()
 import DB.Classes
 import Doc.DocStateData
 import Doc.Model
@@ -177,6 +177,12 @@ documentProblemsCheckEmails = map BS.fromString ["bugs@skrivapa.se"]
 
 runArchiveProblemsCheck :: ActionScheduler ()
 runArchiveProblemsCheck = do
+  return ()
+
+{-
+
+  This requires reorganization as there is no difference between personal and company documents now.
+
   users <- runDBQuery $ GetUsers
   personaldocs <- mapM getPersonalDocs users
   superviseddocs <- mapM getSupervisedDocs users
@@ -205,6 +211,8 @@ mailArchiveProblemsCheck msg = do
                                                   }
 archiveProblemsCheckEmails :: [BS.ByteString]
 archiveProblemsCheckEmails = map BS.fromString ["emily@scrive.com"]
+
+-}
 
 deleteAction :: ActionID -> ActionScheduler ()
 deleteAction aid = do

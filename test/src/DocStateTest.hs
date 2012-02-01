@@ -196,12 +196,9 @@ docStateTests conn = testGroup "DocState" [
   testThat "ReallyDeleteDocument fails if the document hasn't been archived" conn testReallyDeleteNotArchivedLeft,
 
   testThat "GetDocumentsByAuthor doesn't return archived docs" conn testGetDocumentsByAuthorNoArchivedDocs,
-  testThat "GetDocumentsByCompany doesn't return archived docs" conn testGetDocumentsByCompanyNoArchivedDocs,
   testThat "GetDocumentsByCompanyAndTags doesn't return archived docs" conn testGetDocumentsByCompanyAndTagsNoArchivedDocs,
   testThat "GetDocumentsBySignatory doesn't return archived docs" conn testGetDocumentsBySignatoryNoArchivedDocs,
-  testThat "GetDocumentsByUser doesn't return archived docs" conn testGetDocumentsByUserNoArchivedDocs,
-  testThat "GetDeletedDocumentsByUser returns archived docs" conn testGetDeletedDocumentsByUserArchivedDocs,
-  testThat "GetDeletedDocumentsByCompany returns archived docs" conn testGetDeletedDocumentsByCompanyArchivedDocs
+  testThat "GetDeletedDocumentsByUser returns archived docs" conn testGetDeletedDocumentsByUserArchivedDocs
 
   ]
 
@@ -500,10 +497,6 @@ testGetDocumentsByAuthorNoArchivedDocs :: DB ()
 testGetDocumentsByAuthorNoArchivedDocs =
   checkQueryDoesntContainArchivedDocs (GetDocumentsByAuthor . userid)
 
-testGetDocumentsByCompanyNoArchivedDocs :: DB ()
-testGetDocumentsByCompanyNoArchivedDocs =
-  checkQueryDoesntContainArchivedDocs GetDocumentsByCompany
-
 testGetDocumentsByCompanyAndTagsNoArchivedDocs :: DB ()
 testGetDocumentsByCompanyAndTagsNoArchivedDocs =
   checkQueryDoesntContainArchivedDocs (\u -> GetDocumentsByCompanyAndTags Nothing (fromJust $ usercompany u) [])
@@ -511,10 +504,6 @@ testGetDocumentsByCompanyAndTagsNoArchivedDocs =
 testGetDocumentsBySignatoryNoArchivedDocs :: DB ()
 testGetDocumentsBySignatoryNoArchivedDocs =
   checkQueryDoesntContainArchivedDocs GetDocumentsBySignatory
-
-testGetDocumentsByUserNoArchivedDocs :: DB ()
-testGetDocumentsByUserNoArchivedDocs =
-  checkQueryDoesntContainArchivedDocs GetDocumentsByUser
 
 checkQueryDoesntContainArchivedDocs :: DBQuery q [Document] => (User -> q) -> DB ()
 checkQueryDoesntContainArchivedDocs qry = doTimes 10 $ do
@@ -533,10 +522,6 @@ checkQueryDoesntContainArchivedDocs qry = doTimes 10 $ do
 testGetDeletedDocumentsByUserArchivedDocs :: DB ()
 testGetDeletedDocumentsByUserArchivedDocs =
   checkQueryContainsArchivedDocs GetDeletedDocumentsByUser
-
-testGetDeletedDocumentsByCompanyArchivedDocs :: DB ()
-testGetDeletedDocumentsByCompanyArchivedDocs =
-  checkQueryContainsArchivedDocs GetDeletedDocumentsByCompany
 
 checkQueryContainsArchivedDocs :: DBQuery q [Document] => (User -> q) -> DB ()
 checkQueryContainsArchivedDocs qry = doTimes 10 $ do
