@@ -9,15 +9,13 @@ module AppControl
 
     -- exported for the sake of unit tests
     , handleLoginPost
-    , getDocumentLocale
-    , getUserLocale
+    , getStandardLocale
     , signupPagePost
     ) where
 
 import AppConf
 import API.Service.Model
 
-import ActionSchedulerState
 import AppView as V
 import DB.Classes
 import Doc.DocStateData
@@ -25,7 +23,6 @@ import InputValidation
 import Kontra
 import KontraLink
 import Mails.SendMail
-import Numeric
 import MinutesTime
 import Misc
 --import PayEx.PayExInterface ()-- Import so at least we check if it compiles
@@ -37,7 +34,6 @@ import User.Model
 import User.History.Model
 import User.UserView as UserView
 import qualified Log (error, debug)
-import qualified Doc.DocControl as DocControl
 import qualified FlashMessage as F
 import qualified MemCache
 import qualified TrustWeaver as TW
@@ -58,7 +54,6 @@ import DB.Nexus
 import GHC.Int (Int64(..))
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Happstack.Server.Internal.Cookie
-import Happstack.State (query)
 import Network.Socket
 import System.Directory
 import System.Time
@@ -83,67 +78,26 @@ data AppGlobals
                  , docscache       :: MVar (Map.Map FileID JpegPages)
                  }
 
-{- |
-    If the current request is referring to a document then this will
-    return the locale of that document.
--}
-getDocumentLocale :: Nexus -> (ServerMonad m, Functor m, MonadIO m) => m (Maybe Locale)
-getDocumentLocale conn = do
-  rq <- askRq
-  let docids = catMaybes . map (fmap fst . listToMaybe . readSigned readDec) $ rqPaths rq
-  mdoclocales <- ioRunDB conn $ mapM (DocControl.getDocumentLocale . DocumentID) docids
-  return . listToMaybe $ catMaybes mdoclocales
 
 {- |
     Determines the locale of the current user (whether they are logged in or not), by checking
     their settings, the request, and cookies.
 -}
-getUserLocale :: (MonadPlus m, MonadIO m, ServerMonad m, FilterMonad Response m, Functor m, HasRqData m) =>
-                   Nexus -> Maybe User -> m Locale
-getUserLocale conn muser = do
+getStandardLocale :: (HasLocale a, HasRqData m, ServerMonad m, FilterMonad Response m, MonadIO m, MonadPlus m, Functor m) => Maybe a -> m Locale
+
+getStandardLocale muser = do
   rq <- askRq
-  currentcookielocale <- optional (readCookieValue "locale")
-  activationlocale <- getActivationLocale rq
-  let userlocale = locale <$> usersettings <$> muser
-      urlregion = (listToMaybe $ rqPaths rq) >>= regionFromCode
+  currentcookielocale <- optional $ readCookieValue "locale"
+  let urlregion = (listToMaybe $ rqPaths rq) >>= regionFromCode
       urllang = (listToMaybe . drop 1 $ rqPaths rq) >>= langFromCode
       urllocale = case (urlregion, urllang) of
                     (Just region, Just lang) -> Just $ mkLocale region lang
                     _ -> Nothing
-  doclocale <- getDocumentLocale conn
-  let browserlocale = getBrowserLocale rq
-  let newlocale = firstOf [ activationlocale
-                          , userlocale
-                          , doclocale
-                          , urllocale
-                          , currentcookielocale
-                          , Just browserlocale
-                          ]
-  let newlocalecookie = mkCookie "locale" (show newlocale)
+      browserlocale =  mkLocaleFromRegion $ regionFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
+      newlocale = fromMaybe browserlocale $ msum [urllocale, (getLocale <$> muser), currentcookielocale]
+      newlocalecookie = mkCookie "locale" (show newlocale)
   addCookie (MaxAge (60*60*24*366)) newlocalecookie
   return newlocale
-  where
-    getBrowserLocale rq =
-      mkLocaleFromRegion $ regionFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
-    -- try and get the locale from the current activation user by checking the path for action ids, and giving them a go
-    getActivationLocale rq = do
-      let actionids = catMaybes . map (fmap fst . listToMaybe . readSigned readDec) $ rqPaths rq
-      mactionlocales <- mapM (getActivationLocaleFromAction . ActionID) actionids
-      return . listToMaybe $ catMaybes mactionlocales
-    getActivationLocaleFromAction aid = do
-      maction <- query $ GetAction aid
-      mactionuser <- case fmap actionType maction of
-                       Just (AccountCreatedBySigning _ uid _ _) -> ioRunDB conn . dbQuery $ GetUserByID uid
-                       Just (AccountCreated uid _) -> ioRunDB conn . dbQuery $ GetUserByID uid
-                       _ -> return Nothing
-      return $ fmap (locale . usersettings) mactionuser
-    optional c = (liftM Just c) `mplus` (return Nothing)
-    firstOf :: Bounded a => [Maybe a] -> a
-    firstOf opts =
-      case find isJust opts of
-        Just val -> fromJust val
-        Nothing -> defaultValue
-
 
 {- |
     Handles an error by displaying the home page with a modal error dialog.
@@ -266,7 +220,7 @@ appHandler handleRoutes appConf appGlobals = do
       return res
 
     createContext rq session = do
-      hostpart <- getHostpart
+      currhostpart <- getHostpart
       -- FIXME: we should read some headers from upstream proxy, if any
       let peerhost = case getHeader "x-real-ip" rq of
                        Just name -> BS.toString name
@@ -290,7 +244,9 @@ appHandler handleRoutes appConf appGlobals = do
       muser <- getUserFromSession conn session
       mcompany <- getCompanyFromSession conn session
       location <- getLocationFromSession session
-      mservice <- ioRunDB conn . dbQuery . GetServiceByLocation . toServiceLocation =<< currentLink
+      mservice <- currentLink >>= \clink -> if (hostpart appConf `isPrefixOf` clink)
+                                             then return Nothing
+                                             else ioRunDB conn $ dbQuery $ GetServiceByLocation $ toServiceLocation clink
       flashmessages <- withDataFn F.flashDataFromCookie $ maybe (return []) $ \fval ->
           case F.fromCookieValue (aesConfig appConf) fval of
                Just flashes -> return flashes
@@ -303,13 +259,12 @@ appHandler handleRoutes appConf appGlobals = do
       templates2 <- liftIO $ maybeReadTemplates (templates appGlobals)
 
       -- work out the region and language
-      doclocale <- getDocumentLocale conn
-      userlocale <- getUserLocale conn muser
+      userlocale <- getStandardLocale muser
 
       let elegtrans = getELegTransactions session
           ctx = Context
                 { ctxmaybeuser = muser
-                , ctxhostpart = hostpart
+                , ctxhostpart = currhostpart
                 , ctxflashmessages = flashmessages
                 , ctxtime = minutestime
                 , ctxnormalizeddocuments = docscache appGlobals
@@ -322,7 +277,7 @@ appHandler handleRoutes appConf appGlobals = do
                 , ctxtemplates = localizedVersion userlocale templates2
                 , ctxglobaltemplates = templates2
                 , ctxlocale = userlocale
-                , ctxlocaleswitch = isNothing $ doclocale
+                , ctxlocaleswitch = True
                 , ctxmailsconfig = mailsConfig appConf
                 , ctxtwconf = TW.TrustWeaverConf
                               { TW.signConf = trustWeaverSign appConf

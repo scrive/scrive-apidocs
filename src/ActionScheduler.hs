@@ -25,7 +25,7 @@ import ActionSchedulerState
 import Archive.Invariants
 import DB.Classes
 import Doc.DocStateData
-import Doc.Transitory
+import Doc.Model
 import KontraLink
 import MinutesTime
 import Mails.MailsData
@@ -119,7 +119,7 @@ evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid d
         sendReminder = do
             now <- liftIO getMinutesTime
             sd <- ask
-            mdoc <- doc_query $ GetDocumentByDocumentID docid
+            mdoc <- runDBQuery $ GetDocumentByDocumentID docid
             let doctitle = maybe BS.empty documenttitle mdoc
             (runDBQuery $ GetUserByID uid) >>= maybe (return ()) (\user -> do
                 let mailfunc :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
@@ -151,7 +151,7 @@ runDocumentProblemsCheck :: ActionScheduler ()
 runDocumentProblemsCheck = do
   sd <- ask
   now <- liftIO getMinutesTime
-  docs <- doc_query $ GetDocuments Nothing
+  docs <- runDBQuery $ GetDocuments Nothing
   let probs = listInvariantProblems now docs
   when (probs /= []) $ mailDocumentProblemsCheck $
     "<p>"  ++ (hostpart $ sdAppConf sd) ++ "/dave/document/" ++
@@ -187,10 +187,10 @@ runArchiveProblemsCheck = do
   return ()
   where
     getPersonalDocs user = do
-      docs <- doc_query $ GetDocumentsBySignatory user
+      docs <- runDBQuery $ GetDocumentsBySignatory user
       return (user, docs)
     getSupervisedDocs user = do
-      docs <- doc_query $ GetDocumentsByCompany user
+      docs <- runDBQuery $ GetDocumentsByCompany user
       return (user, docs)
 
 mailArchiveProblemsCheck :: String -> ActionScheduler ()
@@ -221,9 +221,9 @@ getGlobalTemplates = do
 
 timeoutDocuments :: MinutesTime -> ActionScheduler ()
 timeoutDocuments now = do
-    docs <- doc_query $ GetTimeoutedButPendingDocuments now
+    docs <- runDBQuery $ GetTimeoutedButPendingDocuments now
     forM_ docs $ \doc -> do
-        edoc <- doc_update $ TimeoutDocument (documentid doc) now
+        edoc <- runDBUpdate $ TimeoutDocument (documentid doc) now
         case edoc of
           Left _ -> return ()
           Right doc' -> do

@@ -15,7 +15,6 @@ module FlashMessage (
     ) where
 
 import Control.Applicative ((<$>))
-import Control.Monad (mplus)
 import Control.Monad.Trans (MonadIO)
 import Happstack.Server
 import Happstack.Util.Common (readM)
@@ -27,7 +26,7 @@ import qualified Data.ByteString.Base64 as B64
 
 import Cookies
 import Crypto
-import Misc (isHTTPS)
+import Misc (isHTTPS, optional)
 import Templates.Templates
 
 data FlashType
@@ -112,7 +111,6 @@ addFlashCookie flashesdata = do
 
 flashDataFromCookie :: RqData (Maybe String)
 flashDataFromCookie = optional $ lookCookieValue "flashes"
-    where optional c = (Just <$> c) `mplus` (return Nothing)
 
 removeFlashCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m, Functor m) => m ()
 removeFlashCookie = do

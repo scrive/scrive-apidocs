@@ -14,7 +14,7 @@ import ActionSchedulerState
 import AppView
 import DB.Classes
 import DB.Types
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStateData
 import Company.Model
 import InputValidation
@@ -421,7 +421,7 @@ handlePostUserSecurity = do
 -}
 isUserDeletable :: Kontrakcja m => User -> m Bool
 isUserDeletable user = do
-  userdocs <- doc_query $ GetDocumentsByUser user
+  userdocs <- runDBQuery $ GetDocumentsByUser user
   return $ all isDeletableDocument userdocs
 
 handleViralInvite :: Kontrakcja m => m KontraLink
@@ -665,6 +665,7 @@ handleAccountSetupGet aid hash = do
         guardMagicTokenMatch hash action
         getUserFromAction action
       Nothing -> getUserByEmail
+  when (isJust muser) $ switchLocale (getLocale $ fromJust muser)
   case (maybe False (isJust . userhasacceptedtermsofservice) muser, maction) of
     (True, _) -> do
       -- seems like a security risk.  you can just feed random numbers with emails in the get param
@@ -717,6 +718,7 @@ handleAccountSetupPost aid hash = do
     Just action -> do
       guardMagicTokenMatch hash action
       user <- guardJustM $ getOrCreateActionUser action
+      switchLocale (getLocale user)
       if isJust $ userhasacceptedtermsofservice user
         then addFlashM flashMessageUserAlreadyActivated
         else do
@@ -802,6 +804,7 @@ guardMagicTokenMatch expectedtoken action =
 handleActivate :: Kontrakcja m => ActionID -> MagicHash -> SignupMethod -> User -> m (Maybe User)
 handleActivate aid hash signupmethod actvuser = do
   Log.debug $ "Activating user account: "  ++ (BS.toString $ getEmail actvuser)
+  switchLocale (getLocale actvuser)
   ctx <- getContext
   mtos <- getDefaultedField False asValidCheckBox "tos"
   -- unless they're signing up from the sign view we require a fstname and a sndname
@@ -866,7 +869,8 @@ handlePasswordReminderGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
 handlePasswordReminderGet aid hash = do
     muser <- getUserFromActionOfType PasswordReminderID aid hash
     case muser of
-         Just _ -> do
+         Just user -> do
+             switchLocale (getLocale user)
              extendActionEvalTimeToOneDayMinimum aid
              addFlashM $ modalNewPasswordView aid hash
              sendRedirect LinkUpload
@@ -879,7 +883,9 @@ handlePasswordReminderPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraL
 handlePasswordReminderPost aid hash = do
     muser <- getUserFromActionOfType PasswordReminderID aid hash
     case muser of
-         Just user -> handleChangePassword user
+         Just user -> do
+             switchLocale (getLocale user)
+             handleChangePassword user
          Nothing   -> do
              addFlashM flashMessagePasswordChangeLinkNotValid
              getHomeOrUploadLink
@@ -925,7 +931,7 @@ handleAccountRemovalFromSign :: Kontrakcja m => User -> SignatoryLink -> ActionI
 handleAccountRemovalFromSign user siglink aid hash = do
   Context{ctxtime} <- getContext
   doc <- removeAccountFromSignAction aid hash
-  doc1 <- guardRightM $ doc_update . ArchiveDocument user $ documentid doc
+  doc1 <- guardRightM $ runDBUpdate . ArchiveDocument user $ documentid doc
   _ <- case getSigLinkFor doc1 (signatorylinkid siglink) of
     Just sl -> runDB $ addSignStatDeleteEvent doc1 sl ctxtime
     _       -> return False

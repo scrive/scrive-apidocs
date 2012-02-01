@@ -28,7 +28,7 @@ import Control.Exception
 import System.Timeout
 --import Doc.DocStateData
 import qualified Log
---import Doc.Transitory
+--import Doc.Model
 import MinutesTime
 import Doc.Model
 import Control.Monad

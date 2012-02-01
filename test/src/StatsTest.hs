@@ -3,7 +3,7 @@ module StatsTest (statsTests) where
 
 import DB.Classes
 import User.Model
-import Doc.Transitory
+import Doc.Model
 import Doc.DocUtils
 import Doc.DocStateData
 import Misc
@@ -21,7 +21,6 @@ import Test.Framework.Providers.HUnit (testCase)
 import Stats.Control
 import Stats.Model
 import StateHelper
-import Mails.MailsUtil
 
 import qualified Data.ByteString.UTF8 as BS
 

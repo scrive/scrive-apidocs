@@ -28,7 +28,7 @@ import qualified Mails.Model as M
 -- Needed only for FROM address
 import User.Region
 import Util.SignatoryLinkUtils
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStateData
 
 scheduleEmailSendout :: DBMonad m => MailsConfig -> Mail -> m ()
@@ -88,7 +88,7 @@ wrapHTML body = concat [
 fromNiceAddress :: MailInfo -> String -> DB String
 fromNiceAddress (None) servicename = return servicename
 fromNiceAddress (Invitation did _) servicename = do
-  mdoc <- doc_query' $ GetDocumentByDocumentID did
+  mdoc <- dbQuery $ GetDocumentByDocumentID did
   case mdoc of
     Nothing -> return $ servicename
     Just doc -> case (documentregion doc, BSU.toString $ getAuthorName doc) of

@@ -10,11 +10,6 @@ Description:
 Cabal-version: >= 1.6.0.0
 Build-type: Custom
 
-Flag documents-in-postgres
-  Description: New database layout for documents
-  Manual: True
-  Default: True
-
 Flag pdfseal
   Description: Build pdfseal
   Manual: True
@@ -159,9 +154,6 @@ Executable kontrakcja-server
   if impl(ghc >= 7)
     ghc-options: -rtsopts
 
-  if flag(documents-in-postgres)
-    cpp-options: -DDOCUMENTS_IN_POSTGRES
-
   Build-depends: Crypto == 4.2.*
   Build-depends: HDBC == 2.3.1.0
   Build-depends: HDBC-postgresql == 2.3.2.0
@@ -191,7 +183,7 @@ Executable kontrakcja-server
   Build-depends: happstack-data==6.0.0
   Build-depends: happstack-ixset==6.0.1
   Build-depends: happstack-server==6.4.5
-  Build-depends: happstack-state==6.1.2
+  Build-depends: happstack-state==6.1.1
   Build-depends: happstack-static-routing==0.2
   Build-depends: happstack-util==6.0.2
   Build-depends: happstack==6.0.5
@@ -336,9 +328,6 @@ Executable kontrakcja-test
     GHC-Options: -threaded
   if os(windows)
     cpp-options: -DWINDOWS
-
-  if flag(documents-in-postgres)
-    cpp-options: -DDOCUMENTS_IN_POSTGRES
 
   if !flag(test-companystate)
     cpp-options: -DNO_COMPANYSTATE

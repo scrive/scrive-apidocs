@@ -23,7 +23,7 @@ import Data.List
 --import ScriveByMail.Control
 import DB.Classes
 import Context
-import Doc.Transitory
+import Doc.Model
 import Misc
 import StateHelper
 import User.Model
@@ -86,7 +86,7 @@ testSuccessfulDocCreation conn emlfile sigs = withMyTestEnvironment conn $ \tmpd
     Log.debug $ "Here's what I got back from handleMailCommand: " ++ show res
     let mdocid = maybeRead res
     assertBool ("documentid is not given: " ++ show mdocid) $ isJust mdocid
-    mdoc <- doc_query' $ GetDocumentByDocumentID $ fromJust mdocid
+    mdoc <- dbQuery $ GetDocumentByDocumentID $ fromJust mdocid
     assertBool "document was really created" $ isJust mdoc
     let doc = fromJust mdoc
     assertBool ("document should have " ++ show sigs ++ " signatories has " ++ show (length (documentsignatorylinks doc)) ++": " ++ show (documentsignatorylinks doc)) $ length (documentsignatorylinks doc) == sigs
@@ -94,7 +94,7 @@ testSuccessfulDocCreation conn emlfile sigs = withMyTestEnvironment conn $ \tmpd
     assertBool ("document status should be pending, is " ++ show (documentstatus doc)) $ documentstatus doc == Pending
     assertBool "document has file no attached" $ (length $ documentfiles doc) == 1
     assertBool ("doc has iso encoded title " ++ show (documenttitle doc)) $ not $ "=?iso" `isInfixOf` (BS.toString $ documenttitle doc)
-    Just doc' <- doc_query' $ GetDocumentByDocumentID $ fromJust mdocid
+    Just doc' <- dbQuery $ GetDocumentByDocumentID $ fromJust mdocid
     assertBool "document is in error!" $ not $ isDocumentError doc'
 
 
@@ -121,7 +121,7 @@ successChecks sigs res = do
         equalsKey (=~ "^Document #[0-9]+ created$") "message" res
     let mdocid = lookup "documentid" res
     assertBool "documentid is given" $ isJust mdocid
-    mdoc <- doc_query $ GetDocumentByDocumentID $ read $ fromJust mdocid
+    mdoc <- (runDB . dbQuery) $ GetDocumentByDocumentID $ read $ fromJust mdocid
     assertBool "document was really created" $ isJust mdoc
     let doc = fromJust mdoc
     assertBool ("document should have " ++ show sigs ++ " signatories has " ++ show (length (documentsignatorylinks doc))) $ length (documentsignatorylinks doc) == sigs

@@ -29,7 +29,7 @@ import DB.Classes
 import Company.Model
 import CompanyAccounts.Model
 import CompanyAccounts.CompanyAccountsView
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStateData
 import InputValidation
 import Kontra
@@ -68,7 +68,7 @@ handleCompanyAccounts = withCompanyAdmin $ \(_user, company) -> do
     Gets the ajax data for the company accounts list.
 -}
 handleCompanyAccountsForAdminOnly :: Kontrakcja m => CompanyID -> m JSValue
-handleCompanyAccountsForAdminOnly cid = onlyAdmin $ do
+handleCompanyAccountsForAdminOnly cid = onlySalesOrAdmin $ do
   handleCompanyAccountsInternal cid
 
 {- |
@@ -423,8 +423,8 @@ handlePostBecomeCompanyAccount cid = withUserPost $ do
 resaveDocsForUser :: Kontrakcja m => UserID -> m ()
 resaveDocsForUser uid = do
   user <- runDBOrFail $ dbQuery $ GetUserByID uid
-  userdocs <- doc_query $ GetDocumentsByUser user
-  mapM_ (\doc -> doc_update $ AdminOnlySaveForUser (documentid doc) user) userdocs
+  userdocs <- runDBQuery $ GetDocumentsByUser user
+  mapM_ (\doc -> runDBUpdate $ AdminOnlySaveForUser (documentid doc) user) userdocs
   return ()
 
 {- |

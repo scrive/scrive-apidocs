@@ -43,7 +43,7 @@ import Happstack.Server hiding (simpleHTTP)
 import Misc
 import Kontra
 import Administration.AdministrationView
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStateData
 import qualified Data.ByteString.Char8 as BSC
 import Company.Model
@@ -365,8 +365,8 @@ handleUserChange uid = onlySalesOrAdmin $ do
 resaveDocsForUser :: Kontrakcja m => UserID -> m ()
 resaveDocsForUser uid = onlySalesOrAdmin $ do
   user <- runDBOrFail $ dbQuery $ GetUserByID uid
-  userdocs <- doc_query $ GetDocumentsByUser user
-  mapM_ (\doc -> doc_update $ AdminOnlySaveForUser (documentid doc) user) userdocs
+  userdocs <- runDBQuery $ GetDocumentsByUser user
+  mapM_ (\doc -> runDBUpdate $ AdminOnlySaveForUser (documentid doc) user) userdocs
   return ()
 
 {- | Handling company details change. It reads user info change -}
@@ -619,7 +619,7 @@ showFunctionalityStats :: Kontrakcja m => m String
 showFunctionalityStats = onlySalesOrAdmin $ do
   ctx@Context{ ctxtime } <- getContext
   users <- runDBQuery GetUsers
-  documents <- doc_query $ GetDocuments $ currentServiceID ctx
+  documents <- runDBQuery $ GetDocuments $ currentServiceID ctx
   adminFunctionalityStatsPage (mkStats ctxtime users)
                               (mkStats ctxtime documents)
   where
@@ -665,7 +665,7 @@ showDocuments = onlySalesOrAdmin $ adminDocuments =<< getContext
 jsonDocuments :: Kontrakcja m => m JSValue
 jsonDocuments = onlySalesOrAdmin $ do
     srvs <- runDBQuery $ GetServices
-    docs <- join <$> (sequence $ map (doc_query . GetDocuments) (Nothing:(map (Just . serviceid) srvs)))
+    docs <- join <$> (sequence $ map (runDBQuery . GetDocuments) (Nothing:(map (Just . serviceid) srvs)))
     params <- getListParamsNew
     let documents = documentsSortSearchPage params docs
     return $ JSObject
@@ -733,7 +733,7 @@ resealFile :: Kontrakcja m => DocumentID -> m KontraLink
 resealFile docid = onlyAdmin $ do
   Log.debug $ "Trying to reseal document "++ show docid ++" | Only superadmin can do that"
   ctx <- getContext
-  doc <- guardJustM $ doc_query $ GetDocumentByDocumentID docid
+  doc <- guardJustM $ runDBQuery $ GetDocumentByDocumentID docid
   Log.debug "Document is valid for resealing sealing"
   res <- runDB $ sealDocument ctx doc
   case res of
@@ -745,7 +745,7 @@ resealFile docid = onlyAdmin $ do
 replaceMainFile :: Kontrakcja m => DocumentID -> m KontraLink
 replaceMainFile did = onlyAdmin $ do
   Log.debug $ "Replaing main file | SUPER CRITICAL | If you see this check who did this ask who did this and why"
-  doc <- guardJustM $ doc_query $ GetDocumentByDocumentID did
+  doc <- guardJustM $ runDBQuery $ GetDocumentByDocumentID did
   input <- getDataFnM (lookInput "file")
   case (input, documentfiles doc) of
        (Input contentspec _ _contentType, cf:_)  -> do
@@ -754,7 +754,7 @@ replaceMainFile did = onlyAdmin $ do
                 Right c -> return c
             fn <- fromMaybe (BS.fromString "file") <$> fmap filename <$> (runDB $ dbQuery $ GetFileByFileID cf)
             file <- runDB $ dbUpdate $ NewFile fn (concatChunks content)
-            _ <- doc_update $ ChangeMainfile did (fileid file)
+            _ <- runDBUpdate $ ChangeMainfile did (fileid file)
             return LoopBack
        _ -> mzero
 

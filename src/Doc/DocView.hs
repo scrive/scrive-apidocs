@@ -74,7 +74,6 @@ import FlashMessage
 import Kontra
 import KontraLink
 import ListUtil
-import Mails.MailsUtil
 import MinutesTime
 import Misc
 import Templates.Templates

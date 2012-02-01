@@ -55,7 +55,6 @@ import Misc
 import qualified MemCache
 import File.Model
 import qualified System.Mem as System.Mem
-import qualified Doc.Import as D
 
 import qualified Paths_kontrakcja as Paths
 
@@ -151,8 +150,6 @@ runKontrakcjaServer = Log.withLogger $ do
                   -- start the http server
                   E.bracket
                            (do
-                              D.populateDBWithDocumentsIfEmpty conn
-
                               let (iface,port) = httpBindAddress appConf
                               listensocket <- listenOn (htonl iface) (fromIntegral port)
                               let (routes,overlaps) = compile staticRoutes
