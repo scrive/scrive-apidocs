@@ -1,11 +1,23 @@
 module Doc.Migrations where
 
-import Database.HDBC 
+import Database.HDBC
 
 import DB.Classes
 import DB.Model
 import Doc.Tables
 
+addColumnToRecordInternalInsertionOrder :: Migration
+addColumnToRecordInternalInsertionOrder =
+  Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 2
+  , mgrDo = wrapDB $ \conn -> do
+      _ <- runRaw conn "CREATE SEQUENCE signatory_links_internal_insert_order_seq"
+      _ <- runRaw conn $ "ALTER TABLE signatory_links"
+           ++ " ADD COLUMN internal_insert_order BIGINT NOT NULL DEFAULT nextval('signatory_links_internal_insert_order_seq')"
+      _ <- runRaw conn $ "CREATE INDEX idx_signatory_links_internal_insert_order ON signatory_links(internal_insert_order)"
+      return ()
+  }
 
 addNameColumnInSignatoryAttachments :: Migration
 addNameColumnInSignatoryAttachments =
@@ -19,7 +31,7 @@ addNameColumnInSignatoryAttachments =
   }
 
 addCSVUploadDataFromDocumentToSignatoryLink :: Migration
-addCSVUploadDataFromDocumentToSignatoryLink = 
+addCSVUploadDataFromDocumentToSignatoryLink =
   Migration {
     mgrTable = tableSignatoryLinks
   , mgrFrom = 1

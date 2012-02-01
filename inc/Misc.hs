@@ -686,3 +686,6 @@ chng ls i v = let (h, t) = splitAt i ls
 -- get the length with a filter
 lengthWith :: (a -> Bool) -> [a] -> Int
 lengthWith f l = length $ filter f l
+
+optional :: (MonadPlus m) => m a -> m (Maybe a)
+optional c = (liftM Just c) `mplus` (return Nothing)

@@ -1966,7 +1966,7 @@ If the other party clicks on the signing link after you withdrawn the invitation
  the invitation before the expiration. This is controlled by
  the Swedish Law of Contracts."
 "_orderhassignedformailtext","Har bekräftat",,"Has confirmed"
-"_ordername","Order-bekräftelse",,"Order confirmation"
+"_ordername","Orderbekräftelse",,"Order confirmation"
 "_orderpendinginfotext","Orderbekräftelsen har ännu inte bekräftats av alla mottagare.",,"The order has not yet been confirmed by all receipients."
 "_orderpendingauthornotsignedinfoheader","Granska innan bekräftelse",,"Please review before you confirm"
 "_orderpendingauthornotsignedinfotext","Vänligen var noga med att granska ordern innan du bekräftar.",,"Please review the order thoroughly before you confirm it."
@@ -2009,8 +2009,8 @@ If the other party clicks on the signing link after you withdrawn the invitation
  bekräftelsen.",,"You have sent an invitation to confirm the order. Please wait
  for the confirmation."
 "_orderstep1text","Välj orderbekräftelse",,"Select order confirmation"
-"_ordertitle","ORDER-BEKRÄFTELSE",,"ORDER CONFIRMATION"
-"_orderuploadname","ORDER-BEKRÄFTELSE",,"ORDER CONFIRMATION"
+"_ordertitle","ORDERBEKRÄFTELSE",,"ORDER CONFIRMATION"
+"_orderuploadname","ORDERBEKRÄFTELSE",,"ORDER CONFIRMATION"
 "_orderuploadprompttext","Välj den orderbekräftelse som du vill skicka till motpart för bekräftelse.",,"Select an order confirmation you want to send to your counterpart for confirmation."
 "_orgnumber","Org. nr",,"Company Reg No"
 "_pageAttachmentAttachments","BILAGOR:",,"ATTACHMENTS:"

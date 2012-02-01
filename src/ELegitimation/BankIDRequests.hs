@@ -9,7 +9,7 @@ import Control.Monad.State
 import Data.Maybe
 import Doc.DocStateData as D
 import Kontra
-import Misc
+import Misc hiding (optional)
 import SOAP.SOAP
 import Text.XML.HaXml.Posn (Posn)
 import Text.XML.HaXml.XmlContent.Parser

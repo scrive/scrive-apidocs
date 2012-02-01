@@ -69,7 +69,8 @@ import ForkAction
 import Doc.DocDraft as Draft
 import Util.JSON 
 import qualified ELegitimation.BankID as BankID
-
+import Data.Function
+import Doc.DocDraft
 {-
   Document state transitions are described in DocState.
 
@@ -362,7 +363,7 @@ sendInvitationEmail1 ctx document signatorylink = do
   ioRunDB (ctxdbconn ctx) $ dbUpdate $ AddInvitationEvidence documentid signatorylinkid (ctxtime ctx) (ctxipnumber ctx)
 
 {- |
-    Send a reminder email
+    Send a reminder email (and update the modification time on the document)
 -}
 sendReminderEmail :: Kontrakcja m => Maybe BS.ByteString -> Context -> Document -> SignatoryLink -> m SignatoryLink
 sendReminderEmail custommessage ctx doc siglink = do
@@ -376,6 +377,8 @@ sendReminderEmail custommessage ctx doc siglink = do
                       else []
     , from = documentservice doc
     }
+  --this is needed so the last event time in archive looks good
+  _ <- runDBUpdate $ SetDocumentModificationData (documentid doc) (ctxtime ctx)
   return siglink
 
 {- |
@@ -466,6 +469,7 @@ handleDeclineAccountFromSign documentid
                              actionid
                              magichash = do
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid signmagichash
+  switchLocale $ getLocale document
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
   userid <- guardJust $ maybesignatory signatorylink
   user <- guardJustM $ runDBQuery $ GetUserByID userid
@@ -587,11 +591,6 @@ rejectDocument documentid
       addFlashM $ modalRejectedView document
       return $ LoopBack
 
-getDocumentLocale :: DocumentID -> DB (Maybe Locale)
-getDocumentLocale documentid = do
-  mdoc <- dbQuery $ GetDocumentByDocumentID documentid
-  return $ fmap getLocale mdoc --TODO: store lang on doc
-
 {- |
    Show the document to be signed
  -}
@@ -603,20 +602,20 @@ handleSignShowOldRedirectToNew did sid mh = do
 
 handleSignShow :: DocumentID -> SignatoryLinkID -> Kontra Response
 handleSignShow documentid
-               signatorylinkid = do
+               signatorylinkid = do           
   mmh <- readField "magichash"
   case mmh of
     Just mh -> do
       modifyContext (\ctx -> ctx { ctxmagichashes = Map.insert signatorylinkid mh (ctxmagichashes ctx) })
-      toResp (LinkSignDocNoMagicHash documentid signatorylinkid)    
+      toResp (LinkSignDocNoMagicHash documentid signatorylinkid)
     Nothing -> do
       v <- handleSignShow2 documentid signatorylinkid
       (toResp v)
-      
+
 
 handleSignShow2 :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m String
 handleSignShow2 documentid
-                signatorylinkid = do
+                signatorylinkid = do                  
   Context { ctxtime
           , ctxipnumber
           , ctxflashmessages
@@ -631,6 +630,8 @@ handleSignShow2 documentid
 
   _ <- markDocumentSeen documentid signatorylinkid magichash ctxtime ctxipnumber
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
+  disableLocalSwitch
+  switchLocale (getLocale document)
   invitedlink <- guardJust $ getSigLinkFor document signatorylinkid
   _ <- runDB $ addSignStatLinkEvent document invitedlink
   let isFlashNeeded = Data.List.null ctxflashmessages
@@ -669,10 +670,12 @@ maybeAddDocumentCancelationMessage document = do
    Method: GET
  -}
 handleIssueShowGet :: Kontrakcja m => DocumentID -> m (Either KontraLink (Either KontraLink String))
-handleIssueShowGet docid =
+handleIssueShowGet docid = do
   checkUserTOSGet $ do
     document <- guardRightM $ getDocByDocID docid
     ctx@Context { ctxmaybeuser } <- getContext
+    disableLocalSwitch -- Not show locale flag on this page
+    switchLocale (getLocale document)
     case (isAuthor (document, ctxmaybeuser),
               ctxmaybeuser >>= maybeInvitedLink document,
               isAttachment document,
@@ -871,7 +874,6 @@ splitUpDocument doc = do
           runDBUpdate $ DocumentFromSignatoryData (documentid udoc) sigindex (item 0) (item 1) (item 2) (item 3) (item 4) (item 5) (drop 6 xs)
           where item n | n<(length xs) = xs !! n
                        | otherwise = BS.empty
-
 makeSigAttachment :: BS.ByteString -> BS.ByteString -> BS.ByteString -> SignatoryAttachment
 makeSigAttachment name desc email =
   SignatoryAttachment { signatoryattachmentfile = Nothing
@@ -971,12 +973,14 @@ getDocumentsForUserByType doctype user = do
                      return $ union mysigdocs mycompanydocs
                    else return mysigdocs
 
-  return . filter ((\d -> documenttype d == doctype)) $ nub mydocuments
+  return . filter ((\d -> documenttype d == doctype)) $ (nubBy $ on (==) documentid) mydocuments
 
 
 handleAttachmentViewForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
 handleAttachmentViewForViewer docid siglinkid mh = do
   doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
+  disableLocalSwitch
+  switchLocale (getLocale doc)
   let pending JpegPagesPending = True
       pending _                = False
       files                    = map authorattachmentfile (documentauthorattachments doc)
@@ -1025,12 +1029,6 @@ handleFilePages did fid = do
       pageinfo (_,width,height) = JSObject $ toJSObject [("width",JSRational True $ toRational width),
                                                          ("height",JSRational True $ toRational height)
                                                         ]
-
--- get rid of duplicates
--- FIXME: nub is very slow
-prepareDocsForList :: [Document] -> [Document]
-prepareDocsForList =
-  sortBy (\d1 d2 -> compare (documentmtime d2) (documentmtime d1)) . nub
 
 handlePageOfDocument :: Kontrakcja m => DocumentID -> m (Either KontraLink Response)
 handlePageOfDocument docid = checkUserTOSGet $ handlePageOfDocument' docid Nothing
@@ -1169,7 +1167,7 @@ handleRubbishReallyDelete = do
             doc <- guardRightM $ runDBUpdate $ ReallyDeleteDocument user did
             case getSigLinkFor doc user of
               Just sl -> runDB $ addSignStatPurgeEvent doc sl ctxtime
-              _ -> return False) 
+              _ -> return False)
     $ map DocumentID docids
   addFlashM flashMessageRubbishHardDeleteDone
   return $ LinkRubbishBin
@@ -1608,12 +1606,10 @@ handleInvariantViolations = onlyAdmin $ do
 
 prepareEmailPreview :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 prepareEmailPreview docid slid = do
-    ctx <- getContext
-    Log.debug "Making email preview"
     mailtype <- getFieldWithDefault "" "mailtype"
-    mdoc <- runDBQuery $ GetDocumentByDocumentID docid
-    when (isNothing mdoc) $ (Log.debug "No document found") >> mzero
-    let doc = fromJust mdoc
+    doc <- guardJustM $ runDBQuery $ GetDocumentByDocumentID docid
+    switchLocale $ getLocale doc
+    ctx <- getContext
     content <- case mailtype of
          "remind" -> do
              let msl = find ((== slid) . signatorylinkid) $ documentsignatorylinks doc
