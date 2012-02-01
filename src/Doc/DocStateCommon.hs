@@ -267,24 +267,3 @@ checkPendingToAwaitingAuthor doc = catMaybes $
                     ("Not all non-author signatories have signed")
   , trueOrMessage (not $ hasSigned $ getAuthorSigLink doc) "Author has already signed"
   ]
-
-
-
-{- |
-    Filter documents according to whether the indicated signatory link has been activated
-    according to the sign order.  Author links are included either way.
--}
-filterDocsWhereActivated :: SignatoryLinkIdentity a => a -> [Document] -> [Document]
-filterDocsWhereActivated siglinkidentifier docs =
-  filter isIncludedDoc docs
-  where
-    isIncludedDoc doc@Document{documentsignatorylinks} = 
-      not . Prelude.null $ filter (isIncludedSigLink doc) documentsignatorylinks
-    isIncludedSigLink doc 
-                      sl@SignatoryLink{signatorylinkdeleted, 
-                                       signatoryroles, 
-                                       signatorydetails} =
-      let isRelevant = isSigLinkFor siglinkidentifier sl && not signatorylinkdeleted
-          isAuthorLink = SignatoryAuthor `elem` signatoryroles
-          isActivatedForSig = (documentcurrentsignorder doc) >= (signatorysignorder signatorydetails)
-      in  isRelevant && (isAuthorLink || isActivatedForSig)

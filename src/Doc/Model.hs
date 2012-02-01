@@ -85,7 +85,6 @@ import DB.Classes
 import DB.Fetcher
 import DB.Types
 import DB.Utils
-import Data.Semantic
 import File.File
 import File.FileID
 --import User.Region
@@ -1276,6 +1275,7 @@ instance DBQuery GetDocumentsByCompanyAndTags [Document] where
   dbQuery (GetDocumentsByCompanyAndTags mservice companyid doctags) = do
         docs <- selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND " ++
                                                 "signatory_links.company_id = ? AND " ++
+                                                activatedSQL ++ " AND " ++
                                                 "(signatory_links.roles = ? OR signatory_links.roles = ?) AND " ++
                                                 "((?::TEXT IS NULL AND service_id IS NULL) OR (service_id = ?)) ")
                 [ toSql companyid,
@@ -1284,15 +1284,25 @@ instance DBQuery GetDocumentsByCompanyAndTags [Document] where
                   toSql mservice,
                   toSql mservice
                 ]
-        let docs' = filterDocsWhereActivated companyid $ docs
-        return (filter hasTags docs')
+        return (filter hasTags docs)
     where hasTags doc = all (`elem` (documenttags doc)) doctags
+
+activatedSQL :: String
+activatedSQL = "COALESCE(signatory_links.sign_order <= (" ++ subselect ++ "), TRUE) "
+  where
+    subselect = "SELECT min(sl2.sign_order) FROM signatory_links AS sl2 " ++
+                "WHERE signatory_links.document_id = sl2.document_id " ++
+                "  AND ((sl2.roles & 1) <> 0) " ++
+                "  AND sl2.sign_time IS NULL "
 
 selectDocumentsBySignatory :: UserID -> Bool -> DB [Document]
 selectDocumentsBySignatory userid deleted = do
     docs <- selectDocumentsBySignatoryLink
             ("    signatory_links.deleted = " ++ show deleted ++ " " ++
              "AND signatory_links.really_deleted = FALSE " ++
+             (if deleted
+              then ""
+              else "AND " ++ activatedSQL) ++
              "AND (   signatory_links.user_id = ? " ++
              "     OR EXISTS (SELECT TRUE FROM users " ++
              "                WHERE users.id = ? " ++
@@ -1314,10 +1324,8 @@ data GetDocumentsBySignatory = GetDocumentsBySignatory User
 instance DBQuery GetDocumentsBySignatory [Document] where
   dbQuery (GetDocumentsBySignatory user) = do
     docs <- selectDocumentsBySignatory (userid user) False
+    return docs
 
-    return $ if useriscompanyadmin user
-           then filterDocsWhereActivated (Or (userid user) (usercompany user)) docs
-           else filterDocsWhereActivated (userid user) docs
 
 data GetSignatoryLinkIDs = GetSignatoryLinkIDs
                            deriving (Eq, Ord, Show, Typeable)
