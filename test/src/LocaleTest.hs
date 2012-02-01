@@ -14,6 +14,7 @@ import Doc.DocControl (handleIssueLocaleChangeAfterUpdate)
 import Doc.Model
 import Doc.DocStateData
 import Context
+import Login
 import MinutesTime
 import Redirect
 import StateHelper

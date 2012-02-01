@@ -466,11 +466,11 @@ createUser email fstname sndname mcompany = do
   passwd <- liftIO $ createPassword =<< randomPassword
   runDBUpdate $ AddUser (fstname, sndname) (unEmail $ email) (Just passwd) False Nothing (fmap companyid mcompany) (ctxlocale ctx)
 
-sendNewUserMail :: Kontrakcja m => Bool -> User -> m ()
-sendNewUserMail vip user = do
+sendNewUserMail :: Kontrakcja m => User -> m ()
+sendNewUserMail user = do
   ctx <- getContext
   al <- newAccountCreatedLink user
-  mail <- newUserMail (ctxhostpart ctx) (getEmail user) (getSmartName user) al vip
+  mail <- newUserMail (ctxhostpart ctx) (getEmail user) (getSmartName user) al
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]}
   return ()
 
@@ -728,7 +728,7 @@ handleAccountSetupPost aid hash = do
         then do
           ctx <- getContext
           al <- newAccountCreatedLink user
-          mail <- newUserMail (ctxhostpart ctx) email email al False
+          mail <- newUserMail (ctxhostpart ctx) email email al
           scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = email, email = email}] }
           addFlashM flashMessageNewActivationLinkSend
           getHomeOrUploadLink
