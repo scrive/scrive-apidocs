@@ -584,8 +584,6 @@ decodeRowAsSignatoryLinkWithDocumentID slid
         _ -> Nothing
     })) :: Either DBException (DocumentID,SignatoryLink)
 
-
-
 fetchSignatoryLinks :: Statement -> IO [SignatoryLink]
 fetchSignatoryLinks st = do
   values <- fetchValues st decodeRowAsSignatoryLinkWithDocumentID
@@ -1198,11 +1196,13 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (DocumentFromSignatoryData a
     when (isRight ed) $ 
       let Right d = ed 
           Just sl = getAuthorSigLink d
-      in ignore $ dbUpdate $ InsertEvidenceEvent
-         AuthorUsesCSVEvidence
-         ("Document created from CSV file by " ++ actorWho actor ++ ".")
-         (Just docid)
-         actor
+      in do
+        copyEvidenceLogToNewDocument docid (documentid d)
+        ignore $ dbUpdate $ InsertEvidenceEvent
+          AuthorUsesCSVEvidence
+          ("Document created from CSV file by " ++ actorWho actor ++ ".")
+          (Just $ documentid d)
+          actor
     return ed
    where
     now = actorTime actor 
@@ -1689,9 +1689,10 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (RestartDocument a) (Either 
           Right d -> do
             ignore $ dbUpdate $ InsertEvidenceEvent
               RestartDocumentEvidence
-              ("Document restarted by " ++ actorWho actor ++ ". New document has id " ++ show (documentid newdoc) ++ ".")
-              (Just $ documentid d)
+              ("Document restarted by " ++ actorWho actor ++ ". New document has id " ++ show (documentid d) ++ ".")
+              (Just $ documentid doc)
               actor
+            copyEvidenceLogToNewDocument (documentid doc) (documentid d)
             ignore $ dbUpdate $ InsertEvidenceEvent
               RestartDocumentEvidence
               ("Document restarted from document with id " ++ (show $ documentid doc) ++ " by " ++ actorWho actor ++ ".")
@@ -2206,9 +2207,12 @@ instance DBUpdate SignLinkFromDetailsForTest SignatoryLink where
 
       return link
 
+
 data (Actor a, Show a, Eq a, Ord a) => SignableFromDocument a = SignableFromDocument Document a
                                                               deriving (Eq, Ord, Show, Typeable)
 instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SignableFromDocument a) Document where
+  -- NOTE TO MERGER: I removed this in another branch. If there's a
+  -- conflict in a merge, get rid of this whole DBUpdate -- Eric
   dbUpdate (SignableFromDocument document actor ) = do
     d <- insertNewDocument $ templateToDocument document
     ignore $ dbUpdate $ InsertEvidenceEvent
@@ -2217,11 +2221,9 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SignableFromDocument a) Doc
       (Just (documentid d))
       actor
     return d
-    
-
 
 data (Actor a, Show a, Eq a, Ord a) => SignableFromDocumentIDWithUpdatedAuthor a = SignableFromDocumentIDWithUpdatedAuthor User (Maybe Company) DocumentID a
-                                               deriving (Eq, Ord, Show, Typeable)
+                                                                                 deriving (Eq, Ord, Show, Typeable)
 instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SignableFromDocumentIDWithUpdatedAuthor a) (Either String Document) where
   dbUpdate (SignableFromDocumentIDWithUpdatedAuthor user mcompany docid actor) =
       if fmap companyid mcompany /= usercompany user
@@ -2233,9 +2235,11 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SignableFromDocumentIDWithU
               documentsignatorylinks = map replaceAuthorSigLink (documentsignatorylinks doc)
                                        -- FIXME: Need to remove authorfields?
               , documentctime = time
+              , documentmtime = time
               }
           case r of 
             Right d -> do
+              copyEvidenceLogToNewDocument docid (documentid d)
               ignore $ dbUpdate $ InsertEvidenceEvent
                 SignableFromDocumentIDWithUpdatedAuthorEvidence
                 ("Document created from template with id " ++ show docid ++ " by " ++ actorWho actor ++ ".")

@@ -10,7 +10,8 @@ module EvidenceLog.Model
          MailSystemActor(..),
          IntegrationAPIActor(..),
          UserActor(..),
-         AdminActor(..)
+         AdminActor(..),
+         copyEvidenceLogToNewDocument
        )
        
        where
@@ -155,6 +156,38 @@ data Actor a => InsertEvidenceEvent a = InsertEvidenceEvent
 instance Actor a => DBUpdate (InsertEvidenceEvent a) Bool where
   dbUpdate (InsertEvidenceEvent tp txt mdid a) = 
     wrapDB (insertEvidenceEvent tp txt mdid a)
+
+copyEvidenceLogToNewDocument :: DocumentID -> DocumentID -> DB ()
+copyEvidenceLogToNewDocument fromdoc todoc =
+  wrapDB $ \conn -> do
+    st <- prepare conn $ "INSERT INTO evidence_log ("
+        ++ "  document_id"
+        ++ ", time"
+        ++ ", text"
+        ++ ", event_type"
+        ++ ", version_id"
+        ++ ", user_id"
+        ++ ", email"
+        ++ ", request_ip_v4"
+        ++ ", request_ip_v6"        
+        ++ ", signatory_link_id"
+        ++ ", api_user"
+        ++ ") SELECT ("
+        ++ "  ?"
+        ++ ", time"
+        ++ ", text"
+        ++ ", event_type"
+        ++ ", version_id"
+        ++ ", user_id"
+        ++ ", email"
+        ++ ", request_ip_v4"
+        ++ ", request_ip_v6"        
+        ++ ", signatory_link_id"
+        ++ ", api_user"
+        ++ ") FROM evidence_log "
+        ++ " WHERE document_id = ?"
+    _ <- execute st [toSql todoc, toSql fromdoc]
+    return ()
 
 -- | A machine-readable event code for different types of events.
 data EvidenceEventType =
