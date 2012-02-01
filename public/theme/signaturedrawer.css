@@ -1,0 +1,8 @@
+.signatureBox {
+    width: 100px;
+    height: 100px;
+}
+.signatureBox canvas{
+    width: 100px;
+    height: 100px;
+}
