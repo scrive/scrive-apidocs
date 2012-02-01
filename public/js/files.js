@@ -173,43 +173,12 @@ var FilePageView = Backbone.View.extend({
             var helper = $(ui.helper);
             var top = helper.offset().top -  pagejpg.offset().top;
             var left = helper.offset().left -  pagejpg.offset().left;
-            var xxx = $(ui.draggable).data("draggable");
             var options = $(ui.draggable).data("draggable").options;
             var onDrop = options.onDrop;
             onDrop(page,left,top);
             return false;
           }  
        })  
-    },
-    makePlacementDragable : function(placement,place){
-        var fileview = this.model.file().view;
-        var field = placement.field();   
-        place.draggable({
-                    appendTo: "body",
-                    helper: function(event) {
-                        return $("<span class='placedfield'/>").text(field.nicetext());
-                    },
-                    start: function(event, ui) {
-                        place.hide();
-                        fileview.showCoordinateAxes(ui.helper);
-                    },
-                    stop: function() {
-                        placement.remove();
-                        fileview.hideCoordinateAxes();
-                    },
-                    drag: function(event, ui) {
-                        fileview.moveCoordinateAxes(ui.helper);
-                    },
-                    onDrop: function(page, x,y ){
-                          field.addPlacement(new FieldPlacement({
-                              page: page.number(),
-                              fileid: page.file().fileid(),
-                              field: field,
-                              x : x,
-                              y : y
-                            }))
-                    }
-        });
     },
     renderDragables : function() {
         var view = this;
@@ -220,26 +189,8 @@ var FilePageView = Backbone.View.extend({
         $(".placedfield",container).remove();
         _.each(page.placements(), function(placement) {
             var placement = placement;
-            var val = $("<span class='value'/>");
-            var field =  placement.field();
             if (placement.page()==page.number()) {
-            val.text(field.nicetext());
-            field.bind('change', function() {
-                if (placement.field().value() != "")
-                    val.text(field.value());
-                else
-                    val.text(field.nicename());
-            });
-            var place = $("<div style='position: absolute;' class='placedfield'>");
-            place.offset({
-                left: placement.x(),
-                top: placement.y()
-            });
-            place.append(val);
-            container.append(place);
-            if (document.allowsDD())
-                view.makePlacementDragable(placement,place);
-
+                container.append(new FieldPlacementPlacedView({model: placement, el : $("<div>")}).el);
             }
         })
     },

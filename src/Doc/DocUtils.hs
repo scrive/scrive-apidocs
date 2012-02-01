@@ -382,6 +382,11 @@ isFieldCustom :: SignatoryField -> Bool
 isFieldCustom SignatoryField{sfType = CustomFT{}} = True
 isFieldCustom _ = False
 
+isStandardField :: SignatoryField -> Bool
+isStandardField SignatoryField{sfType = CustomFT{}} = True
+isStandardField SignatoryField{sfType = SignatureFT{}} = False
+isStandardField _ = True
+
 findCustomField :: (HasFields a ) => BS.ByteString -> a -> Maybe SignatoryField
 findCustomField name = find (matchingFieldType (CustomFT name False) ) . getAllFields
 
@@ -537,65 +542,6 @@ makeSignatory pls fds sid sfn  ssn  se  sso  sc  spn  scn = SignatoryDetails {
       , sfValue = value
       , sfPlacements = filterPlacementsByID pls sid (BS.fromString texttype)
     }
-
-makeSignatories :: [(BS.ByteString, BS.ByteString, FieldPlacement)]
-                   -> [(BS.ByteString, SignatoryField)]
-                   -> [BS.ByteString]
-                   -> [BS.ByteString]
-                   -> [SignOrder]
-                   -> [BS.ByteString]
-                   -> [BS.ByteString]
-                   -> [BS.ByteString]
-                   -> [BS.ByteString]
-                   -> [BS.ByteString]
-                   -> [SignatoryDetails]
-makeSignatories placements fielddefs
-                sigids
-                signatoriesemails
-                signatoriessignorders
-                signatoriescompanies
-                signatoriespersonalnumbers
-                signatoriescompanynumbers
-                signatoriesfstnames
-                signatoriessndnames
-  = zipWith8 (makeSignatory placements fielddefs)
-    sigids
-    signatoriesfstnames
-    signatoriessndnames
-    signatoriesemails
-    signatoriessignorders
-    signatoriescompanies
-    signatoriespersonalnumbers
-    signatoriescompanynumbers
-    where
-        zipWith8 z (a:as) (b:bs) (c:cs) (d:ds) (e:es) (f:fs) (g:gs) (h:hs)
-            = z a b c d e f g h : zipWith8 z as bs cs ds es fs gs hs
-        zipWith8 _ _ _ _ _ _ _ _ _ = []
-
-
--- NEED FIX !!!!  Reverse engineering is not a good design pattern | MR
--- I will fix this when doing backbone anyway.
-makeAuthorDetails :: [(BS.ByteString, BS.ByteString, FieldPlacement)]
-                     -> [(BS.ByteString, SignatoryField)]
-                     -> SignatoryDetails
-                     -> SignatoryDetails
-makeAuthorDetails pls fielddefs sigdetails@SignatoryDetails{signatoryfields = sigfields} =
-  sigdetails {
-    signatoryfields =
-      concatMap f sigfields ++ filterFieldDefsByID fielddefs (BS.fromString "author")
-  }
-  where
-    f sf = case sfType sf of
-      EmailFT -> [g "email"]
-      FirstNameFT -> [g "fstname"]
-      LastNameFT -> [g "sndname"]
-      CompanyFT -> [g "company"]
-      PersonalNumberFT -> [g "personalnumber"]
-      CompanyNumberFT -> [g "companynumber"]
-      CustomFT _ _ -> []
-      where
-        g ftype = sf { sfPlacements = filterPlacementsByID pls (BS.fromString "author") (BS.fromString ftype) }                 
-
 
 recentDate :: Document -> MinutesTime
 recentDate doc = 

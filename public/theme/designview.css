@@ -508,3 +508,58 @@
   color: red;
   font-size: 10px;
 }
+
+.placeSignatureIcon {
+    background: url("../img/signeddoc.png") no-repeat scroll 0 0 transparent;
+    display: block;
+    height: 16px;
+    width: 16px;
+    cursor: pointer;
+    margin-left: 12px;
+    margin-top: 1px;
+    float : left;
+}
+.signatureBoxNotDrawing {
+    background-color: #F5F5F5;
+    display: block;
+    height: 70px;
+    padding-top:30px;
+    width: 180px;
+    text-align: center;
+    border: 1px solid #DDDDDD;
+    filter: alpha(opacity=80);
+    -moz-opacity: 0.80;
+    opacity: 0.80;
+}
+.signatureBoxNotDrawing .text {
+    font-weight: bold;
+    color: black;
+}
+
+.signatureDrawingBoxWrapper{
+    background-color: #F5F5F5;
+    display: block;
+    height: 70px;
+    width: 180px;
+    text-align: center;
+    border: 1px solid #DDDDDD;
+    filter: alpha(opacity=80);
+    -moz-opacity: 0.80;
+    opacity: 0.80;
+}
+.signatureDrawingBox{
+    background-color: #F5F5F5;
+    display: block;
+    height: 70px;
+    width: 180px;
+    text-align: center;
+    border: 1px solid #DDDDDD;
+    filter: alpha(opacity=80);
+    -moz-opacity: 0.80;
+    opacity: 0.80;
+}
+.signatureDrawingBox canvas {
+    height: 70px;
+    width: 180px;
+    border: 1px solid red;
+}

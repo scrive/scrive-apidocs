@@ -227,7 +227,7 @@ window.DocumentStandarView = Backbone.View.extend({
                                 onClick : function() {
                                     if(!signatory.allFieldsReadyForSign()) {
                                      _.each(signatory.fields(),function(field) {
-                                            if (!field.readyForSign() )
+                                            if (!field.readyForSign() && field.view != undefined)
                                                 field.view.redborder();
                                         });
                                         FlashMessages.add({content: localization.mustFillFieldsBeforeSigning, color: "red"});

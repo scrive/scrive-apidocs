@@ -363,6 +363,7 @@ signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{si
       PersonalNumberFT -> fieldJSON doc "sigpersnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
       CompanyFT -> fieldJSON doc "sigco" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
       CompanyNumberFT -> fieldJSON doc "sigcompnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      SignatureFT -> fieldJSON doc "signature" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
       CustomFT label closed -> fieldJSON doc (BS.toString label) sfValue (closed  && (not $ isPreparation doc))  sfPlacements
   where
     closedF sf = ((not $ BS.null $ sfValue sf) || (null $ sfPlacements sf))
@@ -772,7 +773,7 @@ signatoryLinkFields
         PersonalNumberFT -> field "personalnumber" $ packToMString sfValue
         CompanyNumberFT -> field "companynumber" $ packToMString sfValue
         EmailFT -> field "email" $ packToMString sfValue
-        CustomFT _ _ -> return ()
+        _ -> return ()
       fieldFL "fields" $ for (filterCustomField signatoryfields) $
         \(s, label, _) -> do
           field "fieldlabel" label

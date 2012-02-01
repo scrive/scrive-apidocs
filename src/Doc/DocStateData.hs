@@ -122,6 +122,7 @@ data FieldType = FirstNameFT
                | CompanyNumberFT
                | EmailFT
                | CustomFT BS.ByteString Bool -- label filledbyauthor
+               | SignatureFT
     deriving (Eq, Ord, Data, Typeable)
 
 data SignatoryField = SignatoryField

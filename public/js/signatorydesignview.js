@@ -61,7 +61,8 @@ window.SignatoryDesignViewBasic = Backbone.View.extend({
         _.each(signatory.fields(),function(field){
             if (field.name() != "fstname" &&
                 field.name() != "sndname" &&
-                field.name() != "email") 
+                field.name() != "email"   &&
+                !field.isSignature()) 
                 makeField(field);
         });
         this.container.append(fields);
@@ -179,6 +180,37 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
        })
        return setCsvSignatoryIcon;
    },
+   placeSignatureIcon : function() {
+       var view = this;
+       var signatory = this.model;
+       var field = signatory.field("signature");
+       var placeSignatureIcon = $("<a class='placeSignatureIcon' href='#'>");
+       var fileview = signatory.document().mainfile().view;
+       placeSignatureIcon.draggable({
+                    handle: ".ddIcon",
+                    appendTo: "body",
+                    helper: function(event) {
+                        return new FieldPlacementView({model: field, el : $("<div/>")}).el
+                    },
+                    start: function(event, ui) {
+                    },
+                    stop: function() {
+                    },
+                    drag: function(event, ui) {
+                    },
+                    onDrop: function(page, x,y ){
+                          field.addPlacement(new FieldPlacement({
+                              page: page.number(),
+                              fileid: page.file().fileid(),
+                              field: field,
+                              x : x,
+                              y : y
+                            }))
+                    }
+            });
+       
+       return placeSignatureIcon;
+   },
    top : function() {
         var top = $("<div class='top'>")
         var signatory = this.model;
@@ -192,6 +224,8 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
         top.append(this.addFieldButton());
         if (signatory.signs() && document.view.signOrderVisible())
             top.append(this.signOrderSelector());
+        if (signatory.signs() && !signatory.author() )
+            top.append(this.placeSignatureIcon());
         return top;
     },
     postRender : function() {

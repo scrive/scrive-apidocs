@@ -24,23 +24,39 @@ var SignatureForDrawingView = Backbone.View.extend({
         this.zoomed = false;
         this.render();
     },
-    drawingtoolDown : function() {
-        
+    drawingtoolDown : function(x,y) {
+      document.ontouchmove = function(e){
+             e.preventDefault();
+      }
+      this.picture.beginPath();
+      this.picture.moveTo(x, y);
     },
-    drawingtoolUp : function() {
+    drawingtoolMove : function(x,y) {
+      this.picture.lineTo(x, y);
+      this.picture.stroke();
+    },
+    drawingtoolUp : function(x,y) {
+      document.ontouchmove = function(e){
+        return state;
+      }
 
-    },
-    drawingtoolMove : function() {
+      drawingtoolMove(x,y);
 
     },
     render: function () {
         var signature = this.signature;
+        var view = this;
         this.container = this.el;
-        this.container.addClass("signatureBox");
+        this.container.addClass("signatureDrawingBox");
         this.canvas = $("<canvas class='signatureCanvas'>/");
         this.container.append(this.canvas);
-        canvas.bind(mousedown);
-
+        this.picture =  this.canvas[0].getContext('2d');
+        this.canvas[0].addEventListener('touchstart',function(e) {view.drawingtoolDown(2*e.layerX, 2*e.layerY);});
+        this.canvas[0].addEventListener('touchmove',function(e) {view.drawingtoolMove(2*e.layerX, 2*e.layerY);});
+        this.canvas[0].addEventListener('touchend',function(e) {view.drawingtoolUp(2*e.layerX, 2*e.layerY);});
+        this.canvas.mousedown(function(e) {view.drawingtoolDown(2*e.layerX, 2*e.layerY)});
+        this.canvas.mousemove(function(e) {view.drawingtoolMove(2*e.layerX, 2*e.layerY)});
+        this.canvas.mouseup(function(e) {view.drawingtoolUp(2*e.layerX, 2*e.layerY)});
         
         return this;
     }
@@ -51,7 +67,7 @@ var SignatureForDrawingView = Backbone.View.extend({
 window.SignatureDrawer = {
     init : function(args){
         this.model = new SignatureForDrawing({
-                        signatory : args.signatory
+                        signaturefield : args.signaturefield
                     })
         this.view = new SignatureForDrawingView({
                         model: this.model,

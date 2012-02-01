@@ -2085,7 +2085,6 @@ instance DBUpdate UpdateSigAttachments (Either String Document) where
                 , sqlField "description" $ signatoryattachmentdescription
                 , sqlField "document_id" $ did
                 ]
-<<<<<<< HEAD
            getOneDocumentAffected "UpdateSigAttachments" r did
 
 data UpdateDraft =  UpdateDraft DocumentID  Document  MinutesTime
@@ -2098,8 +2097,7 @@ instance DBUpdate UpdateDraft (Either String Document) where
      dbUpdate $ SetDocumentLocale did (getLocale document) time
      dbUpdate $ SetDocumentIdentification did (documentallowedidtypes document) time
      dbUpdate $ SetInviteText did (documentinvitetext document) time
-=======
-           return r
+
 
 -- For users lists in adminonly
 selectUsersAndStatsSQL :: String
@@ -2332,4 +2330,3 @@ instance DBUpdate SetDocumentModificationData (Either String Document) where
          "WHERE id = ?" [ toSql did ]
     getOneDocumentAffected "SetDocumentModificationData" r did
 
->>>>>>> master

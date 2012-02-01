@@ -161,6 +161,8 @@ window.Signatory = Backbone.Model.extend({
                   {name : "sigpersnr"},
                   {name : "sigco"},
                   {name : "sigcompnr"},
+                  {name : "signature"},
+
                 
         ],
         current : false,
@@ -506,8 +508,8 @@ window.SignatoryStandarView = Backbone.View.extend({
                 field.name() == "sndname" ||
                 field.name() == "email")
             return;
-            if (field.canBeIgnored())
-            return;    
+            if (field.canBeIgnored() || field.isSignature())
+            return;
             var fieldview = new FieldStandardView(
             { model : field,
               el : $("<div/>")

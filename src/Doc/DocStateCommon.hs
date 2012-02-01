@@ -198,7 +198,8 @@ replaceSignatoryData siglink@SignatoryLink{signatorydetails} fstname sndname ema
       PersonalNumberFT -> sf { sfValue = personalnumber }
       CompanyNumberFT  -> sf { sfValue = companynumber }
       EmailFT          -> sf { sfValue = email }
-      CustomFT label _ -> sf { sfType = CustomFT label (not $ BS.null v), sfValue = v })
+      CustomFT label _ -> sf { sfType = CustomFT label (not $ BS.null v), sfValue = v }
+      SignatureFT      -> sf)
         : pumpData rest vs'
       where
         (v, vs') = case sfType sf of

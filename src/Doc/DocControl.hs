@@ -70,7 +70,7 @@ import Doc.DocDraft as Draft
 import Util.JSON 
 import qualified ELegitimation.BankID as BankID
 import Data.Function
-import Doc.DocDraft
+
 {-
   Document state transitions are described in DocState.
 

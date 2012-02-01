@@ -119,7 +119,7 @@ window.Field = Backbone.Model.extend({
     },
     canBeIgnored: function(){
         var name = this.name();
-        return this.value() == "" && this.placements().length == 0 && (name == "sigco" || name == "sigpersnr" || name == "sigcompnr");
+        return this.value() == "" && this.placements().length == 0 && (name == "sigco" || name == "sigpersnr" || name == "sigcompnr" || name == "signature");
     },
     readyForSign : function(){
         return this.value() != "" || this.canBeIgnored();
@@ -156,7 +156,11 @@ window.Field = Backbone.Model.extend({
              || (name == "sigcompnr") 
     },
     isCustom: function() {
-        return !this.isStandard();
+        return !this.isStandard() && !this.isSignature();
+    },
+    isSignature : function() {
+        return this.name() == "signature";
+
     },
     isReady: function(){
       return this.get("fresh") == false;  
@@ -296,7 +300,7 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
                     handle: ".ddIcon",
                     appendTo: "body",
                     helper: function(event) {
-                        return $("<span class='placedfieldhelper'/>").text(field.nicetext());
+                        return new FieldPlacementView({model: field, el : $("<div/>")}).el;
                     },
                     start: function(event, ui) {
                         fileview.showCoordinateAxes(ui.helper);

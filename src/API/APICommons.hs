@@ -81,7 +81,7 @@ api_signatory sl = JSObject $ toJSObject $
     )]
     where
       sfToJS sf name = (name, showJSON $ BS.toString $ sfValue sf)
-      fields = for (filter (not . isFieldCustom) $ signatoryfields $ signatorydetails sl) $
+      fields = for (filter isStandardField $ signatoryfields $ signatorydetails sl) $
         \sf -> case sfType sf of
           FirstNameFT      -> sfToJS sf "fstname"
           LastNameFT       -> sfToJS sf "sndname"
@@ -89,7 +89,7 @@ api_signatory sl = JSObject $ toJSObject $
           CompanyNumberFT  -> sfToJS sf "companynr"
           PersonalNumberFT -> sfToJS sf "personalnr"
           EmailFT          -> sfToJS sf "email"
-          CustomFT _ _     -> error "api_signatory: impossible happened"
+          _                -> error "api_signatory: impossible happened"
 
 api_document_tag :: DocumentTag -> JSValue
 api_document_tag tag = JSObject $ toJSObject [
