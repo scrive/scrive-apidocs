@@ -1899,13 +1899,6 @@ instance DBUpdate SignLinkFromDetailsForTest SignatoryLink where
 
       return link
 
-data SignableFromDocument = SignableFromDocument Document
-                            deriving (Eq, Ord, Show, Typeable)
-instance DBUpdate SignableFromDocument Document where
-  dbUpdate (SignableFromDocument document) = do
-    insertNewDocument $ templateToDocument document
-
-
 data SignableFromDocumentIDWithUpdatedAuthor = SignableFromDocumentIDWithUpdatedAuthor User (Maybe Company) DocumentID MinutesTime
                                                deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SignableFromDocumentIDWithUpdatedAuthor (Either String Document) where
