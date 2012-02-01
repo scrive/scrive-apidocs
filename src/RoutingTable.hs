@@ -7,7 +7,6 @@ module RoutingTable
 
 import API.IntegrationAPI
 import API.Service.ServiceControl
-import API.UserAPI
 
 import ActionSchedulerState
 import AppView as V
@@ -292,7 +291,6 @@ staticRoutes = choice
      -- someone wants a phone call
      , dir "phone" $ hPostAllowHttp $ toK0 $ UserControl.handlePhoneCallRequest
 
-     , userAPI
      , integrationAPI
      , documentAPI
      -- static files

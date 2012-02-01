@@ -70,7 +70,6 @@ module Doc.Model
   -- , SetSignatoryUser(..)
   , SignDocument(..)
   , SignLinkFromDetailsForTest(..)
-  , SignableFromDocument(..)
   , SignableFromDocumentIDWithUpdatedAuthor(..)
   , StoreDocumentForTesting(..)
   , TemplateFromDocument(..)
