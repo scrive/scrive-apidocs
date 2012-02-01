@@ -881,7 +881,7 @@ newFromDocument f docid = do
     involve editing all the docs as a user moves between private and company accounts.
 -}
 data (Actor a, Show a, Eq a, Ord a) => AdminOnlySaveForUser a = AdminOnlySaveForUser DocumentID User a
-                            deriving (Eq, Ord, Show, Typeable)
+                                                              deriving (Eq, Ord, Show, Typeable)
 instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (AdminOnlySaveForUser a) (Either String Document) where
   dbUpdate (AdminOnlySaveForUser did user actor) = do
     r <- runUpdateStatement "signatory_links" 
@@ -909,10 +909,13 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (ArchiveDocument a) (Either 
               runUpdateOnArchivableDoc "WHERE company_id = ?" [toSql cid]
            _ ->
               runUpdateOnArchivableDoc "WHERE user_id = ?" [toSql $ userid user]
+    let forstr = case (usercompany user, useriscompanyadmin user) of
+          (Just cid, True) -> "company with admin email " ++ show (getEmail user)
+          _ -> "user with email " ++ show (getEmail user)
     when (r == 1) $
       ignore $ dbUpdate $ InsertEvidenceEvent
       ArchiveDocumentEvidence
-      ("Moved document to rubbish bin by " ++ actorWho actor ++ ".")
+      ("Moved document to rubbish bin for " ++ forstr ++ " by " ++ actorWho actor ++ ".")
       (Just did)
       actor
     getOneDocumentAffected "ArchiveDocument" r did
@@ -952,14 +955,13 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (AttachCSVUpload a) (Either 
                          ]
                      when (r == 1) $
                        ignore $ dbUpdate $ InsertEvidenceEvent
-                       ArchiveDocumentEvidence
-                       ("Attached CSV to document by " ++ actorWho actor ++ ".")
+                       AttachCSVUploadEvidence
+                       ("Attached CSV (" ++ show (csvtitle csvupload) ++ ") to document by " ++ actorWho actor ++ ".")
                        (Just did)
                        actor
                      getOneDocumentAffected "AttachCSVUpload" r did
 
           _ -> return $ Left $ "Document #" ++ show documentid ++ " is in " ++ show (documentstatus document) ++ " state, must be Preparation"
-
 
 data (Actor a, Show a, Eq a, Ord a) => AttachFile a = AttachFile DocumentID FileID a
                   deriving (Eq, Ord, Show, Typeable)
@@ -1023,20 +1025,24 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (CancelDocument a) (Either S
             when (r == 1) $ 
               case reason of
                 ManualCancel -> 
-                  let Just sl = getAuthorSigLink document
-                  in ignore $ dbUpdate $ InsertEvidenceEvent
-                     CancelDocumentEvidence
-                     ("The document was canceled by " ++ actorWho actor ++ ".")
-                     (Just did)
-                     actor
+                  ignore $ dbUpdate $ InsertEvidenceEvent
+                  CancelDocumentEvidence
+                  ("The document was canceled by " ++ actorWho actor ++ ".")
+                  (Just did)
+                  actor
 
-                ELegDataMismatch msg sid _ _ _ ->
+                ELegDataMismatch _ sid fn ln num -> do
                   let Just sl = getSigLinkFor document sid
-                  in ignore $ dbUpdate $ InsertEvidenceEvent
-                     CancelDocumenElegEvidence
-                     ("The document was canceled due to a mismatch with e-legitimation data by " ++ actorWho actor ++ ".")
-                     (Just did)
-                     actor
+                      trips = [("first name",      getFirstName      sl, fn)
+                              ,("last name",       getLastName       sl, ln)
+                              ,("personal number", getPersonalNumber sl, num)]
+                      uneql = filter (\(_,a,b)->a/=b) trips
+                      msg = intercalate "; " $ map (\(f,s,e)->f ++ " from document was " ++ show s ++ " but from e-legitimation was " ++ show e) uneql
+                  ignore $ dbUpdate $ InsertEvidenceEvent
+                    CancelDocumenElegEvidence
+                    ("The document was canceled due to a mismatch with e-legitimation data by " ++ actorWho actor ++ ". Reason: " ++ msg ++ ".")
+                    (Just did)
+                    actor
 
             getOneDocumentAffected "CancelDocument" r did
 
@@ -1098,7 +1104,7 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (ChangeSignatoryEmailWhenUnd
     when (r == 1) $ 
       ignore $ dbUpdate $ InsertEvidenceEvent
       ChangeSignatoryEmailWhenUndeliveredEvidence
-      ("Changed the email address for a signatory from \"" ++ BS.toString oldemail ++ "\" to \"" ++ BS.toString email ++ "\" by " ++ actorWho actor ++ ".")
+      ("Changed the email address for signatory from " ++ show oldemail ++ " to " ++ show email ++ " by " ++ actorWho actor ++ ".")
       (Just did)
       actor
    
@@ -1115,17 +1121,18 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (PreparationToPending a) (Ei
       Just document ->
         case checkPreparationToPending document of
           [] -> do
+            let tt = (\days -> (days * 24 *60) `minutesAfter` time) <$> documentdaystosign document
             r <- runUpdateStatement "documents"
                  [ sqlField "status" $ Pending
                  , sqlField "mtime" time
-                 , sqlField "timeout_time" $ (\days -> (days * 24 *60) `minutesAfter` time) <$> documentdaystosign document
+                 , sqlField "timeout_time" tt
                  , sqlLogAppend time ("Document put into Pending state")
                  ]
                 "WHERE id = ? AND type = ?" [ toSql docid, toSql (toDocumentSimpleType (Signable undefined))]
             when (r == 1) $
               ignore $ dbUpdate $ InsertEvidenceEvent
               PreparationToPendingEvidence
-              ("Document was put into Pending state by " ++ actorWho actor ++ ".")
+              ("Document was put into Pending state by " ++ actorWho actor ++ ". Timeout time set to " ++ formatMinutesTimeUTC tt ++ " UTC.")
               (Just docid)
               actor
             getOneDocumentAffected "PreparationToPending" r docid
@@ -1165,8 +1172,6 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (CloseDocument a) (Either St
 data (Actor a, Show a, Eq a, Ord a) => DeleteSigAttachment a = DeleteSigAttachment DocumentID BS.ByteString FileID a
                            deriving (Eq, Ord, Show, Typeable)
 instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (DeleteSigAttachment a) (Either String Document) where
-  dbUpdate (DeleteSigAttachment _ email _ actor) | Just (BS.toString email) /= actorEmail actor =
-    return $ Left $ "A signatory must delete his own attachment."
   dbUpdate (DeleteSigAttachment did email fid actor) = do
     r <- runUpdateStatement "signatory_attachments"
                          [ sqlField "file_id" SqlNull
@@ -1483,12 +1488,11 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (MarkDocumentSeen a) (Either
   dbUpdate (MarkDocumentSeen did signatorylinkid1 mh actor) = do
     let time = actorTime actor
         ipnumber = fromMaybe (IPAddress 0) $ actorIP actor
-        -- this is weak! -EN
         txt = case actorIP actor of
           Just _ ->
-            "GET Request made to secret link by " ++ actorWho actor ++ "."
+            "GET Request made to secret link for signatory with id " ++ show signatorylinkid1 ++ " by " ++ actorWho actor ++ "."
           Nothing ->
-            "Marking document seen by " ++ actorWho actor ++ "."
+            "Marking document seen for signatory with id " ++ show signatorylinkid1 ++ " by " ++ actorWho actor ++ "."
     r <- runUpdateStatement "signatory_links"
                          [ sqlField "seen_time" time
                          , sqlField "seen_ip" ipnumber
@@ -1558,7 +1562,7 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (MarkInvitationRead a) (Eith
           when (r == 1) $
             ignore $ dbUpdate $ InsertEvidenceEvent
             MarkInvitationReadEvidence
-            ("Invitation sent to " ++ show eml ++ " was opened as reported by " ++ actorWho actor ++ ".")
+            ("Invitation sent to " ++ show eml ++ " was opened, as reported by " ++ actorWho actor ++ ".")
             (Just did)
             actor
           getOneDocumentAffected "MarkInvitationRead" r did
@@ -1638,12 +1642,12 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (ReallyDeleteDocument a) (Ei
            _ ->
              runUpdateOnDeletableDoc "WHERE user_id = ? AND company_id is NULL" [toSql $ userid user]
     let txt = case (usercompany user, useriscompanyadmin user) of
-          (Just cid, True) -> "and for the company that user admins (id " ++ show cid ++ ")"
-          _ -> ""
+          (Just cid, True) -> "the company with admin email " ++ show (getEmail user)
+          _ -> "the user with email " ++ show (getEmail user)
     when (r == 1) $ do
       ignore $ dbUpdate $ InsertEvidenceEvent
         ReallyDeleteDocumentEvidence
-        ("The document was removed from the rubbish bin for " ++ actorWho actor ++ txt ++ ".")
+        ("The document was removed from the rubbish bin for " ++ txt ++ " by " ++ actorWho actor ++ ".")
         (Just did)
         actor
     getOneDocumentAffected "ReallyDeleteDocument" r did
@@ -1754,9 +1758,12 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (RestoreArchivedDocument a) 
              runUpdateOnRestorableDoc "WHERE company_id = ?" [toSql cid]
            _ ->
              runUpdateOnRestorableDoc "WHERE user_id = ?" [toSql $ userid user]
+    let txt = case (usercompany user, useriscompanyadmin user) of
+          (Just cid, True) -> "the company with admin email " ++ show (getEmail user)
+          _ -> "the user with email " ++ show (getEmail user)
     ignore $ dbUpdate $ InsertEvidenceEvent
       RestoreArchivedDocumentEvidence
-      ("Document restored from the rubbish bin by " ++ actorWho actor ++ ".")
+      ("Document restored from the rubbish bin for " ++ txt ++ " by " ++ actorWho actor ++ ".")
       (Just did)
       actor
     getOneDocumentAffected "RestoreArchivedDocument" r did
@@ -1778,7 +1785,7 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (RestoreArchivedDocument a) 
 data (Actor a, Show a, Eq a, Ord a) => SaveDocumentForUser a = SaveDocumentForUser DocumentID User SignatoryLinkID a
                            deriving (Eq, Ord, Show, Typeable)
 instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SaveDocumentForUser a) (Either String Document) where
-  dbUpdate (SaveDocumentForUser did User{userid, usercompany} slid actor) = do
+  dbUpdate (SaveDocumentForUser did user@User{userid, usercompany} slid actor) = do
     r <- runUpdateStatement "signatory_links"
                           [ sqlField "user_id" userid
                           , sqlField "company_id" usercompany
@@ -1790,7 +1797,7 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SaveDocumentForUser a) (Eit
     when (r == 1) $
       ignore $ dbUpdate $ InsertEvidenceEvent
       SaveDocumentForUserEvidence
-      ("Saving document to user account with id " ++ show userid ++ " by " ++ actorWho actor ++ ".")
+      ("Saving document to user account with email " ++ show (getEmail user) ++ " by " ++ actorWho actor ++ ".")
       (Just did)
       actor
     getOneDocumentAffected "SaveDocumentForUser" r did
@@ -1815,7 +1822,7 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SaveSigAttachment a) (Eithe
     when (r == 1) $
       ignore $ dbUpdate $ InsertEvidenceEvent
       SaveSigAttachmentEvidence
-      ("Attachment with name " ++ show name ++ " by " ++ actorWho actor ++ ".")
+      ("Saving attachment with name " ++ show name ++ " for signatory with email " ++ show email ++ " by " ++ actorWho actor ++ ".")
       (Just did)
       actor
     getOneDocumentAffected "SaveSigAttachment" r did
@@ -1829,10 +1836,11 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SetDocumentTags a) (Either 
          -- , sqlField "mtime" time
          ]
          "WHERE id = ?" [ toSql did ]
+    let tagstr = intercalate "; " $ map (\(DocumentTag k v)-> BS.toString k ++ "=" ++ BS.toString v) doctags
     when (r == 1) $
       ignore $ dbUpdate $ InsertEvidenceEvent
       SetDocumentTagsEvidence
-      ("Document tags set by " ++ actorWho actor ++ ".")
+      ("Document tags set to " ++ show tagstr ++ " by " ++ actorWho actor ++ ".")
       (Just did)
       actor
     getOneDocumentAffected "SetDocumentTags" r did
@@ -1850,7 +1858,7 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SetDocumentInviteTime a) (E
     when (r == 1) $
       ignore $ dbUpdate $ InsertEvidenceEvent
       SetDocumentInviteTimeEvidence
-      ("Document invite time set by " ++ actorWho actor ++ ".")
+      ("Document invite time set to " ++ formatMinutesTimeUTC invitetime ++ " UTC by " ++ actorWho actor ++ ".")
       (Just did)
       actor
     getOneDocumentAffected "SetDocumentInviteTime" r did
@@ -1869,7 +1877,7 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SetDocumentTimeoutTime a) (
     when (r == 1) $
       ignore $ dbUpdate $ InsertEvidenceEvent
       SetDocumentTimeoutTimeEvidence
-      ("Document timeout time set by " ++ actorWho actor ++ ".")
+      ("Document timeout time set to " ++ formatMinutesTimeUTC timeouttime ++ " UTC by " ++ actorWho actor ++ ".")
       (Just did)
       actor
     getOneDocumentAffected "SetDocumentTimeoutTime" r did
@@ -2285,7 +2293,7 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (TemplateFromDocument a) (Ei
     when (r == 1) $
       ignore $ dbUpdate $ InsertEvidenceEvent
       TemplateFromDocumentEvidence
-      ("Template created from document by " ++ actorWho actor ++ ".")
+      ("Document converted to template by " ++ actorWho actor ++ ".")
       (Just did)
       actor
     getOneDocumentAffected "TemplateFromDocument" r did
