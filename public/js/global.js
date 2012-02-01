@@ -531,9 +531,10 @@ safeReady(function() {
     fixed: false
   });
 
-  $("#docregionselector").change(function() {
+  $("#docregionselector").change(function(ev) {
     var val = $("#docregionselector").val();
     $("#docregionselector option[value=" + val + "]").data("overlay").load();
+    ev.stopPropogation();
     if (val=="REGION_GB") {
       $("#docregionselector option[value=REGION_SE]").attr("selected", "selected");
     } else {
