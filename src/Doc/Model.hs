@@ -24,7 +24,6 @@ module Doc.Model
   , DeleteSigAttachment(..)
   , DocumentFromSignatoryData(..)
   , ErrorDocument(..)
-  , GetDeletedDocumentsByCompany(..)
   , GetDeletedDocumentsByUser(..)
   , GetDocumentByDocumentID(..)
   , GetDocumentStats(..)
@@ -1140,34 +1139,12 @@ instance DBUpdate ErrorDocument (Either String Document) where
 
           s -> return $ Left $ "Cannot ErrorDocument document " ++ show docid ++ " because " ++ concat s
 
-data GetDeletedDocumentsByCompany = GetDeletedDocumentsByCompany User
-                                    deriving (Eq, Ord, Show, Typeable)
-instance DBQuery GetDeletedDocumentsByCompany [Document] where
-  dbQuery (GetDeletedDocumentsByCompany user) = do
-    case useriscompanyadmin user of
-      True ->
-        selectDocuments (selectDocumentsSQL ++
-                         " WHERE EXISTS (SELECT * FROM signatory_links " ++
-                         "               WHERE signatory_links.deleted = TRUE" ++
-                         "                 AND company_id = ?" ++
-                         "                 AND really_deleted = FALSE" ++
-                         "                 AND ((?::TEXT IS NULL AND service_id IS NULL) OR (service_id = ?))" ++
-                         "                 AND documents.id = document_id)" ++
-                         " ORDER BY mtime DESC")
-                      [ toSql (usercompany user)
-                      , toSql (userservice user)
-                      , toSql (userservice user)
-                      ]
-      False -> return []
-
 data GetDeletedDocumentsByUser = GetDeletedDocumentsByUser User
                                  deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDeletedDocumentsByUser [Document] where
   dbQuery (GetDeletedDocumentsByUser user) = do
-    selectDocuments (selectDocumentsSQL ++
-                     " WHERE EXISTS (SELECT * FROM signatory_links WHERE signatory_links.deleted = TRUE AND really_deleted = FALSE AND user_id = ? AND documents.id = document_id) ORDER BY mtime DESC")
-                      [ toSql (userid user)
-                      ]
+    docs <- selectDocumentsBySignatory (userid user) True
+    return docs
 
 selectDocuments :: String -> [SqlValue] -> DB [Document]
 selectDocuments select values = do
@@ -1311,6 +1288,21 @@ instance DBQuery GetDocumentsByCompanyAndTags [Document] where
         return (filter hasTags docs')
     where hasTags doc = all (`elem` (documenttags doc)) doctags
 
+selectDocumentsBySignatory :: UserID -> Bool -> DB [Document]
+selectDocumentsBySignatory userid deleted = do
+    docs <- selectDocumentsBySignatoryLink
+            ("    signatory_links.deleted = " ++ show deleted ++ " " ++
+             "AND signatory_links.really_deleted = FALSE " ++
+             "AND (   signatory_links.user_id = ? " ++
+             "     OR EXISTS (SELECT TRUE FROM users " ++
+             "                WHERE users.id = ? " ++
+             "                  AND signatory_links.company_id = users.company_id " ++
+             "                  AND users.is_company_admin = TRUE))")
+             [ toSql userid
+             , toSql userid
+             ]
+    return docs
+
 {- |
     All documents where the user is a signatory that are not deleted.  An author is a type
     of signatory, so authored documents are included too.
@@ -1321,16 +1313,7 @@ data GetDocumentsBySignatory = GetDocumentsBySignatory User
                                deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsBySignatory [Document] where
   dbQuery (GetDocumentsBySignatory user) = do
-    docs <- selectDocumentsBySignatoryLink
-            ("    signatory_links.deleted = FALSE " ++
-             "AND (   signatory_links.user_id = ? " ++
-             "     OR EXISTS (SELECT TRUE FROM users " ++
-             "                WHERE users.id = ? " ++
-             "                  AND signatory_links.company_id = users.company_id " ++
-             "                  AND users.is_company_admin = TRUE))")
-             [ toSql (userid user)
-             , toSql (userid user)
-             ]
+    docs <- selectDocumentsBySignatory (userid user) False
 
     return $ if useriscompanyadmin user
            then filterDocsWhereActivated (Or (userid user) (usercompany user)) docs

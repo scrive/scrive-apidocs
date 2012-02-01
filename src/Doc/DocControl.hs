@@ -2014,9 +2014,7 @@ jsonDocumentsList = do
             mydocuments <- runDBQuery $ GetDocumentsByAuthor (userid user)
             return $ filter ((==) Attachment . documenttype) mydocuments
         "Rubbish" -> do
-            if useriscompanyadmin user
-                then runDBQuery $ GetDeletedDocumentsByCompany user
-                else runDBQuery $ GetDeletedDocumentsByUser user
+            runDBQuery $ GetDeletedDocumentsByUser user
         "Template|Contract" -> do
             let tfilter doc = (Template Contract == documenttype doc)
             userdocs <- runDBQuery $ GetDocumentsByAuthor (userid user)
