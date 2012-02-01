@@ -413,7 +413,8 @@ makeMailAttachments ctx document = do
       sattachments = concatMap (maybeToList . signatoryattachmentfile) $ documentsignatoryattachments document
       allfiles' = [mainfile] ++ aattachments ++ sattachments
   allfiles <- liftM catMaybes $ mapM (ioRunDB (ctxdbconn ctx) . dbQuery . GetFileByFileID) allfiles'
-  let filenames = map (BS.toString . filename) allfiles
+  --use the doc title rather than file name for the main file (see jira #1152)
+  let filenames = (BS.toString (documenttitle document) ++ ".pdf") : map (BS.toString . filename) (tail allfiles)
   filecontents <- sequence $ map (getFileContents ctx) allfiles
   return $ zip filenames filecontents
 
@@ -599,7 +600,7 @@ handleSignShowOldRedirectToNew did sid mh = do
 
 handleSignShow :: DocumentID -> SignatoryLinkID -> Kontra Response
 handleSignShow documentid
-               signatorylinkid = do           
+               signatorylinkid = do
   mmh <- readField "magichash"
   case mmh of
     Just mh -> do
@@ -612,7 +613,7 @@ handleSignShow documentid
 
 handleSignShow2 :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m String
 handleSignShow2 documentid
-                signatorylinkid = do                  
+                signatorylinkid = do
   Context { ctxtime
           , ctxipnumber
           , ctxflashmessages
