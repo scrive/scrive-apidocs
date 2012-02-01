@@ -39,7 +39,6 @@ import qualified Log
 docStateTests :: Nexus -> Test
 docStateTests conn = testGroup "DocState" [
   dataStructureProperties,
-  testThat "SignableFromDocumentIDWithUpdatedAuthor generates new siglinkids" conn testCreateFromTemplateNewSigLinkID,
   testThat "GetDocumentsByCompanyAndTags filters" conn testGetDocumentsByCompanyAndTagsFilters,
   testThat "GetDocumentsByCompanyAndTags finds" conn testGetDocumentsByCompanyAndTagsFinds,
   testThat "GetDocumentsByCompanyAndTags finds with multiple" conn testGetDocumentsByCompanyAndTagsFindsMultiple,  
@@ -900,23 +899,6 @@ testCreateFromSharedTemplate = do
      == (fmap sfValue $ filter isCustom $ signatoryfields $ signatorydetails author2)
     then assertSuccess
     else assertFailure "Replacing signatory details based on user is loosing fields | SKRIVAPADEV-294"
-
-testCreateFromTemplateNewSigLinkID :: DB ()
-testCreateFromTemplateNewSigLinkID = do
-  user <- addNewRandomAdvancedUser
-  docid <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user (not . isAttachment)
-  tmpdoc <- fmap fromJust $ dbQuery $ GetDocumentByDocumentID docid
-  doc <- if (isTemplate tmpdoc)
-         then return tmpdoc
-         else fmap fromRight $ dbUpdate (TemplateFromDocument docid)
-  mt <- rand 10 arbitrary
-  doc1 <- fmap fromRight $ dbUpdate $ SignableFromDocumentIDWithUpdatedAuthor user Nothing (documentid doc) mt
-  doc2 <- fmap fromRight $ dbUpdate $ SignableFromDocumentIDWithUpdatedAuthor user Nothing (documentid doc) mt  
-  let Just sl1 = getAuthorSigLink doc1
-      Just sl2 = getAuthorSigLink doc2
-  assertBool ("SignableFromDocumentIDWithUpdatedAuthor should create documents with different signatorylinkids") $ 
-    signatorylinkid sl1 /= signatorylinkid sl2
-
 
 testAddDocumentAttachmentFailsIfNotPreparation :: DB ()
 testAddDocumentAttachmentFailsIfNotPreparation = doTimes 10 $ do
