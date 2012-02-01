@@ -899,7 +899,11 @@ instance DBUpdate ArchiveDocument (Either String Document) where
               runUpdateOnArchivableDoc "WHERE company_id = ?" [toSql cid]
            _ ->
               runUpdateOnArchivableDoc "WHERE user_id = ?" [toSql $ userid user]
-    getOneDocumentAffected "ArchiveDocument" r did
+    -- a supervisor could delete both their own and another subaccount's links
+    -- on the same document, so this would mean the sig link count affected
+    -- is more than 1. see bug 1195.
+    let fudgedr = if r==0 then 0 else 1
+    getOneDocumentAffected "ArchiveDocument" fudgedr did
     where
       runUpdateOnArchivableDoc whereClause whereFields =
         runUpdateStatement "signatory_links"
