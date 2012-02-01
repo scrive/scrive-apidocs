@@ -1288,12 +1288,13 @@ instance DBQuery GetDocumentsByCompanyAndTags [Document] where
     where hasTags doc = all (`elem` (documenttags doc)) doctags
 
 activatedSQL :: String
-activatedSQL = "COALESCE(signatory_links.sign_order <= (" ++ subselect ++ "), TRUE) "
+activatedSQL = "(NOT EXISTS (" ++ subselect ++ ")) "
   where
-    subselect = "SELECT min(sl2.sign_order) FROM signatory_links AS sl2 " ++
+    subselect = "SELECT 1 FROM signatory_links AS sl2 " ++
                 "WHERE signatory_links.document_id = sl2.document_id " ++
                 "  AND ((sl2.roles & 1) <> 0) " ++
-                "  AND sl2.sign_time IS NULL "
+                "  AND sl2.sign_time IS NULL " ++
+                "  AND sl2.sign_order < signatory_links.sign_order "
 
 selectDocumentsBySignatory :: UserID -> Bool -> DB [Document]
 selectDocumentsBySignatory userid deleted = do
