@@ -532,14 +532,16 @@ safeReady(function() {
   });
 
   $("#docregionselector").change(function(ev) {
-    var val = $("#docregionselector").val();
-    $("#docregionselector option[value=" + val + "]").data("overlay").load();
-    ev.stopPropogation();
-    if (val=="REGION_GB") {
-      $("#docregionselector option[value=REGION_SE]").attr("selected", "selected");
-    } else {
-      $("#docregionselector option[value=REGION_GB]").attr("selected", "selected");
-    }
+    if (!$("#dialog-confirm-region-gb").is(":visible") &&
+         !$("#dialog-confirm-region-se").is(":visible")) {
+      var val = $("#docregionselector").val();
+      $("#docregionselector option[value=" + val + "]").data("overlay").load();
+      if (val=="REGION_GB") {
+        $("#docregionselector option[value=REGION_SE]").attr("selected", "selected");
+      } else {
+        $("#docregionselector option[value=REGION_GB]").attr("selected", "selected");
+      }
+   }
   });
 });
 
