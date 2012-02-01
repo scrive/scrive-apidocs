@@ -406,7 +406,7 @@ handlePostUserSecurity = do
 -}
 isUserDeletable :: Kontrakcja m => User -> m Bool
 isUserDeletable user = do
-  userdocs <- runDBQuery $ GetDocumentsByUser user
+  userdocs <- runDBQuery $ GetDocumentsByAuthor (userid user)
   return $ all isDeletableDocument userdocs
 
 handleViralInvite :: Kontrakcja m => m KontraLink
@@ -467,11 +467,11 @@ createUser email fstname sndname mcompany = do
   passwd <- liftIO $ createPassword =<< randomPassword
   runDBUpdate $ AddUser (fstname, sndname) (unEmail $ email) (Just passwd) False Nothing (fmap companyid mcompany) (ctxlocale ctx)
 
-sendNewUserMail :: Kontrakcja m => Bool -> User -> m ()
-sendNewUserMail vip user = do
+sendNewUserMail :: Kontrakcja m => User -> m ()
+sendNewUserMail user = do
   ctx <- getContext
   al <- newAccountCreatedLink user
-  mail <- newUserMail (ctxhostpart ctx) (getEmail user) (getSmartName user) al vip
+  mail <- newUserMail (ctxhostpart ctx) (getEmail user) (getSmartName user) al
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]}
   return ()
 
@@ -633,6 +633,7 @@ handleAccountSetupGet aid hash = do
         guardMagicTokenMatch hash action
         getUserFromAction action
       Nothing -> getUserByEmail
+  when (isJust muser) $ switchLocale (getLocale $ fromJust muser)
   case (maybe False (isJust . userhasacceptedtermsofservice) muser, maction) of
     (True, _) -> do
       -- seems like a security risk.  you can just feed random numbers with emails in the get param
@@ -685,6 +686,7 @@ handleAccountSetupPost aid hash = do
     Just action -> do
       guardMagicTokenMatch hash action
       user <- guardJustM $ getOrCreateActionUser action
+      switchLocale (getLocale user)
       if isJust $ userhasacceptedtermsofservice user
         then addFlashM flashMessageUserAlreadyActivated
         else do
@@ -727,7 +729,7 @@ handleAccountSetupPost aid hash = do
         then do
           ctx <- getContext
           al <- newAccountCreatedLink user
-          mail <- newUserMail (ctxhostpart ctx) email email al False
+          mail <- newUserMail (ctxhostpart ctx) email email al
           scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = email, email = email}] }
           addFlashM flashMessageNewActivationLinkSend
           getHomeOrUploadLink
@@ -770,6 +772,7 @@ guardMagicTokenMatch expectedtoken action =
 handleActivate :: Kontrakcja m => ActionID -> MagicHash -> SignupMethod -> User -> m (Maybe User)
 handleActivate aid hash signupmethod actvuser = do
   Log.debug $ "Activating user account: "  ++ (BS.toString $ getEmail actvuser)
+  switchLocale (getLocale actvuser)
   ctx <- getContext
   mtos <- getDefaultedField False asValidCheckBox "tos"
   -- unless they're signing up from the sign view we require a fstname and a sndname
@@ -829,7 +832,8 @@ handlePasswordReminderGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
 handlePasswordReminderGet aid hash = do
     muser <- getUserFromActionOfType PasswordReminderID aid hash
     case muser of
-         Just _ -> do
+         Just user -> do
+             switchLocale (getLocale user)
              extendActionEvalTimeToOneDayMinimum aid
              addFlashM $ modalNewPasswordView aid hash
              sendRedirect LinkUpload
@@ -842,7 +846,9 @@ handlePasswordReminderPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraL
 handlePasswordReminderPost aid hash = do
     muser <- getUserFromActionOfType PasswordReminderID aid hash
     case muser of
-         Just user -> handleChangePassword user
+         Just user -> do
+             switchLocale (getLocale user)
+             handleChangePassword user
          Nothing   -> do
              addFlashM flashMessagePasswordChangeLinkNotValid
              getHomeOrUploadLink

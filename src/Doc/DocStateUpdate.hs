@@ -63,7 +63,9 @@ signDocumentWithEmail did slid mh fields = do
   edoc <- getDocByDocIDSigLinkIDAndMagicHash did slid mh
   case edoc of
     Left err -> return $ Left err
-    Right olddoc -> case olddoc `allowsIdentification` EmailIdentification of
+    Right olddoc -> do
+     switchLocale (getLocale olddoc)
+     case olddoc `allowsIdentification` EmailIdentification of
       False -> return $ Left (DBActionNotAvailable "This document does not allow signing using email identification.")
       True  -> do
         Context{ ctxtime, ctxipnumber } <- getContext
@@ -89,7 +91,9 @@ signDocumentWithEleg did slid mh fields sinfo = do
   edoc <- getDocByDocIDSigLinkIDAndMagicHash did slid mh
   case edoc of
     Left err -> return $ Left err
-    Right olddoc -> case olddoc `allowsIdentification` ELegitimationIdentification of
+    Right olddoc -> do
+     switchLocale (getLocale olddoc)
+     case olddoc `allowsIdentification` ELegitimationIdentification of
       False -> return $ Left (DBActionNotAvailable "This document does not allow signing using email identification.")
       True  -> do
         let Just sl' = getSigLinkFor olddoc slid
@@ -116,6 +120,7 @@ rejectDocumentWithChecks did slid mh customtext = do
   case edoc of
     Left err -> return $ Left err
     Right olddocument -> do
+      switchLocale (getLocale olddocument)
       Context{ ctxtime, ctxipnumber } <- getContext
       let Just sll = getSigLinkFor olddocument slid
       let sa = SignatoryActor ctxtime ctxipnumber (maybesignatory sll) (BS.toString $ getEmail sll) slid

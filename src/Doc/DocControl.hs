@@ -364,7 +364,7 @@ sendInvitationEmail1 ctx document signatorylink = do
   ioRunDB (ctxdbconn ctx) $ dbUpdate $ AddInvitationEvidence documentid signatorylinkid (SystemActor (ctxtime ctx))
 
 {- |
-    Send a reminder email
+    Send a reminder email (and update the modification time on the document)
 -}
 sendReminderEmail :: Kontrakcja m => Maybe BS.ByteString -> Context -> Document -> SignatoryLink -> m SignatoryLink
 sendReminderEmail custommessage ctx doc siglink = do
@@ -378,6 +378,8 @@ sendReminderEmail custommessage ctx doc siglink = do
                       else []
     , from = documentservice doc
     }
+  --this is needed so the last event time in archive looks good
+  _ <- runDBUpdate $ SetDocumentModificationData (documentid doc) (ctxtime ctx)
   return siglink
 
 {- |
@@ -468,6 +470,7 @@ handleDeclineAccountFromSign documentid
                              actionid
                              magichash = do
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid signmagichash
+  switchLocale $ getLocale document
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
   userid <- guardJust $ maybesignatory signatorylink
   user <- guardJustM $ runDBQuery $ GetUserByID userid
@@ -597,11 +600,6 @@ rejectDocument documentid
       addFlashM $ modalRejectedView document
       return $ LoopBack
 
-getDocumentLocale :: DocumentID -> DB (Maybe Locale)
-getDocumentLocale documentid = do
-  mdoc <- dbQuery $ GetDocumentByDocumentID documentid
-  return $ fmap getLocale mdoc --TODO: store lang on doc
-
 {- |
    Show the document to be signed
  -}
@@ -613,20 +611,20 @@ handleSignShowOldRedirectToNew did sid mh = do
 
 handleSignShow :: DocumentID -> SignatoryLinkID -> Kontra Response
 handleSignShow documentid
-               signatorylinkid = do
+               signatorylinkid = do           
   mmh <- readField "magichash"
   case mmh of
     Just mh -> do
       modifyContext (\ctx -> ctx { ctxmagichashes = Map.insert signatorylinkid mh (ctxmagichashes ctx) })
-      toResp (LinkSignDocNoMagicHash documentid signatorylinkid)    
+      toResp (LinkSignDocNoMagicHash documentid signatorylinkid)
     Nothing -> do
       v <- handleSignShow2 documentid signatorylinkid
       (toResp v)
-      
+
 
 handleSignShow2 :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m String
 handleSignShow2 documentid
-                signatorylinkid = do
+                signatorylinkid = do                  
   Context { ctxtime
           , ctxipnumber
           , ctxflashmessages
@@ -640,6 +638,8 @@ handleSignShow2 documentid
                    mzero
 
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
+  disableLocalSwitch
+  switchLocale (getLocale document)
   invitedlink <- guardJust $ getSigLinkFor document signatorylinkid
   _ <- runDBUpdate $ MarkDocumentSeen documentid signatorylinkid magichash 
        (SignatoryActor ctxtime ctxipnumber (maybesignatory invitedlink) (BS.toString $ getEmail invitedlink) signatorylinkid)
@@ -680,10 +680,12 @@ maybeAddDocumentCancelationMessage document = do
    Method: GET
  -}
 handleIssueShowGet :: Kontrakcja m => DocumentID -> m (Either KontraLink (Either KontraLink String))
-handleIssueShowGet docid =
+handleIssueShowGet docid = do
   checkUserTOSGet $ do
     document <- guardRightM $ getDocByDocID docid
     ctx@Context { ctxmaybeuser } <- getContext
+    disableLocalSwitch -- Not show locale flag on this page
+    switchLocale (getLocale document)
     mdstep <- getDesignStep docid
     case (mdstep, documentfunctionality document) of
       (Just (DesignStep3 _ _), BasicFunctionality) -> return $ Left $ LinkIssueDoc docid
@@ -1334,7 +1336,7 @@ updateDocument Context{ ctxtime, ctxipnumber, ctxmaybeuser} document@Document{ d
   signatoriespersonalnumbers <- getAndConcat "signatorypersonalnumber"
   signatoriescompanynumbers  <- getAndConcat "signatorycompanynumber"
   signatoriesemails          <- map (fromMaybe BS.empty) <$> getOptionalFieldList asValidEmail "signatoryemail"
-  signatoriessignorders      <- map (SignOrder . fromMaybe 1 . fmap (max 1 . fst) . BSC.readInteger) <$> 
+  signatoriessignorders      <- map (SignOrder . fromMaybe 1 . fmap (max 1 . fst) . BSC.readInteger) <$>
                                 getAndConcat "signatorysignorder"
                                 -- a little filtering here, but we want signatories to have sign order > 0
   signatoriesroles           <- getAndConcat "signatoryrole"
@@ -1351,7 +1353,7 @@ updateDocument Context{ ctxtime, ctxipnumber, ctxmaybeuser} document@Document{ d
   invitetext <- fmap (fromMaybe defaultInviteMessage) $ getCustomTextField "invitetext"
 
   mcsvsigindex <- getOptionalField asValidNumber "csvsigindex"
-  
+
   let moldcsvupload = msum (map signatorylinkcsvupload (documentsignatorylinks document))
 
   Log.debug $ "updateDocument: " ++ show mcsvsigindex ++ "/" ++ show (csvtitle <$> moldcsvupload) ++ " for #" ++ show documentid
@@ -1428,7 +1430,7 @@ updateDocument Context{ ctxtime, ctxipnumber, ctxmaybeuser} document@Document{ d
                                   then moldcsvupload
                                   else Nothing
                              )
-                              
+
       authordetails2 = (authordetails, if isauthorsig
                                        then [SignatoryPartner, SignatoryAuthor]
                                        else [SignatoryAuthor], Nothing)
@@ -1465,19 +1467,16 @@ updateDocument Context{ ctxtime, ctxipnumber, ctxmaybeuser} document@Document{ d
 
 getDocumentsForUserByType :: Kontrakcja m => DocumentType -> User -> m [Document]
 getDocumentsForUserByType doctype user = do
-  mysigdocs <- runDBQuery $ GetDocumentsBySignatory user
-  mydocuments <- if useriscompanyadmin user
-                   then do
-                     mycompanydocs <- runDBQuery $ GetDocumentsByCompany user
-                     return $ union mysigdocs mycompanydocs
-                   else return mysigdocs
+  mydocuments <- runDBQuery $ GetDocumentsBySignatory user
 
-  return . filter ((\d -> documenttype d == doctype)) $ nub mydocuments
+  return . filter ((\d -> documenttype d == doctype)) $ mydocuments
 
 
 handleAttachmentViewForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
 handleAttachmentViewForViewer docid siglinkid mh = do
   doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
+  disableLocalSwitch
+  switchLocale (getLocale doc)
   let pending JpegPagesPending = True
       pending _                = False
       files                    = map authorattachmentfile (documentauthorattachments doc)
@@ -1526,12 +1525,6 @@ handleFilePages did fid = do
       pageinfo (_,width,height) = JSObject $ toJSObject [("width",JSRational True $ toRational width),
                                                          ("height",JSRational True $ toRational height)
                                                         ]
-
--- get rid of duplicates
--- FIXME: nub is very slow
-prepareDocsForList :: [Document] -> [Document]
-prepareDocsForList =
-  sortBy (\d1 d2 -> compare (documentmtime d2) (documentmtime d1)) . nub
 
 handlePageOfDocument :: Kontrakcja m => DocumentID -> m (Either KontraLink Response)
 handlePageOfDocument docid = checkUserTOSGet $ handlePageOfDocument' docid Nothing
@@ -1655,7 +1648,7 @@ handleRubbishReallyDelete = do
             doc <- guardRightM $ runDBUpdate $ ReallyDeleteDocument user did actor
             case getSigLinkFor doc user of
               Just sl -> runDB $ addSignStatPurgeEvent doc sl ctxtime
-              _ -> return False) 
+              _ -> return False)
     $ map DocumentID docids
   addFlashM flashMessageRubbishHardDeleteDone
   return $ LinkRubbishBin
@@ -2033,9 +2026,7 @@ jsonDocumentsList = do
             mydocuments <- runDBQuery $ GetDocumentsByAuthor (userid user)
             return $ filter ((==) Attachment . documenttype) mydocuments
         "Rubbish" -> do
-            if useriscompanyadmin user
-                then runDBQuery $ GetDeletedDocumentsByCompany user
-                else runDBQuery $ GetDeletedDocumentsByUser user
+            runDBQuery $ GetDeletedDocumentsByUser user
         "Template|Contract" -> do
             let tfilter doc = (Template Contract == documenttype doc)
             userdocs <- runDBQuery $ GetDocumentsByAuthor (userid user)
@@ -2102,12 +2093,10 @@ handleInvariantViolations = onlyAdmin $ do
 
 prepareEmailPreview :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 prepareEmailPreview docid slid = do
-    ctx <- getContext
-    Log.debug "Making email preview"
     mailtype <- getFieldWithDefault "" "mailtype"
-    mdoc <- runDBQuery $ GetDocumentByDocumentID docid
-    when (isNothing mdoc) $ (Log.debug "No document found") >> mzero
-    let doc = fromJust mdoc
+    doc <- guardJustM $ runDBQuery $ GetDocumentByDocumentID docid
+    switchLocale $ getLocale doc
+    ctx <- getContext
     content <- case mailtype of
          "remind" -> do
              let msl = find ((== slid) . signatorylinkid) $ documentsignatorylinks doc

@@ -8,41 +8,28 @@ module AppControl
     , defaultAWSAction
 
     -- exported for the sake of unit tests
-    , handleLoginPost
-    , getDocumentLocale
-    , getUserLocale
-    , signupPagePost
+    , getStandardLocale
     ) where
 
 import AppConf
 import API.Service.Model
 
-import ActionSchedulerState
 import AppView as V
 import DB.Classes
 import Doc.DocStateData
-import InputValidation
 import Kontra
-import KontraLink
-import Mails.SendMail
-import Numeric
 import MinutesTime
 import Misc
 --import PayEx.PayExInterface ()-- Import so at least we check if it compiles
 import Redirect
 import Session
-import Stats.Control
 import Templates.Templates
 import User.Model
-import User.UserView as UserView
 import qualified Log (error, debug)
-import qualified Doc.DocControl as DocControl
 import qualified FlashMessage as F
 import qualified MemCache
 import qualified TrustWeaver as TW
-import qualified User.UserControl as UserControl
 import Util.FlashUtil
-import Util.HasSomeUserInfo
 import Util.KontraLinkUtils
 import File.FileID
 
@@ -57,7 +44,6 @@ import DB.Nexus
 import GHC.Int (Int64(..))
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Happstack.Server.Internal.Cookie
-import Happstack.State (query)
 import Network.Socket
 import System.Directory
 import System.Time
@@ -82,67 +68,26 @@ data AppGlobals
                  , docscache       :: MVar (Map.Map FileID JpegPages)
                  }
 
-{- |
-    If the current request is referring to a document then this will
-    return the locale of that document.
--}
-getDocumentLocale :: Nexus -> (ServerMonad m, Functor m, MonadIO m) => m (Maybe Locale)
-getDocumentLocale conn = do
-  rq <- askRq
-  let docids = catMaybes . map (fmap fst . listToMaybe . readSigned readDec) $ rqPaths rq
-  mdoclocales <- ioRunDB conn $ mapM (DocControl.getDocumentLocale . DocumentID) docids
-  return . listToMaybe $ catMaybes mdoclocales
 
 {- |
     Determines the locale of the current user (whether they are logged in or not), by checking
     their settings, the request, and cookies.
 -}
-getUserLocale :: (MonadPlus m, MonadIO m, ServerMonad m, FilterMonad Response m, Functor m, HasRqData m) =>
-                   Nexus -> Maybe User -> m Locale
-getUserLocale conn muser = do
+getStandardLocale :: (HasLocale a, HasRqData m, ServerMonad m, FilterMonad Response m, MonadIO m, MonadPlus m, Functor m) => Maybe a -> m Locale
+
+getStandardLocale muser = do
   rq <- askRq
-  currentcookielocale <- optional (readCookieValue "locale")
-  activationlocale <- getActivationLocale rq
-  let userlocale = locale <$> usersettings <$> muser
-      urlregion = (listToMaybe $ rqPaths rq) >>= regionFromCode
+  currentcookielocale <- optional $ readCookieValue "locale"
+  let urlregion = (listToMaybe $ rqPaths rq) >>= regionFromCode
       urllang = (listToMaybe . drop 1 $ rqPaths rq) >>= langFromCode
       urllocale = case (urlregion, urllang) of
                     (Just region, Just lang) -> Just $ mkLocale region lang
                     _ -> Nothing
-  doclocale <- getDocumentLocale conn
-  let browserlocale = getBrowserLocale rq
-  let newlocale = firstOf [ activationlocale
-                          , userlocale
-                          , doclocale
-                          , urllocale
-                          , currentcookielocale
-                          , Just browserlocale
-                          ]
-  let newlocalecookie = mkCookie "locale" (show newlocale)
+      browserlocale =  mkLocaleFromRegion $ regionFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
+      newlocale = fromMaybe browserlocale $ msum [urllocale, (getLocale <$> muser), currentcookielocale]
+      newlocalecookie = mkCookie "locale" (show newlocale)
   addCookie (MaxAge (60*60*24*366)) newlocalecookie
   return newlocale
-  where
-    getBrowserLocale rq =
-      mkLocaleFromRegion $ regionFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
-    -- try and get the locale from the current activation user by checking the path for action ids, and giving them a go
-    getActivationLocale rq = do
-      let actionids = catMaybes . map (fmap fst . listToMaybe . readSigned readDec) $ rqPaths rq
-      mactionlocales <- mapM (getActivationLocaleFromAction . ActionID) actionids
-      return . listToMaybe $ catMaybes mactionlocales
-    getActivationLocaleFromAction aid = do
-      maction <- query $ GetAction aid
-      mactionuser <- case fmap actionType maction of
-                       Just (AccountCreatedBySigning _ uid _ _) -> ioRunDB conn . dbQuery $ GetUserByID uid
-                       Just (AccountCreated uid _) -> ioRunDB conn . dbQuery $ GetUserByID uid
-                       _ -> return Nothing
-      return $ fmap (locale . usersettings) mactionuser
-    optional c = (liftM Just c) `mplus` (return Nothing)
-    firstOf :: Bounded a => [Maybe a] -> a
-    firstOf opts =
-      case find isJust opts of
-        Just val -> fromJust val
-        Nothing -> defaultValue
-
 
 {- |
     Handles an error by displaying the home page with a modal error dialog.
@@ -265,7 +210,7 @@ appHandler handleRoutes appConf appGlobals = do
       return res
 
     createContext rq session = do
-      hostpart <- getHostpart
+      currhostpart <- getHostpart
       -- FIXME: we should read some headers from upstream proxy, if any
       let peerhost = case getHeader "x-real-ip" rq of
                        Just name -> BS.toString name
@@ -289,7 +234,9 @@ appHandler handleRoutes appConf appGlobals = do
       muser <- getUserFromSession conn session
       mcompany <- getCompanyFromSession conn session
       location <- getLocationFromSession session
-      mservice <- ioRunDB conn . dbQuery . GetServiceByLocation . toServiceLocation =<< currentLink
+      mservice <- currentLink >>= \clink -> if (hostpart appConf `isPrefixOf` clink)
+                                             then return Nothing
+                                             else ioRunDB conn $ dbQuery $ GetServiceByLocation $ toServiceLocation clink
       flashmessages <- withDataFn F.flashDataFromCookie $ maybe (return []) $ \fval ->
           case F.fromCookieValue (aesConfig appConf) fval of
                Just flashes -> return flashes
@@ -302,13 +249,12 @@ appHandler handleRoutes appConf appGlobals = do
       templates2 <- liftIO $ maybeReadTemplates (templates appGlobals)
 
       -- work out the region and language
-      doclocale <- getDocumentLocale conn
-      userlocale <- getUserLocale conn muser
+      userlocale <- getStandardLocale muser
 
       let elegtrans = getELegTransactions session
           ctx = Context
                 { ctxmaybeuser = muser
-                , ctxhostpart = hostpart
+                , ctxhostpart = currhostpart
                 , ctxflashmessages = flashmessages
                 , ctxtime = minutestime
                 , ctxnormalizeddocuments = docscache appGlobals
@@ -321,7 +267,7 @@ appHandler handleRoutes appConf appGlobals = do
                 , ctxtemplates = localizedVersion userlocale templates2
                 , ctxglobaltemplates = templates2
                 , ctxlocale = userlocale
-                , ctxlocaleswitch = isNothing $ doclocale
+                , ctxlocaleswitch = True
                 , ctxmailsconfig = mailsConfig appConf
                 , ctxtwconf = TW.TrustWeaverConf
                               { TW.signConf = trustWeaverSign appConf
@@ -341,99 +287,3 @@ appHandler handleRoutes appConf appGlobals = do
                 , ctxmagichashes = getMagicHashes session
                 }
       return ctx
-
-{- |
-   Handles viewing of the signup page
--}
-_signupPageGet :: Kontra Response
-_signupPageGet = do
-    ctx <- getContext
-    content <- liftIO (signupPageView $ ctxtemplates ctx)
-    V.renderFromBody V.TopNone V.kontrakcja  content
-
-
-_signupVipPageGet :: Kontra Response
-_signupVipPageGet = do
-    ctx <- getContext
-    content <- liftIO (signupVipPageView $ ctxtemplates ctx)
-    V.renderFromBody V.TopNone V.kontrakcja content
-{- |
-   Handles submission of the signup form.
-   Normally this would create the user, (in the process mailing them an activation link),
-   but if the user already exists, we check to see if they have accepted the tos.  If they haven't,
-   then we send them a new activation link because probably the old one expired or was lost.
-   If they have then we stop the signup.
--}
-signupPagePost :: Kontrakcja m => m KontraLink
-signupPagePost = do
-    Context { ctxtime } <- getContext
-    signup False $ Just ((60 * 24 * 31) `minutesAfter` ctxtime)
-
-{-
-    A comment next to LoopBack says never to use it. Is this function broken?
--}
-signup :: Kontrakcja m => Bool -> Maybe MinutesTime -> m KontraLink
-signup vip _freetill =  do
-  memail <- getOptionalField asValidEmail "email"
-  case memail of
-    Nothing -> return LoopBack
-    Just email -> do
-      muser <- runDBQuery $ GetUserByEmail Nothing $ Email $ email
-      case (muser, muser >>= userhasacceptedtermsofservice) of
-        (Just user, Nothing) -> do
-          -- there is an existing user that hasn't been activated
-          -- send them another invite
-          UserControl.sendNewUserMail vip user
-        (Nothing, Nothing) -> do
-          -- this email address is new to the system, so create the user
-          -- and send an invite
-          mnewuser <- UserControl.createUser (Email email) BS.empty BS.empty Nothing
-          maybe (return ()) (UserControl.sendNewUserMail vip) mnewuser
-        (_, _) -> return ()
-      -- whatever happens we want the same outcome, we just claim we sent the activation link,
-      -- because we don't want any security problems with user information leaks
-      addFlashM $ modalUserSignupDone (Email email)
-      return LoopBack
-
-{- |
-   Sends a new activation link mail, which is really just a new user mail.
--}
-_sendNewActivationLinkMail:: Context -> User -> Kontra ()
-_sendNewActivationLinkMail Context{ctxhostpart, ctxmailsconfig} user = do
-    let email = getEmail user
-    al <- newAccountCreatedLink user
-    mail <- newUserMail ctxhostpart email email al False
-    scheduleEmailSendout ctxmailsconfig $ mail { to = [MailAddress {fullname = email, email = email}] }
-
-{- |
-   Handles submission of a login form.  On failure will redirect back to referer, if there is one.
--}
-handleLoginPost :: Kontrakcja m => m KontraLink
-handleLoginPost = do
-    ctx <- getContext
-    memail  <- getOptionalField asDirtyEmail    "email"
-    mpasswd <- getOptionalField asDirtyPassword "password"
-    let linkemail = maybe "" BS.toString memail
-    case (memail, mpasswd) of
-        (Just email, Just passwd) -> do
-            -- check the user things here
-            maybeuser <- runDBQuery $ GetUserByEmail Nothing (Email email)
-            case maybeuser of
-                Just user@User{userpassword}
-                    | verifyPassword userpassword passwd -> do
-                        Log.debug $ "User " ++ show email ++ " logged in"
-                        _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
-                          locale = ctxlocale ctx
-                        }
-                        muuser <- runDBQuery $ GetUserByID (userid user)
-                        _ <- addUserLoginStatEvent (ctxtime ctx) (fromJust muuser)
-                        logUserToContext muuser
-                        return BackToReferer
-                Just _ -> do
-                        Log.debug $ "User " ++ show email ++ " login failed (invalid password)"
-                        return $ LinkLogin (ctxlocale ctx) $ InvalidLoginInfo linkemail
-                Nothing -> do
-                    Log.debug $ "User " ++ show email ++ " login failed (user not found)"
-                    return $ LinkLogin (ctxlocale ctx) $ InvalidLoginInfo linkemail
-        _ -> return $ LinkLogin (ctxlocale ctx) $ InvalidLoginInfo linkemail
-

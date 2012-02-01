@@ -123,7 +123,7 @@ testUserMails conn mailTo = withTestEnvironment conn $ do
                            sendoutForManualChecking s req ctx mailTo m
     checkMail "New account" $ do
           al <- newAccountCreatedLink user
-          newUserMail (ctxhostpart ctx) (getEmail user) (getEmail user) al False
+          newUserMail (ctxhostpart ctx) (getEmail user) (getEmail user) al
     checkMail "New account by admin" $ do
           al <- newAccountCreatedLink user
           mailNewAccountCreatedByAdmin ctx (ctxlocale ctx) (getSmartName user) (getEmail user) al Nothing

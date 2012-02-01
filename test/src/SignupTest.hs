@@ -12,12 +12,12 @@ import Test.HUnit (Assertion)
 import qualified Data.ByteString.UTF8 as BS
 
 import ActionSchedulerState
-import AppControl
 import Context
 import DB.Classes
 import DB.Types
 import FlashMessage
 import Mails.Model
+import Login
 import LoginTest (assertLoginEventRecordedFor)
 import MinutesTime
 import Misc

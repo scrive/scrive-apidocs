@@ -11,10 +11,10 @@ import Test.HUnit (Assertion)
 import qualified Data.ByteString.Char8 as BS
 
 import ActionSchedulerState
-import AppControl
 import DB.Classes
 import Context
 import FlashMessage
+import Login
 import Redirect
 import StateHelper
 import Stats.Model

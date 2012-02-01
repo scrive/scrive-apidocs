@@ -31,6 +31,7 @@ kontraMigrations = [
   , makeUserStatsRepeatableByChangingPK
   , addNameColumnInSignatoryAttachments
   , addCSVUploadDataFromDocumentToSignatoryLink
+  , addColumnToRecordInternalInsertionOrder
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

@@ -337,7 +337,7 @@ resaveDocsForUser uid = onlySalesOrAdmin $ do
   Context{ctxmaybeuser = Just admin, ctxtime, ctxipnumber} <- getContext
   let actor = AdminActor ctxtime ctxipnumber (userid admin) (BS.toString $ getEmail admin)
   user <- runDBOrFail $ dbQuery $ GetUserByID uid
-  userdocs <- runDBQuery $ GetDocumentsByUser user
+  userdocs <- runDBQuery $ GetDocumentsByAuthor uid
   mapM_ (\doc -> runDBUpdate $ AdminOnlySaveForUser (documentid doc) user actor) userdocs 
   return ()
 

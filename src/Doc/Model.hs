@@ -24,17 +24,14 @@ module Doc.Model
   , DeleteSigAttachment(..)
   , DocumentFromSignatoryData(..)
   , ErrorDocument(..)
-  , GetDeletedDocumentsByCompany(..)
   , GetDeletedDocumentsByUser(..)
   , GetDocumentByDocumentID(..)
   , GetDocumentStats(..)
   , GetDocumentStatsByUser(..)
   , GetDocuments(..)
   , GetDocumentsByAuthor(..)
-  , GetDocumentsByCompany(..)
   , GetDocumentsByCompanyAndTags(..)
   , GetDocumentsBySignatory(..)
-  , GetDocumentsByUser(..)
   , GetSignatoryLinkIDs(..)
   , GetTimeoutedButPendingDocuments(..)
   , MarkDocumentSeen(..)
@@ -77,6 +74,7 @@ module Doc.Model
   , TimeoutDocument(..)
   , UpdateFields(..)
   , UpdateSigAttachments(..)
+  , SetDocumentModificationData(..)
   -- , FixBug510ForDocument(..)
   --, MigrateDocumentSigAccounts(..)
   ) where
@@ -515,7 +513,7 @@ decodeRowAsSignatoryLinkWithDocumentID :: SignatoryLinkID
                          -> Maybe Int
                          -> Bool
                          -> Bool
-                         -> Either DBException (DocumentID,SignatoryLink)                        
+                         -> Either DBException (DocumentID,SignatoryLink)
 decodeRowAsSignatoryLinkWithDocumentID slid
                          document_id
                          user_id
@@ -580,13 +578,13 @@ decodeRowAsSignatoryLinkWithDocumentID slid
     , signatoryroles     = roles
     , signatorylinkdeleted  = deleted
     , signatorylinkreallydeleted = really_deleted
-    , signatorylinkcsvupload = 
+    , signatorylinkcsvupload =
       case (csv_title, csv_contents, csv_signatory_index) of
         (Just t, Just c, Just si) -> Just (CSVUpload t c si)
         _ -> Nothing
-    })) :: Either DBException (DocumentID,SignatoryLink)         
+    })) :: Either DBException (DocumentID,SignatoryLink)
 
-    
+
 
 fetchSignatoryLinks :: Statement -> IO [SignatoryLink]
 fetchSignatoryLinks st = do
@@ -596,7 +594,7 @@ fetchSignatoryLinks st = do
 fetchSignatoryLinksWithDocuments :: Statement -> IO [(DocumentID,SignatoryLink)]
 fetchSignatoryLinksWithDocuments st = do
   fetchValues st decodeRowAsSignatoryLinkWithDocumentID
-  
+
 insertSignatoryLinkAsIs :: DocumentID -> SignatoryLink -> DB (Maybe SignatoryLink)
 insertSignatoryLinkAsIs documentid link = do
   ruserid <- case maybesignatory link of
@@ -604,14 +602,14 @@ insertSignatoryLinkAsIs documentid link = do
     Just userid1 -> do
       muser <- dbQuery $ GetUserByID userid1
       case muser of
-        Nothing -> 
+        Nothing ->
           do
             Just doc <- dbQuery $ GetDocumentByDocumentID documentid
-            Log.server $ "User " ++ show (maybesignatory link) ++ " of document #" ++ 
+            Log.server $ "User " ++ show (maybesignatory link) ++ " of document #" ++
                show documentid ++ " '" ++ BS.toString (documenttitle doc) ++ "' does not exist, setting to NULL"
             return Nothing
         Just _ -> return (Just userid1)
- 
+
   --liftIO $ print link
   (_, st) <- runInsertStatementWhereReturning "signatory_links"
                             [ sqlField "id" $ signatorylinkid link
@@ -666,7 +664,7 @@ decodeRowAsAuthorAttachment :: DocumentID
                             -> Either DBException (DocumentID, AuthorAttachment)
 decodeRowAsAuthorAttachment document_id
                             file_id =
-  return ( document_id 
+  return ( document_id
          , AuthorAttachment
            { authorattachmentfile = file_id
            })
@@ -719,8 +717,8 @@ decodeRowAsSignatoryAttachment :: DocumentID
                                -> Either DBException (DocumentID, SignatoryAttachment)
 decodeRowAsSignatoryAttachment document_id
                                file_id
-                               email 
-                               name 
+                               email
+                               name
                                description =
    return ( document_id
           , SignatoryAttachment { signatoryattachmentfile = file_id
@@ -794,7 +792,7 @@ insertDocumentAsIs document = do
     files <-  sequence $ map (dbQuery . GetFileByFileID)  documentfiles
     let fileLost = (length $ concatMap maybeToList files) <  length documentfiles
     when (fileLost) $
-        Log.error $ "!!!!MIGRATION WARN: Document  " ++ (show documentid) ++ " has files ("++ show documentfiles ++ "), but they are not in database. FileID will be dropped." 
+        Log.error $ "!!!!MIGRATION WARN: Document  " ++ (show documentid) ++ " has files ("++ show documentfiles ++ "), but they are not in database. FileID will be dropped."
             ++ "Document was created "++ show documentctime
     (_,st) <- runInsertStatementWhereReturning "documents"
                                      [ sqlField "id" documentid
@@ -884,7 +882,7 @@ data (Actor a, Show a, Eq a, Ord a) => AdminOnlySaveForUser a = AdminOnlySaveFor
                                                               deriving (Eq, Ord, Show, Typeable)
 instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (AdminOnlySaveForUser a) (Either String Document) where
   dbUpdate (AdminOnlySaveForUser did user actor) = do
-    r <- runUpdateStatement "signatory_links" 
+    r <- runUpdateStatement "signatory_links"
                        [ sqlField "company_id" $ usercompany user
                        ]
                        ("WHERE document_id = ? " ++
@@ -948,9 +946,9 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (AttachCSVUpload a) (Either 
                           , sqlField "csv_signatory_index" $ csvsignatoryindex csvupload
                           , sqlField "csv_contents" $ csvcontents csvupload
                           ]
-                         "WHERE document_id = ? AND signatory_links.id = ? AND deleted = FALSE AND ((roles & ?)=0)" 
+                         "WHERE document_id = ? AND signatory_links.id = ? AND deleted = FALSE AND ((roles & ?)=0)"
                          [ toSql did
-                         , toSql slid 
+                         , toSql slid
                          , toSql [SignatoryAuthor]
                          ]
                      when (r == 1) $
@@ -1080,20 +1078,20 @@ data (Actor a, Show a, Eq a, Ord a) => ChangeSignatoryEmailWhenUndelivered a = C
 instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (ChangeSignatoryEmailWhenUndelivered a) (Either String Document) where
   dbUpdate (ChangeSignatoryEmailWhenUndelivered did slid muser email actor) = do
     Just doc <- dbQuery $ GetDocumentByDocumentID did
-    let setEmail signatoryfields = 
+    let setEmail signatoryfields =
          map (\sf -> case sfType sf of
                  EmailFT -> sf { sfValue = email }
                  _       -> sf) signatoryfields
 
     let Just sl = getSigLinkFor doc slid
         oldemail = getEmail sl
-    r <- runUpdateStatement "signatory_links" 
+    r <- runUpdateStatement "signatory_links"
                        [ sqlField "invitation_delivery_status" Unknown
                        , sqlField "fields" $ setEmail $ signatoryfields $ signatorydetails sl
                        , sqlField "user_id" $ fmap userid muser
                        , sqlField "company_id" $ muser >>= usercompany
                        ]
-                       ("WHERE EXISTS (SELECT * FROM documents WHERE documents.id = signatory_links.document_id AND (documents.status = ? OR documents.status = ?))" ++ 
+                       ("WHERE EXISTS (SELECT * FROM documents WHERE documents.id = signatory_links.document_id AND (documents.status = ? OR documents.status = ?))" ++
                         " AND document_id = ? " ++
                         " AND id = ? ")
                        [ toSql Pending
@@ -1253,47 +1251,25 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (ErrorDocument a) (Either St
 
           s -> return $ Left $ "Cannot ErrorDocument document " ++ show docid ++ " because " ++ concat s
 
-data GetDeletedDocumentsByCompany = GetDeletedDocumentsByCompany User
-                                    deriving (Eq, Ord, Show, Typeable)
-instance DBQuery GetDeletedDocumentsByCompany [Document] where
-  dbQuery (GetDeletedDocumentsByCompany user) = do
-    case useriscompanyadmin user of
-      True ->
-        selectDocuments (selectDocumentsSQL ++
-                         " WHERE EXISTS (SELECT * FROM signatory_links " ++
-                         "               WHERE signatory_links.deleted = TRUE" ++
-                         "                 AND company_id = ?" ++
-                         "                 AND really_deleted = FALSE" ++
-                         "                 AND ((?::TEXT IS NULL AND service_id IS NULL) OR (service_id = ?))" ++
-                         "                 AND documents.id = document_id)" ++
-                         " ORDER BY mtime DESC")
-                      [ toSql (usercompany user)
-                      , toSql (userservice user)
-                      , toSql (userservice user)
-                      ]
-      False -> return []
-
 data GetDeletedDocumentsByUser = GetDeletedDocumentsByUser User
                                  deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDeletedDocumentsByUser [Document] where
   dbQuery (GetDeletedDocumentsByUser user) = do
-    selectDocuments (selectDocumentsSQL ++
-                     " WHERE EXISTS (SELECT * FROM signatory_links WHERE signatory_links.deleted = TRUE AND really_deleted = FALSE AND user_id = ? AND documents.id = document_id) ORDER BY mtime DESC")
-                      [ toSql (userid user)
-                      ]
+    docs <- selectDocumentsBySignatory (userid user) True
+    return docs
 
 selectDocuments :: String -> [SqlValue] -> DB [Document]
 selectDocuments select values = do
     kPrepare $ "CREATE TEMP TABLE docs ON COMMIT DROP AS " ++ select
     _ <- kExecute values
-    
+
     kPrepare "SELECT * FROM docs"
     _ <- kExecute []
-    
+
     docs <- kFetchAll decodeRowAsDocument
 
     kPrepare $ "SELECT " ++ concat (intersperse "," selectSignatoryLinksSelectors) ++
-               " FROM signatory_links WHERE document_id IN (SELECT id FROM docs) ORDER BY document_id"
+               " FROM signatory_links WHERE document_id IN (SELECT id FROM docs) ORDER BY document_id, internal_insert_order"
     _ <- kExecute []
     sls <- kFetchAll decodeRowAsSignatoryLinkWithDocumentID
 
@@ -1307,7 +1283,7 @@ selectDocuments select values = do
     _ <- kExecute []
 
     sas <- kFetchAll decodeRowAsSignatoryAttachment
-    
+
     kPrepare $ "DROP TABLE docs"
     _ <- kExecute []
 
@@ -1315,14 +1291,14 @@ selectDocuments select values = do
     let makeListOfSecond :: (a,b) -> (a,[b])
         makeListOfSecond (a,b) = (a,[b])
         makeMap::(Eq a) => [(a,b)] -> Map.Map a [b]
-        makeMap x = Map.fromAscListWith (++) $ map makeListOfSecond x
+        makeMap x = Map.fromAscListWith (flip (++)) $ map makeListOfSecond x
         sls_map = makeMap sls
         ats_map = makeMap ats
         sas_map = makeMap sas
-        
+
         findEmpty :: Document -> Map.Map DocumentID [a] -> [a]
         findEmpty doc mapx = maybe [] id (Map.lookup (documentid doc) mapx)
-   
+
         fillIn doc = doc { documentsignatorylinks       = findEmpty doc sls_map
                          , documentauthorattachments    = findEmpty doc ats_map
                          , documentsignatoryattachments = findEmpty doc sas_map
@@ -1330,7 +1306,7 @@ selectDocuments select values = do
 
     return $ map fillIn docs
 
-                             
+
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
                                deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentByDocumentID (Maybe Document) where
@@ -1362,7 +1338,7 @@ data GetDocumentStatsByUser = GetDocumentStatsByUser User MinutesTime
                               deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentStatsByUser DocStats where
   dbQuery (GetDocumentStatsByUser user time) = do
-  docs    <- dbQuery $ GetDocumentsByUser user
+  docs    <- dbQuery $ GetDocumentsByAuthor (userid user)
   sigdocs <- dbQuery $ GetDocumentsBySignatory user
   let signaturecount'    = length $ allsigns
       signaturecount1m'  = length $ filter (isSignedNotLaterThanMonthsAgo 1)  $ allsigns
@@ -1400,17 +1376,6 @@ instance DBQuery GetDocumentsByAuthor [Document] where
   dbQuery (GetDocumentsByAuthor uid) = do
     selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?)<>0) ORDER BY mtime DESC") [toSql uid, toSql [SignatoryAuthor]]
 
-data GetDocumentsByCompany = GetDocumentsByCompany User
-                             deriving (Eq, Ord, Show, Typeable)
-instance DBQuery GetDocumentsByCompany [Document] where
-  dbQuery (GetDocumentsByCompany user) = do
-    case (useriscompanyadmin user, usercompany user) of
-      (True, Just companyid) -> do
-        docs <- selectDocumentsBySignatoryLink ("signatory_links.company_id = ?")
-                      [ toSql (usercompany user)
-                      ]
-        return $ filterDocsWhereActivated companyid . filterDocsWhereDeleted False companyid $ docs
-      _ -> return []
 
 {- |
     Fetches documents by company and tags, this won't return documents that have been deleted (so ones
@@ -1423,17 +1388,44 @@ instance DBQuery GetDocumentsByCompanyAndTags [Document] where
   dbQuery (GetDocumentsByCompanyAndTags mservice companyid doctags) = do
         docs <- selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND " ++
                                                 "signatory_links.company_id = ? AND " ++
+                                                activatedSQL ++ " AND " ++
                                                 "(signatory_links.roles = ? OR signatory_links.roles = ?) AND " ++
-                                                "((?::TEXT IS NULL AND service_id IS NULL) OR (service_id = ?)) ") 
+                                                "((?::TEXT IS NULL AND service_id IS NULL) OR (service_id = ?)) ")
                 [ toSql companyid,
                   toSql [SignatoryAuthor],
                   toSql [SignatoryAuthor, SignatoryPartner],
                   toSql mservice,
-                  toSql mservice                  
+                  toSql mservice
                 ]
-        let docs' = filterDocsWhereActivated companyid . filterDocsWhereDeleted False companyid $ docs
-        return (filter hasTags docs')
+        return (filter hasTags docs)
     where hasTags doc = all (`elem` (documenttags doc)) doctags
+
+activatedSQL :: String
+activatedSQL = "(NOT EXISTS (" ++ subselect ++ ")) "
+  where
+    subselect = "SELECT 1 FROM signatory_links AS sl2 " ++
+                "WHERE signatory_links.document_id = sl2.document_id " ++
+                "  AND ((sl2.roles & 1) <> 0) " ++
+                "  AND sl2.sign_time IS NULL " ++
+                "  AND sl2.sign_order < signatory_links.sign_order "
+
+selectDocumentsBySignatory :: UserID -> Bool -> DB [Document]
+selectDocumentsBySignatory userid deleted = do
+    docs <- selectDocumentsBySignatoryLink
+            ("    signatory_links.deleted = " ++ show deleted ++ " " ++
+             "AND signatory_links.really_deleted = FALSE " ++
+             (if deleted
+              then ""
+              else "AND " ++ activatedSQL) ++
+             "AND (   signatory_links.user_id = ? " ++
+             "     OR EXISTS (SELECT TRUE FROM users " ++
+             "                WHERE users.id = ? " ++
+             "                  AND signatory_links.company_id = users.company_id " ++
+             "                  AND users.is_company_admin = TRUE))")
+             [ toSql userid
+             , toSql userid
+             ]
+    return docs
 
 {- |
     All documents where the user is a signatory that are not deleted.  An author is a type
@@ -1445,21 +1437,9 @@ data GetDocumentsBySignatory = GetDocumentsBySignatory User
                                deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsBySignatory [Document] where
   dbQuery (GetDocumentsBySignatory user) = do
-    docs <- selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?)<>0)")
-                                     [toSql (userid user), {- toSql [SignatoryPartner] -} iToSql 255]
-    return $ filterDocsWhereActivated (userid user) docs
+    docs <- selectDocumentsBySignatory (userid user) False
+    return docs
 
-{- |
-    All documents which are saved for the user which have never been deleted.
-    This doesn't respect sign order, so should be used carefully.
-    This also makes sure that the documents match the user's service.
--}
-data GetDocumentsByUser = GetDocumentsByUser User
-                          deriving (Eq, Ord, Show, Typeable)
-instance DBQuery GetDocumentsByUser [Document] where
-  dbQuery (GetDocumentsByUser user) = do
-        selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?)<>0)")
-                                         [toSql (userid user), toSql [SignatoryAuthor]]
 
 data GetSignatoryLinkIDs = GetSignatoryLinkIDs
                            deriving (Eq, Ord, Show, Typeable)
@@ -1736,7 +1716,7 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (RestartDocument a) (Either 
       newSignLinks <- flip mapM signatoriesDetails $ do \(a,b,c) -> do
                                                              magichash <- liftIO randomIO
 
-                                                             return $ signLinkFromDetails' a b c magichash 
+                                                             return $ signLinkFromDetails' a b c magichash
       let Just authorsiglink0 = find isAuthor newSignLinks
           authorsiglink = authorsiglink0 {
                             maybesignatory = maybesignatory asl,
@@ -2379,10 +2359,10 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (UpdateFields a) (Either Str
 
       let Just sl = getSigLinkFor document slid
           eml     = BS.toString $ getEmail sl
-      r <- runUpdateStatement "signatory_links" 
+      r <- runUpdateStatement "signatory_links"
                        [ sqlField "fields" $ map updateSigField $ signatoryfields $ signatorydetails sl
                        ]
-                       ("WHERE EXISTS (SELECT * FROM documents WHERE documents.id = signatory_links.document_id AND (documents.status = ? OR documents.status = ?))" ++ 
+                       ("WHERE EXISTS (SELECT * FROM documents WHERE documents.id = signatory_links.document_id AND (documents.status = ? OR documents.status = ?))" ++
                         " AND document_id = ? " ++
                         " AND id = ? ")
                        [ toSql Pending
@@ -2510,4 +2490,235 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (UpdateSigAttachments a) (Ei
              actor
            
            return r
+
+-- For users lists in adminonly
+selectUsersAndStatsSQL :: String
+selectUsersAndStatsSQL = "SELECT "
+  -- User:
+  ++ "  u.id AS userid"
+  ++ ", encode(u.password, 'base64')"
+  ++ ", encode(u.salt, 'base64')"
+  ++ ", u.is_company_admin"
+  ++ ", u.account_suspended"
+  ++ ", u.has_accepted_terms_of_service"
+  ++ ", u.signup_method"
+  ++ ", u.service_id"
+  ++ ", u.company_id"
+  ++ ", u.first_name"
+  ++ ", u.last_name"
+  ++ ", u.personal_number"
+  ++ ", u.company_position"
+  ++ ", u.phone"
+  ++ ", u.mobile"
+  ++ ", u.email"
+  ++ ", u.preferred_design_mode"
+  ++ ", u.lang"
+  ++ ", u.region"
+  ++ ", u.customfooter"
+  -- Company:
+  ++ ", c.id AS company_id"
+  ++ ", c.external_id"
+  ++ ", c.service_id"
+  ++ ", c.name"
+  ++ ", c.number"
+  ++ ", c.address"
+  ++ ", c.zip"
+  ++ ", c.city"
+  ++ ", c.country"
+  -- Doc and signature for stats:
+  ++ ", d.mtime"
+  ++ ", d.id as docid"
+  ++ ", sl.sign_time"
+  ++ ", sl.roles"
+  ++ "  FROM users u"
+  ++ "  LEFT JOIN companies c ON u.company_id = c.id"
+  ++ "  LEFT JOIN signatory_links sl "
+  ++ "    ON sl.user_id = u.id"
+  ++ "    AND sl.deleted = FALSE"
+  ++ "    AND (sl.roles & 255) <> 0"
+  ++ "  LEFT JOIN documents d "
+  ++ "    ON d.id = sl.document_id"
+  ++ "  WHERE u.deleted = FALSE"
+  ++ "  ORDER BY u.first_name || ' ' || u.last_name ASC, u.email ASC, userid ASC, docid ASC"
+
+fetchUsersAndStats :: Statement
+                   -> IO [(User, Maybe Company, ( Maybe MinutesTime
+                                                , Maybe DocumentID
+                                                , Maybe MinutesTime
+                                                , Maybe [SignatoryRole]))]
+fetchUsersAndStats st = fetchValues st decoder
+  where
+    decoder :: UserID                   -- u.id
+            -> Maybe Binary             -- encode(u.password, 'base64')
+            -> Maybe Binary             -- encode(u.salt, 'base64')
+            -> Bool                     -- u.is_company_admin
+            -> Bool                     -- u.account_suspended
+            -> Maybe MinutesTime        -- u.has_accepted_terms_of_service
+            -> SignupMethod             -- u.signup_method
+            -> Maybe ServiceID          -- u.service_id
+            -> Maybe CompanyID          -- u.company_id
+            -> BS.ByteString            -- u.first_name
+            -> BS.ByteString            -- u.last_name
+            -> BS.ByteString            -- u.personal_number
+            -> BS.ByteString            -- u.company_position
+            -> BS.ByteString            -- u.phone
+            -> BS.ByteString            -- u.mobile
+            -> Email                    -- u.email
+            -> Maybe DesignMode         -- u.preferred_design_mode
+            -> Lang                     -- u.lang
+            -> Region                   -- u.region
+            -> Maybe String             -- u.customfooter
+            -> Maybe CompanyID          -- c.id AS company_id
+            -> Maybe ExternalCompanyID  -- c.external_id
+            -> Maybe ServiceID          -- c.service_id
+            -> Maybe BS.ByteString      -- c.name
+            -> Maybe BS.ByteString      -- c.number
+            -> Maybe BS.ByteString      -- c.address
+            -> Maybe BS.ByteString      -- c.zip
+            -> Maybe BS.ByteString      -- c.city
+            -> Maybe BS.ByteString      -- c.country
+            -> Maybe MinutesTime        -- d.mtime
+            -> Maybe DocumentID         -- d.id as docid
+            -> Maybe MinutesTime        -- sl.sign_time
+            -> Maybe [SignatoryRole]    -- sl.roles
+            -> Either DBException (User, Maybe Company, ( Maybe MinutesTime
+                                                        , Maybe DocumentID
+                                                        , Maybe MinutesTime
+                                                        , Maybe [SignatoryRole]))
+    decoder uid
+            password
+            salt
+            is_company_admin
+            account_suspended
+            has_accepted_terms_of_service
+            signup_method
+            service_id
+            company_id
+            first_name
+            last_name
+            personal_number
+            company_position
+            phone
+            mobile
+            email
+            preferred_design_mode
+            lang
+            region
+            customfooter
+            cid
+            eid
+            sid
+            name
+            number
+            address
+            zip'
+            city
+            country
+            mtime
+            docid
+            sign_time
+            roles = return (
+                User {
+                       userid = uid
+                     , userpassword = case (password, salt) of
+                         (Just pwd, Just salt') -> Just Password {
+                                                       pwdHash = pwd
+                                                     , pwdSalt = salt'
+                                                     }
+                         _                      -> Nothing
+                     , useriscompanyadmin = is_company_admin
+                     , useraccountsuspended = account_suspended
+                     , userhasacceptedtermsofservice = has_accepted_terms_of_service
+                     , usersignupmethod = signup_method
+                     , userinfo = UserInfo { userfstname = first_name
+                                           , usersndname = last_name
+                                           , userpersonalnumber = personal_number
+                                           , usercompanyposition = company_position
+                                           , userphone = phone
+                                           , usermobile = mobile
+                                           , useremail = email
+                                           }
+                     , usersettings = UserSettings { preferreddesignmode = preferred_design_mode
+                                                   , locale = mkLocale region lang
+                                                   , customfooter = customfooter
+                                                   }
+                     , userservice = service_id
+                     , usercompany = company_id
+                     }
+        , case cid of
+            (Just _) -> Just Company { companyid = fromJust cid
+                                     , companyexternalid = eid
+                                     , companyservice = sid
+                                     , companyinfo = CompanyInfo {
+                                           companyname = fromJust name
+                                         , companynumber = fromJust number
+                                         , companyaddress = fromJust address
+                                         , companyzip = fromJust zip'
+                                         , companycity = fromJust city
+                                         , companycountry = fromJust country
+                                         }
+                                     }
+            _        -> Nothing
+        , case docid of
+            (Just _) -> (mtime,docid,sign_time,roles)
+            _        -> (Nothing, Nothing, Nothing, Nothing)
+        )
+
+sumUserStats :: [(User, Maybe Company, ( Maybe MinutesTime
+                                       , Maybe DocumentID
+                                       , Maybe MinutesTime
+                                       , Maybe [SignatoryRole]))]
+             -> MinutesTime
+             -> [(User, Maybe Company, DocStats)]
+sumUserStats [] _ = []
+sumUserStats list time = map transform' $ groupBy sameUserID' $ sortWith (\(a,_,_)->a) list
+  where
+    sameUserID' = (\(user,_,_) (user2,_,_) -> userid user == userid user2)
+    transform' []                  = error "sumUserStats: empty list grouped"
+    transform' l@((user,mcom,_):_) = snd $ foldl' (\(lastDocId,(u,m,stats)) (_,_,st) ->
+                                                      let (i,s) = addToStats' stats st lastDocId
+                                                      in (i,(u,m,s)))
+                                                  (DocumentID 0,(user,mcom,DocStats 0 0 0 0 0 0 0)) l
+    addToStats' :: DocStats
+                -> (
+                     Maybe MinutesTime
+                   , Maybe DocumentID
+                   , Maybe MinutesTime
+                   , Maybe [SignatoryRole]
+                   )
+                -> DocumentID
+                -> (DocumentID,DocStats)
+    addToStats' (DocStats cnt scnt s1cnt s2cnt s3cnt s6cnt s12cnt)
+                (Just mtime, Just docid, sign_time, Just role) lastid =
+        ( if isJust sign_time then docid else lastid
+        , DocStats {
+              doccount           = cnt + (if SignatoryAuthor `elem` role then 1 else 0)
+            , signaturecount     = if isDiffrentSignedDoc then scnt + 1 else scnt
+            , signaturecount1m   = if isDiffrentSignedDoc && isSignedNotLaterThanMonthsAgo 1  mtime then s1cnt  + 1 else s1cnt
+            , signaturecount2m   = if isDiffrentSignedDoc && isSignedNotLaterThanMonthsAgo 2  mtime then s2cnt  + 1 else s2cnt
+            , signaturecount3m   = if isDiffrentSignedDoc && isSignedNotLaterThanMonthsAgo 3  mtime then s3cnt  + 1 else s3cnt
+            , signaturecount6m   = if isDiffrentSignedDoc && isSignedNotLaterThanMonthsAgo 6  mtime then s6cnt  + 1 else s6cnt
+            , signaturecount12m  = if isDiffrentSignedDoc && isSignedNotLaterThanMonthsAgo 12 mtime then s12cnt + 1 else s12cnt
+         })
+      where
+        isDiffrentSignedDoc = isJust sign_time && docid /= lastid
+    addToStats' docstats _ lastid = (lastid, docstats)
+    isSignedNotLaterThanMonthsAgo m t = monthsBefore m time < t
+
+data GetUsersAndStats = GetUsersAndStats MinutesTime
+instance DBQuery GetUsersAndStats [(User, Maybe Company, DocStats)] where
+  dbQuery (GetUsersAndStats time) = wrapDB $ \conn -> do
+    st  <- prepare conn $ selectUsersAndStatsSQL
+    _   <- executeRaw st
+    uas <- fetchUsersAndStats st
+    return $ sumUserStats uas time
+
+data SetDocumentModificationData = SetDocumentModificationData DocumentID MinutesTime
+                      deriving (Eq, Ord, Show, Typeable)
+instance DBUpdate SetDocumentModificationData (Either String Document) where
+  dbUpdate (SetDocumentModificationData did time) = do
+    r <- runUpdateStatement "documents"
+         [ sqlField "mtime" time]
+         "WHERE id = ?" [ toSql did ]
+    getOneDocumentAffected "SetDocumentModificationData" r did
 
