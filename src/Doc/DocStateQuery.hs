@@ -30,11 +30,11 @@ module Doc.DocStateQuery
     , canUserViewDoc
     ) where
 
+import Control.Applicative
 import DB.Types
 import DBError
 import Doc.Transitory
 import Doc.DocStateData
-import Doc.DocUtils
 import Company.Model
 import Kontra
 import Util.SignatoryLinkUtils
@@ -102,9 +102,7 @@ getDocsByLoggedInUser = do
   ctx <- getContext
   case ctxmaybeuser ctx of
     Nothing   -> return $ Left DBNotLoggedIn
-    Just user -> do
-      docs <- doc_query $ GetDocuments (currentServiceID ctx)
-      return $ Right $ filter (canUserViewDirectly user) docs
+    Just user -> Right <$> (doc_query $ GetDocumentsBySignatory user)
 
 {- |
    Get a document using docid, siglink, and magichash.
