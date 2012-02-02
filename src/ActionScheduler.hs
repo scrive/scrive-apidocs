@@ -31,7 +31,6 @@ import Mails.MailsConfig
 import Mails.SendMail
 import Session
 import Templates.Templates
-import User.Model
 import qualified Log
 import System.Time
 import Doc.Invariants
