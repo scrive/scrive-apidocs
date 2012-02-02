@@ -8,9 +8,7 @@ module AppControl
     , defaultAWSAction
 
     -- exported for the sake of unit tests
-    , handleLoginPost
     , getStandardLocale
-    , signupPagePost
     ) where
 
 import AppConf
@@ -19,27 +17,20 @@ import API.Service.Model
 import AppView as V
 import DB.Classes
 import Doc.DocStateData
-import InputValidation
 import Kontra
-import KontraLink
-import Mails.SendMail
 import MinutesTime
 import Misc
 --import PayEx.PayExInterface ()-- Import so at least we check if it compiles
 import Redirect
 import Session
-import Stats.Control
 import Templates.Templates
 import User.Model
 import User.History.Model
-import User.UserView as UserView
 import qualified Log (error, debug)
 import qualified FlashMessage as F
 import qualified MemCache
 import qualified TrustWeaver as TW
-import qualified User.UserControl as UserControl
 import Util.FlashUtil
-import Util.HasSomeUserInfo
 import Util.KontraLinkUtils
 import File.FileID
 
@@ -298,100 +289,5 @@ appHandler handleRoutes appConf appGlobals = do
                 }
       return ctx
 
-{- |
-   Handles viewing of the signup page
--}
-_signupPageGet :: Kontra Response
-_signupPageGet = do
-    ctx <- getContext
-    content <- liftIO (signupPageView $ ctxtemplates ctx)
-    V.renderFromBody V.TopNone V.kontrakcja  content
-
-
-_signupVipPageGet :: Kontra Response
-_signupVipPageGet = do
-    ctx <- getContext
-    content <- liftIO (signupVipPageView $ ctxtemplates ctx)
-    V.renderFromBody V.TopNone V.kontrakcja content
-{- |
-   Handles submission of the signup form.
-   Normally this would create the user, (in the process mailing them an activation link),
-   but if the user already exists, we check to see if they have accepted the tos.  If they haven't,
-   then we send them a new activation link because probably the old one expired or was lost.
-   If they have then we stop the signup.
--}
-signupPagePost :: Kontrakcja m => m KontraLink
-signupPagePost = do
-    Context { ctxtime } <- getContext
-    signup False $ Just ((60 * 24 * 31) `minutesAfter` ctxtime)
-
-{-
-    A comment next to LoopBack says never to use it. Is this function broken?
--}
-signup :: Kontrakcja m => Bool -> Maybe MinutesTime -> m KontraLink
-signup vip _freetill =  do
-  memail <- getOptionalField asValidEmail "email"
-  case memail of
-    Nothing -> return LoopBack
-    Just email -> do
-      muser <- runDBQuery $ GetUserByEmail Nothing $ Email $ email
-      case (muser, muser >>= userhasacceptedtermsofservice) of
-        (Just user, Nothing) -> do
-          -- there is an existing user that hasn't been activated
-          -- send them another invite
-          UserControl.sendNewUserMail vip user
-        (Nothing, Nothing) -> do
-          -- this email address is new to the system, so create the user
-          -- and send an invite
-          mnewuser <- UserControl.createUser (Email email) BS.empty BS.empty Nothing
-          maybe (return ()) (UserControl.sendNewUserMail vip) mnewuser
-        (_, _) -> return ()
-      -- whatever happens we want the same outcome, we just claim we sent the activation link,
-      -- because we don't want any security problems with user information leaks
-      addFlashM $ modalUserSignupDone (Email email)
-      return LoopBack
-
-{- |
-   Sends a new activation link mail, which is really just a new user mail.
--}
-_sendNewActivationLinkMail:: Context -> User -> Kontra ()
-_sendNewActivationLinkMail Context{ctxhostpart, ctxmailsconfig} user = do
-    let email = getEmail user
-    al <- newAccountCreatedLink user
-    mail <- newUserMail ctxhostpart email email al False
-    scheduleEmailSendout ctxmailsconfig $ mail { to = [MailAddress {fullname = email, email = email}] }
-
-{- |
-   Handles submission of a login form.  On failure will redirect back to referer, if there is one.
--}
-handleLoginPost :: Kontrakcja m => m KontraLink
-handleLoginPost = do
-    ctx <- getContext
-    memail  <- getOptionalField asDirtyEmail    "email"
-    mpasswd <- getOptionalField asDirtyPassword "password"
-    let linkemail = maybe "" BS.toString memail
-    case (memail, mpasswd) of
-        (Just email, Just passwd) -> do
-            -- check the user things here
-            maybeuser <- runDBQuery $ GetUserByEmail Nothing (Email email)
-            case maybeuser of
-                Just user@User{userpassword}
-                    | verifyPassword userpassword passwd -> do
-                        Log.debug $ "User " ++ show email ++ " logged in"
-                        _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
-                          locale = ctxlocale ctx
-                        }
-                        muuser <- runDBQuery $ GetUserByID (userid user)
-                        _ <- addUserLoginStatEvent (ctxtime ctx) (fromJust muuser)
                         _ <- runDBUpdate $ LogHistoryLoginSuccess (userid user) (ctxipnumber ctx) (ctxtime ctx)
-                        logUserToContext muuser
-                        return BackToReferer
-                Just u -> do
-                        Log.debug $ "User " ++ show email ++ " login failed (invalid password)"
                         _ <- runDBUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
-                        return $ LinkLogin (ctxlocale ctx) $ InvalidLoginInfo linkemail
-                Nothing -> do
-                    Log.debug $ "User " ++ show email ++ " login failed (user not found)"
-                    return $ LinkLogin (ctxlocale ctx) $ InvalidLoginInfo linkemail
-        _ -> return $ LinkLogin (ctxlocale ctx) $ InvalidLoginInfo linkemail
-

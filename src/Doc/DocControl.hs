@@ -67,7 +67,7 @@ import qualified Data.Map as Map
 import Text.JSON hiding (Result)
 import ForkAction
 import qualified ELegitimation.BankID as BankID
-import Data.Function
+
 {-
   Document state transitions are described in DocState.
 
@@ -413,7 +413,8 @@ makeMailAttachments ctx document = do
       sattachments = concatMap (maybeToList . signatoryattachmentfile) $ documentsignatoryattachments document
       allfiles' = [mainfile] ++ aattachments ++ sattachments
   allfiles <- liftM catMaybes $ mapM (ioRunDB (ctxdbconn ctx) . dbQuery . GetFileByFileID) allfiles'
-  let filenames = map (BS.toString . filename) allfiles
+  --use the doc title rather than file name for the main file (see jira #1152)
+  let filenames = (BS.toString (documenttitle document) ++ ".pdf") : map (BS.toString . filename) (tail allfiles)
   filecontents <- sequence $ map (getFileContents ctx) allfiles
   return $ zip filenames filecontents
 
@@ -599,7 +600,7 @@ handleSignShowOldRedirectToNew did sid mh = do
 
 handleSignShow :: DocumentID -> SignatoryLinkID -> Kontra Response
 handleSignShow documentid
-               signatorylinkid = do           
+               signatorylinkid = do
   mmh <- readField "magichash"
   case mmh of
     Just mh -> do
@@ -612,7 +613,7 @@ handleSignShow documentid
 
 handleSignShow2 :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m String
 handleSignShow2 documentid
-                signatorylinkid = do                  
+                signatorylinkid = do
   Context { ctxtime
           , ctxipnumber
           , ctxflashmessages
@@ -1448,14 +1449,9 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
 
 getDocumentsForUserByType :: Kontrakcja m => DocumentType -> User -> m [Document]
 getDocumentsForUserByType doctype user = do
-  mysigdocs <- runDBQuery $ GetDocumentsBySignatory user
-  mydocuments <- if useriscompanyadmin user
-                   then do
-                     mycompanydocs <- runDBQuery $ GetDocumentsByCompany user
-                     return $ union mysigdocs mycompanydocs
-                   else return mysigdocs
+  mydocuments <- runDBQuery $ GetDocumentsBySignatory user
 
-  return . filter ((\d -> documenttype d == doctype)) $ (nubBy $ on (==) documentid) mydocuments
+  return . filter ((\d -> documenttype d == doctype)) $ mydocuments
 
 
 handleAttachmentViewForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
@@ -2019,9 +2015,7 @@ jsonDocumentsList = do
             mydocuments <- runDBQuery $ GetDocumentsByAuthor (userid user)
             return $ filter ((==) Attachment . documenttype) mydocuments
         "Rubbish" -> do
-            if useriscompanyadmin user
-                then runDBQuery $ GetDeletedDocumentsByCompany user
-                else runDBQuery $ GetDeletedDocumentsByUser user
+            runDBQuery $ GetDeletedDocumentsByUser user
         "Template|Contract" -> do
             let tfilter doc = (Template Contract == documenttype doc)
             userdocs <- runDBQuery $ GetDocumentsByAuthor (userid user)

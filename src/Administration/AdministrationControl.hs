@@ -365,7 +365,7 @@ handleUserChange uid = onlySalesOrAdmin $ do
 resaveDocsForUser :: Kontrakcja m => UserID -> m ()
 resaveDocsForUser uid = onlySalesOrAdmin $ do
   user <- runDBOrFail $ dbQuery $ GetUserByID uid
-  userdocs <- runDBQuery $ GetDocumentsByUser user
+  userdocs <- runDBQuery $ GetDocumentsByAuthor uid
   mapM_ (\doc -> runDBUpdate $ AdminOnlySaveForUser (documentid doc) user) userdocs
   return ()
 

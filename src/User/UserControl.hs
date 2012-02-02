@@ -421,7 +421,7 @@ handlePostUserSecurity = do
 -}
 isUserDeletable :: Kontrakcja m => User -> m Bool
 isUserDeletable user = do
-  userdocs <- runDBQuery $ GetDocumentsByUser user
+  userdocs <- runDBQuery $ GetDocumentsByAuthor (userid user)
   return $ all isDeletableDocument userdocs
 
 handleViralInvite :: Kontrakcja m => m KontraLink
@@ -490,11 +490,11 @@ createUser email fstname sndname mcompany = do
     _         -> return muser
                  
 
-sendNewUserMail :: Kontrakcja m => Bool -> User -> m ()
-sendNewUserMail vip user = do
+sendNewUserMail :: Kontrakcja m => User -> m ()
+sendNewUserMail user = do
   ctx <- getContext
   al <- newAccountCreatedLink user
-  mail <- newUserMail (ctxhostpart ctx) (getEmail user) (getSmartName user) al vip
+  mail <- newUserMail (ctxhostpart ctx) (getEmail user) (getSmartName user) al
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]}
   return ()
 
@@ -761,7 +761,7 @@ handleAccountSetupPost aid hash = do
         then do
           ctx <- getContext
           al <- newAccountCreatedLink user
-          mail <- newUserMail (ctxhostpart ctx) email email al False
+          mail <- newUserMail (ctxhostpart ctx) email email al
           scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = email, email = email}] }
           addFlashM flashMessageNewActivationLinkSend
           getHomeOrUploadLink
