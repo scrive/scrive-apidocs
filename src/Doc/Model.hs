@@ -2134,10 +2134,35 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SignDocument a) (Either Str
                 "WHERE id = ? AND document_id = ?" [ toSql slid
                                                    , toSql docid
                                                    ]
+            let using = case msiginfo of
+                  Nothing -> ""
+                  Just (SignatureInfo { signatureinfotext
+                                      , signatureinfosignature
+                                      , signatureinfocertificate
+                                      , signatureinfoprovider
+                                      , signaturefstnameverified
+                                      , signaturelstnameverified
+                                      , signaturepersnumverified
+                                      }) -> let ps = case signatureinfoprovider of
+                                                  BankIDProvider -> "BankID"
+                                                  TeliaProvider -> "Telia"
+                                                  NordeaProvider -> "Nordea"
+                                                pairs = [("first name", signaturefstnameverified)
+                                                        ,("last name", signaturelstnameverified)
+                                                        ,("personal number", signaturepersnumverified)]
+                                                pairstrue = filter (\(_,t)->t) pairs
+                                                vs = intercalate "; " $ map (\(s,_) -> s) pairstrue
+                                                vstring = case pairstrue of
+                                                  [] -> "No fields were verified."
+                                                  _ -> "The following fields were verified: " ++ vs
+                                            in " using e-legitimation. The signed text was " 
+                                               ++ show signatureinfotext 
+                                               ++ ". The provider was " ++ ps ++ ". " 
+                                               ++ vstring
             when (r == 1) $
               ignore $ dbUpdate $ InsertEvidenceEvent
               SignDocumentEvidence
-              ("Document signed by " ++ actorWho actor ++ ".")
+              ("Document signed by " ++ actorWho actor ++ using ++ ".")
               (Just docid)
               actor
             getOneDocumentAffected "SignDocument" r docid
