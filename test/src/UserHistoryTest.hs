@@ -19,9 +19,10 @@ import TestKontra as T
 import Control.Applicative
 import Happstack.Server
 import Templates.TemplatesLoader
-import AppControl
+--import AppControl
 import Text.JSON
 import ActionSchedulerState
+import Login
 import SignupTest (getAccountCreatedActions)
 
 userHistoryTests :: Nexus -> Test

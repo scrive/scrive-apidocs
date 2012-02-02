@@ -25,7 +25,6 @@ import Redirect
 import Session
 import Templates.Templates
 import User.Model
-import User.History.Model
 import qualified Log (error, debug)
 import qualified FlashMessage as F
 import qualified MemCache
@@ -289,5 +288,3 @@ appHandler handleRoutes appConf appGlobals = do
                 }
       return ctx
 
-                        _ <- runDBUpdate $ LogHistoryLoginSuccess (userid user) (ctxipnumber ctx) (ctxtime ctx)
-                        _ <- runDBUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
