@@ -1486,7 +1486,7 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (MarkDocumentSeen a) (Either
                          [ sqlField "seen_time" time
                          , sqlField "seen_ip" ipnumber
                          ]
-                         "WHERE id = ? AND document_id = ? AND token = ? AND EXISTS (SELECT * FROM documents WHERE id = ? AND type = ? AND status <> ? AND status <> ?)"
+                         "WHERE id = ? AND document_id = ? AND token = ? AND seen_time IS NULL AND sign_time IS NULL AND EXISTS (SELECT * FROM documents WHERE id = ? AND type = ? AND status <> ? AND status <> ?)"
                          [ toSql signatorylinkid1
                          , toSql did
                          , toSql mh
@@ -1495,7 +1495,12 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (MarkDocumentSeen a) (Either
                          , toSql Preparation
                          , toSql Closed
                          ]
-    when (r == 1) $
+                         
+    -- it's okay if we don't update the doc because it's been seen or signed already
+    -- (see jira #1194)
+    let fudgedr = if r==0 then 1 else r
+    --but we should update the log                   
+    when (fudgedr == 1) $
       ignore $ dbUpdate $ InsertEvidenceEvent
       MarkDocumentSeenEvidence
       txt

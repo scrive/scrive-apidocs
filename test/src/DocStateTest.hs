@@ -586,8 +586,11 @@ testMarkDocumentSeenEvidenceLog  = do
   let Just sl = getAuthorSigLink doc
   etdoc <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (SystemActor t)
   assertRight etdoc
+  _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (SystemActor t)
+  _ <- randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing (SystemActor t)  
+  _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (SystemActor t)
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == MarkDocumentSeenEvidence) lg
+  assertBool "Should have 3 seen events." $ 3 == length (filter (\e -> evType e == MarkDocumentSeenEvidence) lg)
 
 
 testErrorDocumentEvidenceLog :: DB ()    
