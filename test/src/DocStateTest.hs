@@ -537,19 +537,20 @@ testTimeoutDocumentEvidenceLog = do
   assertJust $ find (\e -> evType e == TimeoutDocumentEvidence) lg
   
 testUpdateFieldsEvidenceLog :: DB ()
-testUpdateFieldsEvidenceLog = do
+testUpdateFieldsEvidenceLog = doTimes 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isPending &&^ isSignable &&^ ((<=) 2 . length . documentsignatorylinks))
   let Just sl = getSigLinkFor doc (not . (isAuthor::SignatoryLink->Bool))
-  etdoc <- randomUpdate $ \f t->UpdateFields (documentid doc) (signatorylinkid sl) f (SystemActor t)
-  assertRight etdoc
+  etdoc <- randomUpdate $ \f t->UpdateFields (documentid doc) (signatorylinkid sl) [f] (SystemActor t)
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == UpdateFieldsEvidence) lg
+  validTest $ do
+    assertRight etdoc
+    assertJust $ find (\e -> evType e == UpdateFieldsEvidence) lg
   
 testPreparationToPendingEvidenceLog :: DB ()
 testPreparationToPendingEvidenceLog = do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation)
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation &&^ ((<=) 2 . length . documentsignatorylinks))
   etdoc <- randomUpdate $ \t->PreparationToPending (documentid doc) (SystemActor t)
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
