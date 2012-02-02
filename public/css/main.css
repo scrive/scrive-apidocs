@@ -1727,6 +1727,14 @@ top: 0px;
       background: url(../img/team/marcus-2.png) center no-repeat;
 }
 
+.portrait-image a.dudek {
+      background: url(../img/team/dudek-1.png) center no-repeat;
+}
+
+.portrait-image a.dudek:hover {
+      background: url(../img/team/dudek-2.png) center no-repeat;
+}
+
 .portrait-image a.magnus {
       background: url(../img/team/magnus-1.png) center no-repeat;
 }

@@ -59,19 +59,19 @@ aboutPageContents=
                                                                         </div>
                                                                         <h2>$_aboutPagePerson4()$</h2>
                                                                         <em>$_aboutPagePerson4Position()$</em>
-                                                                        <p>$_aboutPagePerson4Body()$</p>
+                                                                        <p><!-- $_aboutPagePerson4Body()$ --></p>
                                                                         $_aboutPagePerson4Contact()$
                                                                 </li>
-								<!--<li>
+								<li>
 									<div class="portrait-image">
-								          <a class="placeholder"></a>
+								          <a class="dudek"></a>
 									</div>
 									<h2>$_aboutPagePerson5()$</h2>
 									<em>$_aboutPagePerson5Position()$</em>
 									<p>$_aboutPagePerson5Body()$</p>
 									$_aboutPagePerson5Contact()$
 
-								</li>-->
+								</li>
 								<li>
 									<div class="portrait-image">
 								          <a class="gracjan"></a>
