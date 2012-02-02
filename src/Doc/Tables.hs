@@ -228,7 +228,7 @@ tableSignatoryLinks = Table {
           ++ ", csv_title TEXT NULL"
           ++ ", csv_contents TEXT NULL"
           ++ ", csv_signatory_index INTEGER NULL"
-          ++ ", internal_insert_order BIGINT DEFAULT nextval('signatory_links_internal_insert_order_seq')"
+          ++ ", internal_insert_order BIGINT NOT NULL DEFAULT nextval('signatory_links_internal_insert_order_seq')"
           ++ ", CONSTRAINT pk_signatory_links PRIMARY KEY (id, document_id)"
           ++ ")"
         return TVRcreated
