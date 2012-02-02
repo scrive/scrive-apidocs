@@ -26,7 +26,6 @@ import Stats.Control
 
 import Control.Monad.Error
 import Data.Functor
---import Data.List
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Happstack.State (query, update)
@@ -48,7 +47,6 @@ forgotPasswordPagePost = do
       case muser of
         Nothing -> do
           Log.security $ "ip " ++ (show $ ctxipnumber ctx) ++ " made a failed password reset request for non-existant account " ++ (BS.toString email)
-          return LoopBack
         Just user -> do
           now <- liftIO getMinutesTime
           minv <- checkValidity now <$> (query $ GetPasswordReminder $ userid user)
@@ -67,8 +65,8 @@ forgotPasswordPagePost = do
             _ -> do -- Nothing or other ActionTypes (which should not happen)
               link <- newPasswordReminderLink user
               sendResetPasswordMail ctx link user
-          addFlashM flashMessageChangePasswordEmailSend
-          return LinkUpload
+      addFlashM flashMessageChangePasswordEmailSend
+      return LinkUpload
 
 sendResetPasswordMail :: Kontrakcja m => Context -> KontraLink -> User -> m ()
 sendResetPasswordMail ctx link user = do

@@ -905,16 +905,22 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (ArchiveDocument a) (Either 
               runUpdateOnArchivableDoc "WHERE company_id = ?" [toSql cid]
            _ ->
               runUpdateOnArchivableDoc "WHERE user_id = ?" [toSql $ userid user]
+    -- a supervisor could delete both their own and another subaccount's links
+    -- on the same document, so this would mean the sig link count affected
+    -- is more than 1. see bug 1195.
+    let fudgedr = if r==0 then 0 else 1
+
     let forstr = case (usercompany user, useriscompanyadmin user) of
           (Just cid, True) -> "company with admin email " ++ show (getEmail user)
           _ -> "user with email " ++ show (getEmail user)
-    when (r == 1) $
+    when (fudgedr == 1) $
       ignore $ dbUpdate $ InsertEvidenceEvent
       ArchiveDocumentEvidence
       ("Moved document to rubbish bin for " ++ forstr ++ " by " ++ actorWho actor ++ ".")
       (Just did)
       actor
-    getOneDocumentAffected "ArchiveDocument" r did
+    getOneDocumentAffected "ArchiveDocument" fudgedr did
+
     where
       runUpdateOnArchivableDoc whereClause whereFields =
         runUpdateStatement "signatory_links"
@@ -1705,9 +1711,7 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (RestartDocument a) (Either 
     tryToGetRestarted =
       if (documentstatus doc `notElem` [Canceled, Timedout, Rejected])
       then return $ Left $ "Can't restart document with " ++ (show $ documentstatus doc) ++ " status"
-      else if (not $ isAuthor (doc, actorUserID actor))
-           then return $ Left $ "Can't restart document if you are not it's author"
-           else do
+      else do
              let time = actorTime actor
                  ipnumber = fromMaybe (IPAddress 0) $ actorIP actor
              doc' <- clearSignInfofromDoc
@@ -2045,7 +2049,7 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SetDocumentLocale a) (Eithe
     let time = actorTime actor
     r <- runUpdateStatement "documents"
          [ sqlField "region" $ getRegion locale
-         , sqlField "mtime" $ actorTime actor
+         , sqlField "mtime" time
          , sqlLogAppend time ("Document locale changed")
          ]
          "WHERE id = ?" [ toSql did ]

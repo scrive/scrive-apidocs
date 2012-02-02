@@ -44,7 +44,7 @@ import System.Environment (getEnv)
 import System.Time
 import System.Time.ParseDate
 import System.Locale
-import System
+import System.Process
 
 trhsxProgram = simpleProgram "trhsx"
 

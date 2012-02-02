@@ -560,7 +560,6 @@ randomDocumentAllowsDefault user = RandomDocumentAllows
                                                              , Template Order
                                                              , Template Offer
                                                              , Attachment
-                                                             , AttachmentTemplate
                                                              ]
                               , randomDocumentAllowedStatuses = [ Preparation
                                                                 , Pending
