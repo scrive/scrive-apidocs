@@ -170,25 +170,12 @@ fetchCompanies = foldDB decoder []
 newtype CompanyID_0 = CompanyID_0 Int
   deriving (Eq, Ord, Typeable)
 
-deriving instance Typeable Company
-deriving instance Typeable CompanyInfo
-deriving instance Typeable ExternalCompanyID
-
 instance Version CompanyID where
   mode = extension 2 (Proxy :: Proxy CompanyID_0)
 
 instance Version CompanyID_0
-instance Version Company
-instance Version CompanyInfo
-instance Version ExternalCompanyID
 
 instance Migrate CompanyID_0 CompanyID where
   migrate (CompanyID_0 n) = CompanyID (fromIntegral n)
 
-$(deriveSerializeFor [
-    ''CompanyID
-  , ''CompanyID_0
-  , ''Company
-  , ''CompanyInfo
-  , ''ExternalCompanyID
-  ])
+$(deriveSerializeFor [''CompanyID, ''CompanyID_0])

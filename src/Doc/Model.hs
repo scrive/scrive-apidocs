@@ -43,8 +43,6 @@ module Doc.Model
   , RejectDocument(..)
   , RemoveDaysToSign(..)
   , RemoveDocumentAttachment(..)
-  -- , RemoveSignatoryCompany(..)
-  -- , RemoveSignatoryUser(..)
   , ResetSignatoryDetails(..)
   , ResetSignatoryDetails2(..)
   , RestartDocument(..)
@@ -63,8 +61,6 @@ module Doc.Model
   , SetEmailIdentification(..)
   , SetInvitationDeliveryStatus(..)
   , SetInviteText(..)
-  -- , SetSignatoryCompany(..)
-  -- , SetSignatoryUser(..)
   , SignDocument(..)
   , SignLinkFromDetailsForTest(..)
   , SignableFromDocumentIDWithUpdatedAuthor(..)
@@ -74,19 +70,15 @@ module Doc.Model
   , UpdateFields(..)
   , UpdateSigAttachments(..)
   , SetDocumentModificationData(..)
-  -- , FixBug510ForDocument(..)
-  --, MigrateDocumentSigAccounts(..)
   ) where
 
 import API.Service.Model
 import DB.Classes
---import DB.Derive
 import DB.Fetcher
 import DB.Types
 import DB.Utils
 import File.File
 import File.FileID
---import User.Region
 import Doc.DocUtils
 import User.UserID
 import User.Model
@@ -106,16 +98,10 @@ import qualified Data.Map as Map
 import Doc.Tables
 import Control.Applicative
 import Util.SignatoryLinkUtils
---import Doc.DocStateUtils
 import Doc.DocProcess
 import Doc.DocStateCommon
 import qualified Log
 import System.Random (randomIO)
---import Happstack.Server
---import Happstack.State
---import Happstack.Util.Common
---import Numeric
---import Data.Int
 import Control.Monad.IO.Class
 import Control.Monad
 import qualified Control.Exception as E
@@ -241,10 +227,6 @@ toDocumentProcess (Signable p) = Just p
 toDocumentProcess (Template p) = Just p
 toDocumentProcess (Attachment) = Nothing
 toDocumentProcess (AttachmentTemplate) = Nothing
-
-unimplemented :: String -> a
-unimplemented msg = error ("Unimplemented in Doc/Model: " ++ msg)
-
 
 checkEqualBy :: (Eq b, Show b) => String -> (a -> b) -> a -> a -> Maybe (String, String, String)
 checkEqualBy name func obj1 obj2

@@ -62,7 +62,7 @@ import User.UserID
 
 -- newtypes
 newtype Email = Email { unEmail :: BS.ByteString }
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Typeable)
 $(newtypeDeriveConvertible ''Email)
 $(newtypeDeriveUnderlyingReadShow ''Email)
 
@@ -510,40 +510,5 @@ fetchUsers = foldDB decoder []
 -- need to be serializable. I don't know wtf, but I'll gladly dispose of these
 -- instances when we're done with the migration.
 
-deriving instance Typeable User
-deriving instance Typeable UserSettings
-deriving instance Typeable UserInfo
-deriving instance Typeable SignupMethod
-deriving instance Typeable Password
-deriving instance Typeable Lang
-deriving instance Typeable Region
-deriving instance Typeable Locale
-deriving instance Typeable DesignMode
-deriving instance Typeable Email
-deriving instance Typeable Binary
-
-instance Version User
-instance Version UserSettings
-instance Version UserInfo
-instance Version SignupMethod
-instance Version Password
-instance Version Lang
-instance Version Region
-instance Version Locale
-instance Version DesignMode
 instance Version Email
-instance Version Binary
-
-$(deriveSerializeFor [
-    ''User
-  , ''UserSettings
-  , ''UserInfo
-  , ''SignupMethod
-  , ''Password
-  , ''Lang
-  , ''Region
-  , ''Locale
-  , ''DesignMode
-  , ''Email
-  , ''Binary
-  ])
+$(deriveSerialize ''Email)
