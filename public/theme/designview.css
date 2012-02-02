@@ -580,4 +580,13 @@
     float : right;
 
 }
-doneDrawing
+.signatureDrawingBox .lockDrawing {
+    height:14px;
+    width:13px;
+    margin:3px;
+    position: relative;
+    bottom: 22px;
+    background-image: url("/img/lock.png");
+    float : right;
+
+}

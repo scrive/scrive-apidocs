@@ -4,24 +4,31 @@
 
 var SignatureForDrawing = Backbone.Model.extend({
     defaults: {
-        canvas: undefined,
-        ready : false
+        ready : false,
+        image : ""
     },
     initialize: function (args) {
     },
-    signatory : function() {
-        return this.get("signatory");
+    signaturefield : function() {
+        return this.get("signaturefield");
     },
     isReady: function() {
        return this.get("ready");
     },
     clean : function() {
-       this.set({"ready" : false});
+       this.set({"ready" : false, image : ""});
     },
-    makeReady : function() {
-       this.set({"ready" : true});
+    makeReady : function(image) {
+       this.set({"ready" : true, image : image});
+       this.signaturefield().setValue(image);
+    },
+    image : function() {
+       return this.get("image");
+    },
+    hasImage : function() {
+       return this.get("image") != "";
+ 
     }
-
 });
 
 
@@ -83,10 +90,17 @@ var SignatureForDrawingView = Backbone.View.extend({
         var icon = $("<div class='doneDrawing'/>")
         var view = this;
         icon.click(function() {
-             view.model.makeReady();
+             view.model.makeReady(view.canvas[0].toDataURL());
              return false;
         });
         return icon;
+    },
+    lockButton : function() {
+        var icon = $("<div class='lockDrawing'/>")
+        return icon;
+    },
+    signatureBoxTitle : function() {
+        
     },
     render: function () {
         var signature = this.signature;
@@ -94,8 +108,16 @@ var SignatureForDrawingView = Backbone.View.extend({
         this.container = this.el;
         this.container.addClass("signatureDrawingBox");
         this.container.empty();
+        this.container.append(this.signatureBoxTitle());
         this.canvas = $("<canvas class='signatureCanvas'  width='180' height='70'/>");
         this.picture =  this.canvas[0].getContext('2d');
+        if (this.model.hasImage()){
+            var img = new Image();
+            img.src = this.model.image();
+            img.onload = function() {
+                view.picture.drawImage(img,0,0,view.canvas[0].width,view.canvas[0].height);
+            }
+        }
         if (!this.model.isReady()) {
             this.canvas[0].addEventListener('touchstart',function(e) {view.drawingtoolDown(e.layerX, e.layerY);});
             this.canvas[0].addEventListener('touchmove',function(e) {view.drawingtoolMove(e.layerX, e.layerY);});
@@ -108,6 +130,8 @@ var SignatureForDrawingView = Backbone.View.extend({
         this.container.append(this.clearButton());
         if (!this.model.isReady()) 
             this.container.append(this.readyButton());
+        else
+            this.container.append(this.lockButton());
         return this;
     }
 });
