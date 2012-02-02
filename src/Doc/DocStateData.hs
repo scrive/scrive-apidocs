@@ -37,6 +37,8 @@ module Doc.DocStateData (
   , getValueOfType
   , documentHistoryToDocumentLog
   , emptyDocumentUI
+  , documentType
+  , toDocumentProcess
   , doctypeFromString
   ) where
 
@@ -222,7 +224,28 @@ data DocumentType = Signable DocumentProcess
                   | AttachmentTemplate
   deriving (Eq, Ord, Show)
 
+instance Convertible DocumentType SqlValue where
+  safeConvert v = Right . SqlInteger $ case v of
+    Signable _ -> 1
+    Template _ -> 2
+    Attachment -> 3
+    AttachmentTemplate -> 4
+
+documentType :: (Int, Maybe DocumentProcess) -> DocumentType
+documentType (1, Just p) = Signable p
+documentType (2, Just p) = Template p
+documentType (3, Nothing) = Attachment
+documentType (4, Nothing) = AttachmentTemplate
+documentType v = error $ "documentType: wrong values: " ++ show v
+
+toDocumentProcess :: DocumentType -> Maybe DocumentProcess
+toDocumentProcess (Signable p) = Just p
+toDocumentProcess (Template p) = Just p
+toDocumentProcess (Attachment) = Nothing
+toDocumentProcess (AttachmentTemplate) = Nothing
+
 -- | Terrible, I know. Better idea?
+-- | TODO: to be KILLED.
 doctypeFromString :: String -> DocumentType
 doctypeFromString "Signable Contract"  = Signable Contract
 doctypeFromString "Signable Offer"     = Signable Offer

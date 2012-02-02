@@ -215,19 +215,6 @@ getOneDocumentAffected text r did =
                                         , tmoGiven = fromIntegral r
                                         }
 
-
-toDocumentSimpleType :: DocumentType -> Int
-toDocumentSimpleType (Signable _) = 1
-toDocumentSimpleType (Template _) = 2
-toDocumentSimpleType (Attachment) = 3
-toDocumentSimpleType (AttachmentTemplate) = 4
-
-toDocumentProcess :: DocumentType -> Maybe DocumentProcess
-toDocumentProcess (Signable p) = Just p
-toDocumentProcess (Template p) = Just p
-toDocumentProcess (Attachment) = Nothing
-toDocumentProcess (AttachmentTemplate) = Nothing
-
 checkEqualBy :: (Eq b, Show b) => String -> (a -> b) -> a -> a -> Maybe (String, String, String)
 checkEqualBy name func obj1 obj2
   | func obj1 /= func obj2 = Just (name, show (func obj1), show (func obj2))
@@ -325,73 +312,67 @@ decodeRowAsDocument :: DocumentID
                     -> Maybe BS.ByteString
                     -> Region
                     -> Either DBException Document
-decodeRowAsDocument did
-                    title
-                    file_id
-                    sealed_file_id
-                    status
-                    error_text
-                    simple_type
-                    process
-                    functionality
-                    ctime
-                    mtime
-                    days_to_sign
-                    timeout_time
-                    invite_time
-                    invite_ip
-                    dlog
-                    invite_text
-                    allowed_id_types
-                    cancelationreason
-                    rejection_time
-                    rejection_signatory_link_id
-                    rejection_reason
-                    tags
-                    service
-                    deleted
-                    --authorattachments
-                    --signatoryattachments
-                    mail_footer
-                    region = (Right $ Document { documentid = did
-                                               , documenttitle = title
-                                               , documentsignatorylinks = []
-                                               , documentfiles = maybeToList file_id
-                                               , documentsealedfiles = maybeToList sealed_file_id
-                                               , documentstatus = case (status, error_text) of
-                                                                    (DocumentError{}, Just text) -> DocumentError text
-                                                                    (DocumentError{}, Nothing) -> DocumentError "document error"
-                                                                    _ -> status
-                                               , documenttype = case (simple_type, process) of
-                                                                  (1, Just p) -> Signable p
-                                                                  (2, Just p) -> Template p
-                                                                  (3, _) -> Attachment
-                                                                  (4, _) -> AttachmentTemplate
-                                                                  (_,_) -> error "Illegal simpletype"
-                                               , documentfunctionality = functionality
-                                               , documentctime = ctime
-                                               , documentmtime = mtime
-                                               , documentdaystosign = days_to_sign
-                                               , documenttimeouttime = timeout_time
-                                               , documentinvitetime = case invite_time of
-                                                                        Nothing -> Nothing
-                                                                        Just t -> Just (SignInfo t (fromMaybe unknownIPAddress invite_ip))
-                                               , documentlog = dlog
-                                               , documentinvitetext = invite_text
-                                               , documentallowedidtypes = allowed_id_types
-                                               , documentcancelationreason = cancelationreason
-                                               , documentsharing = Private
-                                               , documentrejectioninfo = case (rejection_time, rejection_signatory_link_id, rejection_reason) of
-                                                                           (Just t, Just sl, mr) -> Just (t, sl, fromMaybe BS.empty mr)
-                                                                           _ -> Nothing
-                                               , documenttags = tags
-                                               , documentservice = service
-                                               , documentdeleted = deleted
-                                               , documentauthorattachments = []
-                                               , documentsignatoryattachments = []
-                                               , documentui = DocumentUI mail_footer
-                                               , documentregion = region
-                                               }) :: Either DBException Document
+decodeRowAsDocument
+  did
+  title
+  file_id
+  sealed_file_id
+  status
+  error_text
+  simple_type
+  process
+  functionality
+  ctime
+  mtime
+  days_to_sign
+  timeout_time
+  invite_time
+  invite_ip
+  dlog
+  invite_text
+  allowed_id_types
+  cancelationreason
+  rejection_time
+  rejection_signatory_link_id
+  rejection_reason tags
+  service
+  deleted
+  mail_footer
+  region = Right $ Document {
+     documentid = did
+   , documenttitle = title
+   , documentsignatorylinks = []
+   , documentfiles = maybeToList file_id
+   , documentsealedfiles = maybeToList sealed_file_id
+   , documentstatus = case (status, error_text) of
+     (DocumentError{}, Just text) -> DocumentError text
+     (DocumentError{}, Nothing) -> DocumentError "document error"
+     _ -> status
+   , documenttype = documentType (simple_type, process)
+   , documentfunctionality = functionality
+   , documentctime = ctime
+   , documentmtime = mtime
+   , documentdaystosign = days_to_sign
+   , documenttimeouttime = timeout_time
+   , documentinvitetime = case invite_time of
+       Nothing -> Nothing
+       Just t -> Just (SignInfo t (fromMaybe unknownIPAddress invite_ip))
+   , documentlog = dlog
+   , documentinvitetext = invite_text
+   , documentallowedidtypes = allowed_id_types
+   , documentcancelationreason = cancelationreason
+   , documentsharing = Private
+   , documentrejectioninfo = case (rejection_time, rejection_signatory_link_id, rejection_reason) of
+       (Just t, Just sl, mr) -> Just (t, sl, fromMaybe BS.empty mr)
+       _ -> Nothing
+   , documenttags = tags
+   , documentservice = service
+   , documentdeleted = deleted
+   , documentauthorattachments = []
+   , documentsignatoryattachments = []
+   , documentui = DocumentUI mail_footer
+   , documentregion = region
+   }
 
 selectDocumentsSelectors :: [String]
 selectDocumentsSelectors = [ "id"
@@ -419,8 +400,6 @@ selectDocumentsSelectors = [ "id"
                            , "tags"
                            , "service_id"
                            , "deleted"
-                           --authorattachments
-                           --signatoryattachments
                            , "mail_footer"
                            , "region"
                            ]
@@ -765,7 +744,6 @@ insertDocumentAsIs document = do
                  , documentui
                  , documentregion
                  } = document
-        simpletype = toDocumentSimpleType documenttype
         process = toDocumentProcess documenttype
     files <-  sequence $ map (dbQuery . GetFileByFileID)  documentfiles
     let fileLost = (length $ concatMap maybeToList files) <  length documentfiles
@@ -782,7 +760,7 @@ insertDocumentAsIs document = do
                                      , sqlField "error_text" $ case documentstatus of
                                                                  DocumentError msg -> toSql msg
                                                                  _ -> SqlNull
-                                     , sqlField "type" simpletype
+                                     , sqlField "type" documenttype
                                      , sqlField "process" process
 
                                      , sqlField "functionality" documentfunctionality
@@ -964,7 +942,7 @@ instance DBUpdate CancelDocument (Either String Document) where
                  , sqlField "cancelation_reason" $ reason
                  , sqlLogAppend mtime ("Document canceled from " ++ formatIP ipaddress)
                  ]
-                "WHERE id = ? AND type = ?" [ toSql did, toSql (toDocumentSimpleType (Signable undefined)) ]
+                "WHERE id = ? AND type = ?" [ toSql did, toSql $ Signable undefined ]
             getOneDocumentAffected "CancelDocument" r did
 
             -- return $ Right $ document { documentstatus = Closed
@@ -1035,7 +1013,7 @@ instance DBUpdate PreparationToPending (Either String Document) where
                  , sqlField "timeout_time" $ (\days -> (days * 24 *60) `minutesAfter` time) <$> documentdaystosign document
                  , sqlLogAppend time ("Document put into Pending state")
                  ]
-                "WHERE id = ? AND type = ?" [ toSql docid, toSql (toDocumentSimpleType (Signable undefined))]
+                "WHERE id = ? AND type = ?" [ toSql docid, toSql $ Signable undefined]
             getOneDocumentAffected "PreparationToPending" r docid
           s -> return $ Left $ "Cannot PreparationToPending document " ++ show docid ++ " because " ++ concat s
 
@@ -1055,7 +1033,7 @@ instance DBUpdate CloseDocument (Either String Document) where
                  , sqlField "mtime" time
                  , sqlLogAppend time ("Document closed")
                  ]
-                "WHERE id = ? AND type = ?" [ toSql docid, toSql (toDocumentSimpleType (Signable undefined)) ]
+                "WHERE id = ? AND type = ?" [ toSql docid, toSql $ Signable undefined ]
             getOneDocumentAffected "CloseDocument" r docid
 
             -- return $ Right $ document { documentstatus = Closed
@@ -1346,7 +1324,7 @@ instance DBUpdate MarkDocumentSeen (Either String Document) where
                          , toSql did
                          , toSql mh
                          , toSql did
-                         , toSql (toDocumentSimpleType (Signable Contract)) -- Contract part should be ignored
+                         , toSql $ Signable undefined
                          , toSql Preparation
                          , toSql Closed
                          ]
@@ -1616,7 +1594,7 @@ instance DBUpdate SetDocumentTimeoutTime (Either String Document) where
                          ]
                          "WHERE id = ? AND deleted = FALSE AND type = ?"
                          [ toSql did
-                         , toSql (toDocumentSimpleType (Signable undefined))
+                         , toSql $ Signable undefined
                          ]
     getOneDocumentAffected "SetDocumentTimeoutTime" r did
 
@@ -1768,7 +1746,7 @@ instance DBUpdate SetInvitationDeliveryStatus (Either String Document) where
                          [ toSql slid
                          , toSql did
                          , toSql did
-                         , toSql (toDocumentSimpleType (Signable undefined))
+                         , toSql $ Signable undefined
                          ]
     getOneDocumentAffected "SetInvitationDeliveryStatus" r did
 
@@ -1906,7 +1884,7 @@ instance DBUpdate TemplateFromDocument (Either String Document) where
   dbUpdate (TemplateFromDocument did) = do
     r <- runUpdateStatement "documents"
          [ sqlField "status" Preparation
-         , sqlField "type" $ toDocumentSimpleType (Template undefined)
+         , sqlField "type" $ Template undefined
          ]
          "WHERE id = ?" [ toSql did ]
     getOneDocumentAffected "TemplateFromDocument" r did
@@ -1922,7 +1900,7 @@ instance DBUpdate TimeoutDocument (Either String Document) where
          , sqlLogAppend time ("Document timed out")
          ]
          "WHERE id = ? AND type = ? AND status = ?" [ toSql did
-                                                    , toSql (toDocumentSimpleType (Signable undefined))
+                                                    , toSql $ Signable undefined
                                                     , toSql Pending
                                                     ]
     getOneDocumentAffected "TimeoutDocument" r did
@@ -2004,7 +1982,7 @@ instance DBUpdate PendingToAwaitingAuthor (Either String Document) where
                  , sqlField "mtime" time
                  , sqlLogAppend time ("Changed to AwaitingAuthor status")
                  ]
-                "WHERE id = ? AND type = ?" [ toSql docid, toSql (toDocumentSimpleType (Signable undefined)) ]
+                "WHERE id = ? AND type = ?" [ toSql docid, toSql $ Signable undefined ]
             getOneDocumentAffected "PendingToAwaitingAuthor" r docid
 
             -- return $ Right $ document { documentstatus = Closed
