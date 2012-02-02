@@ -11,6 +11,8 @@ module EvidenceLog.Model
          IntegrationAPIActor(..),
          UserActor(..),
          AdminActor(..),
+         GetEvidenceLog(..),
+         DocumentEvidenceEvent(..),
          copyEvidenceLogToNewDocument
        )
        
@@ -156,6 +158,57 @@ data Actor a => InsertEvidenceEvent a = InsertEvidenceEvent
 instance Actor a => DBUpdate (InsertEvidenceEvent a) Bool where
   dbUpdate (InsertEvidenceEvent tp txt mdid a) = 
     wrapDB (insertEvidenceEvent tp txt mdid a)
+    
+data DocumentEvidenceEvent = DocumentEvidenceEvent { evDocumentID :: DocumentID
+                                                   , evTime       :: MinutesTime
+                                                   , evText       :: String
+                                                   , evType       :: EvidenceEventType
+                                                   , evVersionID  :: String
+                                                   , evEmail      :: Maybe String
+                                                   , evUserID     :: Maybe UserID
+                                                   , evIP4        :: Maybe IPAddress
+                                                   , evIP6        :: Maybe IPAddress
+                                                   , evSigLinkID  :: Maybe SignatoryLinkID
+                                                   , evAPI        :: Maybe String
+                                                   }
+    
+fetchEvidenceLog :: Statement -> [DocumentEvidenceEvent] -> IO [DocumentEvidenceEvent]
+fetchEvidenceLog st acc = fetchRow st >>= maybe (return acc) f
+  where f [did,tm,txt,tp,vid,uid,eml,ip4,ip6,slid,api] =
+          fetchEvidenceLog st $ DocumentEvidenceEvent { evDocumentID = fromSql did
+                                                      , evTime       = fromSql tm
+                                                      , evText       = fromSql txt
+                                                      , evType       = fromSql tp
+                                                      , evVersionID  = fromSql vid
+                                                      , evUserID     = fromSql uid
+                                                      , evEmail      = fromSql eml
+                                                      , evIP4        = fromSql ip4
+                                                      , evIP6        = fromSql ip6
+                                                      , evSigLinkID  = fromSql slid
+                                                      , evAPI        = fromSql api
+                                                      } : acc
+        f l = error $ "fetchEvidenceLog: unexpected row: " ++ show l
+
+data GetEvidenceLog = GetEvidenceLog DocumentID
+instance DBQuery GetEvidenceLog [DocumentEvidenceEvent] where
+  dbQuery (GetEvidenceLog did) = wrapDB $ \conn -> do
+    st <- prepare conn $ "SELECT "
+        ++ "  document_id"
+        ++ ", time"
+        ++ ", text"
+        ++ ", event_type"
+        ++ ", version_id"
+        ++ ", user_id"
+        ++ ", email"
+        ++ ", request_ip_v4"
+        ++ ", request_ip_v6"        
+        ++ ", signatory_link_id"
+        ++ ", api_user"
+        ++ " FROM evidence_log "
+        ++ " WHERE document_id = ?"
+        ++ " ORDER BY time"
+    _ <- execute st [toSql did]
+    fetchEvidenceLog st []
 
 copyEvidenceLogToNewDocument :: DocumentID -> DocumentID -> DB ()
 copyEvidenceLogToNewDocument fromdoc todoc =
@@ -191,7 +244,6 @@ copyEvidenceLogToNewDocument fromdoc todoc =
 
 -- | A machine-readable event code for different types of events.
 data EvidenceEventType =
-  CreateDocumentEvidence                      |
   AddSigAttachmentEvidence                    |
   RemoveSigAttachmentsEvidence                |
   RemoveDocumentAttachmentEvidence            |

@@ -80,6 +80,9 @@ instance (SignatoryLinkIdentity a, SignatoryLinkIdentity b) => SignatoryLinkIden
   
 instance (SignatoryLinkIdentity a, SignatoryLinkIdentity b) => SignatoryLinkIdentity (And a b) where
   isJustSigLinkFor (And a b) sl = isSigLinkFor a sl && isSigLinkFor b sl
+  
+instance (SignatoryLinkIdentity a) => SignatoryLinkIdentity (Not a) where
+  isJustSigLinkFor (Not a) sl = not $ isSigLinkFor a sl
 
 instance SignatoryLinkIdentity SignatoryLinkID where
   isJustSigLinkFor slid sl = slid == signatorylinkid sl

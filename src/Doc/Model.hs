@@ -966,7 +966,7 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (AttachFile a) (Either Strin
     let time = actorTime a
     r <- runUpdateStatement "documents"
          [ sqlField "mtime" time
-         , sqlField "file_id" $ fid
+         , sqlField "file_id" fid
          , sqlLogAppend time ("Attached main file " ++ show fid)
          ]
          "WHERE id = ? AND status = ?" [ toSql did, toSql Preparation ]
@@ -2468,8 +2468,9 @@ data (Actor a, Show a, Eq a, Ord a) => UpdateSigAttachments a = UpdateSigAttachm
                             deriving (Eq, Ord, Show, Typeable)
 instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (UpdateSigAttachments a) (Either String Document) where
   dbUpdate (UpdateSigAttachments did sigatts actor) = do
-    wrapDB $ \conn -> run conn "DELETE FROM signatory_attachments WHERE document_id = ?" [toSql did]
-    ignore $ dbUpdate $ InsertEvidenceEvent
+    r <- wrapDB $ \conn -> run conn "DELETE FROM signatory_attachments WHERE document_id = ?" [toSql did]
+    when (r > 0) $ 
+      ignore $ dbUpdate $ InsertEvidenceEvent
       RemoveSigAttachmentsEvidence
       ("All signatory attachments removed by " ++ actorWho actor ++ ".")
       (Just did)

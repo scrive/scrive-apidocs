@@ -40,6 +40,17 @@ import EvidenceLog.Model
 docStateTests :: Nexus -> Test
 docStateTests conn = testGroup "DocState" [
   dataStructureProperties,
+  testThat "CloseDocument adds to the log" conn testCloseDocumentEvidenceLog,
+  testThat "ChangeSignatoryEmailWhenUndelivered adds to the log" conn testChangeSignatoryEmailWhenUndeliveredEvidenceLog,
+  testThat "ChangeMailfile adds to the log" conn testChangeMainfileEvidenceLog,
+  testThat "CancelDocument adds to the log" conn testCancelDocumentEvidenceLog,
+  testThat "AttachSealedFile adds to the log" conn testAttachSealedFileEvidenceLog,
+  testThat "AttachFile adds to the log" conn testAttachFileEvidenceLog,
+  testThat "AttachCSVUpload adds to the log" conn testAttachCSVUploadEvidenceLog,
+  testThat "ArchiveDocumentEvidence adds to the log" conn testArchiveDocumentEvidenceLog,
+  testThat "AddInvitationEvidence adds to the log" conn testAddInvitationEvidenceLog,
+  testThat "NewDocument adds to the log" conn testNewDocumentEvidenceLog,
+  testThat "AddDocumentAttachment adds to the log" conn testAddDocumentAttachmentEvidenceLog,
   testThat "GetDocumentsByCompanyAndTags filters" conn testGetDocumentsByCompanyAndTagsFilters,
   testThat "GetDocumentsByCompanyAndTags finds" conn testGetDocumentsByCompanyAndTagsFinds,
   testThat "GetDocumentsByCompanyAndTags finds with multiple" conn testGetDocumentsByCompanyAndTagsFindsMultiple,  
@@ -255,6 +266,119 @@ testNewDocumentForMismatchingUserAndCompanyFails = doTimes 10 $ do
   validTest $ do
     assertLeft edoc1
     assertLeft edoc2
+    
+testNewDocumentEvidenceLog :: DB ()
+testNewDocumentEvidenceLog = do
+  (_, _, ed) <- performNewDocumentWithRandomUser Nothing (Signable Contract) "doc"
+  assertRight ed
+  let Right d = ed
+      did = documentid d
+  lg <- dbQuery $ GetEvidenceLog did
+  assertJust $ find (\e -> evType e == NewDocumentEvidence) lg
+  
+testAddDocumentAttachmentEvidenceLog :: DB ()
+testAddDocumentAttachmentEvidenceLog = do
+  (_, _, ed) <- performNewDocumentWithRandomUser Nothing (Signable Contract) "doc"
+  assertRight ed
+  let Right d = ed
+      did = documentid d
+  file <- addNewRandomFile
+  --execute
+  edoc <- randomUpdate $ \t->AddDocumentAttachment did (fileid file) (SystemActor t)
+  assertRight edoc
+  lg <- dbQuery $ GetEvidenceLog did
+  assertJust $ find (\e -> evType e == AddDocumentAttachmentEvidence) lg
+  
+testAddInvitationEvidenceLog :: DB ()
+testAddInvitationEvidenceLog = do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (isPending &&^ ((<=) 2 . length . documentsignatorylinks))
+  let Just sl = getSigLinkFor doc (not . (isAuthor::SignatoryLink->Bool))
+  etdoc <- randomUpdate $ \t->AddInvitationEvidence (documentid doc) (signatorylinkid sl) (SystemActor t)
+  assertRight etdoc
+  lg <- dbQuery $ GetEvidenceLog (documentid doc)
+  assertJust $ find (\e -> evType e == InvitationEvidence) lg
+
+testArchiveDocumentEvidenceLog :: DB ()
+testArchiveDocumentEvidenceLog = do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author isClosed
+  etdoc <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (SystemActor t)
+  assertRight etdoc
+  lg <- dbQuery $ GetEvidenceLog (documentid doc)
+  assertJust $ find (\e -> evType e == ArchiveDocumentEvidence) lg
+
+testAttachCSVUploadEvidenceLog :: DB ()
+testAttachCSVUploadEvidenceLog = do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (isPreparation &&^ ((<=) 2 . length . documentsignatorylinks))
+  let Just sl = getSigLinkFor doc (not . (isAuthor::SignatoryLink->Bool))
+  etdoc <- randomUpdate $ \c t->AttachCSVUpload (documentid doc) (signatorylinkid sl) c (SystemActor t)
+  assertRight etdoc
+  lg <- dbQuery $ GetEvidenceLog (documentid doc)
+  assertJust $ find (\e -> evType e == AttachCSVUploadEvidence) lg
+
+testAttachFileEvidenceLog :: DB ()
+testAttachFileEvidenceLog = do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
+  file <- addNewRandomFile
+  etdoc <- randomUpdate $ \t->AttachFile (documentid doc) (fileid file) (SystemActor t)
+  assertRight etdoc
+  lg <- dbQuery $ GetEvidenceLog (documentid doc)
+  assertJust $ find (\e -> evType e == AttachFileEvidence) lg
+
+testAttachSealedFileEvidenceLog :: DB ()
+testAttachSealedFileEvidenceLog = do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author isClosed
+  file <- addNewRandomFile  
+  etdoc <- randomUpdate $ \t->AttachSealedFile (documentid doc) (fileid file) (SystemActor t)
+  assertRight etdoc
+  lg <- dbQuery $ GetEvidenceLog (documentid doc)
+  assertJust $ find (\e -> evType e == AttachSealedFileEvidence) lg
+
+testCancelDocumentEvidenceLog :: DB ()
+testCancelDocumentEvidenceLog = do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (isPending ||^ isAwaitingAuthor))
+  etdoc <- randomUpdate $ \t-> CancelDocument (documentid doc) ManualCancel (SystemActor t)
+  assertRight etdoc
+  lg <- dbQuery $ GetEvidenceLog (documentid doc)
+  assertJust $ find (\e -> evType e == CancelDocumentEvidence) lg
+
+testChangeMainfileEvidenceLog :: DB ()
+testChangeMainfileEvidenceLog = do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (const True)
+  file <- addNewRandomFile  
+  etdoc <- randomUpdate $ \t-> ChangeMainfile (documentid doc) (fileid file) (SystemActor t)
+  assertRight etdoc
+  lg <- dbQuery $ GetEvidenceLog (documentid doc)
+  assertJust $ find (\e -> evType e == ChangeMainfileEvidence) lg
+
+testChangeSignatoryEmailWhenUndeliveredEvidenceLog :: DB ()
+testChangeSignatoryEmailWhenUndeliveredEvidenceLog = do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (isPending &&^ ((<=) 2 . length . documentsignatorylinks))
+  let Just sl = getSigLinkFor doc (not . (isAuthor::SignatoryLink->Bool))
+  etdoc <- randomUpdate $ \t-> ChangeSignatoryEmailWhenUndelivered (documentid doc) (signatorylinkid sl) Nothing (BS.fromString "email@email.com") (SystemActor t)
+  assertRight etdoc
+  lg <- dbQuery $ GetEvidenceLog (documentid doc)
+  assertJust $ find (\e -> evType e == ChangeSignatoryEmailWhenUndeliveredEvidence) lg
+
+testCloseDocumentEvidenceLog :: DB ()
+testCloseDocumentEvidenceLog = do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author isPending
+  forM_ (documentsignatorylinks doc) $ \sl -> do
+    ignore $ randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (SystemActor t)
+    ignore $ randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing (SystemActor t)
+  etdoc <- randomUpdate $ \t-> CloseDocument (documentid doc) (SystemActor t)
+  assertRight etdoc
+  lg <- dbQuery $ GetEvidenceLog (documentid doc)
+  assertJust $ find (\e -> evType e == CloseDocumentEvidence) lg
+
 
 performNewDocumentWithRandomUser :: Maybe Company -> DocumentType -> String -> DB (User, MinutesTime, Either String Document)
 performNewDocumentWithRandomUser Nothing doctype title = do
