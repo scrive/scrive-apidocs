@@ -41,7 +41,6 @@ import Util.FlashUtil
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.MonadUtils
-import User.Model
 import User.Utils
 import User.UserControl
 import User.UserView

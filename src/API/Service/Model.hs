@@ -82,61 +82,56 @@ data ServiceUI = ServiceUI {
 data GetServiceByLocation = GetServiceByLocation ServiceLocation
 instance DBQuery GetServiceByLocation (Maybe Service) where
   dbQuery (GetServiceByLocation loc) = do
-    ss <- wrapDB $ \conn -> do
-      st <- prepare conn $ selectServicesSQL ++ "WHERE s.location = ?"
-      _ <- execute st [toSql loc]
-      fetchServices st
-    oneObjectReturnedGuard ss
+    kPrepare $ selectServicesSQL ++ "WHERE s.location = ?"
+    _ <- kExecute [toSql loc]
+    fetchServices >>= oneObjectReturnedGuard
 
 data GetService = GetService ServiceID
 instance DBQuery GetService (Maybe Service) where
   dbQuery (GetService sid) = do
-    ss <- wrapDB $ \conn -> do
-      st <- prepare conn $ selectServicesSQL ++ "WHERE s.id = ?"
-      _ <- execute st [toSql sid]
-      fetchServices st
-    oneObjectReturnedGuard ss
+    kPrepare $ selectServicesSQL ++ "WHERE s.id = ?"
+    _ <- kExecute [toSql sid]
+    fetchServices >>= oneObjectReturnedGuard
 
 data GetServicesForAdmin = GetServicesForAdmin UserID
 instance DBQuery GetServicesForAdmin [Service] where
-  dbQuery (GetServicesForAdmin aid) = wrapDB $ \conn -> do
-    st <- prepare conn $ selectServicesSQL ++ "WHERE s.admin_id = ? ORDER BY s.id DESC"
-    _ <- execute st [toSql aid]
-    fetchServices st
+  dbQuery (GetServicesForAdmin aid) = do
+    kPrepare $ selectServicesSQL ++ "WHERE s.admin_id = ? ORDER BY s.id DESC"
+    _ <- kExecute [toSql aid]
+    fetchServices
 
 data GetServices = GetServices
 instance DBQuery GetServices [Service] where
-  dbQuery GetServices = wrapDB $ \conn -> do
-    st <- prepare conn $ selectServicesSQL ++ "ORDER BY s.id DESC"
-    _ <- executeRaw st
-    fetchServices st
+  dbQuery GetServices = do
+    kPrepare $ selectServicesSQL ++ "ORDER BY s.id DESC"
+    _ <- kExecute []
+    fetchServices
 
 data CreateService = CreateService ServiceID (Maybe Password) UserID
 instance DBUpdate CreateService (Maybe Service) where
   dbUpdate (CreateService sid pwd aid) = do
+    _ <- kRunRaw "LOCK TABLE services IN ACCESS EXCLUSIVE MODE"
     exists <- checkIfServiceExists sid
     if exists
       then return Nothing
       else do
-        wrapDB $ \conn -> do
-          _ <- run conn ("INSERT INTO services ("
-            ++ "  id"
-            ++ ", password"
-            ++ ", salt"
-            ++ ", admin_id) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?)") [
-                toSql sid
-              , toSql $ pwdHash <$> pwd
-              , toSql $ pwdSalt <$> pwd
-              , toSql aid
-              ]
-          return ()
+        kPrepare $ "INSERT INTO services ("
+          ++ "  id"
+          ++ ", password"
+          ++ ", salt"
+          ++ ", admin_id) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?)"
+        _ <- kExecute [
+            toSql sid
+          , toSql $ pwdHash <$> pwd
+          , toSql $ pwdSalt <$> pwd
+          , toSql aid
+          ]
         dbQuery $ GetService sid
 
 data UpdateServiceUI = UpdateServiceUI ServiceID ServiceUI
 instance DBUpdate UpdateServiceUI Bool where
   dbUpdate (UpdateServiceUI sid sui) = do
-    r <- wrapDB $ \conn -> do
-      run conn ("UPDATE services SET"
+    kPrepare $ "UPDATE services SET"
         ++ "  mail_footer = ?"
         ++ ", button1 = decode(?, 'base64')"
         ++ ", button2 = decode(?, 'base64')"
@@ -145,44 +140,43 @@ instance DBUpdate UpdateServiceUI Bool where
         ++ ", overlay_background = ?"
         ++ ", bars_background = ?"
         ++ ", logo = decode(?, 'base64')"
-        ++ "  WHERE id = ?") [
-          toSql $ servicemailfooter sui
-        , toSql $ fst <$> servicebuttons sui
-        , toSql $ snd <$> servicebuttons sui
-        , toSql $ servicebuttonstextcolor sui
-        , toSql $ servicebackground sui
-        , toSql $ serviceoverlaybackground sui
-        , toSql $ servicebarsbackground sui
-        , toSql $ servicelogo sui
-        , toSql sid
-        ]
-    oneRowAffectedGuard r
+        ++ "  WHERE id = ?"
+    kExecute01 [
+        toSql $ servicemailfooter sui
+      , toSql $ fst <$> servicebuttons sui
+      , toSql $ snd <$> servicebuttons sui
+      , toSql $ servicebuttonstextcolor sui
+      , toSql $ servicebackground sui
+      , toSql $ serviceoverlaybackground sui
+      , toSql $ servicebarsbackground sui
+      , toSql $ servicelogo sui
+      , toSql sid
+      ]
 
 data UpdateServiceSettings = UpdateServiceSettings ServiceID ServiceSettings
 instance DBUpdate UpdateServiceSettings Bool where
   dbUpdate (UpdateServiceSettings sid ss) = do
-    r <- wrapDB $ \conn -> do
-      run conn ("UPDATE services SET"
+    kPrepare $ "UPDATE services SET"
         ++ "  password = decode(?, 'base64')"
         ++ ", salt = decode(?, 'base64')"
         ++ ", admin_id = ?"
         ++ ", location = ?"
         ++ ", email_from_address = ?"
-        ++ "  WHERE id = ?") [
-          toSql $ pwdHash <$> servicepassword ss
-        , toSql $ pwdSalt <$> servicepassword ss
-        , toSql $ serviceadmin ss
-        , toSql $ servicelocation ss
-        , toSql $ servicemailfromaddress ss
-        , toSql sid
-        ]
-    oneRowAffectedGuard r
+        ++ "  WHERE id = ?"
+    kExecute01 [
+        toSql $ pwdHash <$> servicepassword ss
+      , toSql $ pwdSalt <$> servicepassword ss
+      , toSql $ serviceadmin ss
+      , toSql $ servicelocation ss
+      , toSql $ servicemailfromaddress ss
+      , toSql sid
+      ]
 
 -- helpers
 
 checkIfServiceExists :: ServiceID -> DB Bool
-checkIfServiceExists uid = wrapDB $ \conn -> do
-  quickQuery' conn "SELECT 1 FROM services WHERE id = ?" [toSql uid]
+checkIfServiceExists uid = do
+  kQuickQuery "SELECT 1 FROM services WHERE id = ?" [toSql uid]
     >>= checkIfOneObjectReturned
 
 selectServicesSQL :: String
@@ -204,8 +198,8 @@ selectServicesSQL = "SELECT"
   ++ "  FROM services s"
   ++ " "
 
-fetchServices :: Statement -> IO [Service]
-fetchServices st = foldDB st decoder []
+fetchServices :: DB [Service]
+fetchServices = foldDB decoder []
   where
     decoder acc sid password salt admin_id location email_from_address
       mail_footer button1 button2 buttons_text_color background

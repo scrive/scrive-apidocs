@@ -66,4 +66,3 @@ getOne query values = wrapDB $ \c ->
   quickQuery' c query values
     >>= oneObjectReturnedGuard . join
     >>= return . fmap fromSql
-    

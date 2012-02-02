@@ -9,6 +9,7 @@ import Data.Convertible
 import Database.HDBC as HDBC
 import qualified Control.Exception as E
 
+import DB.Classes
 import DB.Exception as DB
 
 class Fetcher a r where
@@ -48,16 +49,22 @@ instance Fetcher r r where
 -- (usually it's not neccessary since compiler will be able to infer them,
 -- but if it won't, you have to expect quite ugly error message about
 -- missing instances).
-foldDB :: (MonadIO m, Fetcher a b) => Statement -> (b -> a) -> b -> m b
-foldDB st decoder = liftIO . worker
+foldDB :: Fetcher a b => (b -> a) -> b -> DB b
+foldDB decoder init_acc = do
+  mst <- getStatement
+  case mst of
+    Nothing -> return init_acc
+    Just st -> do
+      res <- liftIO $ worker st init_acc
+      case res of
+        Right acc -> return acc
+        Left err -> kFinish >> liftIO (E.throwIO err)
   where
-    worker acc = do
+    worker st acc = do
       mrow <- fetchRow st
       case mrow of
-        Nothing -> return acc
+        Nothing -> return $ Right acc
         Just row ->
           case apply 0 row (decoder acc) of
-            Right acc' -> worker acc'
-            Left err -> do
-              finish st
-              E.throwIO err { DB.originalQuery = HDBC.originalQuery st }
+            Right acc' -> worker st acc'
+            Left err -> return $ Left err { DB.originalQuery = HDBC.originalQuery st }

@@ -38,29 +38,28 @@ module DB.Classes
   , DBException(..)
   , catchDB
   , tryDB
+  , getStatement
   , kPrepare
   , kExecute
   , kExecute1
   , kExecute01
   , kExecute1P
-  , kFetchRow
-  , kFetchAll
-  , kFetchSqlRow
+  , kRun
+  , kRunRaw
+  , kQuickQuery
   , kFinish
   ) where
 
 import Control.Applicative
 import Control.Monad.IO.Class
 import Control.Monad.RWS
-import DB.Fetcher
 import Data.Maybe
 import Database.HDBC hiding (originalQuery)
-import DB.Nexus
-
 import qualified Control.Exception as E
--- import qualified DB.Utils as DB
 import qualified Database.HDBC as HDBC
+
 import DB.Exception
+import DB.Nexus
 
 type DBInside a = RWST Nexus () (Maybe Statement) IO a
 
@@ -87,82 +86,64 @@ type DBInside a = RWST Nexus () (Maybe Statement) IO a
 newtype DB a = DB { unDB :: DBInside a }
   deriving (Applicative, Functor, Monad, MonadIO)
 
--- | Protected 'liftIO'. Properly catches 'SqlError' and converts it
--- to 'DBException'. Adds 'HDBC.originalQuery' that should help a lot.
-protIO :: String -> IO a -> DBInside a
-protIO query action = do
-  conn <- ask
-  liftIO (actionWithCatch conn)
-  where
-    setOriginalQuery e = SQLError query [] e
-    actionWithCatch conn = do
-      action `E.catch` \e -> do
-        -- for some unknown reason we need to do rollback here
-        -- ourselves otherwise something underneath will try to issue
-        -- some commands and those will fail with 'transaction
-        -- aborted, ignoring commands till the end of the block'
-        rollback conn    
-        E.throwIO (setOriginalQuery e)
+-- | Get current statement (if any is prepared)
+getStatement :: DB (Maybe Statement)
+getStatement = DB get
 
 -- | Prepares new SQL query given as string. If there was another
 -- query prepared in this monad, it will be finished first.
 kPrepare :: String -> DB ()
 kPrepare command = DB $ do
-                     conn <- ask
-                     statement <- protIO command $ prepare conn command
-                     oldstatement <- get
-                     put (Just statement)
-                     case oldstatement of
-                       Just st -> protIO (HDBC.originalQuery st) $ finish st
-                       Nothing -> return ()
-                       
+  conn <- ask
+  statement <- protIO command $ prepare conn command
+  oldstatement <- get
+  put (Just statement)
+  case oldstatement of
+    Just st -> protIO (HDBC.originalQuery st) $ finish st
+    Nothing -> return ()
 
 -- | Execute recently prepared query. Values given as param serve as
 -- positional arguments for SQL query binding. See 'execute' for more
 -- details.
 kExecute :: [SqlValue] -> DB Integer
 kExecute values = DB $ do
-                    mstatement <- get
-                    case mstatement of
-                      Nothing -> return (-1) -- no statement prepared
-                      Just statement -> 
-                        protIO (HDBC.originalQuery statement) $ 
-                           execute statement values
+  mstatement <- get
+  case mstatement of
+    Nothing -> return $ -1 -- no statment prepared
+    Just statement -> protIO (HDBC.originalQuery statement) $ execute statement values
 
 -- | Execute recently prepared query and check if it returned exactly
 -- 1 row affected result. Useful for INSERT, DELETE or UPDATE
 -- statements. Watch out for RETURNING clauses though: they make
 -- everything return 0.
-kExecute1 :: [SqlValue] -> DB Integer
+kExecute1 :: [SqlValue] -> DB ()
 kExecute1 values = do
   result <- kExecute values
-  DB (when (result/=1) $ do
-          mst <- get
-          E.throw TooManyObjects
-             { originalQuery = fromMaybe "" (fmap HDBC.originalQuery mst)
-             , queryParams = values
-             , tmoExpected = 1
-             , tmoGiven = result
-             }
-       )
-  return result
+  when (result /= 1) $ DB $ do
+    mst <- get
+    E.throw TooManyObjects {
+        originalQuery = fromMaybe "" (fmap HDBC.originalQuery mst)
+      , queryParams = values
+      , tmoExpected = 1
+      , tmoGiven = result
+    }
 
 -- | Execute recently prepared query and check if it returned 0 or 1
 -- row affected result. Useful for INSERT, DELETE or UPDATE
 -- statements. Watch out for RETURNING clauses though: they make
 -- everything return 0.
-kExecute01 :: [SqlValue] -> DB Integer
+kExecute01 :: [SqlValue] -> DB Bool
 kExecute01 values = do
   result <- kExecute values
-  DB (when (result/=1 && result/=0) $ do
-          mst <- get
-          E.throw TooManyObjects
-             { originalQuery = fromMaybe "" (fmap HDBC.originalQuery mst)
-             , queryParams = values
-             , tmoExpected = 1
-             , tmoGiven = result
-             })
-  return result
+  when (result > 1) $ DB $ do
+    mst <- get
+    E.throw TooManyObjects {
+        originalQuery = fromMaybe "" (fmap HDBC.originalQuery mst)
+      , queryParams = values
+      , tmoExpected = 1
+      , tmoGiven = result
+    }
+  return $ result == 1
 
 -- | Execute recently prepared query and check if it returned 1 or
 -- more rows affected result. Useful for INSERT, DELETE or UPDATE
@@ -171,85 +152,52 @@ kExecute01 values = do
 kExecute1P :: [SqlValue] -> DB Integer
 kExecute1P values = do
   result <- kExecute values
-  DB (when (result<1) $ do
-          mst <- get
-          E.throw TooManyObjects
-             { originalQuery = fromMaybe "" (fmap HDBC.originalQuery mst)
-             , queryParams = values
-             , tmoExpected = 1
-             , tmoGiven = result
-             })
+  when (result < 1) $ DB $ do
+    mst <- get
+    E.throw TooManyObjects {
+        originalQuery = fromMaybe "" (fmap HDBC.originalQuery mst)
+      , queryParams = values
+      , tmoExpected = 1
+      , tmoGiven = result
+    }
   return result
 
--- | Fetch next row from last executed statement. Returns it as a list
--- of 'SqlValue' values. If there was no statement returns
--- 'Nothing'. If amount of returned rows is exhausted, returns
--- 'Nothing'. Use 'kFetchRow' instead.
-kFetchSqlRow :: DB (Maybe [SqlValue])
-kFetchSqlRow = 
-  DB $ do
-    mstatement <- get
-    case mstatement of
-      Nothing -> return Nothing -- no statement prepared
-      Just statement ->
-        protIO (HDBC.originalQuery statement) $ fetchRow statement
+kRun :: String -> [SqlValue] -> DB Integer
+kRun query values = kPrepare query >> kExecute values
 
--- | Fetch next row from last executed statement. Returns it as a list
--- of 'SqlValue' values. If there was no statement returns
--- 'Nothing'. If amount of returned rows is exhausted, returns
--- 'Nothing'.
---
--- Decoder is a function of type similar to:
---
--- > decodeRowAsTriple :: String -> Int -> Double
--- >                   -> Either DBException (String,Double)
--- > decodeRowAsTriple s i d = return (s, fromIntegral i * d)
---
--- Conversion of params from 'SqlValue' to param types is done using
--- 'Convertible'. If there are issues with conversion 'DBException'
--- will be returned in 'Left'. If result row is too long or too shoe,
--- 'DBException' will be returned in 'Left'.
-kFetchRow :: (Fetcher a) => a -> DB (Maybe (FetchResult a))
-kFetchRow decode =
-  DB $ do
-    mstatement <- get
-    case mstatement of
-      Nothing -> return Nothing -- no statement prepared
-      Just statement -> do
-        mrow <- protIO (HDBC.originalQuery statement) $ fetchRow statement
-        case mrow of
-          Nothing -> return Nothing
-          Just row -> 
-            case fetchWorker 0 decode row of
-              Right value -> return (Just value)
-              Left left -> do
-                   unDB kFinish
-                   liftIO $ E.throwIO $ left { originalQuery = HDBC.originalQuery statement }
+kRunRaw :: String -> DB Integer
+kRunRaw query = kPrepare query >> kExecute []
 
--- | Uses 'kFetchRow' to fetch rows until it returns 'Nothing' and
--- return a list of results.
-kFetchAll :: (Fetcher a) => a -> DB [FetchResult a]
-kFetchAll decode = worker []
-  where
-    worker acc = do
-      m <- kFetchRow decode
-      case m of
-        Just v -> worker (v:acc)
-        Nothing -> return (reverse acc)
+kQuickQuery :: String -> [SqlValue] -> DB [[SqlValue]]
+kQuickQuery query values = wrapDB $ \c -> quickQuery' c query values
 
-        
 -- | Finish current statement. 'kPrepare' and 'kExecute' call
 -- 'kFinish' before they alter query.
 kFinish :: DB ()
-kFinish = 
-  DB $ do
-    oldstatement <- get
-    case oldstatement of
-      Just st -> do
-           put Nothing
-           protIO (HDBC.originalQuery st) $ finish st
-      Nothing -> return ()
+kFinish = DB $ do
+  oldstatement <- get
+  case oldstatement of
+    Just st -> do
+      put Nothing
+      protIO (HDBC.originalQuery st) $ finish st
+    Nothing -> return ()
 
+-- | Protected 'liftIO'. Properly catches 'SqlError' and converts it
+-- to 'DBException'. Adds 'HDBC.originalQuery' that should help a lot.
+protIO :: String -> IO a -> DBInside a
+protIO query action = do
+  conn <- ask
+  liftIO $ actionWithCatch conn
+  where
+    setOriginalQuery e = SQLError query [] e
+    actionWithCatch conn = do
+      action `E.catch` \e -> do
+        -- for some unknown reason we need to do rollback here
+        -- ourselves otherwise something underneath will try to issue
+        -- some commands and those will fail with 'transaction
+        -- aborted, ignoring commands till the end of the block'
+        rollback conn
+        E.throwIO (setOriginalQuery e)
 
 -- query typeclasses
 class DBQuery q r | q -> r where

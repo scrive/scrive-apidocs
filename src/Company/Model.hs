@@ -58,63 +58,60 @@ data CompanyInfo = CompanyInfo {
 
 data GetCompanies = GetCompanies (Maybe ServiceID)
 instance DBQuery GetCompanies [Company] where
-  dbQuery (GetCompanies msid) = wrapDB $ \conn -> do
-    st <- prepare conn $ selectCompaniesSQL
-      ++ "WHERE (?::TEXT IS NULL AND c.service_id IS NULL) OR c.service_id = ? ORDER BY c.id DESC"
-    _ <- execute st [toSql msid, toSql msid]
-    fetchCompanies st
+  dbQuery (GetCompanies msid) = do
+    kPrepare $ selectCompaniesSQL ++ "WHERE c.service_id IS NOT DISTINCT FROM ? ORDER BY c.id DESC"
+    _ <- kExecute [toSql msid]
+    fetchCompanies
 
 data GetCompany = GetCompany CompanyID
 instance DBQuery GetCompany (Maybe Company) where
-  dbQuery (GetCompany cid) = wrapDB $ \conn -> do
-    st <- prepare conn $ selectCompaniesSQL ++ "WHERE c.id = ?"
-    _ <- execute st [toSql cid]
-    cs <- fetchCompanies st
-    oneObjectReturnedGuard cs
+  dbQuery (GetCompany cid) = do
+    kPrepare $ selectCompaniesSQL ++ "WHERE c.id = ?"
+    _ <- kExecute [toSql cid]
+    fetchCompanies >>= oneObjectReturnedGuard
 
 data GetCompanyByExternalID = GetCompanyByExternalID (Maybe ServiceID) ExternalCompanyID
 instance DBQuery GetCompanyByExternalID (Maybe Company) where
-  dbQuery (GetCompanyByExternalID msid ecid) = wrapDB $ \conn -> do
-    st <- prepare conn $ selectCompaniesSQL
-      ++ "WHERE ((?::TEXT IS NULL AND c.service_id IS NULL) OR c.service_id = ?) AND c.external_id = ?"
-    _ <- execute st [toSql msid, toSql msid, toSql ecid]
-    cs <- fetchCompanies st
-    oneObjectReturnedGuard cs
+  dbQuery (GetCompanyByExternalID msid ecid) = do
+    kPrepare $ selectCompaniesSQL ++ "WHERE c.service_id IS NOT DISTINCT FROM ? AND c.external_id = ?"
+    _ <- kExecute [toSql msid, toSql ecid]
+    fetchCompanies >>= oneObjectReturnedGuard
 
 data CreateCompany = CreateCompany (Maybe ServiceID) (Maybe ExternalCompanyID)
 instance DBUpdate CreateCompany Company where
   dbUpdate (CreateCompany msid mecid) = do
-    wrapDB $ \conn -> runRaw conn "LOCK TABLE companies IN ACCESS EXCLUSIVE MODE"
+    _ <- kRunRaw "LOCK TABLE companies IN ACCESS EXCLUSIVE MODE"
     cid <- CompanyID <$> getUniqueID tableCompanies
-    wrapDB $ \conn -> do
-      _ <- run conn ("INSERT INTO companies ("
-        ++ "  id"
-        ++ ", external_id"
-        ++ ", service_id"
-        ++ ", name"
-        ++ ", number"
-        ++ ", address"
-        ++ ", zip"
-        ++ ", city"
-        ++ ", country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)") $ [
-            toSql cid
-          , toSql mecid
-          , toSql msid
-          ] ++ replicate 6 (toSql "")
-      return ()
+    kPrepare $ "INSERT INTO companies ("
+      ++ "  id"
+      ++ ", external_id"
+      ++ ", service_id"
+      ++ ", name"
+      ++ ", number"
+      ++ ", address"
+      ++ ", zip"
+      ++ ", city"
+      ++ ", country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      ++ " RETURNING id, external_id, service_id, name, number, address, zip, city, country"
+    _ <- kExecute $ [
+        toSql cid
+      , toSql mecid
+      , toSql msid
+      ] ++ replicate 6 (toSql "")
     dbQuery (GetCompany cid) >>= maybe (E.throw $ NoObject "") return
 
 data SetCompanyInfo = SetCompanyInfo CompanyID CompanyInfo
 instance DBUpdate SetCompanyInfo Bool where
-  dbUpdate (SetCompanyInfo cid ci) = wrapDB $ \conn -> do
-    r <- run conn ("UPDATE companies SET"
+  dbUpdate (SetCompanyInfo cid ci) = do
+    kPrepare $ "UPDATE companies SET"
       ++ "  name = ?"
       ++ ", number = ?"
       ++ ", address = ?"
       ++ ", zip = ?"
       ++ ", city = ?"
       ++ ", country = ?"
-      ++ "  WHERE id = ?") [
+      ++ "  WHERE id = ?"
+    kExecute01 [
         toSql $ companyname ci
       , toSql $ companynumber ci
       , toSql $ companyaddress ci
@@ -123,7 +120,6 @@ instance DBUpdate SetCompanyInfo Bool where
       , toSql $ companycountry ci
       , toSql cid
       ]
-    oneRowAffectedGuard r
 
 data GetOrCreateCompanyWithExternalID = GetOrCreateCompanyWithExternalID (Maybe ServiceID) ExternalCompanyID
 instance DBUpdate GetOrCreateCompanyWithExternalID Company where
@@ -149,8 +145,8 @@ selectCompaniesSQL = "SELECT"
   ++ "  FROM companies c"
   ++ " "
 
-fetchCompanies :: Statement -> IO [Company]
-fetchCompanies st = foldDB st decoder []
+fetchCompanies :: DB [Company]
+fetchCompanies = foldDB decoder []
   where
     decoder acc cid eid sid name number address zip' city country = Company {
         companyid = cid

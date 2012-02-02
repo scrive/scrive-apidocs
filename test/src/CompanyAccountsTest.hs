@@ -29,7 +29,6 @@ import StateHelper
 import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
-import User.Model
 import Util.HasSomeUserInfo
 
 

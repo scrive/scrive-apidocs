@@ -12,12 +12,11 @@ import Database.HDBC
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
 
-
-import Company.Model (CompanyID(..))
+import Company.Model
 import DB.Classes
 import DB.Fetcher2
 import DB.Utils
-import User.Model (Email(..))
+import User.Model
 
 {- |
     A CompanyInvite is a record
@@ -33,58 +32,43 @@ data CompanyInvite = CompanyInvite {
 
 data AddCompanyInvite = AddCompanyInvite CompanyInvite
 instance DBUpdate AddCompanyInvite CompanyInvite where
-  dbUpdate (AddCompanyInvite CompanyInvite{
-      invitedemail
-    , invitedfstname
-    , invitedsndname
-    , invitingcompany
-    }) = do
-    wrapDB $ \conn -> runRaw conn "LOCK TABLE companyinvites IN ACCESS EXCLUSIVE MODE"
-    wrapDB $ \conn -> do
-      _ <- run conn ("DELETE FROM companyinvites "
-                      ++ "WHERE (company_id = ? AND email = ?)")
-                      [ toSql invitingcompany
-                      , toSql invitedemail]
-      _ <- run conn ("INSERT INTO companyinvites ("
-                      ++ "  email"
-                      ++ ", first_name"
-                      ++ ", last_name"
-                      ++ ", company_id) VALUES (?, ?, ?, ?)")
-                      [ toSql invitedemail
-                      , toSql invitedfstname
-                      , toSql invitedsndname
-                      , toSql invitingcompany]
-      return ()
-    dbQuery (GetCompanyInvite invitingcompany invitedemail) >>= maybe (E.throw $ NoObject "") return
+  dbUpdate (AddCompanyInvite CompanyInvite{..}) = do
+    _ <- kRunRaw "LOCK TABLE companyinvites IN ACCESS EXCLUSIVE MODE"
+    kPrepare "DELETE FROM companyinvites WHERE (company_id = ? AND email = ?)"
+    _ <- kExecute [toSql invitingcompany, toSql invitedemail]
+    kPrepare $ "INSERT INTO companyinvites ("
+      ++ "  email"
+      ++ ", first_name"
+      ++ ", last_name"
+      ++ ", company_id) VALUES (?, ?, ?, ?)"
+    _ <- kExecute [
+        toSql invitedemail
+      , toSql invitedfstname
+      , toSql invitedsndname
+      , toSql invitingcompany
+      ]
+    dbQuery (GetCompanyInvite invitingcompany invitedemail)
+      >>= maybe (E.throw $ NoObject "") return
 
 data RemoveCompanyInvite = RemoveCompanyInvite CompanyID Email
-instance DBUpdate RemoveCompanyInvite () where
+instance DBUpdate RemoveCompanyInvite Bool where
   dbUpdate (RemoveCompanyInvite companyid email) = do
-  wrapDB $ \conn -> runRaw conn "LOCK TABLE companyinvites IN ACCESS EXCLUSIVE MODE"
-  wrapDB $ \conn -> do
-    _ <- run conn ("DELETE FROM companyinvites "
-                    ++ "WHERE (company_id = ? AND email = ?)")
-                    [ toSql companyid
-                    , toSql email]
-    return ()
-  dbQuery (GetCompanyInvite companyid email) >>= maybe (return ()) (const $ E.throw $ NoObject "")
+    kPrepare "DELETE FROM companyinvites WHERE (company_id = ? AND email = ?)"
+    kExecute01 [toSql companyid, toSql email]
 
 data GetCompanyInvite = GetCompanyInvite CompanyID Email
 instance DBQuery GetCompanyInvite (Maybe CompanyInvite) where
-  dbQuery (GetCompanyInvite companyid email) = wrapDB $ \conn -> do
-    st <- prepare conn $ selectCompanyInvitesSQL
-      ++ "WHERE (ci.company_id = ? AND ci.email = ?)"
-    _ <- execute st [toSql companyid, toSql email]
-    cs <- fetchCompanyInvites st
-    oneObjectReturnedGuard cs
+  dbQuery (GetCompanyInvite companyid email) = do
+    kPrepare $ selectCompanyInvitesSQL ++ "WHERE (ci.company_id = ? AND ci.email = ?)"
+    _ <- kExecute [toSql companyid, toSql email]
+    fetchCompanyInvites >>= oneObjectReturnedGuard
 
 data GetCompanyInvites = GetCompanyInvites CompanyID
 instance DBQuery GetCompanyInvites [CompanyInvite] where
-    dbQuery (GetCompanyInvites companyid) = wrapDB $ \conn -> do
-    st <- prepare conn $ selectCompanyInvitesSQL
-      ++ "WHERE (ci.company_id = ?)"
-    _ <- execute st [toSql companyid]
-    fetchCompanyInvites st
+  dbQuery (GetCompanyInvites companyid) = do
+    kPrepare $ selectCompanyInvitesSQL ++ "WHERE (ci.company_id = ?)"
+    _ <- kExecute [toSql companyid]
+    fetchCompanyInvites
 
 -- helpers
 selectCompanyInvitesSQL :: String
@@ -96,8 +80,8 @@ selectCompanyInvitesSQL = "SELECT"
   ++ "  FROM companyinvites ci"
   ++ " "
 
-fetchCompanyInvites :: Statement -> IO [CompanyInvite]
-fetchCompanyInvites st = foldDB st decoder []
+fetchCompanyInvites :: DB [CompanyInvite]
+fetchCompanyInvites = foldDB decoder []
   where
     decoder acc email fstname sndname cid = CompanyInvite {
         invitedemail = email

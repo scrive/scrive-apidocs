@@ -1156,23 +1156,23 @@ selectDocuments select values = do
     kPrepare "SELECT * FROM docs"
     _ <- kExecute []
 
-    docs <- kFetchAll decodeRowAsDocument
+    docs <- getStatement >>= \(Just st) -> fetchValues st decodeRowAsDocument
 
     kPrepare $ "SELECT " ++ concat (intersperse "," selectSignatoryLinksSelectors) ++
                " FROM signatory_links WHERE document_id IN (SELECT id FROM docs) ORDER BY document_id, internal_insert_order"
     _ <- kExecute []
-    sls <- kFetchAll decodeRowAsSignatoryLinkWithDocumentID
+    sls <- getStatement >>= \(Just st) -> fetchValues st decodeRowAsSignatoryLinkWithDocumentID
 
     kPrepare $ "SELECT " ++ concat (intersperse "," selectAuthorAttachmentsSelectors) ++
                " FROM author_attachments WHERE document_id IN (SELECT id FROM docs) ORDER BY document_id"
     _ <- kExecute []
-    ats <- kFetchAll decodeRowAsAuthorAttachment
+    ats <- getStatement >>= \(Just st) -> fetchValues st decodeRowAsAuthorAttachment
 
     kPrepare $ "SELECT " ++ concat (intersperse "," selectSignatoryAttachmentsSelectors) ++
                " FROM signatory_attachments WHERE document_id IN (SELECT id FROM docs) ORDER BY document_id"
     _ <- kExecute []
 
-    sas <- kFetchAll decodeRowAsSignatoryAttachment
+    sas <- getStatement >>= \(Just st) -> fetchValues st decodeRowAsSignatoryAttachment
 
     kPrepare $ "DROP TABLE docs"
     _ <- kExecute []
