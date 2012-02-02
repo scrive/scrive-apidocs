@@ -551,9 +551,8 @@
     background-color: #F5F5F5;
     display: block;
     height: 70px;
-    width: 180px;
+    width: 200px;
     text-align: center;
-    border: 1px solid #DDDDDD;
     filter: alpha(opacity=80);
     -moz-opacity: 0.80;
     opacity: 0.80;
@@ -561,5 +560,24 @@
 .signatureDrawingBox canvas {
     height: 70px;
     width: 180px;
-    border: 1px solid red;
 }
+
+.signatureDrawingBox .cleanDrawing {
+    height:15px;
+    width:15px;
+    margin:2px;
+    position: relative;
+    background-image: url("/img/icon-delete.png");
+    float : right;
+}
+.signatureDrawingBox .doneDrawing {
+    height:14px;
+    width:14px;
+    margin:2px;
+    position: relative;
+    bottom: 20px;
+    background-image: url("images/iconGreenCheck.png");
+    float : right;
+
+}
+doneDrawing
