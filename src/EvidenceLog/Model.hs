@@ -225,7 +225,7 @@ copyEvidenceLogToNewDocument fromdoc todoc =
         ++ ", request_ip_v6"        
         ++ ", signatory_link_id"
         ++ ", api_user"
-        ++ ") SELECT ("
+        ++ ") SELECT "
         ++ "  ?"
         ++ ", time"
         ++ ", text"
@@ -237,7 +237,7 @@ copyEvidenceLogToNewDocument fromdoc todoc =
         ++ ", request_ip_v6"        
         ++ ", signatory_link_id"
         ++ ", api_user"
-        ++ ") FROM evidence_log "
+        ++ " FROM evidence_log "
         ++ " WHERE document_id = ?"
     _ <- execute st [toSql todoc, toSql fromdoc]
     return ()
