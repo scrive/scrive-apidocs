@@ -9,7 +9,6 @@ module ActionScheduler (
     , getGlobalTemplates
     ) where
 
-import Control.Applicative
 import Control.Concurrent
 import Control.Monad.Reader
 import Data.List
@@ -26,19 +25,15 @@ import Archive.Invariants ()
 import DB.Classes
 import Doc.DocStateData
 import Doc.Model
-import KontraLink
 import MinutesTime
 import Mails.MailsData
 import Mails.MailsConfig
 import Mails.SendMail
 import Session
-import Templates.Trans
 import Templates.Templates
 import User.Model
-import User.UserView
 import qualified Log
 import System.Time
-import Util.HasSomeUserInfo
 import Doc.Invariants
 import Stats.Control
 import Database.HDBC.PostgreSQL
@@ -108,38 +103,10 @@ evaluateAction Action{actionID, actionType = ViralInvitationSent{}} =
 evaluateAction Action{actionID, actionType = AccountCreated{}} =
     deleteAction actionID
 
-evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid doclinkdataid@(docid, _) token} = do
-    case state of
-         NothingSent ->
-             sendReminder
-         ReminderSent ->
-             deleteAction actionID
-    where
-        sendReminder :: ActionScheduler ()
-        sendReminder = do
-            now <- liftIO getMinutesTime
-            sd <- ask
-            mdoc <- runDBQuery $ GetDocumentByDocumentID docid
-            let doctitle = maybe BS.empty documenttitle mdoc
-            (runDBQuery $ GetUserByID uid) >>= maybe (return ()) (\user -> do
-                let mailfunc :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
-                    mailfunc = case documenttype <$> mdoc of
-                      Just (Signable Offer) -> mailAccountCreatedBySigningOfferReminder
-                      Just (Signable Contract) -> mailAccountCreatedBySigningContractReminder
-                      Just (Signable Order) -> mailAccountCreatedBySigningOrderReminder
-                      t -> error $ "Something strange happened (document with a type " ++ show t ++ " was signed and now reminder wants to be sent)"
-                globaltemplates <- getGlobalTemplates
-                mail <- liftIO $ runTemplatesT (getLocale user, globaltemplates) $
-                          mailfunc (hostpart $ sdAppConf sd) doctitle (getFullName user) (LinkAccountCreatedBySigning actionID token)
-                scheduleEmailSendout (sdMailsConfig sd) $ mail { to = [getMailAddress user]})
-            _ <- update $ UpdateActionType actionID $ AccountCreatedBySigning {
-                  acbsState = ReminderSent
-                , acbsUserID = uid
-                , acbsDocLinkDataID = doclinkdataid
-                , acbsToken = token
-            }
-            _ <- update $ UpdateActionEvalTime actionID ((72 * 60) `minutesAfter` now)
-            return ()
+evaluateAction Action{actionID, actionType = AccountCreatedBySigning{}} = do
+  -- we used to send a "You haven't secured your original" email,
+  -- but we don't anymore, so this just deletes the action
+  deleteAction actionID
 
 evaluateAction Action{actionID, actionType = RequestEmailChange{}} =
   deleteAction actionID

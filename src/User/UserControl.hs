@@ -474,13 +474,6 @@ sendNewUserMail user = do
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]}
   return ()
 
-createUserBySigning :: Kontrakcja m => (BS.ByteString, BS.ByteString) -> BS.ByteString -> (DocumentID, SignatoryLinkID) -> m (Maybe (User, ActionID, MagicHash))
-createUserBySigning names email doclinkdata =
-    createInvitedUser names email Nothing >>= maybe (return Nothing) (\user -> do
-        (actionid, magichash) <- newAccountCreatedBySigningLink user doclinkdata
-        return $ Just (user, actionid, magichash)
-    )
-
 createNewUserByAdmin :: Kontrakcja m => Context -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe MinutesTime -> Maybe String -> Locale -> m (Maybe User)
 createNewUserByAdmin ctx names email _freetill custommessage locale = do
     muser <- createInvitedUser names email (Just locale)
@@ -657,26 +650,23 @@ handleAccountSetupGet aid hash = do
         Nothing -> return Nothing
         Just email -> runDBQuery $ GetUserByEmail Nothing (Email email)
 
-handleAccountSetupFromSign :: Kontrakcja m => ActionID -> MagicHash -> m (Maybe User)
-handleAccountSetupFromSign aid hash = do
-  Log.debug "Account setup after signing document"
-  maction <- getActionByActionID aid
-  case maction of
-    Just action -> do
-      guardMagicTokenMatch hash action
-      muser <- getUserFromAction action
-      case muser of
-        Just user -> do
-          Log.debug $ "Account setup after signing document: Matching user->"  ++ (BS.toString $ getEmail user)
-          mactivateduser <- handleActivate aid hash BySigning user
-          case mactivateduser of
-            Just activateduser -> do
-              _ <- addUserSaveAfterSignStatEvent activateduser
-              return ()
-            Nothing -> return ()
-          return mactivateduser
-        Nothing -> return Nothing
-    Nothing -> return Nothing
+handleAccountSetupFromSign :: Kontrakcja m => Document -> SignatoryLink -> m (Maybe User)
+handleAccountSetupFromSign document signatorylink = do
+  ctx <- getContext
+  let firstname = getFirstName signatorylink
+      lastname = getLastName signatorylink
+      email = getEmail signatorylink
+  muser <- runDBQuery $ GetUserByEmail (currentServiceID ctx) (Email email)
+  user <- maybe (guardJustM $ createInvitedUser (firstname, lastname) email Nothing)
+                return
+                muser
+  mactivateduser <- handleActivate (Just $ firstname) (Just $ lastname) user BySigning
+  when (isJust mactivateduser) $ do
+    activateduser <- guardJust mactivateduser
+    _ <- runDBUpdate $ SaveDocumentForUser (documentid document) activateduser (signatorylinkid signatorylink)
+    _ <- addUserSaveAfterSignStatEvent activateduser
+    return ()
+  return mactivateduser
 
 handleAccountSetupPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
 handleAccountSetupPost aid hash = do
@@ -689,11 +679,20 @@ handleAccountSetupPost aid hash = do
       if isJust $ userhasacceptedtermsofservice user
         then addFlashM flashMessageUserAlreadyActivated
         else do
+          mfstname <- getRequiredField asValidName "fstname"
+          msndname <- getRequiredField asValidName "sndname"
           signupmethod <- guardJust $ getSignupMethod action
-          mactivateduser <- handleActivate aid hash signupmethod user
-          when (isJust mactivateduser) $ do
+          mactivateduser <- handleActivate mfstname msndname user signupmethod
+          case mactivateduser of
+            Just _activateduser -> do
+              dropExistingAction aid
               addFlashM flashMessageUserActivated
               addFlashM modalWelcomeToSkrivaPa
+              return ()
+            Nothing -> do
+              addFlashM $ modalAccountSetup (LinkAccountCreated aid hash $ BS.toString $ getEmail user)
+                                            (maybe "" BS.toString mfstname)
+                                            (maybe "" BS.toString msndname)
               return ()
           return ()
       getHomeOrUploadLink
@@ -718,7 +717,6 @@ handleAccountSetupPost aid hash = do
     getSignupMethod action =
       case actionType action of
         ViralInvitationSent _ _ _ _ _ -> Just ViralInvitation
-        AccountCreatedBySigning _ _ _ _ -> Just BySigning
         AccountCreated _ _ -> Just AccountRequest
         _ -> Nothing
     -- Generates another activation link
@@ -741,16 +739,13 @@ getActionByActionID actionid = do
   (query $ GetAction actionid) >>= maybe (return Nothing) (\action -> do
   -- action may be in state when it has expired, but hasn't yet been
   -- transformed into next form. below code checks for that.
-  if (actionTypeID $ actionType action) == AccountCreatedBySigningID && (acbsState $ actionType action) /= ReminderSent
-    then return $ Just action
-    else return $ checkValidity now $ Just action)
+  return $ checkValidity now $ Just action)
 
 -- Looks up any user id on the action, and then returns the relevant user
 getUserFromAction :: Kontrakcja m => Action -> m (Maybe User)
 getUserFromAction action =
   case actionType action of
     (ViralInvitationSent email _ _ _ _) -> runDBQuery $ GetUserByEmail Nothing email
-    (AccountCreatedBySigning _ uid _ _) -> runDBQuery $ GetUserByID uid
     (AccountCreated uid _) ->  runDBQuery $ GetUserByID uid
     _ -> return Nothing
 
@@ -764,25 +759,16 @@ guardMagicTokenMatch expectedtoken action =
     getMagicTokenFromAction =
       case actionType action of
         ViralInvitationSent _ _ _ _ token -> Just token
-        AccountCreatedBySigning _ _ _ token -> Just token
         AccountCreated _ token -> Just token
         _ -> Nothing
 
-handleActivate :: Kontrakcja m => ActionID -> MagicHash -> SignupMethod -> User -> m (Maybe User)
-handleActivate aid hash signupmethod actvuser = do
-  Log.debug $ "Activating user account: "  ++ (BS.toString $ getEmail actvuser)
+handleActivate :: Kontrakcja m => Maybe BS.ByteString -> Maybe BS.ByteString -> User -> SignupMethod -> m (Maybe User)
+handleActivate mfstname msndname actvuser signupmethod = do
+  Log.debug $ "Attempting to activate account for user " ++ (show $ getEmail actvuser)
+  guard (isNothing $ userhasacceptedtermsofservice actvuser)
   switchLocale (getLocale actvuser)
   ctx <- getContext
   mtos <- getDefaultedField False asValidCheckBox "tos"
-  -- unless they're signing up from the sign view we require a fstname and a sndname
-  -- to be filled in
-  (mfstname, msndname) <-
-    case signupmethod of
-      BySigning -> return (Just $ getFirstName actvuser, Just $ getLastName actvuser)
-      _ -> do
-        mfn <- getRequiredField asValidName "fstname"
-        msn <- getRequiredField asValidName "sndname"
-        return (mfn, msn)
   mpassword <- getRequiredField asValidPassword "password"
   mpassword2 <- getRequiredField asValidPassword "password2"
   case (mtos, mfstname, msndname, mpassword, mpassword2) of
@@ -803,24 +789,16 @@ handleActivate aid hash signupmethod actvuser = do
                 return ()
               tosuser <- guardJustM $ runDBQuery $ GetUserByID (userid actvuser)
               _ <- addUserSignTOSStatEvent tosuser
-              dropExistingAction aid
               _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
               logUserToContext $ Just tosuser
               return $ Just tosuser
             else do
               addFlashM flashMessageMustAcceptTOS
-              returnToAccountSetup
+              return Nothing
         Left flash -> do
           addFlashM flash
-          returnToAccountSetup
-    _ -> returnToAccountSetup
-  where
-    returnToAccountSetup :: Kontrakcja n => n (Maybe User)
-    returnToAccountSetup = do
-      addFlashM $ modalAccountSetup (LinkAccountCreated aid hash $ BS.toString $ getEmail actvuser)
-                                    (BS.toString $ getFirstName actvuser)
-                                    (BS.toString $ getLastName actvuser)
-      return Nothing
+          return Nothing
+    _ -> return Nothing
 
 {- |
     This is where we get to when the user clicks the link in their password reminder
@@ -874,66 +852,6 @@ handlePasswordReminderPost aid hash = do
                  _ -> do
                    addFlashM $ modalNewPasswordView aid hash
                    getHomeOrUploadLink
-
-handleAccountRemovalGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
-handleAccountRemovalGet aid hash = do
-  action <- guardJustM $ getAccountCreatedBySigningIDAction aid
-  let AccountCreatedBySigning _ _ (docid, sigid) token = actionType action
-  guard $ hash == token
-  doc <- queryOrFail $ GetDocumentByDocumentID docid
-  sig <- guardJust $ getSigLinkFor doc sigid
-  extendActionEvalTimeToOneDayMinimum aid
-  addFlashM $ modalAccountRemoval (documenttitle doc) (LinkAccountCreatedBySigning aid hash) (LinkAccountRemoval aid hash)
-  sendRedirect $ LinkSignDoc doc sig
-
-handleAccountRemovalFromSign :: Kontrakcja m => User -> SignatoryLink -> ActionID -> MagicHash -> m ()
-handleAccountRemovalFromSign user siglink aid hash = do
-  Context{ctxtime} <- getContext
-  doc <- removeAccountFromSignAction aid hash
-  doc1 <- guardRightM $ runDBUpdate . ArchiveDocument user $ documentid doc
-  _ <- case getSigLinkFor doc1 (signatorylinkid siglink) of
-    Just sl -> runDB $ addSignStatDeleteEvent doc1 sl ctxtime
-    _       -> return False
-  _ <- addUserRefuseSaveAfterSignStatEvent user siglink
-  return ()
-
-handleAccountRemovalPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
-handleAccountRemovalPost aid hash = do
-  doc <- removeAccountFromSignAction aid hash
-  addFlashM $ modalAccountRemoved $ documenttitle doc
-  getHomeOrUploadLink
-
-{- |
-    Helper function for performing account removal (these are accounts setup
-    by signing), this'll return the document that was removed.
--}
-removeAccountFromSignAction :: Kontrakcja m => ActionID -> MagicHash -> m Document
-removeAccountFromSignAction aid hash = do
-  action <- guardJustM $ getAccountCreatedBySigningIDAction aid
-  let AccountCreatedBySigning _ _ (docid, _) token = actionType action
-  guard $ hash == token
-  doc <- queryOrFail $ GetDocumentByDocumentID docid
-  -- there should be done account and its documents removal, but
-  -- since the functionality is not there yet, we just remove
-  -- this action to prevent user from account activation and
-  -- receiving further reminders
-  dropExistingAction aid
-  return doc
-
-getAccountCreatedBySigningIDAction :: Kontrakcja m => ActionID -> m (Maybe Action)
-getAccountCreatedBySigningIDAction aid = do
-  maction <- query $ GetAction aid
-  case maction of
-    Nothing -> return Nothing
-    Just action ->
-      -- allow for account created by signing links only
-      if actionTypeID (actionType action) /= AccountCreatedBySigningID
-      then return Nothing
-      else if acbsState (actionType action) /= ReminderSent
-           then return $ Just action
-           else do
-             now <- liftIO $ getMinutesTime
-             return $ checkValidity now $ Just action
 
 getUserFromActionOfType :: Kontrakcja m => ActionTypeID -> ActionID -> MagicHash -> m (Maybe User)
 getUserFromActionOfType atypeid aid hash = do

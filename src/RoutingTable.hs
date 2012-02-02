@@ -88,8 +88,7 @@ staticRoutes = choice
 
      , dir "s" $ param "sign"           $ hPostNoXToken $ toK2 $ DocControl.signDocument
      , dir "s" $ param "reject"         $ hPostNoXToken $ toK2 $ DocControl.rejectDocument
-     , dir "s" $ param "acceptaccount"  $ hPostNoXToken $ toK5 $ DocControl.handleAcceptAccountFromSign
-     , dir "s" $ param "declineaccount" $ hPostNoXToken $ toK5 $ DocControl.handleDeclineAccountFromSign
+     , dir "s" $ param "acceptaccount"  $ hPostNoXToken $ toK3 $ DocControl.handleAcceptAccountFromSign
      , dir "s" $ param "sigattachment"  $ hPostNoXToken $ toK2 $ DocControl.handleSigAttach
      , dir "s" $ param "deletesigattachment" $ hPostNoXToken $ toK2 $ DocControl.handleDeleteSigAttach
 
@@ -268,8 +267,6 @@ staticRoutes = choice
      , dir "amnesia"     $ hPostNoXToken $ toK2 UserControl.handlePasswordReminderPost
      , dir "accountsetup"  $ hGet $ toK2 $ UserControl.handleAccountSetupGet
      , dir "accountsetup"  $ hPostNoXToken $ toK2 $ UserControl.handleAccountSetupPost
-     , dir "accountremoval" $ hGet $ toK2 $ UserControl.handleAccountRemovalGet
-     , dir "accountremoval" $ hPostNoXToken $ toK2 $ UserControl.handleAccountRemovalPost
 
      -- viral invite
      , dir "invite"      $ hPostNoXToken $ toK0 $ UserControl.handleViralInvite
