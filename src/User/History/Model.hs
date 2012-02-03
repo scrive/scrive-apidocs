@@ -155,7 +155,7 @@ instance DBUpdate LogHistoryLoginAttempt (Maybe UserHistory) where
                    (UserHistoryEvent {uheventtype = UserLoginAttempt, uheventdata = Nothing})
                    ip
                    time
-                   (Just userid)
+                   Nothing
 
 data LogHistoryLoginSuccess = LogHistoryLoginSuccess UserID IPAddress MinutesTime
 instance DBUpdate LogHistoryLoginSuccess (Maybe UserHistory) where
