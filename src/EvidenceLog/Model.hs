@@ -78,6 +78,7 @@ instance Actor MailAPIActor where
   actorUserID (MailAPIActor _ u _) = Just u
   actorEmail  (MailAPIActor _ _ e) = Just e
   actorWho    (MailAPIActor _ _ e) = "the user with email " ++ show e ++ " using the Mail API"
+  actorAPIString _ = Just "Mail API"
                     
 data MailSystemActor = MailSystemActor MinutesTime (Maybe UserID) String SignatoryLinkID
                    deriving (Eq, Ord, Show)
