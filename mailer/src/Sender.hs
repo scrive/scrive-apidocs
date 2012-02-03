@@ -19,7 +19,7 @@ import Misc
 import OurPrelude
 import qualified Log (mailingServer, mailContent)
 
-newtype Sender = Sender { sendMail :: CryptoRNG m => Mail -> m Bool }
+newtype Sender = Sender { sendMail :: (MonadIO m, CryptoRNG m) => Mail -> m Bool }
 
 createSender :: MailsConfig -> Sender
 createSender mc = case mc of
@@ -30,7 +30,7 @@ createSender mc = case mc of
 createExternalSender :: String -> (Mail -> [String]) -> Sender
 createExternalSender program createargs = Sender { sendMail = send }
   where
-    send :: CryptoRNG m => Mail -> m Bool
+    send :: (MonadIO m, CryptoRNG m) => Mail -> m Bool
     send mail@Mail{..} = do
       content <- assembleContent mail
       liftIO $ do
@@ -77,7 +77,7 @@ createSendmailSender = createExternalSender "sendmail" createargs
 createLocalOpenSender :: MailsConfig -> Sender
 createLocalOpenSender config = Sender { sendMail = send }
   where
-    send :: CryptoRNG m => Mail -> m Bool
+    send :: (MonadIO m, CryptoRNG m) => Mail -> m Bool
     send mail@Mail{..} = do
       content <- assembleContent mail
       let filename = localDirectory config ++ "/Email-" ++ addrEmail ($(head) mailTo) ++ "-" ++ show mailID ++ ".eml"

@@ -2,6 +2,17 @@
 
 -- | Support for generation of cryptographically secure random
 -- numbers, based on the DRBG package.
+--
+-- This is a convenience layer on top of DRBG, which allows you to
+-- pull random values by means of the method 'random', while keeping
+-- the state of the random number generator (RNG) inside a monad.  The
+-- state is protected by an MVar, which means that concurrent
+-- generation of random values from several threads works straight out
+-- of the box.
+--
+-- The access to the RNG state is captured by a class.  By making
+-- instances of this class, client code can enjoy RNG generation from
+-- their own monads.
 
 module Crypto.RNG
   ( -- * Generation of strings and numbers
@@ -39,7 +50,7 @@ newCryptoRNGState :: MonadIO m => m CryptoRNGState
 newCryptoRNGState = liftIO $ newGenIO >>= fmap CryptoRNGState . newMVar
 
 -- | Generate given number of cryptographically secure random bytes.
-randomBytes :: CryptoRNG m =>
+randomBytes :: (MonadIO m, CryptoRNG m) =>
                ByteLength -- ^ number of bytes to generate
             -> m ByteString
 randomBytes l = do
@@ -51,7 +62,7 @@ randomBytes l = do
 
 -- | Generate a cryptographically secure random number in given,
 -- closed range.
-randomR :: (CryptoRNG m, Integral a) => (a, a) -> m a
+randomR :: (MonadIO m, CryptoRNG m, Integral a) => (a, a) -> m a
 randomR (minb', maxb') = do
     bs <- randomBytes byteLen
     return $
@@ -66,16 +77,16 @@ randomR (minb', maxb') = do
       byteLen = ceiling $ logBase 2 (fromIntegral range) / (8 :: Double)
 
 -- | Monads carrying around the RNG state.
-class MonadIO m => CryptoRNG m where
+class CryptoRNG m where
   getCryptoRNGState :: m CryptoRNGState
 
-instance CryptoRNG m => CryptoRNG (ReaderT c m) where
+instance (Monad m, CryptoRNG m) => CryptoRNG (ReaderT c m) where
  getCryptoRNGState = lift $ getCryptoRNGState
 
-instance (Error e, CryptoRNG m) => CryptoRNG (ErrorT e m) where
+instance (Error e, Monad m, CryptoRNG m) => CryptoRNG (ErrorT e m) where
  getCryptoRNGState = lift $ getCryptoRNGState
 
-instance CryptoRNG m => CryptoRNG (StateT s m) where
+instance (Monad m, CryptoRNG m) => CryptoRNG (StateT s m) where
  getCryptoRNGState = lift $ getCryptoRNGState
 
 -- | Monad transformer with RNG state.
@@ -92,11 +103,11 @@ inIO gv (CryptoRNGIO m) = runReaderT m gv
 
 -- | Class for generating cryptographically secure random values.
 class Random a where
-  random :: CryptoRNG m => m a
+  random :: (MonadIO m, CryptoRNG m) => m a
 
 -- | Helper function for making Random instances.
-boundedIntegralRandom :: forall m a . (CryptoRNG m, Integral a, Bounded a)
-                      => m a
+boundedIntegralRandom :: forall m a .
+  (MonadIO m, CryptoRNG m, Integral a, Bounded a) => m a
 boundedIntegralRandom = randomR (minBound :: a, maxBound :: a)
 
 instance Random Int64 where

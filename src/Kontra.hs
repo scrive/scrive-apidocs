@@ -128,27 +128,27 @@ logUserToContext :: Kontrakcja m => Maybe User -> m ()
 logUserToContext user =
     modifyContext $ \ctx -> ctx { ctxmaybeuser = user}
 
-newPasswordReminderLink :: CryptoRNG m => User -> m KontraLink
+newPasswordReminderLink :: (MonadIO m, CryptoRNG m) => User -> m KontraLink
 newPasswordReminderLink user = do
     action <- newPasswordReminder user
     return $ LinkPasswordReminder (actionID action)
                                   (prToken $ actionType action)
 
-newViralInvitationSentLink :: CryptoRNG m => Email -> UserID -> m KontraLink
+newViralInvitationSentLink :: (MonadIO m, CryptoRNG m) => Email -> UserID -> m KontraLink
 newViralInvitationSentLink email inviterid = do
     action <- newViralInvitationSent email inviterid
     return $ LinkViralInvitationSent (actionID action)
                                      (visToken $ actionType action)
                                      (BS.toString $ unEmail email)
 
-newAccountCreatedLink :: CryptoRNG m => User -> m KontraLink
+newAccountCreatedLink :: (MonadIO m, CryptoRNG m) => User -> m KontraLink
 newAccountCreatedLink user = do
     action <- newAccountCreated user
     return $ LinkAccountCreated (actionID action)
                                 (acToken $ actionType action)
                                 (BS.toString $ getEmail user)
 
-newAccountCreatedBySigningLink :: CryptoRNG m => User -> (DocumentID, SignatoryLinkID) -> m (ActionID, MagicHash)
+newAccountCreatedBySigningLink :: (MonadIO m, CryptoRNG m) => User -> (DocumentID, SignatoryLinkID) -> m (ActionID, MagicHash)
 newAccountCreatedBySigningLink user doclinkdata = do
     action <- newAccountCreatedBySigning user doclinkdata
     let aid = actionID action

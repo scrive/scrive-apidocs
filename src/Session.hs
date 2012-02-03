@@ -528,7 +528,7 @@ currentSession =
             Nothing ->  return Nothing
 
 -- | Create empty session data. It has proper timeout already set.
-emptySessionData :: CryptoRNG m => m SessionData
+emptySessionData :: (MonadIO m, CryptoRNG m) => m SessionData
 emptySessionData = do
     now       <- getMinutesTime
     magicHash <- random
@@ -555,7 +555,7 @@ tempSessionID :: SessionId
 tempSessionID = SessionId $ -1
 
 -- | Return empty, temporary session
-startSession :: CryptoRNG m => m Session
+startSession :: (MonadIO m, CryptoRNG m) => m Session
 startSession = emptySessionData >>= return . Session tempSessionID
 
 -- | Get 'User' record from database based on userid in session
@@ -680,7 +680,7 @@ getSessionXToken :: Session -> MagicHash
 getSessionXToken = xtoken . sessionData
 
 --- | Creates a session for user and service
-createServiceSession:: CryptoRNG m => Either CompanyID UserID -> String -> m SessionId
+createServiceSession:: (MonadIO m, CryptoRNG m) => Either CompanyID UserID -> String -> m SessionId
 createServiceSession userorcompany loc = do
     now <- liftIO getMinutesTime
     moldsession <- case userorcompany of
@@ -694,7 +694,7 @@ createServiceSession userorcompany loc = do
                 else return $ sessionId s
       Nothing -> newSession' userorcompany loc
 
-newSession' :: CryptoRNG m => Either CompanyID UserID -> String -> m SessionId
+newSession' :: (MonadIO m, CryptoRNG m) => Either CompanyID UserID -> String -> m SessionId
 newSession' userorcompany loc = do
   sd <- emptySessionData
   session <-  update $ NewSession $  sd {

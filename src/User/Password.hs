@@ -1,6 +1,7 @@
 module User.Password where
 
 import Control.Monad (liftM)
+import Control.Monad.Trans (MonadIO)
 import Crypto.RNG(CryptoRNG, randomBytes)
 import qualified Data.ByteString as BS
 import qualified Data.Digest.SHA256 as D
@@ -12,7 +13,7 @@ data Password = Password {
   , pwdSalt :: Binary
   } deriving (Eq, Ord, Show)
 
-createPassword :: CryptoRNG m => BS.ByteString -> m Password
+createPassword :: (MonadIO m, CryptoRNG m) => BS.ByteString -> m Password
 createPassword password = do
   salt <- Binary `liftM` randomBytes 10
   return Password {

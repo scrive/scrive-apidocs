@@ -134,7 +134,7 @@ sendRequestChangeEmailMail user newemail = do
                                     fullname = getFullName user
                                   , email = unEmail newemail }]})
 
-newRequestChangeEmailLink :: CryptoRNG m => User -> Email -> m KontraLink
+newRequestChangeEmailLink :: (MonadIO m, CryptoRNG m) => User -> Email -> m KontraLink
 newRequestChangeEmailLink user newemail = do
     action <- newRequestEmailChange user newemail
     return $ LinkChangeUserEmail (actionID action)
@@ -449,7 +449,7 @@ handleViralInvite = withUserPost $ do
         mail <- viralInviteMail ctx invitedemail link
         scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = BS.empty, email = invitedemail }]}
 
-randomPassword :: CryptoRNG m => m BS.ByteString
+randomPassword :: (MonadIO m, CryptoRNG m) => m BS.ByteString
 randomPassword =
     BS.fromString `liftM` randomString 8 (['0'..'9'] ++ ['A'..'Z'] ++ ['a'..'z'])
 

@@ -269,7 +269,7 @@ class DBUpdate q r | q -> r where
 -- In such case we want to interrupt what we're currently doing and exit
 -- gracefully, most likely logging an error is some way. Since a way of
 -- handling such case may vary in different monads, hence this function.
-class (Functor m, CryptoRNG m) => DBMonad m where
+class (Functor m, MonadIO m, CryptoRNG m) => DBMonad m where
   getConnection :: m Nexus
   -- | From the point of view of the implementor of instances of
   -- 'DBMonad': handle a database error.  However, code that uses

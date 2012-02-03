@@ -259,7 +259,7 @@ checkValidity now maction = maction >>= \action ->
        else Nothing
 
 -- | Create new 'password reminder' action
-newPasswordReminder :: CryptoRNG m => User -> m Action
+newPasswordReminder :: (MonadIO m, CryptoRNG m) => User -> m Action
 newPasswordReminder user = do
     hash <- random
     now <- getMinutesTime
@@ -271,7 +271,7 @@ newPasswordReminder user = do
     update $ NewAction action $ (12*60) `minutesAfter` now
 
 -- | Create new 'invitation sent' action
-newViralInvitationSent :: CryptoRNG m => Email -> UserID -> m Action
+newViralInvitationSent :: (MonadIO m, CryptoRNG m) => Email -> UserID -> m Action
 newViralInvitationSent email inviterid = do
     hash <- random
     now <- getMinutesTime
@@ -285,7 +285,7 @@ newViralInvitationSent email inviterid = do
     update $ NewAction action $ (7*24*60) `minutesAfter` now
 
 -- | Create new 'account created' action
-newAccountCreated :: CryptoRNG m => User -> m Action
+newAccountCreated :: (MonadIO m, CryptoRNG m) => User -> m Action
 newAccountCreated user = do
     hash <- random
     now <- getMinutesTime
@@ -297,7 +297,7 @@ newAccountCreated user = do
 
 -- | Create new 'account created by signing' action
 newAccountCreatedBySigning ::
-  CryptoRNG m => User -> (DocumentID, SignatoryLinkID) -> m Action
+  (MonadIO m, CryptoRNG m) => User -> (DocumentID, SignatoryLinkID) -> m Action
 newAccountCreatedBySigning user doclinkdata = do
     hash <- random
     now <- getMinutesTime
@@ -309,7 +309,7 @@ newAccountCreatedBySigning user doclinkdata = do
     }
     update $ NewAction action $ (24 * 60) `minutesAfter` now
 
-newRequestEmailChange :: CryptoRNG m => User -> Email -> m Action
+newRequestEmailChange :: (MonadIO m, CryptoRNG m) => User -> Email -> m Action
 newRequestEmailChange user newemail = do
   hash <- random
   now <- getMinutesTime

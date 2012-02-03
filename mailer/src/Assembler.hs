@@ -27,7 +27,7 @@ import Crypto.RNG (CryptoRNG)
 import Mails.Model
 import Misc (randomString)
 
-assembleContent :: CryptoRNG m => Mail -> m BSL.ByteString
+assembleContent :: (MonadIO m, CryptoRNG m) => Mail -> m BSL.ByteString
 assembleContent Mail{..} = do
   (boundaryMixed, boundaryAlternative) <- createBoundaries
   xsmtpapi <- liftIO $ json $ field "unique_args" $ do
@@ -95,7 +95,7 @@ createMailTos :: [Address] -> String
 createMailTos = intercalate ", "
   . map (\Address{..} -> mailEncode addrName ++ " <" ++ addrEmail ++ ">")
 
-createBoundaries :: CryptoRNG m => m (String, String)
+createBoundaries :: (MonadIO m, CryptoRNG m) => m (String, String)
 createBoundaries = return (,) `ap` f `ap` f
   where
     f = randomString 32 $ ['0'..'9'] ++ ['a'..'z']
