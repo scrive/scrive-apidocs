@@ -8,6 +8,26 @@ var SignatureForDrawing = Backbone.Model.extend({
         image : ""
     },
     initialize: function (args) {
+        var sf  = args.signaturefield;
+        var sd = this;
+        var initWithValue = function() {
+            if (sf.value() != undefined && sf.value() != "")
+                {
+                    sd.set({
+                        image :sf.value(),
+                        ready : true
+                    });
+                }
+            else {
+                  sd.set({
+                        image : "",
+                        ready : false
+                    });
+            }     
+        };
+    initWithValue();
+    sf.bind('change',initWithValue);
+        
     },
     signaturefield : function() {
         return this.get("signaturefield");
@@ -16,7 +36,7 @@ var SignatureForDrawing = Backbone.Model.extend({
        return this.get("ready");
     },
     clean : function() {
-       this.set({"ready" : false, image : ""});
+       this.signaturefield().setValue("");
     },
     makeReady : function(image) {
        this.set({"ready" : true, image : image});
@@ -100,16 +120,36 @@ var SignatureForDrawingView = Backbone.View.extend({
         return icon;
     },
     signatureBoxTitle : function() {
-        
+        var box = $("<div class='signatureHeader'>");
+        if (this.model.isReady())
+            box.text("Your signature");
+        else
+            box.text("Place your signature");
+        return box;
     },
     render: function () {
         var signature = this.signature;
         var view = this;
         this.container = this.el;
         this.container.addClass("signatureDrawingBox");
+        if (this.model.isReady())
+               this.container.addClass("ready");
+        else
+               this.container.removeClass("ready");
+       
         this.container.empty();
+        
         this.container.append(this.signatureBoxTitle());
-        this.canvas = $("<canvas class='signatureCanvas'  width='180' height='70'/>");
+
+         var iconbox = $("<div class='signatureIconBox' />");
+        iconbox.append(this.clearButton());
+        if (!this.model.isReady())
+            iconbox.append(this.readyButton());
+        else
+            iconbox.append(this.lockButton());
+        this.container.append(iconbox);
+        
+        this.canvas = $("<canvas class='signatureCanvas'  width='250' height='100'/>");
         this.picture =  this.canvas[0].getContext('2d');
         if (this.model.hasImage()){
             var img = new Image();
@@ -126,12 +166,8 @@ var SignatureForDrawingView = Backbone.View.extend({
             this.canvas.mousemove(function(e) {view.drawingtoolMove(e.layerX, e.layerY);});
             this.canvas.mouseup(function(e){view.drawingtoolUp(e.layerX, e.layerY);} );
         }
-        this.container.append(this.canvas);
-        this.container.append(this.clearButton());
-        if (!this.model.isReady()) 
-            this.container.append(this.readyButton());
-        else
-            this.container.append(this.lockButton());
+        this.container.append($("<div class='canvasWrapper'/>").append(this.canvas));
+        
         return this;
     }
 });

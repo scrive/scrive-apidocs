@@ -498,6 +498,7 @@ window.SignatoryStandarView = Backbone.View.extend({
     render: function(){
         var signatory = this.model;
         this.el.addClass("signViewBodyRight");
+        this.el.children().detach();
         var container = $("<div class='signViewBodyRightTextContainer'/>");
         this.el.append(container);
         var header = $("<div class='header'/>").text(signatory.name());

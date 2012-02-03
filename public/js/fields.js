@@ -67,8 +67,8 @@ window.FieldPlacement = Backbone.Model.extend({
         var fileid = this.get("fileid");
         var page = document.getFile(fileid).page(this.get("page"));
         return { 
-            x : this.x(),
-            y : this.y(),
+            x : parseInt(this.x()),
+            y : parseInt(this.y()),
             pagewidth : page.width(),
             pageheight : page.height(),
             page : page.number(),                               

@@ -99,7 +99,6 @@ var SignaturePlacementViewForDrawing = Backbone.View.extend({
             var view = this;
             var signatory = this.model.signatory();
             var box = this.el;
-            box.addClass('signatureDrawingBoxWrapper');
             box.append(SignatureDrawer.init({signaturefield : this.model}).view.el);
             return this;
     }
@@ -129,13 +128,20 @@ var SignaturePlacementView = Backbone.View.extend({
             var view = this;
             var signatory = this.model.signatory();
             var box = this.el;
-            box.addClass('signatureBoxNotDrawing');
-            box.append(this.innerText());
-            signatory.bind('change', function() {
-               box.empty();
-               box.append(view.innerText());
-            });
-
+            box.empty();
+            if (this.model.value() == undefined || this.model.value() == "")
+            {
+                box.addClass('signatureBoxNotDrawing');
+                box.append(this.innerText());
+                signatory.bind('change', function() {
+                    box.append(view.innerText());
+                });
+            }else{
+               var img = $("<img alt='signature'  width='250' height='100'/>");
+               img.attr('src',this.model.value());
+               box.append(img);
+            }    
+           return this;
     }
 });
 

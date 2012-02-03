@@ -522,9 +522,9 @@
 .signatureBoxNotDrawing {
     background-color: #F5F5F5;
     display: block;
-    height: 70px;
     padding-top:30px;
-    width: 180px;
+    height: 121px;
+    width: 270px;
     text-align: center;
     border: 1px solid #DDDDDD;
     filter: alpha(opacity=80);
@@ -536,30 +536,39 @@
     color: black;
 }
 
-.signatureDrawingBoxWrapper{
-    background-color: #F5F5F5;
+.signatureDrawingBox{
+    border : 1px solid #222222;
     display: block;
-    height: 70px;
-    width: 180px;
+    height: 121px;
+    width: 270px;
     text-align: center;
-    border: 1px solid #DDDDDD;
     filter: alpha(opacity=80);
     -moz-opacity: 0.80;
     opacity: 0.80;
 }
-.signatureDrawingBox{
-    background-color: #F5F5F5;
-    display: block;
-    height: 70px;
-    width: 200px;
-    text-align: center;
-    filter: alpha(opacity=80);
-    -moz-opacity: 0.80;
-    opacity: 0.80;
+
+.signatureDrawingBox.ready{
+   border : 1px solid #888888;
+
 }
 .signatureDrawingBox canvas {
-    height: 70px;
-    width: 180px;
+    height: 100px;
+    width: 250px;
+    background : #EFEFEF
+}
+
+.signatureDrawingBox .canvasWrapper {
+    height: 100px;
+    width: 250px;
+    border-top : 1px solid #222222;
+    border-right: 1px solid #222222;
+    float: left;
+    position: relative; /*Important for dealing with drawing events*/
+}
+
+.signatureDrawingBox.ready .canvasWrapper{
+    border-top : 1px solid #888888;
+    border-right: 1px solid #888888;
 }
 
 .signatureDrawingBox .cleanDrawing {
@@ -571,11 +580,11 @@
     float : right;
 }
 .signatureDrawingBox .doneDrawing {
-    height:14px;
+    height:13px;
     width:14px;
     margin:2px;
     position: relative;
-    bottom: 20px;
+    top: 84px;
     background-image: url("images/iconGreenCheck.png");
     float : right;
 
@@ -585,8 +594,28 @@
     width:13px;
     margin:3px;
     position: relative;
-    bottom: 22px;
+    top: 84px;
     background-image: url("/img/lock.png");
     float : right;
 
+}
+
+.signatureDrawingBox .signatureHeader{
+    float: left;
+    width: 250px;
+    color: #222222;
+    border-right: 1px solid #222222;
+
+}
+
+.signatureDrawingBox.ready .signatureHeader{
+    border-right: 1px solid #888888;
+    color: #666666;
+
+}
+
+.signatureDrawingBox .signatureIconBox{
+    width: 16px;
+    float: right;
+    height: 100%;
 }
