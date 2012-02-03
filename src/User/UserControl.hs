@@ -36,6 +36,7 @@ import Util.KontraLinkUtils
 import Util.MonadUtils
 import Stats.Control
 import User.Utils
+import User.History.Model
 
 checkPasswordsMatch :: TemplatesMonad m => BS.ByteString -> BS.ByteString -> Either (m FlashMessage) ()
 checkPasswordsMatch p1 p2 =
@@ -71,6 +72,9 @@ handleUserPost = do
   user <- guardJustM $ runDBQuery $ GetUserByID (userid user')
   infoUpdate <- getUserInfoUpdate
   _ <- runDBUpdate $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
+  _ <- runDBUpdate $ LogHistoryUserInfoChanged (userid user) (ctxipnumber ctx) (ctxtime ctx) 
+                                               (userinfo user) (infoUpdate $ userinfo user)
+                                               (userid <$> ctxmaybeuser ctx)
   mcompany <- getCompanyForUser user
   case (useriscompanyadmin user, mcompany) of
     (True, Just company) -> do
@@ -154,6 +158,10 @@ handleCreateCompany = do
           _ <- runDBUpdate $ SetUserCompanyAdmin (userid user) True
           upgradeduser <- guardJustM $ runDBQuery $ GetUserByID $ userid user
           _ <- addUserCreateCompanyStatEvent (ctxtime ctx) upgradeduser
+          _ <- runDBUpdate 
+                   $ LogHistoryDetailsChanged (userid user) (ctxipnumber ctx) (ctxtime ctx) 
+                                              [("is_company_admin", "false", "true")] 
+                                              (Just $ userid user)
           addFlashM flashMessageCompanyCreated
           return $ LinkCompanyAccounts emptyListParams
     _ -> return $ LinkAccount True  --we could remove this ugly flag with more javascript validation
@@ -172,7 +180,7 @@ handleGetChangeEmail actionid hash = withUserGet $ do
 handlePostChangeEmail :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
 handlePostChangeEmail actionid hash = withUserPost $ do
   mnewemail <- getNewEmailFromAction actionid hash
-  Context{ctxmaybeuser = Just user} <- getContext
+  Context{ctxmaybeuser = Just user, ctxipnumber, ctxtime} <- getContext
   mpassword <- getRequiredField asDirtyPassword "password"
   case mpassword of
     Nothing -> return ()
@@ -181,7 +189,11 @@ handlePostChangeEmail actionid hash = withUserPost $ do
                       (runDBUpdate . SetUserEmail (userservice user) (userid user))
                       mnewemail
       if changed
-        then addFlashM $ flashMessageYourEmailHasChanged
+        then do
+            _ <- runDBUpdate $ LogHistoryDetailsChanged (userid user) ctxipnumber ctxtime 
+                                                     [("email", BS.unpack $ unEmail $ useremail $ userinfo user, BS.unpack $ unEmail $ fromJust mnewemail)] 
+                                                     (Just $ userid user)
+            addFlashM $ flashMessageYourEmailHasChanged
         else addFlashM $ flashMessageProblemWithEmailChange
     Just _password -> do
       addFlashM $ flashMessageProblemWithPassword
@@ -377,15 +389,19 @@ handlePostUserSecurity = do
         (Just oldpassword, Just password, Just password2) ->
           case (verifyPassword (userpassword user) oldpassword,
                   checkPasswordsMatch password password2) of
-            (False,_) ->
+            (False,_) -> do
+              _ <- runDBUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
               addFlashM flashMessageBadOldPassword
-            (_, Left f) ->
+            (_, Left f) -> do
+              _ <- runDBUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
               addFlashM f
             _ ->  do
               passwordhash <- liftIO $ createPassword password
               _ <- runDBUpdate $ SetUserPassword (userid user) passwordhash
+              _ <- runDBUpdate $ LogHistoryPasswordSetup (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
               addFlashM flashMessageUserDetailsSaved
-        _ | isJust moldpassword || isJust mpassword || isJust mpassword2 ->
+        _ | isJust moldpassword || isJust mpassword || isJust mpassword2 -> do
+              _ <- runDBUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
               addFlashM flashMessageMissingRequiredField
         _ -> return ()
       mregion <- readField "region"
@@ -405,7 +421,7 @@ handlePostUserSecurity = do
 -}
 isUserDeletable :: Kontrakcja m => User -> m Bool
 isUserDeletable user = do
-  userdocs <- runDBQuery $ GetDocumentsByUser user
+  userdocs <- runDBQuery $ GetDocumentsByAuthor (userid user)
   return $ all isDeletableDocument userdocs
 
 handleViralInvite :: Kontrakcja m => m KontraLink
@@ -464,22 +480,23 @@ createUser :: Kontrakcja m => Email
 createUser email fstname sndname mcompany = do
   ctx <- getContext
   passwd <- liftIO $ createPassword =<< randomPassword
-  runDBUpdate $ AddUser (fstname, sndname) (unEmail $ email) (Just passwd) False Nothing (fmap companyid mcompany) (ctxlocale ctx)
+  muser <- runDBUpdate $ AddUser (fstname, sndname) (unEmail $ email) (Just passwd) False Nothing (fmap companyid mcompany) (ctxlocale ctx)
+  case muser of
+    Just user -> do 
+                 _ <- runDBUpdate $ 
+                      LogHistoryAccountCreated (userid user) (ctxipnumber ctx) 
+                                               (ctxtime ctx) email (userid <$> ctxmaybeuser ctx)
+                 return muser
+    _         -> return muser
+                 
 
-sendNewUserMail :: Kontrakcja m => Bool -> User -> m ()
-sendNewUserMail vip user = do
+sendNewUserMail :: Kontrakcja m => User -> m ()
+sendNewUserMail user = do
   ctx <- getContext
   al <- newAccountCreatedLink user
-  mail <- newUserMail (ctxhostpart ctx) (getEmail user) (getSmartName user) al vip
+  mail <- newUserMail (ctxhostpart ctx) (getEmail user) (getSmartName user) al
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]}
   return ()
-
-createUserBySigning :: Kontrakcja m => (BS.ByteString, BS.ByteString) -> BS.ByteString -> (DocumentID, SignatoryLinkID) -> m (Maybe (User, ActionID, MagicHash))
-createUserBySigning names email doclinkdata =
-    createInvitedUser names email Nothing >>= maybe (return Nothing) (\user -> do
-        (actionid, magichash) <- newAccountCreatedBySigningLink user doclinkdata
-        return $ Just (user, actionid, magichash)
-    )
 
 createNewUserByAdmin :: Kontrakcja m => Context -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe MinutesTime -> Maybe String -> Locale -> m (Maybe User)
 createNewUserByAdmin ctx names email _freetill custommessage locale = do
@@ -500,7 +517,12 @@ createInvitedUser names email mlocale = do
     ctx <- getContext
     let locale = fromMaybe (ctxlocale ctx) mlocale
     passwd <- liftIO $ createPassword =<< randomPassword
-    runDBUpdate $ AddUser names email (Just passwd) False Nothing Nothing locale
+    muser <- runDBUpdate $ AddUser names email (Just passwd) False Nothing Nothing locale
+    case muser of
+      Just user -> do 
+                   _ <- runDBUpdate $ LogHistoryAccountCreated (userid user) (ctxipnumber ctx) (ctxtime ctx) (Email email) (userid <$> ctxmaybeuser ctx)
+                   return muser
+      _         -> return muser
 
 {- |
    Guard against a POST with no logged in user.
@@ -558,13 +580,14 @@ handleAcceptTOSGet = withUserGet $ do
 
 handleAcceptTOSPost :: Kontrakcja m => m KontraLink
 handleAcceptTOSPost = withUserPost $ do
-  Context{ctxmaybeuser = Just User{userid}, ctxtime} <- getContext
+  Context{ctxmaybeuser = Just User{userid}, ctxtime, ctxipnumber} <- getContext
   tos <- getDefaultedField False asValidCheckBox "tos"
   case tos of
     Just True -> do
       _ <- runDBUpdate $ AcceptTermsOfService userid ctxtime
       user <- guardJustM $ runDBQuery $ GetUserByID userid
       _ <- addUserSignTOSStatEvent user
+      _ <- runDBUpdate $ LogHistoryTOSAccept userid ctxipnumber ctxtime (Just userid)
       addFlashM flashMessageUserDetailsSaved
       return LinkUpload
     Just False -> do
@@ -618,6 +641,9 @@ handlePhoneCallRequest = do
       _ <- runDBUpdate $ SetUserInfo (userid user) $ (userinfo user){
               userphone = phone
             }
+      _ <- runDBUpdate $ LogHistoryUserInfoChanged (userid user) (ctxipnumber ctx) (ctxtime ctx) 
+                                                   (userinfo user) ((userinfo user){ userphone = phone })
+                                                   (userid <$> ctxmaybeuser ctx)
       _ <- addUserPhoneAfterTOS user
       addFlashM $ flashMessageWeWillCallYouSoon (BS.toString phone)
       return ()
@@ -657,26 +683,23 @@ handleAccountSetupGet aid hash = do
         Nothing -> return Nothing
         Just email -> runDBQuery $ GetUserByEmail Nothing (Email email)
 
-handleAccountSetupFromSign :: Kontrakcja m => ActionID -> MagicHash -> m (Maybe User)
-handleAccountSetupFromSign aid hash = do
-  Log.debug "Account setup after signing document"
-  maction <- getActionByActionID aid
-  case maction of
-    Just action -> do
-      guardMagicTokenMatch hash action
-      muser <- getUserFromAction action
-      case muser of
-        Just user -> do
-          Log.debug $ "Account setup after signing document: Matching user->"  ++ (BS.toString $ getEmail user)
-          mactivateduser <- handleActivate aid hash BySigning user
-          case mactivateduser of
-            Just activateduser -> do
-              _ <- addUserSaveAfterSignStatEvent activateduser
-              return ()
-            Nothing -> return ()
-          return mactivateduser
-        Nothing -> return Nothing
-    Nothing -> return Nothing
+handleAccountSetupFromSign :: Kontrakcja m => Document -> SignatoryLink -> m (Maybe User)
+handleAccountSetupFromSign document signatorylink = do
+  ctx <- getContext
+  let firstname = getFirstName signatorylink
+      lastname = getLastName signatorylink
+      email = getEmail signatorylink
+  muser <- runDBQuery $ GetUserByEmail (currentServiceID ctx) (Email email)
+  user <- maybe (guardJustM $ createInvitedUser (firstname, lastname) email Nothing)
+                return
+                muser
+  mactivateduser <- handleActivate (Just $ firstname) (Just $ lastname) user BySigning
+  when (isJust mactivateduser) $ do
+    activateduser <- guardJust mactivateduser
+    _ <- runDBUpdate $ SaveDocumentForUser (documentid document) activateduser (signatorylinkid signatorylink)
+    _ <- addUserSaveAfterSignStatEvent activateduser
+    return ()
+  return mactivateduser
 
 handleAccountSetupPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
 handleAccountSetupPost aid hash = do
@@ -689,11 +712,20 @@ handleAccountSetupPost aid hash = do
       if isJust $ userhasacceptedtermsofservice user
         then addFlashM flashMessageUserAlreadyActivated
         else do
+          mfstname <- getRequiredField asValidName "fstname"
+          msndname <- getRequiredField asValidName "sndname"
           signupmethod <- guardJust $ getSignupMethod action
-          mactivateduser <- handleActivate aid hash signupmethod user
-          when (isJust mactivateduser) $ do
+          mactivateduser <- handleActivate mfstname msndname user signupmethod
+          case mactivateduser of
+            Just _activateduser -> do
+              dropExistingAction aid
               addFlashM flashMessageUserActivated
               addFlashM modalWelcomeToSkrivaPa
+              return ()
+            Nothing -> do
+              addFlashM $ modalAccountSetup (LinkAccountCreated aid hash $ BS.toString $ getEmail user)
+                                            (maybe "" BS.toString mfstname)
+                                            (maybe "" BS.toString msndname)
               return ()
           return ()
       getHomeOrUploadLink
@@ -718,7 +750,6 @@ handleAccountSetupPost aid hash = do
     getSignupMethod action =
       case actionType action of
         ViralInvitationSent _ _ _ _ _ -> Just ViralInvitation
-        AccountCreatedBySigning _ _ _ _ -> Just BySigning
         AccountCreated _ _ -> Just AccountRequest
         _ -> Nothing
     -- Generates another activation link
@@ -728,7 +759,7 @@ handleAccountSetupPost aid hash = do
         then do
           ctx <- getContext
           al <- newAccountCreatedLink user
-          mail <- newUserMail (ctxhostpart ctx) email email al False
+          mail <- newUserMail (ctxhostpart ctx) email email al
           scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = email, email = email}] }
           addFlashM flashMessageNewActivationLinkSend
           getHomeOrUploadLink
@@ -741,16 +772,13 @@ getActionByActionID actionid = do
   (query $ GetAction actionid) >>= maybe (return Nothing) (\action -> do
   -- action may be in state when it has expired, but hasn't yet been
   -- transformed into next form. below code checks for that.
-  if (actionTypeID $ actionType action) == AccountCreatedBySigningID && (acbsState $ actionType action) /= ReminderSent
-    then return $ Just action
-    else return $ checkValidity now $ Just action)
+  return $ checkValidity now $ Just action)
 
 -- Looks up any user id on the action, and then returns the relevant user
 getUserFromAction :: Kontrakcja m => Action -> m (Maybe User)
 getUserFromAction action =
   case actionType action of
     (ViralInvitationSent email _ _ _ _) -> runDBQuery $ GetUserByEmail Nothing email
-    (AccountCreatedBySigning _ uid _ _) -> runDBQuery $ GetUserByID uid
     (AccountCreated uid _) ->  runDBQuery $ GetUserByID uid
     _ -> return Nothing
 
@@ -764,25 +792,16 @@ guardMagicTokenMatch expectedtoken action =
     getMagicTokenFromAction =
       case actionType action of
         ViralInvitationSent _ _ _ _ token -> Just token
-        AccountCreatedBySigning _ _ _ token -> Just token
         AccountCreated _ token -> Just token
         _ -> Nothing
 
-handleActivate :: Kontrakcja m => ActionID -> MagicHash -> SignupMethod -> User -> m (Maybe User)
-handleActivate aid hash signupmethod actvuser = do
-  Log.debug $ "Activating user account: "  ++ (BS.toString $ getEmail actvuser)
+handleActivate :: Kontrakcja m => Maybe BS.ByteString -> Maybe BS.ByteString -> User -> SignupMethod -> m (Maybe User)
+handleActivate mfstname msndname actvuser signupmethod = do
+  Log.debug $ "Attempting to activate account for user " ++ (show $ getEmail actvuser)
+  guard (isNothing $ userhasacceptedtermsofservice actvuser)
   switchLocale (getLocale actvuser)
   ctx <- getContext
   mtos <- getDefaultedField False asValidCheckBox "tos"
-  -- unless they're signing up from the sign view we require a fstname and a sndname
-  -- to be filled in
-  (mfstname, msndname) <-
-    case signupmethod of
-      BySigning -> return (Just $ getFirstName actvuser, Just $ getLastName actvuser)
-      _ -> do
-        mfn <- getRequiredField asValidName "fstname"
-        msn <- getRequiredField asValidName "sndname"
-        return (mfn, msn)
   mpassword <- getRequiredField asValidPassword "password"
   mpassword2 <- getRequiredField asValidPassword "password2"
   case (mtos, mfstname, msndname, mpassword, mpassword2) of
@@ -797,30 +816,27 @@ handleActivate aid hash signupmethod actvuser = do
                          userfstname = fstname
                        , usersndname = sndname
                        }
+                _ <- dbUpdate $ LogHistoryUserInfoChanged (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) 
+                                                          (userinfo actvuser) ((userinfo actvuser){ userfstname = fstname , usersndname = sndname })
+                                                          (userid <$> ctxmaybeuser ctx)
                 _ <- dbUpdate $ SetUserPassword (userid actvuser) passwordhash
+                _ <- dbUpdate $ LogHistoryPasswordSetup (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
                 _ <- dbUpdate $ AcceptTermsOfService (userid actvuser) (ctxtime ctx)
+                _ <- dbUpdate $ LogHistoryTOSAccept (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
                 _ <- dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
                 return ()
               tosuser <- guardJustM $ runDBQuery $ GetUserByID (userid actvuser)
               _ <- addUserSignTOSStatEvent tosuser
-              dropExistingAction aid
               _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
               logUserToContext $ Just tosuser
               return $ Just tosuser
             else do
               addFlashM flashMessageMustAcceptTOS
-              returnToAccountSetup
+              return Nothing
         Left flash -> do
           addFlashM flash
-          returnToAccountSetup
-    _ -> returnToAccountSetup
-  where
-    returnToAccountSetup :: Kontrakcja n => n (Maybe User)
-    returnToAccountSetup = do
-      addFlashM $ modalAccountSetup (LinkAccountCreated aid hash $ BS.toString $ getEmail actvuser)
-                                    (BS.toString $ getFirstName actvuser)
-                                    (BS.toString $ getLastName actvuser)
-      return Nothing
+          return Nothing
+    _ -> return Nothing
 
 {- |
     This is where we get to when the user clicks the link in their password reminder
@@ -853,6 +869,7 @@ handlePasswordReminderPost aid hash = do
              getHomeOrUploadLink
     where
         handleChangePassword user = do
+            Context{ctxtime, ctxipnumber, ctxmaybeuser} <- getContext
             mpassword <- getRequiredField asValidPassword "password"
             mpassword2 <- getRequiredField asDirtyPassword "password2"
             case (mpassword, mpassword2) of
@@ -862,78 +879,20 @@ handlePasswordReminderPost aid hash = do
                               dropExistingAction aid
                               passwordhash <- liftIO $ createPassword password
                               _ <- runDBUpdate $ SetUserPassword (userid user) passwordhash
+                              _ <- runDBUpdate $ LogHistoryPasswordSetup (userid user) (ctxipnumber) (ctxtime) (userid <$> ctxmaybeuser)
                               addFlashM flashMessageUserPasswordChanged
-                              Context{ctxtime} <- getContext
                               _ <- addUserLoginStatEvent ctxtime user
                               logUserToContext $ Just user
                               return LinkUpload
                           Left flash -> do
+                              _ <- runDBUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber) (ctxtime) (userid <$> ctxmaybeuser)
                               addFlashM flash
                               addFlashM $ modalNewPasswordView aid hash
                               getHomeOrUploadLink
                  _ -> do
+                   _ <- runDBUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber) (ctxtime) (userid <$> ctxmaybeuser)
                    addFlashM $ modalNewPasswordView aid hash
                    getHomeOrUploadLink
-
-handleAccountRemovalGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
-handleAccountRemovalGet aid hash = do
-  action <- guardJustM $ getAccountCreatedBySigningIDAction aid
-  let AccountCreatedBySigning _ _ (docid, sigid) token = actionType action
-  guard $ hash == token
-  doc <- queryOrFail $ GetDocumentByDocumentID docid
-  sig <- guardJust $ getSigLinkFor doc sigid
-  extendActionEvalTimeToOneDayMinimum aid
-  addFlashM $ modalAccountRemoval (documenttitle doc) (LinkAccountCreatedBySigning aid hash) (LinkAccountRemoval aid hash)
-  sendRedirect $ LinkSignDoc doc sig
-
-handleAccountRemovalFromSign :: Kontrakcja m => User -> SignatoryLink -> ActionID -> MagicHash -> m ()
-handleAccountRemovalFromSign user siglink aid hash = do
-  Context{ctxtime} <- getContext
-  doc <- removeAccountFromSignAction aid hash
-  doc1 <- guardRightM $ runDBUpdate . ArchiveDocument user $ documentid doc
-  _ <- case getSigLinkFor doc1 (signatorylinkid siglink) of
-    Just sl -> runDB $ addSignStatDeleteEvent doc1 sl ctxtime
-    _       -> return False
-  _ <- addUserRefuseSaveAfterSignStatEvent user siglink
-  return ()
-
-handleAccountRemovalPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
-handleAccountRemovalPost aid hash = do
-  doc <- removeAccountFromSignAction aid hash
-  addFlashM $ modalAccountRemoved $ documenttitle doc
-  getHomeOrUploadLink
-
-{- |
-    Helper function for performing account removal (these are accounts setup
-    by signing), this'll return the document that was removed.
--}
-removeAccountFromSignAction :: Kontrakcja m => ActionID -> MagicHash -> m Document
-removeAccountFromSignAction aid hash = do
-  action <- guardJustM $ getAccountCreatedBySigningIDAction aid
-  let AccountCreatedBySigning _ _ (docid, _) token = actionType action
-  guard $ hash == token
-  doc <- queryOrFail $ GetDocumentByDocumentID docid
-  -- there should be done account and its documents removal, but
-  -- since the functionality is not there yet, we just remove
-  -- this action to prevent user from account activation and
-  -- receiving further reminders
-  dropExistingAction aid
-  return doc
-
-getAccountCreatedBySigningIDAction :: Kontrakcja m => ActionID -> m (Maybe Action)
-getAccountCreatedBySigningIDAction aid = do
-  maction <- query $ GetAction aid
-  case maction of
-    Nothing -> return Nothing
-    Just action ->
-      -- allow for account created by signing links only
-      if actionTypeID (actionType action) /= AccountCreatedBySigningID
-      then return Nothing
-      else if acbsState (actionType action) /= ReminderSent
-           then return $ Just action
-           else do
-             now <- liftIO $ getMinutesTime
-             return $ checkValidity now $ Just action
 
 getUserFromActionOfType :: Kontrakcja m => ActionTypeID -> ActionID -> MagicHash -> m (Maybe User)
 getUserFromActionOfType atypeid aid hash = do

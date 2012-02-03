@@ -4,7 +4,6 @@
  -}
 module Doc.DocControl where
 
-import ActionSchedulerState
 import AppView
 import DB.Classes
 import DB.Types
@@ -67,7 +66,7 @@ import qualified Data.Map as Map
 import Text.JSON hiding (Result)
 import ForkAction
 import qualified ELegitimation.BankID as BankID
-import Data.Function
+
 {-
   Document state transitions are described in DocState.
 
@@ -413,7 +412,8 @@ makeMailAttachments ctx document = do
       sattachments = concatMap (maybeToList . signatoryattachmentfile) $ documentsignatoryattachments document
       allfiles' = [mainfile] ++ aattachments ++ sattachments
   allfiles <- liftM catMaybes $ mapM (ioRunDB (ctxdbconn ctx) . dbQuery . GetFileByFileID) allfiles'
-  let filenames = map (BS.toString . filename) allfiles
+  --use the doc title rather than file name for the main file (see jira #1152)
+  let filenames = (BS.toString (documenttitle document) ++ ".pdf") : map (BS.toString . filename) (tail allfiles)
   filecontents <- sequence $ map (getFileContents ctx) allfiles
   return $ zip filenames filecontents
 
@@ -441,37 +441,17 @@ sendRejectEmails customMessage ctx document signalink = do
 {- |
     Handles an account setup from within the sign view.
 -}
-handleAcceptAccountFromSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> ActionID -> MagicHash -> m KontraLink
+handleAcceptAccountFromSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
 handleAcceptAccountFromSign documentid
                             signatorylinkid
-                            signmagichash
-                            actionid
                             magichash = do
-  muser <- handleAccountSetupFromSign actionid magichash
-  document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid signmagichash
+  document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
+  muser <- handleAccountSetupFromSign document signatorylink
   case muser of
-    Nothing | isClosed document -> addFlashM $ modalSignedClosedNoAccount document signatorylink actionid magichash
-    Nothing -> addFlashM $ modalSignedNotClosedNoAccount document signatorylink actionid magichash
+    Nothing | isClosed document -> addFlashM $ modalSignedClosedNoAccount document signatorylink
+    Nothing -> addFlashM $ modalSignedNotClosedNoAccount document signatorylink
     Just _ -> addFlashM $ flashMessageAccountActivatedFromSign
-  return $ LinkSignDoc document signatorylink
-
-{- |
-    Handles an account removal from within the sign view.
--}
-handleDeclineAccountFromSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> ActionID -> MagicHash -> m KontraLink
-handleDeclineAccountFromSign documentid
-                             signatorylinkid
-                             signmagichash
-                             actionid
-                             magichash = do
-  document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid signmagichash
-  switchLocale $ getLocale document
-  signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
-  userid <- guardJust $ maybesignatory signatorylink
-  user <- guardJustM $ runDBQuery $ GetUserByID userid
-  handleAccountRemovalFromSign user signatorylink actionid magichash
-  addFlashM flashMessageAccountRemovedFromSign
   return $ LinkSignDoc document signatorylink
 
 {- |
@@ -527,9 +507,8 @@ handleMismatch doc sid msg sfn sln spn = do
         postDocumentChangeAction newdoc doc (Just sid)
 
 {- |
-    Call after signing in order to save the document for any new user,
-    put up the appropriate modal, and register the necessary nagging email actions.
-    This is factored into it's own function because that way it can be used by eleg too.
+    Call after signing in order to save the document for any user, and
+    put up the appropriate modal.
 -}
 handleAfterSigning :: Kontrakcja m => Document -> SignatoryLinkID -> m KontraLink
 handleAfterSigning document@Document{documentid} signatorylinkid = do
@@ -537,27 +516,18 @@ handleAfterSigning document@Document{documentid} signatorylinkid = do
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
   maybeuser <- runDBQuery $ GetUserByEmail (currentServiceID ctx) (Email $ getEmail signatorylink)
   case maybeuser of
-    Nothing -> do
-      let sfield t = getValueOfType t $ signatorydetails signatorylink
-          fullname = (sfield FirstNameFT, sfield LastNameFT)
-          email = sfield EmailFT
-      muser <- createUserBySigning fullname email (documentid, signatorylinkid)
-      case muser of
-        Just (user, actionid, magichash) -> do
-          _ <- runDBUpdate $ SaveDocumentForUser documentid user signatorylinkid
-          Log.debug $ "the doc " ++ (show $ documentid) ++ ".isClosed = " ++ (show $ isClosed document)
-          Log.debug $ "doc " ++ (show document)
-          if isClosed document
-            then addFlashM $ modalSignedClosedNoAccount document signatorylink actionid magichash
-            else addFlashM $ modalSignedNotClosedNoAccount document signatorylink actionid magichash
-          return ()
-        _ -> return ()
-    Just user -> do
-     _ <- runDBUpdate $ SaveDocumentForUser documentid user signatorylinkid
-     let userlocale = locale $ usersettings user
-     if isClosed document
-       then addFlashM $ modalSignedClosedHasAccount userlocale document signatorylink (isJust $ ctxmaybeuser ctx)
-       else addFlashM $ modalSignedNotClosedHasAccount userlocale document signatorylink (isJust $ ctxmaybeuser ctx)
+    Just user | isJust $ userhasacceptedtermsofservice user-> do
+      _ <- runDBUpdate $ SaveDocumentForUser documentid user signatorylinkid
+      let userlocale = locale $ usersettings user
+      if isClosed document
+        then addFlashM $ modalSignedClosedHasAccount userlocale document signatorylink (isJust $ ctxmaybeuser ctx)
+        else addFlashM $ modalSignedNotClosedHasAccount userlocale document signatorylink (isJust $ ctxmaybeuser ctx)
+    _ -> do
+      Log.debug $ "the doc " ++ (show $ documentid) ++ ".isClosed = " ++ (show $ isClosed document)
+      Log.debug $ "doc " ++ (show document)
+      if isClosed document
+        then addFlashM $ modalSignedClosedNoAccount document signatorylink
+        else addFlashM $ modalSignedNotClosedNoAccount document signatorylink
   return $ LinkSignDoc document signatorylink
 
 {- |
@@ -599,7 +569,7 @@ handleSignShowOldRedirectToNew did sid mh = do
 
 handleSignShow :: DocumentID -> SignatoryLinkID -> Kontra Response
 handleSignShow documentid
-               signatorylinkid = do           
+               signatorylinkid = do
   mmh <- readField "magichash"
   case mmh of
     Just mh -> do
@@ -612,7 +582,7 @@ handleSignShow documentid
 
 handleSignShow2 :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m String
 handleSignShow2 documentid
-                signatorylinkid = do                  
+                signatorylinkid = do
   Context { ctxtime
           , ctxipnumber
           , ctxflashmessages
@@ -1448,14 +1418,9 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
 
 getDocumentsForUserByType :: Kontrakcja m => DocumentType -> User -> m [Document]
 getDocumentsForUserByType doctype user = do
-  mysigdocs <- runDBQuery $ GetDocumentsBySignatory user
-  mydocuments <- if useriscompanyadmin user
-                   then do
-                     mycompanydocs <- runDBQuery $ GetDocumentsByCompany user
-                     return $ union mysigdocs mycompanydocs
-                   else return mysigdocs
+  mydocuments <- runDBQuery $ GetDocumentsBySignatory user
 
-  return . filter ((\d -> documenttype d == doctype)) $ (nubBy $ on (==) documentid) mydocuments
+  return . filter ((\d -> documenttype d == doctype)) $ mydocuments
 
 
 handleAttachmentViewForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
@@ -2019,9 +1984,7 @@ jsonDocumentsList = do
             mydocuments <- runDBQuery $ GetDocumentsByAuthor (userid user)
             return $ filter ((==) Attachment . documenttype) mydocuments
         "Rubbish" -> do
-            if useriscompanyadmin user
-                then runDBQuery $ GetDeletedDocumentsByCompany user
-                else runDBQuery $ GetDeletedDocumentsByUser user
+            runDBQuery $ GetDeletedDocumentsByUser user
         "Template|Contract" -> do
             let tfilter doc = (Template Contract == documenttype doc)
             userdocs <- runDBQuery $ GetDocumentsByAuthor (userid user)

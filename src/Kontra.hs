@@ -17,7 +17,6 @@ module Kontra
     , newPasswordReminderLink
     , newViralInvitationSentLink
     , newAccountCreatedLink
-    , newAccountCreatedBySigningLink
     , runDBOrFail
     , queryOrFail
     , currentService
@@ -35,7 +34,6 @@ import Control.Applicative
 import Control.Monad.Reader
 import Control.Monad.State
 import DB.Classes
-import DB.Types
 import ELegitimation.ELegTransaction
 import Doc.DocStateData
 import Happstack.Server
@@ -75,7 +73,7 @@ runKontra :: Context -> Kontra a -> ServerPartT IO a
 runKontra ctx = mapServerPartT (\s -> evalStateT s ctx) . unKontra
 
 {- Logged in user is admin-}
-isAdmin :: Context -> Bool 
+isAdmin :: Context -> Bool
 isAdmin ctx = (useremail <$> userinfo <$> ctxmaybeuser ctx) `melem` (ctxadminaccounts ctx) && scriveService ctx
 
 {- Logged in user is sales -}
@@ -156,13 +154,6 @@ newAccountCreatedLink user = do
     return $ LinkAccountCreated (actionID action)
                                 (acToken $ actionType action)
                                 (BS.toString $ getEmail user)
-
-newAccountCreatedBySigningLink :: MonadIO m => User -> (DocumentID, SignatoryLinkID) -> m (ActionID, MagicHash)
-newAccountCreatedBySigningLink user doclinkdata = do
-    action <- liftIO $ newAccountCreatedBySigning user doclinkdata
-    let aid = actionID action
-        token = acbsToken $ actionType action
-    return $ (aid, token)
 
 -- | Runs DB action and mzeroes if it returned Nothing
 runDBOrFail :: (DBMonad m, MonadPlus m) => DB (Maybe r) -> m r

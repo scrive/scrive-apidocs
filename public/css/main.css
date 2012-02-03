@@ -181,7 +181,7 @@ a.new-btn-small.black p {
 /* Icons */
 
 .icon-money {
-    
+
         margin: 0 auto;
 	height: 60px;
 	width: 60px;
@@ -422,7 +422,7 @@ a.new-btn-small.black p {
 #top-container .moveleft .toplink:hover
 {
   color: #FFFFFF;
-}  
+}
 
 .moveleft2
 {
@@ -1710,13 +1710,6 @@ top: 0px;
       background: url(../img/team/tim-2.jpg) center no-repeat;
 }
 
-.portrait-image a.fredrica {
-      background: url(../img/team/fredrica-1.jpg) center no-repeat;
-}
-
-.portrait-image a.fredrica:hover {
-      background: url(../img/team/fredrica-2.jpg) center no-repeat;
-}
 
 .portrait-image a.daniel {
       background: url(../img/team/daniel-1.jpg) center no-repeat;
@@ -1726,12 +1719,20 @@ top: 0px;
       background: url(../img/team/daniel-2.jpg) center no-repeat;
 }
 
-.portrait-image a.josef {
-      background: url(../img/team/josef-1.jpg) center no-repeat;
+.portrait-image a.marcus {
+      background: url(../img/team/marcus-1.png) center no-repeat;
 }
 
-.portrait-image a.josef:hover {
-      background: url(../img/team/josef-2.jpg) center no-repeat;
+.portrait-image a.marcus:hover {
+      background: url(../img/team/marcus-2.png) center no-repeat;
+}
+
+.portrait-image a.dudek {
+      background: url(../img/team/dudek-1.png) center no-repeat;
+}
+
+.portrait-image a.dudek:hover {
+      background: url(../img/team/dudek-2.png) center no-repeat;
 }
 
 .portrait-image a.magnus {
@@ -1956,7 +1957,7 @@ input.grayed, textarea.grayed
     text-align: left;
 }
 .benefitsbox {
-    
+
     float: left;
     margin-right: 10px;
     position: relative;
@@ -1977,7 +1978,7 @@ input.grayed, textarea.grayed
     height: 340px;
     margin-right: 14px;
 }
-       
+
 
 .productdescriptionbox .smallbox,
 .benefitsbox .smallbox {
@@ -2059,12 +2060,12 @@ a {
     font-size: 11px;
     color: #007CAC;
     cursor: pointer;
-} 
+}
 .page-change.current{
     color: #333333;
     font-weight : bold;
     cursor: default;
-    
+
 }
 .gotodave {
     display: block;
@@ -2079,5 +2080,5 @@ a {
     border-style: solid;
     border-width: 1px;
     font: 10px "Lucida Grande";
-    padding: 20px;   
+    padding: 20px;
 }

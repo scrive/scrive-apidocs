@@ -24,17 +24,14 @@ module Doc.Model
   , DeleteSigAttachment(..)
   , DocumentFromSignatoryData(..)
   , ErrorDocument(..)
-  , GetDeletedDocumentsByCompany(..)
   , GetDeletedDocumentsByUser(..)
   , GetDocumentByDocumentID(..)
   , GetDocumentStats(..)
   , GetDocumentStatsByUser(..)
   , GetDocuments(..)
   , GetDocumentsByAuthor(..)
-  , GetDocumentsByCompany(..)
   , GetDocumentsByCompanyAndTags(..)
   , GetDocumentsBySignatory(..)
-  , GetDocumentsByUser(..)
   , GetSignatoryLinkIDs(..)
   , GetTimeoutedButPendingDocuments(..)
   , MarkDocumentSeen(..)
@@ -901,7 +898,11 @@ instance DBUpdate ArchiveDocument (Either String Document) where
               runUpdateOnArchivableDoc "WHERE company_id = ?" [toSql cid]
            _ ->
               runUpdateOnArchivableDoc "WHERE user_id = ?" [toSql $ userid user]
-    getOneDocumentAffected "ArchiveDocument" r did
+    -- a supervisor could delete both their own and another subaccount's links
+    -- on the same document, so this would mean the sig link count affected
+    -- is more than 1. see bug 1195.
+    let fudgedr = if r==0 then 0 else 1
+    getOneDocumentAffected "ArchiveDocument" fudgedr did
     where
       runUpdateOnArchivableDoc whereClause whereFields =
         runUpdateStatement "signatory_links"
@@ -1140,34 +1141,12 @@ instance DBUpdate ErrorDocument (Either String Document) where
 
           s -> return $ Left $ "Cannot ErrorDocument document " ++ show docid ++ " because " ++ concat s
 
-data GetDeletedDocumentsByCompany = GetDeletedDocumentsByCompany User
-                                    deriving (Eq, Ord, Show, Typeable)
-instance DBQuery GetDeletedDocumentsByCompany [Document] where
-  dbQuery (GetDeletedDocumentsByCompany user) = do
-    case useriscompanyadmin user of
-      True ->
-        selectDocuments (selectDocumentsSQL ++
-                         " WHERE EXISTS (SELECT * FROM signatory_links " ++
-                         "               WHERE signatory_links.deleted = TRUE" ++
-                         "                 AND company_id = ?" ++
-                         "                 AND really_deleted = FALSE" ++
-                         "                 AND ((?::TEXT IS NULL AND service_id IS NULL) OR (service_id = ?))" ++
-                         "                 AND documents.id = document_id)" ++
-                         " ORDER BY mtime DESC")
-                      [ toSql (usercompany user)
-                      , toSql (userservice user)
-                      , toSql (userservice user)
-                      ]
-      False -> return []
-
 data GetDeletedDocumentsByUser = GetDeletedDocumentsByUser User
                                  deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDeletedDocumentsByUser [Document] where
   dbQuery (GetDeletedDocumentsByUser user) = do
-    selectDocuments (selectDocumentsSQL ++
-                     " WHERE EXISTS (SELECT * FROM signatory_links WHERE signatory_links.deleted = TRUE AND really_deleted = FALSE AND user_id = ? AND documents.id = document_id) ORDER BY mtime DESC")
-                      [ toSql (userid user)
-                      ]
+    docs <- selectDocumentsBySignatory (userid user) True
+    return docs
 
 selectDocuments :: String -> [SqlValue] -> DB [Document]
 selectDocuments select values = do
@@ -1249,7 +1228,7 @@ data GetDocumentStatsByUser = GetDocumentStatsByUser User MinutesTime
                               deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentStatsByUser DocStats where
   dbQuery (GetDocumentStatsByUser user time) = do
-  docs    <- dbQuery $ GetDocumentsByUser user
+  docs    <- dbQuery $ GetDocumentsByAuthor (userid user)
   sigdocs <- dbQuery $ GetDocumentsBySignatory user
   let signaturecount'    = length $ allsigns
       signaturecount1m'  = length $ filter (isSignedNotLaterThanMonthsAgo 1)  $ allsigns
@@ -1287,17 +1266,6 @@ instance DBQuery GetDocumentsByAuthor [Document] where
   dbQuery (GetDocumentsByAuthor uid) = do
     selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?)<>0) ORDER BY mtime DESC") [toSql uid, toSql [SignatoryAuthor]]
 
-data GetDocumentsByCompany = GetDocumentsByCompany User
-                             deriving (Eq, Ord, Show, Typeable)
-instance DBQuery GetDocumentsByCompany [Document] where
-  dbQuery (GetDocumentsByCompany user) = do
-    case (useriscompanyadmin user, usercompany user) of
-      (True, Just companyid) -> do
-        docs <- selectDocumentsBySignatoryLink ("signatory_links.company_id = ?")
-                      [ toSql (usercompany user)
-                      ]
-        return $ filterDocsWhereActivated companyid . filterDocsWhereDeleted False companyid $ docs
-      _ -> return []
 
 {- |
     Fetches documents by company and tags, this won't return documents that have been deleted (so ones
@@ -1310,6 +1278,7 @@ instance DBQuery GetDocumentsByCompanyAndTags [Document] where
   dbQuery (GetDocumentsByCompanyAndTags mservice companyid doctags) = do
         docs <- selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND " ++
                                                 "signatory_links.company_id = ? AND " ++
+                                                activatedSQL ++ " AND " ++
                                                 "(signatory_links.roles = ? OR signatory_links.roles = ?) AND " ++
                                                 "((?::TEXT IS NULL AND service_id IS NULL) OR (service_id = ?)) ")
                 [ toSql companyid,
@@ -1318,9 +1287,35 @@ instance DBQuery GetDocumentsByCompanyAndTags [Document] where
                   toSql mservice,
                   toSql mservice
                 ]
-        let docs' = filterDocsWhereActivated companyid . filterDocsWhereDeleted False companyid $ docs
-        return (filter hasTags docs')
+        return (filter hasTags docs)
     where hasTags doc = all (`elem` (documenttags doc)) doctags
+
+activatedSQL :: String
+activatedSQL = "(NOT EXISTS (" ++ subselect ++ ")) "
+  where
+    subselect = "SELECT 1 FROM signatory_links AS sl2 " ++
+                "WHERE signatory_links.document_id = sl2.document_id " ++
+                "  AND ((sl2.roles & 1) <> 0) " ++
+                "  AND sl2.sign_time IS NULL " ++
+                "  AND sl2.sign_order < signatory_links.sign_order "
+
+selectDocumentsBySignatory :: UserID -> Bool -> DB [Document]
+selectDocumentsBySignatory userid deleted = do
+    docs <- selectDocumentsBySignatoryLink
+            ("    signatory_links.deleted = " ++ show deleted ++ " " ++
+             "AND signatory_links.really_deleted = FALSE " ++
+             (if deleted
+              then ""
+              else "AND " ++ activatedSQL) ++
+             "AND (   signatory_links.user_id = ? " ++
+             "     OR EXISTS (SELECT TRUE FROM users " ++
+             "                WHERE users.id = ? " ++
+             "                  AND signatory_links.company_id = users.company_id " ++
+             "                  AND users.is_company_admin = TRUE))")
+             [ toSql userid
+             , toSql userid
+             ]
+    return docs
 
 {- |
     All documents where the user is a signatory that are not deleted.  An author is a type
@@ -1332,21 +1327,9 @@ data GetDocumentsBySignatory = GetDocumentsBySignatory User
                                deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsBySignatory [Document] where
   dbQuery (GetDocumentsBySignatory user) = do
-    docs <- selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?)<>0)")
-                                     [toSql (userid user), {- toSql [SignatoryPartner] -} iToSql 255]
-    return $ filterDocsWhereActivated (userid user) docs
+    docs <- selectDocumentsBySignatory (userid user) False
+    return docs
 
-{- |
-    All documents which are saved for the user which have never been deleted.
-    This doesn't respect sign order, so should be used carefully.
-    This also makes sure that the documents match the user's service.
--}
-data GetDocumentsByUser = GetDocumentsByUser User
-                          deriving (Eq, Ord, Show, Typeable)
-instance DBQuery GetDocumentsByUser [Document] where
-  dbQuery (GetDocumentsByUser user) = do
-        selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?)<>0)")
-                                         [toSql (userid user), toSql [SignatoryAuthor]]
 
 data GetSignatoryLinkIDs = GetSignatoryLinkIDs
                            deriving (Eq, Ord, Show, Typeable)
@@ -1376,7 +1359,7 @@ instance DBUpdate MarkDocumentSeen (Either String Document) where
                          [ sqlField "seen_time" time
                          , sqlField "seen_ip" ipnumber
                          ]
-                         "WHERE id = ? AND document_id = ? AND token = ? AND EXISTS (SELECT * FROM documents WHERE id = ? AND type = ? AND status <> ? AND status <> ?)"
+                         "WHERE id = ? AND document_id = ? AND token = ? AND seen_time IS NULL AND sign_time IS NULL AND EXISTS (SELECT * FROM documents WHERE id = ? AND type = ? AND status <> ? AND status <> ?)"
                          [ toSql signatorylinkid1
                          , toSql did
                          , toSql mh
@@ -1385,6 +1368,9 @@ instance DBUpdate MarkDocumentSeen (Either String Document) where
                          , toSql Preparation
                          , toSql Closed
                          ]
+    -- it's okay if we don't update the doc because it's been seen or signed already
+    -- (see jira #1194)
+    let fudgedr = if r==0 then 1 else r
     getOneDocumentAffected "MarkDocumentSeen" r did
 
 data AddInvitationEvidence = AddInvitationEvidence DocumentID SignatoryLinkID MinutesTime IPAddress
