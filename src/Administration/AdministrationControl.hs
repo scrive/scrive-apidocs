@@ -291,10 +291,9 @@ handleUserChange uid = onlySalesOrAdmin $ do
       --then we just want to make this account an admin
       newuser <- runDBOrFail $ do
         _ <- dbUpdate $ SetUserCompanyAdmin uid True
-        _ <- dbUpdate 
-                 $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
-                                            [("is_company_admin", "false", "true")] 
-                                            (userid <$> ctxmaybeuser ctx)
+        _ <- dbUpdate $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
+             [("is_company_admin", "false", "true")] 
+             (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
       return newuser
     (Just "companyadminaccount", Nothing, False) -> do

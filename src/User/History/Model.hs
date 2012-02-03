@@ -54,7 +54,7 @@ data UserHistory = UserHistory {
   , uhip               :: IPAddress
   , uhtime             :: MinutesTime
   , uhsystemversion    :: BS.ByteString
-  , uhperforminguserid :: Maybe UserID -- Nothing means system changed it
+  , uhperforminguserid :: Maybe UserID -- Nothing means no user changed it (like the system)
   }
   deriving (Eq, Show)
 
@@ -155,7 +155,7 @@ instance DBUpdate LogHistoryLoginAttempt (Maybe UserHistory) where
                    (UserHistoryEvent {uheventtype = UserLoginAttempt, uheventdata = Nothing})
                    ip
                    time
-                   Nothing
+                   (Just userid)
 
 data LogHistoryLoginSuccess = LogHistoryLoginSuccess UserID IPAddress MinutesTime
 instance DBUpdate LogHistoryLoginSuccess (Maybe UserHistory) where
@@ -164,7 +164,7 @@ instance DBUpdate LogHistoryLoginSuccess (Maybe UserHistory) where
                    (UserHistoryEvent {uheventtype = UserLoginSuccess, uheventdata = Nothing})
                    ip
                    time
-                   Nothing
+                   (Just userid)
 
 data LogHistoryPasswordSetup = LogHistoryPasswordSetup UserID IPAddress MinutesTime (Maybe UserID)
 instance DBUpdate LogHistoryPasswordSetup (Maybe UserHistory) where
