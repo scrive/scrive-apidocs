@@ -121,15 +121,9 @@ sqlFieldType name xtype value = SqlField name xtype (toSql value)
 sqlLogAppend :: MinutesTime -> String -> SqlField
 sqlLogAppend time text = sqlFieldType "log" "append" $ unlines [show $ DocumentLogEntry time $ BS.fromString text]
 
-runInsertStatement :: String -> [SqlField] -> DB Integer
-runInsertStatement tableName fields =
-  runInsertStatementWhere tableName fields "" []
-
-
-runInsertStatementWhere :: String -> [SqlField] -> String -> [SqlValue] -> DB Integer
-runInsertStatementWhere tableName fields xwhere values = do
-  (r,_s) <- runInsertStatementWhereReturning tableName fields xwhere values []
-  return r
+sqlLog :: MinutesTime -> String -> (String, String, SqlValue)
+sqlLog time text = sql' "log" "log || ?" logmsg
+  where logmsg = unlines [show $ DocumentLogEntry time $ BS.fromString text]
 
 mkInsertStatementWhereReturning :: String -> [SqlField] -> String -> [SqlValue] -> [String] -> String
 mkInsertStatementWhereReturning tableName fields xwhere _values returnFields =
@@ -150,7 +144,6 @@ mkInsertStatementWhereReturning tableName fields xwhere _values returnFields =
      insertType "base64" = "decode(?, 'base64')"
      insertType ytype = error $ "mkInsertStatement: invalid insert type " ++ ytype
 
-
 runInsertStatementWhereReturning :: String -> [SqlField] -> String -> [SqlValue] -> [String] -> DB (Integer, Statement)
 runInsertStatementWhereReturning tableName fields xwhere values returnFields = do
   wrapDB $ \conn -> (doit conn `E.catch` handle)
@@ -167,34 +160,6 @@ runInsertStatementWhereReturning tableName fields xwhere values returnFields = d
     value (SqlField _ _ v) = [v]
     params = concatMap value fields ++ values
     statement = mkInsertStatementWhereReturning tableName fields xwhere values returnFields
-
--- here we can add encoding and better error reporting in case conversion fails
-mkUpdateStatement :: String -> [SqlField] -> String
-mkUpdateStatement tableName fields =
-   "UPDATE " ++ tableName ++
-   " SET " ++ concat (intersperse "," (map one fields)) ++ " "
-   where
-     name (SqlField x _ _) = x
-     xtype (SqlField _ "" _) = "?"
-     xtype (SqlField _ "timestamp" _) = "?"
-     xtype (SqlField _ "base64" _) = "decode(?, 'base64')"
-     xtype (SqlField name' "append" _) = name' ++ "||?"
-     xtype (SqlField _ x _) = error $ "mkUpdateStatement: invalid insert type " ++ x
-     one field = name field ++ "=" ++ xtype field
-
-
-runUpdateStatement :: String -> [SqlField] -> String -> [SqlValue] -> DB Integer
-runUpdateStatement tableName fields whereClause whereValues = do
-  wrapDB $ \conn -> (run conn statement params) `E.catch`
-        (\e -> liftIO $ E.throwIO $ SQLError { DB.Classes.originalQuery = statement
-                                             , sqlError = e
-                                             , queryParams = params
-                                             })
-  where
-    value (SqlField _ _ v) = [v]
-    params = concatMap value fields ++ whereValues
-    statement = mkUpdateStatement tableName fields ++ whereClause
-
 
 getOneDocumentAffected :: String -> Integer -> DocumentID -> DB (Either String Document)
 getOneDocumentAffected text r did =
@@ -838,15 +803,11 @@ data AdminOnlySaveForUser = AdminOnlySaveForUser DocumentID User
                             deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate AdminOnlySaveForUser (Either String Document) where
   dbUpdate (AdminOnlySaveForUser did user) = do
-    r <- runUpdateStatement "signatory_links"
-                       [ sqlField "company_id" $ usercompany user
-                       ]
-                       ("WHERE document_id = ? " ++
-                        " AND user_id = ? ")
-                       [ toSql did
-                       , toSql (userid user)
-                       ]
-
+    r <- kRun $ mkQuery UPDATE tableSignatoryLinks [sql "company_id" $ usercompany user]
+      `mappend` SQL "WHERE document_id = ? AND user_id = ? " [
+        toSql did
+      , toSql $ userid user
+      ]
     getOneDocumentAffected "AdminOnlySaveForUser" r did
 
 data ArchiveDocument = ArchiveDocument User DocumentID
@@ -854,27 +815,24 @@ data ArchiveDocument = ArchiveDocument User DocumentID
 instance DBUpdate ArchiveDocument (Either String Document) where
   dbUpdate (ArchiveDocument user did) = do
     r <- case (usercompany user, useriscompanyadmin user) of
-           (Just cid, True) ->
-              runUpdateOnArchivableDoc "WHERE company_id = ?" [toSql cid]
-           _ ->
-              runUpdateOnArchivableDoc "WHERE user_id = ?" [toSql $ userid user]
+      (Just cid, True) -> updateArchivableDoc $ SQL "WHERE company_id = ?" [toSql cid]
+      _ -> updateArchivableDoc $ SQL "WHERE user_id = ?" [toSql $ userid user]
     -- a supervisor could delete both their own and another subaccount's links
     -- on the same document, so this would mean the sig link count affected
     -- is more than 1. see bug 1195.
     let fudgedr = if r==0 then 0 else 1
     getOneDocumentAffected "ArchiveDocument" fudgedr did
     where
-      runUpdateOnArchivableDoc whereClause whereFields =
-        runUpdateStatement "signatory_links"
-                          [sqlField "deleted" True]
-                          (whereClause ++ " AND document_id = ? AND EXISTS (SELECT * FROM documents WHERE id = ? AND status <> ? AND status <> ?)")
-                          (whereFields ++
-                              [ toSql did
-                              , toSql did
-                              , toSql Pending
-                              , toSql AwaitingAuthor
-                              ])
-
+      updateArchivableDoc whereClause = kRun $ mconcat [
+          mkQuery UPDATE tableSignatoryLinks [sql "deleted" True]
+        , whereClause
+        , SQL " AND document_id = ? AND EXISTS (SELECT * FROM documents WHERE id = ? AND status <> ? AND status <> ?)" [
+            toSql did
+          , toSql did
+          , toSql Pending
+          , toSql AwaitingAuthor
+          ]
+        ]
 
 data AttachCSVUpload = AttachCSVUpload DocumentID SignatoryLinkID CSVUpload
                        deriving (Eq, Ord, Show, Typeable)
@@ -886,44 +844,38 @@ instance DBUpdate AttachCSVUpload (Either String Document) where
       Just document -> do
         case documentstatus document of
           Preparation -> do
-                     r <- runUpdateStatement "signatory_links"
-                          [ {- sqlField "mtime" time
-                          , -} sqlField "csv_title" $ csvtitle csvupload
-                          , sqlField "csv_signatory_index" $ csvsignatoryindex csvupload
-                          , sqlField "csv_contents" $ csvcontents csvupload
-                          ]
-                         "WHERE document_id = ? AND signatory_links.id = ? AND deleted = FALSE AND ((roles & ?)=0)"
-                         [ toSql did
-                         , toSql slid
-                         , toSql [SignatoryAuthor]
-                         ]
-                     getOneDocumentAffected "AttachCSVUpload" r did
-
+            r <- kRun $ mkQuery UPDATE tableSignatoryLinks [
+                sql "csv_title" $ csvtitle csvupload
+              , sql "csv_signatory_index" $ csvsignatoryindex csvupload
+              , sql "csv_contents" $ csvcontents csvupload
+              ] `mappend` SQL "WHERE document_id = ? AND signatory_links.id = ? AND deleted = FALSE AND ((roles & ?) = 0)" [
+                toSql did
+              , toSql slid
+              , toSql [SignatoryAuthor]
+              ]
+            getOneDocumentAffected "AttachCSVUpload" r did
           _ -> return $ Left $ "Document #" ++ show documentid ++ " is in " ++ show (documentstatus document) ++ " state, must be Preparation"
-
 
 data AttachFile = AttachFile DocumentID FileID MinutesTime
                   deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate AttachFile (Either String Document) where
   dbUpdate (AttachFile did fid time) = do
-    r <- runUpdateStatement "documents"
-         [ sqlField "mtime" time
-         , sqlField "file_id" $ fid
-         , sqlLogAppend time ("Attached main file " ++ show fid)
-         ]
-         "WHERE id = ? AND status = ?" [ toSql did, toSql Preparation ]
+    r <- kRun $ mkQuery UPDATE tableDocuments [
+        sql "mtime" time
+      , sql "file_id" $ fid
+      , sqlLog time $ "Attached main file " ++ show fid
+      ] `mappend` SQL "WHERE id = ? AND status = ?" [toSql did, toSql Preparation]
     getOneDocumentAffected "AttachFile" r did
 
 data AttachSealedFile = AttachSealedFile DocumentID FileID MinutesTime
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate AttachSealedFile (Either String Document) where
   dbUpdate (AttachSealedFile did fid time) = do
-    r <- runUpdateStatement "documents"
-         [ sqlField "mtime" $ time
-         , sqlField "sealed_file_id" $ fid
-         , sqlLogAppend time ("Attached sealed file " ++ show fid)
-         ]
-         "WHERE id = ? AND status = ?" [ toSql did, toSql Closed ]
+    r <- kRun $ mkQuery UPDATE tableDocuments [
+        sql "mtime" time
+      , sql "sealed_file_id" fid
+      , sqlLog time $ "Attached sealed file " ++ show fid
+      ] `mappend` SQL "WHERE id = ? AND status = ?" [toSql did, toSql Closed]
     getOneDocumentAffected "AttachSealedFile" r did
 
 data CancelDocument = CancelDocument DocumentID CancelationReason MinutesTime IPAddress
@@ -936,18 +888,16 @@ instance DBUpdate CancelDocument (Either String Document) where
       Just document ->
         case checkCancelDocument document of
           [] -> do
-            r <- runUpdateStatement "documents"
-                 [ sqlField "status" $ Canceled
-                 , sqlField "mtime" mtime
-                 , sqlField "cancelation_reason" $ reason
-                 , sqlLogAppend mtime ("Document canceled from " ++ formatIP ipaddress)
-                 ]
-                "WHERE id = ? AND type = ?" [ toSql did, toSql $ Signable undefined ]
+            r <- kRun $ mkQuery UPDATE tableDocuments [
+                sql "status" Canceled
+              , sql "mtime" mtime
+              , sql "cancelation_reason" $ reason
+              , sqlLog mtime $ "Document canceled from " ++ formatIP ipaddress
+              ] `mappend` SQL "WHERE id = ? AND type = ?" [
+                toSql did
+              , toSql $ Signable undefined
+              ]
             getOneDocumentAffected "CancelDocument" r did
-
-            -- return $ Right $ document { documentstatus = Closed
-            --                          , documentmtime  = time
-            --                          } `appendHistory` [DocumentHistoryClosed time ipaddress]
           s -> return $ Left $ "Cannot CancelDocument document " ++ show did ++ " because " ++ concat s
 
 data ChangeMainfile = ChangeMainfile DocumentID FileID
@@ -960,10 +910,8 @@ instance DBUpdate ChangeMainfile (Either String Document) where
         let fieldname = if (documentstatus document == Closed || allHadSigned document)
                         then "sealed_file_id"
                         else "file_id"
-        r <- runUpdateStatement "documents"
-                 [ sqlField fieldname $ fid
-                 ]
-             "WHERE id = ?" [ toSql did ]
+        r <- kRun $ mkQuery UPDATE tableDocuments [sql fieldname $ fid]
+          `mappend` SQL "WHERE id = ?" [toSql did]
         getOneDocumentAffected "ChangeMainfile" r did
     where
         allHadSigned doc = all (hasSigned ||^ (not . isSignatory)) $ documentsignatorylinks doc
@@ -981,19 +929,17 @@ instance DBUpdate ChangeSignatoryEmailWhenUndelivered (Either String Document) w
     let signlinks = documentsignatorylinks doc
         Just sl = find ((== slid) . signatorylinkid) signlinks
 
-    r <- runUpdateStatement "signatory_links"
-                       [ sqlField "invitation_delivery_status" Unknown
-                       , sqlField "fields" $ setEmail $ signatoryfields $ signatorydetails sl
-                       , sqlField "user_id" $ fmap userid muser
-                       , sqlField "company_id" $ muser >>= usercompany
-                       ]
-                       ("WHERE EXISTS (SELECT * FROM documents WHERE documents.id = signatory_links.document_id AND (documents.status = ? OR documents.status = ?))" ++
-                        " AND document_id = ? " ++
-                        " AND id = ? ")
-                       [ toSql Pending, toSql AwaitingAuthor
-                       , toSql did
-                       , toSql slid
-                       ]
+    r <- kRun $ mkQuery UPDATE tableSignatoryLinks [
+        sql "invitation_delivery_status" Unknown
+      , sql "fields" $ setEmail $ signatoryfields $ signatorydetails sl
+      , sql "user_id" $ fmap userid muser
+      , sql "company_id" $ muser >>= usercompany
+      ] `mappend` SQL "WHERE EXISTS (SELECT 1 FROM documents WHERE documents.id = signatory_links.document_id AND (documents.status = ? OR documents.status = ?)) AND  AND id = ?" [
+        toSql Pending
+      , toSql AwaitingAuthor
+      , toSql did
+      , toSql slid
+      ]
 
     getOneDocumentAffected "ChangeSignatoryEmailWhenUndelivered" r did
 
@@ -1007,16 +953,18 @@ instance DBUpdate PreparationToPending (Either String Document) where
       Just document ->
         case checkPreparationToPending document of
           [] -> do
-            r <- runUpdateStatement "documents"
-                 [ sqlField "status" $ Pending
-                 , sqlField "mtime" time
-                 , sqlField "timeout_time" $ (\days -> (days * 24 *60) `minutesAfter` time) <$> documentdaystosign document
-                 , sqlLogAppend time ("Document put into Pending state")
-                 ]
-                "WHERE id = ? AND type = ?" [ toSql docid, toSql $ Signable undefined]
+            r <- kRun $ mkQuery UPDATE tableDocuments [
+                sql "status" Pending
+              , sql "mtime" time
+              , sql "timeout_time" $ (\days -> (days * 24 * 60) `minutesAfter` time)
+                  <$> documentdaystosign document
+              , sqlLog time "Document put into Pending state"
+              ] `mappend` SQL "WHERE id = ? AND type = ?" [
+                toSql docid
+              , toSql $ Signable undefined
+              ]
             getOneDocumentAffected "PreparationToPending" r docid
           s -> return $ Left $ "Cannot PreparationToPending document " ++ show docid ++ " because " ++ concat s
-
 
 data CloseDocument = CloseDocument DocumentID MinutesTime IPAddress
                      deriving (Eq, Ord, Show, Typeable)
@@ -1028,31 +976,27 @@ instance DBUpdate CloseDocument (Either String Document) where
       Just document ->
         case checkCloseDocument document of
           [] -> do
-            r <- runUpdateStatement "documents"
-                 [ sqlField "status" $ Closed
-                 , sqlField "mtime" time
-                 , sqlLogAppend time ("Document closed")
-                 ]
-                "WHERE id = ? AND type = ?" [ toSql docid, toSql $ Signable undefined ]
+            r <- kRun $ mkQuery UPDATE tableDocuments [
+                sql "status" Closed
+              , sql "mtime" time
+              , sqlLog time "Document closed"
+              ] `mappend` SQL "WHERE id = ? AND type = ?" [
+                toSql docid
+              , toSql $ Signable undefined
+              ]
             getOneDocumentAffected "CloseDocument" r docid
-
-            -- return $ Right $ document { documentstatus = Closed
-            --                          , documentmtime  = time
-            --                          } `appendHistory` [DocumentHistoryClosed time ipaddress]
           s -> return $ Left $ "Cannot CloseDocument " ++ show docid ++ " because " ++ concat s
 
 data DeleteSigAttachment = DeleteSigAttachment DocumentID BS.ByteString FileID
                            deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate DeleteSigAttachment (Either String Document) where
   dbUpdate (DeleteSigAttachment did email fid) = do
-    r <- runUpdateStatement "signatory_attachments"
-                         [ sqlField "file_id" SqlNull
-                         ]
-                         "WHERE document_id = ? AND email = ? AND file_id = ?"
-                         [ toSql did
-                         , toSql email
-                         , toSql fid
-                         ]
+    r <- kRun $ mkQuery UPDATE tableSignatoryAttachments [sql "file_id" SqlNull]
+      `mappend` SQL "WHERE document_id = ? AND email = ? AND file_id = ?" [
+        toSql did
+      , toSql email
+      , toSql fid
+      ]
     getOneDocumentAffected "DeleteSigAttachment" r did
 
 data DocumentFromSignatoryData = DocumentFromSignatoryData DocumentID Int BS.ByteString BS.ByteString BS.ByteString BS.ByteString BS.ByteString BS.ByteString [BS.ByteString]
@@ -1092,13 +1036,11 @@ instance DBUpdate ErrorDocument (Either String Document) where
       Just document ->
         case [] of
           [] -> do
-            r <- runUpdateStatement "documents"
-                 [ sqlField "status" $ DocumentError errmsg
-                 , sqlField "error_text" $ errmsg
-                 ]
-                "WHERE id = ?" [ toSql docid ]
+            r <- kRun $ mkQuery UPDATE tableDocuments [
+                sql "status" $ DocumentError errmsg
+              , sql "error_text" errmsg
+              ] `mappend` SQL "WHERE id = ?" [toSql docid]
             getOneDocumentAffected "ErrorDocument" r docid
-
           s -> return $ Left $ "Cannot ErrorDocument document " ++ show docid ++ " because " ++ concat s
 
 data GetDeletedDocumentsByUser = GetDeletedDocumentsByUser User
@@ -1314,20 +1256,19 @@ instance DBQuery GetTimeoutedButPendingDocuments [Document] where
 data MarkDocumentSeen = MarkDocumentSeen DocumentID SignatoryLinkID MagicHash MinutesTime IPAddress
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate MarkDocumentSeen (Either String Document) where
-  dbUpdate (MarkDocumentSeen did signatorylinkid1 mh time ipnumber) = do
-    r <- runUpdateStatement "signatory_links"
-                         [ sqlField "seen_time" time
-                         , sqlField "seen_ip" ipnumber
-                         ]
-                         "WHERE id = ? AND document_id = ? AND token = ? AND seen_time IS NULL AND sign_time IS NULL AND EXISTS (SELECT * FROM documents WHERE id = ? AND type = ? AND status <> ? AND status <> ?)"
-                         [ toSql signatorylinkid1
-                         , toSql did
-                         , toSql mh
-                         , toSql did
-                         , toSql $ Signable undefined
-                         , toSql Preparation
-                         , toSql Closed
-                         ]
+  dbUpdate (MarkDocumentSeen did slid mh time ipnumber) = do
+    r <- kRun $ mkQuery UPDATE tableSignatoryLinks [
+        sql "seen_time" time
+      , sql "seen_ip" ipnumber
+      ] `mappend` SQL "WHERE id = ? AND document_id = ? AND token = ? AND seen_time IS NULL AND sign_time IS NULL AND EXISTS (SELECT 1 FROM documents WHERE id = ? AND type = ? AND status <> ? AND status <> ?)" [
+        toSql slid
+      , toSql did
+      , toSql mh
+      , toSql did
+      , toSql $ Signable undefined
+      , toSql Preparation
+      , toSql Closed
+      ]
     -- it's okay if we don't update the doc because it's been seen or signed already
     -- (see jira #1194)
     let fudgedr = if r==0 then 1 else r
@@ -1348,20 +1289,15 @@ instance DBUpdate AddInvitationEvidence (Either String Document) where
       Nothing -> return $ Left "no such document"
       Just doc -> return $ Right doc
 
-
-
-
 data MarkInvitationRead = MarkInvitationRead DocumentID SignatoryLinkID MinutesTime
                           deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate MarkInvitationRead (Either String Document) where
   dbUpdate (MarkInvitationRead did linkid time) = do
-    r <- runUpdateStatement "signatory_links"
-                         [ sqlField "read_invitation" time
-                         ]
-                         "WHERE id = ? AND document_id = ? AND read_invitation IS NULL"
-                         [ toSql linkid
-                         , toSql did
-                         ]
+    r <- kRun $ mkQuery UPDATE tableSignatoryLinks [sql "read_invitation" time]
+      `mappend` SQL "WHERE id = ? AND document_id = ? AND read_invitation IS NULL" [
+        toSql linkid
+      , toSql did
+      ]
     getOneDocumentAffected "MarkInvitationRead" r did
 
 data NewDocument = NewDocument User (Maybe Company) BS.ByteString DocumentType MinutesTime
@@ -1371,8 +1307,8 @@ instance DBUpdate NewDocument (Either String Document) where
   if fmap companyid mcompany /= usercompany user
     then return $ Left "company and user don't match"
     else do
-      wrapDB $ \conn -> runRaw conn "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
-      wrapDB $ \conn -> runRaw conn "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
+      kRunRaw "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
+      kRunRaw "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
       did <- DocumentID <$> getUniqueID tableDocuments
 
       let authorRoles = if ((Just True) == getValueForProcess documenttype processauthorsend)
@@ -1426,20 +1362,15 @@ data ReallyDeleteDocument = ReallyDeleteDocument User DocumentID
 instance DBUpdate ReallyDeleteDocument (Either String Document) where
   dbUpdate (ReallyDeleteDocument user did) = do
     r <- case (usercompany user, useriscompanyadmin user) of
-           (Just cid, True) ->
-             runUpdateOnDeletableDoc "WHERE company_id = ?" [toSql cid]
-           _ ->
-             runUpdateOnDeletableDoc "WHERE user_id = ? AND company_id is NULL" [toSql $ userid user]
+      (Just cid, True) -> deleteDoc $ SQL "WHERE company_id = ?" [toSql cid]
+      _ -> deleteDoc $ SQL "WHERE user_id = ? AND company_id IS NULL" [toSql $ userid user]
     getOneDocumentAffected "ReallyDeleteDocument" r did
     where
-      runUpdateOnDeletableDoc whereClause whereFields =
-        runUpdateStatement "signatory_links"
-                           [sqlField "really_deleted" True]
-                           (whereClause ++ " AND document_id = ? AND deleted = TRUE AND EXISTS (SELECT * FROM documents WHERE id = ?)")
-                           (whereFields ++
-                              [ toSql did
-                              , toSql did
-                              ])
+      deleteDoc whereClause = kRun $ mconcat [
+          mkQuery UPDATE tableSignatoryLinks [sql "really_deleted" True]
+        , whereClause
+        , SQL " AND document_id = ? AND deleted = TRUE" [toSql did]
+        ]
 
 data RejectDocument = RejectDocument DocumentID SignatoryLinkID MinutesTime IPAddress (Maybe BS.ByteString)
                       deriving (Eq, Ord, Show, Typeable)
@@ -1450,18 +1381,16 @@ instance DBUpdate RejectDocument (Either String Document) where
       Nothing -> return $ Left $ "Cannot RejectDocument document " ++ show docid ++ " because it does not exist"
       Just document ->
         case checkRejectDocument document slid of
-          [] ->
-            do
-              r <- runUpdateStatement "documents"
-                                               [ sqlField "status" Rejected
-                                               , sqlField "mtime" time
-                                               , sqlField "rejection_time" time
-                                               , sqlField "rejection_reason" customtext
-                                               , sqlField "rejection_signatory_link_id" slid
-                                               , sqlLogAppend time ("Document rejected")
-                                               ]
-                                               "WHERE id = ?" [toSql docid]
-              getOneDocumentAffected "RejectDocument" r docid
+          [] -> do
+            r <- kRun $ mkQuery UPDATE tableDocuments [
+                sql "status" Rejected
+              , sql "mtime" time
+              , sql "rejection_time" time
+              , sql "rejection_reason" customtext
+              , sql "rejection_signatory_link_id" slid
+              , sqlLog time "Document rejected"
+              ] `mappend` SQL "WHERE id = ?" [toSql docid]
+            getOneDocumentAffected "RejectDocument" r docid
           s -> return $ Left $ "Cannot RejectDocument document " ++ show docid ++ " because " ++ concat s
 
 data RestartDocument = RestartDocument Document User MinutesTime IPAddress
@@ -1508,20 +1437,16 @@ data RestoreArchivedDocument = RestoreArchivedDocument User DocumentID
 instance DBUpdate RestoreArchivedDocument (Either String Document) where
   dbUpdate (RestoreArchivedDocument user did) = do
     r <- case (usercompany user, useriscompanyadmin user) of
-           (Just cid, True) ->
-             runUpdateOnRestorableDoc "WHERE company_id = ?" [toSql cid]
-           _ ->
-             runUpdateOnRestorableDoc "WHERE user_id = ?" [toSql $ userid user]
+      (Just cid, True) -> updateRestorableDoc $ SQL "WHERE company_id = ?" [toSql cid]
+      _ -> updateRestorableDoc $ SQL "WHERE user_id = ?" [toSql $ userid user]
     getOneDocumentAffected "RestoreArchivedDocument" r did
     where
-      runUpdateOnRestorableDoc whereClause whereFields =
-        runUpdateStatement "signatory_links"
-                          [sqlField "deleted" False]
-                          (whereClause ++ " AND document_id = ? AND really_deleted = FALSE AND EXISTS (SELECT * FROM documents WHERE id = ?)")
-                          (whereFields ++
-                              [ toSql did
-                              , toSql did
-                              ])
+      updateRestorableDoc whereClause = kRun $ mconcat [
+          mkQuery UPDATE tableSignatoryLinks [sql "deleted" False]
+        , whereClause
+        , SQL " AND document_id = ? AND really_deleted = FALSE" [toSql did]
+        ]
+
 {- |
     Links up a signatory link to a user account.  This should happen when
       \1. a document moves from preparation to pending more
@@ -1532,14 +1457,13 @@ data SaveDocumentForUser = SaveDocumentForUser DocumentID User SignatoryLinkID
                            deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SaveDocumentForUser (Either String Document) where
   dbUpdate (SaveDocumentForUser did User{userid, usercompany} slid) = do
-    r <- runUpdateStatement "signatory_links"
-                          [ sqlField "user_id" userid
-                          , sqlField "company_id" usercompany
-                          ]
-                          ("WHERE document_id = ? AND id = ?")
-                          [ toSql did
-                          , toSql slid
-                          ]
+    r <- kRun $ mkQuery UPDATE tableSignatoryLinks [
+        sql "user_id" userid
+      , sql "company_id" usercompany
+      ] `mappend` SQL "WHERE document_id = ? AND id = ?" [
+        toSql did
+      , toSql slid
+      ]
     getOneDocumentAffected "SaveDocumentForUser" r did
 
 {- |
@@ -1551,205 +1475,178 @@ data SaveSigAttachment = SaveSigAttachment DocumentID BS.ByteString BS.ByteStrin
                          deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SaveSigAttachment (Either String Document) where
   dbUpdate (SaveSigAttachment did name email fid) = do
-    r <- runUpdateStatement "signatory_attachments"
-                         [ sqlField "file_id" fid
-                         ]
-                         "WHERE document_id = ? AND email = ? AND file_id IS NULL AND name = ? "
-                         [ toSql did
-                         , toSql email
-                         , toSql name
-                         ]
+    r <- kRun $ mkQuery UPDATE tableSignatoryAttachments [sql "file_id" fid]
+      `mappend` SQL "WHERE document_id = ? AND email = ? AND file_id IS NULL AND name = ? " [
+        toSql did
+      , toSql email
+      , toSql name
+      ]
     getOneDocumentAffected "SaveSigAttachment" r did
-
 
 data SetDocumentTags = SetDocumentTags DocumentID [DocumentTag]
                        deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentTags (Either String Document) where
   dbUpdate (SetDocumentTags did doctags) = do
-    r <- runUpdateStatement "documents"
-         [ sqlField "tags" $ doctags
-         -- , sqlField "mtime" time
-         ]
-         "WHERE id = ?" [ toSql did ]
+    r <- kRun $ mkQuery UPDATE tableDocuments [sql "tags" doctags]
+      `mappend` SQL "WHERE id = ?" [toSql did]
     getOneDocumentAffected "SetDocumentTags" r did
 
 data SetDocumentInviteTime = SetDocumentInviteTime DocumentID MinutesTime IPAddress
                        deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentInviteTime (Either String Document) where
   dbUpdate (SetDocumentInviteTime did invitetime ipaddress) = do
-    r <- runUpdateStatement "documents"
-         [ sqlField "invite_time" invitetime,
-           sqlField "invite_ip" ipaddress
-         ]
-         "WHERE id = ?" [ toSql did ]
+    r <- kRun $ mkQuery UPDATE tableDocuments [
+        sql "invite_time" invitetime
+      , sql "invite_ip" ipaddress
+      ] `mappend` SQL "WHERE id = ?" [toSql did]
     getOneDocumentAffected "SetDocumentInviteTime" r did
-
 
 data SetDocumentTimeoutTime = SetDocumentTimeoutTime DocumentID MinutesTime
                               deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentTimeoutTime (Either String Document) where
   dbUpdate (SetDocumentTimeoutTime did timeouttime) = do
-    r <- runUpdateStatement "documents"
-                         [ sqlField "timeout_time" timeouttime
-                         ]
-                         "WHERE id = ? AND deleted = FALSE AND type = ?"
-                         [ toSql did
-                         , toSql $ Signable undefined
-                         ]
+    r <- kRun $ mkQuery UPDATE tableDocuments [sql "timeout_time" timeouttime]
+      `mappend` SQL "WHERE id = ? AND deleted = FALSE AND type = ?" [
+        toSql did
+      , toSql $ Signable undefined
+      ]
     getOneDocumentAffected "SetDocumentTimeoutTime" r did
 
 data SetSignatoryCompany = SetSignatoryCompany DocumentID SignatoryLinkID CompanyID
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetSignatoryCompany (Either String Document) where
   dbUpdate (SetSignatoryCompany did slid cid) = do
-    r <- runUpdateStatement "signatory_links"
-                         [ sqlField "company_id" cid
-                         ]
-                         "WHERE id = ? AND document_id = ?"
-                         [ toSql slid
-                         , toSql did
-                         ]
+    r <- kRun $ mkQuery UPDATE tableSignatoryLinks [sql "company_id" cid]
+      `mappend` SQL "WHERE id = ? AND document_id = ?" [
+        toSql slid
+      , toSql did
+      ]
     getOneDocumentAffected "SetSignatoryCompany" r did
 
 data RemoveSignatoryCompany = RemoveSignatoryCompany DocumentID SignatoryLinkID
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate RemoveSignatoryCompany (Either String Document) where
   dbUpdate (RemoveSignatoryCompany did slid) = do
-    r <- runUpdateStatement "signatory_links"
-                         [ sqlField "company_id" SqlNull
-                         ]
-                         "WHERE id = ? AND document_id = ?"
-                         [ toSql slid
-                         , toSql did
-                         ]
+    r <- kRun $ mkQuery UPDATE tableSignatoryLinks [sql "company_id" SqlNull]
+      `mappend` SQL "WHERE id = ? AND document_id = ?" [
+        toSql slid
+      , toSql did
+      ]
     getOneDocumentAffected "RemoveSignatoryCompany" r did
 
 data SetSignatoryUser = SetSignatoryUser DocumentID SignatoryLinkID UserID
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetSignatoryUser (Either String Document) where
   dbUpdate (SetSignatoryUser did slid uid) = do
-    r <- runUpdateStatement "signatory_links"
-                         [ sqlField "user_id" uid
-                         ]
-                         "WHERE id = ? AND document_id = ?"
-                         [ toSql slid
-                         , toSql did
-                         ]
+    r <- kRun $ mkQuery UPDATE tableSignatoryLinks [sql "user_id" uid]
+      `mappend` SQL "WHERE id = ? AND document_id = ?" [
+        toSql slid
+      , toSql did
+      ]
     getOneDocumentAffected "SetSignatoryUser" r did
 
 data RemoveSignatoryUser = RemoveSignatoryUser DocumentID SignatoryLinkID
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate RemoveSignatoryUser (Either String Document) where
   dbUpdate (RemoveSignatoryUser did slid) = do
-    r <- runUpdateStatement "signatory_links"
-                         [ sqlField "user_id" SqlNull
-                         ]
-                         "WHERE id = ? AND document_id = ?"
-                         [ toSql slid
-                         , toSql did
-                         ]
+    r <- kRun $ mkQuery UPDATE tableSignatoryLinks [sql "user_id" SqlNull]
+      `mappend` SQL "WHERE id = ? AND document_id = ?" [
+        toSql slid
+      , toSql did
+      ]
     getOneDocumentAffected "RemoveSignatoryUser" r did
 
 data SetInviteText = SetInviteText DocumentID BS.ByteString MinutesTime
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetInviteText (Either String Document) where
   dbUpdate (SetInviteText did text time) = do
-    r <- runUpdateStatement "documents"
-         [ sqlField "invite_text" $ text
-         , sqlField "mtime" time
-         , sqlLogAppend time ("Invite text set")
-         ]
-         "WHERE id = ?" [ toSql did ]
+    r <- kRun $ mkQuery UPDATE tableDocuments [
+        sql "invite_text" text
+      , sql "mtime" time
+      , sqlLog time "Invite text set"
+      ] `mappend` SQL "WHERE id = ?" [toSql did]
     getOneDocumentAffected "SetInviteText" r did
 
 data SetDaysToSign = SetDaysToSign DocumentID Int MinutesTime
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDaysToSign (Either String Document) where
   dbUpdate (SetDaysToSign did days time) = do
-    r <- runUpdateStatement "documents"
-         [ sqlField "days_to_sign" $ days
-         , sqlField "mtime" time
-         , sqlLogAppend time ("Days to sign set to " ++ show days)
-         ]
-         "WHERE id = ?" [ toSql did ]
+    r <- kRun $ mkQuery UPDATE tableDocuments [
+        sql "days_to_sign" days
+      , sql "mtime" time
+      , sqlLog time $ "Days to sign set to " ++ show days
+      ] `mappend` SQL "WHERE id = ?" [toSql did]
     getOneDocumentAffected "SetDaysToSign" r did
 
 data RemoveDaysToSign = RemoveDaysToSign DocumentID MinutesTime
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate RemoveDaysToSign (Either String Document) where
   dbUpdate (RemoveDaysToSign did time) = do
-    r <- runUpdateStatement "documents"
-         [ sqlField "days_to_sign" $ SqlNull
-         , sqlField "mtime" time
-         , sqlLogAppend time ("Removed days to sign")
-         ]
-         "WHERE id = ?" [ toSql did ]
+    r <- kRun $ mkQuery UPDATE tableDocuments [
+        sql "days_to_sign" SqlNull
+      , sql "mtime" time
+      , sqlLog time "Removed days to sign"
+      ] `mappend` SQL "WHERE id = ?" [toSql did]
     getOneDocumentAffected "RemoveDaysToSign" r did
 
 data SetDocumentAdvancedFunctionality = SetDocumentAdvancedFunctionality DocumentID MinutesTime
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentAdvancedFunctionality (Either String Document) where
   dbUpdate (SetDocumentAdvancedFunctionality did time) = do
-    r <- runUpdateStatement "documents"
-         [ sqlField "functionality" AdvancedFunctionality
-         , sqlField "mtime" time
-         , sqlLogAppend time ("Document changed to advanced functionality")
-         ]
-         "WHERE id = ? AND functionality <> ?" [ toSql did, toSql AdvancedFunctionality ]
+    r <- kRun $ mkQuery UPDATE tableDocuments [
+        sql "functionality" AdvancedFunctionality
+      , sql "mtime" time
+      , sqlLog time "Document changed to advanced functionality"
+      ] `mappend` SQL "WHERE id = ? AND functionality <> ?" [
+        toSql did
+      , toSql AdvancedFunctionality
+      ]
     getOneDocumentAffected "SetDocumentAdvancedFunctionality" r did
-
 
 data SetDocumentTitle = SetDocumentTitle DocumentID BS.ByteString MinutesTime
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentTitle (Either String Document) where
   dbUpdate (SetDocumentTitle did doctitle time) = do
-    r <- runUpdateStatement "documents"
-         [ sqlField "title" $ doctitle
-         , sqlField "mtime" time
-         , sqlLogAppend time ("Document title changed")
-         ]
-         "WHERE id = ?" [ toSql did ]
+    r <- kRun $ mkQuery UPDATE tableDocuments [
+        sql "title" doctitle
+      , sql "mtime" time
+      , sqlLog time "Document title changed"
+      ] `mappend` SQL "WHERE id = ?" [toSql did]
     getOneDocumentAffected "SetDocumentTitle" r did
 
 data SetDocumentLocale = SetDocumentLocale DocumentID Locale MinutesTime
                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentLocale (Either String Document) where
   dbUpdate (SetDocumentLocale did locale time) = do
-    r <- runUpdateStatement "documents"
-         [ sqlField "region" $ getRegion locale
-         , sqlField "mtime" time
-         , sqlLogAppend time ("Document locale changed")
-         ]
-         "WHERE id = ?" [ toSql did ]
+    r <- kRun $ mkQuery UPDATE tableDocuments [
+        sql "region" $ getRegion locale
+      , sql "mtime" time
+      , sqlLog time "Document locale changed"
+      ] `mappend` SQL "WHERE id = ?" [toSql did]
     getOneDocumentAffected "SetDocumentLocale" r did
 
 data SetDocumentUI = SetDocumentUI DocumentID DocumentUI
                      deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentUI (Either String Document) where
   dbUpdate (SetDocumentUI did documentui) = do
-    r <- runUpdateStatement "documents"
-         [ sqlField "mail_footer" $ documentmailfooter documentui
-         -- , sqlField "mtime" time
-         ]
-         "WHERE id = ?" [ toSql did ]
+    r <- kRun $ mkQuery UPDATE tableDocuments [
+        sql "mail_footer" $ documentmailfooter documentui
+      ] `mappend` SQL "WHERE id = ?" [toSql did]
     getOneDocumentAffected "SetDocumentUI" r did
-
 
 data SetInvitationDeliveryStatus = SetInvitationDeliveryStatus DocumentID SignatoryLinkID MailsDeliveryStatus
                                    deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetInvitationDeliveryStatus (Either String Document) where
   dbUpdate (SetInvitationDeliveryStatus did slid status) = do
-    r <- runUpdateStatement "signatory_links"
-                         [ sqlField "invitation_delivery_status" status
-                         ]
-                         "WHERE id = ? AND document_id = ? AND EXISTS (SELECT * FROM documents WHERE id = ? AND type = ?)"
-                         [ toSql slid
-                         , toSql did
-                         , toSql did
-                         , toSql $ Signable undefined
-                         ]
+    r <- kRun $ mkQuery UPDATE tableSignatoryLinks [
+        sql "invitation_delivery_status" status
+      ] `mappend` SQL "WHERE id = ? AND document_id = ? AND EXISTS (SELECT 1 FROM documents WHERE id = ? AND type = ?)" [
+        toSql slid
+      , toSql did
+      , toSql did
+      , toSql $ Signable undefined
+      ]
     getOneDocumentAffected "SetInvitationDeliveryStatus" r did
-
 
 data SignDocument = SignDocument DocumentID SignatoryLinkID MagicHash MinutesTime IPAddress (Maybe SignatureInfo)
                     deriving (Eq, Ord, Show, Typeable)
@@ -1761,20 +1658,20 @@ instance DBUpdate SignDocument (Either String Document) where
       Just document ->
         case checkSignDocument document slid mh of
           [] -> do
-            r <- runUpdateStatement "signatory_links"
-                      [ sqlField "sign_ip" $ ipnumber
-                      , sqlField "sign_time" time
-                      , sqlField "signinfo_text" $ signatureinfotext `fmap` msiginfo
-                      , sqlField "signinfo_signature" $ signatureinfosignature `fmap` msiginfo
-                      , sqlField "signinfo_certificate" $ signatureinfocertificate `fmap` msiginfo
-                      , sqlField "signinfo_provider" $ signatureinfoprovider `fmap` msiginfo
-                      , sqlField "signinfo_first_name_verified" $ signaturefstnameverified `fmap` msiginfo
-                      , sqlField "signinfo_last_name_verified" $ signaturelstnameverified `fmap` msiginfo
-                      , sqlField "signinfo_personal_number_verified" $ signaturepersnumverified `fmap` msiginfo
-                 ]
-                "WHERE id = ? AND document_id = ?" [ toSql slid
-                                                   , toSql docid
-                                                   ]
+            r <- kRun $ mkQuery UPDATE tableSignatoryLinks [
+                sql "sign_ip" ipnumber
+              , sql "sign_time" time
+              , sql "signinfo_text" $ signatureinfotext `fmap` msiginfo
+              , sql "signinfo_signature" $ signatureinfosignature `fmap` msiginfo
+              , sql "signinfo_certificate" $ signatureinfocertificate `fmap` msiginfo
+              , sql "signinfo_provider" $ signatureinfoprovider `fmap` msiginfo
+              , sql "signinfo_first_name_verified" $ signaturefstnameverified `fmap` msiginfo
+              , sql "signinfo_last_name_verified" $ signaturelstnameverified `fmap` msiginfo
+              , sql "signinfo_personal_number_verified" $ signaturepersnumverified `fmap` msiginfo
+              ] `mappend` SQL "WHERE id = ? AND document_id = ?" [
+                toSql slid
+              , toSql docid
+              ]
             getOneDocumentAffected "SignDocument" r docid
           s -> return $ Left $ "Cannot SignDocument document " ++ show docid ++ " because " ++ concat s
 
@@ -1834,7 +1731,7 @@ data SignLinkFromDetailsForTest = SignLinkFromDetailsForTest SignatoryDetails [S
                                   deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SignLinkFromDetailsForTest SignatoryLink where
   dbUpdate (SignLinkFromDetailsForTest details roles) = do
-      wrapDB $ \conn -> runRaw conn "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
+      kRunRaw "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
       linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
 
       magichash <- liftIO randomIO
@@ -1862,13 +1759,12 @@ instance DBUpdate SignableFromDocumentIDWithUpdatedAuthor (Either String Documen
             | isAuthor sl = replaceSignatoryUser sl user mcompany
             | otherwise = sl
 
-
 data StoreDocumentForTesting = StoreDocumentForTesting Document
                                deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate StoreDocumentForTesting DocumentID where
   dbUpdate (StoreDocumentForTesting document) = do
     -- FIXME: this requires more thinking...
-    wrapDB $ \conn -> runRaw conn "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
+    kRunRaw "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
     did <- DocumentID <$> getUniqueID tableDocuments
     Just doc <- insertDocumentAsIs (document { documentid = did })
     return (documentid doc)
@@ -1882,53 +1778,48 @@ data TemplateFromDocument = TemplateFromDocument DocumentID
                             deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate TemplateFromDocument (Either String Document) where
   dbUpdate (TemplateFromDocument did) = do
-    r <- runUpdateStatement "documents"
-         [ sqlField "status" Preparation
-         , sqlField "type" $ Template undefined
-         ]
-         "WHERE id = ?" [ toSql did ]
+    r <- kRun $ mkQuery UPDATE tableDocuments [
+        sql "status" Preparation
+      , sql "type" $ Template undefined
+      ] `mappend` SQL "WHERE id = ?" [toSql did]
     getOneDocumentAffected "TemplateFromDocument" r did
-
 
 data TimeoutDocument = TimeoutDocument DocumentID MinutesTime
                        deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate TimeoutDocument (Either String Document) where
   dbUpdate (TimeoutDocument did time) = do
-    r <- runUpdateStatement "documents"
-         [ sqlField "status" $ Timedout
-         , sqlField "mtime" time
-         , sqlLogAppend time ("Document timed out")
-         ]
-         "WHERE id = ? AND type = ? AND status = ?" [ toSql did
-                                                    , toSql $ Signable undefined
-                                                    , toSql Pending
-                                                    ]
+    r <- kRun $ mkQuery UPDATE tableDocuments [
+        sql "status" Timedout
+      , sql "mtime" time
+      , sqlLog time "Document timed out"
+      ] `mappend` SQL "WHERE id = ? AND type = ? AND status = ?" [
+        toSql did
+      , toSql $ Signable undefined
+      , toSql Pending
+      ]
     getOneDocumentAffected "TimeoutDocument" r did
 
 data SetEmailIdentification = SetEmailIdentification DocumentID MinutesTime
                       deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetEmailIdentification (Either String Document) where
   dbUpdate (SetEmailIdentification did time) = do
-    r <- runUpdateStatement "documents"
-         [ sqlField "allowed_id_types" $ [EmailIdentification]
-         , sqlField "mtime" time
-         , sqlLogAppend time ("Email identification set")
-         ]
-         "WHERE id = ?" [ toSql did ]
+    r <- kRun $ mkQuery UPDATE tableDocuments [
+        sql "allowed_id_types" $ [EmailIdentification]
+      , sql "mtime" time
+      , sqlLog time "Email identification set"
+      ] `mappend` SQL "WHERE id = ?" [toSql did]
     getOneDocumentAffected "SetEmailIdentification" r did
 
 data SetElegitimationIdentification = SetElegitimationIdentification DocumentID MinutesTime
                       deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetElegitimationIdentification (Either String Document) where
   dbUpdate (SetElegitimationIdentification did time) = do
-    r <- runUpdateStatement "documents"
-         [ sqlField "allowed_id_types" $ [ELegitimationIdentification]
-         , sqlField "mtime" time
-         , sqlLogAppend time ("E-leg identification set")
-         ]
-         "WHERE id = ?" [ toSql did ]
+    r <- kRun $ mkQuery UPDATE tableDocuments [
+        sql "allowed_id_types" $ [ELegitimationIdentification]
+      , sql "mtime" time
+      , sqlLog time "E-leg identification set"
+      ] `mappend` SQL "WHERE id = ?" [toSql did]
     getOneDocumentAffected "SetElegitimationIdentification" r did
-
 
 data UpdateFields  = UpdateFields DocumentID SignatoryLinkID [(BS.ByteString, BS.ByteString)]
                       deriving (Eq, Ord, Show, Typeable)
@@ -1952,19 +1843,15 @@ instance DBUpdate UpdateFields (Either String Document) where
       let signlinks = documentsignatorylinks document
           Just sl = find ((== slid) . signatorylinkid) signlinks
 
-      r <- runUpdateStatement "signatory_links"
-                       [ sqlField "fields" $ map updateSigField $ signatoryfields $ signatorydetails sl
-                       ]
-                       ("WHERE EXISTS (SELECT * FROM documents WHERE documents.id = signatory_links.document_id AND (documents.status = ? OR documents.status = ?))" ++
-                        " AND document_id = ? " ++
-                        " AND id = ? ")
-                       [ toSql Pending, toSql AwaitingAuthor
-                       , toSql did
-                       , toSql slid
-                       ]
-
-      getOneDocumentAffected "ChangeSignatoryEmailWhenUndelivered" r did
-
+      r <- kRun $ mkQuery UPDATE tableSignatoryLinks [
+          sql "fields" $ map updateSigField $ signatoryfields $ signatorydetails sl
+        ] `mappend` SQL "WHERE EXISTS (SELECT 1 FROM documents WHERE documents.id = signatory_links.document_id AND (documents.status = ? OR documents.status = ?)) AND document_id = ? AND id = ? " [
+          toSql Pending
+        , toSql AwaitingAuthor
+        , toSql did
+        , toSql slid
+        ]
+      getOneDocumentAffected "UpdateFields" r did
     s -> return $ Left $ "Cannot updateFields on document " ++ show did ++ " because " ++ concat s
 
 data PendingToAwaitingAuthor = PendingToAwaitingAuthor DocumentID MinutesTime
@@ -1977,74 +1864,66 @@ instance DBUpdate PendingToAwaitingAuthor (Either String Document) where
       Just document ->
         case checkPendingToAwaitingAuthor document of
           [] -> do
-            r <- runUpdateStatement "documents"
-                 [ sqlField "status" $ AwaitingAuthor
-                 , sqlField "mtime" time
-                 , sqlLogAppend time ("Changed to AwaitingAuthor status")
-                 ]
-                "WHERE id = ? AND type = ?" [ toSql docid, toSql $ Signable undefined ]
+            r <- kRun $ mkQuery UPDATE tableDocuments [
+                sql "status" AwaitingAuthor
+              , sql "mtime" time
+              , sqlLog time "Changed to AwaitingAuthor status"
+              ] `mappend` SQL "WHERE id = ? AND type = ?" [
+                toSql docid
+              , toSql $ Signable undefined
+              ]
             getOneDocumentAffected "PendingToAwaitingAuthor" r docid
-
-            -- return $ Right $ document { documentstatus = Closed
-            --                          , documentmtime  = time
-            --                          } `appendHistory` [DocumentHistoryClosed time ipaddress]
           s -> return $ Left $ "Cannot PendingToAwaitingAuthor document " ++ show docid ++ " because " ++ concat s
-
-
 
 data AddDocumentAttachment = AddDocumentAttachment DocumentID FileID
                                  deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate AddDocumentAttachment (Either String Document) where
   dbUpdate (AddDocumentAttachment did fid) = do
-            r <- wrapDB $ \conn -> do
-                   run conn ("INSERT INTO author_attachments(document_id, file_id) (SELECT ?, ? WHERE" ++
-                         " EXISTS (SELECT TRUE FROM documents WHERE id = ? AND status = ?))")
-                      [ toSql did
-                      , toSql fid
-                      , toSql did
-                      , toSql Preparation
-                      ]
-            getOneDocumentAffected "AddDocumentAttachment" r did
+    r <- kRun $ mkQuery INSERT tableAuthorAttachments [
+        sql "document_id" did
+      , sql "file_id" fid
+      ] `mappend` SQL "WHERE EXISTS (SELECT 1 FROM documents WHERE id = ? AND status = ?)" [
+        toSql did
+      , toSql Preparation
+      ]
+    getOneDocumentAffected "AddDocumentAttachment" r did
 
 data RemoveDocumentAttachment = RemoveDocumentAttachment DocumentID FileID
                                  deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate RemoveDocumentAttachment (Either String Document) where
   dbUpdate (RemoveDocumentAttachment did fid) = do
-            r <- wrapDB $ \conn -> run conn "DELETE FROM author_attachments WHERE document_id = ? AND file_id = ? AND EXISTS (SELECT TRUE FROM documents WHERE id = ? AND status = ?)"
-                      [ toSql did
-                      , toSql fid
-                      , toSql did
-                      , toSql Preparation
-                      ]
-            m <- dbQuery $ GetDocumentByDocumentID did
-            case m of
-              Just doc -> case documentstatus doc of
-                            Preparation -> return $ Right doc
-                            _ -> return $ Left "bad document status"
-              Nothing -> return $ Left "no such document"
+    kPrepare "DELETE FROM author_attachments WHERE document_id = ? AND file_id = ? AND EXISTS (SELECT 1 FROM documents WHERE id = ? AND status = ?)"
+    r <- kExecute [
+        toSql did
+      , toSql fid
+      , toSql did
+      , toSql Preparation
+      ]
+    m <- dbQuery $ GetDocumentByDocumentID did
+    case m of
+      Just doc -> case documentstatus doc of
+                       Preparation -> return $ Right doc
+                       _ -> return $ Left "bad document status"
+      Nothing -> return $ Left "no such document"
 
 
 data UpdateSigAttachments = UpdateSigAttachments DocumentID [SignatoryAttachment] MinutesTime
                             deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate UpdateSigAttachments (Either String Document) where
   dbUpdate (UpdateSigAttachments did sigatts time) = do
-    wrapDB $ \conn -> run conn "DELETE FROM signatory_attachments WHERE document_id = ?" [toSql did]
-    flip mapM sigatts doInsert
+    _ <- kRun $ SQL "DELETE FROM signatory_attachments WHERE document_id = ?" [toSql did]
+    forM_ sigatts doInsert
     getOneDocumentAffected "UpdateSigAttachments" 1 did
     where
-         doInsert (SignatoryAttachment { signatoryattachmentfile
-                                       , signatoryattachmentemail
-                                       , signatoryattachmentname
-                                       , signatoryattachmentdescription
-                                       }) = do
-           r <- runInsertStatement "signatory_attachments"
-                [ sqlField "file_id" $ signatoryattachmentfile
-                , sqlField "email" $ signatoryattachmentemail
-                , sqlField "name" $ signatoryattachmentname
-                , sqlField "description" $ signatoryattachmentdescription
-                , sqlField "document_id" $ did
-                ]
-           return r
+      doInsert SignatoryAttachment{..} = do
+        r <- kRun $ mkQuery INSERT tableSignatoryAttachments [
+            sql "file_id" signatoryattachmentfile
+          , sql "email" signatoryattachmentemail
+          , sql "name" signatoryattachmentname
+          , sql "description" signatoryattachmentdescription
+          , sql "document_id" did
+          ]
+        return r
 
 -- For users lists in adminonly
 selectUsersAndStatsSQL :: String
@@ -2272,8 +2151,7 @@ data SetDocumentModificationData = SetDocumentModificationData DocumentID Minute
                       deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentModificationData (Either String Document) where
   dbUpdate (SetDocumentModificationData did time) = do
-    r <- runUpdateStatement "documents"
-         [ sqlField "mtime" time]
-         "WHERE id = ?" [ toSql did ]
+    r <- kRun $ mkQuery UPDATE tableDocuments [sql "mtime" time]
+      `mappend` SQL "WHERE id = ?" [toSql did]
     getOneDocumentAffected "SetDocumentModificationData" r did
 
