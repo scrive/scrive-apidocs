@@ -168,7 +168,7 @@ tableSignatoryAttachments = Table {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = Table {
     tblName = "signatory_links"
-  , tblVersion = 2
+  , tblVersion = 3
   , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
     case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -197,8 +197,10 @@ tableSignatoryLinks = Table {
        , ("csv_title", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("csv_contents", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("csv_signatory_index", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
+       , ("internal_insert_order", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
+        runRaw conn $ "CREATE SEQUENCE signatory_links_internal_insert_order_seq"
         runRaw conn $ "CREATE TABLE signatory_links"
           ++ "( id BIGINT NOT NULL"
           ++ ", document_id BIGINT NOT NULL"
@@ -226,6 +228,7 @@ tableSignatoryLinks = Table {
           ++ ", csv_title TEXT NULL"
           ++ ", csv_contents TEXT NULL"
           ++ ", csv_signatory_index INTEGER NULL"
+          ++ ", internal_insert_order BIGINT NOT NULL DEFAULT nextval('signatory_links_internal_insert_order_seq')"
           ++ ", CONSTRAINT pk_signatory_links PRIMARY KEY (id, document_id)"
           ++ ")"
         return TVRcreated
@@ -233,6 +236,7 @@ tableSignatoryLinks = Table {
   , tblPutProperties = wrapDB $ \conn -> do
     runRaw conn $ "CREATE INDEX idx_signatory_links_user_id ON signatory_links(user_id)"
     runRaw conn $ "CREATE INDEX idx_signatory_links_company_id ON signatory_links(company_id)"
+    runRaw conn $ "CREATE INDEX idx_signatory_links_internal_insert_order ON signatory_links(internal_insert_order)"
     runRaw conn $ "ALTER TABLE signatory_links"
       ++ " ADD CONSTRAINT fk_signatory_links_document_id FOREIGN KEY(document_id)"
       ++ " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"

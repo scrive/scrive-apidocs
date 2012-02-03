@@ -11,17 +11,12 @@ module User.UserView (
     newUserMail,
     viralInviteMail,
     mailNewAccountCreatedByAdmin,
-    mailAccountCreatedBySigningContractReminder,
-    mailAccountCreatedBySigningOfferReminder,
-    mailAccountCreatedBySigningOrderReminder,
     resetPasswordMail,
     mailRequestChangeEmail,
 
     -- modals
     modalWelcomeToSkrivaPa,
     modalAccountSetup,
-    modalAccountRemoval,
-    modalAccountRemoved,
     modalDoYouWantToChangeEmail,
 
     -- flash messages
@@ -260,14 +255,13 @@ resetPasswordMail hostname user setpasslink = do
     field "passwordlink" $ show setpasslink
     field "ctxhostpart"  $ hostname
 
-newUserMail :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> Bool -> m Mail
-newUserMail hostpart emailaddress personname activatelink vip = do
+newUserMail :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
+newUserMail hostpart emailaddress personname activatelink = do
   kontramail "newUserMail" $ do
     field "personname"   $ BS.toString personname
     field "email"        $ BS.toString emailaddress
     field "activatelink" $ show activatelink
     field "ctxhostpart"  $ hostpart
-    field "vip"            vip
 
 viralInviteMail :: TemplatesMonad m => Context -> BS.ByteString -> KontraLink -> m Mail
 viralInviteMail ctx invitedemail setpasslink = do
@@ -288,27 +282,6 @@ mailNewAccountCreatedByAdmin ctx locale personname email setpasslink custommessa
     field "creatorname"   $ BS.toString $ maybe BS.empty getSmartName (ctxmaybeuser ctx)
     field "ctxhostpart"   $ ctxhostpart ctx
     field "custommessage"   custommessage
-
-mailAccountCreatedBySigningContractReminder :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
-mailAccountCreatedBySigningContractReminder =
-    mailAccountCreatedBySigning' "mailAccountBySigningContractReminder"
-
-mailAccountCreatedBySigningOfferReminder :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
-mailAccountCreatedBySigningOfferReminder =
-    mailAccountCreatedBySigning' "mailAccountBySigningOfferReminder"
-
-
-mailAccountCreatedBySigningOrderReminder :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
-mailAccountCreatedBySigningOrderReminder =
-    mailAccountCreatedBySigning' "mailAccountBySigningOrderReminder"
-
-mailAccountCreatedBySigning' :: TemplatesMonad m => String -> String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
-mailAccountCreatedBySigning' mail_template hostpart doctitle personname activationlink = do
-   kontramail mail_template $ do
-        field "personname"     $ BS.toString personname
-        field "ctxhostpart"    $ hostpart
-        field "documenttitle"  $ BS.toString doctitle
-        field "activationlink" $ show activationlink
 
 mailRequestChangeEmail :: (TemplatesMonad m, HasSomeUserInfo a) => String -> a -> Email -> KontraLink -> m Mail
 mailRequestChangeEmail hostpart user newemail link = do
@@ -331,18 +304,6 @@ modalAccountSetup signuplink fstname sndname = do
     [ ("signuplink", show signuplink)
     , ("fstname", fstname)
     , ("sndname", sndname) ]
-
-modalAccountRemoval :: TemplatesMonad m => BS.ByteString -> KontraLink -> KontraLink -> m FlashMessage
-modalAccountRemoval doctitle activationlink removallink = do
-    toModal <$> (renderTemplateFM "modalAccountRemoval" $ do
-        field "documenttitle"  $ BS.toString doctitle
-        field "activationlink" $ show activationlink
-        field "removallink"    $ show removallink)
-
-modalAccountRemoved :: TemplatesMonad m => BS.ByteString -> m FlashMessage
-modalAccountRemoved doctitle = do
-    toModal <$> (renderTemplateFM "modalAccountRemoved" $ do
-        field "documenttitle"  $ BS.toString doctitle)
 
 modalDoYouWantToChangeEmail :: TemplatesMonad m => Email -> m FlashMessage
 modalDoYouWantToChangeEmail newemail = do

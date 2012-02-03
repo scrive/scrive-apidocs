@@ -3,7 +3,7 @@ module StatsTest (statsTests) where
 
 import DB.Classes
 import User.Model
-import Doc.Transitory
+import Doc.Model
 import Doc.DocUtils
 import Doc.DocStateData
 import Misc
@@ -14,14 +14,13 @@ import Company.Model
 import MinutesTime
 import Test.HUnit.Base (Assertion)
 
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import Control.Monad
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 import Stats.Control
 import Stats.Model
 import StateHelper
-import Mails.MailsUtil
 
 import qualified Data.ByteString.UTF8 as BS
 
@@ -32,7 +31,7 @@ import Data.Ix
 
 import Data.Maybe
 
-statsTests :: Connection -> Test
+statsTests :: Nexus -> Test
 statsTests conn = testGroup "Stats" 
   [
     testCase "test invite stat"                  $ testInviteStat       conn                        
@@ -46,7 +45,7 @@ statsTests conn = testGroup "Stats"
   , testCase "test time efficiency of userstats" $ testGetUsersAndStats conn 
   ]
 
-testInviteStat :: Connection -> Assertion
+testInviteStat :: Nexus -> Assertion
 testInviteStat conn = withTestEnvironment conn $ do
   stats' <- dbQuery $ GetSignStatEvents
   assertEqual "Stats should be empty." 0 (length stats')
@@ -65,7 +64,7 @@ testInviteStat conn = withTestEnvironment conn $ do
   assertEqual "Should have saved stat." (length $ documentsignatorylinks doc) (length stats'')
   forM_ stats'' (\s->assertEqual ("Should be Invite stat but was " ++ show (ssQuantity s)) SignStatInvite (ssQuantity s))
 
-testReceiveStat :: Connection -> Assertion
+testReceiveStat :: Nexus -> Assertion
 testReceiveStat conn = withTestEnvironment conn $ do
   stats' <- dbQuery $ GetSignStatEvents
   assertEqual "Stats should be empty." 0 (length stats')
@@ -85,7 +84,7 @@ testReceiveStat conn = withTestEnvironment conn $ do
   assertEqual "Should have saved stat." (length $ documentsignatorylinks doc) (length stats'')
   forM_ stats'' (\s->assertEqual "Wrong stat type" SignStatReceive (ssQuantity s))
 
-testOpenStat :: Connection -> Assertion
+testOpenStat :: Nexus -> Assertion
 testOpenStat conn = withTestEnvironment conn $ do
   stats' <- dbQuery $ GetSignStatEvents
   assertEqual "Stats should be empty." 0 (length stats')
@@ -105,7 +104,7 @@ testOpenStat conn = withTestEnvironment conn $ do
   assertEqual "Should have saved stat." (length $ documentsignatorylinks doc) (length stats'')
   forM_ stats'' (\s->assertEqual "Wrong stat type" SignStatOpen (ssQuantity s))
 
-testLinkStat :: Connection -> Assertion
+testLinkStat :: Nexus -> Assertion
 testLinkStat conn = withTestEnvironment conn $ do
   stats' <- dbQuery $ GetSignStatEvents
   assertEqual "Stats should be empty." 0 (length stats')
@@ -125,7 +124,7 @@ testLinkStat conn = withTestEnvironment conn $ do
   assertEqual "Should have saved stat." (length $ documentsignatorylinks doc) (length stats'')
   forM_ stats'' (\s->assertEqual "Wrong stat type" SignStatLink (ssQuantity s))
 
-testSignStat :: Connection -> Assertion
+testSignStat :: Nexus -> Assertion
 testSignStat conn = withTestEnvironment conn $ do
   stats' <- dbQuery $ GetSignStatEvents
   assertEqual "Stats should be empty." 0 (length stats')
@@ -146,7 +145,7 @@ testSignStat conn = withTestEnvironment conn $ do
   assertEqual "Should have saved stat." (length $ filter isSignatory $ documentsignatorylinks doc) (length stats'')
   forM_ stats'' (\s->assertEqual "Wrong stat type" SignStatSign (ssQuantity s))
 
-testRejectStat :: Connection -> Assertion
+testRejectStat :: Nexus -> Assertion
 testRejectStat conn = withTestEnvironment conn $ do
   stats' <- dbQuery $ GetSignStatEvents
   assertEqual "Stats should be empty." 0 (length stats')
@@ -173,7 +172,7 @@ testRejectStat conn = withTestEnvironment conn $ do
   assertEqual "Should have saved stat." 1 (length stats'')
   forM_ stats'' (\s->assertEqual "Wrong stat type" SignStatReject (ssQuantity s))
 
-testDeleteStat :: Connection -> Assertion
+testDeleteStat :: Nexus -> Assertion
 testDeleteStat conn = withTestEnvironment conn $ do
   stats' <- dbQuery $ GetSignStatEvents
   assertEqual "Stats should be empty." 0 (length stats')
@@ -194,7 +193,7 @@ testDeleteStat conn = withTestEnvironment conn $ do
   assertEqual "Should have saved stat." 1 (length stats'')
   forM_ stats'' (\s->assertEqual "Wrong stat type" SignStatDelete (ssQuantity s))
 
-testPurgeStat :: Connection -> Assertion
+testPurgeStat :: Nexus -> Assertion
 testPurgeStat conn = withTestEnvironment conn $ do
   stats' <- dbQuery $ GetSignStatEvents
   assertEqual "Stats should be empty." 0 (length stats')
@@ -216,7 +215,7 @@ testPurgeStat conn = withTestEnvironment conn $ do
 
 -- tests for old stats
 
-testGetUsersAndStats :: Connection -> Assertion
+testGetUsersAndStats :: Nexus -> Assertion
 testGetUsersAndStats conn = withTestEnvironment conn $ do
   time <- getMinutesTime
   us <- catMaybes <$> (forM (range (0, 100::Int)) $ \i->

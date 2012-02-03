@@ -23,7 +23,6 @@ module ActionSchedulerState (
     , newPasswordReminder
     , newViralInvitationSent
     , newAccountCreated
-    , newAccountCreatedBySigning
     , newRequestEmailChange
     ) where
 
@@ -77,7 +76,7 @@ data ActionType = PasswordReminder {
                 | AccountCreated {
                       acUserID :: UserID
                     , acToken  :: MagicHash
-                }
+                } --AccountCreatedBySigning is no longer needed
                 | AccountCreatedBySigning {
                       acbsState         :: InactiveAccountState
                     , acbsUserID        :: UserID
@@ -294,19 +293,6 @@ newAccountCreated user = do
         , acToken  = hash
     }
     update $ NewAction action $ (24*60) `minutesAfter` now
-
--- | Create new 'account created by signing' action
-newAccountCreatedBySigning :: User -> (DocumentID, SignatoryLinkID) -> IO Action
-newAccountCreatedBySigning user doclinkdata = do
-    hash <- randomIO
-    now <- getMinutesTime
-    let action = AccountCreatedBySigning {
-          acbsState         = NothingSent
-        , acbsUserID        = userid user
-        , acbsDocLinkDataID = doclinkdata
-        , acbsToken         = hash
-    }
-    update $ NewAction action $ (24 * 60) `minutesAfter` now
 
 newRequestEmailChange :: User -> Email -> IO Action
 newRequestEmailChange user newemail = do

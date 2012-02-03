@@ -13,6 +13,8 @@ import qualified Log
 import AppDB
 import DB.Checks
 import DB.Classes
+import DB.Nexus
+import Control.Exception
 
 -- Note: if you add new testsuites here, please add them in a similar
 -- manner to existing ones, i.e. wrap them around ifdefs and add appropriate
@@ -65,6 +67,9 @@ import TrustWeaverTest
 #ifndef NO_USERSTATE
 import UserStateTest
 #endif
+#ifndef NO_USERHISTORY
+import UserHistoryTest
+#endif
 #ifndef NO_CSVUTIL
 import CSVUtilTest
 #endif
@@ -102,7 +107,7 @@ import Doc.TestJSON
 import StatsTest
 #endif
 
-allTests :: Connection -> [(String, [String] -> Test)]
+allTests :: Nexus -> [(String, [String] -> Test)]
 allTests conn = tail tests
   where
     tests = [
@@ -153,6 +158,9 @@ allTests conn = tail tests
 #ifndef NO_USERSTATE
       , ("userstate", const $ userStateTests conn)
 #endif
+#ifndef NO_USERSTATE
+      , ("userhistory", const $ userHistoryTests conn)
+#endif
 #ifndef NO_CSVUTIL
       , ("csvutil", const $ csvUtilTests)
 #endif
@@ -188,7 +196,7 @@ allTests conn = tail tests
 #endif
       ]
 
-testsToRun :: Connection -> [String] -> [Either String Test]
+testsToRun :: Nexus -> [String] -> [Either String Test]
 testsToRun _ [] = []
 testsToRun conn (t:ts)
   | lt == "$" = []
@@ -206,7 +214,19 @@ main = Log.withLogger $ do
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
   pgconf <- readFile "kontrakcja_test.conf"
-  withPostgreSQL pgconf $ \conn -> do
+  withPostgreSQL pgconf $ \conn' -> do
+    conn <- mkNexus conn'
     ioRunDB conn $ performDBChecks Log.debug kontraTables kontraMigrations
     (args, tests) <- partitionEithers . testsToRun conn <$> getArgs
-    defaultMainWithArgs tests args
+
+    -- defaultMainWithArgs does not feel like returning like a normal function
+    -- so have to get around that 'feature'!!
+    bracket_ (return ())
+             (do 
+               stats <- getNexusStats conn
+               putStrLn $ "SQL: queries " ++ show (nexusQueries stats) ++ 
+                          ", params " ++ show (nexusParams stats) ++
+                          ", rows " ++ show (nexusRows stats) ++
+                          ", values " ++ show (nexusValues stats))
+
+             (defaultMainWithArgs tests args)

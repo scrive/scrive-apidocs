@@ -531,14 +531,17 @@ safeReady(function() {
     fixed: false
   });
 
-  $("#docregionselector").change(function() {
-    var val = $("#docregionselector").val();
-    $("#docregionselector option[value=" + val + "]").data("overlay").load();
-    if (val=="REGION_GB") {
-      $("#docregionselector option[value=REGION_SE]").attr("selected", "selected");
-    } else {
-      $("#docregionselector option[value=REGION_GB]").attr("selected", "selected");
-    }
+  $("#docregionselector").change(function(ev) {
+    if (!$("#dialog-confirm-region-gb").is(":visible") &&
+         !$("#dialog-confirm-region-se").is(":visible")) {
+      var val = $("#docregionselector").val();
+      $("#docregionselector option[value=" + val + "]").data("overlay").load();
+      if (val=="REGION_GB") {
+        $("#docregionselector option[value=REGION_SE]").attr("selected", "selected");
+      } else {
+        $("#docregionselector option[value=REGION_GB]").attr("selected", "selected");
+      }
+   }
   });
 });
 
@@ -1723,7 +1726,7 @@ safeReady(function() {
 
 safeReady(function() {
     $(".campaign-play-video").click(function(){
-        window.open('http://player.vimeo.com/video/22397410','','scrollbars=no,menubar=no,height=500,width=700,resizable=yes,toolbar=no,location=no,status=no');
+        window.open('http://player.vimeo.com/video/33833466','','scrollbars=no,menubar=no,height=500,width=700,resizable=yes,toolbar=no,location=no,status=no');
         return false;
     })
 });

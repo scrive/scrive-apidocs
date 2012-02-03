@@ -9,7 +9,6 @@ module Doc.DocView (
   , flashDocumentRestarted
   , flashDocumentTemplateSaved
   , flashMessageAccountActivatedFromSign
-  , flashMessageAccountRemovedFromSign
   , flashMessageRubbishRestoreDone
   , flashMessageRubbishHardDeleteDone
   , flashMessageBulkRemindsSent
@@ -62,7 +61,6 @@ module Doc.DocView (
   , csvLandPage
   ) where
 
-import ActionSchedulerState (ActionID)
 import DB.Types
 import Doc.CSVUtils
 import Doc.DocProcess
@@ -74,7 +72,6 @@ import FlashMessage
 import Kontra
 import KontraLink
 import ListUtil
-import Mails.MailsUtil
 import MinutesTime
 import Misc
 import Templates.Templates
@@ -149,17 +146,17 @@ modalSignedNotClosedHasAccount locale document signatorylink isloggedin = do
     modalSignedFields document
     loginFields locale document signatorylink isloggedin)
 
-modalSignedClosedNoAccount :: TemplatesMonad m => Document -> SignatoryLink -> ActionID -> MagicHash -> m FlashMessage
-modalSignedClosedNoAccount document signatorylink actionid magichash = do
+modalSignedClosedNoAccount :: TemplatesMonad m => Document -> SignatoryLink -> m FlashMessage
+modalSignedClosedNoAccount document signatorylink = do
   toModal <$> (renderTemplateForProcess document processmodalsignedviewclosednoaccount $ do
     modalSignedFields document
-    accountFromSignFields document signatorylink actionid magichash)
+    accountFromSignFields document signatorylink)
 
-modalSignedNotClosedNoAccount :: TemplatesMonad m => Document -> SignatoryLink -> ActionID -> MagicHash -> m FlashMessage
-modalSignedNotClosedNoAccount document signatorylink actionid magichash = do
+modalSignedNotClosedNoAccount :: TemplatesMonad m => Document -> SignatoryLink -> m FlashMessage
+modalSignedNotClosedNoAccount document signatorylink = do
   toModal <$> (renderTemplateForProcess document processmodalsignedviewnotclosednoaccount $ do
     modalSignedFields document
-    accountFromSignFields document signatorylink actionid magichash)
+    accountFromSignFields document signatorylink)
 
 modalSignedFields :: TemplatesMonad m => Document -> Fields m
 modalSignedFields document@Document{ documenttitle } = do
@@ -177,9 +174,9 @@ loginFields locale document signatorylink isloggedin = do
     field "email" $ getEmail signatorylink
     field "linklogin" $ show (LinkLogin locale LoginTry)
 
-accountFromSignFields :: MonadIO m => Document -> SignatoryLink -> ActionID -> MagicHash -> Fields m
-accountFromSignFields document signatorylink actionid magichash = do
-    field "linkaccountfromsign" $ show (LinkAccountFromSign document signatorylink actionid magichash)
+accountFromSignFields :: MonadIO m => Document -> SignatoryLink -> Fields m
+accountFromSignFields document signatorylink = do
+    field "linkaccountfromsign" $ show (LinkAccountFromSign document signatorylink)
 
 flashDocumentDraftSaved :: TemplatesMonad m => m FlashMessage
 flashDocumentDraftSaved =
@@ -266,10 +263,6 @@ flashMessageMultipleAttachmentShareDone =
 flashMessageAccountActivatedFromSign :: TemplatesMonad m => m FlashMessage
 flashMessageAccountActivatedFromSign =
   toFlashMsg OperationDone <$> renderTemplateM "flashMessageAccountActivatedFromSign" ()
-
-flashMessageAccountRemovedFromSign :: TemplatesMonad m => m FlashMessage
-flashMessageAccountRemovedFromSign =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageAccountRemovedFromSign" ()
 
 flashMessageOnlyHaveRightsToViewDoc :: TemplatesMonad m => m FlashMessage
 flashMessageOnlyHaveRightsToViewDoc =

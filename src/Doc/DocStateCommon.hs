@@ -1,44 +1,23 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# LANGUAGE CPP #-}
 
 module Doc.DocStateCommon
 where
 
---import API.Service.Model
 import Company.Model
---import Control.Monad
---import Control.Monad.Reader (ask)
---import Database.HDBC
---import Data.Maybe
---import Data.Word
---import DB.Classes
 import DB.Types
---import DB.Utils
+import Data.Maybe
+import Doc.DocInfo
 import Doc.DocProcess
 import Doc.DocStateData
---import Doc.DocStateUtils
 import Doc.DocUtils
---import Happstack.Data.IxSet as IxSet hiding (null)
---import Happstack.State
-import Mails.MailsUtil
+import InputValidation
 import MinutesTime
 import Misc
 import User.Model
-import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.UTF8 as BS
---import Util.SignatoryLinkUtils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
-import InputValidation
---import Control.Applicative
-import Doc.DocInfo
---import Data.List
---import File.FileID
---import qualified Log
---import qualified Doc.Model as D
---import qualified Doc.Tables as D
-import Data.Maybe
 import Util.SignatoryLinkUtils
+import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.UTF8 as BS
 
                   
 {- |
@@ -288,38 +267,3 @@ checkPendingToAwaitingAuthor doc = catMaybes $
                     ("Not all non-author signatories have signed")
   , trueOrMessage (not $ hasSigned $ getAuthorSigLink doc) "Author has already signed"
   ]
-
-{- |
-    Filter documents according to whether the given indicated sig link has even been deleted.
-    The first param should be True to get the docs which have been deleted,
-    and so would appear in the recycle bin//trash can.  It should be False to get docs which
-    have never been deleted.
--}
-filterDocsWhereDeleted :: (SignatoryLinkIdentity a) => Bool -> a -> [Document] -> [Document]
-filterDocsWhereDeleted deleted siglinkidentifier docs =
-  filter isIncludedDoc docs
-  where
-    isIncludedDoc Document{documentsignatorylinks} = 
-      not . Prelude.null $ filter isIncludedSigLink documentsignatorylinks
-    isIncludedSigLink sl@SignatoryLink{signatorylinkdeleted} =
-      isSigLinkFor siglinkidentifier sl && signatorylinkdeleted==deleted
-
-
-{- |
-    Filter documents according to whether the indicated signatory link has been activated
-    according to the sign order.  Author links are included either way.
--}
-filterDocsWhereActivated :: SignatoryLinkIdentity a => a -> [Document] -> [Document]
-filterDocsWhereActivated siglinkidentifier docs =
-  filter isIncludedDoc docs
-  where
-    isIncludedDoc doc@Document{documentsignatorylinks} = 
-      not . Prelude.null $ filter (isIncludedSigLink doc) documentsignatorylinks
-    isIncludedSigLink doc 
-                      sl@SignatoryLink{signatorylinkdeleted, 
-                                       signatoryroles, 
-                                       signatorydetails} =
-      let isRelevant = isSigLinkFor siglinkidentifier sl && not signatorylinkdeleted
-          isAuthorLink = SignatoryAuthor `elem` signatoryroles
-          isActivatedForSig = (documentcurrentsignorder doc) >= (signatorysignorder signatorydetails)
-      in  isRelevant && (isAuthorLink || isActivatedForSig)

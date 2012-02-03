@@ -29,7 +29,7 @@ import Control.Monad.Reader (ask)
 import Control.Monad.State hiding (State)
 import qualified Data.ByteString.UTF8 as BS
 import Data.Maybe (isNothing,isJust, fromJust)
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import Happstack.Data.IxSet
 import qualified Happstack.Data.IxSet as IxSet
 import Happstack.State
@@ -50,7 +50,7 @@ import DB.Types
 import Util.MonadUtils
 import Doc.SignatoryLinkID
 import qualified Data.Map as Map
-
+import Misc (optional)
 -- | Session ID is a wrapped 'Integer' really
 newtype SessionId = SessionId Integer
     deriving (Eq, Ord, Num, Typeable)
@@ -512,7 +512,6 @@ startSessionCookie session = do
 -- | Read current session cookie from request.
 currentSessionInfoCookie:: RqData (Maybe SessionCookieInfo)
 currentSessionInfoCookie = (optional (readCookieValue "sessionId"))
- where optional c = (liftM Just c) `mplus` (return Nothing)
 
 -- | Get current session based on cookies set.
 currentSession ::(HasRqData m, MonadIO m, ServerMonad m, MonadPlus m, FilterMonad Response m) => m (Maybe Session)
@@ -558,11 +557,11 @@ startSession :: (FilterMonad Response m, ServerMonad m, MonadIO m, MonadPlus m) 
 startSession = liftIO emptySessionData >>= return . Session tempSessionID
 
 -- | Get 'User' record from database based on userid in session
-getUserFromSession :: Connection -> Session -> ServerPartT IO (Maybe User)
+getUserFromSession :: Nexus -> Session -> ServerPartT IO (Maybe User)
 getUserFromSession conn s =
   liftMM (ioRunDB conn . dbQuery . GetUserByID) (return $ userID $ sessionData s)
 
-getCompanyFromSession :: Connection -> Session -> ServerPartT IO (Maybe Company)
+getCompanyFromSession :: Nexus -> Session -> ServerPartT IO (Maybe Company)
 getCompanyFromSession conn s =
   liftMM (ioRunDB conn . dbQuery . GetCompany) (return $ company $ sessionData s)
 

@@ -29,7 +29,7 @@ import DB.Classes
 import Company.Model
 import CompanyAccounts.Model
 import CompanyAccounts.CompanyAccountsView
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStateData
 import InputValidation
 import Kontra
@@ -45,6 +45,7 @@ import User.Model
 import User.Utils
 import User.UserControl
 import User.UserView
+import User.History.Model
 
 {- |
     Handles the showing of the company accounts page.
@@ -67,7 +68,7 @@ handleCompanyAccounts = withCompanyAdmin $ \(_user, company) -> do
     Gets the ajax data for the company accounts list.
 -}
 handleCompanyAccountsForAdminOnly :: Kontrakcja m => CompanyID -> m JSValue
-handleCompanyAccountsForAdminOnly cid = onlyAdmin $ do
+handleCompanyAccountsForAdminOnly cid = onlySalesOrAdmin $ do
   handleCompanyAccountsInternal cid
 
 {- |
@@ -210,6 +211,7 @@ handlePostCompanyAccounts = withCompanyAdmin $ \_ -> do
 -}
 handleAddCompanyAccount :: Kontrakcja m => m ()
 handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
+  ctx <- getContext
   memail <- getOptionalField asValidEmail "email"
   fstname <- fromMaybe BS.empty <$> getOptionalField asValidName "fstname"
   sndname <- fromMaybe BS.empty <$> getOptionalField asValidName "sndname"
@@ -225,6 +227,11 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
                             userfstname = fstname
                           , usersndname = sndname
                           }
+        _ <- runDBUpdate $ 
+             LogHistoryUserInfoChanged (userid newuser') (ctxipnumber ctx) (ctxtime ctx) 
+                                       (userinfo newuser') 
+                                       ((userinfo newuser') { userfstname = fstname , usersndname = sndname })
+                                       (userid <$> ctxmaybeuser ctx)
         newuser <- guardJustM $ runDBQuery $ GetUserByID (userid newuser')
         _ <- sendNewCompanyUserMail user company newuser
         return $ Just newuser
@@ -416,8 +423,8 @@ handlePostBecomeCompanyAccount cid = withUserPost $ do
 resaveDocsForUser :: Kontrakcja m => UserID -> m ()
 resaveDocsForUser uid = do
   user <- runDBOrFail $ dbQuery $ GetUserByID uid
-  userdocs <- doc_query $ GetDocumentsByUser user
-  mapM_ (\doc -> doc_update $ AdminOnlySaveForUser (documentid doc) user) userdocs
+  userdocs <- runDBQuery $ GetDocumentsByAuthor uid
+  mapM_ (\doc -> runDBUpdate $ AdminOnlySaveForUser (documentid doc) user) userdocs
   return ()
 
 {- |

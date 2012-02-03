@@ -282,6 +282,7 @@ instance DBUpdate AddUser (Maybe User) where
           return ()
         dbQuery $ GetUserByID uid
 
+
 data SetUserEmail = SetUserEmail (Maybe ServiceID) UserID Email
 instance DBUpdate SetUserEmail Bool where
   dbUpdate (SetUserEmail msid uid email) = wrapDB $ \conn -> do
@@ -456,8 +457,8 @@ instance DBUpdate SetUserCompanyAdmin Bool where
     case mcid :: Maybe CompanyID of
       Nothing -> return False
       Just _ -> wrapDB $ \conn -> do
-        run conn "UPDATE users SET is_company_admin = ? WHERE id = ? AND deleted = FALSE" [toSql iscompanyadmin, toSql uid]
-          >>= oneRowAffectedGuard
+        r <- run conn "UPDATE users SET is_company_admin = ? WHERE id = ? AND deleted = FALSE" [toSql iscompanyadmin, toSql uid]
+        oneRowAffectedGuard r
 
 -- helpers
 
@@ -507,12 +508,7 @@ fetchUsers st = foldDB st decoder []
       first_name last_name personal_number company_position phone mobile
       email preferred_design_mode lang region customfooter = User {
           userid = uid
-        , userpassword = case (password, salt) of
-                           (Just pwd, Just salt') -> Just Password {
-                               pwdHash = pwd
-                             , pwdSalt = salt'
-                           }
-                           _ -> Nothing
+        , userpassword = maybePassword (password, salt)
         , useriscompanyadmin = is_company_admin
         , useraccountsuspended = account_suspended
         , userhasacceptedtermsofservice = has_accepted_terms_of_service

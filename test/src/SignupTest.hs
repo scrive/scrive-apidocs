@@ -1,9 +1,10 @@
-module SignupTest (signupTests) where
+module SignupTest (signupTests, getAccountCreatedActions) where
 
 import Control.Applicative
 import Control.Monad.State
+import Data.List
 import Data.Maybe
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import Happstack.Server
 import Happstack.State (query)
 import Test.Framework
@@ -12,12 +13,14 @@ import Test.HUnit (Assertion)
 import qualified Data.ByteString.UTF8 as BS
 
 import ActionSchedulerState
-import AppControl
 import Context
 import DB.Classes
 import DB.Types
+import Doc.DocControl
+import Doc.DocStateData
 import FlashMessage
 import Mails.Model
+import Login
 import LoginTest (assertLoginEventRecordedFor)
 import MinutesTime
 import Misc
@@ -30,7 +33,7 @@ import User.Model
 import User.UserControl
 import Util.HasSomeUserInfo
 
-signupTests :: Connection -> Test
+signupTests :: Nexus -> Test
 signupTests conn = testGroup "Signup" [
       testCase "can self signup and activate an account" $ testSignupAndActivate conn
     , testCase "can send viral invite which can be used to activate an account" $ testViralInviteAndActivate conn
@@ -42,9 +45,38 @@ signupTests conn = testGroup "Signup" [
     , testCase "if users enter phone number a mail is sent" $ testUserEnteringPhoneNumber conn
     , testCase "if users don't enter phone number a mail isn't sent" $ testUserNotEnteringPhoneNumber conn
     , testCase "login event recorded when logged in after activation" $ testLoginEventRecordedWhenLoggedInAfterActivation conn
+    , testCase "signup after signing works" $ testSignupAfterSigning conn
     ]
 
-testUserEnteringPhoneNumber :: Connection -> Assertion
+testSignupAfterSigning :: Nexus -> Assertion
+testSignupAfterSigning conn = withTestEnvironment conn $ do
+  (Just author) <- addNewUser "Bob" "Blue" "bob@blue.com"
+  globaltemplates <- readGlobalTemplates
+  ctx <- (\c -> c { ctxdbconn = conn })
+    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+
+  let isSigning sl = not $ SignatoryAuthor `elem` signatoryroles sl
+  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> documentstatus d == Pending
+                                                               && case documenttype d of
+                                                                    Signable Contract -> True
+                                                                    _ -> False
+                                                               && any isSigning (documentsignatorylinks d))
+  let Just sl = find isSigning $ documentsignatorylinks doc
+
+  req <- mkRequest POST [ ("tos", inText "on")
+                        , ("password", inText "password123")
+                        , ("password2", inText "password123")
+                        ]
+  (_res, ctx') <- runTestKontra req ctx $ handleAcceptAccountFromSign (documentid doc) (signatorylinkid sl) (signatorymagichash sl) >>= sendRedirect
+
+  assertBool "User is logged in" (isJust $ ctxmaybeuser ctx')
+  let Just user = ctxmaybeuser ctx'
+  assertBool "User has accepted tos" (isJust $ userhasacceptedtermsofservice user)
+  assertEqual "User email is from signatory" (getEmail sl) (getEmail user)
+  assertEqual "User first name is from signatory" (getFirstName sl) (getFirstName user)
+  assertEqual "User last name is from signatory" (getLastName sl) (getLastName user)
+
+testUserEnteringPhoneNumber :: Nexus -> Assertion
 testUserEnteringPhoneNumber conn = withTestEnvironment conn $ do
   Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   globaltemplates <- readGlobalTemplates
@@ -64,7 +96,7 @@ testUserEnteringPhoneNumber conn = withTestEnvironment conn $ do
   emails <- dbQuery GetIncomingEmails
   assertEqual "An email was sent" 1 (length emails)
 
-testUserNotEnteringPhoneNumber :: Connection -> Assertion
+testUserNotEnteringPhoneNumber :: Nexus -> Assertion
 testUserNotEnteringPhoneNumber conn = withTestEnvironment conn $ do
   Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   globaltemplates <- readGlobalTemplates
@@ -81,7 +113,7 @@ testUserNotEnteringPhoneNumber conn = withTestEnvironment conn $ do
   emails <- dbQuery GetIncomingEmails
   assertEqual "No email was sent" 0 (length emails)
 
-testSignupAndActivate :: Connection -> Assertion
+testSignupAndActivate :: Nexus -> Assertion
 testSignupAndActivate conn = withTestEnvironment conn $ do
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
@@ -101,7 +133,7 @@ testSignupAndActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12"
   assertAccountActivatedFor uid "Andrzej" "Rybczak" (res3, ctx3)
 
-testLoginEventRecordedWhenLoggedInAfterActivation :: Connection -> Assertion
+testLoginEventRecordedWhenLoggedInAfterActivation :: Nexus -> Assertion
 testLoginEventRecordedWhenLoggedInAfterActivation conn = withTestEnvironment conn $ do
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
@@ -118,7 +150,7 @@ testLoginEventRecordedWhenLoggedInAfterActivation conn = withTestEnvironment con
   assertAccountActivatedFor uid "Andrzej" "Rybczak" (res3, ctx3)
   assertLoginEventRecordedFor uid
 
-testViralInviteAndActivate :: Connection -> Assertion
+testViralInviteAndActivate :: Nexus -> Assertion
 testViralInviteAndActivate conn = withTestEnvironment conn $ do
   Just inviter <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   globaltemplates <- readGlobalTemplates
@@ -140,7 +172,7 @@ testViralInviteAndActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12"
   assertAccountActivated "Andrzej" "Rybczak" (res3, ctx3)
 
-testAcceptTOSToActivate :: Connection -> Assertion
+testAcceptTOSToActivate :: Nexus -> Assertion
 testAcceptTOSToActivate conn = withTestEnvironment conn $ do
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
@@ -156,7 +188,7 @@ testAcceptTOSToActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token False "Andrzej" "Rybczak" "password12" "password12"
   assertAccountActivationFailed (res3, ctx3)
 
-testNeedFirstNameToActivate :: Connection -> Assertion
+testNeedFirstNameToActivate :: Nexus -> Assertion
 testNeedFirstNameToActivate conn = withTestEnvironment conn $ do
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
@@ -172,7 +204,7 @@ testNeedFirstNameToActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token True "" "Rybczak" "" ""
   assertAccountActivationFailed (res3, ctx3)
 
-testNeedLastNameToActivate :: Connection -> Assertion
+testNeedLastNameToActivate :: Nexus -> Assertion
 testNeedLastNameToActivate conn = withTestEnvironment conn $ do
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
@@ -188,7 +220,7 @@ testNeedLastNameToActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "" "" ""
   assertAccountActivationFailed (res3, ctx3)
 
-testNeedPasswordToActivate :: Connection -> Assertion
+testNeedPasswordToActivate :: Nexus -> Assertion
 testNeedPasswordToActivate conn = withTestEnvironment conn $ do
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })
@@ -204,7 +236,7 @@ testNeedPasswordToActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "" ""
   assertAccountActivationFailed (res3, ctx3)
 
-testPasswordsMatchToActivate :: Connection -> Assertion
+testPasswordsMatchToActivate :: Nexus -> Assertion
 testPasswordsMatchToActivate conn = withTestEnvironment conn $ do
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn })

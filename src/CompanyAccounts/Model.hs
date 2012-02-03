@@ -15,6 +15,7 @@ import qualified Data.ByteString.Char8 as BS
 
 import Company.Model (CompanyID(..))
 import DB.Classes
+import DB.Fetcher2
 import DB.Utils
 import User.Model (Email(..))
 
@@ -74,7 +75,7 @@ instance DBQuery GetCompanyInvite (Maybe CompanyInvite) where
     st <- prepare conn $ selectCompanyInvitesSQL
       ++ "WHERE (ci.company_id = ? AND ci.email = ?)"
     _ <- execute st [toSql companyid, toSql email]
-    cs <- fetchCompanyInvites st []
+    cs <- fetchCompanyInvites st
     oneObjectReturnedGuard cs
 
 data GetCompanyInvites = GetCompanyInvites CompanyID
@@ -83,7 +84,7 @@ instance DBQuery GetCompanyInvites [CompanyInvite] where
     st <- prepare conn $ selectCompanyInvitesSQL
       ++ "WHERE (ci.company_id = ?)"
     _ <- execute st [toSql companyid]
-    fetchCompanyInvites st []
+    fetchCompanyInvites st
 
 -- helpers
 selectCompanyInvitesSQL :: String
@@ -95,13 +96,12 @@ selectCompanyInvitesSQL = "SELECT"
   ++ "  FROM companyinvites ci"
   ++ " "
 
-fetchCompanyInvites :: Statement -> [CompanyInvite] -> IO [CompanyInvite]
-fetchCompanyInvites st acc = fetchRow st >>= maybe (return acc) f
-  where f [email, fstname, sndname, cid
-         ] = fetchCompanyInvites st $ CompanyInvite {
-             invitedemail = fromSql email
-           , invitedfstname = fromSql fstname
-           , invitedsndname = fromSql sndname
-           , invitingcompany = fromSql cid
-         } : acc
-        f l = error $ "fetchCompanyInvites: unexpected row: "++show l
+fetchCompanyInvites :: Statement -> IO [CompanyInvite]
+fetchCompanyInvites st = foldDB st decoder []
+  where
+    decoder acc email fstname sndname cid = CompanyInvite {
+        invitedemail = email
+      , invitedfstname = fstname
+      , invitedsndname = sndname
+      , invitingcompany = cid
+      } : acc

@@ -17,12 +17,13 @@ module Kontra
     , newPasswordReminderLink
     , newViralInvitationSentLink
     , newAccountCreatedLink
-    , newAccountCreatedBySigningLink
     , runDBOrFail
     , queryOrFail
     , currentService
     , currentServiceID
     , HasService(..)
+    , disableLocalSwitch -- Turn off the flag switcher on top bar
+    , switchLocale       -- set language
     )
     where
 
@@ -33,13 +34,9 @@ import Control.Applicative
 import Control.Monad.Reader
 import Control.Monad.State
 import DB.Classes
-import DB.Types
 import ELegitimation.ELegTransaction
 import Doc.DocStateData
 import Happstack.Server
-#ifndef DOCUMENTS_IN_POSTGRES
-import Happstack.State (query, QueryEvent)
-#endif
 import KontraLink
 import KontraMonad
 import Mails.MailsConfig
@@ -76,7 +73,7 @@ runKontra :: Context -> Kontra a -> ServerPartT IO a
 runKontra ctx = mapServerPartT (\s -> evalStateT s ctx) . unKontra
 
 {- Logged in user is admin-}
-isAdmin :: Context -> Bool 
+isAdmin :: Context -> Bool
 isAdmin ctx = (useremail <$> userinfo <$> ctxmaybeuser ctx) `melem` (ctxadminaccounts ctx) && scriveService ctx
 
 {- Logged in user is sales -}
@@ -127,6 +124,17 @@ logUserToContext :: Kontrakcja m => Maybe User -> m ()
 logUserToContext user =
     modifyContext $ \ctx -> ctx { ctxmaybeuser = user}
 
+disableLocalSwitch :: Kontrakcja m => m ()
+disableLocalSwitch =
+    modifyContext $ \ctx -> ctx { ctxlocaleswitch = False}
+
+switchLocale :: Kontrakcja m => Locale -> m ()
+switchLocale locale =
+     modifyContext $ \ctx -> ctx {
+         ctxlocale     = locale,
+         ctxtemplates  = localizedVersion locale (ctxglobaltemplates ctx)
+     }
+    
 newPasswordReminderLink :: MonadIO m => User -> m KontraLink
 newPasswordReminderLink user = do
     action <- liftIO $ newPasswordReminder user
@@ -147,26 +155,10 @@ newAccountCreatedLink user = do
                                 (acToken $ actionType action)
                                 (BS.toString $ getEmail user)
 
-newAccountCreatedBySigningLink :: MonadIO m => User -> (DocumentID, SignatoryLinkID) -> m (ActionID, MagicHash)
-newAccountCreatedBySigningLink user doclinkdata = do
-    action <- liftIO $ newAccountCreatedBySigning user doclinkdata
-    let aid = actionID action
-        token = acbsToken $ actionType action
-    return $ (aid, token)
-
 -- | Runs DB action and mzeroes if it returned Nothing
 runDBOrFail :: (DBMonad m, MonadPlus m) => DB (Maybe r) -> m r
 runDBOrFail f = runDB f >>= guardJust
 
-#ifndef DOCUMENTS_IN_POSTGRES
-{- |
-   Perform a query (like with query) but if it returns Nothing, mzero; otherwise, return fromJust
- -}
-queryOrFail :: (MonadPlus m,Monad m, MonadIO m) => (QueryEvent ev (Maybe res)) => ev -> m res
-queryOrFail q = do
-  mres <- query q
-  guardJust mres
-#else
 {- |
    Perform a query (like with query) but if it returns Nothing, mzero; otherwise, return fromJust
  -}
@@ -174,7 +166,6 @@ queryOrFail :: (MonadPlus m, DBMonad m, Monad m, MonadIO m, DBQuery ev (Maybe re
 queryOrFail q = do
   mres <- runDBQuery q
   guardJust mres
-#endif
 
 -- | Current service id
 

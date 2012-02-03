@@ -15,18 +15,18 @@ import Happstack.State (runTxSystem, TxControl, shutdownSystem, Saver(..))
 
 import Control.Concurrent (MVar)
 import Database.HDBC
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import System.IO.Temp
 import qualified Control.Exception as E
 
 -- create test environment
-withTestEnvironment :: Connection -> DB () -> IO ()
+withTestEnvironment :: Nexus -> DB () -> IO ()
 withTestEnvironment conn = withTestState . withTestDB conn
 
 -- pgsql database --
 
 -- | Runs set of sql queries within one transaction and clears all tables in the end
-withTestDB :: Connection -> DB () -> IO ()
+withTestDB :: Nexus -> DB () -> IO ()
 withTestDB conn f = do
   er <- ioRunDB conn $ do
     er <- tryDB f
@@ -44,12 +44,10 @@ clearTables = wrapDB $ \conn -> do
   runRaw conn "DELETE FROM sign_stat_events"  
   runRaw conn "DELETE FROM companyinvites"
 
-#ifdef DOCUMENTS_IN_POSTGRES
   runRaw conn "DELETE FROM author_attachments"
   runRaw conn "DELETE FROM signatory_attachments"
   runRaw conn "DELETE FROM signatory_links"
   runRaw conn "DELETE FROM documents"
-#endif
 
   runRaw conn "DELETE FROM companies"
   runRaw conn "DELETE FROM services"

@@ -9,42 +9,37 @@ module ActionScheduler (
     , getGlobalTemplates
     ) where
 
-import Control.Applicative
 import Control.Concurrent
 import Control.Monad.Reader
 import Data.List
 import Data.Maybe
 import Happstack.State
-import Database.HDBC.PostgreSQL
+import DB.Nexus
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 
 import AppControl (AppConf(..))
 import ActionSchedulerState
-import Archive.Invariants
+import Archive.Invariants ()
 import DB.Classes
 import Doc.DocStateData
-import Doc.Transitory
-import KontraLink
+import Doc.Model
 import MinutesTime
 import Mails.MailsData
 import Mails.MailsConfig
 import Mails.SendMail
 import Session
-import Templates.Trans
 import Templates.Templates
-import User.Model
-import User.UserView
 import qualified Log
 import System.Time
-import Util.HasSomeUserInfo
 import Doc.Invariants
 import Stats.Control
+import Database.HDBC.PostgreSQL
 
 type SchedulerData' = SchedulerData AppConf (MVar (ClockTime, KontrakcjaGlobalTemplates)) MailsConfig
 
-newtype ActionScheduler a = AS { unAS :: ReaderT SchedulerData' (ReaderT Connection IO) a }
+newtype ActionScheduler a = AS { unAS :: ReaderT SchedulerData' (ReaderT Nexus IO) a }
     deriving (Monad, Functor, MonadIO, MonadReader SchedulerData')
 
 instance DBMonad ActionScheduler where
@@ -59,7 +54,9 @@ instance DBMonad ActionScheduler where
 
 runScheduler :: ActionScheduler () -> SchedulerData' -> IO ()
 runScheduler sched sd =
-    withPostgreSQL (dbConfig $ sdAppConf sd) $ runReaderT (runReaderT (unAS sched) sd)
+    withPostgreSQL (dbConfig $ sdAppConf sd) $ \conn -> do
+      nexus <- mkNexus conn
+      runReaderT (runReaderT (unAS sched) sd) nexus
 
 -- | Creates scheduler that may be forced to look up for actions to execute
 runEnforceableScheduler :: Int -> MVar () -> ActionScheduler () -> SchedulerData' -> IO ()
@@ -105,38 +102,10 @@ evaluateAction Action{actionID, actionType = ViralInvitationSent{}} =
 evaluateAction Action{actionID, actionType = AccountCreated{}} =
     deleteAction actionID
 
-evaluateAction Action{actionID, actionType = AccountCreatedBySigning state uid doclinkdataid@(docid, _) token} = do
-    case state of
-         NothingSent ->
-             sendReminder
-         ReminderSent ->
-             deleteAction actionID
-    where
-        sendReminder :: ActionScheduler ()
-        sendReminder = do
-            now <- liftIO getMinutesTime
-            sd <- ask
-            mdoc <- doc_query $ GetDocumentByDocumentID docid
-            let doctitle = maybe BS.empty documenttitle mdoc
-            (runDBQuery $ GetUserByID uid) >>= maybe (return ()) (\user -> do
-                let mailfunc :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
-                    mailfunc = case documenttype <$> mdoc of
-                      Just (Signable Offer) -> mailAccountCreatedBySigningOfferReminder
-                      Just (Signable Contract) -> mailAccountCreatedBySigningContractReminder
-                      Just (Signable Order) -> mailAccountCreatedBySigningOrderReminder
-                      t -> error $ "Something strange happened (document with a type " ++ show t ++ " was signed and now reminder wants to be sent)"
-                globaltemplates <- getGlobalTemplates
-                mail <- liftIO $ runTemplatesT (getLocale user, globaltemplates) $
-                          mailfunc (hostpart $ sdAppConf sd) doctitle (getFullName user) (LinkAccountCreatedBySigning actionID token)
-                scheduleEmailSendout (sdMailsConfig sd) $ mail { to = [getMailAddress user]})
-            _ <- update $ UpdateActionType actionID $ AccountCreatedBySigning {
-                  acbsState = ReminderSent
-                , acbsUserID = uid
-                , acbsDocLinkDataID = doclinkdataid
-                , acbsToken = token
-            }
-            _ <- update $ UpdateActionEvalTime actionID ((72 * 60) `minutesAfter` now)
-            return ()
+evaluateAction Action{actionID, actionType = AccountCreatedBySigning{}} = do
+  -- we used to send a "You haven't secured your original" email,
+  -- but we don't anymore, so this just deletes the action
+  deleteAction actionID
 
 evaluateAction Action{actionID, actionType = RequestEmailChange{}} =
   deleteAction actionID
@@ -148,7 +117,7 @@ runDocumentProblemsCheck :: ActionScheduler ()
 runDocumentProblemsCheck = do
   sd <- ask
   now <- liftIO getMinutesTime
-  docs <- doc_query $ GetDocuments Nothing
+  docs <- runDBQuery $ GetDocuments Nothing
   let probs = listInvariantProblems now docs
   when (probs /= []) $ mailDocumentProblemsCheck $
     "<p>"  ++ (hostpart $ sdAppConf sd) ++ "/dave/document/" ++
@@ -174,6 +143,12 @@ documentProblemsCheckEmails = map BS.fromString ["bugs@skrivapa.se"]
 
 runArchiveProblemsCheck :: ActionScheduler ()
 runArchiveProblemsCheck = do
+  return ()
+
+{-
+
+  This requires reorganization as there is no difference between personal and company documents now.
+
   users <- runDBQuery $ GetUsers
   personaldocs <- mapM getPersonalDocs users
   superviseddocs <- mapM getSupervisedDocs users
@@ -184,10 +159,10 @@ runArchiveProblemsCheck = do
   return ()
   where
     getPersonalDocs user = do
-      docs <- doc_query $ GetDocumentsBySignatory user
+      docs <- runDBQuery $ GetDocumentsBySignatory user
       return (user, docs)
     getSupervisedDocs user = do
-      docs <- doc_query $ GetDocumentsByCompany user
+      docs <- runDBQuery $ GetDocumentsByCompany user
       return (user, docs)
 
 mailArchiveProblemsCheck :: String -> ActionScheduler ()
@@ -202,6 +177,8 @@ mailArchiveProblemsCheck msg = do
                                                   }
 archiveProblemsCheckEmails :: [BS.ByteString]
 archiveProblemsCheckEmails = map BS.fromString ["emily@scrive.com"]
+
+-}
 
 deleteAction :: ActionID -> ActionScheduler ()
 deleteAction aid = do
@@ -218,9 +195,9 @@ getGlobalTemplates = do
 
 timeoutDocuments :: MinutesTime -> ActionScheduler ()
 timeoutDocuments now = do
-    docs <- doc_query $ GetTimeoutedButPendingDocuments now
+    docs <- runDBQuery $ GetTimeoutedButPendingDocuments now
     forM_ docs $ \doc -> do
-        edoc <- doc_update $ TimeoutDocument (documentid doc) now
+        edoc <- runDBUpdate $ TimeoutDocument (documentid doc) now
         case edoc of
           Left _ -> return ()
           Right doc' -> do
