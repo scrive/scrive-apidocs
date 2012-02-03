@@ -36,6 +36,7 @@ import Util.KontraLinkUtils
 import Util.MonadUtils
 import Stats.Control
 import User.Utils
+import User.History.Model
 
 checkPasswordsMatch :: TemplatesMonad m => BS.ByteString -> BS.ByteString -> Either (m FlashMessage) ()
 checkPasswordsMatch p1 p2 =
@@ -71,6 +72,9 @@ handleUserPost = do
   user <- guardJustM $ runDBQuery $ GetUserByID (userid user')
   infoUpdate <- getUserInfoUpdate
   _ <- runDBUpdate $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
+  _ <- runDBUpdate $ LogHistoryUserInfoChanged (userid user) (ctxipnumber ctx) (ctxtime ctx) 
+                                               (userinfo user) (infoUpdate $ userinfo user)
+                                               (userid <$> ctxmaybeuser ctx)
   mcompany <- getCompanyForUser user
   case (useriscompanyadmin user, mcompany) of
     (True, Just company) -> do
@@ -154,6 +158,10 @@ handleCreateCompany = do
           _ <- runDBUpdate $ SetUserCompanyAdmin (userid user) True
           upgradeduser <- guardJustM $ runDBQuery $ GetUserByID $ userid user
           _ <- addUserCreateCompanyStatEvent (ctxtime ctx) upgradeduser
+          _ <- runDBUpdate 
+                   $ LogHistoryDetailsChanged (userid user) (ctxipnumber ctx) (ctxtime ctx) 
+                                              [("is_company_admin", "false", "true")] 
+                                              (Just $ userid user)
           addFlashM flashMessageCompanyCreated
           return $ LinkCompanyAccounts emptyListParams
     _ -> return $ LinkAccount True  --we could remove this ugly flag with more javascript validation
@@ -172,7 +180,7 @@ handleGetChangeEmail actionid hash = withUserGet $ do
 handlePostChangeEmail :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
 handlePostChangeEmail actionid hash = withUserPost $ do
   mnewemail <- getNewEmailFromAction actionid hash
-  Context{ctxmaybeuser = Just user} <- getContext
+  Context{ctxmaybeuser = Just user, ctxipnumber, ctxtime} <- getContext
   mpassword <- getRequiredField asDirtyPassword "password"
   case mpassword of
     Nothing -> return ()
@@ -181,7 +189,11 @@ handlePostChangeEmail actionid hash = withUserPost $ do
                       (runDBUpdate . SetUserEmail (userservice user) (userid user))
                       mnewemail
       if changed
-        then addFlashM $ flashMessageYourEmailHasChanged
+        then do
+            _ <- runDBUpdate $ LogHistoryDetailsChanged (userid user) ctxipnumber ctxtime 
+                                                     [("email", BS.unpack $ unEmail $ useremail $ userinfo user, BS.unpack $ unEmail $ fromJust mnewemail)] 
+                                                     (Just $ userid user)
+            addFlashM $ flashMessageYourEmailHasChanged
         else addFlashM $ flashMessageProblemWithEmailChange
     Just _password -> do
       addFlashM $ flashMessageProblemWithPassword
@@ -377,15 +389,19 @@ handlePostUserSecurity = do
         (Just oldpassword, Just password, Just password2) ->
           case (verifyPassword (userpassword user) oldpassword,
                   checkPasswordsMatch password password2) of
-            (False,_) ->
+            (False,_) -> do
+              _ <- runDBUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
               addFlashM flashMessageBadOldPassword
-            (_, Left f) ->
+            (_, Left f) -> do
+              _ <- runDBUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
               addFlashM f
             _ ->  do
               passwordhash <- liftIO $ createPassword password
               _ <- runDBUpdate $ SetUserPassword (userid user) passwordhash
+              _ <- runDBUpdate $ LogHistoryPasswordSetup (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
               addFlashM flashMessageUserDetailsSaved
-        _ | isJust moldpassword || isJust mpassword || isJust mpassword2 ->
+        _ | isJust moldpassword || isJust mpassword || isJust mpassword2 -> do
+              _ <- runDBUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
               addFlashM flashMessageMissingRequiredField
         _ -> return ()
       mregion <- readField "region"
@@ -464,7 +480,15 @@ createUser :: Kontrakcja m => Email
 createUser email fstname sndname mcompany = do
   ctx <- getContext
   passwd <- liftIO $ createPassword =<< randomPassword
-  runDBUpdate $ AddUser (fstname, sndname) (unEmail $ email) (Just passwd) False Nothing (fmap companyid mcompany) (ctxlocale ctx)
+  muser <- runDBUpdate $ AddUser (fstname, sndname) (unEmail $ email) (Just passwd) False Nothing (fmap companyid mcompany) (ctxlocale ctx)
+  case muser of
+    Just user -> do 
+                 _ <- runDBUpdate $ 
+                      LogHistoryAccountCreated (userid user) (ctxipnumber ctx) 
+                                               (ctxtime ctx) email (userid <$> ctxmaybeuser ctx)
+                 return muser
+    _         -> return muser
+                 
 
 sendNewUserMail :: Kontrakcja m => User -> m ()
 sendNewUserMail user = do
@@ -493,7 +517,12 @@ createInvitedUser names email mlocale = do
     ctx <- getContext
     let locale = fromMaybe (ctxlocale ctx) mlocale
     passwd <- liftIO $ createPassword =<< randomPassword
-    runDBUpdate $ AddUser names email (Just passwd) False Nothing Nothing locale
+    muser <- runDBUpdate $ AddUser names email (Just passwd) False Nothing Nothing locale
+    case muser of
+      Just user -> do 
+                   _ <- runDBUpdate $ LogHistoryAccountCreated (userid user) (ctxipnumber ctx) (ctxtime ctx) (Email email) (userid <$> ctxmaybeuser ctx)
+                   return muser
+      _         -> return muser
 
 {- |
    Guard against a POST with no logged in user.
@@ -551,13 +580,14 @@ handleAcceptTOSGet = withUserGet $ do
 
 handleAcceptTOSPost :: Kontrakcja m => m KontraLink
 handleAcceptTOSPost = withUserPost $ do
-  Context{ctxmaybeuser = Just User{userid}, ctxtime} <- getContext
+  Context{ctxmaybeuser = Just User{userid}, ctxtime, ctxipnumber} <- getContext
   tos <- getDefaultedField False asValidCheckBox "tos"
   case tos of
     Just True -> do
       _ <- runDBUpdate $ AcceptTermsOfService userid ctxtime
       user <- guardJustM $ runDBQuery $ GetUserByID userid
       _ <- addUserSignTOSStatEvent user
+      _ <- runDBUpdate $ LogHistoryTOSAccept userid ctxipnumber ctxtime (Just userid)
       addFlashM flashMessageUserDetailsSaved
       return LinkUpload
     Just False -> do
@@ -611,6 +641,9 @@ handlePhoneCallRequest = do
       _ <- runDBUpdate $ SetUserInfo (userid user) $ (userinfo user){
               userphone = phone
             }
+      _ <- runDBUpdate $ LogHistoryUserInfoChanged (userid user) (ctxipnumber ctx) (ctxtime ctx) 
+                                                   (userinfo user) ((userinfo user){ userphone = phone })
+                                                   (userid <$> ctxmaybeuser ctx)
       _ <- addUserPhoneAfterTOS user
       addFlashM $ flashMessageWeWillCallYouSoon (BS.toString phone)
       return ()
@@ -783,8 +816,13 @@ handleActivate mfstname msndname actvuser signupmethod = do
                          userfstname = fstname
                        , usersndname = sndname
                        }
+                _ <- dbUpdate $ LogHistoryUserInfoChanged (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) 
+                                                          (userinfo actvuser) ((userinfo actvuser){ userfstname = fstname , usersndname = sndname })
+                                                          (userid <$> ctxmaybeuser ctx)
                 _ <- dbUpdate $ SetUserPassword (userid actvuser) passwordhash
+                _ <- dbUpdate $ LogHistoryPasswordSetup (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
                 _ <- dbUpdate $ AcceptTermsOfService (userid actvuser) (ctxtime ctx)
+                _ <- dbUpdate $ LogHistoryTOSAccept (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
                 _ <- dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
                 return ()
               tosuser <- guardJustM $ runDBQuery $ GetUserByID (userid actvuser)
@@ -831,6 +869,7 @@ handlePasswordReminderPost aid hash = do
              getHomeOrUploadLink
     where
         handleChangePassword user = do
+            Context{ctxtime, ctxipnumber, ctxmaybeuser} <- getContext
             mpassword <- getRequiredField asValidPassword "password"
             mpassword2 <- getRequiredField asDirtyPassword "password2"
             case (mpassword, mpassword2) of
@@ -840,16 +879,18 @@ handlePasswordReminderPost aid hash = do
                               dropExistingAction aid
                               passwordhash <- liftIO $ createPassword password
                               _ <- runDBUpdate $ SetUserPassword (userid user) passwordhash
+                              _ <- runDBUpdate $ LogHistoryPasswordSetup (userid user) (ctxipnumber) (ctxtime) (userid <$> ctxmaybeuser)
                               addFlashM flashMessageUserPasswordChanged
-                              Context{ctxtime} <- getContext
                               _ <- addUserLoginStatEvent ctxtime user
                               logUserToContext $ Just user
                               return LinkUpload
                           Left flash -> do
+                              _ <- runDBUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber) (ctxtime) (userid <$> ctxmaybeuser)
                               addFlashM flash
                               addFlashM $ modalNewPasswordView aid hash
                               getHomeOrUploadLink
                  _ -> do
+                   _ <- runDBUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber) (ctxtime) (userid <$> ctxmaybeuser)
                    addFlashM $ modalNewPasswordView aid hash
                    getHomeOrUploadLink
 

@@ -67,6 +67,9 @@ import TrustWeaverTest
 #ifndef NO_USERSTATE
 import UserStateTest
 #endif
+#ifndef NO_USERHISTORY
+import UserHistoryTest
+#endif
 #ifndef NO_CSVUTIL
 import CSVUtilTest
 #endif
@@ -154,6 +157,9 @@ allTests conn = tail tests
 #endif
 #ifndef NO_USERSTATE
       , ("userstate", const $ userStateTests conn)
+#endif
+#ifndef NO_USERSTATE
+      , ("userhistory", const $ userHistoryTests conn)
 #endif
 #ifndef NO_CSVUTIL
       , ("csvutil", const $ csvUtilTests)

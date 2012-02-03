@@ -13,6 +13,7 @@ import Doc.Tables
 import Doc.Migrations
 import User.Migrations
 import User.Tables
+import User.History.Tables
 import Stats.Tables
 import Stats.Migrations
 import File.Tables
@@ -38,6 +39,7 @@ kontraTables = [
   , tableUserFriends
   , tableUserMailAPIs
   , tableUserInviteInfos
+  , tableUsersHistory
   , tableServices
   , tableCompanies
   , tableCompanyInvites

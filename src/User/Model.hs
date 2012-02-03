@@ -282,6 +282,7 @@ instance DBUpdate AddUser (Maybe User) where
           return ()
         dbQuery $ GetUserByID uid
 
+
 data SetUserEmail = SetUserEmail (Maybe ServiceID) UserID Email
 instance DBUpdate SetUserEmail Bool where
   dbUpdate (SetUserEmail msid uid email) = wrapDB $ \conn -> do
@@ -456,8 +457,8 @@ instance DBUpdate SetUserCompanyAdmin Bool where
     case mcid :: Maybe CompanyID of
       Nothing -> return False
       Just _ -> wrapDB $ \conn -> do
-        run conn "UPDATE users SET is_company_admin = ? WHERE id = ? AND deleted = FALSE" [toSql iscompanyadmin, toSql uid]
-          >>= oneRowAffectedGuard
+        r <- run conn "UPDATE users SET is_company_admin = ? WHERE id = ? AND deleted = FALSE" [toSql iscompanyadmin, toSql uid]
+        oneRowAffectedGuard r
 
 -- helpers
 

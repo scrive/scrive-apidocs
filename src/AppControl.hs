@@ -287,3 +287,4 @@ appHandler handleRoutes appConf appGlobals = do
                 , ctxmagichashes = getMagicHashes session
                 }
       return ctx
+

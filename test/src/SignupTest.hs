@@ -1,4 +1,4 @@
-module SignupTest (signupTests) where
+module SignupTest (signupTests, getAccountCreatedActions) where
 
 import Control.Applicative
 import Control.Monad.State
