@@ -54,7 +54,7 @@ data UserHistory = UserHistory {
   , uhip               :: IPAddress
   , uhtime             :: MinutesTime
   , uhsystemversion    :: BS.ByteString
-  , uhperforminguserid :: Maybe UserID
+  , uhperforminguserid :: Maybe UserID -- Nothing means system changed it
   }
   deriving (Eq, Show)
 
@@ -73,6 +73,10 @@ data UserHistoryEventType = UserLoginAttempt
                           | UserTOSAccept
   deriving (Eq, Show)
 
+{- |
+  UserPasswordSetup is a successful change but UserPasswordSetupReq is
+  only a request, not successful change.
+ -}
 instance Convertible UserHistoryEventType SqlValue where
   safeConvert UserLoginAttempt     = return . toSql $ (1 :: Int)
   safeConvert UserLoginSuccess     = return . toSql $ (2 :: Int)
@@ -102,7 +106,6 @@ instance Convertible SqlValue UserHistoryEventType where
 data AddUserHistory = AddUserHistory UserID UserHistoryEvent IPAddress MinutesTime (Maybe UserID) 
 instance DBUpdate AddUserHistory (Maybe UserHistory) where
   dbUpdate (AddUserHistory user event ip time mpuser) = do
-    wrapDB $ \conn -> do runRaw conn "LOCK TABLE users IN ACCESS EXCLUSIVE MODE"
     uid <- UserHistoryID <$> getUniqueID tableUsersHistory
     wrapDB $ \conn -> do 
       _ <- run conn ("INSERT INTO users_history("
