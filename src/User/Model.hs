@@ -184,7 +184,7 @@ instance DBQuery GetUserMailAPI (Maybe UserMailAPI) where
 data ExportUsersDetailsToCSV = ExportUsersDetailsToCSV
 instance DBQuery ExportUsersDetailsToCSV BS.ByteString where
   dbQuery ExportUsersDetailsToCSV = do
-    kQuickQuery "SELECT first_name || ' ' || last_name, email FROM users WHERE deleted = FALSE" []
+    kQuickQuery (SQL "SELECT first_name || ' ' || last_name, email FROM users WHERE deleted = FALSE" [])
       >>= return . toCSV
     where
       toCSV = BS.unlines . map (BS.intercalate (BS.pack ", ") . map fromSql)
@@ -287,7 +287,7 @@ instance DBUpdate SetInviteInfo Bool where
         case minviterid of
           Just inviterid -> do
             _ <- kRunRaw "LOCK TABLE user_invite_infos IN ACCESS EXCLUSIVE MODE"
-            rec_exists <- kQuickQuery "SELECT 1 FROM user_invite_infos WHERE user_id = ?" [toSql uid]
+            rec_exists <- kQuickQuery (SQL "SELECT 1 FROM user_invite_infos WHERE user_id = ?" [toSql uid])
               >>= checkIfOneObjectReturned
             if rec_exists
               then do
@@ -327,7 +327,7 @@ instance DBUpdate SetUserMailAPI Bool where
       then case musermailapi of
         Just mailapi -> do
           _ <- kRunRaw "LOCK TABLE user_mail_apis IN ACCESS EXCLUSIVE MODE"
-          rec_exists <- kQuickQuery "SELECT 1 FROM user_mail_apis WHERE user_id = ?" [toSql uid]
+          rec_exists <- kQuickQuery (SQL "SELECT 1 FROM user_mail_apis WHERE user_id = ?" [toSql uid])
               >>= checkIfOneObjectReturned
           if rec_exists
             then do
@@ -444,7 +444,7 @@ composeFullName (fstname, sndname) =
 
 checkIfUserExists :: UserID -> DB Bool
 checkIfUserExists uid = do
-  kQuickQuery "SELECT 1 FROM users WHERE id = ? AND deleted = FALSE" [toSql uid]
+  kQuickQuery (SQL "SELECT 1 FROM users WHERE id = ? AND deleted = FALSE" [toSql uid])
     >>= checkIfOneObjectReturned
 
 selectUsersSQL :: String

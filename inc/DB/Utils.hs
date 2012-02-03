@@ -1,11 +1,16 @@
 module DB.Utils (
-    getOne
+    module DB.SQL
+  , getOne
   , getUniqueID
   , getUniqueIDField
   , oneRowAffectedGuard
   , oneObjectReturnedGuard
   , checkIfOneObjectReturned
   , GetUniqueID
+  , kRun
+  , kRun01
+  , kRunRaw
+  , kQuickQuery
   ) where
 
 import Data.Int
@@ -15,6 +20,7 @@ import qualified Control.Exception as E
 
 import DB.Classes as DB
 import DB.Model
+import DB.SQL
 import Data.Convertible
 import Control.Monad
 
@@ -32,7 +38,6 @@ instance GetUniqueID DB where
         _ <- execute st [toSql uid]
         fetchRow st >>= return . maybe (Just uid) (const Nothing)
       maybe (getUniqueIDField table fieldname) return muid
-
 
 oneRowAffectedGuard :: Monad m => Integer -> m Bool
 oneRowAffectedGuard 0 = return False
@@ -66,3 +71,15 @@ getOne query values = wrapDB $ \c ->
   quickQuery' c query values
     >>= oneObjectReturnedGuard . join
     >>= return . fmap fromSql
+
+kRun :: SQL -> DB Integer
+kRun (SQL query values) = kPrepare query >> kExecute values
+
+kRun01 :: SQL -> DB Bool
+kRun01 (SQL query values) = kPrepare query >> kExecute01 values
+
+kRunRaw :: String -> DB Integer
+kRunRaw query = kPrepare query >> kExecute []
+
+kQuickQuery :: SQL -> DB [[SqlValue]]
+kQuickQuery (SQL query values) = wrapDB $ \c -> quickQuery' c query values

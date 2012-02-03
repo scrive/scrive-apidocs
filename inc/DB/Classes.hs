@@ -44,9 +44,6 @@ module DB.Classes
   , kExecute1
   , kExecute01
   , kExecute1P
-  , kRun
-  , kRunRaw
-  , kQuickQuery
   , kFinish
   ) where
 
@@ -161,15 +158,6 @@ kExecute1P values = do
       , tmoGiven = result
     }
   return result
-
-kRun :: String -> [SqlValue] -> DB Integer
-kRun query values = kPrepare query >> kExecute values
-
-kRunRaw :: String -> DB Integer
-kRunRaw query = kPrepare query >> kExecute []
-
-kQuickQuery :: String -> [SqlValue] -> DB [[SqlValue]]
-kQuickQuery query values = wrapDB $ \c -> quickQuery' c query values
 
 -- | Finish current statement. 'kPrepare' and 'kExecute' call
 -- 'kFinish' before they alter query.

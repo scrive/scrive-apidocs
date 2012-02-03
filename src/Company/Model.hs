@@ -59,22 +59,19 @@ data CompanyInfo = CompanyInfo {
 data GetCompanies = GetCompanies (Maybe ServiceID)
 instance DBQuery GetCompanies [Company] where
   dbQuery (GetCompanies msid) = do
-    kPrepare $ selectCompaniesSQL ++ "WHERE c.service_id IS NOT DISTINCT FROM ? ORDER BY c.id DESC"
-    _ <- kExecute [toSql msid]
+    _ <- kRun $ selectCompaniesSQL `mappend` SQL "WHERE c.service_id IS NOT DISTINCT FROM ? ORDER BY c.id DESC" [toSql msid]
     fetchCompanies
 
 data GetCompany = GetCompany CompanyID
 instance DBQuery GetCompany (Maybe Company) where
   dbQuery (GetCompany cid) = do
-    kPrepare $ selectCompaniesSQL ++ "WHERE c.id = ?"
-    _ <- kExecute [toSql cid]
+    _ <- kRun $ selectCompaniesSQL `mappend` SQL "WHERE c.id = ?" [toSql cid]
     fetchCompanies >>= oneObjectReturnedGuard
 
 data GetCompanyByExternalID = GetCompanyByExternalID (Maybe ServiceID) ExternalCompanyID
 instance DBQuery GetCompanyByExternalID (Maybe Company) where
   dbQuery (GetCompanyByExternalID msid ecid) = do
-    kPrepare $ selectCompaniesSQL ++ "WHERE c.service_id IS NOT DISTINCT FROM ? AND c.external_id = ?"
-    _ <- kExecute [toSql msid, toSql ecid]
+    _ <- kRun $ selectCompaniesSQL `mappend` SQL "WHERE c.service_id IS NOT DISTINCT FROM ? AND c.external_id = ?" [toSql msid, toSql ecid]
     fetchCompanies >>= oneObjectReturnedGuard
 
 data CreateCompany = CreateCompany (Maybe ServiceID) (Maybe ExternalCompanyID)
@@ -82,44 +79,30 @@ instance DBUpdate CreateCompany Company where
   dbUpdate (CreateCompany msid mecid) = do
     _ <- kRunRaw "LOCK TABLE companies IN ACCESS EXCLUSIVE MODE"
     cid <- CompanyID <$> getUniqueID tableCompanies
-    kPrepare $ "INSERT INTO companies ("
-      ++ "  id"
-      ++ ", external_id"
-      ++ ", service_id"
-      ++ ", name"
-      ++ ", number"
-      ++ ", address"
-      ++ ", zip"
-      ++ ", city"
-      ++ ", country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
-      ++ " RETURNING id, external_id, service_id, name, number, address, zip, city, country"
-    _ <- kExecute $ [
-        toSql cid
-      , toSql mecid
-      , toSql msid
-      ] ++ replicate 6 (toSql "")
+    _ <- kRun $ mkQuery INSERT tableCompanies [
+        sql "id" cid
+      , sql "external_id" mecid
+      , sql "service_id" msid
+      , sql "name" ""
+      , sql "number" ""
+      , sql "address" ""
+      , sql "zip" ""
+      , sql "city" ""
+      , sql "country" ""
+      ]
     dbQuery (GetCompany cid) >>= maybe (E.throw $ NoObject "") return
 
 data SetCompanyInfo = SetCompanyInfo CompanyID CompanyInfo
 instance DBUpdate SetCompanyInfo Bool where
-  dbUpdate (SetCompanyInfo cid ci) = do
-    kPrepare $ "UPDATE companies SET"
-      ++ "  name = ?"
-      ++ ", number = ?"
-      ++ ", address = ?"
-      ++ ", zip = ?"
-      ++ ", city = ?"
-      ++ ", country = ?"
-      ++ "  WHERE id = ?"
-    kExecute01 [
-        toSql $ companyname ci
-      , toSql $ companynumber ci
-      , toSql $ companyaddress ci
-      , toSql $ companyzip ci
-      , toSql $ companycity ci
-      , toSql $ companycountry ci
-      , toSql cid
-      ]
+  dbUpdate (SetCompanyInfo cid CompanyInfo{..}) =
+    kRun01 $ mkQuery UPDATE tableCompanies [
+        sql "name" companyname
+      , sql "number" companynumber
+      , sql "address" companyaddress
+      , sql "zip" companyzip
+      , sql "city" companycity
+      , sql "country" companycountry
+      ] `mappend` SQL "WHERE id = ?" [toSql cid]
 
 data GetOrCreateCompanyWithExternalID = GetOrCreateCompanyWithExternalID (Maybe ServiceID) ExternalCompanyID
 instance DBUpdate GetOrCreateCompanyWithExternalID Company where
@@ -131,8 +114,8 @@ instance DBUpdate GetOrCreateCompanyWithExternalID Company where
 
 -- helpers
 
-selectCompaniesSQL :: String
-selectCompaniesSQL = "SELECT"
+selectCompaniesSQL :: SQL
+selectCompaniesSQL = SQL ("SELECT"
   ++ "  c.id"
   ++ ", c.external_id"
   ++ ", c.service_id"
@@ -143,7 +126,7 @@ selectCompaniesSQL = "SELECT"
   ++ ", c.city"
   ++ ", c.country"
   ++ "  FROM companies c"
-  ++ " "
+  ++ " ") []
 
 fetchCompanies :: DB [Company]
 fetchCompanies = foldDB decoder []
