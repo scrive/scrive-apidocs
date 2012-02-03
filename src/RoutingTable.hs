@@ -384,8 +384,6 @@ handleWholePage f = do
   return response
 
 {- |
-                        _ <- runDBUpdate $ LogHistoryLoginSuccess (userid user) (ctxipnumber ctx) (ctxtime ctx)
-                        _ <- runDBUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
    Serves out the static html files.
 -}
 serveHTMLFiles :: Kontra Response
