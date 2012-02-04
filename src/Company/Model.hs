@@ -59,19 +59,19 @@ data CompanyInfo = CompanyInfo {
 data GetCompanies = GetCompanies (Maybe ServiceID)
 instance DBQuery GetCompanies [Company] where
   dbQuery (GetCompanies msid) = do
-    _ <- kRun $ selectCompaniesSQL `mappend` SQL "WHERE c.service_id IS NOT DISTINCT FROM ? ORDER BY c.id DESC" [toSql msid]
+    _ <- kRun $ selectCompaniesSQL <++> SQL "WHERE c.service_id IS NOT DISTINCT FROM ? ORDER BY c.id DESC" [toSql msid]
     fetchCompanies
 
 data GetCompany = GetCompany CompanyID
 instance DBQuery GetCompany (Maybe Company) where
   dbQuery (GetCompany cid) = do
-    _ <- kRun $ selectCompaniesSQL `mappend` SQL "WHERE c.id = ?" [toSql cid]
+    _ <- kRun $ selectCompaniesSQL <++> SQL "WHERE c.id = ?" [toSql cid]
     fetchCompanies >>= oneObjectReturnedGuard
 
 data GetCompanyByExternalID = GetCompanyByExternalID (Maybe ServiceID) ExternalCompanyID
 instance DBQuery GetCompanyByExternalID (Maybe Company) where
   dbQuery (GetCompanyByExternalID msid ecid) = do
-    _ <- kRun $ selectCompaniesSQL `mappend` SQL "WHERE c.service_id IS NOT DISTINCT FROM ? AND c.external_id = ?" [toSql msid, toSql ecid]
+    _ <- kRun $ selectCompaniesSQL <++> SQL "WHERE c.service_id IS NOT DISTINCT FROM ? AND c.external_id = ?" [toSql msid, toSql ecid]
     fetchCompanies >>= oneObjectReturnedGuard
 
 data CreateCompany = CreateCompany (Maybe ServiceID) (Maybe ExternalCompanyID)
@@ -79,7 +79,7 @@ instance DBUpdate CreateCompany Company where
   dbUpdate (CreateCompany msid mecid) = do
     _ <- kRunRaw "LOCK TABLE companies IN ACCESS EXCLUSIVE MODE"
     cid <- CompanyID <$> getUniqueID tableCompanies
-    _ <- kRun $ mkQuery INSERT tableCompanies [
+    _ <- kRun $ mkSQL INSERT tableCompanies [
         sql "id" cid
       , sql "external_id" mecid
       , sql "service_id" msid
@@ -95,14 +95,14 @@ instance DBUpdate CreateCompany Company where
 data SetCompanyInfo = SetCompanyInfo CompanyID CompanyInfo
 instance DBUpdate SetCompanyInfo Bool where
   dbUpdate (SetCompanyInfo cid CompanyInfo{..}) =
-    kRun01 $ mkQuery UPDATE tableCompanies [
+    kRun01 $ mkSQL UPDATE tableCompanies [
         sql "name" companyname
       , sql "number" companynumber
       , sql "address" companyaddress
       , sql "zip" companyzip
       , sql "city" companycity
       , sql "country" companycountry
-      ] `mappend` SQL "WHERE id = ?" [toSql cid]
+      ] <++> SQL "WHERE id = ?" [toSql cid]
 
 data GetOrCreateCompanyWithExternalID = GetOrCreateCompanyWithExternalID (Maybe ServiceID) ExternalCompanyID
 instance DBUpdate GetOrCreateCompanyWithExternalID Company where

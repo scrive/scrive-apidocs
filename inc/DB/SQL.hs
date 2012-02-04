@@ -1,10 +1,10 @@
 module DB.SQL (
-    module Data.Monoid
-  , SQL(..)
+    SQL(..)
   , SQLType(..)
   , sql'
   , sql
-  , mkQuery
+  , mkSQL
+  , (<++>)
   ) where
 
 import Data.Convertible
@@ -13,6 +13,7 @@ import Data.Monoid
 import Database.HDBC
 
 import DB.Model
+import Misc ((<++>))
 
 data SQL = SQL String [SqlValue]
   deriving (Eq, Show)
@@ -29,8 +30,8 @@ sql' column placeholder value = (column, placeholder, toSql value)
 sql :: Convertible a SqlValue => String -> a -> (String, String, SqlValue)
 sql column value = sql' column "?" value
 
-mkQuery :: SQLType -> Table -> [(String, String, SqlValue)] -> SQL
-mkQuery qtype Table{tblName} values = case qtype of
+mkSQL :: SQLType -> Table -> [(String, String, SqlValue)] -> SQL
+mkSQL qtype Table{tblName} values = case qtype of
   INSERT -> SQL ("INSERT INTO " ++ tblName
     ++ " (" ++ (intercalate ", " columns) ++ ")"
     ++ " SELECT " ++ (intercalate ", " placeholders)
