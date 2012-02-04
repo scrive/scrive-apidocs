@@ -9,7 +9,6 @@ module DB.Utils (
   , GetUniqueID
   , kRun
   , kRun01
-  , kRunRaw
   , kQuickQuery
   ) where
 
@@ -77,9 +76,6 @@ kRun (SQL query values) = kPrepare query >> kExecute values
 
 kRun01 :: SQL -> DB Bool
 kRun01 (SQL query values) = kPrepare query >> kExecute01 values
-
-kRunRaw :: String -> DB Integer
-kRunRaw query = kPrepare query >> kExecute []
 
 kQuickQuery :: SQL -> DB [[SqlValue]]
 kQuickQuery (SQL query values) = wrapDB $ \c -> quickQuery' c query values

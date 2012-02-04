@@ -45,6 +45,7 @@ module DB.Classes
   , kExecute01
   , kExecute1P
   , kFinish
+  , kRunRaw
   ) where
 
 import Control.Applicative
@@ -169,6 +170,11 @@ kFinish = DB $ do
       put Nothing
       protIO (HDBC.originalQuery st) $ finish st
     Nothing -> return ()
+
+kRunRaw :: String -> DB ()
+kRunRaw query = DB $ do
+  conn <- ask
+  protIO query $ runRaw conn query
 
 -- | Protected 'liftIO'. Properly catches 'SqlError' and converts it
 -- to 'DBException'. Adds 'HDBC.originalQuery' that should help a lot.
