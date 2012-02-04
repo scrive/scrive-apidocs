@@ -75,6 +75,7 @@ module Doc.Model
 import API.Service.Model
 import DB.Classes
 import DB.Fetcher
+import DB.Fetcher2
 import DB.Types
 import DB.Utils
 import File.File
@@ -108,59 +109,12 @@ import Control.Monad
 import qualified Control.Exception as E
 import File.Model
 
-data SqlField = SqlField String String SqlValue
-
 instance Convertible SqlValue SqlValue where
     safeConvert = return . id
-
-sqlField :: (Convertible v SqlValue) => String -> v -> SqlField
-sqlField name value = SqlField name "" (toSql value)
-
-sqlFieldType :: (Convertible v SqlValue) => String -> String -> v -> SqlField
-sqlFieldType name xtype value = SqlField name xtype (toSql value)
-
-sqlLogAppend :: MinutesTime -> String -> SqlField
-sqlLogAppend time text = sqlFieldType "log" "append" $ unlines [show $ DocumentLogEntry time $ BS.fromString text]
 
 sqlLog :: MinutesTime -> String -> (String, String, SqlValue)
 sqlLog time text = sql' "log" "log || ?" logmsg
   where logmsg = unlines [show $ DocumentLogEntry time $ BS.fromString text]
-
-mkInsertStatementWhereReturning :: String -> [SqlField] -> String -> [SqlValue] -> [String] -> String
-mkInsertStatementWhereReturning tableName fields xwhere _values returnFields =
-   "INSERT INTO " ++ tableName ++
-   " (" ++ concat (intersperse "," (map name fields)) ++ ")" ++
-   " SELECT " ++ concat (intersperse "," (map xtype fields)) ++
-   (case xwhere of
-      [] -> ""
-      _ -> " WHERE " ++ xwhere) ++
-   (case returnFields of
-      [] -> ""
-      _ -> " RETURNING " ++ concat (intersperse ", " returnFields))
-   where
-     name (SqlField x _ _) = x
-     xtype (SqlField _ x _) = insertType x
-     insertType "" = "?"
-     insertType "timestamp" = "?"
-     insertType "base64" = "decode(?, 'base64')"
-     insertType ytype = error $ "mkInsertStatement: invalid insert type " ++ ytype
-
-runInsertStatementWhereReturning :: String -> [SqlField] -> String -> [SqlValue] -> [String] -> DB (Integer, Statement)
-runInsertStatementWhereReturning tableName fields xwhere values returnFields = do
-  wrapDB $ \conn -> (doit conn `E.catch` handle)
-
-  where
-    doit conn = do
-      st <- prepare conn statement
-      r <- execute st params
-      return (r, st)
-    handle e = E.throwIO $ SQLError { DB.Classes.originalQuery = statement
-                                    , sqlError = e
-                                    , queryParams = params
-                                    }
-    value (SqlField _ _ v) = [v]
-    params = concatMap value fields ++ values
-    statement = mkInsertStatementWhereReturning tableName fields xwhere values returnFields
 
 getOneDocumentAffected :: String -> Integer -> DocumentID -> DB (Either String Document)
 getOneDocumentAffected text r did =
@@ -249,274 +203,171 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    concat (zipWith checkSigLink sl1 sl2)
 
 
-
-decodeRowAsDocument :: DocumentID
-                    -> BS.ByteString
-                    -> Maybe FileID
-                    -> Maybe FileID
-                    -> DocumentStatus
-                    -> Maybe String
-                    -> Int
-                    -> Maybe DocumentProcess
-                    -> DocumentFunctionality
-                    -> MinutesTime
-                    -> MinutesTime
-                    -> Maybe Int
-                    -> Maybe TimeoutTime
-                    -> Maybe MinutesTime
-                    -> Maybe IPAddress
-                    -> [DocumentLogEntry]
-                    -> BS.ByteString
-                    -> [IdentificationType]
-                    -> Maybe CancelationReason
-                    -> Maybe MinutesTime
-                    -> Maybe SignatoryLinkID
-                    -> Maybe BS.ByteString
-                    -> [DocumentTag]
-                    -> Maybe ServiceID
-                    -> Bool
-                    -> Maybe BS.ByteString
-                    -> Region
-                    -> Either DBException Document
-decodeRowAsDocument
-  did
-  title
-  file_id
-  sealed_file_id
-  status
-  error_text
-  simple_type
-  process
-  functionality
-  ctime
-  mtime
-  days_to_sign
-  timeout_time
-  invite_time
-  invite_ip
-  dlog
-  invite_text
-  allowed_id_types
-  cancelationreason
-  rejection_time
-  rejection_signatory_link_id
-  rejection_reason tags
-  service
-  deleted
-  mail_footer
-  region = Right $ Document {
-     documentid = did
-   , documenttitle = title
-   , documentsignatorylinks = []
-   , documentfiles = maybeToList file_id
-   , documentsealedfiles = maybeToList sealed_file_id
-   , documentstatus = case (status, error_text) of
-     (DocumentError{}, Just text) -> DocumentError text
-     (DocumentError{}, Nothing) -> DocumentError "document error"
-     _ -> status
-   , documenttype = documentType (simple_type, process)
-   , documentfunctionality = functionality
-   , documentctime = ctime
-   , documentmtime = mtime
-   , documentdaystosign = days_to_sign
-   , documenttimeouttime = timeout_time
-   , documentinvitetime = case invite_time of
-       Nothing -> Nothing
-       Just t -> Just (SignInfo t (fromMaybe unknownIPAddress invite_ip))
-   , documentlog = dlog
-   , documentinvitetext = invite_text
-   , documentallowedidtypes = allowed_id_types
-   , documentcancelationreason = cancelationreason
-   , documentsharing = Private
-   , documentrejectioninfo = case (rejection_time, rejection_signatory_link_id, rejection_reason) of
-       (Just t, Just sl, mr) -> Just (t, sl, fromMaybe BS.empty mr)
-       _ -> Nothing
-   , documenttags = tags
-   , documentservice = service
-   , documentdeleted = deleted
-   , documentauthorattachments = []
-   , documentsignatoryattachments = []
-   , documentui = DocumentUI mail_footer
-   , documentregion = region
-   }
-
-selectDocumentsSelectors :: [String]
-selectDocumentsSelectors = [ "id"
-                           , "title"
-                           , "file_id"
-                           , "sealed_file_id"
-                           , "status"
-                           , "error_text"
-                           , "type"
-                           , "process"
-                           , "functionality"
-                           , "ctime"
-                           , "mtime"
-                           , "days_to_sign"
-                           , "timeout_time"
-                           , "invite_time"
-                           , "invite_ip"
-                           , "log"
-                           , "invite_text"
-                           , "allowed_id_types"
-                           , "cancelation_reason"
-                           , "rejection_time"
-                           , "rejection_signatory_link_id"
-                           , "rejection_reason"
-                           , "tags"
-                           , "service_id"
-                           , "deleted"
-                           , "mail_footer"
-                           , "region"
-                           ]
+documentsSelectors :: String
+documentsSelectors = intercalate ", " [
+    "id"
+  , "title"
+  , "file_id"
+  , "sealed_file_id"
+  , "status"
+  , "error_text"
+  , "type"
+  , "process"
+  , "functionality"
+  , "ctime"
+  , "mtime"
+  , "days_to_sign"
+  , "timeout_time"
+  , "invite_time"
+  , "invite_ip"
+  , "log"
+  , "invite_text"
+  , "allowed_id_types"
+  , "cancelation_reason"
+  , "rejection_time"
+  , "rejection_signatory_link_id"
+  , "rejection_reason"
+  , "tags"
+  , "service_id"
+  , "deleted"
+  , "mail_footer"
+  , "region"
+  ]
 
 selectDocumentsSQL :: String
-selectDocumentsSQL = "SELECT " ++ concat (intersperse "," selectDocumentsSelectors) ++ " FROM documents "
+selectDocumentsSQL = "SELECT "
+  ++ documentsSelectors
+  ++ " FROM documents "
 
-fetchDocuments :: Statement -> IO [Document]
-fetchDocuments st = do
-  fetchValues st decodeRowAsDocument
+fetchDocuments :: DB [Document]
+fetchDocuments = foldDB decoder []
+  where
+    decoder acc did title file_id sealed_file_id status error_text simple_type
+     process functionality ctime mtime days_to_sign timeout_time invite_time
+     invite_ip dlog invite_text allowed_id_types cancelationreason rejection_time
+     rejection_signatory_link_id rejection_reason tags service deleted mail_footer
+     region = Document {
+         documentid = did
+       , documenttitle = title
+       , documentsignatorylinks = []
+       , documentfiles = maybeToList file_id
+       , documentsealedfiles = maybeToList sealed_file_id
+       , documentstatus = case (status, error_text) of
+           (DocumentError{}, Just text) -> DocumentError text
+           (DocumentError{}, Nothing) -> DocumentError "document error"
+           _ -> status
+       , documenttype = documentType (simple_type, process)
+       , documentfunctionality = functionality
+       , documentctime = ctime
+       , documentmtime = mtime
+       , documentdaystosign = days_to_sign
+       , documenttimeouttime = timeout_time
+       , documentinvitetime = case invite_time of
+           Nothing -> Nothing
+           Just t -> Just (SignInfo t (fromMaybe unknownIPAddress invite_ip))
+       , documentlog = dlog
+       , documentinvitetext = invite_text
+       , documentallowedidtypes = allowed_id_types
+       , documentcancelationreason = cancelationreason
+       , documentsharing = Private
+       , documentrejectioninfo = case (rejection_time, rejection_signatory_link_id, rejection_reason) of
+           (Just t, Just sl, mr) -> Just (t, sl, fromMaybe BS.empty mr)
+           _ -> Nothing
+       , documenttags = tags
+       , documentservice = service
+       , documentdeleted = deleted
+       , documentauthorattachments = []
+       , documentsignatoryattachments = []
+       , documentui = DocumentUI mail_footer
+       , documentregion = region
+       } : acc
 
-
-selectSignatoryLinksSelectors :: [String]
-selectSignatoryLinksSelectors = [ "id"
-                                , "document_id"
-                                , "user_id"
-                                , "company_id"
-                                , "fields"
-                                , "sign_order"
-                                , "token"
-                                , "sign_time"
-                                , "sign_ip"
-                                , "seen_time"
-                                , "seen_ip"
-                                , "read_invitation"
-                                , "invitation_delivery_status"
-                                , "signinfo_text"
-                                , "signinfo_signature"
-                                , "signinfo_certificate"
-                                , "signinfo_provider"
-                                , "signinfo_first_name_verified"
-                                , "signinfo_last_name_verified"
-                                , "signinfo_personal_number_verified"
-                                , "roles"
-                                , "csv_title"
-                                , "csv_contents"
-                                , "csv_signatory_index"
-                                , "deleted"
-                                , "really_deleted"
-                                ]
+signatoryLinksSelectors :: String
+signatoryLinksSelectors = intercalate ", " [
+    "id"
+  , "document_id"
+  , "user_id"
+  , "company_id"
+  , "fields"
+  , "sign_order"
+  , "token"
+  , "sign_time"
+  , "sign_ip"
+  , "seen_time"
+  , "seen_ip"
+  , "read_invitation"
+  , "invitation_delivery_status"
+  , "signinfo_text"
+  , "signinfo_signature"
+  , "signinfo_certificate"
+  , "signinfo_provider"
+  , "signinfo_first_name_verified"
+  , "signinfo_last_name_verified"
+  , "signinfo_personal_number_verified"
+  , "roles"
+  , "csv_title"
+  , "csv_contents"
+  , "csv_signatory_index"
+  , "deleted"
+  , "really_deleted"
+  ]
 
 selectSignatoryLinksSQL :: String
-selectSignatoryLinksSQL = "SELECT " ++ concat (intersperse "," selectSignatoryLinksSelectors) ++ " FROM signatory_links "
+selectSignatoryLinksSQL = "SELECT "
+  ++ signatoryLinksSelectors
+  ++ " FROM signatory_links "
 
-decodeRowAsSignatoryLinkWithDocumentID :: SignatoryLinkID
-                         -> DocumentID
-                         -> Maybe UserID
-                         -> Maybe CompanyID
-                         -> [SignatoryField]
-                         -> SignOrder
-                         -> MagicHash
-                         -> Maybe MinutesTime
-                         -> Maybe IPAddress
-                         -> Maybe MinutesTime
-                         -> Maybe IPAddress
-                         -> Maybe MinutesTime
-                         -> MailsDeliveryStatus
-                         -> Maybe String
-                         -> Maybe String
-                         -> Maybe String
-                         -> Maybe SignatureProvider
-                         -> Maybe Bool
-                         -> Maybe Bool
-                         -> Maybe Bool
-                         -> [SignatoryRole]
-                         -> Maybe BS.ByteString
-                         -> Maybe [[BS.ByteString]]
-                         -> Maybe Int
-                         -> Bool
-                         -> Bool
-                         -> Either DBException (DocumentID,SignatoryLink)
-decodeRowAsSignatoryLinkWithDocumentID slid
-                         document_id
-                         user_id
-                         company_id
-                         fields
-                         sign_order
-                         token
-                         sign_time
-                         sign_ip
-                         seen_time
-                         seen_ip
-                         read_invitation
-                         invitation_delivery_status
-                         signinfo_text
-                         signinfo_signature
-                         signinfo_certificate
-                         signinfo_provider
-                         signinfo_first_name_verified
-                         signinfo_last_name_verified
-                         signinfo_personal_number_verified
-                         roles
-                         csv_title
-                         csv_contents
-                         csv_signatory_index
-                         deleted
-                         really_deleted =
-    (return $ (document_id,SignatoryLink
-    { signatorylinkid = slid
-    , signatorydetails = SignatoryDetails
-                         { signatorysignorder = sign_order
-                         , signatoryfields = fields
-                         }
-    , signatorymagichash = token
-    , maybesignatory     = user_id
-    , maybesupervisor    = Nothing
-    , maybecompany       = company_id
-    , maybesigninfo      = case (sign_time, sign_ip) of
-                             (Just st, Just sip) -> Just (SignInfo st sip)
-                             _ -> Nothing
-    , maybeseeninfo      = case (seen_time, seen_ip) of
-                             (Just st, Just sip) -> Just (SignInfo st sip)
-                             _ -> Nothing
-    , maybereadinvite    = read_invitation
-    , invitationdeliverystatus = invitation_delivery_status
-    , signatorysignatureinfo = do -- Maybe Monad
-        signinfo_text' <- signinfo_text
-        signinfo_signature' <- signinfo_signature
-        signinfo_certificate' <- signinfo_certificate
-        signinfo_provider' <- signinfo_provider
-        signinfo_first_name_verified' <- signinfo_first_name_verified
-        signinfo_last_name_verified' <- signinfo_last_name_verified
-        signinfo_personal_number_verified' <- signinfo_personal_number_verified
-        return $ SignatureInfo { signatureinfotext        = signinfo_text'
-                               , signatureinfosignature   = signinfo_signature'
-                               , signatureinfocertificate = signinfo_certificate'
-                               , signatureinfoprovider    = signinfo_provider'
-                               , signaturefstnameverified = signinfo_first_name_verified'
-                               , signaturelstnameverified = signinfo_last_name_verified'
-                               , signaturepersnumverified = signinfo_personal_number_verified'
-                               }
-
-    , signatoryroles     = roles
-    , signatorylinkdeleted  = deleted
-    , signatorylinkreallydeleted = really_deleted
-    , signatorylinkcsvupload =
-      case (csv_title, csv_contents, csv_signatory_index) of
-        (Just t, Just c, Just si) -> Just (CSVUpload t c si)
-        _ -> Nothing
-    })) :: Either DBException (DocumentID,SignatoryLink)
-
-
-
-fetchSignatoryLinks :: Statement -> IO [SignatoryLink]
-fetchSignatoryLinks st = do
-  values <- fetchValues st decodeRowAsSignatoryLinkWithDocumentID
-  return (map snd values)
-
-fetchSignatoryLinksWithDocuments :: Statement -> IO [(DocumentID,SignatoryLink)]
-fetchSignatoryLinksWithDocuments st = do
-  fetchValues st decodeRowAsSignatoryLinkWithDocumentID
+fetchSignatoryLinks :: DB [(DocumentID, SignatoryLink)]
+fetchSignatoryLinks = foldDB decoder []
+  where
+    decoder acc slid document_id user_id company_id fields sign_order token
+     sign_time sign_ip seen_time seen_ip read_invitation invitation_delivery_status
+     signinfo_text signinfo_signature signinfo_certificate signinfo_provider
+     signinfo_first_name_verified signinfo_last_name_verified
+     signinfo_personal_number_verified roles csv_title csv_contents
+     csv_signatory_index deleted really_deleted = (document_id, SignatoryLink {
+         signatorylinkid = slid
+       , signatorydetails = SignatoryDetails {
+           signatorysignorder = sign_order
+         , signatoryfields = fields
+       }
+       , signatorymagichash = token
+       , maybesignatory = user_id
+       , maybesupervisor = Nothing
+       , maybecompany = company_id
+       , maybesigninfo = case (sign_time, sign_ip) of
+           (Just st, Just sip) -> Just (SignInfo st sip)
+           _ -> Nothing
+       , maybeseeninfo = case (seen_time, seen_ip) of
+           (Just st, Just sip) -> Just (SignInfo st sip)
+           _ -> Nothing
+       , maybereadinvite = read_invitation
+       , invitationdeliverystatus = invitation_delivery_status
+       , signatorysignatureinfo = do -- Maybe Monad
+           signinfo_text' <- signinfo_text
+           signinfo_signature' <- signinfo_signature
+           signinfo_certificate' <- signinfo_certificate
+           signinfo_provider' <- signinfo_provider
+           signinfo_first_name_verified' <- signinfo_first_name_verified
+           signinfo_last_name_verified' <- signinfo_last_name_verified
+           signinfo_personal_number_verified' <- signinfo_personal_number_verified
+           return $ SignatureInfo {
+               signatureinfotext        = signinfo_text'
+             , signatureinfosignature   = signinfo_signature'
+             , signatureinfocertificate = signinfo_certificate'
+             , signatureinfoprovider    = signinfo_provider'
+             , signaturefstnameverified = signinfo_first_name_verified'
+             , signaturelstnameverified = signinfo_last_name_verified'
+             , signaturepersnumverified = signinfo_personal_number_verified'
+           }
+       , signatoryroles = roles
+       , signatorylinkdeleted = deleted
+       , signatorylinkreallydeleted = really_deleted
+       , signatorylinkcsvupload =
+         case (csv_title, csv_contents, csv_signatory_index) of
+           (Just t, Just c, Just si) -> Just (CSVUpload t c si)
+           _ -> Nothing
+       }) : acc
 
 insertSignatoryLinkAsIs :: DocumentID -> SignatoryLink -> DB (Maybe SignatoryLink)
 insertSignatoryLinkAsIs documentid link = do
@@ -533,154 +384,105 @@ insertSignatoryLinkAsIs documentid link = do
             return Nothing
         Just _ -> return (Just userid1)
 
-  --liftIO $ print link
-  (_, st) <- runInsertStatementWhereReturning "signatory_links"
-                            [ sqlField "id" $ signatorylinkid link
-                            , sqlField "document_id" documentid
-                            , sqlField "user_id" $ ruserid
-                            , sqlField "roles" $ signatoryroles link
-                            , sqlField "company_id" $ maybecompany link
-                            , sqlField "token" $ signatorymagichash link
-                            , sqlField "fields" $ signatoryfields $ signatorydetails link
-                            , sqlField "sign_order"$ signatorysignorder $ signatorydetails link
-                            , sqlField "sign_time" $ signtime `fmap` maybesigninfo link
-                            , sqlField "sign_ip" $ signipnumber `fmap` maybesigninfo link
-                            , sqlField "seen_time" $ signtime `fmap` maybeseeninfo link
-                            , sqlField "seen_ip" $ signipnumber `fmap` maybeseeninfo link
-                            , sqlField "read_invitation" $ maybereadinvite link
-                            , sqlField "invitation_delivery_status" $ invitationdeliverystatus link
-                            , sqlField "signinfo_text" $ signatureinfotext `fmap` signatorysignatureinfo link
-                            , sqlField "signinfo_signature" $ signatureinfosignature `fmap` signatorysignatureinfo link
-                            , sqlField "signinfo_certificate" $ signatureinfocertificate `fmap` signatorysignatureinfo link
-                            , sqlField "signinfo_provider" $ signatureinfoprovider `fmap` signatorysignatureinfo link
-                            , sqlField "signinfo_first_name_verified" $ signaturefstnameverified `fmap` signatorysignatureinfo link
-                            , sqlField "signinfo_last_name_verified" $ signaturelstnameverified `fmap` signatorysignatureinfo link
-                            , sqlField "signinfo_personal_number_verified" $ signaturepersnumverified `fmap` signatorysignatureinfo link
-                            , sqlField "csv_title" $ csvtitle `fmap` signatorylinkcsvupload link
-                            , sqlField "csv_contents" $ csvcontents `fmap` signatorylinkcsvupload link
-                            , sqlField "csv_signatory_index" $ csvsignatoryindex `fmap` signatorylinkcsvupload link
-                            , sqlField "deleted" $ signatorylinkdeleted link
-                            , sqlField "really_deleted" $ signatorylinkreallydeleted link
-                            ]
-                            "NOT EXISTS (SELECT * FROM signatory_links WHERE id = ? AND document_id = ?)"
-                            [ toSql (signatorylinkid link), toSql documentid ]
-                            selectSignatoryLinksSelectors
+  _ <- kRun $ mkSQL INSERT tableSignatoryLinks [
+      sql "id" $ signatorylinkid link
+    , sql "document_id" documentid
+    , sql "user_id" $ ruserid
+    , sql "roles" $ signatoryroles link
+    , sql "company_id" $ maybecompany link
+    , sql "token" $ signatorymagichash link
+    , sql "fields" $ signatoryfields $ signatorydetails link
+    , sql "sign_order"$ signatorysignorder $ signatorydetails link
+    , sql "sign_time" $ signtime `fmap` maybesigninfo link
+    , sql "sign_ip" $ signipnumber `fmap` maybesigninfo link
+    , sql "seen_time" $ signtime `fmap` maybeseeninfo link
+    , sql "seen_ip" $ signipnumber `fmap` maybeseeninfo link
+    , sql "read_invitation" $ maybereadinvite link
+    , sql "invitation_delivery_status" $ invitationdeliverystatus link
+    , sql "signinfo_text" $ signatureinfotext `fmap` signatorysignatureinfo link
+    , sql "signinfo_signature" $ signatureinfosignature `fmap` signatorysignatureinfo link
+    , sql "signinfo_certificate" $ signatureinfocertificate `fmap` signatorysignatureinfo link
+    , sql "signinfo_provider" $ signatureinfoprovider `fmap` signatorysignatureinfo link
+    , sql "signinfo_first_name_verified" $ signaturefstnameverified `fmap` signatorysignatureinfo link
+    , sql "signinfo_last_name_verified" $ signaturelstnameverified `fmap` signatorysignatureinfo link
+    , sql "signinfo_personal_number_verified" $ signaturepersnumverified `fmap` signatorysignatureinfo link
+    , sql "csv_title" $ csvtitle `fmap` signatorylinkcsvupload link
+    , sql "csv_contents" $ csvcontents `fmap` signatorylinkcsvupload link
+    , sql "csv_signatory_index" $ csvsignatoryindex `fmap` signatorylinkcsvupload link
+    , sql "deleted" $ signatorylinkdeleted link
+    , sql "really_deleted" $ signatorylinkreallydeleted link
+    ] <++> SQL ("RETURNING " ++ signatoryLinksSelectors) []
 
-  links <- liftIO $ fetchSignatoryLinks st
+  fetchSignatoryLinks
+    >>= oneObjectReturnedGuard
+    >>= return . fmap snd
 
-  case links of
-    [newlink] -> return (Just newlink)
-    [] -> return Nothing
-    _ -> return Nothing -- should throw an exception probably
-
-selectAuthorAttachmentsSelectors :: [String]
-selectAuthorAttachmentsSelectors = [ "document_id"
-                                   , "file_id"
-                                   ]
+authorAttachmentsSelectors :: String
+authorAttachmentsSelectors = intercalate ", " [
+    "document_id"
+  , "file_id"
+  ]
 
 selectAuthorAttachmentsSQL :: String
-selectAuthorAttachmentsSQL = "SELECT " ++ concat (intersperse "," selectAuthorAttachmentsSelectors) ++ " FROM author_attachments "
+selectAuthorAttachmentsSQL = "SELECT "
+  ++ authorAttachmentsSelectors
+  ++ " FROM author_attachments "
 
-
-decodeRowAsAuthorAttachment :: DocumentID
-                            -> FileID
-                            -> Either DBException (DocumentID, AuthorAttachment)
-decodeRowAsAuthorAttachment document_id
-                            file_id =
-  return ( document_id
-         , AuthorAttachment
-           { authorattachmentfile = file_id
-           })
-
-fetchAuthorAttachmentsWithDocumentID :: Statement -> IO [(DocumentID,AuthorAttachment)]
-fetchAuthorAttachmentsWithDocumentID st = do
-  fetchValues st decodeRowAsAuthorAttachment
-
-fetchAuthorAttachments :: Statement -> IO [AuthorAttachment]
-fetchAuthorAttachments st = do
-  values <- fetchAuthorAttachmentsWithDocumentID st
-  return (map snd values)
+fetchAuthorAttachments :: DB [(DocumentID, AuthorAttachment)]
+fetchAuthorAttachments = foldDB decoder []
+  where
+    decoder acc document_id file_id = (document_id, AuthorAttachment {
+      authorattachmentfile = file_id
+    }) : acc
 
 insertAuthorAttachmentAsIs :: DocumentID -> AuthorAttachment -> DB (Maybe AuthorAttachment)
 insertAuthorAttachmentAsIs documentid attach = do
-  (_, st) <- runInsertStatementWhereReturning "author_attachments"
-                            [ sqlField "file_id" $ authorattachmentfile attach
-                            , sqlField "document_id" documentid
-                            ]
-                            "NOT EXISTS (SELECT * FROM author_attachments WHERE file_id = ? AND document_id = ?)"
-                            [ toSql (authorattachmentfile attach), toSql documentid ]
-                            selectAuthorAttachmentsSelectors
+  _ <- kRun $ mkSQL INSERT tableAuthorAttachments [
+      sql "file_id" $ authorattachmentfile attach
+    , sql "document_id" documentid
+    ] <++> SQL ("RETURNING " ++ authorAttachmentsSelectors) []
 
-  links <- liftIO $ fetchAuthorAttachments st
+  fetchAuthorAttachments
+    >>= oneObjectReturnedGuard
+    >>= return . fmap snd
 
-  case links of
-    [newattach] -> return (Just newattach)
-    [] -> return Nothing
-    _ -> return Nothing -- should throw an exception probably
-
-
-
-selectSignatoryAttachmentsSelectors :: [String]
-selectSignatoryAttachmentsSelectors = [ "document_id"
-                                      , "file_id"
-                                      , "email"
-                                      , "name"
-                                      , "description"
-                                      ]
+signatoryAttachmentsSelectors :: String
+signatoryAttachmentsSelectors = intercalate ", " [
+    "document_id"
+  , "file_id"
+  , "email"
+  , "name"
+  , "description"
+  ]
 
 selectSignatoryAttachmentsSQL :: String
-selectSignatoryAttachmentsSQL = "SELECT " ++ concat (intersperse "," selectAuthorAttachmentsSelectors) ++ " FROM author_attachments "
+selectSignatoryAttachmentsSQL = "SELECT "
+  ++ signatoryAttachmentsSelectors
+  ++ " FROM signatory_attachments "
 
-
-decodeRowAsSignatoryAttachment :: DocumentID
-                               -> Maybe FileID
-                               -> BS.ByteString
-                               -> BS.ByteString
-                               -> BS.ByteString
-                               -> Either DBException (DocumentID, SignatoryAttachment)
-decodeRowAsSignatoryAttachment document_id
-                               file_id
-                               email
-                               name
-                               description =
-   return ( document_id
-          , SignatoryAttachment { signatoryattachmentfile = file_id
-                                , signatoryattachmentemail = email
-                                , signatoryattachmentname = name
-                                , signatoryattachmentdescription = description
-                                })
-
-fetchSignatoryAttachmentsWithDocumentID :: Statement -> IO [(DocumentID,SignatoryAttachment)]
-fetchSignatoryAttachmentsWithDocumentID st = do
-  fetchValues st decodeRowAsSignatoryAttachment
-
-fetchSignatoryAttachments :: Statement -> IO [SignatoryAttachment]
-fetchSignatoryAttachments st = do
-  values <- fetchValues st decodeRowAsSignatoryAttachment
-  return (map snd values)
+fetchSignatoryAttachments :: DB [(DocumentID, SignatoryAttachment)]
+fetchSignatoryAttachments = foldDB decoder []
+  where
+    decoder acc document_id file_id email name description =
+      (document_id, SignatoryAttachment {
+          signatoryattachmentfile = file_id
+        , signatoryattachmentemail = email
+        , signatoryattachmentname = name
+        , signatoryattachmentdescription = description
+        }) : acc
 
 insertSignatoryAttachmentAsIs :: DocumentID -> SignatoryAttachment -> DB (Maybe SignatoryAttachment)
 insertSignatoryAttachmentAsIs documentid attach = do
-  (_, st) <- runInsertStatementWhereReturning "signatory_attachments"
-                            [ sqlField "file_id" $ signatoryattachmentfile attach
-                            , sqlField "document_id" $ documentid
-                            , sqlField "email" $ signatoryattachmentemail attach
-                            , sqlField "name" $ signatoryattachmentname attach
-                            , sqlField "description" $ signatoryattachmentdescription attach
-                            ]
-                            "NOT EXISTS (SELECT * FROM signatory_attachments WHERE file_id = ? AND email = ?)"
-                            [ toSql $ signatoryattachmentfile attach
-                            , toSql $ signatoryattachmentemail attach
-                            ]
-                            selectSignatoryAttachmentsSelectors
-
-  links <- liftIO $ fetchSignatoryAttachments st
-
-  case links of
-    [newattach] -> return (Just newattach)
-    [] -> return Nothing
-    _ -> return Nothing -- should throw an exception probably
-
+  _ <- kRun $ mkSQL INSERT tableSignatoryAttachments [
+      sql "file_id" $ signatoryattachmentfile attach
+    , sql "document_id" $ documentid
+    , sql "email" $ signatoryattachmentemail attach
+    , sql "name" $ signatoryattachmentname attach
+    , sql "description" $ signatoryattachmentdescription attach
+    ] <++> SQL ("RETURNING " ++ signatoryAttachmentsSelectors) []
+  fetchSignatoryAttachments
+    >>= oneObjectReturnedGuard
+    >>= return . fmap snd
 
 insertDocumentAsIs :: Document -> DB (Maybe Document)
 insertDocumentAsIs document = do
@@ -716,50 +518,43 @@ insertDocumentAsIs document = do
     when (fileLost) $
         Log.error $ "!!!!MIGRATION WARN: Document  " ++ (show documentid) ++ " has files ("++ show documentfiles ++ "), but they are not in database. FileID will be dropped."
             ++ "Document was created "++ show documentctime
-    (_,st) <- runInsertStatementWhereReturning "documents"
-                                     [ sqlField "id" documentid
-                                     , sqlField "title" documenttitle
-                                     , sqlField "tags" documenttags
-                                     , sqlField "file_id" $ Nothing<| fileLost |> (listToMaybe documentfiles)
-                                     , sqlField "sealed_file_id" (listToMaybe documentsealedfiles)
-                                     , sqlField "status" documentstatus
-                                     , sqlField "error_text" $ case documentstatus of
-                                                                 DocumentError msg -> toSql msg
-                                                                 _ -> SqlNull
-                                     , sqlField "type" documenttype
-                                     , sqlField "process" process
+    _ <- kRun $ mkSQL INSERT tableDocuments [
+        sql "id" documentid
+      , sql "title" documenttitle
+      , sql "tags" documenttags
+      , sql "file_id" $ Nothing<| fileLost |> (listToMaybe documentfiles)
+      , sql "sealed_file_id" (listToMaybe documentsealedfiles)
+      , sql "status" documentstatus
+      , sql "error_text" $ case documentstatus of
+          DocumentError msg -> toSql msg
+          _ -> SqlNull
+      , sql "type" documenttype
+      , sql "process" process
+      , sql "functionality" documentfunctionality
+      , sql "ctime" documentctime
+      , sql "mtime" documentmtime
+      , sql "days_to_sign" documentdaystosign
+      , sql "timeout_time" documenttimeouttime
+      , sql "invite_time" $ signtime `fmap` documentinvitetime
+      , sql "invite_ip" (fmap signipnumber documentinvitetime)
+      , sql "invite_text" documentinvitetext
+      , sql "log" documentlog
+      , sql "allowed_id_types" documentallowedidtypes
+      , sql "cancelation_reason" documentcancelationreason
+      , sql "rejection_time" $ fst3 `fmap` documentrejectioninfo
+      , sql "rejection_signatory_link_id" $ snd3 `fmap` documentrejectioninfo
+      , sql "rejection_reason" $ thd3 `fmap` documentrejectioninfo
+      , sql "service_id" documentservice
+      , sql "deleted" documentdeleted
+      , sql "mail_footer" $ documentmailfooter $ documentui -- should go into separate table?
+      , sql "region" documentregion
+      , sql "sharing" Private -- this is unused, but does not have default and needs to be specifed here
+      ] <++> SQL ("RETURNING " ++ documentsSelectors) []
 
-                                     , sqlField "functionality" documentfunctionality
-                                     , sqlField "ctime" documentctime
-                                     , sqlField "mtime" documentmtime
-                                     , sqlField "days_to_sign" documentdaystosign
-                                     , sqlField "timeout_time" documenttimeouttime
-                                     , sqlField "invite_time" $ signtime `fmap` documentinvitetime
-                                     , sqlField "invite_ip" (fmap signipnumber documentinvitetime)
-                                     , sqlField "invite_text" documentinvitetext
-                                     , sqlField "log" documentlog
-                                     , sqlField "allowed_id_types" documentallowedidtypes
-                                     , sqlField "cancelation_reason" documentcancelationreason
-                                     , sqlField "rejection_time" $ fst3 `fmap` documentrejectioninfo
-                                     , sqlField "rejection_signatory_link_id" $ snd3 `fmap` documentrejectioninfo
-                                     , sqlField "rejection_reason" $ thd3 `fmap` documentrejectioninfo
-                                     , sqlField "service_id" documentservice
-                                     , sqlField "deleted" documentdeleted
-                                     -- , toSql documentauthorattachments      -- many to many
-                                     -- , toSql documentsignatoryattachments   -- many to many
-                                     , sqlField "mail_footer" $ documentmailfooter $ documentui  -- should go into separate table?
-                                     , sqlField "region" documentregion
-                                     , sqlField "sharing" Private -- this is unused, but does not have default and needs to be specifed here
-                                     ]
-                                     "NOT EXISTS (SELECT * FROM documents WHERE id = ?)"
-                                     [toSql documentid]
-                                     selectDocumentsSelectors
-
-    docs <- liftIO $ fetchDocuments st
-
-    case docs of
-      [] -> return Nothing
-      [doc] -> do
+    mdoc <- fetchDocuments >>= oneObjectReturnedGuard
+    case mdoc of
+      Nothing -> return Nothing
+      Just doc -> do
         mlinks <- mapM (insertSignatoryLinkAsIs documentid) documentsignatorylinks
         mauthorattachments <- mapM (insertAuthorAttachmentAsIs documentid) documentauthorattachments
         msignatoryattachments <- mapM (insertSignatoryAttachmentAsIs documentid) documentsignatoryattachments
@@ -772,7 +567,6 @@ insertDocumentAsIs document = do
                                 }
           assertEqualDocuments document newdocument
           return (Just newdocument)
-      _ -> error "XXX"
 
 insertNewDocument :: Document -> DB Document
 insertNewDocument doc = do
@@ -827,7 +621,7 @@ instance DBUpdate ArchiveDocument (Either String Document) where
       updateArchivableDoc whereClause = kRun $ mconcat [
           mkSQL UPDATE tableSignatoryLinks [sql "deleted" True]
         , whereClause
-        , SQL " AND document_id = ? AND EXISTS (SELECT * FROM documents WHERE id = ? AND status <> ? AND status <> ?)" [
+        , SQL " AND document_id = ? AND EXISTS (SELECT 1 FROM documents WHERE id = ? AND status <> ? AND status <> ?)" [
             toSql did
           , toSql did
           , toSql Pending
@@ -1053,29 +847,25 @@ instance DBQuery GetDeletedDocumentsByUser [Document] where
 
 selectDocuments :: String -> [SqlValue] -> DB [Document]
 selectDocuments select values = do
-    kPrepare $ "CREATE TEMP TABLE docs ON COMMIT DROP AS " ++ select
+    kPrepare $ "CREATE TEMP TABLE docs AS " ++ select
     _ <- kExecute values
 
     kPrepare "SELECT * FROM docs"
     _ <- kExecute []
 
-    docs <- getStatement >>= \(Just st) -> fetchValues st decodeRowAsDocument
+    docs <- fetchDocuments
 
-    kPrepare $ "SELECT " ++ concat (intersperse "," selectSignatoryLinksSelectors) ++
-               " FROM signatory_links WHERE document_id IN (SELECT id FROM docs) ORDER BY document_id, internal_insert_order"
+    kPrepare $ selectSignatoryLinksSQL ++ "WHERE EXISTS (SELECT 1 FROM docs WHERE signatory_links.document_id = docs.id) ORDER BY document_id DESC, internal_insert_order DESC"
     _ <- kExecute []
-    sls <- getStatement >>= \(Just st) -> fetchValues st decodeRowAsSignatoryLinkWithDocumentID
+    sls <- fetchSignatoryLinks
 
-    kPrepare $ "SELECT " ++ concat (intersperse "," selectAuthorAttachmentsSelectors) ++
-               " FROM author_attachments WHERE document_id IN (SELECT id FROM docs) ORDER BY document_id"
+    kPrepare $ selectAuthorAttachmentsSQL ++ "WHERE EXISTS (SELECT 1 FROM docs WHERE author_attachments.document_id = docs.id) ORDER BY document_id DESC"
     _ <- kExecute []
-    ats <- getStatement >>= \(Just st) -> fetchValues st decodeRowAsAuthorAttachment
+    ats <- fetchAuthorAttachments
 
-    kPrepare $ "SELECT " ++ concat (intersperse "," selectSignatoryAttachmentsSelectors) ++
-               " FROM signatory_attachments WHERE document_id IN (SELECT id FROM docs) ORDER BY document_id"
+    kPrepare $ selectSignatoryAttachmentsSQL ++ "WHERE EXISTS (SELECT 1 FROM docs WHERE signatory_attachments.document_id = docs.id) ORDER BY document_id DESC"
     _ <- kExecute []
-
-    sas <- getStatement >>= \(Just st) -> fetchValues st decodeRowAsSignatoryAttachment
+    sas <- fetchSignatoryAttachments
 
     kPrepare $ "DROP TABLE docs"
     _ <- kExecute []
@@ -1158,7 +948,7 @@ instance DBQuery GetDocuments [Document] where
 
 selectDocumentsBySignatoryLink :: String -> [SqlValue] -> DB [Document]
 selectDocumentsBySignatoryLink condition values = do
-    selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT TRUE FROM signatory_links WHERE documents.id = document_id AND " ++ condition ++ ") ORDER BY mtime DESC") values
+    selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT 1 FROM signatory_links WHERE documents.id = document_id AND " ++ condition ++ ") ORDER BY mtime") values
 
 {- |
     All documents authored by the user that have never been deleted.
@@ -1167,7 +957,7 @@ data GetDocumentsByAuthor = GetDocumentsByAuthor UserID
                             deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsByAuthor [Document] where
   dbQuery (GetDocumentsByAuthor uid) = do
-    selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?)<>0) ORDER BY mtime DESC") [toSql uid, toSql [SignatoryAuthor]]
+    selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?)<>0) ORDER BY mtime") [toSql uid, toSql [SignatoryAuthor]]
 
 
 {- |
@@ -1211,7 +1001,7 @@ selectDocumentsBySignatory userid deleted = do
               then ""
               else "AND " ++ activatedSQL) ++
              "AND (   signatory_links.user_id = ? " ++
-             "     OR EXISTS (SELECT TRUE FROM users " ++
+             "     OR EXISTS (SELECT 1 FROM users " ++
              "                WHERE users.id = ? " ++
              "                  AND signatory_links.company_id = users.company_id " ++
              "                  AND users.is_company_admin = TRUE))")
