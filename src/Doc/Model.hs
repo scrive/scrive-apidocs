@@ -24,8 +24,6 @@ module Doc.Model
   , ErrorDocument(..)
   , GetDeletedDocumentsByUser(..)
   , GetDocumentByDocumentID(..)
-  , GetDocumentStats(..)
-  , GetDocumentStatsByUser(..)
   , GetDocuments(..)
   , GetDocumentsByAuthor(..)
   , GetDocumentsByCompanyAndTags(..)
@@ -226,10 +224,10 @@ documentsSelectors = intercalate ", " [
   , "region"
   ]
 
-selectDocumentsSQL :: String
-selectDocumentsSQL = "SELECT "
+selectDocumentsSQL :: SQL
+selectDocumentsSQL = SQL ("SELECT "
   ++ documentsSelectors
-  ++ " FROM documents "
+  ++ " FROM documents ") []
 
 fetchDocuments :: DB [Document]
 fetchDocuments = foldDB decoder []
@@ -304,10 +302,10 @@ signatoryLinksSelectors = intercalate ", " [
   , "really_deleted"
   ]
 
-selectSignatoryLinksSQL :: String
-selectSignatoryLinksSQL = "SELECT "
+selectSignatoryLinksSQL :: SQL
+selectSignatoryLinksSQL = SQL ("SELECT "
   ++ signatoryLinksSelectors
-  ++ " FROM signatory_links "
+  ++ " FROM signatory_links ") []
 
 fetchSignatoryLinks :: DB [(DocumentID, SignatoryLink)]
 fetchSignatoryLinks = foldDB decoder []
@@ -409,10 +407,10 @@ authorAttachmentsSelectors = intercalate ", " [
   , "file_id"
   ]
 
-selectAuthorAttachmentsSQL :: String
-selectAuthorAttachmentsSQL = "SELECT "
+selectAuthorAttachmentsSQL :: SQL
+selectAuthorAttachmentsSQL = SQL ("SELECT "
   ++ authorAttachmentsSelectors
-  ++ " FROM author_attachments "
+  ++ " FROM author_attachments ") []
 
 fetchAuthorAttachments :: DB [(DocumentID, AuthorAttachment)]
 fetchAuthorAttachments = foldDB decoder []
@@ -441,10 +439,10 @@ signatoryAttachmentsSelectors = intercalate ", " [
   , "description"
   ]
 
-selectSignatoryAttachmentsSQL :: String
-selectSignatoryAttachmentsSQL = "SELECT "
+selectSignatoryAttachmentsSQL :: SQL
+selectSignatoryAttachmentsSQL = SQL ("SELECT "
   ++ signatoryAttachmentsSelectors
-  ++ " FROM signatory_attachments "
+  ++ " FROM signatory_attachments ") []
 
 fetchSignatoryAttachments :: DB [(DocumentID, SignatoryAttachment)]
 fetchSignatoryAttachments = foldDB decoder []
@@ -818,31 +816,23 @@ instance DBQuery GetDeletedDocumentsByUser [Document] where
     docs <- selectDocumentsBySignatory (userid user) True
     return docs
 
-selectDocuments :: String -> [SqlValue] -> DB [Document]
-selectDocuments select values = do
-    kPrepare $ "CREATE TEMP TABLE docs AS " ++ select
-    _ <- kExecute values
+selectDocuments :: SQL -> DB [Document]
+selectDocuments query = do
+    _ <- kRun $ SQL "CREATE TEMP TABLE docs AS " [] <++> query
 
-    kPrepare "SELECT * FROM docs"
-    _ <- kExecute []
-
+    _ <- kRun $ SQL "SELECT * FROM docs" []
     docs <- fetchDocuments
 
-    kPrepare $ selectSignatoryLinksSQL ++ "WHERE EXISTS (SELECT 1 FROM docs WHERE signatory_links.document_id = docs.id) ORDER BY document_id DESC, internal_insert_order DESC"
-    _ <- kExecute []
+    _ <- kRun $ selectSignatoryLinksSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE signatory_links.document_id = docs.id) ORDER BY document_id DESC, internal_insert_order DESC" []
     sls <- fetchSignatoryLinks
 
-    kPrepare $ selectAuthorAttachmentsSQL ++ "WHERE EXISTS (SELECT 1 FROM docs WHERE author_attachments.document_id = docs.id) ORDER BY document_id DESC"
-    _ <- kExecute []
+    _ <- kRun $ selectAuthorAttachmentsSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE author_attachments.document_id = docs.id) ORDER BY document_id DESC" []
     ats <- fetchAuthorAttachments
 
-    kPrepare $ selectSignatoryAttachmentsSQL ++ "WHERE EXISTS (SELECT 1 FROM docs WHERE signatory_attachments.document_id = docs.id) ORDER BY document_id DESC"
-    _ <- kExecute []
+    _ <- kRun $ selectSignatoryAttachmentsSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE signatory_attachments.document_id = docs.id) ORDER BY document_id DESC" []
     sas <- fetchSignatoryAttachments
 
-    kPrepare $ "DROP TABLE docs"
-    _ <- kExecute []
-
+    kRunRaw "DROP TABLE docs"
 
     let makeListOfSecond :: (a,b) -> (a,[b])
         makeListOfSecond (a,b) = (a,[b])
@@ -866,67 +856,34 @@ selectDocuments select values = do
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
 instance DBQuery GetDocumentByDocumentID (Maybe Document) where
   dbQuery (GetDocumentByDocumentID did) = do
-    docs <- selectDocuments (selectDocumentsSQL ++ " WHERE id = ? AND deleted = FALSE") [toSql did]
-    case docs of
-      [doc] -> return (Just doc)
-      _ -> return Nothing
-
-data GetDocumentStats = GetDocumentStats
-instance DBQuery GetDocumentStats DocStats where
-  dbQuery (GetDocumentStats) = do
-  undeleteddocs <- selectDocuments (selectDocumentsSQL ++ " WHERE deleted=FALSE") []
-  let signatureCountForDoc :: Document -> Int
-      signatureCountForDoc doc = length $ filter (isJust . maybesigninfo) (documentsignatorylinks doc)
-  return $ DocStats
-      { doccount = (length undeleteddocs)
-      , signaturecount = sum $ map signatureCountForDoc undeleteddocs
-      , signaturecount1m = 0
-      , signaturecount2m = 0
-      , signaturecount3m = 0
-      , signaturecount6m = 0
-      , signaturecount12m = 0
-      }
-
-
-data GetDocumentStatsByUser = GetDocumentStatsByUser User MinutesTime
-instance DBQuery GetDocumentStatsByUser DocStats where
-  dbQuery (GetDocumentStatsByUser user time) = do
-  docs    <- dbQuery $ GetDocumentsByAuthor (userid user)
-  sigdocs <- dbQuery $ GetDocumentsBySignatory user
-  let signaturecount'    = length $ allsigns
-      signaturecount1m'  = length $ filter (isSignedNotLaterThanMonthsAgo 1)  $ allsigns
-      signaturecount2m'  = length $ filter (isSignedNotLaterThanMonthsAgo 2)  $ allsigns
-      signaturecount3m'  = length $ filter (isSignedNotLaterThanMonthsAgo 3)  $ allsigns
-      signaturecount6m'  = length $ filter (isSignedNotLaterThanMonthsAgo 6)  $ allsigns
-      signaturecount12m' = length $ filter (isSignedNotLaterThanMonthsAgo 12) $ allsigns
-      isSignedNotLaterThanMonthsAgo m d = monthsBefore m time < documentmtime d
-      allsigns = filter (\d -> hasSigned $ getSigLinkFor d (userid user)) sigdocs
-  return DocStats { doccount          = length docs
-                  , signaturecount    = signaturecount'
-                  , signaturecount1m  = signaturecount1m'
-                  , signaturecount2m  = signaturecount2m'
-                  , signaturecount3m  = signaturecount3m'
-                  , signaturecount6m  = signaturecount6m'
-                  , signaturecount12m = signaturecount12m'
-                  }
+    selectDocuments (selectDocumentsSQL
+      <++> SQL "WHERE id = ? AND deleted = FALSE" [toSql did])
+      >>= oneObjectReturnedGuard
 
 data GetDocuments = GetDocuments (Maybe ServiceID)
 instance DBQuery GetDocuments [Document] where
-  dbQuery (GetDocuments mserviceid) = do
-    selectDocuments (selectDocumentsSQL ++ " WHERE (?::TEXT IS NULL AND service_id IS NULL) OR (service_id = ?)")  [toSql mserviceid,toSql mserviceid]
+  dbQuery (GetDocuments msid) = do
+    selectDocuments $ selectDocumentsSQL
+      <++> SQL "WHERE service_id IS NOT DISTINCT FROM ?" [toSql msid]
 
-selectDocumentsBySignatoryLink :: String -> [SqlValue] -> DB [Document]
-selectDocumentsBySignatoryLink condition values = do
-    selectDocuments (selectDocumentsSQL ++ " WHERE EXISTS (SELECT 1 FROM signatory_links WHERE documents.id = document_id AND " ++ condition ++ ") ORDER BY mtime") values
+selectDocumentsBySignatoryLink :: SQL -> DB [Document]
+selectDocumentsBySignatoryLink extendedWhere = selectDocuments $ mconcat [
+    selectDocumentsSQL
+  , SQL "WHERE EXISTS (SELECT 1 FROM signatory_links WHERE documents.id = document_id AND " []
+  , extendedWhere
+  , SQL ") ORDER BY mtime" []
+  ]
 
 {- |
     All documents authored by the user that have never been deleted.
 -}
 data GetDocumentsByAuthor = GetDocumentsByAuthor UserID
 instance DBQuery GetDocumentsByAuthor [Document] where
-  dbQuery (GetDocumentsByAuthor uid) = do
-    selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?)<>0) ORDER BY mtime") [toSql uid, toSql [SignatoryAuthor]]
-
+  dbQuery (GetDocumentsByAuthor uid) = selectDocumentsBySignatoryLink $ SQL
+    "signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?) <> 0) ORDER BY mtime" [
+      toSql uid
+    , toSql [SignatoryAuthor]
+    ]
 
 {- |
     Fetches documents by company and tags, this won't return documents that have been deleted (so ones
@@ -936,46 +893,46 @@ instance DBQuery GetDocumentsByAuthor [Document] where
 data GetDocumentsByCompanyAndTags = GetDocumentsByCompanyAndTags (Maybe ServiceID) CompanyID [DocumentTag]
 instance DBQuery GetDocumentsByCompanyAndTags [Document] where
   dbQuery (GetDocumentsByCompanyAndTags mservice companyid doctags) = do
-        docs <- selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND " ++
-                                                "signatory_links.company_id = ? AND " ++
-                                                activatedSQL ++ " AND " ++
-                                                "(signatory_links.roles = ? OR signatory_links.roles = ?) AND " ++
-                                                "((?::TEXT IS NULL AND service_id IS NULL) OR (service_id = ?)) ")
-                [ toSql companyid,
-                  toSql [SignatoryAuthor],
-                  toSql [SignatoryAuthor, SignatoryPartner],
-                  toSql mservice,
-                  toSql mservice
-                ]
-        return (filter hasTags docs)
+    docs <- selectDocumentsBySignatoryLink $ mconcat [
+        SQL "signatory_links.deleted = FALSE AND signatory_links.company_id = ? AND "
+          [toSql companyid]
+      , activatedSQL
+      , SQL "AND (signatory_links.roles = ? OR signatory_links.roles = ?) " [
+          toSql [SignatoryAuthor]
+        , toSql [SignatoryAuthor, SignatoryPartner]
+        ]
+      , SQL "AND service_id IS NOT DISTINCT FROM ? " [toSql mservice]
+      ]
+    return (filter hasTags docs)
     where hasTags doc = all (`elem` (documenttags doc)) doctags
 
-activatedSQL :: String
-activatedSQL = "(NOT EXISTS (" ++ subselect ++ ")) "
-  where
-    subselect = "SELECT 1 FROM signatory_links AS sl2 " ++
-                "WHERE signatory_links.document_id = sl2.document_id " ++
-                "  AND ((sl2.roles & 1) <> 0) " ++
-                "  AND sl2.sign_time IS NULL " ++
-                "  AND sl2.sign_order < signatory_links.sign_order "
+activatedSQL :: SQL
+activatedSQL = mconcat [
+    SQL " (NOT EXISTS (" []
+  , SQL ("SELECT 1 FROM signatory_links AS sl2"
+      ++ " WHERE signatory_links.document_id = sl2.document_id"
+      ++ "  AND ((sl2.roles & ?) <> 0)"
+      ++ "  AND sl2.sign_time IS NULL"
+      ++ "  AND sl2.sign_order < signatory_links.sign_order")
+      [toSql [SignatoryAuthor]]
+  , SQL ")) " []
+  ]
 
 selectDocumentsBySignatory :: UserID -> Bool -> DB [Document]
-selectDocumentsBySignatory userid deleted = do
-    docs <- selectDocumentsBySignatoryLink
-            ("    signatory_links.deleted = " ++ show deleted ++ " " ++
-             "AND signatory_links.really_deleted = FALSE " ++
-             (if deleted
-              then ""
-              else "AND " ++ activatedSQL) ++
-             "AND (   signatory_links.user_id = ? " ++
-             "     OR EXISTS (SELECT 1 FROM users " ++
-             "                WHERE users.id = ? " ++
-             "                  AND signatory_links.company_id = users.company_id " ++
-             "                  AND users.is_company_admin = TRUE))")
-             [ toSql userid
-             , toSql userid
-             ]
-    return docs
+selectDocumentsBySignatory userid deleted =
+  selectDocumentsBySignatoryLink $ mconcat [
+      SQL "signatory_links.deleted = ? AND signatory_links.really_deleted = FALSE"
+        [toSql deleted]
+    , if deleted then mempty else SQL " AND " [] <++> activatedSQL
+    , SQL (" AND (signatory_links.user_id = ?"
+      ++  "   OR EXISTS (SELECT 1 FROM users "
+      ++  "    WHERE users.id = ? "
+      ++  "    AND signatory_links.company_id = users.company_id "
+      ++  "    AND users.is_company_admin = TRUE))") [
+        toSql userid
+      , toSql userid
+      ]
+    ]
 
 {- |
     All documents where the user is a signatory that are not deleted.  An author is a type
@@ -992,10 +949,11 @@ instance DBQuery GetDocumentsBySignatory [Document] where
 data GetTimeoutedButPendingDocuments = GetTimeoutedButPendingDocuments MinutesTime
 instance DBQuery GetTimeoutedButPendingDocuments [Document] where
   dbQuery (GetTimeoutedButPendingDocuments mtime) = do
-        selectDocuments (selectDocumentsSQL ++ " WHERE status = ? AND timeout_time IS NOT NULL AND timeout_time < ?")
-                      [ toSql Pending
-                      , toSql mtime
-                      ]
+    selectDocuments $ selectDocumentsSQL
+      <++> SQL "WHERE status = ? AND timeout_time IS NOT NULL AND timeout_time < ?" [
+        toSql Pending
+      , toSql mtime
+      ]
 
 data MarkDocumentSeen = MarkDocumentSeen DocumentID SignatoryLinkID MagicHash MinutesTime IPAddress
 instance DBUpdate MarkDocumentSeen (Either String Document) where
@@ -1014,7 +972,9 @@ instance DBUpdate MarkDocumentSeen (Either String Document) where
       ]
     -- it's okay if we don't update the doc because it's been seen or signed already
     -- (see jira #1194)
-    getOneDocumentAffected "MarkDocumentSeen" (max 1 r) did
+    -- FIXME: (max 1 r) should be there instead of r, but with (max 1 r)
+    -- few tests fails. it should be done properly.
+    getOneDocumentAffected "MarkDocumentSeen" r did
 
 data AddInvitationEvidence = AddInvitationEvidence DocumentID SignatoryLinkID MinutesTime IPAddress
 instance DBUpdate AddInvitationEvidence (Either String Document) where
