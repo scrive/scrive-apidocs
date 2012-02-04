@@ -666,10 +666,8 @@ handleIssueShowGet docid = do
             let filesforattachments = [(fid, f) | (fid, Just f) <- filesforattachments']
             case (documentstatus document) of
               Preparation -> do
-                mattachments <- getDocsByLoggedInUser
-                case mattachments of
-                  Left _ -> Right <$> pageDocumentDesign ctx2 document step showadvancedoption [] filesforattachments
-                  Right attachments -> Right <$> pageDocumentDesign ctx2 document step showadvancedoption (filter isAttachment attachments) filesforattachments
+                attachments <- runDBQuery $ GetAttachmentsBySignatory author
+                Right <$> pageDocumentDesign ctx2 document step showadvancedoption attachments filesforattachments
               _ ->  Right <$> pageDocumentForAuthor ctx2 document
           (_, Just invitedlink, _, _) -> Right <$> pageDocumentForSignatory (LinkSignDoc document invitedlink) document ctx invitedlink
           -- others in company can just look (but not touch)
