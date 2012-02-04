@@ -84,7 +84,6 @@ import Company.Model
 import MinutesTime
 import Doc.DocStateData
 import Doc.Invariants
-import Data.Data
 import Database.HDBC
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
@@ -588,7 +587,6 @@ newFromDocument f docid = do
     involve editing all the docs as a user moves between private and company accounts.
 -}
 data AdminOnlySaveForUser = AdminOnlySaveForUser DocumentID User
-                            deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate AdminOnlySaveForUser (Either String Document) where
   dbUpdate (AdminOnlySaveForUser did user) = do
     r <- kRun $ mkSQL UPDATE tableSignatoryLinks [sql "company_id" $ usercompany user]
@@ -599,7 +597,6 @@ instance DBUpdate AdminOnlySaveForUser (Either String Document) where
     getOneDocumentAffected "AdminOnlySaveForUser" r did
 
 data ArchiveDocument = ArchiveDocument User DocumentID
-                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate ArchiveDocument (Either String Document) where
   dbUpdate (ArchiveDocument user did) = do
     r <- case (usercompany user, useriscompanyadmin user) of
@@ -623,7 +620,6 @@ instance DBUpdate ArchiveDocument (Either String Document) where
         ]
 
 data AttachCSVUpload = AttachCSVUpload DocumentID SignatoryLinkID CSVUpload
-                       deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate AttachCSVUpload (Either String Document) where
   dbUpdate (AttachCSVUpload did slid csvupload) = do
     mdocument <- dbQuery $ GetDocumentByDocumentID did
@@ -645,7 +641,6 @@ instance DBUpdate AttachCSVUpload (Either String Document) where
           _ -> return $ Left $ "Document #" ++ show documentid ++ " is in " ++ show (documentstatus document) ++ " state, must be Preparation"
 
 data AttachFile = AttachFile DocumentID FileID MinutesTime
-                  deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate AttachFile (Either String Document) where
   dbUpdate (AttachFile did fid time) = do
     r <- kRun $ mkSQL UPDATE tableDocuments [
@@ -656,7 +651,6 @@ instance DBUpdate AttachFile (Either String Document) where
     getOneDocumentAffected "AttachFile" r did
 
 data AttachSealedFile = AttachSealedFile DocumentID FileID MinutesTime
-                        deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate AttachSealedFile (Either String Document) where
   dbUpdate (AttachSealedFile did fid time) = do
     r <- kRun $ mkSQL UPDATE tableDocuments [
@@ -667,7 +661,6 @@ instance DBUpdate AttachSealedFile (Either String Document) where
     getOneDocumentAffected "AttachSealedFile" r did
 
 data CancelDocument = CancelDocument DocumentID CancelationReason MinutesTime IPAddress
-                      deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate CancelDocument (Either String Document) where
   dbUpdate (CancelDocument did reason mtime ipaddress) = do
     mdocument <- dbQuery $ GetDocumentByDocumentID did
@@ -705,7 +698,6 @@ instance DBUpdate ChangeMainfile (Either String Document) where
         allHadSigned doc = all (hasSigned ||^ (not . isSignatory)) $ documentsignatorylinks doc
 
 data ChangeSignatoryEmailWhenUndelivered = ChangeSignatoryEmailWhenUndelivered DocumentID SignatoryLinkID (Maybe User) BS.ByteString
-                                           deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate ChangeSignatoryEmailWhenUndelivered (Either String Document) where
   dbUpdate (ChangeSignatoryEmailWhenUndelivered did slid muser email) = do
     Just doc <- dbQuery $ GetDocumentByDocumentID did
@@ -732,7 +724,6 @@ instance DBUpdate ChangeSignatoryEmailWhenUndelivered (Either String Document) w
     getOneDocumentAffected "ChangeSignatoryEmailWhenUndelivered" r did
 
 data PreparationToPending = PreparationToPending DocumentID MinutesTime
-                     deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate PreparationToPending (Either String Document) where
   dbUpdate (PreparationToPending docid time) = do
     mdocument <- dbQuery $ GetDocumentByDocumentID docid
@@ -755,7 +746,6 @@ instance DBUpdate PreparationToPending (Either String Document) where
           s -> return $ Left $ "Cannot PreparationToPending document " ++ show docid ++ " because " ++ concat s
 
 data CloseDocument = CloseDocument DocumentID MinutesTime IPAddress
-                     deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate CloseDocument (Either String Document) where
   dbUpdate (CloseDocument docid time ipaddress) = do
     mdocument <- dbQuery $ GetDocumentByDocumentID docid
@@ -776,7 +766,6 @@ instance DBUpdate CloseDocument (Either String Document) where
           s -> return $ Left $ "Cannot CloseDocument " ++ show docid ++ " because " ++ concat s
 
 data DeleteSigAttachment = DeleteSigAttachment DocumentID BS.ByteString FileID
-                           deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate DeleteSigAttachment (Either String Document) where
   dbUpdate (DeleteSigAttachment did email fid) = do
     r <- kRun $ mkSQL UPDATE tableSignatoryAttachments [sql "file_id" SqlNull]
@@ -788,7 +777,6 @@ instance DBUpdate DeleteSigAttachment (Either String Document) where
     getOneDocumentAffected "DeleteSigAttachment" r did
 
 data DocumentFromSignatoryData = DocumentFromSignatoryData DocumentID BS.ByteString BS.ByteString BS.ByteString BS.ByteString BS.ByteString BS.ByteString [BS.ByteString]
-                                 deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate DocumentFromSignatoryData (Either String Document) where
   dbUpdate (DocumentFromSignatoryData docid fstname sndname email company personalnumber companynumber fieldvalues) = do
         newFromDocument toNewDoc docid
@@ -815,7 +803,6 @@ instance DBUpdate DocumentFromSignatoryData (Either String Document) where
     pumpData siglink = replaceSignatoryData siglink fstname sndname email company personalnumber companynumber fieldvalues
 
 data ErrorDocument = ErrorDocument DocumentID String
-                     deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate ErrorDocument (Either String Document) where
   dbUpdate (ErrorDocument docid errmsg) = do
     mdocument <- dbQuery $ GetDocumentByDocumentID docid
@@ -832,7 +819,6 @@ instance DBUpdate ErrorDocument (Either String Document) where
           s -> return $ Left $ "Cannot ErrorDocument document " ++ show docid ++ " because " ++ concat s
 
 data GetDeletedDocumentsByUser = GetDeletedDocumentsByUser User
-                                 deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDeletedDocumentsByUser [Document] where
   dbQuery (GetDeletedDocumentsByUser user) = do
     docs <- selectDocumentsBySignatory (userid user) True
@@ -884,7 +870,6 @@ selectDocuments select values = do
 
 
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
-                               deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentByDocumentID (Maybe Document) where
   dbQuery (GetDocumentByDocumentID did) = do
     docs <- selectDocuments (selectDocumentsSQL ++ " WHERE id = ? AND deleted = FALSE") [toSql did]
@@ -893,7 +878,6 @@ instance DBQuery GetDocumentByDocumentID (Maybe Document) where
       _ -> return Nothing
 
 data GetDocumentStats = GetDocumentStats
-                        deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentStats DocStats where
   dbQuery (GetDocumentStats) = do
   undeleteddocs <- selectDocuments (selectDocumentsSQL ++ " WHERE deleted=FALSE") []
@@ -911,7 +895,6 @@ instance DBQuery GetDocumentStats DocStats where
 
 
 data GetDocumentStatsByUser = GetDocumentStatsByUser User MinutesTime
-                              deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentStatsByUser DocStats where
   dbQuery (GetDocumentStatsByUser user time) = do
   docs    <- dbQuery $ GetDocumentsByAuthor (userid user)
@@ -934,7 +917,6 @@ instance DBQuery GetDocumentStatsByUser DocStats where
                   }
 
 data GetDocuments = GetDocuments (Maybe ServiceID)
-                    deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocuments [Document] where
   dbQuery (GetDocuments mserviceid) = do
     selectDocuments (selectDocumentsSQL ++ " WHERE (?::TEXT IS NULL AND service_id IS NULL) OR (service_id = ?)")  [toSql mserviceid,toSql mserviceid]
@@ -947,7 +929,6 @@ selectDocumentsBySignatoryLink condition values = do
     All documents authored by the user that have never been deleted.
 -}
 data GetDocumentsByAuthor = GetDocumentsByAuthor UserID
-                            deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsByAuthor [Document] where
   dbQuery (GetDocumentsByAuthor uid) = do
     selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?)<>0) ORDER BY mtime") [toSql uid, toSql [SignatoryAuthor]]
@@ -959,7 +940,6 @@ instance DBQuery GetDocumentsByAuthor [Document] where
     cases where the company is linked via a signatory that hasn't yet been activated.
 -}
 data GetDocumentsByCompanyAndTags = GetDocumentsByCompanyAndTags (Maybe ServiceID) CompanyID [DocumentTag]
-                                    deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsByCompanyAndTags [Document] where
   dbQuery (GetDocumentsByCompanyAndTags mservice companyid doctags) = do
         docs <- selectDocumentsBySignatoryLink ("signatory_links.deleted = FALSE AND " ++
@@ -1010,14 +990,12 @@ selectDocumentsBySignatory userid deleted = do
     has not yet been activated according to the document's sign order, are excluded.
 -}
 data GetDocumentsBySignatory = GetDocumentsBySignatory User
-                               deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetDocumentsBySignatory [Document] where
   dbQuery (GetDocumentsBySignatory user) = do
     docs <- selectDocumentsBySignatory (userid user) False
     return docs
 
 data GetTimeoutedButPendingDocuments = GetTimeoutedButPendingDocuments MinutesTime
-                                       deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetTimeoutedButPendingDocuments [Document] where
   dbQuery (GetTimeoutedButPendingDocuments mtime) = do
         selectDocuments (selectDocumentsSQL ++ " WHERE status = ? AND timeout_time IS NOT NULL AND timeout_time < ?")
@@ -1026,7 +1004,6 @@ instance DBQuery GetTimeoutedButPendingDocuments [Document] where
                       ]
 
 data MarkDocumentSeen = MarkDocumentSeen DocumentID SignatoryLinkID MagicHash MinutesTime IPAddress
-                        deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate MarkDocumentSeen (Either String Document) where
   dbUpdate (MarkDocumentSeen did slid mh time ipnumber) = do
     r <- kRun $ mkSQL UPDATE tableSignatoryLinks [
@@ -1046,7 +1023,6 @@ instance DBUpdate MarkDocumentSeen (Either String Document) where
     getOneDocumentAffected "MarkDocumentSeen" (max 1 r) did
 
 data AddInvitationEvidence = AddInvitationEvidence DocumentID SignatoryLinkID MinutesTime IPAddress
-                          deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate AddInvitationEvidence (Either String Document) where
   dbUpdate (AddInvitationEvidence docid _slid _time _ipnumber) = do
   -- modifySignable docid $ \document ->
@@ -1061,7 +1037,6 @@ instance DBUpdate AddInvitationEvidence (Either String Document) where
       Just doc -> return $ Right doc
 
 data MarkInvitationRead = MarkInvitationRead DocumentID SignatoryLinkID MinutesTime
-                          deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate MarkInvitationRead (Either String Document) where
   dbUpdate (MarkInvitationRead did linkid time) = do
     r <- kRun $ mkSQL UPDATE tableSignatoryLinks [sql "read_invitation" time]
@@ -1072,7 +1047,6 @@ instance DBUpdate MarkInvitationRead (Either String Document) where
     getOneDocumentAffected "MarkInvitationRead" r did
 
 data NewDocument = NewDocument User (Maybe Company) BS.ByteString DocumentType MinutesTime
-                 deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate NewDocument (Either String Document) where
   dbUpdate (NewDocument user mcompany title documenttype ctime) = do
   if fmap companyid mcompany /= usercompany user
@@ -1129,7 +1103,6 @@ instance DBUpdate NewDocument (Either String Document) where
 
 
 data ReallyDeleteDocument = ReallyDeleteDocument User DocumentID
-                             deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate ReallyDeleteDocument (Either String Document) where
   dbUpdate (ReallyDeleteDocument user did) = do
     r <- case (usercompany user, useriscompanyadmin user) of
@@ -1144,7 +1117,6 @@ instance DBUpdate ReallyDeleteDocument (Either String Document) where
         ]
 
 data RejectDocument = RejectDocument DocumentID SignatoryLinkID MinutesTime IPAddress (Maybe BS.ByteString)
-                      deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate RejectDocument (Either String Document) where
   dbUpdate (RejectDocument docid slid time ipnumber customtext) =do
     mdocument <- dbQuery $ GetDocumentByDocumentID docid
@@ -1165,7 +1137,6 @@ instance DBUpdate RejectDocument (Either String Document) where
           s -> return $ Left $ "Cannot RejectDocument document " ++ show docid ++ " because " ++ concat s
 
 data RestartDocument = RestartDocument Document User MinutesTime IPAddress
-                       deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate RestartDocument (Either String Document) where
   dbUpdate (RestartDocument doc user time ipnumber) = do
     mndoc <- tryToGetRestarted
@@ -1204,7 +1175,6 @@ instance DBUpdate RestartDocument (Either String Document) where
                  }
 
 data RestoreArchivedDocument = RestoreArchivedDocument User DocumentID
-                                deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate RestoreArchivedDocument (Either String Document) where
   dbUpdate (RestoreArchivedDocument user did) = do
     r <- case (usercompany user, useriscompanyadmin user) of
@@ -1225,7 +1195,6 @@ instance DBUpdate RestoreArchivedDocument (Either String Document) where
       \3. the email of a signatory is corrected to that of an existing user
 -}
 data SaveDocumentForUser = SaveDocumentForUser DocumentID User SignatoryLinkID
-                           deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SaveDocumentForUser (Either String Document) where
   dbUpdate (SaveDocumentForUser did User{userid, usercompany} slid) = do
     r <- kRun $ mkSQL UPDATE tableSignatoryLinks [
@@ -1243,7 +1212,6 @@ instance DBUpdate SaveDocumentForUser (Either String Document) where
     or the document does not exist a Left is returned.
 -}
 data SaveSigAttachment = SaveSigAttachment DocumentID BS.ByteString BS.ByteString FileID
-                         deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SaveSigAttachment (Either String Document) where
   dbUpdate (SaveSigAttachment did name email fid) = do
     r <- kRun $ mkSQL UPDATE tableSignatoryAttachments [sql "file_id" fid]
@@ -1255,7 +1223,6 @@ instance DBUpdate SaveSigAttachment (Either String Document) where
     getOneDocumentAffected "SaveSigAttachment" r did
 
 data SetDocumentTags = SetDocumentTags DocumentID [DocumentTag]
-                       deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentTags (Either String Document) where
   dbUpdate (SetDocumentTags did doctags) = do
     r <- kRun $ mkSQL UPDATE tableDocuments [sql "tags" doctags]
@@ -1263,7 +1230,6 @@ instance DBUpdate SetDocumentTags (Either String Document) where
     getOneDocumentAffected "SetDocumentTags" r did
 
 data SetDocumentInviteTime = SetDocumentInviteTime DocumentID MinutesTime IPAddress
-                       deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentInviteTime (Either String Document) where
   dbUpdate (SetDocumentInviteTime did invitetime ipaddress) = do
     r <- kRun $ mkSQL UPDATE tableDocuments [
@@ -1273,7 +1239,6 @@ instance DBUpdate SetDocumentInviteTime (Either String Document) where
     getOneDocumentAffected "SetDocumentInviteTime" r did
 
 data SetDocumentTimeoutTime = SetDocumentTimeoutTime DocumentID MinutesTime
-                              deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentTimeoutTime (Either String Document) where
   dbUpdate (SetDocumentTimeoutTime did timeouttime) = do
     r <- kRun $ mkSQL UPDATE tableDocuments [sql "timeout_time" timeouttime]
@@ -1284,7 +1249,6 @@ instance DBUpdate SetDocumentTimeoutTime (Either String Document) where
     getOneDocumentAffected "SetDocumentTimeoutTime" r did
 
 data SetSignatoryCompany = SetSignatoryCompany DocumentID SignatoryLinkID CompanyID
-                        deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetSignatoryCompany (Either String Document) where
   dbUpdate (SetSignatoryCompany did slid cid) = do
     r <- kRun $ mkSQL UPDATE tableSignatoryLinks [sql "company_id" cid]
@@ -1295,7 +1259,6 @@ instance DBUpdate SetSignatoryCompany (Either String Document) where
     getOneDocumentAffected "SetSignatoryCompany" r did
 
 data RemoveSignatoryCompany = RemoveSignatoryCompany DocumentID SignatoryLinkID
-                        deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate RemoveSignatoryCompany (Either String Document) where
   dbUpdate (RemoveSignatoryCompany did slid) = do
     r <- kRun $ mkSQL UPDATE tableSignatoryLinks [sql "company_id" SqlNull]
@@ -1306,7 +1269,6 @@ instance DBUpdate RemoveSignatoryCompany (Either String Document) where
     getOneDocumentAffected "RemoveSignatoryCompany" r did
 
 data SetSignatoryUser = SetSignatoryUser DocumentID SignatoryLinkID UserID
-                        deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetSignatoryUser (Either String Document) where
   dbUpdate (SetSignatoryUser did slid uid) = do
     r <- kRun $ mkSQL UPDATE tableSignatoryLinks [sql "user_id" uid]
@@ -1317,7 +1279,6 @@ instance DBUpdate SetSignatoryUser (Either String Document) where
     getOneDocumentAffected "SetSignatoryUser" r did
 
 data RemoveSignatoryUser = RemoveSignatoryUser DocumentID SignatoryLinkID
-                        deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate RemoveSignatoryUser (Either String Document) where
   dbUpdate (RemoveSignatoryUser did slid) = do
     r <- kRun $ mkSQL UPDATE tableSignatoryLinks [sql "user_id" SqlNull]
@@ -1328,7 +1289,6 @@ instance DBUpdate RemoveSignatoryUser (Either String Document) where
     getOneDocumentAffected "RemoveSignatoryUser" r did
 
 data SetInviteText = SetInviteText DocumentID BS.ByteString MinutesTime
-                        deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetInviteText (Either String Document) where
   dbUpdate (SetInviteText did text time) = do
     r <- kRun $ mkSQL UPDATE tableDocuments [
@@ -1339,7 +1299,6 @@ instance DBUpdate SetInviteText (Either String Document) where
     getOneDocumentAffected "SetInviteText" r did
 
 data SetDaysToSign = SetDaysToSign DocumentID Int MinutesTime
-                        deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDaysToSign (Either String Document) where
   dbUpdate (SetDaysToSign did days time) = do
     r <- kRun $ mkSQL UPDATE tableDocuments [
@@ -1350,7 +1309,6 @@ instance DBUpdate SetDaysToSign (Either String Document) where
     getOneDocumentAffected "SetDaysToSign" r did
 
 data RemoveDaysToSign = RemoveDaysToSign DocumentID MinutesTime
-                        deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate RemoveDaysToSign (Either String Document) where
   dbUpdate (RemoveDaysToSign did time) = do
     r <- kRun $ mkSQL UPDATE tableDocuments [
@@ -1361,7 +1319,6 @@ instance DBUpdate RemoveDaysToSign (Either String Document) where
     getOneDocumentAffected "RemoveDaysToSign" r did
 
 data SetDocumentAdvancedFunctionality = SetDocumentAdvancedFunctionality DocumentID MinutesTime
-                        deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentAdvancedFunctionality (Either String Document) where
   dbUpdate (SetDocumentAdvancedFunctionality did time) = do
     r <- kRun $ mkSQL UPDATE tableDocuments [
@@ -1375,7 +1332,6 @@ instance DBUpdate SetDocumentAdvancedFunctionality (Either String Document) wher
     getOneDocumentAffected "SetDocumentAdvancedFunctionality" r did
 
 data SetDocumentTitle = SetDocumentTitle DocumentID BS.ByteString MinutesTime
-                        deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentTitle (Either String Document) where
   dbUpdate (SetDocumentTitle did doctitle time) = do
     r <- kRun $ mkSQL UPDATE tableDocuments [
@@ -1386,7 +1342,6 @@ instance DBUpdate SetDocumentTitle (Either String Document) where
     getOneDocumentAffected "SetDocumentTitle" r did
 
 data SetDocumentLocale = SetDocumentLocale DocumentID Locale MinutesTime
-                        deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentLocale (Either String Document) where
   dbUpdate (SetDocumentLocale did locale time) = do
     r <- kRun $ mkSQL UPDATE tableDocuments [
@@ -1397,7 +1352,6 @@ instance DBUpdate SetDocumentLocale (Either String Document) where
     getOneDocumentAffected "SetDocumentLocale" r did
 
 data SetDocumentUI = SetDocumentUI DocumentID DocumentUI
-                     deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentUI (Either String Document) where
   dbUpdate (SetDocumentUI did documentui) = do
     r <- kRun $ mkSQL UPDATE tableDocuments [
@@ -1406,7 +1360,6 @@ instance DBUpdate SetDocumentUI (Either String Document) where
     getOneDocumentAffected "SetDocumentUI" r did
 
 data SetInvitationDeliveryStatus = SetInvitationDeliveryStatus DocumentID SignatoryLinkID MailsDeliveryStatus
-                                   deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetInvitationDeliveryStatus (Either String Document) where
   dbUpdate (SetInvitationDeliveryStatus did slid status) = do
     r <- kRun $ mkSQL UPDATE tableSignatoryLinks [
@@ -1420,7 +1373,6 @@ instance DBUpdate SetInvitationDeliveryStatus (Either String Document) where
     getOneDocumentAffected "SetInvitationDeliveryStatus" r did
 
 data SignDocument = SignDocument DocumentID SignatoryLinkID MagicHash MinutesTime IPAddress (Maybe SignatureInfo)
-                    deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SignDocument (Either String Document) where
   dbUpdate (SignDocument docid slid mh time ipnumber msiginfo) = do
     mdocument <- dbQuery $ GetDocumentByDocumentID docid
@@ -1447,14 +1399,12 @@ instance DBUpdate SignDocument (Either String Document) where
           s -> return $ Left $ "Cannot SignDocument document " ++ show docid ++ " because " ++ concat s
 
 data ResetSignatoryDetails = ResetSignatoryDetails DocumentID [(SignatoryDetails, [SignatoryRole])] MinutesTime
-                                  deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate ResetSignatoryDetails (Either String Document) where
   dbUpdate (ResetSignatoryDetails documentid signatories time) =
     dbUpdate (ResetSignatoryDetails2 documentid (map (\(a,b) -> (a,b,Nothing)) signatories) time)
 
 
 data ResetSignatoryDetails2 = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryRole], Maybe CSVUpload)] MinutesTime
-                                  deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate ResetSignatoryDetails2 (Either String Document) where
   dbUpdate (ResetSignatoryDetails2 documentid signatories _time) = do
     mdocument <- dbQuery $ GetDocumentByDocumentID documentid
@@ -1499,7 +1449,6 @@ instance DBUpdate ResetSignatoryDetails2 (Either String Document) where
 
 
 data SignLinkFromDetailsForTest = SignLinkFromDetailsForTest SignatoryDetails [SignatoryRole]
-                                  deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SignLinkFromDetailsForTest SignatoryLink where
   dbUpdate (SignLinkFromDetailsForTest details roles) = do
       kRunRaw "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
@@ -1513,7 +1462,6 @@ instance DBUpdate SignLinkFromDetailsForTest SignatoryLink where
       return link
 
 data SignableFromDocumentIDWithUpdatedAuthor = SignableFromDocumentIDWithUpdatedAuthor User (Maybe Company) DocumentID MinutesTime
-                                               deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SignableFromDocumentIDWithUpdatedAuthor (Either String Document) where
   dbUpdate (SignableFromDocumentIDWithUpdatedAuthor user mcompany docid time) =
       if fmap companyid mcompany /= usercompany user
@@ -1531,7 +1479,6 @@ instance DBUpdate SignableFromDocumentIDWithUpdatedAuthor (Either String Documen
             | otherwise = sl
 
 data StoreDocumentForTesting = StoreDocumentForTesting Document
-                               deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate StoreDocumentForTesting DocumentID where
   dbUpdate (StoreDocumentForTesting document) = do
     -- FIXME: this requires more thinking...
@@ -1546,7 +1493,6 @@ instance DBUpdate StoreDocumentForTesting DocumentID where
    - should not change type or copy this doc into new doc
 -}
 data TemplateFromDocument = TemplateFromDocument DocumentID
-                            deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate TemplateFromDocument (Either String Document) where
   dbUpdate (TemplateFromDocument did) = do
     r <- kRun $ mkSQL UPDATE tableDocuments [
@@ -1556,7 +1502,6 @@ instance DBUpdate TemplateFromDocument (Either String Document) where
     getOneDocumentAffected "TemplateFromDocument" r did
 
 data TimeoutDocument = TimeoutDocument DocumentID MinutesTime
-                       deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate TimeoutDocument (Either String Document) where
   dbUpdate (TimeoutDocument did time) = do
     r <- kRun $ mkSQL UPDATE tableDocuments [
@@ -1571,7 +1516,6 @@ instance DBUpdate TimeoutDocument (Either String Document) where
     getOneDocumentAffected "TimeoutDocument" r did
 
 data SetEmailIdentification = SetEmailIdentification DocumentID MinutesTime
-                      deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetEmailIdentification (Either String Document) where
   dbUpdate (SetEmailIdentification did time) = do
     r <- kRun $ mkSQL UPDATE tableDocuments [
@@ -1582,7 +1526,6 @@ instance DBUpdate SetEmailIdentification (Either String Document) where
     getOneDocumentAffected "SetEmailIdentification" r did
 
 data SetElegitimationIdentification = SetElegitimationIdentification DocumentID MinutesTime
-                      deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetElegitimationIdentification (Either String Document) where
   dbUpdate (SetElegitimationIdentification did time) = do
     r <- kRun $ mkSQL UPDATE tableDocuments [
@@ -1593,7 +1536,6 @@ instance DBUpdate SetElegitimationIdentification (Either String Document) where
     getOneDocumentAffected "SetElegitimationIdentification" r did
 
 data UpdateFields  = UpdateFields DocumentID SignatoryLinkID [(BS.ByteString, BS.ByteString)]
-                      deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate UpdateFields (Either String Document) where
   dbUpdate (UpdateFields did slid fields) = do
   Just document <- dbQuery $ GetDocumentByDocumentID did
@@ -1626,7 +1568,6 @@ instance DBUpdate UpdateFields (Either String Document) where
     s -> return $ Left $ "Cannot updateFields on document " ++ show did ++ " because " ++ concat s
 
 data PendingToAwaitingAuthor = PendingToAwaitingAuthor DocumentID MinutesTime
-                      deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate PendingToAwaitingAuthor (Either String Document) where
   dbUpdate (PendingToAwaitingAuthor docid time) = do
     mdocument <- dbQuery $ GetDocumentByDocumentID docid
@@ -1647,7 +1588,6 @@ instance DBUpdate PendingToAwaitingAuthor (Either String Document) where
           s -> return $ Left $ "Cannot PendingToAwaitingAuthor document " ++ show docid ++ " because " ++ concat s
 
 data AddDocumentAttachment = AddDocumentAttachment DocumentID FileID
-                                 deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate AddDocumentAttachment (Either String Document) where
   dbUpdate (AddDocumentAttachment did fid) = do
     r <- kRun $ mkSQL INSERT tableAuthorAttachments [
@@ -1660,7 +1600,6 @@ instance DBUpdate AddDocumentAttachment (Either String Document) where
     getOneDocumentAffected "AddDocumentAttachment" r did
 
 data RemoveDocumentAttachment = RemoveDocumentAttachment DocumentID FileID
-                                 deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate RemoveDocumentAttachment (Either String Document) where
   dbUpdate (RemoveDocumentAttachment did fid) = do
     kPrepare "DELETE FROM author_attachments WHERE document_id = ? AND file_id = ? AND EXISTS (SELECT 1 FROM documents WHERE id = ? AND status = ?)"
@@ -1679,7 +1618,6 @@ instance DBUpdate RemoveDocumentAttachment (Either String Document) where
 
 
 data UpdateSigAttachments = UpdateSigAttachments DocumentID [SignatoryAttachment] MinutesTime
-                            deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate UpdateSigAttachments (Either String Document) where
   dbUpdate (UpdateSigAttachments did sigatts _time) = do
     _ <- kRun $ SQL "DELETE FROM signatory_attachments WHERE document_id = ?" [toSql did]
@@ -1919,7 +1857,6 @@ instance DBQuery GetUsersAndStats [(User, Maybe Company, DocStats)] where
     return $ sumUserStats uas time
 
 data SetDocumentModificationData = SetDocumentModificationData DocumentID MinutesTime
-                      deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate SetDocumentModificationData (Either String Document) where
   dbUpdate (SetDocumentModificationData did time) = do
     r <- kRun $ mkSQL UPDATE tableDocuments [sql "mtime" time]
