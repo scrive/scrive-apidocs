@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module DB.SQL (
     SQL(..)
   , SQLType(..)
@@ -14,6 +15,10 @@ import Database.HDBC
 
 import DB.Model
 import Misc ((<++>))
+
+-- | Instance provided for convenience
+instance Convertible SqlValue SqlValue where
+    safeConvert = Right . id
 
 data SQL = SQL String [SqlValue]
   deriving (Eq, Show)

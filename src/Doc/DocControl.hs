@@ -885,7 +885,7 @@ splitUpDocument doc = do
           Log.debug $ "splitUpDocument: going to DesignStep2"
           return $ Left $ LinkDesignDoc $ DesignStep2 (documentid doc) (Just (1 + csvidx)) (Just AfterCSVUpload) signlast
         ([], CleanCSVData{csvbody}) -> do
-          mdocs <- mapM (createDocFromRow doc (csvidx)) csvbody
+          mdocs <- mapM (createDocFromRow doc) csvbody
           if Data.List.null (lefts mdocs)
             then do
               Log.debug $ "splitUpDocument: finishing properly"
@@ -893,9 +893,9 @@ splitUpDocument doc = do
             else do
               Log.debug $ "splitUpDocument: createDocFromRow returned some Lefts: " ++ show (lefts mdocs)
               mzero
-  where createDocFromRow :: Kontrakcja m => Document -> Int -> [BS.ByteString] -> m (Either String Document)
-        createDocFromRow udoc sigindex xs =
-          runDBUpdate $ DocumentFromSignatoryData (documentid udoc) sigindex (item 0) (item 1) (item 2) (item 3) (item 4) (item 5) (drop 6 xs)
+  where createDocFromRow :: Kontrakcja m => Document -> [BS.ByteString] -> m (Either String Document)
+        createDocFromRow udoc xs =
+          runDBUpdate $ DocumentFromSignatoryData (documentid udoc) (item 0) (item 1) (item 2) (item 3) (item 4) (item 5) (drop 6 xs)
           where item n | n<(length xs) = xs !! n
                        | otherwise = BS.empty
 {- |

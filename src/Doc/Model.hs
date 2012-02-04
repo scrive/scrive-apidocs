@@ -1,6 +1,4 @@
-{-# OPTIONS_GHC -fno-warn-unused-binds -fno-warn-unused-matches -fno-warn-orphans -fcontext-stack=50 -fno-warn-unused-do-bind #-}
-{-# LANGUAGE CPP #-}
-
+{-# OPTIONS_GHC -fcontext-stack=50  #-}
 module Doc.Model
   ( module File.File
   , isTemplate -- fromUtils
@@ -32,7 +30,6 @@ module Doc.Model
   , GetDocumentsByAuthor(..)
   , GetDocumentsByCompanyAndTags(..)
   , GetDocumentsBySignatory(..)
-  , GetSignatoryLinkIDs(..)
   , GetTimeoutedButPendingDocuments(..)
   , MarkDocumentSeen(..)
   , MarkInvitationRead(..)
@@ -93,7 +90,6 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import Data.Maybe
 import Misc
-import Data.Convertible
 import Data.List
 import Data.Monoid
 import qualified Data.Map as Map
@@ -108,9 +104,6 @@ import Control.Monad.IO.Class
 import Control.Monad
 import qualified Control.Exception as E
 import File.Model
-
-instance Convertible SqlValue SqlValue where
-    safeConvert = return . id
 
 sqlLog :: MinutesTime -> String -> (String, String, SqlValue)
 sqlLog time text = sql' "log" "log || ?" logmsg
@@ -774,7 +767,7 @@ instance DBUpdate CloseDocument (Either String Document) where
             r <- kRun $ mkSQL UPDATE tableDocuments [
                 sql "status" Closed
               , sql "mtime" time
-              , sqlLog time "Document closed"
+              , sqlLog time $ "Document closed from " ++ formatIP ipaddress
               ] <++> SQL "WHERE id = ? AND type = ?" [
                 toSql docid
               , toSql $ Signable undefined
@@ -794,10 +787,10 @@ instance DBUpdate DeleteSigAttachment (Either String Document) where
       ]
     getOneDocumentAffected "DeleteSigAttachment" r did
 
-data DocumentFromSignatoryData = DocumentFromSignatoryData DocumentID Int BS.ByteString BS.ByteString BS.ByteString BS.ByteString BS.ByteString BS.ByteString [BS.ByteString]
+data DocumentFromSignatoryData = DocumentFromSignatoryData DocumentID BS.ByteString BS.ByteString BS.ByteString BS.ByteString BS.ByteString BS.ByteString [BS.ByteString]
                                  deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate DocumentFromSignatoryData (Either String Document) where
-  dbUpdate (DocumentFromSignatoryData docid sigindex fstname sndname email company personalnumber companynumber fieldvalues) = do
+  dbUpdate (DocumentFromSignatoryData docid fstname sndname email company personalnumber companynumber fieldvalues) = do
         newFromDocument toNewDoc docid
    where
     toNewDoc :: Document -> Document
@@ -828,7 +821,7 @@ instance DBUpdate ErrorDocument (Either String Document) where
     mdocument <- dbQuery $ GetDocumentByDocumentID docid
     case mdocument of
       Nothing -> return $ Left $ "Cannot ErrorDocument document " ++ show docid ++ " because it does not exist"
-      Just document ->
+      Just _ ->
         case [] of
           [] -> do
             r <- kRun $ mkSQL UPDATE tableDocuments [
@@ -1023,18 +1016,6 @@ instance DBQuery GetDocumentsBySignatory [Document] where
     docs <- selectDocumentsBySignatory (userid user) False
     return docs
 
-
-data GetSignatoryLinkIDs = GetSignatoryLinkIDs
-                           deriving (Eq, Ord, Show, Typeable)
-instance DBQuery GetSignatoryLinkIDs [SignatoryLinkID] where
-  dbQuery (GetSignatoryLinkIDs) = wrapDB $ \conn -> do
-    st <- prepare conn "SELECT id FROM signatory_links"
-    result <- execute st []
-    fetchValues st decodeRowAsSignatoryLinkID
-    where
-      decodeRowAsSignatoryLinkID :: SignatoryLinkID -> Either DBException SignatoryLinkID
-      decodeRowAsSignatoryLinkID slid = return slid
-
 data GetTimeoutedButPendingDocuments = GetTimeoutedButPendingDocuments MinutesTime
                                        deriving (Eq, Ord, Show, Typeable)
 instance DBQuery GetTimeoutedButPendingDocuments [Document] where
@@ -1062,8 +1043,7 @@ instance DBUpdate MarkDocumentSeen (Either String Document) where
       ]
     -- it's okay if we don't update the doc because it's been seen or signed already
     -- (see jira #1194)
-    let fudgedr = if r==0 then 1 else r
-    getOneDocumentAffected "MarkDocumentSeen" r did
+    getOneDocumentAffected "MarkDocumentSeen" (max 1 r) did
 
 data AddInvitationEvidence = AddInvitationEvidence DocumentID SignatoryLinkID MinutesTime IPAddress
                           deriving (Eq, Ord, Show, Typeable)
@@ -1179,7 +1159,7 @@ instance DBUpdate RejectDocument (Either String Document) where
               , sql "rejection_time" time
               , sql "rejection_reason" customtext
               , sql "rejection_signatory_link_id" slid
-              , sqlLog time "Document rejected"
+              , sqlLog time $ "Document rejected from " ++ formatIP ipnumber
               ] <++> SQL "WHERE id = ?" [toSql docid]
             getOneDocumentAffected "RejectDocument" r docid
           s -> return $ Left $ "Cannot RejectDocument document " ++ show docid ++ " because " ++ concat s
@@ -1476,7 +1456,7 @@ instance DBUpdate ResetSignatoryDetails (Either String Document) where
 data ResetSignatoryDetails2 = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryRole], Maybe CSVUpload)] MinutesTime
                                   deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate ResetSignatoryDetails2 (Either String Document) where
-  dbUpdate (ResetSignatoryDetails2 documentid signatories time) = do
+  dbUpdate (ResetSignatoryDetails2 documentid signatories _time) = do
     mdocument <- dbQuery $ GetDocumentByDocumentID documentid
     case mdocument of
       Nothing -> return $ Left $ "ResetSignatoryDetails: document #" ++ show documentid ++ " does not exist"
@@ -1485,12 +1465,12 @@ instance DBUpdate ResetSignatoryDetails2 (Either String Document) where
           [] -> do
 
             kPrepare "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
-            kExecute []
+            _ <- kExecute []
             kPrepare "DELETE FROM signatory_links WHERE document_id = ?"
-            kExecute [toSql documentid]
+            _ <- kExecute [toSql documentid]
 
             let mauthorsiglink = getAuthorSigLink document
-            flip mapM signatories $ \(details, roles, mcsvupload) -> do
+            forM_ signatories $ \(details, roles, mcsvupload) -> do
                      linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
 
                      magichash <- liftIO randomIO
@@ -1684,7 +1664,7 @@ data RemoveDocumentAttachment = RemoveDocumentAttachment DocumentID FileID
 instance DBUpdate RemoveDocumentAttachment (Either String Document) where
   dbUpdate (RemoveDocumentAttachment did fid) = do
     kPrepare "DELETE FROM author_attachments WHERE document_id = ? AND file_id = ? AND EXISTS (SELECT 1 FROM documents WHERE id = ? AND status = ?)"
-    r <- kExecute [
+    _ <- kExecute [
         toSql did
       , toSql fid
       , toSql did
@@ -1701,7 +1681,7 @@ instance DBUpdate RemoveDocumentAttachment (Either String Document) where
 data UpdateSigAttachments = UpdateSigAttachments DocumentID [SignatoryAttachment] MinutesTime
                             deriving (Eq, Ord, Show, Typeable)
 instance DBUpdate UpdateSigAttachments (Either String Document) where
-  dbUpdate (UpdateSigAttachments did sigatts time) = do
+  dbUpdate (UpdateSigAttachments did sigatts _time) = do
     _ <- kRun $ SQL "DELETE FROM signatory_attachments WHERE document_id = ?" [toSql did]
     forM_ sigatts doInsert
     getOneDocumentAffected "UpdateSigAttachments" 1 did
