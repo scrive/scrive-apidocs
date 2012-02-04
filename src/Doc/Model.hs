@@ -256,7 +256,7 @@ fetchDocuments = foldDB decoder []
        , documenttimeouttime = timeout_time
        , documentinvitetime = case invite_time of
            Nothing -> Nothing
-           Just t -> Just (SignInfo t (fromMaybe unknownIPAddress invite_ip))
+           Just t -> Just (SignInfo t $ fromMaybe unknownIPAddress invite_ip)
        , documentlog = dlog
        , documentinvitetext = invite_text
        , documentallowedidtypes = allowed_id_types
@@ -327,12 +327,8 @@ fetchSignatoryLinks = foldDB decoder []
        , maybesignatory = user_id
        , maybesupervisor = Nothing
        , maybecompany = company_id
-       , maybesigninfo = case (sign_time, sign_ip) of
-           (Just st, Just sip) -> Just (SignInfo st sip)
-           _ -> Nothing
-       , maybeseeninfo = case (seen_time, seen_ip) of
-           (Just st, Just sip) -> Just (SignInfo st sip)
-           _ -> Nothing
+       , maybesigninfo = SignInfo <$> sign_time <*> sign_ip
+       , maybeseeninfo = SignInfo <$> seen_time <*> seen_ip
        , maybereadinvite = read_invitation
        , invitationdeliverystatus = invitation_delivery_status
        , signatorysignatureinfo = do -- Maybe Monad
@@ -351,14 +347,12 @@ fetchSignatoryLinks = foldDB decoder []
              , signaturefstnameverified = signinfo_first_name_verified'
              , signaturelstnameverified = signinfo_last_name_verified'
              , signaturepersnumverified = signinfo_personal_number_verified'
-           }
+             }
        , signatoryroles = roles
        , signatorylinkdeleted = deleted
        , signatorylinkreallydeleted = really_deleted
        , signatorylinkcsvupload =
-         case (csv_title, csv_contents, csv_signatory_index) of
-           (Just t, Just c, Just si) -> Just (CSVUpload t c si)
-           _ -> Nothing
+           CSVUpload <$> csv_title <*> csv_contents <*> csv_signatory_index
        }) : acc
 
 insertSignatoryLinkAsIs :: DocumentID -> SignatoryLink -> DB (Maybe SignatoryLink)
