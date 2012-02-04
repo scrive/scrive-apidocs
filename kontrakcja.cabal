@@ -101,6 +101,11 @@ Flag test-userstate
   Manual: True
   Default: True
 
+Flag test-userhistory
+  Description: Build userhistory testsuite
+  Manual: True
+  Default: True
+
 Flag test-csvutil
   Description: Build csvutil testsuite
   Manual: True
@@ -358,6 +363,8 @@ Executable kontrakcja-test
     cpp-options: -DNO_REDIRECT
   if !flag(test-docstatequery)
     cpp-options: -DNO_DOCSTATEQUERY
+  if !flag(test-userhistory)
+    cpp-options: -DNO_USERHISTORY
 
   cpp-options: -DTestMain=Main
   Main-is: TestMain.hs

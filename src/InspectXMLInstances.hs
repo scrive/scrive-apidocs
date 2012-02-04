@@ -16,10 +16,13 @@ import DB.Types
 import MinutesTime
 import InspectXML
 import User.Model
+import User.History.Model
 import KontraLink
 import FlashMessage
 import qualified Data.ByteString.UTF8 as BS
 import File.FileID
+import Misc
+import Text.JSON
 
 instance (InspectXML a, Show a) => InspectXML [a] where
     inspectXML l = "[" ++ (concatMap (\s -> (inspectXML s) ++ "<BR/>") l) ++ "]"
@@ -36,6 +39,8 @@ $(deriveInspectXML ''AuthorAttachment)
 $(deriveInspectXML ''SignatoryAttachment)
 $(deriveInspectXML ''FieldPlacement)
 $(deriveInspectXML ''User)
+$(deriveInspectXML ''UserHistory)
+$(deriveInspectXML ''UserHistoryEvent)
 $(deriveInspectXML ''SignatoryLink)
 $(deriveInspectXML ''SignatoryField)
 $(deriveInspectXML ''SignatoryDetails)
@@ -96,3 +101,7 @@ instance InspectXML DocumentSharing where
 instance InspectXML KontraLink where
 instance InspectXML FieldType where
 instance InspectXML Region where
+instance InspectXML UserHistoryID where
+instance InspectXML IPAddress where
+instance InspectXML UserHistoryEventType where
+instance InspectXML JSValue where

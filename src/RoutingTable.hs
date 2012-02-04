@@ -7,7 +7,6 @@ module RoutingTable (
 
 import API.IntegrationAPI
 import API.Service.ServiceControl
-import API.UserAPI
 
 import AppView as V
 import Kontra
@@ -18,6 +17,7 @@ import Redirect
 import Routing
 import Happstack.StaticRouting(Route, choice, dir, path, param, remainingPath)
 import User.Model
+--import User.History.Model
 import qualified Stats.Control as Stats
 import qualified Administration.AdministrationControl as Administration
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
@@ -88,8 +88,7 @@ staticRoutes = choice
 
      , dir "s" $ param "sign"           $ hPostNoXToken $ toK2 $ DocControl.signDocument
      , dir "s" $ param "reject"         $ hPostNoXToken $ toK2 $ DocControl.rejectDocument
-     , dir "s" $ param "acceptaccount"  $ hPostNoXToken $ toK5 $ DocControl.handleAcceptAccountFromSign
-     , dir "s" $ param "declineaccount" $ hPostNoXToken $ toK5 $ DocControl.handleDeclineAccountFromSign
+     , dir "s" $ param "acceptaccount"  $ hPostNoXToken $ toK3 $ DocControl.handleAcceptAccountFromSign
      , dir "s" $ param "sigattachment"  $ hPostNoXToken $ toK2 $ DocControl.handleSigAttach
      , dir "s" $ param "deletesigattachment" $ hPostNoXToken $ toK2 $ DocControl.handleDeleteSigAttach
 
@@ -254,9 +253,10 @@ staticRoutes = choice
      , dir "adminonly" $ dir "log" $ hGetWrap (onlyAdmin . https) $ toK1 $ Administration.serveLogDirectory
 
 
-     , dir "dave" $ dir "document" $ hGet $ toK1 $ Administration.daveDocument
-     , dir "dave" $ dir "user"     $ hGet $ toK1 $ Administration.daveUser
-     , dir "dave" $ dir "company"  $ hGet $ toK1 $ Administration.daveCompany
+     , dir "dave" $ dir "document"    $ hGet $ toK1 $ Administration.daveDocument
+     , dir "dave" $ dir "user"        $ hGet $ toK1 $ Administration.daveUser
+     , dir "dave" $ dir "userhistory" $ hGet $ toK1 $ Administration.daveUserHistory
+     , dir "dave" $ dir "company"     $ hGet $ toK1 $ Administration.daveCompany
 
      -- account stuff
      , dir "logout"      $ hGet  $ toK0 $ handleLogout
@@ -268,8 +268,6 @@ staticRoutes = choice
      , dir "amnesia"     $ hPostNoXToken $ toK2 UserControl.handlePasswordReminderPost
      , dir "accountsetup"  $ hGet $ toK2 $ UserControl.handleAccountSetupGet
      , dir "accountsetup"  $ hPostNoXToken $ toK2 $ UserControl.handleAccountSetupPost
-     , dir "accountremoval" $ hGet $ toK2 $ UserControl.handleAccountRemovalGet
-     , dir "accountremoval" $ hPostNoXToken $ toK2 $ UserControl.handleAccountRemovalPost
 
      -- viral invite
      , dir "invite"      $ hPostNoXToken $ toK0 $ UserControl.handleViralInvite
@@ -278,7 +276,6 @@ staticRoutes = choice
      -- someone wants a phone call
      , dir "phone" $ hPostAllowHttp $ toK0 $ UserControl.handlePhoneCallRequest
 
-     , userAPI
      , integrationAPI
      , documentAPI
      -- static files

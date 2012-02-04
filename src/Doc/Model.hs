@@ -67,7 +67,6 @@ module Doc.Model
   -- , SetSignatoryUser(..)
   , SignDocument(..)
   , SignLinkFromDetailsForTest(..)
-  , SignableFromDocument(..)
   , SignableFromDocumentIDWithUpdatedAuthor(..)
   , StoreDocumentForTesting(..)
   , TemplateFromDocument(..)
@@ -2240,7 +2239,6 @@ instance DBUpdate SignLinkFromDetailsForTest SignatoryLink where
                         roles linkid magichash
 
       return link
-
 
 data (Actor a, Show a, Eq a, Ord a) => SignableFromDocument a = SignableFromDocument Document a
                                                               deriving (Eq, Ord, Show, Typeable)

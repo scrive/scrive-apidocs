@@ -31,6 +31,7 @@ module Administration.AdministrationControl(
           , daveDocument
           , daveUser
           , daveCompany
+          , daveUserHistory
           , serveLogDirectory
           , jsonUsersList
           , jsonCompanies
@@ -80,6 +81,7 @@ import CompanyAccounts.Model
 import Util.SignatoryLinkUtils
 import Stats.Control (getUsersAndStats)
 import EvidenceLog.Model
+import User.History.Model
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m String
@@ -281,6 +283,7 @@ showAllUsersTable = onlySalesOrAdmin $ do
 {- | Handling user details change. It reads user info change -}
 handleUserChange :: Kontrakcja m => UserID -> m KontraLink
 handleUserChange uid = onlySalesOrAdmin $ do
+  ctx <- getContext
   _ <- getAsStrictBS "change"
   museraccounttype <- getFieldUTF "useraccounttype"
   olduser <- runDBOrFail $ dbQuery $ GetUserByID uid
@@ -289,6 +292,9 @@ handleUserChange uid = onlySalesOrAdmin $ do
       --then we just want to make this account an admin
       newuser <- runDBOrFail $ do
         _ <- dbUpdate $ SetUserCompanyAdmin uid True
+        _ <- dbUpdate $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
+             [("is_company_admin", "false", "true")] 
+             (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
       return newuser
     (Just "companyadminaccount", Nothing, False) -> do
@@ -297,7 +303,15 @@ handleUserChange uid = onlySalesOrAdmin $ do
       newuser <- runDBOrFail $ do
         company <- dbUpdate $ CreateCompany Nothing Nothing
         _ <- dbUpdate $ SetUserCompany uid (Just $ companyid company)
+        _ <- dbUpdate 
+                  $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
+                                             [("company_id", "null", show $ companyid company)] 
+                                             (userid <$> ctxmaybeuser ctx)
         _ <- dbUpdate $ SetUserCompanyAdmin uid True
+        _ <- dbUpdate 
+                  $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
+                                             [("is_company_admin", "false", "true")] 
+                                             (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
       _ <- resaveDocsForUser uid
       return newuser
@@ -305,6 +319,10 @@ handleUserChange uid = onlySalesOrAdmin $ do
       --then we just want to downgrade this account to a standard
       newuser <- runDBOrFail $ do
         _ <- dbUpdate $ SetUserCompanyAdmin uid False
+        _ <- dbUpdate 
+                 $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
+                                            [("is_company_admin", "true", "false")] 
+                                            (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
       return newuser
     (Just "companystandardaccount", Nothing, False) -> do
@@ -313,6 +331,10 @@ handleUserChange uid = onlySalesOrAdmin $ do
       newuser <- runDBOrFail $ do
         company <- dbUpdate $ CreateCompany Nothing Nothing
         _ <- dbUpdate $ SetUserCompany uid (Just $ companyid company)
+        _ <- dbUpdate 
+                 $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
+                                            [("company_id", "null", show $ companyid company)] 
+                                            (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
       _ <- resaveDocsForUser uid
       return newuser
@@ -322,12 +344,20 @@ handleUserChange uid = onlySalesOrAdmin $ do
       --we may also need to delete the company if it's empty, but i haven't implemented this bit
       newuser <- runDBOrFail $ do
         _ <- dbUpdate $ SetUserCompany uid Nothing
+        _ <- dbUpdate 
+                 $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
+                                            [("company_id", show _companyid, "null")] 
+                                            (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
       _ <-resaveDocsForUser uid
       return newuser
     _ -> return olduser
   infoChange <- getUserInfoChange
   _ <- runDBUpdate $ SetUserInfo uid $ infoChange $ userinfo user
+  _ <- runDBUpdate
+           $ LogHistoryUserInfoChanged uid (ctxipnumber ctx) (ctxtime ctx) 
+                                       (userinfo user) (infoChange $ userinfo user)
+                                       (userid <$> ctxmaybeuser ctx)
   settingsChange <- getUserSettingsChange
   _ <- runDBUpdate $ SetUserSettings uid $ settingsChange $ usersettings user
   return $ LinkUserAdmin $ Just uid
@@ -750,6 +780,14 @@ daveUser :: Kontrakcja m => UserID ->  m String
 daveUser userid = onlyAdmin $ do
     user <- runDBOrFail $ dbQuery $ GetUserByID userid
     return $ inspectXML user
+
+{- |
+   Used by super users to inspect a particular user's history.
+-}
+daveUserHistory :: Kontrakcja m => UserID -> m String
+daveUserHistory userid = onlyAdmin $ do
+    history <- runDBOrFail $ dbQuery $ GetUserHistoryByUserID userid
+    return $ inspectXML history
 
 {- |
     Used by super users to inspect a company in xml.

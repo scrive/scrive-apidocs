@@ -23,6 +23,7 @@ import qualified User.UserControl as UserControl
 import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Stats.Control
+import User.History.Model
 
 import Control.Monad.Error
 import Data.Functor
@@ -139,10 +140,12 @@ handleLoginPost = do
                         }
                         muuser <- runDBQuery $ GetUserByID (userid user)
                         _ <- addUserLoginStatEvent (ctxtime ctx) (fromJust muuser)
+                        _ <- runDBUpdate $ LogHistoryLoginSuccess (userid user) (ctxipnumber ctx) (ctxtime ctx)
                         logUserToContext muuser
                         return BackToReferer
-                Just _ -> do
+                Just u -> do
                         Log.debug $ "User " ++ show email ++ " login failed (invalid password)"
+                        _ <- runDBUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
                         return $ LinkLogin (ctxlocale ctx) $ InvalidLoginInfo linkemail
                 Nothing -> do
                     Log.debug $ "User " ++ show email ++ " login failed (user not found)"

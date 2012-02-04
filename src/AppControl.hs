@@ -200,8 +200,8 @@ appHandler handleRoutes appConf appGlobals = do
       F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
       updateSessionWithContextData session newsessionuser newelegtrans newmagichashes
       stats <- liftIO $ getNexusStats (ctxdbconn ctx')
-      
-      Log.debug $ "SQL for " ++ rqUri rq ++ ": queries " ++ show (nexusQueries stats) ++ 
+
+      Log.debug $ "SQL for " ++ rqUri rq ++ ": queries " ++ show (nexusQueries stats) ++
            ", params " ++ show (nexusParams stats) ++
                          ", rows " ++ show (nexusRows stats) ++
                                      ", values " ++ show (nexusValues stats)
@@ -287,3 +287,4 @@ appHandler handleRoutes appConf appGlobals = do
                 , ctxmagichashes = getMagicHashes session
                 }
       return ctx
+
