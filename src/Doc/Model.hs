@@ -25,10 +25,12 @@ module Doc.Model
   , GetDeletedDocumentsByUser(..)
   , GetDocumentByDocumentID(..)
   , GetDocuments(..)
-  , GetDocumentsByAuthor(..)
   , GetDocumentsByCompanyAndTags(..)
+  , GetDocumentsByAuthor(..)
+  , GetTemplatesByAuthor(..)
+  , GetDocumentsOfTypeByAuthor(..)
   , GetDocumentsBySignatory(..)
-  , GetAttachmentsBySignatory(..)
+  , GetDocumentsOfTypeBySignatory(..)
   , GetTimeoutedButPendingDocuments(..)
   , MarkDocumentSeen(..)
   , MarkInvitationRead(..)
@@ -811,11 +813,6 @@ instance DBUpdate ErrorDocument (Either String Document) where
             getOneDocumentAffected "ErrorDocument" r docid
           s -> return $ Left $ "Cannot ErrorDocument document " ++ show docid ++ " because " ++ concat s
 
-data GetDeletedDocumentsByUser = GetDeletedDocumentsByUser User
-instance DBQuery GetDeletedDocumentsByUser [Document] where
-  dbQuery (GetDeletedDocumentsByUser User{userid}) = selectDocumentsBySignatoryLink
-    $ selectDocumentsBySignatorySQL userid False
-
 selectDocuments :: SQL -> DB [Document]
 selectDocuments query = do
     _ <- kRun $ SQL "CREATE TEMP TABLE docs AS " [] <++> query
@@ -852,7 +849,6 @@ selectDocuments query = do
 
     return $ map fillIn docs
 
-
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
 instance DBQuery GetDocumentByDocumentID (Maybe Document) where
   dbQuery (GetDocumentByDocumentID did) = do
@@ -865,25 +861,6 @@ instance DBQuery GetDocuments [Document] where
   dbQuery (GetDocuments msid) = do
     selectDocuments $ selectDocumentsSQL
       <++> SQL "WHERE service_id IS NOT DISTINCT FROM ?" [toSql msid]
-
-selectDocumentsBySignatoryLink :: SQL -> DB [Document]
-selectDocumentsBySignatoryLink extendedWhere = selectDocuments $ mconcat [
-    selectDocumentsSQL
-  , SQL "WHERE EXISTS (SELECT 1 FROM signatory_links WHERE documents.id = document_id AND " []
-  , extendedWhere
-  , SQL ") ORDER BY mtime" []
-  ]
-
-{- |
-    All documents authored by the user that have never been deleted.
--}
-data GetDocumentsByAuthor = GetDocumentsByAuthor UserID
-instance DBQuery GetDocumentsByAuthor [Document] where
-  dbQuery (GetDocumentsByAuthor uid) = selectDocumentsBySignatoryLink $ SQL
-    "signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?) <> 0) ORDER BY mtime" [
-      toSql uid
-    , toSql [SignatoryAuthor]
-    ]
 
 {- |
     Fetches documents by company and tags, this won't return documents that have been deleted (so ones
@@ -906,20 +883,35 @@ instance DBQuery GetDocumentsByCompanyAndTags [Document] where
     return (filter hasTags docs)
     where hasTags doc = all (`elem` (documenttags doc)) doctags
 
+selectDocumentsBySignatoryLink :: SQL -> DB [Document]
+selectDocumentsBySignatoryLink extendedWhere = selectDocuments $ mconcat [
+    selectDocumentsSQL
+  , SQL "WHERE EXISTS (SELECT 1 FROM signatory_links WHERE documents.id = document_id AND " []
+  , extendedWhere
+  , SQL ") ORDER BY mtime" []
+  ]
+
 activatedSQL :: SQL
 activatedSQL = mconcat [
     SQL " (NOT EXISTS (" []
   , SQL ("SELECT 1 FROM signatory_links AS sl2"
-      ++ " WHERE signatory_links.document_id = sl2.document_id"
-      ++ "  AND ((sl2.roles & ?) <> 0)"
-      ++ "  AND sl2.sign_time IS NULL"
-      ++ "  AND sl2.sign_order < signatory_links.sign_order")
-      [toSql [SignatoryAuthor]]
+    ++ " WHERE signatory_links.document_id = sl2.document_id"
+    ++ "  AND ((sl2.roles & ?) <> 0)"
+    ++ "  AND sl2.sign_time IS NULL"
+    ++ "  AND sl2.sign_order < signatory_links.sign_order")
+    [toSql [SignatoryAuthor]]
   , SQL ")) " []
   ]
 
-selectDocumentsBySignatorySQL :: UserID -> Bool -> SQL
-selectDocumentsBySignatorySQL userid deleted = mconcat [
+whereAuthorIs :: UserID -> SQL
+whereAuthorIs uid = SQL
+  "signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?) <> 0)" [
+      toSql uid
+    , toSql [SignatoryAuthor]
+    ]
+
+whereSignatoryIsAndDeletedIs :: UserID -> Bool -> SQL
+whereSignatoryIsAndDeletedIs userid deleted = mconcat [
     SQL "signatory_links.deleted = ? AND signatory_links.really_deleted = FALSE"
       [toSql deleted]
   , if deleted then mempty else SQL " AND " [] <++> activatedSQL
@@ -933,23 +925,53 @@ selectDocumentsBySignatorySQL userid deleted = mconcat [
     ]
   ]
 
+andDocumentTypeIs :: DocumentType -> SQL
+andDocumentTypeIs dtype = SQL
+  " AND type = ? AND process IS NOT DISTINCT FROM ?" [
+      toSql dtype
+    , toSql $ toDocumentProcess dtype
+    ]
+
+data GetDeletedDocumentsByUser = GetDeletedDocumentsByUser User
+instance DBQuery GetDeletedDocumentsByUser [Document] where
+  dbQuery (GetDeletedDocumentsByUser User{userid}) = selectDocumentsBySignatoryLink
+    $ whereSignatoryIsAndDeletedIs userid False
+
+{- |
+    All documents authored by the user that have never been deleted.
+-}
+data GetDocumentsByAuthor = GetDocumentsByAuthor UserID
+instance DBQuery GetDocumentsByAuthor [Document] where
+  dbQuery (GetDocumentsByAuthor uid) = selectDocumentsBySignatoryLink
+    $ whereAuthorIs uid
+
+data GetDocumentsOfTypeByAuthor = GetDocumentsOfTypeByAuthor DocumentType UserID
+instance DBQuery GetDocumentsOfTypeByAuthor [Document] where
+  dbQuery (GetDocumentsOfTypeByAuthor dtype uid) = selectDocumentsBySignatoryLink
+    $ whereAuthorIs uid <++> andDocumentTypeIs dtype
+
+data GetTemplatesByAuthor = GetTemplatesByAuthor UserID
+instance DBQuery GetTemplatesByAuthor [Document] where
+  dbQuery (GetTemplatesByAuthor uid) = selectDocumentsBySignatoryLink
+    $ whereAuthorIs uid
+    <++> SQL " AND type = ?" [toSql $ Template undefined]
+
 {- |
     All documents where the user is a signatory that are not deleted.  An author is a type
     of signatory, so authored documents are included too.
     This also filters so that documents where a user is a signatory, but that signatory
     has not yet been activated according to the document's sign order, are excluded.
 -}
-data GetDocumentsBySignatory = GetDocumentsBySignatory User
+data GetDocumentsBySignatory = GetDocumentsBySignatory UserID
 instance DBQuery GetDocumentsBySignatory [Document] where
-  dbQuery (GetDocumentsBySignatory User{userid}) = selectDocumentsBySignatoryLink
-    $ selectDocumentsBySignatorySQL userid False
+  dbQuery (GetDocumentsBySignatory uid) = selectDocumentsBySignatoryLink
+    $ whereSignatoryIsAndDeletedIs uid False
 
--- | Like above, but returns only attachments.
-data GetAttachmentsBySignatory = GetAttachmentsBySignatory User
-instance DBQuery GetAttachmentsBySignatory [Document] where
-  dbQuery (GetAttachmentsBySignatory User{userid}) = selectDocumentsBySignatoryLink
-    $ selectDocumentsBySignatorySQL userid False
-      <++> SQL "AND type = ?" [toSql Attachment]
+data GetDocumentsOfTypeBySignatory = GetDocumentsOfTypeBySignatory DocumentType UserID
+instance DBQuery GetDocumentsOfTypeBySignatory [Document] where
+  dbQuery (GetDocumentsOfTypeBySignatory dtype uid) = selectDocumentsBySignatoryLink
+    $ whereSignatoryIsAndDeletedIs uid False
+    <++> andDocumentTypeIs dtype
 
 data GetTimeoutedButPendingDocuments = GetTimeoutedButPendingDocuments MinutesTime
 instance DBQuery GetTimeoutedButPendingDocuments [Document] where

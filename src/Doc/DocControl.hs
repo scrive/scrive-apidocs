@@ -666,7 +666,7 @@ handleIssueShowGet docid = do
             let filesforattachments = [(fid, f) | (fid, Just f) <- filesforattachments']
             case (documentstatus document) of
               Preparation -> do
-                attachments <- runDBQuery $ GetAttachmentsBySignatory author
+                attachments <- runDBQuery $ GetDocumentsOfTypeBySignatory Attachment $ userid author
                 Right <$> pageDocumentDesign ctx2 document step showadvancedoption attachments filesforattachments
               _ ->  Right <$> pageDocumentForAuthor ctx2 document
           (_, Just invitedlink, _, _) -> Right <$> pageDocumentForSignatory (LinkSignDoc document invitedlink) document ctx invitedlink
@@ -1414,13 +1414,6 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
   Log.debug $ "ResetSignatoryDetails2 #" ++ show documentid ++ " returned " ++ show aa
   return aa
 
-getDocumentsForUserByType :: Kontrakcja m => DocumentType -> User -> m [Document]
-getDocumentsForUserByType doctype user = do
-  mydocuments <- runDBQuery $ GetDocumentsBySignatory user
-
-  return . filter ((\d -> documenttype d == doctype)) $ mydocuments
-
-
 handleAttachmentViewForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
 handleAttachmentViewForViewer docid siglinkid mh = do
   doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
@@ -1966,46 +1959,33 @@ handleSigAttach docid siglinkid = do
   d <- guardRightM $ runDBUpdate $ SaveSigAttachment docid attachname email (fileid file)
   return $ LinkSignDoc d siglink
 
-jsonDocumentsList ::  Kontrakcja m => m JSValue
-jsonDocumentsList = do
-    Just user <- ctxmaybeuser <$> getContext
-    lang <- getLang . ctxlocale <$> getContext
-    doctype <- getFieldWithDefault "" "documentType"
-    allDocs <- case (doctype) of
-        "Contract" -> getDocumentsForUserByType (Signable Contract) user
-        "Offer" -> getDocumentsForUserByType (Signable Offer) user
-        "Order" -> getDocumentsForUserByType (Signable Order) user
-        "Template" -> do
-            mydocuments <- runDBQuery $ GetDocumentsByAuthor (userid user)
-            return $ filter isTemplate mydocuments
-        "Attachment" -> do
-            mydocuments <- runDBQuery $ GetDocumentsByAuthor (userid user)
-            return $ filter ((==) Attachment . documenttype) mydocuments
-        "Rubbish" -> do
-            runDBQuery $ GetDeletedDocumentsByUser user
-        "Template|Contract" -> do
-            let tfilter doc = (Template Contract == documenttype doc)
-            userdocs <- runDBQuery $ GetDocumentsByAuthor (userid user)
-            return $ filter tfilter $ userdocs
-        "Template|Offer" -> do
-            let tfilter doc = (Template Offer == documenttype doc)
-            userdocs <- runDBQuery $ GetDocumentsByAuthor (userid user)
-            return $ filter tfilter $ userdocs
-        "Template|Order" -> do
-            let tfilter doc = (Template Order == documenttype doc)
-            userdocs <- runDBQuery $ GetDocumentsByAuthor (userid user)
-            return $ filter tfilter $ userdocs
-        _ -> do
-            Log.error "Documents list : No valid document type provided"
-            return []
-    Log.debug $ "Documents list: Number of documents found "  ++  (show $ length allDocs)
-    params <- getListParamsNew
-    let docs = docSortSearchPage params allDocs
-    cttime <- liftIO $ getMinutesTime
-    docsJSONs <- mapM (fmap JSObject . docForListJSON (timeLocaleForLang lang) cttime user) $ list docs
-    return $ JSObject $ toJSObject [("list",JSArray docsJSONs),
-                                    ("paging", pagingParamsJSON docs)]
-
+jsonDocumentsList ::  Kontrakcja m => m (Either KontraLink JSValue)
+jsonDocumentsList = withUserGet $ do
+  Just user@User{userid = uid} <- ctxmaybeuser <$> getContext
+  lang <- getLang . ctxlocale <$> getContext
+  doctype <- getFieldWithDefault "" "documentType"
+  allDocs <- case (doctype) of
+    "Contract" -> runDBQuery $ GetDocumentsOfTypeBySignatory (Signable Contract) uid
+    "Offer" -> runDBQuery $ GetDocumentsOfTypeBySignatory (Signable Offer) uid
+    "Order" -> runDBQuery $ GetDocumentsOfTypeBySignatory (Signable Order) uid
+    "Template" -> runDBQuery $ GetTemplatesByAuthor uid
+    "Attachment" -> runDBQuery $ GetDocumentsOfTypeByAuthor Attachment uid
+    "Rubbish" -> runDBQuery $ GetDeletedDocumentsByUser user
+    "Template|Contract" -> runDBQuery $ GetDocumentsOfTypeByAuthor (Template Contract) uid
+    "Template|Offer" -> runDBQuery $ GetDocumentsOfTypeByAuthor (Template Offer) uid
+    "Template|Order" -> runDBQuery $ GetDocumentsOfTypeByAuthor (Template Order) uid
+    _ -> do
+      Log.error "Documents list: No valid document type provided"
+      return []
+  Log.debug $ "Documents list: Number of documents found "  ++  (show $ length allDocs)
+  params <- getListParamsNew
+  let docs = docSortSearchPage params allDocs
+  cttime <- getMinutesTime
+  docsJSONs <- mapM (fmap JSObject . docForListJSON (timeLocaleForLang lang) cttime user) $ list docs
+  return $ JSObject $ toJSObject [
+      ("list", JSArray docsJSONs)
+    , ("paging", pagingParamsJSON docs)
+    ]
 
 jsonDocument :: Kontrakcja m => DocumentID -> m JSValue
 jsonDocument did = do

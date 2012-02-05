@@ -502,7 +502,7 @@ testGetDocumentsByCompanyAndTagsNoArchivedDocs =
 
 testGetDocumentsBySignatoryNoArchivedDocs :: DB ()
 testGetDocumentsBySignatoryNoArchivedDocs =
-  checkQueryDoesntContainArchivedDocs GetDocumentsBySignatory
+  checkQueryDoesntContainArchivedDocs (GetDocumentsBySignatory . userid)
 
 checkQueryDoesntContainArchivedDocs :: DBQuery q [Document] => (User -> q) -> DB ()
 checkQueryDoesntContainArchivedDocs qry = doTimes 10 $ do

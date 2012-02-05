@@ -103,7 +103,7 @@ getDocsByLoggedInUser = do
   ctx <- getContext
   case ctxmaybeuser ctx of
     Nothing   -> return $ Left DBNotLoggedIn
-    Just user -> Right <$> (runDBQuery $ GetDocumentsBySignatory user)
+    Just user -> Right <$> (runDBQuery $ GetDocumentsBySignatory $ userid user)
 
 {- |
    Get a document using docid, siglink, and magichash.
