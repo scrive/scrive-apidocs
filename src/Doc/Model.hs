@@ -925,12 +925,17 @@ whereSignatoryIsAndDeletedIs userid deleted = mconcat [
     ]
   ]
 
+-- | Note: I'm not sure why, but using 'process IS NOT DISTINCT FROM ?'
+-- gives very sucky performance and since 'convoluted' alternative
+-- behaves normally, we should use it here instead.
 andDocumentTypeIs :: DocumentType -> SQL
 andDocumentTypeIs dtype = SQL
-  " AND type = ? AND process IS NOT DISTINCT FROM ?" [
+  " AND type = ? AND ((?::INT IS NULL AND process IS NULL) OR process = ?)" [
       toSql dtype
-    , toSql $ toDocumentProcess dtype
+    , process
+    , process
     ]
+  where process = toSql $ toDocumentProcess dtype
 
 data GetDeletedDocumentsByUser = GetDeletedDocumentsByUser UserID
 instance DBQuery GetDeletedDocumentsByUser [Document] where
