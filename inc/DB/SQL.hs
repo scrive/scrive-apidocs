@@ -18,7 +18,7 @@ import Misc ((<++>))
 
 -- | Instance provided for convenience
 instance Convertible SqlValue SqlValue where
-    safeConvert = Right . id
+    safeConvert = Right
 
 data SQL = SQL String [SqlValue]
   deriving (Eq, Show)
