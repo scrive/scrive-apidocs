@@ -932,10 +932,10 @@ andDocumentTypeIs dtype = SQL
     , toSql $ toDocumentProcess dtype
     ]
 
-data GetDeletedDocumentsByUser = GetDeletedDocumentsByUser User
+data GetDeletedDocumentsByUser = GetDeletedDocumentsByUser UserID
 instance DBQuery GetDeletedDocumentsByUser [Document] where
-  dbQuery (GetDeletedDocumentsByUser User{userid}) = selectDocumentsBySignatoryLink
-    $ whereSignatoryIsAndDeletedIs userid False
+  dbQuery (GetDeletedDocumentsByUser uid) = selectDocumentsBySignatoryLink
+    $ whereSignatoryIsAndDeletedIs uid False
 
 {- |
     All documents authored by the user that have never been deleted.

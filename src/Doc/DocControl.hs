@@ -1970,7 +1970,7 @@ jsonDocumentsList = withUserGet $ do
     "Order" -> runDBQuery $ GetDocumentsOfTypeBySignatory (Signable Order) uid
     "Template" -> runDBQuery $ GetTemplatesByAuthor uid
     "Attachment" -> runDBQuery $ GetDocumentsOfTypeByAuthor Attachment uid
-    "Rubbish" -> runDBQuery $ GetDeletedDocumentsByUser user
+    "Rubbish" -> runDBQuery $ GetDeletedDocumentsByUser uid
     "Template|Contract" -> runDBQuery $ GetDocumentsOfTypeByAuthor (Template Contract) uid
     "Template|Offer" -> runDBQuery $ GetDocumentsOfTypeByAuthor (Template Offer) uid
     "Template|Order" -> runDBQuery $ GetDocumentsOfTypeByAuthor (Template Order) uid

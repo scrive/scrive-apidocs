@@ -520,7 +520,7 @@ checkQueryDoesntContainArchivedDocs qry = doTimes 10 $ do
 
 testGetDeletedDocumentsByUserArchivedDocs :: DB ()
 testGetDeletedDocumentsByUserArchivedDocs =
-  checkQueryContainsArchivedDocs GetDeletedDocumentsByUser
+  checkQueryContainsArchivedDocs (GetDeletedDocumentsByUser . userid)
 
 checkQueryContainsArchivedDocs :: DBQuery q [Document] => (User -> q) -> DB ()
 checkQueryContainsArchivedDocs qry = doTimes 10 $ do
