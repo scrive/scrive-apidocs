@@ -92,7 +92,7 @@ import Data.Maybe
 import Misc
 import Data.List
 import Data.Monoid
-import qualified Data.Map as Map
+import qualified Data.Map as M
 import Doc.Tables
 import Control.Applicative
 import Util.SignatoryLinkUtils
@@ -310,51 +310,52 @@ selectSignatoryLinksSQL = SQL ("SELECT "
   ++ signatoryLinksSelectors
   ++ " FROM signatory_links ") []
 
-fetchSignatoryLinks :: DB [(DocumentID, SignatoryLink)]
-fetchSignatoryLinks = foldDB decoder []
+fetchSignatoryLinks :: DB (M.Map DocumentID [SignatoryLink])
+fetchSignatoryLinks = foldDB decoder M.empty
   where
     decoder acc slid document_id user_id company_id fields sign_order token
      sign_time sign_ip seen_time seen_ip read_invitation invitation_delivery_status
      signinfo_text signinfo_signature signinfo_certificate signinfo_provider
      signinfo_first_name_verified signinfo_last_name_verified
      signinfo_personal_number_verified roles csv_title csv_contents
-     csv_signatory_index deleted really_deleted = (document_id, SignatoryLink {
-         signatorylinkid = slid
-       , signatorydetails = SignatoryDetails {
-           signatorysignorder = sign_order
-         , signatoryfields = fields
-       }
-       , signatorymagichash = token
-       , maybesignatory = user_id
-       , maybesupervisor = Nothing
-       , maybecompany = company_id
-       , maybesigninfo = SignInfo <$> sign_time <*> sign_ip
-       , maybeseeninfo = SignInfo <$> seen_time <*> seen_ip
-       , maybereadinvite = read_invitation
-       , invitationdeliverystatus = invitation_delivery_status
-       , signatorysignatureinfo = do -- Maybe Monad
-           signinfo_text' <- signinfo_text
-           signinfo_signature' <- signinfo_signature
-           signinfo_certificate' <- signinfo_certificate
-           signinfo_provider' <- signinfo_provider
-           signinfo_first_name_verified' <- signinfo_first_name_verified
-           signinfo_last_name_verified' <- signinfo_last_name_verified
-           signinfo_personal_number_verified' <- signinfo_personal_number_verified
-           return $ SignatureInfo {
-               signatureinfotext        = signinfo_text'
-             , signatureinfosignature   = signinfo_signature'
-             , signatureinfocertificate = signinfo_certificate'
-             , signatureinfoprovider    = signinfo_provider'
-             , signaturefstnameverified = signinfo_first_name_verified'
-             , signaturelstnameverified = signinfo_last_name_verified'
-             , signaturepersnumverified = signinfo_personal_number_verified'
-             }
-       , signatoryroles = roles
-       , signatorylinkdeleted = deleted
-       , signatorylinkreallydeleted = really_deleted
-       , signatorylinkcsvupload =
-           CSVUpload <$> csv_title <*> csv_contents <*> csv_signatory_index
-       }) : acc
+     csv_signatory_index deleted really_deleted =
+       M.insertWith' (++) document_id [SignatoryLink {
+           signatorylinkid = slid
+         , signatorydetails = SignatoryDetails {
+             signatorysignorder = sign_order
+           , signatoryfields = fields
+         }
+         , signatorymagichash = token
+         , maybesignatory = user_id
+         , maybesupervisor = Nothing
+         , maybecompany = company_id
+         , maybesigninfo = SignInfo <$> sign_time <*> sign_ip
+         , maybeseeninfo = SignInfo <$> seen_time <*> seen_ip
+         , maybereadinvite = read_invitation
+         , invitationdeliverystatus = invitation_delivery_status
+         , signatorysignatureinfo = do -- Maybe Monad
+             signinfo_text' <- signinfo_text
+             signinfo_signature' <- signinfo_signature
+             signinfo_certificate' <- signinfo_certificate
+             signinfo_provider' <- signinfo_provider
+             signinfo_first_name_verified' <- signinfo_first_name_verified
+             signinfo_last_name_verified' <- signinfo_last_name_verified
+             signinfo_personal_number_verified' <- signinfo_personal_number_verified
+             return $ SignatureInfo {
+                 signatureinfotext        = signinfo_text'
+               , signatureinfosignature   = signinfo_signature'
+               , signatureinfocertificate = signinfo_certificate'
+               , signatureinfoprovider    = signinfo_provider'
+               , signaturefstnameverified = signinfo_first_name_verified'
+               , signaturelstnameverified = signinfo_last_name_verified'
+               , signaturepersnumverified = signinfo_personal_number_verified'
+               }
+         , signatoryroles = roles
+         , signatorylinkdeleted = deleted
+         , signatorylinkreallydeleted = really_deleted
+         , signatorylinkcsvupload =
+             CSVUpload <$> csv_title <*> csv_contents <*> csv_signatory_index
+         }] acc
 
 insertSignatoryLinkAsIs :: DocumentID -> SignatoryLink -> DB (Maybe SignatoryLink)
 insertSignatoryLinkAsIs documentid link = do
@@ -401,8 +402,7 @@ insertSignatoryLinkAsIs documentid link = do
     ] <++> SQL ("RETURNING " ++ signatoryLinksSelectors) []
 
   fetchSignatoryLinks
-    >>= oneObjectReturnedGuard
-    >>= return . fmap snd
+    >>= oneObjectReturnedGuard . concatMap snd . M.toList
 
 authorAttachmentsSelectors :: String
 authorAttachmentsSelectors = intercalate ", " [
@@ -415,12 +415,13 @@ selectAuthorAttachmentsSQL = SQL ("SELECT "
   ++ authorAttachmentsSelectors
   ++ " FROM author_attachments ") []
 
-fetchAuthorAttachments :: DB [(DocumentID, AuthorAttachment)]
-fetchAuthorAttachments = foldDB decoder []
+fetchAuthorAttachments :: DB (M.Map DocumentID [AuthorAttachment])
+fetchAuthorAttachments = foldDB decoder M.empty
   where
-    decoder acc document_id file_id = (document_id, AuthorAttachment {
-      authorattachmentfile = file_id
-    }) : acc
+    decoder acc document_id file_id =
+      M.insertWith' (++) document_id [AuthorAttachment {
+        authorattachmentfile = file_id
+      }] acc
 
 insertAuthorAttachmentAsIs :: DocumentID -> AuthorAttachment -> DB (Maybe AuthorAttachment)
 insertAuthorAttachmentAsIs documentid attach = do
@@ -430,8 +431,7 @@ insertAuthorAttachmentAsIs documentid attach = do
     ] <++> SQL ("RETURNING " ++ authorAttachmentsSelectors) []
 
   fetchAuthorAttachments
-    >>= oneObjectReturnedGuard
-    >>= return . fmap snd
+    >>= oneObjectReturnedGuard . concatMap snd . M.toList
 
 signatoryAttachmentsSelectors :: String
 signatoryAttachmentsSelectors = intercalate ", " [
@@ -447,16 +447,16 @@ selectSignatoryAttachmentsSQL = SQL ("SELECT "
   ++ signatoryAttachmentsSelectors
   ++ " FROM signatory_attachments ") []
 
-fetchSignatoryAttachments :: DB [(DocumentID, SignatoryAttachment)]
-fetchSignatoryAttachments = foldDB decoder []
+fetchSignatoryAttachments :: DB (M.Map DocumentID [SignatoryAttachment])
+fetchSignatoryAttachments = foldDB decoder M.empty
   where
     decoder acc document_id file_id email name description =
-      (document_id, SignatoryAttachment {
+      M.insertWith' (++) document_id [SignatoryAttachment {
           signatoryattachmentfile = file_id
         , signatoryattachmentemail = email
         , signatoryattachmentname = name
         , signatoryattachmentdescription = description
-        }) : acc
+        }] acc
 
 insertSignatoryAttachmentAsIs :: DocumentID -> SignatoryAttachment -> DB (Maybe SignatoryAttachment)
 insertSignatoryAttachmentAsIs documentid attach = do
@@ -468,8 +468,7 @@ insertSignatoryAttachmentAsIs documentid attach = do
     , sql "description" $ signatoryattachmentdescription attach
     ] <++> SQL ("RETURNING " ++ signatoryAttachmentsSelectors) []
   fetchSignatoryAttachments
-    >>= oneObjectReturnedGuard
-    >>= return . fmap snd
+    >>= oneObjectReturnedGuard . concatMap snd . M.toList
 
 insertDocumentAsIs :: Document -> DB (Maybe Document)
 insertDocumentAsIs document = do
@@ -831,23 +830,16 @@ selectDocuments query = do
 
     kRunRaw "DROP TABLE docs"
 
-    let makeListOfSecond :: (a,b) -> (a,[b])
-        makeListOfSecond (a,b) = (a,[b])
-        makeMap::(Eq a) => [(a,b)] -> Map.Map a [b]
-        makeMap x = Map.fromAscListWith (flip (++)) $ map makeListOfSecond x
-        sls_map = makeMap sls
-        ats_map = makeMap ats
-        sas_map = makeMap sas
+    let findEmpty :: Document -> M.Map DocumentID [a] -> [a]
+        findEmpty doc = fromMaybe [] . M.lookup (documentid doc)
 
-        findEmpty :: Document -> Map.Map DocumentID [a] -> [a]
-        findEmpty doc mapx = maybe [] id (Map.lookup (documentid doc) mapx)
+        fill doc = doc {
+            documentsignatorylinks       = findEmpty doc sls
+          , documentauthorattachments    = findEmpty doc ats
+          , documentsignatoryattachments = findEmpty doc sas
+          }
 
-        fillIn doc = doc { documentsignatorylinks       = findEmpty doc sls_map
-                         , documentauthorattachments    = findEmpty doc ats_map
-                         , documentsignatoryattachments = findEmpty doc sas_map
-                         }
-
-    return $ map fillIn docs
+    return $ map fill docs
 
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
 instance DBQuery GetDocumentByDocumentID (Maybe Document) where
