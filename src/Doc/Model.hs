@@ -235,6 +235,8 @@ selectDocumentsSQL = SQL ("SELECT "
 fetchDocuments :: DB [Document]
 fetchDocuments = foldDB decoder []
   where
+    -- Note: this function gets documents in reversed order, but all queries
+    -- use reversed order too, so in the end everything is properly ordered.
     decoder acc did title file_id sealed_file_id status error_text simple_type
      process functionality ctime mtime days_to_sign timeout_time invite_time
      invite_ip dlog invite_text allowed_id_types cancelationreason rejection_time
