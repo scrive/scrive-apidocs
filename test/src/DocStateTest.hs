@@ -399,7 +399,7 @@ testSetDaysToSignEvidenceLog = do
 testSetDocumentAdvancedFunctionalityEvidenceLog :: DB ()
 testSetDocumentAdvancedFunctionalityEvidenceLog = do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isBasic &&^ isPreparation)
+  doc <- addRandomDocumentWithAuthorAndCondition author (((==) BasicFunctionality . documentfunctionality) &&^ isPreparation)
   etdoc <- randomUpdate $ \t->SetDocumentAdvancedFunctionality (documentid doc) (SystemActor t)
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)

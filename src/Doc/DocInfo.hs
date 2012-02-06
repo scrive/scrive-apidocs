@@ -96,14 +96,3 @@ getInviteTime doc = case documentinvitetime doc of
   Nothing -> Nothing
   Just i -> Just $ signtime i
 
-{- |
-   Is the document in basic functionality?
- -}
-isBasic :: Document -> Bool
-isBasic doc = BasicFunctionality == documentfunctionality doc
-
-{- |
-   Is the document in advanced functionality?
- -}
-isAdvanced :: Document -> Bool
-isAdvanced doc = AdvancedFunctionality == documentfunctionality doc

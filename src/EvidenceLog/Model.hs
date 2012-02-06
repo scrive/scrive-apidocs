@@ -13,7 +13,8 @@ module EvidenceLog.Model
          AdminActor(..),
          GetEvidenceLog(..),
          DocumentEvidenceEvent(..),
-         copyEvidenceLogToNewDocument
+         copyEvidenceLogToNewDocument,
+         mkAuthorActor
        )
        
        where
@@ -30,29 +31,56 @@ import MinutesTime
 import Database.HDBC
 import Misc
 
-import Version
+import API.Service.Model
 
+import Version
+import Context
+import User.Model
+import Util.HasSomeUserInfo
+
+import qualified Data.ByteString.UTF8 as BS hiding (length)
+
+-- | Actor describes who is performing an action and when
 class Actor a where
+  -- | the time the action is taken
   actorTime      :: a -> MinutesTime
+  -- | If the action is originated on another machine, its IP
   actorIP        :: a -> Maybe IPAddress
   actorIP _      = Nothing
+  -- | If the action is originated by a logged in user
   actorUserID    :: a -> Maybe UserID
   actorUserID _  = Nothing
+  -- | If the action is originated by a person with email address
   actorEmail     :: a -> Maybe String
   actorEmail _   = Nothing
+  -- | If the action is originated by a signatory on the document being acted on
   actorSigLinkID :: a -> Maybe SignatoryLinkID
   actorSigLinkID _ = Nothing
+  -- | If the action is originated by an api call, a string to describe it
   actorAPIString :: a -> Maybe String
   actorAPIString _ = Nothing
+  -- | A textual string describing this actor, used for building evidence strings
   actorWho       :: a -> String
 
+-- | The Scrive System acting on its own
 data SystemActor = SystemActor MinutesTime
                    deriving (Eq, Ord, Show)
 instance Actor SystemActor where
   actorTime (SystemActor t) = t
   actorWho _ = "the Scrive system"
 
-data AuthorActor = AuthorActor MinutesTime IPAddress UserID String
+mkAuthorActor :: Context -> Maybe AuthorActor
+mkAuthorActor ctx = case ctxmaybeuser ctx of
+  Just user -> Just $ AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (BS.toString $ getEmail user)
+  Nothing   -> Nothing
+
+-- | For an action that requires an operation on a document and an
+-- author to be logged in
+data AuthorActor = AuthorActor 
+                   MinutesTime 
+                   IPAddress 
+                   UserID 
+                   String -- ^ Email address
                    deriving (Eq, Ord, Show)
 instance Actor AuthorActor where
   actorTime   (AuthorActor t _ _ _) = t
@@ -61,7 +89,13 @@ instance Actor AuthorActor where
   actorEmail  (AuthorActor _ _ _ e) = Just e
   actorWho    (AuthorActor _ _ _ e) = "the author (" ++ e ++ ")"
 
-data SignatoryActor = SignatoryActor MinutesTime IPAddress (Maybe UserID) String SignatoryLinkID
+-- | For an action requiring a signatory with siglinkid and token (such as signing)
+data SignatoryActor = SignatoryActor 
+                      MinutesTime 
+                      IPAddress 
+                      (Maybe UserID) 
+                      String -- ^ Email address
+                      SignatoryLinkID
                    deriving (Eq, Ord, Show)
 instance Actor SignatoryActor where
   actorTime      (SignatoryActor t _ _ _ _) = t
@@ -71,7 +105,11 @@ instance Actor SignatoryActor where
   actorSigLinkID (SignatoryActor _ _ _ _ s) = Just s
   actorWho       (SignatoryActor _ _ _ e _) = "the signatory with email " ++ show e
   
-data MailAPIActor = MailAPIActor MinutesTime UserID String
+-- | For documents created using mailapi/scrivebymail
+data MailAPIActor = MailAPIActor 
+                    MinutesTime 
+                    UserID 
+                    String -- ^ Email address
                    deriving (Eq, Ord, Show)
 instance Actor MailAPIActor where
   actorTime   (MailAPIActor t _ _) = t
@@ -80,7 +118,12 @@ instance Actor MailAPIActor where
   actorWho    (MailAPIActor _ _ e) = "the user with email " ++ show e ++ " using the Mail API"
   actorAPIString _ = Just "Mail API"
                     
-data MailSystemActor = MailSystemActor MinutesTime (Maybe UserID) String SignatoryLinkID
+-- | For delivery/reading notifications from the mail system
+data MailSystemActor = MailSystemActor 
+                       MinutesTime 
+                       (Maybe UserID) 
+                       String -- ^ Email address
+                       SignatoryLinkID
                    deriving (Eq, Ord, Show)
 instance Actor MailSystemActor where
   actorTime      (MailSystemActor t _ _ _) = t
@@ -89,18 +132,28 @@ instance Actor MailSystemActor where
   actorSigLinkID (MailSystemActor _ _ _ s) = Just s
   actorWho       (MailSystemActor _ _ e _) = "the signatory with email " ++ show e ++ " (reported by the Mail subsystem)"
 
-data IntegrationAPIActor = IntegrationAPIActor MinutesTime IPAddress String (Maybe String)
+-- | For actions originating from the integration api
+data IntegrationAPIActor = IntegrationAPIActor 
+                           MinutesTime 
+                           IPAddress 
+                           ServiceID 
+                           (Maybe String) -- ^ Company name
                          deriving (Eq, Ord, Show)
 instance Actor IntegrationAPIActor where
   actorTime      (IntegrationAPIActor t _ _ _) = t
   actorIP        (IntegrationAPIActor _ i _ _) = Just i
-  actorAPIString (IntegrationAPIActor _ _ a _) = Just a
+  actorAPIString (IntegrationAPIActor _ _ a _) = Just $ BS.toString $ unServiceID a
   actorWho       (IntegrationAPIActor _ _ _ c) = 
     case c of
       Just c' -> "the company " ++ show c' ++ " using the Integration API"
       Nothing -> "the Integration API" 
   
-data UserActor = UserActor MinutesTime IPAddress UserID String
+-- | For actions performed by logged in user
+data UserActor = UserActor 
+                 MinutesTime 
+                 IPAddress 
+                 UserID 
+                 String -- ^ email address
                deriving (Eq, Ord, Show)
 instance Actor UserActor where
   actorTime      (UserActor t _ _ _) = t
@@ -109,7 +162,12 @@ instance Actor UserActor where
   actorEmail     (UserActor _ _ _ e) = Just e
   actorWho       (UserActor _ _ _ e) = "the user with email " ++ show e
   
-data AdminActor = AdminActor MinutesTime IPAddress UserID String
+-- | For actions performed by an admin
+data AdminActor = AdminActor 
+                  MinutesTime 
+                  IPAddress 
+                  UserID 
+                  String -- ^ Email address
                   deriving (Eq, Ord, Show)
 instance Actor AdminActor where
   actorTime      (AdminActor t _ _ _) = t
@@ -155,7 +213,7 @@ data Actor a => InsertEvidenceEvent a = InsertEvidenceEvent
                                         EvidenceEventType       -- A code for the event
                                         String                  -- Text for evidence
                                         (Maybe DocumentID)      -- The documentid if this event is about a document
-                                        a
+                                        a                       -- Actor
 instance Actor a => DBUpdate (InsertEvidenceEvent a) Bool where
   dbUpdate (InsertEvidenceEvent tp txt mdid a) = 
     wrapDB (insertEvidenceEvent tp txt mdid a)
@@ -245,59 +303,178 @@ copyEvidenceLogToNewDocument fromdoc todoc =
 
 -- | A machine-readable event code for different types of events.
 data EvidenceEventType =
-  AddSigAttachmentEvidence                    |
-  RemoveSigAttachmentsEvidence                |
-  RemoveDocumentAttachmentEvidence            |
-  AddDocumentAttachmentEvidence               |
-  PendingToAwaitingAuthorEvidence             |
-  UpdateFieldsEvidence                        |
-  SetElegitimationIdentificationEvidence      |
-  SetEmailIdentificationEvidence              |
-  TimeoutDocumentEvidence                     |
-  SignDocumentEvidence                        |
-  SetInvitationDeliveryStatusEvidence         |
-  SetDocumentUIEvidence                       |
-  SetDocumentLocaleEvidence                   |
-  SetDocumentTitleEvidence                    |
-  SetDocumentAdvancedFunctionalityEvidence    |
-  RemoveDaysToSignEvidence                    |
-  SetDaysToSignEvidence                       |
-  SetInvitationTextEvidence                   |
-  RemoveSignatoryUserEvidence                 |
-  SetSignatoryUserEvidence                    |
-  RemoveSignatoryCompanyEvidence              |
-  SetSignatoryCompanyEvidence                 |
-  SetDocumentTagsEvidence                     |
-  SaveSigAttachmentEvidence                   |
-  SaveDocumentForUserEvidence                 |
-  RestartDocumentEvidence                     |
-  ReallyDeleteDocumentEvidence                |
-  NewDocumentEvidence                         |
-  MarkInvitationReadEvidence                  |
-  CloseDocumentEvidence                       |
-  ChangeSignatoryEmailWhenUndeliveredEvidence |
-  ChangeMainfileEvidence                      |
-  CancelDocumenElegEvidence                   |
-  CancelDocumentEvidence                      |
-  AttachFileEvidence                          |
-  AttachSealedFileEvidence                    |
-  PreparationToPendingEvidence                |
-  DeleteSigAttachmentEvidence                 |
-  AuthorUsesCSVEvidence                       |
-  ErrorDocumentEvidence                       |
-  MarkDocumentSeenEvidence                    |
-  RejectDocumentEvidence                      |
-  SetDocumentInviteTimeEvidence               |
-  SetDocumentTimeoutTimeEvidence              |
-  RestoreArchivedDocumentEvidence             |
-  InvitationEvidence                          |
+  AddSigAttachmentEvidence                        |
+  RemoveSigAttachmentsEvidence                    |
+  RemoveDocumentAttachmentEvidence                |
+  AddDocumentAttachmentEvidence                   |
+  PendingToAwaitingAuthorEvidence                 |
+  UpdateFieldsEvidence                            |
+  SetElegitimationIdentificationEvidence          |
+  SetEmailIdentificationEvidence                  |
+  TimeoutDocumentEvidence                         |
+  SignDocumentEvidence                            |
+  SetInvitationDeliveryStatusEvidence             |
+  SetDocumentUIEvidence                           |
+  SetDocumentLocaleEvidence                       |
+  SetDocumentTitleEvidence                        |
+  SetDocumentAdvancedFunctionalityEvidence        |
+  RemoveDaysToSignEvidence                        |
+  SetDaysToSignEvidence                           |
+  SetInvitationTextEvidence                       |
+  RemoveSignatoryUserEvidence                     |
+  SetSignatoryUserEvidence                        |
+  RemoveSignatoryCompanyEvidence                  |
+  SetSignatoryCompanyEvidence                     |
+  SetDocumentTagsEvidence                         |
+  SaveSigAttachmentEvidence                       |
+  SaveDocumentForUserEvidence                     |
+  RestartDocumentEvidence                         |
+  ReallyDeleteDocumentEvidence                    |
+  NewDocumentEvidence                             |
+  MarkInvitationReadEvidence                      |
+  CloseDocumentEvidence                           |
+  ChangeSignatoryEmailWhenUndeliveredEvidence     |
+  ChangeMainfileEvidence                          |
+  CancelDocumenElegEvidence                       |
+  CancelDocumentEvidence                          |
+  AttachFileEvidence                              |
+  AttachSealedFileEvidence                        |
+  PreparationToPendingEvidence                    |
+  DeleteSigAttachmentEvidence                     |
+  AuthorUsesCSVEvidence                           |
+  ErrorDocumentEvidence                           |
+  MarkDocumentSeenEvidence                        |
+  RejectDocumentEvidence                          |
+  SetDocumentInviteTimeEvidence                   |
+  SetDocumentTimeoutTimeEvidence                  |
+  RestoreArchivedDocumentEvidence                 |
+  InvitationEvidence                              |
   SignableFromDocumentIDWithUpdatedAuthorEvidence |
-  ArchiveDocumentEvidence                     |
-  ResetSignatoryDetailsEvidence |
-  AdminOnlySaveForUserEvidence |
-  SignableFromDocumentEvidence |
-  TemplateFromDocumentEvidence |
+  ArchiveDocumentEvidence                         |
+  ResetSignatoryDetailsEvidence                   |
+  AdminOnlySaveForUserEvidence                    |
+  SignableFromDocumentEvidence                    |
+  TemplateFromDocumentEvidence                    |
   AttachCSVUploadEvidence
   deriving (Eq, Show, Read, Ord)
-$(enumDeriveConvertible ''EvidenceEventType)
 
+instance Convertible EvidenceEventType Int where
+  safeConvert AddSigAttachmentEvidence                        = return 1
+  safeConvert RemoveSigAttachmentsEvidence                    = return 2
+  safeConvert RemoveDocumentAttachmentEvidence                = return 3
+  safeConvert AddDocumentAttachmentEvidence                   = return 4
+  safeConvert PendingToAwaitingAuthorEvidence                 = return 5
+  safeConvert UpdateFieldsEvidence                            = return 6
+  safeConvert SetElegitimationIdentificationEvidence          = return 7
+  safeConvert SetEmailIdentificationEvidence                  = return 8
+  safeConvert TimeoutDocumentEvidence                         = return 9
+  safeConvert SignDocumentEvidence                            = return 10
+  safeConvert SetInvitationDeliveryStatusEvidence             = return 11
+  safeConvert SetDocumentUIEvidence                           = return 12
+  safeConvert SetDocumentLocaleEvidence                       = return 13
+  safeConvert SetDocumentTitleEvidence                        = return 14
+  safeConvert SetDocumentAdvancedFunctionalityEvidence        = return 15
+  safeConvert RemoveDaysToSignEvidence                        = return 16
+  safeConvert SetDaysToSignEvidence                           = return 17
+  safeConvert SetInvitationTextEvidence                       = return 18
+  safeConvert RemoveSignatoryUserEvidence                     = return 19
+  safeConvert SetSignatoryUserEvidence                        = return 20
+  safeConvert RemoveSignatoryCompanyEvidence                  = return 21
+  safeConvert SetSignatoryCompanyEvidence                     = return 22
+  safeConvert SetDocumentTagsEvidence                         = return 23
+  safeConvert SaveSigAttachmentEvidence                       = return 24
+  safeConvert SaveDocumentForUserEvidence                     = return 25
+  safeConvert RestartDocumentEvidence                         = return 26
+  safeConvert ReallyDeleteDocumentEvidence                    = return 27
+  safeConvert NewDocumentEvidence                             = return 28
+  safeConvert MarkInvitationReadEvidence                      = return 29
+  safeConvert CloseDocumentEvidence                           = return 30
+  safeConvert ChangeSignatoryEmailWhenUndeliveredEvidence     = return 31
+  safeConvert ChangeMainfileEvidence                          = return 32
+  safeConvert CancelDocumenElegEvidence                       = return 33
+  safeConvert CancelDocumentEvidence                          = return 34
+  safeConvert AttachFileEvidence                              = return 35
+  safeConvert AttachSealedFileEvidence                        = return 36
+  safeConvert PreparationToPendingEvidence                    = return 37
+  safeConvert DeleteSigAttachmentEvidence                     = return 38
+  safeConvert AuthorUsesCSVEvidence                           = return 39
+  safeConvert ErrorDocumentEvidence                           = return 40
+  safeConvert MarkDocumentSeenEvidence                        = return 41
+  safeConvert RejectDocumentEvidence                          = return 42
+  safeConvert SetDocumentInviteTimeEvidence                   = return 43
+  safeConvert SetDocumentTimeoutTimeEvidence                  = return 44
+  safeConvert RestoreArchivedDocumentEvidence                 = return 45
+  safeConvert InvitationEvidence                              = return 46
+  safeConvert SignableFromDocumentIDWithUpdatedAuthorEvidence = return 47
+  safeConvert ArchiveDocumentEvidence                         = return 48
+  safeConvert ResetSignatoryDetailsEvidence                   = return 49
+  safeConvert AdminOnlySaveForUserEvidence                    = return 50
+  safeConvert SignableFromDocumentEvidence                    = return 51
+  safeConvert TemplateFromDocumentEvidence                    = return 52
+  safeConvert AttachCSVUploadEvidence                         = return 53
+  
+instance Convertible Int EvidenceEventType where
+    safeConvert 1  = return AddSigAttachmentEvidence
+    safeConvert 2  = return RemoveSigAttachmentsEvidence
+    safeConvert 3  = return RemoveDocumentAttachmentEvidence
+    safeConvert 4  = return AddDocumentAttachmentEvidence
+    safeConvert 5  = return PendingToAwaitingAuthorEvidence
+    safeConvert 6  = return UpdateFieldsEvidence
+    safeConvert 7  = return SetElegitimationIdentificationEvidence
+    safeConvert 8  = return SetEmailIdentificationEvidence
+    safeConvert 9  = return TimeoutDocumentEvidence
+    safeConvert 10 = return SignDocumentEvidence
+    safeConvert 11 = return SetInvitationDeliveryStatusEvidence
+    safeConvert 12 = return SetDocumentUIEvidence
+    safeConvert 13 = return SetDocumentLocaleEvidence
+    safeConvert 14 = return SetDocumentTitleEvidence
+    safeConvert 15 = return SetDocumentAdvancedFunctionalityEvidence
+    safeConvert 16 = return RemoveDaysToSignEvidence
+    safeConvert 17 = return SetDaysToSignEvidence
+    safeConvert 18 = return SetInvitationTextEvidence
+    safeConvert 19 = return RemoveSignatoryUserEvidence
+    safeConvert 20 = return SetSignatoryUserEvidence
+    safeConvert 21 = return RemoveSignatoryCompanyEvidence
+    safeConvert 22 = return SetSignatoryCompanyEvidence
+    safeConvert 23 = return SetDocumentTagsEvidence
+    safeConvert 24 = return SaveSigAttachmentEvidence
+    safeConvert 25 = return SaveDocumentForUserEvidence
+    safeConvert 26 = return RestartDocumentEvidence
+    safeConvert 27 = return ReallyDeleteDocumentEvidence
+    safeConvert 28 = return NewDocumentEvidence
+    safeConvert 29 = return MarkInvitationReadEvidence
+    safeConvert 30 = return CloseDocumentEvidence
+    safeConvert 31 = return ChangeSignatoryEmailWhenUndeliveredEvidence
+    safeConvert 32 = return ChangeMainfileEvidence
+    safeConvert 33 = return CancelDocumenElegEvidence
+    safeConvert 34 = return CancelDocumentEvidence
+    safeConvert 35 = return AttachFileEvidence
+    safeConvert 36 = return AttachSealedFileEvidence
+    safeConvert 37 = return PreparationToPendingEvidence
+    safeConvert 38 = return DeleteSigAttachmentEvidence
+    safeConvert 39 = return AuthorUsesCSVEvidence
+    safeConvert 40 = return ErrorDocumentEvidence
+    safeConvert 41 = return MarkDocumentSeenEvidence
+    safeConvert 42 = return RejectDocumentEvidence
+    safeConvert 43 = return SetDocumentInviteTimeEvidence
+    safeConvert 44 = return SetDocumentTimeoutTimeEvidence
+    safeConvert 45 = return RestoreArchivedDocumentEvidence
+    safeConvert 46 = return InvitationEvidence
+    safeConvert 47 = return SignableFromDocumentIDWithUpdatedAuthorEvidence
+    safeConvert 48 = return ArchiveDocumentEvidence
+    safeConvert 49 = return ResetSignatoryDetailsEvidence
+    safeConvert 50 = return AdminOnlySaveForUserEvidence
+    safeConvert 51 = return SignableFromDocumentEvidence
+    safeConvert 52 = return TemplateFromDocumentEvidence
+    safeConvert 53 = return AttachCSVUploadEvidence
+    safeConvert s  = Left ConvertError { convSourceValue = show s
+                                       , convSourceType = "Int"
+                                       , convDestType = "EvidenceEventType"
+                                       , convErrorMessage = "Convertion error: value " ++ show s ++ " not mapped"
+                                       }
+
+instance Convertible EvidenceEventType SqlValue where
+  safeConvert e = fmap toSql (safeConvert e :: Either ConvertError Int)
+
+instance Convertible SqlValue EvidenceEventType where
+  safeConvert s = safeConvert (fromSql s :: Int)

@@ -124,6 +124,8 @@ import File.Model
 import EvidenceLog.Model
 import Util.HasSomeUserInfo
 
+import Util.MonadUtils
+
 data SqlField = SqlField String String SqlValue
 
 instance Convertible SqlValue SqlValue where
@@ -887,8 +889,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (AdminOnlySaveForUser a) (Ei
                        [ toSql did
                        , toSql (userid user)
                        ]
-    when (r == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
       AdminOnlySaveForUserEvidence
       ("Document saved for user with email " ++ show (getEmail user) ++ " by " ++ actorWho actor ++ ".")
       (Just did)
@@ -912,8 +914,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (ArchiveDocument a) (Either 
     let forstr = case (usercompany user, useriscompanyadmin user) of
           (Just cid, True) -> "company with admin email " ++ show (getEmail user)
           _ -> "user with email " ++ show (getEmail user)
-    when (fudgedr == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (fudgedr == 1) $
+      dbUpdate $ InsertEvidenceEvent
       ArchiveDocumentEvidence
       ("Moved document to rubbish bin for " ++ forstr ++ " by " ++ actorWho actor ++ ".")
       (Just did)
@@ -954,8 +956,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (AttachCSVUpload a) (Either 
                          , toSql slid
                          , toSql [SignatoryAuthor]
                          ]
-                     when (r == 1) $
-                       ignore $ dbUpdate $ InsertEvidenceEvent
+                     when_ (r == 1) $
+                       dbUpdate $ InsertEvidenceEvent
                        AttachCSVUploadEvidence
                        ("Attached CSV (" ++ show (csvtitle csvupload) ++ ") to document by " ++ actorWho actor ++ ".")
                        (Just did)
@@ -975,8 +977,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (AttachFile a) (Either Strin
          , sqlLogAppend time ("Attached main file " ++ show fid)
          ]
          "WHERE id = ? AND status = ?" [ toSql did, toSql Preparation ]
-    when (r == 1) $ do
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
         AttachFileEvidence
         ("Uploaded main PDF by " ++ actorWho a ++ ".")
         (Just did)
@@ -994,8 +996,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (AttachSealedFile a) (Either
          , sqlLogAppend time ("Attached sealed file " ++ show fid)
          ]
          "WHERE id = ? AND status = ?" [ toSql did, toSql Closed ]
-    when (r == 1) $ 
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $ 
+      dbUpdate $ InsertEvidenceEvent
       AttachSealedFileEvidence
       ("Sealed file attached by " ++ actorWho actor ++ ".")
       (Just did)
@@ -1023,10 +1025,10 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (CancelDocument a) (Either S
                  , sqlLogAppend mtime logmsg
                  ]
                 "WHERE id = ? AND type = ?" [ toSql did, toSql (toDocumentSimpleType (Signable undefined)) ]
-            when (r == 1) $ 
+            when_ (r == 1) $ 
               case reason of
                 ManualCancel -> 
-                  ignore $ dbUpdate $ InsertEvidenceEvent
+                  dbUpdate $ InsertEvidenceEvent
                   CancelDocumentEvidence
                   ("The document was canceled by " ++ actorWho actor ++ ".")
                   (Just did)
@@ -1039,7 +1041,7 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (CancelDocument a) (Either S
                               ,("personal number", getPersonalNumber sl, num)]
                       uneql = filter (\(_,a,b)->a/=b) trips
                       msg = intercalate "; " $ map (\(f,s,e)->f ++ " from document was " ++ show s ++ " but from e-legitimation was " ++ show e) uneql
-                  ignore $ dbUpdate $ InsertEvidenceEvent
+                  dbUpdate $ InsertEvidenceEvent
                     CancelDocumenElegEvidence
                     ("The document was canceled due to a mismatch with e-legitimation data by " ++ actorWho actor ++ ". Reason: " ++ msg ++ ".")
                     (Just did)
@@ -1066,8 +1068,8 @@ instance (Actor a, Show a, Eq a, Ord a)=> DBUpdate (ChangeMainfile a) (Either St
                  [ sqlField fieldname $ fid
                  ]
              "WHERE id = ?" [ toSql did ]
-        when (r == 1) $ do
-          ignore $ dbUpdate $ InsertEvidenceEvent
+        when_ (r == 1) $
+          dbUpdate $ InsertEvidenceEvent
             ChangeMainfileEvidence
             ("Main file was changed by " ++ actorWho actor ++ ".")
             (Just did)
@@ -1102,8 +1104,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (ChangeSignatoryEmailWhenUnd
                        , toSql did
                        , toSql slid
                        ]
-    when (r == 1) $ 
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $ 
+      dbUpdate $ InsertEvidenceEvent
       ChangeSignatoryEmailWhenUndeliveredEvidence
       ("Changed the email address for signatory from " ++ show oldemail ++ " to " ++ show email ++ " by " ++ actorWho actor ++ ".")
       (Just did)
@@ -1133,8 +1135,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (PreparationToPending a) (Ei
                  , sqlLogAppend time ("Document put into Pending state")
                  ]
                 "WHERE id = ? AND type = ?" [ toSql docid, toSql (toDocumentSimpleType (Signable undefined))]
-            when (r == 1) $
-              ignore $ dbUpdate $ InsertEvidenceEvent
+            when_ (r == 1) $
+              dbUpdate $ InsertEvidenceEvent
               PreparationToPendingEvidence
               ("Document was put into Pending state by " ++ actorWho actor ++ "." ++ t)
               (Just docid)
@@ -1160,8 +1162,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (CloseDocument a) (Either St
                  , sqlLogAppend time ("Document closed")
                  ]
                 "WHERE id = ? AND type = ?" [ toSql docid, toSql (toDocumentSimpleType (Signable undefined)) ]
-            when (r == 1) $
-              ignore $ dbUpdate $ InsertEvidenceEvent 
+            when_ (r == 1) $
+              dbUpdate $ InsertEvidenceEvent 
               CloseDocumentEvidence
               ("The document was closed by " ++ actorWho actor ++ " after all signatories had signed.")
               (Just docid)
@@ -1185,8 +1187,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (DeleteSigAttachment a) (Eit
                          , toSql email
                          , toSql fid
                          ]
-    when (r == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
       DeleteSigAttachmentEvidence
       ("Signatory attachment for signatory with email " ++ show email ++ " was deleted by " ++ actorWho actor ++ ".")
       (Just did)
@@ -1198,12 +1200,12 @@ data (Actor a, Show a, Eq a, Ord a) => DocumentFromSignatoryData a = DocumentFro
 instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (DocumentFromSignatoryData a) (Either String Document) where
   dbUpdate (DocumentFromSignatoryData docid sigindex fstname sndname email company personalnumber companynumber fieldvalues actor) = do
     ed <- newFromDocument toNewDoc docid    
-    when (isRight ed) $ 
+    when_ (isRight ed) $ 
       let Right d = ed 
           Just sl = getAuthorSigLink d
       in do
         copyEvidenceLogToNewDocument docid (documentid d)
-        ignore $ dbUpdate $ InsertEvidenceEvent
+        dbUpdate $ InsertEvidenceEvent
           AuthorUsesCSVEvidence
           ("Document created from CSV file by " ++ actorWho actor ++ ".")
           (Just $ documentid d)
@@ -1249,8 +1251,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (ErrorDocument a) (Either St
                  , sqlField "error_text" $ errmsg
                  ]
                 "WHERE id = ?" [ toSql docid ]
-            when (r == 1) $
-              ignore $ dbUpdate $ InsertEvidenceEvent
+            when_ (r == 1) $
+              dbUpdate $ InsertEvidenceEvent
               ErrorDocumentEvidence
               ("The following error occured on the document: " ++ errmsg)
               (Just docid)
@@ -1499,8 +1501,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (MarkDocumentSeen a) (Either
     -- (see jira #1194)
     let fudgedr = if r==0 then 1 else r
     --but we should update the log                   
-    when (fudgedr == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (fudgedr == 1) $
+      dbUpdate $ InsertEvidenceEvent
       MarkDocumentSeenEvidence
       txt
       (Just did)
@@ -1524,11 +1526,11 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (AddInvitationEvidence a) (E
         case getSigLinkFor doc slid of
           Just sl -> do
             let eml = BS.toString $ getEmail sl
-            ignore $ dbUpdate $ InsertEvidenceEvent
-              InvitationEvidence
-              ("Invitation sent to " ++ eml ++ " by " ++ actorWho actor ++ ".")
-              (Just docid)
-              actor
+            _ <- dbUpdate $ InsertEvidenceEvent
+                 InvitationEvidence
+                 ("Invitation sent to " ++ eml ++ " by " ++ actorWho actor ++ ".")
+                 (Just docid)
+                 actor
             return $ Right doc
           Nothing -> 
             return $ Left $ "SignatoryLinkID " ++ show slid ++ " does not exist in document with id " ++ show docid
@@ -1552,8 +1554,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (MarkInvitationRead a) (Eith
                [ toSql linkid
                , toSql did
                ]
-          when (r == 1) $
-            ignore $ dbUpdate $ InsertEvidenceEvent
+          when_ (r == 1) $
+            dbUpdate $ InsertEvidenceEvent
             MarkInvitationReadEvidence
             ("Invitation sent to " ++ show eml ++ " was opened, as reported by " ++ actorWho actor ++ ".")
             (Just did)
@@ -1609,7 +1611,7 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (NewDocument a) (Either Stri
            midoc <- insertDocumentAsIs doc
            case midoc of
              Just doc' -> do
-               ignore $ dbUpdate $ InsertEvidenceEvent           
+               _<- dbUpdate $ InsertEvidenceEvent           
                  NewDocumentEvidence
                  ("Document created by " ++ actorWho actor ++ ".")
                  (Just $ documentid doc')
@@ -1637,8 +1639,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (ReallyDeleteDocument a) (Ei
     let txt = case (usercompany user, useriscompanyadmin user) of
           (Just cid, True) -> "the company with admin email " ++ show (getEmail user)
           _ -> "the user with email " ++ show (getEmail user)
-    when (r == 1) $ do
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $ do
+      dbUpdate $ InsertEvidenceEvent
         ReallyDeleteDocumentEvidence
         ("The document was removed from the rubbish bin for " ++ txt ++ " by " ++ actorWho actor ++ ".")
         (Just did)
@@ -1677,8 +1679,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (RejectDocument a) (Either S
                    ]
                    "WHERE id = ?" [toSql docid]
               let eml = BS.toString $ getEmail sl
-              when (r == 1) $
-                ignore $ dbUpdate $ InsertEvidenceEvent
+              when_ (r == 1) $
+                dbUpdate $ InsertEvidenceEvent
                 RejectDocumentEvidence
                 ("Document rejected for signatory with email " ++ show eml ++ " by " ++ actorWho actor ++ ".")
                 (Just docid)
@@ -1786,8 +1788,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SaveDocumentForUser a) (Eit
                           [ toSql did
                           , toSql slid
                           ]
-    when (r == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
       SaveDocumentForUserEvidence
       ("Saving document to user account with email " ++ show (getEmail user) ++ " by " ++ actorWho actor ++ ".")
       (Just did)
@@ -1811,8 +1813,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SaveSigAttachment a) (Eithe
                          , toSql email
                          , toSql name
                          ]
-    when (r == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
       SaveSigAttachmentEvidence
       ("Saving attachment with name " ++ show name ++ " for signatory with email " ++ show email ++ " by " ++ actorWho actor ++ ".")
       (Just did)
@@ -1829,8 +1831,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SetDocumentTags a) (Either 
          ]
          "WHERE id = ?" [ toSql did ]
     let tagstr = intercalate "; " $ map (\(DocumentTag k v)-> BS.toString k ++ "=" ++ BS.toString v) doctags
-    when (r == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
       SetDocumentTagsEvidence
       ("Document tags set to " ++ show tagstr ++ " by " ++ actorWho actor ++ ".")
       (Just did)
@@ -1847,8 +1849,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SetDocumentInviteTime a) (E
            sqlField "invite_ip" ipaddress
          ]
          "WHERE id = ?" [ toSql did ]
-    when (r == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
       SetDocumentInviteTimeEvidence
       ("Document invite time set to " ++ formatMinutesTimeUTC invitetime ++ " UTC by " ++ actorWho actor ++ ".")
       (Just did)
@@ -1866,8 +1868,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SetDocumentTimeoutTime a) (
                          [ toSql did
                          , toSql (toDocumentSimpleType (Signable undefined))
                          ]
-    when (r == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
       SetDocumentTimeoutTimeEvidence
       ("Document timeout time set to " ++ formatMinutesTimeUTC timeouttime ++ " UTC by " ++ actorWho actor ++ ".")
       (Just did)
@@ -1885,8 +1887,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SetSignatoryCompany a) (Eit
                          [ toSql slid
                          , toSql did
                          ]
-    when (r == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
       SetSignatoryCompanyEvidence
       ("Signatory with id " ++ show slid ++ " was associated to company with id " ++ show cid ++ " by " ++ actorWho actor ++ ".")
       (Just did)
@@ -1904,8 +1906,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (RemoveSignatoryCompany a) (
                          [ toSql slid
                          , toSql did
                          ]
-    when (r == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
       RemoveSignatoryCompanyEvidence
       ("Signatory with id " ++ show slid ++ " was dissociated from company by " ++ actorWho actor ++ ".")
       (Just did)
@@ -1923,8 +1925,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SetSignatoryUser a) (Either
                          [ toSql slid
                          , toSql did
                          ]
-    when (r == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
       SetSignatoryUserEvidence
       ("Signatory with id " ++ show slid ++ " was associated with user with id " ++ show uid ++ " by " ++ actorWho actor ++ ".")
       (Just did)
@@ -1942,8 +1944,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (RemoveSignatoryUser a) (Eit
                          [ toSql slid
                          , toSql did
                          ]
-    when (r == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
       RemoveSignatoryUserEvidence
       ("Signatory with id " ++ show slid ++ " was dissociated from its user by " ++ actorWho actor ++ ".")
       (Just did)
@@ -1961,8 +1963,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SetInviteText a) (Either St
          , sqlLogAppend time ("Invite text set")
          ]
          "WHERE id = ?" [ toSql did ]
-    when (r == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
       SetInvitationTextEvidence
       ("Invitation text set to " ++ show text ++ " by " ++ actorWho actor ++ ".")
       (Just did)
@@ -1980,8 +1982,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SetDaysToSign a) (Either St
          , sqlLogAppend time ("Days to sign set to " ++ show days)
          ]
          "WHERE id = ?" [ toSql did ]
-    when (r == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
       SetDaysToSignEvidence
       ("Days to sign set to " ++ show days ++ " by " ++ actorWho actor ++ ".")
       (Just did)
@@ -1999,8 +2001,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (RemoveDaysToSign a) (Either
          , sqlLogAppend time ("Removed days to sign")
          ]
          "WHERE id = ?" [ toSql did ]
-    when (r == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
       RemoveDaysToSignEvidence
       ("Days to sign removed by " ++ actorWho actor ++ ".")
       (Just did)
@@ -2018,8 +2020,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SetDocumentAdvancedFunction
          , sqlLogAppend time ("Document changed to advanced functionality")
          ]
          "WHERE id = ? AND functionality <> ?" [ toSql did, toSql AdvancedFunctionality ]
-    when (r == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
       SetDocumentAdvancedFunctionalityEvidence
       ("Document set to advanced functionality by " ++ actorWho actor ++ ".")
       (Just did)
@@ -2038,8 +2040,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SetDocumentTitle a) (Either
          , sqlLogAppend time ("Document title changed")
          ]
          "WHERE id = ?" [ toSql did ]
-    when (r == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
       SetDocumentTitleEvidence
       ("Document title set to " ++ show doctitle ++ " by " ++ actorWho actor ++ ".")
       (Just did)
@@ -2057,8 +2059,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SetDocumentLocale a) (Eithe
          , sqlLogAppend time ("Document locale changed")
          ]
          "WHERE id = ?" [ toSql did ]
-    when (r == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
       SetDocumentLocaleEvidence
       ("Document locale set to " ++ show locale ++ " by " ++ actorWho actor ++ ".")
       (Just did)
@@ -2077,8 +2079,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SetDocumentUI a) (Either St
     let txt = case documentmailfooter documentui of
           Nothing -> "Document mail footer removed by " ++ actorWho actor ++ "."
           Just footer -> "Document mail footer set to " ++ show footer ++ " by " ++ actorWho actor ++ "."
-    when (r == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
       SetDocumentUIEvidence
       txt
       (Just did)
@@ -2098,8 +2100,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SetInvitationDeliveryStatus
                          , toSql did
                          , toSql (toDocumentSimpleType (Signable undefined))
                          ]
-    when (r == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
       SetInvitationDeliveryStatusEvidence
       ("Delivery status for signatory with id " ++ show slid ++ " set to " ++ show status ++ " by " ++ actorWho actor ++ ".")
       (Just did)
@@ -2158,8 +2160,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SignDocument a) (Either Str
                                                ++ show signatureinfotext 
                                                ++ ". The provider was " ++ ps ++ ". " 
                                                ++ vstring
-            when (r == 1) $
-              ignore $ dbUpdate $ InsertEvidenceEvent
+            when_ (r == 1) $
+              dbUpdate $ InsertEvidenceEvent
               SignDocumentEvidence
               ("Document signed by " ++ actorWho actor ++ using ++ ".")
               (Just docid)
@@ -2204,8 +2206,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (ResetSignatoryDetails2 a) (
                                            }
                                 else link'
                      r1 <- insertSignatoryLinkAsIs documentid link
-                     when (isJust r1) $
-                       ignore $ dbUpdate $ InsertEvidenceEvent
+                     when_ (isJust r1) $
+                       dbUpdate $ InsertEvidenceEvent
                        ResetSignatoryDetailsEvidence
                        ("Signatory details for signatory with email " ++ show (getEmail link) ++ " by " ++ actorWho actor ++ ".")
                        (Just documentid)
@@ -2309,8 +2311,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (TemplateFromDocument a) (Ei
          , sqlField "type" $ toDocumentSimpleType (Template undefined)
          ]
          "WHERE id = ?" [ toSql did ]
-    when (r == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
       TemplateFromDocumentEvidence
       ("Document converted to template by " ++ actorWho actor ++ ".")
       (Just did)
@@ -2331,8 +2333,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (TimeoutDocument a) (Either 
                                                     , toSql (toDocumentSimpleType (Signable undefined))
                                                     , toSql Pending
                                                     ]
-    when (r == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
       TimeoutDocumentEvidence
       ("Document timed out by " ++ actorWho actor ++ ".")
       (Just did)
@@ -2350,8 +2352,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SetEmailIdentification a) (
          , sqlLogAppend time ("Email identification set")
          ]
          "WHERE id = ?" [ toSql did ]
-    when (r == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
       SetEmailIdentificationEvidence
       ("Document identification type set to Email by " ++ actorWho actor ++ ".")
       (Just did)
@@ -2369,8 +2371,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (SetElegitimationIdentificat
          , sqlLogAppend time ("E-leg identification set")
          ]
          "WHERE id = ?" [ toSql did ]
-    when (r == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
       SetElegitimationIdentificationEvidence
       ("Document identification type set to E-Legitimation by " ++ actorWho actor ++ ".")
       (Just did)
@@ -2436,8 +2438,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (PendingToAwaitingAuthor a) 
                  , sqlLogAppend time ("Changed to AwaitingAuthor status")
                  ]
                 "WHERE id = ? AND type = ?" [ toSql docid, toSql (toDocumentSimpleType (Signable undefined)) ]
-            when (r == 1) $
-              ignore $ dbUpdate $ InsertEvidenceEvent
+            when_ (r == 1) $
+              dbUpdate $ InsertEvidenceEvent
               PendingToAwaitingAuthorEvidence
               ("Document moved from Pending to AwaitingAuthor status when all signatories had signed but author by " ++ actorWho actor ++ ".")
               (Just docid)
@@ -2464,8 +2466,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (AddDocumentAttachment a) (E
                       , toSql did
                       , toSql Preparation
                       ]
-            when (r == 1) $
-              ignore $ dbUpdate $ InsertEvidenceEvent
+            when_ (r == 1) $
+              dbUpdate $ InsertEvidenceEvent
               AddDocumentAttachmentEvidence
               ("File with ID " ++ show fid ++ " attached to Document by " ++ actorWho actor ++ ".")
               (Just did)
@@ -2482,13 +2484,14 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (RemoveDocumentAttachment a)
                                  , toSql did
                                  , toSql Preparation
                                  ]
-    when (r == 1) $
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r == 1) $
+      dbUpdate $ InsertEvidenceEvent
       RemoveDocumentAttachmentEvidence
       ("File with ID " ++ show fid ++ " removed from document by " ++ actorWho actor ++ ".")
       (Just did)
       actor
-                                 
+    
+    -- I understand the point of this, but it is a little weird to do the check after - EN
     m <- dbQuery $ GetDocumentByDocumentID did
     case m of
       Just doc -> case documentstatus doc of
@@ -2501,8 +2504,8 @@ data (Actor a, Show a, Eq a, Ord a) => UpdateSigAttachments a = UpdateSigAttachm
 instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (UpdateSigAttachments a) (Either String Document) where
   dbUpdate (UpdateSigAttachments did sigatts actor) = do
     r <- wrapDB $ \conn -> run conn "DELETE FROM signatory_attachments WHERE document_id = ?" [toSql did]
-    when (r > 0) $ 
-      ignore $ dbUpdate $ InsertEvidenceEvent
+    when_ (r > 0) $ 
+      dbUpdate $ InsertEvidenceEvent
       RemoveSigAttachmentsEvidence
       ("All signatory attachments removed by " ++ actorWho actor ++ ".")
       (Just did)
@@ -2522,8 +2525,8 @@ instance (Actor a, Show a, Eq a, Ord a) => DBUpdate (UpdateSigAttachments a) (Ei
                 , sqlField "description" $ signatoryattachmentdescription
                 , sqlField "document_id" $ did
                 ]
-           when (r == 1) $
-             ignore $ dbUpdate $ InsertEvidenceEvent
+           when_ (r == 1) $
+             dbUpdate $ InsertEvidenceEvent
              AddSigAttachmentEvidence
              ("Signatory attachment request for " ++ show signatoryattachmentname ++ " from signatory with email " ++ show signatoryattachmentemail ++ " by " ++ actorWho actor ++ ".")
              (Just did)

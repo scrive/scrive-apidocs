@@ -211,7 +211,7 @@ createDocFromTemplate templateid title user mcompany time = do
   ctx <- getContext
   sid <- serviceid <$> service <$> ask
   let mecid = maybe Nothing companyexternalid mcompany
-  let ia = IntegrationAPIActor time (ctxipnumber ctx) (BS.toString $ unServiceID sid) (BS.toString . unExternalCompanyID <$> mecid)
+  let ia = IntegrationAPIActor time (ctxipnumber ctx) sid (BS.toString . unExternalCompanyID <$> mecid)
   edoc <- runDBUpdate $ SignableFromDocumentIDWithUpdatedAuthor user mcompany templateid ia
   when (isLeft edoc) $
     throwApiError API_ERROR_OTHER $ "Cannot create document!"
@@ -233,7 +233,7 @@ createDocFromFiles title doctype files user mcompany time = do
   ctx <- getContext
   sid <- serviceid <$> service <$> ask
   let mecid = maybe Nothing companyexternalid mcompany
-  let ia = IntegrationAPIActor time (ctxipnumber ctx) (BS.toString $ unServiceID sid) (BS.toString . unExternalCompanyID <$> mecid)
+  let ia = IntegrationAPIActor time (ctxipnumber ctx) sid (BS.toString . unExternalCompanyID <$> mecid)
   edoc <- runDBUpdate $ NewDocument user mcompany title doctype ia
   case edoc of
     Left _ -> throwApiError API_ERROR_OTHER $ "Cannot create document"
@@ -252,7 +252,7 @@ updateDocumentWithDocumentUI :: Kontrakcja m => Document -> IntegrationAPIFuncti
 updateDocumentWithDocumentUI doc = do
   ctx <- getContext    
   sid <- serviceid <$> service <$> ask
-  let actor = IntegrationAPIActor (ctxtime ctx) (ctxipnumber ctx) (BS.toString $ unServiceID sid) Nothing
+  let actor = IntegrationAPIActor (ctxtime ctx) (ctxipnumber ctx) sid Nothing
   mailfooter <- fromJSONField "mailfooter"
   ndoc <- runDBUpdate $ SetDocumentUI (documentid doc) ((documentui doc) {documentmailfooter = mailfooter}) actor
   return $ either (const doc) id ndoc
@@ -268,7 +268,11 @@ createAPIDocument _ [] _ _ _  =
     throwApiError API_ERROR_OTHER "One involved person must be provided"
 createAPIDocument company' (authorTMP:signTMPS) tags mlocale createFun = do
     sid <- serviceid <$> service <$> ask
+    
+    when (isNothing $ companyexternalid company') $
+      throwApiError API_ERROR_ILLEGAL_VALUE "The companyid must exist."
     let Just (ExternalCompanyID cid) = companyexternalid company'
+        
     when (maybe False (notElem SignatoryAuthor) $ toSignatoryRoles authorTMP) $
       throwApiError API_ERROR_ILLEGAL_VALUE "The first involved must be an author role."
 
@@ -283,7 +287,7 @@ createAPIDocument company' (authorTMP:signTMPS) tags mlocale createFun = do
     mdoc <- createFun author (Just company) now
     when (isNothing mdoc) $ throwApiError API_ERROR_OTHER "Problem creating a document | This may be because the company and author don't match"
     let doc = fromJust mdoc
-        actor = IntegrationAPIActor (ctxtime ctx) (ctxipnumber ctx) (BS.toString $ unServiceID sid) (Just $ BS.toString cid)
+        actor = IntegrationAPIActor (ctxtime ctx) (ctxipnumber ctx) sid (Just $ BS.toString cid)
     _ <- runDBUpdate $ SetDocumentAdvancedFunctionality (documentid doc) actor
     _ <- runDBUpdate $ SetDocumentTags (documentid doc) tags actor
 
@@ -416,7 +420,7 @@ setDocumentTag =  do
   sid <- serviceid <$> service <$> ask
   Context{ctxtime,ctxipnumber} <- getContext
   let tags = addTag (documenttags doc) (fromJust mtag)
-      actor = IntegrationAPIActor ctxtime ctxipnumber (BS.toString $ unServiceID sid) Nothing
+      actor = IntegrationAPIActor ctxtime ctxipnumber sid Nothing
   res <- runDBUpdate $ SetDocumentTags (documentid doc) tags actor
   when (isLeft res) $ throwApiError API_ERROR_NO_USER $ "Changing tag problem:" ++ fromLeft res
   return $ toJSObject []
@@ -432,7 +436,7 @@ removeDocument = do
                      (runDBQuery . GetUserByID)
                      (getAuthorSigLink doc >>= maybesignatory)
     when (isNothing mauthor) $ throwApiError API_ERROR_NO_USER $ "Error while removing a document: Failed to find author"
-    let actor = IntegrationAPIActor ctxtime ctxipnumber (BS.toString $ unServiceID sid) Nothing
+    let actor = IntegrationAPIActor ctxtime ctxipnumber sid Nothing
     res <- runDBUpdate $ ArchiveDocument (fromJust mauthor) (documentid doc) actor
     when (isLeft res) $ throwApiError API_ERROR_NO_DOCUMENT $ "Error while removing a document: " ++ fromLeft res
     return $ toJSObject []

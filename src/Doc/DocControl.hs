@@ -900,14 +900,8 @@ splitUpDocument doc = do
               mzero
   where createDocFromRow :: Kontrakcja m => Document -> Int -> [BS.ByteString] -> m (Either String Document)
         createDocFromRow udoc sigindex xs = do
-          now <- ctxtime <$> getContext
-          Just author <- ctxmaybeuser <$> getContext
-          ip4 <- ctxipnumber <$> getContext
-          runDBUpdate $ DocumentFromSignatoryData (documentid udoc) sigindex (item 0) (item 1) (item 2) (item 3) (item 4) (item 5) (drop 6 xs) 
-            (AuthorActor now
-             ip4
-             (userid author)
-             (BS.toString $ getEmail author))
+          actor <- guardJustM $ mkAuthorActor <$> getContext
+          runDBUpdate $ DocumentFromSignatoryData (documentid udoc) sigindex (item 0) (item 1) (item 2) (item 3) (item 4) (item 5) (drop 6 xs) actor
           where item n | n<(length xs) = xs !! n
                        | otherwise = BS.empty
 {- |
@@ -919,10 +913,7 @@ handleIssueCSVUpload document = do
   ctx <- getContext
   udoc <- guardRightM $ updateDocument ctx document
   signlast <- isFieldSet "signlast"
-
-  let Just user = ctxmaybeuser ctx
-      
-  let actor = AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (BS.toString $ getEmail user)
+  actor <- guardJustM $ mkAuthorActor <$> getContext
   
   mcsvsigindex <- getOptionalField asValidNumber "csvsigindex"
   mcsvfile <- getCSVFile "csv"
@@ -970,8 +961,8 @@ handleIssueLocaleChange doc = do
 -}
 handleIssueLocaleChangeAfterUpdate  :: Kontrakcja m => Document -> m KontraLink
 handleIssueLocaleChangeAfterUpdate doc@Document{documentid} = do
-  Context{ctxtime, ctxipnumber, ctxmaybeuser = Just user} <- getContext
-  let actor = AuthorActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail user)
+  actor <- guardJustM $ mkAuthorActor <$> getContext
+  
   docregion <- getCriticalField (return . maybe (getRegion doc) fst . listToMaybe . reads) "docregion"
 
   udoc <- guardRightM . runDBUpdate $ SetDocumentLocale documentid (mkLocaleFromRegion docregion) actor
@@ -1295,9 +1286,8 @@ makeAuthorDetails pls fielddefs sigdetails@SignatoryDetails{signatoryfields = si
 
  -}
 updateDocument :: Kontrakcja m => Context -> Document -> m (Either String Document)
-updateDocument Context{ ctxtime, ctxipnumber, ctxmaybeuser} document@Document{ documentid, documentfunctionality } = do
-  let Just user = ctxmaybeuser
-  let actor = AuthorActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail user)
+updateDocument ctx document@Document{ documentid, documentfunctionality } = do
+  actor <- guardJust $ mkAuthorActor ctx
   -- each signatory has these predefined fields
   signatoriesfstnames        <- getAndConcat "signatoryfstname"
   signatoriessndnames        <- getAndConcat "signatorysndname"
@@ -1601,22 +1591,23 @@ makeDocumentFromFile _ _ = mzero -- to complete the patterns
 
 handleRubbishRestore :: Kontrakcja m => m KontraLink
 handleRubbishRestore = do
-  Context { ctxtime, ctxipnumber, ctxmaybeuser = Just user } <- getContext
+  user <- guardJustM $ ctxmaybeuser <$> getContext
+  actor <- guardJustM $ mkAuthorActor <$> getContext
   docids <- getCriticalFieldList asValidDocID "doccheck"
-  let actor = UserActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail user)
   mapM_ (\did -> guardRightM $ runDBUpdate $ RestoreArchivedDocument user did actor) $ map DocumentID docids
   addFlashM flashMessageRubbishRestoreDone
   return $ LinkRubbishBin
 
 handleRubbishReallyDelete :: Kontrakcja m => m KontraLink
 handleRubbishReallyDelete = do
-  Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- getContext
+  user <- guardJustM $ ctxmaybeuser <$> getContext  
+  actor <- guardJustM $ mkAuthorActor <$> getContext  
+  ctx <- getContext
   docids <- getCriticalFieldList asValidDocID "doccheck"
-  let actor = UserActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail user)
   mapM_ (\did -> do
             doc <- guardRightM $ runDBUpdate $ ReallyDeleteDocument user did actor
             case getSigLinkFor doc user of
-              Just sl -> runDB $ addSignStatPurgeEvent doc sl ctxtime
+              Just sl -> runDB $ addSignStatPurgeEvent doc sl (ctxtime ctx)
               _ -> return False)
     $ map DocumentID docids
   addFlashM flashMessageRubbishHardDeleteDone
@@ -1624,9 +1615,8 @@ handleRubbishReallyDelete = do
 
 handleAttachmentRename :: Kontrakcja m => DocumentID -> m KontraLink
 handleAttachmentRename docid = withUserPost $ do
-  Context {ctxtime, ctxmaybeuser = Just user, ctxipnumber} <- getContext
   newname <- getCriticalField (return . BS.fromString) "docname"
-  let actor = AuthorActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail user)
+  actor <- guardJustM $ mkAuthorActor <$> getContext  
   doc <- guardRightM $ runDBUpdate $ SetDocumentTitle docid newname actor
   return $ LinkIssueDoc $ documentid doc
 
@@ -1744,12 +1734,10 @@ showPage' fileid pageno = do
 handleCancel :: Kontrakcja m => DocumentID -> m KontraLink
 handleCancel docid = withUserPost $ do
   doc <- guardRightM $ getDocByDocID docid
-  Context { ctxtime, ctxipnumber, ctxmaybeuser = Just user } <- getContext
+  actor <- guardJustM $ mkAuthorActor <$> getContext
   if isPending doc || isAwaitingAuthor doc
     then do
-    let Just asl = getAuthorSigLink doc
-    mdoc' <- runDBUpdate $ CancelDocument (documentid doc) ManualCancel 
-             (AuthorActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail asl))
+    mdoc' <- runDBUpdate $ CancelDocument (documentid doc) ManualCancel actor
     case mdoc' of
       Right doc' ->  do
           Log.debug $ "Canceling document #" ++ show docid
@@ -1802,22 +1790,23 @@ getCustomTextField = getValidateAndHandle asValidInviteText customTextHandler
 --This only works for undelivered mails. We shoulkd check if current user is author
 handleChangeSignatoryEmail :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleChangeSignatoryEmail docid slid = withUserPost $ do
+  user <- guardJustM $ ctxmaybeuser <$> getContext
   memail <- getOptionalField asValidEmail "email"
   case memail of
     Just email -> do
-      ctx@Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- getContext
       edoc <- getDocByDocID docid
       case edoc of
         Left _ -> return LoopBack
         Right doc -> do
           guard $ isAuthor (doc, user)
           muser <- runDBQuery $ GetUserByEmail (documentservice doc) (Email email)
-          mnewdoc <- runDBUpdate $ ChangeSignatoryEmailWhenUndelivered docid slid muser email 
-                     (AuthorActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail user))
+          actor <- guardJustM $ mkAuthorActor <$> getContext          
+          mnewdoc <- runDBUpdate $ ChangeSignatoryEmailWhenUndelivered docid slid muser email actor
           case mnewdoc of
             Right newdoc -> do
               -- get (updated) siglink from updated document
               sl <- guardJust (getSigLinkFor newdoc slid)
+              ctx <- getContext
               _ <- sendInvitationEmail1 ctx newdoc sl
               return $ LoopBack
             _ -> return LoopBack
@@ -1858,22 +1847,19 @@ idmethodFromString idmethod
 
 handleCreateFromTemplate :: Kontrakcja m => m KontraLink
 handleCreateFromTemplate = withUserPost $ do
-  Context { ctxmaybeuser, ctxtime, ctxipnumber } <- getContext
   docid <- readField "template"
   Log.debug $ show "Creating document from template : " ++ show docid
   case docid of
     Just did -> do
-      let user = fromJust ctxmaybeuser
+      user <- guardJustM $ ctxmaybeuser <$> getContext
       document <- queryOrFail $ GetDocumentByDocumentID $ did
       Log.debug $ show "Matching document found"
-      let haspermission = maybe False
-                                (\sl -> isSigLinkFor (userid user) sl)
-                                $ getAuthorSigLink document
+      let haspermission = maybe False (isSigLinkFor (userid user)) $ getAuthorSigLink document
       enewdoc <- if haspermission
                     then do
                       Log.debug $ show "Valid persmision to create from template"
                       mcompany <- getCompanyForUser user
-                      let actor = AuthorActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail user)
+                      actor <- guardJustM $ mkAuthorActor <$> getContext
                       runDBUpdate $ SignableFromDocumentIDWithUpdatedAuthor user mcompany did actor
                     else mzero
       case enewdoc of
