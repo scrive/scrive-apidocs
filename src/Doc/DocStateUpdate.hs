@@ -36,6 +36,7 @@ import Data.Either
 import Stats.Control
 import EvidenceLog.Model
 import Util.HasSomeUserInfo
+import Util.MonadUtils
 
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 
@@ -44,11 +45,9 @@ import qualified Data.ByteString.UTF8 as BS hiding (length)
  -}
 restartDocument :: Kontrakcja m => Document -> m (Either DBError Document)
 restartDocument doc = withUser $ \user -> do
-  Context { ctxtime
-          , ctxipnumber } <- getContext
+  actor <- guardJustM $ mkAuthorActor <$> getContext
   if isSigLinkFor user $ getAuthorSigLink doc
     then do
-      let actor = AuthorActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail user)
       enewdoc <- runDBUpdate $ RestartDocument doc actor
       case enewdoc of
         Left _ -> return $ Left DBResourceNotAvailable
@@ -139,7 +138,7 @@ rejectDocumentWithChecks did slid mh customtext = do
 authorSignDocument :: (Kontrakcja m) => DocumentID -> Maybe SignatureInfo -> m (Either DBError Document)
 authorSignDocument did msigninfo = onlyAuthor did $ do
   ctx <- getContext
-  let Just author = ctxmaybeuser ctx
+  actor <- guardJustM $ mkAuthorActor <$> getContext
   edoc <- getDocByDocID did
   case edoc of
     Left m -> return $ Left m
@@ -149,7 +148,6 @@ authorSignDocument did msigninfo = onlyAuthor did $ do
       case ed1 of
         Left m -> return $ Left $ DBActionNotAvailable m
         Right _ -> do
-          let actor = AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid author) (BS.toString $ getEmail author)          
           _ <- runDBUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
           _ <- runDBUpdate $ MarkInvitationRead did signatorylinkid (SystemActor (ctxtime ctx))
           ed2 <- runDBUpdate $ MarkDocumentSeen did signatorylinkid signatorymagichash actor
@@ -171,7 +169,7 @@ authorSignDocument did msigninfo = onlyAuthor did $ do
 authorSendDocument :: (Kontrakcja m) => DocumentID -> m (Either DBError Document)
 authorSendDocument did = onlyAuthor did $ do
   ctx <- getContext
-  let Just author = ctxmaybeuser ctx
+  actor <- guardJustM $ mkAuthorActor <$> getContext
   edoc <- getDocByDocID did
   case edoc of
     Left m -> return $ Left m
@@ -181,7 +179,6 @@ authorSendDocument did = onlyAuthor did $ do
       case ed1 of
         Left m -> return $ Left $ DBActionNotAvailable m
         Right _ -> do
-          let actor = AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid author) (BS.toString $ getEmail author)
           _ <- runDBUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
           _ <- runDBUpdate $ MarkInvitationRead did signatorylinkid (SystemActor (ctxtime ctx))
           transActionNotAvailable <$> runDBUpdate (MarkDocumentSeen did signatorylinkid signatorymagichash actor)
@@ -191,8 +188,7 @@ authorSendDocument did = onlyAuthor did $ do
  -}
 updateSigAttachments :: (Kontrakcja m) => DocumentID -> [SignatoryAttachment] -> m (Either DBError Document)
 updateSigAttachments did sigatts = onlyAuthor did $ do
-  Context{ctxtime, ctxipnumber, ctxmaybeuser = Just author} <- getContext
-  let actor = AuthorActor ctxtime ctxipnumber (userid author) (BS.toString $ getEmail author)
+  actor <- guardJustM $ mkAuthorActor <$> getContext
   transActionNotAvailable <$> runDBUpdate (UpdateSigAttachments did sigatts actor)
 
 {- |
@@ -201,13 +197,12 @@ updateSigAttachments did sigatts = onlyAuthor did $ do
 authorSignDocumentFinal :: (Kontrakcja m) => DocumentID -> Maybe SignatureInfo -> m (Either DBError Document)
 authorSignDocumentFinal did msigninfo = onlyAuthor did $ do
   ctx <- getContext
+  actor <- guardJustM $ mkAuthorActor <$> getContext
   edoc <- getDocByDocID did
   case edoc of
     Left m -> return $ Left m
     Right doc -> do
-      let Just user = ctxmaybeuser ctx
-          Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink doc
-          actor = AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (BS.toString $ getEmail user)
+      let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink doc
       ed1 <- runDBUpdate (SignDocument did signatorylinkid signatorymagichash msigninfo actor)
       case ed1 of
         Left m -> return $ Left $ DBActionNotAvailable m
@@ -237,9 +232,9 @@ onlyAuthor did action = do
  -}
 signableFromTemplateWithUpdatedAuthor :: (Kontrakcja m) => DocumentID -> m (Either DBError Document)
 signableFromTemplateWithUpdatedAuthor did = onlyAuthor did $ do
-  Context{ ctxmaybeuser = Just user, ctxtime, ctxipnumber} <- getContext
+  user <- guardJustM $ ctxmaybeuser <$> getContext
   mcompany <- getCompanyForUser user
-  let actor = AuthorActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail user)
+  actor <- guardJustM $ mkAuthorActor <$> getContext
   transActionNotAvailable <$> runDBUpdate (SignableFromDocumentIDWithUpdatedAuthor user mcompany did actor)
 
 updateDocAuthorAttachments :: (Kontrakcja m) => DocumentID -> [FileID] -> [FileID] -> m (Either DBError Document)
@@ -247,10 +242,7 @@ updateDocAuthorAttachments did adds removes = onlyAuthor did $ do
   case (adds ++ removes) of
     [] -> getDocByDocID did
     _ -> do
-      Just user <- ctxmaybeuser <$> getContext
-      time      <- ctxtime      <$> getContext
-      ip        <- ctxipnumber  <$> getContext
-      let actor = AuthorActor time ip (userid user) (BS.toString $ getEmail user)
+      actor <- guardJustM $ mkAuthorActor <$> getContext
       res1 <- mapM (\a -> runDBUpdate $ AddDocumentAttachment    did a actor) adds
       res2 <- mapM (\r -> runDBUpdate $ RemoveDocumentAttachment did r actor) removes
       let ls = lefts (res1 ++ res2)
@@ -266,16 +258,14 @@ attachFile docid filename content = onlyAuthor docid $ do
   ctx <- getContext
   content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) content
   file <- runDB $ dbUpdate $ NewFile filename content14
-  let Just user = ctxmaybeuser ctx
-  let actor = AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (BS.toString $ getEmail user)
+  actor <- guardJustM $ mkAuthorActor <$> getContext
   transActionNotAvailable <$> runDBUpdate (AttachFile docid (fileid file) actor)
 
 newDocument :: (Kontrakcja m) => BS.ByteString -> DocumentType -> m (Either DBError Document)
 newDocument title doctype = withUser $ \user -> do
-  Context{ ctxtime, ctxipnumber } <- getContext
   mcompany <- getCompanyForUser user
-  let aa = AuthorActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail user)
-  transActionNotAvailable <$> runDBUpdate (NewDocument user mcompany title doctype aa)
+  actor <- guardJustM $ mkAuthorActor <$> getContext
+  transActionNotAvailable <$> runDBUpdate (NewDocument user mcompany title doctype actor)
 
 withUser :: Kontrakcja m => (User -> m (Either DBError a)) -> m (Either DBError a)
 withUser action = do
