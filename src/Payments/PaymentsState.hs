@@ -87,14 +87,11 @@ data PaymentChange = PaymentChange {
 
 -- | Types of accounts
 data PaymentAccountType = FreeTrial | Private | Minimal | Medium | Maximal | Corp
-    deriving (Eq, Ord, Show, Read, Typeable)
+    deriving (Bounded, Enum, Eq, Ord, Show, Read, Typeable)
 
 -- | Money values wrapper
 newtype Money = Money { money :: Integer }
-    deriving (Eq, Ord, Show, Read, Typeable)
-
-deriving instance Num Money
-deriving instance Data Money
+    deriving (Eq, Ord, Num, Show, Read, Data, Typeable)
 
 -- | Monthly payments for account and subaccounts
 data PaymentForAccounts value = PaymentForAccounts {
@@ -197,9 +194,6 @@ instance Migrate UserPaymentAccount0 UserPaymentAccount  where
 
 
 
-
-deriving instance Bounded PaymentAccountType
-deriving instance Enum PaymentAccountType
 
 type PaymentAccountModels = IxSet PaymentAccountModel
 

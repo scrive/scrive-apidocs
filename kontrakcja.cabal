@@ -155,12 +155,13 @@ Executable kontrakcja-server
     ghc-options: -rtsopts
 
   Build-depends: Crypto == 4.2.*
+  Build-depends: crypto-api == 0.8
   Build-depends: HDBC == 2.3.1.0
   Build-depends: HDBC-postgresql == 2.3.2.0
   Build-depends: HPDF == 1.4.2
   Build-depends: HStringTemplate >= 0.6.5
   Build-depends: HTTP == 4000.*
-  Build-depends: HUnit 
+  Build-depends: HUnit
   Build-depends: HaXml == 1.20.*
   Build-depends: MissingH == 1.1.1.0
   Build-depends: pretty-show == 1.2
@@ -175,7 +176,7 @@ Executable kontrakcja-server
   Build-depends: dataenc == 0.14.0.2
   Build-depends: directory
   Build-depends: explicit-exception == 0.1.6
-  Build-depends: extensible-exceptions 
+  Build-depends: extensible-exceptions
   Build-depends: fields-json==0.1
   Build-depends: filepath
   Build-depends: hS3 == 0.5.6
@@ -225,8 +226,8 @@ Executable kontrakcja-server
               NamedFieldPuns,
               PatternGuards,
               RankNTypes,
+              RecordWildCards,
               ScopedTypeVariables,
-              StandaloneDeriving,
               TemplateHaskell,
               TypeFamilies,
               TypeOperators,
@@ -293,8 +294,8 @@ Executable mailing-server
               NamedFieldPuns,
               PatternGuards,
               RankNTypes,
+              RecordWildCards,
               ScopedTypeVariables,
-              StandaloneDeriving,
               TemplateHaskell,
               TypeFamilies,
               TypeOperators,
@@ -372,8 +373,8 @@ Executable kontrakcja-test
               NamedFieldPuns,
               PatternGuards,
               RankNTypes,
+              RecordWildCards,
               ScopedTypeVariables,
-              StandaloneDeriving,
               TemplateHaskell,
               TypeFamilies,
               TypeOperators,

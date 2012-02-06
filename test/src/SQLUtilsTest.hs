@@ -6,6 +6,7 @@ import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (assertEqual, Assertion)
 
 import DB.Fetcher
+import Data.Monoid
 import Database.HDBC
 import Database.HDBC.Statement as HDBC
 import Data.IORef
@@ -40,7 +41,7 @@ decodeA i s d = return (A i s d)
 
 decodeANonZero :: Int -> String -> Double -> Either DBException A
 decodeANonZero i s d = 
-  if i == 0 then Left $ CannotParseRow "" "I do not like zeros"
+  if i == 0 then Left $ CannotParseRow mempty "I do not like zeros"
   else return (A i s d)
 
 sqlTestFetcherProperData :: Assertion

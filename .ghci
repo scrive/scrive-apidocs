@@ -10,6 +10,7 @@
 :set -XNamedFieldPuns
 :set -XPatternGuards
 :set -XRankNTypes
+:set -XRecordWildCards
 :set -XScopedTypeVariables
 :set -XStandaloneDeriving
 :set -XTemplateHaskell

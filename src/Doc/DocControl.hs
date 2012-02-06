@@ -666,10 +666,8 @@ handleIssueShowGet docid = do
             let filesforattachments = [(fid, f) | (fid, Just f) <- filesforattachments']
             case (documentstatus document) of
               Preparation -> do
-                mattachments <- getDocsByLoggedInUser
-                case mattachments of
-                  Left _ -> Right <$> pageDocumentDesign ctx2 document step showadvancedoption [] filesforattachments
-                  Right attachments -> Right <$> pageDocumentDesign ctx2 document step showadvancedoption (filter isAttachment attachments) filesforattachments
+                attachments <- runDBQuery $ GetDocumentsOfTypeBySignatory Attachment $ userid author
+                Right <$> pageDocumentDesign ctx2 document step showadvancedoption attachments filesforattachments
               _ ->  Right <$> pageDocumentForAuthor ctx2 document
           (_, Just invitedlink, _, _) -> Right <$> pageDocumentForSignatory (LinkSignDoc document invitedlink) document ctx invitedlink
           -- others in company can just look (but not touch)
@@ -885,7 +883,7 @@ splitUpDocument doc = do
           Log.debug $ "splitUpDocument: going to DesignStep2"
           return $ Left $ LinkDesignDoc $ DesignStep2 (documentid doc) (Just (1 + csvidx)) (Just AfterCSVUpload) signlast
         ([], CleanCSVData{csvbody}) -> do
-          mdocs <- mapM (createDocFromRow doc (csvidx)) csvbody
+          mdocs <- mapM (createDocFromRow doc) csvbody
           if Data.List.null (lefts mdocs)
             then do
               Log.debug $ "splitUpDocument: finishing properly"
@@ -893,9 +891,9 @@ splitUpDocument doc = do
             else do
               Log.debug $ "splitUpDocument: createDocFromRow returned some Lefts: " ++ show (lefts mdocs)
               mzero
-  where createDocFromRow :: Kontrakcja m => Document -> Int -> [BS.ByteString] -> m (Either String Document)
-        createDocFromRow udoc sigindex xs =
-          runDBUpdate $ DocumentFromSignatoryData (documentid udoc) sigindex (item 0) (item 1) (item 2) (item 3) (item 4) (item 5) (drop 6 xs)
+  where createDocFromRow :: Kontrakcja m => Document -> [BS.ByteString] -> m (Either String Document)
+        createDocFromRow udoc xs =
+          runDBUpdate $ DocumentFromSignatoryData (documentid udoc) (item 0) (item 1) (item 2) (item 3) (item 4) (item 5) (drop 6 xs)
           where item n | n<(length xs) = xs !! n
                        | otherwise = BS.empty
 {- |
@@ -1415,13 +1413,6 @@ updateDocument Context{ ctxtime } document@Document{ documentid, documentfunctio
   aa <- runDBUpdate $ ResetSignatoryDetails2 documentid (authordetails2 : signatories2) ctxtime
   Log.debug $ "ResetSignatoryDetails2 #" ++ show documentid ++ " returned " ++ show aa
   return aa
-
-getDocumentsForUserByType :: Kontrakcja m => DocumentType -> User -> m [Document]
-getDocumentsForUserByType doctype user = do
-  mydocuments <- runDBQuery $ GetDocumentsBySignatory user
-
-  return . filter ((\d -> documenttype d == doctype)) $ mydocuments
-
 
 handleAttachmentViewForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
 handleAttachmentViewForViewer docid siglinkid mh = do
@@ -1968,46 +1959,33 @@ handleSigAttach docid siglinkid = do
   d <- guardRightM $ runDBUpdate $ SaveSigAttachment docid attachname email (fileid file)
   return $ LinkSignDoc d siglink
 
-jsonDocumentsList ::  Kontrakcja m => m JSValue
-jsonDocumentsList = do
-    Just user <- ctxmaybeuser <$> getContext
-    lang <- getLang . ctxlocale <$> getContext
-    doctype <- getFieldWithDefault "" "documentType"
-    allDocs <- case (doctype) of
-        "Contract" -> getDocumentsForUserByType (Signable Contract) user
-        "Offer" -> getDocumentsForUserByType (Signable Offer) user
-        "Order" -> getDocumentsForUserByType (Signable Order) user
-        "Template" -> do
-            mydocuments <- runDBQuery $ GetDocumentsByAuthor (userid user)
-            return $ filter isTemplate mydocuments
-        "Attachment" -> do
-            mydocuments <- runDBQuery $ GetDocumentsByAuthor (userid user)
-            return $ filter ((==) Attachment . documenttype) mydocuments
-        "Rubbish" -> do
-            runDBQuery $ GetDeletedDocumentsByUser user
-        "Template|Contract" -> do
-            let tfilter doc = (Template Contract == documenttype doc)
-            userdocs <- runDBQuery $ GetDocumentsByAuthor (userid user)
-            return $ filter tfilter $ userdocs
-        "Template|Offer" -> do
-            let tfilter doc = (Template Offer == documenttype doc)
-            userdocs <- runDBQuery $ GetDocumentsByAuthor (userid user)
-            return $ filter tfilter $ userdocs
-        "Template|Order" -> do
-            let tfilter doc = (Template Order == documenttype doc)
-            userdocs <- runDBQuery $ GetDocumentsByAuthor (userid user)
-            return $ filter tfilter $ userdocs
-        _ -> do
-            Log.error "Documents list : No valid document type provided"
-            return []
-    Log.debug $ "Documents list: Number of documents found "  ++  (show $ length allDocs)
-    params <- getListParamsNew
-    let docs = docSortSearchPage params allDocs
-    cttime <- liftIO $ getMinutesTime
-    docsJSONs <- mapM (fmap JSObject . docForListJSON (timeLocaleForLang lang) cttime user) $ list docs
-    return $ JSObject $ toJSObject [("list",JSArray docsJSONs),
-                                    ("paging", pagingParamsJSON docs)]
-
+jsonDocumentsList ::  Kontrakcja m => m (Either KontraLink JSValue)
+jsonDocumentsList = withUserGet $ do
+  Just user@User{userid = uid} <- ctxmaybeuser <$> getContext
+  lang <- getLang . ctxlocale <$> getContext
+  doctype <- getFieldWithDefault "" "documentType"
+  allDocs <- case (doctype) of
+    "Contract" -> runDBQuery $ GetDocumentsOfTypeBySignatory (Signable Contract) uid
+    "Offer" -> runDBQuery $ GetDocumentsOfTypeBySignatory (Signable Offer) uid
+    "Order" -> runDBQuery $ GetDocumentsOfTypeBySignatory (Signable Order) uid
+    "Template" -> runDBQuery $ GetTemplatesByAuthor uid
+    "Attachment" -> runDBQuery $ GetDocumentsOfTypeByAuthor Attachment uid
+    "Rubbish" -> runDBQuery $ GetDeletedDocumentsByUser uid
+    "Template|Contract" -> runDBQuery $ GetDocumentsOfTypeByAuthor (Template Contract) uid
+    "Template|Offer" -> runDBQuery $ GetDocumentsOfTypeByAuthor (Template Offer) uid
+    "Template|Order" -> runDBQuery $ GetDocumentsOfTypeByAuthor (Template Order) uid
+    _ -> do
+      Log.error "Documents list: No valid document type provided"
+      return []
+  Log.debug $ "Documents list: Number of documents found "  ++  (show $ length allDocs)
+  params <- getListParamsNew
+  let docs = docSortSearchPage params allDocs
+  cttime <- getMinutesTime
+  docsJSONs <- mapM (fmap JSObject . docForListJSON (timeLocaleForLang lang) cttime user) $ list docs
+  return $ JSObject $ toJSObject [
+      ("list", JSArray docsJSONs)
+    , ("paging", pagingParamsJSON docs)
+    ]
 
 jsonDocument :: Kontrakcja m => DocumentID -> m JSValue
 jsonDocument did = do
