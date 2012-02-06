@@ -3,9 +3,9 @@ module DB.Fetcher2 (
   , foldDB
   ) where
 
-
 import Control.Monad.IO.Class
 import Data.Convertible
+import Data.Maybe
 import Data.Monoid
 import Database.HDBC hiding (originalQuery)
 import qualified Control.Exception as E
@@ -71,4 +71,13 @@ foldDB decoder init_acc = do
         Just row ->
           case apply 0 row (decoder acc) of
             Right acc' -> worker st acc'
+            Left err@CannotConvertSqlValue{position = pos} -> do
+              column <- liftIO $ getColumnNames st
+                >>= return . fromMaybe "" . listToMaybe . drop pos
+              return $ Left CannotConvertSqlValue {
+                  originalQuery = mempty
+                , columnName    = column
+                , position      = position err
+                , convertError  = convertError err
+                }
             Left err -> return $ Left err
