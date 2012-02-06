@@ -749,7 +749,7 @@ instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbit
     return (a, b, c, d, e, f, g, h, i)
 
 instance Arbitrary FileID where
-  arbitrary = FileID . fromIntegral <$> (arbitrary :: Gen Word64)
+  arbitrary = FileID . abs <$> arbitrary
 
 instance Arbitrary File where
   arbitrary = do
