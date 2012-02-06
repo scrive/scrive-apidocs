@@ -9,6 +9,7 @@ import Doc.DocUtils
 import Doc.DocStateData
 import Misc
 import Util.SignatoryLinkUtils
+import DB.Types
 import Doc.DocInfo
 import TestingUtil
 import Company.Model
@@ -251,7 +252,7 @@ docStateTests conn = testGroup "DocState" [
 
 dataStructureProperties :: Test
 dataStructureProperties = testGroup "data structure properties" [
-  --testProperty "signatories are equal with same fields" propSignatoryDetailsEq,
+  testProperty "signatories are equal with same fields" propSignatoryDetailsEq,
   testProperty "signatories are different with different fields" propSignatoryDetailsNEq,
   testCase "given example" testSignatories1
   ]
@@ -585,14 +586,17 @@ testMarkDocumentSeenEvidenceLog  = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
   let Just sl = getAuthorSigLink doc
+      MagicHash k = signatorymagichash sl
+      mh = MagicHash (k + 1)
   etdoc <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (SystemActor t)
   assertRight etdoc
   _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (SystemActor t)
   _ <- randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing (SystemActor t)  
   _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (SystemActor t)
+  _ <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) mh (SystemActor t)
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertBool "Should have 3 seen events." $ 3 == length (filter (\e -> evType e == MarkDocumentSeenEvidence) lg)
-
+  let n = length (filter (\e -> evType e == MarkDocumentSeenEvidence) lg)
+  assertBool ("Should have 3 seen events, but found " ++ show n) $ 3 == n
 
 testErrorDocumentEvidenceLog :: DB ()    
 testErrorDocumentEvidenceLog  = do
@@ -613,7 +617,7 @@ testDocumentFromSignatoryDataEvidenceLog = do
                                              , signatoryattachmentname        = BS.fromString "attachment"
                                              , signatoryattachmentdescription = BS.fromString "gimme!"
                                              }] (SystemActor t)
-  etdoc <- randomUpdate $ \t a b c d e f -> DocumentFromSignatoryData (documentid doc) 1 a b c d e f [] (SystemActor t)
+  etdoc <- randomUpdate $ \t a b c d e f -> DocumentFromSignatoryData (documentid doc) a b c d e f [] (SystemActor t)
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid $ fromRight etdoc)
   assertJust $ find (\e -> evType e == AddSigAttachmentEvidence) lg
@@ -1566,16 +1570,16 @@ testRemoveDocumentAttachmentOk = doTimes 10 $ do
 
 testDocumentFromSignatoryDataFailsDoesntExist :: DB ()
 testDocumentFromSignatoryDataFailsDoesntExist = doTimes 10 $ do
-  (did, ix, a, b, c, d, e, f, g, aa :: AuthorActor) <- rand 10 arbitrary
-  mdoc <- randomUpdate $ DocumentFromSignatoryData did ix a b c d e f g aa
+  (did, a, b, c, d, e, f, g, aa :: AuthorActor) <- rand 10 arbitrary
+  mdoc <- randomUpdate $ DocumentFromSignatoryData did a b c d e f g aa
   validTest $ assertLeft mdoc
 
 testDocumentFromSignatoryDataSucceedsExists :: DB ()
 testDocumentFromSignatoryDataSucceedsExists = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthor' author
-  (time, ix, a, b, c, d, e, f, g) <- rand 10 arbitrary
-  mdoc <- randomUpdate $ DocumentFromSignatoryData (documentid doc) ix a b c d e f g
+  (time, a, b, c, d, e, f, g) <- rand 10 arbitrary
+  mdoc <- randomUpdate $ DocumentFromSignatoryData (documentid doc) a b c d e f g
           (AuthorActor time (IPAddress 0) (userid author) (BS.toString $ getEmail author))
   validTest $ assertRight mdoc
 
