@@ -14,6 +14,7 @@ module Company.Model (
 import Control.Applicative
 import Data.Data
 import Data.Int
+import Data.Monoid
 import Database.HDBC
 import Happstack.State
 import Happstack.Server
@@ -27,6 +28,7 @@ import DB.Fetcher2
 import DB.Utils
 import API.Service.Model
 import Company.Tables
+import Misc
 
 newtype CompanyID = CompanyID { unCompanyID :: Int64 }
   deriving (Eq, Ord, Data, Typeable)
@@ -90,7 +92,7 @@ instance DBUpdate CreateCompany Company where
       , sql "city" ""
       , sql "country" ""
       ]
-    dbQuery (GetCompany cid) >>= maybe (E.throw $ NoObject "") return
+    dbQuery (GetCompany cid) >>= maybe (E.throw $ NoObject mempty) return
 
 data SetCompanyInfo = SetCompanyInfo CompanyID CompanyInfo
 instance DBUpdate SetCompanyInfo Bool where

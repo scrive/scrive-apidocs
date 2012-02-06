@@ -29,16 +29,17 @@ module DB.Classes
   ( DBQuery(..)
   , DBUpdate(..)
   , DBMonad(..)
+  , DBState(..)
   , DB
   , wrapDB
   , ioRunDB
   , runDB
   , runDBQuery
   , runDBUpdate
+  , getDBState
   , DBException(..)
   , catchDB
   , tryDB
-  , getStatement
   , kPrepare
   , kExecute
   , kExecute1
@@ -58,8 +59,14 @@ import qualified Database.HDBC as HDBC
 
 import DB.Exception
 import DB.Nexus
+import DB.SQL
 
-type DBInside a = RWST Nexus () (Maybe Statement) IO a
+type DBInside a = RWST Nexus () DBState IO a
+
+data DBState = DBState {
+    dbStatement :: Maybe Statement
+  , dbValues    :: [SqlValue]
+  }
 
 -- | 'DB' is a monad that wraps access to database. It hold onto
 -- Connection and current statement. Manages to handle exceptions
@@ -85,19 +92,20 @@ newtype DB a = DB { unDB :: DBInside a }
   deriving (Applicative, Functor, Monad, MonadIO)
 
 -- | Get current statement (if any is prepared)
-getStatement :: DB (Maybe Statement)
-getStatement = DB get
+getDBState :: DB DBState
+getDBState = DB get
 
 -- | Prepares new SQL query given as string. If there was another
 -- query prepared in this monad, it will be finished first.
 kPrepare :: String -> DB ()
-kPrepare command = DB $ do
+kPrepare query = DB $ do
+  let sqlquery = SQL query []
   conn <- ask
-  statement <- protIO command $ prepare conn command
-  oldstatement <- get
-  put (Just statement)
+  statement <- protIO sqlquery $ prepare conn query
+  oldstatement <- dbStatement <$> get
+  modify $ \s -> s { dbStatement = Just statement }
   case oldstatement of
-    Just st -> protIO (HDBC.originalQuery st) $ finish st
+    Just st -> protIO sqlquery $ finish st
     Nothing -> return ()
 
 -- | Execute recently prepared query. Values given as param serve as
@@ -105,10 +113,12 @@ kPrepare command = DB $ do
 -- details.
 kExecute :: [SqlValue] -> DB Integer
 kExecute values = DB $ do
-  mstatement <- get
-  case mstatement of
-    Nothing -> return $ -1 -- no statment prepared
-    Just statement -> protIO (HDBC.originalQuery statement) $ execute statement values
+  state@DBState{dbStatement} <- get
+  let sqlquery = SQL (getQuery dbStatement) values
+  put $ state { dbValues = values }
+  case dbStatement of
+    Nothing -> return $ -1 -- no statement prepared
+    Just st -> protIO sqlquery $ execute st values
 
 -- | Execute recently prepared query and check if it returned exactly
 -- 1 row affected result. Useful for INSERT, DELETE or UPDATE
@@ -118,10 +128,9 @@ kExecute1 :: [SqlValue] -> DB ()
 kExecute1 values = do
   result <- kExecute values
   when (result /= 1) $ DB $ do
-    mst <- get
+    mst <- dbStatement <$> get
     E.throw TooManyObjects {
-        originalQuery = fromMaybe "" (fmap HDBC.originalQuery mst)
-      , queryParams = values
+        originalQuery = SQL (getQuery mst) values
       , tmoExpected = 1
       , tmoGiven = result
     }
@@ -134,10 +143,9 @@ kExecute01 :: [SqlValue] -> DB Bool
 kExecute01 values = do
   result <- kExecute values
   when (result > 1) $ DB $ do
-    mst <- get
+    mst <- dbStatement <$> get
     E.throw TooManyObjects {
-        originalQuery = fromMaybe "" (fmap HDBC.originalQuery mst)
-      , queryParams = values
+        originalQuery = SQL (getQuery mst) values
       , tmoExpected = 1
       , tmoGiven = result
     }
@@ -151,10 +159,9 @@ kExecute1P :: [SqlValue] -> DB Integer
 kExecute1P values = do
   result <- kExecute values
   when (result < 1) $ DB $ do
-    mst <- get
+    mst <- dbStatement <$> get
     E.throw TooManyObjects {
-        originalQuery = fromMaybe "" (fmap HDBC.originalQuery mst)
-      , queryParams = values
+        originalQuery = SQL (getQuery mst) values
       , tmoExpected = 1
       , tmoGiven = result
     }
@@ -164,26 +171,28 @@ kExecute1P values = do
 -- 'kFinish' before they alter query.
 kFinish :: DB ()
 kFinish = DB $ do
-  oldstatement <- get
-  case oldstatement of
+  DBState{..} <- get
+  case dbStatement of
     Just st -> do
-      put Nothing
-      protIO (HDBC.originalQuery st) $ finish st
+      put $ DBState { dbStatement = Nothing, dbValues = [] }
+      protIO (SQL (getQuery dbStatement) dbValues) $ finish st
     Nothing -> return ()
 
 kRunRaw :: String -> DB ()
 kRunRaw query = DB $ do
   conn <- ask
-  protIO query $ runRaw conn query
+  protIO (SQL query []) $ runRaw conn query
+
+getQuery :: Maybe Statement -> String
+getQuery mst = fromMaybe "" $ HDBC.originalQuery `fmap` mst
 
 -- | Protected 'liftIO'. Properly catches 'SqlError' and converts it
 -- to 'DBException'. Adds 'HDBC.originalQuery' that should help a lot.
-protIO :: String -> IO a -> DBInside a
+protIO :: SQL -> IO a -> DBInside a
 protIO query action = do
   conn <- ask
   liftIO $ actionWithCatch conn
   where
-    setOriginalQuery e = SQLError query [] e
     actionWithCatch conn = do
       action `E.catch` \e -> do
         -- for some unknown reason we need to do rollback here
@@ -191,7 +200,7 @@ protIO query action = do
         -- some commands and those will fail with 'transaction
         -- aborted, ignoring commands till the end of the block'
         rollback conn
-        E.throwIO (setOriginalQuery e)
+        E.throwIO $ SQLError query e
 
 -- query typeclasses
 class DBQuery q r | q -> r where
@@ -222,7 +231,8 @@ wrapDB f = DB ask >>= liftIO . f
 runit :: (MonadIO m) => DB a -> Nexus -> m a
 runit action conn = do
   let actionWithFinish = (action >>= \result -> kFinish >> return result)
-  (a,_,_) <- liftIO $ runRWST (unDB actionWithFinish) conn Nothing
+  (a, _, _) <- liftIO $ runRWST (unDB actionWithFinish) conn
+    DBState { dbStatement = Nothing, dbValues = [] }
   return a
 
 -- | Runs DB action in single transaction (IO monad). Note that since
@@ -243,7 +253,7 @@ runDB f = do
   where
     -- we catch only SqlError/DBException here
     handlers = [
-        E.Handler (return . Left . SQLError "<unknown SQL query>" [])
+        E.Handler (return . Left . SQLError (SQL "<unknown SQL query>" []))
       , E.Handler (return . Left)
       ]
 

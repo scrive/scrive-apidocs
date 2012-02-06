@@ -6,11 +6,13 @@ module DB.Fetcher2 (
 
 import Control.Monad.IO.Class
 import Data.Convertible
-import Database.HDBC as HDBC
+import Data.Monoid
+import Database.HDBC hiding (originalQuery)
 import qualified Control.Exception as E
+import qualified Database.HDBC as HDBC
 
 import DB.Classes
-import DB.Exception as DB
+import DB.SQL
 
 class Fetcher a r where
   apply :: Int -> [SqlValue] -> a -> Either DBException r
@@ -18,11 +20,11 @@ class Fetcher a r where
 
 instance (Fetcher b r, Convertible SqlValue t) => Fetcher (t -> b) r where
   apply n (x:xs) f = either
-    (Left . CannotConvertSqlValue "" n "")
+    (Left . CannotConvertSqlValue mempty n "")
     (apply (n+1) xs . f)
     (safeFromSql x)
   apply n _ f = Left RowLengthMismatch {
-      DB.originalQuery = ""
+      originalQuery = mempty
     , expected = n + arity f (undefined :: r)
     , delivered = n
   }
@@ -32,7 +34,7 @@ instance (Fetcher b r, Convertible SqlValue t) => Fetcher (t -> b) r where
 instance Fetcher r r where
   apply _ [] r = Right r
   apply n xs _ = Left RowLengthMismatch {
-      DB.originalQuery = ""
+      originalQuery = mempty
     , expected = n
     , delivered = n + length xs
   }
@@ -51,14 +53,16 @@ instance Fetcher r r where
 -- missing instances).
 foldDB :: Fetcher a b => (b -> a) -> b -> DB b
 foldDB decoder init_acc = do
-  mst <- getStatement
-  case mst of
+  DBState{..} <- getDBState
+  case dbStatement of
     Nothing -> return init_acc
     Just st -> do
       res <- liftIO $ worker st init_acc
       case res of
         Right acc -> return acc
-        Left err -> kFinish >> liftIO (E.throwIO err)
+        Left err -> kFinish >> E.throw err {
+            originalQuery = SQL (HDBC.originalQuery st) dbValues
+          }
   where
     worker st acc = do
       mrow <- fetchRow st
@@ -67,4 +71,4 @@ foldDB decoder init_acc = do
         Just row ->
           case apply 0 row (decoder acc) of
             Right acc' -> worker st acc'
-            Left err -> return $ Left err { DB.originalQuery = HDBC.originalQuery st }
+            Left err -> return $ Left err

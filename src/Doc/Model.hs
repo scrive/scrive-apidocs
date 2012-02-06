@@ -122,11 +122,11 @@ getOneDocumentAffected text r did =
     _ -> do
       -- here we really want to abort transaction, as we have affected more rows that we wanted
       -- something is seriously wrong!
-      liftIO $ E.throwIO TooManyObjects { DB.Classes.originalQuery = ""
-                                        , queryParams = []
-                                        , tmoExpected = 1
-                                        , tmoGiven = fromIntegral r
-                                        }
+      liftIO $ E.throwIO TooManyObjects {
+          originalQuery = mempty
+        , tmoExpected = 1
+        , tmoGiven = fromIntegral r
+        }
 
 checkEqualBy :: (Eq b, Show b) => String -> (a -> b) -> a -> a -> Maybe (String, String, String)
 checkEqualBy name func obj1 obj2

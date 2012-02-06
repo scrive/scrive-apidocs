@@ -8,6 +8,7 @@ module CompanyAccounts.Model (
   , GetCompanyInvites(..)
   ) where
 
+import Data.Monoid
 import Database.HDBC
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
@@ -48,7 +49,7 @@ instance DBUpdate AddCompanyInvite CompanyInvite where
       , toSql invitingcompany
       ]
     dbQuery (GetCompanyInvite invitingcompany invitedemail)
-      >>= maybe (E.throw $ NoObject "") return
+      >>= maybe (E.throw $ NoObject mempty) return
 
 data RemoveCompanyInvite = RemoveCompanyInvite CompanyID Email
 instance DBUpdate RemoveCompanyInvite Bool where
