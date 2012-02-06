@@ -159,8 +159,17 @@ window.Document = Backbone.Model.extend({
               fieldvalue : fieldvalues
           });
     },
-    send : function() {
-        return this.sign().remove("sign").add("send","YES");
+    sendByAuthor : function() {
+        return new Submit({
+              send : "YES",
+              method: "POST",
+          });
+    },
+    signByAuthor : function() {
+        return new Submit({
+              sign : "YES",
+              method: "POST",
+          });
     },
     save : function() {
          return new Submit({
@@ -183,15 +192,13 @@ window.Document = Backbone.Model.extend({
           daystosign : this.get("daystosign"),
           authorization : this.get("authorization"),
           signatories : _.map(this.signatories(), function(sig) {return sig.draftData()}),
-          region : this.region().draftData()                              
+          region : this.region().draftData(),
+          template : this.isTemplate()
       };  
     },
     switchFunctionalityToAdvanced : function() {
           var newfunctionality = this.isBasic() ? "advanced" : "basic";
           this.set({functionality: newfunctionality}, {silent : true});
-    },
-    saveAsTemplate : function() {
-          return this.save().add("template", "YES");
     },
     status : function() {
           return this.get("status");
@@ -289,7 +296,10 @@ window.Document = Backbone.Model.extend({
     },
     isTemplate: function() {
        return this.get("template") == true
-    },  
+    },
+    makeTemplate : function() {
+       return this.set({"template": true}, {silent : true});
+    },
     isBasic: function() {
        return this.get("functionality") == "basic";
     },    

@@ -718,15 +718,11 @@ handleIssueShowPost docid = withUserPost $ do
   Context { ctxmaybeuser = muser } <- getContext
   guard (isAuthor (document, muser)) -- still need this because others can read document
   sign              <- isFieldSet "sign"
-  send              <- isFieldSet "final"
-  template          <- isFieldSet "template"
-  switchtoadvanced  <- isFieldSet "changefunctionality"
+  send              <- isFieldSet "send"
   -- Behold!
   case documentstatus document of
     Preparation | sign              -> handleIssueSign                 document
     Preparation | send              -> handleIssueSend                 document
-    Preparation | template          -> handleIssueSaveAsTemplate       document
-    Preparation | switchtoadvanced  -> handleIssueChangeFunctionality  document
     AwaitingAuthor                  -> handleIssueSignByAuthor         document
     _ -> return $ LinkContracts
 
@@ -821,12 +817,6 @@ handleIssueSend document = do
           Left _ -> return ()
         return mndoc
 
-handleIssueSaveAsTemplate :: Kontrakcja m => Document -> m KontraLink
-handleIssueSaveAsTemplate document = do
-  _ndoc <- guardRightM $ runDBUpdate $ TemplateFromDocument $ documentid document
-  addFlashM flashDocumentTemplateSaved
-  return $ LinkTemplates
-
 markDocumentAuthorReadAndSeen :: Kontrakcja m => Document -> MinutesTime -> IPAddress -> m ()
 markDocumentAuthorReadAndSeen Document{documentid, documentsignatorylinks} time ipnumber =
   mapM_ mark $ filter isAuthor documentsignatorylinks
@@ -889,22 +879,6 @@ zipSigAttachments name desc emailsstring =
                        , not $ Data.List.null $ trim e]
   in map (makeSigAttachment name desc . BS.fromString) emails
 
-
-
-{- |
-    Deals with a switch to the document's functionality.
-    This'll also runDBUpdate the user preferences that they would like
-    to continue with this functionality by default in the future.
--}
-handleIssueChangeFunctionality :: Kontrakcja m => Document -> m KontraLink
-handleIssueChangeFunctionality document = do
-  guardLoggedIn
-  defaultadvanced <- isFieldSet "defaultadvanced"
-  when defaultadvanced $ do
-    SignatoryLink { maybesignatory = Just authorid } <- guardJust $ getAuthorSigLink document
-    _ <- runDBUpdate $ SetPreferredDesignMode authorid (Just AdvancedMode)
-    return ()
-  return $ LinkDesignDoc $ (documentid document)
 
 handleIssueSignByAuthor :: Kontrakcja m => Document -> m KontraLink
 handleIssueSignByAuthor doc = do

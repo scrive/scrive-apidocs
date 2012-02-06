@@ -109,9 +109,13 @@ var DocumentDesignView = Backbone.View.extend({
     saveAsTemplateOption : function() {
         var document = this.model;
         var a = $("<a href='#' class='extraLink saveIcon'/>").html(localization.saveAsTemplate);
-        a.click(function() { 
-            document.saveAsTemplate().send(); 
-            return false; });
+        a.click(function() {
+              document.makeTemplate();
+              document.save().sendAjax(function() {
+                               new Submit().send();
+                               return false;
+                            });
+                     });
         return a;
     },                                               
     designStepBasic: function() {
@@ -404,10 +408,20 @@ var DocumentDesignView = Backbone.View.extend({
         var document = this.model;
         var view = this;
         this.finalButtonBox = $("<div class='finalbuttonbox'/>");
-        if (!document.isBasic() && document.authorCanSignFirst())
+        if (!document.isTemplate()  && !document.isBasic() && document.authorCanSignFirst())
             this.finalButtonBox.append(this.signLastOption());
         var button;
-        if (!this.signLast() && document.authorCanSignFirst())
+        if (document.isTemplate())
+            button = Button.init({
+                        color: "green",
+                        size: document.isBasic() ? "small" : "big" ,
+                        cssClass: "finalbutton",
+                        text: localization.saveTemplate,
+                        onClick: function() {
+                                document.save().sendAjax( function() {new Submit().send();});
+                        }
+                      });
+        else if (!this.signLast() && document.authorCanSignFirst())
             button = Button.init({
                         color: "blue",
                         size: document.isBasic() ? "small" : "big" ,
@@ -444,15 +458,15 @@ var DocumentDesignView = Backbone.View.extend({
             var telia = $("<a href='#' class='telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
             var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
             bankid.click(function() {
-                    Eleg.bankidSign(document,signatory, document.sign()); 
+                    Eleg.bankidSign(document,signatory, document.signByAuthor()); 
                     return false;
             });
             telia.click(function() {
-                    Eleg.teliaSign(document,signatory, document.sign()); 
+                    Eleg.teliaSign(document,signatory, document.signByAuthor()); 
                     return false;
             });
             nordea.click(function() {
-                    Eleg.nordeaSign(document,signatory, document.sign()); 
+                    Eleg.nordeaSign(document,signatory, document.signByAuthor()); 
                     return false;
             });
             acceptButton.append(bankid).append(telia).append(nordea);
@@ -465,7 +479,7 @@ var DocumentDesignView = Backbone.View.extend({
                   icon : $("<span class='btn-symbol cross' style='margin-left: 10px'/>"),
                   text : document.process().signbuttontext(),
                   onClick : function() {                    
-                      document.sign().send();
+                      document.signByAuthor().send();
                     }
                 }).input();
         }
@@ -498,7 +512,7 @@ var DocumentDesignView = Backbone.View.extend({
                                 color : "green",
                                 text : document.process().sendbuttontext(),
                                 onClick : function() {                    
-                                    document.send().send();
+                                    document.sendByAuthor().send();
                                 }
                 }).input(),
               rejectText: localization.cancel,
@@ -510,6 +524,7 @@ var DocumentDesignView = Backbone.View.extend({
     },
     render: function () {
         var document = this.model;
+        var view = this;
         if (!document.ready())
             return this;
         /* Make title row */
@@ -525,7 +540,7 @@ var DocumentDesignView = Backbone.View.extend({
         
         this.tabs = KontraTabs.init({
             title : this.titlerow(),
-            tabsTail : (document.isBasic()) ? [this.switchFunctionalityOption()] : [this.saveAsTemplateOption()]  ,                       
+            tabsTail : (document.isBasic()) ? [this.switchFunctionalityOption()] : (!document.isTemplate()) ?  [this.saveAsTemplateOption()] : [] ,
             tabs: [
                 new Tab({
                     name : document.isTemplate() ? localization.step1template : document.process().step1text(),
@@ -533,7 +548,10 @@ var DocumentDesignView = Backbone.View.extend({
                   }),
                 new Tab({
                     name  : document.isTemplate() ? localization.step2template : document.isBasic() ? localization.step2basic : localization.step2normal,
-                    active : true,
+                    active :  document.isBasic() || SessionStorage.get(document.documentid, "step") != "3",
+                    onActivate : function() {
+                         SessionStorage.set(document.documentid, "step", "2");
+                    },    
                     elems : [
                               designbody1,
                               file.view.el
@@ -541,6 +559,10 @@ var DocumentDesignView = Backbone.View.extend({
                   }),
                 new Tab({
                     name  : document.isTemplate() ? localization.step3template : localization.step3normal,
+                    active :  !document.isBasic() && SessionStorage.get(document.documentid, "step") == "3",
+                    onActivate : function() {
+                         SessionStorage.set(document.documentid, "step", "3");
+                    },    
                     elems : [
                             designbody2,
                             file.view.el
@@ -558,8 +580,9 @@ var DocumentDesignView = Backbone.View.extend({
 var ScrollFixer =  Backbone.Model.extend({
     initialize: function(args){
         var fixer = this;
-        this.object = args.object;
-        this.top = this.object.offset().top;
+        fixer.object = args.object;
+        fixer.top = 0;
+        fixer.object.each(function() {if ($(this).offset().top > fixer.top) fixer.top = $(this).offset().top});
         $(window).scroll(function() { fixer.fix(); });
 
     },

@@ -21,6 +21,7 @@ import Data.List
 import User.Region
 import Doc.Model
 import DB.Classes
+import qualified Log
 
 data DraftData = DraftData {
       title :: String
@@ -30,6 +31,7 @@ data DraftData = DraftData {
     , authorization :: IdentificationType
     , signatories :: [SignatoryTMP]
     , region :: Region
+    , template :: Bool
     } deriving Show
     
 instance FromJSON DocumentFunctionality where
@@ -58,6 +60,7 @@ instance FromJSON DraftData where
         authorization' <-  fromJSONField "authorization"
         signatories' <-  fromJSONField "signatories"
         region' <- fromJSONField "region"
+        template' <- fromJSONField "template"
         case (title',functionality', authorization', region') of
             (Just t, Just f, Just a, Just r) -> return $ Just DraftData {
                                       title =  t
@@ -67,6 +70,7 @@ instance FromJSON DraftData where
                                     , authorization = a
                                     , signatories = concat $ maybeToList $ signatories'
                                     , region = r
+                                    , template = joinB template'
                                  }
             _ -> return Nothing
         
@@ -83,13 +87,13 @@ applyDraftDataToDocument doc draft = do
                                 , documentallowedidtypes = [authorization draft]
                                 , documentsignatoryattachments = concat $ map getAttachments $ signatories draft
                                 , documentregion = region draft
-                            }) time                            
-    case (mergeSignatories (fromJust $ getAuthorSigLink doc) (signatories draft)) of 
+                            }) time
+    when (template draft && (not $ isTemplate doc)) $ do
+         ignore $ runDBUpdate $ TemplateFromDocument $ documentid doc                                   
+    case (mergeSignatories (fromJust $ getAuthorSigLink doc) (signatories draft)) of
          Nothing   -> return $ Left "Problem with author details while sending draft"
-         Just sigs -> do
-             res <- runDBUpdate $ ResetSignatoryDetails2 (documentid doc) sigs time             
-             return res
-             
+         Just sigs -> runDBUpdate $ ResetSignatoryDetails2 (documentid doc) sigs time
+
                             
 
                             

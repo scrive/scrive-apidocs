@@ -15,6 +15,7 @@ window.Tab = Backbone.Model.extend({
     active : false,
     disabled : false,
     clickable : true,
+    onActivate : function() {}
     }  
   ,
   name : function() {
@@ -25,6 +26,8 @@ window.Tab = Backbone.Model.extend({
   },
   setActive : function(bool) {
       this.set({active: bool});
+      if (bool)
+          this.get("onActivate")();
   },
   active : function() {
         return this.get("active");
@@ -61,7 +64,7 @@ var Tabs = Backbone.Model.extend({
    }, 
    initialize : function(args){
        if (_.all(args.tabs,function(t) {return !t.active(); }))
-          args.tabs[0].setActive(true);
+          this.activate(args.tabs[0]);
        if (this.numbers())    
         this.addTabsNumbers();
    }, 
