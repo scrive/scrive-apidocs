@@ -72,7 +72,7 @@ module Doc.Model
 
 import API.Service.Model
 import DB.Classes
-import DB.Fetcher
+--import DB.Fetcher
 import DB.Fetcher2
 import DB.Types
 import DB.Utils
