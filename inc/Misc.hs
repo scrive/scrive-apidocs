@@ -43,6 +43,11 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified GHC.Conc
 import Data.Bits
 
+-- | Infix version of mappend, provided for convenience.
+(<++>) :: Monoid m => m -> m -> m
+(<++>) = mappend
+infixr 6 <++>
+
 -- We want this operators to bind strongly but weeker then . to do cond1 &&^ not . cond2
 infixl 8  &&^
 infixl 8  ||^

@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fcontext-stack=50 #-}
 module Stats.Model
        (
          AddDocStatEvent(..),

@@ -165,7 +165,6 @@ Executable kontrakcja-server
   Build-depends: MissingH == 1.1.1.0
   Build-depends: pretty-show == 1.2
   Build-depends: QuickCheck
-  Build-depends: array
   Build-depends: base >= 4 && < 5
   Build-depends: base64-bytestring == 0.1.0.2
   Build-depends: binary == 0.5.0.2
@@ -189,24 +188,19 @@ Executable kontrakcja-server
   Build-depends: happstack==6.0.5
   Build-depends: hslogger==1.1.4
   Build-depends: html == 1.0.1.2
-  Build-depends: hxt == 9.1.5
-  Build-depends: hxt-xpath == 9.1.1
   Build-depends: iconv == 0.4.1.0
   Build-depends: json == 0.4.4
   Build-depends: list-tries == 0.4.1
   Build-depends: mmap==0.5.*
   Build-depends: mtl == 2.*
-  Build-depends: network == 2.3.0.4
+  Build-depends: network == 2.3.0.10
   Build-depends: old-locale
   Build-depends: old-time
-  Build-depends: parallel == 2.2.*
   Build-depends: parsec == 3.1.1
   Build-depends: process
   Build-depends: random
   Build-depends: regex-tdfa == 1.1.8
   Build-depends: spreadsheet == 0.1.2
-  Build-depends: syb
-  Build-depends: syb-with-class
   Build-depends: tagsoup == 0.12.3
   Build-depends: template-haskell
   Build-depends: temporary==1.1.1
@@ -231,8 +225,8 @@ Executable kontrakcja-server
               NamedFieldPuns,
               PatternGuards,
               RankNTypes,
+              RecordWildCards,
               ScopedTypeVariables,
-              StandaloneDeriving,
               TemplateHaskell,
               TypeFamilies,
               TypeOperators,
@@ -299,8 +293,8 @@ Executable mailing-server
               NamedFieldPuns,
               PatternGuards,
               RankNTypes,
+              RecordWildCards,
               ScopedTypeVariables,
-              StandaloneDeriving,
               TemplateHaskell,
               TypeFamilies,
               TypeOperators,
@@ -378,8 +372,8 @@ Executable kontrakcja-test
               NamedFieldPuns,
               PatternGuards,
               RankNTypes,
+              RecordWildCards,
               ScopedTypeVariables,
-              StandaloneDeriving,
               TemplateHaskell,
               TypeFamilies,
               TypeOperators,

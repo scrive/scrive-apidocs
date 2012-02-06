@@ -1,3 +1,4 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module File.Model
     ( FileID
@@ -14,59 +15,39 @@ import Database.HDBC
 import qualified Data.ByteString.Char8 as BS
 
 import DB.Classes
-import DB.Utils
+import DB.Fetcher2
 import DB.Types
+import DB.Utils
 import File.File
 import File.FileID
 import File.Tables
-
-decodeRowAsFile :: FileID
-                -> BS.ByteString
-                -> Maybe Binary
-                -> Maybe BS.ByteString
-                -> Maybe BS.ByteString
-                -> Maybe FilePath
-                -> Either DBException File
-decodeRowAsFile fid fname content amazon_bucket amazon_url disk_path = 
-  return $ File { fileid = fid
-                , filename = fname
-                , filestorage = 
-                  case content of
-                    Just mem -> FileStorageMemory (unBinary mem)
-                    Nothing -> 
-                      case disk_path of
-                        Just path -> FileStorageDisk path
-                        Nothing ->
-                          case (amazon_bucket, amazon_url) of
-                            (Just bucket, Just url) -> FileStorageAWS bucket url
-                            _ -> FileStorageMemory BS.empty
-                } :: Either DBException File
+import OurPrelude
 
 data GetFileByFileID = GetFileByFileID FileID
 instance DBQuery GetFileByFileID (Maybe File) where
   dbQuery (GetFileByFileID fid) = do
-    kPrepare  $ "SELECT id, name, encode(content,'base64'), amazon_bucket, amazon_url, disk_path FROM files WHERE id = ?"
+    kPrepare $ "SELECT id, name, encode(content,'base64'), amazon_bucket, amazon_url, disk_path FROM files WHERE id = ?"
     _ <- kExecute [toSql fid]
-    kFetchRow decodeRowAsFile
+    fetchFiles >>= oneObjectReturnedGuard
 
 data NewFile = NewFile BS.ByteString BS.ByteString
-instance DBUpdate NewFile (File) where
+instance DBUpdate NewFile File where
   dbUpdate (NewFile filename content) = do
     kPrepare "LOCK TABLE files IN ACCESS EXCLUSIVE MODE"
     _ <- kExecute []
     fid <- FileID <$> getUniqueID tableFiles
-    kPrepare  ("INSERT INTO files ("
-               ++ "  id"
-               ++ ", name"
-               ++ ", content"
-               ++ ") VALUES (?, ?, decode(?,'base64'))"
-               ++ " RETURNING id, name, encode(content,'base64'), amazon_bucket, amazon_url, disk_path")
-    _ <- kExecute [ toSql fid
-                  , toSql filename
-                  , toSql (Binary content)
-                  ]
-    Just file <- kFetchRow decodeRowAsFile
-    return file
+    kPrepare $ "INSERT INTO files ("
+      ++ "  id"
+      ++ ", name"
+      ++ ", content"
+      ++ ") VALUES (?, ?, decode(?,'base64'))"
+      ++ " RETURNING id, name, encode(content,'base64'), amazon_bucket, amazon_url, disk_path"
+    _ <- kExecute [
+        toSql fid
+      , toSql filename
+      , toSql (Binary content)
+      ]
+    $(fromJust) <$> (fetchFiles >>= oneObjectReturnedGuard)
 
 data PutFileUnchecked = PutFileUnchecked File
 instance DBUpdate PutFileUnchecked () where
@@ -100,9 +81,22 @@ instance DBUpdate FileMovedToDisk () where
 data GetFileThatShouldBeMovedToAmazon = GetFileThatShouldBeMovedToAmazon
 instance DBQuery GetFileThatShouldBeMovedToAmazon (Maybe File) where
   dbQuery GetFileThatShouldBeMovedToAmazon = do
-    kPrepare $ "SELECT id, name, encode(content,'base64'), amazon_bucket, amazon_url, disk_path " ++
-               "FROM files " ++
-               "WHERE content IS NOT NULL " ++
-               "LIMIT 1"
+    kPrepare $ "SELECT id, name, encode(content,'base64'), amazon_bucket, amazon_url, disk_path FROM files WHERE content IS NOT NULL LIMIT 1"
     _ <- kExecute []
-    kFetchRow decodeRowAsFile
+    fetchFiles >>= oneObjectReturnedGuard
+
+fetchFiles :: DB [File]
+fetchFiles = foldDB decoder []
+  where
+    decoder acc fid fname content amazon_bucket amazon_url disk_path = File {
+        fileid = fid
+      , filename = fname
+      , filestorage =
+        case content of
+          Just mem -> FileStorageMemory (unBinary mem)
+          Nothing -> case disk_path of
+            Just path -> FileStorageDisk path
+            Nothing -> case (amazon_bucket, amazon_url) of
+              (Just bucket, Just url) -> FileStorageAWS bucket url
+              _ -> FileStorageMemory BS.empty
+    } : acc

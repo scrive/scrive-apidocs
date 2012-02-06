@@ -524,7 +524,7 @@ lookup refid' (Document _ bodies) = msum (map check bodies)
 --            -> (Int,Map.Map Int (Int,Int))
 --            -> (Int,Entry)                  -- (objno,entry)
 --            -> IO () -- (Maybe (Int,(Int,Int)))   -- objno,gener,offset
-writeObject :: (Monad m, Num a) =>
+writeObject :: (Monad m, Num a, Show a) =>
                (BS.ByteString -> m ())
                -> m a
                -> (IntMap.IntMap a, IntMap.IntMap a)
