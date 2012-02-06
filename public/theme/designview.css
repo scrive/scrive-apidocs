@@ -619,3 +619,9 @@
     float: right;
     height: 100%;
 }
+
+.signStepsBody.fixed{
+    position:fixed;
+    top:0px;
+    z-index: 1000;
+}

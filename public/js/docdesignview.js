@@ -518,7 +518,11 @@ var DocumentDesignView = Backbone.View.extend({
 
        
         // Sign boxes
+        var designbody1 = document.isBasic() ? this.designStepBasic() : this.designStep1();
+        var designbody2 = document.isBasic() ? $("Nothing") : this.designStep2();
+
         var file = KontraFile.init({file: document.mainfile()});
+        
         this.tabs = KontraTabs.init({
             title : this.titlerow(),
             tabsTail : (document.isBasic()) ? [this.switchFunctionalityOption()] : [this.saveAsTemplateOption()]  ,                       
@@ -531,14 +535,14 @@ var DocumentDesignView = Backbone.View.extend({
                     name  : document.isTemplate() ? localization.step2template : document.isBasic() ? localization.step2basic : localization.step2normal,
                     active : true,
                     elems : [
-                              document.isBasic() ? this.designStepBasic() : this.designStep1(),
+                              designbody1,
                               file.view.el
                             ]  
                   }),
                 new Tab({
                     name  : document.isTemplate() ? localization.step3template : localization.step3normal,
                     elems : [
-                            document.isBasic() ? $("Nothing") : this.designStep2(),
+                            designbody2,
                             file.view.el
                             ],
                     disabled : document.isBasic()    
@@ -547,10 +551,24 @@ var DocumentDesignView = Backbone.View.extend({
         });
         this.contrainer.append(this.tabs.view.el);
 
+        new ScrollFixer({object : designbody1.add(designbody2)});
+    }
+});
 
+var ScrollFixer =  Backbone.Model.extend({
+    initialize: function(args){
+        var fixer = this;
+        this.object = args.object;
+        this.top = this.object.offset().top;
+        $(window).scroll(function() { fixer.fix(); });
 
-        return this;
-
+    },
+    fix : function() {
+              var fixer = this;
+              if ($(window).scrollTop() >= this.top)
+                this.object.addClass('fixed');
+               else
+                this.object.removeClass('fixed');
     }
 });
 
