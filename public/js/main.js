@@ -63,21 +63,6 @@ $(document).ready(function() {
     };
 })(jQuery);
 
-/*
- * For the decline button on the account activation after signing dialog
- */
-$(document).ready(function() {
-    $(".declineAccountFromSign").click(function() {
-        var form = $(this).closest("form");
-        var acceptaccount = form.find("input[name='acceptaccount']");
-        var declineaccount = $("<input type='hidden' name='declineaccount' value='true' />");
-        declineaccount.insertBefore(acceptaccount);
-        acceptaccount.remove();
-        form.submit();
-        return false;
-    });
-});
-
 $(document).ready(function() {
     var emailform = $(".login-container input[type=email]");
     emailform.focus();

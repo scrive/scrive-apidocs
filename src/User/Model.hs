@@ -62,7 +62,7 @@ import User.UserID
 
 -- newtypes
 newtype Email = Email { unEmail :: BS.ByteString }
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Typeable)
 $(newtypeDeriveConvertible ''Email)
 $(newtypeDeriveUnderlyingReadShow ''Email)
 
@@ -129,42 +129,38 @@ instance HasLocale UserSettings where
 
 data GetUsers = GetUsers
 instance DBQuery GetUsers [User] where
-  dbQuery GetUsers = wrapDB $ \conn -> do
-    st <- prepare conn $ selectUsersSQL ++ " WHERE u.deleted = FALSE ORDER BY u.first_name || ' ' || u.last_name DESC"
-    _ <- executeRaw st
-    fetchUsers st
+  dbQuery GetUsers = do
+    kPrepare $ selectUsersSQL ++ " WHERE u.deleted = FALSE ORDER BY u.first_name || ' ' || u.last_name DESC"
+    _ <- kExecute []
+    fetchUsers
 
 data GetUserByID = GetUserByID UserID
 instance DBQuery GetUserByID (Maybe User) where
-  dbQuery (GetUserByID uid) = wrapDB $ \conn -> do
-    st <- prepare conn $ selectUsersSQL ++ " WHERE u.id = ? AND u.deleted = FALSE"
-    _ <- execute st [toSql uid]
-    us <- fetchUsers st
-    oneObjectReturnedGuard us
+  dbQuery (GetUserByID uid) = do
+    kPrepare $ selectUsersSQL ++ " WHERE u.id = ? AND u.deleted = FALSE"
+    _ <- kExecute [toSql uid]
+    fetchUsers >>= oneObjectReturnedGuard
 
 data GetUserByEmail = GetUserByEmail (Maybe ServiceID) Email
 instance DBQuery GetUserByEmail (Maybe User) where
-  dbQuery (GetUserByEmail msid email) = wrapDB $ \conn -> do
-    st <- prepare conn $ selectUsersSQL
-      ++ " WHERE u.deleted = FALSE AND ((?::TEXT IS NULL AND u.service_id IS NULL) OR u.service_id = ?) AND u.email = ?"
-    _ <- execute st [toSql msid, toSql msid, toSql email]
-    us <- fetchUsers st
-    oneObjectReturnedGuard us
+  dbQuery (GetUserByEmail msid email) = do
+    kPrepare $ selectUsersSQL ++ " WHERE u.deleted = FALSE AND u.service_id IS NOT DISTINCT FROM ? AND u.email = ?"
+    _ <- kExecute [toSql msid, toSql email]
+    fetchUsers >>= oneObjectReturnedGuard
 
 data GetCompanyAccounts = GetCompanyAccounts CompanyID
 instance DBQuery GetCompanyAccounts [User] where
-  dbQuery (GetCompanyAccounts cid) = wrapDB $ \conn -> do
-    st <- prepare conn $ selectUsersSQL ++ " WHERE u.company_id = ? AND u.deleted = FALSE ORDER BY u.email DESC"
-    _ <- execute st [toSql cid]
-    fetchUsers st
+  dbQuery (GetCompanyAccounts cid) = do
+    kPrepare $ selectUsersSQL ++ " WHERE u.company_id = ? AND u.deleted = FALSE ORDER BY u.email DESC"
+    _ <- kExecute [toSql cid]
+    fetchUsers
 
 data GetInviteInfo = GetInviteInfo UserID
 instance DBQuery GetInviteInfo (Maybe InviteInfo) where
-  dbQuery (GetInviteInfo uid) = wrapDB $ \conn -> do
-    st <- prepare conn "SELECT inviter_id, invite_time, invite_type FROM user_invite_infos WHERE user_id = ?"
-    _ <- execute st [toSql uid]
-    is <- foldDB st fetchInviteInfos []
-    oneObjectReturnedGuard is
+  dbQuery (GetInviteInfo uid) = do
+    kPrepare "SELECT inviter_id, invite_time, invite_type FROM user_invite_infos WHERE user_id = ?"
+    _ <- kExecute [toSql uid]
+    foldDB fetchInviteInfos [] >>= oneObjectReturnedGuard
     where
       fetchInviteInfos acc inviter_id invite_time invite_type = InviteInfo {
           userinviter = inviter_id
@@ -174,133 +170,113 @@ instance DBQuery GetInviteInfo (Maybe InviteInfo) where
 
 data GetUserMailAPI = GetUserMailAPI UserID
 instance DBQuery GetUserMailAPI (Maybe UserMailAPI) where
-  dbQuery (GetUserMailAPI uid) = wrapDB $ \conn -> do
-    st <- prepare conn "SELECT key, daily_limit, (CASE WHEN last_sent_date = now()::DATE THEN sent_today ELSE 0 END) FROM user_mail_apis WHERE user_id = ?"
-    _ <- execute st [toSql uid]
-    mapis <- fetchUserMailAPIs st []
-    oneObjectReturnedGuard mapis
+  dbQuery (GetUserMailAPI uid) = do
+    kPrepare "SELECT key, daily_limit, (CASE WHEN last_sent_date = now()::DATE THEN sent_today ELSE 0 END) FROM user_mail_apis WHERE user_id = ?"
+    _ <- kExecute [toSql uid]
+    foldDB fetchUserMailAPIs [] >>= oneObjectReturnedGuard
     where
-      fetchUserMailAPIs st acc = fetchRow st >>= maybe (return acc) f
-        where f [key, daily_limit, sent_today
-                ] = fetchUserMailAPIs st $ UserMailAPI {
-                    umapiKey = fromSql key
-                  , umapiDailyLimit = fromSql daily_limit
-                  , umapiSentToday = fromSql sent_today
-                } : acc
-              f l = error $ "fetchUserMailAPIs: unexpected row: "++show l
+      fetchUserMailAPIs acc key daily_limit sent_today = UserMailAPI {
+          umapiKey = key
+        , umapiDailyLimit = daily_limit
+        , umapiSentToday = sent_today
+        } : acc
 
 data ExportUsersDetailsToCSV = ExportUsersDetailsToCSV
 instance DBQuery ExportUsersDetailsToCSV BS.ByteString where
-  dbQuery ExportUsersDetailsToCSV = wrapDB $ \conn -> do
-    quickQuery conn "SELECT first_name || ' ' || last_name, email FROM users WHERE deleted = FALSE" []
+  dbQuery ExportUsersDetailsToCSV = do
+    kQuickQuery (SQL "SELECT first_name || ' ' || last_name, email FROM users WHERE deleted = FALSE" [])
       >>= return . toCSV
     where
       toCSV = BS.unlines . map (BS.intercalate (BS.pack ", ") . map fromSql)
 
 data SetUserCompany = SetUserCompany UserID (Maybe CompanyID)
 instance DBUpdate SetUserCompany Bool where
-  dbUpdate (SetUserCompany uid mcid) = wrapDB $ \conn -> do
-    case mcid of
-      Nothing -> do
-        st <- prepare conn "UPDATE users SET company_id = NULL, is_company_admin = FALSE WHERE id = ? AND deleted = FALSE"
-        r <- execute st [toSql uid]
-        oneRowAffectedGuard r
-      Just cid -> do
-        st <- prepare conn "UPDATE users SET company_id = ? WHERE id = ? AND deleted = FALSE"
-        r <- execute st [toSql cid, toSql uid]
-        oneRowAffectedGuard r
+  dbUpdate (SetUserCompany uid mcid) = case mcid of
+    Nothing -> do
+      kPrepare "UPDATE users SET company_id = NULL, is_company_admin = FALSE WHERE id = ? AND deleted = FALSE"
+      kExecute01 [toSql uid]
+    Just cid -> do
+      kPrepare "UPDATE users SET company_id = ? WHERE id = ? AND deleted = FALSE"
+      kExecute01 [toSql cid, toSql uid]
 
-{- |
-    Marks a user as deleted so that queries won't return them any more.
-
-    TODO: change deleted to time
--}
+-- | Marks a user as deleted so that queries won't return them any more.
+-- TODO: change deleted to time
 data DeleteUser = DeleteUser UserID
 instance DBUpdate DeleteUser Bool where
-  dbUpdate (DeleteUser uid) = wrapDB $ \conn -> do
-    st <- prepare conn $
-            "UPDATE users SET deleted = ?"
-            ++ " WHERE id = ? AND deleted = FALSE"
-    r <- execute st [ toSql True, toSql uid ]
-    oneRowAffectedGuard r
+  dbUpdate (DeleteUser uid) = do
+    kPrepare $ "UPDATE users SET deleted = ? WHERE id = ? AND deleted = FALSE"
+    kExecute01 [toSql True, toSql uid]
 
-{- |
-    TODO: Fix this AddUser, it has a race condition on the email and it shouldn't lock.
--}
+-- | TODO: Fix this AddUser, it shouldn't lock.
 data AddUser = AddUser (BS.ByteString, BS.ByteString) BS.ByteString (Maybe Password) Bool (Maybe ServiceID) (Maybe CompanyID) Locale
 instance DBUpdate AddUser (Maybe User) where
   dbUpdate (AddUser (fname, lname) email mpwd iscompadmin msid mcid l) = do
     let handle e = case e of
           NoObject{} -> return Nothing
           _ -> E.throw e
+    _ <- kRunRaw "LOCK TABLE users IN ACCESS EXCLUSIVE MODE"
     mu <- dbQuery (GetUserByEmail msid $ Email email) `catchDB` handle
     case mu of
       Just _ -> return Nothing -- user with the same email address exists
       Nothing -> do
-        wrapDB $ \conn -> runRaw conn "LOCK TABLE users IN ACCESS EXCLUSIVE MODE"
         uid <- UserID <$> getUniqueID tableUsers
-        wrapDB $ \conn -> do
-          _ <- run conn ("INSERT INTO users ("
-            ++ "  id"
-            ++ ", password"
-            ++ ", salt"
-            ++ ", is_company_admin"
-            ++ ", account_suspended"
-            ++ ", has_accepted_terms_of_service"
-            ++ ", signup_method"
-            ++ ", service_id"
-            ++ ", company_id"
-            ++ ", first_name"
-            ++ ", last_name"
-            ++ ", personal_number"
-            ++ ", company_position"
-            ++ ", phone"
-            ++ ", mobile"
-            ++ ", email"
-            ++ ", preferred_design_mode"
-            ++ ", lang"
-            ++ ", region"
-            ++ ", deleted) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)") $ [
-                toSql uid
-              , toSql $ pwdHash <$> mpwd
-              , toSql $ pwdSalt <$> mpwd
-              , toSql iscompadmin
-              , toSql False
-              , SqlNull
-              , toSql AccountRequest
-              , toSql msid
-              , toSql mcid
-              , toSql fname
-              , toSql lname
-              ] ++ replicate 4 (toSql "")
-                ++ [toSql email] ++ [
-                SqlNull
-              , toSql $ getLang l
-              , toSql $ getRegion l
-              , toSql False
-              ]
-          return ()
+        kPrepare $ "INSERT INTO users ("
+          ++ "  id"
+          ++ ", password"
+          ++ ", salt"
+          ++ ", is_company_admin"
+          ++ ", account_suspended"
+          ++ ", has_accepted_terms_of_service"
+          ++ ", signup_method"
+          ++ ", service_id"
+          ++ ", company_id"
+          ++ ", first_name"
+          ++ ", last_name"
+          ++ ", personal_number"
+          ++ ", company_position"
+          ++ ", phone"
+          ++ ", mobile"
+          ++ ", email"
+          ++ ", preferred_design_mode"
+          ++ ", lang"
+          ++ ", region"
+          ++ ", deleted) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        _ <- kExecute $ [
+            toSql uid
+          , toSql $ pwdHash <$> mpwd
+          , toSql $ pwdSalt <$> mpwd
+          , toSql iscompadmin
+          , toSql False
+          , SqlNull
+          , toSql AccountRequest
+          , toSql msid
+          , toSql mcid
+          , toSql fname
+          , toSql lname
+          ] ++ replicate 4 (toSql "")
+            ++ [toSql email] ++ [
+              SqlNull
+            , toSql $ getLang l
+            , toSql $ getRegion l
+            , toSql False
+            ]
         dbQuery $ GetUserByID uid
 
 data SetUserEmail = SetUserEmail (Maybe ServiceID) UserID Email
 instance DBUpdate SetUserEmail Bool where
-  dbUpdate (SetUserEmail msid uid email) = wrapDB $ \conn -> do
-    st <- prepare conn $
-            "UPDATE users SET email = ?"
-            ++ " WHERE id = ? AND deleted = FALSE"
-            ++ " AND NOT EXISTS (SELECT * FROM users WHERE deleted = FALSE AND ((?::TEXT IS NULL AND service_id IS NULL) OR service_id = ?) AND email = ?)"
-    r <- execute st [toSql email, toSql uid, toSql msid, toSql msid, toSql email]
-    oneRowAffectedGuard r
+  dbUpdate (SetUserEmail msid uid email) = do
+    kPrepare $ "UPDATE users SET email = ?"
+      ++ " WHERE id = ? AND deleted = FALSE AND service_id IS NOT DISTINCT FROM ?"
+    kExecute01 [toSql email, toSql uid, toSql msid]
 
 data SetUserPassword = SetUserPassword UserID Password
 instance DBUpdate SetUserPassword Bool where
-  dbUpdate (SetUserPassword uid pwd) = wrapDB $ \conn -> do
-    st <- prepare conn $ "UPDATE users SET"
+  dbUpdate (SetUserPassword uid pwd) = do
+    kPrepare $ "UPDATE users SET"
       ++ "  password = decode(?, 'base64')"
       ++ ", salt = decode(?, 'base64')"
       ++ "  WHERE id = ? AND deleted = FALSE"
-    r <- execute st [toSql $ pwdHash pwd, toSql $ pwdSalt pwd, toSql uid]
-    oneRowAffectedGuard r
+    kExecute01 [toSql $ pwdHash pwd, toSql $ pwdSalt pwd, toSql uid]
 
 data SetInviteInfo = SetInviteInfo (Maybe UserID) MinutesTime InviteType UserID
 instance DBUpdate SetInviteInfo Bool where
@@ -308,38 +284,39 @@ instance DBUpdate SetInviteInfo Bool where
     exists <- checkIfUserExists uid
     if exists
       then do
-        wrapDB $ \conn -> case minviterid of
+        case minviterid of
           Just inviterid -> do
-            runRaw conn "LOCK TABLE user_invite_infos IN ACCESS EXCLUSIVE MODE"
-            rec_exists <- quickQuery' conn "SELECT 1 FROM user_invite_infos WHERE user_id = ?" [toSql uid]
+            _ <- kRunRaw "LOCK TABLE user_invite_infos IN ACCESS EXCLUSIVE MODE"
+            rec_exists <- kQuickQuery (SQL "SELECT 1 FROM user_invite_infos WHERE user_id = ?" [toSql uid])
               >>= checkIfOneObjectReturned
-            r <- if rec_exists
+            if rec_exists
               then do
-                run conn ("UPDATE user_invite_infos SET"
+                kPrepare $ "UPDATE user_invite_infos SET"
                   ++ "  inviter_id = ?"
                   ++ ", invite_time = ?"
                   ++ ", invite_type = ?"
-                  ++ "  WHERE user_id = ?") [
+                  ++ "  WHERE user_id = ?"
+                kExecute01 [
                     toSql inviterid
                   , toSql invitetime
                   , toSql invitetype
                   , toSql uid
                   ]
               else do
-                run conn ("INSERT INTO user_invite_infos ("
+                kPrepare $ "INSERT INTO user_invite_infos ("
                   ++ "  user_id"
                   ++ ", inviter_id"
                   ++ ", invite_time"
-                  ++ ", invite_type) VALUES (?, ?, ?, ?)") [
+                  ++ ", invite_type) VALUES (?, ?, ?, ?)"
+                kExecute01 [
                     toSql uid
                   , toSql inviterid
                   , toSql invitetime
                   , toSql invitetype
                   ]
-            oneRowAffectedGuard r
           Nothing -> do
-            _ <- run conn "DELETE FROM user_invite_infos WHERE user_id = ?" [toSql uid]
-            return True
+            kPrepare "DELETE FROM user_invite_infos WHERE user_id = ?"
+            kExecute01 [toSql uid]
       else return False
 
 data SetUserMailAPI = SetUserMailAPI UserID (Maybe UserMailAPI)
@@ -347,47 +324,47 @@ instance DBUpdate SetUserMailAPI Bool where
   dbUpdate (SetUserMailAPI uid musermailapi) = do
     exists <- checkIfUserExists uid
     if exists
-      then do
-        wrapDB $ \conn -> case musermailapi of
-          Just mailapi -> do
-            runRaw conn "LOCK TABLE user_mail_apis IN ACCESS EXCLUSIVE MODE"
-            rec_exists <- quickQuery' conn "SELECT 1 FROM user_mail_apis WHERE user_id = ?" [toSql uid]
+      then case musermailapi of
+        Just mailapi -> do
+          _ <- kRunRaw "LOCK TABLE user_mail_apis IN ACCESS EXCLUSIVE MODE"
+          rec_exists <- kQuickQuery (SQL "SELECT 1 FROM user_mail_apis WHERE user_id = ?" [toSql uid])
               >>= checkIfOneObjectReturned
-            r <- if rec_exists
-              then do
-                run conn ("UPDATE user_mail_apis SET"
+          if rec_exists
+            then do
+              kPrepare $ "UPDATE user_mail_apis SET"
                   ++ "  key = ?"
                   ++ ", daily_limit = ?"
                   ++ ", sent_today = ?"
                   ++ ", last_sent_date = now()"
-                  ++ "  WHERE user_id = ?") [
-                    toSql $ umapiKey mailapi
-                  , toSql $ umapiDailyLimit mailapi
-                  , toSql $ umapiSentToday mailapi
-                  , toSql uid
-                  ]
-              else do
-                run conn ("INSERT INTO user_mail_apis ("
-                  ++ "  user_id"
-                  ++ ", key"
-                  ++ ", daily_limit"
-                  ++ ", sent_today"
-                  ++ ", last_sent_date) VALUES (?, ?, ?, ?, now())") [
-                    toSql uid
-                  , toSql $ umapiKey mailapi
-                  , toSql $ umapiDailyLimit mailapi
-                  , toSql $ umapiSentToday mailapi
-                  ]
-            oneRowAffectedGuard r
-          Nothing -> do
-            _ <- run conn "DELETE FROM user_mail_apis WHERE user_id = ?" [toSql uid]
-            return True
+                  ++ "  WHERE user_id = ?"
+              kExecute01 [
+                  toSql $ umapiKey mailapi
+                , toSql $ umapiDailyLimit mailapi
+                , toSql $ umapiSentToday mailapi
+                , toSql uid
+                ]
+            else do
+              kPrepare $ "INSERT INTO user_mail_apis ("
+                ++ "  user_id"
+                ++ ", key"
+                ++ ", daily_limit"
+                ++ ", sent_today"
+                ++ ", last_sent_date) VALUES (?, ?, ?, ?, now())"
+              kExecute01 [
+                  toSql uid
+                , toSql $ umapiKey mailapi
+                , toSql $ umapiDailyLimit mailapi
+                , toSql $ umapiSentToday mailapi
+                ]
+        Nothing -> do
+          kPrepare "DELETE FROM user_mail_apis WHERE user_id = ?"
+          kExecute01 [toSql uid]
       else return False
 
 data SetUserInfo = SetUserInfo UserID UserInfo
 instance DBUpdate SetUserInfo Bool where
-  dbUpdate (SetUserInfo uid info) = wrapDB $ \conn -> do
-    r <- run conn ("UPDATE users SET"
+  dbUpdate (SetUserInfo uid info) = do
+    kPrepare $ "UPDATE users SET"
       ++ "  first_name = ?"
       ++ ", last_name = ?"
       ++ ", personal_number = ?"
@@ -395,7 +372,8 @@ instance DBUpdate SetUserInfo Bool where
       ++ ", phone = ?"
       ++ ", mobile = ?"
       ++ ", email = ?"
-      ++ "  WHERE id = ? AND deleted = FALSE") [
+      ++ "  WHERE id = ? AND deleted = FALSE"
+    kExecute01 [
         toSql $ userfstname info
       , toSql $ usersndname info
       , toSql $ userpersonalnumber info
@@ -405,49 +383,46 @@ instance DBUpdate SetUserInfo Bool where
       , toSql $ useremail info
       , toSql uid
       ]
-    oneRowAffectedGuard r
 
 data SetUserSettings = SetUserSettings UserID UserSettings
 instance DBUpdate SetUserSettings Bool where
-  dbUpdate (SetUserSettings uid us) = wrapDB $ \conn -> do
-    r <- run conn ("UPDATE users SET"
+  dbUpdate (SetUserSettings uid us) = do
+    kPrepare $ "UPDATE users SET"
       ++ "  preferred_design_mode = ?"
       ++ ", lang = ?"
       ++ ", region = ?"
       ++ ", customfooter = ?"
-      ++ "  WHERE id = ? AND deleted = FALSE") [
+      ++ "  WHERE id = ? AND deleted = FALSE"
+    kExecute01 [
         toSql $ preferreddesignmode us
       , toSql $ getLang us
       , toSql $ getRegion us
       , toSql $ customfooter us
       , toSql uid
       ]
-    oneRowAffectedGuard r
 
 data SetPreferredDesignMode = SetPreferredDesignMode UserID (Maybe DesignMode)
 instance DBUpdate SetPreferredDesignMode Bool where
-  dbUpdate (SetPreferredDesignMode uid mmode) = wrapDB $ \conn -> do
-    r <- run conn "UPDATE users SET preferred_design_mode = ? WHERE id = ? AND deleted = FALSE"
-      [toSql mmode, toSql uid]
-    oneRowAffectedGuard r
+  dbUpdate (SetPreferredDesignMode uid mmode) = do
+    kPrepare $ "UPDATE users SET preferred_design_mode = ? WHERE id = ? AND deleted = FALSE"
+    kExecute01 [toSql mmode, toSql uid]
 
 data AcceptTermsOfService = AcceptTermsOfService UserID MinutesTime
 instance DBUpdate AcceptTermsOfService Bool where
-  dbUpdate (AcceptTermsOfService uid time) = wrapDB $ \conn -> do
-    r <- run conn ("UPDATE users SET"
+  dbUpdate (AcceptTermsOfService uid time) = do
+    kPrepare $ "UPDATE users SET"
       ++ "  has_accepted_terms_of_service = ?"
-      ++ "  WHERE id = ? AND deleted = FALSE") [
+      ++ "  WHERE id = ? AND deleted = FALSE"
+    kExecute01 [
         toSql time
       , toSql uid
       ]
-    oneRowAffectedGuard r
 
 data SetSignupMethod = SetSignupMethod UserID SignupMethod
 instance DBUpdate SetSignupMethod Bool where
-  dbUpdate (SetSignupMethod uid signupmethod) = wrapDB $ \conn -> do
-    r <- run conn ("UPDATE users SET signup_method = ? WHERE id = ? AND deleted = FALSE")
-      [toSql signupmethod, toSql uid]
-    oneRowAffectedGuard r
+  dbUpdate (SetSignupMethod uid signupmethod) = do
+    kPrepare "UPDATE users SET signup_method = ? WHERE id = ? AND deleted = FALSE"
+    kExecute01 [toSql signupmethod, toSql uid]
 
 data SetUserCompanyAdmin = SetUserCompanyAdmin UserID Bool
 instance DBUpdate SetUserCompanyAdmin Bool where
@@ -456,8 +431,8 @@ instance DBUpdate SetUserCompanyAdmin Bool where
     case mcid :: Maybe CompanyID of
       Nothing -> return False
       Just _ -> wrapDB $ \conn -> do
-        run conn "UPDATE users SET is_company_admin = ? WHERE id = ? AND deleted = FALSE" [toSql iscompanyadmin, toSql uid]
-          >>= oneRowAffectedGuard
+        r <- run conn "UPDATE users SET is_company_admin = ? WHERE id = ? AND deleted = FALSE" [toSql iscompanyadmin, toSql uid]
+        oneRowAffectedGuard r
 
 -- helpers
 
@@ -468,8 +443,8 @@ composeFullName (fstname, sndname) =
        else fstname `BS.append` BS.pack " " `BS.append` sndname
 
 checkIfUserExists :: UserID -> DB Bool
-checkIfUserExists uid = wrapDB $ \conn -> do
-  quickQuery' conn "SELECT 1 FROM users WHERE id = ? AND deleted = FALSE" [toSql uid]
+checkIfUserExists uid = do
+  kQuickQuery (SQL "SELECT 1 FROM users WHERE id = ? AND deleted = FALSE" [toSql uid])
     >>= checkIfOneObjectReturned
 
 selectUsersSQL :: String
@@ -497,8 +472,8 @@ selectUsersSQL = "SELECT "
  ++ "  FROM users u"
  ++ " "
 
-fetchUsers :: Statement -> IO [User]
-fetchUsers st = foldDB st decoder []
+fetchUsers :: DB [User]
+fetchUsers = foldDB decoder []
   where
     -- Note: this function gets users in reversed order, but all queries
     -- use ORDER BY DESC, so in the end everything is properly ordered.
@@ -507,12 +482,7 @@ fetchUsers st = foldDB st decoder []
       first_name last_name personal_number company_position phone mobile
       email preferred_design_mode lang region customfooter = User {
           userid = uid
-        , userpassword = case (password, salt) of
-                           (Just pwd, Just salt') -> Just Password {
-                               pwdHash = pwd
-                             , pwdSalt = salt'
-                           }
-                           _ -> Nothing
+        , userpassword = maybePassword (password, salt)
         , useriscompanyadmin = is_company_admin
         , useraccountsuspended = account_suspended
         , userhasacceptedtermsofservice = has_accepted_terms_of_service
@@ -540,40 +510,5 @@ fetchUsers st = foldDB st decoder []
 -- need to be serializable. I don't know wtf, but I'll gladly dispose of these
 -- instances when we're done with the migration.
 
-deriving instance Typeable User
-deriving instance Typeable UserSettings
-deriving instance Typeable UserInfo
-deriving instance Typeable SignupMethod
-deriving instance Typeable Password
-deriving instance Typeable Lang
-deriving instance Typeable Region
-deriving instance Typeable Locale
-deriving instance Typeable DesignMode
-deriving instance Typeable Email
-deriving instance Typeable Binary
-
-instance Version User
-instance Version UserSettings
-instance Version UserInfo
-instance Version SignupMethod
-instance Version Password
-instance Version Lang
-instance Version Region
-instance Version Locale
-instance Version DesignMode
 instance Version Email
-instance Version Binary
-
-$(deriveSerializeFor [
-    ''User
-  , ''UserSettings
-  , ''UserInfo
-  , ''SignupMethod
-  , ''Password
-  , ''Lang
-  , ''Region
-  , ''Locale
-  , ''DesignMode
-  , ''Email
-  , ''Binary
-  ])
+$(deriveSerialize ''Email)

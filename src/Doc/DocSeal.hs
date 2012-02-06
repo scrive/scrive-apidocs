@@ -18,7 +18,7 @@ import Data.Ord
 import Debug.Trace
 import Doc.DocProcess
 import Doc.DocStateData
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStorage
 import Doc.DocView
 import Doc.DocUtils
@@ -43,6 +43,7 @@ import Util.SignatoryLinkUtils
 import File.Model
 import DB.Classes
 import Control.Applicative
+import EvidenceLog.Model
 
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
@@ -211,7 +212,7 @@ sealDocument ctx document = do
   Log.debug $ "Sealing document"
   mapM_ (sealDocumentFile ctx document) files
   Log.debug $ "Sealing should be done now"
-  Just newdocument <- doc_query' $ GetDocumentByDocumentID (documentid document)
+  Just newdocument <- dbQuery $ GetDocumentByDocumentID (documentid document)
   return $ Right newdocument
 
 
@@ -272,11 +273,7 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplat
         Log.debug $ "Adding new sealed file to DB"
         File{fileid = sealedfileid} <- dbUpdate $ NewFile filename newfilepdf
         Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
-#ifdef DOCUMENTS_IN_POSTGRES
-        res <- dbUpdate $ AttachSealedFile documentid sealedfileid (ctxtime ctx)
-#else
-        res <- doc_update $ AttachSealedFile documentid sealedfileid (ctxtime ctx)
-#endif
+        res <- dbUpdate $ AttachSealedFile documentid sealedfileid (SystemActor (ctxtime ctx))
         Log.debug $ "Should be attached to document; is it? " ++ show ((elem sealedfileid . documentsealedfiles) <$> res)
         return res
       ExitFailure _ -> do
@@ -291,11 +288,7 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplat
           BS.hPutStr handle content
           hClose handle
           return msg
-#ifdef DOCUMENTS_IN_POSTGRES
-        _ <- dbUpdate $ ErrorDocument documentid $ "Could not seal document because of file #" ++ show fileid
-#else
-        _ <- doc_update $ ErrorDocument documentid $ "Could not seal document because of file #" ++ show fileid
-#endif
+        _ <- dbUpdate $ ErrorDocument documentid ("Could not seal document because of file #" ++ show fileid) (SystemActor (ctxtime ctx))
         return $ Left msg
   liftIO $ removeDirectoryRecursive tmppath
   case result of

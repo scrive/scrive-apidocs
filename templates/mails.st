@@ -385,54 +385,6 @@ mailNewCompanyUserInviteMainP=
     <p>$_mailNewCompanyUserInviteContentClickLink()$ <a href="$ctxhostpart$$link$">$ctxhostpart$$link$</a></p>
 
 ####
-#### CREATING ACCOUNTS AFTER SIGNING
-####
-mailAccountBySigningContractReminder=
-$_mailAccountBySigningContractReminderTitle()$
-$nicemail(
-        mailheader=_mailAccountBySigningContractReminderTitle();
-        mailp1=mailAccountBySigningContractReminderMainP();
-        mailp2=poweredByScrive()
-    )$
-###
-mailAccountBySigningContractReminderMainP=
-    <p>$_hi()$ <strong>$personname$</strong>,</p>
-
-    <p>$_mailAccountBySigningContractReminderContentBody()$</p>
-
-    <p>$_mailAccountBySigningContractReminderContentInstruction()$</p>
-###
-mailAccountBySigningOfferReminder=
-$_mailAccountBySigningOfferReminderTitle()$
-$nicemail(
-        mailheader=_mailAccountBySigningOfferReminderTitle();
-        mailp1=mailAccountBySigningOfferReminderMainP();
-        mailp2=poweredByScrive()
-    )$
-###
-mailAccountBySigningOfferReminderMainP =
-    <p>$_hi()$ <strong>$personname$</strong>,</p>
-
-    <p>$_mailAccountBySigningOfferReminderContentBody()$</p>
-
-    <p>$_mailAccountBySigningOfferReminderContentInstruction()$</p>
-###
-mailAccountBySigningOrderReminder=
-$_mailAccountBySigningOrderReminderTitle()$
-$nicemail(
-        mailheader=_mailAccountBySigningOrderReminderMainP();
-        mailp1=mailAccountBySigningOrderReminderMainP();
-        mailp2=poweredByScrive()
-    )$
-###
-mailAccountBySigningOrderReminderMainP=
-    <p>$_hi()$ <strong>$personname$</strong>,</p>
-
-    <p>$_mailAccountBySigningOrderReminderContentBody()$</p>
-
-    <p>$_mailAccountBySigningOrderReminderContentInstruction()$</p>
-###
-###
 ### VIRAL INVITE
 ###
 ###

@@ -67,6 +67,9 @@ import TrustWeaverTest
 #ifndef NO_USERSTATE
 import UserStateTest
 #endif
+#ifndef NO_USERHISTORY
+import UserHistoryTest
+#endif
 #ifndef NO_CSVUTIL
 import CSVUtilTest
 #endif
@@ -102,6 +105,10 @@ import Doc.TestJSON
 
 #ifndef NO_STATS
 import StatsTest
+#endif
+
+#ifndef NO_EVIDENCELOG
+import EvidenceLogTest
 #endif
 
 allTests :: Nexus -> [(String, [String] -> Test)]
@@ -155,6 +162,9 @@ allTests conn = tail tests
 #ifndef NO_USERSTATE
       , ("userstate", const $ userStateTests conn)
 #endif
+#ifndef NO_USERSTATE
+      , ("userhistory", const $ userHistoryTests conn)
+#endif
 #ifndef NO_CSVUTIL
       , ("csvutil", const $ csvUtilTests)
 #endif
@@ -187,6 +197,9 @@ allTests conn = tail tests
 #endif
 #ifndef NO_STATS
       , ("stats", const $ statsTests conn)
+#endif
+#ifndef NO_EVIDENCELOG
+      , ("evidencelog", const $ evidenceLogTests conn)
 #endif
       ]
 

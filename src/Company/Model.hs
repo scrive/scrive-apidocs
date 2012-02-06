@@ -14,6 +14,7 @@ module Company.Model (
 import Control.Applicative
 import Data.Data
 import Data.Int
+import Data.Monoid
 import Database.HDBC
 import Happstack.State
 import Happstack.Server
@@ -23,9 +24,11 @@ import qualified Data.ByteString.Char8 as BS
 
 import DB.Classes
 import DB.Derive
+import DB.Fetcher2
 import DB.Utils
 import API.Service.Model
 import Company.Tables
+import Misc
 
 newtype CompanyID = CompanyID { unCompanyID :: Int64 }
   deriving (Eq, Ord, Data, Typeable)
@@ -57,72 +60,51 @@ data CompanyInfo = CompanyInfo {
 
 data GetCompanies = GetCompanies (Maybe ServiceID)
 instance DBQuery GetCompanies [Company] where
-  dbQuery (GetCompanies msid) = wrapDB $ \conn -> do
-    st <- prepare conn $ selectCompaniesSQL
-      ++ "WHERE (?::TEXT IS NULL AND c.service_id IS NULL) OR c.service_id = ? ORDER BY c.id DESC"
-    _ <- execute st [toSql msid, toSql msid]
-    fetchCompanies st []
+  dbQuery (GetCompanies msid) = do
+    _ <- kRun $ selectCompaniesSQL <++> SQL "WHERE c.service_id IS NOT DISTINCT FROM ? ORDER BY c.id DESC" [toSql msid]
+    fetchCompanies
 
 data GetCompany = GetCompany CompanyID
 instance DBQuery GetCompany (Maybe Company) where
-  dbQuery (GetCompany cid) = wrapDB $ \conn -> do
-    st <- prepare conn $ selectCompaniesSQL ++ "WHERE c.id = ?"
-    _ <- execute st [toSql cid]
-    cs <- fetchCompanies st []
-    oneObjectReturnedGuard cs
+  dbQuery (GetCompany cid) = do
+    _ <- kRun $ selectCompaniesSQL <++> SQL "WHERE c.id = ?" [toSql cid]
+    fetchCompanies >>= oneObjectReturnedGuard
 
 data GetCompanyByExternalID = GetCompanyByExternalID (Maybe ServiceID) ExternalCompanyID
 instance DBQuery GetCompanyByExternalID (Maybe Company) where
-  dbQuery (GetCompanyByExternalID msid ecid) = wrapDB $ \conn -> do
-    st <- prepare conn $ selectCompaniesSQL
-      ++ "WHERE ((?::TEXT IS NULL AND c.service_id IS NULL) OR c.service_id = ?) AND c.external_id = ?"
-    _ <- execute st [toSql msid, toSql msid, toSql ecid]
-    cs <- fetchCompanies st []
-    oneObjectReturnedGuard cs
+  dbQuery (GetCompanyByExternalID msid ecid) = do
+    _ <- kRun $ selectCompaniesSQL <++> SQL "WHERE c.service_id IS NOT DISTINCT FROM ? AND c.external_id = ?" [toSql msid, toSql ecid]
+    fetchCompanies >>= oneObjectReturnedGuard
 
 data CreateCompany = CreateCompany (Maybe ServiceID) (Maybe ExternalCompanyID)
 instance DBUpdate CreateCompany Company where
   dbUpdate (CreateCompany msid mecid) = do
-    wrapDB $ \conn -> runRaw conn "LOCK TABLE companies IN ACCESS EXCLUSIVE MODE"
+    _ <- kRunRaw "LOCK TABLE companies IN ACCESS EXCLUSIVE MODE"
     cid <- CompanyID <$> getUniqueID tableCompanies
-    wrapDB $ \conn -> do
-      _ <- run conn ("INSERT INTO companies ("
-        ++ "  id"
-        ++ ", external_id"
-        ++ ", service_id"
-        ++ ", name"
-        ++ ", number"
-        ++ ", address"
-        ++ ", zip"
-        ++ ", city"
-        ++ ", country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)") $ [
-            toSql cid
-          , toSql mecid
-          , toSql msid
-          ] ++ replicate 6 (toSql "")
-      return ()
-    dbQuery (GetCompany cid) >>= maybe (E.throw $ NoObject "") return
+    _ <- kRun $ mkSQL INSERT tableCompanies [
+        sql "id" cid
+      , sql "external_id" mecid
+      , sql "service_id" msid
+      , sql "name" ""
+      , sql "number" ""
+      , sql "address" ""
+      , sql "zip" ""
+      , sql "city" ""
+      , sql "country" ""
+      ]
+    dbQuery (GetCompany cid) >>= maybe (E.throw $ NoObject mempty) return
 
 data SetCompanyInfo = SetCompanyInfo CompanyID CompanyInfo
 instance DBUpdate SetCompanyInfo Bool where
-  dbUpdate (SetCompanyInfo cid ci) = wrapDB $ \conn -> do
-    r <- run conn ("UPDATE companies SET"
-      ++ "  name = ?"
-      ++ ", number = ?"
-      ++ ", address = ?"
-      ++ ", zip = ?"
-      ++ ", city = ?"
-      ++ ", country = ?"
-      ++ "  WHERE id = ?") [
-        toSql $ companyname ci
-      , toSql $ companynumber ci
-      , toSql $ companyaddress ci
-      , toSql $ companyzip ci
-      , toSql $ companycity ci
-      , toSql $ companycountry ci
-      , toSql cid
-      ]
-    oneRowAffectedGuard r
+  dbUpdate (SetCompanyInfo cid CompanyInfo{..}) =
+    kRun01 $ mkSQL UPDATE tableCompanies [
+        sql "name" companyname
+      , sql "number" companynumber
+      , sql "address" companyaddress
+      , sql "zip" companyzip
+      , sql "city" companycity
+      , sql "country" companycountry
+      ] <++> SQL "WHERE id = ?" [toSql cid]
 
 data GetOrCreateCompanyWithExternalID = GetOrCreateCompanyWithExternalID (Maybe ServiceID) ExternalCompanyID
 instance DBUpdate GetOrCreateCompanyWithExternalID Company where
@@ -134,8 +116,8 @@ instance DBUpdate GetOrCreateCompanyWithExternalID Company where
 
 -- helpers
 
-selectCompaniesSQL :: String
-selectCompaniesSQL = "SELECT"
+selectCompaniesSQL :: SQL
+selectCompaniesSQL = SQL ("SELECT"
   ++ "  c.id"
   ++ ", c.external_id"
   ++ ", c.service_id"
@@ -146,25 +128,24 @@ selectCompaniesSQL = "SELECT"
   ++ ", c.city"
   ++ ", c.country"
   ++ "  FROM companies c"
-  ++ " "
+  ++ " ") []
 
-fetchCompanies :: Statement -> [Company] -> IO [Company]
-fetchCompanies st acc = fetchRow st >>= maybe (return acc) f
-  where f [cid, eid, sid, name, number, address, zip', city, country
-         ] = fetchCompanies st $ Company {
-             companyid = fromSql cid
-           , companyexternalid = fromSql eid
-           , companyservice = fromSql sid
-           , companyinfo = CompanyInfo {
-               companyname = fromSql name
-             , companynumber = fromSql number
-             , companyaddress = fromSql address
-             , companyzip = fromSql zip'
-             , companycity = fromSql city
-             , companycountry = fromSql country
-           }
-         } : acc
-        f l = error $ "fetchCompanies: unexpected row: "++show l
+fetchCompanies :: DB [Company]
+fetchCompanies = foldDB decoder []
+  where
+    decoder acc cid eid sid name number address zip' city country = Company {
+        companyid = cid
+      , companyexternalid = eid
+      , companyservice = sid
+      , companyinfo = CompanyInfo {
+          companyname = name
+        , companynumber = number
+        , companyaddress = address
+        , companyzip = zip'
+        , companycity = city
+        , companycountry = country
+        }
+      } : acc
 
 -- this will not be needed when we move documents to pgsql. for now it's needed
 -- for document handlers - it seems that types of arguments that handlers take
@@ -174,25 +155,12 @@ fetchCompanies st acc = fetchRow st >>= maybe (return acc) f
 newtype CompanyID_0 = CompanyID_0 Int
   deriving (Eq, Ord, Typeable)
 
-deriving instance Typeable Company
-deriving instance Typeable CompanyInfo
-deriving instance Typeable ExternalCompanyID
-
 instance Version CompanyID where
   mode = extension 2 (Proxy :: Proxy CompanyID_0)
 
 instance Version CompanyID_0
-instance Version Company
-instance Version CompanyInfo
-instance Version ExternalCompanyID
 
 instance Migrate CompanyID_0 CompanyID where
   migrate (CompanyID_0 n) = CompanyID (fromIntegral n)
 
-$(deriveSerializeFor [
-    ''CompanyID
-  , ''CompanyID_0
-  , ''Company
-  , ''CompanyInfo
-  , ''ExternalCompanyID
-  ])
+$(deriveSerializeFor [''CompanyID, ''CompanyID_0])

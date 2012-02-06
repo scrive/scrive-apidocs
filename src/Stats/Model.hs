@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fcontext-stack=50 #-}
 module Stats.Model
        (
          AddDocStatEvent(..),
@@ -168,13 +169,13 @@ selectUsersAndStatsSQL = "SELECT "
   ++ "  WHERE u.deleted = FALSE"
   ++ "  ORDER BY u.first_name || ' ' || u.last_name ASC, u.email ASC, userid ASC"
 
-fetchUsersAndStats :: Statement 
+fetchUsersAndStats :: Statement
                    -> IO [(User, Maybe Company, ( Maybe MinutesTime
                                                 , Maybe DocStatQuantity
                                                 , Maybe Int))]
 fetchUsersAndStats st = fetchValues st decoder
   where
-    decoder :: UserID                   -- u.id 
+    decoder :: UserID                   -- u.id
             -> Maybe Binary             -- encode(u.password, 'base64')
             -> Maybe Binary             -- encode(u.salt, 'base64')
             -> Bool                     -- u.is_company_admin
@@ -209,46 +210,41 @@ fetchUsersAndStats st = fetchValues st decoder
             -> Either DBException (User, Maybe Company, ( Maybe MinutesTime
                                                         , Maybe DocStatQuantity
                                                         , Maybe Int))
-    decoder uid 
-            password 
-            salt 
-            is_company_admin 
+    decoder uid
+            password
+            salt
+            is_company_admin
             account_suspended
-            has_accepted_terms_of_service 
-            signup_method 
-            service_id 
+            has_accepted_terms_of_service
+            signup_method
+            service_id
             company_id
-            first_name 
-            last_name 
-            personal_number 
-            company_position 
-            phone 
+            first_name
+            last_name
+            personal_number
+            company_position
+            phone
             mobile
-            email 
-            preferred_design_mode 
-            lang 
-            region 
+            email
+            preferred_design_mode
+            lang
+            region
             customfooter
-            cid 
-            eid 
-            sid 
-            name 
-            number 
-            address 
-            zip' 
-            city 
+            cid
+            eid
+            sid
+            name
+            number
+            address
+            zip'
+            city
             country
             time
             quantity
             amount = return (
                 User {
                        userid = uid
-                     , userpassword = case (password, salt) of
-                         (Just pwd, Just salt') -> Just Password {
-                                                       pwdHash = pwd
-                                                     , pwdSalt = salt'
-                                                     }
-                         _                      -> Nothing
+                     , userpassword = maybePassword (password, salt)
                      , useriscompanyadmin = is_company_admin
                      , useraccountsuspended = account_suspended
                      , userhasacceptedtermsofservice = has_accepted_terms_of_service
@@ -268,7 +264,7 @@ fetchUsersAndStats st = fetchValues st decoder
                      , userservice = service_id
                      , usercompany = company_id
                      }
-        , case cid of 
+        , case cid of
             (Just _) -> Just Company { companyid = fromJust cid
                                      , companyexternalid = eid
                                      , companyservice = sid
@@ -292,7 +288,7 @@ instance DBQuery GetUsersAndStats [(User, Maybe Company, ( Maybe MinutesTime
                                                          , Maybe DocStatQuantity
                                                          , Maybe Int))] where
   dbQuery GetUsersAndStats = wrapDB $ \conn -> do
-    st  <- prepare conn $ selectUsersAndStatsSQL 
+    st  <- prepare conn $ selectUsersAndStatsSQL
     _   <- execute st [toSql DocStatCreate, toSql DocStatClose]
     fetchUsersAndStats st
 
@@ -341,7 +337,7 @@ instance DBUpdate FlushDocStats Bool where
 
 data UserStatQuantity = UserSignTOS             -- When user signs TOS
                       | UserSaveAfterSign       -- when user accepts the save option after signing
-                      | UserRefuseSaveAfterSign -- when user refuses the save option after signing
+                      | UserRefuseSaveAfterSign -- deprecated: when user refuses the save option after signing
                       | UserPhoneAfterTOS       -- when a user requests a phone call after accepting the TOS
                       | UserCreateCompany       -- when a user creates a company
                       | UserLogin               -- when a user logs in

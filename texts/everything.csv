@@ -667,7 +667,6 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_flashDocumentDraftSaved","Du har sparat dokumentet.",,"Your document has been saved."
 "_flashDocumentTemplateSaved","Din mall är sparad.",,"Your template has been saved."
 "_flashMessageAccountActivatedFromSign","Ditt original har arkiverats hos Scrive.","Your original document has been saved by Scrive.","Your original document has been saved by Scrive."
-"_flashMessageAccountRemovedFromSign","Ditt original är borttaget från Scrive.",,"Your original document has been removed from Scrive"
 "_flashMessageCompanyAccountDeleted","Kontot har tagits bort.",,"The account was successfully removed."
 "_flashMessageActivationLinkNotValid","Vi beklagar. Länken är inte längre giltig.<br/>    Vänligen använd
  ""Glömt lösenord"" för att generera en ny länk.",,"We are sorry. This link is no longer valid.<br/> Please use ""Forgot
@@ -705,8 +704,6 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_flashMessageLoginPageRedirectReasonNotLoggedIn","Du är inte inloggad.",,"You are not logged in."
 "_flashMessageLoginPageRedirectReasonWrongMailOrPassword","Felaktig e-post eller lösenord.",,"Incorrect email or password."
 "_flashMessageMissingRequiredField","Du har missat att fylla i ett obligatoriskt fält.",,"You missed some mandatory fields."
-"_flashMessageMultipleAttachmentShareDone","Valda bilagor har blivit delade inom din organisation.",,"The selected attachments have been shared with your organisation."
-"_flashMessageMultipleTemplateShareDone","Valda mallar har blivit delade inom din organisation.",,"The selected templates have been shared with your organisation."
 "_flashMessageMustAcceptTOS","För att kunna använda tjänsten måste du acceptera Scrive Allmänna
  Villkor.",,"Please accept the Scrive Terms of Service to get started."
 "_flashMessageNeedsLetterAndDigit","$fieldnametitlecase$ måste innehålla åtminstone två bokstäver
@@ -750,8 +747,6 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_flashMessageRubbishHardDeleteDone","The selected documents have been permanently deleted.""The selected documents have been permanently deleted.",,
 "_flashMessageRubbishRestoreDone","The selected documents have been restored to your archive.""The selected documents have been restored to your archive.",,
 "_flashMessageSecondNameIsRequired","Efternamn krävs.",,"Last name required."
-"_flashMessageSingleAttachmentShareDone","$docname$ har blivit delad inom din organisation.",,"$docname$ has been shared with your organisation."
-"_flashMessageSingleTemplateShareDone","$docname$ har blivit delad inom din organisation.",,"$docname$ has been shared with your organisation."
 "_flashMessageTemplateArchiveDone","Valda mallar har blivit raderade.",,"The selected templates have been deleted."
 "_flashMessageThanksForTheQuestion","Ditt meddelande har skickats! Vi återkommer inom 24h.",,"Your message has been sent! We will get back to you within 24
  hours."
@@ -1546,8 +1541,6 @@ profits and reduce frustration. The following mateials shall only
 "_listReallyDeleteDialogHead","Radera permanent",,"Permanent Delete"
 "_listRestoreDialogBody","Vill du återsätlla följande dokument?",,"Would you like to restore the selected documents?"
 "_listRestoreDialogHead","Återställ",,"Restore"
-"_listShareDialogBody","Vill du dela detta med alla i din organisation.",,"Do you want to share this with everyone on your organisation?"
-"_listShareDialogHead","Dela",,"Share"
 "_listand","och",,"and"
 "_listyou","du",,"you"
 "_loadingFile","Laddar upp . . .",,"Uploading . . ."
@@ -1555,24 +1548,6 @@ profits and reduce frustration. The following mateials shall only
 "_enter","Enter",,"Enter"
 "_login","Logga in",,"Log in"
 "_loginModalForgotPasswordSendNewPassword","Skicka nytt lösenord",,"Send new password"
-"_mailAccountBySigningContractReminderContentBody","Du har inte bekräftat att du vill spara ditt dokument ""$documenttitle$""
- hos Scrive. Scrives system kommer att radera dokumentet
- automatiskt inom 72h. Det kostar ingenting att spara dokumentet.",,"Would you like to save  """"$documenttitle$""""  with Scrive? Saving is free.  If you choose not to save, then Scrive will erase it after 72 hours."
-"_mailAccountBySigningContractReminderContentInstruction","Gör så här:<br/>1. Klicka på länken<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.
- Definiera lösenord och acceptera villkoren<br/>3. Färdig",,"To save:<br/>1. Click the link<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.  Set a password and accept the terms of agreement <br/>3. Done"
-"_mailAccountBySigningContractReminderTitle","Du har inte säkrat ditt original",,"You have not saved your original"
-"_mailAccountBySigningOfferReminderContentBody","Du har inte bekräftat att du vill spara din offert ""$documenttitle$""
- hos Scrive. Scrives system kommer att radera offerten automatiskt
- inom 72h. Det kostar ingenting att spara offerten.",,"Would you like to save  """"$documenttitle$""""  with Scrive? Saving is free.  If you choose not to save, then Scrive will erase it after 72 hours."
-"_mailAccountBySigningOfferReminderContentInstruction","Gör så här:<br/>1. Klicka på länken<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.
- Definiera lösenord och acceptera villkoren<br/>3. Färdig",,"To save:<br/>1. Click the link<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.  Define passwords and accept the terms of agreement <br/>3. Done"
-"_mailAccountBySigningOfferReminderTitle","Du har inte sparat ditt original",,"You have not saved your original"
-"_mailAccountBySigningOrderReminderContentBody","Du har inte bekräftat att du vill spara din orderbekräftelse ""$documenttitle$""
- hos Scrive. Scrives system kommer att radera bekräftelsen automatiskt
- inom 72h. Det kostar ingenting att spara offerten.",,"Would you like to save  """"$documenttitle$""""  with Scrive? Saving is free.  If you choose not to save, then Scrive will erase it after 72 hours."
-"_mailAccountBySigningOrderReminderContentInstruction","Gör så här:<br/>1. Klicka på länken<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.
- Definiera lösenord och acceptera villkoren<br/>3. Färdig",,"To save:<br/>1. Click the link<br/><a href=""$ctxhostpart$$activationlink$"">$ctxhostpart$$activationlink$</a><br/>2.  Define passwords and accept the terms of agreement <br/>3. Done"
-"_mailAccountBySigningOrderReminderTitle","Du har inte sparat ditt original",,"You have not saved your original"
 "_mailCompanyAccountAcceptedContentBody","$invited.fullnameOrEmail$ har accepterat att bli ett underkonto.",,"$invited.fullnameOrEmail$ has agreed to become a sub account."
 "_mailCompanyAccountAcceptedTitle","Kontoförfrågan",,"Account enquiry"
 "_mailContractClosedContentAttached","Det färdigställda dokumentet bifogas med detta mail.",,"The finalised document is attached."
@@ -1736,17 +1711,6 @@ the document <strong>$documenttitle$</strong>. The agreement
 "_message","Meddelande",,"Message"
 "_missingNames","Du har inte namngett alla fält. Vänligen försök igen.",,"You have not names all fields. Please try again."
 "_missingSignatoryNames","Du har inte skrivit in något namn på en eller flera motparter. Vänligen försök igen.",,"You have not entered names for one or several counterparts. Please try again."
-"_modalAccountRemovalActivateAccount","Aktivera konto",,"Activate account"
-"_modalAccountRemovalBody","Är du säker på att du vill radera dokumentet ""Non Disclosure
- and Immaterial Rights Agreement"" och ditt konto från Scrive",,"Are you sure you want to delete the document ""Non Disclosure
- and Immaterial Rights Agreement"" and your account from Scrive"
-"_modalAccountRemovalFooter","Radera konto",,"Delete account"
-"_modalAccountRemovalHeader","Är du säker?",,"Are you sure?"
-"_modalAccountRemovedBestRegards","Med vänliga hälsningar<br/>        Team Scrive",,"Best regards<br/>        Team Scrive"
-"_modalAccountRemovedBody","Din kopia av dokumentet ""$documenttitle$"" är nu raderat tillsammans
- från Scrive tillsammans med ditt konto.",,"Your duplicate for the document ""$documenttitle$"" is now deleted
- from Scrive together with your account."
-"_modalAccountRemovedHeader","Raderat",,"Deleted"
 "_modalAccountSetupBodyAcceptTOS","Jag har läst och accepterar Scrive Allmänna Villkor",,"I have read and accept the Scrive Terms of Service"
 "_modalAccountSetupChoosePassword","Välj lösenord:",,"Choose password:"
 "_modalAccountSetupFooter","Skapa konto!",,"Create account!"
@@ -2020,10 +1984,8 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_orgnumber","Org. nr",,"Company Reg No"
 "_pageAttachmentAttachments","BILAGOR:",,"ATTACHMENTS:"
 "_pageAttachmentDownloadPDF","Ladda ned PDF",,"Download PDF"
-"_pageAttachmentListIfShared","Delad",,"Shared"
 "_pageAttachmentListNewAttachment","Nya Bilagor",,"New attachments"
 "_pageAttachmentListSearchInfo","Sök dokument",,"Search document"
-"_pageAttachmentListShare","Dela",,"Share"
 "_pageDocumentForAuthorHelpersLocalDialogsAddAttachment","Lägg till bilaga",,"Add attachment"
 "_pageDocumentForAuthorHelpersLocalDialogsAttachmentdesc","Beskrivning",,"Description"
 "_pageDocumentForAuthorHelpersLocalDialogsAttachmentname","Bilaga",,"Attachment"
@@ -2764,8 +2726,6 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_senderNumber","Avsändarens Orgnr/Persnr",,"Sender's Company Reg No"
 "_senderTitle","Avsändarens  titel, företag",,"Sender's position, company"
 "_setAllFields","Var vänlig namnge alla skapade fält",,"Please name all created fields"
-"_share","Dela",,"Share"
-"_shared","Delad",,"Shared"
 "_showFileImagesError","Vi beklagar, det var något problem med formateringen på din PDF.
  Vänligen kontrollera dokumentet och försök igen.",,"We are sorry, something was wrong with the format in your PDF.
  Please check the document and try again."

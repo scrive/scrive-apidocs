@@ -31,6 +31,7 @@ module Administration.AdministrationControl(
           , daveDocument
           , daveUser
           , daveCompany
+          , daveUserHistory
           , serveLogDirectory
           , jsonUsersList
           , jsonCompanies
@@ -42,7 +43,7 @@ import Happstack.Server hiding (simpleHTTP)
 import Misc
 import Kontra
 import Administration.AdministrationView
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStateData
 import qualified Data.ByteString.Char8 as BSC
 import Company.Model
@@ -79,6 +80,8 @@ import CompanyAccounts.CompanyAccountsControl
 import CompanyAccounts.Model
 import Util.SignatoryLinkUtils
 import Stats.Control (getUsersAndStats)
+import EvidenceLog.Model
+import User.History.Model
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m String
@@ -280,6 +283,7 @@ showAllUsersTable = onlySalesOrAdmin $ do
 {- | Handling user details change. It reads user info change -}
 handleUserChange :: Kontrakcja m => UserID -> m KontraLink
 handleUserChange uid = onlySalesOrAdmin $ do
+  ctx <- getContext
   _ <- getAsStrictBS "change"
   museraccounttype <- getFieldUTF "useraccounttype"
   olduser <- runDBOrFail $ dbQuery $ GetUserByID uid
@@ -288,6 +292,9 @@ handleUserChange uid = onlySalesOrAdmin $ do
       --then we just want to make this account an admin
       newuser <- runDBOrFail $ do
         _ <- dbUpdate $ SetUserCompanyAdmin uid True
+        _ <- dbUpdate $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
+             [("is_company_admin", "false", "true")] 
+             (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
       return newuser
     (Just "companyadminaccount", Nothing, False) -> do
@@ -296,7 +303,15 @@ handleUserChange uid = onlySalesOrAdmin $ do
       newuser <- runDBOrFail $ do
         company <- dbUpdate $ CreateCompany Nothing Nothing
         _ <- dbUpdate $ SetUserCompany uid (Just $ companyid company)
+        _ <- dbUpdate 
+                  $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
+                                             [("company_id", "null", show $ companyid company)] 
+                                             (userid <$> ctxmaybeuser ctx)
         _ <- dbUpdate $ SetUserCompanyAdmin uid True
+        _ <- dbUpdate 
+                  $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
+                                             [("is_company_admin", "false", "true")] 
+                                             (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
       _ <- resaveDocsForUser uid
       return newuser
@@ -304,6 +319,10 @@ handleUserChange uid = onlySalesOrAdmin $ do
       --then we just want to downgrade this account to a standard
       newuser <- runDBOrFail $ do
         _ <- dbUpdate $ SetUserCompanyAdmin uid False
+        _ <- dbUpdate 
+                 $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
+                                            [("is_company_admin", "true", "false")] 
+                                            (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
       return newuser
     (Just "companystandardaccount", Nothing, False) -> do
@@ -312,6 +331,10 @@ handleUserChange uid = onlySalesOrAdmin $ do
       newuser <- runDBOrFail $ do
         company <- dbUpdate $ CreateCompany Nothing Nothing
         _ <- dbUpdate $ SetUserCompany uid (Just $ companyid company)
+        _ <- dbUpdate 
+                 $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
+                                            [("company_id", "null", show $ companyid company)] 
+                                            (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
       _ <- resaveDocsForUser uid
       return newuser
@@ -321,21 +344,31 @@ handleUserChange uid = onlySalesOrAdmin $ do
       --we may also need to delete the company if it's empty, but i haven't implemented this bit
       newuser <- runDBOrFail $ do
         _ <- dbUpdate $ SetUserCompany uid Nothing
+        _ <- dbUpdate 
+                 $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
+                                            [("company_id", show _companyid, "null")] 
+                                            (userid <$> ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
       _ <-resaveDocsForUser uid
       return newuser
     _ -> return olduser
   infoChange <- getUserInfoChange
   _ <- runDBUpdate $ SetUserInfo uid $ infoChange $ userinfo user
+  _ <- runDBUpdate
+           $ LogHistoryUserInfoChanged uid (ctxipnumber ctx) (ctxtime ctx) 
+                                       (userinfo user) (infoChange $ userinfo user)
+                                       (userid <$> ctxmaybeuser ctx)
   settingsChange <- getUserSettingsChange
   _ <- runDBUpdate $ SetUserSettings uid $ settingsChange $ usersettings user
   return $ LinkUserAdmin $ Just uid
 
 resaveDocsForUser :: Kontrakcja m => UserID -> m ()
 resaveDocsForUser uid = onlySalesOrAdmin $ do
+  Context{ctxmaybeuser = Just admin, ctxtime, ctxipnumber} <- getContext
+  let actor = AdminActor ctxtime ctxipnumber (userid admin) (BS.toString $ getEmail admin)
   user <- runDBOrFail $ dbQuery $ GetUserByID uid
-  userdocs <- doc_query $ GetDocumentsByUser user
-  mapM_ (\doc -> doc_update $ AdminOnlySaveForUser (documentid doc) user) userdocs
+  userdocs <- runDBQuery $ GetDocumentsByAuthor uid
+  mapM_ (\doc -> runDBUpdate $ AdminOnlySaveForUser (documentid doc) user actor) userdocs 
   return ()
 
 {- | Handling company details change. It reads user info change -}
@@ -588,7 +621,7 @@ showFunctionalityStats :: Kontrakcja m => m String
 showFunctionalityStats = onlySalesOrAdmin $ do
   ctx@Context{ ctxtime } <- getContext
   users <- runDBQuery GetUsers
-  documents <- doc_query $ GetDocuments $ currentServiceID ctx
+  documents <- runDBQuery $ GetDocuments $ currentServiceID ctx
   adminFunctionalityStatsPage (mkStats ctxtime users)
                               (mkStats ctxtime documents)
   where
@@ -634,7 +667,7 @@ showDocuments = onlySalesOrAdmin $ adminDocuments =<< getContext
 jsonDocuments :: Kontrakcja m => m JSValue
 jsonDocuments = onlySalesOrAdmin $ do
     srvs <- runDBQuery $ GetServices
-    docs <- join <$> (sequence $ map (doc_query . GetDocuments) (Nothing:(map (Just . serviceid) srvs)))
+    docs <- join <$> (sequence $ map (runDBQuery . GetDocuments) (Nothing:(map (Just . serviceid) srvs)))
     params <- getListParamsNew
     let documents = documentsSortSearchPage params docs
     return $ JSObject
@@ -702,7 +735,7 @@ resealFile :: Kontrakcja m => DocumentID -> m KontraLink
 resealFile docid = onlyAdmin $ do
   Log.debug $ "Trying to reseal document "++ show docid ++" | Only superadmin can do that"
   ctx <- getContext
-  doc <- guardJustM $ doc_query $ GetDocumentByDocumentID docid
+  doc <- guardJustM $ runDBQuery $ GetDocumentByDocumentID docid
   Log.debug "Document is valid for resealing sealing"
   res <- runDB $ sealDocument ctx doc
   case res of
@@ -714,7 +747,7 @@ resealFile docid = onlyAdmin $ do
 replaceMainFile :: Kontrakcja m => DocumentID -> m KontraLink
 replaceMainFile did = onlyAdmin $ do
   Log.debug $ "Replaing main file | SUPER CRITICAL | If you see this check who did this ask who did this and why"
-  doc <- guardJustM $ doc_query $ GetDocumentByDocumentID did
+  doc <- guardJustM $ runDBQuery $ GetDocumentByDocumentID did
   input <- getDataFnM (lookInput "file")
   case (input, documentfiles doc) of
        (Input contentspec _ _contentType, cf:_)  -> do
@@ -722,8 +755,10 @@ replaceMainFile did = onlyAdmin $ do
                 Left filepath -> liftIO $ BSL.readFile filepath
                 Right c -> return c
             fn <- fromMaybe (BS.fromString "file") <$> fmap filename <$> (runDB $ dbQuery $ GetFileByFileID cf)
+            Context{ctxipnumber,ctxtime, ctxmaybeuser = Just user} <- getContext
+            let actor = AdminActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail user)
             file <- runDB $ dbUpdate $ NewFile fn (concatChunks content)
-            _ <- doc_update $ ChangeMainfile did (fileid file)
+            _ <- runDBUpdate $ ChangeMainfile did (fileid file) actor
             return LoopBack
        _ -> mzero
 
@@ -745,6 +780,14 @@ daveUser :: Kontrakcja m => UserID ->  m String
 daveUser userid = onlyAdmin $ do
     user <- runDBOrFail $ dbQuery $ GetUserByID userid
     return $ inspectXML user
+
+{- |
+   Used by super users to inspect a particular user's history.
+-}
+daveUserHistory :: Kontrakcja m => UserID -> m String
+daveUserHistory userid = onlyAdmin $ do
+    history <- runDBOrFail $ dbQuery $ GetUserHistoryByUserID userid
+    return $ inspectXML history
 
 {- |
     Used by super users to inspect a company in xml.

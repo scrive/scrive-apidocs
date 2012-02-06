@@ -19,21 +19,20 @@ import Misc
 import Context
 import DB.Nexus
 import DB.Classes
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStateData
 import Doc.DocControl
 import Doc.DocUtils
-import Company.Model
 import KontraLink
 import User.Model
 import Util.SignatoryLinkUtils
-
+import EvidenceLog.Model
+import Util.HasSomeUserInfo
 
 docControlTests :: Nexus -> Test
 docControlTests conn =  testGroup "Templates"
                            [   testCase "Sending a reminder updates last modified date on doc" $ testSendReminderEmailUpdatesLastModifiedDate conn
                              , testCase "Create document from template" $ testDocumentFromTemplate conn
-                             , testCase "Create document from template | Shared" $ testDocumentFromTemplateShared conn
                              , testCase "Uploading file as contract makes doc" $ testUploadingFileAsContract conn
                              , testCase "Uploading file as offer makes doc" $ testUploadingFileAsOffer conn
                              , testCase "Uploading file as order makes doc" $ testUploadingFileAsOrder conn
@@ -68,7 +67,7 @@ countingMailer counter mail = do
 testUploadingFileAsContract :: Nexus -> Assertion
 testUploadingFileAsContract conn = withTestEnvironment conn $ do
   (user, link) <- uploadDocAsNewUser conn Contract
-  docs <- randomQuery $ GetDocumentsByUser user
+  docs <- randomQuery $ GetDocumentsByAuthor (userid user)
   assertEqual "New doc" 1 (length docs)
   let newdoc = head docs
   assertEqual "Links to /d/docid" ("/d/" ++ (show $ documentid newdoc)) (show link)
@@ -76,7 +75,7 @@ testUploadingFileAsContract conn = withTestEnvironment conn $ do
 testUploadingFileAsOffer :: Nexus -> Assertion
 testUploadingFileAsOffer conn = withTestEnvironment conn $ do
   (user, link) <- uploadDocAsNewUser conn Offer
-  docs <- randomQuery $ GetDocumentsByUser user
+  docs <- randomQuery $ GetDocumentsByAuthor (userid user)
   assertEqual "New doc" 1 (length docs)
   let newdoc = head docs
   assertEqual "Links to /d/docid" ("/d/" ++ (show $ documentid newdoc)) (show link)
@@ -84,7 +83,7 @@ testUploadingFileAsOffer conn = withTestEnvironment conn $ do
 testUploadingFileAsOrder :: Nexus -> Assertion
 testUploadingFileAsOrder conn = withTestEnvironment conn $ do
   (user, link) <- uploadDocAsNewUser conn Order
-  docs <- randomQuery $ GetDocumentsByUser user
+  docs <- randomQuery $ GetDocumentsByAuthor (userid user)
   assertEqual "New doc" 1 (length docs)
   let newdoc = head docs
   assertEqual "Links to /d/docid" ("/d/" ++ (show $ documentid newdoc)) (show link)
@@ -133,7 +132,7 @@ testSendingDocumentSendsInvites conn = withTestEnvironment conn $ do
                         ]
   (_link, _ctx') <- runTestKontra req ctx $ handleIssueShowPost (documentid doc)
 
-  Just sentdoc <- doc_query' $ GetDocumentByDocumentID (documentid doc)
+  Just sentdoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "In pending state" Pending (documentstatus sentdoc)
   emails <- dbQuery GetIncomingEmails
   assertBool "Emails sent" (length emails > 0)
@@ -170,7 +169,7 @@ testSigningDocumentFromDesignViewSendsInvites conn = withTestEnvironment conn $ 
                         ]
   (_link, _ctx') <- runTestKontra req ctx $ handleIssueShowPost (documentid doc)
 
-  Just sentdoc <- doc_query' $ GetDocumentByDocumentID (documentid doc)
+  Just sentdoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "In pending state" Pending (documentstatus sentdoc)
   emails <- dbQuery GetIncomingEmails
   assertBool "Emails sent" (length emails > 0)
@@ -195,14 +194,15 @@ testNonLastPersonSigningADocumentRemainsPending conn = withTestEnvironment conn 
                    (signatorydetails . fromJust $ getAuthorSigLink doc', [SignatoryAuthor])
                  , (mkSigDetails "Fred" "Frog" "fred@frog.com", [SignatoryPartner])
                  , (mkSigDetails "Gordon" "Gecko" "gord@geck.com", [SignatoryPartner])
-               ]) (documentctime doc')
+               ]) (SystemActor $ documentctime doc')
 
-  Right doc'' <- randomUpdate $ PreparationToPending (documentid doc') (documentctime doc')
+  Right doc'' <- randomUpdate $ PreparationToPending (documentid doc') (SystemActor (documentctime doc'))
 
   let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
       siglink = head $ filter isUnsigned (documentsignatorylinks doc'')
 
-  Right doc <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink) (documentctime doc') (ctxipnumber ctx)
+  Right doc <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink) 
+               (SignatoryActor (documentctime doc') (ctxipnumber ctx) (maybesignatory siglink) (BS.toString $ getEmail $ siglink) (signatorylinkid siglink))
 
   assertEqual "Two left to sign" 2 (length $ filter isUnsigned (documentsignatorylinks doc))
 
@@ -210,7 +210,7 @@ testNonLastPersonSigningADocumentRemainsPending conn = withTestEnvironment conn 
                         ]
   (_link, _ctx') <- runTestKontra req ctx $ signDocument (documentid doc) (signatorylinkid siglink)
 
-  Just signeddoc <- doc_query' $ GetDocumentByDocumentID (documentid doc)
+  Just signeddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "In pending state" Pending (documentstatus signeddoc)
   assertEqual "One left to sign" 1 (length $ filter isUnsigned (documentsignatorylinks signeddoc))
   emails <- dbQuery GetIncomingEmails
@@ -235,15 +235,16 @@ testLastPersonSigningADocumentClosesIt conn = withTestEnvironment conn $ do
   Right _ <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
                    (signatorydetails . fromJust $ getAuthorSigLink doc', [SignatoryAuthor])
                  , (mkSigDetails "Fred" "Frog" "fred@frog.com", [SignatoryPartner])
-               ]) (documentctime doc')
+               ]) (SystemActor $ documentctime doc')
 
 
-  Right doc'' <- randomUpdate $ PreparationToPending (documentid doc') (documentctime doc')
+  Right doc'' <- randomUpdate $ PreparationToPending (documentid doc') (SystemActor (documentctime doc'))
 
   let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
       siglink = head $ filter isUnsigned (documentsignatorylinks doc'')
 
-  Right doc <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink) (documentctime doc') (ctxipnumber ctx)
+  Right doc <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink) 
+               (SignatoryActor (documentctime doc') (ctxipnumber ctx) (maybesignatory siglink) (BS.toString $ getEmail siglink) (signatorylinkid siglink))
 
   assertEqual "One left to sign" 1 (length $ filter isUnsigned (documentsignatorylinks doc))
 
@@ -251,7 +252,7 @@ testLastPersonSigningADocumentClosesIt conn = withTestEnvironment conn $ do
                         ]
   (_link, _ctx') <- runTestKontra req ctx $ signDocument (documentid doc) (signatorylinkid siglink)
 
-  Just signeddoc <- doc_query' $ GetDocumentByDocumentID (documentid doc)
+  Just signeddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "In closed state" Closed (documentstatus signeddoc)
   --TODO: this should be commented out really, I guess it's a bug
   --assertEqual "None left to sign" 0 (length $ filter isUnsigned (documentsignatorylinks doc))
@@ -279,7 +280,7 @@ testSendReminderEmailUpdatesLastModifiedDate conn = withTestEnvironment conn $ d
   req <- mkRequest POST []
   (_link, _ctx') <- runTestKontra req ctx $ sendReminderEmail Nothing ctx doc sl
 
-  Just updateddoc <- doc_query' $ GetDocumentByDocumentID (documentid doc)
+  Just updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "Modified date is updated" (ctxtime ctx) (documentmtime updateddoc)
 
 testDocumentFromTemplate :: Nexus -> Assertion
@@ -288,31 +289,13 @@ testDocumentFromTemplate conn =  withTestEnvironment conn $ do
     doc <- addRandomDocumentWithAuthorAndCondition user (\d -> case documenttype d of
                                                             Template _ -> True
                                                             _ -> False)
-    docs1 <- randomQuery $ GetDocumentsByUser user
+    docs1 <- randomQuery $ GetDocumentsByAuthor (userid user)
     globaltemplates <- readGlobalTemplates
     ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
       <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     req <- mkRequest POST [("template", inText (show $ documentid doc))]
     _ <- runTestKontra req ctx $ handleCreateFromTemplate
-    docs2 <- randomQuery $ GetDocumentsByUser user
-    assertBool "No new document" (length docs2 == 1+ length docs1)
-
-testDocumentFromTemplateShared :: Nexus -> Assertion
-testDocumentFromTemplateShared conn = withTestEnvironment conn $ do
-    (Company {companyid}) <- addNewCompany
-    (Just author) <- addNewCompanyUser "aaa" "bbb" "xxx@xxx.pl" companyid
-    doc <- addRandomDocumentWithAuthorAndCondition author (\d -> case documenttype d of
-                                                            Template _ -> True
-                                                            _ -> False)
-    _ <- randomUpdate $ ShareDocument $ documentid doc
-    (Just user) <- addNewCompanyUser "ccc" "ddd" "zzz@zzz.pl" companyid
-    docs1 <- randomQuery $ GetDocumentsByUser user
-    globaltemplates <- readGlobalTemplates
-    ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
-      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
-    req <- mkRequest POST [("template", inText (show $ documentid doc))]
-    _ <- runTestKontra req ctx $ handleCreateFromTemplate
-    docs2 <- randomQuery $ GetDocumentsByUser user
+    docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
     assertBool "No new document" (length docs2 == 1+ length docs1)
 
 mkSigDetails :: String -> String -> String -> SignatoryDetails

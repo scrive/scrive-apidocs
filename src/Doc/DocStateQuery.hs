@@ -30,11 +30,12 @@ module Doc.DocStateQuery
     , canUserViewDoc
     ) where
 
+import Control.Applicative
 import DB.Types
+import DB.Classes
 import DBError
-import Doc.Transitory
+import Doc.Model
 import Doc.DocStateData
-import Doc.DocUtils
 import Company.Model
 import Kontra
 import Util.SignatoryLinkUtils
@@ -73,7 +74,7 @@ getDocByDocID docid = do
   case (ctxmaybeuser, ctxcompany) of
     (Nothing, Nothing) -> return $ Left DBNotLoggedIn
     (Just user, _) -> do
-      mdoc <- doc_query $ GetDocumentByDocumentID docid
+      mdoc <- runDBQuery $ GetDocumentByDocumentID docid
       case mdoc of
         Nothing  -> do
           Log.debug "Does not exist"
@@ -84,7 +85,7 @@ getDocByDocID docid = do
             True  -> return $ Right doc
     (_, Just company) -> do
       Log.debug "Logged in as company"
-      mdoc <- doc_query $ GetDocumentByDocumentID docid
+      mdoc <- runDBQuery $ GetDocumentByDocumentID docid
       case mdoc of
         Nothing  -> return $ Left DBResourceNotAvailable
         Just doc -> if isJust $ getSigLinkFor doc (companyid company)
@@ -102,9 +103,7 @@ getDocsByLoggedInUser = do
   ctx <- getContext
   case ctxmaybeuser ctx of
     Nothing   -> return $ Left DBNotLoggedIn
-    Just user -> do
-      docs <- doc_query $ GetDocuments (currentServiceID ctx)
-      return $ Right $ filter (canUserViewDirectly user) docs
+    Just user -> Right <$> (runDBQuery $ GetDocumentsBySignatory $ userid user)
 
 {- |
    Get a document using docid, siglink, and magichash.
@@ -119,7 +118,7 @@ getDocByDocIDSigLinkIDAndMagicHash :: Kontrakcja m
                                    -> MagicHash
                                    -> m (Either DBError Document)
 getDocByDocIDSigLinkIDAndMagicHash docid sigid mh = do
-  mdoc <- doc_query $ GetDocumentByDocumentID docid
+  mdoc <- runDBQuery $ GetDocumentByDocumentID docid
   case mdoc of
     Just doc | isJust $ getSigLinkFor doc (And mh sigid) -> return $ Right doc
     _ -> return $ Left DBResourceNotAvailable

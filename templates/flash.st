@@ -223,19 +223,9 @@ flashMessageInvalidCSV=	$_flashMessageInvalidCSV()$
 ###
 flashMessageCSVSent=	$_flashMessageCSVSent()$
 ###
-flashMessageSingleTemplateShareDone=	$_flashMessageSingleTemplateShareDone()$
-###
-flashMessageMultipleTemplateShareDone=	$_flashMessageMultipleTemplateShareDone()$
-###
-flashMessageSingleAttachmentShareDone=	$_flashMessageSingleAttachmentShareDone()$
-###
-flashMessageMultipleAttachmentShareDone=	$_flashMessageMultipleAttachmentShareDone()$
-###
 flashMessageUserHasBecomeCompanyAccount=$_flashMessageUserHasBecomeCompanyAccount()$
 ###
 flashMessageAccountActivatedFromSign=	$_flashMessageAccountActivatedFromSign()$
-###
-flashMessageAccountRemovedFromSign=	$_flashMessageAccountRemovedFromSign()$
 ###
 flashMessageOnlyHaveRightsToViewDoc=	$_flashMessageOnlyHaveRightsToViewDoc()$
 ###

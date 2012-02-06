@@ -23,7 +23,7 @@ import KontraLink
 import Kontra
 import DB.Classes
 import Doc.DocStateData
-import Doc.Transitory
+import Doc.Model
 import User.UserControl
 import User.Model
 import Util.FlashUtil
@@ -32,6 +32,11 @@ import Util.MonadUtils
 import Control.Applicative
 import Util.SignatoryLinkUtils
 import Stats.Control
+
+import EvidenceLog.Model
+import Util.HasSomeUserInfo
+
+import qualified Data.ByteString.UTF8 as BS
 
 handleContractArchive :: Kontrakcja m => m KontraLink
 handleContractArchive = do
@@ -68,10 +73,11 @@ handleAttachmentArchive = do
 
 handleIssueArchive :: Kontrakcja m => m ()
 handleIssueArchive = do
-    Context { ctxmaybeuser = Just user, ctxtime } <- getContext
+    Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- getContext
     docids <- getCriticalFieldList asValidDocID "doccheck"
+    let actor = UserActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail user)
     mapM_ (\did -> do 
-              doc <- guardRightM' $ doc_update $ ArchiveDocument user did
+              doc <- guardRightM' $ runDBUpdate $ ArchiveDocument user did actor
               case getSigLinkFor doc user of
                 Just sl -> runDB $ addSignStatDeleteEvent doc sl ctxtime
                 _ -> return False) 

@@ -31,9 +31,8 @@ instance SafeEnum SignatureProvider where
 data SignatureProvider = BankIDProvider
                        | TeliaProvider
                        | NordeaProvider
-    deriving (Eq, Ord, Typeable)
+    deriving (Eq, Ord, Show, Typeable)
 
-deriving instance Show SignatureProvider
 $(deriveSerialize ''SignatureProvider)
 instance Version SignatureProvider
 $(enumDeriveConvertible ''SignatureProvider)
