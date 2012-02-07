@@ -52,21 +52,29 @@ instance DBQuery GetFileByFileID (Maybe File) where
 data NewFile = NewFile BS.ByteString BS.ByteString
 instance DBUpdate NewFile (File) where
   dbUpdate (NewFile filename content) = do
-    kPrepare "LOCK TABLE files IN ACCESS EXCLUSIVE MODE"
-    _ <- kExecute []
-    fid <- FileID <$> getUniqueID tableFiles
-    kPrepare  ("INSERT INTO files ("
-               ++ "  id"
-               ++ ", name"
-               ++ ", content"
-               ++ ") VALUES (?, ?, decode(?,'base64'))"
-               ++ " RETURNING id, name, encode(content,'base64'), amazon_bucket, amazon_url, disk_path")
-    _ <- kExecute [ toSql fid
-                  , toSql filename
-                  , toSql (Binary content)
-                  ]
-    Just file <- kFetchRow decodeRowAsFile
-    return file
+    let loop = do
+          -- NOT EXISTS ensures that we do not insert at the same id
+          -- that already exists if we did not manage to insert, we
+          -- try again with different id, until we scucceed
+          fid <- FileID <$> getUniqueID tableFiles
+          kPrepare  ("INSERT INTO files ("
+                     ++ "  id"
+                     ++ ", name"
+                     ++ ", content"
+                     ++ ") (SELECT ?, ?, decode(?,'base64') WHERE NOT EXISTS (SELECT 1 FROM files WHERE id = ?))"
+                     ++ " RETURNING id, name, encode(content,'base64'), amazon_bucket, amazon_url, disk_path")
+          _ <- kExecute [ toSql fid
+                        , toSql filename
+                        , toSql (Binary content)
+                        , toSql fid
+                        ]
+          mfile <- kFetchRow decodeRowAsFile
+          case mfile of
+            Nothing -> do
+              -- try inserting again as we have hit same file number
+              loop
+            Just file -> return file
+    loop
 
 data PutFileUnchecked = PutFileUnchecked File
 instance DBUpdate PutFileUnchecked () where
