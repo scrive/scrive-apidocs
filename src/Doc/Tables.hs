@@ -9,8 +9,7 @@ tableDocuments :: Table
 tableDocuments = Table {
     tblName = "documents"
   , tblVersion = 1
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
-    case desc of
+  , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("service_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
@@ -45,7 +44,7 @@ tableDocuments = Table {
        , ("deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
-        runRaw conn $ "CREATE TABLE documents ("
+        kRunRaw $ "CREATE TABLE documents ("
           ++ "  id BIGINT NOT NULL"
           ++ ", service_id TEXT NULL"
           ++ ", file_id BIGINT NULL"
@@ -82,17 +81,17 @@ tableDocuments = Table {
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = wrapDB $ \conn -> do
-    runRaw conn $ "CREATE INDEX idx_documents_service_id ON documents(service_id)"
-    runRaw conn $ "ALTER TABLE documents"
+  , tblPutProperties = do
+    kRunRaw $ "CREATE INDEX idx_documents_service_id ON documents(service_id)"
+    kRunRaw $ "ALTER TABLE documents"
       ++ " ADD CONSTRAINT fk_documents_services FOREIGN KEY(service_id)"
       ++ " REFERENCES services(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    runRaw conn $ "ALTER TABLE documents"
+    kRunRaw $ "ALTER TABLE documents"
       ++ " ADD CONSTRAINT fk_documents_file_id FOREIGN KEY(file_id)"
       ++ " REFERENCES files(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    runRaw conn $ "ALTER TABLE documents"
+    kRunRaw $ "ALTER TABLE documents"
       ++ " ADD CONSTRAINT fk_documents_sealed_file_id FOREIGN KEY(sealed_file_id)"
       ++ " REFERENCES files(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
@@ -103,25 +102,24 @@ tableAuthorAttachments :: Table
 tableAuthorAttachments = Table {
     tblName = "author_attachments"
   , tblVersion = 1
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
-    case desc of
+  , tblCreateOrValidate = \desc -> case desc of
       [  ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
-        runRaw conn $ "CREATE TABLE author_attachments ("
+        kRunRaw $ "CREATE TABLE author_attachments ("
           ++ "  file_id BIGINT NOT NULL"
           ++ ", document_id BIGINT NOT NULL"
           ++ ", CONSTRAINT pk_author_attachments PRIMARY KEY (file_id, document_id)"
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = wrapDB $ \conn -> do
-    runRaw conn $ "ALTER TABLE author_attachments"
+  , tblPutProperties = do
+    kRunRaw $ "ALTER TABLE author_attachments"
       ++ " ADD CONSTRAINT fk_author_attachments_files FOREIGN KEY(file_id)"
       ++ " REFERENCES files(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    runRaw conn $ "ALTER TABLE author_attachments"
+    kRunRaw $ "ALTER TABLE author_attachments"
       ++ " ADD CONSTRAINT fk_author_attachments_documents FOREIGN KEY(document_id)"
       ++ " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
@@ -131,8 +129,7 @@ tableSignatoryAttachments :: Table
 tableSignatoryAttachments = Table {
     tblName = "signatory_attachments"
   , tblVersion = 2
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
-    case desc of
+  , tblCreateOrValidate = \desc -> case desc of
       [  ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("email", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
@@ -140,8 +137,7 @@ tableSignatoryAttachments = Table {
        , ("name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
-        print "creating tableSignatoryAttachments"
-        runRaw conn $ "CREATE TABLE signatory_attachments "
+        kRunRaw $ "CREATE TABLE signatory_attachments "
           ++ "( file_id BIGINT NULL"
           ++ ", document_id BIGINT NOT NULL"
           ++ ", email TEXT NOT NULL"
@@ -151,15 +147,14 @@ tableSignatoryAttachments = Table {
           ++ ")"
         return TVRcreated
       _ -> do
-        print desc
         return TVRinvalid
-  , tblPutProperties = wrapDB $ \conn -> do
-    runRaw conn $ "CREATE INDEX idx_signatory_attachments_document_id ON signatory_attachments(document_id)"
-    runRaw conn $ "ALTER TABLE signatory_attachments"
+  , tblPutProperties = do
+    kRunRaw $ "CREATE INDEX idx_signatory_attachments_document_id ON signatory_attachments(document_id)"
+    kRunRaw $ "ALTER TABLE signatory_attachments"
       ++ " ADD CONSTRAINT fk_signatory_attachments_files FOREIGN KEY(file_id)"
       ++ " REFERENCES files(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    runRaw conn $ "ALTER TABLE signatory_attachments"
+    kRunRaw $ "ALTER TABLE signatory_attachments"
       ++ " ADD CONSTRAINT fk_signatory_attachments_documents FOREIGN KEY(document_id)"
       ++ " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
@@ -169,8 +164,7 @@ tableSignatoryLinks :: Table
 tableSignatoryLinks = Table {
     tblName = "signatory_links"
   , tblVersion = 3
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
-    case desc of
+  , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
@@ -200,8 +194,8 @@ tableSignatoryLinks = Table {
        , ("internal_insert_order", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
-        runRaw conn $ "CREATE SEQUENCE signatory_links_internal_insert_order_seq"
-        runRaw conn $ "CREATE TABLE signatory_links"
+        kRunRaw $ "CREATE SEQUENCE signatory_links_internal_insert_order_seq"
+        kRunRaw $ "CREATE TABLE signatory_links"
           ++ "( id BIGINT NOT NULL"
           ++ ", document_id BIGINT NOT NULL"
           ++ ", user_id BIGINT NULL DEFAULT NULL"
@@ -233,18 +227,18 @@ tableSignatoryLinks = Table {
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = wrapDB $ \conn -> do
-    runRaw conn $ "CREATE INDEX idx_signatory_links_user_id ON signatory_links(user_id)"
-    runRaw conn $ "CREATE INDEX idx_signatory_links_company_id ON signatory_links(company_id)"
-    runRaw conn $ "ALTER TABLE signatory_links"
+  , tblPutProperties = do
+    kRunRaw $ "CREATE INDEX idx_signatory_links_user_id ON signatory_links(user_id)"
+    kRunRaw $ "CREATE INDEX idx_signatory_links_company_id ON signatory_links(company_id)"
+    kRunRaw $ "ALTER TABLE signatory_links"
       ++ " ADD CONSTRAINT fk_signatory_links_document_id FOREIGN KEY(document_id)"
       ++ " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    runRaw conn $ "ALTER TABLE signatory_links"
+    kRunRaw $ "ALTER TABLE signatory_links"
       ++ " ADD CONSTRAINT fk_signatory_links_user_id FOREIGN KEY(user_id)"
       ++ " REFERENCES users(id) ON DELETE SET NULL ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    runRaw conn $ "ALTER TABLE signatory_links"
+    kRunRaw $ "ALTER TABLE signatory_links"
       ++ " ADD CONSTRAINT fk_signatory_links_company_id FOREIGN KEY(company_id)"
       ++ " REFERENCES companies(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"

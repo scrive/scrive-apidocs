@@ -31,7 +31,6 @@ module DB.Classes
   , DBMonad(..)
   , DBState(..)
   , DB
-  , wrapDB
   , ioRunDB
   , runDB
   , runDBQuery
@@ -47,6 +46,7 @@ module DB.Classes
   , kExecute1P
   , kFinish
   , kRunRaw
+  , kDescribeTable
   ) where
 
 import Control.Applicative
@@ -224,11 +224,7 @@ class (Functor m, MonadIO m) => DBMonad m where
   -- 'fail'.
   handleDBError :: DBException -> m a
 
--- | Wraps IO action in DB
-wrapDB :: (Nexus -> IO a) -> DB a
-wrapDB f = DB ask >>= liftIO . f
-
-runit :: (MonadIO m) => DB a -> Nexus -> m a
+runit :: MonadIO m => DB a -> Nexus -> m a
 runit action conn = do
   let actionWithFinish = (action >>= \result -> kFinish >> return result)
   (a, _, _) <- liftIO $ runRWST (unDB actionWithFinish) conn
@@ -267,10 +263,14 @@ runDBUpdate = runDB . dbUpdate
 
 -- | Catch in DB monad
 catchDB :: E.Exception e => DB a -> (e -> DB a) -> DB a
-catchDB f exhandler = wrapDB $ \conn -> do
+catchDB f exhandler = DB $ do
+  conn <- ask
   let handler e = runit (exhandler e) conn
   liftIO $ runit f conn `E.catch` handler
 
 -- | Try in DB monad
 tryDB :: E.Exception e => DB a -> DB (Either e a)
-tryDB f = wrapDB $ liftIO . E.try . runit f
+tryDB f = DB $ ask >>= liftIO . E.try . runit f
+
+kDescribeTable :: String -> DB [(String, SqlColDesc)]
+kDescribeTable table = DB ask >>= \c -> liftIO (describeTable c table)

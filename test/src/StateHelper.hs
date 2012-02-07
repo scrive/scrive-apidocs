@@ -14,7 +14,6 @@ import Happstack.Data (Proxy(..))
 import Happstack.State (runTxSystem, TxControl, shutdownSystem, Saver(..))
 
 import Control.Concurrent (MVar)
-import Database.HDBC
 import DB.Nexus
 import System.IO.Temp
 import qualified Control.Exception as E
@@ -37,26 +36,25 @@ withTestDB conn f = do
     Left (e::E.SomeException) -> E.throw e
 
 clearTables :: DB ()
-clearTables = wrapDB $ \conn -> do
-  runRaw conn "UPDATE users SET service_id = NULL, company_id = NULL"
-  runRaw conn "DELETE FROM evidence_log"
-  runRaw conn "DELETE FROM doc_stat_events"
-  runRaw conn "DELETE FROM user_stat_events"
-  runRaw conn "DELETE FROM sign_stat_events"  
-  runRaw conn "DELETE FROM companyinvites"
+clearTables = do
+  kRunRaw "UPDATE users SET service_id = NULL, company_id = NULL"
+  kRunRaw "DELETE FROM evidence_log"
+  kRunRaw "DELETE FROM doc_stat_events"
+  kRunRaw "DELETE FROM user_stat_events"
+  kRunRaw "DELETE FROM sign_stat_events"
+  kRunRaw "DELETE FROM companyinvites"
 
-  runRaw conn "DELETE FROM author_attachments"
-  runRaw conn "DELETE FROM signatory_attachments"
-  runRaw conn "DELETE FROM signatory_links"
-  runRaw conn "DELETE FROM documents"
+  kRunRaw "DELETE FROM author_attachments"
+  kRunRaw "DELETE FROM signatory_attachments"
+  kRunRaw "DELETE FROM signatory_links"
+  kRunRaw "DELETE FROM documents"
 
-  runRaw conn "DELETE FROM companies"
-  runRaw conn "DELETE FROM services"
-  runRaw conn "DELETE FROM users"
-  runRaw conn "DELETE FROM files"
+  kRunRaw "DELETE FROM companies"
+  kRunRaw "DELETE FROM services"
+  kRunRaw "DELETE FROM users"
+  kRunRaw "DELETE FROM files"
 
-  runRaw conn "DELETE FROM mails"
-  return ()
+  kRunRaw "DELETE FROM mails"
 
 -- happstack-state --
 

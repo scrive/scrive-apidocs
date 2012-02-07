@@ -24,8 +24,7 @@ tableEvidenceLog :: Table
 tableEvidenceLog = Table {
   tblName = "evidence_log"
   , tblVersion = 1
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
-    case desc of
+  , tblCreateOrValidate = \desc -> case desc of
       [("id",                SqlColDesc { colType     = SqlBigIntT
                                         , colNullable = Just False}),
        ("document_id",       SqlColDesc { colType     = SqlBigIntT
@@ -51,7 +50,7 @@ tableEvidenceLog = Table {
        ("api_user",          SqlColDesc { colType     = SqlVarCharT
                                         , colNullable = Just True})] -> return TVRvalid
       [] -> do
-        runRaw conn $ "CREATE TABLE evidence_log ("
+        kRunRaw $ "CREATE TABLE evidence_log ("
           ++ "  id            BIGSERIAL   NOT NULL"
           ++ ", document_id   BIGINT          NULL"          
           ++ ", user_id       BIGINT          NULL"
@@ -68,7 +67,5 @@ tableEvidenceLog = Table {
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = wrapDB $ \_conn -> return ()
+  , tblPutProperties = return ()
   }
-
-
