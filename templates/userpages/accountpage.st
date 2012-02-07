@@ -7,6 +7,7 @@ showUser =
     <ul class="tabs">
         <li class="active"><a href="/account">$_HeadUserInfo()$</a></li>
         <li><a href="/account/security">$_HeadAccountSettings()$</a></li>
+        $if(iscompanyadmin)$<li><a href="/account/companysettings">$_CompanySettings()$</a></li>$endif$
         $if(iscompanyadmin)$<li><a href="/account/companyaccounts">$_CompanyAccounts()$</a></li>$endif$
         <li><a href="/account/mailapi">$_HeadMailApi()$</a></li>
         <li><a href="/account/usagestats">$_HeadUsageStats()$</a></li>

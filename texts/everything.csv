@@ -40,6 +40,7 @@
 "_CantRemoveActiveOffers","Det går inte att radera offerter som är skickade eller öppna, var vänlig och återkalla offerten först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
 "_CantRemoveActiveOrders","Det går inte att radera orderbekräftelser som är skickade eller öppna, var vänlig och återkalla dokumentet först.",,"You cannot delete documents that are sent or open, please withdraw the document first."
 "_CompanyAccounts","Användare",,"Users"
+"_CompanySettings","",,"Company Settings"
 "_CreateAccount","Skapa konto!",,"Create account!"
 "_Document","Dokument",,"Document"
 "_DownloadPDF","Ladda ned PDF",,"Download PDF"
