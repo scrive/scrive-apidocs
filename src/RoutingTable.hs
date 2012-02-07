@@ -25,7 +25,6 @@ import qualified Contacts.ContactsControl as Contacts
 import qualified Doc.DocControl as DocControl
 import qualified Archive.Control as ArchiveControl
 import qualified ELegitimation.BankID as BankID
-import qualified Payments.PaymentsControl as Payments
 import qualified User.UserControl as UserControl
 import qualified API.MailAPI as MailAPI
 import Doc.API
@@ -219,9 +218,6 @@ staticRoutes = choice
      , dir "adminonly" $ dir "runstatssigs" $ hGet $ toK0 $ Stats.addAllSigsToStats
 
      , dir "adminonly" $ dir "statistics"        $ hGet  $ toK0 $ Stats.showAdminSystemUsageStats
-     , dir "adminonly" $ dir "payments"          $ hGet  $ toK0 $ Payments.handlePaymentsModelForViewView
-     , dir "adminonly" $ dir "advpayments"       $ hGet  $ toK0 $ Payments.handlePaymentsModelForEditView
-     , dir "adminonly" $ dir "advpayments"       $ hPost $ toK0 $ Payments.handleAccountModelsChange
 
      , dir "adminonly" $ dir "services" $ hGet $ toK0 $ Administration.showServicesPage
      , dir "adminonly" $ dir "services" $ param "create" $ hPost $ toK0 $ Administration.handleCreateService

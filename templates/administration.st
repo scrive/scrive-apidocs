@@ -30,25 +30,18 @@ adminsmain=
               <button style="width:150px"> Statistics</button>
             </a>
           </td>
-          <td style="height:50px">
-            <a href="/adminonly/payments">
-              <button style="width:150px">Price Plan</button>
-            </a>
-          </td>
-        </tr>
-        <tr>
           <td style="height:50px;">
             <a href="/adminonly/functionalitystats">
               <button style="width:150px">Functionality Stats</button>
             </a>
           </td>
+        </tr>
+        <tr>
           <td style="height:50px">
             <a href="/adminonly/documents">
               <button style="width:150px">Documents</button>
             </a>
           </td>
-        </tr>
-        <tr>
           <td style="height:50px;width:200px"> <a href="/adminonly/useradmin"><button style="width:150px"> User Admin </button> </a></td>
         </tr>
     </tbody></table>
@@ -57,7 +50,6 @@ $if(admin)$
     <strong> Admin Tools  </strong>
     <table><tbody>
         <tr>
-          <td style="height:50px;width:200px"> <a href="/adminonly/advpayments"><button style="width:150px"> App Admin </button> </a></td>
           <td style="height:50px;width:200px"><a href="/adminonly/services"><button style="width:150px"> Services </button> </a> </td>
         </tr>
         <tr>

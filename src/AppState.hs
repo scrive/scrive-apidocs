@@ -7,7 +7,6 @@ module AppState
 
 import Happstack.Data
 import Happstack.State
-import Payments.PaymentsState
 import Session
 import ActionSchedulerState
 import Data.Data
@@ -24,7 +23,7 @@ instance Version AppState
 
 -- |top-level application component
 instance Component AppState where
-  type Dependencies AppState = Sessions :+: PaymentAccountModels :+: Actions :+: End
+  type Dependencies AppState = Sessions :+: Actions :+: End
   initialValue = AppState
 
 
