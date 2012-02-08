@@ -36,6 +36,7 @@ import System.Time
 import Doc.Invariants
 import Stats.Control
 import Database.HDBC.PostgreSQL
+import EvidenceLog.Model
 
 type SchedulerData' = SchedulerData AppConf (MVar (ClockTime, KontrakcjaGlobalTemplates)) MailsConfig
 
@@ -197,7 +198,7 @@ timeoutDocuments :: MinutesTime -> ActionScheduler ()
 timeoutDocuments now = do
     docs <- runDBQuery $ GetTimeoutedButPendingDocuments now
     forM_ docs $ \doc -> do
-        edoc <- runDBUpdate $ TimeoutDocument (documentid doc) now
+        edoc <- runDBUpdate $ TimeoutDocument (documentid doc) (SystemActor now)
         case edoc of
           Left _ -> return ()
           Right doc' -> do

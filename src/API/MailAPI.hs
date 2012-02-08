@@ -4,6 +4,9 @@ module API.MailAPI (
       charset
     ) where
 
+import Redirect
+import File.Model
+import Doc.DocStorage
 import MinutesTime
 import DB.Classes
 import Company.Model
@@ -40,6 +43,10 @@ import Data.Char
 import Doc.DocStateData
 
 import Doc.JSON
+
+import EvidenceLog.Model
+import Util.HasSomeUserInfo
+--import Util.SignatoryLinkUtils
 
 parseEmailMessageToParts :: BS.ByteString -> (MIME.MIMEValue, [(MIME.Type, BS.ByteString)])
 parseEmailMessageToParts content = (mime, parts mime)
@@ -129,7 +136,7 @@ jsonMailAPI :: (Kontrakcja m) =>
                 -> BS.ByteString
                 -> m String
 jsonMailAPI mailapi username user pdfs plains content = do
-  Context{ctxtime, ctxipnumber} <- getContext
+  ctx@Context{ctxtime} <- getContext
   when (umapiDailyLimit mailapi <= umapiSentToday mailapi) $ do
     Log.jsonMailAPI $ "Daily limit of documents for user '" ++ username ++ "' has been reached"
     -- ignore it
@@ -241,8 +248,9 @@ jsonMailAPI mailapi username user pdfs plains content = do
 
   let doctype = dcrType dcr
       title = dcrTitle dcr
-
-  edoc <- runDBUpdate $ NewDocument user mcompany (BS.fromString title) doctype ctxtime
+      actor = MailAPIActor ctxtime (userid user) (BS.toString $ getEmail user)
+      
+  edoc <- runDBUpdate $ NewDocument user mcompany (BS.fromString title) doctype actor
 
   when (isLeft edoc) $ do
     let Left msg = edoc
@@ -253,23 +261,25 @@ jsonMailAPI mailapi username user pdfs plains content = do
 
   let Right doc = edoc
 
-  _ <- DocControl.handleDocumentUploadNoLogin (documentid doc) pdfBinary (BS.fromString title)
-  _ <- runDBUpdate $ SetDocumentAdvancedFunctionality (documentid doc) ctxtime
-  _ <- runDBUpdate $ SetEmailIdentification (documentid doc) ctxtime
+  content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) pdfBinary
+  file <- runDB $ dbUpdate $ NewFile (BS.fromString title) content14
+  _ <- guardRightM $ runDBUpdate (AttachFile (documentid doc) (fileid file) actor)
+  
+  _ <- runDBUpdate $ SetDocumentAdvancedFunctionality (documentid doc) actor
+  _ <- runDBUpdate $ SetEmailIdentification (documentid doc) actor
 
   let signatories = for (dcrInvolved dcr) $ \InvolvedRequest{irRole,irData} ->
         (SignatoryDetails{signatorysignorder = SignOrder 0, signatoryfields = irData},
          irRole)
 
-  errs <- lefts <$> (sequence $ [runDBUpdate $ ResetSignatoryDetails (documentid doc) signatories ctxtime])
+  errs <- lefts <$> (sequence $ [runDBUpdate $ ResetSignatoryDetails (documentid doc) signatories actor])
 
   when ([] /= errs) $ do
     Log.jsonMailAPI $ "Could not set up document: " ++ (intercalate "; " errs)
 
     mzero
 
-  edoc2 <- runDBUpdate $ PreparationToPending (documentid doc) ctxtime
-
+  edoc2 <- runDBUpdate $ PreparationToPending (documentid doc) actor
   when (isLeft edoc2) $ do
     Log.jsonMailAPI $ "Could not got to pending document: " ++ (intercalate "; " errs)
 
@@ -277,7 +287,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
 
   let Right doc2 = edoc2
       docid = documentid doc2
-  _ <- DocControl.markDocumentAuthorReadAndSeen doc2 ctxtime ctxipnumber
+  markDocumentAuthorReadAndSeen doc2
   _ <- DocControl.postDocumentChangeAction doc2 doc Nothing
 
   _ <- runDBUpdate $ SetUserMailAPI (userid user) $ Just mailapi {

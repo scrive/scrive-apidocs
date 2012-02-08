@@ -36,6 +36,7 @@ import Util.KontraLinkUtils
 import Util.MonadUtils
 import Stats.Control
 import User.Utils
+import EvidenceLog.Model
 import User.History.Model
 
 checkPasswordsMatch :: TemplatesMonad m => BS.ByteString -> BS.ByteString -> Either (m FlashMessage) ()
@@ -696,7 +697,8 @@ handleAccountSetupFromSign document signatorylink = do
   mactivateduser <- handleActivate (Just $ firstname) (Just $ lastname) user BySigning
   when (isJust mactivateduser) $ do
     activateduser <- guardJust mactivateduser
-    _ <- runDBUpdate $ SaveDocumentForUser (documentid document) activateduser (signatorylinkid signatorylink)
+    let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx)  (maybesignatory signatorylink)  (BS.toString $ getEmail $ signatorylink) (signatorylinkid signatorylink)
+    _ <- runDBUpdate $ SaveDocumentForUser (documentid document) activateduser (signatorylinkid signatorylink) actor
     _ <- addUserSaveAfterSignStatEvent activateduser
     return ()
   return mactivateduser

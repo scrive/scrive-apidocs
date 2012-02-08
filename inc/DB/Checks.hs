@@ -82,6 +82,7 @@ checkDBConsistency logger tables migrations = do
           ver <- checkVersion table
           if ver == tblVersion table
              then do
+               logger $ show desc
                error $ "Existing '" ++ tblName table ++ "' table structure is invalid"
              else do
                logger "Table is outdated, scheduling for migration."

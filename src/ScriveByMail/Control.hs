@@ -1,14 +1,17 @@
 module ScriveByMail.Control 
        (
          scriveByMail,
-         sendMailAPIConfirmEmail       
+         sendMailAPIConfirmEmail,
+         markDocumentAuthorReadAndSeen
        )
        
        where
 
+import File.Model
 import Kontra
 --import Happstack.Server.Types 
---import Control.Monad.Trans
+import Doc.DocStorage
+import Control.Monad.Trans
 import qualified Data.ByteString as BS
 --import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
@@ -39,6 +42,9 @@ import Util.SignatoryLinkUtils
 import Mails.SendMail
 import KontraLink
 import qualified Codec.MIME.Type as MIME
+import Redirect
+
+import EvidenceLog.Model
 
 --import Data.Char
 
@@ -64,7 +70,7 @@ scriveByMail :: (Kontrakcja m) =>
                 -> BS.ByteString
                 -> m String
 scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
-  ctx@Context{ctxtime, ctxipnumber} <- getContext
+  ctx@Context{ctxtime} <- getContext
   -- at this point, the user has been authenticated
   -- we can start sending him emails about errors
   
@@ -143,7 +149,8 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   
   let userDetails = signatoryDetailsFromUser user mcompany
 
-  edoc <- runDBUpdate $ NewDocument user mcompany (BS.fromString title) doctype ctxtime
+  let actor = MailAPIActor ctxtime (userid user) (BS.toString $ getEmail user)
+  edoc <- runDBUpdate $ NewDocument user mcompany (BS.fromString title) doctype actor
   
   when (isLeft edoc) $ do
     let Left msg = edoc
@@ -157,11 +164,14 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
     
   let Right doc = edoc
       
-  _ <- DocControl.handleDocumentUploadNoLogin (documentid doc) pdfBinary (BS.fromString title)
-  _ <- runDBUpdate $ SetDocumentAdvancedFunctionality (documentid doc) ctxtime
-  _ <- runDBUpdate $ SetEmailIdentification (documentid doc) ctxtime
+  content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) pdfBinary
+  file <- runDB $ dbUpdate $ NewFile (BS.fromString title) content14
+  _ <- guardRightM $ runDBUpdate (AttachFile (documentid doc) (fileid file) actor)
+
+  _ <- runDBUpdate $ SetDocumentAdvancedFunctionality (documentid doc) actor
+  _ <- runDBUpdate $ SetEmailIdentification (documentid doc) actor
   
-  errs <- lefts <$> (sequence $ [runDBUpdate $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) ctxtime])
+  errs <- lefts <$> (sequence $ [runDBUpdate $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) actor])
           
   when ([] /= errs) $ do
     Log.scrivebymail $ "Could not set up document: " ++ (intercalate "; " errs)
@@ -170,8 +180,8 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what is wrong. I created it in Scrive, but I cannot get it ready to send. If you want to see your document, you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
     
     mzero
-
-  edoc2 <- runDBUpdate $ PreparationToPending (documentid doc) ctxtime
+    
+  edoc2 <- runDBUpdate $ PreparationToPending (documentid doc) actor           
   
   when (isLeft edoc2) $ do
     Log.scrivebymail $ "Could not got to pending document: " ++ (intercalate "; " errs)
@@ -183,7 +193,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   
   let Right doc2 = edoc2
       docid = documentid doc2
-  _ <- DocControl.markDocumentAuthorReadAndSeen doc2 ctxtime ctxipnumber
+  markDocumentAuthorReadAndSeen doc2
   _ <- DocControl.postDocumentChangeAction doc2 doc Nothing
     
   _ <- runDBUpdate $ SetUserMailAPI (userid user) $ Just mailapi {
@@ -206,3 +216,15 @@ sendMailAPIErrorEmail :: Kontrakcja m => Context -> String -> String -> m ()
 sendMailAPIErrorEmail ctx email msg = do
   mail <- mailMailApiError ctx msg
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress (BS.fromString email) (BS.fromString email)] }
+
+markDocumentAuthorReadAndSeen :: Kontrakcja m => Document -> m ()
+markDocumentAuthorReadAndSeen doc@Document{documentid} = do
+  let Just sl@SignatoryLink{signatorylinkid, signatorymagichash, maybesignatory} =
+        getAuthorSigLink doc
+  time <- ctxtime <$> getContext
+  _ <- runDBUpdate $ MarkInvitationRead documentid signatorylinkid 
+       (MailAPIActor time (fromJust maybesignatory) (BS.toString $ getEmail sl))
+  _ <- runDBUpdate $ MarkDocumentSeen documentid signatorylinkid signatorymagichash 
+       (MailAPIActor time (fromJust maybesignatory) (BS.toString $ getEmail sl))
+  return ()
+

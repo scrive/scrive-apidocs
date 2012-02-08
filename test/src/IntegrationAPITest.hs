@@ -33,6 +33,11 @@ import MinutesTime
 import Doc.Model
 import Control.Monad
 import Doc.DocStateData
+import EvidenceLog.Model
+
+import Util.HasSomeUserInfo
+import qualified Data.ByteString.UTF8 as BS
+import Util.SignatoryLinkUtils
 
 integrationAPITests :: Nexus -> Test
 integrationAPITests conn = testGroup "Integration API" [
@@ -281,10 +286,14 @@ testDocumentsFilteringFromDate2 conn = withTestEnvironment conn $ do
     assertBool ("Should be one document but got " ++ (show $ docsCount apiRespDocsFilter2) ++ " were found") $ (docsCount apiRespDocsFilter2) == 1
     
     Just doc <- dbQuery $ GetDocumentByDocumentID did
-    _ <- dbUpdate $ PreparationToPending did ctxtime
+    _ <- dbUpdate $ PreparationToPending did (SystemActor ctxtime)
 
     _ <- forM (documentsignatorylinks doc) $ \sl ->
-      dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl) (minutesAfter 100 tm) (IPAddress 0)
+      if isAuthor sl 
+      then dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl) 
+           (AuthorActor (minutesAfter 10 tm) (IPAddress 0) (fromJust $ maybesignatory sl) (BS.toString $ getEmail sl))
+      else dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl) 
+           (SignatoryActor (minutesAfter 10 tm) (IPAddress 0) (maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl))
 
     Just _doc' <- dbQuery $ GetDocumentByDocumentID did
     Right apiReqDocsFilter3 <- jsset "from_date" tms <$> getDocumentsJSON "test_company1" "mariusz@skrivapa.se"

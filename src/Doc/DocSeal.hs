@@ -43,6 +43,7 @@ import Util.SignatoryLinkUtils
 import File.Model
 import DB.Classes
 import Control.Applicative
+import EvidenceLog.Model
 
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
@@ -273,7 +274,7 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplat
         Log.debug $ "Adding new sealed file to DB"
         File{fileid = sealedfileid} <- dbUpdate $ NewFile filename newfilepdf
         Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
-        res <- dbUpdate $ AttachSealedFile documentid sealedfileid (ctxtime ctx)
+        res <- dbUpdate $ AttachSealedFile documentid sealedfileid (SystemActor (ctxtime ctx))
         Log.debug $ "Should be attached to document; is it? " ++ show ((elem sealedfileid . documentsealedfiles) <$> res)
         return res
       ExitFailure _ -> do
@@ -288,7 +289,7 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplat
           BS.hPutStr handle content
           hClose handle
           return msg
-        _ <- dbUpdate $ ErrorDocument documentid $ "Could not seal document because of file #" ++ show fileid
+        _ <- dbUpdate $ ErrorDocument documentid ("Could not seal document because of file #" ++ show fileid) (SystemActor (ctxtime ctx))
         return $ Left msg
   liftIO $ removeDirectoryRecursive tmppath
   case result of

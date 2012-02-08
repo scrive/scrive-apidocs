@@ -236,7 +236,6 @@ tableSignatoryLinks = Table {
   , tblPutProperties = wrapDB $ \conn -> do
     runRaw conn $ "CREATE INDEX idx_signatory_links_user_id ON signatory_links(user_id)"
     runRaw conn $ "CREATE INDEX idx_signatory_links_company_id ON signatory_links(company_id)"
-    runRaw conn $ "CREATE INDEX idx_signatory_links_internal_insert_order ON signatory_links(internal_insert_order)"
     runRaw conn $ "ALTER TABLE signatory_links"
       ++ " ADD CONSTRAINT fk_signatory_links_document_id FOREIGN KEY(document_id)"
       ++ " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"

@@ -107,6 +107,10 @@ import Doc.TestJSON
 import StatsTest
 #endif
 
+#ifndef NO_EVIDENCELOG
+import EvidenceLogTest
+#endif
+
 allTests :: Nexus -> [(String, [String] -> Test)]
 allTests conn = tail tests
   where
@@ -193,6 +197,9 @@ allTests conn = tail tests
 #endif
 #ifndef NO_STATS
       , ("stats", const $ statsTests conn)
+#endif
+#ifndef NO_EVIDENCELOG
+      , ("evidencelog", const $ evidenceLogTests conn)
 #endif
       ]
 

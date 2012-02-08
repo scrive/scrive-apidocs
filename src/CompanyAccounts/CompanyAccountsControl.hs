@@ -44,6 +44,7 @@ import Util.MonadUtils
 import User.Utils
 import User.UserControl
 import User.UserView
+import EvidenceLog.Model
 import User.History.Model
 
 {- |
@@ -423,7 +424,9 @@ resaveDocsForUser :: Kontrakcja m => UserID -> m ()
 resaveDocsForUser uid = do
   user <- runDBOrFail $ dbQuery $ GetUserByID uid
   userdocs <- runDBQuery $ GetDocumentsByAuthor uid
-  mapM_ (\doc -> runDBUpdate $ AdminOnlySaveForUser (documentid doc) user) userdocs
+  time <- ctxtime <$> getContext
+  let actor = SystemActor time
+  mapM_ (\doc -> runDBUpdate $ AdminOnlySaveForUser (documentid doc) user actor) userdocs 
   return ()
 
 {- |

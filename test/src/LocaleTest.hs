@@ -25,6 +25,7 @@ import User.Locale
 import User.Model
 import User.UserControl
 import Misc
+import EvidenceLog.Model
 
 
 localeTests :: Nexus -> Test
@@ -158,7 +159,7 @@ createTestElegDoc user ctxtime = do
   doc <- addRandomDocumentWithAuthorAndCondition user
            (\d -> documentstatus d == Preparation
                   && documentfunctionality d == AdvancedFunctionality)
-  (Right elegdoc) <- dbUpdate $ SetElegitimationIdentification (documentid doc) ctxtime
+  (Right elegdoc) <- dbUpdate $ SetElegitimationIdentification (documentid doc) (SystemActor ctxtime)
   return elegdoc
 
 createTestUser :: Region -> Lang -> DB User
