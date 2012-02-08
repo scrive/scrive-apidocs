@@ -104,7 +104,6 @@ import Control.Monad
 import qualified Control.Exception as E
 import File.Model
 import Util.MonadUtils
-import Data.Semantic
 
 import EvidenceLog.Model
 import Util.HasSomeUserInfo
@@ -1110,7 +1109,7 @@ instance Actor a => DBUpdate (MarkDocumentSeen a) (Either String Document) where
     mdoc <- dbQuery $ GetDocumentByDocumentID did
     case mdoc of
       Nothing -> return $ Left $ "document does not exist with id " ++ show did
-      Just doc -> case getSigLinkFor doc (And slid mh) of
+      Just doc -> case maybe Nothing (\_ -> getSigLinkFor doc mh) (getSigLinkFor doc slid) of
         Nothing -> return $ Left $ "signatory link id and magic hash do not match!"
         Just _ -> do
           let time = actorTime actor

@@ -166,19 +166,19 @@ modalAccountSetup=
         <table id="signupInfo"><tbody>
             <tr>
                 <td>$_firstname()$:</td>
-                <td><input type="text" name="fstname" value="$fstname$" autocomplete="off" /></td>
+                <td><input type="text" id="fstname" name="fstname" value="$fstname$" autocomplete="off" /></td>
             </tr>
             <tr>
                 <td>$_lastname()$:</td>
-                <td><input type="text" name="sndname" value="$sndname$" autocomplete="off" /></td>
+                <td><input type="text" id="sndname" name="sndname" value="$sndname$" autocomplete="off" /></td>
             </tr>
             <tr>
                 <td style="width: 120px">$_modalAccountSetupChoosePassword()$</td>
-                <td><input type="password" name="password" autocomplete="off"/></td>
+                <td><input type="password" id="password" name="password" autocomplete="off"/></td>
             </tr>
             <tr>
                 <td>$_modalAccountSetupRepeatPassword()$</td>
-                <td><input type="password" name="password2" autocomplete="off"/></td>
+                <td><input type="password" id="password2" name="password2" autocomplete="off"/></td>
             </tr>
         </tbody></table>
         <input type="submit" class="hidden" />
@@ -197,6 +197,54 @@ modalAccountSetup=
   </div>
   </form>
 </div>
+<script>
+window.onload = function() {
+window.PasswordEqValidation = Validation.extend({
+    defaults: {
+        validates: function(t) {
+            var p1 = jQuery('#password').value;
+
+            return t == p1;
+        },
+        message: "Passwords are not equal!"
+    }
+});
+jQuery('form[action="$signuplink$"]').submit(function(){
+    var callback = function(t,e,v) {
+        e.css("background", "red"); 
+        jQuery(document.createElement('div'))
+            .attr("name", "validate-message")
+            .css({"font-size": 8, "font-weight": "bold", "color": "red"})
+            .append(v.message())
+            .appendTo(e.parent());
+    };
+
+    var fstname = jQuery('#fstname');
+    var sndname = jQuery('#sndname');
+    var password = jQuery('#password');
+    var password2 = jQuery('#password2');
+
+    fstname.css("background", "white");
+    sndname.css("background", "white");
+    password.css("background", "white");
+    password2.css("background", "white");
+
+    jQuery('[name=validate-message]').remove();
+
+    var vresult = [
+        fstname.validate(new NameValidation({callback: callback, message: "Wrong first name format!"})),
+        sndname.validate(new NameValidation({callback: callback, message: "Wrong second name format!"})),
+        password.validate((new PasswordValidation({callback: callback, message: "Wrong password format!"}))),
+        password2.validate((new PasswordValidation({callback: callback, message: "Wrong password format!"})).concat(new PasswordEqValidation({callback: callback})))
+        ];
+
+    if (vresult.every(function(a) {return a;})) 
+        return true;
+
+    return false;
+});
+}
+</script>
 ######
 modalWelcomeToSkrivaPa=
 <div class="modal-container">

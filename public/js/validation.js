@@ -33,9 +33,6 @@ window.Validation = Backbone.Model.extend({
     }
 });
 
-//Here we need to define the initialize function because in javascript objects
-//are shared by the reference. If we don't do this there will be always the
-//same callbacks at all instances.
 window.NotEmptyValidation = Validation.extend({
     defaults: {
            validates: function(t) {

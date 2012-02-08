@@ -42,7 +42,6 @@ import DB.Types
 import Doc.DocStateData
 import User.Model
 import Util.HasSomeUserInfo
-import Data.Semantic
 import Misc
 
 import Data.List
@@ -75,14 +74,6 @@ instance SignatoryLinkIdentity (SignatoryLink -> Bool) where
 {- |
    Identify a SignatoryLink based on a; if that does not match, identify based on b.
  -}
-instance (SignatoryLinkIdentity a, SignatoryLinkIdentity b) => SignatoryLinkIdentity (Or a b) where
-  isJustSigLinkFor (Or a b) sl = isSigLinkFor a sl || isSigLinkFor b sl
-  
-instance (SignatoryLinkIdentity a, SignatoryLinkIdentity b) => SignatoryLinkIdentity (And a b) where
-  isJustSigLinkFor (And a b) sl = isSigLinkFor a sl && isSigLinkFor b sl
-  
-instance (SignatoryLinkIdentity a) => SignatoryLinkIdentity (Not a) where
-  isJustSigLinkFor (Not a) sl = not $ isSigLinkFor a sl
 
 instance SignatoryLinkIdentity SignatoryLinkID where
   isJustSigLinkFor slid sl = slid == signatorylinkid sl
@@ -94,7 +85,7 @@ instance SignatoryLinkIdentity SignatoryRole where
    Identify a User based on UserID or Email (if UserID fails).
  -}
 instance SignatoryLinkIdentity User where
-  isJustSigLinkFor u sl = isSigLinkFor (Or (userid u) (getEmail u)) sl
+  isJustSigLinkFor u sl = isSigLinkFor (userid u) sl || isSigLinkFor (getEmail u) sl
 
 instance SignatoryLinkIdentity CompanyID where
   isJustSigLinkFor cid sl = Just cid == maybecompany sl
@@ -153,7 +144,7 @@ instance (HasSignatoryLinks a, SignatoryLinkIdentity b) => HasSignatoryLinks (a,
    Is the Author of this Document a signatory (not a Secretary)?
  -}
 isAuthorSignatory :: HasSignatoryLinks a => a -> Bool
-isAuthorSignatory hsl = hasSigLinkFor (And SignatoryAuthor SignatoryPartner) hsl
+isAuthorSignatory hsl = hasSigLinkFor SignatoryAuthor hsl && hasSigLinkFor SignatoryPartner hsl
 
 {- |
    Get the author's signatory link.
