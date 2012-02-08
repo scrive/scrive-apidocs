@@ -21,7 +21,6 @@ import Data.List
 import User.Region
 import Doc.Model
 import DB.Classes
-import qualified Log
 
 data DraftData = DraftData {
       title :: String

@@ -134,6 +134,7 @@ var SignaturePlacementView = Backbone.View.extend({
                 box.addClass('signatureBoxNotDrawing');
                 box.append(this.innerText());
                 signatory.bind('change', function() {
+                    box.empty();
                     box.append(view.innerText());
                 });
             }else{
