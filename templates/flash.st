@@ -229,8 +229,6 @@ flashMessageUserHasBecomeCompanyAccount=$_flashMessageUserHasBecomeCompanyAccoun
 ###
 flashMessageAccountActivatedFromSign=	$_flashMessageAccountActivatedFromSign()$
 ###
-flashMessageAccountRemovedFromSign=	$_flashMessageAccountRemovedFromSign()$
-###
 flashMessageOnlyHaveRightsToViewDoc=	$_flashMessageOnlyHaveRightsToViewDoc()$
 ###
 flashMessagePleaseSignWithEleg=	$_flashMessagePleaseSignWithEleg()$

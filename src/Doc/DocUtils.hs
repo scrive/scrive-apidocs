@@ -383,7 +383,7 @@ isFieldCustom SignatoryField{sfType = CustomFT{}} = True
 isFieldCustom _ = False
 
 isStandardField :: SignatoryField -> Bool
-isStandardField SignatoryField{sfType = CustomFT{}} = True
+isStandardField SignatoryField{sfType = CustomFT{}} = False
 isStandardField SignatoryField{sfType = SignatureFT{}} = False
 isStandardField _ = True
 

@@ -39,10 +39,14 @@ import File.Model
 import API.Service.Model
 import Data.Typeable
 import Doc.Invariants
-import Doc.DocInfo
+--import Doc.DocInfo
 import Doc.DocProcess
 import ActionSchedulerState
 import Text.JSON
+
+--import Util.SignatoryLinkUtils
+
+import EvidenceLog.Model
 
 newtype NotNullWord8 = NotNullWord8 { fromNNW8 :: Word8 }
   deriving (Enum, Eq, Integral, Num, Ord, Real)
@@ -59,6 +63,9 @@ instance Arbitrary NotNullWord8 where
   shrink = shrinkIntegral
 
 newtype StringWithoutNUL = StringWithoutNUL { fromSNN :: String }
+
+instance Arbitrary SignOrder where
+  arbitrary = SignOrder <$> arbitrary
 
 instance Arbitrary DocumentTag where
   arbitrary = DocumentTag <$> arbitrary <*> arbitrary
@@ -138,6 +145,26 @@ class ExtendWithRandomnes a where
 
 instance ExtendWithRandomnes SignatoryDetails where
     moreRandom sl = return sl
+    
+instance Arbitrary AuthorActor where
+  arbitrary = do
+    (time, ip, uid, eml) <- arbitrary
+    return $ AuthorActor time ip uid eml
+    
+instance Arbitrary SystemActor where
+  arbitrary = do
+    time <- arbitrary
+    return $ SystemActor time
+    
+instance Arbitrary SignatoryActor where
+  arbitrary = do
+    (time, ip, uid, eml, slid) <- arbitrary
+    return $ SignatoryActor time ip uid eml slid
+    
+instance Arbitrary MailAPIActor where
+  arbitrary = do
+    (time, uid, eml) <- arbitrary
+    return $ MailAPIActor time uid eml
 
 instance Arbitrary SignatoryLinkID where
   arbitrary = SignatoryLinkID <$> arbitrary
@@ -533,7 +560,6 @@ randomDocumentAllowsDefault user = RandomDocumentAllows
                                                              , Template Order
                                                              , Template Offer
                                                              , Attachment
-                                                             , AttachmentTemplate
                                                              ]
                               , randomDocumentAllowedStatuses = [ Preparation
                                                                 , Pending
@@ -552,6 +578,36 @@ addRandomDocumentWithAuthor :: User -> DB DocumentID
 addRandomDocumentWithAuthor user = documentid <$> addRandomDocument (randomDocumentAllowsDefault user)
 
 
+randomSigLinkByStatus :: DocumentStatus -> Gen SignatoryLink
+randomSigLinkByStatus Closed = do
+  (sl, sign, seen) <- arbitrary
+  return $ sl{maybesigninfo = Just sign, maybeseeninfo = Just seen, signatoryroles=[SignatoryPartner]}
+randomSigLinkByStatus Preparation = do
+  (sl) <- arbitrary
+  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatoryroles=[SignatoryPartner]}
+randomSigLinkByStatus Pending = do
+  (sl) <- arbitrary
+  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatoryroles=[SignatoryPartner]}
+randomSigLinkByStatus AwaitingAuthor = do
+  (sl,sign,seen) <- arbitrary
+  return $ sl{maybesigninfo = Just sign, maybeseeninfo = Just seen, signatoryroles=[SignatoryPartner]}
+randomSigLinkByStatus _ = arbitrary
+
+randomAuthorLinkByStatus :: DocumentStatus -> Gen SignatoryLink
+randomAuthorLinkByStatus Closed = do
+  (sl, sign, seen) <- arbitrary
+  return $ sl{maybesigninfo = Just sign, maybeseeninfo = Just seen, signatoryroles=[SignatoryAuthor]}
+randomAuthorLinkByStatus Preparation = do
+  (sl) <- arbitrary
+  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatoryroles=[SignatoryAuthor]}
+randomAuthorLinkByStatus Pending = do
+  (sl) <- arbitrary
+  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatoryroles=[SignatoryAuthor]}
+randomAuthorLinkByStatus AwaitingAuthor = do
+  (sl) <- arbitrary
+  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatoryroles=[SignatoryAuthor]}
+randomAuthorLinkByStatus _ = arbitrary
+
 
 getRandomAuthorRoles :: MonadIO m => Document -> m [SignatoryRole]
 getRandomAuthorRoles doc =
@@ -560,10 +616,8 @@ getRandomAuthorRoles doc =
 getPossibleAuthorRoles :: Document -> [[SignatoryRole]]
 getPossibleAuthorRoles doc = [SignatoryAuthor] :
   case getValueForProcess doc processauthorsend of
-    Just True -> []
+    Just True -> [[SignatoryAuthor]]
     _ ->  [[SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]]
-
-
 
 addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> DB Document
 addRandomDocumentWithAuthorAndCondition user p =
@@ -573,62 +627,60 @@ addRandomDocument :: RandomDocumentAllows -> DB Document
 addRandomDocument rda = do
   file <- addNewRandomFile
   now <- liftIO getMinutesTime
-  document <- worker file now
+  let user = randomDocumentAuthor rda
+      p = randomDocumentCondition rda
+  mcompany <- case usercompany user of
+    Nothing  -> return Nothing
+    Just cid -> dbQuery $ GetCompany cid
+  --liftIO $ print $ "about to generate document"
+  document <- liftIO $ worker file now user p mcompany
   docid <- dbUpdate $ StoreDocumentForTesting document
-  mdoc <- dbQuery $ GetDocumentByDocumentID docid
+  mdoc  <- dbQuery  $ GetDocumentByDocumentID docid
   case mdoc of
     Nothing -> do
-              assertFailure "Could not store document."
-              return document
+      assertFailure "Could not store document."
+      return document
     Just doc' -> do
               return doc'
   where
-    worker file now = do
-      let user = randomDocumentAuthor rda
-          p = randomDocumentCondition rda
+    worker :: File -> MinutesTime -> User -> (Document -> Bool) -> (Maybe Company) -> IO Document
+    worker file now user p _mcompany = do
       doc' <- rand 10 arbitrary
       xtype <- rand 10 (elements $ randomDocumentAllowedTypes rda)
       status <- rand 10 (elements $ randomDocumentAllowedStatuses rda)
+      
+      siglinks <- rand 10 (listOf $ randomSigLinkByStatus status)
+      
       let doc = doc' { documenttype = xtype, documentstatus = status }
 
       roles <- getRandomAuthorRoles doc
-
-      mcompany <- case usercompany user of
-                    Nothing -> return Nothing
-                    Just cid -> dbQuery $ GetCompany cid
-
-
-      (signinfo, seeninfo) <- rand 10 arbitrary
-      asd <- extendRandomness $ signatoryDetailsFromUser user mcompany
-      asl <- dbUpdate $ SignLinkFromDetailsForTest asd roles
-      let asl' = asl { maybeseeninfo = seeninfo
-                     , maybesigninfo = signinfo
+      asl' <- rand 10 $ randomAuthorLinkByStatus status
+      let asl = asl' { maybesignatory = Just (userid user)
+                     , maybecompany = usercompany user
+                     , signatoryroles = roles
                      }
+      
+      let alllinks = asl : siglinks
 
-      let siglinks = documentsignatorylinks doc ++
-                     [ asl' { maybesignatory = Just (userid user)
-                            , maybecompany = usercompany user
-                            }
-                     ]
-      let unsignedsiglinks = map (\sl -> sl { maybesigninfo = Nothing,
-                                              maybeseeninfo = Nothing }) siglinks
-      let siglinksandauthor = if isPreparation doc
-                              then unsignedsiglinks
-                              else siglinks
-      let adoc = doc { documentsignatorylinks = siglinksandauthor
+
+      let adoc = doc { documentsignatorylinks = alllinks
                      , documentregion = getRegion user
                      , documentfiles = [fileid file]
                      }
       case (p adoc, invariantProblems now adoc) of
         (True, Nothing) -> return adoc
         (False, _)  -> do
-                        worker file now
+          --liftIO $ print $ "did not pass condition; doc: " ++ show adoc
+          worker file now user p _mcompany
+        
         (_, Just _problems) -> do
                -- am I right that random document should not have invariantProblems?
                --uncomment this to find out why the doc was rejected
                --print adoc
-               --print $ "rejecting doc: " ++ _problems
-               worker file now
+               --liftIO $ print $ "rejecting doc: " ++ _problems
+               worker file now user p _mcompany
+      --asl <- dbUpdate $ SignLinkFromDetailsForTest asd roles
+
 
 rand :: MonadIO m => Int -> Gen a -> m a
 rand i a = do
@@ -749,7 +801,7 @@ instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbit
     return (a, b, c, d, e, f, g, h, i)
 
 instance Arbitrary FileID where
-  arbitrary = fmap FileID arbitrary
+  arbitrary = FileID . abs <$> arbitrary
 
 instance Arbitrary File where
   arbitrary = do

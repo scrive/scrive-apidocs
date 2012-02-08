@@ -33,6 +33,7 @@ import Mails.Events
 import Data.Char
 import Text.XML.HaXml.Parse (xmlParse')
 import Control.Monad.Trans
+import EvidenceLog.Model
 
 mailsTests :: Nexus -> [String] -> Test
 mailsTests conn params  = testGroup "Mails" [
@@ -59,24 +60,26 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
         -- make  the context, user and document all use the same locale
         ctx <- mailingContext l conn
         _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { locale = l }
-        d' <- gRight $ randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype)
-        d <- gRight . dbUpdate $ SetDocumentLocale (documentid d') l (ctxtime ctx)
+        let aa = AuthorActor (ctxtime ctx) (IPAddress 0) (userid author) (BS.toString $ getEmail author)
+        d' <- gRight $ randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype) aa
+        d <- gRight . dbUpdate $ SetDocumentLocale (documentid d') l (SystemActor $ ctxtime ctx)
 
         let docid = documentid d
         let asl = head $ documentsignatorylinks d
         let authordetails = signatorydetails asl
         file <- addNewRandomFile
-        _ <- gRight $ randomUpdate $ AttachFile docid (fileid file)
+        _ <- gRight $ randomUpdate $ AttachFile docid (fileid file) (SystemActor $ ctxtime ctx)
 
         isl <- rand 10 arbitrary
         now <- getMinutesTime
         let authorrole = [SignatoryAuthor, SignatoryPartner]
             sigs = [(authordetails,authorrole), (isl,[SignatoryPartner])]
-        _ <- gRight $ randomUpdate $ ResetSignatoryDetails docid sigs now
-        d2 <- gRight $ randomUpdate $ PreparationToPending docid now
+        _ <- gRight $ randomUpdate $ ResetSignatoryDetails docid sigs (SystemActor now)
+        d2 <- gRight $ randomUpdate $ PreparationToPending docid (SystemActor now)
         let asl2 = head $ documentsignatorylinks d2
-        _ <- gRight $ randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2) now
-        doc <- gRight $ randomUpdate $ SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) now
+        _ <- gRight $ randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2) 
+             (SignatoryActor now (IPAddress 0) (maybesignatory asl2) (BS.toString $ getEmail asl2) (signatorylinkid asl2))
+        doc <- gRight $ randomUpdate $ \si -> SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) si (SystemActor now)
         let [sl] = filter (not . isAuthor) (documentsignatorylinks doc)
         req <- mkRequest POST []
         --Invitation Mails
@@ -97,7 +100,8 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
         when (doctype == Contract) $ do
           checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc (mkLocaleFromRegion defaultValue)
         -- Virtual signing
-        _ <- randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl) (signatorymagichash sl) (10 `minutesAfter` now) ip Nothing
+        _ <- randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl) (signatorymagichash sl) Nothing 
+                                   (SignatoryActor (10 `minutesAfter` now) ip (maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl))
         (Just sdoc) <- randomQuery $ GetDocumentByDocumentID docid
         -- Sending closed email
         checkMail "Closed" $ mailDocumentClosed ctx sdoc
@@ -119,13 +123,10 @@ testUserMails conn mailTo = withTestEnvironment conn $ do
                            sendoutForManualChecking s req ctx mailTo m
     checkMail "New account" $ do
           al <- newAccountCreatedLink user
-          newUserMail (ctxhostpart ctx) (getEmail user) (getEmail user) al False
+          newUserMail (ctxhostpart ctx) (getEmail user) (getEmail user) al
     checkMail "New account by admin" $ do
           al <- newAccountCreatedLink user
           mailNewAccountCreatedByAdmin ctx (ctxlocale ctx) (getSmartName user) (getEmail user) al Nothing
-    checkMail "New account after signing contract" $ do
-          al <- newAccountCreatedLink user
-          mailAccountCreatedBySigningContractReminder (ctxhostpart ctx)  (getSmartName user) (getEmail user) al
     checkMail "Reset password mail" $ do
           al <- newAccountCreatedLink user
           resetPasswordMail (ctxhostpart ctx) user al

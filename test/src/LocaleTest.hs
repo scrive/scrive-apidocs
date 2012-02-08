@@ -10,10 +10,10 @@ import qualified Data.ByteString.Char8 as BS
 
 import AppControl
 import DB.Classes
-import Doc.DocControl (handleIssueLocaleChangeAfterUpdate)
 import Doc.Model
 import Doc.DocStateData
 import Context
+import Login
 import MinutesTime
 import Redirect
 import StateHelper
@@ -24,6 +24,7 @@ import User.Locale
 import User.Model
 import User.UserControl
 import Misc
+import EvidenceLog.Model
 
 
 localeTests :: Nexus -> Test
@@ -117,19 +118,6 @@ testDocumentLocaleSwitchToBritain conn = withTestEnvironment conn $ do
   -- check that eleg is used
   assertEqual "Eleg is used" [ELegitimationIdentification] (documentallowedidtypes doc)
 
-  -- post a switch to region gb
-  req <- mkRequest POST [("docregion", inText "REGION_GB")]
-  (res, _) <- runTestKontra req ctx $ handleIssueLocaleChangeAfterUpdate doc >>= sendRedirect
-
-  -- check the region was successfully changed to se
-  assertEqual "Response code is 303" 303 (rsCode res)
-  Just udoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
-  assertEqual "Switched region is Britain" REGION_GB (getRegion udoc)
-  assertEqual "Switched lang is English" LANG_EN (getLang udoc)
-
-  -- check that eleg is no longer used
-  assertEqual "Eleg use should be removed" [EmailIdentification] (documentallowedidtypes udoc)
-
 testDocumentLocaleSwitchToSweden :: Nexus -> Assertion
 testDocumentLocaleSwitchToSweden conn = withTestEnvironment conn $ do
   user <- createTestUser REGION_GB LANG_EN
@@ -142,22 +130,13 @@ testDocumentLocaleSwitchToSweden conn = withTestEnvironment conn $ do
   assertEqual "Initial region is Britain" REGION_GB (getRegion doc)
   assertEqual "Initial lang is English" LANG_EN (getLang doc)
 
-  -- post a switch to region se
-  req <- mkRequest POST [("docregion", inText "REGION_SE")]
-  (res, _) <- runTestKontra req ctx $ handleIssueLocaleChangeAfterUpdate doc >>= sendRedirect
-
-  -- check the region was successfully changed to gb
-  assertEqual "Response code is 303" 303 (rsCode res)
-  Just udoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
-  assertEqual "Switched region is Sweden" REGION_SE (getRegion udoc)
-  assertEqual "Switched lang is Swedish" LANG_SE (getLang udoc)
 
 createTestElegDoc :: User -> MinutesTime -> DB Document
 createTestElegDoc user ctxtime = do
   doc <- addRandomDocumentWithAuthorAndCondition user
            (\d -> documentstatus d == Preparation
                   && documentfunctionality d == AdvancedFunctionality)
-  (Right elegdoc) <- dbUpdate $ SetDocumentIdentification (documentid doc) [ELegitimationIdentification] ctxtime
+  (Right elegdoc) <- dbUpdate $ SetDocumentIdentification (documentid doc) [ELegitimationIdentification] (SystemActor ctxtime)
   return elegdoc
 
 createTestUser :: Region -> Lang -> DB User

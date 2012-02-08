@@ -40,38 +40,36 @@ instance DBUpdate CreateEmail MailID where
 
 data AddContentToEmail = AddContentToEmail MailID String String [Attachment] XSMTPAttrs
 instance DBUpdate AddContentToEmail Bool where
-  dbUpdate (AddContentToEmail mid title content attachments xsmtpapi) = wrapDB $ \conn -> do
-    r <- run conn ("UPDATE mails SET"
+  dbUpdate (AddContentToEmail mid title content attachments xsmtpapi) = do
+    kPrepare $ "UPDATE mails SET"
       ++ "  title = ?"
       ++ ", content = ?"
       ++ ", attachments = ?"
-      ++ ", x_smtp_attrs = ? WHERE id = ?") [
-          toSql title
-        , toSql content
-        , toSql attachments
-        , toSql xsmtpapi
-        , toSql mid
-        ]
-    oneRowAffectedGuard r
+      ++ ", x_smtp_attrs = ? WHERE id = ?"
+    kExecute01 [
+        toSql title
+      , toSql content
+      , toSql attachments
+      , toSql xsmtpapi
+      , toSql mid
+      ]
 
 data MarkEventAsRead = MarkEventAsRead EventID MinutesTime
 instance DBUpdate MarkEventAsRead Bool where
-  dbUpdate (MarkEventAsRead eid time) = wrapDB $ \conn -> do
-    r <- run conn "UPDATE mail_events SET event_read = ? WHERE id = ?"
-      [toSql time, toSql eid]
-    oneRowAffectedGuard r
+  dbUpdate (MarkEventAsRead eid time) = do
+    kPrepare "UPDATE mail_events SET event_read = ? WHERE id = ?"
+    kExecute01 [toSql time, toSql eid]
 
 data DeleteEmail = DeleteEmail MailID
 instance DBUpdate DeleteEmail Bool where
-  dbUpdate (DeleteEmail mid) = wrapDB $ \conn -> do
-    r <- run conn "DELETE FROM mails WHERE id = ?"
-      [toSql mid]
-    oneRowAffectedGuard r
+  dbUpdate (DeleteEmail mid) = do
+    kPrepare "DELETE FROM mails WHERE id = ?"
+    kExecute01 [toSql mid]
 
 data GetUnreadEvents = GetUnreadEvents
 instance DBQuery GetUnreadEvents [(EventID, MailID, XSMTPAttrs, Event)] where
-  dbQuery GetUnreadEvents = wrapDB $ \conn -> do
-    st <- prepare conn $ "SELECT "
+  dbQuery GetUnreadEvents = do
+    kPrepare $ "SELECT "
       ++ "  e.id"
       ++ ", e.mail_id"
       ++ ", m.x_smtp_attrs"
@@ -79,17 +77,17 @@ instance DBQuery GetUnreadEvents [(EventID, MailID, XSMTPAttrs, Event)] where
       ++ " FROM mails m JOIN mail_events e ON (m.id = e.mail_id)"
       ++ " WHERE e.event_read IS NULL"
       ++ " ORDER BY m.id DESC, e.id DESC"
-    _ <- execute st []
-    foldDB st fetchEvents []
+    _ <- kExecute []
+    foldDB fetchEvents []
     where
       fetchEvents acc eid mid attrs event = (eid, mid, attrs, event) : acc
 
 data GetIncomingEmails = GetIncomingEmails
 instance DBQuery GetIncomingEmails [Mail] where
-  dbQuery GetIncomingEmails = wrapDB $ \conn -> do
-    st <- prepare conn $ selectMailsSQL ++ "WHERE title IS NOT NULL AND content IS NOT NULL AND to_be_sent <= now() AND sent IS NULL ORDER BY id DESC"
-    _ <- execute st []
-    fetchMails st
+  dbQuery GetIncomingEmails = do
+    kPrepare $ selectMailsSQL ++ "WHERE title IS NOT NULL AND content IS NOT NULL AND to_be_sent <= now() AND sent IS NULL ORDER BY id DESC"
+    _ <- kExecute []
+    fetchMails
 
 -- below handlers are for use within mailer only. I can't hide them properly
 -- since mailer is not separated into another package yet so it has to be
@@ -97,31 +95,28 @@ instance DBQuery GetIncomingEmails [Mail] where
 
 data GetEmail = GetEmail MailID MagicHash
 instance DBQuery GetEmail (Maybe Mail) where
-  dbQuery (GetEmail mid token) = wrapDB $ \conn -> do
-    st <- prepare conn $ selectMailsSQL ++ "WHERE id = ? AND token = ?"
-    _ <- execute st [toSql mid, toSql token]
-    fetchMails st >>= oneObjectReturnedGuard
+  dbQuery (GetEmail mid token) = do
+    kPrepare $ selectMailsSQL ++ "WHERE id = ? AND token = ?"
+    _ <- kExecute [toSql mid, toSql token]
+    fetchMails >>= oneObjectReturnedGuard
 
 data DeferEmail = DeferEmail MailID MinutesTime
 instance DBUpdate DeferEmail Bool where
-  dbUpdate (DeferEmail mid time) = wrapDB $ \conn -> do
-    r <- run conn "UPDATE mails SET to_be_sent = ? WHERE id = ?"
-      [toSql time, toSql mid]
-    oneRowAffectedGuard r
+  dbUpdate (DeferEmail mid time) = do
+    kPrepare "UPDATE mails SET to_be_sent = ? WHERE id = ?"
+    kExecute01 [toSql time, toSql mid]
 
 data MarkEmailAsSent = MarkEmailAsSent MailID MinutesTime
 instance DBUpdate MarkEmailAsSent Bool where
-  dbUpdate (MarkEmailAsSent mid time) = wrapDB $ \conn -> do
-    r <- run conn "UPDATE mails SET sent = ? WHERE id = ?"
-      [toSql time, toSql mid]
-    oneRowAffectedGuard r
+  dbUpdate (MarkEmailAsSent mid time) = do
+    kPrepare "UPDATE mails SET sent = ? WHERE id = ?"
+    kExecute01 [toSql time, toSql mid]
 
 data UpdateWithEvent = UpdateWithEvent MailID Event
 instance DBUpdate UpdateWithEvent Bool where
-  dbUpdate (UpdateWithEvent mid ev) = wrapDB $ \conn -> do
-    r <- run conn "INSERT INTO mail_events (mail_id, event) VALUES (?, ?)"
-      [toSql mid, toSql ev]
-    oneRowAffectedGuard r
+  dbUpdate (UpdateWithEvent mid ev) = do
+    kPrepare "INSERT INTO mail_events (mail_id, event) VALUES (?, ?)"
+    kExecute01 [toSql mid, toSql ev]
 
 selectMailsSQL :: String
 selectMailsSQL = "SELECT"
@@ -136,8 +131,8 @@ selectMailsSQL = "SELECT"
   ++ " FROM mails"
   ++ " "
 
-fetchMails :: Statement -> IO [Mail]
-fetchMails st = foldDB st decoder []
+fetchMails :: DB [Mail]
+fetchMails = foldDB decoder []
   where
     -- Note: this function gets mails in reversed order, but all queries
     -- use ORDER BY DESC, so in the end everything is properly ordered.

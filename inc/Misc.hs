@@ -43,6 +43,11 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified GHC.Conc
 import Data.Bits
 
+-- | Infix version of mappend, provided for convenience.
+(<++>) :: Monoid m => m -> m -> m
+(<++>) = mappend
+infixr 6 <++>
+
 -- We want this operators to bind strongly but weeker then . to do cond1 &&^ not . cond2
 infixl 8  &&^
 infixl 8  ||^
@@ -642,14 +647,6 @@ basename filename =
   case break (\x -> (x=='\\') || (x=='/')) filename of
     (_,(_:rest)) -> basename rest
     _            -> takeWhile ((/=) '.') filename
-
-indentLinesMore :: Int -> String -> String
-indentLinesMore nspaces sublines =
-  case lines sublines of
-    (x:xs) -> unlines $ x : map (spaces ++) xs
-    [] -> []
-  where 
-    spaces = replicate nspaces ' '
 
 ($^) :: Maybe (a -> a) -> a -> a
 ($^) Nothing  a = a

@@ -268,38 +268,3 @@ checkPendingToAwaitingAuthor doc = catMaybes $
                     ("Not all non-author signatories have signed")
   , trueOrMessage (not $ hasSigned $ getAuthorSigLink doc) "Author has already signed"
   ]
-
-{- |
-    Filter documents according to whether the given indicated sig link has even been deleted.
-    The first param should be True to get the docs which have been deleted,
-    and so would appear in the recycle bin//trash can.  It should be False to get docs which
-    have never been deleted.
--}
-filterDocsWhereDeleted :: (SignatoryLinkIdentity a) => Bool -> a -> [Document] -> [Document]
-filterDocsWhereDeleted deleted siglinkidentifier docs =
-  filter isIncludedDoc docs
-  where
-    isIncludedDoc Document{documentsignatorylinks} = 
-      not . Prelude.null $ filter isIncludedSigLink documentsignatorylinks
-    isIncludedSigLink sl@SignatoryLink{signatorylinkdeleted} =
-      isSigLinkFor siglinkidentifier sl && signatorylinkdeleted==deleted
-
-
-{- |
-    Filter documents according to whether the indicated signatory link has been activated
-    according to the sign order.  Author links are included either way.
--}
-filterDocsWhereActivated :: SignatoryLinkIdentity a => a -> [Document] -> [Document]
-filterDocsWhereActivated siglinkidentifier docs =
-  filter isIncludedDoc docs
-  where
-    isIncludedDoc doc@Document{documentsignatorylinks} = 
-      not . Prelude.null $ filter (isIncludedSigLink doc) documentsignatorylinks
-    isIncludedSigLink doc 
-                      sl@SignatoryLink{signatorylinkdeleted, 
-                                       signatoryroles, 
-                                       signatorydetails} =
-      let isRelevant = isSigLinkFor siglinkidentifier sl && not signatorylinkdeleted
-          isAuthorLink = SignatoryAuthor `elem` signatoryroles
-          isActivatedForSig = (documentcurrentsignorder doc) >= (signatorysignorder signatorydetails)
-      in  isRelevant && (isAuthorLink || isActivatedForSig)

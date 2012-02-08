@@ -3,11 +3,12 @@ module DB.Fetcher
   , fetchValues
   ) where
 
+import Data.Monoid
 import Database.HDBC as HDBC
 import qualified Control.Exception as E
 
 import DB.Exception as DB
-import Happstack.State()
+import DB.SQL
 import Control.Monad.IO.Class
 import Control.Monad
 import Data.Convertible
@@ -22,7 +23,7 @@ instance Fetcher (Either DBException r) where
 
     fetchWorker _ action [] = action
     fetchWorker n _ xs = 
-      Left $ RowLengthMismatch "" n (n + length xs)
+      Left $ RowLengthMismatch mempty n (n + length xs)
 
     fetchArity _ = 0
 
@@ -32,10 +33,10 @@ instance (Fetcher b, Convertible SqlValue t) => Fetcher (t -> b) where
     fetchWorker n action (x:xs) = 
       case safeFromSql x of
         Right value -> fetchWorker (n+1) (action value) xs
-        Left cnvError -> Left $ CannotConvertSqlValue "" n "" cnvError
+        Left cnvError -> Left $ CannotConvertSqlValue mempty n "" cnvError
 
     fetchWorker n action _ = do
-      Left $ RowLengthMismatch "" (n + fetchArity action) n
+      Left $ RowLengthMismatch mempty (n + fetchArity action) n
 
     fetchArity action = 1 + fetchArity (action undefined) 
 
@@ -59,11 +60,11 @@ fetchValues st decoder = liftM reverse (worker [])
                                 else columns !! pos
                    liftIO $ finish st
                    liftIO $ E.throwIO $ CannotConvertSqlValue
-                            { DB.originalQuery = HDBC.originalQuery st
+                            { DB.originalQuery = SQL (HDBC.originalQuery st) []
                             , DB.columnName    = column
                             , DB.position      = DB.position left
                             , DB.convertError  = DB.convertError left
                             }
             Left left -> do
                    liftIO $ finish st
-                   liftIO $ E.throwIO $ left { DB.originalQuery = HDBC.originalQuery st }
+                   liftIO $ E.throwIO $ left { DB.originalQuery = SQL (HDBC.originalQuery st) [] }

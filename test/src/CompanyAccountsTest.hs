@@ -29,7 +29,6 @@ import StateHelper
 import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
-import User.Model
 import Util.HasSomeUserInfo
 
 
@@ -344,7 +343,7 @@ test_removingCompanyAccountWorks conn = withTestEnvironment conn $ do
 
   assertCompanyInvitesAre company []
 
-  companydocs <- dbQuery $ GetDocumentsByCompany adminuser
+  companydocs <- dbQuery $ GetDocumentsBySignatory $ userid adminuser
   assertEqual "Company still owns users docs" 1 (length companydocs)
   assertEqual "Docid matches" docid (documentid $ head companydocs)
 
@@ -370,10 +369,10 @@ test_privateUserTakoverWorks conn = withTestEnvironment conn $ do
   assertEqual "User belongs to the company" (usercompany updateduser)
                                             (Just $ companyid company)
   assertBool "User is a standard user" (not $ useriscompanyadmin updateduser)
-  companydocs <- dbQuery $ GetDocumentsByCompany adminuser
+  companydocs <- dbQuery $ GetDocumentsBySignatory $ userid adminuser
   assertEqual "Company owns users docs" 1 (length companydocs)
   assertEqual "Docid matches" docid (documentid $ head companydocs)
-  userdocs <- dbQuery $ GetDocumentsBySignatory user
+  userdocs <- dbQuery $ GetDocumentsBySignatory $ userid user
   assertEqual "User is still linked to their docs" 1 (length userdocs)
   assertEqual "Docid matches" docid (documentid $ head userdocs)
 

@@ -236,61 +236,6 @@ modalWelcomeToSkrivaPa=
     </div>
   </form>
 </div>
-####
-modalAccountRemoval=
-<div class="modal-container">
-  <div class="modal-header">
-    <span class="modal-icon message"></span>
-    <span class="modal-title">
-      <h3>$_modalAccountRemovalHeader()$</h3>
-    </span>
-    <a class="modal-close close"> </a>
-  </div>
-  <div class="modal-body">
-    <div class="modal-content">
-      <p>$_modalAccountRemovalBody()$</p>
-    </div>
-  </div>
-  <div class="modal-footer">
-    <form method="post" action="$removallink$" id="removeaccountform"></form>
-    <a href="#" onclick="\$('#removeaccountform').submit();" class="btn-small red float-right">
-      <div class="left"></div>
-      <div class="label">
-        <p>$_modalAccountRemovalFooter()$</p>
-        <div class="btn-symbol red arrow-left"></div>
-      </div>
-      <div class="right"></div>
-    </a>
-    <a href="$activationlink$" class="float-left" style="color: #5eb30c; text-decoration: none">$_modalAccountRemovalActivateAccount()$</a>
-  </div>
-</div>
-###
-modalAccountRemoved=
-<div class="modal-container">
-  <div class="modal-header">
-    <span class="modal-icon message"></span>
-    <span class="modal-title">
-      <h3>$_modalAccountRemovedHeader()$</h3>
-    </span>
-    <a class="modal-close close"> </a>
-  </div>
-  <div class="modal-body">
-    <div class="modal-content">
-      <p>$_modalAccountRemovedBody()$</p>
-      <p>$_modalAccountRemovedBestRegards()$</p>
-    </div>
-  </div>
-  <div class="modal-footer">
-    <a class="btn-small green float-right close">
-      <div class="left"></div>
-      <div class="label">
-        <p>$_ok()$</p>
-        <div class="btn-symbol green arrow-left"></div>
-      </div>
-      <div class="right"></div>
-    </a>
-  </div>
-</div>
 ###
 modalSendInviteView=
 <div class="modal-container">
@@ -772,7 +717,7 @@ accountFromSignInputs=
 accountFromSignFooter=
     <div class="accountFromSignFooter">
       <div class="float-left">
-        <a class="declineAccountFromSign cancel">$_accountFromSignFooterNoThx()$</a>
+        <a class="cancel close">$_accountFromSignFooterNoThx()$</a>
       </div>
       <a class="btn-small green float-right submit">
         <div class="left"></div>

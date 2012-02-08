@@ -65,6 +65,9 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import Doc.SignatoryTMP
 import qualified Log (integration)
 import Doc.DocStorage
+import User.History.Model
+
+import EvidenceLog.Model
 
 {- |
   Definition of integration API
@@ -200,34 +203,41 @@ createDocument = do
    doc <- updateDocumentWithDocumentUI d
    return $ toJSObject [ ("document_id",JSString $ toJSString $ show $ documentid doc)]
 
-createDocFromTemplate ::(APIContext c, Kontrakcja m) =>
+createDocFromTemplate ::(Kontrakcja m) =>
                         DocumentID
                         -> BS.ByteString
                         -> User
                         -> Maybe Company
                         -> MinutesTime
-                        -> APIFunction m c (Maybe Document)
+                        -> IntegrationAPIFunction m (Maybe Document)
 createDocFromTemplate templateid title user mcompany time = do
-  edoc <- runDBUpdate $ SignableFromDocumentIDWithUpdatedAuthor user mcompany templateid time
+  ctx <- getContext
+  sid <- serviceid <$> service <$> ask
+  let mecid = maybe Nothing companyexternalid mcompany
+  let ia = IntegrationAPIActor time (ctxipnumber ctx) sid (BS.toString . unExternalCompanyID <$> mecid)
+  edoc <- runDBUpdate $ SignableFromDocumentIDWithUpdatedAuthor user mcompany templateid ia
   when (isLeft edoc) $
     throwApiError API_ERROR_OTHER $ "Cannot create document!"
   let doc = fromRight edoc
-  edoc' <- runDBUpdate $ SetDocumentTitle (documentid doc) title time
+  edoc' <- runDBUpdate $ SetDocumentTitle (documentid doc) title ia
   when (isLeft edoc') $
     Log.integration $ "Could not set title on doc " ++ show (documentid doc)
   return $ either (const $ Just doc) Just edoc'
 
-createDocFromFiles :: (Kontrakcja m, APIContext c) =>
+createDocFromFiles :: (Kontrakcja m) =>
                       BS.ByteString
                       -> DocumentType
                       -> [(BS.ByteString, BS.ByteString)]
                       -> User
                       -> Maybe Company
                       -> MinutesTime
-                      -> APIFunction m c (Maybe Document)
+                      -> IntegrationAPIFunction m (Maybe Document)
 createDocFromFiles title doctype files user mcompany time = do
   ctx <- getContext
-  edoc <- runDBUpdate $ NewDocument user mcompany title doctype time
+  sid <- serviceid <$> service <$> ask
+  let mecid = maybe Nothing companyexternalid mcompany
+  let ia = IntegrationAPIActor time (ctxipnumber ctx) sid (BS.toString . unExternalCompanyID <$> mecid)
+  edoc <- runDBUpdate $ NewDocument user mcompany title doctype ia
   case edoc of
     Left _ -> throwApiError API_ERROR_OTHER $ "Cannot create document"
     Right doc -> do
@@ -237,15 +247,18 @@ createDocFromFiles title doctype files user mcompany time = do
                          Left _ -> throwApiError API_ERROR_OTHER $ "Cannot handle uploaded data"
                          Right x -> return x
             file <- runDB $ dbUpdate $ NewFile name content14
-            runDBUpdate $ AttachFile (documentid doc) (fileid file) time
+            runDBUpdate $ AttachFile (documentid doc) (fileid file) ia
       mapM_ (uncurry addAndAttachFile) files
       return $ Just doc
 
 updateDocumentWithDocumentUI :: Kontrakcja m => Document -> IntegrationAPIFunction m Document
 updateDocumentWithDocumentUI doc = do
-    mailfooter <- fromJSONField "mailfooter"
-    ndoc <- runDBUpdate $ SetDocumentUI (documentid doc) $ (documentui doc) {documentmailfooter = mailfooter}
-    return $ either (const doc) id ndoc
+  ctx <- getContext    
+  sid <- serviceid <$> service <$> ask
+  let actor = IntegrationAPIActor (ctxtime ctx) (ctxipnumber ctx) sid Nothing
+  mailfooter <- fromJSONField "mailfooter"
+  ndoc <- runDBUpdate $ SetDocumentUI (documentid doc) ((documentui doc) {documentmailfooter = mailfooter}) actor
+  return $ either (const doc) id ndoc
 
 createAPIDocument :: Kontrakcja m
                   => Company
@@ -257,7 +270,12 @@ createAPIDocument :: Kontrakcja m
 createAPIDocument _ [] _ _ _  =
     throwApiError API_ERROR_OTHER "One involved person must be provided"
 createAPIDocument comp' (authorTMP:signTMPS) tags mlocale createFun = do
-  
+    sid <- serviceid <$> service <$> ask
+    
+    when (isNothing $ companyexternalid comp') $
+      throwApiError API_ERROR_ILLEGAL_VALUE "The companyid must exist."
+    let Just (ExternalCompanyID cid) = companyexternalid comp'
+        
     when (not $ isAuthorTMP authorTMP) $
       throwApiError API_ERROR_ILLEGAL_VALUE "The first involved must be an author role."
   
@@ -271,15 +289,15 @@ createAPIDocument comp' (authorTMP:signTMPS) tags mlocale createFun = do
     mdoc <- createFun docAuthor (Just comp) now
     when (isNothing mdoc) $ throwApiError API_ERROR_OTHER "Problem creating a document | This may be because the company and author don't match"
     let doc = fromJust mdoc
-
-    _ <- runDBUpdate $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality now
-    _ <- runDBUpdate $ SetDocumentTags (documentid doc) tags
+        actor = IntegrationAPIActor (ctxtime ctx) (ctxipnumber ctx) sid (Just $ BS.toString cid)
+    _ <- runDBUpdate $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality actor
+    _ <- runDBUpdate $ SetDocumentTags (documentid doc) tags actor
     when (isJust mlocale) $
-      ignore $ runDBUpdate $ SetDocumentLocale (documentid doc) (fromJust mlocale) now
+      ignore $ runDBUpdate $ SetDocumentLocale (documentid doc) (fromJust mlocale) actor
     let sigdetails s =  (fst $ toSignatoryDetails1 s,[SignatoryPartner] <| (isSignatoryTMP s) |> [])
         authordetails s = (fst $ toSignatoryDetails1 s,[SignatoryAuthor,SignatoryPartner] <| (isSignatoryTMP s) |> [SignatoryAuthor])
         sigs = (authordetails authorTMP):(sigdetails <$> signTMPS)
-    doc' <- runDBUpdate $ ResetSignatoryDetails (documentid doc) sigs (ctxtime ctx)
+    doc' <- runDBUpdate $ ResetSignatoryDetails (documentid doc) sigs actor
     when (isLeft doc') $ Log.integration $ "error creating document: " ++ fromLeft doc'
     when (isLeft doc') $ throwApiError API_ERROR_OTHER "Problem creating a document (SIGUPDATE) | This should never happend"
     return $ fromRight doc'
@@ -290,6 +308,7 @@ userFromTMP uTMP comp = do
     let remail = fold $ asValidEmail . BS.toString <$> email uTMP
     when (not $ isGood $ remail) $ throwApiError API_ERROR_OTHER "NOT valid email for first involved person"
     muser <- runDBQuery $ GetUserByEmail (Just sid) $ Email $ fromGood remail
+    Context{ctxtime,ctxipnumber} <- getContext
     user <- case muser of
               Just u -> return u
               Nothing -> do
@@ -303,8 +322,9 @@ userFromTMP uTMP comp = do
                 when (isNothing mtosuser) $ throwApiError API_ERROR_OTHER "Problem reading a user (BASE) | This should never happend"
                 let tosuser = fromJust mtosuser
 
-                Context{ctxtime} <- getContext
                 _ <- addUserIDSignTOSStatEvent (userid u) ctxtime (usercompany u) (userservice u)
+                _ <- runDBUpdate $ LogHistoryAccountCreated (userid u) ctxipnumber ctxtime (Email $ fromGood remail) Nothing
+                _ <- runDBUpdate $ LogHistoryTOSAccept (userid u) ctxipnumber ctxtime Nothing
 
                 return tosuser
     info_set <- runDBUpdate $ SetUserInfo (userid user) (userinfo user)
@@ -314,6 +334,12 @@ userFromTMP uTMP comp = do
             , userpersonalnumber = fromMaybe (getPersonalNumber user) $ personalnumber uTMP
             }
     when (not info_set) $ throwApiError API_ERROR_OTHER "Problem creating a user (INFO) | This should never happend"
+    _ <- runDBUpdate $ LogHistoryUserInfoChanged (userid user) ctxipnumber ctxtime (userinfo user) 
+                                                 ((userinfo user) { userfstname = fromMaybe (getFirstName user) $ fstname uTMP
+                                                                  , usersndname = fromMaybe (getFirstName user) $ sndname uTMP
+                                                                  , userpersonalnumber = fromMaybe (getPersonalNumber user) $ personalnumber uTMP
+                                                                  }) 
+                                                  Nothing
     company_set <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid comp)
     when (not company_set) $ throwApiError API_ERROR_OTHER "Problem creating a user (COMPANY) | This should never happend"
     Just user' <- runDBQuery $ GetUserByID $ userid user
@@ -381,25 +407,31 @@ getDocument = do
 
 setDocumentTag :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 setDocumentTag =  do
-    doc <- documentFromParam
-    mtag <- fromJSONLocal "tag" $ do
-              liftM2 pairMaybe (fromJSONField "name") (fromJSONField "value")
-    when (isNothing mtag) $ throwApiError API_ERROR_MISSING_VALUE "Could not read tag name or value"
-    let tags = addTag (documenttags doc) (fromJust mtag)
-    res <- runDBUpdate $ SetDocumentTags (documentid doc) tags
-    when (isLeft res) $ throwApiError API_ERROR_NO_USER $ "Changing tag problem:" ++ fromLeft res
-    return $ toJSObject []
+  doc <- documentFromParam
+  mtag <- fromJSONLocal "tag" $ do
+    liftM2 pairMaybe (fromJSONField "name") (fromJSONField "value")
+  when (isNothing mtag) $ throwApiError API_ERROR_MISSING_VALUE "Could not read tag name or value"
+  sid <- serviceid <$> service <$> ask
+  Context{ctxtime,ctxipnumber} <- getContext
+  let tags = addTag (documenttags doc) (fromJust mtag)
+      actor = IntegrationAPIActor ctxtime ctxipnumber sid Nothing
+  res <- runDBUpdate $ SetDocumentTags (documentid doc) tags actor
+  when (isLeft res) $ throwApiError API_ERROR_NO_USER $ "Changing tag problem:" ++ fromLeft res
+  return $ toJSObject []
 
 
 removeDocument  :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 removeDocument = do
+    Context{ctxtime, ctxipnumber} <- getContext
+    sid <- serviceid <$> service <$> ask
     doc <- documentFromParam
     -- we only control the author through the integration api
     mauthor <- maybe (return Nothing)
                      (runDBQuery . GetUserByID)
                      (getAuthorSigLink doc >>= maybesignatory)
     when (isNothing mauthor) $ throwApiError API_ERROR_NO_USER $ "Error while removing a document: Failed to find author"
-    res <- runDBUpdate $ ArchiveDocument (fromJust mauthor) $ documentid doc
+    let actor = IntegrationAPIActor ctxtime ctxipnumber sid Nothing
+    res <- runDBUpdate $ ArchiveDocument (fromJust mauthor) (documentid doc) actor
     when (isLeft res) $ throwApiError API_ERROR_NO_DOCUMENT $ "Error while removing a document: " ++ fromLeft res
     return $ toJSObject []
 

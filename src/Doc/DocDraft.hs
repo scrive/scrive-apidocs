@@ -12,7 +12,6 @@ import Doc.DocStateData
 import Misc
 import Control.Monad
 import Data.Maybe
-import Data.Functor
 import qualified Data.ByteString.UTF8 as BS
 import Kontra
 import Util.SignatoryLinkUtils
@@ -21,6 +20,8 @@ import Data.List
 import User.Region
 import Doc.Model
 import DB.Classes
+import EvidenceLog.Model
+import Util.MonadUtils
 
 data DraftData = DraftData {
       title :: String
@@ -75,10 +76,9 @@ instance FromJSON DraftData where
         
         
         
-applyDraftDataToDocument :: Kontrakcja m =>  Document -> DraftData -> m (Either String Document)
-applyDraftDataToDocument doc draft = do
-    time <- ctxtime <$> getContext
-    _ <- runDBUpdate $ UpdateDraft (documentid doc) ( doc {
+applyDraftDataToDocument :: (Actor a) =>  Kontrakcja m =>  Document -> DraftData -> a -> m (Either String Document)
+applyDraftDataToDocument doc draft actor = do
+    _ <- runDB $ dbUpdate $ UpdateDraft (documentid doc) ( doc {
                                   documenttitle = BS.fromString $ title draft
                                 , documentfunctionality = functionality draft
                                 , documentinvitetext = maybe BS.empty BS.fromString $ invitationmessage draft
@@ -86,12 +86,12 @@ applyDraftDataToDocument doc draft = do
                                 , documentallowedidtypes = [authorization draft]
                                 , documentsignatoryattachments = concat $ map getAttachments $ signatories draft
                                 , documentregion = region draft
-                            }) time
-    when (template draft && (not $ isTemplate doc)) $ do
-         ignore $ runDBUpdate $ TemplateFromDocument $ documentid doc                                   
+                            }) actor
+    when_ (template draft && (not $ isTemplate doc)) $ do
+         runDBUpdate $ TemplateFromDocument (documentid doc) actor
     case (mergeSignatories (fromJust $ getAuthorSigLink doc) (signatories draft)) of
          Nothing   -> return $ Left "Problem with author details while sending draft"
-         Just sigs -> runDBUpdate $ ResetSignatoryDetails2 (documentid doc) sigs time
+         Just sigs -> runDBUpdate $ ResetSignatoryDetails2 (documentid doc) sigs actor
 
                             
 

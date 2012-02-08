@@ -57,7 +57,7 @@ data KontraLink
     | LinkUserMailAPI
     | LinkSignDoc Document SignatoryLink
     | LinkSignDocNoMagicHash DocumentID SignatoryLinkID
-    | LinkAccountFromSign Document SignatoryLink ActionID MagicHash
+    | LinkAccountFromSign Document SignatoryLink
     | LinkIssueDoc DocumentID
     | LinkDesignDoc DocumentID
     | LinkRenameAttachment DocumentID
@@ -69,7 +69,6 @@ data KontraLink
     | LinkRestart DocumentID
     | LinkAcceptTOS
     | LinkAdminOnly
-    | LinkPaymentsAdmin
     | LinkUserAdmin (Maybe UserID)
     | LinkCompanyAdmin (Maybe CompanyID)
     | LinkCompanyUserAdmin CompanyID
@@ -78,8 +77,6 @@ data KontraLink
     | LinkPasswordReminder ActionID MagicHash
     | LinkViralInvitationSent ActionID MagicHash String --email
     | LinkAccountCreated ActionID MagicHash String -- email
-    | LinkAccountCreatedBySigning ActionID MagicHash
-    | LinkAccountRemoval ActionID MagicHash
     | LinkChangeSignatoryEmail DocumentID SignatoryLinkID
     | LinkWithdrawn DocumentID
     | LoopBack
@@ -182,16 +179,13 @@ instance Show KontraLink where
                  "?" ++ "magichash="++ show (signatorymagichash signatorylink)
     showsPrec _ (LinkSignDocNoMagicHash documentid signatorylinkid) =
         (++) $ "/s/" ++ show documentid ++ "/" ++ show signatorylinkid
-    showsPrec _ (LinkAccountFromSign document signatorylink actionid magichash) =
+    showsPrec _ (LinkAccountFromSign document signatorylink) =
         (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++
-                 "/" ++ show (signatorymagichash signatorylink) ++
-                 "/" ++ show actionid ++
-                 "/" ++ show magichash
+                 "/" ++ show (signatorymagichash signatorylink)
     showsPrec _ (LinkRemind document signlink) = (++) $ "/resend/"++(show $ documentid document)++"/"++(show $ signatorylinkid signlink)
     showsPrec _ (LinkCancel document) = (++) $ "/cancel/"++(show $ documentid document)
     showsPrec _ (LinkRestart documentid) = (++) $ "/restart/"++(show  documentid)
     showsPrec _ LinkAdminOnly = (++) $ "/adminonly/"
-    showsPrec _ (LinkPaymentsAdmin ) = (++) $ "/adminonly/advpayments"
     showsPrec _ (LinkUserAdmin Nothing) = (++) $ "/adminonly/useradmin"
     showsPrec _ (LinkUserAdmin (Just userId)) = (++) $ "/adminonly/useradmin/"++show userId
     showsPrec _ (LinkCompanyAdmin Nothing) = (++) $ "/adminonly/companyadmin"
@@ -202,8 +196,6 @@ instance Show KontraLink where
     showsPrec _ (LinkPasswordReminder aid hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash
     showsPrec _ (LinkViralInvitationSent aid hash email) = (++) $ "/accountsetup/" ++ show aid ++ "/" ++ show hash ++ "?email=" ++ email
     showsPrec _ (LinkAccountCreated aid hash email) = (++) $ "/accountsetup/" ++ show aid ++ "/" ++ show hash ++ "?email=" ++ email
-    showsPrec _ (LinkAccountCreatedBySigning aid hash) = (++) $ "/accountsetup/" ++ show aid ++ "/" ++ show hash
-    showsPrec _ (LinkAccountRemoval aid hash) = (++) $ "/accountremoval/" ++ show aid ++ "/" ++ show hash
     showsPrec _ (LinkChangeSignatoryEmail did slid ) = (++) $ "/changeemail/"++show did++"/"++show slid
     showsPrec _ (LinkWithdrawn did ) = (++) $ "/withdrawn/"++show did
     showsPrec _ LoopBack = (++) $ "/" -- this should never be used

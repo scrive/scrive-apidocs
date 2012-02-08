@@ -13,11 +13,14 @@ import Doc.Tables
 import Doc.Migrations
 import User.Migrations
 import User.Tables
+import User.History.Tables
 import Stats.Tables
 import Stats.Migrations
 import File.Tables
 import Mails.Tables
 import Mails.Migrations
+
+import EvidenceLog.Tables
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
 kontraMigrations :: [Migration]
@@ -38,6 +41,7 @@ kontraTables = [
   , tableUserFriends
   , tableUserMailAPIs
   , tableUserInviteInfos
+  , tableUsersHistory
   , tableServices
   , tableCompanies
   , tableCompanyInvites
@@ -49,4 +53,5 @@ kontraTables = [
   , tableSignatoryLinks
   , tableAuthorAttachments
   , tableSignatoryAttachments
+  , tableEvidenceLog
   ] ++ mailerTables

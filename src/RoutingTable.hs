@@ -1,53 +1,37 @@
 {- |
    Initialises contexts and sessions, and farms requests out to the appropriate handlers.
  -}
-module RoutingTable
-    ( staticRoutes
-    ) where
+module RoutingTable (
+    staticRoutes
+  ) where
 
 import API.IntegrationAPI
 import API.Service.ServiceControl
-import API.UserAPI
 
-import ActionSchedulerState
 import AppView as V
-import DB.Classes
-import InputValidation
 import Kontra
 import KontraLink
-import Mails.SendMail
-import MinutesTime
+import Login
 import Misc
---import PayEx.PayExInterface ()-- Import so at least we check if it compiles
 import Redirect
 import Routing
 import Happstack.StaticRouting(Route, choice, dir, path, param, remainingPath)
 import User.Model
-import User.UserView as UserView
+--import User.History.Model
 import qualified Stats.Control as Stats
 import qualified Administration.AdministrationControl as Administration
-import qualified Log (security, debug)
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
-import qualified Contacts.ContactsControl as Contacts
 import qualified Doc.DocControl as DocControl
 import qualified Archive.Control as ArchiveControl
 import qualified ELegitimation.BankID as BankID
-import qualified Payments.PaymentsControl as Payments
 import qualified User.UserControl as UserControl
---import qualified ScriveByMail.Control as ScriveByMail
 import qualified API.MailAPI as MailAPI
-import Util.FlashUtil
-import Util.HasSomeUserInfo
 import Doc.API
-import Stats.Control
 
 import Control.Monad.Error
 import Data.Functor
 import Data.List
-import Data.Maybe
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
-import Happstack.State (query, update)
-
 
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
@@ -102,8 +86,7 @@ staticRoutes = choice
 
      , dir "s" $ param "sign"           $ hPostNoXToken $ toK2 $ DocControl.signDocument
      , dir "s" $ param "reject"         $ hPostNoXToken $ toK2 $ DocControl.rejectDocument
-     , dir "s" $ param "acceptaccount"  $ hPostNoXToken $ toK5 $ DocControl.handleAcceptAccountFromSign
-     , dir "s" $ param "declineaccount" $ hPostNoXToken $ toK5 $ DocControl.handleDeclineAccountFromSign
+     , dir "s" $ param "acceptaccount"  $ hPostNoXToken $ toK3 $ DocControl.handleAcceptAccountFromSign
      , dir "s" $ param "sigattachment"  $ hPostNoXToken $ toK2 $ DocControl.handleSigAttach
      , dir "s" $ param "deletesigattachment" $ hPostNoXToken $ toK2 $ DocControl.handleDeleteSigAttach
 
@@ -187,8 +170,6 @@ staticRoutes = choice
      , dir "account" $ dir "usagestats" $ hGet $ toK0 $ UserControl.handleUsageStatsForUser
      , dir "account" $ dir "usagestats" $ dir "days"   $ dir "json" $ hGet $ toK0 $ UserControl.handleUsageStatsJSONForUserDays
      , dir "account" $ dir "usagestats" $ dir "months" $ dir "json" $ hGet $ toK0 $ UserControl.handleUsageStatsJSONForUserMonths
-     , dir "contacts"  $ hGet  $ toK0 $ Contacts.showContacts
-     , dir "contacts"  $ hPost $ toK0 $ Contacts.handleContactsChange
      , dir "accepttos" $ hGet  $ toK0 $ UserControl.handleAcceptTOSGet
      , dir "accepttos" $ hPost $ toK0 $ UserControl.handleAcceptTOSPost
 
@@ -237,9 +218,6 @@ staticRoutes = choice
      , dir "adminonly" $ dir "runstatssigs" $ hGet $ toK0 $ Stats.addAllSigsToStats
 
      , dir "adminonly" $ dir "statistics"        $ hGet  $ toK0 $ Stats.showAdminSystemUsageStats
-     , dir "adminonly" $ dir "payments"          $ hGet  $ toK0 $ Payments.handlePaymentsModelForViewView
-     , dir "adminonly" $ dir "advpayments"       $ hGet  $ toK0 $ Payments.handlePaymentsModelForEditView
-     , dir "adminonly" $ dir "advpayments"       $ hPost $ toK0 $ Payments.handleAccountModelsChange
 
      , dir "adminonly" $ dir "services" $ hGet $ toK0 $ Administration.showServicesPage
      , dir "adminonly" $ dir "services" $ param "create" $ hPost $ toK0 $ Administration.handleCreateService
@@ -271,9 +249,10 @@ staticRoutes = choice
      , dir "adminonly" $ dir "log" $ hGetWrap (onlyAdmin . https) $ toK1 $ Administration.serveLogDirectory
 
 
-     , dir "dave" $ dir "document" $ hGet $ toK1 $ Administration.daveDocument
-     , dir "dave" $ dir "user"     $ hGet $ toK1 $ Administration.daveUser
-     , dir "dave" $ dir "company"  $ hGet $ toK1 $ Administration.daveCompany
+     , dir "dave" $ dir "document"    $ hGet $ toK1 $ Administration.daveDocument
+     , dir "dave" $ dir "user"        $ hGet $ toK1 $ Administration.daveUser
+     , dir "dave" $ dir "userhistory" $ hGet $ toK1 $ Administration.daveUserHistory
+     , dir "dave" $ dir "company"     $ hGet $ toK1 $ Administration.daveCompany
 
      -- account stuff
      , dir "logout"      $ hGet  $ toK0 $ handleLogout
@@ -285,8 +264,6 @@ staticRoutes = choice
      , dir "amnesia"     $ hPostNoXToken $ toK2 UserControl.handlePasswordReminderPost
      , dir "accountsetup"  $ hGet $ toK2 $ UserControl.handleAccountSetupGet
      , dir "accountsetup"  $ hPostNoXToken $ toK2 $ UserControl.handleAccountSetupPost
-     , dir "accountremoval" $ hGet $ toK2 $ UserControl.handleAccountRemovalGet
-     , dir "accountremoval" $ hPostNoXToken $ toK2 $ UserControl.handleAccountRemovalPost
 
      -- viral invite
      , dir "invite"      $ hPostNoXToken $ toK0 $ UserControl.handleViralInvite
@@ -295,7 +272,6 @@ staticRoutes = choice
      -- someone wants a phone call
      , dir "phone" $ hPostAllowHttp $ toK0 $ UserControl.handlePhoneCallRequest
 
-     , userAPI
      , integrationAPI
      , documentAPI
      -- static files
@@ -397,164 +373,6 @@ handleWholePage f = do
   response <- V.simpleResponse content
   clearFlashMsgs
   return response
-
-{- |
-   Handles submission of the password reset form
--}
-forgotPasswordPagePost :: Kontrakcja m => m KontraLink
-forgotPasswordPagePost = do
-  ctx <- getContext
-  memail <- getOptionalField asValidEmail "email"
-  case memail of
-    Nothing -> return LoopBack
-    Just email -> do
-      muser <- runDBQuery $ GetUserByEmail Nothing $ Email email
-      case muser of
-        Nothing -> do
-          Log.security $ "ip " ++ (show $ ctxipnumber ctx) ++ " made a failed password reset request for non-existant account " ++ (BS.toString email)
-          return LoopBack
-        Just user -> do
-          now <- liftIO getMinutesTime
-          minv <- checkValidity now <$> (query $ GetPasswordReminder $ userid user)
-          case minv of
-            Just Action{ actionID, actionType = PasswordReminder { prToken, prRemainedEmails, prUserID } } ->
-              case prRemainedEmails of
-                0 -> addFlashM flashMessageNoRemainedPasswordReminderEmails
-                n -> do
-                  -- I had to make it PasswordReminder because it was complaining about not giving cases
-                  -- for the constructors of ActionType
-                  _ <- update $ UpdateActionType actionID (PasswordReminder { prToken          = prToken
-                                                                            , prRemainedEmails = n - 1
-                                                                            , prUserID         = prUserID})
-                  sendResetPasswordMail ctx (LinkPasswordReminder actionID prToken) user
-            _ -> do -- Nothing or other ActionTypes (which should not happen)
-              link <- newPasswordReminderLink user
-              sendResetPasswordMail ctx link user
-          addFlashM flashMessageChangePasswordEmailSend
-          return LinkUpload
-
-sendResetPasswordMail :: Kontrakcja m => Context -> KontraLink -> User -> m ()
-sendResetPasswordMail ctx link user = do
-  mail <- UserView.resetPasswordMail (ctxhostpart ctx) user link
-  scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [getMailAddress user] }
-
-{- |
-   Handles viewing of the signup page
--}
-_signupPageGet :: Kontra Response
-_signupPageGet = do
-    ctx <- getContext
-    content <- liftIO (signupPageView $ ctxtemplates ctx)
-    V.renderFromBody V.TopNone V.kontrakcja  content
-
-
-_signupVipPageGet :: Kontra Response
-_signupVipPageGet = do
-    ctx <- getContext
-    content <- liftIO (signupVipPageView $ ctxtemplates ctx)
-    V.renderFromBody V.TopNone V.kontrakcja content
-{- |
-   Handles submission of the signup form.
-   Normally this would create the user, (in the process mailing them an activation link),
-   but if the user already exists, we check to see if they have accepted the tos.  If they haven't,
-   then we send them a new activation link because probably the old one expired or was lost.
-   If they have then we stop the signup.
--}
-signupPagePost :: Kontrakcja m => m KontraLink
-signupPagePost = do
-    Context { ctxtime } <- getContext
-    signup False $ Just ((60 * 24 * 31) `minutesAfter` ctxtime)
-
-{-
-    A comment next to LoopBack says never to use it. Is this function broken?
--}
-signup :: Kontrakcja m => Bool -> Maybe MinutesTime -> m KontraLink
-signup vip _freetill =  do
-  memail <- getOptionalField asValidEmail "email"
-  case memail of
-    Nothing -> return LoopBack
-    Just email -> do
-      muser <- runDBQuery $ GetUserByEmail Nothing $ Email $ email
-      case (muser, muser >>= userhasacceptedtermsofservice) of
-        (Just user, Nothing) -> do
-          -- there is an existing user that hasn't been activated
-          -- send them another invite
-          UserControl.sendNewUserMail vip user
-        (Nothing, Nothing) -> do
-          -- this email address is new to the system, so create the user
-          -- and send an invite
-          mnewuser <- UserControl.createUser (Email email) BS.empty BS.empty Nothing
-          maybe (return ()) (UserControl.sendNewUserMail vip) mnewuser
-        (_, _) -> return ()
-      -- whatever happens we want the same outcome, we just claim we sent the activation link,
-      -- because we don't want any security problems with user information leaks
-      addFlashM $ modalUserSignupDone (Email email)
-      return LoopBack
-
-{- |
-   Sends a new activation link mail, which is really just a new user mail.
--}
-_sendNewActivationLinkMail:: Context -> User -> Kontra ()
-_sendNewActivationLinkMail Context{ctxhostpart, ctxmailsconfig} user = do
-    let email = getEmail user
-    al <- newAccountCreatedLink user
-    mail <- newUserMail ctxhostpart email email al False
-    scheduleEmailSendout ctxmailsconfig $ mail { to = [MailAddress {fullname = email, email = email}] }
-
-{- |
-   Handles viewing of the login page
--}
-handleLoginGet :: Kontrakcja m => m Response
-handleLoginGet = do
-  ctx <- getContext
-  case ctxmaybeuser ctx of
-       Just _  -> sendRedirect LinkUpload
-       Nothing -> do
-         referer <- getField "referer"
-         email   <- getField "email"
-         content <- V.pageLogin referer email
-         V.renderFromBody V.TopNone V.kontrakcja content
-
-{- |
-   Handles submission of a login form.  On failure will redirect back to referer, if there is one.
--}
-handleLoginPost :: Kontrakcja m => m KontraLink
-handleLoginPost = do
-    ctx <- getContext
-    memail  <- getOptionalField asDirtyEmail    "email"
-    mpasswd <- getOptionalField asDirtyPassword "password"
-    let linkemail = maybe "" BS.toString memail
-    case (memail, mpasswd) of
-        (Just email, Just passwd) -> do
-            -- check the user things here
-            maybeuser <- runDBQuery $ GetUserByEmail Nothing (Email email)
-            case maybeuser of
-                Just user@User{userpassword}
-                    | verifyPassword userpassword passwd -> do
-                        Log.debug $ "User " ++ show email ++ " logged in"
-                        _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
-                          locale = ctxlocale ctx
-                        }
-                        muuser <- runDBQuery $ GetUserByID (userid user)
-                        _ <- addUserLoginStatEvent (ctxtime ctx) (fromJust muuser)
-                        logUserToContext muuser
-                        return BackToReferer
-                Just _ -> do
-                        Log.debug $ "User " ++ show email ++ " login failed (invalid password)"
-                        return $ LinkLogin (ctxlocale ctx) $ InvalidLoginInfo linkemail
-                Nothing -> do
-                    Log.debug $ "User " ++ show email ++ " login failed (user not found)"
-                    return $ LinkLogin (ctxlocale ctx) $ InvalidLoginInfo linkemail
-        _ -> return $ LinkLogin (ctxlocale ctx) $ InvalidLoginInfo linkemail
-
-{- |
-   Handles the logout, and sends user back to main page.
--}
-handleLogout :: Kontrakcja m => m Response
-handleLogout = do
-    ctx <- getContext
-    logUserToContext Nothing
-    sendRedirect $ LinkHome (ctxlocale ctx)
 
 {- |
    Serves out the static html files.

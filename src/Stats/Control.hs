@@ -12,7 +12,6 @@ module Stats.Control
          addUserIDSignTOSStatEvent,
          addUserSignTOSStatEvent,
          addUserSaveAfterSignStatEvent,
-         addUserRefuseSaveAfterSignStatEvent,
          addUserPhoneAfterTOS,
          addUserCreateCompanyStatEvent,
          addUserLoginStatEvent,
@@ -227,20 +226,20 @@ userEventToDocStatTuple (UserStatEvent {usTime, usQuantity, usAmount}) = case us
   _           -> Nothing
 
 calculateDocStats :: MinutesTime -> [(Int, [Int])] -> DocStats
-calculateDocStats ctxtime events = 
+calculateDocStats ctxtime events =
   let m1  = asInt $ monthsBefore 1 ctxtime
       m2  = asInt $ monthsBefore 3 ctxtime
       m3  = asInt $ monthsBefore 3 ctxtime
       m6  = asInt $ monthsBefore 6 ctxtime
       m12 = asInt $ monthsBefore 12 ctxtime
       sortedEvents = reverse $ sortWith fst events
-      fstSumStats = (\prev (a1,a2) -> let a3 = prev++a1 
+      fstSumStats = (\prev (a1,a2) -> let a3 = prev++a1
                                       in (sumStats $ if null a3 then [(0,[0,0])] else a3, a2))
-      (s1, r1) = fstSumStats [] $ span (\(m, _) -> m >= m1) sortedEvents 
-      (s2, r2) = fstSumStats [s1] $ span (\(m, _) -> m >= m2) r1 
+      (s1, r1) = fstSumStats [] $ span (\(m, _) -> m >= m1) sortedEvents
+      (s2, r2) = fstSumStats [s1] $ span (\(m, _) -> m >= m2) r1
       (s3, r3) = fstSumStats [s2] $ span (\(m, _) -> m >= m3) r2
       (s6, r6) = fstSumStats [s3] $ span (\(m, _) -> m >= m6) r3
-      (s12, r12) = fstSumStats [s6] $ span (\(m, _) -> m >= m12) r6  
+      (s12, r12) = fstSumStats [s6] $ span (\(m, _) -> m >= m12) r6
       sAll = sumStats $ s12:r12
   in DocStats ((!!1) . snd $ sAll) -- doccount
               ((!!0) . snd $ sAll) -- signaturecount
@@ -565,15 +564,6 @@ addUserLoginStatEvent time user = msum [
     addUserIDStatEvent UserLogin (userid user) time (usercompany user) (userservice user)
   , return False]
 
-addUserRefuseSaveAfterSignStatEvent :: Kontrakcja m => User -> SignatoryLink -> m Bool
-addUserRefuseSaveAfterSignStatEvent user siglink = msum [
-  do
-    case maybesigninfo siglink of
-      Nothing -> return False
-      Just SignInfo{ signtime } -> do
-        addUserIDStatEvent UserRefuseSaveAfterSign (userid user) signtime (usercompany user) (userservice user)
-  , return False]
-
 addUserCreateCompanyStatEvent :: Kontrakcja m => MinutesTime -> User -> m Bool
 addUserCreateCompanyStatEvent time user = msum [
     do
@@ -637,11 +627,11 @@ getUsersAndStats = do
   return $ convert' ctxtime list
   where
     convert' _ []   = []
-    convert' ctxtime list = map (innerGroup' ctxtime) 
+    convert' ctxtime list = map (innerGroup' ctxtime)
              $ groupBy (\(u1,_,_) (u2,_,_) -> u1 == u2) list
     innerGroup' _ [] = error "empty list grouped"
     innerGroup' ctxtime l@((u,m,_):_) =
-        transform' ctxtime $ foldr (\(_,_,r) (au,ac,al) -> 
+        transform' ctxtime $ foldr (\(_,_,r) (au,ac,al) ->
                            (au,ac,r:al)) (u,m,[]) l
     transform' :: MinutesTime
                -> (User, Maybe Company, [( Maybe MinutesTime
@@ -652,7 +642,7 @@ getUsersAndStats = do
     tuples' :: [(Maybe MinutesTime, Maybe DocStatQuantity, Maybe Int)]
             -> [(Int, [Int])]
     tuples' l = map toTuple' l
-    toTuple' (Just time, Just quantity, Just amount) = 
+    toTuple' (Just time, Just quantity, Just amount) =
         case quantity of
             DocStatClose  -> (asInt time, [amount, 0])
             DocStatCreate -> (asInt time, [0, amount])
@@ -712,7 +702,7 @@ tuplesFromUsageStatsForCompany = catMaybes . map toTuple
 
 
 {------ Sign Stats ------}
-          
+
 addSignStatInviteEvent :: Document -> SignatoryLink -> MinutesTime -> DB Bool
 addSignStatInviteEvent doc sl time =
   let mdp = toDocumentProcess $ documenttype doc
@@ -729,14 +719,14 @@ addSignStatInviteEvent doc sl time =
                                                           , ssServiceID       = sid
                                                           , ssCompanyID       = cid
                                                           }
-      unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++ 
+      unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
         show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatInvite
       return a
     _ -> do
       Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
       return False
- 
-      
+
+
 addSignStatReceiveEvent :: Document -> SignatoryLink -> MinutesTime -> DB Bool
 addSignStatReceiveEvent doc sl time =
   let mdp = toDocumentProcess $ documenttype doc
@@ -753,7 +743,7 @@ addSignStatReceiveEvent doc sl time =
                                                           , ssServiceID       = sid
                                                           , ssCompanyID       = cid
                                                           }
-      unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++ 
+      unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
         show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatReceive
       return a
     (_, Just _) -> do
@@ -763,7 +753,7 @@ addSignStatReceiveEvent doc sl time =
       Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
       return False
 
-      
+
 addSignStatOpenEvent :: Document -> SignatoryLink -> DB Bool
 addSignStatOpenEvent doc sl =
   let mdp = toDocumentProcess $ documenttype doc
@@ -780,7 +770,7 @@ addSignStatOpenEvent doc sl =
                                                             , ssServiceID       = sid
                                                             , ssCompanyID       = cid
                                                             }
-        unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++ 
+        unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
           show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatOpen
         return a
     (Nothing, _) -> do
@@ -789,7 +779,7 @@ addSignStatOpenEvent doc sl =
     (_, Nothing) -> do
       Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
       return False
-      
+
 addSignStatLinkEvent :: Document -> SignatoryLink -> DB Bool
 addSignStatLinkEvent doc sl =
   let mdp = toDocumentProcess $ documenttype doc
@@ -806,7 +796,7 @@ addSignStatLinkEvent doc sl =
                                                             , ssServiceID       = sid
                                                             , ssCompanyID       = cid
                                                             }
-        unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++ 
+        unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
           show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatLink
         return a
     (Nothing, _) -> do
@@ -815,7 +805,7 @@ addSignStatLinkEvent doc sl =
     (_, Nothing) -> do
       Log.stats $ "Cannot save stat if not doc process. docid: " ++ show (documentid doc)
       return False
-  
+
 addSignStatSignEvent :: Document -> SignatoryLink -> DB Bool
 addSignStatSignEvent doc sl =
   let mdp = toDocumentProcess $ documenttype doc
@@ -832,7 +822,7 @@ addSignStatSignEvent doc sl =
                                                             , ssServiceID       = sid
                                                             , ssCompanyID       = cid
                                                             }
-        unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++ 
+        unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
           show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatSign
         return a
     (Nothing, _) -> do
@@ -858,7 +848,7 @@ addSignStatRejectEvent doc sl =
                                                           , ssServiceID       = sid
                                                           , ssCompanyID       = cid
                                                           }
-      unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++ 
+      unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
         show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatReject
       return a
     (Just _, Just _) -> do
@@ -887,7 +877,7 @@ addSignStatDeleteEvent doc sl time =
                                                           , ssServiceID       = sid
                                                           , ssCompanyID       = cid
                                                           }
-      unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++ 
+      unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
         show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatDelete
       return a
     (False, _) -> do
@@ -913,7 +903,7 @@ addSignStatPurgeEvent doc sl time =
                                                           , ssServiceID       = sid
                                                           , ssCompanyID       = cid
                                                           }
-      unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++ 
+      unless a $ Log.stats $ "Skipping existing sign stat for signatorylinkid: " ++
         show (signatorylinkid sl) ++ " and quantity: " ++ show SignStatPurge
       return a
     (False, _) -> do
@@ -948,7 +938,7 @@ addAllSigsToStats = onlyAdmin $ do
     let docs' = sortBy (\d1 d2 -> compare (documentid d1) (documentid d2)) docs
         docs'' = filterMissing stats' docs'
     sequence $ [runDB $ allSignStats d sl ctxtime
-               | d  <- docs'' 
+               | d  <- docs''
                , sl <- documentsignatorylinks d]
   addFlash (OperationDone, "Added all docs to stats")
   return LinkUpload
@@ -990,7 +980,7 @@ handleDocHistoryCSV = do
   ok $ setHeader "Content-Disposition" "attachment;filename=dochist.csv"
      $ setHeader "Content-Type" "text/csv"
      $ toResponse (docHistCSV rows)
-  
+
 -- CSV for sig history
 csvRowFromSignHist :: [SignStatEvent] -> [String] -> [String]
 csvRowFromSignHist [] csv = csv
@@ -1005,7 +995,7 @@ csvRowFromSignHist (s:ss) csv' =
         SignStatReject  -> chng csvtail 5 $ formatMinutesTimeISO (ssTime s)
         SignStatDelete  -> chng csvtail 6 $ formatMinutesTimeISO (ssTime s)
         SignStatPurge   -> chng csvtail 7 $ formatMinutesTimeISO (ssTime s)
-  in csvRowFromSignHist ss $ 
+  in csvRowFromSignHist ss $
      [show                $ ssDocumentID s,
       show                $ ssSignatoryLinkID s,
       maybe "scrive" show $ ssServiceID s,

@@ -9,8 +9,8 @@ viewCompanyAccounts =
         <li><a href="/account/mailapi">$_HeadMailApi()$</a></li>
         <li><a href="/account/usagestats">$_HeadUsageStats()$</a></li>
       </ul>
-  </div>
 </div>
+
 
 <script>
  jQuery(function(){
