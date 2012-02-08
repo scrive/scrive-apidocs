@@ -28,6 +28,7 @@ import Data.Monoid
 import Control.Monad.Writer.Class
 import qualified Control.Monad.Writer.Strict as Strict
 import qualified Control.Monad.State.Strict as Strict
+import Data.List (findIndex)
 
 #ifdef _DEBUG
 import Debug.Trace
@@ -38,6 +39,19 @@ trace _ x = x
 
 traceM :: (Monad m) => P.String -> m ()
 traceM msg = trace msg (return ())
+
+
+-- this is cheating
+-- FIXME: font encoding
+winAnsiChars :: P.String
+winAnsiChars = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~?€\201‚ƒ„…†‡ˆ‰Š‹Œ\215Ž\217\220‘’“”•–—˜™š›œ\235žŸ ¡¢£¤¥¦§¨©ª«¬?®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ"
+
+unicodeToWinAnsi :: Char -> Char
+unicodeToWinAnsi x = 
+    case findIndex (==x) winAnsiChars of
+      Just i -> Char.chr (i + 33)
+      Nothing -> x
+      
 
 
 type MyReadP a = P.ReadP a
@@ -145,11 +159,22 @@ unpsname :: Value -> BS.ByteString
 unpsname (Name x ) = x
 unpsname _ = error "Value is not a Name in unpsname"
 
-string :: IsName a => a -> Value
-string x = String False . unpsname . name $ x
+class IsString a where
+    string :: a -> Value
 
-hexstring :: IsName a => a -> Value
-hexstring x = String True . unpsname . name $ x
+instance IsString BS.ByteString where
+    string x = String False x
+
+-- This instance is funny. If we see a char with value >255 we need to encode whole string as
+-- double byte with a marker.
+instance IsString P.String where
+    string x = String False bs
+      where bs = BSC.pack x
+
+hexstring :: IsString a => a -> Value
+hexstring x = String True v
+  where
+    String _ v = string x
 
 class IsName a where
     name :: a -> Value
@@ -405,7 +430,7 @@ entrya a b = entry a (array b)
 entryna :: (Real a1, IsName a) => a -> [a1] -> (BS.ByteString, Value)
 entryna a b = entry a (arrayn b)
 
-entrys :: (IsName a1, IsName a) => a -> a1 -> (BS.ByteString, Value)
+entrys :: (IsName a, IsString b) => a -> b -> (BS.ByteString, Value)
 entrys a b = entry a (string b)
 
 showpair :: (Show t) => (BS.ByteString, t) -> [Char]
