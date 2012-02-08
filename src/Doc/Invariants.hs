@@ -49,14 +49,6 @@ documentInvariants = [ documentHasOneAuthor
                      , maxCustomFields
                      , closedWhenAllSigned
                      , hasSignedAttachments
-                     , basicDocsDontHaveCSVs
-                     , basicDocsDontHaveDaysToSign
-                     , basicDocsDontHaveMultipleCounterparts
-                     , basicDocsDontHaveViewingCounterparts
-                     , basicDocsDontHaveCustomFields
-                     , basicDocsDontHavePlacements
-                     , basicDocsDontUseSignOrder
-                     , basicDocsDontHaveAttachments
 --                   , hasFirstName
 --                   , hasLastName
                      , hasValidEmail
@@ -241,86 +233,6 @@ maxCustomFields _ document =
   assertInvariant ("there are signatories with too many custom fields: " ++ show m ++ ". maximum is " ++ show maxfields) $
     m <= maxfields
 
-                  
-{- |
-    Documents in basic mode don't have csvs
--}
-basicDocsDontHaveCSVs :: MinutesTime -> Document -> Maybe String
-basicDocsDontHaveCSVs _ Document{documentfunctionality, documentsignatorylinks} =
-  assertInvariant ("basic doc has csv data on it")
-                  ((documentfunctionality == BasicFunctionality) =>> (all (isNothing . signatorylinkcsvupload) documentsignatorylinks))
-                  
-{- |
-    Documents in basic mode don't have days to sign set
--}
-basicDocsDontHaveDaysToSign :: MinutesTime -> Document -> Maybe String
-basicDocsDontHaveDaysToSign _ Document{documentfunctionality, documentdaystosign} =
-  assertInvariant ("basic doc has days to sign on it")
-                  ((documentfunctionality == BasicFunctionality) =>> (documentdaystosign == Nothing))
-                  
-{- |
-    Documents in basic mode don't have multiple counterparts
--}
-basicDocsDontHaveMultipleCounterparts :: MinutesTime -> Document -> Maybe String
-basicDocsDontHaveMultipleCounterparts _ Document{documentfunctionality, documentsignatorylinks} =
-  assertInvariant ("basic doc has multiple counterparts (" ++ (show $ length documentsignatorylinks) ++ ")")
-                  ((documentfunctionality == BasicFunctionality) =>> ((length documentsignatorylinks) <= 2))
-                  
-{- |
-    Contracts in basic mode don't have viewing counterparts
--}
-basicDocsDontHaveViewingCounterparts :: MinutesTime -> Document -> Maybe String
-basicDocsDontHaveViewingCounterparts _ Document{documentfunctionality, documentsignatorylinks, documenttype} =
-  assertInvariant ("basic doc has viewing counterparts")
-                  ((documenttype == Signable Contract && documentfunctionality == BasicFunctionality) =>> 
-                    (all isSignatory $ filter (not . isAuthor) documentsignatorylinks))
-                    
-{- |
-    Documents in basic mode don't have any custom fields
--}
-basicDocsDontHaveCustomFields :: MinutesTime -> Document -> Maybe String
-basicDocsDontHaveCustomFields _ Document{documentfunctionality,documentsignatorylinks} =
-  assertInvariant ("basic doc has custom fields")
-                  ((documentfunctionality == BasicFunctionality) =>> 
-                    (all (null . filter isFieldCustom . signatoryfields . signatorydetails) documentsignatorylinks))
-                   
-{- |
-    Documents in basic mode don't have any placements
--}
-basicDocsDontHavePlacements :: MinutesTime -> Document -> Maybe String
-basicDocsDontHavePlacements _ Document{documentfunctionality,documentsignatorylinks,documenttype} =
-  assertInvariant ("basic doc has placement")
-                  ((documenttype == Signable Contract && documentfunctionality == BasicFunctionality) =>> 
-                    (all (hasNoPlacement . signatorydetails) documentsignatorylinks))
-  where
-    hasNoPlacement :: SignatoryDetails -> Bool
-    hasNoPlacement SignatoryDetails{signatoryfields} =
-      all (null . sfPlacements) signatoryfields
-
-{- |
-    Documents in basic mode don't have a special sign order
--}
-basicDocsDontUseSignOrder :: MinutesTime -> Document -> Maybe String
-basicDocsDontUseSignOrder _ Document{documentfunctionality,documentsignatorylinks} =
-  assertInvariant ("basic doc has a special sign order")
-                  ((documentfunctionality == BasicFunctionality) =>> 
-                    (all hasOrdinarySignOrder documentsignatorylinks))
-  where
-    hasOrdinarySignOrder :: SignatoryLink -> Bool
-    hasOrdinarySignOrder sl@SignatoryLink{signatorydetails}
-      | isAuthor sl = hasSignOrder 0 || hasSignOrder 1
-      | otherwise = hasSignOrder 1
-      where hasSignOrder n = SignOrder n == signatorysignorder signatorydetails
-
-{- |
-    Documents in basic mode don't have any attachments
--}
-basicDocsDontHaveAttachments :: MinutesTime -> Document -> Maybe String
-basicDocsDontHaveAttachments _ Document{documentfunctionality,documentauthorattachments, documentsignatoryattachments} =
-  assertInvariant ("basic doc has attachments")
-                  ((documentfunctionality == BasicFunctionality) =>> 
-                    (null documentauthorattachments && null documentsignatoryattachments))
-
 -- the following should work in Pending, Closed, AwaitingAuthor
 
 -- | First Name not null
@@ -328,7 +240,7 @@ _hasFirstName :: MinutesTime -> Document -> Maybe String
 _hasFirstName _ document =
   assertInvariant "has a signatory with no first name" $
     all (\sl -> (isPending document || isClosed document || isAwaitingAuthor document) =>>
-                (not $ null $ BS.toString$ getFirstName sl))
+                (not $ null $ BS.toString $ getFirstName sl))
         (documentsignatorylinks document)
 
 -- | Last Name not null

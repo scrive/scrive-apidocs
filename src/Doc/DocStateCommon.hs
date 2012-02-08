@@ -166,13 +166,9 @@ checkSignDocument doc slid mh = catMaybes $
 checkResetSignatoryData :: Document -> [(SignatoryDetails, [SignatoryRole], Maybe CSVUpload)] -> [String]
 checkResetSignatoryData doc sigs = 
   let authors    = [ r | (_, r, _) <- sigs, SignatoryAuthor `elem` r]
-      nonauthors = [ r | (_, r, _) <- sigs, SignatoryAuthor `notElem` r]
-      isbasic = documentfunctionality doc == BasicFunctionality
   in catMaybes $
       [ trueOrMessage (documentstatus doc == Preparation) $ "Document is not in preparation, is in " ++ show (documentstatus doc)
       , trueOrMessage (length authors == 1) $ "Should have exactly one author, had " ++ show (length authors)
-      , trueOrMessage (isbasic =>> (length nonauthors <= 1)) $ "Should be at most one signatory since it's basic functionality"
-      , trueOrMessage (isbasic =>> none (hasFieldsAndPlacements . (\(a,_,_) -> a)) sigs) "The signatories should have no custom fields or placements" 
       ]
 
 {- |
