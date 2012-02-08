@@ -21,7 +21,6 @@ import User.Model
 import qualified Stats.Control as Stats
 import qualified Administration.AdministrationControl as Administration
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
-import qualified Contacts.ContactsControl as Contacts
 import qualified Doc.DocControl as DocControl
 import qualified Archive.Control as ArchiveControl
 import qualified ELegitimation.BankID as BankID
@@ -168,8 +167,6 @@ staticRoutes = choice
      , dir "account" $ dir "usagestats" $ hGet $ toK0 $ UserControl.handleUsageStatsForUser
      , dir "account" $ dir "usagestats" $ dir "days"   $ dir "json" $ hGet $ toK0 $ UserControl.handleUsageStatsJSONForUserDays
      , dir "account" $ dir "usagestats" $ dir "months" $ dir "json" $ hGet $ toK0 $ UserControl.handleUsageStatsJSONForUserMonths
-     , dir "contacts"  $ hGet  $ toK0 $ Contacts.showContacts
-     , dir "contacts"  $ hPost $ toK0 $ Contacts.handleContactsChange
      , dir "accepttos" $ hGet  $ toK0 $ UserControl.handleAcceptTOSGet
      , dir "accepttos" $ hPost $ toK0 $ UserControl.handleAcceptTOSPost
 
