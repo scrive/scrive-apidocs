@@ -32,7 +32,28 @@ data Field =
           , w     :: Int    -- ^ page width in pixels
           , h     :: Int    -- ^ page height in pixels
           }
+    | FieldJPG
+      { valueBase64      :: String -- ^ binary content of image to put into a field
+      , x                :: Int    -- ^ left coordinate of field
+      , y                :: Int    -- ^ upper coordinate of field in screen coordinate space
+      , page             :: Int    -- ^ on which page should the field be placed
+      , w                :: Int    -- ^ page width in pixels
+      , h                :: Int    -- ^ page height in pixels
+      , image_w          :: Int    -- ^ image width in pixels as appears on te screen
+      , image_h          :: Int    -- ^ image height in pixels as appears on te screen
+      , internal_image_w :: Int    -- ^ pixels horizontal of image, if it was not scaled this is same as image_w
+      , internal_image_h :: Int    -- ^ pixels vertical of image, if it was not scaled this is same as image_h
+      }
     deriving (Eq, Ord, Show, Read)
+
+-- | An attachment that will be put into a PDF. Attachments are put in
+-- order.  File name should be without any directory parts. File
+-- content as base64 encoded string.
+data SealAttachment = SealAttachment
+  { fileName          :: String -- ^ how should attached file be named
+  , fileBase64Content :: String -- ^ base64 binary content of the file
+  }
+    deriving (Eq,Ord,Show,Read)
 
 data SealSpec = SealSpec 
     { input :: String
@@ -45,6 +66,7 @@ data SealSpec = SealSpec
     , hostpart :: String
     , fields :: [Field]
     , staticTexts :: SealingTexts
+    , attachments :: [SealAttachment]
     }
     deriving (Eq,Ord,Show,Read)
 

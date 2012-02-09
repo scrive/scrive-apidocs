@@ -202,6 +202,7 @@ sealSpecFromDocument hostpart document inputpath outputpath =
             , Seal.hostpart       = hostpart
             , Seal.fields         = fields
             , Seal.staticTexts    = readtexts
+            , Seal.attachments    = []
             }
 
 sealDocument :: Context

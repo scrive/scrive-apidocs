@@ -43,6 +43,7 @@ import Util.SignatoryLinkUtils
 import qualified Doc.DocStateData as D
 import qualified Log
 import EvidenceLog.Model
+import Stats.Control
 
 processEvents :: ActionScheduler ()
 processEvents = runDBQuery GetUnreadEvents >>= mapM_ processEvent
@@ -69,7 +70,7 @@ processEvents = runDBQuery GetUnreadEvents >>= mapM_ processEvent
               -- email address, we don't want to send him emails reporting success/failure
               -- for old signatory address, so we need to compare addresses here.
               runTemplatesT (getLocale doc, templates) $ case ev of
-                Opened       -> handleOpenedInvitation docid signlinkid email muid
+                Opened       -> handleOpenedInvitation doc signlinkid email muid
                 Delivered _  -> handleDeliveredInvitation mc doc signlinkid
                 -- we send notification that email is reported deferred after fifth
                 -- attempt has failed - this happens after ~10 minutes from sendout
@@ -109,12 +110,16 @@ handleDeliveredInvitation mc doc signlinkid = do
       return ()
     Nothing -> return ()
 
-handleOpenedInvitation :: DBMonad m => DocumentID -> SignatoryLinkID -> String -> Maybe UserID -> m ()
-handleOpenedInvitation docid signlinkid email muid = do
-  now <- getMinutesTime
-  _   <- runDBUpdate $ MarkInvitationRead docid signlinkid 
-         (MailSystemActor now muid email signlinkid)
-  return ()
+handleOpenedInvitation :: DBMonad m => Document -> SignatoryLinkID -> String -> Maybe UserID -> m ()
+handleOpenedInvitation doc signlinkid email muid = do
+  now  <- getMinutesTime
+  edoc <- runDBUpdate $ MarkInvitationRead (documentid doc) signlinkid 
+          (MailSystemActor now muid email signlinkid)
+  case edoc of
+    Right doc' -> case getSigLinkFor doc' signlinkid of
+      Just sl -> ignore $ runDB $ addSignStatOpenEvent doc' sl
+      _ -> return ()
+    _ -> return ()
 
 handleDeferredInvitation :: (DBMonad m, TemplatesMonad m) => (String, MailsConfig) -> Document -> SignatoryLinkID -> String -> m ()
 handleDeferredInvitation (hostpart, mc) doc signlinkid email = do

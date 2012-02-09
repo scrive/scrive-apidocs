@@ -9,8 +9,7 @@ tableCompanies :: Table
 tableCompanies = Table {
     tblName = "companies"
   , tblVersion = 1
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
-    case desc of
+  , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("external_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("service_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
@@ -22,7 +21,7 @@ tableCompanies = Table {
        , ("country", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
-        runRaw conn $ "CREATE TABLE companies ("
+        kRunRaw $ "CREATE TABLE companies ("
           ++ "  id BIGINT NOT NULL"
           ++ ", external_id TEXT NULL"
           ++ ", service_id TEXT NULL"
@@ -36,10 +35,10 @@ tableCompanies = Table {
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = wrapDB $ \conn -> do
-    runRaw conn "CREATE INDEX idx_companies_service_id ON companies(service_id)"
-    runRaw conn "CREATE INDEX idx_companies_external_id ON companies(external_id)"
-    runRaw conn $ "ALTER TABLE companies"
+  , tblPutProperties = do
+    kRunRaw "CREATE INDEX idx_companies_service_id ON companies(service_id)"
+    kRunRaw "CREATE INDEX idx_companies_external_id ON companies(external_id)"
+    kRunRaw $ "ALTER TABLE companies"
       ++ " ADD CONSTRAINT fk_companies_services FOREIGN KEY(service_id)"
       ++ " REFERENCES services(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"

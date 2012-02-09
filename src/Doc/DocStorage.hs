@@ -249,6 +249,7 @@ preCheckPDF' gscmd content tmppath =
                , Seal.hostpart       = "An example text"
                , Seal.fields         = []
                , Seal.staticTexts    = sealingTexts
+               , Seal.attachments    = []
                }
 
     sealingTexts = Seal.SealingTexts

@@ -564,7 +564,7 @@ insertDocumentAsIs document = do
 
 insertNewDocument :: Document -> DB Document
 insertNewDocument doc = do
-  wrapDB $ \conn -> runRaw conn "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
+  kRunRaw "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
   docid <- DocumentID <$> getUniqueID tableDocuments
   now <- liftIO $ getMinutesTime
   let docWithId = doc {documentid = docid, documentmtime  = now, documentctime = now}

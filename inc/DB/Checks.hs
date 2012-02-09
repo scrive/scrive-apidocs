@@ -55,7 +55,7 @@ checkDBConsistency logger tables migrations = do
 
     checkTables = second catMaybes . partitionEithers <$> mapM checkTable tables
     checkTable table = do
-      desc <- wrapDB $ \conn -> describeTable conn $ tblName table
+      desc <- kDescribeTable $ tblName table
       logger $ "Checking table '" ++ tblName table ++ "'..."
       tvr <- tblCreateOrValidate table desc
       case tvr of
@@ -71,10 +71,8 @@ checkDBConsistency logger tables migrations = do
                return $ Right $ Just (table, ver)
         TVRcreated -> do
           logger $ "Table created, writing version information..."
-          wrapDB $ \conn -> do
-            _ <- run conn "INSERT INTO table_versions (name, version) VALUES (?, ?)"
-              [toSql $ tblName table, toSql $ tblVersion table]
-            return ()
+          kPrepare "INSERT INTO table_versions (name, version) VALUES (?, ?)"
+          _ <- kExecute [toSql $ tblName table, toSql $ tblVersion table]
           _ <- checkTable table
           return $ Left table
         TVRinvalid -> do
@@ -102,8 +100,7 @@ checkDBConsistency logger tables migrations = do
            when (ver /= mgrFrom m) $
              error $ "Migration can't be performed because current table version (" ++ show ver ++ ") doesn't match parameter mgrFrom of next migration to be run (" ++ show (mgrFrom m) ++ "). Make sure that migrations were put in migrationsList in correct order."
            mgrDo m
-           wrapDB $ \conn -> do
-             _ <- run conn "UPDATE table_versions SET version = ? WHERE name = ?"
-               [toSql $ succ $ mgrFrom m, toSql $ tblName t]
-             return ()
+           kPrepare "UPDATE table_versions SET version = ? WHERE name = ?"
+           _ <- kExecute [toSql $ succ $ mgrFrom m, toSql $ tblName t]
+           return ()
          else return ()

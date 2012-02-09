@@ -9,8 +9,7 @@ tableDocStatEvents :: Table
 tableDocStatEvents = Table {
   tblName = "doc_stat_events"
   , tblVersion = 2
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
-    case desc of
+  , tblCreateOrValidate = \desc -> case desc of
       [("user_id",     SqlColDesc { colType        = SqlBigIntT
                                   , colNullable    = Just False}),
        ("time",        SqlColDesc { colType        = SqlTimestampWithZoneT
@@ -28,7 +27,7 @@ tableDocStatEvents = Table {
        ("document_type", SqlColDesc { colType = SqlVarCharT
                                     , colNullable = Just False})] -> return TVRvalid
       [] -> do
-        runRaw conn $ "CREATE TABLE doc_stat_events ("
+        kRunRaw $ "CREATE TABLE doc_stat_events ("
           ++ "  user_id       BIGINT      NOT NULL"
           ++ ", time          TIMESTAMPTZ NOT NULL"
           ++ ", quantity      SMALLINT    NOT NULL"
@@ -41,18 +40,18 @@ tableDocStatEvents = Table {
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = wrapDB $ \conn -> do
+  , tblPutProperties = do
     -- we don't want to delete the stats if a user gets deleted
     -- I don't know if we want to restrict user_id, either
-    runRaw conn $ "ALTER TABLE doc_stat_events"
+    kRunRaw $ "ALTER TABLE doc_stat_events"
       ++ " ADD CONSTRAINT fk_doc_stat_events_users FOREIGN KEY(user_id)"
       ++ " REFERENCES users(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    runRaw conn $ "ALTER TABLE doc_stat_events"
+    kRunRaw $ "ALTER TABLE doc_stat_events"
       ++ " ADD CONSTRAINT fk_doc_stat_events_company FOREIGN KEY(company_id)"
       ++ " REFERENCES companies(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    runRaw conn $ "ALTER TABLE doc_stat_events"
+    kRunRaw $ "ALTER TABLE doc_stat_events"
       ++ " ADD CONSTRAINT fk_doc_stat_events_service FOREIGN KEY(service_id)"
       ++ " REFERENCES services(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
@@ -63,8 +62,7 @@ tableDocStatEvents1 :: Table
 tableDocStatEvents1 = Table {
   tblName = "doc_stat_events"
   , tblVersion = 1
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
-    case desc of
+  , tblCreateOrValidate = \desc -> case desc of
       [("user_id",     SqlColDesc { colType        = SqlBigIntT
                                   , colNullable    = Just False}),
        ("time",        SqlColDesc { colType        = SqlTimestampWithZoneT
@@ -76,7 +74,7 @@ tableDocStatEvents1 = Table {
        ("document_id", SqlColDesc { colType        = SqlBigIntT
                                   , colNullable    = Just False})] -> return TVRvalid
       [] -> do
-        runRaw conn $ "CREATE TABLE doc_stat_events ("
+        kRunRaw $ "CREATE TABLE doc_stat_events ("
           ++ "  user_id     BIGINT      NOT NULL"
           ++ ", time        TIMESTAMPTZ NOT NULL"
           ++ ", quantity    SMALLINT    NOT NULL"
@@ -86,10 +84,10 @@ tableDocStatEvents1 = Table {
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = wrapDB $ \conn -> do
+  , tblPutProperties = do
     -- we don't want to delete the stats if a user gets deleted
     -- I don't know if we want to restrict user_id, either
-    runRaw conn $ "ALTER TABLE doc_stat_events"
+    kRunRaw $ "ALTER TABLE doc_stat_events"
       ++ " ADD CONSTRAINT fk_doc_stat_events_users FOREIGN KEY(user_id)"
       ++ " REFERENCES users(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
@@ -99,8 +97,7 @@ tableUserStatEvents :: Table
 tableUserStatEvents = Table {
   tblName = "user_stat_events"
   , tblVersion = 2
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
-    case desc of
+  , tblCreateOrValidate = \desc -> case desc of
       [("user_id",     SqlColDesc { colType        = SqlBigIntT
                                   , colNullable    = Just False}),
        ("time",        SqlColDesc { colType        = SqlTimestampWithZoneT
@@ -116,8 +113,8 @@ tableUserStatEvents = Table {
        ("id",          SqlColDesc { colType        = SqlBigIntT
                                   , colNullable    = Just False})] -> return TVRvalid
       [] -> do
-        runRaw conn $ "CREATE SEQUENCE user_stat_events_id_seq"
-        runRaw conn $ "CREATE TABLE user_stat_events ("
+        kRunRaw $ "CREATE SEQUENCE user_stat_events_id_seq"
+        kRunRaw $ "CREATE TABLE user_stat_events ("
           ++ "  user_id       BIGINT      NOT NULL"
           ++ ", time          TIMESTAMPTZ NOT NULL"
           ++ ", quantity      SMALLINT    NOT NULL"
@@ -129,18 +126,18 @@ tableUserStatEvents = Table {
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = wrapDB $ \conn -> do
-    runRaw conn "CREATE INDEX idx_user_stat_events_user_id ON user_stat_events(user_id)"
+  , tblPutProperties = do
+    kRunRaw "CREATE INDEX idx_user_stat_events_user_id ON user_stat_events(user_id)"
     -- we don't want to delete the stats if a user gets deleted
-    runRaw conn $ "ALTER TABLE user_stat_events"
+    kRunRaw $ "ALTER TABLE user_stat_events"
       ++ " ADD CONSTRAINT fk_user_stat_events_users FOREIGN KEY(user_id)"
       ++ " REFERENCES users(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    runRaw conn $ "ALTER TABLE user_stat_events"
+    kRunRaw $ "ALTER TABLE user_stat_events"
       ++ " ADD CONSTRAINT fk_user_stat_events_company FOREIGN KEY(company_id)"
       ++ " REFERENCES companies(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    runRaw conn $ "ALTER TABLE user_stat_events"
+    kRunRaw $ "ALTER TABLE user_stat_events"
       ++ " ADD CONSTRAINT fk_user_stat_events_service FOREIGN KEY(service_id)"
       ++ " REFERENCES services(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
@@ -150,8 +147,7 @@ tableSignStatEvents :: Table
 tableSignStatEvents = Table {
   tblName = "sign_stat_events"
   , tblVersion = 2
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
-    case desc of
+  , tblCreateOrValidate = \desc -> case desc of
       [("document_id",       SqlColDesc { colType     = SqlBigIntT
                                         , colNullable = Just False}),
        ("signatory_link_id", SqlColDesc { colType     = SqlBigIntT
@@ -167,7 +163,7 @@ tableSignStatEvents = Table {
        ("document_process",  SqlColDesc { colType     = SqlSmallIntT
                                         , colNullable = Just False})] -> return TVRvalid
       [] -> do
-        runRaw conn $ "CREATE TABLE sign_stat_events ("
+        kRunRaw $ "CREATE TABLE sign_stat_events ("
           ++ "  document_id        BIGINT      NOT NULL"          
           ++ ", signatory_link_id  BIGINT      NOT NULL"
           ++ ", time               TIMESTAMPTZ NOT NULL"
@@ -179,23 +175,23 @@ tableSignStatEvents = Table {
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = wrapDB $ \conn -> do
+  , tblPutProperties = do
     {-
      -- I wanted to add this but apparently signatory_link_id is not unique, so I could not.
-    runRaw conn $ "ALTER TABLE sign_stat_events"
+    kRunRaw $ "ALTER TABLE sign_stat_events"
       ++ " ADD CONSTRAINT fk_sign_stat_events_signatory_link FOREIGN KEY(signatory_link_id)"
       ++ " REFERENCES signatory_links(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
     -}
-    runRaw conn $ "ALTER TABLE sign_stat_events"
+    kRunRaw $ "ALTER TABLE sign_stat_events"
       ++ " ADD CONSTRAINT fk_sign_stat_events_documents FOREIGN KEY(document_id)"
       ++ " REFERENCES documents(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    runRaw conn $ "ALTER TABLE sign_stat_events"
+    kRunRaw $ "ALTER TABLE sign_stat_events"
       ++ " ADD CONSTRAINT fk_sign_stat_events_company FOREIGN KEY(company_id)"
       ++ " REFERENCES companies(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    runRaw conn $ "ALTER TABLE sign_stat_events"
+    kRunRaw $ "ALTER TABLE sign_stat_events"
       ++ " ADD CONSTRAINT fk_sign_stat_events_service FOREIGN KEY(service_id)"
       ++ " REFERENCES services(id) ON UPDATE RESTRICT ON DELETE NO ACTION"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
