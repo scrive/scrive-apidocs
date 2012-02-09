@@ -206,7 +206,7 @@ data DocumentEvidenceEvent = DocumentEvidenceEvent { evDocumentID :: DocumentID
 
 data GetEvidenceLog = GetEvidenceLog DocumentID
 instance DBQuery GetEvidenceLog [DocumentEvidenceEvent] where
-  dbQuery (GetEvidenceLog did) = do
+  dbQuery (GetEvidenceLog docid) = do
     _ <- kRun $ SQL ("SELECT "
       ++ "  document_id"
       ++ ", time"
@@ -222,10 +222,12 @@ instance DBQuery GetEvidenceLog [DocumentEvidenceEvent] where
       ++ "  FROM evidence_log "
       ++ "  WHERE document_id = ?"
       ++ "  ORDER BY time DESC") [
-        toSql did
+        toSql docid
       ]
     foldDB fetchEvidenceLog []
     where
+      -- Note: this function gets objects in reverse order, that's why there
+      -- is DESC in query above.
       fetchEvidenceLog acc did tm txt tp vid uid eml ip4 ip6 slid api =
         DocumentEvidenceEvent {
             evDocumentID = did
