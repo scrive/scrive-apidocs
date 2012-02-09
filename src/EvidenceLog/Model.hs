@@ -16,29 +16,24 @@ module EvidenceLog.Model
          copyEvidenceLogToNewDocument,
          mkAuthorActor
        )
-       
        where
 
-import Doc.DocStateData
-import User.UserID
-import DB.Derive
-import DB.Nexus
-
-import DB.Classes
-import DB.Utils
-import MinutesTime
-
 import Database.HDBC
-import Misc
 
 import API.Service.Model
-
-import Version
 import Context
+import DB.Classes
+import DB.Derive
+import DB.Fetcher2
+import DB.Utils
+import Doc.DocStateData
+import EvidenceLog.Tables
+import MinutesTime
+import Misc
 import User.Model
 import Util.HasSomeUserInfo
-
-import qualified Data.ByteString.UTF8 as BS hiding (length)
+import Version
+import qualified Data.ByteString.UTF8 as BS
 
 -- | Actor describes who is performing an action and when
 class Actor a where
@@ -176,48 +171,26 @@ instance Actor AdminActor where
   actorEmail     (AdminActor _ _ _ e) = Just e
   actorWho       (AdminActor _ _ _ e) = "the admin with email " ++ show e
 
-insertEvidenceEvent :: Actor a 
-                       => EvidenceEventType
-                       -> String       -- text
-                       -> Maybe DocumentID 
-                       -> a
-                       -> Nexus
-                       -> IO Bool
-insertEvidenceEvent event text mdid actor conn = do
-  st <- prepare conn $ "INSERT INTO evidence_log ("
-        ++ "  document_id"
-        ++ ", time"
-        ++ ", text"
-        ++ ", event_type"
-        ++ ", version_id"
-        ++ ", user_id"
-        ++ ", email"
-        ++ ", request_ip_v4"
-        ++ ", signatory_link_id"
-        ++ ", api_user"
-        ++ ") VALUES (?,?,?,?,?,?,?,?,?,?)"
-  res <- execute st [toSql mdid
-                    ,toSql $ actorTime      actor
-                    ,toSql text
-                    ,toSql event
-                    ,toSql versionID
-                    ,toSql $ actorUserID    actor
-                    ,toSql $ actorEmail     actor
-                    ,toSql $ actorIP        actor
-                    ,toSql $ actorSigLinkID actor
-                    ,toSql $ actorAPIString actor
-                    ]
-  oneRowAffectedGuard res
-
 data Actor a => InsertEvidenceEvent a = InsertEvidenceEvent 
                                         EvidenceEventType       -- A code for the event
                                         String                  -- Text for evidence
                                         (Maybe DocumentID)      -- The documentid if this event is about a document
                                         a                       -- Actor
 instance Actor a => DBUpdate (InsertEvidenceEvent a) Bool where
-  dbUpdate (InsertEvidenceEvent tp txt mdid a) = 
-    wrapDB (insertEvidenceEvent tp txt mdid a)
-    
+  dbUpdate (InsertEvidenceEvent event text mdid actor) =
+    kRun01 $ mkSQL INSERT tableEvidenceLog [
+      sql "document_id" mdid
+    , sql "time" $ actorTime actor
+    , sql "text" text
+    , sql "event_type" event
+    , sql "version_id" versionID
+    , sql "user_id" $ actorUserID actor
+    , sql "email" $ actorEmail actor
+    , sql "request_ip_v4" $ actorIP actor
+    , sql "signatory_link_id" $ actorSigLinkID actor
+    , sql "api_user" $ actorAPIString actor
+    ]
+
 data DocumentEvidenceEvent = DocumentEvidenceEvent { evDocumentID :: DocumentID
                                                    , evTime       :: MinutesTime
                                                    , evText       :: String
@@ -230,76 +203,76 @@ data DocumentEvidenceEvent = DocumentEvidenceEvent { evDocumentID :: DocumentID
                                                    , evSigLinkID  :: Maybe SignatoryLinkID
                                                    , evAPI        :: Maybe String
                                                    }
-    
-fetchEvidenceLog :: Statement -> [DocumentEvidenceEvent] -> IO [DocumentEvidenceEvent]
-fetchEvidenceLog st acc = fetchRow st >>= maybe (return acc) f
-  where f [did,tm,txt,tp,vid,uid,eml,ip4,ip6,slid,api] =
-          fetchEvidenceLog st $ DocumentEvidenceEvent { evDocumentID = fromSql did
-                                                      , evTime       = fromSql tm
-                                                      , evText       = fromSql txt
-                                                      , evType       = fromSql tp
-                                                      , evVersionID  = fromSql vid
-                                                      , evUserID     = fromSql uid
-                                                      , evEmail      = fromSql eml
-                                                      , evIP4        = fromSql ip4
-                                                      , evIP6        = fromSql ip6
-                                                      , evSigLinkID  = fromSql slid
-                                                      , evAPI        = fromSql api
-                                                      } : acc
-        f l = error $ "fetchEvidenceLog: unexpected row: " ++ show l
 
 data GetEvidenceLog = GetEvidenceLog DocumentID
 instance DBQuery GetEvidenceLog [DocumentEvidenceEvent] where
-  dbQuery (GetEvidenceLog did) = wrapDB $ \conn -> do
-    st <- prepare conn $ "SELECT "
-        ++ "  document_id"
-        ++ ", time"
-        ++ ", text"
-        ++ ", event_type"
-        ++ ", version_id"
-        ++ ", user_id"
-        ++ ", email"
-        ++ ", request_ip_v4"
-        ++ ", request_ip_v6"        
-        ++ ", signatory_link_id"
-        ++ ", api_user"
-        ++ " FROM evidence_log "
-        ++ " WHERE document_id = ?"
-        ++ " ORDER BY time"
-    _ <- execute st [toSql did]
-    fetchEvidenceLog st []
+  dbQuery (GetEvidenceLog did) = do
+    _ <- kRun $ SQL ("SELECT "
+      ++ "  document_id"
+      ++ ", time"
+      ++ ", text"
+      ++ ", event_type"
+      ++ ", version_id"
+      ++ ", user_id"
+      ++ ", email"
+      ++ ", request_ip_v4"
+      ++ ", request_ip_v6"
+      ++ ", signatory_link_id"
+      ++ ", api_user"
+      ++ "  FROM evidence_log "
+      ++ "  WHERE document_id = ?"
+      ++ "  ORDER BY time DESC") [
+        toSql did
+      ]
+    foldDB fetchEvidenceLog []
+    where
+      fetchEvidenceLog acc did tm txt tp vid uid eml ip4 ip6 slid api =
+        DocumentEvidenceEvent {
+            evDocumentID = did
+          , evTime       = tm
+          , evText       = txt
+          , evType       = tp
+          , evVersionID  = vid
+          , evUserID     = uid
+          , evEmail      = eml
+          , evIP4        = ip4
+          , evIP6        = ip6
+          , evSigLinkID  = slid
+          , evAPI        = api
+          } : acc
 
 copyEvidenceLogToNewDocument :: DocumentID -> DocumentID -> DB ()
-copyEvidenceLogToNewDocument fromdoc todoc =
-  wrapDB $ \conn -> do
-    st <- prepare conn $ "INSERT INTO evidence_log ("
-        ++ "  document_id"
-        ++ ", time"
-        ++ ", text"
-        ++ ", event_type"
-        ++ ", version_id"
-        ++ ", user_id"
-        ++ ", email"
-        ++ ", request_ip_v4"
-        ++ ", request_ip_v6"        
-        ++ ", signatory_link_id"
-        ++ ", api_user"
-        ++ ") SELECT "
-        ++ "  ?"
-        ++ ", time"
-        ++ ", text"
-        ++ ", event_type"
-        ++ ", version_id"
-        ++ ", user_id"
-        ++ ", email"
-        ++ ", request_ip_v4"
-        ++ ", request_ip_v6"        
-        ++ ", signatory_link_id"
-        ++ ", api_user"
-        ++ " FROM evidence_log "
-        ++ " WHERE document_id = ?"
-    _ <- execute st [toSql todoc, toSql fromdoc]
-    return ()
+copyEvidenceLogToNewDocument fromdoc todoc = do
+  _ <- kRun $ SQL ("INSERT INTO evidence_log ("
+    ++ "  document_id"
+    ++ ", time"
+    ++ ", text"
+    ++ ", event_type"
+    ++ ", version_id"
+    ++ ", user_id"
+    ++ ", email"
+    ++ ", request_ip_v4"
+    ++ ", request_ip_v6"
+    ++ ", signatory_link_id"
+    ++ ", api_user"
+    ++ ") SELECT "
+    ++ "  ?"
+    ++ ", time"
+    ++ ", text"
+    ++ ", event_type"
+    ++ ", version_id"
+    ++ ", user_id"
+    ++ ", email"
+    ++ ", request_ip_v4"
+    ++ ", request_ip_v6"
+    ++ ", signatory_link_id"
+    ++ ", api_user"
+    ++ " FROM evidence_log "
+    ++ " WHERE document_id = ?") [
+      toSql todoc
+    , toSql fromdoc
+    ]
+  return ()
 
 -- | A machine-readable event code for different types of events.
 data EvidenceEventType =

@@ -4,6 +4,7 @@ import Database.HDBC
 
 import DB.Classes
 import DB.Model
+import DB.Utils
 import Misc
 import User.Region
 import User.Tables
@@ -13,9 +14,9 @@ addUserCustomFooter =
   Migration {
     mgrTable = tableUsers
   , mgrFrom = 3
-  , mgrDo = wrapDB $ \conn -> do
-      _ <- run conn "ALTER TABLE users ADD COLUMN customfooter TEXT" []
-      _ <- run conn "UPDATE users SET customfooter = ?" [toSql (Nothing :: Maybe String)]
+  , mgrDo = do
+      kRunRaw "ALTER TABLE users ADD COLUMN customfooter TEXT"
+      _ <- kRun $ SQL "UPDATE users SET customfooter = ?" [SqlNull]
       return ()
   }
 
@@ -24,9 +25,8 @@ removeSystemServer =
   Migration {
     mgrTable = tableUsers
   , mgrFrom = 2
-  , mgrDo = wrapDB $ \conn -> do
-      _ <- run conn "ALTER TABLE users DROP COLUMN system_server CASCADE" []
-      return ()
+  , mgrDo = do
+      kRunRaw "ALTER TABLE users DROP COLUMN system_server CASCADE"
   }
 
 addRegionToUserSettings :: Migration
@@ -34,9 +34,8 @@ addRegionToUserSettings =
   Migration {
     mgrTable = tableUsers
   , mgrFrom = 1
-  , mgrDo = wrapDB $ \conn -> do
-      _ <- run conn "ALTER TABLE users ADD COLUMN region SMALLINT" []
-      _ <- run conn "UPDATE users SET region = ?" [toSql (defaultValue :: Region)]
-      _ <- run conn "ALTER TABLE users ALTER COLUMN region SET NOT NULL" []
-      return ()
+  , mgrDo = do
+      kRunRaw "ALTER TABLE users ADD COLUMN region SMALLINT"
+      _ <- kRun $ SQL "UPDATE users SET region = ?" [toSql (defaultValue :: Region)]
+      kRunRaw "ALTER TABLE users ALTER COLUMN region SET NOT NULL"
   }

@@ -30,11 +30,11 @@ import qualified Data.Version as Ver
 
 import DB.Classes
 import DB.Derive
-import DB.Fetcher
+import DB.Fetcher2
 import DB.Utils
 
 import MinutesTime
-import Misc (IPAddress)
+import Misc
 
 import User.History.Tables
 import User.UserID
@@ -107,50 +107,37 @@ data AddUserHistory = AddUserHistory UserID UserHistoryEvent IPAddress MinutesTi
 instance DBUpdate AddUserHistory (Maybe UserHistory) where
   dbUpdate (AddUserHistory user event ip time mpuser) = do
     uid <- UserHistoryID <$> getUniqueID tableUsersHistory
-    wrapDB $ \conn -> do 
-      _ <- run conn ("INSERT INTO users_history("
-        ++ "  id"
-        ++ ", user_id"
-        ++ ", event_type"
-        ++ ", event_data"
-        ++ ", ip"
-        ++ ", time"
-        ++ ", system_version"
-        ++ ", performing_user_id)"
-        ++ " VALUES (?, ?, ?, ?, ?, ?, ?, ?)") $ [
-            toSql uid
-          , toSql user
-          , toSql $ uheventtype event
-          , toSql $ maybe "" encode $ uheventdata event
-          , toSql ip
-          , toSql $ time
-          , toSql $ concat $ intersperse "." $ Ver.versionTags Paths.version
-          , toSql mpuser
-          ]
-      return ()
+    _ <- kRun $ mkSQL INSERT tableUsersHistory [
+        sql "id" uid
+      , sql "user_id" user
+      , sql "event_type" $ uheventtype event
+      , sql "event_data" $ maybe "" encode $ uheventdata event
+      , sql "ip" ip
+      , sql "time" time
+      , sql "system_version" $ concat $ intersperse "." $ Ver.versionTags Paths.version
+      , sql "performing_user_id" mpuser
+      ]
     dbQuery $ GetUserHistoryByID uid
 
 data GetUserHistoryByID = GetUserHistoryByID UserHistoryID
 instance DBQuery GetUserHistoryByID (Maybe UserHistory) where
-  dbQuery (GetUserHistoryByID uid) = wrapDB $ \conn -> do
-    st <- prepare conn $ selectUserHistorySQL 
-            ++ " WHERE id = ?"
-    _  <- execute st [toSql uid]
-    uh <- fetchUserHistory st
-    oneObjectReturnedGuard uh
+  dbQuery (GetUserHistoryByID uid) = do
+    _ <- kRun $ selectUserHistorySQL
+      <++> SQL "WHERE id = ?" [toSql uid]
+    fetchUserHistory
+      >>= oneObjectReturnedGuard
 
 data GetUserHistoryByUserID = GetUserHistoryByUserID UserID
 instance DBQuery GetUserHistoryByUserID (Maybe [UserHistory]) where
-  dbQuery (GetUserHistoryByUserID uid) = wrapDB $ \conn -> do
-    st <- prepare conn $ selectUserHistorySQL 
-            ++ " WHERE user_id = ? ORDER BY time DESC "
-    _  <- execute st [toSql uid]
-    hist <- fetchUserHistory st
+  dbQuery (GetUserHistoryByUserID uid) = do
+    _ <- kRun $ selectUserHistorySQL
+      <++> SQL "WHERE user_id = ? ORDER BY time DESC" [toSql uid]
+    hist <- fetchUserHistory
     return $ if null hist then Nothing else Just hist
 
 data LogHistoryLoginAttempt = LogHistoryLoginAttempt UserID IPAddress MinutesTime
 instance DBUpdate LogHistoryLoginAttempt (Maybe UserHistory) where
-  dbUpdate (LogHistoryLoginAttempt userid ip time) = dbUpdate $ 
+  dbUpdate (LogHistoryLoginAttempt userid ip time) = dbUpdate $
     AddUserHistory userid 
                    (UserHistoryEvent {uheventtype = UserLoginAttempt, uheventdata = Nothing})
                    ip
@@ -265,8 +252,8 @@ diffUserInfos old new = fstNameDiff
                             then [("email", BS.unpack $ unEmail $ useremail old, BS.unpack $ unEmail $ useremail new)] 
                             else []
 
-selectUserHistorySQL :: String
-selectUserHistorySQL = "SELECT "
+selectUserHistorySQL :: SQL
+selectUserHistorySQL = SQL ("SELECT"
  ++ "  id"
  ++ ", user_id"
  ++ ", event_type"
@@ -276,32 +263,22 @@ selectUserHistorySQL = "SELECT "
  ++ ", system_version"
  ++ ", performing_user_id"
  ++ "  FROM users_history"
- ++ " "
+ ++ " ") []
 
-fetchUserHistory :: Statement -> IO [UserHistory]
-fetchUserHistory st = fetchValues st decodeRowAsUserHistory
-
-decodeRowAsUserHistory :: UserHistoryID
-                       -> UserID
-                       -> UserHistoryEventType
-                       -> Maybe BS.ByteString
-                       -> IPAddress
-                       -> MinutesTime
-                       -> BS.ByteString
-                       -> Maybe UserID
-                       -> Either DBException UserHistory
-decodeRowAsUserHistory uid userid eventtype meventdata ip time sysver mpuser = (
-  Right $ UserHistory {
-      uhid = uid
-    , uhuserid = userid
-    , uhevent = UserHistoryEvent { 
+fetchUserHistory :: DB [UserHistory]
+fetchUserHistory = reverse `fmap` foldDB decoder []
+  where
+    decoder acc uid userid eventtype meventdata ip time sysver mpuser = UserHistory {
+        uhid = uid
+      , uhuserid = userid
+      , uhevent = UserHistoryEvent {
           uheventtype = eventtype
         , uheventdata = maybe Nothing (\d -> case decode $ BS.unpack d of
-                                             Ok a -> Just a
-                                             _    -> Nothing) meventdata
+                                        Ok a -> Just a
+                                        _    -> Nothing) meventdata
         }
-    , uhip = ip
-    , uhtime = time
-    , uhsystemversion = sysver
-    , uhperforminguserid = mpuser
-  }):: Either DBException UserHistory
+      , uhip = ip
+      , uhtime = time
+      , uhsystemversion = sysver
+      , uhperforminguserid = mpuser
+      } : acc

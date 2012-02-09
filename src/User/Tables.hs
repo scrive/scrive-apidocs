@@ -9,25 +9,24 @@ tableUserFriends :: Table
 tableUserFriends = Table {
     tblName = "user_friends"
   , tblVersion = 1
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
-    case desc of
+  , tblCreateOrValidate = \desc -> case desc of
       [  ("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("friend_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
-        runRaw conn $ "CREATE TABLE user_friends ("
+        kRunRaw $ "CREATE TABLE user_friends ("
           ++ "  user_id BIGINT NOT NULL"
           ++ ", friend_id BIGINT NOT NULL"
           ++ ", CONSTRAINT pk_user_friends PRIMARY KEY (user_id, friend_id)"
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = wrapDB $ \conn -> do
-    runRaw conn $ "ALTER TABLE user_friends"
+  , tblPutProperties = do
+    kRunRaw $ "ALTER TABLE user_friends"
       ++ " ADD CONSTRAINT fk_user_friends_users FOREIGN KEY(user_id)"
       ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    runRaw conn $ "ALTER TABLE user_friends"
+    kRunRaw $ "ALTER TABLE user_friends"
       ++ " ADD CONSTRAINT fk_user_friends_users_2 FOREIGN KEY(friend_id)"
       ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
@@ -37,8 +36,7 @@ tableUsers :: Table
 tableUsers = Table {
     tblName = "users"
   , tblVersion = 4
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
-    case desc of
+  , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("password", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
        , ("salt", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
@@ -61,7 +59,7 @@ tableUsers = Table {
        , ("customfooter", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
-        runRaw conn $ "CREATE TABLE users ("
+        kRunRaw $ "CREATE TABLE users ("
           ++ "  id BIGINT NOT NULL"
           ++ ", password BYTEA NULL"
           ++ ", salt BYTEA NULL"
@@ -87,15 +85,15 @@ tableUsers = Table {
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = wrapDB $ \conn -> do
-    runRaw conn "CREATE INDEX idx_users_service_id ON users(service_id)"
-    runRaw conn "CREATE INDEX idx_users_company_id ON users(company_id)"
-    runRaw conn "CREATE INDEX idx_users_email ON users(email)"
-    runRaw conn $ "ALTER TABLE users"
+  , tblPutProperties = do
+    kRunRaw "CREATE INDEX idx_users_service_id ON users(service_id)"
+    kRunRaw "CREATE INDEX idx_users_company_id ON users(company_id)"
+    kRunRaw "CREATE INDEX idx_users_email ON users(email)"
+    kRunRaw $ "ALTER TABLE users"
       ++ " ADD CONSTRAINT fk_users_services FOREIGN KEY(service_id)"
       ++ " REFERENCES services(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    runRaw conn $ "ALTER TABLE users"
+    kRunRaw $ "ALTER TABLE users"
       ++ " ADD CONSTRAINT fk_users_companies FOREIGN KEY(company_id)"
       ++ " REFERENCES companies(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
@@ -105,8 +103,7 @@ tableUserMailAPIs :: Table
 tableUserMailAPIs = Table {
     tblName = "user_mail_apis"
   , tblVersion = 1
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
-    case desc of
+  , tblCreateOrValidate = \desc -> case desc of
       [  ("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("key", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("daily_limit", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -114,7 +111,7 @@ tableUserMailAPIs = Table {
        , ("last_sent_date", SqlColDesc {colType = SqlDateT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
-        runRaw conn $ "CREATE TABLE user_mail_apis ("
+        kRunRaw $ "CREATE TABLE user_mail_apis ("
           ++ "  user_id BIGINT NOT NULL"
           ++ ", key BIGINT NOT NULL"
           ++ ", daily_limit INTEGER NOT NULL"
@@ -124,8 +121,8 @@ tableUserMailAPIs = Table {
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = wrapDB $ \conn -> do
-    runRaw conn $ "ALTER TABLE user_mail_apis"
+  , tblPutProperties = do
+    kRunRaw $ "ALTER TABLE user_mail_apis"
       ++ " ADD CONSTRAINT fk_user_mail_apis_users FOREIGN KEY(user_id)"
       ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
@@ -135,7 +132,7 @@ tableUserInviteInfos :: Table
 tableUserInviteInfos = Table {
     tblName = "user_invite_infos"
   , tblVersion = 1
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
+  , tblCreateOrValidate = \desc -> do
     case desc of
       [  ("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("inviter_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -143,7 +140,7 @@ tableUserInviteInfos = Table {
        , ("invite_type", SqlColDesc {colType = SqlSmallIntT, colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
-        runRaw conn $ "CREATE TABLE user_invite_infos ("
+        kRunRaw $ "CREATE TABLE user_invite_infos ("
           ++ "  user_id BIGINT NOT NULL"
           ++ ", inviter_id BIGINT NOT NULL"
           ++ ", invite_time TIMESTAMPTZ NULL"
@@ -152,12 +149,12 @@ tableUserInviteInfos = Table {
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = wrapDB $ \conn -> do
-    runRaw conn $ "ALTER TABLE user_invite_infos"
+  , tblPutProperties = do
+    kRunRaw $ "ALTER TABLE user_invite_infos"
       ++ " ADD CONSTRAINT fk_user_invite_info_users FOREIGN KEY(user_id)"
       ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    runRaw conn $ "ALTER TABLE user_invite_infos"
+    kRunRaw $ "ALTER TABLE user_invite_infos"
       ++ " ADD CONSTRAINT fk_user_invite_infos_users FOREIGN KEY(inviter_id)"
       ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"

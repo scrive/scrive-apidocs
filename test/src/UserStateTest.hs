@@ -40,7 +40,6 @@ userStateTests conn = testGroup "UserState" [
   , testThat "SetUserCompanyAdmin/GetCompanyAccounts works" conn test_getCompanyAccounts
   , testThat "GetInviteInfo/SetInviteInfo works" conn test_getInviteInfo
   , testThat "GetUserMailAPI/SetUserMailAPI works" conn test_getUserMailAPI
-  , testThat "ExportUsersDetailsToCSV works" conn test_exportUsersDetailsToCSV
   , testThat "SetUserCompany works" conn test_setUserCompany
   , testThat "DeleteUser works" conn test_deleteUser
   , testThat "SetUserInfo works" conn test_setUserInfo
@@ -149,14 +148,6 @@ test_getUserMailAPI = do
   assertBool "UserMailAPI erased correctly" res3
   nomapi <- dbQuery $ GetUserMailAPI userid
   assertBool "No UserMailAPI returned" $ isNothing nomapi
-
-test_exportUsersDetailsToCSV :: DB ()
-test_exportUsersDetailsToCSV = do
-  Just _ <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  Just _ <- addNewUser "Emily" "Green" "emily@green.com"
-  csv <- dbQuery ExportUsersDetailsToCSV
-  let users = BS.fromString "Andrzej Rybczak, andrzej@skrivapa.se\nEmily Green, emily@green.com\n"
-  assertBool "ExportUsersDetailsToCSV returned correct result" $ users == csv
 
 test_setUserCompany :: DB ()
 test_setUserCompany = do
