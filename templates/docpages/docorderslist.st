@@ -2,7 +2,7 @@
 pageOrdersList=
 $loadingdialog()$
 <div>
-    <div id="tab-viewer">
+    <div class="tab-viewer">
 	  <div class="tab-header">
     $docListRubbishBinLink()$
 	  </div>
