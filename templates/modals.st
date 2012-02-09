@@ -141,6 +141,7 @@ modalOfferSignedNoAccount=
   </div>
   </form>
 </div>
+$accountFromSignScript()$
 ######
 modalAccountSetup=
 <div class="modal-container">
@@ -206,7 +207,7 @@ window.PasswordEqValidation = Validation.extend({
 
             return t == p1;
         },
-        message: "$_flashMessagePasswordsDontMatch()$"
+        message: localization.validation.passwordsDontMatch
     }
 });
 jQuery('form[action="$signuplink$"]').submit(function(){
@@ -234,11 +235,16 @@ jQuery('form[action="$signuplink$"]').submit(function(){
     jQuery('[name=validate-message]').remove();
 
     var vresult = [
-        fstname.validate(new NameValidation({callback: callback, message: "$_flashMessageFirstNameIsRequired()$"})),
-        sndname.validate(new NameValidation({callback: callback, message: "$_flashMessageSecondNameIsRequired()$"})),
-        password.validate((new PasswordValidation({callback: callback, message: "$_flashMessageNeedsLetterAndDigit()$"}))),
+        fstname.validate(new NameValidation({callback: callback, message: localization.validation.firstNameRequired})),
+        sndname.validate(new NameValidation({callback: callback, message: localization.validation.secondNameRequired})),
+        password.validate(passwordValidation(callback, 
+            [
+              localization.validation.passwordLessThanMinLength
+            , localization.validation.passwordExceedsMaxLength
+            , localization.validation.passwordNeedsLetterAndDigit
+            ])),
         password2.validate(new PasswordEqValidation({callback: callback})),
-        tos.validate(new CheckboxReqValidation({callback: callback, message: "$_flashMessageMustAcceptTOS()$"}))
+        tos.validate(new CheckboxReqValidation({callback: callback, message: localization.validation.mustAcceptTOS}))
         ];
 
     if (vresult.every(function(a) {return a;})) 
@@ -528,6 +534,7 @@ modalSignedViewClosedNoAccount=
   </div>
   </form>
 </div>
+$accountFromSignScript()$
 ####
 ####
 modalSignedViewOrderClosedNoAccount=
@@ -551,6 +558,7 @@ modalSignedViewOrderClosedNoAccount=
   </div>
   </form>
 </div>
+$accountFromSignScript()$
 ####
 modalSignedViewNotClosedHasAccount=
 $if(isloggedin)$
@@ -643,6 +651,7 @@ modalSignedViewNotClosedNoAccount=
   </div>
   </form>
 </div>
+$accountFromSignScript()$
 #####
 modalSignedViewOrderNotClosedHasAccount=
 $if(isloggedin)$
@@ -733,6 +742,59 @@ modalSignedViewOrderNotClosedNoAccount=
   </div>
   </form>
 </div>
+$accountFromSignScript()$
+#####
+accountFromSignScript=
+<script>
+window.onload = function() {
+window.PasswordEqValidation = Validation.extend({
+    defaults: {
+        validates: function(t) {
+            var p1 = jQuery('#password').val();
+
+            return t == p1;
+        },
+        message: localization.validation.passwordsDontMatch
+    }
+});
+jQuery('#accountFromSignForm').submit(function(){
+    var callback = function(t,e,v) {
+        e.css("background", "red"); 
+        jQuery(document.createElement('div'))
+            .attr("name", "validate-message")
+            .css({"font-size": 8, "font-weight": "bold", "color": "red"})
+            .append(v.message())
+            .appendTo(e.parent());
+    };
+
+    var password = jQuery('#password');
+    var password2 = jQuery('#password2');
+    var tos = jQuery('#tosCBox');
+
+    password.css("background", "white");
+    password2.css("background", "white");
+    tos.css("background", "white");
+
+    jQuery('[name=validate-message]').remove();
+
+    var vresult = [
+        password.validate(passwordValidation(callback, 
+            [
+              localization.validation.passwordLessThanMinLength
+            , localization.validation.passwordExceedsMaxLength
+            , localization.validation.passwordNeedsLetterAndDigit
+            ])),
+        password2.validate(new PasswordEqValidation({callback: callback})),
+        tos.validate(new CheckboxReqValidation({callback: callback, message: localization.validation.mustAcceptTOS}))
+        ];
+
+    if (vresult.every(function(a) {return a;})) 
+        return true;
+
+    return false;
+});
+}
+</script>
 #####
 accountFromSignInputs=
 <div class="account-from-sign-container">
@@ -750,11 +812,11 @@ accountFromSignInputs=
           <table>
             <tr>
               <td style="width:120px;">$_password()$</td>
-              <td><input type="password" name="password" /></td>
+              <td><input id="password" type="password" name="password" /></td>
             </tr>
             <tr>
               <td>$_accountFromSignInputsConfirmPassword()$</td>
-              <td><input type="password" name="password2" /></td>
+              <td><input id="password2" type="password" name="password2" /></td>
             </tr>
           </table>
           <input type="submit" class="hidden" />
@@ -764,6 +826,7 @@ accountFromSignInputs=
     </div>
   </div>
 </div>
+
 #####
 accountFromSignFooter=
     <div class="accountFromSignFooter">

@@ -71,8 +71,6 @@ window.PasswordValidation = Validation.extend({
     }
 });
 
-window.
-
 window.NameValidation = Validation.extend({
     defaults: {
             validates: function(t) {
@@ -99,16 +97,42 @@ window.CheckboxReqValidation = Validation.extend({
     }
 });
 
+window.DigitsLettersValidation = Validation.extend({
+    defaults: {
+        validates: function(t) {
+            if (!/[a-z].*[a-z]/i.test(t))
+                return false;
+            if (!/[0-9].*[0-9]/.test(t))
+                return false;
+
+            return true;
+        },
+        message: "The field must have minimum two letters and two digits!"
+    }
+});
+
+window.passwordValidation = function(callback, messages) {
+    var messages = messages == undefined ? [] : messages;
+    var message1 = messages[0] == undefined ? "" : messages[0];
+    var message2 = messages[1] == undefined ? "" : messages[1];
+    var message3 = messages[2] == undefined ? "" : messages[2];
+
+    return new Validation({callback: callback, message: message1, validates: function(t) { return t.length >= 8;}})
+               .concat(new Validation({callback: callback, message: message2, validates: function(t) { return t.length <= 250;}}))
+               .concat(new DigitsLettersValidation({callback: callback, message: message3}));
+}
+
 jQuery.fn.validate = function(validationObject){
     var validationObject = validationObject || (new NotEmptyValidation);
     var validates = true;
 
     this.each(function(){
             //if this is a checkbox then passing value makes no sense for validation
-            if ($(this).attr('type') == 'checkbox' 
-                && !validationObject.validateData($(this), $(this))) {
-                validates = false;
-                return false;
+            if ($(this).attr('type') == 'checkbox') {
+                if (!validationObject.validateData($(this), $(this))) {
+                    validates = false;
+                    return false; 
+                } 
             } else if (!validationObject.validateData($(this).val(), $(this))) {
                 validates = false;
                 return false;

@@ -3219,3 +3219,9 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_days","dagar","","days"
 "_to"," till ",," to "
 "_selectFileToUpload","Välj fil från dator",,"Select file from computer"
+"_PasswordValidationMessageInputExceedsMaxLength","Lösenord får max innehålla 250 tecken.",,"Password must contain max 250 characters."
+"_PasswordValidationMessageInputLessThanMinLength","Lösenord måste innehålla minst 8 tecken.",,"Password must contain at least 8 characters."
+"_PasswordValidationMessageNeedsLetterAndDigit","Lösenord måste innehålla åtminstone två bokstäver
+ och två nummer.",,"Password must contain at least two letters and two
+ digits."
+"_PasswordValidationMessagePasswordsDontMatch","Nytt lösenord matchar inte med Upprepa lösenord",,"The two passwords do not match."
