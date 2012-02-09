@@ -9,8 +9,7 @@ tableFiles :: Table
 tableFiles = Table {
     tblName = "files"
   , tblVersion = 1
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
-    case desc of
+  , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("content", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
@@ -19,7 +18,7 @@ tableFiles = Table {
        , ("disk_path", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
-        runRaw conn $ "CREATE TABLE files ("
+        kRunRaw $ "CREATE TABLE files ("
           ++ "  id BIGINT NOT NULL"
           ++ ", name TEXT NOT NULL"
           ++ ", content BYTEA NULL"
@@ -30,13 +29,13 @@ tableFiles = Table {
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = wrapDB $ \_conn -> do
+  , tblPutProperties = do
     {-
-    runRaw conn $ "ALTER TABLE user_friends"
+    kRunRaw $ "ALTER TABLE user_friends"
       ++ " ADD CONSTRAINT fk_user_friends_users FOREIGN KEY(user_id)"
       ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    runRaw conn $ "ALTER TABLE user_friends"
+    kRunRaw $ "ALTER TABLE user_friends"
       ++ " ADD CONSTRAINT fk_user_friends_users_2 FOREIGN KEY(friend_id)"
       ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"

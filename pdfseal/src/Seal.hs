@@ -7,10 +7,11 @@ import qualified Data.ByteString.Lazy.Char8 as BSL
 import Control.Monad.State.Strict
 import qualified Data.Map as Map
 import Data.List
-import Data.Char
+import Data.Ord
 import Graphics.PDF.Text
 import Graphics.PDF hiding (Box)
 import SealSpec
+import qualified Data.ByteString.Base64 as Base64
 
 winAnsiPostScriptEncode :: String -> String
 winAnsiPostScriptEncode text' = concatMap charEncode text'
@@ -547,6 +548,70 @@ pageToForm refid' = do
     let value' = concatMap changekeys page ++ [entry "Subtype" "Form"] ++ contentsdict
     addStream (Dict value') streamdata
 
+addFileStream :: SealAttachment -> State Document (Value, RefID)
+addFileStream SealAttachment{fileBase64Content, fileName} = do
+   let content = BSL.fromChunks [Base64.decodeLenient (BS.pack fileBase64Content)]
+   sid <- addStream (Dict [(BS.pack "Type", Name $ BS.pack "EmbeddedFile")]) $ content
+   sid2 <- addObject (Dict [ (BS.pack "Type", Name $ BS.pack "Filespec")
+                           , (BS.pack "F", string fileName)
+                           , (BS.pack "EF", Dict [
+                                   (BS.pack "F", Ref sid)
+                                   ])
+                           ])
+
+   return (string fileName, sid2)
+
+attachFiles :: [SealAttachment] -> State Document ()
+attachFiles [] = return () -- do nothing
+attachFiles sealAttachments = do
+    -- two step process:
+    -- 1. create appriopriate streams
+    -- 2. link them into name tree
+    --
+    -- Embedded files names tree is in: /Root -> /Names ->
+    -- /EmbeddedFiles If /Names is inside, we want to preserve
+    -- content.  We want to kill what is inside /EmbeddedFiles, too
+    -- much trouble to try to merge this together.
+    --
+    -- We probably should add /Limits here as this seems required
+
+    pairArray <- mapM addFileStream sealAttachments
+    let plainArray1 = sortBy (comparing fst) pairArray
+        plainArray = concatMap (\(a,b) -> [a,Ref b]) plainArray1
+        lowLimit = fst (head plainArray1)
+        highLimit = fst (last plainArray1)
+
+    embeddedFilesNamesTree <- addObject (Dict [ (BS.pack "Names", Array plainArray)
+                                              , (BS.pack "Limits", Array [lowLimit, highLimit])
+                                              ])
+
+    embeddedFilesNamesTreeRoot <- addObject (Dict [ (BS.pack "Kids", Array [Ref embeddedFilesNamesTree])])
+
+    document <- get
+    let
+        firstBody = head (documentBodies document)
+        trailer' = bodyTrailer firstBody
+        root = case Prelude.lookup (BS.pack "Root") trailer' of
+                 Just (Ref root') -> root'
+                 x -> error ("/Root is wrong: " ++ show x)
+        catalog = case PdfModel.lookup root document of
+                    Just (Indir (Dict catalog') _) -> catalog'
+                    x -> error ("lookup of " ++ show root ++ " returned " ++ show x)
+        names = case Prelude.lookup (BS.pack "Names") catalog of
+                    Just (Dict names') -> names'
+                    Just (Ref namesrefid) -> case PdfModel.lookup namesrefid document of
+                                               Just (Indir (Dict names') _) -> names'
+                                               x -> error ("lookup of " ++ show namesrefid ++ " returned " ++ show x)
+                    Nothing -> []
+                    x -> error ("lookup of " ++ show root ++ " returned " ++ show x)
+
+        skipEmbeddedFiles = filter (not . (== BS.pack "EmbeddedFiles") . fst)
+        skipNames = filter (not . (== BS.pack "Names") . fst)
+
+        names2 = Dict ((BS.pack "EmbeddedFiles", Ref embeddedFilesNamesTreeRoot) : skipEmbeddedFiles names)
+        catalog2 = Dict ((BS.pack "Names", names2) : skipNames catalog)
+
+    setObject root catalog2
 
 
 process :: SealSpec -> IO ()
@@ -554,6 +619,7 @@ process (sealSpec@SealSpec
     { input
     , output
     , fields 
+    , attachments
     }) = do
     mdoc <- PdfModel.parseFile input
     doc <- maybe (error $ "Cannot parse input PDF " ++ input) return mdoc
@@ -575,18 +641,8 @@ process (sealSpec@SealSpec
               let pagintext1 = pagintext sealSpec
               let sealtexts = verificationPagesContents sealSpec
               placeSeals fields newsealcontents sealtexts newpagincontents pagintext1 sealmarkerform
+              when (not (null attachments)) $
+                   attachFiles attachments
+    putStrLn $ "Writing file " ++ output
     writeFileX output outputdoc
     return ()
-
-
--- this is cheating
--- FIXME: font encoding
-winAnsiChars :: String
-winAnsiChars = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~?€\201‚ƒ„…†‡ˆ‰Š‹Œ\215Ž\217\220‘’“”•–—˜™š›œ\235žŸ ¡¢£¤¥¦§¨©ª«¬?®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ"
-
-unicodeToWinAnsi :: Char -> Char
-unicodeToWinAnsi x = 
-    case findIndex (==x) winAnsiChars of
-      Just i -> chr (i + 33)
-      Nothing -> x
-      

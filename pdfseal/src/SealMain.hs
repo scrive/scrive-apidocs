@@ -48,6 +48,16 @@ sealspec filename = SealSpec
                , Field {value = "Gracjan Polak", x = 681, y = 1058, page = 1, w = 770, h = 1085}
                , Field {value = "gracjan@mail.com", x = 121, y = 347, page = 1,w = 770, h = 1085}]
     , staticTexts = sampleSealingTexts
+    , attachments = [ SealAttachment { fileName = "SkrivaPå attachment 1.txt"
+                                     , fileBase64Content = "214124124123412341234"
+                                     }
+                    , SealAttachment { fileName = "SkrivaPå attachment 2.html"
+                                     , fileBase64Content = "26345645636534563454"
+                                     }
+                    , SealAttachment { fileName = "SkrivaPå attachment 2b.pdf"
+                                     , fileBase64Content = "2632345234534563454"
+                                     }
+                    ]
     }
 
 
@@ -127,6 +137,16 @@ simple_upsales_confirmation = SealSpec
                , Field {value = "Gracjan Polak", x = 681, y = 1058, page = 1, w = 770, h = 1085}
                , Field {value = "gracjan@mail.com", x = 121, y = 347, page = 1,w = 770, h = 1085}]
     , staticTexts = sampleSealingTexts
+    , attachments = [ SealAttachment { fileName = "SkrivaPa attachment 1.txt"
+                                     , fileBase64Content = "214124124123412341234"
+                                     }
+                    , SealAttachment { fileName = "SkrivaPa attachment 2.html"
+                                     , fileBase64Content = "26345645636534563454"
+                                     }
+                    , SealAttachment { fileName = "SkrivaPa attachment 2b.pdf"
+                                     , fileBase64Content = "2632345234534563454"
+                                     }
+                    ]
     }
 
 main :: IO ()

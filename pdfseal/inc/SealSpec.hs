@@ -34,6 +34,15 @@ data Field =
           }
     deriving (Eq, Ord, Show, Read)
 
+-- | An attachment that will be put into a PDF. Attachments are put in
+-- order.  File name should be without any directory parts. File
+-- content as base64 encoded string.
+data SealAttachment = SealAttachment
+  { fileName          :: String -- ^ how should attached file be named
+  , fileBase64Content :: String -- ^ base64 binary content of the file
+  }
+    deriving (Eq,Ord,Show,Read)
+
 data SealSpec = SealSpec 
     { input :: String
     , output :: String
@@ -45,6 +54,7 @@ data SealSpec = SealSpec
     , hostpart :: String
     , fields :: [Field]
     , staticTexts :: SealingTexts
+    , attachments :: [SealAttachment]
     }
     deriving (Eq,Ord,Show,Read)
 

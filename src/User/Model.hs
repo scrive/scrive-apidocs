@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -fno-warn-orphans -fcontext-stack=50 #-}
+{-# OPTIONS_GHC -fcontext-stack=50 #-}
 module User.Model (
     module User.Lang
   , module User.Region
@@ -20,7 +20,6 @@ module User.Model (
   , GetCompanyAccounts(..)
   , GetInviteInfo(..)
   , GetUserMailAPI(..)
-  , ExportUsersDetailsToCSV(..)
   , SetUserCompany(..)
   , DeleteUser(..)
   , AddUser(..)
@@ -181,14 +180,6 @@ instance DBQuery GetUserMailAPI (Maybe UserMailAPI) where
         , umapiSentToday = sent_today
         } : acc
 
-data ExportUsersDetailsToCSV = ExportUsersDetailsToCSV
-instance DBQuery ExportUsersDetailsToCSV BS.ByteString where
-  dbQuery ExportUsersDetailsToCSV = do
-    kQuickQuery (SQL "SELECT first_name || ' ' || last_name, email FROM users WHERE deleted = FALSE" [])
-      >>= return . toCSV
-    where
-      toCSV = BS.unlines . map (BS.intercalate (BS.pack ", ") . map fromSql)
-
 data SetUserCompany = SetUserCompany UserID (Maybe CompanyID)
 instance DBUpdate SetUserCompany Bool where
   dbUpdate (SetUserCompany uid mcid) = case mcid of
@@ -287,8 +278,7 @@ instance DBUpdate SetInviteInfo Bool where
         case minviterid of
           Just inviterid -> do
             _ <- kRunRaw "LOCK TABLE user_invite_infos IN ACCESS EXCLUSIVE MODE"
-            rec_exists <- kQuickQuery (SQL "SELECT 1 FROM user_invite_infos WHERE user_id = ?" [toSql uid])
-              >>= checkIfOneObjectReturned
+            rec_exists <- checkIfAnyReturned "SELECT 1 FROM user_invite_infos WHERE user_id = ?" [toSql uid]
             if rec_exists
               then do
                 kPrepare $ "UPDATE user_invite_infos SET"
@@ -327,8 +317,7 @@ instance DBUpdate SetUserMailAPI Bool where
       then case musermailapi of
         Just mailapi -> do
           _ <- kRunRaw "LOCK TABLE user_mail_apis IN ACCESS EXCLUSIVE MODE"
-          rec_exists <- kQuickQuery (SQL "SELECT 1 FROM user_mail_apis WHERE user_id = ?" [toSql uid])
-              >>= checkIfOneObjectReturned
+          rec_exists <- checkIfAnyReturned "SELECT 1 FROM user_mail_apis WHERE user_id = ?" [toSql uid]
           if rec_exists
             then do
               kPrepare $ "UPDATE user_mail_apis SET"
@@ -430,9 +419,9 @@ instance DBUpdate SetUserCompanyAdmin Bool where
     mcid <- getOne "SELECT company_id FROM users WHERE id = ? AND deleted = FALSE FOR UPDATE" [toSql uid]
     case mcid :: Maybe CompanyID of
       Nothing -> return False
-      Just _ -> wrapDB $ \conn -> do
-        r <- run conn "UPDATE users SET is_company_admin = ? WHERE id = ? AND deleted = FALSE" [toSql iscompanyadmin, toSql uid]
-        oneRowAffectedGuard r
+      Just _ -> kRun01 $ SQL
+        "UPDATE users SET is_company_admin = ? WHERE id = ? AND deleted = FALSE"
+        [toSql iscompanyadmin, toSql uid]
 
 -- helpers
 
@@ -443,9 +432,8 @@ composeFullName (fstname, sndname) =
        else fstname `BS.append` BS.pack " " `BS.append` sndname
 
 checkIfUserExists :: UserID -> DB Bool
-checkIfUserExists uid = do
-  kQuickQuery (SQL "SELECT 1 FROM users WHERE id = ? AND deleted = FALSE" [toSql uid])
-    >>= checkIfOneObjectReturned
+checkIfUserExists uid =
+  checkIfAnyReturned "SELECT 1 FROM users WHERE id = ? AND deleted = FALSE" [toSql uid]
 
 selectUsersSQL :: String
 selectUsersSQL = "SELECT "

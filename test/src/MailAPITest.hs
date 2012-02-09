@@ -1,26 +1,20 @@
 module MailAPITest (mailApiTests) where
 
 import Control.Applicative
---import Control.Arrow
 import Data.Maybe
-import Database.HDBC
 import DB.Nexus
 import Happstack.Server
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit (Assertion)
---import Text.JSON.Generic
---import Text.Regex.TDFA ((=~))
 import System.IO.Temp
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
 import qualified Codec.MIME.Type as MIME
---import Control.Concurrent
 import Doc.DocStateData
 import Control.Monad.Trans
 import Data.List
 
---import ScriveByMail.Control
 import DB.Classes
 import Context
 import Doc.Model
@@ -30,7 +24,6 @@ import User.Model
 import TestingUtil
 import Templates.TemplatesLoader
 import TestKontra as T
---import Doc.DocControl
 import Doc.DocInfo
 import qualified Log
 
@@ -82,7 +75,7 @@ testSuccessfulDocCreation conn emlfile sigs = withMyTestEnvironment conn $ \tmpd
         , umapiSentToday = 0
     }
     (res, _) <- runTestKontra req ctx handleMailAPI
-    wrapDB rollback 
+    --kRollback
     Log.debug $ "Here's what I got back from handleMailCommand: " ++ show res
     let mdocid = maybeRead res
     assertBool ("documentid is not given: " ++ show mdocid) $ isJust mdocid
