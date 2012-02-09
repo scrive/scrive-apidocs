@@ -202,11 +202,11 @@ window.onload = function() {
 window.PasswordEqValidation = Validation.extend({
     defaults: {
         validates: function(t) {
-            var p1 = jQuery('#password').value;
+            var p1 = jQuery('#password').val();
 
             return t == p1;
         },
-        message: "Passwords are not equal!"
+        message: "$_flashMessagePasswordsDontMatch()$"
     }
 });
 jQuery('form[action="$signuplink$"]').submit(function(){
@@ -223,19 +223,22 @@ jQuery('form[action="$signuplink$"]').submit(function(){
     var sndname = jQuery('#sndname');
     var password = jQuery('#password');
     var password2 = jQuery('#password2');
+    var tos = jQuery('#tosCBox');
 
     fstname.css("background", "white");
     sndname.css("background", "white");
     password.css("background", "white");
     password2.css("background", "white");
+    tos.css("background", "white");
 
     jQuery('[name=validate-message]').remove();
 
     var vresult = [
-        fstname.validate(new NameValidation({callback: callback, message: "Wrong first name format!"})),
-        sndname.validate(new NameValidation({callback: callback, message: "Wrong second name format!"})),
-        password.validate((new PasswordValidation({callback: callback, message: "Wrong password format!"}))),
-        password2.validate((new PasswordValidation({callback: callback, message: "Wrong password format!"})).concat(new PasswordEqValidation({callback: callback})))
+        fstname.validate(new NameValidation({callback: callback, message: "$_flashMessageFirstNameIsRequired()$"})),
+        sndname.validate(new NameValidation({callback: callback, message: "$_flashMessageSecondNameIsRequired()$"})),
+        password.validate((new PasswordValidation({callback: callback, message: "$_flashMessageNeedsLetterAndDigit()$"}))),
+        password2.validate(new PasswordEqValidation({callback: callback})),
+        tos.validate(new CheckboxReqValidation({callback: callback, message: "$_flashMessageMustAcceptTOS()$"}))
         ];
 
     if (vresult.every(function(a) {return a;})) 

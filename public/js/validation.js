@@ -71,6 +71,8 @@ window.PasswordValidation = Validation.extend({
     }
 });
 
+window.
+
 window.NameValidation = Validation.extend({
     defaults: {
             validates: function(t) {
@@ -88,12 +90,26 @@ window.NameValidation = Validation.extend({
     }
 });
 
+window.CheckboxReqValidation = Validation.extend({
+    defaults: {
+            validates: function(t) {
+                return t.attr('checked');
+            },
+            message: "Checkbox must be checked!"
+    }
+});
+
 jQuery.fn.validate = function(validationObject){
     var validationObject = validationObject || (new NotEmptyValidation);
     var validates = true;
 
     this.each(function(){
-            if (!validationObject.validateData($(this).val(), $(this))) {
+            //if this is a checkbox then passing value makes no sense for validation
+            if ($(this).attr('type') == 'checkbox' 
+                && !validationObject.validateData($(this), $(this))) {
+                validates = false;
+                return false;
+            } else if (!validationObject.validateData($(this).val(), $(this))) {
                 validates = false;
                 return false;
             }
