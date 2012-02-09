@@ -27,7 +27,7 @@ var SignatureForDrawing = Backbone.Model.extend({
         };
     initWithValue();
     sf.bind('change',initWithValue);
-        
+    sf.bind('empty', function() {sd.trigger('empty');})    
     },
     signaturefield : function() {
         return this.get("signaturefield");
@@ -56,12 +56,17 @@ var SignatureForDrawing = Backbone.Model.extend({
 
 var SignatureForDrawingView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render');
+        _.bindAll(this, 'render', 'redborder');
         this.model.bind('change', this.render);
+        this.model.bind('empty', this.redborder);
+
         this.model.view = this;
         this.drawing = false;
         this.ready = false;
         this.render();
+    },
+    redborder: function() {
+        $('.signatureHeader', this.el).css("color", "red");
     },
     startDrawing : function()
     {

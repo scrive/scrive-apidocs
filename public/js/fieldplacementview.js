@@ -109,10 +109,10 @@ var SignaturePlacementView = Backbone.View.extend({
         _.bindAll(this, 'render');
         this.render();
     },
-    innerText : function() {
+    header : function() {
         var signatory = this.model.signatory();
         var process = signatory.document().process();
-        var box = $("<span>");
+        var box = $("<div class='signatureHeader'>");
         var sname = signatory.nameOrEmail();
         if (sname == "")
         {
@@ -121,7 +121,7 @@ var SignaturePlacementView = Backbone.View.extend({
             else
              sname =  process.signatoryname() + (process.numberedsignatories() ? " " + signatory.signIndex() : "");
         }
-        box.append($("<span class='text'>").text(sname + " signature"));
+        box.text(localization.signaturePlacement(sname));
         return box;
     },
     render: function() {
@@ -129,20 +129,24 @@ var SignaturePlacementView = Backbone.View.extend({
             var signatory = this.model.signatory();
             var box = this.el;
             box.empty();
+            box.addClass('signatureBoxNotDrawing');
+            box.append(this.header());
+            signatory.bind('change', function() {
+                    $(".signatureHeader",box).replaceWith(view.header());
+            });
             if (this.model.value() == undefined || this.model.value() == "")
             {
-                box.addClass('signatureBoxNotDrawing');
-                box.append(this.innerText());
-                signatory.bind('change', function() {
-                    box.empty();
-                    box.append(view.innerText());
-                });
-            }else{
-               var img = $("<img alt='signature'  width='250' height='100'/>");
-               img.attr('src',this.model.value());
-               box.append(img);
-            }    
-           return this;
+                var img = $("<div class='signatureDummy'>")
+                box.append(img);
+
+            }
+            else {
+                var img = $("<img alt='signature'  width='250' height='100'/>");
+                img.attr('src',this.model.value());
+                box.append(img);
+            }
+
+            return this;
     }
 });
 

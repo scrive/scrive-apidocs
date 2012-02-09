@@ -333,6 +333,12 @@ window.Signatory = Backbone.Model.extend({
             return field.readyForSign();
         })      
     },
+    signatureReadyForSign : function() {
+        return this.signature() == undefined || this.signature().readyForSign();
+    },
+    signature : function() {
+        return this.field("signature")
+    },
     remind: function(customtext) {
         return new Submit({
               url: "/resend/" + this.document().documentid() + "/" + this.signatoryid(),

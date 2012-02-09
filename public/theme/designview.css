@@ -519,20 +519,32 @@
     float : left;
 }
 .signatureBoxNotDrawing {
-    background-color: #F5F5F5;
     display: block;
-    padding-top:30px;
-    height: 121px;
-    width: 270px;
+    width: 250px;
     text-align: center;
-    border: 1px solid #DDDDDD;
+    border: 1px solid #999999;
     filter: alpha(opacity=80);
     -moz-opacity: 0.80;
     opacity: 0.80;
 }
-.signatureBoxNotDrawing .text {
-    font-weight: bold;
-    color: black;
+
+.signatureBoxNotDrawing .signatureDummy{
+    display: block;
+    height: 100px;
+    width: 250px;
+    
+}
+.signatureBoxNotDrawing .signatureHeader{
+    display: block;
+    width: 250px;
+    font-size: 12px;
+    font-style: italic;
+    border-bottom: 1px solid #999999;
+    background-color: #F5F5F5;
+    color: #666666;
+    padding-top:2px;
+    padding-bottom:2px;
+
 }
 
 .signatureDrawingBox{
@@ -553,7 +565,6 @@
 .signatureDrawingBox canvas {
     height: 100px;
     width: 250px;
-    background : #EFEFEF
 }
 
 .signatureDrawingBox .canvasWrapper {
@@ -602,21 +613,29 @@
 .signatureDrawingBox .signatureHeader{
     float: left;
     width: 250px;
-    color: #222222;
+    color: #666666;
+    background-color: #F5F5F5;
     border-right: 1px solid #222222;
+    font-size: 12px;
+    font-style: italic;
+    padding-top:2px;
+    padding-bottom:2px;
 
 }
 
 .signatureDrawingBox.ready .signatureHeader{
     border-right: 1px solid #888888;
-    color: #666666;
+    color: #222222;
 
 }
 
 .signatureDrawingBox .signatureIconBox{
-    width: 16px;
+    width: 17px;
     float: right;
     height: 100%;
+    padding-left: 1px;
+    padding-right: 1px;
+    background-color: #F5F5F5;
 }
 
 .signStepsBody.fixed{

@@ -225,7 +225,12 @@ window.DocumentStandarView = Backbone.View.extend({
                                 labelstyle : document.process().requiressignguard()? "width:120px" : "padding-left:20px;padding-right:20px;",
                                 cssClass : "center" ,
                                 onClick : function() {
-                                    if(!signatory.allFieldsReadyForSign()) {
+                                    if(!signatory.signatureReadyForSign()) {
+                                     signatory.signature().trigger('empty');
+                                     FlashMessages.add({content: localization.signatureMissing, color: "red"});
+                                    }
+                                    
+                                    else if(!signatory.allFieldsReadyForSign()) {
                                      _.each(signatory.fields(),function(field) {
                                             if (!field.readyForSign() && field.view != undefined)
                                                 field.view.redborder();
@@ -373,7 +378,6 @@ window.DocumentStandarView = Backbone.View.extend({
       leftbox.append(this.cancelButton().input());
       box.append (leftbox);
 
-        console.log("xxx");
         if (document.process().requiressignguard())
         {
             var middlebox = $("<div id='signViewBottomBoxContainerMiddle'/>");
