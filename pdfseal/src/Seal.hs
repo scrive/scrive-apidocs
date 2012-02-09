@@ -227,6 +227,23 @@ fieldstext pagew pageh fields = concatMap fieldtext fields
                    } = "q 1 0 0 1 " ++ show (fromIntegral (x * pagew) / fromIntegral w :: Double) ++ " " ++ 
                        show (fromIntegral ((h - y) * pageh) / fromIntegral h - fontBaseline :: Double) ++ " cm " ++
                        "BT /SkrivaPaHelvetica 10 Tf (" ++ winAnsiPostScriptEncode val ++ ") Tj ET Q "
+    fieldtext FieldJPG{ SealSpec.valueBase64 = val
+                   , x
+                   , y
+                   , w
+                   , h
+                   , image_w, image_h
+                   , internal_image_w, internal_image_h
+                   } = "q " ++ intercalate " " [ "300" --show image_w
+                                               , "0"
+                                               , "0"
+                                               , "300" -- show image_h
+                                               , "0" -- show (fromIntegral (x * pagew) / fromIntegral w :: Double)
+                                               , "0" -- show (fromIntegral ((h - y) * pageh) / fromIntegral h :: Double)
+                                               ] ++ " cm " ++
+                       "BI /BPC 8 /CS /RGB /F /DCT " ++
+                       "/H " ++ show internal_image_h ++ " /W " ++ show internal_image_w ++ " ID\n" ++ 
+                       BS.unpack (Base64.decodeLenient (BS.pack val)) ++ "\nEI Q "
 
 
 placeSeals :: [Field] -> RefID -> [String] -> RefID -> String -> RefID -> State Document ()
