@@ -127,9 +127,9 @@ var SignatureForDrawingView = Backbone.View.extend({
     signatureBoxTitle : function() {
         var box = $("<div class='signatureHeader'>");
         if (this.model.isReady())
-            box.text("Your signature");
+            box.text(localization.signature.placeYour);
         else
-            box.text("Place your signature");
+            box.text(localization.signature.placeYour);
         return box;
     },
     render: function () {

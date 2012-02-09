@@ -232,7 +232,11 @@ javascriptLocalisation =
               , selectFile :  "$_dialogCsvupload2CSVMultiChooseFile()$"
               , selectOtherFile: "$_dialogCsvupload2CSVMultiChooseFile()$"
             }
-         , signaturePlacement : function(s) { return s + " signature"; }
-         , signatureMissing : "Missing signature"
+         , signature : {
+              placeFor : function(s) { return s + " $_signaturePlaceFor()$"; }
+            , missing : "$_signatureMissing()$"
+            , placeYour : "$_signaturePlaceYour()$"
+           }
+
    }
 ####

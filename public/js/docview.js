@@ -227,7 +227,7 @@ window.DocumentStandarView = Backbone.View.extend({
                                 onClick : function() {
                                     if(!signatory.signatureReadyForSign()) {
                                      signatory.signature().trigger('empty');
-                                     FlashMessages.add({content: localization.signatureMissing, color: "red"});
+                                     FlashMessages.add({content: localization.signature.missing, color: "red"});
                                     }
                                     
                                     else if(!signatory.allFieldsReadyForSign()) {

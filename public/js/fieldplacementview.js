@@ -121,7 +121,7 @@ var SignaturePlacementView = Backbone.View.extend({
             else
              sname =  process.signatoryname() + (process.numberedsignatories() ? " " + signatory.signIndex() : "");
         }
-        box.text(localization.signaturePlacement(sname));
+        box.text(localization.signature.placeFor(sname));
         return box;
     },
     render: function() {

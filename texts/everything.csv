@@ -3218,4 +3218,7 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_ordernonsignatoryname","Ej undertecknande part",,"Non-signing party"
 "_days","dagar","","days"
 "_to"," till ",," to "
+"_signaturePlaceFor","signerar här",,"signature"
+"_signatureMissing","Var vänliga och skriv din signatur",,"Please draw you signature"
+"_signaturePlaceYour","Signera här",,"Place your signature here"
 "_selectFileToUpload","Välj fil från dator",,"Select file from computer"
