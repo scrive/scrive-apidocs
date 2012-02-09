@@ -115,7 +115,7 @@ var SignatureForDrawingView = Backbone.View.extend({
         var icon = $("<div class='doneDrawing'/>")
         var view = this;
         icon.click(function() {
-             view.model.makeReady(view.canvas[0].toDataURL());
+             view.model.makeReady(view.canvas[0].toDataURL("image/jpeg"));
              return false;
         });
         return icon;
@@ -158,10 +158,15 @@ var SignatureForDrawingView = Backbone.View.extend({
         this.picture =  this.canvas[0].getContext('2d');
         if (this.model.hasImage()){
             var img = new Image();
+            img.type = 'image/jpeg';
             img.src = this.model.image();
             img.onload = function() {
                 view.picture.drawImage(img,0,0,view.canvas[0].width,view.canvas[0].height);
             }
+        }
+        else {
+             view.picture.fillStyle = "#ffffff";
+             view.picture.fillRect (0,0,view.canvas[0].width,view.canvas[0].height);  
         }
         if (!this.model.isReady()) {
             this.canvas[0].addEventListener('touchstart',function(e) {view.drawingtoolDown(e.layerX, e.layerY);});

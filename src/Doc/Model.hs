@@ -1915,6 +1915,7 @@ instance Actor a => DBUpdate (UpdateFields a) (Either String Document) where
                   CompanyFT        -> updateF $ BS.fromString "sigco"
                   PersonalNumberFT -> updateF $ BS.fromString "sigpersnr"
                   CompanyNumberFT  -> updateF $ BS.fromString "sigcompnr"
+                  SignatureFT      -> updateF $ BS.fromString "signature"
                   CustomFT label _ -> updateF label
                   _                -> sf
 

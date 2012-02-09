@@ -226,9 +226,9 @@ instance DBQuery GetEvidenceLog [DocumentEvidenceEvent] where
       ]
     foldDB fetchEvidenceLog []
     where
-      fetchEvidenceLog acc did tm txt tp vid uid eml ip4 ip6 slid api =
+      fetchEvidenceLog acc did' tm txt tp vid uid eml ip4 ip6 slid api =
         DocumentEvidenceEvent {
-            evDocumentID = did
+            evDocumentID = did'
           , evTime       = tm
           , evText       = txt
           , evType       = tp

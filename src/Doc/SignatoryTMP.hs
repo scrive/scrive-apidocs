@@ -214,6 +214,7 @@ instance FromJSON FieldType where
          Just "sigpersnr" -> Just $ PersonalNumberFT
          Just "sigco"     -> Just $ CompanyFT
          Just "sigcompnr" -> Just $ CompanyNumberFT
+         Just "signature" -> Just $ SignatureFT
          Just name        -> Just $ CustomFT (BS.fromString name) False
          _ -> Nothing
          
