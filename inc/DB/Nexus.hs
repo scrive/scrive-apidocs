@@ -46,7 +46,6 @@ module DB.Nexus
 , NexusStats(..)
 , mkNexus
 , getNexusStats
-, nexusRNG
 )
 where
 
@@ -54,8 +53,6 @@ import Control.Monad.Trans (liftIO, MonadIO)
 import Database.HDBC
 import Database.HDBC.Statement
 import Data.IORef
-
-import Crypto.RNG (CryptoRNGState)
 
 -- | Statistics that a 'Nexus' can gather.
 data NexusStats = NexusStats
@@ -91,15 +88,14 @@ emptyStats = NexusStats 0 0 0 0
 data Nexus = forall conn . IConnection conn => 
            Nexus { nexusConnection :: conn
                  , nexusStats      :: IORef NexusStats
-                 , nexusRNG        :: CryptoRNGState
                  }
 
 -- | Wrap an existing 'IConnection' object into a 'Nexus' statistics
 -- counting mechanism'
-mkNexus :: (MonadIO m, IConnection conn) => CryptoRNGState -> conn -> m Nexus
-mkNexus rng conn = do
+mkNexus :: (MonadIO m, IConnection conn) => conn -> m Nexus
+mkNexus conn = do
   stats <- liftIO $ newIORef emptyStats
-  return (Nexus conn stats rng)
+  return (Nexus conn stats)
 
 -- | Retrieve current 'NexusStats' from a 'Nexus'. Does not clear
 -- stats, so you may use this many times a day.
@@ -154,10 +150,10 @@ instance IConnection Nexus where
              , describeResult = describeResult st
              }
 
-    clone Nexus{nexusConnection=conn, nexusRNG = rng} = do
+    clone Nexus{nexusConnection=conn} = do
       c2 <- clone conn
       s2 <- newIORef emptyStats
-      return (Nexus c2 s2 rng)
+      return (Nexus c2 s2)
 
     hdbcDriverName Nexus{nexusConnection=conn} = hdbcDriverName conn
     hdbcClientVer Nexus{nexusConnection=conn} = hdbcClientVer conn

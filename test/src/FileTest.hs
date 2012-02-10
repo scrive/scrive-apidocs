@@ -5,7 +5,6 @@ module FileTest (fileTests) where
 import DB.Classes
 import TestingUtil
 
-import DB.Nexus
 import Control.Monad
 import Test.Framework
 import Test.QuickCheck
@@ -19,8 +18,8 @@ import Control.Monad.Trans
 import File.FileID
 import File.File
 
-fileTests :: Nexus -> Test
-fileTests conn = testGroup "Files" [
+fileTests :: DBEnv -> Test
+fileTests env = testGroup "Files" [
   
   -- Primitive properties
   testCase "FileID read - show works" testFileIDReadShow,
@@ -28,14 +27,14 @@ fileTests conn = testGroup "Files" [
   testCase "File are equal when they have equal ids" testFileEquality,
   
   --Basic DB operations
-  testThat "File insert persists content"  conn testFileNewFile,
-  testThat "File move to disk works"  conn testFileMovedToDisc,
-  testThat "File move to AWS works"  conn testFileMovedToAWS,
-  testThat "We can put file unchecked in db"  conn testUncheckedStoring,
+  testThat "File insert persists content"  env testFileNewFile,
+  testThat "File move to disk works"  env testFileMovedToDisc,
+  testThat "File move to AWS works"  env testFileMovedToAWS,
+  testThat "We can put file unchecked in db"  env testUncheckedStoring,
   
   
   -- Advanced tests
-  testThat "Newly created files are supposed to be moved to amazon"  conn testNewFileThatShouldBeMovedToAWS
+  testThat "Newly created files are supposed to be moved to amazon"  env testNewFileThatShouldBeMovedToAWS
   ]
   
   

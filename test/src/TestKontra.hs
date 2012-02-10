@@ -32,7 +32,7 @@ import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 
 import Context
-import Crypto.RNG (CryptoRNG, getCryptoRNGState, newCryptoRNGState)
+import Crypto.RNG (CryptoRNG, getCryptoRNGState)
 import DB.Classes
 import KontraMonad
 import Mails.MailsConfig
@@ -50,10 +50,10 @@ newtype TestKontra a = TK { unTK :: ErrorT Response (ReaderT Request (StateT (Co
 instance Kontrakcja TestKontra
 
 instance CryptoRNG TestKontra where
-  getCryptoRNGState = TK $ gets (ctxcryptorng . fst)
+  getCryptoRNGState = TK $ gets (rngstate . ctxdbenv . fst)
 
 instance DBMonad TestKontra where
-  getConnection = ctxdbconn <$> getContext
+  getDBEnv = ctxdbenv <$> getContext
   handleDBError e = finishWith =<< (internalServerError $ toResponse $ show e)
 
 instance TemplatesMonad TestKontra where
@@ -201,7 +201,6 @@ mkContext locale globaltemplates = liftIO $ do
     docs <- newMVar M.empty
     memcache <- MemCache.new BS.length 52428800
     time <- getMinutesTime
-    rng <- newCryptoRNGState -- TODO: Here we could start with a deterministic seed instead
     return Context {
           ctxmaybeuser = Nothing
         , ctxhostpart = "http://testkontra.fake"
@@ -209,7 +208,7 @@ mkContext locale globaltemplates = liftIO $ do
         , ctxtime = time
         , ctxnormalizeddocuments = docs
         , ctxipnumber = unknownIPAddress
-        , ctxdbconn = error "dbconn is not defined"
+        , ctxdbenv = error "dbenv is not defined"
         , ctxdocstore = error "docstore is not defined"
         , ctxs3action = AWS.S3Action {
               AWS.s3conn = AWS.amazonS3Connection "" ""
@@ -237,5 +236,4 @@ mkContext locale globaltemplates = liftIO $ do
         , ctxadminaccounts = []
         , ctxsalesaccounts = []
         , ctxmagichashes = Map.empty
-        , ctxcryptorng = rng
     }

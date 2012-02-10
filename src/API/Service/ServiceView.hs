@@ -19,15 +19,14 @@ import Misc
 import API.Service.Model
 import Util.HasSomeUserInfo
 import Data.Maybe
-import DB.Nexus
 import User.Model
 import Data.Functor
 import KontraLink
 import DB.Classes
 import qualified Data.ByteString.UTF8 as BS
 
-serviceAdminPage :: TemplatesMonad m => Nexus -> Bool -> Service -> m String
-serviceAdminPage conn superuser service =
+serviceAdminPage :: TemplatesMonad m => DBEnv -> Bool -> Service -> m String
+serviceAdminPage dbenv superuser service =
     renderTemplateFM "serviceAdminPage" $ do
        field "name" $ show $ serviceid service
        field "nameforurl" $ encodeForURL $ serviceid service
@@ -42,7 +41,7 @@ serviceAdminPage conn superuser service =
        field "barsbackground"  $ BS.toString <$> (servicebarsbackground $ serviceui service)
        field "logo" $ isJust $ servicelogo $ serviceui service
        field "logoLink"  $ show $ LinkServiceLogo $ serviceid service
-       fieldM "admin" $ fmap getSmartName <$> (ioRunDB conn $ dbQuery $ GetUserByID $ serviceadmin $ servicesettings service)
+       fieldM "admin" $ fmap getSmartName <$> (ioRunDB dbenv $ dbQuery $ GetUserByID $ serviceadmin $ servicesettings service)
        field "location" $ fmap unServiceLocation $ servicelocation $ servicesettings service
        field "allowToChangeSettings" $ superuser
 

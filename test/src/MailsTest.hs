@@ -1,7 +1,6 @@
 module MailsTest (mailsTests) where
 
 import Control.Applicative
-import DB.Nexus
 import Happstack.Server
 import Test.Framework
 import Test.Framework.Providers.HUnit
@@ -34,10 +33,10 @@ import Data.Char
 import Text.XML.HaXml.Parse (xmlParse')
 import Control.Monad.Trans
 
-mailsTests :: Nexus -> [String] -> Test
-mailsTests conn params  = testGroup "Mails" [
-    testCase "Document emails" $ testDocumentMails conn (toMailAddress params),
-    testCase "User emails" $ testUserMails conn (toMailAddress params)
+mailsTests :: DBEnv -> [String] -> Test
+mailsTests env params  = testGroup "Mails" [
+    testCase "Document emails" $ testDocumentMails env (toMailAddress params),
+    testCase "User emails" $ testUserMails env (toMailAddress params)
     ]
 
 gRight :: (Show a, MonadIO m) => m (Either a b) -> m b
@@ -50,14 +49,14 @@ gRight ac = do
     Right d -> return d
 
 
-testDocumentMails  :: Nexus -> Maybe String -> Assertion
-testDocumentMails  conn mailTo = withTestEnvironment conn $ do
+testDocumentMails  :: DBEnv -> Maybe String -> Assertion
+testDocumentMails  env mailTo = withTestEnvironment env $ do
   author <- addNewRandomAdvancedUser
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
   forM_ allLocales $ \l ->
     forM_ [Contract,Offer,Order] $ \doctype -> do
         -- make  the context, user and document all use the same locale
-        ctx <- mailingContext l conn
+        ctx <- mailingContext l env
         _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { locale = l }
         d' <- gRight $ randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype)
         d <- gRight . dbUpdate $ SetDocumentLocale (documentid d') l (ctxtime ctx)
@@ -105,11 +104,11 @@ testDocumentMails  conn mailTo = withTestEnvironment conn $ do
         checkMail "Reminder signed" $ mailDocumentRemind Nothing ctx doc (head $ documentsignatorylinks sdoc)
 
 
-testUserMails :: Nexus -> Maybe String -> Assertion
-testUserMails conn mailTo = withTestEnvironment conn $ do
+testUserMails :: DBEnv -> Maybe String -> Assertion
+testUserMails env mailTo = withTestEnvironment env $ do
   forM_ allLocales $ \l ->  do
     -- make a user and context that use the same locale
-    ctx <- mailingContext l conn
+    ctx <- mailingContext l env
     user <- addNewRandomAdvancedUserWithLocale l
 
     req <- mkRequest POST []
@@ -152,12 +151,12 @@ addNewRandomAdvancedUserWithLocale l = do
   (Just uuser) <- dbQuery $ GetUserByID (userid user)
   return uuser
 
-mailingContext :: Locale -> Nexus -> DB Context
-mailingContext locale conn = do
+mailingContext :: Locale -> DBEnv -> DB Context
+mailingContext locale env = do
     globaltemplates <- readGlobalTemplates
     ctx <- mkContext locale globaltemplates
     return $ ctx {
-                ctxdbconn = conn,
+                ctxdbenv = env,
                 ctxhostpart = "http://dev.skrivapa.se"
               }
 

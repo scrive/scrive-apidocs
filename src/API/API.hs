@@ -53,7 +53,7 @@ newtype APIFunction m c a = AF { unAF :: ReaderT c (ErrorT (API_ERROR, String) m
     deriving (Functor, Monad, MonadError (API_ERROR, String), MonadIO, MonadReader c, CryptoRNG)
 
 instance (APIContext c, Kontrakcja m, CryptoRNG m) => DBMonad (APIFunction m c) where
-    getConnection = liftKontra getConnection
+    getDBEnv = liftKontra getDBEnv
     handleDBError e = do
       Log.error $ show e
       throwApiError API_ERROR_OTHER "Database problem"

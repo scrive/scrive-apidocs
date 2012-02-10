@@ -146,7 +146,7 @@ handleChangeServiceSettings sid = do
 handleShowService :: Kontrakcja m => ServiceID -> m (Either KontraLink String)
 handleShowService sid = do
     ctx <- getContext
-    conn <- getConnection
+    conn <- getDBEnv
     mservice <- runDBQuery $ GetService sid
     if ((isJust mservice)
         && (sameUser (ctxmaybeuser ctx) (serviceadmin . servicesettings <$> mservice)

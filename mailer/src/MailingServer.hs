@@ -2,8 +2,6 @@
 module MailingServer where
 
 import Control.Concurrent
-import DB.Nexus
-import Database.HDBC.PostgreSQL
 import System.Environment
 import Happstack.Server
 import Happstack.State
@@ -28,9 +26,8 @@ main = Log.withLogger $ do
   appname <- getProgName
   conf <- readConfig Log.mailingServer appname [] "mailing_server.conf"
   rng <- newCryptoRNGState
-  withPostgreSQL (mscDBConfig conf) $ \conn' -> do
-    conn <- mkNexus rng conn'
-    ioRunDB conn $ performDBChecks Log.mailingServer mailerTables mailerMigrations
+  withPostgreSQLDB (mscDBConfig conf) rng $
+    performDBChecks Log.mailingServer mailerTables mailerMigrations
   E.bracket (do
     let (iface, port) = mscHttpBindAddress conf
         handlerConf = nullConf { port = fromIntegral port }

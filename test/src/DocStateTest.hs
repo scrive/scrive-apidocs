@@ -23,7 +23,6 @@ import Data.Functor
 import Data.Maybe
 import Data.Convertible(convert)
 import Database.HDBC(SqlValue)
-import DB.Nexus
 import Control.Monad
 import Control.Monad.Trans
 import Data.List
@@ -36,171 +35,171 @@ import File.FileID
 import qualified Log
 
 
-docStateTests :: Nexus -> Test
-docStateTests conn = testGroup "DocState" [
+docStateTests :: DBEnv -> Test
+docStateTests env = testGroup "DocState" [
   dataStructureProperties,
-  testThat "GetDocumentsByCompanyAndTags filters" conn testGetDocumentsByCompanyAndTagsFilters,
-  testThat "GetDocumentsByCompanyAndTags finds" conn testGetDocumentsByCompanyAndTagsFinds,
-  testThat "GetDocumentsByCompanyAndTags finds with multiple" conn testGetDocumentsByCompanyAndTagsFindsMultiple,  
-  testThat "GetDocumentsByCompanyAndTags finds with company filter" conn testGetDocumentsByCompanyAndTagsCompany,
-  testThat "NewDocument inserts a new contract for a single user successfully" conn testNewDocumentForNonCompanyUserInsertsANewContract,
-  testThat "NewDocument inserts a new contract for a company user successfully" conn testNewDocumentForACompanyUserInsertsANewContract,
-  testThat "NewDocument inserts a new offer for a single user successfully" conn testNewDocumentForNonCompanyUserInsertsANewOffer,
-  testThat "NewDocument inserts a new offer for a company user successfully" conn testNewDocumentForACompanyUserInsertsANewOffer,
-  testThat "NewDocument inserts a new order for a single user successfully" conn testNewDocumentForNonCompanyUserInsertsANewOrder,
-  testThat "NewDocument inserts a new order for a company user successfully" conn testNewDocumentForACompanyUserInsertsANewOrder,
-  testThat "NewDocument with mismatching user & company results in left" conn testNewDocumentForMismatchingUserAndCompanyFails,
+  testThat "GetDocumentsByCompanyAndTags filters" env testGetDocumentsByCompanyAndTagsFilters,
+  testThat "GetDocumentsByCompanyAndTags finds" env testGetDocumentsByCompanyAndTagsFinds,
+  testThat "GetDocumentsByCompanyAndTags finds with multiple" env testGetDocumentsByCompanyAndTagsFindsMultiple,  
+  testThat "GetDocumentsByCompanyAndTags finds with company filter" env testGetDocumentsByCompanyAndTagsCompany,
+  testThat "NewDocument inserts a new contract for a single user successfully" env testNewDocumentForNonCompanyUserInsertsANewContract,
+  testThat "NewDocument inserts a new contract for a company user successfully" env testNewDocumentForACompanyUserInsertsANewContract,
+  testThat "NewDocument inserts a new offer for a single user successfully" env testNewDocumentForNonCompanyUserInsertsANewOffer,
+  testThat "NewDocument inserts a new offer for a company user successfully" env testNewDocumentForACompanyUserInsertsANewOffer,
+  testThat "NewDocument inserts a new order for a single user successfully" env testNewDocumentForNonCompanyUserInsertsANewOrder,
+  testThat "NewDocument inserts a new order for a company user successfully" env testNewDocumentForACompanyUserInsertsANewOrder,
+  testThat "NewDocument with mismatching user & company results in left" env testNewDocumentForMismatchingUserAndCompanyFails,
 
-  testThat "CancelDocument cancels a document" conn testCancelDocumentCancelsDocument,
-  testThat "CancelDocument fails if doc not pending or awaiting author" conn testCancelDocumentReturnsLeftIfDocInWrongState,
+  testThat "CancelDocument cancels a document" env testCancelDocumentCancelsDocument,
+  testThat "CancelDocument fails if doc not pending or awaiting author" env testCancelDocumentReturnsLeftIfDocInWrongState,
 
-  testThat "SetDocumentLocale fails when doc doesn't exist" conn testSetDocumentLocaleNotLeft,
+  testThat "SetDocumentLocale fails when doc doesn't exist" env testSetDocumentLocaleNotLeft,
 
-  testThat "SetDocumentTitle fails when doc doesn't exist" conn testSetDocumentTitleNotLeft,
-  testThat "SetDocumentTitle succeeds when doc exists and has proper status" conn testSetDocumentTitleRight,
+  testThat "SetDocumentTitle fails when doc doesn't exist" env testSetDocumentTitleNotLeft,
+  testThat "SetDocumentTitle succeeds when doc exists and has proper status" env testSetDocumentTitleRight,
 
-  testThat "SetDaysToSign fails when doc doesn't exist" conn testSetDocumentDaysToSignNotLeft,
-  testThat "RemoveDaysToSign fails when doc doesn't exist" conn testRemoveDocumentDaysToSignNotLeft,
-  testThat "SetDaysToSign and RemoveDaysToSign succeed when doc exist and has proper status" conn testSetDocumentDaysToSignRight,
+  testThat "SetDaysToSign fails when doc doesn't exist" env testSetDocumentDaysToSignNotLeft,
+  testThat "RemoveDaysToSign fails when doc doesn't exist" env testRemoveDocumentDaysToSignNotLeft,
+  testThat "SetDaysToSign and RemoveDaysToSign succeed when doc exist and has proper status" env testSetDocumentDaysToSignRight,
 
-  testThat "CloseDocument fails when doc is not signable" conn testCloseDocumentNotSignableNothing,
-  testThat "CloseDocument fails when doc doesn't exist" conn testCloseDocumentNotNothing,
-  testThat "CloseDocument succeeds when doc is signable and awaiting author" conn testCloseDocumentSignableAwaitingAuthorJust,
-  testThat "CloseDocument fails when doc is signable and awaiting author" conn testCloseDocumentSignableNotAwaitingAuthorNothing,
+  testThat "CloseDocument fails when doc is not signable" env testCloseDocumentNotSignableNothing,
+  testThat "CloseDocument fails when doc doesn't exist" env testCloseDocumentNotNothing,
+  testThat "CloseDocument succeeds when doc is signable and awaiting author" env testCloseDocumentSignableAwaitingAuthorJust,
+  testThat "CloseDocument fails when doc is signable and awaiting author" env testCloseDocumentSignableNotAwaitingAuthorNothing,
 
-  testThat "CancelDocument fails when doc is not signable" conn testCancelDocumentNotSignableNothing,
-  testThat "CancelDocument fails when doc doesn't exist" conn testCancelDocumentNotNothing,
-  testThat "CancelDocument succeeds when doc is signable and awaiting author" conn testCancelDocumentSignableAwaitingAuthorJust,
-  testThat "CancelDocument fails when doc is signable and awaiting author" conn testCancelDocumentSignableNotAwaitingAuthorNothing,
+  testThat "CancelDocument fails when doc is not signable" env testCancelDocumentNotSignableNothing,
+  testThat "CancelDocument fails when doc doesn't exist" env testCancelDocumentNotNothing,
+  testThat "CancelDocument succeeds when doc is signable and awaiting author" env testCancelDocumentSignableAwaitingAuthorJust,
+  testThat "CancelDocument fails when doc is signable and awaiting author" env testCancelDocumentSignableNotAwaitingAuthorNothing,
 
-  testThat "PendingToAwaitingAuthor fails when doc is not signable" conn testPendingToAwaitingAuthorDocumentNotSignableNothing,
-  testThat "PendingToAwaitingAuthor fails when doc doesn't exist" conn testPendingToAwaitingAuthorDocumentNotNothing,
-  testThat "PendingToAwaitingAuthor succeeds when doc is signable and awaiting author" conn testPendingToAwaitingAuthorDocumentSignableAwaitingAuthorJust,
-  testThat "PendingToAwaitingAuthor fails when doc is signable and awaiting author" conn testPendingToAwaitingAuthorDocumentSignableNotAwaitingAuthorNothing,
+  testThat "PendingToAwaitingAuthor fails when doc is not signable" env testPendingToAwaitingAuthorDocumentNotSignableNothing,
+  testThat "PendingToAwaitingAuthor fails when doc doesn't exist" env testPendingToAwaitingAuthorDocumentNotNothing,
+  testThat "PendingToAwaitingAuthor succeeds when doc is signable and awaiting author" env testPendingToAwaitingAuthorDocumentSignableAwaitingAuthorJust,
+  testThat "PendingToAwaitingAuthor fails when doc is signable and awaiting author" env testPendingToAwaitingAuthorDocumentSignableNotAwaitingAuthorNothing,
 
 
-  testThat "SetDocumentTags fails when does not exist" conn testSetDocumentTagsNotLeft,
-  testThat "SetDocumentTags succeeds" conn testSetDocumentTagsRight,
+  testThat "SetDocumentTags fails when does not exist" env testSetDocumentTagsNotLeft,
+  testThat "SetDocumentTags succeeds" env testSetDocumentTagsRight,
 
-  testThat "SetDocumentUI fails when does not exist" conn testSetDocumentUINotLeft,
-  testThat "SetDocumentUI succeeds" conn testSetDocumentUIRight,
+  testThat "SetDocumentUI fails when does not exist" env testSetDocumentUINotLeft,
+  testThat "SetDocumentUI succeeds" env testSetDocumentUIRight,
 
-  testThat "SetDocumentTimeoutTime fails when does not exist" conn testSetDocumentTimeoutTimeNotLeft,
-  testThat "SetDocumentTimeoutTime fails when not signable" conn testSetDocumentTimeoutTimeNotSignableLeft,
-  testThat "SetDocumentTimeoutTime succeeds when signable" conn testSetDocumentTimeoutTimeSignableRight,
+  testThat "SetDocumentTimeoutTime fails when does not exist" env testSetDocumentTimeoutTimeNotLeft,
+  testThat "SetDocumentTimeoutTime fails when not signable" env testSetDocumentTimeoutTimeNotSignableLeft,
+  testThat "SetDocumentTimeoutTime succeeds when signable" env testSetDocumentTimeoutTimeSignableRight,
 
-  testThat "GetTimeoutedButPendingDocuments works as expected" conn testGetTimedOutButPendingDocuments,
+  testThat "GetTimeoutedButPendingDocuments works as expected" env testGetTimedOutButPendingDocuments,
 
-  testThat "SetInvitationDeliveryStatus fails when not signable" conn testSetInvitationDeliveryStatusNotSignableLeft,
-  testThat "SetInvitationDeliveryStatus fails when doc does not exist" conn testSetInvitationDeliveryStatusNotLeft,
-  testThat "SetInvitationDeliveryStatus succeeds if signable" conn testSetInvitationDeliveryStatusSignableRight,
+  testThat "SetInvitationDeliveryStatus fails when not signable" env testSetInvitationDeliveryStatusNotSignableLeft,
+  testThat "SetInvitationDeliveryStatus fails when doc does not exist" env testSetInvitationDeliveryStatusNotLeft,
+  testThat "SetInvitationDeliveryStatus succeeds if signable" env testSetInvitationDeliveryStatusSignableRight,
 
-  testThat "MarkDocumentSeen fails when not signable" conn testMarkDocumentSeenNotSignableLeft,
-  testThat "MarkDocumentSeen fails when closed or preparation" conn testMarkDocumentSeenClosedOrPreparationLeft,
-  testThat "MarkDocumentSeen fails when doc does not exist" conn testMarkDocumentSeenNotLeft,
-  testThat "MarkDocumentSeen succeeds when siglink and magichash match" conn testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight,
-  testThat "MarkDocumentSeen fails when the siglink matches but magichash does not" conn testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft,
+  testThat "MarkDocumentSeen fails when not signable" env testMarkDocumentSeenNotSignableLeft,
+  testThat "MarkDocumentSeen fails when closed or preparation" env testMarkDocumentSeenClosedOrPreparationLeft,
+  testThat "MarkDocumentSeen fails when doc does not exist" env testMarkDocumentSeenNotLeft,
+  testThat "MarkDocumentSeen succeeds when siglink and magichash match" env testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight,
+  testThat "MarkDocumentSeen fails when the siglink matches but magichash does not" env testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft,
 
-  testThat "MarkInvitationRead when has not read" conn testMarkInvitationRead,
-  testThat "MarkInvitationRead never fails when doc doesn't exist" conn testMarkInvitationReadDocDoesntExist,
+  testThat "MarkInvitationRead when has not read" env testMarkInvitationRead,
+  testThat "MarkInvitationRead never fails when doc doesn't exist" env testMarkInvitationReadDocDoesntExist,
 
-  testThat "RejectDocument succeeds when signable and pending" conn testRejectDocumentSignablePendingRight,
-  testThat "RejectDocument fails when document doesn't exist" conn testRejectDocumentNotLeft,
-  testThat "RejectDocument fails when signable but not pending" conn testRejectDocumentSignableNotPendingLeft,
-  testThat "RejectDocument fails when not signable" conn testRejectDocumentNotSignableLeft,
+  testThat "RejectDocument succeeds when signable and pending" env testRejectDocumentSignablePendingRight,
+  testThat "RejectDocument fails when document doesn't exist" env testRejectDocumentNotLeft,
+  testThat "RejectDocument fails when signable but not pending" env testRejectDocumentSignableNotPendingLeft,
+  testThat "RejectDocument fails when not signable" env testRejectDocumentNotSignableLeft,
 
---  testThat "AuthorSignDocument succeeds when signable and preparation" conn testAuthorSignDocumentSignablePreparationRight,
---  testThat "AuthorSignDocument fails when document doesn't exist" conn testAuthorSignDocumentNotLeft,
---  testThat "AuthorSignDocument fails when signable but not preparation" conn testAuthorSignDocumentSignableNotPreparationLeft,
---  testThat "AuthorSignDocument fails when not signable" conn testAuthorSignDocumentNotSignableLeft,
+--  testThat "AuthorSignDocument succeeds when signable and preparation" env testAuthorSignDocumentSignablePreparationRight,
+--  testThat "AuthorSignDocument fails when document doesn't exist" env testAuthorSignDocumentNotLeft,
+--  testThat "AuthorSignDocument fails when signable but not preparation" env testAuthorSignDocumentSignableNotPreparationLeft,
+--  testThat "AuthorSignDocument fails when not signable" env testAuthorSignDocumentNotSignableLeft,
 
-  testThat "PreparationToPending succeeds when signable and preparation" conn testPreparationToPendingSignablePreparationRight,
-  testThat "PreparationToPending fails when document doesn't exist" conn testPreparationToPendingNotLeft,
-  testThat "PreparationToPending fails when signable but not preparation" conn testPreparationToPendingSignableNotPreparationLeft,
-  testThat "PreparationToPending fails when not signable" conn testPreparationToPendingNotSignableLeft,
+  testThat "PreparationToPending succeeds when signable and preparation" env testPreparationToPendingSignablePreparationRight,
+  testThat "PreparationToPending fails when document doesn't exist" env testPreparationToPendingNotLeft,
+  testThat "PreparationToPending fails when signable but not preparation" env testPreparationToPendingSignableNotPreparationLeft,
+  testThat "PreparationToPending fails when not signable" env testPreparationToPendingNotSignableLeft,
 
-  testThat "SignDocument fails when doc doesn't exist" conn testSignDocumentNotLeft,
-  testThat "SignDocument succeeds when doc is Signable and Pending" conn testSignDocumentSignablePendingRight,
-  testThat "SignDocument fails when the document is Signable but not in Pending" conn testSignDocumentSignableNotPendingLeft,
-  testThat "SignDocument fails when document is not signable" conn testSignDocumentNonSignableLeft,
+  testThat "SignDocument fails when doc doesn't exist" env testSignDocumentNotLeft,
+  testThat "SignDocument succeeds when doc is Signable and Pending" env testSignDocumentSignablePendingRight,
+  testThat "SignDocument fails when the document is Signable but not in Pending" env testSignDocumentSignableNotPendingLeft,
+  testThat "SignDocument fails when document is not signable" env testSignDocumentNonSignableLeft,
 
-  testThat "TimeoutDocument fails when doc doesn't exist" conn testTimeoutDocumentSignableNotLeft,
-  testThat "TimeoutDocument succeeds when doc is Signable and Pending" conn testTimeoutDocumentSignablePendingRight,
-  testThat "TimeoutDocument fails when the document is Signable but not in Pending" conn testTimeoutDocumentSignableNotPendingLeft,
-  testThat "create document and check invariants" conn testNewDocumentDependencies,
-  testThat "can create new document and read it back with the returned id" conn testDocumentCanBeCreatedAndFetchedByID,
-  testThat "can create new document and read it back with GetDocuments" conn testDocumentCanBeCreatedAndFetchedByAllDocs,
+  testThat "TimeoutDocument fails when doc doesn't exist" env testTimeoutDocumentSignableNotLeft,
+  testThat "TimeoutDocument succeeds when doc is Signable and Pending" env testTimeoutDocumentSignablePendingRight,
+  testThat "TimeoutDocument fails when the document is Signable but not in Pending" env testTimeoutDocumentSignableNotPendingLeft,
+  testThat "create document and check invariants" env testNewDocumentDependencies,
+  testThat "can create new document and read it back with the returned id" env testDocumentCanBeCreatedAndFetchedByID,
+  testThat "can create new document and read it back with GetDocuments" env testDocumentCanBeCreatedAndFetchedByAllDocs,
 
 {-
-  testThat "when I call update document, it doesn't change the document id" conn testDocumentUpdateDoesNotChangeID,
-  testThat "when I call update document, i can change the title" conn testDocumentUpdateCanChangeTitle,
+  testThat "when I call update document, it doesn't change the document id" env testDocumentUpdateDoesNotChangeID,
+  testThat "when I call update document, i can change the title" env testDocumentUpdateCanChangeTitle,
   -}
-  testThat "when I attach a file to a real document in preparation, it returns Right" conn testDocumentAttachPreparationRight,
-  testThat "when I attach a file to a real document not in preparation, it returns Right" conn testDocumentAttachNotPreparationLeft,
-  testThat "when I attach a file to a bad docid, it ALWAYS returns Left" conn testNoDocumentAttachAlwaysLeft,
-  testThat "when I attach a file, the file is attached" conn testDocumentAttachHasAttachment,
+  testThat "when I attach a file to a real document in preparation, it returns Right" env testDocumentAttachPreparationRight,
+  testThat "when I attach a file to a real document not in preparation, it returns Right" env testDocumentAttachNotPreparationLeft,
+  testThat "when I attach a file to a bad docid, it ALWAYS returns Left" env testNoDocumentAttachAlwaysLeft,
+  testThat "when I attach a file, the file is attached" env testDocumentAttachHasAttachment,
 
-  testThat "when I attach a sealed file to a bad docid, it always returns left" conn testNoDocumentAttachSealedAlwaysLeft,
-  testThat "when I attach a sealed file to a real doc, it always returns Right" conn testDocumentAttachSealedPendingRight,
+  testThat "when I attach a sealed file to a bad docid, it always returns left" env testNoDocumentAttachSealedAlwaysLeft,
+  testThat "when I attach a sealed file to a real doc, it always returns Right" env testDocumentAttachSealedPendingRight,
 
 
-  testThat "when I ChangeMainFile of a real document returns Right" conn testDocumentChangeMainFileRight,
-  testThat "when I ChangeMainFile of a bad docid, it ALWAYS returns Left" conn testNoDocumentChangeMainFileAlwaysLeft,
+  testThat "when I ChangeMainFile of a real document returns Right" env testDocumentChangeMainFileRight,
+  testThat "when I ChangeMainFile of a bad docid, it ALWAYS returns Left" env testNoDocumentChangeMainFileAlwaysLeft,
 
   {-
-  testThat "when I call updateDocument, it fails when the doc doesn't exist" conn testNoDocumentUpdateDocumentAlwaysLeft,
-  testThat "When I call updateDocument with a doc that is not in Preparation, always returns left" conn testNotPreparationUpdateDocumentAlwaysLeft,
-  testThat "when I call updatedocument with a doc that is in Preparation, it always returns Right" conn testPreparationUpdateDocumentAlwaysRight,
+  testThat "when I call updateDocument, it fails when the doc doesn't exist" env testNoDocumentUpdateDocumentAlwaysLeft,
+  testThat "When I call updateDocument with a doc that is not in Preparation, always returns left" env testNotPreparationUpdateDocumentAlwaysLeft,
+  testThat "when I call updatedocument with a doc that is in Preparation, it always returns Right" env testPreparationUpdateDocumentAlwaysRight,
 -}
-  testThat "when I create document from shared template author custom fields are stored" conn testCreateFromSharedTemplate,
+  testThat "when I create document from shared template author custom fields are stored" env testCreateFromSharedTemplate,
 
-  testThat "when I call ResetSignatoryDetails, it fails when the doc doesn't exist" conn testNoDocumentResetSignatoryDetailsAlwaysLeft,
-  testThat "When I call ResetSignatoryDetails with a doc that is not in Preparation, always returns left" conn testNotPreparationResetSignatoryDetailsAlwaysLeft,
-  testThat "when I call updatedocumentSimple with a doc that is in Preparation, it always returns Right" conn testPreparationResetSignatoryDetailsAlwaysRight,
-  testThat "when I call attachcsvupload with a doc that does not exist, always returns left" conn testNoDocumentAttachCSVUploadAlwaysLeft,
-  testThat "when I call attachcsvupload with a doc that is not in preparation, always returns left" conn testNotPreparationAttachCSVUploadAlwaysLeft,
-  testThat "when I call attachcsvupload and the csvindex is the author, return left" conn testPreparationAttachCSVUploadAuthorIndexLeft,
-  testThat "when I call attachcsvupload and not existing signatory link, return left" conn testPreparationAttachCSVUploadNonExistingSignatoryLink,
+  testThat "when I call ResetSignatoryDetails, it fails when the doc doesn't exist" env testNoDocumentResetSignatoryDetailsAlwaysLeft,
+  testThat "When I call ResetSignatoryDetails with a doc that is not in Preparation, always returns left" env testNotPreparationResetSignatoryDetailsAlwaysLeft,
+  testThat "when I call updatedocumentSimple with a doc that is in Preparation, it always returns Right" env testPreparationResetSignatoryDetailsAlwaysRight,
+  testThat "when I call attachcsvupload with a doc that does not exist, always returns left" env testNoDocumentAttachCSVUploadAlwaysLeft,
+  testThat "when I call attachcsvupload with a doc that is not in preparation, always returns left" env testNotPreparationAttachCSVUploadAlwaysLeft,
+  testThat "when I call attachcsvupload and the csvindex is the author, return left" env testPreparationAttachCSVUploadAuthorIndexLeft,
+  testThat "when I call attachcsvupload and not existing signatory link, return left" env testPreparationAttachCSVUploadNonExistingSignatoryLink,
 
-  testThat "addDocumentAttachment fails if not in preparation" conn testAddDocumentAttachmentFailsIfNotPreparation,
-  testThat "addDocumentAttachment doesn't fail if there's no attachments" conn testAddDocumentAttachmentOk,
+  testThat "addDocumentAttachment fails if not in preparation" env testAddDocumentAttachmentFailsIfNotPreparation,
+  testThat "addDocumentAttachment doesn't fail if there's no attachments" env testAddDocumentAttachmentOk,
 
-  testThat "removeDocumentAttachment fails if not in preparation" conn testRemoveDocumentAttachmentFailsIfNotPreparation,
-  testThat "removeDocumentAttachment doesn't fail if there's no attachments" conn testRemoveDocumentAttachmentOk,
+  testThat "removeDocumentAttachment fails if not in preparation" env testRemoveDocumentAttachmentFailsIfNotPreparation,
+  testThat "removeDocumentAttachment doesn't fail if there's no attachments" env testRemoveDocumentAttachmentOk,
 
-  testThat "UpdateSigAttachments works as advertised" conn testUpdateSigAttachmentsAttachmentsOk,
+  testThat "UpdateSigAttachments works as advertised" env testUpdateSigAttachmentsAttachmentsOk,
 
   -- we need to do one that tests updateDocumentAttachment where there is an attachment
-  testThat "documentFromSignatoryData fails when document doesn't exist" conn testDocumentFromSignatoryDataFailsDoesntExist,
-  testThat "documentFromSignatoryData succeeds when document exists" conn testDocumentFromSignatoryDataSucceedsExists,
-  testThat "TimeoutDocument fails when document is not signable" conn testTimeoutDocumentNonSignableLeft,
+  testThat "documentFromSignatoryData fails when document doesn't exist" env testDocumentFromSignatoryDataFailsDoesntExist,
+  testThat "documentFromSignatoryData succeeds when document exists" env testDocumentFromSignatoryDataSucceedsExists,
+  testThat "TimeoutDocument fails when document is not signable" env testTimeoutDocumentNonSignableLeft,
   testProperty "bitfieldDeriveConvertibleId" propbitfieldDeriveConvertibleId,
 
   -- archive & doc deletion tests
-  testThat "ArchiveDocument fails if the document is pending or awaiting author" conn testArchiveDocumentPendingLeft,
-  testThat "ArchiveDocument succeeds if the archiving user is the author" conn testArchiveDocumentAuthorRight,
-  testThat "ArchiveDocument succeeds if the archiving user is a company admin" conn testArchiveDocumentCompanyAdminRight,
-  testThat "RestoreArchivedDocument succeeds if the restoring user is the author" conn testRestoreArchivedDocumentAuthorRight,
-  testThat "RestoreArchivedDocument succeeds if the restoring user is the company admin" conn testRestoreArchiveDocumentCompanyAdminRight,
-  testThat "ReallyDeleteDocument succeeds if deleted by the author who is a private user" conn testReallyDeleteDocumentPrivateAuthorRight,
-  testThat "ReallyDeleteDocument succeeds if deleted by a company admin user" conn testReallyDeleteDocumentCompanyAdminRight,
+  testThat "ArchiveDocument fails if the document is pending or awaiting author" env testArchiveDocumentPendingLeft,
+  testThat "ArchiveDocument succeeds if the archiving user is the author" env testArchiveDocumentAuthorRight,
+  testThat "ArchiveDocument succeeds if the archiving user is a company admin" env testArchiveDocumentCompanyAdminRight,
+  testThat "RestoreArchivedDocument succeeds if the restoring user is the author" env testRestoreArchivedDocumentAuthorRight,
+  testThat "RestoreArchivedDocument succeeds if the restoring user is the company admin" env testRestoreArchiveDocumentCompanyAdminRight,
+  testThat "ReallyDeleteDocument succeeds if deleted by the author who is a private user" env testReallyDeleteDocumentPrivateAuthorRight,
+  testThat "ReallyDeleteDocument succeeds if deleted by a company admin user" env testReallyDeleteDocumentCompanyAdminRight,
 -- for this stuff postgres implementation is stricter, with happstack it just left the doc unchanged
 
-  testThat "ArchiveDocument fails if the archiving user is an unrelated user" conn testArchiveDocumentUnrelatedUserLeft,
-  testThat "ArchiveDocument fails if the archiving user is just another standard company user" conn testArchiveDocumentCompanyStandardLeft,
-  testThat "RestoreArchivedDocument fails if the storing user is an unrlated user" conn testRestoreArchivedDocumentUnrelatedUserLeft,
-  testThat "RestoreArchivedDocument fails if the restoring user is just another standard company user" conn testRestoreArchiveDocumentCompanyStandardLeft,
-  testThat "ReallyDeleteDocument fails if deleted by the author who is a standard company user" conn testReallyDeleteDocumentCompanyAuthorLeft,
-  testThat "ReallyDeleteDocument fails if the deleting user is just another standard company user" conn testReallyDeleteDocumentCompanyStandardLeft,
-  testThat "ReallyDeleteDocument fails if the document hasn't been archived" conn testReallyDeleteNotArchivedLeft,
+  testThat "ArchiveDocument fails if the archiving user is an unrelated user" env testArchiveDocumentUnrelatedUserLeft,
+  testThat "ArchiveDocument fails if the archiving user is just another standard company user" env testArchiveDocumentCompanyStandardLeft,
+  testThat "RestoreArchivedDocument fails if the storing user is an unrlated user" env testRestoreArchivedDocumentUnrelatedUserLeft,
+  testThat "RestoreArchivedDocument fails if the restoring user is just another standard company user" env testRestoreArchiveDocumentCompanyStandardLeft,
+  testThat "ReallyDeleteDocument fails if deleted by the author who is a standard company user" env testReallyDeleteDocumentCompanyAuthorLeft,
+  testThat "ReallyDeleteDocument fails if the deleting user is just another standard company user" env testReallyDeleteDocumentCompanyStandardLeft,
+  testThat "ReallyDeleteDocument fails if the document hasn't been archived" env testReallyDeleteNotArchivedLeft,
 
-  testThat "GetDocumentsByAuthor doesn't return archived docs" conn testGetDocumentsByAuthorNoArchivedDocs,
-  testThat "GetDocumentsByCompany doesn't return archived docs" conn testGetDocumentsByCompanyNoArchivedDocs,
-  testThat "GetDocumentsByCompanyAndTags doesn't return archived docs" conn testGetDocumentsByCompanyAndTagsNoArchivedDocs,
-  testThat "GetDocumentsBySignatory doesn't return archived docs" conn testGetDocumentsBySignatoryNoArchivedDocs,
-  testThat "GetDocumentsByUser doesn't return archived docs" conn testGetDocumentsByUserNoArchivedDocs,
-  testThat "GetDeletedDocumentsByUser returns archived docs" conn testGetDeletedDocumentsByUserArchivedDocs,
-  testThat "GetDeletedDocumentsByCompany returns archived docs" conn testGetDeletedDocumentsByCompanyArchivedDocs
+  testThat "GetDocumentsByAuthor doesn't return archived docs" env testGetDocumentsByAuthorNoArchivedDocs,
+  testThat "GetDocumentsByCompany doesn't return archived docs" env testGetDocumentsByCompanyNoArchivedDocs,
+  testThat "GetDocumentsByCompanyAndTags doesn't return archived docs" env testGetDocumentsByCompanyAndTagsNoArchivedDocs,
+  testThat "GetDocumentsBySignatory doesn't return archived docs" env testGetDocumentsBySignatoryNoArchivedDocs,
+  testThat "GetDocumentsByUser doesn't return archived docs" env testGetDocumentsByUserNoArchivedDocs,
+  testThat "GetDeletedDocumentsByUser returns archived docs" env testGetDeletedDocumentsByUserArchivedDocs,
+  testThat "GetDeletedDocumentsByCompany returns archived docs" env testGetDeletedDocumentsByCompanyArchivedDocs
 
   ]
 

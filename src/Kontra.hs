@@ -55,10 +55,10 @@ newtype Kontra a = Kontra { unKontra :: ServerPartT (StateT Context IO) a }
 instance Kontrakcja Kontra
 
 instance CryptoRNG Kontra where
-  getCryptoRNGState = Kontra $ gets ctxcryptorng
+  getCryptoRNGState = Kontra $ gets (rngstate . ctxdbenv)
 
 instance DBMonad Kontra where
-  getConnection = ctxdbconn <$> getContext
+  getDBEnv = ctxdbenv <$> getContext
   handleDBError e = do
     Log.error $ show e
     mzero

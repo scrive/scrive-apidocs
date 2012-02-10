@@ -2,9 +2,8 @@ module Context (
       Context(..)
     ) where
 
-import Crypto.RNG (CryptoRNGState)
 import Control.Concurrent.MVar
-import DB.Nexus
+import DB.Classes (DBEnv)
 import File.FileID
 import Doc.JpegPages
 import Doc.SignatoryLinkID
@@ -31,7 +30,7 @@ data Context = Context
     , ctxtime                :: MinutesTime -- ^ The time of the request.
     , ctxnormalizeddocuments :: MVar (Map.Map FileID JpegPages) -- ^
     , ctxipnumber            :: IPAddress -- ^ The ip number of the client.
-    , ctxdbconn              :: Nexus -- ^ PostgreSQL database connection
+    , ctxdbenv               :: DBEnv -- ^ PostgreSQL database environment
     , ctxdocstore            :: FilePath -- ^ The temporary document directory.
     , ctxs3action            :: AWS.S3Action -- ^
     , ctxgscmd               :: String -- ^
@@ -51,5 +50,4 @@ data Context = Context
     , ctxadminaccounts       :: [Email] -- ^
     , ctxsalesaccounts       :: [Email] -- ^
     , ctxmagichashes         :: Map.Map SignatoryLinkID MagicHash
-    , ctxcryptorng           :: CryptoRNGState
     }

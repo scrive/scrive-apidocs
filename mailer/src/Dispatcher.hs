@@ -5,8 +5,6 @@ module Dispatcher (
 
 import Control.Concurrent
 import Control.Monad
-import DB.Nexus
-import Database.HDBC.PostgreSQL
 import qualified Control.Exception as E
 
 import Crypto.RNG (CryptoRNGState)
@@ -18,7 +16,7 @@ import qualified Log (mailingServer)
 
 dispatcher :: CryptoRNGState -> Sender -> String -> IO ()
 dispatcher rng sender dbconf = do
-  res <- withPostgreSQL dbconf $ \conn' -> mkNexus rng conn' >>= \conn -> E.try $ ioRunDB conn $ do
+  res <- withPostgreSQLDB' dbconf rng $ \dbenv -> E.try $ ioRunDB dbenv $ do
     mails <- dbQuery GetIncomingEmails
     forM_ mails $ \mail@Mail{mailID} -> do
       if isNotSendable mail

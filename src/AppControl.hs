@@ -88,11 +88,11 @@ data AppGlobals
     If the current request is referring to a document then this will
     return the locale of that document.
 -}
-getDocumentLocale :: Nexus -> (ServerMonad m, Functor m, MonadIO m) => m (Maybe Locale)
-getDocumentLocale conn = do
+getDocumentLocale :: DBEnv -> (ServerMonad m, Functor m, MonadIO m) => m (Maybe Locale)
+getDocumentLocale env = do
   rq <- askRq
   let docids = catMaybes . map (fmap fst . listToMaybe . readSigned readDec) $ rqPaths rq
-  mdoclocales <- ioRunDB conn $ mapM (DocControl.getDocumentLocale . DocumentID) docids
+  mdoclocales <- ioRunDB env $ mapM (DocControl.getDocumentLocale . DocumentID) docids
   return . listToMaybe $ catMaybes mdoclocales
 
 {- |
@@ -100,8 +100,8 @@ getDocumentLocale conn = do
     their settings, the request, and cookies.
 -}
 getUserLocale :: (MonadPlus m, MonadIO m, ServerMonad m, FilterMonad Response m, Functor m, HasRqData m) =>
-                   Nexus -> Maybe User -> m Locale
-getUserLocale conn muser = do
+                   DBEnv -> Maybe User -> m Locale
+getUserLocale env muser = do
   rq <- askRq
   currentcookielocale <- optional (readCookieValue "locale")
   activationlocale <- getActivationLocale rq
@@ -111,7 +111,7 @@ getUserLocale conn muser = do
       urllocale = case (urlregion, urllang) of
                     (Just region, Just lang) -> Just $ mkLocale region lang
                     _ -> Nothing
-  doclocale <- getDocumentLocale conn
+  doclocale <- getDocumentLocale env
   let browserlocale = getBrowserLocale rq
   let newlocale = firstOf [ activationlocale
                           , userlocale
@@ -134,8 +134,8 @@ getUserLocale conn muser = do
     getActivationLocaleFromAction aid = do
       maction <- query $ GetAction aid
       mactionuser <- case fmap actionType maction of
-                       Just (AccountCreatedBySigning _ uid _ _) -> ioRunDB conn . dbQuery $ GetUserByID uid
-                       Just (AccountCreated uid _) -> ioRunDB conn . dbQuery $ GetUserByID uid
+                       Just (AccountCreatedBySigning _ uid _ _) -> ioRunDB env . dbQuery $ GetUserByID uid
+                       Just (AccountCreated uid _) -> ioRunDB env . dbQuery $ GetUserByID uid
                        _ -> return Nothing
       return $ fmap (locale . usersettings) mactionuser
     optional c = (liftM Just c) `mplus` (return Nothing)
@@ -256,14 +256,14 @@ appHandler handleRoutes appConf appGlobals = do
       let newmagichashes = ctxmagichashes ctx'
       F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
       updateSessionWithContextData session newsessionuser newelegtrans newmagichashes
-      stats <- liftIO $ getNexusStats (ctxdbconn ctx')
+      stats <- liftIO $ getNexusStats (nexus $ ctxdbenv ctx')
       
       Log.debug $ "SQL for " ++ rqUri rq ++ ": queries " ++ show (nexusQueries stats) ++ 
            ", params " ++ show (nexusParams stats) ++
                          ", rows " ++ show (nexusRows stats) ++
                                      ", values " ++ show (nexusValues stats)
 
-      liftIO $ disconnect $ ctxdbconn ctx'
+      liftIO $ disconnect $ nexus $ ctxdbenv ctx'
       return res
 
     createContext rq session = do
@@ -286,12 +286,12 @@ appHandler handleRoutes appConf appGlobals = do
                      _ -> unknownIPAddress
 
       psqlconn <- liftIO $ connectPostgreSQL $ dbConfig appConf
-      conn <- liftIO $ mkNexus (cryptorng appGlobals) psqlconn
+      dbenv <- mkDBEnv psqlconn (cryptorng appGlobals)
       minutestime <- liftIO getMinutesTime
-      muser <- getUserFromSession conn session
-      mcompany <- getCompanyFromSession conn session
+      muser <- getUserFromSession dbenv session
+      mcompany <- getCompanyFromSession dbenv session
       location <- getLocationFromSession session
-      mservice <- ioRunDB conn . dbQuery . GetServiceByLocation . toServiceLocation =<< currentLink
+      mservice <- ioRunDB dbenv . dbQuery . GetServiceByLocation . toServiceLocation =<< currentLink
       flashmessages <- withDataFn F.flashDataFromCookie $ maybe (return []) $ \fval ->
           case F.fromCookieValue (aesConfig appConf) fval of
                Just flashes -> return flashes
@@ -304,8 +304,8 @@ appHandler handleRoutes appConf appGlobals = do
       templates2 <- liftIO $ maybeReadTemplates (templates appGlobals)
 
       -- work out the region and language
-      doclocale <- getDocumentLocale conn
-      userlocale <- getUserLocale conn muser
+      doclocale <- getDocumentLocale  dbenv
+      userlocale <- getUserLocale dbenv muser
 
       let elegtrans = getELegTransactions session
           ctx = Context
@@ -315,7 +315,7 @@ appHandler handleRoutes appConf appGlobals = do
                 , ctxtime = minutestime
                 , ctxnormalizeddocuments = docscache appGlobals
                 , ctxipnumber = peerip
-                , ctxdbconn = conn
+                , ctxdbenv = dbenv
                 , ctxdocstore = docstore appConf
                 , ctxs3action = defaultAWSAction appConf
                 , ctxgscmd = gsCmd appConf
@@ -341,7 +341,6 @@ appHandler handleRoutes appConf appGlobals = do
                 , ctxadminaccounts = admins appConf
                 , ctxsalesaccounts = sales appConf
                 , ctxmagichashes = getMagicHashes session
-                , ctxcryptorng = cryptorng appGlobals
                 }
       return ctx
 

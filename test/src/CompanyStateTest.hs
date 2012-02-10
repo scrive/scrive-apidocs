@@ -1,7 +1,6 @@
 module CompanyStateTest (companyStateTests) where
 
 import Control.Monad
-import DB.Nexus
 import Test.Framework
 import qualified Data.ByteString.UTF8 as BS
 
@@ -9,14 +8,14 @@ import Company.Model
 import DB.Classes
 import TestingUtil
 
-companyStateTests :: Nexus -> Test
-companyStateTests conn = testGroup "CompanyState" [
-    testThat "CreateCompany works" conn test_createCompany
-  , testThat "GetCompanies works" conn test_getCompanies
-  , testThat "GetCompany works" conn test_getCompany
-  , testThat "GetCompanyByExternalID works" conn test_getCompanyByExternalID
-  , testThat "SetCompanyInfo works" conn test_setCompanyInfo
-  , testThat "GetOrCreateCompanyWithExternalID works" conn test_getOrCreateCompanyWithExternalID
+companyStateTests :: DBEnv -> Test
+companyStateTests env = testGroup "CompanyState" [
+    testThat "CreateCompany works" env test_createCompany
+  , testThat "GetCompanies works" env test_getCompanies
+  , testThat "GetCompany works" env test_getCompany
+  , testThat "GetCompanyByExternalID works" env test_getCompanyByExternalID
+  , testThat "SetCompanyInfo works" env test_setCompanyInfo
+  , testThat "GetOrCreateCompanyWithExternalID works" env test_getOrCreateCompanyWithExternalID
   ]
 
 test_createCompany :: DB ()

@@ -3,7 +3,6 @@ module SignupTest (signupTests) where
 import Control.Applicative
 import Control.Monad.State
 import Data.Maybe
-import DB.Nexus
 import Happstack.Server
 import Happstack.State (query)
 import Test.Framework
@@ -30,25 +29,25 @@ import User.Model
 import User.UserControl
 import Util.HasSomeUserInfo
 
-signupTests :: Nexus -> Test
-signupTests conn = testGroup "Signup" [
-      testCase "can self signup and activate an account" $ testSignupAndActivate conn
-    , testCase "can send viral invite which can be used to activate an account" $ testViralInviteAndActivate conn
-    , testCase "must accept tos to activate an account" $ testAcceptTOSToActivate conn
-    , testCase "must enter first name to activate an account" $ testNeedFirstNameToActivate conn
-    , testCase "must enter last name to activate an account" $ testNeedLastNameToActivate conn
-    , testCase "must enter passwords to activate an account" $ testNeedPasswordToActivate conn
-    , testCase "passwords must match to activate an account" $ testPasswordsMatchToActivate conn
-    , testCase "if users enter phone number a mail is sent" $ testUserEnteringPhoneNumber conn
-    , testCase "if users don't enter phone number a mail isn't sent" $ testUserNotEnteringPhoneNumber conn
-    , testCase "login event recorded when logged in after activation" $ testLoginEventRecordedWhenLoggedInAfterActivation conn
+signupTests :: DBEnv -> Test
+signupTests env = testGroup "Signup" [
+      testCase "can self signup and activate an account" $ testSignupAndActivate env
+    , testCase "can send viral invite which can be used to activate an account" $ testViralInviteAndActivate env
+    , testCase "must accept tos to activate an account" $ testAcceptTOSToActivate env
+    , testCase "must enter first name to activate an account" $ testNeedFirstNameToActivate env
+    , testCase "must enter last name to activate an account" $ testNeedLastNameToActivate env
+    , testCase "must enter passwords to activate an account" $ testNeedPasswordToActivate env
+    , testCase "passwords must match to activate an account" $ testPasswordsMatchToActivate env
+    , testCase "if users enter phone number a mail is sent" $ testUserEnteringPhoneNumber env
+    , testCase "if users don't enter phone number a mail isn't sent" $ testUserNotEnteringPhoneNumber env
+    , testCase "login event recorded when logged in after activation" $ testLoginEventRecordedWhenLoggedInAfterActivation env
     ]
 
-testUserEnteringPhoneNumber :: Nexus -> Assertion
-testUserEnteringPhoneNumber conn = withTestEnvironment conn $ do
+testUserEnteringPhoneNumber :: DBEnv -> Assertion
+testUserEnteringPhoneNumber env = withTestEnvironment env $ do
   Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [ ("phone", inText "12345")
@@ -64,11 +63,11 @@ testUserEnteringPhoneNumber conn = withTestEnvironment conn $ do
   emails <- dbQuery GetIncomingEmails
   assertEqual "An email was sent" 1 (length emails)
 
-testUserNotEnteringPhoneNumber :: Nexus -> Assertion
-testUserNotEnteringPhoneNumber conn = withTestEnvironment conn $ do
+testUserNotEnteringPhoneNumber :: DBEnv -> Assertion
+testUserNotEnteringPhoneNumber env = withTestEnvironment env $ do
   Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [ ("phone", inText "")
@@ -81,10 +80,10 @@ testUserNotEnteringPhoneNumber conn = withTestEnvironment conn $ do
   emails <- dbQuery GetIncomingEmails
   assertEqual "No email was sent" 0 (length emails)
 
-testSignupAndActivate :: Nexus -> Assertion
-testSignupAndActivate conn = withTestEnvironment conn $ do
+testSignupAndActivate :: DBEnv -> Assertion
+testSignupAndActivate env = withTestEnvironment env $ do
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn })
+  ctx <- (\c -> c { ctxdbenv = env })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   -- enter the email to signup
@@ -101,10 +100,10 @@ testSignupAndActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12"
   assertAccountActivatedFor uid "Andrzej" "Rybczak" (res3, ctx3)
 
-testLoginEventRecordedWhenLoggedInAfterActivation :: Nexus -> Assertion
-testLoginEventRecordedWhenLoggedInAfterActivation conn = withTestEnvironment conn $ do
+testLoginEventRecordedWhenLoggedInAfterActivation :: DBEnv -> Assertion
+testLoginEventRecordedWhenLoggedInAfterActivation env = withTestEnvironment env $ do
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn })
+  ctx <- (\c -> c { ctxdbenv = env })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   -- enter the email to signup
@@ -118,11 +117,11 @@ testLoginEventRecordedWhenLoggedInAfterActivation conn = withTestEnvironment con
   assertAccountActivatedFor uid "Andrzej" "Rybczak" (res3, ctx3)
   assertLoginEventRecordedFor uid
 
-testViralInviteAndActivate :: Nexus -> Assertion
-testViralInviteAndActivate conn = withTestEnvironment conn $ do
+testViralInviteAndActivate :: DBEnv -> Assertion
+testViralInviteAndActivate env = withTestEnvironment env $ do
   Just inviter <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just inviter })
+  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just inviter })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
    -- enter the email to invite
@@ -140,10 +139,10 @@ testViralInviteAndActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12"
   assertAccountActivated "Andrzej" "Rybczak" (res3, ctx3)
 
-testAcceptTOSToActivate :: Nexus -> Assertion
-testAcceptTOSToActivate conn = withTestEnvironment conn $ do
+testAcceptTOSToActivate :: DBEnv -> Assertion
+testAcceptTOSToActivate env = withTestEnvironment env $ do
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn })
+  ctx <- (\c -> c { ctxdbenv = env })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   -- enter the email to signup
@@ -156,10 +155,10 @@ testAcceptTOSToActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token False "Andrzej" "Rybczak" "password12" "password12"
   assertAccountActivationFailed (res3, ctx3)
 
-testNeedFirstNameToActivate :: Nexus -> Assertion
-testNeedFirstNameToActivate conn = withTestEnvironment conn $ do
+testNeedFirstNameToActivate :: DBEnv -> Assertion
+testNeedFirstNameToActivate env = withTestEnvironment env $ do
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn })
+  ctx <- (\c -> c { ctxdbenv = env })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   -- enter the email to signup
@@ -172,10 +171,10 @@ testNeedFirstNameToActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token True "" "Rybczak" "" ""
   assertAccountActivationFailed (res3, ctx3)
 
-testNeedLastNameToActivate :: Nexus -> Assertion
-testNeedLastNameToActivate conn = withTestEnvironment conn $ do
+testNeedLastNameToActivate :: DBEnv -> Assertion
+testNeedLastNameToActivate env = withTestEnvironment env $ do
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn })
+  ctx <- (\c -> c { ctxdbenv = env })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   -- enter the email to signup
@@ -188,10 +187,10 @@ testNeedLastNameToActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "" "" ""
   assertAccountActivationFailed (res3, ctx3)
 
-testNeedPasswordToActivate :: Nexus -> Assertion
-testNeedPasswordToActivate conn = withTestEnvironment conn $ do
+testNeedPasswordToActivate :: DBEnv -> Assertion
+testNeedPasswordToActivate env = withTestEnvironment env $ do
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn })
+  ctx <- (\c -> c { ctxdbenv = env })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   -- enter the email to signup
@@ -204,10 +203,10 @@ testNeedPasswordToActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "" ""
   assertAccountActivationFailed (res3, ctx3)
 
-testPasswordsMatchToActivate :: Nexus -> Assertion
-testPasswordsMatchToActivate conn = withTestEnvironment conn $ do
+testPasswordsMatchToActivate :: DBEnv -> Assertion
+testPasswordsMatchToActivate env = withTestEnvironment env $ do
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn })
+  ctx <- (\c -> c { ctxdbenv = env })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   -- enter the email to signup

@@ -75,7 +75,7 @@ remindMailNotSigned :: TemplatesMonad m
                     -> m Mail
 remindMailNotSigned forMail customMessage ctx document signlink = do
     let mainfile =  head $ (documentfiles document) ++ [FileID 0]
-    authorattachmentfiles <- mapM (ioRunDB (ctxdbconn ctx) . dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
+    authorattachmentfiles <- mapM (ioRunDB (ctxdbenv ctx) . dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
     documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailremindnotsigned) $ do
         fieldM "header" $ do
             header <- if isNothing customMessage
@@ -216,7 +216,7 @@ mailInvitation forMail
                invitationto
                document@Document{documentinvitetext, documenttitle }
                msiglink = do
-    authorattachmentfiles <- mapM (ioRunDB (ctxdbconn ctx) . dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
+    authorattachmentfiles <- mapM (ioRunDB (ctxdbenv ctx) . dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
     let creatorname = BS.toString $ getSmartName $ fromJust $ getAuthorSigLink document
     let issignatory = maybe False (elem SignatoryPartner . signatoryroles) msiglink
     let personname = maybe "" (BS.toString . getSmartName) msiglink
@@ -368,7 +368,7 @@ getDocumentFooter doc = return $ fmap BS.toString <$> documentmailfooter $ docum
 
 getServiceFooter :: MonadIO m => Context -> Document -> m (Maybe String)
 getServiceFooter ctx doc = do
-  mservice <- liftMM (ioRunDB (ctxdbconn ctx) . dbQuery . GetService) (return $ documentservice doc)
+  mservice <- liftMM (ioRunDB (ctxdbenv ctx) . dbQuery . GetService) (return $ documentservice doc)
   return . fmap BS.toString $ mservice >>= servicemailfooter . serviceui
 
 defaultFooter :: TemplatesMonad m => Context -> m String
@@ -376,7 +376,7 @@ defaultFooter ctx = renderTemplateM "poweredByScrive" $ [("ctxhostpart", ctxhost
 
 makeFullLink :: TemplatesMonad m => Context -> Document -> String -> m String
 makeFullLink ctx doc link = do
-    mservice <- liftMM (ioRunDB (ctxdbconn ctx) . dbQuery . GetService) (return $ documentservice doc)
+    mservice <- liftMM (ioRunDB (ctxdbenv ctx) . dbQuery . GetService) (return $ documentservice doc)
     case join $ servicelocation <$> servicesettings <$> mservice of
          Just (ServiceLocation location) -> return $ BS.toString location ++ link
          Nothing -> return $ ctxhostpart ctx ++ link
@@ -387,7 +387,7 @@ documentMailWithDocLocale ctx doc mailname otherfields = documentMail doc ctx do
 
 documentMail :: (MonadIO m,Functor m,TemplatesMonad m, HasLocale a) =>  a -> Context -> Document -> String -> Fields m -> m Mail
 documentMail haslocale ctx doc mailname otherfields = do
-    mservice <- liftMM (ioRunDB (ctxdbconn ctx) . dbQuery . GetService) (return $ documentservice doc)
+    mservice <- liftMM (ioRunDB (ctxdbenv ctx) . dbQuery . GetService) (return $ documentservice doc)
     let allfields = do
         contextFields ctx
         field "documenttitle" $ BS.toString $ documenttitle doc

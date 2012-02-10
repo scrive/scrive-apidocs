@@ -15,7 +15,6 @@ import Doc.DocUtils
 import Test.QuickCheck.Gen
 import Control.Monad.Trans
 import Data.Maybe
-import DB.Nexus
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import qualified Test.HUnit as T
@@ -454,8 +453,8 @@ blankDocument =
 
 -}
 
-testThat :: String -> Nexus -> DB () -> Test
-testThat s conn a = testCase s (withTestEnvironment conn a)
+testThat :: String -> DBEnv -> DB () -> Test
+testThat s env a = testCase s (withTestEnvironment env a)
 
 addNewCompany ::  DB Company
 addNewCompany = do

@@ -27,7 +27,7 @@ instance (Functor m, MonadIO m) => TemplatesMonad (TemplatesT m) where
     return $ localizedVersion locale ts
 
 instance (CryptoRNG (TemplatesT m), DBMonad m) => DBMonad (TemplatesT m) where
-  getConnection = lift getConnection
+  getDBEnv = lift getDBEnv
   handleDBError = lift . handleDBError
 
 -- add more instances if neccessary...

@@ -18,6 +18,7 @@ module Crypto.RNG
   ( -- * Generation of strings and numbers
     CryptoRNGState
   , newCryptoRNGState
+  , unsafeCryptoRNGState
   , CryptoRNG(..)
   , randomBytes
   , randomR
@@ -34,7 +35,7 @@ import Control.Monad.Trans(MonadIO, liftIO, lift)
 import Control.Monad.Reader(ReaderT, MonadReader, ask, runReaderT)
 import Control.Monad.State(StateT)
 import Control.Monad.Error(ErrorT, Error)
-import Crypto.Random (newGenIO, genBytes)
+import Crypto.Random (newGenIO, newGen, genBytes)
 import Crypto.Random.DRBG (GenAutoReseed, HashDRBG)
 import Crypto.Types (ByteLength)
 import Data.Bits((.|.), shiftL)
@@ -48,6 +49,12 @@ newtype CryptoRNGState = CryptoRNGState (MVar (GenAutoReseed HashDRBG HashDRBG))
 -- | Create a new 'CryptoRNGState', based on system entropy.
 newCryptoRNGState :: MonadIO m => m CryptoRNGState
 newCryptoRNGState = liftIO $ newGenIO >>= fmap CryptoRNGState . newMVar
+
+-- | Create a new 'CryptoRNGState', based on a bytestring seed.
+-- Should only be used for testing.
+unsafeCryptoRNGState :: MonadIO m => ByteString -> m CryptoRNGState
+unsafeCryptoRNGState s = liftIO $
+  either (fail . show) (fmap CryptoRNGState . newMVar) (newGen s)
 
 -- | Generate given number of cryptographically secure random bytes.
 randomBytes :: (MonadIO m, CryptoRNG m) =>

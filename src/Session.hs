@@ -29,7 +29,6 @@ import Control.Monad.Reader (ask)
 import Control.Monad.State hiding (State)
 import qualified Data.ByteString.UTF8 as BS
 import Data.Maybe (isNothing,isJust, fromJust)
-import DB.Nexus
 import Happstack.Data.IxSet
 import qualified Happstack.Data.IxSet as IxSet
 import Happstack.State
@@ -559,13 +558,13 @@ startSession :: (MonadIO m, CryptoRNG m) => m Session
 startSession = emptySessionData >>= return . Session tempSessionID
 
 -- | Get 'User' record from database based on userid in session
-getUserFromSession :: Nexus -> Session -> ServerPartT IO (Maybe User)
-getUserFromSession conn s =
-  liftMM (ioRunDB conn . dbQuery . GetUserByID) (return $ userID $ sessionData s)
+getUserFromSession :: DBEnv -> Session -> ServerPartT IO (Maybe User)
+getUserFromSession dbenv s =
+  liftMM (ioRunDB dbenv . dbQuery . GetUserByID) (return $ userID $ sessionData s)
 
-getCompanyFromSession :: Nexus -> Session -> ServerPartT IO (Maybe Company)
-getCompanyFromSession conn s =
-  liftMM (ioRunDB conn . dbQuery . GetCompany) (return $ company $ sessionData s)
+getCompanyFromSession :: DBEnv -> Session -> ServerPartT IO (Maybe Company)
+getCompanyFromSession dbenv s =
+  liftMM (ioRunDB dbenv . dbQuery . GetCompany) (return $ company $ sessionData s)
 
 getLocationFromSession :: Session -> ServerPartT IO String
 getLocationFromSession s = return $ location $ sessionData s

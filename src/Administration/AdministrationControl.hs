@@ -489,9 +489,9 @@ handleCreateService = onlySalesOrAdmin $ do
 {- Services page-}
 showServicesPage :: Kontrakcja m => m String
 showServicesPage = onlySalesOrAdmin $ do
-  conn <- getConnection
+  env <- getDBEnv
   services <- runDBQuery GetServices
-  servicesAdminPage conn services
+  servicesAdminPage env services
 
 
 {-

@@ -4,13 +4,13 @@ module TestMain where
 import Control.Applicative
 import Data.Char
 import Data.Either
-import Database.HDBC.PostgreSQL
 import System.Environment.UTF8
 import System.IO
 import Test.Framework
 import qualified Log
+import qualified Data.ByteString as BS
 
-import Crypto.RNG (newCryptoRNGState)
+import Crypto.RNG (unsafeCryptoRNGState)
 import AppDB
 import DB.Checks
 import DB.Classes
@@ -105,19 +105,19 @@ import Doc.TestJSON
 import StatsTest
 #endif
 
-allTests :: Nexus -> [(String, [String] -> Test)]
-allTests conn = tail tests
+allTests :: DBEnv -> [(String, [String] -> Test)]
+allTests env = tail tests
   where
     tests = [
         undefined
 #ifndef NO_COMPANYSTATE
-      , ("companystate", const $ companyStateTests conn)
+      , ("companystate", const $ companyStateTests env)
 #endif
 #ifndef NO_DOCSTATE
-      , ("docstate", const $ docStateTests conn)
+      , ("docstate", const $ docStateTests env)
 #endif
 #ifndef NO_DOCCONTROL
-      , ("doccontrol", const $ docControlTests conn)
+      , ("doccontrol", const $ docControlTests env)
 #endif
 #ifndef NO_DOCSTATEQUERY
       , ("docstatequery", const $ docStateQueryTests)
@@ -129,32 +129,32 @@ allTests conn = tail tests
       , ("inputvalidation", const $ inputValidationTests)
 #endif
 #ifndef NO_INTEGRATIONAPI
-      , ("integrationapi", const $ integrationAPITests conn)
+      , ("integrationapi", const $ integrationAPITests env)
 #endif
 #ifndef NO_LOGIN
-      , ("login", const $ loginTests conn)
+      , ("login", const $ loginTests env)
 #endif
 #ifndef NO_SIGNUP
-      , ("signup", const $ signupTests conn)
+      , ("signup", const $ signupTests env)
 #endif
 #ifndef NO_ACCOUNTINFO
-     , ("accountinfo", const $ accountInfoTests conn)
+     , ("accountinfo", const $ accountInfoTests env)
 #endif
 #ifndef NO_MAILAPI
-      , ("mailapi", const $ mailApiTests conn)
+      , ("mailapi", const $ mailApiTests env)
 #endif
 #ifndef NO_REDIRECT
       , ("redirect", const $ redirectTests)
 #endif
 #ifndef NO_SERVICESTATE
-      , ("servicestate", const $ serviceStateTests conn)
+      , ("servicestate", const $ serviceStateTests env)
 #endif
 #ifndef NO_TRUSTWEAVER
       -- everything fails for trustweaver, so commenting out for now
       , ("trustweaver", const $ trustWeaverTests)
 #endif
 #ifndef NO_USERSTATE
-      , ("userstate", const $ userStateTests conn)
+      , ("userstate", const $ userStateTests env)
 #endif
 #ifndef NO_CSVUTIL
       , ("csvutil", const $ csvUtilTests)
@@ -163,13 +163,13 @@ allTests conn = tail tests
       , ("simplemail", const $ simpleMailTests)
 #endif
 #ifndef NO_LOCALE
-      , ("locale", const $ localeTests conn)
+      , ("locale", const $ localeTests env)
 #endif
 #ifndef NO_COMPANYACCOUNTS
-      , ("companyaccounts", const $ companyAccountsTests conn)
+      , ("companyaccounts", const $ companyAccountsTests env)
 #endif
 #ifndef NO_MAILS
-      , ("mails", mailsTests conn )
+      , ("mails", mailsTests env )
 #endif
 #ifndef NO_MAILS
       , ("apicommons", const $ apiCommonsTest )
@@ -178,7 +178,7 @@ allTests conn = tail tests
       , ("jsonutil", const $ jsonUtilTests )
 #endif
 #ifndef NO_FILE
-      , ("file", const $ fileTests conn )
+      , ("file", const $ fileTests env )
 #endif
 #ifndef NO_DOCJSON
       , ("docjson", const $ documentJSONTests)
@@ -187,21 +187,21 @@ allTests conn = tail tests
       , ("sqlutil", const $ sqlUtilsTests )
 #endif
 #ifndef NO_STATS
-      , ("stats", const $ statsTests conn)
+      , ("stats", const $ statsTests env)
 #endif
       ]
 
-testsToRun :: Nexus -> [String] -> [Either String Test]
+testsToRun :: DBEnv -> [String] -> [Either String Test]
 testsToRun _ [] = []
-testsToRun conn (t:ts)
+testsToRun env (t:ts)
   | lt == "$" = []
-  | lt == "all" = map (\(_,f) -> Right $ f params) (allTests conn) ++ rest
-  | otherwise = case lookup lt (allTests conn) of
+  | lt == "all" = map (\(_,f) -> Right $ f params) (allTests env) ++ rest
+  | otherwise = case lookup lt (allTests env) of
                   Just testcase -> Right (testcase params) : rest
                   Nothing       -> Left t : rest
   where
     lt = map toLower t
-    rest = testsToRun conn ts
+    rest = testsToRun env ts
     params = drop 1 $ dropWhile (/= ("$")) ts
 
 main :: IO ()
@@ -209,17 +209,16 @@ main = Log.withLogger $ do
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
   pgconf <- readFile "kontrakcja_test.conf"
-  rng <- newCryptoRNGState -- TODO: Here we could use a deterministic seed
-  withPostgreSQL pgconf $ \conn' -> do
-    conn <- mkNexus rng conn'
-    ioRunDB conn $ performDBChecks Log.debug kontraTables kontraMigrations
-    (args, tests) <- partitionEithers . testsToRun conn <$> getArgs
+  rng <- unsafeCryptoRNGState (BS.pack (replicate 128 0))
+  withPostgreSQLDB' pgconf rng $ \dbenv -> do
+    ioRunDB dbenv $ performDBChecks Log.debug kontraTables kontraMigrations
+    (args, tests) <- partitionEithers . testsToRun dbenv <$> getArgs
 
     -- defaultMainWithArgs does not feel like returning like a normal function
     -- so have to get around that 'feature'!!
     bracket_ (return ())
-             (do 
-               stats <- getNexusStats conn
+             (do
+               stats <- getNexusStats (nexus dbenv)
                putStrLn $ "SQL: queries " ++ show (nexusQueries stats) ++ 
                           ", params " ++ show (nexusParams stats) ++
                           ", rows " ++ show (nexusRows stats) ++
