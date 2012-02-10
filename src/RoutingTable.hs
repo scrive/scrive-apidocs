@@ -169,6 +169,7 @@ staticRoutes = choice
      , dir "account" $ dir "company" $ hGet $ toK0 $ Company.handleGetCompany
      , dir "account" $ dir "company" $ hPost $ toK0 $ Company.handlePostCompany
      , dir "account" $ dir "company" $ dir "json" $ hGet $ toK0 $ Company.handleGetCompanyJSON
+     , dir "account" $ dir "company" $ hGet $ toK1 $ Company.handleCompanyLogo
      , dir "account" $ dir "mailapi" $ hGet $ toK0 $ UserControl.handleGetUserMailAPI
      , dir "account" $ dir "mailapi" $ hPost $ toK0 $ UserControl.handlePostUserMailAPI
      , dir "account" $ dir "usagestats" $ hGet $ toK0 $ UserControl.handleUsageStatsForUser

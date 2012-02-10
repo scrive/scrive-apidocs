@@ -28,6 +28,8 @@ window.CompanyModel = Backbone.Model.extend({
       country: "",
       barsbackground: "",
       iscustombarsbackground: false,
+      logo: "",
+      iscustomlogo: false,
       ready: false,
       editable: false,
     },
@@ -65,14 +67,27 @@ window.CompanyModel = Backbone.Model.extend({
     setIsCustomBarsBackground: function(val) {
       this.set({"iscustombarsbackground": val});
     },
+    logo: function() {
+      return this.get("logo");
+    },
+    isCustomLogo: function() {
+      return this.get("iscustomlogo");
+    },
+    setIsCustomLogo: function(val) {
+      this.set({"iscustomlogo": val});
+    },
     isReady: function() {
       return this.get("ready");
     },
     isEditable: function() {
       return this.get("editable");
     },
+    submitUrl: function() {
+      return this.get("url");
+    },
     parse: function(args) {
       var isbarsbackground = args.company.barsbackground.trim()!="";
+      var islogo = args.company.logo!="";
       return {
         id: args.company.id,
         name: args.company.name,
@@ -82,6 +97,8 @@ window.CompanyModel = Backbone.Model.extend({
         city: args.company.country,
         barsbackground: isbarsbackground ? args.company.barsbackground : "#212121",
         iscustombarsbackground: isbarsbackground,
+        logo: args.company.logo,
+        iscustomlogo: islogo,
         editable: args.company.editable,
         ready: true
       };
@@ -108,20 +125,14 @@ window.CompanyView = Backbone.View.extend({
 
     if (company.isEditable()) {
       this.bbcheckbox.removeAttr("disabled");
+      this.bbinput.removeAttr("disabled");
+      this.saveButton.show();
+      this.logocheckbox.removeAttr("disabled");
     } else {
       this.bbcheckbox.attr("disabled", true);
-    }
-
-    if (company.isEditable()) {
-      this.bbinput.removeAttr("disabled");
-    } else {
       this.bbinput.attr("disabled", true);
-    }
-
-    if (company.isEditable()) {
-      this.saveButton.show();
-    } else {
       this.saveButton.hide();
+      this.logocheckbox.attr("disabled", true);
     }
 
     this.bbdisplay.css("background-color", company.barsbackground());
@@ -132,6 +143,20 @@ window.CompanyView = Backbone.View.extend({
     } else {
       this.bbcheckbox.removeAttr("checked");
       this.bbcustomdiv.hide();
+    }
+
+    if (company.isCustomLogo()) {
+      this.logocheckbox.attr("checked", true);
+      this.logocustomdiv.show();
+    } else {
+      this.logocheckbox.removeAttr("checked");
+      this.logocustomdiv.hide();
+    }
+
+    if (company.isCustomLogo() && company.logo()!="") {
+      this.logodisplay.attr("src", company.logo());
+    } else {
+      this.logodisplay.attr("src", "/img/email-logo.png");
     }
   },
   initElems: function() {
@@ -178,6 +203,63 @@ window.CompanyView = Backbone.View.extend({
     var tr1 = jQuery("<tr/>").append(jQuery("<td colspan='2' style='width:400px'/>").append(bbstuff));
     tablebody.append(tr1);
 
+    var logocheckbox = jQuery("<input id='logocheckbox' name='islogo' type='checkbox' style='width: 30px;' />");
+    this.logocheckbox = logocheckbox;
+    this.logocheckbox.change(function() {
+      company.setIsCustomLogo(logocheckbox.is(":checked"));
+    });
+    var logocheckboxlabel = jQuery("<label for='logocheckbox'>Custom Logo</label>");
+
+
+    var logodisplay = jQuery("<img class='float-left' width='70' height='22' style='margin-top:10px;' />");
+    this.logodisplay = logodisplay;
+
+    var logoupload = UploadButton.init({
+      width: 120,
+      name: "logo",
+      text: "Select PNG",
+      submitOnUpload: true,
+      showLoadingDialog: false,
+      type: "image/png",
+      submit: new Submit({
+          method: "POST",
+          url: company.submitUrl(),
+          company: JSON.stringify(company),
+          isLogo: true,
+          beforeSend: function() {
+            //horrible hack from emily
+            jQuery("input[name='company']").val(JSON.stringify(company));
+            jQuery("input[name='isLogo']").val(company.isCustomLogo());
+          },
+          ajax: true,
+          onSend: function() {
+            console.log("sending");
+            logodisplay.attr("src", "/theme/images/wait30trans.gif");
+          },
+          ajaxsuccess: function(d) {
+            company.fetch({cache: false});
+            logodisplay.attr("src", company.logo());
+          },
+          ajaxerror: function(d, a) {
+            company.fetch({cache: false});
+            logodisplay.attr("src", company.logo());
+            console.log("error");
+          }
+      })
+    }).input();
+
+    this.logocustomdiv = jQuery("<div />");
+    this.logocustomdiv.append(jQuery("<div class='float-left' style='padding-left:30px;padding-right:30px;padding-top:5px;'/>").append(logoupload));
+    this.logocustomdiv.append(this.logodisplay);
+
+    var logostuff = jQuery("<div/>");
+    logostuff.append(this.logocheckbox);
+    logostuff.append(logocheckboxlabel);
+    logostuff.append(this.logocustomdiv);
+
+    var tr2 = jQuery("<tr/>").append(jQuery("<td colspan='2' style='width:400px'/>").append(logostuff));
+    tablebody.append(tr2);
+
     var firstcol = jQuery("<div class='col' />");
     firstcol.append(header);
     firstcol.append(body);
@@ -191,10 +273,12 @@ window.CompanyView = Backbone.View.extend({
           company.setBarsbackground("");
         }
         var companyjson = JSON.stringify(company);
+        var islogo = company.isCustomLogo();
         new Submit({
           method: "POST",
           url: "/account/company",
-          company: companyjson
+          company: companyjson,
+          isLogo: islogo
         }).send();
       }
     }).input();

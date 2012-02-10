@@ -1,12 +1,13 @@
 /* Upload buttons
  * Usage
  *  var button =  UploadButton.init({
- *                   width: 100 // Expected size of the button. 
+ *                   width: 100 // Expected size of the button.
  *                   name: "Name that will be used for input element"
  *                   text: "Text that will be put inside of button",
  *                   submitOnUpload : Bool //Submit the parent form when file selected })
  *                   list : jQuery("selector") // If you want to show list of uploaded files
- *                   maxlength : 1 // Number of files that can be selected   
+ *                   maxlength : 1 // Number of files that can be selected
+ *                   accept: "image/png" //Type of file to accept - by default this is a pdf
  *  will return UploadButton object.
  *
  * It exports method input that returns jQuery object to be inserted anywere you want
@@ -16,7 +17,10 @@
  *  ! FOR now this module is based on MultiFile jQuery plugin, but this may change soon.
  *  We do not store internally any data about uploaded files.
  *
+<<<<<<< HEAD
  * If you are using onAppend construct you can't submit input in first 10 ms.
+=======
+>>>>>>> make it so you can upload a logo
 */
 
 (function( window){
@@ -27,6 +31,7 @@ var UploadButtonModel = Backbone.Model.extend({
       text : "",
       width: 200,
       maxlength : 1,
+      accept: "application/pdf",
       submitOnUpload : false,
       size : "small",
       showLoadingDialog : true,
@@ -46,6 +51,9 @@ var UploadButtonModel = Backbone.Model.extend({
   maxlength : function() {
         return this.get("maxlength");
   },
+  accept: function() {
+        return this.get("accept");
+  },
   submitOnUpload : function(){
        return this.get("submitOnUpload") == true;
   },
@@ -61,6 +69,7 @@ var UploadButtonModel = Backbone.Model.extend({
   hasSubmit : function(){
         return this.submit() != undefined;
   },
+<<<<<<< HEAD
   onAppend : function() {
              return this.get("onAppend");  
   },
@@ -69,6 +78,15 @@ var UploadButtonModel = Backbone.Model.extend({
   },
   color : function() {
         return this.get("color");
+=======
+  borderWidth : function(){
+    if (this.size() == "small")
+        return 16;
+    else if (this.size() == "tiny")
+        return 6;
+    else if (this.size() == "big")
+        return 22;
+>>>>>>> make it so you can upload a logo
   }
 });
 
@@ -94,7 +112,11 @@ var UploadButtonView = Backbone.View.extend({
         button.append(label);
         button.append(right);
         var fileinput = $("<input class='multiFileInput' type='file'/>");
+<<<<<<< HEAD
         fileinput.attr("accept",model.type()).attr("maxlength",model.maxlength()).attr("name",model.name());
+=======
+        fileinput.attr("accept",model.accept()).attr("maxlength",model.maxlength()).attr("name",model.name());
+>>>>>>> make it so you can upload a logo
         fileinput.css("width",model.width()  + "px");
         var list = model.list();
         if (list == undefined) {
@@ -151,4 +173,4 @@ window.UploadButton = {
         }
 };
 
-})(window); 
+})(window);
