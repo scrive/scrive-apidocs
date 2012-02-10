@@ -237,14 +237,13 @@ fieldstext pagew pageh fields = concatMap fieldtext fields
                    } = "q " ++ intercalate " " [  show (fromIntegral (image_w * pagew) / fromIntegral w :: Double) 
                                                , "0"
                                                , "0"
-                                               ,  show (fromIntegral (image_h * pageh) / fromIntegral h :: Double)
-                                               ,  show (fromIntegral (x * pagew) / fromIntegral w :: Double)
-                                               ,  show (fromIntegral ((h - y - image_h) * pageh) / fromIntegral h :: Double)
-                                               ] ++ " cm " ++
-                       "BI /BPC 8 /CS /RGB /F /DCT " ++
-                       "/H " ++ show internal_image_h ++ " /W " ++ show internal_image_w ++ " ID\n" ++ 
-                       BS.unpack (Base64.decodeLenient (BS.pack val)) ++ "\nEI Q "
-
+                                               , show (fromIntegral (image_h * pageh) / fromIntegral h :: Double)
+                                               , show (fromIntegral (x * pagew) / fromIntegral w :: Double)
+                                               , show (fromIntegral ((h - y - image_h) * pageh) / fromIntegral h :: Double)
+                                               ] ++ " cm\n" ++
+                       "BI\n/BPC 8\n/CS /RGB\n/F /DCT\n" ++
+                       "/H " ++ show internal_image_h ++ "\n/W " ++ show internal_image_w ++ "\nID " ++ 
+                       BS.unpack (Base64.decodeLenient (BS.pack val)) ++ "\nEI\nQ "
 
 placeSeals :: [Field] -> RefID -> [String] -> RefID -> String -> RefID -> State Document ()
 placeSeals fields sealrefid sealtexts paginrefid pagintext' sealmarkerformrefid = do
