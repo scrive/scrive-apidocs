@@ -122,8 +122,8 @@ var DocumentDesignView = Backbone.View.extend({
         var document = this.model;
         var box = $("<div class='signStepsBody basicMode'/>");
         document.fixForBasic();
-        var signatoriesView = new SignatoriesDesignBasicView({model: document, el: $("<div/>"), extra: this.finalBasicBox()})
-        box.append(signatoriesView.el);      
+        this.signatoriesView = new SignatoriesDesignBasicView({model: document, el: $("<div/>"), extra: this.finalBasicBox()})
+        box.append(this.signatoriesView.el);
         return box;
     },
     finalBasicBox : function() {
@@ -142,8 +142,8 @@ var DocumentDesignView = Backbone.View.extend({
     designStep1: function() {
         var document = this.model;
         var box = $("<div class='signStepsBody advancedMode'/>");
-        var signatoriesView = new SignatoriesDesignAdvancedView({model: document, el: $("<div/>") , extra: this.nextStepButton()})
-        box.append(signatoriesView.el);
+        this.signatoriesView  = new SignatoriesDesignAdvancedView({model: document, el: $("<div/>") , extra: this.nextStepButton()})
+        box.append(this.signatoriesView.el);
         return box;
     },
     nextStepButton : function() {
@@ -520,7 +520,48 @@ var DocumentDesignView = Backbone.View.extend({
         });
     },
     verificationBeforeSendingOrSigning : function() {
+        var view = this;
+        var failed = false;
+        var sigs = this.model.signatories();
+        var vres = true;
+        var atLeastOneSignatory = false;
+        for(var i =0; i< sigs.length; i++)
+        {   if (!sigs[i].author() && sigs[i].signs()) atLeastOneSignatory = true;
+            var fields = sigs[i].fields();
+            for(var j = 0; j< fields.length; j++) {
+                var field = fields[j];
+                var validationCallback = function(text, object, validation) {
+                    view.showSignatory(sigs[i]);
+                    FlashMessages.add({color: 'red', content : validation.message()})
+                    if (field.view != undefined)
+                        field.view.redborder()
+                 };
+                if (!field.validation().setCallback(validationCallback).validateData(field.value()))
+                    return false;
+            }
+        }
+
+        if (!atLeastOneSignatory)
+        {
+              FlashMessages.add({color: 'red', content : localization.designview.validation.atLeastOnePersonOtherThenAuthor});
+              this.tabs.activate(this.tab2);
+              return false;    
+        }
+
+        var mails = _.map(sigs, function(sig) {return sig.email();}).sort();;
+        for (var i =0;i< mails.length -1;i++)
+                if (mails[i] == mails[i+1])
+                {
+                    FlashMessages.add({color: 'red', content : localization.designview.validation.sameMails});
+                    this.tabs.activate(this.tab2);
+                    return false;
+                }
+
         return true;
+    },
+    showSignatory : function(sig) {
+        this.tabs.activate(this.tab2);
+        this.signatoriesView.showSignatory(sig);
     },
     render: function () {
         var document = this.model;
@@ -542,11 +583,11 @@ var DocumentDesignView = Backbone.View.extend({
             title : this.titlerow(),
             tabsTail : (document.isBasic()) ? [this.switchFunctionalityOption()] : (!document.isTemplate()) ?  [this.saveAsTemplateOption()] : [] ,
             tabs: [
-                new Tab({
+                this.tab1 = new Tab({
                     name : document.isTemplate() ? localization.step1template : document.process().step1text(),
                     clickable : false,    
                   }),
-                new Tab({
+                this.tab2 = new Tab({
                     name  : document.isTemplate() ? localization.step2template : document.isBasic() ? localization.step2basic : localization.step2normal,
                     active :  document.isBasic() || SessionStorage.get(document.documentid, "step") != "3",
                     onActivate : function() {
@@ -557,7 +598,7 @@ var DocumentDesignView = Backbone.View.extend({
                               file.view.el
                             ]  
                   }),
-                new Tab({
+                this.tab3 = new Tab({
                     name  : document.isTemplate() ? localization.step3template : localization.step3normal,
                     active :  !document.isBasic() && SessionStorage.get(document.documentid, "step") == "3",
                     onActivate : function() {

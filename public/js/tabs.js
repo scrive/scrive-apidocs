@@ -198,6 +198,9 @@ window.KontraTabs = {
     },
     next : function() {
         this.model.activateNext();
+    },
+    activate : function(tab) {
+        this.model.activate(tab);
     }
 }
 

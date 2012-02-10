@@ -94,7 +94,6 @@ window.Field = Backbone.Model.extend({
                 return new FieldPlacement(extendedWithField(placement));
         });
         this.set({"placements": placements});
-        this.bind("change", function() {this.signatory().change()})
     },
     name : function() {
         return this.get("name");
@@ -121,6 +120,9 @@ window.Field = Backbone.Model.extend({
         var name = this.name();
         return this.value() == "" && this.placements().length == 0 && (name == "sigco" || name == "sigpersnr" || name == "sigcompnr" || name == "signature");
     },
+    hasRestrictedName : function() {
+        return this.isStandard() || this.isSignature(); //this checks are name based
+    },
     readyForSign : function(){
         return this.value() != "" || this.canBeIgnored();
     },
@@ -145,6 +147,32 @@ window.Field = Backbone.Model.extend({
           return this.value();
         else
           return this.nicename();
+    },
+    validation: function() {
+        var field = this;
+        var name  = this.name()
+        
+        if (!this.signatory().author() && (name == "fstname" ||name == "sndname")) {
+            var msg = localization.designview.validation.missingOrWrongNames;
+            return new NameValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
+        }
+        
+        if (!this.signatory().author() && name == "email"){
+            var msg = localization.designview.validation.missingOrWrongEmail;
+            return new EmailValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
+        }
+        
+        if (this.signatory().document().elegAuthorization() && name == "sigpersnr" ) {
+            var msg = localization.designview.validation.missingOrWrongPersonalNumber
+            return new NotEmptyValidation({message: msg});
+        }
+        
+        if (this.isCustom()) {
+            var msg = localization.designview.validation.notReadyField
+            return new Validation({validates : function() {return field.isReady()}, message : msg});
+        }
+        
+        return new Validation();
     },
     isStandard: function() {
         var name = this.name();
@@ -198,8 +226,8 @@ window.Field = Backbone.Model.extend({
 window.FieldStandardView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'cleanredborder');
-        this.model.view = this;
         this.model.bind('change', this.cleanredborder);
+        this.model.view = this;
         this.render();
     },
     render: function(){
@@ -255,8 +283,9 @@ window.FieldStandardView = Backbone.View.extend({
 
 window.FieldBasicDesignView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render');
+        _.bindAll(this, 'render', 'cleanredborder');
         this.model.view = this;
+        this.model.bind('change', this.cleanredborder);
         this.render();
     },
     render: function(){
@@ -272,7 +301,6 @@ window.FieldBasicDesignView = Backbone.View.extend({
                                     field.setValue(value);    
                                   }
                             }).input();
-                  
         if (field.isClosed())  
         { 
             this.el.addClass('closed');
@@ -280,12 +308,19 @@ window.FieldBasicDesignView = Backbone.View.extend({
         }    
         this.el.append(input);    
         return this;
+    },
+    redborder : function() {
+        this.el.css("border","1px solid red");
+    },
+    cleanredborder : function() {
+        this.el.css("border","");
     }
 });
 
 window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render');
+        _.bindAll(this, 'render', 'cleanredborder');
+        this.model.bind('change', this.cleanredborder);
         this.model.bind('ready', this.render);
         this.model.view = this;
         this.render();
@@ -331,7 +366,12 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
         var field = this.model;
         var icon =  $("<a class='setNameIcon' href='#'/>")
         icon.click(function(){
-            field.makeReady();
+            if (!field.hasRestrictedName())
+                field.makeReady();
+            else  FlashMessages.add({
+                    color : "red",
+                    content: localization.designview.validation.restrictedName
+                    })
             return false;
         })
         return icon;
@@ -359,18 +399,18 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
                                  onChange : function(value) {
                                     field.setValue(value);    
                                   }
-                            });
+                            }).input();
           if (field.isClosed())  
             { 
                 this.el.addClass('closed');
-                this.input.input().attr("readonly","yes");
+                this.input.attr("readonly","yes");
             }
           else if (!field.isStandard())
            {
-               this.input.input().addClass("shorter");  
+               this.input.addClass("shorter");
                this.el.append(this.removeIcon())  
            }
-          this.el.append(this.input.input());
+          this.el.append(this.input);
         }
         else {
            this.el.append(this.prepIcon());
@@ -381,14 +421,20 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
                                  onChange : function(value) {
                                     field.setName(value);    
                                   }
-               })
-           this.input.input().addClass("much-shorter");  
-           this.el.append(this.input.input());
+               }).input();
+           this.input.addClass("much-shorter");
+           this.el.append(this.input);
            this.el.append(this.removeIcon());
            this.el.append(this.setNameIcon());
 
         }
         return this;
+    },
+    redborder : function() {
+        this.el.css("border","1px solid red");
+    },
+    cleanredborder : function() {
+        this.el.css("border","");
     }
 });
     

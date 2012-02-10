@@ -3222,3 +3222,5 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_signatureMissing","Var vänliga och skriv din signatur",,"Please draw you signature"
 "_signaturePlaceYour","Signera här",,"Place your signature here"
 "_selectFileToUpload","Välj fil från dator",,"Select file from computer"
+"_atLeastOnePersonOtherThenAuthor","Document needs to have at least one more person",,"Document needs to have at least one more person"
+"_fieldnameRestricted","Field name restricted",,"Field name restricted"

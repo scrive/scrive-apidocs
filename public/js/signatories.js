@@ -224,6 +224,9 @@ window.Signatory = Backbone.Model.extend({
             if (fields[i].name() == name)
                 return fields[i];
     },
+    readyFields : function() {
+        return _.filter(this.fields(), function(f) {return f.isReady();});
+    },
     customFields : function() {
         var cf = new Array();
         var fields = this.fields();
@@ -405,7 +408,7 @@ window.Signatory = Backbone.Model.extend({
     },
     draftData : function() {
         return {
-              fields: _.map(this.fields(), function(field) {
+              fields: _.map(this.readyFields(), function(field) {
                   return field.draftData();} )
             , author: this.author()
             , signs: this.signs()

@@ -30,6 +30,11 @@ window.Validation = Backbone.Model.extend({
     },
     message: function() {
         return this.get("message");
+    },
+    setCallback : function(callback) {
+        this.set({callback : callback});
+        if (this.get('next') != undefined) this.get('next').setCallback(callback);
+        return this;
     }
 });
 

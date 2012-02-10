@@ -532,6 +532,7 @@
     display: block;
     height: 100px;
     width: 250px;
+    background-color: white;
     
 }
 .signatureBoxNotDrawing .signatureHeader{
@@ -574,6 +575,7 @@
     border-right: 1px solid #222222;
     float: left;
     position: relative; /*Important for dealing with drawing events*/
+    background-color: #ffffff;
 }
 
 .signatureDrawingBox.ready .canvasWrapper{

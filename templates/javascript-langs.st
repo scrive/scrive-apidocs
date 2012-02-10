@@ -237,6 +237,17 @@ javascriptLocalisation =
             , missing : "$_signatureMissing()$"
             , placeYour : "$_signaturePlaceYour()$"
            }
+         , designview : {
+             validation : {
+                      missingOrWrongEmail : "$_emptyOrNotValidEmail()$"
+                    , missingOrWrongNames:  "$_missingSignatoryNames()$"
+                    , missingOrWrongPersonalNumber : "$_backToStepTwoAndFillPersonNumber()$"
+                    , sameMails : "$_repetedEmailAddress()$"
+                    , atLeastOnePersonOtherThenAuthor : "$_atLeastOnePersonOtherThenAuthor()$"
+                    , notReadyField : "$_setAllFields()$"
+                    , restrictedName : "$_fieldnameRestricted()$"
+                }
+           }
 
    }
 ####

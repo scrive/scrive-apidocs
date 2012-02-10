@@ -253,6 +253,9 @@ window.SignatoriesDesignBasicView = Backbone.View.extend({
         box.append(s2view.el);
         box.append(this.extra);
         return this;
+    },
+    showSignatory : function() {
+        return true;
     }
 })
     
@@ -345,6 +348,11 @@ window.SignatoriesDesignAdvancedView = SignatoriesDesignBasicView.extend({
         }
         box.append(this.addRemoveSignatoryBox());
         return this;
+    },
+    showSignatory : function(sig) {
+        this.current= sig;
+        this.render();
+        return true;
     }
 })
     
