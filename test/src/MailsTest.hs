@@ -33,8 +33,8 @@ import Data.Char
 import Text.XML.HaXml.Parse (xmlParse')
 import Control.Monad.Trans
 
-mailsTests :: DBEnv -> [String] -> Test
-mailsTests env params  = testGroup "Mails" [
+mailsTests :: [String] -> DBEnv -> Test
+mailsTests params env  = testGroup "Mails" [
     testCase "Document emails" $ testDocumentMails env (toMailAddress params),
     testCase "User emails" $ testUserMails env (toMailAddress params)
     ]

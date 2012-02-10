@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP, OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-module DocStateTest (docStateTests) where
+module DocStateTest where
 
 import DB.Classes
 import User.Model
