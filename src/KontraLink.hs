@@ -52,6 +52,7 @@ data KontraLink
     | LinkAttachments
     | LinkRubbishBin
     | LinkAccount Bool -- show create company modal?
+    | LinkAccountCompany
     | LinkChangeUserEmail ActionID MagicHash
     | LinkAccountSecurity
     | LinkUserMailAPI
@@ -158,6 +159,7 @@ instance Show KontraLink where
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
     showsPrec _ (LinkAccount False) = (++) "/account"
     showsPrec _ (LinkAccount True) = (++) "/account/?createcompany"
+    showsPrec _ LinkAccountCompany = (++) "/account/company"
     showsPrec _ (LinkChangeUserEmail actionid magichash) =
         (++) $ "/account/" ++ show actionid ++  "/" ++ show magichash
     showsPrec _ (LinkCompanyAccounts params) = (++) $ "/account/companyaccounts" ++ "?" ++ show params
