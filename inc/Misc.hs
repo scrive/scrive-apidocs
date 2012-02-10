@@ -16,13 +16,11 @@ import Control.Concurrent
 import Control.Monad.State
 import Data.Char
 import Data.Data
-import Data.Int
 import Data.List
 import Data.Maybe
 import Data.Monoid
 import Data.Word
 import Numeric (readDec)
-import Happstack.Data.IxSet as IxSet
 import Happstack.Server hiding (simpleHTTP,dir)
 import Happstack.State
 import Happstack.Util.Common hiding  (mapFst,mapSnd)
@@ -40,7 +38,6 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS
-import qualified GHC.Conc
 import Data.Bits
 
 -- We want this operators to bind strongly but weeker then . to do cond1 &&^ not . cond2
@@ -60,44 +57,6 @@ guardFormAction button = do
 
 concatChunks :: BSL.ByteString -> BS.ByteString
 concatChunks = BS.concat . BSL.toChunks
-
--- | Get a unique index value in a set. Unique number is 31 bit in
--- this function.  First argument is set, second is index constructor.
---
--- See also 'getUnique64'.
-getUnique
-  :: (Indexable a,
-      Typeable a,
-      Ord a,
-      Typeable k,
-      Monad (t GHC.Conc.STM),
-      MonadTrans t) =>
-     IxSet a -> (Int -> k) -> Ev (t GHC.Conc.STM) k
-getUnique ixset constr = do
-  r <- getRandomR (0,0x7fffffff::Int)
-  let v = constr r
-  if IxSet.null (ixset @= v)
-     then return v
-     else getUnique ixset constr
-
--- | Get a unique index value in a set. Unique number is 31 bit in
--- this function.  First argument is set, second is index constructor.
---
--- See also 'getUnique64'.
-getUnique64
-  :: (Indexable a,
-      Typeable a,
-      Ord a,
-      Typeable k,
-      Monad (t GHC.Conc.STM),
-      MonadTrans t) =>
-     IxSet a -> (Int64 -> k) -> Ev (t GHC.Conc.STM) k
-getUnique64 ixset constr = do
-  r <- getRandomR (0,0x7fffffffffffffff::Int64)
-  let v = constr r
-  if IxSet.null (ixset @= v)
-     then return v
-     else getUnique64 ixset constr
 
 -- | Generate random string of specified length that contains allowed
 -- chars.
