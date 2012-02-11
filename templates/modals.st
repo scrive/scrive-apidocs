@@ -167,19 +167,19 @@ modalAccountSetup=
         <table id="signupInfo"><tbody>
             <tr>
                 <td>$_firstname()$:</td>
-                <td><input type="text" id="fstname" name="fstname" value="$fstname$" autocomplete="off" /></td>
+                <td><input type="text" name="fstname" value="$fstname$" autocomplete="off" /></td>
             </tr>
             <tr>
                 <td>$_lastname()$:</td>
-                <td><input type="text" id="sndname" name="sndname" value="$sndname$" autocomplete="off" /></td>
+                <td><input type="text" name="sndname" value="$sndname$" autocomplete="off" /></td>
             </tr>
             <tr>
                 <td style="width: 120px">$_modalAccountSetupChoosePassword()$</td>
-                <td><input type="password" id="password" name="password" autocomplete="off"/></td>
+                <td><input type="password" name="password" autocomplete="off"/></td>
             </tr>
             <tr>
                 <td>$_modalAccountSetupRepeatPassword()$</td>
-                <td><input type="password" id="password2" name="password2" autocomplete="off"/></td>
+                <td><input type="password" name="password2" autocomplete="off"/></td>
             </tr>
         </tbody></table>
         <input type="submit" class="hidden" />
@@ -200,16 +200,6 @@ modalAccountSetup=
 </div>
 <script>
 window.onload = function() {
-window.PasswordEqValidation = Validation.extend({
-    defaults: {
-        validates: function(t) {
-            var p1 = jQuery('#password').val();
-
-            return t == p1;
-        },
-        message: localization.validation.passwordsDontMatch
-    }
-});
 jQuery('form[action="$signuplink$"]').submit(function(){
     var callback = function(t,e,v) {
         e.css("background", "red"); 
@@ -220,10 +210,10 @@ jQuery('form[action="$signuplink$"]').submit(function(){
             .appendTo(e.parent());
     };
 
-    var fstname = jQuery('#fstname');
-    var sndname = jQuery('#sndname');
-    var password = jQuery('#password');
-    var password2 = jQuery('#password2');
+    var fstname = jQuery('#signupInfo').find('input[name="fstname"]');
+    var sndname = jQuery('#signupInfo').find('input[name="sndname"]');
+    var password = jQuery('#signupInfo').find('input[name="password"]');
+    var password2 = jQuery('#signupInfo').find('input[name="password2"]');
     var tos = jQuery('#tosCBox');
 
     fstname.css("background", "white");
@@ -237,13 +227,17 @@ jQuery('form[action="$signuplink$"]').submit(function(){
     var vresult = [
         fstname.validate(new NameValidation({callback: callback, message: localization.validation.firstNameRequired})),
         sndname.validate(new NameValidation({callback: callback, message: localization.validation.secondNameRequired})),
-        password.validate(passwordValidation(callback, 
-            [
-              localization.validation.passwordLessThanMinLength
-            , localization.validation.passwordExceedsMaxLength
-            , localization.validation.passwordNeedsLetterAndDigit
-            ])),
-        password2.validate(new PasswordEqValidation({callback: callback})),
+        password.validate(new PasswordValidation({
+              callback: callback
+            , message: localization.validation.passwordLessThanMinLength
+            , message_max: localization.validation.passwordExceedsMaxLength
+            , message_digits: localization.validation.passwordNeedsLetterAndDigit
+            })),
+        password2.validate(new PasswordEqValidation({
+              callback: callback
+            , message: localization.validation.passwordsDontMatch
+            , "with": password
+            })),
         tos.validate(new CheckboxReqValidation({callback: callback, message: localization.validation.mustAcceptTOS}))
         ];
 
@@ -747,16 +741,6 @@ $accountFromSignScript()$
 accountFromSignScript=
 <script>
 window.onload = function() {
-window.PasswordEqValidation = Validation.extend({
-    defaults: {
-        validates: function(t) {
-            var p1 = jQuery('#password').val();
-
-            return t == p1;
-        },
-        message: localization.validation.passwordsDontMatch
-    }
-});
 jQuery('#accountFromSignForm').submit(function(){
     var callback = function(t,e,v) {
         e.css("background", "red"); 
@@ -767,8 +751,8 @@ jQuery('#accountFromSignForm').submit(function(){
             .appendTo(e.parent());
     };
 
-    var password = jQuery('#password');
-    var password2 = jQuery('#password2');
+    var password = jQuery('.account-from-sign-container').find('input[name="password"]');
+    var password2 = jQuery('.account-from-sign-container').find('input[name="password2"]');
     var tos = jQuery('#tosCBox');
 
     password.css("background", "white");
@@ -778,13 +762,17 @@ jQuery('#accountFromSignForm').submit(function(){
     jQuery('[name=validate-message]').remove();
 
     var vresult = [
-        password.validate(passwordValidation(callback, 
-            [
-              localization.validation.passwordLessThanMinLength
-            , localization.validation.passwordExceedsMaxLength
-            , localization.validation.passwordNeedsLetterAndDigit
-            ])),
-        password2.validate(new PasswordEqValidation({callback: callback})),
+        password.validate(new PasswordValidation({
+              callback: callback 
+            , message: localization.validation.passwordLessThanMinLength
+            , message_max: localization.validation.passwordExceedsMaxLength
+            , message_digits: localization.validation.passwordNeedsLetterAndDigit
+            })),
+        password2.validate(new PasswordEqValidation({
+              callback: callback
+            , message: localization.validation.passwordsDontMatch
+            , "with": password
+            })),
         tos.validate(new CheckboxReqValidation({callback: callback, message: localization.validation.mustAcceptTOS}))
         ];
 
@@ -812,11 +800,11 @@ accountFromSignInputs=
           <table>
             <tr>
               <td style="width:120px;">$_password()$</td>
-              <td><input id="password" type="password" name="password" /></td>
+              <td><input type="password" name="password" /></td>
             </tr>
             <tr>
               <td>$_accountFromSignInputsConfirmPassword()$</td>
-              <td><input id="password2" type="password" name="password2" /></td>
+              <td><input type="password" name="password2" /></td>
             </tr>
           </table>
           <input type="submit" class="hidden" />

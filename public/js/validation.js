@@ -15,7 +15,7 @@ window.Validation = Backbone.Model.extend({
         return this;
     },
     validateData: function(text, elem) {
-            if (!this.get("validates")(text)) {
+            if (!this.get("validates").call(this, text)) {
                this.fail(text, elem);
                return false;       
             }
@@ -53,21 +53,6 @@ window.EmailValidation = Validation.extend({
                 return false;
             },
             message: "Wrong email format!"
-    }
-});
-
-window.PasswordValidation = Validation.extend({
-    defaults: {
-            validates: function(t) {
-                if (t.length < 8 || t.length > 250)
-                    return false;
-                
-                if (!/([a-z]+[0-9]+)|([0-9]+[a-z]+)/.test(t))
-                    return false;
-                
-                return true;
-            },
-            message: "Password must contain one digit and one letter and must be 8 characters long at least!"
     }
 });
 
@@ -111,16 +96,38 @@ window.DigitsLettersValidation = Validation.extend({
     }
 });
 
-window.passwordValidation = function(callback, messages) {
-    var messages = messages == undefined ? [] : messages;
-    var message1 = messages[0] == undefined ? "" : messages[0];
-    var message2 = messages[1] == undefined ? "" : messages[1];
-    var message3 = messages[2] == undefined ? "" : messages[2];
+window.PasswordValidation = Validation.extend({
+    defaults: {
+        validates: function(t) { return t.length >= 8; },
+        message: "Password must contain 8 characters at least!",
+        message_max: "Password must contain 250 characters at most!",
+        message_digits: "Password must have minimum two digits and two letters!",
+    },
+    initialize: function() {
+        this.set({"next": new Validation({
+            callback: this.get("callback"), 
+            message: this.get("message_max"), 
+            validates: function(t) { return t.length <= 250; }})});
 
-    return new Validation({callback: callback, message: message1, validates: function(t) { return t.length >= 8;}})
-               .concat(new Validation({callback: callback, message: message2, validates: function(t) { return t.length <= 250;}}))
-               .concat(new DigitsLettersValidation({callback: callback, message: message3}));
-}
+        this.concat(new DigitsLettersValidation({
+            callback: this.get("callback"), 
+            message: this.get("message_digits")
+        }));
+
+    }
+});
+
+window.PasswordEqValidation = Validation.extend({
+    defaults: {
+        with: undefined,
+        validates: function(t) {
+            var p1 = this.get("with") ? this.get("with").val() : undefined;
+
+            return t == p1;
+        },
+        message: "The two passwords don't match!"
+    }
+});
 
 jQuery.fn.validate = function(validationObject){
     var validationObject = validationObject || (new NotEmptyValidation);
