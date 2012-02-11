@@ -100,8 +100,10 @@ var DocumentDesignView = Backbone.View.extend({
                       document.save().sendAjax(function() {
                                new Submit().send();
                             });
+                      return false;
                      }
                });
+               return false;
             })
        return a;
         
@@ -213,8 +215,8 @@ var DocumentDesignView = Backbone.View.extend({
     finalDateSelection: function() {
         var document = this.model;
         var box = $("<div class='finaldateselection'/>");
-        var checkbox = $("<input type='checkbox' name='finaldatecheckbox' class='finaldatecheckbox'>");
-        var label = $("<label for='finaldatecheckbox'>").text(localization.finalDateCheckboxLabel);
+        var checkbox = $("<input type='checkbox' name='finaldatecheckbox' class='finaldatecheckbox'/>");
+        var label = $("<label for='finaldatecheckbox'/>").text(localization.finalDateCheckboxLabel);
         box.append($("<div/>").append(checkbox).append(label));
         if (document.daystosign() != undefined)
             checkbox.attr('checked', true);

@@ -127,7 +127,7 @@ standardHeaderContents=
             $endif$
        $endif$
        <script src="/js/main.js"
-                type="text/javascript"></script>
+                type="text/javascript"></script> 
 ####
 standardBodyWithQueryCol=
        $standardBodyWrapper(unwrappedbody=contentsWithQueryCol(unwrappedbody=unwrappedbody))$

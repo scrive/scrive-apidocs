@@ -88,10 +88,6 @@ window.SignatoryAttachmentRowView = Backbone.View.extend({
                         console.log("error");
                     }
                 });
-//                new Submit({
-//                    method : "POST",
-//                    deletesigattachment : attachment.file().fileid()
-//                }).send();
                 return false;         
             });
             lasttd.append(filelink);
@@ -161,9 +157,7 @@ window.Signatory = Backbone.Model.extend({
                   {name : "sigpersnr"},
                   {name : "sigco"},
                   {name : "sigcompnr"},
-                  {name : "signature"},
-
-                
+                  {name : "signature"}                
         ],
         current : false,
         attachments : [],
@@ -171,7 +165,7 @@ window.Signatory = Backbone.Model.extend({
         csv : undefined
     },
     
-    initialize : function(args){   
+    initialize : function(args){
         var signatory = this;
         var extendedWithSignatory =   function(hash){
                     hash.signatory = signatory;
@@ -180,6 +174,7 @@ window.Signatory = Backbone.Model.extend({
         var fields =  _.map(args.fields, function(field){
                 return new Field(extendedWithSignatory(field));
         });
+
         var attachments =  _.map(args.attachments, function(attachment){
                 return new SignatoryAttachment(extendedWithSignatory(attachment));
         });
@@ -188,6 +183,7 @@ window.Signatory = Backbone.Model.extend({
         });
         
         this.bind("change",function() {signatory.document().trigger("change:signatories")});
+
     },
     document : function(){
         return this.get("document");

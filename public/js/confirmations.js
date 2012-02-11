@@ -133,12 +133,12 @@ var ConfirmationView = Backbone.View.extend({
        title.append($("<h2/>").append(this.model.title()));
        header.append(title);
        if (model.canCancel()) 
-        header.append("<a class='modal-close close'/a>");
+        header.append("<a class='modal-close close'/>");
        var body = $("<div class='modal-body'>");
-       var content = $("<div class='modal-content'>");
+       var content = $("<div class='modal-content'/>");
        content.html(this.model.content());
        body.append(content);
-       var footer = $("<div class='modal-footer'>");
+       var footer = $("<div class='modal-footer'/>");
        if (model.canCancel()) {
         var cancel = $("<a class='cancel close float-left'/>");
         cancel.text(this.model.rejectText());
@@ -152,7 +152,7 @@ var ConfirmationView = Backbone.View.extend({
                                  onClick : function() {
                                      if (model.accept() == true)
                                          view.clear();
-                                     
+                                     return false;
                                 }
             }).input();
        this.renderAcceptButton();

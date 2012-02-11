@@ -147,7 +147,7 @@ var ConfirmationWithEmailView = Backbone.View.extend({
        var title = $("<span class='modal-title'/>");
        title.append($("<h2/>").append(this.model.title()));
        header.append(title);
-       header.append("<a class='modal-close close'/a>");
+       header.append("<a class='modal-close close'/>");
 	   
 	   //Modal body
        var body = $("<div class='modal-body'>");

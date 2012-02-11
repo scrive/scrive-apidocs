@@ -71,7 +71,7 @@ window.FieldPlacement = Backbone.Model.extend({
             y : parseInt(this.y()),
             pagewidth : page.width(),
             pageheight : page.height(),
-            page : page.number(),                               
+            page : page.number()                              
         }
     }    
 });
@@ -197,7 +197,7 @@ window.Field = Backbone.Model.extend({
       this.set({fresh: false});
       this.trigger("ready");
     },
-    delete: function(){
+    remove: function(){
       _.each(this.placements(),function(placement) {
             placement.remove();
         });
@@ -310,10 +310,10 @@ window.FieldBasicDesignView = Backbone.View.extend({
         return this;
     },
     redborder : function() {
-        this.el.css("border","1px solid red");
+        this.el.addClass("redborder");
     },
     cleanredborder : function() {
-        this.el.css("border","");
+        this.el.removeClass("redborder");
     }
 });
 
@@ -380,7 +380,7 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
         var field = this.model;
         var icon = $("<a class='removeField' href='#'/>")
         icon.click(function(){
-            field.delete();
+            field.remove();
             return false;
         })
         return icon;
@@ -431,10 +431,10 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
         return this;
     },
     redborder : function() {
-        this.el.css("border","1px solid red");
+        this.el.addClass("redborder");
     },
     cleanredborder : function() {
-        this.el.css("border","");
+        this.el.removeClass("redborder");
     }
 });
     

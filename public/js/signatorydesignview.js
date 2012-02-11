@@ -30,7 +30,7 @@ window.SignatoryDesignViewBasic = Backbone.View.extend({
         return process.nonsignatoryname()
     },
     top : function() {
-        var top = $("<div class='top'>")
+        var top = $("<div class='top'/>")
         top.text(this.name().toUpperCase());
         return top;
     },
@@ -47,7 +47,7 @@ window.SignatoryDesignViewBasic = Backbone.View.extend({
         this.container.addClass('sigview');
         this.container.children().detach();
         this.container.append(this.top());
-        var fields = $("<div class='fields'>")
+        var fields = $("<div class='fields'/>")
         var makeField = function(field) {
                        if (field != undefined)
                         fields.append(view.fieldView(
@@ -74,7 +74,7 @@ window.SignatoryDesignViewBasic = Backbone.View.extend({
 window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
    addFieldButton : function() {
         var signatory = this.model;
-        var addFieldButton = $("<a class='addField' href='#'>");
+        var addFieldButton = $("<a class='addField' href='#'/>");
         addFieldButton.click(function(){
             signatory.addNewField();
             return false;
@@ -90,10 +90,10 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
 
        if (view.showRoleSelector) {
            this.setRoleIcon.addClass("selected");
-           this.setRoleBox = $("<div class='setRoleBox'>");
+           this.setRoleBox = $("<div class='setRoleBox'/>");
            this.container.append(this.setRoleBox);
 
-           var closeButton = $("<a class='modal-close close' href='#'>");
+           var closeButton = $("<a class='modal-close close' href='#'/>");
            closeButton.click(function() {
                view.setRoleIcon.removeClass("selected");
                if (view.setRoleBox!= undefined)  view.setRoleBox.remove();
@@ -103,8 +103,8 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
            this.setRoleBox.append(closeButton);
        
            
-           var makeSignatoryWrapper = $("<div class='option'>");
-           var makeSignatoryCheckbox =  $("<input class='radio' type='radio' >");
+           var makeSignatoryWrapper = $("<div class='option'/>");
+           var makeSignatoryCheckbox =  $("<input class='radio' type='radio'/>");
            if (signatory.signs())
                makeSignatoryCheckbox.attr("checked","yes")
            else
@@ -134,7 +134,7 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
    setRoleFieldIcon : function() {
        var view = this;
        var signatory = this.model;
-       this.setRoleIcon = $("<a class='setRole' href='#'>");
+       this.setRoleIcon = $("<a class='setRole' href='#'/>");
        this.setRoleIcon.click(function(){
            if (view.showRoleSelector)
                view.showRoleSelector = false;
@@ -148,7 +148,7 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
    setSignOrderIcon : function() {
        var view = this;
        var signatory = this.model;
-       var setSignOrderIcon = $("<a class='setSignOrder' href='#'>");
+       var setSignOrderIcon = $("<a class='setSignOrder' href='#'/>");
        setSignOrderIcon.click(function(){
           signatory.document().view.toggleSignOrger();
             });
@@ -173,7 +173,7 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
    setCsvSignatoryIcon : function() {
        var view = this;
        var signatory = this.model;
-       var setCsvSignatoryIcon = $("<a class='setCsvSignatory' href='#'>");
+       var setCsvSignatoryIcon = $("<a class='setCsvSignatory' href='#'/>");
        setCsvSignatoryIcon.click(function() {
             CsvSignatoryDesignPopup.popup({signatory: signatory});
             return false;
@@ -184,7 +184,7 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
        var view = this;
        var signatory = this.model;
        var field = signatory.field("signature");
-       var placeSignatureIcon = $("<a class='placeSignatureIcon' href='#'>");
+       var placeSignatureIcon = $("<a class='placeSignatureIcon' href='#'/>");
        var fileview = signatory.document().mainfile().view;
        placeSignatureIcon.draggable({
                     handle: ".ddIcon",
@@ -212,10 +212,10 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
        return placeSignatureIcon;
    },
    top : function() {
-        var top = $("<div class='top'>")
+        var top = $("<div class='top'/>")
         var signatory = this.model;
         var document = signatory.document();
-        top.append($("<span class='signame'>").text(this.name().toUpperCase()));
+        top.append($("<span class='signame'/>").text(this.name().toUpperCase()));
         top.append(this.setRoleFieldIcon());
         if (!signatory.author())
             top.append(this.setCsvSignatoryIcon())
@@ -271,11 +271,11 @@ window.SignatoriesDesignAdvancedView = SignatoriesDesignBasicView.extend({
         var document = this.model;
         var view = this;
         var box =  $("<div class='addremovesignatorybox'/>");
-        var addLink = $("<a class='addSignatory' href='#'>").text(localization.addSignatory);
+        var addLink = $("<a class='addSignatory' href='#'/>").text(localization.addSignatory);
         addLink.click(function(){
             document.addSignatory();   
         })
-        var removeLink = $("<a class='removeSignatory' href='#'>").text(localization.removeSignatory);
+        var removeLink = $("<a class='removeSignatory' href='#'/>").text(localization.removeSignatory);
         removeLink.click(function() {
             document.removeSignatory(view.current);
         })
@@ -290,14 +290,14 @@ window.SignatoriesDesignAdvancedView = SignatoriesDesignBasicView.extend({
         var document = this.model;
         var view = this; 
         var box =  $("<div class='siglist'/>");
-        var header = $("<a href='#' class='header'>").text(localization.signatoryListPartner);
+        var header = $("<a href='#' class='header'/>").text(localization.signatoryListPartner);
         if (document.view.signOrderVisible())
             header.append($("<span class='float-right'/>").text(localization.signatoryListSignOrder));
         box.append(header);
 
         var sigs = document.signatories();
         _.each(document.signatories(),function(sig) {
-            var sigline = $("<a href='#' class='signame'>");
+            var sigline = $("<a href='#' class='signame'/>");
             var setSiglineContent= function() {
                 var text = sig.isCsv() ?  localization.csv.title : sig.nameOrEmail()
                 if (text == undefined || text == "")
@@ -329,7 +329,7 @@ window.SignatoriesDesignAdvancedView = SignatoriesDesignBasicView.extend({
         { 
             var s1view = new SignatoryDesignViewAdvanced({model: document.signatories()[0], el: $("<div/>")});
             box.append(s1view.el);
-            box.append($("<div class='sigview dummy'>"))
+            box.append($("<div class='sigview dummy'/>"))
         }
         else if (document.signatories().length == 2)
         { 
