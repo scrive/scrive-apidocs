@@ -18,7 +18,6 @@ import Data.Int
 import Happstack.Data
 import Happstack.Util.Common
 import Happstack.Server.SimpleHTTP
-import Numeric
 
 -- | 'SignatoryLinkID' is and integer that identifies a signatory
 -- inside a document scope.
