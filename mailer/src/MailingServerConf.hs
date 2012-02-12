@@ -12,16 +12,15 @@ data MailingServerConf = MailingServerConf {
   , mscMailsConfig     :: MailsConfig
   } deriving (Read, Show)
 
-data MailsConfig = MailsSendgrid {
-    sendgridSMTP         :: String
-  , sendgridRestAPI      :: String
-  , sendgridUser         :: String
-  , sendgridPassword     :: String
+data MailsConfig = MailsSMTP {
+    smtpAddr           :: String
+  , smtpUser           :: String
+  , smtpPassword       :: String
   }
   | MailsSendmail
   | MailsLocal {
-    localDirectory       :: FilePath
-  , localOpenCommand     :: Maybe String
+    localDirectory     :: FilePath
+  , localOpenCommand   :: Maybe String
   } deriving (Read, Show)
 
 -- MailsSendgrid  {

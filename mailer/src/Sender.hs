@@ -23,9 +23,9 @@ newtype Sender = Sender { sendMail :: (MonadIO m, CryptoRNG m) => Mail -> m Bool
 
 createSender :: MailsConfig -> Sender
 createSender mc = case mc of
-  MailsSendgrid{} -> createSendGridSender mc
-  MailsSendmail   -> createSendmailSender
-  MailsLocal{}    -> createLocalOpenSender mc
+  MailsSMTP{}   -> createSMTPSender mc
+  MailsSendmail -> createSendmailSender
+  MailsLocal{}  -> createLocalOpenSender mc
 
 createExternalSender :: String -> (Mail -> [String]) -> Sender
 createExternalSender program createargs = Sender { sendMail = send }
@@ -51,8 +51,8 @@ createExternalSender program createargs = Sender { sendMail = send }
               ]
             return True
 
-createSendGridSender :: MailsConfig -> Sender
-createSendGridSender config = createExternalSender "curl" createargs
+createSMTPSender :: MailsConfig -> Sender
+createSMTPSender config = createExternalSender "curl" createargs
   where
     mailRcpt addr = [
         "--mail-rcpt"
@@ -60,8 +60,8 @@ createSendGridSender config = createExternalSender "curl" createargs
       ]
     createargs Mail{mailFrom, mailTo} = [
         "--user"
-      , sendgridUser config ++ ":" ++ sendgridPassword config
-      , sendgridSMTP config
+      , smtpUser config ++ ":" ++ smtpPassword config
+      , smtpAddr config
       , "-k", "--ssl", "--mail-from"
       , "<" ++ addrEmail mailFrom ++ ">"
       ] ++ concatMap mailRcpt mailTo

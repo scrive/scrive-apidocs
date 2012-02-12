@@ -15,9 +15,7 @@ module Mails.Events (
   , mailUndeliveredInvitation
   ) where
 
---import Control.Applicative
 import Data.Maybe
---import Data.List
 import Control.Monad.Reader
 import qualified Data.ByteString.UTF8 as BS
 
@@ -26,7 +24,7 @@ import ActionScheduler
 import ActionSchedulerState
 import DB.Classes
 import Doc.Model
-import Doc.DocStateData hiding (MailsDeliveryStatus(..))
+import Doc.DocStateData
 import KontraLink
 import Mails.MailsConfig
 import Mails.MailsData
@@ -40,7 +38,6 @@ import Templates.Trans
 import User.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import qualified Doc.DocStateData as D
 import qualified Log
 import EvidenceLog.Model
 import Stats.Control
@@ -48,8 +45,8 @@ import Stats.Control
 processEvents :: ActionScheduler ()
 processEvents = runDBQuery GetUnreadEvents >>= mapM_ processEvent
   where
-    processEvent (eid, mid, XSMTPAttrs [("mailinfo", mi)], SendGridEvent email ev _) = do
-      markEventAsRead eid  
+    processEvent (eid, mid, XSMTPAttrs [("mailinfo", mi)], eventType) = do
+      markEventAsRead eid
       case maybeRead mi of
         Just (Invitation docid signlinkid) -> do
           mdoc <- runDBQuery $ GetDocumentByDocumentID docid
@@ -61,23 +58,35 @@ processEvents = runDBQuery GetUnreadEvents >>= mapM_ processEvent
               let msl = getSigLinkFor doc signlinkid
                   muid = maybe Nothing maybesignatory msl
               let signemail = maybe "" (BS.toString . getEmail) msl
-              Log.debug $ signemail ++ " == " ++ email
               sd <- ask
               templates <- getGlobalTemplates
               let host = hostpart $ sdAppConf sd
                   mc = sdMailsConfig sd
-              -- since when email is reported deferred author has a possibility to change
-              -- email address, we don't want to send him emails reporting success/failure
-              -- for old signatory address, so we need to compare addresses here.
-              runTemplatesT (getLocale doc, templates) $ case ev of
-                Opened       -> handleOpenedInvitation doc signlinkid email muid
-                Delivered _  -> handleDeliveredInvitation mc doc signlinkid
-                -- we send notification that email is reported deferred after fifth
-                -- attempt has failed - this happens after ~10 minutes from sendout
-                Deferred _ 5 -> handleDeferredInvitation (host, mc) doc signlinkid email
-                Dropped _    -> when (signemail == email) $  handleUndeliveredInvitation (host, mc) doc signlinkid
-                Bounce _ _ _ -> when (signemail == email) $  handleUndeliveredInvitation (host, mc) doc signlinkid
-                _            -> return ()
+                  -- since when email is reported deferred author has a possibility to
+                  -- change email address, we don't want to send him emails reporting
+                  -- success/failure for old signatory address, so we need to compare
+                  -- addresses here (for dropped/bounce events)
+                  handleEv (SendGridEvent email ev _) = do
+                    Log.debug $ signemail ++ " == " ++ email
+                    runTemplatesT (getLocale doc, templates) $ case ev of
+                      SG_Opened -> handleOpenedInvitation doc signlinkid email muid
+                      SG_Delivered _ -> handleDeliveredInvitation mc doc signlinkid
+                      -- we send notification that email is reported deferred after
+                      -- fifth attempt has failed - this happens after ~10 minutes
+                      -- from sendout
+                      SG_Deferred _ 5 -> handleDeferredInvitation (host, mc) doc signlinkid email
+                      SG_Dropped _ -> when (signemail == email) $ handleUndeliveredInvitation (host, mc) doc signlinkid
+                      SG_Bounce _ _ _ -> when (signemail == email) $ handleUndeliveredInvitation (host, mc) doc signlinkid
+                      _ -> return ()
+                  handleEv (MailGunEvent email ev) = do
+                    Log.debug $ signemail ++ " == " ++ email
+                    runTemplatesT (getLocale doc, templates) $ case ev of
+                      MG_Opened -> handleOpenedInvitation doc signlinkid email muid
+                      MG_Delivered -> handleDeliveredInvitation mc doc signlinkid
+                      MG_Bounced _ _ _ -> when (signemail == email) $ handleUndeliveredInvitation (host, mc) doc signlinkid
+                      MG_Dropped _ -> when (signemail == email) $ handleUndeliveredInvitation (host, mc) doc signlinkid
+                      _ -> return ()
+              handleEv eventType
         _ -> return ()
     processEvent (eid, _ , _, _) = markEventAsRead eid
 
@@ -99,14 +108,14 @@ handleDeliveredInvitation mc doc signlinkid = do
   case getSigLinkFor doc signlinkid of
     Just signlink -> do
       -- send it only if email was reported deferred earlier
-      when (invitationdeliverystatus signlink == D.Deferred) $ do
+      when (invitationdeliverystatus signlink == Deferred) $ do
         mail <- mailDeliveredInvitation doc signlink
         scheduleEmailSendout mc $ mail {
           to = [getMailAddress $ fromJust $ getAuthorSigLink doc]
         }
       time <- getMinutesTime
       let actor = MailSystemActor time (maybesignatory signlink) (BS.toString $ getEmail signlink) signlinkid
-      _ <- runDBUpdate $ SetInvitationDeliveryStatus (documentid doc) signlinkid D.Delivered actor
+      _ <- runDBUpdate $ SetInvitationDeliveryStatus (documentid doc) signlinkid Delivered actor
       return ()
     Nothing -> return ()
 
@@ -127,7 +136,7 @@ handleDeferredInvitation (hostpart, mc) doc signlinkid email = do
   case getSigLinkFor doc signlinkid of
     Just sl -> do
       let actor = MailSystemActor time (maybesignatory sl) email signlinkid
-      mdoc <- runDBUpdate $ SetInvitationDeliveryStatus (documentid doc) signlinkid D.Deferred actor
+      mdoc <- runDBUpdate $ SetInvitationDeliveryStatus (documentid doc) signlinkid Deferred actor
       case mdoc of
         Right doc' -> do
           mail <- mailDeferredInvitation hostpart doc'
@@ -137,14 +146,13 @@ handleDeferredInvitation (hostpart, mc) doc signlinkid email = do
         Left _ -> return ()
     Nothing -> return ()
 
-
 handleUndeliveredInvitation :: (DBMonad m, TemplatesMonad m) => (String, MailsConfig) -> Document -> SignatoryLinkID -> m ()
 handleUndeliveredInvitation (hostpart, mc) doc signlinkid = do
   case getSigLinkFor doc signlinkid of
     Just signlink -> do
       time <- getMinutesTime
       let actor = MailSystemActor time (maybesignatory signlink) (BS.toString $ getEmail signlink) signlinkid
-      _ <- runDBUpdate $ SetInvitationDeliveryStatus (documentid doc) signlinkid D.Undelivered actor
+      _ <- runDBUpdate $ SetInvitationDeliveryStatus (documentid doc) signlinkid Undelivered actor
       mail <- mailUndeliveredInvitation hostpart doc signlink
       scheduleEmailSendout mc $ mail {
         to = [getMailAddress $ fromJust $ getAuthorSigLink doc]
