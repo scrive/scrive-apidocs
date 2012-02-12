@@ -153,10 +153,11 @@ window.CompanyView = Backbone.View.extend({
       this.logocustomdiv.hide();
     }
 
+    this.logodisplaywrapper.css("background-color", company.barsbackground());
     if (company.isCustomLogo() && company.logo()!="") {
-      this.logodisplay.attr("src", company.logo());
+      this.logodisplay.css("background-image", "url('" + company.logo() + "')");
     } else {
-      this.logodisplay.attr("src", "/img/email-logo.png");
+      this.logodisplay.css("background-image", "url('/img/email-logo.png')");
     }
   },
   initElems: function() {
@@ -208,11 +209,13 @@ window.CompanyView = Backbone.View.extend({
     this.logocheckbox.change(function() {
       company.setIsCustomLogo(logocheckbox.is(":checked"));
     });
-    var logocheckboxlabel = jQuery("<label for='logocheckbox'>Custom Logo</label>");
+    var logocheckboxlabel = jQuery("<label for='logocheckbox'>Custom Email Logo</label>");
 
-
-    var logodisplay = jQuery("<img class='float-left' width='70' height='22' style='margin-top:10px;' />");
+    var logodisplay = jQuery("<div style='width:100%;height:33px;background-repeat:no-repeat;' />");
+    var logodisplaywrapper = jQuery("<div style='margin:10px 30px;padding: 10px;' />")
+    logodisplaywrapper.append(logodisplay);
     this.logodisplay = logodisplay;
+    this.logodisplaywrapper = logodisplaywrapper;
 
     var logoupload = UploadButton.init({
       width: 120,
@@ -249,8 +252,8 @@ window.CompanyView = Backbone.View.extend({
     }).input();
 
     this.logocustomdiv = jQuery("<div />");
-    this.logocustomdiv.append(jQuery("<div class='float-left' style='padding-left:30px;padding-right:30px;padding-top:5px;'/>").append(logoupload));
-    this.logocustomdiv.append(this.logodisplay);
+    this.logocustomdiv.append(jQuery("<div style='padding-left:30px;padding-right:30px;padding-top:5px;'/>").append(logoupload));
+    this.logocustomdiv.append(this.logodisplaywrapper);
 
     var logostuff = jQuery("<div/>");
     logostuff.append(this.logocheckbox);

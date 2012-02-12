@@ -20,15 +20,7 @@ nicemail=
                     cellspacing="0" align="center" style="color:#ffffff;text-align:center;margin:auto">
                     <tr>
                         <td style="text-align:left; margin: auto;padding:10px;">
-                           $if(!service.logo)$
-                            $if(!companybrand.logo)$
-                              <img src="$ctxhostpart$/img/email-logo.png" width="70" height="22" />
-                            $else$
-                              <img src="$ctxhostpart$$companybrand.logoLink$" width="70" height="22" />
-                            $endif$
-                           $else$
-                            <img src="$ctxhostpart$$service.logoLink$" width="121" height="33" />
-                           $endif$
+                          <div style="background-repeat:no-repeat;background-image:url('$nicemaillogo()$');height:33px;width:100%;"/>
                         </td>
                     </tr>
                     <tr>
@@ -80,6 +72,8 @@ nicemail=
 </div>
 #####
 nicemailbgcolour=$if(!service.barsbackground)$$if(!companybrand.barsbackground)$212121$else$$companybrand.barsbackground$$endif$$else$$service.barsbackground$$endif$
+#####
+nicemaillogo=$if(!service.logo)$$if(!companybrand.logo)$$ctxhostpart$/img/email-logo.png$else$$ctxhostpart$$companybrand.logoLink$$endif$$else$$ctxhostpart$$service.logoLink$$endif$
 #####
 nicemailparagraph =
       <tr>
