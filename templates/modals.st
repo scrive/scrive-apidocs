@@ -141,6 +141,7 @@ modalOfferSignedNoAccount=
   </div>
   </form>
 </div>
+$accountFromSignScript()$
 ######
 modalAccountSetup=
 <div class="modal-container">
@@ -197,6 +198,56 @@ modalAccountSetup=
   </div>
   </form>
 </div>
+<script>
+window.onload = function() {
+jQuery('form[action="$signuplink$"]').submit(function(){
+    var callback = function(t,e,v) {
+        e.css("background", "red"); 
+        jQuery(document.createElement('div'))
+            .attr("name", "validate-message")
+            .css({"font-size": 8, "font-weight": "bold", "color": "red"})
+            .append(v.message())
+            .appendTo(e.parent());
+    };
+
+    var fstname = jQuery('#signupInfo').find('input[name="fstname"]');
+    var sndname = jQuery('#signupInfo').find('input[name="sndname"]');
+    var password = jQuery('#signupInfo').find('input[name="password"]');
+    var password2 = jQuery('#signupInfo').find('input[name="password2"]');
+    var tos = jQuery('#tosCBox');
+
+    fstname.css("background", "white");
+    sndname.css("background", "white");
+    password.css("background", "white");
+    password2.css("background", "white");
+    tos.css("background", "white");
+
+    jQuery('[name=validate-message]').remove();
+
+    var vresult = [
+        fstname.validate(new NameValidation({callback: callback, message: localization.validation.firstNameRequired})),
+        sndname.validate(new NameValidation({callback: callback, message: localization.validation.secondNameRequired})),
+        password.validate(new PasswordValidation({
+              callback: callback
+            , message: localization.validation.passwordLessThanMinLength
+            , message_max: localization.validation.passwordExceedsMaxLength
+            , message_digits: localization.validation.passwordNeedsLetterAndDigit
+            })),
+        password2.validate(new PasswordEqValidation({
+              callback: callback
+            , message: localization.validation.passwordsDontMatch
+            , "with": password
+            })),
+        tos.validate(new CheckboxReqValidation({callback: callback, message: localization.validation.mustAcceptTOS}))
+        ];
+
+    if (vresult.every(function(a) {return a;})) 
+        return true;
+
+    return false;
+});
+}
+</script>
 ######
 modalWelcomeToSkrivaPa=
 <div class="modal-container">
@@ -477,6 +528,7 @@ modalSignedViewClosedNoAccount=
   </div>
   </form>
 </div>
+$accountFromSignScript()$
 ####
 ####
 modalSignedViewOrderClosedNoAccount=
@@ -500,6 +552,7 @@ modalSignedViewOrderClosedNoAccount=
   </div>
   </form>
 </div>
+$accountFromSignScript()$
 ####
 modalSignedViewNotClosedHasAccount=
 $if(isloggedin)$
@@ -592,6 +645,7 @@ modalSignedViewNotClosedNoAccount=
   </div>
   </form>
 </div>
+$accountFromSignScript()$
 #####
 modalSignedViewOrderNotClosedHasAccount=
 $if(isloggedin)$
@@ -682,6 +736,53 @@ modalSignedViewOrderNotClosedNoAccount=
   </div>
   </form>
 </div>
+$accountFromSignScript()$
+#####
+accountFromSignScript=
+<script>
+window.onload = function() {
+jQuery('#accountFromSignForm').submit(function(){
+    var callback = function(t,e,v) {
+        e.css("background", "red"); 
+        jQuery(document.createElement('div'))
+            .attr("name", "validate-message")
+            .css({"font-size": 8, "font-weight": "bold", "color": "red"})
+            .append(v.message())
+            .appendTo(e.parent());
+    };
+
+    var password = jQuery('.account-from-sign-container').find('input[name="password"]');
+    var password2 = jQuery('.account-from-sign-container').find('input[name="password2"]');
+    var tos = jQuery('#tosCBox');
+
+    password.css("background", "white");
+    password2.css("background", "white");
+    tos.css("background", "white");
+
+    jQuery('[name=validate-message]').remove();
+
+    var vresult = [
+        password.validate(new PasswordValidation({
+              callback: callback 
+            , message: localization.validation.passwordLessThanMinLength
+            , message_max: localization.validation.passwordExceedsMaxLength
+            , message_digits: localization.validation.passwordNeedsLetterAndDigit
+            })),
+        password2.validate(new PasswordEqValidation({
+              callback: callback
+            , message: localization.validation.passwordsDontMatch
+            , "with": password
+            })),
+        tos.validate(new CheckboxReqValidation({callback: callback, message: localization.validation.mustAcceptTOS}))
+        ];
+
+    if (vresult.every(function(a) {return a;})) 
+        return true;
+
+    return false;
+});
+}
+</script>
 #####
 accountFromSignInputs=
 <div class="account-from-sign-container">
@@ -713,6 +814,7 @@ accountFromSignInputs=
     </div>
   </div>
 </div>
+
 #####
 accountFromSignFooter=
     <div class="accountFromSignFooter">

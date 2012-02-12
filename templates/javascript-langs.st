@@ -249,5 +249,14 @@ javascriptLocalisation =
                 }
            }
 
-   }
+         , validation : {
+                firstNameRequired: "$_flashMessageFirstNameIsRequired()$"
+              , secondNameRequired: "$_flashMessageSecondNameIsRequired()$"
+              , passwordExceedsMaxLength: "$_PasswordValidationMessageInputExceedsMaxLength()$"
+              , passwordLessThanMinLength: "$_PasswordValidationMessageInputLessThanMinLength()$"
+              , passwordNeedsLetterAndDigit: "$_PasswordValidationMessageNeedsLetterAndDigit()$"
+              , passwordsDontMatch: "$_PasswordValidationMessagePasswordsDontMatch()$"
+              , mustAcceptTOS: "$_flashMessageMustAcceptTOS()$"
+         }
+    }
 ####

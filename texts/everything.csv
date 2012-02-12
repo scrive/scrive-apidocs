@@ -3224,3 +3224,9 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_selectFileToUpload","Välj fil från dator",,"Select file from computer"
 "_atLeastOnePersonOtherThenAuthor","Document needs to have at least one more person",,"Document needs to have at least one more person"
 "_fieldnameRestricted","Field name restricted",,"Field name restricted"
+"_PasswordValidationMessageInputExceedsMaxLength","Lösenord får max innehålla 250 tecken.",,"Password must contain max 250 characters."
+"_PasswordValidationMessageInputLessThanMinLength","Lösenord måste innehålla minst 8 tecken.",,"Password must contain at least 8 characters."
+"_PasswordValidationMessageNeedsLetterAndDigit","Lösenord måste innehålla åtminstone två bokstäver
+ och två nummer.",,"Password must contain at least two letters and two
+ digits."
+"_PasswordValidationMessagePasswordsDontMatch","Nytt lösenord matchar inte med Upprepa lösenord",,"The two passwords do not match."

@@ -20,7 +20,6 @@ import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Company.Model
 import DB.Classes
-import Data.Semantic
 import Misc
 
 import Control.Monad
@@ -342,13 +341,15 @@ replaceSignOrder signorder sd = sd { signatorysignorder = signorder }
  -}
 canUserInfoViewDirectly :: UserID -> BS.ByteString -> Document -> Bool
 canUserInfoViewDirectly userid email doc =
-  case getSigLinkFor doc (Or userid email) of
-    Nothing                                                                    -> False
-    Just siglink | signatorylinkdeleted siglink                                -> False
-    Just siglink | isAuthor siglink                                            -> True
-    Just _       | Preparation == documentstatus doc                           -> False
-    Just siglink | isActivatedSignatory (documentcurrentsignorder doc) siglink -> True
-    _                                                                          -> False
+    (checkSigLink' $ getSigLinkFor doc userid) || (checkSigLink' $ getSigLinkFor doc email)
+  where 
+    checkSigLink' a = case a of
+      Nothing                                                                    -> False
+      Just siglink | signatorylinkdeleted siglink                                -> False
+      Just siglink | isAuthor siglink                                            -> True
+      Just _       | Preparation == documentstatus doc                           -> False
+      Just siglink | isActivatedSignatory (documentcurrentsignorder doc) siglink -> True
+      _                                                                          -> False
 
 {- |
    Can a user view this document?
