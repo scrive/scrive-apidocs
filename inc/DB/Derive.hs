@@ -51,7 +51,11 @@ newtypeDeriveUnderlyingReadShow t = do
       s' <- newName "s"
       v' <- newName "v"
       let readsPrecE = VarE 'readsPrec `AppE` VarE p' `AppE` VarE s'
-          readDecE = VarE 'readDec `AppE` VarE s'
+          -- Note: readSigned below is needed, because readDec alone
+          -- is not able to parse strings like " 123" and thus reading
+          -- data types that contain fields of type that uses readDec
+          -- in its Read instance doesn't work.
+          readDecE = VarE 'readSigned `AppE` VarE 'readDec `AppE` VarE s'
           correctRead = if typename `elem` [ ''Integer
                                            , ''Int
                                            , ''Int8
