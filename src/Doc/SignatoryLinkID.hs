@@ -24,18 +24,11 @@ import Numeric
 -- inside a document scope.
 newtype SignatoryLinkID = SignatoryLinkID { unSignatoryLinkID :: Int64 }
     deriving (Eq, Ord, Typeable, Data)
-
-instance Show SignatoryLinkID where
-    showsPrec prec (SignatoryLinkID x) = showsPrec prec x
-
-instance Read SignatoryLinkID where
-    readsPrec _prec = let make (i,v) = (SignatoryLinkID i,v)
-                      in map make . readSigned readDec
+$(newtypeDeriveUnderlyingReadShow ''SignatoryLinkID)
+$(newtypeDeriveConvertible ''SignatoryLinkID)
 
 instance FromReqURI SignatoryLinkID where
     fromReqURI = readM
 
 instance Version SignatoryLinkID
-
 $(deriveSerialize ''SignatoryLinkID)
-$(newtypeDeriveConvertible ''SignatoryLinkID)
