@@ -6,7 +6,8 @@ module Mails.Data (
   , Attachment(..)
   , Address(..)
   , SendGridEvent(..)
-  , Event(SendGridEvent)
+  , MailGunEvent(..)
+  , Event(..)
   , Mail(..)
   ) where
 
@@ -64,24 +65,29 @@ $(jsonableDeriveConvertible [t| Address |])
 $(jsonableDeriveConvertible [t| [Address] |])
 
 data SendGridEvent =
-    Processed
-  | Opened
-  | Dropped String              -- ^ drop reason
-  | Deferred String Int32       -- ^ response, delivery attempt
-  | Delivered String            -- ^ response from mta
-  | Bounce String String String -- ^ status, reason, type
-  | SpamReport
-  | Unsubscribe
+    SG_Processed
+  | SG_Opened
+  | SG_Dropped String              -- ^ drop reason
+  | SG_Deferred String Int32       -- ^ response, delivery attempt
+  | SG_Delivered String            -- ^ response from mta
+  | SG_Bounce String String String -- ^ status, reason, type
+  | SG_SpamReport
+  | SG_Unsubscribe
     deriving (Eq, Ord, Show, Data, Typeable)
 
--- we define additional constructor UnusedEvent there, because if
--- data has only one, jsoned output doesn't contain its name and would
--- require us to write migration when we add another one. by defining
--- additional, dummy costructor we bypass it.
+data MailGunEvent =
+    MG_Opened
+  | MG_Delivered
+  | MG_Clicked String               -- ^ url
+  | MG_Unsubscribed String          -- ^ domain
+  | MG_Complained String            -- ^ domain
+  | MG_Bounced String String String -- ^ domain, code, error
+  | MG_Dropped String               -- ^ drop reason
+    deriving (Eq, Ord, Show, Data, Typeable)
 
 data Event =
     SendGridEvent String SendGridEvent String -- ^ email, event, category
-  | UnusedEvent -- ^ unused
+  | MailGunEvent String MailGunEvent          -- ^ email, event
   deriving (Eq, Ord, Show, Data, Typeable)
 $(jsonableDeriveConvertible [t| Event |])
 
