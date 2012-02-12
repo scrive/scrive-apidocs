@@ -296,7 +296,8 @@ window.FieldBasicDesignView = Backbone.View.extend({
         var input = InfoTextInput.init({
                                  infotext: field.nicename(),
                                  value: field.value(),
-                                 cssClass :'fieldvalue',       
+                                 cssClass :'fieldvalue',
+                                 inputname : field.name(), //Added only for selenium tests
                                  onChange : function(value) {
                                     field.setValue(value);    
                                   }
@@ -395,7 +396,8 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
           this.input = InfoTextInput.init({
                                  infotext: field.nicename(),
                                  value: field.value(),
-                                 cssClass :'fieldvalue',       
+                                 cssClass :'fieldvalue',
+                                 inputname : field.name(), //Added only for selenium tests
                                  onChange : function(value) {
                                     field.setValue(value);    
                                   }
@@ -418,6 +420,7 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
                                  infotext: localization.fieldName,
                                  value: field.name(),
                                  cssClass :'fieldvalue',
+                                 inputname : field.name(), //Added only for selenium tests
                                  onChange : function(value) {
                                     field.setName(value);    
                                   }

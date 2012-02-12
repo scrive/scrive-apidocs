@@ -727,7 +727,7 @@ documentsPageSize = 100
 handleBackdoorQuery :: Kontrakcja m => String -> m String
 handleBackdoorQuery email = onlySalesOrAdmin $ onlyBackdoorOpen $ do
   minfo <- listToMaybe . filter ((email `elem`) . map addrEmail . mailTo)
-    <$> runDBQuery GetIncomingEmails
+    <$> runDBQuery GetEmails
   return $ maybe "No email found" mailContent minfo
 
 -- This method can be used do reseal a document

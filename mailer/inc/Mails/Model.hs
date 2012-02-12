@@ -7,6 +7,7 @@ module Mails.Model (
   , DeleteEmail(..)
   , GetUnreadEvents(..)
   , GetIncomingEmails(..)
+  , GetEmails(..)
   , GetEmail(..)
   , DeferEmail(..)
   , MarkEmailAsSent(..)
@@ -89,6 +90,12 @@ instance DBQuery GetIncomingEmails [Mail] where
     _ <- kExecute []
     fetchMails
 
+data GetEmails = GetEmails
+instance DBQuery GetEmails [Mail] where
+  dbQuery GetEmails = do
+    kPrepare $ selectMailsSQL ++ "WHERE title IS NOT NULL AND content IS NOT NULL ORDER BY id DESC"
+    _ <- kExecute []
+    fetchMails
 -- below handlers are for use within mailer only. I can't hide them properly
 -- since mailer is not separated into another package yet so it has to be
 -- here for now. do not use it though.

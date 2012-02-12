@@ -29,14 +29,19 @@ describe "basic signing" do
   it "allows users to sign basic contracts if they've checked the sign guard" do
 
     @loginhelper.login_as(@ctx.props.tester_email, @ctx.props.tester_password)
+    puts "Logged in"
     begin
       @dochelper.uploadContract
+      puts "Use basic mode"
       @dochelper.useBasicMode
+      puts "Fill in counterpart"
       @dochelper.enterCounterpart(@ctx.props.first_counterpart_fstname, @ctx.props.first_counterpart_sndname, @ctx.props.first_counterpart_email)
+      puts "About to sign and send"
       @dochelper.signAndSend
     ensure
       @loginhelper.logout
     end
+    puts "Getting the mail"
 
     @emailhelper.follow_link_in_latest_mail_for @ctx.props.first_counterpart_email
 
