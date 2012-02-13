@@ -327,7 +327,7 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
         this.render();
     },
     ddIcon : function() {
-        var icon =  $("<a class='ddIcon' href='#'/>")
+        var icon =  $("<div class='ddIcon' />")
         var field = this.model;
         var document = field.signatory().document();
         if (document.mainfile() != undefined && document.mainfile().view != undefined)
