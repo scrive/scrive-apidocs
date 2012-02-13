@@ -204,10 +204,11 @@ jsonMailAPI mailapi username user pdfs plains content = do
     mzero
 
   -- the mainfile is attached
-  let mpdf = getByAttachmentName (dcrMainFile dcr) pdfs
+  let mpdf = getByAttachmentName (strip $ dcrMainFile dcr) pdfs
 
   when (isNothing mpdf) $ do
     Log.jsonMailAPI $ (show $ toSeconds ctxtime) ++ " Missing pdf attachment: " ++ show (dcrMainFile dcr)
+    Log.jsonMailAPI $ "Here are the attachments: " ++ show (map fst pdfs)
     Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content
 
     mzero
@@ -302,5 +303,5 @@ getByAttachmentName :: String -> [(MIME.Type, BS.ByteString)] -> Maybe (MIME.Typ
 getByAttachmentName name ps =
   find byname ps
     where byname p = case lookup "name" (MIME.mimeParams $ fst p) of
-            Just n' -> name == n'
+            Just n' -> name == decodeWords n'
             _       -> False
