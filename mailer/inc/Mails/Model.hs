@@ -93,7 +93,7 @@ instance DBQuery GetIncomingEmails [Mail] where
 data GetEmails = GetEmails
 instance DBQuery GetEmails [Mail] where
   dbQuery GetEmails = do
-    kPrepare $ selectMailsSQL ++ "WHERE title IS NOT NULL AND content IS NOT NULL ORDER BY id DESC"
+    kPrepare $ selectMailsSQL ++ "WHERE title IS NOT NULL AND content IS NOT NULL ORDER BY to_be_sent"
     _ <- kExecute []
     fetchMails
 -- below handlers are for use within mailer only. I can't hide them properly
