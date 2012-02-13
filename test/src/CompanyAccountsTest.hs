@@ -320,10 +320,10 @@ test_removingCompanyAccountInvite conn = withTestEnvironment conn $ do
 test_removingCompanyAccountWorks :: Nexus -> Assertion
 test_removingCompanyAccountWorks conn = withTestEnvironment conn $ do
   (adminuser, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
-  Just standarduser <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
+  Just standarduser <- addNewCompanyUser "Bob" "Blue" "jony@blue.com" (companyid company)
   docid <- addRandomDocumentWithAuthor standarduser
 
-  _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "bob@blue.com" "Bob" "Blue"
+  _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "jony@blue.com" "Bob" "Blue"
 
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just adminuser })
@@ -331,12 +331,9 @@ test_removingCompanyAccountWorks conn = withTestEnvironment conn $ do
 
   req <- mkRequest POST [ ("remove", inText "True")
                         , ("removeid", inText $ show (userid standarduser))
-                        , ("removeemail", inText $ "bob@blue.com")
+                        , ("removeemail", inText $ "jony@blue.com")
                         ]
-  (res, ctx') <- runTestKontra req ctx $ handlePostCompanyAccounts >>= sendRedirect
-
-  assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
+  (_res, ctx') <- runTestKontra req ctx $ handlePostCompanyAccounts
   assertBool "Flash message is of type indicating success" $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
   deleteduser <- dbQuery $ GetUserByID (userid standarduser)
   assertEqual "User has been deleted" Nothing deleteduser
