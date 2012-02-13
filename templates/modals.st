@@ -205,6 +205,7 @@ jQuery('form[action="$signuplink$"]').submit(function(){
         e.css("background", "red"); 
         jQuery(document.createElement('div'))
             .attr("name", "validate-message")
+            .addClass('failed-validation')
             .css({"font-size": 8, "font-weight": "bold", "color": "red"})
             .append(v.message())
             .appendTo(e.parent());
@@ -746,6 +747,7 @@ jQuery('#accountFromSignForm').submit(function(){
         e.css("background", "red"); 
         jQuery(document.createElement('div'))
             .attr("name", "validate-message")
+            .addClass('failed-validation')
             .css({"font-size": 8, "font-weight": "bold", "color": "red"})
             .append(v.message())
             .appendTo(e.parent());
