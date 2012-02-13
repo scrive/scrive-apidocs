@@ -46,6 +46,7 @@ mailApiTests env = testGroup "MailAPI" [
     , testCase "test exchange email" $ testSuccessfulDocCreation env "test/mailapi/email_exchange.eml" 2
     , testCase "test 2 sig model from outlook mac" $ testSuccessfulDocCreation env "test/mailapi/email_outlook_viktor.eml" 3
     , testCase "test json with 2 sigs" $ testSuccessfulDocCreation env "test/mailapi/email_onesig_json.eml" 2
+    , testCase "test json with 2 sigs (from Roger)" $ testSuccessfulDocCreation env "test/mailapi/roger_json.eml" 2
     ]
 
 testParseMimes :: String -> Assertion
