@@ -49,7 +49,7 @@ module DB.Nexus
 )
 where
 
-import Control.Monad.IO.Class
+import Control.Monad.Trans (liftIO, MonadIO)
 import Database.HDBC
 import Database.HDBC.Statement
 import Data.IORef
@@ -92,8 +92,10 @@ data Nexus = forall conn . IConnection conn =>
 
 -- | Wrap an existing 'IConnection' object into a 'Nexus' statistics
 -- counting mechanism'
-mkNexus :: (IConnection conn, MonadIO m) => conn -> m Nexus
-mkNexus conn = liftIO $ newIORef emptyStats >>= return . Nexus conn
+mkNexus :: (MonadIO m, IConnection conn) => conn -> m Nexus
+mkNexus conn = do
+  stats <- liftIO $ newIORef emptyStats
+  return (Nexus conn stats)
 
 -- | Retrieve current 'NexusStats' from a 'Nexus'. Does not clear
 -- stats, so you may use this many times a day.

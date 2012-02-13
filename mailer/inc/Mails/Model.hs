@@ -19,8 +19,8 @@ import Database.HDBC
 
 import DB.Classes
 import DB.Fetcher2
-import DB.Types
 import DB.Utils
+import MagicHash (MagicHash)
 import Mails.Data
 import MinutesTime
 import OurPrelude

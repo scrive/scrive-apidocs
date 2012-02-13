@@ -2,7 +2,6 @@ module MailAPITest (mailApiTests) where
 
 import Control.Applicative
 import Data.Maybe
-import DB.Nexus
 import Happstack.Server
 import Test.Framework
 import Test.Framework.Providers.HUnit
@@ -29,24 +28,24 @@ import qualified Log
 
 import API.MailAPI
 
-mailApiTests :: Nexus -> Test
-mailApiTests conn = testGroup "MailAPI" [
+mailApiTests :: DBEnv -> Test
+mailApiTests env = testGroup "MailAPI" [
       --some tests are for JSON, which we don't use anymore
-      --testCase "create proper document with one signatory" $ testSuccessfulDocCreation conn "test/mailapi/email_onesig_ok.eml" 2
-      --testCase "fail if user doesn't exist" $ testFailureNoSuchUser conn
-      testCase "Create simple email document with one signatory" $ testSuccessfulDocCreation conn "test/mailapi/email_simple_onesig.eml" 2
+      --testCase "create proper document with one signatory" $ testSuccessfulDocCreation env "test/mailapi/email_onesig_ok.eml" 2
+      --testCase "fail if user doesn't exist" $ testFailureNoSuchUser env
+      testCase "Create simple email document with one signatory" $ testSuccessfulDocCreation env "test/mailapi/email_simple_onesig.eml" 2
     , testCase "Parse mime document email_onesig_ok.eml" $ testParseMimes "test/mailapi/email_onesig_ok.eml"
     , testCase "Parse mime document email_simple_onesig.eml" $ testParseMimes "test/mailapi/email_simple_onesig.eml"
     , testCase "Parse mime document email_outlook_three.eml" $ testParseMimes "test/mailapi/email_outlook_three.eml"
     , testCase "Parse mime document email_outlook_viktor.eml" $ testParseMimes "test/mailapi/email_outlook_viktor.eml"
     , testCase "Parse mime document email_gmail_eric.eml" $ testParseMimes "test/mailapi/email_gmail_eric.eml"
-    , testCase "Create outlook email document with three signatories" $ testSuccessfulDocCreation conn "test/mailapi/email_outlook_three.eml" 4
-    , testCase "test lukas's error email" $ testSuccessfulDocCreation conn "test/mailapi/lukas_mail_error.eml" 2
-    , testCase "test eric's error email" $ testSuccessfulDocCreation conn "test/mailapi/eric_email_error.eml" 2    
-    , testCase "test lukas's funny title" $ testSuccessfulDocCreation conn "test/mailapi/email_weird_subject.eml" 2
-    , testCase "test exchange email" $ testSuccessfulDocCreation conn "test/mailapi/email_exchange.eml" 2
-    , testCase "test 2 sig model from outlook mac" $ testSuccessfulDocCreation conn "test/mailapi/email_outlook_viktor.eml" 3
-    , testCase "test json with 2 sigs" $ testSuccessfulDocCreation conn "test/mailapi/email_onesig_json.eml" 2
+    , testCase "Create outlook email document with three signatories" $ testSuccessfulDocCreation env "test/mailapi/email_outlook_three.eml" 4
+    , testCase "test lukas's error email" $ testSuccessfulDocCreation env "test/mailapi/lukas_mail_error.eml" 2
+    , testCase "test eric's error email" $ testSuccessfulDocCreation env "test/mailapi/eric_email_error.eml" 2    
+    , testCase "test lukas's funny title" $ testSuccessfulDocCreation env "test/mailapi/email_weird_subject.eml" 2
+    , testCase "test exchange email" $ testSuccessfulDocCreation env "test/mailapi/email_exchange.eml" 2
+    , testCase "test 2 sig model from outlook mac" $ testSuccessfulDocCreation env "test/mailapi/email_outlook_viktor.eml" 3
+    , testCase "test json with 2 sigs" $ testSuccessfulDocCreation env "test/mailapi/email_onesig_json.eml" 2
     ]
 
 testParseMimes :: String -> Assertion
@@ -61,13 +60,13 @@ testParseMimes mimepath = do
   assertBool ("Should be exactly one pdf, found " ++ show pdfs) (length pdfs == 1)
   assertBool ("Should be exactly one plaintext, found " ++ show plains) (length plains == 1)
 
-testSuccessfulDocCreation :: Nexus -> String -> Int -> Assertion
-testSuccessfulDocCreation conn emlfile sigs = withMyTestEnvironment conn $ \tmpdir -> do
+testSuccessfulDocCreation :: DBEnv -> String -> Int -> Assertion
+testSuccessfulDocCreation env emlfile sigs = withMyTestEnvironment env $ \tmpdir -> do
     req <- mkRequest POST [("mail", inFile emlfile)]
     uid <- createTestUser
     muser <- dbQuery $ GetUserByID uid
     globaltemplates <- readGlobalTemplates
-    ctx <- (\c -> c { ctxdbconn = conn, ctxdocstore = tmpdir, ctxmaybeuser = muser })
+    ctx <- (\c -> c { ctxdbenv = env, ctxdocstore = tmpdir, ctxmaybeuser = muser })
       <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     _ <- dbUpdate $ SetUserMailAPI uid $ Just UserMailAPI {
           umapiKey = read "ef545848bcd3f7d8"
@@ -91,11 +90,11 @@ testSuccessfulDocCreation conn emlfile sigs = withMyTestEnvironment conn $ \tmpd
     assertBool "document is in error!" $ not $ isDocumentError doc'
 
 
-_testFailureNoSuchUser :: Nexus -> Assertion
-_testFailureNoSuchUser conn = withMyTestEnvironment conn $ \tmpdir -> do
+_testFailureNoSuchUser :: DBEnv -> Assertion
+_testFailureNoSuchUser env = withMyTestEnvironment env $ \tmpdir -> do
     req <- mkRequest POST [("mail", inFile "test/mailapi/email_simple_onesig.eml")]
     globaltemplates <- readGlobalTemplates
-    ctx <- (\c -> c { ctxdbconn = conn, ctxdocstore = tmpdir })
+    ctx <- (\c -> c { ctxdbenv = env, ctxdocstore = tmpdir })
       <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     liftIO $ catch (do _ <- runTestKontra req ctx  handleMailAPI
                        assertFailure "Should not work"
@@ -130,9 +129,9 @@ jsonToStringList = (mapSnd toString) . fromJSObject
         toString (JSString s) = fromJSString s
         toString _ = error "Pattern not matched -> Waiting for JSON string, but other structure found"
 -}
-withMyTestEnvironment :: Nexus -> (FilePath -> DB ()) -> Assertion
-withMyTestEnvironment conn f =
-  withSystemTempDirectory "mailapi-test-" (\d -> withTestEnvironment conn (f d))
+withMyTestEnvironment :: DBEnv -> (FilePath -> DB ()) -> Assertion
+withMyTestEnvironment env f =
+  withSystemTempDirectory "mailapi-test-" (\d -> withTestEnvironment env (f d))
 
 createTestUser :: DB UserID
 createTestUser = do

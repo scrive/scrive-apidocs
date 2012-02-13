@@ -15,6 +15,7 @@ import AppConf
 import API.Service.Model
 
 import AppView as V
+import Crypto.RNG (CryptoRNGState)
 import DB.Classes
 import Doc.DocStateData
 import Kontra
@@ -66,6 +67,7 @@ data AppGlobals
     = AppGlobals { templates       :: MVar (ClockTime, KontrakcjaGlobalTemplates)
                  , filecache       :: MemCache.MemCache FileID BS.ByteString
                  , docscache       :: MVar (Map.Map FileID JpegPages)
+                 , cryptorng       :: CryptoRNGState
                  }
 
 
@@ -170,7 +172,7 @@ appHandler handleRoutes appConf appGlobals = do
 
   rq <- askRq
 
-  session <- handleSession
+  session <- handleSession (cryptorng appGlobals)
   ctx <- createContext rq session
   response <- handle rq session ctx
   finishTime <- liftIO getClockTime
@@ -199,14 +201,11 @@ appHandler handleRoutes appConf appGlobals = do
       let newmagichashes = ctxmagichashes ctx'
       F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
       updateSessionWithContextData session newsessionuser newelegtrans newmagichashes
-      stats <- liftIO $ getNexusStats (ctxdbconn ctx')
+      stats <- liftIO $ getNexusStats (nexus $ ctxdbenv ctx')
 
-      Log.debug $ "SQL for " ++ rqUri rq ++ ": queries " ++ show (nexusQueries stats) ++
-           ", params " ++ show (nexusParams stats) ++
-                         ", rows " ++ show (nexusRows stats) ++
-                                     ", values " ++ show (nexusValues stats)
+      Log.debug $ "SQL for " ++ rqUri rq ++ ": " ++ show stats
 
-      liftIO $ disconnect $ ctxdbconn ctx'
+      liftIO $ disconnect $ nexus $ ctxdbenv ctx'
       return res
 
     createContext rq session = do
@@ -229,14 +228,15 @@ appHandler handleRoutes appConf appGlobals = do
                      _ -> unknownIPAddress
 
       psqlconn <- liftIO $ connectPostgreSQL $ dbConfig appConf
-      conn <- liftIO $ mkNexus psqlconn
+      dbenv <- mkDBEnv psqlconn (cryptorng appGlobals)
       minutestime <- liftIO getMinutesTime
-      muser <- getUserFromSession conn session
-      mcompany <- getCompanyFromSession conn session
+      muser <- getUserFromSession dbenv session
+      mcompany <- getCompanyFromSession dbenv session
       location <- getLocationFromSession session
       mservice <- currentLink >>= \clink -> if (hostpart appConf `isPrefixOf` clink)
                                              then return Nothing
-                                             else ioRunDB conn $ dbQuery $ GetServiceByLocation $ toServiceLocation clink
+                                             else ioRunDB dbenv $ dbQuery $ GetServiceByLocation $ toServiceLocation clink
+
       flashmessages <- withDataFn F.flashDataFromCookie $ maybe (return []) $ \fval ->
           case F.fromCookieValue (aesConfig appConf) fval of
                Just flashes -> return flashes
@@ -259,7 +259,7 @@ appHandler handleRoutes appConf appGlobals = do
                 , ctxtime = minutestime
                 , ctxnormalizeddocuments = docscache appGlobals
                 , ctxipnumber = peerip
-                , ctxdbconn = conn
+                , ctxdbenv = dbenv
                 , ctxdocstore = docstore appConf
                 , ctxs3action = defaultAWSAction appConf
                 , ctxgscmd = gsCmd appConf

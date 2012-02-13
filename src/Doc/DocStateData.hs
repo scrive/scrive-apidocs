@@ -49,10 +49,10 @@ import Data.Either
 import Data.Int
 import Data.Maybe
 import DB.Derive
-import DB.Types
 import Happstack.Data
 import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
+import MagicHash (MagicHash)
 import MinutesTime
 import Misc
 import User.Model

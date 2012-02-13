@@ -71,9 +71,9 @@ module Doc.Model
 
 import API.Service.Model
 import DB.Classes
---import DB.Fetcher
 import DB.Fetcher2
-import DB.Types
+import MagicHash (MagicHash)
+import Crypto.RNG(random)
 import DB.Utils
 import File.File
 import File.FileID
@@ -98,7 +98,6 @@ import Util.SignatoryLinkUtils
 import Doc.DocProcess
 import Doc.DocStateCommon
 import qualified Log
-import System.Random (randomIO)
 import Control.Monad.IO.Class
 import Control.Monad
 import qualified Control.Exception as E
@@ -1213,7 +1212,7 @@ instance Actor a => DBUpdate (NewDocument a) (Either String Document) where
                         else [SignatoryPartner, SignatoryAuthor]
       linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
 
-      magichash <- liftIO randomIO
+      magichash <- random
 
       let authorlink0 = signLinkFromDetails'
                         (signatoryDetailsFromUser user mcompany)
@@ -1354,7 +1353,7 @@ instance Actor a => DBUpdate (RestartDocument a) (Either String Document) where
       let signatoriesDetails = map (\x -> (signatorydetails x, signatoryroles x, signatorylinkid x)) $ documentsignatorylinks doc
           Just asl = getAuthorSigLink doc
       newSignLinks <- flip mapM signatoriesDetails $ do \(a,b,c) -> do
-                                                             magichash <- liftIO randomIO
+                                                             magichash <- random
 
                                                              return $ signLinkFromDetails' a b c magichash
       let Just authorsiglink0 = find isAuthor newSignLinks
@@ -1749,7 +1748,7 @@ instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document)
             forM_ signatories $ \(details, roles, mcsvupload) -> do
                      linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
 
-                     magichash <- liftIO randomIO
+                     magichash <- random
 
                      let link' = (signLinkFromDetails' details roles linkid magichash)
                                  { signatorylinkcsvupload = mcsvupload }
@@ -1787,7 +1786,7 @@ instance DBUpdate SignLinkFromDetailsForTest SignatoryLink where
       kRunRaw "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
       linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
 
-      magichash <- liftIO randomIO
+      magichash <- random
 
       let link = signLinkFromDetails' details
                         roles linkid magichash

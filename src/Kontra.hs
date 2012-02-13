@@ -33,6 +33,7 @@ import Context
 import Control.Applicative
 import Control.Monad.Reader
 import Control.Monad.State
+import Crypto.RNG (CryptoRNG, getCryptoRNGState)
 import DB.Classes
 import ELegitimation.ELegTransaction
 import Doc.DocStateData
@@ -53,8 +54,11 @@ newtype Kontra a = Kontra { unKontra :: ServerPartT (StateT Context IO) a }
 
 instance Kontrakcja Kontra
 
+instance CryptoRNG Kontra where
+  getCryptoRNGState = Kontra $ gets (rngstate . ctxdbenv)
+
 instance DBMonad Kontra where
-  getConnection = ctxdbconn <$> getContext
+  getDBEnv = ctxdbenv <$> getContext
   handleDBError e = do
     Log.error $ show e
     mzero
@@ -134,23 +138,23 @@ switchLocale locale =
          ctxlocale     = locale,
          ctxtemplates  = localizedVersion locale (ctxglobaltemplates ctx)
      }
-    
-newPasswordReminderLink :: MonadIO m => User -> m KontraLink
+
+newPasswordReminderLink :: (MonadIO m, CryptoRNG m) => User -> m KontraLink
 newPasswordReminderLink user = do
-    action <- liftIO $ newPasswordReminder user
+    action <- newPasswordReminder user
     return $ LinkPasswordReminder (actionID action)
                                   (prToken $ actionType action)
 
-newViralInvitationSentLink :: MonadIO m => Email -> UserID -> m KontraLink
+newViralInvitationSentLink :: (MonadIO m, CryptoRNG m) => Email -> UserID -> m KontraLink
 newViralInvitationSentLink email inviterid = do
-    action <- liftIO $ newViralInvitationSent email inviterid
+    action <- newViralInvitationSent email inviterid
     return $ LinkViralInvitationSent (actionID action)
                                      (visToken $ actionType action)
                                      (BS.toString $ unEmail email)
 
-newAccountCreatedLink :: MonadIO m => User -> m KontraLink
+newAccountCreatedLink :: (MonadIO m, CryptoRNG m) => User -> m KontraLink
 newAccountCreatedLink user = do
-    action <- liftIO $ newAccountCreated user
+    action <- newAccountCreated user
     return $ LinkAccountCreated (actionID action)
                                 (acToken $ actionType action)
                                 (BS.toString $ getEmail user)

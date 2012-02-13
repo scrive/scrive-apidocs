@@ -2,8 +2,8 @@ module ELegitimation.ELegTransaction where
 
 import Happstack.Data
 
-import DB.Types
 import Doc.DocStateData
+import MagicHash (MagicHash)
 import MinutesTime
 
 data ELegTransaction = ELegTransaction { transactiontransactionid   :: String

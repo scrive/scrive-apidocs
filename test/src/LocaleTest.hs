@@ -1,7 +1,6 @@
 module LocaleTest (localeTests) where
 
 import Control.Applicative
-import DB.Nexus
 import Happstack.Server
 import Test.Framework
 import Test.Framework.Providers.HUnit
@@ -27,14 +26,14 @@ import Misc
 import EvidenceLog.Model
 
 
-localeTests :: Nexus -> Test
-localeTests conn = testGroup "Locale" [
+localeTests :: DBEnv -> Test
+localeTests env = testGroup "Locale" [
       testCase "restricts allowed locales" $ testRestrictsAllowedLocales
-    , testCase "logged in locale switching" $ testLoggedInLocaleSwitching conn
+    , testCase "logged in locale switching" $ testLoggedInLocaleSwitching env
     , testCase "doc locale can be switched from sweden to britain" $
-               testDocumentLocaleSwitchToBritain conn
+               testDocumentLocaleSwitchToBritain env
     , testCase "doc locale can be switched from britain to sweden" $
-               testDocumentLocaleSwitchToSweden conn
+               testDocumentLocaleSwitchToSweden env
     ]
 
 {- |
@@ -58,12 +57,12 @@ testRestrictsAllowedLocales = do
     Checks along the way that the user has the correct locale, and also that the
     context has the correct locale.
 -}
-testLoggedInLocaleSwitching :: Nexus -> Assertion
-testLoggedInLocaleSwitching conn = withTestEnvironment conn $ do
+testLoggedInLocaleSwitching :: DBEnv -> Assertion
+testLoggedInLocaleSwitching env = withTestEnvironment env $ do
     --create a new uk user and login
     user <- createTestUser REGION_GB LANG_EN
     globaltemplates <- readGlobalTemplates
-    ctx0 <- (\c -> c { ctxdbconn = conn, ctxlocale = mkLocale REGION_GB LANG_EN })
+    ctx0 <- (\c -> c { ctxdbenv = env, ctxlocale = mkLocale REGION_GB LANG_EN })
       <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     req0 <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
     (res1, ctx1) <- runTestKontra req0 ctx0 $ handleLoginPost >>= sendRedirect
@@ -103,11 +102,11 @@ testLoggedInLocaleSwitching conn = withTestEnvironment conn $ do
       assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx) == Just uid
       assertBool "No flash messages were added" $ null $ ctxflashmessages ctx
 
-testDocumentLocaleSwitchToBritain :: Nexus -> Assertion
-testDocumentLocaleSwitchToBritain conn = withTestEnvironment conn $ do
+testDocumentLocaleSwitchToBritain :: DBEnv -> Assertion
+testDocumentLocaleSwitchToBritain env = withTestEnvironment env $ do
   user <- createTestUser REGION_SE LANG_SE
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
   doc <- createTestElegDoc user (ctxtime ctx)
 
@@ -118,11 +117,11 @@ testDocumentLocaleSwitchToBritain conn = withTestEnvironment conn $ do
   -- check that eleg is used
   assertEqual "Eleg is used" [ELegitimationIdentification] (documentallowedidtypes doc)
 
-testDocumentLocaleSwitchToSweden :: Nexus -> Assertion
-testDocumentLocaleSwitchToSweden conn = withTestEnvironment conn $ do
+testDocumentLocaleSwitchToSweden :: DBEnv -> Assertion
+testDocumentLocaleSwitchToSweden env = withTestEnvironment env $ do
   user <- createTestUser REGION_GB LANG_EN
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
   doc <- createTestElegDoc user (ctxtime ctx)
 

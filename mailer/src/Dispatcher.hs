@@ -5,19 +5,18 @@ module Dispatcher (
 
 import Control.Concurrent
 import Control.Monad
-import DB.Nexus
-import Database.HDBC.PostgreSQL
 import qualified Control.Exception as E
 
+import Crypto.RNG (CryptoRNGState)
 import DB.Classes
 import Sender
 import Mails.Model
 import MinutesTime
 import qualified Log (mailingServer)
 
-dispatcher :: Sender -> String -> IO ()
-dispatcher sender dbconf = do
-  res <- withPostgreSQL dbconf $ \conn' -> mkNexus conn' >>= \conn -> E.try $ ioRunDB conn $ do
+dispatcher :: CryptoRNGState -> Sender -> String -> IO ()
+dispatcher rng sender dbconf = do
+  res <- withPostgreSQLDB' dbconf rng $ \dbenv -> E.try $ ioRunDB dbenv $ do
     mails <- dbQuery GetIncomingEmails
     forM_ mails $ \mail@Mail{mailID} -> do
       if isNotSendable mail
@@ -45,7 +44,7 @@ dispatcher sender dbconf = do
     Left (e::E.SomeException) -> do
       Log.mailingServer $ "Exception '" ++ show e ++ "' thrown while sending emails, sleeping for five minutes."
       threadDelay $ 5 * 60 * second
-  dispatcher sender dbconf
+  dispatcher rng sender dbconf
   where
     second = 1000000
     isNotSendable Mail{..} =

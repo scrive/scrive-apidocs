@@ -50,7 +50,7 @@ import Doc.DocUtils
 import Company.Model
 import User.Model
 import Data.Foldable (fold)
-import System.Random (randomIO)
+import Crypto.RNG (CryptoRNG, randomBytes)
 import Util.SignatoryLinkUtils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
@@ -129,7 +129,7 @@ documentFromParam = do
     when (isNothing mdocument || (not $ sameService srvs mdocument)) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists"
     return $ fromJust mdocument
 
-embeddDocumentFrame :: Kontrakcja m => IntegrationAPIFunction m APIResponse
+embeddDocumentFrame :: (CryptoRNG m, Kontrakcja m) => IntegrationAPIFunction m APIResponse
 embeddDocumentFrame = do
     ctx <- getContext
     srvs <-  service <$> ask
@@ -312,7 +312,7 @@ userFromTMP uTMP comp = do
     user <- case muser of
               Just u -> return u
               Nothing -> do
-                password <- liftIO $ createPassword . BS.fromString =<< (sequence $ replicate 12 randomIO)
+                password <- createPassword =<< randomBytes 12
                 mu <- runDBUpdate $ AddUser (fold $ fstname uTMP,fold $ sndname uTMP) (fromGood remail) (Just password) False (Just sid) (Just $ companyid comp) (mkLocaleFromRegion defaultValue)
                 when (isNothing mu) $ throwApiError API_ERROR_OTHER "Problem creating a user (BASE) | This should never happend"
                 let u = fromJust mu

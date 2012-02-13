@@ -1,9 +1,7 @@
 module LoginTest (loginTests, assertLoginEventRecordedFor) where
 
 import Control.Applicative
-import Control.Monad.Reader
 import Data.List
-import DB.Nexus
 import Happstack.Server
 import Test.Framework
 import Test.Framework.Providers.HUnit
@@ -25,21 +23,21 @@ import User.Model
 import User.UserControl
 import Misc
 
-loginTests :: Nexus -> Test
-loginTests conn = testGroup "Login" [
-      testCase "can login with valid user and password" $ testSuccessfulLogin conn
-    , testCase "can't login with invalid user" $ testCantLoginWithInvalidUser conn
-    , testCase "can't login with invalid password" $ testCantLoginWithInvalidPassword conn
-    , testCase "logging in records a user login stat event" $ testSuccessfulLoginSavesAStatEvent conn
-    , testCase "you get logged in after you reset a password" $ assertResettingPasswordLogsIn conn
-    , testCase "when you're logged in after resetting a password a user login stat event is recorded" $ assertResettingPasswordRecordsALoginEvent conn
+loginTests :: DBEnv -> Test
+loginTests env = testGroup "Login" [
+      testCase "can login with valid user and password" $ testSuccessfulLogin env
+    , testCase "can't login with invalid user" $ testCantLoginWithInvalidUser env
+    , testCase "can't login with invalid password" $ testCantLoginWithInvalidPassword env
+    , testCase "logging in records a user login stat event" $ testSuccessfulLoginSavesAStatEvent env
+    , testCase "you get logged in after you reset a password" $ assertResettingPasswordLogsIn env
+    , testCase "when you're logged in after resetting a password a user login stat event is recorded" $ assertResettingPasswordRecordsALoginEvent env
     ]
 
-testSuccessfulLogin :: Nexus -> Assertion
-testSuccessfulLogin conn = withTestEnvironment conn $ do
+testSuccessfulLogin :: DBEnv -> Assertion
+testSuccessfulLogin env = withTestEnvironment env $ do
     uid <- createTestUser
     globaltemplates <- readGlobalTemplates
-    ctx <- (\c -> c { ctxdbconn = conn })
+    ctx <- (\c -> c { ctxdbenv = env })
       <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
@@ -48,55 +46,55 @@ testSuccessfulLogin conn = withTestEnvironment conn $ do
     assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx') == Just uid
     assertBool "No flash messages were added" $ null $ ctxflashmessages ctx'
 
-testCantLoginWithInvalidUser :: Nexus -> Assertion
-testCantLoginWithInvalidUser conn = withTestEnvironment conn $ do
+testCantLoginWithInvalidUser :: DBEnv -> Assertion
+testCantLoginWithInvalidUser env = withTestEnvironment env $ do
     _ <- createTestUser
     globaltemplates <- readGlobalTemplates
-    ctx <- (\c -> c { ctxdbconn = conn })
+    ctx <- (\c -> c { ctxdbenv = env })
       <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     req <- mkRequest POST [("email", inText "emily@skrivapa.se"), ("password", inText "admin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
     loginFailureChecks res ctx'
 
-testCantLoginWithInvalidPassword :: Nexus -> Assertion
-testCantLoginWithInvalidPassword conn = withTestEnvironment conn $ do
+testCantLoginWithInvalidPassword :: DBEnv -> Assertion
+testCantLoginWithInvalidPassword env = withTestEnvironment env $ do
     _ <- createTestUser
     globaltemplates <- readGlobalTemplates
-    ctx <- (\c -> c { ctxdbconn = conn })
+    ctx <- (\c -> c { ctxdbenv = env })
       <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "invalid")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
     loginFailureChecks res ctx'
 
-testSuccessfulLoginSavesAStatEvent :: Nexus -> Assertion
-testSuccessfulLoginSavesAStatEvent conn = withTestEnvironment conn $ do
+testSuccessfulLoginSavesAStatEvent :: DBEnv -> Assertion
+testSuccessfulLoginSavesAStatEvent env = withTestEnvironment env $ do
   uid <- createTestUser
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn })
+  ctx <- (\c -> c { ctxdbenv = env })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
   req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
   (_res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
   assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx') == Just uid
   assertLoginEventRecordedFor uid
 
-assertResettingPasswordLogsIn :: Nexus -> Assertion
-assertResettingPasswordLogsIn conn = withTestEnvironment conn $ do
-  (user, _res, ctx) <- createUserAndResetPassword conn
+assertResettingPasswordLogsIn :: DBEnv -> Assertion
+assertResettingPasswordLogsIn env = withTestEnvironment env $ do
+  (user, _res, ctx) <- createUserAndResetPassword env
   assertEqual "User was logged into context" (Just $ userid user) (userid <$> ctxmaybeuser ctx)
 
-assertResettingPasswordRecordsALoginEvent :: Nexus -> Assertion
-assertResettingPasswordRecordsALoginEvent conn = withTestEnvironment conn $ do
-  (user, _res, ctx) <- createUserAndResetPassword conn
+assertResettingPasswordRecordsALoginEvent :: DBEnv -> Assertion
+assertResettingPasswordRecordsALoginEvent env = withTestEnvironment env $ do
+  (user, _res, ctx) <- createUserAndResetPassword env
   assertEqual "User was logged into context" (Just $ userid user) (userid <$> ctxmaybeuser ctx)
   assertLoginEventRecordedFor (userid user)
 
-createUserAndResetPassword :: Nexus -> DB (User, Response, Context)
-createUserAndResetPassword conn = do
+createUserAndResetPassword :: DBEnv -> DB (User, Response, Context)
+createUserAndResetPassword env = do
   pwd <- createPassword $ BS.pack "admin"
   Just user <- dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") (Just pwd) False Nothing Nothing (mkLocaleFromRegion defaultValue)
-  Action{ actionID, actionType = PasswordReminder { prToken } } <- liftIO $ newPasswordReminder user
+  Action{ actionID, actionType = PasswordReminder { prToken } } <- newPasswordReminder user
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn })
+  ctx <- (\c -> c { ctxdbenv = env })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
   req <- mkRequest POST [("password", inText "password123"),
                          ("password2", inText "password123")]

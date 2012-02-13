@@ -29,15 +29,15 @@ import Control.Monad.Reader (ask)
 import Control.Monad.State hiding (State)
 import qualified Data.ByteString.UTF8 as BS
 import Data.Maybe (isNothing,isJust, fromJust)
-import DB.Nexus
 import Happstack.Data.IxSet
 import qualified Happstack.Data.IxSet as IxSet
 import Happstack.State
 import User.Model
 import Numeric
 import MinutesTime
-import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie, readCookieValue, withDataFn, ServerPartT, HasRqData, CookieLife(MaxAge), FromReqURI(..))
-import System.Random (randomIO)
+import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie,
+  readCookieValue, withDataFn, ServerPartT, HasRqData, CookieLife(MaxAge), FromReqURI(..))
+import Crypto.RNG (CryptoRNGState, CryptoRNG, random, inIO)
 import Happstack.Util.Common ( readM)
 import Misc (mkTypeOf, isSecure, isHTTPS)
 import ELegitimation.ELegTransaction
@@ -46,7 +46,7 @@ import API.Service.Model
 import Cookies
 import Company.Model
 import DB.Classes
-import DB.Types
+import MagicHash (MagicHash, unsafeMagicHash)
 import Util.MonadUtils
 import Doc.SignatoryLinkID
 import qualified Data.Map as Map
@@ -257,7 +257,7 @@ instance Migrate SessionData1 SessionData2 where
         SessionData2 { userID2 = Nothing
                      , flashMessages2 = []
                      , expires2 = fromSeconds 0
-                     , hash2 = MagicHash 0
+                     , hash2 = unsafeMagicHash 0
                      }
 
 instance Migrate SessionData2 SessionData3 where
@@ -268,7 +268,7 @@ instance Migrate SessionData2 SessionData3 where
         SessionData3 { userID3 = Nothing
                     , flashMessages3 = []
                     , expires3 = fromSeconds 0
-                    , hash3 = MagicHash 0
+                    , hash3 = unsafeMagicHash 0
                     , elegtransactions3 = []
                     }
 
@@ -281,27 +281,27 @@ instance Migrate SessionData3 SessionData4 where
         SessionData4 { userID4           = Nothing
                     , flashMessages4    = []
                     , expires4          = fromSeconds 0
-                    , hash4             = MagicHash 0
+                    , hash4             = unsafeMagicHash 0
                     , elegtransactions4 = []
-                    , xtoken4           = MagicHash 0
+                    , xtoken4           = unsafeMagicHash 0
                     }
 
 instance Migrate SessionData4 SessionData5 where
     migrate SessionData4{} =
         SessionData5 { userID5           = Nothing
                     , expires5          = fromSeconds 0
-                    , hash5             = MagicHash 0
+                    , hash5             = unsafeMagicHash 0
                     , elegtransactions5 = []
-                    , xtoken5           = MagicHash 0
+                    , xtoken5           = unsafeMagicHash 0
                     }
 
 instance Migrate SessionData5 SessionData6 where
     migrate SessionData5{} =
         SessionData6 { userID6           = Nothing
                     , expires6          = fromSeconds 0
-                    , hash6             = MagicHash 0
+                    , hash6             = unsafeMagicHash 0
                     , elegtransactions6 = []
-                    , xtoken6           = MagicHash 0
+                    , xtoken6           = unsafeMagicHash 0
                     , service6          = Nothing
                     }
 
@@ -309,9 +309,9 @@ instance Migrate SessionData6 SessionData7 where
     migrate SessionData6{} =
         SessionData7 { userID7           = Nothing
                     , expires7          = fromSeconds 0
-                    , hash7             = MagicHash 0
+                    , hash7             = unsafeMagicHash 0
                     , elegtransactions7 = []
-                    , xtoken7           = MagicHash 0
+                    , xtoken7           = unsafeMagicHash 0
                     , service7          = Nothing
                     }
 
@@ -319,9 +319,9 @@ instance Migrate SessionData7 SessionData8 where
     migrate SessionData7{} =
         SessionData8 { userID8           = Nothing
                     , expires8          = fromSeconds 0
-                    , hash8             = MagicHash 0
+                    , hash8             = unsafeMagicHash 0
                     , elegtransactions8 = []
-                    , xtoken8           = MagicHash 0
+                    , xtoken8           = unsafeMagicHash 0
                     , service8          = Nothing
                     , company8          = Nothing
                     }
@@ -330,9 +330,9 @@ instance Migrate SessionData8 SessionData9 where
     migrate SessionData8{} =
         SessionData9 { userID9           = Nothing
                      , expires9          = fromSeconds 0
-                     , hash9             = MagicHash 0
+                     , hash9             = unsafeMagicHash 0
                      , elegtransactions9 = []
-                     , xtoken9           = MagicHash 0
+                     , xtoken9           = unsafeMagicHash 0
                      , location9         = ""
                      , company9          = Nothing
                      }
@@ -526,11 +526,11 @@ currentSession =
             Nothing ->  return Nothing
 
 -- | Create empty session data. It has proper timeout already set.
-emptySessionData :: IO SessionData
+emptySessionData :: (MonadIO m, CryptoRNG m) => m SessionData
 emptySessionData = do
     now       <- getMinutesTime
-    magicHash <- randomIO
-    xhash     <- randomIO
+    magicHash <- random
+    xhash     <- random
     return $ SessionData { userID = Nothing
                          , expires = 60 `minutesAfter` now
                          , hash = magicHash
@@ -553,25 +553,25 @@ tempSessionID :: SessionId
 tempSessionID = SessionId $ -1
 
 -- | Return empty, temporary session
-startSession :: (FilterMonad Response m, ServerMonad m, MonadIO m, MonadPlus m) => m Session
-startSession = liftIO emptySessionData >>= return . Session tempSessionID
+startSession :: (MonadIO m, CryptoRNG m) => m Session
+startSession = emptySessionData >>= return . Session tempSessionID
 
 -- | Get 'User' record from database based on userid in session
-getUserFromSession :: Nexus -> Session -> ServerPartT IO (Maybe User)
-getUserFromSession conn s =
-  liftMM (ioRunDB conn . dbQuery . GetUserByID) (return $ userID $ sessionData s)
+getUserFromSession :: DBEnv -> Session -> ServerPartT IO (Maybe User)
+getUserFromSession dbenv s =
+  liftMM (ioRunDB dbenv . dbQuery . GetUserByID) (return $ userID $ sessionData s)
 
-getCompanyFromSession :: Nexus -> Session -> ServerPartT IO (Maybe Company)
-getCompanyFromSession conn s =
-  liftMM (ioRunDB conn . dbQuery . GetCompany) (return $ company $ sessionData s)
+getCompanyFromSession :: DBEnv -> Session -> ServerPartT IO (Maybe Company)
+getCompanyFromSession dbenv s =
+  liftMM (ioRunDB dbenv . dbQuery . GetCompany) (return $ company $ sessionData s)
 
 getLocationFromSession :: Session -> ServerPartT IO String
 getLocationFromSession s = return $ location $ sessionData s
 
 
 -- | Handles session timeout. Starts new session when old session timed out.
-handleSession :: ServerPartT IO Session
-handleSession = do
+handleSession :: CryptoRNGState -> ServerPartT IO Session
+handleSession r = do
     msession <- currentSession
     case msession of
         Just session ->do
@@ -579,9 +579,9 @@ handleSession = do
                       if (now >= (expires $ sessionData $ session))
                           then do
                              _ <- update $ DelSession (sessionId session)
-                             startSession
+                             liftIO $ inIO r $ startSession
                           else return session
-        Nothing -> startSession
+        Nothing -> inIO r $ startSession
 
 -- | Updates session data. If session is temporary and new
 -- session data is non-empty, register session in the system
@@ -678,7 +678,7 @@ getSessionXToken :: Session -> MagicHash
 getSessionXToken = xtoken . sessionData
 
 --- | Creates a session for user and service
-createServiceSession:: MonadIO m => Either CompanyID UserID -> String ->  m SessionId
+createServiceSession:: (MonadIO m, CryptoRNG m) => Either CompanyID UserID -> String -> m SessionId
 createServiceSession userorcompany loc = do
     now <- liftIO getMinutesTime
     moldsession <- case userorcompany of
@@ -692,9 +692,9 @@ createServiceSession userorcompany loc = do
                 else return $ sessionId s
       Nothing -> newSession' userorcompany loc
 
-newSession' :: MonadIO m => Either CompanyID UserID -> String -> m SessionId
+newSession' :: (MonadIO m, CryptoRNG m) => Either CompanyID UserID -> String -> m SessionId
 newSession' userorcompany loc = do
-  sd <- liftIO emptySessionData
+  sd <- emptySessionData
   session <-  update $ NewSession $  sd {
     userID = either (const Nothing) Just userorcompany
     , company = either Just (const Nothing) userorcompany

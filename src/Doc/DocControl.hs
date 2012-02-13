@@ -6,7 +6,6 @@ module Doc.DocControl where
 
 import AppView
 import DB.Classes
-import DB.Types
 import DBError
 import Doc.CSVUtils
 import Doc.DocSeal
@@ -23,6 +22,7 @@ import File.Model
 import Kontra
 import KontraLink
 import ListUtil
+import MagicHash (MagicHash)
 import Mails.SendMail
 import MinutesTime
 import Misc
@@ -139,9 +139,9 @@ postDocumentChangeAction document@Document  { documentstatus
         Log.docevent $ "Preparation -> Closed; Sealing document, sending emails: " ++ show documentid
         _ <- addDocumentCloseStatEvents document
         ctx@Context{ctxlocale, ctxglobaltemplates} <- getContext
-        forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ \conn -> do
-          let newctx = ctx {ctxdbconn = conn}
-          enewdoc <- ioRunDB conn $ sealDocument newctx document
+        forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ \env -> do
+          let newctx = ctx {ctxdbenv = env}
+          enewdoc <- ioRunDB env $ sealDocument newctx document
           case enewdoc of
              Right newdoc -> runTemplatesT (ctxlocale, ctxglobaltemplates) $ sendClosedEmails newctx newdoc
              Left errmsg -> Log.error $ "Sealing of document #" ++ show documentid ++ " failed, could not send document confirmations: " ++ errmsg
@@ -163,13 +163,13 @@ postDocumentChangeAction document@Document  { documentstatus
         _ <- addDocumentCloseStatEvents document
         ctx@Context{ctxlocale, ctxglobaltemplates} <- getContext
         author <- getDocAuthor
-        forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ \conn -> do
-          let newctx = ctx {ctxdbconn = conn}
-          enewdoc <- ioRunDB conn $ sealDocument newctx document
+        forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ \env -> do
+          let newctx = ctx {ctxdbenv = env}
+          enewdoc <- ioRunDB env $ sealDocument newctx document
           case enewdoc of
             Right newdoc -> runTemplatesT (ctxlocale, ctxglobaltemplates) $ sendClosedEmails newctx newdoc
             Left errmsg -> do
-              _ <- ioRunDB conn $ dbUpdate $ ErrorDocument documentid errmsg
+              _ <- ioRunDB env $ dbUpdate $ ErrorDocument documentid errmsg
                    (SystemActor (ctxtime ctx))
               Log.server $ "Sending seal error emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
               runTemplatesT (ctxlocale, ctxglobaltemplates) $ sendDocumentErrorEmail newctx document author
@@ -309,7 +309,7 @@ sendDocumentErrorEmail ctx document author = do
     sendDocumentErrorEmailToAuthor = do
       let authorlink = fromJust $ getAuthorSigLink document
       mail <- mailDocumentErrorForAuthor ctx document (getLocale author)
-      ioRunDB (ctxdbconn ctx) $ scheduleEmailSendout' (ctxmailsconfig ctx) $ mail {
+      ioRunDB (ctxdbenv ctx) $ scheduleEmailSendout' (ctxmailsconfig ctx) $ mail {
           to = [getMailAddress authorlink]
         , from = documentservice document
       }
@@ -320,7 +320,7 @@ sendDocumentErrorEmail ctx document author = do
                         , signatorydetails } = signatorylink
           Document { documentid } = document
       mail <- mailDocumentErrorForSignatory ctx document
-      ioRunDB (ctxdbconn ctx) $ scheduleEmailSendout' (ctxmailsconfig ctx) $ mail {
+      ioRunDB (ctxdbenv ctx) $ scheduleEmailSendout' (ctxmailsconfig ctx) $ mail {
             to = [getMailAddress signatorydetails]
           , mailInfo = Invitation documentid  signatorylinkid
           , from = documentservice document
@@ -359,7 +359,7 @@ sendInvitationEmail1 ctx document signatorylink = do
       , mailInfo = Invitation documentid signatorylinkid
       , from = documentservice document
   }
-  ioRunDB (ctxdbconn ctx) $ dbUpdate $ AddInvitationEvidence documentid signatorylinkid (SystemActor (ctxtime ctx))
+  ioRunDB (ctxdbenv ctx) $ dbUpdate $ AddInvitationEvidence documentid signatorylinkid (SystemActor (ctxtime ctx))
 
 {- |
     Send a reminder email (and update the modification time on the document)
@@ -388,7 +388,7 @@ sendClosedEmails ctx document = do
     let signatorylinks = documentsignatorylinks document
     mail <- mailDocumentClosed ctx document
     mailattachments <- liftIO $ makeMailAttachments ctx document
-    ioRunDB (ctxdbconn ctx) $ scheduleEmailSendout' (ctxmailsconfig ctx) $
+    ioRunDB (ctxdbenv ctx) $ scheduleEmailSendout' (ctxmailsconfig ctx) $
       mail { to = map getMailAddress signatorylinks
            , attachments = mailattachments
            , from = documentservice document
@@ -414,9 +414,10 @@ makeMailAttachments ctx document = do
       aattachments = map authorattachmentfile $ documentauthorattachments document
       sattachments = concatMap (maybeToList . signatoryattachmentfile) $ documentsignatoryattachments document
       allfiles' = [mainfile] ++ aattachments ++ sattachments
-  allfiles <- liftM catMaybes $ mapM (ioRunDB (ctxdbconn ctx) . dbQuery . GetFileByFileID) allfiles'
+  allfiles <- liftM catMaybes $ mapM (ioRunDB (ctxdbenv ctx) . dbQuery . GetFileByFileID) allfiles'
   --use the doc title rather than file name for the main file (see jira #1152)
   let filenames = (BS.toString (documenttitle document) ++ ".pdf") : map (BS.toString . filename) (tail allfiles)
+
   filecontents <- sequence $ map (getFileContents ctx) allfiles
   return $ zip filenames filecontents
 

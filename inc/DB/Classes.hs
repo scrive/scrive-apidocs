@@ -31,7 +31,14 @@ module DB.Classes
   , DBMonad(..)
   , DBState(..)
   , DB
+  , DBEnv
+  , mkDBEnv
+  , nexus
+  , rngstate
+  , cloneDBEnv
   , ioRunDB
+  , withPostgreSQLDB
+  , withPostgreSQLDB'
   , runDB
   , runDBQuery
   , runDBUpdate
@@ -52,8 +59,10 @@ module DB.Classes
 import Control.Applicative
 import Control.Monad.IO.Class
 import Control.Monad.RWS
+import Crypto.RNG (CryptoRNG, CryptoRNGState, getCryptoRNGState)
 import Data.Maybe
 import Database.HDBC hiding (originalQuery)
+import Database.HDBC.PostgreSQL (withPostgreSQL)
 import qualified Control.Exception as E
 import qualified Database.HDBC as HDBC
 
@@ -61,12 +70,23 @@ import DB.Exception
 import DB.Nexus
 import DB.SQL
 
-type DBInside a = RWST Nexus () DBState IO a
+type DBInside a = RWST DBEnv () DBState IO a
 
 data DBState = DBState {
     dbStatement :: Maybe Statement
   , dbValues    :: [SqlValue]
   }
+
+data DBEnv = DBEnv
+  { rngstate :: CryptoRNGState
+  , nexus :: Nexus
+  }
+
+mkDBEnv :: (MonadIO m, IConnection conn) => conn -> CryptoRNGState -> m DBEnv
+mkDBEnv conn rng = DBEnv rng `liftM` mkNexus conn
+
+cloneDBEnv :: DBEnv -> IO DBEnv
+cloneDBEnv env = DBEnv (rngstate env) `liftM` HDBC.clone (nexus env)
 
 -- | 'DB' is a monad that wraps access to database. It hold onto
 -- Connection and current statement. Manages to handle exceptions
@@ -91,16 +111,20 @@ data DBState = DBState {
 newtype DB a = DB { unDB :: DBInside a }
   deriving (Applicative, Functor, Monad, MonadIO)
 
+
 -- | Get current statement (if any is prepared)
 getDBState :: DB DBState
 getDBState = DB get
+
+instance CryptoRNG DB where
+  getCryptoRNGState = DB $ asks rngstate
 
 -- | Prepares new SQL query given as string. If there was another
 -- query prepared in this monad, it will be finished first.
 kPrepare :: String -> DB ()
 kPrepare query = DB $ do
   let sqlquery = SQL query []
-  conn <- ask
+  conn <- asks nexus
   statement <- protIO sqlquery $ prepare conn query
   oldstatement <- dbStatement <$> get
   modify $ \s -> s { dbStatement = Just statement }
@@ -180,7 +204,7 @@ kFinish = DB $ do
 
 kRunRaw :: String -> DB ()
 kRunRaw query = DB $ do
-  conn <- ask
+  conn <- asks nexus
   protIO (SQL query []) $ runRaw conn query
 
 getQuery :: Maybe Statement -> String
@@ -190,7 +214,7 @@ getQuery mst = fromMaybe "" $ HDBC.originalQuery `fmap` mst
 -- to 'DBException'. Adds 'HDBC.originalQuery' that should help a lot.
 protIO :: SQL -> IO a -> DBInside a
 protIO query action = do
-  conn <- ask
+  conn <- asks nexus
   liftIO $ actionWithCatch conn
   where
     actionWithCatch conn = do
@@ -209,25 +233,25 @@ class DBQuery q r | q -> r where
 class DBUpdate q r | q -> r where
   dbUpdate :: q -> DB r
 
--- | DBMonad class. getConnection function is used for getting connection
+-- | DBMonad class. getDBEnv function is used for getting connection
 -- from underlying state object (obviously). If it comes to handleDBError,
 -- it's for handling hard db errors like lost connection, sql errors of
 -- all kind or the fact that query did something that should never happen.
 -- In such case we want to interrupt what we're currently doing and exit
 -- gracefully, most likely logging an error is some way. Since a way of
 -- handling such case may vary in different monads, hence this function.
-class (Functor m, MonadIO m) => DBMonad m where
-  getConnection :: m Nexus
+class (Functor m, MonadIO m, CryptoRNG m) => DBMonad m where
+  getDBEnv :: m DBEnv
   -- | From the point of view of the implementor of instances of
   -- 'DBMonad': handle a database error.  However, code that uses
   -- 'handleDBError' throws an exception - compare with 'throw', or
   -- 'fail'.
   handleDBError :: DBException -> m a
 
-runit :: MonadIO m => DB a -> Nexus -> m a
-runit action conn = do
+runit :: MonadIO m => DB a -> DBEnv -> m a
+runit action env = do
   let actionWithFinish = (action >>= \result -> kFinish >> return result)
-  (a, _, _) <- liftIO $ runRWST (unDB actionWithFinish) conn
+  (a, _, _) <- liftIO $ runRWST (unDB actionWithFinish) env
     DBState { dbStatement = Nothing, dbValues = [] }
   return a
 
@@ -235,14 +259,22 @@ runit action conn = do
 -- it runs in IO, you need to pass Connecion object explicitly. Also,
 -- sql releated exceptions are not handled, so you probably need to do
 -- it yourself. Use this function ONLY if there is no way to use runDB.
-ioRunDB :: MonadIO m => Nexus -> DB a -> m a
-ioRunDB conn = liftIO . withTransaction conn . runit
+ioRunDB :: MonadIO m => DBEnv -> DB a -> m a
+ioRunDB env f = liftIO $ withTransaction (nexus env) $ const (runit f env)
+
+withPostgreSQLDB' :: String -> CryptoRNGState -> (DBEnv -> IO a) -> IO a
+withPostgreSQLDB' cs rng f = withPostgreSQL cs $ \conn ->
+  mkDBEnv conn rng >>= f
+
+withPostgreSQLDB :: String -> CryptoRNGState -> DB a -> IO a
+withPostgreSQLDB cs rng f = withPostgreSQLDB' cs rng (flip ioRunDB f)
+
 
 -- | Runs DB action in a DB compatible monad
 runDB :: DBMonad m => DB a -> m a
 runDB f = do
-  conn <- getConnection
-  res <- liftIO $ (Right <$> withTransaction conn (runit f)) `E.catches` handlers
+  env <- getDBEnv
+  res <- liftIO $ (Right <$> ioRunDB env f) `E.catches` handlers
   case res of
     Right r -> return r
     Left e  -> handleDBError e
@@ -264,13 +296,13 @@ runDBUpdate = runDB . dbUpdate
 -- | Catch in DB monad
 catchDB :: E.Exception e => DB a -> (e -> DB a) -> DB a
 catchDB f exhandler = DB $ do
-  conn <- ask
-  let handler e = runit (exhandler e) conn
-  liftIO $ runit f conn `E.catch` handler
+  env <- ask
+  let handler e = runit (exhandler e) env
+  liftIO $ runit f env `E.catch` handler
 
 -- | Try in DB monad
 tryDB :: E.Exception e => DB a -> DB (Either e a)
 tryDB f = DB $ ask >>= liftIO . E.try . runit f
 
 kDescribeTable :: String -> DB [(String, SqlColDesc)]
-kDescribeTable table = DB ask >>= \c -> liftIO (describeTable c table)
+kDescribeTable table = DB (asks nexus) >>= \c -> liftIO (describeTable c table)
