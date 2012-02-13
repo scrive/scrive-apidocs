@@ -3,7 +3,6 @@ module ServiceStateTest (serviceStateTests) where
 import Control.Applicative
 import Control.Monad
 import Data.Maybe
-import DB.Nexus
 import Test.Framework
 import qualified Data.ByteString.UTF8 as BS
 
@@ -12,14 +11,14 @@ import DB.Classes
 import User.Model
 import TestingUtil
 
-serviceStateTests :: Nexus -> Test
-serviceStateTests conn = testGroup "ServiceState" [
-    testThat "CreateService works" conn test_createService
-  , testThat "GetService works" conn test_getService
-  , testThat "GetServicesForAdmin works" conn test_getServicesForAdmin
-  , testThat "GetServices works" conn test_getServices
-  , testThat "UpdateServiceUI works" conn test_updateServiceUI
-  , testThat "UpdateServiceSettings/GetServiceByLocation works" conn test_updateServiceSettings
+serviceStateTests :: DBEnv -> Test
+serviceStateTests env = testGroup "ServiceState" [
+    testThat "CreateService works" env test_createService
+  , testThat "GetService works" env test_getService
+  , testThat "GetServicesForAdmin works" env test_getServicesForAdmin
+  , testThat "GetServices works" env test_getServices
+  , testThat "UpdateServiceUI works" env test_updateServiceUI
+  , testThat "UpdateServiceSettings/GetServiceByLocation works" env test_updateServiceSettings
   ]
 
 test_createService :: DB ()

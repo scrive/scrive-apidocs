@@ -2,13 +2,12 @@ module UserStateTest (userStateTests) where
 
 import Control.Monad
 import Data.Maybe
-import DB.Nexus
 import Test.Framework
 import qualified Data.ByteString.UTF8 as BS
 
 import Company.Model
 import DB.Classes
-import DB.Types
+import MagicHash (unsafeMagicHash)
 import MinutesTime
 import User.Model
 import TestingUtil
@@ -18,35 +17,35 @@ sortByEmail :: [User] -> [User]
 sortByEmail = sortBy (\a b -> compare (f a) (f b))
   where f = useremail . userinfo
 
-userStateTests :: Nexus -> Test
-userStateTests conn = testGroup "UserState" [
+userStateTests :: DBEnv -> Test
+userStateTests env = testGroup "UserState" [
     testGroup "getUserByEmail" [
-      testThat "returns nothing when there isn't a user with a matching email" conn test_getUserByEmail_returnsNothing
-    , testThat "returns a user with a matching email" conn test_getUserByEmail_returnsTheRightUser
+      testThat "returns nothing when there isn't a user with a matching email" env test_getUserByEmail_returnsNothing
+    , testThat "returns a user with a matching email" env test_getUserByEmail_returnsTheRightUser
     ]
   , testGroup "getUserByID" [
-      testThat "returns nothing when there isn't a user with a matching id" conn test_getUserByID_returnsNothing
-    , testThat "returns a user with a matching id" conn test_getUserByID_returnsTheRightUser
+      testThat "returns nothing when there isn't a user with a matching id" env test_getUserByID_returnsNothing
+    , testThat "returns a user with a matching id" env test_getUserByID_returnsTheRightUser
     ]
   , testGroup "getAllUsers" [
-      testThat "returns all the users" conn test_getAllUsers_returnsAllUsers
+      testThat "returns all the users" env test_getAllUsers_returnsAllUsers
     ]
   , testGroup "setUserPassword" [
-      testThat "password is successfully set" conn test_setUserPassword_changesPassword
+      testThat "password is successfully set" env test_setUserPassword_changesPassword
     ]
   , testGroup "addUser" [
-      testThat "adding a repeated email returns nothing" conn test_addUser_repeatedEmailReturnsNothing
+      testThat "adding a repeated email returns nothing" env test_addUser_repeatedEmailReturnsNothing
     ]
-  , testThat "SetUserCompanyAdmin/GetCompanyAccounts works" conn test_getCompanyAccounts
-  , testThat "GetInviteInfo/SetInviteInfo works" conn test_getInviteInfo
-  , testThat "GetUserMailAPI/SetUserMailAPI works" conn test_getUserMailAPI
-  , testThat "SetUserCompany works" conn test_setUserCompany
-  , testThat "DeleteUser works" conn test_deleteUser
-  , testThat "SetUserInfo works" conn test_setUserInfo
-  , testThat "SetUserSettings works" conn test_setUserSettings
-  , testThat "SetPreferredDesignMode works" conn test_setPreferredDesignMode
-  , testThat "AcceptTermsOfService works" conn test_acceptTermsOfService
-  , testThat "SetSignupMethod works" conn test_setSignupMethod
+  , testThat "SetUserCompanyAdmin/GetCompanyAccounts works" env test_getCompanyAccounts
+  , testThat "GetInviteInfo/SetInviteInfo works" env test_getInviteInfo
+  , testThat "GetUserMailAPI/SetUserMailAPI works" env test_getUserMailAPI
+  , testThat "SetUserCompany works" env test_setUserCompany
+  , testThat "DeleteUser works" env test_deleteUser
+  , testThat "SetUserInfo works" env test_setUserInfo
+  , testThat "SetUserSettings works" env test_setUserSettings
+  , testThat "SetPreferredDesignMode works" env test_setPreferredDesignMode
+  , testThat "AcceptTermsOfService works" env test_acceptTermsOfService
+  , testThat "SetSignupMethod works" env test_setSignupMethod
   ]
 
 test_getUserByEmail_returnsNothing :: DB ()
@@ -132,7 +131,7 @@ test_getUserMailAPI :: DB ()
 test_getUserMailAPI = do
   Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   let mapi = UserMailAPI {
-      umapiKey = MagicHash 0
+      umapiKey = unsafeMagicHash 0
     , umapiDailyLimit = 1
     , umapiSentToday = 0
   }

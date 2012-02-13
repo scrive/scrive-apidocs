@@ -15,7 +15,6 @@ import Doc.DocUtils
 import Test.QuickCheck.Gen
 import Control.Monad.Trans
 import Data.Maybe
-import DB.Nexus
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import qualified Test.HUnit as T
@@ -23,7 +22,7 @@ import qualified Test.HUnit as T
 import File.FileID
 import API.API
 import DB.Classes
-import DB.Types
+import MagicHash (MagicHash, unsafeMagicHash)
 import Company.Model
 import FlashMessage
 import qualified Log
@@ -111,7 +110,7 @@ instance Arbitrary ServiceID where
   arbitrary = ServiceID <$> arbitrary
 
 instance Arbitrary MagicHash where
-  arbitrary = MagicHash <$> arbitrary
+  arbitrary = unsafeMagicHash <$> arbitrary
 
 instance Arbitrary MailsDeliveryStatus where
   arbitrary = elements [ Delivered
@@ -394,7 +393,7 @@ arbEmail = do
 
 signatoryLinkExample1 :: SignatoryLink
 signatoryLinkExample1 = SignatoryLink { signatorylinkid = SignatoryLinkID 0
-                                      , signatorymagichash = MagicHash 0
+                                      , signatorymagichash = unsafeMagicHash 0
                                       , maybesignatory = Nothing
                                       , maybesupervisor = Nothing
                                       , maybecompany = Nothing
@@ -481,8 +480,8 @@ blankDocument =
 
 -}
 
-testThat :: String -> Nexus -> DB () -> Test
-testThat s conn a = testCase s (withTestEnvironment conn a)
+testThat :: String -> DBEnv -> DB () -> Test
+testThat s env a = testCase s (withTestEnvironment env a)
 
 addNewCompany ::  DB Company
 addNewCompany = do

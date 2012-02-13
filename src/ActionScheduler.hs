@@ -14,14 +14,13 @@ import Control.Monad.Reader
 import Data.List
 import Data.Maybe
 import Happstack.State
-import DB.Nexus
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 
 import AppControl (AppConf(..))
 import ActionSchedulerState
-import Archive.Invariants ()
+import Crypto.RNG (CryptoRNG, getCryptoRNGState, CryptoRNGState)
 import DB.Classes
 import Doc.DocStateData
 import Doc.Model
@@ -35,16 +34,18 @@ import qualified Log
 import System.Time
 import Doc.Invariants
 import Stats.Control
-import Database.HDBC.PostgreSQL
 import EvidenceLog.Model
 
 type SchedulerData' = SchedulerData AppConf (MVar (ClockTime, KontrakcjaGlobalTemplates)) MailsConfig
 
-newtype ActionScheduler a = AS { unAS :: ReaderT SchedulerData' (ReaderT Nexus IO) a }
+newtype ActionScheduler a = AS { unAS :: ReaderT SchedulerData' (ReaderT DBEnv IO) a }
     deriving (Monad, Functor, MonadIO, MonadReader SchedulerData')
 
+instance CryptoRNG ActionScheduler where
+  getCryptoRNGState = AS $ lift $ asks rngstate
+
 instance DBMonad ActionScheduler where
-    getConnection = AS $ lift ask
+    getDBEnv = AS $ lift ask
     handleDBError = E.throw
 
 -- Note: Do not define TemplatesMonad instance for ActionScheduler, use
@@ -53,28 +54,27 @@ instance DBMonad ActionScheduler where
 -- assigned to and since TemplatesMonad doesn't give us the way to get
 -- appropriate language version of templates, we need to do that manually.
 
-runScheduler :: ActionScheduler () -> SchedulerData' -> IO ()
-runScheduler sched sd =
-    withPostgreSQL (dbConfig $ sdAppConf sd) $ \conn -> do
-      nexus <- mkNexus conn
-      runReaderT (runReaderT (unAS sched) sd) nexus
+runScheduler :: CryptoRNGState -> ActionScheduler () -> SchedulerData' -> IO ()
+runScheduler rng sched sd =
+    withPostgreSQLDB' (dbConfig $ sdAppConf sd) rng $
+      runReaderT (runReaderT (unAS sched) sd)
 
 -- | Creates scheduler that may be forced to look up for actions to execute
-runEnforceableScheduler :: Int -> MVar () -> ActionScheduler () -> SchedulerData' -> IO ()
-runEnforceableScheduler interval enforcer sched sd = listen 0
+runEnforceableScheduler :: CryptoRNGState -> Int -> MVar () -> ActionScheduler () -> SchedulerData' -> IO ()
+runEnforceableScheduler rng interval enforcer sched sd = listen 0
     where
         listen delay = do
             run_now <- tryTakeMVar enforcer
             if isJust run_now || delay >= interval
-               then runScheduler sched sd >> listen 0
+               then runScheduler rng sched sd >> listen 0
                else threadDelay 1000000 >> (listen $! delay+1)
 
 -- | Gets 'expired' actions and evaluates them
 actionScheduler :: ActionImportance -> ActionScheduler ()
 actionScheduler imp = do
     sd <- ask
-    conn <- getConnection
-    let runAction a = runReaderT (runReaderT (unAS $ evaluateAction a) sd) conn `E.catch` catchEverything a
+    env <- getDBEnv
+    let runAction a = runReaderT (runReaderT (unAS $ evaluateAction a) sd) env `E.catch` catchEverything a
     liftIO $ getMinutesTime
          >>= query . GetExpiredActions imp
          >>= sequence_ . map runAction

@@ -5,15 +5,14 @@ import Data.Functor
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (update, query)
-import System.Random (randomIO)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS
 import Text.JSON (JSValue(..), toJSObject, showJSON)
 
 import ActionSchedulerState
 import AppView
+import Crypto.RNG (CryptoRNG, random)
 import DB.Classes
-import DB.Types
 import Doc.Model
 import Doc.DocStateData
 import Company.Model
@@ -21,6 +20,7 @@ import InputValidation
 import Kontra
 import KontraLink
 import ListUtil
+import MagicHash (MagicHash)
 import Mails.SendMail
 import MinutesTime
 import Misc
@@ -139,9 +139,9 @@ sendRequestChangeEmailMail user newemail = do
                                     fullname = getFullName user
                                   , email = unEmail newemail }]})
 
-newRequestChangeEmailLink :: MonadIO m => User -> Email -> m KontraLink
+newRequestChangeEmailLink :: (MonadIO m, CryptoRNG m) => User -> Email -> m KontraLink
 newRequestChangeEmailLink user newemail = do
-    action <- liftIO $ newRequestEmailChange user newemail
+    action <- newRequestEmailChange user newemail
     return $ LinkChangeUserEmail (actionID action)
                                  (recToken $ actionType action)
 
@@ -326,7 +326,7 @@ handlePostUserMailAPI = withUserPost $ do
         case mapi of
              Nothing -> do
                  when enabledapi $ do
-                     apikey <- liftIO randomIO
+                     apikey <- random
                      _ <- runDBUpdate $ SetUserMailAPI userid $ Just UserMailAPI {
                            umapiKey = apikey
                          , umapiDailyLimit = 50
@@ -345,7 +345,7 @@ handlePostUserMailAPI = withUserPost $ do
                         case (mresetkey, mresetsenttoday, mdailylimit) of
                              (Just resetkey, Just resetsenttoday, Just dailylimit) -> do
                                  newkey <- if resetkey
-                                   then liftIO randomIO
+                                   then random
                                    else return $ umapiKey api
                                  _ <- runDBUpdate $ SetUserMailAPI userid $ Just api {
                                        umapiKey = newkey
@@ -397,7 +397,7 @@ handlePostUserSecurity = do
               _ <- runDBUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
               addFlashM f
             _ ->  do
-              passwordhash <- liftIO $ createPassword password
+              passwordhash <- createPassword password
               _ <- runDBUpdate $ SetUserPassword (userid user) passwordhash
               _ <- runDBUpdate $ LogHistoryPasswordSetup (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
               addFlashM flashMessageUserDetailsSaved
@@ -466,9 +466,9 @@ handleViralInvite = withUserPost $ do
         mail <- viralInviteMail ctx invitedemail link
         scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = BS.empty, email = invitedemail }]}
 
-randomPassword :: IO BS.ByteString
+randomPassword :: (MonadIO m, CryptoRNG m) => m BS.ByteString
 randomPassword =
-    BS.fromString <$> randomString 8 (['0'..'9'] ++ ['A'..'Z'] ++ ['a'..'z'])
+    BS.fromString `liftM` randomString 8 (['0'..'9'] ++ ['A'..'Z'] ++ ['a'..'z'])
 
 --there must be a better way than all of these weird user create functions
 -- TODO clean up
@@ -480,7 +480,7 @@ createUser :: Kontrakcja m => Email
                               -> m (Maybe User)
 createUser email fstname sndname mcompany = do
   ctx <- getContext
-  passwd <- liftIO $ createPassword =<< randomPassword
+  passwd <- createPassword =<< randomPassword
   muser <- runDBUpdate $ AddUser (fstname, sndname) (unEmail $ email) (Just passwd) False Nothing (fmap companyid mcompany) (ctxlocale ctx)
   case muser of
     Just user -> do 
@@ -489,7 +489,7 @@ createUser email fstname sndname mcompany = do
                                                (ctxtime ctx) email (userid <$> ctxmaybeuser ctx)
                  return muser
     _         -> return muser
-                 
+
 
 sendNewUserMail :: Kontrakcja m => User -> m ()
 sendNewUserMail user = do
@@ -517,7 +517,7 @@ createInvitedUser :: Kontrakcja m => (BS.ByteString, BS.ByteString) -> BS.ByteSt
 createInvitedUser names email mlocale = do
     ctx <- getContext
     let locale = fromMaybe (ctxlocale ctx) mlocale
-    passwd <- liftIO $ createPassword =<< randomPassword
+    passwd <- createPassword =<< randomPassword
     muser <- runDBUpdate $ AddUser names email (Just passwd) False Nothing Nothing locale
     case muser of
       Just user -> do 
@@ -812,7 +812,7 @@ handleActivate mfstname msndname actvuser signupmethod = do
         Right () ->
           if tos
             then do
-              passwordhash <- liftIO $ createPassword password
+              passwordhash <- createPassword password
               runDB $ do
                 _ <- dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser){
                          userfstname = fstname
@@ -879,7 +879,7 @@ handlePasswordReminderPost aid hash = do
                      case (checkPasswordsMatch password password2) of
                           Right () -> do
                               dropExistingAction aid
-                              passwordhash <- liftIO $ createPassword password
+                              passwordhash <- createPassword password
                               _ <- runDBUpdate $ SetUserPassword (userid user) passwordhash
                               _ <- runDBUpdate $ LogHistoryPasswordSetup (userid user) (ctxipnumber) (ctxtime) (userid <$> ctxmaybeuser)
                               addFlashM flashMessageUserPasswordChanged

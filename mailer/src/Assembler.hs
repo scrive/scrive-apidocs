@@ -4,7 +4,6 @@ module Assembler (
   , htmlToTxt
   ) where
 
-import Control.Applicative
 import Control.Arrow
 import Control.Monad
 import Control.Monad.IO.Class
@@ -24,10 +23,11 @@ import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import qualified Data.ByteString.Base64 as Base64
 import qualified Text.JSON as J
 
+import Crypto.RNG (CryptoRNG)
 import Mails.Model
 import Misc (randomString)
 
-assembleContent :: MonadIO m => Mail -> m BSL.ByteString
+assembleContent :: (MonadIO m, CryptoRNG m) => Mail -> m BSL.ByteString
 assembleContent Mail{..} = do
   (boundaryMixed, boundaryAlternative) <- createBoundaries
   xsmtpapi <- liftIO $ json $ field "unique_args" $ do
@@ -95,8 +95,8 @@ createMailTos :: [Address] -> String
 createMailTos = intercalate ", "
   . map (\Address{..} -> mailEncode addrName ++ " <" ++ addrEmail ++ ">")
 
-createBoundaries :: MonadIO m => m (String, String)
-createBoundaries = liftIO $ (,) <$> f <*> f
+createBoundaries :: (MonadIO m, CryptoRNG m) => m (String, String)
+createBoundaries = return (,) `ap` f `ap` f
   where
     f = randomString 32 $ ['0'..'9'] ++ ['a'..'z']
 

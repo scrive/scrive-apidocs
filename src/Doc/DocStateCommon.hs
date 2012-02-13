@@ -3,13 +3,13 @@ module Doc.DocStateCommon
 where
 
 import Company.Model
-import DB.Types
 import Data.Maybe
 import Doc.DocInfo
 import Doc.DocProcess
 import Doc.DocStateData
 import Doc.DocUtils
 import InputValidation
+import MagicHash (MagicHash)
 import MinutesTime
 import Misc
 import User.Model

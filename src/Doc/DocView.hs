@@ -59,7 +59,6 @@ module Doc.DocView (
   , csvLandPage
   ) where
 
-import DB.Types
 import Doc.DocProcess
 import Doc.DocRegion
 import Doc.DocStateData
@@ -69,6 +68,7 @@ import FlashMessage
 import Kontra
 import KontraLink
 import ListUtil
+import MagicHash (MagicHash)
 import MinutesTime
 import Misc
 import Templates.Templates

@@ -31,13 +31,13 @@ module Doc.DocStateQuery
     ) where
 
 import Control.Applicative
-import DB.Types
 import DB.Classes
 import DBError
 import Doc.Model
 import Doc.DocStateData
 import Company.Model
 import Kontra
+import MagicHash (MagicHash)
 import Util.SignatoryLinkUtils
 import qualified Log
 import Doc.DocInfo

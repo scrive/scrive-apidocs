@@ -13,7 +13,7 @@ module Doc.DocStateUpdate
     , newDocument
     ) where
 
-import DB.Types
+import MagicHash (MagicHash)
 import DBError
 import Doc.Model
 import Doc.DocStateData

@@ -32,7 +32,6 @@ import Control.Applicative
 import Control.Monad.IO.Class
 import Data.ByteString.UTF8 (toString)
 import Data.Maybe
-import DB.Nexus
 import DB.Classes
 import Misc
 import User.UserView
@@ -147,13 +146,13 @@ allUsersTable users =
         fieldFL "users" $ map mkUserInfoView $ users
         field "adminlink" $ show $ LinkAdminOnly
 
-servicesAdminPage :: TemplatesMonad m => Nexus -> [Service] -> m String
-servicesAdminPage conn services = do
+servicesAdminPage :: TemplatesMonad m => DBEnv -> [Service] -> m String
+servicesAdminPage env services = do
     renderTemplateFM "servicesAdmin" $ do
         field "adminlink" $ show $ LinkAdminOnly
         fieldFL "services" $ for services $ \ service -> do
             field "name"  $ show $ serviceid service
-            fieldM "admin" $ fmap getSmartName <$> (ioRunDB conn $ dbQuery $ GetUserByID $ serviceadmin $ servicesettings service)
+            fieldM "admin" $ fmap getSmartName <$> (ioRunDB env $ dbQuery $ GetUserByID $ serviceadmin $ servicesettings service)
             field "location" $ show $ servicelocation $ servicesettings service
 
 mkUserInfoView :: (Functor m, MonadIO m) => (User, Maybe Company, DocStats) -> Fields m

@@ -14,20 +14,19 @@ import Happstack.Data (Proxy(..))
 import Happstack.State (runTxSystem, TxControl, shutdownSystem, Saver(..))
 
 import Control.Concurrent (MVar)
-import DB.Nexus
 import System.IO.Temp
 import qualified Control.Exception as E
 
 -- create test environment
-withTestEnvironment :: Nexus -> DB () -> IO ()
-withTestEnvironment conn = withTestState . withTestDB conn
+withTestEnvironment :: DBEnv -> DB () -> IO ()
+withTestEnvironment env = withTestState . withTestDB env
 
 -- pgsql database --
 
 -- | Runs set of sql queries within one transaction and clears all tables in the end
-withTestDB :: Nexus -> DB () -> IO ()
-withTestDB conn f = do
-  er <- ioRunDB conn $ do
+withTestDB :: DBEnv -> DB () -> IO ()
+withTestDB env f = do
+  er <- ioRunDB env $ do
     er <- tryDB f
     clearTables
     return er

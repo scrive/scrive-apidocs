@@ -67,9 +67,9 @@ import Control.Monad.Reader
 import Data.Maybe
 import ActionSchedulerState
 import Company.Model
-import DB.Types
 import Kontra
 import KontraLink
+import MagicHash (MagicHash)
 import Mails.SendMail(Mail)
 import Templates.Templates
 import Templates.TemplatesUtils

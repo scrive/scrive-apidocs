@@ -2,7 +2,6 @@ module AccountInfoTest (accountInfoTests) where
 
 import Control.Applicative
 import Control.Monad.State
-import DB.Nexus
 import Data.Maybe
 import Happstack.Server
 import Happstack.State (query)
@@ -14,8 +13,8 @@ import qualified Data.ByteString.UTF8 as BS
 import ActionSchedulerState
 import Context
 import DB.Classes
-import DB.Types
 import FlashMessage
+import MagicHash (unsafeMagicHash)
 import Mails.Model
 import MinutesTime
 import Misc
@@ -31,56 +30,56 @@ import User.Utils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 
-accountInfoTests :: Nexus -> Test
-accountInfoTests conn = testGroup "AccountInfo" [
-      testCase "lets private account upgrade to company account" $ testPrivateToCompanyUpgrade conn
-    , testCase "company upgrade requires a company name" $ testCompanyUpgradeRequiresCompanyName conn
-    , testCase "lets users change their email addresses" $ testChangeEmailAddress conn
-    , testCase  "requesting email change fails is the entered emails are mismatched" $ testAddressesMustMatchToRequestEmailChange conn
-    , testCase "need two addresses to request email changes" $ testNeedTwoAddressesToRequestEmailChange conn
-    , testCase "need unique email to request email change" $ testNeedEmailToBeUniqueToRequestChange conn
-    , testCase "need the correct action id to complete email change" $ testEmailChangeFailsIfActionIDIsWrong conn
-    , testCase "need the correct hash to complete email change" $ testEmailChangeFailsIfMagicHashIsWrong conn
-    , testCase "need the correct user to complete email change" $ testEmailChangeIfForAnotherUser conn
-    , testCase "need the email to still be unique to complete email change" $ testEmailChangeFailsIfEmailInUse conn
-    , testCase "need the password to the correct to complete the email change" $ testEmailChangeFailsIfPasswordWrong conn
-    , testCase "need the password to be entered to complete the email change" $ testEmailChangeFailsIfNoPassword conn
+accountInfoTests :: DBEnv -> Test
+accountInfoTests env = testGroup "AccountInfo" [
+      testCase "lets private account upgrade to company account" $ testPrivateToCompanyUpgrade env
+    , testCase "company upgrade requires a company name" $ testCompanyUpgradeRequiresCompanyName env
+    , testCase "lets users change their email addresses" $ testChangeEmailAddress env
+    , testCase  "requesting email change fails is the entered emails are mismatched" $ testAddressesMustMatchToRequestEmailChange env
+    , testCase "need two addresses to request email changes" $ testNeedTwoAddressesToRequestEmailChange env
+    , testCase "need unique email to request email change" $ testNeedEmailToBeUniqueToRequestChange env
+    , testCase "need the correct action id to complete email change" $ testEmailChangeFailsIfActionIDIsWrong env
+    , testCase "need the correct hash to complete email change" $ testEmailChangeFailsIfMagicHashIsWrong env
+    , testCase "need the correct user to complete email change" $ testEmailChangeIfForAnotherUser env
+    , testCase "need the email to still be unique to complete email change" $ testEmailChangeFailsIfEmailInUse env
+    , testCase "need the password to the correct to complete the email change" $ testEmailChangeFailsIfPasswordWrong env
+    , testCase "need the password to be entered to complete the email change" $ testEmailChangeFailsIfNoPassword env
     ]
 
-testPrivateToCompanyUpgrade :: Nexus -> Assertion
-testPrivateToCompanyUpgrade conn = withTestEnvironment conn $ do
+testPrivateToCompanyUpgrade :: DBEnv -> Assertion
+testPrivateToCompanyUpgrade env = withTestEnvironment env $ do
   Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   let upgradeinfo = UpgradeInfo "Test Corp"
                                 "Andrzejj"
                                 "Rybczakk"
                                 "Tester"
                                 "12345"
-  (res1, ctx1) <- upgradeCompanyForUser conn user upgradeinfo
+  (res1, ctx1) <- upgradeCompanyForUser env user upgradeinfo
 
   assertCompanyUpgradeSuccessful (userid user) upgradeinfo (res1, ctx1)
 
-testCompanyUpgradeRequiresCompanyName :: Nexus -> Assertion
-testCompanyUpgradeRequiresCompanyName conn = withTestEnvironment conn $ do
+testCompanyUpgradeRequiresCompanyName :: DBEnv -> Assertion
+testCompanyUpgradeRequiresCompanyName env = withTestEnvironment env $ do
   Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   let upgradeinfo = UpgradeInfo ""
                                 "Andrzejj"
                                 "Rybczakk"
                                 "Tester"
                                 "12345"
-  (res1, ctx1) <- upgradeCompanyForUser conn user upgradeinfo
+  (res1, ctx1) <- upgradeCompanyForUser env user upgradeinfo
 
   assertCompanyUpgradeFailed (userid user) (res1, ctx1)
 
 data UpgradeInfo = UpgradeInfo String String String String String
 
 upgradeCompanyForUser :: (MonadIO m, Functor m) =>
-                               Nexus
+                               DBEnv
                             -> User
                             -> UpgradeInfo
                             -> m (Response, Context)
-upgradeCompanyForUser conn user (UpgradeInfo cname fstname sndname position phone) = do
+upgradeCompanyForUser env user (UpgradeInfo cname fstname sndname position phone) = do
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [ ("createcompany", inText "true")
@@ -123,14 +122,14 @@ assertCompanyUpgradeFailed uid (res, ctx) = do
   assertBool "User isn't a company admin" (not $ useriscompanyadmin user)
   assertEqual "There is no company" Nothing mcompany
 
-testChangeEmailAddress :: Nexus -> Assertion
-testChangeEmailAddress conn = withTestEnvironment conn $ do
+testChangeEmailAddress :: DBEnv -> Assertion
+testChangeEmailAddress env = withTestEnvironment env $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
-  passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
+  passwordhash <- createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req1 <- mkRequest POST [ ("changeemail", inText "true")
@@ -164,11 +163,11 @@ testChangeEmailAddress conn = withTestEnvironment conn $ do
   Just uuuser <- dbQuery $ GetUserByID (userid user)
   assertEqual "Email has changed" (BS.fromString "jim@bob.com") (getEmail uuuser)
 
-testAddressesMustMatchToRequestEmailChange :: Nexus -> Assertion
-testAddressesMustMatchToRequestEmailChange conn = withTestEnvironment conn $ do
+testAddressesMustMatchToRequestEmailChange :: DBEnv -> Assertion
+testAddressesMustMatchToRequestEmailChange env = withTestEnvironment env $ do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req1 <- mkRequest POST [ ("changeemail", inText "true")
@@ -181,11 +180,11 @@ testAddressesMustMatchToRequestEmailChange conn = withTestEnvironment conn $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx1)
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx1) `isFlashOfType` OperationFailed
 
-testNeedTwoAddressesToRequestEmailChange :: Nexus -> Assertion
-testNeedTwoAddressesToRequestEmailChange conn = withTestEnvironment conn $ do
+testNeedTwoAddressesToRequestEmailChange :: DBEnv -> Assertion
+testNeedTwoAddressesToRequestEmailChange env = withTestEnvironment env $ do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req1 <- mkRequest POST [ ("changeemail", inText "true")
@@ -198,12 +197,12 @@ testNeedTwoAddressesToRequestEmailChange conn = withTestEnvironment conn $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx1)
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx1) `isFlashOfType` OperationFailed
 
-testNeedEmailToBeUniqueToRequestChange :: Nexus -> Assertion
-testNeedEmailToBeUniqueToRequestChange conn = withTestEnvironment conn $ do
+testNeedEmailToBeUniqueToRequestChange :: DBEnv -> Assertion
+testNeedEmailToBeUniqueToRequestChange env = withTestEnvironment env $ do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   _ <- addNewUser "Jim" "Bob" "jim@bob.com"
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req1 <- mkRequest POST [ ("changeemail", inText "true")
@@ -218,113 +217,113 @@ testNeedEmailToBeUniqueToRequestChange conn = withTestEnvironment conn $ do
   actions <- getRequestChangeEmailActions
   assertEqual "No request email action was made" 0 (length $ actions)
 
-testEmailChangeFailsIfActionIDIsWrong :: Nexus -> Assertion
-testEmailChangeFailsIfActionIDIsWrong conn = withTestEnvironment conn $ do
+testEmailChangeFailsIfActionIDIsWrong :: DBEnv -> Assertion
+testEmailChangeFailsIfActionIDIsWrong env = withTestEnvironment env $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
-  passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
+  passwordhash <- createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [("password", inText "abc123")]
-  action <- liftIO $ newRequestEmailChange user (Email $ BS.fromString "jim@bob.com")
+  action <- newRequestEmailChange user (Email $ BS.fromString "jim@bob.com")
   let (RequestEmailChange _inviterid _invitedemail token) = actionType action
   (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (ActionID 123) token >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
-testEmailChangeFailsIfMagicHashIsWrong :: Nexus -> Assertion
-testEmailChangeFailsIfMagicHashIsWrong conn = withTestEnvironment conn $ do
+testEmailChangeFailsIfMagicHashIsWrong :: DBEnv -> Assertion
+testEmailChangeFailsIfMagicHashIsWrong env = withTestEnvironment env $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
-  passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
+  passwordhash <- createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [("password", inText "abc123")]
-  action <- liftIO $ newRequestEmailChange user (Email $ BS.fromString "jim@bob.com")
-  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) (MagicHash 123) >>= sendRedirect
+  action <- newRequestEmailChange user (Email $ BS.fromString "jim@bob.com")
+  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) (unsafeMagicHash 123) >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
-testEmailChangeIfForAnotherUser :: Nexus -> Assertion
-testEmailChangeIfForAnotherUser conn = withTestEnvironment conn $ do
+testEmailChangeIfForAnotherUser :: DBEnv -> Assertion
+testEmailChangeIfForAnotherUser env = withTestEnvironment env $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
-  passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
+  passwordhash <- createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   Just anotheruser <- addNewUser "Fred" "Frog" "fred@frog.com"
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [("password", inText "abc123")]
-  action <- liftIO $ newRequestEmailChange anotheruser (Email $ BS.fromString "jim@bob.com")
+  action <- newRequestEmailChange anotheruser (Email $ BS.fromString "jim@bob.com")
   let (RequestEmailChange _inviterid _invitedemail token) = actionType action
   (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) token >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
-testEmailChangeFailsIfEmailInUse:: Nexus -> Assertion
-testEmailChangeFailsIfEmailInUse conn = withTestEnvironment conn $ do
+testEmailChangeFailsIfEmailInUse:: DBEnv -> Assertion
+testEmailChangeFailsIfEmailInUse env = withTestEnvironment env $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
-  passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
+  passwordhash <- createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [("password", inText "abc123")]
-  action <- liftIO $ newRequestEmailChange user (Email $ BS.fromString "jim@bob.com")
+  action <- newRequestEmailChange user (Email $ BS.fromString "jim@bob.com")
 
   Just _ <- addNewUser "Jim" "Bob" "jim@bob.com"
-  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) (MagicHash 123) >>= sendRedirect
+  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) (unsafeMagicHash 123) >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
-testEmailChangeFailsIfPasswordWrong :: Nexus -> Assertion
-testEmailChangeFailsIfPasswordWrong conn = withTestEnvironment conn $ do
+testEmailChangeFailsIfPasswordWrong :: DBEnv -> Assertion
+testEmailChangeFailsIfPasswordWrong env = withTestEnvironment env $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
-  passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
+  passwordhash <- createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [("password", inText "wrongpassword")]
-  action <- liftIO $ newRequestEmailChange user (Email $ BS.fromString "jim@bob.com")
+  action <- newRequestEmailChange user (Email $ BS.fromString "jim@bob.com")
 
   Just _ <- addNewUser "Jim" "Bob" "jim@bob.com"
-  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) (MagicHash 123) >>= sendRedirect
+  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) (unsafeMagicHash 123) >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
-testEmailChangeFailsIfNoPassword :: Nexus -> Assertion
-testEmailChangeFailsIfNoPassword conn = withTestEnvironment conn $ do
+testEmailChangeFailsIfNoPassword :: DBEnv -> Assertion
+testEmailChangeFailsIfNoPassword env = withTestEnvironment env $ do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
-  passwordhash <- liftIO $ createPassword (BS.fromString "abc123")
+  passwordhash <- createPassword (BS.fromString "abc123")
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [("password", inText "")]
-  action <- liftIO $ newRequestEmailChange user (Email $ BS.fromString "jim@bob.com")
+  action <- newRequestEmailChange user (Email $ BS.fromString "jim@bob.com")
 
   Just _ <- addNewUser "Jim" "Bob" "jim@bob.com"
-  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) (MagicHash 123) >>= sendRedirect
+  (res, ctx') <- runTestKontra req ctx $ handlePostChangeEmail (actionID action) (unsafeMagicHash 123) >>= sendRedirect
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed

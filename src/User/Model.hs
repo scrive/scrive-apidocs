@@ -49,8 +49,8 @@ import Company.Model
 import DB.Classes
 import DB.Derive
 import DB.Fetcher2
-import DB.Types
 import DB.Utils
+import MagicHash (MagicHash)
 import MinutesTime
 import User.Lang
 import User.Locale
