@@ -55,6 +55,7 @@ mailApiTests conn = testGroup "MailAPI" [
     , testCase "test 2 sig model from outlook mac" $ testSuccessfulDocCreation conn "test/mailapi/email_outlook_viktor.eml" 3
     , testCase "test json with 2 sigs" $ testSuccessfulDocCreation conn "test/mailapi/email_onesig_json.eml" 2
     , testCase "test json with 2 sigs (from Roger)" $ testSuccessfulDocCreation conn "test/mailapi/roger_json.eml" 2      
+    , testCase "test json with 2 sigs (from Roger) with decoding" $ testSuccessfulDocCreation conn "test/mailapi/roger_decode_json.eml" 2      
     ]
 
 testParseMimes :: String -> Assertion
