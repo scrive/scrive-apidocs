@@ -34,7 +34,7 @@ Content-Transfer-Encoding: quoted-printable
 
 {
 
-    "mainfile" : { "name" : "avtal.pdf"},
+    "mainfile" : { "name" : "Anst=E4llningsavtal.pdf " },
 
     "title" : "Anst=E4llningsavtal",
 
@@ -179,10 +179,10 @@ n><o:p></o:p></p><p style=3D'margin:0cm;margin-bottom:.0001pt'><span style=
 
 --_004_274B8C8096943D499CFF57DDC38E1EAB019467C2C9intelliplandc_
 Content-Type: application/pdf;
-	name="avtal.pdf"
+	name="=?iso-8859-1?Q?Anst=E4llningsavtal.pdf?="
 Content-Description: =?iso-8859-1?Q?Anst=E4llningsavtal.pdf?=
 Content-Disposition: attachment;
-	filename="avtal.pdf"; size=98917;
+	filename="=?iso-8859-1?Q?Anst=E4llningsavtal.pdf?="; size=98917;
 	creation-date="Mon, 13 Feb 2012 13:38:42 GMT";
 	modification-date="Mon, 13 Feb 2012 13:38:43 GMT"
 Content-Transfer-Encoding: base64
