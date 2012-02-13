@@ -15,7 +15,6 @@ import Company.Model
 import CompanyAccounts.Model
 import Context
 import DB.Classes
-import DB.Nexus
 import Misc
 import Redirect
 import StateHelper
@@ -24,20 +23,20 @@ import TestingUtil
 import TestKontra as T
 import Util.JSON
 
-companyControlTests :: Nexus -> Test
-companyControlTests conn = testGroup "CompanyControl" [
-    testCase "handleGetCompany works" $ test_handleGetCompany conn
-  , testCase "handleGetCompanyJSON works" $ test_handleGetCompanyJSON conn
-  , testCase "handlePostCompany can be used to set the company ui" $ test_settingUIWithHandlePostCompany conn
-  , testCase "handleCompanyLogo responds when noone is logged in" $ test_handleCompanyLogo conn
+companyControlTests :: DBEnv -> Test
+companyControlTests env = testGroup "CompanyControl" [
+    testCase "handleGetCompany works" $ test_handleGetCompany env
+  , testCase "handleGetCompanyJSON works" $ test_handleGetCompanyJSON env
+  , testCase "handlePostCompany can be used to set the company ui" $ test_settingUIWithHandlePostCompany env
+  , testCase "handleCompanyLogo responds when noone is logged in" $ test_handleCompanyLogo env
   ]
 
-test_handleGetCompany :: Nexus -> Assertion
-test_handleGetCompany conn = withTestEnvironment conn $ do
+test_handleGetCompany :: DBEnv -> Assertion
+test_handleGetCompany env = withTestEnvironment env $ do
   (user, _company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest GET []
@@ -45,12 +44,12 @@ test_handleGetCompany conn = withTestEnvironment conn $ do
 
   assertEqual "Response code is 200" 200 (rsCode res)
 
-test_handleGetCompanyJSON :: Nexus -> Assertion
-test_handleGetCompanyJSON conn = withTestEnvironment conn $ do
+test_handleGetCompanyJSON :: DBEnv -> Assertion
+test_handleGetCompanyJSON env = withTestEnvironment env $ do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest GET []
@@ -68,12 +67,12 @@ test_handleGetCompanyJSON conn = withTestEnvironment conn $ do
       JSString (JSONString jsonid) <- jsget "id" companyjsv
       return jsonid
 
-test_settingUIWithHandlePostCompany :: Nexus -> Assertion
-test_settingUIWithHandlePostCompany conn = withTestEnvironment conn $ do
+test_settingUIWithHandlePostCompany :: DBEnv -> Assertion
+test_settingUIWithHandlePostCompany env = withTestEnvironment env $ do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req1 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"barsbackground\":\"green\"}")
@@ -105,12 +104,12 @@ test_settingUIWithHandlePostCompany conn = withTestEnvironment conn $ do
   assertEqual "Colour was set" (Just $ BS.fromString "blue") (companybarsbackground $ companyui newcompany3)
   assertEqual "File reset" Nothing (companylogo $ companyui newcompany3)
 
-test_handleCompanyLogo :: Nexus -> Assertion
-test_handleCompanyLogo conn = withTestEnvironment conn $ do
+test_handleCompanyLogo :: DBEnv -> Assertion
+test_handleCompanyLogo env = withTestEnvironment env $ do
   (_user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn })
+  ctx <- (\c -> c { ctxdbenv = env })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest GET []
