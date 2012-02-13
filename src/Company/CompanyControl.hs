@@ -27,12 +27,12 @@ import Company.Model
 import Kontra
 import KontraLink
 import Misc
-import InputValidation
 import Redirect
 import User.Model
 import User.Utils
 import Util.HasSomeCompanyInfo
 import Util.MonadUtils
+import qualified Log
 
 handleGetCompany :: Kontrakcja m => m Response
 handleGetCompany = withCompanyUser $ \(_user, company) -> do
@@ -43,21 +43,26 @@ handlePostCompany :: Kontrakcja m => m KontraLink
 handlePostCompany = withCompanyAdmin $ \(_user, company) -> do
   rawcompanyjson <- guardJustM $ getField "company"
   companyjson <- guardRight $ runGetJSON readJSValue rawcompanyjson
-  cui <- (guardRight $ companyUiFromJSON companyjson) >>= setCompanyLogoFromRequest
+  jsoncui <- guardRight $ companyUiFromJSON companyjson
+  cui <- setCompanyLogoFromRequest jsoncui{ companylogo = companylogo $ companyui company }
+  Log.debug $ "company UI " ++ (show $ companyid company) ++ " updated to " ++ (show cui)
   _ <- runDBUpdate $ UpdateCompanyUI (companyid company) cui
   return LinkAccountCompany
 
 setCompanyLogoFromRequest :: Kontrakcja m => CompanyUI -> m CompanyUI
 setCompanyLogoFromRequest cui = do
   mlogo <- fmap Binary <$> getFileField "logo"
-  mislogo <- getOptionalField asValidCheckBox "islogo"
+  mislogo <- getField "islogo"
   case (mislogo, mlogo) of
     -- islogo = False so if there is a stored logo remove it
-    (Just False, _) -> return cui{ companylogo = Nothing }
+    (Just "false", _) -> do
+      return cui{ companylogo = Nothing }
     -- they uploaded a logo so store it
-    (_, Just logo) -> return cui{ companylogo = Just logo }
+    (_, Just logo) -> do
+      return cui{ companylogo = Just logo }
     -- just keep the logo however it currently is
-    _ -> return cui
+    _ -> do
+      return cui
 
 companyUiFromJSON :: JSValue -> Either String CompanyUI
 companyUiFromJSON jsv = do

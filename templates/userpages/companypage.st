@@ -95,7 +95,7 @@ window.CompanyModel = Backbone.Model.extend({
         address: args.company.address,
         zip: args.company.zip,
         city: args.company.country,
-        barsbackground: isbarsbackground ? args.company.barsbackground : "#212121",
+        barsbackground: args.company.barsbackground,
         iscustombarsbackground: isbarsbackground,
         logo: args.company.logo,
         iscustomlogo: islogo,
@@ -119,9 +119,15 @@ window.CompanyView = Backbone.View.extend({
 
     this.title.text("$_EmailBranding()$");
 
-    if (this.bbinput.val()!=company.barsbackground()) {
-      this.bbinput.val(company.barsbackground());
+    var bbcolour = (company.isCustomBarsbackground() && company.barsbackground()!="") ? company.barsbackground() : "#212121";
+    if (this.bbinput.val()!=bbcolour) {
+      this.bbinput.val(bbcolour);
     }
+    this.bbdisplay.css("background-color", bbcolour);
+    this.logodisplaywrapper.css("background-color", bbcolour);
+
+    var logo = (company.isCustomLogo() && company.logo()!="") ? company.logo() : "/img/email-logo.png";
+    this.logodisplay.css("background-image", "url('" + logo + "')");
 
     if (company.isEditable()) {
       this.bbcheckbox.removeAttr("disabled");
@@ -134,8 +140,6 @@ window.CompanyView = Backbone.View.extend({
       this.saveButton.hide();
       this.logocheckbox.attr("disabled", true);
     }
-
-    this.bbdisplay.css("background-color", company.barsbackground());
 
     if (company.isCustomBarsbackground()) {
       this.bbcheckbox.attr("checked", true);
@@ -151,13 +155,6 @@ window.CompanyView = Backbone.View.extend({
     } else {
       this.logocheckbox.removeAttr("checked");
       this.logocustomdiv.hide();
-    }
-
-    this.logodisplaywrapper.css("background-color", company.barsbackground());
-    if (company.isCustomLogo() && company.logo()!="") {
-      this.logodisplay.css("background-image", "url('" + company.logo() + "')");
-    } else {
-      this.logodisplay.css("background-image", "url('/img/email-logo.png')");
     }
   },
   initElems: function() {
@@ -228,24 +225,24 @@ window.CompanyView = Backbone.View.extend({
           method: "POST",
           url: company.submitUrl(),
           company: JSON.stringify(company),
-          isLogo: true,
+          islogo: true,
           beforeSend: function() {
             //horrible hack from emily
             jQuery("input[name='company']").val(JSON.stringify(company));
-            jQuery("input[name='isLogo']").val(company.isCustomLogo());
+            jQuery("input[name='islogo']").val(company.isCustomLogo());
           },
           ajax: true,
           onSend: function() {
             console.log("sending");
-            logodisplay.attr("src", "/theme/images/wait30trans.gif");
+            logodisplay.css("background-image", "url('/theme/images/wait30trans.gif')");
           },
           ajaxsuccess: function(d) {
             company.fetch({cache: false});
-            logodisplay.attr("src", company.logo());
+            logodisplay.css("background-image", "url('" + company.logo() + "')");
           },
           ajaxerror: function(d, a) {
             company.fetch({cache: false});
-            logodisplay.attr("src", company.logo());
+            logodisplay.css("background-image", "url('" + company.logo() + "')");
             console.log("error");
           }
       })
@@ -281,7 +278,7 @@ window.CompanyView = Backbone.View.extend({
           method: "POST",
           url: "/account/company",
           company: companyjson,
-          isLogo: islogo
+          islogo: islogo
         }).send();
       }
     }).input();
