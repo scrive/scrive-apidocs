@@ -12,7 +12,7 @@ viewCompany =
       <li><a href="/account/usagestats">$_HeadUsageStats()$</a></li>
   </ul>
   <div class="tab-container">
-      <div class="tab-content account" style="height:330px;">
+      <div class="tab-content account" style="height:360px;">
       </div>
   </div>
 </div>
@@ -117,7 +117,7 @@ window.CompanyView = Backbone.View.extend({
   render: function() {
     var company = this.model;
 
-    this.title.text(company.name());
+    this.title.text("$_EmailBranding()$");
 
     if (this.bbinput.val()!=company.barsbackground()) {
       this.bbinput.val(company.barsbackground());
@@ -177,7 +177,7 @@ window.CompanyView = Backbone.View.extend({
     this.bbcheckbox.change(function() {
       company.setIsCustomBarsBackground(bbcheckbox.is(":checked"));
     });
-    var bbcheckboxlabel = jQuery("<label for='bbcheckbox'>Custom Email Colour</label>");
+    var bbcheckboxlabel = jQuery("<label for='bbcheckbox'>$_CustomiseColour()$</label>");
 
     var bbinput = jQuery("<input type='text' class='float-left' style='width: 150px; margin-left: 30px' />");
     this.bbinput = bbinput;
@@ -209,7 +209,7 @@ window.CompanyView = Backbone.View.extend({
     this.logocheckbox.change(function() {
       company.setIsCustomLogo(logocheckbox.is(":checked"));
     });
-    var logocheckboxlabel = jQuery("<label for='logocheckbox'>Custom Email Logo</label>");
+    var logocheckboxlabel = jQuery("<label for='logocheckbox'>$_CustomiseLogo()$</label>");
 
     var logodisplay = jQuery("<div style='width:100%;height:33px;background-repeat:no-repeat;' />");
     var logodisplaywrapper = jQuery("<div style='margin:10px 30px;padding: 10px;' />")
@@ -218,9 +218,9 @@ window.CompanyView = Backbone.View.extend({
     this.logodisplaywrapper = logodisplaywrapper;
 
     var logoupload = UploadButton.init({
-      width: 120,
+      width: 150,
       name: "logo",
-      text: "Select PNG",
+      text: "$_SelectImageLabel()$",
       submitOnUpload: true,
       showLoadingDialog: false,
       type: "image/png",
@@ -270,7 +270,7 @@ window.CompanyView = Backbone.View.extend({
     this.saveButton = Button.init({
       color: "green",
       size: "small",
-      text: "Save Settings",
+      text: "$_SaveSettings()$",
       onClick: function() {
         if (!company.isCustomBarsbackground()) {
           company.setBarsbackground("");
@@ -286,7 +286,7 @@ window.CompanyView = Backbone.View.extend({
       }
     }).input();
 
-    var cols = jQuery("<div style='height:300px;' />");
+    var cols = jQuery("<div style='height:330px;' />");
     cols.append(firstcol);
 
     this.el.empty();
