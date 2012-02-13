@@ -26,6 +26,9 @@ import DB.Nexus
 #ifndef NO_COMPANYSTATE
 import CompanyStateTest
 #endif
+#ifndef NO_COMPANYCONTROL
+import CompanyControlTest
+#endif
 #ifndef NO_DOCSTATE
 import DocStateTest
 #endif
@@ -119,6 +122,9 @@ allTests = tail tests
         undefined
 #ifndef NO_COMPANYSTATE
       , ("companystate", const $ companyStateTests)
+#endif
+#ifndef NO_COMPANYCONTROL
+      , ("companycontrol", const $ companyControlTests conn)
 #endif
 #ifndef NO_DOCSTATE
       , ("docstate", const $ docStateTests)
@@ -230,6 +236,7 @@ testMany (args, ts) = Log.withLogger $ do
     -- so have to get around that 'feature'!!
     bracket_ (return ())
              (do
+<<<<<<< HEAD
                stats <- getNexusStats (nexus dbenv)
                putStrLn $ "SQL: " ++ show stats)
 
@@ -247,3 +254,12 @@ testone t = do
 main :: IO ()
 main = (partitionEithers . testsToRun <$> getArgs) >>= testMany
 
+=======
+               stats <- getNexusStats conn
+               putStrLn $ "SQL: queries " ++ show (nexusQueries stats) ++
+                          ", params " ++ show (nexusParams stats) ++
+                          ", rows " ++ show (nexusRows stats) ++
+                          ", values " ++ show (nexusValues stats))
+
+             (defaultMainWithArgs tests args)
+>>>>>>> add in a unit test for CompanyControl

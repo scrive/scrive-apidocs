@@ -40,6 +40,11 @@ Flag test-companystate
   Manual: True
   Default: True
 
+Flag test-companycontrol
+  Description: Build companycontrol testsuite
+  Manual: True
+  Default: True
+
 Flag test-docstate
   Description: Build docstate testsuite
   Manual: True
@@ -328,6 +333,8 @@ Executable kontrakcja-test
 
   if !flag(test-companystate)
     cpp-options: -DNO_COMPANYSTATE
+  if !flag(test-companycontrol)
+    cpp-options: -DNO_COMPANYCONTROL
   if !flag(test-docstate)
     cpp-options: -DNO_DOCSTATE
   if !flag(test-html)
