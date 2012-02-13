@@ -134,11 +134,13 @@ window.CompanyView = Backbone.View.extend({
       this.bbinput.removeAttr("disabled");
       this.saveButton.show();
       this.logocheckbox.removeAttr("disabled");
+      this.logoupload.show();
     } else {
       this.bbcheckbox.attr("disabled", true);
       this.bbinput.attr("disabled", true);
       this.saveButton.hide();
       this.logocheckbox.attr("disabled", true);
+      this.logoupload.hide();
     }
 
     if (company.isCustomBarsbackground()) {
@@ -234,10 +236,12 @@ window.CompanyView = Backbone.View.extend({
           ajax: true,
           onSend: function() {
             console.log("sending");
+            logodisplaywrapper.css("background-color", "transparent");
             logodisplay.css("background-image", "url('/theme/images/wait30trans.gif')");
           },
           ajaxsuccess: function(d) {
             company.fetch({cache: false});
+            company.change();
             logodisplay.css("background-image", "url('" + company.logo() + "')");
           },
           ajaxerror: function(d, a) {
@@ -247,6 +251,7 @@ window.CompanyView = Backbone.View.extend({
           }
       })
     }).input();
+    this.logoupload = logoupload;
 
     this.logocustomdiv = jQuery("<div />");
     this.logocustomdiv.append(jQuery("<div style='padding-left:30px;padding-right:30px;padding-top:5px;'/>").append(logoupload));

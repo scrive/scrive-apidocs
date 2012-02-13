@@ -17,10 +17,7 @@
  *  ! FOR now this module is based on MultiFile jQuery plugin, but this may change soon.
  *  We do not store internally any data about uploaded files.
  *
-<<<<<<< HEAD
  * If you are using onAppend construct you can't submit input in first 10 ms.
-=======
->>>>>>> make it so you can upload a logo
 */
 
 (function( window){
@@ -69,24 +66,14 @@ var UploadButtonModel = Backbone.Model.extend({
   hasSubmit : function(){
         return this.submit() != undefined;
   },
-<<<<<<< HEAD
   onAppend : function() {
-             return this.get("onAppend");  
+             return this.get("onAppend");
   },
   type : function() {
         return this.get("type");
   },
   color : function() {
         return this.get("color");
-=======
-  borderWidth : function(){
-    if (this.size() == "small")
-        return 16;
-    else if (this.size() == "tiny")
-        return 6;
-    else if (this.size() == "big")
-        return 22;
->>>>>>> make it so you can upload a logo
   }
 });
 
@@ -112,11 +99,7 @@ var UploadButtonView = Backbone.View.extend({
         button.append(label);
         button.append(right);
         var fileinput = $("<input class='multiFileInput' type='file'/>");
-<<<<<<< HEAD
         fileinput.attr("accept",model.type()).attr("maxlength",model.maxlength()).attr("name",model.name());
-=======
-        fileinput.attr("accept",model.accept()).attr("maxlength",model.maxlength()).attr("name",model.name());
->>>>>>> make it so you can upload a logo
         fileinput.css("width",model.width()  + "px");
         var list = model.list();
         if (list == undefined) {
@@ -126,7 +109,14 @@ var UploadButtonView = Backbone.View.extend({
         fileinput.MultiFile({
             list: list,
             onError: function(a,b,c,d) {
-                FlashMessages.add({content: localization.onlyPDFAllowed, color: "red"});
+                var flashcontent = localization.onlyPDFAllowed;
+                console.log(model.accept().split("/"));
+                var splitaccept = model.accept().split("/");
+                var lastaccept = splitaccept[splitaccept.length - 1].toUpperCase();
+                if (lastaccept!="PDF") {
+                  flashcontent = flashcontent.replace("PDF", lastaccept);
+                }
+                FlashMessages.add({content: flashcontent, color: "red"});
                 if (model.get('onError'))
                     model.get('onError')(a,b,c,d);
             },
