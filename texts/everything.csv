@@ -3134,7 +3134,7 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_mailMailAPIConfirmOfferHeader","Offert <strong>$documenttitle$</strong> har blivit skickat med Scrive by Mail. <BR/> Vänligen se över följande detaljer noggrant eller följ <a href='$link$'>länken</a> för att hantera ditt dokument.",,"The contract <strong>$documenttitle$</strong>  has been sent with Scrive by Mail. <BR/> Please review the following details or follow this <a href=""$link$"">link</a> to manage your document."
 "_zip","Postnummer",,"Zip"
 "_tweetAccount","scrive",,"scriveuk"
-"_mailsubheader","Signera Dokument Online med Scrive",,"Sign Documents Online with Scrive"
+"_mailsubheader","Powered by Scrive",,"Powered by Scrive"
 "_createCompany","Skapa företag",,"Create Company"
 "_createCompanyExplanation","När ett företag är skapat kommer du att bli en administratör och kommer kunna bjuda in dina kollegor till underkonton.",,"When a company is created you will be made an admin user and will be able to invite your colleagues to join you."
 "_createCompanyFormPreamble","För att skapa ett företag vänligen fyll i följande information:",,"To create a company please complete the following information:"
