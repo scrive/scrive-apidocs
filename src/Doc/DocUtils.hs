@@ -405,7 +405,7 @@ getSignatoryAttachment :: BS.ByteString -> BS.ByteString -> Document -> Maybe Si
 getSignatoryAttachment email name doc =
   find (\sl -> email == signatoryattachmentemail sl &&
                name  == signatoryattachmentname sl) $
-  documentsignatoryattachments doc
+  concat . map signatoryattachments $ documentsignatorylinks doc
 
 buildattach :: String -> Document -> [SignatoryAttachment]
                -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])]
@@ -456,7 +456,7 @@ fileInDocument doc fid =
     elem fid $      (documentfiles doc)
                  ++ (documentsealedfiles doc)
                  ++ (fmap authorattachmentfile $ documentauthorattachments doc)
-                 ++ (catMaybes $ fmap signatoryattachmentfile $ documentsignatoryattachments doc)
+                 ++ (catMaybes $ fmap signatoryattachmentfile $ concat . map signatoryattachments $ documentsignatorylinks doc)
 
 makePlacements :: [BS.ByteString]
                -> [BS.ByteString]

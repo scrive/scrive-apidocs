@@ -151,6 +151,7 @@ data SignatoryLink = SignatoryLink {
   , signatorylinkdeleted       :: Bool -- ^ when true sends the doc to the recycle bin for that sig
   , signatorylinkreallydeleted :: Bool -- ^ when true it means that the doc has been removed from the recycle bin
   , signatorylinkcsvupload     :: Maybe CSVUpload
+  , signatoryattachments       :: [SignatoryAttachment]
   } deriving (Eq, Ord, Show)
 
 data SignatoryRole = SignatoryPartner | SignatoryAuthor
@@ -407,7 +408,6 @@ data Document = Document {
   , documentservice                :: Maybe ServiceID
   , documentdeleted                :: Bool -- set to true when doc is deleted - the other fields will be cleared too, so it is really truely deleting, it's just we want to avoid re-using the docid.
   , documentauthorattachments      :: [AuthorAttachment]
-  , documentsignatoryattachments   :: [SignatoryAttachment]
   , documentui                     :: DocumentUI
   , documentregion                 :: Region
   } deriving (Eq, Ord, Show)

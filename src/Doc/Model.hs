@@ -192,7 +192,6 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documentservice" documentservice
                    , checkEqualBy "documentdeleted" documentdeleted
                    , checkEqualBy "documentauthorattachments" documentauthorattachments
-                   , checkEqualBy "documentsignatoryattachments" documentsignatoryattachments
                    , checkEqualBy "documentui" documentui
                    , checkEqualBy "documentregion" documentregion
                    , checkEqualBy "documentsignatorylinks count" (length . documentsignatorylinks)
@@ -276,7 +275,6 @@ fetchDocuments = foldDB decoder []
        , documentservice = service
        , documentdeleted = deleted
        , documentauthorattachments = []
-       , documentsignatoryattachments = []
        , documentui = DocumentUI mail_footer
        , documentregion = region
        } : acc
@@ -317,7 +315,12 @@ selectSignatoryLinksSQL = SQL ("SELECT "
   ++ " FROM signatory_links ") []
 
 fetchSignatoryLinks :: DB (M.Map DocumentID [SignatoryLink])
-fetchSignatoryLinks = foldDB decoder M.empty
+fetchSignatoryLinks = do
+  siglinks <- foldDB decoder M.empty
+  atts <- (return . M.fromList) =<< mapM (\link -> do 
+    att <- dbQuery $ GetSignatoryAttachments $ signatorylinkid link
+    return (signatorylinkid link, att)) (concat $ M.elems siglinks)
+  return $ M.mapMaybe (\links -> Just $ map (\link -> link{signatoryattachments = atts M.! (signatorylinkid link)}) links) siglinks 
   where
     decoder acc slid document_id user_id company_id fields sign_order token
      sign_time sign_ip seen_time seen_ip read_invitation invitation_delivery_status
@@ -361,6 +364,7 @@ fetchSignatoryLinks = foldDB decoder M.empty
          , signatorylinkreallydeleted = really_deleted
          , signatorylinkcsvupload =
              CSVUpload <$> csv_title <*> csv_contents <*> csv_signatory_index
+         , signatoryattachments = []
          }] acc
 
 insertSignatoryLinkAsIs :: DocumentID -> SignatoryLink -> DB (Maybe SignatoryLink)
@@ -446,6 +450,7 @@ signatoryAttachmentsSelectors = intercalate ", " [
   , "email"
   , "name"
   , "description"
+  , "signatory_link_id"
   ]
 
 selectSignatoryAttachmentsSQL :: SQL
@@ -453,28 +458,47 @@ selectSignatoryAttachmentsSQL = SQL ("SELECT "
   ++ signatoryAttachmentsSelectors
   ++ " FROM signatory_attachments ") []
 
-fetchSignatoryAttachments :: DB (M.Map DocumentID [SignatoryAttachment])
+fetchSignatoryAttachments :: DB (M.Map SignatoryLinkID [SignatoryAttachment])
 fetchSignatoryAttachments = foldDB decoder M.empty
   where
-    decoder acc document_id file_id email name description =
-      M.insertWith' (++) document_id [SignatoryAttachment {
+    decoder :: (M.Map SignatoryLinkID [SignatoryAttachment])
+            -> DocumentID
+            -> Maybe FileID
+            -> BS.ByteString
+            -> BS.ByteString
+            -> BS.ByteString
+            -> SignatoryLinkID
+            -> (M.Map SignatoryLinkID [SignatoryAttachment])
+    decoder acc _ file_id email name description slid =
+      M.insertWith' (++) slid [SignatoryAttachment {
           signatoryattachmentfile = file_id
         , signatoryattachmentemail = email
         , signatoryattachmentname = name
         , signatoryattachmentdescription = description
         }] acc
 
-insertSignatoryAttachmentAsIs :: DocumentID -> SignatoryAttachment -> DB (Maybe SignatoryAttachment)
-insertSignatoryAttachmentAsIs documentid attach = do
+{-
+insertSignatoryAttachmentAsIs :: SignatoryLinkID -> DocumentID -> SignatoryAttachment -> DB (Maybe SignatoryAttachment)
+insertSignatoryAttachmentAsIs slid documentid attach = do
   _ <- kRun $ mkSQL INSERT tableSignatoryAttachments [
       sql "file_id" $ signatoryattachmentfile attach
     , sql "document_id" $ documentid
     , sql "email" $ signatoryattachmentemail attach
     , sql "name" $ signatoryattachmentname attach
     , sql "description" $ signatoryattachmentdescription attach
+    , sql "signatory_link_id" $ slid
     ] <++> SQL ("RETURNING " ++ signatoryAttachmentsSelectors) []
   fetchSignatoryAttachments
     >>= oneObjectReturnedGuard . concatMap snd . M.toList
+-}
+
+data GetSignatoryAttachments = GetSignatoryAttachments SignatoryLinkID
+instance DBQuery GetSignatoryAttachments [SignatoryAttachment] where
+  dbQuery (GetSignatoryAttachments slid) = do
+    _ <- kRun $ selectSignatoryAttachmentsSQL 
+      <++> SQL "WHERE signatory_link_id = ?" [toSql slid]
+    att <- fetchSignatoryAttachments 
+    return $ att M.! slid
 
 insertDocumentAsIs :: Document -> DB (Maybe Document)
 insertDocumentAsIs document = do
@@ -500,7 +524,6 @@ insertDocumentAsIs document = do
                  , documentservice
                  , documentdeleted
                  , documentauthorattachments
-                 , documentsignatoryattachments
                  , documentui
                  , documentregion
                  } = document
@@ -549,13 +572,11 @@ insertDocumentAsIs document = do
       Just doc -> do
         mlinks <- mapM (insertSignatoryLinkAsIs documentid) documentsignatorylinks
         mauthorattachments <- mapM (insertAuthorAttachmentAsIs documentid) documentauthorattachments
-        msignatoryattachments <- mapM (insertSignatoryAttachmentAsIs documentid) documentsignatoryattachments
-        if any isNothing mlinks || any isNothing mauthorattachments || any isNothing msignatoryattachments
+        if any isNothing mlinks || any isNothing mauthorattachments
          then return Nothing
          else do
           let newdocument = doc { documentsignatorylinks = catMaybes mlinks
                                 , documentauthorattachments = catMaybes mauthorattachments
-                                , documentsignatoryattachments = catMaybes msignatoryattachments
                                 }
           assertEqualDocuments document newdocument
           return (Just newdocument)
@@ -856,14 +877,15 @@ instance Actor a => DBUpdate (CloseDocument a) (Either String Document) where
             getOneDocumentAffected "CloseDocument" r docid
           s -> return $ Left $ "Cannot CloseDocument " ++ show docid ++ " because " ++ concat s
 
-data Actor a => DeleteSigAttachment a = DeleteSigAttachment DocumentID BS.ByteString FileID a
+data Actor a => DeleteSigAttachment a = DeleteSigAttachment SignatoryLinkID DocumentID BS.ByteString FileID a
 instance Actor a => DBUpdate (DeleteSigAttachment a) (Either String Document) where
-  dbUpdate (DeleteSigAttachment did email fid actor) = do
+  dbUpdate (DeleteSigAttachment slid did email fid actor) = do
     r <- kRun $ mkSQL UPDATE tableSignatoryAttachments [sql "file_id" SqlNull]
-      <++> SQL "WHERE document_id = ? AND email = ? AND file_id = ?" [
+      <++> SQL "WHERE document_id = ? AND email = ? AND file_id = ? AND signatory_link_id = ?" [
         toSql did
       , toSql email
       , toSql fid
+      , toSql slid
       ]
     when_ (r == 1) $
       dbUpdate $ InsertEvidenceEvent
@@ -892,7 +914,7 @@ instance Actor a => DBUpdate (DocumentFromSignatoryData a) (Either String Docume
     toNewDoc :: Document -> Document
     toNewDoc d = d { documentsignatorylinks = map toNewSigLink (documentsignatorylinks d)
                     , documenttype = newDocType $ documenttype d
-                    , documentsignatoryattachments = map replaceCSV (documentsignatoryattachments d)
+                    -- , documentsignatoryattachments = map replaceCSV (documentsignatoryattachments d)
                     , documentctime = now
                     , documentmtime = now
                     }
@@ -907,7 +929,10 @@ instance Actor a => DBUpdate (DocumentFromSignatoryData a) (Either String Docume
     newDocType dt = dt
     toNewSigLink :: SignatoryLink -> SignatoryLink
     toNewSigLink sl
-      | isJust (signatorylinkcsvupload sl) = pumpData sl { signatorylinkcsvupload = Nothing }
+      | isJust (signatorylinkcsvupload sl) = let pumpedData = pumpData sl 
+                                             in pumpedData { signatorylinkcsvupload = Nothing
+                                                           , signatoryattachments = map replaceCSV $ signatoryattachments pumpedData
+                                                           }
       | otherwise = sl
     pumpData :: SignatoryLink -> SignatoryLink
     pumpData siglink = replaceSignatoryData siglink fstname sndname email company personalnumber companynumber fieldvalues
@@ -947,9 +972,6 @@ selectDocuments query = do
     _ <- kRun $ selectAuthorAttachmentsSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE author_attachments.document_id = docs.id) ORDER BY document_id DESC" []
     ats <- fetchAuthorAttachments
 
-    _ <- kRun $ selectSignatoryAttachmentsSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE signatory_attachments.document_id = docs.id) ORDER BY document_id DESC" []
-    sas <- fetchSignatoryAttachments
-
     kRunRaw "DROP TABLE docs"
 
     let findEmpty :: Document -> M.Map DocumentID [a] -> [a]
@@ -958,7 +980,6 @@ selectDocuments query = do
         fill doc = doc {
             documentsignatorylinks       = findEmpty doc sls
           , documentauthorattachments    = findEmpty doc ats
-          , documentsignatoryattachments = findEmpty doc sas
           }
 
     return $ map fill docs
@@ -1233,7 +1254,6 @@ instance Actor a => DBUpdate (NewDocument a) (Either String Document) where
                 , documentmtime                = ctime
                 , documentservice              = userservice user
                 , documentauthorattachments    = []
-                , documentsignatoryattachments = []
                 , documentallowedidtypes       = [EmailIdentification]
                 , documentui                   = (documentui blankDocument) {documentmailfooter = BS.fromString <$> (customfooter $ usersettings user)}
                 } `appendHistory` [DocumentHistoryCreated ctime]
@@ -1419,14 +1439,15 @@ instance Actor a => DBUpdate (SaveDocumentForUser a) (Either String Document) wh
     If there's a problem such as the document isn't in a pending or awaiting author state,
     or the document does not exist a Left is returned.
 -}
-data Actor a => SaveSigAttachment a = SaveSigAttachment DocumentID BS.ByteString BS.ByteString FileID a
+data Actor a => SaveSigAttachment a = SaveSigAttachment SignatoryLinkID DocumentID BS.ByteString BS.ByteString FileID a
 instance Actor a => DBUpdate (SaveSigAttachment a) (Either String Document) where
-  dbUpdate (SaveSigAttachment did name email fid actor) = do
+  dbUpdate (SaveSigAttachment slid did name email fid actor) = do
     r <- kRun $ mkSQL UPDATE tableSignatoryAttachments [sql "file_id" fid]
-      <++> SQL "WHERE document_id = ? AND email = ? AND file_id IS NULL AND name = ? " [
+      <++> SQL "WHERE document_id = ? AND email = ? AND file_id IS NULL AND name = ? AND signatory_link_id = ?" [
         toSql did
       , toSql email
       , toSql name
+      , toSql slid
       ]
     when_ (r == 1) $
       dbUpdate $ InsertEvidenceEvent
@@ -1965,12 +1986,13 @@ instance Actor a => DBUpdate (PendingToAwaitingAuthor a) (Either String Document
             getOneDocumentAffected "PendingToAwaitingAuthor" r docid
           s -> return $ Left $ "Cannot PendingToAwaitingAuthor document " ++ show docid ++ " because " ++ concat s
 
-data Actor a => AddDocumentAttachment a = AddDocumentAttachment DocumentID FileID a
+data Actor a => AddDocumentAttachment a = AddDocumentAttachment SignatoryLinkID DocumentID FileID a
 instance Actor a => DBUpdate (AddDocumentAttachment a) (Either String Document) where
-  dbUpdate (AddDocumentAttachment did fid actor) = do
+  dbUpdate (AddDocumentAttachment slid did fid actor) = do
     r <- kRun $ mkSQL INSERT tableAuthorAttachments [
         sql "document_id" did
       , sql "file_id" fid
+      , sql "signatory_link_id" slid
       ] <++> SQL "WHERE EXISTS (SELECT 1 FROM documents WHERE id = ? AND status = ?)" [
         toSql did
       , toSql Preparation
@@ -2008,10 +2030,11 @@ instance Actor a => DBUpdate (RemoveDocumentAttachment a) (Either String Documen
                        _ -> return $ Left "bad document status"
       Nothing -> return $ Left "no such document"
 
-data Actor a => UpdateSigAttachments a = UpdateSigAttachments DocumentID [SignatoryAttachment] a
+data Actor a => UpdateSigAttachments a = UpdateSigAttachments DocumentID SignatoryLinkID [SignatoryAttachment] a
 instance Actor a => DBUpdate (UpdateSigAttachments a) (Either String Document) where
-  dbUpdate (UpdateSigAttachments did sigatts actor) = do
-    _ <- kRun $ SQL "DELETE FROM signatory_attachments WHERE document_id = ?" [toSql did]
+  dbUpdate (UpdateSigAttachments did slid sigatts actor) = do
+    _ <- kRun $ SQL "DELETE FROM signatory_attachments WHERE document_id = ? AND signatory_link_id = ?" 
+                    [toSql did, toSql slid]
     forM_ sigatts doInsert
     _ <- dbUpdate $ InsertEvidenceEvent
          RemoveSigAttachmentsEvidence
@@ -2027,6 +2050,7 @@ instance Actor a => DBUpdate (UpdateSigAttachments a) (Either String Document) w
           , sql "name" signatoryattachmentname
           , sql "description" signatoryattachmentdescription
           , sql "document_id" did
+          , sql "signatory_link_id" slid
           ]
         when_ (r == 1) $
              dbUpdate $ InsertEvidenceEvent
@@ -2041,7 +2065,8 @@ data Actor a => UpdateDraft a =  UpdateDraft DocumentID  Document  a
 instance Actor a => DBUpdate (UpdateDraft a) (Either String Document) where
   dbUpdate (UpdateDraft did document actor) = do
      _ <- dbUpdate $ SetDocumentTitle did (documenttitle document) actor
-     _ <- dbUpdate $ UpdateSigAttachments  did (documentsignatoryattachments document) actor
+     _ <- mapM_ (\siglink -> dbUpdate $ UpdateSigAttachments did (signatorylinkid siglink) (signatoryattachments siglink) actor) 
+                $ documentsignatorylinks document
      _ <- dbUpdate $ SetDaysToSign  did (documentdaystosign document) actor  
      _ <- dbUpdate $ SetDocumentFunctionality did (documentfunctionality document) actor
      _ <- dbUpdate $ SetDocumentLocale did (getLocale document) actor

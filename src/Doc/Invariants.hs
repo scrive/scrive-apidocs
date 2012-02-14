@@ -156,7 +156,7 @@ hasSignedAttachments _ document =
   all (hasSigned =>>^ (all (isJust . signatoryattachmentfile) . (sigAttachmentsForEmail document . getEmail))) (documentsignatorylinks document)
        
 sigAttachmentsForEmail :: Document -> BS.ByteString -> [SignatoryAttachment]
-sigAttachmentsForEmail doc email = filter ((== email) . signatoryattachmentemail) (documentsignatoryattachments doc)
+sigAttachmentsForEmail doc email = filter ((== email) . signatoryattachmentemail) (concat . map signatoryattachments $ documentsignatorylinks doc)
        
 {- |
    Has signed implies has seen.

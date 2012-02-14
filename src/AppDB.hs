@@ -33,6 +33,7 @@ kontraMigrations = [
   , addNameColumnInSignatoryAttachments
   , addCSVUploadDataFromDocumentToSignatoryLink
   , addColumnToRecordInternalInsertionOrder
+  , addSignatoryLinkIdToSignatoryAttachment
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

@@ -49,6 +49,7 @@ signLinkFromDetails' details roles linkid magichash =
                 , signatorylinkdeleted = False
                 , signatorylinkreallydeleted = False
                 , signatorylinkcsvupload = Nothing
+                , signatoryattachments = []
                 }
 
 {- |
@@ -83,7 +84,6 @@ blankDocument =
           , documentservice              = Nothing
           , documentauthorattachments    = []
           , documentdeleted              = False
-          , documentsignatoryattachments = []
           -- , documentattachments          = []
           , documentregion               = defaultValue
           }

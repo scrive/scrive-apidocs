@@ -36,3 +36,18 @@ addCSVUploadDataFromDocumentToSignatoryLink =
         ++ " ADD COLUMN csv_contents TEXT NULL,"
         ++ " ADD COLUMN csv_signatory_index INTEGER NULL"
   }
+
+addSignatoryLinkIdToSignatoryAttachment :: Migration
+addSignatoryLinkIdToSignatoryAttachment =
+  Migration {
+    mgrTable = tableSignatoryAttachments
+  , mgrFrom = 2
+  , mgrDo = do
+      kRunRaw $ "ALTER TABLE signatory_attachments"
+        ++ " ADD COLUMN signatory_link_id BIGINT NOT NULL"
+      kRunRaw $ "ALTER TABLE signatory_attachments"
+        ++ " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(signatory_link_id)"
+        ++ " REFERENCES signatory_links(id) ON DELETE CASCADE ON UPDATE RESTRICT"
+        ++ " DEFERRABLE INITIALLY IMMEDIATE"
+  }
+
