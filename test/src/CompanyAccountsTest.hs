@@ -320,7 +320,8 @@ test_removingCompanyAccountWorks :: DBEnv -> Assertion
 test_removingCompanyAccountWorks env = withTestEnvironment env $ do
   (adminuser, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
   Just standarduser <- addNewCompanyUser "Bob" "Blue" "jony@blue.com" (companyid company)
-  docid <- addRandomDocumentWithAuthor standarduser
+  doc <- addRandomDocumentWithAuthorAndCondition standarduser (\d -> documentstatus d `elem` [Preparation, Closed])
+  let docid = documentid doc
 
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "jony@blue.com" "Bob" "Blue"
 
