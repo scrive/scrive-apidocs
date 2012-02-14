@@ -120,7 +120,7 @@ window.CompanyView = Backbone.View.extend({
     this.title.text("$_EmailBranding()$");
 
     var bbcolour = (company.isCustomBarsbackground() && company.barsbackground()!="") ? company.barsbackground() : "#212121";
-    if (this.bbinput.val()!=bbcolour) {
+    if (this.bbinput.val()!=bbcolour && !this.bbinput.is(":focus")) {
       this.bbinput.val(bbcolour);
     }
     this.bbdisplay.css("background-color", bbcolour);
