@@ -30,9 +30,6 @@ import API.MailAPI
 
 mailApiTests :: DBEnv -> Test
 mailApiTests env = testGroup "MailAPI" [
-      --some tests are for JSON, which we don't use anymore
-      --testCase "create proper document with one signatory" $ testSuccessfulDocCreation env "test/mailapi/email_onesig_ok.eml" 2
-      --testCase "fail if user doesn't exist" $ testFailureNoSuchUser env
       testCase "Create simple email document with one signatory" $ testSuccessfulDocCreation env "test/mailapi/email_simple_onesig.eml" 2
     , testCase "Parse mime document email_onesig_ok.eml" $ testParseMimes "test/mailapi/email_onesig_ok.eml"
     , testCase "Parse mime document email_simple_onesig.eml" $ testParseMimes "test/mailapi/email_simple_onesig.eml"
