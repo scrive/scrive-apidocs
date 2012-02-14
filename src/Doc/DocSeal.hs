@@ -32,6 +32,7 @@ import qualified Control.Exception as E
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
+import qualified Data.ByteString.Base64 as B64
 import qualified SealSpec as Seal
 import qualified TrustWeaver as TW
 import qualified Log
@@ -130,8 +131,8 @@ fieldsFromSignatory SignatoryDetails{signatoryfields} =
       , Seal.internal_image_h = 100
       }
 
-sealSpecFromDocument :: TemplatesMonad m => String -> Document -> String -> String -> m Seal.SealSpec
-sealSpecFromDocument hostpart document inputpath outputpath =
+_sealSpecFromDocument :: TemplatesMonad m => String -> Document -> String -> String -> m Seal.SealSpec
+_sealSpecFromDocument hostpart document inputpath outputpath =
   let docid = unDocumentID (documentid document)
       Just authorsiglink = getAuthorSigLink document
       authorHasSigned = isSignatory authorsiglink && isJust (maybesigninfo authorsiglink)
@@ -221,6 +222,104 @@ sealSpecFromDocument hostpart document inputpath outputpath =
             , Seal.attachments    = []
             }
 
+sealSpecFromDocument :: TemplatesMonad m => String -> Document -> [DocumentEvidenceEvent] -> String -> String -> m Seal.SealSpec
+sealSpecFromDocument hostpart document elog inputpath outputpath =
+  let docid = unDocumentID (documentid document)
+      Just authorsiglink = getAuthorSigLink document
+      authorHasSigned = isSignatory authorsiglink && isJust (maybesigninfo authorsiglink)
+      signatoriesdetails = [signatorydetails sl | sl <- documentsignatorylinks document
+                                                , SignatoryPartner `elem` signatoryroles sl]
+      authordetails = signatorydetails authorsiglink
+      signatories = personsFromDocument document
+      secretaries = if authorHasSigned then [] else [personFromSignatoryDetails authordetails]
+
+      persons = map (\(a,_,_,_,_,_) -> a) signatories
+      initialsx = map (\(_,_,_,_,_,a) -> a) signatories
+      paddeddocid = pad0 20 (show docid)
+
+      initials = concatComma initialsx
+      makeHistoryEntryFromSignatory personInfo@(_ ,seen, signed, isauthor, _, _)  = do
+          seenDesc <- renderLocalTemplateForProcess document processseenhistentry $ do
+                        personFields personInfo
+                        documentInfoFields document
+          let seenEvent = Seal.HistEntry
+                            { Seal.histdate = show (signtime seen)
+                            , Seal.histcomment = pureString seenDesc}
+          signDesc <- renderLocalTemplateForProcess document processsignhistentry $ do
+                        personFields personInfo
+                        documentInfoFields document
+          let signEvent = Seal.HistEntry
+                            { Seal.histdate = show (signtime signed)
+                            , Seal.histcomment = pureString signDesc}
+          return $ if (isauthor)
+                    then [signEvent]
+                    else [seenEvent,signEvent]
+      invitationSentEntry = case documentinvitetime document of
+                                Nothing -> return []
+                                Just (SignInfo time ipnumber) -> do
+                                   desc <-  renderLocalTemplateForProcess document processinvitationsententry $ do
+                                       documentInfoFields document
+                                       documentAuthorInfo document
+                                       field "oneSignatory"  (length signatories>1)
+                                       field "personname" $  listToMaybe $ map  (BS.toString . getFullName)  signatoriesdetails
+                                       field "ip" $ formatIP ipnumber
+                                   return  [ Seal.HistEntry
+                                      { Seal.histdate = show time
+                                      , Seal.histcomment = pureString desc
+                                      }]
+
+      maxsigntime = maximum (map (signtime . (\(_,_,c,_,_,_) -> c)) signatories)
+      concatComma = concat . intersperse ", "
+
+      lastHistEntry = do
+                       desc <- renderLocalTemplateForProcess document processlasthisentry (documentInfoFields document)
+                       return $ if (Just True == getValueForProcess document processsealincludesmaxtime)
+                                then [Seal.HistEntry
+                                { Seal.histdate = show maxsigntime
+                                , Seal.histcomment = pureString desc}]
+                                else []
+
+      -- document fields
+      fields = concatMap (fieldsFromSignatory . signatorydetails) (documentsignatorylinks document)
+
+  in do
+      -- Log.debug "Creating seal spec from file."
+      events <- fmap concat $ sequence $
+                    (map makeHistoryEntryFromSignatory signatories) ++
+                    [invitationSentEntry] ++
+                    [lastHistEntry]
+      -- Log.debug ("events created: " ++ show events)
+      -- here we use Data.List.sort that is *stable*, so it puts
+      -- signatories actions before what happened with a document
+      let history = sortBy (comparing Seal.histdate) events
+      -- Log.debug ("about to render staticTexts")
+      staticTexts <- renderLocalTemplateForProcess document processsealingtext $ do
+                        documentInfoFields document
+                        field "hostpart" hostpart
+      -- Log.debug ("finished staticTexts: " ++ show staticTexts)
+      let readtexts :: Seal.SealingTexts = read staticTexts -- this should never fail since we control templates
+      -- Log.debug ("read texts: " ++ show readtexts)
+
+      -- Creating HTML Evidence Log
+      htmllogs <- htmlDocFromEvidenceLog (BS.toString $ documenttitle document) elog
+      let evidenceattachment = Seal.SealAttachment { Seal.fileName = "evidencelog.html"
+                                                   , Seal.fileBase64Content = BS.toString $ B64.encode $ BS.fromString htmllogs }
+
+      return $ Seal.SealSpec
+            { Seal.input          = inputpath
+            , Seal.output         = outputpath
+            , Seal.documentNumber = paddeddocid
+            , Seal.persons        = persons
+            , Seal.secretaries    = secretaries
+            , Seal.history        = history
+            , Seal.initials       = initials
+            , Seal.hostpart       = hostpart
+            , Seal.fields         = fields
+            , Seal.staticTexts    = readtexts
+            , Seal.attachments    = [evidenceattachment]
+            }
+
+
 sealDocument :: Context
              -> Document
              -> DB (Either String Document)
@@ -259,12 +358,14 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplat
     tmpdir <- getTemporaryDirectory
     createTempDirectory tmpdir $ "seal-" ++ show documentid ++ "-" ++ show fileid ++ "-"
   result <- tryDB $ do
+    elog <- dbQuery $ GetEvidenceLog documentid
     Log.debug ("sealing: " ++ show fileid)
     let tmpin = tmppath ++ "/input.pdf"
     let tmpout = tmppath ++ "/output.pdf"
     content <- liftIO $ getFileContents ctx file
     liftIO $ BS.writeFile tmpin content
-    config <- runTemplatesT (ctxlocale, ctxglobaltemplates) $ sealSpecFromDocument ctxhostpart document tmpin tmpout
+
+    config <- runTemplatesT (ctxlocale, ctxglobaltemplates) $ sealSpecFromDocument ctxhostpart document elog tmpin tmpout
     Log.debug $ "Config " ++ show config
     (code,_stdout,stderr) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
     Log.debug $ "Sealing completed with " ++ show code

@@ -76,7 +76,8 @@ templateFiles = ["landpages.st",
                  "eleg.st",
                  "api/embedded.st",
                  "api/services.st",
-                 "javascript-langs.st"]
+                 "javascript-langs.st",
+                 "evidencelog/htmllog.st"]
 
 
 getTemplates :: String -> IO [(String, String)]

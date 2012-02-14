@@ -14,7 +14,8 @@ module EvidenceLog.Model
          GetEvidenceLog(..),
          DocumentEvidenceEvent(..),
          copyEvidenceLogToNewDocument,
-         mkAuthorActor
+         mkAuthorActor,
+         htmlDocFromEvidenceLog
        )
        where
 
@@ -34,6 +35,7 @@ import User.Model
 import Util.HasSomeUserInfo
 import Version
 import qualified Data.ByteString.UTF8 as BS
+import Templates.Templates
 
 -- | Actor describes who is performing an action and when
 class Actor a where
@@ -203,6 +205,15 @@ data DocumentEvidenceEvent = DocumentEvidenceEvent { evDocumentID :: DocumentID
                                                    , evSigLinkID  :: Maybe SignatoryLinkID
                                                    , evAPI        :: Maybe String
                                                    }
+
+htmlDocFromEvidenceLog :: TemplatesMonad m => String -> [DocumentEvidenceEvent] -> m String
+htmlDocFromEvidenceLog title elog = do
+  renderTemplateFM "htmlevidencelog" $ do
+    field "documenttitle" title
+    fieldFL "entries" $ for elog $ \entry -> do
+      field "time" $ formatMinutesTimeUTC (evTime entry) ++ " UTC"
+      field "ip"   $ fmap formatIP (evIP4 entry)
+      field "text" $ evText entry
 
 data GetEvidenceLog = GetEvidenceLog DocumentID
 instance DBQuery GetEvidenceLog [DocumentEvidenceEvent] where
