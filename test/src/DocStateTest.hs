@@ -1473,7 +1473,7 @@ testRemoveDocumentAttachmentFailsIfNotPreparation = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
   --execute
-  edoc <- randomUpdate $ \t -> RemoveDocumentAttachment (documentid doc) (FileID 0) (SystemActor t)
+  edoc <- randomUpdate $ \t -> RemoveDocumentAttachment (documentid doc) (unsafeFileID 0) (SystemActor t)
   --assert
   validTest $ assertLeft edoc
 
@@ -1482,7 +1482,7 @@ testRemoveDocumentAttachmentOk = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   --execute
-  edoc <- randomUpdate $ \t -> RemoveDocumentAttachment (documentid doc) (FileID 0) (SystemActor t)
+  edoc <- randomUpdate $ \t -> RemoveDocumentAttachment (documentid doc) (unsafeFileID 0) (SystemActor t)
   --assert
   validTest $ assertRight edoc
 
