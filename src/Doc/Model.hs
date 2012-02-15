@@ -1210,7 +1210,7 @@ instance Actor a => DBUpdate (NewDocument a) (Either String Document) where
       let authorRoles = if ((Just True) == getValueForProcess documenttype processauthorsend)
                         then [SignatoryAuthor]
                         else [SignatoryPartner, SignatoryAuthor]
-      linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
+      linkid <- getUniqueID tableSignatoryLinks
 
       magichash <- random
 
@@ -1746,7 +1746,7 @@ instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document)
 
             let mauthorsiglink = getAuthorSigLink document
             forM_ signatories $ \(details, roles, mcsvupload) -> do
-                     linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
+                     linkid <- getUniqueID tableSignatoryLinks
 
                      magichash <- random
 
@@ -1784,7 +1784,7 @@ data SignLinkFromDetailsForTest = SignLinkFromDetailsForTest SignatoryDetails [S
 instance DBUpdate SignLinkFromDetailsForTest SignatoryLink where
   dbUpdate (SignLinkFromDetailsForTest details roles) = do
       kRunRaw "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
-      linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
+      linkid <- getUniqueID tableSignatoryLinks
 
       magichash <- random
 

@@ -166,7 +166,7 @@ instance Arbitrary MailAPIActor where
     return $ MailAPIActor time uid eml
 
 instance Arbitrary SignatoryLinkID where
-  arbitrary = SignatoryLinkID <$> arbitrary
+  arbitrary = unsafeSignatoryLinkID . abs <$> arbitrary
 
 instance Arbitrary SignatoryLink where
   arbitrary = do
@@ -392,7 +392,7 @@ arbEmail = do
   return $ BS.fromString (n ++ "@" ++ d ++ ".com")
 
 signatoryLinkExample1 :: SignatoryLink
-signatoryLinkExample1 = SignatoryLink { signatorylinkid = SignatoryLinkID 0
+signatoryLinkExample1 = SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 0
                                       , signatorymagichash = unsafeMagicHash 0
                                       , maybesignatory = Nothing
                                       , maybesupervisor = Nothing
