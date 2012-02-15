@@ -1986,13 +1986,12 @@ instance Actor a => DBUpdate (PendingToAwaitingAuthor a) (Either String Document
             getOneDocumentAffected "PendingToAwaitingAuthor" r docid
           s -> return $ Left $ "Cannot PendingToAwaitingAuthor document " ++ show docid ++ " because " ++ concat s
 
-data Actor a => AddDocumentAttachment a = AddDocumentAttachment SignatoryLinkID DocumentID FileID a
+data Actor a => AddDocumentAttachment a = AddDocumentAttachment DocumentID FileID a
 instance Actor a => DBUpdate (AddDocumentAttachment a) (Either String Document) where
-  dbUpdate (AddDocumentAttachment slid did fid actor) = do
+  dbUpdate (AddDocumentAttachment did fid actor) = do
     r <- kRun $ mkSQL INSERT tableAuthorAttachments [
         sql "document_id" did
       , sql "file_id" fid
-      , sql "signatory_link_id" slid
       ] <++> SQL "WHERE EXISTS (SELECT 1 FROM documents WHERE id = ? AND status = ?)" [
         toSql did
       , toSql Preparation

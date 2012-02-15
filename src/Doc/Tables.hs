@@ -135,6 +135,7 @@ tableSignatoryAttachments = Table {
        , ("email", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("description", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("signatory_link_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE signatory_attachments "
@@ -144,13 +145,14 @@ tableSignatoryAttachments = Table {
           ++ ", description TEXT NOT NULL"
           ++ ", name TEXT NOT NULL"
           ++ ", signatory_link_id BIGINT NOT NULL"
-          ++ ", CONSTRAINT pk_signatory_attachments PRIMARY KEY (document_id, name, email)"
+          ++ ", CONSTRAINT pk_signatory_attachments PRIMARY KEY (signatory_link_id, name, email)"
           ++ ")"
         return TVRcreated
       _ -> do
         return TVRinvalid
   , tblPutProperties = do
     kRunRaw $ "CREATE INDEX idx_signatory_attachments_document_id ON signatory_attachments(document_id)"
+    kRunRaw $ "CREATE INDEX idx_signatory_attachments_signatory_link_id ON signatory_attachments(signatory_link_id)"
     kRunRaw $ "ALTER TABLE signatory_attachments"
       ++ " ADD CONSTRAINT fk_signatory_attachments_files FOREIGN KEY(file_id)"
       ++ " REFERENCES files(id) ON DELETE CASCADE ON UPDATE RESTRICT"
@@ -160,8 +162,8 @@ tableSignatoryAttachments = Table {
       ++ " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
     kRunRaw $ "ALTER TABLE signatory_attachments"
-      ++ " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(signatory_link_id)"
-      ++ " REFERENCES signatory_links(id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      ++ " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(signatory_link_id, document_id)"
+      ++ " REFERENCES signatory_links(id, document_id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
 

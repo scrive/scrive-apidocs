@@ -84,7 +84,6 @@ applyDraftDataToDocument doc draft actor = do
                                 , documentinvitetext = maybe BS.empty BS.fromString $ invitationmessage draft
                                 , documentdaystosign = daystosign draft
                                 , documentallowedidtypes = [authorization draft]
-                                , documentsignatoryattachments = concat $ map getAttachments $ signatories draft
                                 , documentregion = region draft
                             }) actor
     when_ (template draft && (not $ isTemplate doc)) $ do

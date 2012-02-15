@@ -190,6 +190,7 @@ instance Arbitrary SignatoryLink where
                            , signatorylinkdeleted       = False
                            , signatorylinkreallydeleted = False
                            , signatorylinkcsvupload     = Nothing
+                           , signatoryattachments       = []
                            }
 
 instance Arbitrary SignatureProvider where
@@ -418,6 +419,7 @@ signatoryLinkExample1 = SignatoryLink { signatorylinkid = SignatoryLinkID 0
 
                                                                             }
                                       , signatorylinkcsvupload = Nothing
+                                      , signatoryattachments   = []
                                       }
 
 blankUser :: User

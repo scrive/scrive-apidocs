@@ -608,7 +608,7 @@ testDocumentFromSignatoryDataEvidenceLog :: DB ()
 testDocumentFromSignatoryDataEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isPreparation &&^ ((<=) 2 . length . documentsignatorylinks))
-  _<-randomUpdate $ \t->UpdateSigAttachments (documentid doc) 
+  _<-randomUpdate $ \t->UpdateSigAttachments (documentid doc) (signatorylinkid $ (documentsignatorylinks doc)!!0)
                         [SignatoryAttachment { signatoryattachmentfile        = Nothing
                                              , signatoryattachmentemail       = BS.fromString "hello@goodbye.com"
                                              , signatoryattachmentname        = BS.fromString "attachment"
@@ -625,14 +625,14 @@ testSaveSigAttachmentEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   file <- addNewRandomFile
-  _<-randomUpdate $ \t->UpdateSigAttachments (documentid doc) 
+  _<-randomUpdate $ \t->UpdateSigAttachments (documentid doc) (signatorylinkid $ (documentsignatorylinks doc)!!0)
                         [SignatoryAttachment { signatoryattachmentfile        = Nothing
                                              , signatoryattachmentemail       = BS.fromString "hello@goodbye.com"
                                              , signatoryattachmentname        = BS.fromString "attachment"
                                              , signatoryattachmentdescription = BS.fromString "gimme!"
                                              }] (SystemActor t)
   _ <- randomUpdate $ \t->PreparationToPending (documentid doc) (SystemActor t)
-  etdoc <- randomUpdate $ \t->SaveSigAttachment (documentid doc) (BS.fromString "attachment") (BS.fromString "hello@goodbye.com") (fileid file) (SystemActor t)
+  etdoc <- randomUpdate $ \t->SaveSigAttachment (signatorylinkid $ (documentsignatorylinks doc)!!0) (documentid doc) (BS.fromString "attachment") (BS.fromString "hello@goodbye.com") (fileid file) (SystemActor t)
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == SaveSigAttachmentEvidence) lg
@@ -642,7 +642,7 @@ testUpdateSigAttachmentsEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   file <- addNewRandomFile
-  etdoc<-randomUpdate $ \t->UpdateSigAttachments (documentid doc) 
+  etdoc<-randomUpdate $ \t->UpdateSigAttachments (documentid doc) (signatorylinkid $ (documentsignatorylinks doc)!!0)
                         [SignatoryAttachment { signatoryattachmentfile        = Just $ (fileid file)
                                              , signatoryattachmentemail       = BS.fromString "hello@goodbye.com"
                                              , signatoryattachmentname        = BS.fromString "attachment"
@@ -657,13 +657,13 @@ testDeleteSigAttachmentEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   file <- addNewRandomFile
-  _<-randomUpdate $ \t->UpdateSigAttachments (documentid doc) 
+  _<-randomUpdate $ \t->UpdateSigAttachments (documentid doc) (signatorylinkid $ (documentsignatorylinks doc)!!0)
                         [SignatoryAttachment { signatoryattachmentfile        = Just $ (fileid file)
                                              , signatoryattachmentemail       = BS.fromString "hello@goodbye.com"
                                              , signatoryattachmentname        = BS.fromString "attachment"
                                              , signatoryattachmentdescription = BS.fromString "gimme!"
                                              }] (SystemActor t)
-  etdoc <- randomUpdate $ \t->DeleteSigAttachment (documentid doc) (BS.fromString "hello@goodbye.com") (fileid file) (SystemActor t)
+  etdoc <- randomUpdate $ \t->DeleteSigAttachment (signatorylinkid $ (documentsignatorylinks doc)!!0) (documentid doc) (BS.fromString "hello@goodbye.com") (fileid file) (SystemActor t)
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == DeleteSigAttachmentEvidence) lg
@@ -807,7 +807,7 @@ assertGoodNewDocument mcompany doctype title authorsigns (user, time, edoc) = do
     assertEqual "Doc modification time" time (documentmtime doc)
     assertEqual "Doc has user's service" (userservice user) (documentservice doc)
     assertEqual "No author attachments" [] (documentauthorattachments doc)
-    assertEqual "No sig attachments" [] (documentsignatoryattachments doc)
+    assertEqual "No sig attachments" [] (concat . map signatoryattachments $ documentsignatorylinks doc)
     assertEqual "Uses email identification only" [EmailIdentification] (documentallowedidtypes doc)
     assertEqual "Doc has user's footer" (customfooter $ usersettings user) (fmap BS.toString <$> documentmailfooter $ documentui doc)
     assertEqual "In preparation" Preparation (documentstatus doc)
@@ -1522,25 +1522,26 @@ testUpdateSigAttachmentsAttachmentsOk = doTimes 10 $ do
                                  }
   (time, sl) <- rand 10 arbitrary
   let sa = SignatoryActor time (IPAddress 0) Nothing (BS.toString email1) sl
-  edoc1 <- randomUpdate $ UpdateSigAttachments (documentid doc) [att1, att2] sa
+  edoc1 <- randomUpdate $ UpdateSigAttachments (documentid doc) (signatorylinkid $ (documentsignatorylinks doc)!!0) [att1, att2] sa
 
-  edoc2 <- randomUpdate $ DeleteSigAttachment (documentid doc) email1 (fileid file1) sa
+  edoc2 <- randomUpdate $ DeleteSigAttachment (signatorylinkid $ (documentsignatorylinks doc)!!0) (documentid doc) email1 (fileid file1) sa
 
-  edoc3 <- randomUpdate $ SaveSigAttachment (documentid doc) name1 email1 (fileid file2) sa
+  edoc3 <- randomUpdate $ SaveSigAttachment (signatorylinkid $ (documentsignatorylinks doc)!!0) (documentid doc) name1 email1 (fileid file2) sa
 
   --assert
   validTest $ do
     assertRight edoc1
     let doc1 = fromRight edoc1
-    assertEqual "Both attachments were attached" 2 (length (documentsignatoryattachments doc1))
+    assertEqual "Both attachments were attached" 2 (length (concat . map signatoryattachments $ documentsignatorylinks doc1))
     assertRight edoc2
     let doc2 = fromRight edoc2
-    assertBool "All signatory attachments are not connected to files" (all (isNothing . signatoryattachmentfile) (documentsignatoryattachments doc2))
+    assertBool "All signatory attachments are not connected to files" (all (isNothing . signatoryattachmentfile) 
+                                                                           (concat . map signatoryattachments $ documentsignatorylinks doc2))
 
     assertRight edoc3
     let doc3 = fromRight edoc3
     assertBool "Attachment connected to signatory"
-                 (Just (fileid file2) `elem` map signatoryattachmentfile (documentsignatoryattachments doc3))
+                 (Just (fileid file2) `elem` map signatoryattachmentfile (concat . map signatoryattachments $ documentsignatorylinks doc3))
 
 
 {-

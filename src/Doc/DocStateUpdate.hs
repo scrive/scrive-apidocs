@@ -186,10 +186,10 @@ authorSendDocument did = onlyAuthor did $ do
 {- |
   The Author can add new SigAttachments.
  -}
-updateSigAttachments :: (Kontrakcja m) => DocumentID -> [SignatoryAttachment] -> m (Either DBError Document)
-updateSigAttachments did sigatts = onlyAuthor did $ do
+updateSigAttachments :: (Kontrakcja m) => DocumentID -> SignatoryLinkID -> [SignatoryAttachment] -> m (Either DBError Document)
+updateSigAttachments did sid sigatts = onlyAuthor did $ do
   actor <- guardJustM $ mkAuthorActor <$> getContext
-  transActionNotAvailable <$> runDBUpdate (UpdateSigAttachments did sigatts actor)
+  transActionNotAvailable <$> runDBUpdate (UpdateSigAttachments did sid sigatts actor)
 
 {- |
    Only the author can Close a document when its in AwaitingAuthor status.

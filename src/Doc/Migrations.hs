@@ -46,8 +46,16 @@ addSignatoryLinkIdToSignatoryAttachment =
       kRunRaw $ "ALTER TABLE signatory_attachments"
         ++ " ADD COLUMN signatory_link_id BIGINT NOT NULL"
       kRunRaw $ "ALTER TABLE signatory_attachments"
-        ++ " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(signatory_link_id)"
-        ++ " REFERENCES signatory_links(id) ON DELETE CASCADE ON UPDATE RESTRICT"
+        ++ " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(signatory_link_id, document_id)"
+        ++ " REFERENCES signatory_links(id, document_id) ON DELETE CASCADE ON UPDATE RESTRICT"
         ++ " DEFERRABLE INITIALLY IMMEDIATE"
+      kRunRaw $ "UPDATE signatory_attachments "
+        ++ "SET signatory_link_id = sl.id "
+        ++ "FROM signatory_links sl "
+        ++ "WHERE sl.document_id = signatory_attachments.document_id "
+        ++ "AND regexp_replace(sl.fields, '^.*EmailFT\",\"sfValue\":\"([a-zA-Z0-9@-_.]+)\".*$', E'\\\\1') = signatory_attachments.email"
+      kRunRaw $ "ALTER TABLE signatory_attachments DROP CONSTRAINT pk_signatory_attachments"
+      kRunRaw $ "ALTER TABLE signatory_attachments ADD CONSTRAINT pk_signatory_attachments PRIMARY KEY (signatory_link_id, name, email)"
+      kRunRaw $ "CREATE INDEX idx_signatory_attachments_signatory_link_id ON signatory_attachments(signatory_link_id)"
   }
 

@@ -277,7 +277,7 @@ documentJSON msl _crttime doc = do
                                              case file of
                                                Nothing -> return Nothing
                                                Just f -> return $ Just (fid, f)
-                                          | SignatoryAttachment { signatoryattachmentfile = Just fid } <- documentsignatoryattachments doc])
+                                          | SignatoryAttachment { signatoryattachmentfile = Just fid } <- concat . map signatoryattachments $ documentsignatorylinks doc])
     let isauthoradmin = maybe False (flip isAuthorAdmin doc) (ctxmaybeuser ctx)
     fmap toJSObject $ propagateMonad  $
      [ ("title",return $ JSString $ toJSString $ BS.toString $ documenttitle doc),
@@ -323,8 +323,7 @@ signatoryJSON doc viewer files siglink = fmap (JSObject . toJSObject) $ propagat
       , ("rejecteddate", return $ jsonDate $ rejectedDate)
       , ("fields", liftIO $ signatoryFieldsJSON doc siglink)
       , ("status", return $ JSString $ toJSString  $ show $ signatoryStatusClass doc siglink)
-      , ("attachments", return $ JSArray $ map (signatoryAttachmentJSON files) $
-                        filter ((==) (getEmail siglink) . signatoryattachmentemail)  (documentsignatoryattachments doc))
+      , ("attachments", return $ JSArray $ map (signatoryAttachmentJSON files) $ signatoryattachments siglink)
       , ("csv", case (csvcontents <$> signatorylinkcsvupload siglink) of
                      Just a1 ->  return $ JSArray $ for a1 (\a2 -> JSArray $ map (JSString . toJSString . BS.toString) a2 )
                      Nothing -> return $ JSNull) 
@@ -885,7 +884,7 @@ documentInfoFields  document  = do
   field "template" $  isTemplate document
   field "emailselected" $ document `allowsIdentification` EmailIdentification
   field "elegselected" $ document `allowsIdentification` ELegitimationIdentification
-  field "hasanyattachments" $ length (documentauthorattachments document) + length (documentsignatoryattachments document) > 0
+  field "hasanyattachments" $ length (documentauthorattachments document) + length (concat . map signatoryattachments $ documentsignatorylinks document) > 0
   documentStatusFields document
 
 documentAuthorInfo :: MonadIO m => Document -> Fields m
