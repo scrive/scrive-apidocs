@@ -563,8 +563,8 @@ insertDocumentAsIs document = do
 insertNewDocument :: Document -> DB Document
 insertNewDocument doc = do
   kRunRaw "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
-  docid <- DocumentID <$> getUniqueID tableDocuments
-  now <- liftIO $ getMinutesTime
+  docid <- getUniqueID tableDocuments
+  now <- getMinutesTime
   let docWithId = doc {documentid = docid, documentmtime  = now, documentctime = now}
   newdoc <- insertDocumentAsIs docWithId
   case newdoc of
@@ -1205,7 +1205,7 @@ instance Actor a => DBUpdate (NewDocument a) (Either String Document) where
     else do
       kRunRaw "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
       kRunRaw "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
-      did <- DocumentID <$> getUniqueID tableDocuments
+      did <- getUniqueID tableDocuments
 
       let authorRoles = if ((Just True) == getValueForProcess documenttype processauthorsend)
                         then [SignatoryAuthor]
@@ -1840,7 +1840,7 @@ instance DBUpdate StoreDocumentForTesting DocumentID where
   dbUpdate (StoreDocumentForTesting document) = do
     -- FIXME: this requires more thinking...
     kRunRaw "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
-    did <- DocumentID <$> getUniqueID tableDocuments
+    did <- getUniqueID tableDocuments
     Just doc <- insertDocumentAsIs (document { documentid = did })
     return (documentid doc)
 

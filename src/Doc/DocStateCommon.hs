@@ -58,7 +58,7 @@ signLinkFromDetails' details roles linkid magichash =
 blankDocument :: Document
 blankDocument =
           Document
-          { documentid                   = DocumentID 0
+          { documentid                   = unsafeDocumentID 0
           , documenttitle                = BS.empty
           , documentsignatorylinks       = []
           , documentfiles                = []

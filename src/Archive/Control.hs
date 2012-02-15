@@ -81,7 +81,7 @@ handleIssueArchive = do
               case getSigLinkFor doc user of
                 Just sl -> runDB $ addSignStatDeleteEvent doc sl ctxtime
                 _ -> return False) 
-      $ map DocumentID docids
+      docids
 
 {- |
    Constructs a list of documents (Arkiv) to show to the user.

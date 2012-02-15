@@ -1066,7 +1066,7 @@ handleRubbishRestore = do
   user <- guardJustM $ ctxmaybeuser <$> getContext
   actor <- guardJustM $ mkAuthorActor <$> getContext
   docids <- getCriticalFieldList asValidDocID "doccheck"
-  mapM_ (\did -> guardRightM $ runDBUpdate $ RestoreArchivedDocument user did actor) $ map DocumentID docids
+  mapM_ (\did -> guardRightM $ runDBUpdate $ RestoreArchivedDocument user did actor) docids
   addFlashM flashMessageRubbishRestoreDone
   return $ LinkRubbishBin
 
@@ -1081,7 +1081,7 @@ handleRubbishReallyDelete = do
             case getSigLinkFor doc user of
               Just sl -> runDB $ addSignStatPurgeEvent doc sl (ctxtime ctx)
               _ -> return False)
-    $ map DocumentID docids
+    docids
   addFlashM flashMessageRubbishHardDeleteDone
   return $ LinkRubbishBin
 
@@ -1116,8 +1116,7 @@ handleBulkOrderRemind = withUserPost $ do
 handleIssueBulkRemind :: Kontrakcja m => DocumentType -> m [SignatoryLink]
 handleIssueBulkRemind doctype = do
     ctx@Context{ctxmaybeuser = Just user } <- getContext
-    idnumbers <- getCriticalFieldList asValidDocID "doccheck"
-    let ids = map DocumentID idnumbers
+    ids <- getCriticalFieldList asValidDocID "doccheck"
     remindedsiglinks <- fmap concat . sequence . map (\docid -> docRemind ctx user docid) $ ids
     case (length remindedsiglinks) of
       0 -> addFlashM $ flashMessageNoBulkRemindsSent doctype

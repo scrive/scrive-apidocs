@@ -229,7 +229,7 @@ instance Arbitrary CSVUpload where
                        }
 
 instance Arbitrary DocumentID where
-  arbitrary = DocumentID <$> arbitrary
+  arbitrary = unsafeDocumentID . abs <$> arbitrary
 
 documentAllTypes :: [DocumentType]
 documentAllTypes = [ Signable Contract
