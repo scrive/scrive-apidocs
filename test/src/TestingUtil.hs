@@ -70,7 +70,7 @@ instance Arbitrary DocumentTag where
   arbitrary = DocumentTag <$> arbitrary <*> arbitrary
 
 instance Arbitrary UserID where
-  arbitrary = UserID <$> arbitrary
+  arbitrary = unsafeUserID . abs <$> arbitrary
 
 instance Arbitrary Company where
   arbitrary = do
@@ -421,7 +421,7 @@ signatoryLinkExample1 = SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 
                                       }
 
 blankUser :: User
-blankUser = User { userid                        = UserID 0
+blankUser = User { userid                        = unsafeUserID 0
                  , userpassword                  = Nothing
                  , useriscompanyadmin            = False
                  , useraccountsuspended          = False

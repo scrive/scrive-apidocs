@@ -62,7 +62,7 @@ test_getUserByEmail_returnsTheRightUser = do
 
 test_getUserByID_returnsNothing :: DB ()
 test_getUserByID_returnsNothing = do
-  queriedUser <- dbQuery $ GetUserByID (UserID 100)
+  queriedUser <- dbQuery $ GetUserByID (unsafeUserID 100)
   assert (isNothing queriedUser)
 
 test_getUserByID_returnsTheRightUser :: DB ()
