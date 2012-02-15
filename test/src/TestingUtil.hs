@@ -85,7 +85,7 @@ instance Arbitrary Company where
                      }
 
 instance Arbitrary CompanyID where
-  arbitrary = CompanyID <$> arbitrary
+  arbitrary = unsafeCompanyID . abs <$> arbitrary
 
 instance Arbitrary ExternalCompanyID where
   arbitrary = ExternalCompanyID <$> arbitrary
