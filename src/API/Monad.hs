@@ -8,6 +8,9 @@ import Text.JSON
 import Happstack.Server.Response
 import Control.Monad.Error
 import Control.Applicative
+import qualified Codec.Binary.Url as URL
+import qualified Codec.Binary.UTF8.String as UTF
+import Data.List
 
 import Util.JSON
 import Misc
@@ -38,6 +41,9 @@ instance ToAPIResponse Response where
 instance ToAPIResponse JSValue where
   toAPIResponse jv = let r1 = toResponse $ encode jv in
     setHeader "Content-Type" "text/plain" r1 -- must be text/plain to allow browsers who want to save stuff to files
+
+instance ToAPIResponse () where
+  toAPIResponse _ = toResponse ""
     
 instance ToAPIResponse a => ToAPIResponse (Created a) where
   toAPIResponse (Created a) = (toAPIResponse a) { rsCode = 201 }
@@ -148,3 +154,9 @@ getAPIUser = do
   Context {ctxmaybeuser} <- getContext
   apiGuard' NotLoggedIn ctxmaybeuser
   
+data FormEncoded = FormEncoded [(String, String)]
+
+instance ToAPIResponse FormEncoded where
+  toAPIResponse (FormEncoded kvs) = 
+    let r1 = toResponse $ intercalate "&" $ for kvs (\(k,v)->(URL.encode $ UTF.encode k) ++ "=" ++ (URL.encode $ UTF.encode v))
+    in setHeader "Content-Type" "application/x-www-form-urlencoded" r1

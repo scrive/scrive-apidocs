@@ -20,6 +20,7 @@ import File.Tables
 import Mails.Tables
 import Mails.Migrations
 
+import OAuth.Tables
 import EvidenceLog.Tables
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
@@ -54,4 +55,7 @@ kontraTables = [
   , tableAuthorAttachments
   , tableSignatoryAttachments
   , tableEvidenceLog
+  , tableTempCredential
+  , tableTempPrivileges
+  , tableAPIToken
   ] ++ mailerTables

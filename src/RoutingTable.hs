@@ -27,6 +27,7 @@ import qualified ELegitimation.BankID as BankID
 import qualified User.UserControl as UserControl
 import qualified API.MailAPI as MailAPI
 import Doc.API
+import OAuth.Control
 
 import Control.Monad.Error
 import Data.Functor
@@ -274,6 +275,7 @@ staticRoutes = choice
 
      , integrationAPI
      , documentAPI
+     , oauthAPI
      -- static files
      , remainingPath GET $ msum
          [ allowHttp $ serveHTMLFiles
