@@ -284,7 +284,6 @@ documentJSON msl _crttime doc = do
        ("files", return $ JSArray $ jsonPack <$> fileJSON <$> files ),
        ("sealedfiles", return $ JSArray $ jsonPack <$> fileJSON <$> sealedfiles ),
        ("authorattachments", return $ JSArray $ jsonPack <$> fileJSON <$> catMaybes authorattachmentfiles),
-       --("signatoryattachments", return $ JSArray $ jsonPack <$> fileJSON <$> catMaybes ),
        ("process", processJSON doc ),
        ("region",  liftIO $ regionJSON doc ),
        ("infotext", JSString <$> toJSString <$> documentInfoText ctx doc msl),
