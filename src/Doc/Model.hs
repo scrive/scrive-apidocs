@@ -320,7 +320,7 @@ fetchSignatoryLinks = do
   atts <- (return . M.fromList) =<< mapM (\link -> do 
     att <- dbQuery $ GetSignatoryAttachments $ signatorylinkid link
     return (signatorylinkid link, att)) (concat $ M.elems siglinks)
-  return $ M.mapMaybe (\links -> Just $ map (\link -> link{signatoryattachments = atts M.! (signatorylinkid link)}) links) siglinks 
+  return $ M.mapMaybe (\links -> Just $ map (\link -> link{signatoryattachments = M.findWithDefault [] (signatorylinkid link) atts}) links) siglinks 
   where
     decoder acc slid document_id user_id company_id fields sign_order token
      sign_time sign_ip seen_time seen_ip read_invitation invitation_delivery_status
@@ -498,7 +498,7 @@ instance DBQuery GetSignatoryAttachments [SignatoryAttachment] where
     _ <- kRun $ selectSignatoryAttachmentsSQL 
       <++> SQL "WHERE signatory_link_id = ?" [toSql slid]
     att <- fetchSignatoryAttachments 
-    return $ att M.! slid
+    return $ M.findWithDefault [] slid att 
 
 insertDocumentAsIs :: Document -> DB (Maybe Document)
 insertDocumentAsIs document = do
