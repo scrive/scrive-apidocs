@@ -76,6 +76,7 @@ templateFiles = ["landpages.st",
                  "eleg.st",
                  "api/embedded.st",
                  "api/services.st",
+                 "oauth.st",
                  "javascript-langs.st"]
 
 

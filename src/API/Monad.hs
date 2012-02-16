@@ -8,9 +8,7 @@ import Text.JSON
 import Happstack.Server.Response
 import Control.Monad.Error
 import Control.Applicative
-import qualified Codec.Binary.Url as URL
-import qualified Codec.Binary.UTF8.String as UTF
-import Data.List
+import Network.HTTP (urlEncodeVars)
 
 import Util.JSON
 import Misc
@@ -47,7 +45,7 @@ instance ToAPIResponse () where
     
 instance ToAPIResponse a => ToAPIResponse (Created a) where
   toAPIResponse (Created a) = (toAPIResponse a) { rsCode = 201 }
-  
+
 newtype APIMonad m a = AM { runAPIMonad :: ErrorT APIError m a }
                      deriving (MonadTrans, Monad, MonadError APIError, Functor, Applicative, MonadIO)
                               
@@ -158,5 +156,5 @@ data FormEncoded = FormEncoded [(String, String)]
 
 instance ToAPIResponse FormEncoded where
   toAPIResponse (FormEncoded kvs) = 
-    let r1 = toResponse $ intercalate "&" $ for kvs (\(k,v)->(URL.encode $ UTF.encode k) ++ "=" ++ (URL.encode $ UTF.encode v))
+    let r1 = toResponse $ urlEncodeVars kvs
     in setHeader "Content-Type" "application/x-www-form-urlencoded" r1

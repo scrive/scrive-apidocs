@@ -39,6 +39,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS
 import Data.Bits
+import Network.HTTP (urlDecode)
 
 -- | Infix version of mappend, provided for convenience.
 (<++>) :: Monoid m => m -> m -> m
@@ -646,3 +647,12 @@ lengthWith f l = length $ filter f l
 
 optional :: (MonadPlus m) => m a -> m (Maybe a)
 optional c = (liftM Just c) `mplus` (return Nothing)
+
+urlDecodeVars :: String -> Maybe [(String, String)]
+urlDecodeVars ('?':s) = urlDecodeVars s
+urlDecodeVars s = makeKV (splitOver "&" s) []
+  where makeKV [] a = Just a
+        makeKV (kv:ks) a = case break (== '=') kv of
+          (k, '=':v) -> makeKV ks ((urlDecode k, urlDecode v):a)
+          (k, "") -> makeKV ks ((urlDecode k, ""):a)
+          _ -> Nothing

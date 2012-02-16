@@ -48,9 +48,10 @@ sendRedirect BackToReferer = do
 
 sendRedirect link@(LinkLogin _locale reason) = do
   curr <- rqUri <$> askRq
+  qr <- rqQuery <$> askRq
   referer <- getField "referer"
   addFlashM $ flashMessageLoginRedirectReason reason
-  let link' = show link ++ "&referer=" ++ (URL.encode . UTF.encode $ fromMaybe curr referer)
+  let link' = show link ++ "&referer=" ++ (URL.encode . UTF.encode $ fromMaybe (curr++qr) referer)
   seeOther link' =<< setRsCode 303 (seeOtherXML link')
 
 sendRedirect link = do

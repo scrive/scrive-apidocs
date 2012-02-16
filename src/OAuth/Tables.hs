@@ -120,7 +120,7 @@ tablePrivilege = Table {
       _ -> return TVRinvalid
   , tblPutProperties = do
     kRunRaw $ "ALTER TABLE oauth_privilege"
-      ++ " ADD CONSTRAINT fk_oauth_privilege FOREIGN KEY(access_token_d)"
+      ++ " ADD CONSTRAINT fk_oauth_privilege FOREIGN KEY(access_token_id)"
       -- remove the privilege if we delete the Access Token
       ++ " REFERENCES oauth_access_token(id) ON UPDATE RESTRICT ON DELETE CASCADE"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"

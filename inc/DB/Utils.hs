@@ -96,3 +96,4 @@ mkSQL qtype Table{tblName} values = case qtype of
     ++ " ") vals
   where
     (columns, placeholders, vals) = unzip3 values
+

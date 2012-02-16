@@ -13,6 +13,9 @@ import Session
 import API.Service.Model
 import Company.Model
 import File.FileID
+import OAuth.Model
+import Network.URI
+import Network.HTTP
 
 {- |
    Defines the reason why we are redirected to login page
@@ -98,6 +101,7 @@ data KontraLink
     | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID
     | LinkAPIDocumentMetadata DocumentID
     | LinkAPIDocumentSignatoryAttachment DocumentID SignatoryLinkID String
+    | LinkOAuthCallback URI APIToken APISecret
     deriving (Eq)
 
 localeFolder :: Locale -> String
@@ -224,3 +228,8 @@ instance Show KontraLink where
     showsPrec _ (LinkAPIDocumentMetadata did) = (++) ("/api/document/" ++ show did ++ "/metadata")
     showsPrec _ (LinkAPIDocumentSignatoryAttachment did sid name) =
       (++) ("/api/document/" ++ show did ++ "/signatory/" ++ show sid ++ "/attachment/" ++ name)
+    showsPrec _ (LinkOAuthCallback url token verifier) = 
+      let newvars = [("oauth_token", show token), ("oauth_verifier", show verifier)]
+          mvars = urlDecodeVars $ uriQuery url
+          vars = urlEncodeVars $ maybe newvars (++ newvars) mvars
+      in (++) (show $ url { uriQuery = "?" ++ vars})

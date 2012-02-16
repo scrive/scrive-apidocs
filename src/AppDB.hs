@@ -58,4 +58,6 @@ kontraTables = [
   , tableTempCredential
   , tableTempPrivileges
   , tableAPIToken
+  , tableAccessToken
+  , tablePrivilege
   ] ++ mailerTables
