@@ -15,7 +15,6 @@ import Test.HUnit (Assertion)
 import qualified Data.ByteString.UTF8 as BS
 import Happstack.Server.SimpleHTTP
 import Control.Monad.Trans
-import File.FileID
 import File.File
 
 fileTests :: DBEnv -> Test
@@ -107,8 +106,8 @@ testNewFileThatShouldBeMovedToAWS  = do
 testUncheckedStoring :: DB ()
 testUncheckedStoring  = sequence_ $ replicate 10 $ do
   (name,content) <- fileData
-  fid <- fmap FileID $ rand 10 arbitrary
-  mf <-  dbQuery $ GetFileByFileID (fid)
+  fid <- rand 10 arbitrary
+  mf <-  dbQuery $ GetFileByFileID fid
   case mf of 
     Just _ -> return ()
     Nothing -> do

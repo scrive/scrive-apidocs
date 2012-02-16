@@ -41,6 +41,7 @@ module InputValidation
     , asValidID
     , asValidNumber
     , asValidDocID
+    , asValidUserID
     , asValidBool
     , asValidFieldName
     , asValidFieldValue
@@ -64,6 +65,7 @@ import Text.XML.HaXml.Types
 
 import KontraMonad
 import Context
+import Doc.DocumentID
 import Numeric
 import qualified Log (security)
 import Misc hiding (getFields)
@@ -514,17 +516,26 @@ asValidDaysToSign input =
     you're not getting fed complete garbage from hidden fields,
     this makes sure the result parses as a Int64.
 -}
-asValidDocID :: String -> Result Int64
+asValidDocID :: String -> Result DocumentID
 asValidDocID input =
     checkIfEmpty input
-    >>= parseAsInt64
+    >>= parseAsDocID
     where fieldtemplate = "idFieldName"
-          parseAsInt64 :: String -> Result Int64
-          parseAsInt64 xs =
-            case readSigned readDec xs of
+          parseAsDocID xs =
+            case reads xs of
               (val,[]):[] -> return val
               _ -> Bad $ flashMessageNotAValidInteger fieldtemplate
 
+{- |
+    Gets a cleaned up user id. Useful for validating
+    you're not getting fed complete garbage from hidden fields,
+    this makes sure the result parses as a Int64.
+-}
+asValidUserID :: String -> Result UserID
+asValidUserID input = checkIfEmpty input
+  >>= \xs -> case reads xs of
+    [(val,[])] -> return val
+    _ -> Bad $ flashMessageNotAValidInteger "idFieldName"
 
 {- |
     Checks that the input is a valid id, meaning it can be parsed

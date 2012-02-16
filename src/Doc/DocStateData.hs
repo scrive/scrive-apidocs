@@ -1,12 +1,13 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.DocStateData (
-    CSVUpload(..)
+    module Doc.DocumentID
+  , module Doc.SignatoryLinkID
+  , CSVUpload(..)
   , CancelationReason(..)
   , DocStats(..)
   , Document(..)
   , DocumentFunctionality(..)
   , DocumentHistoryEntry(..)
-  , DocumentID(..)
   , DocumentLogEntry(..)
   , DocumentSharing(..)
   , DocumentStatus(..)
@@ -27,7 +28,6 @@ module Doc.DocStateData (
   , FieldType(..)
   , SignatoryDetails(..)
   , SignatoryLink(..)
-  , SignatoryLinkID(..)
   , SignatoryRole(..)
   , SignatureInfo(..)
   , TimeoutTime(..)
@@ -50,8 +50,6 @@ import Data.Int
 import Data.Maybe
 import DB.Derive
 import Happstack.Data
-import Happstack.Server.SimpleHTTP
-import Happstack.Util.Common
 import MagicHash (MagicHash)
 import MinutesTime
 import Misc
@@ -60,21 +58,12 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import File.FileID
 import File.File
+import Doc.DocumentID
 import Doc.JpegPages
+import Doc.SignatoryLinkID
 import Database.HDBC
 import Data.List
 import ELegitimation.SignatureProvider
-import Doc.SignatoryLinkID
-
-newtype DocumentID = DocumentID { unDocumentID :: Int64 }
-  deriving (Eq, Ord, Typeable)
-$(newtypeDeriveUnderlyingReadShow ''DocumentID)
-
-instance FromReqURI DocumentID where
-  fromReqURI = readM
-
-$(deriveSerialize ''DocumentID)
-instance Version DocumentID
 
 newtype TimeoutTime = TimeoutTime { unTimeoutTime :: MinutesTime }
   deriving (Eq, Ord)
