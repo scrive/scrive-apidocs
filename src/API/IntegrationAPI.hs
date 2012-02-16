@@ -472,5 +472,5 @@ getDaveDoc :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDaveDoc = do
   Just (JSString document_id) <- fromJSONField "document_id"
   let Just did = maybeRead $ fromJSString document_id
-  doc <- runDBQuery $ GetDocumentByDocumentID $ DocumentID did
+  doc <- runDBQuery $ GetDocumentByDocumentID did
   return $ toJSObject [("document", showJSON $ show doc)]

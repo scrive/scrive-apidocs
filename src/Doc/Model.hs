@@ -584,8 +584,8 @@ insertDocumentAsIs document = do
 insertNewDocument :: Document -> DB Document
 insertNewDocument doc = do
   kRunRaw "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
-  docid <- DocumentID <$> getUniqueID tableDocuments
-  now <- liftIO $ getMinutesTime
+  docid <- getUniqueID tableDocuments
+  now <- getMinutesTime
   let docWithId = doc {documentid = docid, documentmtime  = now, documentctime = now}
   newdoc <- insertDocumentAsIs docWithId
   case newdoc of
@@ -1226,12 +1226,12 @@ instance Actor a => DBUpdate (NewDocument a) (Either String Document) where
     else do
       kRunRaw "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
       kRunRaw "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
-      did <- DocumentID <$> getUniqueID tableDocuments
+      did <- getUniqueID tableDocuments
 
       let authorRoles = if ((Just True) == getValueForProcess documenttype processauthorsend)
                         then [SignatoryAuthor]
                         else [SignatoryPartner, SignatoryAuthor]
-      linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
+      linkid <- getUniqueID tableSignatoryLinks
 
       magichash <- random
 
@@ -1767,7 +1767,7 @@ instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document)
 
             let mauthorsiglink = getAuthorSigLink document
             forM_ signatories $ \(details, roles, mcsvupload) -> do
-                     linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
+                     linkid <- getUniqueID tableSignatoryLinks
 
                      magichash <- random
 
@@ -1805,7 +1805,7 @@ data SignLinkFromDetailsForTest = SignLinkFromDetailsForTest SignatoryDetails [S
 instance DBUpdate SignLinkFromDetailsForTest SignatoryLink where
   dbUpdate (SignLinkFromDetailsForTest details roles) = do
       kRunRaw "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
-      linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
+      linkid <- getUniqueID tableSignatoryLinks
 
       magichash <- random
 
@@ -1861,7 +1861,7 @@ instance DBUpdate StoreDocumentForTesting DocumentID where
   dbUpdate (StoreDocumentForTesting document) = do
     -- FIXME: this requires more thinking...
     kRunRaw "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
-    did <- DocumentID <$> getUniqueID tableDocuments
+    did <- getUniqueID tableDocuments
     Just doc <- insertDocumentAsIs (document { documentid = did })
     return (documentid doc)
 

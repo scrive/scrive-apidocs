@@ -1,8 +1,8 @@
 {-# LANGUAGE CPP, OverloadedStrings #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 module DocStateTest where
 
 import DB.Classes
+import DB.Utils
 import User.Model
 import Doc.Model
 import Doc.DocUtils
@@ -10,6 +10,7 @@ import Doc.DocStateData
 import Misc
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
+import Doc.Tables
 import TestingUtil
 import Company.Model
 import Doc.Invariants
@@ -1414,10 +1415,10 @@ testPreparationAttachCSVUploadNonExistingSignatoryLink = doTimes 3 $ do
   (csvupload, time) <- rand 10 arbitrary
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  let i = 1 + maximum [unSignatoryLinkID $ signatorylinkid sl | sl <- documentsignatorylinks doc]
+  slid <- getUniqueID tableSignatoryLinks
   --execute
   edoc <- dbUpdate $ AttachCSVUpload (documentid doc) 
-          (SignatoryLinkID i) csvupload (SystemActor time)
+          slid csvupload (SystemActor time)
   --assert
   validTest $ assertLeft edoc
 
@@ -1472,7 +1473,7 @@ testRemoveDocumentAttachmentFailsIfNotPreparation = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
   --execute
-  edoc <- randomUpdate $ \t -> RemoveDocumentAttachment (documentid doc) (FileID 0) (SystemActor t)
+  edoc <- randomUpdate $ \t -> RemoveDocumentAttachment (documentid doc) (unsafeFileID 0) (SystemActor t)
   --assert
   validTest $ assertLeft edoc
 
@@ -1481,7 +1482,7 @@ testRemoveDocumentAttachmentOk = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   --execute
-  edoc <- randomUpdate $ \t -> RemoveDocumentAttachment (documentid doc) (FileID 0) (SystemActor t)
+  edoc <- randomUpdate $ \t -> RemoveDocumentAttachment (documentid doc) (unsafeFileID 0) (SystemActor t)
   --assert
   validTest $ assertRight edoc
 

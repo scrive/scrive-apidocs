@@ -210,7 +210,7 @@ instance DBUpdate AddUser (Maybe User) where
     case mu of
       Just _ -> return Nothing -- user with the same email address exists
       Nothing -> do
-        uid <- UserID <$> getUniqueID tableUsers
+        uid <- getUniqueID tableUsers
         kPrepare $ "INSERT INTO users ("
           ++ "  id"
           ++ ", password"

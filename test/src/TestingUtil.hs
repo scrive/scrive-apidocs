@@ -70,7 +70,7 @@ instance Arbitrary DocumentTag where
   arbitrary = DocumentTag <$> arbitrary <*> arbitrary
 
 instance Arbitrary UserID where
-  arbitrary = UserID <$> arbitrary
+  arbitrary = unsafeUserID . abs <$> arbitrary
 
 instance Arbitrary Company where
   arbitrary = do
@@ -85,7 +85,7 @@ instance Arbitrary Company where
                      }
 
 instance Arbitrary CompanyID where
-  arbitrary = CompanyID <$> arbitrary
+  arbitrary = unsafeCompanyID . abs <$> arbitrary
 
 instance Arbitrary ExternalCompanyID where
   arbitrary = ExternalCompanyID <$> arbitrary
@@ -166,7 +166,7 @@ instance Arbitrary MailAPIActor where
     return $ MailAPIActor time uid eml
 
 instance Arbitrary SignatoryLinkID where
-  arbitrary = SignatoryLinkID <$> arbitrary
+  arbitrary = unsafeSignatoryLinkID . abs <$> arbitrary
 
 instance Arbitrary SignatoryLink where
   arbitrary = do
@@ -230,7 +230,7 @@ instance Arbitrary CSVUpload where
                        }
 
 instance Arbitrary DocumentID where
-  arbitrary = DocumentID <$> arbitrary
+  arbitrary = unsafeDocumentID . abs <$> arbitrary
 
 documentAllTypes :: [DocumentType]
 documentAllTypes = [ Signable Contract
@@ -393,7 +393,7 @@ arbEmail = do
   return $ BS.fromString (n ++ "@" ++ d ++ ".com")
 
 signatoryLinkExample1 :: SignatoryLink
-signatoryLinkExample1 = SignatoryLink { signatorylinkid = SignatoryLinkID 0
+signatoryLinkExample1 = SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 0
                                       , signatorymagichash = unsafeMagicHash 0
                                       , maybesignatory = Nothing
                                       , maybesupervisor = Nothing
@@ -423,7 +423,7 @@ signatoryLinkExample1 = SignatoryLink { signatorylinkid = SignatoryLinkID 0
                                       }
 
 blankUser :: User
-blankUser = User { userid                        = UserID 0
+blankUser = User { userid                        = unsafeUserID 0
                  , userpassword                  = Nothing
                  , useriscompanyadmin            = False
                  , useraccountsuspended          = False
@@ -802,7 +802,7 @@ instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbit
     return (a, b, c, d, e, f, g, h, i)
 
 instance Arbitrary FileID where
-  arbitrary = FileID . abs <$> arbitrary
+  arbitrary = unsafeFileID . abs <$> arbitrary
 
 instance Arbitrary File where
   arbitrary = do
