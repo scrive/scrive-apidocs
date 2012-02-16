@@ -110,7 +110,7 @@ api_document_file_read file = do
 
 api_document :: Maybe [JSValue] -> Document -> JSValue
 api_document mfiles doc = JSObject $ toJSObject $ [
-  ("document_id", showJSON  $ show $ unDocumentID $ documentid doc)
+    ("document_id", showJSON  $ show $ documentid doc)
   , ("title", showJSON  $ BS.toString $ documenttitle doc)
   , ("type", showJSON  $ fromSafeEnumInt $ documenttype doc)
   , ("state", showJSON  $ fromSafeEnumInt $ documentstatus doc)

@@ -133,7 +133,7 @@ fieldsFromSignatory SignatoryDetails{signatoryfields} =
 
 sealSpecFromDocument :: TemplatesMonad m => String -> Document -> [DocumentEvidenceEvent] -> String -> String -> m Seal.SealSpec
 sealSpecFromDocument hostpart document elog inputpath outputpath =
-  let docid = unDocumentID (documentid document)
+  let docid = documentid document
       Just authorsiglink = getAuthorSigLink document
       authorHasSigned = isSignatory authorsiglink && isJust (maybesigninfo authorsiglink)
       signatoriesdetails = [signatorydetails sl | sl <- documentsignatorylinks document
