@@ -56,7 +56,6 @@ import Control.Monad.Error
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import Data.Char
-import Data.Int
 import Data.Maybe
 import Text.Regex.TDFA ((=~))
 import Text.XML.HaXml.Parse (xmlParse')

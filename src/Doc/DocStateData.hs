@@ -46,7 +46,6 @@ import API.Service.Model
 import Company.Model
 import Data.Data (Data)
 import Data.Either
-import Data.Int
 import Data.Maybe
 import DB.Derive
 import Happstack.Data
