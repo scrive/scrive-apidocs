@@ -33,6 +33,9 @@ import API.Monad
 import Control.Monad.Error
 import qualified Log
 import Stats.Control
+import qualified Data.Map as Map
+import Control.Applicative
+import Data.String.Utils
 
 import EvidenceLog.Model
 
@@ -78,6 +81,25 @@ documentList = api $ do
 -- capable clients that follows the api standards
 documentNew :: Kontrakcja m => m Response
 documentNew = api $ do
+  rq <- lift askRq
+  let headers = rqHeaders rq
+
+  HeaderPair _ contenttypes <- apiGuard' BadInput $ Map.lookup (BS.fromString "content-type") headers
+
+  contenttype <- apiGuard' BadInput $ BS.toString <$> listToMaybe contenttypes
+  Log.debug $ "content-type: " ++ contenttype
+
+  case strip $ fst $ break (== ';') contenttype of
+    "multipart/form-data" -> documentNewMultiPart
+    "mime/multipart" -> documentWithJSON
+    _ -> throwError BadInput
+
+documentWithJSON :: Kontrakcja m => APIMonad m (Created JSValue)
+documentWithJSON = do
+  throwError Forbidden
+
+documentNewMultiPart :: Kontrakcja m => APIMonad m (Created JSValue)
+documentNewMultiPart = do
   user <- getAPIUser
   mcompany <- case usercompany user of
     Nothing -> return Nothing

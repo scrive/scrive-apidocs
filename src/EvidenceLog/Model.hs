@@ -9,6 +9,7 @@ module EvidenceLog.Model
          MailAPIActor(..),  
          MailSystemActor(..),
          IntegrationAPIActor(..),
+         APIActor(..),
          UserActor(..),
          AdminActor(..),
          GetEvidenceLog(..),
@@ -170,6 +171,16 @@ instance Actor AdminActor where
   actorUserID    (AdminActor _ _ u _) = Just u
   actorEmail     (AdminActor _ _ _ e) = Just e
   actorWho       (AdminActor _ _ _ e) = "the admin with email " ++ show e
+
+data APIActor = APIActor MinutesTime IPAddress UserID String String
+     deriving (Eq, Show)
+instance Actor APIActor where
+  actorTime      (APIActor t _ _ _ _) = t
+  actorIP        (APIActor _ i _ _ _) = Just i
+  actorUserID    (APIActor _ _ u _ _) = Just u
+  actorEmail     (APIActor _ _ _ e _) = Just e
+  actorAPIString (APIActor _ _ _ _ s) = Just s
+  actorWho       (APIActor _ _ _ e _) = "the user with email " ++ show e ++ " using the API"
 
 data Actor a => InsertEvidenceEvent a = InsertEvidenceEvent 
                                         EvidenceEventType       -- A code for the event

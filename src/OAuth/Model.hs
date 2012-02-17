@@ -236,3 +236,4 @@ instance DBUpdate DenyCredentials () where
     _ <- kRun $ SQL "DELETE FROM oauth_temp_credential WHERE (id = ? AND temp_token = ? AND email = ?) OR expires <= ?" 
                     [ toSql $ atID token, toSql $ atToken token, toSql email, toSql time ]
     return ()
+
