@@ -1,5 +1,5 @@
 module Company.Model (
-    CompanyID(..)
+    module Company.CompanyID
   , ExternalCompanyID(..)
   , Company(..)
   , CompanyInfo(..)
@@ -11,14 +11,8 @@ module Company.Model (
   , GetOrCreateCompanyWithExternalID(..)
   ) where
 
-import Control.Applicative
-import Data.Data
-import Data.Int
 import Data.Monoid
 import Database.HDBC
-import Happstack.State
-import Happstack.Server
-import Happstack.Util.Common
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
 
@@ -27,16 +21,9 @@ import DB.Derive
 import DB.Fetcher2
 import DB.Utils
 import API.Service.Model
+import Company.CompanyID
 import Company.Tables
 import Misc
-
-newtype CompanyID = CompanyID { unCompanyID :: Int64 }
-  deriving (Eq, Ord, Data, Typeable)
-$(newtypeDeriveConvertible ''CompanyID)
-$(newtypeDeriveUnderlyingReadShow ''CompanyID)
-
-instance FromReqURI CompanyID where
-  fromReqURI = readM
 
 newtype ExternalCompanyID = ExternalCompanyID { unExternalCompanyID :: BS.ByteString }
   deriving (Eq, Ord, Show)
@@ -80,7 +67,7 @@ data CreateCompany = CreateCompany (Maybe ServiceID) (Maybe ExternalCompanyID)
 instance DBUpdate CreateCompany Company where
   dbUpdate (CreateCompany msid mecid) = do
     _ <- kRunRaw "LOCK TABLE companies IN ACCESS EXCLUSIVE MODE"
-    cid <- CompanyID <$> getUniqueID tableCompanies
+    cid <- getUniqueID tableCompanies
     _ <- kRun $ mkSQL INSERT tableCompanies [
         sql "id" cid
       , sql "external_id" mecid
@@ -146,21 +133,3 @@ fetchCompanies = foldDB decoder []
         , companycountry = country
         }
       } : acc
-
--- this will not be needed when we move documents to pgsql. for now it's needed
--- for document handlers - it seems that types of arguments that handlers take
--- need to be serializable. I don't know wtf, but I'll gladly dispose of these
--- instances when we're done with the migration.
-
-newtype CompanyID_0 = CompanyID_0 Int
-  deriving (Eq, Ord, Typeable)
-
-instance Version CompanyID where
-  mode = extension 2 (Proxy :: Proxy CompanyID_0)
-
-instance Version CompanyID_0
-
-instance Migrate CompanyID_0 CompanyID where
-  migrate (CompanyID_0 n) = CompanyID (fromIntegral n)
-
-$(deriveSerializeFor [''CompanyID, ''CompanyID_0])

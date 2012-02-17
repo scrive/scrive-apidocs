@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-module File.Model
-    ( FileID
+module File.Model (
+      module File.FileID
     , FileMovedToAWS(..)
     , FileMovedToDisk(..)
     , GetFileByFileID(..)
@@ -35,7 +35,7 @@ instance DBUpdate NewFile File where
   dbUpdate (NewFile filename content) = do
     kPrepare "LOCK TABLE files IN ACCESS EXCLUSIVE MODE"
     _ <- kExecute []
-    fid <- FileID <$> getUniqueID tableFiles
+    fid :: FileID <- getUniqueID tableFiles
     kPrepare $ "INSERT INTO files ("
       ++ "  id"
       ++ ", name"

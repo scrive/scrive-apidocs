@@ -14,12 +14,11 @@ module DB.Utils (
   ) where
 
 import Data.Convertible
-import Data.Int
 import Data.List
 import Data.Maybe
 import Data.Monoid
 import Database.HDBC as HDBC
-import Crypto.RNG (random)
+import Crypto.RNG
 import qualified Control.Exception as E
 
 import DB.Classes as DB
@@ -27,17 +26,16 @@ import DB.Fetcher2
 import DB.Model
 import DB.SQL
 
-
-getUniqueID :: Table -> DB Int64
+getUniqueID :: (Convertible a SqlValue, Random a) => Table -> DB a
 getUniqueID table = getUniqueIDField table "id"
 
-getUniqueIDField :: Table -> String -> DB Int64
+getUniqueIDField :: forall a. (Convertible a SqlValue, Random a) => Table -> String -> DB a
 getUniqueIDField table fieldname = do
   muid <- do
     uid <- random
     kPrepare $ "SELECT " ++ fieldname ++ " FROM " ++ tblName table ++ " WHERE " ++ fieldname ++ " = ?"
     _ <- kExecute [toSql uid]
-    foldDB (\_ (_::SqlValue) -> Nothing :: Maybe Int64) (Just uid)
+    foldDB (\_ (_::SqlValue) -> Nothing :: Maybe a) (Just uid)
   maybe (getUniqueIDField table fieldname) return muid
 
 oneRowAffectedGuard :: Monad m => Integer -> m Bool
