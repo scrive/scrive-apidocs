@@ -7,7 +7,6 @@
  *                   submitOnUpload : Bool //Submit the parent form when file selected })
  *                   list : jQuery("selector") // If you want to show list of uploaded files
  *                   maxlength : 1 // Number of files that can be selected
- *                   accept: "image/png" //Type of file to accept - by default this is a pdf
  *  will return UploadButton object.
  *
  * It exports method input that returns jQuery object to be inserted anywere you want
@@ -28,7 +27,6 @@ var UploadButtonModel = Backbone.Model.extend({
       text : "",
       width: 200,
       maxlength : 1,
-      accept: "application/pdf",
       submitOnUpload : false,
       size : "small",
       showLoadingDialog : true,
@@ -47,9 +45,6 @@ var UploadButtonModel = Backbone.Model.extend({
   },
   maxlength : function() {
         return this.get("maxlength");
-  },
-  accept: function() {
-        return this.get("accept");
   },
   submitOnUpload : function(){
        return this.get("submitOnUpload") == true;
@@ -109,14 +104,9 @@ var UploadButtonView = Backbone.View.extend({
         fileinput.MultiFile({
             list: list,
             onError: function(a,b,c,d) {
-                var flashcontent = localization.onlyPDFAllowed;
-                console.log(model.accept().split("/"));
-                var splitaccept = model.accept().split("/");
-                var lastaccept = splitaccept[splitaccept.length - 1].toUpperCase();
-                if (lastaccept!="PDF") {
-                  flashcontent = flashcontent.replace("PDF", lastaccept);
-                }
-                FlashMessages.add({content: flashcontent, color: "red"});
+                var splittype = model.type().split("/");
+                var lasttype = splittype[splittype.length - 1].toUpperCase();
+                FlashMessages.add({content: localization.onlyFileWithTypeAllowed(lasttype), color: "red"});
                 if (model.get('onError'))
                     model.get('onError')(a,b,c,d);
             },

@@ -19,7 +19,6 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Map as Map
 
-import AppView
 import DB.Classes
 import DB.Types
 import Company.CompanyView
@@ -34,17 +33,23 @@ import Util.HasSomeCompanyInfo
 import Util.MonadUtils
 import qualified Log
 
-handleGetCompany :: Kontrakcja m => m Response
-handleGetCompany = withCompanyUser $ \(_user, company) -> do
-  content <- viewCompanySettings company
-  renderFromBody TopAccount kontrakcja content
+handleGetCompany :: Kontrakcja m => m String
+handleGetCompany = withCompanyUser $ \_ -> viewCompanySettings
 
 handlePostCompany :: Kontrakcja m => m KontraLink
 handlePostCompany = withCompanyAdmin $ \(_user, company) -> do
-  rawcompanyjson <- guardJustM $ getField "company"
-  companyjson <- guardRight $ runGetJSON readJSValue rawcompanyjson
-  jsoncui <- guardRight $ companyUiFromJSON companyjson
-  cui <- setCompanyLogoFromRequest jsoncui{ companylogo = companylogo $ companyui company }
+  iscompanyjson <- isFieldSet "company"
+  cui' <-
+    if iscompanyjson
+      then do
+        rawcompanyjson <- guardJustM $ getField "company"
+        companyjson <- guardRight $ runGetJSON readJSValue rawcompanyjson
+        jsoncui <- guardRight $ companyUiFromJSON companyjson
+        Log.debug $ "using json " ++ (show $ jsoncui)
+        return $ jsoncui{ companylogo = companylogo $ companyui company }
+      else
+        return $ companyui company
+  cui <- setCompanyLogoFromRequest cui'
   Log.debug $ "company UI " ++ (show $ companyid company) ++ " updated to " ++ (show cui)
   _ <- runDBUpdate $ UpdateCompanyUI (companyid company) cui
   return LinkAccountCompany
@@ -66,11 +71,12 @@ setCompanyLogoFromRequest cui = do
 
 companyUiFromJSON :: JSValue -> Either String CompanyUI
 companyUiFromJSON jsv = do
-  JSString (JSONString barsbackground) <- jsget "barsbackground" jsv
+  jsonbb <- jsget "barsbackground" jsv
   return CompanyUI {
-    companybarsbackground = if barsbackground==""
-                               then Nothing
-                               else Just (BS.fromString barsbackground)
+    companybarsbackground =
+      case jsonbb of
+        JSString (JSONString bb) | not (null bb) -> Just (BS.fromString bb)
+        _ -> Nothing
   , companylogo = Nothing
   }
 
@@ -114,9 +120,7 @@ withCompanyUser action = do
   action (user, company)
 
 {- |
-    Guards that there is a user that is logged in and is the admin
-    of a company.  The user and company are passed as params to the
-    given action, to save you having to look them up yourself.
+    Guards that there is a logged in company admin.
 -}
 withCompanyAdmin :: Kontrakcja m => ((User, Company) -> m a) -> m a
 withCompanyAdmin action = withCompanyUser $ \(user, company) ->

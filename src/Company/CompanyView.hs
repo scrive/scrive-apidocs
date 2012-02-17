@@ -3,8 +3,7 @@ module Company.CompanyView (
     viewCompanySettings
 ) where
 
-import Company.Model
 import Templates.Templates
 
-viewCompanySettings :: TemplatesMonad m => Company -> m String
-viewCompanySettings _company = renderTemplateM "viewCompany" ()
+viewCompanySettings :: TemplatesMonad m => m String
+viewCompanySettings = renderTemplateM "viewCompany" ()
