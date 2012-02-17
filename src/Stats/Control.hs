@@ -170,11 +170,11 @@ dbCompanyIDLookup cid tbl =
  -}
 convertUserIDToFullName :: Kontrakcja m => [User] -> [(Int, UserID, [Int])] -> m [(Int, String, [Int])]
 convertUserIDToFullName _ [] = return []
-convertUserIDToFullName acc ((a,UserID 0,s):ss) = do
-  rst <- convertUserIDToFullName acc ss
-  return $ (a, "Total", s) : rst
-convertUserIDToFullName acc ((a,uid,s):ss) =
-  case find (\u->userid u == uid) acc of
+convertUserIDToFullName acc ((a,uid,s):ss)
+  | uid == unsafeUserID 0 = do
+    rst <- convertUserIDToFullName acc ss
+    return $ (a, "Total", s) : rst
+  | otherwise = case find (\u->userid u == uid) acc of
     Just u -> do
       rst <- convertUserIDToFullName acc ss
       return $ (a, BS.toString $ getSmartName u, s) : rst
@@ -265,7 +265,7 @@ calculateCompanyDocStats events =
   let byDay = groupWith (\(a,_,_)->a) $ reverse $ sortWith (\(a,_,_)->a) events
       byUser = map (groupWith (\(_,a,_)->a) . sortWith (\(_,a,_)->a)) byDay
       userTotalsByDay = map (map sumCStats) byUser
-      setUID0 (a,_,s) = (a,UserID 0,s)
+      setUID0 (a,_,s) = (a,unsafeUserID 0,s)
       totalByDay = map (setUID0 . sumCStats) byDay
   in concat $ zipWith (\a b->a++[b]) userTotalsByDay totalByDay
 
@@ -275,7 +275,7 @@ calculateCompanyDocStatsByMonth events =
       byMonth = groupWith (\(a,_,_) -> a) $ reverse $ sortWith  (\(a,_,_) -> a) monthOnly
       byUser = map (groupWith (\(_,a,_) ->a) . sortWith (\(_,a,_)->a)) byMonth
       userTotalsByMonth = map (map sumCStats) byUser
-      setUID0 (a,_,s) = (a,UserID 0, s)
+      setUID0 (a,_,s) = (a,unsafeUserID 0, s)
       totalByMonth = map (setUID0 . sumCStats) byMonth
   in concat $ zipWith (\a b->a++[b]) userTotalsByMonth totalByMonth
 

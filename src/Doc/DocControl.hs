@@ -64,7 +64,7 @@ import Text.JSON.Fields as JSON (json)
 import qualified Text.JSON.Fields as JSON (field)
 import ForkAction
 import Doc.DocDraft as Draft
-import Util.JSON 
+import Util.JSON
 import qualified ELegitimation.BankID as BankID
 import EvidenceLog.Model
 
@@ -415,8 +415,10 @@ makeMailAttachments ctx document = do
       sattachments = concatMap (maybeToList . signatoryattachmentfile) $ documentsignatoryattachments document
       allfiles' = [mainfile] ++ aattachments ++ sattachments
   allfiles <- liftM catMaybes $ mapM (ioRunDB (ctxdbenv ctx) . dbQuery . GetFileByFileID) allfiles'
+  let pdfIfy name | ".pdf" `isSuffixOf` name = name
+                  | otherwise = name ++ ".pdf"
   --use the doc title rather than file name for the main file (see jira #1152)
-  let filenames = (BS.toString (documenttitle document) ++ ".pdf") : map (BS.toString . filename) (tail allfiles)
+  let filenames = map (pdfIfy . BS.toString) $ documenttitle document : map filename (tail allfiles)
 
   filecontents <- sequence $ map (getFileContents ctx) allfiles
   return $ zip filenames filecontents
@@ -506,13 +508,13 @@ signDocument documentid
 handleMismatch :: Kontrakcja m => Document -> SignatoryLinkID -> String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> m ()
 handleMismatch doc sid msg sfn sln spn = do
         ctx <- getContext
-        let Just sl = getSigLinkFor doc sid        
+        let Just sl = getSigLinkFor doc sid
         Log.eleg $ "Information from eleg did not match information stored for signatory in document." ++ show msg
-        Right newdoc <- runDBUpdate $ CancelDocument (documentid doc) (ELegDataMismatch msg sid sfn sln spn) 
-                        (SignatoryActor (ctxtime ctx) 
-                         (ctxipnumber ctx) 
-                         (maybesignatory sl) 
-                         (BS.toString $ getEmail $ sl) 
+        Right newdoc <- runDBUpdate $ CancelDocument (documentid doc) (ELegDataMismatch msg sid sfn sln spn)
+                        (SignatoryActor (ctxtime ctx)
+                         (ctxipnumber ctx)
+                         (maybesignatory sl)
+                         (BS.toString $ getEmail $ sl)
                          sid)
         postDocumentChangeAction newdoc doc (Just sid)
 
@@ -610,7 +612,7 @@ handleSignShow2 documentid
   disableLocalSwitch
   switchLocale (getLocale document)
   invitedlink <- guardJust $ getSigLinkFor document signatorylinkid
-  _ <- runDBUpdate $ MarkDocumentSeen documentid signatorylinkid magichash 
+  _ <- runDBUpdate $ MarkDocumentSeen documentid signatorylinkid magichash
        (SignatoryActor ctxtime ctxipnumber (maybesignatory invitedlink) (BS.toString $ getEmail invitedlink) signatorylinkid)
   _ <- runDB $ addSignStatLinkEvent document invitedlink
   let isFlashNeeded = Data.List.null ctxflashmessages
@@ -1064,14 +1066,14 @@ handleRubbishRestore = do
   user <- guardJustM $ ctxmaybeuser <$> getContext
   actor <- guardJustM $ mkAuthorActor <$> getContext
   docids <- getCriticalFieldList asValidDocID "doccheck"
-  mapM_ (\did -> guardRightM $ runDBUpdate $ RestoreArchivedDocument user did actor) $ map DocumentID docids
+  mapM_ (\did -> guardRightM $ runDBUpdate $ RestoreArchivedDocument user did actor) docids
   addFlashM flashMessageRubbishRestoreDone
   return $ LinkRubbishBin
 
 handleRubbishReallyDelete :: Kontrakcja m => m KontraLink
 handleRubbishReallyDelete = do
-  user <- guardJustM $ ctxmaybeuser <$> getContext  
-  actor <- guardJustM $ mkAuthorActor <$> getContext  
+  user <- guardJustM $ ctxmaybeuser <$> getContext
+  actor <- guardJustM $ mkAuthorActor <$> getContext
   ctx <- getContext
   docids <- getCriticalFieldList asValidDocID "doccheck"
   mapM_ (\did -> do
@@ -1079,14 +1081,14 @@ handleRubbishReallyDelete = do
             case getSigLinkFor doc user of
               Just sl -> runDB $ addSignStatPurgeEvent doc sl (ctxtime ctx)
               _ -> return False)
-    $ map DocumentID docids
+    docids
   addFlashM flashMessageRubbishHardDeleteDone
   return $ LinkRubbishBin
 
 handleAttachmentRename :: Kontrakcja m => DocumentID -> m KontraLink
 handleAttachmentRename docid = withUserPost $ do
   newname <- getCriticalField (return . BS.fromString) "docname"
-  actor <- guardJustM $ mkAuthorActor <$> getContext  
+  actor <- guardJustM $ mkAuthorActor <$> getContext
   doc <- guardRightM $ runDBUpdate $ SetDocumentTitle docid newname actor
   return $ LinkIssueDoc $ documentid doc
 
@@ -1114,8 +1116,7 @@ handleBulkOrderRemind = withUserPost $ do
 handleIssueBulkRemind :: Kontrakcja m => DocumentType -> m [SignatoryLink]
 handleIssueBulkRemind doctype = do
     ctx@Context{ctxmaybeuser = Just user } <- getContext
-    idnumbers <- getCriticalFieldList asValidDocID "doccheck"
-    let ids = map DocumentID idnumbers
+    ids <- getCriticalFieldList asValidDocID "doccheck"
     remindedsiglinks <- fmap concat . sequence . map (\docid -> docRemind ctx user docid) $ ids
     case (length remindedsiglinks) of
       0 -> addFlashM $ flashMessageNoBulkRemindsSent doctype
@@ -1270,7 +1271,7 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
         Right doc -> do
           guard $ isAuthor (doc, user)
           muser <- runDBQuery $ GetUserByEmail (documentservice doc) (Email email)
-          actor <- guardJustM $ mkAuthorActor <$> getContext          
+          actor <- guardJustM $ mkAuthorActor <$> getContext
           mnewdoc <- runDBUpdate $ ChangeSignatoryEmailWhenUndelivered docid slid muser email actor
           case mnewdoc of
             Right newdoc -> do
@@ -1409,7 +1410,7 @@ handleDeleteSigAttach docid siglinkid = do
   Context{ctxtime, ctxipnumber} <- getContext
   let email = getEmail siglink
   Log.debug $ "delete Sig attachment " ++ (show fid) ++ "  " ++ (BS.toString email)
-  _ <- runDBUpdate $ DeleteSigAttachment docid email fid 
+  _ <- runDBUpdate $ DeleteSigAttachment docid email fid
        (SignatoryActor ctxtime ctxipnumber (maybesignatory siglink) (BS.toString email) siglinkid)
   return $ LinkSignDoc doc siglink
 
@@ -1540,8 +1541,8 @@ handleSaveDraft did = do
     case res of
          Right _ -> return $ JSObject $ toJSObject []
          Left s -> do
-             return $ JSObject $ toJSObject [("error",JSString $ toJSString $ "Document saving failed with ("++s++") - unless someone is experimenting this should never happend")] 
-    
+             return $ JSObject $ toJSObject [("error",JSString $ toJSString $ "Document saving failed with ("++s++") - unless someone is experimenting this should never happend")]
+
 
 handleSetAttachments :: Kontrakcja m => DocumentID -> m KontraLink
 handleSetAttachments did = do
@@ -1572,24 +1573,24 @@ handleSetAttachments did = do
                  Just (Input  (Right c)  _ _)  -> do
                      case maybeRead (BSL.toString c) of
                           Just fid -> (fmap fileid) <$> (runDB $ dbQuery $ GetFileByFileID fid)
-                          Nothing -> return $ Nothing    
+                          Nothing -> return $ Nothing
                  _ -> do
                      return Nothing
-                 
+
 handleUpsalesDeleted :: Kontrakcja m => m Response
 handleUpsalesDeleted = onlyAdmin $ do
   docs <- runDBQuery $ GetDocuments $ Just $ ServiceID $ BS.fromString "upsales"
   let deleteddocs = [[show $ documentid d, showDateYMD $ documentctime d, BS.toString $ documenttitle d]
                     | d <- docs
                     , isDeletedFor $ getAuthorSigLink d
-                    , (isJust $ getSigLinkFor d SignatoryAuthor) && (isJust $ getSigLinkFor d $ CompanyID 1849610088)]
+                    , (isJust $ getSigLinkFor d SignatoryAuthor) && (isJust $ getSigLinkFor d $ unsafeCompanyID 1849610088)]
   let header = ["document_id", "date created", "document_title"]
   let csv = toCSV header deleteddocs
   ok $ setHeader "Content-Disposition" "attachment;filename=upsalesdocsdeleted.csv"
      $ setHeader "Content-Type" "text/csv"
      $ toResponse csv
 
-handleParseCSV :: Kontrakcja m => m JSValue 
+handleParseCSV :: Kontrakcja m => m JSValue
 handleParseCSV = do
   ctx <- getContext
   guardJust $ ctxmaybeuser ctx
@@ -1617,7 +1618,7 @@ handleParseCSV = do
                                 when (isJust $ problemCell p) $
                                     JSON.field "cell" $ fromJust $ problemCell p
                             JSON.field "rows" $ for (csvbody csvdata) $ \row -> map BS.toString row
-                                
+
         _ -> do
             oneProblemJSON $ renderTemplateM "flashMessageFailedToParseCSV" ()
   return res

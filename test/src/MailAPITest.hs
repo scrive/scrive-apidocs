@@ -30,22 +30,21 @@ import API.MailAPI
 
 mailApiTests :: DBEnv -> Test
 mailApiTests env = testGroup "MailAPI" [
-      --some tests are for JSON, which we don't use anymore
-      --testCase "create proper document with one signatory" $ testSuccessfulDocCreation env "test/mailapi/email_onesig_ok.eml" 2
-      --testCase "fail if user doesn't exist" $ testFailureNoSuchUser env
-      testCase "Create simple email document with one signatory" $ testSuccessfulDocCreation env "test/mailapi/email_simple_onesig.eml" 2
-    , testCase "Parse mime document email_onesig_ok.eml" $ testParseMimes "test/mailapi/email_onesig_ok.eml"
-    , testCase "Parse mime document email_simple_onesig.eml" $ testParseMimes "test/mailapi/email_simple_onesig.eml"
-    , testCase "Parse mime document email_outlook_three.eml" $ testParseMimes "test/mailapi/email_outlook_three.eml"
-    , testCase "Parse mime document email_outlook_viktor.eml" $ testParseMimes "test/mailapi/email_outlook_viktor.eml"
-    , testCase "Parse mime document email_gmail_eric.eml" $ testParseMimes "test/mailapi/email_gmail_eric.eml"
+      testCase "Create simple email document with one signatory"      $ testSuccessfulDocCreation env "test/mailapi/email_simple_onesig.eml" 2
+    , testCase "Parse mime document email_onesig_ok.eml"              $ testParseMimes "test/mailapi/email_onesig_ok.eml"
+    , testCase "Parse mime document email_simple_onesig.eml"          $ testParseMimes "test/mailapi/email_simple_onesig.eml"
+    , testCase "Parse mime document email_outlook_three.eml"          $ testParseMimes "test/mailapi/email_outlook_three.eml"
+    , testCase "Parse mime document email_outlook_viktor.eml"         $ testParseMimes "test/mailapi/email_outlook_viktor.eml"
+    , testCase "Parse mime document email_gmail_eric.eml"             $ testParseMimes "test/mailapi/email_gmail_eric.eml"
     , testCase "Create outlook email document with three signatories" $ testSuccessfulDocCreation env "test/mailapi/email_outlook_three.eml" 4
-    , testCase "test lukas's error email" $ testSuccessfulDocCreation env "test/mailapi/lukas_mail_error.eml" 2
-    , testCase "test eric's error email" $ testSuccessfulDocCreation env "test/mailapi/eric_email_error.eml" 2    
-    , testCase "test lukas's funny title" $ testSuccessfulDocCreation env "test/mailapi/email_weird_subject.eml" 2
-    , testCase "test exchange email" $ testSuccessfulDocCreation env "test/mailapi/email_exchange.eml" 2
-    , testCase "test 2 sig model from outlook mac" $ testSuccessfulDocCreation env "test/mailapi/email_outlook_viktor.eml" 3
-    , testCase "test json with 2 sigs" $ testSuccessfulDocCreation env "test/mailapi/email_onesig_json.eml" 2
+    , testCase "test lukas's error email"                             $ testSuccessfulDocCreation env "test/mailapi/lukas_mail_error.eml" 2
+    , testCase "test eric's error email"                              $ testSuccessfulDocCreation env "test/mailapi/eric_email_error.eml" 2    
+    , testCase "test lukas's funny title"                             $ testSuccessfulDocCreation env "test/mailapi/email_weird_subject.eml" 2
+    , testCase "test exchange email"                                  $ testSuccessfulDocCreation env "test/mailapi/email_exchange.eml" 2
+    , testCase "test 2 sig model from outlook mac"                    $ testSuccessfulDocCreation env "test/mailapi/email_outlook_viktor.eml" 3
+    , testCase "test json with 2 sigs"                                $ testSuccessfulDocCreation env "test/mailapi/email_onesig_json.eml" 2
+    , testCase "test json with 2 sigs (from Roger)"                   $ testSuccessfulDocCreation env "test/mailapi/roger_json.eml" 2
+    , testCase "test json with 2 sigs (from Roger) with decoding"     $ testSuccessfulDocCreation env "test/mailapi/roger_decode_json.eml" 2
     ]
 
 testParseMimes :: String -> Assertion

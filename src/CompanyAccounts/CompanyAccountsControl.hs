@@ -263,9 +263,9 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
 -}
 handleResendToCompanyAccount :: Kontrakcja m => m ()
 handleResendToCompanyAccount = withCompanyAdmin $ \(user, company) -> do
-  resendid <- getCriticalField asValidNumber "resendid"
+  resendid <- getCriticalField asValidUserID "resendid"
   resendemail <- getCriticalField asValidEmail "resendemail"
-  muserbyid <- runDBQuery $ GetUserByID (UserID resendid)
+  muserbyid <- runDBQuery $ GetUserByID resendid
   mcompanybyid <- maybe (return Nothing) getCompanyForUser muserbyid
   minvite <- runDBQuery $ GetCompanyInvite (companyid company) (Email resendemail)
   muserbyemail <- runDBQuery $ GetUserByEmail Nothing (Email resendemail)
@@ -329,12 +329,12 @@ sendTakeoverCompanyInternalWarningMail inviter company user = do
 -}
 handleChangeRoleOfCompanyAccount :: Kontrakcja m => m ()
 handleChangeRoleOfCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
-  changeid <- getCriticalField asValidNumber "changeid"
+  changeid <- getCriticalField asValidUserID "changeid"
   makeadmin <- getFieldUTF "makeadmin"
-  changeuser <- guardJustM $ runDBQuery $ GetUserByID (UserID changeid)
+  changeuser <- guardJustM $ runDBQuery $ GetUserByID changeid
   changecompanyid <- guardJust $ usercompany changeuser
   guard $ changecompanyid == companyid company --make sure user is in same company
-  _ <- runDBUpdate $ SetUserCompanyAdmin (UserID changeid) (makeadmin == Just (BS.fromString "true"))
+  _ <- runDBUpdate $ SetUserCompanyAdmin changeid (makeadmin == Just (BS.fromString "true"))
   return ()
 
 {- |
@@ -343,9 +343,9 @@ handleChangeRoleOfCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
 -}
 handleRemoveCompanyAccount :: Kontrakcja m => m ()
 handleRemoveCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
-  removeid <- getCriticalField asValidNumber "removeid"
+  removeid <- getCriticalField asValidUserID "removeid"
   removeemail <- getCriticalField asValidEmail "removeemail"
-  mremoveuser <- runDBQuery $ GetUserByID (UserID removeid)
+  mremoveuser <- runDBQuery $ GetUserByID removeid
   mremovecompany <- maybe (return Nothing) getCompanyForUser mremoveuser
   isdeletable <- maybe (return False) isUserDeletable mremoveuser
 
