@@ -1533,16 +1533,16 @@ testUpdateSigAttachmentsAttachmentsOk = doTimes 10 $ do
   validTest $ do
     assertRight edoc1
     let doc1 = fromRight edoc1
-    assertEqual "Both attachments were attached" 2 (length (concat . map signatoryattachments $ documentsignatorylinks doc1))
+    assertEqual "Both attachments were attached" 2 (length (signatoryattachments $ (documentsignatorylinks doc1)!!0))
     assertRight edoc2
     let doc2 = fromRight edoc2
     assertBool "All signatory attachments are not connected to files" (all (isNothing . signatoryattachmentfile) 
-                                                                           (concat . map signatoryattachments $ documentsignatorylinks doc2))
+                                                                           (signatoryattachments $ (documentsignatorylinks doc2)!!0))
 
     assertRight edoc3
     let doc3 = fromRight edoc3
     assertBool "Attachment connected to signatory"
-                 (Just (fileid file2) `elem` map signatoryattachmentfile (concat . map signatoryattachments $ documentsignatorylinks doc3))
+                 (Just (fileid file2) `elem` map signatoryattachmentfile (signatoryattachments $ (documentsignatorylinks doc3)!!0))
 
 
 {-
