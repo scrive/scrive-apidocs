@@ -654,7 +654,6 @@ handleIssueShowGet docid = do
     document <- guardRightM $ getDocByDocID docid
     ctx@Context { ctxmaybeuser } <- getContext
     disableLocalSwitch -- Not show locale flag on this page
-    switchLocale (getLocale document)
     mdstep <- getDesignStep docid
     case (mdstep, documentfunctionality document) of
       (Just (DesignStep3 _ _), BasicFunctionality) -> return $ Left $ LinkIssueDoc docid
@@ -1426,7 +1425,6 @@ handleAttachmentViewForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -
 handleAttachmentViewForViewer docid siglinkid mh = do
   doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
   disableLocalSwitch
-  switchLocale (getLocale doc)
   let pending JpegPagesPending = True
       pending _                = False
       files                    = map authorattachmentfile (documentauthorattachments doc)
@@ -2027,7 +2025,6 @@ prepareEmailPreview :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValu
 prepareEmailPreview docid slid = do
     mailtype <- getFieldWithDefault "" "mailtype"
     doc <- guardJustM $ runDBQuery $ GetDocumentByDocumentID docid
-    switchLocale $ getLocale doc
     ctx <- getContext
     content <- case mailtype of
          "remind" -> do
