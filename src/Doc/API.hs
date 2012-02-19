@@ -15,12 +15,27 @@ import Doc.JSON
 import Control.Monad.Trans
 import Misc
 import Data.Maybe
+import qualified Codec.Text.IConv as IConv
+import OAuth.Model
+import qualified Codec.MIME.Type as MIME
+import qualified Codec.MIME.Parse as MIME
+import qualified Codec.MIME.Utils as MIME
+
+import Text.JSON
+import Text.JSON.String
+
+import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.ByteString.Lazy as BSL
 import Util.SignatoryLinkUtils
 import Util.HasSomeUserInfo
 import Happstack.Server.RqData
 import Doc.DocStorage
+import qualified Doc.DocControl as DocControl
+import Data.List
+import Data.Either
+import Doc.DocControl
+
 import DB.Classes
 import File.Model
 import MagicHash (MagicHash)
@@ -36,7 +51,8 @@ import Stats.Control
 import qualified Data.Map as Map
 import Control.Applicative
 import Data.String.Utils
-
+import OAuth.Parse
+import MinutesTime
 import EvidenceLog.Model
 
 documentAPI :: Route (Kontra Response)
@@ -96,7 +112,143 @@ documentNew = api $ do
 
 documentWithJSON :: Kontrakcja m => APIMonad m (Created JSValue)
 documentWithJSON = do
-  throwError Forbidden
+  time <- ctxtime <$> getContext
+  ip <- ctxipnumber <$> getContext
+  bdy <- rqBody <$> lift askRq                
+  let (mime, allParts) = MIME.parseMIMEToParts bdy
+
+      isPDF (tp,_) = MIME.mimeType tp == MIME.Application "pdf"
+      isJSON (tp,_) = MIME.mimeType tp == MIME.Application "json"
+
+      pdfs = filter isPDF allParts
+      jsons = filter isJSON allParts
+
+  
+  rq <- lift askRq
+  let headers = rqHeaders rq
+  Log.debug $ "Got headers: " ++ show headers
+
+  HeaderPair _ auths <- apiGuard' Forbidden $ Map.lookup (BS.fromString "authorization") headers
+
+  Log.debug $ "Got Authorization: headers: " ++ show auths
+
+  auth <- apiGuard' Forbidden $ BS.toString <$> listToMaybe auths
+
+  -- pull the data out of Authorization
+  let params = splitAuthorization auth                 
+
+  Log.debug $ "Split Authorization header into params: " ++ show params
+
+  sigtype <- apiGuard' BadInput $ maybeRead =<< lookup "oauth_signature_method" params
+  when (sigtype /= "PLAINTEXT") $ throwError BadInput
+
+  (mapisecret, mtokensecret) <- apiGuard' Forbidden $ splitSignature =<< maybeRead =<< lookup "oauth_signature" params
+  apisecret <- apiGuard' Forbidden mapisecret
+  tokensecret <- apiGuard' Forbidden mtokensecret
+
+  Log.debug $ "Got api secret: " ++ show apisecret
+     
+  apitoken    <- apiGuard' BadInput $ maybeRead =<< maybeRead =<< lookup "oauth_consumer_key" params
+  accesstoken <- apiGuard' BadInput $ maybeRead =<< maybeRead =<< lookup "oauth_token" params
+   
+  (userid, apistring) <- apiGuardL' Forbidden $ dbQuery $ GetUserIDForAPIWithPrivilege apitoken apisecret accesstoken tokensecret APIDocCreate
+  
+  user <- apiGuardL' Forbidden $ dbQuery $ GetUserByID userid
+
+  let actor = APIActor time ip userid (BS.toString $ getEmail user) apistring
+
+  when (length jsons /= 1) $ do
+    Log.debug $ "Wrong number of json attachments. Expected 1, got: " ++ show (length jsons)
+    throwError BadInput
+
+  let [jsonString] = jsons
+
+  recodedJSON' <- case IConv.convertStrictly (MIME.charset (fst jsonString)) "UTF-8" (BSL.fromChunks [(snd jsonString)]) of
+    Left result' -> return $ BS.concat (BSL.toChunks (result'))
+    Right errmsg -> do
+      let msg = (show $ IConv.reportConversionError errmsg)
+
+      Log.debug $ (show $ toSeconds time) ++ " " ++ msg
+      throwError BadInput
+
+  json <- apiGuard' BadInput $ runGetJSON readJSValue $ BS.toString recodedJSON'
+  dcr <- apiGuard' BadInput $ dcrFromJSON json
+
+  -- exactly one author
+  let aus = [a | a <- dcrInvolved dcr, elem SignatoryAuthor $ irRole a]
+
+  when (length aus /= 1) $ do
+    Log.debug $ (show $ toSeconds time) ++ " Should have exactly one author; instead, has " ++ show aus
+    throwError BadInput
+
+  let [authorIR] = aus
+
+  -- at least one signatory
+  let sigs = length $ [p | p <- dcrInvolved dcr, elem SignatoryAuthor $ irRole p]
+  when (1 > length (dcrInvolved dcr)) $ do
+    Log.debug $ (show $ toSeconds time) ++ " Should have at least one signatory; instead, has " ++ show sigs
+    throwError BadInput
+
+  -- the mainfile is attached
+  pdfBinary <- apiGuard' BadInput $ snd <$> MIME.getByAttachmentName (strip $ dcrMainFile dcr) pdfs
+
+  -- create document
+  -- set to advanced
+  -- add signatories
+  -- send document
+
+  mcompany <- case usercompany user of
+    Just companyid -> runDBQuery $ GetCompany companyid
+    Nothing -> return Nothing
+
+  let userDetails = signatoryDetailsFromUser user mcompany
+
+  -- check email, first name, and last name to make sure they match with the author
+  when (not $ all id [sfValue u == sfValue j
+                     | u <- signatoryfields userDetails
+                     , j <- irData authorIR
+                     , sfType u == sfType j
+                     , sfType u `elem` [FirstNameFT, LastNameFT, EmailFT]
+                     ]) $ do
+    Log.debug $ (show $ toSeconds time) ++ " Author data does not match: " ++ show authorIR ++ " and " ++ show userDetails
+    throwError Forbidden
+
+  -- check that all signatories have first, last, and email
+  when (not $ all ((3 ==) . length) [[v | v <- irData s
+                                      , sfType v `elem` [FirstNameFT, LastNameFT, EmailFT]]
+                                    | s <- dcrInvolved dcr]) $ do
+    Log.debug $ (show $ toSeconds time) ++ " Minimum information not there for all signatories: " ++ show (dcrInvolved dcr)
+    throwError BadInput
+
+  let doctype = dcrType dcr
+      title = dcrTitle dcr
+      
+  doc <- apiGuardL' ServerError $ runDBUpdate $ NewDocument user mcompany (BS.fromString title) doctype actor
+
+  gscmd <- ctxgscmd <$> getContext
+  content14 <- apiGuardL $ liftIO $ preCheckPDF gscmd pdfBinary
+  file <- lift $ runDBUpdate $ NewFile (BS.fromString title) content14
+  _ <- apiGuardL' $ runDBUpdate (AttachFile (documentid doc) (fileid file) actor)
+  
+  _ <- lift $ runDBUpdate $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality actor
+  _ <- lift $ runDBUpdate $ SetDocumentIdentification (documentid doc) [EmailIdentification] actor
+
+  let signatories = for (dcrInvolved dcr) $ \InvolvedRequest{irRole,irData} ->
+        (SignatoryDetails{signatorysignorder = SignOrder 0, signatoryfields = irData},
+         irRole)
+
+  errs <- lefts <$> (sequence $ [runDBUpdate $ ResetSignatoryDetails (documentid doc) signatories actor])
+
+  when ([] /= errs) $ do
+    Log.debug $ "Could not set up document: " ++ (intercalate "; " errs)
+    throwError BadInput
+
+  doc2 <- apiGuardL' ServerError $ runDBUpdate $ PreparationToPending (documentid doc) actor
+  let docid = documentid doc2
+  markDocumentAuthorReadAndSeen doc2
+  _ <- DocControl.postDocumentChangeAction doc2 doc Nothing
+
+  return $ Created $ jsonDocumentForAuthor doc2
 
 documentNewMultiPart :: Kontrakcja m => APIMonad m (Created JSValue)
 documentNewMultiPart = do

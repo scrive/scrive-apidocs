@@ -237,3 +237,11 @@ instance DBUpdate DenyCredentials () where
                     [ toSql $ atID token, toSql $ atToken token, toSql email, toSql time ]
     return ()
 
+data GetUserIDForAPIWithPrivilege = GetUserIDForAPIWithPrivilege
+                                    APIToken
+                                    APISecret
+                                    APIToken
+                                    APISecret
+                                    APIPrivilege
+instance DBQuery GetUserIDForAPIWithPrivilege (Maybe (UserID, String)) where
+  dbUpdate (GetUserIDForAPIWithPrivilege token secret atoken asecret uid priv) 

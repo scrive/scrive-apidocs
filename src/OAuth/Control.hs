@@ -12,9 +12,9 @@ import Happstack.StaticRouting(Route, choice, dir)
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import OAuth.View
+import OAuth.Parse
 
 import Happstack.Server.RqData
-import Data.String.Utils
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Codec.Binary.UTF8.String as UTF
 import qualified Codec.Binary.Url as URL
@@ -27,7 +27,6 @@ import qualified Data.Map as Map
 import Data.Maybe
 import Control.Monad.Error
 import Network.URI
-
 
 import qualified Log
 
@@ -194,30 +193,3 @@ tokenCredRequest = api $ do
                        ,("oauth_token_secret", show accesssecret)
                        ]
 
-splitAuthorization :: String -> [(String, String)]
-splitAuthorization s = 
-  catMaybes $ map makeKV $ splitOver "," s
-  where makeKV kv = case break (== '=') kv of
-          (k, '=':v) -> Just (strip k, strip v)
-          _ -> Nothing
-
-splitSignature :: String -> Maybe (Maybe APISecret, Maybe APISecret)
-splitSignature s = case break (== '&') s of
-  ("",'&':"") -> Just (Nothing, Nothing)
-  ("",'&':sc) -> case maybeRead sc of
-    Just secret -> Just (Nothing, Just secret)
-    Nothing -> Nothing
-  (sc,'&':"") -> case maybeRead sc of
-    Just secret -> Just (Just secret, Nothing)
-    Nothing -> Nothing
-  (s1,'&':s2) -> case (maybeRead s1, maybeRead s2) of
-    (Just sc1, Just sc2) -> Just (Just sc1, Just sc2)
-    _ -> Nothing
-  _ -> Nothing
-
-readPrivileges :: String -> Maybe [APIPrivilege]
-readPrivileges s = privs (splitOver "+" s) []
-  where privs [] a = Just a
-        privs (p:pp) a = case maybeRead p of
-          Just priv -> privs pp (priv:a)
-          Nothing -> Nothing

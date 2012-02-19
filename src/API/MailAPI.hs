@@ -1,6 +1,5 @@
 module API.MailAPI (
       handleMailAPI,
-      parseEmailMessageToParts,
       charset
     ) where
 
@@ -26,10 +25,11 @@ import Happstack.Server hiding (simpleHTTP, host)
 import Text.JSON
 import Text.JSON.String
 import Codec.MIME.Decode
+import Codec.MIME.Utils
 import qualified Codec.MIME.Parse as MIME
 import qualified Codec.MIME.Type as MIME
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as BSC
+--import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
 import Data.Either
@@ -48,17 +48,6 @@ import EvidenceLog.Model
 import Util.HasSomeUserInfo
 --import Util.SignatoryLinkUtils
 
-parseEmailMessageToParts :: BS.ByteString -> (MIME.MIMEValue, [(MIME.Type, BS.ByteString)])
-parseEmailMessageToParts content = (mime, parts mime)
-  where
-    mime = MIME.parseMIMEMessage (BSC.unpack content)
-    parts mimevalue = case MIME.mime_val_content mimevalue of
-        MIME.Single value -> [(MIME.mime_val_type mimevalue, BSC.pack value)]
-        MIME.Multi more -> concatMap parts more
-
-charset :: MIME.Type -> String
-charset mimetype = fromMaybe "us-ascii" $ lookup "charset" (MIME.mimeParams mimetype)
-
 handleMailAPI :: Kontrakcja m => m String
 handleMailAPI = do
   Input contentspec _ _ <- getDataFnM (lookInput "mail")
@@ -66,7 +55,7 @@ handleMailAPI = do
     Left filepath -> liftIO $ BSL.readFile filepath
     Right content -> return content
 
-  let (mime, allParts) = parseEmailMessageToParts content
+  let (mime, allParts) = MIME.parseMIMEToParts content
 
       isPDF (tp,_) = MIME.mimeType tp == MIME.Application "pdf" ||
                      (MIME.mimeType tp == MIME.Application "octet-stream" &&
@@ -299,9 +288,3 @@ jsonMailAPI mailapi username user pdfs plains content = do
 
   return $ show docid
 
-getByAttachmentName :: String -> [(MIME.Type, BS.ByteString)] -> Maybe (MIME.Type, BS.ByteString)
-getByAttachmentName name ps =
-  find byname ps
-    where byname p = case lookup "name" (MIME.mimeParams $ fst p) of
-            Just n' -> name == decodeWords n'
-            _       -> False

@@ -20,10 +20,14 @@ module Codec.MIME.Parse
   , parseMultipart   -- :: Type -> String -> (MIMEValue, String)
   , parseContentType -- :: String -> Maybe Type
   , splitMulti       -- :: String -> String -> ([MIMEValue], String)
+  , parseMIMEToParts
   ) where
 
 import Codec.MIME.Type
 import Codec.MIME.Decode
+
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BSC
 
 import Data.Char
 import Data.Maybe
@@ -272,3 +276,10 @@ lookupField n ns =
         Nothing -> Nothing
         Just (_, x) -> Just x
       
+parseMIMEToParts :: BS.ByteString -> (MIMEValue, [(Type, BS.ByteString)])
+parseMIMEToParts content = (mime, parts mime)
+  where
+    mime = parseMIMEMessage (BSC.unpack content)
+    parts mimevalue = case mime_val_content mimevalue of
+        Single value -> [(mime_val_type mimevalue, BSC.pack value)]
+        Multi more -> concatMap parts more
