@@ -163,7 +163,7 @@ tableTempCredential = Table {
           ++ ", expires     TIMESTAMPTZ NOT NULL"
           ++ ", email       VARCHAR     NOT NULL"
           ++ ", callback    VARCHAR     NOT NULL"
-          ++ ", CONSTRAINT pk_oauth_temp_credential PRIMARY KEY (temp_token)"
+          ++ ", CONSTRAINT pk_oauth_temp_credential PRIMARY KEY (id)"
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid
@@ -197,6 +197,6 @@ tableTempPrivileges = Table {
     kRunRaw $ "ALTER TABLE oauth_temp_privileges"
       ++ " ADD CONSTRAINT fk_oauth_temp_privileges_temp_token FOREIGN KEY(temp_token_id)"
       -- we want the temp credentials to disappear when the api_token disappears
-      ++ " REFERENCES oauth_temp_token(id) ON UPDATE RESTRICT ON DELETE CASCADE"
+      ++ " REFERENCES oauth_temp_credential(id) ON UPDATE RESTRICT ON DELETE CASCADE"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }

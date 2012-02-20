@@ -21,7 +21,6 @@ import qualified Codec.MIME.Type as MIME
 import qualified Codec.MIME.Parse as MIME
 import qualified Codec.MIME.Utils as MIME
 
-import Text.JSON
 import Text.JSON.String
 
 import qualified Data.ByteString as BS
@@ -32,9 +31,9 @@ import Util.HasSomeUserInfo
 import Happstack.Server.RqData
 import Doc.DocStorage
 import qualified Doc.DocControl as DocControl
-import Data.List
-import Data.Either
 import Doc.DocControl
+
+import Control.Concurrent.MVar
 
 import DB.Classes
 import File.Model
@@ -107,15 +106,20 @@ documentNew = api $ do
 
   case strip $ fst $ break (== ';') contenttype of
     "multipart/form-data" -> documentNewMultiPart
-    "mime/multipart" -> documentWithJSON
+    "multipart/mixed" -> documentWithJSON
     _ -> throwError BadInput
 
 documentWithJSON :: Kontrakcja m => APIMonad m (Created JSValue)
 documentWithJSON = do
   time <- ctxtime <$> getContext
   ip <- ctxipnumber <$> getContext
-  bdy <- rqBody <$> lift askRq                
-  let (mime, allParts) = MIME.parseMIMEToParts bdy
+  rq <- lift $ askRq
+  let mvarbdy = rqBody rq
+  bdy <- unBody <$> (liftIO $ readMVar mvarbdy)
+  ct <- apiGuard' BadInput $ getHeader "content-type" rq
+  mv <- apiGuard' BadInput $ getHeader "mime-version" rq
+  Log.debug $ "body: " ++ show bdy
+  let (_, allParts) = MIME.parseMIMEToParts $ BS.concat [BS.fromString "MIME-Version: ", mv, BS.fromString "\r\n", BS.fromString "Content-type: ", ct, BS.fromString "\r\n", concatChunks bdy]
 
       isPDF (tp,_) = MIME.mimeType tp == MIME.Application "pdf"
       isJSON (tp,_) = MIME.mimeType tp == MIME.Application "json"
@@ -123,8 +127,7 @@ documentWithJSON = do
       pdfs = filter isPDF allParts
       jsons = filter isJSON allParts
 
-  
-  rq <- lift askRq
+  Log.debug $ "parts : " ++ show allParts
   let headers = rqHeaders rq
   Log.debug $ "Got headers: " ++ show headers
 
@@ -150,10 +153,10 @@ documentWithJSON = do
      
   apitoken    <- apiGuard' BadInput $ maybeRead =<< maybeRead =<< lookup "oauth_consumer_key" params
   accesstoken <- apiGuard' BadInput $ maybeRead =<< maybeRead =<< lookup "oauth_token" params
-   
-  (userid, apistring) <- apiGuardL' Forbidden $ dbQuery $ GetUserIDForAPIWithPrivilege apitoken apisecret accesstoken tokensecret APIDocCreate
+
+  (userid, apistring) <- apiGuardL' Forbidden $ runDBQuery $ GetUserIDForAPIWithPrivilege apitoken apisecret accesstoken tokensecret APIDocCreate
   
-  user <- apiGuardL' Forbidden $ dbQuery $ GetUserByID userid
+  user <- apiGuardL' Forbidden $ runDBQuery $ GetUserByID userid
 
   let actor = APIActor time ip userid (BS.toString $ getEmail user) apistring
 
@@ -198,7 +201,7 @@ documentWithJSON = do
   -- send document
 
   mcompany <- case usercompany user of
-    Just companyid -> runDBQuery $ GetCompany companyid
+    Just companyid -> lift $ runDBQuery $ GetCompany companyid
     Nothing -> return Nothing
 
   let userDetails = signatoryDetailsFromUser user mcompany
@@ -228,7 +231,7 @@ documentWithJSON = do
   gscmd <- ctxgscmd <$> getContext
   content14 <- apiGuardL $ liftIO $ preCheckPDF gscmd pdfBinary
   file <- lift $ runDBUpdate $ NewFile (BS.fromString title) content14
-  _ <- apiGuardL' $ runDBUpdate (AttachFile (documentid doc) (fileid file) actor)
+  _ <- apiGuardL $ runDBUpdate (AttachFile (documentid doc) (fileid file) actor)
   
   _ <- lift $ runDBUpdate $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality actor
   _ <- lift $ runDBUpdate $ SetDocumentIdentification (documentid doc) [EmailIdentification] actor
@@ -236,17 +239,12 @@ documentWithJSON = do
   let signatories = for (dcrInvolved dcr) $ \InvolvedRequest{irRole,irData} ->
         (SignatoryDetails{signatorysignorder = SignOrder 0, signatoryfields = irData},
          irRole)
-
-  errs <- lefts <$> (sequence $ [runDBUpdate $ ResetSignatoryDetails (documentid doc) signatories actor])
-
-  when ([] /= errs) $ do
-    Log.debug $ "Could not set up document: " ++ (intercalate "; " errs)
-    throwError BadInput
-
+  
+  _ <- apiGuardL' BadInput $ runDBUpdate $ ResetSignatoryDetails (documentid doc) signatories actor
+  
   doc2 <- apiGuardL' ServerError $ runDBUpdate $ PreparationToPending (documentid doc) actor
-  let docid = documentid doc2
-  markDocumentAuthorReadAndSeen doc2
-  _ <- DocControl.postDocumentChangeAction doc2 doc Nothing
+  lift $ markDocumentAuthorReadAndSeen doc2 actor
+  _ <- lift $ DocControl.postDocumentChangeAction doc2 doc Nothing
 
   return $ Created $ jsonDocumentForAuthor doc2
 

@@ -7,6 +7,7 @@ import DB.Utils
 import DB.Fetcher2
 --import Misc
 import qualified Log
+import User.Model
 
 import Crypto.RNG (random)
 import Control.Applicative
@@ -244,4 +245,21 @@ data GetUserIDForAPIWithPrivilege = GetUserIDForAPIWithPrivilege
                                     APISecret
                                     APIPrivilege
 instance DBQuery GetUserIDForAPIWithPrivilege (Maybe (UserID, String)) where
-  dbUpdate (GetUserIDForAPIWithPrivilege token secret atoken asecret uid priv) 
+  dbQuery (GetUserIDForAPIWithPrivilege token secret atoken asecret priv) = do
+    kPrepare (  "SELECT a.user_id, c.name "
+             ++ "FROM oauth_access_token a "
+             ++ "JOIN oauth_privilege p ON p.access_token_id = a.id "
+             ++ "JOIN oauth_api_token t ON a.api_token_id = t.id "
+             ++ "JOIN users u ON t.user_id = u.id "
+             ++ "JOIN companies c ON u.company_id = c.id "
+             ++ "WHERE a.status = ? AND t.id = ? AND t.api_token = ? AND t.api_secret = ? AND a.id = ? AND a.access_token = ? AND a.access_secret = ? AND p.privilege = ?")
+    _ <- kExecute [ toSql APIEnabled
+                  , toSql $ atID token
+                  , toSql $ atToken token
+                  , toSql secret
+                  , toSql $ atID atoken
+                  , toSql $ atToken atoken
+                  , toSql asecret
+                  , toSql priv ]
+    mr <- foldDB (\acc u s -> (u, s):acc) []
+    oneObjectReturnedGuard mr

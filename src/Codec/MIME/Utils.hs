@@ -12,8 +12,8 @@
 -- 
 --------------------------------------------------------------------
 module Codec.MIME.Utils
-  ( findMultipartNamed -- :: String -> MIMEValue -> Maybe MIMEValue
-  , getByAttachmentName
+  ( 
+    getByAttachmentName
   , charset
   )  where
 
@@ -21,20 +21,24 @@ import Codec.MIME.Type
 import Codec.MIME.Decode
 import Data.Maybe
 import Data.List ( find )
-import Control.Monad ( msum )
 import qualified Data.ByteString.UTF8 as BS
 
+{-
 -- | Given a parameter name, locate it within a MIME value,
 -- returning the corresponding (sub) MIME value.
+-- (this function never worked but was unused! -- Eric)
 findMultipartNamed :: String -> MIMEValue -> Maybe MIMEValue
 findMultipartNamed nm mv =
  case mime_val_content mv of
    Multi ms  -> msum (map (findMultipartNamed nm) ms)
-   Single {} -> do cd <- mime_val_disp mv
-                   find (withDispName nm) (dispParams cd)
-                   return mv
+   Single {} -> do
+      cd <- mime_val_disp mv
+      find (withDispName nm) (dispParams cd)
+      return mv
  where withDispName a (Name b) = a == b
        withDispName _ _ = False
+-}
+
 
 getByAttachmentName :: String -> [(Type, BS.ByteString)] -> Maybe (Type, BS.ByteString)
 getByAttachmentName name ps =
