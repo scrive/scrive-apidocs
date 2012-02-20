@@ -82,7 +82,13 @@ instance Arbitrary Company where
                      , companyexternalid = b
                      , companyservice = c
                      , companyinfo = d
+                     , companyui = emptyCompanyUI
                      }
+    where
+      emptyCompanyUI = CompanyUI {
+        companybarsbackground = Nothing
+      , companylogo = Nothing
+      }
 
 instance Arbitrary CompanyID where
   arbitrary = unsafeCompanyID . abs <$> arbitrary
@@ -144,22 +150,22 @@ class ExtendWithRandomnes a where
 
 instance ExtendWithRandomnes SignatoryDetails where
     moreRandom sl = return sl
-    
+
 instance Arbitrary AuthorActor where
   arbitrary = do
     (time, ip, uid, eml) <- arbitrary
     return $ AuthorActor time ip uid eml
-    
+
 instance Arbitrary SystemActor where
   arbitrary = do
     time <- arbitrary
     return $ SystemActor time
-    
+
 instance Arbitrary SignatoryActor where
   arbitrary = do
     (time, ip, uid, eml, slid) <- arbitrary
     return $ SignatoryActor time ip uid eml slid
-    
+
 instance Arbitrary MailAPIActor where
   arbitrary = do
     (time, uid, eml) <- arbitrary
@@ -647,9 +653,9 @@ addRandomDocument rda = do
       doc' <- rand 10 arbitrary
       xtype <- rand 10 (elements $ randomDocumentAllowedTypes rda)
       status <- rand 10 (elements $ randomDocumentAllowedStatuses rda)
-      
+
       siglinks <- rand 10 (listOf $ randomSigLinkByStatus status)
-      
+
       let doc = doc' { documenttype = xtype, documentstatus = status }
 
       roles <- getRandomAuthorRoles doc
@@ -658,7 +664,7 @@ addRandomDocument rda = do
                      , maybecompany = usercompany user
                      , signatoryroles = roles
                      }
-      
+
       let alllinks = asl : siglinks
 
 
@@ -671,7 +677,7 @@ addRandomDocument rda = do
         (False, _)  -> do
           --liftIO $ print $ "did not pass condition; doc: " ++ show adoc
           worker file now user p _mcompany
-        
+
         (_, Just _problems) -> do
                -- am I right that random document should not have invariantProblems?
                --uncomment this to find out why the doc was rejected

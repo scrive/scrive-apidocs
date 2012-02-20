@@ -20,6 +20,7 @@ import User.Model
 --import User.History.Model
 import qualified Stats.Control as Stats
 import qualified Administration.AdministrationControl as Administration
+import qualified Company.CompanyControl as Company
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import qualified Doc.DocControl as DocControl
 import qualified Archive.Control as ArchiveControl
@@ -165,6 +166,10 @@ staticRoutes = choice
      , dir "account" $ hPost $ toK2 $ UserControl.handlePostChangeEmail
      , dir "account" $ dir "security" $ hGet $ toK0 $ UserControl.handleGetUserSecurity
      , dir "account" $ dir "security" $ hPost $ toK0 $ UserControl.handlePostUserSecurity
+     , dir "account" $ dir "company" $ hGet $ toK0 $ Company.handleGetCompany
+     , dir "account" $ dir "company" $ hPost $ toK0 $ Company.handlePostCompany
+     , dir "account" $ dir "company" $ dir "json" $ hGet $ toK0 $ Company.handleGetCompanyJSON
+     , dir "account" $ dir "company" $ hGet $ toK1 $ Company.handleCompanyLogo
      , dir "account" $ dir "mailapi" $ hGet $ toK0 $ UserControl.handleGetUserMailAPI
      , dir "account" $ dir "mailapi" $ hPost $ toK0 $ UserControl.handlePostUserMailAPI
      , dir "account" $ dir "usagestats" $ hGet $ toK0 $ UserControl.handleUsageStatsForUser

@@ -1,5 +1,5 @@
 ######
-nicemail= 
+nicemail=
 <BR/>
 <div style="font-family:'Lucida Grande', sans-serif;margin-top:0px;padding:0px;">
 
@@ -8,7 +8,7 @@ nicemail=
     <table id="top-message" cellpadding="0" cellspacing="0" width="600" align="center" style="font-family:sans-serif;font-weight:bold;color:#aaaaaa;font-size:10px;">
         <tr>
             <td align="center" height="30">
-                $if(mailtop)$ $mailtom$ $endif$ <p>Kan du inte läsa detta brev? <a href="#">Öppna det i din webbläsare här.</a></p> 
+                $if(mailtop)$ $mailtom$ $endif$ <p>Kan du inte läsa detta brev? <a href="#">Öppna det i din webbläsare här.</a></p>
             </td>
         </tr>
     </table>
@@ -16,21 +16,16 @@ nicemail=
     <table id="main" cellpadding="0" cellspacing="15" width="630" align="center" style="margin: auto;background-color:#ffffff;border:1px solid #DDDDDD;">
         <tr>
             <td style="padding:10px; margin: auto;">
-                <table id="header" width="580" cellpadding="9" 
-                        bgcolor="$if(!service.barsbackground)$212121$else$$service.barsbackground$$endif$" 
+                <table id="header" width="580" cellpadding="9" bgcolor="$nicemailbgcolour()$"
                     cellspacing="0" align="center" style="color:#ffffff;text-align:center;margin:auto">
                     <tr>
                         <td style="text-align:left; margin: auto;padding:10px;">
-                           $if(!service.logo)$
-                            <img src="$ctxhostpart$/img/email-logo.png" width="70" height="22" />
-                           $else$
-                            <img src="$ctxhostpart$$service.logoLink$" width="121" height="33" />
-                           $endif$
+                          <div style="background-repeat:no-repeat;background-image:url('$nicemaillogo()$');height:33px;width:100%;"/>
                         </td>
                     </tr>
                     <tr>
                     <td>
-                        <table id="banner" width="590" cellpadding="0" bgcolor="$if(!service.barsbackground)$212121$else$$service.barsbackground$$endif$" cellspacing="0" align="center" style="color:#fff;text-align:center;">
+                        <table id="banner" width="590" cellpadding="0" bgcolor="$nicemailbgcolour()$">
                             <tr>
                                 <td width="580" cellpadding="0"><span style="font-weight:100;font-size:32px;margin:0px;letter-spacing:0.04em;color:#fff;font-family:'Copse', serif;padding:10px">
                                     $if(mailheader)$ $mailheader$ $endif$
@@ -41,9 +36,9 @@ nicemail=
                                 <td width="580" height="10"><hr style="height:1px;border:none;background:#fff;width:330px;" /></td>
                             </tr>
                             <tr>
-                                
+
                                 <td width="580"><span style="display:block;font-weight:100;font-family:'Lucida Grande',sans-serif;font-size:11px;margin:0px;margin-bottom:20px;color:#fff;">
-                                       $if(!service)$ $_mailsubheader()$ $endif$ 
+                                       $if(!service)$ $_mailsubheader()$ $endif$
                                     </span>
                                 </td>
                             </tr>
@@ -75,9 +70,12 @@ nicemail=
 </td></tr></table><!-- wrapper -->
 
 </div>
-
 #####
-nicemailparagraph = 
+nicemailbgcolour=$if(!service.barsbackground)$$if(!companybrand.barsbackground)$212121$else$$companybrand.barsbackground$$endif$$else$$service.barsbackground$$endif$
+#####
+nicemaillogo=$if(!service.logo)$$if(!companybrand.logo)$$ctxhostpart$/img/email-logo.png$else$$ctxhostpart$$companybrand.logoLink$$endif$$else$$ctxhostpart$$service.logoLink$$endif$
+#####
+nicemailparagraph =
       <tr>
         <td style="padding:5px; margin: auto;">$p:noescape()$</td>
       </tr>

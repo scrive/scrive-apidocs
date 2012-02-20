@@ -37,6 +37,7 @@ templateFiles = ["landpages.st",
                  "pages.st",
                  "administration.st",
                  "userpages/accountpage.st",
+                 "userpages/companypage.st",
                  "userpages/companyaccountslist.st",
                  "userpages/mailapipage.st",
                  "userpages/securitypage.st",
@@ -76,7 +77,8 @@ templateFiles = ["landpages.st",
                  "eleg.st",
                  "api/embedded.st",
                  "api/services.st",
-                 "javascript-langs.st"]
+                 "javascript-langs.st",
+                 "evidencelog/htmllog.st"]
 
 
 getTemplates :: String -> IO [(String, String)]

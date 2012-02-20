@@ -26,6 +26,9 @@ import DB.Nexus
 #ifndef NO_COMPANYSTATE
 import CompanyStateTest
 #endif
+#ifndef NO_COMPANYCONTROL
+import CompanyControlTest
+#endif
 #ifndef NO_DOCSTATE
 import DocStateTest
 #endif
@@ -119,6 +122,9 @@ allTests = tail tests
         undefined
 #ifndef NO_COMPANYSTATE
       , ("companystate", const $ companyStateTests)
+#endif
+#ifndef NO_COMPANYCONTROL
+      , ("companycontrol", const $ companyControlTests)
 #endif
 #ifndef NO_DOCSTATE
       , ("docstate", const $ docStateTests)

@@ -1,12 +1,12 @@
 /* Upload buttons
  * Usage
  *  var button =  UploadButton.init({
- *                   width: 100 // Expected size of the button. 
+ *                   width: 100 // Expected size of the button.
  *                   name: "Name that will be used for input element"
  *                   text: "Text that will be put inside of button",
  *                   submitOnUpload : Bool //Submit the parent form when file selected })
  *                   list : jQuery("selector") // If you want to show list of uploaded files
- *                   maxlength : 1 // Number of files that can be selected   
+ *                   maxlength : 1 // Number of files that can be selected
  *  will return UploadButton object.
  *
  * It exports method input that returns jQuery object to be inserted anywere you want
@@ -62,7 +62,7 @@ var UploadButtonModel = Backbone.Model.extend({
         return this.submit() != undefined;
   },
   onAppend : function() {
-             return this.get("onAppend");  
+             return this.get("onAppend");
   },
   type : function() {
         return this.get("type");
@@ -104,7 +104,9 @@ var UploadButtonView = Backbone.View.extend({
         fileinput.MultiFile({
             list: list,
             onError: function(a,b,c,d) {
-                FlashMessages.add({content: localization.onlyPDFAllowed, color: "red"});
+                var splittype = model.type().split("/");
+                var lasttype = splittype[splittype.length - 1].toUpperCase();
+                FlashMessages.add({content: localization.onlyFileWithTypeAllowed(lasttype), color: "red"});
                 if (model.get('onError'))
                     model.get('onError')(a,b,c,d);
             },
@@ -151,4 +153,4 @@ window.UploadButton = {
         }
 };
 
-})(window); 
+})(window);

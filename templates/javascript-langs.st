@@ -136,7 +136,7 @@ javascriptLocalisation =
             , authorAttachmentBoxHeader : "$_signViewNotsignedbymeAttachmentBoxHead()$"
             , signatoryAttachmentBoxHeader : "$_signViewSigAttachmentBoxHead()$"
             , signatoryAttachmentUploadButton: "$_signViewSigAttachmentBoxChooseFile()$"
-            , templateTitle : "$_signStepsTitleRowTextContainerIfTemplate()$" 
+            , templateTitle : "$_signStepsTitleRowTextContainerIfTemplate()$"
             , step1template : "$_step1selectIfTemplate()$"
             , step2template : "$_step2selectIfTemplate()$"
             , step2basic    : "$_step2selectIfisbasic()$"
@@ -156,7 +156,9 @@ javascriptLocalisation =
 
             , tweetAccount : "$_tweetAccount()$"
             , selectFileToUpload : "$_selectFileToUpload()$"
-            , onlyPDFAllowed: "$_onlyPDFAllowed()$"
+            , onlyFileWithTypeAllowed : function(t) {
+                return "$_onlyFileWithTypeAllowed1()$" + t + "$_onlyFileWithTypeAllowed2()$"
+              }
             , fileTooLarge: "$_fileTooLarge()$"
             , couldNotUpload: "$_couldNotUpload()$"
             , process : {
@@ -189,7 +191,7 @@ javascriptLocalisation =
            , to : "$_to()$"
            , nextStep : "$_signStepsBodyFunctionsNextStep()$"
            , uploadButton: "$_signStepsBodyUploadBoxStepButtonChooseFile()$"
-           , ok : "$_ok()$" 
+           , ok : "$_ok()$"
            , addSignatory : "$_signStepsBodyFunctionsAddPerson()$"
            , removeSignatory : "$_signStepsBodyFunctionsRemovePerson()$"
            , isSigningParty : "$_authorsignatoryradioSenderSign()$"
@@ -258,5 +260,10 @@ javascriptLocalisation =
               , passwordsDontMatch: "$_PasswordValidationMessagePasswordsDontMatch()$"
               , mustAcceptTOS: "$_flashMessageMustAcceptTOS()$"
          }
+         , emailBrading: "$_EmailBranding()$"
+         , customiseColour: "$_CustomiseColour()$"
+         , customiseLogo: "$_CustomiseLogo()$"
+         , selectImageLabel: "$_SelectImageLabel()$"
+         , saveBranding: "$_SaveSettings()$"
     }
 ####

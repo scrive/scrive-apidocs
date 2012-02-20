@@ -26,6 +26,7 @@ import Text.JSON (JSValue(..), toJSObject, toJSString)
 
 import AppView
 import DB.Classes
+import Company.CompanyControl (withCompanyAdmin)
 import Company.Model
 import CompanyAccounts.Model
 import CompanyAccounts.CompanyAccountsView
@@ -227,9 +228,9 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
                             userfstname = fstname
                           , usersndname = sndname
                           }
-        _ <- runDBUpdate $ 
-             LogHistoryUserInfoChanged (userid newuser') (ctxipnumber ctx) (ctxtime ctx) 
-                                       (userinfo newuser') 
+        _ <- runDBUpdate $
+             LogHistoryUserInfoChanged (userid newuser') (ctxipnumber ctx) (ctxtime ctx)
+                                       (userinfo newuser')
                                        ((userinfo newuser') { userfstname = fstname , usersndname = sndname })
                                        (userid <$> ctxmaybeuser ctx)
         newuser <- guardJustM $ runDBQuery $ GetUserByID (userid newuser')
@@ -426,7 +427,7 @@ resaveDocsForUser uid = do
   userdocs <- runDBQuery $ GetDocumentsByAuthor uid
   time <- ctxtime <$> getContext
   let actor = SystemActor time
-  mapM_ (\doc -> runDBUpdate $ AdminOnlySaveForUser (documentid doc) user actor) userdocs 
+  mapM_ (\doc -> runDBUpdate $ AdminOnlySaveForUser (documentid doc) user actor) userdocs
   return ()
 
 {- |
@@ -440,15 +441,3 @@ guardGoodForTakeover companyid = do
   _ <- guard $ isNothing (usercompany user)
   _ <- guardJustM $ runDBQuery $ GetCompanyInvite companyid (Email $ getEmail user)
   return ()
-
-{- |
-    Guards that there is a user that is logged in and is the admin
-    of a company.  The user and company are passed as params to the
-    given action, to save you having to look them up yourself.
--}
-withCompanyAdmin :: Kontrakcja m => ((User, Company) -> m a) -> m a
-withCompanyAdmin action = do
-  Context{ ctxmaybeuser } <- getContext
-  user <- guardJust ctxmaybeuser
-  company <- guardJustM $ getCompanyForUser user
-  if useriscompanyadmin user then action (user, company) else mzero

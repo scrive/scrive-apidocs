@@ -32,6 +32,7 @@ import qualified Control.Exception as E
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
+import qualified Data.ByteString.Base64 as B64
 import qualified SealSpec as Seal
 import qualified TrustWeaver as TW
 import qualified Log
@@ -130,8 +131,8 @@ fieldsFromSignatory SignatoryDetails{signatoryfields} =
       , Seal.internal_image_h = 100
       }
 
-sealSpecFromDocument :: TemplatesMonad m => String -> Document -> String -> String -> m Seal.SealSpec
-sealSpecFromDocument hostpart document inputpath outputpath =
+sealSpecFromDocument :: TemplatesMonad m => String -> Document -> [DocumentEvidenceEvent] -> String -> String -> m Seal.SealSpec
+sealSpecFromDocument hostpart document elog inputpath outputpath =
   let docid = documentid document
       Just authorsiglink = getAuthorSigLink document
       authorHasSigned = isSignatory authorsiglink && isJust (maybesigninfo authorsiglink)
@@ -207,6 +208,12 @@ sealSpecFromDocument hostpart document inputpath outputpath =
       -- Log.debug ("finished staticTexts: " ++ show staticTexts)
       let readtexts :: Seal.SealingTexts = read staticTexts -- this should never fail since we control templates
       -- Log.debug ("read texts: " ++ show readtexts)
+
+      -- Creating HTML Evidence Log
+      htmllogs <- htmlDocFromEvidenceLog (BS.toString $ documenttitle document) elog
+      let evidenceattachment = Seal.SealAttachment { Seal.fileName = "evidencelog.html"
+                                                   , Seal.fileBase64Content = BS.toString $ B64.encode $ BS.fromString htmllogs }
+
       return $ Seal.SealSpec
             { Seal.input          = inputpath
             , Seal.output         = outputpath
@@ -218,8 +225,9 @@ sealSpecFromDocument hostpart document inputpath outputpath =
             , Seal.hostpart       = hostpart
             , Seal.fields         = fields
             , Seal.staticTexts    = readtexts
-            , Seal.attachments    = []
+            , Seal.attachments    = [evidenceattachment]
             }
+
 
 sealDocument :: Context
              -> Document
@@ -259,12 +267,14 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplat
     tmpdir <- getTemporaryDirectory
     createTempDirectory tmpdir $ "seal-" ++ show documentid ++ "-" ++ show fileid ++ "-"
   result <- tryDB $ do
+    elog <- dbQuery $ GetEvidenceLog documentid
     Log.debug ("sealing: " ++ show fileid)
     let tmpin = tmppath ++ "/input.pdf"
     let tmpout = tmppath ++ "/output.pdf"
     content <- liftIO $ getFileContents ctx file
     liftIO $ BS.writeFile tmpin content
-    config <- runTemplatesT (ctxlocale, ctxglobaltemplates) $ sealSpecFromDocument ctxhostpart document tmpin tmpout
+
+    config <- runTemplatesT (ctxlocale, ctxglobaltemplates) $ sealSpecFromDocument ctxhostpart document elog tmpin tmpout
     Log.debug $ "Config " ++ show config
     (code,_stdout,stderr) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
     Log.debug $ "Sealing completed with " ++ show code
