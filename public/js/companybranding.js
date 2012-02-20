@@ -101,45 +101,45 @@ window.CompanyBrandingView = Backbone.View.extend({
   createBarsbackgroundElems: function() {
     var company = this.model;
 
-    var bbcheckbox = jQuery("<input id='bbcheckbox' type='checkbox' class='checkboxtoggle' />");
+    var bbcheckbox = $("<input id='bbcheckbox' type='checkbox' class='checkboxtoggle' />");
     this.bbcheckbox = bbcheckbox;
     this.bbcheckbox.change(function() {
       company.setIsCustomBarsBackground(bbcheckbox.is(":checked"));
     });
-    var bbcheckboxlabel = jQuery("<label for='bbcheckbox'>" + localization.customiseColour + "</label>");
+    var bbcheckboxlabel = $("<label for='bbcheckbox'>" + localization.customiseColour + "</label>");
 
-    var bbinput = jQuery("<input type='text' class='float-left bbinput' />");
+    var bbinput = $("<input type='text' class='float-left bbinput' />");
     this.bbinput = bbinput;
     this.bbinput.bind("keyup change", function() {
       company.setBarsbackground(bbinput.val());
     });
 
-    this.bbdisplay = jQuery("<span class='float-left  bbdisplay' />");
+    this.bbdisplay = $("<span class='float-left  bbdisplay' />");
     this.bbdisplay.css("background-color", company.barsbackground());
 
-    this.bbcustomdiv = jQuery("<div />");
+    this.bbcustomdiv = $("<div />");
     this.bbcustomdiv.append(this.bbinput);
     this.bbcustomdiv.append(this.bbdisplay);
 
-    var bbstuff = jQuery("<div/>");
+    var bbstuff = $("<div/>");
     bbstuff.append(this.bbcheckbox);
     bbstuff.append(bbcheckboxlabel);
-    bbstuff.append(jQuery("<div class='bbcustomise' />").append(this.bbcustomdiv));
+    bbstuff.append($("<div class='bbcustomise' />").append(this.bbcustomdiv));
 
     return bbstuff;
   },
   createLogoElems: function() {
     var company = this.model;
 
-    var logocheckbox = jQuery("<input id='logocheckbox' name='islogo' type='checkbox' class='checkboxtoggle' />");
+    var logocheckbox = $("<input id='logocheckbox' name='islogo' type='checkbox' class='checkboxtoggle' />");
     this.logocheckbox = logocheckbox;
     this.logocheckbox.change(function() {
       company.setIsCustomLogo(logocheckbox.is(":checked"));
     });
-    var logocheckboxlabel = jQuery("<label for='logocheckbox'>" + localization.customiseLogo + "</label>");
+    var logocheckboxlabel = $("<label for='logocheckbox'>" + localization.customiseLogo + "</label>");
 
-    var logodisplay = jQuery("<div class='logodisplay' />");
-    var logodisplaywrapper = jQuery("<div class='logodisplaywrapper' />")
+    var logodisplay = $("<div class='logodisplay' />");
+    var logodisplaywrapper = $("<div class='logodisplaywrapper' />")
     logodisplaywrapper.append(logodisplay);
     this.logodisplay = logodisplay;
     this.logodisplaywrapper = logodisplaywrapper;
@@ -174,11 +174,11 @@ window.CompanyBrandingView = Backbone.View.extend({
     }).input();
     this.logoupload = logoupload;
 
-    this.logocustomdiv = jQuery("<div />");
-    this.logocustomdiv.append(jQuery("<div class='logocustomise' />").append(logoupload));
+    this.logocustomdiv = $("<div />");
+    this.logocustomdiv.append($("<div class='logocustomise' />").append(logoupload));
     this.logocustomdiv.append(this.logodisplaywrapper);
 
-    var logostuff = jQuery("<div/>");
+    var logostuff = $("<div/>");
     logostuff.append(this.logocheckbox);
     logostuff.append(logocheckboxlabel);
     logostuff.append(this.logocustomdiv);
@@ -208,35 +208,35 @@ window.CompanyBrandingView = Backbone.View.extend({
   initElems: function() {
     var company = this.model;
 
-    this.title = jQuery("<h2 />");
-    var header = jQuery("<div class='account-header' />").append(this.title);
+    this.title = $("<h2 />");
+    var header = $("<div class='account-header' />").append(this.title);
 
-    var body = jQuery("<div class='account-body' />");
-    var table = jQuery("<table />");
+    var body = $("<div class='account-body' />");
+    var table = $("<table />");
     body.append(table);
-    var tablebody = jQuery("<tbody />");
+    var tablebody = $("<tbody />");
     table.append(tablebody);
 
     var bbstuff = this.createBarsbackgroundElems();
-    var tr1 = jQuery("<tr/>").append(jQuery("<td colspan='2' class='row' />").append(bbstuff));
+    var tr1 = $("<tr/>").append($("<td colspan='2' class='row' />").append(bbstuff));
     tablebody.append(tr1);
 
     var logostuff = this.createLogoElems();
-    var tr2 = jQuery("<tr/>").append(jQuery("<td colspan='2' class='row'/>").append(logostuff));
+    var tr2 = $("<tr/>").append($("<td colspan='2' class='row'/>").append(logostuff));
     tablebody.append(tr2);
 
-    var firstcol = jQuery("<div class='col' />");
+    var firstcol = $("<div class='col' />");
     firstcol.append(header);
     firstcol.append(body);
 
-    var cols = jQuery("<div class='companybranding' />");
+    var cols = $("<div class='companybranding' />");
     cols.append(firstcol);
 
     var saveButton = this.createSaveButton();
 
     this.el.empty();
     this.el.append(cols);
-    this.el.append(jQuery("<div class='float-right'/>").append(this.saveButton));
+    this.el.append($("<div class='float-right'/>").append(this.saveButton));
 
     return this;
   },
@@ -290,7 +290,7 @@ window.CompanyBrandingView = Backbone.View.extend({
 window.CompanyBranding = {
   init: function(args) {
     var model = new CompanyModel();
-    var div = jQuery("<div />");
+    var div = $("<div />");
     var view = new CompanyBrandingView({ model: model, el: div});
     return new Object({
       input: function() { return div; }
