@@ -83,7 +83,6 @@ import User.Model
 import Company.Model
 import MinutesTime
 import Doc.DocStateData
-import Doc.Invariants
 import Database.HDBC
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
@@ -447,7 +446,6 @@ signatoryAttachmentsSelectors :: String
 signatoryAttachmentsSelectors = intercalate ", " [
     "document_id"
   , "file_id"
-  , "email"
   , "name"
   , "description"
   , "signatory_link_id"
@@ -466,13 +464,11 @@ fetchSignatoryAttachments = foldDB decoder M.empty
             -> Maybe FileID
             -> BS.ByteString
             -> BS.ByteString
-            -> BS.ByteString
             -> SignatoryLinkID
             -> (M.Map SignatoryLinkID [SignatoryAttachment])
-    decoder acc _ file_id email name description slid =
+    decoder acc _ file_id name description slid =
       M.insertWith' (++) slid [SignatoryAttachment {
           signatoryattachmentfile = file_id
-        , signatoryattachmentemail = email
         , signatoryattachmentname = name
         , signatoryattachmentdescription = description
         }] acc
@@ -918,11 +914,6 @@ instance Actor a => DBUpdate (DocumentFromSignatoryData a) (Either String Docume
                     , documentctime = now
                     , documentmtime = now
                     }
-    replaceCSV :: SignatoryAttachment -> SignatoryAttachment
-    replaceCSV sa =
-      if signatoryattachmentemail sa == BS.fromString "csv"
-      then sa { signatoryattachmentemail = email }
-      else sa
     newDocType :: DocumentType -> DocumentType
     newDocType (Signable p) = Signable p
     newDocType (Template p) = Signable p
@@ -931,7 +922,7 @@ instance Actor a => DBUpdate (DocumentFromSignatoryData a) (Either String Docume
     toNewSigLink sl
       | isJust (signatorylinkcsvupload sl) = let pumpedData = pumpData sl 
                                              in pumpedData { signatorylinkcsvupload = Nothing
-                                                           , signatoryattachments = map replaceCSV $ signatoryattachments pumpedData
+                                                           , signatoryattachments = signatoryattachments pumpedData
                                                            }
       | otherwise = sl
     pumpData :: SignatoryLink -> SignatoryLink
@@ -1258,24 +1249,18 @@ instance Actor a => DBUpdate (NewDocument a) (Either String Document) where
                 , documentui                   = (documentui blankDocument) {documentmailfooter = BS.fromString <$> (customfooter $ usersettings user)}
                 } `appendHistory` [DocumentHistoryCreated ctime]
 
-      case invariantProblems ctime doc of
+      midoc <- insertDocumentAsIs doc
+      case midoc of
+        Just doc' -> do
+          _<- dbUpdate $ InsertEvidenceEvent           
+            NewDocumentEvidence
+            ("Document created by " ++ actorWho actor ++ ".")
+            (Just $ documentid doc')
+            actor
+          return $ Right doc'
         Nothing -> do
-
-           midoc <- insertDocumentAsIs doc
-           case midoc of
-             Just doc' -> do
-               _<- dbUpdate $ InsertEvidenceEvent           
-                 NewDocumentEvidence
-                 ("Document created by " ++ actorWho actor ++ ".")
-                 (Just $ documentid doc')
-                 actor
-               return $ Right doc'
-             Nothing -> do
-               Log.debug $ "insertDocumentAsIs could not insert document #" ++ show (documentid doc) ++ " in NewDocument"
-               return $ Left $ "insertDocumentAsIs could not insert document #" ++ show (documentid doc) ++ " in NewDocument"
-        Just a -> do
-           Log.debug $ "insertDocumentAsIs invariants violated: " ++ show a
-           return $ Left $ "insertDocumentAsIs invariants violated: " ++ show a
+          Log.debug $ "insertDocumentAsIs could not insert document #" ++ show (documentid doc) ++ " in NewDocument"
+          return $ Left $ "insertDocumentAsIs could not insert document #" ++ show (documentid doc) ++ " in NewDocument"
 
 data Actor a => ReallyDeleteDocument a = ReallyDeleteDocument User DocumentID a
 instance Actor a => DBUpdate (ReallyDeleteDocument a) (Either String Document) where
@@ -2045,7 +2030,6 @@ instance Actor a => DBUpdate (UpdateSigAttachments a) (Either String Document) w
      doInsert SignatoryAttachment{..} = do
         r <- kRun $ mkSQL INSERT tableSignatoryAttachments [
             sql "file_id" signatoryattachmentfile
-          , sql "email" signatoryattachmentemail
           , sql "name" signatoryattachmentname
           , sql "description" signatoryattachmentdescription
           , sql "document_id" did
@@ -2054,7 +2038,7 @@ instance Actor a => DBUpdate (UpdateSigAttachments a) (Either String Document) w
         when_ (r == 1) $
              dbUpdate $ InsertEvidenceEvent
              AddSigAttachmentEvidence
-             ("Signatory attachment request for " ++ show signatoryattachmentname ++ " from signatory with email " ++ show signatoryattachmentemail ++ " by " ++ actorWho actor ++ ".")
+             ("Signatory attachment request for " ++ show signatoryattachmentname ++ " from signatory by " ++ actorWho actor ++ ".")
              (Just did)
              actor
 

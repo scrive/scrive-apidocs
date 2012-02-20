@@ -40,7 +40,6 @@ import Util.KontraLinkUtils
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Util.MonadUtils
-import Doc.Invariants
 import Stats.Control
 import User.Utils
 import API.Service.Model
@@ -1421,8 +1420,7 @@ handleSigAttach docid siglinkid = do
   siglink <- guardJust $ getSigLinkFor doc siglinkid
   attachname <- getCriticalField asValidFieldValue "attachname"
   let email = getEmail siglink
-  _ <- guardJust $  find (\sa -> signatoryattachmentemail sa == email
-                                && signatoryattachmentname sa == attachname) (signatoryattachments siglink)
+  _ <- guardJust $  find (\sa -> signatoryattachmentname sa == attachname) (signatoryattachments siglink)
   (Input contentspec _ _) <- getDataFnM (lookInput "sigattach")
   content1 <- case contentspec of
     Left filepath -> liftIO $ BSL.readFile filepath
@@ -1489,20 +1487,6 @@ jsonDocumentGetterWithPermissionCheck did = do
                     mdoc <- toMaybe <$> getDocByDocID did
                     let msiglink = join $ getMaybeSignatoryLink <$> pairMaybe mdoc (ctxmaybeuser ctx)
                     return $ (mdoc, msiglink)
-
-
-
-handleInvariantViolations :: Kontrakcja m => m Response
-handleInvariantViolations = onlyAdmin $ do
-  Context{ ctxtime } <- getContext
-  docs <- runDBQuery $ GetDocuments Nothing
-  let probs = listInvariantProblems ctxtime docs
-      res = case probs of
-        [] -> "No problems!"
-        _  -> intercalate "\n" probs
-  return $ Response 200 Map.empty nullRsFlags (BSL.fromString res) Nothing
-
-
 
 prepareEmailPreview :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 prepareEmailPreview docid slid = do

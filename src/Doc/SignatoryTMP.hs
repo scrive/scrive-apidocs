@@ -141,7 +141,7 @@ addAttachment :: SignatoryAttachment -> SignatoryTMP -> SignatoryTMP
 addAttachment a s = s {attachments = a : (attachments s)}
 
 getAttachments :: SignatoryTMP -> [SignatoryAttachment]
-getAttachments s = for (attachments s) (\a -> a {signatoryattachmentemail = fromMaybe BS.empty $ email s})
+getAttachments s = attachments s
 
 
 toSignatoryDetails1 :: SignatoryTMP -> (SignatoryDetails,[SignatoryRole])
@@ -200,7 +200,6 @@ instance FromJSON SignatoryAttachment where
         case (name,description) of
              (Just n, Just d) -> return $ Just $ SignatoryAttachment {signatoryattachmentname  = n ,
                                                                       signatoryattachmentdescription = d,
-                                                                      signatoryattachmentemail = BS.empty,
                                                                       signatoryattachmentfile = Nothing}
              _ -> return Nothing  
 

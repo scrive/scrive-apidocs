@@ -415,7 +415,6 @@ newtype AuthorAttachment = AuthorAttachment { authorattachmentfile :: FileID }
 
 data SignatoryAttachment = SignatoryAttachment {
     signatoryattachmentfile            :: Maybe FileID
-  , signatoryattachmentemail           :: BS.ByteString
   , signatoryattachmentname            :: BS.ByteString
   , signatoryattachmentdescription     :: BS.ByteString
   } deriving (Eq, Ord, Show)

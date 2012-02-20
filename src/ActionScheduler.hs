@@ -4,19 +4,15 @@ module ActionScheduler (
     , runEnforceableScheduler
     , actionScheduler
     , oldScheduler
-    , runDocumentProblemsCheck
     , runArchiveProblemsCheck
     , getGlobalTemplates
     ) where
 
 import Control.Concurrent
 import Control.Monad.Reader
-import Data.List
 import Data.Maybe
 import Happstack.State
 import qualified Control.Exception as E
-import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.UTF8 as BS hiding (length)
 
 import AppControl (AppConf(..))
 import ActionSchedulerState
@@ -25,14 +21,11 @@ import DB.Classes
 import Doc.DocStateData
 import Doc.Model
 import MinutesTime
-import Mails.MailsData
 import Mails.MailsConfig
-import Mails.SendMail
 import Session
 import Templates.Templates
 import qualified Log
 import System.Time
-import Doc.Invariants
 import Stats.Control
 import EvidenceLog.Model
 
@@ -113,34 +106,6 @@ evaluateAction Action{actionID, actionType = RequestEmailChange{}} =
 
 evaluateAction Action{actionID, actionType = DummyActionType} =
   deleteAction actionID
-
-runDocumentProblemsCheck :: ActionScheduler ()
-runDocumentProblemsCheck = do
-  sd <- ask
-  now <- liftIO getMinutesTime
-  docs <- runDBQuery $ GetDocuments Nothing
-  let probs = listInvariantProblems now docs
-  when (probs /= []) $ mailDocumentProblemsCheck $
-    "<p>"  ++ (hostpart $ sdAppConf sd) ++ "/dave/document/" ++
-    intercalate ("</p>\n\n<p>" ++ (hostpart $ sdAppConf sd) ++ "/dave/document/") probs ++
-    "</p>"
-  return ()
-
--- | Send an email out to all registered emails about document problems.
-mailDocumentProblemsCheck :: String -> ActionScheduler ()
-mailDocumentProblemsCheck msg = do
-  sd <- ask
-  scheduleEmailSendout (sdMailsConfig sd) $ Mail { to = zipWith MailAddress documentProblemsCheckEmails documentProblemsCheckEmails
-                                                  , title = "Document problems report " ++ (hostpart $ sdAppConf sd)
-                                                  , content = msg
-                                                  , attachments = []
-                                                  , from = Nothing
-                                                  , mailInfo = None
-                                                  }
-
--- | A message will be sent to these email addresses when there is an inconsistent document found in the database.
-documentProblemsCheckEmails :: [BS.ByteString]
-documentProblemsCheckEmails = map BS.fromString ["bugs@skrivapa.se"]
 
 runArchiveProblemsCheck :: ActionScheduler ()
 runArchiveProblemsCheck = do

@@ -132,7 +132,6 @@ tableSignatoryAttachments = Table {
   , tblCreateOrValidate = \desc -> case desc of
       [  ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       , ("email", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("description", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("signatory_link_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -141,11 +140,10 @@ tableSignatoryAttachments = Table {
         kRunRaw $ "CREATE TABLE signatory_attachments "
           ++ "( file_id BIGINT NULL"
           ++ ", document_id BIGINT NOT NULL"
-          ++ ", email TEXT NOT NULL"
           ++ ", description TEXT NOT NULL"
           ++ ", name TEXT NOT NULL"
           ++ ", signatory_link_id BIGINT NOT NULL"
-          ++ ", CONSTRAINT pk_signatory_attachments PRIMARY KEY (signatory_link_id, name, email)"
+          ++ ", CONSTRAINT pk_signatory_attachments PRIMARY KEY (document_id, signatory_link_id, name)"
           ++ ")"
         return TVRcreated
       _ -> do

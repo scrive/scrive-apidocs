@@ -176,7 +176,7 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   sl  <- apiGuard $ getSigLinkFor doc sid
   let email = getEmail sl
   
-  sigattach <- apiGuard' Forbidden $ getSignatoryAttachment email (BS.fromString aname) doc
+  sigattach <- apiGuard' Forbidden $ getSignatoryAttachment slid doc
   
   -- attachment must have no file
   apiGuard' ActionNotAvailable (isNothing $ signatoryattachmentfile sigattach)
@@ -199,12 +199,12 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   d <- apiGuardL $ runDBUpdate $ SaveSigAttachment sid (documentid doc) (BS.fromString aname) email (fileid file) actor
   
   -- let's dig the attachment out again
-  sigattach' <- apiGuard $ getSignatoryAttachment email (BS.fromString aname) d
+  sigattach' <- apiGuard $ getSignatoryAttachment sid d
   
   return $ Created $ jsonSigAttachmentWithFile sigattach' (Just file)
 
 documentDeleteSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryResource -> SignatoryLinkID -> AttachmentResource -> String -> FileResource -> m Response
-documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
+documentDeleteSignatoryAttachment did _ sid _ _ _ = api $ do
   Context{ctxtime, ctxipnumber} <- getContext
   (slid, magichash) <- getSigLinkID
   doc <- apiGuardL $ getDocByDocIDSigLinkIDAndMagicHash did slid magichash
@@ -215,7 +215,7 @@ documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
   
   
   -- sigattachexists
-  sigattach <- apiGuard $ getSignatoryAttachment email (BS.fromString aname) doc
+  sigattach <- apiGuard $ getSignatoryAttachment slid doc
 
   -- attachment must have a file
   fileid <- apiGuard' ActionNotAvailable $ signatoryattachmentfile sigattach
@@ -224,7 +224,7 @@ documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
        (SignatoryActor ctxtime ctxipnumber muid (BS.toString email) sid)
   
   -- let's dig the attachment out again
-  sigattach' <- apiGuard $ getSignatoryAttachment email (BS.fromString aname) d
+  sigattach' <- apiGuard $ getSignatoryAttachment sid d
   
   return $ jsonSigAttachmentWithFile sigattach' Nothing
 

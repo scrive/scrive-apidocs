@@ -96,8 +96,8 @@ remindMailNotSigned forMail customMessage ctx document signlink = do
         field "previewLink" $ show $ LinkDocumentPreview (documentid document) (Just signlink <| forMail |> Nothing) (mainfile)
         field "hassigattachments" $ length (concat . map signatoryattachments $ documentsignatorylinks document ) > 0
         -- We try to use generic templates and this is why we return a tuple
-        field "sigattachments" $ for (concat . map signatoryattachments $ documentsignatorylinks document) $ \sa ->
-                        (BS.toString $ signatoryattachmentname sa, BS.toString <$> getSmartName <$> getMaybeSignatoryLink (document, signatoryattachmentemail sa))
+        field "sigattachments" $ for (concat $ (\l -> (\a -> (l,a)) <$> signatoryattachments l) <$> documentsignatorylinks document) $ \(link, sa) ->
+                        (BS.toString $ signatoryattachmentname sa, BS.toString $ getSmartName link)
         field "nojavascriptmagic" $ True
         field "javascriptmagic" $ False
         field "companyname" $ nothingIfEmpty $ getCompanyName document
@@ -254,8 +254,8 @@ mailInvitation forMail
         field "previewLink" $ show $ LinkDocumentPreview (documentid document) (msiglink <| forMail |> Nothing) (mainfile)
         field "hassigattachments" $ length (concat . map signatoryattachments $ documentsignatorylinks document ) > 0
         -- We try to use generic templates and this is why we return a tuple
-        field "sigattachments" $ for (concat . map signatoryattachments $ documentsignatorylinks document) $ \sa ->
-                        (BS.toString $ signatoryattachmentname sa, BS.toString <$> getSmartName <$> getMaybeSignatoryLink (document, signatoryattachmentemail sa))
+        field "sigattachments" $ for (concat $ (\l -> (\a -> (l,a)) <$> signatoryattachments l) <$> documentsignatorylinks document) $ \(link, sa) ->
+                        (BS.toString $ signatoryattachmentname sa, BS.toString $ getSmartName link)
         field "companyname" $ nothingIfEmpty $ getCompanyName document
 
 

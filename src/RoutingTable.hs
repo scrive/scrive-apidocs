@@ -227,8 +227,6 @@ staticRoutes = choice
      , dir "adminonly" $ dir "reseal" $ hPost $ toK1 $ Administration.resealFile
      , dir "adminonly" $ dir "replacemainfile" $ hPost $ toK1 $ Administration.replaceMainFile
 
-     , dir "adminonly" $ dir "docproblems" $ hGet $ toK0 $ DocControl.handleInvariantViolations
-
      , dir "adminonly" $ dir "backdoor" $ hGet $ toK1 $ Administration.handleBackdoorQuery
 
      , dir "adminonly" $ dir "upsalesdeleted" $ hGet $ toK0 $ DocControl.handleUpsalesDeleted

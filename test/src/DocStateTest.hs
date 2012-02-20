@@ -13,7 +13,6 @@ import Doc.DocInfo
 import Doc.Tables
 import TestingUtil
 import Company.Model
-import Doc.Invariants
 import MagicHash
 import MinutesTime
 import Test.HUnit.Base (Assertion)
@@ -611,7 +610,6 @@ testDocumentFromSignatoryDataEvidenceLog = do
   doc <- addRandomDocumentWithAuthorAndCondition author (isPreparation &&^ ((<=) 2 . length . documentsignatorylinks))
   _<-randomUpdate $ \t->UpdateSigAttachments (documentid doc) (signatorylinkid $ (documentsignatorylinks doc)!!0)
                         [SignatoryAttachment { signatoryattachmentfile        = Nothing
-                                             , signatoryattachmentemail       = BS.fromString "hello@goodbye.com"
                                              , signatoryattachmentname        = BS.fromString "attachment"
                                              , signatoryattachmentdescription = BS.fromString "gimme!"
                                              }] (SystemActor t)
@@ -628,7 +626,6 @@ testSaveSigAttachmentEvidenceLog = do
   file <- addNewRandomFile
   _<-randomUpdate $ \t->UpdateSigAttachments (documentid doc) (signatorylinkid $ (documentsignatorylinks doc)!!0)
                         [SignatoryAttachment { signatoryattachmentfile        = Nothing
-                                             , signatoryattachmentemail       = BS.fromString "hello@goodbye.com"
                                              , signatoryattachmentname        = BS.fromString "attachment"
                                              , signatoryattachmentdescription = BS.fromString "gimme!"
                                              }] (SystemActor t)
@@ -645,7 +642,6 @@ testUpdateSigAttachmentsEvidenceLog = do
   file <- addNewRandomFile
   etdoc<-randomUpdate $ \t->UpdateSigAttachments (documentid doc) (signatorylinkid $ (documentsignatorylinks doc)!!0)
                         [SignatoryAttachment { signatoryattachmentfile        = Just $ (fileid file)
-                                             , signatoryattachmentemail       = BS.fromString "hello@goodbye.com"
                                              , signatoryattachmentname        = BS.fromString "attachment"
                                              , signatoryattachmentdescription = BS.fromString "gimme!"
                                              }] (SystemActor t)
@@ -660,7 +656,6 @@ testDeleteSigAttachmentEvidenceLog = do
   file <- addNewRandomFile
   _<-randomUpdate $ \t->UpdateSigAttachments (documentid doc) (signatorylinkid $ (documentsignatorylinks doc)!!0)
                         [SignatoryAttachment { signatoryattachmentfile        = Just $ (fileid file)
-                                             , signatoryattachmentemail       = BS.fromString "hello@goodbye.com"
                                              , signatoryattachmentname        = BS.fromString "attachment"
                                              , signatoryattachmentdescription = BS.fromString "gimme!"
                                              }] (SystemActor t)
@@ -1089,7 +1084,6 @@ testNewDocumentDependencies = doTimes 10 $ do
   -- assert
   validTest $ do
     assertRight edoc
-    assertInvariants $ fromRight edoc
 
 testDocumentCanBeCreatedAndFetchedByID :: DB ()
 testDocumentCanBeCreatedAndFetchedByID = doTimes 10 $ do
@@ -1108,7 +1102,6 @@ testDocumentCanBeCreatedAndFetchedByID = doTimes 10 $ do
   validTest $ do
     assertJust mdoc
     assert $ sameDocID doc (fromJust mdoc)
-    assertInvariants (fromJust mdoc)
 
 testDocumentCanBeCreatedAndFetchedByAllDocs :: DB ()
 testDocumentCanBeCreatedAndFetchedByAllDocs = doTimes 10 $ do
@@ -1127,7 +1120,6 @@ testDocumentCanBeCreatedAndFetchedByAllDocs = doTimes 10 $ do
   -- assert
   validTest $ do
     assertJust $ find (sameDocID doc) docs
-    assertInvariants $ fromJust $ find (sameDocID doc) docs
 
 {-
 testDocumentUpdateDoesNotChangeID :: DB ()
@@ -1187,7 +1179,6 @@ testDocumentAttachPreparationRight = doTimes 10 $ do
   --assert
   validTest $ do
     assertRight edoc
-    assertInvariants $ fromRight edoc
 
 
 testNoDocumentAttachAlwaysLeft :: DB ()
@@ -1213,7 +1204,6 @@ testDocumentAttachHasAttachment = doTimes 10 $ do
   validTest $ do
     assertRight edoc
     -- assertJust $ find ((== a) . filename) (documentfiles $ fromRight edoc)
-    assertInvariants $ fromRight edoc
 
 testNoDocumentAttachSealedAlwaysLeft :: DB ()
 testNoDocumentAttachSealedAlwaysLeft = doTimes 10 $ do
@@ -1259,7 +1249,6 @@ testDocumentChangeMainFileRight = doTimes 10 $ do
     assertRight edoc
     let doc1 = fromRight edoc
     assertBool "New file is attached" (fileid file `elem` (documentfiles doc1 ++ documentsealedfiles doc1))
-    assertInvariants $ fromRight edoc
 
 
 testNoDocumentChangeMainFileAlwaysLeft :: DB ()
@@ -1356,7 +1345,6 @@ testPreparationResetSignatoryDetailsAlwaysRight = doTimes 10 $ do
   --assert
   validTest $ do
     assertRight edoc
-    assertInvariants $ fromRight edoc
 
 testNoDocumentResetSignatoryDetailsAlwaysLeft :: DB ()
 testNoDocumentResetSignatoryDetailsAlwaysLeft = doTimes 10 $ do
@@ -1512,12 +1500,10 @@ testUpdateSigAttachmentsAttachmentsOk = doTimes 10 $ do
   let email1 = BS.fromString "g1@g.com"
       name1 = BS.fromString "att1"
   let att1 = SignatoryAttachment { signatoryattachmentfile = Just (fileid file1)
-                                 , signatoryattachmentemail = email1
                                  , signatoryattachmentname = name1
                                  , signatoryattachmentdescription = BS.fromString "att1 description"
                                  }
   let att2 = SignatoryAttachment { signatoryattachmentfile = Nothing
-                                 , signatoryattachmentemail = BS.fromString "g2@g.com"
                                  , signatoryattachmentname = BS.fromString "att2"
                                  , signatoryattachmentdescription = BS.fromString "att2 description"
                                  }
@@ -1606,7 +1592,6 @@ testTimeoutDocumentSignablePendingRight = doTimes 10 $ do
   etdoc <- randomUpdate $ \t->TimeoutDocument (documentid doc) (SystemActor t)
   validTest $ do
     assertRight etdoc
-    assertInvariants $ fromRight etdoc
 
 testTimeoutDocumentSignableNotLeft :: DB ()
 testTimeoutDocumentSignableNotLeft = doTimes 10 $ do
@@ -1688,7 +1673,6 @@ testPreparationToPendingSignablePreparationRight = doTimes 10 $ do
   etdoc <- randomUpdate $ PreparationToPending (documentid doc) (SystemActor time)
   validTest $ do
     assertRight etdoc
-    assertInvariants $ fromRight etdoc
 
 {-
 testAuthorSignDocumentNotSignableLeft :: DB ()
@@ -1759,7 +1743,6 @@ testRejectDocumentSignablePendingRight = doTimes 10 $ do
   edoc <- randomUpdate $ RejectDocument (documentid doc) slid Nothing sa
   validTest $ do
     assertRight edoc
-    assertInvariants $ fromRight edoc
 
 testMarkInvitationRead :: DB ()
 testMarkInvitationRead = doTimes 10 $ do
@@ -2115,13 +2098,6 @@ testSetDocumentDaysToSignRight = doTimes 10 $ do
     let Right doc2' = etdoc2
     assertEqual "Days to sign is set properly" (Just daystosign) (documentdaystosign doc1')
     assertEqual "Days to sign removed properly" (Nothing) (documentdaystosign doc2')
-
-assertInvariants :: Document -> DB ()
-assertInvariants document = do
-  now <- getMinutesTime
-  case invariantProblems now document of
-    Nothing -> assertSuccess
-    Just a  -> assertFailure a
 
 propbitfieldDeriveConvertibleId :: [SignatoryRole] -> Bool
 propbitfieldDeriveConvertibleId ss =

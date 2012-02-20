@@ -401,12 +401,13 @@ addTag _ (n,v) = [DocumentTag n v]
 samenameanddescription :: BS.ByteString -> BS.ByteString -> (BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)]) -> Bool
 samenameanddescription n d (nn, dd, _) = n == nn && d == dd
 
-getSignatoryAttachment :: BS.ByteString -> BS.ByteString -> Document -> Maybe SignatoryAttachment
-getSignatoryAttachment email name doc =
-  find (\sl -> email == signatoryattachmentemail sl &&
-               name  == signatoryattachmentname sl) $
-  concat . map signatoryattachments $ documentsignatorylinks doc
+getSignatoryAttachment :: SignatoryLinkID -> Document -> Maybe SignatoryAttachment
+getSignatoryAttachment slid doc = takeFstAtt $ signatoryattachments <$> (find (\sl -> slid == signatorylinkid sl) $ documentsignatorylinks doc)
+  where
+    takeFstAtt (Just a) = if null a then Nothing else Just $ a !! 0
+    takeFstAtt _        = Nothing
 
+{-
 buildattach :: String -> Document -> [SignatoryAttachment]
                -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])]
                -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])]
@@ -421,6 +422,7 @@ buildattach csvstring d (f:fs) a =
     Just sl -> case find (samenameanddescription (signatoryattachmentname f) (signatoryattachmentdescription f)) a of
       Nothing -> buildattach csvstring d fs (((signatoryattachmentname f), (signatoryattachmentdescription f), [(getFullName sl, getEmail sl)]):a)
       Just (nx, dx, sigs) -> buildattach csvstring d fs ((nx, dx, (getFullName sl, getEmail sl):sigs):(delete (nx, dx, sigs) a))
+-}
 
 sameDocID :: Document -> Document -> Bool
 sameDocID doc1 doc2 = (documentid doc1) == (documentid doc2)
