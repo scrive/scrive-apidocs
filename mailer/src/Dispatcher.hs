@@ -5,6 +5,7 @@ module Dispatcher (
 
 import Control.Concurrent
 import Control.Monad
+import Control.Monad.IO.Class
 import qualified Control.Exception as E
 
 import Crypto.RNG (CryptoRNGState)
@@ -14,11 +15,12 @@ import Mails.Model
 import MinutesTime
 import qualified Log (mailingServer)
 
-dispatcher :: CryptoRNGState -> Sender -> String -> IO ()
-dispatcher rng sender dbconf = do
+dispatcher :: CryptoRNGState -> Sender -> MVar Sender -> String -> IO ()
+dispatcher rng master msender dbconf = do
   res <- withPostgreSQLDB' dbconf rng $ \dbenv -> E.try $ ioRunDB dbenv $ do
+    sender <- liftIO $ readMVar msender
     mails <- dbQuery GetIncomingEmails
-    forM_ mails $ \mail@Mail{mailID} -> do
+    forM_ mails $ \mail@Mail{mailID, mailServiceTest} -> do
       if isNotSendable mail
        then do
          Log.mailingServer $ "Email " ++ show mail ++ " is not sendable, discarding."
@@ -27,7 +29,10 @@ dispatcher rng sender dbconf = do
            Log.mailingServer $ "CRITICAL: couldn't remove unsendable email #" ++ show mailID ++ " from database."
        else do
          Log.mailingServer $ "Sending email #" ++ show mailID ++ "..."
-         success <- sendMail sender mail
+         -- we want to send service testing emails always with master service
+         success <- if mailServiceTest
+           then sendMail master mail
+           else sendMail sender mail
          now <- getMinutesTime
          if success
            then do
@@ -44,7 +49,7 @@ dispatcher rng sender dbconf = do
     Left (e::E.SomeException) -> do
       Log.mailingServer $ "Exception '" ++ show e ++ "' thrown while sending emails, sleeping for five minutes."
       threadDelay $ 5 * 60 * second
-  dispatcher rng sender dbconf
+  dispatcher rng master msender dbconf
   where
     second = 1000000
     isNotSendable Mail{..} =

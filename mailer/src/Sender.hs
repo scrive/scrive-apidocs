@@ -19,16 +19,24 @@ import Misc
 import OurPrelude
 import qualified Log (mailingServer, mailContent)
 
-newtype Sender = Sender { sendMail :: (MonadIO m, CryptoRNG m) => Mail -> m Bool }
+data Sender = Sender {
+    senderName :: String
+  , sendMail   :: (MonadIO m, CryptoRNG m) => Mail -> m Bool
+  }
 
-createSender :: MailsConfig -> Sender
+instance Show Sender where
+  show Sender{senderName} = senderName
+
+instance Eq Sender where
+  Sender name _ == Sender name' _ = name == name'
+
+createSender :: SenderConfig -> Sender
 createSender mc = case mc of
-  MailsSMTP{}   -> createSMTPSender mc
-  MailsSendmail -> createSendmailSender
-  MailsLocal{}  -> createLocalOpenSender mc
+  SMTPSender{}   -> createSMTPSender mc
+  LocalSender{}  -> createLocalSender mc
 
-createExternalSender :: String -> (Mail -> [String]) -> Sender
-createExternalSender program createargs = Sender { sendMail = send }
+createExternalSender :: String -> String -> (Mail -> [String]) -> Sender
+createExternalSender name program createargs = Sender { senderName = name, sendMail = send }
   where
     send :: (MonadIO m, CryptoRNG m) => Mail -> m Bool
     send mail@Mail{..} = do
@@ -51,8 +59,8 @@ createExternalSender program createargs = Sender { sendMail = send }
               ]
             return True
 
-createSMTPSender :: MailsConfig -> Sender
-createSMTPSender config = createExternalSender "curl" createargs
+createSMTPSender :: SenderConfig -> Sender
+createSMTPSender config = createExternalSender (serviceName config) "curl" createargs
   where
     mailRcpt addr = [
         "--mail-rcpt"
@@ -66,16 +74,8 @@ createSMTPSender config = createExternalSender "curl" createargs
       , "<" ++ addrEmail mailFrom ++ ">"
       ] ++ concatMap mailRcpt mailTo
 
-createSendmailSender :: Sender
-createSendmailSender = createExternalSender "sendmail" createargs
-  where
-    createargs _ = [
-        "-t" -- get the addresses from the content
-      , "-i" -- ignore single dots in input
-      ]
-
-createLocalOpenSender :: MailsConfig -> Sender
-createLocalOpenSender config = Sender { sendMail = send }
+createLocalSender :: SenderConfig -> Sender
+createLocalSender config = Sender { senderName = "localSender", sendMail = send }
   where
     send :: (MonadIO m, CryptoRNG m) => Mail -> m Bool
     send mail@Mail{..} = do
