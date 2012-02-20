@@ -14,6 +14,7 @@ module Mails.Data (
 import Data.Data
 import Data.Either
 import Data.Int
+import Data.Monoid
 import Database.HDBC
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
@@ -34,6 +35,10 @@ $(newtypeDeriveConvertible ''EventID)
 newtype XSMTPAttrs = XSMTPAttrs { fromXSMTPAttrs :: [(String, String)] }
   deriving (Eq, Ord, Show, Data, Typeable)
 $(jsonableDeriveConvertible [t| XSMTPAttrs |])
+
+instance Monoid XSMTPAttrs where
+  mempty = XSMTPAttrs []
+  (XSMTPAttrs a) `mappend` (XSMTPAttrs b) = XSMTPAttrs (a ++ b)
 
 data Attachment = Attachment {
     attName    :: String
@@ -100,4 +105,5 @@ data Mail = Mail {
   , mailContent     :: String
   , mailAttachments :: [Attachment]
   , mailXSMTPAttrs  :: XSMTPAttrs
+  , mailServiceTest :: Bool
   } deriving (Eq, Ord, Show)
