@@ -751,8 +751,8 @@ If the other party clicks on the signing link after you withdrawn the invitation
  to sign."
 "_flashMessageRowGreaterThanMaxColCount","Raden kan inte ha mer än $maxcols$ kolumner.",,"The row must not have more than $maxcols$ columns."
 "_flashMessageRowLessThanMinColCount","Raden behöver åtminstone $mincols$ kolumner.",,"The row must have at least $mincols$ columns."
-"_flashMessageRubbishHardDeleteDone","The selected documents have been permanently deleted.""The selected documents have been permanently deleted.",,
-"_flashMessageRubbishRestoreDone","The selected documents have been restored to your archive.""The selected documents have been restored to your archive.",,
+"_flashMessageRubbishHardDeleteDone","The selected documents have been permanently deleted.",,"The selected documents have been permanently deleted."
+"_flashMessageRubbishRestoreDone","The selected documents have been restored to your archive.",,"The selected documents have been restored to your archive."
 "_flashMessageSecondNameIsRequired","Efternamn krävs.",,"Last name required."
 "_flashMessageTemplateArchiveDone","Valda mallar har blivit raderade.",,"The selected templates have been deleted."
 "_flashMessageThanksForTheQuestion","Ditt meddelande har skickats! Vi återkommer inom 24h.",,"Your message has been sent! We will get back to you within 24
