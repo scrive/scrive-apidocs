@@ -1,0 +1,44 @@
+.companybranding {
+  height: 330px;
+}
+
+.companybranding .row {
+  width: 400px;
+}
+
+.companybranding .checkboxtoggle {
+  width: 30px;
+}
+
+.companybranding .bbcustomise {
+  width: 350px;
+}
+
+.companybranding .bbinput {
+  width: 80px;
+  margin-left: 30px;
+}
+
+.companybranding .bbdisplay {
+  width: 0px;
+  margin-left: 20px;
+  padding: 10px 14px;
+  border: solid 1px black;
+}
+
+.companybranding .logodisplay {
+  width: 100%;
+  height: 33px;
+  background-repeat: no-repeat;
+}
+
+.companybranding .logodisplaywrapper {
+  margin: 10px 30px;
+  padding: 10px;
+}
+
+.companybranding .logocustomise {
+  padding-left: 30px;
+  padding-right: 30px;
+  padding-top: 5px;
+}

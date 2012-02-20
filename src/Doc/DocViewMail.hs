@@ -18,6 +18,7 @@ module Doc.DocViewMail (
     ) where
 
 import API.Service.Model
+import Company.Model
 import Doc.DocProcess
 import Doc.DocStateData
 import Doc.DocUtils
@@ -385,11 +386,21 @@ documentMailWithDocLocale ctx doc mailname otherfields = documentMail doc ctx do
 documentMail :: (MonadIO m,Functor m,TemplatesMonad m, HasLocale a) =>  a -> Context -> Document -> String -> Fields m -> m Mail
 documentMail haslocale ctx doc mailname otherfields = do
     mservice <- liftMM (ioRunDB (ctxdbenv ctx) . dbQuery . GetService) (return $ documentservice doc)
+    mcompany <- liftMM (ioRunDB (ctxdbenv ctx) . dbQuery . GetCompany) (return $ getAuthorSigLink doc >>= maybecompany)
     let allfields = do
         contextFields ctx
         field "documenttitle" $ BS.toString $ documenttitle doc
         field "creatorname" $ BS.toString $ getSmartName $ fromJust $ getAuthorSigLink doc
+        when (isJust mcompany) $ do
+            let (Just company) = mcompany
+            fieldF "companybrand" $ companyBrandFields company
         when (isJust mservice) $
             fieldF "service" $ serviceFields "" mservice
         otherfields
     kontramaillocal haslocale mailname allfields
+
+companyBrandFields :: MonadIO m => Company -> Fields m
+companyBrandFields company = do
+    field "barsbackground"  $ companybarsbackground $ companyui company
+    field "logo" $ isJust $ companylogo $ companyui company
+    field "logoLink"  $ show $ LinkCompanyLogo $ companyid company

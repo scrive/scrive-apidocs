@@ -3,11 +3,13 @@ module Company.Model (
   , ExternalCompanyID(..)
   , Company(..)
   , CompanyInfo(..)
+  , CompanyUI(..)
   , GetCompanies(..)
   , GetCompany(..)
   , GetCompanyByExternalID(..)
   , CreateCompany(..)
   , SetCompanyInfo(..)
+  , UpdateCompanyUI(..)
   , GetOrCreateCompanyWithExternalID(..)
   ) where
 
@@ -19,6 +21,7 @@ import qualified Data.ByteString.Char8 as BS
 import DB.Classes
 import DB.Derive
 import DB.Fetcher2
+import DB.Types
 import DB.Utils
 import API.Service.Model
 import Company.CompanyID
@@ -34,6 +37,7 @@ data Company = Company {
   , companyexternalid :: Maybe ExternalCompanyID
   , companyservice    :: Maybe ServiceID
   , companyinfo       :: CompanyInfo
+  , companyui         :: CompanyUI
   } deriving (Eq, Ord, Show)
 
 data CompanyInfo = CompanyInfo {
@@ -44,6 +48,11 @@ data CompanyInfo = CompanyInfo {
   , companycity    :: BS.ByteString
   , companycountry :: BS.ByteString
   } deriving (Eq, Ord, Show)
+
+data CompanyUI = CompanyUI {
+    companybarsbackground    :: Maybe BS.ByteString
+  , companylogo              :: Maybe Binary -- File with the logo
+} deriving (Eq, Ord, Show)
 
 data GetCompanies = GetCompanies (Maybe ServiceID)
 instance DBQuery GetCompanies [Company] where
@@ -93,6 +102,19 @@ instance DBUpdate SetCompanyInfo Bool where
       , sql "country" companycountry
       ] <++> SQL "WHERE id = ?" [toSql cid]
 
+data UpdateCompanyUI = UpdateCompanyUI CompanyID CompanyUI
+instance DBUpdate UpdateCompanyUI Bool where
+  dbUpdate (UpdateCompanyUI cid cui) = do
+    kPrepare $ "UPDATE companies SET"
+      ++ "  bars_background = ?"
+      ++ ", logo = decode(?, 'base64')"
+      ++ "  WHERE id = ?"
+    kExecute01 [
+        toSql $ companybarsbackground cui
+      , toSql $ companylogo cui
+      , toSql cid
+      ]
+
 data GetOrCreateCompanyWithExternalID = GetOrCreateCompanyWithExternalID (Maybe ServiceID) ExternalCompanyID
 instance DBUpdate GetOrCreateCompanyWithExternalID Company where
   dbUpdate (GetOrCreateCompanyWithExternalID msid ecid) = do
@@ -114,13 +136,16 @@ selectCompaniesSQL = SQL ("SELECT"
   ++ ", c.zip"
   ++ ", c.city"
   ++ ", c.country"
+  ++ ", c.bars_background"
+  ++ ", encode(c.logo, 'base64')"
   ++ "  FROM companies c"
   ++ " ") []
 
 fetchCompanies :: DB [Company]
 fetchCompanies = foldDB decoder []
   where
-    decoder acc cid eid sid name number address zip' city country = Company {
+    decoder acc cid eid sid name number address zip' city country
+      bars_background logo = Company {
         companyid = cid
       , companyexternalid = eid
       , companyservice = sid
@@ -131,5 +156,9 @@ fetchCompanies = foldDB decoder []
         , companyzip = zip'
         , companycity = city
         , companycountry = country
+        }
+      , companyui = CompanyUI {
+          companybarsbackground = bars_background
+        , companylogo = logo
         }
       } : acc

@@ -33,6 +33,7 @@ standardHeaderContents=
 
 		<link rel="stylesheet" type="text/css" href="$prefix$/theme/symbols.css" media="screen"/>
 		<link rel="stylesheet" type="text/css" href="$prefix$/theme/buttons.css" media="screen"/>
+        <link rel="stylesheet" type="text/css" href="$prefix$/theme/account.css" />
         <link href="$prefix$/theme/flash.css" rel="stylesheet" type="text/css" media="screen" />
         <link href="/css/main.css" rel="stylesheet" type="text/css" />
         <script src="$if(production)$$protocol$//ajax.googleapis.com/ajax/libs/jquery/1.5.1$else$/js$endif$/jquery.min.js"
@@ -98,9 +99,9 @@ standardHeaderContents=
         <script src="$prefix$/js/docview.js"
                 type="text/javascript"></script>
         <script src="$prefix$/js/signatorydesignview.js"
-                type="text/javascript"></script>    
+                type="text/javascript"></script>
         <script src="$prefix$/js/docdesignview.js"
-                type="text/javascript"></script>  
+                type="text/javascript"></script>
         <script src="$prefix$/js/bankid.js"
                 type="text/javascript"></script>
         <script src="/js/jquery.form.js"
@@ -119,6 +120,8 @@ standardHeaderContents=
                 type="text/javascript"></script>
        <script src="/js/fieldplacementview.js"
                 type="text/javascript"></script>
+       <script src="/js/companybranding.js"
+                type="text/javascript"></script>
        $if(publicsafe)$
         <script src="/js/jquery.tweet.js"
                 type="text/javascript"></script>
@@ -127,7 +130,7 @@ standardHeaderContents=
             $endif$
        $endif$
        <script src="/js/main.js"
-                type="text/javascript"></script> 
+                type="text/javascript"></script>
 ####
 standardBodyWithQueryCol=
        $standardBodyWrapper(unwrappedbody=contentsWithQueryCol(unwrappedbody=unwrappedbody))$

@@ -9,13 +9,14 @@ import DB.Classes
 import TestingUtil
 
 companyStateTests :: DBEnv -> Test
-companyStateTests env = testGroup "CompanyState" [
-    testThat "CreateCompany works" env test_createCompany
-  , testThat "GetCompanies works" env test_getCompanies
-  , testThat "GetCompany works" env test_getCompany
-  , testThat "GetCompanyByExternalID works" env test_getCompanyByExternalID
-  , testThat "SetCompanyInfo works" env test_setCompanyInfo
-  , testThat "GetOrCreateCompanyWithExternalID works" env test_getOrCreateCompanyWithExternalID
+companyStateTests conn = testGroup "CompanyState" [
+    testThat "CreateCompany works" conn test_createCompany
+  , testThat "GetCompanies works" conn test_getCompanies
+  , testThat "GetCompany works" conn test_getCompany
+  , testThat "GetCompanyByExternalID works" conn test_getCompanyByExternalID
+  , testThat "SetCompanyInfo works" conn test_setCompanyInfo
+  , testThat "GetOrCreateCompanyWithExternalID works" conn test_getOrCreateCompanyWithExternalID
+  , testThat "UpdateCompanyUI works" conn test_updateCompanyUI
   ]
 
 test_createCompany :: DB ()
@@ -58,6 +59,18 @@ test_setCompanyInfo = do
   assertBool "CompanyInfo updated correctly" res
   Just Company{companyinfo = newci} <- dbQuery $ GetCompany cid
   assertBool "Returned CompanyInfo is correct" $ ci == newci
+
+test_updateCompanyUI :: DB ()
+test_updateCompanyUI = do
+  Company{companyid = cid, companyui} <- addTestCompany ""
+  let cui = companyui {
+    companybarsbackground = Just $ BS.fromString "blue"
+  , companylogo = Nothing
+  }
+  res <- dbUpdate $ UpdateCompanyUI cid cui
+  assertBool "CompanyUI updated correctly" res
+  Just Company{companyui = newcui} <- dbQuery $ GetCompany cid
+  assertEqual "Returned CompanyUI is correct" cui newcui
 
 test_getOrCreateCompanyWithExternalID :: DB ()
 test_getOrCreateCompanyWithExternalID = do
