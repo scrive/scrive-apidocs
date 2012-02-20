@@ -93,23 +93,26 @@ jsonDocumentMetadata doc = fromRight $
 
 jsonDocumentForAuthor :: Document -> JSValue
 jsonDocumentForAuthor doc = 
-  fromRight            $ (Right jsempty)                          >>=                                
-  (jsset "designurl"   $ show $ LinkIssueDoc (documentid doc))    >>=
-  (jsset "document_id" $ jsonDocumentID $ documentid doc)         >>=    
-  (jsset "title"       $ documenttitle doc)                       >>=                        
-  (jsset "type"        $ fromSafeEnumInt $ documenttype doc)     >>=       
-  (jsset "status"      $ fromSafeEnumInt $ documentstatus doc) >>=
-  (jsset "metadata"    $ jsonDocumentMetadata doc) >>=
-  (jsset "authorization" $ fromSafeEnumInt $ documentallowedidtypes doc)
+  fromRight              $ (Right jsempty)                       >>=                    
+
+  (jsset "url"           $ show $ LinkIssueDoc (documentid doc)) >>=
+  (jsset "document_id"   $ jsonDocumentID $ documentid doc)      >>=                    
+  (jsset "title"         $ documenttitle doc)                    >>=                    
+  (jsset "type"          $ fromSafeEnumInt $ documenttype doc)   >>=                    
+  (jsset "status"        $ fromSafeEnumInt $ documentstatus doc) >>=                    
+
+  (jsset "metadata"      $ jsonDocumentMetadata doc)             >>= -- up for deletion 
+  (jsset "designurl"     $ show $ LinkIssueDoc (documentid doc)) >>= -- up for deletion 
+  (jsset "authorization" $ fromSafeEnumInt $ documentallowedidtypes doc)              
 
 jsonDocumentForSignatory :: Document -> JSValue
 jsonDocumentForSignatory doc = 
-  fromRight            $ (Right jsempty)                          >>=                                
-  (jsset "document_id" $ jsonDocumentID $ documentid doc)         >>=    
-  (jsset "title"       $ documenttitle doc)                       >>=                        
-  (jsset "type"        $ fromSafeEnumInt $ documenttype doc)     >>=       
-  (jsset "status"      $ fromSafeEnumInt $ documentstatus doc) >>=
-  (jsset "metadata"    $ jsonDocumentMetadata doc) >>=
+  fromRight              $ (Right jsempty)                       >>=                                
+  (jsset "document_id"   $ jsonDocumentID $ documentid doc)      >>=    
+  (jsset "title"         $ documenttitle doc)                    >>=                        
+  (jsset "type"          $ fromSafeEnumInt $ documenttype doc)   >>=       
+  (jsset "status"        $ fromSafeEnumInt $ documentstatus doc) >>=
+  (jsset "metadata"      $ jsonDocumentMetadata doc)             >>=
   (jsset "authorization" $ fromSafeEnumInt $ documentallowedidtypes doc)
 
 
@@ -127,18 +130,20 @@ jsonSigAttachmentWithFile sa mfile =
                                              (jsset "name" $ (filename file))))
 
 data DocumentCreationRequest = DocumentCreationRequest {
-  dcrTitle    :: String,
-  dcrType     :: DocumentType,
-  dcrTags     :: [DocumentTag],
-  dcrInvolved :: [InvolvedRequest],
-  dcrMainFile :: String -- filename
+  dcrTitle       :: String,
+  dcrType        :: DocumentType,
+  dcrTags        :: [DocumentTag],
+  dcrInvolved    :: [InvolvedRequest],
+  dcrMainFile    :: String, -- filename
+  dcrAttachments :: [String] -- filenames
   }
                              deriving (Show, Eq)
                                
 data InvolvedRequest = InvolvedRequest {
   irRole        :: [SignatoryRole],
   irData        :: [SignatoryField],
-  irAttachments :: [AttachmentRequest]
+  irAttachments :: [AttachmentRequest],
+  irSignOrder   :: Maybe Int
   }
                      deriving (Show, Eq)
                        
@@ -180,7 +185,8 @@ irFromJSON jsv = do
   role <- maybe (Left $ "Not a valid role: " ++ show i)
           Right $ toSafeEnum i
   hisData <- mapM sfFromJSON dat
-  return $ InvolvedRequest { irRole = role, irData = hisData, irAttachments = attachments }
+  let mso = either (const Nothing) fromJSON $ jsget "signorder" jsv
+  return $ InvolvedRequest { irRole = role, irData = hisData, irAttachments = attachments, irSignOrder = mso }
 
 fileNameFromJSON :: JSValue -> Either String String
 fileNameFromJSON jsv = do
@@ -204,9 +210,12 @@ dcrFromJSON jsv = do
   tags <- mapM tagFromJSON tags'
   JSArray inv' <- jsget "involved" jsv
   inv <- mapM irFromJSON inv'
+  JSArray att' <- jsgetdef "attachments" (JSArray []) jsv
+  att <- mapM fileNameFromJSON att'
   return $ DocumentCreationRequest { dcrTitle    = title
                                    , dcrType     = tp
                                    , dcrTags     = tags
                                    , dcrInvolved = inv
                                    , dcrMainFile = f
+                                   , dcrAttachments = att
                                    }

@@ -119,7 +119,9 @@ documentWithJSON = do
   ct <- apiGuard' BadInput $ getHeader "content-type" rq
   mv <- apiGuard' BadInput $ getHeader "mime-version" rq
   Log.debug $ "body: " ++ show bdy
-  let (_, allParts) = MIME.parseMIMEToParts $ BS.concat [BS.fromString "MIME-Version: ", mv, BS.fromString "\r\n", BS.fromString "Content-type: ", ct, BS.fromString "\r\n", concatChunks bdy]
+  let (_, allParts) = MIME.parseMIMEToParts $ BS.concat [BS.fromString "MIME-Version: ", mv, BS.fromString "\r\n"
+                                                        ,BS.fromString "Content-type: ", ct, BS.fromString "\r\n"
+                                                        ,concatChunks bdy]
 
       isPDF (tp,_) = MIME.mimeType tp == MIME.Application "pdf"
       isJSON (tp,_) = MIME.mimeType tp == MIME.Application "json"

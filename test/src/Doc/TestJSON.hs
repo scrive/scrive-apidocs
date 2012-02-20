@@ -100,7 +100,9 @@ dcrTest = doNTimes 100 $ do
                                          irData = [SignatoryField FirstNameFT (BS.fromString fn) [],
                                                    SignatoryField LastNameFT  (BS.fromString sn) [],
                                                    SignatoryField EmailFT     (BS.fromString em) []],
-                                         irAttachments = [] }],
-        dcrMainFile = mainfile
+                                         irAttachments = [],
+                                         irSignOrder = Nothing }],
+        dcrMainFile = mainfile,
+        dcrAttachments = []
         }
   assertEqual ("Are not the same! " ++ show o ++ " and " ++ show dcr) o dcr
