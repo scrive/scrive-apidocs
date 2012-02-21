@@ -94,6 +94,10 @@ window.Field = Backbone.Model.extend({
                 return new FieldPlacement(extendedWithField(placement));
         });
         this.set({"placements": placements});
+        this.bind("change",function() {
+            field.signatory().document().trigger("change:signatories")
+        });
+
     },
     name : function() {
         return this.get("name");
@@ -210,7 +214,11 @@ window.Field = Backbone.Model.extend({
              }  
     },
    addPlacement : function(placement) {
-     this.placements().push(placement);
+      var newplacements = new Array(); //Please don't ask why we rewrite this array
+      for(var i=0;i<this.placements().length;i++) 
+         newplacements.push(this.placements()[i]);
+      newplacements.push(placement);
+      this.set({placements : newplacements});
     },
    removePlacement : function(placement) {
        var newplacements = new Array();

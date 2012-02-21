@@ -64,9 +64,11 @@ window.Document = Backbone.Model.extend({
     addSignatory : function(){
         var document = this;
         var signatories = this.signatories();
-        signatories[signatories.length] = new Signatory({"document": document, signs: true});
+        var nsig = new Signatory({"document": document, signs: true})
+        signatories[signatories.length] = nsig;
         document.set({"signatories" : signatories});
         document.change();
+        return nsig;
     },
     mainfile: function(){
         var file;
