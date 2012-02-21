@@ -720,9 +720,8 @@ accountFromSignInputs=
           <label for="tos" >$_accountFromSignInputsBodyAcceptTOS()$</label>
          </div>
          <div>
-             <input type='checkbox' style='padding: 0px;margin:0px 5px 0px 0px;float:left;width: auto;' class="callme" name='callme'/>$_modalAccountSetupCallMe()$</td>
+             <input type='checkbox' style='padding: 0px;margin:0px 5px 0px 0px;float:left;width: auto;' class="callme" name='callme'/>$_modalAccountSetupCallMe()$
              <script src="/js/signup.js" type="text/javascript"></script>
-
          </div>
          <div style="padding-top:10px">
           <table>
