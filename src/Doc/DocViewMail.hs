@@ -94,7 +94,7 @@ remindMailNotSigned forMail customMessage ctx document signlink = do
         field "isattachments" $ length (documentauthorattachments document) > 0
         field "attachments" $ map (filename) (catMaybes authorattachmentfiles)
         field "previewLink" $ show $ LinkDocumentPreview (documentid document) (Just signlink <| forMail |> Nothing) (mainfile)
-        field "hassigattachments" $ length (concat . map signatoryattachments $ documentsignatorylinks document ) > 0
+        field "hassigattachments" $ not $ null $ concat $ signatoryattachments <$> documentsignatorylinks document
         -- We try to use generic templates and this is why we return a tuple
         field "sigattachments" $ for (concat $ (\l -> (\a -> (l,a)) <$> signatoryattachments l) <$> documentsignatorylinks document) $ \(link, sa) ->
                         (BS.toString $ signatoryattachmentname sa, BS.toString $ getSmartName link)

@@ -142,7 +142,7 @@ tableSignatoryAttachments = Table {
           ++ ", document_id BIGINT NOT NULL"
           ++ ", description TEXT NOT NULL"
           ++ ", name TEXT NOT NULL"
-          ++ ", signatory_link_id BIGINT NOT NULL"
+          ++ ", signatory_link_id BIGINT NOT NULL DEFAULT 0"
           ++ ", CONSTRAINT pk_signatory_attachments PRIMARY KEY (document_id, signatory_link_id, name)"
           ++ ")"
         return TVRcreated

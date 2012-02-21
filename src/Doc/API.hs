@@ -196,7 +196,7 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   
   file <- lift $ runDB $ dbUpdate $ NewFile (BS.fromString $ basename filename) content
   let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) (BS.toString email) slid
-  d <- apiGuardL $ runDBUpdate $ SaveSigAttachment sid (documentid doc) (BS.fromString aname) email (fileid file) actor
+  d <- apiGuardL $ runDBUpdate $ SaveSigAttachment (documentid doc) sid (BS.fromString aname) (fileid file) actor
   
   -- let's dig the attachment out again
   sigattach' <- apiGuard $ getSignatoryAttachment sid d
@@ -220,7 +220,7 @@ documentDeleteSignatoryAttachment did _ sid _ _ _ = api $ do
   -- attachment must have a file
   fileid <- apiGuard' ActionNotAvailable $ signatoryattachmentfile sigattach
 
-  d <- apiGuardL $ runDBUpdate $ DeleteSigAttachment sid (documentid doc) email fileid 
+  d <- apiGuardL $ runDBUpdate $ DeleteSigAttachment (documentid doc) sid fileid 
        (SignatoryActor ctxtime ctxipnumber muid (BS.toString email) sid)
   
   -- let's dig the attachment out again
