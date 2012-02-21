@@ -159,7 +159,7 @@ selectUsersAndStatsSQL (q1, q2) = SQL ("SELECT "
   ++ ", c.city"
   ++ ", c.country"
   ++ ", c.bars_background"
-  ++ ", encode(c.logo 'base64')"
+  ++ ", encode(c.logo, 'base64')"
   -- Events:
   ++ ", e.time"
   ++ ", e.quantity"

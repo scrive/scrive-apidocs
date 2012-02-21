@@ -907,7 +907,6 @@ handleAttachmentViewForViewer :: Kontrakcja m => DocumentID -> SignatoryLinkID -
 handleAttachmentViewForViewer docid siglinkid mh = do
   doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
   disableLocalSwitch
-  switchLocale (getLocale doc)
   let pending JpegPagesPending = True
       pending _                = False
       files                    = map authorattachmentfile (documentauthorattachments doc)
@@ -1149,7 +1148,6 @@ handleIssueBulkRemind doctype = do
       docRemind :: Kontrakcja m => Context -> User -> DocumentID -> m [SignatoryLink]
       docRemind ctx user docid = do
         doc <- queryOrFail $ GetDocumentByDocumentID docid
-        failIfNotAuthor doc user
         case (documentstatus doc) of
           Pending -> do
             let isElegible = isEligibleForReminder (Just user) doc
@@ -1531,7 +1529,6 @@ prepareEmailPreview :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValu
 prepareEmailPreview docid slid = do
     mailtype <- getFieldWithDefault "" "mailtype"
     doc <- guardJustM $ runDBQuery $ GetDocumentByDocumentID docid
-    switchLocale $ getLocale doc
     ctx <- getContext
     content <- case mailtype of
          "remind" -> do
