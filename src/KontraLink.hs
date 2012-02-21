@@ -102,7 +102,6 @@ data KontraLink
     | LinkDaveDocument DocumentID
     | LinkFile FileID BS.ByteString
     | LinkAskQuestion
-    | LinkRequestPhoneCall
     | LinkInvite
     | LinkSignCanceledDataMismatch DocumentID SignatoryLinkID
     | LinkConnectUserSession ServiceID UserID SessionId KontraLink
@@ -225,7 +224,6 @@ instance Show KontraLink where
     showsPrec _ BackToReferer = (++) $ "/" -- this should never be used
     showsPrec _ (LinkDaveDocument docid) = (++) ("/dave/document/" ++ show docid)
     showsPrec _ (LinkAskQuestion) = (++) ("/question")
-    showsPrec _ (LinkRequestPhoneCall) = (++) "/phone"
     showsPrec _ (LinkInvite) = (++) "/invite"
     showsPrec _ (LinkSignCanceledDataMismatch docid sigid) = (++) $ "/landpage/signcanceleddatamismatch/" ++ show docid ++ "/" ++ show sigid
     showsPrec _ (LinkConnectUserSession sid uid ssid referer) = (++) $ "/integration/connectuser/" ++ encodeForURL sid ++ "/" ++ show uid  ++ "/" ++ show ssid

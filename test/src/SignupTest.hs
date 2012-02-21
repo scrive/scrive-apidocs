@@ -39,47 +39,8 @@ signupTests conn = testGroup "Signup" [
     , testCase "must enter last name to activate an account" $ testNeedLastNameToActivate conn
     , testCase "must enter passwords to activate an account" $ testNeedPasswordToActivate conn
     , testCase "passwords must match to activate an account" $ testPasswordsMatchToActivate conn
-    , testCase "if users enter phone number a mail is sent" $ testUserEnteringPhoneNumber conn
-    , testCase "if users don't enter phone number a mail isn't sent" $ testUserNotEnteringPhoneNumber conn
     , testCase "login event recorded when logged in after activation" $ testLoginEventRecordedWhenLoggedInAfterActivation conn
     ]
-
-testUserEnteringPhoneNumber :: Nexus -> Assertion
-testUserEnteringPhoneNumber conn = withTestEnvironment conn $ do
-  Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
-
-  req <- mkRequest POST [ ("phone", inText "12345")
-                        ]
-  (res, ctx') <- runTestKontra req ctx $ handlePhoneCallRequest >>= sendRedirect
-
-  assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
-  assertBool ("Flash message has type indicating success, was "  ++ show (getFlashType $ head $ ctxflashmessages ctx')) $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
-  Just uuser <- dbQuery $ GetUserByID (userid user)
-  assertEqual "Phone number was saved" "12345" (BS.toString . userphone $ userinfo uuser)
-
-  emails <- dbQuery GetIncomingEmails
-  assertEqual "An email was sent" 1 (length emails)
-
-testUserNotEnteringPhoneNumber :: Nexus -> Assertion
-testUserNotEnteringPhoneNumber conn = withTestEnvironment conn $ do
-  Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbconn = conn, ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
-
-  req <- mkRequest POST [ ("phone", inText "")
-                        ]
-  (res, ctx') <- runTestKontra req ctx $ handlePhoneCallRequest >>= sendRedirect
-
-  assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "No flash message was added" 0 (length $ ctxflashmessages ctx')
-
-  emails <- dbQuery GetIncomingEmails
-  assertEqual "No email was sent" 0 (length emails)
 
 testSignupAndActivate :: Nexus -> Assertion
 testSignupAndActivate conn = withTestEnvironment conn $ do
@@ -98,8 +59,14 @@ testSignupAndActivate conn = withTestEnvironment conn $ do
   assertActivationPageOK (res2, ctx2)
 
   -- activate the account using the signup details
-  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12"
+  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12" (Just "123")
   assertAccountActivatedFor uid "Andrzej" "Rybczak" (res3, ctx3)
+  Just uuser <- dbQuery $ GetUserByID  uid
+  assertEqual "Phone number was saved" "123" (BS.toString . userphone $ userinfo uuser)
+  emails <- dbQuery GetIncomingEmails
+  assertEqual "An email was sent" 1 (length emails)
+
+
 
 testLoginEventRecordedWhenLoggedInAfterActivation :: Nexus -> Assertion
 testLoginEventRecordedWhenLoggedInAfterActivation conn = withTestEnvironment conn $ do
@@ -114,7 +81,7 @@ testLoginEventRecordedWhenLoggedInAfterActivation conn = withTestEnvironment con
       (AccountCreated uid token) = actionType action
 
   -- activate the account using the signup details
-  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12"
+  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12" Nothing
   assertAccountActivatedFor uid "Andrzej" "Rybczak" (res3, ctx3)
   assertLoginEventRecordedFor uid
 
@@ -137,7 +104,7 @@ testViralInviteAndActivate conn = withTestEnvironment conn $ do
   assertActivationPageOK (res2, ctx2)
 
   -- activate the account using the signup details
-  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12"
+  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12" Nothing
   assertAccountActivated "Andrzej" "Rybczak" (res3, ctx3)
 
 testAcceptTOSToActivate :: Nexus -> Assertion
@@ -153,7 +120,7 @@ testAcceptTOSToActivate conn = withTestEnvironment conn $ do
       (AccountCreated _uid token) = actionType action
 
   -- activate the account without accepting the tos
-  (res3, ctx3) <- activateAccount ctx1 aid token False "Andrzej" "Rybczak" "password12" "password12"
+  (res3, ctx3) <- activateAccount ctx1 aid token False "Andrzej" "Rybczak" "password12" "password12" Nothing
   assertAccountActivationFailed (res3, ctx3)
 
 testNeedFirstNameToActivate :: Nexus -> Assertion
@@ -169,7 +136,7 @@ testNeedFirstNameToActivate conn = withTestEnvironment conn $ do
       (AccountCreated _uid token) = actionType action
 
   -- activate the account without entering passwords
-  (res3, ctx3) <- activateAccount ctx1 aid token True "" "Rybczak" "" ""
+  (res3, ctx3) <- activateAccount ctx1 aid token True "" "Rybczak" "" "" Nothing
   assertAccountActivationFailed (res3, ctx3)
 
 testNeedLastNameToActivate :: Nexus -> Assertion
@@ -185,7 +152,7 @@ testNeedLastNameToActivate conn = withTestEnvironment conn $ do
       (AccountCreated _uid token) = actionType action
 
   -- activate the account without entering passwords
-  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "" "" ""
+  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "" "" "" Nothing
   assertAccountActivationFailed (res3, ctx3)
 
 testNeedPasswordToActivate :: Nexus -> Assertion
@@ -201,7 +168,7 @@ testNeedPasswordToActivate conn = withTestEnvironment conn $ do
       (AccountCreated _uid token) = actionType action
 
   -- activate the account without entering passwords
-  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "" ""
+  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "" "" Nothing
   assertAccountActivationFailed (res3, ctx3)
 
 testPasswordsMatchToActivate :: Nexus -> Assertion
@@ -217,7 +184,7 @@ testPasswordsMatchToActivate conn = withTestEnvironment conn $ do
       (AccountCreated _uid token) = actionType action
 
   -- activate the account using mismatched passwords
-  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password21"
+  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password21" Nothing
   assertAccountActivationFailed (res3, ctx3)
 
 signupForAccount :: MonadIO m => Context -> String -> m (Response, Context)
@@ -269,17 +236,18 @@ assertActivationPageOK (res, ctx) = do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx)
   assertBool "Flash message has type indicating is modal" $ head (ctxflashmessages ctx) `isFlashOfType` Modal
 
-activateAccount :: MonadIO m => Context -> ActionID -> MagicHash -> Bool -> String -> String -> String -> String -> m (Response, Context)
-activateAccount ctx aid token tos fstname sndname password password2 = do
+activateAccount :: MonadIO m => Context -> ActionID -> MagicHash -> Bool -> String -> String -> String -> String -> Maybe String -> m (Response, Context)
+activateAccount ctx aid token tos fstname sndname password password2 phone = do
   let tosValue = if tos
                    then "on"
                    else "off"
-  req <- mkRequest POST [ ("tos", inText tosValue)
-                        , ("fstname", inText fstname)
-                        , ("sndname", inText sndname)
-                        , ("password", inText password)
-                        , ("password2", inText password2)
-                        ]
+  req <- mkRequest POST $ [ ("tos", inText tosValue)
+                          , ("fstname", inText fstname)
+                          , ("sndname", inText sndname)
+                          , ("password", inText password)
+                          , ("password2", inText password2)
+                          ] ++
+                          ([("callme", inText "YES"), ("phone", inText $ fromJust phone)] <| isJust phone |> [])
   runTestKontra req ctx $ handleAccountSetupPost aid token >>= sendRedirect
 
 assertAccountActivatedFor :: MonadIO m => UserID -> String -> String -> (Response, Context) -> m ()

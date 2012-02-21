@@ -9,4 +9,11 @@ safeReady(function() {
       $("#signupInfo").hide();
     }
   });
+   $(".callme").change(function() {
+    if ($(".callme").attr("checked")) {
+      $(".phonerow").show();
+    } else {
+      $(".phonerow").hide();
+    }
+  });
 });

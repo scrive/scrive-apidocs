@@ -18,7 +18,6 @@ module User.UserView (
     mailRequestChangeEmail,
 
     -- modals
-    modalWelcomeToSkrivaPa,
     modalAccountSetup,
     modalAccountRemoval,
     modalAccountRemoved,
@@ -47,7 +46,6 @@ module User.UserView (
     flashMessageNewActivationLinkSend,
     flashMessageUserSignupDone,
     flashMessageThanksForTheQuestion,
-    flashMessageWeWillCallYouSoon,
     flashMessageChangeEmailMailSent,
     flashMessageMismatchedEmails,
     flashMessageProblemWithEmailChange,
@@ -320,11 +318,6 @@ mailRequestChangeEmail hostpart user newemail link = do
 
 -------------------------------------------------------------------------------
 
-modalWelcomeToSkrivaPa :: TemplatesMonad m => m FlashMessage
-modalWelcomeToSkrivaPa =
-    toModal <$> (renderTemplateFM "modalWelcomeToSkrivaPa" $ do
-      field "phonelink" $ show LinkRequestPhoneCall)
-
 modalAccountSetup :: MonadIO m => KontraLink -> String -> String -> m FlashMessage
 modalAccountSetup signuplink fstname sndname = do
   return $ toFlashTemplate Modal "modalAccountSetup" $
@@ -352,11 +345,6 @@ modalDoYouWantToChangeEmail newemail = do
 flashMessageThanksForTheQuestion :: TemplatesMonad m => m FlashMessage
 flashMessageThanksForTheQuestion =
     toFlashMsg OperationDone <$> renderTemplateM "flashMessageThanksForTheQuestion" ()
-
-flashMessageWeWillCallYouSoon :: TemplatesMonad m => String -> m FlashMessage
-flashMessageWeWillCallYouSoon phone =
-    toFlashMsg OperationDone <$> (renderTemplateFM "flashMessageWeWillCallYouSoon" $ do
-        field "phone" phone)
 
 flashMessageLoginRedirectReason :: TemplatesMonad m => LoginRedirectReason -> m (Maybe FlashMessage)
 flashMessageLoginRedirectReason reason =

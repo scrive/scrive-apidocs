@@ -594,34 +594,24 @@ handleQuestion = do
              addFlashM flashMessageThanksForTheQuestion
              return LoopBack
 
-handlePhoneCallRequest :: Kontrakcja m => m KontraLink
-handlePhoneCallRequest = do
+phoneMeRequest :: Kontrakcja m => User -> m ()
+phoneMeRequest user = do
   ctx <- getContext
-  user <- guardJust $ ctxmaybeuser ctx
-  mphone <- getOptionalField asValidPhone "phone"
-  case mphone of
-    Nothing -> return ()
-    Just phone -> do
-      let content = "<p>User " ++ (BS.toString $ getFirstName user) ++ " "
+  let content = "<p>User " ++ (BS.toString $ getFirstName user) ++ " "
                     ++ (BS.toString $ getLastName user) ++ " "
                     ++ "&lt;" ++ (BS.toString $ getEmail user) ++ "&gt; "
                     ++ "has requested a call on "
-                    ++ "&lt;" ++ (BS.toString phone) ++ "&gt;.  "
+                    ++ "&lt;" ++ (BS.toString $ userphone $ userinfo $ user ) ++ "&gt;.  "
                     ++ "They have just signed the TOS, "
                     ++ "and they're setup with lang "
                     ++ "&lt;" ++ (codeFromLang $ getLang user) ++ "&gt;.</p>"
-      scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
+  scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
             to = [MailAddress { fullname = BS.fromString "info@skrivapa.se", email = BS.fromString "info@skrivapa.se" }]
           , title = "Phone Call Request"
           , content = content
       }
-      _ <- runDBUpdate $ SetUserInfo (userid user) $ (userinfo user){
-              userphone = phone
-            }
-      _ <- addUserPhoneAfterTOS user
-      addFlashM $ flashMessageWeWillCallYouSoon (BS.toString phone)
-      return ()
-  return LoopBack
+  _ <- addUserPhoneAfterTOS user
+  return ()
 
 handleAccountSetupGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
 handleAccountSetupGet aid hash = do
@@ -693,7 +683,6 @@ handleAccountSetupPost aid hash = do
           mactivateduser <- handleActivate aid hash signupmethod user
           when (isJust mactivateduser) $ do
               addFlashM flashMessageUserActivated
-              addFlashM modalWelcomeToSkrivaPa
               return ()
           return ()
       getHomeOrUploadLink
@@ -783,6 +772,8 @@ handleActivate aid hash signupmethod actvuser = do
         mfn <- getRequiredField asValidName "fstname"
         msn <- getRequiredField asValidName "sndname"
         return (mfn, msn)
+  callme <- isFieldSet "callme"      
+  phone <-  BS.fromString <$> fromMaybe "" <$> getField "phone"
   mpassword <- getRequiredField asValidPassword "password"
   mpassword2 <- getRequiredField asValidPassword "password2"
   case (mtos, mfstname, msndname, mpassword, mpassword2) of
@@ -796,6 +787,7 @@ handleActivate aid hash signupmethod actvuser = do
                 _ <- dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser){
                          userfstname = fstname
                        , usersndname = sndname
+                       , userphone = phone
                        }
                 _ <- dbUpdate $ SetUserPassword (userid actvuser) passwordhash
                 _ <- dbUpdate $ AcceptTermsOfService (userid actvuser) (ctxtime ctx)
@@ -806,6 +798,7 @@ handleActivate aid hash signupmethod actvuser = do
               dropExistingAction aid
               _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
               logUserToContext $ Just tosuser
+              when (callme) $ phoneMeRequest tosuser
               return $ Just tosuser
             else do
               addFlashM flashMessageMustAcceptTOS
