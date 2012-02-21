@@ -4,7 +4,8 @@ safeReady(function() {
   $("#tosCBox").change(function() {
     if ($("#tosCBox").attr("checked")) {
       $("#signupInfo").show();
-      $("#signupInfo input")[0].focus();
+      if ($("#signupInfo input").size() > 0)
+        $("#signupInfo input")[0].focus();
     } else {
       $("#signupInfo").hide();
     }
