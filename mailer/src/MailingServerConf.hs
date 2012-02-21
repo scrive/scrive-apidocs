@@ -1,6 +1,6 @@
 module MailingServerConf (
     MailingServerConf(..)
-  , MailsConfig(..)
+  , SenderConfig(..)
   ) where
 
 import Data.Word
@@ -9,36 +9,37 @@ import Configuration
 data MailingServerConf = MailingServerConf {
     mscHttpBindAddress :: (Word32, Word16)
   , mscDBConfig        :: String
-  , mscMailsConfig     :: MailsConfig
+  , mscMasterSender    :: SenderConfig
+  , mscSlaveSender     :: Maybe SenderConfig
   } deriving (Read, Show)
 
-data MailsConfig = MailsSendgrid {
-    sendgridSMTP         :: String
-  , sendgridRestAPI      :: String
-  , sendgridUser         :: String
-  , sendgridPassword     :: String
+data SenderConfig = SMTPSender {
+    serviceName        :: String
+  , smtpAddr           :: String
+  , smtpUser           :: String
+  , smtpPassword       :: String
   }
-  | MailsSendmail
-  | MailsLocal {
-    localDirectory       :: FilePath
-  , localOpenCommand     :: Maybe String
+  | LocalSender {
+    localDirectory     :: FilePath
+  , localOpenCommand   :: Maybe String
   } deriving (Read, Show)
 
--- MailsSendgrid  {
---     sendgridSMTP = "smtps://smtp.sendgrid.net"
---   , sendgridRestAPI = "https://sendgrid.com/api"
---   , sendgridUser= "duzyrak@gmail.com"
---   , sendgridPassword = "zimowisko"
+-- SMTPSender {
+--     serviceName = "SendGrid"
+--   , smtpAddr = "smtps://smtp.sendgrid.net"
+--   , smtpUser= "duzyrak@gmail.com"
+--   , smtpPassword = "zimowisko"
 -- }
 
 instance Configuration MailingServerConf where
   confDefault = MailingServerConf {
       mscHttpBindAddress = (0x7f000001, 6666)
     , mscDBConfig = "user='kontra' password='kontra' dbname='kontrakcja'"
-    , mscMailsConfig = MailsLocal {
+    , mscMasterSender = LocalSender {
         localDirectory = "/tmp"
       , localOpenCommand = Nothing
     }
+    , mscSlaveSender = Nothing
   }
   confOptions = []
   confVerify _ = return $ Right ()

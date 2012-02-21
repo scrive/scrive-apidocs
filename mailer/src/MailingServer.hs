@@ -19,6 +19,7 @@ import Mails.Tables
 import MailingServerConf
 import Network
 import Sender
+import ServiceChecker
 import qualified Log (withLogger, mailingServer)
 
 main :: IO ()
@@ -31,13 +32,18 @@ main = Log.withLogger $ do
   E.bracket (do
     let (iface, port) = mscHttpBindAddress conf
         handlerConf = nullConf { port = fromIntegral port }
-        sender = createSender $ mscMailsConfig conf
+        sender = createSender $ mscMasterSender conf
         (routes, overlaps) = R.compile handlers
+        dbconf = mscDBConfig conf
+    msender <- newMVar sender
     maybe (return ()) Log.mailingServer overlaps
     socket <- listenOn (htonl iface) $ fromIntegral port
     t1 <- forkIO $ simpleHTTPWithSocket socket handlerConf (router rng conf routes)
-    t2 <- forkIO $ dispatcher rng sender $ mscDBConfig conf
-    return [t1, t2]
+    t2 <- forkIO $ dispatcher rng sender msender dbconf
+    t3 <- case mscSlaveSender conf of
+      Just slave -> return `fmap` (forkIO $ serviceAvailabilityChecker rng dbconf (sender, createSender slave) msender)
+      Nothing -> return []
+    return $ t1 : t2 : t3
    ) (mapM_ killThread) (\_ -> do
      waitForTermination
      Log.mailingServer $ "Termination request received"
