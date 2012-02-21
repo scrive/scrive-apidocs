@@ -34,13 +34,14 @@ class DocHelper
     @wait.until { (@driver.find_elements :css => "a.documenticon").length>0 }
     (@wait.until { (@driver.find_elements :css => "a.documenticon").first }).click
     (@wait.until { @driver.find_element :css => "input.multiFileInput" }).send_keys @ctx.props.contract_pdf_path
-    @wait.until { @driver.find_element :css => "form.stepForm" }
+    puts "waiting for pages"
+    @wait.until { @driver.find_element :css => "#page1" }
   end
 
   def enterCounterpart(fstname, sndname, email)
-    (@wait.until { @driver.find_element :xpath => "//span[@class='persondetails currentPerson']//input[@name='signatoryfstname']" }).send_keys fstname
-    (@wait.until { @driver.find_element :xpath => "//span[@class='persondetails currentPerson']//input[@name='signatorysndname']" }).send_keys sndname
-    (@wait.until { @driver.find_element :xpath => "//span[@class='persondetails currentPerson']//input[@name='signatoryemail']" }).send_keys email
+    (@wait.until { @driver.find_element :xpath => "//div[@class='sigview'][2]//input[@name='fstname']" }).send_keys fstname
+    (@wait.until { @driver.find_element :xpath => "//div[@class='sigview'][2]//input[@name='sndname']" }).send_keys sndname
+    (@wait.until { @driver.find_element :xpath => "//div[@class='sigview'][2]//input[@name='email']" }).send_keys email
   end
 
   def addAuthorCustomField(fieldname, fieldvalue)
@@ -101,9 +102,15 @@ class DocHelper
   end
 
   def signAndSend
-    (@wait.until { @driver.find_element :id => "signinvite" }).click
-    (@wait.until { @driver.find_element :css => "#dialog-confirm-signinvite a.submiter" }).click
-    @wait.until { (@driver.find_elements :id => "dialog-confirm-signinvite").length==0 && (@driver.find_element :css => ".modal-container") }
-    (@wait.until { @driver.find_element :css => ".modal-container a.close" }).click
+    (@wait.until { @driver.find_element :css => ".finalbutton" }).click
+    puts "Final aproval modal"
+    acceptStandardModal 
+    puts "Closing confirmation modal"
+    acceptStandardModal 
   end
+
+ def acceptStandardModal
+    (@wait.until { @driver.find_element :css => ".modal-footer .btn-small.float-right" }).click
+ end   
+
 end

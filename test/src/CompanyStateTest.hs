@@ -1,7 +1,6 @@
 module CompanyStateTest (companyStateTests) where
 
 import Control.Monad
-import DB.Nexus
 import Test.Framework
 import qualified Data.ByteString.UTF8 as BS
 
@@ -9,7 +8,7 @@ import Company.Model
 import DB.Classes
 import TestingUtil
 
-companyStateTests :: Nexus -> Test
+companyStateTests :: DBEnv -> Test
 companyStateTests conn = testGroup "CompanyState" [
     testThat "CreateCompany works" conn test_createCompany
   , testThat "GetCompanies works" conn test_getCompanies
@@ -17,6 +16,7 @@ companyStateTests conn = testGroup "CompanyState" [
   , testThat "GetCompanyByExternalID works" conn test_getCompanyByExternalID
   , testThat "SetCompanyInfo works" conn test_setCompanyInfo
   , testThat "GetOrCreateCompanyWithExternalID works" conn test_getOrCreateCompanyWithExternalID
+  , testThat "UpdateCompanyUI works" conn test_updateCompanyUI
   ]
 
 test_createCompany :: DB ()
@@ -59,6 +59,18 @@ test_setCompanyInfo = do
   assertBool "CompanyInfo updated correctly" res
   Just Company{companyinfo = newci} <- dbQuery $ GetCompany cid
   assertBool "Returned CompanyInfo is correct" $ ci == newci
+
+test_updateCompanyUI :: DB ()
+test_updateCompanyUI = do
+  Company{companyid = cid, companyui} <- addTestCompany ""
+  let cui = companyui {
+    companybarsbackground = Just $ BS.fromString "blue"
+  , companylogo = Nothing
+  }
+  res <- dbUpdate $ UpdateCompanyUI cid cui
+  assertBool "CompanyUI updated correctly" res
+  Just Company{companyui = newcui} <- dbQuery $ GetCompany cid
+  assertEqual "Returned CompanyUI is correct" cui newcui
 
 test_getOrCreateCompanyWithExternalID :: DB ()
 test_getOrCreateCompanyWithExternalID = do

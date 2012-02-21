@@ -31,19 +31,18 @@ module Doc.DocStateQuery
     ) where
 
 import Control.Applicative
-import DB.Types
 import DB.Classes
 import DBError
 import Doc.Model
 import Doc.DocStateData
 import Company.Model
 import Kontra
+import MagicHash (MagicHash)
 import Util.SignatoryLinkUtils
 import qualified Log
 import Doc.DocInfo
 import User.Model
 import Data.Maybe
-import Data.Semantic
 
 {- |
    Assuming user is the logged in user, can he view the Document?
@@ -60,7 +59,8 @@ canUserViewDoc user doc =
     docIsSavedForUser =
       any (isSigLinkSavedFor user) $ documentsignatorylinks doc
     isSharedWithinCompany = isDocumentShared doc && isAuthoredWithinCompany
-    isAuthoredWithinCompany = isJust $ getSigLinkFor doc (And SignatoryAuthor $ usercompany user)
+    isAuthoredWithinCompany = (isJust $ getSigLinkFor doc SignatoryAuthor) 
+                              && (isJust $ getSigLinkFor doc $ usercompany user)
 
 {- |
    Securely find a document by documentid for the author or within their company.
@@ -120,6 +120,7 @@ getDocByDocIDSigLinkIDAndMagicHash :: Kontrakcja m
 getDocByDocIDSigLinkIDAndMagicHash docid sigid mh = do
   mdoc <- runDBQuery $ GetDocumentByDocumentID docid
   case mdoc of
-    Just doc | isJust $ getSigLinkFor doc (And mh sigid) -> return $ Right doc
+    Just doc | (isJust $ getSigLinkFor doc mh) 
+               && (isJust $ getSigLinkFor doc sigid) -> return $ Right doc
     _ -> return $ Left DBResourceNotAvailable
 

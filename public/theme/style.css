@@ -919,7 +919,6 @@ a.button {
     height: 1px;
     background: #dedede;
     position: relative;
-    display: none;
 }
 
 .pagediv .vline {
@@ -927,7 +926,6 @@ a.button {
     height: 100%;
     background: #dedede;
     position: relative;
-    display: none;
 }
 
 .placedfield, .placedfieldhelper {
@@ -1192,6 +1190,11 @@ input[type=submit].hidden
     position: relative; /* 008 new */
 }
 
+.saveIcon
+{
+    background-image: url(images/iconFloppy.png);
+}
+
 .switchIcon{
    background-image: url(images/iconSwitch.png);
 }
@@ -1266,14 +1269,17 @@ input[type=submit].hidden
 }
 
 /**/
-#signStepsBody
+.signStepsBody
 {
     color: #414241;
     background-image: url(images/signStepsBodyBorder.png);
     background-repeat: repeat-y;
     overflow: hidden;
     min-height: 100px;
-
+    padding:8px 19px;
+    border-left: 1px solid #BDBDBD;
+    border-right: 1px solid #BDBDBD;
+    border-bottom: 1px solid #C0C0C0;
 }
 
 .postSignStepBody {
@@ -1658,39 +1664,21 @@ input.multiFileInput {
     top:3px;
 }
 
-#signStepsMenu div.extraLink
+.tab-viewer .tabs a.extraLink
 {
-  padding-left: 7px;
-  padding-right: 7px;
-}
-
-#signStepsMenu .extraLink
-{
-    float:right;
-    font-size:11px;
-}
-
-.signStepsMenu .extraLink a
-{
-    margin-top:5px;
-    padding-top:2px;
-    padding-bottom:2px;
     display: inline-block;
+    height: 20px;
     background-position: 2px 0px;
     background-repeat: no-repeat;
     padding-left: 23px;
     color: #007CAC;
     cursor: pointer;
+    font-size: 9px;
+    font-family: 'Segoe UI',arial,verdana,'lucida sans unicode',tahoma,sans-serif;
 }
 
-.signStepsMenu .extraLink a:hover{
+.tab-viewer tabs a.extraLink:hover{
     color: #000000;
-}
-
-.signStepsBodySave a.submit
-{
-    background-image: url(images/iconFloppy.png);
-    padding-right: 19px;
 }
 
 /* 013 new */
@@ -2273,38 +2261,28 @@ form {
     width: 960px;
 }
 
-.step1icon {
+.numbericon1 {
     background-image: url(images/icon1.png);
-    background-position: 50% 50%;
     background-repeat: no-repeat;
     float: left;
-    height: 23px;
-    width: 23px;
+    height: 24px;
+    width: 24px;
 }
 
-.step2icon {
+.numbericon2 {
     background-image: url(images/icon2.png);
-    background-position: 50% 50%;
     background-repeat: no-repeat;
     float: left;
-    height: 23px;
-    width: 23px;
+    height: 24px;
+    width: 24px;
 }
 
-.step3icon {
+.numbericon3 {
     background-image: url(images/icon3.png);
-    background-position: 50% 50%;
     background-repeat: no-repeat;
     float: left;
-    height: 23px;
-    width: 23px;
-}
-
-#signStepsBody {
-    padding:8px 19px;
-    border-left: 1px solid #BDBDBD;
-    border-right: 1px solid #BDBDBD;
-    border-bottom: 1px solid #C0C0C0;
+    height: 24px;
+    width: 24px;
 }
 
 #signStepsBody.ericfix {
@@ -2849,14 +2827,32 @@ width: 340px;
     font-weight: bold;
 }
 
-.eleghidden .btn-small, #elegbuttons .btn-small {
+
+.nordea {
+    padding-top: 11px;
     margin-left: 15px;
     margin-right: 15px;
+    float: right;
+    height: 33px;
+    overflow:none;
+}
+.telia {
+    margin-left: 15px;
+    margin-right: 15px;
+    float: right;
+    height: 33px;
+    overflow:none;
 }
 
-.eleghidden .nordea, #elegbuttons .nordea {
-    padding-top: 13px;
+.bankid {
+    padding-top: 3px;
+    margin-left: 15px;
+    margin-right: 15px;
+    float: right;
+    height: 33px;
+    overflow:none;
 }
+
 
 .templatedDialogContainer{
     margin-top: 16px;

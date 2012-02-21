@@ -114,6 +114,9 @@ window.InfoTextInput = {
           var input = $("<input type='text'/>");
           if (args.cssClass != undefined)
               input.addClass(args.cssClass);
+          if (args.inputname != undefined)
+              input.attr('name',args.inputname);
+          
           if (args.style != undefined)
               input.attr("style", attr.style);
           var view = new InfoTextInputView({model : model, el : input});

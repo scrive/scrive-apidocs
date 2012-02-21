@@ -13,6 +13,7 @@ orderuploadprompttext=$_orderuploadprompttext()$
 ####
 uploadPage=   
 $loadingdialog()$
+<div class="tab-viewer">
 <div id="signStepsContainer" class="uploading">
   <script type="text/javascript">
     jQuery(UploadProcessMain);
@@ -23,30 +24,18 @@ $loadingdialog()$
 
   </div>
 
-
-  <div id="signStepsMenu" class="signStepsMenu">
-    <div id="step1select" class="current">
-      <span class="step1select clickArea"> </span>
-      <span class="step1select step1icon"> </span>
-      <span class="step1select text">$_step1select()$</span>
-    </div>
-    
-    <div id="step2select">
-      <span class="step2select clickArea"> </span>
-      <span class="step2select step2icon"> </span>
-      <span class="step2select text">$_step2select()$</span>
-    </div>
-    
-    <div id="step3select">
-      <span class="step3select clickArea"> </span>
-      <span class="step3select step3icon"> </span>
-      <span class="step3select text">$_step3select()$</span>
-    </div>
-    
-    <div id="signStepsMenuEmptyStep"></div>
-  </div>
-  
-  <div id="signStepsBody"> 
+    <ul class="tabs">
+       <li class="active">
+            <span class="numbericon1"></span><a href="#">$_step1select()$</a>
+      </li>
+      <li>
+            <span class="numbericon2"></span><a href="#">$_step2select()$</a>
+      </li>
+      <li>
+            <span class="numbericon3"></span><a href="#">$_step3select()$</a>
+      </li>   
+  </ul>
+  <div class="signStepsBody"> 
  
 <!-- MAIN FORM STARTS HERE -->
 <!-- Templates -->
@@ -115,6 +104,7 @@ $loadingdialog()$
   </tbody>
 </table>
 <!-- MAIN FROM END HERE --> 
+</div>
 </div>
 </div>
 ####

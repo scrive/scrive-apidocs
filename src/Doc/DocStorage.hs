@@ -60,7 +60,7 @@ getFileContents ctx file = do
 
 getFileIDContents :: Context -> FileID -> IO BS.ByteString
 getFileIDContents ctx fid = do
-  mfile <- ioRunDB (ctxdbconn ctx) . dbQuery $ GetFileByFileID fid
+  mfile <- ioRunDB (ctxdbenv ctx) . dbQuery $ GetFileByFileID fid
   case mfile of
     Just file -> getFileContents ctx file
     Nothing -> return BS.empty
@@ -195,8 +195,8 @@ maybeScheduleRendering fileid docid = do
            return (Map.insert fileid JpegPagesPending setoffilesrenderednow, (JpegPagesPending, True))
 
   when start $
-       forkAction ("Rendering file #" ++ show fileid ++ " of doc #" ++ show docid) $ \conn' -> do
-                let newctx = ctx { ctxdbconn = conn' }
+       forkAction ("Rendering file #" ++ show fileid ++ " of doc #" ++ show docid) $ \env' -> do
+                let newctx = ctx { ctxdbenv = env' }
                 jpegpages <- convertPdfToJpgPages newctx fileid docid
                 case jpegpages of
                      JpegPagesError _errmsg -> do
@@ -249,6 +249,7 @@ preCheckPDF' gscmd content tmppath =
                , Seal.hostpart       = "An example text"
                , Seal.fields         = []
                , Seal.staticTexts    = sealingTexts
+               , Seal.attachments    = []
                }
 
     sealingTexts = Seal.SealingTexts

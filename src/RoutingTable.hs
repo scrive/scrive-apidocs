@@ -20,12 +20,11 @@ import User.Model
 --import User.History.Model
 import qualified Stats.Control as Stats
 import qualified Administration.AdministrationControl as Administration
+import qualified Company.CompanyControl as Company
 import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
-import qualified Contacts.ContactsControl as Contacts
 import qualified Doc.DocControl as DocControl
 import qualified Archive.Control as ArchiveControl
 import qualified ELegitimation.BankID as BankID
-import qualified Payments.PaymentsControl as Payments
 import qualified User.UserControl as UserControl
 import qualified API.MailAPI as MailAPI
 import Doc.API
@@ -132,6 +131,9 @@ staticRoutes = choice
      , dir "d"                     $ hPost $ toK1 $ DocControl.handleIssueShowPost
      , dir "docs"                  $ hGet  $ toK0 $ DocControl.jsonDocumentsList
      , dir "doc"                   $ hGet  $ toK1 $ DocControl.jsonDocument
+     , dir "save"                  $ hPost $ toK1 $ DocControl.handleSaveDraft
+     , dir "setattachments"        $ hPost $ toK1 $ DocControl.handleSetAttachments -- Since setting attachments can have file upload, we need extra handler for it.
+     , dir "parsecsv"              $ hPost $ toK0 $ DocControl.handleParseCSV
      , dir "mailpreview"           $ hGet  $ toK2 $ DocControl.prepareEmailPreview
 
      , dir "df"                    $ hGet  $ toK2 $ DocControl.handleFileGet
@@ -164,13 +166,15 @@ staticRoutes = choice
      , dir "account" $ hPost $ toK2 $ UserControl.handlePostChangeEmail
      , dir "account" $ dir "security" $ hGet $ toK0 $ UserControl.handleGetUserSecurity
      , dir "account" $ dir "security" $ hPost $ toK0 $ UserControl.handlePostUserSecurity
+     , dir "account" $ dir "company" $ hGet $ toK0 $ Company.handleGetCompany
+     , dir "account" $ dir "company" $ hPost $ toK0 $ Company.handlePostCompany
+     , dir "account" $ dir "company" $ dir "json" $ hGet $ toK0 $ Company.handleGetCompanyJSON
+     , dir "account" $ dir "company" $ hGet $ toK1 $ Company.handleCompanyLogo
      , dir "account" $ dir "mailapi" $ hGet $ toK0 $ UserControl.handleGetUserMailAPI
      , dir "account" $ dir "mailapi" $ hPost $ toK0 $ UserControl.handlePostUserMailAPI
      , dir "account" $ dir "usagestats" $ hGet $ toK0 $ UserControl.handleUsageStatsForUser
      , dir "account" $ dir "usagestats" $ dir "days"   $ dir "json" $ hGet $ toK0 $ UserControl.handleUsageStatsJSONForUserDays
      , dir "account" $ dir "usagestats" $ dir "months" $ dir "json" $ hGet $ toK0 $ UserControl.handleUsageStatsJSONForUserMonths
-     , dir "contacts"  $ hGet  $ toK0 $ Contacts.showContacts
-     , dir "contacts"  $ hPost $ toK0 $ Contacts.handleContactsChange
      , dir "accepttos" $ hGet  $ toK0 $ UserControl.handleAcceptTOSGet
      , dir "accepttos" $ hPost $ toK0 $ UserControl.handleAcceptTOSPost
 
@@ -219,9 +223,6 @@ staticRoutes = choice
      , dir "adminonly" $ dir "runstatssigs" $ hGet $ toK0 $ Stats.addAllSigsToStats
 
      , dir "adminonly" $ dir "statistics"        $ hGet  $ toK0 $ Stats.showAdminSystemUsageStats
-     , dir "adminonly" $ dir "payments"          $ hGet  $ toK0 $ Payments.handlePaymentsModelForViewView
-     , dir "adminonly" $ dir "advpayments"       $ hGet  $ toK0 $ Payments.handlePaymentsModelForEditView
-     , dir "adminonly" $ dir "advpayments"       $ hPost $ toK0 $ Payments.handleAccountModelsChange
 
      , dir "adminonly" $ dir "services" $ hGet $ toK0 $ Administration.showServicesPage
      , dir "adminonly" $ dir "services" $ param "create" $ hPost $ toK0 $ Administration.handleCreateService

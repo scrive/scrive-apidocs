@@ -138,6 +138,7 @@ var ConfirmationWithEmailView = Backbone.View.extend({
     },
     render: function () {
        var model = this.model;
+       var view = this;
        this.el.addClass("modal-container");
        this.el.addClass("email-preview");
 	   
@@ -146,7 +147,7 @@ var ConfirmationWithEmailView = Backbone.View.extend({
        var title = $("<span class='modal-title'/>");
        title.append($("<h2/>").append(this.model.title()));
        header.append(title);
-       header.append("<a class='modal-close close'/a>");
+       header.append("<a class='modal-close close'/>");
 	   
 	   //Modal body
        var body = $("<div class='modal-body'>");
@@ -169,7 +170,8 @@ var ConfirmationWithEmailView = Backbone.View.extend({
                                  text: this.model.acceptText(),
                                  onClick : function() { 
 									 var customtext = mailview.customtext();
-									 model.accept(customtext); 
+									 var res = model.accept(customtext); 
+                                                                         if (res == true) view.el.data("overlay").close();
 									 
 								}
         });
@@ -182,7 +184,7 @@ var ConfirmationWithEmailView = Backbone.View.extend({
     reject: function(){
         this.clear();
     },
-	edit: function(){
+    edit: function(){
 		this.editOption.remove();
 		this.model.mail().makeEditable();
 		return false;

@@ -743,25 +743,6 @@ a.new-btn-small.black p {
 }
 
 
-/* Body Drop Shadow */
-
-.body-container .drop-shadow-container {
-	position: relative;
-	width: 1040px;
-	z-index: 0;
-}
-
-.body-container .drop-shadow {
-	background: url(../img/bg-drop-shadow.png);
-	bottom: -11px;
-	height: 22px;
-	position: absolute;
-	left: -50px;
-	overflow: hidden;
-	width: 1040px;
-	z-index: -1;
-}
-
 /* Body Price Plan */
 
 .body-container .price-plan-container {

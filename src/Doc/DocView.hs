@@ -12,11 +12,9 @@ module Doc.DocView (
   , flashMessageRubbishRestoreDone
   , flashMessageRubbishHardDeleteDone
   , flashMessageBulkRemindsSent
-  , flashMessageCSVHasTooManyRows
   , flashMessageCSVSent
   , flashMessageCanceled
   , flashMessageCannotCancel
-  , flashMessageFailedToParseCSV
   , flashMessageInvalidCSV
   , flashMessageMultipleAttachmentShareDone
   , flashMessageMultipleTemplateShareDone
@@ -61,8 +59,6 @@ module Doc.DocView (
   , csvLandPage
   ) where
 
-import DB.Types
-import Doc.CSVUtils
 import Doc.DocProcess
 import Doc.DocRegion
 import Doc.DocStateData
@@ -72,6 +68,7 @@ import FlashMessage
 import Kontra
 import KontraLink
 import ListUtil
+import MagicHash (MagicHash)
 import MinutesTime
 import Misc
 import Templates.Templates
@@ -80,7 +77,7 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import User.Model
 import Doc.JSON()
-
+import Doc.DocInfo
 import Control.Applicative ((<$>))
 import Control.Monad.Reader
 import Data.Char (toUpper)
@@ -90,9 +87,10 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import Text.JSON
 import Data.List (intercalate)
---import Happstack.State (query)
 import File.Model
 import DB.Classes
+import Text.JSON.Fields as JSON (json)
+import qualified Text.JSON.Fields as JSON (field)
 
 
 
@@ -212,14 +210,6 @@ flashAuthorSigned :: TemplatesMonad m => m FlashMessage
 flashAuthorSigned =
   toFlashMsg OperationDone <$> renderTemplateM "flashAuthorSigned" ()
 
-flashMessageFailedToParseCSV :: TemplatesMonad m => m FlashMessage
-flashMessageFailedToParseCSV =
-  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageFailedToParseCSV" ()
-
-flashMessageCSVHasTooManyRows :: TemplatesMonad m => Int -> m FlashMessage
-flashMessageCSVHasTooManyRows maxrows =
-  toFlashMsg OperationFailed <$> (renderTemplateFM "flashMessageCSVHasTooManyRows" $ field "maxrows" maxrows)
-
 flashMessageBulkRemindsSent :: TemplatesMonad m => DocumentType -> m FlashMessage
 flashMessageBulkRemindsSent doctype = do
   toFlashMsg OperationDone <$> renderTextForProcess doctype processflashmessagebulkremindssent
@@ -296,6 +286,7 @@ documentJSON msl _crttime doc = do
        ("authorattachments", return $ JSArray $ jsonPack <$> fileJSON <$> catMaybes authorattachmentfiles),
        --("signatoryattachments", return $ JSArray $ jsonPack <$> fileJSON <$> catMaybes ),
        ("process", processJSON doc ),
+       ("region",  liftIO $ regionJSON doc ),
        ("infotext", JSString <$> toJSString <$> documentInfoText ctx doc msl),
        ("canberestarted", return $ JSBool $  isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])),
        ("canbecanceled", return $ JSBool $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending && isNothing (documenttimeouttime doc)),
@@ -303,7 +294,11 @@ documentJSON msl _crttime doc = do
        ("status", return $ JSString $ toJSString $ show $ documentstatus doc),
        ("signatories", JSArray <$>  mapM (signatoryJSON doc msl signatoryattachmentsfiles) (documentsignatorylinks doc)),
        ("signorder", return $ JSRational True (toRational $ unSignOrder $ documentcurrentsignorder doc)),
-       ("authorization", return $ authorizationJSON $ head $ (documentallowedidtypes doc) ++ [EmailIdentification])
+       ("authorization", return $ authorizationJSON $ head $ (documentallowedidtypes doc) ++ [EmailIdentification] ),
+       ("template", return $ JSBool $ isTemplate doc),
+       ("functionality", return $ JSString $ toJSString $ "basic" <| documentfunctionality doc == BasicFunctionality |> "advanced"),
+       ("daystosign", return $ maybe JSNull (JSRational True . toRational) $ documentdaystosign doc),
+       ("invitationmessage", return $ if (BS.null $ documentinvitetext doc ) then JSNull else JSString $ toJSString $ BS.toString $ documentinvitetext doc)  
      ]
 
 authorizationJSON :: IdentificationType -> JSValue
@@ -326,10 +321,13 @@ signatoryJSON doc viewer files siglink = fmap (JSObject . toJSObject) $ propagat
       , ("seendate", return $ jsonDate $ signtime <$> maybeseeninfo siglink)
       , ("readdate", return $ jsonDate $ maybereadinvite siglink)
       , ("rejecteddate", return $ jsonDate $ rejectedDate)
-      , ("fields", return $ signatoryFieldsJSON doc siglink)
+      , ("fields", liftIO $ signatoryFieldsJSON doc siglink)
       , ("status", return $ JSString $ toJSString  $ show $ signatoryStatusClass doc siglink)
       , ("attachments", return $ JSArray $ map (signatoryAttachmentJSON files) $
                         filter ((==) (getEmail siglink) . signatoryattachmentemail)  (documentsignatoryattachments doc))
+      , ("csv", case (csvcontents <$> signatorylinkcsvupload siglink) of
+                     Just a1 ->  return $ JSArray $ for a1 (\a2 -> JSArray $ map (JSString . toJSString . BS.toString) a2 )
+                     Nothing -> return $ JSNull) 
    ]
     where
     datamismatch = case documentcancelationreason doc of
@@ -340,7 +338,6 @@ signatoryJSON doc viewer files siglink = fmap (JSObject . toJSObject) $ propagat
                         | slid == signatorylinkid siglink -> Just rt
                     _                             -> Nothing
 
-
 signatoryAttachmentJSON :: [(FileID, File)] -> SignatoryAttachment -> JSValue
 signatoryAttachmentJSON files sa = JSObject $ toJSObject $
   let mfile = maybe Nothing (\fid -> lookup fid files) (signatoryattachmentfile sa)
@@ -349,27 +346,28 @@ signatoryAttachmentJSON files sa = JSObject $ toJSObject $
      , ("file", fromMaybe JSNull $ jsonPack <$> fileJSON <$> mfile)
      ]
 
-signatoryFieldsJSON:: Document -> SignatoryLink -> JSValue
-signatoryFieldsJSON doc SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}} = JSArray $
-  for signatoryfields $ \sf@SignatoryField{sfType, sfValue, sfPlacements} ->
-    case sfType of
-      FirstNameFT -> fieldJSON doc "fstname" sfValue True sfPlacements
-      LastNameFT -> fieldJSON doc "sndname" sfValue True sfPlacements
-      EmailFT -> fieldJSON doc "email" sfValue True sfPlacements
-      PersonalNumberFT -> fieldJSON doc "sigpersnr" sfValue (closedF sf) sfPlacements
-      CompanyFT -> fieldJSON doc "sigco" sfValue (closedF sf) sfPlacements
-      CompanyNumberFT -> fieldJSON doc "sigcompnr" sfValue (closedF sf) sfPlacements
-      CustomFT label closed -> fieldJSON doc (BS.toString label) sfValue closed sfPlacements
-  where
-    closedF sf = (not $ BS.null $ sfValue sf) || (null $ sfPlacements sf)
 
-fieldJSON :: Document -> String -> BS.ByteString -> Bool -> [FieldPlacement] -> JSValue
-fieldJSON  doc name value closed placements = JSObject $ toJSObject $
-    [   ("name", JSString $ toJSString name)
-      , ("value", jsStringFromBS value)
-      , ("closed", JSBool closed)
-      , ("placements", JSArray $ map (placementJSON doc) placements)
-    ]
+signatoryFieldsJSON:: Document -> SignatoryLink -> IO JSValue
+signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}}) = fmap JSArray $
+  forM signatoryfields $ \sf@SignatoryField{sfType, sfValue, sfPlacements} ->
+    case sfType of
+      FirstNameFT -> fieldJSON doc "fstname" sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      LastNameFT -> fieldJSON doc "sndname" sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      EmailFT -> fieldJSON doc "email" sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      PersonalNumberFT -> fieldJSON doc "sigpersnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      CompanyFT -> fieldJSON doc "sigco" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      CompanyNumberFT -> fieldJSON doc "sigcompnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      SignatureFT -> fieldJSON doc "signature" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      CustomFT label closed -> fieldJSON doc (BS.toString label) sfValue (closed  && (not $ isPreparation doc))  sfPlacements
+  where
+    closedF sf = ((not $ BS.null $ sfValue sf) || (null $ sfPlacements sf))
+
+fieldJSON :: Document -> String -> BS.ByteString -> Bool -> [FieldPlacement] -> IO JSValue
+fieldJSON  doc name value closed placements = json $ do
+    JSON.field "name" name
+    JSON.field "value" $ BS.toString value
+    JSON.field "closed" closed
+    JSON.field "placements"  $ map (placementJSON doc) placements
 
 placementJSON :: Document -> FieldPlacement -> JSValue
 placementJSON doc placement = JSObject $ toJSObject $
@@ -395,10 +393,10 @@ processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
       , ("validationchoiceforbasic", bool processvalidationchoiceforbasic)
       , ("expiryforbasic", bool processexpiryforbasic)
       , ("step1text", text processstep1text )
-      , ("expirywarntext ", text processexpirywarntext )
+      , ("expirywarntext", text processexpirywarntext )
       , ("sendbuttontext", text processsendbuttontext )
       , ("confirmsendtitle", text processconfirmsendtitle )
-      , ("confirmsendtext ", text processconfirmsendtext )
+      , ("confirmsendtext", text processconfirmsendtext )
       , ("expirytext", text processexpirytext )
       -- some buttons texts
       , ("restartbuttontext", text processrestartbuttontext)
@@ -421,10 +419,26 @@ processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
       , ("signbuttontextauthor", text processsignbuttontextauthor)
       , ("signatorysignmodaltitle", text processsignatorysignmodaltitle)
       , ("authorsignlastbutton", text processauthorsignlastbuttontext)
+      
+      , ("authorname", text processauthorname)
+      , ("authorsignatoryname", text processauthorsignatoryname)
+      , ("signatoryname", text processsignatoryname)
+      , ("nonsignatoryname", text processnonsignatoryname)
+      , ("numberedsignatories", bool processnumberedsignatories)
+
      ]
     where
         text  k = JSString <$> toJSString <$> renderTextForProcess doc k
         bool k = return $ JSBool <$> fromMaybe False $ getValueForProcess doc k
+
+        
+regionJSON  :: Document -> IO JSValue
+regionJSON doc = json $ do
+      JSON.field "haspeopleids" $ regionhaspeopleids $ getRegionInfo doc 
+      JSON.field "iselegavailable" $ regionelegavailable $ getRegionInfo doc 
+      JSON.field "gb" $ REGION_GB == getRegion doc
+      JSON.field "se" $ REGION_SE == getRegion doc
+
 
 fileJSON :: File ->  [(String,String)]
 fileJSON file =
@@ -460,7 +474,8 @@ docFieldsListForJSON tl crtime doc =  propagateMonad [
     ("process", renderTextForProcess doc processname),
     ("type", renderDocType),
     ("anyinvitationundelivered", return $ show $ anyInvitationUndelivered  doc && Pending == documentstatus doc),
-    ("shared", return $ show $ (documentsharing doc)==Shared)
+    ("shared", return $ show $ (documentsharing doc)==Shared),
+    ("file", return $ fromMaybe "" $ show <$> (listToMaybe $ (documentsealedfiles doc) ++ (documentfiles doc)))
     ]
   where
     renderDocType :: (TemplatesMonad m) => m String
@@ -680,176 +695,13 @@ pageAttachment' iseditable msiglink doc@Document {documentid, documenttitle} =
       field "linkissuedocpdf" $ show (LinkIssueDocPDF msiglink doc)
 
 pageDocumentDesign :: TemplatesMonad m
-                   => Context
-                   -> Document
-                   -> (Maybe DesignStep)
-                   -> Bool
-                   -> [Document]
-                   -> [(FileID, File)]
+                   => Document
                    -> m String
-pageDocumentDesign ctx
-  document@Document {
-      documentsignatorylinks
-    , documentid
-    , documentdaystosign
-    , documentinvitetext
-  }
-  step
-  showadvancedoption
-  attachments
-  files =
-   let
-       documentdaystosignboxvalue = maybe 7 id documentdaystosign
-       authorotherfields fields = sequence .
-         map (\((s, label, _), i) ->
-           renderTemplateFM "customfield" $ do
-             field "otherFieldValue" $ sfValue s
-             field "otherFieldName"  $ label
-             field "otherFieldID"    $ "field" ++ show i
-             field "otherFieldOwner" "author")
-             $ zip fields ([1..]::[Int])
-       authorsiglink = fromJust $ getAuthorSigLink document
-   in do
-     csvstring <- renderTemplateM "csvsendoutsignatoryattachmentstring" ()
-     csvfields <- documentCsvFields document
+pageDocumentDesign document = do
      renderTemplateFM "pageDocumentDesign" $ do
-       fieldM "authorOtherFields" $ authorotherfields $ filterCustomField $ signatoryfields $ signatorydetails authorsiglink
-       field "linkissuedoc" $ show $ LinkIssueDoc documentid
-       field "documentinvitetext" $ documentinvitetext
-       fieldM "invitationMailContent" $ mailInvitationContent False ctx Sign document Nothing
-       field "documentdaystosignboxvalue" $ documentdaystosignboxvalue
-       field "docstate" (buildDocState (signatorydetails authorsiglink) documentsignatorylinks)
-       field "fromservice" (isJust $ ctxservice ctx)
-       field "showadvancedoption" showadvancedoption
-       documentAuthorInfo document
-       csvfields
-       documentFunctionalityFields document
-       documentInfoFields document
-       documentViewFields document
-       designViewFields step
-       documentAttachmentDesignFields documentid (documentauthorattachments document) files
-       documentAuthorAttachments attachments
-       documentSignatoryAttachments csvstring document (documentsignatoryattachments document)
-       fieldF "process" processFields
-       documentRegionFields document
-   where
-     getProcessText = renderTextForProcess document
-     getProcessValue = getValueForProcess document
-     processFields = do
-       field "isbasicavailable" $ getProcessValue processbasicavailable
-       field "isauthorsend" $ getProcessValue processauthorsend
-       field "isvalidationchoiceforbasic" $ getProcessValue processvalidationchoiceforbasic
-       field "isexpiryforbasic" $ getProcessValue processexpiryforbasic
-       fieldM "title" $ getProcessText processtitle
-       fieldM "step1text" $ getProcessText processstep1text
-       fieldM "expirywarntext" $ getProcessText processexpirywarntext
-       fieldM "sendbuttontext" $ getProcessText processsendbuttontext
-       fieldM "signbuttontext" $ getProcessText processsignbuttontext
-       fieldM "signbuttontextauthor" $ getProcessText processsignbuttontextauthor
-       fieldM "expirywarntext" $ getProcessText processexpirywarntext
-       fieldM "confirmsendtitle" $ getProcessText processconfirmsendtitle
-       fieldM "confirmsendtext" $ getProcessText processconfirmsendtext
-       fieldM "expirytext" $ getProcessText processexpirytext
+         field "isbasic" $ (documentfunctionality document) ==BasicFunctionality
+         field "documentid" $ show $ documentid document
 
-
-documentRegionFields :: (Functor m, MonadIO m) => Document -> Fields m
-documentRegionFields document = do
-  fieldF "region" regionFields
-  where
-    getRegionValue f = f $ getRegionInfo document
-    regionFields = do
-      field "haspeopleids" $ getRegionValue regionhaspeopleids
-      field "iselegavailable" $ getRegionValue regionelegavailable
-      field "gb" $ REGION_GB == getRegion document
-      field "se" $ REGION_SE == getRegion document
-
-documentAttachmentDesignFields :: (Functor m, MonadIO m) => DocumentID -> [AuthorAttachment] -> [(FileID, File)] -> Fields m
-documentAttachmentDesignFields docid atts files = do
-  field "isattachments" $ not $ null atts
-  field "attachmentcount" $ length atts
-  fieldFL "attachments" $ catMaybes $ map attachmentFields atts
-  where
-    attachmentFields AuthorAttachment{authorattachmentfile = fileid} =
-      case lookup fileid files of
-        Nothing -> Nothing
-        Just file -> Just $ do
-          field "attachmentid" $ show fileid
-          field "attachmentname" $ filename file
-          field "linkattachment" $ show (LinkAttachmentForAuthor docid fileid)
-
-documentFunctionalityFields :: MonadIO m => Document -> Fields m
-documentFunctionalityFields Document{documentfunctionality} = do
-  field "docfunctionality" $ show documentfunctionality
-  field "isbasic" $ documentfunctionality==BasicFunctionality
-
-documentCsvFields :: TemplatesMonad m => Document -> m (Fields m)
-documentCsvFields document@Document{documentallowedidtypes} =  do
-  let csvcustomfields = either (const [BS.fromString ""]) id $ getCSVCustomFields document
-      mcleancsv = (cleanCSVContents documentallowedidtypes (length csvcustomfields) . csvcontents) <$> (snd <$> mcsvupload)
-      csvproblems = maybe [] fst mcleancsv
-      csvdata = maybe [] (csvbody . snd) mcleancsv
-      csvPageSize :: Int = 10
-      csvpages = splitCSVDataIntoPages csvPageSize csvdata
-      mcsvupload = msum (zipWith check [0::Int ..] (documentsignatorylinks document))
-      check idx sl = case signatorylinkcsvupload sl of
-                       Just c -> Just (idx, c)
-                       Nothing -> Nothing
-  csvproblemfields <- sequence $ zipWith (csvProblemFields (length csvproblems)) [1..] csvproblems
-  return $ do
-    fieldFL "csvproblems" $ csvproblemfields
-    field "csvproblemcount" $ length csvproblems
-    fieldFL "csvpages" $ zipWith (csvPageFields csvproblems (length csvdata)) [0,csvPageSize..] csvpages
-    field "csvrowcount" $ length csvdata
-    field "csvcustomfields" $ csvcustomfields
-    field "isvalidcsv" $ null csvproblems
-    field "csvsigindex" $ (fst <$> mcsvupload)
-
-csvPageFields :: TemplatesMonad m => [CSVProblem] -> Int -> Int -> [[BS.ByteString]] -> Fields m
-csvPageFields problems totalrowcount firstrowindex xs = do
-  fieldFL "csvrows" $ zipWith (csvRowFields problems) [firstrowindex..] xs
-  field "isfirstcsvpage" $ firstrowindex==0
-  field "islastcsvpage" $ (firstrowindex+(length xs))==totalrowcount
-
-splitCSVDataIntoPages :: Int -> [a] -> [[a]]
-splitCSVDataIntoPages n xs =
-  case splitAt n xs of
-    (y,[]) -> [y]
-    (y,ys) -> y : splitCSVDataIntoPages n ys
-
-csvRowFields :: TemplatesMonad m => [CSVProblem] -> Int -> [BS.ByteString] -> Fields m
-csvRowFields problems rowindex xs = do
-  field "rownumber" $ rowindex + 1
-  fieldFL "csvfields" $ zipWith (csvFieldFields problems rowindex)
-                              [0..]
-                              xs
-  field "isproblem" $ any isRelevantProblem problems
-  where
-    isRelevantProblem CSVProblem{problemrowindex, problemcolindex} =
-      case (problemrowindex, problemcolindex) of
-        (Just r, Nothing) | rowindex==r -> True
-        _ -> False
-
-csvFieldFields :: TemplatesMonad m => [CSVProblem] -> Int -> Int -> BS.ByteString -> Fields m
-csvFieldFields problems rowindex colindex val = do
-  field "value" $ val
-  field "isproblem" $ any isRelevantProblem problems
-  where
-    isRelevantProblem CSVProblem{problemrowindex, problemcolindex} =
-      case (problemrowindex, problemcolindex) of
-        (Just r, Just c) | rowindex==r && colindex==c -> True
-        _ -> False
-
-csvProblemFields :: TemplatesMonad m => Int -> Int -> CSVProblem -> m (Fields m)
-csvProblemFields probcount number csvproblem = do
-    flashMsg <- problemdescription csvproblem
-    let desc = snd $ fromJust $ unFlashMessage flashMsg
-    return $ do
-      field "problemnumber" $ number
-      field "problemrow" $ fmap (+1) $ problemrowindex csvproblem
-      field "problemcol" $ fmap (+1) $ problemcolindex csvproblem
-      field "problemdesc" $ desc
-      field "isfirstproblem" $ (number==1)
-      field "islastproblem" $ (number==probcount)
 
 {- | Showing document to author after we are done with design -}
 
@@ -915,7 +767,7 @@ signatoryLinkFields
         PersonalNumberFT -> field "personalnumber" $ packToMString sfValue
         CompanyNumberFT -> field "companynumber" $ packToMString sfValue
         EmailFT -> field "email" $ packToMString sfValue
-        CustomFT _ _ -> return ()
+        _ -> return ()
       fieldFL "fields" $ for (filterCustomField signatoryfields) $
         \(s, label, _) -> do
           field "fieldlabel" label
@@ -1072,33 +924,6 @@ signedByMeFields _document siglnk = do
   field "iamauthor" $ maybe False isAuthor siglnk
 
 
-documentViewFields :: MonadIO m => Document -> Fields m
-documentViewFields Document{documentstatus} = do
-  field "addSignatoryScript" $ documentstatus /= Closed
-
-
-designViewFields :: MonadIO m => Maybe DesignStep -> Fields m
-designViewFields step = do
-    case step of
-        (Just (DesignStep3 _ _)) -> field "step3" True
-        (Just (DesignStep2 _ _ _ _)) -> field "step2" True
-        (Just (DesignStep1)) -> field "step1" True
-        _ -> field "step2" True
-    field "initialperson" $
-      case step of
-        (Just (DesignStep2 _ (Just part) _ _)) -> part
-        _ -> 0
-    field "isaftercsvupload" $
-      case step of
-        (Just (DesignStep2 _ _ (Just AfterCSVUpload) _)) -> True
-        _ -> False
-    field "signlast" $
-      case step of
-        (Just (DesignStep2 _ _ _ True)) -> True
-        (Just (DesignStep3 _ True)) -> True
-        _ -> False
-
-
 uploadPage :: TemplatesMonad m => (Maybe DocumentProcess) -> Bool -> m String
 uploadPage mdocprocess showTemplates = renderTemplateFM "uploadPage" $ do
     field "isprocessselected" $ isJust mdocprocess
@@ -1118,69 +943,6 @@ uploadPage mdocprocess showTemplates = renderTemplateFM "uploadPage" $ do
         fieldM "uploadprompttext" $ renderTextForProcess (Signable process) processuploadprompttext
         field "apiid" $ fromSafeEnumInt (Signable process)
 
-buildCustomJS :: SignatoryField -> Int -> JSValue
-buildCustomJS SignatoryField{sfType = CustomFT label _, sfValue, sfPlacements} i =
-  JSObject $ toJSObject [
-      ("label", jsStringFromBS label)
-    , ("value", jsStringFromBS $ sfValue)
-    , ("id", JSString $ toJSString $ "field" ++ show i)
-    , ("placements", JSArray $ map buildPlacementJS sfPlacements)
-  ]
-buildCustomJS SignatoryField{sfType} _ = error $ "buildCustomJS: field of type " ++ show sfType ++ " passed to function that handles only custom fields"
-
-buildPlacementJS :: FieldPlacement -> JSValue
-buildPlacementJS fp = JSObject $ toJSObject [
-    ("x", jsString $ placementx fp)
-  , ("y", jsString $ placementy fp)
-  , ("page", jsString $ placementpage fp)
-  , ("h", jsString $ placementpageheight fp)
-  , ("w", jsString $ placementpagewidth fp)
-  ]
-  where
-    jsString = JSString . toJSString . show
-
-buildSigLinkJS :: SignatoryLink -> JSValue
-buildSigLinkJS SignatoryLink{signatorydetails, signatoryroles} =
-  JSObject $ addRole $ buildSigJS signatorydetails
-  where
-    addRole = toJSObject . (:) ("role", role) . fromJSObject
-    role = JSString $ toJSString $ if SignatoryPartner `elem` signatoryroles
-              then "signatory"
-              else "viewer"
-
-buildSigJS :: SignatoryDetails -> JSObject JSValue
-buildSigJS SignatoryDetails{signatorysignorder, signatoryfields} =
-  toJSObject $ signorder ++ otherfields ++ fields
-  where
-    signorder = [("signorder", JSString $ toJSString $ show signatorysignorder)]
-    otherfields = [("otherfields", JSArray $ zipWith buildCustomJS (filter isFieldCustom signatoryfields) [1..])]
-    fields = concatMap (\sf ->
-      case sfType sf of
-        FirstNameFT -> sfJS sf "fstname" "fstnameplacements"
-        LastNameFT -> sfJS sf "sndname" "sndnameplacements"
-        CompanyFT -> sfJS sf "company" "companyplacements"
-        PersonalNumberFT -> sfJS sf "personalnumber" "personalnumberplacements"
-        CompanyNumberFT -> sfJS sf "companynumber" "companynumberplacements"
-        EmailFT -> sfJS sf "email" "emailplacements"
-        CustomFT _ _ -> error $ "buildSigJS: impossible happened"
-        ) $ filter (not . isFieldCustom) signatoryfields
-      where
-        sfJS sf name pname = [
-            (name, jsStringFromBS $ sfValue sf)
-          , (pname, JSArray $ map buildPlacementJS $ sfPlacements sf)
-          ]
-
-buildDocState :: SignatoryDetails -> [SignatoryLink] -> String
-buildDocState authordetails sigdetails = Text.JSON.encode $ JSObject (
-  toJSObject [
-      ("signatories", JSArray $ map buildSigLinkJS sigdetails)
-    , ("author", JSObject $ buildSigJS authordetails)
-    ]
-  )
-
-jsStringFromBS :: BS.ByteString -> JSValue
-jsStringFromBS = JSString . toJSString . BS.toString
-
 defaultInviteMessage :: BS.ByteString
 defaultInviteMessage = BS.empty
 
@@ -1197,23 +959,3 @@ documentsToFixView docs = do
             field "id" $ show $ documentid doc
             field "involved" $ map getEmail  $ documentsignatorylinks doc
             field "cdate" $  show $ documentctime doc
-
-documentAuthorAttachments :: (Functor m, MonadIO m) => [Document] -> Fields m
-documentAuthorAttachments attachments =
-  fieldFL "existingattachments" $
-  for attachments (\doc -> do
-                      field "attachmentid" $ show (documentid doc)
-                      field "attachmentname" $ documenttitle doc)
-
-documentSignatoryAttachments :: (Functor m, MonadIO m) => String -> Document -> [SignatoryAttachment] -> Fields m
-documentSignatoryAttachments csvstring doc attachments =
-  let ats = buildattach csvstring doc attachments []
-  in fieldFL "sigattachments" $
-     for ats (\(n, d, sigs) -> do
-                 field "attachmentname" n
-                 field "attachmentdescription" d
-                 fieldFL "signatories" $
-                   for sigs (\(name, email) -> do
-                                field "signame" name
-                                field "sigemail" email))
-

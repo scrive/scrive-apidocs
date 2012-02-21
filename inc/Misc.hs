@@ -16,13 +16,11 @@ import Control.Concurrent
 import Control.Monad.State
 import Data.Char
 import Data.Data
-import Data.Int
 import Data.List
 import Data.Maybe
 import Data.Monoid
 import Data.Word
 import Numeric (readDec)
-import Happstack.Data.IxSet as IxSet
 import Happstack.Server hiding (simpleHTTP,dir)
 import Happstack.State
 import Happstack.Util.Common hiding  (mapFst,mapSnd)
@@ -31,7 +29,7 @@ import System.Exit
 import System.IO
 import System.IO.Temp
 import System.Process
-import System.Random (randomRIO)
+import Crypto.RNG (CryptoRNG, randomR)
 import System.Time
 import qualified Log
 import qualified Codec.Binary.Url as URL
@@ -40,7 +38,6 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS
-import qualified GHC.Conc
 import Data.Bits
 
 -- | Infix version of mappend, provided for convenience.
@@ -51,6 +48,8 @@ infixr 6 <++>
 -- We want this operators to bind strongly but weeker then . to do cond1 &&^ not . cond2
 infixl 8  &&^
 infixl 8  ||^
+infixr 9 $^ 
+infixr 9 $^^
 
 selectFormAction :: (HasRqData m, MonadIO m,MonadPlus m,ServerMonad m) => [(String,m a)] -> m a
 selectFormAction [] = mzero
@@ -66,48 +65,11 @@ guardFormAction button = do
 concatChunks :: BSL.ByteString -> BS.ByteString
 concatChunks = BS.concat . BSL.toChunks
 
--- | Get a unique index value in a set. Unique number is 31 bit in
--- this function.  First argument is set, second is index constructor.
---
--- See also 'getUnique64'.
-getUnique
-  :: (Indexable a,
-      Typeable a,
-      Ord a,
-      Typeable k,
-      Monad (t GHC.Conc.STM),
-      MonadTrans t) =>
-     IxSet a -> (Int -> k) -> Ev (t GHC.Conc.STM) k
-getUnique ixset constr = do
-  r <- getRandomR (0,0x7fffffff::Int)
-  let v = constr r
-  if IxSet.null (ixset @= v)
-     then return v
-     else getUnique ixset constr
-
--- | Get a unique index value in a set. Unique number is 31 bit in
--- this function.  First argument is set, second is index constructor.
---
--- See also 'getUnique64'.
-getUnique64
-  :: (Indexable a,
-      Typeable a,
-      Ord a,
-      Typeable k,
-      Monad (t GHC.Conc.STM),
-      MonadTrans t) =>
-     IxSet a -> (Int64 -> k) -> Ev (t GHC.Conc.STM) k
-getUnique64 ixset constr = do
-  r <- getRandomR (0,0x7fffffffffffffff::Int64)
-  let v = constr r
-  if IxSet.null (ixset @= v)
-     then return v
-     else getUnique64 ixset constr
-
--- | Generate random string of specified length that contains allowed chars
-randomString :: MonadIO m => Int -> [Char] -> m String
-randomString n allowed_chars = liftIO $
-    sequence $ replicate n $ ((!!) allowed_chars <$> randomRIO (0, len))
+-- | Generate random string of specified length that contains allowed
+-- chars.
+randomString :: (MonadIO m, CryptoRNG m) => Int -> [Char] -> m String
+randomString n allowed_chars =
+    sequence $ replicate n $ ((!!) allowed_chars `liftM` randomR (0, len))
     where
         len = length allowed_chars - 1
 
@@ -378,9 +340,9 @@ thd3 (_,_,c) = c
 
 -- HTTPS utils
 
-isSecure::(ServerMonad m,Functor m) => m Bool
+isSecure::ServerMonad m => m Bool
 isSecure = do
-     (Just (BS.fromString "http") /=) <$> (getHeaderM "scheme")
+     (Just (BS.fromString "http") /=) `liftM` (getHeaderM "scheme")
 
 isHTTPS :: (ServerMonad m) => m Bool
 isHTTPS = do
@@ -452,6 +414,14 @@ maybeReadM c = join <$> fmap maybeRead <$> c
 
 maybeRead::(Read a) => String -> Maybe a
 maybeRead s = case reads s of
+            [(v,"")] -> Just v
+            _        -> Nothing
+
+maybeReadIntM::(Monad m,Functor m) => m (Maybe String) -> m (Maybe Int)
+maybeReadIntM c = join <$> fmap maybeReadInt <$> c
+
+maybeReadInt::String -> Maybe Int
+maybeReadInt s = case readDec s of
             [(v,"")] -> Just v
             _        -> Nothing
 
@@ -637,6 +607,15 @@ basename filename =
   case break (\x -> (x=='\\') || (x=='/')) filename of
     (_,(_:rest)) -> basename rest
     _            -> takeWhile ((/=) '.') filename
+
+($^) :: Maybe (a -> a) -> a -> a
+($^) Nothing  a = a
+($^) (Just f) a = f a
+
+($^^) :: [a -> a] -> a -> a
+($^^) []  a = a
+($^^) (f : fs) a = fs $^^ f a
+
 
 toCSV :: [String] -> [[String]] -> String
 toCSV header ls =

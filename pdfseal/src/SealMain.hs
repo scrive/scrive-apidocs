@@ -7,6 +7,28 @@ import SealSpec
 import System.Directory
 import Data.List
 import Control.Exception
+import qualified Data.ByteString.Base64 as Base64
+import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString as BS
+
+
+addBarackObamaField :: IO Field
+addBarackObamaField = do
+  bin <- BS.readFile "pdfseal/test/barack-obama-signature.jpg"
+  let (w1,h1) = (523,247)
+  let base64 = Base64.encode bin
+  return $ FieldJPG
+         { valueBase64 = BS.toString base64
+         , internal_image_w = w1
+         , internal_image_h = h1
+         , image_w = w1
+         , image_h = h1
+         , x = 7
+         , y = 7
+         , page = 1
+         , w = 770
+         , h = 1085
+         }
 
 sealspec :: String -> SealSpec
 sealspec filename = SealSpec
@@ -48,6 +70,16 @@ sealspec filename = SealSpec
                , Field {value = "Gracjan Polak", x = 681, y = 1058, page = 1, w = 770, h = 1085}
                , Field {value = "gracjan@mail.com", x = 121, y = 347, page = 1,w = 770, h = 1085}]
     , staticTexts = sampleSealingTexts
+    , attachments = [ SealAttachment { fileName = "SkrivaPå attachment 1.txt"
+                                     , fileBase64Content = "214124124123412341234"
+                                     }
+                    , SealAttachment { fileName = "SkrivaPå attachment 2.html"
+                                     , fileBase64Content = "26345645636534563454"
+                                     }
+                    , SealAttachment { fileName = "SkrivaPå attachment 2b.pdf"
+                                     , fileBase64Content = "2632345234534563454"
+                                     }
+                    ]
     }
 
 
@@ -71,6 +103,12 @@ sampleSealingTexts = SealingTexts
 processFile :: String -> IO ()
 processFile filename = do
   process (sealspec filename)
+
+processWithObama :: SealSpec -> IO ()
+processWithObama sealspec = do
+  obama <- addBarackObamaField
+  let sealspec2 = sealspec { fields = obama : fields sealspec }
+  process sealspec2
 
 sealAllInTest :: IO ()
 sealAllInTest = do
@@ -127,6 +165,16 @@ simple_upsales_confirmation = SealSpec
                , Field {value = "Gracjan Polak", x = 681, y = 1058, page = 1, w = 770, h = 1085}
                , Field {value = "gracjan@mail.com", x = 121, y = 347, page = 1,w = 770, h = 1085}]
     , staticTexts = sampleSealingTexts
+    , attachments = [ SealAttachment { fileName = "SkrivaPa attachment 1.txt"
+                                     , fileBase64Content = "214124124123412341234"
+                                     }
+                    , SealAttachment { fileName = "SkrivaPa attachment 2.html"
+                                     , fileBase64Content = "26345645636534563454"
+                                     }
+                    , SealAttachment { fileName = "SkrivaPa attachment 2b.pdf"
+                                     , fileBase64Content = "2632345234534563454"
+                                     }
+                    ]
     }
 
 main :: IO ()

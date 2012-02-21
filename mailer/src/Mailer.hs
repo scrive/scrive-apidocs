@@ -5,20 +5,23 @@ module Mailer (
 
 import Control.Applicative
 import Control.Monad.Reader
-import DB.Nexus
 import Happstack.Server
 
+import Crypto.RNG (CryptoRNG, getCryptoRNGState)
 import DB.Classes
 import qualified Log (mailingServer)
 
-newtype Mailer a = Mailer { unMailer :: ServerPartT (ReaderT Nexus IO) a }
-  deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadIO, MonadPlus, ServerMonad, WebMonad Response)
+newtype Mailer a = Mailer { unMailer :: ServerPartT (ReaderT DBEnv IO) a }
+  deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadIO, MonadPlus, ServerMonad, WebMonad Response, MonadReader DBEnv)
+
+instance CryptoRNG Mailer where
+  getCryptoRNGState = asks rngstate
 
 instance DBMonad Mailer where
-  getConnection = Mailer ask
+  getDBEnv = Mailer ask
   handleDBError e = do
     Log.mailingServer $ "SQL error: " ++ show e
     finishWith =<< internalServerError (toResponse "Internal server error")
 
-runMailer :: Nexus -> Mailer a -> ServerPartT IO a
-runMailer conn = mapServerPartT (\r -> runReaderT r conn) . unMailer
+runMailer :: DBEnv -> Mailer a -> ServerPartT IO a
+runMailer env = mapServerPartT (\r -> runReaderT r env) . unMailer

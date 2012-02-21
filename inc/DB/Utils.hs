@@ -6,41 +6,37 @@ module DB.Utils (
   , oneRowAffectedGuard
   , oneObjectReturnedGuard
   , checkIfOneObjectReturned
-  , GetUniqueID
+  , checkIfAnyReturned
   , kRun
   , kRun01
-  , kQuickQuery
   , SQLType(..)
   , mkSQL
   ) where
 
-import Data.Int
+import Data.Convertible
 import Data.List
+import Data.Maybe
 import Data.Monoid
 import Database.HDBC as HDBC
-import System.Random (randomRIO)
+import Crypto.RNG
 import qualified Control.Exception as E
 
 import DB.Classes as DB
+import DB.Fetcher2
 import DB.Model
 import DB.SQL
-import Data.Convertible
-import Control.Monad
 
-class GetUniqueID m where
-    getUniqueIDField :: Table -> String -> m Int64
-
-getUniqueID :: (GetUniqueID m) => Table -> m Int64
+getUniqueID :: (Convertible a SqlValue, Random a) => Table -> DB a
 getUniqueID table = getUniqueIDField table "id"
 
-instance GetUniqueID DB where
-    getUniqueIDField table fieldname = do
-      muid <- wrapDB $ \conn -> do
-        uid <- randomRIO (0, maxBound)
-        st <- prepare conn $ "SELECT " ++ fieldname ++ " FROM " ++ tblName table ++ " WHERE " ++ fieldname ++ " = ?"
-        _ <- execute st [toSql uid]
-        fetchRow st >>= return . maybe (Just uid) (const Nothing)
-      maybe (getUniqueIDField table fieldname) return muid
+getUniqueIDField :: forall a. (Convertible a SqlValue, Random a) => Table -> String -> DB a
+getUniqueIDField table fieldname = do
+  muid <- do
+    uid <- random
+    kPrepare $ "SELECT " ++ fieldname ++ " FROM " ++ tblName table ++ " WHERE " ++ fieldname ++ " = ?"
+    _ <- kExecute [toSql uid]
+    foldDB (\_ (_::SqlValue) -> Nothing :: Maybe a) (Just uid)
+  maybe (getUniqueIDField table fieldname) return muid
 
 oneRowAffectedGuard :: Monad m => Integer -> m Bool
 oneRowAffectedGuard 0 = return False
@@ -66,20 +62,22 @@ checkIfOneObjectReturned xs =
     >>= return . maybe False (const True)
 
 getOne :: Convertible SqlValue a => String -> [SqlValue] -> DB (Maybe a)
-getOne query values = wrapDB $ \c ->
-  quickQuery' c query values
-    >>= oneObjectReturnedGuard . join
-    >>= return . fmap fromSql
+getOne query values = do
+  kPrepare query
+  _ <- kExecute values
+  foldDB (\acc v -> v : acc) []
+    >>= oneObjectReturnedGuard
+
+checkIfAnyReturned :: String -> [SqlValue] -> DB Bool
+checkIfAnyReturned query values =
+  (getOne query values :: DB (Maybe SqlValue))
+    >>= checkIfOneObjectReturned . maybeToList
 
 kRun :: SQL -> DB Integer
 kRun (SQL query values) = kPrepare query >> kExecute values
 
 kRun01 :: SQL -> DB Bool
 kRun01 (SQL query values) = kPrepare query >> kExecute01 values
-
-kQuickQuery :: SQL -> DB [[SqlValue]]
-kQuickQuery (SQL query values) = wrapDB $ \c -> quickQuery' c query values
-
 
 -- for INSERT/UPDATE statements generation
 

@@ -26,6 +26,7 @@ import Text.JSON (JSValue(..), toJSObject, toJSString)
 
 import AppView
 import DB.Classes
+import Company.CompanyControl (withCompanyAdmin)
 import Company.Model
 import CompanyAccounts.Model
 import CompanyAccounts.CompanyAccountsView
@@ -227,9 +228,9 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
                             userfstname = fstname
                           , usersndname = sndname
                           }
-        _ <- runDBUpdate $ 
-             LogHistoryUserInfoChanged (userid newuser') (ctxipnumber ctx) (ctxtime ctx) 
-                                       (userinfo newuser') 
+        _ <- runDBUpdate $
+             LogHistoryUserInfoChanged (userid newuser') (ctxipnumber ctx) (ctxtime ctx)
+                                       (userinfo newuser')
                                        ((userinfo newuser') { userfstname = fstname , usersndname = sndname })
                                        (userid <$> ctxmaybeuser ctx)
         newuser <- guardJustM $ runDBQuery $ GetUserByID (userid newuser')
@@ -263,9 +264,9 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
 -}
 handleResendToCompanyAccount :: Kontrakcja m => m ()
 handleResendToCompanyAccount = withCompanyAdmin $ \(user, company) -> do
-  resendid <- getCriticalField asValidNumber "resendid"
+  resendid <- getCriticalField asValidUserID "resendid"
   resendemail <- getCriticalField asValidEmail "resendemail"
-  muserbyid <- runDBQuery $ GetUserByID (UserID resendid)
+  muserbyid <- runDBQuery $ GetUserByID resendid
   mcompanybyid <- maybe (return Nothing) getCompanyForUser muserbyid
   minvite <- runDBQuery $ GetCompanyInvite (companyid company) (Email resendemail)
   muserbyemail <- runDBQuery $ GetUserByEmail Nothing (Email resendemail)
@@ -329,12 +330,12 @@ sendTakeoverCompanyInternalWarningMail inviter company user = do
 -}
 handleChangeRoleOfCompanyAccount :: Kontrakcja m => m ()
 handleChangeRoleOfCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
-  changeid <- getCriticalField asValidNumber "changeid"
+  changeid <- getCriticalField asValidUserID "changeid"
   makeadmin <- getFieldUTF "makeadmin"
-  changeuser <- guardJustM $ runDBQuery $ GetUserByID (UserID changeid)
+  changeuser <- guardJustM $ runDBQuery $ GetUserByID changeid
   changecompanyid <- guardJust $ usercompany changeuser
   guard $ changecompanyid == companyid company --make sure user is in same company
-  _ <- runDBUpdate $ SetUserCompanyAdmin (UserID changeid) (makeadmin == Just (BS.fromString "true"))
+  _ <- runDBUpdate $ SetUserCompanyAdmin changeid (makeadmin == Just (BS.fromString "true"))
   return ()
 
 {- |
@@ -343,9 +344,9 @@ handleChangeRoleOfCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
 -}
 handleRemoveCompanyAccount :: Kontrakcja m => m ()
 handleRemoveCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
-  removeid <- getCriticalField asValidNumber "removeid"
+  removeid <- getCriticalField asValidUserID "removeid"
   removeemail <- getCriticalField asValidEmail "removeemail"
-  mremoveuser <- runDBQuery $ GetUserByID (UserID removeid)
+  mremoveuser <- runDBQuery $ GetUserByID removeid
   mremovecompany <- maybe (return Nothing) getCompanyForUser mremoveuser
   isdeletable <- maybe (return False) isUserDeletable mremoveuser
 
@@ -426,7 +427,7 @@ resaveDocsForUser uid = do
   userdocs <- runDBQuery $ GetDocumentsByAuthor uid
   time <- ctxtime <$> getContext
   let actor = SystemActor time
-  mapM_ (\doc -> runDBUpdate $ AdminOnlySaveForUser (documentid doc) user actor) userdocs 
+  mapM_ (\doc -> runDBUpdate $ AdminOnlySaveForUser (documentid doc) user actor) userdocs
   return ()
 
 {- |
@@ -440,15 +441,3 @@ guardGoodForTakeover companyid = do
   _ <- guard $ isNothing (usercompany user)
   _ <- guardJustM $ runDBQuery $ GetCompanyInvite companyid (Email $ getEmail user)
   return ()
-
-{- |
-    Guards that there is a user that is logged in and is the admin
-    of a company.  The user and company are passed as params to the
-    given action, to save you having to look them up yourself.
--}
-withCompanyAdmin :: Kontrakcja m => ((User, Company) -> m a) -> m a
-withCompanyAdmin action = do
-  Context{ ctxmaybeuser } <- getContext
-  user <- guardJust ctxmaybeuser
-  company <- guardJustM $ getCompanyForUser user
-  if useriscompanyadmin user then action (user, company) else mzero

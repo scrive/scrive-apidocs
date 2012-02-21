@@ -40,6 +40,11 @@ Flag test-companystate
   Manual: True
   Default: True
 
+Flag test-companycontrol
+  Description: Build companycontrol testsuite
+  Manual: True
+  Default: True
+
 Flag test-docstate
   Description: Build docstate testsuite
   Manual: True
@@ -155,7 +160,8 @@ Executable kontrakcja-server
     ghc-options: -rtsopts
 
   Build-depends: Crypto == 4.2.*
-  Build-depends: crypto-api == 0.8
+  Build-depends: crypto-api == 0.7
+  Build-depends: DRBG == 0.2.3
   Build-depends: HDBC == 2.3.1.0
   Build-depends: HDBC-postgresql == 2.3.2.0
   Build-depends: HPDF == 1.4.2
@@ -172,6 +178,7 @@ Executable kontrakcja-server
   Build-depends: bytestring
   Build-depends: containers
   Build-depends: convertible == 1.0.11.0
+  Build-depends: crypto-api==0.7
   Build-depends: cryptocipher == 0.2.14
   Build-depends: dataenc == 0.14.0.2
   Build-depends: directory
@@ -326,6 +333,8 @@ Executable kontrakcja-test
 
   if !flag(test-companystate)
     cpp-options: -DNO_COMPANYSTATE
+  if !flag(test-companycontrol)
+    cpp-options: -DNO_COMPANYCONTROL
   if !flag(test-docstate)
     cpp-options: -DNO_DOCSTATE
   if !flag(test-html)
@@ -375,6 +384,7 @@ Executable kontrakcja-test
               RankNTypes,
               RecordWildCards,
               ScopedTypeVariables,
+              StandaloneDeriving,
               TemplateHaskell,
               TypeFamilies,
               TypeOperators,

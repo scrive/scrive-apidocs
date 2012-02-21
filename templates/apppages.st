@@ -26,18 +26,19 @@ standardHeaderContents=
         <meta http-equiv="content-language" content="$ctxlang$" />
         <link href='$protocol$//fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css"/>
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/newdesign.css" media="screen"/>
+        <link rel="stylesheet" type="text/css" href="$prefix$/theme/designview.css" media="screen"/>
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/style.css" media="screen"/>
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/calendar.css" media="screen"/>
+        <link rel="stylesheet" type="text/css" href="$prefix$/theme/signaturedrawer.css" media="screen"/>
+
 		<link rel="stylesheet" type="text/css" href="$prefix$/theme/symbols.css" media="screen"/>
 		<link rel="stylesheet" type="text/css" href="$prefix$/theme/buttons.css" media="screen"/>
+        <link rel="stylesheet" type="text/css" href="$prefix$/theme/account.css" />
         <link href="$prefix$/theme/flash.css" rel="stylesheet" type="text/css" media="screen" />
         <link href="/css/main.css" rel="stylesheet" type="text/css" />
-        <link rel="stylesheet" type="text/css"
-              href="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/themes/ui-lightness/jquery-ui.css"
-                   media="screen" />
-        <script src="$protocol$//ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"
+        <script src="$if(production)$$protocol$//ajax.googleapis.com/ajax/libs/jquery/1.5.1$else$/js$endif$/jquery.min.js"
                 type="text/javascript"></script>
-        <script src="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/jquery-ui.min.js"
+        <script src="$if(production)$$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.11$else$/js$endif$/jquery-ui.min.js"
                 type="text/javascript"></script>
         <script src="$prefix$/js/jquery.tools.min.js"
                 type="text/javascript"></script>
@@ -71,6 +72,8 @@ standardHeaderContents=
                 type="text/javascript"></script>
         <script src="$prefix$/js/tooltips.js"
                 type="text/javascript"></script>
+        <script src="$prefix$/js/calendar.js"
+                type="text/javascript"></script>
         <script src="$prefix$/js/submits.js"
                 type="text/javascript"></script>
         <script src="$prefix$/js/confirmations.js"
@@ -95,6 +98,10 @@ standardHeaderContents=
                 type="text/javascript"></script>
         <script src="$prefix$/js/docview.js"
                 type="text/javascript"></script>
+        <script src="$prefix$/js/signatorydesignview.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/docdesignview.js"
+                type="text/javascript"></script>
         <script src="$prefix$/js/bankid.js"
                 type="text/javascript"></script>
         <script src="/js/jquery.form.js"
@@ -103,9 +110,18 @@ standardHeaderContents=
                 type="text/javascript"></script>
         <script src="/js/uploadview.js"
                 type="text/javascript"></script>
+        <script src="/js/attachmentsdesignview.js"
+                type="text/javascript"></script>
+        <script src="/js/csvsignatorydesign.js"
+                type="text/javascript"></script>
         <script src="/js/validation.js"
                 type="text/javascript"></script>
-
+        <script src="/js/signaturedrawer.js"
+                type="text/javascript"></script>
+       <script src="/js/fieldplacementview.js"
+                type="text/javascript"></script>
+       <script src="/js/companybranding.js"
+                type="text/javascript"></script>
        $if(publicsafe)$
         <script src="/js/jquery.tweet.js"
                 type="text/javascript"></script>

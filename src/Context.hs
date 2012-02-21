@@ -3,7 +3,7 @@ module Context (
     ) where
 
 import Control.Concurrent.MVar
-import DB.Nexus
+import DB.Classes (DBEnv)
 import File.FileID
 import Doc.JpegPages
 import Doc.SignatoryLinkID
@@ -20,7 +20,7 @@ import FlashMessage
 import Mails.MailsConfig
 import API.Service.Model
 import Company.Model
-import DB.Types
+import MagicHash (MagicHash)
 import Misc (IPAddress)
 
 data Context = Context
@@ -30,7 +30,7 @@ data Context = Context
     , ctxtime                :: MinutesTime -- ^ The time of the request.
     , ctxnormalizeddocuments :: MVar (Map.Map FileID JpegPages) -- ^
     , ctxipnumber            :: IPAddress -- ^ The ip number of the client.
-    , ctxdbconn              :: Nexus -- ^ PostgreSQL database connection
+    , ctxdbenv               :: DBEnv -- ^ PostgreSQL database environment
     , ctxdocstore            :: FilePath -- ^ The temporary document directory.
     , ctxs3action            :: AWS.S3Action -- ^
     , ctxgscmd               :: String -- ^

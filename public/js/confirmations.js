@@ -23,7 +23,9 @@ var ConfirmationModel = Backbone.Model.extend({
       rejectText: "Cancel",
       acceptColor : "green",
       content  : jQuery("<p/>"),
-      cantCancel : false
+      cantCancel : false,
+      width: "640px",
+      acceptVisible : true
   },
   title : function(){
        return this.get("title");
@@ -36,6 +38,14 @@ var ConfirmationModel = Backbone.Model.extend({
           return this.get("onAccept");
       var submit = this.get("submit");
       return function() {submit.send();};
+  },
+  onReject : function() {
+      if (this.get("onReject") != undefined )
+          return this.get("onReject");
+      return function() {};
+  },
+  reject : function() {
+      return this.onReject()();
   },
   accept : function(){
        return this.onAccept()();
@@ -54,6 +64,19 @@ var ConfirmationModel = Backbone.Model.extend({
   },
   canCancel : function() {
       return this.get("cantCancel") == false;
+  },
+  width: function() {
+      return this.get("width");
+  },
+  
+  showAccept : function() {
+      this.set({acceptVisible : true})
+  },
+  hideAccept : function() {
+      this.set({acceptVisible : false})
+  },
+  acceptVisible : function() {
+      return this.get("acceptVisible");   
   }
 });
 
@@ -86,50 +109,69 @@ var ConfirmationView = Backbone.View.extend({
         "click .close"  :  "reject"
     },
     initialize: function (args) {
-        _.bindAll(this, 'render', 'reject');
+        _.bindAll(this, 'render', 'reject', 'renderAcceptButton');
+        this.model.bind('change:acceptVisible', this.renderAcceptButton);
         this.model.view = this;
         this.render();
         this.fixer = new ExposeMaskFixer({object : this.model});
     },
+    renderAcceptButton : function() {
+        var model = this.model;
+        if (model.acceptVisible())
+          this.acceptButton.show();
+        else
+          this.acceptButton.hide();
+       
+    },
     render: function () {
+       var view = this;
        var model = this.model;
        this.el.addClass("modal-container");
+       this.el.css("width",model.width());
        var header = $("<div class='modal-header'><span class='modal-icon message'></span></div>");
        var title = $("<span class='modal-title'/>");
        title.append($("<h2/>").append(this.model.title()));
        header.append(title);
        if (model.canCancel()) 
-        header.append("<a class='modal-close close'/a>");
+        header.append("<a class='modal-close close'/>");
        var body = $("<div class='modal-body'>");
-       var content = $("<div class='modal-content'>");
+       var content = $("<div class='modal-content'/>");
        content.html(this.model.content());
        body.append(content);
-       var footer = $("<div class='modal-footer'>");
+       var footer = $("<div class='modal-footer'/>");
        if (model.canCancel()) {
         var cancel = $("<a class='cancel close float-left'/>");
         cancel.text(this.model.rejectText());
         footer.append(cancel);
        } 
-       var accept = model.acceptButton() != undefined ?  model.acceptButton().addClass("float-right") :
+       this.acceptButton = model.acceptButton() != undefined ?  model.acceptButton().addClass("float-right") :
             Button.init({color:model.acceptColor(),
                                  size: "small",
                                  cssClass: "float-right",
                                  text: this.model.acceptText(),
-                                 onClick : function() { model.accept(); }
+                                 onClick : function() {
+                                     if (model.accept() == true)
+                                         view.clear();
+                                     return false;
+                                }
             }).input();
-       footer.append(accept);
+       this.renderAcceptButton();
+       footer.append( this.acceptButton);
        this.el.append(header);
        this.el.append(body);
        this.el.append(footer);
        return this;
     },
     reject: function(){
+        this.model.reject()
         this.clear();
     },
     clear: function(){
+        this.el.data('overlay').close();
         this.model.destroy();
         this.model.view = undefined;
         this.el.remove();
+      
     }
 
 });
@@ -141,12 +183,15 @@ window.Confirmation = {
                       submit : args.submit,
                       title  : args.title,
                       onAccept : args.onAccept,
+                      onReject : args.onReject,
                       acceptText: args.acceptText,
                       acceptColor : args.acceptColor,
                       rejectText: args.rejectText,
                       content  : args.content,
                       acceptButton : args.acceptButton,
-                      cantCancel : args.cantCancel
+                      cantCancel : args.cantCancel,
+                      width: args.width,
+                      acceptVisible : args.acceptVisible
                     });
           var overlay = $("<div/>");
           var view = new ConfirmationView({model : model, el : overlay});
@@ -158,6 +203,7 @@ window.Confirmation = {
                            top: standardDialogTop,
                            fixed: false      
                           });
+          return model;
    }
     
 };

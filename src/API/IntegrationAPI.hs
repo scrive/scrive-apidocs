@@ -50,7 +50,7 @@ import Doc.DocUtils
 import Company.Model
 import User.Model
 import Data.Foldable (fold)
-import System.Random (randomIO)
+import Crypto.RNG (CryptoRNG, randomBytes)
 import Util.SignatoryLinkUtils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
@@ -62,6 +62,7 @@ import File.Model
 import Util.JSON
 import Text.JSON.String
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
+import Doc.SignatoryTMP
 import qualified Log (integration)
 import Doc.DocStorage
 import User.History.Model
@@ -128,7 +129,7 @@ documentFromParam = do
     when (isNothing mdocument || (not $ sameService srvs mdocument)) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists"
     return $ fromJust mdocument
 
-embeddDocumentFrame :: Kontrakcja m => IntegrationAPIFunction m APIResponse
+embeddDocumentFrame :: (CryptoRNG m, Kontrakcja m) => IntegrationAPIFunction m APIResponse
 embeddDocumentFrame = do
     ctx <- getContext
     srvs <-  service <$> ask
@@ -137,37 +138,37 @@ embeddDocumentFrame = do
     let returnLink l =  return $ toJSObject [ ("link",JSString $ toJSString $ slocation ++ show l)]
     location <- fold <$> fromJSONField "location"
     doc <- documentFromParam
-    mcompany <- lift_M (runDBUpdate . GetOrCreateCompanyWithExternalID  (Just sid)) (fmap ExternalCompanyID <$> fromJSONField "company_id")
-    when (isNothing mcompany) $ throwApiError API_ERROR_MISSING_VALUE "At least company connected to document must be provided."
-    let company = fromJust mcompany
-    when (not $ isAuthoredByCompany (companyid company) doc) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists"
+    mcomp <- lift_M (runDBUpdate . GetOrCreateCompanyWithExternalID  (Just sid)) (fmap ExternalCompanyID <$> fromJSONField "company_id")
+    when (isNothing mcomp) $ throwApiError API_ERROR_MISSING_VALUE "At least company connected to document must be provided."
+    let comp = fromJust mcomp
+    when (not $ isAuthoredByCompany (companyid comp) doc) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists"
     msiglink <- liftMM (\(bs::BS.ByteString) -> return $ getSigLinkFor doc bs) (fromJSONField "email")
     case msiglink of
          Nothing -> do
-             when (not $ sameService srvs company) $ throwApiError API_ERROR_MISSING_VALUE "Not matching company | This should never happend"
-             ssid <- createServiceSession (Left $ companyid $ company) location
-             returnLink $ LinkConnectCompanySession sid (companyid company) ssid $ LinkIssueDoc (documentid doc)
+             when (not $ sameService srvs comp) $ throwApiError API_ERROR_MISSING_VALUE "Not matching company | This should never happend"
+             ssid <- createServiceSession (Left $ companyid $ comp) location
+             returnLink $ LinkConnectCompanySession sid (companyid comp) ssid $ LinkIssueDoc (documentid doc)
          Just siglink -> do
              if (isAuthor siglink && (isJust $ maybesignatory siglink))
                 then do
                      muser <- runDBQuery $ GetUserByID $ fromJust $ maybesignatory siglink
-                     when (not $ sameService sid muser && sameService srvs company) $ throwApiError API_ERROR_MISSING_VALUE "Not matching user or company| This should never happend"
+                     when (not $ sameService sid muser && sameService srvs comp) $ throwApiError API_ERROR_MISSING_VALUE "Not matching user or company| This should never happend"
                      ssid <- createServiceSession (Right $ fromJust $ maybesignatory siglink) location
                      returnLink $ LinkConnectUserSession sid  (fromJust $ maybesignatory siglink) ssid $ LinkIssueDoc (documentid doc)
                 else do
-                     when (not $ sameService srvs company) $ throwApiError API_ERROR_MISSING_VALUE "Not matching company | This should never happend"
-                     ssid <- createServiceSession (Left $ companyid $ company) location
-                     returnLink $ LinkConnectCompanySession sid (companyid company) ssid $ LinkIssueDoc (documentid doc)
+                     when (not $ sameService srvs comp) $ throwApiError API_ERROR_MISSING_VALUE "Not matching company | This should never happend"
+                     ssid <- createServiceSession (Left $ companyid $ comp) location
+                     returnLink $ LinkConnectCompanySession sid (companyid comp) ssid $ LinkIssueDoc (documentid doc)
 
 
 
 createDocument :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 createDocument = do
    sid <- serviceid <$> service <$> ask
-   mcompany_id <- fmap ExternalCompanyID <$> fromJSONField "company_id"
-   when (isNothing mcompany_id) $
-     throwApiError API_ERROR_MISSING_VALUE "No company id provided"
-   company <- runDBUpdate $ GetOrCreateCompanyWithExternalID  (Just sid) (fromJust mcompany_id)
+   mcomp_id <- fmap ExternalCompanyID <$> fromJSONField "company_id"
+   when (isNothing mcomp_id) $ 
+    throwApiError API_ERROR_MISSING_VALUE "No company id provided"
+   comp <- runDBUpdate $ GetOrCreateCompanyWithExternalID  (Just sid) (fromJust mcomp_id)
    mtitle <- fromJSONField "title"
    when (isNothing mtitle) $ throwApiError API_ERROR_MISSING_VALUE "No title provided"
    let title = fromJust mtitle
@@ -178,7 +179,9 @@ createDocument = do
    let doctype = fromJust mtype
    mtemplateids <- fromJSONField "template_id"
    Log.integration $ "got this template from json " ++ show mtemplateids
-   involved  <- fmap (fromMaybe []) $ fromJSONLocal "involved" $ fromJSONLocalMap $ getSignatoryTMP
+   involved  <- fmap (fromMaybe []) $ fromJSONLocal "involved" $ fromJSONLocalMapList $ 
+        (getSignatoryTMP [SignatoryAuthor, SignatoryPartner]) : (repeat $ getSignatoryTMP [SignatoryPartner])
+   
    mlocale <- fromJSONField "locale"
    tags <- fmap (fromMaybe []) $ fromJSONLocal "tags" $ fromJSONLocalMap $ do
      n <- fromJSONField "name"
@@ -196,7 +199,7 @@ createDocument = do
              Just _template ->
                return $ createDocFromTemplate templateid title
      Nothing -> return $ createDocFromFiles title doctype files
-   d <- createAPIDocument company involved tags mlocale createFun
+   d <- createAPIDocument comp involved tags mlocale createFun
    doc <- updateDocumentWithDocumentUI d
    return $ toJSObject [ ("document_id",JSString $ toJSString $ show $ documentid doc)]
 
@@ -266,50 +269,41 @@ createAPIDocument :: Kontrakcja m
                   -> IntegrationAPIFunction m Document
 createAPIDocument _ [] _ _ _  =
     throwApiError API_ERROR_OTHER "One involved person must be provided"
-createAPIDocument company' (authorTMP:signTMPS) tags mlocale createFun = do
+createAPIDocument comp' (authorTMP:signTMPS) tags mlocale createFun = do
     sid <- serviceid <$> service <$> ask
     
-    when (isNothing $ companyexternalid company') $
+    when (isNothing $ companyexternalid comp') $
       throwApiError API_ERROR_ILLEGAL_VALUE "The companyid must exist."
-    let Just (ExternalCompanyID cid) = companyexternalid company'
+    let Just (ExternalCompanyID cid) = companyexternalid comp'
         
-    when (maybe False (notElem SignatoryAuthor) $ toSignatoryRoles authorTMP) $
+    when (not $ isAuthorTMP authorTMP) $
       throwApiError API_ERROR_ILLEGAL_VALUE "The first involved must be an author role."
-
-    when (any (maybe False (elem SignatoryAuthor) . toSignatoryRoles) signTMPS) $
+  
+    when (any isAuthorTMP signTMPS) $
       throwApiError API_ERROR_ILLEGAL_VALUE "Only one author is allowed."
 
     now <- liftIO $ getMinutesTime
-    company <- setCompanyInfoFromTMP authorTMP company'
-    author <- userFromTMP authorTMP company
-
+    comp <- setCompanyInfoFromTMP authorTMP comp'
+    docAuthor <- userFromTMP authorTMP comp
     ctx <- getContext
-    mdoc <- createFun author (Just company) now
+    mdoc <- createFun docAuthor (Just comp) now
     when (isNothing mdoc) $ throwApiError API_ERROR_OTHER "Problem creating a document | This may be because the company and author don't match"
     let doc = fromJust mdoc
         actor = IntegrationAPIActor (ctxtime ctx) (ctxipnumber ctx) sid (Just $ BS.toString cid)
-    _ <- runDBUpdate $ SetDocumentAdvancedFunctionality (documentid doc) actor
+    _ <- runDBUpdate $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality actor
     _ <- runDBUpdate $ SetDocumentTags (documentid doc) tags actor
-
     when (isJust mlocale) $
       ignore $ runDBUpdate $ SetDocumentLocale (documentid doc) (fromJust mlocale) actor
-    let mauthorsiglink = getAuthorSigLink doc
-    when (isNothing mauthorsiglink) $ throwApiError API_ERROR_OTHER "Problem creating document."
-    let authorsiglink = fromJust mauthorsiglink
-        authorroles = fromMaybe (signatoryroles authorsiglink) (toSignatoryRoles authorTMP)
-        defsigroles = [SignatoryPartner]
-        nonauthordetails = map toSignatoryDetails signTMPS
-        nonauthorroles = map (fromMaybe defsigroles . toSignatoryRoles) signTMPS
-        sigs = (toSignatoryDetails authorTMP, authorroles):zip nonauthordetails nonauthorroles
+    let sigdetails s =  (fst $ toSignatoryDetails1 s,[SignatoryPartner] <| (isSignatoryTMP s) |> [])
+        authordetails s = (fst $ toSignatoryDetails1 s,[SignatoryAuthor,SignatoryPartner] <| (isSignatoryTMP s) |> [SignatoryAuthor])
+        sigs = (authordetails authorTMP):(sigdetails <$> signTMPS)
     doc' <- runDBUpdate $ ResetSignatoryDetails (documentid doc) sigs actor
-
-    when (isLeft doc') $ do
-        Log.integration $ "error creating document: " ++ fromLeft doc'
-        throwApiError API_ERROR_OTHER "Problem creating a document (SIGUPDATE) | This should never happend"
+    when (isLeft doc') $ Log.integration $ "error creating document: " ++ fromLeft doc'
+    when (isLeft doc') $ throwApiError API_ERROR_OTHER "Problem creating a document (SIGUPDATE) | This should never happend"
     return $ fromRight doc'
 
 userFromTMP :: Kontrakcja m => SignatoryTMP -> Company -> IntegrationAPIFunction m User
-userFromTMP uTMP company = do
+userFromTMP uTMP comp = do
     sid <- serviceid <$> service <$> ask
     let remail = fold $ asValidEmail . BS.toString <$> email uTMP
     when (not $ isGood $ remail) $ throwApiError API_ERROR_OTHER "NOT valid email for first involved person"
@@ -318,8 +312,8 @@ userFromTMP uTMP company = do
     user <- case muser of
               Just u -> return u
               Nothing -> do
-                password <- liftIO $ createPassword . BS.fromString =<< (sequence $ replicate 12 randomIO)
-                mu <- runDBUpdate $ AddUser (fold $ fstname uTMP,fold $ sndname uTMP) (fromGood remail) (Just password) False (Just sid) (Just $ companyid company) (mkLocaleFromRegion defaultValue)
+                password <- createPassword =<< randomBytes 12
+                mu <- runDBUpdate $ AddUser (fold $ fstname uTMP,fold $ sndname uTMP) (fromGood remail) (Just password) False (Just sid) (Just $ companyid comp) (mkLocaleFromRegion defaultValue)
                 when (isNothing mu) $ throwApiError API_ERROR_OTHER "Problem creating a user (BASE) | This should never happend"
                 let u = fromJust mu
                 tos_accepted <- runDBUpdate $ AcceptTermsOfService (userid u) (fromSeconds 0)
@@ -346,21 +340,21 @@ userFromTMP uTMP company = do
                                                                   , userpersonalnumber = fromMaybe (getPersonalNumber user) $ personalnumber uTMP
                                                                   }) 
                                                   Nothing
-    company_set <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid company)
+    company_set <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid comp)
     when (not company_set) $ throwApiError API_ERROR_OTHER "Problem creating a user (COMPANY) | This should never happend"
     Just user' <- runDBQuery $ GetUserByID $ userid user
     return user'
 
 setCompanyInfoFromTMP :: Kontrakcja m => SignatoryTMP -> Company -> IntegrationAPIFunction m Company
-setCompanyInfoFromTMP uTMP company = do
-    info_set <- runDBUpdate $ SetCompanyInfo (companyid company) (companyinfo company)
+setCompanyInfoFromTMP uTMP cmp = do
+    info_set <- runDBUpdate $ SetCompanyInfo (companyid cmp) (companyinfo cmp)
                 {
-                  companyname = fromMaybe (getCompanyName company) $ API.APICommons.company uTMP
-                , Company.Model.companynumber = fromMaybe (getCompanyNumber company) $ API.APICommons.companynumber uTMP
+                  companyname = fromMaybe (getCompanyName cmp) $ company uTMP
+                , Company.Model.companynumber = fromMaybe (getCompanyNumber cmp) $ Doc.SignatoryTMP.companynumber uTMP
                 }
     when (not info_set) $ throwApiError API_ERROR_OTHER "Problem create a user (COMPANY INFO) | This should never happen"
-    Just company' <- runDBQuery $ GetCompany $ companyid company
-    return company'
+    Just cmp' <- runDBQuery $ GetCompany $ companyid cmp
+    return cmp'
     
 
 getDocuments :: Kontrakcja m => IntegrationAPIFunction m APIResponse
@@ -368,7 +362,7 @@ getDocuments = do
     sid <- serviceid <$> service <$> ask
     mcompany_id <- fmap ExternalCompanyID <$> fromJSONField "company_id"
     when (isNothing mcompany_id) $ throwApiError API_ERROR_MISSING_VALUE "No company id provided"
-    company <- runDBUpdate $ GetOrCreateCompanyWithExternalID  (Just sid) (fromJust mcompany_id)
+    comp <- runDBUpdate $ GetOrCreateCompanyWithExternalID  (Just sid) (fromJust mcompany_id)
     tags <- fmap (fromMaybe []) $ fromJSONLocal "tags" $ fromJSONLocalMap $ do
                     n <- fromJSONField "name"
                     v <- fromJSONField "value"
@@ -388,10 +382,10 @@ getDocuments = do
       Just s  -> case parseMinutesTimeISO s of
         Just t  -> return $ Just t
         Nothing -> throwApiError API_ERROR_PARSING $ "to_date unrecognized format: " ++ show s
-    linkeddocuments <- runDBQuery $ GetDocumentsByCompanyAndTags (Just sid) (companyid company) tags
+    linkeddocuments <- runDBQuery $ GetDocumentsByCompanyAndTags (Just sid) (companyid comp) tags
     api_docs <- sequence [api_document_read False d  
                          | d <- linkeddocuments
-                         , isAuthoredByCompany (companyid company) d
+                         , isAuthoredByCompany (companyid comp) d
                          , not $ isDeletedFor $ getAuthorSigLink d
                          , not $ isAttachment d
                          -- we avoid filtering when the filter is not defined
@@ -478,5 +472,5 @@ getDaveDoc :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDaveDoc = do
   Just (JSString document_id) <- fromJSONField "document_id"
   let Just did = maybeRead $ fromJSString document_id
-  doc <- runDBQuery $ GetDocumentByDocumentID $ DocumentID did
+  doc <- runDBQuery $ GetDocumentByDocumentID did
   return $ toJSObject [("document", showJSON $ show doc)]

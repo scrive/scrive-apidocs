@@ -29,17 +29,17 @@ module ActionSchedulerState (
 import Control.Applicative
 import Control.Monad.State
 import Control.Monad.Reader
+import Crypto.RNG(CryptoRNG, random)
 import qualified Data.ByteString as BS
 import Data.Typeable
 import Happstack.Data.IxSet
 import Happstack.State
-import System.Random (randomIO)
 import qualified Happstack.Data.IxSet as IxSet
 import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
 
-import DB.Types
 import Doc.DocStateData
+import MagicHash (MagicHash)
 import Misc
 import MinutesTime
 import Mails.MailsData
@@ -258,9 +258,9 @@ checkValidity now maction = maction >>= \action ->
        else Nothing
 
 -- | Create new 'password reminder' action
-newPasswordReminder :: User -> IO Action
+newPasswordReminder :: (MonadIO m, CryptoRNG m) => User -> m Action
 newPasswordReminder user = do
-    hash <- randomIO
+    hash <- random
     now <- getMinutesTime
     let action = PasswordReminder {
           prUserID         = userid user
@@ -270,9 +270,9 @@ newPasswordReminder user = do
     update $ NewAction action $ (12*60) `minutesAfter` now
 
 -- | Create new 'invitation sent' action
-newViralInvitationSent :: Email -> UserID -> IO Action
+newViralInvitationSent :: (MonadIO m, CryptoRNG m) => Email -> UserID -> m Action
 newViralInvitationSent email inviterid = do
-    hash <- randomIO
+    hash <- random
     now <- getMinutesTime
     let action = ViralInvitationSent {
           visEmail          = email
@@ -284,9 +284,9 @@ newViralInvitationSent email inviterid = do
     update $ NewAction action $ (7*24*60) `minutesAfter` now
 
 -- | Create new 'account created' action
-newAccountCreated :: User -> IO Action
+newAccountCreated :: (MonadIO m, CryptoRNG m) => User -> m Action
 newAccountCreated user = do
-    hash <- randomIO
+    hash <- random
     now <- getMinutesTime
     let action = AccountCreated {
           acUserID = userid user
@@ -294,9 +294,9 @@ newAccountCreated user = do
     }
     update $ NewAction action $ (24*60) `minutesAfter` now
 
-newRequestEmailChange :: User -> Email -> IO Action
+newRequestEmailChange :: (MonadIO m, CryptoRNG m) => User -> Email -> m Action
 newRequestEmailChange user newemail = do
-  hash <- randomIO
+  hash <- random
   now <- getMinutesTime
   let action = RequestEmailChange {
     recUser = userid user

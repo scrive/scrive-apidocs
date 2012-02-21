@@ -29,7 +29,7 @@ $if(barsbackground)$
    border-color: $barsbackground$;
 }
 
- #tab-viewer .tabs li.active 
+.tab-viewer .tabs li.active 
  {
    background : $barsbackground$;
 }

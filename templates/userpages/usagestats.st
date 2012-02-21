@@ -1,12 +1,13 @@
 ####
 showUsageStats =
 <form action="$linksecurity$" method="post">
-  <div id="tab-viewer">
+  <div class="tab-viewer">
     <div class="tab-header">
     </div>
     <ul class="tabs">
       <li><a href="/account">$_HeadUserInfo()$</a></li>
       <li><a href="/account/security">$_HeadAccountSettings()$</a></li>
+        $if(iscompanyadmin)$<li><a href="/account/company">$_CompanySettings()$</a></li>$endif$
       $if(iscompanyadmin)$<li><a href="/account/companyaccounts">$_CompanyAccounts()$</a></li>$endif$
       <li><a href="/account/mailapi">$_HeadMailApi()$</a></li>
       <li class="active"><a href="/account/usagestats">$_HeadUsageStats()$</a></li>

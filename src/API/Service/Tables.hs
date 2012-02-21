@@ -9,8 +9,7 @@ tableServices :: Table
 tableServices = Table {
     tblName = "services"
   , tblVersion = 1
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
-    case desc of
+  , tblCreateOrValidate = \desc -> case desc of
          [  ("id", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
           , ("password", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
           , ("salt", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
@@ -26,7 +25,7 @@ tableServices = Table {
           , ("logo", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
           ] -> return TVRvalid
          [] -> do
-           runRaw conn $ "CREATE TABLE services ("
+           kRunRaw $ "CREATE TABLE services ("
              ++ "  id TEXT NOT NULL"
              ++ ", password BYTEA NULL"
              ++ ", salt BYTEA NULL"
@@ -46,9 +45,9 @@ tableServices = Table {
              ++ ")"
            return TVRcreated
          _ -> return TVRinvalid
-  , tblPutProperties = wrapDB $ \conn -> do
-    runRaw conn "CREATE INDEX idx_services_admin_id ON services(admin_id)"
-    runRaw conn $ "ALTER TABLE services"
+  , tblPutProperties = do
+    kRunRaw "CREATE INDEX idx_services_admin_id ON services(admin_id)"
+    kRunRaw $ "ALTER TABLE services"
       ++ " ADD CONSTRAINT fk_services_users FOREIGN KEY (admin_id)"
       ++ " REFERENCES users(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"

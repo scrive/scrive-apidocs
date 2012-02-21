@@ -23,15 +23,6 @@ import KontraLink
 import qualified Data.ByteString.UTF8 as BS
 --import Control.Applicative
 
-{-
-data DOCUMENT_RELATION =
-      DOCUMENT_RELATION_AUTHOR_SECRETARY
-    | DOCUMENT_RELATION_AUTHOR_SIGNATORY
-    | DOCUMENT_RELATION_SIGNATORY
-    | DOCUMENT_RELATION_VIEWER
-    | DOCUMENT_RELATION_OTHER
--}
-
 instance SafeEnum [SignatoryRole] where
   fromSafeEnum srs =
     case srs of
@@ -47,15 +38,6 @@ instance SafeEnum [SignatoryRole] where
   toSafeEnum 10 = Just []
   toSafeEnum 20 = Just []
   toSafeEnum _  = Nothing
-
-{-
-api_document_relation :: SignatoryLink -> DOCUMENT_RELATION
-api_document_relation sl 
-    | isAuthor sl && isSignatory sl = DOCUMENT_RELATION_AUTHOR_SIGNATORY
-    | isAuthor sl                   = DOCUMENT_RELATION_AUTHOR_SECRETARY
-    | isSignatory sl                = DOCUMENT_RELATION_SIGNATORY
-    | otherwise                     = DOCUMENT_RELATION_VIEWER
--}
 
 instance SafeEnum DocumentType where
   fromSafeEnum (Signable Contract) = 1

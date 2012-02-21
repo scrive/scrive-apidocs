@@ -7,10 +7,11 @@ import qualified Data.ByteString.Lazy.Char8 as BSL
 import Control.Monad.State.Strict
 import qualified Data.Map as Map
 import Data.List
-import Data.Char
+import Data.Ord
 import Graphics.PDF.Text
 import Graphics.PDF hiding (Box)
 import SealSpec
+import qualified Data.ByteString.Base64 as Base64
 
 winAnsiPostScriptEncode :: String -> String
 winAnsiPostScriptEncode text' = concatMap charEncode text'
@@ -37,7 +38,7 @@ listPageRefIDSFromPages document' pagesrefid =
     in list
 
 addPageToDocument :: Value -> State Document RefID
-addPageToDocument (Dict newpagevalue) = do 
+addPageToDocument (Dict newpagevalue) = do
   rec
     document <- get
     let
@@ -84,7 +85,7 @@ listPageRefIDs document' =
         pagesrefid = case Prelude.lookup (BS.pack "Pages") catalog of
                        Just (Ref pagesrefid') -> pagesrefid'
                        x -> error ("lookup of /Pages in catalog at " ++ show root ++ " returned " ++ show x ++ " catalog is " ++ show catalog)
-                       
+
     in listPageRefIDSFromPages document' pagesrefid
 
 getResDict :: Document -> RefID -> DictData
@@ -103,17 +104,17 @@ getResDict doc pageid =
                                 _ -> error "2"
           _ -> error "/Resources key is totally bogus"
     in resource
-        
+
 mergeResourceBranch :: Document -> DictData -> DictData -> DictData
 mergeResourceBranch _document source1 source2 = source1 ++ source2
 {-
     map merge source1
     where
-      merge (key,Dict value) = 
+      merge (key,Dict value) =
           let
               Dict value2 = maybe (Dict []) id $ Prelude.lookup key source2
           in (key,Dict (value ++ value2))
-      merge (key,Ref refid) = 
+      merge (key,Ref refid) =
           case PdfModel.lookup refid document of
             Just (Indir value _) -> merge (key,value)
             _ -> merge (key,Dict [])
@@ -127,11 +128,11 @@ mergeResources document' source1 source2 =
       map1 = Map.fromList source1
       map2 = Map.fromList source2
       map3 = Map.unionWith unite map1 map2
-      unite (Ref refid') x = 
+      unite (Ref refid') x =
           case PdfModel.lookup refid' document' of
             Just (Indir value' _) -> unite value' x
             _ -> x
-      unite x (Ref refid') = 
+      unite x (Ref refid') =
           case PdfModel.lookup refid' document' of
             Just (Indir value' _) -> unite x value'
             _ -> x
@@ -140,9 +141,9 @@ mergeResources document' source1 source2 =
       unite x _ = x
 
 placeSealOnPageRefID :: RefID -> RefID -> (RefID,String) -> Document -> Document
-placeSealOnPageRefID sealrefid sealmarkerformrefid (pagerefid,sealtext) document' = 
+placeSealOnPageRefID sealrefid sealmarkerformrefid (pagerefid,sealtext) document' =
     let
-        Just (Indir (Dict pagedict) pagestrem) = 
+        Just (Indir (Dict pagedict) pagestrem) =
             PdfModel.lookup pagerefid document'
         Just contentvalue = {- trace (show pagedict) $ -} Prelude.lookup (BS.pack "Contents") pagedict
         contentlist = case contentvalue of
@@ -161,7 +162,7 @@ placeSealOnPageRefID sealrefid sealmarkerformrefid (pagerefid,sealtext) document
         rotatekey = Prelude.lookup (BS.pack "Rotate") pagedict
         ([cropbox_l, cropbox_b, cropbox_r, cropbox_t] {- :: Double -})
             = case (Prelude.lookup (BS.pack "CropBox") pagedict `mplus` Prelude.lookup (BS.pack "MediaBox") pagedict) of
-                  Just (PdfModel.Array [PdfModel.Number l, PdfModel.Number b, PdfModel.Number r, PdfModel.Number t]) -> 
+                  Just (PdfModel.Array [PdfModel.Number l, PdfModel.Number b, PdfModel.Number r, PdfModel.Number t]) ->
                        [l :: Double, b, r, t]
                   _ -> [0, 0, 595, 842]
 
@@ -185,9 +186,9 @@ placeSealOnPageRefID sealrefid sealmarkerformrefid (pagerefid,sealtext) document
         pageresdict = getResDict document' pagerefid
         newresdictcont1 = mergeResources document' sealresdict pageresdict
         newxobjectdict = case Prelude.lookup (BS.pack "XObject") newresdictcont1 of
-                           Just (Dict w) -> Dict (w ++ [(BS.pack "SealMarkerForm",Ref sealmarkerformrefid)]) 
+                           Just (Dict w) -> Dict (w ++ [(BS.pack "SealMarkerForm",Ref sealmarkerformrefid)])
                            Just (Ref r) -> case PdfModel.lookup r document' of
-                                             Just (Indir (Dict w) _) -> 
+                                             Just (Indir (Dict w) _) ->
                                                    Dict (w ++ [(BS.pack "SealMarkerForm",Ref sealmarkerformrefid)])
                                              x -> error (show x)
 
@@ -195,7 +196,7 @@ placeSealOnPageRefID sealrefid sealmarkerformrefid (pagerefid,sealtext) document
                            x -> error (show x)
         newresdict = Dict ((BS.pack "XObject",newxobjectdict) : skipXObject newresdictcont1)
         skipXObject = filter (not . (== BS.pack "XObject") . fst)
-                   
+
 
         newcontentarray = Array ([Ref q] ++ contentlist ++ [Ref qQ] ++ map Ref sealpagecontents ++ [Ref rr])
         skipkey x = BS.pack "Contents" == x || BS.pack "Resources" == x
@@ -214,6 +215,11 @@ placeSealOnPageRefID sealrefid sealmarkerformrefid (pagerefid,sealtext) document
 -- points and bottom left corner is (0,0). Grows right and
 -- upwards. Fonts are also strange: the y=0 is on font baseline. Read
 -- about this one, before you change what is below.
+--
+-- Image x, y, image_w and image_h are in screen pixels, anchored in
+-- upper left corner.  The internal_image_w and internal_image_h are
+-- in image pixels. Usually these are equal to image_w and image_h,
+-- but we have the machinery to scale should it be needed.
 fieldstext :: Int -> Int -> [Field] -> String
 fieldstext pagew pageh fields = concatMap fieldtext fields
   where
@@ -223,10 +229,26 @@ fieldstext pagew pageh fields = concatMap fieldtext fields
                    , y
                    , w
                    , h
-                   } = "q 1 0 0 1 " ++ show (fromIntegral (x * pagew) / fromIntegral w :: Double) ++ " " ++ 
+                   } = "q 1 0 0 1 " ++ show (fromIntegral (x * pagew) / fromIntegral w :: Double) ++ " " ++
                        show (fromIntegral ((h - y) * pageh) / fromIntegral h - fontBaseline :: Double) ++ " cm " ++
                        "BT /SkrivaPaHelvetica 10 Tf (" ++ winAnsiPostScriptEncode val ++ ") Tj ET Q "
-
+    fieldtext FieldJPG{ SealSpec.valueBase64 = val
+                   , x
+                   , y
+                   , w
+                   , h
+                   , image_w, image_h
+                   , internal_image_w, internal_image_h
+                   } = "q " ++ intercalate " " [  show (fromIntegral (image_w * pagew) / fromIntegral w :: Double)
+                                               , "0"
+                                               , "0"
+                                               , show (fromIntegral (image_h * pageh) / fromIntegral h :: Double)
+                                               , show (fromIntegral (x * pagew) / fromIntegral w :: Double)
+                                               , show (fromIntegral ((h - y - image_h) * pageh) / fromIntegral h :: Double)
+                                               ] ++ " cm\n" ++
+                       "BI\n/BPC 8\n/CS /RGB\n/F /DCT\n" ++
+                       "/H " ++ show internal_image_h ++ "\n/W " ++ show internal_image_w ++ "\nID " ++
+                       BS.unpack (Base64.decodeLenient (BS.pack val)) ++ "\nEI\nQ "
 
 placeSeals :: [Field] -> RefID -> [String] -> RefID -> String -> RefID -> State Document ()
 placeSeals fields sealrefid sealtexts paginrefid pagintext' sealmarkerformrefid = do
@@ -236,8 +258,8 @@ placeSeals fields sealrefid sealtexts paginrefid pagintext' sealmarkerformrefid 
     let pagevalue = page_dict (Array []) (Array []) `ext` [entryna "MediaBox" [0,0,pagew,pageh]]
     -- should optimize pagintext' into one stream
     let findFields pageno = filter (\x -> page x == pageno) fields
-    let pagintext1 pageno = fieldstext pagew pageh (findFields pageno)++ 
-                     pagintext' ++ 
+    let pagintext1 pageno = fieldstext pagew pageh (findFields pageno)++
+                     pagintext' ++
                      " q 0.2 0 0 0.2 " ++ show (fromIntegral (pagew - 18) / 2 :: Double) ++ " 14 cm /SealMarkerForm Do Q "
 
     modify $ \document' -> foldr (placeSealOnPageRefID paginrefid sealmarkerformrefid) document'
@@ -248,9 +270,9 @@ placeSeals fields sealrefid sealtexts paginrefid pagintext' sealmarkerformrefid 
 
 
 contentsValueListFromPageID :: Document -> RefID -> [RefID]
-contentsValueListFromPageID document' pagerefid = 
+contentsValueListFromPageID document' pagerefid =
     let
-        Just (Indir (Dict pagedict) _) = 
+        Just (Indir (Dict pagedict) _) =
             PdfModel.lookup pagerefid document'
         Just contentvalue = Prelude.lookup (BS.pack "Contents") pagedict
         contentlist = case contentvalue of
@@ -270,7 +292,7 @@ groupBoxesUpToHeight :: Int -> [Box] -> [[Box]]
 groupBoxesUpToHeight height boxes = helper boxes
     where
         worker _ currentBoxes [] = (currentBoxes,[])
-        worker currentHeight currentBoxes rest@((x@(Box h _)):xs) 
+        worker currentHeight currentBoxes rest@((x@(Box h _)):xs)
                                                | currentHeight + h < height = worker (currentHeight + h) (x:currentBoxes) xs
                                                | otherwise = (currentBoxes, rest)
         helper boxes' = case worker 0 [] boxes' of
@@ -278,17 +300,17 @@ groupBoxesUpToHeight height boxes = helper boxes
                             (cb, rest) -> reverse cb : helper rest
 
 pagintext :: SealSpec -> String
-pagintext (SealSpec{documentNumber,initials,staticTexts }) = 
+pagintext (SealSpec{documentNumber,initials,staticTexts }) =
  let
     font = PDFFont Helvetica 8
     docnrwidth = textWidth font (toPDFString docnrtext)
     docnroffset = center - 20 - docnrwidth
     center = 595/2
-    signedinitials = (signedText staticTexts) ++": " ++ winAnsiPostScriptEncode initials 
+    signedinitials = (signedText staticTexts) ++": " ++ winAnsiPostScriptEncode initials
     siwidth = textWidth font (toPDFString signedinitials)
     sioffset = center + 20
     docnrtext = (docPrefix staticTexts) ++ " "++ documentNumber
-    
+
  in
  "q 1 0 0 1 0 5 cm " ++
  "BT " ++
@@ -298,7 +320,7 @@ pagintext (SealSpec{documentNumber,initials,staticTexts }) =
  "[(" ++ signedinitials ++ ")]TJ " ++
  "8 0 0 8 " ++ show docnroffset ++ " 15 Tm " ++
  "(" ++ docnrtext ++ ")Tj " ++
- "ET " ++ 
+ "ET " ++
  "0.863 0.43 0.152 0.004 K " ++
  "0.4 w " ++
  "60 18 m " ++ show (docnroffset-10) ++ " 18 l S " ++
@@ -313,7 +335,7 @@ makeManyLines font width text' = result
     -- textSplit [x] = [[x]]
     textSplit (text'') = let (b,a1) = break (==' ') text''
                              (s,a) = break (/=' ') a1
-                         in (b ++ s) : textSplit a  
+                         in (b ++ s) : textSplit a
     textWithLength :: String -> (PDFFloat,String)
     textWithLength text'' = (textWidth font (toPDFString text''),text'')
     textSplitWithLength = map textWithLength (textSplit text')
@@ -324,7 +346,7 @@ makeManyLines font width text' = result
                     | otherwise = text'' : takeWhileLength 0 "" all'
     textOutLine text'' = "[(" ++ winAnsiPostScriptEncode text'' ++ ")]TJ T* "
     textLines = takeWhileLength 0 "" textSplitWithLength
-    result = map textOutLine textLines 
+    result = map textOutLine textLines
 
 
 
@@ -374,7 +396,7 @@ secretaryBox staticTexts = Box 27 $
             "ET "
 
 signatoryBox :: SealingTexts -> Person -> Box
-signatoryBox sealingTexts (Person {fullname,company,companynumber,email}) = 
+signatoryBox sealingTexts (Person {fullname,company,companynumber,email}) =
  let
     orgnrtext = if companynumber=="" then "" else (orgNumberText sealingTexts) ++ " " ++ companynumber
     orgnroffset = textWidth (PDFFont Helvetica 10) (toPDFString orgnrtext)
@@ -439,10 +461,10 @@ dateAndHistoryBox staticTexts = Box 26 $
     "ET "
 
 logEntryBox :: HistEntry -> Box
-logEntryBox (HistEntry {histdate,histcomment}) = 
+logEntryBox (HistEntry {histdate,histcomment}) =
     let outlines = (makeManyLines (PDFFont Helvetica_Oblique 10) 300 histcomment)
     in
-        Box (8 + length outlines * 12) $ 
+        Box (8 + length outlines * 12) $
                 "1 0 0 1 0 30 cm " ++
                 "1 0 0 1 0 30 cm " ++
                 "1 0 0 1 0 22 cm " ++
@@ -461,7 +483,7 @@ logEntryBox (HistEntry {histdate,histcomment}) =
                 "ET "
 
 verificationPagesContents :: SealSpec -> [String]
-verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,staticTexts}) = 
+verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,staticTexts}) =
     let boxes = [verificationTextBox staticTexts] ++
                 [documentNumberTextBox staticTexts documentNumber] ++
                 [partnerTextBox staticTexts] ++
@@ -474,16 +496,16 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
                      _ -> [secretaryBox staticTexts] ++
                           map (signatoryBox staticTexts) secretaries
                 ) ++
- 
+
                 -- Datum and Handelse
                 [handlingBox staticTexts] ++
                 [dateAndHistoryBox staticTexts] ++
 
                 -- logentry
-                map (logEntryBox) history 
+                map (logEntryBox) history
         groupedBoxes = groupBoxesUpToHeight 650 boxes
         groupedBoxesNumbered = zip groupedBoxes [1::Int ..]
-    in flip map groupedBoxesNumbered $ \(thisPageBoxes, thisNumber) ->   
+    in flip map groupedBoxesNumbered $ \(thisPageBoxes, thisNumber) ->
 
     "/GS0 gs " ++
     "0.4 G " ++
@@ -510,7 +532,7 @@ verificationPagesContents (SealSpec {documentNumber,persons,secretaries,history,
     "0.546 0.469 0.454 0.113 k " ++
     "10 0 0 10 46.5522 31.5469 Tm " ++
     "(" ++ show thisNumber ++ "/" ++ show (length groupedBoxesNumbered) ++ ")Tj " ++
-    "ET " ++ rightcornerseal2 
+    "ET " ++ rightcornerseal2
 
 -- To emulate a near perfect circle of radius r with cubic Bézier
 -- curves, draw four curves such that one of the line segments
@@ -528,7 +550,7 @@ rightcornerseal2 = "q 1 0 0 1 491.839 14.37 cm " ++
                    "90 70 70 90 45 90 c " ++
                    "20 90 0  70 0  45 c " ++
                    "f " ++
-                   "/SealMarkerForm Do Q" 
+                   "/SealMarkerForm Do Q"
 
 pageToForm :: RefID -> State Document RefID
 pageToForm refid' = do
@@ -538,7 +560,7 @@ pageToForm refid' = do
                           Just (Ref contentsrefid') -> contentsrefid'
                           _ -> error "/Contents must be a ref or an array of refs"
     Just (Indir (Dict contentsdict) (Just streamdata)) <- gets $ PdfModel.lookup contentsrefid
-    
+
     let changekeys (k,v)
             | k==BS.pack "MediaBox" = [(BS.pack "BBox",v)]
             | k==BS.pack "Group" = [(k,v)]
@@ -547,27 +569,92 @@ pageToForm refid' = do
     let value' = concatMap changekeys page ++ [entry "Subtype" "Form"] ++ contentsdict
     addStream (Dict value') streamdata
 
+addFileStream :: SealAttachment -> State Document (Value, RefID)
+addFileStream SealAttachment{fileBase64Content, fileName} = do
+   let content = BSL.fromChunks [Base64.decodeLenient (BS.pack fileBase64Content)]
+   sid <- addStream (Dict [(BS.pack "Type", Name $ BS.pack "EmbeddedFile")]) $ content
+   sid2 <- addObject (Dict [ (BS.pack "Type", Name $ BS.pack "Filespec")
+                           , (BS.pack "F", string fileName)
+                           , (BS.pack "EF", Dict [
+                                   (BS.pack "F", Ref sid)
+                                   ])
+                           ])
+
+   return (string fileName, sid2)
+
+attachFiles :: [SealAttachment] -> State Document ()
+attachFiles [] = return () -- do nothing
+attachFiles sealAttachments = do
+    -- two step process:
+    -- 1. create appriopriate streams
+    -- 2. link them into name tree
+    --
+    -- Embedded files names tree is in: /Root -> /Names ->
+    -- /EmbeddedFiles If /Names is inside, we want to preserve
+    -- content.  We want to kill what is inside /EmbeddedFiles, too
+    -- much trouble to try to merge this together.
+    --
+    -- We probably should add /Limits here as this seems required
+
+    pairArray <- mapM addFileStream sealAttachments
+    let plainArray1 = sortBy (comparing fst) pairArray
+        plainArray = concatMap (\(a,b) -> [a,Ref b]) plainArray1
+        lowLimit = fst (head plainArray1)
+        highLimit = fst (last plainArray1)
+
+    embeddedFilesNamesTree <- addObject (Dict [ (BS.pack "Names", Array plainArray)
+                                              , (BS.pack "Limits", Array [lowLimit, highLimit])
+                                              ])
+
+    embeddedFilesNamesTreeRoot <- addObject (Dict [ (BS.pack "Kids", Array [Ref embeddedFilesNamesTree])])
+
+    document <- get
+    let
+        firstBody = head (documentBodies document)
+        trailer' = bodyTrailer firstBody
+        root = case Prelude.lookup (BS.pack "Root") trailer' of
+                 Just (Ref root') -> root'
+                 x -> error ("/Root is wrong: " ++ show x)
+        catalog = case PdfModel.lookup root document of
+                    Just (Indir (Dict catalog') _) -> catalog'
+                    x -> error ("lookup of " ++ show root ++ " returned " ++ show x)
+        names = case Prelude.lookup (BS.pack "Names") catalog of
+                    Just (Dict names') -> names'
+                    Just (Ref namesrefid) -> case PdfModel.lookup namesrefid document of
+                                               Just (Indir (Dict names') _) -> names'
+                                               x -> error ("lookup of " ++ show namesrefid ++ " returned " ++ show x)
+                    Nothing -> []
+                    x -> error ("lookup of " ++ show root ++ " returned " ++ show x)
+
+        skipEmbeddedFiles = filter (not . (== BS.pack "EmbeddedFiles") . fst)
+        skipNames = filter (not . (== BS.pack "Names") . fst)
+
+        names2 = Dict ((BS.pack "EmbeddedFiles", Ref embeddedFilesNamesTreeRoot) : skipEmbeddedFiles names)
+        catalog2 = Dict ((BS.pack "Names", names2) : skipNames catalog)
+
+    setObject root catalog2
 
 
 process :: SealSpec -> IO ()
-process (sealSpec@SealSpec 
+process (sealSpec@SealSpec
     { input
     , output
-    , fields 
+    , fields
+    , attachments
     }) = do
     mdoc <- PdfModel.parseFile input
     doc <- maybe (error $ "Cannot parse input PDF " ++ input) return mdoc
-    mseal <- PdfModel.parseFile sealFileName 
-    seal <- maybe (error $ "Cannot parse seal PDF " ++ sealFileName) 
+    mseal <- PdfModel.parseFile sealFileName
+    seal <- maybe (error $ "Cannot parse seal PDF " ++ sealFileName)
             return mseal
-    msealmarker <- PdfModel.parseFile "files/sealmarker.pdf" 
+    msealmarker <- PdfModel.parseFile "files/sealmarker.pdf"
     sealmarker <- maybe (error $ "Cannot parse marker PDF " ++ "files/sealmarker.pdf")
                   return msealmarker
 
     let [paginpage1, sealpage1] = listPageRefIDs seal
-        [sealmarkerpage] = listPageRefIDs sealmarker 
+        [sealmarkerpage] = listPageRefIDs sealmarker
 
-    let ((),outputdoc) = 
+    let ((),outputdoc) =
             flip runState doc $ do
               [newpagincontents,newsealcontents] <- importObjects seal [paginpage1,sealpage1]
               [sealmarkerpage2] <- importObjects sealmarker [sealmarkerpage]
@@ -575,18 +662,8 @@ process (sealSpec@SealSpec
               let pagintext1 = pagintext sealSpec
               let sealtexts = verificationPagesContents sealSpec
               placeSeals fields newsealcontents sealtexts newpagincontents pagintext1 sealmarkerform
+              when (not (null attachments)) $
+                   attachFiles attachments
+    putStrLn $ "Writing file " ++ output
     writeFileX output outputdoc
     return ()
-
-
--- this is cheating
--- FIXME: font encoding
-winAnsiChars :: String
-winAnsiChars = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~?€\201‚ƒ„…†‡ˆ‰Š‹Œ\215Ž\217\220‘’“”•–—˜™š›œ\235žŸ ¡¢£¤¥¦§¨©ª«¬?®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ"
-
-unicodeToWinAnsi :: Char -> Char
-unicodeToWinAnsi x = 
-    case findIndex (==x) winAnsiChars of
-      Just i -> chr (i + 33)
-      Nothing -> x
-      

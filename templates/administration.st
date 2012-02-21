@@ -30,25 +30,18 @@ adminsmain=
               <button style="width:150px"> Statistics</button>
             </a>
           </td>
-          <td style="height:50px">
-            <a href="/adminonly/payments">
-              <button style="width:150px">Price Plan</button>
-            </a>
-          </td>
-        </tr>
-        <tr>
           <td style="height:50px;">
             <a href="/adminonly/functionalitystats">
               <button style="width:150px">Functionality Stats</button>
             </a>
           </td>
+        </tr>
+        <tr>
           <td style="height:50px">
             <a href="/adminonly/documents">
               <button style="width:150px">Documents</button>
             </a>
           </td>
-        </tr>
-        <tr>
           <td style="height:50px;width:200px"> <a href="/adminonly/useradmin"><button style="width:150px"> User Admin </button> </a></td>
         </tr>
     </tbody></table>
@@ -57,7 +50,6 @@ $if(admin)$
     <strong> Admin Tools  </strong>
     <table><tbody>
         <tr>
-          <td style="height:50px;width:200px"> <a href="/adminonly/advpayments"><button style="width:150px"> App Admin </button> </a></td>
           <td style="height:50px;width:200px"><a href="/adminonly/services"><button style="width:150px"> Services </button> </a> </td>
         </tr>
         <tr>
@@ -76,7 +68,7 @@ $endif$
 
 #####
 adminusers=
-   <div id="tab-viewer">
+   <div class="tab-viewer">
          <div class="tab-header">
           <strong>
            <span>USER ADMIN</span>
@@ -129,7 +121,7 @@ adminusers=
 
 ###
 admincompanies=
-   <div id="tab-viewer">
+   <div class="tab-viewer">
          <div class="tab-header">
           <strong>
            <span>COMPANY ADMIN</span>
@@ -170,7 +162,7 @@ admincompanies=
 </script>
 ###
 adminUsersForSales=
-   <div id="tab-viewer">
+   <div class="tab-viewer">
          <div class="tab-header">
           <strong>
            <span>USER ADMIN FOR SALES</span>
@@ -306,7 +298,7 @@ adminuser=
     <br/>
     <br/>
     <form action="" method="POST">
-      <div id="tab-viewer">
+      <div class="tab-viewer">
 	<div class="tab-header">
 	</div>
 	<ul class="tabs">
@@ -399,7 +391,7 @@ admincompany=
     <br/>
     <br/>
     <form action="" method="POST">
-      <div id="tab-viewer">
+      <div class="tab-viewer">
 	<div class="tab-header">
 	</div>
 	<ul class="tabs">
@@ -458,7 +450,8 @@ admincompanyusers=
 <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
 <br/>
 <br/>
-<div id="tab-viewer">
+
+<div class="tab-viewer">
   <div class="tab-header">
   </div>
   <ul class="tabs">
@@ -468,63 +461,7 @@ admincompanyusers=
   </ul>
   <div class="tab-container">
     <div class="tab-content account">
-      <div style="height:195px;border: 1px solid gray;padding:10px;">
-        <div class="float-left">
-          <form method="post" action="$admincompanieslink$/users/$companyid$">
-            <h2>Create user:</h2>
-            <table style="width:450px">
-              <tr>
-                <td>First name:</td>
-                <td><input type="text" name="fstname"/></td>
-              </tr>
-              <tr>
-                <td>Second name:</td>
-                <td><input type="text" name="sndname"/></td>
-              </tr>
-              <tr>
-                <td>Email address:</td>
-                <td><input type="email" name="email"/></td>
-              </tr>
-              <tr>
-                <td>Is Admin?</td>
-                <td>
-                  <input type="checkbox" name="iscompanyadmin"/>
-                </td>
-              </tr>
-              <tr>
-                <td>Region:</td>
-                <td>
-                  <select name="region">
-                    <option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>
-                    <option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>
-                  </select>
-                </td>
-              </tr>
-              <tr>
-                <td>Header:</td>
-                <td>
-                  <input type="button" class="editer " value="Default"/>
-                  <span class="editable" name="custommessage" style="display:none">$mailNewAccountCreatedByAdminContentHeader()$</span>
-                </td>
-              </tr>
-            </table><br/>
-            <input type="submit" value="Add User" />
-          </form>
-        </div>
-        <div class="float-left">
-          <form method="post" action="$admincompanieslink$/users/$companyid$">
-            <h2>Invite private user:</h2>
-            <input type="hidden" name="privateinvite" value="true" />
-            <table>
-              <tr>
-                <td style="width:173px;">Email address:</td>
-                <td><input type="email" name="email"/></td>
-              </tr>
-            </table><br/>
-            <input type="submit" value="Invite Private User" />
-          </form>
-        </div>
-      </div>
+
     </div>
   </div>
 </div>
@@ -568,7 +505,7 @@ userusagestats=
     <a style="padding-left:100px" href="$adminuserslink$">Go back to user admin page</a>
     <br/>
     <br/>
-    <div id="tab-viewer">
+    <div class="tab-viewer">
       <div class="tab-header">
       </div>
       <ul class="tabs">
@@ -604,7 +541,7 @@ companyusagestats=
     <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
     <br/>
     <br/>
-      <div id="tab-viewer">
+      <div class="tab-viewer">
 	<div class="tab-header">
 	</div>
 	<ul class="tabs">
@@ -759,7 +696,7 @@ $services:{service |<tr>
 ###
 admindocumentslist =
 
-   <div id="tab-viewer">
+   <div class="tab-viewer">
          <div class="tab-header">
           <strong>
            <span>DOCUMENTS</span>

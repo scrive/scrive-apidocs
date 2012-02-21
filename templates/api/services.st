@@ -18,7 +18,7 @@ serviceAdminPage=
 
 
 
-<div id="tab-viewer">
+<div class="tab-viewer">
    <div class="tab-header">
         <center><h3> <strong> $name$ </strong></h3></center>
    </div>

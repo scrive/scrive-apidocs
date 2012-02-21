@@ -3,13 +3,13 @@ module Doc.DocStateCommon
 where
 
 import Company.Model
-import DB.Types
 import Data.Maybe
 import Doc.DocInfo
 import Doc.DocProcess
 import Doc.DocStateData
 import Doc.DocUtils
 import InputValidation
+import MagicHash (MagicHash)
 import MinutesTime
 import Misc
 import User.Model
@@ -58,7 +58,7 @@ signLinkFromDetails' details roles linkid magichash =
 blankDocument :: Document
 blankDocument =
           Document
-          { documentid                   = DocumentID 0
+          { documentid                   = unsafeDocumentID 0
           , documenttitle                = BS.empty
           , documentsignatorylinks       = []
           , documentfiles                = []
@@ -166,13 +166,9 @@ checkSignDocument doc slid mh = catMaybes $
 checkResetSignatoryData :: Document -> [(SignatoryDetails, [SignatoryRole], Maybe CSVUpload)] -> [String]
 checkResetSignatoryData doc sigs = 
   let authors    = [ r | (_, r, _) <- sigs, SignatoryAuthor `elem` r]
-      nonauthors = [ r | (_, r, _) <- sigs, SignatoryAuthor `notElem` r]
-      isbasic = documentfunctionality doc == BasicFunctionality
   in catMaybes $
       [ trueOrMessage (documentstatus doc == Preparation) $ "Document is not in preparation, is in " ++ show (documentstatus doc)
       , trueOrMessage (length authors == 1) $ "Should have exactly one author, had " ++ show (length authors)
-      , trueOrMessage (isbasic =>> (length nonauthors <= 1)) $ "Should be at most one signatory since it's basic functionality"
-      , trueOrMessage (isbasic =>> none (hasFieldsAndPlacements . (\(a,_,_) -> a)) sigs) "The signatories should have no custom fields or placements" 
       ]
 
 {- |
@@ -198,7 +194,8 @@ replaceSignatoryData siglink@SignatoryLink{signatorydetails} fstname sndname ema
       PersonalNumberFT -> sf { sfValue = personalnumber }
       CompanyNumberFT  -> sf { sfValue = companynumber }
       EmailFT          -> sf { sfValue = email }
-      CustomFT label _ -> sf { sfType = CustomFT label (not $ BS.null v), sfValue = v })
+      CustomFT label _ -> sf { sfType = CustomFT label (not $ BS.null v), sfValue = v }
+      SignatureFT      -> sf)
         : pumpData rest vs'
       where
         (v, vs') = case sfType sf of

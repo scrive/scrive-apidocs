@@ -13,7 +13,9 @@ $(function(){
 window.Tab = Backbone.Model.extend({
   defaults: {
     active : false,
-    disabled : false
+    disabled : false,
+    clickable : true,
+    onActivate : function() {}
     }  
   ,
   name : function() {
@@ -23,24 +25,48 @@ window.Tab = Backbone.Model.extend({
       return this.get("elems");
   },
   setActive : function(bool) {
-      return this.set({active: bool});
+      this.set({active: bool});
+      if (bool)
+          this.get("onActivate")();
   },
   active : function() {
         return this.get("active");
   },
   disabled : function() {
         return this.get("disabled");
+  },
+  clickable : function() {
+        return this.get("clickable");
+  },
+  number : function() {
+        return this.get("number");
+  },
+  hasNumber : function() {
+     return this.number() != undefined;  
+  },
+  setNumber: function(number)
+  { 
+       this.set({number:number});
   }
 });
 
 
 
 var Tabs = Backbone.Model.extend({
+   defaults: {
+       numbers : true,
+    },  
    title: function(){
      return this.get("title");
     },
+   numbers : function() {
+     return   this.get("numbers") == true;
+   }, 
    initialize : function(args){
-       args.tabs[0].setActive(true);
+       if (_.all(args.tabs,function(t) {return !t.active(); }))
+          this.activate(args.tabs[0]);
+       if (this.numbers())    
+        this.addTabsNumbers();
    }, 
    activate: function(newtab)
    {
@@ -48,6 +74,14 @@ var Tabs = Backbone.Model.extend({
         for(var i=0;i<tabs.length;i++)
             tabs[i].setActive(newtab === tabs[i]);
         this.trigger("change");
+   },
+   activateNext : function() {
+        var tabs = this.tabs();
+        var next = this.activeTab();
+        for(var i=tabs.length-1;i>=0 && !tabs[i].active() ;i--)
+            if (!tabs[i].disabled())
+                next = tabs[i];
+        this.activate(next);
    },
    hideAll: function()
    {    var tabs = this.tabs();
@@ -72,8 +106,19 @@ var Tabs = Backbone.Model.extend({
         for(var i=0;i<tabs.length;i++)
             if (!tabs[i].disabled()) notdisabled++;
      return notdisabled > 1;
-       
-   }
+   },
+   addTabsNumbers : function() {
+     var number = 1;
+     var tabs = this.tabs();
+        for(var i=0;i<tabs.length;i++)
+            if (!tabs[i].disabled()) {
+                  tabs[i].setNumber(number);
+                  number++;
+            }     
+   },
+   tabsTail: function(){
+     return this.get("tabsTail");
+   },
 });
 
 
@@ -81,6 +126,7 @@ var TabsView = Backbone.View.extend({
     model: Tabs,
     initialize: function (args) {
         _.bindAll(this, 'render');
+        this.extrasInTabsRow = args.extrasInTabsRow;
         this.model.bind('change', this.render);
         this.model.view = this;
         this.prerender();
@@ -88,7 +134,7 @@ var TabsView = Backbone.View.extend({
     },
     prerender: function(){
         var container = this.el;
-        container.attr("id","tab-viewer");
+        container.addClass("tab-viewer");
         this.toprow = $("<div id='signStepsContainer'/>");
         container.append(this.toprow);
         _.each(this.model.tabs(), function(t) {
@@ -96,9 +142,8 @@ var TabsView = Backbone.View.extend({
         })
     },
     render: function () {
-        this.toprow.empty();
-
-
+        var tabsview = this;
+        this.toprow.children().detach();
         // Top part , with title and the tabs
         var titlepart = $("<div id='signStepsTitleRow'/>")
         titlepart.append(this.model.title());
@@ -107,11 +152,15 @@ var TabsView = Backbone.View.extend({
         _.each(this.model.tabs(), function(tab) 
         {
             if (tab.disabled()) return;
-            var li = $("<li/>").append($("<a href='#'/>").text(tab.name()));
+            var li = $("<li/>");
+            if (tab.hasNumber())
+                li.append(tabsview.numberIcon(tab.number()));
+            li.append($("<a href='#'/>").html(tab.name()));
             if (tab.active())
                 li.addClass("active");
             li.click(function() {
-                    model.activate(tab);
+                    if (tab.clickable())
+                        model.activate(tab);
                     return false;
                     });
             tabsrow.append(li);
@@ -119,11 +168,21 @@ var TabsView = Backbone.View.extend({
         this.toprow.append(titlepart);
         if (model.hasManyTabs())
             this.toprow.append(tabsrow);
-
-        // Main part
+        if (model.tabsTail() != undefined) 
+           _.each(model.tabsTail(), function (elem) {
+           var li = $("<li style= 'float:right;padding-left:0px;padding-right:20px;'/>").append(elem);
+           tabsrow.append(li);    
+        }) 
+           
+        
         this.model.hideAll();
         _.each(this.model.activeTab().elems(), function(e) {e.show();})
         return this;
+    },
+    numberIcon : function(number) {
+        var icon = $("<span/>");
+        icon.addClass("numbericon" + number);
+        return icon;
     }
 });
 
@@ -136,6 +195,12 @@ window.KontraTabs = {
                         el : $("<div/>")
                     })
         return this;
+    },
+    next : function() {
+        this.model.activateNext();
+    },
+    activate : function(tab) {
+        this.model.activate(tab);
     }
 }
 

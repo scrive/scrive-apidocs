@@ -1,42 +1,32 @@
 module Company.Model (
-    CompanyID(..)
+    module Company.CompanyID
   , ExternalCompanyID(..)
   , Company(..)
   , CompanyInfo(..)
+  , CompanyUI(..)
   , GetCompanies(..)
   , GetCompany(..)
   , GetCompanyByExternalID(..)
   , CreateCompany(..)
   , SetCompanyInfo(..)
+  , UpdateCompanyUI(..)
   , GetOrCreateCompanyWithExternalID(..)
   ) where
 
-import Control.Applicative
-import Data.Data
-import Data.Int
 import Data.Monoid
 import Database.HDBC
-import Happstack.State
-import Happstack.Server
-import Happstack.Util.Common
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
 
 import DB.Classes
 import DB.Derive
 import DB.Fetcher2
+import DB.Types
 import DB.Utils
 import API.Service.Model
+import Company.CompanyID
 import Company.Tables
 import Misc
-
-newtype CompanyID = CompanyID { unCompanyID :: Int64 }
-  deriving (Eq, Ord, Data, Typeable)
-$(newtypeDeriveConvertible ''CompanyID)
-$(newtypeDeriveUnderlyingReadShow ''CompanyID)
-
-instance FromReqURI CompanyID where
-  fromReqURI = readM
 
 newtype ExternalCompanyID = ExternalCompanyID { unExternalCompanyID :: BS.ByteString }
   deriving (Eq, Ord, Show)
@@ -47,6 +37,7 @@ data Company = Company {
   , companyexternalid :: Maybe ExternalCompanyID
   , companyservice    :: Maybe ServiceID
   , companyinfo       :: CompanyInfo
+  , companyui         :: CompanyUI
   } deriving (Eq, Ord, Show)
 
 data CompanyInfo = CompanyInfo {
@@ -57,6 +48,11 @@ data CompanyInfo = CompanyInfo {
   , companycity    :: BS.ByteString
   , companycountry :: BS.ByteString
   } deriving (Eq, Ord, Show)
+
+data CompanyUI = CompanyUI {
+    companybarsbackground    :: Maybe BS.ByteString
+  , companylogo              :: Maybe Binary -- File with the logo
+} deriving (Eq, Ord, Show)
 
 data GetCompanies = GetCompanies (Maybe ServiceID)
 instance DBQuery GetCompanies [Company] where
@@ -80,7 +76,7 @@ data CreateCompany = CreateCompany (Maybe ServiceID) (Maybe ExternalCompanyID)
 instance DBUpdate CreateCompany Company where
   dbUpdate (CreateCompany msid mecid) = do
     _ <- kRunRaw "LOCK TABLE companies IN ACCESS EXCLUSIVE MODE"
-    cid <- CompanyID <$> getUniqueID tableCompanies
+    cid <- getUniqueID tableCompanies
     _ <- kRun $ mkSQL INSERT tableCompanies [
         sql "id" cid
       , sql "external_id" mecid
@@ -106,6 +102,19 @@ instance DBUpdate SetCompanyInfo Bool where
       , sql "country" companycountry
       ] <++> SQL "WHERE id = ?" [toSql cid]
 
+data UpdateCompanyUI = UpdateCompanyUI CompanyID CompanyUI
+instance DBUpdate UpdateCompanyUI Bool where
+  dbUpdate (UpdateCompanyUI cid cui) = do
+    kPrepare $ "UPDATE companies SET"
+      ++ "  bars_background = ?"
+      ++ ", logo = decode(?, 'base64')"
+      ++ "  WHERE id = ?"
+    kExecute01 [
+        toSql $ companybarsbackground cui
+      , toSql $ companylogo cui
+      , toSql cid
+      ]
+
 data GetOrCreateCompanyWithExternalID = GetOrCreateCompanyWithExternalID (Maybe ServiceID) ExternalCompanyID
 instance DBUpdate GetOrCreateCompanyWithExternalID Company where
   dbUpdate (GetOrCreateCompanyWithExternalID msid ecid) = do
@@ -127,13 +136,16 @@ selectCompaniesSQL = SQL ("SELECT"
   ++ ", c.zip"
   ++ ", c.city"
   ++ ", c.country"
+  ++ ", c.bars_background"
+  ++ ", encode(c.logo, 'base64')"
   ++ "  FROM companies c"
   ++ " ") []
 
 fetchCompanies :: DB [Company]
 fetchCompanies = foldDB decoder []
   where
-    decoder acc cid eid sid name number address zip' city country = Company {
+    decoder acc cid eid sid name number address zip' city country
+      bars_background logo = Company {
         companyid = cid
       , companyexternalid = eid
       , companyservice = sid
@@ -145,22 +157,8 @@ fetchCompanies = foldDB decoder []
         , companycity = city
         , companycountry = country
         }
+      , companyui = CompanyUI {
+          companybarsbackground = bars_background
+        , companylogo = logo
+        }
       } : acc
-
--- this will not be needed when we move documents to pgsql. for now it's needed
--- for document handlers - it seems that types of arguments that handlers take
--- need to be serializable. I don't know wtf, but I'll gladly dispose of these
--- instances when we're done with the migration.
-
-newtype CompanyID_0 = CompanyID_0 Int
-  deriving (Eq, Ord, Typeable)
-
-instance Version CompanyID where
-  mode = extension 2 (Proxy :: Proxy CompanyID_0)
-
-instance Version CompanyID_0
-
-instance Migrate CompanyID_0 CompanyID where
-  migrate (CompanyID_0 n) = CompanyID (fromIntegral n)
-
-$(deriveSerializeFor [''CompanyID, ''CompanyID_0])

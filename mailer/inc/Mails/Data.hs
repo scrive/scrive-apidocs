@@ -18,7 +18,7 @@ import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 
 import DB.Derive
-import DB.Types
+import MagicHash (MagicHash)
 
 newtype MailID = MailID Int64
   deriving (Eq, Ord)

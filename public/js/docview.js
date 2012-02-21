@@ -5,7 +5,7 @@
 
 (function(window){
 
-var DocumentStandarView = Backbone.View.extend({
+window.DocumentStandarView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
         this.model.bind('reset', this.render);
@@ -26,7 +26,7 @@ var DocumentStandarView = Backbone.View.extend({
     attachmentsTab : function() {
           var document = this.model;
           var attachmenttabview = $("<span id='attachmenttabview' />");
-          var body = $("<div id='signStepsBody' class='ericfix forauthor'/>");
+          var body = $("<div class='signStepsBody ericfix forauthor'/>");
           var attachmentlist=  $("<div class='attachmentListContainer'/>");
           if (document.authorattachments().length > 0 ) {
             var authorattachmentlist= $("<div class='float-left'/>");
@@ -61,7 +61,7 @@ var DocumentStandarView = Backbone.View.extend({
     signatoriesTab : function(){
           var document = this.model;
           var signatoriestabview = $("<span id='documenttabview' />");
-          var body = $("<div id='signStepsBody' class='ericfix forauthor'/>");
+          var body = $("<div class='signStepsBody ericfix forauthor'/>");
           var firstbox = $("<div id='signViewBodyLeft' />");
           firstbox.append(document.infotext());
           firstbox.append("<BR/>");
@@ -126,6 +126,7 @@ var DocumentStandarView = Backbone.View.extend({
                             onAccept : function()
                             {
                                 document.cancel().send();
+                                return true;
                             }
                             });
                         }
@@ -224,9 +225,14 @@ var DocumentStandarView = Backbone.View.extend({
                                 labelstyle : document.process().requiressignguard()? "width:120px" : "padding-left:20px;padding-right:20px;",
                                 cssClass : "center" ,
                                 onClick : function() {
-                                    if(!signatory.allFieldsReadyForSign()) {
+                                    if(!signatory.signatureReadyForSign()) {
+                                     signatory.signature().trigger('empty');
+                                     FlashMessages.add({content: localization.signature.missing, color: "red"});
+                                    }
+                                    
+                                    else if(!signatory.allFieldsReadyForSign()) {
                                      _.each(signatory.fields(),function(field) {
-                                            if (!field.readyForSign() )
+                                            if (!field.readyForSign() && field.view != undefined)
                                                 field.view.redborder();
                                         });
                                         FlashMessages.add({content: localization.mustFillFieldsBeforeSigning, color: "red"});
@@ -260,10 +266,10 @@ var DocumentStandarView = Backbone.View.extend({
         var acceptButton;
         if (document.elegAuthorization())
         {
-            acceptButton = $("<span class='eleghidden'/>");
-            var bankid = $("<a href='#' class='btn-small green float-right author2 bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
-            var telia = $("<a href='#' class='btn-small green float-right author2 telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
-            var nordea = $("<a href='#' class='btn-small green float-right author2 nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
+            acceptButton = $("<span/>");
+            var bankid = $("<a href='#' class='bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
+            var telia = $("<a href='#' class='author2 telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
+            var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
             bankid.click(function() {
                     Eleg.bankidSign(document,signatory, document.sign());
                     return false;
@@ -315,10 +321,10 @@ var DocumentStandarView = Backbone.View.extend({
         var acceptButton;
         if (document.elegAuthorization())
         {
-            acceptButton = $("<span class='eleghidden'/>");
-            var bankid = $("<a href='#' class='btn-small green float-right author2 bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
-            var telia = $("<a href='#' class='btn-small green float-right author2 telia'><img src='/img/telia.png' alt='Telia Eleg' /></a>");
-            var nordea = $("<a href='#' class='btn-small green float-right author2 nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
+            acceptButton = $("<span/>");
+            var bankid = $("<a href='#' class='bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
+            var telia = $("<a href='#' class='telia'><img src='/img/telia.png' alt='Telia Eleg' /></a>");
+            var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
             bankid.click(function() {
                     Eleg.bankidSign(document,signatory, document.sign());
                     return false;
@@ -372,7 +378,6 @@ var DocumentStandarView = Backbone.View.extend({
       leftbox.append(this.cancelButton().input());
       box.append (leftbox);
 
-        console.log("xxx");
         if (document.process().requiressignguard())
         {
             var middlebox = $("<div id='signViewBottomBoxContainerMiddle'/>");

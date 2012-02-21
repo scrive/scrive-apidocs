@@ -12,6 +12,7 @@ module Util.JSON (
     -- | Diggers - Asking local envirement about JSON object
     , fromJSONLocal
     , fromJSONLocalMap 
+    , fromJSONLocalMapList
     , fromJSONField       
     , fromJSONFieldBase64
     , askJSON 
@@ -28,6 +29,7 @@ module Util.JSON (
     , fromJSONString
     , fromJSONRational
     , fromJSONArray
+    , withJSONFromField
     , JSONPath()
     , pathList
     , jsonType
@@ -42,6 +44,10 @@ import Data.Ratio
 import Control.Monad.Identity
 import Data.Maybe
 import qualified Data.List.Utils as List
+import Misc
+import Text.JSON.String
+import Happstack.Server (HasRqData,ServerMonad)
+
 
 fromJSONString :: JSValue -> String
 fromJSONString (JSString s) = fromJSString s
@@ -125,6 +131,12 @@ instance FromJSON Integer where
 instance FromJSON Int where
     fromJSValue j = liftM fromIntegral (fromJSValue j :: Maybe Integer)
 
+instance FromJSON Bool where
+    fromJSValue (JSBool v) = Just $ v
+    fromJSValue _ = Nothing
+    
+instance (SafeEnum a) => FromJSON a where
+    fromJSValue = join . (fmap toSafeEnumInt) . fromJSValue
     
 instance (FromJSON a) => FromJSON [a] where
     fromJSValue (JSArray list) = let plist = map fromJSValue list 
@@ -147,23 +159,27 @@ fromJSONLocal s digger = do
          Nothing -> return Nothing
 
 fromJSONLocalMap :: (JSONContainer c , MonadReader c m) => m (Maybe a) -> m (Maybe [a])
-fromJSONLocalMap digger = do
+fromJSONLocalMap digger = fromJSONLocalMapList (repeat digger)
+
+
+fromJSONLocalMapList :: (JSONContainer c , MonadReader c m) => [m (Maybe a)] -> m (Maybe [a])
+fromJSONLocalMapList diggers = do
     mlist <- fromJSON
     case mlist of 
          Nothing -> return Nothing
-         Just list ->  runDiggers list
+         Just list ->  runDiggers list diggers
     where
-         runDiggers (j:js) = do
-             mres <- local (setJSON j) digger
+         runDiggers (j:js) (d:ds) = do
+             mres <- local (setJSON j) d
              case mres of
                  Just res -> do
-                     mress <- runDiggers js
+                     mress <- runDiggers js ds
                      case mress of
                          Just ress -> return $ Just (res:ress)
                          _ -> return Nothing
                  _ -> return Nothing
-         runDiggers _ = return $ Just []
-
+         runDiggers _ _ = return $ Just []         
+         
 -- | Getting JSON part of envirement
 askJSON :: (JSONContainer c , MonadReader c m) => m JSValue
 askJSON = liftM getJSON ask
@@ -172,6 +188,13 @@ askJSON = liftM getJSON ask
 withJSON :: (Monad m) => JSValue -> ReaderT JSValue m a -> m a
 withJSON j a = runReaderT a j
 
+withJSONFromField :: (HasRqData m, MonadIO m, Functor m, ServerMonad m) => String -> ReaderT JSValue m (Maybe a) -> m (Maybe a)
+withJSONFromField s a = do
+    mj <- liftM (runGetJSON readJSObject) (getFieldWithDefault "" s)
+    case mj of
+         Right j -> withJSON j a
+         Left _  -> return Nothing
+         
 -- JSON Object construction; partial functions
 
 class JSONPath a where

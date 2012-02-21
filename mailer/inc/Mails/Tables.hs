@@ -19,8 +19,7 @@ tableMails :: Table
 tableMails = Table {
     tblName = "mails"
   , tblVersion = 1
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
-    case desc of
+  , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("token", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("sender", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
@@ -33,7 +32,7 @@ tableMails = Table {
        , ("sent", SqlColDesc { colType = SqlTimestampWithZoneT, colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
-        runRaw conn $ "CREATE TABLE mails ("
+        kRunRaw $ "CREATE TABLE mails ("
           ++ "  id BIGSERIAL NOT NULL"
           ++ ", token BIGINT NOT NULL"
           ++ ", sender TEXT NOT NULL"
@@ -55,15 +54,14 @@ tableMailEvents :: Table
 tableMailEvents = Table {
     tblName = "mail_events"
   , tblVersion = 1
-  , tblCreateOrValidate = \desc -> wrapDB $ \conn -> do
-    case desc of
+  , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("mail_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("event", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("event_read", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
-        runRaw conn $ "CREATE TABLE mail_events ("
+        kRunRaw $ "CREATE TABLE mail_events ("
           ++ "  id BIGSERIAL NOT NULL"
           ++ ", mail_id BIGINT NOT NULL"
           ++ ", event TEXT NOT NULL"
@@ -72,9 +70,9 @@ tableMailEvents = Table {
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid
-  , tblPutProperties = wrapDB $ \conn -> do
-    runRaw conn "CREATE INDEX idx_mail_events_mail_id ON mail_events(mail_id)"
-    runRaw conn $ "ALTER TABLE mail_events"
+  , tblPutProperties = do
+    kRunRaw "CREATE INDEX idx_mail_events_mail_id ON mail_events(mail_id)"
+    kRunRaw $ "ALTER TABLE mail_events"
       ++ " ADD CONSTRAINT fk_mail_events_mails FOREIGN KEY(mail_id)"
       ++ " REFERENCES mails(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"

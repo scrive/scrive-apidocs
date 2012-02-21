@@ -175,9 +175,8 @@ instance DBUpdate UpdateServiceSettings Bool where
 -- helpers
 
 checkIfServiceExists :: ServiceID -> DB Bool
-checkIfServiceExists uid = do
-  kQuickQuery (SQL "SELECT 1 FROM services WHERE id = ?" [toSql uid])
-    >>= checkIfOneObjectReturned
+checkIfServiceExists uid =
+  checkIfAnyReturned "SELECT 1 FROM services WHERE id = ?" [toSql uid]
 
 selectServicesSQL :: String
 selectServicesSQL = "SELECT"

@@ -99,9 +99,6 @@ priceplanPageContents=
                         </ul>
                     </div>
                 </div>
-                <div class="drop-shadow-container">
-                    <div class="drop-shadow"></div>
-                </div>
                 <br />
                 <br />
                 <div>$_priceplanPageVAT()$</div>

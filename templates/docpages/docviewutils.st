@@ -18,13 +18,7 @@ showFileImagesError=
 <div class="errormsg">
  $_showFileImagesError()$
 </div>
-####
 ###
-signatoryScriptIfRequired=   
-$if(addSignatoryScript)$
-      <script type="text/javascript" src="/js/signatory.js"></script>
-$endif$
-####
 customfield=
 <span class="customfield dragfield inputWrapper">
   <input type="text" class="customfieldbox" autocomplete="off" value="$otherFieldValue$" name="fieldvalue" infotext="$otherFieldName$" />

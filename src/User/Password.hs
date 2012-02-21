@@ -1,7 +1,8 @@
 module User.Password where
 
-import Control.Monad.IO.Class
-import System.Random (newStdGen, randoms)
+import Control.Monad (liftM)
+import Control.Monad.Trans (MonadIO)
+import Crypto.RNG(CryptoRNG, randomBytes)
 import qualified Data.ByteString as BS
 import qualified Data.Digest.SHA256 as D
 
@@ -12,17 +13,13 @@ data Password = Password {
   , pwdSalt :: Binary
   } deriving (Eq, Ord, Show)
 
-createPassword :: MonadIO m => BS.ByteString -> m Password
-createPassword password = liftIO $ do
-  salt <- makeSalt
+createPassword :: (MonadIO m, CryptoRNG m) => BS.ByteString -> m Password
+createPassword password = do
+  salt <- Binary `liftM` randomBytes 10
   return Password {
       pwdHash = hashPassword password salt
     , pwdSalt = salt
   }
-  where
-    makeSalt = do
-      rng <- newStdGen
-      return . Binary . BS.pack . take 10 $ map fromIntegral (randoms rng :: [Int])
 
 hashPassword :: BS.ByteString -> Binary -> Binary
 hashPassword password salt =

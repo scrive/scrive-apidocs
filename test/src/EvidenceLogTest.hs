@@ -1,7 +1,6 @@
 module EvidenceLogTest (evidenceLogTests) where
 
 import Control.Monad
-import DB.Nexus
 import Data.Convertible
 import Data.Ix
 import EvidenceLog.Model
@@ -11,9 +10,10 @@ import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit.Base (Assertion)
 --import Test.QuickCheck
 import TestingUtil
+import DB.Classes
 
-evidenceLogTests :: Nexus -> Test
-evidenceLogTests _conn = testGroup "Evidence Log" [
+evidenceLogTests :: DBEnv -> Test
+evidenceLogTests _env = testGroup "Evidence Log" [
       testCase "Testing EvidenceEventType conversions not equal" conversionNEq,
       testCase "Testing EvidenceEventType conversions equal" conversionEq
       ]

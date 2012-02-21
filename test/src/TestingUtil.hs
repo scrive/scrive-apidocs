@@ -15,7 +15,6 @@ import Doc.DocUtils
 import Test.QuickCheck.Gen
 import Control.Monad.Trans
 import Data.Maybe
-import DB.Nexus
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString as BS
 import qualified Test.HUnit as T
@@ -23,7 +22,7 @@ import qualified Test.HUnit as T
 import File.FileID
 import API.API
 import DB.Classes
-import DB.Types
+import MagicHash (MagicHash, unsafeMagicHash)
 import Company.Model
 import FlashMessage
 import qualified Log
@@ -71,7 +70,7 @@ instance Arbitrary DocumentTag where
   arbitrary = DocumentTag <$> arbitrary <*> arbitrary
 
 instance Arbitrary UserID where
-  arbitrary = UserID <$> arbitrary
+  arbitrary = unsafeUserID . abs <$> arbitrary
 
 instance Arbitrary Company where
   arbitrary = do
@@ -83,10 +82,16 @@ instance Arbitrary Company where
                      , companyexternalid = b
                      , companyservice = c
                      , companyinfo = d
+                     , companyui = emptyCompanyUI
                      }
+    where
+      emptyCompanyUI = CompanyUI {
+        companybarsbackground = Nothing
+      , companylogo = Nothing
+      }
 
 instance Arbitrary CompanyID where
-  arbitrary = CompanyID <$> arbitrary
+  arbitrary = unsafeCompanyID . abs <$> arbitrary
 
 instance Arbitrary ExternalCompanyID where
   arbitrary = ExternalCompanyID <$> arbitrary
@@ -111,7 +116,7 @@ instance Arbitrary ServiceID where
   arbitrary = ServiceID <$> arbitrary
 
 instance Arbitrary MagicHash where
-  arbitrary = MagicHash <$> arbitrary
+  arbitrary = unsafeMagicHash <$> arbitrary
 
 instance Arbitrary MailsDeliveryStatus where
   arbitrary = elements [ Delivered
@@ -145,29 +150,29 @@ class ExtendWithRandomnes a where
 
 instance ExtendWithRandomnes SignatoryDetails where
     moreRandom sl = return sl
-    
+
 instance Arbitrary AuthorActor where
   arbitrary = do
     (time, ip, uid, eml) <- arbitrary
     return $ AuthorActor time ip uid eml
-    
+
 instance Arbitrary SystemActor where
   arbitrary = do
     time <- arbitrary
     return $ SystemActor time
-    
+
 instance Arbitrary SignatoryActor where
   arbitrary = do
     (time, ip, uid, eml, slid) <- arbitrary
     return $ SignatoryActor time ip uid eml slid
-    
+
 instance Arbitrary MailAPIActor where
   arbitrary = do
     (time, uid, eml) <- arbitrary
     return $ MailAPIActor time uid eml
 
 instance Arbitrary SignatoryLinkID where
-  arbitrary = SignatoryLinkID <$> arbitrary
+  arbitrary = unsafeSignatoryLinkID . abs <$> arbitrary
 
 instance Arbitrary SignatoryLink where
   arbitrary = do
@@ -230,7 +235,7 @@ instance Arbitrary CSVUpload where
                        }
 
 instance Arbitrary DocumentID where
-  arbitrary = DocumentID <$> arbitrary
+  arbitrary = unsafeDocumentID . abs <$> arbitrary
 
 documentAllTypes :: [DocumentType]
 documentAllTypes = [ Signable Contract
@@ -393,8 +398,8 @@ arbEmail = do
   return $ BS.fromString (n ++ "@" ++ d ++ ".com")
 
 signatoryLinkExample1 :: SignatoryLink
-signatoryLinkExample1 = SignatoryLink { signatorylinkid = SignatoryLinkID 0
-                                      , signatorymagichash = MagicHash 0
+signatoryLinkExample1 = SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 0
+                                      , signatorymagichash = unsafeMagicHash 0
                                       , maybesignatory = Nothing
                                       , maybesupervisor = Nothing
                                       , maybecompany = Nothing
@@ -422,7 +427,7 @@ signatoryLinkExample1 = SignatoryLink { signatorylinkid = SignatoryLinkID 0
                                       }
 
 blankUser :: User
-blankUser = User { userid                        = UserID 0
+blankUser = User { userid                        = unsafeUserID 0
                  , userpassword                  = Nothing
                  , useriscompanyadmin            = False
                  , useraccountsuspended          = False
@@ -481,8 +486,8 @@ blankDocument =
 
 -}
 
-testThat :: String -> Nexus -> DB () -> Test
-testThat s conn a = testCase s (withTestEnvironment conn a)
+testThat :: String -> DBEnv -> DB () -> Test
+testThat s env a = testCase s (withTestEnvironment env a)
 
 addNewCompany ::  DB Company
 addNewCompany = do
@@ -648,9 +653,9 @@ addRandomDocument rda = do
       doc' <- rand 10 arbitrary
       xtype <- rand 10 (elements $ randomDocumentAllowedTypes rda)
       status <- rand 10 (elements $ randomDocumentAllowedStatuses rda)
-      
+
       siglinks <- rand 10 (listOf $ randomSigLinkByStatus status)
-      
+
       let doc = doc' { documenttype = xtype, documentstatus = status }
 
       roles <- getRandomAuthorRoles doc
@@ -659,7 +664,7 @@ addRandomDocument rda = do
                      , maybecompany = usercompany user
                      , signatoryroles = roles
                      }
-      
+
       let alllinks = asl : siglinks
 
 
@@ -672,7 +677,7 @@ addRandomDocument rda = do
         (False, _)  -> do
           --liftIO $ print $ "did not pass condition; doc: " ++ show adoc
           worker file now user p _mcompany
-        
+
         (_, Just _problems) -> do
                -- am I right that random document should not have invariantProblems?
                --uncomment this to find out why the doc was rejected
@@ -801,7 +806,7 @@ instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d, Arbitrary e, Arbit
     return (a, b, c, d, e, f, g, h, i)
 
 instance Arbitrary FileID where
-  arbitrary = FileID . abs <$> arbitrary
+  arbitrary = unsafeFileID . abs <$> arbitrary
 
 instance Arbitrary File where
   arbitrary = do

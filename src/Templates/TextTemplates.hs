@@ -35,6 +35,7 @@ import User.Lang
 import User.Region
 import Text.ParserCombinators.Parsec
 import System.IO
+import Data.String.Utils (replace)
 
 
 -- | Reading CSV files Part of this code is done in wrong way. This is
@@ -96,7 +97,7 @@ getTextTemplatesFromFile path =
                                     smartZip scheme $ for rest $ \v ->
                                         if (all (isSpace ||^ isControl) v && (length v < 6))
                                            then []
-                                           else [(n,v)]
+                                           else [(n,replace "\n" " " v)]
    addLine _ m _ = m
 
 

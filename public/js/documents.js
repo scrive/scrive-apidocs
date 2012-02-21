@@ -38,8 +38,8 @@ window.Document = Backbone.Model.extend({
         ready: false,
         viewer: new DocumentViewer(),
         infotext: "",
-        authorization: "email"
-
+        authorization: "email",
+        template : false
     },
     initialize: function (args) {
         this.url = "/doc/" + args.id;
@@ -55,6 +55,20 @@ window.Document = Backbone.Model.extend({
     },
     signatories: function(){
         return this.get("signatories");
+    },
+    fixForBasic: function() {
+        while (this.signatories().length <2 ) {
+              this.addSignatory();
+        }
+    },
+    addSignatory : function(){
+        var document = this;
+        var signatories = this.signatories();
+        var nsig = new Signatory({"document": document, signs: true})
+        signatories[signatories.length] = nsig;
+        document.set({"signatories" : signatories});
+        document.change();
+        return nsig;
     },
     mainfile: function(){
         var file;
@@ -79,8 +93,20 @@ window.Document = Backbone.Model.extend({
     process: function(){
         return this.get("process");
     },
+    region: function(){
+        return this.get("region");
+    },
     title : function(){
         return this.get("title");
+    },
+    setTitle : function(title) {
+        this.set({title: title}, {silent: true});
+    },
+    daystosign : function() {
+          return this.get("daystosign");
+    },
+    setDaystosign : function(daystosign) {
+         this.set({daystosign: daystosign}, {silent: true});
     },
     infotext : function(){
         return this.get("infotext");
@@ -103,6 +129,22 @@ window.Document = Backbone.Model.extend({
               method: "POST"
           });
     },
+    cancelMail : function(){
+          	return new Mail({
+						document: this,
+						type: "cancel"
+			});
+    },
+    setInvitationMessage : function(customtext)
+    {
+        this.set({invitationmessage: customtext},{silent: true});
+    },
+    inviteMail : function(){
+                return new Mail({
+                                                document: this,
+                                                type: "invite"
+                        });
+    },
     sign : function() {
         var fieldnames = [];
         var fieldvalues = [];
@@ -119,6 +161,47 @@ window.Document = Backbone.Model.extend({
               fieldvalue : fieldvalues
           });
     },
+    sendByAuthor : function() {
+        return new Submit({
+              send : "YES",
+              method: "POST",
+          });
+    },
+    signByAuthor : function() {
+        return new Submit({
+              sign : "YES",
+              method: "POST",
+          });
+    },
+    save : function() {
+         return new Submit({
+              url: "/save/" + this.documentid(),
+              method: "POST",
+              draft: JSON.stringify(this.draftData())
+          });
+    },
+    setAttachments: function() {
+        return new Submit({
+              url: "/setattachments/" + this.documentid(),
+              method: "POST",
+          });
+    },
+    draftData : function() {
+      return { 
+          title : this.title(),
+          functionality : this.get("functionality"),
+          invitationmessage : this.get("invitationmessage"),
+          daystosign : this.get("daystosign"),
+          authorization : this.get("authorization"),
+          signatories : _.map(this.signatories(), function(sig) {return sig.draftData()}),
+          region : this.region().draftData(),
+          template : this.isTemplate()
+      };  
+    },
+    switchFunctionalityToAdvanced : function() {
+          var newfunctionality = this.isBasic() ? "advanced" : "basic";
+          this.set({functionality: newfunctionality}, {silent : true});
+    },
     status : function() {
           return this.get("status");
     },
@@ -133,9 +216,27 @@ window.Document = Backbone.Model.extend({
            return !signatory.current();
        });
     },
+    removeSignatory : function(sig) {
+       if (this.signatories().length < 2) 
+           return;
+       var newsigs = new Array();    
+       newsigs.push(this.signatories()[0]);
+       var removed = false;
+       for(var i=1;i<this.signatories().length;i++)
+          if ((sig !== this.signatories()[i] && i < this.signatories().length -1)
+              || removed)
+             newsigs.push(this.signatories()[i]);
+          else 
+             removed = true;
+       this.set({signatories : newsigs});
+
+    },
     currentViewerIsAuthor : function() {
         var csig  = this.currentSignatory();
         return  (csig != undefined && csig.author());
+    },
+    preparation: function() {
+        return this.status() == "Preparation";
     },
     pending: function() {
         return this.status() == "Pending";
@@ -177,6 +278,12 @@ window.Document = Backbone.Model.extend({
     elegAuthorization : function() {
           return this.get("authorization") == "eleg";
     },
+    setElegVerification : function() {
+          this.set({"authorization":"eleg"}, {silent: true});
+    },
+    setEmailVerification : function() {
+          this.set({"authorization":"email"}, {silent: true});
+    },
     elegTBS : function() {
         var text = this.title() + " "+  this.documentid() ;
         _.each(this.signatories(),function(signatory) {
@@ -189,16 +296,37 @@ window.Document = Backbone.Model.extend({
           return (signatory.signs() && signatory.hasSigned()) || !signatory.signs() || signatory.current();
         });
     },
+    isTemplate: function() {
+       return this.get("template") == true
+    },
+    makeTemplate : function() {
+       return this.set({"template": true}, {silent : true});
+    },
+    isBasic: function() {
+       return this.get("functionality") == "basic";
+    },    
     recall : function() {
        this.fetch({data: this.viewer().forFetch(),   processData:  true, cache : false});
     },
     needRecall : function() {
         return this.mainfile() == undefined;
-        {   var document = this;
-            setTimeout(function() {
-                        document.fetch({data: document.viewer().forFetch(),   processData:  true, cache : false});
-                        }, 1000);
-        }
+    },
+    author: function() {
+      for(var i=0;i<this.signatories().length;i++)
+          if (this.signatories()[i].author())
+              return this.signatories()[i];
+    },
+    authorCanSignFirst : function() {
+        if (!this.author().signs())
+            return false;
+        var aidx = this.author().signorder();
+        return ! _.any(this.signatories(), function(sig ){
+            return sig.signs() && sig.signorder() < aidx
+            })
+
+    },
+    allowsDD : function() {
+        return this.preparation() && !this.isBasic();
     },
     parse: function(args) {
      var document = this;
@@ -224,6 +352,7 @@ window.Document = Backbone.Model.extend({
                 return new Signatory(extendedWithDocument(signatoryargs));
       }),
       process: new Process(args.process),
+      region: new Region(args.region),
       infotext : args.infotext,
       canberestarted : args.canberestarted,
       canbecanceled : args.canbecanceled,
@@ -231,6 +360,10 @@ window.Document = Backbone.Model.extend({
       timeouttime  : args.timeouttime  == undefined ? undefined :  new Date(args.timeouttime),
       signorder : args.signorder,
       authorization : args.authorization,
+      template : args.template,
+      functionality : args.functionality,
+      daystosign: args.daystosign,
+      invitationmessage : args.invitationmessage,
       ready: true
       };
     }
@@ -255,6 +388,7 @@ window.DocumentDataFiller = {
             unsignedpartynotcurrent.push(signatories[i].smartname());
         var ls = listString(unsignedpartynotcurrent);
         $(".unsignedpartynotcurrent", object).html(ls);
+        return object;
         // Something more can come up
     }
 }

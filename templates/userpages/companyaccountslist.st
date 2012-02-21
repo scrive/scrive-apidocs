@@ -1,17 +1,17 @@
 ####    Pages for users - usual from my account
 viewCompanyAccounts =
-<div>
-  <div id="tab-viewer">
+<div class="tab-viewer">
       <div class="tab-header"></div>
       <ul class="tabs">
         <li><a href="/account">$_HeadUserInfo()$</a></li>
         <li><a href="/account/security">$_HeadAccountSettings()$</a></li>
+        <li><a href="/account/company">$_CompanySettings()$</a></li>
         <li class="active"><a href="/account/companyaccounts">$_CompanyAccounts()$</a></li>
         <li><a href="/account/mailapi">$_HeadMailApi()$</a></li>
         <li><a href="/account/usagestats">$_HeadUsageStats()$</a></li>
       </ul>
-  </div>
 </div>
+
 
 <script>
  jQuery(function(){
@@ -193,7 +193,7 @@ viewCompanyAccounts =
     }),
     headerExtras: addCompanyAccountButton.input()
   });
-    jQuery("#tab-viewer").append(companyAccountsTable.view.el);
+    jQuery(".tab-viewer").append(companyAccountsTable.view.el);
   });
 </script>
 ####

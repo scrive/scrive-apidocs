@@ -145,6 +145,13 @@ data DocProcessInfo =
   , processsignedinfotext :: String
   , processstatusinfotext :: String
   , processauthorsignlastbuttontext :: String
+  
+  -- process specific design view titles of parties
+  , processauthorname :: String
+  , processauthorsignatoryname :: String
+  , processsignatoryname :: String
+  , processnonsignatoryname :: String
+  , processnumberedsignatories :: Bool
   }
 
 contractProcess :: DocProcessInfo
@@ -234,6 +241,12 @@ contractProcess =
   , processsignedinfotext = "contractsignedinfotext"
   , processstatusinfotext = "contractstatusinfotext"
   , processauthorsignlastbuttontext = "contractauthorsignlastbuttontext"
+  
+  , processauthorname = "contractauthorname"
+  , processauthorsignatoryname = "contractauthorsignatoryname"
+  , processsignatoryname = "contractsignatoryname"
+  , processnonsignatoryname = "contractnonsignatoryname"
+  , processnumberedsignatories = True
   }
 
 offerProcess :: DocProcessInfo
@@ -323,7 +336,14 @@ offerProcess =
   , processsignedinfoheader = "offersignedinfoheader"
   , processsignedinfotext = "offersignedinfotext"
   , processstatusinfotext = "offerstatusinfotext"
-  , processauthorsignlastbuttontext = "offerauthorsignlastbuttontext"
+  , processauthorsignlastbuttontext = "offerauthorsignlastbuttontext"  
+  
+  , processauthorname = "offerauthorname"
+  , processauthorsignatoryname = "offerauthorsignatoryname"
+  , processsignatoryname = "offersignatoryname"
+  , processnonsignatoryname = "offernonsignatoryname"
+  , processnumberedsignatories = True
+
   }
 
 orderProcess :: DocProcessInfo
@@ -413,6 +433,13 @@ orderProcess =
   , processsignedinfoheader = "ordersignedinfoheader"
   , processsignedinfotext = "ordersignedinfotext"
   , processstatusinfotext = "orderstatusinfotext"
-  , processauthorsignlastbuttontext = "orderauthorsignlastbuttontext"
+  , processauthorsignlastbuttontext = "orderauthorsignlastbuttontext"    
+  
+  , processauthorname = "orderauthorname"
+  , processauthorsignatoryname = "orderauthorsignatoryname"
+  , processsignatoryname = "ordersignatoryname"
+  , processnonsignatoryname = "ordernonsignatoryname"
+  , processnumberedsignatories = True
+
   }
 

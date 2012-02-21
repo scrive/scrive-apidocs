@@ -23,10 +23,14 @@
 # and make it executable.
 #
 
+# Note: creating symlink for mailing-server is disabled for now
+# since mailer doesn't share many files with kontrakcja and thus
+# having it doesn't provide sny significant speed boost.
+
 mkdir -p ./dist/build/kontrakcja-server/kontrakcja-server-tmp
 mkdir -p ./dist/build/kontrakcja-test
-mkdir -p ./dist/build/mailing-server
+#mkdir -p ./dist/build/mailing-server
 ln -sf ../kontrakcja-server/kontrakcja-server-tmp \
        ./dist/build/kontrakcja-test/kontrakcja-test-tmp
-ln -sf ../kontrakcja-server/kontrakcja-server-tmp \
-       ./dist/build/mailing-server/mailing-server-tmp
+#ln -sf ../kontrakcja-server/kontrakcja-server-tmp \
+#       ./dist/build/mailing-server/mailing-server-tmp

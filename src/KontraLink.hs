@@ -1,7 +1,7 @@
-module KontraLink(KontraLink(..), LoginRedirectReason(..), DesignStep(..), DesignStep2Flag(..)) where
+module KontraLink(KontraLink(..), LoginRedirectReason(..)) where
 
-import DB.Types
 import Doc.DocStateData
+import MagicHash (MagicHash)
 import Misc
 import ActionSchedulerState (ActionID)
 import User.Model
@@ -22,21 +22,6 @@ data LoginRedirectReason = LoginTry
                          | NotLoggedAsSuperUser
                          | InvalidLoginInfo String -- email
     deriving (Eq)
-data DesignStep2Flag = AfterCSVUpload  deriving (Eq)
-type Person = Int
-
-data DesignStep = DesignStep1
-                | DesignStep2 DocumentID (Maybe Person) (Maybe DesignStep2Flag) SignLast
-                | DesignStep3 DocumentID SignLast
-    deriving (Eq)
-type SignLast = Bool
-
-instance Show DesignStep where
-    show DesignStep1 =  ""
-    show (DesignStep2 documentid Nothing _ sl) = "d/" ++ show documentid ++ "?step2" ++ (if sl then "&authorsignlast" else "")
-    show (DesignStep2 documentid (Just person) Nothing sl) = "d/" ++ show documentid ++ "?step2&person=" ++ show person ++ (if sl then "&authorsignlast" else "")
-    show (DesignStep2 documentid (Just person) (Just AfterCSVUpload) sl) =  "d/" ++ show documentid ++ "?step2&person=" ++ show person ++ "&aftercsvupload" ++ (if sl then "&authorsignlast" else "")
-    show (DesignStep3 documentid sl) ="d/" ++ show documentid ++ "?step3" ++ (if sl then "&authorsignlast" else "")
 
 {- |
    All the links available for responses
@@ -67,6 +52,8 @@ data KontraLink
     | LinkAttachments
     | LinkRubbishBin
     | LinkAccount Bool -- show create company modal?
+    | LinkAccountCompany
+    | LinkCompanyLogo CompanyID
     | LinkChangeUserEmail ActionID MagicHash
     | LinkAccountSecurity
     | LinkUserMailAPI
@@ -74,7 +61,7 @@ data KontraLink
     | LinkSignDocNoMagicHash DocumentID SignatoryLinkID
     | LinkAccountFromSign Document SignatoryLink
     | LinkIssueDoc DocumentID
-    | LinkDesignDoc DesignStep
+    | LinkDesignDoc DocumentID
     | LinkRenameAttachment DocumentID
     | LinkIssueDocPDF (Maybe SignatoryLink) Document {- Which file? -}
     | LinkCompanyAccounts ListParams
@@ -84,7 +71,6 @@ data KontraLink
     | LinkRestart DocumentID
     | LinkAcceptTOS
     | LinkAdminOnly
-    | LinkPaymentsAdmin
     | LinkUserAdmin (Maybe UserID)
     | LinkCompanyAdmin (Maybe CompanyID)
     | LinkCompanyUserAdmin CompanyID
@@ -174,6 +160,8 @@ instance Show KontraLink where
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
     showsPrec _ (LinkAccount False) = (++) "/account"
     showsPrec _ (LinkAccount True) = (++) "/account/?createcompany"
+    showsPrec _ LinkAccountCompany = (++) "/account/company"
+    showsPrec _ (LinkCompanyLogo cid) = (++) $ "/account/company/" ++ show cid
     showsPrec _ (LinkChangeUserEmail actionid magichash) =
         (++) $ "/account/" ++ show actionid ++  "/" ++ show magichash
     showsPrec _ (LinkCompanyAccounts params) = (++) $ "/account/companyaccounts" ++ "?" ++ show params
@@ -182,7 +170,7 @@ instance Show KontraLink where
     showsPrec _ LinkUserMailAPI = (++) "/account/mailapi"
     showsPrec _ (LinkIssueDoc documentid) =
         (++) $ "/d/" ++ show documentid
-    showsPrec _ (LinkDesignDoc designstep) =  (++) $ "/" ++ show designstep
+    showsPrec _ (LinkDesignDoc did) =  (++) $ "/" ++ show did
     showsPrec _ (LinkRenameAttachment documentid) = (++) $ "/a/rename/" ++ show documentid
     showsPrec _ (LinkIssueDocPDF Nothing document) =
         (++) $ "/d/" ++ show (documentid document) ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"
@@ -202,7 +190,6 @@ instance Show KontraLink where
     showsPrec _ (LinkCancel document) = (++) $ "/cancel/"++(show $ documentid document)
     showsPrec _ (LinkRestart documentid) = (++) $ "/restart/"++(show  documentid)
     showsPrec _ LinkAdminOnly = (++) $ "/adminonly/"
-    showsPrec _ (LinkPaymentsAdmin ) = (++) $ "/adminonly/advpayments"
     showsPrec _ (LinkUserAdmin Nothing) = (++) $ "/adminonly/useradmin"
     showsPrec _ (LinkUserAdmin (Just userId)) = (++) $ "/adminonly/useradmin/"++show userId
     showsPrec _ (LinkCompanyAdmin Nothing) = (++) $ "/adminonly/companyadmin"

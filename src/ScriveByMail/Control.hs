@@ -167,10 +167,8 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) pdfBinary
   file <- runDB $ dbUpdate $ NewFile (BS.fromString title) content14
   _ <- guardRightM $ runDBUpdate (AttachFile (documentid doc) (fileid file) actor)
-
-  _ <- runDBUpdate $ SetDocumentAdvancedFunctionality (documentid doc) actor
-  _ <- runDBUpdate $ SetEmailIdentification (documentid doc) actor
-  
+  _ <- runDBUpdate $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality actor
+  _ <- runDBUpdate $ SetDocumentIdentification (documentid doc) [EmailIdentification] actor
   errs <- lefts <$> (sequence $ [runDBUpdate $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) actor])
           
   when ([] /= errs) $ do

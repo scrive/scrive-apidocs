@@ -266,8 +266,8 @@ jsonMailAPI mailapi username user pdfs plains content = do
   file <- runDB $ dbUpdate $ NewFile (BS.fromString title) content14
   _ <- guardRightM $ runDBUpdate (AttachFile (documentid doc) (fileid file) actor)
   
-  _ <- runDBUpdate $ SetDocumentAdvancedFunctionality (documentid doc) actor
-  _ <- runDBUpdate $ SetEmailIdentification (documentid doc) actor
+  _ <- runDBUpdate $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality actor
+  _ <- runDBUpdate $ SetDocumentIdentification (documentid doc) [EmailIdentification] actor
 
   let signatories = for (dcrInvolved dcr) $ \InvolvedRequest{irRole,irData} ->
         (SignatoryDetails{signatorysignorder = SignOrder 0, signatoryfields = irData},

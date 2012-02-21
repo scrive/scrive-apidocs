@@ -39,7 +39,6 @@ module Doc.Model
   , PreparationToPending(..)
   , ReallyDeleteDocument(..)
   , RejectDocument(..)
-  , RemoveDaysToSign(..)
   , RemoveDocumentAttachment(..)
   , ResetSignatoryDetails(..)
   , ResetSignatoryDetails2(..)
@@ -48,15 +47,14 @@ module Doc.Model
   , SaveDocumentForUser(..)
   , SaveSigAttachment(..)
   , SetDaysToSign(..)
-  , SetDocumentAdvancedFunctionality(..)
+  , SetDocumentFunctionality(..)
   , SetDocumentInviteTime(..)
   , SetDocumentLocale(..)
   , SetDocumentTags(..)
   , SetDocumentTimeoutTime(..)
   , SetDocumentTitle(..)
   , SetDocumentUI(..)
-  , SetElegitimationIdentification(..)
-  , SetEmailIdentification(..)
+  , SetDocumentIdentification(..)
   , SetInvitationDeliveryStatus(..)
   , SetInviteText(..)
   , SignDocument(..)
@@ -67,14 +65,15 @@ module Doc.Model
   , TimeoutDocument(..)
   , UpdateFields(..)
   , UpdateSigAttachments(..)
+  , UpdateDraft(..)
   , SetDocumentModificationData(..)
   ) where
 
 import API.Service.Model
 import DB.Classes
---import DB.Fetcher
 import DB.Fetcher2
-import DB.Types
+import MagicHash (MagicHash)
+import Crypto.RNG(random)
 import DB.Utils
 import File.File
 import File.FileID
@@ -99,13 +98,11 @@ import Util.SignatoryLinkUtils
 import Doc.DocProcess
 import Doc.DocStateCommon
 import qualified Log
-import System.Random (randomIO)
 import Control.Monad.IO.Class
 import Control.Monad
 import qualified Control.Exception as E
 import File.Model
 import Util.MonadUtils
-import Data.Semantic
 
 import EvidenceLog.Model
 import Util.HasSomeUserInfo
@@ -565,9 +562,9 @@ insertDocumentAsIs document = do
 
 insertNewDocument :: Document -> DB Document
 insertNewDocument doc = do
-  wrapDB $ \conn -> runRaw conn "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
-  docid <- DocumentID <$> getUniqueID tableDocuments
-  now <- liftIO $ getMinutesTime
+  kRunRaw "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
+  docid <- getUniqueID tableDocuments
+  now <- getMinutesTime
   let docWithId = doc {documentid = docid, documentmtime  = now, documentctime = now}
   newdoc <- insertDocumentAsIs docWithId
   case newdoc of
@@ -1111,7 +1108,7 @@ instance Actor a => DBUpdate (MarkDocumentSeen a) (Either String Document) where
     mdoc <- dbQuery $ GetDocumentByDocumentID did
     case mdoc of
       Nothing -> return $ Left $ "document does not exist with id " ++ show did
-      Just doc -> case getSigLinkFor doc (And slid mh) of
+      Just doc -> case maybe Nothing (\_ -> getSigLinkFor doc mh) (getSigLinkFor doc slid) of
         Nothing -> return $ Left $ "signatory link id and magic hash do not match!"
         Just _ -> do
           let time = actorTime actor
@@ -1208,14 +1205,14 @@ instance Actor a => DBUpdate (NewDocument a) (Either String Document) where
     else do
       kRunRaw "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
       kRunRaw "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
-      did <- DocumentID <$> getUniqueID tableDocuments
+      did <- getUniqueID tableDocuments
 
       let authorRoles = if ((Just True) == getValueForProcess documenttype processauthorsend)
                         then [SignatoryAuthor]
                         else [SignatoryPartner, SignatoryAuthor]
-      linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
+      linkid <- getUniqueID tableSignatoryLinks
 
-      magichash <- liftIO randomIO
+      magichash <- random
 
       let authorlink0 = signLinkFromDetails'
                         (signatoryDetailsFromUser user mcompany)
@@ -1356,7 +1353,7 @@ instance Actor a => DBUpdate (RestartDocument a) (Either String Document) where
       let signatoriesDetails = map (\x -> (signatorydetails x, signatoryroles x, signatorylinkid x)) $ documentsignatorylinks doc
           Just asl = getAuthorSigLink doc
       newSignLinks <- flip mapM signatoriesDetails $ do \(a,b,c) -> do
-                                                             magichash <- liftIO randomIO
+                                                             magichash <- random
 
                                                              return $ signLinkFromDetails' a b c magichash
       let Just authorsiglink0 = find isAuthor newSignLinks
@@ -1566,59 +1563,37 @@ instance Actor a => DBUpdate (SetInviteText a) (Either String Document) where
       actor
     getOneDocumentAffected "SetInviteText" r did
 
-data Actor a => SetDaysToSign a = SetDaysToSign DocumentID Int a
-instance Actor a => DBUpdate (SetDaysToSign a) (Either String Document) where
-  dbUpdate (SetDaysToSign did days actor) = do
-    let time = actorTime actor
-    r <- kRun $ mkSQL UPDATE tableDocuments [
-        sql "days_to_sign" days
-      , sql "mtime" time
-      , sqlLog time $ "Days to sign set to " ++ show days
-      ] <++> SQL "WHERE id = ?" [toSql did]
+
+data Actor a => SetDaysToSign a = SetDaysToSign DocumentID (Maybe Int) a
+instance Actor a =>  DBUpdate (SetDaysToSign a) (Either String Document) where
+  dbUpdate (SetDaysToSign did mdays actor) = do
+    r <- kRun $ mkSQL UPDATE tableDocuments 
+         [ sql "days_to_sign" $ mdays
+         , sql "mtime" $ actorTime actor
+
+         ] <++> SQL "WHERE id = ?" [ toSql did ]
     when_ (r == 1) $
       dbUpdate $ InsertEvidenceEvent
-      SetDaysToSignEvidence
-      ("Days to sign set to " ++ show days ++ " by " ++ actorWho actor ++ ".")
+      (SetDaysToSignEvidence <| isJust mdays |> RemoveDaysToSignEvidence)
+      ("Days to sign set to " ++ show mdays ++ " by " ++ actorWho actor ++ ".")
       (Just did)
-      actor
+      actor    
     getOneDocumentAffected "SetDaysToSign" r did
 
-data Actor a => RemoveDaysToSign a = RemoveDaysToSign DocumentID a
-instance Actor a => DBUpdate (RemoveDaysToSign a) (Either String Document) where
-  dbUpdate (RemoveDaysToSign did actor) = do
-    let time = actorTime actor
-    r <- kRun $ mkSQL UPDATE tableDocuments [
-        sql "days_to_sign" SqlNull
-      , sql "mtime" time
-      , sqlLog time "Removed days to sign"
-      ] <++> SQL "WHERE id = ?" [toSql did]
-    when_ (r == 1) $
-      dbUpdate $ InsertEvidenceEvent
-      RemoveDaysToSignEvidence
-      ("Days to sign removed by " ++ actorWho actor ++ ".")
-      (Just did)
-      actor
-    getOneDocumentAffected "RemoveDaysToSign" r did
-
-data Actor a => SetDocumentAdvancedFunctionality a = SetDocumentAdvancedFunctionality DocumentID a
-instance Actor a => DBUpdate (SetDocumentAdvancedFunctionality a) (Either String Document) where
-  dbUpdate (SetDocumentAdvancedFunctionality did actor) = do
-    let time = actorTime actor
-    r <- kRun $ mkSQL UPDATE tableDocuments [
-        sql "functionality" AdvancedFunctionality
-      , sql "mtime" time
-      , sqlLog time "Document changed to advanced functionality"
-      ] <++> SQL "WHERE id = ? AND functionality <> ?" [
-        toSql did
-      , toSql AdvancedFunctionality
-      ]
+data Actor a =>  SetDocumentFunctionality a = SetDocumentFunctionality DocumentID DocumentFunctionality a
+instance Actor a => DBUpdate (SetDocumentFunctionality a) (Either String Document) where
+  dbUpdate (SetDocumentFunctionality did functionality actor) = do
+    r <- kRun $ mkSQL UPDATE tableDocuments 
+         [ sql "functionality" functionality
+         , sql "mtime" $ actorTime actor
+         ]  <++> SQL "WHERE id = ?" [ toSql did ]
     when_ (r == 1) $
       dbUpdate $ InsertEvidenceEvent
       SetDocumentAdvancedFunctionalityEvidence
-      ("Document set to advanced functionality by " ++ actorWho actor ++ ".")
+      ("Document functionality st to " ++ show functionality ++ " by " ++ actorWho actor ++ ".")
       (Just did)
-      actor
-    getOneDocumentAffected "SetDocumentAdvancedFunctionality" r did
+      actor     
+    getOneDocumentAffected "SetDocumentFunctionality" r did
 
 data Actor a => SetDocumentTitle a = SetDocumentTitle DocumentID BS.ByteString a
 instance Actor a => DBUpdate (SetDocumentTitle a) (Either String Document) where
@@ -1771,9 +1746,9 @@ instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document)
 
             let mauthorsiglink = getAuthorSigLink document
             forM_ signatories $ \(details, roles, mcsvupload) -> do
-                     linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
+                     linkid <- getUniqueID tableSignatoryLinks
 
-                     magichash <- liftIO randomIO
+                     magichash <- random
 
                      let link' = (signLinkFromDetails' details roles linkid magichash)
                                  { signatorylinkcsvupload = mcsvupload }
@@ -1809,9 +1784,9 @@ data SignLinkFromDetailsForTest = SignLinkFromDetailsForTest SignatoryDetails [S
 instance DBUpdate SignLinkFromDetailsForTest SignatoryLink where
   dbUpdate (SignLinkFromDetailsForTest details roles) = do
       kRunRaw "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
-      linkid <- SignatoryLinkID <$> getUniqueID tableSignatoryLinks
+      linkid <- getUniqueID tableSignatoryLinks
 
-      magichash <- liftIO randomIO
+      magichash <- random
 
       let link = signLinkFromDetails' details
                         roles linkid magichash
@@ -1865,7 +1840,7 @@ instance DBUpdate StoreDocumentForTesting DocumentID where
   dbUpdate (StoreDocumentForTesting document) = do
     -- FIXME: this requires more thinking...
     kRunRaw "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
-    did <- DocumentID <$> getUniqueID tableDocuments
+    did <- getUniqueID tableDocuments
     Just doc <- insertDocumentAsIs (document { documentid = did })
     return (documentid doc)
 
@@ -1910,39 +1885,19 @@ instance Actor a => DBUpdate (TimeoutDocument a) (Either String Document) where
       actor
     getOneDocumentAffected "TimeoutDocument" r did
 
-data Actor a => SetEmailIdentification a = SetEmailIdentification DocumentID a
-instance Actor a => DBUpdate (SetEmailIdentification a) (Either String Document) where
-  dbUpdate (SetEmailIdentification did actor) = do
-    let time = actorTime actor
-    r <- kRun $ mkSQL UPDATE tableDocuments [
-        sql "allowed_id_types" $ [EmailIdentification]
-      , sql "mtime" time
-      , sqlLog time "Email identification set"
-      ] <++> SQL "WHERE id = ?" [toSql did]
+data Actor a => SetDocumentIdentification a = SetDocumentIdentification DocumentID [IdentificationType] a
+instance Actor a => DBUpdate (SetDocumentIdentification a) (Either String Document) where
+  dbUpdate (SetDocumentIdentification did identification actor) = do
+    r <- kRun $ mkSQL UPDATE tableDocuments 
+         [ sql "allowed_id_types" $ identification
+         ] <++> SQL "WHERE id = ?" [ toSql did ]
     when_ (r == 1) $
       dbUpdate $ InsertEvidenceEvent
-      SetEmailIdentificationEvidence
-      ("Document identification type set to Email by " ++ actorWho actor ++ ".")
+      (SetEmailIdentificationEvidence <| EmailIdentification `elem` identification |> SetElegitimationIdentificationEvidence)
+      ("Document identification type set to " ++ show identification ++ " by " ++ actorWho actor ++ ".")
       (Just did)
-      actor
-    getOneDocumentAffected "SetEmailIdentification" r did
-
-data Actor a => SetElegitimationIdentification a = SetElegitimationIdentification DocumentID a
-instance Actor a => DBUpdate (SetElegitimationIdentification a) (Either String Document) where
-  dbUpdate (SetElegitimationIdentification did actor) = do
-    let time = actorTime actor    
-    r <- kRun $ mkSQL UPDATE tableDocuments [
-        sql "allowed_id_types" $ [ELegitimationIdentification]
-      , sql "mtime" time
-      , sqlLog time "E-leg identification set"
-      ] <++> SQL "WHERE id = ?" [toSql did]
-    when_ (r == 1) $
-      dbUpdate $ InsertEvidenceEvent
-      SetElegitimationIdentificationEvidence
-      ("Document identification type set to E-Legitimation by " ++ actorWho actor ++ ".")
-      (Just did)
-      actor
-    getOneDocumentAffected "SetElegitimationIdentification" r did
+      actor     
+    getOneDocumentAffected "SetDocumentIdentification" r did
 
 data Actor a => UpdateFields a = UpdateFields DocumentID SignatoryLinkID [(BS.ByteString, BS.ByteString)] a
 instance Actor a => DBUpdate (UpdateFields a) (Either String Document) where
@@ -1958,6 +1913,7 @@ instance Actor a => DBUpdate (UpdateFields a) (Either String Document) where
                   CompanyFT        -> updateF $ BS.fromString "sigco"
                   PersonalNumberFT -> updateF $ BS.fromString "sigpersnr"
                   CompanyNumberFT  -> updateF $ BS.fromString "sigcompnr"
+                  SignatureFT      -> updateF $ BS.fromString "signature"
                   CustomFT label _ -> updateF label
                   _                -> sf
 
@@ -2064,7 +2020,7 @@ instance Actor a => DBUpdate (UpdateSigAttachments a) (Either String Document) w
          actor
     getOneDocumentAffected "UpdateSigAttachments" 1 did
     where
-      doInsert SignatoryAttachment{..} = do
+     doInsert SignatoryAttachment{..} = do
         r <- kRun $ mkSQL INSERT tableSignatoryAttachments [
             sql "file_id" signatoryattachmentfile
           , sql "email" signatoryattachmentemail
@@ -2078,8 +2034,19 @@ instance Actor a => DBUpdate (UpdateSigAttachments a) (Either String Document) w
              ("Signatory attachment request for " ++ show signatoryattachmentname ++ " from signatory with email " ++ show signatoryattachmentemail ++ " by " ++ actorWho actor ++ ".")
              (Just did)
              actor
-           
+
         return r
+
+data Actor a => UpdateDraft a =  UpdateDraft DocumentID  Document  a
+instance Actor a => DBUpdate (UpdateDraft a) (Either String Document) where
+  dbUpdate (UpdateDraft did document actor) = do
+     _ <- dbUpdate $ SetDocumentTitle did (documenttitle document) actor
+     _ <- dbUpdate $ UpdateSigAttachments  did (documentsignatoryattachments document) actor
+     _ <- dbUpdate $ SetDaysToSign  did (documentdaystosign document) actor  
+     _ <- dbUpdate $ SetDocumentFunctionality did (documentfunctionality document) actor
+     _ <- dbUpdate $ SetDocumentLocale did (getLocale document) actor
+     _ <- dbUpdate $ SetDocumentIdentification did (documentallowedidtypes document) actor
+     dbUpdate $ SetInviteText did (documentinvitetext document) actor
 
 data SetDocumentModificationData = SetDocumentModificationData DocumentID MinutesTime
 instance DBUpdate SetDocumentModificationData (Either String Document) where
