@@ -21,8 +21,6 @@ tableAPIToken = Table {
        ("api_secret", SqlColDesc { colType     = SqlBigIntT
                                  , colNullable = Just False}),
        ("user_id",    SqlColDesc { colType     = SqlBigIntT
-                                 , colNullable = Just False}),
-       ("status",     SqlColDesc { colType     = SqlSmallIntT
                                  , colNullable = Just False})] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE oauth_api_token ("
@@ -30,7 +28,6 @@ tableAPIToken = Table {
           ++ ", api_token  BIGINT      NOT NULL"          
           ++ ", api_secret BIGINT      NOT NULL"          
           ++ ", user_id    BIGINT      NOT NULL"
-          ++ ", status     SMALLINT    NOT NULL"
           ++ ", CONSTRAINT pk_oauth_api_token PRIMARY KEY (id)"
           ++ ")"
         return TVRcreated
@@ -64,8 +61,6 @@ tableAccessToken = Table {
        ("user_id",       SqlColDesc { colType     = SqlBigIntT
                                     , colNullable = Just False}),
        ("created",       SqlColDesc { colType     = SqlTimestampWithZoneT
-                                    , colNullable = Just False}),
-       ("status",        SqlColDesc { colType     = SqlSmallIntT
                                     , colNullable = Just False})] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE oauth_access_token ("
@@ -77,8 +72,6 @@ tableAccessToken = Table {
           ++ ", user_id       BIGINT      NOT NULL"
           -- the creation date
           ++ ", created       TIMESTAMPTZ NOT NULL"
-          -- active, deleted, etc
-          ++ ", status        SMALLINT    NOT NULL"
           ++ ", CONSTRAINT pk_oauth_access_token PRIMARY KEY (id)"
           ++ ")"
         return TVRcreated

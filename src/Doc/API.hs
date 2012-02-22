@@ -15,15 +15,15 @@ import Doc.JSON
 import Control.Monad.Trans
 import Misc
 import Data.Maybe
-import qualified Codec.Text.IConv as IConv
+--import qualified Codec.Text.IConv as IConv
 import OAuth.Model
-import qualified Codec.MIME.Type as MIME
-import qualified Codec.MIME.Parse as MIME
-import qualified Codec.MIME.Utils as MIME
+--import qualified Codec.MIME.Type as MIME
+--import qualified Codec.MIME.Parse as MIME
+--import qualified Codec.MIME.Utils as MIME
 
 import Text.JSON.String
 
-import qualified Data.ByteString as BS
+--import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.ByteString.Lazy as BSL
 import Util.SignatoryLinkUtils
@@ -33,7 +33,7 @@ import Doc.DocStorage
 import qualified Doc.DocControl as DocControl
 import Doc.DocControl
 
-import Control.Concurrent.MVar
+--import Control.Concurrent.MVar
 
 import DB.Classes
 import File.Model
@@ -49,7 +49,7 @@ import qualified Log
 import Stats.Control
 import qualified Data.Map as Map
 import Control.Applicative
-import Data.String.Utils
+--import Data.String.Utils
 import OAuth.Parse
 import MinutesTime
 import EvidenceLog.Model
@@ -96,40 +96,18 @@ documentList = api $ do
 -- capable clients that follows the api standards
 documentNew :: Kontrakcja m => m Response
 documentNew = api $ do
-  rq <- lift askRq
-  let headers = rqHeaders rq
 
-  HeaderPair _ contenttypes <- apiGuard' BadInput $ Map.lookup (BS.fromString "content-type") headers
-
-  contenttype <- apiGuard' BadInput $ BS.toString <$> listToMaybe contenttypes
-  Log.debug $ "content-type: " ++ contenttype
-
-  case strip $ fst $ break (== ';') contenttype of
-    "multipart/form-data" -> documentNewMultiPart
-    "multipart/mixed" -> documentWithJSON
-    _ -> throwError BadInput
+  mjson <- lift $ getDataFn' (look "json")
+  case mjson of
+    Just _ -> documentWithJSON
+    Nothing -> documentNewMultiPart
 
 documentWithJSON :: Kontrakcja m => APIMonad m (Created JSValue)
 documentWithJSON = do
   time <- ctxtime <$> getContext
   ip <- ctxipnumber <$> getContext
   rq <- lift $ askRq
-  let mvarbdy = rqBody rq
-  bdy <- unBody <$> (liftIO $ readMVar mvarbdy)
-  ct <- apiGuard' BadInput $ getHeader "content-type" rq
-  mv <- apiGuard' BadInput $ getHeader "mime-version" rq
-  Log.debug $ "body: " ++ show bdy
-  let (_, allParts) = MIME.parseMIMEToParts $ BS.concat [BS.fromString "MIME-Version: ", mv, BS.fromString "\r\n"
-                                                        ,BS.fromString "Content-type: ", ct, BS.fromString "\r\n"
-                                                        ,concatChunks bdy]
 
-      isPDF (tp,_) = MIME.mimeType tp == MIME.Application "pdf"
-      isJSON (tp,_) = MIME.mimeType tp == MIME.Application "json"
-
-      pdfs = filter isPDF allParts
-      jsons = filter isJSON allParts
-
-  Log.debug $ "parts : " ++ show allParts
   let headers = rqHeaders rq
   Log.debug $ "Got headers: " ++ show headers
 
@@ -156,28 +134,23 @@ documentWithJSON = do
   apitoken    <- apiGuard' BadInput $ maybeRead =<< maybeRead =<< lookup "oauth_consumer_key" params
   accesstoken <- apiGuard' BadInput $ maybeRead =<< maybeRead =<< lookup "oauth_token" params
 
+  Log.debug $ "token: " ++ show accesstoken
   (userid, apistring) <- apiGuardL' Forbidden $ runDBQuery $ GetUserIDForAPIWithPrivilege apitoken apisecret accesstoken tokensecret APIDocCreate
   
+  Log.debug $ "userid: " ++ show userid
+
   user <- apiGuardL' Forbidden $ runDBQuery $ GetUserByID userid
+
+  
 
   let actor = APIActor time ip userid (BS.toString $ getEmail user) apistring
 
-  when (length jsons /= 1) $ do
-    Log.debug $ "Wrong number of json attachments. Expected 1, got: " ++ show (length jsons)
-    throwError BadInput
+  jsonString <- apiGuardL' BadInput $ getDataFn' (look "json")
 
-  let [jsonString] = jsons
-
-  recodedJSON' <- case IConv.convertStrictly (MIME.charset (fst jsonString)) "UTF-8" (BSL.fromChunks [(snd jsonString)]) of
-    Left result' -> return $ BS.concat (BSL.toChunks (result'))
-    Right errmsg -> do
-      let msg = (show $ IConv.reportConversionError errmsg)
-
-      Log.debug $ (show $ toSeconds time) ++ " " ++ msg
-      throwError BadInput
-
-  json <- apiGuard' BadInput $ runGetJSON readJSValue $ BS.toString recodedJSON'
+  json <- apiGuard' BadInput $ runGetJSON readJSValue jsonString
   dcr <- apiGuard' BadInput $ dcrFromJSON json
+
+  Log.debug $ "DCR: " ++ show dcr
 
   -- exactly one author
   let aus = [a | a <- dcrInvolved dcr, elem SignatoryAuthor $ irRole a]
@@ -195,7 +168,11 @@ documentWithJSON = do
     throwError BadInput
 
   -- the mainfile is attached
-  pdfBinary <- apiGuard' BadInput $ snd <$> MIME.getByAttachmentName (strip $ dcrMainFile dcr) pdfs
+  (Input contentspec (Just _filename') _contentType) <- apiGuardL' BadInput $ getDataFn' (lookInput $ dcrMainFile dcr)
+
+  content1 <- case contentspec of
+    Left filepath -> liftIO $ BSL.readFile filepath
+    Right content -> return content
 
   -- create document
   -- set to advanced
@@ -231,7 +208,7 @@ documentWithJSON = do
   doc <- apiGuardL' ServerError $ runDBUpdate $ NewDocument user mcompany (BS.fromString title) doctype actor
 
   gscmd <- ctxgscmd <$> getContext
-  content14 <- apiGuardL $ liftIO $ preCheckPDF gscmd pdfBinary
+  content14 <- apiGuardL $ liftIO $ preCheckPDF gscmd (concatChunks content1)
   file <- lift $ runDBUpdate $ NewFile (BS.fromString title) content14
   _ <- apiGuardL $ runDBUpdate (AttachFile (documentid doc) (fileid file) actor)
   

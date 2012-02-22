@@ -32,11 +32,11 @@ import qualified Log
 
 oauthAPI :: Route (Kontra Response)
 oauthAPI = choice [
-  dir "oauth" $ dir "temporarycredentials" $ hPostNoXToken $ toK0 $ tempCredRequest,
+  dir "oauth" $ dir "temporarycredentials" $ hGet $ toK0 $ tempCredRequest,
   dir "oauth" $ dir "authorization" $ hGet $ toK0 $ authorization,
   dir "oauth" $ dir "authorizationconfirm" $ hPost $ toK0 $ authorizationGranted,
   dir "oauth" $ dir "authorizationdeny" $ hPost $ toK0 $ authorizationDenied,
-  dir "oauth" $ dir "tokencredentials" $ hPostNoXToken $ toK0 $ tokenCredRequest
+  dir "oauth" $ dir "tokencredentials" $ hGet $ toK0 $ tokenCredRequest
   ]
 
 tempCredRequest :: Kontrakcja m => m Response
@@ -53,7 +53,7 @@ tempCredRequest = api $ do
   auth <- apiGuard' BadInput $ BS.toString <$> listToMaybe auths
 
   -- pull the data out of Authorization
-  let params = splitAuthorization auth                 
+  let params = splitAuthorization auth
 
   Log.debug $ "Split Authorization header into params: " ++ show params
 
@@ -73,11 +73,13 @@ tempCredRequest = api $ do
 
   Log.debug $ "Got token: " ++ show apitoken
 
-  privileges <- apiGuard' BadInput $ readPrivileges =<< maybeRead =<< lookup "privileges" params
+  privilegesstring <- apiGuardL' BadInput $ getDataFn' (look "privileges")
+
+  privileges <- apiGuard' BadInput $ readPrivileges privilegesstring
 
   Log.debug $ "Got privileges: " ++ show privileges
 
-  email <- apiGuard' BadInput $ maybeRead =<< lookup "useremail" params
+  email <- apiGuardL' BadInput $ getDataFn' (look "useremail")
 
   Log.debug $ "Got email: " ++ show email
 

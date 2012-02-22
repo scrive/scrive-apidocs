@@ -103,7 +103,7 @@ data KontraLink
     | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID
     | LinkAPIDocumentMetadata DocumentID
     | LinkAPIDocumentSignatoryAttachment DocumentID SignatoryLinkID String
-    | LinkOAuthCallback URI APIToken APISecret
+    | LinkOAuthCallback URI APIToken MagicHash
     deriving (Eq)
 
 localeFolder :: Locale -> String

@@ -6,20 +6,26 @@ module OAuth.Parse (
 
 import OAuth.Model
 import Misc
+import MagicHash
 
 import Data.String.Utils
 import Data.Maybe
+import Data.List
+import Network.HTTP (urlDecode)
 
 
 splitAuthorization :: String -> [(String, String)]
 splitAuthorization s = 
-  catMaybes $ map makeKV $ splitOver "," s
-  where makeKV kv = case break (== '=') kv of
+  catMaybes $ map makeKV $ splitOver "," over
+  where over = if "OAuth" `isPrefixOf` s
+               then drop 5 s
+               else s
+        makeKV kv = case break (== '=') kv of
           (k, '=':v) -> Just (strip k, strip v)
           _ -> Nothing
 
-splitSignature :: String -> Maybe (Maybe APISecret, Maybe APISecret)
-splitSignature s = case break (== '&') s of
+splitSignature :: String -> Maybe (Maybe MagicHash, Maybe MagicHash)
+splitSignature s = case break (== '&') $ urlDecode s of
   ("",'&':"") -> Just (Nothing, Nothing)
   ("",'&':sc) -> case maybeRead sc of
     Just secret -> Just (Nothing, Just secret)
