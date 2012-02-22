@@ -2,7 +2,6 @@ module SignupTest (signupTests, getAccountCreatedActions) where
 
 import Control.Applicative
 import Control.Monad.State
-import Data.List
 import Data.Maybe
 import Happstack.Server
 import Happstack.State (query)
@@ -14,8 +13,6 @@ import qualified Data.ByteString.UTF8 as BS
 import ActionSchedulerState
 import Context
 import DB.Classes
-import Doc.DocControl
-import Doc.DocStateData
 import FlashMessage
 import MagicHash (MagicHash)
 import Mails.Model
@@ -33,89 +30,21 @@ import User.UserControl
 import Util.HasSomeUserInfo
 
 signupTests :: DBEnv -> Test
-signupTests env = testGroup "Signup" [
-      testCase "can self signup and activate an account" $ testSignupAndActivate env
-    , testCase "can send viral invite which can be used to activate an account" $ testViralInviteAndActivate env
-    , testCase "must accept tos to activate an account" $ testAcceptTOSToActivate env
-    , testCase "must enter first name to activate an account" $ testNeedFirstNameToActivate env
-    , testCase "must enter last name to activate an account" $ testNeedLastNameToActivate env
-    , testCase "must enter passwords to activate an account" $ testNeedPasswordToActivate env
-    , testCase "passwords must match to activate an account" $ testPasswordsMatchToActivate env
-    , testCase "if users enter phone number a mail is sent" $ testUserEnteringPhoneNumber env
-    , testCase "if users don't enter phone number a mail isn't sent" $ testUserNotEnteringPhoneNumber env
-    , testCase "login event recorded when logged in after activation" $ testLoginEventRecordedWhenLoggedInAfterActivation env
-    , testCase "signup after signing works" $ testSignupAfterSigning env
+signupTests conn = testGroup "Signup" [
+      testCase "can self signup and activate an account" $ testSignupAndActivate conn
+    , testCase "can send viral invite which can be used to activate an account" $ testViralInviteAndActivate conn
+    , testCase "must accept tos to activate an account" $ testAcceptTOSToActivate conn
+    , testCase "must enter first name to activate an account" $ testNeedFirstNameToActivate conn
+    , testCase "must enter last name to activate an account" $ testNeedLastNameToActivate conn
+    , testCase "must enter passwords to activate an account" $ testNeedPasswordToActivate conn
+    , testCase "passwords must match to activate an account" $ testPasswordsMatchToActivate conn
+    , testCase "login event recorded when logged in after activation" $ testLoginEventRecordedWhenLoggedInAfterActivation conn
     ]
 
-testSignupAfterSigning :: DBEnv -> Assertion
-testSignupAfterSigning env = withTestEnvironment env $ do
-  (Just author) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
-
-  let isSigning sl = not $ SignatoryAuthor `elem` signatoryroles sl
-  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> documentstatus d == Pending
-                                                               && case documenttype d of
-                                                                    Signable Contract -> True
-                                                                    _ -> False
-                                                               && any isSigning (documentsignatorylinks d))
-  let Just sl = find isSigning $ documentsignatorylinks doc
-
-  req <- mkRequest POST [ ("tos", inText "on")
-                        , ("password", inText "password123")
-                        , ("password2", inText "password123")
-                        ]
-  (_res, ctx') <- runTestKontra req ctx $ handleAcceptAccountFromSign (documentid doc) (signatorylinkid sl) (signatorymagichash sl) >>= sendRedirect
-
-  assertBool "User is logged in" (isJust $ ctxmaybeuser ctx')
-  let Just user = ctxmaybeuser ctx'
-  assertBool "User has accepted tos" (isJust $ userhasacceptedtermsofservice user)
-  assertEqual "User email is from signatory" (getEmail sl) (getEmail user)
-  assertEqual "User first name is from signatory" (getFirstName sl) (getFirstName user)
-  assertEqual "User last name is from signatory" (getLastName sl) (getLastName user)
-
-testUserEnteringPhoneNumber :: DBEnv -> Assertion
-testUserEnteringPhoneNumber env = withTestEnvironment env $ do
-  Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
-
-  req <- mkRequest POST [ ("phone", inText "12345")
-                        ]
-  (res, ctx') <- runTestKontra req ctx $ handlePhoneCallRequest >>= sendRedirect
-
-  assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
-  assertBool ("Flash message has type indicating success, was "  ++ show (getFlashType $ head $ ctxflashmessages ctx')) $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
-  Just uuser <- dbQuery $ GetUserByID (userid user)
-  assertEqual "Phone number was saved" "12345" (BS.toString . userphone $ userinfo uuser)
-
-  emails <- dbQuery GetIncomingEmails
-  assertEqual "An email was sent" 1 (length emails)
-
-testUserNotEnteringPhoneNumber :: DBEnv -> Assertion
-testUserNotEnteringPhoneNumber env = withTestEnvironment env $ do
-  Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
-
-  req <- mkRequest POST [ ("phone", inText "")
-                        ]
-  (res, ctx') <- runTestKontra req ctx $ handlePhoneCallRequest >>= sendRedirect
-
-  assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "No flash message was added" 0 (length $ ctxflashmessages ctx')
-
-  emails <- dbQuery GetIncomingEmails
-  assertEqual "No email was sent" 0 (length emails)
-
 testSignupAndActivate :: DBEnv -> Assertion
-testSignupAndActivate env = withTestEnvironment env $ do
+testSignupAndActivate conn = withTestEnvironment conn $ do
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env })
+  ctx <- (\c -> c { ctxdbenv = conn })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   -- enter the email to signup
@@ -129,8 +58,14 @@ testSignupAndActivate env = withTestEnvironment env $ do
   assertActivationPageOK (res2, ctx2)
 
   -- activate the account using the signup details
-  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12"
+  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12" (Just "123")
   assertAccountActivatedFor uid "Andrzej" "Rybczak" (res3, ctx3)
+  Just uuser <- dbQuery $ GetUserByID  uid
+  assertEqual "Phone number was saved" "123" (BS.toString . userphone $ userinfo uuser)
+  emails <- dbQuery GetIncomingEmails
+  assertEqual "An email was sent" 2 (length emails) -- Two mail - one for user and one to info adress.
+
+
 
 testLoginEventRecordedWhenLoggedInAfterActivation :: DBEnv -> Assertion
 testLoginEventRecordedWhenLoggedInAfterActivation env = withTestEnvironment env $ do
@@ -145,7 +80,7 @@ testLoginEventRecordedWhenLoggedInAfterActivation env = withTestEnvironment env 
       (AccountCreated uid token) = actionType action
 
   -- activate the account using the signup details
-  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12"
+  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12" Nothing
   assertAccountActivatedFor uid "Andrzej" "Rybczak" (res3, ctx3)
   assertLoginEventRecordedFor uid
 
@@ -168,7 +103,7 @@ testViralInviteAndActivate env = withTestEnvironment env $ do
   assertActivationPageOK (res2, ctx2)
 
   -- activate the account using the signup details
-  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12"
+  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12" Nothing
   assertAccountActivated "Andrzej" "Rybczak" (res3, ctx3)
 
 testAcceptTOSToActivate :: DBEnv -> Assertion
@@ -184,7 +119,7 @@ testAcceptTOSToActivate env = withTestEnvironment env $ do
       (AccountCreated _uid token) = actionType action
 
   -- activate the account without accepting the tos
-  (res3, ctx3) <- activateAccount ctx1 aid token False "Andrzej" "Rybczak" "password12" "password12"
+  (res3, ctx3) <- activateAccount ctx1 aid token False "Andrzej" "Rybczak" "password12" "password12" Nothing
   assertAccountActivationFailed (res3, ctx3)
 
 testNeedFirstNameToActivate :: DBEnv -> Assertion
@@ -200,7 +135,7 @@ testNeedFirstNameToActivate env = withTestEnvironment env $ do
       (AccountCreated _uid token) = actionType action
 
   -- activate the account without entering passwords
-  (res3, ctx3) <- activateAccount ctx1 aid token True "" "Rybczak" "" ""
+  (res3, ctx3) <- activateAccount ctx1 aid token True "" "Rybczak" "" "" Nothing
   assertAccountActivationFailed (res3, ctx3)
 
 testNeedLastNameToActivate :: DBEnv -> Assertion
@@ -216,7 +151,7 @@ testNeedLastNameToActivate env = withTestEnvironment env $ do
       (AccountCreated _uid token) = actionType action
 
   -- activate the account without entering passwords
-  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "" "" ""
+  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "" "" "" Nothing
   assertAccountActivationFailed (res3, ctx3)
 
 testNeedPasswordToActivate :: DBEnv -> Assertion
@@ -232,7 +167,7 @@ testNeedPasswordToActivate env = withTestEnvironment env $ do
       (AccountCreated _uid token) = actionType action
 
   -- activate the account without entering passwords
-  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "" ""
+  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "" "" Nothing
   assertAccountActivationFailed (res3, ctx3)
 
 testPasswordsMatchToActivate :: DBEnv -> Assertion
@@ -248,7 +183,7 @@ testPasswordsMatchToActivate env = withTestEnvironment env $ do
       (AccountCreated _uid token) = actionType action
 
   -- activate the account using mismatched passwords
-  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password21"
+  (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password21" Nothing
   assertAccountActivationFailed (res3, ctx3)
 
 signupForAccount :: MonadIO m => Context -> String -> m (Response, Context)
@@ -300,17 +235,18 @@ assertActivationPageOK (res, ctx) = do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx)
   assertBool "Flash message has type indicating is modal" $ head (ctxflashmessages ctx) `isFlashOfType` Modal
 
-activateAccount :: MonadIO m => Context -> ActionID -> MagicHash -> Bool -> String -> String -> String -> String -> m (Response, Context)
-activateAccount ctx aid token tos fstname sndname password password2 = do
+activateAccount :: MonadIO m => Context -> ActionID -> MagicHash -> Bool -> String -> String -> String -> String -> Maybe String -> m (Response, Context)
+activateAccount ctx aid token tos fstname sndname password password2 phone = do
   let tosValue = if tos
                    then "on"
                    else "off"
-  req <- mkRequest POST [ ("tos", inText tosValue)
-                        , ("fstname", inText fstname)
-                        , ("sndname", inText sndname)
-                        , ("password", inText password)
-                        , ("password2", inText password2)
-                        ]
+  req <- mkRequest POST $ [ ("tos", inText tosValue)
+                          , ("fstname", inText fstname)
+                          , ("sndname", inText sndname)
+                          , ("password", inText password)
+                          , ("password2", inText password2)
+                          ] ++
+                          ([("callme", inText "YES"), ("phone", inText $ fromJust phone)] <| isJust phone |> [])
   runTestKontra req ctx $ handleAccountSetupPost aid token >>= sendRedirect
 
 assertAccountActivatedFor :: MonadIO m => UserID -> String -> String -> (Response, Context) -> m ()
@@ -322,10 +258,9 @@ assertAccountActivated :: MonadIO m => String -> String -> (Response, Context) -
 assertAccountActivated fstname sndname (res, ctx) = do
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "Location is /upload" (Just "/upload") (T.getHeader "location" (rsHeaders res))
-  assertEqual "A flash message & dialog was added" 2 (length $ ctxflashmessages ctx)
+  assertEqual "A flash message" 1 (length $ ctxflashmessages ctx)
   --shouldn't this flash just indicate success and not that it's signing related?!
   assertBool "Flash message has type indicating signing related" $ any (`isFlashOfType` SigningRelated) (ctxflashmessages ctx)
-  assertBool "There's also a modal" $ any (`isFlashOfType` Modal) (ctxflashmessages ctx)
   assertBool "Accepted TOS" $ isJust ((ctxmaybeuser ctx) >>= userhasacceptedtermsofservice)
   assertEqual "First name was set" (Just fstname) (fmap (BS.toString . getFirstName) $ ctxmaybeuser ctx)
   assertEqual "Second name was set" (Just sndname) (fmap (BS.toString . getLastName) $ ctxmaybeuser ctx)
