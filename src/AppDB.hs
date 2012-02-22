@@ -36,6 +36,9 @@ kontraMigrations = [
   , addColumnToRecordInternalInsertionOrder
   , addEmailBrandingToCompany
   ] ++ mailerMigrations
+  ++
+  [ addDocumentIdIndexOnSignatoryLinks
+  ]
 
 kontraTables :: [Table]
 kontraTables = [
