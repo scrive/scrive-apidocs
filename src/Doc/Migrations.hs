@@ -16,6 +16,16 @@ addColumnToRecordInternalInsertionOrder =
       return ()
   }
 
+addDocumentIdIndexOnSignatoryLinks :: Migration
+addDocumentIdIndexOnSignatoryLinks =
+  Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 3
+  , mgrDo = do
+      kRunRaw $ "CREATE INDEX idx_signatory_links_document_id ON signatory_links(document_id)"
+      return ()
+  }
+
 addNameColumnInSignatoryAttachments :: Migration
 addNameColumnInSignatoryAttachments =
   Migration {
