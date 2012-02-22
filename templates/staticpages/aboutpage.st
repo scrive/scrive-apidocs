@@ -138,4 +138,20 @@ aboutPageContents=
 							</ul>
 						</div>
 					</div>
+
+<!-- Fix for image loading issue with week connection-->
+<div class='image-reloader' style='display:none'>
+        <img src='/img/team/group-2.jpg'/>
+        <img src='/img/team/lukas-2.jpg'/>
+        <img src='/img/team/viktor-2.jpg'/>
+        <img src='/img/team/daniel-2.jpg'/>
+        <img src='/img/team/marcus-2.png'/>
+        <img src='/img/team/gracjan-2.jpg'/>
+        <img src='/img/team/mariusz-2.jpg'/>
+        <img src='/img/team/magnus-2.png'/>
+        <img src='/img/team/eric-2.jpg'/>
+        <img src='/img/team/emily-2.jpg'/>
+        <img src='/img/team/andrzej-2.jpg'/>
+        <img src='/img/team/tim-2.jpg'/>
+</div>
 ###

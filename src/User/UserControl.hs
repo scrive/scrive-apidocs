@@ -618,37 +618,24 @@ handleQuestion = do
              addFlashM flashMessageThanksForTheQuestion
              return LoopBack
 
-handlePhoneCallRequest :: Kontrakcja m => m KontraLink
-handlePhoneCallRequest = do
+phoneMeRequest :: Kontrakcja m => User -> m ()
+phoneMeRequest user = do
   ctx <- getContext
-  user <- guardJust $ ctxmaybeuser ctx
-  mphone <- getOptionalField asValidPhone "phone"
-  case mphone of
-    Nothing -> return ()
-    Just phone -> do
-      let content = "<p>User " ++ (BS.toString $ getFirstName user) ++ " "
+  let content = "<p>User " ++ (BS.toString $ getFirstName user) ++ " "
                     ++ (BS.toString $ getLastName user) ++ " "
                     ++ "&lt;" ++ (BS.toString $ getEmail user) ++ "&gt; "
                     ++ "has requested a call on "
-                    ++ "&lt;" ++ (BS.toString phone) ++ "&gt;.  "
+                    ++ "&lt;" ++ (BS.toString $ userphone $ userinfo $ user ) ++ "&gt;.  "
                     ++ "They have just signed the TOS, "
                     ++ "and they're setup with lang "
                     ++ "&lt;" ++ (codeFromLang $ getLang user) ++ "&gt;.</p>"
-      scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
+  scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
             to = [MailAddress { fullname = BS.fromString "info@skrivapa.se", email = BS.fromString "info@skrivapa.se" }]
           , title = "Phone Call Request"
           , content = content
       }
-      _ <- runDBUpdate $ SetUserInfo (userid user) $ (userinfo user){
-              userphone = phone
-            }
-      _ <- runDBUpdate $ LogHistoryUserInfoChanged (userid user) (ctxipnumber ctx) (ctxtime ctx) 
-                                                   (userinfo user) ((userinfo user){ userphone = phone })
-                                                   (userid <$> ctxmaybeuser ctx)
-      _ <- addUserPhoneAfterTOS user
-      addFlashM $ flashMessageWeWillCallYouSoon (BS.toString phone)
-      return ()
-  return LoopBack
+  _ <- addUserPhoneAfterTOS user
+  return ()
 
 handleAccountSetupGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
 handleAccountSetupGet aid hash = do
@@ -722,7 +709,6 @@ handleAccountSetupPost aid hash = do
             Just _activateduser -> do
               dropExistingAction aid
               addFlashM flashMessageUserActivated
-              addFlashM modalWelcomeToSkrivaPa
               return ()
             Nothing -> do
               addFlashM $ modalAccountSetup (LinkAccountCreated aid hash $ BS.toString $ getEmail user)
@@ -804,6 +790,8 @@ handleActivate mfstname msndname actvuser signupmethod = do
   switchLocale (getLocale actvuser)
   ctx <- getContext
   mtos <- getDefaultedField False asValidCheckBox "tos"
+  callme <- isFieldSet "callme"      
+  phone <-  BS.fromString <$> fromMaybe "" <$> getField "phone"
   mpassword <- getRequiredField asValidPassword "password"
   mpassword2 <- getRequiredField asValidPassword "password2"
   case (mtos, mfstname, msndname, mpassword, mpassword2) of
@@ -817,6 +805,7 @@ handleActivate mfstname msndname actvuser signupmethod = do
                 _ <- dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser){
                          userfstname = fstname
                        , usersndname = sndname
+                       , userphone = phone
                        }
                 _ <- dbUpdate $ LogHistoryUserInfoChanged (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) 
                                                           (userinfo actvuser) ((userinfo actvuser){ userfstname = fstname , usersndname = sndname })
@@ -831,6 +820,7 @@ handleActivate mfstname msndname actvuser signupmethod = do
               _ <- addUserSignTOSStatEvent tosuser
               _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
               logUserToContext $ Just tosuser
+              when (callme) $ phoneMeRequest tosuser
               return $ Just tosuser
             else do
               addFlashM flashMessageMustAcceptTOS

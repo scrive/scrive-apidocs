@@ -10,7 +10,6 @@ module File.Model (
     , PutFileUnchecked(..)
     ) where
 
-import Control.Applicative
 import Database.HDBC
 import qualified Data.ByteString.Char8 as BS
 
@@ -33,21 +32,22 @@ instance DBQuery GetFileByFileID (Maybe File) where
 data NewFile = NewFile BS.ByteString BS.ByteString
 instance DBUpdate NewFile File where
   dbUpdate (NewFile filename content) = do
-    kPrepare "LOCK TABLE files IN ACCESS EXCLUSIVE MODE"
-    _ <- kExecute []
-    fid :: FileID <- getUniqueID tableFiles
-    kPrepare $ "INSERT INTO files ("
-      ++ "  id"
-      ++ ", name"
-      ++ ", content"
-      ++ ") VALUES (?, ?, decode(?,'base64'))"
-      ++ " RETURNING id, name, encode(content,'base64'), amazon_bucket, amazon_url, disk_path"
-    _ <- kExecute [
+     fid :: FileID <- getUniqueID tableFiles
+     kPrepare $ "INSERT INTO files ("
+       ++ "  id"
+       ++ ", name"
+       ++ ", content"
+       ++ ") VALUES (?, ?, decode(?,'base64'))"
+       ++ " RETURNING id, name, encode(content,'base64'), amazon_bucket, amazon_url, disk_path"
+     _ <- kExecute [
         toSql fid
       , toSql filename
       , toSql (Binary content)
       ]
-    $(fromJust) <$> (fetchFiles >>= oneObjectReturnedGuard)
+     fs <- fetchFiles
+     case fs of
+            [file] -> return file
+            _ ->  dbUpdate (NewFile filename content) 
 
 data PutFileUnchecked = PutFileUnchecked File
 instance DBUpdate PutFileUnchecked () where

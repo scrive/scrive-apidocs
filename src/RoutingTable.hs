@@ -277,9 +277,6 @@ staticRoutes = choice
      , dir "invite"      $ hPostNoXToken $ toK0 $ UserControl.handleViralInvite
      , dir "question"    $ hPostAllowHttp $ toK0 $ UserControl.handleQuestion
 
-     -- someone wants a phone call
-     , dir "phone" $ hPostAllowHttp $ toK0 $ UserControl.handlePhoneCallRequest
-
      , integrationAPI
      , documentAPI
      , oauthAPI

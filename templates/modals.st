@@ -181,6 +181,14 @@ modalAccountSetup=
                 <td>$_modalAccountSetupRepeatPassword()$</td>
                 <td><input type="password" name="password2" autocomplete="off"/></td>
             </tr>
+            <tr style='height:20px;'>
+                <td colspan="2"><input type='checkbox' style='padding: 0px;margin:0px 5px 0px 0px;float:left;' class="callme" name='callme'/>$_modalAccountSetupCallMe()$</td>
+                <td></td>
+            </tr>
+            <tr class='phonerow' style="display:none;">
+                <td>$_modalAccountSetupPhone()$</td>
+                <td><input type="text" name="phone" autocomplete="off"/></td>
+            </tr>
         </tbody></table>
         <input type="submit" class="hidden" />
       </div>
@@ -249,45 +257,6 @@ jQuery('form[action="$signuplink$"]').submit(function(){
 });
 }
 </script>
-######
-modalWelcomeToSkrivaPa=
-<div class="modal-container">
-  <form action="$phonelink$" method="post">
-    <div class="modal-header">
-      <span class="modal-icon message"></span>
-      <span class="modal-title">
-        <h3>$_modalWelcomeToSkrivaPaHeader()$</h3>
-      </span>
-      <a class="modal-close close"> </a>
-    </div>
-    <div class="modal-body">
-      <div class="modal-content">
-        $_modalWelcomeToSkrivaPaBodyMain()$
-
-        <table>
-          <tr>
-            <td style="padding-left:10px;padding-right:10px;">$_phone()$:</td>
-            <td><input type="text" name="phone" id="phone"/></td>
-          </tr>
-        </table>
-
-      </div>
-    </div>
-    <div class="modal-footer">
-      <div class="float-left">
-        <a class="cancel close">$_modalWelcomeToSkrivaPaFooterReject()$</a>
-      </div>
-      <a class="btn-small green float-right submit">
-        <div class="left"></div>
-        <div class="label">
-          <p>$_modalWelcomeToSkrivaPaFooterAccept()$</p>
-          <div class="btn-symbol green arrow-left"></div>
-        </div>
-        <div class="right"></div>
-      </a>
-    </div>
-  </form>
-</div>
 ###
 modalSendInviteView=
 <div class="modal-container">
@@ -795,8 +764,12 @@ accountFromSignInputs=
         <input type="hidden" name="acceptaccount" value="true" />
         <div style="padding:10px 50px;">
          <div>
-          <input type="checkbox" name="tos" id="tosCBox" style="width: auto"/>
-          <label for="tos" style="padding-left:5px;">$_accountFromSignInputsBodyAcceptTOS()$</label>
+          <input type="checkbox" name="tos" id="tosCBox" style='padding: 0px;margin:0px 5px 0px 0px;float:left;width: auto;'/>
+          <label for="tos" >$_accountFromSignInputsBodyAcceptTOS()$</label>
+         </div>
+         <div style="padding-top:8px">
+             <input type='checkbox' style='padding: 0px;margin:0px 5px 0px 0px;float:left;width: auto;' class="callme" name='callme'/>$_modalAccountSetupCallMe()$
+             <script src="/js/signup.js" type="text/javascript"></script>
          </div>
          <div style="padding-top:10px">
           <table>
@@ -807,6 +780,10 @@ accountFromSignInputs=
             <tr>
               <td>$_accountFromSignInputsConfirmPassword()$</td>
               <td><input type="password" name="password2" /></td>
+            </tr>
+            <tr class='phonerow' style="display:none;">
+                <td>$_modalAccountSetupPhone()$</td>
+                <td><input type="text" name="phone" autocomplete="off"/></td>
             </tr>
           </table>
           <input type="submit" class="hidden" />

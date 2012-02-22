@@ -19,7 +19,6 @@ import Stats.Tables
 import Stats.Migrations
 import File.Tables
 import Mails.Tables
-import Mails.Migrations
 
 import OAuth.Tables
 import EvidenceLog.Tables
@@ -36,7 +35,8 @@ kontraMigrations = [
   , addCSVUploadDataFromDocumentToSignatoryLink
   , addColumnToRecordInternalInsertionOrder
   , addEmailBrandingToCompany
-  ] ++ mailerMigrations
+  , removeOldSignatoryLinkIDFromCancelationReason
+  ]
 
 kontraTables :: [Table]
 kontraTables = [
