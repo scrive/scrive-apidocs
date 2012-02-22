@@ -172,8 +172,8 @@ documentWithJSON = do
   Log.debug "about to read input for file"
 
   -- the mainfile is attached
-  --(Input contentspec (Just _filename') _contentType) <- apiGuardL' BadInput $ getDataFn' (lookInput $ dcrMainFile dcr)
-  content1 <- apiGuardL' BadInput $ getDataFn' (look $ dcrMainFile dcr)
+  (Input contentspec (Just _filename') _contentType) <- apiGuardL' BadInput $ getDataFn' (lookInput $ dcrMainFile dcr)
+  --content1 <- apiGuardL' BadInput $ getDataFn' (look $ dcrMainFile dcr)
   Log.debug "just got input"
 
   --content1 <- case contentspec of
@@ -218,7 +218,7 @@ documentWithJSON = do
 
   Log.debug "new document success"
   gscmd <- ctxgscmd <$> getContext
-  content14 <- apiGuardL $ liftIO $ preCheckPDF gscmd (BS.fromString content1)
+  content14 <- apiGuardL $ liftIO $ preCheckPDF gscmd (concatChunks content1)
 
   file <- lift $ runDBUpdate $ NewFile (BS.fromString title) content14
   _ <- apiGuardL $ runDBUpdate (AttachFile (documentid doc) (fileid file) actor)
