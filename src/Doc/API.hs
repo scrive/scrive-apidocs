@@ -236,7 +236,8 @@ documentWithJSON = do
   lift $ markDocumentAuthorReadAndSeen doc2 actor
   _ <- lift $ DocControl.postDocumentChangeAction doc2 doc Nothing
 
-  return $ Created $ jsonDocumentForAuthor doc2
+  hostpart <- ctxhostpart <$> getContext
+  return $ Created $ jsonDocumentForAuthor doc2 hostpart
 
 documentNewMultiPart :: Kontrakcja m => APIMonad m (Created JSValue)
 documentNewMultiPart = do
@@ -274,7 +275,7 @@ documentNewMultiPart = do
 
   d2 <- apiGuardL $ runDBUpdate $ AttachFile (documentid d1) (fileid file) aa
   _ <- lift $ addDocumentCreateStatEvents d2
-  return $ Created $ jsonDocumentForAuthor d2
+  return $ Created $ jsonDocumentForAuthor d2 (ctxhostpart ctx)
 
 documentChangeMetadata :: Kontrakcja m => DocumentID -> MetadataResource -> m Response
 documentChangeMetadata docid _ = api $ do

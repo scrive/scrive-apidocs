@@ -91,11 +91,11 @@ jsonDocumentMetadata doc = fromRight $
                            (jsset "url" $ show $ LinkAPIDocumentMetadata (documentid doc)) >>=
                            (jsset "title" $ documenttitle doc)
 
-jsonDocumentForAuthor :: Document -> JSValue
-jsonDocumentForAuthor doc = 
+jsonDocumentForAuthor :: Document -> String -> JSValue
+jsonDocumentForAuthor doc hostpart = 
   fromRight              $ (Right jsempty)                       >>=                    
 
-  (jsset "url"           $ show $ LinkIssueDoc (documentid doc)) >>=
+  (jsset "url"           $ hostpart ++ show (LinkIssueDoc (documentid doc))) >>=
   (jsset "document_id"   $ jsonDocumentID $ documentid doc)      >>=                    
   (jsset "title"         $ documenttitle doc)                    >>=                    
   (jsset "type"          $ fromSafeEnumInt $ documenttype doc)   >>=                    
