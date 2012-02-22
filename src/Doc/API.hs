@@ -176,9 +176,9 @@ documentWithJSON = do
   --content1 <- apiGuardL' BadInput $ getDataFn' (look $ dcrMainFile dcr)
   Log.debug "just got input"
 
-  --content1 <- case contentspec of
-  --  Left filepath -> liftIO $ BSL.readFile filepath
-  --  Right content -> return content
+  content1 <- case contentspec of
+    Left filepath -> liftIO $ BSL.readFile filepath
+    Right content -> return content
 
   Log.debug "got content"
 
