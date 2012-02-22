@@ -30,10 +30,12 @@ import Misc (randomString)
 assembleContent :: (MonadIO m, CryptoRNG m) => Mail -> m BSL.ByteString
 assembleContent Mail{..} = do
   (boundaryMixed, boundaryAlternative) <- createBoundaries
-  xsmtpapi <- liftIO $ json $ field "unique_args" $ do
-    field "id" $ show mailID
-    field "token" $ show mailToken
-    forM_ (fromXSMTPAttrs mailXSMTPAttrs) $ uncurry field
+  let datafields = do
+        field "email_id" $ show mailID
+        field "email_token" $ show mailToken
+        forM_ (fromXSMTPAttrs mailXSMTPAttrs) $ uncurry field
+  mailgundata <- liftIO $ json datafields
+  xsmtpapi <- liftIO $ json $ field "unique_args" $ datafields
   let -- FIXME: add =?UTF8?B= everywhere it is needed here
       headerEmail =
         -- FIXME: encoded word should not be longer than 75 bytes including everything
@@ -41,6 +43,7 @@ assembleContent Mail{..} = do
         "To: " ++ createMailTos mailTo ++ "\r\n" ++
         "From: " ++ mailEncode (addrName mailFrom) ++ " <" ++ addrEmail mailFrom ++ ">\r\n" ++
         "X-SMTPAPI: " ++ J.encode xsmtpapi ++ "\r\n" ++
+        "X-Mailgun-Variables: " ++ J.encode mailgundata ++ "\r\n" ++
         "MIME-Version: 1.0\r\n" ++
         "Content-Type: multipart/mixed; boundary=" ++ boundaryMixed ++ "\r\n" ++
         "\r\n"

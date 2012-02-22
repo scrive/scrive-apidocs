@@ -61,16 +61,15 @@ checkIfOneObjectReturned xs =
   oneObjectReturnedGuard xs
     >>= return . maybe False (const True)
 
-getOne :: Convertible SqlValue a => String -> [SqlValue] -> DB (Maybe a)
-getOne query values = do
-  kPrepare query
-  _ <- kExecute values
+getOne :: Convertible SqlValue a => SQL -> DB (Maybe a)
+getOne query = do
+  _ <- kRun query
   foldDB (\acc v -> v : acc) []
     >>= oneObjectReturnedGuard
 
-checkIfAnyReturned :: String -> [SqlValue] -> DB Bool
-checkIfAnyReturned query values =
-  (getOne query values :: DB (Maybe SqlValue))
+checkIfAnyReturned :: SQL -> DB Bool
+checkIfAnyReturned query =
+  (getOne query :: DB (Maybe SqlValue))
     >>= checkIfOneObjectReturned . maybeToList
 
 kRun :: SQL -> DB Integer

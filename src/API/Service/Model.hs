@@ -175,8 +175,8 @@ instance DBUpdate UpdateServiceSettings Bool where
 -- helpers
 
 checkIfServiceExists :: ServiceID -> DB Bool
-checkIfServiceExists uid =
-  checkIfAnyReturned "SELECT 1 FROM services WHERE id = ?" [toSql uid]
+checkIfServiceExists uid = checkIfAnyReturned
+  $ SQL "SELECT 1 FROM services WHERE id = ?" [toSql uid]
 
 selectServicesSQL :: String
 selectServicesSQL = "SELECT"

@@ -527,9 +527,9 @@
     width: 250px;
     text-align: center;
     border: 1px solid #999999;
-    filter: alpha(opacity=80);
-    -moz-opacity: 0.80;
-    opacity: 0.80;
+    filter: alpha(opacity=95);
+    -moz-opacity: 0.95;
+    opacity: 0.95;
 }
 
 .signatureBoxNotDrawing .signatureDummy{
@@ -556,11 +556,12 @@
     border : 1px solid #222222;
     display: block;
     height: 121px;
-    width: 270px;
+    width: 250px;
+    margin:5px;
     text-align: center;
-    filter: alpha(opacity=80);
-    -moz-opacity: 0.80;
-    opacity: 0.80;
+    filter: alpha(opacity=95);
+    -moz-opacity: 0.95;
+    opacity: 0.95;
 }
 
 .signatureDrawingBox.ready{
@@ -576,7 +577,6 @@
     height: 100px;
     width: 250px;
     border-top : 1px solid #222222;
-    border-right: 1px solid #222222;
     float: left;
     position: relative; /*Important for dealing with drawing events*/
     background-color: #ffffff;
@@ -584,34 +584,27 @@
 
 .signatureDrawingBox.ready .canvasWrapper{
     border-top : 1px solid #888888;
-    border-right: 1px solid #888888;
 }
 
-.signatureDrawingBox .cleanDrawing {
-    height:15px;
-    width:15px;
-    margin:2px;
-    position: relative;
-    background-image: url("/img/icon-delete.png");
-    float : right;
-}
-.signatureDrawingBox .doneDrawing {
-    height:13px;
-    width:14px;
-    margin:2px;
-    position: relative;
-    top: 84px;
-    background-image: url("images/iconGreenCheck.png");
-    float : right;
-
-}
-.signatureDrawingBox .lockDrawing {
+.signatureDrawingBox .zoomDrawing {
     height:14px;
-    width:13px;
-    margin:3px;
+    width:14px;
+    margin-left:5px;
+    margin-top:1px;
+    margin-bottom:1px;
+    margin-right:5px;
     position: relative;
-    top: 84px;
-    background-image: url("/img/lock.png");
+    background-image: url("/img/loop.png");
+    float : right;
+
+}
+
+.signatureDrawingBox .clearIcon {
+    height:14px;
+    width:14px;
+    margin:1px;
+    position: relative;
+    background-image: url("/img/clear.png");
     float : right;
 
 }
@@ -621,27 +614,35 @@
     width: 250px;
     color: #666666;
     background-color: #F5F5F5;
-    border-right: 1px solid #222222;
     font-size: 12px;
     font-style: italic;
     padding-top:2px;
     padding-bottom:2px;
 
 }
-
-.signatureDrawingBox.ready .signatureHeader{
-    border-right: 1px solid #888888;
-    color: #222222;
-
+.signatureDrawingBox .signatureHeader.redborder{
+    color: red;
+    border-width: 0px;
 }
 
-.signatureDrawingBox .signatureIconBox{
-    width: 17px;
-    float: right;
-    height: 100%;
-    padding-left: 1px;
-    padding-right: 1px;
-    background-color: #F5F5F5;
+.drawing-modal {
+    height: 389px;
+    width: 875px;
+    background-color: #F8F8F8;
+    border: 3px double #444444;
+}
+.drawing-modal .canvasWrapper {
+    height: 350px;
+    width: 875px;
+    position: relative; /*Important for dealing with drawing events*/
+    background-color: #ffffff;
+}
+.drawing-modal .footer {
+    height: 30px;
+    width: 875px;
+    border-top: 3px double #444444;
+    position: relative; /*Important for dealing with drawing events*/
+    background-color: #F8F8F8;
 }
 
 .signStepsBody.fixed{

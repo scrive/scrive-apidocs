@@ -18,7 +18,7 @@ mailerTables = [
 tableMails :: Table
 tableMails = Table {
     tblName = "mails"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("token", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -30,6 +30,7 @@ tableMails = Table {
        , ("x_smtp_attrs", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("to_be_sent", SqlColDesc { colType = SqlTimestampWithZoneT, colNullable = Just False})
        , ("sent", SqlColDesc { colType = SqlTimestampWithZoneT, colNullable = Just True})
+       , ("service_test" , SqlColDesc { colType = SqlBitT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE mails ("
@@ -43,6 +44,7 @@ tableMails = Table {
           ++ ", x_smtp_attrs TEXT NULL"
           ++ ", to_be_sent TIMESTAMPTZ NOT NULL"
           ++ ", sent TIMESTAMPTZ NULL"
+          ++ ", service_test BOOL NOT NULL"
           ++ ", CONSTRAINT pk_mails PRIMARY KEY (id)"
           ++ ")"
         return TVRcreated

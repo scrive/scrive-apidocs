@@ -22,9 +22,33 @@ var documentsTable = KontraList().init({
     cells : [
         new Cell({name: "ID", width:"30px", field:"id", special: "select"}),
         new Cell({name: "$_SortTime()$", width:"140px", field:"time"}),
-        new Cell({name: "$_SortAttachment()$", width:"400px", field:"title",  special: "link"})
+        new Cell({name: "$_SortAttachment()$", width:"400px", field:"title",  special: "link"}),
+        new Cell({name: "", width:"100px", field:"shared", special: "rendered",
+                  rendering: function(shared) {
+                         var res = jQuery("<p/>")
+                         if (shared == "True")
+                          return res.text("$_pageAttachmentListIfShared()$");
+                         return res;
+                  }})
         ],
-    options : [{name : "$_delete()$",
+    options : [{name : "$_pageAttachmentListShare()$",
+                onSelect: function(docs){
+                             var submit = new Submit({
+                                                url: "$currentlink$",
+                                                method: "POST",
+                                                share: "true",
+                                                doccheck: _.map(docs, function(doc){return doc.field("id");})
+                                          });
+                            Confirmation.popup({
+                                submit: submit,
+                                acceptText: "$_ok()$",
+                                rejectText: "$_cancel()$",
+                                title: "$_listShareDialogHead()$",
+                                content: jQuery("<p/>").text("$_listShareDialogBody()$")
+                              })
+                          }
+               },
+               {name : "$_delete()$",
                 onSelect: function(docs){
                              var submit = new Submit({
                                                 url: "$currentlink$",

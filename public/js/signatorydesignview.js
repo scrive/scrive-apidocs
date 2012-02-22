@@ -261,9 +261,11 @@ window.SignatoriesDesignBasicView = Backbone.View.extend({
     
 window.SignatoriesDesignAdvancedView = SignatoriesDesignBasicView.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render');
+        _.bindAll(this, 'render', 'signatoriesList');
         this.model.bind('reset', this.render);
         this.model.bind('change', this.render);
+        this.model.bind('change:signatories', this.signatoriesList);
+
         this.extra = args.extra;
         this.render();
     },
@@ -273,11 +275,15 @@ window.SignatoriesDesignAdvancedView = SignatoriesDesignBasicView.extend({
         var box =  $("<div class='addremovesignatorybox'/>");
         var addLink = $("<a class='addSignatory' href='#'/>").text(localization.addSignatory);
         addLink.click(function(){
-            document.addSignatory();   
+            var nsig = document.addSignatory();
+            view.showSignatory(nsig);
+            return false;
         })
         var removeLink = $("<a class='removeSignatory' href='#'/>").text(localization.removeSignatory);
         removeLink.click(function() {
             document.removeSignatory(view.current);
+            return false;
+
         })
         box.append(addLink).append(removeLink).append(this.extra);
         return box;
@@ -288,12 +294,15 @@ window.SignatoriesDesignAdvancedView = SignatoriesDesignBasicView.extend({
     },
     signatoriesList : function() {
         var document = this.model;
-        var view = this; 
-        var box =  $("<div class='siglist'/>");
+        var view = this;
+        if (view.signatoriesListBox == undefined)
+            view.signatoriesListBox =  $("<div class='siglist'/>");
+        else
+            view.signatoriesListBox.empty();
         var header = $("<a href='#' class='header'/>").text(localization.signatoryListPartner);
         if (document.view.signOrderVisible())
             header.append($("<span class='float-right'/>").text(localization.signatoryListSignOrder));
-        box.append(header);
+        view.signatoriesListBox.append(header);
 
         var sigs = document.signatories();
         _.each(document.signatories(),function(sig) {
@@ -315,9 +324,9 @@ window.SignatoriesDesignAdvancedView = SignatoriesDesignBasicView.extend({
                 view.render();
                 return false;
             })
-            box.append(sigline);
+            view.signatoriesListBox.append(sigline);
         })
-        return box;
+        return view.signatoriesListBox;
     },
     render: function(){
         this.fixCurrent();

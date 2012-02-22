@@ -22,6 +22,7 @@ import Doc.Model
 import Doc.DocStateData
 import Doc.DocControl
 import Doc.DocUtils
+import Company.Model
 import KontraLink
 import User.Model
 import Util.SignatoryLinkUtils
@@ -33,6 +34,7 @@ docControlTests conn =  testGroup "Templates"
                            [   testCase "Sending a reminder updates last modified date on doc" $ testSendReminderEmailUpdatesLastModifiedDate conn
                              , testCase "Create document from template" $ testDocumentFromTemplate conn
                              , testCase "Uploading file as contract makes doc" $ testUploadingFileAsContract conn
+                             , testCase "Create document from template | Shared" $ testDocumentFromTemplateShared conn
                              , testCase "Uploading file as offer makes doc" $ testUploadingFileAsOffer conn
                              , testCase "Uploading file as order makes doc" $ testUploadingFileAsOrder conn
                              , testCase "Sending document sends invites" $ testSendingDocumentSendsInvites conn
@@ -296,6 +298,25 @@ testDocumentFromTemplate env =  withTestEnvironment env $ do
     _ <- runTestKontra req ctx $ handleCreateFromTemplate
     docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
     assertBool "No new document" (length docs2 == 1+ length docs1)
+
+testDocumentFromTemplateShared :: DBEnv -> Assertion
+testDocumentFromTemplateShared env = withTestEnvironment env $ do
+    (Company {companyid}) <- addNewCompany
+    (Just author) <- addNewCompanyUser "aaa" "bbb" "xxx@xxx.pl" companyid
+    doc <- addRandomDocumentWithAuthorAndCondition author (\d -> case documenttype d of
+                                                            Template _ -> True
+                                                            _ -> False)
+    _ <- randomUpdate $ SetDocumentSharing [documentid doc] True
+    (Just user) <- addNewCompanyUser "ccc" "ddd" "zzz@zzz.pl" companyid
+    docs1 <- randomQuery $ GetDocumentsByAuthor (userid user)
+    globaltemplates <- readGlobalTemplates
+    ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
+      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    req <- mkRequest POST [("template", inText (show $ documentid doc))]
+    _ <- runTestKontra req ctx $ handleCreateFromTemplate
+    docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
+    assertBool "New document should have been created" (length docs2 == 1+ length docs1)
+
 
 mkSigDetails :: String -> String -> String -> SignatoryDetails
 mkSigDetails fstname sndname email = SignatoryDetails {

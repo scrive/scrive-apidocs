@@ -656,6 +656,7 @@ handleIssueShowGet docid = do
     document <- guardRightM $ getDocByDocID docid
     ctx@Context { ctxmaybeuser } <- getContext
     disableLocalSwitch -- Not show locale flag on this page
+    switchLocale (getLocale document)
     case (isAuthor (document, ctxmaybeuser),
               ctxmaybeuser >>= maybeInvitedLink document,
               isAttachment document,
@@ -1082,6 +1083,29 @@ handleRubbishReallyDelete = do
     docids
   addFlashM flashMessageRubbishHardDeleteDone
   return $ LinkRubbishBin
+
+handleTemplateShare :: Kontrakcja m => m KontraLink
+handleTemplateShare = withUserPost $ do
+    docs <- handleIssueShare
+    case docs of
+      (d:[]) -> addFlashM $ flashMessageSingleTemplateShareDone $ documenttitle d
+      _ -> addFlashM flashMessageMultipleTemplateShareDone
+    return $ LinkTemplates
+
+handleAttachmentShare :: Kontrakcja m => m KontraLink
+handleAttachmentShare = withUserPost $ do
+    docs <- handleIssueShare
+    case docs of
+      (d:[]) -> addFlashM $ flashMessageSingleAttachmentShareDone $ documenttitle d
+      _ -> addFlashM  flashMessageMultipleAttachmentShareDone
+    return $ LinkAttachments
+
+handleIssueShare :: Kontrakcja m => m [Document]
+handleIssueShare = do
+  ids <- getCriticalFieldList asValidDocID "doccheck"
+  _ <- runDBUpdate $ SetDocumentSharing ids True
+  w <- flip mapM ids $ (runDBQuery . GetDocumentByDocumentID)
+  return (catMaybes w)
 
 handleAttachmentRename :: Kontrakcja m => DocumentID -> m KontraLink
 handleAttachmentRename docid = withUserPost $ do
