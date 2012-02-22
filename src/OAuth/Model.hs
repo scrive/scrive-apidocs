@@ -71,7 +71,7 @@ instance DBUpdate RequestTempCredentials (Maybe (APIToken, MagicHash)) where
     temptoken  :: MagicHash <- random
     tempsecret :: MagicHash <- random
     verifier   :: MagicHash <- random
-    mid ::    Maybe Int64 <- getOne  ("INSERT INTO oauth_temp_credential ("
+    mid ::    Maybe Int64 <- getOne $ SQL ("INSERT INTO oauth_temp_credential ("
                            ++ "  temp_token"
                            ++ ", temp_secret"
                            ++ ", api_token_id"
@@ -81,17 +81,17 @@ instance DBUpdate RequestTempCredentials (Maybe (APIToken, MagicHash)) where
                            ++ ", callback"
                            ++ ") (SELECT ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM oauth_api_token WHERE id = ? AND api_token = ? AND api_secret = ?))"
                            ++ " RETURNING id")
-             [ toSql temptoken
-                   , toSql tempsecret
-                   , toSql $ atID token
-                   , toSql verifier
-                   , toSql $ 10 `minutesAfter` time
-                   , toSql email
-                   , toSql callback
-                   , toSql $ atID token
-                   , toSql $ atToken token
-                   , toSql secret
-                   ]
+                           [ toSql temptoken
+                           , toSql tempsecret
+                           , toSql $ atID token
+                           , toSql verifier
+                           , toSql $ 10 `minutesAfter` time
+                           , toSql email
+                           , toSql callback
+                           , toSql $ atID token
+                           , toSql $ atToken token
+                           , toSql secret
+                           ]
     case mid of
       Nothing   -> do
         Log.debug $ show [ toSql temptoken

@@ -97,6 +97,8 @@ documentList = api $ do
 documentNew :: Kontrakcja m => m Response
 documentNew = api $ do
 
+  Log.debug $ "hello!!!"
+
   mjson <- lift $ getDataFn' (look "json")
   case mjson of
     Just _ -> documentWithJSON
@@ -141,11 +143,11 @@ documentWithJSON = do
 
   user <- apiGuardL' Forbidden $ runDBQuery $ GetUserByID userid
 
-  
-
   let actor = APIActor time ip userid (BS.toString $ getEmail user) apistring
 
   jsonString <- apiGuardL' BadInput $ getDataFn' (look "json")
+
+  Log.debug $ "JSON: " ++ jsonString
 
   json <- apiGuard' BadInput $ runGetJSON readJSValue jsonString
   dcr <- apiGuard' BadInput $ dcrFromJSON json
@@ -167,12 +169,18 @@ documentWithJSON = do
     Log.debug $ (show $ toSeconds time) ++ " Should have at least one signatory; instead, has " ++ show sigs
     throwError BadInput
 
-  -- the mainfile is attached
-  (Input contentspec (Just _filename') _contentType) <- apiGuardL' BadInput $ getDataFn' (lookInput $ dcrMainFile dcr)
+  Log.debug "about to read input for file"
 
-  content1 <- case contentspec of
-    Left filepath -> liftIO $ BSL.readFile filepath
-    Right content -> return content
+  -- the mainfile is attached
+  --(Input contentspec (Just _filename') _contentType) <- apiGuardL' BadInput $ getDataFn' (lookInput $ dcrMainFile dcr)
+  content1 <- apiGuardL' BadInput $ getDataFn' (look $ dcrMainFile dcr)
+  Log.debug "just got input"
+
+  --content1 <- case contentspec of
+  --  Left filepath -> liftIO $ BSL.readFile filepath
+  --  Right content -> return content
+
+  Log.debug "got content"
 
   -- create document
   -- set to advanced
@@ -204,11 +212,14 @@ documentWithJSON = do
 
   let doctype = dcrType dcr
       title = dcrTitle dcr
-      
+
+  Log.debug "about to new document"      
   doc <- apiGuardL' ServerError $ runDBUpdate $ NewDocument user mcompany (BS.fromString title) doctype actor
 
+  Log.debug "new document success"
   gscmd <- ctxgscmd <$> getContext
-  content14 <- apiGuardL $ liftIO $ preCheckPDF gscmd (concatChunks content1)
+  content14 <- apiGuardL $ liftIO $ preCheckPDF gscmd (BS.fromString content1)
+
   file <- lift $ runDBUpdate $ NewFile (BS.fromString title) content14
   _ <- apiGuardL $ runDBUpdate (AttachFile (documentid doc) (fileid file) actor)
   
