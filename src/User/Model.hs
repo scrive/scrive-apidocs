@@ -52,6 +52,7 @@ import DB.Fetcher2
 import DB.Utils
 import MagicHash (MagicHash)
 import MinutesTime
+import Misc
 import User.Lang
 import User.Locale
 import User.Password
@@ -278,7 +279,7 @@ instance DBUpdate SetInviteInfo Bool where
         case minviterid of
           Just inviterid -> do
             _ <- kRunRaw "LOCK TABLE user_invite_infos IN ACCESS EXCLUSIVE MODE"
-            rec_exists <- checkIfAnyReturned "SELECT 1 FROM user_invite_infos WHERE user_id = ?" [toSql uid]
+            rec_exists <- checkIfAnyReturned $ SQL "SELECT 1 FROM user_invite_infos WHERE user_id = ?" [toSql uid]
             if rec_exists
               then do
                 kPrepare $ "UPDATE user_invite_infos SET"
@@ -317,7 +318,7 @@ instance DBUpdate SetUserMailAPI Bool where
       then case musermailapi of
         Just mailapi -> do
           _ <- kRunRaw "LOCK TABLE user_mail_apis IN ACCESS EXCLUSIVE MODE"
-          rec_exists <- checkIfAnyReturned "SELECT 1 FROM user_mail_apis WHERE user_id = ?" [toSql uid]
+          rec_exists <- checkIfAnyReturned $ SQL "SELECT 1 FROM user_mail_apis WHERE user_id = ?" [toSql uid]
           if rec_exists
             then do
               kPrepare $ "UPDATE user_mail_apis SET"
@@ -416,7 +417,7 @@ instance DBUpdate SetSignupMethod Bool where
 data SetUserCompanyAdmin = SetUserCompanyAdmin UserID Bool
 instance DBUpdate SetUserCompanyAdmin Bool where
   dbUpdate (SetUserCompanyAdmin uid iscompanyadmin) = do
-    mcid <- getOne "SELECT company_id FROM users WHERE id = ? AND deleted = FALSE FOR UPDATE" [toSql uid]
+    mcid <- getOne $ SQL "SELECT company_id FROM users WHERE id = ? AND deleted = FALSE FOR UPDATE" [toSql uid]
     case mcid :: Maybe CompanyID of
       Nothing -> return False
       Just _ -> kRun01 $ SQL
@@ -426,14 +427,13 @@ instance DBUpdate SetUserCompanyAdmin Bool where
 -- helpers
 
 composeFullName :: (BS.ByteString, BS.ByteString) -> BS.ByteString
-composeFullName (fstname, sndname) =
-    if BS.null sndname
-       then fstname
-       else fstname `BS.append` BS.pack " " `BS.append` sndname
+composeFullName (fstname, sndname) = if BS.null sndname
+  then fstname
+  else fstname <++> BS.pack " " <++> sndname
 
 checkIfUserExists :: UserID -> DB Bool
-checkIfUserExists uid =
-  checkIfAnyReturned "SELECT 1 FROM users WHERE id = ? AND deleted = FALSE" [toSql uid]
+checkIfUserExists uid = checkIfAnyReturned
+  $ SQL "SELECT 1 FROM users WHERE id = ? AND deleted = FALSE" [toSql uid]
 
 selectUsersSQL :: String
 selectUsersSQL = "SELECT "

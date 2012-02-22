@@ -52,6 +52,8 @@ data KontraLink
     | LinkAttachments
     | LinkRubbishBin
     | LinkAccount Bool -- show create company modal?
+    | LinkAccountCompany
+    | LinkCompanyLogo CompanyID
     | LinkChangeUserEmail ActionID MagicHash
     | LinkAccountSecurity
     | LinkUserMailAPI
@@ -84,7 +86,6 @@ data KontraLink
     | LinkDaveDocument DocumentID
     | LinkFile FileID BS.ByteString
     | LinkAskQuestion
-    | LinkRequestPhoneCall
     | LinkInvite
     | LinkSignCanceledDataMismatch DocumentID SignatoryLinkID
     | LinkConnectUserSession ServiceID UserID SessionId KontraLink
@@ -158,6 +159,8 @@ instance Show KontraLink where
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
     showsPrec _ (LinkAccount False) = (++) "/account"
     showsPrec _ (LinkAccount True) = (++) "/account/?createcompany"
+    showsPrec _ LinkAccountCompany = (++) "/account/company"
+    showsPrec _ (LinkCompanyLogo cid) = (++) $ "/account/company/" ++ show cid
     showsPrec _ (LinkChangeUserEmail actionid magichash) =
         (++) $ "/account/" ++ show actionid ++  "/" ++ show magichash
     showsPrec _ (LinkCompanyAccounts params) = (++) $ "/account/companyaccounts" ++ "?" ++ show params
@@ -202,7 +205,6 @@ instance Show KontraLink where
     showsPrec _ BackToReferer = (++) $ "/" -- this should never be used
     showsPrec _ (LinkDaveDocument docid) = (++) ("/dave/document/" ++ show docid)
     showsPrec _ (LinkAskQuestion) = (++) ("/question")
-    showsPrec _ (LinkRequestPhoneCall) = (++) "/phone"
     showsPrec _ (LinkInvite) = (++) "/invite"
     showsPrec _ (LinkSignCanceledDataMismatch docid sigid) = (++) $ "/landpage/signcanceleddatamismatch/" ++ show docid ++ "/" ++ show sigid
     showsPrec _ (LinkConnectUserSession sid uid ssid referer) = (++) $ "/integration/connectuser/" ++ encodeForURL sid ++ "/" ++ show uid  ++ "/" ++ show ssid

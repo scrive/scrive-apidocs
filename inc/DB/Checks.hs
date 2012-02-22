@@ -17,7 +17,7 @@ import DB.Versions
 
 getDatabaseName :: DB String
 getDatabaseName = do
-  maybe "<database>" id <$> getOne "SELECT current_catalog" []
+  fromMaybe "<database>" <$> getOne (SQL "SELECT current_catalog" [])
 
 -- | Runs all checks on a database
 performDBChecks :: (String -> DB ()) -> [Table] -> [Migration] -> DB ()
@@ -29,7 +29,8 @@ performDBChecks logger tables migrations = do
 checkDBTimeZone :: (String -> DB ()) -> DB ()
 checkDBTimeZone logger = do
   logger "Checking whether database returns timestamps in UTC..."
-  tz <- maybe (error "'SELECT now()' returned nothing") zonedTimeZone <$> getOne "SELECT now()" []
+  tz <- maybe (error "'SELECT now()' returned Nothing") zonedTimeZone
+    <$> getOne (SQL "SELECT now()" [])
   if timeZoneMinutes tz == 0
      then return ()
      else do
@@ -87,7 +88,7 @@ checkDBConsistency logger tables migrations = do
                return $ Right $ Just (table, ver)
 
     checkVersion table = do
-      mver <- getOne "SELECT version FROM table_versions WHERE name = ?" [toSql $ tblName table]
+      mver <- getOne $ SQL "SELECT version FROM table_versions WHERE name = ?" [toSql $ tblName table]
       case mver of
         Just ver -> return ver
         _ -> error $ "No version information about table '" ++ tblName table ++ "' was found in database"

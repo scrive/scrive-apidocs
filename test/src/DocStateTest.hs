@@ -65,7 +65,8 @@ docStateTests env = testGroup "DocState" [
   testThat "TemplateFromDocument adds to the log" env testTemplateFromDocumentEvidenceLog,
   testThat "TimeoutDocument adds to the log" env testTimeoutDocumentEvidenceLog,
   testThat "UpdateFields adds to the log" env testUpdateFieldsEvidenceLog,
-  
+  testThat "Documents are shared in company properly" env testGetDocumentsSharedInCompany,
+ 
   testThat "PreparationToPending adds to the log" env testPreparationToPendingEvidenceLog,
   testThat "PendingToAwaitingAuthor adds to the log" env testPendingToAwaitingAuthorEvidenceLog,
   testThat "MarkInvitationRead adds to the log" env testMarkInvitationReadEvidenceLog,
@@ -1410,6 +1411,60 @@ testPreparationAttachCSVUploadNonExistingSignatoryLink = doTimes 3 $ do
   --assert
   validTest $ assertLeft edoc
 
+testGetDocumentsSharedInCompany :: DB ()
+testGetDocumentsSharedInCompany = doTimes 10 $ do
+  -- two companies, two users per company, two users outside of company
+  -- each having a document here
+  company1 <- addNewCompany
+  company2 <- addNewCompany
+  user1' <- addNewRandomAdvancedUser
+  user2' <- addNewRandomAdvancedUser
+  _ <- dbUpdate $ SetUserCompany (userid user1') (Just (companyid company1))
+  Just user1 <- dbQuery $ GetUserByID (userid user1')
+  _ <- dbUpdate $ SetUserCompany (userid user2') (Just (companyid company1))
+  Just user2 <- dbQuery $ GetUserByID (userid user2')
+  user3' <- addNewRandomAdvancedUser
+  user4' <- addNewRandomAdvancedUser
+  _ <- dbUpdate $ SetUserCompany (userid user3') (Just (companyid company2))
+  Just user3 <- dbQuery $ GetUserByID (userid user3')
+  _ <- dbUpdate $ SetUserCompany (userid user4') (Just (companyid company2))
+  Just user4 <- dbQuery $ GetUserByID (userid user4')
+  user5 <- addNewRandomAdvancedUser
+  user6 <- addNewRandomAdvancedUser
+
+  docid1 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user1 (isTemplate)
+  docid2 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user2 (isTemplate)
+  docid3 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user3 (isTemplate)
+  docid4 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user4 (isTemplate)
+  docid5 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user5 (isTemplate)
+  docid6 <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user6 (isTemplate)
+
+  -- user1: owns doc1, sees doc2
+  -- user2: owns doc2, sees doc1
+  -- user3: owns doc3,
+  -- user4: owns doc4, sees doc3
+  -- user5: owns doc5
+  -- user6: owns doc6
+
+  _ <- dbUpdate $ SetDocumentSharing [docid4] False
+  _ <- dbUpdate $ SetDocumentSharing [docid1, docid2, docid3, docid5, docid6] True
+
+  dlist1 <- dbQuery $ GetTemplatesByAuthor (userid user1)
+  dlist2 <- dbQuery $ GetTemplatesByAuthor (userid user2)
+  dlist3 <- dbQuery $ GetTemplatesByAuthor (userid user3)
+  dlist4 <- dbQuery $ GetTemplatesByAuthor (userid user4)
+  dlist5 <- dbQuery $ GetTemplatesByAuthor (userid user5)
+  dlist6 <- dbQuery $ GetTemplatesByAuthor (userid user6)
+
+  mapM_ (liftIO . putStrLn . show . map documentid) [dlist1, dlist2, dlist3, dlist4, dlist5, dlist6]
+
+  validTest $ do
+    assertEqual "Documents not shared in user without company (X) by user 5" 1 (length dlist5)
+    assertEqual "Documents not shared in user without company (Y) by user 6" 1 (length dlist6)
+    assertEqual "Documents properly shared in company (2) by user 3" 1 (length dlist3)
+    assertEqual "Documents properly shared in company (2) by user 4" 2 (length dlist4)
+    assertEqual "Documents properly shared in company (1) by user 1" 2 (length dlist1)
+    assertEqual "Documents properly shared in company (1) by user 2" 2 (length dlist2)
 
 testCreateFromSharedTemplate :: DB ()
 testCreateFromSharedTemplate = do

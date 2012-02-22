@@ -2,6 +2,7 @@
 module Doc.Model
   ( module File.File
   , isTemplate -- fromUtils
+  , isShared -- fromUtils
   , isDeletableDocument -- fromUtils
   , anyInvitationUndelivered
   , undeliveredSignatoryLinks
@@ -50,6 +51,7 @@ module Doc.Model
   , SetDocumentFunctionality(..)
   , SetDocumentInviteTime(..)
   , SetDocumentLocale(..)
+  , SetDocumentSharing(..)
   , SetDocumentTags(..)
   , SetDocumentTimeoutTime(..)
   , SetDocumentTitle(..)
@@ -186,6 +188,7 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documentinvitetext" documentinvitetext
                    , checkEqualBy "documentallowedidtypes" (nub . documentallowedidtypes)
                    , checkEqualBy "documentcancelationreason" documentcancelationreason
+                   , checkEqualBy "documentsharing" documentsharing
                    , checkEqualBy "documentrejectioninfo" documentrejectioninfo
                    , checkEqualBy "documenttags" documenttags
                    , checkEqualBy "documentservice" documentservice
@@ -227,6 +230,7 @@ documentsSelectors = intercalate ", " [
   , "deleted"
   , "mail_footer"
   , "region"
+  , "sharing"
   ]
 
 selectDocumentsSQL :: SQL
@@ -243,7 +247,7 @@ fetchDocuments = foldDB decoder []
      process functionality ctime mtime days_to_sign timeout_time invite_time
      invite_ip dlog invite_text allowed_id_types cancelationreason rejection_time
      rejection_signatory_link_id rejection_reason tags service deleted mail_footer
-     region = Document {
+     region sharing = Document {
          documentid = did
        , documenttitle = title
        , documentsignatorylinks = []
@@ -266,7 +270,7 @@ fetchDocuments = foldDB decoder []
        , documentinvitetext = invite_text
        , documentallowedidtypes = allowed_id_types
        , documentcancelationreason = cancelationreason
-       , documentsharing = Private
+       , documentsharing = sharing
        , documentrejectioninfo = case (rejection_time, rejection_signatory_link_id, rejection_reason) of
            (Just t, Just sl, mr) -> Just (t, sl, fromMaybe BS.empty mr)
            _ -> Nothing
@@ -571,6 +575,7 @@ insertDocumentAsIs document = do
                  , documentinvitetext
                  , documentallowedidtypes
                  , documentcancelationreason
+                 , documentsharing
                  , documentrejectioninfo
                  , documenttags
                  , documentservice
@@ -615,7 +620,7 @@ insertDocumentAsIs document = do
       , sql "deleted" documentdeleted
       , sql "mail_footer" $ documentmailfooter $ documentui -- should go into separate table?
       , sql "region" documentregion
-      , sql "sharing" Private -- this is unused, but does not have default and needs to be specifed here
+      , sql "sharing" documentsharing
       ] <++> SQL ("RETURNING " ++ documentsSelectors) []
 
     mdoc <- fetchDocuments >>= oneObjectReturnedGuard
@@ -1005,30 +1010,45 @@ instance Actor a => DBUpdate (ErrorDocument a) (Either String Document) where
             getOneDocumentAffected "ErrorDocument" r docid
           s -> return $ Left $ "Cannot ErrorDocument document " ++ show docid ++ " because " ++ concat s
 
+
 selectDocuments :: SQL -> DB [Document]
 selectDocuments query = do
-    _ <- kRun $ SQL "CREATE TEMP TABLE docs AS " [] <++> query
+  _ <- kRun $ query
+  docs <- fetchDocuments
 
-    _ <- kRun $ SQL "SELECT * FROM docs" []
-    docs <- fetchDocuments
+  -- we need to short circuit case when there are no documents returned because of syntax
+  -- SELECT ... WHERE document_id IN () is not valid.
+  -- Also doing round trips to server when result is known to be empty does not make sense.
+  case docs of
+    [] -> return []
+    _ -> do
+      let docids = map documentid docs
 
-    _ <- kRun $ selectSignatoryLinksSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE sl.document_id = docs.id) ORDER BY document_id DESC, internal_insert_order DESC" []
-    sls <- fetchSignatoryLinks
+      -- This is supposed to create a command string of the form:
+      -- (?,?,?,....,?) where the number of question marks is equal to number of 
+      -- document ids we have in the list
+      let docidsinsql = SQL "(" [] <++> SQL (intercalate "," ["?" | _ <- docids]) (map toSql docids) <++> SQL ")" []
 
-    _ <- kRun $ selectAuthorAttachmentsSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE author_attachments.document_id = docs.id) ORDER BY document_id DESC" []
-    ats <- fetchAuthorAttachments
+      _ <- kRun $ selectSignatoryLinksSQL <++>
+           SQL "WHERE sl.document_id IN " [] <++>
+           docidsinsql <++> SQL " ORDER BY document_id DESC, internal_insert_order DESC" []
+      sls <- fetchSignatoryLinks
 
-    kRunRaw "DROP TABLE docs"
+      _ <- kRun $ selectAuthorAttachmentsSQL <++>
+           SQL "WHERE author_attachments.document_id IN " [] <++>
+           docidsinsql <++> SQL " ORDER BY document_id DESC" []
+      ats <- fetchAuthorAttachments
 
-    let findEmpty :: Document -> M.Map DocumentID [a] -> [a]
-        findEmpty doc = fromMaybe [] . M.lookup (documentid doc)
 
-        fill doc = doc {
-            documentsignatorylinks       = findEmpty doc sls
-          , documentauthorattachments    = findEmpty doc ats
-          }
+      let findEmpty :: Document -> M.Map DocumentID [a] -> [a]
+          findEmpty doc = fromMaybe [] . M.lookup (documentid doc)
 
-    return $ map fill docs
+      let fill doc = doc
+                 { documentsignatorylinks       = findEmpty doc sls
+                 , documentauthorattachments    = findEmpty doc ats
+                 }
+
+      return $ map fill docs
 
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
 instance DBQuery GetDocumentByDocumentID (Maybe Document) where
@@ -1086,10 +1106,28 @@ activatedSQL = mconcat [
 
 whereAuthorIs :: UserID -> SQL
 whereAuthorIs uid = SQL
-  "signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?) <> 0)" [
+  "(signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?) <> 0))" [
       toSql uid
     , toSql [SignatoryAuthor]
     ]
+
+-- | If there is another user, that belongs to the same company, and
+-- document has the sharing bit set and is owned by that user.
+orDocumentIsSharedInAuthorsCompany :: UserID -> SQL
+orDocumentIsSharedInAuthorsCompany uid = SQL
+  ("OR (signatory_links.deleted = FALSE " ++ 
+   "    AND documents.sharing = ?" ++
+   "    AND documents.type = ?" ++
+   "    AND ((signatory_links.roles & ?) <> 0) " ++
+   "    AND EXISTS (SELECT 1 FROM users AS usr1, users AS usr2 " ++
+   "                WHERE signatory_links.user_id = usr2.id " ++
+   "                  AND usr2.company_id = usr1.company_id " ++
+   "                  AND usr1.id = ?))")
+  [ toSql Shared
+  , toSql $ Template undefined
+  , toSql [SignatoryAuthor]
+  , toSql uid
+  ]
 
 whereSignatoryIsAndDeletedIs :: UserID -> Bool -> SQL
 whereSignatoryIsAndDeletedIs userid deleted = mconcat [
@@ -1136,11 +1174,14 @@ instance DBQuery GetDocumentsOfTypeByAuthor [Document] where
   dbQuery (GetDocumentsOfTypeByAuthor dtype uid) = selectDocumentsBySignatoryLink
     $ whereAuthorIs uid <++> andDocumentTypeIs dtype
 
+parenthesize :: SQL -> SQL
+parenthesize (SQL command values) = SQL ("(" ++ command ++ ")") values
+
 data GetTemplatesByAuthor = GetTemplatesByAuthor UserID
 instance DBQuery GetTemplatesByAuthor [Document] where
   dbQuery (GetTemplatesByAuthor uid) = selectDocumentsBySignatoryLink
-    $ whereAuthorIs uid
-    <++> SQL " AND type = ?" [toSql $ Template undefined]
+    $ parenthesize (whereAuthorIs uid <++> (SQL " AND type = ?" [toSql $ Template undefined]) 
+                    <++> orDocumentIsSharedInAuthorsCompany uid)
 
 {- |
     All documents where the user is a signatory that are not deleted.  An author is a type
@@ -1725,6 +1766,16 @@ instance Actor a => DBUpdate (SetInvitationDeliveryStatus a) (Either String Docu
       (Just did)
       actor
     getOneDocumentAffected "SetInvitationDeliveryStatus" r did
+
+data SetDocumentSharing = SetDocumentSharing [DocumentID] Bool
+instance DBUpdate SetDocumentSharing (Either String Bool) where
+  dbUpdate (SetDocumentSharing dids flag) = do
+    flip mapM_ dids $ \did -> kRun $ mkSQL UPDATE tableDocuments
+         [ sql "sharing" $ (if flag then Shared else Private)
+         ] <++> SQL
+         " WHERE id = ? AND deleted = FALSE " [ toSql did ]
+    return (Right True)
+
 
 data Actor a => SignDocument a = SignDocument DocumentID SignatoryLinkID MagicHash (Maybe SignatureInfo) a
 instance Actor a => DBUpdate (SignDocument a) (Either String Document) where

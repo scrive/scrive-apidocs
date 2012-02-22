@@ -8,6 +8,7 @@ import DB.Model
 
 import API.Service.Tables
 import Company.Tables
+import Company.Migrations
 import CompanyAccounts.Tables
 import Doc.Tables
 import Doc.Migrations
@@ -18,7 +19,6 @@ import Stats.Tables
 import Stats.Migrations
 import File.Tables
 import Mails.Tables
-import Mails.Migrations
 
 import EvidenceLog.Tables
 
@@ -33,8 +33,9 @@ kontraMigrations = [
   , addNameColumnInSignatoryAttachments
   , addCSVUploadDataFromDocumentToSignatoryLink
   , addColumnToRecordInternalInsertionOrder
-  , addSignatoryLinkIdToSignatoryAttachment
-  ] ++ mailerMigrations
+  , addEmailBrandingToCompany
+  , removeOldSignatoryLinkIDFromCancelationReason
+  ]
 
 kontraTables :: [Table]
 kontraTables = [
