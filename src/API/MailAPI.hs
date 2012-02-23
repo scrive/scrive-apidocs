@@ -93,7 +93,7 @@ handleMailAPI = do
     -- extension and can be used as for example password
   let extension = takeWhile (/= '@') $ dropWhile (== '+') $ dropWhile (/= '+') to
 
-  muser <- runDBQuery (GetUserByEmail Nothing (Email $ BS.fromString username))
+  muser <- runDBQuery (GetUserByEmail Nothing (Email $ BS.fromString $ map toLower username))
   when (isNothing muser) $ do
     Log.mailAPI $ "User does not exist: " ++ username
     mzero
