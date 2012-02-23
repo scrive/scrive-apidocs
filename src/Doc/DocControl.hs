@@ -1346,8 +1346,11 @@ handleCreateFromTemplate = withUserPost $ do
       user <- guardJustM $ ctxmaybeuser <$> getContext
       document <- queryOrFail $ GetDocumentByDocumentID $ did
       Log.debug $ show "Matching document found"
-      let haspermission = maybe False (isSigLinkFor (userid user)) $ getAuthorSigLink document
-      enewdoc <- if haspermission
+      auid <- guardJust $ join $ maybesignatory <$> getAuthorSigLink document
+      auser <- guardJustM $ runDBQuery $ GetUserByID auid
+      let haspermission = (userid auser == userid user) ||
+                          ((usercompany auser == usercompany user && (isJust $ usercompany user)) &&  isDocumentShared document)
+      enewdoc <- if (isTemplate document && haspermission)
                     then do
                       Log.debug $ show "Valid persmision to create from template"
                       mcompany <- getCompanyForUser user

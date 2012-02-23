@@ -7,7 +7,8 @@ javascriptLocalisation =
     var localization =
         {
        loadingFile : "$_loadingFile()$"
-             , problemWithPDF : "$_problemWithPDF()$"
+             , problemWithPDF : "$_problemWithPDF()$""
+             , backToArchive : "$_backToArchive()$"
              , repetedEmailAddress : "$_repetedEmailAddress()$"
              , offerSignatory : "$_offerSignatory()$"
              , sigattachmessage : "$_pageDocumentForAuthorHelpersLocalDialogsRecipient()$"
