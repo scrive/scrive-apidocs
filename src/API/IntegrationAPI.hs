@@ -392,14 +392,7 @@ getDocuments = do
     linkeddocuments <- runDBQuery $ GetDocumentsByCompanyWithFiltering (Just sid) (companyid comp) tags mFromDate mToDate mstatuses
     api_docs <- sequence [api_document_read False d  
                          | d <- linkeddocuments
-                         , isAuthoredByCompany (companyid comp) d
-                         , not $ isDeletedFor $ getAuthorSigLink d
                          , not $ isAttachment d
-                         -- we avoid filtering when the filter is not defined
-                         --, maybe True (recentDate d >=) mFromDate
-                         --, maybe True (recentDate d <=) mToDate
-                         --, maybe True ((fromSafeEnum $ documentstatus d) >=) mFromState
-                         --, maybe True ((fromSafeEnum $ documentstatus d) <=) mToState
                          ]
     return $ toJSObject $ [("documents"  , JSArray $ api_docs)] ++
                           ([] <| isNothing mFromDate  |> [("from_date",  showJSON $ showMinutesTimeForAPI (fromJust mFromDate ))]) ++

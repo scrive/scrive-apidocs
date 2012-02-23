@@ -26,7 +26,6 @@ module Doc.Model
   , GetDeletedDocumentsByUser(..)
   , GetDocumentByDocumentID(..)
   , GetDocuments(..)
-  , GetDocumentsByCompanyAndTags(..)
   , GetDocumentsByCompanyWithFiltering(..)
   , GetDocumentsByAuthor(..)
   , GetTemplatesByAuthor(..)
@@ -987,6 +986,16 @@ instance DBQuery GetDocuments [Document] where
     this won't return documents that have been deleted (so ones
     that would appear in the recycle bin//trash can.)  It also makes sure to respect the sign order in
     cases where the company is linked via a signatory that hasn't yet been activated.
+
+    Filters
+    ----------------------------
+    Service must match
+    CompanyID must match Author
+    Author must not be deleted
+    All DocumentTags must be present and match (currently still done in Haskell)
+    If isJust stime, the last change on the document must be greater than or equal to stime
+    if isJust ftime, the last change on the document must be less than or equal to ftime
+    if isJust statuses, the document status must be element of statuses
 -}
 data GetDocumentsByCompanyWithFiltering = GetDocumentsByCompanyWithFiltering (Maybe ServiceID) CompanyID [DocumentTag] (Maybe MinutesTime) (Maybe MinutesTime) (Maybe [DocumentStatus])
 instance DBQuery GetDocumentsByCompanyWithFiltering [Document] where
@@ -1032,30 +1041,9 @@ instance DBQuery GetDocumentsByCompanyWithFiltering [Document] where
           Just statuses -> SQL (" AND documents.status in (" ++ intercalate "," (map (const "?") statuses) ++ ") ")
                                (map toSql statuses)
       ]
+    -- There is no perfect way to filter by tags; we could do a partial job, but we will always have to filter in Haskell.
     return (filter hasTags docs)
     where hasTags doc = all (`elem` (documenttags doc)) doctags
-
-{- |
-    Fetches documents by company and tags, this won't return documents that have been deleted (so ones
-    that would appear in the recycle bin//trash can.)  It also makes sure to respect the sign order in
-    cases where the company is linked via a signatory that hasn't yet been activated.
--}
-data GetDocumentsByCompanyAndTags = GetDocumentsByCompanyAndTags (Maybe ServiceID) CompanyID [DocumentTag]
-instance DBQuery GetDocumentsByCompanyAndTags [Document] where
-  dbQuery (GetDocumentsByCompanyAndTags mservice companyid doctags) = do
-    docs <- selectDocumentsBySignatoryLink $ mconcat [
-        SQL "signatory_links.deleted = FALSE AND signatory_links.company_id = ? AND "
-          [toSql companyid]
-      , activatedSQL
-      , SQL "AND (signatory_links.roles = ? OR signatory_links.roles = ?) " [
-          toSql [SignatoryAuthor]
-        , toSql [SignatoryAuthor, SignatoryPartner]
-        ]
-      , SQL "AND service_id IS NOT DISTINCT FROM ? " [toSql mservice]
-      ]
-    return (filter hasTags docs)
-    where hasTags doc = all (`elem` (documenttags doc)) doctags
-
 
 selectDocumentsBySignatoryLink :: SQL -> DB [Document]
 selectDocumentsBySignatoryLink extendedWhere = selectDocuments $ mconcat [
