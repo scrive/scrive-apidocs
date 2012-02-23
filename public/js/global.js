@@ -385,7 +385,7 @@ function loadpages() {
                         content: errormsg.text(),
                         cantCancel : true,
                         acceptColor: "red",
-                        acceptText : "Back to Archive"
+                        acceptText : localization.backToArchive
                     });
                 } else {
                     $('#documentBox').html(content);
@@ -1668,7 +1668,7 @@ safeReady(function() {
                         content: errormsg.text(),
                         cantCancel : true,
                         acceptColor: "red",
-                        acceptText : "Back to Archive"
+                        acceptText : localization.backToArchive
                     });
 
                 } else {

@@ -2456,6 +2456,7 @@ If the other party clicks on the signing link after you withdrawn the invitation
  or its services are handled with highest possible carefulness"
 "_privacyPolicyPageTitle","| Sekretesspolicy",,"| Privacy Policy"
 "_problemWithPDF","Problem med PDF",,"Problem with PDF"
+"_backToArchive","Tillbaka till Arkiv",,"Back to Archive"
 "_queryColumnBody1","Stäng affärerna snabbare. Mindre administrativt krångel. Nöjdare kunder. Scrive gör ditt liv lite enklare och lite bättre.",,"Close deals faster. Less administration. More satisfied customers. Simpler and
 simply better."
 "_queryColumnBody2","10 fria signaturer per månad. Ingen inlåsning, inga konstigheter.",,"10 free signatures per month. No commitments. Cancel any time."
@@ -2704,9 +2705,7 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_setAllFields","Var vänlig namnge alla skapade fält",,"Please name all created fields"
 "_share","Dela",,"Share"
 "_shared","Delad",,"Shared"
-"_showFileImagesError","Vi beklagar, det var något problem med formateringen på din PDF.
- Vänligen kontrollera dokumentet och försök igen.",,"We are sorry, something was wrong with the format in your PDF.
- Please check the document and try again."
+"_showFileImagesError","Vi beklagar, det var något problem med formateringen på din PDF. Vänligen kontrollera dokumentet och försök igen.",,"We are sorry, something was wrong with the format in your PDF. Please check the document and try again."
 "_sigattachlistRequestedAttachment","Begärda bilagor:",,"Requested attachments:"
 "_signAwaitingAuthorLastBody","Alla parter har nu undertecknat och dokumentet är bindande.",,"All parties have  signed, and the document is now legally binding."
 "_signAwaitingAuthorLastHeader","Dokumentet har undertecknats",,"The document has been signed"
