@@ -185,6 +185,9 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
        var signatory = this.model;
        var field = signatory.field("signature");
        var placeSignatureIcon = $("<a class='placeSignatureIcon' href='#'/>");
+       field.view = placeSignatureIcon;
+       field.view.redborder = function() {placeSignatureIcon.addClass('redborder')};
+       field.view.mousedown(function() {placeSignatureIcon.removeClass('redborder')});
        var fileview = signatory.document().mainfile().view;
        placeSignatureIcon.draggable({
                     handle: ".ddIcon",

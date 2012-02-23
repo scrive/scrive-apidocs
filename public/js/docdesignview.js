@@ -7,10 +7,11 @@
 
 var DocumentDesignView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render', 'refreshFinalButton');
+        _.bindAll(this, 'render', 'refreshFinalButton', 'refreshAuthorizationDependantOptions');
         this.model.bind('reset', this.render);
         this.model.bind('change:ready', this.render);
         this.model.bind('change:signatories', this.refreshFinalButton);
+        this.model.bind('change:authorization', this.refreshAuthorizationDependantOptions);
         this.model.view = this;
         this.document
         this.prerender();
@@ -190,24 +191,39 @@ var DocumentDesignView = Backbone.View.extend({
         var select= $("<select/>");
         var eleg =  $("<option value='eleg'/>").text(localization.eleg);
         var email = $("<option value='email'/>").text(localization.email);
+        var pad = $("<option value='pad'/>").text(localization.pad);
         select.append(eleg);
         select.append(email);
+        if (!document.isBasic() || document.padAuthorization()) select.append(pad);
         box.text(localization.verification.selectmethod);
         box.append(select);
         if (document.elegAuthorization())
         { 
-          eleg.attr("selected","YES");
           email.attr("selected","");
+          pad.attr("selected","");
+          eleg.attr("selected","YES");
         }
-        else
+        else if  (document.padAuthorization())
         { 
           eleg.attr("selected","");
-          email.attr("selected","YES");
+          email.attr("selected","");
+          pad.attr("selected","YES");
+          
         }
+        else if  (document.emailAuthorization())
+        {
+          eleg.attr("selected","");
+          pad.attr("selected","");
+          email.attr("selected","YES");
+
+        }
+       
         select.change(function(){
             if ($(this).val() == 'eleg')
                 document.setElegVerification();
-            else
+            else if ($(this).val() == 'pad')
+                document.setPadVerification();
+            else 
                 document.setEmailVerification();
         })    
         return box;
@@ -401,6 +417,16 @@ var DocumentDesignView = Backbone.View.extend({
     setSignLast : function(v) {
          SessionStorage.set(this.model.documentid(), "signLastChecked", "" + v);
          this.refreshFinalButton();
+    },
+    refreshInvitationMessageOption : function() {
+        
+    },
+    refreshSignatoryAttachmentsOption : function() {
+        
+    },
+    refreshAuthorizationDependantOptions : function() {
+        this.refreshInvitationMessageOption();
+        this.refreshSignatoryAttachmentsOption();
     },
     refreshFinalButton : function() {
         if (this.finalButtonBox != undefined)

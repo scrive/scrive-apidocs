@@ -184,6 +184,7 @@ javascriptLocalisation =
                     selectmethod: "$_signStepsBodyFunctionsBoxChooseVerification()$"
                 }
            , eleg : "$_eleg()$"
+           , pad : "Pad"
            , finalDateCheckboxLabel : "$_daystosigncheckboxExpDate()$"
            , editInviteText :"$_editinvitetextlinkInviteText()$"
            , editInviteDialogHead : "$_editInviteTextDialogHead()$"
@@ -248,6 +249,7 @@ javascriptLocalisation =
                     , atLeastOnePersonOtherThenAuthor : "$_atLeastOnePersonOtherThenAuthor()$"
                     , notReadyField : "$_setAllFields()$"
                     , restrictedName : "$_fieldnameRestricted()$"
+                    , notPlacedSignature : "Signature must be placed for signing party with pad authorization"
                 }
            }
 

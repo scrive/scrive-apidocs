@@ -175,6 +175,10 @@ window.Field = Backbone.Model.extend({
             var msg = localization.designview.validation.notReadyField
             return new Validation({validates : function() {return field.isReady()}, message : msg});
         }
+        if (!this.signatory().author() && this.signatory().signs() && this.signatory().document().padAuthorization() && this.isSignature()) {
+            var msg = localization.designview.validation.notPlacedSignature
+            return new Validation({validates : function() {return field.hasPlacements()}, message : msg});
+        }
         
         return new Validation();
     },
@@ -213,6 +217,9 @@ window.Field = Backbone.Model.extend({
                , placements : _.map(this.placements(), function(placement) {return placement.draftData();})
              }  
     },
+   hasPlacements : function() {
+      return this.get("placements").length > 0;
+   },
    addPlacement : function(placement) {
       var newplacements = new Array(); //Please don't ask why we rewrite this array
       for(var i=0;i<this.placements().length;i++) 

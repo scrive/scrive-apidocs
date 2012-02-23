@@ -304,6 +304,7 @@ documentJSON msl _crttime doc = do
 authorizationJSON :: IdentificationType -> JSValue
 authorizationJSON EmailIdentification = JSString $ toJSString "email"
 authorizationJSON ELegitimationIdentification = JSString $ toJSString "eleg"
+authorizationJSON PadIdentification = JSString $ toJSString "pad"
 
 
 signatoryJSON :: (TemplatesMonad m) => Document -> Maybe SignatoryLink -> [(FileID, File)] -> SignatoryLink -> m JSValue

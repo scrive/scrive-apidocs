@@ -57,6 +57,8 @@ window.Document = Backbone.Model.extend({
         return this.get("signatories");
     },
     fixForBasic: function() {
+        if (this.padAuthorization())
+            this.setEmailVerification();
         while (this.signatories().length <2 ) {
               this.addSignatory();
         }
@@ -278,11 +280,21 @@ window.Document = Backbone.Model.extend({
     elegAuthorization : function() {
           return this.get("authorization") == "eleg";
     },
+    padAuthorization : function() {
+          return this.get("authorization") == "pad";
+    },
     setElegVerification : function() {
           this.set({"authorization":"eleg"}, {silent: true});
+          this.trigger("change:authorization");
     },
     setEmailVerification : function() {
           this.set({"authorization":"email"}, {silent: true});
+          this.trigger("change:authorization");
+    },
+    setPadVerification : function() {
+          this.set({"authorization":"pad"}, {silent: true});
+          _.each(this.signatories(), function(sig) {sig.clearAttachments();})
+          this.trigger("change:authorization");
     },
     elegTBS : function() {
         var text = this.title() + " "+  this.documentid() ;

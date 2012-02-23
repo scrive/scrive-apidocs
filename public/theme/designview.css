@@ -522,6 +522,14 @@
     margin-top: 1px;
     float : left;
 }
+.placeSignatureIcon.redborder {
+    margin-left: 11px;
+    margin-top: 0px;
+    border: 1px solid red;
+    border-radius: 2px 2px 2px 2px;
+
+} 
+
 .signatureBoxNotDrawing {
     display: block;
     width: 250px;
