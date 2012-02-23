@@ -27,6 +27,7 @@ module Doc.Model
   , GetDocumentByDocumentID(..)
   , GetDocuments(..)
   , GetDocumentsByCompanyAndTags(..)
+  , GetDocumentsByCompanyWithFiltering(..)
   , GetDocumentsByAuthor(..)
   , GetTemplatesByAuthor(..)
   , GetDocumentsOfTypeByAuthor(..)
@@ -982,6 +983,59 @@ instance DBQuery GetDocuments [Document] where
       <++> SQL "WHERE service_id IS NOT DISTINCT FROM ?" [toSql msid]
 
 {- |
+    Fetches documents by company with filtering by tags, edate, and status.
+    this won't return documents that have been deleted (so ones
+    that would appear in the recycle bin//trash can.)  It also makes sure to respect the sign order in
+    cases where the company is linked via a signatory that hasn't yet been activated.
+-}
+data GetDocumentsByCompanyWithFiltering = GetDocumentsByCompanyWithFiltering (Maybe ServiceID) CompanyID [DocumentTag] (Maybe MinutesTime) (Maybe MinutesTime) (Maybe [DocumentStatus])
+instance DBQuery GetDocumentsByCompanyWithFiltering [Document] where
+  dbQuery (GetDocumentsByCompanyWithFiltering mservice companyid doctags stime ftime mstatuses) = do
+    docs <- selectDocumentsBySignatoryLink $ mconcat [
+        SQL "signatory_links.deleted = FALSE AND signatory_links.company_id = ? AND "
+          [toSql companyid]
+      , activatedSQL
+      , SQL "AND (signatory_links.roles = ? OR signatory_links.roles = ?) " [
+          toSql [SignatoryAuthor]
+        , toSql [SignatoryAuthor, SignatoryPartner]
+        ]
+      , SQL " AND service_id IS NOT DISTINCT FROM ? " [toSql mservice]
+      , case (stime, ftime) of
+          (Nothing, Nothing) -> SQL "" []
+          (Just s, Nothing) ->  SQL (" AND ? <= (select max(greatest(signatory_links.sign_time"
+                                       ++ ",signatory_links.seen_time"
+                                       ++ ",signatory_links.read_invitation"
+                                       ++ ",documents.invite_time"
+                                       ++ ",documents.rejection_time"
+                                       ++ ",documents.mtime"
+                                       ++ ",documents.ctime"
+                                       ++ ")) from signatory_links where signatory_links.document_id = documents.id) ") [toSql s]
+          (Nothing, Just f) -> SQL (" AND ? >= (select max(greatest(signatory_links.sign_time"
+                                       ++ ",signatory_links.seen_time"
+                                       ++ ",signatory_links.read_invitation"
+                                       ++ ",documents.invite_time"
+                                       ++ ",documents.rejection_time"
+                                       ++ ",documents.mtime"
+                                       ++ ",documents.ctime"
+                                       ++ ")) from signatory_links where signatory_links.document_id = documents.id) ") [toSql f]
+          (Just s, Just f) ->  SQL (" AND (select max(greatest(signatory_links.sign_time"
+                                       ++ ",signatory_links.seen_time"
+                                       ++ ",signatory_links.read_invitation"
+                                       ++ ",documents.invite_time"
+                                       ++ ",documents.rejection_time"
+                                       ++ ",documents.mtime"
+                                       ++ ",documents.ctime"
+                                       ++ ")) from signatory_links where signatory_links.document_id = documents.id) BETWEEN ? AND ? ") [toSql s, toSql f]
+      , case mstatuses of
+          Nothing -> SQL "" []
+          Just [] -> SQL "AND FALSE " []
+          Just statuses -> SQL (" AND documents.status in (" ++ intercalate "," (map (const "?") statuses) ++ ") ")
+                               (map toSql statuses)
+      ]
+    return (filter hasTags docs)
+    where hasTags doc = all (`elem` (documenttags doc)) doctags
+
+{- |
     Fetches documents by company and tags, this won't return documents that have been deleted (so ones
     that would appear in the recycle bin//trash can.)  It also makes sure to respect the sign order in
     cases where the company is linked via a signatory that hasn't yet been activated.
@@ -1001,6 +1055,7 @@ instance DBQuery GetDocumentsByCompanyAndTags [Document] where
       ]
     return (filter hasTags docs)
     where hasTags doc = all (`elem` (documenttags doc)) doctags
+
 
 selectDocumentsBySignatoryLink :: SQL -> DB [Document]
 selectDocumentsBySignatoryLink extendedWhere = selectDocuments $ mconcat [
