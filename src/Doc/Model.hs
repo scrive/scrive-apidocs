@@ -1011,30 +1011,9 @@ instance DBQuery GetDocumentsByCompanyWithFiltering [Document] where
       , SQL " AND service_id IS NOT DISTINCT FROM ? " [toSql mservice]
       , case (stime, ftime) of
           (Nothing, Nothing) -> SQL "" []
-          (Just s, Nothing) ->  SQL (" AND ? <= (select max(greatest(signatory_links.sign_time"
-                                       ++ ",signatory_links.seen_time"
-                                       ++ ",signatory_links.read_invitation"
-                                       ++ ",documents.invite_time"
-                                       ++ ",documents.rejection_time"
-                                       ++ ",documents.mtime"
-                                       ++ ",documents.ctime"
-                                       ++ ")) from signatory_links where signatory_links.document_id = documents.id) ") [toSql s]
-          (Nothing, Just f) -> SQL (" AND ? >= (select max(greatest(signatory_links.sign_time"
-                                       ++ ",signatory_links.seen_time"
-                                       ++ ",signatory_links.read_invitation"
-                                       ++ ",documents.invite_time"
-                                       ++ ",documents.rejection_time"
-                                       ++ ",documents.mtime"
-                                       ++ ",documents.ctime"
-                                       ++ ")) from signatory_links where signatory_links.document_id = documents.id) ") [toSql f]
-          (Just s, Just f) ->  SQL (" AND (select max(greatest(signatory_links.sign_time"
-                                       ++ ",signatory_links.seen_time"
-                                       ++ ",signatory_links.read_invitation"
-                                       ++ ",documents.invite_time"
-                                       ++ ",documents.rejection_time"
-                                       ++ ",documents.mtime"
-                                       ++ ",documents.ctime"
-                                       ++ ")) from signatory_links where signatory_links.document_id = documents.id) BETWEEN ? AND ? ") [toSql s, toSql f]
+          (Just s, Nothing)  -> SQL (" AND " ++ maxselect ++ " >= ? ") [toSql s]
+          (Nothing, Just f)  -> SQL (" AND " ++ maxselect ++ " <= ? ") [toSql f]
+          (Just s, Just f)   -> SQL (" AND " ++ maxselect ++ " BETWEEN ? AND ? ") [toSql s, toSql f]
       , case mstatuses of
           Nothing -> SQL "" []
           Just [] -> SQL "AND FALSE " []
@@ -1044,6 +1023,14 @@ instance DBQuery GetDocumentsByCompanyWithFiltering [Document] where
     -- There is no perfect way to filter by tags; we could do a partial job, but we will always have to filter in Haskell.
     return (filter hasTags docs)
     where hasTags doc = all (`elem` (documenttags doc)) doctags
+          maxselect = " (select max(greatest(signatory_links.sign_time"
+                                        ++ ",signatory_links.seen_time"
+                                        ++ ",signatory_links.read_invitation"
+                                        ++ ",documents.invite_time"
+                                        ++ ",documents.rejection_time"
+                                        ++ ",documents.mtime"
+                                        ++ ",documents.ctime"
+                                        ++ ")) from signatory_links where signatory_links.document_id = documents.id) "
 
 selectDocumentsBySignatoryLink :: SQL -> DB [Document]
 selectDocumentsBySignatoryLink extendedWhere = selectDocuments $ mconcat [
