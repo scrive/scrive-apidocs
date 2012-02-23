@@ -1,6 +1,5 @@
-{-# LANGUAGE RecordWildCards #-}
-module SendGrid (
-    handleSendGridEvents
+module MailGun (
+    handleMailGunEvents
   ) where
 
 import Control.Applicative
@@ -15,8 +14,14 @@ import Mailer
 import Misc
 import qualified Log (mailingServer)
 
-handleSendGridEvents :: Mailer Response
-handleSendGridEvents = do
+-- Note: This function is almost the same as the one used for handling sendgrid
+-- events, yet slightly different. I could abstract away some parts of them, but
+-- I'm not sure if it's worth it, because in the future we can add support for
+-- next mailing service which may require different handling and all will be for
+-- nothing, so I would rather leave it the way it is for now.
+
+handleMailGunEvents :: Mailer Response
+handleMailGunEvents = do
   mident <- (,) <$> readField "email_id" <*> readField "email_token"
   case mident of
     (Just mid, Just token) -> do
@@ -35,9 +40,8 @@ handleSendGridEvents = do
               case mevent of
                 Nothing -> logMsg "No event object received"
                 Just event -> do
-                  email <- fromMaybe "" <$> getField "email"
-                  category <- fromMaybe "" <$> getField "category"
-                  let ev = SendGridEvent email event category
+                  email <- fromMaybe "" <$> getField "recipient"
+                  let ev = MailGunEvent email event
                   res <- runDBUpdate $ UpdateWithEvent mailID ev
                   logMsg $ if not res
                     then "UpdateWithEvent didn't update anything"
@@ -46,22 +50,18 @@ handleSendGridEvents = do
   ok $ toResponse "Thanks"
 
 logMsg :: String -> Mailer ()
-logMsg msg = Log.mailingServer $ "handleSendgridEvents: " ++ msg
+logMsg msg = Log.mailingServer $ "handleMailGunEvents: " ++ msg
 
-readEventType :: Maybe String -> Mailer (Maybe SendGridEvent)
-readEventType (Just "processed") = return $ Just SG_Processed
-readEventType (Just "open") = return $ Just SG_Opened
-readEventType (Just "dropped") = getField "reason" >>= return . fmap SG_Dropped
-readEventType (Just "deferred") = do
-  response <- getField "response"
-  attempt  <- readField "attempt"
-  return (SG_Deferred <$> response <*> attempt)
-readEventType (Just "delivered") = getField "response" >>= return . fmap SG_Delivered
-readEventType (Just "bounce") = do
-  status <- getField "status"
-  reason <- getField "reason"
-  btype  <- getField "type"
-  return (SG_Bounce <$> status <*> reason <*> btype)
-readEventType (Just "spamreport") = return $ Just SG_SpamReport
-readEventType (Just "unsubscribe") = return $ Just SG_Unsubscribe
+readEventType :: Maybe String -> Mailer (Maybe MailGunEvent)
+readEventType (Just "opened") = return $ Just MG_Opened
+readEventType (Just "delivered") = return $ Just MG_Delivered
+readEventType (Just "clicked") = getField "url" >>= return . fmap MG_Clicked
+readEventType (Just "unsubscribed") = getField "domain" >>= return . fmap MG_Unsubscribed
+readEventType (Just "complained") = getField "domain" >>= return . fmap MG_Complained
+readEventType (Just "bounced") = do
+  domain <- getField "domain"
+  code   <- getField "code"
+  err    <- getField "error"
+  return (MG_Bounced <$> domain <*> code <*> err)
+readEventType (Just "dropped") = getField "reason" >>= return . fmap MG_Dropped
 readEventType _ = return Nothing
