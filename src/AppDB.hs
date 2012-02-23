@@ -35,6 +35,7 @@ kontraMigrations = [
   , addColumnToRecordInternalInsertionOrder
   , addEmailBrandingToCompany
   , removeOldSignatoryLinkIDFromCancelationReason
+  , addDocumentIdIndexOnSignatoryLinks
   ]
 
 kontraTables :: [Table]
