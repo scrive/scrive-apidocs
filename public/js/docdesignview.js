@@ -135,9 +135,9 @@ var DocumentDesignView = Backbone.View.extend({
         if (document.region().iselegavailable())
             finalBox.append(this.verifikationMethodSelection())
         finalBox.append(this.finalDateSelection())
-        
-        finalBox.append(this.editInvitationOption());
-        
+        this.editInvitationOptionBox = this.editInvitationOption();
+        finalBox.append(this.editInvitationOptionBox);
+
         finalBox.append(this.finalButton())
         return finalBox;
         
@@ -168,12 +168,14 @@ var DocumentDesignView = Backbone.View.extend({
        var box1 = $("<div class='signStepsBodyPart first'/>");
        box1.append(this.finalDateSelection());
        box1.append(this.selectLanguageOption());
-       box1.append(this.editInvitationOption());
+       this.editInvitationOptionBox = this.editInvitationOption();
+       box1.append(this.editInvitationOptionBox);
        box.append(box1).append($("<div class='border'/>"));
        
        var box2 = $("<div class='signStepsBodyPart middle'/>");
        box2.append(this.authorAttachmentsSetup());
-       box2.append(this.signatoryAttachmentSetup());
+       this.signatoryAttachmentSetupBox = this.signatoryAttachmentSetup();
+       box2.append(this.signatoryAttachmentSetupBox);
 
        box.append(box2).append($("<div class='border'/>"));
        
@@ -282,7 +284,8 @@ var DocumentDesignView = Backbone.View.extend({
     },
     editInvitationOption: function() {
         var document = this.model;
-        var box = $("<div class='editinvitemessage'/>");
+        if (document.padAuthorization()) return $("<div class='display:none'>");
+        var box  = $("<div class='editinvitemessage'/>");
         var icon = $("<span class='editinvitemessageicon'/>");
         var text = $("<span class='editinvitemessagetext'/>").text(localization.editInviteText);
         box.append(icon).append(text);
@@ -382,8 +385,10 @@ var DocumentDesignView = Backbone.View.extend({
         return box
 
     },
-    signatoryAttachmentSetup: function() {
+    signatoryAttachmentSetup : function() {
         var document = this.model;
+        if (document.padAuthorization()) return $("<div style='display:none'/>")
+
         var box = $("<div class='signatoryattachmentssetup'/>");
         var icon = $("<span class='signatoryattachmentssetupicon'/>");
         var text = $("<span class='signatoryattachmentssetuptext'/>").text(localization.signatoryAttachments.requestAttachments);
@@ -419,10 +424,18 @@ var DocumentDesignView = Backbone.View.extend({
          this.refreshFinalButton();
     },
     refreshInvitationMessageOption : function() {
-        
+        if (this.editInvitationOptionBox != undefined)
+        {   var tmp = this.editInvitationOption();
+            this.editInvitationOptionBox.replaceWith(tmp);
+            this.editInvitationOptionBox = tmp;
+        }
     },
     refreshSignatoryAttachmentsOption : function() {
-        
+       if (this.signatoryAttachmentSetupBox != undefined)
+        {   var tmp = this.signatoryAttachmentSetup();
+            this.signatoryAttachmentSetupBox.replaceWith(tmp);
+            this.signatoryAttachmentSetupBox = tmp;
+        }
     },
     refreshAuthorizationDependantOptions : function() {
         this.refreshInvitationMessageOption();

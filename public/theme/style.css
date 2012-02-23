@@ -2822,6 +2822,19 @@ width: 340px;
 .prepareToSendReminderMail {
     padding-top: 6px;
 }
+.giveForSigning {
+    padding-top: 6px;
+}
+
+.giveForSigningIcon {
+    background: url(../img/remind.png) 0 0 no-repeat;
+    margin-top: 2px;
+    display: inline-block;
+    height: 16px;
+    width: 16px;
+    float:left;
+}
+
 
 .prepareToSendReminderMail:hover{
     font-weight: bold;

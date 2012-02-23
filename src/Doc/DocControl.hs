@@ -107,7 +107,8 @@ postDocumentChangeAction document@Document  { documentstatus
         when (documentcurrentsignorder document /= documentcurrentsignorder olddocument) $ do
             ctx <- getContext
             Log.server $ "Resending invitation emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
-            _ <- sendInvitationEmails ctx document
+            when_ (sendInvitationMails document) $
+                sendInvitationEmails ctx document
             return ()
     -- Preparation -> Pending
     -- main action: sendInvitationEmails
@@ -122,16 +123,8 @@ postDocumentChangeAction document@Document  { documentstatus
           (Right saveddoc) -> return saveddoc
         -- we don't need to forkIO here since we only schedule emails here
         Log.server $ "Sending invitation emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
-        edoc <- sendInvitationEmails ctx document'
-        _ <- case edoc of
-          Left _ -> do
-            _ <- addDocumentSendStatEvents document'
-            runDB $ forM (documentsignatorylinks document') $ \sl ->
-              addSignStatInviteEvent document' sl (ctxtime ctx)
-          Right doc2 -> do
-            _ <- addDocumentSendStatEvents doc2
-            runDB $ forM (documentsignatorylinks doc2) $ \sl ->
-              addSignStatInviteEvent doc2 sl (ctxtime ctx)
+        when_ (sendInvitationMails document') $
+            sendInvitationEmails ctx document'
         return ()
     -- Preparation -> Closed (only author signs)
     -- main action: sealDocument and sendClosedEmails
@@ -359,7 +352,9 @@ sendInvitationEmail1 ctx document signatorylink = do
       , mailInfo = Invitation documentid signatorylinkid
       , from = documentservice document
   }
+  _ <- ioRunDB (ctxdbenv ctx) $ addSignStatInviteEvent document signatorylink (ctxtime ctx)
   ioRunDB (ctxdbenv ctx) $ dbUpdate $ AddInvitationEvidence documentid signatorylinkid (SystemActor (ctxtime ctx))
+
 
 {- |
     Send a reminder email (and update the modification time on the document)

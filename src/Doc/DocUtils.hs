@@ -272,6 +272,11 @@ isELegDataMismatch _                            = False
 allowsIdentification :: Document -> IdentificationType -> Bool
 allowsIdentification document idtype = idtype `elem` documentallowedidtypes document
 
+{- | Determine is document is designed to be signed using pad - this determines if invitation emais are send and if author can get access to siglink -}
+sendInvitationMails :: Document -> Bool
+sendInvitationMails doc = not $ doc `allowsIdentification` PadIdentification
+
+
 -- Not ready to refactor this quite yet.
 isEligibleForReminder :: Maybe User -> Document -> SignatoryLink -> Bool
 isEligibleForReminder muser doc siglink = isEligibleForReminder'' muser doc siglink
