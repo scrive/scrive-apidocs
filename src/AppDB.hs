@@ -19,7 +19,7 @@ import Stats.Tables
 import Stats.Migrations
 import File.Tables
 import Mails.Tables
-
+import PadQueue.Tables
 import EvidenceLog.Tables
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
@@ -56,4 +56,5 @@ kontraTables = [
   , tableAuthorAttachments
   , tableSignatoryAttachments
   , tableEvidenceLog
+  , tablePadQueue
   ] ++ mailerTables

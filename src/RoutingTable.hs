@@ -37,7 +37,7 @@ import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import Util.MonadUtils
-
+import qualified PadQueue.Control as PadQueue
 
 {- |
    The routing table for the app.
