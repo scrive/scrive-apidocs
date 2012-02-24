@@ -261,10 +261,15 @@ javascriptLocalisation =
               , passwordsDontMatch: "$_PasswordValidationMessagePasswordsDontMatch()$"
               , mustAcceptTOS: "$_flashMessageMustAcceptTOS()$"
          }
-         , emailBrading: "$_EmailBranding()$"
-         , customiseColour: "$_CustomiseColour()$"
+         , emailBranding: "$_EmailBranding()$"
+         , customiseBackgroundColour: "$_CustomiseBackgroundColour()$"
+         , customiseTextColour: "$_CustomiseTextColour()$"
          , customiseLogo: "$_CustomiseLogo()$"
          , selectImageLabel: "$_SelectImageLabel()$"
          , saveBranding: "$_SaveSettings()$"
+         , sampleEmailHeader: "$_SampleEmailHeader()$"
+         , sampleEmailSubheader: "$_mailsubheader()$"
+         , sampleEmailContent: "$_SampleEmailContent()$"
+         , recommendedLogoSize: "$_RecommendedLogoSize()$"
     }
 ####

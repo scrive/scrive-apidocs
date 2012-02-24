@@ -56,6 +56,7 @@ testBrandedDocumentMails env mailTo = withTestEnvironment env $ do
   author <- addNewRandomCompanyUser (companyid company') False
   let cui = CompanyUI {
         companybarsbackground = Just $ BS.fromString "red"
+      , companybarstextcolour = Just $ BS.fromString "gray"
       , companylogo = Nothing
       }
   _ <- dbUpdate $ UpdateCompanyUI (companyid company') cui
