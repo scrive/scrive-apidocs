@@ -1557,10 +1557,10 @@ handleCSVLandpage c = do
 -- Function for saving document while still working in design view
 handleSaveDraft:: Kontrakcja m => DocumentID -> m JSValue
 handleSaveDraft did = do
-    doc <- guardRightM $ getDocByDocID did
+    doc       <- guardRightM $ getDocByDocID did
     draftData <- guardJustM $ withJSONFromField "draft" $ fromJSON
-    actor <- guardJustM $ mkAuthorActor <$> getContext
-    res <- applyDraftDataToDocument doc draftData actor
+    actor     <- guardJustM $ mkAuthorActor <$> getContext
+    res       <- applyDraftDataToDocument doc draftData actor
     case res of
          Right _ -> return $ JSObject $ toJSObject []
          Left s -> do
