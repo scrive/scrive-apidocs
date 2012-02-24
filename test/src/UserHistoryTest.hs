@@ -8,7 +8,6 @@ import StateHelper
 import TestingUtil
 import Misc
 import DB.Classes
-import Data.Maybe
 import MinutesTime
 import User.Model
 import User.UserControl
