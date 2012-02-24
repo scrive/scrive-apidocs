@@ -2,6 +2,7 @@ module ScriveByMail.Control
        (
          scriveByMail,
          sendMailAPIConfirmEmail,
+         sendMailAPIErrorEmail,
          markDocumentAuthorReadAndSeen
        )
        

@@ -27,7 +27,7 @@ nicemail=
                     <td>
                         <table id="banner" width="590" cellpadding="0" bgcolor="$nicemailbgcolour()$">
                             <tr>
-                                <td width="580" cellpadding="0"><span style="font-weight:100;font-size:32px;margin:0px;letter-spacing:0.04em;color:#fff;font-family:'Copse', serif;padding:10px">
+                                <td width="580" align="center" cellpadding="0" style="text-align:center;"><span style="font-weight:100;font-size:32px;margin:0px;letter-spacing:0.04em;color:#fff;font-family:'Copse', serif;padding:10px">
                                     $if(mailheader)$ $mailheader$ $endif$
                                     </span>
                                 </td>
@@ -37,7 +37,7 @@ nicemail=
                             </tr>
                             <tr>
 
-                                <td width="580"><span style="display:block;font-weight:100;font-family:'Lucida Grande',sans-serif;font-size:11px;margin:0px;margin-bottom:20px;color:#fff;">
+                                <td width="580" align="center" style="text-align:center;"><span style="display:block;font-weight:100;font-family:'Lucida Grande',sans-serif;font-size:11px;margin:0px;margin-bottom:20px;color:#fff;">
                                        $if(!service)$ $_mailsubheader()$ $endif$
                                     </span>
                                 </td>

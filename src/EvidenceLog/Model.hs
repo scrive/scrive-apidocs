@@ -209,7 +209,7 @@ data DocumentEvidenceEvent = DocumentEvidenceEvent { evDocumentID :: DocumentID
 htmlDocFromEvidenceLog :: TemplatesMonad m => String -> [DocumentEvidenceEvent] -> m String
 htmlDocFromEvidenceLog title elog = do
   renderTemplateFM "htmlevidencelog" $ do
-    field "documenttitle" $ BS.fromString title
+    field "documenttitle" title
     fieldFL "entries" $ for elog $ \entry -> do
       field "time" $ formatMinutesTimeUTC (evTime entry) ++ " UTC"
       field "ip"   $ fmap formatIP (evIP4 entry)

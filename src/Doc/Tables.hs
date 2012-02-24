@@ -168,7 +168,7 @@ tableSignatoryAttachments = Table {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = Table {
     tblName = "signatory_links"
-  , tblVersion = 3
+  , tblVersion = 4
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -235,6 +235,7 @@ tableSignatoryLinks = Table {
   , tblPutProperties = do
     kRunRaw $ "CREATE INDEX idx_signatory_links_user_id ON signatory_links(user_id)"
     kRunRaw $ "CREATE INDEX idx_signatory_links_company_id ON signatory_links(company_id)"
+    kRunRaw $ "CREATE INDEX idx_signatory_links_document_id ON signatory_links(document_id)"
     kRunRaw $ "ALTER TABLE signatory_links"
       ++ " ADD CONSTRAINT fk_signatory_links_document_id FOREIGN KEY(document_id)"
       ++ " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"

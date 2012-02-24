@@ -8,6 +8,7 @@ javascriptLocalisation =
         {
        loadingFile : "$_loadingFile()$"
              , problemWithPDF : "$_problemWithPDF()$"
+             , backToArchive : "$_backToArchive()$"
              , repetedEmailAddress : "$_repetedEmailAddress()$"
              , offerSignatory : "$_offerSignatory()$"
              , sigattachmessage : "$_pageDocumentForAuthorHelpersLocalDialogsRecipient()$"

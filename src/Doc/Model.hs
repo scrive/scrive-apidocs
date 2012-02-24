@@ -1011,45 +1011,30 @@ instance Actor a => DBUpdate (ErrorDocument a) (Either String Document) where
             getOneDocumentAffected "ErrorDocument" r docid
           s -> return $ Left $ "Cannot ErrorDocument document " ++ show docid ++ " because " ++ concat s
 
-
 selectDocuments :: SQL -> DB [Document]
 selectDocuments query = do
-  _ <- kRun $ query
-  docs <- fetchDocuments
+    _ <- kRun $ SQL "CREATE TEMP TABLE docs AS " [] <++> query
 
-  -- we need to short circuit case when there are no documents returned because of syntax
-  -- SELECT ... WHERE document_id IN () is not valid.
-  -- Also doing round trips to server when result is known to be empty does not make sense.
-  case docs of
-    [] -> return []
-    _ -> do
-      let docids = map documentid docs
+    _ <- kRun $ SQL "SELECT * FROM docs" []
+    docs <- fetchDocuments
 
-      -- This is supposed to create a command string of the form:
-      -- (?,?,?,....,?) where the number of question marks is equal to number of 
-      -- document ids we have in the list
-      let docidsinsql = SQL "(" [] <++> SQL (intercalate "," ["?" | _ <- docids]) (map toSql docids) <++> SQL ")" []
+    _ <- kRun $ selectSignatoryLinksSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE sl.document_id = docs.id) ORDER BY document_id DESC, internal_insert_order DESC" []
+    sls <- fetchSignatoryLinks
 
-      _ <- kRun $ selectSignatoryLinksSQL <++>
-           SQL "WHERE sl.document_id IN " [] <++>
-           docidsinsql <++> SQL " ORDER BY document_id DESC, internal_insert_order DESC" []
-      sls <- fetchSignatoryLinks
+    _ <- kRun $ selectAuthorAttachmentsSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE author_attachments.document_id = docs.id) ORDER BY document_id DESC" []
+    ats <- fetchAuthorAttachments
 
-      _ <- kRun $ selectAuthorAttachmentsSQL <++>
-           SQL "WHERE author_attachments.document_id IN " [] <++>
-           docidsinsql <++> SQL " ORDER BY document_id DESC" []
-      ats <- fetchAuthorAttachments
+    kRunRaw "DROP TABLE docs"
 
+    let findEmpty :: Document -> M.Map DocumentID [a] -> [a]
+        findEmpty doc = fromMaybe [] . M.lookup (documentid doc)
 
-      let findEmpty :: Document -> M.Map DocumentID [a] -> [a]
-          findEmpty doc = fromMaybe [] . M.lookup (documentid doc)
+        fill doc = doc {
+            documentsignatorylinks       = findEmpty doc sls
+          , documentauthorattachments    = findEmpty doc ats
+          }
 
-      let fill doc = doc
-                 { documentsignatorylinks       = findEmpty doc sls
-                 , documentauthorattachments    = findEmpty doc ats
-                 }
-
-      return $ map fill docs
+    return $ map fill docs
 
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
 instance DBQuery GetDocumentByDocumentID (Maybe Document) where
