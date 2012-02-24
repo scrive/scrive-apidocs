@@ -189,7 +189,6 @@ getViralInvitationByEmail :: Email -> Query Actions (Maybe Action)
 getViralInvitationByEmail email =
     return . getOne . (@= email) . (@= ViralInvitationSentID) =<< ask
 
-
 -- | Insert new action
 newAction :: StdGen -> ActionType -> MinutesTime -> Update Actions Action
 newAction rng atype time = do
