@@ -87,6 +87,10 @@ handleMailAPI = do
 
   -- access control
 
+
+  hostpart <- ctxhostpart <$> getContext
+  locale <- ctxlocale <$> getContext
+  ctx <- getContext
   let username = takeWhile (/= '>') $ dropWhile (== '<') $ dropWhile (/= '<') from
     -- 'extension' is a piece of data that is after + sign in email
     -- addres. example: api+1234@api.skrivapa.se here '1234' is
@@ -96,6 +100,7 @@ handleMailAPI = do
   muser <- runDBQuery (GetUserByEmail Nothing (Email $ BS.fromString $ map toLower username))
   when (isNothing muser) $ do
     Log.mailAPI $ "User does not exist: " ++ username
+    sendMailAPIErrorEmail ctx username $ "<p>The address from which you sent the email (" ++ username ++ ") is not a registered Scrive User account. If you would like to sign up to use Scrive, please visit <a href='" ++  hostpart ++ show (LinkHome locale) ++ "'>the Scrive homepage</a>.</p>"    
     mzero
 
   let Just user = muser
@@ -103,12 +108,14 @@ handleMailAPI = do
   mmailapi <- runDBQuery $ GetUserMailAPI $ userid user
   when (isNothing mmailapi) $ do
     Log.mailAPI $ "User has not enabled api: " ++ username
+    sendMailAPIErrorEmail ctx username $ "<p>The address from which you sent the email (" ++ username ++ ") is a registered Scrive User account but Scrive by Mail has not been activated on the account. If you would like to sign up to use Scrive by Mail, please visit <a href='" ++  hostpart ++ show LinkUserMailAPI ++ "'>the Scrive by Mail settings page</a>.</p>"    
     mzero
 
   let Just mailapi = mmailapi
 
   when (maybeRead extension /= Just (umapiKey mailapi)) $ do
     Log.mailAPI $ "User api key does not match: " ++ username ++ " key: " ++ extension
+    sendMailAPIErrorEmail ctx username $ "<p>I have just received an email from " ++ username ++ " requesting to create a document. Unfortunately, the Scrive by Mail email address it was sent to was invalid for this account. Please visit is a registered Scrive User account but the email address you sent to is not . If you would like to sign up to use Scrive, please visit <a href='" ++  hostpart ++ show LinkUserMailAPI ++ "'>the Scrive by Mail settings page</a> to note your personal Scrive by Mail email address.</p>"
     mzero
 
   -- at this point, the user has been authenticated
@@ -140,7 +147,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
   ctx@Context{ctxtime} <- getContext
   when (umapiDailyLimit mailapi <= umapiSentToday mailapi) $ do
     Log.jsonMailAPI $ "Daily limit of documents for user '" ++ username ++ "' has been reached"
-    sendMailAPIErrorEmail ctx username $ "<p>For your own protection, Scrive Mail API sets a daily limit on how many emails you can send out. Your daily Scrive Mail API limit has been reached. To reset your daily limit, please visit " ++ show LinkUserMailAPI ++ " .<p>"    
+    sendMailAPIErrorEmail ctx username $ "<p>For your own protection, Scrive Mail API sets a daily limit on how many emails you can send out. Your daily Scrive Mail API limit has been reached. To reset your daily limit, please visit " ++ ctxhostpart ctx ++ show LinkUserMailAPI ++ " .<p>"    
     mzero
 
   when (length plains /= 1) $ do
