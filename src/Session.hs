@@ -25,6 +25,7 @@ module Session
     )
     where
 
+import Control.Arrow (first)
 import Control.Monad.Reader (ask)
 import Control.Monad.State hiding (State)
 import qualified Data.ByteString.UTF8 as BS
@@ -37,6 +38,8 @@ import Numeric
 import MinutesTime
 import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie,
   readCookieValue, withDataFn, ServerPartT, HasRqData, CookieLife(MaxAge), FromReqURI(..))
+import System.Random (StdGen, randomR)
+import System.Random.CryptoRNG ()
 import Crypto.RNG (CryptoRNGState, CryptoRNG, random, inIO)
 import Happstack.Util.Common ( readM)
 import Misc (mkTypeOf, isSecure, isHTTPS)
@@ -439,14 +442,14 @@ delSession sessionId =
 
 -- | Start a new session with the supplied session data
 -- returns: the 'SessionId'
-newSession :: SessionData -> Update Sessions Session
-newSession sessData =
-    do sessId <- fmap SessionId $ getRandomR (0,1000000000)
+newSession :: StdGen -> SessionData -> Update Sessions Session
+newSession rng sessData =
+    do let (sessId,rng') = first SessionId $ randomR (0,1000000000) rng
        let session = (Session sessId sessData)
        r <- testAndInsert (isNothing . getOne . (@= sessId)) session
        if r
           then return (Session sessId sessData)
-          else newSession sessData
+          else newSession rng' sessData
 
 
 -- | Drops expired session from database, to be used with scheduler
@@ -587,12 +590,13 @@ handleSession r = do
 -- session data is non-empty, register session in the system
 -- and add a cookie. Is user loggs in, check whether there is
 -- an old session with his userid and throw it away.
-updateSessionWithContextData :: Session
+updateSessionWithContextData :: StdGen
+                             -> Session
                              -> Maybe UserID
                              -> [ELegTransaction]
                              -> Map.Map SignatoryLinkID MagicHash
                              -> ServerPartT IO ()
-updateSessionWithContextData (Session i sd) u trans magichashes' = do
+updateSessionWithContextData rng (Session i sd) u trans magichashes' = do
     now <- liftIO getMinutesTime
     let newsd = sd
                 { userID = u
@@ -609,7 +613,7 @@ updateSessionWithContextData (Session i sd) u trans magichashes' = do
                         _ <- update $ DelSession $ sessionId sess
                         return ()
                     Nothing   -> return ()
-           update (NewSession newsd) >>= startSessionCookie
+           update (NewSession rng newsd) >>= startSessionCookie
        else update $ UpdateSession (Session i newsd)
 
 -- | This are special sessions used for passwords reminder links. Such links should be carefully.
@@ -695,7 +699,8 @@ createServiceSession userorcompany loc = do
 newSession' :: (MonadIO m, CryptoRNG m) => Either CompanyID UserID -> String -> m SessionId
 newSession' userorcompany loc = do
   sd <- emptySessionData
-  session <-  update $ NewSession $  sd {
+  rng <- random
+  session <-  update $ NewSession rng $  sd {
     userID = either (const Nothing) Just userorcompany
     , company = either Just (const Nothing) userorcompany
     , location = loc
