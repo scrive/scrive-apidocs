@@ -756,6 +756,7 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_flashMessageRubbishHardDeleteDone","The selected documents have been permanently deleted.",,"The selected documents have been permanently deleted."
 "_flashMessageRubbishRestoreDone","The selected documents have been restored to your archive.",,"The selected documents have been restored to your archive."
 "_flashMessageSecondNameIsRequired","Efternamn krävs.",,"Last name required."
+"_flashMessagePhoneIsRequired","Telefonnummer krävs.",,"Phone number is required if you want more information."
 "_flashMessageSingleAttachmentShareDone","$docname$ har blivit delad inom din organisation.",,"$docname$ has been shared with your organisation."
 "_flashMessageSingleTemplateShareDone","$docname$ har blivit delad inom din organisation.",,"$docname$ has been shared with your organisation."
 "_flashMessageTemplateArchiveDone","Valda mallar har blivit raderade.",,"The selected templates have been deleted."
