@@ -37,6 +37,7 @@ import Misc
 import File.Model
 import API.Service.Model
 import Data.Typeable
+import Doc.Invariants
 --import Doc.DocInfo
 import Doc.DocProcess
 import ActionSchedulerState
@@ -650,7 +651,7 @@ addRandomDocument rda = do
               return doc'
   where
     worker :: File -> MinutesTime -> User -> (Document -> Bool) -> (Maybe Company) -> IO Document
-    worker file _ user _ _mcompany = do
+    worker file now user p _mcompany = do
       doc' <- rand 10 arbitrary
       xtype <- rand 10 (elements $ randomDocumentAllowedTypes rda)
       status <- rand 10 (elements $ randomDocumentAllowedStatuses rda)
@@ -673,7 +674,20 @@ addRandomDocument rda = do
                      , documentregion = getRegion user
                      , documentfiles = [fileid file]
                      }
-      return adoc
+      case (p adoc, invariantProblems now adoc) of
+        (True, Nothing) -> return adoc
+        (False, _)  -> do
+          --liftIO $ print $ "did not pass condition; doc: " ++ show adoc
+          worker file now user p _mcompany
+
+        (_, Just _problems) -> do
+               -- am I right that random document should not have invariantProblems?
+               --uncomment this to find out why the doc was rejected
+               --print adoc
+               --liftIO $ print $ "rejecting doc: " ++ _problems
+               worker file now user p _mcompany
+      --asl <- dbUpdate $ SignLinkFromDetailsForTest asd roles
+
 
 rand :: MonadIO m => Int -> Gen a -> m a
 rand i a = do

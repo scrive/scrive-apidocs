@@ -85,6 +85,7 @@ import User.Model
 import Company.Model
 import MinutesTime
 import Doc.DocStateData
+import Doc.Invariants
 import Database.HDBC
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
@@ -1345,18 +1346,24 @@ instance Actor a => DBUpdate (NewDocument a) (Either String Document) where
                 , documentui                   = (documentui blankDocument) {documentmailfooter = BS.fromString <$> (customfooter $ usersettings user)}
                 } `appendHistory` [DocumentHistoryCreated ctime]
 
-      midoc <- insertDocumentAsIs doc
-      case midoc of
-        Just doc' -> do
-          _<- dbUpdate $ InsertEvidenceEvent           
-            NewDocumentEvidence
-            ("Document created by " ++ actorWho actor ++ ".")
-            (Just $ documentid doc')
-            actor
-          return $ Right doc'
+      case invariantProblems ctime doc of
         Nothing -> do
-          Log.debug $ "insertDocumentAsIs could not insert document #" ++ show (documentid doc) ++ " in NewDocument"
-          return $ Left $ "insertDocumentAsIs could not insert document #" ++ show (documentid doc) ++ " in NewDocument"
+
+           midoc <- insertDocumentAsIs doc
+           case midoc of
+             Just doc' -> do
+               _<- dbUpdate $ InsertEvidenceEvent           
+                 NewDocumentEvidence
+                 ("Document created by " ++ actorWho actor ++ ".")
+                 (Just $ documentid doc')
+                 actor
+               return $ Right doc'
+             Nothing -> do
+               Log.debug $ "insertDocumentAsIs could not insert document #" ++ show (documentid doc) ++ " in NewDocument"
+               return $ Left $ "insertDocumentAsIs could not insert document #" ++ show (documentid doc) ++ " in NewDocument"
+        Just a -> do
+           Log.debug $ "insertDocumentAsIs invariants violated: " ++ show a
+           return $ Left $ "insertDocumentAsIs invariants violated: " ++ show a
 
 data Actor a => ReallyDeleteDocument a = ReallyDeleteDocument User DocumentID a
 instance Actor a => DBUpdate (ReallyDeleteDocument a) (Either String Document) where

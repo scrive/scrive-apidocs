@@ -40,6 +40,7 @@ import Util.KontraLinkUtils
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Util.MonadUtils
+import Doc.Invariants
 import Stats.Control
 import User.Utils
 import API.Service.Model
@@ -1508,6 +1509,20 @@ jsonDocumentGetterWithPermissionCheck did = do
                     mdoc <- toMaybe <$> getDocByDocID did
                     let msiglink = join $ getMaybeSignatoryLink <$> pairMaybe mdoc (ctxmaybeuser ctx)
                     return $ (mdoc, msiglink)
+
+
+
+handleInvariantViolations :: Kontrakcja m => m Response
+handleInvariantViolations = onlyAdmin $ do
+  Context{ ctxtime } <- getContext
+  docs <- runDBQuery $ GetDocuments Nothing
+  let probs = listInvariantProblems ctxtime docs
+      res = case probs of
+        [] -> "No problems!"
+        _  -> intercalate "\n" probs
+  return $ Response 200 Map.empty nullRsFlags (BSL.fromString res) Nothing
+
+
 
 prepareEmailPreview :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 prepareEmailPreview docid slid = do
