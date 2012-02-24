@@ -41,7 +41,8 @@ window.Validation = Backbone.Model.extend({
 window.NotEmptyValidation = Validation.extend({
     defaults: {
            validates: function(t) {
-                    if (/^\s*$/.test(t))
+
+                    if (/^\s*$/.test(t)) // only spaces
                         return false;
                     
                     return true;
