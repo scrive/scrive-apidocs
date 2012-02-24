@@ -787,7 +787,7 @@ daveUser userid = onlyAdmin $ do
 -}
 daveUserHistory :: Kontrakcja m => UserID -> m String
 daveUserHistory userid = onlyAdmin $ do
-    history <- runDBOrFail $ dbQuery $ GetUserHistoryByUserID userid
+    history <- runDBQuery $ GetUserHistoryByUserID userid
     return $ inspectXML history
 
 {- |
