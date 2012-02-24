@@ -91,6 +91,7 @@ staticRoutes = choice
      , dir "s" $ param "sigattachment"  $ hPostNoXToken $ toK2 $ DocControl.handleSigAttach
      , dir "s" $ param "deletesigattachment" $ hPostNoXToken $ toK2 $ DocControl.handleDeleteSigAttach
 
+     , dir "pad" $ hGet $ toK2 $ DocControl.handlePadView
      , dir "sv" $ hGet $ toK3 $ DocControl.handleAttachmentViewForViewer
 
      --Q: This all needs to be done by author. Why we dont check it

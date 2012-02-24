@@ -354,7 +354,9 @@ window.Signatory = Backbone.Model.extend({
               reject : "YES"
           });
     },
-    
+    padSigningURL : function() {
+        return "/pad/" + this.document().documentid() + "/"+ this.signatoryid();
+    },
     changeEmail: function(email) {
         return new Submit({
                 url: "/changeemail/" + this.document().documentid() + "/" + this.signatoryid(),
@@ -477,7 +479,7 @@ window.SignatoryStandarView = Backbone.View.extend({
         container.append(fstbutton.input());
         return container;
     },
-	remidenMailOption : function() {
+    remidenMailOption : function() {
 		 var signatory = this.model;
 		 var button = $("<a  class='btn-tiny green prepareToSendReminderMail'/>")
 		 var icon = $("<div/>").addClass(signatory.hasSigned()? "reminderForSignedIcon": "reminderForSendIcon");
@@ -500,6 +502,28 @@ window.SignatoryStandarView = Backbone.View.extend({
 		 return button;
 		
 	},
+    giveForSigningOnThisDeviceOption : function() {
+                 var signatory = this.model;
+                 var button = $("<a  class='btn-tiny green giveForSigning'/>")
+                 var icon = $("<div class='giveForSigningIcon'/>")
+                 var text = localization.pad.signingOnSameDevice; 
+                 var textbox = $("<div class='sendLinkText'/>").text(text);
+                 button.append(icon).append(textbox);
+                 button.click(function() {
+                         Confirmation.popup({
+                                title : localization.pad.signingOnSameDeviceConfirmHeader,
+                                content : localization.pad.signingOnSameDeviceConfirmText(signatory.nameOrEmail()),
+                                acceptText : localization.pad.signingOnSameDevice ,
+                                rejectText : localization.cancel,
+                                onAccept : function()
+                                        {
+                                           window.open(signatory.padSigningURL(),'Pad signing');
+                                           return true;
+                                        }
+                        })
+                 })
+                 return button;
+    },
     render: function(){
         var signatory = this.model;
         this.el.addClass("signViewBodyRight");
@@ -543,12 +567,20 @@ window.SignatoryStandarView = Backbone.View.extend({
         if (signatory.document().currentViewerIsAuthor() 
             && !signatory.author() 
             && ((signatory.document().pending() && signatory.canSign())
-                || signatory.document().closed()))
+                || signatory.document().closed())
+            && !signatory.document().padAuthorization())
 		  container.append(this.remidenMailOption());
 		
-        if (signatory.undeliveredEmail() && signatory.document().currentViewerIsAuthor() && signatory.document().pending())
+        if (signatory.undeliveredEmail() && signatory.document().currentViewerIsAuthor() && signatory.document().pending() && !signatory.document().padAuthorization())
           container.append(this.changeEmailOption());
-        
+
+        if (signatory.document().currentViewerIsAuthor()
+            && !signatory.author()
+            && signatory.document().pending()
+            && signatory.canSign()
+            && signatory.document().padAuthorization())
+                  container.append(this.giveForSigningOnThisDeviceOption());
+
         return this;
     }
 })

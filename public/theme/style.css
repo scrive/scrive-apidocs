@@ -2823,12 +2823,11 @@ width: 340px;
     padding-top: 6px;
 }
 .giveForSigning {
-    padding-top: 6px;
+    padding-top: 4px;
 }
 
 .giveForSigningIcon {
-    background: url(../img/remind.png) 0 0 no-repeat;
-    margin-top: 2px;
+    background: url(../img/give.png) 0 0 no-repeat;
     display: inline-block;
     height: 16px;
     width: 16px;

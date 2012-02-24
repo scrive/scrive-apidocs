@@ -472,7 +472,7 @@ signDocument documentid
   let fields = zip fieldnames fieldvalues
   mprovider <- readField "eleg"
   edoc <- case mprovider of
-           Nothing -> Right <$> signDocumentWithEmail documentid signatorylinkid magichash fields
+           Nothing -> Right <$> signDocumentWithEmailOrPad documentid signatorylinkid magichash fields
            Just provider -> do
                signature     <- getDataFnM $ look "signature"
                transactionid <- getDataFnM $ look "transactionid"
@@ -587,7 +587,17 @@ handleSignShow documentid
       v <- handleSignShow2 documentid signatorylinkid
       (toResp v)
 
-
+handlePadView :: DocumentID -> SignatoryLinkID -> Kontra KontraLink
+handlePadView did sid = do
+    user <- guardJustM $ ctxmaybeuser <$> getContext
+    doc <- guardRightM $ getDocByDocID did -- This already checks author
+    sl <- guardJust $ getSigLinkFor doc sid
+    if (not $ isAuthor (doc,user) || doc `allowsIdentification` PadIdentification)
+        then mzero
+        else do
+            modifyContext (\ctx -> ctx { ctxmagichashes = Map.insert sid (signatorymagichash sl) (ctxmagichashes ctx) })
+            return (LinkSignDocNoMagicHash did sid)
+    
 handleSignShow2 :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m String
 handleSignShow2 documentid
                 signatorylinkid = do

@@ -184,7 +184,6 @@ javascriptLocalisation =
                     selectmethod: "$_signStepsBodyFunctionsBoxChooseVerification()$"
                 }
            , eleg : "$_eleg()$"
-           , pad : "Pad"
            , finalDateCheckboxLabel : "$_daystosigncheckboxExpDate()$"
            , editInviteText :"$_editinvitetextlinkInviteText()$"
            , editInviteDialogHead : "$_editInviteTextDialogHead()$"
@@ -267,5 +266,11 @@ javascriptLocalisation =
          , customiseLogo: "$_CustomiseLogo()$"
          , selectImageLabel: "$_SelectImageLabel()$"
          , saveBranding: "$_SaveSettings()$"
+         , pad : {
+                authorization : "Pad"
+             ,  signingOnSameDevice : "Give for signing on same device"
+             ,  signingOnSameDeviceConfirmHeader : "Are you sure you want to sign on same device"
+             ,  signingOnSameDeviceConfirmText : function(name) { return "You are about to give this document to sign to " + name +". Sign page will be opened in other card or window depending on your browser.";}
+         }
     }
 ####

@@ -132,8 +132,7 @@ var DocumentDesignView = Backbone.View.extend({
     finalBasicBox : function() {
         var document = this.model;
         var finalBox = $("<div class='finalbox'/>");
-        if (document.region().iselegavailable())
-            finalBox.append(this.verifikationMethodSelection())
+        finalBox.append(this.verifikationMethodSelection())
         finalBox.append(this.finalDateSelection())
         this.editInvitationOptionBox = this.editInvitationOption();
         finalBox.append(this.editInvitationOptionBox);
@@ -180,8 +179,7 @@ var DocumentDesignView = Backbone.View.extend({
        box.append(box2).append($("<div class='border'/>"));
        
        var box3 = $("<div class='signStepsBodyPart last'/>");
-       if (document.region().iselegavailable())
-            box3.append(this.verifikationMethodSelection());
+       box3.append(this.verifikationMethodSelection());
        
        box3.append(this.finalButton());
        box.append(box3);
@@ -189,14 +187,17 @@ var DocumentDesignView = Backbone.View.extend({
     },
     verifikationMethodSelection : function() {
         var document = this.model;
+        var elegAvaible = document.region().iselegavailable() || document.elegAuthorization();;
+        var padAvaible = !document.isBasic() || document.padAuthorization();
+        if (!elegAvaible && !padAvaible) return $("<div sttle='display:none;'/>");
         var box = $("<div class='verificationmethodselect'/>");
         var select= $("<select/>");
         var eleg =  $("<option value='eleg'/>").text(localization.eleg);
         var email = $("<option value='email'/>").text(localization.email);
-        var pad = $("<option value='pad'/>").text(localization.pad);
-        select.append(eleg);
+        var pad = $("<option value='pad'/>").text(localization.pad.authorization);
         select.append(email);
-        if (!document.isBasic() || document.padAuthorization()) select.append(pad);
+        if (elegAvaible) select.append(eleg); 
+        if (padAvaible) select.append(pad);
         box.text(localization.verification.selectmethod);
         box.append(select);
         if (document.elegAuthorization())
