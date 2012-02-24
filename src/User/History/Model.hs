@@ -13,7 +13,6 @@ module User.History.Model (
   , GetUserHistoryByUserID(..)
   ) where
 
-import Data.Int
 import Data.List (intersperse)
 import Database.HDBC
 import qualified Data.ByteString.Char8 as BS
