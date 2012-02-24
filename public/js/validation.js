@@ -54,6 +54,7 @@ window.NotEmptyValidation = Validation.extend({
 window.EmailValidation = Validation.extend({
      defaults: {
             validates: function(t) {
+                // this does not allow international characters, which for the moment is good
                 if (/^[\w._%+-]+@[\w.-]+[.][a-z]{2,4}$/i.test(t))
                     return true;
                 return false;
@@ -67,10 +68,11 @@ window.NameValidation = Validation.extend({
             validates: function(t) {
                 var t = $.trim(t);
 
-                if (t.length == 0 || t.length > 100)
+                if (t.length === 0 || t.length > 100)
                     return false;
-
-                if (/[^a-z-' ]/i.test(t))
+                // we want to match international characters
+                // http://stackoverflow.com/questions/1073412/javascript-validation-issue-with-international-characters
+                if (/[^a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF-' ]/i.test(t))
                     return false;
 
                 return true;
@@ -91,6 +93,7 @@ window.CheckboxReqValidation = Validation.extend({
 window.DigitsLettersValidation = Validation.extend({
     defaults: {
         validates: function(t) {
+            // we don't allow international in password; good or bad?
             if (!/[a-z].*[a-z]/i.test(t))
                 return false;
             if (!/[0-9].*[0-9]/.test(t))
