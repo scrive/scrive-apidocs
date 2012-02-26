@@ -456,7 +456,7 @@ window.CompanyBrandingView = Backbone.View.extend({
       return this;
     }
 
-    this.title = $("<h2 />");
+    this.title = $("<h2 />").append(localization.emailBranding);
     var header = $("<div class='account-header' />").append(this.title);
 
     var body = $("<div class='account-body' />");
