@@ -1,6 +1,253 @@
 
 (function(window){
 
+window.CompanyBrandingColour = Backbone.Model.extend({
+  defaults: {
+    customised: false,
+    defaultcolour: "white",
+    colour: "",
+    label: "",
+    editable: false
+  },
+  customised: function() {
+    return this.get("customised");
+  },
+  setCustomised: function(customised) {
+    this.set({ customised: customised });
+  },
+  setColour: function(colour) {
+    this.set({ colour: colour.trim() });
+  },
+  colour: function() {
+    var colour = this.get("colour");
+    if (this.customised() && colour.length>0) {
+      return colour;
+    } else {
+      return this.get("defaultcolour");
+    }
+  },
+  label: function() {
+    return this.get("label");
+  },
+  editable: function() {
+    return this.get("editable");
+  }
+});
+
+window.CompanyBrandingColourView = Backbone.View.extend({
+  initialize: function(args) {
+    _.bindAll(this, 'render');
+    if (this.model) {
+      this.model.bind('change', this.render);
+      this.prerender();
+      this.render();
+    }
+  },
+  prerender: function() {
+    var model = this.model;
+
+    var checkbox = $("<input type='checkbox' class='checkboxtoggle' />");
+    this.checkbox = checkbox;
+    this.checkbox.change(function() {
+      model.setCustomised(checkbox.is(":checked"));
+    });
+    var checkboxlabel = $("<label />").append(model.label());
+
+    var input = $("<input type='text' class='float-left colour' />");;
+    input.bind("keyup change", function() {
+      model.setColour(input.val().trim());
+    });
+    this.input = input;
+
+    this.display = $("<span class='float-left  colourdisplay' />");
+    this.display.css("background-color", model.colour());
+
+    this.customdiv = $("<div />");
+    this.customdiv.append(this.input);
+    this.customdiv.append(this.display);
+
+    var container = $("<div/>");
+    container.append(this.checkbox);
+    container.append(checkboxlabel);
+    container.append($("<div />").append(this.customdiv));
+
+
+    this.el.empty();
+    this.el.append(container);
+
+    return this;
+  },
+  render: function() {
+
+    if (this.model.customised()) {
+      this.checkbox.attr("checked", "true");
+      this.customdiv.show();
+    } else {
+      this.checkbox.removeAttr("checked");
+      this.customdiv.hide();
+    }
+
+    var colour = this.model.colour();
+    if (this.input.val()!=colour && !this.input.is(":focus")) {
+      this.input.val(colour);
+    }
+    this.display.css("background-color", colour);
+
+    if (!this.model.editable()) {
+      this.checkbox.attr("readonly", "true");
+      this.input.attr("readonly", "true");
+    } else {
+      this.checkbox.removeAttr("readonly");
+      this.input.removeAttr("readonly");
+    }
+  }
+});
+
+window.CompanyBrandingLogo = Backbone.Model.extend({
+  defaults: {
+    customised: false,
+    loadinglogo: "/theme/images/wait30trans.gif",
+    defaultlogo: "/img/email-logo.png",
+    logo: localization.customiseLogo,
+    label: "",
+    editable: false,
+    loading: false,
+    submitUrl: ""
+  },
+  initialize: function(args) {
+    _.bindAll(this, "onSend");
+    _.bindAll(this, "onSubmitSuccess");
+    _.bindAll(this, "onSubmitError");
+    this.url = args.url;
+  },
+  customised: function() {
+    return this.get("customised");
+  },
+  setCustomised: function(customised) {
+    this.set({ customised: customised });
+  },
+  logo: function() {
+    var logo = this.get("logo");
+    if (this.loading()) {
+      return this.get("loadinglogo");
+    } else if (this.customised() && logo.length>0) {
+      return logo;
+    } else {
+      return this.get("defaultlogo");
+    }
+  },
+  setLoading: function(loading) {
+    this.set({ loading: loading });
+  },
+  loading: function() {
+    return this.get("loading");
+  },
+  label: function() {
+    return this.get("label");
+  },
+  editable: function() {
+    return this.get("editable");
+  },
+  parse: function(args) {
+    return {
+      customised: args.company.logo!="",
+      logo: args.company.logo
+    };
+  },
+  onSend: function() {
+    this.setLoading(true);
+  },
+  reload: function() {
+    var logo = this;
+    logo.setLoading(true);
+    logo.fetch({
+      cache: false,
+      success: function() {
+        logo.setLoading(false);
+      }
+    });
+  },
+  onSubmitSuccess: function() {
+    console.log("onSubmitSuccess");
+    this.reload();
+  },
+  onSubmitError: function() {
+    this.reload();
+    console.log("error");
+  },
+  submitUrl: function() {
+    return this.get("submiturl");
+  },
+  submit: function() {
+    var logo = this;
+    return new Submit({
+      method: "POST",
+      url: logo.submitUrl(),
+      islogo: true,
+      ajax: true,
+      onSend: logo.onSend,
+      ajaxsuccess: logo.onSubmitSuccess,
+      ajaxerror: logo.onSubmitError
+    });
+  }
+});
+
+window.CompanyBrandingLogoView = Backbone.View.extend({
+  initialize: function(args) {
+    _.bindAll(this, 'render');
+    this.model.bind('change', this.render);
+    this.prerender();
+    this.render();
+  },
+  prerender: function() {
+    var model = this.model;
+
+    var checkbox = $("<input type='checkbox' class='checkboxtoggle' />");
+    this.checkbox = checkbox;
+    this.checkbox.change(function() {
+      model.setCustomised(checkbox.is(":checked"));
+    });
+    var checkboxlabel = $("<label />").append(model.label());
+
+    this.upload = UploadButton.init({
+      width: 150,
+      name: "logo",
+      text: localization.selectImageLabel,
+      submitOnUpload: true,
+      showLoadingDialog: false,
+      type: "image/png",
+      submit: this.model.submit()
+    }).input();
+
+    this.customdiv = $("<div />");
+    this.customdiv.append($("<div class='logonote' />").append(localization.recommendedLogoSize));
+    this.customdiv.append($("<div class='logocustomise' />").append(this.upload));
+
+    var container = $("<div/>");
+    container.append(this.checkbox);
+    container.append(checkboxlabel);
+    container.append($("<div />").append(this.customdiv));
+
+    this.el.empty();
+    this.el.append(container);
+
+    return this;
+  },
+  render: function() {
+    if (this.model.customised()) {
+      this.checkbox.attr("checked", "true");
+      this.customdiv.show();
+    } else {
+      this.checkbox.removeAttr("checked");
+      this.customdiv.hide();
+    }
+
+    if (!this.model.editable()) {
+      this.customdiv.hide();
+    }
+  }
+});
+
 window.CompanyModel = Backbone.Model.extend({
     defaults: {
       id: 0,
@@ -9,10 +256,6 @@ window.CompanyModel = Backbone.Model.extend({
       zip: "",
       city: "",
       country: "",
-      barsbackground: "",
-      iscustombarsbackground: false,
-      barstextcolour: "",
-      iscustombarstextcolour: false,
       logo: "",
       iscustomlogo: false,
       ready: false,
@@ -20,7 +263,7 @@ window.CompanyModel = Backbone.Model.extend({
     },
     initialize: function(args) {
       this.submiturl = "/account/company";
-      this.url = "/account/company/json"
+      this.url = "/account/company/json";
       this.fetch({cache: false});
     },
     id: function() {
@@ -44,237 +287,174 @@ window.CompanyModel = Backbone.Model.extend({
     barsbackground: function() {
       return this.get("barsbackground");
     },
-    setBarsbackground: function(val) {
-      this.set({"barsbackground": val.trim()});
-    },
-    isCustomBarsbackground: function() {
-      return this.get("iscustombarsbackground");
-    },
-    setIsCustomBarsBackground: function(val) {
-      this.set({"iscustombarsbackground": val});
-    },
     barstextcolour: function() {
       return this.get("barstextcolour");
-    },
-    setBarstextcolour: function(val) {
-      this.set({"barstextcolour": val.trim()});
-    },
-    isCustomBarstextcolour: function() {
-      return this.get("iscustombarstextcolour");
-    },
-    setIsCustomBarstextcolour: function(val) {
-      this.set({"iscustombarstextcolour": val});
     },
     logo: function() {
       return this.get("logo");
     },
-    isCustomLogo: function() {
-      return this.get("iscustomlogo");
-    },
-    setIsCustomLogo: function(val) {
-      this.set({"iscustomlogo": val});
-    },
-    isReady: function() {
+    ready: function() {
       return this.get("ready");
     },
-    isEditable: function() {
+    editable: function() {
       return this.get("editable");
     },
-    submitUrl: function() {
-      return this.get("submiturl");
-    },
     parse: function(args) {
-      if (this.parseLogoOnly) {
-        var islogo = args.company.logo!="";
-        return {
+      return {
+        id: args.company.id,
+        name: args.company.name,
+        number: args.company.number,
+        address: args.company.address,
+        zip: args.company.zip,
+        city: args.company.country,
+        barsbackground: new CompanyBrandingColour({
+          customised: args.company.barsbackground.trim()!="",
+          defaultcolour: "#212121",
+          colour: args.company.barsbackground,
+          label: localization.customiseBackgroundColour,
+          editable: args.company.editable
+        }),
+        barstextcolour: new CompanyBrandingColour({
+          customised: args.company.barstextcolour.trim()!="",
+          defaultcolour: "#ffffff",
+          colour: args.company.barstextcolour,
+          label: localization.customiseTextColour,
+          editable: args.company.editable
+        }),
+        logo: new CompanyBrandingLogo({
+          customised: args.company.logo.trim()!="",
           logo: args.company.logo,
-          iscustomlogo: islogo,
-        }
-      } else {
-        var isbarsbackground = args.company.barsbackground.trim()!="";
-        var isbarstextcolour = args.company.barstextcolour.trim()!="";
-        var islogo = args.company.logo!="";
-        return {
-          id: args.company.id,
-          name: args.company.name,
-          number: args.company.number,
-          address: args.company.address,
-          zip: args.company.zip,
-          city: args.company.country,
-          barsbackground: args.company.barsbackground,
-          iscustombarsbackground: isbarsbackground,
-          barstextcolour: args.company.barstextcolour,
-          iscustombarstextcolour: isbarstextcolour,
-          logo: args.company.logo,
-          iscustomlogo: islogo,
+          label: localization.customiseLogo,
           editable: args.company.editable,
-          ready: true
-        };
-      }
+          url: this.url,
+          submiturl: this.submitUrl
+        }),
+        editable: args.company.editable,
+        ready: true
+      };
+    },
+    toJSON: function() {
+      return ({
+        id: this.get("id"),
+        name: this.get("name"),
+        address: this.get("address"),
+        zip: this.get("zip"),
+        city: this.get("city"),
+        country: this.get("country"),
+        barsbackground: this.barsbackground().customised() ? this.barsbackground().colour() : "",
+        barstextcolour: this.barstextcolour().customised() ? this.barstextcolour().colour() : "",
+      });
     }
+});
+
+window.CompanyBrandingSampleView = Backbone.View.extend({
+  initialize: function(args) {
+    _.bindAll(this, 'render');
+    this.model.barsbackground().bind('change', this.render);
+    this.model.barstextcolour().bind('change', this.render);
+    this.model.logo().bind('change', this.render);
+    this.prerender();
+    this.render();
+  },
+  prerender: function() {
+    var company = this.model;
+
+    this.header = $("<div class='header' />");
+    this.headerrule = $("<hr />");
+    this.logo = $("<div class='logo' />");
+    this.header.append(this.logo);
+    this.header.append($("<div class='subject' />").append(localization.sampleEmailHeader));
+    this.header.append(this.headerrule);
+    this.header.append($("<div class='strapline' />").append(localization.sampleEmailSubheader));
+
+    this.container = $("<div class='sample' />");
+    this.container.append(this.header);
+    this.container.append($("<div class='content' />").append(localization.sampleEmailContent));
+
+    this.el.empty();
+    this.el.append(this.container);
+
+    return this;
+  },
+  render: function() {
+    var company = this.model;
+
+    var logourl = company.logo().logo();
+    var bbcolour = company.barsbackground().colour();
+    var btcolour = company.barstextcolour().colour();
+
+    this.logo.css("background-image", "url('" + logourl + "')");
+    if (company.logo().loading()) {
+      this.header.css("background-color", "transparent");
+    } else {
+      this.header.css("background-color", bbcolour);
+    }
+    this.headerrule.css("background-color", btcolour);
+    this.header.css("color", btcolour);
+
+    if (!company.logo().customised() &&
+          !company.barsbackground().customised() &&
+          !company.barstextcolour().customised()) {
+      this.container.hide();
+    } else {
+      this.container.show();
+    }
+  }
 });
 
 window.CompanyBrandingView = Backbone.View.extend({
   model: CompanyModel,
   initialize: function(args) {
     _.bindAll(this, "render");
-    _.bindAll(this, "onLogoSend");
     this.model.bind("change", this.render);
-    this.model.view = this;
-    this.initElems();
     this.render();
   },
   createBarsbackgroundElems: function() {
-    var company = this.model;
-
-    var bbcheckbox = $("<input id='bbcheckbox' type='checkbox' class='checkboxtoggle' />");
-    this.bbcheckbox = bbcheckbox;
-    this.bbcheckbox.change(function() {
-      company.setIsCustomBarsBackground(bbcheckbox.is(":checked"));
-    });
-    var bbcheckboxlabel = $("<label for='bbcheckbox'>" + localization.customiseBackgroundColour + "</label>");
-
-    var bbinput = $("<input type='text' class='float-left colour' />");
-    this.bbinput = bbinput;
-    this.bbinput.bind("keyup change", function() {
-      company.setBarsbackground(bbinput.val());
-    });
-
-    this.bbdisplay = $("<span class='float-left  colourdisplay' />");
-    this.bbdisplay.css("background-color", company.barsbackground());
-
-    this.bbcustomdiv = $("<div />");
-    this.bbcustomdiv.append(this.bbinput);
-    this.bbcustomdiv.append(this.bbdisplay);
-
-    var bbstuff = $("<div/>");
-    bbstuff.append(this.bbcheckbox);
-    bbstuff.append(bbcheckboxlabel);
-    bbstuff.append($("<div />").append(this.bbcustomdiv));
-
-    return bbstuff;
+    return new CompanyBrandingColourView({
+      model: this.model.barsbackground(),
+      el: $("<div />")
+    }).el;
   },
   createBarstextcolourElems: function() {
-    var company = this.model;
-
-    var btcheckbox = $("<input id='btcheckbox' type='checkbox' class='checkboxtoggle' />");
-    this.btcheckbox = btcheckbox;
-    this.btcheckbox.change(function() {
-      company.setIsCustomBarstextcolour(btcheckbox.is(":checked"));
-    });
-    var btcheckboxlabel = $("<label for='btcheckbox'>" + localization.customiseTextColour + "</label>");
-
-    var btinput = $("<input type='text' class='float-left colour' />");
-    this.btinput = btinput;
-    this.btinput.bind("keyup change", function() {
-      company.setBarstextcolour(btinput.val());
-    });
-
-    this.btdisplay = $("<span class='float-left  colourdisplay' />");
-    this.btdisplay.css("background-color", company.barstextcolour());
-
-    this.btcustomdiv = $("<div />");
-    this.btcustomdiv.append(this.btinput);
-    this.btcustomdiv.append(this.btdisplay);
-
-    var btstuff = $("<div/>");
-    btstuff.append(this.btcheckbox);
-    btstuff.append(btcheckboxlabel);
-    btstuff.append($("<div />").append(this.btcustomdiv));
-
-    return btstuff;
-  },
-  onLogoSend: function() {
-    this.sampleheader.css("background-color", "transparent");
-    this.samplelogo.css("background-image", "url('/theme/images/wait30trans.gif')");
+    return new CompanyBrandingColourView({
+      model: this.model.barstextcolour(),
+      el: $("<div />")
+    }).el;
   },
   createLogoElems: function() {
-    var company = this.model;
-
-    var logocheckbox = $("<input id='logocheckbox' name='islogo' type='checkbox' class='checkboxtoggle' />");
-    this.logocheckbox = logocheckbox;
-    this.logocheckbox.change(function() {
-      company.setIsCustomLogo(logocheckbox.is(":checked"));
-    });
-    var logocheckboxlabel = $("<label for='logocheckbox'>" + localization.customiseLogo + "</label>");
-
-    var logoupload = UploadButton.init({
-      width: 150,
-      name: "logo",
-      text: localization.selectImageLabel,
-      submitOnUpload: true,
-      showLoadingDialog: false,
-      type: "image/png",
-      submit: new Submit({
-          method: "POST",
-          url: company.submitUrl(),
-          islogo: true,
-          ajax: true,
-          onSend: this.onLogoSend,
-          ajaxsuccess: function(d) {
-            company.parseLogoOnly = true;
-            company.fetch({cache: false});
-            company.change();
-            company.parseLogoOnly = false;
-          },
-          ajaxerror: function(d, a) {
-            company.fetch({cache: false});
-            company.change();
-            console.log("error");
-          }
-      })
-    }).input();
-    this.logoupload = logoupload;
-
-    this.logocustomdiv = $("<div />");
-    this.logocustomdiv.append($("<div class='logonote' />").append(localization.recommendedLogoSize));
-    this.logocustomdiv.append($("<div class='logocustomise' />").append(logoupload));
-
-    var logostuff = $("<div/>");
-    logostuff.append(this.logocheckbox);
-    logostuff.append(logocheckboxlabel);
-    logostuff.append(this.logocustomdiv);
-
-    return logostuff;
+    return new CompanyBrandingLogoView({
+      model: this.model.logo(),
+      el: $("<div />")
+    }).el;
   },
   createSampleElems: function() {
-    var company = this.model;
-
-    this.sampleheader = $("<div class='header' />");
-    this.sampleheaderrule = $("<hr />");
-    this.samplelogo = $("<div class='logo' />");
-    this.sampleheader.append(this.samplelogo);
-    this.sampleheader.append($("<div class='subject' />").append(localization.sampleEmailHeader));
-    this.sampleheader.append(this.sampleheaderrule);
-    this.sampleheader.append($("<div class='strapline' />").append(localization.sampleEmailSubheader));
-
-    this.sample = $("<div class='sample' />");
-    this.sample.append(this.sampleheader);
-    this.sample.append($("<div class='content' />").append(localization.sampleEmailContent));
-    return this.sample;
+    return new CompanyBrandingSampleView({
+      model: this.model,
+      el: $("<div />")
+    }).el;
   },
   createSaveButton: function() {
     var company = this.model;
-
-    this.saveButton = Button.init({
+    return Button.init({
       color: "green",
       size: "small",
       text: localization.saveBranding,
       onClick: function() {
-        if (!company.isCustomBarsbackground()) {
-          company.setBarsbackground("");
-        }
         new Submit({
           method: "POST",
-          url: company.submitUrl(),
+          url: company.submitUrl,
           company: JSON.stringify(company),
-          islogo: company.isCustomLogo()
+          islogo: company.logo().customised()
         }).send();
       }
     }).input();
   },
-  initElems: function() {
+  render: function() {
     var company = this.model;
+
+    if (!company.ready()) {
+      return this;
+    }
 
     this.title = $("<h2 />");
     var header = $("<div class='account-header' />").append(this.title);
@@ -308,85 +488,15 @@ window.CompanyBrandingView = Backbone.View.extend({
     var container = $("<div class='companybranding' />");
     container.append(col);
 
-    var saveButton = this.createSaveButton();
-    container.append($("<div class='float-right save'/>").append(this.saveButton));
+    if (company.editable()) {
+      var saveButton = this.createSaveButton();
+      container.append($("<div class='float-right save'/>").append(saveButton));
+    }
 
     this.el.empty();
     this.el.append(container);
 
     return this;
-  },
-  render: function() {
-    var company = this.model;
-
-    this.title.text(localization.emailBranding);
-
-    var bbcolour = (company.isCustomBarsbackground() && company.barsbackground()!="") ? company.barsbackground() : "#212121";
-    if (this.bbinput.val()!=bbcolour && !this.bbinput.is(":focus")) {
-      this.bbinput.val(bbcolour);
-    }
-    this.bbdisplay.css("background-color", bbcolour);
-
-    var btcolour = (company.isCustomBarstextcolour() && company.barstextcolour()!="") ? company.barstextcolour() : "#ffffff";
-    if (this.btinput.val()!=btcolour && !this.btinput.is(":focus")) {
-      this.btinput.val(btcolour);
-    }
-    this.btdisplay.css("background-color", btcolour);
-
-    var logo = (company.isCustomLogo() && company.logo()!="") ? company.logo() : "/img/email-logo.png";
-    this.samplelogo.css("background-image", "url('" + logo + "')");
-    this.sampleheader.css("background-color", bbcolour);
-    this.sampleheaderrule.css("background-color", btcolour);
-    this.sampleheader.css("color", btcolour);
-    if (!company.isCustomBarsbackground() &&
-          !company.isCustomBarstextcolour() &&
-            !company.isCustomLogo()) {
-      this.sample.hide();
-    } else {
-      this.sample.show();
-    }
-
-    if (company.isEditable()) {
-      this.bbcheckbox.removeAttr("disabled");
-      this.bbinput.removeAttr("disabled");
-      this.btcheckbox.removeAttr("disabled");
-      this.btinput.removeAttr("disabled");
-      this.saveButton.show();
-      this.logocheckbox.removeAttr("disabled");
-      this.logoupload.show();
-    } else {
-      this.bbcheckbox.attr("disabled", true);
-      this.bbinput.attr("disabled", true);
-      this.btcheckbox.attr("disabled", true);
-      this.btinput.attr("disabled", true);
-      this.saveButton.hide();
-      this.logocheckbox.attr("disabled", true);
-      this.logoupload.hide();
-    }
-
-    if (company.isCustomBarsbackground()) {
-      this.bbcheckbox.attr("checked", true);
-      this.bbcustomdiv.show();
-    } else {
-      this.bbcheckbox.removeAttr("checked");
-      this.bbcustomdiv.hide();
-    }
-
-    if (company.isCustomBarstextcolour()) {
-      this.btcheckbox.attr("checked", true);
-      this.btcustomdiv.show();
-    } else {
-      this.btcheckbox.removeAttr("checked");
-      this.btcustomdiv.hide();
-    }
-
-    if (company.isCustomLogo()) {
-      this.logocheckbox.attr("checked", true);
-      this.logocustomdiv.show();
-    } else {
-      this.logocheckbox.removeAttr("checked");
-      this.logocustomdiv.hide();
-    }
   }
 });
 
