@@ -88,10 +88,10 @@ docStateTests env = testGroup "DocState" [
   testThat "AddInvitationEvidence adds to the log" env testAddInvitationEvidenceLog,
   testThat "NewDocument adds to the log" env testNewDocumentEvidenceLog,
   testThat "AddDocumentAttachment adds to the log" env testAddDocumentAttachmentEvidenceLog,
-  testThat "GetDocumentsByCompanyAndTags filters" env testGetDocumentsByCompanyAndTagsFilters,
-  testThat "GetDocumentsByCompanyAndTags finds" env testGetDocumentsByCompanyAndTagsFinds,
-  testThat "GetDocumentsByCompanyAndTags finds with multiple" env testGetDocumentsByCompanyAndTagsFindsMultiple,  
-  testThat "GetDocumentsByCompanyAndTags finds with company filter" env testGetDocumentsByCompanyAndTagsCompany,
+  testThat "GetDocumentsByCompanyWithFiltering filters" env testGetDocumentsByCompanyWithFilteringFilters,
+  testThat "GetDocumentsByCompanyWithFiltering finds" env testGetDocumentsByCompanyWithFilteringFinds,
+  testThat "GetDocumentsByCompanyWithFiltering finds with multiple" env testGetDocumentsByCompanyWithFilteringFindsMultiple,  
+  testThat "GetDocumentsByCompanyWithFiltering finds with company filter" env testGetDocumentsByCompanyWithFilteringCompany,
   testThat "NewDocument inserts a new contract for a single user successfully" env testNewDocumentForNonCompanyUserInsertsANewContract,
   testThat "NewDocument inserts a new contract for a company user successfully" env testNewDocumentForACompanyUserInsertsANewContract,
   testThat "NewDocument inserts a new offer for a single user successfully" env testNewDocumentForNonCompanyUserInsertsANewOffer,
@@ -243,7 +243,7 @@ docStateTests env = testGroup "DocState" [
   testThat "ReallyDeleteDocument fails if the document hasn't been archived" env testReallyDeleteNotArchivedLeft,
 
   testThat "GetDocumentsByAuthor doesn't return archived docs" env testGetDocumentsByAuthorNoArchivedDocs,
-  testThat "GetDocumentsByCompanyAndTags doesn't return archived docs" env testGetDocumentsByCompanyAndTagsNoArchivedDocs,
+  testThat "GetDocumentsByCompanyWithFiltering doesn't return archived docs" env testGetDocumentsByCompanyWithFilteringNoArchivedDocs,
   testThat "GetDocumentsBySignatory doesn't return archived docs" env testGetDocumentsBySignatoryNoArchivedDocs,
   testThat "GetDeletedDocumentsByUser returns archived docs" env testGetDeletedDocumentsByUserArchivedDocs
 
@@ -1032,9 +1032,9 @@ testGetDocumentsByAuthorNoArchivedDocs :: DB ()
 testGetDocumentsByAuthorNoArchivedDocs =
   checkQueryDoesntContainArchivedDocs (GetDocumentsByAuthor . userid)
 
-testGetDocumentsByCompanyAndTagsNoArchivedDocs :: DB ()
-testGetDocumentsByCompanyAndTagsNoArchivedDocs =
-  checkQueryDoesntContainArchivedDocs (\u -> GetDocumentsByCompanyAndTags Nothing (fromJust $ usercompany u) [])
+testGetDocumentsByCompanyWithFilteringNoArchivedDocs :: DB ()
+testGetDocumentsByCompanyWithFilteringNoArchivedDocs =
+  checkQueryDoesntContainArchivedDocs (\u -> GetDocumentsByCompanyWithFiltering Nothing (fromJust $ usercompany u) [] Nothing Nothing Nothing)
 
 testGetDocumentsBySignatoryNoArchivedDocs :: DB ()
 testGetDocumentsBySignatoryNoArchivedDocs =
@@ -2183,8 +2183,8 @@ propbitfieldDeriveConvertibleId ss =
   in ss' == convert (convert ss' :: SqlValue)
      
      
-testGetDocumentsByCompanyAndTagsCompany :: DB ()
-testGetDocumentsByCompanyAndTagsCompany = doTimes 10 $ do
+testGetDocumentsByCompanyWithFilteringCompany :: DB ()
+testGetDocumentsByCompanyWithFilteringCompany = doTimes 10 $ do
   (name, value) <- rand 10 arbitrary
   company <- addNewCompany
   company2 <- addNewCompany
@@ -2195,30 +2195,30 @@ testGetDocumentsByCompanyAndTagsCompany = doTimes 10 $ do
   time <- getMinutesTime
   let actor = SystemActor time
   _ <- dbUpdate $ SetDocumentTags did [DocumentTag name value] actor
-  docs <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company2) []
-  docs' <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) []
+  docs <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company2) [] Nothing Nothing Nothing
+  docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [] Nothing Nothing Nothing
   validTest $ do
     assertEqual "Should have no documents returned" docs []
     assertEqual "Should have 1 document returned" (length docs') 1    
      
 
-testGetDocumentsByCompanyAndTagsFilters :: DB ()
-testGetDocumentsByCompanyAndTagsFilters = doTimes 10 $ do
+testGetDocumentsByCompanyWithFilteringFilters :: DB ()
+testGetDocumentsByCompanyWithFilteringFilters = doTimes 10 $ do
   (name, value) <- rand 10 arbitrary
   company <- addNewCompany
   author <- addNewRandomUser
   _ <- dbUpdate $ SetUserCompany (userid author) (Just (companyid company))
   Just author' <- dbQuery $ GetUserByID (userid author)
   _ <- addRandomDocumentWithAuthor author'
-  docs <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name value]
-  docs' <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) []
+  docs <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [DocumentTag name value] Nothing Nothing Nothing
+  docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [] Nothing Nothing Nothing
   validTest $ do
     assertEqual "Should have no documents returned" docs []
     assertEqual "Should have 1 document returned" (length docs') 1    
     
 
-testGetDocumentsByCompanyAndTagsFinds :: DB ()
-testGetDocumentsByCompanyAndTagsFinds = doTimes 10 $ do
+testGetDocumentsByCompanyWithFilteringFinds :: DB ()
+testGetDocumentsByCompanyWithFilteringFinds = doTimes 10 $ do
   (name, value) <- rand 10 arbitrary
   company <- addNewCompany
   author <- addNewRandomUser
@@ -2228,14 +2228,14 @@ testGetDocumentsByCompanyAndTagsFinds = doTimes 10 $ do
   time <- getMinutesTime
   let actor = SystemActor time
   _ <- dbUpdate $ SetDocumentTags did [DocumentTag name value] actor
-  docs <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name value]
-  docs' <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) []
+  docs <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [DocumentTag name value] Nothing Nothing Nothing
+  docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [] Nothing Nothing Nothing
   validTest $ do
     assertEqual "Should have one document returned" (length docs) 1
     assertEqual "Should have one document returned" (length docs') 1
   
-testGetDocumentsByCompanyAndTagsFindsMultiple :: DB ()
-testGetDocumentsByCompanyAndTagsFindsMultiple = doTimes 10 $ do
+testGetDocumentsByCompanyWithFilteringFindsMultiple :: DB ()
+testGetDocumentsByCompanyWithFilteringFindsMultiple = doTimes 10 $ do
   (name1, value1) <- rand 10 arbitrary
   (name2, value2) <- rand 10 arbitrary
   (name3, value3) <- rand 10 arbitrary
@@ -2248,11 +2248,11 @@ testGetDocumentsByCompanyAndTagsFindsMultiple = doTimes 10 $ do
   did <- addRandomDocumentWithAuthor author'
 
   _ <- dbUpdate $ SetDocumentTags did [DocumentTag name1 value1, DocumentTag name2 value2] actor
-  docs <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name1 value1]  
-  docs' <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name2 value2]
-  docs'' <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name1 value1, DocumentTag name2 value2]  
-  docs''' <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) []
-  docs'''' <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name1 value1, DocumentTag name2 value2, DocumentTag name3 value3]  
+  docs <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [DocumentTag name1 value1] Nothing Nothing Nothing
+  docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [DocumentTag name2 value2] Nothing Nothing Nothing
+  docs'' <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [DocumentTag name1 value1, DocumentTag name2 value2] Nothing Nothing Nothing
+  docs''' <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [] Nothing Nothing Nothing
+  docs'''' <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [DocumentTag name1 value1, DocumentTag name2 value2, DocumentTag name3 value3] Nothing Nothing Nothing
   validTest $ do
     assertEqual "Should have one document returned" (length docs) 1  
     assertEqual "Should have one document returned" (length docs') 1
