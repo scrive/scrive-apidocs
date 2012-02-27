@@ -1,7 +1,10 @@
 #####
 htmlevidencelog=
 <html>
-  <head><title>$documenttitle$ Evidence Log</title></head>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>$documenttitle$ Evidence Log</title>
+  </head>
   <body>
     <h1></h1>
 
