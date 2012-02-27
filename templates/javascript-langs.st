@@ -260,6 +260,7 @@ javascriptLocalisation =
               , passwordNeedsLetterAndDigit: "$_PasswordValidationMessageNeedsLetterAndDigit()$"
               , passwordsDontMatch: "$_PasswordValidationMessagePasswordsDontMatch()$"
               , mustAcceptTOS: "$_flashMessageMustAcceptTOS()$"
+              , phoneRequired: "$_flashMessagePhoneIsRequired()$"
          }
          , emailBrading: "$_EmailBranding()$"
          , customiseColour: "$_CustomiseColour()$"

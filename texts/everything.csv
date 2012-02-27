@@ -269,7 +269,7 @@
 "_OrderReminderBodyMulti","Är du säker att du vill skicka en påminnelse til berörda parter för",,"Are you sure you want to send reminders to the parties involved in the"
 "_OrderReminderBodySingel","Är du säker att du vill skicka en påminnelse til berörda parter i orderbekräftelse",,"Are you sure you want to send a reminder to the parties involved in the order confirmation"
 "_RepeatNewPassword","Upprepa nytt lösenord:",,"Repeat new password:"
-"_RequestedAttachments","Bägarda bilagor:",,"Requested attachments:"
+"_RequestedAttachments","Begärda bilagor:",,"Requested attachments:"
 "_SaveChanges","Spara ändringar",,"Save changes"
 "_SaveSettings","Spara inställningar",,"Save changes"
 "_SearchCompanyAccount","Sök konto",,"Search Accounts"
@@ -296,7 +296,7 @@
 "_Swedish","Svenska",,"Swedish"
 "_UserLanguage","Användarspråk:",,"User language:"
 "_Sweden","Sverige",,"Sweden"
-"_Britain","Storbritanien",,"Britain"
+"_Britain","Storbritannien",,"Britain"
 "_UserRegion","Land:",,"Country/Region:"
 "_aboutPagaMetaDescription","Signera och arkivera dina avtal elektroniskt. Scrive är skapat
  av ett ambitiöst, internationellt team med bas i Stockholm.",,"Sign and store your contracts electronically. Scrive is made
@@ -756,6 +756,7 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_flashMessageRubbishHardDeleteDone","The selected documents have been permanently deleted.",,"The selected documents have been permanently deleted."
 "_flashMessageRubbishRestoreDone","The selected documents have been restored to your archive.",,"The selected documents have been restored to your archive."
 "_flashMessageSecondNameIsRequired","Efternamn krävs.",,"Last name required."
+"_flashMessagePhoneIsRequired","Telefonnummer krävs.",,"Phone number is required if you want more information."
 "_flashMessageSingleAttachmentShareDone","$docname$ har blivit delad inom din organisation.",,"$docname$ has been shared with your organisation."
 "_flashMessageSingleTemplateShareDone","$docname$ har blivit delad inom din organisation.",,"$docname$ has been shared with your organisation."
 "_flashMessageTemplateArchiveDone","Valda mallar har blivit raderade.",,"The selected templates have been deleted."
