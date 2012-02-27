@@ -37,6 +37,7 @@ kontraMigrations = [
   , addEmailBrandingToCompany
   , removeOldSignatoryLinkIDFromCancelationReason
   , addDocumentIdIndexOnSignatoryLinks
+  , addSignatoryLinkIdToSignatoryAttachment
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

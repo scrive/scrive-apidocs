@@ -382,17 +382,18 @@ getDocuments = do
       Just s  -> case parseMinutesTimeISO s of
         Just t  -> return $ Just t
         Nothing -> throwApiError API_ERROR_PARSING $ "to_date unrecognized format: " ++ show s
-    linkeddocuments <- runDBQuery $ GetDocumentsByCompanyAndTags (Just sid) (companyid comp) tags
+    let allstatuses = [Preparation, Pending, Closed, Rejected, Timedout, Canceled, AwaitingAuthor, DocumentError ""]
+        mstatuses   = case (mFromState, mToState) of
+          (Nothing, Nothing) -> Nothing
+          _ -> Just [s | s <- allstatuses
+                       , maybe True (fromSafeEnum s >=) mFromState
+                       , maybe True (fromSafeEnum s <=) mToState
+                       ]
+    linkeddocuments <- runDBQuery $ GetDocumentsByCompanyWithFiltering (Just sid) (companyid comp) tags mFromDate mToDate mstatuses
     api_docs <- sequence [api_document_read False d  
                          | d <- linkeddocuments
-                         , isAuthoredByCompany (companyid comp) d
-                         , not $ isDeletedFor $ getAuthorSigLink d
                          , not $ isAttachment d
-                         -- we avoid filtering when the filter is not defined
-                         , maybe True (recentDate d >=) mFromDate
-                         , maybe True (recentDate d <=) mToDate
-                         , maybe True ((fromSafeEnum $ documentstatus d) >=) mFromState
-                         , maybe True ((fromSafeEnum $ documentstatus d) <=) mToState]
+                         ]
     return $ toJSObject $ [("documents"  , JSArray $ api_docs)] ++
                           ([] <| isNothing mFromDate  |> [("from_date",  showJSON $ showMinutesTimeForAPI (fromJust mFromDate ))]) ++
                           ([] <| isNothing mToDate    |> [("to_date",    showJSON $ showMinutesTimeForAPI (fromJust mToDate   ))]) ++

@@ -26,7 +26,7 @@ module Doc.Model
   , GetDeletedDocumentsByUser(..)
   , GetDocumentByDocumentID(..)
   , GetDocuments(..)
-  , GetDocumentsByCompanyAndTags(..)
+  , GetDocumentsByCompanyWithFiltering(..)
   , GetDocumentsByAuthor(..)
   , GetTemplatesByAuthor(..)
   , GetDocumentsOfTypeByAuthor(..)
@@ -316,54 +316,6 @@ signatoryLinksSelectorsWith i = intercalate i [
 signatoryLinksSelectors :: String
 signatoryLinksSelectors = signatoryLinksSelectorsWith ", "
 
-fetchSignatoryLinksWithoutAttachments :: DB (M.Map DocumentID [SignatoryLink])
-fetchSignatoryLinksWithoutAttachments = foldDB decoder M.empty
-  where
-    decoder acc slid document_id user_id company_id fields sign_order token
-     sign_time sign_ip seen_time seen_ip read_invitation invitation_delivery_status
-     signinfo_text signinfo_signature signinfo_certificate signinfo_provider
-     signinfo_first_name_verified signinfo_last_name_verified
-     signinfo_personal_number_verified roles csv_title csv_contents
-     csv_signatory_index deleted really_deleted =
-       M.insertWith' (++) document_id [SignatoryLink {
-           signatorylinkid = slid
-         , signatorydetails = SignatoryDetails {
-             signatorysignorder = sign_order
-           , signatoryfields = fields
-         }
-         , signatorymagichash = token
-         , maybesignatory = user_id
-         , maybesupervisor = Nothing
-         , maybecompany = company_id
-         , maybesigninfo = SignInfo <$> sign_time <*> sign_ip
-         , maybeseeninfo = SignInfo <$> seen_time <*> seen_ip
-         , maybereadinvite = read_invitation
-         , invitationdeliverystatus = invitation_delivery_status
-         , signatorysignatureinfo = do -- Maybe Monad
-             signinfo_text' <- signinfo_text
-             signinfo_signature' <- signinfo_signature
-             signinfo_certificate' <- signinfo_certificate
-             signinfo_provider' <- signinfo_provider
-             signinfo_first_name_verified' <- signinfo_first_name_verified
-             signinfo_last_name_verified' <- signinfo_last_name_verified
-             signinfo_personal_number_verified' <- signinfo_personal_number_verified
-             return $ SignatureInfo {
-                 signatureinfotext        = signinfo_text'
-               , signatureinfosignature   = signinfo_signature'
-               , signatureinfocertificate = signinfo_certificate'
-               , signatureinfoprovider    = signinfo_provider'
-               , signaturefstnameverified = signinfo_first_name_verified'
-               , signaturelstnameverified = signinfo_last_name_verified'
-               , signaturepersnumverified = signinfo_personal_number_verified'
-               }
-         , signatoryroles = roles
-         , signatorylinkdeleted = deleted
-         , signatorylinkreallydeleted = really_deleted
-         , signatorylinkcsvupload =
-             CSVUpload <$> csv_title <*> csv_contents <*> csv_signatory_index
-         , signatoryattachments = []
-         }] acc
-
 selectSignatoryLinksSQL :: SQL
 selectSignatoryLinksSQL = SQL ("SELECT "
   ++ signatoryLinksSelectorsWith ", sl."
@@ -469,9 +421,9 @@ insertSignatoryLinkAsIs documentid link = do
     , sql "csv_signatory_index" $ csvsignatoryindex `fmap` signatorylinkcsvupload link
     , sql "deleted" $ signatorylinkdeleted link
     , sql "really_deleted" $ signatorylinkreallydeleted link
-    ] <++> SQL ("RETURNING " ++ signatoryLinksSelectors) []
+    ] <++> SQL ("RETURNING " ++ signatoryLinksSelectors ++ ", NULL, NULL, NULL") []
 
-  fetchSignatoryLinksWithoutAttachments
+  fetchSignatoryLinks
     >>= oneObjectReturnedGuard . concatMap snd . M.toList
 
 authorAttachmentsSelectors :: String
@@ -503,37 +455,6 @@ insertAuthorAttachmentAsIs documentid attach = do
   fetchAuthorAttachments
     >>= oneObjectReturnedGuard . concatMap snd . M.toList
 
-signatoryAttachmentsSelectors :: String
-signatoryAttachmentsSelectors = intercalate ", " [
-    "document_id"
-  , "file_id"
-  , "name"
-  , "description"
-  , "signatory_link_id"
-  ]
-
-selectSignatoryAttachmentsSQL :: SQL
-selectSignatoryAttachmentsSQL = SQL ("SELECT "
-  ++ signatoryAttachmentsSelectors
-  ++ " FROM signatory_attachments ") []
-
-fetchSignatoryAttachments :: DB (M.Map SignatoryLinkID [SignatoryAttachment])
-fetchSignatoryAttachments = foldDB decoder M.empty
-  where
-    decoder :: (M.Map SignatoryLinkID [SignatoryAttachment])
-            -> DocumentID
-            -> Maybe FileID
-            -> BS.ByteString
-            -> BS.ByteString
-            -> SignatoryLinkID
-            -> (M.Map SignatoryLinkID [SignatoryAttachment])
-    decoder acc _ file_id name description slid =
-      M.insertWith' (++) slid [SignatoryAttachment {
-          signatoryattachmentfile = file_id
-        , signatoryattachmentname = name
-        , signatoryattachmentdescription = description
-        }] acc
-
 {-
 insertSignatoryAttachmentAsIs :: SignatoryLinkID -> DocumentID -> SignatoryAttachment -> DB (Maybe SignatoryAttachment)
 insertSignatoryAttachmentAsIs slid documentid attach = do
@@ -548,14 +469,6 @@ insertSignatoryAttachmentAsIs slid documentid attach = do
   fetchSignatoryAttachments
     >>= oneObjectReturnedGuard . concatMap snd . M.toList
 -}
-
-data GetSignatoryAttachments = GetSignatoryAttachments DocumentID SignatoryLinkID
-instance DBQuery GetSignatoryAttachments [SignatoryAttachment] where
-  dbQuery (GetSignatoryAttachments docid slid) = do
-    _ <- kRun $ selectSignatoryAttachmentsSQL 
-      <++> SQL "WHERE document_id = ? AND signatory_link_id = ?" [toSql docid, toSql slid]
-    att <- fetchSignatoryAttachments 
-    return $ M.findWithDefault [] slid att 
 
 insertDocumentAsIs :: Document -> DB (Maybe Document)
 insertDocumentAsIs document = do
@@ -971,7 +884,6 @@ instance Actor a => DBUpdate (DocumentFromSignatoryData a) (Either String Docume
     toNewDoc :: Document -> Document
     toNewDoc d = d { documentsignatorylinks = map toNewSigLink (documentsignatorylinks d)
                     , documenttype = newDocType $ documenttype d
-                    -- , documentsignatoryattachments = map replaceCSV (documentsignatoryattachments d)
                     , documentctime = now
                     , documentmtime = now
                     }
@@ -1050,13 +962,24 @@ instance DBQuery GetDocuments [Document] where
       <++> SQL "WHERE service_id IS NOT DISTINCT FROM ?" [toSql msid]
 
 {- |
-    Fetches documents by company and tags, this won't return documents that have been deleted (so ones
+    Fetches documents by company with filtering by tags, edate, and status.
+    this won't return documents that have been deleted (so ones
     that would appear in the recycle bin//trash can.)  It also makes sure to respect the sign order in
     cases where the company is linked via a signatory that hasn't yet been activated.
+
+    Filters
+    ----------------------------
+    Service must match
+    CompanyID must match Author
+    Author must not be deleted
+    All DocumentTags must be present and match (currently still done in Haskell)
+    If isJust stime, the last change on the document must be greater than or equal to stime
+    if isJust ftime, the last change on the document must be less than or equal to ftime
+    if isJust statuses, the document status must be element of statuses
 -}
-data GetDocumentsByCompanyAndTags = GetDocumentsByCompanyAndTags (Maybe ServiceID) CompanyID [DocumentTag]
-instance DBQuery GetDocumentsByCompanyAndTags [Document] where
-  dbQuery (GetDocumentsByCompanyAndTags mservice companyid doctags) = do
+data GetDocumentsByCompanyWithFiltering = GetDocumentsByCompanyWithFiltering (Maybe ServiceID) CompanyID [DocumentTag] (Maybe MinutesTime) (Maybe MinutesTime) (Maybe [DocumentStatus])
+instance DBQuery GetDocumentsByCompanyWithFiltering [Document] where
+  dbQuery (GetDocumentsByCompanyWithFiltering mservice companyid doctags stime ftime mstatuses) = do
     docs <- selectDocumentsBySignatoryLink $ mconcat [
         SQL "signatory_links.deleted = FALSE AND signatory_links.company_id = ? AND "
           [toSql companyid]
@@ -1065,10 +988,29 @@ instance DBQuery GetDocumentsByCompanyAndTags [Document] where
           toSql [SignatoryAuthor]
         , toSql [SignatoryAuthor, SignatoryPartner]
         ]
-      , SQL "AND service_id IS NOT DISTINCT FROM ? " [toSql mservice]
+      , SQL " AND service_id IS NOT DISTINCT FROM ? " [toSql mservice]
+      , case (stime, ftime) of
+          (Nothing, Nothing) -> SQL "" []
+          (Just s, Nothing)  -> SQL (" AND " ++ maxselect ++ " >= ? ") [toSql s]
+          (Nothing, Just f)  -> SQL (" AND " ++ maxselect ++ " <= ? ") [toSql f]
+          (Just s, Just f)   -> SQL (" AND " ++ maxselect ++ " BETWEEN ? AND ? ") [toSql s, toSql f]
+      , case mstatuses of
+          Nothing -> SQL "" []
+          Just [] -> SQL "AND FALSE " []
+          Just statuses -> SQL (" AND documents.status in (" ++ intercalate "," (map (const "?") statuses) ++ ") ")
+                               (map toSql statuses)
       ]
+    -- There is no perfect way to filter by tags; we could do a partial job, but we will always have to filter in Haskell.
     return (filter hasTags docs)
     where hasTags doc = all (`elem` (documenttags doc)) doctags
+          maxselect = " (select max(greatest(signatory_links.sign_time"
+                                        ++ ",signatory_links.seen_time"
+                                        ++ ",signatory_links.read_invitation"
+                                        ++ ",documents.invite_time"
+                                        ++ ",documents.rejection_time"
+                                        ++ ",documents.mtime"
+                                        ++ ",documents.ctime"
+                                        ++ ")) from signatory_links where signatory_links.document_id = documents.id) "
 
 selectDocumentsBySignatoryLink :: SQL -> DB [Document]
 selectDocumentsBySignatoryLink extendedWhere = selectDocuments $ mconcat [

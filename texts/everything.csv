@@ -2083,8 +2083,7 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_partnersPagePartner3Web","www.chalmers.se",,"www.chalmers.se"
 "_partnersPageTitle","| Partners",,"| Partners"
 "_password","Lösenord",,"Password"
-"_passwordChangeLinkMailContentBody","Du har begärt att ändra ditt lösenord på Scrive. Vänligen klicka
- på följande länk för att gå vidare. Länken är giltig i 12 timmar.<br/>",,"You've requested a password change for your Scrive account. Please click to proceed. The link is valid for 12 hours:<br/>"
+"_passwordChangeLinkMailContentBody","Någon har begärt att ändra ditt lösenord på Scrive. Om det inte var du så kan du bara strunta i detta e-mail. Om det var du, vänligen klicka på följande länk för att gå vidare. Länken är giltig i 12 timmar.<br/>",,"Someone has requested a password change for your Scrive account. If it wasn't you, you may safely ignore this e-mail. If it was you, please click to proceed. The link is valid for 12 hours:<br/>"
 "_passwordChangeLinkMailTitle","Nytt lösenord",,"New password"
 "_passwordFieldName","lösenord",,"password"
 "_personnumber","Pers. nr",,"SSN"
