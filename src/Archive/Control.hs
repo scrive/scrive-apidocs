@@ -12,7 +12,8 @@ module Archive.Control
        showOfferList,
        showOrdersList,
        showRubbishBinList,
-       showTemplatesList
+       showTemplatesList,
+       showPadDeviceArchive
        )
        where
 
@@ -104,6 +105,9 @@ showAttachmentList = someArchivePage pageAttachmentList
 showRubbishBinList :: Kontrakcja m => m (Either KontraLink String)
 showRubbishBinList = someArchivePage pageRubbishBinList
 
+showPadDeviceArchive :: Kontrakcja m => m (Either KontraLink String)
+showPadDeviceArchive = someArchivePage pagePadDeviceArchive
+
 {- |
     Helper function for showing lists of documents.
 -}
@@ -111,3 +115,5 @@ someArchivePage :: Kontrakcja m => (User -> m String) -> m (Either KontraLink St
 someArchivePage page = checkUserTOSGet $ do
   user <- guardJustM $ ctxmaybeuser <$> getContext
   page user
+
+  

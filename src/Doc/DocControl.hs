@@ -589,15 +589,17 @@ handleSignShow documentid
 
 handlePadView :: DocumentID -> SignatoryLinkID -> Kontra KontraLink
 handlePadView did sid = do
-    user <- guardJustM $ ctxmaybeuser <$> getContext
-    doc <- guardRightM $ getDocByDocID did -- This already checks author
+    Log.debug $ "PadSigning: Document #" ++ show did ++ "/" ++ show sid++" send to pad signing on same device"
+    doc <- guardRightM $ getDocByDocIDForAuthor did -- This already checks author
+    Log.debug $ "PadSigning: (" ++ show did ++ "/"++ show sid ++ ") author loged in and document found"
     sl <- guardJust $ getSigLinkFor doc sid
-    if (not $ isAuthor (doc,user) || doc `allowsIdentification` PadIdentification)
-        then mzero
-        else do
+    Log.debug $ "PadSigning: (" ++ show did ++ "/"++ show sid ++ ") found matching signatory link"
+    if (doc `allowsIdentification` PadIdentification)
+        then do
+            Log.debug $ "PadSigning: (" ++ show did ++ "/"++ show sid ++ ") authorization method for document is PAD"
             modifyContext (\ctx -> ctx { ctxmagichashes = Map.insert sid (signatorymagichash sl) (ctxmagichashes ctx) })
             return (LinkSignDocNoMagicHash did sid)
-    
+        else mzero
 handleSignShow2 :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m String
 handleSignShow2 documentid
                 signatorylinkid = do
@@ -700,9 +702,7 @@ handleIssueShowGet docid = do
  -}
 handleIssueShowPost :: Kontrakcja m => DocumentID -> m KontraLink
 handleIssueShowPost docid = withUserPost $ do
-  document <- guardRightM $ getDocByDocID docid
-  Context { ctxmaybeuser = muser } <- getContext
-  guard (isAuthor (document, muser)) -- still need this because others can read document
+  document <- guardRightM $ getDocByDocIDForAuthor docid
   sign              <- isFieldSet "sign"
   send              <- isFieldSet "send"
   -- Behold!
@@ -1263,9 +1263,8 @@ handleRestart docid = withUserPost $ do
 
 handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleResend docid signlinkid  = withUserPost $ do
-  ctx@Context { ctxmaybeuser = Just user } <- getContext
-  doc <- guardRightM $ getDocByDocID docid
-  guard (isAuthor (doc, user)) -- only author can resend
+  ctx <- getContext
+  doc <- guardRightM $ getDocByDocIDForAuthor docid
   signlink <- guardJust $ getSigLinkFor doc signlinkid
   customMessage <- getCustomTextField "customtext"
   _ <- sendReminderEmail customMessage ctx doc signlink
@@ -1287,15 +1286,13 @@ getCustomTextField = getValidateAndHandle asValidInviteText customTextHandler
 --This only works for undelivered mails. We shoulkd check if current user is author
 handleChangeSignatoryEmail :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleChangeSignatoryEmail docid slid = withUserPost $ do
-  user <- guardJustM $ ctxmaybeuser <$> getContext
   memail <- getOptionalField asValidEmail "email"
   case memail of
     Just email -> do
-      edoc <- getDocByDocID docid
+      edoc <- getDocByDocIDForAuthor docid
       case edoc of
         Left _ -> return LoopBack
         Right doc -> do
-          guard $ isAuthor (doc, user)
           muser <- runDBQuery $ GetUserByEmail (documentservice doc) (Email email)
           actor <- guardJustM $ mkAuthorActor <$> getContext
           mnewdoc <- runDBUpdate $ ChangeSignatoryEmailWhenUndelivered docid slid muser email actor
@@ -1308,9 +1305,6 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
               return $ LoopBack
             _ -> return LoopBack
     _ -> return LoopBack
-
-failIfNotAuthor :: Kontrakcja m => Document -> User -> m ()
-failIfNotAuthor document user = guard (isAuthor (document, user))
 
 checkLinkIDAndMagicHash :: Kontrakcja m => Document -> SignatoryLinkID -> MagicHash -> m ()
 checkLinkIDAndMagicHash document linkid magichash1 = do
@@ -1562,7 +1556,7 @@ handleCSVLandpage c = do
 -- Function for saving document while still working in design view
 handleSaveDraft:: Kontrakcja m => DocumentID -> m JSValue
 handleSaveDraft did = do
-    doc <- guardRightM $ getDocByDocID did
+    doc <- guardRightM $ getDocByDocIDForAuthor did
     draftData <- guardJustM $ withJSONFromField "draft" $ fromJSON
     actor <- guardJustM $ mkAuthorActor <$> getContext
     res <- applyDraftDataToDocument doc draftData actor
@@ -1574,7 +1568,7 @@ handleSaveDraft did = do
 
 handleSetAttachments :: Kontrakcja m => DocumentID -> m KontraLink
 handleSetAttachments did = do
-    doc <- guardRightM $ getDocByDocID did
+    doc <- guardRightM $ getDocByDocIDForAuthor did
     attachments <- getAttachments 0
     Log.debug $ "Setting attachments to " ++ show attachments
     actor <- guardJustM $ mkAuthorActor <$> getContext

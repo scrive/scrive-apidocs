@@ -345,6 +345,14 @@ window.Signatory = Backbone.Model.extend({
               customtext : customtext
           });
     },
+    addtoPadQueue : function(callback) {
+        return new Submit({
+              url: "/padqueue/add/"+ this.document().documentid() + "/" + this.signatoryid(),
+              method: "POST",
+              ajax : true,
+              ajaxsuccess : callback
+          });
+    },
     reject: function(customtext) {
         return new Submit({
               url: "/s/" + this.document().documentid() + "/"+ this.document().viewer().signatoryid(),
@@ -504,7 +512,7 @@ window.SignatoryStandarView = Backbone.View.extend({
 	},
     giveForSigningOnThisDeviceOption : function() {
                  var signatory = this.model;
-                 var button = $("<a  class='btn-tiny green giveForSigning'/>")
+                 var button = $("<a  class='giveForSigning'/>")
                  var icon = $("<div class='giveForSigningIcon'/>")
                  var text = localization.pad.signingOnSameDevice; 
                  var textbox = $("<div class='sendLinkText'/>").text(text);
@@ -519,6 +527,40 @@ window.SignatoryStandarView = Backbone.View.extend({
                                         {
                                            window.open(signatory.padSigningURL(),'Pad signing');
                                            return true;
+                                        }
+                        })
+                 })
+                 return button;
+    },
+    addToPadQueueOption : function() {
+                 var signatory = this.model;
+                 var button = $("<a  class='addToPad'/>")
+                 var icon = $("<div class='addToPadIcon'/>")
+                 var text = localization.pad.addToPadQueue;
+                 var textbox = $("<div class='sendLinkText'/>").text(text);
+                 button.append(icon).append(textbox);
+                 button.click(function() {
+                         Confirmation.popup({
+                                title : localization.pad.addToPadQueueConfirmHeader,
+                                content : localization.pad.addToPadQueueConfirmText,
+                                acceptText : localization.pad.addToPadQueue ,
+                                rejectText : localization.cancel,
+                                onAccept : function()
+                                        {
+                                           signatory.addtoPadQueue(function(resp) {
+                                               if (resp.error == undefined)
+                                                   FlashMessages.add({
+                                                       content: localization.pad.addToPadQueueAdded,
+                                                       color: "green"
+                                                    })
+                                               else
+                                                   FlashMessages.add({
+                                                       content: localization.pad.addToPadQueueNotAdded,
+                                                       color: "red"
+                                                   })
+                                            }).send();
+                                           return true;
+                                           
                                         }
                         })
                  })
@@ -578,9 +620,12 @@ window.SignatoryStandarView = Backbone.View.extend({
             && !signatory.author()
             && signatory.document().pending()
             && signatory.canSign()
-            && signatory.document().padAuthorization())
+            && signatory.document().padAuthorization()) {
                   container.append(this.giveForSigningOnThisDeviceOption());
+                  container.append(this.addToPadQueueOption());
+           }
 
+                  
         return this;
     }
 })

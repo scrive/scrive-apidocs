@@ -8,7 +8,8 @@ module Archive.View
          pageOffersList,
          pageOrdersList,
          pageRubbishBinList,
-         pageTemplatesList         
+         pageTemplatesList,
+         pagePadDeviceArchive
        )
        where
 
@@ -53,6 +54,9 @@ pageOrdersList = pageList' "pageOrdersList" LinkOrders
 pageRubbishBinList :: TemplatesMonad m => User ->  m String
 pageRubbishBinList = pageList' "pageRubbishBinList" LinkRubbishBin
 
+pagePadDeviceArchive :: TemplatesMonad m => User ->  m String
+pagePadDeviceArchive = pageList' "pagePadDeviceArchive" LinkPadDeviceArchive
+
 {- |
     Helper function for list pages
 -}
@@ -77,3 +81,5 @@ pageList' templatename currentlink user  =
     field "attachmentactive" $ (LinkAttachments == currentlink)
     field "linkrubbishbinlist" $ show $ LinkRubbishBin
     field "rubbishbinactive" $ (LinkRubbishBin == currentlink)
+    field "linkpaddevicearchive" $ show LinkPadDeviceArchive 
+    field "paddevicearchiveactive" $ (LinkPadDeviceArchive == currentlink)

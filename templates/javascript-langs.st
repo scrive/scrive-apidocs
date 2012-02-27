@@ -271,6 +271,12 @@ javascriptLocalisation =
              ,  signingOnSameDevice : "Give for signing on same device"
              ,  signingOnSameDeviceConfirmHeader : "Are you sure you want to sign on same device"
              ,  signingOnSameDeviceConfirmText : function(name) { return "You are about to give this document to sign to " + name +". Sign page will be opened in other card or window depending on your browser.";}
-         }
+             ,  addToPadQueue : "Send for pad signing"
+             ,  addToPadQueueConfirmHeader : "Are you sure you want to send this document for pad signing"
+             ,  addToPadQueueConfirmText : "Document will be send to pad device for signing. Any other document waiting to be signed on this device will be removed from the queue, but can be added to it later. "
+             ,  addToPadQueueAdded : "Document send to pad device"
+             ,  addToPadQueueNotAdded : "Document could not be send to pad device"
+             
+        }
     }
 ####

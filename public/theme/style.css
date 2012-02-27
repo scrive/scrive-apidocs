@@ -2824,6 +2824,10 @@ width: 340px;
 }
 .giveForSigning {
     padding-top: 4px;
+    height: 16px;
+    display: block;
+    cursor: pointer;
+
 }
 
 .giveForSigningIcon {
@@ -2833,8 +2837,20 @@ width: 340px;
     width: 16px;
     float:left;
 }
+.addToPad{
+    padding-top: 4px;
+    height: 16px;
+    display: block;
+    cursor: pointer;
+}
 
-
+.addToPadIcon {
+    background: url(../img/pad.png) 0 0 no-repeat; 
+    display: inline-block;
+    height: 16px;
+    width: 16px;
+    float:left;
+}
 .prepareToSendReminderMail:hover{
     font-weight: bold;
 }

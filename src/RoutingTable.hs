@@ -125,6 +125,9 @@ staticRoutes = choice
      , dir "r" $ param "restore" $ hPost $ toK0 $ DocControl.handleRubbishRestore
      , dir "r" $ param "reallydelete" $ hPost $ toK0 $ DocControl.handleRubbishReallyDelete
 
+     , dir "paddevice" $ dir "archive" $ hGet $ toK0 $ ArchiveControl.showPadDeviceArchive
+
+
      , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showContractsList
      , dir "d"                     $ hGet  $ toK1 $ DocControl.handleIssueShowGet
      , dir "d" $ dir "eleg"        $ hGet  $ toK1 $ BankID.generateBankIDTransactionForAuthor
@@ -162,6 +165,8 @@ staticRoutes = choice
 
      , dir "csvlandpage" $ hGet $ toK1 $ DocControl.handleCSVLandpage
 
+     , dir "padqueue" $ dir "add" $ hPost $ toK2 $ PadQueue.addToQueue
+     
      -- UserControl
      , dir "account"                    $ hGet  $ toK0 $ UserControl.handleUserGet
      , dir "account"                    $ hPost $ toK0 $ UserControl.handleUserPost

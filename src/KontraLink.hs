@@ -99,6 +99,7 @@ data KontraLink
     | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID
     | LinkAPIDocumentMetadata DocumentID
     | LinkAPIDocumentSignatoryAttachment DocumentID SignatoryLinkID String
+    | LinkPadDeviceArchive 
     deriving (Eq)
 
 localeFolder :: Locale -> String
@@ -226,3 +227,5 @@ instance Show KontraLink where
     showsPrec _ (LinkAPIDocumentMetadata did) = (++) ("/api/document/" ++ show did ++ "/metadata")
     showsPrec _ (LinkAPIDocumentSignatoryAttachment did sid name) =
       (++) ("/api/document/" ++ show did ++ "/signatory/" ++ show sid ++ "/attachment/" ++ name)
+    showsPrec _ (LinkPadDeviceArchive) =
+      (++) ("/paddevice/archive")
