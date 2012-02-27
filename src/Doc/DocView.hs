@@ -272,12 +272,6 @@ documentJSON msl _crttime doc = do
     files <- runDB $ documentfilesM doc
     sealedfiles <- runDB $ documentsealedfilesM doc
     authorattachmentfiles <- mapM (runDBQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
-    signatoryattachmentsfiles <- catMaybes <$> (sequence [do
-                                             file <- runDBQuery $ GetFileByFileID fid
-                                             case file of
-                                               Nothing -> return Nothing
-                                               Just f -> return $ Just (fid, f)
-                                          | SignatoryAttachment { signatoryattachmentfile = Just fid } <- concat . map signatoryattachments $ documentsignatorylinks doc])
     let isauthoradmin = maybe False (flip isAuthorAdmin doc) (ctxmaybeuser ctx)
     fmap toJSObject $ propagateMonad  $
      [ ("title",return $ JSString $ toJSString $ BS.toString $ documenttitle doc),
@@ -291,7 +285,7 @@ documentJSON msl _crttime doc = do
        ("canbecanceled", return $ JSBool $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending && isNothing (documenttimeouttime doc)),
        ("timeouttime", return $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc),
        ("status", return $ JSString $ toJSString $ show $ documentstatus doc),
-       ("signatories", JSArray <$>  mapM (signatoryJSON doc msl signatoryattachmentsfiles) (documentsignatorylinks doc)),
+       ("signatories", JSArray <$> mapM (signatoryJSON doc msl) (documentsignatorylinks doc)),
        ("signorder", return $ JSRational True (toRational $ unSignOrder $ documentcurrentsignorder doc)),
        ("authorization", return $ authorizationJSON $ head $ (documentallowedidtypes doc) ++ [EmailIdentification] ),
        ("template", return $ JSBool $ isTemplate doc),
@@ -305,9 +299,15 @@ authorizationJSON EmailIdentification = JSString $ toJSString "email"
 authorizationJSON ELegitimationIdentification = JSString $ toJSString "eleg"
 
 
-signatoryJSON :: (TemplatesMonad m) => Document -> Maybe SignatoryLink -> [(FileID, File)] -> SignatoryLink -> m JSValue
-signatoryJSON doc viewer files siglink = fmap (JSObject . toJSObject) $ propagateMonad $
-    [
+signatoryJSON :: (TemplatesMonad m, DBMonad m) => Document -> Maybe SignatoryLink -> SignatoryLink -> m JSValue
+signatoryJSON doc viewer siglink = do
+    signatoryattachmentsfiles <- catMaybes <$> (sequence [do
+                                    file <- runDBQuery $ GetFileByFileID fid
+                                    case file of
+                                        Nothing -> return Nothing
+                                        Just f -> return $ Just (fid, f)
+                                    | SignatoryAttachment { signatoryattachmentfile = Just fid } <- signatoryattachments siglink])
+    fmap (JSObject . toJSObject) $ propagateMonad $ [
         ("id", return $ JSString $ toJSString  $ show $ signatorylinkid siglink)
       , ("current", return $ JSBool $ (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink))
       , ("signorder",return $ JSRational True (toRational $ unSignOrder $ signatorysignorder $ signatorydetails siglink))
@@ -322,11 +322,11 @@ signatoryJSON doc viewer files siglink = fmap (JSObject . toJSObject) $ propagat
       , ("rejecteddate", return $ jsonDate $ rejectedDate)
       , ("fields", liftIO $ signatoryFieldsJSON doc siglink)
       , ("status", return $ JSString $ toJSString  $ show $ signatoryStatusClass doc siglink)
-      , ("attachments", return $ JSArray $ map (signatoryAttachmentJSON files) $ signatoryattachments siglink)
+      , ("attachments", return $ JSArray $ map (signatoryAttachmentJSON signatoryattachmentsfiles) $ signatoryattachments siglink)
       , ("csv", case (csvcontents <$> signatorylinkcsvupload siglink) of
                      Just a1 ->  return $ JSArray $ for a1 (\a2 -> JSArray $ map (JSString . toJSString . BS.toString) a2 )
                      Nothing -> return $ JSNull) 
-   ]
+      ]
     where
     datamismatch = case documentcancelationreason doc of
                     Just (ELegDataMismatch _ sid _ _ _) -> sid == signatorylinkid siglink

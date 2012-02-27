@@ -402,10 +402,7 @@ samenameanddescription :: BS.ByteString -> BS.ByteString -> (BS.ByteString, BS.B
 samenameanddescription n d (nn, dd, _) = n == nn && d == dd
 
 getSignatoryAttachment :: SignatoryLinkID -> Document -> Maybe SignatoryAttachment
-getSignatoryAttachment slid doc = takeFstAtt $ signatoryattachments <$> (find (\sl -> slid == signatorylinkid sl) $ documentsignatorylinks doc)
-  where
-    takeFstAtt (Just a) = if null a then Nothing else Just $ a !! 0
-    takeFstAtt _        = Nothing
+getSignatoryAttachment slid doc = join $ listToMaybe <$> signatoryattachments <$> (find (\sl -> slid == signatorylinkid sl) $ documentsignatorylinks doc)
 
 {-
 buildattach :: String -> Document -> [SignatoryAttachment]
@@ -458,7 +455,7 @@ fileInDocument doc fid =
     elem fid $      (documentfiles doc)
                  ++ (documentsealedfiles doc)
                  ++ (fmap authorattachmentfile $ documentauthorattachments doc)
-                 ++ (catMaybes $ fmap signatoryattachmentfile $ concat . map signatoryattachments $ documentsignatorylinks doc)
+                 ++ (catMaybes $ fmap signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
 
 makePlacements :: [BS.ByteString]
                -> [BS.ByteString]
