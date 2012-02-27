@@ -603,7 +603,7 @@ instance Actor a => DBUpdate (AdminOnlySaveForUser a) (Either String Document) w
     when_ (r == 1) $
       dbUpdate $ InsertEvidenceEvent
       AdminOnlySaveForUserEvidence
-      ("Document saved for user with email " ++ show (getEmail user) ++ " by " ++ actorWho actor ++ ".")
+      ("Document saved for user with email " ++ show (BS.toString $ getEmail user) ++ " by " ++ actorWho actor ++ ".")
       (Just did)
       actor
     getOneDocumentAffected "AdminOnlySaveForUser" r did
@@ -620,8 +620,8 @@ instance Actor a => DBUpdate (ArchiveDocument a) (Either String Document) where
     let fudgedr = if r==0 then 0 else 1
 
     let forstr = case (usercompany user, useriscompanyadmin user) of
-          (Just _, True) -> "company with admin email " ++ show (getEmail user)
-          _ -> "user with email " ++ show (getEmail user)
+          (Just _, True) -> "company with admin email " ++ show (BS.toString $ getEmail user)
+          _ -> "user with email " ++ show (BS.toString $ getEmail user)
     when_ (fudgedr == 1) $
       dbUpdate $ InsertEvidenceEvent
       ArchiveDocumentEvidence
@@ -663,7 +663,7 @@ instance Actor a => DBUpdate (AttachCSVUpload a) (Either String Document) where
             when_ (r == 1) $
               dbUpdate $ InsertEvidenceEvent
               AttachCSVUploadEvidence
-              ("Attached CSV (" ++ show (csvtitle csvupload) ++ ") to document by " ++ actorWho actor ++ ".")
+              ("Attached CSV (" ++ show (BS.toString $ csvtitle csvupload) ++ ") to document by " ++ actorWho actor ++ ".")
               (Just did)
               actor
             getOneDocumentAffected "AttachCSVUpload" r did
@@ -738,7 +738,7 @@ instance Actor a => DBUpdate (CancelDocument a) (Either String Document) where
                               ,("last name",       getLastName       sl, ln)
                               ,("personal number", getPersonalNumber sl, num)]
                       uneql = filter (\(_,a,b)->a/=b) trips
-                      msg = intercalate "; " $ map (\(f,s,e)->f ++ " from document was " ++ show s ++ " but from e-legitimation was " ++ show e) uneql
+                      msg = intercalate "; " $ map (\(f,s,e)->f ++ " from document was " ++ show (BS.toString s) ++ " but from e-legitimation was " ++ show (BS.toString e)) uneql
                   dbUpdate $ InsertEvidenceEvent
                     CancelDocumenElegEvidence
                     ("The document was canceled due to a mismatch with e-legitimation data by " ++ actorWho actor ++ ". Reason: " ++ msg ++ ".")
@@ -794,7 +794,7 @@ instance Actor a => DBUpdate (ChangeSignatoryEmailWhenUndelivered a) (Either Str
     when_ (r == 1) $ 
       dbUpdate $ InsertEvidenceEvent
       ChangeSignatoryEmailWhenUndeliveredEvidence
-      ("Changed the email address for signatory from " ++ show oldemail ++ " to " ++ show email ++ " by " ++ actorWho actor ++ ".")
+      ("Changed the email address for signatory from " ++ show (BS.toString oldemail) ++ " to " ++ show (BS.toString email) ++ " by " ++ actorWho actor ++ ".")
       (Just did)
       actor
    
@@ -873,7 +873,7 @@ instance Actor a => DBUpdate (DeleteSigAttachment a) (Either String Document) wh
     when_ (r == 1) $
       dbUpdate $ InsertEvidenceEvent
       DeleteSigAttachmentEvidence
-      ("Signatory attachment for signatory with email " ++ show email ++ " was deleted by " ++ actorWho actor ++ ".")
+      ("Signatory attachment for signatory with email " ++ show (BS.toString email) ++ " was deleted by " ++ actorWho actor ++ ".")
       (Just did)
       actor
     getOneDocumentAffected "DeleteSigAttachment" r did
@@ -1293,8 +1293,8 @@ instance Actor a => DBUpdate (ReallyDeleteDocument a) (Either String Document) w
       (Just cid, True) -> deleteDoc $ SQL "WHERE company_id = ?" [toSql cid]
       _ -> deleteDoc $ SQL "WHERE user_id = ? AND company_id IS NULL" [toSql $ userid user]
     let txt = case (usercompany user, useriscompanyadmin user) of
-          (Just _, True) -> "the company with admin email " ++ show (getEmail user)
-          _ -> "the user with email " ++ show (getEmail user)
+          (Just _, True) -> "the company with admin email " ++ show (BS.toString $ getEmail user)
+          _ -> "the user with email " ++ show (BS.toString $ getEmail user)
     when_ (r == 1) $ do
       dbUpdate $ InsertEvidenceEvent
         ReallyDeleteDocumentEvidence
@@ -1435,7 +1435,7 @@ instance Actor a => DBUpdate (SaveDocumentForUser a) (Either String Document) wh
     when_ (r == 1) $
       dbUpdate $ InsertEvidenceEvent
       SaveDocumentForUserEvidence
-      ("Saving document to user account with email " ++ show (getEmail user) ++ " by " ++ actorWho actor ++ ".")
+      ("Saving document to user account with email " ++ show (BS.toString $ getEmail user) ++ " by " ++ actorWho actor ++ ".")
       (Just did)
       actor
     getOneDocumentAffected "SaveDocumentForUser" r did
@@ -1457,7 +1457,7 @@ instance Actor a => DBUpdate (SaveSigAttachment a) (Either String Document) wher
     when_ (r == 1) $
       dbUpdate $ InsertEvidenceEvent
       SaveSigAttachmentEvidence
-      ("Saving attachment with name " ++ show name ++ " for signatory with email " ++ show email ++ " by " ++ actorWho actor ++ ".")
+      ("Saving attachment with name " ++ show (BS.toString name) ++ " for signatory with email " ++ show (BS.toString email) ++ " by " ++ actorWho actor ++ ".")
       (Just did)
       actor
     getOneDocumentAffected "SaveSigAttachment" r did
@@ -1584,7 +1584,7 @@ instance Actor a => DBUpdate (SetInviteText a) (Either String Document) where
     when_ (r == 1) $
       dbUpdate $ InsertEvidenceEvent
       SetInvitationTextEvidence
-      ("Invitation text set to " ++ show text ++ " by " ++ actorWho actor ++ ".")
+      ("Invitation text set to " ++ show (BS.toString text) ++ " by " ++ actorWho actor ++ ".")
       (Just did)
       actor
     getOneDocumentAffected "SetInviteText" r did
@@ -1633,7 +1633,7 @@ instance Actor a => DBUpdate (SetDocumentTitle a) (Either String Document) where
     when_ (r == 1) $
       dbUpdate $ InsertEvidenceEvent
       SetDocumentTitleEvidence
-      ("Document title set to " ++ show doctitle ++ " by " ++ actorWho actor ++ ".")
+      ("Document title set to " ++ show (BS.toString doctitle) ++ " by " ++ actorWho actor ++ ".")
       (Just did)
       actor
     getOneDocumentAffected "SetDocumentTitle" r did
@@ -1664,7 +1664,7 @@ instance Actor a => DBUpdate (SetDocumentUI a) (Either String Document) where
       ] <++> SQL "WHERE id = ?" [toSql did]
     let txt = case documentmailfooter documentui of
           Nothing -> "Document mail footer removed by " ++ actorWho actor ++ "."
-          Just footer -> "Document mail footer set to " ++ show footer ++ " by " ++ actorWho actor ++ "."
+          Just footer -> "Document mail footer set to " ++ show (BS.toString footer) ++ " by " ++ actorWho actor ++ "."
     when_ (r == 1) $
       dbUpdate $ InsertEvidenceEvent
       SetDocumentUIEvidence
@@ -1736,7 +1736,7 @@ instance Actor a => DBUpdate (SignDocument a) (Either String Document) where
                                       , signaturepersnumverified
                                       }) -> let ps = case signatureinfoprovider of
                                                   BankIDProvider -> "BankID"
-                                                  TeliaProvider -> "Telia"
+                                                  TeliaProvider  -> "Telia"
                                                   NordeaProvider -> "Nordea"
                                                 pairs = [("first name", signaturefstnameverified)
                                                         ,("last name", signaturelstnameverified)
@@ -1747,7 +1747,7 @@ instance Actor a => DBUpdate (SignDocument a) (Either String Document) where
                                                   [] -> "No fields were verified."
                                                   _ -> "The following fields were verified: " ++ vs
                                             in " using e-legitimation. The signed text was " 
-                                               ++ show signatureinfotext 
+                                               ++ show signatureinfotext
                                                ++ ". The provider was " ++ ps ++ ". " 
                                                ++ vstring
             when_ (r == 1) $
@@ -1797,7 +1797,7 @@ instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document)
                      when_ (isJust r1) $
                        dbUpdate $ InsertEvidenceEvent
                        ResetSignatoryDetailsEvidence
-                       ("Signatory details for signatory with email " ++ show (getEmail link) ++ " by " ++ actorWho actor ++ ".")
+                       ("Signatory details for signatory with email " ++ show (BS.toString $ getEmail link) ++ " by " ++ actorWho actor ++ ".")
                        (Just documentid)
                        actor
 
@@ -1929,7 +1929,7 @@ instance Actor a => DBUpdate (SetDocumentIdentification a) (Either String Docume
          ] <++> SQL "WHERE id = ?" [ toSql did ]
     when_ (r == 1) $
       dbUpdate $ InsertEvidenceEvent
-      (SetEmailIdentificationEvidence <| EmailIdentification `elem` identification |> SetElegitimationIdentificationEvidence)
+      (SetElegitimationIdentificationEvidence <| ELegitimationIdentification `elem` identification |> SetEmailIdentificationEvidence)
       ("Document identification type set to " ++ show identification ++ " by " ++ actorWho actor ++ ".")
       (Just did)
       actor     
@@ -1967,7 +1967,7 @@ instance Actor a => DBUpdate (UpdateFields a) (Either String Document) where
       when_ (r == 1) $ forM_ fields $ \(n, v) -> 
         dbUpdate $ InsertEvidenceEvent
         UpdateFieldsEvidence
-        ("Information for signatory with email " ++ show eml ++ " for field " ++ show n ++ " was set to " ++ show v ++ " by " ++ actorWho actor ++ ".")
+        ("Information for signatory with email " ++ show eml ++ " for field " ++ show (BS.toString n) ++ " was set to " ++ show (BS.toString v) ++ " by " ++ actorWho actor ++ ".")
         (Just did)
         actor
       getOneDocumentAffected "UpdateFields" r did
@@ -2067,7 +2067,7 @@ instance Actor a => DBUpdate (UpdateSigAttachments a) (Either String Document) w
         when_ (r == 1) $
              dbUpdate $ InsertEvidenceEvent
              AddSigAttachmentEvidence
-             ("Signatory attachment request for " ++ show signatoryattachmentname ++ " from signatory with email " ++ show signatoryattachmentemail ++ " by " ++ actorWho actor ++ ".")
+             ("Signatory attachment request for " ++ show (BS.toString signatoryattachmentname) ++ " from signatory with email " ++ show (BS.toString signatoryattachmentemail) ++ " by " ++ actorWho actor ++ ".")
              (Just did)
              actor
 
