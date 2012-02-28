@@ -1013,7 +1013,7 @@ handleIssueNewDocument = withUserPost $ do
     mdocprocess <- getDocProcess
     let docprocess = fromMaybe (Contract) mdocprocess
     Log.debug $ "Creating new document of process : " ++ show docprocess
-    mdoc <- makeDocumentFromFile (Signable docprocess) input
+    mdoc <- makeDocumentFromFile (Signable docprocess) input 1
     case mdoc of
       Nothing -> return LinkUpload
       Just doc -> do
@@ -1024,7 +1024,7 @@ handleIssueNewDocument = withUserPost $ do
 handleCreateNewTemplate:: Kontrakcja m => m KontraLink
 handleCreateNewTemplate = withUserPost $ do
   input <- getDataFnM (lookInput "doc")
-  mdoc <- makeDocumentFromFile (Template Contract) input
+  mdoc <- makeDocumentFromFile (Template Contract) input 1
   case mdoc of
     Nothing -> return $ LinkTemplates
     Just doc -> do
@@ -1034,14 +1034,14 @@ handleCreateNewTemplate = withUserPost $ do
 handleCreateNewAttachment:: Kontrakcja m => m KontraLink
 handleCreateNewAttachment = withUserPost $ do
   input <- getDataFnM (lookInput "doc")
-  mdoc <- makeDocumentFromFile Attachment input
+  mdoc <- makeDocumentFromFile Attachment input 0
   when (isJust mdoc) $ do
     _<- addDocumentCreateStatEvents $ fromJust mdoc
     return ()
   return LinkAttachments
 
-makeDocumentFromFile :: Kontrakcja m => DocumentType -> Input -> m (Maybe Document)
-makeDocumentFromFile doctype (Input contentspec (Just filename) _contentType) = do
+makeDocumentFromFile :: Kontrakcja m => DocumentType -> Input -> Int -> m (Maybe Document)
+makeDocumentFromFile doctype (Input contentspec (Just filename) _contentType) nrOfExtraSigs  = do
     Log.debug $ "makeDocumentFromFile: beggining"
     guardLoggedIn
     content <- case contentspec of
@@ -1054,10 +1054,10 @@ makeDocumentFromFile doctype (Input contentspec (Just filename) _contentType) = 
       else do
           Log.debug "Got the content, creating document"
           let title = BS.fromString (basename filename)
-          doc <- guardRightM $ newDocument title doctype
+          doc <- guardRightM $ newDocument title doctype nrOfExtraSigs
           handleDocumentUpload (documentid doc) (concatChunks content) title
           return $ Just doc
-makeDocumentFromFile _ _ = mzero -- to complete the patterns
+makeDocumentFromFile _ _ _ = mzero -- to complete the patterns
 
 
 handleRubbishRestore :: Kontrakcja m => m KontraLink
@@ -1590,7 +1590,7 @@ handleSetAttachments did = do
                  Just (Input (Left filepath) (Just filename) _contentType) -> do
                      content <- liftIO $ BSL.readFile filepath
                      let title = BS.fromString (basename filename)
-                     doc <- guardRightM $ newDocument title Attachment
+                     doc <- guardRightM $ newDocument title Attachment 0
                      doc' <- guardRightM $  attachFile (documentid doc) (BS.fromString filename) (concatChunks content)
                      return $ listToMaybe $ documentfiles  doc'
                  Just (Input  (Right c)  _ _)  -> do

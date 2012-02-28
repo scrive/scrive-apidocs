@@ -240,7 +240,7 @@ testGetUsersAndStats env = withTestEnvironment env $ do
                         Nothing False Nothing Nothing (mkLocale REGION_SE LANG_SE))
   _ <- forM [(u, i) | u <- us, i <- range (0, 10::Int)] $ \(u,_) -> do
     let aa = AuthorActor time (IPAddress 0) (userid u) (BS.toString $ getEmail u)
-    dbUpdate $ NewDocument u Nothing (BS.fromString "doc!") (Signable Contract) aa
+    dbUpdate $ NewDocument u Nothing (BS.fromString "doc!") (Signable Contract) 0 aa
 
   Log.debug $ "Set up test, now running query."
   t0 <- getMinutesTime

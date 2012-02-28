@@ -1222,9 +1222,9 @@ instance Actor a => DBUpdate (MarkInvitationRead a) (Either String Document) whe
             actor
           getOneDocumentAffected "MarkInvitationRead" r did
 
-data Actor a => NewDocument a = NewDocument User (Maybe Company) BS.ByteString DocumentType a
+data Actor a => NewDocument a = NewDocument User (Maybe Company) BS.ByteString DocumentType Int a
 instance Actor a => DBUpdate (NewDocument a) (Either String Document) where
-  dbUpdate (NewDocument user mcompany title documenttype actor) = do
+  dbUpdate (NewDocument user mcompany title documenttype nrOfOtherSignatories actor) = do
   let ctime = actorTime actor  
   if fmap companyid mcompany /= usercompany user
     then return $ Left "company and user don't match"
@@ -1247,11 +1247,21 @@ instance Actor a => DBUpdate (NewDocument a) (Either String Document) where
       let authorlink = authorlink0 {
                          maybesignatory = Just $ userid user,
                          maybecompany = usercompany user }
-
+                         
+      othersignatories <- sequence $ replicate nrOfOtherSignatories $ do
+                        l <- getUniqueID tableSignatoryLinks
+                        mh <- random
+                        return $ signLinkFromDetails'
+                                SignatoryDetails
+                                                {  signatorysignorder = SignOrder 1
+                                                 , signatoryfields   = emptySignatoryFields
+                                                }
+                                [SignatoryPartner] l mh                  
+          
       let doc = blankDocument
                 { documentid                   = did
                 , documenttitle                = title
-                , documentsignatorylinks       = [authorlink]
+                , documentsignatorylinks       = authorlink:othersignatories
                 , documenttype                 = documenttype
                 , documentregion               = getRegion user
                 , documentfunctionality        = newDocumentFunctionality documenttype user

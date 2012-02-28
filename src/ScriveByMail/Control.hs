@@ -151,7 +151,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   let userDetails = signatoryDetailsFromUser user mcompany
 
   let actor = MailAPIActor ctxtime (userid user) (BS.toString $ getEmail user)
-  edoc <- runDBUpdate $ NewDocument user mcompany (BS.fromString title) doctype actor
+  edoc <- runDBUpdate $ NewDocument user mcompany (BS.fromString title) doctype 0 actor
   
   when (isLeft edoc) $ do
     let Left msg = edoc
