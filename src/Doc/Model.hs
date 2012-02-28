@@ -1771,10 +1771,10 @@ instance Actor a => DBUpdate (SignDocument a) (Either String Document) where
 data Actor a => ResetSignatoryDetails a = ResetSignatoryDetails DocumentID [(SignatoryDetails, [SignatoryRole])] a
 instance Actor a => DBUpdate (ResetSignatoryDetails a) (Either String Document) where
   dbUpdate (ResetSignatoryDetails documentid signatories actor) = 
-    dbUpdate (ResetSignatoryDetails2 documentid (map (\(a,b) -> (a,b,Nothing)) signatories) actor)
+    dbUpdate (ResetSignatoryDetails2 documentid (map (\(a,b) -> (a,b,[],Nothing)) signatories) actor)
 
 
-data Actor a => ResetSignatoryDetails2 a = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryRole], Maybe CSVUpload)] a
+data Actor a => ResetSignatoryDetails2 a = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryRole], [SignatoryAttachment], Maybe CSVUpload)] a
 instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document) where
   dbUpdate (ResetSignatoryDetails2 documentid signatories actor) = do
     mdocument <- dbQuery $ GetDocumentByDocumentID documentid
@@ -1790,7 +1790,7 @@ instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document)
             _ <- kExecute [toSql documentid]
 
             let mauthorsiglink = getAuthorSigLink document
-            forM_ signatories $ \(details, roles, mcsvupload) -> do
+            forM_ signatories $ \(details, roles, atts, mcsvupload) -> do
                      linkid <- getUniqueID tableSignatoryLinks
 
                      magichash <- random
@@ -1803,18 +1803,19 @@ instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document)
                                            }
                                 else link'
                      r1 <- insertSignatoryLinkAsIs documentid link
-                     when_ (isJust r1) $
+                     when_ (isJust r1) $ do
+                       _ <- dbUpdate $ UpdateSigAttachments documentid linkid atts actor 
                        dbUpdate $ InsertEvidenceEvent
-                       ResetSignatoryDetailsEvidence
-                       ("Signatory details for signatory with email " ++ show (getEmail link) ++ " by " ++ actorWho actor ++ ".")
-                       (Just documentid)
-                       actor
+                           ResetSignatoryDetailsEvidence
+                           ("Signatory details for signatory with email " ++ show (getEmail link) ++ " by " ++ actorWho actor ++ ".")
+                           (Just documentid)
+                           actor
 
                      when (not (isJust r1)) $
                           error "ResetSignatoryDetails signatory_links did not manage to insert a row"
 
             Just newdocument <- dbQuery $ GetDocumentByDocumentID documentid
-            let moldcvsupload = msum (map (\(_,_,a) -> a) signatories)
+            let moldcvsupload = msum (map (\(_,_,_,a) -> a) signatories)
             let mnewcsvupload = msum (map (signatorylinkcsvupload) (documentsignatorylinks newdocument))
 
             when (moldcvsupload /= mnewcsvupload) $ do
@@ -2087,8 +2088,6 @@ data Actor a => UpdateDraft a =  UpdateDraft DocumentID  Document  a
 instance Actor a => DBUpdate (UpdateDraft a) (Either String Document) where
   dbUpdate (UpdateDraft did document actor) = do
      _ <- dbUpdate $ SetDocumentTitle did (documenttitle document) actor
-     _ <- mapM_ (\siglink -> dbUpdate $ UpdateSigAttachments did (signatorylinkid siglink) (signatoryattachments siglink) actor) 
-                $ documentsignatorylinks document
      _ <- dbUpdate $ SetDaysToSign  did (documentdaystosign document) actor  
      _ <- dbUpdate $ SetDocumentFunctionality did (documentfunctionality document) actor
      _ <- dbUpdate $ SetDocumentLocale did (getLocale document) actor

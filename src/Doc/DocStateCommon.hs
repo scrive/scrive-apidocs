@@ -163,9 +163,9 @@ checkSignDocument doc slid mh = catMaybes $
   , trueOrMessage (validSigLink slid mh (Just doc)) "Magic Hash does not match"
   ]
 
-checkResetSignatoryData :: Document -> [(SignatoryDetails, [SignatoryRole], Maybe CSVUpload)] -> [String]
+checkResetSignatoryData :: Document -> [(SignatoryDetails, [SignatoryRole], [SignatoryAttachment], Maybe CSVUpload)] -> [String]
 checkResetSignatoryData doc sigs = 
-  let authors    = [ r | (_, r, _) <- sigs, SignatoryAuthor `elem` r]
+  let authors    = [ r | (_, r, _, _) <- sigs, SignatoryAuthor `elem` r]
   in catMaybes $
       [ trueOrMessage (documentstatus doc == Preparation) $ "Document is not in preparation, is in " ++ show (documentstatus doc)
       , trueOrMessage (length authors == 1) $ "Should have exactly one author, had " ++ show (length authors)

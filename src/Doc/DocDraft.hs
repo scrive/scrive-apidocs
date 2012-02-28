@@ -95,7 +95,7 @@ applyDraftDataToDocument doc draft actor = do
                             
 
                             
-mergeSignatories :: SignatoryLink -> [SignatoryTMP] -> Maybe [(SignatoryDetails, [SignatoryRole], Maybe CSVUpload)]
+mergeSignatories :: SignatoryLink -> [SignatoryTMP] -> Maybe [(SignatoryDetails, [SignatoryRole], [SignatoryAttachment], Maybe CSVUpload)]
 mergeSignatories docAuthor tmps = 
         let (atmp, notatmps) = partition isAuthorTMP tmps
             setAuthorConstandDetails =  setFstname (getFirstName docAuthor) . 
