@@ -1574,7 +1574,7 @@ handleSetAttachments did = do
     Log.debug $ "Setting attachments to " ++ show attachments
     actor <- guardJustM $ mkAuthorActor <$> getContext
     forM_ (documentauthorattachments doc) $ \att -> runDB $ dbUpdate $ RemoveDocumentAttachment did (authorattachmentfile att) actor
-    forM_ attachments $ \att -> runDB $ dbUpdate $ AddDocumentAttachment did att actor
+    forM_ (nub attachments) $ \att -> runDB $ dbUpdate $ AddDocumentAttachment did att actor -- usage of nub is ok, as we never expect this list to be big
     return LoopBack
    where
         getAttachments :: Kontrakcja m => Int -> m [FileID]
