@@ -301,12 +301,6 @@ authorizationJSON ELegitimationIdentification = JSString $ toJSString "eleg"
 
 signatoryJSON :: (TemplatesMonad m, DBMonad m) => Document -> Maybe SignatoryLink -> SignatoryLink -> m JSValue
 signatoryJSON doc viewer siglink = do
-    signatoryattachmentsfiles <- catMaybes <$> (sequence [do
-                                    file <- runDBQuery $ GetFileByFileID fid
-                                    case file of
-                                        Nothing -> return Nothing
-                                        Just f -> return $ Just (fid, f)
-                                    | SignatoryAttachment { signatoryattachmentfile = Just fid } <- signatoryattachments siglink])
     fmap (JSObject . toJSObject) $ propagateMonad $ [
         ("id", return $ JSString $ toJSString  $ show $ signatorylinkid siglink)
       , ("current", return $ JSBool $ (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink))
@@ -322,7 +316,7 @@ signatoryJSON doc viewer siglink = do
       , ("rejecteddate", return $ jsonDate $ rejectedDate)
       , ("fields", liftIO $ signatoryFieldsJSON doc siglink)
       , ("status", return $ JSString $ toJSString  $ show $ signatoryStatusClass doc siglink)
-      , ("attachments", return $ JSArray $ map (signatoryAttachmentJSON signatoryattachmentsfiles) $ signatoryattachments siglink)
+      , ("attachments", fmap JSArray $ sequence $ signatoryAttachmentJSON <$> signatoryattachments siglink)
       , ("csv", case (csvcontents <$> signatorylinkcsvupload siglink) of
                      Just a1 ->  return $ JSArray $ for a1 (\a2 -> JSArray $ map (JSString . toJSString . BS.toString) a2 )
                      Nothing -> return $ JSNull) 
@@ -336,10 +330,13 @@ signatoryJSON doc viewer siglink = do
                         | slid == signatorylinkid siglink -> Just rt
                     _                             -> Nothing
 
-signatoryAttachmentJSON :: [(FileID, File)] -> SignatoryAttachment -> JSValue
-signatoryAttachmentJSON files sa = JSObject $ toJSObject $
-  let mfile = maybe Nothing (\fid -> lookup fid files) (signatoryattachmentfile sa)
-  in [ ("name", JSString $ toJSString $ BS.toString $ signatoryattachmentname sa)
+signatoryAttachmentJSON :: (TemplatesMonad m, DBMonad m) => SignatoryAttachment -> m JSValue
+signatoryAttachmentJSON sa = do
+  mfile <- case (signatoryattachmentfile sa) of
+                Just fid -> runDBQuery $ GetFileByFileID fid
+                _ -> return Nothing 
+  return $ (JSObject . toJSObject) $ 
+     [ ("name", JSString $ toJSString $ BS.toString $ signatoryattachmentname sa)
      , ("description", JSString $ toJSString $ BS.toString $ signatoryattachmentdescription sa)
      , ("file", fromMaybe JSNull $ jsonPack <$> fileJSON <$> mfile)
      ]
