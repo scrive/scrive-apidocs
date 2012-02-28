@@ -261,11 +261,11 @@ attachFile docid filename content = onlyAuthor docid $ do
   actor <- guardJustM $ mkAuthorActor <$> getContext
   transActionNotAvailable <$> runDBUpdate (AttachFile docid (fileid file) actor)
 
-newDocument :: (Kontrakcja m) => BS.ByteString -> DocumentType -> m (Either DBError Document)
-newDocument title doctype = withUser $ \user -> do
+newDocument :: (Kontrakcja m) => BS.ByteString -> DocumentType -> Int -> m (Either DBError Document)
+newDocument title doctype nrOrOtherSignatories = withUser $ \user -> do
   mcompany <- getCompanyForUser user
   actor <- guardJustM $ mkAuthorActor <$> getContext
-  transActionNotAvailable <$> runDBUpdate (NewDocument user mcompany title doctype actor)
+  transActionNotAvailable <$> runDBUpdate (NewDocument user mcompany title doctype nrOrOtherSignatories actor)
 
 withUser :: Kontrakcja m => (User -> m (Either DBError a)) -> m (Either DBError a)
 withUser action = do

@@ -119,3 +119,6 @@ boundedIntegralRandom = randomR (minBound :: a, maxBound :: a)
 
 instance Random Int64 where
   random = boundedIntegralRandom
+
+instance Random Int where
+  random = boundedIntegralRandom

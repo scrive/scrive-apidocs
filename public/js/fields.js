@@ -373,16 +373,26 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
     },
     setNameIcon : function() {
         var field = this.model;
+        var input = this.input;
         var icon =  $("<a class='setNameIcon' href='#'/>")
-        icon.click(function(){
-            if (!field.hasRestrictedName())
-                field.makeReady();
-            else  FlashMessages.add({
-                    color : "red",
-                    content: localization.designview.validation.restrictedName
-                    })
-            return false;
-        })
+        var fn = function(){
+          if (!field.hasRestrictedName())
+            field.makeReady();
+          else  FlashMessages.add({
+            color : "red",
+            content: localization.designview.validation.restrictedName
+          })
+          return false;
+        };  
+        icon.click(fn);
+        input.keypress(function(event) {
+          if(event.which === 13)
+            return fn();
+        });
+
+        // I'm not putting a blur handler that sets the name
+        // because it's a little odd. Neither is perfect. Eric
+
         return icon;
     },
     removeIcon: function() {

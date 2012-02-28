@@ -81,8 +81,9 @@ javascriptLocalisation =
              , searchBoxButtonText : "$_searchBoxButtonText()$"
              , downloadPDF : "$_DownloadPDF()$"
              , document : "$_Document()$"
+             , onlyPDFAllowed : "$_updateAttachmentsDialogUpLoadOnlyPDF()$"
              , attachment : "$_Attachment()$"
-             , attachments : "$_Attachments()$"
+             , attachmentsWord : "$_Attachments()$"
              , requestedAttachments : "$_RequestedAttachments()$"
              , send : "$_send()$"
 			 , reminder : {
@@ -267,5 +268,7 @@ javascriptLocalisation =
          , customiseLogo: "$_CustomiseLogo()$"
          , selectImageLabel: "$_SelectImageLabel()$"
          , saveBranding: "$_SaveSettings()$"
+         , changeEmail : "$_changeEmail()$"
+         , onlyPDF : "$_onlyPDF()$"
     }
 ####

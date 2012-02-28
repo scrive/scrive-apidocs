@@ -296,9 +296,9 @@ testNewDocumentForMismatchingUserAndCompanyFails = doTimes 10 $ do
   companyuser <- addNewRandomCompanyUser (companyid company) False
   time <- getMinutesTime
   let aa = AuthorActor time (IPAddress 0) (userid singleuser) (BS.toString $ getEmail singleuser)
-  edoc1 <- randomUpdate $ NewDocument singleuser (Just company) (BS.fromString "doc title") (Signable Contract) aa
+  edoc1 <- randomUpdate $ NewDocument singleuser (Just company) (BS.fromString "doc title") (Signable Contract) 0 aa
   let ca = AuthorActor time (IPAddress 0) (userid companyuser) (BS.toString $ getEmail companyuser)
-  edoc2 <- randomUpdate $ NewDocument companyuser Nothing (BS.fromString "doc title") (Signable Contract) ca
+  edoc2 <- randomUpdate $ NewDocument companyuser Nothing (BS.fromString "doc title") (Signable Contract) 0 ca
   validTest $ do
     assertLeft edoc1
     assertLeft edoc2
@@ -784,13 +784,13 @@ performNewDocumentWithRandomUser Nothing doctype title = do
   user <- addNewRandomUser
   time <- getMinutesTime
   let aa = AuthorActor time (IPAddress 0) (userid user) (BS.toString $ getEmail user)  
-  edoc <- randomUpdate $ NewDocument user Nothing (BS.fromString title) doctype aa
+  edoc <- randomUpdate $ NewDocument user Nothing (BS.fromString title) doctype 0 aa
   return (user, time, edoc)
 performNewDocumentWithRandomUser (Just company) doctype title = do
   user <- addNewRandomCompanyUser (companyid company) False
   time <- getMinutesTime
   let aa = AuthorActor time (IPAddress 0) (userid user) (BS.toString $ getEmail user)  
-  edoc <- randomUpdate $ NewDocument user (Just company) (BS.fromString title) doctype aa
+  edoc <- randomUpdate $ NewDocument user (Just company) (BS.fromString title) doctype 0 aa
   return (user, time, edoc)
 
 assertGoodNewDocument :: Maybe Company -> DocumentType -> String -> Bool -> (User, MinutesTime, Either String Document) -> DB (Maybe (DB ()))
@@ -1082,7 +1082,7 @@ testNewDocumentDependencies = doTimes 10 $ do
   -- execute
   now <- liftIO $ getMinutesTime
   let aa = AuthorActor now (IPAddress 0) (userid author) (BS.toString $ getEmail author)
-  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany title doctype aa)
+  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany title doctype 0 aa)
   -- assert
   validTest $ do
     assertRight edoc
@@ -1095,7 +1095,7 @@ testDocumentCanBeCreatedAndFetchedByID = doTimes 10 $ do
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
   now <- liftIO $ getMinutesTime
   let aa = AuthorActor now (IPAddress 0) (userid author) (BS.toString $ getEmail author)
-  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany title doctype aa)
+  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany title doctype 0 aa)
   let doc = case edoc of
           Left msg -> error $ show msg
           Right d -> d
@@ -1115,7 +1115,7 @@ testDocumentCanBeCreatedAndFetchedByAllDocs = doTimes 10 $ do
   -- execute
   now <- liftIO $ getMinutesTime
   let aa = AuthorActor now (IPAddress 0) (userid author) (BS.toString $ getEmail author)
-  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany title doctype aa)
+  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany title doctype 0 aa)
 
   let doc = case edoc of
           Left msg -> error $ show msg

@@ -77,7 +77,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
         var attachmentsList = this.model;
         var box = $("<div class='option-box'>");
         var header = $("<div class='header'/>").text(localization.selectFileToUpload);
-        var subheader = $("<div class='sheader'/>").text(localization.onlyPDFAllowed);
+        var subheader = $("<div class='sheader'/>").text(localization.onlyPDF);
         this.uploadButton = UploadButton.init({
                 color : "green",
                 size: "small",
