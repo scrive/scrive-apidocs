@@ -1146,7 +1146,7 @@ instance Actor a => DBUpdate (MarkDocumentSeen a) (Either String Document) where
               ipnumber = fromMaybe (IPAddress 0) $ actorIP actor
               txt = case actorIP actor of
                 Just _ ->
-                  "GET Request made to secret link for signatory with id " ++ show slid ++ " by " ++ actorWho actor ++ "."
+                  "Document viewed by " ++ actorWho actor ++ "."
                 Nothing ->
                   "Marking document seen for signatory with id " ++ show slid ++ " by " ++ actorWho actor ++ "."
 
@@ -1287,7 +1287,7 @@ instance Actor a => DBUpdate (NewDocument a) (Either String Document) where
              Just doc' -> do
                _<- dbUpdate $ InsertEvidenceEvent           
                  NewDocumentEvidence
-                 ("Document created by " ++ actorWho actor ++ ".")
+                 ("Document \"" ++ BS.toString title ++ "\" created by " ++ actorWho actor ++ ".")
                  (Just $ documentid doc')
                  actor
                return $ Right doc'
@@ -1673,7 +1673,7 @@ instance Actor a => DBUpdate (SetDocumentFunctionality a) (Either String Documen
     when_ (r == 1 && changed) $
       dbUpdate $ InsertEvidenceEvent
       SetDocumentAdvancedFunctionalityEvidence
-      ("Document functionality st to " ++ show functionality ++ " by " ++ actorWho actor ++ ".")
+      ("Document functionality set to " ++ show functionality ++ " by " ++ actorWho actor ++ ".")
       (Just did)
       actor     
     getOneDocumentAffected "SetDocumentFunctionality" r did
@@ -1867,15 +1867,46 @@ instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document)
                                            }
                                 else link'
                      r1 <- insertSignatoryLinkAsIs documentid link
-                     when_ (isJust r1) $
-                       dbUpdate $ InsertEvidenceEvent
-                       ResetSignatoryDetailsEvidence
-                       ("Signatory details for signatory with email \"" ++ (BS.toString $ getEmail link) ++ "\" by " ++ actorWho actor ++ ".")
-                       (Just documentid)
-                       actor
-
                      when (not (isJust r1)) $
                           error "ResetSignatoryDetails signatory_links did not manage to insert a row"
+
+            let (old, _, new) = splitContains (map signatorydetails $ documentsignatorylinks document) (map (\(sd, _, _)-> sd) signatories)
+
+            let (removed, changed, newsigs) = partSigDets old new
+            
+            forM_ removed $ \eml ->
+              dbUpdate $ InsertEvidenceEvent
+                ResetSignatoryDetailsEvidence
+                ("Signatory with email \"" ++ eml ++ "\" removed by " ++ actorWho actor ++ ".")
+                (Just documentid)
+                actor
+
+            forM_ changed $ \(eml, rs, cs) -> do
+              forM_ rs $ \removedfield ->
+                dbUpdate $ InsertEvidenceEvent
+                  ResetSignatoryDetailsEvidence
+                  ("Field \"" ++ show (sfType removedfield) ++ "\" for signatory with email \"" ++ eml ++ "\" removed by " ++ actorWho actor ++ ".")
+                  (Just documentid)
+                  actor
+              forM_ cs $ \changedfield ->
+                dbUpdate $ InsertEvidenceEvent
+                  ResetSignatoryDetailsEvidence
+                  ("Field \"" ++ show (sfType changedfield) ++ "\" for signatory with email \"" ++ eml ++ "\" set to \"" ++ BS.toString (sfValue changedfield) ++ "\" by " ++ actorWho actor ++ ".")
+                  (Just documentid)
+                  actor
+
+            forM_ newsigs $ \(eml, fs) -> do
+              _ <- dbUpdate $ InsertEvidenceEvent
+                ResetSignatoryDetailsEvidence
+                ("Signatory with email \"" ++ eml ++ "\" added by " ++ actorWho actor ++ ".")
+                (Just documentid)
+                actor
+              forM_ fs $ \changedfield ->
+                dbUpdate $ InsertEvidenceEvent
+                  ResetSignatoryDetailsEvidence
+                  ("Field \"" ++ show (sfType changedfield) ++ "\" for signatory with email \"" ++ eml ++ "\" set to \"" ++ BS.toString (sfValue changedfield) ++ "\" by " ++ actorWho actor ++ ".")
+                  (Just documentid)
+                  actor
 
             Just newdocument <- dbQuery $ GetDocumentByDocumentID documentid
             let moldcvsupload = msum (map (\(_,_,a) -> a) signatories)
@@ -1888,6 +1919,19 @@ instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document)
 
           s -> return $ Left $ "cannot reset signatory details on document " ++ show documentid ++ " because " ++ intercalate ";" s
 
+-- | Partition signatory details based on email
+--   return (emails of removed signatories, changed fields of existing signatories, all fields of new signatories)
+--   Only process signatories with an email address; until there's an email address, don't write to the log
+partSigDets :: [SignatoryDetails] -> [SignatoryDetails] -> ([String], [(String, [SignatoryField], [SignatoryField])], [(String, [SignatoryField])])
+partSigDets old new = (emailsOfRemoved, changedStuff, fieldsOfNew)
+  where emailsOfRemoved = [ BS.toString $ getEmail x | x <- removedSigs, "" /= BS.toString (getEmail x)]
+        changedStuff    = [(BS.toString $ getEmail x, removedFields x y, changedFields x y) | (x, y) <- changedSigs, not $ BS.null $ getEmail x]
+        fieldsOfNew     = [(BS.toString $ getEmail x, filter (not . BS.null . sfValue) $ signatoryfields x) | x <- newSigs, not $ BS.null $ getEmail x]
+        removedSigs     = [x      | x <- old, getEmail x `notElem` map getEmail new, not $ BS.null $ getEmail x]
+        changedSigs     = [(x, y) | x <- new, y <- old, getEmail x == getEmail y,    not $ BS.null $ getEmail x]
+        newSigs         = [x      | x <- new, getEmail x `notElem` map getEmail old, not $ BS.null $ getEmail x]
+        removedFields x y = let (r, _, _) = splitContains (signatoryfields x) (signatoryfields y) in filter (not . BS.null . sfValue) r
+        changedFields x y = let (_, _, c) = splitContains (signatoryfields x) (signatoryfields y) in filter (not . BS.null . sfValue) c
 
 data SignLinkFromDetailsForTest = SignLinkFromDetailsForTest SignatoryDetails [SignatoryRole]
 instance DBUpdate SignLinkFromDetailsForTest SignatoryLink where
@@ -2124,31 +2168,35 @@ instance Actor a => DBUpdate (RemoveDocumentAttachment a) (Either String Documen
 data Actor a => UpdateSigAttachments a = UpdateSigAttachments DocumentID [SignatoryAttachment] a
 instance Actor a => DBUpdate (UpdateSigAttachments a) (Either String Document) where
   dbUpdate (UpdateSigAttachments did sigatts actor) = do
+    ed <- dbQuery $ GetDocumentByDocumentID did
+    let (remove, _, new) = case ed of
+          Nothing -> ([],[],[])
+          Just d -> splitContains (documentsignatoryattachments d) sigatts
     _ <- kRun $ SQL "DELETE FROM signatory_attachments WHERE document_id = ?" [toSql did]
-    forM_ sigatts doInsert
-    _ <- dbUpdate $ InsertEvidenceEvent
+    forM_ remove $ \SignatoryAttachment {signatoryattachmentname, signatoryattachmentemail} ->
+      dbUpdate $ InsertEvidenceEvent
          RemoveSigAttachmentsEvidence
-         ("All signatory attachments removed by " ++ actorWho actor ++ ".")
+         ("Signatory attachment request for \"" ++ (BS.toString signatoryattachmentname) ++ "\" from signatory with email \"" ++ (BS.toString signatoryattachmentemail) ++ "\" removed by " ++ actorWho actor ++ ".")
          (Just did)
          actor
+    forM_ sigatts doInsert
+    forM_ new $ \SignatoryAttachment {signatoryattachmentname, signatoryattachmentemail} ->
+      dbUpdate $ InsertEvidenceEvent
+        AddSigAttachmentEvidence
+        ("Signatory attachment request added for \"" ++ (BS.toString signatoryattachmentname) ++ "\" from signatory with email \"" ++ (BS.toString signatoryattachmentemail) ++ "\" by " ++ actorWho actor ++ ".")
+        (Just did)
+        actor
+
     getOneDocumentAffected "UpdateSigAttachments" 1 did
     where
      doInsert SignatoryAttachment{..} = do
-        r <- kRun $ mkSQL INSERT tableSignatoryAttachments [
+        kRun $ mkSQL INSERT tableSignatoryAttachments [
             sql "file_id" signatoryattachmentfile
           , sql "email" signatoryattachmentemail
           , sql "name" signatoryattachmentname
           , sql "description" signatoryattachmentdescription
           , sql "document_id" did
           ]
-        when_ (r == 1) $
-             dbUpdate $ InsertEvidenceEvent
-             AddSigAttachmentEvidence
-             ("Signatory attachment request for \"" ++ (BS.toString signatoryattachmentname) ++ "\" from signatory with email \"" ++ (BS.toString signatoryattachmentemail) ++ "\" by " ++ actorWho actor ++ ".")
-             (Just did)
-             actor
-
-        return r
 
 data Actor a => UpdateDraft a =  UpdateDraft DocumentID  Document  a
 instance Actor a => DBUpdate (UpdateDraft a) (Either String Document) where

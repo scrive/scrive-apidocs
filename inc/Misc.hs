@@ -652,3 +652,8 @@ containsAll elems inList = foldl (\a e-> a && e `elem` inList) True elems
 
 listsEqualNoOrder :: Eq a => [a] -> [a] -> Bool
 listsEqualNoOrder a b = containsAll a b && containsAll b a
+
+splitContains :: Eq a => [a] -> [a] -> ([a], [a], [a])
+splitContains a b = ([x|x <- a, x `notElem` b], 
+                     [x|x <- a, x `elem`    b],
+                     [x|x <- b, x `notElem` a])
