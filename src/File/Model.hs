@@ -20,7 +20,6 @@ import DB.Utils
 import File.File
 import File.FileID
 import OurPrelude
-import Crypto.RNG(random)
 
 data GetFileByFileID = GetFileByFileID FileID
 instance DBQuery GetFileByFileID (Maybe File) where
@@ -32,19 +31,14 @@ instance DBQuery GetFileByFileID (Maybe File) where
 data NewFile = NewFile BS.ByteString BS.ByteString
 instance DBUpdate NewFile File where
   dbUpdate (NewFile filename content) = do
-     fid :: FileID <- random
-     kPrepare $ "INSERT INTO files ("
-       ++ "  id"
-       ++ ", name"
+     kPrepare $ "INSERT INTO files"
+       ++ "( name"
        ++ ", content"
-       ++ ") SELECT ?, ?, decode(?,'base64')"
-       ++ " WHERE NOT EXISTS (SELECT 1 FROM files WHERE id = ?)"
+       ++ ") SELECT ?, decode(?,'base64')"
        ++ " RETURNING id, name, encode(content,'base64'), amazon_bucket, amazon_url, disk_path"
-     _ <- kExecute [
-        toSql fid
-      , toSql filename
+     _ <- kExecute
+      [ toSql filename
       , toSql (Binary content)
-      , toSql fid
       ]
      fs <- fetchFiles
      case fs of
