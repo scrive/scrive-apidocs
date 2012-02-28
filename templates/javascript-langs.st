@@ -267,5 +267,7 @@ javascriptLocalisation =
          , customiseLogo: "$_CustomiseLogo()$"
          , selectImageLabel: "$_SelectImageLabel()$"
          , saveBranding: "$_SaveSettings()$"
+         , changeEmail : "$_changeEmail()$"
+         , onlyPDF : "$_onlyPDF()$"
     }
 ####
