@@ -580,7 +580,6 @@ var DocumentDesignView = Backbone.View.extend({
         var designbody2 = document.isBasic() ? $("Nothing") : this.designStep2();
 
         var file = KontraFile.init({file: document.mainfile()});
-        
         this.tabs = KontraTabs.init({
             title : this.titlerow(),
             tabsTail : (document.isBasic()) ? [this.switchFunctionalityOption()] : (!document.isTemplate()) ?  [this.saveAsTemplateOption()] : [] ,
@@ -591,9 +590,9 @@ var DocumentDesignView = Backbone.View.extend({
                   }),
                 this.tab2 = new Tab({
                     name  : document.isTemplate() ? localization.step2template : document.isBasic() ? localization.step2basic : localization.step2normal,
-                    active :  document.isBasic() || SessionStorage.get(document.documentid, "step") != "3",
+                    active :  document.isBasic() || SessionStorage.get(document.documentid(), "step") != "3",
                     onActivate : function() {
-                         SessionStorage.set(document.documentid, "step", "2");
+                         SessionStorage.set(document.documentid(), "step", "2");
                     },    
                     elems : [
                               designbody1,
@@ -602,9 +601,9 @@ var DocumentDesignView = Backbone.View.extend({
                   }),
                 this.tab3 = new Tab({
                     name  : document.isTemplate() ? localization.step3template : localization.step3normal,
-                    active :  !document.isBasic() && SessionStorage.get(document.documentid, "step") == "3",
+                    active :  !document.isBasic() && SessionStorage.get(document.documentid(), "step") == "3",
                     onActivate : function() {
-                         SessionStorage.set(document.documentid, "step", "3");
+                         SessionStorage.set(document.documentid(), "step", "3");
                     },    
                     elems : [
                             designbody2,
