@@ -64,13 +64,21 @@ var DocumentDesignView = Backbone.View.extend({
         display.append(iconedit).append(titleshow);
         edit.append(iconok).append(titleedit);
         namepart.append(display).append(edit);
-        iconok.click(function() {
-            document.setTitle(titleedit.val());
-            titleshow.text(document.title());
-            edit.hide();
-            display.show();
-            return false;
-        });      
+        var fn = function() {
+          document.setTitle(titleedit.val());
+          titleshow.text(document.title());
+          edit.hide();
+          display.show();
+          return false;
+        };
+        iconok.click(fn);      
+        titleedit.keypress(function(event) {
+          if(event.which === 13)
+            return fn();
+        });
+        titleedit.blur(function() {
+          fn();
+        });
         iconedit.click(function() { 
             display.hide();
             edit.show();
