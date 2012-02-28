@@ -81,6 +81,7 @@ javascriptLocalisation =
              , searchBoxButtonText : "$_searchBoxButtonText()$"
              , downloadPDF : "$_DownloadPDF()$"
              , document : "$_Document()$"
+             , onlyPDFAllowed : "$_updateAttachmentsDialogUpLoadOnlyPDF()$"
              , attachment : "$_Attachment()$"
              , attachments : "$_Attachments()$"
              , requestedAttachments : "$_RequestedAttachments()$"
