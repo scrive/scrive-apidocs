@@ -83,7 +83,7 @@ javascriptLocalisation =
              , document : "$_Document()$"
              , onlyPDFAllowed : "$_updateAttachmentsDialogUpLoadOnlyPDF()$"
              , attachment : "$_Attachment()$"
-             , attachments : "$_Attachments()$"
+             , attachmentsWord : "$_Attachments()$"
              , requestedAttachments : "$_RequestedAttachments()$"
              , send : "$_send()$"
 			 , reminder : {
