@@ -646,3 +646,9 @@ lengthWith f l = length $ filter f l
 
 optional :: (MonadPlus m) => m a -> m (Maybe a)
 optional c = (liftM Just c) `mplus` (return Nothing)
+
+containsAll :: Eq a => [a] -> [a] -> Bool
+containsAll elems inList = foldl (\a e-> a && e `elem` inList) True elems
+
+listsEqualNoOrder :: Eq a => [a] -> [a] -> Bool
+listsEqualNoOrder a b = containsAll a b && containsAll b a

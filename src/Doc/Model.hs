@@ -886,10 +886,15 @@ instance Actor a => DBUpdate (DocumentFromSignatoryData a) (Either String Docume
       let Right d = ed 
       in do
         copyEvidenceLogToNewDocument docid (documentid d)
-        dbUpdate $ InsertEvidenceEvent
+        _ <- dbUpdate $ InsertEvidenceEvent
           AuthorUsesCSVEvidence
           ("Document created from CSV file by " ++ actorWho actor ++ ".")
           (Just $ documentid d)
+          actor
+        dbUpdate $ InsertEvidenceEvent
+          AuthorUsesCSVEvidence
+          ("Documents created from this document using CSV file by " ++ actorWho actor ++ ".")
+          (Just $ docid)
           actor
     return ed
    where
@@ -1475,10 +1480,15 @@ instance Actor a => DBUpdate (SaveSigAttachment a) (Either String Document) wher
 data Actor a => SetDocumentTags a = SetDocumentTags DocumentID [DocumentTag] a
 instance Actor a => DBUpdate (SetDocumentTags a) (Either String Document) where
   dbUpdate (SetDocumentTags did doctags actor) = do
+    -- check if the tags are changed
+    ed <- dbQuery $ GetDocumentByDocumentID did
+    let changed = case ed of
+          Nothing -> True
+          Just d -> not $ listsEqualNoOrder doctags $ documenttags d
     r <- kRun $ mkSQL UPDATE tableDocuments [sql "tags" doctags]
       <++> SQL "WHERE id = ?" [toSql did]
     let tagstr = intercalate "; " $ map (\(DocumentTag k v)-> BS.toString k ++ "=" ++ BS.toString v) doctags
-    when_ (r == 1) $
+    when_ (r == 1 && changed) $
       dbUpdate $ InsertEvidenceEvent
       SetDocumentTagsEvidence
       ("Document tags set to " ++ show tagstr ++ " by " ++ actorWho actor ++ ".")
@@ -1490,11 +1500,16 @@ data Actor a => SetDocumentInviteTime a = SetDocumentInviteTime DocumentID Minut
 instance Actor a => DBUpdate (SetDocumentInviteTime a) (Either String Document) where
   dbUpdate (SetDocumentInviteTime did invitetime actor) = do
     let ipaddress  = fromMaybe (IPAddress 0) $ actorIP actor
+    -- check if it's changed
+    ed <- dbQuery $ GetDocumentByDocumentID did
+    let changed = case ed of
+          Nothing -> True
+          Just d -> not $ documentinvitetime d == Just (SignInfo invitetime ipaddress)
     r <- kRun $ mkSQL UPDATE tableDocuments [
         sql "invite_time" invitetime
       , sql "invite_ip" ipaddress
       ] <++> SQL "WHERE id = ?" [toSql did]
-    when_ (r == 1) $
+    when_ (r == 1 && changed) $
       dbUpdate $ InsertEvidenceEvent
       SetDocumentInviteTimeEvidence
       ("Document invite time set to " ++ formatMinutesTimeUTC invitetime ++ " UTC by " ++ actorWho actor ++ ".")
@@ -1505,12 +1520,16 @@ instance Actor a => DBUpdate (SetDocumentInviteTime a) (Either String Document) 
 data Actor a => SetDocumentTimeoutTime a = SetDocumentTimeoutTime DocumentID MinutesTime a
 instance Actor a => DBUpdate (SetDocumentTimeoutTime a) (Either String Document) where
   dbUpdate (SetDocumentTimeoutTime did timeouttime actor) = do
+    ed <- dbQuery $ GetDocumentByDocumentID did
+    let changed = case ed of
+          Nothing -> True
+          Just d -> not $ documenttimeouttime d == Just (TimeoutTime timeouttime)
     r <- kRun $ mkSQL UPDATE tableDocuments [sql "timeout_time" timeouttime]
       <++> SQL "WHERE id = ? AND deleted = FALSE AND type = ?" [
         toSql did
       , toSql $ Signable undefined
       ]
-    when_ (r == 1) $
+    when_ (r == 1 && changed) $
       dbUpdate $ InsertEvidenceEvent
       SetDocumentTimeoutTimeEvidence
       ("Document timeout time set to " ++ formatMinutesTimeUTC timeouttime ++ " UTC by " ++ actorWho actor ++ ".")
@@ -1521,12 +1540,16 @@ instance Actor a => DBUpdate (SetDocumentTimeoutTime a) (Either String Document)
 data Actor a => SetSignatoryCompany a = SetSignatoryCompany DocumentID SignatoryLinkID CompanyID a
 instance Actor a => DBUpdate (SetSignatoryCompany a) (Either String Document) where
   dbUpdate (SetSignatoryCompany did slid cid actor) = do
+    ed <- dbQuery $ GetDocumentByDocumentID did
+    let changed = case getSigLinkFor ed slid of
+          Nothing -> False
+          Just sl -> not $ Just cid == maybecompany sl
     r <- kRun $ mkSQL UPDATE tableSignatoryLinks [sql "company_id" cid]
       <++> SQL "WHERE id = ? AND document_id = ?" [
         toSql slid
       , toSql did
       ]
-    when_ (r == 1) $
+    when_ (r == 1 && changed) $
       dbUpdate $ InsertEvidenceEvent
       SetSignatoryCompanyEvidence
       ("Signatory with id " ++ show slid ++ " was associated to company with id " ++ show cid ++ " by " ++ actorWho actor ++ ".")
@@ -1537,12 +1560,16 @@ instance Actor a => DBUpdate (SetSignatoryCompany a) (Either String Document) wh
 data Actor a => RemoveSignatoryCompany a = RemoveSignatoryCompany DocumentID SignatoryLinkID a
 instance Actor a => DBUpdate (RemoveSignatoryCompany a) (Either String Document) where
   dbUpdate (RemoveSignatoryCompany did slid actor) = do
+    ed <- dbQuery $ GetDocumentByDocumentID did
+    let changed = case getSigLinkFor ed slid of
+          Nothing -> False
+          Just sl -> isJust $ maybecompany sl
     r <- kRun $ mkSQL UPDATE tableSignatoryLinks [sql "company_id" SqlNull]
       <++> SQL "WHERE id = ? AND document_id = ?" [
         toSql slid
       , toSql did
       ]
-    when_ (r == 1) $
+    when_ (r == 1 && changed) $
       dbUpdate $ InsertEvidenceEvent
       RemoveSignatoryCompanyEvidence
       ("Signatory with id " ++ show slid ++ " was dissociated from company by " ++ actorWho actor ++ ".")
@@ -1553,12 +1580,16 @@ instance Actor a => DBUpdate (RemoveSignatoryCompany a) (Either String Document)
 data Actor a => SetSignatoryUser a = SetSignatoryUser DocumentID SignatoryLinkID UserID a
 instance Actor a => DBUpdate (SetSignatoryUser a) (Either String Document) where
   dbUpdate (SetSignatoryUser did slid uid actor) = do
+    ed <- dbQuery $ GetDocumentByDocumentID did
+    let changed = case getSigLinkFor ed slid of
+          Nothing -> False
+          Just sl -> not $ maybesignatory sl == Just uid
     r <- kRun $ mkSQL UPDATE tableSignatoryLinks [sql "user_id" uid]
       <++> SQL "WHERE id = ? AND document_id = ?" [
         toSql slid
       , toSql did
       ]
-    when_ (r == 1) $
+    when_ (r == 1 && changed) $
       dbUpdate $ InsertEvidenceEvent
       SetSignatoryUserEvidence
       ("Signatory with id " ++ show slid ++ " was associated with user with id " ++ show uid ++ " by " ++ actorWho actor ++ ".")
@@ -1569,12 +1600,16 @@ instance Actor a => DBUpdate (SetSignatoryUser a) (Either String Document) where
 data Actor a => RemoveSignatoryUser a = RemoveSignatoryUser DocumentID SignatoryLinkID a
 instance Actor a => DBUpdate (RemoveSignatoryUser a) (Either String Document) where
   dbUpdate (RemoveSignatoryUser did slid actor) = do
+    ed <- dbQuery $ GetDocumentByDocumentID did
+    let changed = case getSigLinkFor ed slid of
+          Nothing -> False
+          Just sl -> not $ isNothing $ maybesignatory sl
     r <- kRun $ mkSQL UPDATE tableSignatoryLinks [sql "user_id" SqlNull]
       <++> SQL "WHERE id = ? AND document_id = ?" [
         toSql slid
       , toSql did
       ]
-    when_ (r == 1) $
+    when_ (r == 1 && changed) $
       dbUpdate $ InsertEvidenceEvent
       RemoveSignatoryUserEvidence
       ("Signatory with id " ++ show slid ++ " was dissociated from its user by " ++ actorWho actor ++ ".")
@@ -1585,13 +1620,17 @@ instance Actor a => DBUpdate (RemoveSignatoryUser a) (Either String Document) wh
 data Actor a => SetInviteText a = SetInviteText DocumentID BS.ByteString a
 instance Actor a => DBUpdate (SetInviteText a) (Either String Document) where
   dbUpdate (SetInviteText did text actor) = do
+    ed <- dbQuery $ GetDocumentByDocumentID did
+    let changed = case ed of
+          Nothing -> False
+          Just d -> not $ documentinvitetext d == text
     let time = actorTime actor
     r <- kRun $ mkSQL UPDATE tableDocuments [
         sql "invite_text" text
       , sql "mtime" time
       , sqlLog time "Invite text set"
       ] <++> SQL "WHERE id = ?" [toSql did]
-    when_ (r == 1) $
+    when_ (r == 1 && changed) $
       dbUpdate $ InsertEvidenceEvent
       SetInvitationTextEvidence
       ("Invitation text set to \"" ++ (BS.toString text) ++ "\" by " ++ actorWho actor ++ ".")
@@ -1603,12 +1642,16 @@ instance Actor a => DBUpdate (SetInviteText a) (Either String Document) where
 data Actor a => SetDaysToSign a = SetDaysToSign DocumentID (Maybe Int) a
 instance Actor a =>  DBUpdate (SetDaysToSign a) (Either String Document) where
   dbUpdate (SetDaysToSign did mdays actor) = do
+    ed <- dbQuery $ GetDocumentByDocumentID did
+    let changed = case ed of
+          Nothing -> False
+          Just d -> not $ documentdaystosign d == mdays
     r <- kRun $ mkSQL UPDATE tableDocuments 
          [ sql "days_to_sign" $ mdays
          , sql "mtime" $ actorTime actor
 
          ] <++> SQL "WHERE id = ?" [ toSql did ]
-    when_ (r == 1) $
+    when_ (r == 1 && changed) $
       dbUpdate $ InsertEvidenceEvent
       (SetDaysToSignEvidence <| isJust mdays |> RemoveDaysToSignEvidence)
       ("Days to sign set to " ++ show mdays ++ " by " ++ actorWho actor ++ ".")
@@ -1619,11 +1662,15 @@ instance Actor a =>  DBUpdate (SetDaysToSign a) (Either String Document) where
 data Actor a =>  SetDocumentFunctionality a = SetDocumentFunctionality DocumentID DocumentFunctionality a
 instance Actor a => DBUpdate (SetDocumentFunctionality a) (Either String Document) where
   dbUpdate (SetDocumentFunctionality did functionality actor) = do
+    ed <- dbQuery $ GetDocumentByDocumentID did
+    let changed = case ed of
+          Nothing -> False
+          Just d -> not $ documentfunctionality d == functionality
     r <- kRun $ mkSQL UPDATE tableDocuments 
          [ sql "functionality" functionality
          , sql "mtime" $ actorTime actor
          ]  <++> SQL "WHERE id = ?" [ toSql did ]
-    when_ (r == 1) $
+    when_ (r == 1 && changed) $
       dbUpdate $ InsertEvidenceEvent
       SetDocumentAdvancedFunctionalityEvidence
       ("Document functionality st to " ++ show functionality ++ " by " ++ actorWho actor ++ ".")
@@ -1634,13 +1681,17 @@ instance Actor a => DBUpdate (SetDocumentFunctionality a) (Either String Documen
 data Actor a => SetDocumentTitle a = SetDocumentTitle DocumentID BS.ByteString a
 instance Actor a => DBUpdate (SetDocumentTitle a) (Either String Document) where
   dbUpdate (SetDocumentTitle did doctitle actor) = do
+    ed <- dbQuery $ GetDocumentByDocumentID did
+    let changed = case ed of
+          Nothing -> False
+          Just d -> not $ documenttitle d == doctitle
     let time = actorTime actor
     r <- kRun $ mkSQL UPDATE tableDocuments [
         sql "title" doctitle
       , sql "mtime" time
       , sqlLog time "Document title changed"
       ] <++> SQL "WHERE id = ?" [toSql did]
-    when_ (r == 1) $
+    when_ (r == 1 && changed) $
       dbUpdate $ InsertEvidenceEvent
       SetDocumentTitleEvidence
       ("Document title set to \"" ++ (BS.toString doctitle) ++ "\" by " ++ actorWho actor ++ ".")
@@ -1651,13 +1702,17 @@ instance Actor a => DBUpdate (SetDocumentTitle a) (Either String Document) where
 data Actor a => SetDocumentLocale a = SetDocumentLocale DocumentID Locale a
 instance Actor a => DBUpdate (SetDocumentLocale a) (Either String Document) where
   dbUpdate (SetDocumentLocale did locale actor) = do
+    ed <- dbQuery $ GetDocumentByDocumentID did
+    let changed = case ed of
+          Nothing -> False
+          Just d -> not $ getLocale d == locale
     let time = actorTime actor
     r <- kRun $ mkSQL UPDATE tableDocuments [
         sql "region" $ getRegion locale
       , sql "mtime" time
       , sqlLog time "Document locale changed"
       ] <++> SQL "WHERE id = ?" [toSql did]
-    when_ (r == 1) $
+    when_ (r == 1 && changed) $
       dbUpdate $ InsertEvidenceEvent
       SetDocumentLocaleEvidence
       ("Document locale set to " ++ show locale ++ " by " ++ actorWho actor ++ ".")
@@ -1667,15 +1722,19 @@ instance Actor a => DBUpdate (SetDocumentLocale a) (Either String Document) wher
 
 data Actor a => SetDocumentUI a = SetDocumentUI DocumentID DocumentUI a
 instance Actor a => DBUpdate (SetDocumentUI a) (Either String Document) where
-  dbUpdate (SetDocumentUI did documentui actor) = do
+  dbUpdate (SetDocumentUI did docui actor) = do
+    ed <- dbQuery $ GetDocumentByDocumentID did
+    let changed = case ed of
+          Nothing -> False
+          Just d -> not $ documentui d == docui
     r <- kRun $ mkSQL UPDATE tableDocuments [
-        sql "mail_footer" $ documentmailfooter documentui
+        sql "mail_footer" $ documentmailfooter docui
          , sql "mtime" $ actorTime actor           
       ] <++> SQL "WHERE id = ?" [toSql did]
-    let txt = case documentmailfooter documentui of
+    let txt = case documentmailfooter docui of
           Nothing -> "Document mail footer removed by " ++ actorWho actor ++ "."
           Just footer -> "Document mail footer set to \"" ++ (BS.toString footer) ++ "\" by " ++ actorWho actor ++ "."
-    when_ (r == 1) $
+    when_ (r == 1 && changed) $
       dbUpdate $ InsertEvidenceEvent
       SetDocumentUIEvidence
       txt
@@ -1686,6 +1745,10 @@ instance Actor a => DBUpdate (SetDocumentUI a) (Either String Document) where
 data Actor a => SetInvitationDeliveryStatus a = SetInvitationDeliveryStatus DocumentID SignatoryLinkID MailsDeliveryStatus a
 instance Actor a => DBUpdate (SetInvitationDeliveryStatus a) (Either String Document) where
   dbUpdate (SetInvitationDeliveryStatus did slid status actor) = do
+    ed <- dbQuery $ GetDocumentByDocumentID did
+    let changed = case getSigLinkFor ed slid of
+          Nothing -> False
+          Just sl -> not $ invitationdeliverystatus sl == status
     r <- kRun $ mkSQL UPDATE tableSignatoryLinks [
         sql "invitation_delivery_status" status
       ] <++> SQL "WHERE id = ? AND document_id = ? AND EXISTS (SELECT 1 FROM documents WHERE id = ? AND type = ?)" [
@@ -1694,7 +1757,7 @@ instance Actor a => DBUpdate (SetInvitationDeliveryStatus a) (Either String Docu
       , toSql did
       , toSql $ Signable undefined
       ]
-    when_ (r == 1) $
+    when_ (r == 1 && changed) $
       dbUpdate $ InsertEvidenceEvent
       SetInvitationDeliveryStatusEvidence
       ("Delivery status for signatory with id " ++ show slid ++ " set to " ++ show status ++ " by " ++ actorWho actor ++ ".")
@@ -1934,10 +1997,14 @@ instance Actor a => DBUpdate (TimeoutDocument a) (Either String Document) where
 data Actor a => SetDocumentIdentification a = SetDocumentIdentification DocumentID [IdentificationType] a
 instance Actor a => DBUpdate (SetDocumentIdentification a) (Either String Document) where
   dbUpdate (SetDocumentIdentification did identification actor) = do
+    ed <- dbQuery $ GetDocumentByDocumentID did
+    let changed = case ed of
+          Nothing -> False
+          Just d -> not $ documentallowedidtypes d == identification
     r <- kRun $ mkSQL UPDATE tableDocuments 
          [ sql "allowed_id_types" $ identification
          ] <++> SQL "WHERE id = ?" [ toSql did ]
-    when_ (r == 1) $
+    when_ (r == 1 && changed) $
       dbUpdate $ InsertEvidenceEvent
       (SetElegitimationIdentificationEvidence <| ELegitimationIdentification `elem` identification |> SetEmailIdentificationEvidence)
       ("Document identification type set to " ++ show identification ++ " by " ++ actorWho actor ++ ".")
