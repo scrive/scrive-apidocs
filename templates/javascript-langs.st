@@ -268,5 +268,6 @@ javascriptLocalisation =
          , selectImageLabel: "$_SelectImageLabel()$"
          , saveBranding: "$_SaveSettings()$"
          , changeEmail : "$_changeEmail()$"
+         , onlyPDF : "$_onlyPDF()$"
     }
 ####
