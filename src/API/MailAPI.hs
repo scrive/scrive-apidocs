@@ -275,7 +275,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
       title = dcrTitle dcr
       actor = MailAPIActor ctxtime (userid user) (BS.toString $ getEmail user)
       
-  edoc <- runDBUpdate $ NewDocument user mcompany (BS.fromString title) doctype actor
+  edoc <- runDBUpdate $ NewDocument user mcompany (BS.fromString title) doctype 0 actor
 
   when (isLeft edoc) $ do
     let Left msg = edoc
