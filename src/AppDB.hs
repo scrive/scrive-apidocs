@@ -41,6 +41,7 @@ kontraMigrations = [
   , addFileIdSequence
   , addIdSerialOnSignatoryLinks
   , addIdSerialOnDocuments
+  , addIdSerialOnCompanies
   ] ++ mailerMigrations
 
 kontraTables :: [Table]
