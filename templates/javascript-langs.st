@@ -263,11 +263,16 @@ javascriptLocalisation =
               , mustAcceptTOS: "$_flashMessageMustAcceptTOS()$"
               , phoneRequired: "$_flashMessagePhoneIsRequired()$"
          }
-         , emailBrading: "$_EmailBranding()$"
-         , customiseColour: "$_CustomiseColour()$"
+         , emailBranding: "$_EmailBranding()$"
+         , customiseBackgroundColour: "$_CustomiseBackgroundColour()$"
+         , customiseTextColour: "$_CustomiseTextColour()$"
          , customiseLogo: "$_CustomiseLogo()$"
          , selectImageLabel: "$_SelectImageLabel()$"
          , saveBranding: "$_SaveSettings()$"
+         , sampleEmailHeader: "$_SampleEmailHeader()$"
+         , sampleEmailSubheader: "$_mailsubheader()$"
+         , sampleEmailContent: "$_SampleEmailContent()$"
+         , recommendedLogoSize: "$_RecommendedLogoSize()$"
          , changeEmail : "$_changeEmail()$"
          , onlyPDF : "$_onlyPDF()$"
     }
