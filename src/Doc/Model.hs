@@ -1872,16 +1872,14 @@ instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document)
 
             let (old, _, new) = splitContains (map signatorydetails $ documentsignatorylinks document) (map (\(sd, _, _)-> sd) signatories)
 
-            let (removed, changed, newsigs) = partSigDets old new
-            
-            forM_ removed $ \eml ->
+            forM_ (emailsOfRemoved old new) $ \eml ->
               dbUpdate $ InsertEvidenceEvent
                 ResetSignatoryDetailsEvidence
                 ("Signatory with email \"" ++ eml ++ "\" removed by " ++ actorWho actor ++ ".")
                 (Just documentid)
                 actor
 
-            forM_ changed $ \(eml, rs, cs) -> do
+            forM_ (changedStuff old new) $ \(eml, rs, cs) -> do
               forM_ rs $ \removedfield ->
                 dbUpdate $ InsertEvidenceEvent
                   ResetSignatoryDetailsEvidence
@@ -1895,7 +1893,7 @@ instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document)
                   (Just documentid)
                   actor
 
-            forM_ newsigs $ \(eml, fs) -> do
+            forM_ (fieldsOfNew old new) $ \(eml, fs) -> do
               _ <- dbUpdate $ InsertEvidenceEvent
                 ResetSignatoryDetailsEvidence
                 ("Signatory with email \"" ++ eml ++ "\" added by " ++ actorWho actor ++ ".")
@@ -1918,20 +1916,14 @@ instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document)
             return $ Right newdocument
 
           s -> return $ Left $ "cannot reset signatory details on document " ++ show documentid ++ " because " ++ intercalate ";" s
-
--- | Partition signatory details based on email
---   return (emails of removed signatories, changed fields of existing signatories, all fields of new signatories)
---   Only process signatories with an email address; until there's an email address, don't write to the log
-partSigDets :: [SignatoryDetails] -> [SignatoryDetails] -> ([String], [(String, [SignatoryField], [SignatoryField])], [(String, [SignatoryField])])
-partSigDets old new = (emailsOfRemoved, changedStuff, fieldsOfNew)
-  where emailsOfRemoved = [ BS.toString $ getEmail x | x <- removedSigs, "" /= BS.toString (getEmail x)]
-        changedStuff    = [(BS.toString $ getEmail x, removedFields x y, changedFields x y) | (x, y) <- changedSigs, not $ BS.null $ getEmail x]
-        fieldsOfNew     = [(BS.toString $ getEmail x, filter (not . BS.null . sfValue) $ signatoryfields x) | x <- newSigs, not $ BS.null $ getEmail x]
-        removedSigs     = [x      | x <- old, getEmail x `notElem` map getEmail new, not $ BS.null $ getEmail x]
-        changedSigs     = [(x, y) | x <- new, y <- old, getEmail x == getEmail y,    not $ BS.null $ getEmail x]
-        newSigs         = [x      | x <- new, getEmail x `notElem` map getEmail old, not $ BS.null $ getEmail x]
-        removedFields x y = let (r, _, _) = splitContains (signatoryfields x) (signatoryfields y) in filter (not . BS.null . sfValue) r
-        changedFields x y = let (_, _, c) = splitContains (signatoryfields x) (signatoryfields y) in filter (not . BS.null . sfValue) c
+          where emailsOfRemoved old new = [ BS.toString $ getEmail x | x <- removedSigs old new, "" /= BS.toString (getEmail x)]
+                changedStuff    old new = [(BS.toString $ getEmail x, removedFields x y, changedFields x y) | (x, y) <- changedSigs old new, not $ BS.null $ getEmail x]
+                fieldsOfNew     old new = [(BS.toString $ getEmail x, filter (not . BS.null . sfValue) $ signatoryfields x) | x <- newSigs old new, not $ BS.null $ getEmail x]
+                removedSigs     old new = [x      | x <- old, getEmail x `notElem` map getEmail new, not $ BS.null $ getEmail x]
+                changedSigs     old new = [(x, y) | x <- new, y <- old, getEmail x == getEmail y,    not $ BS.null $ getEmail x]
+                newSigs         old new = [x      | x <- new, getEmail x `notElem` map getEmail old, not $ BS.null $ getEmail x]
+                removedFields x y = let (r, _, _) = splitContains (signatoryfields x) (signatoryfields y) in filter (not . BS.null . sfValue) r
+                changedFields x y = let (_, _, c) = splitContains (signatoryfields x) (signatoryfields y) in filter (not . BS.null . sfValue) c
 
 data SignLinkFromDetailsForTest = SignLinkFromDetailsForTest SignatoryDetails [SignatoryRole]
 instance DBUpdate SignLinkFromDetailsForTest SignatoryLink where
