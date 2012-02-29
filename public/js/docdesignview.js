@@ -64,13 +64,21 @@ var DocumentDesignView = Backbone.View.extend({
         display.append(iconedit).append(titleshow);
         edit.append(iconok).append(titleedit);
         namepart.append(display).append(edit);
-        iconok.click(function() {
-            document.setTitle(titleedit.val());
-            titleshow.text(document.title());
-            edit.hide();
-            display.show();
-            return false;
-        });      
+        var fn = function() {
+          document.setTitle(titleedit.val());
+          titleshow.text(document.title());
+          edit.hide();
+          display.show();
+          return false;
+        };
+        iconok.click(fn);      
+        titleedit.keypress(function(event) {
+          if(event.which === 13)
+            return fn();
+        });
+        titleedit.blur(function() {
+          fn();
+        });
         iconedit.click(function() { 
             display.hide();
             edit.show();
@@ -580,7 +588,6 @@ var DocumentDesignView = Backbone.View.extend({
         var designbody2 = document.isBasic() ? $("Nothing") : this.designStep2();
 
         var file = KontraFile.init({file: document.mainfile()});
-        
         this.tabs = KontraTabs.init({
             title : this.titlerow(),
             tabsTail : (document.isBasic()) ? [this.switchFunctionalityOption()] : (!document.isTemplate()) ?  [this.saveAsTemplateOption()] : [] ,
@@ -591,9 +598,9 @@ var DocumentDesignView = Backbone.View.extend({
                   }),
                 this.tab2 = new Tab({
                     name  : document.isTemplate() ? localization.step2template : document.isBasic() ? localization.step2basic : localization.step2normal,
-                    active :  document.isBasic() || SessionStorage.get(document.documentid, "step") != "3",
+                    active :  document.isBasic() || SessionStorage.get(document.documentid(), "step") != "3",
                     onActivate : function() {
-                         SessionStorage.set(document.documentid, "step", "2");
+                         SessionStorage.set(document.documentid(), "step", "2");
                     },    
                     elems : [
                               designbody1,
@@ -602,9 +609,9 @@ var DocumentDesignView = Backbone.View.extend({
                   }),
                 this.tab3 = new Tab({
                     name  : document.isTemplate() ? localization.step3template : localization.step3normal,
-                    active :  !document.isBasic() && SessionStorage.get(document.documentid, "step") == "3",
+                    active :  !document.isBasic() && SessionStorage.get(document.documentid(), "step") == "3",
                     onActivate : function() {
-                         SessionStorage.set(document.documentid, "step", "3");
+                         SessionStorage.set(document.documentid(), "step", "3");
                     },    
                     elems : [
                             designbody2,

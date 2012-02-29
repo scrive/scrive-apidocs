@@ -1,7 +1,10 @@
 #####
 htmlevidencelog=
 <html>
-  <head><title>$documenttitle$ Evidence Log</title></head>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>$documenttitle$ Evidence Log</title>
+  </head>
   <body>
     <h1></h1>
 
@@ -51,13 +54,13 @@ htmlevidencelog=
                     <tr style="font-weight:800;font-family:'Lucida Grande',sans-serif;font-size:14px;margin:0px;">
                       <td style="border-bottom: solid 1px black;margin-bottom:60px;width:140px;">Time</td>
                       <td style="border-bottom: solid 1px black;margin-bottom:60px;width:80px;">IP</td>
-                      <td style="border-bottom: solid 1px black;margin-bottom:60px;">Event</td>
+                      <td style="border-bottom: solid 1px black;margin-bottom:60px;width:574px">Event</td>
                     </tr> 
                     $entries:{entry|
                     <tr>
                       <td style="font-size:10px;padding-top:18px;">$entry.time$</td>
                       <td style="font-size:10px;padding-top:18px">$entry.ip$</td>
-                      <td style="padding-top:18px">$entry.text$</td>
+                      <td style="padding-top:18px;width:574px;"><div style="max-height:60px;overflow-y:auto">$entry.text:noescape()$</div></td>
                     </tr>
                     }$
                   </table>

@@ -77,7 +77,7 @@ sendDocumentMails env mailTo author mcompany = do
         ctx <- mailingContext l env
         _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { locale = l }
         let aa = AuthorActor (ctxtime ctx) (IPAddress 0) (userid author) (BS.toString $ getEmail author)
-        d' <- gRight $ randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype) aa
+        d' <- gRight $ randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype) 0 aa
         d <- gRight . dbUpdate $ SetDocumentLocale (documentid d') l (SystemActor $ ctxtime ctx)
 
         let docid = documentid d

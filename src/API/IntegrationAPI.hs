@@ -237,7 +237,7 @@ createDocFromFiles title doctype files user mcompany time = do
   sid <- serviceid <$> service <$> ask
   let mecid = maybe Nothing companyexternalid mcompany
   let ia = IntegrationAPIActor time (ctxipnumber ctx) sid (BS.toString . unExternalCompanyID <$> mecid)
-  edoc <- runDBUpdate $ NewDocument user mcompany title doctype ia
+  edoc <- runDBUpdate $ NewDocument user mcompany title doctype 0 ia
   case edoc of
     Left _ -> throwApiError API_ERROR_OTHER $ "Cannot create document"
     Right doc -> do

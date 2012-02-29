@@ -81,8 +81,9 @@ javascriptLocalisation =
              , searchBoxButtonText : "$_searchBoxButtonText()$"
              , downloadPDF : "$_DownloadPDF()$"
              , document : "$_Document()$"
+             , onlyPDFAllowed : "$_updateAttachmentsDialogUpLoadOnlyPDF()$"
              , attachment : "$_Attachment()$"
-             , attachments : "$_Attachments()$"
+             , attachmentsWord : "$_Attachments()$"
              , requestedAttachments : "$_RequestedAttachments()$"
              , send : "$_send()$"
 			 , reminder : {
@@ -260,6 +261,7 @@ javascriptLocalisation =
               , passwordNeedsLetterAndDigit: "$_PasswordValidationMessageNeedsLetterAndDigit()$"
               , passwordsDontMatch: "$_PasswordValidationMessagePasswordsDontMatch()$"
               , mustAcceptTOS: "$_flashMessageMustAcceptTOS()$"
+              , phoneRequired: "$_flashMessagePhoneIsRequired()$"
          }
          , emailBranding: "$_EmailBranding()$"
          , customiseBackgroundColour: "$_CustomiseBackgroundColour()$"
@@ -271,5 +273,7 @@ javascriptLocalisation =
          , sampleEmailSubheader: "$_mailsubheader()$"
          , sampleEmailContent: "$_SampleEmailContent()$"
          , recommendedLogoSize: "$_RecommendedLogoSize()$"
+         , changeEmail : "$_changeEmail()$"
+         , onlyPDF : "$_onlyPDF()$"
     }
 ####

@@ -113,6 +113,7 @@
     margin:2px;
     float:left;
     background-image: url("images/iconHand.png");
+    cursor: pointer;
 }
 .field .prepIcon{
     height:15px;
