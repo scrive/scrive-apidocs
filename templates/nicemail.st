@@ -17,7 +17,7 @@ nicemail=
         <tr>
             <td style="padding:10px; margin: auto;">
                 <table id="header" width="580" cellpadding="9" bgcolor="$nicemailbgcolour()$"
-                    cellspacing="0" align="center" style="color:#ffffff;text-align:center;margin:auto">
+                    cellspacing="0" align="center" style="color:$nicemailfgcolour()$;text-align:center;margin:auto">
                     <tr>
                         <td style="text-align:left; margin: auto;padding:10px;">
                           <div style="background-repeat:no-repeat;background-image:url('$nicemaillogo()$');height:33px;width:100%;"/>
@@ -27,17 +27,17 @@ nicemail=
                     <td>
                         <table id="banner" width="590" cellpadding="0" bgcolor="$nicemailbgcolour()$">
                             <tr>
-                                <td width="580" align="center" cellpadding="0" style="text-align:center;"><span style="font-weight:100;font-size:32px;margin:0px;letter-spacing:0.04em;color:#fff;font-family:'Copse', serif;padding:10px">
+                                <td width="580" align="center" cellpadding="0" style="text-align:center;"><span style="font-weight:100;font-size:32px;margin:0px;letter-spacing:0.04em;color:$nicemailfgcolour()$;font-family:'Copse', serif;padding:10px">
                                     $if(mailheader)$ $mailheader$ $endif$
                                     </span>
                                 </td>
                             </tr>
                             <tr>
-                                <td width="580" height="10"><hr style="height:1px;border:none;background:#fff;width:330px;" /></td>
+                                <td width="580" height="10"><hr style="height:1px;border:none;background:$nicemailfgcolour()$;width:330px;" /></td>
                             </tr>
                             <tr>
 
-                                <td width="580" align="center" style="text-align:center;"><span style="display:block;font-weight:100;font-family:'Lucida Grande',sans-serif;font-size:11px;margin:0px;margin-bottom:20px;color:#fff;">
+                                <td width="580" align="center" style="text-align:center;"><span style="display:block;font-weight:100;font-family:'Lucida Grande',sans-serif;font-size:11px;margin:0px;margin-bottom:20px;color:$nicemailfgcolour()$;">
                                        $if(!service)$ $_mailsubheader()$ $endif$
                                     </span>
                                 </td>
@@ -72,6 +72,8 @@ nicemail=
 </div>
 #####
 nicemailbgcolour=$if(!service.barsbackground)$$if(!companybrand.barsbackground)$212121$else$$companybrand.barsbackground$$endif$$else$$service.barsbackground$$endif$
+#####
+nicemailfgcolour=$if(!companybrand.barstextcolour)$#ffffff$else$$companybrand.barstextcolour$$endif$
 #####
 nicemaillogo=$if(!service.logo)$$if(!companybrand.logo)$$ctxhostpart$/img/email-logo.png$else$$ctxhostpart$$companybrand.logoLink$$endif$$else$$ctxhostpart$$service.logoLink$$endif$
 #####

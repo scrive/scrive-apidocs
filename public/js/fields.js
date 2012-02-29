@@ -156,17 +156,17 @@ window.Field = Backbone.Model.extend({
         var field = this;
         var name  = this.name()
         
-        if (!this.signatory().author() && (name == "fstname" ||name == "sndname")) {
+        if (!this.signatory().author() && (name == "fstname" ||name == "sndname") && !this.signatory().isCsv()) {
             var msg = localization.designview.validation.missingOrWrongNames;
             return new NameValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
         
-        if (!this.signatory().author() && name == "email"){
+        if (!this.signatory().author() && name == "email" && !this.signatory().isCsv() ){
             var msg = localization.designview.validation.missingOrWrongEmail;
             return new EmailValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
         
-        if (this.signatory().document().elegAuthorization() && name == "sigpersnr" ) {
+        if (this.signatory().document().elegAuthorization() && name == "sigpersnr" && !this.signatory().isCsv() ) {
             var msg = localization.designview.validation.missingOrWrongPersonalNumber
             return new NotEmptyValidation({message: msg});
         }

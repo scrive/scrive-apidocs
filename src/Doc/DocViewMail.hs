@@ -402,5 +402,6 @@ documentMail haslocale ctx doc mailname otherfields = do
 companyBrandFields :: MonadIO m => Company -> Fields m
 companyBrandFields company = do
     field "barsbackground"  $ companybarsbackground $ companyui company
+    field "barstextcolour" $ companybarstextcolour $ companyui company
     field "logo" $ isJust $ companylogo $ companyui company
     field "logoLink"  $ show $ LinkCompanyLogo $ companyid company
