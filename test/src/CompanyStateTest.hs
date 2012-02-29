@@ -65,6 +65,7 @@ test_updateCompanyUI = do
   Company{companyid = cid, companyui} <- addTestCompany ""
   let cui = companyui {
     companybarsbackground = Just $ BS.fromString "blue"
+  , companybarstextcolour = Just $ BS.fromString "green"
   , companylogo = Nothing
   }
   res <- dbUpdate $ UpdateCompanyUI cid cui

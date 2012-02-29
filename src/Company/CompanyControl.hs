@@ -72,13 +72,15 @@ setCompanyLogoFromRequest cui = do
 companyUiFromJSON :: JSValue -> Either String CompanyUI
 companyUiFromJSON jsv = do
   jsonbb <- jsget "barsbackground" jsv
+  jsonbtc <- jsget "barstextcolour" jsv
   return CompanyUI {
-    companybarsbackground =
-      case jsonbb of
-        JSString (JSONString bb) | not (null bb) -> Just (BS.fromString bb)
-        _ -> Nothing
+    companybarsbackground = maybeBS jsonbb
+  , companybarstextcolour = maybeBS jsonbtc
   , companylogo = Nothing
   }
+  where
+    maybeBS (JSString (JSONString val)) | not (null val) = Just (BS.fromString val)
+    maybeBS _ = Nothing
 
 handleCompanyLogo :: Kontrakcja m => CompanyID -> m Response
 handleCompanyLogo cid = do
@@ -103,6 +105,7 @@ companyJSON company editable =
                    , ("city", JSString $ toJSString $ BS.toString $  companycity $ companyinfo $ company)
                    , ("country", JSString $ toJSString $ BS.toString $  companycountry $ companyinfo $ company)
                    , ("barsbackground", JSString $ toJSString $ maybe "" BS.toString $ companybarsbackground $ companyui $ company)
+                   , ("barstextcolour", JSString $ toJSString $ maybe "" BS.toString $ companybarstextcolour $ companyui $ company)
                    , ("logo", JSString $ toJSString $ maybe "" (const $ show $ LinkCompanyLogo $ companyid company) $ companylogo $ companyui $ company)
                    , ("editable", JSBool $ editable)
                  ])

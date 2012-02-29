@@ -159,6 +159,7 @@ selectUsersAndStatsSQL (q1, q2) = SQL ("SELECT "
   ++ ", c.city"
   ++ ", c.country"
   ++ ", c.bars_background"
+  ++ ", c.bars_textcolour"
   ++ ", encode(c.logo, 'base64')"
   -- Events:
   ++ ", e.time"
@@ -181,7 +182,7 @@ fetchUsersAndStats = reverse `fmap` foldDB decoder []
      has_accepted_terms_of_service signup_method service_id company_id
      first_name last_name personal_number company_position phone mobile
      email preferred_design_mode lang region customfooter cid eid sid
-     name number address zip' city country bars_background logo time quantity amount = (
+     name number address zip' city country bars_background bars_textcolour logo time quantity amount = (
        User {
            userid = uid
          , userpassword = maybePassword (password, salt)
@@ -221,6 +222,7 @@ fetchUsersAndStats = reverse `fmap` foldDB decoder []
                 }
               , companyui = CompanyUI {
                   companybarsbackground = bars_background
+                , companybarstextcolour = bars_textcolour
                 , companylogo = logo
                 }
               }

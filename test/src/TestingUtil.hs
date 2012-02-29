@@ -87,6 +87,7 @@ instance Arbitrary Company where
     where
       emptyCompanyUI = CompanyUI {
         companybarsbackground = Nothing
+      , companybarstextcolour = Nothing
       , companylogo = Nothing
       }
 
