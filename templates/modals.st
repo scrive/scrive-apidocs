@@ -750,7 +750,7 @@ jQuery('#accountFromSignForm').submit(function(){
         ];
 
     if (callme.attr('checked'))
-        phone.validate(new NotEmptyValidation({callback: callback, message: localization.validation.phoneRequired}));
+        vresult.push(phone.validate(new NotEmptyValidation({callback: callback, message: localization.validation.phoneRequired})));
 
     if (vresult.every(function(a) {return a;})) 
         return true;
