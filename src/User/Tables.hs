@@ -35,7 +35,7 @@ tableUserFriends = Table {
 tableUsers :: Table
 tableUsers = Table {
     tblName = "users"
-  , tblVersion = 4
+  , tblVersion = 5
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("password", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
@@ -97,6 +97,10 @@ tableUsers = Table {
       ++ " ADD CONSTRAINT fk_users_companies FOREIGN KEY(company_id)"
       ++ " REFERENCES companies(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
+    kRunRaw $ "CREATE SEQUENCE users_id_seq"
+    kRunRaw $ "SELECT setval('users_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM users))"
+    kRunRaw $ "ALTER TABLE users ALTER id SET DEFAULT nextval('users_id_seq')"
+    return ()
   }
 
 tableUserMailAPIs :: Table
