@@ -39,6 +39,8 @@ kontraMigrations = [
   , removeOldSignatoryLinkIDFromCancelationReason
   , addDocumentIdIndexOnSignatoryLinks
   , addFileIdSequence
+  , addIdSerialOnSignatoryLinks
+  , addIdSerialOnDocuments
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

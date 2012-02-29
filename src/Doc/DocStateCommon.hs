@@ -30,11 +30,10 @@ trueOrMessage True  _ = Nothing
 
 signLinkFromDetails' :: SignatoryDetails
                      -> [SignatoryRole]
-                     -> SignatoryLinkID
                      -> MagicHash
                      -> SignatoryLink
-signLinkFromDetails' details roles linkid magichash = 
-  SignatoryLink { signatorylinkid = linkid
+signLinkFromDetails' details roles magichash = 
+  SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 0
                 , signatorydetails = details
                 , signatorymagichash = magichash
                 , maybesignatory = Nothing
