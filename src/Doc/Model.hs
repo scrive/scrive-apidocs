@@ -1870,7 +1870,7 @@ instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document)
                      when (not (isJust r1)) $
                           error "ResetSignatoryDetails signatory_links did not manage to insert a row"
 
-            let (old, _, new) = splitContains (map signatorydetails $ documentsignatorylinks document) (map (\(sd, _, _)-> sd) signatories)
+            let (old, _, new) = listDiff (map signatorydetails $ documentsignatorylinks document) (map (\(sd, _, _)-> sd) signatories)
 
             forM_ (emailsOfRemoved old new) $ \eml ->
               dbUpdate $ InsertEvidenceEvent
@@ -1922,8 +1922,8 @@ instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document)
                 removedSigs     old new = [x      | x <- old, getEmail x `notElem` map getEmail new, not $ BS.null $ getEmail x]
                 changedSigs     old new = [(x, y) | x <- new, y <- old, getEmail x == getEmail y,    not $ BS.null $ getEmail x]
                 newSigs         old new = [x      | x <- new, getEmail x `notElem` map getEmail old, not $ BS.null $ getEmail x]
-                removedFields x y = let (r, _, _) = splitContains (signatoryfields x) (signatoryfields y) in filter (not . BS.null . sfValue) r
-                changedFields x y = let (_, _, c) = splitContains (signatoryfields x) (signatoryfields y) in filter (not . BS.null . sfValue) c
+                removedFields x y = let (r, _, _) = listDiff (signatoryfields x) (signatoryfields y) in filter (not . BS.null . sfValue) r
+                changedFields x y = let (_, _, c) = listDiff (signatoryfields x) (signatoryfields y) in filter (not . BS.null . sfValue) c
 
 data SignLinkFromDetailsForTest = SignLinkFromDetailsForTest SignatoryDetails [SignatoryRole]
 instance DBUpdate SignLinkFromDetailsForTest SignatoryLink where
@@ -2163,7 +2163,7 @@ instance Actor a => DBUpdate (UpdateSigAttachments a) (Either String Document) w
     ed <- dbQuery $ GetDocumentByDocumentID did
     let (remove, _, new) = case ed of
           Nothing -> ([],[],[])
-          Just d -> splitContains (documentsignatoryattachments d) sigatts
+          Just d -> listDiff (documentsignatoryattachments d) sigatts
     _ <- kRun $ SQL "DELETE FROM signatory_attachments WHERE document_id = ?" [toSql did]
     forM_ remove $ \SignatoryAttachment {signatoryattachmentname, signatoryattachmentemail} ->
       dbUpdate $ InsertEvidenceEvent
