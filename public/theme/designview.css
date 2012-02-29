@@ -378,6 +378,11 @@
     margin: auto;
 }
 
+.designCSVSignatoryPopupContent {
+    width: 840px;
+    overflow-x: auto;
+}
+
 .selectAuthorAttachmentPopupContent .header,
 .designCSVSignatoryPopupContent .header{
     color: black;
