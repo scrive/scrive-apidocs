@@ -177,7 +177,7 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   sl  <- apiGuard $ getSigLinkFor doc sid
   let email = getEmail sl
   
-  sigattach <- apiGuard' Forbidden $ getSignatoryAttachment slid doc
+  sigattach <- apiGuard' Forbidden $ getSignatoryAttachment doc slid $ BS.fromString aname
   
   -- attachment must have no file
   apiGuard' ActionNotAvailable (isNothing $ signatoryattachmentfile sigattach)
@@ -200,12 +200,12 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   d <- apiGuardL $ runDBUpdate $ SaveSigAttachment (documentid doc) sid (BS.fromString aname) (fileid file) actor
   
   -- let's dig the attachment out again
-  sigattach' <- apiGuard $ getSignatoryAttachment sid d
+  sigattach' <- apiGuard $ getSignatoryAttachment d sid (BS.fromString aname)
   
   return $ Created $ jsonSigAttachmentWithFile sigattach' (Just file)
 
 documentDeleteSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryResource -> SignatoryLinkID -> AttachmentResource -> String -> FileResource -> m Response
-documentDeleteSignatoryAttachment did _ sid _ _ _ = api $ do
+documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
   Context{ctxtime, ctxipnumber} <- getContext
   (slid, magichash) <- getSigLinkID
   doc <- apiGuardL $ getDocByDocIDSigLinkIDAndMagicHash did slid magichash
@@ -216,7 +216,7 @@ documentDeleteSignatoryAttachment did _ sid _ _ _ = api $ do
   
   
   -- sigattachexists
-  sigattach <- apiGuard $ getSignatoryAttachment slid doc
+  sigattach <- apiGuard $ getSignatoryAttachment doc slid (BS.fromString aname)
 
   -- attachment must have a file
   fileid <- apiGuard' ActionNotAvailable $ signatoryattachmentfile sigattach
@@ -225,7 +225,7 @@ documentDeleteSignatoryAttachment did _ sid _ _ _ = api $ do
        (SignatoryActor ctxtime ctxipnumber muid (BS.toString email) sid)
   
   -- let's dig the attachment out again
-  sigattach' <- apiGuard $ getSignatoryAttachment sid d
+  sigattach' <- apiGuard $ getSignatoryAttachment d sid (BS.fromString aname)
   
   return $ jsonSigAttachmentWithFile sigattach' Nothing
 

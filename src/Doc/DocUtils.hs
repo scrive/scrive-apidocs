@@ -401,8 +401,10 @@ addTag _ (n,v) = [DocumentTag n v]
 samenameanddescription :: BS.ByteString -> BS.ByteString -> (BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)]) -> Bool
 samenameanddescription n d (nn, dd, _) = n == nn && d == dd
 
-getSignatoryAttachment :: SignatoryLinkID -> Document -> Maybe SignatoryAttachment
-getSignatoryAttachment slid doc = join $ listToMaybe <$> signatoryattachments <$> (find (\sl -> slid == signatorylinkid sl) $ documentsignatorylinks doc)
+getSignatoryAttachment :: Document -> SignatoryLinkID -> BS.ByteString -> Maybe SignatoryAttachment
+getSignatoryAttachment doc slid name = join $ find (\a -> name == signatoryattachmentname a) 
+                                       <$> signatoryattachments 
+                                       <$> (find (\sl -> slid == signatorylinkid sl) $ documentsignatorylinks doc)
 
 {-
 buildattach :: String -> Document -> [SignatoryAttachment]
