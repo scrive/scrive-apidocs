@@ -364,8 +364,8 @@ fetchSignatoryLinks = foldDB decoder M.empty
              CSVUpload <$> csv_title <*> csv_contents <*> csv_signatory_index
          }] acc
 
-insertSignatoryLinkAsIs :: Bool -> DocumentID -> SignatoryLink -> DB (Maybe SignatoryLink)
-insertSignatoryLinkAsIs generateNewID documentid link = do
+insertSignatoryLinkAsIs :: DocumentID -> SignatoryLink -> DB (Maybe SignatoryLink)
+insertSignatoryLinkAsIs documentid link = do
   ruserid <- case maybesignatory link of
     Nothing -> return Nothing
     Just userid1 -> do
@@ -379,9 +379,8 @@ insertSignatoryLinkAsIs generateNewID documentid link = do
             return Nothing
         Just _ -> return (Just userid1)
 
-  _ <- kRun $ mkSQL INSERT tableSignatoryLinks 
-    ((if generateNewID then [] else [sql "id" $ signatorylinkid link]) ++
-    [ sql "document_id" documentid
+  _ <- kRun $ mkSQL INSERT tableSignatoryLinks [
+      sql "document_id" documentid
     , sql "user_id" $ ruserid
     , sql "roles" $ signatoryroles link
     , sql "company_id" $ maybecompany link
@@ -406,7 +405,7 @@ insertSignatoryLinkAsIs generateNewID documentid link = do
     , sql "csv_signatory_index" $ csvsignatoryindex `fmap` signatorylinkcsvupload link
     , sql "deleted" $ signatorylinkdeleted link
     , sql "really_deleted" $ signatorylinkreallydeleted link
-    ]) <++> SQL ("RETURNING " ++ signatoryLinksSelectors) []
+    ] <++> SQL ("RETURNING " ++ signatoryLinksSelectors) []
 
   fetchSignatoryLinks
     >>= oneObjectReturnedGuard . concatMap snd . M.toList
@@ -477,8 +476,8 @@ insertSignatoryAttachmentAsIs documentid attach = do
   fetchSignatoryAttachments
     >>= oneObjectReturnedGuard . concatMap snd . M.toList
 
-insertDocumentAsIs :: Bool -> Document -> DB (Maybe Document)
-insertDocumentAsIs generateNewID document = do
+insertDocumentAsIs :: Document -> DB (Maybe Document)
+insertDocumentAsIs document = do
     let Document { documenttitle
                  , documentsignatorylinks
                  , documentfiles
@@ -507,9 +506,8 @@ insertDocumentAsIs generateNewID document = do
                  } = document
         process = toDocumentProcess documenttype
 
-    _ <- kRun $ mkSQL INSERT tableDocuments
-      ((if generateNewID then [] else [sql "id" (documentid document)]) ++
-      [ sql "title" documenttitle
+    _ <- kRun $ mkSQL INSERT tableDocuments [
+        sql "title" documenttitle
       , sql "tags" documenttags
       , sql "file_id" $ listToMaybe documentfiles
       , sql "sealed_file_id" $ listToMaybe documentsealedfiles
@@ -538,13 +536,13 @@ insertDocumentAsIs generateNewID document = do
       , sql "mail_footer" $ documentmailfooter $ documentui -- should go into separate table?
       , sql "region" documentregion
       , sql "sharing" documentsharing
-      ]) <++> SQL ("RETURNING " ++ documentsSelectors) []
+      ] <++> SQL ("RETURNING " ++ documentsSelectors) []
 
     mdoc <- fetchDocuments >>= oneObjectReturnedGuard
     case mdoc of
       Nothing -> return Nothing
       Just doc -> do
-        mlinks <- mapM (insertSignatoryLinkAsIs generateNewID (documentid doc)) documentsignatorylinks
+        mlinks <- mapM (insertSignatoryLinkAsIs (documentid doc)) documentsignatorylinks
         mauthorattachments <- mapM (insertAuthorAttachmentAsIs (documentid doc)) documentauthorattachments
         msignatoryattachments <- mapM (insertSignatoryAttachmentAsIs (documentid doc)) documentsignatoryattachments
         if any isNothing mlinks || any isNothing mauthorattachments || any isNothing msignatoryattachments
@@ -561,7 +559,7 @@ insertNewDocument :: Document -> DB Document
 insertNewDocument doc = do
   now <- getMinutesTime
   let docWithTime = doc {documentmtime  = now, documentctime = now}
-  newdoc <- insertDocumentAsIs True docWithTime
+  newdoc <- insertDocumentAsIs docWithTime
   case newdoc of
     Just d -> return d
     Nothing -> error "insertNewDocument failed for some reason"
@@ -1291,7 +1289,7 @@ instance Actor a => DBUpdate (NewDocument a) (Either String Document) where
       case invariantProblems ctime doc of
         Nothing -> do
 
-           midoc <- insertDocumentAsIs True doc
+           midoc <- insertDocumentAsIs doc
            case midoc of
              Just doc' -> do
                _<- dbUpdate $ InsertEvidenceEvent
@@ -1810,7 +1808,7 @@ instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document)
                                            , maybecompany   = maybe Nothing maybecompany   mauthorsiglink
                                            }
                                 else link'
-                     r1 <- insertSignatoryLinkAsIs True documentid link
+                     r1 <- insertSignatoryLinkAsIs documentid link
                      when_ (isJust r1) $
                        dbUpdate $ InsertEvidenceEvent
                        ResetSignatoryDetailsEvidence
@@ -1888,7 +1886,7 @@ instance Actor a => DBUpdate (SignableFromDocumentIDWithUpdatedAuthor a) (Either
 data StoreDocumentForTesting = StoreDocumentForTesting Document
 instance DBUpdate StoreDocumentForTesting DocumentID where
   dbUpdate (StoreDocumentForTesting document) = do
-    Just doc <- insertDocumentAsIs True document
+    Just doc <- insertDocumentAsIs document
     return (documentid doc)
 
 {-
