@@ -391,15 +391,25 @@ window.DocumentDataFiller = {
         $(".documenttitle", object).text(title);
 
         // Filling unsigned signatories
-        var unsignedpartynotcurrent = [localization.you];
+        var unsignedpartynotcurrent = [];
+        var unsignedparty= [];
+
         var signatories = _.select(document.signatories(), function(signatory){
-            return signatory.signs() && !signatory.hasSigned() && !signatory.current();
+            return signatory.signs() && !signatory.hasSigned();
         });
 
         for(var i=0;i<signatories.length;i++)
-            unsignedpartynotcurrent.push(signatories[i].smartname());
-        var ls = listString(unsignedpartynotcurrent);
-        $(".unsignedpartynotcurrent", object).html(ls);
+            if (signatories[i].current())
+            {
+                unsignedparty.push(localization.you);
+            }
+            else
+            {
+                unsignedparty.push(signatories[i].smartname());
+                unsignedpartynotcurrent.push(signatories[i].smartname());
+            }
+        $(".unsignedpart", object).html(listString(unsignedparty));
+        $(".unsignedpartynotcurrent", object).html(listString(unsignedpartynotcurrent));
         return object;
         // Something more can come up
     }

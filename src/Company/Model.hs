@@ -51,6 +51,7 @@ data CompanyInfo = CompanyInfo {
 
 data CompanyUI = CompanyUI {
     companybarsbackground    :: Maybe BS.ByteString
+  , companybarstextcolour    :: Maybe BS.ByteString
   , companylogo              :: Maybe Binary -- File with the logo
 } deriving (Eq, Ord, Show)
 
@@ -107,10 +108,12 @@ instance DBUpdate UpdateCompanyUI Bool where
   dbUpdate (UpdateCompanyUI cid cui) = do
     kPrepare $ "UPDATE companies SET"
       ++ "  bars_background = ?"
+      ++ ", bars_textcolour = ?"
       ++ ", logo = decode(?, 'base64')"
       ++ "  WHERE id = ?"
     kExecute01 [
         toSql $ companybarsbackground cui
+      , toSql $ companybarstextcolour cui
       , toSql $ companylogo cui
       , toSql cid
       ]
@@ -137,6 +140,7 @@ selectCompaniesSQL = SQL ("SELECT"
   ++ ", c.city"
   ++ ", c.country"
   ++ ", c.bars_background"
+  ++ ", c.bars_textcolour"
   ++ ", encode(c.logo, 'base64')"
   ++ "  FROM companies c"
   ++ " ") []
@@ -145,7 +149,7 @@ fetchCompanies :: DB [Company]
 fetchCompanies = foldDB decoder []
   where
     decoder acc cid eid sid name number address zip' city country
-      bars_background logo = Company {
+      bars_background bars_textcolour logo = Company {
         companyid = cid
       , companyexternalid = eid
       , companyservice = sid
@@ -159,6 +163,7 @@ fetchCompanies = foldDB decoder []
         }
       , companyui = CompanyUI {
           companybarsbackground = bars_background
+        , companybarstextcolour = bars_textcolour
         , companylogo = logo
         }
       } : acc

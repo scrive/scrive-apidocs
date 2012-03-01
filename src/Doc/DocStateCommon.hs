@@ -51,6 +51,18 @@ signLinkFromDetails' details roles linkid magichash =
                 , signatorylinkcsvupload = Nothing
                 }
 
+
+emptySignatoryFields :: [SignatoryField]
+emptySignatoryFields = [
+          sf FirstNameFT 
+        , sf LastNameFT 
+        , sf CompanyFT
+        , sf PersonalNumberFT
+        , sf CompanyNumberFT
+        , sf EmailFT
+        , sf SignatureFT
+        ]
+    where sf t = SignatoryField t BS.empty []                         
 {- |
     A blank document containing default values that need to be set before
     saving.

@@ -154,8 +154,8 @@ window.Signatory = Backbone.Model.extend({
         fields : [{name : "fstname"},
                   {name : "sndname"},
                   {name : "email"},
-                  {name : "sigpersnr"},
                   {name : "sigco"},
+                  {name : "sigpersnr"},
                   {name : "sigcompnr"},
                   {name : "signature"}                
         ],
@@ -465,7 +465,7 @@ window.SignatoryStandarView = Backbone.View.extend({
         var fstbutton = Button.init({
                             size: "tiny",
                             color: "blue",
-                            text : localization.send,
+                            text : localization.changeEmail,
                             onClick : function() {
                                 container.empty();
                                 var inputwrapper = $("<div class='field float-left' style='width:150px'/>")

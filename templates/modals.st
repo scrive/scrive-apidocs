@@ -722,9 +722,11 @@ jQuery('#accountFromSignForm').submit(function(){
             .appendTo(e.parent());
     };
 
-    var password = jQuery('.account-from-sign-container').find('input[name="password"]');
+    var password  = jQuery('.account-from-sign-container').find('input[name="password"]');
     var password2 = jQuery('.account-from-sign-container').find('input[name="password2"]');
-    var tos = jQuery('#tosCBox');
+    var phone     = jQuery('.account-from-sign-container').find('input[name="phone"]');
+    var callme    = jQuery('.account-from-sign-container').find('input[name="callme"]');
+    var tos       = jQuery('#tosCBox');
 
     password.css("background", "white");
     password2.css("background", "white");
@@ -746,6 +748,9 @@ jQuery('#accountFromSignForm').submit(function(){
             })),
         tos.validate(new CheckboxReqValidation({callback: callback, message: localization.validation.mustAcceptTOS}))
         ];
+
+    if (callme.attr('checked'))
+        vresult.push(phone.validate(new NotEmptyValidation({callback: callback, message: localization.validation.phoneRequired})));
 
     if (vresult.every(function(a) {return a;})) 
         return true;

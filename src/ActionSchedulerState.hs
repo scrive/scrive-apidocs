@@ -27,9 +27,10 @@ module ActionSchedulerState (
     ) where
 
 import Control.Applicative
+import Control.Arrow (first)
 import Control.Monad.State
 import Control.Monad.Reader
-import Crypto.RNG(CryptoRNG, random)
+import Crypto.RNG (CryptoRNG, random)
 import qualified Data.ByteString as BS
 import Data.Typeable
 import Happstack.Data.IxSet
@@ -38,6 +39,8 @@ import qualified Happstack.Data.IxSet as IxSet
 import Happstack.Server.SimpleHTTP
 import Happstack.Util.Common
 
+import System.Random (randomR, StdGen)
+import System.Random.CryptoRNG ()
 import Doc.DocStateData
 import MagicHash (MagicHash)
 import Misc
@@ -187,12 +190,12 @@ getViralInvitationByEmail email =
     return . getOne . (@= email) . (@= ViralInvitationSentID) =<< ask
 
 -- | Insert new action
-newAction :: ActionType -> MinutesTime -> Update Actions Action
-newAction atype time = do
+newAction :: StdGen -> ActionType -> MinutesTime -> Update Actions Action
+newAction rng atype time = do
     actions <- ask
-    aid <- ActionID <$> getRandomR (0, 1000000000)
+    let (aid,rng') = first ActionID $ randomR (0, 1000000000) rng
     case getOne $ actions @= aid of
-         Just _  -> newAction atype time
+         Just _  -> newAction rng' atype time
          Nothing -> do
              let action = Action aid atype time
              modify $ IxSet.updateIx aid action
@@ -261,18 +264,20 @@ checkValidity now maction = maction >>= \action ->
 newPasswordReminder :: (MonadIO m, CryptoRNG m) => User -> m Action
 newPasswordReminder user = do
     hash <- random
+    rng <- random
     now <- getMinutesTime
     let action = PasswordReminder {
           prUserID         = userid user
         , prRemainedEmails = 9
         , prToken          = hash
     }
-    update $ NewAction action $ (12*60) `minutesAfter` now
+    update $ NewAction rng action $ (12*60) `minutesAfter` now
 
 -- | Create new 'invitation sent' action
 newViralInvitationSent :: (MonadIO m, CryptoRNG m) => Email -> UserID -> m Action
 newViralInvitationSent email inviterid = do
     hash <- random
+    rng <- random
     now <- getMinutesTime
     let action = ViralInvitationSent {
           visEmail          = email
@@ -281,29 +286,31 @@ newViralInvitationSent email inviterid = do
         , visRemainedEmails = 9
         , visToken          = hash
     }
-    update $ NewAction action $ (7*24*60) `minutesAfter` now
+    update $ NewAction rng action $ (7*24*60) `minutesAfter` now
 
 -- | Create new 'account created' action
 newAccountCreated :: (MonadIO m, CryptoRNG m) => User -> m Action
 newAccountCreated user = do
     hash <- random
+    rng <- random
     now <- getMinutesTime
     let action = AccountCreated {
           acUserID = userid user
         , acToken  = hash
     }
-    update $ NewAction action $ (24*60) `minutesAfter` now
+    update $ NewAction rng action $ (24*60) `minutesAfter` now
 
 newRequestEmailChange :: (MonadIO m, CryptoRNG m) => User -> Email -> m Action
 newRequestEmailChange user newemail = do
   hash <- random
+  rng <- random
   now <- getMinutesTime
   let action = RequestEmailChange {
     recUser = userid user
   , recNewEmail = newemail
   , recToken = hash
   }
-  update $ NewAction action $ (24 * 60) `minutesAfter` now
+  update $ NewAction rng action $ (24 * 60) `minutesAfter` now
 
 -- Migrations and old stuff --
 

@@ -1,7 +1,7 @@
 DBNAME=kontratest
 DBUSER=kontra
 DBPASSWORD=kontra
-TESTS=all
+TESTS=all --plain
 
 
 .PHONY : all

@@ -78,7 +78,8 @@ documentNew = api $ do
   let now = ctxtime ctx
   
   let aa = AuthorActor now (ctxipnumber ctx) (userid user) (BS.toString $ getEmail user)
-  d1 <- apiGuardL $ runDBUpdate $ NewDocument user mcompany filename doctype aa
+  d1 <- apiGuardL $ runDBUpdate $ NewDocument user mcompany filename doctype 1 aa 
+  
   content <- apiGuardL' BadInput $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
   file <- lift $ runDB $ dbUpdate $ NewFile filename content
 

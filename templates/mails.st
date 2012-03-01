@@ -380,7 +380,7 @@ mailNewCompanyUserInviteMainP=
 
     <p>$_mailNewCompanyUserInviteContentBodyFirst()$</p>
 
-    <p>$_mailNewCompanyUserInviteContentBodyUserName()$ $inviteremail$</p>
+    <p>$_mailNewCompanyUserInviteContentBodyUserName()$ $invitedemail$</p>
 
     <p>$_mailNewCompanyUserInviteContentClickLink()$ <a href="$ctxhostpart$$link$">$ctxhostpart$$link$</a></p>
 

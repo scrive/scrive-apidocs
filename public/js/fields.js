@@ -156,17 +156,17 @@ window.Field = Backbone.Model.extend({
         var field = this;
         var name  = this.name()
         
-        if (!this.signatory().author() && (name == "fstname" ||name == "sndname")) {
+        if (!this.signatory().author() && (name == "fstname" ||name == "sndname") && !this.signatory().isCsv()) {
             var msg = localization.designview.validation.missingOrWrongNames;
             return new NameValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
         
-        if (!this.signatory().author() && name == "email"){
+        if (!this.signatory().author() && name == "email" && !this.signatory().isCsv() ){
             var msg = localization.designview.validation.missingOrWrongEmail;
             return new EmailValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
         
-        if (this.signatory().document().elegAuthorization() && name == "sigpersnr" ) {
+        if (this.signatory().document().elegAuthorization() && name == "sigpersnr" && this.signatory().signs()  && !this.signatory().isCsv() ) {
             var msg = localization.designview.validation.missingOrWrongPersonalNumber
             return new NotEmptyValidation({message: msg});
         }
@@ -301,6 +301,7 @@ window.FieldBasicDesignView = Backbone.View.extend({
         _.bindAll(this, 'render', 'cleanredborder');
         this.model.view = this;
         this.model.bind('change', this.cleanredborder);
+        this.model.signatory().document().bind('change:authorization', this.cleanredborder);
         this.render();
     },
     render: function(){
@@ -338,6 +339,7 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
         _.bindAll(this, 'render', 'cleanredborder');
         this.model.bind('change', this.cleanredborder);
         this.model.bind('ready', this.render);
+        this.model.signatory().document().bind('change:authorization', this.cleanredborder);
         this.model.view = this;
         this.render();
     },
@@ -380,16 +382,26 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
     },
     setNameIcon : function() {
         var field = this.model;
+        var input = this.input;
         var icon =  $("<a class='setNameIcon' href='#'/>")
-        icon.click(function(){
-            if (!field.hasRestrictedName())
-                field.makeReady();
-            else  FlashMessages.add({
-                    color : "red",
-                    content: localization.designview.validation.restrictedName
-                    })
-            return false;
-        })
+        var fn = function(){
+          if (!field.hasRestrictedName())
+            field.makeReady();
+          else  FlashMessages.add({
+            color : "red",
+            content: localization.designview.validation.restrictedName
+          })
+          return false;
+        };  
+        icon.click(fn);
+        input.keypress(function(event) {
+          if(event.which === 13)
+            return fn();
+        });
+
+        // I'm not putting a blur handler that sets the name
+        // because it's a little odd. Neither is perfect. Eric
+
         return icon;
     },
     removeIcon: function() {

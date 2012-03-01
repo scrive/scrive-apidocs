@@ -148,30 +148,16 @@ testSigningDocumentFromDesignViewSendsInvites env = withTestEnvironment env $ do
   doc <- addRandomDocumentWithAuthorAndCondition user (\d -> documentstatus d == Preparation
                                                                && case documenttype d of
                                                                     Signable Contract -> True
-                                                                    _ -> False)
+                                                                    _ -> False
+                                                               && isSignatory (getAuthorSigLink d)
+                                                               && 2 <= length (filterSigLinksFor SignatoryPartner d))
 
   req <- mkRequest POST [ ("sign", inText "True")
-                        -- this stuff is for updateDocument function, which I believe
-                        -- is being deleted.
-                        , ("docname", inText "Test Doc")
-                        , ("allowedsignaturetypes", inText "Email")
-                        , ("docfunctionality", inText "BasicFunctionality")
-                        , ("authorrole", inText "signatory")
-                        , ("signatoryrole", inText "signatory")
-                        , ("sigid", inText "EDF92AA6-3595-451D-B5D1-04C823A616FF")
-                        , ("signatoryfstname", inText "Fred")
-                        , ("signatorysndname", inText "Frog")
-                        , ("signatorycompany", inText "")
-                        , ("signatorypersonalnumber", inText "")
-                        , ("signatorycompanynumber", inText "")
-                        , ("signatoriessignorder", inText "1")
-                        , ("signatoryemail", inText "fred@frog.com")
-                        , ("signatoryrole", inText "signatory")
                         ]
   (_link, _ctx') <- runTestKontra req ctx $ handleIssueShowPost (documentid doc)
 
   Just sentdoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
-  assertEqual "In pending state" Pending (documentstatus sentdoc)
+  assertEqual "Not in pending state" Pending (documentstatus sentdoc)
   emails <- dbQuery GetIncomingEmails
   assertBool "Emails sent" (length emails > 0)
 

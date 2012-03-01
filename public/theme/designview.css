@@ -113,6 +113,7 @@
     margin:2px;
     float:left;
     background-image: url("images/iconHand.png");
+    cursor: pointer;
 }
 .field .prepIcon{
     height:15px;
@@ -375,6 +376,11 @@
 .designCSVSignatoryPopupContent .option-box
 {
     margin: auto;
+}
+
+.designCSVSignatoryPopupContent {
+    width: 840px;
+    overflow-x: auto;
 }
 
 .selectAuthorAttachmentPopupContent .header,

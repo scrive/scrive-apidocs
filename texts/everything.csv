@@ -42,10 +42,14 @@
 "_CompanyAccounts","Användare",,"Users"
 "_CompanySettings","Branding",,"Branding"
 "_EmailBranding","Branding av e-post",,"Email branding"
-"_CustomiseColour","Välj färg",,"Customise Colour"
+"_CustomiseBackgroundColour","Välj backgrundsfärg",,"Customise Background Colour"
+"_CustomiseTextColour","Välj textfärg",,"Customise Text Colour"
 "_CustomiseLogo","Välj logo",,"Customise Logo"
 "_SelectImageLabel","Välj fil (.png)",,"Select file (.png)"
 "_SaveSettings","Spara inställningar",,"Save settings"
+"_SampleEmailHeader","Ämne...",,"The Email Subject..."
+"_SampleEmailContent","Innehåll...",,"The email content..."
+"_RecommendedLogoSize","Vi rekommenderar att du laddar upp en bild som maximalt är 200px bred och 33px hög.",,"We recommend that you upload an image with a maximum width of 200px and a maximum height of 33px."
 "_CreateAccount","Skapa konto!",,"Create account!"
 "_Document","Dokument",,"Document"
 "_DownloadPDF","Ladda ned PDF",,"Download PDF"
@@ -269,7 +273,7 @@
 "_OrderReminderBodyMulti","Är du säker att du vill skicka en påminnelse til berörda parter för",,"Are you sure you want to send reminders to the parties involved in the"
 "_OrderReminderBodySingel","Är du säker att du vill skicka en påminnelse til berörda parter i orderbekräftelse",,"Are you sure you want to send a reminder to the parties involved in the order confirmation"
 "_RepeatNewPassword","Upprepa nytt lösenord:",,"Repeat new password:"
-"_RequestedAttachments","Bägarda bilagor:",,"Requested attachments:"
+"_RequestedAttachments","Begärda bilagor:",,"Requested attachments:"
 "_SaveChanges","Spara ändringar",,"Save changes"
 "_SaveSettings","Spara inställningar",,"Save changes"
 "_SearchCompanyAccount","Sök konto",,"Search Accounts"
@@ -296,7 +300,7 @@
 "_Swedish","Svenska",,"Swedish"
 "_UserLanguage","Användarspråk:",,"User language:"
 "_Sweden","Sverige",,"Sweden"
-"_Britain","Storbritanien",,"Britain"
+"_Britain","Storbritannien",,"Britain"
 "_UserRegion","Land:",,"Country/Region:"
 "_aboutPagaMetaDescription","Signera och arkivera dina avtal elektroniskt. Scrive är skapat
  av ett ambitiöst, internationellt team med bas i Stockholm.",,"Sign and store your contracts electronically. Scrive is made
@@ -756,6 +760,7 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_flashMessageRubbishHardDeleteDone","The selected documents have been permanently deleted.",,"The selected documents have been permanently deleted."
 "_flashMessageRubbishRestoreDone","The selected documents have been restored to your archive.",,"The selected documents have been restored to your archive."
 "_flashMessageSecondNameIsRequired","Efternamn krävs.",,"Last name required."
+"_flashMessagePhoneIsRequired","Telefonnummer krävs.",,"Phone number is required if you want more information."
 "_flashMessageSingleAttachmentShareDone","$docname$ har blivit delad inom din organisation.",,"$docname$ has been shared with your organisation."
 "_flashMessageSingleTemplateShareDone","$docname$ har blivit delad inom din organisation.",,"$docname$ has been shared with your organisation."
 "_flashMessageTemplateArchiveDone","Valda mallar har blivit raderade.",,"The selected templates have been deleted."
@@ -1683,16 +1688,14 @@ profits and reduce frustration. The following mateials shall only
 "_mailNewAccountCreatedByAdminTitle","Nytt konto",,"New account"
 "_mailOfferClosedContentAttached","Bifogat med detta mail finner du en PDF med offerten och verifikatet.",,"The verified offer is attached."
 "_mailOfferClosedContentOfferAccepted","Offerten <strong>$documenttitle$</strong> har accepterats av
- $partylist:noescape()$.",,"The offer <strong>$documenttitle$</strong> was accepted by $partylist:noescape()$
- and Scrive has verified the confirmation."
+ $partylist:noescape()$.",,"The offer <strong>$documenttitle$</strong> was accepted by $partylist:noescape()$."
 "_mailOfferClosedContentOfferAcceptedWithService","Offerten <strong>$documenttitle$</strong> har accepterats av
  $partylist:noescape()$.","The offer <strong>$documenttitle$</strong> was accepted by $partylist:noescape()$.",
 "_mailOrderClosedContentAttached","Bifogat med detta mail finner du en PDF med orderbekräftelsen
  och verifikatet.",,"The verified order is attached."
 "_mailOrderClosedContentViewed","Orderbekräftelsen <strong>$documenttitle$</strong> har bekräftats
- av $partylist:noescape()$  och Scrive har utfärdat ett verifikat
- för bekräftelsen.",,"The order <strong>$documenttitle$</strong> has been
- accepted by $partylist:noescape()$  and Scrive has verified the confirmation."
+ av $partylist:noescape()$.",,"The order <strong>$documenttitle$</strong> has been
+ accepted by $partylist:noescape()$."
 "_mailOrderClosedContentViewedWithService","Orderbekräftelsen <strong>$documenttitle$</strong> har bekräftats
  av $partylist:noescape()$.","The order <strong>$documenttitle$</strong> has been
  accepted by $partylist:noescape()$.",
@@ -1745,8 +1748,8 @@ the document <strong>$documenttitle$</strong>. The agreement
 "_modalNewPasswordViewNewPassword","Nytt lösenord:",,"New password:"
 "_modalNewPasswordViewRepeatPassword","Upprepa lösenord:",,"Repeat password:"
 "_modalOfferCreatedBody","Offerten <strong>$documenttitle$</strong> har nu skickats till
- <strong>$signatory$</strong>.",,"The offer <strong>$documenttitle$</strong> Has been sent to
- <strong>$signatory$</strong>."
+ $partyListButAuthor:noescape()$.",,"The offer <strong>$documenttitle$</strong> has been sent to
+ $partyListButAuthor:noescape()$."
 "_modalOfferCreatedHeader","Offerten skickad!",,"The offer has been sent!"
 "_modalOfferSignedHasAccountBody","Offerten har sparats till ditt konto med användarnamn <span
  style=""color:#007CAC"">$signatory$</span>.",,"The offer has been saved to your account with user name <span
@@ -1759,8 +1762,8 @@ the document <strong>$documenttitle$</strong>. The agreement
  e-mail address."
 "_modalOfferSignedNoAccountHeader","Du har accepterat offerten!",,"You have accepted the offer!"
 "_modalOrderCreatedBody","Orderbekräftelsen <strong>$documenttitle$</strong> har nu skickats
- till <strong>$signatory$</strong>.",,"The order confirmation <strong>$documenttitle$</strong> has been
- sent to <strong>$signatory$</strong>."
+ till $partyListButAuthor:noescape()$.",,"The order confirmation <strong>$documenttitle$</strong> has been
+ sent to $partyListButAuthor:noescape()$."
 "_modalOrderCreatedHeader","Orderbekräftelsen skickad!",,"The order confirmation has been sent!"
 "_modalPdfTooBigBody","Du har valt att bifoga en fil som överstiger 2 MB. Var vänlig och bifoga ett mindre dokument.",,"You have tried to upload a PDF over 2 MB. Please try again with a smaller document."
 "_modalPdfTooBigTitle","För stora fil",,"Cannot store file"
@@ -2082,8 +2085,7 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_partnersPagePartner3Web","www.chalmers.se",,"www.chalmers.se"
 "_partnersPageTitle","| Partners",,"| Partners"
 "_password","Lösenord",,"Password"
-"_passwordChangeLinkMailContentBody","Du har begärt att ändra ditt lösenord på Scrive. Vänligen klicka
- på följande länk för att gå vidare. Länken är giltig i 12 timmar.<br/>",,"You've requested a password change for your Scrive account. Please click to proceed. The link is valid for 12 hours:<br/>"
+"_passwordChangeLinkMailContentBody","Någon har begärt att ändra ditt lösenord på Scrive. Om det inte var du så kan du bara strunta i detta e-mail. Om det var du, vänligen klicka på följande länk för att gå vidare. Länken är giltig i 12 timmar.<br/>",,"Someone has requested a password change for your Scrive account. If it wasn't you, you may safely ignore this e-mail. If it was you, please click to proceed. The link is valid for 12 hours:<br/>"
 "_passwordChangeLinkMailTitle","Nytt lösenord",,"New password"
 "_passwordFieldName","lösenord",,"password"
 "_personnumber","Pers. nr",,"SSN"
@@ -2456,6 +2458,7 @@ If the other party clicks on the signing link after you withdrawn the invitation
  or its services are handled with highest possible carefulness"
 "_privacyPolicyPageTitle","| Sekretesspolicy",,"| Privacy Policy"
 "_problemWithPDF","Problem med PDF",,"Problem with PDF"
+"_backToArchive","Tillbaka till Arkiv",,"Back to Archive"
 "_queryColumnBody1","Stäng affärerna snabbare. Mindre administrativt krångel. Nöjdare kunder. Scrive gör ditt liv lite enklare och lite bättre.",,"Close deals faster. Less administration. More satisfied customers. Simpler and
 simply better."
 "_queryColumnBody2","10 fria signaturer per månad. Ingen inlåsning, inga konstigheter.",,"10 free signatures per month. No commitments. Cancel any time."
@@ -2521,7 +2524,7 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_reminderFormFooterOwnMessage","Skriv eget meddelande",,"Write own message"
 "_reminderFormHead","Skicka påminnelse",,"Send reminder"
 "_reminderFormSendReminder","Skicka påminnelse",,"Send reminder"
-"_repetedEmailAddress","Du kan ej använda samma e-post för mer än 1 användare",,"You cannot use the same email address for more than one user"
+"_repetedEmailAddress","Du kan ej använda samma e-post för mer än 1 användare",,"You cannot use the same email address for more than one signatory"
 "_restore","Återställ",,"Restore"
 "_save","Spara",,"Save"
 "_searchBoxButtonText","Sök",,"Search"
@@ -2704,9 +2707,7 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_setAllFields","Var vänlig namnge alla skapade fält",,"Please name all created fields"
 "_share","Dela",,"Share"
 "_shared","Delad",,"Shared"
-"_showFileImagesError","Vi beklagar, det var något problem med formateringen på din PDF.
- Vänligen kontrollera dokumentet och försök igen.",,"We are sorry, something was wrong with the format in your PDF.
- Please check the document and try again."
+"_showFileImagesError","Vi beklagar, det var något problem med formateringen på din PDF. Vänligen kontrollera dokumentet och försök igen.",,"We are sorry, something was wrong with the format in your PDF. Please check the document and try again."
 "_sigattachlistRequestedAttachment","Begärda bilagor:",,"Requested attachments:"
 "_signAwaitingAuthorLastBody","Alla parter har nu undertecknat och dokumentet är bindande.",,"All parties have  signed, and the document is now legally binding."
 "_signAwaitingAuthorLastHeader","Dokumentet har undertecknats",,"The document has been signed"
@@ -2744,7 +2745,7 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
  to continue."
 "_signStepsBodyUploadBoxStep1TemplateSaved","Som du sparat hos Scrive",,"Saved in Scrive"
 "_signStepsBodyUploadBoxStep1UpLoadChooseFile","Välj fil från dator",,"Select file from computer"
-"_signStepsBodyUploadBoxStep1UpLoadOnlyPDF","OBS! Endast PDF",,"PDF only!"
+"_onlyPDF","OBS! Endast PDF",,"PDF only!"
 "_signStepsBodyUploadBoxStepButtonChooseFile","Välj fil",,"Select file"
 "_signStepsFunctionalityChangeToAdvanced","BYT TILL AVANCERAD PROCESS",,"CHANGE TO ADVANCED PROCESS"
 "_signStepsFunctionalityChangeToSimplified","BYT TILL FÖRENKLAD PROCES",,"CHANGE TO SIMPLIFIED PROCESS"
@@ -3136,7 +3137,7 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_mailMailAPIConfirmOrderHeader","Order <strong>$documenttitle$</strong> har blivit skickat med Scrive by Mail. <BR/> Vänligen se över följande detaljer noggrant eller följ <a href='$link$'>länken</a> för att hantera ditt dokument.",,"The order <strong>$documenttitle$</strong>  has been sent with Scrive by Mail. <BR/> Please review the following details or follow this <a href=""$link$"">link</a> to manage your document."
 "_mailMailAPIConfirmOfferHeader","Offert <strong>$documenttitle$</strong> har blivit skickat med Scrive by Mail. <BR/> Vänligen se över följande detaljer noggrant eller följ <a href='$link$'>länken</a> för att hantera ditt dokument.",,"The contract <strong>$documenttitle$</strong>  has been sent with Scrive by Mail. <BR/> Please review the following details or follow this <a href=""$link$"">link</a> to manage your document."
 "_zip","Postnummer",,"Zip"
-"_tweetAccount","scrive",,"scriveuk"
+"_tweetAccount","scrive",,"scrive"
 "_mailsubheader","Powered by Scrive",,"Powered by Scrive"
 "_createCompany","Skapa företag",,"Create Company"
 "_createCompanyExplanation","När ett företag är skapat kommer du att bli en administratör och kommer kunna bjuda in dina kollegor till underkonton.",,"When a company is created you will be made an admin user and will be able to invite your colleagues to join you."
@@ -3184,6 +3185,7 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_modalResendCompanyAccountInviteBody","Vänligen bekräfta att du vill skicka om inbjudan till",,"Please confirm that you would like to resend an invitation to"
 "_modalResendCompanyAccountInviteConfirm","Skicka",,"Send"
 "_pendingcompanyaccount","Väntar",,"Pending"
+"_changeEmail","Ändra e-post",,"Change e-mail"
 "_changeEmailRequestExplanation","Din e-post och ditt användarnamn är samma i Scrive. Genom att ändra e-post kommer du också att ändra ditt användarnamn vid inloggning.  För att bekräfta din nya adress skickar vi ett bekräftelsemail med en länk. Vänligen följ instruktionerna för att fullfölja ändringen.",,"Your email and user name are the same in Scrive. By changing the email you will also change the username for logging in.  To verify your new address we will send you an confirmation mail with a link. Please follow the instructions to complete the change."
 "_newemail","Ny e-post",,"New email"
 "_newemailagain","Ny e-post igen",,"New email again"

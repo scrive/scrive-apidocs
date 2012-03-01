@@ -8,7 +8,7 @@ import DB.Model
 tableCompanies :: Table
 tableCompanies = Table {
     tblName = "companies"
-  , tblVersion = 2
+  , tblVersion = 3
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("external_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
@@ -21,6 +21,7 @@ tableCompanies = Table {
        , ("country", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("bars_background", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("logo", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
+       , ("bars_textcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE companies ("
@@ -35,6 +36,7 @@ tableCompanies = Table {
           ++ ", country TEXT NOT NULL"
           ++ ", bars_background TEXT NULL"
           ++ ", logo BYTEA NULL"
+          ++ ", bars_textcolour TEXT NULL"
           ++ ", CONSTRAINT pk_companies PRIMARY KEY (id)"
           ++ ")"
         return TVRcreated

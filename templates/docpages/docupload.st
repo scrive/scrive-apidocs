@@ -74,7 +74,7 @@ $loadingdialog()$
     <form action="/api/document" method="post" enctype="multipart/form-data" class="jsuploadform"> 
       <div class="signStepsBodyUploadBox">
         <span class="header">$_signStepsBodyUploadBoxStep1UpLoadChooseFile()$</span><br/>
-        <span class="text">$_signStepsBodyUploadBoxStep1UpLoadOnlyPDF()$</span> 
+        <span class="text">$_onlyPDF()$</span>
         <br/>
         <div class="signStepsButtonContainer"></div>
       </div>

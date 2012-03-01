@@ -14,3 +14,13 @@ addEmailBrandingToCompany =
       kRunRaw "ALTER TABLE companies ADD COLUMN logo BYTEA NULL"
       return ()
   }
+
+addTextColourToEmailBranding :: Migration
+addTextColourToEmailBranding =
+  Migration {
+    mgrTable = tableCompanies
+  , mgrFrom = 2
+  , mgrDo = do
+      kRunRaw "ALTER TABLE companies ADD COLUMN bars_textcolour TEXT NULL"
+      return ()
+  }

@@ -127,7 +127,7 @@ var CsvSignatoryDesignView = Backbone.View.extend({
       var tbody = $("<tbody/>");
       table.append(thead).append(tbody);
       for (var i=0;i< fields.length;i++)
-      {
+      {  if (fields[i].isSignature()) continue;
          thead.append($("<th/>").text(fields[i].nicename()));
       }
       var rows = model.rows();
@@ -221,7 +221,7 @@ window.CsvSignatoryDesignPopup = {
               content  : view.el,
               title  : localization.csv.title,
               acceptText: localization.save,
-              width: "800px",
+              width: "960px",
               acceptVisible : model.ready(),
               onAccept : function() {
                   signatory.makeCsv(model.rows());

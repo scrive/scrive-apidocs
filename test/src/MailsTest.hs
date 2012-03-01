@@ -37,6 +37,7 @@ import EvidenceLog.Model
 mailsTests :: [String] -> DBEnv -> Test
 mailsTests params env  = testGroup "Mails" [
     testCase "Document emails" $ testDocumentMails env (toMailAddress params),
+    testCase "Branded document emails" $ testBrandedDocumentMails env (toMailAddress params),
     testCase "User emails" $ testUserMails env (toMailAddress params)
     ]
 
@@ -49,18 +50,34 @@ gRight ac = do
       return undefined
     Right d -> return d
 
+testBrandedDocumentMails :: DBEnv -> Maybe String -> Assertion
+testBrandedDocumentMails env mailTo = withTestEnvironment env $ do
+  company' <- addNewCompany
+  author <- addNewRandomCompanyUser (companyid company') False
+  let cui = CompanyUI {
+        companybarsbackground = Just $ BS.fromString "red"
+      , companybarstextcolour = Just $ BS.fromString "gray"
+      , companylogo = Nothing
+      }
+  _ <- dbUpdate $ UpdateCompanyUI (companyid company') cui
+  mcompany <- dbQuery $ GetCompany (companyid company')
+  sendDocumentMails env mailTo author mcompany
 
-testDocumentMails  :: DBEnv -> Maybe String -> Assertion
-testDocumentMails  env mailTo = withTestEnvironment env $ do
+testDocumentMails :: DBEnv -> Maybe String -> Assertion
+testDocumentMails env mailTo = withTestEnvironment env $ do
   author <- addNewRandomAdvancedUser
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
+  sendDocumentMails env mailTo author mcompany
+
+sendDocumentMails :: DBEnv -> Maybe String -> User -> Maybe Company -> DB ()
+sendDocumentMails env mailTo author mcompany = do
   forM_ allLocales $ \l ->
     forM_ [Contract,Offer,Order] $ \doctype -> do
         -- make  the context, user and document all use the same locale
         ctx <- mailingContext l env
         _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { locale = l }
         let aa = AuthorActor (ctxtime ctx) (IPAddress 0) (userid author) (BS.toString $ getEmail author)
-        d' <- gRight $ randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype) aa
+        d' <- gRight $ randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype) 0 aa
         d <- gRight . dbUpdate $ SetDocumentLocale (documentid d') l (SystemActor $ ctxtime ctx)
 
         let docid = documentid d
@@ -76,7 +93,7 @@ testDocumentMails  env mailTo = withTestEnvironment env $ do
         _ <- gRight $ randomUpdate $ ResetSignatoryDetails docid sigs (SystemActor now)
         d2 <- gRight $ randomUpdate $ PreparationToPending docid (SystemActor now)
         let asl2 = head $ documentsignatorylinks d2
-        _ <- gRight $ randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2) 
+        _ <- gRight $ randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2)
              (SignatoryActor now (IPAddress 0) (maybesignatory asl2) (BS.toString $ getEmail asl2) (signatorylinkid asl2))
         doc <- gRight $ randomUpdate $ \si -> SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) si (SystemActor now)
         let [sl] = filter (not . isAuthor) (documentsignatorylinks doc)
@@ -99,7 +116,7 @@ testDocumentMails  env mailTo = withTestEnvironment env $ do
         when (doctype == Contract) $ do
           checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc (mkLocaleFromRegion defaultValue)
         -- Virtual signing
-        _ <- randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl) (signatorymagichash sl) Nothing 
+        _ <- randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl) (signatorymagichash sl) Nothing
                                    (SignatoryActor (10 `minutesAfter` now) ip (maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl))
         (Just sdoc) <- randomQuery $ GetDocumentByDocumentID docid
         -- Sending closed email

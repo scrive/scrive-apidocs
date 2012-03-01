@@ -101,7 +101,6 @@ instance InspectXML DocumentSharing where
 instance InspectXML KontraLink where
 instance InspectXML FieldType where
 instance InspectXML Region where
-instance InspectXML UserHistoryID where
 instance InspectXML IPAddress where
 instance InspectXML UserHistoryEventType where
 instance InspectXML JSValue where

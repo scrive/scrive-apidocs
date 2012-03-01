@@ -356,14 +356,37 @@ function postBack(sig, provider, formselector, transactionid, posturl) {
 (function(window){
 
 window.Eleg = {
+  // generate a TBS from the available data
+   generateTBS : function(doctitle, docid, signatories) {
+     var text = localization.tbsGenerationMessage(doctitle, docid);
+     
+     if($("a.group").size() > 0)
+       return text + "\n " + localization.differentSignatories;
+     else
+       $(signatories).each(function() {
+         text = text + "\n" + this.fstname() + " " + this.sndname() + ", " + this.personalnumber();
+       });
+     return text;
+   },
+
     bankidSign : function(document, signatory, submit) {
       if (!checkPlugin(hasSign2PluginIE, hasSign2PluginMozilla, flashBankIDMessage))
         return false;
       LoadingDialog.open(localization.startingSaveSigning);
+
+      var url;
+      if(document.preparation() || (document.viewer() && document.viewer().signatoryid() === document.author().signatoryid())) // author
+        url = "/d/eleg/" + document.documentid();
+      else 
+        url = "/s/eleg/" + document.documentid() +  "/" + document.viewer().signatoryid();
+      var tbs = window.Eleg.generateTBS(document.title(), document.documentid(), document.signatories());
       $.ajax({
-            'url': "/s/eleg/" + document.documentid() +  "/" + document.viewer().signatoryid(),
+            'url': url,
             'dataType': 'json',
-            'data': { 'provider' : 'bankid', 'magichash' : document.viewer().magichash()}, 
+            'data': { 'provider' : 'bankid', 
+                      'magichash' : document.viewer().magichash(),
+                      'tbs' : tbs
+                    }, 
             'scriptCharset': "utf-8",
             'success': function(data) {
               if (data && data.status === 0)  {
@@ -410,14 +433,23 @@ window.Eleg = {
       });  
     },
     nordeaSign : function(document, signatory, submit) {
-       if (!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage))
-            return;
-
-    LoadingDialog.open(localization.startingSaveSigning);
+      if (!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage))
+        return;
+      var url;
+      if(document.preparation() || (document.viewer() && document.viewer().signatoryid() === document.author().signatoryid())) // author
+        url = "/d/eleg/" + document.documentid();
+      else 
+        url = "/s/eleg/" + document.documentid() +  "/" + document.viewer().signatoryid();
+      var tbs = window.Eleg.generateTBS(document.title(), document.documentid(), document.signatories());
+      LoadingDialog.open(localization.startingSaveSigning);
     $.ajax({
-            'url': "/s/eleg/" + document.documentid() +  "/" + document.viewer().signatoryid(),
+            'url': url,
             'dataType': 'json',
-            'data': {  'provider' : 'nordea' , 'magichash' : document.viewer().magichash() }, 
+            'data': {  'provider' : 'nordea' ,
+                       'magichash' : document.viewer().magichash(),
+                       'tbs' : tbs
+                    }, 
+      
             'scriptCharset': "utf-8",
             'success': function(data) {
               if (data && data.status === 0)  {
@@ -470,13 +502,22 @@ window.Eleg = {
     
     },
     teliaSign : function(document, signatory, submit) {
-        if (!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage))
-            return false;
+      if (!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage))
+        return false;
+      var url;
+      if(document.preparation() || (document.viewer() && document.viewer().signatoryid() === document.author().signatoryid())) // author
+        url = "/d/eleg/" + document.documentid();
+      else 
+        url = "/s/eleg/" + document.documentid() +  "/" + document.viewer().signatoryid();
+      var tbs = window.Eleg.generateTBS(document.title(), document.documentid(), document.signatories());
         LoadingDialog.open(localization.startingSaveSigning);
         $.ajax({
-            'url': "/s/eleg/" + document.documentid() +  "/" + document.viewer().signatoryid(),
+            'url': url,
             'dataType': 'json',
-            'data': { 'provider' : 'telia', 'magichash' : document.viewer().magichash()}, 
+            'data': { 'provider' : 'telia', 
+                      'magichash' : document.viewer().magichash(),
+                      'tbs' : tbs
+                    }, 
             'scriptCharset': "utf-8",
             'success': function(data) {
             if (data && data.status === 0)  {

@@ -86,7 +86,7 @@ import Data.Maybe
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import Text.JSON
-import Data.List (intercalate)
+import Data.List (intercalate, sortBy)
 import File.Model
 import DB.Classes
 import Text.JSON.Fields as JSON (json)
@@ -113,6 +113,7 @@ modalSendConfirmationView document = do
   toModal <$> (renderTemplateForProcess document processmodalsendconfirmation $ do
     field "partyListButAuthor" partylist
     field "signatory" . listToMaybe $ map (BS.toString . getSmartName) $ partyList document
+    -- field "signed" $ isJust $ join (maybesigninfo <$> getAuthorSigLink document)
     documentInfoFields document)
 
 modalSendInviteView :: TemplatesMonad m => Document -> m FlashMessage
@@ -350,7 +351,7 @@ signatoryAttachmentJSON files sa = JSObject $ toJSObject $
 
 signatoryFieldsJSON:: Document -> SignatoryLink -> IO JSValue
 signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}}) = fmap JSArray $
-  forM signatoryfields $ \sf@SignatoryField{sfType, sfValue, sfPlacements} ->
+  forM orderedFields $ \sf@SignatoryField{sfType, sfValue, sfPlacements} ->
     case sfType of
       FirstNameFT -> fieldJSON doc "fstname" sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
       LastNameFT -> fieldJSON doc "sndname" sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
@@ -362,7 +363,15 @@ signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{si
       CustomFT label closed -> fieldJSON doc (BS.toString label) sfValue (closed  && (not $ isPreparation doc))  sfPlacements
   where
     closedF sf = ((not $ BS.null $ sfValue sf) || (null $ sfPlacements sf))
-
+    orderedFields = sortBy (\f1 f2 -> ftOrder (sfType f1) (sfType f2)) signatoryfields
+    ftOrder FirstNameFT _ = LT
+    ftOrder LastNameFT _ = LT
+    ftOrder EmailFT _ = LT
+    ftOrder CompanyFT _ = LT
+    ftOrder PersonalNumberFT _ = LT
+    ftOrder CompanyNumberFT _ = LT
+    ftOrder _ _ = EQ
+    
 fieldJSON :: Document -> String -> BS.ByteString -> Bool -> [FieldPlacement] -> IO JSValue
 fieldJSON  doc name value closed placements = json $ do
     JSON.field "name" name

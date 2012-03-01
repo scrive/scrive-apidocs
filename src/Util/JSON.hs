@@ -231,12 +231,12 @@ jsgetdef path d obj = let (p:ps) = pathList path in
 jsmodify :: JSONPath path => path -> (JSValue -> Either String JSValue) -> JSValue -> Either String JSValue
 jsmodify path f val | pathList path == [] = f val
 jsmodify path f obj@(JSObject _) = jsget path obj >>= f >>= \v -> jsset path v obj
-jsmodify _ _ obj = Left $ "Cannot set value on non-object: " ++ show obj
+jsmodify _ _ obj = Left $ "Cannot set value on non-object: " ++ encode obj
 
 jsmodifydef :: JSONPath path => path -> (JSValue -> Either String JSValue) -> JSValue -> JSValue -> Either String JSValue
 jsmodifydef path f _ val | pathList path == [] = f val
 jsmodifydef path f d obj@(JSObject _) = jsgetdef path d obj >>= f >>= \v -> jsset path v obj
-jsmodifydef _ _ _ obj = Left $ "Cannot set value on non-object: " ++ show obj
+jsmodifydef _ _ _ obj = Left $ "Cannot set value on non-object: " ++ encode obj
 
 jsrem :: JSONPath path => path -> JSValue -> Either String JSValue
 jsrem path val | pathList path == [] = Right val
@@ -244,31 +244,31 @@ jsrem path val | [p] <-pathList path = remStr p val
 jsrem path val = jsmodify (init $ pathList path) (remStr (last $ pathList path)) val
 
 getStr :: String -> JSValue -> Either String JSValue
-getStr k obj@(JSObject kvs) = maybe (Left $ "Key " ++ show k ++ " not found in : " ++ show obj) 
+getStr k obj@(JSObject kvs) = maybe (Left $ "Key " ++ show k ++ " not found in : " ++ encode obj) 
                               Right $ lookup k (fromJSObject kvs)
-getStr _ obj = Left $ "Cannot get value on non-object: " ++ show obj
+getStr _ obj = Left $ "Cannot get value on non-object: " ++ encode obj
 
 getStrDef :: JSON a => String -> a -> JSValue -> Either String JSValue
 getStrDef k d (JSObject kvs) = maybe (Right $ showJSON d) Right $ lookup k (fromJSObject kvs)
-getStrDef _ _ obj = Left $ "Cannot get value on non-object: " ++ show obj
+getStrDef _ _ obj = Left $ "Cannot get value on non-object: " ++ encode obj
 
 setStr :: JSON a => String -> a -> JSValue -> Either String JSValue
 setStr k v (JSObject jsobj) = Right $ JSObject $ toJSObject $ List.addToAL (fromJSObject jsobj) k $ showJSON v
-setStr _ _ obj            = Left $ "Cannot set value on non-object: " ++ show obj
+setStr _ _ obj            = Left $ "Cannot set value on non-object: " ++ encode obj
 
 modifyStrDef :: JSON a => String -> (JSValue -> Either String JSValue) -> a -> JSValue -> Either String JSValue
 modifyStrDef k f d obj@(JSObject _) = getStrDef k d obj >>= f >>= \v -> setStr k v obj
-modifyStrDef _ _ _ obj              = Left $ "Cannot set value on non-object: " ++ show obj
+modifyStrDef _ _ _ obj              = Left $ "Cannot set value on non-object: " ++ encode obj
 
 remStr :: String -> JSValue -> Either String JSValue
 remStr k (JSObject jsobj) = case lookup k (fromJSObject jsobj) of
-  Nothing -> Left  $ "Key " ++ show k ++ " not found in : " ++ show jsobj
+  Nothing -> Left  $ "Key " ++ show k ++ " not found in : " ++ encode jsobj
   Just _  -> Right $ JSObject $ toJSObject $ filter ((/=) k . fst) $ fromJSObject jsobj
-remStr _ obj = Left $ "Cannot remove value on non-object: " ++ show obj
+remStr _ obj = Left $ "Cannot remove value on non-object: " ++ encode obj
 
 _modifyStr :: String -> (JSValue -> Either String JSValue) -> JSValue -> Either String JSValue
 _modifyStr k f obj@(JSObject _) = getStr k obj >>= f >>= \v -> setStr k v obj
-_modifyStr _ _ obj = Left $ "Cannot set value on non-object: " ++ show obj
+_modifyStr _ _ obj = Left $ "Cannot set value on non-object: " ++ encode obj
 
 jsonType :: JSValue -> String
 jsonType (JSString _) = "string"

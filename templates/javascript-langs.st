@@ -8,6 +8,7 @@ javascriptLocalisation =
         {
        loadingFile : "$_loadingFile()$"
              , problemWithPDF : "$_problemWithPDF()$"
+             , backToArchive : "$_backToArchive()$"
              , repetedEmailAddress : "$_repetedEmailAddress()$"
              , offerSignatory : "$_offerSignatory()$"
              , sigattachmessage : "$_pageDocumentForAuthorHelpersLocalDialogsRecipient()$"
@@ -80,8 +81,9 @@ javascriptLocalisation =
              , searchBoxButtonText : "$_searchBoxButtonText()$"
              , downloadPDF : "$_DownloadPDF()$"
              , document : "$_Document()$"
+             , onlyPDFAllowed : "$_updateAttachmentsDialogUpLoadOnlyPDF()$"
              , attachment : "$_Attachment()$"
-             , attachments : "$_Attachments()$"
+             , attachmentsWord : "$_Attachments()$"
              , requestedAttachments : "$_RequestedAttachments()$"
              , send : "$_send()$"
 			 , reminder : {
@@ -260,9 +262,11 @@ javascriptLocalisation =
               , passwordNeedsLetterAndDigit: "$_PasswordValidationMessageNeedsLetterAndDigit()$"
               , passwordsDontMatch: "$_PasswordValidationMessagePasswordsDontMatch()$"
               , mustAcceptTOS: "$_flashMessageMustAcceptTOS()$"
+              , phoneRequired: "$_flashMessagePhoneIsRequired()$"
          }
-         , emailBrading: "$_EmailBranding()$"
-         , customiseColour: "$_CustomiseColour()$"
+         , emailBranding: "$_EmailBranding()$"
+         , customiseBackgroundColour: "$_CustomiseBackgroundColour()$"
+         , customiseTextColour: "$_CustomiseTextColour()$"
          , customiseLogo: "$_CustomiseLogo()$"
          , selectImageLabel: "$_SelectImageLabel()$"
          , saveBranding: "$_SaveSettings()$"
@@ -278,5 +282,11 @@ javascriptLocalisation =
              ,  addToPadQueueNotAdded : "Document could not be send to pad device"
              
         }
+         , sampleEmailHeader: "$_SampleEmailHeader()$"
+         , sampleEmailSubheader: "$_mailsubheader()$"
+         , sampleEmailContent: "$_SampleEmailContent()$"
+         , recommendedLogoSize: "$_RecommendedLogoSize()$"
+         , changeEmail : "$_changeEmail()$"
+         , onlyPDF : "$_onlyPDF()$"
     }
 ####

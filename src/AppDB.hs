@@ -20,6 +20,7 @@ import Stats.Migrations
 import File.Tables
 import Mails.Tables
 import PadQueue.Tables
+import Mails.Migrations
 import EvidenceLog.Tables
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
@@ -35,7 +36,9 @@ kontraMigrations = [
   , addColumnToRecordInternalInsertionOrder
   , addEmailBrandingToCompany
   , removeOldSignatoryLinkIDFromCancelationReason
-  ]
+  , addDocumentIdIndexOnSignatoryLinks
+  , addTextColourToEmailBranding
+  ] ++ mailerMigrations
 
 kontraTables :: [Table]
 kontraTables = [
