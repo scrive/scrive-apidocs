@@ -327,7 +327,7 @@ testRemoveDaysToSignEvidenceLog :: DB ()
 testRemoveDaysToSignEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  etdoc <- randomUpdate $ \t->SetDaysToSign (documentid doc) Nothing (SystemActor t)
+  etdoc <- randomUpdate $ \t->SetDaysToSign (documentid doc) (Just 3) (SystemActor t)
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == RemoveDaysToSignEvidence) lg
