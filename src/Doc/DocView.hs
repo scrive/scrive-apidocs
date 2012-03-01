@@ -113,6 +113,7 @@ modalSendConfirmationView document = do
   toModal <$> (renderTemplateForProcess document processmodalsendconfirmation $ do
     field "partyListButAuthor" partylist
     field "signatory" . listToMaybe $ map (BS.toString . getSmartName) $ partyList document
+    -- field "signed" $ isJust $ join (maybesigninfo <$> getAuthorSigLink document)
     documentInfoFields document)
 
 modalSendInviteView :: TemplatesMonad m => Document -> m FlashMessage

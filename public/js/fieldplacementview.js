@@ -30,8 +30,7 @@ var StandardPlacementView = Backbone.View.extend({
     render: function() {
             var field =   this.model;
             var box = this.el;
-            box.addClass('placedfield');
-            box.addClass('value');
+            box.addClass('placedfieldvalue value');
             box.text(field.nicetext());
             field.bind('change', function() {
                 box.text(field.nicetext());
