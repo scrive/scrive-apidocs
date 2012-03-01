@@ -166,7 +166,7 @@ window.Field = Backbone.Model.extend({
             return new EmailValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
         
-        if (this.signatory().document().elegAuthorization() && name == "sigpersnr" && !this.signatory().isCsv() ) {
+        if (this.signatory().document().elegAuthorization() && name == "sigpersnr" && this.signatory().signs()  && !this.signatory().isCsv() ) {
             var msg = localization.designview.validation.missingOrWrongPersonalNumber
             return new NotEmptyValidation({message: msg});
         }
@@ -294,6 +294,7 @@ window.FieldBasicDesignView = Backbone.View.extend({
         _.bindAll(this, 'render', 'cleanredborder');
         this.model.view = this;
         this.model.bind('change', this.cleanredborder);
+        this.model.signatory().document().bind('change:authorization', this.cleanredborder);
         this.render();
     },
     render: function(){
@@ -331,6 +332,7 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
         _.bindAll(this, 'render', 'cleanredborder');
         this.model.bind('change', this.cleanredborder);
         this.model.bind('ready', this.render);
+        this.model.signatory().document().bind('change:authorization', this.cleanredborder);
         this.model.view = this;
         this.render();
     },

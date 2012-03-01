@@ -280,9 +280,12 @@ window.Document = Backbone.Model.extend({
     },
     setElegVerification : function() {
           this.set({"authorization":"eleg"}, {silent: true});
+          this.trigger("change:authorization");
     },
     setEmailVerification : function() {
           this.set({"authorization":"email"}, {silent: true});
+          this.trigger("change:authorization");
+
     },
     elegTBS : function() {
         var text = this.title() + " "+  this.documentid() ;
