@@ -3,7 +3,6 @@ module File.Migrations where
 import Data.Int
 
 import DB.Classes
-import DB.Fetcher2
 import DB.Model
 import DB.Utils
 import File.Tables
@@ -17,10 +16,8 @@ addFileIdSequence = Migration {
       -- create the sequence
       _ <- kRunRaw $ "CREATE SEQUENCE files_id_seq"
       -- set start value to be one more than maximum already in the table or 1000 if table is empty
-      _ <- kRun $ SQL "SELECT setval('files_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM files))" []
-      let fetch acc value = (value :: Int64) : acc
-      [a] <- foldDB fetch []
-      Log.debug $ "Table files has yet " ++ show (maxBound - a :: Int64) ++ " values to go"
+      Just n <- getOne $ SQL "SELECT setval('files_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM files))" []
+      Log.debug $ "Table files has yet " ++ show (maxBound - n :: Int64) ++ " values to go"
       -- and finally attach serial default value to files.id
       _ <- kRunRaw $ "ALTER TABLE files ALTER id SET DEFAULT nextval('files_id_seq')"
       return ()

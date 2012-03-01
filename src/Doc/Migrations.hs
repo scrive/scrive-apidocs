@@ -64,10 +64,8 @@ addIdSerialOnSignatoryLinks =
       -- create the sequence
       _ <- kRunRaw $ "CREATE SEQUENCE signatory_links_id_seq"
       -- set start value to be one more than maximum already in the table or 1000 if table is empty
-      _ <- kRun $ SQL "SELECT setval('signatory_links_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM signatory_links))" []
-      let fetch acc value = (value :: Int64) : acc
-      [a] <- foldDB fetch []
-      Log.debug $ "Table signatory_links has yet " ++ show (maxBound - a :: Int64) ++ " values to go"
+      Just n <- getOne $ SQL "SELECT setval('signatory_links_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM signatory_links))" []
+      Log.debug $ "Table signatory_links has yet " ++ show (maxBound - n :: Int64) ++ " values to go"
       -- and finally attach serial default value to files.id
       _ <- kRunRaw $ "ALTER TABLE signatory_links ALTER id SET DEFAULT nextval('signatory_links_id_seq')"
       return ()
@@ -82,10 +80,8 @@ addIdSerialOnDocuments =
       -- create the sequence
       _ <- kRunRaw $ "CREATE SEQUENCE documents_id_seq"
       -- set start value to be one more than maximum already in the table or 1000 if table is empty
-      _ <- kRun $ SQL "SELECT setval('documents_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM documents))" []
-      let fetch acc value = (value :: Int64) : acc
-      [a] <- foldDB fetch []
-      Log.debug $ "Table documents has yet " ++ show (maxBound - a :: Int64) ++ " values to go"
+      Just n <- getOne $ SQL "SELECT setval('documents_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM documents))" []
+      Log.debug $ "Table documents has yet " ++ show (maxBound - n :: Int64) ++ " values to go"
       -- and finally attach serial default value to files.id
       _ <- kRunRaw $ "ALTER TABLE documents ALTER id SET DEFAULT nextval('documents_id_seq')"
       return ()
