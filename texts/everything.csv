@@ -1688,16 +1688,14 @@ profits and reduce frustration. The following mateials shall only
 "_mailNewAccountCreatedByAdminTitle","Nytt konto",,"New account"
 "_mailOfferClosedContentAttached","Bifogat med detta mail finner du en PDF med offerten och verifikatet.",,"The verified offer is attached."
 "_mailOfferClosedContentOfferAccepted","Offerten <strong>$documenttitle$</strong> har accepterats av
- $partylist:noescape()$.",,"The offer <strong>$documenttitle$</strong> was accepted by $partylist:noescape()$
- and Scrive has verified the confirmation."
+ $partylist:noescape()$.",,"The offer <strong>$documenttitle$</strong> was accepted by $partylist:noescape()$."
 "_mailOfferClosedContentOfferAcceptedWithService","Offerten <strong>$documenttitle$</strong> har accepterats av
  $partylist:noescape()$.","The offer <strong>$documenttitle$</strong> was accepted by $partylist:noescape()$.",
 "_mailOrderClosedContentAttached","Bifogat med detta mail finner du en PDF med orderbekräftelsen
  och verifikatet.",,"The verified order is attached."
 "_mailOrderClosedContentViewed","Orderbekräftelsen <strong>$documenttitle$</strong> har bekräftats
- av $partylist:noescape()$  och Scrive har utfärdat ett verifikat
- för bekräftelsen.",,"The order <strong>$documenttitle$</strong> has been
- accepted by $partylist:noescape()$  and Scrive has verified the confirmation."
+ av $partylist:noescape()$.",,"The order <strong>$documenttitle$</strong> has been
+ accepted by $partylist:noescape()$."
 "_mailOrderClosedContentViewedWithService","Orderbekräftelsen <strong>$documenttitle$</strong> har bekräftats
  av $partylist:noescape()$.","The order <strong>$documenttitle$</strong> has been
  accepted by $partylist:noescape()$.",
@@ -1750,8 +1748,8 @@ the document <strong>$documenttitle$</strong>. The agreement
 "_modalNewPasswordViewNewPassword","Nytt lösenord:",,"New password:"
 "_modalNewPasswordViewRepeatPassword","Upprepa lösenord:",,"Repeat password:"
 "_modalOfferCreatedBody","Offerten <strong>$documenttitle$</strong> har nu skickats till
- <strong>$signatory$</strong>.",,"The offer <strong>$documenttitle$</strong> Has been sent to
- <strong>$signatory$</strong>."
+ $partyListButAuthor:noescape()$.",,"The offer <strong>$documenttitle$</strong> has been sent to
+ $partyListButAuthor:noescape()$."
 "_modalOfferCreatedHeader","Offerten skickad!",,"The offer has been sent!"
 "_modalOfferSignedHasAccountBody","Offerten har sparats till ditt konto med användarnamn <span
  style=""color:#007CAC"">$signatory$</span>.",,"The offer has been saved to your account with user name <span
@@ -1764,8 +1762,8 @@ the document <strong>$documenttitle$</strong>. The agreement
  e-mail address."
 "_modalOfferSignedNoAccountHeader","Du har accepterat offerten!",,"You have accepted the offer!"
 "_modalOrderCreatedBody","Orderbekräftelsen <strong>$documenttitle$</strong> har nu skickats
- till <strong>$signatory$</strong>.",,"The order confirmation <strong>$documenttitle$</strong> has been
- sent to <strong>$signatory$</strong>."
+ till $partyListButAuthor:noescape()$.",,"The order confirmation <strong>$documenttitle$</strong> has been
+ sent to $partyListButAuthor:noescape()$."
 "_modalOrderCreatedHeader","Orderbekräftelsen skickad!",,"The order confirmation has been sent!"
 "_modalPdfTooBigBody","Du har valt att bifoga en fil som överstiger 2 MB. Var vänlig och bifoga ett mindre dokument.",,"You have tried to upload a PDF over 2 MB. Please try again with a smaller document."
 "_modalPdfTooBigTitle","För stora fil",,"Cannot store file"
@@ -2526,7 +2524,7 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_reminderFormFooterOwnMessage","Skriv eget meddelande",,"Write own message"
 "_reminderFormHead","Skicka påminnelse",,"Send reminder"
 "_reminderFormSendReminder","Skicka påminnelse",,"Send reminder"
-"_repetedEmailAddress","Du kan ej använda samma e-post för mer än 1 användare",,"You cannot use the same email address for more than one user"
+"_repetedEmailAddress","Du kan ej använda samma e-post för mer än 1 användare",,"You cannot use the same email address for more than one signatory"
 "_restore","Återställ",,"Restore"
 "_save","Spara",,"Save"
 "_searchBoxButtonText","Sök",,"Search"

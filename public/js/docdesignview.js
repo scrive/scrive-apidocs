@@ -514,7 +514,7 @@ var DocumentDesignView = Backbone.View.extend({
     sendConfirmation : function() {
        var document = this.model;
        var signatory = document.currentSignatory();
-       var content = $("<p>" + document.process().confirmsendtext() + " <strong class='documenttitle'/> " + localization.to + "<strong class='unsignedpartynotcurrent'/></p>");
+       var content = $("<p>" + document.process().confirmsendtext() + " <strong class='documenttitle'/> " + localization.to + "<span class='unsignedpartynotcurrent'/></p>");
        Confirmation.popup({
               title : document.process().confirmsendtitle(),
               acceptButton : Button.init({

@@ -930,9 +930,14 @@ a.button {
 
 .placedfield, .placedfieldhelper {
     position: absolute;
+    cursor: pointer;
     font-family: Helvetica;
-    font-size: 15.93px; /* keep in sync with .pagediv font-size propery */
-    cursor: pointer;  
+    font-size: 15.93px; 
+}
+
+.placedfieldvalue{
+    font-family: Helvetica;
+    font-size: 15.93px; 
 }
 
 .placedfieldhelper {
