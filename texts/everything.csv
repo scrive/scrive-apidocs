@@ -1688,16 +1688,14 @@ profits and reduce frustration. The following mateials shall only
 "_mailNewAccountCreatedByAdminTitle","Nytt konto",,"New account"
 "_mailOfferClosedContentAttached","Bifogat med detta mail finner du en PDF med offerten och verifikatet.",,"The verified offer is attached."
 "_mailOfferClosedContentOfferAccepted","Offerten <strong>$documenttitle$</strong> har accepterats av
- $partylist:noescape()$.",,"The offer <strong>$documenttitle$</strong> was accepted by $partylist:noescape()$
- and Scrive has verified the confirmation."
+ $partylist:noescape()$.",,"The offer <strong>$documenttitle$</strong> was accepted by $partylist:noescape()$."
 "_mailOfferClosedContentOfferAcceptedWithService","Offerten <strong>$documenttitle$</strong> har accepterats av
  $partylist:noescape()$.","The offer <strong>$documenttitle$</strong> was accepted by $partylist:noescape()$.",
 "_mailOrderClosedContentAttached","Bifogat med detta mail finner du en PDF med orderbekräftelsen
  och verifikatet.",,"The verified order is attached."
 "_mailOrderClosedContentViewed","Orderbekräftelsen <strong>$documenttitle$</strong> har bekräftats
- av $partylist:noescape()$  och Scrive har utfärdat ett verifikat
- för bekräftelsen.",,"The order <strong>$documenttitle$</strong> has been
- accepted by $partylist:noescape()$  and Scrive has verified the confirmation."
+ av $partylist:noescape()$.",,"The order <strong>$documenttitle$</strong> has been
+ accepted by $partylist:noescape()$."
 "_mailOrderClosedContentViewedWithService","Orderbekräftelsen <strong>$documenttitle$</strong> har bekräftats
  av $partylist:noescape()$.","The order <strong>$documenttitle$</strong> has been
  accepted by $partylist:noescape()$.",
