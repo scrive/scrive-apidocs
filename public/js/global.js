@@ -105,17 +105,17 @@ function listString(names) {
     if (names.length === 0)
         return "";
     if (names.length === 1)
-        return "<strong>" + names[0] + "</strong>";
+        return "<strong>" + escapeHTML(names[0]) + "</strong>";
     if (names.length === 2)
-        return "<strong>" + names[0] + "</strong> " + localization.and + " <strong>" + names[1] + "</strong>";
+        return "<strong>" + escapeHTML(names[0]) + "</strong> " + localization.and + " <strong>" + escapeHTML(names[1]) + "</strong>";
     return listStringMany(names);
 }
 
 function listStringMany(names) {
     var name0 = names.shift();
     if (names.length === 1)
-        return "<strong>" + name0 + "</strong> " + localization.listand + " <strong>" + names[0] + "</strong>";
-    return "<strong>" + name0 + "</strong>, " + listStringMany(names);
+        return "<strong>" + escapeHTML(name0) + "</strong> " + localization.listand + " <strong>" + escapeHTML(names[0]) + "</strong>";
+    return "<strong>" + escapeHTML(name0) + "</strong>, " + listStringMany(names);
 }
 
 /*
