@@ -253,7 +253,7 @@ mailInvitation forMail
         field "isattachments" $ length (documentauthorattachments document) > 0
         field "attachments" $ map (filename) (catMaybes authorattachmentfiles)
         field "previewLink" $ show $ LinkDocumentPreview (documentid document) (msiglink <| forMail |> Nothing) (mainfile)
-        field "hassigattachments" $ length (concat . map signatoryattachments $ documentsignatorylinks document ) > 0
+        field "hassigattachments" $ length (concatMap signatoryattachments $ documentsignatorylinks document ) > 0
         -- We try to use generic templates and this is why we return a tuple
         field "sigattachments" $ for (concat $ (\l -> (\a -> (l,a)) <$> signatoryattachments l) <$> documentsignatorylinks document) $ \(link, sa) ->
                         (BS.toString $ signatoryattachmentname sa, BS.toString $ getSmartName link)

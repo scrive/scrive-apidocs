@@ -819,7 +819,7 @@ assertGoodNewDocument mcompany doctype title authorsigns (user, time, edoc) = do
     assertEqual "Doc modification time" time (documentmtime doc)
     assertEqual "Doc has user's service" (userservice user) (documentservice doc)
     assertEqual "No author attachments" [] (documentauthorattachments doc)
-    assertEqual "No sig attachments" [] (concat . map signatoryattachments $ documentsignatorylinks doc)
+    assertEqual "No sig attachments" [] (concatMap signatoryattachments $ documentsignatorylinks doc)
     assertEqual "Uses email identification only" [EmailIdentification] (documentallowedidtypes doc)
     assertEqual "Doc has user's footer" (customfooter $ usersettings user) (fmap BS.toString <$> documentmailfooter $ documentui doc)
     assertEqual "In preparation" Preparation (documentstatus doc)

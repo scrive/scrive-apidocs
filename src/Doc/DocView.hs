@@ -888,7 +888,7 @@ documentInfoFields  document  = do
   field "template" $  isTemplate document
   field "emailselected" $ document `allowsIdentification` EmailIdentification
   field "elegselected" $ document `allowsIdentification` ELegitimationIdentification
-  field "hasanyattachments" $ length (documentauthorattachments document) + length (concat . map signatoryattachments $ documentsignatorylinks document) > 0
+  field "hasanyattachments" $ length (documentauthorattachments document) + length (concatMap signatoryattachments $ documentsignatorylinks document) > 0
   documentStatusFields document
 
 documentAuthorInfo :: MonadIO m => Document -> Fields m

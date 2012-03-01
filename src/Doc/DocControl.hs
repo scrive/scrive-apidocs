@@ -412,7 +412,7 @@ makeMailAttachments ctx document = do
         _ -> documentsealedfiles document
   let
       aattachments = map authorattachmentfile $ documentauthorattachments document
-      sattachments = concatMap (maybeToList . signatoryattachmentfile) $ concat . map signatoryattachments $ documentsignatorylinks document
+      sattachments = concatMap (maybeToList . signatoryattachmentfile) $ concatMap signatoryattachments $ documentsignatorylinks document
       allfiles' = [mainfile] ++ aattachments ++ sattachments
   allfiles <- liftM catMaybes $ mapM (ioRunDB (ctxdbenv ctx) . dbQuery . GetFileByFileID) allfiles'
   let pdfIfy name | ".pdf" `isSuffixOf` name = name

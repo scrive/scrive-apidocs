@@ -647,7 +647,7 @@ instance HasFunctionalityStats Document where
     ]
     where
       anyField p doc =
-        any p . concat . map (signatoryfields . signatorydetails) $ documentsignatorylinks doc
+        any p . concatMap (signatoryfields . signatorydetails) $ documentsignatorylinks doc
       hasPlacement SignatoryField{sfPlacements} = not $ null sfPlacements
       isCustom SignatoryField{sfType} =
         case sfType of
