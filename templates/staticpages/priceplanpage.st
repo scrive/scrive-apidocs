@@ -19,6 +19,42 @@ priceplanPageContents=
                     <p class="stronger">$_priceplanPageH1Body1()$</p>
                     <p class="stronger">$_priceplanPageH1Body2()$</p>
                 </div>
+
+                                <div class="price-plan-container">
+                                        <table class="price-plan">
+                                                <tr>$_PriceTableHead()$
+                                                </tr>
+                                                <tr class="odd-row">
+                                                        $_PriceTableRow1()$
+                                                </tr>
+                                                <tr>
+                                                        $_PriceTableRow2()$
+                                                </tr>
+                                                <tr class="odd-row">
+                                                        $_PriceTableRow3()$
+                                                </tr>
+                                                <tr>
+                                                        $_PriceTableRow4()$
+                                                </tr>
+                                                <tr>
+                                                        $_PriceTableRow5()$
+                                                </tr>
+                                        </table>
+                                        <div class="highlight-container">
+                                                <div class="ribbon $if(langen)$english$else$swedish$endif$"></div>
+                                                $_PriceTableHighlightedColumn()$
+                                        </div>
+                                </div>
+                <br />
+                <div>$_priceplanPageVAT()$</div>
+                <div class="big-price-plan">$_priceplanPageBelowTable1()$
+                </div>
+                <div class="big-price-plan">$_priceplanPageBelowTable2()$
+                </div>
+                <div class="big-price-plan">$_priceplanPageBelowTable3()$
+                </div>
+
+
                 <div class="big-pp-container">
                     <table>
                         <thead>
@@ -30,13 +66,6 @@ priceplanPageContents=
                             <tr class="spacer">
                               <td></td>
                               <td></td>
-                              <td></td>
-                              <td></td>
-                              <td></td>
-                            </tr>
-                            <tr>$_priceplanPageTableRow1()$
-                            </tr>
-                            <tr class="odd-row">$_priceplanPageTableRow2()$
                             </tr>
                             <tr>$_priceplanPageTableRow3()$
                             </tr>
@@ -93,19 +122,5 @@ priceplanPageContents=
                             <tr class="odd-row">$_priceplanPageTableRow30()$                            </tr>
                         </tbody>
                     </table>
-                    <div class="highlight-container ppfix">
-                        <div class="ribbon  $if(langen)$english$else$swedish$endif$"></div>
-                        <ul class="highlight-rows">$_priceplanPageTableHighlightedColumn()$
-                        </ul>
-                    </div>
-                </div>
-                <br />
-                <br />
-                <div>$_priceplanPageVAT()$</div>
-                <div class="big-price-plan">$_priceplanPageBelowTable1()$
-                </div>
-                <div class="big-price-plan">$_priceplanPageBelowTable2()$
-                </div>
-                <div class="big-price-plan">$_priceplanPageBelowTable3()$
                 </div>
 ###
