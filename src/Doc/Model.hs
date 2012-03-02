@@ -328,56 +328,63 @@ selectSignatoryLinksSQL = SQL ("SELECT "
   ++ " AND sa.signatory_link_id = sl.id ") []
 
 fetchSignatoryLinks :: DB (M.Map DocumentID [SignatoryLink])
-fetchSignatoryLinks = foldDB decoder M.empty
+fetchSignatoryLinks = do
+  sigs <- foldDB decoder (nulldocid, [], M.empty)
+  return $ (\(d,l,m) -> M.insertWith' (++) d l m) sigs
   where
-    decoder acc slid document_id user_id company_id fields sign_order token
-     sign_time sign_ip seen_time seen_ip read_invitation invitation_delivery_status
-     signinfo_text signinfo_signature signinfo_certificate signinfo_provider
-     signinfo_first_name_verified signinfo_last_name_verified
-     signinfo_personal_number_verified roles csv_title csv_contents
-     csv_signatory_index deleted really_deleted safileid saname sadesc =
-       let addsigatt' _ [] = error "Empty signature link"
-           addsigatt' old new@(newsl:_) = maybe (old ++ new) (\sl -> 
-            (old \\ [sl]) ++ [sl{signatoryattachments = signatoryattachments sl ++ signatoryattachments newsl}]) 
-            $ find (\sl -> signatorylinkid sl == signatorylinkid newsl) old
-       in M.insertWith' addsigatt' document_id [SignatoryLink {
-           signatorylinkid = slid
-         , signatorydetails = SignatoryDetails {
-             signatorysignorder = sign_order
-           , signatoryfields = fields
-         }
-         , signatorymagichash = token
-         , maybesignatory = user_id
-         , maybesupervisor = Nothing
-         , maybecompany = company_id
-         , maybesigninfo = SignInfo <$> sign_time <*> sign_ip
-         , maybeseeninfo = SignInfo <$> seen_time <*> seen_ip
-         , maybereadinvite = read_invitation
-         , invitationdeliverystatus = invitation_delivery_status
-         , signatorysignatureinfo = do -- Maybe Monad
-             signinfo_text' <- signinfo_text
-             signinfo_signature' <- signinfo_signature
-             signinfo_certificate' <- signinfo_certificate
-             signinfo_provider' <- signinfo_provider
-             signinfo_first_name_verified' <- signinfo_first_name_verified
-             signinfo_last_name_verified' <- signinfo_last_name_verified
-             signinfo_personal_number_verified' <- signinfo_personal_number_verified
-             return $ SignatureInfo {
-                 signatureinfotext        = signinfo_text'
-               , signatureinfosignature   = signinfo_signature'
-               , signatureinfocertificate = signinfo_certificate'
-               , signatureinfoprovider    = signinfo_provider'
-               , signaturefstnameverified = signinfo_first_name_verified'
-               , signaturelstnameverified = signinfo_last_name_verified'
-               , signaturepersnumverified = signinfo_personal_number_verified'
-               }
-         , signatoryroles = roles
-         , signatorylinkdeleted = deleted
-         , signatorylinkreallydeleted = really_deleted
-         , signatorylinkcsvupload =
-             CSVUpload <$> csv_title <*> csv_contents <*> csv_signatory_index
-         , signatoryattachments = maybe [] (\name -> [SignatoryAttachment safileid name $ maybe BS.empty id sadesc]) saname
-         }] acc
+  nulldocid = unsafeDocumentID 0
+  decoder (docid, links, linksmap) slid document_id user_id company_id fields sign_order token
+    sign_time sign_ip seen_time seen_ip read_invitation invitation_delivery_status
+    signinfo_text signinfo_signature signinfo_certificate signinfo_provider
+    signinfo_first_name_verified signinfo_last_name_verified
+    signinfo_personal_number_verified roles csv_title csv_contents
+    csv_signatory_index deleted really_deleted safileid saname sadesc
+    | docid == nulldocid   = (document_id, link, linksmap)
+    | docid /= document_id = (document_id, link, M.insertWith' (++) docid links linksmap)
+    | otherwise            = (docid, addsigatt' links link, linksmap)
+    where
+      link = [SignatoryLink {
+          signatorylinkid = slid
+        , signatorydetails = SignatoryDetails {
+            signatorysignorder = sign_order
+          , signatoryfields = fields
+        }
+        , signatorymagichash = token
+        , maybesignatory = user_id
+        , maybesupervisor = Nothing
+        , maybecompany = company_id
+        , maybesigninfo = SignInfo <$> sign_time <*> sign_ip
+        , maybeseeninfo = SignInfo <$> seen_time <*> seen_ip
+        , maybereadinvite = read_invitation
+        , invitationdeliverystatus = invitation_delivery_status
+        , signatorysignatureinfo = do -- Maybe Monad
+            signinfo_text' <- signinfo_text
+            signinfo_signature' <- signinfo_signature
+            signinfo_certificate' <- signinfo_certificate
+            signinfo_provider' <- signinfo_provider
+            signinfo_first_name_verified' <- signinfo_first_name_verified
+            signinfo_last_name_verified' <- signinfo_last_name_verified
+            signinfo_personal_number_verified' <- signinfo_personal_number_verified
+            return $ SignatureInfo {
+                signatureinfotext        = signinfo_text'
+              , signatureinfosignature   = signinfo_signature'
+              , signatureinfocertificate = signinfo_certificate'
+              , signatureinfoprovider    = signinfo_provider'
+              , signaturefstnameverified = signinfo_first_name_verified'
+              , signaturelstnameverified = signinfo_last_name_verified'
+              , signaturepersnumverified = signinfo_personal_number_verified'
+              }
+        , signatoryroles = roles
+        , signatorylinkdeleted = deleted
+        , signatorylinkreallydeleted = really_deleted
+        , signatorylinkcsvupload =
+            CSVUpload <$> csv_title <*> csv_contents <*> csv_signatory_index
+        , signatoryattachments = maybe [] (\name -> [SignatoryAttachment safileid name $ maybe BS.empty id sadesc]) saname
+        }]
+      addsigatt' _ [] = error "Empty signature link"
+      addsigatt' old new@(newsl:_) = maybe (old ++ new) (\sl -> 
+        (old \\ [sl]) ++ [sl{signatoryattachments = signatoryattachments sl ++ signatoryattachments newsl}]) 
+        $ find (\sl -> signatorylinkid sl == signatorylinkid newsl) old
 
 insertSignatoryLinkAsIs :: DocumentID -> SignatoryLink -> DB (Maybe SignatoryLink)
 insertSignatoryLinkAsIs documentid link = do
