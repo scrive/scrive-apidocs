@@ -357,33 +357,72 @@ remindMailNotSignedContract=
 
     $nicemail(
         mailheader=_remindMailNotSignedTitleContract();
-        mailp1=header;
-        mailp2=_remindMailNotSignedContractContentInstruction();
-        mailp3=contractInfo();
-        mailp4= legalparagraph()
+        mailp1=remindMailNotSignedContractP1();
+        mailp2=footer;
+        mailp3= legalparagraph()
     )$
 #####
+remindMailNotSignedContractP1=
+    $nicemailbodywithpreview(
+        hidetitle='true';
+
+        r1='true';
+        r1cond='true';
+        r1elems=header;
+        r1noescp='true';
+
+        r2='true';
+        r2cond='true';
+        r2elems=_remindMailNotSignedContractContentInstruction();
+        r2noescp='true'
+    )$
 #####
 remindMailNotSignedOffer=
     $_remindMailNotSignedTitleOffer()$
     $nicemail(
         mailheader=_remindMailNotSignedTitleOffer();
-        mailp1=header;
-        mailp2=_remindMailNotSignedOfferContentInstruction();
-        mailp3=offerInfo();
-        mailp4=footer;
-        mailp5= legalparagraph()
+        mailp1=remindMailNotSignedOfferP1();
+        mailp2=footer;
+        mailp3= legalparagraph()
+    )$
+###
+remindMailNotSignedOfferP1=
+    $nicemailbodywithpreview(
+        hidetitle='true';
+
+        r1='true';
+        r1cond='true';
+        r1elems=header;
+        r1noescp='true';
+
+        r2='true';
+        r2cond='true';
+        r2elems=_remindMailNotSignedOfferContentInstruction();
+        r2noescp='true'
     )$
 ###
 remindMailNotSignedOrder=
     $_remindMailNotSignedTitleOrder()$
     $nicemail(
         mailheader=_remindMailNotSignedTitleOrder();
-        mailp1=header;
-        mailp2=_remindMailNotSignedOrderContentInstruction();
-        mailp3=orderInfo();
-        mailp4=footer;
-        mailp5= legalparagraph()
+        mailp1=remindMailNotSignedOrderP1();
+        mailp2=footer;
+        mailp3= legalparagraph()
+    )$
+###
+remindMailNotSignedOrderP1=
+    $nicemailbodywithpreview(
+        hidetitle='true';
+
+        r1='true';
+        r1cond='true';
+        r1elems=header;
+        r1noescp='true';
+
+        r2='true';
+        r2cond='true';
+        r2elems=_remindMailNotSignedOfferContentInstruction();
+        r2noescp='true'
     )$
 ###
 ###
