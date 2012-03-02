@@ -123,7 +123,6 @@ var DocumentDesignView = Backbone.View.extend({
               document.makeTemplate();
               document.save().sendAjax(function() {
                                new Submit().send();
-                               return false;
                             });
                      });
         return a;
@@ -439,7 +438,8 @@ var DocumentDesignView = Backbone.View.extend({
                         text: document.process().signbuttontext(),
                         onClick: function() {
                             if (!view.verificationBeforeSendingOrSigning()) return;
-                               document.save().sendAjax( function() {view.signConfirmation()});   
+                               document.save().sendAjax();
+                               view.signConfirmation();
                         }
                       });
        else  
@@ -450,7 +450,8 @@ var DocumentDesignView = Backbone.View.extend({
                         text: document.process().sendbuttontext(),
                         onClick: function() {
                             if (!view.verificationBeforeSendingOrSigning()) return;
-                                document.save().sendAjax( function() {view.sendConfirmation()});    
+                                document.save().sendAjax();
+                                view.sendConfirmation();
                         }
                       });
         this.finalButtonBox.append(button.input())
