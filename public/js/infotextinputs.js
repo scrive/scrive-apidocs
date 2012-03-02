@@ -32,6 +32,7 @@ var InfoTextInputModel = Backbone.Model.extend({
       return this.value() != "";
   },
   setValue: function(value) {
+      if (value == this.value()) return;
       this.set({"value": value});
       if (this.get("onChange") != undefined)
           this.get("onChange")(value);
@@ -69,8 +70,10 @@ var InfoTextInputView = Backbone.View.extend({
     render: function () {
         if (this.model.isValueSet())
         {
-            this.el.val(this.model.value());
-            this.el.removeClass("grayed");
+            if (this.el.val() != this.model.value())
+                this.el.val(this.model.value());
+            if(this.el.hasClass("grayed"))
+                this.el.removeClass("grayed");
         }
         else if (!this.model.hasFocus())
         {
