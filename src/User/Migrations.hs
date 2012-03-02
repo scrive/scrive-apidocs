@@ -39,3 +39,15 @@ addRegionToUserSettings =
       _ <- kRun $ SQL "UPDATE users SET region = ?" [toSql (defaultValue :: Region)]
       kRunRaw "ALTER TABLE users ALTER COLUMN region SET NOT NULL"
   }
+
+addIdSerialOnUsers :: Migration
+addIdSerialOnUsers =
+  Migration {
+    mgrTable = tableUsers
+  , mgrFrom = 4
+  , mgrDo = do
+      _ <- kRunRaw $ "CREATE SEQUENCE users_id_seq"
+      _ <- kRunRaw $ "SELECT setval('users_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM users))"
+      _ <- kRunRaw $ "ALTER TABLE users ALTER id SET DEFAULT nextval('users_id_seq')"
+      return ()
+  }

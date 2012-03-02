@@ -2,7 +2,6 @@
 module DocStateTest where
 
 import DB.Classes
-import DB.Utils
 import User.Model
 import Doc.Model
 import Doc.DocUtils
@@ -10,7 +9,6 @@ import Doc.DocStateData
 import Misc
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
-import Doc.Tables
 import TestingUtil
 import Company.Model
 import Doc.Invariants
@@ -1447,7 +1445,7 @@ testPreparationAttachCSVUploadNonExistingSignatoryLink = doTimes 3 $ do
   (csvupload, time) <- rand 10 arbitrary
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  slid <- getUniqueID tableSignatoryLinks
+  slid <- unsafeSignatoryLinkID <$> rand 10 arbitrary
   --execute
   edoc <- dbUpdate $ AttachCSVUpload (documentid doc) 
           slid csvupload (SystemActor time)

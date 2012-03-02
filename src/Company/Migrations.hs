@@ -20,7 +20,16 @@ addTextColourToEmailBranding =
   Migration {
     mgrTable = tableCompanies
   , mgrFrom = 2
+  , mgrDo = kRunRaw "ALTER TABLE companies ADD COLUMN bars_textcolour TEXT NULL"
+  }
+
+addIdSerialOnCompanies :: Migration
+addIdSerialOnCompanies =
+  Migration {
+    mgrTable = tableCompanies
+  , mgrFrom = 3
   , mgrDo = do
-      kRunRaw "ALTER TABLE companies ADD COLUMN bars_textcolour TEXT NULL"
-      return ()
+      kRunRaw $ "CREATE SEQUENCE companies_id_seq"
+      kRunRaw $ "SELECT setval('companies_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM companies))"
+      kRunRaw $ "ALTER TABLE companies ALTER id SET DEFAULT nextval('companies_id_seq')"
   }
