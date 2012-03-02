@@ -52,7 +52,7 @@ nicemail=
             <td>
                 <table id="content" width="590" cellspacing="0" align="center" style="margin: auto;color:#212121;font-family:'Lucida Grande', sans-serif;font-size:12px;">
                     <tr>
-                        <td style="padding:5px; margin: auto;"><img src="$ctxhostpart$/img/email-line.jpg" alt="" width="540" height="10" /></td>
+                        <td style="padding-left:25px; padding-right: 25px; padding-top: 5px; padding-bottom: 5px; margin: auto;"><img src="$ctxhostpart$/img/email-line.jpg" alt="" width="540" height="10" /></td>
                     </tr>
                     $if(mailp1)$ $nicemailparagraph(p=mailp1)$ $endif$
                     $if(mailp2)$ $nicemailparagraph(p=mailp2)$ $endif$
@@ -79,9 +79,9 @@ nicemaillogo=$if(!service.logo)$$if(!companybrand.logo)$$ctxhostpart$/img/email-
 #####
 nicemailparagraph =
       <tr>
-        <td style="padding:5px; margin: auto;">$p:noescape()$</td>
+        <td style="padding-left:25px; padding-right:25px; padding-top: 5px; padding-bottom: 5px; margin: auto;">$p:noescape()$</td>
       </tr>
       <tr>
-         <td style="padding:5px; margin: auto;"><img src="$ctxhostpart$/img/email-line.jpg" alt="" width="540" height="10" /></td>
+         <td style="padding-left:25px; padding-right:25px; padding-top: 5px; padding-bottom: 5px; margin: auto;"><img src="$ctxhostpart$/img/email-line.jpg" alt="" width="540" height="10" /></td>
       </tr>
 ####

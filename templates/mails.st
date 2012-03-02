@@ -148,11 +148,24 @@ mailInvitationToSignContract=
     $mailInvitationTitleContract()$
      $nicemail(
         mailheader= mailInvitationTitleContract();
-        mailp1 = header;
-        mailp2 = mailInvitationToSignContractIntructions();
-        mailp3 = contractInfo();
-        mailp4 = footer;
-        mailp5 = legalparagraph()
+        mailp1 = mailInvitationToSignContractP2();
+        mailp2 = footer;
+        mailp3 = legalparagraph()
+    )$
+###
+mailInvitationToSignContractP2=
+    $nicemailbodywithpreview(
+        hidetitle='true';
+
+        r1='true';
+        r1cond='true';
+        r1elems=header;
+        r1noescp='true';
+
+        r2='true';
+        r2cond='true';
+        r2elems=mailInvitationToSignContractIntructions();
+        r2noescp='true'
     )$
 ###
 mailInvitationToSignContractIntructions=
@@ -807,7 +820,7 @@ orderInfo=
 ####
 ####
 nicemailbodywithpreview=
-<table align="center" style="margin: auto; border-collapse: separate;  border-spacing: 30px;">
+<table style="margin: auto; width:540px;">
     <tr>
        <td>
          <table cellspacing="0" cellpadding="0" style="margin: auto;">
@@ -818,10 +831,12 @@ nicemailbodywithpreview=
        </td>
        <td>
 
-        <table style="font-family:'Lucida Grande', sans-serif;font-size:12px;margin: auto;display: block; max-width: 300px; overflow: auto;">
+        <table style="font-family:'Lucida Grande', sans-serif;font-size:12px;margin: auto;display: block; max-width: 330px; overflow: auto;">
+            $if(!hidetitle)$
             <tr>
                 <td><span style="color:#212121;font-size:1.5em;">$documenttitle$</span></td>
             </tr>
+            $endif$
                $if(r1)$
                 $nicemailpreviewrow(
                     cond=r1cond;
@@ -831,7 +846,8 @@ nicemailbodywithpreview=
                     alttext = r1alttext;
                     altelems = r1altelems;
                     elemsclass = r1elemsclass;
-                    separator = r1separator
+                    separator = r1separator;
+                    noescp = r1noescp
                 )$
               $endif$
 
@@ -845,7 +861,8 @@ nicemailbodywithpreview=
                     alttext = r2alttext;
                     altelems = r2altelems;
                     elemsclass = r2elemsclass;
-                    separator = r2separator
+                    separator = r2separator;
+                    noescp = r2noescp
                 )$
             $endif$
 
@@ -858,7 +875,8 @@ nicemailbodywithpreview=
                     alttext = r3alttext;
                     altelems = r3altelems;
                     elemsclass = r3elemsclass;
-                    separator = r3separator
+                    separator = r3separator;
+                    noescp = r3noescp
                 )$
             $endif$
 
@@ -871,7 +889,8 @@ nicemailbodywithpreview=
                     alttext = r4alttext;
                     altelems = r4altelems;
                     elemsclass = r4elemsclass;
-                    separator = r4separator
+                    separator = r4separator;
+                    noescp = r4noescp
                 )$
             $endif$
 
@@ -884,7 +903,8 @@ nicemailbodywithpreview=
                     alttext = r5alttext;
                     altelems = r5altelems;
                     elemsclass = r5elemsclass;
-                    separator = r5separator
+                    separator = r5separator;
+                    noescp = r5noescp
                 )$
             $endif$
 
@@ -897,7 +917,8 @@ nicemailbodywithpreview=
                     alttext = r6alttext;
                     altelems = r6altelems;
                     elemsclass = r6elemsclass;
-                    separator = r6separator
+                    separator = r6separator;
+                    noescp = r6noescp
                 )$
             $endif$
 
@@ -910,7 +931,8 @@ nicemailbodywithpreview=
                     alttext = r7alttext;
                     altelems = r7altelems;
                     elemsclass = r7elemsclass;
-                    separator = r7separator
+                    separator = r7separator;
+                    noescp = r7noescp
                 )$
             $endif$
         </table>
@@ -920,7 +942,15 @@ nicemailbodywithpreview=
 ####
 nicemailpreviewrow=
 $if(cond)$
-<tr><td>
+<tr>
+    $if(noescp)$
+    <td>
+      <table width="300px" style="margin-left:30px">
+      <tbody><tr><td>$elems:noescape()$</td></tr></tbody>
+      </table>
+    </td>
+    $else$
+    <td>
       <p style="font-style:italic;font-family:sans-serif;vertical-align:top;font-size:11px;">$text$</p>
           $elems: {elem |
               $if(elem.0)$
@@ -929,7 +959,9 @@ $if(cond)$
                 <p style="font-weight:bold;" $if(elemsclass)$class="$elemsclass$"$endif$> $elem$ </p>
               $endif$
           }$
-</td></tr>
+    </td>
+    $endif$
+</tr>
 $elseif(alter)$
 $nicemailpreviewrow(
         cond='true';
