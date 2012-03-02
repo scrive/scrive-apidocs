@@ -182,7 +182,8 @@ modalAccountSetup=
                 <td><input type="password" name="password2" autocomplete="off"/></td>
             </tr>
             <tr style='height:20px;'>
-                <td colspan="2"><input type='checkbox' style='padding: 0px;margin:0px 5px 0px 0px;float:left;' class="callme" name='callme'/>$_modalAccountSetupCallMe()$</td>
+                <td colspan="2"><input type='checkbox' style='padding: 0px;margin:0px 5px 0px 0px;float:left;' class="callme" id="callme" name='callme'/>
+                <label for="callme">$_modalAccountSetupCallMe()$</label></td>
                 <td></td>
             </tr>
             <tr class='phonerow' style="display:none;">
@@ -219,11 +220,13 @@ jQuery('form[action="$signuplink$"]').submit(function(){
             .appendTo(e.parent());
     };
 
-    var fstname = jQuery('#signupInfo').find('input[name="fstname"]');
-    var sndname = jQuery('#signupInfo').find('input[name="sndname"]');
-    var password = jQuery('#signupInfo').find('input[name="password"]');
+    var fstname   = jQuery('#signupInfo').find('input[name="fstname"]');
+    var sndname   = jQuery('#signupInfo').find('input[name="sndname"]');
+    var password  = jQuery('#signupInfo').find('input[name="password"]');
     var password2 = jQuery('#signupInfo').find('input[name="password2"]');
-    var tos = jQuery('#tosCBox');
+    var callme    = jQuery('#signupInfo').find('input[name="callme"]');
+    var phone     = jQuery('#signupInfo').find('input[name="phone"]');
+    var tos       = jQuery('#tosCBox');
 
     fstname.css("background", "white");
     sndname.css("background", "white");
@@ -249,6 +252,9 @@ jQuery('form[action="$signuplink$"]').submit(function(){
             })),
         tos.validate(new CheckboxReqValidation({callback: callback, message: localization.validation.mustAcceptTOS}))
         ];
+
+    if (callme.attr('checked'))
+        vresult.push(phone.validate(new NotEmptyValidation({callback: callback, message: localization.validation.phoneRequired})));
 
     if (vresult.every(function(a) {return a;})) 
         return true;
