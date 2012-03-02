@@ -806,8 +806,10 @@ a.new-btn-small.black p {
 }
 
 .body-container .price-plan td a {
-	color: #999;
 	text-decoration: none;
+	color: #35A4D6;
+	font: 12px "Lucida Grande";
+	text-transform: uppercase;
 }
 
 .body-container .price-plan td a:hover {
@@ -819,11 +821,10 @@ a.new-btn-small.black p {
 }
 
 .body-container .price-plan tr.big-row {
-	height: 70px;
 }
 
 .body-container .price-plan tr.big-row td {
-	font: italic 14px "Georgia";
+    line-height: 1.7em;
 }
 
 .body-container .price-plan tr.big-row h4 {
@@ -851,7 +852,7 @@ a.new-btn-small.black p {
 	border: 2px solid #35A4D6;
 	left: 467px;
 	position: absolute;
-	top: -6px;
+	top: -13px;
 	width: 245px;
 	z-index: 2;
 	-moz-border-radius: 7px;
@@ -868,7 +869,7 @@ a.new-btn-small.black p {
 .body-container .highlight-container .highlight-rows {
 	padding: 0 10px;
 	width: 224px;
-    height: 260px;
+    height: 290px;
 }
 
 .body-container .highlight-container .highlight-rows li {
@@ -883,6 +884,9 @@ a.new-btn-small.black p {
 .body-container .highlight-container .highlight-rows li a {
 	color: #999;
 	text-decoration: none;
+	color: #35A4D6;
+	font: 10px "Lucida Grande";
+	text-transform: uppercase;
 }
 
 .body-container .highlight-container .highlight-rows li a:hover {
