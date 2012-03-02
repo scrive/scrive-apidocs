@@ -2169,7 +2169,7 @@ simply better."
 "_remindMailNotSignedContractContentInfo","Översiktlig information",,"General information"
 "_remindMailNotSignedContractContentInstruction","<i>Så här går du vidare</i><br/>        1. Klicka på <a href=""$link$"">länken</a><br/>        2.
  Granska online<br/>        3. Underteckna (eller avvisa)<br/>
-         4. Färdig <BR/> $footer:noescape()$",,"<i>To continue</i><br/>        1. Click this <a href=""$link$"">link</a><br/>        2. Review online<br/>         3. Sign (or return)<br/>         4. Done <BR/> $footer:noescape()$"
+         4. Färdig",,"<i>To continue</i><br/>        1. Click this <a href=""$link$"">link</a><br/>        2. Review online<br/>         3. Sign (or return)<br/>         4. Done"
 "_remindMailNotSignedContractContentPartys","Parter:",,"Parties:"
 "_remindMailNotSignedContractStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte undertecknat eller avvisat
  dokument <strong>$documenttitle$</strong> ännu.",,"<strong>$author$</strong> wants to remind you that you haven't
@@ -2177,9 +2177,9 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_remindMailNotSignedOfferContentInfo","Översiktlig information",,"General information"
 "_remindMailNotSignedOfferContentInstruction","1. Klicka på <a href=""$link$"">länken</a><br/>
         2. Granska online<br/>        3.  Acceptera offert (eller
- avvisa)<br/>        4. Färdig <BR/> $footer:noescape()$",,"1. Click this <a href=""$link$"">link</a><br/>
+ avvisa)<br/>        4. Färdig",,"1. Click this <a href=""$link$"">link</a><br/>
         2. Review online<br/>        3.  Accept the offer (or
- return)<br/>        4. Done <BR/> $footer:noescape()$"
+ return)<br/>        4. Done"
 "_remindMailNotSignedOfferContentPartys","Parter:",,"Parties:"
 "_remindMailNotSignedOfferContentSender","Avsändare:",,"Sender:"
 "_remindMailNotSignedOfferStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte accepterat
@@ -2188,9 +2188,9 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_remindMailNotSignedOrderContentInfo","Översiktlig information",,"General information"
 "_remindMailNotSignedOrderContentInstruction","1. Klicka på <a href=""$link$"">länken</a><br/>
         2. Granska online<br/>        3. Bekräfta ordern (eller
- avvisa)<br/>         4. Färdig <BR/> $footer:noescape()$",,"1. Click this <a href=""$link$"">link</a><br/>
+ avvisa)<br/>         4. Färdig",,"1. Click this <a href=""$link$"">link</a><br/>
         2. Review online<br/>        3. Confirm the order (or
- return)<br/>         4. Done <BR/> $footer:noescape()$"
+ return)<br/>         4. Done"
 "_remindMailNotSignedOrderContentPartys","Parter:",,"Parties:"
 "_remindMailNotSignedOrderStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte bekräftat
  ordern <strong>$documenttitle$</strong> ännu. Bekräfta ordern eller avvisa
