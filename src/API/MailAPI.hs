@@ -4,50 +4,47 @@ module API.MailAPI (
       charset
     ) where
 
-import Redirect
-import File.Model
-import Doc.DocStorage
-import MinutesTime
-import DB.Classes
 import Company.Model
-import User.Model
+import DB.Classes
+import Doc.DocStateData
+import Doc.DocStorage
+import Doc.DocUtils
+import Doc.JSON
+import Doc.Model
+import EvidenceLog.Model
+import File.Model
 import Kontra
 import KontraLink
+import MinutesTime
 import Misc
-import qualified Log (jsonMailAPI, mailAPI, scrivebymailfailure)
+import Redirect
+import ScriveByMail.Control
+import User.Model
+import Util.HasSomeUserInfo
 import qualified Doc.DocControl as DocControl
+import qualified Log (jsonMailAPI, mailAPI, scrivebymailfailure)
+--import InspectXMLInstances ()
+--import Util.SignatoryLinkUtils
 
+import Codec.MIME.Decode
+import Control.Applicative
 import Control.Monad
 import Control.Monad.IO.Class
+import Data.Char
+import Data.Either
 import Data.List
 import Data.Maybe
-import Control.Applicative
+import Data.String.Utils
 import Happstack.Server hiding (simpleHTTP, host)
-
 import Text.JSON
 import Text.JSON.String
-import Codec.MIME.Decode
 import qualified Codec.MIME.Parse as MIME
 import qualified Codec.MIME.Type as MIME
+import qualified Codec.Text.IConv as IConv
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
-import Data.Either
-import Doc.DocUtils
-import ScriveByMail.Control
-import Doc.Model
-import qualified Codec.Text.IConv as IConv
-import InspectXMLInstances ()
-import Data.String.Utils
-import Data.Char
-import Doc.DocStateData
-
-import Doc.JSON
-
-import EvidenceLog.Model
-import Util.HasSomeUserInfo
---import Util.SignatoryLinkUtils
 
 parseEmailMessageToParts :: BS.ByteString -> (MIME.MIMEValue, [(MIME.Type, BS.ByteString)])
 parseEmailMessageToParts content = (mime, parts mime)

@@ -128,7 +128,6 @@ window.PasswordValidation = Validation.extend({
 
 window.PasswordEqValidation = Validation.extend({
     defaults: {
-        with: undefined,
         validates: function(t) {
             var p1 = this.get("with") ? this.get("with").val() : undefined;
 

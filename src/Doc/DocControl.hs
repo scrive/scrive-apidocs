@@ -5,6 +5,7 @@
 module Doc.DocControl where
 
 import AppView
+import Data.Char
 import DB.Classes
 import DBError
 import Doc.CSVUtils
@@ -415,10 +416,10 @@ makeMailAttachments ctx document = do
       sattachments = concatMap (maybeToList . signatoryattachmentfile) $ documentsignatoryattachments document
       allfiles' = [mainfile] ++ aattachments ++ sattachments
   allfiles <- liftM catMaybes $ mapM (ioRunDB (ctxdbenv ctx) . dbQuery . GetFileByFileID) allfiles'
-  let pdfIfy name | ".pdf" `isSuffixOf` name = name
-                  | otherwise = name ++ ".pdf"
+  let dropPDFSuffix name | ".pdf" `isSuffixOf` (map toLower name) = reverse . drop 4 $ reverse name
+                         | otherwise = name
   --use the doc title rather than file name for the main file (see jira #1152)
-  let filenames = map (pdfIfy . BS.toString) $ documenttitle document : map filename (tail allfiles)
+  let filenames = map (dropPDFSuffix . BS.toString) $ documenttitle document : map filename (tail allfiles)
 
   filecontents <- sequence $ map (getFileContents ctx) allfiles
   return $ zip filenames filecontents
