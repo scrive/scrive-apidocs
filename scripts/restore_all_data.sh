@@ -53,6 +53,9 @@ echo "  password:               $PGPASSWORD"
 #          and there is no CASCADE, so it does not clean attached
 #          constraints for example
 #
+# Same story goes about other database features. We need to DROP
+# LANGUAGE plpgsql so it can be recreated just a moment later.
+#
 # So we need to plainly drop the database before restoring.
 # Warning: this is not transactional so be careful!
 #
@@ -60,9 +63,19 @@ echo Dropping old database
 dropdb -i $PGDATABASE --no-password
 createdb $PGDATABASE -O $PGUSER --no-password
 psql $PGDATABASE -c "ALTER DATABASE $PGDATABASE SET TIMEZONE = UTC"
+psql $PGDATABASE -c "DROP LANGUAGE 'plpgsql'"
 
 echo Restoring postgresql database...
-pg_restore -O -1 -d $PGDATABASE $ALLDATA/psql_database.dump --no-password
+pg_restore -O -1 -v -d $PGDATABASE $ALLDATA/psql_database.dump --no-password
+
+if [ $? -ne 0 ]
+then
+    echo Database restore did not return zero, it probably failed
+    echo Command was:
+    echo "    pg_restore -O -1 -d $PGDATABASE $ALLDATA/psql_database.dump --no-password"
+    echo Exiting to not make more mess.
+    exit 3
+fi
 
 echo Removing old Happstack state files...
 rm -v $LOCAL_STATE/*
