@@ -148,12 +148,12 @@ mailInvitationToSignContract=
     $mailInvitationTitleContract()$
      $nicemail(
         mailheader= mailInvitationTitleContract();
-        mailp1 = mailInvitationToSignContractP2();
+        mailp1 = mailInvitationToSignContractP1();
         mailp2 = footer;
         mailp3 = legalparagraph()
     )$
 ###
-mailInvitationToSignContractP2=
+mailInvitationToSignContractP1=
     $nicemailbodywithpreview(
         hidetitle='true';
 
@@ -184,11 +184,24 @@ mailInvitationToSignOffer=
      $mailInvitationTitleOffer()$
      $nicemail(
         mailheader= mailInvitationTitleOffer();
-        mailp1 = header;
-        mailp2 = mailInvitationToSignOfferIntructions();
-        mailp3 = offerInfo();
-        mailp4 = footer;
-        mailp5 = legalparagraph()
+        mailp1 = mailInvitationToSignOfferP1();
+        mailp2 = footer;
+        mailp3 = legalparagraph()
+    )$
+###
+mailInvitationToSignOfferP1=
+    $nicemailbodywithpreview(
+        hidetitle='true';
+
+        r1='true';
+        r1cond='true';
+        r1elems=header;
+        r1noescp='true';
+
+        r2='true';
+        r2cond='true';
+        r2elems=mailInvitationToSignOfferIntructions();
+        r2noescp='true'
     )$
 ###
 mailInvitationToSignOfferIntructions=
@@ -206,13 +219,26 @@ mailInvitationToSignOrder=
     $mailInvitationTitleOrder()$
     $nicemail(
         mailheader= mailInvitationTitleOrder();
-        mailp1 = header;
-        mailp2 = mailInvitationToSignOrderIntructions();
-        mailp3 = orderInfo();
-        mailp4 = footer;
-        mailp5 = legalparagraph()
+        mailp1 = mailInvitationToSignOrderP1();
+        mailp2 = footer;
+        mailp3 = legalparagraph()
     )$
 ####
+mailInvitationToSignOrderP1=
+    $nicemailbodywithpreview(
+        hidetitle='true';
+
+        r1='true';
+        r1cond='true';
+        r1elems=header;
+        r1noescp='true';
+
+        r2='true';
+        r2cond='true';
+        r2elems=mailInvitationToSignOrderIntructions();
+        r2noescp='true'
+    )$
+###
 mailInvitationToSignOrderIntructions=
     $if(sign)$
     <p>$_mailInvitationToSignOrderContentIfSignatoryInstruction()$</p>
