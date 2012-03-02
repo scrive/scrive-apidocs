@@ -833,6 +833,10 @@ a.new-btn-small.black p {
         font-weight: bold;
 }
 
+.price-plan-page .price-plan tr.big-row td a {
+    display: none;
+}
+
 .body-container .price-plan tr.big-row td a {
 	color: #35A4D6;
 	font: 10px "Lucida Grande";
@@ -866,6 +870,14 @@ a.new-btn-small.black p {
     height: 910px;
 }
 
+.body-container .price-plan-page .highlight-container {
+  top: -6px;
+}
+
+.body-container .price-plan-page .highlight-container .highlight-rows {
+    height: 260px;
+}
+
 .body-container .highlight-container .highlight-rows {
 	padding: 0 10px;
 	width: 224px;
@@ -881,8 +893,11 @@ a.new-btn-small.black p {
 	text-align: center;
 }
 
+.price-plan-page .highlight-container .highlight-rows li a {
+    display: none;
+}
+
 .body-container .highlight-container .highlight-rows li a {
-	color: #999;
 	text-decoration: none;
 	color: #35A4D6;
 	font: 10px "Lucida Grande";

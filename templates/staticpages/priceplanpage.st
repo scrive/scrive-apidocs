@@ -20,7 +20,7 @@ priceplanPageContents=
                     <p class="stronger">$_priceplanPageH1Body2()$</p>
                 </div>
 
-                                <div class="price-plan-container">
+                                <div class="price-plan-container price-plan-page">
                                         <table class="price-plan">
                                                 <tr>$_PriceTableHead()$
                                                 </tr>
