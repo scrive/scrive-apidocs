@@ -208,8 +208,8 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <tr>
                                                         $_PriceTableRow4()$
                                                 </tr>
-                                                <tr>
-                                                        $_PriceTableRow5()$
+                                                <tr class="big-row">
+                                                        $_PriceTablePriceRow()$
                                                 </tr>
                                         </table>
                                         <div class="highlight-container">

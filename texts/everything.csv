@@ -126,7 +126,7 @@
                                         </li>
                                          <li class=""odd"">Ingen bindning</li>
          <li>50 användare</li>
-         <li>Alla features</li>
+         <li>Alla features<br /><a href=""$linkpriceplan$"">Detaljerad prisplan</a></li>
        </ul>","<ul class=""highlight-rows"">
                        <li class=""top"">
                                            <h3>Kickstart business</h3>
@@ -140,7 +140,7 @@
                            </li>
                             <li class=""odd"">No commitment</li>
                                                         <li>50 users</li>
-                           <li>All features</li>
+                           <li>All features<br /><a href=""$linkpriceplan$"">Detailed Priceplan</a></li>
                       </ul>","<ul class=""highlight-rows"">
                        <li class=""top"">
                                            <h3>Kickstart business</h3>
@@ -154,46 +154,19 @@
                            </li>
                             <li class=""odd"">No commitment</li>
                                                         <li>50 users</li>
-                           <li>All features</li>
+                           <li>All features<br /><a href=""$linkpriceplan$"">Detailed Priceplan</a></li>
                       </ul>"
-"_PriceTablePriceRow","<td>
-        <h4>35 kr/signatur</h4>
-                                   <a href=""$linkpriceplan$"">Detaljerad
- prisplan</a>
-         </td>
-          <td>
-                  <h4>32.50 kr/signatur</h4>
-                                                <a href=""$linkpriceplan$"">Detaljerad
- prisplan</a>
-         </td>
-          <td>
-                  <h4>30 kr/signatur</h4>
-                                             <a href=""$linkpriceplan$"">Detaljerad
- prisplan</a>
-                                                            </td>
-                                                        <td>
-
-    <h4>Offert</h4>
-                       <a href=""$linkpriceplan$"">Detaljerad prisplan</a>
-                                                        </td>","<td>                                                                 <h4>35 kr/signature</h4>                                     <a href=""$linkpriceplan$"">Detailed  price plan</a>           </td>                                                         <td>                                                                 <h4>32.50 kr/signature</h4>                                                   <a href=""$linkpriceplan$"">Detailed  price plan</a>           </td>                                                         <td>                                                                 <h4>30 kr/signature</h4>                                                <a href=""$linkpriceplan$"">Detailed  price plan</a>                                                               </td>                                                         <td>                                                                 <h4>Tender</h4>                                                                 <a href=""$linkpriceplan$"">Detailed price plan</a>                                                         </td>","<td>
-        <h4>£3.50/signature</h4>
-                                    <a href=""$linkpriceplan$"">Detailed
+"_PriceTablePriceRow","<td>Alla features<br /><a href=""$linkpriceplan$"">Detaljerad prisplan</a></td><td>Alla features<br /><a href=""$linkpriceplan$"">Detaljerad prisplan</a></td><td>Alla features<br /><<a href=""$linkpriceplan$"">Detaljerad prisplan</a></td><td>Alla features<br /><a href=""$linkpriceplan$"">Detaljerad prisplan</a></td>","<td>All features<br /><a href=""$linkpriceplan$"">Detailed  price plan</a></td><td>All features<br /><a href=""$linkpriceplan$"">Detailed  price plan</a></td>                                                         <td>All features<br /><a href=""$linkpriceplan$"">Detailed  price plan</a>                                                               </td>                                                         <td>All features<br /><a href=""$linkpriceplan$"">Detailed price plan</a>                                                         </td>","<td>All features<br /><a href=""$linkpriceplan$"">Detailed
  price plan</a>
           </td>
-           <td>
-                   <h4>£3.25/signature</h4>
-                                                  <a href=""$linkpriceplan$"">Detailed
+           <td>All features<br /><a href=""$linkpriceplan$"">Detailed
  price plan</a>
           </td>
-           <td>
-                   <h4>£3/signature</h4>
-                                               <a href=""$linkpriceplan$"">Detailed
+           <td>All features<br /><a href=""$linkpriceplan$"">Detailed
  price plan</a>
 
  </td>
-  <td>
-          <h4>Tender</h4>
-                            <a href=""$linkpriceplan$"">Detailed price plan</a>
+  <td>All features<br /><a href=""$linkpriceplan$"">Detailed price plan</a>
                                                         </td>"
 "_PriceTableRow1","<td>0 kr/månad</td>
                 <td>500 kr/månad</td>

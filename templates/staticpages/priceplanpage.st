@@ -36,8 +36,8 @@ priceplanPageContents=
                                                 <tr>
                                                         $_PriceTableRow4()$
                                                 </tr>
-                                                <tr>
-                                                        $_PriceTableRow5()$
+                                                <tr class="big-row">
+                                                        $_PriceTablePriceRow()$
                                                 </tr>
                                         </table>
                                         <div class="highlight-container">
