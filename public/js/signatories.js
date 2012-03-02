@@ -71,7 +71,7 @@ window.SignatoryAttachmentRowView = Backbone.View.extend({
         var lasttd = $("<td/>");
         if (attachment.get('loading')){
             lasttd.append($("<img>").attr('src', "/theme/images/wait30trans.gif"));
-        } else if (attachment.hasFile()) {  
+        } else if (attachment.hasFile()) {
             var filelink = $("<a target='_blank'/>").text(attachment.file().name()).attr("href",attachment.file().downloadLink());
             var path = document.location.pathname.split("/");
             var deleteurl = "/api/document/" + path[2] + "/signatory/" + path[3] + "/attachment/" + attachment.name() +"/file"+ attachment.document().viewer().urlPart();
@@ -88,7 +88,7 @@ window.SignatoryAttachmentRowView = Backbone.View.extend({
                         console.log("error");
                     }
                 });
-                return false;         
+                return false;
             });
             lasttd.append(filelink);
             lasttd.append(removelink);
@@ -136,14 +136,14 @@ window.SignatoryAttachmentRowView = Backbone.View.extend({
                             attachment.notLoading();
                         }
                     }
-                }) 
+                })
             });
             lasttd.append(uploadbutton.input());
-        } 
+        }
         row.append(lasttd);
         return this;
     }
-});    
+});
 
 window.Signatory = Backbone.Model.extend({
     defaults: {
@@ -157,14 +157,14 @@ window.Signatory = Backbone.Model.extend({
                   {name : "sigco"},
                   {name : "sigpersnr"},
                   {name : "sigcompnr"},
-                  {name : "signature"}                
+                  {name : "signature"}
         ],
         current : false,
         attachments : [],
         signorder : 1,
         csv : undefined
     },
-    
+
     initialize : function(args){
         var signatory = this;
         var extendedWithSignatory =   function(hash){
@@ -181,7 +181,7 @@ window.Signatory = Backbone.Model.extend({
         this.set({"fields": fields ,
                   "attachments" : attachments
         });
-        
+
         this.bind("change",function() {signatory.document().trigger("change:signatories")});
 
     },
@@ -228,7 +228,7 @@ window.Signatory = Backbone.Model.extend({
         var fields = this.fields();
         for(var i =0 ;i< fields.length; i++)
             if (fields[i].isCustom()) cf.push(fields[i]);
-        return cf;                                 
+        return cf;
     },
     email: function(){
         return  this.field("email").value();
@@ -244,10 +244,10 @@ window.Signatory = Backbone.Model.extend({
         if (name != undefined && name != " ")
             return name;
         else
-            return "";                                    
+            return "";
     },
     smartname : function() {
-        if (this.current()) 
+        if (this.current())
          return localization.you;
         else
          return this.nameOrEmail();
@@ -255,13 +255,13 @@ window.Signatory = Backbone.Model.extend({
     nameOrEmail : function() {
          if (this.name() != "")
          return this.name();
-        else 
+        else
          return this.email();
     },
     personalnumber : function() {
         var pn = this.field("sigpersnr").value();
         if (pn != undefined)
-            return pn; 
+            return pn;
         else
             return "";
     },
@@ -317,8 +317,8 @@ window.Signatory = Backbone.Model.extend({
         this.set({attachments: []});
     },
     canSign : function() {
-        var canSign = this.document().pending() &&  
-            this.signs() &&  
+        var canSign = this.document().pending() &&
+            this.signs() &&
             !this.hasSigned() &&
             this.signorder() == this.document().signorder();
         return canSign;
@@ -326,12 +326,12 @@ window.Signatory = Backbone.Model.extend({
     allAttachemntHaveFile : function() {
         return _.all(this.attachments(),function(attachment){
             return attachment.hasFile()
-        })      
+        })
     },
     allFieldsReadyForSign: function() {
         return _.all(this.fields(),function(field){
             return field.readyForSign();
-        })      
+        })
     },
     signatureReadyForSign : function() {
         return this.signature() == undefined || this.signature().readyForSign();
@@ -355,7 +355,7 @@ window.Signatory = Backbone.Model.extend({
               reject : "YES"
           });
     },
-    
+
     changeEmail: function(email) {
         return new Submit({
                 url: "/changeemail/" + this.document().documentid() + "/" + this.signatoryid(),
@@ -367,7 +367,8 @@ window.Signatory = Backbone.Model.extend({
         return new Mail({
                 document: this.document(),
                 signatory: this,
-                type: "remind"
+                type: "remind",
+                editWidth: (this.canSign() && !this.hasSigned()) ? 300 : undefined
         })
     },
     rejectMail: function() {
@@ -385,7 +386,7 @@ window.Signatory = Backbone.Model.extend({
         this.trigger("change:fields");
     },
     deleteField : function(field) {
-       var newfields = new Array();    
+       var newfields = new Array();
        for(var i=0;i<this.fields().length;i++)
           if (field !== this.fields()[i])
              newfields.push(this.fields()[i]);
@@ -413,10 +414,10 @@ window.Signatory = Backbone.Model.extend({
             , attachments : _.map(this.attachments(), function(att) {
                   return att.draftData();} )
             , csv : this.csv()
-            
+
         }
     }
-    
+
 })
 
 window.SignatoryStandarView = Backbone.View.extend({
@@ -448,7 +449,7 @@ window.SignatoryStandarView = Backbone.View.extend({
           else if (signatory.deliveredEmail())
                return localization.signatoryMessage.delivered
           else
-              return localization.signatoryMessage.other       
+              return localization.signatoryMessage.other
     },
     changeEmailOption : function(){
         var signatory = this.model;
@@ -487,7 +488,7 @@ window.SignatoryStandarView = Backbone.View.extend({
 		 button.append(icon).append(textbox);
 		 button.click(function() {
 			 ConfirmationWithEmail.popup({
-				title : signatory.hasSigned() ? signatory.document().process().remindagainbuttontext() : localization.reminder.formHead, 
+				title : signatory.hasSigned() ? signatory.document().process().remindagainbuttontext() : localization.reminder.formHead,
 				mail : signatory.remindMail(),
 				acceptText : signatory.hasSigned() ? localization.send : localization.reminder.formSend ,
 				editText :  localization.reminder.formOwnMessage,
@@ -499,7 +500,7 @@ window.SignatoryStandarView = Backbone.View.extend({
 			})
 		 })
 		 return button;
-		
+
 	},
     render: function(){
         var signatory = this.model;
@@ -526,7 +527,7 @@ window.SignatoryStandarView = Backbone.View.extend({
         container.append(fieldsbox);
         var emailview = new FieldStandardView(
             { model : signatory.field("email"),
-              el : $("<div/>")                                
+              el : $("<div/>")
             });
         container.append($(emailview.el));
 
@@ -535,23 +536,23 @@ window.SignatoryStandarView = Backbone.View.extend({
             textsummary.append($("<div class='icon status'/>").addClass(signatory.status()));
             if (signatory.undeliveredEmail() && signatory.seendate() == undefined) textsummary.append("<span style='color:#000000;position:relative;left:-4px;'>!</span> ");
             textsummary.append($("<span class='textstatus'/>").text(this.signatorySummary()));
-        } 
+        }
         else {
             textsummary.text(signatory.document().process().authorissecretarytext());
         }
         container.append(textsummary);
 
-        if (signatory.document().currentViewerIsAuthor() 
-            && !signatory.author() 
+        if (signatory.document().currentViewerIsAuthor()
+            && !signatory.author()
             && ((signatory.document().pending() && signatory.canSign())
                 || signatory.document().closed()))
 		  container.append(this.remidenMailOption());
-		
+
         if (signatory.undeliveredEmail() && signatory.document().currentViewerIsAuthor() && signatory.document().pending())
           container.append(this.changeEmailOption());
-        
+
         return this;
     }
 })
 
-})(window); 
+})(window);
