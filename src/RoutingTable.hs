@@ -166,7 +166,7 @@ staticRoutes = choice
      , dir "csvlandpage" $ hGet $ toK1 $ DocControl.handleCSVLandpage
 
      , dir "padqueue" $ dir "add" $ hPost $ toK2 $ PadQueue.addToQueue
-     
+     , dir "padqueue" $ hGet $ toK0 $ PadQueue.showPadQueueCurrent
      -- UserControl
      , dir "account"                    $ hGet  $ toK0 $ UserControl.handleUserGet
      , dir "account"                    $ hPost $ toK0 $ UserControl.handleUserPost
