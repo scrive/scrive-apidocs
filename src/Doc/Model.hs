@@ -103,7 +103,6 @@ import qualified Log
 import Control.Monad.IO.Class
 import Control.Monad
 import qualified Control.Exception as E
-import File.Model
 import Util.MonadUtils
 
 import EvidenceLog.Model
@@ -152,11 +151,10 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
   where
     message = "Documents aren't equal in " ++ concat (map showInequality inequalities)
     showInequality (name,obj1,obj2) = name ++ ": \n" ++ obj1 ++ "\n" ++ obj2 ++ "\n"
-    sl1 = sort $ documentsignatorylinks d1
-    sl2 = sort $ documentsignatorylinks d2
+    sl1 = documentsignatorylinks d1
+    sl2 = documentsignatorylinks d2
     checkSigLink s1 s2 = map (\f -> f s1 s2)
-                         [ checkEqualBy "signatorylinkid" signatorylinkid
-                         , checkEqualBy "signatorydetails" signatorydetails
+                         [ checkEqualBy "signatorydetails" signatorydetails
                          , checkEqualBy "signatorymagichash" signatorymagichash
                          , checkEqualByAllowSecondNothing "maybesignatory" maybesignatory
                          , checkEqualByAllowSecondNothing "maybesupervisor" maybesupervisor
@@ -173,9 +171,8 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                          ]
 
     inequalities = catMaybes $ map (\f -> f d1 d2)
-                   [ checkEqualBy "documentid" documentid
-                   , checkEqualBy "documenttitle" documenttitle
-                   --, checkEqualBy "documentfiles" documentfiles -- Mariusz: I skipped this test, since for migration I put drop files that are no avaible in database (broken)
+                   [ checkEqualBy "documenttitle" documenttitle
+                   , checkEqualBy "documentfiles" documentfiles
                    , checkEqualBy "documentsealedfiles" documentsealedfiles
                    , checkEqualBy "documentstatus" documentstatus
                    , checkEqualBy "documenttype" documenttype
@@ -402,8 +399,7 @@ insertSignatoryLinkAsIs documentid link = do
         Just _ -> return (Just userid1)
 
   _ <- kRun $ mkSQL INSERT tableSignatoryLinks [
-      sql "id" $ signatorylinkid link
-    , sql "document_id" documentid
+      sql "document_id" documentid
     , sql "user_id" $ ruserid
     , sql "roles" $ signatoryroles link
     , sql "company_id" $ maybecompany link
@@ -464,8 +460,7 @@ insertAuthorAttachmentAsIs documentid attach = do
 
 insertDocumentAsIs :: Document -> DB (Maybe Document)
 insertDocumentAsIs document = do
-    let Document { documentid
-                 , documenttitle
+    let Document { documenttitle
                  , documentsignatorylinks
                  , documentfiles
                  , documentsealedfiles
@@ -491,17 +486,12 @@ insertDocumentAsIs document = do
                  , documentregion
                  } = document
         process = toDocumentProcess documenttype
-    files <-  sequence $ map (dbQuery . GetFileByFileID)  documentfiles
-    let fileLost = (length $ concatMap maybeToList files) <  length documentfiles
-    when (fileLost) $
-        Log.error $ "!!!!MIGRATION WARN: Document  " ++ (show documentid) ++ " has files ("++ show documentfiles ++ "), but they are not in database. FileID will be dropped."
-            ++ "Document was created "++ show documentctime
+
     _ <- kRun $ mkSQL INSERT tableDocuments [
-        sql "id" documentid
-      , sql "title" documenttitle
+        sql "title" documenttitle
       , sql "tags" documenttags
-      , sql "file_id" $ Nothing<| fileLost |> (listToMaybe documentfiles)
-      , sql "sealed_file_id" (listToMaybe documentsealedfiles)
+      , sql "file_id" $ listToMaybe documentfiles
+      , sql "sealed_file_id" $ listToMaybe documentsealedfiles
       , sql "status" documentstatus
       , sql "error_text" $ case documentstatus of
           DocumentError msg -> toSql msg
@@ -533,8 +523,8 @@ insertDocumentAsIs document = do
     case mdoc of
       Nothing -> return Nothing
       Just doc -> do
-        mlinks <- mapM (insertSignatoryLinkAsIs documentid) documentsignatorylinks
-        mauthorattachments <- mapM (insertAuthorAttachmentAsIs documentid) documentauthorattachments
+        mlinks <- mapM (insertSignatoryLinkAsIs (documentid doc)) documentsignatorylinks
+        mauthorattachments <- mapM (insertAuthorAttachmentAsIs (documentid doc)) documentauthorattachments
         if any isNothing mlinks || any isNothing mauthorattachments
          then return Nothing
          else do
@@ -546,11 +536,9 @@ insertDocumentAsIs document = do
 
 insertNewDocument :: Document -> DB Document
 insertNewDocument doc = do
-  kRunRaw "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
-  docid <- getUniqueID tableDocuments
   now <- getMinutesTime
-  let docWithId = doc {documentid = docid, documentmtime  = now, documentctime = now}
-  newdoc <- insertDocumentAsIs docWithId
+  let docWithTime = doc {documentmtime  = now, documentctime = now}
+  newdoc <- insertDocumentAsIs docWithTime
   case newdoc of
     Just d -> return d
     Nothing -> error "insertNewDocument failed for some reason"
@@ -1236,38 +1224,32 @@ instance Actor a => DBUpdate (NewDocument a) (Either String Document) where
   if fmap companyid mcompany /= usercompany user
     then return $ Left "company and user don't match"
     else do
-      kRunRaw "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
-      kRunRaw "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
-      did <- getUniqueID tableDocuments
 
       let authorRoles = if ((Just True) == getValueForProcess documenttype processauthorsend)
                         then [SignatoryAuthor]
                         else [SignatoryPartner, SignatoryAuthor]
-      linkid <- getUniqueID tableSignatoryLinks
 
       magichash <- random
 
       let authorlink0 = signLinkFromDetails'
                         (signatoryDetailsFromUser user mcompany)
-                        authorRoles linkid magichash
+                        authorRoles magichash
 
       let authorlink = authorlink0 {
                          maybesignatory = Just $ userid user,
                          maybecompany = usercompany user }
-                         
+
       othersignatories <- sequence $ replicate nrOfOtherSignatories $ do
-                        l <- getUniqueID tableSignatoryLinks
                         mh <- random
                         return $ signLinkFromDetails'
                                 SignatoryDetails
                                                 {  signatorysignorder = SignOrder 1
                                                  , signatoryfields   = emptySignatoryFields
                                                 }
-                                [SignatoryPartner] l mh                  
-          
+                                [SignatoryPartner] mh
+
       let doc = blankDocument
-                { documentid                   = did
-                , documenttitle                = title
+                { documenttitle                = title
                 , documentsignatorylinks       = authorlink:othersignatories
                 , documenttype                 = documenttype
                 , documentregion               = getRegion user
@@ -1286,7 +1268,7 @@ instance Actor a => DBUpdate (NewDocument a) (Either String Document) where
            midoc <- insertDocumentAsIs doc
            case midoc of
              Just doc' -> do
-               _<- dbUpdate $ InsertEvidenceEvent           
+               _<- dbUpdate $ InsertEvidenceEvent
                  NewDocumentEvidence
                  ("Document \"" ++ BS.toString title ++ "\" created by " ++ actorWho actor ++ ".")
                  (Just $ documentid doc')
@@ -1394,10 +1376,9 @@ instance Actor a => DBUpdate (RestartDocument a) (Either String Document) where
     clearSignInfofromDoc = do
       let signatoriesDetails = map (\x -> (signatorydetails x, signatoryroles x, signatorylinkid x)) $ documentsignatorylinks doc
           Just asl = getAuthorSigLink doc
-      newSignLinks <- flip mapM signatoriesDetails $ do \(a,b,c) -> do
-                                                             magichash <- random
-
-                                                             return $ signLinkFromDetails' a b c magichash
+      newSignLinks <- forM signatoriesDetails $ \(details,roles,linkid) -> do
+                           magichash <- random
+                           return $ (signLinkFromDetails' details roles magichash) { signatorylinkid = linkid }
       let Just authorsiglink0 = find isAuthor newSignLinks
           authorsiglink = authorsiglink0 {
                             maybesignatory = maybesignatory asl,
@@ -1848,19 +1829,13 @@ instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document)
       Just document ->
         case checkResetSignatoryData document signatories of
           [] -> do
-
-            kPrepare "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
-            _ <- kExecute []
             kPrepare "DELETE FROM signatory_links WHERE document_id = ?"
             _ <- kExecute [toSql documentid]
 
             let mauthorsiglink = getAuthorSigLink document
             forM_ signatories $ \(details, roles, atts, mcsvupload) -> do
-                     linkid <- getUniqueID tableSignatoryLinks
-
                      magichash <- random
-
-                     let link' = (signLinkFromDetails' details roles linkid magichash)
+                     let link' = (signLinkFromDetails' details roles magichash)
                                  { signatorylinkcsvupload = mcsvupload }
                          link = if isAuthor link'
                                 then link' { maybesignatory = maybe Nothing maybesignatory mauthorsiglink
@@ -1868,7 +1843,7 @@ instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document)
                                            }
                                 else link'
                      r1 <- insertSignatoryLinkAsIs documentid link
-                     when_ (isJust r1) $ dbUpdate $ SetSigAttachments documentid linkid atts actor
+                     when_ (isJust r1) $ dbUpdate $ SetSigAttachments documentid (signatorylinkid $ fromJust r1) atts actor
                      when (not (isJust r1)) $
                           error "ResetSignatoryDetails signatory_links did not manage to insert a row"
 
@@ -1930,13 +1905,10 @@ instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document)
 data SignLinkFromDetailsForTest = SignLinkFromDetailsForTest SignatoryDetails [SignatoryRole]
 instance DBUpdate SignLinkFromDetailsForTest SignatoryLink where
   dbUpdate (SignLinkFromDetailsForTest details roles) = do
-      kRunRaw "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
-      linkid <- getUniqueID tableSignatoryLinks
-
       magichash <- random
 
       let link = signLinkFromDetails' details
-                        roles linkid magichash
+                        roles magichash
 
       return link
 
@@ -1985,10 +1957,7 @@ instance Actor a => DBUpdate (SignableFromDocumentIDWithUpdatedAuthor a) (Either
 data StoreDocumentForTesting = StoreDocumentForTesting Document
 instance DBUpdate StoreDocumentForTesting DocumentID where
   dbUpdate (StoreDocumentForTesting document) = do
-    -- FIXME: this requires more thinking...
-    kRunRaw "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
-    did <- getUniqueID tableDocuments
-    Just doc <- insertDocumentAsIs (document { documentid = did })
+    Just doc <- insertDocumentAsIs document
     return (documentid doc)
 
 {-

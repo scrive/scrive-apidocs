@@ -103,7 +103,7 @@ signatoryLinksHaveDifferentIDs _ document =
   let slids = map signatorylinkid (documentsignatorylinks document)
   in assertInvariant ("some of document signatory links have same id: " ++ 
                    show slids) $
-          (all ((==1) . length) . group . sort) slids
+          (all ((==1) . length) . group . sort . filter ((/=) (unsafeSignatoryLinkID 0))) slids
 
 {- |
    Template or Preparation implies only Author has user or company connected

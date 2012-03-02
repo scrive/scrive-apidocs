@@ -8,7 +8,7 @@ import DB.Model
 tableDocuments :: Table
 tableDocuments = Table {
     tblName = "documents"
-  , tblVersion = 2
+  , tblVersion = 3
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("service_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
@@ -95,6 +95,11 @@ tableDocuments = Table {
       ++ " ADD CONSTRAINT fk_documents_sealed_file_id FOREIGN KEY(sealed_file_id)"
       ++ " REFERENCES files(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
+      -- create the sequence
+    kRunRaw $ "CREATE SEQUENCE documents_id_seq"
+    kRunRaw $ "SELECT setval('documents_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM documents))"
+    kRunRaw $ "ALTER TABLE documents ALTER id SET DEFAULT nextval('documents_id_seq')"
+    return ()
   }
 
 
@@ -168,7 +173,7 @@ tableSignatoryAttachments = Table {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = Table {
     tblName = "signatory_links"
-  , tblVersion = 4
+  , tblVersion = 5
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -248,4 +253,9 @@ tableSignatoryLinks = Table {
       ++ " ADD CONSTRAINT fk_signatory_links_company_id FOREIGN KEY(company_id)"
       ++ " REFERENCES companies(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
+    kRunRaw $ "CREATE SEQUENCE signatory_links_id_seq"
+      -- set start value to be one more than maximum already in the table or 1000 if table is empty
+    kRunRaw $ "SELECT setval('signatory_links_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM signatory_links))"
+      -- and finally attach serial default value to files.id
+    kRunRaw $ "ALTER TABLE signatory_links ALTER id SET DEFAULT nextval('signatory_links_id_seq')"
   }

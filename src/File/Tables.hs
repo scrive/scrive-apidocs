@@ -8,7 +8,7 @@ import DB.Model
 tableFiles :: Table
 tableFiles = Table {
     tblName = "files"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
@@ -30,15 +30,11 @@ tableFiles = Table {
         return TVRcreated
       _ -> return TVRinvalid
   , tblPutProperties = do
-    {-
-    kRunRaw $ "ALTER TABLE user_friends"
-      ++ " ADD CONSTRAINT fk_user_friends_users FOREIGN KEY(user_id)"
-      ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE user_friends"
-      ++ " ADD CONSTRAINT fk_user_friends_users_2 FOREIGN KEY(friend_id)"
-      ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    -}
-    return ()
+      -- create the sequence
+      _ <- kRunRaw $ "CREATE SEQUENCE files_id_seq"
+      -- set start value to be one more than maximum already in the table or 1000 if table is empty
+      _ <- kRunRaw $ "SELECT setval('files_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM files))"
+      -- and finally attach serial default value to files.id
+      _ <- kRunRaw $ "ALTER TABLE files ALTER id SET DEFAULT nextval('files_id_seq')"
+      return ()
   }

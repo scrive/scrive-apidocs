@@ -375,7 +375,7 @@ window.Eleg = {
       LoadingDialog.open(localization.startingSaveSigning);
 
       var url;
-      if(document.viewer().signatoryid() === document.author().signatoryid()) // author
+      if(document.preparation() || (document.viewer() && document.viewer().signatoryid() === document.author().signatoryid())) // author
         url = "/d/eleg/" + document.documentid();
       else 
         url = "/s/eleg/" + document.documentid() +  "/" + document.viewer().signatoryid();
@@ -436,7 +436,7 @@ window.Eleg = {
       if (!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage))
         return;
       var url;
-      if(document.viewer().signatoryid() === document.author().signatoryid()) // author
+      if(document.preparation() || (document.viewer() && document.viewer().signatoryid() === document.author().signatoryid())) // author
         url = "/d/eleg/" + document.documentid();
       else 
         url = "/s/eleg/" + document.documentid() +  "/" + document.viewer().signatoryid();
@@ -505,7 +505,7 @@ window.Eleg = {
       if (!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage))
         return false;
       var url;
-      if(document.viewer().signatoryid() === document.author().signatoryid()) // author
+      if(document.preparation() || (document.viewer() && document.viewer().signatoryid() === document.author().signatoryid())) // author
         url = "/d/eleg/" + document.documentid();
       else 
         url = "/s/eleg/" + document.documentid() +  "/" + document.viewer().signatoryid();

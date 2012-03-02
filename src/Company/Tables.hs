@@ -8,7 +8,7 @@ import DB.Model
 tableCompanies :: Table
 tableCompanies = Table {
     tblName = "companies"
-  , tblVersion = 3
+  , tblVersion = 4
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("external_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
@@ -48,4 +48,7 @@ tableCompanies = Table {
       ++ " ADD CONSTRAINT fk_companies_services FOREIGN KEY(service_id)"
       ++ " REFERENCES services(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
+    kRunRaw $ "CREATE SEQUENCE companies_id_seq"
+    kRunRaw $ "SELECT setval('companies_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM companies))"
+    kRunRaw $ "ALTER TABLE companies ALTER id SET DEFAULT nextval('companies_id_seq')"
   }
