@@ -77,99 +77,85 @@
 "_PresentPassword","Nuvarande lösenord:",,"Present password:"
 "_PriceTableHead","<th>
 
-    <h3>Small</h3>
-                      <p>Förbättra processerna i den mindre organisationen</p>
+    <h3>Private</h3>
+                      <p>För privatperson och entreprenör.</p>
                                                         </th>
                                                         <th>
 
-    <h3>Team</h3>
-                     <p>Effektivisera teamet med enkla medel</p>
+    <h3>Kickstart team</h3>
+                     <p>Ingen bindningstid. Börja genast.</p>
                                                         </th>
                                                         <th>
 
-    <h3>Business</h3>
-                         <p>En helhetslösning för många användningsområden</p>
+    <h3>Kickstart business</h3>
+                         <p>Ingen bindningstid. Börja genast.</p>
                                                         </th>
                                                         <th>
 
     <h3>Enterprise</h3>
-                           <p>Större volymer, integrationer och
- anpassning</p>
+                           <p>För större organisationer.</p>
            </th>",,"<th>
 
-    <h3>Small</h3>
-                      <p>Improve small organisations</p>
+    <h3>Private</h3>
+                      <p>For private use and small companies.</p>
                                                     </th>
                                                      <th>
 
- <h3>Team</h3>
-                  <p>Make your team more efficient</p>
+ <h3>Kickstart team</h3>
+                  <p>No commitment. Get started now.</p>
                                                  </th>
                                                   <th>
-                                                          <h3>Business</h3>
+                                                          <h3>Kickstart business</h3>
 
-    <p>One solution with many uses</p>
+    <p>No commitment. Get started now.</p>
                                    </th>
                                     <th>
                                             <h3>Enterprise</h3>
 
-    <p>Larger volume, integrations and customisation</p>
+    <p>For larger organisations.</p>
                                                     </th>"
 "_PriceTableHighlightedColumn","<ul class=""highlight-rows"">
                        <li class=""top"">
-                                           <h3>Business</h3>
+                                           <h3>Kickstart business</h3>
 
-    <p>En helhetslösning för många användningsområden </p>
+    <p>Ingen bindningstid. Börja genast.</p>
                                                       </li>
-                                                       <li class=""odd"">50
- användare</li>
+                                                       <li class=""odd"">2000 kr/månad</li>
            <li>
-                   <p>2000 signaturer/år</p>
+                   <p>30 kr/signatur</p>
                                         </li>
-                                         <li class=""odd"">Obegränsad
- lagring</li>
-         <li>Avancerade funktioner</li>
-                                   <li class=""bottom"">
-                                                          <h4>30
- kr/signatur</h4>
-                     <a href=""$linkpriceplan$"">Detaljerad prisplan</a>
-                                                           </li></ul>","<ul class=""highlight-rows"">
+                                         <li class=""odd"">Ingen bindning</li>
+         <li>50 användare</li>
+         <li>Alla features</li>
+       </ul>","<ul class=""highlight-rows"">
                        <li class=""top"">
-                                           <h3>Business</h3>
+                                           <h3>Kickstart business</h3>
 
-    <p>One solution with many uses</p>
+    <p>No commitment. Get started now.</p>
                                    </li>
-                                    <li class=""odd"">50 users</li>
+                                    <li class=""odd"">200 €/month</li>
                                                         <li>
 
-    <p>2000 signatures/year</p>
+    <p>3.0 €/signature</p>
                            </li>
-                            <li class=""odd"">Unlimited storage</li>
-                                                        <li>Advanced
- features</li>
-          <li class=""bottom"">
-                                 <h4>30 kr/signature</h4>
-
- <a href=""$linkpriceplan$"">Detailed price plan</a>
-                                        </li></ul>","<ul class=""highlight-rows"">
+                            <li class=""odd"">No commitment</li>
+                                                        <li>50 users</li>
+                           <li>All features</li>
+                      </ul>","<ul class=""highlight-rows"">
                        <li class=""top"">
-                                           <h3>Business</h3>
+                                           <h3>Kickstart business</h3>
 
-    <p>One solution with many uses</p>
+    <p>No commitment. Get started now.</p>
                                    </li>
-                                    <li class=""odd"">50 users</li>
+                                    <li class=""odd"">200 €/month</li>
                                                         <li>
 
-    <p>2000 signatures/year</p>
+    <p>3.0 €/signature</p>
                            </li>
-                            <li class=""odd"">Unlimited storage</li>
-                                                        <li>Advanced
- features</li>
-          <li class=""bottom"">
-                                 <h4>£3/signature</h4>
-
- <a href=""$linkpriceplan$"">Detailed price plan</a>
-                                        </li></ul>"
+                            <li class=""odd"">No commitment</li>
+                                                        <li>50 users</li>
+                           <li>All features</li>
+                      </ul>"
 "_PriceTablePriceRow","<td>
         <h4>35 kr/signatur</h4>
                                    <a href=""$linkpriceplan$"">Detaljerad
@@ -209,35 +195,38 @@
           <h4>Tender</h4>
                             <a href=""$linkpriceplan$"">Detailed price plan</a>
                                                         </td>"
-"_PriceTableRow1","<td>5 användare</td>
-                <td>15 användare</td>
-                                 <td>50 användare</td>
-                                                  <td>Offert</td>",,"<td>5 users</td>
-                <td>15 users</td>
-                                 <td>50 users</td>
-                                                  <td>Tender</td>"
-"_PriceTableRow2","<td>500 signaturer/år</td>
-                      <td>1000 signaturer/år</td>
-                                             <td>2000 signaturer/år</td>
-                                                        <td>Från
- 4000 signaturer/år</td>",,"<td>500 signatures/year</td>
-                        <td>1000 signatures/year</td>
-                                                 <td>2000 signatures/year</td>
-                                                        <td>From
- 4000 signatures/year</td>"
-"_PriceTableRow3","<td>500 dok laging</td>
-                   <td>Obegränsad lagring</td>
+"_PriceTableRow1","<td>0 kr/månad</td>
+                <td>500 kr/månad</td>
+                                 <td>2000 kr/månad</td>
+                                                  <td>Offert</td>",,"<td>0 €/month</td>
+                <td>50 €/month</td>
+                                 <td>200 €/month</td>
+                                                  <td>Offer</td>"
+"_PriceTableRow2","<td>5 fria signaturer/månad</td>
+                      <td>35 kr/signatur</td>
+                                             <td>30 kr/signatur</td>
+                                                        <td>Offert</td>",,"<td>5 free signatures/month</td>
+                        <td>3.5 €/signature</td>
+                                                 <td>3.0 €/signature</td>
+                                                        <td>Offer</td>"
+"_PriceTableRow3","<td>Ingen bindning</td>
+                   <td>Ingen bindning</td>
                                           <td>Obegränsad lagring</td>
-                                                        <td>Offert</td>",,"<td>Storage for 500 documents</td>                                                         <td>Unlimited storage</td>                                                         <td>Unlimited storage</td>                                                         <td>Tender</td>"
-"_PriceTableRow4","<td>Basfunktioner</td>
-                  <td>Basfunktioner</td>
-                                    <td>Advancerade funktioner</td>
-                                                        <td>Anpassad
- lösning</td>",,"<td>Basic features</td>
-                   <td>Basic features</td>
-                                      <td>Advanced features</td>
-                                                        <td>Custom
- solution</td>"
+                                                        <td>Offert</td>",,"<td>No commitment</td>                                                         <td>No commitment</td>                                                         <td>No commitment</td>                                                         <td>Offer</td>"
+"_PriceTableRow4","<td>1 användare</td>
+                  <td>10 användare</td>
+                                    <td>50 användare</td>
+                                                        <td>Offert</td>",,"<td>1 user</td>
+                   <td>10 users</td>
+                                      <td>50 users</td>
+                                                        <td>Offer</td>"
+"_PriceTableRow5","<td>Alla features</td>
+                  <td>Alla features</td>
+                                    <td>Alla features</td>
+                                                        <td>Alla features</td>",,"<td>All features</td>
+                   <td>All features</td>
+                                      <td>All features</td>
+                                                        <td>All features</td>"
 "_Quote1","”Skönt. Snabbare vändor med kund och man slipper arkivera papper.”",,"""Nice. Faster responses from customers and no paper archiving."""
 "_Quote1By","Mikael Green, VD, Account Factory, Redovisningsbyrå",,"Mikael Green, CEO, Account Factory, Accounting firm"
 "_Quote2","”Man har mycket bättre koll på de avtal som ingåtts. Det är grejen
@@ -786,7 +775,7 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_from","från",,"from"
 "_h1","Signera offerter och avtal med Scrive",,"Sign tenders and contracts with Scrive"
 "_h1Body","Stäng affärer snabbare. Mindre administration. Nöjdare kunder.",,"Close deals faster. Less administration. More satisfied customers."
-"_h3CreateAccount","10 fria signaturer per månad!",,"10 free signatures per month!"
+"_h3CreateAccount","5 fria signaturer per månad!",,"5 free signatures per month!"
 "_h3CreateAccountBody","Kom igång omedelbart. Inga installationer. Inga dolda kostnader.",,"Get started instantly. No installation. No hidden costs."
 "_headerAccount","Konto",,"Account"
 "_headerArchive","Arkiv",,"Archive"
@@ -2093,312 +2082,52 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_phone","Telefonnummer",,"Phone"
 "_placeFieldName","place",,"place"
 "_poweredByScrive","Med vänliga hälsningar",,"Best regards"
-"_priceplanPageBelowTable1","<h2>Vi tar bara betalt när du tjänar pengar</h2>
-                    <p>Vi tar betalt per signatur. Vi tror dock
- på att bara ta betalt när vi tillför som mest värde. Därför
- räknar vi bara signaturer i färdigställda dokument där vi utfärdat
- vårt verifikat. Med andra ord, vi tar bara betalt när du gör
- affär.</p>",,"<h2>We only charge you when you make money</h2>
-                    <p>We charge you per signature, but we believe in charging only when we add value. Therefore we count just the signatures in completed documents. In other words, we charge if and when you make a deal.</p>"
-"_priceplanPageBelowTable2","<h2>Gratis för privatpersoner och enmansföretagare</h2>
-                    <p>Det finns tusen skäl varför alla bör signera
- sina dokument elektroniskt. Vår ambition är att alltid jobba
- nära kunden i tätt samarbete. Tyvärr har vi inte möjlighet att
- hjälpa alla målgrupper aktivt. Därför erbjuder vi ett supportfritt
- konto för alla mindre användare. 1 användare, 5 fria signaturer
- per månad och 50 dokument i lagring.</p>",,"<h2>Free for personal use</h2>                     <p>We offer a support free account for small users. This includes 5 free  signatures per month and storage of up to 50 documents.</p>"
+"_priceplanPageBelowTable1","<h2>Vi tar bara betalt för signaturer när du tjänar pengar</h2>
+                    <p>Signaturer räknas endast när ett dokument signerats av samtliga parter.</p>",,"<h2>We only charge for signatures when you make money</h2>
+                    <p>Signatures are counted only when a document has been signed by all parties.</p>"
+"_priceplanPageBelowTable2","<h2>20% rabatt</h2>
+                    <p>Den månatliga supportkostnaden rabatteras med 20% vid 12 månaders bundet abonnemang.</p>",,"<h2>20% discount</h2>                     <p>We give you 20% discount on the monthly support fee if you choose to subscribe for 12 months.</p>"
 "_priceplanPageBelowTable3","<h2>Rabatter till ej vinstdrivande organisationer</h2>
                     <p>Vi gillar engagemang och eldsjälar som
  vill förändra. Därför stödjer vi ej vinstdrivande organisationer
  genom att erbjuda bra rabatter på våra listpriser.</p>",,"<h2>Discounts for non-profit organisations</h2>                     <p>We appreciate dedicated enthusiasts who  want to make a difference. Therefore we support non-profit organisations  by offering them discounts on our list prices.</p>"
 "_priceplanPageH1","Priser",,"Prices"
 "_priceplanPageH1Body1","E-signera dokument snabbt, smidigt och säkert.",,"E-sign documents quickly, simply and securely. "
-"_priceplanPageH1Body2","Registrera dig på under minuten och få 10 fria signaturer per månad redan idag!",,"Register in less than a minute and get 10 free signatures per month today!"
+"_priceplanPageH1Body2","Registrera dig på under minuten och få 5 fria signaturer per månad redan idag!",,"Register in less than a minute and get 5 free signatures per month today!"
 "_priceplanPageMetaDescription","Signera och arkivera dina avtal elektroniskt. Välj prisplan efter
  dina behov – Free, Small, Business eller Enterprise.",,"Sign and store your contracts online. Select a price plan that
  matches your needs Small, Team, Business or Enterprise."
 "_contactUsPageMetaDescription","Kontakta Scrive",,"Contact Scrive"
-"_priceplanPagePriceplanTop","<th><h2>Prisplan</h2>                                </th>
-                              <th>
-          <h3>Small</h3>                                    <p>35
- kr/signatur</p>                                </th>
-                         <th>
-     <h3>Team</h3>                                    <p>32.50
- kr/signatur</p>                                </th>
-                         <th>
-     <h3>Business</h3>                                    <p>30
- kr/signatur</p>                                </th>
-                         <th>
-     <h3>Enterprise</h3>                                    <p>Offert</p></th>","<th><h2>Price plan</h2>                                </th>                                <th>                                     <h3>Small</h3>                                     <p>35kr/signature</p>                                </th>                                 <th>                                     <h3>Team</h3>                                     <p>32.5kr/signature</p>                                </th>                                 <th>                                     <h3>Business</h3>                                     <p>30 kr/signature</p>                                </th>                                 <th>                                     <h3>Enterprise</h3>                                     <p>Tender</p></th>","<th><h2>Price plan</h2>                                </th>
-                               <th>
-           <h3>Small</h3>
- <p>£3.50/signature</p>                                </th>
-                                <th>
-            <h3>Team</h3>
- <p>£3.25/signature</p>                                </th>
-                                <th>
-            <h3>Business</h3>
-     <p>£3.00/signature</p>                                </th>
-                                <th>
-            <h3>Enterprise</h3>
-       <p>Tender</p></th>"
-"_priceplanPageTableHighlightedColumn","<li class=""top"">
-                <h3>Business</h3>
-     <p>30 kr/signatur</p>                            </li>
-                           <li>50</li>
-      <li class=""odd"">2 000</li>                            <li>Obegränsad</li>
-                            <li class=""odd"">Offert</li>
-                       <li>2 x 1h</li>
-      <li class=""odd"">4h</li>                            <li>Telefon</li>
-                            <li class=""odd"">✓</li>
-                  <li>✓</li>                            <li class=""odd"">✓</li>
-                            <li>✓</li>
-      <li class=""odd"">✓</li>                            <li>✓</li>
-                            <li class=""odd"">✓</li>
-                  <li>✓</li>                            <li class=""odd"">✓</li>
-                            <li>✓</li>
-      <li class=""odd"">✓</li>                            <li>✓</li>
-                            <li class=""odd"">✓</li>
-                  <li>✓</li>                            <li class=""odd"">✓</li>
-                            <li>✓</li>
-      <li class=""odd"">✓</li>                            <li>✓</li>
-                            <li class=""odd"">✓</li>
-                  <li></li>                            <li class=""odd""></li>
-                            <li></li>
-     <li class=""odd""></li>                            <li class=""bottom""></li>",,"<li class=""top"">
-                <h3>Business</h3>
-     <p>£3.00/signature</p>                            </li>
-                            <li>50</li>
-       <li class=""odd"">2 000</li>
- <li>Unlimited</li>                            <li class=""odd"">Tender</li>
-                            <li>2 x 1h</li>
-           <li class=""odd"">4h</li>
-  <li>Phone</li>                            <li class=""odd"">✓</li>
-                            <li>✓</li>
-      <li class=""odd"">✓</li>                            <li>✓</li>
-                            <li class=""odd"">✓</li>
-                  <li>✓</li>                            <li class=""odd"">✓</li>
-                            <li>✓</li>
-      <li class=""odd"">✓</li>                            <li>✓</li>
-                            <li class=""odd"">✓</li>
-                  <li>✓</li>                            <li class=""odd"">✓</li>
-                            <li>✓</li>
-      <li class=""odd"">✓</li>                            <li>✓</li>
-                            <li class=""odd"">✓</li>
-                  <li>✓</li>                            <li class=""odd"">✓</li>
-                            <li></li>
-     <li class=""odd""></li>                            <li></li>
-                            <li class=""odd""></li>
-                 <li class=""bottom""></li>"
-"_priceplanPageTableRow1","<td>Antal användare</td>
-                            <td>5</td>
-          <td>15</td>                                <td>50</td>
-                                <td>Offert</td>",,"<td>Number of users</td>
-                            <td>5</td>
-          <td>15</td>                                <td>50</td>
-                                <td>Tender</td>"
-"_priceplanPageTableRow10","<td>E-signering</td>
-                        <td>✓</td>
-      <td>✓</td>                                <td>✓</td>
-                              <td>✓</td>",,"<td>E-signing</td>
-                      <td>✓</td>
-    <td>✓</td>                                <td>✓</td>
-                            <td>✓</td>"
-"_priceplanPageTableRow11","<td>E-legitimationssignering</td>
-                                <td>✓</td>
-              <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>",,"<td>E-ID signing</td>
-                         <td>✓</td>
-       <td>✓</td>                                <td>✓</td>
-                               <td>✓</td>"
-"_priceplanPageTableRow12","<td>E-arkiv</td>
-                    <td>✓</td>
-  <td>✓</td>                                <td>✓</td>
-                          <td>✓</td>",,"<td>E-archive</td>
-                      <td>✓</td>
-    <td>✓</td>                                <td>✓</td>
-                            <td>✓</td>"
-"_priceplanPageTableRow13","<td>Processbevakning</td>
-                             <td>✓</td>
-           <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>",,"<td>Process monitoring</td>
-                               <td>✓</td>
-             <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>"
-"_priceplanPageTableRow14","<td>Påminnelser</td>
-                        <td>✓</td>
-      <td>✓</td>                                <td>✓</td>
-                              <td>✓</td>",,"<td>Reminders</td>
-                      <td>✓</td>
-    <td>✓</td>                                <td>✓</td>
-                            <td>✓</td>"
-"_priceplanPageTableRow15","<td>Justera hälsningsmeddelande</td>
-                                <td>✓</td>
-              <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>",,"<td>Edit invitation message</td>
-                                <td>✓</td>
-              <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>"
-"_priceplanPageTableRow16","<td>Välj förfallodatum</td>
-                               <td>✓</td>
-             <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>",,"<td>Select expiry date</td>
-                                <td>✓</td>
-              <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>"
-"_priceplanPageTableRow17","<td>Spara egna mallar</td>
-                              <td>✓</td>
-            <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>",,"<td>Save templates</td>
-                           <td>✓</td>
-         <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>"
-"_priceplanPageTableRow18","<td>Bifoga bilaga</td>
-                          <td>✓</td>
-        <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>",,"<td>Add attachment</td>
-                           <td>✓</td>
-         <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>"
-"_priceplanPageTableRow19","<td>Begär Bilagor</td>
-                          <td>✓</td>
-        <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>",,"<td>Request attachments</td>
-                                <td>✓</td>
-              <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>"
-"_priceplanPageTableRow2","<td>Minimum antal signaturer
- per år</td>                                <td>500</td>
-                            <td>1 000</td>
-              <td>2 000</td>                                <td>4
- 000</td>",,"<td>Minimum yearly signatures</td>
-                                <td>500</td>
-                <td>1 000</td>
-  <td>2 000</td>                                <td>4 000</td>"
-"_priceplanPageTableRow20","<td>Flerpartsavtal</td>
-                           <td>✓</td>
-         <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>",,"<td>Multi party contract</td>
-                                <td>✓</td>
-              <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>"
-"_priceplanPageTableRow21","<td>Användarroller</td>
-                           <td>✓</td>
-         <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>",,"<td>User roles</td>
-                       <td>✓</td>
-     <td>✓</td>                                <td>✓</td>
-                             <td>✓</td>"
-"_priceplanPageTableRow22","<td>Drag and drop</td>
-                          <td>✓</td>
-        <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>",,"<td>Drag and drop</td>
-                          <td>✓</td>
-        <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>"
-"_priceplanPageTableRow23","<td>Signeringsordning</td>
-                              <td>✓</td>
-            <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>",,"<td>Sign order</td>
-                       <td>✓</td>
-     <td>✓</td>                                <td>✓</td>
-                             <td>✓</td>"
-"_priceplanPageTableRow24","<td>Delat arkiv</td>
-                        <td>✓</td>
-      <td>✓</td>                                <td>✓</td>
-                              <td>✓</td>",,"<td>Shared archive</td>
-                           <td>✓</td>
-         <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>"
-"_priceplanPageTableRow25","<td>Enkel Integration</td>
-                              <td></td>
-           <td></td>                                <td>✓</td>
-                                <td>✓</td>",,"<td>Simple integration</td>
-                               <td></td>
-            <td></td>                                <td>✓</td>
-                                <td>✓</td>"
-"_priceplanPageTableRow26","<td>Massutskick</td>
-                        <td></td>
-     <td></td>                                <td>✓</td>
-                            <td>✓</td>",,"<td>Mass sendout</td>
-                      <td></td>
-   <td></td>                                <td>✓</td>
-                          <td>✓</td>"
-"_priceplanPageTableRow27","<td>Brandad signeringssida</td>
-                                <td></td>
-             <td></td>                                <td></td>
-                                <td>✓</td>",,"<td>Branded signing page</td>
-                                <td></td>
-             <td></td>                                <td></td>
-                                <td>✓</td>"
-"_priceplanPageTableRow28","<td>Brandat mail</td>
-                         <td></td>
-      <td></td>                                <td></td>
-                            <td>✓</td>",,"<td>Branded e-mail</td>
-                           <td></td>
-        <td></td>                                <td></td>
-                              <td>✓</td>"
-"_priceplanPageTableRow29","<td>Fullt API</td>
-                      <td></td>
-   <td></td>                                <td></td>
-                         <td>✓</td>",,"<td>Full API</td>
-                     <td></td>
-  <td></td>                                <td></td>
-                        <td>✓</td>"
-"_priceplanPageTableRow3","<td>Standardlagring</td>
-                            <td>500 dok</td>
-                <td>Obegränsad</td>
-       <td>Obegränsad</td>                                <td>Obegränsad</td>",,"<td>Standard storage</td>
-                             <td>500 docs</td>
-                  <td>Unlimited</td>
-        <td>Unlimited</td>                                <td>Unlimited</td>"
-"_priceplanPageTableRow30","<td>Skapa egen process</td>
-                               <td></td>
-            <td></td>                                <td></td>
-                                <td>✓</td>",,"<td>Custom workflow</td>
-                               <td></td>
-            <td></td>                                <td></td>
-                                <td>✓</td>"
-"_priceplanPageTableRow4","<td>Trustweaver premiumlagring</td>
-                                <td>Uppgradera</td>
-                       <td>Uppgradera</td>
-              <td>Offert</td>
- <td>Offert</td>",,"<td>Trustweaver premium storage</td>                                 <td>Upgrade</td>                                 <td>Upgrade</td>                                 <td>Tender</td>                                <td>Tender</td>"
-"_priceplanPageTableRow5","<td>Uppstartsutbildning</td>
-                                <td>0.5 h</td>
-                  <td>1 h</td>
-  <td>2 x 1 h</td>                                <td>Offert</td>",,"<td>Startup training</td>
-                             <td>0.5 h</td>
-               <td>1 h</td>                                <td>2
- x 1 h</td>                                <td>Tender</td>"
-"_priceplanPageTableRow6","<td>Hjälp med konfiguration</td>
-                                <td>1 h</td>
-                <td>2 h</td>                                <td>4
- h</td>                                <td>Offert</td>",,"<td>Configuration help</td>
-                               <td>1 h</td>
-               <td>2 h</td>                                <td>4
- h</td>                                <td>Tender</td>"
-"_priceplanPageTableRow7","<td>Support</td>
-                    <td>E-post</td>
-       <td>Telefon</td>                                <td>Telefon</td>
-                                <td>Personlig kontakt</td>",,"<td>Support</td>
-                    <td>E-mail</td>
-       <td>Phone</td>                                <td>Phone</td>
-                                <td>Personal</td>"
-"_priceplanPageTableRow8","<td>Avtals-, offert- eller orderprocess</td>
-                                <td>✓</td>
-              <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>",,"<td>Contract, offer or order
- processes</td>                                <td>✓</td>
-                             <td>✓</td>
-           <td>✓</td>                                <td>✓</td>"
-"_priceplanPageTableRow9","<td>Tredjepartsverifiering</td>
-                                <td>✓</td>
-              <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>",,"<td>Third-party verification</td>
-                                <td>✓</td>
-              <td>✓</td>                                <td>✓</td>
-                                <td>✓</td>"
+"_priceplanPagePriceplanTop","<th><h2>Features</h2></th><th></th>","<th><h2>Features</h2></th><th></th>","<th><h2>Features</h2></th><th></th>"
+_descriptionSoon,"Beskrivning kommer snart.","Description coming soon","Description coming soon"
+"_priceplanPageTableRow10","<td>E-signering</td><td>$_descriptionSoon()$</td>",,"<td>E-signing</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow11","<td>E-legitimationssignering</td><td>$_descriptionSoon()$</td>",,"<td>E-ID signing</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow12","<td>E-arkiv</td><td>$_descriptionSoon()$</td>",,"<td>E-archive</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow13","<td>Processbevakning</td><td>$_descriptionSoon()$</td>",,"<td>Process monitoring</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow14","<td>Påminnelser</td><td>$_descriptionSoon()$</td>",,"<td>Reminders</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow15","<td>Justera hälsningsmeddelande</td><td>$_descriptionSoon()$</td>",,"<td>Edit invitation message</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow16","<td>Välj förfallodatum</td><td>$_descriptionSoon()$</td>",,"<td>Select expiry date</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow17","<td>Spara egna mallar</td><td>$_descriptionSoon()$</td>",,"<td>Save templates</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow18","<td>Bifoga bilaga</td><td>$_descriptionSoon()$</td>",,"<td>Add attachment</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow19","<td>Begär Bilagor</td><td>$_descriptionSoon()$</td>",,"<td>Request attachments</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow20","<td>Flerpartsavtal</td><td>$_descriptionSoon()$</td>",,"<td>Multi party contract</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow21","<td>Användarroller</td><td>$_descriptionSoon()$</td>",,"<td>User roles</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow22","<td>Drag and drop</td><td>$_descriptionSoon()$</td>",,"<td>Drag and drop</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow23","<td>Signeringsordning</td><td>$_descriptionSoon()$</td>",,"<td>Sign order</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow24","<td>Delat arkiv</td><td>$_descriptionSoon()$</td>",,"<td>Shared archive</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow25","<td>Enkel Integration</td><td>$_descriptionSoon()$</td>",,"<td>Simple integration</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow26","<td>Massutskick</td><td>$_descriptionSoon()$</td>",,"<td>Mass sendout</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow27","<td>Brandad signeringssida</td><td>$_descriptionSoon()$</td>",,"<td>Branded signing page</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow28","<td>Brandat mail</td><td>$_descriptionSoon()$</td>",,"<td>Branded e-mail</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow29","<td>Fullt API</td><td>$_descriptionSoon()$</td>",,"<td>Full API</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow3","<td>Standardlagring</td><td>$_descriptionSoon()$</td>",,"<td>Standard storage</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow30","<td>Skapa egen process</td><td>$_descriptionSoon()$</td>",,"<td>Custom workflow</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow4","<td>Trustweaver premiumlagring</td><td>$_descriptionSoon()$</td>",,"<td>Trustweaver premium storage</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow5","<td>Uppstartsutbildning</td><td>$_descriptionSoon()$</td>",,"<td>Startup training</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow6","<td>Hjälp med konfiguration</td><td>$_descriptionSoon()$</td>",,"<td>Configuration help</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow7","<td>Support</td><td>$_descriptionSoon()$</td>",,"<td>Support</td><td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow8","<td>Avtals-, offert- eller orderprocess</td><td>$_descriptionSoon()$</td>",,"<td>Contract, offer or order<td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow9","<td>Tredjepartsverifiering</td><td>$_descriptionSoon()$</td>",,"<td>Third-party verification</td><td>$_descriptionSoon()$</td>"
 "_priceplanPageTitle","| Prisplan",,"| Price plan"
 "_priceplanPageVAT","* Alla priser är exkl moms.",,"* All prices exclude VAT"
 "_privacyPolicyPageH1","SEKRETESSPOLICY (2011:02)",,"PRIVACY POLICY (2011:02)"
@@ -2461,7 +2190,7 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_backToArchive","Tillbaka till Arkiv",,"Back to Archive"
 "_queryColumnBody1","Stäng affärerna snabbare. Mindre administrativt krångel. Nöjdare kunder. Scrive gör ditt liv lite enklare och lite bättre.",,"Close deals faster. Less administration. More satisfied customers. Simpler and
 simply better."
-"_queryColumnBody2","10 fria signaturer per månad. Ingen inlåsning, inga konstigheter.",,"10 free signatures per month. No commitments. Cancel any time."
+"_queryColumnBody2","5 fria signaturer per månad. Ingen inlåsning, inga konstigheter.",,"5 free signatures per month. No commitments. Cancel any time."
 "_queryColumnEmail","E-post: info@scrive.com",,"Email: info@scrive.com"
 "_queryColumnHead","Varför vänta?",,"Why wait?"
 "_queryColumnPhone","Telefon: +46 8 519 779 00",,"Phone: +46 8 519 779 00"
@@ -2783,7 +2512,7 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_signupVipPageViewHead","Gratis Scrive till och med 31 december!",,"Free Scrive through December 31!"
 "_skrivapa","Scrive",,"Scrive"
 "_standardBodyWrapperBody","Ingen inlåsning, inga konstigheter.",,"No commitment. Cancel any time."
-"_standardBodyWrapperHead","10 fria signaturer per månad",,"10 free signatures per month!"
+"_standardBodyWrapperHead","5 fria signaturer per månad",,"5 free signatures per month!"
 "_startingSaveSigning","Inleder säker signering . . .",,"Initiates secure signing . . ."
 "_step1select","Välj dokument",,"Select document"
 "_step1selectIfTemplate","Välj mall",,"Select template"
