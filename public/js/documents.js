@@ -145,7 +145,8 @@ window.Document = Backbone.Model.extend({
     inviteMail : function(){
                 return new Mail({
                                                 document: this,
-                                                type: "invite"
+                                                type: "invite",
+                                                editWidth: 300
                         });
     },
     sign : function() {
