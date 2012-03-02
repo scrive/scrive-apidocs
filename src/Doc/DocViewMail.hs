@@ -284,6 +284,7 @@ mailDocumentAwaitingForAuthor ctx document authorlocale = do
         field "documentlink" $ (ctxhostpart ctx) ++ show (LinkSignDoc document $ fromJust $ getAuthorSigLink document)
         field "partylist" signatories
         field "companyname" $ nothingIfEmpty $ getCompanyName document
+        fieldM "footer" $ mailFooterForDocument ctx document
 
 mailMismatchSignatory :: TemplatesMonad m
                         => Context

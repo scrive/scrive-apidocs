@@ -12,7 +12,8 @@ mailDocumentAwaitingForAuthor=
     $nicemail(
         mailheader= _mailDocumentAwaitingForAuthorTitle();
         mailp1 = mailDocumentAwaitingForAuthorContentMainP();
-        mailp2 = footer
+        mailp2 = footer;
+        mailp3 = legalparagraph()
     )$
 #####
 mailDocumentAwaitingForAuthorContentMainP =

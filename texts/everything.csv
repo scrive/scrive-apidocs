@@ -1525,9 +1525,9 @@ profits and reduce frustration. The following mateials shall only
 "_mailContractClosedContentSignedBy","Dokumentet <strong>$documenttitle$</strong> har undertecknats
          av $partylist:noescape()$. Avtalet är nu bindande.",,"The document <strong>$documenttitle$</strong> has been signed by $partylist:noescape()$. This agreement is now legally binding."
 "_mailDocumentAwaitingForAuthorContentInstruction","För att färdigställa dokumentet gör följande:<br/>      1. Klicka
- på länken<br/>      <a href=""$documentlink$"">$documenttitle$</a><br/>
-      <br/>      2. Granska uppgifterna<br/>      3. Underteckna
- För att avtalet skall färdigställas krävs din underskrift.",,"To finalise the document:<br/>      1. Click  the link<br/>      <a href=""$documentlink$"">$documenttitle$</a><br/>       <br/>2. Review<br/>3. Sign the  agreement"
+ på länken <a href=""$documentlink$"">$documenttitle$</a><br/>
+      2. Granska uppgifterna<br/>      3. Underteckna
+ För att avtalet skall färdigställas krävs din underskrift.",,"To finalise the document:<br/>      1. Click  the link <a href=""$documentlink$"">$documenttitle$</a><br/>2. Review<br/>3. Sign the  agreement"
 "_mailDocumentAwaitingForAuthorContentSignedBy","Dokumentet <strong>$documenttitle$</strong> har undertecknats
  av $partylist:noescape()$.      Därmed är det bara du kvar innan
  dokumentet är färdigställt.",,"The document <strong>$documenttitle$</strong> has been signed  by $partylist:noescape()$.  Therefore it only remains for you sign before the document is final."
