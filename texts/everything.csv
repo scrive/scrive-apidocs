@@ -156,7 +156,7 @@
                                                         <li>50 users</li>
                            <li>All features<br /><a href=""$linkpriceplan$"">Detailed Priceplan</a></li>
                       </ul>"
-"_PriceTablePriceRow","<td>Alla features<br /><a href=""$linkpriceplan$"">Detaljerad prisplan</a></td><td>Alla features<br /><a href=""$linkpriceplan$"">Detaljerad prisplan</a></td><td>Alla features<br /><<a href=""$linkpriceplan$"">Detaljerad prisplan</a></td><td>Alla features<br /><a href=""$linkpriceplan$"">Detaljerad prisplan</a></td>","<td>All features<br /><a href=""$linkpriceplan$"">Detailed  price plan</a></td><td>All features<br /><a href=""$linkpriceplan$"">Detailed  price plan</a></td>                                                         <td>All features<br /><a href=""$linkpriceplan$"">Detailed  price plan</a>                                                               </td>                                                         <td>All features<br /><a href=""$linkpriceplan$"">Detailed price plan</a>                                                         </td>","<td>All features<br /><a href=""$linkpriceplan$"">Detailed
+"_PriceTablePriceRow","<td>Alla features<br /><a href=""$linkpriceplan$"">Detaljerad prisplan</a></td><td>Alla features<br /><a href=""$linkpriceplan$"">Detaljerad prisplan</a></td><td>Alla features<br /><a href=""$linkpriceplan$"">Detaljerad prisplan</a></td><td>Alla features<br /><a href=""$linkpriceplan$"">Detaljerad prisplan</a></td>","<td>All features<br /><a href=""$linkpriceplan$"">Detailed  price plan</a></td><td>All features<br /><a href=""$linkpriceplan$"">Detailed  price plan</a></td>                                                         <td>All features<br /><a href=""$linkpriceplan$"">Detailed  price plan</a>                                                               </td>                                                         <td>All features<br /><a href=""$linkpriceplan$"">Detailed price plan</a>                                                         </td>","<td>All features<br /><a href=""$linkpriceplan$"">Detailed
  price plan</a>
           </td>
            <td>All features<br /><a href=""$linkpriceplan$"">Detailed
@@ -2099,7 +2099,7 @@ _descriptionSoon,"Beskrivning kommer snart.","Description coming soon","Descript
 "_priceplanPageTableRow5","<td>Uppstartsutbildning</td><td>$_descriptionSoon()$</td>",,"<td>Startup training</td><td>$_descriptionSoon()$</td>"
 "_priceplanPageTableRow6","<td>Hjälp med konfiguration</td><td>$_descriptionSoon()$</td>",,"<td>Configuration help</td><td>$_descriptionSoon()$</td>"
 "_priceplanPageTableRow7","<td>Support</td><td>$_descriptionSoon()$</td>",,"<td>Support</td><td>$_descriptionSoon()$</td>"
-"_priceplanPageTableRow8","<td>Avtals-, offert- eller orderprocess</td><td>$_descriptionSoon()$</td>",,"<td>Contract, offer or order<td>$_descriptionSoon()$</td>"
+"_priceplanPageTableRow8","<td>Avtals-, offert- eller orderprocess</td><td>$_descriptionSoon()$</td>",,"<td>Contract, offer or order</td><td>$_descriptionSoon()$</td>"
 "_priceplanPageTableRow9","<td>Tredjepartsverifiering</td><td>$_descriptionSoon()$</td>",,"<td>Third-party verification</td><td>$_descriptionSoon()$</td>"
 "_priceplanPageTitle","| Prisplan",,"| Price plan"
 "_priceplanPageVAT","* Alla priser är exkl moms.",,"* All prices exclude VAT"
