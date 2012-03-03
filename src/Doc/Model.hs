@@ -336,9 +336,10 @@ fetchSignatoryLinks = do
     signinfo_first_name_verified signinfo_last_name_verified
     signinfo_personal_number_verified roles csv_title csv_contents
     csv_signatory_index deleted really_deleted safileid saname sadesc
-    | docid == nulldocid   = (document_id, link, linksmap)
-    | docid /= document_id = (document_id, link, M.insertWith' (++) docid links linksmap)
-    | otherwise            = (docid, addsigatt' links link, linksmap)
+    | docid == nulldocid                      = (document_id, link, linksmap)
+    | docid /= document_id                    = (document_id, link, M.insertWith' (++) docid links linksmap)
+    | (signatorylinkid $ head links)  == slid = (docid, (addsigatt' $ head links) : (tail links), linksmap)
+    | otherwise                               = (docid, link ++ links, linksmap)
     where
       link = [SignatoryLink {
           signatorylinkid = slid
@@ -378,11 +379,10 @@ fetchSignatoryLinks = do
             CSVUpload <$> csv_title <*> csv_contents <*> csv_signatory_index
         , signatoryattachments = maybe [] (\name -> [SignatoryAttachment safileid name $ maybe BS.empty id sadesc]) saname
         }]
-      addsigatt' _ [] = error "Empty signature link"
-      addsigatt' old new@(newsl:_) = maybe (old ++ new) (\sl -> 
-        (old \\ [sl]) ++ [sl{signatoryattachments = signatoryattachments sl ++ signatoryattachments newsl}]) 
-        $ find (\sl -> signatorylinkid sl == signatorylinkid newsl) old
-
+      addsigatt' l = l {
+          signatoryattachments = (maybe [] (\name -> [SignatoryAttachment safileid name $ maybe BS.empty id sadesc]) saname) 
+                                 ++ signatoryattachments l
+        }
 insertSignatoryLinkAsIs :: DocumentID -> SignatoryLink -> DB (Maybe SignatoryLink)
 insertSignatoryLinkAsIs documentid link = do
   ruserid <- case maybesignatory link of
