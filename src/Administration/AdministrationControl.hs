@@ -36,6 +36,7 @@ module Administration.AdministrationControl(
           , jsonUsersList
           , jsonCompanies
           , jsonDocuments
+          , companyClosedFilesZip
           ) where
 import Control.Monad.State
 import Data.Functor
@@ -69,7 +70,9 @@ import Util.HasSomeUserInfo
 import InputValidation
 import User.Utils
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString as BSS
 import qualified Data.ByteString.UTF8 as BS
+
 import InspectXMLInstances ()
 import InspectXML
 import File.Model
@@ -83,6 +86,9 @@ import Util.SignatoryLinkUtils
 import Stats.Control (getUsersAndStats)
 import EvidenceLog.Model
 import User.History.Model
+import Codec.Archive.Zip
+import qualified Data.Map as Map
+import Doc.DocStorage
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m String
@@ -807,3 +813,27 @@ serveLogDirectory filename = onlyAdmin $ do
         mzero
     (_,bsstdout,_) <- liftIO $ readProcessWithExitCode' "tail" ["log/" ++ filename, "-n", "40"] BSL.empty
     ok $ addHeader "Refresh" "5" $ toResponseBS (BS.fromString "text/plain; charset=utf-8") $ bsstdout
+
+
+companyClosedFilesZip :: Kontrakcja m => CompanyID -> String -> m Response
+companyClosedFilesZip cid _filenamefordownload = onlyAdmin $ do
+  archive <- companyFilesArchive cid
+  let res = Response 200 Map.empty nullRsFlags (fromArchive archive) Nothing
+  return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "archive/zip") res
+
+companyFilesArchive :: Kontrakcja m => CompanyID -> m Archive
+companyFilesArchive cid = do
+    docs <- runDB $ dbQuery $ GetDocumentsByCompanyAndTags Nothing cid []
+    mentries <- mapM docToEntry $ filter (\doc -> documentstatus doc == Closed) docs
+    return $ foldr addEntryToArchive emptyArchive $ map fromJust $ filter isJust $ mentries
+
+docToEntry ::  Kontrakcja m => Document -> m (Maybe Entry)
+docToEntry doc = do
+      let snpart = concat $ for (take 5 $ documentsignatorylinks doc) $ \sl -> (take 8 $ BS.toString $ getFirstName sl) ++ "_"++(take 8 $ BS.toString $ getFirstName sl)
+      let name = (BS.toString $ documenttitle doc) ++ "_" ++ (show $ documentmtime doc) ++ "_" ++ snpart
+      ctx <- getContext
+      case (documentsealedfiles doc) of
+        [fid] -> do
+            content <- liftIO $ getFileIDContents ctx fid
+            return $ Just $ toEntry name 0 $ BSL.pack $ BSS.unpack content
+        _ -> return Nothing

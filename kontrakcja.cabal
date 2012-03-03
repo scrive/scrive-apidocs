@@ -221,7 +221,7 @@ Executable kontrakcja-server
   Build-depends: unix
   Build-depends: utf8-string == 0.3.6
   Build-depends: zlib == 0.5.3.1
-
+  Build-depends: zip-archive == 0.1.1.7
   Main-Is: Main.hs
 
   Extensions: BangPatterns,
