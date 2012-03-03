@@ -823,17 +823,21 @@ companyClosedFilesZip cid _filenamefordownload = onlyAdmin $ do
 
 companyFilesArchive :: Kontrakcja m => CompanyID -> m Archive
 companyFilesArchive cid = do
+    Log.debug $ "Getting all files archive for company " ++ show cid
     docs <- runDB $ dbQuery $ GetDocumentsByCompanyAndTags Nothing cid []
-    mentries <- mapM docToEntry $ filter (\doc -> documentstatus doc == Closed) docs
+    let cdocs = (filter (\doc -> documentstatus doc == Closed)) docs
+    Log.debug $ "Found  " ++ show (length cdocs) ++ "document"
+    mentries <- mapM docToEntry $  cdocs
     return $ foldr addEntryToArchive emptyArchive $ map fromJust $ filter isJust $ mentries
 
 docToEntry ::  Kontrakcja m => Document -> m (Maybe Entry)
 docToEntry doc = do
       let snpart = concat $ for (take 5 $ documentsignatorylinks doc) $ \sl -> (take 8 $ BS.toString $ getFirstName sl) ++ "_"++(take 8 $ BS.toString $ getFirstName sl)
-      let name = (BS.toString $ documenttitle doc) ++ "_" ++ (show $ documentmtime doc) ++ "_" ++ snpart
+      let name = (BS.toString $ documenttitle doc) ++ "_" ++ (show $ documentmtime doc) ++ "_" ++ snpart ++".pdf"
       ctx <- getContext
       case (documentsealedfiles doc) of
         [fid] -> do
+            Log.debug $ "Getting content for the file " ++ show fid
             content <- liftIO $ getFileIDContents ctx fid
             return $ Just $ toEntry name 0 $ BSL.pack $ BSS.unpack content
         _ -> return Nothing
