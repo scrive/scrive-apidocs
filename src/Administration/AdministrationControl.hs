@@ -24,6 +24,7 @@ module Administration.AdministrationControl(
           , handleCreateUser
           , handlePostAdminCompanyUsers
           , handleCreateService
+          , handleUsersListCSV
           , showFunctionalityStats
           , handleBackdoorQuery
           , resealFile
@@ -179,6 +180,32 @@ showAdminCompanyUsers cid = onlySalesOrAdmin $ adminCompanyUsersPage cid
 
 showAdminUsersForSales :: Kontrakcja m => m String
 showAdminUsersForSales = onlySalesOrAdmin $ adminUsersPageForSales
+
+handleUsersListCSV :: Kontrakcja m => m Response
+handleUsersListCSV = onlySalesOrAdmin $ do
+  users <- getUsersAndStatsInv
+  ok $ setHeader "Content-Disposition" "attachment;filename=userslist.csv"
+     $ setHeader "Content-Type" "text/csv"
+     $ toResponse (usersListCSV users)
+
+usersListCSV :: [(User, Maybe Company, DocStats, InviteType)] -> String
+usersListCSV users = 
+  "\"" ++ intercalate "\";\""  
+  ["id", "fstname", "sndname", "email", "company", "position","tos"]
+  ++ "\"\n" ++
+  (concat $ map csvline $ filter active users)
+    where
+        active (u,_,_,_) =   (not (useraccountsuspended u)) && (isJust $ userhasacceptedtermsofservice u) && (isNothing $ userservice u)
+        csvline (u,mc,_,_) = "\"" ++ intercalate "\";\""
+                          [ show $ userid u
+                          , BS.toString $ getFirstName u
+                          , BS.toString $ getLastName u
+                          , BS.toString $ getEmail u
+                          , BS.toString $ getCompanyName mc
+                          , BS.toString $ usercompanyposition $ userinfo u
+                          , show $ fromJust $ userhasacceptedtermsofservice u
+                          ]
+                          ++ "\"\n"
 
 jsonUsersList ::Kontrakcja m => m JSValue
 jsonUsersList = do
