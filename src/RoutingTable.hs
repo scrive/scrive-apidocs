@@ -260,7 +260,7 @@ staticRoutes = choice
      , dir "dave" $ dir "user"        $ hGet $ toK1 $ Administration.daveUser
      , dir "dave" $ dir "userhistory" $ hGet $ toK1 $ Administration.daveUserHistory
      , dir "dave" $ dir "company"     $ hGet $ toK1 $ Administration.daveCompany
-     , dir "dave" $ dir "company"     $ hGet $ toK2 $ Administration.companyClosedFilesZip
+     , dir "dave" $ dir "company"     $ hGet $ toK3 $ Administration.companyClosedFilesZip
 
      -- account stuff
      , dir "logout"      $ hGet  $ toK0 $ handleLogout
