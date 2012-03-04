@@ -18,7 +18,7 @@ $(newtypeDeriveUnderlyingReadShow ''FileID)
 $(newtypeDeriveConvertible ''FileID)
 
 instance Random FileID where
-  random = FileID `liftM` randomR (0, maxBound)
+  random = FileID `liftM` randomR (10000000, 10000000000)
 
 instance FromReqURI FileID where
   fromReqURI = readM
