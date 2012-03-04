@@ -821,16 +821,18 @@ companyClosedFilesZip cid start _filenamefordownload = onlyAdmin $ do
   let res = Response 200 Map.empty nullRsFlags (fromArchive archive) Nothing
   return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "archive/zip") res
 
+
 companyFilesArchive :: Kontrakcja m => CompanyID -> Int -> m Archive
 companyFilesArchive cid start = do
     Log.debug $ "Getting all files archive for company " ++ show cid
     docs <- runDB $ dbQuery $ GetDocumentsByCompanyAndTags Nothing cid []
     let cdocs = sortBy (\d1 d2 -> compare (documentid d1) (documentid d2)) $ filter (\doc -> documentstatus doc == Closed)  $ docs
-    let sdocs = take 80 $ drop start $ cdocs
+    let sdocs = take zipCount $ drop (zipCount*start) $ cdocs
     Log.debug $ "Found  " ++ show (length $ filter (\doc -> documentstatus doc == Closed)  $ docs) ++ "document"
     mentries <- mapM docToEntry $  sdocs
     return $ foldr addEntryToArchive emptyArchive $ map fromJust $ filter isJust $ mentries
-
+  where
+    zipCount = 80
 docToEntry ::  Kontrakcja m => Document -> m (Maybe Entry)
 docToEntry doc = do
       let snpart = concat $ for (take 5 $ documentsignatorylinks doc) $ \sl -> (take 8 $ BS.toString $ getFirstName sl) ++ "_"++(take 8 $ BS.toString $ getFirstName sl)
