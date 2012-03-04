@@ -10,6 +10,8 @@ adminsmain=
     document histories</a></p>
 <p><a href="/adminonly/signhistorycsv">Download the CSV containing
     sign histories</a></p>
+<p><a href="/adminonly/userslistcsv">Download the CSV containing all 
+    users (not suspended, with accepted TOS, no integration parties)</a></p>
     <strong>Sales Tools</strong>
     <table><tbody>
         <tr>
