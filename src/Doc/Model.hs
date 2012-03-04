@@ -29,6 +29,7 @@ module Doc.Model
   , GetDocumentsByCompanyAndTags(..)
   , GetDocumentsByAuthor(..)
   , GetTemplatesByAuthor(..)
+  , GetAvaibleTemplates(..)
   , GetDocumentsOfTypeByAuthor(..)
   , GetDocumentsBySignatory(..)
   , GetDocumentsOfTypeBySignatory(..)
@@ -1036,8 +1037,8 @@ whereAuthorIs uid = SQL
 
 -- | If there is another user, that belongs to the same company, and
 -- document has the sharing bit set and is owned by that user.
-orDocumentIsSharedInAuthorsCompany :: UserID -> SQL
-orDocumentIsSharedInAuthorsCompany uid = SQL
+orDocumentIsSharedInUsersCompany :: UserID -> SQL
+orDocumentIsSharedInUsersCompany uid = SQL
   ("OR (signatory_links.deleted = FALSE " ++ 
    "    AND documents.sharing = ?" ++
    "    AND documents.type = ?" ++
@@ -1103,8 +1104,13 @@ parenthesize (SQL command values) = SQL ("(" ++ command ++ ")") values
 data GetTemplatesByAuthor = GetTemplatesByAuthor UserID
 instance DBQuery GetTemplatesByAuthor [Document] where
   dbQuery (GetTemplatesByAuthor uid) = selectDocumentsBySignatoryLink
+    $ parenthesize (whereAuthorIs uid <++> (SQL " AND type = ?" [toSql $ Template undefined]))
+
+data GetAvaibleTemplates = GetAvaibleTemplates UserID
+instance DBQuery GetAvaibleTemplates [Document] where
+  dbQuery (GetAvaibleTemplates uid) = selectDocumentsBySignatoryLink
     $ parenthesize (whereAuthorIs uid <++> (SQL " AND type = ?" [toSql $ Template undefined]) 
-                    <++> orDocumentIsSharedInAuthorsCompany uid)
+                    <++> orDocumentIsSharedInUsersCompany uid)
 
 {- |
     All documents where the user is a signatory that are not deleted.  An author is a type
