@@ -835,7 +835,7 @@ companyFilesArchive cid start = do
     zipCount = 80
 docToEntry ::  Kontrakcja m => Document -> m (Maybe Entry)
 docToEntry doc = do
-      let snpart = concat $ for (take 5 $ documentsignatorylinks doc) $ \sl -> (take 8 $ BS.toString $ getFirstName sl) ++ "_"++(take 8 $ BS.toString $ getFirstName sl)
+      let snpart = concat $ for (take 5 $ documentsignatorylinks doc) $ \sl -> (take 8 $ BS.toString $ getFirstName sl) ++ "_"++(take 8 $ BS.toString $ getFirstName sl) ++ "_"
       let name = filter ((/= ' ')) $ filter (isAscii) $ (BS.toString $ documenttitle doc) ++ "_" ++ (show $ documentmtime doc) ++ "_" ++ snpart ++".pdf"
       ctx <- getContext
       case (documentsealedfiles doc) of
