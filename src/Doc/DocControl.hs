@@ -2,7 +2,57 @@
 {- |
    DocControl represents the controler (in MVC) of the document.
  -}
-module Doc.DocControl where
+module Doc.DocControl(
+    -- Exported utils or test functions
+      sendReminderEmail
+    -- Top level handlers
+    , postDocumentChangeAction
+    , handleDownloadFile
+    , handleSignShow
+    , handleSignShowOldRedirectToNew
+    , signDocument
+    , rejectDocument
+    , handleAcceptAccountFromSign
+    , handleSigAttach
+    , handleDeleteSigAttach
+    , handleAttachmentViewForViewer
+    , handleShowUploadPage
+    , handleAttachmentShare
+    , handleAttachmentRename
+    , handleCreateNewAttachment
+    , handleTemplateShare
+    , handleCreateNewTemplate
+    , handleBulkOfferRemind
+    , handleBulkOrderRemind
+    , handleRubbishRestore
+    , handleRubbishReallyDelete
+    , handleIssueShowGet
+    , handleIssueNewDocument
+    , handleBulkContractRemind
+    , handleIssueShowPost
+    , jsonDocument
+    , handleSaveDraft
+    , handleSetAttachments
+    , handleParseCSV
+    , prepareEmailPreview
+    , handleFileGet
+    , handleAttachmentViewForAuthor
+    , handleResend
+    , handleChangeSignatoryEmail
+    , handleRestart
+    , handleCancel
+    , showPage
+    , showPreview
+    , showPreviewForSignatory
+    , handleCreateFromTemplate
+    , handleFilePages
+    , handlePageOfDocument
+    , handlePageOfDocumentForSignatory
+    , handleCSVLandpage
+    , handleInvariantViolations
+    , handleUpsalesDeleted
+  
+) where
 
 import AppView
 import Data.Char
@@ -22,7 +72,6 @@ import InputValidation
 import File.Model
 import Kontra
 import KontraLink
-import ListUtil
 import MagicHash (MagicHash)
 import Mails.SendMail
 import MinutesTime
@@ -635,14 +684,6 @@ handleSignShow2 documentid
       pageDocumentForSignatory (LinkSignDoc document invitedlink) document ctx invitedlink
     _ -> pageDocumentForViewer ctx document (Just invitedlink)
 
-
-maybeAddDocumentCancelationMessage :: Kontrakcja m => Document -> m ()
-maybeAddDocumentCancelationMessage document = do
-  let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
-  when (isCanceled document && isJust mMismatchMessage) $
-    addFlash (OperationFailed, fromJust mMismatchMessage)
-  return ()
-
 {- |
    Handles the request to show a document to a user.
    There are two cases:
@@ -799,14 +840,6 @@ handleIssueSend document = do
           Left _ -> return ()
         return mndoc
 
-markDocumentAuthorReadAndSeen :: (Kontrakcja m , Actor a) => Document -> a -> m ()
-markDocumentAuthorReadAndSeen Document{documentid, documentsignatorylinks} actor =
-  mapM_ mark $ filter isAuthor documentsignatorylinks
-  where
-    mark SignatoryLink{signatorylinkid, signatorymagichash} = do
-      _ <- runDBUpdate $ MarkInvitationRead documentid signatorylinkid actor
-      _ <- runDBUpdate $ MarkDocumentSeen documentid signatorylinkid signatorymagichash actor
-      return ()
 {- |
     If the document has a multiple part this will pump csv values through it to create multiple docs, and then
     save the original as a template if it isn't already.  This will make sure to clean the csv data.  It just returns
@@ -1305,8 +1338,6 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
             _ -> return LoopBack
     _ -> return LoopBack
 
-failIfNotAuthor :: Kontrakcja m => Document -> User -> m ()
-failIfNotAuthor document user = guard (isAuthor (document, user))
 
 checkLinkIDAndMagicHash :: Kontrakcja m => Document -> SignatoryLinkID -> MagicHash -> m ()
 checkLinkIDAndMagicHash document linkid magichash1 = do
@@ -1331,12 +1362,6 @@ getDocProcess = getOptionalField asDocType "doctype"
       | val == show Contract = Good $ Contract
       | val == show Order = Good $ Order
       | otherwise = Empty
-
-idmethodFromString :: String -> Maybe IdentificationType
-idmethodFromString idmethod
-  | idmethod == "email" = Just EmailIdentification
-  | idmethod == "eleg"  = Just ELegitimationIdentification
-  | otherwise           = Nothing
 
 handleCreateFromTemplate :: Kontrakcja m => m KontraLink
 handleCreateFromTemplate = withUserPost $ do
@@ -1367,20 +1392,6 @@ handleCreateFromTemplate = withUserPost $ do
     Nothing -> mzero
 
 {- |
-   The FileID matches the AuthorAttachment.
- -}
-authorAttachmentHasFileID :: FileID -> AuthorAttachment -> Bool
-authorAttachmentHasFileID fid attachment =
-  fid == authorattachmentfile attachment
-
-{- |
-   The FileID matches the SignatoryAttachment.
--}
-sigAttachmentHasFileID :: FileID -> SignatoryAttachment -> Bool
-sigAttachmentHasFileID fid attachment =
-  maybe False (fid ==) (signatoryattachmentfile attachment)
-
-{- |
    Download the attachment with the given fileid
  -}
 
@@ -1404,27 +1415,6 @@ respondWithPDF contents = do
   let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
       res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
   return res2
-
--- Fix for broken production | To be removed after fixing is done
-isBroken :: Document -> Bool
-isBroken doc = isClosed doc && (not $ Data.List.null $ documentfiles doc)  && (Data.List.null $ documentsealedfiles doc)
-
-handleFixDocument :: Kontrakcja m => DocumentID -> m KontraLink
-handleFixDocument docid = onlyAdmin $ do
-    ctx <- getContext
-    mdoc <- runDBQuery $ GetDocumentByDocumentID docid
-    case (mdoc) of
-       Nothing -> return LoopBack
-       Just doc -> if (isBroken doc)
-                    then do
-                        runDB $ sealDocument ctx doc
-                        return LoopBack
-                    else return LoopBack
-
-showDocumentsToFix :: Kontrakcja m => m String
-showDocumentsToFix = onlyAdmin $ do
-    docs <- runDBQuery $ GetDocuments Nothing
-    documentsToFixView $ filter isBroken docs
 
 handleDeleteSigAttach :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  m KontraLink
 handleDeleteSigAttach docid siglinkid = do
@@ -1460,34 +1450,6 @@ handleSigAttach docid siglinkid = do
   let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory siglink) (BS.toString email) siglinkid
   d <- guardRightM $ runDBUpdate $ SaveSigAttachment docid attachname email (fileid file) actor
   return $ LinkSignDoc d siglink
-
-jsonDocumentsList ::  Kontrakcja m => m (Either KontraLink JSValue)
-jsonDocumentsList = withUserGet $ do
-  Just user@User{userid = uid} <- ctxmaybeuser <$> getContext
-  lang <- getLang . ctxlocale <$> getContext
-  doctype <- getFieldWithDefault "" "documentType"
-  allDocs <- case (doctype) of
-    "Contract" -> runDBQuery $ GetDocumentsOfTypeBySignatory (Signable Contract) uid
-    "Offer" -> runDBQuery $ GetDocumentsOfTypeBySignatory (Signable Offer) uid
-    "Order" -> runDBQuery $ GetDocumentsOfTypeBySignatory (Signable Order) uid
-    "Template" -> runDBQuery $ GetTemplatesByAuthor uid
-    "Attachment" -> runDBQuery $ GetDocumentsOfTypeByAuthor Attachment uid
-    "Rubbish" -> runDBQuery $ GetDeletedDocumentsByUser uid
-    "Template|Contract" -> filter (\d -> documenttype d == Template Contract) <$> (runDBQuery $ GetAvaibleTemplates  uid)
-    "Template|Offer" ->  filter (\d -> documenttype d == Template Offer) <$>  (runDBQuery $ GetAvaibleTemplates  uid)
-    "Template|Order" -> filter (\d -> documenttype d == Template Order) <$> (runDBQuery $ GetAvaibleTemplates  uid)
-    _ -> do
-      Log.error "Documents list: No valid document type provided"
-      return []
-  Log.debug $ "Documents list: Number of documents found "  ++  (show $ length allDocs)
-  params <- getListParamsNew
-  let docs = docSortSearchPage params allDocs
-  cttime <- getMinutesTime
-  docsJSONs <- mapM (fmap JSObject . docForListJSON (timeLocaleForLang lang) cttime user) $ list docs
-  return $ JSObject $ toJSObject [
-      ("list", JSArray docsJSONs)
-    , ("paging", pagingParamsJSON docs)
-    ]
 
 jsonDocument :: Kontrakcja m => DocumentID -> m JSValue
 jsonDocument did = do

@@ -44,13 +44,12 @@ ordersignedinfoheader=$_ordersignedinfoheader()$
 contractsignedinfotext=$_contractsignedinfotext()$
 ###
 offersignedinfotext=
-    $signatories:{signatory | $if(!signatory.author)$ $signatory.fstname$ $signatory.sndname$ $endif$}$
-    $_offersignedinfotextHasAccepted()$	 $documenttitle$ $_offersignedinfotextFrom()$  $authorfstname$ $authorsndname$ .
+    $signatories:{signatory | $if(!signatory.author)$ $signatory.name$ $endif$}$
+    $_offersignedinfotextHasAccepted()$	 $documenttitle$ $_offersignedinfotextFrom()$  $signatories:{signatory | $if(signatory.author)$ $signatory.name$ $endif$}$ .
 ###
 ordersignedinfotext=
-    $signatories:{signatory | $if(!signatory.author)$ $signatory.fstname$ $signatory.sndname$ $endif$}$
-    $_ordersignedinfotextHasConfirmed()$ $documenttitle$ $_ordersignedinfotextFrom()$ $authorfstname$
-$authorsndname$ .
+    $signatories:{signatory | $if(!signatory.author)$  $signatory.name$  $endif$}$
+    $_ordersignedinfotextHasConfirmed()$ $documenttitle$ $_ordersignedinfotextFrom()$  $signatories:{signatory | $if(signatory.author)$ $signatory.name$ $endif$}$ .
 ###
 contractstatusinfotext=$_contractstatusinfotext()$
 ###
