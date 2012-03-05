@@ -458,16 +458,15 @@ handleCreateCompanyUser companyid = onlySalesOrAdmin $ do
   email <- getCriticalField asValidEmail "email"
   fstname <- getCriticalField asValidName "fstname"
   sndname <- getCriticalField asValidName "sndname"
-  custommessage <- getField "custommessage"
+  custommessage <- joinEmpty <$> getField "custommessage"
+  Log.debug $ "Custom message when creating an account " ++ show custommessage
   region <- guardJustM $ readField "region"
-  madmin <- getOptionalField asValidCheckBox "iscompanyadmin"
+  admin <- isFieldSet "iscompanyadmin"
   muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage (mkLocaleFromRegion region)
   case muser of
     Just (User{userid}) -> do
       _ <- runDBUpdate $ SetUserCompany userid (Just companyid)
-      when (fromMaybe False madmin) $ do
-        _ <- runDBUpdate $ SetUserCompanyAdmin userid True
-        return ()
+      when_ admin $ runDBUpdate $ SetUserCompanyAdmin userid True
     Nothing -> addFlashM flashMessageUserWithSameEmailExists
   return ()
 
