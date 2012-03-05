@@ -462,7 +462,7 @@ makeMailAttachments ctx document = do
         _ -> documentsealedfiles document
   let
       aattachments = map authorattachmentfile $ documentauthorattachments document
-      sattachments = concatMap (maybeToList . signatoryattachmentfile) $ documentsignatoryattachments document
+      sattachments = concatMap (maybeToList . signatoryattachmentfile) $ concatMap signatoryattachments $ documentsignatorylinks document
       allfiles' = [mainfile] ++ aattachments ++ sattachments
   allfiles <- liftM catMaybes $ mapM (ioRunDB (ctxdbenv ctx) . dbQuery . GetFileByFileID) allfiles'
   let dropPDFSuffix name | ".pdf" `isSuffixOf` (map toLower name) = reverse . drop 4 $ reverse name
@@ -1425,7 +1425,7 @@ handleDeleteSigAttach docid siglinkid = do
   Context{ctxtime, ctxipnumber} <- getContext
   let email = getEmail siglink
   Log.debug $ "delete Sig attachment " ++ (show fid) ++ "  " ++ (BS.toString email)
-  _ <- runDBUpdate $ DeleteSigAttachment docid email fid
+  _ <- runDBUpdate $ DeleteSigAttachment docid siglinkid fid 
        (SignatoryActor ctxtime ctxipnumber (maybesignatory siglink) (BS.toString email) siglinkid)
   return $ LinkSignDoc doc siglink
 
@@ -1436,8 +1436,7 @@ handleSigAttach docid siglinkid = do
   siglink <- guardJust $ getSigLinkFor doc siglinkid
   attachname <- getCriticalField asValidFieldValue "attachname"
   let email = getEmail siglink
-  _ <- guardJust $  find (\sa -> signatoryattachmentemail sa == email
-                                && signatoryattachmentname sa == attachname) (documentsignatoryattachments doc)
+  _ <- guardJust $  find (\sa -> signatoryattachmentname sa == attachname) (signatoryattachments siglink)
   (Input contentspec _ _) <- getDataFnM (lookInput "sigattach")
   content1 <- case contentspec of
     Left filepath -> liftIO $ BSL.readFile filepath
@@ -1448,7 +1447,7 @@ handleSigAttach docid siglinkid = do
   content <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
   file <- runDB $ dbUpdate $ NewFile attachname content
   let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory siglink) (BS.toString email) siglinkid
-  d <- guardRightM $ runDBUpdate $ SaveSigAttachment docid attachname email (fileid file) actor
+  d <- guardRightM $ runDBUpdate $ SaveSigAttachment docid siglinkid attachname (fileid file) actor
   return $ LinkSignDoc d siglink
 
 jsonDocument :: Kontrakcja m => DocumentID -> m JSValue

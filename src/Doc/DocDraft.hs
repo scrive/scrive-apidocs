@@ -84,7 +84,6 @@ applyDraftDataToDocument doc draft actor = do
                                 , documentinvitetext = maybe BS.empty BS.fromString $ invitationmessage draft
                                 , documentdaystosign = daystosign draft
                                 , documentallowedidtypes = [authorization draft]
-                                , documentsignatoryattachments = concat $ map getAttachments $ signatories draft
                                 , documentregion = region draft
                             }) actor
     when_ (template draft && (not $ isTemplate doc)) $ do
@@ -96,7 +95,7 @@ applyDraftDataToDocument doc draft actor = do
                             
 
                             
-mergeSignatories :: SignatoryLink -> [SignatoryTMP] -> Maybe [(SignatoryDetails, [SignatoryRole], Maybe CSVUpload)]
+mergeSignatories :: SignatoryLink -> [SignatoryTMP] -> Maybe [(SignatoryDetails, [SignatoryRole], [SignatoryAttachment], Maybe CSVUpload)]
 mergeSignatories docAuthor tmps = 
         let (atmp, notatmps) = partition isAuthorTMP tmps
             setAuthorConstandDetails =  setFstname (getFirstName docAuthor) . 

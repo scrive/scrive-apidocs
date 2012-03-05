@@ -153,10 +153,7 @@ closedWhenAllSigned _ document =
 hasSignedAttachments :: MinutesTime -> Document -> Maybe String
 hasSignedAttachments _ document =
   assertInvariant "a signatory has signed without attaching his requested attachment" $
-  all (hasSigned =>>^ (all (isJust . signatoryattachmentfile) . (sigAttachmentsForEmail document . getEmail))) (documentsignatorylinks document)
-       
-sigAttachmentsForEmail :: Document -> BS.ByteString -> [SignatoryAttachment]
-sigAttachmentsForEmail doc email = filter ((== email) . signatoryattachmentemail) (documentsignatoryattachments doc)
+  all (hasSigned =>>^ (all (isJust . signatoryattachmentfile) . (signatoryattachments))) (documentsignatorylinks document)
        
 {- |
    Has signed implies has seen.

@@ -267,19 +267,12 @@ documentJSON msl _crttime doc = do
     files <- runDB $ documentfilesM doc
     sealedfiles <- runDB $ documentsealedfilesM doc
     authorattachmentfiles <- mapM (runDBQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
-    signatoryattachmentsfiles <- catMaybes <$> (sequence [do
-                                             file <- runDBQuery $ GetFileByFileID fid
-                                             case file of
-                                               Nothing -> return Nothing
-                                               Just f -> return $ Just (fid, f)
-                                          | SignatoryAttachment { signatoryattachmentfile = Just fid } <- documentsignatoryattachments doc])
     let isauthoradmin = maybe False (flip isAuthorAdmin doc) (ctxmaybeuser ctx)
     fmap toJSObject $ propagateMonad  $
      [ ("title",return $ JSString $ toJSString $ BS.toString $ documenttitle doc),
        ("files", return $ JSArray $ jsonPack <$> fileJSON <$> files ),
        ("sealedfiles", return $ JSArray $ jsonPack <$> fileJSON <$> sealedfiles ),
        ("authorattachments", return $ JSArray $ jsonPack <$> fileJSON <$> catMaybes authorattachmentfiles),
-       --("signatoryattachments", return $ JSArray $ jsonPack <$> fileJSON <$> catMaybes ),
        ("process", processJSON doc ),
        ("region",  liftIO $ regionJSON doc ),
        ("infotext", JSString <$> toJSString <$> documentInfoText ctx doc msl),
@@ -287,7 +280,7 @@ documentJSON msl _crttime doc = do
        ("canbecanceled", return $ JSBool $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending && isNothing (documenttimeouttime doc)),
        ("timeouttime", return $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc),
        ("status", return $ JSString $ toJSString $ show $ documentstatus doc),
-       ("signatories", JSArray <$>  mapM (signatoryJSON doc msl signatoryattachmentsfiles) (documentsignatorylinks doc)),
+       ("signatories", JSArray <$> mapM (signatoryJSON doc msl) (documentsignatorylinks doc)),
        ("signorder", return $ JSRational True (toRational $ unSignOrder $ documentcurrentsignorder doc)),
        ("authorization", return $ authorizationJSON $ head $ (documentallowedidtypes doc) ++ [EmailIdentification] ),
        ("template", return $ JSBool $ isTemplate doc),
@@ -301,9 +294,9 @@ authorizationJSON EmailIdentification = JSString $ toJSString "email"
 authorizationJSON ELegitimationIdentification = JSString $ toJSString "eleg"
 
 
-signatoryJSON :: (TemplatesMonad m) => Document -> Maybe SignatoryLink -> [(FileID, File)] -> SignatoryLink -> m JSValue
-signatoryJSON doc viewer files siglink = fmap (JSObject . toJSObject) $ propagateMonad $
-    [
+signatoryJSON :: (TemplatesMonad m, DBMonad m) => Document -> Maybe SignatoryLink -> SignatoryLink -> m JSValue
+signatoryJSON doc viewer siglink = do
+    fmap (JSObject . toJSObject) $ propagateMonad $ [
         ("id", return $ JSString $ toJSString  $ show $ signatorylinkid siglink)
       , ("current", return $ JSBool $ (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink))
       , ("signorder",return $ JSRational True (toRational $ unSignOrder $ signatorysignorder $ signatorydetails siglink))
@@ -318,12 +311,11 @@ signatoryJSON doc viewer files siglink = fmap (JSObject . toJSObject) $ propagat
       , ("rejecteddate", return $ jsonDate $ rejectedDate)
       , ("fields", liftIO $ signatoryFieldsJSON doc siglink)
       , ("status", return $ JSString $ toJSString  $ show $ signatoryStatusClass doc siglink)
-      , ("attachments", return $ JSArray $ map (signatoryAttachmentJSON files) $
-                        filter ((==) (getEmail siglink) . signatoryattachmentemail)  (documentsignatoryattachments doc))
+      , ("attachments", fmap JSArray $ sequence $ signatoryAttachmentJSON <$> signatoryattachments siglink)
       , ("csv", case (csvcontents <$> signatorylinkcsvupload siglink) of
                      Just a1 ->  return $ JSArray $ for a1 (\a2 -> JSArray $ map (JSString . toJSString . BS.toString) a2 )
                      Nothing -> return $ JSNull) 
-   ]
+      ]
     where
     datamismatch = case documentcancelationreason doc of
                     Just (ELegDataMismatch _ sid _ _ _) -> sid == signatorylinkid siglink
@@ -333,10 +325,13 @@ signatoryJSON doc viewer files siglink = fmap (JSObject . toJSObject) $ propagat
                         | slid == signatorylinkid siglink -> Just rt
                     _                             -> Nothing
 
-signatoryAttachmentJSON :: [(FileID, File)] -> SignatoryAttachment -> JSValue
-signatoryAttachmentJSON files sa = JSObject $ toJSObject $
-  let mfile = maybe Nothing (\fid -> lookup fid files) (signatoryattachmentfile sa)
-  in [ ("name", JSString $ toJSString $ BS.toString $ signatoryattachmentname sa)
+signatoryAttachmentJSON :: (TemplatesMonad m, DBMonad m) => SignatoryAttachment -> m JSValue
+signatoryAttachmentJSON sa = do
+  mfile <- case (signatoryattachmentfile sa) of
+                Just fid -> runDBQuery $ GetFileByFileID fid
+                _ -> return Nothing 
+  return $ (JSObject . toJSObject) $ 
+     [ ("name", JSString $ toJSString $ BS.toString $ signatoryattachmentname sa)
      , ("description", JSString $ toJSString $ BS.toString $ signatoryattachmentdescription sa)
      , ("file", fromMaybe JSNull $ jsonPack <$> fileJSON <$> mfile)
      ]
@@ -657,7 +652,7 @@ documentInfoFields  document  = do
   field "template" $  isTemplate document
   field "emailselected" $ document `allowsIdentification` EmailIdentification
   field "elegselected" $ document `allowsIdentification` ELegitimationIdentification
-  field "hasanyattachments" $ length (documentauthorattachments document) + length (documentsignatoryattachments document) > 0
+  field "hasanyattachments" $ length (documentauthorattachments document) + length (concatMap signatoryattachments $ documentsignatorylinks document) > 0
   documentStatusFields document
 
 documentAuthorInfo :: MonadIO m => Document -> Fields m

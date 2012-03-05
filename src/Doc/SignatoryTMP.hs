@@ -141,13 +141,13 @@ addAttachment :: SignatoryAttachment -> SignatoryTMP -> SignatoryTMP
 addAttachment a s = s {attachments = a : (attachments s)}
 
 getAttachments :: SignatoryTMP -> [SignatoryAttachment]
-getAttachments s = for (attachments s) (\a -> a {signatoryattachmentemail = fromMaybe BS.empty $ email s})
+getAttachments s = attachments s
 
 
 toSignatoryDetails1 :: SignatoryTMP -> (SignatoryDetails,[SignatoryRole])
-toSignatoryDetails1 sTMP = (\(x,y,_) ->(x,y)) (toSignatoryDetails2 sTMP)
+toSignatoryDetails1 sTMP = (\(x,y,_,_) ->(x,y)) (toSignatoryDetails2 sTMP)
 -- To SignatoryLink or SignatoryDetails conversion
-toSignatoryDetails2 :: SignatoryTMP -> (SignatoryDetails,[SignatoryRole], Maybe CSVUpload)
+toSignatoryDetails2 :: SignatoryTMP -> (SignatoryDetails,[SignatoryRole], [SignatoryAttachment], Maybe CSVUpload)
 toSignatoryDetails2 sTMP  = 
     let sig = makeSignatory [] [] BS.empty
                  (fold $ fstname sTMP)
@@ -157,13 +157,13 @@ toSignatoryDetails2 sTMP  =
                  (fold $ company sTMP)
                  (fold $ personalnumber sTMP)
                  (fold $ companynumber sTMP)
-    in withRolesAndCSV $ sig { 
+    in withRolesAndAttsAndCSV $ sig { 
             signatoryfields =  mergeFields (getAllFields sTMP)  (signatoryfields sig),
             signatorysignorder = signatorysignorder $ details sTMP }
   where
    mergeFields [] l = l
    mergeFields (f:fs) l = mergeFields fs (replaceField f l)
-   withRolesAndCSV x = (x,roles $  sTMP, csvupload $ sTMP)
+   withRolesAndAttsAndCSV x = (x,roles $ sTMP, attachments $ sTMP, csvupload $ sTMP)
    
 
 instance FromJSON SignatoryTMP where
@@ -200,7 +200,6 @@ instance FromJSON SignatoryAttachment where
         case (name,description) of
              (Just n, Just d) -> return $ Just $ SignatoryAttachment {signatoryattachmentname  = n ,
                                                                       signatoryattachmentdescription = d,
-                                                                      signatoryattachmentemail = BS.empty,
                                                                       signatoryattachmentfile = Nothing}
              _ -> return Nothing  
 
