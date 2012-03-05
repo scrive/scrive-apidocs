@@ -18,7 +18,7 @@ newtype DocumentID = DocumentID Int64
 $(newtypeDeriveUnderlyingReadShow ''DocumentID)
 
 instance Random DocumentID where
-  random = DocumentID `liftM` randomR (0, maxBound)
+  random = DocumentID `liftM` randomR (10000000, 10000000000)
 
 instance FromReqURI DocumentID where
   fromReqURI = readM

@@ -223,6 +223,7 @@ staticRoutes = choice
      , dir "adminonly" $ dir "signstatscsv" $ path GET id $ Stats.handleSignStatsCSV
      , dir "adminonly" $ dir "dochistorycsv" $ path GET id $ Stats.handleDocHistoryCSV
      , dir "adminonly" $ dir "signhistorycsv" $ path GET id $ Stats.handleSignHistoryCSV
+     , dir "adminonly" $ dir "userslistcsv" $ path GET id $ Administration.handleUsersListCSV
 
      , dir "adminonly" $ dir "runstatsonalldocs" $ hGet $ toK0 $ Stats.addAllDocsToStats
      , dir "adminonly" $ dir "stats1to2" $ hGet $ toK0 $ Stats.handleMigrate1To2
@@ -266,6 +267,7 @@ staticRoutes = choice
      , dir "dave" $ dir "user"        $ hGet $ toK1 $ Administration.daveUser
      , dir "dave" $ dir "userhistory" $ hGet $ toK1 $ Administration.daveUserHistory
      , dir "dave" $ dir "company"     $ hGet $ toK1 $ Administration.daveCompany
+     , dir "dave" $ dir "company"     $ hGet $ toK3 $ Administration.companyClosedFilesZip
 
      -- account stuff
      , dir "logout"      $ hGet  $ toK0 $ handleLogout

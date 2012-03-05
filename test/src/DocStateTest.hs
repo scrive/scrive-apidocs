@@ -2,7 +2,6 @@
 module DocStateTest where
 
 import DB.Classes
-import DB.Utils
 import User.Model
 import Doc.Model
 import Doc.DocUtils
@@ -10,7 +9,6 @@ import Doc.DocStateData
 import Misc
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
-import Doc.Tables
 import TestingUtil
 import Company.Model
 import Doc.Invariants
@@ -327,6 +325,7 @@ testRemoveDaysToSignEvidenceLog :: DB ()
 testRemoveDaysToSignEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
+  _ <- randomUpdate $ \t->SetDaysToSign (documentid doc) (Just 3) (SystemActor t)
   etdoc <- randomUpdate $ \t->SetDaysToSign (documentid doc) Nothing (SystemActor t)
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
@@ -1446,7 +1445,7 @@ testPreparationAttachCSVUploadNonExistingSignatoryLink = doTimes 3 $ do
   (csvupload, time) <- rand 10 arbitrary
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  slid <- getUniqueID tableSignatoryLinks
+  slid <- unsafeSignatoryLinkID <$> rand 10 arbitrary
   --execute
   edoc <- dbUpdate $ AttachCSVUpload (documentid doc) 
           slid csvupload (SystemActor time)
@@ -1491,12 +1490,12 @@ testGetDocumentsSharedInCompany = doTimes 10 $ do
   _ <- dbUpdate $ SetDocumentSharing [docid4] False
   _ <- dbUpdate $ SetDocumentSharing [docid1, docid2, docid3, docid5, docid6] True
 
-  dlist1 <- dbQuery $ GetTemplatesByAuthor (userid user1)
-  dlist2 <- dbQuery $ GetTemplatesByAuthor (userid user2)
-  dlist3 <- dbQuery $ GetTemplatesByAuthor (userid user3)
-  dlist4 <- dbQuery $ GetTemplatesByAuthor (userid user4)
-  dlist5 <- dbQuery $ GetTemplatesByAuthor (userid user5)
-  dlist6 <- dbQuery $ GetTemplatesByAuthor (userid user6)
+  dlist1 <- dbQuery $ GetAvaibleTemplates (userid user1)
+  dlist2 <- dbQuery $ GetAvaibleTemplates (userid user2)
+  dlist3 <- dbQuery $ GetAvaibleTemplates (userid user3)
+  dlist4 <- dbQuery $ GetAvaibleTemplates (userid user4)
+  dlist5 <- dbQuery $ GetAvaibleTemplates (userid user5)
+  dlist6 <- dbQuery $ GetAvaibleTemplates (userid user6)
 
   mapM_ (liftIO . putStrLn . show . map documentid) [dlist1, dlist2, dlist3, dlist4, dlist5, dlist6]
 
