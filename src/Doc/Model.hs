@@ -1,3 +1,4 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -fcontext-stack=50  #-}
 module Doc.Model
   ( module File.File
@@ -84,14 +85,15 @@ import User.UserID
 import User.Model
 import Company.Model
 import MinutesTime
+import OurPrelude
 import Doc.DocStateData
 import Doc.Invariants
 import Database.HDBC
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-import Data.Maybe
+import Data.Maybe hiding (fromJust)
 import Misc
-import Data.List
+import Data.List hiding (tail, head)
 import Data.Monoid
 import qualified Data.Map as M
 import Doc.Tables
@@ -327,21 +329,27 @@ selectSignatoryLinksSQL = SQL ("SELECT "
 fetchSignatoryLinks :: DB (M.Map DocumentID [SignatoryLink])
 fetchSignatoryLinks = do
   sigs <- foldDB decoder (nulldocid, [], M.empty)
-  return $ (\(d,l,m) -> M.insertWith' (++) d l m) sigs
+  return $ (\(d, l, m) -> M.insertWith' (++) d l m) sigs
   where
-  nulldocid = unsafeDocumentID 0
-  decoder (docid, links, linksmap) slid document_id user_id company_id fields sign_order token
-    sign_time sign_ip seen_time seen_ip read_invitation invitation_delivery_status
-    signinfo_text signinfo_signature signinfo_certificate signinfo_provider
-    signinfo_first_name_verified signinfo_last_name_verified
-    signinfo_personal_number_verified roles csv_title csv_contents
-    csv_signatory_index deleted really_deleted safileid saname sadesc
-    | docid == nulldocid                      = (document_id, link, linksmap)
-    | docid /= document_id                    = (document_id, link, M.insertWith' (++) docid links linksmap)
-    | (signatorylinkid $ head links)  == slid = (docid, (addsigatt' $ head links) : (tail links), linksmap)
-    | otherwise                               = (docid, link ++ links, linksmap)
+  nulldocid = unsafeDocumentID $ -1
+  decoder (docid, links, linksmap) slid document_id user_id company_id fields
+   sign_order token sign_time sign_ip seen_time seen_ip read_invitation
+   invitation_delivery_status signinfo_text signinfo_signature signinfo_certificate
+   signinfo_provider signinfo_first_name_verified signinfo_last_name_verified
+   signinfo_personal_number_verified roles csv_title csv_contents csv_signatory_index
+   deleted really_deleted safileid saname sadesc
+    | docid == nulldocid                      = (document_id, [link], linksmap)
+    | docid /= document_id                    = (document_id, [link], M.insertWith' (++) docid links linksmap)
+    | signatorylinkid ($(head) links) == slid = (docid, addSigAtt ($(head) links) : $(tail) links, linksmap)
+    | otherwise                               = (docid, link : links, linksmap)
     where
-      link = [SignatoryLink {
+      addSigAtt l = l { signatoryattachments = sigAtt ++ signatoryattachments l }
+      sigAtt = maybe [] (\name -> [SignatoryAttachment {
+          signatoryattachmentfile = safileid
+        , signatoryattachmentname = name
+        , signatoryattachmentdescription = fromMaybe BS.empty sadesc
+        }]) saname
+      link = SignatoryLink {
           signatorylinkid = slid
         , signatorydetails = SignatoryDetails {
             signatorysignorder = sign_order
@@ -377,12 +385,9 @@ fetchSignatoryLinks = do
         , signatorylinkreallydeleted = really_deleted
         , signatorylinkcsvupload =
             CSVUpload <$> csv_title <*> csv_contents <*> csv_signatory_index
-        , signatoryattachments = maybe [] (\name -> [SignatoryAttachment safileid name $ maybe BS.empty id sadesc]) saname
-        }]
-      addsigatt' l = l {
-          signatoryattachments = (maybe [] (\name -> [SignatoryAttachment safileid name $ maybe BS.empty id sadesc]) saname) 
-                                 ++ signatoryattachments l
+        , signatoryattachments = sigAtt
         }
+
 insertSignatoryLinkAsIs :: DocumentID -> SignatoryLink -> DB (Maybe SignatoryLink)
 insertSignatoryLinkAsIs documentid link = do
   ruserid <- case maybesignatory link of
@@ -1843,7 +1848,7 @@ instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document)
                                            }
                                 else link'
                      r1 <- insertSignatoryLinkAsIs documentid link
-                     when_ (isJust r1) $ dbUpdate $ SetSigAttachments documentid (signatorylinkid $ fromJust r1) atts actor
+                     when_ (isJust r1) $ dbUpdate $ SetSigAttachments documentid (signatorylinkid $ $(fromJust) r1) atts actor
                      when (not (isJust r1)) $
                           error "ResetSignatoryDetails signatory_links did not manage to insert a row"
 
