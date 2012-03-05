@@ -489,7 +489,7 @@ var DocumentDesignView = Backbone.View.extend({
                   color : "blue",
                   icon : $("<span class='btn-symbol cross' style='margin-left: 10px'/>"),
                   text : document.process().signbuttontext(),
-                  onClick : function() {                    
+                  onClick : function() {
                       document.signByAuthor().send();
                     }
                 }).input();
