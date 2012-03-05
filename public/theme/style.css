@@ -626,6 +626,15 @@ color: white;
     background-repeat: no-repeat;
     background-position: center center;
 }
+.loadingMail
+{
+    margin-left:40%;
+    margin-right:40%;
+    height: 400px;
+    background-image: url(images/wait30trans.gif);
+    background-repeat: no-repeat;
+    background-position: center center;
+}
 .pagejpg
 {
     width: 943px;
