@@ -514,6 +514,8 @@ getUserInfoChange = do
   muserphone           <- getFieldUTF "userphone"
   musermobile          <- getFieldUTF "usermobile"
   museremail           <- fmap Email <$> getFieldUTF "useremail"
+  musercompanyname     <- getFieldUTF "usercompanyname"
+  musercompanynumber   <- getFieldUTF "usercompanynumber"
   return $ \UserInfo {
       userfstname
     , usersndname
@@ -522,6 +524,8 @@ getUserInfoChange = do
     , userphone
     , usermobile
     , useremail
+    , usercompanyname
+    , usercompanynumber
     } ->  UserInfo {
       userfstname = fromMaybe userfstname muserfstname
       , usersndname = fromMaybe usersndname musersndname
@@ -530,6 +534,8 @@ getUserInfoChange = do
       , userphone = fromMaybe userphone muserphone
       , usermobile = fromMaybe usermobile musermobile
       , useremail =  fromMaybe useremail museremail
+      , usercompanyname = fromMaybe usercompanyname musercompanyname
+      , usercompanynumber = fromMaybe usercompanynumber musercompanynumber
     }
 
 

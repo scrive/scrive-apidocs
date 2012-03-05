@@ -46,6 +46,16 @@ showUser =
                             <td>$_phone()$:</td>
                             <td><input type="text" name="phone" value="$phone$" autocomplete="off" /></td>
                         </tr>
+                        $if(!iscompanyaccount)$
+                        <tr>
+                            <td>$_company()$:</td>
+                            <td><input type="text" name="companyname" value="$usercompanyname$" autocomplete="off" /></td>
+                        </tr>
+                        <tr>
+                            <td>$_orgnumber()$:</td>
+                            <td><input type="text" name="companynumber" value="$usercompanynumber$" autocomplete="off" /></td>
+                        </tr>
+                        $endif$
                         <tr>
                             <td>$_companyposition()$:</td>
                             <td><input type="text" name="companyposition" value="$companyposition$" autocomplete="off" /></td>
