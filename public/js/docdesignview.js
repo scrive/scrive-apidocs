@@ -126,7 +126,30 @@ var DocumentDesignView = Backbone.View.extend({
                             });
                      });
         return a;
-    },                                               
+    },
+    designChangeMainFile: function() {
+      var document = this.model;
+      var box = $("<div class='signStepsBody table tbody' />");
+
+      var wizard = new Wizard;
+      var wizardview = new WizardView({model: wizard});
+
+
+      window.UploadWizardView = wizardview;
+
+      var up = new WizardStep;
+      var upview = new window.ChangeFileUploadView({model: up});
+      
+      var tmp = new WizardStep;
+      var tmpview = new window.ChangeFileTemplateView({model: tmp});
+
+      wizard.addStep(up);
+      wizard.addStep(tmp);
+
+      wizardview.render();
+      box.append(wizardview.el);
+      return box;
+    },
     designStepBasic: function() {
         var document = this.model;
         var box = $("<div class='signStepsBody basicMode'/>");
@@ -588,6 +611,8 @@ var DocumentDesignView = Backbone.View.extend({
         var designbody1 = document.isBasic() ? this.designStepBasic() : this.designStep1();
         var designbody2 = document.isBasic() ? $("Nothing") : this.designStep2();
 
+        var changemainfile = this.designChangeMainFile();
+
         var file = KontraFile.init({file: document.mainfile()});
         this.tabs = KontraTabs.init({
             title : this.titlerow(),
@@ -595,11 +620,18 @@ var DocumentDesignView = Backbone.View.extend({
             tabs: [
                 this.tab1 = new Tab({
                     name : document.isTemplate() ? localization.step1template : document.process().step1text(),
-                    clickable : false,    
+                    active :  SessionStorage.get(document.documentid(), "step") == "1",
+                    onActivate : function() {
+                      SessionStorage.set(document.documentid(), "step", "1");
+                      window.UploadWizardView.model.setStepIndex(0);
+                    },    
+                    elems : [
+                      changemainfile
+                            ]  
                   }),
                 this.tab2 = new Tab({
                     name  : document.isTemplate() ? localization.step2template : document.isBasic() ? localization.step2basic : localization.step2normal,
-                    active :  document.isBasic() || SessionStorage.get(document.documentid(), "step") != "3",
+                    active :  SessionStorage.get(document.documentid(), "step") != "1" && SessionStorage.get(document.documentid(), "step") != "3",
                     onActivate : function() {
                          SessionStorage.set(document.documentid(), "step", "2");
                     },    

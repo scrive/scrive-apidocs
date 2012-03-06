@@ -1,37 +1,6 @@
-/* The process for uploading a new document.
-   Written by Eric Normand
- */
 (function(window){
-    window.SelectProcessView = Backbone.View.extend({
-        tagName: "tr",
-        initialize: function() {
-            this.model.view = this;
-            _.bindAll(this, 'render');
-            this.model.bind('change', this.render);
-            this.text = $("#jschooseprocesstext").html();
-            this.choose = $("#jschooseprocess").html();
-        },
-        render: function() {
-            var view = this;
-            $(view.el).children().detach();
-            var model = view.model;
-            var wiz = model.wizard();
-            $(view.el).append(this.text);
-            $.each(model.get('processes'), function(i, v) {
-                var n = $(view.choose);
-                var a = n.find("a");
-                a.click(function(){
-                    wiz.set({process: v});
-                    wiz.nextStep();
-                    return false;
-                });
-                a.text(v.localname);
-                $(view.el).append(n);
-            });
-        }
-    });
 
-    window.UploadProcessView = Backbone.View.extend({
+    window.ChangeFileUploadView = Backbone.View.extend({
         tagName: "tr",
         initialize: function() {
             this.model.view = this;
@@ -47,15 +16,8 @@
             var model = view.model;
             var wiz = model.wizard();
             var t = $(view.text);
-            if(t.find("a.jswizardback").length > 0)
-              t.find("a.jswizardback").click(function() {
-                wiz.previousStep();
-                return false;
-              });
-            if(t.find(".jsprompt").length > 0)
-              t.find(".jsprompt").text(wiz.get('process').prompt);
             $(view.el).append(t);
-            var url = "/api/document";
+            var url = "/api/document/" + KontraDesignDocument.model.id;
             var upbutton = UploadButton.init({
                 name: "file",
                 width: 125,
@@ -72,7 +34,6 @@
                     method : "POST",
                     url : url,
                     ajax: true,
-                    type: wiz.get('process') ? wiz.get('process').signable : "",
                     expectedType: 'json',
                     beforeSend: function() {
                         console.log("first");
@@ -81,7 +42,7 @@
                         console.log("here");
                         LoadingDialog.open();
                     },
-                    ajaxerror: function(d,a){
+                   ajaxerror: function(d,a){
                         if(a === 'parsererror') // file too large
                             FlashMessages.add({content: localization.fileTooLarge, color: "red"});
                         else
@@ -90,8 +51,9 @@
                         wiz.trigger('change');
                     },
                     ajaxsuccess: function(d) {
-                        console.log("there");
+                      console.log("there");
                         if (d) {
+                          SessionStorage.set(KontraDesignDocument.model.documentid(), "step", "2");
                             window.location.href = d.designurl;
                         }
                     }
@@ -101,8 +63,7 @@
             up.find(".signStepsBodyUploadBox .signStepsButtonContainer").append(upbutton.input());
             $(view.el).append(up);
             var temps = $(view.template);
-            temps.find("a").click(function(event) {
-                event.preventDefault();
+            temps.find("a").click(function() {
                 wiz.nextStep();
                 return false;
             });
@@ -110,7 +71,7 @@
         }
     });
 
-    window.SelectTemplateView = Backbone.View.extend({
+    window.ChangeFileTemplateView = Backbone.View.extend({
         tagName: "tr",
         initialize: function() {
             this.model.view = this;
@@ -132,12 +93,11 @@
             var el = $(view.el);
             var model = view.model;
             var wiz = model.wizard();
-
             var documentsTable = KontraList().init({
                 name : "Templates table",
                 schema: new Schema({
                     url: "/docs",
-                    extraParams : { documentType : "Template|" + wiz.get('process').name },
+                    extraParams : { documentType : "Template|" + KontraDesignDocument.model.process().name() },
                     sorting: new Sorting({ fields: ["title"]}),
                     paging: new Paging({}),
                     filtering: new Filtering({text: "", infotext: localization.searchTemplate}),
@@ -147,12 +107,23 @@
                                   field:"title",
                                   special: "rendered",
                                   rendering : function(title, _mainrow, listobject) {
-                                      var link = jQuery("<a/>").text(title);
+                                      var link = jQuery("<a />").text(title);
                                       link.click(function(){
                                           new Submit({
-                                              method : "POST",
-                                              url: "/t",
-                                              template: listobject.field("id")
+                                            method : "POST",
+                                            ajax: true,
+                                            expectedType: 'json',
+                                            url: "/api/document/" + KontraDesignDocument.model.id,
+                                            template: listobject.field("id"),
+                                            ajaxsuccess: function(d) {
+                                              console.log("there");
+                      
+                                              if (d) {
+                                                SessionStorage.set(KontraDesignDocument.model.documentid(), "step", "2");
+                                                window.location.href = d.designurl;
+                                              }
+
+                                            }
                                           }).send();
                                           return false;
                                       });
@@ -176,48 +147,4 @@
 
         }
     });
-
-    window.UploadProcessMain = function(){
-        var wizard = new Wizard;
-        var wizardview = new WizardView({model: wizard});
-        wizardview.el = $(".signStepsBody table tbody");
-        window.UploadWizardView = wizardview;
-
-        var sp = new WizardStep;
-
-        sp.set({processes:
-                [
-                    {name: "Contract",
-                     localname: localization.process.contract.name,
-                     signable: "1",
-                     prompt: localization.process.contract.uploadprompt
-                    },
-                    {name: "Offer",
-                     localname: localization.process.offer.name,
-                     signable: "3",
-                     prompt: localization.process.offer.uploadprompt
-                    },
-                    {name: "Order",
-                     localname: localization.process.order.name,
-                     signable: "5",
-                     prompt: localization.process.order.uploadprompt
-                    }
-                ]
-               },
-               {silent: true});
-
-        var spview = new SelectProcessView({model: sp});
-
-        var up = new WizardStep;
-        var upview = new UploadProcessView({model: up});
-
-        var tmp = new WizardStep;
-        var tmpview = new SelectTemplateView({model: tmp});
-        wizard.addStep(sp);
-        wizard.addStep(up);
-        wizard.addStep(tmp);
-
-        wizardview.render();
-
-    };
 })(window);
