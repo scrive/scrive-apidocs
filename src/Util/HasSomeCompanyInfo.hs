@@ -18,6 +18,9 @@ import Doc.DocStateData
 import Company.Model
 import User.Model
 import Util.SignatoryLinkUtils
+import Misc
+
+import Data.Maybe
 
 import qualified Data.ByteString as BS
 
@@ -51,8 +54,8 @@ instance HasSomeCompanyInfo UserInfo where
   getCompanyNumber = usercompanynumber
 
 instance HasSomeCompanyInfo User where
-  getCompanyName   = getCompanyName   . userinfo
-  getCompanyNumber = getCompanyNumber . userinfo
+  getCompanyName   user = BS.empty <| (isJust $ usercompany user) |> getCompanyName   (userinfo user)
+  getCompanyNumber user = BS.empty <| (isJust $ usercompany user) |> getCompanyNumber (userinfo user)
 
 instance HasSomeCompanyInfo (User, Maybe Company) where
   getCompanyName   (u, mc) = maybe (getCompanyName   u) getCompanyName   mc

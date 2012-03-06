@@ -156,11 +156,11 @@ modalCreateCompany=
             <table>
               <tr>
                   <td>$_company()$:</td>
-                  <td><input type="text" name="companyname" value="$companyname$" autocomplete="off" /></td>
+                  <td><input type="text" name="companyname" value="$usercompanyname$" autocomplete="off" /></td>
               </tr>
               <tr>
                   <td>$_orgnumber()$:</td>
-                  <td><input type="text" name="companynumber" value="$companynumber$" autocomplete="off" /></td>
+                  <td><input type="text" name="companynumber" value="$usercompanynumber$" autocomplete="off" /></td>
               </tr>
               <tr>
                   <td>$_address()$:</td>
