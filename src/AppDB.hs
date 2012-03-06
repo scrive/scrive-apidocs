@@ -40,6 +40,7 @@ kontraMigrations = [
   , addEmailBrandingToCompany
   , removeOldSignatoryLinkIDFromCancelationReason
   , addDocumentIdIndexOnSignatoryLinks
+  , addSignatoryLinkIdToSignatoryAttachment
   , addTextColourToEmailBranding
   , addFileIdSequence
   , addIdSerialOnSignatoryLinks
