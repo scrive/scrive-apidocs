@@ -5,7 +5,7 @@ module Doc.DocStateUpdate
     , rejectDocumentWithChecks
     , authorSignDocument
     , authorSendDocument
-    , updateSigAttachments
+    , setSigAttachments
     , authorSignDocumentFinal
     , signableFromTemplateWithUpdatedAuthor
     , updateDocAuthorAttachments
@@ -184,12 +184,12 @@ authorSendDocument did = onlyAuthor did $ do
           transActionNotAvailable <$> runDBUpdate (MarkDocumentSeen did signatorylinkid signatorymagichash actor)
 
 {- |
-  The Author can add new SigAttachments.
+  Reseting all signatory attachments when document is in preparation | State of document is not checked
  -}
-updateSigAttachments :: (Kontrakcja m) => DocumentID -> [SignatoryAttachment] -> m (Either DBError Document)
-updateSigAttachments did sigatts = onlyAuthor did $ do
+setSigAttachments :: (Kontrakcja m) => DocumentID -> SignatoryLinkID -> [SignatoryAttachment] -> m (Either DBError ())
+setSigAttachments did sid sigatts = onlyAuthor did $ do
   actor <- guardJustM $ mkAuthorActor <$> getContext
-  transActionNotAvailable <$> runDBUpdate (UpdateSigAttachments did sigatts actor)
+  transActionNotAvailable <$> Right <$> runDBUpdate (SetSigAttachments did sid sigatts actor)
 
 {- |
    Only the author can Close a document when its in AwaitingAuthor status.

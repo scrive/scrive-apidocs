@@ -214,7 +214,7 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   sl  <- apiGuard $ getSigLinkFor doc sid
   let email = getEmail sl
   
-  sigattach <- apiGuard' Forbidden $ getSignatoryAttachment email (BS.fromString aname) doc
+  sigattach <- apiGuard' Forbidden $ getSignatoryAttachment doc slid $ BS.fromString aname
   
   -- attachment must have no file
   apiGuard' ActionNotAvailable (isNothing $ signatoryattachmentfile sigattach)
@@ -234,10 +234,10 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   
   file <- lift $ runDB $ dbUpdate $ NewFile (BS.fromString $ basename filename) content
   let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) (BS.toString email) slid
-  d <- apiGuardL $ runDBUpdate $ SaveSigAttachment (documentid doc) (BS.fromString aname) email (fileid file) actor
+  d <- apiGuardL $ runDBUpdate $ SaveSigAttachment (documentid doc) sid (BS.fromString aname) (fileid file) actor
   
   -- let's dig the attachment out again
-  sigattach' <- apiGuard $ getSignatoryAttachment email (BS.fromString aname) d
+  sigattach' <- apiGuard $ getSignatoryAttachment d sid (BS.fromString aname)
   
   return $ Created $ jsonSigAttachmentWithFile sigattach' (Just file)
 
@@ -253,16 +253,16 @@ documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
   
   
   -- sigattachexists
-  sigattach <- apiGuard $ getSignatoryAttachment email (BS.fromString aname) doc
+  sigattach <- apiGuard $ getSignatoryAttachment doc slid (BS.fromString aname)
 
   -- attachment must have a file
   fileid <- apiGuard' ActionNotAvailable $ signatoryattachmentfile sigattach
 
-  d <- apiGuardL $ runDBUpdate $ DeleteSigAttachment (documentid doc) email fileid 
+  d <- apiGuardL $ runDBUpdate $ DeleteSigAttachment (documentid doc) sid fileid 
        (SignatoryActor ctxtime ctxipnumber muid (BS.toString email) sid)
   
   -- let's dig the attachment out again
-  sigattach' <- apiGuard $ getSignatoryAttachment email (BS.fromString aname) d
+  sigattach' <- apiGuard $ getSignatoryAttachment d sid (BS.fromString aname)
   
   return $ jsonSigAttachmentWithFile sigattach' Nothing
 
