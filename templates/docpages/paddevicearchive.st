@@ -57,7 +57,7 @@ var padTable = KontraList().init({
                        }
                     return icon;
                  }}),
-       new Cell({name: "Action", width:"100px", field:"id",  special: "rendered",
+       new Cell({name: "Action", width:"100px", field:"id", substyle: "", special: "rendered",
                  rendering: function(id,idx,listobject) {
                     var actionIcon = jQuery("<a class='actionIcon'/>");
                     if(idx == undefined)
@@ -104,20 +104,12 @@ jQuery(function(){
 </script>
 ####
 padQueueCurrentPage=
-
-$if(documentid)$
+<div class="padview"></div>
 <script>
+var padTable = KontraPad.init({ });
+
 jQuery(function(){
-var docview = KontraStandardDocument.init({
-        id:"$documentid$",
-        viewer : new DocumentViewer({
-                                signatoryid : "$siglinkid$",
-                                magichash : "$sigmagichash$"
-                        })
-        });
-jQuery(".body-container").replaceWith(docview.view.el)
-})
+    jQuery(".padview").append(padTable.view.el)
+});
+
 </script>
-$else$
-No document
-$endif$

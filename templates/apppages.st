@@ -123,6 +123,8 @@ standardHeaderContents=
                 type="text/javascript"></script>
        <script src="/js/companybranding.js"
                 type="text/javascript"></script>
+       <script src="/js/padview.js"
+                type="text/javascript"></script>
        $if(publicsafe)$
         <script src="/js/jquery.tweet.js"
                 type="text/javascript"></script>

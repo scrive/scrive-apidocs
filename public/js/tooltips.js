@@ -16,7 +16,7 @@ window.ToolTip= {
            container.append(body);
             $(args.on).mouseenter(function(e) {
                 var checker = function() {
-                    if ($(':hover',on).size() == 0)
+                    if ($(':hover',args.on).size() == 0)
                     {
                         container.remove()
                     }

@@ -1,4 +1,4 @@
-module PadQueue.Control (addToQueue,clearQueue,showPadQueueCurrent)
+module PadQueue.Control (addToQueue,clearQueue,showPadQueuePage, padQueueState)
     where
         
 import PadQueue.Model
@@ -38,13 +38,15 @@ clearQueue = do
     runDB $ dbUpdate $ ClearPadQueue uid 
     liftIO $ json $ return ()
 
+showPadQueuePage::  (Kontrakcja m) =>  m String
+showPadQueuePage = padQueuePage 
 
-showPadQueueCurrent ::  (Kontrakcja m) =>  m String
-showPadQueueCurrent = do
+padQueueState ::  (Kontrakcja m) =>  m JSValue
+padQueueState = do
     uid <- userid <$> (guardJustM $ ctxmaybeuser <$> getContext)
     pq <- runDB $ dbQuery $ GetPadQueue uid
     msdata <- padQueueToSignatoryData pq
-    showPadQueueCurrentPage msdata
+    padQueueStateJSON msdata
 
 
 padQueueToSignatoryData :: (Kontrakcja m) => PadQueue -> m (Maybe (Document,SignatoryLink))

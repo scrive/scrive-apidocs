@@ -166,7 +166,8 @@ staticRoutes = choice
      , dir "padqueue" $ dir "add" $ hPost $ toK2 $ PadQueue.addToQueue
      , dir "padqueue" $ dir "clear" $ hPost $ toK0 $ PadQueue.clearQueue
     
-     , dir "padqueue" $ hGet $ toK0 $ PadQueue.showPadQueueCurrent
+     , dir "padqueue" $ dir "state" $ hGet $ toK0 $ PadQueue.padQueueState
+     , dir "padqueue" $ hGet $ toK0 $ PadQueue.showPadQueuePage
      , dir "padqueue" $ dir "archive" $ hGet $ toK0 $ ArchiveControl.showPadDeviceArchive
 
      -- UserControl
