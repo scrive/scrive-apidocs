@@ -1,0 +1,40 @@
+.paddevicearchive .statusIcon.inqueuestatus{
+        background-image: url(../theme/images/status_viewed.png);
+        float: left;
+        height: 16px;
+        width: 16px;
+}
+
+.paddevicearchive .statusIcon.notinqueuestatus{
+        background-image: url(../theme/images/status_draft.png);
+        float: left;
+        height: 16px;
+        width: 16px;
+}
+.paddevicearchive .statusIcon.signedstatus{
+        background-image: url(../theme/images/status_signed.png);
+        float: left;
+        height: 16px;
+        width: 16px;
+}
+
+.paddevicearchive .actionIcon.gotodocument{
+        background-image: url(../theme/images/next.gif);
+        float: left;
+        height: 14px;
+        width: 14px;
+}
+
+.paddevicearchive .actionIcon.removefromqueue{
+        background-image: url(../img/icon-delete.png);
+        float: left;
+        height: 16px;
+        width: 16px;
+}
+
+.paddevicearchive .actionIcon.addtoqueue{
+        background-image: url(../img/foreward.png);
+        float: left;
+        height: 14px;
+        width: 14px;
+}
