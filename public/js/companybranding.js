@@ -88,7 +88,7 @@ window.CompanyBrandingColourView = Backbone.View.extend({
     }
 
     var colour = this.model.colour();
-    if (this.input.val()!=colour && !this.input.is(":focus")) {
+    if (this.input.val()!=colour && this.input[0] !== document.activeElement) {
       this.input.val(colour);
     }
     this.display.css("background-color", colour);
@@ -259,7 +259,7 @@ window.CompanyModel = Backbone.Model.extend({
       logo: "",
       iscustomlogo: false,
       ready: false,
-      editable: false,
+      editable: false
     },
     initialize: function(args) {
       this.submiturl = "/account/company";
@@ -342,7 +342,7 @@ window.CompanyModel = Backbone.Model.extend({
         city: this.get("city"),
         country: this.get("country"),
         barsbackground: this.barsbackground().customised() ? this.barsbackground().colour() : "",
-        barstextcolour: this.barstextcolour().customised() ? this.barstextcolour().colour() : "",
+        barstextcolour: this.barstextcolour().customised() ? this.barstextcolour().colour() : ""
       });
     }
 });
