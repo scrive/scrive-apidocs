@@ -13,8 +13,6 @@ module Company.Model (
   , GetOrCreateCompanyWithExternalID(..)
   , GetCompanyByEmailDomain(..)
   , SetCompanyEmailDomain(..)
-  , SetCompanyMailAPI(..)
-  , GetCompanyMailAPI(..)
   ) where
 
 import Data.Monoid
@@ -31,7 +29,6 @@ import API.Service.Model
 import Company.CompanyID
 import Company.Tables
 import Misc
-import ScriveByMail.Model
 
 newtype ExternalCompanyID = ExternalCompanyID { unExternalCompanyID :: BS.ByteString }
   deriving (Eq, Ord, Show)
@@ -169,45 +166,6 @@ fetchCompanies = foldDB decoder []
         , companylogo = logo
         }
       } : acc
-
-data GetCompanyMailAPI = GetCompanyMailAPI CompanyID
-instance DBQuery GetCompanyMailAPI (Maybe MailAPIInfo) where
-  dbQuery (GetCompanyMailAPI cid) = do
-    kPrepare "SELECT key, daily_limit, (CASE WHEN last_sent_date = now()::DATE THEN sent_today ELSE 0 END) FROM company_mail_apis WHERE company_id = ?"
-    _ <- kExecute [toSql cid]
-    foldDB fetchMailAPIs [] >>= oneObjectReturnedGuard
-    where
-      fetchMailAPIs acc key daily_limit sent_today = MailAPIInfo {
-          umapiKey        = key
-        , umapiDailyLimit = daily_limit
-        , umapiSentToday  = sent_today
-        } : acc
-
--- todo: make this one query delete/insert
-data SetCompanyMailAPI = SetCompanyMailAPI CompanyID (Maybe MailAPIInfo)
-instance DBUpdate SetCompanyMailAPI Bool where
-  dbUpdate (SetCompanyMailAPI cid mmailapi) =
-    case mmailapi of
-      Just mailapi -> do
-        kPrepare "DELETE FROM company_mail_apis WHERE company_id = ?"
-        _ <- kExecute01 [toSql cid]
-        kPrepare $ "INSERT INTO user_mail_apis ("
-                ++ "  company_id"
-                ++ ", key"
-                ++ ", daily_limit"
-                ++ ", sent_today"
-                ++ ", last_sent_date"
-                ++ ") "
-                ++ "VALUES (?, ?, ?, ?, now()) "
-        kExecute01 [
-                     toSql cid
-                   , toSql $ umapiKey mailapi
-                   , toSql $ umapiDailyLimit mailapi
-                   , toSql $ umapiSentToday mailapi
-                   ]
-      Nothing -> do
-        kPrepare "DELETE FROM company_mail_apis WHERE company_id = ?"
-        kExecute01 [toSql cid]
 
 data SetCompanyEmailDomain = SetCompanyEmailDomain CompanyID (Maybe String)
 instance DBUpdate SetCompanyEmailDomain Bool where

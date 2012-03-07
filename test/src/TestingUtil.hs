@@ -377,8 +377,6 @@ instance Arbitrary UserInfo where
                       , userphone           = BS.pack []
                       , usermobile          = BS.pack []
                       , useremail           = Email em
-                      , usercompanyname = BS.empty
-                      , usercompanynumber = BS.empty
                       }
 
 -- generate (byte)strings without \NUL in them since
@@ -445,8 +443,6 @@ blankUser = User { userid                        = unsafeUserID 0
                                        , userphone = BS.empty
                                        , usermobile = BS.empty
                                        , useremail = Email BS.empty
-                                       , usercompanyname = BS.empty
-                                       , usercompanynumber = BS.empty
                                        }
                  , usersettings  = UserSettings { preferreddesignmode = Nothing
                                                 , locale = mkLocaleFromRegion Misc.defaultValue

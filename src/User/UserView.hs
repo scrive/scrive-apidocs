@@ -122,8 +122,6 @@ userFields user = do
     field "fullnameOrEmail" $ fullnameOrEmail
     field "fullnamePlusEmail" $ fullnamePlusEmail
     field "iscompanyaccount" $ isJust $ usercompany user
-    field "usercompanyname" $ getCompanyName user
-    field "usercompanynumber" $ getCompanyNumber user
 
     --field "invoiceaddress" $ BS.toString $ useraddress $ userinfo user
     menuFields user

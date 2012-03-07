@@ -48,15 +48,3 @@ instance HasSomeCompanyInfo SignatoryLink where
 instance HasSomeCompanyInfo Document where
   getCompanyName  doc  = maybe BS.empty getCompanyName   $ getAuthorSigLink doc
   getCompanyNumber doc = maybe BS.empty getCompanyNumber $ getAuthorSigLink doc
-
-instance HasSomeCompanyInfo UserInfo where
-  getCompanyName   = usercompanyname
-  getCompanyNumber = usercompanynumber
-
-instance HasSomeCompanyInfo User where
-  getCompanyName   user = BS.empty <| (isJust $ usercompany user) |> getCompanyName   (userinfo user)
-  getCompanyNumber user = BS.empty <| (isJust $ usercompany user) |> getCompanyNumber (userinfo user)
-
-instance HasSomeCompanyInfo (User, Maybe Company) where
-  getCompanyName   (u, mc) = maybe (getCompanyName   u) getCompanyName   mc
-  getCompanyNumber (u, mc) = maybe (getCompanyNumber u) getCompanyNumber mc

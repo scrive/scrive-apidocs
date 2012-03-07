@@ -3,6 +3,8 @@ module ScriveByMail.Control
          scriveByMail,
          sendMailAPIConfirmEmail,
          sendMailAPIErrorEmail,
+         sendMailAPIDelayAdminEmail,
+         sendMailAPIDelayUserEmail,
          markDocumentAuthorReadAndSeen
        )
        
@@ -214,6 +216,18 @@ sendMailAPIConfirmEmail ctx document =
 sendMailAPIErrorEmail :: Kontrakcja m => Context -> String -> String -> m ()
 sendMailAPIErrorEmail ctx email msg = do
   mail <- mailMailApiError ctx msg
+  scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress (BS.fromString email) (BS.fromString email)] }
+
+sendMailAPIDelayAdminEmail :: Kontrakcja m => String -> String -> Int64 -> MagicHash -> MinutesTime -> m ()
+sendMailAPIDelayAdminEmail adminemail email delayid key now = do
+  ctx <- getContext
+  mail <- mailMailApiDelayAdmin ctx email delayid key now
+  scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress (BS.fromString adminemail) (BS.fromString adminemail)] }
+
+sendMailAPIDelayAdminEmail :: Kontrakcja m => String -> m ()
+sendMailAPIDelayAdminEmail email = do
+  ctx  <- getContext
+  mail <- mailMailApiDelayUser ctx email
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress (BS.fromString email) (BS.fromString email)] }
 
 markDocumentAuthorReadAndSeen :: Kontrakcja m => Document -> m ()

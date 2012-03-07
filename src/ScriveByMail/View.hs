@@ -43,7 +43,6 @@ mailMailAPIConfirm ctx document siglink = do
         field "ctxhostpart" $ ctxhostpart ctx
         field "link" $ ctxhostpart ctx ++ (show $  LinkIssueDoc (documentid document))
 
-
 mailMailApiError:: TemplatesMonad m =>
                    Context ->
                    String ->
@@ -52,3 +51,10 @@ mailMailApiError ctx err =
   kontramail "mailMailAPIError" $ do
     field "errormsg" err
     field "ctxhostpart" (ctxhostpart ctx)
+
+mailMailApiDelayAdmin :: TemplateMonad m => Context -> String -> Int64 -> MagicHash -> MinutesTime -> m Mail
+mailMailApiDelayAdmin context email delayid key now =
+  kontramail "mailMailAPIDelayAdmin" $ do
+    field "ctxhostpart" $ ctxhostpart ctx
+    field "confirmationlink" $ ctxhostpart ctx ++ (show $ MailAPIDelayConfirmationLink delayid key)
+    field "email" email

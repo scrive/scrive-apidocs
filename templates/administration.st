@@ -348,22 +348,6 @@ adminuser=
 		    <input type="text" style="width:200px;margin:0"  value="$user.email$" name="useremail" />
 		  </td>
 		</tr>
-                <tr> <td style="padding-top:10px" ><strong>Company</strong></td>
-		  <td>
-		  </td>
-		</tr>
-                $if(!user.iscompanyaccount)$
-		<tr> <td>Company name:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.companyname$"  name="usercompanyname" />
-		  </td>
-		</tr>
-		<tr> <td>Company number:</td>
-		  <td>
-		    <input type="text" style="width:200px;margin:0" value="$user.companynumber$"  name="usercompanynumber" />
-		  </td>
-		</tr>
-                $endif$
 		<tr> <td>Company position:</td>
 		  <td>
 		    <input type="text" style="width:200px;margin:0" value="$user.companyposition$"  name="usercompanyposition" />

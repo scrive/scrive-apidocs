@@ -133,8 +133,12 @@ handleMailAPI = do
               case mcmailapi of
                 Just cmailapi | Just (umapiKey cmailapi) == maybeRead extension -> do
                   -- we have a non-user with company email domain with matching company mailapi key
-                  -- we need to store the email, send a confirmation to the company admin, a message to the sender
-                  
+                  -- we need to store the email, send a confirmation to the company admins, a message to the sender
+                  (delayid, key) <- runDBUpdate $ AddMailAPIDelay username content (ctxtime ctx)
+                  cusers <- dbQuery $ GetCompanyAccounts (companyid company)
+                  forM_ (filter useriscompanyadmin cusers) $ \admin -> do
+                    sendMailApiDelayAdminEmail (BS.toString $ getEmail admin) username delayid key (ctxtime ctx)
+                  sendMailApiDelayUserEmail username
                   return Nothing
                 _ -> do
                   Log.mailAPI $ "email from: " ++ from ++ " to " ++ to ++ "; User does not exist; domain matches but key is wrong; not sending error because of opportunity for abuse."

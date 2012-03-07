@@ -47,7 +47,6 @@ kontraMigrations = [
   , addIdSerialOnDocuments
   , addIdSerialOnCompanies
   , addIdSerialOnUsers
-  , addCompanyNameNumberOnUsers
   , addEmailDomainOnCompanies
   ] ++ mailerMigrations
 
