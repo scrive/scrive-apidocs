@@ -80,6 +80,8 @@ javascriptLocalisation =
              , you : "$_you()$"
              , searchBoxButtonText : "$_searchBoxButtonText()$"
              , downloadPDF : "$_DownloadPDF()$"
+             , reviewPDF: "$_ReviewPDF()$"
+             , deletePDF: "$_DeletePDF()$"
              , document : "$_Document()$"
              , onlyPDFAllowed : "$_updateAttachmentsDialogUpLoadOnlyPDF()$"
              , attachment : "$_Attachment()$"
@@ -279,23 +281,27 @@ javascriptLocalisation =
          , docsignview : {
             followArrowToSign: "$_followArrowToSign()$"
           , followArrowToReview: "$_followArrowToReview()$"
-          , signedAndClosed: "$_signedAndClosed()$"
           , signedNotClosed: "$_signedNotClosed()$"
+          , signedAndClosed: "$_signedAndClosed()$"
           , unavailableForSign: "$_unavailableForSign()$"
           , dueDate: "$_dueDate()$"
-          , signatories: "$_signatories()$"
+          , showDetails: "$_showDetails()$"
+          , hideDetails: "$_hideDetails()$"
+          , companyNumberLabel: "$_companyNumberLabel()$"
+          , personalNumberLabel: "$_personalNumberLabel()$"
+          , authorAttachmentsTitle: "$_signViewAuthorAttachmentsTitle()$"
+          , signatoryAttachmentsTitle: "$_signViewSignatoryAttachmentsTitle()$"
+          , uploadedAttachmentsTitle: "$_signViewUploadedAttachmentsTitle()$"
+          , signatoriesTitle: "$_signViewSignatoriesTitle()$"
           , uploadPDFFile: "$_uploadPDFFile()$"
           , fillInYourDetails: "$_fillInYourDetails()$"
           , clickToSign: "$_clickToSign()$"
-          , acceptTOSLabel: '$_accountFromSignInputsBodyAcceptTOS()$'
           , newAccountTitle: "$_createaccount()$"
           , emailLabel: "$_email()$:"
           , passwordLabel: "$_modalAccountSetupChoosePassword()$"
           , password2Label: "$_modalAccountSetupRepeatPassword()$"
+          , acceptTOSLabel: '$_accountFromSignInputsBodyAcceptTOS()$'
           , newAccountButton: "$_createaccount()$"
-          , reviewPDF: "Review"
-          , companyNumberLabel: "Org.-nr"
-          , personalNumberLabel: "Pers.-nr"
         }
     }
 ####

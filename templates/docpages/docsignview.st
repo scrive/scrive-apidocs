@@ -13,11 +13,12 @@ $doctype()$
         $pageDocumentSignViewContents()$
       </div>
     </div>
+    $signviewfooter()$
   </body>
 </html>
 ####
 signviewheader=
- <div class="pageheader" $if(companybrand.barsbackground)$style="background-image:none;background-color:$companybrand.barsbackground$;"$else$$if(service.barsbackground)$style="background-image:none;background-color:$service.barsbackground$;"$endif$$endif$>
+ <div class="pageheader" style="$signviewbarsbackgroundstyle()$$signviewtextcolorstyle()$">
    <div class="content">
     <div class="logowrapper">
       $if(!service.logo)$
@@ -31,7 +32,7 @@ signviewheader=
       $endif$
     </div>
 
-    <div class="sender"  $if(companybrand.barstextcolour)$style="color:$companybrand.barstextcolour$;"$endif$>
+    <div class="sender">
       <div class="name">$author.fullname$</div>
       <div class="phone">$author.phone$</div>
     </div>
@@ -48,6 +49,32 @@ signviewheader=
     $endif$
    <div class="clearboth"></div>
  </div>
+####
+signviewfooter=
+  <div class="pagefooter" style="$signviewbarsbackgroundstyle()$$signviewtextcolorstyle()$">
+    <div class="content">
+      <div class="sender">
+        <div class="name">$author.fullname$</div>
+        $if(author.position)$
+        $if(author.company)$
+        <div class='position'>$author.position$, $author.company$</div>
+        $else$
+        <div class='position'>$author.position$</div>
+        $endif$
+        $else$
+        <div class='company'>$author.company$</div>
+        $endif$
+        <div class="phone">$author.phone$</div>
+        <div class="email">$author.email$</div>
+      </div>
+      <div class='poweredbyscrive'><a href="$linkhome$" style="$signviewtextcolorstyle()$">$_poweredByScrive()$</a></div>
+      <div class="clearboth"></div>
+    </div>
+  </div>
+####
+signviewbarsbackgroundstyle=$if(companybrand.barsbackground)$background-image:none;background-color:$companybrand.barsbackground$;$else$$if(service.barsbackground)$background-image:none;background-color:$service.barsbackground$;$endif$$endif$
+####
+signviewtextcolorstyle=$if(companybrand.barstextcolour)$color:$companybrand.barstextcolour$;$endif$
 ####
 pageDocumentSignViewContents=
 <script>

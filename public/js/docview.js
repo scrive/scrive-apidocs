@@ -48,6 +48,7 @@ window.DocumentActionMenuView = Backbone.View.extend({
 window.DocumentAuthorAttachmentsView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
+    this.title = args.title;
     this.render();
   },
   createAuthorAttachmentElems: function(attachment) {
@@ -56,7 +57,7 @@ window.DocumentAuthorAttachmentsView = Backbone.View.extend({
     var label = $("<div class='label' />");
     label.append($("<div class='name' />").append(attachment.name()));
     var link = $("<a target='_blank' />");
-    link.text(localization.docsignview.reviewPDF);
+    link.text(localization.reviewPDF);
     link.attr("href", attachment.downloadLink());
     label.append(link);
     container.append(label);
@@ -72,7 +73,7 @@ window.DocumentAuthorAttachmentsView = Backbone.View.extend({
 
     var container = $("<div class='authorattachments' />");
 
-    container.append($("<h2/>").text(localization.authorAttachmentBoxHeader));
+    container.append($("<h2/>").text(this.title==undefined ? localization.authorAttachmentBoxHeader : this.title));
 
     var list = $("<div class='list' />");
     var createAuthorAttachmentElems = this.createAuthorAttachmentElems;
@@ -93,6 +94,7 @@ window.DocumentAuthorAttachmentsView = Backbone.View.extend({
 window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
+    this.title = args.title;
     this.render();
   },
   createSignatoryAttachmentElems: function(attachment) {
@@ -109,7 +111,7 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     }
 
     var container = $("<div class='signatoryattachments' />");
-    container.append($("<h2/>").text(localization.requestedAttachments));
+    container.append($("<h2/>").text(this.title==undefined ? localization.requestedAttachments : this.title));
 
     var createSignatoryAttachmentElems = this.createSignatoryAttachmentElems;
     var list = $("<div class='list'/>");
@@ -129,6 +131,7 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
 window.DocumentUploadedSignatoryAttachmentsView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
+    this.title = args.title;
     this.render();
   },
   createUploadedAttachmentElems: function(attachment) {
@@ -145,7 +148,7 @@ window.DocumentUploadedSignatoryAttachmentsView = Backbone.View.extend({
     }
 
     var container = $("<div class='uploadedsignatoryattachments' />");
-    container.append($("<h2/>").text(localization.uploadedAttachments));
+    container.append($("<h2/>").text(this.title==undefined ? localization.uploadedAttachments : this.title));
 
     var createUploadedAttachmentElems = this.createUploadedAttachmentElems;
     var list = $("<div class='list'/>");

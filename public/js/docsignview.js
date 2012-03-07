@@ -45,7 +45,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
       smallerbit.append($("<div class='duedate' />").append(localization.docsignview.dueDate + " " + timeout.getFullYear() + "-" + timeout.getMonth() + "-" + timeout.getDate()));
       smallerbit.css("margin-left", "330px");
     } else {
-      smallerbit.css("margin-left", "390px");
+      smallerbit.css("margin-left", "370px");
     }
     smallerbit.append(this.createMenuElems());
     smallerbit.append($("<div class='clearfix' />"));
@@ -105,17 +105,26 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
               field.name() != "sigcompnr" &&
               field.name() != "signature");
   },
-  render: function() {
-    this.el.empty();
+  createCompactInfoElements: function() {
+    var view = this;
 
+    var container = $("<div />");
+    container.append($("<div class='grouping' />").append($("<div class='name' />").append(this.model.name())));
+    var expandlink = $("<a />");
+    expandlink.click(function() {
+      view.expanded = true;
+      view.render();
+    });
+    expandlink.text(localization.docsignview.showDetails);
+    container.append($("<div class='grouping' />").append(expandlink));
+
+    return container;
+  },
+  createDetailedInfoElements: function() {
     var signatory = this.model;
+    var view = this;
 
-    var container = $("<div class='signatory' />");
-    if (signatory.current()) {
-      container.addClass("current");
-    } else {
-      container.addClass("other");
-    }
+    var container = $("<div />");
 
     var topbit = $("<div class='grouping' />");
     topbit.append($("<div class='name' />").append(signatory.name()));
@@ -163,20 +172,53 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
       container.append(inputbits);
     }
 
-    container.append($("<div style='spacer'/>"));
-
-    var summary = $("<div class='summary' />");
-    if (signatory.signs()) {
-      summary.addClass(signatory.status());
-      if (signatory.status()=="signed") {
-        summary.append($("<div class='icon status signed' />"));
-      }
-      summary.append($("<div class='label' />").text(this.signatorySummary()));
-    } else {
-      summary.append($("<div class='label' />").text(signatory.document().process().authorissecretarytext()));
+    if (!signatory.current()) {
+      var compactlink = $("<a />");
+      compactlink.click(function() {
+        view.expanded = false;
+        view.render();
+      });
+      compactlink.text(localization.docsignview.hideDetails);
+      container.append($("<div class='grouping' />").append(compactlink));
     }
-    summary.append($("<div class='clearfix' />"));
-    container.append(summary);
+
+    return container;
+  },
+  createSummaryElements: function() {
+    var signatory = this.model;
+
+    var container = $("<div class='summary' />");
+    if (signatory.signs()) {
+      container.addClass(signatory.status());
+      if (signatory.status()=="signed") {
+        container.append($("<div class='icon status signed' />"));
+      }
+      container.append($("<div class='label' />").text(this.signatorySummary()));
+    } else {
+      container.append($("<div class='label' />").text(signatory.document().process().authorissecretarytext()));
+    }
+    container.append($("<div class='clearfix' />"));
+    return container;
+  },
+  render: function() {
+    this.el.empty();
+
+    var signatory = this.model;
+
+    var container = $("<div class='signatory' />");
+    if (signatory.current()) {
+      container.addClass("current");
+    } else {
+      container.addClass("other");
+    }
+
+    if (!signatory.current() && !this.expanded) {
+      container.append(this.createCompactInfoElements());
+    } else {
+      container.append(this.createDetailedInfoElements());
+    }
+
+    container.append(this.createSummaryElements());
 
     this.el.append(container);
     return this;
@@ -222,7 +264,7 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
     this.el.empty();
 
     var container = $("<div class='signatories' />");
-    container.append($("<h2 />").append(localization.docsignview.signatories));
+    container.append($("<h2 />").append(localization.docsignview.signatoriesTitle));
 
     var signatoriesview = this;
     var list = $("<div class='list' />");
@@ -237,10 +279,6 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
         row.append(item);
         row.append($("<div class='clearfix' />"));
         list.append(row);
-        console.log(otheritem);
-        console.log(otheritem.height());
-        console.log(item);
-        console.log(item.height());
         row = undefined;
       }
     });
@@ -460,13 +498,15 @@ window.DocumentSignView = Backbone.View.extend({
     createAuthorAttachmentsElems: function() {
       return new DocumentAuthorAttachmentsView({
         model: this.model,
-        el: $("<div class='section'/>")
+        el: $("<div class='section'/>"),
+        title: localization.docsignview.authorAttachmentsTitle
       }).el;
     },
     createSignatoryAttachmentsElems: function() {
       return new DocumentSignatoryAttachmentsView({
         model: this.model,
-        el: $("<div class='section'/>")
+        el: $("<div class='section'/>"),
+        title: localization.docsignview.signatoryAttachmentsTitle
       }).el;
     },
     signatoryAttachmentTasks: function(el) {
@@ -556,7 +596,8 @@ window.DocumentSignView = Backbone.View.extend({
     createUploadedAttachmentsElems: function() {
       return new DocumentUploadedSignatoryAttachmentsView({
         model: this.model,
-        el: $("<div class='section' />")
+        el: $("<div class='section' />"),
+        title: localization.docsignview.uploadedAttachmentsTitle
       }).el;
     },
     createSignatoriesElems: function() {
@@ -708,8 +749,10 @@ window.DocumentSignView = Backbone.View.extend({
           bottomstuff.append(signsection);
         }
 
-        bottomstuff.append($("<div class='clearfix' />"));
         subcontainer.append(bottomstuff);
+
+        subcontainer.append($("<div class='end' />"));
+        subcontainer.append($("<div class='cleafix' />"));
 
         this.makeVisibleWhenMainFileReady([bottomstuff]);
       }
