@@ -102,9 +102,7 @@ javascriptLocalisation =
                                  }
                     }
              , signByAuthor : {
-                          guardCBoxForAuthorLabel : "$_signGuardField1()$"
-                        , guardCBoxForAuthorAfterLabel : "$_signGuardField2()$"
-                        , modalTitle : "$_dialogConfirmSignByAuthorHead()$"
+                          modalTitle : "$_dialogConfirmSignByAuthorHead()$"
                         , modalBody1 : "$_dialogConfirmSignByAuthorBody1()$"
                         , modalBody2 : "$_dialogConfirmSignByAuthorBody2()$"
                         , modalBody3 : "$_dialogConfirmSignByAuthorBody3()$"
@@ -134,10 +132,13 @@ javascriptLocalisation =
                        , signed : "$_signatoryMessageIfSigned()$"
                        , cancelled : "$_signatoryMessageIfCancelled()$"
                        , other : "$_signatoryMessageIfElse()$"
+                       , waitingForSignature: "$_waitingForSignature()$"
                     }
             , authorAttachmentBoxHeader : "$_signViewNotsignedbymeAttachmentBoxHead()$"
             , signatoryAttachmentBoxHeader : "$_signViewSigAttachmentBoxHead()$"
             , signatoryAttachmentUploadButton: "$_signViewSigAttachmentBoxChooseFile()$"
+            , uploadedAttachments: "$_uploadedAttachments()$"
+            , waitingForAttachment: "$_waitingForAttachment()$"
             , templateTitle : "$_signStepsTitleRowTextContainerIfTemplate()$"
             , step1template : "$_step1selectIfTemplate()$"
             , step2template : "$_step2selectIfTemplate()$"
@@ -275,5 +276,26 @@ javascriptLocalisation =
          , changeEmail : "$_changeEmail()$"
          , onlyPDF : "$_onlyPDF()$"
          , cancel : "$_cancel()$"
+         , docsignview : {
+            followArrowToSign: "$_followArrowToSign()$"
+          , followArrowToReview: "$_followArrowToReview()$"
+          , signedAndClosed: "$_signedAndClosed()$"
+          , signedNotClosed: "$_signedNotClosed()$"
+          , unavailableForSign: "$_unavailableForSign()$"
+          , dueDate: "$_dueDate()$"
+          , signatories: "$_signatories()$"
+          , uploadPDFFile: "$_uploadPDFFile()$"
+          , fillInYourDetails: "$_fillInYourDetails()$"
+          , clickToSign: "$_clickToSign()$"
+          , acceptTOSLabel: '$_accountFromSignInputsBodyAcceptTOS()$'
+          , newAccountTitle: "$_createaccount()$"
+          , emailLabel: "$_email()$:"
+          , passwordLabel: "$_modalAccountSetupChoosePassword()$"
+          , password2Label: "$_modalAccountSetupRepeatPassword()$"
+          , newAccountButton: "$_createaccount()$"
+          , reviewPDF: "Review"
+          , companyNumberLabel: "Org.-nr"
+          , personalNumberLabel: "Pers.-nr"
+        }
     }
 ####

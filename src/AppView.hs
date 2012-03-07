@@ -22,10 +22,11 @@ module AppView( TopMenu(..)
               , clientsPage
               , contactUsPage
               , apiPage
-              , scriveByMailPage              
+              , scriveByMailPage
               , modalError
               , embeddedErrorPage
               , serviceFields
+              , standardPageFields
               ) where
 
 import API.Service.Model

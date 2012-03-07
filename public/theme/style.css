@@ -1139,6 +1139,10 @@ input[type=submit].hidden
     text-transform: uppercase;
 }
 
+#signStepsTitleRow .download .docname {
+  display: none;
+}
+
 
 #signStepsTitleRow .download a:hover{
   color: #FFFFFF;
@@ -2174,7 +2178,8 @@ form {
     text-decoration: none;
 }
 
-#signViewAttachmentBox, #signViewSigAttachmentBox
+.docview .authorattachments,
+.docview .signatoryattachments
 {
     /* 002 float: left;*/
     margin-top: 30px;
@@ -2189,11 +2194,78 @@ form {
     padding: 30px;
 }
 
-#signViewAttachmentBoxList {
+.docview .authorattachments .list {
 
     position:relative;
     top:-20px;
     margin-left:250px;
+}
+
+.docview .attachmentstab .section {
+  float: left;
+  width: 400px;
+  padding: 20px;
+}
+
+.docview .attachmentstab h2 {
+  font-size: small;
+}
+
+.docview .attachmentstab .authorattachments {
+  width: auto;
+  border: none;
+  margin: auto;
+  padding: 0px;
+}
+
+.docview .attachmentstab .uploadedsignatoryattachments .list .item {
+  min-height: 20px;
+  margin-bottom: 20px;
+}
+
+.docview .attachmentstab .uploadedsignatoryattachments .list .column {
+  float: left;
+  width: 150px;
+
+  min-height: 20px;
+}
+
+.docview .attachmentstab .uploadedsignatoryattachments .from {
+  font-weight: bold;
+  font-style: italic;
+}
+
+.docview .attachmentstab .uploadedsignatoryattachments .name {
+  font-weight: bold;
+}
+
+.docview .attachmentstab .uploadedsignatoryattachments .description {
+  display: none;
+}
+
+.docview .attachmentstab .list {
+  position: auto;
+  top: auto;
+  margin-left: auto;
+}
+
+.signguard {
+  height: 80px;
+  padding: 20px;
+}
+
+.signguard .check {
+  float:left;
+  width: 25px;
+}
+
+.signguard .label {
+  float: left;
+  width: 300px;
+}
+
+.docview .dragfield .label {
+  display: none;
 }
 
 #signViewBottomBox
@@ -2972,6 +3044,26 @@ input.attachmentname {
 
 table.authorsigattachment {
     width: 100%;
+}
+
+.docview .signatoryattachments .column {
+  float: left;
+  width: 400px;
+
+  min-height: 20px;
+}
+
+.docview .signatoryattachments .list {
+  min-height: 50px;
+  margin-top: 20px;
+}
+
+.docview .signatoryattachments .list .item {
+  min-height: 50px;
+}
+
+.docview .signatoryattachments .list .item .name {
+  font-weight: bold;
 }
 
 table#signViewSigAttachmentBoxList {

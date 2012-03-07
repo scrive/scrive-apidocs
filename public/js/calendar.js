@@ -4,7 +4,7 @@ window.Calendar = Backbone.Model.extend({
     defaults: {
         on : $('<div/>'),
         change : function() {return false},
-        value : 0                                
+        value : 0
     },
     initialize : function(args){
         var activator  = this.get("on")
@@ -30,5 +30,5 @@ window.Calendar = Backbone.Model.extend({
 
 
 
-    
-})(window); 
+
+})(window);
