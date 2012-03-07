@@ -12,7 +12,6 @@ module User.Model (
   , InviteInfo(..)
   , User(..)
   , UserInfo(..)
-  , UserMailAPI(..)
   , UserSettings(..)
   , GetUsers(..)
   , GetUserByID(..)
@@ -38,7 +37,7 @@ module User.Model (
 
 import Control.Applicative
 import Data.Data
-import Data.Int
+--import Data.Int
 import Database.HDBC
 import Happstack.State
 import qualified Control.Exception as E
@@ -50,7 +49,7 @@ import DB.Classes
 import DB.Derive
 import DB.Fetcher2
 import DB.Utils
-import MagicHash (MagicHash)
+--import MagicHash (MagicHash)
 import MinutesTime
 import Misc
 import User.Lang
@@ -58,6 +57,7 @@ import User.Locale
 import User.Password
 import User.Region
 import User.UserID
+import ScriveByMail.Model
 
 -- newtypes
 newtype Email = Email { unEmail :: BS.ByteString }
@@ -108,12 +108,6 @@ data UserInfo = UserInfo {
   , useremail           :: Email
   , usercompanyname     :: BS.ByteString
   , usercompanynumber   :: BS.ByteString
-  } deriving (Eq, Ord, Show)
-
-data UserMailAPI = UserMailAPI {
-    umapiKey          :: MagicHash
-  , umapiDailyLimit   :: Int32
-  , umapiSentToday    :: Int32
   } deriving (Eq, Ord, Show)
 
 data UserSettings  = UserSettings {
@@ -170,13 +164,13 @@ instance DBQuery GetInviteInfo (Maybe InviteInfo) where
         } : acc
 
 data GetUserMailAPI = GetUserMailAPI UserID
-instance DBQuery GetUserMailAPI (Maybe UserMailAPI) where
+instance DBQuery GetUserMailAPI (Maybe MailAPIInfo) where
   dbQuery (GetUserMailAPI uid) = do
     kPrepare "SELECT key, daily_limit, (CASE WHEN last_sent_date = now()::DATE THEN sent_today ELSE 0 END) FROM user_mail_apis WHERE user_id = ?"
     _ <- kExecute [toSql uid]
     foldDB fetchUserMailAPIs [] >>= oneObjectReturnedGuard
     where
-      fetchUserMailAPIs acc key daily_limit sent_today = UserMailAPI {
+      fetchUserMailAPIs acc key daily_limit sent_today = MailAPIInfo {
           umapiKey = key
         , umapiDailyLimit = daily_limit
         , umapiSentToday = sent_today
@@ -309,7 +303,7 @@ instance DBUpdate SetInviteInfo Bool where
             kExecute01 [toSql uid]
       else return False
 
-data SetUserMailAPI = SetUserMailAPI UserID (Maybe UserMailAPI)
+data SetUserMailAPI = SetUserMailAPI UserID (Maybe MailAPIInfo)
 instance DBUpdate SetUserMailAPI Bool where
   dbUpdate (SetUserMailAPI uid musermailapi) = do
     exists <- checkIfUserExists uid

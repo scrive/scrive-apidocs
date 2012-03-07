@@ -48,6 +48,7 @@ kontraMigrations = [
   , addIdSerialOnCompanies
   , addIdSerialOnUsers
   , addCompanyNameNumberOnUsers
+  , addEmailDomainOnCompanies
   ] ++ mailerMigrations
 
 kontraTables :: [Table]
@@ -69,4 +70,5 @@ kontraTables = [
   , tableAuthorAttachments
   , tableSignatoryAttachments
   , tableEvidenceLog
+  , tableCompanyMailAPIs
   ] ++ mailerTables

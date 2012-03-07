@@ -8,7 +8,7 @@ import DB.Model
 tableCompanies :: Table
 tableCompanies = Table {
     tblName = "companies"
-  , tblVersion = 4
+  , tblVersion = 5
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("external_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
@@ -22,6 +22,7 @@ tableCompanies = Table {
        , ("bars_background", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("logo", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
        , ("bars_textcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("email_domain", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE companies ("
@@ -37,6 +38,7 @@ tableCompanies = Table {
           ++ ", bars_background TEXT NULL"
           ++ ", logo BYTEA NULL"
           ++ ", bars_textcolour TEXT NULL"
+          ++ ", email_domain TEXT NULL"
           ++ ", CONSTRAINT pk_companies PRIMARY KEY (id)"
           ++ ")"
         return TVRcreated
@@ -51,4 +53,33 @@ tableCompanies = Table {
     kRunRaw $ "CREATE SEQUENCE companies_id_seq"
     kRunRaw $ "SELECT setval('companies_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM companies))"
     kRunRaw $ "ALTER TABLE companies ALTER id SET DEFAULT nextval('companies_id_seq')"
+  }
+
+tableCompanyMailAPIs :: Table
+tableCompanyMailAPIs = Table {
+    tblName = "company_mail_apis"
+  , tblVersion = 1
+  , tblCreateOrValidate = \desc -> case desc of
+      [  ("company_id",     SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+       , ("key",            SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+       , ("daily_limit",    SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+       , ("sent_today",     SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
+       , ("last_sent_date", SqlColDesc {colType = SqlDateT,   colNullable = Just False})
+       ] -> return TVRvalid
+      [] -> do
+        kRunRaw $ "CREATE TABLE company_mail_apis ("
+          ++ "  company_id     BIGINT NOT NULL"
+          ++ ", key            BIGINT NOT NULL"
+          ++ ", daily_limit   INTEGER NOT NULL"
+          ++ ", sent_today    INTEGER NOT NULL"
+          ++ ", last_sent_date   DATE NOT NULL"
+          ++ ", CONSTRAINT pk_company_mail_apis PRIMARY KEY (company_id)"
+          ++ ")"
+        return TVRcreated
+      _ -> return TVRinvalid
+  , tblPutProperties = do
+    kRunRaw $ "ALTER TABLE company_mail_apis"
+      ++ " ADD CONSTRAINT fk_company_mail_apis_users FOREIGN KEY(company_id)"
+      ++ " REFERENCES companies(id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }

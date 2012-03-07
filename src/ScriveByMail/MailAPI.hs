@@ -1,4 +1,4 @@
-module API.MailAPI (
+module ScriveByMail.MailAPI (
       handleMailAPI,
       parseEmailMessageToParts,
       charset
@@ -57,6 +57,13 @@ parseEmailMessageToParts content = (mime, parts mime)
 charset :: MIME.Type -> String
 charset mimetype = fromMaybe "us-ascii" $ lookup "charset" (MIME.mimeParams mimetype)
 
+data TaggedMailAPIInfo = CompanyMailAPIInfo MailAPIInfo
+                       | UserMailAPIInfo    MailAPIInfo
+                         
+unTagMailAPIInfo :: TaggedMailAPIInfo -> MailAPIInfo
+unTagMailAPIInfo (CompanyMailAPIInfo i) = i
+unTagMailAPIInfo (   UserMailAPIInfo i) = i
+
 handleMailAPI :: Kontrakcja m => m String
 handleMailAPI = do
   Input contentspec _ _ <- getDataFnM (lookInput "mail")
@@ -95,26 +102,50 @@ handleMailAPI = do
   let extension = takeWhile (/= '@') $ dropWhile (== '+') $ dropWhile (/= '+') to
 
   muser <- runDBQuery (GetUserByEmail Nothing (Email $ BS.fromString $ map toLower username))
-  when (isNothing muser) $ do
-    Log.mailAPI $ "User does not exist: " ++ username
-    sendMailAPIErrorEmail ctx username $ "<p>The address from which you sent the email (" ++ username ++ ") is not a registered Scrive User account. If you would like to sign up to use Scrive, please visit <a href='" ++  hostpart ++ show (LinkHome locale) ++ "'>the Scrive homepage</a>.</p>"    
-    mzero
-
-  let Just user = muser
-
-  mmailapi <- runDBQuery $ GetUserMailAPI $ userid user
-  when (isNothing mmailapi) $ do
-    Log.mailAPI $ "User has not enabled api: " ++ username
-    sendMailAPIErrorEmail ctx username $ "<p>The address from which you sent the email (" ++ username ++ ") is a registered Scrive User account but Scrive by Mail has not been activated on the account. If you would like to sign up to use Scrive by Mail, please visit <a href='" ++  hostpart ++ show LinkUserMailAPI ++ "'>the Scrive by Mail settings page</a>.</p>"    
-    mzero
-
-  let Just mailapi = mmailapi
-
-  when (maybeRead extension /= Just (umapiKey mailapi)) $ do
-    Log.mailAPI $ "User api key does not match: " ++ username ++ " key: " ++ extension
-    sendMailAPIErrorEmail ctx username $ "<p>I have just received an email from " ++ username ++ " requesting to create a document. Unfortunately, the Scrive by Mail email address it was sent to was invalid for this account. Please visit is a registered Scrive User account but the email address you sent to is not . If you would like to sign up to use Scrive, please visit <a href='" ++  hostpart ++ show LinkUserMailAPI ++ "'>the Scrive by Mail settings page</a> to note your personal Scrive by Mail email address.</p>"
-    mzero
-
+  
+  minfo <- case muser of
+    Just user -> do
+      mmailapi <- runDBQuery $ GetUserMailAPI $ userid user
+      case mmailapi of
+        Just mailapi | Just (umapiKey mailapi) == maybeRead extension -> do
+          -- we have a user with matching mailapi key
+          return $ Just (user, UserMailAPIInfo mailapi)
+        _ -> case usercompany user of
+               Just companyid -> do
+                 mcmailapi <- runDBQuery $ GetCompanyMailAPI companyid
+                 case mcmailapi of
+                   Just cmailapi | Just (umapiKey cmailapi) == maybeRead extension -> do
+                     -- we have a user with company with matching company mailapi key
+                     return $ Just (user, CompanyMailAPIInfo cmailapi)
+                   _ -> do
+                      Log.mailAPI $ "email from: " ++ from ++ " to " ++ to ++ "; User exists but key is wrong; Company exists but key is wrong; not sending error because of opportunity for abuse."
+                      return Nothing
+               _ -> do
+                   Log.mailAPI $ "email from: " ++ from ++ " to " ++ to ++ "; User exists but key is wrong; Company does not exist; not sending error because of opportunity for abuse."
+                   return Nothing
+    _ ->  -- no user for this address
+      case break (== '@') $ map toLower username of
+        (_, '@':domain) -> do 
+          mcompany <- runDBQuery $ GetCompanyByEmailDomain domain
+          case mcompany of
+            Just company -> do
+              mcmailapi <- runDBQuery $ GetCompanyMailAPI (companyid company)
+              case mcmailapi of
+                Just cmailapi | Just (umapiKey cmailapi) == maybeRead extension -> do
+                  -- we have a non-user with company email domain with matching company mailapi key
+                  -- we need to store the email, send a confirmation to the company admin, a message to the sender
+                  
+                  return Nothing
+                _ -> do
+                  Log.mailAPI $ "email from: " ++ from ++ " to " ++ to ++ "; User does not exist; domain matches but key is wrong; not sending error because of opportunity for abuse."
+                  return Nothing
+            Nothing -> do
+                  Log.mailAPI $ "email from: " ++ from ++ " to " ++ to ++ "; User does not exist; domain does not match; not sending error because of opportunity for abuse."
+                  return Nothing
+        _ -> do
+          Log.mailAPI $ "email from: " ++ from ++ " to " ++ to ++ "; User does not exist; no domain(?): " ++ username ++ "; not sending error because of opportunity for abuse."
+          return Nothing
+                     
   -- at this point, the user has been authenticated
   -- we can start sending him emails about errors
 
@@ -122,9 +153,10 @@ handleMailAPI = do
   -- Mail and JSON api since the JSON mail api sends back different
   -- errors (in JSON format), we need to split it off here.
 
-  case plains of
-    [p] | isJSON p -> jsonMailAPI mailapi username user pdfs plains content
-    _              -> scriveByMail mailapi username user to subject isOutlook pdfs plains content
+  case (minfo, plains) of
+    (Just (user, mailapi), [p]) | isJSON p -> jsonMailAPI mailapi username user pdfs plains content
+    (Just (user, mailapi), _)              -> scriveByMail mailapi username user to subject isOutlook pdfs plains content
+    _                                      -> return ""
 
 isJSON :: (MIME.Type, BS.ByteString) -> Bool
 isJSON plain =
@@ -133,7 +165,7 @@ isJSON plain =
     _      -> False
 
 jsonMailAPI :: (Kontrakcja m) =>
-                UserMailAPI
+                TaggedMailAPIInfo
                 -> String
                 -> User
                 -> [(MIME.Type, BS.ByteString)]
@@ -142,7 +174,7 @@ jsonMailAPI :: (Kontrakcja m) =>
                 -> m String
 jsonMailAPI mailapi username user pdfs plains content = do
   ctx@Context{ctxtime} <- getContext
-  when (umapiDailyLimit mailapi <= umapiSentToday mailapi) $ do
+  when (umapiDailyLimit (unTagMailAPIInfo mailapi) <= umapiSentToday (unTagMailAPIInfo mailapi)) $ do
     Log.jsonMailAPI $ "Daily limit of documents for user '" ++ username ++ "' has been reached"
     sendMailAPIErrorEmail ctx username $ "<p>For your own protection, Scrive Mail API sets a daily limit on how many emails you can send out. Your daily Scrive Mail API limit has been reached. To reset your daily limit, please visit " ++ ctxhostpart ctx ++ show LinkUserMailAPI ++ " .<p>"    
     mzero
@@ -314,9 +346,16 @@ jsonMailAPI mailapi username user pdfs plains content = do
   markDocumentAuthorReadAndSeen doc2
   _ <- DocControl.postDocumentChangeAction doc2 doc Nothing
 
-  _ <- runDBUpdate $ SetUserMailAPI (userid user) $ Just mailapi {
-    umapiSentToday = umapiSentToday mailapi + 1
-  }
+  _ <- case (mailapi, usercompany user) of
+    (CompanyMailAPIInfo info, Just companyid) -> runDBUpdate $ SetCompanyMailAPI companyid $ Just info {
+                                                          umapiSentToday = umapiSentToday info + 1
+                                                        }
+    (UserMailAPIInfo info, _) -> runDBUpdate $ SetUserMailAPI (userid user) $ Just info {
+                                                          umapiSentToday = umapiSentToday info + 1
+                                                        }
+    _ -> do
+      Log.jsonMailAPI $ "Company API Key with user with no companyid?"
+      return False
 
   sendMailAPIConfirmEmail ctx doc2
 
