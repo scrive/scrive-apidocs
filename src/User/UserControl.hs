@@ -219,6 +219,8 @@ getUserInfoUpdate  = do
     mpersonalnumber   <- getFieldUTF "personalnumber"
     mphone            <- getFieldUTF "phone"
     mcompanyposition  <- getValidField asValidPosition "companyposition"
+    mcompanyname      <- getFieldUTF "companyname"
+    mcompanynumber    <- getFieldUTF "companynumber"
     return $ \ui ->
         ui {
             userfstname = fromMaybe (userfstname ui) mfstname
@@ -226,6 +228,8 @@ getUserInfoUpdate  = do
           , userpersonalnumber = fromMaybe (userpersonalnumber ui) mpersonalnumber
           , usercompanyposition = fromMaybe (usercompanyposition ui) mcompanyposition
           , userphone  = fromMaybe (userphone ui) mphone
+          , usercompanyname = fromMaybe (usercompanyname ui) mcompanyname
+          , usercompanynumber = fromMaybe (usercompanynumber ui) mcompanynumber
         }
     where
         getValidField = getDefaultedField BS.empty
