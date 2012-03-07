@@ -1,0 +1,421 @@
+body.signview {
+  background-image: none;
+  background-color: #fcfcfc;
+}
+
+.signview .pageheader {
+  padding-top: 30px;
+  min-width: 960px;
+  background: url(../img/bg-header.jpg);
+}
+
+.signview .pageheader .content {
+  width: 960px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.signview .pageheader .logowrapper {
+  float: left;
+  width : 200px;
+}
+
+.signview .pageheader .logo {
+  background: url(../img/logo-scrive-small.png);
+  height: 33px;
+  width: 200px;
+  background-repeat: no-repeat;
+}
+
+.signview .pageheader .content .sender {
+  float: right;
+  color: white;
+  width: 300px;
+  text-align: right;
+}
+
+.signview .pageheader .content .sender .name {
+  font-weight: bold;
+}
+
+.signview .pageheader .poweredbyscrive {
+  height: 114px;
+  width: 114px;
+  background: url(../img/powered-by-scrive-corner.png);
+  background-repeat: no-repeat;
+  position: absolute;
+  top: 0px;
+  right: 0px;
+}
+
+.signview .body-container {
+  padding-top: 10px;
+  background-color: transparent;
+  background-image: none;
+}
+
+.signview .instructions {
+  background-color: white;
+  padding-top: 31px;
+  padding-bottom: 20px;
+  margin-bottom: 7px;
+  border: solid #bababc 1px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.signview .instructions .headline {
+  text-transform: uppercase;
+  color: black;
+  font-size: x-large;
+  margin-bottom: 5px;
+}
+
+.signview .instructions .subheadline .duedate {
+  float: left;
+  font-size: medium;
+  margin-top: 2px;
+}
+
+.signview .instructions .subheadline .menuwrapper {
+  float: left;
+  margin-left: 20px;
+}
+
+.signview .menu .download .icon {
+  height: 21px;
+  width: 24px;
+  background: url(../img/download-icon.png);
+}
+
+.signview .menu .download .label {
+  display: none;
+}
+
+.signview .menu .download .docname {
+  text-align: left;
+  margin-top: 1px;
+  text-decoration: underline;
+  font-size: medium;
+}
+
+.signview .aftersign {
+  background-color: white;
+  margin: 7px;
+  border: solid #6D6E70 1px;
+  text-align: center;
+}
+
+.signview .aftersign .big {
+  font-size: x-large;
+}
+
+.signview .aftersign .newaccount .form {
+  margin-left: 181px;
+  margin-right: 181px;
+  text-align: left;
+}
+
+.signview .aftersign .newaccount .form .row {
+  clear: both;
+  margin-left: 11px;
+  margin-right: 11px;
+  margin-bottom: 11px;
+}
+
+.signview .aftersign .newaccount .form .email {
+  margin-top: 5px;
+  font-weight: bold;
+}
+
+.signview .aftersign .newaccount .form .item {
+  float: left;
+  width: 172px;
+  margin-left: 11px;
+  margin-right: 11px;
+  margin-bottom: 11px;
+}
+
+.signview .aftersign .newaccount .form .invalid {
+  border: solid red 1px;
+}
+
+.signview .aftersign .newaccount .form .errormsg {
+  color: red;
+  font-size: x-small;
+}
+
+.signview .aftersign .newaccount .tos {
+  margin-bottom: 2px;
+}
+
+.signview .aftersign .newaccount .tos .check {
+  float: left;
+  width: 20px;
+}
+
+.signview .aftersign .newaccount .tos .label {
+  float: left;
+  width: 300px;
+  margin-top: 3px;
+}
+
+.signview .aftersign .newaccount .acceptbutton {
+  float: right;
+  margin-right: 22px;
+  margin-bottom: 22px;
+}
+
+.signview .subcontainer {
+  background-color: #e1e1e1;
+  padding-bottom: 3px;
+}
+
+.signview .pagediv {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  margin-left: 6px;
+  margin-right: 6px;
+  border: 2px solid #808080;
+  border-radius: 2px;
+  -moz-border-radius: 2px;
+  -webkit-border-radius: 2px;
+  width: 945px;
+}
+
+.signview .section {
+  clear: both;
+
+  margin: 7px;
+  padding: 20px;
+  background-color: white;
+}
+
+.signview .section.highlight {
+  border: 5px solid #83bc39;
+  padding: 15px;
+}
+
+.signview .section h2 {
+  float: left;
+  width: 250px;
+  margin-bottom: 20px;
+  margin-right: 20px;
+  text-transform: uppercase;
+  color: black;
+  font-weight: normal;
+}
+
+.signview .authorattachments .list {
+  float: left;
+  width: 322px;
+
+  margin-right: 20px;
+}
+
+.signview .authorattachments .item {
+  margin-bottom: 10px;
+}
+
+.signview .authorattachments .item .icon {
+  float: left;
+  width: 13px;
+  height: 14px;
+  background: url(../img/attachment-icon.png);
+}
+
+.signview .authorattachments .item .label {
+  float: left;
+  margin-left: 10px;
+}
+
+.signview .authorattachments .item .name {
+  font-weight: bold;
+  color: black;
+}
+
+.signview .authorattachments .item a {
+  text-decoration: underline;
+}
+
+.signview .signatoryattachments .list {
+  float: left;
+  width: 500px;
+
+  margin-right: 20px;
+}
+
+.signview .signatoryattachments .list .item {
+  margin-bottom: 10px;
+}
+
+.signview .signatoryattachments .list .item .column {
+  float: left;
+  width: 200px;
+  margin-right: 20px;
+}
+
+.signview .signatoryattachments .list .item .name {
+  font-weight: bold;
+}
+
+.signview .signatoryattachments .list .item .description {
+  font-style: italic;
+  font-family: "Copse";
+}
+
+.signview .uploadedsignatoryattachments .list {
+  float: left;
+  width: 500px;
+  margin-right: 20px;
+}
+
+.signview .uploadedsignatoryattachments .item .icon {
+  float: left;
+  width: 13px;
+  height: 14px;
+  background: url(../img/attachment-icon.png);
+}
+
+.signview .uploadedsignatoryattachments .item {
+  margin-bottom: 10px;
+}
+
+.signview .uploadedsignatoryattachments .item .label {
+  float: left;
+  margin-left: 10px;
+}
+
+.signview .uploadedsignatoryattachments .list .item .name {
+  font-weight: bold;
+  color: black;
+}
+
+.signview .uploadedsignatoryattachments .list .item .from {
+  font-style: italic;
+}
+
+.signview .uploadedsignatoryattachments .list .item a {
+  text-decoration: underline;
+}
+
+.signview .signatories .list {
+  float: left;
+}
+
+.signview .signatories .list .column {
+  float: left;
+  width: 200px;
+  margin-right: 20px;
+  min-height: 10px;
+}
+
+.signview .signatories .signatory {
+  border: solid #bababc 1px;
+  padding: 10px;
+}
+
+.signview .signatories .grouping {
+  margin-bottom: 10px;
+}
+
+.signview .signatories .signatory .name {
+  color: black;
+  font-weight: bold;
+}
+
+.signview .signatories .signatory .company {
+  color: black;
+  font-weight: bold;
+  font-size: smaller;
+}
+
+.signview .signatories .signatory .summary {
+  border-top-style: dotted;
+  border-top-color: #bababc;
+  border-top-width: 1px;
+  padding-top: 10px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.signview .signatories .signatory .summary.signed {
+  color: #83bc39;
+  padding-left: 50px;
+}
+
+.signview .signatories .signatory .summary.signed .label {
+  float: left;
+}
+
+.signview .signatories .signatory.current .fieldwrapper {
+  margin-top: 10px;
+}
+
+.signview .signatories .signatory.other .fieldvalue {
+  border: none;
+  height: 17px;
+  line-height: 17px;
+}
+
+/*Hide the info text on the custom fields, cos
+ * we're using labels.
+ */
+.signview .signatories .signatory .dragfield .grayed {
+  color: white;
+}
+
+
+.signview .rejectwrapper {
+  float: left;
+  margin-right: 290px;
+}
+
+.signview .rejectwrapper a.btn-big.red .label {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.signview .signwrapper {
+  float: left;
+}
+
+.signview .arrows .arrow {
+  display: block;
+
+  position: fixed;
+  right: 205px;
+
+  z-index: 5000;
+
+  height: 112px;
+  width: 112px;
+}
+
+.signview .arrows .down.arrow {
+  bottom: 50px;
+  background: url(../img/sign-arrow-down.png);
+  background-repeat: no-repeat;
+}
+
+.signview .arrows .up.arrow {
+  top: 50px;
+  background: url(../img/sign-arrow-up.png);
+  background-repeat: no-repeat;
+}
+
+.signview .arrows .action.arrow {
+  background: url(../img/sign-arrow-action.png);
+  background-repeat: no-repeat;
+  width: 200px;
+  height: 33px;
+}
+
+.signview .arrows .action.arrow .label {
+  padding-left: 50px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-right: 10px;
+  color: white;
+  font-weight: bold;
+}

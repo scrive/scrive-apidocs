@@ -118,7 +118,6 @@ data DocProcessInfo =
   , processflashmessagearchivedone :: String
   , processflashmessagebulkremindssent :: String
   , processflashmessagenobulkremindssent :: String
-  , processflashmessagepleasesign :: String
 
   -- process specific modal templates
   , processmodalsignedviewclosedhasaccount :: String
@@ -145,7 +144,7 @@ data DocProcessInfo =
   , processsignedinfotext :: String
   , processstatusinfotext :: String
   , processauthorsignlastbuttontext :: String
-  
+
   -- process specific design view titles of parties
   , processauthorname :: String
   , processauthorsignatoryname :: String
@@ -214,7 +213,6 @@ contractProcess =
   , processflashmessagearchivedone = "flashMessageContractArchiveDone"
   , processflashmessagebulkremindssent = "flashMessageBulkContractRemindsSent"
   , processflashmessagenobulkremindssent = "flashMessageNoBulkContractRemindsSent"
-  , processflashmessagepleasesign = "flashMessagePleaseSignContract"
 
   -- process specific modal templates
   , processmodalsignedviewclosedhasaccount = "modalSignedViewClosedHasAccount"
@@ -241,7 +239,7 @@ contractProcess =
   , processsignedinfotext = "contractsignedinfotext"
   , processstatusinfotext = "contractstatusinfotext"
   , processauthorsignlastbuttontext = "contractauthorsignlastbuttontext"
-  
+
   , processauthorname = "contractauthorname"
   , processauthorsignatoryname = "contractauthorsignatoryname"
   , processsignatoryname = "contractsignatoryname"
@@ -280,7 +278,7 @@ offerProcess =
   , processcancelbuttontext = "offercancelbuttontext"
   , processcancelmodaltitle = "offercancelmodaltitle"
   , processcancelmodaltext = "offercancelmodaltext"
-  
+
   , processrejectbuttontext = "offerrejectbuttontext"
   , processsignatorysignmodaltitle = "offersignatorysignmodaltitle"
   , processsignatorysignmodalcontentlast = "offersignatorysignmodalcontentlast"
@@ -310,7 +308,6 @@ offerProcess =
   , processflashmessagearchivedone = "flashMessageOfferArchiveDone"
   , processflashmessagebulkremindssent = "flashMessageBulkOfferRemindsSent"
   , processflashmessagenobulkremindssent = "flashMessageNoBulkOfferRemindsSent"
-  , processflashmessagepleasesign = "flashMessagePleaseSignOffer"
 
   -- process specific modal templates
   , processmodalsignedviewclosedhasaccount = "modalOfferSignedHasAccount"
@@ -336,8 +333,8 @@ offerProcess =
   , processsignedinfoheader = "offersignedinfoheader"
   , processsignedinfotext = "offersignedinfotext"
   , processstatusinfotext = "offerstatusinfotext"
-  , processauthorsignlastbuttontext = "offerauthorsignlastbuttontext"  
-  
+  , processauthorsignlastbuttontext = "offerauthorsignlastbuttontext"
+
   , processauthorname = "offerauthorname"
   , processauthorsignatoryname = "offerauthorsignatoryname"
   , processsignatoryname = "offersignatoryname"
@@ -407,7 +404,6 @@ orderProcess =
   , processflashmessagearchivedone = "flashMessageOrderArchiveDone"
   , processflashmessagebulkremindssent = "flashMessageBulkOrderRemindsSent"
   , processflashmessagenobulkremindssent = "flashMessageNoBulkOrderRemindsSent"
-  , processflashmessagepleasesign = "flashMessagePleaseSignOrder"
 
   -- process specific modal templates
   , processmodalsignedviewclosedhasaccount = "modalSignedViewOrderClosedHasAccount"
@@ -433,8 +429,8 @@ orderProcess =
   , processsignedinfoheader = "ordersignedinfoheader"
   , processsignedinfotext = "ordersignedinfotext"
   , processstatusinfotext = "orderstatusinfotext"
-  , processauthorsignlastbuttontext = "orderauthorsignlastbuttontext"    
-  
+  , processauthorsignlastbuttontext = "orderauthorsignlastbuttontext"
+
   , processauthorname = "orderauthorname"
   , processauthorsignatoryname = "orderauthorsignatoryname"
   , processsignatoryname = "ordersignatoryname"

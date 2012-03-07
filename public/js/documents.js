@@ -135,6 +135,9 @@ window.Document = Backbone.Model.extend({
 						type: "cancel"
 			});
     },
+    canseeallattachments: function() {
+      return this.get("canseeallattachments");
+    },
     setInvitationMessage : function(customtext)
     {
         this.set({invitationmessage: customtext},{silent: true});
@@ -187,7 +190,7 @@ window.Document = Backbone.Model.extend({
           });
     },
     draftData : function() {
-      return { 
+      return {
           title : this.title(),
           functionality : this.get("functionality"),
           invitationmessage : this.get("invitationmessage"),
@@ -196,7 +199,7 @@ window.Document = Backbone.Model.extend({
           signatories : _.map(this.signatories(), function(sig) {return sig.draftData()}),
           region : this.region().draftData(),
           template : this.isTemplate()
-      };  
+      };
     },
     switchFunctionalityToAdvanced : function() {
           var newfunctionality = this.isBasic() ? "advanced" : "basic";
@@ -217,16 +220,16 @@ window.Document = Backbone.Model.extend({
        });
     },
     removeSignatory : function(sig) {
-       if (this.signatories().length < 2) 
+       if (this.signatories().length < 2)
            return;
-       var newsigs = new Array();    
+       var newsigs = new Array();
        newsigs.push(this.signatories()[0]);
        var removed = false;
        for(var i=1;i<this.signatories().length;i++)
           if ((sig !== this.signatories()[i] && i < this.signatories().length -1)
               || removed)
              newsigs.push(this.signatories()[i]);
-          else 
+          else
              removed = true;
        this.set({signatories : newsigs});
 
@@ -307,7 +310,7 @@ window.Document = Backbone.Model.extend({
     },
     isBasic: function() {
        return this.get("functionality") == "basic";
-    },    
+    },
     recall : function() {
        this.fetch({data: this.viewer().forFetch(),   processData:  true, cache : false});
     },
@@ -330,6 +333,23 @@ window.Document = Backbone.Model.extend({
     },
     allowsDD : function() {
         return this.preparation() && !this.isBasic();
+    },
+    isAuthorAttachments: function() {
+      return this.authorattachments().length>0;
+    },
+    isSignatoryAttachments: function() {
+      return this.currentSignatory().attachments().length>0;
+    },
+    isUploadedAttachments: function() {
+      return this.canseeallattachments() && this.signatoryattachments().length>0;
+    },
+    currentSignatoryCanSign: function() {
+      var canSignAsSig = !this.currentViewerIsAuthor() &&
+                              this.currentSignatory()!=undefined &&
+                              this.currentSignatory().canSign();
+      var canSignAsAuthor = this.currentViewerIsAuthor()
+                              && this.awaitingauthor();
+      return canSignAsSig || canSignAsAuthor;
     },
     parse: function(args) {
      var document = this;
@@ -359,6 +379,7 @@ window.Document = Backbone.Model.extend({
       infotext : args.infotext,
       canberestarted : args.canberestarted,
       canbecanceled : args.canbecanceled,
+      canseeallattachments: args.canseeallattachments,
       status : args.status,
       timeouttime  : args.timeouttime  == undefined ? undefined :  new Date(args.timeouttime),
       signorder : args.signorder,
