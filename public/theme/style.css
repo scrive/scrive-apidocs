@@ -941,12 +941,12 @@ a.button {
     position: absolute;
     cursor: pointer;
     font-family: Helvetica;
-    font-size: 15.93px; 
+    font-size: 15.93px;
 }
 
 .placedfieldvalue{
     font-family: Helvetica;
-    font-size: 15.93px; 
+    font-size: 15.93px;
 }
 
 .placedfieldhelper {
@@ -2194,21 +2194,69 @@ form {
     padding: 30px;
 }
 
-.docview .authorattachments .list {
+.docview .authorattachments .list .item {
+  margin-bottom: 10px;
+}
 
-    position:relative;
-    top:-20px;
-    margin-left:250px;
+.docview .authorattachments .item .icon {
+  float: left;
+  width: 13px;
+  height: 14px;
+  background: url(../img/attachment-icon.png);
+}
+
+.docview .authorattachments .item .label {
+  float: left;
+  margin-left: 10px;
+}
+
+.docview .authorattachments .item .name {
+  font-weight: bold;
+  color: black;
+}
+
+.docview .authorattachments .item a {
+  text-decoration: underline;
+}
+
+
+.docview .uploadedsignatoryattachments .item .icon {
+  float: left;
+  width: 13px;
+  height: 14px;
+  background: url(../img/attachment-icon.png);
+}
+
+.docview .uploadedsignatoryattachments .item {
+  margin-bottom: 10px;
+}
+
+.docview .uploadedsignatoryattachments .item .label {
+  float: left;
+  margin-left: 10px;
+}
+
+.docview .uploadedsignatoryattachments .list .item .name {
+  font-weight: bold;
+  color: black;
+}
+
+.docview .uploadedsignatoryattachments .list .item .from {
+  font-style: italic;
+}
+
+.docview .uploadedsignatoryattachments .list .item a {
+  text-decoration: underline;
 }
 
 .docview .attachmentstab .section {
   float: left;
-  width: 400px;
-  padding: 20px;
+  margin-right: 20px;
 }
 
 .docview .attachmentstab h2 {
   font-size: small;
+  margin-bottom: 10px;
 }
 
 .docview .attachmentstab .authorattachments {
@@ -2216,31 +2264,6 @@ form {
   border: none;
   margin: auto;
   padding: 0px;
-}
-
-.docview .attachmentstab .uploadedsignatoryattachments .list .item {
-  min-height: 20px;
-  margin-bottom: 20px;
-}
-
-.docview .attachmentstab .uploadedsignatoryattachments .list .column {
-  float: left;
-  width: 150px;
-
-  min-height: 20px;
-}
-
-.docview .attachmentstab .uploadedsignatoryattachments .from {
-  font-weight: bold;
-  font-style: italic;
-}
-
-.docview .attachmentstab .uploadedsignatoryattachments .name {
-  font-weight: bold;
-}
-
-.docview .attachmentstab .uploadedsignatoryattachments .description {
-  display: none;
 }
 
 .docview .attachmentstab .list {

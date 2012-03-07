@@ -291,7 +291,6 @@ signatoryJSON doc viewer siglink = do
       , ("signs", return $ JSBool $ isSignatory siglink)
       , ("author",return $ JSBool $ isAuthor siglink)
       , ("saved", return $ JSBool $ isJust . maybesignatory $ siglink)
-      , ("loggedin", return $ JSBool $ isJust $ ctxmaybeuser ctx)
       , ("datamismatch", return $ JSBool datamismatch)
       , ("signdate", return $ jsonDate $ signtime <$> maybesigninfo siglink)
       , ("seendate", return $ jsonDate $ signtime <$> maybeseeninfo siglink)

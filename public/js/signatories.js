@@ -67,7 +67,7 @@ window.SignatoryAttachmentUploadView = Backbone.View.extend({
   removeLink: function() {
     var attachment = this.model;
     var deleteurl = this.apiURL();
-    var removelink = $("<a href='' style='padding-left: 2em'>x</a>");
+    var removelink = $("<a href='' />").append(localization.deletePDF);
     removelink.click(function(){
         attachment.loading();
         $.ajax(deleteurl, {
@@ -86,7 +86,7 @@ window.SignatoryAttachmentUploadView = Backbone.View.extend({
     return removelink;
   },
   fileLink: function() {
-    return $("<a target='_blank'/>").text(this.model.file().name()).attr("href",this.model.file().downloadLink());
+    return $("<a target='_blank'/>").text(localization.reviewPDF).attr("href",this.model.file().downloadLink());
   },
   uploadButton: function() {
     var attachment = this.model;
@@ -135,15 +135,24 @@ window.SignatoryAttachmentUploadView = Backbone.View.extend({
 
     var container = $("<div class='upload' />");
     if (attachment.get('loading')){
-      container.append($("<img>").attr('src', "/theme/images/wait30trans.gif"));
+      container.append($("<img class='loading'>").attr('src', "/theme/images/wait30trans.gif"));
     } else if (attachment.hasFile()) {
-      container.append(this.fileLink());
+      container.append($("<div class='icon' />"));
+      var label = $("<div class='file' />");
+      label.append($("<div class='name' />").append(this.model.file().name() + ".pdf"));
+      var actions = $("<div />");
+      actions.append($("<div class='action' />").append(this.fileLink()));
       if (!attachment.signatory().hasSigned()) {
-        container.append(this.removeLink());
+        actions.append($("<div class='action' />").append(this.removeLink()));
       }
+      actions.append($("<div class='clearfix' />"));
+      label.append(actions);
+      label.append($("<div class='clearfix' />"));
+      container.append(label);
     } else {
       container.append(this.uploadButton().input());
     }
+    container.append($("<div class='clearfix' />"));
 
     this.el.empty();
     this.el.append(container);
@@ -189,7 +198,7 @@ window.UploadedSignatoryAttachmentView = Backbone.View.extend({
     this.render();
   },
   fileLink: function() {
-    return $("<a target='_blank'/>").text(localization.docsignview.reviewPDF).attr("href",this.model.file().downloadLink());
+    return $("<a target='_blank'/>").text(localization.reviewPDF).attr("href",this.model.file().downloadLink());
   },
   render: function() {
     this.el.empty();
