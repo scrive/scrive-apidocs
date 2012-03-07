@@ -3,6 +3,7 @@
 module PadQueue.Model (
       AddToPadQueue(..)
     , GetPadQueue(..)
+    , ClearPadQueue(..)
     , PadQueue
     ) where
 
@@ -20,12 +21,19 @@ type PadQueue = Maybe (DocumentID,SignatoryLinkID)
 data AddToPadQueue = AddToPadQueue UserID DocumentID SignatoryLinkID
 instance DBUpdate AddToPadQueue () where
   dbUpdate (AddToPadQueue uid did slid) = do
-    kPrepare "DELETE FROM padqueue WHERE user_id = ?"
+    dbUpdate $ ClearPadQueue uid
     _ <- kExecute01 [toSql uid]
     kPrepare $ "INSERT INTO padqueue( user_id, document_id, signatorylink_id) VALUES(?,?,?)"
     _ <- kExecute [toSql uid, toSql did, toSql slid]
     return ()
 
+data ClearPadQueue = ClearPadQueue UserID
+instance DBUpdate ClearPadQueue () where
+  dbUpdate (ClearPadQueue uid) = do
+    kPrepare "DELETE FROM padqueue WHERE user_id = ?"
+    _ <- kExecute01 [toSql uid]
+    return ()
+        
 data GetPadQueue = GetPadQueue UserID
 instance DBQuery GetPadQueue PadQueue where
   dbQuery ( GetPadQueue uid) = do

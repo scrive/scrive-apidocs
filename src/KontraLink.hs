@@ -228,4 +228,4 @@ instance Show KontraLink where
     showsPrec _ (LinkAPIDocumentSignatoryAttachment did sid name) =
       (++) ("/api/document/" ++ show did ++ "/signatory/" ++ show sid ++ "/attachment/" ++ name)
     showsPrec _ (LinkPadDeviceArchive) =
-      (++) ("/paddevice/archive")
+      (++) ("/padqueue/archive")

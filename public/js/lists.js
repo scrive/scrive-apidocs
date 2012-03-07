@@ -458,7 +458,10 @@
                     if (value != undefined) {
                         if (this.schema.cell(i).isRendered()) {
                             div.append(this.schema.cell(i).rendering(value, j, this.model));
-                        } else {
+                        }
+                        else if (this.schema.cell(i).isSelect()) {
+                        }
+                        else {
                             div.text(value);
                         }
                     }

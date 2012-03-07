@@ -91,7 +91,7 @@ staticRoutes = choice
      , dir "s" $ param "sigattachment"  $ hPostNoXToken $ toK2 $ DocControl.handleSigAttach
      , dir "s" $ param "deletesigattachment" $ hPostNoXToken $ toK2 $ DocControl.handleDeleteSigAttach
 
-     , dir "pad" $ hGet $ toK2 $ DocControl.handlePadView
+     , dir "pad" $ hGet $ toK2 $ DocControl.handleSameDevicePadView
      , dir "sv" $ hGet $ toK3 $ DocControl.handleAttachmentViewForViewer
 
      --Q: This all needs to be done by author. Why we dont check it
@@ -125,8 +125,6 @@ staticRoutes = choice
      , dir "r" $ param "restore" $ hPost $ toK0 $ DocControl.handleRubbishRestore
      , dir "r" $ param "reallydelete" $ hPost $ toK0 $ DocControl.handleRubbishReallyDelete
 
-     , dir "paddevice" $ dir "archive" $ hGet $ toK0 $ ArchiveControl.showPadDeviceArchive
-
 
      , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showContractsList
      , dir "d"                     $ hGet  $ toK1 $ DocControl.handleIssueShowGet
@@ -135,7 +133,7 @@ staticRoutes = choice
      , dir "d" $ param "archive"   $ hPost $ toK0 $ ArchiveControl.handleContractArchive
      , dir "d" $ param "remind"    $ hPost $ toK0 $ DocControl.handleBulkContractRemind
      , dir "d"                     $ hPost $ toK1 $ DocControl.handleIssueShowPost
-     , dir "docs"                  $ hGet  $ toK0 $ DocControl.jsonDocumentsList
+     , dir "docs"                  $ hGet  $ toK0 $ ArchiveControl.jsonDocumentsList
      , dir "doc"                   $ hGet  $ toK1 $ DocControl.jsonDocument
      , dir "save"                  $ hPost $ toK1 $ DocControl.handleSaveDraft
      , dir "setattachments"        $ hPost $ toK1 $ DocControl.handleSetAttachments -- Since setting attachments can have file upload, we need extra handler for it.
@@ -166,7 +164,11 @@ staticRoutes = choice
      , dir "csvlandpage" $ hGet $ toK1 $ DocControl.handleCSVLandpage
 
      , dir "padqueue" $ dir "add" $ hPost $ toK2 $ PadQueue.addToQueue
+     , dir "padqueue" $ dir "clear" $ hPost $ toK0 $ PadQueue.clearQueue
+    
      , dir "padqueue" $ hGet $ toK0 $ PadQueue.showPadQueueCurrent
+     , dir "padqueue" $ dir "archive" $ hGet $ toK0 $ ArchiveControl.showPadDeviceArchive
+
      -- UserControl
      , dir "account"                    $ hGet  $ toK0 $ UserControl.handleUserGet
      , dir "account"                    $ hPost $ toK0 $ UserControl.handleUserPost

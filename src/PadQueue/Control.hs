@@ -1,4 +1,4 @@
-module PadQueue.Control (addToQueue,showPadQueueCurrent)
+module PadQueue.Control (addToQueue,clearQueue,showPadQueueCurrent)
     where
         
 import PadQueue.Model
@@ -31,6 +31,13 @@ addToQueue did slid = do
             runDB $ dbUpdate $ AddToPadQueue uid did slid
             liftIO $ json $ return ()
         else mzero
+
+clearQueue :: (Kontrakcja m) =>  m JSValue
+clearQueue = do
+    uid <- userid <$> (guardJustM $ ctxmaybeuser <$> getContext)
+    runDB $ dbUpdate $ ClearPadQueue uid 
+    liftIO $ json $ return ()
+
 
 showPadQueueCurrent ::  (Kontrakcja m) =>  m String
 showPadQueueCurrent = do

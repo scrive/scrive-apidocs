@@ -224,8 +224,8 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
             top.append(this.setCsvSignatoryIcon())
         if (signatory.signs())
             top.append(this.setSignOrderIcon());
-        //if (signatory.signs() && !signatory.author() )
-        //    top.append(this.placeSignatureIcon());
+        if (signatory.signs() && !signatory.author() )
+            top.append(this.placeSignatureIcon());
         top.append(this.addFieldButton());
         if (signatory.signs() && document.view.signOrderVisible())
             top.append(this.signOrderSelector());

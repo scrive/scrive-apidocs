@@ -73,13 +73,19 @@ window.MailView = Backbone.View.extend({
 	render : function() {
 		var mail = this.model;
 		var container = this.el;
-		if (!mail.ready()) return this;
-        container.empty();
-		if (!mail.editable())
-			container.append(mail.content());
-		else
-			container.append(this.editableMailContent());
-		return this;
+		if (!mail.ready()) {
+                    container.addClass('loadingMail')
+                }
+                else {
+                    container.removeClass('loadingMail')
+                    container.empty();
+                    if (!mail.editable())
+                            container.append(mail.content());
+                    else
+                            container.append(this.editableMailContent());
+                }
+               return this;
+
 	},
 	customtext : function() {
 		if (this.editor != undefined)  
@@ -127,7 +133,7 @@ var ConfirmationWithEmailModel = Backbone.Model.extend({
 var ConfirmationWithEmailView = Backbone.View.extend({
   events: {
         "click .close"  :  "reject",
-		"click .edit"  :  "edit"
+	"click .edit"  :  "edit"
     },
     initialize: function (args) {
         _.bindAll(this, 'render', 'reject');
@@ -211,23 +217,16 @@ window.ConfirmationWithEmail = {
                     });
           var overlay = $("<div/>");
           var view = new ConfirmationWithEmailView({model : model, el : overlay});
-          whenReady(args.mail,function() {
-                    $("body").append(overlay);
-                    overlay.overlay({load: true,
+          $("body").append(overlay);
+          overlay.overlay({load: true,
                            target:overlay,
                            speed : 0,
                            mask: standardDialogMask,
                            top: standardDialogTop,
                            fixed: false
                           });
-          });
    }
     
-};
-
-var whenReady = function(object, callback) {
-        if (object.ready()) callback();
-        else setTimeout(function() {whenReady(object,callback);},50);
 };
 
 });

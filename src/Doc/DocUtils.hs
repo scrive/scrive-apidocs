@@ -406,26 +406,10 @@ addTag _ (n,v) = [DocumentTag n v]
 samenameanddescription :: BS.ByteString -> BS.ByteString -> (BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)]) -> Bool
 samenameanddescription n d (nn, dd, _) = n == nn && d == dd
 
-getSignatoryAttachment :: BS.ByteString -> BS.ByteString -> Document -> Maybe SignatoryAttachment
-getSignatoryAttachment email name doc =
-  find (\sl -> email == signatoryattachmentemail sl &&
-               name  == signatoryattachmentname sl) $
-  documentsignatoryattachments doc
-
-buildattach :: String -> Document -> [SignatoryAttachment]
-               -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])]
-               -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])]
-buildattach _ _ [] a = a
-buildattach csvstring d (f:fs) a =
-  case getSigLinkFor d (signatoryattachmentemail f) of
-    Nothing -> if signatoryattachmentemail f == BS.fromString "csv"
-               then case find (samenameanddescription (signatoryattachmentname f) (signatoryattachmentdescription f)) a of
-                 Nothing -> buildattach csvstring d fs (((signatoryattachmentname f), (signatoryattachmentdescription f), [(BS.fromString csvstring, BS.fromString "csv")]):a)
-                 Just (nx, dx, sigs) -> buildattach csvstring d fs ((nx, dx, (BS.fromString csvstring, BS.fromString "csv"):sigs):(delete (nx, dx, sigs) a))
-               else buildattach csvstring d fs a
-    Just sl -> case find (samenameanddescription (signatoryattachmentname f) (signatoryattachmentdescription f)) a of
-      Nothing -> buildattach csvstring d fs (((signatoryattachmentname f), (signatoryattachmentdescription f), [(getFullName sl, getEmail sl)]):a)
-      Just (nx, dx, sigs) -> buildattach csvstring d fs ((nx, dx, (getFullName sl, getEmail sl):sigs):(delete (nx, dx, sigs) a))
+getSignatoryAttachment :: Document -> SignatoryLinkID -> BS.ByteString -> Maybe SignatoryAttachment
+getSignatoryAttachment doc slid name = join $ find (\a -> name == signatoryattachmentname a) 
+                                       <$> signatoryattachments 
+                                       <$> (find (\sl -> slid == signatorylinkid sl) $ documentsignatorylinks doc)
 
 sameDocID :: Document -> Document -> Bool
 sameDocID doc1 doc2 = (documentid doc1) == (documentid doc2)
@@ -461,7 +445,7 @@ fileInDocument doc fid =
     elem fid $      (documentfiles doc)
                  ++ (documentsealedfiles doc)
                  ++ (fmap authorattachmentfile $ documentauthorattachments doc)
-                 ++ (catMaybes $ fmap signatoryattachmentfile $ documentsignatoryattachments doc)
+                 ++ (catMaybes $ fmap signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
 
 makePlacements :: [BS.ByteString]
                -> [BS.ByteString]
