@@ -14,36 +14,36 @@ showUsageStats =
     </ul>
 
 <script>
-var DayTable = KontraList().init({
+var dayTable = KontraList().init({
     name : "Past Month Table",
     schema: new Schema({
     url: "/account/usagestats/days/json",
     cells : [
         new Cell({name: "$_usageStatsDate()$",   width:"100px", field:"date"}),
   $if(iscompanyadmin)$new Cell({name: "$_statsSender()$", width:"100px", field:"name", special:"expandable"}),$endif$
-        new Cell({name: "$_closedDocuments()$",  width:"70px",  field:"closed", class: 'num'}),
-        new Cell({name: "$_sentDocuments()$",    width:"70px",  field:"sent", class: 'num'}),
-        new Cell({name: "$_closedSignatures()$", width:"70px",  field:"signatures", class: 'num'})
+        new Cell({name: "$_closedDocuments()$",  width:"70px",  field:"closed", tdclass: 'num'}),
+        new Cell({name: "$_sentDocuments()$",    width:"70px",  field:"sent", tdclass: 'num'}),
+        new Cell({name: "$_closedSignatures()$", width:"70px",  field:"signatures", tdclass: 'num'})
     ]})});
 
 jQuery(function(){
-    jQuery("#jsdaytable").append(DayTable.view.el);
+    jQuery("#jsdaytable").append(dayTable.view.el);
 });
 
-var MonthTable = KontraList().init({
+var monthTable = KontraList().init({
     name : "Past 6 Month Table",
     schema: new Schema({
     url: "/account/usagestats/months/json",
     cells : [
         new Cell({name: "$_usageStatsMonth()$",   width:"100px", field:"date"}),
   $if(iscompanyadmin)$new Cell({name: "$_statsSender()$", width:"100px", field:"name", special:"expandable"}),$endif$
-        new Cell({name: "$_closedDocuments()$",  width:"70px",  field:"closed", class: 'num'}),
-        new Cell({name: "$_sentDocuments()$",    width:"70px",  field:"sent", class: 'num'}),
-        new Cell({name: "$_closedSignatures()$", width:"70px",  field:"signatures", class: 'num'})
+        new Cell({name: "$_closedDocuments()$",  width:"70px",  field:"closed", tdclass: 'num'}),
+        new Cell({name: "$_sentDocuments()$",    width:"70px",  field:"sent", tdclass: 'num'}),
+        new Cell({name: "$_closedSignatures()$", width:"70px",  field:"signatures", tdclass: 'num'})
     ]})});
 
 jQuery(function(){
-    jQuery("#jsmonthtable").append(MonthTable.view.el);
+    jQuery("#jsmonthtable").append(monthTable.view.el);
 });
 
 </script>
