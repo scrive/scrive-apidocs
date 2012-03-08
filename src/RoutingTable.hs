@@ -32,7 +32,7 @@ import Doc.API
 import Control.Monad.Error
 import Data.Functor
 import Data.List
-import Happstack.Server hiding (simpleHTTP, host, dir, path)
+import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
 
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
