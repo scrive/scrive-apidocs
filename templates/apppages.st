@@ -46,6 +46,8 @@ standardHeaderContents=
                 type="text/javascript"></script>
         <script src="$prefix$/tiny_mce/jquery.tinymce.js"
                 type="text/javascript"></script>
+        <script src="$prefix$/js/json2.js"
+                type="text/javascript"></script>
         <script type="text/javascript">
                 $javascriptLocalisation()$</script>
         <script src="$prefix$/js/global.js"
