@@ -587,7 +587,7 @@ handleAfterSigning document@Document{documentid} signatorylinkid = do
       if isClosed document
         then addFlashM $ modalSignedClosedNoAccount document signatorylink
         else addFlashM $ modalSignedNotClosedNoAccount document signatorylink
-  return $ LinkSignDoc document signatorylink
+  return $ LoopBack
 
 {- |
    Control rejecting the document
@@ -1457,6 +1457,11 @@ handleSigAttach docid siglinkid = do
 jsonDocument :: Kontrakcja m => DocumentID -> m JSValue
 jsonDocument did = do
     (mdoc,msiglink) <- jsonDocumentGetterWithPermissionCheck did
+    when_ (isJust mdoc && isJust msiglink) $ do 
+         let sl = fromJust msiglink 
+         ctx <- getContext
+         runDBUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl)
+              (SignatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl))
     cttime <- liftIO $ getMinutesTime
     rsp <- case mdoc of
          Nothing -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "No document avaible")]

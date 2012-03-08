@@ -14,12 +14,13 @@ window.PadQueue = Backbone.Model.extend({
     initialize: function (args) {
         var padqueue = this;
         this.url = "padqueue/state";
-        setTimeout(function() {padqueue.refresher();} , 1000 );
+        padqueue.refresher();
     },
     refresher : function() {
         var padqueue = this;
+        this.refresherstarted = true;
         padqueue.recall();
-        setTimeout(function() {padqueue.refresher();} , 1000 );
+        setTimeout(function() {padqueue.refresher();} , 3000 );
     },
     ready: function(){
         return this.get("ready");
@@ -71,7 +72,12 @@ window.PadQueueView = Backbone.View.extend({
         return doc.view.el;
     },
     noDocumentView : function() {
-        return $("<div> No document </div>");
+        var box = $("<div class='noDocumentAvaible'> </div>");
+        var header = $("<div class='header'>No document is avaible</div>")
+        var sheader = $("<div class='sheader'>Waiting for device owner to send a document</div>");
+        box.append(header).append(sheader);
+        return box;
+        
     },
     
     render: function () {
@@ -96,7 +102,6 @@ window.KontraPad = {
                         model: this.model,
                         el : $("<div/>")
                     });
-       this.recall();
        return this;
    },
    recall : function()

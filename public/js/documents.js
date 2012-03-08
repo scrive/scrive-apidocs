@@ -157,6 +157,7 @@ window.Document = Backbone.Model.extend({
         });
           return new Submit({
               sign : "YES",
+              url : "/s/" + this.documentid() + "/" + this.viewer().signatoryid(), 
               method: "POST",
               magichash : this.viewer().magichash(),
               fieldname : fieldnames,

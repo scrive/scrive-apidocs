@@ -54,6 +54,6 @@ padQueueToSignatoryData Nothing = return Nothing
 padQueueToSignatoryData (Just (did,slid)) = do
         doc <- guardRightM $ getDocByDocID did
         sl <- guardJust $ getSigLinkFor doc slid
-        if (Pending == documentstatus doc)
+        if (Preparation /= documentstatus doc)
          then return $ Just (doc,sl)
          else return Nothing  

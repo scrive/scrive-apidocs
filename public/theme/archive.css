@@ -11,12 +11,6 @@
         height: 16px;
         width: 16px;
 }
-.paddevicearchive .statusIcon.signedstatus{
-        background-image: url(../theme/images/status_signed.png);
-        float: left;
-        height: 16px;
-        width: 16px;
-}
 
 .paddevicearchive .actionIcon.gotodocument{
         background-image: url(../theme/images/next.gif);
@@ -37,4 +31,22 @@
         float: left;
         height: 14px;
         width: 14px;
+}
+
+.noDocumentAvaible {
+    background-color: #FAFAFA;
+    border: 1px solid #777777;
+    height: 735px;
+    width: 943px;
+    text-align: center;
+    padding-top: 100px;
+}
+.noDocumentAvaible .header {
+    font-size: 24px;
+    color: #222222;
+    font-weight: bold;
+    padding: 10px;
+}
+.noDocumentAvaible .sheader {
+    font-size: 14px;
 }

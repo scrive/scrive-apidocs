@@ -157,7 +157,7 @@ jsonDocumentsList = withUserGet $ do
  where
      padDocument::Document -> Bool
      padDocument doc  = PadIdentification `elem` (documentallowedidtypes doc) &&
-                        not (all (hasSigned ||^ isAuthor) $ documentsignatorylinks doc)
+                        (Preparation /= documentstatus doc)
 
 -- Searching, sorting and paging
 docSortSearchPage :: ListParams -> [Document] -> PagedList Document

@@ -22,13 +22,25 @@ var padTable = KontraList().init({
     schema: new Schema({
     url: "/docs",
     extraParams : { documentType : "Pad" },
-    sorting: new Sorting({ fields: ["title","party"]}),
+    sorting: new Sorting({ fields: ["status", "time", "title","party"]}),
     paging: new Paging({}),
     filtering: new Filtering({text: "", infotext: "$_SearchDoc()$"}),
     cells : [
+         new Cell({name: "$_SortStatus()$", width:"65px", field:"status", special: "rendered",
+                 rendering: function(status,idx,listobject) {
+                        return jQuery("<div class='icon status "+status+"'></div>")
+                 }
+        }),
+        new Cell({name: "$_SortTime()$", width:"140px", field:"time" , special: "rendered",
+                 rendering: function(time,idx,listobject) {
+                    var tbox = jQuery("<div/>");
+                    if (idx == undefined) tbox.text(time);
+                    return tbox;
+                 }
+        }),
         new Cell({name: "$_SortDoc()$", width:"240px", field:"title",  special: "expandable"}),
         new Cell({name: "$_SortParty()$", width:"240px", field:"party", special: "expandable", subfield : "name"}),
-        new Cell({name: "Pad", width:"100px", field:"id",  special: "rendered",
+        new Cell({name: "Pad", width:"50px", field:"id",  special: "rendered",
                  rendering: function(id,idx,listobject) {
                     var icon = jQuery("<div class='statusIcon'/>");
                     if(listobject.field("inpadqueue") == "true" && idx == undefined) {
@@ -44,12 +56,7 @@ var padTable = KontraList().init({
                        {
                          icon.addClass("inqueuestatus");
                          ToolTip.set({on: icon, tip : "This signatory can sign on pad device"});
-                       }
-                    else if (listobject.subfield(idx,"status") == "signed")
-                       {
-                        icon.addClass("signedstatus");
-                        ToolTip.set({on: icon, tip : "This signatory signed a document"});
-                       }
+                       } 
                     else
                        {
                          icon.addClass("notinqueuestatus");
@@ -57,7 +64,7 @@ var padTable = KontraList().init({
                        }
                     return icon;
                  }}),
-       new Cell({name: "Action", width:"100px", field:"id", substyle: "", special: "rendered",
+       new Cell({name: "Action", width:"50px", field:"id", substyle: "", special: "rendered",
                  rendering: function(id,idx,listobject) {
                     var actionIcon = jQuery("<a class='actionIcon'/>");
                     if(idx == undefined)
@@ -70,7 +77,7 @@ var padTable = KontraList().init({
                     else if (listobject.field("inpadqueue") == "true" && listobject.subfield(idx,"inpadqueue") == "true")
                         {
                             actionIcon.addClass("removefromqueue");
-                            ToolTip.set({on: actionIcon, tip : "Cancel signing on pad device"});
+                            ToolTip.set({on: actionIcon, tip : "Remove from pad device"});
                             actionIcon.click(function() {
                                 new Submit({
                                     url: "/padqueue/clear" ,
@@ -78,10 +85,10 @@ var padTable = KontraList().init({
                                 }).sendAjax(function() { LoadingDialog.close(); padTable.recall(); });
                             });
                         }
-                    else if (listobject.subfield(idx,"status") != "signed")
+                    else if (listobject.subfield(idx,"author") != "true")
                         {
                             actionIcon.addClass("addtoqueue");
-                            ToolTip.set({on: actionIcon, tip : "Send for signing on pad device"});
+                            ToolTip.set({on: actionIcon, tip : "Send to pad device"});
                             actionIcon.click(function() {
                             LoadingDialog.open();
                             new Submit({
