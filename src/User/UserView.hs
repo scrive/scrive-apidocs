@@ -83,6 +83,7 @@ import Util.JSON
 import Text.JSON
 import Data.Either
 import Misc
+import ScriveByMail.Model
 
 showUser :: TemplatesMonad m => User -> Maybe Company -> Bool -> m String
 showUser user mcompany createcompany = renderTemplateFM "showUser" $ do
@@ -142,7 +143,7 @@ showUserSecurity user = renderTemplateFM "showUserSecurity" $ do
     field "advancedMode" $ Just AdvancedMode == (preferreddesignmode $ usersettings user)
     menuFields user
 
-showUserMailAPI :: TemplatesMonad m => User -> Maybe UserMailAPI -> m String
+showUserMailAPI :: TemplatesMonad m => User -> Maybe MailAPIInfo -> m String
 showUserMailAPI user mapi =
     renderTemplateFM "showUserMailAPI" $ do
         field "linkmailapi" $ show LinkUserMailAPI

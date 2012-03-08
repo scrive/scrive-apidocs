@@ -177,7 +177,7 @@ instance DBUpdate SetCompanyEmailDomain Bool where
     kExecute01 [toSql domain, toSql cid]
     
 data GetCompanyByEmailDomain = GetCompanyByEmailDomain String
-instance DBUpdate GetCompanyByEmailDomain (Maybe Company) where
-  dbUpdate (GetCompanyByEmailDomain domain) = do
+instance DBQuery GetCompanyByEmailDomain (Maybe Company) where
+  dbQuery (GetCompanyByEmailDomain domain) = do
     _ <- kRun $ selectCompaniesSQL <++> SQL "WHERE email_domain = ?" [toSql domain]
     fetchCompanies >>= oneObjectReturnedGuard

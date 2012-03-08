@@ -26,7 +26,8 @@ import TestKontra as T
 import Doc.DocInfo
 import qualified Log
 
-import API.MailAPI
+import ScriveByMail.Control
+import ScriveByMail.Model
 
 mailApiTests :: DBEnv -> Test
 mailApiTests env = testGroup "MailAPI" [
@@ -67,7 +68,7 @@ testSuccessfulDocCreation env emlfile sigs = withMyTestEnvironment env $ \tmpdir
     globaltemplates <- readGlobalTemplates
     ctx <- (\c -> c { ctxdbenv = env, ctxdocstore = tmpdir, ctxmaybeuser = muser })
       <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
-    _ <- dbUpdate $ SetUserMailAPI uid $ Just UserMailAPI {
+    _ <- dbUpdate $ SetUserMailAPI uid $ Just MailAPIInfo {
           umapiKey = read "ef545848bcd3f7d8"
         , umapiDailyLimit = 1
         , umapiSentToday = 0

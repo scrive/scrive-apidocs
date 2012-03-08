@@ -12,6 +12,7 @@ import MinutesTime
 import User.Model
 import TestingUtil
 import Data.List
+import ScriveByMail.Model
 
 sortByEmail :: [User] -> [User]
 sortByEmail = sortBy (\a b -> compare (f a) (f b))
@@ -130,7 +131,7 @@ test_getInviteInfo = do
 test_getUserMailAPI :: DB ()
 test_getUserMailAPI = do
   Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  let mapi = UserMailAPI {
+  let mapi = MailAPIInfo {
       umapiKey = unsafeMagicHash 0
     , umapiDailyLimit = 1
     , umapiSentToday = 0

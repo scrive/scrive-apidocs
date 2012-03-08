@@ -38,6 +38,7 @@ import Stats.Control
 import User.Utils
 import EvidenceLog.Model
 import User.History.Model
+import ScriveByMail.Model
 
 checkPasswordsMatch :: TemplatesMonad m => BS.ByteString -> BS.ByteString -> Either (m FlashMessage) ()
 checkPasswordsMatch p1 p2 =
@@ -327,7 +328,7 @@ handlePostUserMailAPI = withUserPost $ do
              Nothing -> do
                  when enabledapi $ do
                      apikey <- random
-                     _ <- runDBUpdate $ SetUserMailAPI userid $ Just UserMailAPI {
+                     _ <- runDBUpdate $ SetUserMailAPI userid $ Just MailAPIInfo {
                            umapiKey = apikey
                          , umapiDailyLimit = 50
                          , umapiSentToday = 0

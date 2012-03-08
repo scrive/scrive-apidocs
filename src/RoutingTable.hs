@@ -26,7 +26,7 @@ import qualified Doc.DocControl as DocControl
 import qualified Archive.Control as ArchiveControl
 import qualified ELegitimation.BankID as BankID
 import qualified User.UserControl as UserControl
-import qualified ScriveByMail.MailAPI as MailAPI
+import qualified ScriveByMail.Control as MailAPI
 import Doc.API
 
 import Control.Monad.Error

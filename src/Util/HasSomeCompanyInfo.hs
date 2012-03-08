@@ -16,11 +16,7 @@ module Util.HasSomeCompanyInfo (
 
 import Doc.DocStateData
 import Company.Model
-import User.Model
 import Util.SignatoryLinkUtils
-import Misc
-
-import Data.Maybe
 
 import qualified Data.ByteString as BS
 

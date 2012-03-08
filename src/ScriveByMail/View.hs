@@ -4,7 +4,6 @@ import Templates.Templates
 import Templates.TemplatesUtils
 import Context
 import Doc.DocStateData
-import qualified Data.ByteString.UTF8 as BS
 import Util.HasSomeUserInfo
 import Doc.DocUtils
 import Mails.MailsData
@@ -12,7 +11,12 @@ import Doc.DocViewMail
 import Data.Maybe
 import Doc.DocProcess
 import KontraLink
+import MagicHash
+import MinutesTime
 --import Mails.SendMail
+
+import Data.Int
+import qualified Data.ByteString.UTF8 as BS
 
 mailMailAPIConfirm :: TemplatesMonad m
                       => Context
@@ -52,9 +56,15 @@ mailMailApiError ctx err =
     field "errormsg" err
     field "ctxhostpart" (ctxhostpart ctx)
 
-mailMailApiDelayAdmin :: TemplateMonad m => Context -> String -> Int64 -> MagicHash -> MinutesTime -> m Mail
-mailMailApiDelayAdmin context email delayid key now =
+mailMailApiDelayAdmin :: TemplatesMonad m => Context -> String -> Int64 -> MagicHash -> MinutesTime -> m Mail
+mailMailApiDelayAdmin ctx email delayid key expires =
   kontramail "mailMailAPIDelayAdmin" $ do
     field "ctxhostpart" $ ctxhostpart ctx
-    field "confirmationlink" $ ctxhostpart ctx ++ (show $ MailAPIDelayConfirmationLink delayid key)
+    field "confirmationlink" $ ctxhostpart ctx ++ (show $ LinkMailAPIDelayConfirmation delayid key)
+    field "email" email
+    field "expires" expires
+    
+mailMailApiDelayUser :: TemplatesMonad m => Context -> String -> m Mail
+mailMailApiDelayUser _ctx email =
+  kontramail "mailMailAPIDelayAdmin" $ do
     field "email" email
