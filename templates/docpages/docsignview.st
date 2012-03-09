@@ -55,15 +55,8 @@ signviewfooter=
     <div class="content">
       <div class="sender">
         <div class="name">$author.fullname$</div>
-        $if(author.position)$
-        $if(author.company)$
-        <div class='position'>$author.position$, $author.company$</div>
-        $else$
         <div class='position'>$author.position$</div>
-        $endif$
-        $else$
         <div class='company'>$author.company$</div>
-        $endif$
         <div class="phone">$author.phone$</div>
         <div class="email">$author.email$</div>
       </div>
