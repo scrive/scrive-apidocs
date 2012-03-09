@@ -17,7 +17,7 @@
             var wiz = model.wizard();
             var t = $(view.text);
             $(view.el).append(t);
-            var url = "/api/document/" + KontraDesignDocument.model.id;
+            var url = "/api/mainfile/" + KontraDesignDocument.model.id;
             var upbutton = UploadButton.init({
                 name: "file",
                 width: 125,
@@ -34,12 +34,9 @@
                     method : "POST",
                     url : url,
                     ajax: true,
-                    expectedType: 'json',
                     beforeSend: function() {
-                        console.log("first");
                     },
                     onSend: function() {
-                        console.log("here");
                         LoadingDialog.open();
                     },
                    ajaxerror: function(d,a){
@@ -50,12 +47,9 @@
                         LoadingDialog.close();
                         wiz.trigger('change');
                     },
-                    ajaxsuccess: function(d) {
-                      console.log("there");
-                        if (d) {
-                          SessionStorage.set(KontraDesignDocument.model.documentid(), "step", "2");
-                            window.location.href = d.designurl;
-                        }
+                    ajaxsuccess: function() {
+                      SessionStorage.set(KontraDesignDocument.model.documentid(), "step", "2");
+                      window.location.reload();
                     }
                 })
             });
@@ -78,21 +72,28 @@
             _.bindAll(this, 'render');
             this.model.bind('change', this.render);
             var model = this.model;
-            // I had to put this callback here because
-            // it wasn't working in-place
-            //it's a hack but something must be interfering
-            // with the click event
-            $("a.jsback1").live('click', function() {
-                if(model.wizard())
-                    model.wizard().previousStep();
-                return false;
-            });
+        },
+        extras: function() {
+          var model = this.model;
+          return $("<div>").addClass("float-left basicinfo")
+            .append($("<p>").text(localization.infoSelectTemplate))
+            .append($("<br>"))
+            .append($("<p>").append($("<a href='#' />").addClass("jsback1 backicon float-left boo").html(" &nbsp;"))
+                    .click(function() {
+                      if(model.wizard())
+                        model.wizard().previousStep();
+                      return false;
+                    })
+                    .append(" &nbsp;" + localization.goBack));
         },
         render: function() {
             var view = this;
             var el = $(view.el);
             var model = view.model;
             var wiz = model.wizard();
+
+            el.children().detach();
+
             var documentsTable = KontraList().init({
                 name : "Templates table",
                 schema: new Schema({
@@ -112,17 +113,11 @@
                                           new Submit({
                                             method : "POST",
                                             ajax: true,
-                                            expectedType: 'json',
-                                            url: "/api/document/" + KontraDesignDocument.model.id,
+                                            url: "/api/mainfile/" + KontraDesignDocument.model.id,
                                             template: listobject.field("id"),
-                                            ajaxsuccess: function(d) {
-                                              console.log("there");
-                      
-                                              if (d) {
-                                                SessionStorage.set(KontraDesignDocument.model.documentid(), "step", "2");
-                                                window.location.href = d.designurl;
-                                              }
-
+                                            ajaxsuccess: function() {
+                                              SessionStorage.set(KontraDesignDocument.model.documentid(), "step", "2");
+                                              window.location.reload();
                                             }
                                           }).send();
                                           return false;
@@ -132,16 +127,12 @@
                                  })
                     ]
                 }),
-                headerExtras : $("<div>").addClass("float-left basicinfo")
-                    .append($("<p>").text(localization.infoSelectTemplate))
-                    .append($("<br>"))
-                    .append($("<p>").append($("<a href='#' />").addClass("jsback1 backicon float-left boo").html(" &nbsp;"))
-                            .append(" &nbsp;" + localization.goBack))
+                headerExtras : view.extras()
 
             });
             documentsTable.view.render();
 
-            el.children().detach();
+
             el.append($("<td>").addClass("templateslist").append(documentsTable.view.el));
 
 

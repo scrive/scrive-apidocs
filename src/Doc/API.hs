@@ -40,8 +40,8 @@ documentAPI :: Route (Kontra Response)
 documentAPI = choice [
   dir "api" $ dir "document" $ hGet          $ toK0 $ documentList,
   dir "api" $ dir "document" $ hPostNoXToken $ toK0 $ documentNew,
-  -- /api/document/{docid} ==> Change main file
-  dir "api" $ dir "document" $ hPostNoXToken $ toK1 $ documentChange,
+  -- /api/mainfile/{docid} ==> Change main file
+  dir "api" $ dir "mainfile" $ hPostNoXToken $ toK1 $ documentChangeMainFile,
 
 --  dir "api" $ dir "document" $ hGet          $ toK1 $ documentView,
   dir "api" $ dir "document" $ hPostNoXToken $ toK6 $ documentUploadSignatoryAttachment,
@@ -120,12 +120,12 @@ documentNew = api $ do
 -- this one must be standard post with post params because it needs to
 -- be posted from a browser form
 -- Change main file, file stored in input "file" OR templateid stored in "template"
--- eventually this could also change other things?
-documentChange :: Kontrakcja m => DocumentID -> m Response
-documentChange docid = api $ do
+documentChangeMainFile :: Kontrakcja m => DocumentID -> m Response
+documentChangeMainFile docid = api $ do
   ctx <- getContext
   aa <- apiGuard' Forbidden $ mkAuthorActor ctx
-  _ <- apiGuardL' Forbidden $ getDocByDocID docid
+  doc <- apiGuardL' Forbidden $ getDocByDocID docid
+  apiGuard' Forbidden (isAuthor $ getAuthorSigLink doc)
 
   fileinput <- lift $ getDataFn' (lookInput "file")
   templateinput <- lift $ getDataFn' (look "template")
@@ -148,8 +148,8 @@ documentChange docid = api $ do
               apiGuard' BadInput $ listToMaybe $ documentfiles temp
             _ -> throwError BadInput
   
-  doc <- apiGuardL $ runDBUpdate $ AttachFile docid fileid aa
-  return $ jsonDocumentForAuthor doc
+  _ <- apiGuardL $ runDBUpdate $ AttachFile docid fileid aa
+  return ()
 
 
 documentChangeMetadata :: Kontrakcja m => DocumentID -> MetadataResource -> m Response

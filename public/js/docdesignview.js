@@ -138,10 +138,10 @@ var DocumentDesignView = Backbone.View.extend({
       window.UploadWizardView = wizardview;
 
       var up = new WizardStep;
-      var upview = new window.ChangeFileUploadView({model: up});
+      var upview = new ChangeFileUploadView({model: up});
       
       var tmp = new WizardStep;
-      var tmpview = new window.ChangeFileTemplateView({model: tmp});
+      var tmpview = new ChangeFileTemplateView({model: tmp});
 
       wizard.addStep(up);
       wizard.addStep(tmp);
@@ -622,6 +622,7 @@ var DocumentDesignView = Backbone.View.extend({
                     name : document.isTemplate() ? localization.step1template : document.process().step1text(),
                     active :  SessionStorage.get(document.documentid(), "step") == "1",
                     onActivate : function() {
+                      KontraDesignDocument.model.save().sendAjax();
                       SessionStorage.set(document.documentid(), "step", "1");
                       window.UploadWizardView.model.setStepIndex(0);
                     },    
