@@ -175,13 +175,13 @@ window.SignatoryAttachmentView = Backbone.View.extend({
   render: function() {
     this.el.empty();
 
-    var firstcol = $("<div class='column'/>")
+    var firstcol = $("<div class='first column'/>")
     firstcol.append($("<div class='name' />").text(this.model.name()));
     firstcol.append($("<div class='description' />").text(this.model.description()));
 
     var container = $("<div class='item' />");
     container.append(firstcol);
-    container.append($("<div class='column'/>").append(this.uploadView().el));
+    container.append($("<div class='second column'/>").append(this.uploadView().el));
 
     container.append($("<div class='clearfix' />"));
 
