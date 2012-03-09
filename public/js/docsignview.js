@@ -845,6 +845,12 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
     }
     container.append(actionarrow);
 
+    var highlightarrow = $("<div class='highlight arrow'/>");
+    if (taskmodel.isIncompleteTask()) {
+      highlightarrow.append();
+    }
+    container.append(highlightarrow);
+
     var updateRightMargin = function() {
       var space = $(window).width() - 941;
       var margin = 0;
@@ -869,11 +875,21 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
     $(window).scroll(updateActionArrowHeight);
     updateActionArrowHeight();
 
+    var updateHighlightArrowPosition = function() {
+      if (taskmodel.isIncompleteTask()) {
+        var section = taskmodel.nextIncompleteTask().el.parents(".signview .section");
+        highlightarrow.css("top", (section.offset().top + 12) + "px");
+        highlightarrow.css("left", (section.offset().left - 50) + "px");
+      };
+    };
+    updateHighlightArrowPosition();
+
     var updateVisibility = function() {
 
       downarrow.hide();
       uparrow.hide();
       actionarrow.hide();
+      highlightarrow.hide();
       $(".signview .section").removeClass("highlight");
 
       if (!taskmodel.isIncompleteTask()) {
@@ -884,7 +900,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
         var eltop = taskmodel.nextIncompleteTask().el.offset().top;
         var elbottom = eltop + taskmodel.nextIncompleteTask().el.height();
 
-        var bottommargin = 50;
+        var bottommargin = 10; //50 worked better for action arrows
         var topmargin = 0;
 
         if ((scrolltop >= 0) && (elbottom <= eltop)) {
@@ -892,6 +908,8 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
           window.setTimeout(updateVisibility, 500);
         } else if (((elbottom + bottommargin) <= scrollbottom) && ((eltop - topmargin) >= scrolltop)) {
           taskmodel.nextIncompleteTask().el.parents(".signview .section").addClass("highlight");
+          updateHighlightArrowPosition();
+          highlightarrow.show();
           actionarrow.show();
         } else if ((elbottom + bottommargin) > scrollbottom) {
           downarrow.show();
