@@ -20,6 +20,7 @@ import Doc.DocViewMail
 import InputValidation
 import File.Model
 import Kontra
+import KontraError (internalError)
 import KontraLink
 import ListUtil
 import MagicHash (MagicHash)
@@ -503,7 +504,7 @@ signDocument documentid
     Left msg -> do
       addFlash  (OperationFailed, msg)
       return LoopBack
-    _ -> mzero
+    _ -> internalError
 
 handleMismatch :: Kontrakcja m => Document -> SignatoryLinkID -> String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> m ()
 handleMismatch doc sid msg sfn sln spn = do
@@ -565,7 +566,7 @@ rejectDocument documentid
     Left (DBDatabaseNotAvailable message) -> do
       addFlash (OperationFailed, message)
       getHomeOrUploadLink
-    Left _ -> mzero
+    Left _ -> internalError
     Right (document, olddocument) -> do
       postDocumentChangeAction document olddocument (Just signatorylinkid1)
       addFlashM $ modalRejectedView document
@@ -606,7 +607,7 @@ handleSignShow2 documentid
                  Just x -> return x
                  Nothing -> do
                    Log.debug $ "magichash for " ++ show documentid ++ "/" ++ show signatorylinkid ++ " not found"
-                   mzero
+                   internalError
 
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
   disableLocalSwitch
@@ -697,7 +698,7 @@ handleIssueShowPost :: Kontrakcja m => DocumentID -> m KontraLink
 handleIssueShowPost docid = withUserPost $ do
   document <- guardRightM $ getDocByDocID docid
   Context { ctxmaybeuser = muser } <- getContext
-  guard (isAuthor (document, muser)) -- still need this because others can read document
+  unless (isAuthor (document, muser)) internalError -- still need this because others can read document
   sign              <- isFieldSet "sign"
   send              <- isFieldSet "send"
   -- Behold!
@@ -786,7 +787,7 @@ handleIssueSend document = do
                 _ -> return $ LinkUpload
           (ls, _) -> do
             Log.debug $ "handleIssueSend had lefts: " ++ intercalate ";" (map show ls)
-            mzero
+            internalError
       Left link -> return link
     where
       forIndividual udoc doc = do
@@ -818,7 +819,7 @@ splitUpDocument doc = do
   case (msum (signatorylinkcsvupload <$> documentsignatorylinks doc), getCSVCustomFields doc) of
     (Just _, Left msg) -> do
       Log.debug $ "splitUpDocument: got csvupload, but getCSVCustomFields returned issues: " ++ show msg
-      mzero
+      internalError
     (Nothing, _) -> do
       Log.debug $ "splitUpDocument called on document without csvupload, that is ok"
       return $ Right [doc]
@@ -837,7 +838,7 @@ splitUpDocument doc = do
               return $ Right (rights mdocs)
             else do
               Log.debug $ "splitUpDocument: createDocFromRow returned some Lefts: " ++ show (lefts mdocs)
-              mzero
+              internalError
   where createDocFromRow :: Kontrakcja m => Document -> [BS.ByteString] -> m (Either String Document)
         createDocFromRow udoc xs = do
           actor <- guardJustM $ mkAuthorActor <$> getContext
@@ -884,7 +885,7 @@ handleFileGet fileid' _title = do
    contents <- liftIO $ getFileIDContents ctx fileid'
 
    if BS.null contents
-      then mzero
+      then internalError
       else do
           let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
           let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
@@ -940,7 +941,7 @@ handleAttachmentViewForAuthor docid = do
 handleFilePages :: Kontrakcja m => DocumentID -> FileID -> m JSValue
 handleFilePages did fid = do
   (mdoc,_) <- jsonDocumentGetterWithPermissionCheck did
-  when (isNothing mdoc ) mzero
+  when (isNothing mdoc) internalError
   let doc = fromJust mdoc
   let allfiles = (documentfiles doc) ++ (documentsealedfiles doc)  ++ (authorattachmentfile <$> documentauthorattachments doc)
   case find (== fid) allfiles of
@@ -974,7 +975,7 @@ handlePageOfDocument' documentid mtokens = do
   case edoc of
     Left l -> do
       Log.debug ("Could not get Document " ++ show l)
-      mzero
+      internalError
     Right Document { documentfiles
                    , documentsealedfiles
                    , documentstatus
@@ -1057,7 +1058,7 @@ makeDocumentFromFile doctype (Input contentspec (Just filename) _contentType) nr
           doc <- guardRightM $ newDocument title doctype nrOfExtraSigs
           handleDocumentUpload (documentid doc) (concatChunks content) title
           return $ Just doc
-makeDocumentFromFile _ _ _ = mzero -- to complete the patterns
+makeDocumentFromFile _ _ _ = internalError -- to complete the patterns
 
 
 handleRubbishRestore :: Kontrakcja m => m KontraLink
@@ -1170,7 +1171,7 @@ showPage docid fileid pageno = do
            _ ->  checkUserTOSGet $ guardRightM (getDocByDocID docid)
   case edoc of
        Right doc -> do
-           unless (fileInDocument doc fileid) mzero
+           unless (fileInDocument doc fileid) internalError
            Right <$> showPage' fileid pageno
        Left rdir -> return $ Left rdir
 
@@ -1260,7 +1261,7 @@ handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
 handleResend docid signlinkid  = withUserPost $ do
   ctx@Context { ctxmaybeuser = Just user } <- getContext
   doc <- guardRightM $ getDocByDocID docid
-  guard (isAuthor (doc, user)) -- only author can resend
+  unless (isAuthor (doc, user)) internalError -- only author can resend
   signlink <- guardJust $ getSigLinkFor doc signlinkid
   customMessage <- getCustomTextField "customtext"
   _ <- sendReminderEmail customMessage ctx doc signlink
@@ -1290,7 +1291,7 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
       case edoc of
         Left _ -> return LoopBack
         Right doc -> do
-          guard $ isAuthor (doc, user)
+          unless (isAuthor (doc, user)) internalError
           muser <- runDBQuery $ GetUserByEmail (documentservice doc) (Email email)
           actor <- guardJustM $ mkAuthorActor <$> getContext
           mnewdoc <- runDBUpdate $ ChangeSignatoryEmailWhenUndelivered docid slid muser email actor
@@ -1305,12 +1306,12 @@ handleChangeSignatoryEmail docid slid = withUserPost $ do
     _ -> return LoopBack
 
 failIfNotAuthor :: Kontrakcja m => Document -> User -> m ()
-failIfNotAuthor document user = guard (isAuthor (document, user))
+failIfNotAuthor document user = unless (isAuthor (document, user)) internalError
 
 checkLinkIDAndMagicHash :: Kontrakcja m => Document -> SignatoryLinkID -> MagicHash -> m ()
 checkLinkIDAndMagicHash document linkid magichash1 = do
   siglink <- guardJust $ getSigLinkFor document linkid
-  guard $ signatorymagichash siglink == magichash1
+  unless (signatorymagichash siglink == magichash1) internalError
   return ()
 
 handleShowUploadPage :: Kontrakcja m => m (Either KontraLink String)
@@ -1356,14 +1357,14 @@ handleCreateFromTemplate = withUserPost $ do
                       mcompany <- getCompanyForUser user
                       actor <- guardJustM $ mkAuthorActor <$> getContext
                       runDBUpdate $ SignableFromDocumentIDWithUpdatedAuthor user mcompany did actor
-                    else mzero
+                    else internalError
       case enewdoc of
         Right newdoc -> do
           _ <- addDocumentCreateStatEvents newdoc
           Log.debug $ show "Document created from template"
           return $ LinkIssueDoc $ documentid newdoc
-        Left _ -> mzero
-    Nothing -> mzero
+        Left _ -> internalError
+    Nothing -> internalError
 
 {- |
    The FileID matches the AuthorAttachment.
@@ -1390,7 +1391,7 @@ handleDownloadFile did fid _nameForBrowser = do
   doc <- case (msid, mmh) of
            (Just sid, Just mh) -> guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
            _ ->                   guardRightM $ getDocByDocID did
-  unless (fileInDocument doc fid) mzero
+  unless (fileInDocument doc fid) internalError
   respondWithFile doc fid
 
 respondWithFile :: Kontrakcja m =>  Document -> FileID -> m Response

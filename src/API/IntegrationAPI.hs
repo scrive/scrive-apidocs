@@ -36,6 +36,7 @@ import MinutesTime
 import Misc
 import Session
 import Kontra
+import KontraError (internalError)
 import AppView
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
@@ -104,7 +105,7 @@ integrationService = do
                 else return Nothing
          Nothing -> return Nothing
 
-integrationAPI :: Route (Kontra Response)
+integrationAPI :: Route (Kontra' Response)
 integrationAPI = dir "integration" $ choice [
       dir "api" $
         choice
@@ -442,11 +443,11 @@ removeDocument = do
 connectUserToSessionPost :: Kontrakcja m => ServiceID -> UserID -> SessionId -> m KontraLink
 connectUserToSessionPost sid uid ssid = do
     matchingService <-sameService sid <$> (runDBQuery $ GetUserByID uid)
-    when (not matchingService) mzero
+    when (not matchingService) internalError
     loaded <- loadServiceSession (Right uid) ssid
     -- just send back empty string
-    when loaded $ finishWith $ toResponseBS (BS.fromString "text/html;charset=utf-8") (BSL.fromString "")
-    mzero
+    if loaded then finishWith $ toResponseBS (BS.fromString "text/html;charset=utf-8") (BSL.fromString "")
+              else internalError
 
 connectUserToSessionGet :: Kontrakcja m => ServiceID -> UserID -> SessionId -> m Response
 connectUserToSessionGet _sid _uid _ssid = do
@@ -463,11 +464,11 @@ connectUserToSessionGet _sid _uid _ssid = do
 connectCompanyToSession :: Kontrakcja m => ServiceID -> CompanyID -> SessionId -> m KontraLink
 connectCompanyToSession sid cid ssid = do
     matchingService <- sameService sid <$> (runDBQuery $ GetCompany cid)
-    when (not matchingService) mzero
+    when (not matchingService) internalError
     loaded <- loadServiceSession (Left cid) ssid
     if (loaded)
      then return $ BackToReferer
-     else mzero
+     else internalError
 
 getDaveDoc :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDaveDoc = do

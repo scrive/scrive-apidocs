@@ -10,9 +10,12 @@ Keep this one as unorganized dump.
 -}
 module Misc where
 
+import KontraError(KontraError, internalError)
+
 import Control.Applicative
 import Control.Arrow
 import Control.Concurrent
+import Control.Monad.Error (MonadError)
 import Control.Monad.State
 import Data.Char
 import Data.Data
@@ -73,12 +76,12 @@ randomString n allowed_chars =
     where
         len = length allowed_chars - 1
 
--- | Extract data from GET or POST request. Fail with 'mzero' if param
+-- | Extract data from GET or POST request. Fail with 'internalError' if param
 -- variable not present or when it cannot be read.
-getDataFnM :: (HasRqData m, MonadIO m, ServerMonad m, MonadPlus m) => RqData a -> m a
+getDataFnM :: (HasRqData m, MonadIO m, ServerMonad m, MonadError KontraError m) => RqData a -> m a
 getDataFnM fun = do
   m <- getDataFn fun
-  either (\_ -> mzero) (return) m
+  either (const internalError) (return) m
 
 -- | Since we sometimes want to get 'Maybe' and also we wont work with
 -- newer versions of happstack here is.  This should be droped when
@@ -104,7 +107,7 @@ pathdb getfn action = path $ \idd -> do
     Just obj -> action obj
 
 -- | Get param as strict ByteString instead of a lazy one.
-getAsStrictBS :: (HasRqData f, MonadIO f, ServerMonad f, MonadPlus f, Functor f) =>
+getAsStrictBS :: (HasRqData f, MonadIO f, ServerMonad f, MonadError KontraError f, Functor f) =>
      String -> f BS.ByteString
 getAsStrictBS name = fmap concatChunks (getDataFnM (lookBS name))
 

@@ -18,6 +18,7 @@ import Doc.DocStateData
 import Company.Model
 import InputValidation
 import Kontra
+import KontraError (internalError)
 import KontraLink
 import ListUtil
 import MagicHash (MagicHash)
@@ -556,7 +557,7 @@ withDocumentAuthor document action = do
   ctx <- getContext
   user <- guardJust $ ctxmaybeuser ctx
   sl <- guardJust $ getAuthorSigLink document
-  guard $ isSigLinkFor user sl
+  unless (isSigLinkFor user sl) internalError
   action
 
 {- |
@@ -718,7 +719,7 @@ handleAccountSetupPost aid hash = do
           return ()
       getHomeOrUploadLink
     Nothing ->
-      getOptionalField asValidEmail "email" >>= maybe mzero generateActivationLink
+      getOptionalField asValidEmail "email" >>= maybe internalError generateActivationLink
   where
     -- If this is a user activating a viral invitation then we create their user
     -- if needed, otherwise we fetch the user indicated inside the action details.
@@ -751,7 +752,7 @@ handleAccountSetupPost aid hash = do
           scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = email, email = email}] }
           addFlashM flashMessageNewActivationLinkSend
           getHomeOrUploadLink
-        else mzero
+        else internalError
 
  -- Retrieves the action for the given id
 getActionByActionID :: Kontrakcja m => ActionID -> m (Maybe Action)
@@ -773,9 +774,7 @@ getUserFromAction action =
 -- Guards so that the token in the given action matches the given magic hash.
 guardMagicTokenMatch :: Kontrakcja m => MagicHash -> Action -> m ()
 guardMagicTokenMatch expectedtoken action =
-  if getMagicTokenFromAction == Just expectedtoken
-    then return ()
-    else mzero
+  unless (getMagicTokenFromAction == Just expectedtoken) internalError
   where
     getMagicTokenFromAction =
       case actionType action of
@@ -786,7 +785,7 @@ guardMagicTokenMatch expectedtoken action =
 handleActivate :: Kontrakcja m => Maybe BS.ByteString -> Maybe BS.ByteString -> User -> SignupMethod -> m (Maybe User)
 handleActivate mfstname msndname actvuser signupmethod = do
   Log.debug $ "Attempting to activate account for user " ++ (show $ getEmail actvuser)
-  guard (isNothing $ userhasacceptedtermsofservice actvuser)
+  unless (isNothing $ userhasacceptedtermsofservice actvuser) internalError
   switchLocale (getLocale actvuser)
   ctx <- getContext
   mtos <- getDefaultedField False asValidCheckBox "tos"
@@ -938,4 +937,4 @@ guardXToken = do
   unless (xtoken == ctxxtoken) $ do
     Log.debug $ "xtoken failure: session: " ++ show ctxxtoken
       ++ " param: " ++ show xtoken
-    mzero
+    internalError

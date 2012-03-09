@@ -19,6 +19,7 @@ import Crypto.RNG (CryptoRNGState, random, inIO)
 import DB.Classes
 import Doc.DocStateData
 import Kontra
+import KontraError (KontraError(..))
 import MinutesTime
 import Misc
 --import PayEx.PayExInterface ()-- Import so at least we check if it compiles
@@ -94,8 +95,17 @@ getStandardLocale muser = do
 {- |
     Handles an error by displaying the home page with a modal error dialog.
 -}
-handleError :: Kontra Response
-handleError = do
+handleError :: (MonadIO m, Kontrakcja m) => Request -> m Response
+handleError rq = do
+     rqcontent <- liftIO $ tryTakeMVar (rqInputsBody rq)
+     when (isJust rqcontent) $
+         liftIO $ putMVar (rqInputsBody rq) (fromJust rqcontent)
+     Log.error $ showRequest rq rqcontent
+     response <- handleError'
+     setRsCode 404 response
+  where
+  handleError' :: Kontrakcja m => m Response
+  handleError' = do
     ctx <- getContext
     case (ctxservice ctx) of
          Nothing -> do
@@ -161,7 +171,7 @@ showRequest rq maybeInputsBody =
 {- |
    Creates a context, routes the request, and handles the session.
 -}
-appHandler :: Kontra Response -> AppConf -> AppGlobals -> ServerPartT IO Response
+appHandler :: Kontra' Response -> AppConf -> AppGlobals -> ServerPartT IO Response
 appHandler handleRoutes appConf appGlobals = do
   startTime <- liftIO getClockTime
 
@@ -182,16 +192,15 @@ appHandler handleRoutes appConf appGlobals = do
   Log.debug $ "Response time " ++ show (diff `div` 1000000000) ++ "ms"
   return response
   where
+    handleNotFound :: Kontrakcja m => Request -> m Response
+    handleNotFound = handleError
     handle :: Request -> Session -> Context -> ServerPartT IO Response
     handle rq session ctx = do
-      (res, ctx') <- runKontra ctx $ do
-          res <- handleRoutes  `mplus` do
-             rqcontent <- liftIO $ tryTakeMVar (rqInputsBody rq)
-             when (isJust rqcontent) $
-                 liftIO $ putMVar (rqInputsBody rq) (fromJust rqcontent)
-             Log.error $ showRequest rq rqcontent
-             response <- handleError
-             setRsCode 404 response
+      Right (res, ctx') <- runKontra' ctx $ do
+          res <- (handleRoutes `mplus` handleNotFound rq) `catchError` \e ->
+                 case e of
+                   Respond404 -> handleNotFound rq
+                   InternalError -> handleError rq
           ctx' <- getContext
           return (res,ctx')
 

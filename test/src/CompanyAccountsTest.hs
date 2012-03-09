@@ -2,6 +2,7 @@ module CompanyAccountsTest (companyAccountsTests) where
 
 import Control.Applicative
 import Control.Monad.State
+import Control.Monad.Error (catchError)
 import Data.List
 import Data.Ord
 import Happstack.Server hiding (simpleHTTP)
@@ -383,9 +384,10 @@ test_mustBeInvitedForTakeoverToWork env = withTestEnvironment env $ do
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST []
-  (res, _ctx') <- runTestKontra req ctx $ handlePostBecomeCompanyAccount (companyid company) >>= sendRedirect
-
-  assertEqual "Response code is 500" 500 (rsCode res)
+  (l, _ctx') <- runTestKontra req ctx $
+    (handlePostBecomeCompanyAccount (companyid company) >> return False)
+      `catchError` const (return True)
+  assertEqual "Exception thrown" True l
   Just updateduser <- dbQuery $ GetUserByID (userid user)
   assertEqual "User is still not in company" Nothing (usercompany updateduser)
 

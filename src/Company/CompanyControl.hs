@@ -24,6 +24,7 @@ import DB.Types
 import Company.CompanyView
 import Company.Model
 import Kontra
+import KontraError (internalError)
 import KontraLink
 import Misc
 import Redirect
@@ -127,4 +128,4 @@ withCompanyUser action = do
 -}
 withCompanyAdmin :: Kontrakcja m => ((User, Company) -> m a) -> m a
 withCompanyAdmin action = withCompanyUser $ \(user, company) ->
-  if useriscompanyadmin user then action (user, company) else mzero
+  if useriscompanyadmin user then action (user, company) else internalError

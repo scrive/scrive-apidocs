@@ -51,6 +51,7 @@ import Doc.DocInfo
 import Doc.DocStateData
 import Doc.Model
 import Kontra
+import KontraError (KontraError)
 import KontraLink
 import MinutesTime
 import Misc
@@ -67,6 +68,7 @@ import qualified Log
 import qualified Data.ByteString.UTF8 as BS
 import Happstack.Server
 import Control.Monad
+import Control.Monad.Error (MonadError, catchError)
 import Control.Applicative
 
 import User.Utils
@@ -281,14 +283,16 @@ calculateCompanyDocStatsByMonth events =
 
 -- some utility functions
 
+falseOnError :: MonadError e m => m Bool -> m Bool
+falseOnError m = m `catchError` const (return False)
+
 -- | Two stats get created for a document close:
 --   1. Count 1 for StatDocumentClose
 --   2. Count the number of signatures in StatDocumentSignatures
 -- Note that this will roll over (using mplus) in case there is
 -- an error.
-addDocumentCloseStatEvents :: (DBMonad m, MonadPlus m) => Document -> m Bool
-addDocumentCloseStatEvents doc = msum [
-  do
+addDocumentCloseStatEvents :: (DBMonad m, MonadError KontraError m) => Document -> m Bool
+addDocumentCloseStatEvents doc = falseOnError $ do
     if not (isClosed doc)
       then do
       Log.stats $ "Cannot log CloseStat because document is not closed: " ++ show (documentid doc)
@@ -326,11 +330,9 @@ addDocumentCloseStatEvents doc = msum [
                                                         }
       unless b $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show q
       return (a && b)
-  , return False]
 
-addDocumentSendStatEvents :: (DBMonad m, MonadPlus m) => Document -> m Bool
-addDocumentSendStatEvents doc = msum [
-  do
+addDocumentSendStatEvents :: (DBMonad m, MonadError KontraError m) => Document -> m Bool
+addDocumentSendStatEvents doc = falseOnError $ do
     if isNothing $ documentinvitetime doc
       then do
       Log.stats $ "Cannot add send stat because there is not invite time: " ++ show (documentid doc)
@@ -366,11 +368,9 @@ addDocumentSendStatEvents doc = msum [
                                                         }
       unless b $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show q
       return (a && b)
-  , return False]
 
-addDocumentCancelStatEvents :: (DBMonad m, MonadPlus m) => Document -> m Bool
-addDocumentCancelStatEvents doc = msum [
-  do
+addDocumentCancelStatEvents :: (DBMonad m, MonadError KontraError m) => Document -> m Bool
+addDocumentCancelStatEvents doc = falseOnError $ do
     if not $ isCanceled doc
       then do
       Log.stats $ "Cannot add Cancel event because doc is not canceled: " ++ show (documentid doc)
@@ -405,11 +405,9 @@ addDocumentCancelStatEvents doc = msum [
                                                         }
       unless b $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show q
       return (a && b)
-  , return False]
 
-addDocumentRejectStatEvents :: (DBMonad m, MonadPlus m) => Document -> m Bool
-addDocumentRejectStatEvents doc = msum [
-  do
+addDocumentRejectStatEvents :: (DBMonad m, MonadError KontraError m) => Document -> m Bool
+addDocumentRejectStatEvents doc = falseOnError $ do
     if not $ isRejected doc
       then do
       Log.stats $ "Cannot add Reject stat because document is not rejected: " ++ show (documentid doc)
@@ -444,11 +442,9 @@ addDocumentRejectStatEvents doc = msum [
                                                         }
       unless b $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show q
       return (a && b)
-  , return False]
 
-addDocumentCreateStatEvents :: (DBMonad m, MonadPlus m) => Document -> m Bool
-addDocumentCreateStatEvents doc = msum [
-  do
+addDocumentCreateStatEvents :: (DBMonad m, MonadError KontraError m) => Document -> m Bool
+addDocumentCreateStatEvents doc = falseOnError $ do
       sl  <- guardJust $ getAuthorSigLink doc
       uid <- guardJust $ maybesignatory sl
       let createtime = documentctime doc
@@ -464,7 +460,6 @@ addDocumentCreateStatEvents doc = msum [
                                                         }
       unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatCreate
       return a
-  , return False]
 
 addDocumentTimeoutStatEvents :: (DBMonad m) => Document -> m Bool
 addDocumentTimeoutStatEvents doc = do
@@ -510,7 +505,7 @@ addDocumentTimeoutStatEvents doc = do
       return (a && b)
 
 
-allDocStats ::  (DBMonad m, MonadPlus m) => Document -> m ()
+allDocStats ::  (DBMonad m, MonadError KontraError m) => Document -> m ()
 allDocStats doc = do
     _ <- addDocumentSendStatEvents doc
     _ <- addDocumentCloseStatEvents doc
@@ -560,18 +555,15 @@ addAllUsersToStats = onlyAdmin $ do
   return LinkUpload
 
 addUserLoginStatEvent :: Kontrakcja m => MinutesTime -> User -> m Bool
-addUserLoginStatEvent time user = msum [
+addUserLoginStatEvent time user = falseOnError $ do
     addUserIDStatEvent UserLogin (userid user) time (usercompany user) (userservice user)
-  , return False]
 
 addUserCreateCompanyStatEvent :: Kontrakcja m => MinutesTime -> User -> m Bool
-addUserCreateCompanyStatEvent time user = msum [
-    do
+addUserCreateCompanyStatEvent time user = falseOnError $ do
       case usercompany user of
         Nothing -> return False
         Just cid ->
           addUserIDStatEvent UserCreateCompany (userid user) time (Just cid) (userservice user)
-  , return False]
 
 addUserSignTOSStatEvent :: Kontrakcja m => User -> m Bool
 addUserSignTOSStatEvent = addUserStatEventWithTOSTime UserSignTOS
@@ -586,8 +578,7 @@ addUserPhoneAfterTOS :: Kontrakcja m => User -> m Bool
 addUserPhoneAfterTOS = addUserStatEventWithTOSTime UserPhoneAfterTOS
 
 addUserStatEventWithTOSTime :: Kontrakcja m => UserStatQuantity -> User -> m Bool
-addUserStatEventWithTOSTime qty user = msum [
-  do
+addUserStatEventWithTOSTime qty user = falseOnError $ do
     if isNothing $ userhasacceptedtermsofservice user then return False
       else do
       Context{ctxtime} <- getContext
@@ -596,7 +587,6 @@ addUserStatEventWithTOSTime qty user = msum [
                 then (60 * 24) `minutesBefore` ctxtime -- one day before running stats
                 else mt
       addUserIDStatEvent qty (userid user) mt' (usercompany user) (userservice user)
-  , return False]
 
 addUserIDStatEvent :: (DBMonad m) => UserStatQuantity -> UserID -> MinutesTime -> Maybe CompanyID -> Maybe ServiceID -> m Bool
 addUserIDStatEvent qty uid mt mcid msid =  do

@@ -42,12 +42,14 @@ import Data.Functor
 import Happstack.Server hiding (simpleHTTP)
 import Misc
 import Kontra
+import KontraError (respond404)
 import Administration.AdministrationView
 import Crypto.RNG (CryptoRNG)
 import Doc.Model
 import Doc.DocStateData
 import qualified Data.ByteString.Char8 as BSC
 import Company.Model
+import KontraError (internalError)
 import KontraLink
 import MinutesTime
 import System.Directory
@@ -99,7 +101,7 @@ showAdminUsers Nothing = onlySalesOrAdmin adminUsersPage
 showAdminUsers (Just userId) = onlySalesOrAdmin $ do
   muser <- runDBQuery $ GetUserByID userId
   case muser of
-    Nothing -> mzero
+    Nothing -> internalError
     Just user -> adminUserPage user =<< getCompanyForUser user
     
 showAdminCompanies :: Kontrakcja m => m String
@@ -761,7 +763,7 @@ replaceMainFile did = onlyAdmin $ do
             file <- runDB $ dbUpdate $ NewFile fn (concatChunks content)
             _ <- runDBUpdate $ ChangeMainfile did (fileid file) actor
             return LoopBack
-       _ -> mzero
+       _ -> internalError
 
 {- |
    Used by super users to inspect a particular document.
@@ -804,6 +806,6 @@ serveLogDirectory filename = onlyAdmin $ do
     contents <- liftIO $ getDirectoryContents "log"
     when (filename `notElem` contents) $ do
         Log.debug $ "Log '" ++ filename ++ "' not found"
-        mzero
+        respond404
     (_,bsstdout,_) <- liftIO $ readProcessWithExitCode' "tail" ["log/" ++ filename, "-n", "40"] BSL.empty
     ok $ addHeader "Refresh" "5" $ toResponseBS (BS.fromString "text/plain; charset=utf-8") $ bsstdout

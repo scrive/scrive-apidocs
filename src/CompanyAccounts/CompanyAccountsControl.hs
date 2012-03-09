@@ -34,6 +34,7 @@ import Doc.Model
 import Doc.DocStateData
 import InputValidation
 import Kontra
+import KontraError (internalError)
 import KontraLink
 import ListUtil
 import Mails.SendMail
@@ -334,7 +335,7 @@ handleChangeRoleOfCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
   makeadmin <- getFieldUTF "makeadmin"
   changeuser <- guardJustM $ runDBQuery $ GetUserByID changeid
   changecompanyid <- guardJust $ usercompany changeuser
-  guard $ changecompanyid == companyid company --make sure user is in same company
+  unless (changecompanyid == companyid company) internalError --make sure user is in same company
   _ <- runDBUpdate $ SetUserCompanyAdmin changeid (makeadmin == Just (BS.fromString "true"))
   return ()
 
@@ -438,6 +439,6 @@ resaveDocsForUser uid = do
 guardGoodForTakeover :: Kontrakcja m => CompanyID -> m ()
 guardGoodForTakeover companyid = do
   Context{ctxmaybeuser = Just user} <- getContext
-  _ <- guard $ isNothing (usercompany user)
+  _ <- unless (isNothing (usercompany user)) internalError
   _ <- guardJustM $ runDBQuery $ GetCompanyInvite companyid (Email $ getEmail user)
   return ()

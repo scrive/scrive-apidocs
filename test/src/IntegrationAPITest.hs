@@ -10,6 +10,7 @@ import StateHelper
 import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
+import Kontra (Kontra)
 import User.Model
 import Misc
 import API.API
@@ -453,7 +454,7 @@ getEmbedDocumentaJSON  documentid company email = randomCall $ JSObject $ toJSOb
         ]
 
 -- Making requests
-makeAPIRequest :: DBEnv -> IntegrationAPIFunction TestKontra APIResponse -> APIRequestBody -> DB APIResponse
+makeAPIRequest :: DBEnv -> IntegrationAPIFunction Kontra APIResponse -> APIRequestBody -> DB APIResponse
 makeAPIRequest env handler req = do
     globaltemplates <- readGlobalTemplates
     ctx <- (\c -> c { ctxdbenv = env })

@@ -10,6 +10,7 @@ module ScriveByMail.Control
 
 import File.Model
 import Kontra
+import KontraError (internalError)
 --import Happstack.Server.Types 
 import Doc.DocStorage
 import Control.Monad.Trans
@@ -85,7 +86,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
     
     sendMailAPIErrorEmail ctx username $ "<p>For your own protection, Scrive by Mail sets a daily limit on how many emails you can send out. Your daily Scrive by Mail limit has been reached. To reset your daily limit, please visit " ++ show LinkUserMailAPI ++ " .<p>"
     
-    mzero
+    internalError
   
   --Log.scrivebymail $ "Types of mime parts: " ++ show typesOfParts
   let errors1 = catMaybes [
@@ -102,7 +103,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
     -- send error email
     sendMailAPIErrorEmail ctx username $ "<p>Please ensure that the following condition is met: <br /> " ++ errorstring ++ "</p>"
   
-    mzero
+    internalError
   
   let [plain] = plains
       [pdf]   = pdfs
@@ -117,7 +118,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
           
       -- send error email          
       sendMailAPIErrorEmail ctx username $ "<p>I do not know what the problem is. Perhaps try again with a different email program.</p>"
-      mzero
+      internalError
       
   let recodedPlain = (replace "\r\n\r\n" "\r\n" $ BS.toString recodedPlain') <| isOutlook |> BS.toString recodedPlain'
       eparseresult = parseSimpleEmail subject recodedPlain
@@ -131,7 +132,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
     -- send error mail
     sendMailAPIErrorEmail ctx username $ "<p>I could not understand the email you sent me. Here are the things I did not understand: <br /><br />\n" ++ msg ++ "<br /><br />\nPlease correct the problems and try again.</p>"
     
-    mzero
+    internalError
     
   let Right (title, sigdets) = eparseresult
   
@@ -161,7 +162,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
     -- send email saying sorry, there was some weird error
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not create your document. I do not know what is wrong. You can try again or you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkUpload) ++ "\">click here</a> to use the web interface.</p>"
     
-    mzero
+    internalError
     
   let Right doc = edoc
       
@@ -178,7 +179,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
     -- send sorry email
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what is wrong. I created it in Scrive, but I cannot get it ready to send. If you want to see your document, you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
     
-    mzero
+    internalError
     
   edoc2 <- runDBUpdate $ PreparationToPending (documentid doc) actor           
   
@@ -188,7 +189,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
     -- send sorry email
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what's wrong. Your document is created and ready to be sent. To see your document and send it yourself, <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
     
-    mzero
+    internalError
   
   let Right doc2 = edoc2
       docid = documentid doc2

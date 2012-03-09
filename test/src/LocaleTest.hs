@@ -12,6 +12,7 @@ import DB.Classes
 import Doc.Model
 import Doc.DocStateData
 import Context
+import Kontra (Kontra(..))
 import Login
 import MinutesTime
 import Redirect
@@ -90,7 +91,7 @@ testLoggedInLocaleSwitching env = withTestEnvironment env $ do
     assertContextLocale uid ctx region lang = do
       emptyReq <- mkRequest GET []
       muser <- dbQuery $ GetUserByID uid
-      (userlocale, _) <- runTestKontra emptyReq ctx $ getStandardLocale muser
+      (userlocale, _) <- runTestKontra emptyReq ctx $ Kontra $ getStandardLocale muser
       assertLocale userlocale region lang
     assertLocale :: HasLocale a => a -> Region -> Lang -> DB ()
     assertLocale locale region lang = do

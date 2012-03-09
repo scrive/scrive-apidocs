@@ -1,4 +1,4 @@
-{-# LANGUAGE OverlappingInstances, IncoherentInstances, CPP #-}
+{-# LANGUAGE OverlappingInstances, IncoherentInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module TestingUtil where
 
@@ -13,6 +13,7 @@ import Test.QuickCheck
 import Happstack.Server
 import Doc.DocUtils
 import Test.QuickCheck.Gen
+import Control.Monad (unless)
 import Control.Monad.Trans
 import Data.Maybe
 import qualified Data.ByteString.UTF8 as BS
@@ -30,6 +31,7 @@ import StateHelper
 import Doc.Model
 import Doc.DocStateData
 import Doc.DocStateCommon
+import KontraError (internalError)
 import KontraMonad
 import MinutesTime
 import User.Model
@@ -877,10 +879,15 @@ assertionPredicate = liftIO . T.assertionPredicate
 
 -- other helpers
 
+guardMethodM :: Kontrakcja m => Method -> m ()
+guardMethodM m = do
+  rq <- askRq
+  unless (rqMethod rq == m) internalError
+
 -- | Runs API function and returns its json response
 testAPI :: (APIContext c, Kontrakcja m) => APIFunction m c APIResponse -> m APIResponse
 testAPI f = do
-    methodM POST
+    guardMethodM POST
     mcontext <- apiContext
     case mcontext of
          Right apictx -> either (uncurry apiError) id <$> runApiFunction f apictx

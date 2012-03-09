@@ -62,6 +62,7 @@ import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Types
 
+import KontraError (internalError)
 import KontraMonad
 import Context
 import Doc.DocumentID
@@ -304,14 +305,14 @@ flashMessageMissingRequiredField =
 -}
 withFailure :: Kontrakcja m => (Input, Result a) -> m a
 withFailure (_,Good x) = return x
-withFailure _        = mzero
+withFailure _        = internalError
 
 {- |
     You get a failure for bad input.
 -}
 withFailureIfBad :: Kontrakcja m => (Input, Result a) -> m (Maybe a)
 withFailureIfBad (_,Good x) = return $ Just x
-withFailureIfBad (_,Bad _) = mzero
+withFailureIfBad (_,Bad _) = internalError
 withFailureIfBad (_,Empty) = return Nothing
 
 {- |

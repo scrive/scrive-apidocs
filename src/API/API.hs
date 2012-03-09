@@ -89,8 +89,8 @@ apiResponse action = action >>= simpleResponse . encode
 
 -}
 
-apiCall :: (APIContext c, Kontrakcja m, Path m (m Response) Response) => 
-           String -> APIFunction m c APIResponse -> Route (m Response)
+apiCall :: (APIContext c, Kontrakcja m, Path m' m' (m Response) Response) =>
+           String -> APIFunction m c APIResponse -> Route (m' Response)
 apiCall s f = dir s $ path POST id $ do
     --Log.debug $ "API call " ++ s ++ " matched"
     apiResponse $ do
@@ -102,8 +102,8 @@ apiCall s f = dir s $ path POST id $ do
                  return res
              Left emsg -> return $ uncurry apiError emsg
 
-{- | Also for routing tables, to mark that api calls did not match and not to fall to mzero-}
-apiUnknownCall :: (Kontrakcja m, Path m (m Response) Response) => Route (m Response)
+{- | Also for routing tables, to mark that api calls did not match and avoid 404 response -}
+apiUnknownCall :: Kontrakcja m => Route (m Response)
 apiUnknownCall = remainingPath POST $ apiResponse $ return $ apiError API_ERROR_UNNOWN_CALL "Bad request"
 
 

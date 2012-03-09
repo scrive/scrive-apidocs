@@ -23,6 +23,7 @@ import Control.Monad.State
 import Data.Functor
 import Misc
 import Kontra
+import KontraError (internalError)
 import KontraLink
 import Data.Maybe
 import API.Service.Model
@@ -119,7 +120,7 @@ handleChangeServicePasswordAdminOnly sid passwordString = do
        _ <- runDBUpdate $ UpdateServiceSettings sid $ (servicesettings service) {servicepassword = Just pwd}
        addFlash (OperationDone, "Password changed")
        getHomeOrUploadLink
-     _ -> mzero
+     _ -> internalError
 
 handleChangeServiceSettings :: Kontrakcja m => ServiceID -> m KontraLink
 handleChangeServiceSettings sid = do
@@ -166,7 +167,7 @@ handleShowServiceList = do
          (_, True) -> do
              srvs <- runDBQuery GetServices
              servicesListPage srvs
-         _ -> mzero
+         _ -> internalError
 
 handleServiceLogo :: Kontrakcja m => ServiceID -> m Response
 handleServiceLogo = handleServiceBinary (servicelogo . serviceui)

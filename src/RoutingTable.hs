@@ -53,7 +53,7 @@ import Util.MonadUtils
    That is, all routing logic should be in this table to ensure that we can find
    the function for any given path and method.
 -}
-staticRoutes :: Route (Kontra Response)
+staticRoutes :: Route (Kontra' Response)
 staticRoutes = choice
      [ allLocaleDirs $ const $ hGetAllowHttp $ toK0 handleHomepage
      , hGetAllowHttp $ getContext >>= (redirectKontraResponse . LinkHome . ctxlocale)
@@ -288,7 +288,7 @@ staticRoutes = choice
 {- |
     This is a helper function for routing a public dir.
 -}
-publicDir :: String -> String -> (Locale -> KontraLink) -> Kontra Response -> Route (Kontra Response)
+publicDir :: String -> String -> (Locale -> KontraLink) -> Kontra Response -> Route (Kontra' Response)
 publicDir swedish english link handler = choice [
     -- the correct url with region/lang/publicdir where the publicdir must be in the correct lang
     allLocaleDirs $ \locale -> dirByLang locale swedish english $ hGetAllowHttp $ handler
@@ -381,7 +381,7 @@ handleWholePage f = do
 {- |
    Serves out the static html files.
 -}
-serveHTMLFiles :: Kontra Response
+serveHTMLFiles :: (Kontrakcja m, MonadPlus m) => m Response
 serveHTMLFiles =  do
   rq <- askRq
   let fileName = last (rqPaths rq)
