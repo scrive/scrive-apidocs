@@ -9,22 +9,49 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     _.bindAll(this, 'render');
     this.render();
   },
+  isSigning: function() {
+    var signatory = this.model.currentSignatory();
+    return this.model.signingInProcess() && signatory.signs() && !signatory.hasSigned();
+  },
+  isReviewing: function() {
+    var signatory = this.model.currentSignatory();
+    return (this.model.signingInProcess() || this.model.closed()) && !signatory.signs();
+  },
+  isSignedNotClosed: function() {
+    var signatory = this.model.currentSignatory();
+    return this.model.signingInProcess() && signatory.hasSigned() && !this.model.closed();
+  },
+  isSignedAndClosed: function() {
+    var signatory = this.model.currentSignatory();
+    return signatory.hasSigned() && this.model.closed();
+  },
+  isUnavailableForSign: function() {
+    var signatory = this.model.currentSignatory();
+    return !this.model.signingInProcess() && !this.model.closed();
+  },
   text: function() {
-    //TODO: improve the readability of this function
-    if (this.model.signingInProcess()) {
-      if (this.model.currentSignatory().signs()) {
-        if (this.model.currentSignatory().hasSigned()) {
-          return localization.docsignview.signedNotClosed;
-        } else {
-          return localization.docsignview.followArrowToSign;
-        }
-      } else {
-        return localization.docsignview.followArrowToReview;
-      }
-    } else if (this.model.closed()) {
+    if (this.isSigning()) {
+      return localization.docsignview.followArrowToSign;
+    } else if (this.isReviewing()) {
+      return localization.docsignview.followArrowToReview;
+    } else if (this.isSignedAndClosed()) {
       return localization.docsignview.signedAndClosed;
-    } else {
+    } else if (this.isSignedNotClosed()) {
+      return localization.docsignview.signedNotClosed;
+    } else if (this.isUnavailableForSign()) {
       return localization.docsignview.unavailableForSign;
+    } else {
+      console.error("Unsure what state we're in");
+      return localization.docsignview.unavailableForSign;
+    }
+  },
+  subtext: function() {
+    if (this.isSignedAndClosed()) {
+      return localization.docsignview.signedAndClosedSubText;
+    } else if (this.isSignedNotClosed()) {
+      return localization.docsignview.signedNotClosedSubText;
+    } else {
+      return "";
     }
   },
   createMenuElems: function() {
@@ -38,6 +65,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
 
     var container = $("<div class='instructions' />");
     container.append($("<div class='headline' />").append(this.text()));
+    container.append($("<div class='subheadline' />").append(this.subtext()));
 
     var smallerbit = $("<div class='subheadline' />");
     var timeout = this.model.timeouttime();
@@ -372,7 +400,8 @@ window.DocumentSaveAfterSignView = Backbone.View.extend({
   },
   createNewAccountElems: function() {
     var container = $("<div class='newaccount'/>");
-    container.append($("<div class='text big' />").append(localization.docsignview.newAccountTitle));
+    container.append($("<div class='title' />").append(localization.docsignview.newAccountTitle));
+    container.append($("<div class='subtitle' />").append(localization.docsignview.newAccountSubTitle));
 
     var form = $("<div class='form'/>");
 
@@ -495,18 +524,36 @@ window.DocumentSignView = Backbone.View.extend({
       });
       return file.view.el;
     },
+    authorAttachmentsTitle: function() {
+      if (!this.model.signingInProcess() || !this.model.currentSignatoryCanSign()) {
+        return undefined;
+      } else if (this.model.authorattachments().length>1) {
+        return localization.docsignview.authorAttachmentsTitleForLots;
+      } else {
+        return localization.docsignview.authorAttachmentsTitleForOne;
+      }
+    },
     createAuthorAttachmentsElems: function() {
       return new DocumentAuthorAttachmentsView({
         model: this.model,
         el: $("<div class='section'/>"),
-        title: localization.docsignview.authorAttachmentsTitle
+        title: this.authorAttachmentsTitle()
       }).el;
+    },
+    signatoryAttachmentsTitle: function() {
+      if (!this.model.signingInProcess() || !this.model.currentSignatoryCanSign()) {
+        return undefined;
+      } else if (this.model.currentSignatory().attachments().length>1) {
+        return localization.docsignview.signatoryAttachmentsTitleForLots;
+      } else {
+        return localization.docsignview.signatoryAttachmentsTitleForOne;
+      }
     },
     createSignatoryAttachmentsElems: function() {
       return new DocumentSignatoryAttachmentsView({
         model: this.model,
         el: $("<div class='section'/>"),
-        title: localization.docsignview.signatoryAttachmentsTitle
+        title: this.signatoryAttachmentsTitle()
       }).el;
     },
     signatoryAttachmentTasks: function(el) {
