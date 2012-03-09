@@ -9,6 +9,7 @@ module Kontra
     , clearFlashMsgs
     , addELegTransaction
     , logUserToContext
+    , logPadUserToContext
     , isAdmin
     , isSales
     , onlyAdmin
@@ -128,6 +129,10 @@ logUserToContext :: Kontrakcja m => Maybe User -> m ()
 logUserToContext user =
     modifyContext $ \ctx -> ctx { ctxmaybeuser = user}
 
+logPadUserToContext :: Kontrakcja m => Maybe User -> m ()
+logPadUserToContext user =
+    modifyContext $ \ctx -> ctx { ctxmaybepaduser = user}
+    
 disableLocalSwitch :: Kontrakcja m => m ()
 disableLocalSwitch =
     modifyContext $ \ctx -> ctx { ctxlocaleswitch = False}

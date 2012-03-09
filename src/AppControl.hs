@@ -196,12 +196,13 @@ appHandler handleRoutes appConf appGlobals = do
           return (res,ctx')
 
       let newsessionuser = fmap userid $ ctxmaybeuser ctx'
+      let newsessionpaduser = fmap userid $ ctxmaybepaduser ctx'
       let newflashmessages = ctxflashmessages ctx'
       let newelegtrans = ctxelegtransactions ctx'
       let newmagichashes = ctxmagichashes ctx'
       F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
       rng <- inIO (cryptorng appGlobals) random
-      updateSessionWithContextData rng session newsessionuser newelegtrans newmagichashes
+      updateSessionWithContextData rng session newsessionuser newelegtrans newmagichashes newsessionpaduser
       stats <- liftIO $ getNexusStats (nexus $ ctxdbenv ctx')
 
       Log.debug $ "SQL for " ++ rqUri rq ++ ": " ++ show stats
@@ -233,6 +234,7 @@ appHandler handleRoutes appConf appGlobals = do
       minutestime <- liftIO getMinutesTime
       muser <- getUserFromSession dbenv session
       mcompany <- getCompanyFromSession dbenv session
+      mpaduser <- getPadUserFromSession dbenv session
       location <- getLocationFromSession session
       mservice <- currentLink >>= \clink -> if (hostpart appConf `isPrefixOf` clink)
                                              then return Nothing
@@ -286,6 +288,7 @@ appHandler handleRoutes appConf appGlobals = do
                 , ctxadminaccounts = admins appConf
                 , ctxsalesaccounts = sales appConf
                 , ctxmagichashes = getMagicHashes session
+                , ctxmaybepaduser = mpaduser
                 }
       return ctx
 

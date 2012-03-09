@@ -1,4 +1,4 @@
-module PadQueue.Control (addToQueue,clearQueue,showPadQueuePage, padQueueState)
+module PadQueue.Control (addToQueue,clearQueue,showPadQueuePage, padQueueState, handlePadLogin)
     where
         
 import PadQueue.Model
@@ -20,7 +20,18 @@ import Control.Monad
 import Text.JSON hiding (Result)
 import Text.JSON.Fields as JSON (json)
 import Control.Monad.Trans
+import KontraLink
+import Misc
 
+-- PadQueue STATE
+padQueueState ::  (Kontrakcja m) =>  m JSValue
+padQueueState = do
+    uid <- userid <$> (guardJustM $ ctxmaybeuser <$> getContext)
+    pq <- runDB $ dbQuery $ GetPadQueue uid
+    msdata <- padQueueToSignatoryData pq
+    padQueueStateJSON msdata
+
+-- PadQueue ACTIONS
 addToQueue :: (Kontrakcja m) => DocumentID ->  SignatoryLinkID -> m JSValue
 addToQueue did slid = do
     uid <- userid <$> (guardJustM $ ctxmaybeuser <$> getContext)
@@ -38,15 +49,9 @@ clearQueue = do
     runDB $ dbUpdate $ ClearPadQueue uid 
     liftIO $ json $ return ()
 
+-- PadQueue Pages
 showPadQueuePage::  (Kontrakcja m) =>  m String
 showPadQueuePage = padQueuePage 
-
-padQueueState ::  (Kontrakcja m) =>  m JSValue
-padQueueState = do
-    uid <- userid <$> (guardJustM $ ctxmaybeuser <$> getContext)
-    pq <- runDB $ dbQuery $ GetPadQueue uid
-    msdata <- padQueueToSignatoryData pq
-    padQueueStateJSON msdata
 
 
 padQueueToSignatoryData :: (Kontrakcja m) => PadQueue -> m (Maybe (Document,SignatoryLink))
@@ -57,3 +62,29 @@ padQueueToSignatoryData (Just (did,slid)) = do
         if (Preparation /= documentstatus doc)
          then return $ Just (doc,sl)
          else return Nothing  
+         
+
+
+
+-- PadQueue Login
+handlePadLogin :: Kontrakcja m => m KontraLink
+handlePadLogin = do
+    memail  <- getFieldUTF "email"
+    mpasswd <- getFieldUTF "password"
+    case (memail, mpasswd) of
+        (Just email, Just passwd) -> do
+            -- check the user things here
+            maybeuser <- runDBQuery $ GetUserByEmail Nothing (Email $ email)
+            case maybeuser of
+               Just user@User{userpassword}
+                    | verifyPassword userpassword passwd -> do
+                       loginPadUser user
+                       return LoopBack
+               _ -> return $ LoopBack
+        _ -> return $ LoopBack              
+                    
+
+loginPadUser :: Kontrakcja m => User -> m ()
+loginPadUser user = do
+    -- Some event loging should be done here
+    logPadUserToContext (Just user)         
