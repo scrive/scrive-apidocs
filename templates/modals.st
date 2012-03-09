@@ -219,7 +219,6 @@ jQuery('form[action="$signuplink$"]').submit(function(){
             .append(v.message())
             .appendTo(e.parent());
     };
-
     var fstname   = jQuery('#signupInfo').find('input[name="fstname"]');
     var sndname   = jQuery('#signupInfo').find('input[name="sndname"]');
     var password  = jQuery('#signupInfo').find('input[name="password"]');
@@ -256,10 +255,11 @@ jQuery('form[action="$signuplink$"]').submit(function(){
     if (callme.attr('checked'))
         vresult.push(phone.validate(new NotEmptyValidation({callback: callback, message: localization.validation.phoneRequired})));
 
-    if (vresult.every(function(a) {return a;})) 
-        return true;
+    var ret = true;
 
-    return false;
+    jQuery.each(vresult, function(k,v) { if(!v) ret = false; });
+
+    return ret;
 });
 }
 </script>
@@ -758,10 +758,11 @@ jQuery('#accountFromSignForm').submit(function(){
     if (callme.attr('checked'))
         vresult.push(phone.validate(new NotEmptyValidation({callback: callback, message: localization.validation.phoneRequired})));
 
-    if (vresult.every(function(a) {return a;})) 
-        return true;
+    var ret = true;
 
-    return false;
+    jQuery.each(vresult, function(k,v) { if(!v) ret = false; });
+
+    return ret;
 });
 }
 </script>

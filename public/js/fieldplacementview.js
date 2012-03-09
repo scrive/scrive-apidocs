@@ -9,7 +9,7 @@ window.FieldPlacementView = Backbone.View.extend({
         if (args.model.isSignature())
             return new SignaturePlacementView(args);
         else return new StandardPlacementView(args);
-    },
+    }
 });
 
 window.FieldPlacementPlacedView = Backbone.View.extend({
@@ -17,7 +17,7 @@ window.FieldPlacementPlacedView = Backbone.View.extend({
         if (args.model.field().isSignature())
             return new SignaturePlacementPlacedView(args);
         else return new StandardPlacementPlacedView(args);
-    },
+    }
 });
 
 
