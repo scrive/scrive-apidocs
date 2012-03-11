@@ -77,7 +77,6 @@ import Doc.DocInfo
 import Control.Applicative ((<$>))
 import Control.Monad.Reader
 import Data.Maybe
-import qualified Data.ByteString.UTF8 as BS
 import Text.JSON
 import Data.List (sortBy)
 import File.Model
@@ -507,7 +506,7 @@ showFileImages _ _ _ JpegPagesPending =
 
 showFileImages _ _ _ (JpegPagesError normalizelog) =
   renderTemplateFM "showFileImagesError" $ do
-    field "normalizelog" $ BS.toString normalizelog
+    field "normalizelog" normalizelog
 
 showFileImages docid mtokens fileid (JpegPages jpgpages) =
   renderTemplateFM "showFileImagesReady" $ do

@@ -53,7 +53,7 @@ module InputValidation
 import Control.Applicative
 import Control.Monad()
 import Control.Monad.Error
-import qualified Data.ByteString.UTF8 as BS
+import qualified Data.ByteString.Lazy.UTF8 as BSL
 import Data.Char
 import Data.Maybe
 import Text.Regex.TDFA ((=~))
@@ -222,9 +222,7 @@ getAndValidateList validate fieldname = do
   return $ zip (map Just rawvalues) (map validate rawvalues)
 
 getFields :: Kontrakcja m => String -> m [String]
-getFields fieldname = do
-  values <- getDataFnM $ lookInputList fieldname
-  return $ map (BS.toString . concatChunks) values
+getFields fieldname = map BSL.toString <$> getDataFnM (lookInputList fieldname)
 
 {- |
     Handles any validation message by adding

@@ -61,7 +61,6 @@ import User.Model
 import Data.Maybe
 import Data.Char
 import API.Service.Model
-import Data.Monoid
 import Templates.Templates
 import Util.FlashUtil
 import Data.List
@@ -525,7 +524,7 @@ handleCreateService = onlySalesOrAdmin $ do
     Log.debug $ "name: " ++ name
     admin <- guardJustM $ liftMM  (runDBQuery . GetUserByEmail Nothing . Email) (getField "admin")
     Log.debug $ "admin: " ++ show admin
-    pwdBS <- getFieldWithDefault mempty "password"
+    pwdBS <- getField' "password"
     Log.debug $ "password: " ++ show pwdBS
     pwd <- createPassword pwdBS
     service <- guardJustM $ runDBUpdate $ CreateService (ServiceID $ BS.fromString name) (Just pwd) (userid admin)

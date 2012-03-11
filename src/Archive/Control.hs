@@ -122,7 +122,7 @@ jsonDocumentsList ::  Kontrakcja m => m (Either KontraLink JSValue)
 jsonDocumentsList = withUserGet $ do
   Just user@User{userid = uid} <- ctxmaybeuser <$> getContext
   lang <- getLang . ctxlocale <$> getContext
-  doctype <- getFieldWithDefault "" "documentType"
+  doctype <- getField' "documentType"
   allDocs <- case (doctype) of
     "Contract" -> runDBQuery $ GetDocumentsOfTypeBySignatory (Signable Contract) uid
     "Offer" -> runDBQuery $ GetDocumentsOfTypeBySignatory (Signable Offer) uid

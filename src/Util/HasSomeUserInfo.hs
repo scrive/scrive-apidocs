@@ -22,6 +22,7 @@ module Util.HasSomeUserInfo (
   ) where
 
 import Data.Char
+import Data.String.Utils
 
 import Doc.DocStateData
 import User.Model
@@ -70,16 +71,16 @@ emailFromSigLink sl = (getFullName sl, getEmail sl)
 -- | Get the full name (first last)
 getFullName :: (HasSomeUserInfo a) => a -> String
 getFullName a =
-  let fn = trim $ getFirstName a
-      ln = trim $ getLastName  a
+  let fn = strip $ getFirstName a
+      ln = strip $ getLastName  a
   in fn ++ " " ++ ln
 
 -- | If the full name is empty, return the email
 -- (no check if email is empty)
 getSmartName :: (HasSomeUserInfo a) => a -> String
 getSmartName a =
-  let fn = trim $ getFullName a
-      em = trim $ getEmail    a
+  let fn = strip $ getFullName a
+      em = strip $ getEmail    a
   in if all isSpace fn
      then em
      else fn
@@ -90,6 +91,3 @@ getMailAddress a = MailAddress {
     fullname = getFullName a
   , email    = getEmail a
   }
-
-trim :: String -> String
-trim = let f = reverse . dropWhile isSpace in f . f

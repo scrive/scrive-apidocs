@@ -80,7 +80,7 @@ type IntegrationAPIFunction m a = APIFunction m IntegrationAPIContext a
 instance APIContext IntegrationAPIContext where
     apiContext  = do
         mservice <- integrationService
-        mbody <- runGetJSON readJSObject <$> getFieldWithDefault "" "body"
+        mbody <- runGetJSON readJSObject <$> getField' "body"
         case (mservice, mbody)  of
              (Just service, Right body2) -> do
                 Log.integration $ "API call from service:" ++ show (serviceid service)
@@ -95,11 +95,11 @@ instance JSONContainer IntegrationAPIContext where
 
 integrationService :: Kontrakcja m => m (Maybe Service)
 integrationService = do
-    mservice <- getFieldWithDefault "" "service"
+    mservice <- getField' "service"
       >>= runDBQuery . GetService . ServiceID . BS.fromString
     case mservice of
          Just service -> do
-             passwd <- getFieldWithDefault "" "password"
+             passwd <- getField' "password"
              if (verifyPassword (servicepassword $ servicesettings service) passwd)
                 then return $ Just service
                 else return Nothing

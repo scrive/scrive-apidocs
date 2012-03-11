@@ -1479,7 +1479,7 @@ handleInvariantViolations = onlyAdmin $ do
 
 prepareEmailPreview :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m JSValue
 prepareEmailPreview docid slid = do
-    mailtype <- getFieldWithDefault "" "mailtype"
+    mailtype <- getField' "mailtype"
     doc <- guardJustM $ runDBQuery $ GetDocumentByDocumentID docid
     ctx <- getContext
     content <- case mailtype of

@@ -92,9 +92,9 @@ handleChangeServicePassword sid = do
     case (mservice,sameUser (ctxmaybeuser ctx) (serviceadmin . servicesettings <$> mservice)
                    || isAdmin ctx) of
      (Just service,True) -> do
-            password <- getFieldWithDefault "" "oldpassword"
-            newpassword1 <- getFieldWithDefault "" "newpassword1"
-            newpassword2 <- getFieldWithDefault "" "newpassword2"
+            password <- getField' "oldpassword"
+            newpassword1 <- getField' "newpassword1"
+            newpassword2 <- getField' "newpassword2"
             if (verifyPassword (servicepassword $ servicesettings service) password) && (newpassword1 == newpassword2)
                 then do
                     pwd <- createPassword newpassword1

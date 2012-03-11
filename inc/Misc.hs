@@ -196,11 +196,11 @@ isFieldSet name = isJust <$> getField name
 getFields :: (HasRqData m, MonadIO m, ServerMonad m) => String -> m [String]
 getFields name = map BSL.toString `liftM` fromMaybe [] `liftM` getDataFn' (lookInputList name)
 
-getField :: (HasRqData m, MonadIO m, ServerMonad m,Functor m) => String -> m (Maybe String)
-getField name = listToMaybe . reverse <$> getFields name
+getField :: (HasRqData m, MonadIO m, ServerMonad m) => String -> m (Maybe String)
+getField name = (listToMaybe . reverse) `liftM` getFields name
 
-getFieldWithDefault :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) => String -> String -> f String
-getFieldWithDefault d name = fromMaybe d <$> getField name
+getField' :: (HasRqData m, MonadIO m, ServerMonad m) => String -> m String
+getField' name = fromMaybe "" `liftM` getField name
 
 readField :: (HasRqData f, MonadIO f, Read a, Functor f, ServerMonad f) => String -> f (Maybe a)
 readField name =  (join . (fmap readM)) <$> getField name
