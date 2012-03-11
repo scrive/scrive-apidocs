@@ -316,7 +316,7 @@ showAllUsersTable = onlySalesOrAdmin $ do
 handleUserChange :: Kontrakcja m => UserID -> m KontraLink
 handleUserChange uid = onlySalesOrAdmin $ do
   ctx <- getContext
-  _ <- getAsStrictBS "change"
+  _ <- getAsString "change"
   museraccounttype <- getField "useraccounttype"
   olduser <- runDBOrFail $ dbQuery $ GetUserByID uid
   user <- case (museraccounttype, usercompany olduser, useriscompanyadmin olduser) of
@@ -406,7 +406,7 @@ resaveDocsForUser uid = onlySalesOrAdmin $ do
 {- | Handling company details change. It reads user info change -}
 handleCompanyChange :: Kontrakcja m => CompanyID -> m KontraLink
 handleCompanyChange companyid = onlySalesOrAdmin $ do
-  _ <- getAsStrictBS "change"
+  _ <- getAsString "change"
   company <- runDBOrFail $ dbQuery $ GetCompany companyid
   companyInfoChange <- getCompanyInfoChange
   _ <- runDBUpdate $ SetCompanyInfo companyid (companyInfoChange $ companyinfo company)

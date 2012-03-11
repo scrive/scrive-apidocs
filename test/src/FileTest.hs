@@ -5,7 +5,6 @@ module FileTest (fileTests) where
 import DB.Classes
 import TestingUtil
 
-import Control.Monad
 import Test.Framework
 import Test.QuickCheck
 import File.Model
