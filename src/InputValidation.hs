@@ -53,7 +53,6 @@ module InputValidation
 import Control.Applicative
 import Control.Monad()
 import Control.Monad.Error
-import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import Data.Char
 import Data.Maybe
@@ -251,7 +250,7 @@ logIfBad x@(input, Bad flashmsg) = do
   Context{ctxmaybeuser, ctxipnumber} <- getContext
   flash <- flashmsg
   let username :: String
-      username = maybe "unknown" (BS.toString . unEmail . useremail . userinfo) ctxmaybeuser
+      username = maybe "unknown" (unEmail . useremail . userinfo) ctxmaybeuser
       logtext = "ip " ++ (formatIP ctxipnumber) ++
                " user " ++ username ++
                " invalid input: " ++
@@ -327,14 +326,13 @@ withFailureIfBad (_,Empty) = return Nothing
     * Size: Up to 200 characters
   Also emails are lowercased.
 -}
-asValidEmail :: String -> Result BS.ByteString
+asValidEmail :: String -> Result String
 asValidEmail input =
     stripWhitespace input
     >>= checkIfEmpty
     >>= checkLengthIsMax 200 fieldtemplate
     >>= checkFormat
     >>= mkLowerCase
-    >>= mkByteString
     where fieldtemplate = "emailFieldName"
           checkFormat :: String -> Result String
           checkFormat email | isValidFormat email = return email
@@ -348,12 +346,11 @@ asValidEmail input =
     like checking a login.  Because it's dirty make sure you through it away,
     and don't store it.
 -}
-asDirtyEmail :: String -> Result BS.ByteString
+asDirtyEmail :: String -> Result String
 asDirtyEmail input =
     stripWhitespace input
     >>= checkIfEmpty
     >>= mkLowerCase
-    >>= mkByteString
 
 {- |
     Creates a clean and validated password.
@@ -361,14 +358,13 @@ asDirtyEmail input =
     Rules: Must contain at least one Alphabetic character, and one Digit [0-9]
     Size: At least 8 chars.  No more than 250 chars.
 -}
-asValidPassword :: String -> Result BS.ByteString
+asValidPassword :: String -> Result String
 asValidPassword input =
     checkIfEmpty input
     >>= checkLengthIsMin 8 fieldtemplate
     >>= checkLengthIsMax 250 fieldtemplate
     >>= checkOnly [isAlpha, isDigit, isPunctuation, isSymbol] fieldtemplate
     >>= checkContainsAlphaAndDigit
-    >>= mkByteString
     where fieldtemplate = "passwordFieldName"
           checkContainsAlphaAndDigit :: String -> Result String
           checkContainsAlphaAndDigit pwd
@@ -384,23 +380,20 @@ flashMessageNeedsLetterAndDigit fieldtemplate =
     logins for example.  Because it's dirty you should make sure to throw it away,
     and not store it.
 -}
-asDirtyPassword :: String -> Result BS.ByteString
-asDirtyPassword input =
-    checkIfEmpty input
-    >>= mkByteString
+asDirtyPassword :: String -> Result String
+asDirtyPassword input = checkIfEmpty input
 
 {- |
     Creates a clean and validated name (works for first or second)
     White list: Space, Apostrophe ', Hyphen -, Alphabetic characters
     Size: Up to 100 chars
 -}
-asValidName :: String -> Result BS.ByteString
+asValidName :: String -> Result String
 asValidName input =
     stripWhitespace input
     >>= checkIfEmpty
     >>= checkLengthIsMax 100 fieldtemplate
     >>= checkOnly (isAlpha : map (==) " \'-") fieldtemplate
-    >>= mkByteString
     where fieldtemplate = "nameFieldName"
 
 {- |
@@ -419,14 +412,13 @@ replaceChar c r s = Good $ map (\ch -> if ch == c then r else ch) s
     White list: Space, Ampersand &, Apostrophe ', At @, Open and close brackets (), Colon :, Comma , Exclamation !, Full-stop ., Hyphen -, Question mark ?, Alphabetic characters, Numeric characters
     Size: Up to 100 chars
 -}
-asValidCompanyName :: String -> Result BS.ByteString
+asValidCompanyName :: String -> Result String
 asValidCompanyName input =
     sanitize input
     >>= stripWhitespace
     >>= checkIfEmpty
     >>= checkLengthIsMax 100 fieldtemplate
     >>= checkOnly (isAlphaNum : map (==) " &\'@():,!.-?") fieldtemplate
-    >>= mkByteString
     where fieldtemplate = "companyNameFieldName"
 
 {- |
@@ -434,14 +426,13 @@ asValidCompanyName input =
     White list: Alphabetic characters, Numeric characters, punctuation
     Size: From 4 to 50 chars
 -}
-asValidCompanyNumber :: String -> Result BS.ByteString
+asValidCompanyNumber :: String -> Result String
 asValidCompanyNumber input =
     stripWhitespace input
     >>= checkIfEmpty
     >>= checkLengthIsMin 4 fieldtemplate
     >>= checkLengthIsMax 50 fieldtemplate
     >>= checkOnly [isDigit, (`elem` ['a'..'z']), (`elem` ['A'..'Z']), (=='-')] fieldtemplate
-    >>= mkByteString
     where fieldtemplate = "companyNumberFieldName"
 
 {- |
@@ -449,13 +440,12 @@ asValidCompanyNumber input =
     White list: Space, Apostrophe ', Open and close brackets (), Colon :, Comma , Forward slash //, Full-stop ., Hash #, Hyphen -, Alphabetic characters, Numeric characters
     Size: Up to 200 chars
 -}
-asValidAddress :: String -> Result BS.ByteString
+asValidAddress :: String -> Result String
 asValidAddress input =
     stripWhitespace input
     >>= checkIfEmpty
     >>= checkLengthIsMax 200 fieldtemplate
     >>= checkOnly (isAlphaNum : map (==) " \'():,/.#-") fieldtemplate
-    >>= mkByteString
     where fieldtemplate = "addressFieldName"
 
 {- |
@@ -463,13 +453,12 @@ asValidAddress input =
     White list: Space, Ampersand &, Apostrophe ', Open and close brackets (), Colon :, Comma , Hyphen -, Alphabetic characters, Numeric characters
     Size: Up to 100 chars
 -}
-asValidPosition :: String -> Result BS.ByteString
+asValidPosition :: String -> Result String
 asValidPosition input =
     stripWhitespace input
     >>= checkIfEmpty
     >>= checkLengthIsMax 200 fieldtemplate
     >>= checkOnly (isAlphaNum : map (==) " &():,-") fieldtemplate
-    >>= mkByteString
     where fieldtemplate = "positionFieldName"
 
 {- |
@@ -489,13 +478,12 @@ asValidCheckBox input =
 {- |
     No idea how this validator should look like
 -}
-asValidPhone :: String -> Result BS.ByteString
+asValidPhone :: String -> Result String
 asValidPhone input =
     stripWhitespace input
     >>= checkIfEmpty
     >>= checkLengthIsMax 100 fieldtemplate
     >>= checkOnly (isAlphaNum : map (==) " +-()") fieldtemplate
-    >>= mkByteString
   where fieldtemplate = "_phone"
 
 {-|
@@ -542,12 +530,12 @@ asValidUserID input = checkIfEmpty input
     as an int.  This is handy if you want to check that you're not
     getting fed rubbish in hidden fields.
 -}
-asValidID :: String -> Result BS.ByteString
+asValidID :: String -> Result String
 asValidID input =
   asValidNumber input
     >>= useInput input
   where
-    useInput xs (_::Int) = return $ BS.fromString xs
+    useInput xs (_::Int) = return xs
 
 {- |
     Parses as a number.
@@ -584,13 +572,12 @@ asValidPlace input =
     White list: Space, Hyphen -, Alphabetic characters, Numeric characters
     Size: Up to 50 chars
 -}
-asValidFieldName :: String -> Result BS.ByteString
+asValidFieldName :: String -> Result String
 asValidFieldName input =
     stripWhitespace input
     >>= checkIfEmpty
     >>= checkLengthIsMax 50 fieldtemplate
     >>= checkOnly (isAlphaNum : map (==) " -") fieldtemplate
-    >>= mkByteString
     where fieldtemplate = "fieldNameFieldName"
 
 {- |
@@ -598,13 +585,12 @@ asValidFieldName input =
     White list: Alphabetic characters, Numeric characters, Punctuation characters & Symbol chars, and spaces.
     Size: Up to 200 chars
 -}
-asValidFieldValue :: String -> Result BS.ByteString
+asValidFieldValue :: String -> Result String
 asValidFieldValue input =
     stripWhitespace input
     >>= checkIfEmpty
     >>= checkLengthIsMax 200 fieldtemplate
     >>= checkOnly [isAlphaNum, isPunctuation, isSymbol, (==' ')] fieldtemplate
-    >>= mkByteString
     where fieldtemplate = "fieldValueFieldName"
 
 {- |
@@ -619,13 +605,12 @@ asValidFieldValue input =
     filter all the tags nicely, but have failed here.  When I have time I'll either figure it out, or filter here.
     Size:  up to 800 chars
 -}
-asValidInviteText :: String -> Result BS.ByteString
+asValidInviteText :: String -> Result String
 asValidInviteText input =
     checkIfEmpty input
     >>= parseAsXml
     >>= checkContent
     >>= ignoreXml input
-    >>= mkByteString
     where fieldtemplate = "inviteTextFieldName"
           bad = Bad $ flashMessageInvalidFormat fieldtemplate
           parseAsXml :: String -> Result (Content Posn)
@@ -662,11 +647,6 @@ asValidInviteText input =
           isValidAttValue _ = False
           ignoreXml :: String -> Content Posn -> Result String
           ignoreXml c _ = return c
-{- |
-    Formats strings as ByteStrings
--}
-mkByteString :: String -> Result BS.ByteString
-mkByteString = return . BS.fromString
 
 {- |
     Lower cases everything

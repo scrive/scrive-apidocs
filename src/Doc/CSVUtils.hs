@@ -9,8 +9,6 @@ module Doc.CSVUtils (
     )
 where
 
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString as BS
 import Data.Char
 import Data.Maybe
 import Data.List
@@ -34,14 +32,14 @@ data CSVProblem = NumberNotValid       Int Int    | -- Row Cell
                   NoData
                              
 data CleanCSVData = CleanCSVData
-                    { csvheader :: Maybe [BS.ByteString]
-                    , csvbody :: [[BS.ByteString]]
+                    { csvheader :: Maybe [String]
+                    , csvbody :: [[String]]
                     }
 
 {- |
     Looks up all the custom fields for the csv upload and returns their labels.
 -}
-getCSVCustomFields :: Document -> Either String [BS.ByteString]
+getCSVCustomFields :: Document -> Either String [String]
 getCSVCustomFields doc@Document{ documentsignatorylinks } =
   case filter (isJust . signatorylinkcsvupload) documentsignatorylinks of
     [] -> Right []
@@ -57,7 +55,7 @@ getCSVCustomFields doc@Document{ documentsignatorylinks } =
     Cleans up csv contents. You get a list of all the problems alongside all the data
     that's been scrubbed up as much as possible.
 -}
-cleanCSVContents :: Bool -> Int -> [[BS.ByteString]] -> ([CSVProblem], CleanCSVData)
+cleanCSVContents :: Bool -> Int -> [[String]] -> ([CSVProblem], CleanCSVData)
 cleanCSVContents eleg customfieldcount contents =
   let mincols = (if eleg then 5 else 3) :: Int
       maxcols = 6 + customfieldcount
@@ -77,25 +75,25 @@ cleanCSVContents eleg customfieldcount contents =
         This looks a possible header and separates it out.  The oh so sophisticated rule this uses at the moment
         is that if the first line is invalid use it as a header!
     -}
-    lookForHeader :: [([CSVProblem], [BS.ByteString])] -> Maybe [BS.ByteString]
+    lookForHeader :: [([CSVProblem], [String])] -> Maybe [String]
     lookForHeader ((_:_, vals):_) = Just vals
     lookForHeader _ = Nothing
     {- |
         This cleans a single row of data.  It checks both the size of the row
         (meaning how many cols it has), and the values of the fields.
     -}
-    cleanRow :: Int -> Int -> Int -> [BS.ByteString] -> ([CSVProblem], [BS.ByteString])
+    cleanRow :: Int -> Int -> Int -> [String] -> ([CSVProblem], [String])
     cleanRow mincols maxcols row xs =
       let fieldresults = zipWith4 cleanField (repeat row) [0..] fieldValidators xs
           fieldproblems = map (fromJust . fst) . filter (isJust . fst) $ fieldresults
           rowsizeproblems = validateRowSize row mincols maxcols xs
           values = map snd fieldresults in
       (rowsizeproblems ++ fieldproblems, fitToMaxSize values)
-      where fitToMaxSize vals = take maxcols $ vals ++ repeat BS.empty
+      where fitToMaxSize vals = take maxcols $ vals ++ repeat ""
     {- |
         We want the row to have a sensible number of columns
     -}
-    validateRowSize :: Int -> Int -> Int -> [BS.ByteString] -> [CSVProblem]
+    validateRowSize :: Int -> Int -> Int -> [String] -> [CSVProblem]
     validateRowSize row mincols maxcols xs =
       case length xs of
         l | l<mincols -> [RowLessThenMinCol row mincols]
@@ -105,10 +103,9 @@ cleanCSVContents eleg customfieldcount contents =
         This cleans up a single field.  It is given the validator to use (which are mostly things from the
         InputValidation module).
     -}
-    cleanField :: Int -> Int -> (String -> Either (Int -> Int -> CSVProblem) BS.ByteString) -> BS.ByteString -> (Maybe CSVProblem, BS.ByteString)
-    cleanField row col f x =
-      let raw = BS.toString x
-          failedval = BS.fromString $ minimalScrub raw in
+    cleanField :: Int -> Int -> (String -> Either (Int -> Int -> CSVProblem) String) -> String -> (Maybe CSVProblem, String)
+    cleanField row col f raw =
+      let failedval = minimalScrub raw in
       case f raw of
         Right v -> (Nothing, v)
         Left pd -> (Just $ pd row col, failedval)
@@ -120,7 +117,7 @@ cleanCSVContents eleg customfieldcount contents =
     {- |
         All the validators that we're going to use to check the field values.
     -}
-    fieldValidators :: [String -> Either (Int -> Int -> CSVProblem) BS.ByteString]
+    fieldValidators :: [String -> Either (Int -> Int -> CSVProblem) String]
     fieldValidators = map validate $ 
       [ (checkIfEmpty >=>  asValidName,  FirstNameNotValid )
       , (checkIfEmpty >=>  asValidName,  SecondNameNotValid )
@@ -128,10 +125,11 @@ cleanCSVContents eleg customfieldcount contents =
       , (                  asValidCompanyName, ValueNotValid)
       , ((checkIfEmpty <| eleg |> return) >=> asValidCompanyNumber, NumberNotValid)
        ] ++ repeat (asValidFieldValue, ValueNotValid)
-    validate :: (String -> Result a, Int -> Int -> CSVProblem) -> String -> Either (Int -> Int -> CSVProblem) BS.ByteString
+
+    validate :: (String -> Result a, Int -> Int -> CSVProblem) -> String -> Either (Int -> Int -> CSVProblem) String
     validate (v,pd) s =  case v s of
                            Bad _ -> Left pd
-                           _ -> Right $ BS.fromString s
+                           _ -> Right s
 
 csvProblemToDescription :: (TemplatesMonad m) => CSVProblem -> m String
 csvProblemToDescription p = case p of

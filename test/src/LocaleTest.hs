@@ -5,7 +5,6 @@ import Happstack.Server
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit (Assertion)
-import qualified Data.ByteString.Char8 as BS
 
 import AppControl
 import DB.Classes
@@ -141,6 +140,6 @@ createTestElegDoc user ctxtime = do
 
 createTestUser :: Region -> Lang -> DB User
 createTestUser region lang = do
-    pwd <- createPassword $ BS.pack "admin"
-    Just user <- dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") (Just pwd) False Nothing Nothing (mkLocale region lang)
+    pwd <- createPassword "admin"
+    Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) False Nothing Nothing (mkLocale region lang)
     return user

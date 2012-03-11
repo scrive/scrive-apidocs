@@ -68,7 +68,7 @@ instance Actor SystemActor where
 
 mkAuthorActor :: Context -> Maybe AuthorActor
 mkAuthorActor ctx = case ctxmaybeuser ctx of
-  Just user -> Just $ AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (BS.toString $ getEmail user)
+  Just user -> Just $ AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (getEmail user)
   Nothing   -> Nothing
 
 -- | For an action that requires an operation on a document and an

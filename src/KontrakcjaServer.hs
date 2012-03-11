@@ -78,11 +78,11 @@ initDatabaseEntries :: DBEnv -> [(Email,String)] -> IO ()
 initDatabaseEntries env iusers = do
   -- create initial database entries
   flip mapM_ iusers $ \(email,passwordstring) -> do
-      passwd <- inIO (rngstate env) $ createPassword (BS.pack passwordstring)
+      passwd <- inIO (rngstate env) $ createPassword passwordstring
       maybeuser <- ioRunDB env $ dbQuery $ GetUserByEmail Nothing email
       case maybeuser of
           Nothing -> do
-              _ <- ioRunDB env $ dbUpdate $ AddUser (BS.empty, BS.empty) (unEmail email) (Just passwd) False Nothing Nothing (mkLocaleFromRegion defaultValue)
+              _ <- ioRunDB env $ dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) False Nothing Nothing (mkLocaleFromRegion defaultValue)
               return ()
           Just _ -> return () -- user exist, do not add it
 

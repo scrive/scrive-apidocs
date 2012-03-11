@@ -15,7 +15,6 @@ module User.History.Model (
 
 import Data.List (intersperse)
 import Database.HDBC
-import qualified Data.ByteString.Char8 as BS
 import Text.JSON
 
 import qualified Paths_kontrakcja as Paths
@@ -38,7 +37,7 @@ data UserHistory = UserHistory {
   , uhevent            :: UserHistoryEvent
   , uhip               :: IPAddress
   , uhtime             :: MinutesTime
-  , uhsystemversion    :: BS.ByteString
+  , uhsystemversion    :: String
   , uhperforminguserid :: Maybe UserID -- Nothing means no user changed it (like the system)
   }
   deriving (Eq, Show)
@@ -139,7 +138,7 @@ instance DBUpdate LogHistoryAccountCreated Bool where
       , uheventdata = Just $ JSArray $ [JSObject . toJSObject $ [
           ("field", JSString $ toJSString "email")
         , ("oldval", JSString $ toJSString "")
-        , ("newval", JSString $ toJSString $ BS.unpack $ unEmail email)
+        , ("newval", JSString $ toJSString $ unEmail email)
         ]]
       }
     ip
@@ -190,25 +189,25 @@ diffUserInfos old new = fstNameDiff
   ++ emailDiff
   where
     fstNameDiff = if (userfstname old) /= (userfstname new)
-      then [("first_name", BS.unpack $ userfstname old, BS.unpack $ userfstname new)]
+      then [("first_name", userfstname old, userfstname new)]
       else []
     sndNameDiff = if (usersndname old) /= (usersndname new) 
-      then [("last_name", BS.unpack $ usersndname old, BS.unpack $ usersndname new)]
+      then [("last_name", usersndname old, usersndname new)]
       else []
     personalNumberDiff = if (userpersonalnumber old) /= (userpersonalnumber new) 
-      then [("personal_number", BS.unpack $ userpersonalnumber old, BS.unpack $ userpersonalnumber new)]
+      then [("personal_number", userpersonalnumber old, userpersonalnumber new)]
       else []
     companyPositionDiff = if (usercompanyposition old) /= (usercompanyposition new) 
-      then [("company_position", BS.unpack $ usercompanyposition old, BS.unpack $ usercompanyposition new)]
+      then [("company_position", usercompanyposition old, usercompanyposition new)]
       else []
     phoneDiff = if (userphone old) /= (userphone new) 
-      then [("phone", BS.unpack $ userphone old, BS.unpack $ userphone new)]
+      then [("phone", userphone old, userphone new)]
       else []
     mobileDiff = if (usermobile old) /= (usermobile new) 
-      then [("mobile", BS.unpack $ usermobile old, BS.unpack $ usermobile new)]
+      then [("mobile", usermobile old, usermobile new)]
       else []
     emailDiff = if (useremail old) /= (useremail new) 
-      then [("email", BS.unpack $ unEmail $ useremail old, BS.unpack $ unEmail $ useremail new)]
+      then [("email", unEmail $ useremail old, unEmail $ useremail new)]
       else []
 
 addUserHistory :: UserID -> UserHistoryEvent -> IPAddress -> MinutesTime -> Maybe UserID -> DB Bool
@@ -242,7 +241,7 @@ fetchUserHistory = foldDB decoder []
         uhuserid = userid
       , uhevent = UserHistoryEvent {
           uheventtype = eventtype
-        , uheventdata = maybe Nothing (\d -> case decode $ BS.unpack d of
+        , uheventdata = maybe Nothing (\d -> case decode d of
                                         Ok a -> Just a
                                         _    -> Nothing) meventdata
         }

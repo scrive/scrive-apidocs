@@ -41,8 +41,6 @@ import Text.JSON
 import qualified Log as Log
 import ListUtil
 import MinutesTime
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS
 import Doc.DocView
 import Misc
 import Util.HasSomeCompanyInfo
@@ -84,7 +82,7 @@ handleIssueArchive :: Kontrakcja m => m ()
 handleIssueArchive = do
     Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- getContext
     docids <- getCriticalFieldList asValidDocID "doccheck"
-    let actor = UserActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail user)
+    let actor = UserActor ctxtime ctxipnumber (userid user) (getEmail user)
     mapM_ (\did -> do 
               doc <- guardRightM' $ runDBUpdate $ ArchiveDocument user did actor
               case getSigLinkFor doc user of
@@ -157,8 +155,8 @@ docSearchFunc::SearchingFunction Document
 docSearchFunc s doc =  nameMatch doc || signMatch doc
     where
     match m = isInfixOf (map toUpper s) (map toUpper m)
-    nameMatch = match . BS.toString . documenttitle
-    signMatch d = any (match . BS.toString . getSmartName) (documentsignatorylinks d)
+    nameMatch = match . documenttitle
+    signMatch d = any (match . getSmartName) (documentsignatorylinks d)
 
 
 docSortFunc:: SortingFunction Document
@@ -182,8 +180,8 @@ docSortFunc "author" = viewComparing getAuthorName
 docSortFunc "authorRev" = viewComparingRev getAuthorName
 docSortFunc _ = const $ const EQ
 
-partnerComps :: Document -> BS.ByteString
-partnerComps doc = BS.concat $ map getCompanyName $ getSignatoryPartnerLinks doc
+partnerComps :: Document -> String
+partnerComps = concatMap getCompanyName . getSignatoryPartnerLinks
 
 revCompareStatus :: Document -> Document -> Ordering
 revCompareStatus doc1 doc2 = compareStatus doc2 doc1
@@ -209,7 +207,7 @@ comparePartners doc1 doc2 =
     isMatch _ = False
     compareSignatory :: SignatoryLink -> SignatoryLink -> Ordering
     compareSignatory sl1 sl2 =
-      let splitUp sl = span (\c -> c/=' ') . map toUpper . BS.toString $ getSmartName sl
+      let splitUp = span (\c -> c/=' ') . map toUpper . getSmartName
           (fst1, snd1) = splitUp sl1
           (fst2, snd2) = splitUp sl2 in
       case (compare fst1 fst2) of

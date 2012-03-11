@@ -20,7 +20,6 @@ import MagicHash (MagicHash)
 import MinutesTime
 import Misc
 import Text.XML.HaXml.XmlContent.Parser
-import qualified Data.ByteString as BS
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
 import Doc.DocStateQuery
@@ -28,9 +27,6 @@ import Text.JSON
 import Text.JSON.Fields
 import ELegitimation.BankIDUtils
 import ELegitimation.BankIDRequests
-
-
-
 
 {- |
    Handle the Ajax request for initiating a BankID transaction.
@@ -131,7 +127,7 @@ generationFailed desc code msg = do
  -}
 
 data VerifySignatureResult  = Problem String
-                            | Mismatch String BS.ByteString BS.ByteString BS.ByteString
+                            | Mismatch String String String String
                             | Sign SignatureInfo
 
 verifySignatureAndGetSignInfo ::  Kontrakcja m =>
@@ -219,7 +215,7 @@ verifySignatureAndGetSignInfo docid signid magic provider signature transactioni
  -}
 
 
-verifySignatureAndGetSignInfoForAuthor :: Kontrakcja m => DocumentID -> SignatureProvider -> String  -> String -> m VerifySignatureResult
+verifySignatureAndGetSignInfoForAuthor :: Kontrakcja m => DocumentID -> SignatureProvider -> String -> String -> m VerifySignatureResult
 verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = do
     Log.eleg $ ("Document " ++ show docid ) ++ ": Author is signing with eleg for document "
     elegtransactions  <- ctxelegtransactions <$> getContext

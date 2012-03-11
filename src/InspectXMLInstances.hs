@@ -56,7 +56,7 @@ instance InspectXML UserID where
 instance InspectXML File where
     inspectXML file = "<a href='" ++ (inspectXML $ LinkFile (fileid file) (filename file)) ++"'>" ++ show (fileid file)++ "/" ++ inspectXML (filename file) ++"</a>"
 instance InspectXML FileID where
-    inspectXML fileid = "<a href='" ++ (inspectXML $ LinkFile fileid (BS.fromString $ show fileid)) ++"'>" ++ show fileid ++ "</a>"
+    inspectXML fileid = "<a href='" ++ (inspectXML $ LinkFile fileid (show fileid)) ++"'>" ++ show fileid ++ "</a>"
 
 instance InspectXML DocumentLogEntry where
     inspectXML (DocumentLogEntry time text) = show time ++ ": " ++ inspectXML text

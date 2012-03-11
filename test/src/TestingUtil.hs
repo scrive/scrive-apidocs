@@ -63,8 +63,6 @@ instance Arbitrary NotNullWord8 where
   arbitrary = arbitrarySizedBoundedIntegral
   shrink = shrinkIntegral
 
-newtype StringWithoutNUL = StringWithoutNUL { fromSNN :: String }
-
 instance Arbitrary SignOrder where
   arbitrary = SignOrder <$> arbitrary
 
@@ -320,8 +318,8 @@ filterSingleFieldType (f:fs) = f : filterSingleFieldType (filter (\h-> sfType f 
 
 instance Arbitrary SignatoryDetails where
   arbitrary = do
-    fn <- nonemptybs
-    ln <- nonemptybs
+    fn <- arbitrary
+    ln <- arbitrary
     em <- arbEmail
     fields <- filterSingleFieldType <$> arbitrary
     return $ SignatoryDetails { signatorysignorder = SignOrder 1
@@ -375,12 +373,12 @@ instance Arbitrary UserInfo where
     return $ UserInfo { userfstname     = fn
                       , usersndname     = ln
                       , userpersonalnumber  = pn
-                      , usercompanyposition = BS.pack []
-                      , userphone           = BS.pack []
-                      , usermobile          = BS.pack []
+                      , usercompanyposition = []
+                      , userphone           = []
+                      , usermobile          = []
                       , useremail           = Email em
-                      , usercompanyname = BS.empty
-                      , usercompanynumber = BS.empty
+                      , usercompanyname = []
+                      , usercompanynumber = []
                       }
 
 -- generate (byte)strings without \NUL in them since
@@ -389,19 +387,19 @@ instance Arbitrary UserInfo where
 instance Arbitrary BS.ByteString where
   arbitrary = BS.pack . map fromNNW8 <$> arbitrary
 
-instance Arbitrary StringWithoutNUL where
-  arbitrary = StringWithoutNUL . map (chr . fromIntegral . fromNNW8) <$> arbitrary
+instance Arbitrary String where
+  arbitrary = map (chr . fromIntegral . fromNNW8) <$> arbitrary
 
 arbString :: Int -> Int -> Gen String
 arbString minl maxl = do
   l <- choose (minl, maxl)
   vectorOf l $ elements ['a'..'z']
 
-arbEmail :: Gen BS.ByteString
+arbEmail :: Gen String
 arbEmail = do
   n <- arbString 1 34
   d <- arbString 3 7
-  return $ BS.fromString (n ++ "@" ++ d ++ ".com")
+  return $ n ++ "@" ++ d ++ ".com"
 
 signatoryLinkExample1 :: SignatoryLink
 signatoryLinkExample1 = SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 0
@@ -418,13 +416,13 @@ signatoryLinkExample1 = SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 
                                       , signatorylinkdeleted = False
                                       , signatorylinkreallydeleted = False
                                       , signatorydetails = SignatoryDetails { signatorysignorder = SignOrder 1,
-                                                                              signatoryfields = [SignatoryField FirstNameFT (BS.fromString "Eric") [],
-                                                                                                 SignatoryField LastNameFT (BS.fromString "Normand") [],
-                                                                                                 SignatoryField EmailFT (BS.fromString "eric@scrive.com") [],
-                                                                                                 SignatoryField CompanyFT (BS.fromString "Scrive") [],
-                                                                                                 SignatoryField CompanyNumberFT (BS.fromString "1234") [],
-                                                                                                 SignatoryField PersonalNumberFT (BS.fromString "9101112") [],
-                                                                                                 SignatoryField (CustomFT (BS.fromString "phone") True) (BS.fromString "504-302-3742") []
+                                                                              signatoryfields = [SignatoryField FirstNameFT "Eric" [],
+                                                                                                 SignatoryField LastNameFT "Normand" [],
+                                                                                                 SignatoryField EmailFT "eric@scrive.com" [],
+                                                                                                 SignatoryField CompanyFT "Scrive" [],
+                                                                                                 SignatoryField CompanyNumberFT "1234" [],
+                                                                                                 SignatoryField PersonalNumberFT "9101112" [],
+                                                                                                 SignatoryField (CustomFT "phone" True) "504-302-3742" []
 
                                                                                                 ]
 
@@ -440,15 +438,15 @@ blankUser = User { userid                        = unsafeUserID 0
                  , useraccountsuspended          = False
                  , userhasacceptedtermsofservice = Nothing
                  , usersignupmethod              = AccountRequest
-                 , userinfo = UserInfo { userfstname = BS.empty
-                                       , usersndname = BS.empty
-                                       , userpersonalnumber = BS.empty
-                                       , usercompanyposition =  BS.empty
-                                       , userphone = BS.empty
-                                       , usermobile = BS.empty
-                                       , useremail = Email BS.empty
-                                       , usercompanyname = BS.empty
-                                       , usercompanynumber = BS.empty
+                 , userinfo = UserInfo { userfstname = []
+                                       , usersndname = []
+                                       , userpersonalnumber = []
+                                       , usercompanyposition =  []
+                                       , userphone = []
+                                       , usermobile = []
+                                       , useremail = Email []
+                                       , usercompanyname = []
+                                       , usercompanynumber = []
                                        }
                  , usersettings  = UserSettings { preferreddesignmode = Nothing
                                                 , locale = mkLocaleFromRegion Misc.defaultValue
@@ -457,43 +455,6 @@ blankUser = User { userid                        = unsafeUserID 0
                  , userservice = Nothing
                  , usercompany = Nothing
                  }
-
-{-
-blankDocument :: Document
-blankDocument =
-          Document
-          { documentid                   = DocumentID 0
-          , documenttitle                = BS.empty
-          , documentsignatorylinks       = []
-          , documentfiles                = []
-          , documentstatus               = Preparation
-          , documenttype                 = Signable Contract
-          , documentfunctionality        = AdvancedFunctionality
-          , documentctime                = fromSeconds 0
-          , documentmtime                = fromSeconds 0
-          , documentdaystosign           = Nothing
-          , documenttimeouttime          = Nothing
-          , documentlog                  = []
-          , documentinvitetext           = BS.empty
-          , documentsealedfiles          = []
-          -- , documenttrustweaverreference = Nothing
-          , documentallowedidtypes       = [EmailIdentification]
-          , documentcsvupload            = Nothing
-          , documentcancelationreason    = Nothing
-          , documentinvitetime           = Nothing
-          , documentsharing              = Doc.DocState.Private
-          , documentrejectioninfo        = Nothing
-          , documenttags                 = []
-          , documentui                   = emptyDocumentUI
-          , documentservice              = Nothing
-          , documentauthorattachments    = []
-          , documentdeleted              = False
-          , documentsignatoryattachments = []
-          -- , documentattachments          = []
-          , documentregion               = REGION_SE
-          }
-
--}
 
 testThat :: String -> DBEnv -> DB () -> Test
 testThat s env a = testCase s (withTestEnvironment env a)
@@ -504,8 +465,7 @@ addNewCompany = do
     dbUpdate $ CreateCompany Nothing eid
 
 addNewFile :: String -> BS.ByteString -> DB File
-addNewFile filename content =
-  dbUpdate $ NewFile (BS.fromString filename) content
+addNewFile filename content = dbUpdate $ NewFile filename content
 
 addNewRandomFile :: DB File
 addNewRandomFile = do
@@ -515,18 +475,18 @@ addNewRandomFile = do
 
 addNewUser :: String -> String -> String -> DB (Maybe User)
 addNewUser firstname secondname email =
-  dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing Nothing (mkLocaleFromRegion defaultValue)
+  dbUpdate $ AddUser (firstname, secondname) email Nothing False Nothing Nothing (mkLocaleFromRegion defaultValue)
 
 addNewCompanyUser :: String -> String -> String -> CompanyID -> DB (Maybe User)
 addNewCompanyUser firstname secondname email cid =
-  dbUpdate $ AddUser (BS.fromString firstname, BS.fromString secondname) (BS.fromString email) Nothing False Nothing (Just cid) (mkLocaleFromRegion defaultValue)
+  dbUpdate $ AddUser (firstname, secondname) email Nothing False Nothing (Just cid) (mkLocaleFromRegion defaultValue)
 
 addNewRandomUser :: DB User
 addNewRandomUser = do
   fn <- rand 10 $ arbString 3 30
   ln <- rand 10 $ arbString 3 30
   em <- rand 10 arbEmail
-  muser <- addNewUser fn ln (BS.toString em)
+  muser <- addNewUser fn ln em
   case muser of
     Just user -> return user
     Nothing -> do

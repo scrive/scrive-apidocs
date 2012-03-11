@@ -2,8 +2,6 @@ module DocControlTest(
     docControlTests
 ) where
 
-
-import qualified Data.ByteString.UTF8 as BS
 import Control.Applicative
 import Data.Maybe
 import Happstack.Server
@@ -189,7 +187,7 @@ testNonLastPersonSigningADocumentRemainsPending env = withTestEnvironment env $ 
       siglink = head $ filter isUnsigned (documentsignatorylinks doc'')
 
   Right doc <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink) 
-               (SignatoryActor (documentctime doc') (ctxipnumber ctx) (maybesignatory siglink) (BS.toString $ getEmail $ siglink) (signatorylinkid siglink))
+               (SignatoryActor (documentctime doc') (ctxipnumber ctx) (maybesignatory siglink) (getEmail $ siglink) (signatorylinkid siglink))
 
   assertEqual "Two left to sign" 2 (length $ filter isUnsigned (documentsignatorylinks doc))
 
@@ -231,7 +229,7 @@ testLastPersonSigningADocumentClosesIt env = withTestEnvironment env $ do
       siglink = head $ filter isUnsigned (documentsignatorylinks doc'')
 
   Right doc <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink) 
-               (SignatoryActor (documentctime doc') (ctxipnumber ctx) (maybesignatory siglink) (BS.toString $ getEmail siglink) (signatorylinkid siglink))
+               (SignatoryActor (documentctime doc') (ctxipnumber ctx) (maybesignatory siglink) (getEmail siglink) (signatorylinkid siglink))
 
   assertEqual "One left to sign" 1 (length $ filter isUnsigned (documentsignatorylinks doc))
 
@@ -308,9 +306,9 @@ mkSigDetails :: String -> String -> String -> SignatoryDetails
 mkSigDetails fstname sndname email = SignatoryDetails {
     signatorysignorder = SignOrder 1
   , signatoryfields = [
-      toSF FirstNameFT . BS.fromString $ fstname
-    , toSF LastNameFT . BS.fromString $ sndname
-    , toSF EmailFT . BS.fromString $ email
+      toSF FirstNameFT fstname
+    , toSF LastNameFT sndname
+    , toSF EmailFT email
     ]
   }
   where

@@ -46,7 +46,6 @@ import Templates.Templates
 import User.Model
 import Util.HasSomeUserInfo
 import qualified Log
-import qualified Data.ByteString.UTF8 as BS
 import Util.MonadUtils
 import Misc
 
@@ -168,14 +167,14 @@ newViralInvitationSentLink email inviterid = do
     action <- newViralInvitationSent email inviterid
     return $ LinkViralInvitationSent (actionID action)
                                      (visToken $ actionType action)
-                                     (BS.toString $ unEmail email)
+                                     (unEmail email)
 
 newAccountCreatedLink :: (MonadIO m, CryptoRNG m) => User -> m KontraLink
 newAccountCreatedLink user = do
     action <- newAccountCreated user
     return $ LinkAccountCreated (actionID action)
                                 (acToken $ actionType action)
-                                (BS.toString $ getEmail user)
+                                (getEmail user)
 
 -- | Runs DB action and fails if it returned Nothing
 runDBOrFail :: (DBMonad m, MonadError KontraError m) => DB (Maybe r) -> m r

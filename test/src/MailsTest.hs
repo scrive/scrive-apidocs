@@ -19,8 +19,6 @@ import Doc.DocViewMail
 import Doc.DocStateData
 import Mails.SendMail
 import Company.Model
---import Mails.MailsConfig
-import qualified Data.ByteString.UTF8 as BS
 import Test.QuickCheck
 import Control.Monad
 import MinutesTime
@@ -55,8 +53,8 @@ testBrandedDocumentMails env mailTo = withTestEnvironment env $ do
   company' <- addNewCompany
   author <- addNewRandomCompanyUser (companyid company') False
   let cui = CompanyUI {
-        companybarsbackground = Just $ BS.fromString "red"
-      , companybarstextcolour = Just $ BS.fromString "gray"
+        companybarsbackground = Just "red"
+      , companybarstextcolour = Just "gray"
       , companylogo = Nothing
       }
   _ <- dbUpdate $ UpdateCompanyUI (companyid company') cui
@@ -76,8 +74,8 @@ sendDocumentMails env mailTo author mcompany = do
         -- make  the context, user and document all use the same locale
         ctx <- mailingContext l env
         _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { locale = l }
-        let aa = AuthorActor (ctxtime ctx) (IPAddress 0) (userid author) (BS.toString $ getEmail author)
-        d' <- gRight $ randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype) 0 aa
+        let aa = AuthorActor (ctxtime ctx) (IPAddress 0) (userid author) (getEmail author)
+        d' <- gRight $ randomUpdate $ NewDocument author mcompany "Document title" (Signable doctype) 0 aa
         d <- gRight . dbUpdate $ SetDocumentLocale (documentid d') l (SystemActor $ ctxtime ctx)
 
         let docid = documentid d
@@ -94,7 +92,7 @@ sendDocumentMails env mailTo author mcompany = do
         d2 <- gRight $ randomUpdate $ PreparationToPending docid (SystemActor now)
         let asl2 = head $ documentsignatorylinks d2
         _ <- gRight $ randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2)
-             (SignatoryActor now (IPAddress 0) (maybesignatory asl2) (BS.toString $ getEmail asl2) (signatorylinkid asl2))
+             (SignatoryActor now (IPAddress 0) (maybesignatory asl2) (getEmail asl2) (signatorylinkid asl2))
         doc <- gRight $ randomUpdate $ \si -> SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) si (SystemActor now)
         let [sl] = filter (not . isAuthor) (documentsignatorylinks doc)
         req <- mkRequest POST []
@@ -117,7 +115,7 @@ sendDocumentMails env mailTo author mcompany = do
           checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc (mkLocaleFromRegion defaultValue)
         -- Virtual signing
         _ <- randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl) (signatorymagichash sl) Nothing
-                                   (SignatoryActor (10 `minutesAfter` now) ip (maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl))
+                                   (SignatoryActor (10 `minutesAfter` now) ip (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
         (Just sdoc) <- randomQuery $ GetDocumentByDocumentID docid
         -- Sending closed email
         checkMail "Closed" $ mailDocumentClosed ctx sdoc

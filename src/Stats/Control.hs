@@ -146,7 +146,7 @@ dbUserIDLookup :: (Kontrakcja m) => UserID -> [(UserID, String)] -> m (String, [
 dbUserIDLookup uid tbl =
   case lookup uid tbl of
     Nothing -> do
-      name <- maybe "Unknown user" (BS.toString . getSmartName) <$> (runDBQuery $ GetUserByID uid)
+      name <- maybe "Unknown user" getSmartName <$> (runDBQuery $ GetUserByID uid)
       return (name, (uid, name):tbl)
     Just name -> return (name, tbl)
 
@@ -158,8 +158,8 @@ dbCompanyIDLookup cid tbl =
       let name = case mcompany of
             Nothing -> "Unknown Company"
             Just company -> case companyexternalid company of
-              Just eid -> BS.toString $ unExternalCompanyID eid
-              Nothing -> case BS.toString $ companyname $ companyinfo company of
+              Just eid -> unExternalCompanyID eid
+              Nothing -> case companyname $ companyinfo company of
                 "" -> "no company name"
                 a -> a
       return (name, (cid, name):tbl)
@@ -179,7 +179,7 @@ convertUserIDToFullName acc ((a,uid,s):ss)
   | otherwise = case find (\u->userid u == uid) acc of
     Just u -> do
       rst <- convertUserIDToFullName acc ss
-      return $ (a, BS.toString $ getSmartName u, s) : rst
+      return $ (a, getSmartName u, s) : rst
     Nothing -> do
       mu <- runDBQuery $ GetUserByID uid
       case mu of
@@ -188,7 +188,7 @@ convertUserIDToFullName acc ((a,uid,s):ss)
           return $ (a, "Unknown user", s) : rst
         Just u -> do
           rst <- convertUserIDToFullName (u:acc) ss
-          return $ (a, BS.toString $ getSmartName u, s) : rst
+          return $ (a, getSmartName u, s) : rst
 
 addStats :: (Int, [Int]) -> (Int, [Int]) -> (Int, [Int])
 addStats (_, t1s) (t, t2s) = (t, zipWithPadZeroes (+) t1s t2s)

@@ -95,7 +95,7 @@ handleMailAPI = do
     -- extension and can be used as for example password
   let extension = takeWhile (/= '@') $ dropWhile (== '+') $ dropWhile (/= '+') to
 
-  muser <- runDBQuery (GetUserByEmail Nothing (Email $ BS.fromString $ map toLower username))
+  muser <- runDBQuery (GetUserByEmail Nothing (Email $ map toLower username))
   when (isNothing muser) $ do
     Log.mailAPI $ "User does not exist: " ++ username
     sendMailAPIErrorEmail ctx username $ "<p>The address from which you sent the email (" ++ username ++ ") is not a registered Scrive User account. If you would like to sign up to use Scrive, please visit <a href='" ++  hostpart ++ show (LinkHome locale) ++ "'>the Scrive homepage</a>.</p>"    
@@ -271,23 +271,23 @@ jsonMailAPI mailapi username user pdfs plains content = do
 
   let doctype = dcrType dcr
       title = dcrTitle dcr
-      actor = MailAPIActor ctxtime (userid user) (BS.toString $ getEmail user)
+      actor = MailAPIActor ctxtime (userid user) (getEmail user)
       
-  edoc <- runDBUpdate $ NewDocument user mcompany (BS.fromString title) doctype 0 actor
+  edoc <- runDBUpdate $ NewDocument user mcompany title doctype 0 actor
 
   when (isLeft edoc) $ do
     let Left msg = edoc
 
     Log.jsonMailAPI $ "Could not create document: " ++ msg
 
-    sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not create your document. I do not know what is wrong. You can try again or you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkUpload) ++ "\">click here</a> to use the web interface.</p>"
+    sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not create your document. I do not know what is wrong. You can try again or you can <a href=\"" ++ ctxhostpart ctx ++ show LinkUpload ++ "\">click here</a> to use the web interface.</p>"
 
     internalError
 
   let Right doc = edoc
 
   content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) pdfBinary
-  file <- runDB $ dbUpdate $ NewFile (BS.fromString title) content14
+  file <- runDB $ dbUpdate $ NewFile title content14
   _ <- guardRightM $ runDBUpdate (AttachFile (documentid doc) (fileid file) actor)
   
   _ <- runDBUpdate $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality actor

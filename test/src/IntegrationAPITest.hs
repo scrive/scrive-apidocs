@@ -26,9 +26,7 @@ import Util.JSON
 import Test.QuickCheck.Gen
 import Control.Exception
 import System.Timeout
---import Doc.DocStateData
 import qualified Log
---import Doc.Model
 import MinutesTime
 import Doc.Model
 import Control.Monad
@@ -36,7 +34,6 @@ import Doc.DocStateData
 import EvidenceLog.Model
 
 import Util.HasSomeUserInfo
-import qualified Data.ByteString.UTF8 as BS
 import Util.SignatoryLinkUtils
 
 integrationAPITests :: DBEnv -> Test
@@ -291,9 +288,9 @@ testDocumentsFilteringFromDate2 env = withTestEnvironment env $ do
     _ <- forM (documentsignatorylinks doc) $ \sl ->
       if isAuthor sl 
       then dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl) 
-           (AuthorActor (minutesAfter 100 tm) (IPAddress 0) (fromJust $ maybesignatory sl) (BS.toString $ getEmail sl))
+           (AuthorActor (minutesAfter 100 tm) (IPAddress 0) (fromJust $ maybesignatory sl) (getEmail sl))
       else dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl) 
-           (SignatoryActor (minutesAfter 100 tm) (IPAddress 0) (maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl))
+           (SignatoryActor (minutesAfter 100 tm) (IPAddress 0) (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
 
     Just _doc' <- dbQuery $ GetDocumentByDocumentID did
     Right apiReqDocsFilter3 <- jsset "from_date" tms <$> getDocumentsJSON "test_company1" "mariusz@skrivapa.se"
@@ -382,7 +379,7 @@ createDocumentJSON company author = do
      dt <- rand 10 $  elements [1,3,5]
      randomCall $ \title fname sname -> JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
-         ,("title" , JSString $ toJSString $ fromSNN title)
+         ,("title" , JSString $ toJSString title)
          ,("type" , JSRational True (dt%1))
          ,("involved" , JSArray [ JSObject $ toJSObject $
                                     [ ("fstname", JSString $ toJSString fname),
@@ -397,7 +394,7 @@ createDocumentJSONFriend company author friend = do
      dt <- rand 10 $  elements [1,3,5]
      randomCall $ \title fname sname fname2 sname2 -> JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
-         ,("title" , JSString $ toJSString $ fromSNN title)
+         ,("title" , JSString $ toJSString title)
          ,("type" , JSRational True (dt%1))
          ,("files", JSArray [JSObject $ toJSObject $
                              [("name", JSString $ toJSString "file.pdf")
@@ -424,7 +421,7 @@ createDocumentJSONFriend company author friend = do
 createOrderJSON :: String -> String -> DB JSValue
 createOrderJSON company author = randomCall $ \title fname sname fname2 sname2 em2 -> JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
-         ,("title" , JSString $ toJSString $ fromSNN title)
+         ,("title" , JSString $ toJSString title)
          ,("type" , JSRational True (5%1))
          ,("involved" , JSArray [ JSObject $ toJSObject $
                                     [ ("fstname", JSString $ toJSString fname),
@@ -465,8 +462,8 @@ makeAPIRequest env handler req = do
 -- A service to be used with API. We need one to use it.
 createTestService :: DB ()
 createTestService = do
-  pwd <- createPassword $ BS.pack "test_password"
-  muser <- dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "mariusz@skrivapa.se") (Just pwd) False Nothing Nothing (mkLocaleFromRegion defaultValue)
+  pwd <- createPassword "test_password"
+  muser <- dbUpdate $ AddUser ("", "") "mariusz@skrivapa.se" (Just pwd) False Nothing Nothing (mkLocaleFromRegion defaultValue)
   case muser of
     Nothing -> error "can't create user"
     Just User{userid} ->

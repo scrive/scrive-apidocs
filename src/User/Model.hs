@@ -42,7 +42,6 @@ import Data.Int
 import Database.HDBC
 import Happstack.State
 import qualified Control.Exception as E
-import qualified Data.ByteString.Char8 as BS
 
 import API.Service.Model
 import Company.Model
@@ -52,7 +51,6 @@ import DB.Fetcher2
 import DB.Utils
 import MagicHash (MagicHash)
 import MinutesTime
-import Misc
 import User.Lang
 import User.Locale
 import User.Password
@@ -60,7 +58,7 @@ import User.Region
 import User.UserID
 
 -- newtypes
-newtype Email = Email { unEmail :: BS.ByteString }
+newtype Email = Email { unEmail :: String }
   deriving (Eq, Ord, Typeable)
 $(newtypeDeriveConvertible ''Email)
 $(newtypeDeriveUnderlyingReadShow ''Email)
@@ -99,15 +97,15 @@ data User = User {
   } deriving (Eq, Ord, Show)
 
 data UserInfo = UserInfo {
-    userfstname         :: BS.ByteString
-  , usersndname         :: BS.ByteString
-  , userpersonalnumber  :: BS.ByteString
-  , usercompanyposition :: BS.ByteString
-  , userphone           :: BS.ByteString
-  , usermobile          :: BS.ByteString
+    userfstname         :: String
+  , usersndname         :: String
+  , userpersonalnumber  :: String
+  , usercompanyposition :: String
+  , userphone           :: String
+  , usermobile          :: String
   , useremail           :: Email
-  , usercompanyname     :: BS.ByteString
-  , usercompanynumber   :: BS.ByteString
+  , usercompanyname     :: String
+  , usercompanynumber   :: String
   } deriving (Eq, Ord, Show)
 
 data UserMailAPI = UserMailAPI {
@@ -201,7 +199,7 @@ instance DBUpdate DeleteUser Bool where
     kExecute01 [toSql True, toSql uid]
 
 -- | TODO: Fix this AddUser, it shouldn't lock.
-data AddUser = AddUser (BS.ByteString, BS.ByteString) BS.ByteString (Maybe Password) Bool (Maybe ServiceID) (Maybe CompanyID) Locale
+data AddUser = AddUser (String, String) String (Maybe Password) Bool (Maybe ServiceID) (Maybe CompanyID) Locale
 instance DBUpdate AddUser (Maybe User) where
   dbUpdate (AddUser (fname, lname) email mpwd iscompadmin msid mcid l) = do
     let handle e = case e of
@@ -431,10 +429,10 @@ instance DBUpdate SetUserCompanyAdmin Bool where
 
 -- helpers
 
-composeFullName :: (BS.ByteString, BS.ByteString) -> BS.ByteString
-composeFullName (fstname, sndname) = if BS.null sndname
+composeFullName :: (String, String) -> String
+composeFullName (fstname, sndname) = if null sndname
   then fstname
-  else fstname <++> BS.pack " " <++> sndname
+  else fstname ++ " " ++ sndname
 
 checkIfUserExists :: UserID -> DB Bool
 checkIfUserExists uid = checkIfAnyReturned

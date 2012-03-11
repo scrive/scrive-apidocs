@@ -54,6 +54,9 @@ infixl 8  ||^
 infixr 9 $^ 
 infixr 9 $^^
 
+randomPassword :: (MonadIO m, CryptoRNG m) => m String
+randomPassword = randomString 8 (['0'..'9'] ++ ['A'..'Z'] ++ ['a'..'z'])
+
 selectFormAction :: (HasRqData m, MonadIO m,MonadPlus m,ServerMonad m) => [(String,m a)] -> m a
 selectFormAction [] = mzero
 selectFormAction ((button,action):rest) = do
@@ -109,17 +112,18 @@ pathdb getfn action = path $ \idd -> do
 -- | Get param as strict ByteString instead of a lazy one.
 getAsStrictBS :: (HasRqData f, MonadIO f, ServerMonad f, MonadError KontraError f, Functor f) =>
      String -> f BS.ByteString
-getAsStrictBS name = fmap concatChunks (getDataFnM (lookBS name))
+getAsStrictBS = fmap concatChunks . getDataFnM . lookBS
+
+getAsString :: (HasRqData f, MonadIO f, ServerMonad f, MonadPlus f, Functor f) =>
+     String -> f String
+getAsString = getDataFnM . look
 
 -- | Useful inside the 'RqData' monad.  Gets the named input parameter
 -- (either from a @POST@ or a @GET@)
 lookInputList :: String -> RqData [BSL.ByteString]
-lookInputList name
-    = do
-         inputs <- (\(a, b, _) -> a ++ fromMaybe [] b) <$> askRqEnv
-         let isname (xname,(Input value _ _)) | xname == name = [value]
-             isname _ = []
-         return [value | k <- inputs, eithervalue <- isname k, Right value <- [eithervalue]]
+lookInputList name = do
+  inputs <- lookInputs name
+  return [value | Input (Right value) _ _ <- inputs]
 
 -- | Create an external process with arguments. Feed it input, collect
 -- exit code, stdout and stderr.
@@ -247,26 +251,9 @@ getFields name = (map BSL.toString)  <$> (fromMaybe []) <$> getDataFn' (lookInpu
 getField :: (HasRqData m, MonadIO m, ServerMonad m,Functor m) => String -> m (Maybe String)
 getField name = listToMaybe . reverse <$> getFields name
 
-getFieldBS :: (HasRqData m, MonadIO m, ServerMonad m,Functor m) => String -> m (Maybe BSL.ByteString)
-getFieldBS name = getDataFn' (lookBS name)
-
-getFieldUTF
-  :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) => String -> f (Maybe BS.ByteString)
-getFieldUTF name = (fmap BS.fromString) <$> getField name
-
 getFieldWithDefault
   :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) => String -> String -> f String
-getFieldWithDefault d name =   (fromMaybe d) <$> getField name
-
-getFieldBSWithDefault
-  :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) =>
-     BSL.ByteString -> String -> f BSL.ByteString
-getFieldBSWithDefault  d name = (fromMaybe d) <$> getFieldBS name
-
-getFieldUTFWithDefault
-  :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) =>
-     BS.ByteString -> String -> f BS.ByteString
-getFieldUTFWithDefault  d name = (fromMaybe d) <$> getFieldUTF name
+getFieldWithDefault d name = fromMaybe d <$> getField name
 
 readField
   :: (HasRqData f, MonadIO f, Read a, Functor f, ServerMonad f) => String -> f (Maybe a)

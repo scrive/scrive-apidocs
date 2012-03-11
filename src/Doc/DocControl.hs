@@ -157,7 +157,7 @@ postDocumentChangeAction document@Document  { documentstatus
         -- if sign order has changed, we need to send another invitations
         when (documentcurrentsignorder document /= documentcurrentsignorder olddocument) $ do
             ctx <- getContext
-            Log.server $ "Resending invitation emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
+            Log.server $ "Resending invitation emails for document #" ++ show documentid ++ ": " ++ documenttitle
             _ <- sendInvitationEmails ctx document
             return ()
     -- Preparation -> Pending
@@ -172,7 +172,7 @@ postDocumentChangeAction document@Document  { documentstatus
             return document
           (Right saveddoc) -> return saveddoc
         -- we don't need to forkIO here since we only schedule emails here
-        Log.server $ "Sending invitation emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
+        Log.server $ "Sending invitation emails for document #" ++ show documentid ++ ": " ++ documenttitle
         edoc <- sendInvitationEmails ctx document'
         _ <- case edoc of
           Left _ -> do
@@ -190,7 +190,7 @@ postDocumentChangeAction document@Document  { documentstatus
         Log.docevent $ "Preparation -> Closed; Sealing document, sending emails: " ++ show documentid
         _ <- addDocumentCloseStatEvents document
         ctx@Context{ctxlocale, ctxglobaltemplates} <- getContext
-        forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ \env -> do
+        forkAction ("Sealing document #" ++ show documentid ++ ": " ++ documenttitle) $ \env -> do
           let newctx = ctx {ctxdbenv = env}
           enewdoc <- ioRunDB env $ sealDocument newctx document
           case enewdoc of
@@ -204,7 +204,7 @@ postDocumentChangeAction document@Document  { documentstatus
         ctx <- getContext
         -- we don't need to forkIO here since we only schedule emails here
         author <- getDocAuthor
-        Log.server $ "Sending awaiting email for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
+        Log.server $ "Sending awaiting email for document #" ++ show documentid ++ ": " ++ documenttitle
         sendAwaitingEmail ctx document author
         return ()
     -- Pending -> Closed OR AwaitingAuthor -> Closed
@@ -214,7 +214,7 @@ postDocumentChangeAction document@Document  { documentstatus
         _ <- addDocumentCloseStatEvents document
         ctx@Context{ctxlocale, ctxglobaltemplates} <- getContext
         author <- getDocAuthor
-        forkAction ("Sealing document #" ++ show documentid ++ ": " ++ BS.toString documenttitle) $ \env -> do
+        forkAction ("Sealing document #" ++ show documentid ++ ": " ++ documenttitle) $ \env -> do
           let newctx = ctx {ctxdbenv = env}
           enewdoc <- ioRunDB env $ sealDocument newctx document
           case enewdoc of
@@ -222,7 +222,7 @@ postDocumentChangeAction document@Document  { documentstatus
             Left errmsg -> do
               _ <- ioRunDB env $ dbUpdate $ ErrorDocument documentid errmsg
                    (SystemActor (ctxtime ctx))
-              Log.server $ "Sending seal error emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
+              Log.server $ "Sending seal error emails for document #" ++ show documentid ++ ": " ++ documenttitle
               runTemplatesT (ctxlocale, ctxglobaltemplates) $ sendDocumentErrorEmail newctx document author
               return ()
         return ()
@@ -234,8 +234,8 @@ postDocumentChangeAction document@Document  { documentstatus
         ctx <- getContext
         customMessage <- getCustomTextField "customtext"
         -- we don't need to forkIO here since we only schedule emails here
-        Log.server $ "Sending rejection emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
-        sendRejectEmails (fmap BS.toString customMessage) ctx document (fromJust msignalink)
+        Log.server $ "Sending rejection emails for document #" ++ show documentid ++ ": " ++ documenttitle
+        sendRejectEmails customMessage ctx document (fromJust msignalink)
         return ()
     -- Pending -> Canceled
     -- main action: if canceled because of ElegDataMismatch, send out emails
@@ -247,7 +247,7 @@ postDocumentChangeAction document@Document  { documentstatus
           then do
           ctx <- getContext
           author <- getDocAuthor
-          Log.server $ "Sending cancelation emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
+          Log.server $ "Sending cancelation emails for document #" ++ show documentid ++ ": " ++ documenttitle
           sendElegDataMismatchEmails ctx document author
           else do
           -- should we send cancelation emails?
@@ -258,7 +258,7 @@ postDocumentChangeAction document@Document  { documentstatus
         Log.docevent $ "DocumentError; " ++ msg ++ " : " ++ show documentid
         ctx <- getContext
         author <- getDocAuthor
-        Log.server $ "Sending error emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
+        Log.server $ "Sending error emails for document #" ++ show documentid ++ ": " ++ documenttitle
         sendDocumentErrorEmail ctx document author
         return ()
 
@@ -301,7 +301,7 @@ saveDocumentForSignatories doc@Document{documentsignatorylinks} =
         Nothing -> return $ Right doc'
         Just user -> do
           Context{ctxtime, ctxipnumber} <- getContext
-          let actor = SignatoryActor ctxtime ctxipnumber (Just $ userid user) (BS.toString sigemail) signatorylinkid
+          let actor = SignatoryActor ctxtime ctxipnumber (Just $ userid user) sigemail signatorylinkid
           udoc <- runDBUpdate $ SaveDocumentForUser documentid user signatorylinkid actor
           return udoc
 
@@ -314,8 +314,8 @@ sendElegDataMismatchEmails ctx document author = do
                         , not $ isAuthor sl]
         Just (ELegDataMismatch msg badid _ _ _) = documentcancelationreason document
         badsig = fromJust $ find (\sl -> badid == signatorylinkid sl) (documentsignatorylinks document)
-        badname  = BS.toString $ getFullName badsig
-        bademail = BS.toString $ getEmail badsig
+        badname  = getFullName badsig
+        bademail = getEmail badsig
     forM_ signlinks $ sendDataMismatchEmailSignatory ctx document badid badname msg
     sendDataMismatchEmailAuthor ctx document author badname bademail
 
@@ -329,10 +329,10 @@ sendDataMismatchEmailSignatory ctx document badid badname msg signatorylink = do
         mail <- mailMismatchSignatory
                 ctx
                 document
-                (BS.toString $ getEmail authorsl)
-                (BS.toString $ getFullName authorsl)
+                (getEmail authorsl)
+                (getFullName authorsl)
                 (ctxhostpart ctx ++ (show $ LinkSignDoc document signatorylink))
-                (BS.toString $ getFullName signatorylink)
+                (getFullName signatorylink)
                 badname
                 msg
                 isbad
@@ -342,7 +342,7 @@ sendDataMismatchEmailAuthor :: Kontrakcja m => Context -> Document -> User -> St
 sendDataMismatchEmailAuthor ctx document author badname bademail = do
     let authorname = getFullName $ fromJust $ getAuthorSigLink document
         authoremail = getEmail $ fromJust $ getAuthorSigLink document
-    mail <- mailMismatchAuthor ctx document (BS.toString authorname) badname bademail (getLocale author)
+    mail <- mailMismatchAuthor ctx document authorname badname bademail (getLocale author)
     scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress {fullname = authorname, email = authoremail }]}
 
 {- |
@@ -415,7 +415,7 @@ sendInvitationEmail1 ctx document signatorylink = do
 {- |
     Send a reminder email (and update the modification time on the document)
 -}
-sendReminderEmail :: Kontrakcja m => Maybe BS.ByteString -> Context -> Document -> SignatoryLink -> m SignatoryLink
+sendReminderEmail :: Kontrakcja m => Maybe String -> Context -> Document -> SignatoryLink -> m SignatoryLink
 sendReminderEmail custommessage ctx doc siglink = do
   mail <- mailDocumentRemind custommessage ctx doc siglink
   mailattachments <- liftIO $ makeMailAttachments ctx doc
@@ -469,7 +469,7 @@ makeMailAttachments ctx document = do
   let dropPDFSuffix name | ".pdf" `isSuffixOf` (map toLower name) = reverse . drop 4 $ reverse name
                          | otherwise = name
   --use the doc title rather than file name for the main file (see jira #1152)
-  let filenames = map (dropPDFSuffix . BS.toString) $ documenttitle document : map filename (tail allfiles)
+  let filenames = map dropPDFSuffix $ documenttitle document : map filename (tail allfiles)
 
   filecontents <- sequence $ map (getFileContents ctx) allfiles
   return $ zip filenames filecontents
@@ -485,12 +485,6 @@ sendRejectEmails customMessage ctx document signalink = do
     mail <- mailDocumentRejected customMessage ctx document signalink
     scheduleEmailSendout (ctxmailsconfig ctx) $ mail {   to = [getMailAddress sl]
                                                       , from = documentservice document }
-
-
-
-
-
-
 
 
 -- END EMAILS
@@ -555,8 +549,10 @@ signDocument documentid
       addFlash  (OperationFailed, msg)
       return LoopBack
     _ -> internalError
+  where
+    getAndConcat fname = getDataFnM (lookInputList fname) >>= return . map BSL.toString
 
-handleMismatch :: Kontrakcja m => Document -> SignatoryLinkID -> String -> BS.ByteString -> BS.ByteString -> BS.ByteString -> m ()
+handleMismatch :: Kontrakcja m => Document -> SignatoryLinkID -> String -> String -> String -> String -> m ()
 handleMismatch doc sid msg sfn sln spn = do
         ctx <- getContext
         let Just sl = getSigLinkFor doc sid
@@ -565,7 +561,7 @@ handleMismatch doc sid msg sfn sln spn = do
                         (SignatoryActor (ctxtime ctx)
                          (ctxipnumber ctx)
                          (maybesignatory sl)
-                         (BS.toString $ getEmail $ sl)
+                         (getEmail sl)
                          sid)
         postDocumentChangeAction newdoc doc (Just sid)
 
@@ -580,7 +576,7 @@ handleAfterSigning document@Document{documentid} signatorylinkid = do
   maybeuser <- runDBQuery $ GetUserByEmail (currentServiceID ctx) (Email $ getEmail signatorylink)
   case maybeuser of
     Just user | isJust $ userhasacceptedtermsofservice user-> do
-      let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx)  (maybesignatory signatorylink)  (BS.toString $ getEmail $ signatorylink) (signatorylinkid)
+      let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx)  (maybesignatory signatorylink) (getEmail signatorylink) (signatorylinkid)
       _ <- runDBUpdate $ SaveDocumentForUser documentid user signatorylinkid actor
       let userlocale = locale $ usersettings user
       if isClosed document
@@ -664,7 +660,7 @@ handleSignShow2 documentid
   switchLocale (getLocale document)
   invitedlink <- guardJust $ getSigLinkFor document signatorylinkid
   _ <- runDBUpdate $ MarkDocumentSeen documentid signatorylinkid magichash
-       (SignatoryActor ctxtime ctxipnumber (maybesignatory invitedlink) (BS.toString $ getEmail invitedlink) signatorylinkid)
+       (SignatoryActor ctxtime ctxipnumber (maybesignatory invitedlink) (getEmail invitedlink) signatorylinkid)
   _ <- runDB $ addSignStatLinkEvent document invitedlink
   let isFlashNeeded = Data.List.null ctxflashmessages
                         && not (hasSigned invitedlink)
@@ -873,12 +869,11 @@ splitUpDocument doc = do
             else do
               Log.debug $ "splitUpDocument: createDocFromRow returned some Lefts: " ++ show (lefts mdocs)
               internalError
-  where createDocFromRow :: Kontrakcja m => Document -> [BS.ByteString] -> m (Either String Document)
-        createDocFromRow udoc xs = do
+  where createDocFromRow udoc xs = do
           actor <- guardJustM $ mkAuthorActor <$> getContext
           runDBUpdate $ DocumentFromSignatoryData (documentid udoc) (item 0) (item 1) (item 2) (item 3) (item 4) (item 5) (drop 6 xs) actor
           where item n | n<(length xs) = xs !! n
-                       | otherwise = BS.empty
+                       | otherwise = ""
 
 handleIssueSignByAuthor :: Kontrakcja m => Document -> m KontraLink
 handleIssueSignByAuthor doc = do
@@ -924,14 +919,6 @@ handleFileGet fileid' _title = do
           let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
           let res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString "application/pdf") res
           return res2
-
-{- |
-   Get multiple post/get params and return them in an array
- -}
-getAndConcat :: Kontrakcja m => String -> m [BS.ByteString]
-getAndConcat fname = do
-  values <- getDataFnM $ lookInputList fname
-  return $ map concatChunks values
 
 {- |
    Save a document from data in the post params.
@@ -1029,7 +1016,7 @@ handlePageOfDocument' documentid mtokens = do
                     pages <- Doc.DocView.showFilesImages2 documentid mtokens $ zip f b
                     simpleResponse pages
 
-handleDocumentUpload :: Kontrakcja m => DocumentID -> BS.ByteString -> BS.ByteString -> m ()
+handleDocumentUpload :: Kontrakcja m => DocumentID -> BS.ByteString -> String -> m ()
 handleDocumentUpload docid content1 filename = do
   Log.debug $ "Uploading file for doc #" ++ show docid
   fileresult <- attachFile docid filename content1
@@ -1088,7 +1075,7 @@ makeDocumentFromFile doctype (Input contentspec (Just filename) _contentType) nr
         return Nothing
       else do
           Log.debug "Got the content, creating document"
-          let title = BS.fromString (basename filename)
+          let title = basename filename
           doc <- guardRightM $ newDocument title doctype nrOfExtraSigs
           handleDocumentUpload (documentid doc) (concatChunks content) title
           return $ Just doc
@@ -1144,7 +1131,7 @@ handleIssueShare = do
 
 handleAttachmentRename :: Kontrakcja m => DocumentID -> m KontraLink
 handleAttachmentRename docid = withUserPost $ do
-  newname <- getCriticalField (return . BS.fromString) "docname"
+  newname <- getCriticalField return "docname"
   actor <- guardJustM $ mkAuthorActor <$> getContext
   doc <- guardRightM $ runDBUpdate $ SetDocumentTitle docid newname actor
   return $ LinkIssueDoc $ documentid doc
@@ -1306,7 +1293,7 @@ handleResend docid signlinkid  = withUserPost $ do
     If the custom text field is empty then that's okay, but if it's invalid
     then we want to fail.
 -}
-getCustomTextField :: Kontrakcja m => String -> m (Maybe BS.ByteString)
+getCustomTextField :: Kontrakcja m => String -> m (Maybe String)
 getCustomTextField = getValidateAndHandle asValidInviteText customTextHandler
     where
     customTextHandler textresult =
@@ -1421,12 +1408,12 @@ handleDeleteSigAttach docid siglinkid = do
   mh <- guardJustM $ readField "magichash"
   doc <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid siglinkid mh
   siglink <- guardJust $ getSigLinkFor doc siglinkid
-  fid <- (read . BS.toString) <$> getCriticalField asValidID "deletesigattachment"
+  fid <- read <$> getCriticalField asValidID "deletesigattachment"
   Context{ctxtime, ctxipnumber} <- getContext
   let email = getEmail siglink
-  Log.debug $ "delete Sig attachment " ++ (show fid) ++ "  " ++ (BS.toString email)
+  Log.debug $ "delete Sig attachment " ++ (show fid) ++ "  " ++ email
   _ <- runDBUpdate $ DeleteSigAttachment docid siglinkid fid 
-       (SignatoryActor ctxtime ctxipnumber (maybesignatory siglink) (BS.toString email) siglinkid)
+       (SignatoryActor ctxtime ctxipnumber (maybesignatory siglink) email siglinkid)
   return $ LinkSignDoc doc siglink
 
 handleSigAttach :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
@@ -1446,7 +1433,7 @@ handleSigAttach docid siglinkid = do
   ctx <- getContext
   content <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
   file <- runDB $ dbUpdate $ NewFile attachname content
-  let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory siglink) (BS.toString email) siglinkid
+  let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory siglink) email siglinkid
   d <- guardRightM $ runDBUpdate $ SaveSigAttachment docid siglinkid attachname (fileid file) actor
   return $ LinkSignDoc d siglink
 
@@ -1551,9 +1538,9 @@ handleSetAttachments did = do
             case inp of
                  Just (Input (Left filepath) (Just filename) _contentType) -> do
                      content <- liftIO $ BSL.readFile filepath
-                     let title = BS.fromString (basename filename)
+                     let title = basename filename
                      doc <- guardRightM $ newDocument title Attachment 0
-                     doc' <- guardRightM $  attachFile (documentid doc) (BS.fromString filename) (concatChunks content)
+                     doc' <- guardRightM $  attachFile (documentid doc) filename (concatChunks content)
                      return $ listToMaybe $ documentfiles  doc'
                  Just (Input  (Right c)  _ _)  -> do
                      case maybeRead (BSL.toString c) of
@@ -1565,7 +1552,7 @@ handleSetAttachments did = do
 handleUpsalesDeleted :: Kontrakcja m => m Response
 handleUpsalesDeleted = onlyAdmin $ do
   docs <- runDBQuery $ GetDocuments $ Just $ ServiceID $ BS.fromString "upsales"
-  let deleteddocs = [[show $ documentid d, showDateYMD $ documentctime d, BS.toString $ documenttitle d]
+  let deleteddocs = [[show $ documentid d, showDateYMD $ documentctime d, documenttitle d]
                     | d <- docs
                     , isDeletedFor $ getAuthorSigLink d
                     , (isJust $ getSigLinkFor d SignatoryAuthor) && (isJust $ getSigLinkFor d $ unsafeCompanyID 1849610088)]
@@ -1594,7 +1581,7 @@ handleParseCSV = do
                  Right contents
                    | length contents > 1000 -> oneProblemJSON $ renderTemplateFM "flashMessageCSVHasTooManyRows" $ field "maxrows" (1000::Int)
                    | otherwise -> do
-                       let (problems, csvdata) = cleanCSVContents eleg customfieldscount $ fmap (fmap BS.fromString) contents
+                       let (problems, csvdata) = cleanCSVContents eleg customfieldscount contents
                        liftIO $ json $ do
                             JSON.field "problems" $ for problems $ \p -> do
                                 JSON.field "description" $ ((runTemplatesT (ctxlocale ctx, ctxglobaltemplates ctx) $ csvProblemToDescription p) :: IO String)
@@ -1602,7 +1589,7 @@ handleParseCSV = do
                                     JSON.field "row" $ fromJust $ problemRow p
                                 when (isJust $ problemCell p) $
                                     JSON.field "cell" $ fromJust $ problemCell p
-                            JSON.field "rows" $ for (csvbody csvdata) $ \row -> map BS.toString row
+                            JSON.field "rows" $ csvbody csvdata
 
         _ -> do
             oneProblemJSON $ renderTemplateM "flashMessageFailedToParseCSV" ()

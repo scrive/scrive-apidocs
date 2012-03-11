@@ -75,12 +75,12 @@ api_signatory sl = JSObject $ toJSObject $
     [("relation",showJSON $ fromSafeEnumInt $ signatoryroles sl)]
     ++
     [("fields", JSArray $ for (filterCustomField $ signatoryfields $ signatorydetails sl) $ \(s, label, _) -> JSObject $ toJSObject [
-        ("name",  JSString $ toJSString $ BS.toString label)
-      , ("value", JSString $ toJSString $ BS.toString (sfValue s))
+        ("name",  JSString $ toJSString label)
+      , ("value", JSString $ toJSString $ sfValue s)
       ]
     )]
     where
-      sfToJS sf name = (name, showJSON $ BS.toString $ sfValue sf)
+      sfToJS sf name = (name, showJSON $ sfValue sf)
       fields = for (filter isStandardField $ signatoryfields $ signatorydetails sl) $
         \sf -> case sfType sf of
           FirstNameFT      -> sfToJS sf "fstname"
@@ -93,13 +93,13 @@ api_signatory sl = JSObject $ toJSObject $
 
 api_document_tag :: DocumentTag -> JSValue
 api_document_tag tag = JSObject $ toJSObject [
-      ("name", showJSON $ BS.toString $ tagname tag)
-    , ("value", showJSON $ BS.toString $ tagvalue tag)]
-                       
-api_file :: BS.ByteString -> BS.ByteString -> JSValue
+      ("name", showJSON $ tagname tag)
+    , ("value", showJSON $ tagvalue tag)]
+
+api_file :: String -> BS.ByteString -> JSValue
 api_file name content = 
   let base64data = BS.toString (Base64.encode content) in
-  JSObject $ toJSObject [ ("name", showJSON $ BS.toString name)
+  JSObject $ toJSObject [ ("name", showJSON name)
                         , ("content", showJSON base64data)]
 
 api_document_file_read :: (APIContext c, Kontrakcja m) => File -> APIFunction m c JSValue
@@ -111,7 +111,7 @@ api_document_file_read file = do
 api_document :: Maybe [JSValue] -> Document -> JSValue
 api_document mfiles doc = JSObject $ toJSObject $ [
     ("document_id", showJSON  $ show $ documentid doc)
-  , ("title", showJSON  $ BS.toString $ documenttitle doc)
+  , ("title", showJSON  $ documenttitle doc)
   , ("type", showJSON  $ fromSafeEnumInt $ documenttype doc)
   , ("state", showJSON  $ fromSafeEnumInt $ documentstatus doc)
   , ("involved", JSArray $ map api_signatory $ documentsignatorylinks doc)
@@ -157,7 +157,7 @@ getSignatoryTMP defaultRoles = do
      (setPersonalnumber <$> personalnumber') $^
      (setCompanynumber <$> companynumber') $^
      (setEmail <$> email') $^
-     (map (\(n,v) -> setCustomField n (fromMaybe BS.empty v)) (concat $ maybeToList fields')) $^^ 
+     (map (\(n,v) -> setCustomField n (fromMaybe "" v)) (concat $ maybeToList fields')) $^^
      (applyRelation (fromMaybe defaultRoles $ join $ toSafeEnumInt <$> relation') emptySignatoryTMP )
 
 
@@ -168,7 +168,7 @@ applyRelation _                      = id
 
 
 -- High level commons. Used buy some simmilar API's, but not all of them
-getFiles :: (APIContext c, Kontrakcja m) => APIFunction m c [(BS.ByteString, BS.ByteString)]
+getFiles :: (APIContext c, Kontrakcja m) => APIFunction m c [(String, BS.ByteString)]
 getFiles = fmap (fromMaybe []) $ fromJSONLocal "files" $ fromJSONLocalMap $ do
     name    <- fromJSONField "name"
     content <- fromJSONFieldBase64 "content"

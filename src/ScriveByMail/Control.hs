@@ -151,8 +151,8 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   
   let userDetails = signatoryDetailsFromUser user mcompany
 
-  let actor = MailAPIActor ctxtime (userid user) (BS.toString $ getEmail user)
-  edoc <- runDBUpdate $ NewDocument user mcompany (BS.fromString title) doctype 0 actor
+  let actor = MailAPIActor ctxtime (userid user) (getEmail user)
+  edoc <- runDBUpdate $ NewDocument user mcompany title doctype 0 actor
   
   when (isLeft edoc) $ do
     let Left msg = edoc
@@ -167,7 +167,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   let Right doc = edoc
       
   content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) pdfBinary
-  file <- runDB $ dbUpdate $ NewFile (BS.fromString title) content14
+  file <- runDB $ dbUpdate $ NewFile title content14
   _ <- guardRightM $ runDBUpdate (AttachFile (documentid doc) (fileid file) actor)
   _ <- runDBUpdate $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality actor
   _ <- runDBUpdate $ SetDocumentIdentification (documentid doc) [EmailIdentification] actor
@@ -215,7 +215,7 @@ sendMailAPIConfirmEmail ctx document =
 sendMailAPIErrorEmail :: Kontrakcja m => Context -> String -> String -> m ()
 sendMailAPIErrorEmail ctx email msg = do
   mail <- mailMailApiError ctx msg
-  scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress (BS.fromString email) (BS.fromString email)] }
+  scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress email email] }
 
 markDocumentAuthorReadAndSeen :: Kontrakcja m => Document -> m ()
 markDocumentAuthorReadAndSeen doc@Document{documentid} = do
@@ -223,8 +223,8 @@ markDocumentAuthorReadAndSeen doc@Document{documentid} = do
         getAuthorSigLink doc
   time <- ctxtime <$> getContext
   _ <- runDBUpdate $ MarkInvitationRead documentid signatorylinkid 
-       (MailAPIActor time (fromJust maybesignatory) (BS.toString $ getEmail sl))
+       (MailAPIActor time (fromJust maybesignatory) (getEmail sl))
   _ <- runDBUpdate $ MarkDocumentSeen documentid signatorylinkid signatorymagichash 
-       (MailAPIActor time (fromJust maybesignatory) (BS.toString $ getEmail sl))
+       (MailAPIActor time (fromJust maybesignatory) (getEmail sl))
   return ()
 

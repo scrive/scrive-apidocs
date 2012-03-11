@@ -30,7 +30,6 @@ import Templates.Templates
 import Text.StringTemplate.GenericStandard()
 import Control.Applicative
 import Control.Monad.IO.Class
-import Data.ByteString.UTF8 (toString)
 import Data.Maybe
 import DB.Classes
 import Misc
@@ -167,10 +166,10 @@ companyFields mc = do
         field "companyid" $ maybe "" (show . companyid) mc
         field "companyname" $  getCompanyName mc
         field "companynumber" $ getCompanyNumber mc
-        field "companyaddress" $ maybe "" (toString . companyaddress . companyinfo) mc
-        field "companyzip" $  maybe "" (toString . companyzip . companyinfo)  mc
-        field "companycity" $  maybe "" (toString . companycity . companyinfo) mc
-        field "companycountry" $ maybe "" (toString . companycountry . companyinfo) mc
+        field "companyaddress" $ maybe "" (companyaddress . companyinfo) mc
+        field "companyzip" $  maybe "" (companyzip . companyinfo)  mc
+        field "companycity" $  maybe "" (companycity . companyinfo) mc
+        field "companycountry" $ maybe "" (companycountry . companyinfo) mc
 
 {-| Full fields set about user -}
 userFields :: MonadIO m => User -> Fields m
@@ -179,8 +178,8 @@ userFields u =  do
         field "sndname"          $ getLastName u
         field "personalnumber"   $ getPersonalNumber u
         field "companyposition"  $ usercompanyposition $ userinfo u
-        field "phone"            $ toString $ userphone $ userinfo u
-        field "mobile"           $ toString $ usermobile $ userinfo u
+        field "phone"            $ userphone $ userinfo u
+        field "mobile"           $ usermobile $ userinfo u
         field "email"            $ getEmail u
         field "regionse"         $ REGION_SE == getRegion u
         field "regiongb"         $ REGION_GB == getRegion u
