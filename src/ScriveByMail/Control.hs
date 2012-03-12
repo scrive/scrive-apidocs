@@ -1,72 +1,34 @@
 module ScriveByMail.Control 
        (
 
-         sendMailAPIConfirmEmail,
-         sendMailAPIErrorEmail,
-         sendMailAPIDelayAdminEmail,
-         sendMailAPIDelayUserEmail,
-         markDocumentAuthorReadAndSeen,
          handleMailAPI,
-         parseEmailMessageToParts,
-         charset,
-         handleConfirmDelay,
-         doMailAPI
+         handleConfirmDelay
        )
        
        where
 
 import Company.Model
+import CompanyAccounts.CompanyAccountsControl
 import DB.Classes
 import Doc.DocStateData
-import Doc.DocStorage
-import Doc.DocUtils
-import Doc.JSON
-import Doc.Model
-import EvidenceLog.Model
-import File.Model
 import Kontra
-import KontraLink
 import MagicHash
-import Mails.SendMail
-import MinutesTime
 import Misc
 import Util.MonadUtils
-import Redirect
+import ScriveByMail.Action
 import ScriveByMail.Model
-import ScriveByMail.Parse
-import ScriveByMail.View
 import User.Model
-import Util.HasSomeUserInfo
-import Util.SignatoryLinkUtils
+import User.UserControl
 import qualified Doc.DocControl as DocControl
-import qualified Log (scrivebymail, scrivebymailfailure, mailAPI, jsonMailAPI)
 
-import Codec.MIME.Decode
 import Control.Applicative
 import Control.Monad
 import Control.Monad.Trans
-import Data.Char
-import Data.Either
 import Data.Int
-import Data.List
-import Data.Maybe
-import Data.String.Utils
 import Happstack.Server hiding (simpleHTTP, host)
-import Text.JSON
-import Text.JSON.String
-import qualified Codec.MIME.Parse as MIME
-import qualified Codec.MIME.Type as MIME
-import qualified Codec.Text.IConv as IConv
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
-
-checkThat :: String -> Bool -> Maybe String
-checkThat s b = Nothing <| b |> Just s
-
-charset :: MIME.Type -> String
-charset mimetype = fromMaybe "us-ascii" $ lookup "charset" (MIME.mimeParams mimetype)        
 
 {- |
 
@@ -83,7 +45,8 @@ handleMailAPI = do
   case mresult of
     Just (doc2, doc, msiglinkid) -> do
         _ <- DocControl.postDocumentChangeAction doc2 doc msiglinkid
-  return $ show (documentid doc)
+        return $ show $ documentid doc
+    Nothing -> return ""
 
 handleConfirmDelay :: Kontrakcja m => String -> Int64 -> MagicHash -> m String
 handleConfirmDelay adminemail delayid key = do

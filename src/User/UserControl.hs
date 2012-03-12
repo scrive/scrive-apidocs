@@ -39,7 +39,7 @@ import User.Utils
 import EvidenceLog.Model
 import User.History.Model
 import ScriveByMail.Model
-import ScriveByMail.Control
+import qualified ScriveByMail.Action as MailAPI
 
 checkPasswordsMatch :: TemplatesMonad m => BS.ByteString -> BS.ByteString -> Either (m FlashMessage) ()
 checkPasswordsMatch p1 p2 =
@@ -811,11 +811,20 @@ handleActivate mfstname msndname actvuser signupmethod = do
                 _ <- dbUpdate $ AcceptTermsOfService (userid actvuser) (ctxtime ctx)
                 _ <- dbUpdate $ LogHistoryTOSAccept (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
                 _ <- dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
-                delays <- dbQuery $ GetMailAPIDelaysForEmail (BS.toString $ getEmail actvuser) (ctxtime ctx)
-                forM_ delays $ \(delayid, text) -> do
-                  _ <- MailAPI.doMailAPI text
-                  dbUpdate $ DeleteMailAPIDelay delayid (ctxtime ctx)
                 return ()
+              delays <- runDBQuery $ GetMailAPIDelaysForEmail (BS.toString $ getEmail actvuser) (ctxtime ctx)
+              
+              forM_ delays $ \(delayid, text) -> do
+                Log.debug $ "delay: " ++ show delayid
+                mresult <- MailAPI.doMailAPI text
+                case mresult of
+                  Just (_doc2, _doc, _msiglinkid) -> do
+                    --_ <- DocControl.postDocumentChangeAction doc2 doc msiglinkid
+                    return ()
+                  Nothing -> return ()
+
+                runDBUpdate $ DeleteMailAPIDelays delayid (ctxtime ctx)
+
               tosuser <- guardJustM $ runDBQuery $ GetUserByID (userid actvuser)
               _ <- addUserSignTOSStatEvent tosuser
               _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
