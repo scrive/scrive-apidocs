@@ -1,4 +1,3 @@
-{-# LANGUAGE OverlappingInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module TestingUtil where
 
