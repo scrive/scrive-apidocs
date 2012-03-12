@@ -58,29 +58,26 @@ data CompanyUI = CompanyUI {
 data GetCompanies = GetCompanies (Maybe ServiceID)
 instance DBQuery GetCompanies [Company] where
   dbQuery (GetCompanies msid) = do
-    _ <- kRun $ selectCompaniesSQL <++> SQL "WHERE c.service_id IS NOT DISTINCT FROM ? ORDER BY c.id DESC" [toSql msid]
+    _ <- kRun $ selectCompaniesSQL <++> SQL "WHERE service_id IS NOT DISTINCT FROM ? ORDER BY id DESC" [toSql msid]
     fetchCompanies
 
 data GetCompany = GetCompany CompanyID
 instance DBQuery GetCompany (Maybe Company) where
   dbQuery (GetCompany cid) = do
-    _ <- kRun $ selectCompaniesSQL <++> SQL "WHERE c.id = ?" [toSql cid]
+    _ <- kRun $ selectCompaniesSQL <++> SQL "WHERE id = ?" [toSql cid]
     fetchCompanies >>= oneObjectReturnedGuard
 
 data GetCompanyByExternalID = GetCompanyByExternalID (Maybe ServiceID) ExternalCompanyID
 instance DBQuery GetCompanyByExternalID (Maybe Company) where
   dbQuery (GetCompanyByExternalID msid ecid) = do
-    _ <- kRun $ selectCompaniesSQL <++> SQL "WHERE c.service_id IS NOT DISTINCT FROM ? AND c.external_id = ?" [toSql msid, toSql ecid]
+    _ <- kRun $ selectCompaniesSQL <++> SQL "WHERE service_id IS NOT DISTINCT FROM ? AND external_id = ?" [toSql msid, toSql ecid]
     fetchCompanies >>= oneObjectReturnedGuard
 
 data CreateCompany = CreateCompany (Maybe ServiceID) (Maybe ExternalCompanyID)
 instance DBUpdate CreateCompany Company where
   dbUpdate (CreateCompany msid mecid) = do
-    _ <- kRunRaw "LOCK TABLE companies IN ACCESS EXCLUSIVE MODE"
-    cid <- getUniqueID tableCompanies
-    _ <- kRun $ mkSQL INSERT tableCompanies [
-        sql "id" cid
-      , sql "external_id" mecid
+    _ <- kRun $ mkSQL INSERT tableCompanies
+      [ sql "external_id" mecid
       , sql "service_id" msid
       , sql "name" ""
       , sql "number" ""
@@ -88,8 +85,8 @@ instance DBUpdate CreateCompany Company where
       , sql "zip" ""
       , sql "city" ""
       , sql "country" ""
-      ]
-    dbQuery (GetCompany cid) >>= maybe (E.throw $ NoObject mempty) return
+      ] <++> SQL (" RETURNING " ++ selectCompaniesSelectors) []
+    fetchCompanies >>= oneObjectReturnedGuard >>= maybe (E.throw $ NoObject mempty) return
 
 data SetCompanyInfo = SetCompanyInfo CompanyID CompanyInfo
 instance DBUpdate SetCompanyInfo Bool where
@@ -128,22 +125,22 @@ instance DBUpdate GetOrCreateCompanyWithExternalID Company where
 
 -- helpers
 
+selectCompaniesSelectors :: String
+selectCompaniesSelectors = "id"
+  ++ ", external_id"
+  ++ ", service_id"
+  ++ ", name"
+  ++ ", number"
+  ++ ", address"
+  ++ ", zip"
+  ++ ", city"
+  ++ ", country"
+  ++ ", bars_background"
+  ++ ", bars_textcolour"
+  ++ ", encode(logo, 'base64')"
+
 selectCompaniesSQL :: SQL
-selectCompaniesSQL = SQL ("SELECT"
-  ++ "  c.id"
-  ++ ", c.external_id"
-  ++ ", c.service_id"
-  ++ ", c.name"
-  ++ ", c.number"
-  ++ ", c.address"
-  ++ ", c.zip"
-  ++ ", c.city"
-  ++ ", c.country"
-  ++ ", c.bars_background"
-  ++ ", c.bars_textcolour"
-  ++ ", encode(c.logo, 'base64')"
-  ++ "  FROM companies c"
-  ++ " ") []
+selectCompaniesSQL = SQL ("SELECT " ++ selectCompaniesSelectors ++ " FROM companies ") []
 
 fetchCompanies :: DB [Company]
 fetchCompanies = foldDB decoder []

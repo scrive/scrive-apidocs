@@ -32,7 +32,7 @@ import Doc.API
 import Control.Monad.Error
 import Data.Functor
 import Data.List
-import Happstack.Server hiding (simpleHTTP, host, dir, path)
+import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
 
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
@@ -131,7 +131,7 @@ staticRoutes = choice
      , dir "d" $ param "archive"   $ hPost $ toK0 $ ArchiveControl.handleContractArchive
      , dir "d" $ param "remind"    $ hPost $ toK0 $ DocControl.handleBulkContractRemind
      , dir "d"                     $ hPost $ toK1 $ DocControl.handleIssueShowPost
-     , dir "docs"                  $ hGet  $ toK0 $ DocControl.jsonDocumentsList
+     , dir "docs"                  $ hGet  $ toK0 $ ArchiveControl.jsonDocumentsList
      , dir "doc"                   $ hGet  $ toK1 $ DocControl.jsonDocument
      , dir "save"                  $ hPost $ toK1 $ DocControl.handleSaveDraft
      , dir "setattachments"        $ hPost $ toK1 $ DocControl.handleSetAttachments -- Since setting attachments can have file upload, we need extra handler for it.
@@ -217,6 +217,7 @@ staticRoutes = choice
      , dir "adminonly" $ dir "signstatscsv" $ path GET id $ Stats.handleSignStatsCSV
      , dir "adminonly" $ dir "dochistorycsv" $ path GET id $ Stats.handleDocHistoryCSV
      , dir "adminonly" $ dir "signhistorycsv" $ path GET id $ Stats.handleSignHistoryCSV
+     , dir "adminonly" $ dir "userslistcsv" $ path GET id $ Administration.handleUsersListCSV
 
      , dir "adminonly" $ dir "runstatsonalldocs" $ hGet $ toK0 $ Stats.addAllDocsToStats
      , dir "adminonly" $ dir "stats1to2" $ hGet $ toK0 $ Stats.handleMigrate1To2
@@ -260,6 +261,7 @@ staticRoutes = choice
      , dir "dave" $ dir "user"        $ hGet $ toK1 $ Administration.daveUser
      , dir "dave" $ dir "userhistory" $ hGet $ toK1 $ Administration.daveUserHistory
      , dir "dave" $ dir "company"     $ hGet $ toK1 $ Administration.daveCompany
+     , dir "dave" $ dir "company"     $ hGet $ toK3 $ Administration.companyClosedFilesZip
 
      -- account stuff
      , dir "logout"      $ hGet  $ toK0 $ handleLogout

@@ -35,7 +35,7 @@ tableUserFriends = Table {
 tableUsers :: Table
 tableUsers = Table {
     tblName = "users"
-  , tblVersion = 4
+  , tblVersion = 6
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("password", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
@@ -57,6 +57,8 @@ tableUsers = Table {
        , ("deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})
        , ("region", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("customfooter", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("company_name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("company_number", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE users ("
@@ -81,6 +83,8 @@ tableUsers = Table {
           ++ ", deleted BOOL NOT NULL"
           ++ ", region SMALLINT NOT NULL"
           ++ ", customfooter TEXT NULL"
+          ++ ", company_name   TEXT NOT NULL"
+          ++ ", company_number TEXT NOT NULL"
           ++ ", CONSTRAINT pk_users PRIMARY KEY (id)"
           ++ ")"
         return TVRcreated
@@ -97,6 +101,10 @@ tableUsers = Table {
       ++ " ADD CONSTRAINT fk_users_companies FOREIGN KEY(company_id)"
       ++ " REFERENCES companies(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
+    kRunRaw $ "CREATE SEQUENCE users_id_seq"
+    kRunRaw $ "SELECT setval('users_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM users))"
+    kRunRaw $ "ALTER TABLE users ALTER id SET DEFAULT nextval('users_id_seq')"
+    return ()
   }
 
 tableUserMailAPIs :: Table

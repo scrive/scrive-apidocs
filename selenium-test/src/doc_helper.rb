@@ -103,6 +103,8 @@ class DocHelper
 
   def signAndSend
     (@wait.until { @driver.find_element :css => ".finalbutton" }).click
+    puts "At this moment draft is being saved | wait for it a 0.5 secound"
+    sleep(1.0/2.0)
     puts "Final aproval modal"
     acceptStandardModal 
     puts "Closing confirmation modal"

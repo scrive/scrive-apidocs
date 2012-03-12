@@ -57,7 +57,6 @@ import User.Lang
 import User.Locale
 import User.Password
 import User.Region
-import User.Tables
 import User.UserID
 
 -- newtypes
@@ -107,6 +106,8 @@ data UserInfo = UserInfo {
   , userphone           :: BS.ByteString
   , usermobile          :: BS.ByteString
   , useremail           :: Email
+  , usercompanyname     :: BS.ByteString
+  , usercompanynumber   :: BS.ByteString
   } deriving (Eq, Ord, Show)
 
 data UserMailAPI = UserMailAPI {
@@ -130,28 +131,28 @@ instance HasLocale UserSettings where
 data GetUsers = GetUsers
 instance DBQuery GetUsers [User] where
   dbQuery GetUsers = do
-    kPrepare $ selectUsersSQL ++ " WHERE u.deleted = FALSE ORDER BY u.first_name || ' ' || u.last_name DESC"
+    kPrepare $ selectUsersSQL ++ " WHERE deleted = FALSE ORDER BY first_name || ' ' || last_name DESC"
     _ <- kExecute []
     fetchUsers
 
 data GetUserByID = GetUserByID UserID
 instance DBQuery GetUserByID (Maybe User) where
   dbQuery (GetUserByID uid) = do
-    kPrepare $ selectUsersSQL ++ " WHERE u.id = ? AND u.deleted = FALSE"
+    kPrepare $ selectUsersSQL ++ " WHERE id = ? AND deleted = FALSE"
     _ <- kExecute [toSql uid]
     fetchUsers >>= oneObjectReturnedGuard
 
 data GetUserByEmail = GetUserByEmail (Maybe ServiceID) Email
 instance DBQuery GetUserByEmail (Maybe User) where
   dbQuery (GetUserByEmail msid email) = do
-    kPrepare $ selectUsersSQL ++ " WHERE u.deleted = FALSE AND u.service_id IS NOT DISTINCT FROM ? AND u.email = ?"
+    kPrepare $ selectUsersSQL ++ " WHERE deleted = FALSE AND service_id IS NOT DISTINCT FROM ? AND email = ?"
     _ <- kExecute [toSql msid, toSql email]
     fetchUsers >>= oneObjectReturnedGuard
 
 data GetCompanyAccounts = GetCompanyAccounts CompanyID
 instance DBQuery GetCompanyAccounts [User] where
   dbQuery (GetCompanyAccounts cid) = do
-    kPrepare $ selectUsersSQL ++ " WHERE u.company_id = ? AND u.deleted = FALSE ORDER BY u.email DESC"
+    kPrepare $ selectUsersSQL ++ " WHERE company_id = ? AND deleted = FALSE ORDER BY email DESC"
     _ <- kExecute [toSql cid]
     fetchUsers
 
@@ -206,15 +207,12 @@ instance DBUpdate AddUser (Maybe User) where
     let handle e = case e of
           NoObject{} -> return Nothing
           _ -> E.throw e
-    _ <- kRunRaw "LOCK TABLE users IN ACCESS EXCLUSIVE MODE"
     mu <- dbQuery (GetUserByEmail msid $ Email email) `catchDB` handle
     case mu of
       Just _ -> return Nothing -- user with the same email address exists
       Nothing -> do
-        uid <- getUniqueID tableUsers
-        kPrepare $ "INSERT INTO users ("
-          ++ "  id"
-          ++ ", password"
+        kPrepare $ "INSERT INTO users"
+          ++ "( password"
           ++ ", salt"
           ++ ", is_company_admin"
           ++ ", account_suspended"
@@ -226,16 +224,19 @@ instance DBUpdate AddUser (Maybe User) where
           ++ ", last_name"
           ++ ", personal_number"
           ++ ", company_position"
+          ++ ", company_name"
+          ++ ", company_number"
           ++ ", phone"
           ++ ", mobile"
           ++ ", email"
           ++ ", preferred_design_mode"
           ++ ", lang"
           ++ ", region"
-          ++ ", deleted) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        _ <- kExecute $ [
-            toSql uid
-          , toSql $ pwdHash <$> mpwd
+          ++ ", deleted) VALUES (decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+          ++ " RETURNING " ++ selectUsersSelectors
+
+        _ <- kExecute $
+          [ toSql $ pwdHash <$> mpwd
           , toSql $ pwdSalt <$> mpwd
           , toSql iscompadmin
           , toSql False
@@ -245,14 +246,14 @@ instance DBUpdate AddUser (Maybe User) where
           , toSql mcid
           , toSql fname
           , toSql lname
-          ] ++ replicate 4 (toSql "")
+          ] ++ replicate 6 (toSql "")
             ++ [toSql email] ++ [
               SqlNull
             , toSql $ getLang l
             , toSql $ getRegion l
             , toSql False
             ]
-        dbQuery $ GetUserByID uid
+        fetchUsers >>= oneObjectReturnedGuard
 
 data SetUserEmail = SetUserEmail (Maybe ServiceID) UserID Email
 instance DBUpdate SetUserEmail Bool where
@@ -362,6 +363,8 @@ instance DBUpdate SetUserInfo Bool where
       ++ ", phone = ?"
       ++ ", mobile = ?"
       ++ ", email = ?"
+      ++ ", company_name = ?"
+      ++ ", company_number = ?"
       ++ "  WHERE id = ? AND deleted = FALSE"
     kExecute01 [
         toSql $ userfstname info
@@ -371,6 +374,8 @@ instance DBUpdate SetUserInfo Bool where
       , toSql $ userphone info
       , toSql $ usermobile info
       , toSql $ useremail info
+      , toSql $ usercompanyname info
+      , toSql $ usercompanynumber info
       , toSql uid
       ]
 
@@ -436,29 +441,32 @@ checkIfUserExists uid = checkIfAnyReturned
   $ SQL "SELECT 1 FROM users WHERE id = ? AND deleted = FALSE" [toSql uid]
 
 selectUsersSQL :: String
-selectUsersSQL = "SELECT "
- ++ "  u.id"
- ++ ", encode(u.password, 'base64')"
- ++ ", encode(u.salt, 'base64')"
- ++ ", u.is_company_admin"
- ++ ", u.account_suspended"
- ++ ", u.has_accepted_terms_of_service"
- ++ ", u.signup_method"
- ++ ", u.service_id"
- ++ ", u.company_id"
- ++ ", u.first_name"
- ++ ", u.last_name"
- ++ ", u.personal_number"
- ++ ", u.company_position"
- ++ ", u.phone"
- ++ ", u.mobile"
- ++ ", u.email"
- ++ ", u.preferred_design_mode"
- ++ ", u.lang"
- ++ ", u.region"
- ++ ", u.customfooter"
- ++ "  FROM users u"
- ++ " "
+selectUsersSQL = "SELECT " ++ selectUsersSelectors ++ " FROM users"
+
+selectUsersSelectors :: String
+selectUsersSelectors =
+ "  id"
+ ++ ", encode(password, 'base64')"
+ ++ ", encode(salt, 'base64')"
+ ++ ", is_company_admin"
+ ++ ", account_suspended"
+ ++ ", has_accepted_terms_of_service"
+ ++ ", signup_method"
+ ++ ", service_id"
+ ++ ", company_id"
+ ++ ", first_name"
+ ++ ", last_name"
+ ++ ", personal_number"
+ ++ ", company_position"
+ ++ ", phone"
+ ++ ", mobile"
+ ++ ", email"
+ ++ ", preferred_design_mode"
+ ++ ", lang"
+ ++ ", region"
+ ++ ", customfooter"
+ ++ ", company_name"
+ ++ ", company_number"
 
 fetchUsers :: DB [User]
 fetchUsers = foldDB decoder []
@@ -468,7 +476,8 @@ fetchUsers = foldDB decoder []
     decoder acc uid password salt is_company_admin account_suspended
       has_accepted_terms_of_service signup_method service_id company_id
       first_name last_name personal_number company_position phone mobile
-      email preferred_design_mode lang region customfooter = User {
+      email preferred_design_mode lang region customfooter
+      company_name company_number = User {
           userid = uid
         , userpassword = maybePassword (password, salt)
         , useriscompanyadmin = is_company_admin
@@ -483,6 +492,8 @@ fetchUsers = foldDB decoder []
           , userphone = phone
           , usermobile = mobile
           , useremail = email
+          , usercompanyname = company_name
+          , usercompanynumber = company_number
           }
         , usersettings = UserSettings {
             preferreddesignmode = preferred_design_mode

@@ -9,7 +9,7 @@ window.FieldPlacementView = Backbone.View.extend({
         if (args.model.isSignature())
             return new SignaturePlacementView(args);
         else return new StandardPlacementView(args);
-    },
+    }
 });
 
 window.FieldPlacementPlacedView = Backbone.View.extend({
@@ -17,7 +17,7 @@ window.FieldPlacementPlacedView = Backbone.View.extend({
         if (args.model.field().isSignature())
             return new SignaturePlacementPlacedView(args);
         else return new StandardPlacementPlacedView(args);
-    },
+    }
 });
 
 
@@ -30,8 +30,7 @@ var StandardPlacementView = Backbone.View.extend({
     render: function() {
             var field =   this.model;
             var box = this.el;
-            box.addClass('placedfield');
-            box.addClass('value');
+            box.addClass('placedfieldvalue value');
             box.text(field.nicetext());
             field.bind('change', function() {
                 box.text(field.nicetext());

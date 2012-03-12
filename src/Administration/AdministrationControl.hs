@@ -24,6 +24,7 @@ module Administration.AdministrationControl(
           , handleCreateUser
           , handlePostAdminCompanyUsers
           , handleCreateService
+          , handleUsersListCSV
           , showFunctionalityStats
           , handleBackdoorQuery
           , resealFile
@@ -36,6 +37,7 @@ module Administration.AdministrationControl(
           , jsonUsersList
           , jsonCompanies
           , jsonDocuments
+          , companyClosedFilesZip
           ) where
 import Control.Monad.State
 import Data.Functor
@@ -71,7 +73,9 @@ import Util.HasSomeUserInfo
 import InputValidation
 import User.Utils
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString as BSS
 import qualified Data.ByteString.UTF8 as BS
+
 import InspectXMLInstances ()
 import InspectXML
 import File.Model
@@ -85,6 +89,9 @@ import Util.SignatoryLinkUtils
 import Stats.Control (getUsersAndStats)
 import EvidenceLog.Model
 import User.History.Model
+import Codec.Archive.Zip
+import qualified Data.Map as Map
+import Doc.DocStorage
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m String
@@ -175,6 +182,32 @@ showAdminCompanyUsers cid = onlySalesOrAdmin $ adminCompanyUsersPage cid
 
 showAdminUsersForSales :: Kontrakcja m => m String
 showAdminUsersForSales = onlySalesOrAdmin $ adminUsersPageForSales
+
+handleUsersListCSV :: Kontrakcja m => m Response
+handleUsersListCSV = onlySalesOrAdmin $ do
+  users <- getUsersAndStatsInv
+  ok $ setHeader "Content-Disposition" "attachment;filename=userslist.csv"
+     $ setHeader "Content-Type" "text/csv"
+     $ toResponse (usersListCSV users)
+
+usersListCSV :: [(User, Maybe Company, DocStats, InviteType)] -> String
+usersListCSV users = 
+  "\"" ++ intercalate "\";\""  
+  ["id", "fstname", "sndname", "email", "company", "position","tos"]
+  ++ "\"\n" ++
+  (concat $ map csvline $ filter active users)
+    where
+        active (u,_,_,_) =   (not (useraccountsuspended u)) && (isJust $ userhasacceptedtermsofservice u) && (isNothing $ userservice u)
+        csvline (u,mc,_,_) = "\"" ++ intercalate "\";\""
+                          [ show $ userid u
+                          , BS.toString $ getFirstName u
+                          , BS.toString $ getLastName u
+                          , BS.toString $ getEmail u
+                          , BS.toString $ getCompanyName mc
+                          , BS.toString $ usercompanyposition $ userinfo u
+                          , show $ fromJust $ userhasacceptedtermsofservice u
+                          ]
+                          ++ "\"\n"
 
 jsonUsersList ::Kontrakcja m => m JSValue
 jsonUsersList = do
@@ -427,16 +460,15 @@ handleCreateCompanyUser companyid = onlySalesOrAdmin $ do
   email <- getCriticalField asValidEmail "email"
   fstname <- getCriticalField asValidName "fstname"
   sndname <- getCriticalField asValidName "sndname"
-  custommessage <- getField "custommessage"
+  custommessage <- joinEmpty <$> getField "custommessage"
+  Log.debug $ "Custom message when creating an account " ++ show custommessage
   region <- guardJustM $ readField "region"
-  madmin <- getOptionalField asValidCheckBox "iscompanyadmin"
+  admin <- isFieldSet "iscompanyadmin"
   muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage (mkLocaleFromRegion region)
   case muser of
     Just (User{userid}) -> do
       _ <- runDBUpdate $ SetUserCompany userid (Just companyid)
-      when (fromMaybe False madmin) $ do
-        _ <- runDBUpdate $ SetUserCompanyAdmin userid True
-        return ()
+      when_ admin $ runDBUpdate $ SetUserCompanyAdmin userid True
     Nothing -> addFlashM flashMessageUserWithSameEmailExists
   return ()
 
@@ -483,6 +515,8 @@ getUserInfoChange = do
   muserphone           <- getFieldUTF "userphone"
   musermobile          <- getFieldUTF "usermobile"
   museremail           <- fmap Email <$> getFieldUTF "useremail"
+  musercompanyname     <- getFieldUTF "usercompanyname"
+  musercompanynumber   <- getFieldUTF "usercompanynumber"
   return $ \UserInfo {
       userfstname
     , usersndname
@@ -491,6 +525,8 @@ getUserInfoChange = do
     , userphone
     , usermobile
     , useremail
+    , usercompanyname
+    , usercompanynumber
     } ->  UserInfo {
       userfstname = fromMaybe userfstname muserfstname
       , usersndname = fromMaybe usersndname musersndname
@@ -499,6 +535,8 @@ getUserInfoChange = do
       , userphone = fromMaybe userphone muserphone
       , usermobile = fromMaybe usermobile musermobile
       , useremail =  fromMaybe useremail museremail
+      , usercompanyname = fromMaybe usercompanyname musercompanyname
+      , usercompanynumber = fromMaybe usercompanynumber musercompanynumber
     }
 
 
@@ -649,7 +687,7 @@ instance HasFunctionalityStats Document where
     ]
     where
       anyField p doc =
-        any p . concat . map (signatoryfields . signatorydetails) $ documentsignatorylinks doc
+        any p . concatMap (signatoryfields . signatorydetails) $ documentsignatorylinks doc
       hasPlacement SignatoryField{sfPlacements} = not $ null sfPlacements
       isCustom SignatoryField{sfType} =
         case sfType of
@@ -809,3 +847,37 @@ serveLogDirectory filename = onlyAdmin $ do
         respond404
     (_,bsstdout,_) <- liftIO $ readProcessWithExitCode' "tail" ["log/" ++ filename, "-n", "40"] BSL.empty
     ok $ addHeader "Refresh" "5" $ toResponseBS (BS.fromString "text/plain; charset=utf-8") $ bsstdout
+
+
+companyClosedFilesZip :: Kontrakcja m => CompanyID -> Int  -> String -> m Response
+companyClosedFilesZip cid start _filenamefordownload = onlyAdmin $ do
+  archive <- companyFilesArchive cid start
+  let res = Response 200 Map.empty nullRsFlags (fromArchive archive) Nothing
+  return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "archive/zip") res
+
+
+companyFilesArchive :: Kontrakcja m => CompanyID -> Int -> m Archive
+companyFilesArchive cid start = do
+    Log.debug $ "Getting all files archive for company " ++ show cid
+    docs <- runDB $ dbQuery $ GetDocumentsByCompanyWithFiltering Nothing cid [] Nothing Nothing Nothing
+    let cdocs = sortBy (\d1 d2 -> compare (documentid d1) (documentid d2)) $ filter (\doc -> documentstatus doc == Closed)  $ docs
+    let sdocs = take zipCount $ drop (zipCount*start) $ cdocs
+    Log.debug $ "Found  " ++ show (length $ filter (\doc -> documentstatus doc == Closed)  $ docs) ++ "document"
+    mentries <- mapM docToEntry $  sdocs
+    return $ foldr addEntryToArchive emptyArchive $ map fromJust $ filter isJust $ mentries
+  where
+    zipCount = 80
+    
+docToEntry ::  Kontrakcja m => Document -> m (Maybe Entry)
+docToEntry doc = do
+      let snpart = concat $ for (take 5 $ documentsignatorylinks doc) $ \sl -> (take 8 $ BS.toString $ getFirstName sl) ++ "_"++(take 8 $ BS.toString $ getFirstName sl) ++ "_"
+      let name = filter ((/= ' ')) $ filter (isAscii) $ (BS.toString $ documenttitle doc) ++ "_" ++ (show $ documentmtime doc) ++ "_" ++ snpart ++".pdf"
+      ctx <- getContext
+      case (documentsealedfiles doc) of
+        [fid] -> do
+            Log.debug $ "Getting content for the file " ++ show fid
+            content <- liftIO $ getFileIDContents ctx fid
+            return $ Just $ toEntry name 0 $ BSL.pack $ BSS.unpack content
+        _ -> do
+            Log.debug $ "Bad sealed file number " ++ show (documentid doc)
+            return Nothing

@@ -25,7 +25,7 @@ $(newtypeDeriveUnderlyingReadShow ''SignatoryLinkID)
 $(newtypeDeriveConvertible ''SignatoryLinkID)
 
 instance Random SignatoryLinkID where
-  random = SignatoryLinkID `liftM` randomR (0, maxBound)
+  random = SignatoryLinkID `liftM` randomR (10000000, 10000000000)
 
 instance FromReqURI SignatoryLinkID where
   fromReqURI = readM

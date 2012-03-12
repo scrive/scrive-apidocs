@@ -4,8 +4,7 @@ window.Validation = Backbone.Model.extend({
     defaults : {
         validates : function() {return true;},
         callback : function() {},
-        message : "Validation has failed",
-        next: undefined
+        message : "Validation has failed"
     },
     concat: function(nextValidation) {
         if (this.get("next") == undefined)
@@ -110,7 +109,7 @@ window.PasswordValidation = Validation.extend({
         validates: function(t) { return t.length >= 8; },
         message: "Password must contain 8 characters at least!",
         message_max: "Password must contain 250 characters at most!",
-        message_digits: "Password must have minimum two digits and two letters!",
+        message_digits: "Password must have minimum two digits and two letters!"
     },
     initialize: function() {
         this.set({"next": new Validation({
@@ -128,7 +127,6 @@ window.PasswordValidation = Validation.extend({
 
 window.PasswordEqValidation = Validation.extend({
     defaults: {
-        with: undefined,
         validates: function(t) {
             var p1 = this.get("with") ? this.get("with").val() : undefined;
 

@@ -123,7 +123,6 @@ var DocumentDesignView = Backbone.View.extend({
               document.makeTemplate();
               document.save().sendAjax(function() {
                                new Submit().send();
-                               return false;
                             });
                      });
         return a;
@@ -439,7 +438,8 @@ var DocumentDesignView = Backbone.View.extend({
                         text: document.process().signbuttontext(),
                         onClick: function() {
                             if (!view.verificationBeforeSendingOrSigning()) return;
-                               document.save().sendAjax( function() {view.signConfirmation()});   
+                               document.save().sendAjax();
+                               view.signConfirmation();
                         }
                       });
        else  
@@ -450,7 +450,8 @@ var DocumentDesignView = Backbone.View.extend({
                         text: document.process().sendbuttontext(),
                         onClick: function() {
                             if (!view.verificationBeforeSendingOrSigning()) return;
-                                document.save().sendAjax( function() {view.sendConfirmation()});    
+                                document.save().sendAjax();
+                                view.sendConfirmation();
                         }
                       });
         this.finalButtonBox.append(button.input())
@@ -488,7 +489,7 @@ var DocumentDesignView = Backbone.View.extend({
                   color : "blue",
                   icon : $("<span class='btn-symbol cross' style='margin-left: 10px'/>"),
                   text : document.process().signbuttontext(),
-                  onClick : function() {                    
+                  onClick : function() {
                       document.signByAuthor().send();
                     }
                 }).input();
@@ -514,7 +515,7 @@ var DocumentDesignView = Backbone.View.extend({
     sendConfirmation : function() {
        var document = this.model;
        var signatory = document.currentSignatory();
-       var content = $("<p>" + document.process().confirmsendtext() + " <strong class='documenttitle'/> " + localization.to + "<strong class='unsignedpartynotcurrent'/></p>");
+       var content = $("<p>" + document.process().confirmsendtext() + " <strong class='documenttitle'/> " + localization.to + "<span class='unsignedpartynotcurrent'/></p>");
        Confirmation.popup({
               title : document.process().confirmsendtitle(),
               acceptButton : Button.init({
@@ -594,7 +595,7 @@ var DocumentDesignView = Backbone.View.extend({
             tabs: [
                 this.tab1 = new Tab({
                     name : document.isTemplate() ? localization.step1template : document.process().step1text(),
-                    clickable : false,    
+                    clickable : false    
                   }),
                 this.tab2 = new Tab({
                     name  : document.isTemplate() ? localization.step2template : document.isBasic() ? localization.step2basic : localization.step2normal,

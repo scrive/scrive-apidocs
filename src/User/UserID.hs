@@ -19,7 +19,7 @@ $(newtypeDeriveConvertible ''UserID)
 $(newtypeDeriveUnderlyingReadShow ''UserID)
 
 instance Random UserID where
-  random = UserID `liftM` randomR (0, maxBound)
+  random = UserID `liftM` randomR (10000000, 10000000000)
 
 instance Version UserID where
   mode = extension 2 (Proxy :: Proxy UserID_0)

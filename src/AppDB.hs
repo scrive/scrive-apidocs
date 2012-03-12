@@ -18,12 +18,15 @@ import User.History.Tables
 import Stats.Tables
 import Stats.Migrations
 import File.Tables
+import File.Migrations
 import Mails.Tables
 import Mails.Migrations
 
 import EvidenceLog.Tables
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
+-- (mailerMigrations always stay at the end though. They are
+-- disjoint with kontrakcja, so it can be done that way).
 kontraMigrations :: [Migration]
 kontraMigrations = [
     addRegionToUserSettings
@@ -37,7 +40,14 @@ kontraMigrations = [
   , addEmailBrandingToCompany
   , removeOldSignatoryLinkIDFromCancelationReason
   , addDocumentIdIndexOnSignatoryLinks
+  , addSignatoryLinkIdToSignatoryAttachment
   , addTextColourToEmailBranding
+  , addFileIdSequence
+  , addIdSerialOnSignatoryLinks
+  , addIdSerialOnDocuments
+  , addIdSerialOnCompanies
+  , addIdSerialOnUsers
+  , addCompanyNameNumberOnUsers
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

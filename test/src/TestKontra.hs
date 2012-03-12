@@ -131,7 +131,8 @@ mkRequest method vars = liftIO $ do
                 then []
                 else vars
     return Request {
-          rqMethod = POST
+          rqSecure = False
+        , rqMethod = POST
         , rqPaths = []
         , rqUri = ""
         , rqQuery = ""
