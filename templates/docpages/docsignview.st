@@ -52,6 +52,7 @@ signviewheader=
 ####
 signviewfooter=
   <div class="pagefooter" style="$signviewbarsbackgroundstyle()$$signviewtextcolorstyle()$">
+   <div class="dogtooth" />
     <div class="content">
       <div class="sender">
         <div class="name">$author.fullname$</div>
