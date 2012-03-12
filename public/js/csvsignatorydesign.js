@@ -35,7 +35,7 @@ var CsvProblem = Backbone.Model.extend({
  var CsvSignatoryDesign = Backbone.Model.extend({
   defaults : {
       rows : [],
-      problems : [],
+      problems : []
   },
   problems : function() {
      return this.get("problems");    

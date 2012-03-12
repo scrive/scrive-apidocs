@@ -54,7 +54,7 @@ window.Tab = Backbone.Model.extend({
 
 var Tabs = Backbone.Model.extend({
    defaults: {
-       numbers : true,
+       numbers : true
     },  
    title: function(){
      return this.get("title");
@@ -118,7 +118,7 @@ var Tabs = Backbone.Model.extend({
    },
    tabsTail: function(){
      return this.get("tabsTail");
-   },
+   }
 });
 
 
