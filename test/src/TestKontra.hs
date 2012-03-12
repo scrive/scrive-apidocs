@@ -46,12 +46,12 @@ type TestKontra a = Kontra a
 runTestKontra' :: MonadIO m => Request -> Context -> TestKontra a ->
                   m ((Either Response a, FilterFun Response), Context)
 runTestKontra' rq ctx tk = do
-        let noflashctx = ctx{ctxflashmessages=[]}
-        (mres, ctx') <- liftIO $ runStateT (runErrorT $ ununWebT $ runServerPartT (unKontra' $ unKontra tk) rq) noflashctx
-        case mres of
-          Left e -> fail $ "runTestKontra' uncaught error: " ++ show e
-          Right Nothing -> fail "runTestKontra' mzero"
-          Right (Just a) -> return (a, ctx')
+    let noflashctx = ctx{ctxflashmessages=[]}
+    (mres, ctx') <- liftIO $ runStateT (runErrorT $ ununWebT $ runServerPartT (unKontra' $ unKontra tk) rq) noflashctx
+    case mres of
+        Left e -> fail $ "runTestKontra' uncaught error: " ++ show e
+        Right Nothing -> fail "runTestKontra' mzero"
+        Right (Just a) -> return (a, ctx')
 
 -- | Typeclass for running handlers within TestKontra monad
 class RunnableTestKontra a where
