@@ -66,6 +66,7 @@ instance InspectXML String where
 instance InspectXML BS.ByteString where
   inspectXML = inspectXML . BS.toString
 instance InspectXML Bool where
+instance InspectXML Char where
 instance InspectXML Int where
 instance InspectXML ServiceID where
 instance InspectXML Integer where
