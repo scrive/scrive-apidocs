@@ -385,7 +385,7 @@ window.CompanyBrandingSampleView = Backbone.View.extend({
 
     console.log("displaying logo " + logourl);
     this.logo.hide();
-    this.logo.css("background-image", "url('" + logourl + "')");
+    this.logo.css("background-image", "url('" + location.protocol + "//" + location.host + logourl + "')");
     this.logo.show();
     if (company.logo().loading()) {
       this.header.css("background-color", "transparent");
