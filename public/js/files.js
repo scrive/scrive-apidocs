@@ -205,7 +205,7 @@ var FilePageView = Backbone.View.extend({
         
         // Page part with image
         this.pagejpg = $("<div class='pagejpg'/>")
-        var pagelink = "/pages/" + document.documentid() + "/" + file.fileid()  + "/" + page.number() + document.viewer().urlPart() ;
+        var pagelink = location.protocol + "//" + location.host + "/pages/" + document.documentid() + "/" + file.fileid()  + "/" + page.number() + document.viewer().urlPart() ;
         this.pagejpg.css("background-image", "url(" +pagelink +")");
         this.pagejpg.append($("<input type='hidden' name='width'/>").val(page.width()));
         this.pagejpg.append($("<input type='hidden' name='height'/>").val(page.height()));
