@@ -1,3 +1,7 @@
+body.signview {
+  font-family: "Lucida Grande"
+}
+
 .signview .pageheader {
   padding-top: 30px;
   min-width: 960px;
@@ -237,6 +241,7 @@
   font-weight: normal;
   padding-left: 30px;
   padding-right: 10px;
+  font-size: large;
 }
 
 .signview .authorattachments .list {
@@ -323,7 +328,6 @@
 
 .signview .signatoryattachments .list .item .description {
   font-style: italic;
-  font-family: "Copse";
 }
 
 .signview .uploadedsignatoryattachments .list {
