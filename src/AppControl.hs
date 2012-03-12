@@ -234,8 +234,8 @@ appHandler handleRoutes appConf appGlobals = do
       addrs <- liftIO $ getAddrInfo (Just hints) (Just peerhost) Nothing
       let addr = head addrs
       let peerip = case addrAddress addr of
-                     SockAddrInet _ hostip -> IPAddress hostip
-                     _ -> unknownIPAddress
+            SockAddrInet _ hostip -> unsafeIPAddress hostip
+            _                     -> noIP
 
       psqlconn <- liftIO $ connectPostgreSQL $ dbConfig appConf
       dbenv <- mkDBEnv psqlconn (cryptorng appGlobals)

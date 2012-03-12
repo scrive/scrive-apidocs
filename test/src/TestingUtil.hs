@@ -408,8 +408,8 @@ signatoryLinkExample1 = SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 
                                       , maybesignatory = Nothing
                                       , maybesupervisor = Nothing
                                       , maybecompany = Nothing
-                                      , maybesigninfo = Just $ SignInfo (fromSeconds 0) unknownIPAddress
-                                      , maybeseeninfo = Just $ SignInfo (fromSeconds 0) unknownIPAddress
+                                      , maybesigninfo = Just $ SignInfo (fromSeconds 0) noIP
+                                      , maybeseeninfo = Just $ SignInfo (fromSeconds 0) noIP
                                       , maybereadinvite = Nothing
                                       , invitationdeliverystatus = Delivered
                                       , signatorysignatureinfo = Nothing
@@ -787,7 +787,7 @@ instance Arbitrary File where
                   }
 
 instance Arbitrary IPAddress where
-  arbitrary = fmap IPAddress arbitrary
+  arbitrary = unsafeIPAddress <$> arbitrary
 
 instance Arbitrary SignInfo where
   arbitrary = SignInfo <$> arbitrary <*> arbitrary

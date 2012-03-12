@@ -52,7 +52,7 @@ testLoginAttempt :: DBEnv -> Assertion
 testLoginAttempt env = withTestEnvironment env $ do
     User{userid} <- createTestUser
     now <- getMinutesTime
-    success <- dbUpdate $ LogHistoryLoginAttempt userid unknownIPAddress now
+    success <- dbUpdate $ LogHistoryLoginAttempt userid noIP now
     assertBool "LogHistoryLoginAttempt inserted correctly" success
     history <- dbQuery $ GetUserHistoryByUserID userid
     assertBool "User's history is not empty" (not $ null history)
@@ -61,7 +61,7 @@ testLoginSuccess :: DBEnv -> Assertion
 testLoginSuccess env = withTestEnvironment env $ do
     User{userid} <- createTestUser
     now <- getMinutesTime
-    success <- dbUpdate $ LogHistoryLoginSuccess userid unknownIPAddress now
+    success <- dbUpdate $ LogHistoryLoginSuccess userid noIP now
     assertBool "LogHistoryLoginSuccess inserted correctly" success
     history <- dbQuery $ GetUserHistoryByUserID userid
     assertBool "User's history is not empty" (not $ null history)
@@ -70,7 +70,7 @@ testPasswordSetup :: DBEnv -> Assertion
 testPasswordSetup env = withTestEnvironment env $ do
     User{userid} <- createTestUser
     now <- getMinutesTime
-    success <- dbUpdate $ LogHistoryPasswordSetup userid unknownIPAddress now Nothing
+    success <- dbUpdate $ LogHistoryPasswordSetup userid noIP now Nothing
     assertBool "LogHistoryPasswordSetup inserted correctly" success
     history <- dbQuery $ GetUserHistoryByUserID userid
     assertBool "User's history is not empty" (not $ null history)
@@ -79,7 +79,7 @@ testPasswordSetupReq :: DBEnv -> Assertion
 testPasswordSetupReq env = withTestEnvironment env $ do
     User{userid} <- createTestUser
     now <- getMinutesTime
-    success <- dbUpdate $ LogHistoryPasswordSetupReq userid unknownIPAddress now Nothing
+    success <- dbUpdate $ LogHistoryPasswordSetupReq userid noIP now Nothing
     assertBool "LogHistoryPasswordSetupReq inserted correctly" success
     history <- dbQuery $ GetUserHistoryByUserID userid
     assertBool "User's history is not empty" (not $ null history)
@@ -88,7 +88,7 @@ testAccountCreated :: DBEnv -> Assertion
 testAccountCreated env = withTestEnvironment env $ do
     User{userid} <- createTestUser
     now <- getMinutesTime
-    success <- dbUpdate $ LogHistoryAccountCreated userid unknownIPAddress now
+    success <- dbUpdate $ LogHistoryAccountCreated userid noIP now
       (Email "test@test.com") Nothing
     assertBool "LogHistoryAccountCreated inserted correctly" success
     history <- dbQuery $ GetUserHistoryByUserID userid
@@ -98,7 +98,7 @@ testTOSAccept :: DBEnv -> Assertion
 testTOSAccept env = withTestEnvironment env $ do
     User{userid} <- createTestUser
     now <- getMinutesTime
-    success <- dbUpdate $ LogHistoryTOSAccept userid unknownIPAddress now Nothing
+    success <- dbUpdate $ LogHistoryTOSAccept userid noIP now Nothing
     assertBool "LogHistoryTOSAccept inserted correctly" success
     history <- dbQuery $ GetUserHistoryByUserID userid
     assertBool "User's history is not empty" (not $ null history)
@@ -107,7 +107,7 @@ testDetailsChanged :: DBEnv -> Assertion
 testDetailsChanged env = withTestEnvironment env $ do
     User{userid} <- createTestUser
     now <- getMinutesTime
-    success <- dbUpdate $ LogHistoryDetailsChanged userid unknownIPAddress now
+    success <- dbUpdate $ LogHistoryDetailsChanged userid noIP now
       [("email", "test@test.com", "test2@test.com")] Nothing
     assertBool "LogHistoryTOSAccept inserted correctly" success
     history <- dbQuery $ GetUserHistoryByUserID userid

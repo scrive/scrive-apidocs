@@ -1,4 +1,9 @@
-module IPAddress where
+module IPAddress (
+    IPAddress
+  , unsafeIPAddress
+  , noIP
+  , formatIP
+  ) where
 
 import Data.Bits
 import Data.Convertible
@@ -25,8 +30,11 @@ instance Show IPAddress where
     , show $ (n `shiftR` 24) .&. 255
     ]
 
-unknownIPAddress :: IPAddress
-unknownIPAddress = IPAddress 0
+unsafeIPAddress :: Word32 -> IPAddress
+unsafeIPAddress = IPAddress
+
+noIP :: IPAddress
+noIP = IPAddress 0
 
 formatIP :: IPAddress -> String
 formatIP ip = "(IP: " ++ show ip ++ ")"

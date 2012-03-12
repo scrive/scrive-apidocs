@@ -263,7 +263,7 @@ fetchDocuments = foldDB decoder []
        , documenttimeouttime = timeout_time
        , documentinvitetime = case invite_time of
            Nothing -> Nothing
-           Just t -> Just (SignInfo t $ fromMaybe unknownIPAddress invite_ip)
+           Just t -> Just (SignInfo t $ fromMaybe noIP invite_ip)
        , documentlog = dlog
        , documentinvitetext = invite_text
        , documentallowedidtypes = allowed_id_types
@@ -683,7 +683,7 @@ instance Actor a => DBUpdate (CancelDocument a) (Either String Document) where
       Just document ->
         case checkCancelDocument document of
           [] -> do
-            let ipaddress = fromMaybe (IPAddress 0) $ actorIP actor
+            let ipaddress = fromMaybe noIP $ actorIP actor
             r <- kRun $ mkSQL UPDATE tableDocuments [
                 sql "status" Canceled
               , sql "mtime" mtime
@@ -807,7 +807,7 @@ data Actor a => CloseDocument a = CloseDocument DocumentID a
 instance Actor a => DBUpdate (CloseDocument a) (Either String Document) where
   dbUpdate (CloseDocument docid actor) = do
     let time = actorTime actor
-        ipaddress = fromMaybe (IPAddress 0) $ actorIP actor
+        ipaddress = fromMaybe noIP $ actorIP actor
     mdocument <- dbQuery $ GetDocumentByDocumentID docid
     case mdocument of
       Nothing -> return $ Left $ "Cannot Close document " ++ show docid ++ " because it does not exist"
@@ -1141,7 +1141,7 @@ instance Actor a => DBUpdate (MarkDocumentSeen a) (Either String Document) where
         Nothing -> return $ Left $ "signatory link id and magic hash do not match!"
         Just _ -> do
           let time = actorTime actor
-              ipnumber = fromMaybe (IPAddress 0) $ actorIP actor
+              ipnumber = fromMaybe noIP $ actorIP actor
               txt = case actorIP actor of
                 Just _ ->
                   "Document viewed by " ++ actorWho actor ++ "."
@@ -1326,7 +1326,7 @@ instance Actor a => DBUpdate (RejectDocument a) (Either String Document) where
         Just sl ->
           case checkRejectDocument document slid of
           [] -> do
-            let ipnumber = fromMaybe (IPAddress 0) $ actorIP actor
+            let ipnumber = fromMaybe noIP $ actorIP actor
             r <- kRun $ mkSQL UPDATE tableDocuments [
                 sql "status" Rejected
               , sql "mtime" time
@@ -1375,7 +1375,7 @@ instance Actor a => DBUpdate (RestartDocument a) (Either String Document) where
       then return $ Left $ "Can't restart document with " ++ (show $ documentstatus doc) ++ " status"
       else do
              let time = actorTime actor
-                 ipnumber = fromMaybe (IPAddress 0) $ actorIP actor
+                 ipnumber = fromMaybe noIP $ actorIP actor
              doc' <- clearSignInfofromDoc
              let doc'' = doc' `appendHistory` [DocumentHistoryRestarted time ipnumber]
              return $ Right doc''
@@ -1488,7 +1488,7 @@ instance Actor a => DBUpdate (SetDocumentTags a) (Either String Document) where
 data Actor a => SetDocumentInviteTime a = SetDocumentInviteTime DocumentID MinutesTime a
 instance Actor a => DBUpdate (SetDocumentInviteTime a) (Either String Document) where
   dbUpdate (SetDocumentInviteTime did invitetime actor) = do
-    let ipaddress  = fromMaybe (IPAddress 0) $ actorIP actor
+    let ipaddress  = fromMaybe noIP $ actorIP actor
     -- check if it's changed
     ed <- dbQuery $ GetDocumentByDocumentID did
     let changed = case ed of
@@ -1773,7 +1773,7 @@ instance Actor a => DBUpdate (SignDocument a) (Either String Document) where
       Just document ->
         case checkSignDocument document slid mh of
           [] -> do
-            let ipnumber = fromMaybe (IPAddress 0) $ actorIP actor
+            let ipnumber = fromMaybe noIP $ actorIP actor
                 time     = actorTime actor
             r <- kRun $ mkSQL UPDATE tableSignatoryLinks [
                 sql "sign_ip" ipnumber
