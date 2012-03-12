@@ -75,7 +75,8 @@ staticRoutes = choice
      , dir "sitemap"         $ hGetAllowHttp $ handleSitemapPage
 
      -- this is SMTP to HTTP gateway
-     , dir "mailapi" $ hPostNoXToken $ toK0 $ MailAPI.handleMailAPI
+     , dir "mailapi" $ hPostNoXToken             $ toK0 $ MailAPI.handleMailAPI
+     , dir "mailapi" $ dir "confirmdelay" $ hGet $ toK3 $ MailAPI.handleConfirmDelay
 
      -- Only download function | unified for author and signatories
      , dir "download"                     $ hGet  $ toK3 $ DocControl.handleDownloadFile

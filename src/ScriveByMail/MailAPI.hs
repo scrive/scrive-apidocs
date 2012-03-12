@@ -1,4 +1,0 @@
-module ScriveByMail.MailAPI (
-    ) where
-
-

@@ -101,7 +101,7 @@ data KontraLink
     | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID
     | LinkAPIDocumentMetadata DocumentID
     | LinkAPIDocumentSignatoryAttachment DocumentID SignatoryLinkID String
-    | LinkMailAPIDelayConfirmation Int64 MagicHash
+    | LinkMailAPIDelayConfirmation String Int64 MagicHash
     deriving (Eq)
 
 localeFolder :: Locale -> String
@@ -229,4 +229,4 @@ instance Show KontraLink where
     showsPrec _ (LinkAPIDocumentMetadata did) = (++) ("/api/document/" ++ show did ++ "/metadata")
     showsPrec _ (LinkAPIDocumentSignatoryAttachment did sid name) =
       (++) ("/api/document/" ++ show did ++ "/signatory/" ++ show sid ++ "/attachment/" ++ name)
-    showsPrec _ (LinkMailAPIDelayConfirmation delayid key) = (++) ("/mailapi/confirmdelay/" ++ show delayid ++ "/" ++ show key)
+    showsPrec _ (LinkMailAPIDelayConfirmation email delayid key) = (++) ("/mailapi/confirmdelay/" ++ (URL.encode $ UTF.encode email) ++ "/" ++ show delayid ++ "/" ++ show key)

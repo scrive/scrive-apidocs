@@ -39,6 +39,7 @@ import User.Utils
 import EvidenceLog.Model
 import User.History.Model
 import ScriveByMail.Model
+import ScriveByMail.Control
 
 checkPasswordsMatch :: TemplatesMonad m => BS.ByteString -> BS.ByteString -> Either (m FlashMessage) ()
 checkPasswordsMatch p1 p2 =
@@ -156,6 +157,8 @@ handleCreateCompany = do
   case (mcompany, mcompanyname) of
     (Nothing, Just _companyname) -> do
           company <- runDBUpdate $ CreateCompany Nothing Nothing
+          mailapikey <- random
+          _ <- runDBUpdate $ SetCompanyMailAPIKey (companyid company) mailapikey 1000
           _ <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid company)
           _ <- runDBUpdate $ SetUserCompanyAdmin (userid user) True
           upgradeduser <- guardJustM $ runDBQuery $ GetUserByID $ userid user
@@ -316,7 +319,8 @@ handleGetUserMailAPI :: Kontrakcja m => m (Either KontraLink Response)
 handleGetUserMailAPI = withUserGet $ do
     Context{ctxmaybeuser = Just user@User{userid}} <- getContext
     mapi <- runDBQuery $ GetUserMailAPI userid
-    showUserMailAPI user mapi >>= renderFromBody TopAccount kontrakcja
+    mcapi <- maybe (return Nothing) (runDBQuery . GetCompanyMailAPI) $ usercompany user
+    showUserMailAPI user mapi mcapi >>= renderFromBody TopAccount kontrakcja
 
 handlePostUserMailAPI :: Kontrakcja m => m KontraLink
 handlePostUserMailAPI = withUserPost $ do
@@ -328,16 +332,12 @@ handlePostUserMailAPI = withUserPost $ do
              Nothing -> do
                  when enabledapi $ do
                      apikey <- random
-                     _ <- runDBUpdate $ SetUserMailAPI userid $ Just MailAPIInfo {
-                           umapiKey = apikey
-                         , umapiDailyLimit = 50
-                         , umapiSentToday = 0
-                     }
+                     _ <- runDBUpdate $ SetUserMailAPIKey userid apikey 50
                      return ()
              Just api -> do
                  if not enabledapi
                     then do
-                        _ <- runDBUpdate $ SetUserMailAPI userid Nothing
+                        _ <- runDBUpdate $ RemoveUserMailAPI userid
                         return ()
                     else do
                         mresetkey <- getDefaultedField False asValidCheckBox "reset_key"
@@ -348,13 +348,8 @@ handlePostUserMailAPI = withUserPost $ do
                                  newkey <- if resetkey
                                    then random
                                    else return $ umapiKey api
-                                 _ <- runDBUpdate $ SetUserMailAPI userid $ Just api {
-                                       umapiKey = newkey
-                                     , umapiDailyLimit = max 1 dailylimit
-                                     , umapiSentToday = if resetsenttoday
-                                                           then 0
-                                                           else umapiSentToday api
-                                 }
+                                 _ <- runDBUpdate $ SetUserMailAPIKey userid newkey dailylimit
+                                 when_ resetsenttoday $ runDBUpdate $ ResetUserMailAPI userid
                                  return ()
                              _ -> return ()
         return LinkUserMailAPI)
@@ -816,6 +811,10 @@ handleActivate mfstname msndname actvuser signupmethod = do
                 _ <- dbUpdate $ AcceptTermsOfService (userid actvuser) (ctxtime ctx)
                 _ <- dbUpdate $ LogHistoryTOSAccept (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
                 _ <- dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
+                delays <- dbQuery $ GetMailAPIDelaysForEmail (BS.toString $ getEmail actvuser) (ctxtime ctx)
+                forM_ delays $ \(delayid, text) -> do
+                  _ <- MailAPI.doMailAPI text
+                  dbUpdate $ DeleteMailAPIDelay delayid (ctxtime ctx)
                 return ()
               tosuser <- guardJustM $ runDBQuery $ GetUserByID (userid actvuser)
               _ <- addUserSignTOSStatEvent tosuser

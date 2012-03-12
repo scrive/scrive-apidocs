@@ -13,8 +13,9 @@ import Doc.DocProcess
 import KontraLink
 import MagicHash
 import MinutesTime
---import Mails.SendMail
+import ScriveByMail.Model
 
+import Control.Monad.IO.Class
 import Data.Int
 import qualified Data.ByteString.UTF8 as BS
 
@@ -56,15 +57,21 @@ mailMailApiError ctx err =
     field "errormsg" err
     field "ctxhostpart" (ctxhostpart ctx)
 
-mailMailApiDelayAdmin :: TemplatesMonad m => Context -> String -> Int64 -> MagicHash -> MinutesTime -> m Mail
-mailMailApiDelayAdmin ctx email delayid key expires =
+mailMailApiDelayAdmin :: TemplatesMonad m => Context -> String -> String -> Int64 -> MagicHash -> MinutesTime -> m Mail
+mailMailApiDelayAdmin ctx adminemail email delayid key expires =
   kontramail "mailMailAPIDelayAdmin" $ do
     field "ctxhostpart" $ ctxhostpart ctx
-    field "confirmationlink" $ ctxhostpart ctx ++ (show $ LinkMailAPIDelayConfirmation delayid key)
+    field "confirmationlink" $ ctxhostpart ctx ++ (show $ LinkMailAPIDelayConfirmation adminemail delayid key)
     field "email" email
-    field "expires" expires
+    field "expires" $ showDateDMY expires
     
 mailMailApiDelayUser :: TemplatesMonad m => Context -> String -> m Mail
 mailMailApiDelayUser _ctx email =
   kontramail "mailMailAPIDelayAdmin" $ do
     field "email" email
+
+mailAPIInfoFields :: MonadIO m => MailAPIInfo -> Fields m
+mailAPIInfoFields info = do
+  field "mailapikey"   $ show $ umapiKey        info
+  field "mailapilimit" $ show $ umapiDailyLimit info
+  field "mailapisent"  $ show $ umapiSentToday  info

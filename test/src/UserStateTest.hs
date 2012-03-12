@@ -7,12 +7,10 @@ import qualified Data.ByteString.UTF8 as BS
 
 import Company.Model
 import DB.Classes
-import MagicHash (unsafeMagicHash)
 import MinutesTime
 import User.Model
 import TestingUtil
 import Data.List
-import ScriveByMail.Model
 
 sortByEmail :: [User] -> [User]
 sortByEmail = sortBy (\a b -> compare (f a) (f b))
@@ -39,7 +37,6 @@ userStateTests env = testGroup "UserState" [
     ]
   , testThat "SetUserCompanyAdmin/GetCompanyAccounts works" env test_getCompanyAccounts
   , testThat "GetInviteInfo/SetInviteInfo works" env test_getInviteInfo
-  , testThat "GetUserMailAPI/SetUserMailAPI works" env test_getUserMailAPI
   , testThat "SetUserCompany works" env test_setUserCompany
   , testThat "DeleteUser works" env test_deleteUser
   , testThat "SetUserInfo works" env test_setUserInfo
@@ -127,27 +124,6 @@ test_getInviteInfo = do
   assertBool "InviteInfo erased correctly" res3
   noii <- dbQuery $ GetInviteInfo userid
   assertBool "No InviteInfo returned" $ isNothing noii
-
-test_getUserMailAPI :: DB ()
-test_getUserMailAPI = do
-  Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  let mapi = MailAPIInfo {
-      umapiKey = unsafeMagicHash 0
-    , umapiDailyLimit = 1
-    , umapiSentToday = 0
-  }
-  res <- dbUpdate $ SetUserMailAPI userid $ Just mapi
-  assertBool "UserMailAPI created correctly" res
-  Just mapi2 <- dbQuery $ GetUserMailAPI userid
-  assertBool "Correct UserMailAPI returned" $ mapi == mapi2
-  res2 <- dbUpdate $ SetUserMailAPI userid $ Just mapi { umapiSentToday = 1 }
-  assertBool "UserMailAPI updated correctly" res2
-  Just mapi3 <- dbQuery $ GetUserMailAPI userid
-  assertBool "Correct updated UserMailAPI returned" $ mapi { umapiSentToday = 1 } == mapi3
-  res3 <- dbUpdate $ SetUserMailAPI userid Nothing
-  assertBool "UserMailAPI erased correctly" res3
-  nomapi <- dbQuery $ GetUserMailAPI userid
-  assertBool "No UserMailAPI returned" $ isNothing nomapi
 
 test_setUserCompany :: DB ()
 test_setUserCompany = do
