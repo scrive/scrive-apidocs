@@ -35,7 +35,7 @@ import Kontra ( Kontra, unKontra', unKontra)
 import Context
 import Mails.MailsConfig
 import MinutesTime
-import Misc (unknownIPAddress)
+import IPAddress
 import Templates.Templates
 import qualified MemCache
 import User.Locale

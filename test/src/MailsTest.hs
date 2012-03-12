@@ -13,6 +13,7 @@ import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
 import User.Model
+import IPAddress
 import Misc
 import Doc.Model
 import Doc.DocViewMail

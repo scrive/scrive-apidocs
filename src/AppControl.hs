@@ -18,11 +18,11 @@ import AppView as V
 import Crypto.RNG (CryptoRNGState, random, inIO)
 import DB.Classes
 import Doc.DocStateData
+import IPAddress
 import Kontra
 import KontraError (KontraError(..))
 import MinutesTime
 import Misc
---import PayEx.PayExInterface ()-- Import so at least we check if it compiles
 import Redirect
 import Session
 import Templates.Templates

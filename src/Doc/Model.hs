@@ -92,6 +92,7 @@ import Doc.Invariants
 import Database.HDBC
 import Data.Maybe hiding (fromJust)
 import Misc
+import IPAddress
 import Data.List hiding (tail, head)
 import Data.Monoid
 import qualified Data.Map as M
@@ -687,7 +688,7 @@ instance Actor a => DBUpdate (CancelDocument a) (Either String Document) where
                 sql "status" Canceled
               , sql "mtime" mtime
               , sql "cancelation_reason" $ reason
-              , sqlLog mtime $ "Document canceled from " ++ formatIP ipaddress
+              , sqlLog mtime $ "Document canceled from " ++ show ipaddress
               ] <++> SQL "WHERE id = ? AND type = ?" [
                 toSql did
               , toSql $ Signable undefined
@@ -816,7 +817,7 @@ instance Actor a => DBUpdate (CloseDocument a) (Either String Document) where
             r <- kRun $ mkSQL UPDATE tableDocuments [
                 sql "status" Closed
               , sql "mtime" time
-              , sqlLog time $ "Document closed from " ++ formatIP ipaddress
+              , sqlLog time $ "Document closed from " ++ show ipaddress
               ] <++> SQL "WHERE id = ? AND type = ?" [
                 toSql docid
               , toSql $ Signable undefined
@@ -1332,7 +1333,7 @@ instance Actor a => DBUpdate (RejectDocument a) (Either String Document) where
               , sql "rejection_time" time
               , sql "rejection_reason" customtext
               , sql "rejection_signatory_link_id" slid
-              , sqlLog time $ "Document rejected from " ++ formatIP ipnumber
+              , sqlLog time $ "Document rejected from " ++ show ipnumber
               ] <++> SQL "WHERE id = ?" [toSql docid]
             let eml = getEmail sl
             when_ (r == 1) $

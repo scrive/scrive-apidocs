@@ -36,6 +36,7 @@ import KontraMonad
 import MinutesTime
 import User.Model
 import Misc
+import IPAddress
 import File.Model
 import API.Service.Model
 import Data.Typeable

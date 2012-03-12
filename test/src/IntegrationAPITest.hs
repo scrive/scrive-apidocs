@@ -12,6 +12,7 @@ import TestingUtil
 import TestKontra as T
 import Kontra (Kontra)
 import User.Model
+import IPAddress
 import Misc
 import API.API
 import API.Service.Model

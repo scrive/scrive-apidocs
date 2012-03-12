@@ -5,6 +5,7 @@ import Test.Framework
 import Test.Framework.Providers.HUnit
 import StateHelper
 import TestingUtil
+import IPAddress
 import Misc
 import DB.Classes
 import MinutesTime
@@ -16,7 +17,6 @@ import TestKontra as T
 import Control.Applicative
 import Happstack.Server
 import Templates.TemplatesLoader
---import AppControl
 import Text.JSON
 import ActionSchedulerState
 import Login

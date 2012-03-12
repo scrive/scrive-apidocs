@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 module StatsTest (statsTests) where
 
 import DB.Classes
@@ -6,6 +5,7 @@ import User.Model
 import Doc.Model
 import Doc.DocUtils
 import Doc.DocStateData
+import IPAddress
 import Misc
 import Util.SignatoryLinkUtils
 import Doc.DocInfo

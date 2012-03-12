@@ -22,10 +22,8 @@ import Data.Data
 import Data.List
 import Data.Maybe
 import Data.Monoid
-import Data.Word
 import Numeric (readDec)
 import Happstack.Server hiding (simpleHTTP,dir)
-import Happstack.State
 import Happstack.Util.Common hiding  (mapFst,mapSnd)
 import System.Directory
 import System.Exit
@@ -41,7 +39,6 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS
-import Data.Bits
 
 -- | Infix version of mappend, provided for convenience.
 (<++>) :: Monoid m => m -> m -> m
@@ -485,28 +482,6 @@ sortWith k ls = sortBy (\a b-> compare (k a) (k b)) ls
 
 groupWith :: Eq b => (a -> b) -> [a] -> [[a]]
 groupWith k ls = Data.List.groupBy (\a b -> k a == k b) ls
-
-newtype IPAddress = IPAddress Word32
-  deriving (Eq, Ord, Typeable, Serialize, Version)
-
-unknownIPAddress :: IPAddress
-unknownIPAddress = IPAddress 0
-
-instance Show IPAddress where
-  showsPrec p (IPAddress n) = showsPrec p n
-
-instance Read IPAddress where
-  readsPrec _ = map (first IPAddress) . readDec
-
--- oh boy, this is really network byte order!
-formatIP :: IPAddress -> String
-formatIP (IPAddress 0) = ""
--- formatIP 0x7f000001 = ""
-formatIP (IPAddress x) =
-              " (IP: " ++ show ((x `shiftR` 0) .&. 255) ++
-                   "." ++ show ((x `shiftR` 8) .&. 255) ++
-                   "." ++ show ((x `shiftR` 16) .&. 255) ++
-                   "." ++ show ((x `shiftR` 24) .&. 255) ++ ")"
 
 ignore :: Monad m => m a -> m ()
 ignore a = a >> return ()
