@@ -103,25 +103,37 @@ body.signview {
   font-weight: normal;
 }
 
-.signview .aftersign {
+.signview .save {
   background-color: white;
   border: solid #bababc 1px;
   text-align: center;
   padding: 20px;
 }
 
-.signview .aftersign .title {
+.signview .save .title {
   font-size: large;
   color: black;
   text-transform: uppercase;
   margin-bottom: 5px;
 }
 
-.signview .aftersign .subtitle {
+.signview .save .subtitle {
   margin-bottom: 20px;
 }
 
-.signview .aftersign .newaccount .form {
+.signview .save.done {
+  border: solid #89c041 1px;
+  background-color: #e7f6d5;
+  color: #89c041;
+}
+
+.signview .save.done .title {
+  color: #89c041;
+  font-weight: bold;
+  font-size: x-large;
+}
+
+.signview .save .newaccount .form {
   margin-left: 158px;
   margin-right: 158px;
   text-align: left;
@@ -132,21 +144,21 @@ body.signview {
   background-color: #e7f6d5;
 }
 
-.signview .aftersign .newaccount .form .row {
+.signview .save .newaccount .form .row {
   clear: both;
   margin-left: 11px;
   margin-right: 11px;
   margin-bottom: 11px;
 }
 
-.signview .aftersign .newaccount .form .email {
+.signview .save .newaccount .form .email {
   margin-top: 3px;
   font-weight: bold;
   border: solid #bababc 1px;
   padding: 1px;
 }
 
-.signview .aftersign .newaccount .form .item {
+.signview .save .newaccount .form .item {
   float: left;
   width: 172px;
   margin-left: 11px;
@@ -154,42 +166,129 @@ body.signview {
   margin-bottom: 11px;
 }
 
-.signview .aftersign .newaccount .form .invalid {
+.signview .save .newaccount .form .invalid {
   border: solid red 1px;
 }
 
-.signview .aftersign .newaccount .form .errormsg {
+.signview .save .newaccount .form .errormsg {
   color: red;
   font-size: x-small;
 }
 
-.signview .aftersign .newaccount .row {
+.signview .save .newaccount .row {
   float: left;
 }
 
-.signview .aftersign .newaccount .tos {
+.signview .save .newaccount .tos {
   margin-bottom: 2px;
 }
 
-.signview .aftersign .newaccount .invalid.tos {
+.signview .save .newaccount .invalid.tos {
   padding: 2px 10px;
 }
 
-.signview .aftersign .newaccount .tos .check {
+.signview .save .newaccount .tos .check {
   float: left;
   width: 20px;
 }
 
-.signview .aftersign .newaccount .tos .label {
+.signview .save .newaccount .tos .label {
   float: left;
   width: 300px;
   margin-top: 3px;
 }
 
-.signview .aftersign .newaccount .acceptbutton {
+.signview .save .newaccount .acceptbutton {
   float: right;
   margin-right: 22px;
   margin-bottom: 22px;
+}
+
+.signview .share {
+  background-color: white;
+  padding-top: 31px;
+  padding-bottom: 15px;
+  margin-bottom: 7px;
+  margin-top: 7px;
+  border: solid #bababc 1px;
+  text-align: center;
+  font-weight: bold;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.signview .share .title {
+  font-size: medium;
+  font-weight: normal;
+  margin-bottom: 20px;
+}
+
+.signview .share .panel {
+  margin-left: 95px;
+  margin-right: 95px;
+}
+
+.signview .share .item {
+  float: left;
+  margin: 10px;
+  cursor: pointer;
+  height: 82px;
+  width: 162px;
+}
+
+.signview .share .btn {
+  background-repeat: no-repeat;
+  background-position: 0px 0px;
+  height: 82px;
+  width: 162px;
+}
+
+.signview .share .btn:hover {
+  background-position: -162px 0px;
+}
+
+.signview .share .btn .label {
+  padding-left: 60px;
+  padding-top: 25px;
+  padding-bottom: 25px;
+  padding-right: 20px;
+  color: white;
+  text-align: left;
+  text-shadow: #bababc 1px 1px 1px;
+  font-weight: normal;
+}
+
+.signview .share .facebook.btn {
+  background-image: url(../img/facebook-button.png);
+}
+
+.signview .share .facebook.dropdown {
+  background: white;
+  width: 292px;
+  height: 63px;
+  z-index: 5000;
+  position: absolute;
+  border: solid black 1px;
+}
+
+.signview .share .twitter.btn {
+  background-image: url(../img/twitter-button.png);
+}
+
+.signview .share .phone.btn {
+  background-image: url(../img/phone-button.png);
+}
+
+.signview .share .phone.btn .label {
+  color: #666666;
+}
+
+.signview .share .start.btn {
+  background-image: url(../img/start-button.png)
+}
+
+.signview .share .start.btn .label {
+  padding-left: 50px;
 }
 
 .signview .subcontainer {

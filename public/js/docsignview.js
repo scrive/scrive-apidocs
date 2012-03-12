@@ -475,13 +475,106 @@ window.DocumentSaveAfterSignView = Backbone.View.extend({
       return this;
     }
 
-    var container = $("<div class='aftersign' />");
+    var container = $("<div class='save' />");
 
     if (this.model.currentSignatory().saved()) {
-      container.append($("<div class='saved text'/>").append("Document saved to " + this.model.currentSignatory().email()));
+      container.addClass("done");
+      container.append($("<div class='title'/>").append("Document Saved!"));
+      container.append($("<div class='subtitle'/>").append("Your document is now securely saved with Scrive.  To retrieve in the future login with your email and password at www.scrive.com."));
     } else {
       container.append(this.createNewAccountElems());
     }
+
+    this.el.append(container);
+    return this;
+  }
+});
+
+
+window.DocumentShareAfterSignView = Backbone.View.extend({
+  initialize: function (args) {
+    _.bindAll(this, 'render');
+    this.model.bind('reset', this.render);
+    this.model.bind('change', this.render);
+    this.model.view = this;
+    this.render();
+  },
+  createFacebookLikeBox: function() {
+    return $('<iframe src="//www.facebook.com/plugins/likebox.php?href=http%3A%2F%2Fwww.facebook.com%2Fpages%2FScrive%2F237391196280189&amp;width=292&amp;height=62&amp;colorscheme=light&amp;show_faces=false&amp;border_color&amp;stream=false&amp;header=false" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:292px; height:62px;" allowTransparency="true"></iframe>');
+  },
+  createFacebookLikeElems: function() {
+    var container = $("<div />");
+
+    var button = $("<div class='facebook btn' />");
+    button.append($("<div class='label' />").append("Like us on Facebook"));
+    container.append(button);
+
+    var dropdown = $("<div class='facebook dropdown'/>");
+    dropdown.append(this.createFacebookLikeBox());
+    dropdown.hide();
+    container.append(dropdown);
+
+    button.click(function() {
+      console.log("facebook button clicked");
+      dropdown.toggle();
+    });
+    return container;
+  },
+  createTweetLink: function() {
+    var container = $("<a />");
+    container.attr("href", "https://twitter.com/intent/tweet?screen_name=scrive");
+    var f = function (d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (!d.getElementById(id)){
+        js = d.createElement(s);
+        js.id = id;
+        js.src = "//platform.twitter.com/widgets.js";
+        fjs.parentNode.insertBefore(js, fjs);
+      }
+    }(document,"script","twitter-wjs");
+    return container;
+  },
+  createTweetThisElems: function() {
+    var container = this.createTweetLink();
+    var button = $("<div class='twitter btn' />");
+    button.append($("<div class='label' />").append("Tweet about Scrive"));
+    container.append(button);
+    return container;
+  },
+  createPhoneMeElems: function() {
+    var container = $("<div class='phone btn' />");
+    container.append($("<div class='label' />").append("Please call me"));
+    return container;
+  },
+  createStartLink: function() {
+    var container = $("<a />");
+    container.attr("href", "/upload");
+    return container;
+  },
+  createGetStartedElems: function() {
+    var container = this.createStartLink();
+    var button = $("<div class='start btn' />");
+    button.append($("<div class='label' />").append("Just take me to the service!"));
+    container.append(button);
+    return container;
+  },
+  render: function() {
+    this.el.empty();
+
+    if (!this.model.currentSignatory().hasSigned()) {
+      return this;
+    }
+
+    var container = $("<div class='share' />");
+
+    container.append($("<div class='title'/>").append("Did you like this signing experience?"));
+    var panel = $("<div class='panel' />");
+    panel.append($("<div class='item' />").append(this.createFacebookLikeElems()));
+    panel.append($("<div class='item' />").append(this.createTweetThisElems()));
+    panel.append($("<div class='item' />").append(this.createPhoneMeElems()));
+    panel.append($("<div class='item' />").append(this.createGetStartedElems()));
+    panel.append($("<div class='clearfix' />"));
+    container.append(panel);
 
     this.el.append(container);
     return this;
@@ -515,6 +608,12 @@ window.DocumentSignView = Backbone.View.extend({
       return new DocumentSaveAfterSignView({
        model: this.model,
        el: $("<div />")
+      }).el;
+    },
+    createShareAfterSignViewElems: function() {
+      return new DocumentShareAfterSignView({
+        model: this.model,
+        el: $("<div />")
       }).el;
     },
     createMainFileElems: function() {
@@ -749,6 +848,7 @@ window.DocumentSignView = Backbone.View.extend({
       this.container.append(this.createSignInstructionElems());
       if (document.currentSignatory().hasSigned()) {
         this.container.append(this.createSaveAfterSignViewElems());
+        this.container.append(this.createShareAfterSignViewElems());
       }
 
       var subcontainer = $("<div class='subcontainer'/>");
