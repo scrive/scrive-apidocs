@@ -50,9 +50,7 @@ module Doc.DocControl(
     , handlePageOfDocumentForSignatory
     , handleCSVLandpage
     , handleInvariantViolations
-    , handleUpsalesDeleted
-    , handleSameDevicePadView
-  
+    , handleUpsalesDeleted 
 ) where
 
 import AppView
@@ -118,7 +116,7 @@ import Doc.DocDraft as Draft
 import Util.JSON
 import qualified ELegitimation.BankID as BankID
 import EvidenceLog.Model
-
+import PadQueue.Model
 {-
   Document state transitions are described in DocState.
 
@@ -578,13 +576,15 @@ handleAfterSigning document@Document{documentid} signatorylinkid = do
       let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx)  (maybesignatory signatorylink)  (BS.toString $ getEmail $ signatorylink) (signatorylinkid)
       _ <- runDBUpdate $ SaveDocumentForUser documentid user signatorylinkid actor
       let userlocale = locale $ usersettings user
-      if isClosed document
-        then addFlashM $ modalSignedClosedHasAccount userlocale document signatorylink (isJust $ ctxmaybeuser ctx)
-        else addFlashM $ modalSignedNotClosedHasAccount userlocale document signatorylink (isJust $ ctxmaybeuser ctx)
+      when (showCreateAccountModal document) $
+       if (isClosed document)
+         then addFlashM $ modalSignedClosedHasAccount userlocale document signatorylink (isJust $ ctxmaybeuser ctx)
+         else addFlashM $ modalSignedNotClosedHasAccount userlocale document signatorylink (isJust $ ctxmaybeuser ctx)
     _ -> do
       Log.debug $ "the doc " ++ (show $ documentid) ++ ".isClosed = " ++ (show $ isClosed document)
       Log.debug $ "doc " ++ (show document)
-      if isClosed document
+      when (showCreateAccountModal document) $ 
+       if isClosed document
         then addFlashM $ modalSignedClosedNoAccount document signatorylink
         else addFlashM $ modalSignedNotClosedNoAccount document signatorylink
   return $ LoopBack
@@ -637,20 +637,6 @@ handleSignShow documentid
     Nothing -> do
       v <- handleSignShow2 documentid signatorylinkid
       (toResp v)
-
-handleSameDevicePadView :: DocumentID -> SignatoryLinkID -> Kontra KontraLink
-handleSameDevicePadView did sid = do
-    Log.debug $ "PadSigning: Document #" ++ show did ++ "/" ++ show sid++" send to pad signing on same device"
-    doc <- guardRightM $ getDocByDocIDForAuthor did -- This already checks author
-    Log.debug $ "PadSigning: (" ++ show did ++ "/"++ show sid ++ ") author loged in and document found"
-    sl <- guardJust $ getSigLinkFor doc sid
-    Log.debug $ "PadSigning: (" ++ show did ++ "/"++ show sid ++ ") found matching signatory link"
-    if (doc `allowsIdentification` PadIdentification)
-        then do
-            Log.debug $ "PadSigning: (" ++ show did ++ "/"++ show sid ++ ") authorization method for document is PAD"
-            modifyContext (\ctx -> ctx { ctxmagichashes = Map.insert sid (signatorymagichash sl) (ctxmagichashes ctx) })
-            return (LinkSignDocNoMagicHash did sid)
-        else mzero
         
 handleSignShow2 :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m String
 handleSignShow2 documentid
@@ -1456,16 +1442,19 @@ handleSigAttach docid siglinkid = do
 
 jsonDocument :: Kontrakcja m => DocumentID -> m JSValue
 jsonDocument did = do
+    ctx <- getContext
     (mdoc,msiglink) <- jsonDocumentGetterWithPermissionCheck did
+    pg <- case (userid <$> ctxmaybeuser ctx) of 
+               Just uid ->  runDB $ dbQuery $ GetPadQueue uid
+               Nothing -> return Nothing
     when_ (isJust mdoc && isJust msiglink) $ do 
          let sl = fromJust msiglink 
-         ctx <- getContext
          runDBUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl)
               (SignatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl))
     cttime <- liftIO $ getMinutesTime
     rsp <- case mdoc of
          Nothing -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "No document avaible")]
-         Just doc -> JSObject <$> documentJSON msiglink cttime doc
+         Just doc -> JSObject <$> documentJSON pg msiglink cttime doc
     return rsp
 
 jsonDocumentGetterWithPermissionCheck ::   Kontrakcja m => DocumentID -> m (Maybe Document, Maybe SignatoryLink)

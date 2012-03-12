@@ -32,7 +32,7 @@ import Doc.API
 import Control.Monad.Error
 import Data.Functor
 import Data.List
-import Happstack.Server hiding (simpleHTTP, host, dir, path)
+import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
 
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
@@ -91,7 +91,6 @@ staticRoutes = choice
      , dir "s" $ param "sigattachment"  $ hPostNoXToken $ toK2 $ DocControl.handleSigAttach
      , dir "s" $ param "deletesigattachment" $ hPostNoXToken $ toK2 $ DocControl.handleDeleteSigAttach
 
-     , dir "pad" $ hGet $ toK2 $ DocControl.handleSameDevicePadView
      , dir "sv" $ hGet $ toK3 $ DocControl.handleAttachmentViewForViewer
 
      --Q: This all needs to be done by author. Why we dont check it
@@ -169,6 +168,7 @@ staticRoutes = choice
      , dir "padqueue" $ dir "state" $ hGet $ toK0 $ PadQueue.padQueueState
      , dir "padqueue" $ hGet $ toK0 $ PadQueue.showPadQueuePage
      , dir "padqueue" $ dir "archive" $ hGet $ toK0 $ ArchiveControl.showPadDeviceArchive
+     , dir "padqueue" $ dir "login" $ hPostNoXToken $ toK0 $ PadQueue.handlePadLogin
 
      -- UserControl
      , dir "account"                    $ hGet  $ toK0 $ UserControl.handleUserGet

@@ -8,17 +8,14 @@ pagePadDeviceArchive=
   </div>
 </div>
 <script>
-
 var padTable = KontraList().init({
     name : "Pad Table",
-    headerExtras: Button.init({
+    headerExtras: jQuery("<a href='/padqueue'/>").append(Button.init({
                     text: "Open pad view",
                     size: "tiny",
-                    color: "blue",
-                    onClick : function() {
-                       window.location = "/padqueue";
-                    }
-            }).input(),
+                    color: "blue"
+
+            }).input()),
     schema: new Schema({
     url: "/docs",
     extraParams : { documentType : "Pad" },
@@ -113,9 +110,8 @@ jQuery(function(){
 padQueueCurrentPage=
 <div class="padview"></div>
 <script>
-var padTable = KontraPad.init({ });
-
 jQuery(function(){
+    var padTable = KontraPad.init({ });
     jQuery(".padview").append(padTable.view.el)
 });
 

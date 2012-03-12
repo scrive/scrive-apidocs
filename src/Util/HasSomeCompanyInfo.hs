@@ -16,7 +16,11 @@ module Util.HasSomeCompanyInfo (
 
 import Doc.DocStateData
 import Company.Model
+import User.Model
 import Util.SignatoryLinkUtils
+import Misc
+
+import Data.Maybe
 
 import qualified Data.ByteString as BS
 
@@ -26,7 +30,7 @@ class HasSomeCompanyInfo a where
   getCompanyNumber :: a -> BS.ByteString
 
 instance HasSomeCompanyInfo Company where
-  getCompanyName   = companyname . companyinfo
+  getCompanyName   = companyname   . companyinfo
   getCompanyNumber = companynumber . companyinfo
 
 instance HasSomeCompanyInfo (Maybe Company) where
@@ -38,9 +42,21 @@ instance HasSomeCompanyInfo SignatoryDetails where
   getCompanyNumber = getValueOfType CompanyNumberFT
 
 instance HasSomeCompanyInfo SignatoryLink where
-  getCompanyName   = getCompanyName . signatorydetails
+  getCompanyName   = getCompanyName   . signatorydetails
   getCompanyNumber = getCompanyNumber . signatorydetails
 
 instance HasSomeCompanyInfo Document where
   getCompanyName  doc  = maybe BS.empty getCompanyName   $ getAuthorSigLink doc
   getCompanyNumber doc = maybe BS.empty getCompanyNumber $ getAuthorSigLink doc
+
+instance HasSomeCompanyInfo UserInfo where
+  getCompanyName   = usercompanyname
+  getCompanyNumber = usercompanynumber
+
+instance HasSomeCompanyInfo User where
+  getCompanyName   user = BS.empty <| (isJust $ usercompany user) |> getCompanyName   (userinfo user)
+  getCompanyNumber user = BS.empty <| (isJust $ usercompany user) |> getCompanyNumber (userinfo user)
+
+instance HasSomeCompanyInfo (User, Maybe Company) where
+  getCompanyName   (u, mc) = maybe (getCompanyName   u) getCompanyName   mc
+  getCompanyNumber (u, mc) = maybe (getCompanyNumber u) getCompanyNumber mc

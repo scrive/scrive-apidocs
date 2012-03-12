@@ -25,7 +25,7 @@ var ConfirmationModel = Backbone.Model.extend({
       content  : jQuery("<p/>"),
       cantCancel : false,
       width: "640px",
-      acceptVisible : true
+      acceptVisible : true,
   },
   title : function(){
        return this.get("title");
@@ -77,6 +77,9 @@ var ConfirmationModel = Backbone.Model.extend({
   },
   acceptVisible : function() {
       return this.get("acceptVisible");   
+  },
+  extraClass : function() {
+            return this.get("extraClass");   
   }
 });
 
@@ -127,6 +130,8 @@ var ConfirmationView = Backbone.View.extend({
        var view = this;
        var model = this.model;
        this.el.addClass("modal-container");
+       if (model.extraClass() != undefined)
+            this.el.addClass(model.extraClass());
        this.el.css("width",model.width());
        var header = $("<div class='modal-header'><span class='modal-icon message'></span></div>");
        var title = $("<span class='modal-title'/>");
@@ -191,7 +196,8 @@ window.Confirmation = {
                       acceptButton : args.acceptButton,
                       cantCancel : args.cantCancel,
                       width: args.width,
-                      acceptVisible : args.acceptVisible
+                      acceptVisible : args.acceptVisible,
+                      extraClass: args.extraClass
                     });
           var overlay = $("<div/>");
           var view = new ConfirmationView({model : model, el : overlay});

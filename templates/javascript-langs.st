@@ -47,6 +47,7 @@ javascriptLocalisation =
              , companyposition : "$_companyposition()$"
              , phone : "$_phone()$"
              , email : "$_email()$"
+             , password : "$_password()$"
              , niceEmail : "$_niceEmail()$"
              , company : "$_company()$"
              , personamNumber : "$_personnumber()$"
@@ -280,6 +281,7 @@ javascriptLocalisation =
              ,  addToPadQueueConfirmText : "Document will be send to pad device for signing. Any other document waiting to be signed on this device will be removed from the queue, but can be added to it later. "
              ,  addToPadQueueAdded : "Document send to pad device"
              ,  addToPadQueueNotAdded : "Document could not be send to pad device"
+             ,  removeFromPadQueue : "Remove from pad device"
              
         }
          , sampleEmailHeader: "$_SampleEmailHeader()$"
@@ -288,5 +290,9 @@ javascriptLocalisation =
          , recommendedLogoSize: "$_RecommendedLogoSize()$"
          , changeEmail : "$_changeEmail()$"
          , onlyPDF : "$_onlyPDF()$"
+         , login : {
+              logMeIn : "$_login()$"
+         }
     }
+
 ####

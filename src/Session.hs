@@ -324,8 +324,9 @@ emptySessionData = do
 
 -- | Check if session data is empty
 isSessionDataEmpty :: SessionData -> Bool
-isSessionDataEmpty SessionData{userID, elegtransactions, location, company, magichashes} =
+isSessionDataEmpty SessionData{userID, elegtransactions, location, company, magichashes, padUserID} =
        userID == Nothing
+    && padUserID == Nothing   
     && Prelude.null elegtransactions && location == "" && company == Nothing
     && Map.null magichashes
 

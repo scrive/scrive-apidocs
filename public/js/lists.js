@@ -65,7 +65,7 @@
             return this.get("rendering")(value, mainrow, model);
         },
         tdclass: function() {
-            return this.get('class') || "";
+            return this.get('tdclass') || "";
         },
         substyle : function() {
             return this.get('substyle') == undefined ?  "margin-left:10px" : this.get('substyle') ;

@@ -9,7 +9,7 @@ import Doc.DocUtils
 import Kontra
 import Redirect
 import User.Model
---import qualified Log
+import qualified Log
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
 import PadQueue.View
@@ -22,14 +22,23 @@ import Text.JSON.Fields as JSON (json)
 import Control.Monad.Trans
 import KontraLink
 import Misc
+import Util.FlashUtil
+import User.UserView
+import Doc.Model
 
 -- PadQueue STATE
 padQueueState ::  (Kontrakcja m) =>  m JSValue
 padQueueState = do
-    uid <- userid <$> (guardJustM $ ctxmaybeuser <$> getContext)
-    pq <- runDB $ dbQuery $ GetPadQueue uid
-    msdata <- padQueueToSignatoryData pq
-    padQueueStateJSON msdata
+    ctx <- getContext
+    Log.debug "Checking state"
+    case (ctxmaybeuser ctx `mplus` ctxmaybepaduser ctx) of 
+         Nothing  -> do
+             Log.debug "Not logged in"
+             padQueueStateJSONNotLoggedIn
+         Just user -> do
+             pq <- runDB $ dbQuery $ GetPadQueue (userid user)
+             msdata <- padQueueToSignatoryData pq
+             padQueueStateJSON msdata
 
 -- PadQueue ACTIONS
 addToQueue :: (Kontrakcja m) => DocumentID ->  SignatoryLinkID -> m JSValue
@@ -57,18 +66,16 @@ showPadQueuePage = padQueuePage
 padQueueToSignatoryData :: (Kontrakcja m) => PadQueue -> m (Maybe (Document,SignatoryLink))
 padQueueToSignatoryData Nothing = return Nothing
 padQueueToSignatoryData (Just (did,slid)) = do
-        doc <- guardRightM $ getDocByDocID did
+        doc <- guardJustM $ runDBQuery $ GetDocumentByDocumentID did
         sl <- guardJust $ getSigLinkFor doc slid
         if (Preparation /= documentstatus doc)
          then return $ Just (doc,sl)
          else return Nothing  
          
-
-
-
 -- PadQueue Login
 handlePadLogin :: Kontrakcja m => m KontraLink
 handlePadLogin = do
+    Log.debug "Loging to pad device"
     memail  <- getFieldUTF "email"
     mpasswd <- getFieldUTF "password"
     case (memail, mpasswd) of
@@ -78,10 +85,13 @@ handlePadLogin = do
             case maybeuser of
                Just user@User{userpassword}
                     | verifyPassword userpassword passwd -> do
+                       Log.debug "Logged in"
                        loginPadUser user
-                       return LoopBack
-               _ -> return $ LoopBack
-        _ -> return $ LoopBack              
+                       return LinkPadDeviceView
+               _ -> do
+                   addFlashM $ flashMessageLoginRedirectReason (InvalidLoginInfo undefined)
+                   return $ LinkPadDeviceView
+        _ -> return $ LinkPadDeviceView              
                     
 
 loginPadUser :: Kontrakcja m => User -> m ()

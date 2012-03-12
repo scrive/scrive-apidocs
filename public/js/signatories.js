@@ -162,7 +162,8 @@ window.Signatory = Backbone.Model.extend({
         current : false,
         attachments : [],
         signorder : 1,
-        csv : undefined
+        csv : undefined,
+        ispadqueue : false
     },
     
     initialize : function(args){
@@ -353,6 +354,14 @@ window.Signatory = Backbone.Model.extend({
               ajaxsuccess : callback
           });
     },
+    removeFromPadQueue : function(callback) {
+       return new Submit({
+              url: "/padqueue/clear",
+              method: "POST",
+              ajax : true,
+              ajaxsuccess : callback
+       });
+    },
     reject: function(customtext) {
         return new Submit({
               url: "/s/" + this.document().documentid() + "/"+ this.document().viewer().signatoryid(),
@@ -363,7 +372,7 @@ window.Signatory = Backbone.Model.extend({
           });
     },
     padSigningURL : function() {
-        return "/pad/" + this.document().documentid() + "/"+ this.signatoryid();
+        return "/padqueue"
     },
     changeEmail: function(email) {
         return new Submit({
@@ -411,6 +420,9 @@ window.Signatory = Backbone.Model.extend({
          this.set({"csv":csv});
          this.trigger("change:csv");
 
+    },
+    inpadqueue : function() {
+       return this.get("inpadqueue");
     },
     draftData : function() {
         return {
@@ -525,12 +537,33 @@ window.SignatoryStandarView = Backbone.View.extend({
                                 rejectText : localization.cancel,
                                 onAccept : function()
                                         {
-                                           window.open(signatory.padSigningURL(),'Pad signing');
+                                           signatory.addtoPadQueue(function(resp) {
+                                               if (resp.error == undefined)
+                                                   window.open(signatory.padSigningURL(),'Pad signing');
+                                               else
+                                                   FlashMessages.add({
+                                                       content: localization.pad.addToPadQueueNotAdded,
+                                                       color: "red"
+                                                   })
+                                            }).send();
                                            return true;
                                         }
                         })
                  })
                  return button;
+    },
+    removeFromPadQueueOption :  function() {
+        var signatory = this.model;
+        var button = $("<a  class='removeFromPad'/>")
+        var icon = $("<div class='removeFromPadIcon'/>")
+        var text = localization.pad.removeFromPadQueue;
+        var textbox = $("<div class='sendLinkText'/>").text(text);
+        button.append(icon).append(textbox);
+        button.click(function() {
+            signatory.removeFromPadQueue().sendAjax( function() { window.location = window.location;}); // Fix at some point not to reload the page
+        });
+        return button;
+
     },
     addToPadQueueOption : function() {
                  var signatory = this.model;
@@ -558,7 +591,8 @@ window.SignatoryStandarView = Backbone.View.extend({
                                                        content: localization.pad.addToPadQueueNotAdded,
                                                        color: "red"
                                                    })
-                                            }).send();
+                                            }).sendAjax();
+                                           window.location = window.location; // Fix at some point not to reload the page
                                            return true;
                                            
                                         }
@@ -622,7 +656,10 @@ window.SignatoryStandarView = Backbone.View.extend({
             && signatory.canSign()
             && signatory.document().padAuthorization()) {
                   container.append(this.giveForSigningOnThisDeviceOption());
-                  container.append(this.addToPadQueueOption());
+                  if (signatory.inpadqueue())
+                      container.append(this.removeFromPadQueueOption());
+                  else    
+                      container.append(this.addToPadQueueOption());
            }
 
                   

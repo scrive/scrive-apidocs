@@ -86,7 +86,7 @@ import DB.Classes
 import Text.JSON.Fields as JSON (json)
 import qualified Text.JSON.Fields as JSON (field)
 import Util.JSON
-
+import PadQueue.Model
 
 modalMismatch :: TemplatesMonad m => String -> SignatoryLink -> m FlashMessage
 modalMismatch msg author = toModal <$>  do
@@ -261,8 +261,8 @@ flashMessagePleaseSign :: TemplatesMonad m => Document -> m FlashMessage
 flashMessagePleaseSign document = do
   toFlashMsg OperationDone <$> renderTextForProcess document processflashmessagepleasesign
 
-documentJSON :: (TemplatesMonad m, KontraMonad m, DBMonad m) => Maybe SignatoryLink -> MinutesTime -> Document -> m (JSObject JSValue)
-documentJSON msl _crttime doc = do
+documentJSON :: (TemplatesMonad m, KontraMonad m, DBMonad m) => PadQueue -> Maybe SignatoryLink -> MinutesTime -> Document -> m (JSObject JSValue)
+documentJSON pq msl _crttime doc = do
     ctx <- getContext
     files <- runDB $ documentfilesM doc
     sealedfiles <- runDB $ documentsealedfilesM doc
@@ -280,7 +280,7 @@ documentJSON msl _crttime doc = do
        ("canbecanceled", return $ JSBool $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending && isNothing (documenttimeouttime doc)),
        ("timeouttime", return $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc),
        ("status", return $ JSString $ toJSString $ show $ documentstatus doc),
-       ("signatories", JSArray <$> mapM (signatoryJSON doc msl) (documentsignatorylinks doc)),
+       ("signatories", JSArray <$> mapM (signatoryJSON pq doc msl) (documentsignatorylinks doc)),
        ("signorder", return $ JSRational True (toRational $ unSignOrder $ documentcurrentsignorder doc)),
        ("authorization", return $ authorizationJSON $ head $ (documentallowedidtypes doc) ++ [EmailIdentification] ),
        ("template", return $ JSBool $ isTemplate doc),
@@ -295,8 +295,8 @@ authorizationJSON ELegitimationIdentification = JSString $ toJSString "eleg"
 authorizationJSON PadIdentification = JSString $ toJSString "pad"
 
 
-signatoryJSON :: (TemplatesMonad m, DBMonad m) => Document -> Maybe SignatoryLink -> SignatoryLink -> m JSValue
-signatoryJSON doc viewer siglink = do
+signatoryJSON :: (TemplatesMonad m, DBMonad m) => PadQueue -> Document -> Maybe SignatoryLink -> SignatoryLink -> m JSValue
+signatoryJSON pq doc viewer siglink = do
     fmap (JSObject . toJSObject) $ propagateMonad $ [
         ("id", return $ JSString $ toJSString  $ show $ signatorylinkid siglink)
       , ("current", return $ JSBool $ (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink))
@@ -316,6 +316,8 @@ signatoryJSON doc viewer siglink = do
       , ("csv", case (csvcontents <$> signatorylinkcsvupload siglink) of
                      Just a1 ->  return $ JSArray $ for a1 (\a2 -> JSArray $ map (JSString . toJSString . BS.toString) a2 )
                      Nothing -> return $ JSNull) 
+      , ("inpadqueue", return $ JSBool $ (fmap fst pq == Just (documentid doc)) && (fmap snd pq == Just (signatorylinkid siglink)))
+                
       ]
     where
     datamismatch = case documentcancelationreason doc of

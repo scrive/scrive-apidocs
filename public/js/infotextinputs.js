@@ -20,7 +20,8 @@ var InfoTextInputModel = Backbone.Model.extend({
   defaults : {
       infotext : "",
       focus : false,
-      value : ""
+      value : "",
+      inputtype : "text"
   },
   infotext : function(){
        return this.get("infotext");
@@ -46,8 +47,10 @@ var InfoTextInputModel = Backbone.Model.extend({
   },
   hasFocus : function() {
       return this.get("focus");
+  },
+  inputtype: function() {
+      return this.get("inputtype");
   }
-  
 });
 
 /* View controls bechavior of real input vs. InfoTextInput model
@@ -112,9 +115,12 @@ window.InfoTextInput = {
           var model = new InfoTextInputModel({
                       infotext: args.infotext,
                       value: args.value,
-                      onChange : args.onChange
+                      onChange : args.onChange,
+                      inputtype : args.inputtype
                     });
-          var input = $("<input type='text'/>");
+          var input = $("<input/>");
+          input.attr("type",model.inputtype());
+
           if (args.cssClass != undefined)
               input.addClass(args.cssClass);
           if (args.inputname != undefined)

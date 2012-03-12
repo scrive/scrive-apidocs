@@ -240,9 +240,9 @@ signatoryDetailsFromUser user mcompany = SignatoryDetails {
       toSF FirstNameFT $ getFirstName user
     , toSF LastNameFT $ getLastName user
     , toSF EmailFT $ getEmail user
-    , toSF CompanyFT $ getCompanyName mcompany
+    , toSF CompanyFT $ getCompanyName (user, mcompany)
     , toSF PersonalNumberFT $ getPersonalNumber user
-    , toSF CompanyNumberFT $ getCompanyNumber mcompany
+    , toSF CompanyNumberFT $ getCompanyNumber (user, mcompany)
     ]
   }
   where
@@ -275,6 +275,10 @@ allowsIdentification document idtype = idtype `elem` documentallowedidtypes docu
 {- | Determine is document is designed to be signed using pad - this determines if invitation emais are send and if author can get access to siglink -}
 sendInvitationMails :: Document -> Bool
 sendInvitationMails doc = not $ doc `allowsIdentification` PadIdentification
+
+{- | Determine is we should show a modal to create account after signing -}
+showCreateAccountModal :: Document -> Bool
+showCreateAccountModal doc = not $ doc `allowsIdentification` PadIdentification
 
 
 -- Not ready to refactor this quite yet.

@@ -175,18 +175,20 @@ companyFields mc = do
 {-| Full fields set about user -}
 userFields :: MonadIO m => User -> Fields m
 userFields u =  do
-        field "fstname" $ getFirstName u
-        field "sndname" $ getLastName u
-        field "personalnumber" $ getPersonalNumber u
-        field "companyposition" $ usercompanyposition $ userinfo u
-        field "phone" $ toString $ userphone $ userinfo u
-        field "mobile" $ toString $ usermobile $ userinfo u
-        field "email" $ getEmail u
-        field "regionse" $ REGION_SE == getRegion u
-        field "regiongb" $ REGION_GB == getRegion u
-        field "langsv" $ LANG_SE == getLang u
-        field "langen" $ LANG_EN == getLang u
+        field "fstname"          $ getFirstName u
+        field "sndname"          $ getLastName u
+        field "personalnumber"   $ getPersonalNumber u
+        field "companyposition"  $ usercompanyposition $ userinfo u
+        field "phone"            $ toString $ userphone $ userinfo u
+        field "mobile"           $ toString $ usermobile $ userinfo u
+        field "email"            $ getEmail u
+        field "regionse"         $ REGION_SE == getRegion u
+        field "regiongb"         $ REGION_GB == getRegion u
+        field "langsv"           $ LANG_SE == getLang u
+        field "langen"           $ LANG_EN == getLang u
         field "iscompanyaccount" $ isJust $ usercompany u
-        field "iscompanyadmin" $ useriscompanyadmin u
-        field "id" $ show (userid u)
+        field "iscompanyadmin"   $ useriscompanyadmin u
+        field "id"               $ show (userid u)
+        field "companynumber"    $ getCompanyNumber u
+        field "companyname"      $ getCompanyName u
 

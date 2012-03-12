@@ -2866,6 +2866,21 @@ width: 340px;
     width: 16px;
     float:left;
 }
+.removeFromPad{
+    padding-top: 4px;
+    height: 16px;
+    display: block;
+    cursor: pointer;
+}
+
+.removeFromPadIcon {
+    background: url(../img/icon-delete.png) 0 0 no-repeat; 
+    display: inline-block;
+    height: 16px;
+    width: 16px;
+    float:left;
+}
+
 .prepareToSendReminderMail:hover{
     font-weight: bold;
 }

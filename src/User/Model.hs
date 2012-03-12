@@ -106,6 +106,8 @@ data UserInfo = UserInfo {
   , userphone           :: BS.ByteString
   , usermobile          :: BS.ByteString
   , useremail           :: Email
+  , usercompanyname     :: BS.ByteString
+  , usercompanynumber   :: BS.ByteString
   } deriving (Eq, Ord, Show)
 
 data UserMailAPI = UserMailAPI {
@@ -222,13 +224,15 @@ instance DBUpdate AddUser (Maybe User) where
           ++ ", last_name"
           ++ ", personal_number"
           ++ ", company_position"
+          ++ ", company_name"
+          ++ ", company_number"
           ++ ", phone"
           ++ ", mobile"
           ++ ", email"
           ++ ", preferred_design_mode"
           ++ ", lang"
           ++ ", region"
-          ++ ", deleted) VALUES (decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+          ++ ", deleted) VALUES (decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
           ++ " RETURNING " ++ selectUsersSelectors
 
         _ <- kExecute $
@@ -242,7 +246,7 @@ instance DBUpdate AddUser (Maybe User) where
           , toSql mcid
           , toSql fname
           , toSql lname
-          ] ++ replicate 4 (toSql "")
+          ] ++ replicate 6 (toSql "")
             ++ [toSql email] ++ [
               SqlNull
             , toSql $ getLang l
@@ -359,6 +363,8 @@ instance DBUpdate SetUserInfo Bool where
       ++ ", phone = ?"
       ++ ", mobile = ?"
       ++ ", email = ?"
+      ++ ", company_name = ?"
+      ++ ", company_number = ?"
       ++ "  WHERE id = ? AND deleted = FALSE"
     kExecute01 [
         toSql $ userfstname info
@@ -368,6 +374,8 @@ instance DBUpdate SetUserInfo Bool where
       , toSql $ userphone info
       , toSql $ usermobile info
       , toSql $ useremail info
+      , toSql $ usercompanyname info
+      , toSql $ usercompanynumber info
       , toSql uid
       ]
 
@@ -457,6 +465,8 @@ selectUsersSelectors =
  ++ ", lang"
  ++ ", region"
  ++ ", customfooter"
+ ++ ", company_name"
+ ++ ", company_number"
 
 fetchUsers :: DB [User]
 fetchUsers = foldDB decoder []
@@ -466,7 +476,8 @@ fetchUsers = foldDB decoder []
     decoder acc uid password salt is_company_admin account_suspended
       has_accepted_terms_of_service signup_method service_id company_id
       first_name last_name personal_number company_position phone mobile
-      email preferred_design_mode lang region customfooter = User {
+      email preferred_design_mode lang region customfooter
+      company_name company_number = User {
           userid = uid
         , userpassword = maybePassword (password, salt)
         , useriscompanyadmin = is_company_admin
@@ -481,6 +492,8 @@ fetchUsers = foldDB decoder []
           , userphone = phone
           , usermobile = mobile
           , useremail = email
+          , usercompanyname = company_name
+          , usercompanynumber = company_number
           }
         , usersettings = UserSettings {
             preferreddesignmode = preferred_design_mode

@@ -40,11 +40,15 @@ window.PadQueue = Backbone.Model.extend({
     hasDocument : function() {
         return this.documentid() != undefined && this.signatorylinkid() != undefined && this.magichash() != undefined;
     },
+    logged : function() {
+        return this.get("logged") == "true";
+    },
     parse: function(args) {
      return {
       documentid : args.documentid,
       signatorylinkid: args.signatorylinkid,
       magichash : args.magichash,
+      logged : args.logged,
       ready: true
       };
     }
@@ -79,7 +83,41 @@ window.PadQueueView = Backbone.View.extend({
         return box;
         
     },
-    
+    logToPadDevicePopup : function() {
+        var wrapper = $("<div class='body'>");
+        var loginForm= $("<form class='wrapper'/>");
+        var email = InfoTextInput.init({infotext:localization.email});
+        var password = InfoTextInput.init({infotext:localization.password, inputtype : 'password'});
+        var sendLogin = function() {
+                new Submit({
+                    url : "/padqueue/login",
+                    method : "POST",
+                    email: email.value(),
+                    password : password.value()       
+                }).send();
+                return false;
+            };
+            
+        var table = Table.init({
+                        fields: 
+                        [
+                            [$("<span class='txt'>").text(localization.email), email.input()],
+                            [$("<span class='txt'>").text(localization.password), password.input()],
+                            
+                        ]
+                    })
+        loginForm.append(table.view.el);
+        loginForm.append("<input class='hidden' type='submit'>");    
+        loginForm.submit(sendLogin);     
+        Confirmation.popup({
+            title : localization.login.logMeIn,
+            content : wrapper.append(loginForm),
+            acceptText : localization.login.logMeIn,
+            cantCancel : true,
+            extraClass : "login-container",
+            onAccept : sendLogin
+            });
+    },
     render: function () {
         var padqueue = this.model;
         var container = this.el;
@@ -87,8 +125,10 @@ window.PadQueueView = Backbone.View.extend({
         if (padqueue.ready()) {
             if (padqueue.hasDocument())
                 container.append(this.documentView())
-            else 
+            else if (padqueue.logged())
                 container.append(this.noDocumentView())      
+            else 
+                this.logToPadDevicePopup();
         }
         return this;
 

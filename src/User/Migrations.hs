@@ -51,3 +51,14 @@ addIdSerialOnUsers =
       _ <- kRunRaw $ "ALTER TABLE users ALTER id SET DEFAULT nextval('users_id_seq')"
       return ()
   }
+
+addCompanyNameNumberOnUsers :: Migration
+addCompanyNameNumberOnUsers =
+  Migration {
+    mgrTable = tableUsers
+  , mgrFrom = 5
+  , mgrDo = do
+      _ <- kRunRaw $ "ALTER TABLE users ADD COLUMN company_name   TEXT NOT NULL DEFAULT ''"
+      _ <- kRunRaw $ "ALTER TABLE users ADD COLUMN company_number TEXT NOT NULL DEFAULT ''"
+      return ()
+  }

@@ -635,7 +635,7 @@ var DocumentDesignView = Backbone.View.extend({
             tabs: [
                 this.tab1 = new Tab({
                     name : document.isTemplate() ? localization.step1template : document.process().step1text(),
-                    clickable : false,    
+                    clickable : false    
                   }),
                 this.tab2 = new Tab({
                     name  : document.isTemplate() ? localization.step2template : document.isBasic() ? localization.step2basic : localization.step2normal,
