@@ -362,9 +362,6 @@ window.Signatory = Backbone.Model.extend({
     saved: function() {
       return this.get("saved");
     },
-    loggedin: function() {
-      return this.get("loggedin");
-    },
     signdate:function(){
         return  this.get("signdate");
     },
