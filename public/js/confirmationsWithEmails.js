@@ -72,7 +72,7 @@ window.MailView = Backbone.View.extend({
 	},
 	render : function() {
 		var mail = this.model;
-		var container = this.el;
+		var container = $(this.el);
 		if (!mail.ready()) {
                     container.addClass('loadingMail')
                 }
@@ -85,7 +85,6 @@ window.MailView = Backbone.View.extend({
                             container.append(this.editableMailContent());
                 }
                return this;
-
 	},
 	customtext : function() {
 		if (this.editor != undefined)  
@@ -145,8 +144,8 @@ var ConfirmationWithEmailView = Backbone.View.extend({
     render: function () {
        var model = this.model;
        var view = this;
-       this.el.addClass("modal-container");
-       this.el.addClass("email-preview");
+       $(this.el).addClass("modal-container");
+       $(this.el).addClass("email-preview");
 	   
 	   //Modal header
        var header = $("<div class='modal-header'><span class='modal-icon message'></span></div>");
@@ -159,7 +158,7 @@ var ConfirmationWithEmailView = Backbone.View.extend({
        var body = $("<div class='modal-body'>");
        var content = $("<div class='modal-content'>");
 	   var mailview = new MailView({model: model.mail(), el : $("<div/>")});
-       content.html(mailview.el);
+       content.html($(mailview.el));
        body.append(content);
 	   
 	   //Modal footer
@@ -177,14 +176,14 @@ var ConfirmationWithEmailView = Backbone.View.extend({
                                  onClick : function() { 
 									 var customtext = mailview.customtext();
 									 var res = model.accept(customtext); 
-                                                                         if (res == true) view.el.data("overlay").close();
+                                                                         if (res == true) $(view.el).data("overlay").close();
 									 
 								}
         });
        footer.append(accept.input());
-       this.el.append(header);
-       this.el.append(body);
-       this.el.append(footer);
+       $(this.el).append(header);
+       $(this.el).append(body);
+       $(this.el).append(footer);
        return this;
     },
     reject: function(){
@@ -198,7 +197,7 @@ var ConfirmationWithEmailView = Backbone.View.extend({
     clear: function(){
         this.model.destroy();
         this.model.view = undefined;
-        this.el.remove();
+        $(this.el).remove();
     }
 
 });
@@ -206,15 +205,7 @@ var ConfirmationWithEmailView = Backbone.View.extend({
 
 window.ConfirmationWithEmail = {
     popup: function (args) {
-          var model = new ConfirmationWithEmailModel({
-                      onAccept : args.onAccept,
-                      title  : args.title,
-                      acceptText: args.acceptText,
-                      acceptColor : args.acceptColor,
-                      rejectText: args.rejectText,
-					  editText : args.editText,
-                      mail  : args.mail
-                    });
+          var model = new ConfirmationWithEmailModel(args);
           var overlay = $("<div/>");
           var view = new ConfirmationWithEmailView({model : model, el : overlay});
           $("body").append(overlay);
