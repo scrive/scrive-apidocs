@@ -92,7 +92,8 @@ handleActivate mfstname msndname actvuser signupmethod = do
               newdocs <- case mdelays of
                 Nothing -> return []
                 Just (delayid, texts) -> do
-                  results <- forM texts MailAPI.doMailAPI
+                  -- mplus to avoid exiting early!
+                  results <- forM texts (\t -> MailAPI.doMailAPI t `mplus` return Nothing)
                   runDBUpdate $ DeleteMailAPIDelays delayid (ctxtime ctx)
                   return $ catMaybes results
  
