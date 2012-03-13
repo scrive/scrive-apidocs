@@ -72,7 +72,7 @@ window.SelectOptionView = Backbone.View.extend({
     },
     render: function () {
         var a = $("<a/>").text(this.model.name());
-        this.el.append(a);
+        $(this.el).append(a);
         return this;
     },
     selected: function(){
@@ -90,7 +90,7 @@ var SelectView = Backbone.View.extend({
         this.render();
     },
     render: function () {
-        this.el.empty();
+        $(this.el).empty();
         var options = $("<ul class='tab-dd-opts'/>");
         var model = this.model;
         var o = this.model.options();
@@ -113,8 +113,8 @@ var SelectView = Backbone.View.extend({
               button.removeClass("tab-dd-exp");
               options.css("display", "none");
             }
-        this.el.addClass("tab-dd");
-        this.el.append(button).append(options);
+        $(this.el).addClass("tab-dd");
+        $(this.el).append(button).append(options);
         return this;
     }
 });

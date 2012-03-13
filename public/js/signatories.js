@@ -64,7 +64,7 @@ window.SignatoryAttachmentRowView = Backbone.View.extend({
     },
     render : function(){
         var attachment = this.model;
-        var row = this.el;
+        var row = $(this.el);
         row.children().remove();
         row.append($("<td/>").text(attachment.name()));
         row.append($("<td/>").text(attachment.description()));
@@ -502,10 +502,10 @@ window.SignatoryStandarView = Backbone.View.extend({
 	},
     render: function(){
         var signatory = this.model;
-        this.el.addClass("signViewBodyRight");
-        this.el.children().detach();
+        $(this.el).addClass("signViewBodyRight");
+        $(this.el).children().detach();
         var container = $("<div class='signViewBodyRightTextContainer'/>");
-        this.el.append(container);
+        $(this.el).append(container);
         var header = $("<div class='header'/>").text(signatory.name());
         container.append(header);
         var fieldsbox = $("<div class='signViewBodyForms'/>")
@@ -520,14 +520,14 @@ window.SignatoryStandarView = Backbone.View.extend({
             { model : field,
               el : $("<div/>")
             });
-            fieldsbox.append(fieldview.el);
+            fieldsbox.append($(fieldview.el));
         });
         container.append(fieldsbox);
         var emailview = new FieldStandardView(
             { model : signatory.field("email"),
               el : $("<div/>")                                
             });
-        container.append(emailview.el);
+        container.append($(emailview.el));
 
         var textsummary = $("<div class='text'/>");
         if (signatory.signs()) {
