@@ -1,3 +1,4 @@
+{-# LANGUAGE OverlappingInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module TestingUtil where
 
@@ -39,12 +40,9 @@ import File.Model
 import API.Service.Model
 import Data.Typeable
 import Doc.Invariants
---import Doc.DocInfo
 import Doc.DocProcess
 import ActionSchedulerState
 import Text.JSON
-
---import Util.SignatoryLinkUtils
 
 import EvidenceLog.Model
 
@@ -57,6 +55,8 @@ instance Show NotNullWord8 where
 instance Bounded NotNullWord8 where
   minBound = 1
   maxBound = NotNullWord8 maxBound
+
+newtype StringNoNUL = StringNoNUL { fromSNN :: String }
 
 instance Arbitrary NotNullWord8 where
   arbitrary = arbitrarySizedBoundedIntegral
@@ -386,8 +386,8 @@ instance Arbitrary UserInfo where
 instance Arbitrary BS.ByteString where
   arbitrary = BS.pack . map fromNNW8 <$> arbitrary
 
-instance Arbitrary String where
-  arbitrary = map (chr . fromIntegral . fromNNW8) <$> arbitrary
+instance Arbitrary StringNoNUL where
+  arbitrary = StringNoNUL . map (chr . fromIntegral . fromNNW8) <$> arbitrary
 
 arbString :: Int -> Int -> Gen String
 arbString minl maxl = do

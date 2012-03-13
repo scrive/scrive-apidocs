@@ -265,8 +265,7 @@ Executable pdfseal
               TemplateHaskell,
               TypeFamilies,
               TypeOperators,
-              TypeSynonymInstances,
-              UndecidableInstances
+              TypeSynonymInstances
 
 Executable mailing-server
   if flag(mailing-server)
@@ -308,7 +307,6 @@ Executable mailing-server
               TypeOperators,
               TypeSynonymInstances,
               UndecidableInstances
-
 
 Executable kontrakcja-test
   if flag(test)
@@ -389,6 +387,4 @@ Executable kontrakcja-test
               TypeFamilies,
               TypeOperators,
               TypeSynonymInstances,
-              UndecidableInstances,
-              OverlappingInstances,
-              IncoherentInstances
+              UndecidableInstances

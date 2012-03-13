@@ -1094,7 +1094,7 @@ testNewDocumentDependencies = doTimes 10 $ do
   -- execute
   now <- liftIO $ getMinutesTime
   let aa = AuthorActor now (IPAddress 0) (userid author) (getEmail author)
-  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany title doctype 0 aa)
+  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany (fromSNN title) doctype 0 aa)
   -- assert
   validTest $ do
     assertRight edoc
@@ -1107,7 +1107,7 @@ testDocumentCanBeCreatedAndFetchedByID = doTimes 10 $ do
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
   now <- liftIO $ getMinutesTime
   let aa = AuthorActor now (IPAddress 0) (userid author) (getEmail author)
-  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany title doctype 0 aa)
+  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany (fromSNN title) doctype 0 aa)
   let doc = case edoc of
           Left msg -> error $ show msg
           Right d -> d
@@ -1127,7 +1127,7 @@ testDocumentCanBeCreatedAndFetchedByAllDocs = doTimes 10 $ do
   -- execute
   now <- liftIO $ getMinutesTime
   let aa = AuthorActor now (IPAddress 0) (userid author) (getEmail author)
-  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany title doctype 0 aa)
+  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany (fromSNN title) doctype 0 aa)
 
   let doc = case edoc of
           Left msg -> error $ show msg
