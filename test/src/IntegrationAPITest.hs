@@ -377,7 +377,10 @@ testNewDocumentWithCompanyNr env = withTestEnvironment env $ do
 createDocumentJSON :: String -> String -> DB JSValue
 createDocumentJSON company author = do
      dt <- rand 10 $  elements [1,3,5]
-     randomCall $ \title fname sname -> JSObject $ toJSObject $
+     title <- rand 10 arbitraryNiceString
+     fname <- rand 10 arbitraryNiceString
+     sname <- rand 10 arbitraryNiceString
+     return $ JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
          ,("title" , JSString $ toJSString title)
          ,("type" , JSRational True (dt%1))
@@ -392,7 +395,12 @@ createDocumentJSON company author = do
 createDocumentJSONFriend :: String -> String -> String -> DB JSValue
 createDocumentJSONFriend company author friend = do
      dt <- rand 10 $  elements [1,3,5]
-     randomCall $ \title fname sname fname2 sname2 -> JSObject $ toJSObject $
+     title <- rand 10 arbitraryNiceString
+     fname <- rand 10 arbitraryNiceString
+     sname <- rand 10 arbitraryNiceString
+     fname2 <- rand 10 arbitraryNiceString
+     sname2 <- rand 10 arbitraryNiceString
+     return $ JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
          ,("title" , JSString $ toJSString title)
          ,("type" , JSRational True (dt%1))
@@ -419,7 +427,14 @@ createDocumentJSONFriend company author friend = do
 
 
 createOrderJSON :: String -> String -> DB JSValue
-createOrderJSON company author = randomCall $ \title fname sname fname2 sname2 em2 -> JSObject $ toJSObject $
+createOrderJSON company author = do
+    title <- rand 10 arbitraryNiceString 
+    fname <- rand 10 arbitraryNiceString 
+    sname <- rand 10 arbitraryNiceString
+    fname2 <- rand 10 arbitraryNiceString 
+    sname2 <- rand 10 arbitraryNiceString 
+    em2 <- rand 10 arbitraryNiceString 
+    return $ JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
          ,("title" , JSString $ toJSString title)
          ,("type" , JSRational True (5%1))

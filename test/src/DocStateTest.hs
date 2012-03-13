@@ -1094,7 +1094,8 @@ testNewDocumentDependencies = doTimes 10 $ do
   -- execute
   now <- liftIO $ getMinutesTime
   let aa = AuthorActor now (IPAddress 0) (userid author) (getEmail author)
-  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany title doctype 0 aa)
+  title <- rand 10 arbitraryNiceString
+  edoc <- randomUpdate $ (\doctype -> NewDocument author mcompany title doctype 0 aa)
   -- assert
   validTest $ do
     assertRight edoc
@@ -1107,7 +1108,8 @@ testDocumentCanBeCreatedAndFetchedByID = doTimes 10 $ do
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
   now <- liftIO $ getMinutesTime
   let aa = AuthorActor now (IPAddress 0) (userid author) (getEmail author)
-  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany title doctype 0 aa)
+  title <- rand 10 arbitraryNiceString
+  edoc <- randomUpdate $ (\doctype -> NewDocument author mcompany title doctype 0 aa)
   let doc = case edoc of
           Left msg -> error $ show msg
           Right d -> d
@@ -1127,7 +1129,8 @@ testDocumentCanBeCreatedAndFetchedByAllDocs = doTimes 10 $ do
   -- execute
   now <- liftIO $ getMinutesTime
   let aa = AuthorActor now (IPAddress 0) (userid author) (getEmail author)
-  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany title doctype 0 aa)
+  title <- rand 10 arbitraryNiceString
+  edoc <- randomUpdate $ (\doctype -> NewDocument author mcompany title doctype 0 aa)
 
   let doc = case edoc of
           Left msg -> error $ show msg
@@ -2121,7 +2124,8 @@ testPendingToAwaitingAuthorDocumentNotNothing = doTimes 10 $ do
 
 testSetDocumentTitleNotLeft :: DB ()
 testSetDocumentTitleNotLeft = doTimes 10 $ do
-  (did, title, actor::AuthorActor) <- rand 10 arbitrary
+  (did, actor::AuthorActor) <- rand 10 arbitrary
+  title <- rand 10 arbitraryNiceString
   etdoc <- randomUpdate $ SetDocumentTitle did title actor
   validTest $ assertLeft etdoc
 
