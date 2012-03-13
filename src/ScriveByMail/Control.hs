@@ -11,14 +11,18 @@ import Company.Model
 import CompanyAccounts.CompanyAccountsControl
 import DB.Classes
 import Doc.DocStateData
+import FlashMessage
 import Kontra
+import KontraLink
 import MagicHash
 import Misc
-import Util.MonadUtils
 import ScriveByMail.Action
 import ScriveByMail.Model
+import ScriveByMail.View
 import User.Model
 import User.UserControl
+import Util.FlashUtil
+import Util.MonadUtils
 import qualified Doc.DocControl as DocControl
 
 import Control.Applicative
@@ -48,12 +52,12 @@ handleMailAPI = do
         return $ show $ documentid doc
     Nothing -> return ""
 
-handleConfirmDelay :: Kontrakcja m => String -> Int64 -> MagicHash -> m String
+handleConfirmDelay :: Kontrakcja m => String -> Int64 -> MagicHash -> m KontraLink
 handleConfirmDelay adminemail delayid key = do
   ctx <- getContext
   mdelay <- runDBQuery $ GetMailAPIUserRequest delayid key (ctxtime ctx)
   case mdelay of
-    Nothing -> return "This confirmation link has expired."
+    Nothing -> addFlashM $ modalDenyDelay
     Just (email, companyid) -> do
       company   <- guardJustM $ runDBQuery $ GetCompany companyid
       adminuser <- guardJustM $ runDBQuery $ GetUserByEmail Nothing (Email $ BS.fromString adminemail)
@@ -61,5 +65,6 @@ handleConfirmDelay adminemail delayid key = do
       newuser   <- guardJustM $ createUser (Email $ BS.fromString email) BS.empty BS.empty (Just company)
       _ <- runDBUpdate $ ConfirmBossDelay delayid (ctxtime ctx)
       _ <- sendNewCompanyUserMail adminuser company newuser
-      return $ "An account for your company has been created for " ++ email ++ ". Thank you."
+      addFlashM $ modalConfirmDelay email
+  return $ LinkHome (ctxlocale ctx)
       

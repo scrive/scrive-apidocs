@@ -14,7 +14,9 @@ import KontraLink
 import MagicHash
 import MinutesTime
 import ScriveByMail.Model
+import FlashMessage
 
+import Control.Applicative
 import Control.Monad.IO.Class
 import Data.Int
 import qualified Data.ByteString.UTF8 as BS
@@ -75,3 +77,11 @@ mailAPIInfoFields info = do
   field "mailapikey"   $ show $ umapiKey        info
   field "mailapilimit" $ show $ umapiDailyLimit info
   field "mailapisent"  $ show $ umapiSentToday  info
+
+modalDenyDelay :: TemplatesMonad m => m FlashMessage
+modalDenyDelay =
+  toModal <$> renderTemplateM "modalDenyDelay" ()
+
+modalConfirmDelay :: TemplatesMonad m => String -> m FlashMessage
+modalConfirmDelay email =
+  toModal <$> renderTemplateFM "modalConfirmDelay" (field "email" email)

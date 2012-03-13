@@ -115,10 +115,10 @@ showAdminCompanies :: Kontrakcja m => m String
 showAdminCompanies = onlySalesOrAdmin $  adminCompaniesPage
 
 showAdminCompany :: Kontrakcja m => CompanyID -> m String
-showAdminCompany companyid = do
+showAdminCompany companyid = onlySalesOrAdmin $ do
   company  <- guardJustM . runDBQuery $ GetCompany companyid
   mmailapi <- runDBQuery $ GetCompanyMailAPI companyid
-  onlySalesOrAdmin $ adminCompanyPage company mmailapi
+  adminCompanyPage company mmailapi
 
 jsonCompanies :: Kontrakcja m => m JSValue
 jsonCompanies = onlySalesOrAdmin $ do

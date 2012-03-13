@@ -174,8 +174,8 @@ fetchCompanies = foldDB decoder []
 data SetCompanyEmailDomain = SetCompanyEmailDomain CompanyID (Maybe String)
 instance DBUpdate SetCompanyEmailDomain Bool where
   dbUpdate (SetCompanyEmailDomain cid mdomain) = do    
-    kPrepare $ "UPDATE companies SET email_domain = ? WHERE id = ?"
-    kExecute01 [toSql mdomain, toSql cid]
+    kPrepare $ "UPDATE companies SET email_domain = ? WHERE id = ? AND NOT EXISTS (SELECT 1 FROM companies WHERE email_domain = ?)"
+    kExecute01 [toSql mdomain, toSql cid, toSql mdomain]
     
 data GetCompanyByEmailDomain = GetCompanyByEmailDomain String
 instance DBQuery GetCompanyByEmailDomain (Maybe Company) where

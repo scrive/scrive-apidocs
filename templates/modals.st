@@ -1177,3 +1177,7 @@ modalUserSignupDone=
   </div>
 </div>
 #####
+modalDenyDelay=$_modalDenyDelay()
+#####
+modalConfirmDelay=$_modalConfirmDelay()$
+#####
