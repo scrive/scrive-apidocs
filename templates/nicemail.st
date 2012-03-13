@@ -19,8 +19,8 @@ nicemail=
                 <table id="header" width="580" cellpadding="9" bgcolor="$nicemailbgcolour()$"
                     cellspacing="0" align="center" style="color:$nicemailfgcolour()$;text-align:center;margin:auto">
                     <tr>
-                        <td style="text-align:left; margin: auto;padding:10px;">
-                          <div style="background-repeat:no-repeat;background-image:url('$nicemaillogo()$');height:33px;width:100%;"/>
+                        <td style="text-align:center; margin: auto;padding:10px;min-height:33px;">
+                          <img src="$nicemaillogo()$" style="margin:auto;"></img>
                         </td>
                     </tr>
                     <tr>
