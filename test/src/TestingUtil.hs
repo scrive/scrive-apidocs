@@ -66,7 +66,7 @@ instance Arbitrary SignOrder where
   arbitrary = SignOrder <$> arbitrary
 
 instance Arbitrary DocumentTag where
-  arbitrary = DocumentTag <$> arbitraryNiceString <*> arbitraryNiceString
+  arbitrary = DocumentTag <$> arbitrary <*> arbitrary
 
 instance Arbitrary UserID where
   arbitrary = unsafeUserID . abs <$> arbitrary
@@ -94,16 +94,16 @@ instance Arbitrary CompanyID where
   arbitrary = unsafeCompanyID . abs <$> arbitrary
 
 instance Arbitrary ExternalCompanyID where
-  arbitrary = ExternalCompanyID <$> arbitraryNiceString
+  arbitrary = ExternalCompanyID <$> arbitrary
 
 instance Arbitrary CompanyInfo where
   arbitrary = do
-    a <- arbitraryNiceString
-    b <- arbitraryNiceString
-    c <- arbitraryNiceString
-    d <- arbitraryNiceString
-    e <- arbitraryNiceString
-    f <- arbitraryNiceString
+    a <- arbitrary
+    b <- arbitrary
+    c <- arbitrary
+    d <- arbitrary
+    e <- arbitrary
+    f <- arbitrary
     return $ CompanyInfo { companyname       = a
                          , companynumber     = b
                          , companyaddress    = c
@@ -132,10 +132,7 @@ instance Arbitrary MinutesTime where
   arbitrary = fromSeconds <$> arbitrary
 
 instance Arbitrary DocumentUI where
-  arbitrary = do
-      b <- arbitrary 
-      s <- arbitraryNiceString 
-      return $ DocumentUI $ Just s <| b |> Nothing  
+  arbitrary = DocumentUI <$> arbitrary
 
 instance Arbitrary ActionID where
   arbitrary = ActionID <$> arbitrary
@@ -156,8 +153,7 @@ instance ExtendWithRandomnes SignatoryDetails where
 
 instance Arbitrary AuthorActor where
   arbitrary = do
-    (time, ip, uid) <- arbitrary
-    eml <- arbitraryNiceString
+    (time, ip, uid, eml) <- arbitrary
     return $ AuthorActor time ip uid eml
 
 instance Arbitrary SystemActor where
@@ -167,14 +163,12 @@ instance Arbitrary SystemActor where
 
 instance Arbitrary SignatoryActor where
   arbitrary = do
-    (time, ip, uid, slid) <- arbitrary
-    eml <- arbitraryNiceString
+    (time, ip, uid, eml, slid) <- arbitrary
     return $ SignatoryActor time ip uid eml slid
 
 instance Arbitrary MailAPIActor where
   arbitrary = do
-    (time, uid) <- arbitrary
-    eml <- arbitraryNiceString
+    (time, uid, eml) <- arbitrary
     return $ MailAPIActor time uid eml
 
 instance Arbitrary SignatoryLinkID where
@@ -213,9 +207,9 @@ instance Arbitrary SignatureProvider where
 
 instance Arbitrary SignatureInfo where
   arbitrary = do
-    a <- arbitraryNiceString
-    b <- arbitraryNiceString
-    c <- arbitraryNiceString
+    a <- arbitrary
+    b <- arbitrary
+    c <- arbitrary
     d <- arbitrary
     e <- arbitrary
     f <- arbitrary
@@ -231,10 +225,10 @@ instance Arbitrary SignatureInfo where
 
 instance Arbitrary CSVUpload where
   arbitrary = do
-    a <- arbitraryNiceString
+    a <- arbitrary
     cols <- arbitrary
     rows <- arbitrary
-    b <- vectorOf rows (vectorOf cols arbitraryNiceString)
+    b <- vectorOf rows (vectorOf cols arbitrary)
     c <- arbitrary
     return $ CSVUpload { csvtitle = a
                        , csvcontents = b
@@ -323,8 +317,8 @@ filterSingleFieldType (f:fs) = f : filterSingleFieldType (filter (\h-> sfType f 
 
 instance Arbitrary SignatoryDetails where
   arbitrary = do
-    fn <- arbitraryNiceString
-    ln <- arbitraryNiceString
+    fn <- arbitrary
+    ln <- arbitrary
     em <- arbEmail
     fields <- filterSingleFieldType <$> arbitrary
     return $ SignatoryDetails { signatorysignorder = SignOrder 1
@@ -345,14 +339,14 @@ instance Arbitrary FieldPlacement where
 
 instance Arbitrary FieldType where
   arbitrary = do
-    fieldlabel <- arbitraryNiceString
+    fieldlabel <- arbitrary
     filled <- arbitrary
     elements [FirstNameFT, LastNameFT, EmailFT, CompanyFT, CompanyNumberFT, PersonalNumberFT, CustomFT fieldlabel filled]
 
 instance Arbitrary SignatoryField where
   arbitrary = do
     t <- arbitrary
-    v <- arbitraryNiceString
+    v <- arbitrary
     p <- arbitrary
     return $ SignatoryField { sfType = t
                             , sfValue = v
@@ -370,9 +364,9 @@ instance Arbitrary IdentificationType where
 
 instance Arbitrary UserInfo where
   arbitrary = do
-    fn <- arbitraryNiceString
-    ln <- arbitraryNiceString
-    pn <- arbitraryNiceString
+    fn <- arbitrary
+    ln <- arbitrary
+    pn <- arbitrary
     em <- arbEmail
 
     return $ UserInfo { userfstname     = fn
@@ -392,12 +386,8 @@ instance Arbitrary UserInfo where
 instance Arbitrary BS.ByteString where
   arbitrary = BS.pack . map fromNNW8 <$> arbitrary
 
---instance Arbitrary String where
---  arbitrary = map (chr . fromIntegral . fromNNW8) <$> arbitrary
-
--- Temporary fix for instances overlaping problem in older ghc
-arbitraryNiceString :: Gen String
-arbitraryNiceString =  map (chr . fromIntegral . fromNNW8) <$> arbitrary
+instance Arbitrary String where
+  arbitrary = map (chr . fromIntegral . fromNNW8) <$> arbitrary
 
 arbString :: Int -> Int -> Gen String
 arbString minl maxl = do
@@ -788,8 +778,7 @@ instance Arbitrary FileID where
 
 instance Arbitrary File where
   arbitrary = do
-    (a, c) <- arbitrary
-    b <- arbitraryNiceString
+    (a, b, c) <- arbitrary
     return $ File { fileid = a
                   , filename = b
                   , filestorage = FileStorageMemory c
@@ -804,14 +793,11 @@ instance Arbitrary SignInfo where
 
 instance Arbitrary JSValue where
   arbitrary =
-    oneof [ JSObject <$> toJSObject <$> (do
-                                                                                             a <- arbitraryNiceString
-                                                                                             b <- arbitrary
-                                                                                             return [(a,b)])
-          , JSArray <$> arbitrary
+    oneof [ JSObject <$> toJSObject <$> (\(f,s) -> (maybeToList f) ++ (maybeToList s)) <$> arbitrary
+          , JSArray <$> (\(f,s) -> (maybeToList f) ++ (maybeToList s)) <$> arbitrary
           , JSRational True <$> toRational <$> (arbitrary :: Gen Integer)
           , JSBool <$> arbitrary
-          , JSString <$> toJSString <$> arbitraryNiceString
+          , JSString <$> toJSString <$> arbitrary
           ]
 
 
