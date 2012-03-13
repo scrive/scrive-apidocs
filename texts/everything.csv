@@ -62,7 +62,7 @@
 "_InviteBox","Skriv e-post för att lägga till fler",,"Enter email, and invite a friend"
 "_LanguageSettings","Regioninställningar",,"Region settings"
 "_MailAPIActiveEmail","Aktiva e-postadresser:",,"Active email addresses:"
-"_MailAPIEnable","Aktivera Scrive by Mail",,"Enable Scrive by Mail"
+"_MailAPIEnable","Aktivera Personlig Scrive by Mail",,"Enable Personal Scrive by Mail"
 "_MailAPILimitHead","Begränsningar",,"Limits"
 "_MailAPILimitsDaily","Daglig begränsning för processade mail",,"Daily limit of processed e-mails"
 "_MailAPILimitsProcessedToday","Mail processade idag:",,"Emails processed today:"
