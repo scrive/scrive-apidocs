@@ -476,7 +476,7 @@ admincompany=
                 $endif$
 	    </tbody></table>
 	    <br/>
-            $if(!hasmailapi)$(Clicking "Change" will add MailAPI key for company; new policy is that all companies have it activated by default.) <br \>$endif$
+            $if(!hasmailapi)$(Clicking "Change" will add MailAPI key for company; new policy is that all companies have it activated by default.) <br />$endif$
 	    <input type="submit" style="width:200px;font-weight:bold"
 	    value="Change" name="change" />
 	  </div>
