@@ -272,7 +272,6 @@ javascriptLocalisation =
          , sampleEmailHeader: "$_SampleEmailHeader()$"
          , sampleEmailSubheader: "$_mailsubheader()$"
          , sampleEmailContent: "$_SampleEmailContent()$"
-         , recommendedLogoSize: "$_RecommendedLogoSize()$"
          , changeEmail : "$_changeEmail()$"
          , onlyPDF : "$_onlyPDF()$"
     }
