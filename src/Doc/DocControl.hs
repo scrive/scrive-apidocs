@@ -146,7 +146,6 @@ postDocumentChangeAction document@Document  { documentstatus
           case enewdoc of
              Right newdoc -> runTemplatesT (ctxlocale, ctxglobaltemplates) $ sendClosedEmails newctx newdoc
              Left errmsg -> Log.error $ "Sealing of document #" ++ show documentid ++ " failed, could not send document confirmations: " ++ errmsg
-        liftIO $ threadDelay 1000 -- TEMP. I'll remove this as fast as possible
         return ()
     -- Pending -> AwaitingAuthor
     -- main action: sendAwaitingEmail
@@ -176,7 +175,6 @@ postDocumentChangeAction document@Document  { documentstatus
               Log.server $ "Sending seal error emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
               runTemplatesT (ctxlocale, ctxglobaltemplates) $ sendDocumentErrorEmail newctx document author
               return ()
-        liftIO $ threadDelay 1000 -- TEMP. I'll remove this as fast as possible
         return ()
     -- Pending -> Rejected
     -- main action: sendRejectAuthorEmail
