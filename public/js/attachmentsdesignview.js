@@ -228,14 +228,19 @@ window.DesignAuthorAttachmentsPopup = {
                   _.each(model.attachments(), function(att){
                       var name = "attachment_" + counter;
                       if (att.isServerFile())
-                        submit.add(name,att.serverFileId());
+                        submit.add(name, att.serverFileId());
                       else
-                        submit.addInputs(att.fileUpload().attr("name",name));
+                        submit.addInputs(att.fileUpload().attr("name", name));
                       counter++;     
-                   })
-                  
-                  submit.send();
-                  return false;
+                   });
+
+                submit.success(function(){
+                  SessionStorage.set(document.documentid(), "step", "3");
+                  window.location = window.location;
+                });
+                LoadingDialog.open();
+                submit.send();
+                return false;
             }
 
 

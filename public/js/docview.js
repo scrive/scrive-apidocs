@@ -512,10 +512,7 @@ window.DocumentStandarView = Backbone.View.extend({
 
 window.KontraStandardDocument = {
     init : function(args){
-       this.model = new Document({
-                        id : args.id,
-                        viewer : args.viewer
-                    });
+       this.model = new Document(args);
        this.view = new DocumentStandarView({
                         model: this.model,
                         el : $("<div/>")
