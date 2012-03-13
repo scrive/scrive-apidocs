@@ -72,8 +72,8 @@ window.CompanyBrandingColourView = Backbone.View.extend({
     container.append($("<div />").append(this.customdiv));
 
 
-    this.el.empty();
-    this.el.append(container);
+    $(this.el).empty();
+    $(this.el).append(container);
 
     return this;
   },
@@ -220,7 +220,6 @@ window.CompanyBrandingLogoView = Backbone.View.extend({
     }).input();
 
     this.customdiv = $("<div />");
-    this.customdiv.append($("<div class='logonote' />").append(localization.recommendedLogoSize));
     this.customdiv.append($("<div class='logocustomise' />").append(this.upload));
 
     var container = $("<div/>");
@@ -228,8 +227,8 @@ window.CompanyBrandingLogoView = Backbone.View.extend({
     container.append(checkboxlabel);
     container.append($("<div />").append(this.customdiv));
 
-    this.el.empty();
-    this.el.append(container);
+    $(this.el).empty();
+    $(this.el).append(container);
 
     return this;
   },
@@ -371,10 +370,17 @@ window.CompanyBrandingSampleView = Backbone.View.extend({
     this.container.append(this.header);
     this.container.append($("<div class='content' />").append(localization.sampleEmailContent));
 
-    this.el.empty();
-    this.el.append(this.container);
+    $(this.el).empty();
+    $(this.el).append(this.container);
 
     return this;
+  },
+  renderLogoWithSrc: function(src) {
+    this.logo.empty();
+    var img = $("<img />");
+    img.attr("src", src);
+    this.logo.append(img);
+    return this.logo;
   },
   render: function() {
     var company = this.model;
@@ -384,9 +390,7 @@ window.CompanyBrandingSampleView = Backbone.View.extend({
     var btcolour = company.barstextcolour().colour();
 
     console.log("displaying logo " + logourl);
-    this.logo.hide();
-    this.logo.css("background-image", "url('" + location.protocol + "//" + location.host + logourl + "')");
-    this.logo.show();
+    this.renderLogoWithSrc(location.protocol + "//" + location.host + logourl);
     if (company.logo().loading()) {
       this.header.css("background-color", "transparent");
     } else {
@@ -496,8 +500,8 @@ window.CompanyBrandingView = Backbone.View.extend({
       container.append($("<div class='float-right save'/>").append(saveButton));
     }
 
-    this.el.empty();
-    this.el.append(container);
+    $(this.el).empty();
+    $(this.el).append(container);
 
     return this;
   }

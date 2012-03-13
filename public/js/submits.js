@@ -89,5 +89,10 @@ window.Submit = Backbone.Model.extend({
         this.get('beforeSend')();
         form.submit();
         this.get('onSend')();
-    }})
+    },
+  success: function(f) {
+    this.set({ajaxsuccess: f || function(){}}, {silent:true});
+    return this;
+  }
+})
 })(window); 

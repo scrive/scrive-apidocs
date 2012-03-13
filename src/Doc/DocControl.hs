@@ -100,6 +100,7 @@ import Control.Monad.Reader
 import Data.Either
 import Data.List
 import Data.Maybe
+import Happstack.Server.Types
 import Happstack.Server hiding (simpleHTTP)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
@@ -1166,16 +1167,15 @@ handleSetAttachments did = do
             case inp of
                  Just (Input (Left filepath) (Just filename) _contentType) -> do
                      content <- liftIO $ BSL.readFile filepath
-                     let title = BS.fromString (basename filename)
-                     doc <- guardRightM $ newDocument title Attachment 0
-                     doc' <- guardRightM $  attachFile (documentid doc) (BS.fromString filename) (concatChunks content)
+                     let title = basename filename
+                     doc <- guardRightM $ newDocument (BS.fromString title) Attachment 0
+                     doc' <- guardRightM $  attachFile (documentid doc) (BS.fromString $ title ++ ".pdf") (concatChunks content)
                      return $ listToMaybe $ documentfiles  doc'
-                 Just (Input  (Right c)  _ _)  -> do
-                     case maybeRead (BSL.toString c) of
+                 Just (Input  (Right c)  _ _)  -> do 
+                      case maybeRead (BSL.toString c) of
                           Just fid -> (fmap fileid) <$> (runDB $ dbQuery $ GetFileByFileID fid)
                           Nothing -> return $ Nothing
-                 _ -> do
-                     return Nothing
+                 _ -> return Nothing
 
 handleUpsalesDeleted :: Kontrakcja m => m Response
 handleUpsalesDeleted = onlyAdmin $ do

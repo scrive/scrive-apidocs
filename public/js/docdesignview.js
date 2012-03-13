@@ -35,10 +35,10 @@ var DocumentDesignView = Backbone.View.extend({
     },
     prerender: function(){
         this.contrainer = $("<div class='mainContainer' />");
-        this.el.append(this.contrainer);
-        this.el.addClass("body-container");
-        this.el.append("<div class='clearfix'/>");
-        this.el.append("<div class='spacer40'/>");
+        $(this.el).append(this.contrainer);
+        $(this.el).addClass("body-container");
+        $(this.el).append("<div class='clearfix'/>");
+        $(this.el).append("<div class='spacer40'/>");
        
     },
     titlerow : function() {
@@ -124,6 +124,7 @@ var DocumentDesignView = Backbone.View.extend({
               document.save().sendAjax(function() {
                                new Submit().send();
                             });
+              return false;
                      });
         return a;
     },                                               
@@ -132,7 +133,7 @@ var DocumentDesignView = Backbone.View.extend({
         var box = $("<div class='signStepsBody basicMode'/>");
         document.fixForBasic();
         this.signatoriesView = new SignatoriesDesignBasicView({model: document, el: $("<div/>"), extra: this.finalBasicBox()})
-        box.append(this.signatoriesView.el);
+        box.append($(this.signatoriesView.el));
         return box;
     },
     finalBasicBox : function() {
@@ -152,7 +153,7 @@ var DocumentDesignView = Backbone.View.extend({
         var document = this.model;
         var box = $("<div class='signStepsBody advancedMode'/>");
         this.signatoriesView  = new SignatoriesDesignAdvancedView({model: document, el: $("<div/>") , extra: this.nextStepButton()})
-        box.append(this.signatoriesView.el);
+        box.append($(this.signatoriesView.el));
         return box;
     },
     nextStepButton : function() {
@@ -364,6 +365,7 @@ var DocumentDesignView = Backbone.View.extend({
         var box = $("<div class='authorattachmentssetup'/>");
         var icon = $("<span class='authorattachmentssetupicon'/>");
         var text = $("<span class='authorattachmentssetuptext'/>").text(localization.attachments.changeAuthorAttachments);
+        var countspan = $("<span class='countspan' />").text("(" + document.authorattachments().length + ")").appendTo(text);
         box.append(icon).append(text);
 
         box.click(function() {
@@ -378,8 +380,12 @@ var DocumentDesignView = Backbone.View.extend({
         var box = $("<div class='signatoryattachmentssetup'/>");
         var icon = $("<span class='signatoryattachmentssetupicon'/>");
         var text = $("<span class='signatoryattachmentssetuptext'/>").text(localization.signatoryAttachments.requestAttachments);
+        var countspan = $("<span class='countspan' />").text("(" + document.signatoryattachments().length + ")");
+      text.append(countspan);
         box.append(icon).append(text);
-
+        document.bind("change:attachments", function(){
+          countspan.text("(" + document.signatoryattachments().length + ")");
+        });
         box.click(function() {
             document.save().sendAjax();
             DesignSignatoryAttachmentsPopup.popup({document: document});
@@ -605,7 +611,7 @@ var DocumentDesignView = Backbone.View.extend({
                     },    
                     elems : [
                               designbody1,
-                              file.view.el
+                              $(file.view.el)
                             ]  
                   }),
                 this.tab3 = new Tab({
@@ -616,13 +622,13 @@ var DocumentDesignView = Backbone.View.extend({
                     },    
                     elems : [
                             designbody2,
-                            file.view.el
+                            $(file.view.el)
                             ],
                     disabled : document.isBasic()    
                   })
                 ]
         });
-        this.contrainer.append(this.tabs.view.el);
+        this.contrainer.append($(this.tabs.view.el));
 
         new ScrollFixer({object : designbody1.add(designbody2)});
     }
@@ -650,7 +656,6 @@ window.KontraDesignDocument = {
     init : function(args){
        this.model = new Document({
                         id : args.id
-                       
                     });
        this.view = new DocumentDesignView({
                         model: this.model,

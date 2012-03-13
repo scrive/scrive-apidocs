@@ -29,7 +29,7 @@ var StandardPlacementView = Backbone.View.extend({
     },
     render: function() {
             var field =   this.model;
-            var box = this.el;
+            var box = $(this.el);
             box.addClass('placedfieldvalue value');
             box.text(field.nicetext());
             field.bind('change', function() {
@@ -50,7 +50,7 @@ var StandardPlacementPlacedView = Backbone.View.extend({
             var placement = this.model;
             var field =  placement.field();
             var document = field.signatory().document();
-            var place = this.el;
+            var place = $(this.el);
             var fileview = field.signatory().document().mainfile().view;
             place.addClass('placedfield').css('position','absolute');
             place.offset({
@@ -98,8 +98,8 @@ var SignaturePlacementViewForDrawing = Backbone.View.extend({
     render: function() {
             var view = this;
             var signatory = this.model.signatory();
-            var box = this.el;
-            box.append(SignatureDrawer.init({signaturefield : this.model}).view.el);
+            var box = $(this.el);
+            box.append($(SignatureDrawer.init({signaturefield : this.model}).view.el));
             return this;
     }
 });
@@ -127,7 +127,7 @@ var SignaturePlacementView = Backbone.View.extend({
     render: function() {
             var view = this;
             var signatory = this.model.signatory();
-            var box = this.el;
+            var box = $(this.el);
             box.empty();
             box.addClass('signatureBoxNotDrawing');
             box.append(this.header());
@@ -161,7 +161,7 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
             var field =  placement.field();
             var signatory =  field.signatory();
             var document = signatory.document();
-            var place = this.el;
+            var place = $(this.el);
             var fileview = field.signatory().document().mainfile().view;
             place.addClass('placedfield').css('position','absolute');
             place.offset({
