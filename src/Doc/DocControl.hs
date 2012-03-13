@@ -176,6 +176,7 @@ postDocumentChangeAction document@Document  { documentstatus
               Log.server $ "Sending seal error emails for document #" ++ show documentid ++ ": " ++ BS.toString documenttitle
               runTemplatesT (ctxlocale, ctxglobaltemplates) $ sendDocumentErrorEmail newctx document author
               return ()
+        liftIO $ threadDelay 1000 -- TEMP. I'll remove this as fast as possible
         return ()
     -- Pending -> Rejected
     -- main action: sendRejectAuthorEmail
