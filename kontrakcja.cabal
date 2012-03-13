@@ -389,6 +389,4 @@ Executable kontrakcja-test
               TypeFamilies,
               TypeOperators,
               TypeSynonymInstances,
-              UndecidableInstances,
-              OverlappingInstances,
-              IncoherentInstances
+              UndecidableInstances
