@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, OverloadedStrings #-}
+{-# LANGUAGE CPP, OverloadedStrings, OverlappingInstances, IncoherentInstances #-}
 module DocStateTest where
 
 import DB.Classes
