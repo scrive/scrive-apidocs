@@ -2,6 +2,7 @@ module ScriveByMail.Tables
        (
          tableMailAPIDelay,
          tableUserMailAPIs,
+         tableUserRequest,
          tableCompanyMailAPIs
        )
     where
@@ -11,38 +12,61 @@ import Database.HDBC
 import DB.Classes
 import DB.Model
 
-tableMailAPIDelay :: Table
-tableMailAPIDelay = Table {
-    tblName = "mail_api_delay"
+tableUserRequest :: Table
+tableUserRequest = Table  {
+    tblName = "mail_api_user_request"
   , tblVersion = 1
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id",             SqlColDesc {colType = SqlBigIntT,  colNullable = Just False})
        , ("key",            SqlColDesc {colType = SqlBigIntT,  colNullable = Just False})
        , ("email",          SqlColDesc {colType = SqlVarCharT,  colNullable = Just False})
-       , ("email_text",     SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("time",           SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just False})
        , ("expires",        SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just False})
        , ("status",         SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("company_id",     SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
-        kRunRaw $ "CREATE TABLE mail_api_delay ("
+        kRunRaw $ "CREATE TABLE mail_api_user_request ("
           ++ "  id          BIGSERIAL NOT NULL"
           ++ ", key            BIGINT NOT NULL"
           ++ ", email            TEXT NOT NULL"
-          ++ ", email_text       TEXT NOT NULL"
           ++ ", time      TIMESTAMPTZ NOT NULL"
           ++ ", expires   TIMESTAMPTZ NOT NULL"
           ++ ", status       SMALLINT NOT NULL"
           ++ ", company_id     BIGINT NOT NULL"
+          ++ ", CONSTRAINT pk_mail_api_user_request PRIMARY KEY (id)"
+          ++ ")"
+        return TVRcreated
+      _ -> return TVRinvalid
+  , tblPutProperties = do
+    kRunRaw $ "ALTER TABLE mail_api_user_request"
+      ++ " ADD CONSTRAINT fk_mail_api_user_request FOREIGN KEY(company_id)"
+      ++ " REFERENCES companies(id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
+  }
+
+tableMailAPIDelay :: Table
+tableMailAPIDelay = Table {
+    tblName = "mail_api_delay"
+  , tblVersion = 1
+  , tblCreateOrValidate = \desc -> case desc of
+      [  ("id",              SqlColDesc {colType = SqlBigIntT,  colNullable = Just False})
+       , ("email_text",      SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("user_request_id", SqlColDesc {colType = SqlBigIntT,  colNullable = Just False})
+       ] -> return TVRvalid
+      [] -> do
+        kRunRaw $ "CREATE TABLE mail_api_delay ("
+          ++ "  id           BIGSERIAL NOT NULL"
+          ++ ", email_text        TEXT NOT NULL"
+          ++ ", user_request_id BIGINT NOT NULL"
           ++ ", CONSTRAINT pk_mail_api_delay PRIMARY KEY (id)"
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid
   , tblPutProperties = do
     kRunRaw $ "ALTER TABLE mail_api_delay"
-      ++ " ADD CONSTRAINT fk_mail_api_delay FOREIGN KEY(company_id)"
-      ++ " REFERENCES companies(id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      ++ " ADD CONSTRAINT fk_mail_api_delay FOREIGN KEY(user_request_id)"
+      ++ " REFERENCES mail_api_user_request(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
 

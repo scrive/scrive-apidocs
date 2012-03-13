@@ -3,7 +3,7 @@ module ScriveByMail.Model
      MailAPIInfo(..),
      DeleteMailAPIDelays(..),
      AddMailAPIDelay(..),
-     GetMailAPIDelay(..),
+     GetMailAPIUserRequest(..),
      GetMailAPIDelaysForEmail(..),
      ConfirmBossDelay(..),
      DelayStatus(..),
@@ -32,7 +32,9 @@ import MinutesTime
 import qualified Data.ByteString as BS
 import Company.Model
 import User.Model
+import qualified Log
 
+import Data.Maybe
 import Database.HDBC
 import Data.Int
 import Crypto.RNG(random)
@@ -185,59 +187,73 @@ $(enumDeriveConvertible ''DelayStatus)
    Create a new Delay to request confirmation from the BOSS.
 -}
 data AddMailAPIDelay = AddMailAPIDelay String BS.ByteString CompanyID MinutesTime
-instance DBUpdate AddMailAPIDelay (Maybe (Int64, MagicHash)) where
+instance DBUpdate AddMailAPIDelay (Maybe (Int64, MagicHash, Bool)) where
   dbUpdate (AddMailAPIDelay email text cid now) = do
     key :: MagicHash <- random
-    kPrepare $ "INSERT INTO mail_api_delay ("
-            ++ " key"
-            ++ ",email"
-            ++ ",email_text"
-            ++ ",time"
-            ++ ",expires"
-            ++ ",status"
-            ++ ",company_id"
-            ++ ") VALUES (?,?,?,?,?,?,?) "
-            ++ "RETURNING id, key, status"
-    _ <- kExecute [ toSql key
+    kPrepare $ "INSERT INTO mail_api_user_request ("
+                 ++ " key"
+                 ++ ",email"
+                 ++ ",time"
+                 ++ ",expires"
+                 ++ ",status"
+                 ++ ",company_id"
+                 ++ ") SELECT ?,?,?,?,?,? "
+                 ++ "WHERE NOT EXISTS (SELECT 1 FROM mail_api_user_request WHERE email = ? AND company_id = ?) "
+    r <- kExecute [ toSql key
                   , toSql email
-                  , toSql text
                   , toSql now
                   , toSql $ 3 `daysAfter` now
                   , toSql DelayWaitAdmin
+                  , toSql cid
+                  , toSql email
                   , toSql cid]
-    foldDB f [] >>= oneObjectReturnedGuard
-    where f acc delayid key DelayWaitAdmin = (delayid, key):acc
-          f acc _ _ DelayWaitUser  = acc
+    Log.debug $ "number of rows AddMailAPIDelay: " ++ show r
+    _ <- kRun $ SQL "SELECT id, key FROM mail_api_user_request WHERE email = ? AND company_id = ?"
+                      [toSql email, toSql cid]
+    a <- listToMaybe <$> foldDB f []
+    case a of
+      Nothing -> return Nothing
+      Just (requestid, key') -> do
+        kPrepare $ "INSERT INTO mail_api_delay ("
+                     ++ " email_text"
+                     ++ ",user_request_id"
+                     ++ ") VALUES (?,?) "
+        _ <- kExecute [ toSql text
+                      , toSql requestid]
+        return $ Just (requestid, key', r == 1) -- r is 1 when user_request is new
+    where f acc delayid key = (delayid, key):acc
           
-data GetMailAPIDelay = GetMailAPIDelay Int64 MagicHash MinutesTime
-instance DBQuery GetMailAPIDelay (Maybe (String, CompanyID, BS.ByteString)) where
-  dbQuery (GetMailAPIDelay delayid key now) = do
-    kPrepare $ "SELECT email, company_id, email_text FROM mail_api_delay "
+data GetMailAPIUserRequest = GetMailAPIUserRequest Int64 MagicHash MinutesTime
+instance DBQuery GetMailAPIUserRequest (Maybe (String, CompanyID)) where
+  dbQuery (GetMailAPIUserRequest delayid key now) = do
+    kPrepare $ "SELECT email, company_id FROM mail_api_user_request "
             ++ "WHERE id = ? AND key = ? AND expires >= ? AND status = ?"
     _ <- kExecute [toSql delayid, toSql key, toSql now, toSql DelayWaitAdmin]
     foldDB f [] >>= oneObjectReturnedGuard
-    where f acc email cid text = (email, cid, text):acc
+    where f acc email cid = (email, cid):acc
 
 data DeleteMailAPIDelays = DeleteMailAPIDelays Int64 MinutesTime
 instance DBUpdate DeleteMailAPIDelays () where
   dbUpdate (DeleteMailAPIDelays delayid now) = do
-    kPrepare $ "DELETE FROM mail_api_delay "
+    kPrepare $ "DELETE FROM mail_api_user_request "
             ++ "WHERE id = ? "
             ++ "   OR expires < ?"
     _ <- kExecute [toSql delayid, toSql now]
     return ()
 
 data GetMailAPIDelaysForEmail = GetMailAPIDelaysForEmail String MinutesTime
-instance DBQuery GetMailAPIDelaysForEmail [(Int64, BS.ByteString)] where
+instance DBQuery GetMailAPIDelaysForEmail (Maybe (Int64, [BS.ByteString])) where
   dbQuery (GetMailAPIDelaysForEmail email now) = do
-    kPrepare $ "SELECT id, email_text FROM mail_api_delay "
-            ++ "WHERE email = ? AND expires >= ? AND company_id IN (SELECT company_id FROM mail_api_delay WHERE email = ? AND expires >= ? AND status = ?)"
-    _ <- kExecute [toSql email, toSql now, toSql email, toSql now, toSql DelayWaitUser]
-    foldDB f []
-    where f acc i e = (i, e):acc
+    kPrepare $ "SELECT mail_api_user_request.id, mail_api_delay.email_text FROM mail_api_user_request "
+            ++ "JOIN mail_api_delay ON mail_api_delay.user_request_id = mail_api_user_request.id "
+            ++ "WHERE email = ? AND expires >= ? AND status = ?"
+    _ <- kExecute [toSql email, toSql now, toSql DelayWaitUser]
+    foldDB f Nothing
+    where f Nothing i e = Just (i, [e])
+          f (Just (i, acc)) _ e = Just (i, e:acc)
 
 data ConfirmBossDelay = ConfirmBossDelay Int64 MinutesTime
 instance DBUpdate ConfirmBossDelay Bool where
   dbUpdate (ConfirmBossDelay delayid now) = do
-    (==1) <$> (kRun $ SQL "UPDATE mail_api_delay SET status = ?, expires =? WHERE id = ? and expires >= ?" 
+    (==1) <$> (kRun $ SQL "UPDATE mail_api_user_request SET status = ?, expires = ? WHERE id = ? and expires >= ?" 
                         [toSql DelayWaitUser, toSql $ 30 `daysAfter` now, toSql delayid, toSql now])

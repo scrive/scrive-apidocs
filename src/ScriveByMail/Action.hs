@@ -119,12 +119,15 @@ doMailAPI content = do
                   -- we need to store the email, send a confirmation to the company admins, a message to the sender
                   mdelay <- runDBUpdate $ AddMailAPIDelay username content (companyid company) (ctxtime ctx)
                   case mdelay of
-                    Just (delayid, key) -> do
+                    Just (delayid, key, True) -> do
                       cusers <- runDBQuery $ GetCompanyAccounts (companyid company)
                       forM_ (filter useriscompanyadmin cusers) $ \admin -> do
                         sendMailAPIDelayAdminEmail (BS.toString $ getEmail admin) username delayid key (ctxtime ctx)
                       return ()
-                    Nothing -> return () -- this means we already have a delay for this user; no need to bug the admins again
+                    Just (_, _, False) -> return () -- no need to do anything; we already have sent an admin confirmation
+                    Nothing -> do 
+                      Log.scrivebymail $ "Could not create delay; email: " ++ username ++ " companyid: " ++ show (companyid company)
+                      return () -- this means we had an error
                   sendMailAPIDelayUserEmail username
                   return Nothing
                 _ -> do

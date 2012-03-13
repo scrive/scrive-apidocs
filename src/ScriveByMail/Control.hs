@@ -51,10 +51,10 @@ handleMailAPI = do
 handleConfirmDelay :: Kontrakcja m => String -> Int64 -> MagicHash -> m String
 handleConfirmDelay adminemail delayid key = do
   ctx <- getContext
-  mdelay <- runDBQuery $ GetMailAPIDelay delayid key (ctxtime ctx)
+  mdelay <- runDBQuery $ GetMailAPIUserRequest delayid key (ctxtime ctx)
   case mdelay of
     Nothing -> return "This confirmation link has expired."
-    Just (email, companyid, _) -> do
+    Just (email, companyid) -> do
       company   <- guardJustM $ runDBQuery $ GetCompany companyid
       adminuser <- guardJustM $ runDBQuery $ GetUserByEmail Nothing (Email $ BS.fromString adminemail)
       guard (Just companyid == usercompany adminuser && useriscompanyadmin adminuser)

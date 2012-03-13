@@ -973,4 +973,4 @@ para=<p>$a$</p>
 #####
 linkk=<a href="$href$">$text$</a>
 ####
-concat=$a1$$a2$$a3$
+concat=$a1:noescape()$$a2:noescape()$$a3:noescape()$

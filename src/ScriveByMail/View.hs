@@ -67,7 +67,7 @@ mailMailApiDelayAdmin ctx adminemail email delayid key expires =
     
 mailMailApiDelayUser :: TemplatesMonad m => Context -> String -> m Mail
 mailMailApiDelayUser _ctx email =
-  kontramail "mailMailAPIDelayAdmin" $ do
+  kontramail "mailMailAPIDelayUser" $ do
     field "email" email
 
 mailAPIInfoFields :: MonadIO m => MailAPIInfo -> Fields m

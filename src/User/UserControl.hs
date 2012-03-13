@@ -13,6 +13,7 @@ import ActionSchedulerState
 import AppView
 import Crypto.RNG (CryptoRNG, random)
 import DB.Classes
+import qualified Doc.Action
 import Doc.Model
 import Company.Model
 import InputValidation
@@ -595,8 +596,11 @@ handleAccountSetupPost aid hash = do
           signupmethod <- guardJust $ getSignupMethod action
           mactivateduser <- handleActivate mfstname msndname user signupmethod
           case mactivateduser of
-            Just _activateduser -> do
+            Just (_activateduser, docs) -> do
               dropExistingAction aid
+
+              forM_ docs $ \(doc2, doc, mslid) -> Doc.Action.postDocumentChangeAction doc2 doc mslid
+
               addFlashM flashMessageUserActivated
               return ()
             Nothing -> do

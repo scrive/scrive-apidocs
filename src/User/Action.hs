@@ -15,7 +15,6 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS
 
 import DB.Classes
-import qualified Doc.Action
 import Doc.Model
 import Doc.DocStateData
 import InputValidation
@@ -47,15 +46,15 @@ handleAccountSetupFromSign document signatorylink = do
                 return
                 muser
   mactivateduser <- handleActivate (Just $ firstname) (Just $ lastname) user BySigning
-  when (isJust mactivateduser) $ do
-    activateduser <- guardJust mactivateduser
-    let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx)  (maybesignatory signatorylink)  (BS.toString $ getEmail $ signatorylink) (signatorylinkid signatorylink)
-    _ <- runDBUpdate $ SaveDocumentForUser (documentid document) activateduser (signatorylinkid signatorylink) actor
-    _ <- addUserSaveAfterSignStatEvent activateduser
-    return ()
-  return mactivateduser
+  case mactivateduser of
+    Just (activateduser, _) -> do
+      let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx)  (maybesignatory signatorylink)  (BS.toString $ getEmail $ signatorylink) (signatorylinkid signatorylink)
+      _ <- runDBUpdate $ SaveDocumentForUser (documentid document) activateduser (signatorylinkid signatorylink) actor
+      _ <- addUserSaveAfterSignStatEvent activateduser
+      return $ Just activateduser
+    Nothing -> return Nothing
 
-handleActivate :: Kontrakcja m => Maybe BS.ByteString -> Maybe BS.ByteString -> User -> SignupMethod -> m (Maybe User)
+handleActivate :: Kontrakcja m => Maybe BS.ByteString -> Maybe BS.ByteString -> User -> SignupMethod -> m (Maybe (User, [(Document, Document, Maybe SignatoryLinkID)]))
 handleActivate mfstname msndname actvuser signupmethod = do
   Log.debug $ "Attempting to activate account for user " ++ (show $ getEmail actvuser)
   guard (isNothing $ userhasacceptedtermsofservice actvuser)
@@ -88,25 +87,21 @@ handleActivate mfstname msndname actvuser signupmethod = do
                 _ <- dbUpdate $ LogHistoryTOSAccept (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
                 _ <- dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
                 return ()
-              delays <- runDBQuery $ GetMailAPIDelaysForEmail (BS.toString $ getEmail actvuser) (ctxtime ctx)
+              mdelays <- runDBQuery $ GetMailAPIDelaysForEmail (BS.toString $ getEmail actvuser) (ctxtime ctx)
               
-              forM_ delays $ \(delayid, text) -> do
-                Log.debug $ "delay: " ++ show delayid
-                mresult <- MailAPI.doMailAPI text
-                case mresult of
-                  Just (doc2, doc, msiglinkid) -> do
-                    _ <- Doc.Action.postDocumentChangeAction doc2 doc msiglinkid
-                    return ()
-                  Nothing -> return ()
-
-                runDBUpdate $ DeleteMailAPIDelays delayid (ctxtime ctx)
-
+              newdocs <- case mdelays of
+                Nothing -> return []
+                Just (delayid, texts) -> do
+                  results <- forM texts MailAPI.doMailAPI
+                  runDBUpdate $ DeleteMailAPIDelays delayid (ctxtime ctx)
+                  return $ catMaybes results
+ 
               tosuser <- guardJustM $ runDBQuery $ GetUserByID (userid actvuser)
               _ <- addUserSignTOSStatEvent tosuser
               _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
               logUserToContext $ Just tosuser
               when (callme) $ phoneMeRequest tosuser
-              return $ Just tosuser
+              return $ Just (tosuser, newdocs)
             else do
               addFlashM flashMessageMustAcceptTOS
               return Nothing

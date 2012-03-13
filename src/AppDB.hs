@@ -70,5 +70,6 @@ kontraTables = [
   , tableSignatoryAttachments
   , tableEvidenceLog
   , tableCompanyMailAPIs
+  , tableUserRequest
   , tableMailAPIDelay
   ] ++ mailerTables

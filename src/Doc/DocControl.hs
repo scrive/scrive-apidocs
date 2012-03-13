@@ -121,13 +121,6 @@ import EvidenceLog.Model
   Here are all actions associated with transitions.
 -}
 
-
-
-
-
-
--- END EMAILS
-
 {- |
     Handles an account setup from within the sign view.
 -}
