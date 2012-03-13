@@ -10,7 +10,7 @@ adminsmain=
     document histories</a></p>
 <p><a href="/adminonly/signhistorycsv">Download the CSV containing
     sign histories</a></p>
-<p><a href="/adminonly/userslistcsv">Download the CSV containing all 
+<p><a href="/adminonly/userslistcsv">Download the CSV containing all
     users (not suspended, with accepted TOS, no integration parties)</a></p>
     <strong>Sales Tools</strong>
     <table><tbody>
@@ -84,10 +84,10 @@ adminusers=
         name : "Admin Users Table",
         schema: new Schema({
             url: "/adminonly/userslist",
-            sorting: new Sorting({ 
+            sorting: new Sorting({
                 fields: [
                       "username"
-                    , "email" 
+                    , "email"
                     , "company"
                     , "uploaded_docs"
                     , "signed_docs"
@@ -200,7 +200,7 @@ adminUsersForSales=
             table.append(tr5);
 
             var tr6 = jQuery("<tr/>").append(jQuery("<td/>").text("Region:"));
-            var region = jQuery("<select name='region'>" 
+            var region = jQuery("<select name='region'>"
                                 + '<option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>'
                                 + '<option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>'
                                 + "</select>");
@@ -225,7 +225,7 @@ adminUsersForSales=
             Confirmation.popup({
               onAccept : function() {
                             var callback = function(t,e,v) {
-                                e.css("background", "red"); 
+                                e.css("background", "red");
                                 jQuery(document.createElement('div'))
                                     .attr("name", "validate-message")
                                     .css({"font-size": 8, "font-weight": "bold", "color": "red"})
@@ -268,7 +268,7 @@ adminUsersForSales=
             });
         }
     });
-            
+
     var usersTable = KontraList().init({
         name : "Users Table",
         schema: new Schema({
@@ -444,7 +444,7 @@ admincompany=
 		    <input type="text" style="width:200px;margin:0" value="$companyemaildomain$" name="companyemaildomain" />
 		  </td>
 		</tr>
-                $if(hasmailapi)$      
+                $if(hasmailapi)$
 		<tr> <td style="padding-top:10px"><strong>Company Mail API</strong></td> <td> </td></tr>
 		<tr> <td>emails:</td>
 		  <td>
@@ -476,7 +476,7 @@ admincompany=
                 $endif$
 	    </tbody></table>
 	    <br/>
-            $if(!hasmailapi)$(Clicking "Change" will add MailAPI key for company; new policy is that all companies have it activated by default.) <br \>$endif$
+            $if(!hasmailapi)$(Clicking "Change" will add MailAPI key for company; new policy is that all companies have it activated by default.) <br />$endif$
 	    <input type="submit" style="width:200px;font-weight:bold"
 	    value="Change" name="change" />
 	  </div>
@@ -899,7 +899,7 @@ admindocumentslist =
         name : "Documents Table",
         schema: new Schema({
             url: "/adminonly/documentslist",
-            sorting: new Sorting({ 
+            sorting: new Sorting({
                 fields: [
                       "ctime"
                     , "mtime"
@@ -917,39 +917,39 @@ admindocumentslist =
                 new Cell({name: "Dates", width:"80px", field: "ctime", special: "rendered",
                         rendering: function(_, _, doc) {
                                return jQuery("<small><span>"
-                                          + doc.field("ctime") + " <BR/> " 
+                                          + doc.field("ctime") + " <BR/> "
                                           + doc.field("mtime") +
                                        " </small>");
                           }}),
                 new Cell({name: "Author", width:"120px", field:"author", special: "rendered",
                         rendering: function(value, idx, doc) {
-                            if (value != undefined) 
-                                return jQuery("<small><span>" + value.name    + " <BR/> " 
-                                                   + value.email   + " <BR/> " 
+                            if (value != undefined)
+                                return jQuery("<small><span>" + value.name    + " <BR/> "
+                                                   + value.email   + " <BR/> "
                                                    + value.company + "</span></small>");
                           }}),
-                new Cell({name: "Title", width:"120px", field:"title",  special: "rendered", 
+                new Cell({name: "Title", width:"120px", field:"title",  special: "rendered",
                         rendering: function(value, idx, doc) {
                                 return jQuery("<small>"+value+"</small>");
                           }}),
-                new Cell({name: "Service", width:"40px", field:"service", special: "rendered", 
+                new Cell({name: "Service", width:"40px", field:"service", special: "rendered",
                           rendering: function(value, idx, doc) {
-                            if (value == undefined) 
+                            if (value == undefined)
                                 return jQuery("<small>" + value + "</small>");
 
                             return jQuery("<small>Scrive</small>");
                           }}),
-                new Cell({name: "Status", width:"40px", field:"status",  special: "rendered", 
+                new Cell({name: "Status", width:"40px", field:"status",  special: "rendered",
                         rendering: function(value, idx, doc) {
                                 return jQuery("<small>"+value+"</small>");
                           }}),
-                new Cell({name: "Type", width:"40px", field:"type",  special: "rendered", 
+                new Cell({name: "Type", width:"40px", field:"type",  special: "rendered",
                         rendering: function(value, idx, doc) {
                                 return jQuery("<small>"+value+"</small>");
                           }}),
                 new Cell({name: "Signatories", width:"120px", field:"signs", special: "rendered",
                           rendering: function(value, idx, doc) {
-                            if (value == undefined) 
+                            if (value == undefined)
                                 return ;
 
                             return jQuery("<small>" + value.join('<BR/>') + "</small>");
