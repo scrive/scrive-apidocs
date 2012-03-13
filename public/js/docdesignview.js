@@ -656,7 +656,6 @@ window.KontraDesignDocument = {
     init : function(args){
        this.model = new Document({
                         id : args.id
-                       
                     });
        this.view = new DocumentDesignView({
                         model: this.model,
