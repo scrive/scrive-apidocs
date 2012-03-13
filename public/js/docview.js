@@ -17,10 +17,10 @@ window.DocumentStandarView = Backbone.View.extend({
 
     prerender: function(){
         this.contrainer = $("<div class='mainContainer' />");
-        this.el.append(this.contrainer);
-        this.el.addClass("body-container");
-        this.el.append("<div class='clearfix'/>");
-        this.el.append("<div class='spacer40'/>");
+        $(this.el).append(this.contrainer);
+        $(this.el).addClass("body-container");
+        $(this.el).append("<div class='clearfix'/>");
+        $(this.el).append("<div class='spacer40'/>");
 
     },
     attachmentsTab : function() {
@@ -89,7 +89,7 @@ window.DocumentStandarView = Backbone.View.extend({
           {
               if (document.currentSignatory().author() || document.currentSignatory().signs()) {
                 var currentsignatoryview = new SignatoryStandarView({model : document.currentSignatory(), el : $("<div/>")});
-                middlebox.append(currentsignatoryview.el);
+                middlebox.append($(currentsignatoryview.el));
               }
           }
 
@@ -98,7 +98,7 @@ window.DocumentStandarView = Backbone.View.extend({
           _.each(document.otherSignatories(), function(signatory) {
               if (signatory.author() || signatory.signs()) {
                 var signatoryview = new SignatoryStandarView({model : signatory, el : $("<div/>")});
-                lastbox.append(signatoryview.el);
+                lastbox.append($(signatoryview.el));
               }
           });
 
@@ -158,7 +158,7 @@ window.DocumentStandarView = Backbone.View.extend({
       list.append(lbody);
          _.each(signatory.attachments(), function (attachment) {
            var view = new SignatoryAttachmentRowView({model : attachment, el : $("<tr/>")});
-           lbody.append(view.el);
+           lbody.append($(view.el));
         });
       box.append(header);
       box.append(list);
@@ -241,7 +241,7 @@ window.DocumentStandarView = Backbone.View.extend({
                                     {
                                         _.each(signatory.attachments(),function(attachment) {
                                             if (!attachment.hasFile())
-                                                attachment.view.el.addClass("redborder");
+                                                $(attachment.view.el).addClass("redborder");
                                         });
                                         FlashMessages.add({content: localization.addRequiredAttachments, color: "red"});
                                     }
@@ -480,7 +480,7 @@ window.DocumentStandarView = Backbone.View.extend({
                     name : localization.document,
                     elems: [
                             this.signatoriesTab(),
-                            file.view.el,
+                            $(file.view.el),
                             bottomparts
                            ]
                   }),
@@ -488,7 +488,7 @@ window.DocumentStandarView = Backbone.View.extend({
                     name  : localization.attachmentsWord,
                     elems : [
                             this.attachmentsTab(),
-                            file.view.el,
+                            $(file.view.el),
                             bottomparts
                             ],
                     disabled : !this.model.hasAnyAttachments() ||
@@ -501,7 +501,7 @@ window.DocumentStandarView = Backbone.View.extend({
                   })
                 ]
         });
-        this.contrainer.append(tabs.view.el);
+        this.contrainer.append($(tabs.view.el));
 
 
 

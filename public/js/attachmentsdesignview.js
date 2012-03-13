@@ -160,7 +160,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
                 })
             });
         documentsTable.view.render();
-        box.append(documentsTable.view.el);
+        box.append($(documentsTable.view.el));
         return box;
     },
     attachmentList : function() {
@@ -184,7 +184,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
         this.attachmentListBox.append(this.attachmentList());
     },
     render: function () {
-        this.container = this.el;
+        this.container = $(this.el);
         this.container.addClass("selectAuthorAttachmentPopupContent");
         this.container.empty();
         if (!this.showAvaibleAttachmentsList) {
@@ -218,7 +218,7 @@ window.DesignAuthorAttachmentsPopup = {
          var model = new DesignAuthorAttachments({ document : document  });
          var view = new DesignAuthorAttachmentsView({model : model, el : $("<div/>")})
          Confirmation.popup({
-              content  : view.el,
+              content  : $(view.el),
               title  : localization.attachments.selectAttachments,
               acceptText: localization.attachments.attach,
               width: "800px",
@@ -396,7 +396,7 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
     render: function () {
         var view = this;
         var attachments = this.model;
-        this.container = this.el;
+        this.container = $(this.el);
         this.container.addClass("designSignatoryAttachmentsPopupContent");
         this.container.empty();
         if (!attachments.isEmpty())
@@ -425,7 +425,7 @@ window.DesignSignatoryAttachmentsPopup = {
          var model = new DesignSignatoryAttachments({ document : document  });
          var view = new DesignSignatoryAttachmentsView({model : model, el : $("<div/>")})
          Confirmation.popup({
-              content  : view.el,
+              content  : $(view.el),
               title  : localization.signatoryAttachments.requestAttachments,
               acceptText: localization.save,
               width: "800px",

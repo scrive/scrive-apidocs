@@ -136,7 +136,7 @@ var UploadButtonView = Backbone.View.extend({
             }
         });
         button.append($("<span>").append(fileinput)); // This span is bugfix for error cases
-        this.el.append(button);
+        $(this.el).append(button);
         return this;
     }
 });

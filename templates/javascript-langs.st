@@ -275,5 +275,6 @@ javascriptLocalisation =
          , recommendedLogoSize: "$_RecommendedLogoSize()$"
          , changeEmail : "$_changeEmail()$"
          , onlyPDF : "$_onlyPDF()$"
+         , cancel : "$_cancel()$"
     }
 ####
