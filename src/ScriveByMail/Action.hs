@@ -1,6 +1,7 @@
 module ScriveByMail.Action
     (
      doMailAPI
+    ,parseEmailMessageToParts
     )
 
     where

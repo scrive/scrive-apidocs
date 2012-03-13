@@ -29,6 +29,7 @@ import qualified Log
 
 import ScriveByMail.Control
 import ScriveByMail.Model
+import ScriveByMail.Action
 
 mailApiTests :: DBEnv -> Test
 mailApiTests env = testGroup "MailAPI" [
