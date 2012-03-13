@@ -364,6 +364,7 @@ var DocumentDesignView = Backbone.View.extend({
         var box = $("<div class='authorattachmentssetup'/>");
         var icon = $("<span class='authorattachmentssetupicon'/>");
         var text = $("<span class='authorattachmentssetuptext'/>").text(localization.attachments.changeAuthorAttachments);
+        var countspan = $("<span class='countspan' />").text("(" + document.authorattachments().length + ")").appendTo(text);
         box.append(icon).append(text);
 
         box.click(function() {
@@ -378,8 +379,12 @@ var DocumentDesignView = Backbone.View.extend({
         var box = $("<div class='signatoryattachmentssetup'/>");
         var icon = $("<span class='signatoryattachmentssetupicon'/>");
         var text = $("<span class='signatoryattachmentssetuptext'/>").text(localization.signatoryAttachments.requestAttachments);
+        var countspan = $("<span class='countspan' />").text("(" + document.signatoryattachments().length + ")");
+      text.append(countspan);
         box.append(icon).append(text);
-
+        document.bind("change:attachments", function(){
+          countspan.text("(" + document.signatoryattachments().length + ")");
+        });
         box.click(function() {
             document.save().sendAjax();
             DesignSignatoryAttachmentsPopup.popup({document: document});
