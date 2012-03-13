@@ -274,5 +274,6 @@ javascriptLocalisation =
          , sampleEmailContent: "$_SampleEmailContent()$"
          , changeEmail : "$_changeEmail()$"
          , onlyPDF : "$_onlyPDF()$"
+         , cancel : "$_cancel()$"
     }
 ####

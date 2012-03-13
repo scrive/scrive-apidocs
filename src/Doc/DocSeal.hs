@@ -45,7 +45,7 @@ import File.Model
 import DB.Classes
 import Control.Applicative
 import EvidenceLog.Model
-
+import Control.Concurrent
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
     Seal.Person { Seal.fullname = (BS.toString $ getFullName details) ++
@@ -273,10 +273,11 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplat
     let tmpout = tmppath ++ "/output.pdf"
     content <- liftIO $ getFileContents ctx file
     liftIO $ BS.writeFile tmpin content
-
     config <- runTemplatesT (ctxlocale, ctxglobaltemplates) $ sealSpecFromDocument ctxhostpart document elog tmpin tmpout
     Log.debug $ "Config " ++ show config
     (code,_stdout,stderr) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
+    liftIO $ threadDelay 500000
+
     Log.debug $ "Sealing completed with " ++ show code
     case code of
       ExitSuccess -> do

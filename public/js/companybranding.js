@@ -72,8 +72,8 @@ window.CompanyBrandingColourView = Backbone.View.extend({
     container.append($("<div />").append(this.customdiv));
 
 
-    this.el.empty();
-    this.el.append(container);
+    $(this.el).empty();
+    $(this.el).append(container);
 
     return this;
   },
@@ -227,8 +227,8 @@ window.CompanyBrandingLogoView = Backbone.View.extend({
     container.append(checkboxlabel);
     container.append($("<div />").append(this.customdiv));
 
-    this.el.empty();
-    this.el.append(container);
+    $(this.el).empty();
+    $(this.el).append(container);
 
     return this;
   },
@@ -370,8 +370,8 @@ window.CompanyBrandingSampleView = Backbone.View.extend({
     this.container.append(this.header);
     this.container.append($("<div class='content' />").append(localization.sampleEmailContent));
 
-    this.el.empty();
-    this.el.append(this.container);
+    $(this.el).empty();
+    $(this.el).append(this.container);
 
     return this;
   },
@@ -500,8 +500,8 @@ window.CompanyBrandingView = Backbone.View.extend({
       container.append($("<div class='float-right save'/>").append(saveButton));
     }
 
-    this.el.empty();
-    this.el.append(container);
+    $(this.el).empty();
+    $(this.el).append(container);
 
     return this;
   }

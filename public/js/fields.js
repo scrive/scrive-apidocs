@@ -97,7 +97,6 @@ window.Field = Backbone.Model.extend({
         this.bind("change",function() {
             field.signatory().document().trigger("change:signatories")
         });
-
     },
     name : function() {
         return this.get("name");
@@ -240,10 +239,10 @@ window.FieldStandardView = Backbone.View.extend({
     },
     render: function(){
         var field = this.model;
-        this.el.empty();
+        $(this.el).empty();
         var signatory = field.signatory();
         if (!signatory.canSign() || field.isClosed() || !signatory.current()) {
-            this.el.addClass("field");
+            $(this.el).addClass("field");
             input = $("<input class='fieldvalue' autocomplete='off' readonly=''/>");
             if (field.value() != "")
                 input.val(field.value());
@@ -252,11 +251,11 @@ window.FieldStandardView = Backbone.View.extend({
                 input.val(field.nicename());
                 input.addClass("grayed");
                 }
-        this.el.append(input);
+        $(this.el).append(input);
         }
         else
         {
-            this.el.addClass("dragfield");
+            $(this.el).addClass("dragfield");
             var wrapper = $("<div style='border: medium none ! important;' class='dragfield'/>");
             if (field.value() ==  "" && SessionStorage.get(signatory.document().documentid(),field.name()) != undefined ) {
                 field.setValue(SessionStorage.get(signatory.document().documentid(),field.name()));
@@ -273,7 +272,7 @@ window.FieldStandardView = Backbone.View.extend({
             this.redborderhere = input;                            
             input.attr("autocomplete","off");                
             wrapper.append(input);
-            this.el.append(wrapper);    
+            $(this.el).append(wrapper);    
             
         }
         
@@ -299,9 +298,9 @@ window.FieldBasicDesignView = Backbone.View.extend({
     },
     render: function(){
         var field = this.model;
-        this.el.empty();
+        $(this.el).empty();
         var signatory = field.signatory();
-        this.el.addClass("field");
+        $(this.el).addClass("field");
         var input = InfoTextInput.init({
                                  infotext: field.nicename(),
                                  value: field.value(),
@@ -313,17 +312,17 @@ window.FieldBasicDesignView = Backbone.View.extend({
                             }).input();
         if (field.isClosed())  
         { 
-            this.el.addClass('closed');
+            $(this.el).addClass('closed');
             input.attr("readonly","yes");
         }    
-        this.el.append(input);    
+        $(this.el).append(input);    
         return this;
     },
     redborder : function() {
-        this.el.addClass("redborder");
+        $(this.el).addClass("redborder");
     },
     cleanredborder : function() {
-        this.el.removeClass("redborder");
+        $(this.el).removeClass("redborder");
     }
 });
 
@@ -408,11 +407,11 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
     },
     render: function(){
         var field = this.model;
-        this.el.empty();
+        $(this.el).empty();
         var signatory = field.signatory();
-        this.el.addClass("field");
+        $(this.el).addClass("field");
         if (field.isReady()) {
-          this.el.append(this.ddIcon());
+          $(this.el).append(this.ddIcon());
           this.input = InfoTextInput.init({
                                  infotext: field.nicename(),
                                  value: field.value(),
@@ -424,18 +423,18 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
                             }).input();
           if (field.isClosed())  
             { 
-                this.el.addClass('closed');
+                $(this.el).addClass('closed');
                 this.input.attr("readonly","yes");
             }
           else if (!field.isStandard())
            {
                this.input.addClass("shorter");
-               this.el.append(this.removeIcon())  
+               $(this.el).append(this.removeIcon())  
            }
-          this.el.append(this.input);
+          $(this.el).append(this.input);
         }
         else {
-           this.el.append(this.prepIcon());
+           $(this.el).append(this.prepIcon());
            this.input = InfoTextInput.init({
                                  infotext: localization.fieldName,
                                  value: field.name(),
@@ -446,18 +445,18 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
                                   }
                }).input();
            this.input.addClass("much-shorter");
-           this.el.append(this.input);
-           this.el.append(this.removeIcon());
-           this.el.append(this.setNameIcon());
+           $(this.el).append(this.input);
+           $(this.el).append(this.removeIcon());
+           $(this.el).append(this.setNameIcon());
 
         }
         return this;
     },
     redborder : function() {
-        this.el.addClass("redborder");
+        $(this.el).addClass("redborder");
     },
     cleanredborder : function() {
-        this.el.removeClass("redborder");
+        $(this.el).removeClass("redborder");
     }
 });
     

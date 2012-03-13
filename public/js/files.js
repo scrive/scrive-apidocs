@@ -183,7 +183,7 @@ var FilePageView = Backbone.View.extend({
     renderDragables : function() {
         var view = this;
         var page = this.model;
-        var container = this.el;
+        var container = $(this.el);
         var file = page.file();
         var document =file.document();
         $(".placedfield",container).remove();
@@ -198,7 +198,7 @@ var FilePageView = Backbone.View.extend({
         var page = this.model;
         var file = page.file();
         var document =file.document();
-        var container = this.el;
+        var container = $(this.el);
         container.empty();
         container.attr("id", "page" + page.number());
         container.addClass("pagediv");
@@ -228,7 +228,7 @@ var FileView = Backbone.View.extend({
     },
     render: function () {
         var file = this.model;
-        var docbox = this.el
+        var docbox = $(this.el)
         docbox.attr("id","documentBox");
         docbox.empty();
         if (!file.ready()) {
@@ -237,7 +237,7 @@ var FileView = Backbone.View.extend({
         } else {
             _.each(file.pages(),function(page){
                  var pageview = new FilePageView({model : page, el: $("<div/>")});
-                 docbox.append(pageview.el);
+                 docbox.append($(pageview.el));
             })
         }
         return this;
