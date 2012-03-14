@@ -47,16 +47,21 @@ var StandardPlacementPlacedView = Backbone.View.extend({
         this.render();
     },
     render: function() {
+            var view = this;
             var placement = this.model;
             var field =  placement.field();
             var document = field.signatory().document();
             var place = $(this.el);
+            if (this.placed != true)
+            {   this.placed = true;
+                place.addClass('placedfield').css('position','absolute');
+                place.offset({
+                    left: placement.x(),
+                    top: placement.y()
+                });
+            }
+            place.empty();
             var fileview = field.signatory().document().mainfile().view;
-            place.addClass('placedfield').css('position','absolute');
-            place.offset({
-                left: placement.x(),
-                top: placement.y()
-            });
             place.append(new StandardPlacementView({model: placement.field(), el: $("<div/>")}).el);
             
             if (document.allowsDD())
@@ -86,6 +91,39 @@ var StandardPlacementPlacedView = Backbone.View.extend({
                             }))
                     }
             });
+            if (field.signatory().canSign() && !field.isClosed() && field.signatory().current() && view.inlineediting != true)
+            place.click(function() {
+                  if (view.inlineediting == true) return false;
+                  view.inlineediting = true;
+                  console.log('Input was clicked');
+                  var width = place.width() > 80 ? place.width() : 80;
+                  place.empty();
+                  var box = $("<div class='inlineEditing'/>").width(width+24);
+                  var iti = $("<input type='text'/>").val(field.value()).width(width+5);
+                  var acceptIcon = $("<span class='acceptIcon'/>");
+                  place.append(box.append(iti).append(acceptIcon));
+                  iti.focus();
+                  field.bind('change',function() { view.inlineediting  = false; view.render();});
+                  var accept =  function() {
+                      view.inlineediting = false;
+                      var val = iti.val();
+                      field.setValue(val);
+                      SessionStorage.set(field.signatory().document().documentid(),field.name(),val);
+                      field.trigger('change:inlineedited');
+                      view.render();
+                  }
+                  acceptIcon.click(function() {
+                      accept();
+                      return false;
+                  });
+                  iti.keypress(function(event) {
+                    if(event.which === 13)
+                    {   accept();
+                        return false;
+                    }   
+                  });
+                  return false;
+            })
             return this;
     }
 });
