@@ -108,7 +108,7 @@ customField ::  BS.ByteString  -> SignatoryTMP -> Maybe BS.ByteString
 customField name = (fmap sfValue) . (findCustomField name) . details
 
 setCustomField :: BS.ByteString -> BS.ByteString -> SignatoryTMP -> SignatoryTMP
-setCustomField name = replaceFieldValue (CustomFT name False)
+setCustomField name value = replaceFieldValue (CustomFT name (not $ BS.null value)) value
 
 email::SignatoryTMP -> Maybe BS.ByteString
 email = nothingIfEmpty . getEmail . details
@@ -190,8 +190,12 @@ instance FromJSON SignatoryField where
         value  <- fromJSONField "value" 
         placements <- fromJSONField "placements" 
         case (ftype,value) of 
-          (Just ft, Just v) -> return $ Just $ SignatoryField ft v (concat $ maybeToList placements)
+          (Just ft, Just v) -> do
+              let fixFT (CustomFT name _)= CustomFT name (not $ BS.null v)
+                  fixFT t = t
+              return $ Just $ SignatoryField (fixFT ft) v (concat $ maybeToList placements)
           _ -> return Nothing
+        
 
 instance FromJSON SignatoryAttachment where
     fromJSON = do

@@ -189,7 +189,7 @@ instance HasFields SignatoryLink where
             
 replaceFieldValue::(HasFields a) =>  FieldType -> BS.ByteString -> a -> a
 replaceFieldValue ft v a = case (find (matchingFieldType ft) $ getAllFields a) of
-                            Just f  -> replaceField (f { sfValue = v}) a
+                            Just f  -> replaceField (f { sfType = ft, sfValue = v}) a
                             Nothing -> replaceField (SignatoryField { sfType = ft, sfValue = v, sfPlacements =[]}) a
 
 
