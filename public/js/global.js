@@ -1602,7 +1602,8 @@ safeReady(function() {
 function displayLoadingOverlay(message) {
     $("#loadingmessage").html(message);
     $("#loadingdialog").overlay({
-        fixed:false
+        fixed:false,
+      top:standardDialogTop
     }).load();
 }
 
