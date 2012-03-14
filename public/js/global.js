@@ -1238,7 +1238,8 @@ function showModal() {
             opacity: 0.9
         },
         speed: 0,
-        fixed: false
+        fixed: false,
+       top: standardDialogTop
     });
     if (modalbox.size() > 0) {
         modalbox.first().data("overlay").load();
@@ -1601,7 +1602,8 @@ safeReady(function() {
 function displayLoadingOverlay(message) {
     $("#loadingmessage").html(message);
     $("#loadingdialog").overlay({
-        fixed:false
+        fixed:false,
+      top:standardDialogTop
     }).load();
 }
 
