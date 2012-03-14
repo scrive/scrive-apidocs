@@ -1230,6 +1230,7 @@ function flashSpecialFlashMessages() {
 
 function showModal() {
     var modalbox = $(".modalbox");
+    var fixed = modalbox.find(".jsnotfixed").length != 0 && $("body.jsintegrationapi").length > 0; 
     modalbox.overlay({
         mask: {
             color: standardDialogMask,
@@ -1238,7 +1239,7 @@ function showModal() {
             opacity: 0.9
         },
         speed: 0,
-        fixed: false
+        fixed: fixed
     });
     if (modalbox.size() > 0) {
         modalbox.first().data("overlay").load();

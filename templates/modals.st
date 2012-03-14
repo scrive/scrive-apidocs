@@ -40,7 +40,7 @@ modalSignInviteView=
 </div>
 ###
 modalOfferCreated=
-<div class="modal-container">
+<div class="modal-container jsnotfixed">
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
@@ -67,7 +67,7 @@ modalOfferCreated=
 </div>
 ###
 modalOrderCreated=
-<div class="modal-container">
+<div class="modal-container jsnotfixed">
   <div class="modal-header">
     <span class="modal-icon message"></span>
     <span class="modal-title">
