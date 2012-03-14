@@ -440,7 +440,8 @@ testSetDocumentTimeoutTimeEvidenceLog :: DB ()
 testSetDocumentTimeoutTimeEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation)
-  etdoc <- randomUpdate $ \o t->SetDocumentTimeoutTime (documentid doc) o (SystemActor t)
+  _ <- randomUpdate $ \t->SetDocumentTimeoutTime (documentid doc) (fromMinutes 0) (SystemActor t)
+  etdoc <- randomUpdate $ \t->SetDocumentTimeoutTime (documentid doc) (fromMinutes 10000) (SystemActor t)
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == SetDocumentTimeoutTimeEvidence) lg
