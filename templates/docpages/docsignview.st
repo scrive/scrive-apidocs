@@ -18,17 +18,17 @@ $doctype()$
 </html>
 ####
 signviewheader=
- <div class="pageheader" style="$signviewbarsbackgroundstyle()$$signviewtextcolorstyle()$">
+ <div class="pageheader $signviewwithlogoclass()$" style="$signviewbarsbackgroundstyle()$$signviewtextcolorstyle()$">
    <div class="content">
     <div class="logowrapper">
       $if(!service.logo)$
       $if(!companybrand.logo)$
       <a href="$linkhome$"><div class='logo'></div></a>
       $else$
-      <div class='logo' style="background-image:url('$ctxhostpart$$companybrand.logoLink$');"></div>
+      <img class='logo' src="$ctxhostpart$$companybrand.logoLink$"></img>
       $endif$
       $else$
-      <div class='logo' style="background-image:url('$ctxhostpart$$service.logoLink$');"></div>
+      <img class='logo' src="$ctxhostpart$$service.logoLink$"></img>
       $endif$
     </div>
 
@@ -39,14 +39,7 @@ signviewheader=
     <div class="clearboth"></div>
    </div>
 
-    $if(!service.logo)$
-    $if(!companybrand.logo)$
-    $else$
-    <div class='poweredbyscrive'></div>
-    $endif$
-    $else$
-    <div class='poweredbyscrive'></div>
-    $endif$
+   <div class='poweredbyscrive'></div>
    <div class="clearboth"></div>
  </div>
 ####
@@ -66,12 +59,33 @@ signviewfooter=
     </div>
   </div>
 ####
+signviewwithlogoclass=$if(!service.logo)$$if(!companybrand.logo)$withstandardlogo$else$withcustomlogo$endif$$else$withcustomlogo$endif$
+####
 signviewbarsbackgroundstyle=$if(companybrand.barsbackground)$background-image:none;background-color:$companybrand.barsbackground$;$else$$if(service.barsbackground)$background-image:none;background-color:$service.barsbackground$;$endif$$endif$
 ####
 signviewtextcolorstyle=$if(companybrand.barstextcolour)$color:$companybrand.barstextcolour$;$endif$
 ####
 pageDocumentSignViewContents=
 <script>
+
+/** this adds a class to the sender when the screen is small so that we
+  * can shove the sender along as the "powered by scrive" banner
+  * moves along.  kind of icky.
+  */
+jQuery(function() {
+var updateHeaderSenderPosition = function() {
+  var sender = jQuery(".signview .pageheader.withcustomlogo .content .sender");
+  if (jQuery(window).width() < 1150) {
+    sender.addClass("shoved");
+  } else {
+    sender.removeClass("shoved");
+  }
+};
+
+jQuery(window).resize(updateHeaderSenderPosition);
+updateHeaderSenderPosition();
+});
+
 var docview;
 jQuery(function(){
 docview = KontraSignDocument.init({

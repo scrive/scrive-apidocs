@@ -2,11 +2,15 @@ body.signview {
   font-family: "Lucida Grande"
 }
 
+.signview .clearfix {
+  height: 0px;
+}
+
 .signview .pageheader {
-  padding-top: 30px;
   min-width: 960px;
   background: url(../img/bg-header.jpg);
   color: white;
+  border-bottom: solid #bababc 1px;
 }
 
 .signview .pageheader .content {
@@ -20,7 +24,8 @@ body.signview {
   width : 200px;
 }
 
-.signview .pageheader .logo {
+.signview .pageheader div.logo {
+  margin-top: 20px;
   background: url(../img/logo-scrive-small.png);
   height: 33px;
   width: 200px;
@@ -29,8 +34,16 @@ body.signview {
 
 .signview .pageheader .content .sender {
   float: right;
-  width: 300px;
+  margin-top: 20px;
+  margin-bottom: 20px;
   text-align: right;
+}
+
+.signview .pageheader.withcustomlogo .content .sender.shoved {
+  float: none;
+  position: fixed;
+  top: 10px;
+  right: 100px;
 }
 
 .signview .pageheader .content .sender .name {
@@ -45,6 +58,10 @@ body.signview {
   position: absolute;
   top: 0px;
   right: 0px;
+}
+
+.signview .pageheader.withstandardlogo .poweredbyscrive {
+  display: none;
 }
 
 .signview .body-container {
@@ -71,23 +88,32 @@ body.signview {
 }
 
 .signview .instructions .subheadline {
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 0px;
   margin-bottom: 5px;
+}
+
+.signview .instructions a {
+  display: block;
 }
 
 .signview .instructions .subheadline .duedate {
   float: left;
-  font-size: medium;
   margin-top: 2px;
 }
 
 .signview .instructions .subheadline .menuwrapper {
   float: left;
   margin-left: 20px;
+  margin-right: 20px;
 }
 
 .signview .menu .download .icon {
-  height: 21px;
-  width: 24px;
+  margin-top: 1px;
+  margin-right: 2px;
+  width: 18px;
+  height: 20px;
   background: url(../img/download-icon.png);
 }
 
@@ -97,9 +123,7 @@ body.signview {
 
 .signview .menu .download .docname {
   text-align: left;
-  margin-top: 1px;
   text-decoration: underline;
-  font-size: medium;
   font-weight: normal;
 }
 
@@ -395,6 +419,10 @@ body.signview {
   margin-right: 30px;
 }
 
+.signview .signatoryattachments .list .item .second.column {
+  width: 200px;
+}
+
 .signview .signatoryattachments .list .item .loading {
   margin-left: 80px;
 }
@@ -575,40 +603,16 @@ body.signview {
   background-repeat: no-repeat;
 }
 
-
-/** don't show action arrows anymore, but left code for now just in case - lukas
- * said something about a/b testing.  clean if possible tho. */
-/**
 .signview .arrows .action.arrow {
+  position: absolute;
   background: url(../img/sign-arrow-action.png);
   background-repeat: no-repeat;
-  width: 200px;
-  height: 33px;
+  width: 92px;
+  height: 28px;
 }
 
 .signview .arrows .action.arrow .label {
-  padding-left: 50px;
-  padding-top: 10px;
-  padding-bottom: 10px;
-  padding-right: 10px;
-  color: white;
-  font-weight: bold;
-}
-*/
-
-.signview .arrows .action.arrow .label {
-  color: transparent;
-}
-
-.signview .arrows .highlight.arrow {
-  position: absolute;
-  background: url(../img/section-highlight-arrow.png);
-  background-repeat: no-repeat;
-  right: auto;
-  left: 150px;
-  top: 300px;
-  width: 96px;
-  height: 38px;
+  display: none;
 }
 
 .signview .pagefooter {
