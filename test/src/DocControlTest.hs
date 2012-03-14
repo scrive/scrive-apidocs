@@ -107,6 +107,7 @@ testSendingDocumentSendsInvites env = withTestEnvironment env $ do
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   doc <- addRandomDocumentWithAuthorAndCondition user (\d -> documentstatus d == Preparation
+                                                             && 2 <= length (filterSigLinksFor SignatoryPartner d)
                                                                && case documenttype d of
                                                                     Signable _ -> True
                                                                     _ -> False)
@@ -132,7 +133,7 @@ testSendingDocumentSendsInvites env = withTestEnvironment env $ do
   (_link, _ctx') <- runTestKontra req ctx $ handleIssueShowPost (documentid doc)
 
   Just sentdoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
-  assertEqual "In pending state" Pending (documentstatus sentdoc)
+  assertEqual "Should be pending" Pending (documentstatus sentdoc)
   emails <- dbQuery GetIncomingEmails
   assertBool "Emails sent" (length emails > 0)
 

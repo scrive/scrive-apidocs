@@ -188,8 +188,12 @@ instance FromJSON SignatoryField where
         value  <- fromJSONField "value" 
         placements <- fromJSONField "placements" 
         case (ftype,value) of 
-          (Just ft, Just v) -> return $ Just $ SignatoryField ft v (concat $ maybeToList placements)
+          (Just ft, Just v) -> do
+              let fixFT (CustomFT name _)= CustomFT name (not $ null v)
+                  fixFT t = t
+              return $ Just $ SignatoryField (fixFT ft) v (concat $ maybeToList placements)
           _ -> return Nothing
+        
 
 instance FromJSON SignatoryAttachment where
     fromJSON = do

@@ -538,7 +538,8 @@ testSignableFromDocumentIDWithUpdatedAuthorEvidenceLog :: DB ()
 testSignableFromDocumentIDWithUpdatedAuthorEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isTemplate &&^ isPreparation)
-  _<- randomUpdate $ \i t->SetInviteText (documentid doc) i (SystemActor t)
+  _<- randomUpdate $ \t->SetInviteText (documentid doc) "" (SystemActor t)
+  _<- randomUpdate $ \t->SetInviteText (documentid doc) "new invite text" (SystemActor t)
   etdoc <- randomUpdate $ \t->SignableFromDocumentIDWithUpdatedAuthor author Nothing (documentid doc) (SystemActor t)
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid $ fromRight etdoc)
