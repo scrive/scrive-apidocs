@@ -3042,3 +3042,28 @@ a#attachmentback {
     font-family: "Courier New", Courier, monospace;
 
 }
+
+.inlineEditing .acceptIcon {
+    height:14px;
+    width:14px;
+    margin:2px;
+    display: block;
+    float:right;
+    background: url("../img/spr-icons.png") no-repeat scroll 0 0 transparent;
+    background-position: -171px 0px;
+    width: 14px;
+    float:right;
+}
+.inlineEditing {
+    border: 1px solid #DDDDDD;
+    height: 18px;
+}
+.inlineEditing input{
+    border: 0px solid #DDDDDD;
+    float: left;
+    padding: 0px;
+    margin: 0px;
+}
+.inlineEditing input:focus{
+    outline:0px;
+}
