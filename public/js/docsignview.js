@@ -71,9 +71,6 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     var timeout = this.model.timeouttime();
     if (timeout!=undefined && this.model.signingInProcess()) {
       smallerbit.append($("<div class='duedate' />").append(localization.docsignview.dueDate + " " + timeout.getFullYear() + "-" + timeout.getMonth() + "-" + timeout.getDate()));
-      smallerbit.css("margin-left", "330px");
-    } else {
-      smallerbit.css("margin-left", "370px");
     }
     smallerbit.append(this.createMenuElems());
     smallerbit.append($("<div class='clearfix' />"));
@@ -656,7 +653,7 @@ window.DocumentSignView = Backbone.View.extend({
       }).el;
     },
     signatoryAttachmentTasks: function(el) {
-      var attachmentels = el.find(".list .item");
+      var attachmentels = el.find(".list .item .second.column");
       var attachments = this.model.currentSignatory().attachments();
       if (attachments.length!=attachmentels.length) {
         console.error("expected to find an element per attachment");
@@ -986,17 +983,29 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
     var uparrow = $("<div class='up arrow' />");
     container.append(uparrow);
 
+    if (taskmodel.isIncompleteTask()) {
+      downarrow.css("cursor", "pointer");
+      downarrow.click(function() {
+        var el = taskmodel.nextIncompleteTask().el;
+        var scrollbottom = el.offset().top + el.height() + 100;
+        $('html,body').animate({
+          scrollTop: scrollbottom - $(window).height()
+        }, 2000);
+      });
+      uparrow.css("cursor", "pointer");
+      uparrow.click(function() {
+        var el = taskmodel.nextIncompleteTask().el;
+        $('html,body').animate({
+          scrollTop: el.offset().top - 100
+        }, 1000);
+      });
+    }
+
     var actionarrow = $("<div class='action arrow'/>");
     if (taskmodel.isIncompleteTask()) {
       actionarrow.append($("<div class='label' />").append(taskmodel.nextIncompleteTask().label()));
     }
     container.append(actionarrow);
-
-    var highlightarrow = $("<div class='highlight arrow'/>");
-    if (taskmodel.isIncompleteTask()) {
-      highlightarrow.append();
-    }
-    container.append(highlightarrow);
 
     var updateRightMargin = function() {
       var space = $(window).width() - 941;
@@ -1006,37 +1015,26 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
       }
       downarrow.css("right", margin + "px");
       uparrow.css("right", margin + "px");
-      actionarrow.css("right", margin + "px");
+      actionarrow.css("right", (margin - 20) + "px");
     };
     $(window).resize(updateRightMargin);
     updateRightMargin();
 
-    var updateActionArrowHeight = function() {
+    var updateActionArrowPosition = function() {
       if (taskmodel.isIncompleteTask()) {
-        var scrolltop = $(window).scrollTop();
-        var eltop = taskmodel.nextIncompleteTask().el.offset().top;
-        actionarrow.css("top", (eltop - scrolltop) + "px");
+        var el = taskmodel.nextIncompleteTask().el;
+        actionarrow.css("top", (el.offset().top + (el.height() / 2) - 14)+ "px");
+        actionarrow.css("right", ($(window).width() - (el.offset().left + el.width() + 102)) + "px");
       }
     };
-    $(window).resize(updateActionArrowHeight);
-    $(window).scroll(updateActionArrowHeight);
-    updateActionArrowHeight();
-
-    var updateHighlightArrowPosition = function() {
-      if (taskmodel.isIncompleteTask()) {
-        var section = taskmodel.nextIncompleteTask().el.parents(".signview .section");
-        highlightarrow.css("top", (section.offset().top + 12) + "px");
-        highlightarrow.css("left", (section.offset().left - 50) + "px");
-      };
-    };
-    updateHighlightArrowPosition();
+    $(window).resize(updateActionArrowPosition);
+    updateActionArrowPosition();
 
     var updateVisibility = function() {
 
       downarrow.hide();
       uparrow.hide();
       actionarrow.hide();
-      highlightarrow.hide();
       $(".signview .section").removeClass("highlight");
 
       if (!taskmodel.isIncompleteTask()) {
@@ -1047,7 +1045,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
         var eltop = taskmodel.nextIncompleteTask().el.offset().top;
         var elbottom = eltop + taskmodel.nextIncompleteTask().el.height();
 
-        var bottommargin = 10; //50 worked better for action arrows
+        var bottommargin = 0;
         var topmargin = 0;
 
         if ((scrolltop >= 0) && (elbottom <= eltop)) {
@@ -1055,8 +1053,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
           window.setTimeout(updateVisibility, 500);
         } else if (((elbottom + bottommargin) <= scrollbottom) && ((eltop - topmargin) >= scrolltop)) {
           taskmodel.nextIncompleteTask().el.parents(".signview .section").addClass("highlight");
-          updateHighlightArrowPosition();
-          highlightarrow.show();
+          updateActionArrowPosition();
           actionarrow.show();
         } else if ((elbottom + bottommargin) > scrollbottom) {
           downarrow.show();
