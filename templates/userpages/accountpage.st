@@ -97,13 +97,7 @@ showUser =
             <input type="submit" class="hidden" />
             <div class="account-footer">
                   $if(!iscompanyaccount)$
-                  <a href="#" rel="#dialog-create-company" id="createcompany" class="btn-small green $if(createcompany)$loadbydefault$endif$">
-                    <div class="left"></div>
-                    <div class="label">
-                        <p>$_createCompany()$</p>
-                    </div>
-                    <div class="right"></div>
-                  </a>
+                  <a href="#" id="createcompany"></a>
                   $endif$
                   <a href="#" class="btn-small green submit">
                     <div class="left"></div>
@@ -118,74 +112,7 @@ showUser =
         </div>
     </div>
   </form>
-  $modalCreateCompany()$
 </div>
-####
-modalCreateCompany=
-  <form method="post" name="form" action="$currentlink$" class="overlay redirectsubmitform" id="dialog-create-company" rel=".accountForm">
-    <input type="hidden" name="createcompany" value="true" />
-    <div class="modal-container">
-      <div class="modal-header">
-        <span class="modal-icon message"></span>
-        <span class="modal-title">
-          <h2>$_createCompany()$</h2>
-        </span>
-        <a class="modal-close close"> </a>
-      </div>
-      <div class="modal-body">
-        <div class="modal-content">
-          <div>
-            <p>
-            $_createCompanyExplanation()$
-            </p>
-            <p>
-            $_createCompanyFormPreamble()$
-            </p>
-          </div>
-          <div class="account-body">
-            <table>
-              <tr>
-                  <td>$_company()$:</td>
-                  <td><input type="text" name="companyname" value="$companyname$" autocomplete="off" /></td>
-              </tr>
-              <tr>
-                  <td>$_orgnumber()$:</td>
-                  <td><input type="text" name="companynumber" value="$companynumber$" autocomplete="off" /></td>
-              </tr>
-              <tr>
-                  <td>$_address()$:</td>
-                  <td><input type="text" name="companyaddress" value="$address$" autocomplete="off" /></td>
-              </tr>
-              <tr>
-                  <td>$_zip()$:</td>
-                  <td><input type="email" name="companyzip" value="$zip$" autocomplete="off" /></td>
-              </tr>
-              <tr>
-                  <td>$_city()$:</td>
-                  <td><input type="text" name="companycity" value="$city$" autocomplete="off" /></td>
-              </tr>
-              <tr>
-                  <td>$_country()$:</td>
-                  <td><input type="text" name="companycountry" value="$country$" autocomplete="off" /></td>
-              </tr>
-            </table>
-          </div>
-        </div>
-        <input type="submit" class="hidden" />
-      </div>
-      <div class="modal-footer">
-        <a class="cancel close float-left" style="height:40px;">
-          <div class="label">$_cancel()$</div>
-        </a>
-        <a class="btn-small green float-right submit" href="#">
-          <div class="left"></div>
-          <div class="label"><p>$_createCompany()$</p></div>
-          <div class="right"></div>
-        </a>
-      </div>
-    </div>
-  </form>
-
 <script>
   jQuery(function() {
     var changeEmailRequestButton = Button.init({
@@ -244,7 +171,7 @@ modalCreateCompany=
     var addCompanyAccountButton = Button.init({
     color: "green",
     size: "small",
-    text: "$_newCompanyAccountButtonText()$",
+    text: "$_createCompany()$",
     onClick: function() {
         var body = jQuery("<div class='account-body'>");
         var firstp = jQuery("<p>").text("$_createCompanyExplanation()$");
@@ -288,21 +215,43 @@ modalCreateCompany=
 
         Confirmation.popup({
           onAccept: function() {
-            new Submit({
-              method: "POST",
-              createcompany: "true",
-              companynumber: companynumber.val(),
-              companyaddress: companyaddress.val(),
-              companyzip: companyzip.val(),
-              companycity: companycity.val(),
-              companycountry: companycountry.val(),
-              fstname: jQuery("input[name='fstname']").val(),
-              sndname: jQuery("input[name='sndname']").val(),
-              personalnumber: jQuery("input[name='personalnumber']").val(),
-              phone: jQuery("input[name='phone']").val(),
-              companyposition: jQuery("input[name='companyposition']").val()
-              }).send();
-            },
+            var callback = function(t,e,v) {
+                e.css("background", "red");
+                jQuery(document.createElement('div'))
+                    .attr("name", "validate-message")
+                    .css({"font-size": 8, "font-weight": "bold", "color": "red"})
+                    .append(v.message())
+                    .appendTo(e.parent());
+            };
+
+            //reset red background
+            companyname.css("background", "white");
+
+            //delete messages
+            jQuery('[name=validate-message]').remove();
+
+            var vresult = [
+                companyname.validate(new NotEmptyValidation({callback: callback, message: "Company name cannot be empty!"})),
+                ];
+
+            if (vresult.every(function(a) {return a;})) {
+              new Submit({
+                method: "POST",
+                createcompany: "true",
+                companyname: companyname.val(),
+                companynumber: companynumber.val(),
+                companyaddress: companyaddress.val(),
+                companyzip: companyzip.val(),
+                companycity: companycity.val(),
+                companycountry: companycountry.val(),
+                fstname: jQuery("input[name='fstname']").val(),
+                sndname: jQuery("input[name='sndname']").val(),
+                personalnumber: jQuery("input[name='personalnumber']").val(),
+                phone: jQuery("input[name='phone']").val(),
+                companyposition: jQuery("input[name='companyposition']").val()
+                }).send();
+            }
+          },
           title: "$_createCompany()$",
           acceptButtonText: "$_createCompany()$",
           content: body
@@ -315,7 +264,9 @@ modalCreateCompany=
        when validation happens on client we can start using **/
     var createcompany = jQuery("#createcompany");
     if (createcompany.length>0) {
-      /** createcompany.append(addCompanyAccountButton.view.el); **/
+      createcompany.append(addCompanyAccountButton.input());
+      if (/\\?createcompany/.test(window.location.href))
+        addCompanyAccountButton.input().click();
     }
   });
 </script>
