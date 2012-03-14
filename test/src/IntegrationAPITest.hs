@@ -10,6 +10,7 @@ import StateHelper
 import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
+import Kontra (Kontra)
 import User.Model
 import Misc
 import API.API
@@ -25,9 +26,7 @@ import Util.JSON
 import Test.QuickCheck.Gen
 import Control.Exception
 import System.Timeout
---import Doc.DocStateData
 import qualified Log
---import Doc.Model
 import MinutesTime
 import Doc.Model
 import Control.Monad
@@ -35,7 +34,6 @@ import Doc.DocStateData
 import EvidenceLog.Model
 
 import Util.HasSomeUserInfo
-import qualified Data.ByteString.UTF8 as BS
 import Util.SignatoryLinkUtils
 
 integrationAPITests :: DBEnv -> Test
@@ -290,9 +288,9 @@ testDocumentsFilteringFromDate2 env = withTestEnvironment env $ do
     _ <- forM (documentsignatorylinks doc) $ \sl ->
       if isAuthor sl 
       then dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl) 
-           (AuthorActor (minutesAfter 100 tm) (IPAddress 0) (fromJust $ maybesignatory sl) (BS.toString $ getEmail sl))
+           (AuthorActor (minutesAfter 100 tm) (IPAddress 0) (fromJust $ maybesignatory sl) (getEmail sl))
       else dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl) 
-           (SignatoryActor (minutesAfter 100 tm) (IPAddress 0) (maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl))
+           (SignatoryActor (minutesAfter 100 tm) (IPAddress 0) (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
 
     Just _doc' <- dbQuery $ GetDocumentByDocumentID did
     Right apiReqDocsFilter3 <- jsset "from_date" tms <$> getDocumentsJSON "test_company1" "mariusz@skrivapa.se"
@@ -453,7 +451,7 @@ getEmbedDocumentaJSON  documentid company email = randomCall $ JSObject $ toJSOb
         ]
 
 -- Making requests
-makeAPIRequest :: DBEnv -> IntegrationAPIFunction TestKontra APIResponse -> APIRequestBody -> DB APIResponse
+makeAPIRequest :: DBEnv -> IntegrationAPIFunction Kontra APIResponse -> APIRequestBody -> DB APIResponse
 makeAPIRequest env handler req = do
     globaltemplates <- readGlobalTemplates
     ctx <- (\c -> c { ctxdbenv = env })
@@ -464,8 +462,8 @@ makeAPIRequest env handler req = do
 -- A service to be used with API. We need one to use it.
 createTestService :: DB ()
 createTestService = do
-  pwd <- createPassword $ BS.pack "test_password"
-  muser <- dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "mariusz@skrivapa.se") (Just pwd) False Nothing Nothing (mkLocaleFromRegion defaultValue)
+  pwd <- createPassword "test_password"
+  muser <- dbUpdate $ AddUser ("", "") "mariusz@skrivapa.se" (Just pwd) False Nothing Nothing (mkLocaleFromRegion defaultValue)
   case muser of
     Nothing -> error "can't create user"
     Just User{userid} ->

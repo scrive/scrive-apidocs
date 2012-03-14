@@ -49,7 +49,7 @@ viewCompanyAccounts =
                                 add : "true",
                                 fstname : fstname.val(),
                                 sndname : sndname.val(),
-                                email : email.val(),
+                                email : email.val()
                                 }).send();
                          },
               title : "$_modalAddCompanyAccountTitle()$",

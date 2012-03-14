@@ -31,7 +31,6 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Doc.JSON()
 import Control.Monad.Reader
-import qualified Data.ByteString.UTF8 as BS
 import Text.JSON
 import Data.List (intercalate)
 
@@ -117,12 +116,12 @@ docForListJSON tl crtime user padqueue doc =
 docFieldsListForJSON :: (TemplatesMonad m) => KontraTimeLocale -> MinutesTime -> PadQueue -> Document -> m [(String,String)]
 docFieldsListForJSON tl crtime padqueue doc =  propagateMonad [
     ("id", return $ show $ documentid doc),
-    ("title",return $  BS.toString $ documenttitle doc),
+    ("title",return $ documenttitle doc),
     ("status", return $ show $ documentStatusClass doc),
-    ("party", return $ intercalate ", " $ map (BS.toString . getSmartName) $ getSignatoryPartnerLinks doc),
-    ("partner", return $ intercalate ", " $ map (BS.toString . getSmartName) $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)),
-    ("partnercomp", return $ intercalate ", " $ map (BS.toString .  getCompanyName) $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)),
-    ("author", return $ intercalate ", " $ map (BS.toString . getSmartName) $ filter (isAuthor) $ (documentsignatorylinks doc)),
+    ("party", return $ intercalate ", " $ map getSmartName $ getSignatoryPartnerLinks doc),
+    ("partner", return $ intercalate ", " $ map getSmartName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)),
+    ("partnercomp", return $ intercalate ", " $ map getCompanyName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)),
+    ("author", return $ intercalate ", " $ map getSmartName $ filter isAuthor $ (documentsignatorylinks doc)),
     ("time", return $ showDateAbbrev tl crtime (documentmtime doc)),
     ("process", renderTextForProcess doc processname),
     ("type", renderDocType),
@@ -145,7 +144,7 @@ signatoryFieldsListForJSON :: (TemplatesMonad m) => KontraTimeLocale -> MinutesT
 signatoryFieldsListForJSON tl crtime padqueue doc sl = propagateMonad [
     ("id", return $ show $ signatorylinkid sl ),
     ("status", return $ show $ signatoryStatusClass doc sl ),
-    ("name", return $ BS.toString $ getSmartName sl ),
+    ("name", return $ getSmartName sl),
     ("time", return $ fromMaybe "" $ (showDateAbbrev tl crtime) <$> (sign `mplus` reject `mplus` seen `mplus` open)),
     ("invitationundelivered", return $ show $ isUndelivered sl && Pending == documentstatus doc),
     ("inpadqueue", return $ "true" <| (fmap fst padqueue == Just (documentid doc)) && (fmap snd padqueue == Just (signatorylinkid sl)) |> "false"),

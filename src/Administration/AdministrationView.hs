@@ -30,7 +30,6 @@ import Templates.Templates
 import Text.StringTemplate.GenericStandard()
 import Control.Applicative
 import Control.Monad.IO.Class
-import Data.ByteString.UTF8 (toString)
 import Data.Maybe
 import DB.Classes
 import Misc
@@ -42,6 +41,10 @@ import API.Service.Model
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
 import Kontra
+import ScriveByMail.Model
+import ScriveByMail.View
+
+import Control.Monad
 
 {-| Main admin page - can go from here to other pages -}
 adminMainPage :: TemplatesMonad m => Context -> m String
@@ -86,11 +89,13 @@ adminUserPage user mcompany =
         field "adminlink" $ show $ LinkAdminOnly
 
 {- | Manager company page - can change company info and settings here -}
-adminCompanyPage :: TemplatesMonad m => Company -> m String
-adminCompanyPage company =
+adminCompanyPage :: TemplatesMonad m => Company -> Maybe MailAPIInfo -> m String
+adminCompanyPage company mmailapiinfo =
   renderTemplateFM "admincompany" $ do
     field "admincompanieslink" $ show $ LinkCompanyAdmin Nothing
     companyFields (Just company)
+    when (isJust mmailapiinfo) $ mailAPIInfoFields (fromJust mmailapiinfo)
+    field "hasmailapi" $ isJust mmailapiinfo
     field "adminlink" $ show $ LinkAdminOnly
 
 adminUserStatisticsPage :: TemplatesMonad m => Fields m -> m String
@@ -167,10 +172,11 @@ companyFields mc = do
         field "companyid" $ maybe "" (show . companyid) mc
         field "companyname" $  getCompanyName mc
         field "companynumber" $ getCompanyNumber mc
-        field "companyaddress" $ maybe "" (toString . companyaddress . companyinfo) mc
-        field "companyzip" $  maybe "" (toString . companyzip . companyinfo)  mc
-        field "companycity" $  maybe "" (toString . companycity . companyinfo) mc
-        field "companycountry" $ maybe "" (toString . companycountry . companyinfo) mc
+        field "companyaddress" $ maybe "" (companyaddress . companyinfo) mc
+        field "companyzip" $  maybe "" (companyzip . companyinfo)  mc
+        field "companycity" $  maybe "" (companycity . companyinfo) mc
+        field "companycountry" $ maybe "" (companycountry . companyinfo) mc
+        field "companyemaildomain" $ maybe "" (fromMaybe "" . (companyemaildomain . companyinfo)) mc
 
 {-| Full fields set about user -}
 userFields :: MonadIO m => User -> Fields m
@@ -179,8 +185,8 @@ userFields u =  do
         field "sndname"          $ getLastName u
         field "personalnumber"   $ getPersonalNumber u
         field "companyposition"  $ usercompanyposition $ userinfo u
-        field "phone"            $ toString $ userphone $ userinfo u
-        field "mobile"           $ toString $ usermobile $ userinfo u
+        field "phone"            $ userphone $ userinfo u
+        field "mobile"           $ usermobile $ userinfo u
         field "email"            $ getEmail u
         field "regionse"         $ REGION_SE == getRegion u
         field "regiongb"         $ REGION_GB == getRegion u
@@ -189,6 +195,4 @@ userFields u =  do
         field "iscompanyaccount" $ isJust $ usercompany u
         field "iscompanyadmin"   $ useriscompanyadmin u
         field "id"               $ show (userid u)
-        field "companynumber"    $ getCompanyNumber u
-        field "companyname"      $ getCompanyName u
 

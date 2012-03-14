@@ -16,11 +16,11 @@ import Control.Applicative
 import Control.Arrow
 import Control.Concurrent
 import Control.Monad.Error
-import Control.Monad.Reader
 import Control.Monad.State
 import Data.Maybe
-import Data.List
 import Happstack.Server hiding (mkHeaders, getHeader, method, path)
+import Happstack.Server.Internal.Monads (FilterFun, ununWebT, runServerPartT,
+  unFilterFun)
 import System.FilePath
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BSU
@@ -31,10 +31,8 @@ import qualified Network.AWS.AWSConnection as AWS
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 
+import Kontra ( Kontra, unKontra', unKontra)
 import Context
-import Crypto.RNG (CryptoRNG, getCryptoRNGState)
-import DB.Classes
-import KontraMonad
 import Mails.MailsConfig
 import MinutesTime
 import Misc (unknownIPAddress)
@@ -43,62 +41,17 @@ import qualified MemCache
 import User.Locale
 import qualified Data.Map as Map
 
--- | Monad that emulates the server
-newtype TestKontra a = TK { unTK :: ErrorT Response (ReaderT Request (StateT (Context, Response -> Response) IO)) a }
-    deriving (Applicative, Functor, Monad, MonadIO, MonadPlus)
+type TestKontra a = Kontra a
 
-instance Kontrakcja TestKontra
-
-instance CryptoRNG TestKontra where
-  getCryptoRNGState = TK $ gets (rngstate . ctxdbenv . fst)
-
-instance DBMonad TestKontra where
-  getDBEnv = ctxdbenv <$> getContext
-  handleDBError e = finishWith =<< (internalServerError $ toResponse $ show e)
-
-instance TemplatesMonad TestKontra where
-    getTemplates = ctxtemplates <$> getContext
-    getLocalTemplates locale = do
-      Context{ctxglobaltemplates} <- getContext
-      return $ localizedVersion locale ctxglobaltemplates
-
-instance KontraMonad TestKontra where
-    getContext    = TK $ fst <$> get
-    modifyContext = TK . modify . first
-
-instance ServerMonad TestKontra where
-    askRq     = TK $ ask
-    localRq f = TK . local f . unTK
-
-instance HasRqData TestKontra where
-    askRqEnv = do
-        rq <- askRq
-        mbi <- liftIO $ if rqMethod rq == POST || rqMethod rq == PUT
-                           then readInputsBody rq
-                           else return $ Just []
-        return (rqInputsQuery rq, mbi, rqCookies rq)
-    rqDataError (Errors msgs) = fail $ intercalate " || " msgs
-    localRqEnv f m = do
-        rq <- askRq
-        b <- liftIO $ readInputsBody rq
-        let (q', b', c') = f (rqInputsQuery rq, b, rqCookies rq)
-        bv <- liftIO $ newMVar $ fromMaybe [] b'
-        let rq' = rq {
-              rqInputsQuery = q'
-            , rqInputsBody = bv
-            , rqCookies = c'
-        }
-        localRq (const rq') m
-
-instance FilterMonad Response TestKontra where
-    setFilter f     = TK $ modify $ \(ctx, _) -> (ctx, f)
-    composeFilter f = TK $ modify $ \(ctx, g) -> (ctx, f . g)
-    getFilter m     = TK $ do
-        f <- snd <$> get
-        unTK m >>= \x -> return (x, f)
-
-instance WebMonad Response TestKontra where
-    finishWith = TK . throwError
+runTestKontra' :: MonadIO m => Request -> Context -> TestKontra a ->
+                  m ((Either Response a, FilterFun Response), Context)
+runTestKontra' rq ctx tk = do
+    let noflashctx = ctx{ctxflashmessages=[]}
+    (mres, ctx') <- liftIO $ runStateT (runErrorT $ ununWebT $ runServerPartT (unKontra' $ unKontra tk) rq) noflashctx
+    case mres of
+        Left e -> fail $ "runTestKontra' uncaught error: " ++ show e
+        Right Nothing -> fail "runTestKontra' mzero"
+        Right (Just a) -> return (a, ctx')
 
 -- | Typeclass for running handlers within TestKontra monad
 class RunnableTestKontra a where
@@ -106,19 +59,17 @@ class RunnableTestKontra a where
 
 instance RunnableTestKontra a where
     runTestKontra rq ctx tk = do
-        let noflashctx = ctx{ctxflashmessages=[]}
-        (mres, (ctx', _)) <- liftIO $ runStateT (runReaderT (runErrorT $ unTK tk) rq) (noflashctx, id)
+        ((mres, _), ctx') <- runTestKontra' rq ctx tk
         case mres of
              Right res -> return (res, ctx')
              Left  _   -> error "finishWith called in function that doesn't return Response"
 
 instance RunnableTestKontra Response where
     runTestKontra rq ctx tk = do
-        let noflashctx = ctx{ctxflashmessages=[]}
-        (mres, (ctx', f)) <- liftIO $ runStateT (runReaderT (runErrorT $ unTK tk) rq) (noflashctx, id)
+        ((mres, f), ctx') <- runTestKontra' rq ctx tk
         case mres of
-             Right res -> return (f res, ctx')
-             Left  res -> return (f res, ctx')
+             Right res -> return (unFilterFun f res, ctx')
+             Left  res -> return (unFilterFun f res, ctx')
 
 -- Various helpers for constructing appropriate Context/Request
 

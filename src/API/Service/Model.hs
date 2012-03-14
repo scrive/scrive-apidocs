@@ -21,7 +21,6 @@ import Happstack.Server
 import Happstack.State
 import qualified Codec.Binary.Base16 as B16
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS
 
 import DB.Classes
 import DB.Derive
@@ -45,14 +44,14 @@ instance URLAble ServiceID where
 instance FromReqURI ServiceID  where
   fromReqURI = fmap (ServiceID . BS.pack) . B16.decode
 
-newtype ServiceLocation = ServiceLocation { unServiceLocation :: BS.ByteString }
+newtype ServiceLocation = ServiceLocation { unServiceLocation :: String }
   deriving (Eq, Ord)
 $(newtypeDeriveConvertible ''ServiceLocation)
 $(newtypeDeriveUnderlyingReadShow ''ServiceLocation)
 
 toServiceLocation :: String -> ServiceLocation
 toServiceLocation s =
-  ServiceLocation $ BS.fromString $ prefix ++ takeWhile ((/=) '/') rest
+  ServiceLocation $ prefix ++ takeWhile ((/=) '/') rest
   where
     (prefix, rest) = splitAt 8 s
 
@@ -66,16 +65,16 @@ data ServiceSettings = ServiceSettings {
     servicepassword        :: Maybe Password
   , serviceadmin           :: UserID
   , servicelocation        :: Maybe ServiceLocation
-  , servicemailfromaddress :: Maybe BS.ByteString
+  , servicemailfromaddress :: Maybe String
   } deriving (Eq, Ord, Show)
 
 data ServiceUI = ServiceUI {
-    servicemailfooter        :: Maybe BS.ByteString
+    servicemailfooter        :: Maybe String
   , servicebuttons           :: Maybe (Binary, Binary) -- Two sprite files
-  , servicebuttonstextcolor  :: Maybe BS.ByteString
-  , servicebackground        :: Maybe BS.ByteString
-  , serviceoverlaybackground :: Maybe BS.ByteString
-  , servicebarsbackground    :: Maybe BS.ByteString
+  , servicebuttonstextcolor  :: Maybe String
+  , servicebackground        :: Maybe String
+  , serviceoverlaybackground :: Maybe String
+  , servicebarsbackground    :: Maybe String
   , servicelogo              :: Maybe Binary -- File with the logo
   } deriving (Eq, Ord, Show)
 

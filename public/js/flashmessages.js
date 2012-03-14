@@ -105,18 +105,18 @@ var FlashMessagesView = Backbone.View.extend({
         this.model.view = this;
     },
     render: function () {
-        var el = this.el;
+        var el = $(this.el);
         if (this.model.isEmpty())
-            this.el.hide();
+            $(this.el).hide();
         else {
-            this.el.empty();
-            var el = this.el;
+            $(this.el).empty();
+            var el = $(this.el);
             this.model.forEach(function(e){
                 if (e.isActive() && e.view != undefined)
-                    el.append(e.view.el);
+                    el.append($(e.view.el));
             });
-           if (this.el.css("display") == "none")
-               this.el.slideDown(800, function() {
+           if ($(this.el).css("display") == "none")
+               $(this.el).slideDown(800, function() {
                    el.css("height","");
                    el.show();
 

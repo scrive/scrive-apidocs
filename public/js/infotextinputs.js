@@ -73,19 +73,19 @@ var InfoTextInputView = Backbone.View.extend({
     render: function () {
         if (this.model.isValueSet())
         {
-            if (this.el.val() != this.model.value())
-                this.el.val(this.model.value());
-            if(this.el.hasClass("grayed"))
-                this.el.removeClass("grayed");
+            if ($(this.el).val() != this.model.value())
+                $(this.el).val(this.model.value());
+            if($(this.el).hasClass("grayed"))
+                $(this.el).removeClass("grayed");
         }
         else if (!this.model.hasFocus())
         {
-            this.el.val(this.model.infotext());
-            this.el.addClass("grayed");
+            $(this.el).val(this.model.infotext());
+            $(this.el).addClass("grayed");
         }
         else {
-            this.el.val("");
-            this.el.removeClass("grayed");
+            $(this.el).val("");
+            $(this.el).removeClass("grayed");
         }
         return this;
     },
@@ -103,7 +103,7 @@ var InfoTextInputView = Backbone.View.extend({
         }
     },
     updateValue: function(){
-        this.model.setValue(this.el.val());
+        this.model.setValue($(this.el).val());
     }
     
 });

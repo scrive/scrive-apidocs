@@ -24,14 +24,14 @@ showUserMailAPI =
                <div style="margin-top: 10px">
                  $_MailAPIActiveEmail()$
                  <ul id="mailapiemailslist">
-                  <li><a href="mailto:contract+$mailapikey$@api.scrive.com">
-                    contract+$mailapikey$@api.scrive.com
+                  <li><a href="mailto:contract$if(!production)$-staging$endif$+$mailapikey$@api.scrive.com">
+                    contract$if(!production)$-staging$endif$+$mailapikey$@api.scrive.com
                    </a></li>
-                   <li><a href="mailto:offer+$mailapikey$@api.scrive.com">
-                     offer+$mailapikey$@api.scrive.com
+                   <li><a href="mailto:offer$if(!production)$-staging$endif$+$mailapikey$@api.scrive.com">
+                     offer$if(!production)$-staging$endif$+$mailapikey$@api.scrive.com
                    </a></li>
-                   <li><a href="mailto:order+$mailapikey$@api.scrive.com">
-                     order+$mailapikey$@api.scrive.com
+                   <li><a href="mailto:order$if(!production)$-staging$endif$+$mailapikey$@api.scrive.com">
+                     order$if(!production)$-staging$endif$+$mailapikey$@api.scrive.com
                    </a></li>
                  </ul>
                  <input type="checkbox" id="resetapikeycbox" name="reset_key" />
@@ -47,11 +47,11 @@ showUserMailAPI =
            <table class="mailapitable">
             <tr>
                <td>$_MailAPILimitsDaily()$</td>
-               <td><input type="text" name="daily_limit" $if(mailapienabled)$ value="$mapidailylimit$" $else$ value="N/A" disabled="disabled" $endif$ /></td>
+               <td><input type="text" name="daily_limit" $if(mailapienabled)$ value="$mailapilimit$" $else$ value="N/A" disabled="disabled" $endif$ /></td>
             </tr>
             <tr>
               <td>$_MailAPILimitsProcessedToday()$</td>
-              <td><input type="text" value="$if(mailapienabled)$$mapisenttoday$$else$N/A$endif$" disabled="disabled" /></td>
+              <td><input type="text" value="$if(mailapienabled)$$mailapisent$$else$N/A$endif$" disabled="disabled" /></td>
             </tr>
           </table>
           $if(mailapienabled)$
@@ -62,6 +62,32 @@ showUserMailAPI =
           $endif$
          </div>
        </div>
+       $if(hascompanymailapi)$
+       <div class="col">
+         <div class="account-header"><h2>$_CompanyMailAPI()$</h2></div>
+         <div class="account-body">
+           <div class="mailapi">
+               <div style="margin-top: 10px">
+                 $_MailAPIActiveEmail()$
+                 <ul id="mailapiemailslist">
+                  <li><a href="mailto:contract$if(!production)$-staging$endif$+$company.mailapikey$@api.scrive.com">
+                    contract$if(!production)$-staging$endif$+$company.mailapikey$@api.scrive.com
+                   </a></li>
+                   <li><a href="mailto:offer$if(!production)$-staging$endif$+$company.mailapikey$@api.scrive.com">
+                     offer$if(!production)$-staging$endif$+$company.mailapikey$@api.scrive.com
+                   </a></li>
+                   <li><a href="mailto:order$if(!production)$-staging$endif$+$company.mailapikey$@api.scrive.com">
+                     order$if(!production)$-staging$endif$+$company.mailapikey$@api.scrive.com
+                   </a></li>
+                 </ul>
+                 <br />
+                 $_MailAPILimitsDaily()$: $company.mailapilimit$ <br /><br />
+                 $_MailAPILimitsProcessedToday()$ $company.mailapisent$ <br />
+               </div>
+           </div>
+         </div>
+       </div>
+       $endif$
        <div class="account-footer">
          <a href="#" class="btn-small green submit">
            <div class="left"></div>

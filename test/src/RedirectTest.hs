@@ -6,7 +6,7 @@ import Test.HUnit (Assertion)
 import Test.Framework
 import Redirect
 import Test.Framework.Providers.HUnit (testCase)
-import Control.Monad
+import Control.Monad.Error (catchError)
 import Control.Applicative
 import Data.List
 import DBError
@@ -27,22 +27,25 @@ redirectTests = testGroup "RedirectTests"
                   ,testCase "mzero if Left DBResourceNotAvailable" testDBErrorGuardMZeroLeft
                   ]
 
+testResponse :: String
+testResponse = "hello"
+
 testGuardRight :: Assertion
 testGuardRight = withTestState $ do
     globaltemplates <- readGlobalTemplates
     ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
-    (res, _) <- runTestKontra req ctx (guardRight $ (Right ("hello" :: String) :: Either String String))
-    assertEqual "should be equal" res "hello"
+    (res, _) <- runTestKontra req ctx (guardRight $ (Right testResponse :: Either String String))
+    assertEqual "should be equal" res testResponse
 
 testStringGuardMZeroLeft :: Assertion
 testStringGuardMZeroLeft = withTestState $ do
     globaltemplates <- readGlobalTemplates
     ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
-    (res, _) <- runTestKontra req ctx (mplus (guardRight $ (Left ("hello" :: String) :: Either String String))
-                                       (return "hello"))
-    assertEqual "should be equal" res "hello"
+    (res, _) <- runTestKontra req ctx (catchError (guardRight $ (Left "error" :: Either String String))
+                                                  (const (return testResponse)))
+    assertEqual "should be equal" res testResponse
 
 testDBErrorGuardRedirectLeftDBNotLoggedIn :: Assertion
 testDBErrorGuardRedirectLeftDBNotLoggedIn = withTestState $ do
@@ -62,14 +65,6 @@ testDBErrorGuardMZeroLeft = withTestState $ do
   globaltemplates <- readGlobalTemplates
   ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
   req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
-  (res, _ctx') <- runTestKontra req ctx (mplus (guardRight $ (Left DBResourceNotAvailable))
-                                       (return ("hello" :: String)))
-  assertEqual "Should be equal" "hello" res
-
-assertMZero :: IO t -> IO ()
-assertMZero action =
-  mplus
-    (do
-        _ <- action
-        assertFailure "did not mzero")
-    assertSuccess
+  (res, _ctx') <- runTestKontra req ctx (catchError (guardRight $ (Left DBResourceNotAvailable))
+                                                    (const (return testResponse)))
+  assertEqual "Should be equal" res testResponse

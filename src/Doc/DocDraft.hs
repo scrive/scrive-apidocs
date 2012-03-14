@@ -4,15 +4,12 @@ module Doc.DocDraft (
     applyDraftDataToDocument
   ) where
 
---import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString as BS
 import Doc.SignatoryTMP 
 import Util.JSON
 import Doc.DocStateData
 import Misc
 import Control.Monad
 import Data.Maybe
-import qualified Data.ByteString.UTF8 as BS
 import Kontra
 import Util.SignatoryLinkUtils
 import Util.HasSomeUserInfo
@@ -80,9 +77,9 @@ instance FromJSON DraftData where
 applyDraftDataToDocument :: (Actor a) =>  Kontrakcja m =>  Document -> DraftData -> a -> m (Either String Document)
 applyDraftDataToDocument doc draft actor = do
     _ <- runDB $ dbUpdate $ UpdateDraft (documentid doc) ( doc {
-                                  documenttitle = BS.fromString $ title draft
+                                  documenttitle = title draft
                                 , documentfunctionality = functionality draft
-                                , documentinvitetext = maybe BS.empty BS.fromString $ invitationmessage draft
+                                , documentinvitetext = fromMaybe "" $ invitationmessage draft
                                 , documentdaystosign = daystosign draft
                                 , documentallowedidtypes = [authorization draft]
                                 , documentregion = region draft

@@ -25,6 +25,7 @@ import Misc
 import Util.FlashUtil
 import User.UserView
 import Doc.Model
+import KontraError
 
 -- PadQueue STATE
 padQueueState ::  (Kontrakcja m) =>  m JSValue
@@ -50,7 +51,7 @@ addToQueue did slid = do
         then do
             runDB $ dbUpdate $ AddToPadQueue uid did slid
             liftIO $ json $ return ()
-        else mzero
+        else internalError
 
 clearQueue :: (Kontrakcja m) =>  m JSValue
 clearQueue = do
@@ -76,8 +77,8 @@ padQueueToSignatoryData (Just (did,slid)) = do
 handlePadLogin :: Kontrakcja m => m KontraLink
 handlePadLogin = do
     Log.debug "Loging to pad device"
-    memail  <- getFieldUTF "email"
-    mpasswd <- getFieldUTF "password"
+    memail  <- getField "email"
+    mpasswd <- getField "password"
     case (memail, mpasswd) of
         (Just email, Just passwd) -> do
             -- check the user things here

@@ -6,7 +6,6 @@ import Happstack.Server
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit (Assertion)
-import qualified Data.ByteString.Char8 as BS
 
 import ActionSchedulerState
 import DB.Classes
@@ -90,8 +89,8 @@ assertResettingPasswordRecordsALoginEvent env = withTestEnvironment env $ do
 
 createUserAndResetPassword :: DBEnv -> DB (User, Response, Context)
 createUserAndResetPassword env = do
-  pwd <- createPassword $ BS.pack "admin"
-  Just user <- dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") (Just pwd) False Nothing Nothing (mkLocaleFromRegion defaultValue)
+  pwd <- createPassword "admin"
+  Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) False Nothing Nothing (mkLocaleFromRegion defaultValue)
   Action{ actionID, actionType = PasswordReminder { prToken } } <- newPasswordReminder user
   globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxdbenv = env })
@@ -119,6 +118,6 @@ loginFailureChecks res ctx = do
 
 createTestUser :: DB UserID
 createTestUser = do
-    pwd <- createPassword $ BS.pack "admin"
-    Just User{userid} <- dbUpdate $ AddUser (BS.empty, BS.empty) (BS.pack "andrzej@skrivapa.se") (Just pwd) False Nothing Nothing (mkLocaleFromRegion defaultValue)
+    pwd <- createPassword "admin"
+    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) False Nothing Nothing (mkLocaleFromRegion defaultValue)
     return userid

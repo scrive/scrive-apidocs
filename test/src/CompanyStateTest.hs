@@ -2,7 +2,6 @@ module CompanyStateTest (companyStateTests) where
 
 import Control.Monad
 import Test.Framework
-import qualified Data.ByteString.UTF8 as BS
 
 import Company.Model
 import DB.Classes
@@ -39,7 +38,7 @@ test_getCompany = do
 test_getCompanyByExternalID :: DB ()
 test_getCompanyByExternalID = do
   let seid = "external_id"
-      eid = ExternalCompanyID $ BS.fromString seid
+      eid = ExternalCompanyID seid
   Company{companyid = cid} <- addTestCompany seid
   Just company <- dbQuery $ GetCompanyByExternalID Nothing eid
   assertBool "GetCompanyByExternalID returned correct result" $ companyid company == cid
@@ -48,12 +47,12 @@ test_setCompanyInfo :: DB ()
 test_setCompanyInfo = do
   Company{companyid = cid, companyinfo} <- addTestCompany ""
   let ci = companyinfo {
-      companyname = BS.fromString "name"
-    , companynumber = BS.fromString "number"
-    , companyaddress = BS.fromString "address"
-    , companyzip = BS.fromString "zip"
-    , companycity = BS.fromString "city"
-    , companycountry = BS.fromString "country"
+      companyname = "name"
+    , companynumber = "number"
+    , companyaddress = "address"
+    , companyzip = "zip"
+    , companycity = "city"
+    , companycountry = "country"
   }
   res <- dbUpdate $ SetCompanyInfo cid ci
   assertBool "CompanyInfo updated correctly" res
@@ -64,8 +63,8 @@ test_updateCompanyUI :: DB ()
 test_updateCompanyUI = do
   Company{companyid = cid, companyui} <- addTestCompany ""
   let cui = companyui {
-    companybarsbackground = Just $ BS.fromString "blue"
-  , companybarstextcolour = Just $ BS.fromString "green"
+    companybarsbackground = Just "blue"
+  , companybarstextcolour = Just "green"
   , companylogo = Nothing
   }
   res <- dbUpdate $ UpdateCompanyUI cid cui
@@ -75,7 +74,7 @@ test_updateCompanyUI = do
 
 test_getOrCreateCompanyWithExternalID :: DB ()
 test_getOrCreateCompanyWithExternalID = do
-  let eid = ExternalCompanyID $ BS.fromString "external_id"
+  let eid = ExternalCompanyID "external_id"
   Company{companyid = cid} <- dbUpdate $ GetOrCreateCompanyWithExternalID Nothing eid
   company <- dbUpdate $ GetOrCreateCompanyWithExternalID Nothing eid
   assertBool "GetOrCreateCompanyWithExternalID returned the same company it created before" $ companyid company == cid
@@ -85,4 +84,4 @@ addTestCompany seid = dbUpdate $ CreateCompany Nothing eid
   where
     eid = case seid of
       "" -> Nothing
-      _  -> Just $ ExternalCompanyID $ BS.fromString seid
+      _  -> Just $ ExternalCompanyID seid

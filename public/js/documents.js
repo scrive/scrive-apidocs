@@ -186,7 +186,8 @@ window.Document = Backbone.Model.extend({
     setAttachments: function() {
         return new Submit({
               url: "/setattachments/" + this.documentid(),
-              method: "POST"
+              method: "POST",
+              ajax: true
           });
     },
     draftData : function() {

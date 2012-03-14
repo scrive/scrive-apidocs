@@ -20,8 +20,6 @@ import Text.JSON.Types
 import Util.JSON
 import Misc
 import KontraLink
-import qualified Data.ByteString.UTF8 as BS
---import Control.Applicative
 
 instance SafeEnum [SignatoryRole] where
   fromSafeEnum srs =
@@ -165,9 +163,9 @@ sfFromJSON (name, jsv) = do
     "company"    -> Right CompanyFT
     "companynr"  -> Right CompanyNumberFT
     "personalnr" -> Right PersonalNumberFT
-    s            -> Right $ CustomFT (BS.fromString s) req
+    s            -> Right $ CustomFT s req
   -- do placements later /Eric
-  return $ SignatoryField { sfType = tp, sfValue = BS.fromString value, sfPlacements = [] }
+  return $ SignatoryField { sfType = tp, sfValue = value, sfPlacements = [] }
   
 irFromJSON :: JSValue -> Either String InvolvedRequest
 irFromJSON jsv = do
@@ -191,7 +189,7 @@ tagFromJSON :: JSValue -> Either String DocumentTag
 tagFromJSON jsv = do
   JSString (JSONString name)  <- jsget "name"  jsv
   JSString (JSONString value) <- jsget "value" jsv
-  return $ DocumentTag { tagname = BS.fromString name, tagvalue = BS.fromString value }
+  return $ DocumentTag { tagname = name, tagvalue = value }
 
 dcrFromJSON :: JSValue -> Either String DocumentCreationRequest
 dcrFromJSON jsv = do

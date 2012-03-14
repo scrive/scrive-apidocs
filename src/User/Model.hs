@@ -12,21 +12,18 @@ module User.Model (
   , InviteInfo(..)
   , User(..)
   , UserInfo(..)
-  , UserMailAPI(..)
   , UserSettings(..)
   , GetUsers(..)
   , GetUserByID(..)
   , GetUserByEmail(..)
   , GetCompanyAccounts(..)
   , GetInviteInfo(..)
-  , GetUserMailAPI(..)
   , SetUserCompany(..)
   , DeleteUser(..)
   , AddUser(..)
   , SetUserEmail(..)
   , SetUserPassword(..)
   , SetInviteInfo(..)
-  , SetUserMailAPI(..)
   , SetUserInfo(..)
   , SetUserSettings(..)
   , SetPreferredDesignMode(..)
@@ -38,11 +35,10 @@ module User.Model (
 
 import Control.Applicative
 import Data.Data
-import Data.Int
+--import Data.Int
 import Database.HDBC
 import Happstack.State
 import qualified Control.Exception as E
-import qualified Data.ByteString.Char8 as BS
 
 import API.Service.Model
 import Company.Model
@@ -50,9 +46,8 @@ import DB.Classes
 import DB.Derive
 import DB.Fetcher2
 import DB.Utils
-import MagicHash (MagicHash)
+--import MagicHash (MagicHash)
 import MinutesTime
-import Misc
 import User.Lang
 import User.Locale
 import User.Password
@@ -60,7 +55,7 @@ import User.Region
 import User.UserID
 
 -- newtypes
-newtype Email = Email { unEmail :: BS.ByteString }
+newtype Email = Email { unEmail :: String }
   deriving (Eq, Ord, Typeable)
 $(newtypeDeriveConvertible ''Email)
 $(newtypeDeriveUnderlyingReadShow ''Email)
@@ -99,21 +94,15 @@ data User = User {
   } deriving (Eq, Ord, Show)
 
 data UserInfo = UserInfo {
-    userfstname         :: BS.ByteString
-  , usersndname         :: BS.ByteString
-  , userpersonalnumber  :: BS.ByteString
-  , usercompanyposition :: BS.ByteString
-  , userphone           :: BS.ByteString
-  , usermobile          :: BS.ByteString
+    userfstname         :: String
+  , usersndname         :: String
+  , userpersonalnumber  :: String
+  , usercompanyposition :: String
+  , userphone           :: String
+  , usermobile          :: String
   , useremail           :: Email
-  , usercompanyname     :: BS.ByteString
-  , usercompanynumber   :: BS.ByteString
-  } deriving (Eq, Ord, Show)
-
-data UserMailAPI = UserMailAPI {
-    umapiKey          :: MagicHash
-  , umapiDailyLimit   :: Int32
-  , umapiSentToday    :: Int32
+  , usercompanyname     :: String
+  , usercompanynumber   :: String
   } deriving (Eq, Ord, Show)
 
 data UserSettings  = UserSettings {
@@ -155,7 +144,7 @@ instance DBQuery GetCompanyAccounts [User] where
     kPrepare $ selectUsersSQL ++ " WHERE company_id = ? AND deleted = FALSE ORDER BY email DESC"
     _ <- kExecute [toSql cid]
     fetchUsers
-
+    
 data GetInviteInfo = GetInviteInfo UserID
 instance DBQuery GetInviteInfo (Maybe InviteInfo) where
   dbQuery (GetInviteInfo uid) = do
@@ -167,19 +156,6 @@ instance DBQuery GetInviteInfo (Maybe InviteInfo) where
           userinviter = inviter_id
         , invitetime = invite_time
         , invitetype = invite_type
-        } : acc
-
-data GetUserMailAPI = GetUserMailAPI UserID
-instance DBQuery GetUserMailAPI (Maybe UserMailAPI) where
-  dbQuery (GetUserMailAPI uid) = do
-    kPrepare "SELECT key, daily_limit, (CASE WHEN last_sent_date = now()::DATE THEN sent_today ELSE 0 END) FROM user_mail_apis WHERE user_id = ?"
-    _ <- kExecute [toSql uid]
-    foldDB fetchUserMailAPIs [] >>= oneObjectReturnedGuard
-    where
-      fetchUserMailAPIs acc key daily_limit sent_today = UserMailAPI {
-          umapiKey = key
-        , umapiDailyLimit = daily_limit
-        , umapiSentToday = sent_today
         } : acc
 
 data SetUserCompany = SetUserCompany UserID (Maybe CompanyID)
@@ -201,7 +177,7 @@ instance DBUpdate DeleteUser Bool where
     kExecute01 [toSql True, toSql uid]
 
 -- | TODO: Fix this AddUser, it shouldn't lock.
-data AddUser = AddUser (BS.ByteString, BS.ByteString) BS.ByteString (Maybe Password) Bool (Maybe ServiceID) (Maybe CompanyID) Locale
+data AddUser = AddUser (String, String) String (Maybe Password) Bool (Maybe ServiceID) (Maybe CompanyID) Locale
 instance DBUpdate AddUser (Maybe User) where
   dbUpdate (AddUser (fname, lname) email mpwd iscompadmin msid mcid l) = do
     let handle e = case e of
@@ -311,47 +287,6 @@ instance DBUpdate SetInviteInfo Bool where
             kExecute01 [toSql uid]
       else return False
 
-data SetUserMailAPI = SetUserMailAPI UserID (Maybe UserMailAPI)
-instance DBUpdate SetUserMailAPI Bool where
-  dbUpdate (SetUserMailAPI uid musermailapi) = do
-    exists <- checkIfUserExists uid
-    if exists
-      then case musermailapi of
-        Just mailapi -> do
-          _ <- kRunRaw "LOCK TABLE user_mail_apis IN ACCESS EXCLUSIVE MODE"
-          rec_exists <- checkIfAnyReturned $ SQL "SELECT 1 FROM user_mail_apis WHERE user_id = ?" [toSql uid]
-          if rec_exists
-            then do
-              kPrepare $ "UPDATE user_mail_apis SET"
-                  ++ "  key = ?"
-                  ++ ", daily_limit = ?"
-                  ++ ", sent_today = ?"
-                  ++ ", last_sent_date = now()"
-                  ++ "  WHERE user_id = ?"
-              kExecute01 [
-                  toSql $ umapiKey mailapi
-                , toSql $ umapiDailyLimit mailapi
-                , toSql $ umapiSentToday mailapi
-                , toSql uid
-                ]
-            else do
-              kPrepare $ "INSERT INTO user_mail_apis ("
-                ++ "  user_id"
-                ++ ", key"
-                ++ ", daily_limit"
-                ++ ", sent_today"
-                ++ ", last_sent_date) VALUES (?, ?, ?, ?, now())"
-              kExecute01 [
-                  toSql uid
-                , toSql $ umapiKey mailapi
-                , toSql $ umapiDailyLimit mailapi
-                , toSql $ umapiSentToday mailapi
-                ]
-        Nothing -> do
-          kPrepare "DELETE FROM user_mail_apis WHERE user_id = ?"
-          kExecute01 [toSql uid]
-      else return False
-
 data SetUserInfo = SetUserInfo UserID UserInfo
 instance DBUpdate SetUserInfo Bool where
   dbUpdate (SetUserInfo uid info) = do
@@ -363,8 +298,6 @@ instance DBUpdate SetUserInfo Bool where
       ++ ", phone = ?"
       ++ ", mobile = ?"
       ++ ", email = ?"
-      ++ ", company_name = ?"
-      ++ ", company_number = ?"
       ++ "  WHERE id = ? AND deleted = FALSE"
     kExecute01 [
         toSql $ userfstname info
@@ -374,8 +307,6 @@ instance DBUpdate SetUserInfo Bool where
       , toSql $ userphone info
       , toSql $ usermobile info
       , toSql $ useremail info
-      , toSql $ usercompanyname info
-      , toSql $ usercompanynumber info
       , toSql uid
       ]
 
@@ -431,10 +362,10 @@ instance DBUpdate SetUserCompanyAdmin Bool where
 
 -- helpers
 
-composeFullName :: (BS.ByteString, BS.ByteString) -> BS.ByteString
-composeFullName (fstname, sndname) = if BS.null sndname
+composeFullName :: (String, String) -> String
+composeFullName (fstname, sndname) = if null sndname
   then fstname
-  else fstname <++> BS.pack " " <++> sndname
+  else fstname ++ " " ++ sndname
 
 checkIfUserExists :: UserID -> DB Bool
 checkIfUserExists uid = checkIfAnyReturned
@@ -492,7 +423,7 @@ fetchUsers = foldDB decoder []
           , userphone = phone
           , usermobile = mobile
           , useremail = email
-          , usercompanyname = company_name
+          , usercompanyname  = company_name
           , usercompanynumber = company_number
           }
         , usersettings = UserSettings {

@@ -10,7 +10,6 @@ import Mails.MailsConfig
 import Data.Word
 import System.Console.GetOpt
 import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.UTF8 as BSU
 
 -- | Defines the application's configuration.  This includes amongst
 -- other things the http port number, amazon, trust weaver and email
@@ -62,7 +61,7 @@ instance Configuration AppConf where
         aesKey = BS.pack "}>\230\206>_\222\STX\218\SI\159i\DC1H\DC3Q\ENQK\r\169\183\133bu\211\NUL\251s|\207\245J"
       , aesIV = BS.pack "\205\168\250\172\CAN\177\213\EOT\254\190\157SY3i\160"
       }
-    , admins             = map (Email . BSU.fromString) ["gracjanpolak@gmail.com", "lukas@skrivapa.se"]
+    , admins             = map Email ["gracjanpolak@gmail.com", "lukas@skrivapa.se"]
     , sales              = []
     , initialUsers       = []
     }

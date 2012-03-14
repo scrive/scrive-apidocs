@@ -11,7 +11,6 @@ module CompanyAccounts.Model (
 import Data.Monoid
 import Database.HDBC
 import qualified Control.Exception as E
-import qualified Data.ByteString.Char8 as BS
 
 import Company.Model
 import DB.Classes
@@ -26,8 +25,8 @@ import User.Model
 -}
 data CompanyInvite = CompanyInvite {
     invitedemail    :: Email --who was invited
-  , invitedfstname  :: BS.ByteString --the fstname they were invited as
-  , invitedsndname  :: BS.ByteString --the sndname they were invited as
+  , invitedfstname  :: String --the fstname they were invited as
+  , invitedsndname  :: String --the sndname they were invited as
   , invitingcompany :: CompanyID --the company they are invited to
   } deriving (Eq, Ord, Show)
 

@@ -11,12 +11,13 @@ module Company.Model (
   , SetCompanyInfo(..)
   , UpdateCompanyUI(..)
   , GetOrCreateCompanyWithExternalID(..)
+  , GetCompanyByEmailDomain(..)
+  , SetCompanyEmailDomain(..)
   ) where
 
 import Data.Monoid
 import Database.HDBC
 import qualified Control.Exception as E
-import qualified Data.ByteString.Char8 as BS
 
 import DB.Classes
 import DB.Derive
@@ -28,7 +29,7 @@ import Company.CompanyID
 import Company.Tables
 import Misc
 
-newtype ExternalCompanyID = ExternalCompanyID { unExternalCompanyID :: BS.ByteString }
+newtype ExternalCompanyID = ExternalCompanyID { unExternalCompanyID :: String }
   deriving (Eq, Ord, Show)
 $(newtypeDeriveConvertible ''ExternalCompanyID)
 
@@ -41,17 +42,18 @@ data Company = Company {
   } deriving (Eq, Ord, Show)
 
 data CompanyInfo = CompanyInfo {
-    companyname    :: BS.ByteString
-  , companynumber  :: BS.ByteString
-  , companyaddress :: BS.ByteString
-  , companyzip     :: BS.ByteString
-  , companycity    :: BS.ByteString
-  , companycountry :: BS.ByteString
+    companyname    :: String
+  , companynumber  :: String
+  , companyaddress :: String
+  , companyzip     :: String
+  , companycity    :: String
+  , companycountry :: String
+  , companyemaildomain :: Maybe String
   } deriving (Eq, Ord, Show)
 
 data CompanyUI = CompanyUI {
-    companybarsbackground    :: Maybe BS.ByteString
-  , companybarstextcolour    :: Maybe BS.ByteString
+    companybarsbackground    :: Maybe String
+  , companybarstextcolour    :: Maybe String
   , companylogo              :: Maybe Binary -- File with the logo
 } deriving (Eq, Ord, Show)
 
@@ -98,6 +100,7 @@ instance DBUpdate SetCompanyInfo Bool where
       , sql "zip" companyzip
       , sql "city" companycity
       , sql "country" companycountry
+      , sql "email_domain" companyemaildomain
       ] <++> SQL "WHERE id = ?" [toSql cid]
 
 data UpdateCompanyUI = UpdateCompanyUI CompanyID CompanyUI
@@ -138,6 +141,7 @@ selectCompaniesSelectors = "id"
   ++ ", bars_background"
   ++ ", bars_textcolour"
   ++ ", encode(logo, 'base64')"
+  ++ ", email_domain"
 
 selectCompaniesSQL :: SQL
 selectCompaniesSQL = SQL ("SELECT " ++ selectCompaniesSelectors ++ " FROM companies ") []
@@ -146,7 +150,7 @@ fetchCompanies :: DB [Company]
 fetchCompanies = foldDB decoder []
   where
     decoder acc cid eid sid name number address zip' city country
-      bars_background bars_textcolour logo = Company {
+      bars_background bars_textcolour logo email_domain = Company {
         companyid = cid
       , companyexternalid = eid
       , companyservice = sid
@@ -157,6 +161,7 @@ fetchCompanies = foldDB decoder []
         , companyzip = zip'
         , companycity = city
         , companycountry = country
+        , companyemaildomain = email_domain
         }
       , companyui = CompanyUI {
           companybarsbackground = bars_background
@@ -164,3 +169,15 @@ fetchCompanies = foldDB decoder []
         , companylogo = logo
         }
       } : acc
+
+data SetCompanyEmailDomain = SetCompanyEmailDomain CompanyID (Maybe String)
+instance DBUpdate SetCompanyEmailDomain Bool where
+  dbUpdate (SetCompanyEmailDomain cid mdomain) = do    
+    kPrepare $ "UPDATE companies SET email_domain = ? WHERE id = ? AND NOT EXISTS (SELECT 1 FROM companies WHERE email_domain = ?)"
+    kExecute01 [toSql mdomain, toSql cid, toSql mdomain]
+    
+data GetCompanyByEmailDomain = GetCompanyByEmailDomain String
+instance DBQuery GetCompanyByEmailDomain (Maybe Company) where
+  dbQuery (GetCompanyByEmailDomain domain) = do
+    _ <- kRun $ selectCompaniesSQL <++> SQL "WHERE email_domain = ?" [toSql domain]
+    fetchCompanies >>= oneObjectReturnedGuard

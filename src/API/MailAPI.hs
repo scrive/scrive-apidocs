@@ -14,6 +14,7 @@ import Doc.Model
 import EvidenceLog.Model
 import File.Model
 import Kontra
+import KontraError (internalError)
 import KontraLink
 import MinutesTime
 import Misc
@@ -80,7 +81,7 @@ handleMailAPI = do
       isOutlook = maybe False ("Outlook" `isInfixOf`) (lookup "x-mailer" (MIME.mime_val_headers mime)) ||
                   maybe False ("Exchange" `isInfixOf`) (lookup "x-mimeole" (MIME.mime_val_headers mime))
 
-      subject = decodeWords $ BS.toString $ maybe BS.empty BS.fromString $ lookup "subject" (MIME.mime_val_headers mime)
+      subject = decodeWords $ fromMaybe "" $ lookup "subject" (MIME.mime_val_headers mime)
 
   -- access control
 
@@ -94,11 +95,11 @@ handleMailAPI = do
     -- extension and can be used as for example password
   let extension = takeWhile (/= '@') $ dropWhile (== '+') $ dropWhile (/= '+') to
 
-  muser <- runDBQuery (GetUserByEmail Nothing (Email $ BS.fromString $ map toLower username))
+  muser <- runDBQuery (GetUserByEmail Nothing (Email $ map toLower username))
   when (isNothing muser) $ do
     Log.mailAPI $ "User does not exist: " ++ username
     sendMailAPIErrorEmail ctx username $ "<p>The address from which you sent the email (" ++ username ++ ") is not a registered Scrive User account. If you would like to sign up to use Scrive, please visit <a href='" ++  hostpart ++ show (LinkHome locale) ++ "'>the Scrive homepage</a>.</p>"    
-    mzero
+    internalError
 
   let Just user = muser
 
@@ -106,14 +107,14 @@ handleMailAPI = do
   when (isNothing mmailapi) $ do
     Log.mailAPI $ "User has not enabled api: " ++ username
     sendMailAPIErrorEmail ctx username $ "<p>The address from which you sent the email (" ++ username ++ ") is a registered Scrive User account but Scrive by Mail has not been activated on the account. If you would like to sign up to use Scrive by Mail, please visit <a href='" ++  hostpart ++ show LinkUserMailAPI ++ "'>the Scrive by Mail settings page</a>.</p>"    
-    mzero
+    internalError
 
   let Just mailapi = mmailapi
 
   when (maybeRead extension /= Just (umapiKey mailapi)) $ do
     Log.mailAPI $ "User api key does not match: " ++ username ++ " key: " ++ extension
     sendMailAPIErrorEmail ctx username $ "<p>I have just received an email from " ++ username ++ " requesting to create a document. Unfortunately, the Scrive by Mail email address it was sent to was invalid for this account. Please visit is a registered Scrive User account but the email address you sent to is not . If you would like to sign up to use Scrive, please visit <a href='" ++  hostpart ++ show LinkUserMailAPI ++ "'>the Scrive by Mail settings page</a> to note your personal Scrive by Mail email address.</p>"
-    mzero
+    internalError
 
   -- at this point, the user has been authenticated
   -- we can start sending him emails about errors
@@ -145,13 +146,13 @@ jsonMailAPI mailapi username user pdfs plains content = do
   when (umapiDailyLimit mailapi <= umapiSentToday mailapi) $ do
     Log.jsonMailAPI $ "Daily limit of documents for user '" ++ username ++ "' has been reached"
     sendMailAPIErrorEmail ctx username $ "<p>For your own protection, Scrive Mail API sets a daily limit on how many emails you can send out. Your daily Scrive Mail API limit has been reached. To reset your daily limit, please visit " ++ ctxhostpart ctx ++ show LinkUserMailAPI ++ " .<p>"    
-    mzero
+    internalError
 
   when (length plains /= 1) $ do
     Log.jsonMailAPI $ "Wrong number of plain text attachments."
     Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content
     sendMailAPIErrorEmail ctx username $ "<p>Please ensure that there is exactly one plain text attachment. In the message you sent, there were " ++ show (length plains) ++ ".</p>"
-    mzero
+    internalError
 
   let [plain] = plains
 
@@ -165,7 +166,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
 
       sendMailAPIErrorEmail ctx username $ "<p>I do not know what the problem is. Perhaps try again with a different email program or contact <a href='mailto:eric@scrive.com'>Mail API Support</a> for help.</p>"
 
-      mzero
+      internalError
 
   let ejson = runGetJSON readJSValue $ BS.toString recodedPlain'
 
@@ -175,7 +176,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
     Log.jsonMailAPI $ (show $ toSeconds ctxtime) ++ " " ++ msg
     Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content
     sendMailAPIErrorEmail ctx username $ "<p>I could not understand the email you sent me. The JSON did not parse: <br /><br />\n" ++ msg ++ "<br /><br />\nPlease correct the problems and try again.</p>"
-    mzero
+    internalError
 
   let Right json = ejson
       edcr = dcrFromJSON json
@@ -187,7 +188,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
     Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content
     sendMailAPIErrorEmail ctx username $ "<p>I could not understand the email you sent me. The JSON parsed, but there were problems: <br /><br />\n" ++ msg ++ "<br /><br />\nPlease correct the problems and try again.</p>"
     -- should probably send a bad request message
-    mzero
+    internalError
 
   let Right dcr = edcr
 
@@ -200,7 +201,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
     Log.jsonMailAPI $ (show $ toSeconds ctxtime) ++ " Should have exactly one author; instead, has " ++ show aus
     Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content
     sendMailAPIErrorEmail ctx username $ "<p>There should be exactly one author (role 1 or 2), but there were " ++ show (length aus) ++ ". Please correct the problem and try again.</p>"
-    mzero
+    internalError
 
   let [authorIR] = aus
 
@@ -210,7 +211,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
     Log.jsonMailAPI $ (show $ toSeconds ctxtime) ++ " Should have at least one signatory; instead, has " ++ show sigs
     Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content
     sendMailAPIErrorEmail ctx username $ "<p>There should be at least one signatory (role 2 or 5), but there were " ++ show sigs ++ ". Please correct the problem and try again.</p>"
-    mzero
+    internalError
 
   -- the mainfile is attached
   let mpdf = getByAttachmentName (strip $ dcrMainFile dcr) pdfs
@@ -221,7 +222,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
     Log.jsonMailAPI $ "Here are the attachments: " ++ show (map fst pdfs)
     Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content
     sendMailAPIErrorEmail ctx username $ "<p>In the JSON, you requested the pdf called '" ++ show (dcrMainFile dcr) ++ "' to be considered the main file of the document. I could not find the pdf called '" ++ show (dcrMainFile dcr) ++ "' in the email attachments. The following pdfs were attached: '" ++ intercalate "', '" attnames ++ "'. Please check the file names and JSON and try again.</p>"
-    mzero
+    internalError
 
   let Just pdf = mpdf
 
@@ -256,7 +257,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
     Log.jsonMailAPI $ (show $ toSeconds ctxtime) ++ " Author data does not match: " ++ show authorIR ++ " and " ++ show userDetails
     Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content
     sendMailAPIErrorEmail ctx username $ "<p>The author information in the JSON does not match the information from your user account.</p>" ++ concatMap mm mismatched
-    mzero
+    internalError
 
   -- check that all signatories have first, last, and email
   when (not $ all ((3 ==) . length) [[v | v <- irData s
@@ -266,27 +267,27 @@ jsonMailAPI mailapi username user pdfs plains content = do
     Log.scrivebymailfailure $ "\n####### "++ (show $ toSeconds ctxtime) ++ "\n" ++ BS.toString content
 
     sendMailAPIErrorEmail ctx username $ "<p>All involved parties need <i>fstname</i>, <i>sndname</i>, and <i>email</i> entries in the JSON.</p>"
-    mzero
+    internalError
 
   let doctype = dcrType dcr
       title = dcrTitle dcr
-      actor = MailAPIActor ctxtime (userid user) (BS.toString $ getEmail user)
+      actor = MailAPIActor ctxtime (userid user) (getEmail user)
       
-  edoc <- runDBUpdate $ NewDocument user mcompany (BS.fromString title) doctype 0 actor
+  edoc <- runDBUpdate $ NewDocument user mcompany title doctype 0 actor
 
   when (isLeft edoc) $ do
     let Left msg = edoc
 
     Log.jsonMailAPI $ "Could not create document: " ++ msg
 
-    sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not create your document. I do not know what is wrong. You can try again or you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkUpload) ++ "\">click here</a> to use the web interface.</p>"
+    sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not create your document. I do not know what is wrong. You can try again or you can <a href=\"" ++ ctxhostpart ctx ++ show LinkUpload ++ "\">click here</a> to use the web interface.</p>"
 
-    mzero
+    internalError
 
   let Right doc = edoc
 
   content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) pdfBinary
-  file <- runDB $ dbUpdate $ NewFile (BS.fromString title) content14
+  file <- runDB $ dbUpdate $ NewFile title content14
   _ <- guardRightM $ runDBUpdate (AttachFile (documentid doc) (fileid file) actor)
   
   _ <- runDBUpdate $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality actor
@@ -301,13 +302,13 @@ jsonMailAPI mailapi username user pdfs plains content = do
   when ([] /= errs) $ do
     Log.jsonMailAPI $ "Could not set up document: " ++ (intercalate "; " errs)
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what is wrong. I created it in Scrive, but I cannot get it ready to send. If you want to see your document, you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
-    mzero
+    internalError
 
   edoc2 <- runDBUpdate $ PreparationToPending (documentid doc) actor
   when (isLeft edoc2) $ do
     Log.jsonMailAPI $ "Could not got to pending document: " ++ (intercalate "; " errs)
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what's wrong. Your document is created and ready to be sent. To see your document and send it yourself, <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
-    mzero
+    internalError
 
   let Right doc2 = edoc2
       docid = documentid doc2

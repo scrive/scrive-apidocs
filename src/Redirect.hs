@@ -9,7 +9,6 @@ module Redirect
 
 
 import Control.Applicative ((<$>))
-import Control.Monad
 import Data.Maybe
 import Happstack.Server.SimpleHTTP
 import qualified Codec.Binary.Url as URL
@@ -18,6 +17,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 
 import Kontra
+import KontraError (internalError)
 import KontraLink
 import qualified Log
 import Misc
@@ -75,7 +75,7 @@ instance GuardRight String where
   guardRight (Right b) = return b
   guardRight (Left  a) = do
     Log.debug a
-    mzero
+    internalError
 
 instance GuardRight DBError where
   guardRight (Right b)            = return b
@@ -83,10 +83,10 @@ instance GuardRight DBError where
     ctx <- getContext
     r <- sendRedirect $ LinkLogin (ctxlocale ctx) NotLogged
     finishWith r
-  guardRight _                    = mzero
+  guardRight _                    = internalError
 
 {- |
-   Get the value from a Right or log an error and mzero if it is a left
+   Get the value from a Right or log an error and fail if it is a left
  -}
 guardRightM :: (Kontrakcja m, GuardRight msg) => m (Either msg b) -> m b
 guardRightM action = guardRight =<< action

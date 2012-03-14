@@ -12,6 +12,7 @@ module CompanyAccounts.CompanyAccountsControl (
   -- this shares some handy stuff with the adminonly section
   , handleCompanyAccountsForAdminOnly
   , sendTakeoverPrivateUserMail
+  , sendNewCompanyUserMail
   ) where
 
 import Control.Monad.State
@@ -20,8 +21,6 @@ import Data.Functor
 import Data.List
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
-import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.UTF8 as BS
 import Text.JSON (JSValue(..), toJSObject, toJSString)
 
 import AppView
@@ -34,6 +33,7 @@ import Doc.Model
 import Doc.DocStateData
 import InputValidation
 import Kontra
+import KontraError (internalError)
 import KontraLink
 import ListUtil
 import Mails.SendMail
@@ -104,9 +104,7 @@ handleCompanyAccountsInternal cid = do
         camaybeuserid = Nothing
       , cafstname = invitedfstname i
       , casndname = invitedsndname i
-      , cafullname = invitedfstname i
-                     `BS.append` BS.fromString " "
-                     `BS.append` invitedsndname i
+      , cafullname = invitedfstname i ++ " " ++ invitedsndname i
       , caemail = unEmail $ invitedemail i
       , carole = RolePending
       , cadeletable = True
@@ -120,8 +118,8 @@ handleCompanyAccountsInternal cid = do
                                               toJSObject [("fields",
                                                            JSObject $ toJSObject [
                                                               ("id", JSString $ toJSString $ maybe "0" show $ camaybeuserid f)
-                                                            , ("fullname", JSString $ toJSString $ BS.toString $ cafullname f)
-                                                            , ("email", JSString $ toJSString $ BS.toString $ caemail f)
+                                                            , ("fullname", JSString $ toJSString $ cafullname f)
+                                                            , ("email", JSString $ toJSString $ caemail f)
                                                             , ("role", JSString $ toJSString $ show $ carole f)
                                                             , ("deletable", JSBool $ cadeletable f)
                                                             , ("activated", JSBool $ caactivated f)
@@ -135,10 +133,10 @@ handleCompanyAccountsInternal cid = do
 -}
 data CompanyAccount = CompanyAccount {
     camaybeuserid :: Maybe UserID --the account's userid if they have one & not if they're a pending takeover invite
-  , cafstname :: BS.ByteString --the account's first name
-  , casndname :: BS.ByteString --the account's last name
-  , cafullname :: BS.ByteString --the account's fullname
-  , caemail :: BS.ByteString --the account's email
+  , cafstname :: String --the account's first name
+  , casndname :: String --the account's last name
+  , cafullname :: String --the account's fullname
+  , caemail :: String --the account's email
   , carole :: Role --the account's role
   , cadeletable :: Bool --can the account be deleted, or do they have pending documents?
   , caactivated :: Bool --is the account a full company user with accepted tos?
@@ -157,7 +155,7 @@ companyAccountsSortSearchPage  =
 companyAccountsSearchFunc :: SearchingFunction CompanyAccount
 companyAccountsSearchFunc s ca = accountMatch ca s
   where
-      match s' m = map toUpper s' `isInfixOf` map toUpper (BS.toString m)
+      match s' m = map toUpper s' `isInfixOf` map toUpper m
       accountMatch ca' s' = match s' (cafstname ca')
                             || match s' (casndname ca')
                             || match s' (cafullname ca')
@@ -214,8 +212,8 @@ handleAddCompanyAccount :: Kontrakcja m => m ()
 handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
   ctx <- getContext
   memail <- getOptionalField asValidEmail "email"
-  fstname <- fromMaybe BS.empty <$> getOptionalField asValidName "fstname"
-  sndname <- fromMaybe BS.empty <$> getOptionalField asValidName "sndname"
+  fstname <- fromMaybe "" <$> getOptionalField asValidName "fstname"
+  sndname <- fromMaybe "" <$> getOptionalField asValidName "sndname"
   mexistinguser <- maybe (return Nothing) (runDBQuery . GetUserByEmail Nothing . Email) memail
   mexistingcompany <- maybe (return Nothing) getCompanyForUser mexistinguser
 
@@ -250,7 +248,7 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
   -- record the invite and flash a message
   when (isJust minvitee) $ do
     email <- guardJust memail
-    _ <- runDBUpdate $ AddCompanyInvite CompanyInvite{
+    _ <- runDBUpdate $ AddCompanyInvite CompanyInvite {
             invitedemail = Email email
           , invitedfstname = fstname
           , invitedsndname = sndname
@@ -310,16 +308,16 @@ sendTakeoverPrivateUserMail inviter company user = do
 sendTakeoverCompanyInternalWarningMail :: Kontrakcja m => User -> Company -> User -> m ()
 sendTakeoverCompanyInternalWarningMail inviter company user = do
   ctx <- getContext
-  let content = "Oh dear!  " ++ BS.toString (getFullName inviter)
-                ++ " &lt;" ++ BS.toString (getEmail inviter) ++ "&gt;"
-                ++ " in company " ++ BS.toString (getCompanyName company)
-                ++ " has asked to takeover " ++ BS.toString (getFullName user)
-                ++ " &lt;" ++ BS.toString (getEmail user) ++ "&gt;"
+  let content = "Oh dear!  " ++ getFullName inviter
+                ++ " &lt;" ++ getEmail inviter ++ "&gt;"
+                ++ " in company " ++ getCompanyName company
+                ++ " has asked to takeover " ++ getFullName user
+                ++ " &lt;" ++ getEmail user ++ "&gt;"
                 ++ " who is already in a company."
-                ++ "  " ++ BS.toString (getFullName user)
+                ++ "  " ++ getFullName user
                 ++ " has been emailed about the problem and advised to contact us if they want to move accounts."
   scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
-        to = [MailAddress { fullname = BS.fromString "info@skrivapa.se", email = BS.fromString "info@skrivapa.se" }]
+        to = [MailAddress { fullname = "info@skrivapa.se", email = "info@skrivapa.se" }]
       , title = "Attempted Company Account Takeover"
       , content = content
   }
@@ -331,11 +329,11 @@ sendTakeoverCompanyInternalWarningMail inviter company user = do
 handleChangeRoleOfCompanyAccount :: Kontrakcja m => m ()
 handleChangeRoleOfCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
   changeid <- getCriticalField asValidUserID "changeid"
-  makeadmin <- getFieldUTF "makeadmin"
+  makeadmin <- getField "makeadmin"
   changeuser <- guardJustM $ runDBQuery $ GetUserByID changeid
   changecompanyid <- guardJust $ usercompany changeuser
-  guard $ changecompanyid == companyid company --make sure user is in same company
-  _ <- runDBUpdate $ SetUserCompanyAdmin changeid (makeadmin == Just (BS.fromString "true"))
+  unless (changecompanyid == companyid company) internalError --make sure user is in same company
+  _ <- runDBUpdate $ SetUserCompanyAdmin changeid (makeadmin == Just "true")
   return ()
 
 {- |
@@ -438,6 +436,6 @@ resaveDocsForUser uid = do
 guardGoodForTakeover :: Kontrakcja m => CompanyID -> m ()
 guardGoodForTakeover companyid = do
   Context{ctxmaybeuser = Just user} <- getContext
-  _ <- guard $ isNothing (usercompany user)
+  _ <- unless (isNothing (usercompany user)) internalError
   _ <- guardJustM $ runDBQuery $ GetCompanyInvite companyid (Email $ getEmail user)
   return ()

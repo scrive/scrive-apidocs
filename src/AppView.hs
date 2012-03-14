@@ -115,7 +115,7 @@ embeddedPage pb = do
     clearFlashMsgs
     return res
 
-embeddedErrorPage :: Kontra Response
+embeddedErrorPage :: Kontrakcja m => m Response
 embeddedErrorPage = do
     ctx <- getContext
     content <- renderTemplateFM "embeddedErrorPage" $ do

@@ -26,6 +26,7 @@ import Doc.DocStateData
 import File.Model
 import ForkAction
 import Kontra
+import KontraError (internalError)
 import Misc
 import System.Directory
 import System.Exit
@@ -45,7 +46,7 @@ instance GuardRight FileError where
   guardRight (Right b)            = return b
   guardRight (Left fe)            = do
                                      Log.error $ show fe
-                                     mzero
+                                     internalError
 
 {- Gets file content from somewere (Amazon for now), putting it to cache and returning as BS -}
 getFileContents :: Context -> File -> IO (BS.ByteString)

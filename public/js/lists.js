@@ -218,7 +218,7 @@
             if (paging.pageMax() > 0) {
                 main.append(pages);
             }
-            this.el.append(main);
+            $(this.el).append(main);
         }
     });
 
@@ -246,7 +246,7 @@
                                           filtering.searchText(searchBox.value());
                                       }
                                      });
-            this.el.append(button.input()).append(searchBox.input());
+            $(this.el).append(button.input()).append(searchBox.input());
         }
     });
 
@@ -260,9 +260,10 @@
         },
         initialize: function() {
             _.bindAll(this, 'change');
-            this.filtering().bind('change', this.change);
-            this.sorting().bind('change', this.change);
-            this.paging().bind('change:pageCurrent', this.change);
+            var schema = this;
+            this.filtering().bind('change', function() {schema.trigger('change')});
+            this.sorting().bind('change', function() {schema.trigger('change')});
+            this.paging().bind('change:pageCurrent', function() {schema.trigger('change')});
         },
         cell: function(i) {
             return this.get("cells")[i];
@@ -448,13 +449,13 @@
             this.render();
         },
         render: function() {
-            if (this.el.size() === 1) {
+            if ($(this.el).size() === 1) {
                 for (var j = 0; j < this.model.subfieldsSize(); j++) {
-                    this.el = this.el.add($("<tr />"));
+                    this.el = $(this.el).add($("<tr />"));
                 }
             }
-            this.el.empty();
-            var mainrow = this.el.first();
+            $(this.el).empty();
+            var mainrow = $(this.el).first();
             for (var i = 0; i < this.schema.size(); i++) {
                 var td = $("<td class='row'></td>");
                 var cell = this.schema.cell(i);
@@ -479,7 +480,7 @@
                 mainrow.append(td);
             }
             for (var j = 0; j < this.model.subfieldsSize(); j++) {
-                var subrow = this.el.eq(j + 1);
+                var subrow = $(this.el).eq(j + 1);
                 for (var i = 0; i < this.schema.size(); i++) {
                     var div = $("<div/>").attr('style',this.schema.cell(i).substyle());
                     var td = $("<td></td>").append(div);
@@ -507,12 +508,12 @@
         },
         renderSelection: function() {
             if (this.model.isSelected()) {
-                this.el.addClass("ui-selected");
+                $(this.el).addClass("ui-selected");
                 if (this.checkbox != undefined) {
                     this.checkbox.attr("checked", "true");
                 }
             } else {
-                this.el.removeClass("ui-selected");
+                $(this.el).removeClass("ui-selected");
                 if (this.checkbox != undefined) {
                     this.checkbox.removeAttr("checked");
                 }
@@ -584,15 +585,15 @@
             overlay.css("text-align", "center");
             overlay.css("display", "none");
 
-            this.el.css("position", "relative");
+            $(this.el).css("position", "relative");
             this.makeLoader(overlay);
 
             this.loader.fadeIn(2000);
-            this.el.css("opacity", 0.5);
+            $(this.el).css("opacity", 0.5);
             //this.el.css("opacity", "0.5");
           } else if (!this.model.isLoading() && this.isLoader()) {
             this.removeLoader();
-            this.el.fadeTo(500, 1.0);
+            $(this.el).fadeTo(500, 1.0);
           }
         },
         isLoader: function() {
@@ -600,7 +601,7 @@
         },
         makeLoader: function(elem) {
           this.loader = elem;
-          this.el.prepend(this.loader);
+          $(this.el).prepend(this.loader);
         },
         removeLoader: function() {
           this.loader.remove();
@@ -624,7 +625,7 @@
             this.makeElementsViews([]);
         },
         makeElementsViews : function(ms){
-            this.el.children().detach();
+            $(this.el).children().detach();
             this.prerender();
             new LoadingView({
                 model: this.loading,
@@ -681,7 +682,7 @@
                 new PagingView({model: this.schema.paging(), el: pagingFooter});
                 this.tableboxfooter.append(pagingFooter);
             }
-            this.el.append(this.main);
+            $(this.el).append(this.main);
         },
         prepareOptions: function() {
             var options = this.schema.options();
@@ -748,9 +749,9 @@
             var odd = true;
             this.model.forEach(function(e) {
                 if (e.view != undefined) {
-                    body.append(e.view.el);
+                    body.append($(e.view.el));
                     if (odd) {
-                        e.view.el.addClass("odd");
+                        $(e.view.el).addClass("odd");
                     }
                     odd = !odd;
                 }

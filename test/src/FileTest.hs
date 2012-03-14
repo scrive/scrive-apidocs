@@ -5,7 +5,6 @@ module FileTest (fileTests) where
 import DB.Classes
 import TestingUtil
 
-import Control.Monad
 import Test.Framework
 import Test.QuickCheck
 import File.Model
@@ -57,7 +56,7 @@ testFileEquality = doNTimes 100 $  do
    
 testFileNewFile ::   DB ()
 testFileNewFile  = doNTimes 100 $ do
-  (name,content) <- fileData 
+  (name, content) <- fileData 
   File { fileid = fileid , filename = fname1 , filestorage = FileStorageMemory fcontent1} <- dbUpdate $  NewFile name content
   assertBool ("File content doesn't change " ++ show content ++ " vs "++ show fcontent1) (content == fcontent1)
   assertBool ("File name doesn't change " ++ show name ++ " vs "++ show fname1) (name == fname1)
@@ -78,8 +77,8 @@ testFileMovedToDisc  = doNTimes 100 $ do
 testFileMovedToAWS ::   DB ()
 testFileMovedToAWS  = doNTimes 100 $ do
   (name,content) <- fileData
-  bucket <- viewableBS
-  url <- viewableBS 
+  bucket <- viewableS
+  url <- viewableS 
   file <- dbUpdate $  NewFile name content
   dbUpdate $ FileMovedToAWS (fileid file) bucket url
   Just (File { filename = fname , filestorage = FileStorageAWS fbucket furl }) <- dbQuery $ GetFileByFileID (fileid file)
@@ -116,12 +115,11 @@ testUncheckedStoring  = sequence_ $ replicate 10 $ do
         mf1 <-  dbQuery $ GetFileByFileID (fid)
         assertBool "We can put file in db with mem starage" ( Just f1 == mf1 ) 
 
-viewableBS :: (MonadIO m) => m BS.ByteString
-viewableBS = rand 10 $  liftM BS.fromString (arbString 10 100)
+viewableS :: (MonadIO m) => m String
+viewableS = rand 10 $ arbString 10 100
 
-
-fileData :: (MonadIO m) =>  m (BS.ByteString,BS.ByteString)
+fileData :: (MonadIO m) =>  m (String, BS.ByteString)
 fileData = do
-    n <- viewableBS
+    n <- viewableS
     c <- rand 10 arbitrary
     return (n , c)

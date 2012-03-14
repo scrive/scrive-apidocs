@@ -22,6 +22,7 @@ import File.Migrations
 import Mails.Tables
 import PadQueue.Tables
 import Mails.Migrations
+import ScriveByMail.Tables
 import EvidenceLog.Tables
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
@@ -47,6 +48,7 @@ kontraMigrations = [
   , addIdSerialOnDocuments
   , addIdSerialOnCompanies
   , addIdSerialOnUsers
+  , addEmailDomainOnCompanies
   , addCompanyNameNumberOnUsers
   ] ++ mailerMigrations
 
@@ -70,4 +72,7 @@ kontraTables = [
   , tableSignatoryAttachments
   , tableEvidenceLog
   , tablePadQueue
+  , tableCompanyMailAPIs
+  , tableUserRequest
+  , tableMailAPIDelay
   ] ++ mailerTables

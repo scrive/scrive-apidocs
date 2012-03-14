@@ -7,7 +7,6 @@ import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit (Assertion)
 import System.IO.Temp
-import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
 import qualified Codec.MIME.Type as MIME
 import Doc.DocStateData
@@ -15,6 +14,7 @@ import Control.Monad.Trans
 import Data.List
 
 import DB.Classes
+import MagicHash
 import Context
 import Doc.Model
 import Misc
@@ -26,11 +26,16 @@ import TestKontra as T
 import Doc.DocInfo
 import qualified Log
 
-import API.MailAPI
+import ScriveByMail.Control
+import ScriveByMail.Model
+import ScriveByMail.Action
 
 mailApiTests :: DBEnv -> Test
 mailApiTests env = testGroup "MailAPI" [
-      testCase "Create simple email document with one signatory"      $ testSuccessfulDocCreation env "test/mailapi/email_simple_onesig.eml" 2
+
+
+      testThat "GetUserMailAPI/SetUserMailAPI works" env test_getUserMailAPI
+    , testCase "Create simple email document with one signatory"      $ testSuccessfulDocCreation env "test/mailapi/email_simple_onesig.eml" 2
     , testCase "Parse mime document email_onesig_ok.eml"              $ testParseMimes "test/mailapi/email_onesig_ok.eml"
     , testCase "Parse mime document email_simple_onesig.eml"          $ testParseMimes "test/mailapi/email_simple_onesig.eml"
     , testCase "Parse mime document email_outlook_three.eml"          $ testParseMimes "test/mailapi/email_outlook_three.eml"
@@ -67,11 +72,7 @@ testSuccessfulDocCreation env emlfile sigs = withMyTestEnvironment env $ \tmpdir
     globaltemplates <- readGlobalTemplates
     ctx <- (\c -> c { ctxdbenv = env, ctxdocstore = tmpdir, ctxmaybeuser = muser })
       <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
-    _ <- dbUpdate $ SetUserMailAPI uid $ Just UserMailAPI {
-          umapiKey = read "ef545848bcd3f7d8"
-        , umapiDailyLimit = 1
-        , umapiSentToday = 0
-    }
+    _ <- dbUpdate $ SetUserMailAPIKey uid (read "ef545848bcd3f7d8") 1
     (res, _) <- runTestKontra req ctx handleMailAPI
     --kRollback
     Log.debug $ "Here's what I got back from handleMailCommand: " ++ show res
@@ -84,7 +85,7 @@ testSuccessfulDocCreation env emlfile sigs = withMyTestEnvironment env $ \tmpdir
     
     assertBool ("document status should be pending, is " ++ show (documentstatus doc)) $ documentstatus doc == Pending
     assertBool "document has file no attached" $ (length $ documentfiles doc) == 1
-    assertBool ("doc has iso encoded title " ++ show (documenttitle doc)) $ not $ "=?iso" `isInfixOf` (BS.toString $ documenttitle doc)
+    assertBool ("doc has iso encoded title " ++ show (documenttitle doc)) $ not $ "=?iso" `isInfixOf` (documenttitle doc)
     Just doc' <- dbQuery $ GetDocumentByDocumentID $ fromJust mdocid
     assertBool "document is in error!" $ not $ isDocumentError doc'
 
@@ -134,5 +135,27 @@ withMyTestEnvironment env f =
 
 createTestUser :: DB UserID
 createTestUser = do
-    Just User{userid} <- dbUpdate $ AddUser (BSC.empty, BSC.empty) (BSC.pack "andrzej@skrivapa.se") Nothing False Nothing Nothing (mkLocaleFromRegion defaultValue)
+    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" Nothing False Nothing Nothing (mkLocaleFromRegion defaultValue)
     return userid
+
+test_getUserMailAPI :: DB ()
+test_getUserMailAPI = do
+  Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  let mapi = MailAPIInfo {
+      umapiKey = unsafeMagicHash 0
+    , umapiDailyLimit = 1
+    , umapiSentToday = 0
+  }
+  res <- dbUpdate $ SetUserMailAPIKey userid (umapiKey mapi) (umapiDailyLimit mapi)
+  assertBool "UserMailAPI created correctly" res
+  Just mapi2 <- dbQuery $ GetUserMailAPI userid
+  assertBool "Correct UserMailAPI returned" $ mapi == mapi2
+  res2 <- dbUpdate $ IncrementUserMailAPI userid
+  assertBool "UserMailAPI updated correctly" (res2 == Just 1)
+  Just mapi3 <- dbQuery $ GetUserMailAPI userid
+  assertBool "Correct updated UserMailAPI returned" $ umapiSentToday mapi3 == 1
+  res3 <- dbUpdate $ RemoveUserMailAPI userid
+  assertBool "UserMailAPI erased correctly" res3
+  nomapi <- dbQuery $ GetUserMailAPI userid
+  assertBool "No UserMailAPI returned" $ isNothing nomapi
+

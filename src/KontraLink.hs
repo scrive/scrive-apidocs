@@ -7,12 +7,13 @@ import ActionSchedulerState (ActionID)
 import User.Model
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
-import qualified Data.ByteString.UTF8 as BS
 import ListUtil
 import Session
 import API.Service.Model
 import Company.Model
 import File.FileID
+
+import Data.Int
 
 {- |
    Defines the reason why we are redirected to login page
@@ -84,7 +85,7 @@ data KontraLink
     | LoopBack
     | BackToReferer
     | LinkDaveDocument DocumentID
-    | LinkFile FileID BS.ByteString
+    | LinkFile FileID String
     | LinkAskQuestion
     | LinkInvite
     | LinkSignCanceledDataMismatch DocumentID SignatoryLinkID
@@ -101,6 +102,8 @@ data KontraLink
     | LinkAPIDocumentSignatoryAttachment DocumentID SignatoryLinkID String
     | LinkPadDeviceArchive 
     | LinkPadDeviceView
+    | LinkMailAPIDelayConfirmation String Int64 MagicHash
+
     deriving (Eq)
 
 localeFolder :: Locale -> String
@@ -174,11 +177,11 @@ instance Show KontraLink where
     showsPrec _ (LinkDesignDoc did) =  (++) $ "/" ++ show did
     showsPrec _ (LinkRenameAttachment documentid) = (++) $ "/a/rename/" ++ show documentid
     showsPrec _ (LinkIssueDocPDF Nothing document) =
-        (++) $ "/d/" ++ show (documentid document) ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"
+        (++) $ "/d/" ++ show (documentid document) ++ "/" ++ documenttitle document ++ ".pdf"
     showsPrec _ (LinkIssueDocPDF (Just SignatoryLink{signatorylinkid, signatorymagichash}) document) =
-        (++) $ "/d/" ++ show (documentid document) ++ "/" ++ show signatorylinkid ++ "/" ++ show signatorymagichash ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"
+        (++) $ "/d/" ++ show (documentid document) ++ "/" ++ show signatorylinkid ++ "/" ++ show signatorymagichash ++ "/" ++ documenttitle document ++ ".pdf"
     showsPrec _ (LinkFile fileid filename) =
-        (++) $ "/df/" ++ show fileid ++ "/" ++ BS.toString filename
+        (++) $ "/df/" ++ show fileid ++ "/" ++ filename
     showsPrec _ (LinkSignDoc document signatorylink) =
         (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++
                  "?" ++ "magichash="++ show (signatorymagichash signatorylink)
@@ -232,4 +235,5 @@ instance Show KontraLink where
       (++) ("/padqueue/archive")
     showsPrec _ (LinkPadDeviceView) =
       (++) ("/padqueue")
-      
+    showsPrec _ (LinkMailAPIDelayConfirmation email delayid key) = (++) ("/mailapi/confirmdelay/" ++ (URL.encode $ UTF.encode email) ++ "/" ++ show delayid ++ "/" ++ show key)
+

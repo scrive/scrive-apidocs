@@ -6,22 +6,17 @@ module ELegitimation.BankIDUtils (
            , getSigEntry
            , fieldvaluebyid
            , compareFirstNames
-           , bsdigits
-           , isBSDigit
            , normalizeNumber
            , compareNumbers
            , compareLastNames
            , compareSigLinkToElegData
     ) where
 
+import Data.Char
 import Data.List
 import Doc.DocStateData as D
 import ELegitimation.ELegTransaction 
 import Kontra
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
-import GHC.Word
-import GHC.Unicode (toLower)
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.MonadUtils
@@ -40,9 +35,9 @@ data MergeResult = MergeMatch
      E-Legitimation provider. Returns Either and error message or the
      correct value.
  -}
-mergeInfo :: (BS.ByteString, BS.ByteString, BS.ByteString)
-                -> (BS.ByteString, BS.ByteString, BS.ByteString)
-                -> Either (String, BS.ByteString, BS.ByteString, BS.ByteString) (Bool, Bool, Bool)
+mergeInfo :: (String, String, String)
+                -> (String, String, String)
+                -> Either (String, String, String, String) (Bool, Bool, Bool)
 mergeInfo (contractFirst, contractLast, contractNumber) (elegFirst, elegLast, elegNumber) =
     let results = [ compareFirstNames contractFirst  elegFirst
                   , compareLastNames  contractLast   elegLast
@@ -78,70 +73,61 @@ getSigEntry signatorydetails =
         field "company"   $ getCompanyName signatorydetails
         field "number"    $ getPersonalNumber signatorydetails
 
-fieldvaluebyid :: BS.ByteString -> [(BS.ByteString, BS.ByteString)] -> BS.ByteString
-fieldvaluebyid _ [] = BS.fromString ""
+fieldvaluebyid :: String -> [(String, String)] -> String
+fieldvaluebyid _ [] = ""
 fieldvaluebyid fid ((k, v):xs)
     | k == fid  = v
     | otherwise = fieldvaluebyid fid xs
 
-compareFirstNames :: BS.ByteString -> BS.ByteString -> MergeResult
+compareFirstNames :: String -> String -> MergeResult
 compareFirstNames fnContract fnEleg
-    | BS.null fnContract = MergeFail "Du har inte fyllt i förnamn, vänligen försök igen."
-    | BS.null fnEleg = MergeKeep
+    | null fnContract = MergeFail "Du har inte fyllt i förnamn, vänligen försök igen."
+    | null fnEleg = MergeKeep
     | otherwise =
-        let fnsc = words $ map toLower $ BS.toString fnContract
-            fnse = words $ map toLower $ BS.toString fnEleg
+        let fnsc = words $ map toLower fnContract
+            fnse = words $ map toLower fnEleg
             difs = [levenshtein a b | a <- fnsc, b <- fnse]
         in if any (<= 1) difs
             then MergeMatch
-            else MergeFail $ "Förnamn matchar inte: \"" ++ BS.toString fnContract ++ "\" och \"" ++ BS.toString fnEleg ++ "\"."
+            else MergeFail $ "Förnamn matchar inte: \"" ++ fnContract ++ "\" och \"" ++ fnEleg ++ "\"."
 
-bsdigits :: BS.ByteString
-bsdigits = BS.fromString "0123456789"
+normalizeNumber :: String -> String
+normalizeNumber = filter isDigit
 
-isBSDigit :: Word8 -> Bool
-isBSDigit x = x `BS.elem` bsdigits
-
-normalizeNumber :: BS.ByteString -> BS.ByteString
-normalizeNumber n | BS.null n = n
-normalizeNumber n
-    | isBSDigit (BS.head n) = BS.cons (BS.head n) $ normalizeNumber (BS.tail n)
-    | otherwise = normalizeNumber (BS.tail n)
-
-compareNumbers :: BS.ByteString -> BS.ByteString -> MergeResult
+compareNumbers :: String -> String -> MergeResult
 compareNumbers nContract nEleg
-    | BS.null nContract = MergeFail "Du har inte fyllt i personnnummer, vänligen försök igen."
-    | BS.null nEleg     = MergeKeep
+    | null nContract = MergeFail "Du har inte fyllt i personnnummer, vänligen försök igen."
+    | null nEleg     = MergeKeep
     | otherwise =
         let nsc = normalizeNumber nContract
             nse = normalizeNumber nEleg
-            dif = levenshtein (BS.toString nsc) (BS.toString nse)
+            dif = levenshtein nsc nse
         in if dif <= 3
             then MergeMatch
-            else MergeFail $ "Personnnummer matchar inte: \"" ++ BS.toString nContract ++ "\" och \"" ++ BS.toString nEleg ++ "\"."
+            else MergeFail $ "Personnnummer matchar inte: \"" ++ nContract ++ "\" och \"" ++ nEleg ++ "\"."
 
-compareLastNames :: BS.ByteString -> BS.ByteString -> MergeResult
+compareLastNames :: String -> String -> MergeResult
 compareLastNames lnContract lnEleg
-    | BS.null lnContract = MergeFail "Du har inte fyllt i efternamn, vänligen försök igen."
-    | BS.null lnEleg = MergeKeep
-    | levenshtein (map toLower (BS.toString lnContract)) (map toLower (BS.toString lnEleg)) <= 1 = MergeMatch
-    | otherwise = MergeFail $ "Efternamn matchar inte: \"" ++ BS.toString lnContract ++ "\" och \"" ++ BS.toString lnEleg ++"\"."
+    | null lnContract = MergeFail "Du har inte fyllt i efternamn, vänligen försök igen."
+    | null lnEleg = MergeKeep
+    | levenshtein (map toLower lnContract) (map toLower lnEleg) <= 1 = MergeMatch
+    | otherwise = MergeFail $ "Efternamn matchar inte: \"" ++ lnContract ++ "\" och \"" ++ lnEleg ++"\"."
 
 --GHC.Unicode.toLower
 -- import GHC.Unicode ( toLower )
 --import qualified Data.ByteString.Lazy.Char8 as B
 
 
-compareSigLinkToElegData :: SignatoryLink -> [(BS.ByteString, BS.ByteString)] -> Either (String, BS.ByteString, BS.ByteString, BS.ByteString) (Bool, Bool, Bool)
+compareSigLinkToElegData :: SignatoryLink -> [(String, String)] -> Either (String, String, String, String) (Bool, Bool, Bool)
 compareSigLinkToElegData sl attrs =
   -- compare information from document (and fields) to that obtained from BankID
   let contractFirst  = getFirstName sl
       contractLast   = getLastName sl
       contractNumber = getPersonalNumber sl
                 
-      elegFirst  = fieldvaluebyid (BS.fromString "Subject.GivenName")    attrs
-      elegLast   = fieldvaluebyid (BS.fromString "Subject.Surname")      attrs
-      elegNumber = fieldvaluebyid (BS.fromString "Subject.SerialNumber") attrs
+      elegFirst  = fieldvaluebyid "Subject.GivenName"    attrs
+      elegLast   = fieldvaluebyid "Subject.Surname"      attrs
+      elegNumber = fieldvaluebyid "Subject.SerialNumber" attrs
 
   in mergeInfo (contractFirst, contractLast, contractNumber)
                (elegFirst,     elegLast,     elegNumber)

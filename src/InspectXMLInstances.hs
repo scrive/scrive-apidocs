@@ -24,6 +24,8 @@ import File.FileID
 import Misc
 import Text.JSON
 
+import ScriveByMail.Model
+
 instance (InspectXML a, Show a) => InspectXML [a] where
     inspectXML l = "[" ++ (concatMap (\s -> (inspectXML s) ++ "<BR/>") l) ++ "]"
 
@@ -56,7 +58,7 @@ instance InspectXML UserID where
 instance InspectXML File where
     inspectXML file = "<a href='" ++ (inspectXML $ LinkFile (fileid file) (filename file)) ++"'>" ++ show (fileid file)++ "/" ++ inspectXML (filename file) ++"</a>"
 instance InspectXML FileID where
-    inspectXML fileid = "<a href='" ++ (inspectXML $ LinkFile fileid (BS.fromString $ show fileid)) ++"'>" ++ show fileid ++ "</a>"
+    inspectXML fileid = "<a href='" ++ (inspectXML $ LinkFile fileid (show fileid)) ++"'>" ++ show fileid ++ "</a>"
 
 instance InspectXML DocumentLogEntry where
     inspectXML (DocumentLogEntry time text) = show time ++ ": " ++ inspectXML text
@@ -66,6 +68,7 @@ instance InspectXML String where
 instance InspectXML BS.ByteString where
   inspectXML = inspectXML . BS.toString
 instance InspectXML Bool where
+instance InspectXML Char where
 instance InspectXML Int where
 instance InspectXML ServiceID where
 instance InspectXML Integer where
@@ -88,7 +91,7 @@ instance InspectXML Email where
 instance InspectXML SignupMethod where
 instance InspectXML MailsDeliveryStatus where
 instance InspectXML UserInfo where
-instance InspectXML UserMailAPI where
+instance InspectXML MailAPIInfo where
 instance InspectXML UserSettings where
 instance InspectXML IdentificationType where
 instance InspectXML CancelationReason where

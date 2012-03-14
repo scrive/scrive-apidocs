@@ -5,19 +5,18 @@ import Data.Functor
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (update, query)
-import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.UTF8 as BS
 import Text.JSON (JSValue(..), toJSObject, showJSON)
 
 import ActionSchedulerState
 import AppView
 import Crypto.RNG (CryptoRNG, random)
 import DB.Classes
+import qualified Doc.Action
 import Doc.Model
-import Doc.DocStateData
 import Company.Model
 import InputValidation
 import Kontra
+import KontraError (internalError)
 import KontraLink
 import ListUtil
 import MagicHash (MagicHash)
@@ -30,21 +29,14 @@ import User.Model
 import User.UserView
 import Util.FlashUtil
 import Util.HasSomeUserInfo
-import Util.SignatoryLinkUtils
 import qualified Log
 import Util.KontraLinkUtils
 import Util.MonadUtils
 import Stats.Control
+import User.Action
 import User.Utils
-import EvidenceLog.Model
 import User.History.Model
-
-checkPasswordsMatch :: TemplatesMonad m => BS.ByteString -> BS.ByteString -> Either (m FlashMessage) ()
-checkPasswordsMatch p1 p2 =
-    if p1 == p2
-       then Right ()
-       else Left flashMessagePasswordsDontMatch
-
+import ScriveByMail.Model
 
 handleUserGet :: Kontrakcja m => m (Either KontraLink Response)
 handleUserGet = checkUserTOSGet $ do
@@ -115,8 +107,8 @@ sendChangeToExistingEmailInternalWarningMail :: Kontrakcja m => User -> Email ->
 sendChangeToExistingEmailInternalWarningMail user newemail = do
   ctx <- getContext
   let securitymsg =
-        "User " ++ BS.toString (getEmail user) ++ " (" ++ show (userid user) ++ ")"
-        ++ " has requested that their email be changed to " ++ BS.toString (unEmail newemail)
+        "User " ++ getEmail user ++ " (" ++ show (userid user) ++ ")"
+        ++ " has requested that their email be changed to " ++ unEmail newemail
         ++ " but this email is already used by another account."
       content =
         securitymsg
@@ -124,7 +116,7 @@ sendChangeToExistingEmailInternalWarningMail user newemail = do
         ++ "or maybe they're a hacker trying to figure out who is and isn't a user."
   Log.security securitymsg
   scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
-      to = [MailAddress { fullname = BS.fromString "info@skrivapa.se", email = BS.fromString "info@skrivapa.se" }]
+      to = [MailAddress { fullname = "info@skrivapa.se", email = "info@skrivapa.se" }]
     , title = "Request to Change Email to Existing Account"
     , content = content
     }
@@ -155,6 +147,8 @@ handleCreateCompany = do
   case (mcompany, mcompanyname) of
     (Nothing, Just _companyname) -> do
           company <- runDBUpdate $ CreateCompany Nothing Nothing
+          mailapikey <- random
+          _ <- runDBUpdate $ SetCompanyMailAPIKey (companyid company) mailapikey 1000
           _ <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid company)
           _ <- runDBUpdate $ SetUserCompanyAdmin (userid user) True
           upgradeduser <- guardJustM $ runDBQuery $ GetUserByID $ userid user
@@ -192,7 +186,7 @@ handlePostChangeEmail actionid hash = withUserPost $ do
       if changed
         then do
             _ <- runDBUpdate $ LogHistoryDetailsChanged (userid user) ctxipnumber ctxtime 
-                                                     [("email", BS.unpack $ unEmail $ useremail $ userinfo user, BS.unpack $ unEmail $ fromJust mnewemail)] 
+                                                     [("email", unEmail $ useremail $ userinfo user, unEmail $ fromJust mnewemail)]
                                                      (Just $ userid user)
             addFlashM $ flashMessageYourEmailHasChanged
         else addFlashM $ flashMessageProblemWithEmailChange
@@ -216,11 +210,11 @@ getUserInfoUpdate  = do
     -- a lot doesn't have validation rules defined, but i put in what we do have
     mfstname          <- getValidField asValidName "fstname"
     msndname          <- getValidField asValidName "sndname"
-    mpersonalnumber   <- getFieldUTF "personalnumber"
-    mphone            <- getFieldUTF "phone"
+    mpersonalnumber   <- getField "personalnumber"
+    mphone            <- getField "phone"
     mcompanyposition  <- getValidField asValidPosition "companyposition"
-    mcompanyname      <- getFieldUTF "companyname"
-    mcompanynumber    <- getFieldUTF "companynumber"
+    mcompanyname      <- getField "companyname"
+    mcompanynumber    <- getField "companynumber"
     return $ \ui ->
         ui {
             userfstname = fromMaybe (userfstname ui) mfstname
@@ -232,7 +226,7 @@ getUserInfoUpdate  = do
           , usercompanynumber = fromMaybe (usercompanynumber ui) mcompanynumber
         }
     where
-        getValidField = getDefaultedField BS.empty
+        getValidField = getDefaultedField ""
 
 getCompanyInfoUpdate :: Kontrakcja m => m (CompanyInfo -> CompanyInfo)
 getCompanyInfoUpdate = do
@@ -240,9 +234,9 @@ getCompanyInfoUpdate = do
   mcompanyname <- getValidField asValidCompanyName "companyname"
   mcompanynumber <- getValidField asValidCompanyNumber "companynumber"
   mcompanyaddress <- getValidField asValidAddress "companyaddress"
-  mcompanyzip <- getFieldUTF "companyzip"
-  mcompanycity <- getFieldUTF "companycity"
-  mcompanycountry <- getFieldUTF "companycountry"
+  mcompanyzip <- getField "companyzip"
+  mcompanycity <- getField "companycity"
+  mcompanycountry <- getField "companycountry"
   return $ \ci ->
       ci {
          companyname = fromMaybe (companyname ci) mcompanyname
@@ -253,7 +247,7 @@ getCompanyInfoUpdate = do
       ,  companycountry = fromMaybe (companycountry ci) mcompanycountry
       }
   where
-    getValidField = getDefaultedField BS.empty
+    getValidField = getDefaultedField ""
 
 handleUsageStatsForUser :: Kontrakcja m => m (Either KontraLink Response)
 handleUsageStatsForUser = withUserGet $ do
@@ -319,7 +313,8 @@ handleGetUserMailAPI :: Kontrakcja m => m (Either KontraLink Response)
 handleGetUserMailAPI = withUserGet $ do
     Context{ctxmaybeuser = Just user@User{userid}} <- getContext
     mapi <- runDBQuery $ GetUserMailAPI userid
-    showUserMailAPI user mapi >>= renderFromBody TopAccount kontrakcja
+    mcapi <- maybe (return Nothing) (runDBQuery . GetCompanyMailAPI) $ usercompany user
+    showUserMailAPI user mapi mcapi >>= renderFromBody TopAccount kontrakcja
 
 handlePostUserMailAPI :: Kontrakcja m => m KontraLink
 handlePostUserMailAPI = withUserPost $ do
@@ -331,16 +326,12 @@ handlePostUserMailAPI = withUserPost $ do
              Nothing -> do
                  when enabledapi $ do
                      apikey <- random
-                     _ <- runDBUpdate $ SetUserMailAPI userid $ Just UserMailAPI {
-                           umapiKey = apikey
-                         , umapiDailyLimit = 50
-                         , umapiSentToday = 0
-                     }
+                     _ <- runDBUpdate $ SetUserMailAPIKey userid apikey 50
                      return ()
              Just api -> do
                  if not enabledapi
                     then do
-                        _ <- runDBUpdate $ SetUserMailAPI userid Nothing
+                        _ <- runDBUpdate $ RemoveUserMailAPI userid
                         return ()
                     else do
                         mresetkey <- getDefaultedField False asValidCheckBox "reset_key"
@@ -351,13 +342,8 @@ handlePostUserMailAPI = withUserPost $ do
                                  newkey <- if resetkey
                                    then random
                                    else return $ umapiKey api
-                                 _ <- runDBUpdate $ SetUserMailAPI userid $ Just api {
-                                       umapiKey = newkey
-                                     , umapiDailyLimit = max 1 dailylimit
-                                     , umapiSentToday = if resetsenttoday
-                                                           then 0
-                                                           else umapiSentToday api
-                                 }
+                                 _ <- runDBUpdate $ SetUserMailAPIKey userid newkey dailylimit
+                                 when_ resetsenttoday $ runDBUpdate $ ResetUserMailAPI userid
                                  return ()
                              _ -> return ()
         return LinkUserMailAPI)
@@ -457,7 +443,7 @@ handleViralInvite = withUserPost $ do
                                                                                     , visInviterID = visInviterID
                                                                                     , visRemainedEmails = n -1
                                                                                     , visToken = visToken }
-                      sendInvitation ctx (LinkViralInvitationSent actionID visToken (BS.toString invitedemail)) invitedemail
+                      sendInvitation ctx (LinkViralInvitationSent actionID visToken invitedemail) invitedemail
                   else addFlashM flashMessageOtherUserSentInvitation
               _ -> do
                 link <- newViralInvitationSentLink (Email invitedemail) (userid . fromJust $ ctxmaybeuser ctx)
@@ -468,24 +454,20 @@ handleViralInvite = withUserPost $ do
       sendInvitation ctx link invitedemail = do
         addFlashM flashMessageViralInviteSent
         mail <- viralInviteMail ctx invitedemail link
-        scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = BS.empty, email = invitedemail }]}
-
-randomPassword :: (MonadIO m, CryptoRNG m) => m BS.ByteString
-randomPassword =
-    BS.fromString `liftM` randomString 8 (['0'..'9'] ++ ['A'..'Z'] ++ ['a'..'z'])
+        scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = "", email = invitedemail }]}
 
 --there must be a better way than all of these weird user create functions
 -- TODO clean up
 
 createUser :: Kontrakcja m => Email
-                              -> BS.ByteString
-                              -> BS.ByteString
+                              -> String
+                              -> String
                               -> Maybe Company
                               -> m (Maybe User)
 createUser email fstname sndname mcompany = do
   ctx <- getContext
   passwd <- createPassword =<< randomPassword
-  muser <- runDBUpdate $ AddUser (fstname, sndname) (unEmail $ email) (Just passwd) False Nothing (fmap companyid mcompany) (ctxlocale ctx)
+  muser <- runDBUpdate $ AddUser (fstname, sndname) (unEmail email) (Just passwd) False Nothing (fmap companyid mcompany) (ctxlocale ctx)
   case muser of
     Just user -> do 
                  _ <- runDBUpdate $ 
@@ -503,7 +485,7 @@ sendNewUserMail user = do
   scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]}
   return ()
 
-createNewUserByAdmin :: Kontrakcja m => Context -> (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe MinutesTime -> Maybe String -> Locale -> m (Maybe User)
+createNewUserByAdmin :: Kontrakcja m => Context -> (String, String) -> String -> Maybe MinutesTime -> Maybe String -> Locale -> m (Maybe User)
 createNewUserByAdmin ctx names email _freetill custommessage locale = do
     muser <- createInvitedUser names email (Just locale)
     case muser of
@@ -516,68 +498,6 @@ createNewUserByAdmin ctx names email _freetill custommessage locale = do
              scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
              return muser
          Nothing -> return muser
-
-createInvitedUser :: Kontrakcja m => (BS.ByteString, BS.ByteString) -> BS.ByteString -> Maybe Locale -> m (Maybe User)
-createInvitedUser names email mlocale = do
-    ctx <- getContext
-    let locale = fromMaybe (ctxlocale ctx) mlocale
-    passwd <- createPassword =<< randomPassword
-    muser <- runDBUpdate $ AddUser names email (Just passwd) False Nothing Nothing locale
-    case muser of
-      Just user -> do 
-                   _ <- runDBUpdate $ LogHistoryAccountCreated (userid user) (ctxipnumber ctx) (ctxtime ctx) (Email email) (userid <$> ctxmaybeuser ctx)
-                   return muser
-      _         -> return muser
-
-{- |
-   Guard against a POST with no logged in user.
-   If they are not logged in, redirect to login page.
--}
-withUserPost :: Kontrakcja m => m KontraLink -> m KontraLink
-withUserPost action = do
-    ctx <- getContext
-    case ctxmaybeuser ctx of
-         Just _  -> action
-         Nothing -> return $ LinkLogin (ctxlocale ctx) NotLogged
-
-{- |
-   Guard against a GET with no logged in user.
-   If they are not logged in, redirect to login page.
--}
-withUserGet :: Kontrakcja m => m a -> m (Either KontraLink a)
-withUserGet action = do
-  ctx <- getContext
-  case ctxmaybeuser ctx of
-    Just _  -> Right <$> action
-    Nothing -> return $ Left $ LinkLogin (ctxlocale ctx) NotLogged
-
-{- |
-     Takes a document and a action
-     Runs an action only if current user (from context) is author of document
-| -}
-withDocumentAuthor :: Kontrakcja m => Document -> m a -> m a
-withDocumentAuthor document action = do
-  ctx <- getContext
-  user <- guardJust $ ctxmaybeuser ctx
-  sl <- guardJust $ getAuthorSigLink document
-  guard $ isSigLinkFor user sl
-  action
-
-{- |
-   Guard against a GET with logged in users who have not signed the TOS agreement.
-   If they have not, redirect to their account page.
--}
-checkUserTOSGet :: Kontrakcja m => m a -> m (Either KontraLink a)
-checkUserTOSGet action = do
-    ctx <- getContext
-    case ctxmaybeuser ctx of
-        Just (User{userhasacceptedtermsofservice = Just _}) -> Right <$> action
-        Just _ -> return $ Left $ LinkAcceptTOS
-        Nothing -> case (ctxcompany ctx) of
-             Just _company -> Right <$> action
-             Nothing -> return $ Left $ LinkLogin (ctxlocale ctx) NotLogged
-
-
 
 handleAcceptTOSGet :: Kontrakcja m => m (Either KontraLink Response)
 handleAcceptTOSGet = withUserGet $ do
@@ -604,42 +524,23 @@ handleQuestion :: Kontrakcja m => m KontraLink
 handleQuestion = do
     ctx <- getContext
     name <- getField "name"
-    memail <- getDefaultedField BS.empty asValidEmail "email"
+    memail <- getDefaultedField "" asValidEmail "email"
     phone <- getField "phone"
     message <- getField "message"
     case memail of
          Nothing -> return LoopBack
          Just email -> do
              let content = "name: "    ++ fromMaybe "" name ++ "<BR/>"
-                        ++ "email: "   ++ BS.toString email ++ "<BR/>"
+                        ++ "email: "   ++ email ++ "<BR/>"
                         ++ "phone "    ++ fromMaybe "" phone ++ "<BR/>"
                         ++ "message: " ++ fromMaybe "" message
              scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
-                   to = [MailAddress { fullname = BS.fromString "info@skrivapa.se", email = BS.fromString "info@skrivapa.se" }]
+                   to = [MailAddress { fullname = "info@skrivapa.se", email = "info@skrivapa.se" }]
                  , title = "Question"
                  , content = content
              }
              addFlashM flashMessageThanksForTheQuestion
              return LoopBack
-
-phoneMeRequest :: Kontrakcja m => User -> m ()
-phoneMeRequest user = do
-  ctx <- getContext
-  let content = "<p>User " ++ (BS.toString $ getFirstName user) ++ " "
-                    ++ (BS.toString $ getLastName user) ++ " "
-                    ++ "&lt;" ++ (BS.toString $ getEmail user) ++ "&gt; "
-                    ++ "has requested a call on "
-                    ++ "&lt;" ++ (BS.toString $ userphone $ userinfo $ user ) ++ "&gt;.  "
-                    ++ "They have just signed the TOS, "
-                    ++ "and they're setup with lang "
-                    ++ "&lt;" ++ (codeFromLang $ getLang user) ++ "&gt;.</p>"
-  scheduleEmailSendout (ctxmailsconfig ctx) $ emptyMail {
-            to = [MailAddress { fullname = BS.fromString "info@skrivapa.se", email = BS.fromString "info@skrivapa.se" }]
-          , title = "Phone Call Request"
-          , content = content
-      }
-  _ <- addUserPhoneAfterTOS user
-  return ()
 
 handleAccountSetupGet :: Kontrakcja m => ActionID -> MagicHash -> m Response
 handleAccountSetupGet aid hash = do
@@ -658,9 +559,9 @@ handleAccountSetupGet aid hash = do
       sendRedirect LinkUpload
     (False, Just _action) -> do
       extendActionEvalTimeToOneDayMinimum aid
-      addFlashM $ modalAccountSetup (LinkAccountCreated aid hash $ maybe "" (BS.toString . getEmail) muser)
-                                    (maybe "" (BS.toString . getFirstName) muser)
-                                    (maybe "" (BS.toString . getLastName) muser)
+      addFlashM $ modalAccountSetup (LinkAccountCreated aid hash $ maybe "" getEmail muser)
+                                    (maybe "" getFirstName muser)
+                                    (maybe "" getLastName muser)
       ctx <- getContext
       sendRedirect $ LinkHome (ctxlocale ctx)
     (False, Nothing) -> do
@@ -674,25 +575,6 @@ handleAccountSetupGet aid hash = do
       case memail of
         Nothing -> return Nothing
         Just email -> runDBQuery $ GetUserByEmail Nothing (Email email)
-
-handleAccountSetupFromSign :: Kontrakcja m => Document -> SignatoryLink -> m (Maybe User)
-handleAccountSetupFromSign document signatorylink = do
-  ctx <- getContext
-  let firstname = getFirstName signatorylink
-      lastname = getLastName signatorylink
-      email = getEmail signatorylink
-  muser <- runDBQuery $ GetUserByEmail (currentServiceID ctx) (Email email)
-  user <- maybe (guardJustM $ createInvitedUser (firstname, lastname) email Nothing)
-                return
-                muser
-  mactivateduser <- handleActivate (Just $ firstname) (Just $ lastname) user BySigning
-  when (isJust mactivateduser) $ do
-    activateduser <- guardJust mactivateduser
-    let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx)  (maybesignatory signatorylink)  (BS.toString $ getEmail $ signatorylink) (signatorylinkid signatorylink)
-    _ <- runDBUpdate $ SaveDocumentForUser (documentid document) activateduser (signatorylinkid signatorylink) actor
-    _ <- addUserSaveAfterSignStatEvent activateduser
-    return ()
-  return mactivateduser
 
 handleAccountSetupPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
 handleAccountSetupPost aid hash = do
@@ -710,19 +592,22 @@ handleAccountSetupPost aid hash = do
           signupmethod <- guardJust $ getSignupMethod action
           mactivateduser <- handleActivate mfstname msndname user signupmethod
           case mactivateduser of
-            Just _activateduser -> do
+            Just (_activateduser, docs) -> do
               dropExistingAction aid
+
+              forM_ docs $ \(doc2, doc, mslid) -> Doc.Action.postDocumentChangeAction doc2 doc mslid
+
               addFlashM flashMessageUserActivated
               return ()
             Nothing -> do
-              addFlashM $ modalAccountSetup (LinkAccountCreated aid hash $ BS.toString $ getEmail user)
-                                            (maybe "" BS.toString mfstname)
-                                            (maybe "" BS.toString msndname)
+              addFlashM $ modalAccountSetup (LinkAccountCreated aid hash $ getEmail user)
+                                            (fromMaybe "" mfstname)
+                                            (fromMaybe "" msndname)
               return ()
           return ()
       getHomeOrUploadLink
     Nothing ->
-      getOptionalField asValidEmail "email" >>= maybe mzero generateActivationLink
+      getOptionalField asValidEmail "email" >>= maybe internalError generateActivationLink
   where
     -- If this is a user activating a viral invitation then we create their user
     -- if needed, otherwise we fetch the user indicated inside the action details.
@@ -730,7 +615,7 @@ handleAccountSetupPost aid hash = do
       mactionuser <- getUserFromAction action
       case (mactionuser, actionType action) of
         (Nothing, ViralInvitationSent email invtime inviterid _ _) -> do
-          muser <- createInvitedUser (BS.empty, BS.empty) (unEmail email) Nothing
+          muser <- createInvitedUser ("", "") (unEmail email) Nothing
           case muser of
             Just user -> do -- user created, we need to fill in some info
               minviter <- runDBQuery $ GetUserByID inviterid
@@ -755,7 +640,7 @@ handleAccountSetupPost aid hash = do
           scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = email, email = email}] }
           addFlashM flashMessageNewActivationLinkSend
           getHomeOrUploadLink
-        else mzero
+        else internalError
 
  -- Retrieves the action for the given id
 getActionByActionID :: Kontrakcja m => ActionID -> m (Maybe Action)
@@ -777,62 +662,13 @@ getUserFromAction action =
 -- Guards so that the token in the given action matches the given magic hash.
 guardMagicTokenMatch :: Kontrakcja m => MagicHash -> Action -> m ()
 guardMagicTokenMatch expectedtoken action =
-  if getMagicTokenFromAction == Just expectedtoken
-    then return ()
-    else mzero
+  unless (getMagicTokenFromAction == Just expectedtoken) internalError
   where
     getMagicTokenFromAction =
       case actionType action of
         ViralInvitationSent _ _ _ _ token -> Just token
         AccountCreated _ token -> Just token
         _ -> Nothing
-
-handleActivate :: Kontrakcja m => Maybe BS.ByteString -> Maybe BS.ByteString -> User -> SignupMethod -> m (Maybe User)
-handleActivate mfstname msndname actvuser signupmethod = do
-  Log.debug $ "Attempting to activate account for user " ++ (show $ getEmail actvuser)
-  guard (isNothing $ userhasacceptedtermsofservice actvuser)
-  switchLocale (getLocale actvuser)
-  ctx <- getContext
-  mtos <- getDefaultedField False asValidCheckBox "tos"
-  callme <- isFieldSet "callme"      
-  phone <-  BS.fromString <$> fromMaybe "" <$> getField "phone"
-  mpassword <- getRequiredField asValidPassword "password"
-  mpassword2 <- getRequiredField asValidPassword "password2"
-  case (mtos, mfstname, msndname, mpassword, mpassword2) of
-    (Just tos, Just fstname, Just sndname, Just password, Just password2) -> do
-      case checkPasswordsMatch password password2 of
-        Right () ->
-          if tos
-            then do
-              passwordhash <- createPassword password
-              runDB $ do
-                _ <- dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser){
-                         userfstname = fstname
-                       , usersndname = sndname
-                       , userphone = phone
-                       }
-                _ <- dbUpdate $ LogHistoryUserInfoChanged (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) 
-                                                          (userinfo actvuser) ((userinfo actvuser){ userfstname = fstname , usersndname = sndname })
-                                                          (userid <$> ctxmaybeuser ctx)
-                _ <- dbUpdate $ SetUserPassword (userid actvuser) passwordhash
-                _ <- dbUpdate $ LogHistoryPasswordSetup (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
-                _ <- dbUpdate $ AcceptTermsOfService (userid actvuser) (ctxtime ctx)
-                _ <- dbUpdate $ LogHistoryTOSAccept (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
-                _ <- dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
-                return ()
-              tosuser <- guardJustM $ runDBQuery $ GetUserByID (userid actvuser)
-              _ <- addUserSignTOSStatEvent tosuser
-              _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
-              logUserToContext $ Just tosuser
-              when (callme) $ phoneMeRequest tosuser
-              return $ Just tosuser
-            else do
-              addFlashM flashMessageMustAcceptTOS
-              return Nothing
-        Left flash -> do
-          addFlashM flash
-          return Nothing
-    _ -> return Nothing
 
 {- |
     This is where we get to when the user clicks the link in their password reminder
@@ -942,4 +778,4 @@ guardXToken = do
   unless (xtoken == ctxxtoken) $ do
     Log.debug $ "xtoken failure: session: " ++ show ctxxtoken
       ++ " param: " ++ show xtoken
-    mzero
+    internalError

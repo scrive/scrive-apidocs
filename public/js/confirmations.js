@@ -63,7 +63,7 @@ var ConfirmationModel = Backbone.Model.extend({
       return this.get("acceptButton");
   },
   canCancel : function() {
-      return this.get("cantCancel") == false;
+      return this.get("cantCancel") != true;
   },
   width: function() {
       return this.get("width");
@@ -129,10 +129,10 @@ var ConfirmationView = Backbone.View.extend({
     render: function () {
        var view = this;
        var model = this.model;
-       this.el.addClass("modal-container");
+       $(this.el).addClass("modal-container");
        if (model.extraClass() != undefined)
-            this.el.addClass(model.extraClass());
-       this.el.css("width",model.width());
+            $(this.el).addClass(model.extraClass());
+       $(this.el).css("width",model.width());
        var header = $("<div class='modal-header'><span class='modal-icon message'></span></div>");
        var title = $("<span class='modal-title'/>");
        title.append($("<h2/>").append(this.model.title()));
@@ -162,9 +162,9 @@ var ConfirmationView = Backbone.View.extend({
             }).input();
        this.renderAcceptButton();
        footer.append( this.acceptButton);
-       this.el.append(header);
-       this.el.append(body);
-       this.el.append(footer);
+       $(this.el).append(header);
+       $(this.el).append(body);
+       $(this.el).append(footer);
        return this;
     },
     reject: function(){
@@ -172,10 +172,10 @@ var ConfirmationView = Backbone.View.extend({
         this.clear();
     },
     clear: function(){
-        this.el.data('overlay').close();
+        $(this.el).data('overlay').close();
         this.model.destroy();
         this.model.view = undefined;
-        this.el.remove();
+        $(this.el).remove();
       
     }
 
@@ -184,6 +184,7 @@ var ConfirmationView = Backbone.View.extend({
 
 window.Confirmation = {
     popup: function (args) {
+<<<<<<< HEAD
           var model = new ConfirmationModel({
                       submit : args.submit,
                       title  : args.title,
@@ -199,6 +200,9 @@ window.Confirmation = {
                       acceptVisible : args.acceptVisible,
                       extraClass: args.extraClass
                     });
+=======
+          var model = new ConfirmationModel(args);
+>>>>>>> master
           var overlay = $("<div/>");
           var view = new ConfirmationView({model : model, el : overlay});
           $("body").append(overlay);
