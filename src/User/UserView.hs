@@ -81,6 +81,8 @@ import Util.JSON
 import Text.JSON
 import Data.Either
 import Misc
+import ScriveByMail.Model
+import ScriveByMail.View
 
 showUser :: TemplatesMonad m => User -> Maybe Company -> Bool -> m String
 showUser user mcompany createcompany = renderTemplateFM "showUser" $ do
@@ -120,8 +122,6 @@ userFields user = do
     field "fullnameOrEmail" $ fullnameOrEmail
     field "fullnamePlusEmail" $ fullnamePlusEmail
     field "iscompanyaccount" $ isJust $ usercompany user
-    field "usercompanyname" $ getCompanyName user
-    field "usercompanynumber" $ getCompanyNumber user
 
     --field "invoiceaddress" $ BS.toString $ useraddress $ userinfo user
     menuFields user
@@ -142,14 +142,14 @@ showUserSecurity user = renderTemplateFM "showUserSecurity" $ do
     field "advancedMode" $ Just AdvancedMode == (preferreddesignmode $ usersettings user)
     menuFields user
 
-showUserMailAPI :: TemplatesMonad m => User -> Maybe UserMailAPI -> m String
-showUserMailAPI user mapi =
+showUserMailAPI :: TemplatesMonad m => User -> Maybe MailAPIInfo -> Maybe MailAPIInfo -> m String
+showUserMailAPI user mapi mcapi =
     renderTemplateFM "showUserMailAPI" $ do
         field "linkmailapi" $ show LinkUserMailAPI
         field "mailapienabled" $ isJust mapi
-        field "mailapikey" $ show . umapiKey <$> mapi
-        field "mapidailylimit" $ show . umapiDailyLimit <$> mapi
-        field "mapisenttoday" $ show . umapiSentToday <$> mapi
+        when (isJust mapi) $ mailAPIInfoFields (fromJust mapi)
+        field "hascompanymailapi" $ isJust mcapi
+        when (isJust mcapi) $ fieldF "company" $ mailAPIInfoFields (fromJust mcapi)
         menuFields user
 
 _usageStatisticsFieldsByDay :: (Functor m, MonadIO m) => [(Int, [Int])] -> [Fields m]

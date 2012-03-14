@@ -13,6 +13,8 @@ import API.Service.Model
 import Company.Model
 import File.FileID
 
+import Data.Int
+
 {- |
    Defines the reason why we are redirected to login page
 -}
@@ -98,6 +100,7 @@ data KontraLink
     | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID
     | LinkAPIDocumentMetadata DocumentID
     | LinkAPIDocumentSignatoryAttachment DocumentID SignatoryLinkID String
+    | LinkMailAPIDelayConfirmation String Int64 MagicHash
     deriving (Eq)
 
 localeFolder :: Locale -> String
@@ -225,3 +228,4 @@ instance Show KontraLink where
     showsPrec _ (LinkAPIDocumentMetadata did) = (++) ("/api/document/" ++ show did ++ "/metadata")
     showsPrec _ (LinkAPIDocumentSignatoryAttachment did sid name) =
       (++) ("/api/document/" ++ show did ++ "/signatory/" ++ show sid ++ "/attachment/" ++ name)
+    showsPrec _ (LinkMailAPIDelayConfirmation email delayid key) = (++) ("/mailapi/confirmdelay/" ++ (URL.encode $ UTF.encode email) ++ "/" ++ show delayid ++ "/" ++ show key)

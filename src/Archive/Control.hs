@@ -25,8 +25,8 @@ import Kontra
 import DB.Classes
 import Doc.DocStateData
 import Doc.Model
-import User.UserControl
 import User.Model
+import User.Utils
 import Util.FlashUtil
 import Util.MonadUtils
 

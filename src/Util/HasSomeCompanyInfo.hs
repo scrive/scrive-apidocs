@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Util.HasSomeCompanyInfo
@@ -16,9 +15,9 @@ module Util.HasSomeCompanyInfo (
 
 import Data.Maybe
 
+import User.Model
 import Doc.DocStateData
 import Company.Model
-import User.Model
 import Util.SignatoryLinkUtils
 import Misc
 
@@ -44,7 +43,7 @@ instance HasSomeCompanyInfo SignatoryLink where
   getCompanyNumber = getCompanyNumber . signatorydetails
 
 instance HasSomeCompanyInfo Document where
-  getCompanyName  doc  = maybe "" getCompanyName   $ getAuthorSigLink doc
+  getCompanyName   doc = maybe "" getCompanyName   $ getAuthorSigLink doc
   getCompanyNumber doc = maybe "" getCompanyNumber $ getAuthorSigLink doc
 
 instance HasSomeCompanyInfo UserInfo where

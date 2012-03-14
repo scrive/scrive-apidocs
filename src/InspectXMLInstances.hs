@@ -24,6 +24,8 @@ import File.FileID
 import Misc
 import Text.JSON
 
+import ScriveByMail.Model
+
 instance (InspectXML a, Show a) => InspectXML [a] where
     inspectXML l = "[" ++ (concatMap (\s -> (inspectXML s) ++ "<BR/>") l) ++ "]"
 
@@ -89,7 +91,7 @@ instance InspectXML Email where
 instance InspectXML SignupMethod where
 instance InspectXML MailsDeliveryStatus where
 instance InspectXML UserInfo where
-instance InspectXML UserMailAPI where
+instance InspectXML MailAPIInfo where
 instance InspectXML UserSettings where
 instance InspectXML IdentificationType where
 instance InspectXML CancelationReason where

@@ -11,6 +11,8 @@ module Company.Model (
   , SetCompanyInfo(..)
   , UpdateCompanyUI(..)
   , GetOrCreateCompanyWithExternalID(..)
+  , GetCompanyByEmailDomain(..)
+  , SetCompanyEmailDomain(..)
   ) where
 
 import Data.Monoid
@@ -46,6 +48,7 @@ data CompanyInfo = CompanyInfo {
   , companyzip     :: String
   , companycity    :: String
   , companycountry :: String
+  , companyemaildomain :: Maybe String
   } deriving (Eq, Ord, Show)
 
 data CompanyUI = CompanyUI {
@@ -97,6 +100,7 @@ instance DBUpdate SetCompanyInfo Bool where
       , sql "zip" companyzip
       , sql "city" companycity
       , sql "country" companycountry
+      , sql "email_domain" companyemaildomain
       ] <++> SQL "WHERE id = ?" [toSql cid]
 
 data UpdateCompanyUI = UpdateCompanyUI CompanyID CompanyUI
@@ -137,6 +141,7 @@ selectCompaniesSelectors = "id"
   ++ ", bars_background"
   ++ ", bars_textcolour"
   ++ ", encode(logo, 'base64')"
+  ++ ", email_domain"
 
 selectCompaniesSQL :: SQL
 selectCompaniesSQL = SQL ("SELECT " ++ selectCompaniesSelectors ++ " FROM companies ") []
@@ -145,7 +150,7 @@ fetchCompanies :: DB [Company]
 fetchCompanies = foldDB decoder []
   where
     decoder acc cid eid sid name number address zip' city country
-      bars_background bars_textcolour logo = Company {
+      bars_background bars_textcolour logo email_domain = Company {
         companyid = cid
       , companyexternalid = eid
       , companyservice = sid
@@ -156,6 +161,7 @@ fetchCompanies = foldDB decoder []
         , companyzip = zip'
         , companycity = city
         , companycountry = country
+        , companyemaildomain = email_domain
         }
       , companyui = CompanyUI {
           companybarsbackground = bars_background
@@ -163,3 +169,15 @@ fetchCompanies = foldDB decoder []
         , companylogo = logo
         }
       } : acc
+
+data SetCompanyEmailDomain = SetCompanyEmailDomain CompanyID (Maybe String)
+instance DBUpdate SetCompanyEmailDomain Bool where
+  dbUpdate (SetCompanyEmailDomain cid mdomain) = do    
+    kPrepare $ "UPDATE companies SET email_domain = ? WHERE id = ? AND NOT EXISTS (SELECT 1 FROM companies WHERE email_domain = ?)"
+    kExecute01 [toSql mdomain, toSql cid, toSql mdomain]
+    
+data GetCompanyByEmailDomain = GetCompanyByEmailDomain String
+instance DBQuery GetCompanyByEmailDomain (Maybe Company) where
+  dbQuery (GetCompanyByEmailDomain domain) = do
+    _ <- kRun $ selectCompaniesSQL <++> SQL "WHERE email_domain = ?" [toSql domain]
+    fetchCompanies >>= oneObjectReturnedGuard

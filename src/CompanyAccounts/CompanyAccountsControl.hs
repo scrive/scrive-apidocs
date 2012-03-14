@@ -12,6 +12,7 @@ module CompanyAccounts.CompanyAccountsControl (
   -- this shares some handy stuff with the adminonly section
   , handleCompanyAccountsForAdminOnly
   , sendTakeoverPrivateUserMail
+  , sendNewCompanyUserMail
   ) where
 
 import Control.Monad.State

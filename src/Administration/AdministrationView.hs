@@ -41,6 +41,10 @@ import API.Service.Model
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
 import Kontra
+import ScriveByMail.Model
+import ScriveByMail.View
+
+import Control.Monad
 
 {-| Main admin page - can go from here to other pages -}
 adminMainPage :: TemplatesMonad m => Context -> m String
@@ -85,11 +89,13 @@ adminUserPage user mcompany =
         field "adminlink" $ show $ LinkAdminOnly
 
 {- | Manager company page - can change company info and settings here -}
-adminCompanyPage :: TemplatesMonad m => Company -> m String
-adminCompanyPage company =
+adminCompanyPage :: TemplatesMonad m => Company -> Maybe MailAPIInfo -> m String
+adminCompanyPage company mmailapiinfo =
   renderTemplateFM "admincompany" $ do
     field "admincompanieslink" $ show $ LinkCompanyAdmin Nothing
     companyFields (Just company)
+    when (isJust mmailapiinfo) $ mailAPIInfoFields (fromJust mmailapiinfo)
+    field "hasmailapi" $ isJust mmailapiinfo
     field "adminlink" $ show $ LinkAdminOnly
 
 adminUserStatisticsPage :: TemplatesMonad m => Fields m -> m String
@@ -170,6 +176,7 @@ companyFields mc = do
         field "companyzip" $  maybe "" (companyzip . companyinfo)  mc
         field "companycity" $  maybe "" (companycity . companyinfo) mc
         field "companycountry" $ maybe "" (companycountry . companyinfo) mc
+        field "companyemaildomain" $ maybe "" (fromMaybe "" . (companyemaildomain . companyinfo)) mc
 
 {-| Full fields set about user -}
 userFields :: MonadIO m => User -> Fields m
@@ -188,6 +195,4 @@ userFields u =  do
         field "iscompanyaccount" $ isJust $ usercompany u
         field "iscompanyadmin"   $ useriscompanyadmin u
         field "id"               $ show (userid u)
-        field "companynumber"    $ getCompanyNumber u
-        field "companyname"      $ getCompanyName u
 

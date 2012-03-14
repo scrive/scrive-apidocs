@@ -238,9 +238,9 @@ signatoryDetailsFromUser user mcompany = SignatoryDetails {
       toSF FirstNameFT $ getFirstName user
     , toSF LastNameFT $ getLastName user
     , toSF EmailFT $ getEmail user
-    , toSF CompanyFT $ getCompanyName (user, mcompany)
+    , toSF CompanyFT $ getCompanyName mcompany
     , toSF PersonalNumberFT $ getPersonalNumber user
-    , toSF CompanyNumberFT $ getCompanyNumber (user, mcompany)
+    , toSF CompanyNumberFT $ getCompanyNumber mcompany
     ]
   }
   where

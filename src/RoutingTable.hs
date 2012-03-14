@@ -26,7 +26,7 @@ import qualified Doc.DocControl as DocControl
 import qualified Archive.Control as ArchiveControl
 import qualified ELegitimation.BankID as BankID
 import qualified User.UserControl as UserControl
-import qualified API.MailAPI as MailAPI
+import qualified ScriveByMail.Control as MailAPI
 import Doc.API
 
 import Control.Monad.Error
@@ -75,7 +75,8 @@ staticRoutes = choice
      , dir "sitemap"         $ hGetAllowHttp $ handleSitemapPage
 
      -- this is SMTP to HTTP gateway
-     , dir "mailapi" $ hPostNoXToken $ toK0 $ MailAPI.handleMailAPI
+     , dir "mailapi" $ hPostNoXToken             $ toK0 $ MailAPI.handleMailAPI
+     , dir "mailapi" $ dir "confirmdelay" $ hGet $ toK3 $ MailAPI.handleConfirmDelay
 
      -- Only download function | unified for author and signatories
      , dir "download"                     $ hGet  $ toK3 $ DocControl.handleDownloadFile

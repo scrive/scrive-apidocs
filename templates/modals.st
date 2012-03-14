@@ -1177,3 +1177,55 @@ modalUserSignupDone=
   </div>
 </div>
 #####
+modalDenyDelay=
+<div class="modal-container">
+  <div class="modal-header">
+    <span class="modal-icon message"></span>
+    <span class="modal-title">
+      <h3>$_signatoryMessageIfTimedout()$</h3>
+    </span>
+    <a class="modal-close close"> </a>
+  </div>
+  <div class="modal-body">
+    <div class="modal-content">
+      <p>$_modalDenyDelay()$</p>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <a class="btn-small green float-right close">
+      <div class="left"></div>
+      <div class="label">
+        <p>$_close()$</p>
+        <div class="btn-symbol green arrow-left"></div>
+      </div>
+      <div class="right"></div>
+    </a>
+  </div>
+</div>
+#####
+modalConfirmDelay=
+<div class="modal-container">
+  <div class="modal-header">
+    <span class="modal-icon message"></span>
+    <span class="modal-title">
+      <h3>$_modalUserSignupDoneHeader()$</h3>
+    </span>
+    <a class="modal-close close"> </a>
+  </div>
+  <div class="modal-body">
+    <div class="modal-content">
+      <p>$_modalConfirmDelay()$</p>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <a class="btn-small green float-right close">
+      <div class="left"></div>
+      <div class="label">
+        <p>$_close()$</p>
+        <div class="btn-symbol green arrow-left"></div>
+      </div>
+      <div class="right"></div>
+    </a>
+  </div>
+</div>
+#####
