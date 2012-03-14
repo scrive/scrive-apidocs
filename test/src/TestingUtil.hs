@@ -111,6 +111,7 @@ instance Arbitrary CompanyInfo where
                          , companyzip        = d
                          , companycity       = e
                          , companycountry    = f
+                         , companyemaildomain = Nothing
                          }
 
 instance Arbitrary ServiceID where

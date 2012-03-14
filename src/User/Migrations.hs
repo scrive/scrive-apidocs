@@ -51,3 +51,4 @@ addIdSerialOnUsers =
       _ <- kRunRaw $ "ALTER TABLE users ALTER id SET DEFAULT nextval('users_id_seq')"
       return ()
   }
+

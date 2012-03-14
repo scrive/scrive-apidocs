@@ -33,3 +33,11 @@ addIdSerialOnCompanies =
       kRunRaw $ "SELECT setval('companies_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM companies))"
       kRunRaw $ "ALTER TABLE companies ALTER id SET DEFAULT nextval('companies_id_seq')"
   }
+
+addEmailDomainOnCompanies :: Migration
+addEmailDomainOnCompanies =
+  Migration {
+    mgrTable = tableCompanies
+  , mgrFrom = 4
+  , mgrDo = kRunRaw $ "ALTER TABLE companies ADD COLUMN email_domain TEXT NULL"
+  }

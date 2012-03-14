@@ -70,9 +70,11 @@ import Doc.DocSeal (sealDocument)
 import Util.HasSomeUserInfo
 import InputValidation
 import User.Utils
+import ScriveByMail.Model
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString as BSS
 import qualified Data.ByteString.UTF8 as BS
+import Crypto.RNG(random)
 
 import InspectXMLInstances ()
 import InspectXML
@@ -113,7 +115,10 @@ showAdminCompanies :: Kontrakcja m => m String
 showAdminCompanies = onlySalesOrAdmin $  adminCompaniesPage
 
 showAdminCompany :: Kontrakcja m => CompanyID -> m String
-showAdminCompany companyid = onlySalesOrAdmin $ adminCompanyPage =<< (guardJustM . runDBQuery $ GetCompany companyid)
+showAdminCompany companyid = onlySalesOrAdmin $ do
+  company  <- guardJustM . runDBQuery $ GetCompany companyid
+  mmailapi <- runDBQuery $ GetCompanyMailAPI companyid
+  adminCompanyPage company mmailapi
 
 jsonCompanies :: Kontrakcja m => m JSValue
 jsonCompanies = onlySalesOrAdmin $ do
@@ -412,6 +417,10 @@ handleCompanyChange companyid = onlySalesOrAdmin $ do
   company <- runDBOrFail $ dbQuery $ GetCompany companyid
   companyInfoChange <- getCompanyInfoChange
   _ <- runDBUpdate $ SetCompanyInfo companyid (companyInfoChange $ companyinfo company)
+  mmailapi <- runDBQuery $ GetCompanyMailAPI companyid
+  when_ (isNothing mmailapi) $ do
+    key <- random
+    runDBUpdate $ SetCompanyMailAPIKey companyid key 1000
   return $ LinkCompanyAdmin $ Just companyid
 
 handleCreateUser :: Kontrakcja m => m KontraLink
@@ -479,6 +488,7 @@ getCompanyInfoChange = do
   mcompanyzip     <- getFieldUTF "companyzip"
   mcompanycity    <- getFieldUTF "companycity"
   mcompanycountry <- getFieldUTF "companycountry"
+  mcompanyemaildomain <- getFieldUTF "companyemaildomain"
   return $ \CompanyInfo {
       companyname
     , companynumber
@@ -493,6 +503,9 @@ getCompanyInfoChange = do
       , companyzip = fromMaybe companyzip mcompanyzip
       , companycity  = fromMaybe companycity mcompanycity
       , companycountry = fromMaybe companycountry mcompanycountry
+      , companyemaildomain = case mcompanyemaildomain of
+                               Just a | not $ BSS.null a -> Just a
+                               _                         -> Nothing
     }
 
 {- | Reads params and returns function for conversion of user settings.  No param leaves fields unchanged -}

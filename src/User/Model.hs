@@ -12,21 +12,18 @@ module User.Model (
   , InviteInfo(..)
   , User(..)
   , UserInfo(..)
-  , UserMailAPI(..)
   , UserSettings(..)
   , GetUsers(..)
   , GetUserByID(..)
   , GetUserByEmail(..)
   , GetCompanyAccounts(..)
   , GetInviteInfo(..)
-  , GetUserMailAPI(..)
   , SetUserCompany(..)
   , DeleteUser(..)
   , AddUser(..)
   , SetUserEmail(..)
   , SetUserPassword(..)
   , SetInviteInfo(..)
-  , SetUserMailAPI(..)
   , SetUserInfo(..)
   , SetUserSettings(..)
   , SetPreferredDesignMode(..)
@@ -38,7 +35,7 @@ module User.Model (
 
 import Control.Applicative
 import Data.Data
-import Data.Int
+--import Data.Int
 import Database.HDBC
 import Happstack.State
 import qualified Control.Exception as E
@@ -50,7 +47,7 @@ import DB.Classes
 import DB.Derive
 import DB.Fetcher2
 import DB.Utils
-import MagicHash (MagicHash)
+--import MagicHash (MagicHash)
 import MinutesTime
 import Misc
 import User.Lang
@@ -108,12 +105,6 @@ data UserInfo = UserInfo {
   , useremail           :: Email
   } deriving (Eq, Ord, Show)
 
-data UserMailAPI = UserMailAPI {
-    umapiKey          :: MagicHash
-  , umapiDailyLimit   :: Int32
-  , umapiSentToday    :: Int32
-  } deriving (Eq, Ord, Show)
-
 data UserSettings  = UserSettings {
     preferreddesignmode :: Maybe DesignMode
   , locale              :: Locale
@@ -153,7 +144,7 @@ instance DBQuery GetCompanyAccounts [User] where
     kPrepare $ selectUsersSQL ++ " WHERE company_id = ? AND deleted = FALSE ORDER BY email DESC"
     _ <- kExecute [toSql cid]
     fetchUsers
-
+    
 data GetInviteInfo = GetInviteInfo UserID
 instance DBQuery GetInviteInfo (Maybe InviteInfo) where
   dbQuery (GetInviteInfo uid) = do
@@ -165,19 +156,6 @@ instance DBQuery GetInviteInfo (Maybe InviteInfo) where
           userinviter = inviter_id
         , invitetime = invite_time
         , invitetype = invite_type
-        } : acc
-
-data GetUserMailAPI = GetUserMailAPI UserID
-instance DBQuery GetUserMailAPI (Maybe UserMailAPI) where
-  dbQuery (GetUserMailAPI uid) = do
-    kPrepare "SELECT key, daily_limit, (CASE WHEN last_sent_date = now()::DATE THEN sent_today ELSE 0 END) FROM user_mail_apis WHERE user_id = ?"
-    _ <- kExecute [toSql uid]
-    foldDB fetchUserMailAPIs [] >>= oneObjectReturnedGuard
-    where
-      fetchUserMailAPIs acc key daily_limit sent_today = UserMailAPI {
-          umapiKey = key
-        , umapiDailyLimit = daily_limit
-        , umapiSentToday = sent_today
         } : acc
 
 data SetUserCompany = SetUserCompany UserID (Maybe CompanyID)
@@ -305,47 +283,6 @@ instance DBUpdate SetInviteInfo Bool where
           Nothing -> do
             kPrepare "DELETE FROM user_invite_infos WHERE user_id = ?"
             kExecute01 [toSql uid]
-      else return False
-
-data SetUserMailAPI = SetUserMailAPI UserID (Maybe UserMailAPI)
-instance DBUpdate SetUserMailAPI Bool where
-  dbUpdate (SetUserMailAPI uid musermailapi) = do
-    exists <- checkIfUserExists uid
-    if exists
-      then case musermailapi of
-        Just mailapi -> do
-          _ <- kRunRaw "LOCK TABLE user_mail_apis IN ACCESS EXCLUSIVE MODE"
-          rec_exists <- checkIfAnyReturned $ SQL "SELECT 1 FROM user_mail_apis WHERE user_id = ?" [toSql uid]
-          if rec_exists
-            then do
-              kPrepare $ "UPDATE user_mail_apis SET"
-                  ++ "  key = ?"
-                  ++ ", daily_limit = ?"
-                  ++ ", sent_today = ?"
-                  ++ ", last_sent_date = now()"
-                  ++ "  WHERE user_id = ?"
-              kExecute01 [
-                  toSql $ umapiKey mailapi
-                , toSql $ umapiDailyLimit mailapi
-                , toSql $ umapiSentToday mailapi
-                , toSql uid
-                ]
-            else do
-              kPrepare $ "INSERT INTO user_mail_apis ("
-                ++ "  user_id"
-                ++ ", key"
-                ++ ", daily_limit"
-                ++ ", sent_today"
-                ++ ", last_sent_date) VALUES (?, ?, ?, ?, now())"
-              kExecute01 [
-                  toSql uid
-                , toSql $ umapiKey mailapi
-                , toSql $ umapiDailyLimit mailapi
-                , toSql $ umapiSentToday mailapi
-                ]
-        Nothing -> do
-          kPrepare "DELETE FROM user_mail_apis WHERE user_id = ?"
-          kExecute01 [toSql uid]
       else return False
 
 data SetUserInfo = SetUserInfo UserID UserInfo
