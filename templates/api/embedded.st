@@ -167,7 +167,7 @@ jQuery(function(){propagateHeight();})
 
 </script>
 </head>
-<body "jsintegrationapi">
+<body class="jsintegrationapi">
 <div class="mainContainer" style="margin-top:0;">
 <div class="mainContainer960">
 $flashmessages(whitelabel="true")$
