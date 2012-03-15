@@ -588,8 +588,42 @@ window.DocumentShareAfterSignView = Backbone.View.extend({
     return container;
   },
   createPhoneMeElems: function() {
-    var container = $("<div class='phone btn' />");
-    container.append($("<div class='label' />").append(localization.docsignview.phoneButtonLabel));
+    var container = $("<div />");
+
+    var button = $("<div class='phone btn' />");
+    button.append($("<div class='label' />").append(localization.docsignview.phoneButtonLabel));
+    container.append(button);
+
+    var form = $("<div class='content' />");
+    form.append($("<div />").append(localization.docsignview.phoneFormDescription));
+    var numberinput = $("<input type='text' />");
+    form.append(numberinput);
+    form.append(Button.init({
+      color: "green",
+      size: "tiny",
+      text: localization.docsignview.phoneSubmitButtonLabel,
+      onClick: function() {
+        console.log("blah");
+      }
+    }).input());
+    form.append($("<div class='clearfix' />"));
+
+    var dropdown = $("<div class='phone dropdown'/>");
+    dropdown.append(form);
+    dropdown.hide();
+    container.append(dropdown);
+
+    button.mouseover(function() {
+      dropdown.addClass("over");
+    });
+
+    button.mouseleave(function() {
+      dropdown.removeClass("over");
+    });
+
+    button.click(function() {
+      dropdown.toggle();
+    });
     return container;
   },
   createStartLink: function() {

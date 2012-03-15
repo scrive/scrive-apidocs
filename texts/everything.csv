@@ -2976,4 +2976,7 @@ _modalConfirmDelay,"An account for your company has been created for $email$. Th
 "_facebookButtonLabel","Like us on Facebook",,"Like us on Facebook"
 "_tweetButtonLabel","Tweet about Scrive",,"Tweet about Scrive"
 "_phoneButtonLabel","Please call me",,"Please call me"
+"_phoneFormDescription","My number is",,"My number is"
+"_phoneSubmitButtonLabel","OK",,"OK"
+"_phoneConfirmationText","Thanks, someone from Scrive will call you soon!",,"Thanks, someone from Scrive will call you soon!"
 "_startButtonLabel","Just take me to the service!",,"Just take me to the service!"

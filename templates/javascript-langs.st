@@ -298,9 +298,6 @@ javascriptLocalisation =
           , uploadedAttachmentsTitleForOne: "$_signViewUploadedAttachmentsTitleForOne()$"
           , uploadedAttachmentsTitleForLots: "$_signViewUploadedAttachmentsTitleForLots()$"
           , signatoriesTitle: "$_signViewSignatoriesTitle()$"
-          , uploadPDFFile: "$_uploadPDFFile()$"
-          , fillInYourDetails: "$_fillInYourDetails()$"
-          , clickToSign: "$_clickToSign()$"
           , newAccountTitle: "$_signViewCreateAccountTitle()$"
           , newAccountSubTitle: "$_signViewCreateAccountSubTitle()$"
           , emailLabel: "$_email()$:"
@@ -308,13 +305,16 @@ javascriptLocalisation =
           , password2Label: "$_modalAccountSetupRepeatPassword()$"
           , acceptTOSLabel: '$_accountFromSignInputsBodyAcceptTOS()$'
           , newAccountButton: "$_signViewCreateAccountLabel()$"
-          , createdAccountTitle: "Document Saved!"
-          , createdAccountSubtitle: "Your document has been securely saved with Scrive.  To retrieve in the future login with your email and password at www.scrive.com."
-          , shareTitle: "Did you like this signing experience?"
-          , facebookButtonLabel: "Like us on Facebook"
-          , tweetButtonLabel: "Tweet about Scrive"
-          , phoneButtonLabel: "Please call me"
-          , startButtonLabel: "Just take me to the service!"
+          , createdAccountTitle: "$_signViewCreatedAccountTitle()$"
+          , createdAccountSubtitle: "$_signViewCreatedAccountSubtitle()$"
+          , shareTitle: "$_signViewShareTitle()$"
+          , facebookButtonLabel: "$_facebookButtonLabel()$"
+          , tweetButtonLabel: "$_tweetButtonLabel()$"
+          , phoneButtonLabel: "$_phoneButtonLabel()$"
+          , phoneFormDescription: "$_phoneFormDescription()$"
+          , phoneSubmitButtonLabel: "$_phoneSubmitButtonLabel()$"
+          , phoneConfirmationText: "$_phoneConfirmationText()$"
+          , startButtonLabel: "$_startButtonLabel()$"
         }
     }
 ####
