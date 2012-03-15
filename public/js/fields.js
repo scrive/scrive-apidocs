@@ -250,7 +250,7 @@ window.FieldStandardView = Backbone.View.extend({
             else
                 {
                 input.val(field.nicename());
-                this.el.addClass("required");
+                $(this.el).addClass("required");
                 input.addClass("grayed");
                 }
         $(this.el).append(input);

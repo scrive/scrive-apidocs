@@ -467,6 +467,7 @@ window.DocumentSaveAfterSignView = Backbone.View.extend({
     var model = this.model;
     var newAccountButton = Button.init({
       color: "green",
+      size: "small",
       text: localization.docsignview.newAccountButton,
       onClick: function() {
 
@@ -830,10 +831,10 @@ window.DocumentSignView = Backbone.View.extend({
        */
       var completiontime = undefined;
       var lastvalue = undefined;
-      var queueChange = function() {
+      var queueChange = function(update) {
         console.log("Delaying field completion...");
         window.setTimeout(function() {
-          field.change();
+          update();
         }, 500);
       };
       return new DocumentSignViewTask({
@@ -849,7 +850,7 @@ window.DocumentSignView = Backbone.View.extend({
                        newvalue &&
                        completiontime == undefined) {
             completiontime = new Date();
-            queueChange();
+            queueChange(this.update);
           } else if (!lastvalue &&
                        newvalue &&
                        completiontime != undefined) {
@@ -858,7 +859,7 @@ window.DocumentSignView = Backbone.View.extend({
               completiontime = undefined;
               returnvalue = newvalue;
             } else {
-              queueChange();
+              queueChange(this.update);
             }
           }
 
