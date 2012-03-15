@@ -233,8 +233,6 @@ flashMessageMultipleAttachmentShareDone=	$_flashMessageMultipleAttachmentShareDo
 ###
 flashMessageUserHasBecomeCompanyAccount=$_flashMessageUserHasBecomeCompanyAccount()$
 ###
-flashMessageAccountActivatedFromSign=	$_flashMessageAccountActivatedFromSign()$
-###
 flashMessageUserHasLiveDocs=$_flashMessageUserHasLiveDocs()$
 ###
 flashMessageCompanyAccountDeleted=$_flashMessageCompanyAccountDeleted()$

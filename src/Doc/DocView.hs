@@ -5,7 +5,6 @@ module Doc.DocView (
   , flashDocumentDraftSaved
   , flashDocumentRestarted
   , flashDocumentTemplateSaved
-  , flashMessageAccountActivatedFromSign
   , flashMessageRubbishRestoreDone
   , flashMessageRubbishHardDeleteDone
   , flashMessageBulkRemindsSent
@@ -27,10 +26,6 @@ module Doc.DocView (
   , mailDocumentRejected
   , mailDocumentRemind
   , mailInvitation
-  , modalSignedClosedHasAccount
-  , modalSignedNotClosedHasAccount
-  , modalSignedClosedNoAccount
-  , modalSignedNotClosedNoAccount
   , modalLoginForSaveView
   , modalRejectedView
   , modalSendInviteView
@@ -123,50 +118,6 @@ modalRejectedView document = do
 modalLoginForSaveView :: TemplatesMonad m => m FlashMessage
 modalLoginForSaveView = toModal <$> renderTemplateM "modalLoginForSaveView" ()
 
-modalSignedClosedHasAccount :: TemplatesMonad m => Locale -> Document -> SignatoryLink -> Bool -> m FlashMessage
-modalSignedClosedHasAccount locale document signatorylink isloggedin = do
-  toModal <$> (renderTemplateForProcess document processmodalsignedviewclosedhasaccount $ do
-    modalSignedFields document
-    loginFields locale document signatorylink isloggedin)
-
-modalSignedNotClosedHasAccount :: TemplatesMonad m => Locale -> Document -> SignatoryLink -> Bool -> m FlashMessage
-modalSignedNotClosedHasAccount locale document signatorylink isloggedin = do
-  toModal <$> (renderTemplateForProcess document processmodalsignedviewnotclosedhasaccount $ do
-    modalSignedFields document
-    loginFields locale document signatorylink isloggedin)
-
-modalSignedClosedNoAccount :: TemplatesMonad m => Document -> SignatoryLink -> m FlashMessage
-modalSignedClosedNoAccount document signatorylink = do
-  toModal <$> (renderTemplateForProcess document processmodalsignedviewclosednoaccount $ do
-    modalSignedFields document
-    accountFromSignFields document signatorylink)
-
-modalSignedNotClosedNoAccount :: TemplatesMonad m => Document -> SignatoryLink -> m FlashMessage
-modalSignedNotClosedNoAccount document signatorylink = do
-  toModal <$> (renderTemplateForProcess document processmodalsignedviewnotclosednoaccount $ do
-    modalSignedFields document
-    accountFromSignFields document signatorylink)
-
-modalSignedFields :: TemplatesMonad m => Document -> Fields m
-modalSignedFields document@Document{ documenttitle } = do
-  fieldM "partyUnsignedListString" . renderListTemplate . map getSmartName $ partyUnsignedList document
-  fieldM "partyListString" . renderListTemplate . map getSmartName $ partyList document
-  field "signatory" . listToMaybe $ map getEmail $ partyList document
-  field "documenttitle" documenttitle
-  field "unsignedlistplural" $ length (partyUnsignedList document) /= 1
-  field "partylistplural" $ length (partyList document) /= 1
-
-loginFields :: MonadIO m => Locale -> Document -> SignatoryLink -> Bool -> Fields m
-loginFields locale document signatorylink isloggedin = do
-    field "isloggedin" isloggedin
-    field "referer" $ show (LinkSignDoc document signatorylink)
-    field "email" $ getEmail signatorylink
-    field "linklogin" $ show (LinkLogin locale LoginTry)
-
-accountFromSignFields :: MonadIO m => Document -> SignatoryLink -> Fields m
-accountFromSignFields document signatorylink = do
-    field "linkaccountfromsign" $ show (LinkAccountFromSign document signatorylink)
-
 flashDocumentDraftSaved :: TemplatesMonad m => m FlashMessage
 flashDocumentDraftSaved =
   toFlashMsg SigningRelated <$> renderTemplateM "flashDocumentDraftSaved" ()
@@ -240,10 +191,6 @@ flashMessageSingleAttachmentShareDone docname =
 flashMessageMultipleAttachmentShareDone :: TemplatesMonad m => m FlashMessage
 flashMessageMultipleAttachmentShareDone =
   toFlashMsg OperationDone <$> renderTemplateM "flashMessageMultipleAttachmentShareDone" ()
-
-flashMessageAccountActivatedFromSign :: TemplatesMonad m => m FlashMessage
-flashMessageAccountActivatedFromSign =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageAccountActivatedFromSign" ()
 
 documentJSON :: (TemplatesMonad m, KontraMonad m, DBMonad m) => Maybe SignatoryLink -> MinutesTime -> Document -> m (JSObject JSValue)
 documentJSON msl _crttime doc = do

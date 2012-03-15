@@ -133,11 +133,7 @@ handleAcceptAccountFromSign documentid
                             magichash = do
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
-  muser <- User.Action.handleAccountSetupFromSign document signatorylink
-  case muser of
-    Nothing | isClosed document -> addFlashM $ modalSignedClosedNoAccount document signatorylink
-    Nothing -> addFlashM $ modalSignedNotClosedNoAccount document signatorylink
-    Just _ -> addFlashM $ flashMessageAccountActivatedFromSign
+  _ <- guardJustM $ User.Action.handleAccountSetupFromSign document signatorylink
   return $ LinkSignDoc document signatorylink
 
 {- |
@@ -213,16 +209,8 @@ handleAfterSigning document@Document{documentid} signatorylinkid = do
     Just user | isJust $ userhasacceptedtermsofservice user-> do
       let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx)  (maybesignatory signatorylink) (getEmail signatorylink) (signatorylinkid)
       _ <- runDBUpdate $ SaveDocumentForUser documentid user signatorylinkid actor
-      let userlocale = locale $ usersettings user
-      if isClosed document
-        then addFlashM $ modalSignedClosedHasAccount userlocale document signatorylink (isJust $ ctxmaybeuser ctx)
-        else addFlashM $ modalSignedNotClosedHasAccount userlocale document signatorylink (isJust $ ctxmaybeuser ctx)
-    _ -> do
-      Log.debug $ "the doc " ++ (show $ documentid) ++ ".isClosed = " ++ (show $ isClosed document)
-      Log.debug $ "doc " ++ (show document)
-      if isClosed document
-        then addFlashM $ modalSignedClosedNoAccount document signatorylink
-        else addFlashM $ modalSignedNotClosedNoAccount document signatorylink
+      return ()
+    _ -> return ()
   return $ LinkSignDoc document signatorylink
 
 {- |
@@ -336,7 +324,7 @@ handleIssueShowGet docid = checkUserTOSGet $ do
     (True,  _)                       -> pageDocumentDesign document
     (False, _) | isauthororincompany -> pageDocumentView document msiglink
     (False, Just siglink)            -> pageDocumentSignView ctx mservice mcompany mauthor document siglink
-    _                                -> mzero
+    _                                -> internalError
 
 {- |
    Modify a document. Typically called with the "Underteckna" or "Save" button

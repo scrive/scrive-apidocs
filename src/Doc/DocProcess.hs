@@ -120,10 +120,6 @@ data DocProcessInfo =
   , processflashmessagenobulkremindssent :: String
 
   -- process specific modal templates
-  , processmodalsignedviewclosedhasaccount :: String
-  , processmodalsignedviewnotclosedhasaccount :: String
-  , processmodalsignedviewclosednoaccount :: String
-  , processmodalsignedviewnotclosednoaccount :: String
   , processmodalsendconfirmation :: String
 
   -- process specific seal information
@@ -215,10 +211,6 @@ contractProcess =
   , processflashmessagenobulkremindssent = "flashMessageNoBulkContractRemindsSent"
 
   -- process specific modal templates
-  , processmodalsignedviewclosedhasaccount = "modalSignedViewClosedHasAccount"
-  , processmodalsignedviewnotclosedhasaccount = "modalSignedViewNotClosedHasAccount"
-  , processmodalsignedviewclosednoaccount = "modalSignedViewClosedNoAccount"
-  , processmodalsignedviewnotclosednoaccount = "modalSignedViewNotClosedNoAccount"
   , processmodalsendconfirmation = "modalSignInviteView"
 
   -- process specific seal information
@@ -310,10 +302,6 @@ offerProcess =
   , processflashmessagenobulkremindssent = "flashMessageNoBulkOfferRemindsSent"
 
   -- process specific modal templates
-  , processmodalsignedviewclosedhasaccount = "modalOfferSignedHasAccount"
-  , processmodalsignedviewnotclosedhasaccount = "modalOfferSignedHasAccount"
-  , processmodalsignedviewclosednoaccount = "modalOfferSignedNoAccount"
-  , processmodalsignedviewnotclosednoaccount = "modalOfferSignedNoAccount"
   , processmodalsendconfirmation = "modalOfferCreated"
 
   -- process specific seal information
@@ -406,10 +394,6 @@ orderProcess =
   , processflashmessagenobulkremindssent = "flashMessageNoBulkOrderRemindsSent"
 
   -- process specific modal templates
-  , processmodalsignedviewclosedhasaccount = "modalSignedViewOrderClosedHasAccount"
-  , processmodalsignedviewnotclosedhasaccount = "modalSignedViewOrderNotClosedHasAccount"
-  , processmodalsignedviewclosednoaccount = "modalSignedViewOrderClosedNoAccount"
-  , processmodalsignedviewnotclosednoaccount = "modalSignedViewOrderNotClosedNoAccount"
   , processmodalsendconfirmation = "modalOrderCreated"
 
   -- process specific seal information

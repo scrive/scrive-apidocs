@@ -320,13 +320,8 @@
 "_aboutPageTitle","| Om Scrive",,"| About Scrive"
 "_aboutPageTopBody","<p>Scrive är en tjänst för att e-signera offerter, avtal och andra typer av dokument. Vi hjälper våra kunder att stänga affärer snabbare, minska den administrativa bördan och samtidigt förbättra kundupplevelsen. </p> <BR/> <p>Elektronisk dokumentsignering är en ung bransch som är på stark framfart både i Sverige och internationellt. Vi är ett ungt företag som växer i en rasande fart. Idag har vi tolv medarbetare som arbetar från åtta platser runt om i världen. Du finner våra medarbetare i bland annat Stockholm, London, Buenos Aires och Warszawa. Vi är stolta över att vi på så kort tid lyckats bygga en tjänst som är marknadsledande på svenska marknaden och vi berättar gärna mer om hur mycket vi tycker om Haskell, den teknologi vi valt för att bygga tjänsten.  </p> <BR/> <p>Vi är förvisso ett teknikföretag men vi tycker om att arbeta kundnära. Vi ser själva att bland våra främsta styrkor är vår förmåga att se kundens behov, vår kundnära personliga approach och vår förmåga att lösa komplexa juridiska- och säkerhetsproblem på sätt som verkar enkla och tilltalande för slutkund. </p> <BR/> <p>Scrive grundades av Lukas Duczko och Gracjan Polak som lärde känna varandra under sin tid på kreditbolaget Klarna. </p> <BR/> ",,"<p>Scrive is a service for e-signing tenders, contracts, and other documents. We help our clients close deals faster, decrease the administrative burden, and improve our clients’ customers’ experience. </p> <BR/> <p>Electronic document signing is a burgeoning industry that is growing fast both in Sweden and internationally. We are a young company with rapid growth. Today we are twelve team members working from eight different places from around the globe. You can find us in cities such as Stockholm, London, Buenos Aires, and Warszaw. We are proud that we have managed to build a market-leading solution for the Swedish market in such a short time and we would love to tell you more about how much we like Haskell, our technology of choice. </p> <BR/> <p>At the core we are a technology company but we like to work closely with our customers. We are confident that our greatest strengths are our understanding of our users' business requirements, our customer-oriented approach, and our ability to solve complex legal and security-related issues in a way that seems simple and appealing to the end user. </p> <BR/> <p>Scrive was founded by Lukas Duczko and Gracjan Polak who got to know each other at the Swedish credit company Klarna.
  </p> <BR/> "
-"_accountFromSignFooterNoThx","Nej tack",,"No thanks"
-"_accountFromSignFooterYesArchive","Ja, arkivera",,"Yes, please store"
 "_accountFromSignInputsBodyAcceptTOS","Jag har läst och accepterat <a target=""_blank"" href=""$linkterms$"">Scrive
  Allmänna Villkor</a>",,"I have read and accept the <a target=""_blank"" href=""$linkterms$"">Scrive Terms of Service</a>"
-"_accountFromSignInputsBodySecureOriginal","Vill du säkra ditt original? Scrive kan även arkivera ett original för din säkerhet. Det kostar ingenting.",,"Do you want to secure your original? Scrive can store it for you safely and free of charge."
-"_accountFromSignInputsConfirmPassword","Bekräfta lösenord",,"Confirm password"
-"_accountFromSignInputsPrivateAccount","Privatperson",,"Private person"
 "_activatePageViewNotValidLinkBody","Begklagar, din aktiveringslänk är äldre än 12 timmar. Vänligen
  fyll i        din mailadress så skickar vi en ny aktiveringslänk
  omedelbart.",,"We are sorry, your activation link is older than 12 hours. Please
@@ -639,7 +634,6 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_flashAuthorSigned","Dokumentet har undertecknats.",,"The document has been signed."
 "_flashDocumentDraftSaved","Du har sparat dokumentet.",,"Your document has been saved."
 "_flashDocumentTemplateSaved","Din mall är sparad.",,"Your template has been saved."
-"_flashMessageAccountActivatedFromSign","Ditt original har arkiverats hos Scrive.","Your original document has been saved by Scrive.","Your original document has been saved by Scrive."
 "_flashMessageCompanyAccountDeleted","Kontot har tagits bort.",,"The account was successfully removed."
 "_flashMessageActivationLinkNotValid","Vi beklagar. Länken är inte längre giltig.<br/>    Vänligen använd
  ""Glömt lösenord"" för att generera en ny länk.",,"We are sorry. This link is no longer valid.<br/> Please use ""Forgot
@@ -1710,16 +1704,6 @@ the document <strong>$documenttitle$</strong>. The agreement
  $partyListButAuthor:noescape()$.",,"The offer <strong>$documenttitle$</strong> has been sent to
  $partyListButAuthor:noescape()$."
 "_modalOfferCreatedHeader","Offerten skickad!",,"The offer has been sent!"
-"_modalOfferSignedHasAccountBody","Offerten har sparats till ditt konto med användarnamn <span
- style=""color:#007CAC"">$signatory$</span>.",,"The offer has been saved to your account with user name <span
- style=""color:#007CAC"">$signatory$</span>."
-"_modalOfferSignedHasAccountHeader","Du har accepterat offerten!",,"You have accepted the offer!"
-"_modalOfferSignedNoAccountBody","Offerten är nu bindande. Scrive har verifierat accepten
- och utfärdat ett verifikat. Ett original av den färdiga accepten
- har skickats till din inkorg.",,"The offer is now binding. Scrive has verified the acceptance
- and generated a verification. An original has been sent to your
- e-mail address."
-"_modalOfferSignedNoAccountHeader","Du har accepterat offerten!",,"You have accepted the offer!"
 "_modalOrderCreatedBody","Orderbekräftelsen <strong>$documenttitle$</strong> har nu skickats
  till $partyListButAuthor:noescape()$.",,"The order confirmation <strong>$documenttitle$</strong> has been
  sent to $partyListButAuthor:noescape()$."
@@ -1735,57 +1719,6 @@ the document <strong>$documenttitle$</strong>. The agreement
  har färdigställts.",,"You have signed the document $documenttitle$ and the document has been completed."
 "_modalSignInviteViewHeaderIfElse","Du har undertecknat!",,"You have signed!"
 "_modalSignInviteViewHeaderIfSigned","Du har undertecknat dokumentet <strong>$documenttitle$</strong>!",,"You have signed the document <strong>$documenttitle$</strong>!"
-"_modalSignedViewClosedHasAccountLoggedInBodySaved","Dokumentet har sparats till ditt konto.",,"The document has been saved to your account."
-"_modalSignedViewClosedHasAccountLoggedInBodySigned","$partyListString:noescape()$ har nu undertecknat och
-        dokumentet är bindande.",,"$partyListString:noescape()$ $englishHasSP(pl=partylistplural)$ signed, and the document
-         is now legally binding."
-"_modalSignedViewClosedHasAccountLoggedInHeader","Du har undertecknat dokumentet $documenttitle$",,"You have signed the document $documenttitle$"
-"_modalSignedViewClosedHasAccountNotLoggedInBodySaved","Dokumentet har sparats till ditt konto.",,"The document has been saved to your account."
-"_modalSignedViewClosedHasAccountNotLoggedInBodySigned","$partyListString:noescape()$ har nu undertecknat och
-          dokumentet är bindande.",,"$partyListString:noescape()$ $englishHasSP(pl=partylistplural)$ signed, and the document
-         is now legally binding."
-"_modalSignedViewClosedHasAccountNotLoggedInFooterForgottenPassword","Glömt lösenord",,"Forgot password"
-"_modalSignedViewClosedHasAccountNotLoggedInHeader","Du har undertecknat dokumentet $documenttitle$",,"You have signed the document called $documenttitle$"
-"_modalSignedViewClosedNoAccountBody","Dokumentet är nu bindande. Scrive har verifierat denna transaktion och utfärdat ett verifikat. Vi har skickat ett original av dokumentet till din inkorg.",,"The document is now binding. Scrive has verified this transaction and generated a verification. An original document has been sent to your e-mail address."
-"_modalSignedViewClosedNoAccountHeader","Du har undertecknat!",,"You have signed!"
-"_modalSignedViewNotClosedNoAccountHeader","Du har undertecknat!",,"You have signed!"
-"_modalSignedViewNotClosedHasAccountLoggedInBodyNotSigned","$partyUnsignedListString:noescape()$ har ännu inte
-      undertecknat. När alla undertecknat blir dokumentet bindande
-        och en kopia skickas till din e-post.",,"$partyUnsignedListString:noescape()$ $englishHasSP(pl=unsignedlistplural)$ not yet signed. When everyone involved has signed, the document becomes legally binding and a digital copy is sent to your e-mail address."
-"_modalSignedViewNotClosedHasAccountLoggedInBodySaved","Dokumentet har sparats till ditt konto.",,"The document has been saved to your account."
-"_modalSignedViewNotClosedHasAccountLoggedInHeader","Du har undertecknat dokumentet $documenttitle$",,"You have signed the document called $documenttitle$"
-"_modalSignedViewNotClosedHasAccountNotLoggedInBodyNotSigned","$partyUnsignedListString:noescape()$ har ännu inte
-          undertecknat. När alla undertecknat blir dokumentet
- bindande          och en kopia skickas till din e-post.",,"$partyUnsignedListString:noescape()$ $englishHasSP(pl=unsignedlistplural)$  not yet
-        signed. When everyone involved has signed, the document
-          becomes legally binding and a duplicate is sent to
- your e-mail address."
-"_modalSignedViewNotClosedNoAccountBody","$partyUnsignedListString:noescape()$ har ännu inte undertecknat. När alla undertecknat utfärdar Scrive ett verifikat, dokumentet blir bindande och en kopia skickas till din e-post.",,"$partyUnsignedListString:noescape()$ have not signed. When they have signed the document will become binding and a copy emailed to all."
-"_modalSignedViewNotClosedHasAccountNotLoggedInBodySaved","Dokumentet har sparats till ditt konto.",,"The document has been saved to your account."
-"_modalSignedViewNotClosedHasAccountNotLoggedInFooterForgottenPassword","Glömt lösenord",,"Forgot password"
-"_modalSignedViewNotClosedHasAccountNotLoggedInHeader","Du har undertecknat dokumentet $documenttitle$",,"You have signed the document $documenttitle$"
-"_modalSignedViewOrderClosedHasAccountLoggedInBodyConfirmed","$partyListString:noescape()$ har nu bekräftat ordern.",,"$partyListString:noescape()$ $englishHasSP(pl=partylistplural)$ now confirmed the order."
-"_modalSignedViewOrderClosedHasAccountLoggedInBodySaved","Orderbekräftelsen har sparats till ditt konto.",,"The order confirmation has been saved to your account."
-"_modalSignedViewOrderClosedHasAccountLoggedInHeader","Du har bekräftat ordern $documenttitle$",,"You have confirmed the order $documenttitle$"
-"_modalSignedViewOrderClosedHasAccountNotLoggedInBodyConfirmed","$partyListString:noescape()$ har nu bekräftat ordern.",,"$partyListString:noescape()$ $englishHasSP(pl=partylistplural)$ now confirmed the
- order."
-"_modalSignedViewOrderClosedHasAccountNotLoggedInBodySaved","Orderbekräftelsen har sparats till ditt konto.",,"The order confirmation has been saved to your account."
-"_modalSignedViewOrderClosedHasAccountNotLoggedInHeader","Du har bekräftat ordern $documenttitle$",,"You have confirmed the order $documenttitle$"
-"_modalSignedViewOrderClosedNoAccountBody","Vi har skickat ett original orderbekräftelse till din
- inkorg.",,"We have sent an original order confirmation to your e-mail
- address."
-"_modalSignedViewOrderClosedNoAccountHeader","Du har bekräftat ordern!",,"You have confirmed the order!"
-"_modalSignedViewOrderNotClosedHasAccountLoggedInBodyNotSigned","$partyUnsignedListString:noescape()$ har ännu inte
-      bekräftat.",,"$partyUnsignedListString:noescape()$ $englishHasSP(pl=unsignedlistplural)$ not yet confirmed."
-"_modalSignedViewOrderNotClosedHasAccountLoggedInBodySaved","Orderbekräftelsen har sparats till ditt konto.",,"The order confirmation has been saved to your account."
-"_modalSignedViewOrderNotClosedHasAccountLoggedInHeader","Du har bekräftat ordern $documenttitle$",,"You have confirmed the order $documenttitle$"
-"_modalSignedViewOrderNotClosedHasAccountNotLoggedInBodyNotConfirmed","$partyUnsignedListString:noescape()$ har ännu inte
-          bekräftat.",,"$partyUnsignedListString:noescape()$ $englishHasSP(pl=unsignedlistplural)$ not yet confirmed."
-"_modalSignedViewOrderNotClosedHasAccountNotLoggedInBodySaved","Orderbekräftelsen har sparats till ditt konto.",,"The order confirmation has been saved to your account."
-"_modalSignedViewOrderNotClosedHasAccountNotLoggedInFooterForgottenPassword","Glömt lösenord",,"Forgot password"
-"_modalSignedViewOrderNotClosedHasAccountNotLoggedInHeader","Du har bekräftat ordern $documenttitle$",,"You have confirmed the order $documenttitle$"
-"_modalSignedViewOrderNotClosedNoAccountBody","$partyUnsignedListString:noescape()$ har ännu inte bekräftat.",,"$partyUnsignedListString:noescape()$ $englishHasSP(pl=unsignedlistplural)$ not yet confirmed."
-"_modalSignedViewOrderNotClosedNoAccountHeader","Du har bekräftat ordern!",,"You have confirmed the order!"
 "_multiPartPartner","Parter",,"Parties"
 "_multipleSignatory","Massutskick",,"Multi send"
 "_mustFillFieldsBeforeSigning","Du måste fylla i tomma fält innan du kan underteckna.",,"You must fill in the empty fields before you sign."
