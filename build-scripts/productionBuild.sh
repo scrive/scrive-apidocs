@@ -10,7 +10,7 @@ echo "Directory: "$DIR
 echo "BUILD_NUMBER: "$BUILD_NUMBER
 echo "TMP: "$TMP
 
-cd $DIR
+#cd $DIR
 
 BUILD_DATE=`date "+%Y-%m-%d-%H-%M-%S"`
 BUILD_VCS_NUMBER=`git log -1 --pretty=oneline|awk '{print $1;}'`
