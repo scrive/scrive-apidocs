@@ -86,39 +86,22 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
     _.bindAll(this, 'render');
     this.model.bind('reset', this.render);
     this.model.bind('change', this.render);
-    if (args.summary) {
-      this.summary = args.summary;
-    } else {
-      this.summary = new SignatoryStandardSummary({
-        model: this.model
-      });
-    }
     this.render();
   },
-  //TODO: neaten up this junk
   signatorySummary : function(){
     var signatory = this.model;
     var document = signatory.document();
     if (signatory.signdate() != undefined)
-          return this.summary.signed();
-    else if (signatory.datamismatch() == true)
-          return this.summary.datamismatch()
-    else if (document.timedout())
-          return this.summary.timedout();
-    else if(document.canceled())
-          return this.summary.cancelled();
-    else if (document.datamismatch())
-          return " "
+      return localization.signatoryMessage.signed;
+    else if (signatory.datamismatch() == true ||
+               document.timedout() ||
+               document.canceled() ||
+               document.datamismatch())
+      return ""
     else if (signatory.rejecteddate()!= undefined)
-          return this.summary.rejected();
-    else if (signatory.seendate()!= undefined)
-          return this.summary.seen();
-    else if (signatory.readdate()!= undefined)
-          return this.summary.read();
-    else if (signatory.deliveredEmail())
-          return this.summary.delivered();
+      return localization.signatoryMessage.rejected;
     else
-        return this.summary.other();
+      return localization.signatoryMessage.waitingForSignature;
   },
   isInputField: function(field) {
     return (field.name() != "fstname" &&
@@ -278,9 +261,6 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
   createSignatoryElems: function(signatory) {
     return $(new DocumentSignSignatoryView({
       model: signatory,
-      summary: new SignatoryReducedSummary({
-        model: signatory
-      }),
       el: $("<div />")
     }).el);
   },

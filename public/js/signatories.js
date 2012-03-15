@@ -516,103 +516,36 @@ window.Signatory = Backbone.Model.extend({
 
 });
 
-window.SignatoryStandardSummary = Backbone.View.extend({
-  signed: function() {
-    return localization.signatoryMessage.signed + " " + this.model.signdate();
-  },
-  datamismatch: function() {
-    return localization.signatoryMessage.datamismatch;
-  },
-  timedout: function() {
-    return localization.signatoryMessage.timedout;
-  },
-  cancelled: function() {
-    return localization.signatoryMessage.cancelled;
-  },
-  rejected: function() {
-    return localization.signatoryMessage.rejected + " " + this.model.rejecteddate();
-  },
-  seen: function() {
-    return localization.signatoryMessage.seen + " " + this.model.seendate();
-  },
-  read: function() {
-    return localization.signatoryMessage.read + " " + this.model.readdate();
-  },
-  delivered: function() {
-    return localization.signatoryMessage.delivered;
-  },
-  other: function() {
-    return localization.signatoryMessage.other;
-  }
-});
-
-window.SignatoryReducedSummary = Backbone.View.extend({
-  signed: function() {
-    return localization.signatoryMessage.signed;
-  },
-  datamismatch: function() {
-    return "";
-  },
-  timedout: function() {
-    return "";
-  },
-  cancelled: function() {
-    return "";
-  },
-  rejected: function() {
-    return localization.signatoryMessage.rejected;
-  },
-  seen: function() {
-    return localization.signatoryMessage.waitingForSignature;
-  },
-  read: function() {
-    return localization.signatoryMessage.waitingForSignature;
-  },
-  delivered: function() {
-    return localization.signatoryMessage.waitingForSignature;
-  },
-  other: function() {
-    return localization.signatoryMessage.waitingForSignature;
-  }
-});
-
 window.SignatoryStandardView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
         this.model.bind('reset', this.render);
         this.model.bind('change', this.render);
-        if (args.summary) {
-          this.summary = args.summary;
-        } else {
-          this.summary = new SignatoryStandardSummary({
-            model: this.model
-          });
-        }
         this.render();
     },
     signatorySummary : function(){
           var signatory = this.model;
           var document = signatory.document();
           if (signatory.signdate() != undefined)
-               return this.summary.signed();
+               return localization.signatoryMessage.signed + " " + this.model.signdate();
           else if (signatory.datamismatch() == true)
-               return this.summary.datamismatch()
+               return localization.signatoryMessage.datamismatch;
           else if (document.timedout())
-               return this.summary.timedout();
+               return localization.signatoryMessage.timedout;
           else if(document.canceled())
-               return this.summary.cancelled();
+               return localization.signatoryMessage.cancelled;
           else if (document.datamismatch())
                return " "
           else if (signatory.rejecteddate()!= undefined)
-               return this.summary.rejected();
+               return localization.signatoryMessage.rejected + " " + this.model.rejecteddate();
           else if (signatory.seendate()!= undefined)
-               return this.summary.seen();
+               return localization.signatoryMessage.seen + " " + this.model.seendate();
           else if (signatory.readdate()!= undefined)
-               return this.summary.read();
+               return localization.signatoryMessage.read + " " + this.model.readdate();
           else if (signatory.deliveredEmail())
-               return this.summary.delivered();
+               return localization.signatoryMessage.delivered;
           else
-              return this.summary.other();
+              return localization.signatoryMessage.other;
     },
     changeEmailOption : function(){
         var signatory = this.model;
