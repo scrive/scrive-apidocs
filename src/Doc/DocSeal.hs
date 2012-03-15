@@ -22,6 +22,7 @@ import Doc.Model
 import Doc.DocStorage
 import Doc.DocView
 import Doc.DocUtils
+import IPAddress
 import Misc
 import System.Directory
 import System.Exit

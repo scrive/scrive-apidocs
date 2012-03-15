@@ -18,11 +18,11 @@ import AppView as V
 import Crypto.RNG (CryptoRNGState, random, inIO)
 import DB.Classes
 import Doc.DocStateData
+import IPAddress
 import Kontra
 import KontraError (KontraError(..))
 import MinutesTime
 import Misc
---import PayEx.PayExInterface ()-- Import so at least we check if it compiles
 import Redirect
 import Session
 import Templates.Templates
@@ -234,8 +234,8 @@ appHandler handleRoutes appConf appGlobals = do
       addrs <- liftIO $ getAddrInfo (Just hints) (Just peerhost) Nothing
       let addr = head addrs
       let peerip = case addrAddress addr of
-                     SockAddrInet _ hostip -> IPAddress hostip
-                     _ -> unknownIPAddress
+            SockAddrInet _ hostip -> unsafeIPAddress hostip
+            _                     -> noIP
 
       psqlconn <- liftIO $ connectPostgreSQL $ dbConfig appConf
       dbenv <- mkDBEnv psqlconn (cryptorng appGlobals)

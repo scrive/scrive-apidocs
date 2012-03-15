@@ -12,6 +12,7 @@ import TestingUtil
 import TestKontra as T
 import Kontra (Kontra)
 import User.Model
+import IPAddress
 import Misc
 import API.API
 import API.Service.Model
@@ -288,9 +289,9 @@ testDocumentsFilteringFromDate2 env = withTestEnvironment env $ do
     _ <- forM (documentsignatorylinks doc) $ \sl ->
       if isAuthor sl 
       then dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl) 
-           (AuthorActor (minutesAfter 100 tm) (IPAddress 0) (fromJust $ maybesignatory sl) (getEmail sl))
+           (AuthorActor (minutesAfter 100 tm) noIP (fromJust $ maybesignatory sl) (getEmail sl))
       else dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl) 
-           (SignatoryActor (minutesAfter 100 tm) (IPAddress 0) (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
+           (SignatoryActor (minutesAfter 100 tm) noIP (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
 
     Just _doc' <- dbQuery $ GetDocumentByDocumentID did
     Right apiReqDocsFilter3 <- jsset "from_date" tms <$> getDocumentsJSON "test_company1" "mariusz@skrivapa.se"

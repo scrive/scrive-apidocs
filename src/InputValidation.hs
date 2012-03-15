@@ -249,7 +249,7 @@ logIfBad x@(input, Bad flashmsg) = do
   flash <- flashmsg
   let username :: String
       username = maybe "unknown" (unEmail . useremail . userinfo) ctxmaybeuser
-      logtext = "ip " ++ (formatIP ctxipnumber) ++
+      logtext = "ip " ++ show ctxipnumber ++
                " user " ++ username ++
                " invalid input: " ++
                " flash [" ++ show (snd <$> unFlashMessage flash) ++ "]" ++
