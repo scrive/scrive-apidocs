@@ -13,7 +13,7 @@ echo "TMP: "$TMP
 BUILD_DATE=`date "+%Y-%m-%d-%H-%M-%S"`
 #BUILD_VCS_NUMBER=`git log -1 --pretty=oneline|awk '{print $1;}'`
 
-sh build-scripts/runCleanCompile.sh
+#sh build-scripts/runCleanCompile.sh
 
 echo "Computing checksums of all binaries"
 
@@ -23,7 +23,7 @@ mkdir checksums
 find dist/build -executable -type f -exec sh -c 'sha512sum {} > checksums/`basename {}`.sha512' \;
 
 echo "Running unit tests"
-sh build-scripts/runAllUnitTests.sh > test-report.txt
+#sh build-scripts/runAllUnitTests.sh > test-report.txt
 
 BUILD_ID=$BUILD_DATE"."$BUILD_NUMBER"."$BUILD_VCS_NUMBER
 
@@ -40,7 +40,7 @@ tar zcf "$TMP/$ZIP"                        \
 ls -lh "$TMP/$ZIP"
 
 echo "Generating signature hash"
-hashdoc="$TMP"."/hash-$BUILD_ID.txt"
+hashdoc="$TMP/hash-$BUILD_ID.txt"
 m=`sha512sum "$TMP/$ZIP" | awk 'BEGIN { FS = " +" } ; { print $1 }'`
 echo "Scrive Production Build"         >  "$hashdoc"
 echo "--------------------------------">> "$hashdoc"
@@ -62,11 +62,11 @@ echo "------END------" >> "$hashdoc"
 echo "Building soap request for Trustweaver signing"
 
 echo "Multipart MIME"
-mimefile="$TMP"."hash-$BUILD_ID.mime"
+mimefile="$TMP/hash-$BUILD_ID.mime"
 python scripts/genmime.py "$hashdoc" "$mimefile"
 
 echo "Constructing SOAP Message"
-soaprequest="$TMP"."request-$BUILD_ID.xml"
+soaprequest="$TMP/request-$BUILD_ID.xml"
 base64 "$hashdoc" | cat scripts/top - scripts/bottom > "$soaprequest"
 
 # For https authentication of Trustweaver
@@ -75,7 +75,7 @@ twcertpwd=jhdaEo5LLejh
 twurl=https://tseiod.trustweaver.com/ts/svs.asmx
 
 echo "Signing with trustweaver"
-soapresponse="$TMP"."response-$BUILD_ID.xml"
+soapresponse="$TMP/response-$BUILD_ID.xml"
 curl -X POST --verbose --show-error                           \
     --cert $twcert:$twcertpwd --cacert $twcert                \
     --data-binary "@$soaprequest"                             \
@@ -86,12 +86,12 @@ curl -X POST --verbose --show-error                           \
     $twurl
 
 echo "Parsing XML response"
-signed64="$TMP"."signed-$BUILD_ID.b64"
+signed64="$TMP/signed-$BUILD_ID.b64"
 python scripts/parsesignresponse.py "$soapresponse" "$signed64"
 
 echo "Decoding base64 response"
 finalfile="$BUILD_ID.production.enhanced.tar.gz"
-signedmime="$TMP"."$BUILD_ID.signature.mime"
+signedmime="$TMP/$BUILD_ID.signature.mime"
 base64 -d "$signed64" > "$signedmime"
 
 echo "Creating final enhanced deployment file"
@@ -103,7 +103,7 @@ s3cmd --acl-private put "$TMP/$finalfile" s3://production-builds
 echo "Checking amazon md5 sum"
 md5amazon=`s3cmd info "s3://production-builds/$finalfile" | grep MD5 | awk '{print $3}'`
 echo "MD5SUM from Amazon S3: "$md5amazon
-md5local=`md5sum "$finalfile" | awk 'BEGIN { FS = " +" } ; { print $1 }'`
+md5local=`md5sum "$TMP/$finalfile" | awk 'BEGIN { FS = " +" } ; { print $1 }'`
 echo "MD5SUM from local    : "$md5local
 if [ "$md5amazon" = "$md5local" ]
 then
