@@ -187,13 +187,13 @@ Executable kontrakcja-server
   Build-depends: fields-json==0.1
   Build-depends: filepath
   Build-depends: hS3 == 0.5.6
-  Build-depends: happstack-data==6.0.0
+  Build-depends: happstack-data==6.0.1
   Build-depends: happstack-ixset==6.0.1
-  Build-depends: happstack-server==6.4.5
-  Build-depends: happstack-state==6.1.1
-  Build-depends: happstack-static-routing==0.2
-  Build-depends: happstack-util==6.0.2
-  Build-depends: happstack==6.0.5
+  Build-depends: happstack-server==6.6.4
+  Build-depends: happstack-state==6.1.4
+  Build-depends: happstack-static-routing==0.3
+  Build-depends: happstack-util==6.0.3
+  Build-depends: happstack==6.1.8
   Build-depends: hslogger==1.1.4
   Build-depends: html == 1.0.1.2
   Build-depends: iconv == 0.4.1.0
@@ -201,7 +201,7 @@ Executable kontrakcja-server
   Build-depends: list-tries == 0.4.1
   Build-depends: mmap==0.5.*
   Build-depends: mtl == 2.*
-  Build-depends: network == 2.3.0.10
+  Build-depends: network == 2.3.0.11
   Build-depends: old-locale
   Build-depends: old-time
   Build-depends: parsec == 3.1.1
@@ -265,8 +265,7 @@ Executable pdfseal
               TemplateHaskell,
               TypeFamilies,
               TypeOperators,
-              TypeSynonymInstances,
-              UndecidableInstances
+              TypeSynonymInstances
 
 Executable mailing-server
   if flag(mailing-server)
@@ -308,7 +307,6 @@ Executable mailing-server
               TypeOperators,
               TypeSynonymInstances,
               UndecidableInstances
-
 
 Executable kontrakcja-test
   if flag(test)

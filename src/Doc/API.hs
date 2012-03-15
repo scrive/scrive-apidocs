@@ -36,7 +36,7 @@ import Stats.Control
 
 import EvidenceLog.Model
 
-documentAPI :: Route (Kontra Response)
+documentAPI :: Route (Kontra' Response)
 documentAPI = choice [
   dir "api" $ dir "document" $ hGet          $ toK0 $ documentList,
   dir "api" $ dir "document" $ hPostNoXToken $ toK0 $ documentNew,
@@ -96,7 +96,7 @@ documentNew = api $ do
   -- pdf exists  
   (Input contentspec (Just filename') _contentType) <- apiGuardL' BadInput $ getDataFn' (lookInput "file")
   
-  let filename = (BS.fromString $ basename filename')
+  let filename = basename filename'
       
   content1 <- case contentspec of
     Left filepath -> liftIO $ BSL.readFile filepath
@@ -107,11 +107,11 @@ documentNew = api $ do
   ctx <- getContext
   let now = ctxtime ctx
   
-  let aa = AuthorActor now (ctxipnumber ctx) (userid user) (BS.toString $ getEmail user)
+  let aa = AuthorActor now (ctxipnumber ctx) (userid user) (getEmail user)
   d1 <- apiGuardL $ runDBUpdate $ NewDocument user mcompany filename doctype 1 aa 
   
   content <- apiGuardL' BadInput $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
-  file <- lift $ runDB $ dbUpdate $ NewFile filename content
+  file <- lift $ runDBUpdate $ NewFile filename content
 
   d2 <- apiGuardL $ runDBUpdate $ AttachFile (documentid d1) (fileid file) aa
   _ <- lift $ addDocumentCreateStatEvents d2
@@ -169,11 +169,11 @@ documentChangeMetadata docid _ = api $ do
   json <- apiGuard $ decode jstring
   ctx <- getContext
   let now = ctxtime ctx
-  let actor = AuthorActor now (ctxipnumber ctx) (userid user) (BS.toString $ getEmail user)      
+  let actor = AuthorActor now (ctxipnumber ctx) (userid user) (getEmail user)
   d <- case jsget "title" json of
     Left _ -> return doc
     Right (JSString s) ->
-      apiGuardL $ runDBUpdate $ SetDocumentTitle docid (BS.fromString $ fromJSString s) actor
+      apiGuardL $ runDBUpdate $ SetDocumentTitle docid (fromJSString s) actor
     Right _ -> throwError BadInput
       
   return $ jsonDocumentMetadata d
@@ -214,7 +214,7 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   sl  <- apiGuard $ getSigLinkFor doc sid
   let email = getEmail sl
   
-  sigattach <- apiGuard' Forbidden $ getSignatoryAttachment email (BS.fromString aname) doc
+  sigattach <- apiGuard' Forbidden $ getSignatoryAttachment doc slid aname
   
   -- attachment must have no file
   apiGuard' ActionNotAvailable (isNothing $ signatoryattachmentfile sigattach)
@@ -232,12 +232,12 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
 
   content <- apiGuardL' BadInput $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
   
-  file <- lift $ runDB $ dbUpdate $ NewFile (BS.fromString $ basename filename) content
-  let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) (BS.toString email) slid
-  d <- apiGuardL $ runDBUpdate $ SaveSigAttachment (documentid doc) (BS.fromString aname) email (fileid file) actor
+  file <- lift $ runDBUpdate $ NewFile (basename filename) content
+  let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) email slid
+  d <- apiGuardL $ runDBUpdate $ SaveSigAttachment (documentid doc) sid aname (fileid file) actor
   
   -- let's dig the attachment out again
-  sigattach' <- apiGuard $ getSignatoryAttachment email (BS.fromString aname) d
+  sigattach' <- apiGuard $ getSignatoryAttachment d sid aname
   
   return $ Created $ jsonSigAttachmentWithFile sigattach' (Just file)
 
@@ -253,16 +253,16 @@ documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
   
   
   -- sigattachexists
-  sigattach <- apiGuard $ getSignatoryAttachment email (BS.fromString aname) doc
+  sigattach <- apiGuard $ getSignatoryAttachment doc slid aname
 
   -- attachment must have a file
   fileid <- apiGuard' ActionNotAvailable $ signatoryattachmentfile sigattach
 
-  d <- apiGuardL $ runDBUpdate $ DeleteSigAttachment (documentid doc) email fileid 
-       (SignatoryActor ctxtime ctxipnumber muid (BS.toString email) sid)
+  d <- apiGuardL $ runDBUpdate $ DeleteSigAttachment (documentid doc) sid fileid 
+       (SignatoryActor ctxtime ctxipnumber muid email sid)
   
   -- let's dig the attachment out again
-  sigattach' <- apiGuard $ getSignatoryAttachment email (BS.fromString aname) d
+  sigattach' <- apiGuard $ getSignatoryAttachment d sid aname
   
   return $ jsonSigAttachmentWithFile sigattach' Nothing
 

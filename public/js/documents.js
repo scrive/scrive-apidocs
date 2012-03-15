@@ -164,13 +164,13 @@ window.Document = Backbone.Model.extend({
     sendByAuthor : function() {
         return new Submit({
               send : "YES",
-              method: "POST",
+              method: "POST"
           });
     },
     signByAuthor : function() {
         return new Submit({
               sign : "YES",
-              method: "POST",
+              method: "POST"
           });
     },
     save : function() {
@@ -184,6 +184,7 @@ window.Document = Backbone.Model.extend({
         return new Submit({
               url: "/setattachments/" + this.documentid(),
               method: "POST",
+              ajax: true
           });
     },
     draftData : function() {

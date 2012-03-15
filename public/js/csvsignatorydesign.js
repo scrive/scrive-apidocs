@@ -35,7 +35,7 @@ var CsvProblem = Backbone.Model.extend({
  var CsvSignatoryDesign = Backbone.Model.extend({
   defaults : {
       rows : [],
-      problems : [],
+      problems : []
   },
   problems : function() {
      return this.get("problems");    
@@ -196,7 +196,7 @@ var CsvSignatoryDesignView = Backbone.View.extend({
     render: function () {
         var view = this;
         var model = this.model;
-        this.container = this.el;
+        this.container = $(this.el);
         this.container.addClass("designCSVSignatoryPopupContent");
         this.container.empty();
         if (model.isEmpty()) {
@@ -218,7 +218,7 @@ window.CsvSignatoryDesignPopup = {
          var model = new CsvSignatoryDesign({ signatory : signatory  });
          var view = new CsvSignatoryDesignView({model : model, el : $("<div/>")})
          var popup = Confirmation.popup({
-              content  : view.el,
+              content  : $(view.el),
               title  : localization.csv.title,
               acceptText: localization.save,
               width: "960px",

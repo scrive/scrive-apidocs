@@ -13,8 +13,6 @@ import Misc hiding (optional)
 import SOAP.SOAP
 import Text.XML.HaXml.Posn (Posn)
 import Text.XML.HaXml.XmlContent.Parser
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
 import ELegitimation.Config
 
 data ImplStatus = ImplStatus Int String Int String
@@ -150,23 +148,19 @@ instance XmlContent (VerifySignatureRequest) where
          ()]
     parseContents = error "Please do not parse VerifySignatureRequest"
 
-slurpAttributes :: Parser (Content Text.XML.HaXml.Posn.Posn) [(BS.ByteString, BS.ByteString)]
-slurpAttributes = slurpAttributes' []
+slurpAttributes :: Parser (Content Text.XML.HaXml.Posn.Posn) [(String, String)]
+slurpAttributes = worker []
+  where
+    worker acc = do
+      att <- optional $ inElementNS "attributes" $ do
+        name <- inElementNS "name" text
+        value <- inElementNS "value" text
+        return (name, value)
+      case att of
+        Nothing -> return acc
+        Just nv -> worker $ nv : acc
 
-slurpAttributes' :: [(BS.ByteString, BS.ByteString)]
-                        -> Parser (Content Text.XML.HaXml.Posn.Posn)
-                                [(BS.ByteString, BS.ByteString)]
-slurpAttributes' ls = do
-  att <- optional $ inElementNS "attributes" $ do
-                        name <- inElementNS "name" text
-                        value <- inElementNS "value" text
-                        return (BS.fromString name, BS.fromString value)
-  case att of
-    Nothing -> return ls
-    Just nv -> slurpAttributes' $ nv : ls
-
-
-data VerifySignatureResponse = VerifySignatureResponse ImplStatus [(BS.ByteString, BS.ByteString)] String
+data VerifySignatureResponse = VerifySignatureResponse ImplStatus [(String, String)] String
 
 instance HTypeable (VerifySignatureResponse) where
     toHType _x = Defined "VerifySignatureResponse" [] []
@@ -223,7 +217,7 @@ verifySignature :: Kontrakcja m
                 -> String
                 -> Maybe String
                 -> String
-                -> m (Either ImplStatus (String, [(BS.ByteString, BS.ByteString)]))
+                -> m (Either ImplStatus (String, [(String, String)]))
 verifySignature provider tbs signature mnonce transactionID = do
     eresponse <- liftIO $
         makeSoapCallCA endpoint certfile

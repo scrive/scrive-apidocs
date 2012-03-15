@@ -24,6 +24,7 @@ import DB.Types
 import Company.CompanyView
 import Company.Model
 import Kontra
+import KontraError (internalError)
 import KontraLink
 import Misc
 import Redirect
@@ -74,13 +75,13 @@ companyUiFromJSON jsv = do
   jsonbb <- jsget "barsbackground" jsv
   jsonbtc <- jsget "barstextcolour" jsv
   return CompanyUI {
-    companybarsbackground = maybeBS jsonbb
-  , companybarstextcolour = maybeBS jsonbtc
+    companybarsbackground = maybeS jsonbb
+  , companybarstextcolour = maybeS jsonbtc
   , companylogo = Nothing
   }
   where
-    maybeBS (JSString (JSONString val)) | not (null val) = Just (BS.fromString val)
-    maybeBS _ = Nothing
+    maybeS (JSString (JSONString val)) | not (null val) = Just val
+    maybeS _ = Nothing
 
 handleCompanyLogo :: Kontrakcja m => CompanyID -> m Response
 handleCompanyLogo cid = do
@@ -98,14 +99,14 @@ companyJSON company editable =
                [ ("company",
                    JSObject $ toJSObject [
                      ("id", JSString $ toJSString $ show $ companyid company)
-                   , ("name", JSString $ toJSString $ BS.toString $  getCompanyName company)
-                   , ("number", JSString $ toJSString $ BS.toString $  getCompanyNumber company)
-                   , ("address", JSString $ toJSString $ BS.toString $  companyaddress $ companyinfo $ company)
-                   , ("zip", JSString $ toJSString $ BS.toString $  companyzip $ companyinfo $ company)
-                   , ("city", JSString $ toJSString $ BS.toString $  companycity $ companyinfo $ company)
-                   , ("country", JSString $ toJSString $ BS.toString $  companycountry $ companyinfo $ company)
-                   , ("barsbackground", JSString $ toJSString $ maybe "" BS.toString $ companybarsbackground $ companyui $ company)
-                   , ("barstextcolour", JSString $ toJSString $ maybe "" BS.toString $ companybarstextcolour $ companyui $ company)
+                   , ("name", JSString $ toJSString $ getCompanyName company)
+                   , ("number", JSString $ toJSString $ getCompanyNumber company)
+                   , ("address", JSString $ toJSString $ companyaddress $ companyinfo $ company)
+                   , ("zip", JSString $ toJSString $ companyzip $ companyinfo $ company)
+                   , ("city", JSString $ toJSString $ companycity $ companyinfo $ company)
+                   , ("country", JSString $ toJSString $ companycountry $ companyinfo $ company)
+                   , ("barsbackground", JSString $ toJSString $ fromMaybe "" $ companybarsbackground $ companyui $ company)
+                   , ("barstextcolour", JSString $ toJSString $ fromMaybe "" $ companybarstextcolour $ companyui $ company)
                    , ("logo", JSString $ toJSString $ maybe "" (const $ show $ LinkCompanyLogo $ companyid company) $ companylogo $ companyui $ company)
                    , ("editable", JSBool $ editable)
                  ])
@@ -127,4 +128,4 @@ withCompanyUser action = do
 -}
 withCompanyAdmin :: Kontrakcja m => ((User, Company) -> m a) -> m a
 withCompanyAdmin action = withCompanyUser $ \(user, company) ->
-  if useriscompanyadmin user then action (user, company) else mzero
+  if useriscompanyadmin user then action (user, company) else internalError

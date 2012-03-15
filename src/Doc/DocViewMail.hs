@@ -36,9 +36,6 @@ import DB.Classes
 import Control.Monad
 import Data.Functor
 import Data.Maybe
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS
--- import Happstack.State (query)
 import File.Model
 import Control.Monad.Trans
 import AppView
@@ -46,7 +43,7 @@ import User.Model
 import Util.HasSomeCompanyInfo
 
 mailDocumentRemind :: TemplatesMonad m
-                   => Maybe BS.ByteString
+                   => Maybe String
                    -> Context
                    -> Document
                    -> SignatoryLink
@@ -57,7 +54,7 @@ mailDocumentRemind cm c d s =
          _                                       -> remindMailSigned    True cm c d s
 
 mailDocumentRemindContent :: TemplatesMonad m
-                          => Maybe BS.ByteString
+                          => Maybe String
                           -> Context
                           -> Document
                           -> SignatoryLink
@@ -69,7 +66,7 @@ mailDocumentRemindContent cm c d s =
 
 remindMailNotSigned :: TemplatesMonad m
                     => Bool
-                    -> Maybe BS.ByteString
+                    -> Maybe String
                     -> Context
                     -> Document
                     -> SignatoryLink
@@ -81,11 +78,11 @@ remindMailNotSigned forMail customMessage ctx document signlink = do
         fieldM "header" $ do
             header <- if isNothing customMessage
                          then remindMailNotSignedStandardHeader document signlink
-                         else return $ BS.toString $ fromJust customMessage
+                         else return $ fromJust customMessage
             makeEditable "customtext" header
         fieldM "footer" $ mailFooterForDocument ctx document
-        field "partners" $ map (BS.toString . getSmartName) $ partyList document
-        field "partnerswhosigned" $ map (BS.toString . getSmartName) $ partySignedList document
+        field "partners" $ map getSmartName $ partyList document
+        field "partnerswhosigned" $ map getSmartName $ partySignedList document
         field "someonesigned" $ not $ null $ partySignedList document
         field "timetosign" $ show <$> documenttimeouttime document
         fieldM "link" $ do
@@ -95,10 +92,10 @@ remindMailNotSigned forMail customMessage ctx document signlink = do
         field "isattachments" $ length (documentauthorattachments document) > 0
         field "attachments" $ map (filename) (catMaybes authorattachmentfiles)
         field "previewLink" $ show $ LinkDocumentPreview (documentid document) (Just signlink <| forMail |> Nothing) (mainfile)
-        field "hassigattachments" $ length (documentsignatoryattachments document ) > 0
+        field "hassigattachments" $ not $ null $ concat $ signatoryattachments <$> documentsignatorylinks document
         -- We try to use generic templates and this is why we return a tuple
-        field "sigattachments" $ for (documentsignatoryattachments document) $ \sa ->
-                        (BS.toString $ signatoryattachmentname sa, BS.toString <$> getSmartName <$> getMaybeSignatoryLink (document, signatoryattachmentemail sa))
+        field "sigattachments" $ for (concat $ (\l -> (\a -> (l,a)) <$> signatoryattachments l) <$> documentsignatorylinks document) $ \(link, sa) ->
+                        (signatoryattachmentname sa, getSmartName link)
         field "nojavascriptmagic" $ True
         field "javascriptmagic" $ False
         field "companyname" $ nothingIfEmpty $ getCompanyName document
@@ -106,7 +103,7 @@ remindMailNotSigned forMail customMessage ctx document signlink = do
 
 remindMailSigned :: TemplatesMonad m
                  => Bool
-                 -> Maybe BS.ByteString
+                 -> Maybe String
                  -> Context
                  -> Document
                  -> SignatoryLink
@@ -114,13 +111,13 @@ remindMailSigned :: TemplatesMonad m
 remindMailSigned _forMail customMessage ctx document signlink = do
     sheader <- remindMailSignedStandardHeader document signlink
     documentMailWithDocLocale ctx document "remindMailSigned" $ do
-            fieldM "header" $ makeEditable "customtext" $  fromMaybe sheader (BS.toString <$> customMessage)
+            fieldM "header" $ makeEditable "customtext" $ fromMaybe sheader customMessage
             fieldM "footer" $ mailFooterForDocument ctx document
 
 
 remindMailNotSignedContent :: TemplatesMonad m
                            => Bool
-                           -> Maybe BS.ByteString
+                           -> Maybe String
                            -> Context
                            -> Document
                            -> SignatoryLink
@@ -130,7 +127,7 @@ remindMailNotSignedContent forMail customMessage ctx document signlink =
 
 remindMailSignedContent :: TemplatesMonad m
                         => Bool
-                        -> (Maybe BS.ByteString)
+                        -> (Maybe String)
                         -> Context
                         -> Document
                         -> SignatoryLink
@@ -145,10 +142,10 @@ remindMailSignedStandardHeader :: TemplatesMonad m
 remindMailSignedStandardHeader document signlink =
     renderLocalTemplateForProcess document processmailsignedstandardheader $ do
         let mauthorsiglink = getAuthorSigLink document
-            creatorname = maybe BS.empty getSmartName mauthorsiglink
-        field "documenttitle" $ BS.toString $ documenttitle document
-        field "author" $ BS.toString creatorname
-        field "personname" $ BS.toString $ getSmartName signlink
+            creatorname = maybe "" getSmartName mauthorsiglink
+        field "documenttitle" $ documenttitle document
+        field "author" creatorname
+        field "personname" $ getSmartName signlink
         field "service" $ isJust $ documentservice document
 
 remindMailNotSignedStandardHeader :: TemplatesMonad m
@@ -158,12 +155,11 @@ remindMailNotSignedStandardHeader :: TemplatesMonad m
 remindMailNotSignedStandardHeader document signlink =
     renderLocalTemplateForProcess document processmailnotsignedstandardheader $ do
         let mauthorsiglink = getAuthorSigLink document
-            creatorname = maybe (BS.fromString "") getSmartName mauthorsiglink
-        field "documenttitle" $ BS.toString $ documenttitle document
-        field "author" $ BS.toString creatorname
-        field "personname" $ BS.toString $ getSmartName signlink
+            creatorname = maybe "" getSmartName mauthorsiglink
+        field "documenttitle" $ documenttitle document
+        field "author" $ creatorname
+        field "personname" $ getSmartName signlink
         field "service" $ isJust $ documentservice document
-
 
 mailDocumentRejected :: TemplatesMonad m
                      => Maybe String
@@ -218,47 +214,46 @@ mailInvitation forMail
                document@Document{documentinvitetext, documenttitle }
                msiglink = do
     authorattachmentfiles <- mapM (ioRunDB (ctxdbenv ctx) . dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments document)
-    let creatorname = BS.toString $ getSmartName $ fromJust $ getAuthorSigLink document
+    let creatorname = getSmartName $ fromJust $ getAuthorSigLink document
     let issignatory = maybe False (elem SignatoryPartner . signatoryroles) msiglink
-    let personname = maybe "" (BS.toString . getSmartName) msiglink
+    let personname = maybe "" getSmartName msiglink
     let mainfile =  head $ (documentfiles document) ++ [unsafeFileID 0] -- There always should be main file but tests fail without it
     documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailinvitationtosign) $ do
         fieldsInvitationTo invitationto
         field "nojavascriptmagic" $ forMail
         field "javascriptmagic" $ not forMail
         fieldM "header" $ do
-            header <- if BS.null documentinvitetext
+            header <- if null documentinvitetext
                          then if issignatory || not forMail
                                  then renderLocalTemplateForProcess document processmailinvitationtosigndefaultheader $ do
                                      field "creatorname" $ creatorname
                                      field "personname" $ personname
-                                     field "documenttitle" $ BS.toString documenttitle
+                                     field "documenttitle" $ documenttitle
                                      field "service" $ isJust $ documentservice document
                                  else renderLocalTemplateFM document "mailInvitationToViewDefaultHeader" $ do
                                      field "creatorname" creatorname
                                      field "personname" personname
-                                     field "documenttitle" $ BS.toString documenttitle
+                                     field "documenttitle" $ documenttitle
                                      field "service" $ isJust $ documentservice document
-                         else return $ BS.toString documentinvitetext
+                         else return documentinvitetext
             makeEditable "customtext" header
         fieldM "footer" $ mailFooterForDocument ctx document
         fieldM "link" $ do
             case msiglink of
                  Just siglink -> makeFullLink ctx document $ show (LinkSignDoc document siglink)
                  Nothing -> makeFullLink ctx document "/s/avsäkerhetsskälkanviendastvisalänkenfördinmotpart/"
-        field "partners" $ map (BS.toString . getSmartName) $ partyList document
-        field "partnerswhosigned" $ map (BS.toString . getSmartName) $ partySignedList document
+        field "partners" $ map getSmartName $ partyList document
+        field "partnerswhosigned" $ map getSmartName $ partySignedList document
         field "someonesigned" $ not $ null $ partySignedList document
         field "timetosign" $ show <$> documenttimeouttime document
         field "isattachments" $ length (documentauthorattachments document) > 0
         field "attachments" $ map (filename) (catMaybes authorattachmentfiles)
         field "previewLink" $ show $ LinkDocumentPreview (documentid document) (msiglink <| forMail |> Nothing) (mainfile)
-        field "hassigattachments" $ length (documentsignatoryattachments document ) > 0
+        field "hassigattachments" $ length (concatMap signatoryattachments $ documentsignatorylinks document ) > 0
         -- We try to use generic templates and this is why we return a tuple
-        field "sigattachments" $ for (documentsignatoryattachments document) $ \sa ->
-                        (BS.toString $ signatoryattachmentname sa, BS.toString <$> getSmartName <$> getMaybeSignatoryLink (document, signatoryattachmentemail sa))
+        field "sigattachments" $ for (concat $ (\l -> (\a -> (l,a)) <$> signatoryattachments l) <$> documentsignatorylinks document) $ \(link, sa) ->
+                        (signatoryattachmentname sa, getSmartName link)
         field "companyname" $ nothingIfEmpty $ getCompanyName document
-
 
 
 mailInvitationContent :: TemplatesMonad m
@@ -273,7 +268,7 @@ mailInvitationContent  forMail ctx invitationto document msiglink = do
 
 mailDocumentClosed :: TemplatesMonad m => Context -> Document -> m Mail
 mailDocumentClosed ctx document= do
-   partylist <- renderLocalListTemplate document $ map (BS.toString . getSmartName) $ partyList document
+   partylist <- renderLocalListTemplate document $ map getSmartName $ partyList document
    documentMailWithDocLocale ctx document (fromMaybe "" $ getValueForProcess document processmailclosed) $ do
         field "partylist" $ partylist
         fieldM "footer" $ mailFooterForDocument ctx document
@@ -282,9 +277,9 @@ mailDocumentClosed ctx document= do
 
 mailDocumentAwaitingForAuthor :: (HasLocale a, TemplatesMonad m) => Context -> Document -> a -> m Mail
 mailDocumentAwaitingForAuthor ctx document authorlocale = do
-    signatories <- renderLocalListTemplate authorlocale $ map (BS.toString . getSmartName) $ partySignedList document
+    signatories <- renderLocalListTemplate authorlocale $ map getSmartName $ partySignedList document
     documentMail authorlocale ctx document "mailDocumentAwaitingForAuthor" $ do
-        field "authorname" $ BS.toString $ getSmartName $ fromJust $ getAuthorSigLink document
+        field "authorname" $ getSmartName $ fromJust $ getAuthorSigLink document
         field "documentlink" $ (ctxhostpart ctx) ++ (show $ LinkIssueDoc $ documentid document)
         field "partylist" signatories
         field "companyname" $ nothingIfEmpty $ getCompanyName document
@@ -362,12 +357,12 @@ getUserFooter :: Monad m => Context -> m (Maybe String)
 getUserFooter ctx = return $ join $ customfooter <$> usersettings <$> ctxmaybeuser ctx
 
 getDocumentFooter :: MonadIO m => Document -> m (Maybe String)
-getDocumentFooter doc = return $ fmap BS.toString <$> documentmailfooter $ documentui doc
+getDocumentFooter doc = return $ documentmailfooter $ documentui doc
 
 getServiceFooter :: MonadIO m => Context -> Document -> m (Maybe String)
 getServiceFooter ctx doc = do
   mservice <- liftMM (ioRunDB (ctxdbenv ctx) . dbQuery . GetService) (return $ documentservice doc)
-  return . fmap BS.toString $ mservice >>= servicemailfooter . serviceui
+  return $ mservice >>= servicemailfooter . serviceui
 
 defaultFooter :: TemplatesMonad m => Context -> m String
 defaultFooter ctx = renderTemplateM "poweredByScrive" $ [("ctxhostpart", ctxhostpart ctx)]
@@ -376,7 +371,7 @@ makeFullLink :: TemplatesMonad m => Context -> Document -> String -> m String
 makeFullLink ctx doc link = do
     mservice <- liftMM (ioRunDB (ctxdbenv ctx) . dbQuery . GetService) (return $ documentservice doc)
     case join $ servicelocation <$> servicesettings <$> mservice of
-         Just (ServiceLocation location) -> return $ BS.toString location ++ link
+         Just (ServiceLocation location) -> return $ location ++ link
          Nothing -> return $ ctxhostpart ctx ++ link
 
 
@@ -389,8 +384,8 @@ documentMail haslocale ctx doc mailname otherfields = do
     mcompany <- liftMM (ioRunDB (ctxdbenv ctx) . dbQuery . GetCompany) (return $ getAuthorSigLink doc >>= maybecompany)
     let allfields = do
         contextFields ctx
-        field "documenttitle" $ BS.toString $ documenttitle doc
-        field "creatorname" $ BS.toString $ getSmartName $ fromJust $ getAuthorSigLink doc
+        field "documenttitle" $ documenttitle doc
+        field "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink doc
         when (isJust mcompany) $ do
             let (Just company) = mcompany
             fieldF "companybrand" $ companyBrandFields company

@@ -3,7 +3,6 @@ module UserHistoryTest (userHistoryTests) where
 import Test.HUnit (Assertion)
 import Test.Framework
 import Test.Framework.Providers.HUnit
-import qualified Data.ByteString.Char8 as BS
 import StateHelper
 import TestingUtil
 import Misc
@@ -90,7 +89,7 @@ testAccountCreated env = withTestEnvironment env $ do
     User{userid} <- createTestUser
     now <- getMinutesTime
     success <- dbUpdate $ LogHistoryAccountCreated userid unknownIPAddress now
-      (Email $ BS.pack"test@test.com") Nothing
+      (Email "test@test.com") Nothing
     assertBool "LogHistoryAccountCreated inserted correctly" success
     history <- dbQuery $ GetUserHistoryByUserID userid
     assertBool "User's history is not empty" (not $ null history)
@@ -183,7 +182,7 @@ testHandlerForAccountCreated env = withTestEnvironment env $ do
       <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     req <- mkRequest POST [ ("email", inText "test@test.com")]
     _ <- runTestKontra req ctx $ signupPagePost
-    Just user <- dbQuery $ GetUserByEmail Nothing $ Email $ BS.pack "test@test.com"
+    Just user <- dbQuery $ GetUserByEmail Nothing $ Email "test@test.com"
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
     assertBool "History log exists" (not . null $ history)
     assertBool "History log contains account created event" 
@@ -254,9 +253,9 @@ compareEventDataFromList d l = (uheventdata . uhevent . head $ l) == (Just $ JSA
 
 createTestUser :: DB User
 createTestUser = do
-    pwd <- createPassword $ BS.pack "test_password"
-    muser <- dbUpdate $ AddUser (BS.empty, BS.empty) 
-                                (BS.pack "karol@skrivapa.se") 
+    pwd <- createPassword "test_password"
+    muser <- dbUpdate $ AddUser ("", "")
+                                "karol@skrivapa.se"
                                 (Just pwd) 
                                 False 
                                 Nothing 

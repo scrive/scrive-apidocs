@@ -26,8 +26,7 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Data.List hiding (insert)
 import Data.Maybe
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS
+--import qualified Data.ByteString as BS
 import File.Model
 import Control.Applicative
 import MinutesTime
@@ -178,20 +177,19 @@ instance HasFields  [SignatoryField] where
     replaceField f fs = if (any (matchingFieldType f) fs) 
                                 then map (\f' ->  f <| (matchingFieldType f f') |> f' )  fs
                                 else fs  ++ [f]
-               
+
 instance HasFields SignatoryDetails where
     getAllFields = getAllFields . signatoryfields
     replaceField f s = s {signatoryfields = replaceField f (signatoryfields s) } 
-    
+
 instance HasFields SignatoryLink where
     getAllFields =  getAllFields . signatorydetails
     replaceField f s = s {signatorydetails = replaceField f (signatorydetails s) }     
-            
-replaceFieldValue::(HasFields a) =>  FieldType -> BS.ByteString -> a -> a
-replaceFieldValue ft v a = case (find (matchingFieldType ft) $ getAllFields a) of
-                            Just f  -> replaceField (f { sfValue = v}) a
-                            Nothing -> replaceField (SignatoryField { sfType = ft, sfValue = v, sfPlacements =[]}) a
 
+replaceFieldValue :: HasFields a =>  FieldType -> String -> a -> a
+replaceFieldValue ft v a = case (find (matchingFieldType ft) $ getAllFields a) of
+                            Just f  -> replaceField (f { sfType = ft, sfValue = v}) a
+                            Nothing -> replaceField (SignatoryField { sfType = ft, sfValue = v, sfPlacements =[]}) a
 
 -- does this need to change now? -EN
 checkCSVSigIndex :: [SignatoryLink] -> Int -> Either String Int
@@ -339,7 +337,7 @@ replaceSignOrder signorder sd = sd { signatorysignorder = signorder }
 {- |
    Can the user view this document directly?
  -}
-canUserInfoViewDirectly :: UserID -> BS.ByteString -> Document -> Bool
+canUserInfoViewDirectly :: UserID -> String -> Document -> Bool
 canUserInfoViewDirectly userid email doc =
     (checkSigLink' $ getSigLinkFor doc userid) || (checkSigLink' $ getSigLinkFor doc email)
   where 
@@ -374,7 +372,7 @@ isCurrentSignatory signorder siglink =
   (not $ isAuthor siglink) &&
   signorder == signatorysignorder (signatorydetails siglink)
 
-type CustomSignatoryField = (SignatoryField, BS.ByteString, Bool)
+type CustomSignatoryField = (SignatoryField, String, Bool)
 
 filterCustomField :: [SignatoryField] -> [CustomSignatoryField]
 filterCustomField l = [(sf, cs, cb) | sf@SignatoryField{sfType = CustomFT cs cb} <- l]
@@ -388,39 +386,23 @@ isStandardField SignatoryField{sfType = CustomFT{}} = False
 isStandardField SignatoryField{sfType = SignatureFT{}} = False
 isStandardField _ = True
 
-findCustomField :: (HasFields a ) => BS.ByteString -> a -> Maybe SignatoryField
-findCustomField name = find (matchingFieldType (CustomFT name False) ) . getAllFields
+findCustomField :: HasFields a => String -> a -> Maybe SignatoryField
+findCustomField name = find (matchingFieldType (CustomFT name False)) . getAllFields
 
 {- | Add a tag to tag list -}
-addTag:: [DocumentTag] -> (BS.ByteString,BS.ByteString) -> [DocumentTag]
+addTag:: [DocumentTag] -> (String, String) -> [DocumentTag]
 addTag ((DocumentTag n v):ts) (n',v') = if n == n'
                            then (DocumentTag n v') : ts
                            else (DocumentTag n v)  : (addTag ts (n',v'))
 addTag _ (n,v) = [DocumentTag n v]
 
-samenameanddescription :: BS.ByteString -> BS.ByteString -> (BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)]) -> Bool
+samenameanddescription :: String -> String -> (String, String, [(String, String)]) -> Bool
 samenameanddescription n d (nn, dd, _) = n == nn && d == dd
 
-getSignatoryAttachment :: BS.ByteString -> BS.ByteString -> Document -> Maybe SignatoryAttachment
-getSignatoryAttachment email name doc =
-  find (\sl -> email == signatoryattachmentemail sl &&
-               name  == signatoryattachmentname sl) $
-  documentsignatoryattachments doc
-
-buildattach :: String -> Document -> [SignatoryAttachment]
-               -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])]
-               -> [(BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)])]
-buildattach _ _ [] a = a
-buildattach csvstring d (f:fs) a =
-  case getSigLinkFor d (signatoryattachmentemail f) of
-    Nothing -> if signatoryattachmentemail f == BS.fromString "csv"
-               then case find (samenameanddescription (signatoryattachmentname f) (signatoryattachmentdescription f)) a of
-                 Nothing -> buildattach csvstring d fs (((signatoryattachmentname f), (signatoryattachmentdescription f), [(BS.fromString csvstring, BS.fromString "csv")]):a)
-                 Just (nx, dx, sigs) -> buildattach csvstring d fs ((nx, dx, (BS.fromString csvstring, BS.fromString "csv"):sigs):(delete (nx, dx, sigs) a))
-               else buildattach csvstring d fs a
-    Just sl -> case find (samenameanddescription (signatoryattachmentname f) (signatoryattachmentdescription f)) a of
-      Nothing -> buildattach csvstring d fs (((signatoryattachmentname f), (signatoryattachmentdescription f), [(getFullName sl, getEmail sl)]):a)
-      Just (nx, dx, sigs) -> buildattach csvstring d fs ((nx, dx, (getFullName sl, getEmail sl):sigs):(delete (nx, dx, sigs) a))
+getSignatoryAttachment :: Document -> SignatoryLinkID -> String -> Maybe SignatoryAttachment
+getSignatoryAttachment doc slid name = join $ find (\a -> name == signatoryattachmentname a) 
+                                       <$> signatoryattachments 
+                                       <$> (find (\sl -> slid == signatorylinkid sl) $ documentsignatorylinks doc)
 
 sameDocID :: Document -> Document -> Bool
 sameDocID doc1 doc2 = (documentid doc1) == (documentid doc2)
@@ -456,75 +438,31 @@ fileInDocument doc fid =
     elem fid $      (documentfiles doc)
                  ++ (documentsealedfiles doc)
                  ++ (fmap authorattachmentfile $ documentauthorattachments doc)
-                 ++ (catMaybes $ fmap signatoryattachmentfile $ documentsignatoryattachments doc)
+                 ++ (catMaybes $ fmap signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
 
-makePlacements :: [BS.ByteString]
-               -> [BS.ByteString]
-               -> [Int]
-               -> [Int]
-               -> [Int]
-               -> [Int]
-               -> [Int]
-               -> [(BS.ByteString, BS.ByteString, FieldPlacement)]
-makePlacements placedsigids
-               placedfieldids
-               placedxs
-               placedys
-               placedpages
-               placedwidths
-               placedheights =
-    let placements = zipWith5 FieldPlacement
-                        placedxs
-                        placedys
-                        placedpages
-                        placedwidths
-                        placedheights
-    in zip3 placedsigids placedfieldids placements
-
-filterPlacementsByID :: [(BS.ByteString, BS.ByteString, FieldPlacement)]
-                        -> BS.ByteString
-                        -> BS.ByteString
+filterPlacementsByID :: [(String, String, FieldPlacement)]
+                        -> String
+                        -> String
                         -> [FieldPlacement]
 filterPlacementsByID placements sigid fieldid =
     [x | (s, f, x) <- placements, s == sigid, f == fieldid]
 
-fieldDefAndSigID :: [(BS.ByteString, BS.ByteString, FieldPlacement)]
-                    -> BS.ByteString
-                    -> BS.ByteString
-                    -> BS.ByteString
-                    -> BS.ByteString
-                    -> (BS.ByteString, SignatoryField)
-fieldDefAndSigID placements fn fv fid sigid = (sigid,
-  SignatoryField {
-      sfType = CustomFT fn $ not $ BS.null fv
-    , sfValue = fv
-    , sfPlacements = filterPlacementsByID placements sigid fid
-  })
-
-makeFieldDefs :: [(BS.ByteString, BS.ByteString, FieldPlacement)]
-              -> [BS.ByteString]
-              -> [BS.ByteString]
-              -> [BS.ByteString]
-              -> [BS.ByteString]
-              -> [(BS.ByteString, SignatoryField)]
-makeFieldDefs placements = zipWith4 (fieldDefAndSigID placements)
-
-filterFieldDefsByID :: [(BS.ByteString, SignatoryField)]
-                    -> BS.ByteString
+filterFieldDefsByID :: [(String, SignatoryField)]
+                    -> String
                     -> [SignatoryField]
 filterFieldDefsByID fielddefs sigid =
     [x | (s, x) <- fielddefs, s == sigid]
 
-makeSignatory ::[(BS.ByteString, BS.ByteString, FieldPlacement)]
-                -> [(BS.ByteString, SignatoryField)]
-                -> BS.ByteString
-                -> BS.ByteString
-                -> BS.ByteString
-                -> BS.ByteString
+makeSignatory ::[(String, String, FieldPlacement)]
+                -> [(String, SignatoryField)]
+                -> String
+                -> String
+                -> String
+                -> String
                 -> SignOrder
-                -> BS.ByteString
-                -> BS.ByteString
-                -> BS.ByteString
+                -> String
+                -> String
+                -> String
                 -> SignatoryDetails
 makeSignatory pls fds sid sfn  ssn  se  sso  sc  spn  scn = SignatoryDetails {
     signatorysignorder = sso
@@ -541,7 +479,7 @@ makeSignatory pls fds sid sfn  ssn  se  sso  sc  spn  scn = SignatoryDetails {
     sf ftype value texttype = SignatoryField {
         sfType = ftype
       , sfValue = value
-      , sfPlacements = filterPlacementsByID pls sid (BS.fromString texttype)
+      , sfPlacements = filterPlacementsByID pls sid texttype
     }
 
 recentDate :: Document -> MinutesTime

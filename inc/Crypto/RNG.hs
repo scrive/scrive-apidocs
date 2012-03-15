@@ -1,5 +1,4 @@
 
-
 -- | Support for generation of cryptographically secure random
 -- numbers, based on the DRBG package.
 --

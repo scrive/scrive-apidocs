@@ -941,10 +941,36 @@ $endif$
 mailMailAPIError=
     Scrive by Mail Error
     $nicemail(
-        mailheader= "ScriveBy Mail Error";
+        mailheader= "Scrive by Mail Error";
         mailp1 = "<p>Greetings from Scrive by Mail,</p>";
         mailp2 = "<p>I was unable to process the mail you just sent me and I have not forwarded the document to anyone.</p>";
         mailp3 = errormsg;
         mailp4 = "<p>Thanks for using Scrive by Mail</p>"
     )$
 #####
+mailMailAPIDelayAdmin=
+    Scrive by Mail User Confirmation
+    $nicemail(
+        mailheader= "Scrive by Mail User Confirmation";
+        mailp1 = "<p>Greetings from Scrive by Mail,</p>";
+        mailp2 = concat(a1="<p>I have just received an email from ";a2=email;a3=", which is an account on your domain.</p>");
+        mailp3 = "<p>If this is an email address in your company, please click on the confirmation link below, then I will create the new account. Please act soon. The link expires in three days for security reasons.</p>";
+        mailp4 = para(a=linkk(href=confirmationlink;text="Click here to confirm this account."));
+        mailp5 = "<p>If you received this email in error or the email address is not correct, please ignore this email.</p><p>Thanks for using Scrive by Mail.</p>"
+    )$
+#####
+mailMailAPIDelayUser=
+    Scrive by Mail
+    $nicemail(
+        mailheader= "ScriveBy Mail";
+        mailp1 = "<p>Greetings from Scrive by Mail,</p>";
+        mailp2 = "<p>I was unable to immediately process the mail you just sent me and I have not forwarded the document to anyone.</p>";
+        mailp3 = "<p>There is no account for this email address. I have contacted the Company Account administrators to ask them to confirm the creation of a new account. When your account is created, I will continue processing the document. If you have not received an invitation within three days, please contact the administrator of the Company Account.</p>";
+        mailp4 = "<p>Thanks for using Scrive by Mail</p>"
+    )$
+#####
+para=<p>$a$</p>
+#####
+linkk=<a href="$href$">$text$</a>
+####
+concat=$a1:noescape()$$a2:noescape()$$a3:noescape()$

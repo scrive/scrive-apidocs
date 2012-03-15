@@ -42,7 +42,7 @@ window.SignatoryDesignViewBasic = Backbone.View.extend({
     },
     render: function () {
         var signatory = this.model;
-        this.container = this.el;
+        this.container = $(this.el);
         var view = this;
         this.container.addClass('sigview');
         this.container.children().detach();
@@ -221,8 +221,8 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
             top.append(this.setCsvSignatoryIcon())
         if (signatory.signs())
             top.append(this.setSignOrderIcon());
-        //if (signatory.signs() && !signatory.author() )
-        //    top.append(this.placeSignatureIcon());
+        if (signatory.signs() && !signatory.author() )
+            top.append(this.placeSignatureIcon());
         top.append(this.addFieldButton());
         if (signatory.signs() && document.view.signOrderVisible())
             top.append(this.signOrderSelector());
@@ -245,7 +245,7 @@ window.SignatoriesDesignBasicView = Backbone.View.extend({
         this.render();
     },
     render: function(){
-        var box = this.el;
+        var box = $(this.el);
         box.addClass('signatoriesbox');
         var document = this.model;
         box.children().detach();
@@ -332,7 +332,7 @@ window.SignatoriesDesignAdvancedView = SignatoriesDesignBasicView.extend({
     },
     render: function(){
         this.fixCurrent();
-        var box = this.el;
+        var box = $(this.el);
         box.children().detach();
         box.addClass('signatoriesbox');
         var document = this.model;

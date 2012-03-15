@@ -35,7 +35,7 @@ tableUserFriends = Table {
 tableUsers :: Table
 tableUsers = Table {
     tblName = "users"
-  , tblVersion = 5
+  , tblVersion = 6
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("password", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
@@ -57,6 +57,8 @@ tableUsers = Table {
        , ("deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})
        , ("region", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("customfooter", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("company_name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("company_number", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE users ("
@@ -81,6 +83,8 @@ tableUsers = Table {
           ++ ", deleted BOOL NOT NULL"
           ++ ", region SMALLINT NOT NULL"
           ++ ", customfooter TEXT NULL"
+          ++ ", company_name   TEXT NOT NULL"
+          ++ ", company_number TEXT NOT NULL"
           ++ ", CONSTRAINT pk_users PRIMARY KEY (id)"
           ++ ")"
         return TVRcreated
@@ -101,35 +105,6 @@ tableUsers = Table {
     kRunRaw $ "SELECT setval('users_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM users))"
     kRunRaw $ "ALTER TABLE users ALTER id SET DEFAULT nextval('users_id_seq')"
     return ()
-  }
-
-tableUserMailAPIs :: Table
-tableUserMailAPIs = Table {
-    tblName = "user_mail_apis"
-  , tblVersion = 1
-  , tblCreateOrValidate = \desc -> case desc of
-      [  ("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       , ("key", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       , ("daily_limit", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       , ("sent_today", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       , ("last_sent_date", SqlColDesc {colType = SqlDateT, colNullable = Just False})
-       ] -> return TVRvalid
-      [] -> do
-        kRunRaw $ "CREATE TABLE user_mail_apis ("
-          ++ "  user_id BIGINT NOT NULL"
-          ++ ", key BIGINT NOT NULL"
-          ++ ", daily_limit INTEGER NOT NULL"
-          ++ ", sent_today INTEGER NOT NULL"
-          ++ ", last_sent_date DATE NOT NULL"
-          ++ ", CONSTRAINT pk_user_mail_apis PRIMARY KEY (user_id)"
-          ++ ")"
-        return TVRcreated
-      _ -> return TVRinvalid
-  , tblPutProperties = do
-    kRunRaw $ "ALTER TABLE user_mail_apis"
-      ++ " ADD CONSTRAINT fk_user_mail_apis_users FOREIGN KEY(user_id)"
-      ++ " REFERENCES users(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
 
 tableUserInviteInfos :: Table

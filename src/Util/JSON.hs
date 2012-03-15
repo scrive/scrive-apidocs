@@ -191,7 +191,7 @@ withJSON j a = runReaderT a j
 
 withJSONFromField :: (HasRqData m, MonadIO m, Functor m, ServerMonad m) => String -> ReaderT JSValue m (Maybe a) -> m (Maybe a)
 withJSONFromField s a = do
-    mj <- liftM (runGetJSON readJSObject) (getFieldWithDefault "" s)
+    mj <- liftM (runGetJSON readJSObject) (getField' s)
     case mj of
          Right j -> withJSON j a
          Left _  -> return Nothing

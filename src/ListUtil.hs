@@ -55,7 +55,6 @@ import qualified Data.ByteString.Char8 as BS8
 import Data.Char (toUpper)
 import Happstack.Server hiding (simpleHTTP)
 import Network.HTTP.Base (urlEncode)
-import Data.ByteString.UTF8 (ByteString)
 import Text.JSON
 
 -- This part is responsible for sorting,searching and paging documents lists
@@ -189,9 +188,6 @@ class ViewOrd a where
 
 instance ViewOrd String where
     viewCompare = comparing (map toUpper)
-
-instance ViewOrd ByteString where
-    viewCompare = comparing (map toUpper . BS.toString)
 
 instance (Ord a) => ViewOrd a where
     viewCompare = compare

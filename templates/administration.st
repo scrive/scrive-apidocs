@@ -10,7 +10,7 @@ adminsmain=
     document histories</a></p>
 <p><a href="/adminonly/signhistorycsv">Download the CSV containing
     sign histories</a></p>
-<p><a href="/adminonly/userslistcsv">Download the CSV containing all 
+<p><a href="/adminonly/userslistcsv">Download the CSV containing all
     users (not suspended, with accepted TOS, no integration parties)</a></p>
     <strong>Sales Tools</strong>
     <table><tbody>
@@ -84,10 +84,10 @@ adminusers=
         name : "Admin Users Table",
         schema: new Schema({
             url: "/adminonly/userslist",
-            sorting: new Sorting({ 
+            sorting: new Sorting({
                 fields: [
                       "username"
-                    , "email" 
+                    , "email"
                     , "company"
                     , "uploaded_docs"
                     , "signed_docs"
@@ -200,7 +200,7 @@ adminUsersForSales=
             table.append(tr5);
 
             var tr6 = jQuery("<tr/>").append(jQuery("<td/>").text("Region:"));
-            var region = jQuery("<select name='region'>" 
+            var region = jQuery("<select name='region'>"
                                 + '<option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>'
                                 + '<option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>'
                                 + "</select>");
@@ -225,7 +225,7 @@ adminUsersForSales=
             Confirmation.popup({
               onAccept : function() {
                             var callback = function(t,e,v) {
-                                e.css("background", "red"); 
+                                e.css("background", "red");
                                 jQuery(document.createElement('div'))
                                     .attr("name", "validate-message")
                                     .css({"font-size": 8, "font-weight": "bold", "color": "red"})
@@ -258,7 +258,7 @@ adminUsersForSales=
                                     sndname : sndname.val(),
                                     email : email.val(),
                                     region : region.val(),
-                                    custommessage : header.val()
+                                    custommessage : jQuery('textarea',body).val()
                                     }).send();
                             }
                          },
@@ -268,7 +268,7 @@ adminUsersForSales=
             });
         }
     });
-            
+
     var usersTable = KontraList().init({
         name : "Users Table",
         schema: new Schema({
@@ -438,8 +438,45 @@ admincompany=
 		    <input type="text" style="width:200px;margin:0" value="$companycountry$" name="companycountry" />
 		  </td>
 		</tr>
+		<tr> <td style="padding-top:10px"><strong>Company email domain</strong></td> <td>optional; be careful with this; example input: <b>scrive.com</b></td></tr>
+		<tr> <td>Email domain:</td>
+		  <td>
+		    <input type="text" style="width:200px;margin:0" value="$companyemaildomain$" name="companyemaildomain" />
+		  </td>
+		</tr>
+                $if(hasmailapi)$
+		<tr> <td style="padding-top:10px"><strong>Company Mail API</strong></td> <td> </td></tr>
+		<tr> <td>emails:</td>
+		  <td>
+
+                 <ul id="mailapiemailslist">
+                  <li><a href="mailto:contract$if(!production)$-staging$endif$+$mailapikey$@api.scrive.com">
+                    contract$if(!production)$-staging$endif$+$mailapikey$@api.scrive.com
+                   </a></li>
+                   <li><a href="mailto:offer$if(!production)$-staging$endif$+$mailapikey$@api.scrive.com">
+                     offer$if(!production)$-staging$endif$+$mailapikey$@api.scrive.com
+                   </a></li>
+                   <li><a href="mailto:order$if(!production)$-staging$endif$+$mailapikey$@api.scrive.com">
+                     order$if(!production)$-staging$endif$+$mailapikey$@api.scrive.com
+                   </a></li>
+                 </ul>
+
+		  </td>
+		</tr>
+		<tr> <td>daily limit:</td>
+		  <td>
+                    $mailapilimit$
+                  </td>
+                </tr>
+		<tr> <td>documents sent today:</td>
+		  <td>
+                    $mailapisent$
+                  </td>
+                </tr>
+                $endif$
 	    </tbody></table>
 	    <br/>
+            $if(!hasmailapi)$(Clicking "Change" will add MailAPI key for company; new policy is that all companies have it activated by default.) <br />$endif$
 	    <input type="submit" style="width:200px;font-weight:bold"
 	    value="Change" name="change" />
 	  </div>
@@ -461,13 +498,163 @@ admincompanyusers=
     <li class="active"><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
     <li><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
   </ul>
-  <div class="tab-container">
-    <div class="tab-content account">
-
-    </div>
-  </div>
 </div>
 <script>
+
+  var newUserInCompanyButton = Button.init({
+       color: "green",
+       text : "Add new user",
+       size : "tiny",
+       style: "float:left",
+       onClick : function() {
+            var body = jQuery("<div class='account-body'>");
+            body.append("<p>Create new user account in company</p>");
+            var table = jQuery("<table/>");
+
+            var tr1 = jQuery("<tr/>").append(jQuery("<td/>").text("First name:"));
+            var fstname = jQuery("<input type='text' name='fstname' autocomplete='off' />");
+            tr1.append(jQuery("<td/>").append(fstname));
+            table.append(tr1);
+
+            var tr2 = jQuery("<tr/>").append(jQuery("<td/>").text("Second name:"));
+            var sndname = jQuery("<input type='text' name='sndname' autocomplete='off' />");
+            tr2.append(jQuery("<td/>").append(sndname));
+            table.append(tr2);
+
+            var tr5 = jQuery("<tr/>").append(jQuery("<td/>").text("Email address:"));
+            var email = jQuery("<input type='text' name='email' autocomplete='off' />");
+            tr5.append(jQuery("<td/>").append(email));
+            table.append(tr5);
+
+            var tr6 = jQuery("<tr/>").append(jQuery("<td/>").text("Region:"));
+            var region = jQuery("<select name='region'>"
+                                + '<option $if(user.regiongb)$selected=""$endif$ value="REGION_SE">Sweden (Swedish)</option>'
+                                + '<option $if(user.regionse)$selected=""$endif$ value="REGION_GB">Britain (English)</option>'
+                                + "</select>");
+            tr6.append(jQuery("<td/>").append(region));
+            table.append(tr6);
+
+            var tr7 = jQuery("<tr/>").append(jQuery("<td/>").text("Is company admin:"));
+            var isadmin = jQuery("<input type='checkbox' name='isadmin' autocomplete='off' />");
+            tr7.append(jQuery("<td/>").append(isadmin));
+            table.append(tr7);
+
+
+            var tr8 = jQuery("<tr/>").append(jQuery("<td/>").text("Header:"));
+            var btnHeader = jQuery('<input type="button" class="editer" value="Default"/>').click(function(){
+                prepareForEdit(jQuery(this).parents("div"), '300');
+                jQuery(this).hide();
+            });
+            var header = jQuery('<span class="editable" name="custommessage" style="display: none">'
+                                + jQuery('#message').html()
+                                + '</span>');
+
+            tr8.append(jQuery("<td/>").append(btnHeader).append(header));
+            table.append(tr8);
+
+            body.append(table);
+
+
+            Confirmation.popup({
+              onAccept : function() {
+                            var callback = function(t,e,v) {
+                                e.css("background", "red");
+                                jQuery(document.createElement('div'))
+                                    .attr("name", "validate-message")
+                                    .css({"font-size": 8, "font-weight": "bold", "color": "red"})
+                                    .append(v.message())
+                                    .appendTo(e.parent());
+                            };
+
+                            //reset red background
+                            fstname.css("background", "white");
+                            sndname.css("background", "white");
+                            email.css("background", "white");
+                            region.css("background", "white");
+
+                            //delete messages
+                            jQuery('[name=validate-message]').remove();
+
+                            var vresult = [
+                                fstname.validate(new NameValidation({callback: callback, message: "Wrong first name format!"})),
+                                sndname.validate(new NameValidation({callback: callback, message: "Wrong second name format!"})),
+                                email.validate((new NotEmptyValidation({callback: callback, message: "Email cannot be empty!"})).concat(new EmailValidation({callback: callback}))),
+                                region.validate(new NotEmptyValidation({callback: callback, message:"Region cannot be empty!"}))
+                                ];
+
+                            if (vresult.every(function(a) {return a;})) {
+                                new Submit({
+                                    method: "POST",
+                                    url: "$admincompanieslink$/users/$companyid$",
+                                    fstname : fstname.val(),
+                                    sndname : sndname.val(),
+                                    email : email.val(),
+                                    region : region.val(),
+                                    iscompanyadmin : isadmin.is(":checked") ? "Yes" : undefined,
+                                    custommessage : jQuery('textarea',body).val()
+                                    }).send();
+                            }
+                         },
+              title : "Create user in company",
+              acceptText : "Create",
+              content  : body
+            });
+   } }).input();
+
+  var inviteExistingUserToCompany = Button.init({
+     color: "green",
+     text : "Invite existing user",
+     size : "tiny",
+     style: "float:left;margin-left:10px",
+     onClick : function() {
+     var body = jQuery("<div class='account-body' style='min-height:50px;'>");
+            body.append("<p>Create new user account in company</p>");
+            var table = jQuery("<table/>");
+
+            var tr = jQuery("<tr/>").append(jQuery("<td/>").text("Email address:"));
+            var email = jQuery("<input type='text' name='email' autocomplete='off' />");
+            tr.append(jQuery("<td/>").append(email));
+            table.append(tr);
+            body.append(table);
+
+
+            Confirmation.popup({
+              onAccept : function() {
+                            var callback = function(t,e,v) {
+                                e.css("background", "red");
+                                jQuery(document.createElement('div'))
+                                    .attr("name", "validate-message")
+                                    .css({"font-size": 8, "font-weight": "bold", "color": "red"})
+                                    .append(v.message())
+                                    .appendTo(e.parent());
+                            };
+
+                            email.css("background", "white");
+
+
+                            //delete messages
+                            jQuery('[name=validate-message]').remove();
+
+                            var vresult = [
+                                email.validate((new NotEmptyValidation({callback: callback, message: "Email cannot be empty!"})).concat(new EmailValidation({callback: callback}))),
+                                ];
+
+                            if (vresult.every(function(a) {return a;})) {
+                                new Submit({
+                                    method: "POST",
+                                    url: "$admincompanieslink$/users/$companyid$",
+                                    email : email.val(),
+                                    privateinvite : "true",
+                                    }).send();
+                            }
+                         },
+              title : "Add existing user to company",
+              acceptText : "Add",
+              content  : body
+            });
+    }}).input();
+
+
   jQuery(function() {
 
     var companyAccountsTable = KontraList().init({
@@ -496,9 +683,10 @@ admincompanyusers=
                       }
                     }})
         ]
-      })
+      }),
+      headerExtras : newUserInCompanyButton.add(inviteExistingUserToCompany)
     });
-    jQuery(".tab-content").append(companyAccountsTable.view.el);
+    jQuery(".tab-viewer").append(companyAccountsTable.view.el);
   });
 </script>
 ####
@@ -711,7 +899,7 @@ admindocumentslist =
         name : "Documents Table",
         schema: new Schema({
             url: "/adminonly/documentslist",
-            sorting: new Sorting({ 
+            sorting: new Sorting({
                 fields: [
                       "ctime"
                     , "mtime"
@@ -729,39 +917,39 @@ admindocumentslist =
                 new Cell({name: "Dates", width:"80px", field: "ctime", special: "rendered",
                         rendering: function(_, _, doc) {
                                return jQuery("<small><span>"
-                                          + doc.field("ctime") + " <BR/> " 
+                                          + doc.field("ctime") + " <BR/> "
                                           + doc.field("mtime") +
                                        " </small>");
                           }}),
                 new Cell({name: "Author", width:"120px", field:"author", special: "rendered",
                         rendering: function(value, idx, doc) {
-                            if (value != undefined) 
-                                return jQuery("<small><span>" + value.name    + " <BR/> " 
-                                                   + value.email   + " <BR/> " 
+                            if (value != undefined)
+                                return jQuery("<small><span>" + value.name    + " <BR/> "
+                                                   + value.email   + " <BR/> "
                                                    + value.company + "</span></small>");
                           }}),
-                new Cell({name: "Title", width:"120px", field:"title",  special: "rendered", 
+                new Cell({name: "Title", width:"120px", field:"title",  special: "rendered",
                         rendering: function(value, idx, doc) {
                                 return jQuery("<small>"+value+"</small>");
                           }}),
-                new Cell({name: "Service", width:"40px", field:"service", special: "rendered", 
+                new Cell({name: "Service", width:"40px", field:"service", special: "rendered",
                           rendering: function(value, idx, doc) {
-                            if (value == undefined) 
+                            if (value == undefined)
                                 return jQuery("<small>" + value + "</small>");
 
                             return jQuery("<small>Scrive</small>");
                           }}),
-                new Cell({name: "Status", width:"40px", field:"status",  special: "rendered", 
+                new Cell({name: "Status", width:"40px", field:"status",  special: "rendered",
                         rendering: function(value, idx, doc) {
                                 return jQuery("<small>"+value+"</small>");
                           }}),
-                new Cell({name: "Type", width:"40px", field:"type",  special: "rendered", 
+                new Cell({name: "Type", width:"40px", field:"type",  special: "rendered",
                         rendering: function(value, idx, doc) {
                                 return jQuery("<small>"+value+"</small>");
                           }}),
                 new Cell({name: "Signatories", width:"120px", field:"signs", special: "rendered",
                           rendering: function(value, idx, doc) {
-                            if (value == undefined) 
+                            if (value == undefined)
                                 return ;
 
                             return jQuery("<small>" + value.join('<BR/>') + "</small>");

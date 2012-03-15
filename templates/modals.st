@@ -219,7 +219,6 @@ jQuery('form[action="$signuplink$"]').submit(function(){
             .append(v.message())
             .appendTo(e.parent());
     };
-
     var fstname   = jQuery('#signupInfo').find('input[name="fstname"]');
     var sndname   = jQuery('#signupInfo').find('input[name="sndname"]');
     var password  = jQuery('#signupInfo').find('input[name="password"]');
@@ -256,10 +255,11 @@ jQuery('form[action="$signuplink$"]').submit(function(){
     if (callme.attr('checked'))
         vresult.push(phone.validate(new NotEmptyValidation({callback: callback, message: localization.validation.phoneRequired})));
 
-    if (vresult.every(function(a) {return a;})) 
-        return true;
+    var ret = true;
 
-    return false;
+    jQuery.each(vresult, function(k,v) { if(!v) ret = false; });
+
+    return ret;
 });
 }
 </script>
@@ -758,10 +758,11 @@ jQuery('#accountFromSignForm').submit(function(){
     if (callme.attr('checked'))
         vresult.push(phone.validate(new NotEmptyValidation({callback: callback, message: localization.validation.phoneRequired})));
 
-    if (vresult.every(function(a) {return a;})) 
-        return true;
+    var ret = true;
 
-    return false;
+    jQuery.each(vresult, function(k,v) { if(!v) ret = false; });
+
+    return ret;
 });
 }
 </script>
@@ -1162,6 +1163,58 @@ modalUserSignupDone=
   <div class="modal-body">
     <div class="modal-content">
       <p>$_modalUserSignupDoneBody()$</p>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <a class="btn-small green float-right close">
+      <div class="left"></div>
+      <div class="label">
+        <p>$_close()$</p>
+        <div class="btn-symbol green arrow-left"></div>
+      </div>
+      <div class="right"></div>
+    </a>
+  </div>
+</div>
+#####
+modalDenyDelay=
+<div class="modal-container">
+  <div class="modal-header">
+    <span class="modal-icon message"></span>
+    <span class="modal-title">
+      <h3>$_signatoryMessageIfTimedout()$</h3>
+    </span>
+    <a class="modal-close close"> </a>
+  </div>
+  <div class="modal-body">
+    <div class="modal-content">
+      <p>$_modalDenyDelay()$</p>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <a class="btn-small green float-right close">
+      <div class="left"></div>
+      <div class="label">
+        <p>$_close()$</p>
+        <div class="btn-symbol green arrow-left"></div>
+      </div>
+      <div class="right"></div>
+    </a>
+  </div>
+</div>
+#####
+modalConfirmDelay=
+<div class="modal-container">
+  <div class="modal-header">
+    <span class="modal-icon message"></span>
+    <span class="modal-title">
+      <h3>$_modalUserSignupDoneHeader()$</h3>
+    </span>
+    <a class="modal-close close"> </a>
+  </div>
+  <div class="modal-body">
+    <div class="modal-content">
+      <p>$_modalConfirmDelay()$</p>
     </div>
   </div>
   <div class="modal-footer">

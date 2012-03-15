@@ -60,9 +60,9 @@ var ButtonView = Backbone.View.extend({
         this.render();
     },
     render: function () {
-        this.el.addClass(this.model.color());
-        this.el.addClass("btn-"+this.model.size());
-        this.el.append("<div class='left'/>");
+        $(this.el).addClass(this.model.color());
+        $(this.el).addClass("btn-"+this.model.size());
+        $(this.el).append("<div class='left'/>");
         
         var label = $("<div class='label'/>").text(this.model.text());
         if (this.model.width() != undefined)
@@ -70,9 +70,9 @@ var ButtonView = Backbone.View.extend({
         label.append(this.model.icon());
         if (this.model.labelstyle() != undefined)
             label.attr("style",this.model.labelstyle());
-        this.el.append(label);
+        $(this.el).append(label);
         
-        this.el.append("<div class='right'/>");
+        $(this.el).append("<div class='right'/>");
         return this;
     },
     clicked: function(){

@@ -9,7 +9,6 @@ import Data.List
 import Util.StringUtil
 import Data.Char
 import Doc.DocStateData
-import qualified Data.ByteString.UTF8 as BS
 
 -- Simple Mail API
 
@@ -131,17 +130,17 @@ parseSignatory sig =
       prsnr   = msum $ map (flip levLookup $ pairs) persStrings
   in
    if all isJust [fstname, sndname, email]
-   then let ss = [SignatoryField FirstNameFT (BS.fromString $ fromJust fstname) [],
-                  SignatoryField LastNameFT  (BS.fromString $ fromJust sndname) [],
-                  SignatoryField EmailFT     (BS.fromString $ fromJust email  ) []] ++
-                 [SignatoryField CompanyFT   (BS.fromString $ a               ) [] | Just a <- [company]] ++
-                 [SignatoryField CompanyNumberFT   (BS.fromString $ a               ) [] | Just a <- [cmpnr]] ++ 
-                 [SignatoryField PersonalNumberFT   (BS.fromString $ a               ) [] | Just a <- [prsnr]]
+   then let ss = [SignatoryField FirstNameFT (fromJust fstname) [],
+                  SignatoryField LastNameFT  (fromJust sndname) [],
+                  SignatoryField EmailFT     (fromJust email  ) []] ++
+                 [SignatoryField CompanyFT   (a               ) [] | Just a <- [company]] ++
+                 [SignatoryField CompanyNumberFT   (a               ) [] | Just a <- [cmpnr]] ++
+                 [SignatoryField PersonalNumberFT   (a               ) [] | Just a <- [prsnr]]
         in if length ss == length pairs 
            then Just $ SignatoryDetails (SignOrder 0) ss
            else Nothing
    else Nothing
-       
+
 parseSimpleEmail :: String -> String -> Either String (String, [SignatoryDetails])
 parseSimpleEmail subject mailbody =  
   case getParseErrorsEmail mailbody of
@@ -151,5 +150,3 @@ parseSimpleEmail subject mailbody =
                in Right $ (strip subject,
                            catMaybes sigs)
     es -> Left $ intercalate "<br /><br />\n" (map show es)
-                           
-

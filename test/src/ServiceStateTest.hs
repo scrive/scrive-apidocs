@@ -4,7 +4,6 @@ import Control.Applicative
 import Control.Monad
 import Data.Maybe
 import Test.Framework
-import qualified Data.ByteString.UTF8 as BS
 
 import API.Service.Model
 import DB.Classes
@@ -48,9 +47,9 @@ test_updateServiceUI :: DB ()
 test_updateServiceUI = do
   Just Service{serviceid = sid, serviceui} <- addTestService
   let sui = serviceui {
-    servicemailfooter = Just $ BS.fromString "blabla"
-  , servicebuttonstextcolor = Just $ BS.fromString "yellow"
-  , servicebackground = Just $ BS.fromString "red"
+    servicemailfooter = Just "blabla"
+  , servicebuttonstextcolor = Just "yellow"
+  , servicebackground = Just "red"
   }
   res <- dbUpdate $ UpdateServiceUI sid sui
   assertBool "ServiceUI updated correctly" res
@@ -61,8 +60,8 @@ test_updateServiceSettings :: DB ()
 test_updateServiceSettings = do
   Just Service{serviceid = sid, servicesettings} <- addTestService
   let ss = servicesettings {
-    servicelocation = Just $ ServiceLocation $ BS.fromString "test_location"
-  , servicemailfromaddress = Just $ BS.fromString "blabla"
+    servicelocation = Just $ ServiceLocation "test_location"
+  , servicemailfromaddress = Just "blabla"
   }
   res <- dbUpdate $ UpdateServiceSettings sid ss
   assertBool "ServiceSettings updated correctly" res

@@ -49,7 +49,6 @@
 "_SaveSettings","Spara inställningar",,"Save settings"
 "_SampleEmailHeader","Ämne...",,"The Email Subject..."
 "_SampleEmailContent","Innehåll...",,"The email content..."
-"_RecommendedLogoSize","Vi rekommenderar att du laddar upp en bild som maximalt är 200px bred och 33px hög.",,"We recommend that you upload an image with a maximum width of 200px and a maximum height of 33px."
 "_CreateAccount","Skapa konto!",,"Create account!"
 "_Document","Dokument",,"Document"
 "_DownloadPDF","Ladda ned PDF",,"Download PDF"
@@ -62,13 +61,13 @@
 "_InviteBox","Skriv e-post för att lägga till fler",,"Enter email, and invite a friend"
 "_LanguageSettings","Regioninställningar",,"Region settings"
 "_MailAPIActiveEmail","Aktiva e-postadresser:",,"Active email addresses:"
-"_MailAPIEnable","Aktivera Scrive by Mail",,"Enable Scrive by Mail"
+"_MailAPIEnable","Aktivera Personlig Scrive by Mail",,"Enable Personal Scrive by Mail"
 "_MailAPILimitHead","Begränsningar",,"Limits"
 "_MailAPILimitsDaily","Daglig begränsning för processade mail",,"Daily limit of processed e-mails"
 "_MailAPILimitsProcessedToday","Mail processade idag:",,"Emails processed today:"
 "_MailAPILimitsResetToday","Återställ mail processade idag",,"Reset counter of e-mails processed today"
 "_MailAPIResetKey","API-nyckel",,"Reset API key"
-"_MailAPISettings","Inställningar",,"Settings"
+"_MailAPISettings","Personlig Inställningar",,"Personal Settings"
 "_NewPassword","Nytt lösenord:",,"New password:"
 "_OfferReminderBodyMulti","Är du säker att du vill skicka en påminnelse til berörda parter för",,"Are you sure you want to send reminders to the parties involved in the"
 "_OfferReminderBodySingel","Är du säker att du vill skicka en påminnelse till berörda parter i offerter",,"Are you sure you want to send a reminder to the parties involved in the offer"
@@ -122,7 +121,7 @@
                                                       </li>
                                                        <li class=""odd"">2000 kr/månad</li>
            <li>
-                   <p>30 kr/signatur</p>
+                   <p>20 kr/signatur</p>
                                         </li>
                                          <li class=""odd"">Ingen bindning</li>
          <li>50 användare</li>
@@ -136,7 +135,7 @@
                                     <li class=""odd"">200 €/month</li>
                                                         <li>
 
-    <p>3.0 €/signature</p>
+    <p>2.0 €/signature</p>
                            </li>
                             <li class=""odd"">No commitment</li>
                                                         <li>50 users</li>
@@ -150,7 +149,7 @@
                                     <li class=""odd"">200 €/month</li>
                                                         <li>
 
-    <p>3.0 €/signature</p>
+    <p>2.0 €/signature</p>
                            </li>
                             <li class=""odd"">No commitment</li>
                                                         <li>50 users</li>
@@ -176,11 +175,11 @@
                                  <td>200 €/month</td>
                                                   <td>Offer</td>"
 "_PriceTableRow2","<td>5 fria signaturer/månad</td>
-                      <td>35 kr/signatur</td>
-                                             <td>30 kr/signatur</td>
+                      <td>25 kr/signatur</td>
+                                             <td>20 kr/signatur</td>
                                                         <td>Offert</td>",,"<td>5 free signatures/month</td>
-                        <td>3.5 €/signature</td>
-                                                 <td>3.0 €/signature</td>
+                        <td>2.5 €/signature</td>
+                                                 <td>2.0 €/signature</td>
                                                         <td>Offer</td>"
 "_PriceTableRow3","<td>Ingen bindning</td>
                    <td>Ingen bindning</td>
@@ -2947,3 +2946,7 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_modalAccountSetupCallMe","Jag vill veta mer, ring mig!",,"I want to know more, call me!"
 "_modalAccountSetupPhone","Telefonnummer",,"Phone"
 "_uploadNewFile","Please select a new file to upload.",,"Please select a new file to upload."
+_CompanyMailAPI,"Company Settings",,"Company Settings"
+_modalDenyDelay,"This confirmation link has expired.",,"This confirmation link has expired."
+_modalConfirmDelay,"An account for your company has been created for $email$. Thank you.",,"An account for your company has been created for $email$. Thank you."
+

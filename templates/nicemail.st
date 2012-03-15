@@ -19,15 +19,15 @@ nicemail=
                 <table id="header" width="580" cellpadding="9" bgcolor="$nicemailbgcolour()$"
                     cellspacing="0" align="center" style="color:$nicemailfgcolour()$;text-align:center;margin:auto">
                     <tr>
-                        <td style="text-align:left; margin: auto;padding:10px;">
-                          <div style="background-repeat:no-repeat;background-image:url('$nicemaillogo()$');height:33px;width:100%;"/>
+                        <td style="text-align:center; margin: auto;padding:20px;min-height:33px;">
+                          <img src="$nicemaillogo()$" style="margin:auto;"></img>
                         </td>
                     </tr>
                     <tr>
                     <td>
                         <table id="banner" width="590" cellpadding="0" bgcolor="$nicemailbgcolour()$">
                             <tr>
-                                <td width="580" align="center" cellpadding="0" style="text-align:center;"><span style="font-weight:100;font-size:32px;margin:0px;letter-spacing:0.04em;color:$nicemailfgcolour()$;font-family:'Copse', serif;padding:10px">
+                                <td width="580" align="center" cellpadding="0" style="text-align:center;"><span style="font-weight:100;font-size:24px;margin:0px;letter-spacing:0.04em;color:$nicemailfgcolour()$;font-family:'Copse', serif;padding:10px">
                                     $if(mailheader)$ $mailheader$ $endif$
                                     </span>
                                 </td>

@@ -1,4 +1,8 @@
-module Doc.Invariants (listInvariantProblems, invariantProblems, documentInvariants) where
+module Doc.Invariants (
+    listInvariantProblems
+  , invariantProblems
+  , documentInvariants
+  ) where
 
 import Doc.DocStateData
 import Util.SignatoryLinkUtils
@@ -11,9 +15,6 @@ import InputValidation
 
 import Data.List
 import Data.Maybe
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS hiding (length)
-
 
 listInvariantProblems :: MinutesTime -> [Document] -> [String]
 listInvariantProblems now docs = catMaybes $ map (invariantProblems now) docs
@@ -153,10 +154,7 @@ closedWhenAllSigned _ document =
 hasSignedAttachments :: MinutesTime -> Document -> Maybe String
 hasSignedAttachments _ document =
   assertInvariant "a signatory has signed without attaching his requested attachment" $
-  all (hasSigned =>>^ (all (isJust . signatoryattachmentfile) . (sigAttachmentsForEmail document . getEmail))) (documentsignatorylinks document)
-       
-sigAttachmentsForEmail :: Document -> BS.ByteString -> [SignatoryAttachment]
-sigAttachmentsForEmail doc email = filter ((== email) . signatoryattachmentemail) (documentsignatoryattachments doc)
+  all (hasSigned =>>^ (all (isJust . signatoryattachmentfile) . (signatoryattachments))) (documentsignatorylinks document)
        
 {- |
    Has signed implies has seen.
@@ -173,7 +171,7 @@ maxLengthOnFields :: MinutesTime -> Document -> Maybe String
 maxLengthOnFields _ document =
   let maxlength = 512 :: Int
       lengths :: [Int] 
-      lengths = concatMap (map (BS.length . sfValue) . signatoryfields . signatorydetails) (documentsignatorylinks document)
+      lengths = concatMap (map (length . sfValue) . signatoryfields . signatorydetails) (documentsignatorylinks document)
       m = maximum (0 : lengths) in
   assertInvariant ("some fields were too long: " ++ show m ++ ". max is " ++ show maxlength) $ m <= maxlength
     
@@ -240,7 +238,7 @@ _hasFirstName :: MinutesTime -> Document -> Maybe String
 _hasFirstName _ document =
   assertInvariant "has a signatory with no first name" $
     all (\sl -> (isPending document || isClosed document || isAwaitingAuthor document) =>>
-                (not $ null $ BS.toString $ getFirstName sl))
+                (not $ null $ getFirstName sl))
         (documentsignatorylinks document)
 
 -- | Last Name not null
@@ -248,7 +246,7 @@ _hasLastName :: MinutesTime -> Document -> Maybe String
 _hasLastName _ document =
   assertInvariant "has a signatory with no last name" $
     all (\sl -> (isPending document || isClosed document || isAwaitingAuthor document) =>>
-                (not $ null $ BS.toString $ getLastName sl))
+                (not $ null $ getLastName sl))
         (documentsignatorylinks document)
 
 -- | Email looks like email
@@ -256,7 +254,7 @@ hasValidEmail :: MinutesTime -> Document -> Maybe String
 hasValidEmail _ document =
   assertInvariant "has a signatory with invalid email" $
     all (\sl -> (isPending document || isClosed document || isAwaitingAuthor document) =>>
-                (isGood $ asValidEmail $ BS.toString $ getEmail sl))
+                (isGood $ asValidEmail $ getEmail sl))
         (documentsignatorylinks document)
     
 -- | Has only one of each type of field

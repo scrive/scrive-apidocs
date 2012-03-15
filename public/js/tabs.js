@@ -54,7 +54,7 @@ window.Tab = Backbone.Model.extend({
 
 var Tabs = Backbone.Model.extend({
    defaults: {
-       numbers : true,
+       numbers : true
     },  
    title: function(){
      return this.get("title");
@@ -118,7 +118,7 @@ var Tabs = Backbone.Model.extend({
    },
    tabsTail: function(){
      return this.get("tabsTail");
-   },
+   }
 });
 
 
@@ -133,7 +133,7 @@ var TabsView = Backbone.View.extend({
         this.render();
     },
     prerender: function(){
-        var container = this.el;
+        var container = $(this.el);
         container.addClass("tab-viewer");
         this.toprow = $("<div id='signStepsContainer'/>");
         container.append(this.toprow);

@@ -13,9 +13,7 @@ module Amazon (
 import Network.AWS.Authentication
 import System.FilePath ((</>))
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 
@@ -35,7 +33,7 @@ urlFromFile :: File -> String
 urlFromFile File{filename, fileid} =
     -- here we use BSC.unpack, as HTTP.urlEncode
     -- does only %-escaping for 8bit values
-    "file" </> show fileid </> HTTP.urlEncode (BSC.unpack filename) ++ ".pdf"
+    "file" </> show fileid </> HTTP.urlEncode filename ++ ".pdf"
 
 -- | Upload a document file. This means one of:
 --
@@ -44,7 +42,7 @@ urlFromFile File{filename, fileid} =
 -- - do nothing and keep it in memory database
 uploadFile :: FilePath -> S3Action -> File -> DB ()
 uploadFile docstore@(_:_) AWS.S3Action{AWS.s3bucket = ""} File{fileid, filename, filestorage = FileStorageMemory content} = do
-    let filepath = docstore </> show fileid ++ '-' : BSC.unpack filename ++ ".pdf"
+    let filepath = docstore </> show fileid ++ '-' : filename ++ ".pdf"
     liftIO $ BS.writeFile filepath content
     Log.debug $ "Document file #" ++ show fileid ++ " saved as " ++ filepath
     dbUpdate $ FileMovedToDisk fileid filepath
@@ -62,7 +60,7 @@ uploadFile _ ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)} file@File{fileid, fi
     case result of
          Right _ -> do
              Log.debug $ "AWS uploaded " ++ bucket </> url
-             _ <- dbUpdate $ FileMovedToAWS fileid (BS.fromString bucket) (BS.fromString url)
+             _ <- dbUpdate $ FileMovedToAWS fileid bucket url
              return ()
          Left err -> do -- FIXME: do much better error handling
              Log.debug $ "AWS failed to upload of " ++ bucket </> url ++ " failed with error: " ++ show err
@@ -89,8 +87,8 @@ getFileContents _ File{filestorage = FileStorageMemory content} =
     return content
 
 getFileContents s3action File{filestorage = FileStorageAWS bucket url} = do
-  let action = s3action { AWS.s3object = BS.toString url
-                        , AWS.s3bucket = BS.toString bucket
+  let action = s3action { AWS.s3object = url
+                        , AWS.s3bucket = bucket
                         }
   result <- AWS.runAction action
   case result of
