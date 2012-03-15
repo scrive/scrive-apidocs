@@ -390,8 +390,8 @@ window.DocumentSaveAfterSignView = Backbone.View.extend({
     });
   },
   createPassword2ValidationFunction: function(passwordinput, password2input) {
-    return this.createValidationFunction(passwordinput, password2input, function(callback) {
-      return new PasswordValidation({
+    return this.createValidationFunction(password2input, password2input, function(callback) {
+      return new PasswordEqValidation({
           callback: callback
         , message: localization.validation.passwordsDontMatch
         , "with": passwordinput
