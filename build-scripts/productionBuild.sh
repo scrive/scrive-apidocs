@@ -6,6 +6,10 @@
 # example:
 #DIR=/home/eric/haskell/kontrakcja
 
+echo "Directory: "$DIR
+echo "BUILD_NUMBER: "$BUILD_NUMBER
+echo "TMP: "$TMP
+
 cd $DIR
 
 BUILD_DATE=`date "+%Y-%m-%d-%H-%M-%S"`
