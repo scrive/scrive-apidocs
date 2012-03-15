@@ -13,7 +13,7 @@ echo "TMP: "$TMP
 #cd $DIR
 
 BUILD_DATE=`date "+%Y-%m-%d-%H-%M-%S"`
-BUILD_VCS_NUMBER=`git log -1 --pretty=oneline|awk '{print $1;}'`
+#BUILD_VCS_NUMBER=`git log -1 --pretty=oneline|awk '{print $1;}'`
 
 sh build-scripts/runCleanCompile.sh
 
