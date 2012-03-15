@@ -97,7 +97,7 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
                document.timedout() ||
                document.canceled() ||
                document.datamismatch())
-      return ""
+      return localization.docsignview.unavailableForSign
     else if (signatory.rejecteddate()!= undefined)
       return localization.signatoryMessage.rejected;
     else
@@ -1016,7 +1016,8 @@ window.DocumentSignView = Backbone.View.extend({
       }
       this.container.append(subcontainer);
 
-      if (!this.model.currentSignatory().hasSigned()) {
+      if (this.model.signingInProcess() &&
+           !this.model.currentSignatory().hasSigned()) {
         this.container.prepend(this.createArrowsElems(tasks));
       }
 
