@@ -14,6 +14,10 @@ window.DocumentDownloadView = Backbone.View.extend({
   render: function() {
     $(this.el).empty();
 
+    if (this.model.mainfile()==undefined) {
+      return this;
+    }
+
     var link = $("<a target='_blank' />");
     link.attr("href", this.model.mainfile().downloadLink());
     link.append($("<div class='float-left icon' />"));
