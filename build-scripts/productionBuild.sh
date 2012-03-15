@@ -102,10 +102,10 @@ echo "Creating final enhanced deployment file"
 tar zcf "$finalfile" "$signedmime" "$ZIP"
 
 echo "Pushing to amazon"
-s3cmd --acl-private put "$finalfile" s3://kontrakcja-production
+s3cmd --acl-private put "$finalfile" s3://production-builds
 
 echo "Checking amazon md5 sum"
-md5amazon=`s3cmd info "s3://kontrakcja-production/$finalfile" | grep MD5 | awk '{print $3}'`
+md5amazon=`s3cmd info "s3://production-builds/$finalfile" | grep MD5 | awk '{print $3}'`
 echo "MD5SUM from Amazon S3: "$md5amazon
 md5local=`md5sum "$finalfile" | awk 'BEGIN { FS = " +" } ; { print $1 }'`
 echo "MD5SUM from local    : "$md5local
@@ -117,6 +117,6 @@ else
     exit 1
 fi
 
-echo "s3://kontrakcja-production/$finalfile"
+echo "s3://production-builds/$finalfile"
 
 exit 0
