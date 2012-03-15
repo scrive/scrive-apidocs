@@ -154,8 +154,8 @@ window.SignatoryAttachmentUploadView = Backbone.View.extend({
     }
     container.append($("<div class='clearfix' />"));
 
-    this.el.empty();
-    this.el.append(container);
+    $(this.el).empty();
+    $(this.el).append(container);
     return this;
   }
 });
@@ -173,7 +173,7 @@ window.SignatoryAttachmentView = Backbone.View.extend({
     });
   },
   render: function() {
-    this.el.empty();
+    $(this.el).empty();
 
     var firstcol = $("<div class='first column'/>")
     firstcol.append($("<div class='name' />").text(this.model.name()));
@@ -181,11 +181,11 @@ window.SignatoryAttachmentView = Backbone.View.extend({
 
     var container = $("<div class='item' />");
     container.append(firstcol);
-    container.append($("<div class='second column'/>").append(this.uploadView().el));
+    container.append($("<div class='second column'/>").append($(this.uploadView().el)));
 
     container.append($("<div class='clearfix' />"));
 
-    this.el.append(container);
+    $(this.el).append(container);
     return this;
   }
 });
@@ -201,7 +201,7 @@ window.UploadedSignatoryAttachmentView = Backbone.View.extend({
     return $("<a target='_blank'/>").text(localization.reviewPDF).attr("href",this.model.file().downloadLink());
   },
   render: function() {
-    this.el.empty();
+    $(this.el).empty();
 
     var container = $("<div class='item' />");
     container.append($("<div class='icon' />"));
@@ -219,7 +219,7 @@ window.UploadedSignatoryAttachmentView = Backbone.View.extend({
     container.append(label);
     container.append($("<div class='clearfix' />"));
 
-    this.el.append(container);
+    $(this.el).append(container);
     return this;
   }
 });

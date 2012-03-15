@@ -55,10 +55,10 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     }
   },
   createMenuElems: function() {
-    return new DocumentActionMenuView({
+    return $(new DocumentActionMenuView({
       model: this.model,
       el: $("<div class='menuwrapper'/>")
-    }).el;
+    }).el);
   },
   render: function() {
     $(this.el).empty();
@@ -185,10 +185,10 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
         if (signatory.current()) {
           fieldwrapper.append($("<div class='label' />").append(field.nicename() + ":"));
         }
-        fieldwrapper.append(new FieldStandardView({
+        fieldwrapper.append($(new FieldStandardView({
           model: field,
           el: $("<div class='field' />")
-        }).el);
+        }).el));
         inputbits.append(fieldwrapper);
       }
     });
@@ -276,13 +276,13 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
     return othersignatories;
   },
   createSignatoryElems: function(signatory) {
-    return new DocumentSignSignatoryView({
+    return $(new DocumentSignSignatoryView({
       model: signatory,
       summary: new SignatoryReducedSummary({
         model: signatory
       }),
       el: $("<div />")
-    }).el;
+    }).el);
   },
   render: function() {
     $(this.el).empty();
@@ -730,29 +730,29 @@ window.DocumentSignView = Backbone.View.extend({
       return this;
     },
     createSignInstructionElems: function() {
-      return new DocumentSignInstructionsView({
+      return $(new DocumentSignInstructionsView({
         model: this.model,
         el: $("<div/>")
-      }).el;
+      }).el);
     },
     createSaveAfterSignViewElems: function() {
-      return new DocumentSaveAfterSignView({
+      return $(new DocumentSaveAfterSignView({
        model: this.saveAfterSignModel,
        el: $("<div />")
-      }).el;
+      }).el);
     },
     createShareAfterSignViewElems: function() {
-      return new DocumentShareAfterSignView({
+      return $(new DocumentShareAfterSignView({
         model: this.saveAfterSignModel,
         el: $("<div />")
-      }).el;
+      }).el);
     },
     createMainFileElems: function() {
       var file = KontraFile.init({
         file: this.model.mainfile(),
         document: this.model
       });
-      return file.view.el;
+      return $(file.view.el);
     },
     authorAttachmentsTitle: function() {
       if (!this.model.signingInProcess() || !this.model.currentSignatoryCanSign()) {
@@ -764,11 +764,11 @@ window.DocumentSignView = Backbone.View.extend({
       }
     },
     createAuthorAttachmentsElems: function() {
-      return new DocumentAuthorAttachmentsView({
+      return $(new DocumentAuthorAttachmentsView({
         model: this.model,
         el: $("<div class='section'/>"),
         title: this.authorAttachmentsTitle()
-      }).el;
+      }).el);
     },
     signatoryAttachmentsTitle: function() {
       if (!this.model.signingInProcess() || !this.model.currentSignatoryCanSign()) {
@@ -780,11 +780,11 @@ window.DocumentSignView = Backbone.View.extend({
       }
     },
     createSignatoryAttachmentsElems: function() {
-      return new DocumentSignatoryAttachmentsView({
+      return $(new DocumentSignatoryAttachmentsView({
         model: this.model,
         el: $("<div class='section'/>"),
         title: this.signatoryAttachmentsTitle()
-      }).el;
+      }).el);
     },
     signatoryAttachmentTasks: function(el) {
       var attachmentels = el.find(".list .item .second.column");
@@ -869,17 +869,17 @@ window.DocumentSignView = Backbone.View.extend({
       });
     },
     createUploadedAttachmentsElems: function() {
-      return new DocumentUploadedSignatoryAttachmentsView({
+      return $(new DocumentUploadedSignatoryAttachmentsView({
         model: this.model,
         el: $("<div class='section' />"),
         title: localization.docsignview.uploadedAttachmentsTitle
-      }).el;
+      }).el);
     },
     createSignatoriesElems: function() {
-      return new DocumentSignSignatoriesView({
+      return $(new DocumentSignSignatoriesView({
         model: this.model,
         el: $("<div class='section'/>")
-      }).el;
+      }).el);
     },
     createRejectButtonElems: function() {
       var document = this.model;
@@ -904,7 +904,7 @@ window.DocumentSignView = Backbone.View.extend({
       }).input());
     },
     createSignButtonElems: function(othertasks) {
-      return new DocumentSignButtonView({
+      return $(new DocumentSignButtonView({
         model: this.model,
         validate: function() {
           var complete = true;
@@ -916,7 +916,7 @@ window.DocumentSignView = Backbone.View.extend({
           return complete;
         },
         el: $("<div class='signwrapper'/>")
-      }).el;
+      }).el);
     },
     signButtonTask: function(el) {
       var document = this.model;
@@ -932,10 +932,10 @@ window.DocumentSignView = Backbone.View.extend({
       var model = new DocumentSignViewTasks({
         tasks: tasks
       });
-      return new DocumentSignViewArrowView({
+      return $(new DocumentSignViewArrowView({
         model: model,
         el: $("<div />")
-      }).el;
+      }).el);
     },
     makeVisibleWhenMainFileReady: function(elems) {
       if (this.mainfilebound==undefined) {
@@ -1051,7 +1051,7 @@ window.DocumentSignViewTask = Backbone.Model.extend({
     _.bindAll(this, 'update');
     this.model = args.model;
     this.isComplete = args.isComplete;
-    $(this.el) = args.el;
+    this.el = args.el;
     this.model.bind('reset', this.update);
     this.model.bind('change', this.update);
     this.update();

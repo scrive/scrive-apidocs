@@ -33,10 +33,10 @@ window.DocumentActionMenuView = Backbone.View.extend({
     this.render();
   },
   createDownloadElems: function() {
-    return new DocumentDownloadView({
+    return $(new DocumentDownloadView({
                   model: this.model,
                   el: $("<div/>")
-    }).el;
+    }).el);
   },
   render: function() {
     $(this.el).empty();
@@ -97,10 +97,10 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     this.render();
   },
   createSignatoryAttachmentElems: function(attachment) {
-    return new SignatoryAttachmentView({
+    return $(new SignatoryAttachmentView({
       model: attachment,
       el : $("<div/>")
-    }).el;
+    }).el);
   },
   render: function() {
     $(this.el).empty();
@@ -134,10 +134,10 @@ window.DocumentUploadedSignatoryAttachmentsView = Backbone.View.extend({
     this.render();
   },
   createUploadedAttachmentElems: function(attachment) {
-    return new UploadedSignatoryAttachmentView({
+    return $(new UploadedSignatoryAttachmentView({
       model: attachment,
       el : $("<div/>")
-    }).el;
+    }).el);
   },
   render: function() {
     $(this.el).empty();
@@ -366,10 +366,10 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     }
   },
   createSignGuardElems: function() {
-    return new DocumentSignGuardView({
+    return $(new DocumentSignGuardView({
       model: this.guardModel,
       el: $("<div />")
-    }).el;
+    }).el);
   },
   createContentElems: function() {
     var content = $("<div />");
@@ -437,7 +437,7 @@ window.DocumentStandardView = Backbone.View.extend({
     if (document.currentSignatory() != undefined) {
         if (document.currentSignatory().author() || document.currentSignatory().signs()) {
           var currentsignatoryview = new SignatoryStandardView({model : document.currentSignatory(), el : $("<div/>")});
-          middlebox.append(currentsignatoryview.el);
+          middlebox.append($(currentsignatoryview.el));
         }
     }
 
@@ -446,7 +446,7 @@ window.DocumentStandardView = Backbone.View.extend({
     _.each(document.otherSignatories(), function(signatory) {
         if (signatory.author() || signatory.signs()) {
           var signatoryview = new SignatoryStandardView({model : signatory, el : $("<div/>")});
-          lastbox.append(signatoryview.el);
+          lastbox.append($(signatoryview.el));
         }
     });
 
@@ -459,10 +459,10 @@ window.DocumentStandardView = Backbone.View.extend({
 
   },
   createMenuElems: function() {
-    return new DocumentActionMenuView({
+    return $(new DocumentActionMenuView({
       model: this.model,
       el: $("<div/>")
-    }).el;
+    }).el);
   },
   createRestartButtonElems: function() {
     var document = this.model;
@@ -495,32 +495,32 @@ window.DocumentStandardView = Backbone.View.extend({
     }).input();
   },
   createAuthorAttachmentsElems : function() {
-    return new DocumentAuthorAttachmentsView({
+    return $(new DocumentAuthorAttachmentsView({
       model: this.model,
       el: $("<div />")
-    }).el;
+    }).el);
   },
   createSignatoryAttachmentsElems : function() {
-    return new DocumentSignatoryAttachmentsView({
+    return $(new DocumentSignatoryAttachmentsView({
       model: this.model,
       el: $("<div />")
-    }).el;
+    }).el);
   },
   createUploadedAttachmentsElems: function() {
-    return new DocumentUploadedSignatoryAttachmentsView({
+    return $(new DocumentUploadedSignatoryAttachmentsView({
       model: this.model,
       el: $("<div />")
-    }).el;
+    }).el);
   },
   createAcceptButtonElems: function() {
     var validateSign = this.validateSign;
-    return new DocumentSignButtonView({
+    return $(new DocumentSignButtonView({
       model: this.model,
       validate: function() {
         return validateSign();
       },
       el: $("<div />")
-    }).el;
+    }).el);
   },
   validateSign: function() {
     var document = this.model;
@@ -544,7 +544,7 @@ window.DocumentStandardView = Backbone.View.extend({
     if (!signatory.allAttachemntHaveFile()) {
       _.each(signatory.attachments(),function(attachment) {
         if (!attachment.hasFile())
-          attachment.view.el.addClass("redborder");
+          $(attachment.view.el).addClass("redborder");
       });
       FlashMessages.add({content: localization.addRequiredAttachments, color: "red"});
       return false;
@@ -596,6 +596,7 @@ window.DocumentStandardView = Backbone.View.extend({
     var document = this.model;
     if (!document.ready())
         return this;
+
     this.container.empty();
 
     var titlepart = $("<span id='signStepsTitleRowTextContainer'/>");
@@ -636,14 +637,14 @@ window.DocumentStandardView = Backbone.View.extend({
       new Tab({
         name : localization.document,
         elems: [ this.createSignatoriesTabElems(),
-                 file.view.el,
+                 $(file.view.el),
                  bottomparts
                ]
         }),
       new Tab({
           name: localization.attachments,
           elems: [ this.createAttachmentsTabElems(),
-                   file.view.el,
+                   $(file.view.el),
                    bottomparts
                  ],
           disabled: !this.model.hasAnyAttachments() ||
@@ -656,7 +657,7 @@ window.DocumentStandardView = Backbone.View.extend({
         })
       ]
     });
-    this.container.append(tabs.view.el);
+    this.container.append($(tabs.view.el));
 
     return this;
   }
