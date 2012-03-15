@@ -299,11 +299,10 @@ body.signview {
   background-image: url(../img/facebook-button.png);
 }
 
-.signview .share .facebook.dropdown {
+.signview .share .dropdown {
   position: relative;
   z-index: 5000;
   top: -3px;
-  background-image: url(../img/facebook-dropdown.png);
   background-repeat: no-repeat;
   height: 99px;
   width: 318px;
@@ -311,17 +310,42 @@ body.signview {
   padding-left: 12px;
   padding-right: 12px;
   background-position: 0px 0px;
+  text-align: left;
+  font-weight: normal;
 }
 
-.signview .share .facebook.dropdown.over {
+.signview .share .dropdown.over {
   background-position: -366px 0px;
 }
 
-.signview .share .content {
+.signview .share .dropdown .content {
   background: white;
   width: 292px;
   height: 65px;
   margin: 0px;
+}
+
+.signview .share .facebook.dropdown {
+  background-image: url(../img/facebook-dropdown.png);
+}
+
+.signview .share .phone.dropdown {
+  background-image: url(../img/phone-dropdown.png);
+}
+
+.signview .share .phone.dropdown .content {
+  background: transparent;
+  padding-top: 10px;
+  padding-left: 30px;
+}
+
+.signview .share .phone.dropdown input {
+  float: left;
+}
+
+.signview .share .phone.dropdown a {
+  float: left;
+  margin-left: 20px;
 }
 
 .signview .share .twitter.btn {
