@@ -184,25 +184,7 @@ var ConfirmationView = Backbone.View.extend({
 
 window.Confirmation = {
     popup: function (args) {
-<<<<<<< HEAD
-          var model = new ConfirmationModel({
-                      submit : args.submit,
-                      title  : args.title,
-                      onAccept : args.onAccept,
-                      onReject : args.onReject,
-                      acceptText: args.acceptText,
-                      acceptColor : args.acceptColor,
-                      rejectText: args.rejectText,
-                      content  : args.content,
-                      acceptButton : args.acceptButton,
-                      cantCancel : args.cantCancel,
-                      width: args.width,
-                      acceptVisible : args.acceptVisible,
-                      extraClass: args.extraClass
-                    });
-=======
           var model = new ConfirmationModel(args);
->>>>>>> master
           var overlay = $("<div/>");
           var view = new ConfirmationView({model : model, el : overlay});
           $("body").append(overlay);

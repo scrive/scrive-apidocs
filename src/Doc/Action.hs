@@ -89,17 +89,17 @@ postDocumentChangeAction document@Document  { documentstatus
           (Right saveddoc) -> return saveddoc
         -- we don't need to forkIO here since we only schedule emails here
         Log.server $ "Sending invitation emails for document #" ++ show documentid ++ ": " ++ documenttitle
-        edoc <- sendInvitationEmails ctx document'
-        _ <- case edoc of
-          Left _ -> do
-            _ <- addDocumentSendStatEvents document'
-            runDB $ forM (documentsignatorylinks document') $ \sl ->
-              addSignStatInviteEvent document' sl (ctxtime ctx)
-          Right doc2 -> do
-            _ <- addDocumentSendStatEvents doc2
-            runDB $ forM (documentsignatorylinks doc2) $ \sl ->
-              addSignStatInviteEvent doc2 sl (ctxtime ctx)
-        return ()
+        when_ (sendInvitationMails document') $ do
+            edoc <- sendInvitationEmails ctx document'
+            case edoc of
+                Left _ -> do
+                    _ <- addDocumentSendStatEvents document'
+                    runDB $ forM (documentsignatorylinks document') $ \sl ->
+                        addSignStatInviteEvent document' sl (ctxtime ctx)
+                Right doc2 -> do
+                    _ <- addDocumentSendStatEvents doc2
+                    runDB $ forM (documentsignatorylinks doc2) $ \sl ->
+                        addSignStatInviteEvent doc2 sl (ctxtime ctx)
     -- Preparation -> Closed (only author signs)
     -- main action: sealDocument and sendClosedEmails
     | oldstatus == Preparation && documentstatus == Closed = do
