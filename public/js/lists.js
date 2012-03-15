@@ -727,11 +727,13 @@
             return this;
         },
         toggleSelectAll: function() {
+            this.model.off('change');
             if (this.model.hasUnselected()) {
                 this.model.selectAll();
             } else {
                 this.model.selectNone();
             }
+            this.model.bind('change', this.render);
         }
     });
 

@@ -2054,18 +2054,6 @@ a {
     font: 14px "Copse";
 }
 
-.page-change{
-    padding: 3px;
-    font-size: 11px;
-    color: #007CAC;
-    cursor: pointer;
-}
-.page-change.current{
-    color: #333333;
-    font-weight : bold;
-    cursor: default;
-
-}
 .gotodave {
     display: block;
     width: 15px;

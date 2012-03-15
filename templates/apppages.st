@@ -31,8 +31,9 @@ standardHeaderContents=
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/calendar.css" media="screen"/>
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/signaturedrawer.css" media="screen"/>
 
-		<link rel="stylesheet" type="text/css" href="$prefix$/theme/symbols.css" media="screen"/>
-		<link rel="stylesheet" type="text/css" href="$prefix$/theme/buttons.css" media="screen"/>
+        <link rel="stylesheet" type="text/css" href="$prefix$/theme/symbols.css" media="screen"/>
+        <link rel="stylesheet" type="text/css" href="$prefix$/theme/lists.css" media="screen"/>
+        <link rel="stylesheet" type="text/css" href="$prefix$/theme/buttons.css" media="screen"/>
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/account.css" />
         <link href="$prefix$/theme/flash.css" rel="stylesheet" type="text/css" media="screen" />
         <link href="/css/main.css" rel="stylesheet" type="text/css" />
