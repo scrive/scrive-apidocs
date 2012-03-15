@@ -1,12 +1,10 @@
-#!/bin/sh -e
+#!/bin/bash -e
 
 # This script assumes the existence of BUILD_NUMBER from TeamCity
-# This script assumes the existence of DIR as the path to the repo
 # This script assumes TMP which is the directory as a temporary workspace
 # example:
 #DIR=/home/eric/haskell/kontrakcja
 
-echo "Directory: "$DIR
 echo "BUILD_NUMBER: "$BUILD_NUMBER
 echo "TMP: "$TMP
 
@@ -29,11 +27,11 @@ sh build-scripts/runAllUnitTests.sh > test-report.txt
 
 BUILD_ID=$BUILD_DATE"."$BUILD_NUMBER"."$BUILD_VCS_NUMBER
 
-ZIP="$TMP"."$BUILD_ID".".production.tar.gz"
+ZIP="$BUILD_ID".".production.tar.gz"
 
 echo "Creating zip file"
 
-tar zcf "$ZIP"                        \
+tar zcf "$TMP/$ZIP"                        \
     --exclude=.git*                   \
     --exclude=_local*                 \
     --exclude=_darcs*                 \
@@ -43,7 +41,7 @@ ls -lh "$TMP/$ZIP"
 
 echo "Generating signature hash"
 hashdoc="$TMP"."/hash-$BUILD_ID.txt"
-m=`sha512sum "$ZIP" | awk 'BEGIN { FS = " +" } ; { print $1 }'`
+m=`sha512sum "$TMP/$ZIP" | awk 'BEGIN { FS = " +" } ; { print $1 }'`
 echo "Scrive Production Build"         >  "$hashdoc"
 echo "--------------------------------">> "$hashdoc"
 echo "Build_ID:     $BUILD_ID"         >> "$hashdoc"
@@ -97,7 +95,7 @@ signedmime="$TMP"."$BUILD_ID.signature.mime"
 base64 -d "$signed64" > "$signedmime"
 
 echo "Creating final enhanced deployment file"
-tar zcf "$TMP/$finalfile" "$signedmime" "$ZIP"
+tar zcf "$TMP/$finalfile" "$signedmime" "$TMP/$ZIP"
 
 echo "Pushing to amazon"
 s3cmd --acl-private put "$TMP/$finalfile" s3://production-builds
