@@ -2884,7 +2884,7 @@ _modalConfirmDelay,"An account for your company has been created for $email$. Th
 "_followArrowToSign","Följ den gröna pilen för att e-signera",,"Follow the green arrow to e-sign"
 "_followArrowToReview","Följ den gröna pilen för att granska",,"Follow the green arrow to review"
 "_signedNotClosed","Du har signerat",,"You have signed"
-"_signedNotClosedSubText","",,""
+"_signedNotClosedSubText","When everyone has signed a copy will be sent to your email.",,"When everyone has signed a copy will be sent to your email."
 "_signedAndClosed","Dokument signerat!",,"Document signed!"
 "_signedAndClosedSubText","En kopia har skickats till din e-post. Bläddra ned för att se dokumentet och verifikatet.",,"A copy has been sent to your email.  Scroll down to view the document and verification."
 "_unavailableForSign","Dokumentet går ej längre att signera.",,"No longer available for signing."
