@@ -308,6 +308,13 @@ javascriptLocalisation =
           , password2Label: "$_modalAccountSetupRepeatPassword()$"
           , acceptTOSLabel: '$_accountFromSignInputsBodyAcceptTOS()$'
           , newAccountButton: "$_signViewCreateAccountLabel()$"
+          , createdAccountTitle: "Document Saved!"
+          , createdAccountSubtitle: "Your document has been securely saved with Scrive.  To retrieve in the future login with your email and password at www.scrive.com."
+          , shareTitle: "Did you like this signing experience?"
+          , facebookButtonLabel: "Like us on Facebook"
+          , tweetButtonLabel: "Tweet about Scrive"
+          , phoneButtonLabel: "Please call me"
+          , startButtonLabel: "Just take me to the service!"
         }
     }
 ####

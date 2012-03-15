@@ -67,14 +67,13 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     container.append($("<div class='headline' />").append(this.text()));
     container.append($("<div class='subheadline' />").append(this.subtext()));
 
-    var smallerbit = $("<div class='subheadline' />");
+    var smallerbit = $("<div />");
     var timeout = this.model.timeouttime();
     if (timeout!=undefined && this.model.signingInProcess()) {
       smallerbit.append($("<div class='duedate' />").append(localization.docsignview.dueDate + " " + timeout.getFullYear() + "-" + timeout.getMonth() + "-" + timeout.getDate()));
     }
     smallerbit.append(this.createMenuElems());
-    smallerbit.append($("<div class='clearfix' />"));
-    container.append(smallerbit);
+    container.append($("<div class='subheadline' />").append(smallerbit));
 
     this.el.append(container);
 
@@ -327,6 +326,38 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
   }
 });
 
+window.DocumentSaveAfterSignModel = Backbone.Model.extend({
+  defaults: {
+    saved: false
+  , saving: false
+  },
+  initialize: function(args) {
+    this.document = args.document;
+  },
+  email: function() {
+    return this.document.currentSignatory().email();
+  },
+  hasSigned: function() {
+    return this.document.currentSignatory().hasSigned();
+  },
+  saved: function() {
+    return this.document.currentSignatory().saved() || this.get("saved");
+  },
+  saving: function() {
+    return this.get("saving");
+  },
+  setSaving: function(saving) {
+    this.set({ saving: saving });
+  },
+  setSaved: function() {
+    this.set({ saved: true,
+               saving: false });
+  },
+  saveurl: function() {
+    return "/s/" + this.document.id + "/" + this.document.currentSignatory().signatoryid() + "/" + this.document.viewer().magichash();
+  }
+});
+
 window.DocumentSaveAfterSignView = Backbone.View.extend({
   initialize: function (args) {
     _.bindAll(this, 'render');
@@ -392,15 +423,12 @@ window.DocumentSaveAfterSignView = Backbone.View.extend({
       });
     });
   },
-  accountFromSignURL: function() {
-    return "/s/" + this.model.id + "/" + this.model.currentSignatory().signatoryid() + "/" + this.model.viewer().magichash();
-  },
   createNewAccountElems: function() {
     var container = $("<div class='newaccount'/>");
     container.append($("<div class='title' />").append(localization.docsignview.newAccountTitle));
     container.append($("<div class='subtitle' />").append(localization.docsignview.newAccountSubTitle));
 
-    var form = $("<div class='form'/>");
+    var form = $("<div class='highlight'/>");
 
     var appendFormInput = function(labeltext, input) {
       var row = $("<div class='item' />");
@@ -409,7 +437,7 @@ window.DocumentSaveAfterSignView = Backbone.View.extend({
       form.append(row);
     };
 
-    appendFormInput(localization.docsignview.emailLabel, $("<div class='email'/>").append(this.model.currentSignatory().email()));
+    appendFormInput(localization.docsignview.emailLabel, $("<div class='email'/>").append(this.model.email()));
 
     var passwordinput = $("<input type='password' autocomplete='off' />");
     appendFormInput(localization.docsignview.passwordLabel, passwordinput);
@@ -433,6 +461,7 @@ window.DocumentSaveAfterSignView = Backbone.View.extend({
     var validateTOS = this.createTOSValidationFunction(checkbox, tos);
 
     var view = this;
+    var model = this.model;
     var newAccountButton = Button.init({
       color: "green",
       text: localization.docsignview.newAccountButton,
@@ -446,12 +475,25 @@ window.DocumentSaveAfterSignView = Backbone.View.extend({
               password2valid &&
               tosvalid) {
          new Submit({
-           url: view.accountFromSignURL(),
+           url: model.saveurl(),
            method: "POST",
            acceptaccount: true,
            password: passwordinput.val(),
            password2: password2input.val(),
-           tos: checkbox.val()
+           tos: checkbox.val(),
+           ajax: true,
+           onSend: function() {
+             console.log("creating account");
+             model.setSaving(true);
+           },
+           ajaxerror: function(d, a) {
+             console.error("failed to create an account");
+             model.setSaving(false);
+           },
+           ajaxsuccess: function(d) {
+             console.log("successfully created account");
+             model.setSaved();
+           }
          }).send();
         }
       }
@@ -463,21 +505,21 @@ window.DocumentSaveAfterSignView = Backbone.View.extend({
 
     return container;
   },
-  createFindOutMoreElems: function() {
-  },
   render: function() {
     this.el.empty();
 
-    if (!this.model.currentSignatory().hasSigned()) {
+    if (!this.model.hasSigned()) {
       return this;
     }
 
     var container = $("<div class='save' />");
 
-    if (this.model.currentSignatory().saved()) {
+    if (this.model.saving()) {
+      container.addClass("saving");
+    } else if (this.model.saved()) {
       container.addClass("done");
-      container.append($("<div class='title'/>").append("Document Saved!"));
-      container.append($("<div class='subtitle'/>").append("Your document is now securely saved with Scrive.  To retrieve in the future login with your email and password at www.scrive.com."));
+      container.append($("<div class='title'/>").append(localization.docsignview.createdAccountTitle));
+      container.append($("<div class='subtitle'/>").append(localization.docsignview.createdAccountSubtitle));
     } else {
       container.append(this.createNewAccountElems());
     }
@@ -503,16 +545,23 @@ window.DocumentShareAfterSignView = Backbone.View.extend({
     var container = $("<div />");
 
     var button = $("<div class='facebook btn' />");
-    button.append($("<div class='label' />").append("Like us on Facebook"));
+    button.append($("<div class='label' />").append(localization.docsignview.facebookButtonLabel));
     container.append(button);
 
     var dropdown = $("<div class='facebook dropdown'/>");
-    dropdown.append(this.createFacebookLikeBox());
+    dropdown.append($("<div class='content' />").append(this.createFacebookLikeBox()));
     dropdown.hide();
     container.append(dropdown);
 
+    button.mouseover(function() {
+      dropdown.addClass("over");
+    });
+
+    button.mouseleave(function() {
+      dropdown.removeClass("over");
+    });
+
     button.click(function() {
-      console.log("facebook button clicked");
       dropdown.toggle();
     });
     return container;
@@ -534,13 +583,13 @@ window.DocumentShareAfterSignView = Backbone.View.extend({
   createTweetThisElems: function() {
     var container = this.createTweetLink();
     var button = $("<div class='twitter btn' />");
-    button.append($("<div class='label' />").append("Tweet about Scrive"));
+    button.append($("<div class='label' />").append(localization.docsignview.tweetButtonLabel));
     container.append(button);
     return container;
   },
   createPhoneMeElems: function() {
     var container = $("<div class='phone btn' />");
-    container.append($("<div class='label' />").append("Please call me"));
+    container.append($("<div class='label' />").append(localization.docsignview.phoneButtonLabel));
     return container;
   },
   createStartLink: function() {
@@ -551,20 +600,20 @@ window.DocumentShareAfterSignView = Backbone.View.extend({
   createGetStartedElems: function() {
     var container = this.createStartLink();
     var button = $("<div class='start btn' />");
-    button.append($("<div class='label' />").append("Just take me to the service!"));
+    button.append($("<div class='label' />").append(localization.docsignview.startButtonLabel));
     container.append(button);
     return container;
   },
   render: function() {
     this.el.empty();
 
-    if (!this.model.currentSignatory().hasSigned()) {
+    if (!this.model.hasSigned() || !this.model.saved()) {
       return this;
     }
 
     var container = $("<div class='share' />");
 
-    container.append($("<div class='title'/>").append("Did you like this signing experience?"));
+    container.append($("<div class='title'/>").append(localization.docsignview.shareTitle));
     var panel = $("<div class='panel' />");
     panel.append($("<div class='item' />").append(this.createFacebookLikeElems()));
     panel.append($("<div class='item' />").append(this.createTweetThisElems()));
@@ -584,6 +633,9 @@ window.DocumentSignView = Backbone.View.extend({
         this.model.bind('reset', this.render);
         this.model.bind('change', this.render);
         this.model.view = this;
+        this.saveAfterSignModel = new DocumentSaveAfterSignModel({
+          document: this.model
+        });
         this.prerender();
         this.render();
     },
@@ -603,13 +655,13 @@ window.DocumentSignView = Backbone.View.extend({
     },
     createSaveAfterSignViewElems: function() {
       return new DocumentSaveAfterSignView({
-       model: this.model,
+       model: this.saveAfterSignModel,
        el: $("<div />")
       }).el;
     },
     createShareAfterSignViewElems: function() {
       return new DocumentShareAfterSignView({
-        model: this.model,
+        model: this.saveAfterSignModel,
         el: $("<div />")
       }).el;
     },
@@ -668,7 +720,6 @@ window.DocumentSignView = Backbone.View.extend({
     signatoryAttachmentTask: function(attachment, el) {
       return new DocumentSignViewTask({
         model: attachment,
-        label: localization.docsignview.uploadPDFFile,
         isComplete: function() {
           return attachment.hasFile();
         },
@@ -705,7 +756,6 @@ window.DocumentSignView = Backbone.View.extend({
       };
       return new DocumentSignViewTask({
         model: field,
-        label: localization.docsignview.fillInYourDetails,
         isComplete: function() {
           var newvalue = field.value() != "";
           var returnvalue = lastvalue;
@@ -790,7 +840,6 @@ window.DocumentSignView = Backbone.View.extend({
       var document = this.model;
       return new DocumentSignViewTask({
         model: document,
-        label: localization.docsignview.clickToSign,
         isComplete: function() {
           return !document.currentSignatoryCanSign();
         },
@@ -844,7 +893,9 @@ window.DocumentSignView = Backbone.View.extend({
 
       this.container.append(this.createSignInstructionElems());
       if (document.currentSignatory().hasSigned()) {
-        this.container.append(this.createSaveAfterSignViewElems());
+        if (!document.currentSignatory().saved()) {
+          this.container.append(this.createSaveAfterSignViewElems());
+        }
         this.container.append(this.createShareAfterSignViewElems());
       }
 
@@ -934,9 +985,6 @@ window.DocumentSignViewTask = Backbone.Model.extend({
     if (complete != this.complete) {
       this.set({ complete: complete });
     }
-  },
-  label: function() {
-    return this.get("label");
   }
 });
 
@@ -1002,9 +1050,6 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
     }
 
     var actionarrow = $("<div class='action arrow'/>");
-    if (taskmodel.isIncompleteTask()) {
-      actionarrow.append($("<div class='label' />").append(taskmodel.nextIncompleteTask().label()));
-    }
     container.append(actionarrow);
 
     var updateRightMargin = function() {
