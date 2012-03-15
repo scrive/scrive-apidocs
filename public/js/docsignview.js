@@ -61,7 +61,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     }).el;
   },
   render: function() {
-    this.el.empty();
+    $(this.el).empty();
 
     var container = $("<div class='instructions' />");
     container.append($("<div class='headline' />").append(this.text()));
@@ -75,7 +75,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     smallerbit.append(this.createMenuElems());
     container.append($("<div class='subheadline' />").append(smallerbit));
 
-    this.el.append(container);
+    $(this.el).append(container);
 
     return this;
   }
@@ -225,7 +225,7 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
     return container;
   },
   render: function() {
-    this.el.empty();
+    $(this.el).empty();
 
     var signatory = this.model;
 
@@ -244,7 +244,7 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
 
     container.append(this.createSummaryElements());
 
-    this.el.append(container);
+    $(this.el).append(container);
     return this;
   }
 });
@@ -285,7 +285,7 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
     }).el;
   },
   render: function() {
-    this.el.empty();
+    $(this.el).empty();
 
     var container = $("<div class='signatories' />");
     container.append($("<h2 />").append(localization.docsignview.signatoriesTitle));
@@ -320,7 +320,7 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
     container.append(list);
     container.append($("<div class='clearfix' />"));
 
-    this.el.append(container);
+    $(this.el).append(container);
 
     return this;
   }
@@ -355,6 +355,9 @@ window.DocumentSaveAfterSignModel = Backbone.Model.extend({
   },
   saveurl: function() {
     return "/s/" + this.document.id + "/" + this.document.currentSignatory().signatoryid() + "/" + this.document.viewer().magichash();
+  },
+  phoneurl: function() {
+    return "/account/phoneme"
   }
 });
 
@@ -506,7 +509,7 @@ window.DocumentSaveAfterSignView = Backbone.View.extend({
     return container;
   },
   render: function() {
-    this.el.empty();
+    $(this.el).empty();
 
     if (!this.model.hasSigned()) {
       return this;
@@ -524,7 +527,7 @@ window.DocumentSaveAfterSignView = Backbone.View.extend({
       container.append(this.createNewAccountElems());
     }
 
-    this.el.append(container);
+    $(this.el).append(container);
     return this;
   }
 });
@@ -588,28 +591,73 @@ window.DocumentShareAfterSignView = Backbone.View.extend({
     return container;
   },
   createPhoneMeElems: function() {
+    var model = this.model;
+
     var container = $("<div />");
 
     var button = $("<div class='phone btn' />");
     button.append($("<div class='label' />").append(localization.docsignview.phoneButtonLabel));
     container.append(button);
 
-    var form = $("<div class='content' />");
+    var loading = $("<div class='loading' />");
+    loading.hide();
+
+    var form = $("<div />");
     form.append($("<div />").append(localization.docsignview.phoneFormDescription));
     var numberinput = $("<input type='text' />");
     form.append(numberinput);
+    var submitForm = function() {
+      var phone = numberinput.val();
+      if (phone.trim().length==0) {
+        return;
+      }
+      (new Submit({
+        url: model.phoneurl,
+        method: "POST",
+        email: model.email(),
+        phone: phone,
+        ajax: true,
+        onSend: function() {
+          console.log("requesting phone call");
+          form.hide();
+          loading.show();
+        },
+        ajaxerror: function(d, a) {
+          console.error("failed to request a phone call");
+          loading.hide();
+          form.show();
+        },
+        ajaxsuccess: function(d) {
+          console.log("successfully requested a phone call");
+          loading.hide();
+          form.empty();
+          form.append(localization.docsignview.phoneConfirmationText);
+          form.show();
+        }
+      })).send();
+    };
+
     form.append(Button.init({
       color: "green",
       size: "tiny",
       text: localization.docsignview.phoneSubmitButtonLabel,
-      onClick: function() {
-        console.log("blah");
-      }
+      onClick: submitForm
     }).input());
+
+    numberinput.keypress(function(e) {
+      if (e.which == 13) {
+        submitForm();
+      }
+    });
+
     form.append($("<div class='clearfix' />"));
 
+    var content = $("<div class='content' />");
+    content.append(loading);
+    content.append(form);
+
     var dropdown = $("<div class='phone dropdown'/>");
-    dropdown.append(form);
+    dropdown.append(content);
     dropdown.hide();
     container.append(dropdown);
 
@@ -639,7 +687,7 @@ window.DocumentShareAfterSignView = Backbone.View.extend({
     return container;
   },
   render: function() {
-    this.el.empty();
+    $(this.el).empty();
 
     if (!this.model.hasSigned() || !this.model.saved()) {
       return this;
@@ -656,7 +704,7 @@ window.DocumentShareAfterSignView = Backbone.View.extend({
     panel.append($("<div class='clearfix' />"));
     container.append(panel);
 
-    this.el.append(container);
+    $(this.el).append(container);
     return this;
   }
 });
@@ -674,12 +722,12 @@ window.DocumentSignView = Backbone.View.extend({
         this.render();
     },
     prerender: function(){
-        this.container = $("<div class='mainContainer signview' />");
-        this.el.append(this.container);
-        this.el.addClass("body-container");
-        this.el.append("<div class='clearfix'/>");
-        this.el.append("<div class='spacer40'/>");
-        return this;
+      this.container = $("<div class='mainContainer signview' />");
+      $(this.el).append(this.container);
+      $(this.el).addClass("body-container");
+      $(this.el).append("<div class='clearfix'/>");
+      $(this.el).append("<div class='spacer40'/>");
+      return this;
     },
     createSignInstructionElems: function() {
       return new DocumentSignInstructionsView({
@@ -1003,7 +1051,7 @@ window.DocumentSignViewTask = Backbone.Model.extend({
     _.bindAll(this, 'update');
     this.model = args.model;
     this.isComplete = args.isComplete;
-    this.el = args.el;
+    $(this.el) = args.el;
     this.model.bind('reset', this.update);
     this.model.bind('change', this.update);
     this.update();
@@ -1053,7 +1101,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
     this.render();
   },
   render: function() {
-    this.el.empty();
+    $(this.el).empty();
 
     var taskmodel = this.model;
 
@@ -1145,7 +1193,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
     $(window).scroll(updateVisibility);
     updateVisibility();
 
-    this.el.append(container);
+    $(this.el).append(container);
   }
 });
 

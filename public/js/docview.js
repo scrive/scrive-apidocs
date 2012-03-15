@@ -12,7 +12,7 @@ window.DocumentDownloadView = Backbone.View.extend({
     this.render();
   },
   render: function() {
-    this.el.empty();
+    $(this.el).empty();
 
     var link = $("<a target='_blank' />");
     link.attr("href", this.model.mainfile().downloadLink());
@@ -21,7 +21,7 @@ window.DocumentDownloadView = Backbone.View.extend({
     link.append($("<div class='float-left docname' />").text(this.model.mainfile().name() + ".pdf"));
     link.append($("<div class='clearfix' />"));
 
-    this.el.append($("<div class='download' />").append(link));
+    $(this.el).append($("<div class='download' />").append(link));
 
     return this;
   }
@@ -39,8 +39,8 @@ window.DocumentActionMenuView = Backbone.View.extend({
     }).el;
   },
   render: function() {
-    this.el.empty();
-    this.el.append($("<div class='menu' />").append(this.createDownloadElems()));
+    $(this.el).empty();
+    $(this.el).append($("<div class='menu' />").append(this.createDownloadElems()));
 
     return this;
   }
@@ -66,7 +66,7 @@ window.DocumentAuthorAttachmentsView = Backbone.View.extend({
     return container;
   },
   render: function() {
-    this.el.empty();
+    $(this.el).empty();
 
     if (!this.model.isAuthorAttachments()) {
       return this;
@@ -84,7 +84,7 @@ window.DocumentAuthorAttachmentsView = Backbone.View.extend({
 
     container.append($("<div class='clearfix' />"));
 
-    this.el.append(container);
+    $(this.el).append(container);
 
     return this;
   }
@@ -103,7 +103,7 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     }).el;
   },
   render: function() {
-    this.el.empty();
+    $(this.el).empty();
 
     if (!this.model.isSignatoryAttachments()) {
       return this;
@@ -121,7 +121,7 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     container.append(list);
     container.append($("<div class='clearfix' />"));
 
-    this.el.append(container);
+    $(this.el).append(container);
 
     return this;
   }
@@ -140,7 +140,7 @@ window.DocumentUploadedSignatoryAttachmentsView = Backbone.View.extend({
     }).el;
   },
   render: function() {
-    this.el.empty();
+    $(this.el).empty();
 
     if (!this.model.isUploadedAttachments()) {
       return this;
@@ -157,7 +157,7 @@ window.DocumentUploadedSignatoryAttachmentsView = Backbone.View.extend({
     container.append(list);
     container.append($("<div class='clearfix' />"));
 
-    this.el.append(container);
+    $(this.el).append(container);
 
     return this;
   }
@@ -214,7 +214,7 @@ window.DocumentSignGuardView = Backbone.View.extend({
     this.render();
   },
   prerender: function() {
-    this.el.empty();
+    $(this.el).empty();
 
     if (!this.model.isRequired()) {
       return this;
@@ -232,7 +232,7 @@ window.DocumentSignGuardView = Backbone.View.extend({
     this.container.append($("<div class='check' />").append(this.checkbox));
     this.container.append($("<div class='label' />").append($("<label for='signGuardCBox' />").append(localization.sign.guardCBox)));
 
-    this.el.append(this.container);
+    $(this.el).append(this.container);
 
     return this;
   },
@@ -274,7 +274,7 @@ window.DocumentSignButtonView = Backbone.View.extend({
     }
 
     var sign = this;
-    this.el.append($("<div class='sign' />").append(Button.init({
+    $(this.el).append($("<div class='sign' />").append(Button.init({
       size: "big",
       color: "blue",
       text: this.model.process().signbuttontext(),
@@ -402,10 +402,10 @@ window.DocumentStandardView = Backbone.View.extend({
   },
   prerender: function() {
     this.container = $("<div class='mainContainer docview' />");
-    this.el.append(this.container);
-    this.el.addClass("body-container");
-    this.el.append("<div class='clearfix'/>");
-    this.el.append("<div class='spacer40'/>");
+    $(this.el).append(this.container);
+    $(this.el).addClass("body-container");
+    $(this.el).append("<div class='clearfix'/>");
+    $(this.el).append("<div class='spacer40'/>");
   },
   createAttachmentsTabElems: function() {
     var attachmenttab = $("<span id='attachmenttabview' class='attachmentstab' />");

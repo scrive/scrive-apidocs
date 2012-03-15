@@ -337,6 +337,16 @@ body.signview {
   background: transparent;
   padding-top: 10px;
   padding-left: 30px;
+  padding-right: 30px;
+  width: 262px;
+}
+
+.signview .share .phone.dropdown .loading {
+  background-image: url(images/wait30trans.gif);
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 50px;
+  width: 240px;
 }
 
 .signview .share .phone.dropdown input {
