@@ -11,7 +11,7 @@ cd $DIR
 BUILD_DATE=`date "+%Y-%m-%d-%H-%M-%S"`
 BUILD_VCS_NUMBER=`git log -1 --pretty=oneline|awk '{print $1;}'`
 
-build-scripts/runCleanCompile.sh
+sh build-scripts/runCleanCompile.sh
 
 echo "Computing checksums of all binaries"
 
@@ -21,7 +21,7 @@ mkdir checksums
 find dist/build -executable -type f -exec sh -c 'sha512sum {} > checksums/`basename {}`.sha512' \;
 
 echo "Running unit tests"
-build-scripts/runAllUnitTests.sh > test-report.txt
+sh build-scripts/runAllUnitTests.sh > test-report.txt
 
 BUILD_ID=$BUILD_DATE"."$BUILD_NUMBER"."$BUILD_VCS_NUMBER
 
