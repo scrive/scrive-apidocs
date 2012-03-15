@@ -74,7 +74,6 @@ window.DocumentAuthorAttachmentsView = Backbone.View.extend({
 
     var container = $("<div class='authorattachments' />");
     container.append($("<h2/>").text(this.title==undefined ? localization.authorAttachmentBoxHeader : this.title));
-
     var list = $("<div class='list' />");
     var createAuthorAttachmentElems = this.createAuthorAttachmentElems;
     _.each(this.model.authorattachments(), function(attachment) {
@@ -550,7 +549,6 @@ window.DocumentStandardView = Backbone.View.extend({
       FlashMessages.add({content: localization.addRequiredAttachments, color: "red"});
       return false;
     }
-
 
     return true;
   },

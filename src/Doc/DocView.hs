@@ -300,13 +300,8 @@ signatoryJSON doc viewer siglink = do
       , ("status", return $ JSString $ toJSString  $ show $ signatoryStatusClass doc siglink)
       , ("attachments", fmap JSArray $ sequence $ signatoryAttachmentJSON <$> signatoryattachments siglink)
       , ("csv", case (csvcontents <$> signatorylinkcsvupload siglink) of
-<<<<<<< HEAD
                      Just a1 ->  return $ JSArray $ for a1 (\a2 -> JSArray $ map (JSString . toJSString) a2 )
                      Nothing -> return $ JSNull)
-=======
-                     Just a1 ->  return $ JSArray $ for a1 (\a2 -> JSArray $ map (JSString . toJSString . BS.toString) a2 )
-                     Nothing -> return $ JSNull)
->>>>>>> big merged patch of most of sign view stuff
       ]
     where
     datamismatch = case documentcancelationreason doc of
@@ -321,17 +316,10 @@ signatoryAttachmentJSON :: (TemplatesMonad m, DBMonad m) => SignatoryAttachment 
 signatoryAttachmentJSON sa = do
   mfile <- case (signatoryattachmentfile sa) of
                 Just fid -> runDBQuery $ GetFileByFileID fid
-<<<<<<< HEAD
                 _ -> return Nothing
   return $ (JSObject . toJSObject) $
      [ ("name", JSString $ toJSString $ signatoryattachmentname sa)
      , ("description", JSString $ toJSString $ signatoryattachmentdescription sa)
-=======
-                _ -> return Nothing
-  return $ (JSObject . toJSObject) $
-     [ ("name", JSString $ toJSString $ BS.toString $ signatoryattachmentname sa)
-     , ("description", JSString $ toJSString $ BS.toString $ signatoryattachmentdescription sa)
->>>>>>> big merged patch of most of sign view stuff
      , ("file", fromMaybe JSNull $ jsonPack <$> fileJSON <$> mfile)
      ]
 
@@ -358,13 +346,8 @@ signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{si
     ftOrder PersonalNumberFT _ = LT
     ftOrder CompanyNumberFT _ = LT
     ftOrder _ _ = EQ
-<<<<<<< HEAD
 
 fieldJSON :: Document -> String -> String -> Bool -> [FieldPlacement] -> IO JSValue
-=======
-
-fieldJSON :: Document -> String -> BS.ByteString -> Bool -> [FieldPlacement] -> IO JSValue
->>>>>>> big merged patch of most of sign view stuff
 fieldJSON  doc name value closed placements = json $ do
     JSON.field "name" name
     JSON.field "value" value
