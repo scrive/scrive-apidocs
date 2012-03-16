@@ -376,10 +376,17 @@ window.CompanyBrandingSampleView = Backbone.View.extend({
     return this;
   },
   renderLogoWithSrc: function(src) {
+    console.log("rendering logo with src " + src);
+    /**all this hiding and showing seems to be necessary
+     * to make the browser re-display the logo.  gah!*/
+    this.logo.hide();
     this.logo.empty();
     var img = $("<img />");
     img.attr("src", src);
+    img.hide();
     this.logo.append(img);
+    this.logo.show();
+    img.fadeIn();
     return this.logo;
   },
   render: function() {
@@ -389,7 +396,6 @@ window.CompanyBrandingSampleView = Backbone.View.extend({
     var bbcolour = company.barsbackground().colour();
     var btcolour = company.barstextcolour().colour();
 
-    console.log("displaying logo " + logourl);
     this.renderLogoWithSrc(location.protocol + "//" + location.host + logourl);
     if (company.logo().loading()) {
       this.header.css("background-color", "transparent");

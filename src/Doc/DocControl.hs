@@ -1036,7 +1036,9 @@ jsonDocument did = do
     cttime <- liftIO $ getMinutesTime
     rsp <- case mdoc of
          Nothing -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "No document avaible")]
-         Just doc -> JSObject <$> documentJSON msiglink cttime doc
+         Just doc -> do
+             switchLocale (getLocale doc)
+             JSObject <$> documentJSON msiglink cttime doc
     return rsp
 
 jsonDocumentGetterWithPermissionCheck ::   Kontrakcja m => DocumentID -> m (Maybe Document, Maybe SignatoryLink)
