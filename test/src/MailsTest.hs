@@ -13,6 +13,7 @@ import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
 import User.Model
+import IPAddress
 import Misc
 import Doc.Model
 import Doc.DocViewMail
@@ -74,7 +75,7 @@ sendDocumentMails env mailTo author mcompany = do
         -- make  the context, user and document all use the same locale
         ctx <- mailingContext l env
         _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { locale = l }
-        let aa = AuthorActor (ctxtime ctx) (IPAddress 0) (userid author) (getEmail author)
+        let aa = AuthorActor (ctxtime ctx) noIP (userid author) (getEmail author)
         d' <- gRight $ randomUpdate $ NewDocument author mcompany "Document title" (Signable doctype) 0 aa
         d <- gRight . dbUpdate $ SetDocumentLocale (documentid d') l (SystemActor $ ctxtime ctx)
 
@@ -92,7 +93,7 @@ sendDocumentMails env mailTo author mcompany = do
         d2 <- gRight $ randomUpdate $ PreparationToPending docid (SystemActor now)
         let asl2 = head $ documentsignatorylinks d2
         _ <- gRight $ randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2)
-             (SignatoryActor now (IPAddress 0) (maybesignatory asl2) (getEmail asl2) (signatorylinkid asl2))
+             (SignatoryActor now noIP (maybesignatory asl2) (getEmail asl2) (signatorylinkid asl2))
         doc <- gRight $ randomUpdate $ \si -> SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) si (SystemActor now)
         let [sl] = filter (not . isAuthor) (documentsignatorylinks doc)
         req <- mkRequest POST []

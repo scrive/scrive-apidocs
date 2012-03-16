@@ -29,6 +29,7 @@ import DB.Fetcher2
 import DB.Utils
 import Doc.DocStateData
 import EvidenceLog.Tables
+import IPAddress
 import MinutesTime
 import Misc
 import User.Model
@@ -212,7 +213,7 @@ htmlDocFromEvidenceLog title elog = do
     field "documenttitle" title
     fieldFL "entries" $ for elog $ \entry -> do
       field "time" $ formatMinutesTimeUTC (evTime entry) ++ " UTC"
-      field "ip"   $ fmap formatIP (evIP4 entry)
+      field "ip"   $ show $ evIP4 entry
       field "text" $ evText entry
 
 data GetEvidenceLog = GetEvidenceLog DocumentID
