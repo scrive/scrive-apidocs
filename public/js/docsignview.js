@@ -64,13 +64,13 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     $(this.el).empty();
 
     var container = $("<div class='instructions' />");
-    container.append($("<div class='headline' />").append(this.text()));
-    container.append($("<div class='subheadline' />").append(this.subtext()));
+    container.append($("<div class='headline' />").text(this.text()));
+    container.append($("<div class='subheadline' />").text(this.subtext()));
 
     var smallerbit = $("<div />");
     var timeout = this.model.timeouttime();
     if (timeout!=undefined && this.model.signingInProcess()) {
-      smallerbit.append($("<div class='duedate' />").append(localization.docsignview.dueDate + " " + timeout.getFullYear() + "-" + timeout.getMonth() + "-" + timeout.getDate()));
+      smallerbit.append($("<div class='duedate' />").text(localization.docsignview.dueDate + " " + timeout.getFullYear() + "-" + timeout.getMonth() + "-" + timeout.getDate()));
     }
     smallerbit.append(this.createMenuElems());
     container.append($("<div class='subheadline' />").append(smallerbit));
@@ -88,6 +88,7 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
     this.model.bind('change', this.render);
     this.onExpand = args.onExpand;
     this.onCollapse = args.onCollapse;
+    this.dragfields = [];
     this.render();
   },
   signatorySummary : function(){
@@ -119,7 +120,7 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
     var signatory = this.model;
 
     var container = $("<div />");
-    container.append($("<div class='grouping' />").append($("<div class='name' />").append(this.model.name())));
+    container.append($("<div class='grouping' />").append($("<div class='name' />").text(this.model.name())));
     var expandlink = $("<a />");
     expandlink.click(function() {
       view.expanded = true;
@@ -138,23 +139,23 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
     var container = $("<div />");
 
     var topbit = $("<div class='grouping' />");
-    topbit.append($("<div class='name' />").append(signatory.name()));
-    topbit.append($("<div class='company' />").append(signatory.company()));
+    topbit.append($("<div class='name' />").text(signatory.name()));
+    topbit.append($("<div class='company' />").text(signatory.company()));
     container.append(topbit);
 
     if (signatory.companynumber()!="" || signatory.personalnumber()!="") {
       var middlebit = $("<div class='grouping' />");
       if (signatory.companynumber()!="") {
-        middlebit.append($("<div class='companynumber'/>").append(localization.docsignview.companyNumberLabel + ": " + signatory.companynumber()));
+        middlebit.append($("<div class='companynumber'/>").text(localization.docsignview.companyNumberLabel + ": " + signatory.companynumber()));
       }
       if (signatory.personalnumber()!="") {
-        middlebit.append($("<div class='personalnumber'/>").append(localization.docsignview.personalNumberLabel + ": " + signatory.personalnumber()));
+        middlebit.append($("<div class='personalnumber'/>").text(localization.docsignview.personalNumberLabel + ": " + signatory.personalnumber()));
       }
       container.append(middlebit);
     }
 
     var bottombit = $("<div class='grouping' />");
-    bottombit.append($("<div class='email' />").append(signatory.email()));
+    bottombit.append($("<div class='email' />").text(signatory.email()));
     container.append(bottombit);
 
     var inputbits = $("<div class='grouping' />");
@@ -170,12 +171,16 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
         isinputs = true;
         var fieldwrapper = $("<div class='fieldwrapper'/>");
         if (signatory.current()) {
-          fieldwrapper.append($("<div class='label' />").append(field.nicename() + ":"));
+          fieldwrapper.append($("<div class='label' />").text(field.nicename() + ":"));
         }
-        fieldwrapper.append($(new FieldStandardView({
+        var fieldview = new FieldStandardView({
           model: field,
           el: $("<div class='field' />")
-        }).el));
+        });
+        if (fieldview.dragfield!=undefined) {
+          this.dragfields.push(fieldview.dragfield);
+        }
+        fieldwrapper.append($(fieldview.el));
         inputbits.append(fieldwrapper);
       }
     });
@@ -242,6 +247,7 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
     _.bindAll(this, 'render');
     this.onExpand = args.onExpand;
     this.onCollapse = args.onCollapse;
+    this.dragfields = [];
     this.render();
   },
   orderedOtherSignatories: function() {
@@ -265,26 +271,26 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
 
     return othersignatories;
   },
-  createSignatoryElems: function(signatory) {
-    return $(new DocumentSignSignatoryView({
+  createSignatoryView: function(signatory) {
+    return new DocumentSignSignatoryView({
       model: signatory,
       el: $("<div />"),
       onExpand: this.onExpand,
       onCollapse: this.onCollapse
-    }).el);
+    });
   },
   render: function() {
     $(this.el).empty();
 
     var container = $("<div class='signatories' />");
-    container.append($("<h2 />").append(localization.docsignview.signatoriesTitle));
+    container.append($("<h2 />").text(localization.docsignview.signatoriesTitle));
 
     var signatoriesview = this;
     var list = $("<div class='list' />");
     var otheritem = undefined;
     var row = undefined;
     _.each(this.orderedOtherSignatories(), function (signatory) {
-      var item = $("<div class='column' />").append(signatoriesview.createSignatoryElems(signatory));
+      var item = $("<div class='column' />").append($(signatoriesview.createSignatoryView(signatory).el));
       if (row==undefined) {
         row = $("<div class='row' />").append(item);
         otheritem = item;
@@ -296,7 +302,9 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
       }
     });
 
-    var currentitem = $("<div class='column' />").append(signatoriesview.createSignatoryElems(this.model.currentSignatory()));
+    var currentsigview = signatoriesview.createSignatoryView(this.model.currentSignatory())
+    this.dragfields = currentsigview.dragfields;
+    var currentitem = $("<div class='column' />").append($(currentsigview.el));
     if (row==undefined) {
       row = $("<div class='row' />").append($("<div class='column' />"));
     }
@@ -343,7 +351,7 @@ window.DocumentSaveAfterSignModel = Backbone.Model.extend({
                saving: false });
   },
   saveurl: function() {
-    return "/s/" + this.document.id + "/" + this.document.currentSignatory().signatoryid() + "/" + this.document.viewer().magichash();
+    return this.document.currentSignatory().saveurl();
   },
   phoneurl: function() {
     return "/account/phoneme"
@@ -374,7 +382,7 @@ window.DocumentSaveAfterSignView = Backbone.View.extend({
   },
   addValidationError: function(elem, msg) {
     elem.addClass("invalid");
-    elem.parent().append($("<div class='errormsg' />").append(msg));
+    elem.parent().append($("<div class='errormsg' />").text(msg));
   },
   createValidationFunction: function(inputelem, displayelem, createValidation) {
     var view = this;
@@ -417,19 +425,19 @@ window.DocumentSaveAfterSignView = Backbone.View.extend({
   },
   createNewAccountElems: function() {
     var container = $("<div class='newaccount'/>");
-    container.append($("<div class='title' />").append(localization.docsignview.newAccountTitle));
-    container.append($("<div class='subtitle' />").append(localization.docsignview.newAccountSubTitle));
+    container.append($("<div class='title' />").text(localization.docsignview.newAccountTitle));
+    container.append($("<div class='subtitle' />").text(localization.docsignview.newAccountSubTitle));
 
     var form = $("<div class='highlight'/>");
 
     var appendFormInput = function(labeltext, input) {
       var row = $("<div class='item' />");
-      row.append($("<div />").append($("<div class='label' />").append(labeltext)));
+      row.append($("<div />").append($("<div class='label' />").text(labeltext)));
       row.append($("<div />").append(input));
       form.append(row);
     };
 
-    appendFormInput(localization.docsignview.emailLabel, $("<div class='email'/>").append(this.model.email()));
+    appendFormInput(localization.docsignview.emailLabel, $("<div class='email'/>").text(this.model.email()));
 
     var passwordinput = $("<input type='password' name='password' autocomplete='off' />");
     appendFormInput(localization.docsignview.passwordLabel, passwordinput);
@@ -511,8 +519,8 @@ window.DocumentSaveAfterSignView = Backbone.View.extend({
       container.addClass("saving");
     } else if (this.model.saved()) {
       container.addClass("done");
-      container.append($("<div class='title'/>").append(localization.docsignview.createdAccountTitle));
-      container.append($("<div class='subtitle'/>").append(localization.docsignview.createdAccountSubtitle));
+      container.append($("<div class='title'/>").text(localization.docsignview.createdAccountTitle));
+      container.append($("<div class='subtitle'/>").text(localization.docsignview.createdAccountSubtitle));
     } else {
       container.append(this.createNewAccountElems());
     }
@@ -538,7 +546,7 @@ window.DocumentShareAfterSignView = Backbone.View.extend({
     var container = $("<div />");
 
     var button = $("<div class='facebook btn' />");
-    button.append($("<div class='label' />").append(localization.docsignview.facebookButtonLabel));
+    button.append($("<div class='label' />").text(localization.docsignview.facebookButtonLabel));
     container.append(button);
 
     var dropdown = $("<div class='facebook dropdown'/>");
@@ -562,21 +570,16 @@ window.DocumentShareAfterSignView = Backbone.View.extend({
   createTweetLink: function() {
     var container = $("<a />");
     container.attr("href", "https://twitter.com/intent/tweet?screen_name=scrive");
-    var f = function (d, s, id) {
-      var js, fjs = d.getElementsByTagName(s)[0];
-      if (!d.getElementById(id)){
-        js = d.createElement(s);
-        js.id = id;
-        js.src = "//platform.twitter.com/widgets.js";
-        fjs.parentNode.insertBefore(js, fjs);
-      }
-    }(document,"script","twitter-wjs");
+    var twitterscript = $("<script type='text/javascript' />");
+    twitterscript.attr("src", "//platform.twitter.com/widgets.js");
+    console.log("adding twitter script to head");
+    $("head").append(twitterscript);
     return container;
   },
   createTweetThisElems: function() {
     var container = this.createTweetLink();
     var button = $("<div class='twitter btn' />");
-    button.append($("<div class='label' />").append(localization.docsignview.tweetButtonLabel));
+    button.append($("<div class='label' />").text(localization.docsignview.tweetButtonLabel));
     container.append(button);
     return container;
   },
@@ -586,14 +589,14 @@ window.DocumentShareAfterSignView = Backbone.View.extend({
     var container = $("<div />");
 
     var button = $("<div class='phone btn' />");
-    button.append($("<div class='label' />").append(localization.docsignview.phoneButtonLabel));
+    button.append($("<div class='label' />").text(localization.docsignview.phoneButtonLabel));
     container.append(button);
 
     var loading = $("<div class='loading' />");
     loading.hide();
 
     var form = $("<div />");
-    form.append($("<div />").append(localization.docsignview.phoneFormDescription));
+    form.append($("<div />").text(localization.docsignview.phoneFormDescription));
     var numberinput = $("<input type='text' />");
     form.append(numberinput);
     var submitForm = function() {
@@ -621,7 +624,7 @@ window.DocumentShareAfterSignView = Backbone.View.extend({
           console.log("successfully requested a phone call");
           loading.hide();
           form.empty();
-          form.append(localization.docsignview.phoneConfirmationText);
+          form.text(localization.docsignview.phoneConfirmationText);
           form.show();
         }
       })).send();
@@ -672,7 +675,7 @@ window.DocumentShareAfterSignView = Backbone.View.extend({
   createGetStartedElems: function() {
     var container = this.createStartLink();
     var button = $("<div class='start btn' />");
-    button.append($("<div class='label' />").append(localization.docsignview.startButtonLabel));
+    button.append($("<div class='label' />").text(localization.docsignview.startButtonLabel));
     container.append(button);
     return container;
   },
@@ -685,7 +688,7 @@ window.DocumentShareAfterSignView = Backbone.View.extend({
 
     var container = $("<div class='share' />");
 
-    container.append($("<div class='title'/>").append(localization.docsignview.shareTitle));
+    container.append($("<div class='title'/>").text(localization.docsignview.shareTitle));
     var panel = $("<div class='panel' />");
     panel.append($("<div class='item' />").append(this.createFacebookLikeElems()));
     panel.append($("<div class='item' />").append(this.createTweetThisElems()));
@@ -769,15 +772,14 @@ window.DocumentSignView = Backbone.View.extend({
         return localization.docsignview.signatoryAttachmentsTitleForOne;
       }
     },
-    createSignatoryAttachmentsElems: function() {
-      return $(new DocumentSignatoryAttachmentsView({
+    createSignatoryAttachmentsView: function() {
+      return new DocumentSignatoryAttachmentsView({
         model: this.model,
         el: $("<div class='section'/>"),
         title: this.signatoryAttachmentsTitle()
-      }).el);
+      });
     },
-    signatoryAttachmentTasks: function(el) {
-      var attachmentels = el.find(".list .item .second.column");
+    signatoryAttachmentTasks: function(attachmentels) {
       var attachments = this.model.currentSignatory().attachments();
       if (attachments.length!=attachmentels.length) {
         console.error("expected to find an element per attachment");
@@ -785,7 +787,7 @@ window.DocumentSignView = Backbone.View.extend({
       }
       var tasks = [];
       for (var i=0; i<attachments.length; i++) {
-        tasks.push(this.signatoryAttachmentTask(attachments[i], attachmentels.eq(i)));
+        tasks.push(this.signatoryAttachmentTask(attachments[i], attachmentels[i]));
       }
       return tasks;
     },
@@ -798,16 +800,21 @@ window.DocumentSignView = Backbone.View.extend({
         el: el
       });
     },
-    customFieldTasks: function(el) {
+    customFieldTasks: function(fieldels) {
       var fields = this.model.currentSignatory().customFields();
-      var fieldels = el.find(".signatory.current .dragfield input");
       if (fields.length!=fieldels.length) {
         console.error("expected to find an element per custom field");
+        console.log("****info*****");
+        console.log("fields");
+        console.log(fields);
+        console.log("fieldels");
+        console.log(fieldels);
+        console.log("*****");
         return;
       }
       var tasks = [];
       for (var i=0; i<fields.length; i++) {
-        tasks.push(this.customFieldTask(fields[i], fieldels.eq(i)));
+        tasks.push(this.customFieldTask(fields[i], fieldels[i]));
       }
       return tasks;
     },
@@ -865,13 +872,13 @@ window.DocumentSignView = Backbone.View.extend({
         title: localization.docsignview.uploadedAttachmentsTitle
       }).el);
     },
-    createSignatoriesElems: function(triggerArrowChange) {
-      return $(new DocumentSignSignatoriesView({
+    createSignatoriesView: function(triggerArrowChange) {
+      return new DocumentSignSignatoriesView({
         model: this.model,
         el: $("<div class='section'/>"),
         onExpand: triggerArrowChange,
         onCollapse: triggerArrowChange
-      }).el);
+      });
     },
     createRejectButtonElems: function() {
       var document = this.model;
@@ -992,13 +999,13 @@ window.DocumentSignView = Backbone.View.extend({
         }
 
         if (this.model.isSignatoryAttachments()) {
-          var signatoryattachments = this.createSignatoryAttachmentsElems();
+          var attachmentsview = this.createSignatoryAttachmentsView();
           if (this.model.currentSignatoryCanSign()) {
-            _.each(this.signatoryAttachmentTasks(signatoryattachments), function(task) {
+            _.each(this.signatoryAttachmentTasks(attachmentsview.uploadElems), function(task) {
               tasks.push(task);
             });
           }
-          bottomstuff.append(signatoryattachments);
+          bottomstuff.append($(attachmentsview.el));
         }
 
         if (this.model.isUploadedAttachments()) {
@@ -1006,13 +1013,13 @@ window.DocumentSignView = Backbone.View.extend({
         }
 
         if (this.isDisplaySignatories()) {
-          var signatories = this.createSignatoriesElems(triggerArrowChange);
+          var signatoriesview = this.createSignatoriesView(triggerArrowChange);
           if (this.model.currentSignatoryCanSign()) {
-            _.each(this.customFieldTasks(signatories), function(task) {
+            _.each(this.customFieldTasks(signatoriesview.dragfields), function(task) {
               tasks.push(task);
             });
           }
-          bottomstuff.append(signatories);
+          bottomstuff.append($(signatoriesview.el));
         }
 
         if (this.model.currentSignatoryCanSign()) {

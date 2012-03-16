@@ -60,7 +60,7 @@ window.DocumentAuthorAttachmentsView = Backbone.View.extend({
     var container = $("<div class='item' />");
     container.append($("<div class='icon' />"));
     var label = $("<div class='label' />");
-    label.append($("<div class='name' />").append(attachment.name()));
+    label.append($("<div class='name' />").text(attachment.name()));
     var link = $("<a target='_blank' />");
     link.text(localization.reviewPDF);
     link.attr("href", attachment.downloadLink());
@@ -98,16 +98,18 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
     this.title = args.title;
+    this.uploadElems = [];
     this.render();
   },
-  createSignatoryAttachmentElems: function(attachment) {
-    return $(new SignatoryAttachmentView({
+  createSignatoryAttachmentView: function(attachment) {
+    return new SignatoryAttachmentView({
       model: attachment,
       el : $("<div/>")
-    }).el);
+    });
   },
   render: function() {
     $(this.el).empty();
+    var view = this;
 
     if (!this.model.isSignatoryAttachments()) {
       return this;
@@ -116,10 +118,11 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     var container = $("<div class='signatoryattachments' />");
     container.append($("<h2/>").text(this.title==undefined ? localization.requestedAttachments : this.title));
 
-    var createSignatoryAttachmentElems = this.createSignatoryAttachmentElems;
     var list = $("<div class='list'/>");
     _.each(this.model.currentSignatory().attachments(), function (attachment) {
-      list.append(createSignatoryAttachmentElems(attachment));
+      var attachmentview = view.createSignatoryAttachmentView(attachment);
+      view.uploadElems.push(attachmentview.uploadElems);
+      list.append($(attachmentview.el));
     });
     list.append($("<div class='clearfix' />"));
     container.append(list);

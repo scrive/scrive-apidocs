@@ -67,7 +67,7 @@ window.SignatoryAttachmentUploadView = Backbone.View.extend({
   removeLink: function() {
     var attachment = this.model;
     var deleteurl = this.apiURL();
-    var removelink = $("<a href='' />").append(localization.deletePDF);
+    var removelink = $("<a href='' />").text(localization.deletePDF);
     removelink.click(function(){
         attachment.loading();
         $.ajax(deleteurl, {
@@ -139,7 +139,7 @@ window.SignatoryAttachmentUploadView = Backbone.View.extend({
     } else if (attachment.hasFile()) {
       container.append($("<div class='icon' />"));
       var label = $("<div class='file' />");
-      label.append($("<div class='name' />").append(this.model.file().name() + ".pdf"));
+      label.append($("<div class='name' />").text(this.model.file().name() + ".pdf"));
       var actions = $("<div />");
       actions.append($("<div class='action' />").append(this.fileLink()));
       if (!attachment.signatory().hasSigned()) {
@@ -181,7 +181,8 @@ window.SignatoryAttachmentView = Backbone.View.extend({
 
     var container = $("<div class='item' />");
     container.append(firstcol);
-    container.append($("<div class='second column'/>").append($(this.uploadView().el)));
+    this.uploadElems = $("<div class='second column'/>").append($(this.uploadView().el));
+    container.append(this.uploadElems);
 
     container.append($("<div class='clearfix' />"));
 
@@ -213,7 +214,7 @@ window.UploadedSignatoryAttachmentView = Backbone.View.extend({
     if (this.model.hasFile()) {
       label.append(this.fileLink());
     } else {
-      label.append(localization.waitingForAttachment);
+      label.text(localization.waitingForAttachment);
     }
 
     container.append(label);
@@ -267,6 +268,9 @@ window.Signatory = Backbone.Model.extend({
     },
     document : function(){
         return this.get("document");
+    },
+    saveurl: function() {
+      return "/s/" + this.document().id + "/" + this.signatoryid() + "/" + this.document().viewer().magichash();
     },
     signIndex : function() {
         var allSignatories = this.document().signatories();
