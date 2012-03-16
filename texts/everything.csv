@@ -335,7 +335,6 @@
 "_addsigattachmentlink","BEGÄR BILAGA",,"REQUEST ATTACHMENT"
 "_and","och",,"and"
 "_listand","och",,", and"
-"_appendixListAttachment","Bilagor:",,"Attachments:"
 "_atLeastOneSignatoryRequired","Du måste ha minst en undertecknande part.",,"You must add at least one signing party."
 "_authorsignatoryradioSenderNotSign","Ej undertecknande part",,"Non-signing party"
 "_authorsignatoryradioSenderSign","Undertecknande part",,"Signing party"
@@ -736,7 +735,6 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_flashRemindMailSentSigned","Dokumentet har skickats till",,"The document has been sent to"
 "_flashUserIsAlreadyCompanyAccount","Du har redan skickat en inbjudan till denna e-post!",,"You've already sent an invite to that e-mail!"
 "_forgotpassword","Glömt lösenord",,"Forgot password"
-"_from","från",,"from"
 "_h1","Signera offerter och avtal med Scrive",,"Sign tenders and contracts with Scrive"
 "_h1Body","Stäng affärer snabbare. Mindre administration. Nöjdare kunder.",,"Close deals faster. Less administration. More satisfied customers."
 "_h3CreateAccount","5 fria signaturer per månad!",,"5 free signatures per month!"
@@ -1550,7 +1548,6 @@ profits and reduce frustration. The following mateials shall only
  Färdig",,"<i>To continue:</i><br/>      1. Click this <a href=""$link$"">link</a><br/>      2. Review online<br/>       3. Sign (or return)<br/>       4. Done"
 "_mailInvitationToSignContractContentInfo","Översiktlig information",,"General information"
 "_mailInvitationToSignContractContentPartys","Parter:",,"Parties:"
-"_mailInvitationToSignContractContentSender","Avsändare:",,"Sender:"
 "_mailInvitationToSignContractDefaultHeader","<strong>$creatorname$</strong> har bjudit in dig att underteckna dokumentet <strong>$documenttitle$</strong>.",,"<strong>$creatorname$</strong>  has invited you to sign the document <strong>$documenttitle$</strong>."
 "_mailInvitationToSignContractDefaultHeaderWithService","<strong>$creatorname$</strong> har bjudit in dig att underteckna dokumentet <strong>$documenttitle$</strong> online.",,"<strong>$creatorname$</strong>  has invited you to sign the document <strong>$documenttitle$</strong> online."
 "_mailInvitationToSignOfferContentIfNotSignatoryInstruction","Du har behörighet att se detta dokument    Klicka på länken
@@ -1574,7 +1571,6 @@ profits and reduce frustration. The following mateials shall only
        4. Done"
 "_mailInvitationToSignOrderContentInfo","Översiktlig information",,"General information"
 "_mailInvitationToSignOrderContentPartys","Parter:",,"Parties:"
-"_mailInvitationToSignOrderContentSender","Avsändare:",,"Sender:"
 "_mailInvitationToSignOrderDefaultHeader","<strong>$creatorname$</strong> har skickat orderbekräftelsen  <strong>$documenttitle$</strong> till dig och önskar din bekräftelse. Bekräfta eller avvisa ordern genom att
  följa instruktionerna nedan.",,"<strong>$creatorname$</strong> has sent the order confirmation <strong>$documenttitle$</strong> to you and wants your confirmation. To confirm or return the order:"
 "_mailInvitationToSignTitleContract","Avtal att e-signera $if(companyname)$från $companyname$ $endif$ ",,"Contract to e-sign $if(companyname)$ from $companyname$ $endif$"
@@ -1736,7 +1732,6 @@ Thank you for creating an account with us."
 "_noNordeaInstalled","Du har inte Nordeas e-legitimation installerad. Du kan ladda ned Nordeas e-legitimation från Nordeas internetbank.",,"You do not have Nordea e-ID installed on your computer. You can download Nordea e-legitimation from Nordea online bank."
 "_noTeliaInstalled","Du har inte Telias e-legitimation installerad.",,"You do not have Telia e-ID installed on your computer."
 "_nonsignatory","Ej undertecknande part",,"Non-signing party"
-"_noonehadsignedtext","Ingen har undertecknat dokumentet ännu",,"No one has signed the document yet"
 "_of","av",,"of"
 "_offerAuthor","Avsändare",,"Sender"
 "_offerInvitationSentEntry"," skickar offerten till ",," sends the offer to "
@@ -2101,7 +2096,6 @@ simply better."
 "_remindMailNotSignedContractContentInstruction","<i>Så här går du vidare</i><br/>        1. Klicka på <a href=""$link$"">länken</a><br/>        2.
  Granska online<br/>        3. Underteckna (eller avvisa)<br/>
          4. Färdig",,"<i>To continue</i><br/>        1. Click this <a href=""$link$"">link</a><br/>        2. Review online<br/>         3. Sign (or return)<br/>         4. Done"
-"_remindMailNotSignedContractContentPartys","Parter:",,"Parties:"
 "_remindMailNotSignedContractStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte undertecknat eller avvisat
  dokument <strong>$documenttitle$</strong> ännu.",,"<strong>$author$</strong> wants to remind you that you haven't
 signed or returned the contract  <strong>$documenttitle$</strong> yet."
@@ -2111,8 +2105,6 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
  avvisa)<br/>        4. Färdig",,"1. Click this <a href=""$link$"">link</a><br/>
         2. Review online<br/>        3.  Accept the offer (or
  return)<br/>        4. Done"
-"_remindMailNotSignedOfferContentPartys","Parter:",,"Parties:"
-"_remindMailNotSignedOfferContentSender","Avsändare:",,"Sender:"
 "_remindMailNotSignedOfferStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte accepterat
  offerten <strong>$documenttitle$</strong> ännu.        Acceptera eller avvisa
  offerten genom att följa instruktionerna nedan.",,"<strong>$author$</strong>  wants to remind you that you haven't  confirmed or returned the offer  <strong>$documenttitle$</strong> yet. To do so:"
@@ -2122,7 +2114,6 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
  avvisa)<br/>         4. Färdig",,"1. Click this <a href=""$link$"">link</a><br/>
         2. Review online<br/>        3. Confirm the order (or
  return)<br/>         4. Done"
-"_remindMailNotSignedOrderContentPartys","Parter:",,"Parties:"
 "_remindMailNotSignedOrderStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte bekräftat
  ordern <strong>$documenttitle$</strong> ännu. Bekräfta ordern eller avvisa
  genom att följa instruktionerna nedan.",,"<strong>$author$</strong> wants to remind you that you haven't  confirmed or returned the order <strong>$documenttitle$</strong> yet. To do so:"
@@ -2338,7 +2329,6 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_share","Dela",,"Share"
 "_shared","Delad",,"Shared"
 "_showFileImagesError","Vi beklagar, det var något problem med formateringen på din PDF. Vänligen kontrollera dokumentet och försök igen.",,"We are sorry, something was wrong with the format in your PDF. Please check the document and try again."
-"_sigattachlistRequestedAttachment","Begärda bilagor:",,"Requested attachments:"
 "_signAwaitingAuthorLastBody","Alla parter har nu undertecknat och dokumentet är bindande.",,"All parties have  signed, and the document is now legally binding."
 "_signAwaitingAuthorLastHeader","Dokumentet har undertecknats",,"The document has been signed"
 "_signCanceledDataMismatchBody","Vi beklagar. Uppgifterna i din e-legitimation matchar inte dina
@@ -2749,13 +2739,7 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_updateAttachmentsDialogUpLoadSaved","Sparad på Scrive",,"Stored in Scrive"
 "_validationdropdownChooseVMethod","Välj verifieringsmetod",,"Select verification method"
 "_verifyingSignature","Verifierar signatur...",,"Verifying signature..."
-"_whohadsignedcontractinfoformailIfNotSigned","Har undertecknat:",,"Has signed:"
-"_whohadsignedcontractinfoformailIfSigned","Har undertecknat:",,"Has signed:"
 "_whohadsignedinfoforpreview","Har undertecknat:",,"Has signed:"
-"_whohadsignedofferinfoformailIfConfirmed","Har bekräftat:",,"Has confirmed:"
-"_whohadsignedofferinfoformailIfNotConfirmed","Har bekräftat:",,"Has signed:"
-"_whohadsignedorderinfoformailIfAccepted","Har accepterat:",,"Has accepted:"
-"_whohadsignedorderinfoformailIfNotAccepted","Har accepterat:",,"Has accepted:"
 "_you","du",,"you"
 "_youCanNotInviteSameEmail","Du kan endast bjuda in e-post adresser med samma domännamn som din egen.",,"You can only invite e-mail addresses with the same domain alias as your own."
 "_youMustSetParnerEmail","Du måste ange e-post till motpart.",,"You must enter an email address to your counterpart."

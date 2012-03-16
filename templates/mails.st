@@ -728,17 +728,12 @@ updateinglistwithauthor=
       <span class="partylistupdate"></span>
     </span>
 ####
-noonehadsignedtext=$_noonehadsignedtext()$
-####
 contracthassignedformailtext=$_contracthassignedformailtext()$
 ####
 offerhassignedformailtext=$_offerhassignedformailtext()$
 ####
 orderhassignedformailtext=$_orderhassignedformailtext()$
 ####
-####
-whohadsignedinfoforpreview=
-    <span class="authornamewhennotsecretary" alt="$noonehadsignedtext()$"></span>
 ####
 ####
 legalparagraph=
@@ -749,140 +744,6 @@ legalparagraph=
 ####
 #### DOCUMENT INFORMATION PREVIEW FOR MAIL
 ####
-contractInfo=
-    $nicemailbodywithpreview(
-        r1='true';
-        r1cond='true';
-        r1text= _remindMailNotSignedContractContentPartys();
-        r1elems=partners;
-        r1elemsclass = 'partnersmailpreview';
-
-
-        r2='true';
-        r2cond='true';
-        r2text= _mailInvitationToSignContractContentSender();
-        r2elems=creatorname;
-
-
-        r3=nojavascriptmagic;
-        r3cond=someonesigned;
-        r3text= _whohadsignedcontractinfoformailIfSigned();
-        r3elems=partnerswhosigned;
-        r3alter='true';
-        r3alttext = _whohadsignedcontractinfoformailIfNotSigned();
-        r3altelems = noonehadsignedtext();
-
-
-        r4=javascriptmagic;
-        r4cond='true';
-        r4text= _whohadsignedcontractinfoformailIfNotSigned();
-        r4elems= whohadsignedinfoforpreview();
-
-        r5='true';
-        r5cond=timetosign;
-        r5text= _timetosigninfo();
-        r5elems=timetosign;
-
-        r6='true';
-        r6cond=isattachments;
-        r6text= _appendixListAttachment();
-        r6elems=attachments;
-
-        r7='true';
-        r7cond=hassigattachments;
-        r7text=_sigattachlistRequestedAttachment();
-        r7elems= sigattachments;
-        r7separator= _from()
-    )$
-
-####
-offerInfo=
-    $nicemailbodywithpreview(
-        r1='true';
-        r1cond='true';
-        r1text= _remindMailNotSignedOfferContentPartys();
-        r1elems=partners;
-
-
-        r2='true';
-        r2cond='true';
-        r2text= _remindMailNotSignedOfferContentSender();
-        r2elems=creatorname;
-
-        r3=nojavascriptmagic;
-        r3cond=someonesigned;
-        r3text= _whohadsignedofferinfoformailIfConfirmed();
-        r3elems=partnerswhosigned;
-        r3alter='true';
-        r3alttext = _whohadsignedofferinfoformailIfNotConfirmed();
-        r3altelems = noonehadsignedtext();
-
-
-        r4=javascriptmagic;
-        r4cond='true';
-        r4text= _whohadsignedofferinfoformailIfNotConfirmed();
-        r4elems= whohadsignedinfoforpreview();
-
-        r5='true';
-        r5cond=timetosign;
-        r5text= _timetosigninfo();
-        r5elems=timetosign;
-
-        r6='true';
-        r6cond=isattachments;
-        r6text= _appendixListAttachment();
-        r6elems=attachments;
-
-        r7='true';
-        r7cond=hassigattachments;
-        r7text=_sigattachlistRequestedAttachment();
-        r7elems= sigattachments;
-        r7separator= _from()
-    )$
-####
-orderInfo=
-    $nicemailbodywithpreview(
-        r1='true';
-        r1cond='true';
-        r1text= _remindMailNotSignedOrderContentPartys();
-        r1elems=partners;
-
-        r2='true';
-        r2cond='true';
-        r2text= _mailInvitationToSignOrderContentSender();
-        r2elems=creatorname;
-
-        r3=nojavascriptmagic;
-        r3cond=someonesigned;
-        r3text= _whohadsignedorderinfoformailIfAccepted();
-        r3elems=partnerswhosigned;
-        r3alter='true';
-        r3alttext = _whohadsignedorderinfoformailIfNotAccepted();
-        r3altelems = noonehadsignedtext();
-
-        r4=javascriptmagic;
-        r4cond='true';
-        r4text= _whohadsignedorderinfoformailIfNotAccepted();
-        r4elems= whohadsignedinfoforpreview();
-
-
-        r5='true';
-        r5cond=timetosign;
-        r5text= _timetosigninfo();
-        r5elems=timetosign;
-
-        r6='true';
-        r6cond=isattachments;
-        r6text= _appendixListAttachment();
-        r6elems=attachments;
-
-        r7='true';
-        r7cond=hassigattachments;
-        r7text=_sigattachlistRequestedAttachment();
-        r7elems= sigattachments;
-        r7separator= _from()
-    )$
-
 ####
 ####
 nicemailbodywithpreview=
