@@ -324,9 +324,6 @@ instance DBUpdate AddUserStatEvent Bool where
       , sql "amount" usAmount
       , sql "service_id" usServiceID
       , sql "company_id" usCompanyID
-      ] <++> SQL "WHERE NOT EXISTS (SELECT 1 FROM user_stat_events WHERE user_id = ? AND quantity = ?)" [
-        toSql usUserID
-      , toSql usQuantity
       ]
 
 {------ Signatory Stats ------}
