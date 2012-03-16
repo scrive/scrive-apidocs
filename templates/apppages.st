@@ -32,6 +32,7 @@ standardHeaderContents=
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/signaturedrawer.css" media="screen"/>
 
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/symbols.css" media="screen"/>
+        <link rel="stylesheet" type="text/css" href="$prefix$/theme/tabs.css" media="screen"/>
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/lists.css" media="screen"/>
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/buttons.css" media="screen"/>
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/account.css" />
