@@ -56,7 +56,7 @@ import User.History.Model
 handleGetCompanyAccounts :: Kontrakcja m => m (Either KontraLink Response)
 handleGetCompanyAccounts = withUserGet $ withCompanyAdmin $ \_ -> do
   content <- viewCompanyAccounts
-  renderFromBody TopAccount kontrakcja content
+  renderFromBody kontrakcja content
 
 {- |
     Gets the ajax data for the company accounts list.
@@ -377,7 +377,7 @@ handleGetBecomeCompanyAccountOld inviterid = withUserGet $ do
   Context{ctxmaybeuser = Just user} <- getContext
   mcompany <- getCompanyForUser user
   content <- showUser user mcompany False
-  renderFromBody TopAccount kontrakcja content
+  renderFromBody kontrakcja content
 
 handlePostBecomeCompanyAccountOld :: Kontrakcja m => UserID -> m KontraLink
 handlePostBecomeCompanyAccountOld inviterid = withUserPost $ do
@@ -402,7 +402,7 @@ handleGetBecomeCompanyAccount companyid = withUserGet $ do
   newcompany <- guardJustM $ runDBQuery $ GetCompany companyid
   addFlashM $ modalDoYouWantToBeCompanyAccount newcompany
   content <- showUser user mcompany False
-  renderFromBody TopAccount kontrakcja content
+  renderFromBody kontrakcja content
 
 handlePostBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m KontraLink
 handlePostBecomeCompanyAccount cid = withUserPost $ do

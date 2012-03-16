@@ -36,6 +36,7 @@ import Util.KontraLinkUtils
 import File.FileID
 
 import Control.Concurrent
+import Control.Concurrent.MVar.Util (tryReadMVar)
 import Control.Monad.Error
 import Data.Functor
 import Data.List
@@ -95,25 +96,24 @@ getStandardLocale muser = do
 {- |
     Handles an error by displaying the home page with a modal error dialog.
 -}
-handleError :: (MonadIO m, Kontrakcja m) => Request -> m Response
-handleError rq = do
-     rqcontent <- liftIO $ tryTakeMVar (rqInputsBody rq)
-     when (isJust rqcontent) $
-         liftIO $ putMVar (rqInputsBody rq) (fromJust rqcontent)
-     Log.error $ showRequest rq rqcontent
-     response <- handleError'
-     setRsCode 404 response
+handleError :: (MonadIO m, Kontrakcja m) => KontraError -> m Response
+handleError e = do
+     rq <- askRq
+     Log.error (show e)
+     liftIO (tryReadMVar (rqInputsBody rq)) >>= Log.error . showRequest rq
+     handleError' e
   where
-  handleError' :: Kontrakcja m => m Response
-  handleError' = do
+  handleError' :: Kontrakcja m => KontraError -> m Response
+  handleError' InternalError = do
     ctx <- getContext
-    case (ctxservice ctx) of
+    case ctxservice ctx of
          Nothing -> do
             addFlashM V.modalError
             linkmain <- getHomeOrUploadLink
             sendRedirect linkmain
          Just _ -> embeddedErrorPage
-
+  handleError' Respond404 = do
+    notFound =<< notFoundPage
 {- |
    Creates a default amazon configuration based on the
    given AppConf
@@ -180,11 +180,9 @@ appHandler handleRoutes appConf appGlobals = do
   temp <- liftIO $ getTemporaryDirectory
   decodeBody (defaultBodyPolicy temp quota quota quota)
 
-  rq <- askRq
-
   session <- handleSession (cryptorng appGlobals)
-  ctx <- createContext rq session
-  response <- handle rq session ctx
+  ctx <- createContext session
+  response <- handle session ctx
   finishTime <- liftIO getClockTime
   let TOD ss sp = startTime
       TOD fs fp = finishTime
@@ -192,15 +190,10 @@ appHandler handleRoutes appConf appGlobals = do
   Log.debug $ "Response time " ++ show (diff `div` 1000000000) ++ "ms"
   return response
   where
-    handleNotFound :: Kontrakcja m => Request -> m Response
-    handleNotFound = handleError
-    handle :: Request -> Session -> Context -> ServerPartT IO Response
-    handle rq session ctx = do
+    handle :: Session -> Context -> ServerPartT IO Response
+    handle session ctx = do
       Right (res, ctx') <- runKontra' ctx $ do
-          res <- (handleRoutes `mplus` handleNotFound rq) `catchError` \e ->
-                 case e of
-                   Respond404 -> handleNotFound rq
-                   InternalError -> handleError rq
+          res <- (handleRoutes `mplus` throwError Respond404) `catchError` handleError
           ctx' <- getContext
           return (res,ctx')
 
@@ -212,13 +205,14 @@ appHandler handleRoutes appConf appGlobals = do
       rng <- inIO (cryptorng appGlobals) random
       updateSessionWithContextData rng session newsessionuser newelegtrans newmagichashes
       stats <- liftIO $ getNexusStats (nexus $ ctxdbenv ctx')
-
+      rq <- askRq
       Log.debug $ "SQL for " ++ rqUri rq ++ ": " ++ show stats
 
       liftIO $ disconnect $ nexus $ ctxdbenv ctx'
       return res
 
-    createContext rq session = do
+    createContext session = do
+      rq <- askRq
       currhostpart <- getHostpart
       -- FIXME: we should read some headers from upstream proxy, if any
       let peerhost = case getHeader "x-real-ip" rq of

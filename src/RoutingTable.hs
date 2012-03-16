@@ -391,5 +391,5 @@ serveHTMLFiles =  do
   guard ((length (rqPaths rq) > 0) && (isSuffixOf ".html" fileName))
   s <- guardJustM $ (liftIO $ catch (fmap Just $ BS.readFile ("html/" ++ fileName))
                                       (const $ return Nothing))
-  renderFromBody V.TopNone V.kontrakcja $ BS.toString s
+  renderFromBody V.kontrakcja $ BS.toString s
 

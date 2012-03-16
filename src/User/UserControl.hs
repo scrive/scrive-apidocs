@@ -45,7 +45,7 @@ handleUserGet = checkUserTOSGet $ do
     case (ctxmaybeuser ctx) of
          Just user -> do
            mcompany <- getCompanyForUser user
-           showUser user mcompany createcompany >>= renderFromBody TopAccount kontrakcja
+           showUser user mcompany createcompany >>= renderFromBody kontrakcja
          Nothing -> sendRedirect $ LinkLogin (ctxlocale ctx) NotLogged
 
 handleUserPost :: Kontrakcja m => m KontraLink
@@ -170,7 +170,7 @@ handleGetChangeEmail actionid hash = withUserGet $ do
   Context{ctxmaybeuser = Just user} <- getContext
   mcompany <- getCompanyForUser user
   content <- showUser user mcompany False
-  renderFromBody TopAccount kontrakcja content
+  renderFromBody kontrakcja content
 
 handlePostChangeEmail :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
 handlePostChangeEmail actionid hash = withUserPost $ do
@@ -252,7 +252,7 @@ getCompanyInfoUpdate = do
 handleUsageStatsForUser :: Kontrakcja m => m (Either KontraLink Response)
 handleUsageStatsForUser = withUserGet $ do
   Context{ctxmaybeuser = Just user} <- getContext
-  showUsageStats user >>= renderFromBody TopAccount kontrakcja
+  showUsageStats user >>= renderFromBody kontrakcja
 
 handleUsageStatsJSONForUserDays :: Kontrakcja m => m JSValue
 handleUsageStatsJSONForUserDays = do
@@ -314,7 +314,7 @@ handleGetUserMailAPI = withUserGet $ do
     Context{ctxmaybeuser = Just user@User{userid}} <- getContext
     mapi <- runDBQuery $ GetUserMailAPI userid
     mcapi <- maybe (return Nothing) (runDBQuery . GetCompanyMailAPI) $ usercompany user
-    showUserMailAPI user mapi mcapi >>= renderFromBody TopAccount kontrakcja
+    showUserMailAPI user mapi mcapi >>= renderFromBody kontrakcja
 
 handlePostUserMailAPI :: Kontrakcja m => m KontraLink
 handlePostUserMailAPI = withUserPost $ do
@@ -352,7 +352,7 @@ handleGetUserSecurity :: Kontrakcja m => m Response
 handleGetUserSecurity = do
     ctx <- getContext
     case (ctxmaybeuser ctx) of
-         Just user -> showUserSecurity user >>= renderFromBody TopAccount kontrakcja
+         Just user -> showUserSecurity user >>= renderFromBody kontrakcja
          Nothing -> sendRedirect $ LinkLogin (ctxlocale ctx) NotLogged
 
 handlePostUserLocale :: Kontrakcja m => m KontraLink
@@ -501,7 +501,7 @@ createNewUserByAdmin ctx names email _freetill custommessage locale = do
 
 handleAcceptTOSGet :: Kontrakcja m => m (Either KontraLink Response)
 handleAcceptTOSGet = withUserGet $ do
-    renderFromBody TopNone kontrakcja =<< pageAcceptTOS
+    renderFromBody kontrakcja =<< pageAcceptTOS
 
 handleAcceptTOSPost :: Kontrakcja m => m KontraLink
 handleAcceptTOSPost = withUserPost $ do
@@ -567,7 +567,7 @@ handleAccountSetupGet aid hash = do
     (False, Nothing) -> do
       -- this is a very disgusting page.  i didn't even know it existed
       content <- activatePageViewNotValidLink ""
-      renderFromBody TopNone kontrakcja content
+      renderFromBody kontrakcja content
   where
     -- looks up the user using the value in the optional email param
     getUserByEmail = do
