@@ -298,6 +298,8 @@ instance DBUpdate SetUserInfo Bool where
       ++ ", phone = ?"
       ++ ", mobile = ?"
       ++ ", email = ?"
+      ++ ", company_name = ?"
+      ++ ", company_number = ?"
       ++ "  WHERE id = ? AND deleted = FALSE"
     kExecute01 [
         toSql $ userfstname info
@@ -307,6 +309,8 @@ instance DBUpdate SetUserInfo Bool where
       , toSql $ userphone info
       , toSql $ usermobile info
       , toSql $ useremail info
+      , toSql $ usercompanyname info
+      , toSql $ usercompanynumber info
       , toSql uid
       ]
 
