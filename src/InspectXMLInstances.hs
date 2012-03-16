@@ -21,7 +21,7 @@ import KontraLink
 import FlashMessage
 import qualified Data.ByteString.UTF8 as BS
 import File.FileID
-import Misc
+import IPAddress
 import Text.JSON
 
 import ScriveByMail.Model

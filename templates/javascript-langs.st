@@ -224,9 +224,9 @@ javascriptLocalisation =
                 selectLanguage : "$_documentLanguageLabel()$"
               , en : "$_English()$"
               , se : "$_Swedish()$"
-              , changeEnglishToSwedishText :  "$_signInEnglishConfirmText()$"
+              , changeEnglishToSwedishText :  "$_signInSwedishConfirmText()$"
               , signInSwedish : "$_signInSwedish()$"
-              , changeSwedishToEnglishText: "$_signInSwedishConfirmText()$"
+              , changeSwedishToEnglishText: "$_signInEnglishConfirmText()$" 
               , signInEnglish:  "$_signInEnglish()$"
             }
          , csv : {
