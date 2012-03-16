@@ -630,7 +630,6 @@ body.signview {
 .signview .rejectwrapper {
   float: left;
   margin-left: 30px;
-  margin-right: 435px;
 }
 
 .signview .rejectwrapper a.btn-big.red .label {
@@ -639,7 +638,8 @@ body.signview {
 }
 
 .signview .signwrapper {
-  float: left;
+  float: right;
+  margin-right: 30px;
 }
 
 .signview .arrows .arrow {

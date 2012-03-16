@@ -86,6 +86,8 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
     _.bindAll(this, 'render');
     this.model.bind('reset', this.render);
     this.model.bind('change', this.render);
+    this.onExpand = args.onExpand;
+    this.onCollapse = args.onCollapse;
     this.render();
   },
   signatorySummary : function(){
@@ -114,13 +116,15 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
   },
   createCompactInfoElements: function() {
     var view = this;
+    var signatory = this.model;
 
     var container = $("<div />");
     container.append($("<div class='grouping' />").append($("<div class='name' />").append(this.model.name())));
     var expandlink = $("<a />");
     expandlink.click(function() {
       view.expanded = true;
-      view.render();
+      signatory.trigger("change");
+      view.onExpand();
     });
     expandlink.text(localization.docsignview.showDetails);
     container.append($("<div class='grouping' />").append(expandlink));
@@ -183,7 +187,8 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
       var compactlink = $("<a />");
       compactlink.click(function() {
         view.expanded = false;
-        view.render();
+        signatory.trigger("change");
+        view.onCollapse();
       });
       compactlink.text(localization.docsignview.hideDetails);
       container.append($("<div class='grouping' />").append(compactlink));
@@ -235,6 +240,8 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
 window.DocumentSignSignatoriesView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
+    this.onExpand = args.onExpand;
+    this.onCollapse = args.onCollapse;
     this.render();
   },
   orderedOtherSignatories: function() {
@@ -261,7 +268,9 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
   createSignatoryElems: function(signatory) {
     return $(new DocumentSignSignatoryView({
       model: signatory,
-      el: $("<div />")
+      el: $("<div />"),
+      onExpand: this.onExpand,
+      onCollapse: this.onCollapse
     }).el);
   },
   render: function() {
@@ -856,10 +865,12 @@ window.DocumentSignView = Backbone.View.extend({
         title: localization.docsignview.uploadedAttachmentsTitle
       }).el);
     },
-    createSignatoriesElems: function() {
+    createSignatoriesElems: function(triggerArrowChange) {
       return $(new DocumentSignSignatoriesView({
         model: this.model,
-        el: $("<div class='section'/>")
+        el: $("<div class='section'/>"),
+        onExpand: triggerArrowChange,
+        onCollapse: triggerArrowChange
       }).el);
     },
     createRejectButtonElems: function() {
@@ -954,6 +965,13 @@ window.DocumentSignView = Backbone.View.extend({
 
       var tasks = [];
 
+      var triggerTask = undefined;
+      var triggerArrowChange = function() {
+        if (triggerTask != undefined) {
+          triggerTask.trigger("change");
+        }
+      };
+
       this.container.append(this.createSignInstructionElems());
       if (document.currentSignatory().hasSigned()) {
         if (!document.currentSignatory().saved()) {
@@ -988,7 +1006,7 @@ window.DocumentSignView = Backbone.View.extend({
         }
 
         if (this.isDisplaySignatories()) {
-          var signatories = this.createSignatoriesElems();
+          var signatories = this.createSignatoriesElems(triggerArrowChange);
           if (this.model.currentSignatoryCanSign()) {
             _.each(this.customFieldTasks(signatories), function(task) {
               tasks.push(task);
@@ -1001,7 +1019,9 @@ window.DocumentSignView = Backbone.View.extend({
           var signsection = $("<div class='section' />");
           signsection.append(this.createRejectButtonElems());
           var signButton = this.createSignButtonElems(jQuery.extend({}, tasks));
-          tasks.push(this.signButtonTask(signButton));
+          var signButtonTask = this.signButtonTask(signButton);
+          triggerTask = signButtonTask;
+          tasks.push(signButtonTask);
           signsection.append(signButton);
           signsection.append($("<div class='clearfix' />"));
           bottomstuff.append(signsection);
@@ -1083,6 +1103,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
     this.render();
   },
   render: function() {
+    console.log("rendering arrows");
     $(this.el).empty();
 
     var taskmodel = this.model;
@@ -1136,7 +1157,6 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
         actionarrow.css("right", ($(window).width() - (el.offset().left + el.width() + 102)) + "px");
       }
     };
-    $(window).resize(updateActionArrowPosition);
     updateActionArrowPosition();
 
     var updateVisibility = function() {
