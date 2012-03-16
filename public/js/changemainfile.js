@@ -6,62 +6,83 @@
             this.model.view = this;
             _.bindAll(this, 'render');
             this.model.bind('change', this.render);
-            this.text = $("#jsuploadtext").html();
-            this.upload = $("#jsuploadbutton").html();
-            this.template = $("#jschoosetemplate").html();
         },
         render: function() {
-            var view = this;
-            $(view.el).children().detach();
-            var model = view.model;
-            var wiz = model.wizard();
-            var t = $(view.text);
-            $(view.el).append(t);
-            var url = "/api/mainfile/" + KontraDesignDocument.model.id;
-            var upbutton = UploadButton.init({
-                name: "file",
-                width: 125,
-                text: localization.uploadButton,
-                submitOnUpload: true,
-                onClick : function () {
-                    LoadingDialog.open();
-                },
-                onError: function() {
-                    wiz.trigger('change');
-                    LoadingDialog.close();
-                },
-                submit: new Submit({
-                    method : "POST",
-                    url : url,
-                    ajax: true,
-                    beforeSend: function() {
-                    },
-                    onSend: function() {
-                        LoadingDialog.open();
-                    },
-                   ajaxerror: function(d,a){
-                        if(a === 'parsererror') // file too large
-                            FlashMessages.add({content: localization.fileTooLarge, color: "red"});
-                        else
-                            FlashMessages.add({content: localization.couldNotUpload, color: "red"});
-                        LoadingDialog.close();
-                        wiz.trigger('change');
-                    },
-                    ajaxsuccess: function() {
-                      SessionStorage.set(KontraDesignDocument.model.documentid(), "step", "2");
-                      window.location.reload();
-                    }
-                })
-            });
-            var up = $(view.upload);
-            up.find(".signStepsBodyUploadBox .signStepsButtonContainer").append(upbutton.input());
-            $(view.el).append(up);
-            var temps = $(view.template);
-            temps.find("a").click(function() {
-                wiz.nextStep();
-                return false;
-            });
-            $(view.el).append(temps);
+          var view = this;
+
+          $(view.el).children().detach();
+          var model = view.model;
+          var wiz = model.wizard();
+
+          var textview = new UploadTextView({text:localization.docupload.uploadinfo});
+          $(view.el).append(textview.el);
+
+          var url = "/api/mainfile/" + KontraDesignDocument.model.id;
+          var upbutton = UploadButton.init({
+            name: "file",
+            width: 130,
+            text: localization.uploadButton,
+            submitOnUpload: true,
+            onClick : function () {
+              LoadingDialog.open();
+            },
+            onError: function() {
+              wiz.trigger('change');
+              LoadingDialog.close();
+            },
+            submit: new Submit({
+              method : "POST",
+              url : url,
+              ajax: true,
+              beforeSend: function() {
+              },
+              onSend: function() {
+                LoadingDialog.open();
+              },
+              ajaxerror: function(d,a){
+                if(a === 'parsererror') // file too large
+                  FlashMessages.add({content: localization.fileTooLarge, color: "red"});
+                else
+                  FlashMessages.add({content: localization.couldNotUpload, color: "red"});
+                LoadingDialog.close();
+                wiz.trigger('change');
+              },
+              ajaxsuccess: function() {
+                SessionStorage.set(KontraDesignDocument.model.documentid(), "step", "2");
+                window.location.reload();
+              }
+            })
+          });
+
+          var upbox = new UploadBoxModel({
+            headertext: localization.docupload.choosefile,
+            subtext: localization.onlyPDF,
+            button: upbutton
+          });
+
+          var upboxview = new UploadBoxView({model: upbox});
+          $(view.el).append(upboxview.el);
+
+          var tempbutton = Button.init({
+            color: "green",
+            size: "small",
+            text: localization.docupload.choosetemplate,
+            width: "130",
+            onClick: function () {
+              wiz.nextStep();
+              return false;
+            }
+          });
+
+          var tempbox = new UploadBoxModel({
+            headertext: localization.docupload.choosetemplate,
+            subtext: localization.docupload.templatesaved,
+            button: tempbutton
+          });
+
+          var tempboxview = new UploadBoxView({model: tempbox});
+
+          $(view.el).append(tempboxview.el);
         }
     });
 

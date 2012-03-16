@@ -275,5 +275,11 @@ javascriptLocalisation =
          , changeEmail : "$_changeEmail()$"
          , onlyPDF : "$_onlyPDF()$"
          , cancel : "$_cancel()$"
+         , docupload : {
+             choosefile: "$_signStepsBodyUploadBoxStep1UpLoadChooseFile()$"
+            ,choosetemplate: "$_signStepsBodyUploadBoxStep1ChooseTemplate()$"
+            ,templatesaved: "$_signStepsBodyUploadBoxStep1TemplateSaved()$"
+            ,uploadinfo: "$_contractuploadprompttext()$"
+         }
     }
 ####

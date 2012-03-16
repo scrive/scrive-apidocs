@@ -139,7 +139,7 @@ documentChangeMainFile docid = api $ do
               -- we need to downgrade the PDF to 1.4 that has uncompressed structure
               -- we use gs to do that of course
               content <- apiGuardL' BadInput $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
-              let filename = (BS.fromString $ basename filename')
+              let filename = basename filename'
       
               fileid <$> (lift $ runDB $ dbUpdate $ NewFile filename content)
             (_, Just templateids) -> do
