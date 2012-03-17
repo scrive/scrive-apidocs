@@ -1654,3 +1654,18 @@ handleParseCSV = do
             JSON.field "problems" $ do
                 JSON.field "description" s
             JSON.field "rows" ([]::[String])
+
+fixDanielEmail :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m String
+fixDanielEmail did sid = do
+  Log.debug "Fixing email - checking permissions"
+  onlyAdmin $ do
+    Log.debug "Fixing email ...."
+    doc <- guardJustM $ runDBQuery $ GetDocumentByDocumentID did
+    Log.debug "Document found"
+    sl  <- guardJust $ getSigLinkFor doc sid
+    Log.debug "we have sl"
+    when_ (not $ getEmail sl == BS.fromString "daniel@bqstad.se") mzero
+    Log.debug "old email is matching"
+    _ <- guardRightM $ runDBUpdate $ FixDanielEmail did sid (signatoryfields $ signatorydetails sl)
+    Log.debug $ "Daniel Skold email change due to Lukas Duczko request."
+    return "ok"
