@@ -277,7 +277,7 @@ staticRoutes = choice
      -- viral invite
      , dir "invite"      $ hPostNoXToken $ toK0 $ UserControl.handleViralInvite
      , dir "question"    $ hPostAllowHttp $ toK0 $ UserControl.handleQuestion
-     , dir "fixdanieemail"    $ hGet $ toK2 $ DocControl.fixDanielEmail
+
      , integrationAPI
      , documentAPI
      -- static files

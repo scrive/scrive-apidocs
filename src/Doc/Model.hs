@@ -70,7 +70,6 @@ module Doc.Model
   , UpdateSigAttachments(..)
   , UpdateDraft(..)
   , SetDocumentModificationData(..)
-  , FixDanielEmail(..)
   ) where
 
 import API.Service.Model
@@ -2215,12 +2214,3 @@ instance DBUpdate SetDocumentModificationData (Either String Document) where
       <++> SQL "WHERE id = ?" [toSql did]
     getOneDocumentAffected "SetDocumentModificationData" r did
 
-data FixDanielEmail = FixDanielEmail DocumentID SignatoryLinkID [SignatoryField]
-instance DBUpdate FixDanielEmail (Either String ())  where
-  dbUpdate (FixDanielEmail did slid danielsfields) = do
-      r <- kRun $ mkSQL UPDATE tableSignatoryLinks [
-          sql "fields" $ replaceFieldValue EmailFT (BS.fromString "daniel@danielskold.se") $ danielsfields
-        ] <++> SQL "WHERE document_id = ? AND id = ?" [toSql did, toSql slid]
-      if (r == 1) 
-         then return $ Right ()
-         else return $ Left $ "Can fix danie s email";
