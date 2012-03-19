@@ -75,7 +75,6 @@ import MagicHash (MagicHash)
 import MinutesTime
 import Misc
 import Redirect
-import Routing(toResp)
 import User.Model
 import Util.HasSomeUserInfo
 import qualified Log
@@ -252,23 +251,25 @@ rejectDocument documentid
 {- |
    Show the document to be signed
  -}
-handleSignShowOldRedirectToNew :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
+handleSignShowOldRedirectToNew :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m (Either KontraLink String)
 handleSignShowOldRedirectToNew did sid mh = do
   doc<- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
   invitedlink <- guardJust $ getSigLinkFor doc sid
-  return $ LinkSignDoc doc invitedlink
+  iphone <- isIphone
+  if iphone -- For iphones we are returning full page due to cookie bug in mobile safari
+    then return $ Left $ LinkSignDoc doc invitedlink
+    else Right <$> handleSignShow2 did sid
 
-handleSignShow :: DocumentID -> SignatoryLinkID -> Kontra Response
+handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Either KontraLink String)
 handleSignShow documentid
                signatorylinkid = do
   mmh <- readField "magichash"
   case mmh of
     Just mh -> do
       modifyContext (\ctx -> ctx { ctxmagichashes = Map.insert signatorylinkid mh (ctxmagichashes ctx) })
-      toResp (LinkSignDocNoMagicHash documentid signatorylinkid)
-    Nothing -> do
-      v <- handleSignShow2 documentid signatorylinkid
-      (toResp v)
+      return $ Left (LinkSignDocNoMagicHash documentid signatorylinkid)
+    Nothing -> Right <$> handleSignShow2 documentid signatorylinkid
+
 
 
 handleSignShow2 :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m String
