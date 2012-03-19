@@ -203,7 +203,7 @@ instance Show KontraLink where
     showsPrec _ (LinkWithdrawn did ) = (++) $ "/withdrawn/"++show did
     showsPrec _ LoopBack = (++) $ "/" -- this should never be used
     showsPrec _ BackToReferer = (++) $ "/" -- this should never be used
-    showsPrec _ (LinkDaveDocument docid) = (++) ("/dave/document/" ++ show docid)
+    showsPrec _ (LinkDaveDocument docid) = (++) ("/dave/document/" ++ show docid ++"/")
     showsPrec _ (LinkAskQuestion) = (++) ("/question")
     showsPrec _ (LinkInvite) = (++) "/invite"
     showsPrec _ (LinkSignCanceledDataMismatch docid sigid) = (++) $ "/landpage/signcanceleddatamismatch/" ++ show docid ++ "/" ++ show sigid
