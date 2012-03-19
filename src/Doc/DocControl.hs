@@ -11,7 +11,9 @@ module Doc.DocControl(
     , handleSignShow
     , handleSignShowOldRedirectToNew
     , signDocument
+    , signDocumentIphoneCase
     , rejectDocument
+    , rejectDocumentIphoneCase
     , handleAcceptAccountFromSign
     , handleSigAttach
     , handleDeleteSigAttach
@@ -142,6 +144,9 @@ handleAcceptAccountFromSign documentid
    URL: /s/{docid}/{signatorylinkid1}/{magichash1}
    Method: POST
  -}
+signDocumentIphoneCase :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
+signDocumentIphoneCase did sid _ = signDocument did sid
+
 signDocument :: Kontrakcja m
              => DocumentID      -- ^ The DocumentID of the document to sign
              -> SignatoryLinkID -- ^ The SignatoryLinkID that is in the URL
@@ -220,6 +225,10 @@ handleAfterSigning document@Document{documentid} signatorylinkid = do
         else addFlashM $ modalSignedNotClosedNoAccount document signatorylink
   return $ LinkSignDoc document signatorylink
 
+
+rejectDocumentIphoneCase :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
+rejectDocumentIphoneCase did sid _ = rejectDocument did sid
+ 
 {- |
    Control rejecting the document
    URL: /s/{docid}/{signatorylinkid1}/{magichash1}
@@ -256,8 +265,8 @@ handleSignShowOldRedirectToNew did sid mh = do
   modifyContext (\ctx -> ctx { ctxmagichashes = Map.insert sid mh (ctxmagichashes ctx) })
   iphone <- isIphone
   if iphone -- For iphones we are returning full page due to cookie bug in mobile safari
-    then return $ Left $ LinkSignDocNoMagicHash did sid
-    else Right <$> handleSignShow2 did sid
+    then Right <$> handleSignShow2 did sid
+    else return $ Left $ LinkSignDocNoMagicHash did sid
 
 handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Either KontraLink String)
 handleSignShow documentid
