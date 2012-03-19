@@ -1,4 +1,4 @@
-/* Stuff specyfic to design view 
+/* Stuff specyfic to design view
  * Durring backbone refactoring we changed structure and we want to get rid of bad css stuff also
  */
 
@@ -7,7 +7,7 @@
         width: 350px;
         min-height: 100px;
 }
-.siglist { 
+.siglist {
     border-color: #E6E7EF #F3F4F7 #F0F1F5 #F2F2F7;
     border-width: 1px;
     border-style: solid;
@@ -43,7 +43,7 @@
     font-weight: bold;
     width: auto;
     min-height: 18px;
-}   
+}
 
 .sigview .field{
     border: 1px solid #6782A5;
@@ -155,7 +155,7 @@
   height:16px;
   margin-left: 12px;
   display: block;
-  float: left; 
+  float: left;
 }
 .setCsvSignatory{
   background-image: url("images/iconCsv.png");
@@ -163,12 +163,11 @@
   height:16px;
   margin-left: 12px;
   display: block;
-  float: left;    
+  float: left;
 }
 .setRole{
     background-image: url("images/iconMan.png");
     margin-top: -1px;
-    margin-left: 15px;
     height: 16px;
     width: 16px;
     display: block;
@@ -220,9 +219,14 @@
 }
 
 .top .signame {
-  float: left;   
-  margin-right:10px;
+  float: left;
+  margin-right:15px;
 }
+
+.top {
+  margin-right: 20px;
+}
+
 .nextstepbutton {
    margin-top:10px;
    margin-bottom:5px;
@@ -313,7 +317,7 @@
     height: 16px;
     position: relative;
     top: 3px;
-    width: 16px;   
+    width: 16px;
 }
 
 .authorattachmentssetupicon , .signatoryattachmentssetupicon {
@@ -326,7 +330,7 @@
     height: 16px;
     position: relative;
     top: 3px;
-    width: 16px;      
+    width: 16px;
 }
 
 .editinvitemessagetext , .authorattachmentssetuptext,  .signatoryattachmentssetuptext{
@@ -403,7 +407,7 @@
     width: 250px;
     padding-left: 25px;
     padding-right: 25px;
-   
+
 }
 .selectAuthorAttachmentPopupContent .tab-table {
     background: none;
@@ -423,7 +427,7 @@
 
 .selectAuthorAttachmentPopupContent .attachmentsList .attachmentBox{
    margin-top: 5px;
-}   
+}
 
 .selectAuthorAttachmentPopupContent .attachmentsList .header{
    color: black;
@@ -512,7 +516,7 @@
   border: 1px solid #EEEEEE;
 
 }
- 
+
 .designCSVSignatoryPopupContent .problem{
   color: red;
   font-size: 10px;
@@ -543,7 +547,7 @@
     height: 100px;
     width: 250px;
     background-color: white;
-    
+
 }
 .signatureBoxNotDrawing .signatureHeader{
     display: block;
