@@ -2102,61 +2102,19 @@ _descriptionSoon,"Beskrivning kommer snart.","Description coming soon","Descript
 "_priceplanPageTableRow9","<td>Tredjepartsverifiering</td><td>$_descriptionSoon()$</td>",,"<td>Third-party verification</td><td>$_descriptionSoon()$</td>"
 "_priceplanPageTitle","| Prisplan",,"| Price plan"
 "_priceplanPageVAT","* Alla priser är exkl moms.",,"* All prices exclude VAT"
-"_privacyPolicyPageH1","SEKRETESSPOLICY (2011:02)",,"PRIVACY POLICY (2011:02)"
-"_privacyPolicyPageH1Body","<p>All information Ni delger Scrive eller dess Tjänster hanteras
- med största möjliga försiktighet och innehållets säkerhet har
- högsta prioritet för Scrive. Er integritet är viktig för oss.</p><br
- /><p>Nedan följer en mer detaljerad beskrivning av hur Scrive
- hanterar Er information. Vid vidare frågor, vänligen kontakta
- oss på info@scrive.com.</p>",,"<p>All the data You provide to Scrive or its Services is handled
- with the highest caution possible and the security of the contents
- is of the highest priority to Scrive. Your integrity is important
- to us.</p><br /><p>A more detailed description of how your data
- is handled by Scrive follows below. If you have further questions,
- please contact Scrive at info@scrive.com.</p>"
-"_privacyPolicyPageH21","Återförsäljning eller delgivning av information",,"Retailing or sharing of data"
-"_privacyPolicyPageH21Body","Scrive kommer inte att sälja, hyra eller låna ut eller på annat
- sätt till tredje part delge Er information insamlad genom Tjänsten
- eller genom Er kontakt med oss på annat sätt, än som uttryckligen
- överenskommits i de Allmänna Villkoren eller genom Ert skriftliga
- medgivande. Vi använder dock från tid till annan Användarinformation
- i anonymiserad form för att göra statistiska analyser som vi
- kan komma att göra tillgängliga för tredje part eller våra samarbetspartners.",,"Scrive will not sell, rent out or lend, or in any other way share
- data that you have provided to Scrive through the service or in any
- other way to a to a Third-party except for in those cases regulated
- by the Terms Of Service or your written approval. Though, we
- sometimes use anonymous user data for statistical analyses
- that are available to third parties or our partners."
-"_privacyPolicyPageH23","Webbläsarinformation på Hemsidan",,"Browser information in the homepage"
-"_privacyPolicyPageH23Body","Scrive analyserar våra webbloggar för att kontinuerligt utvärdera
- hemsidans innehåll och hur det tillfredställer Användarnas behov.
- Loggarna använder ingen personligt identifierbar information.
- Vår server identifierar också användarnas IP-adresser. En IP-adress
- är ett nummer som automatiskt tillskrivs en dator när den används
- på internet. Vi använder IP-adresser för att identifiera Tjänstens
- Användare, analysera trender, följa Användares förflyttning
- och insamla statistisk data. Avtalsparternas IP-adresser visas
- i undertecknade avtals certifikat som en extra säkerhet och
- identifieringstjänst till avtalsparterna.",,"Scrive analysis its logs in purpose of continuously evaluate
- the contents of the homepage and how it satisfies user needs.
- The logs does not contain any personal identifiable information.
- Our servers also identifies the user’s IP-addresses. An IP-address
- is a number that a computer is given automatically when connecting
- to the internet. We use the IP-address to identify the service
- users, analyse trends, register user movements and gather
- statistical data. The parties’ IP-addresses are displayed in
- the verification certificate for extra security and as an extra
- identification service to the parties."
-"_privacyPolicyPageH24","Användning av Cookies",,"Usage of Cookies"
-"_privacyPolicyPageH24Body","Scrive använder cookies för att förenkla Användarens login
- och kontohantering. Dessa cookies kommer inte att säljas, hyras
- eller lånas ut eller på annat sätt visas till tredje part.",,"Scrive uses cookies to simplify user log in and account management.
- These cookies will not be sold, rented out or lent, or in
- any other way shared with a Third-party."
-"_privacyPolicyPageMetaDescription","Signera och arkivera dina avtal elektroniskt. All information
- ni delger Scrive eller dess tjänster hanteras med största
- möjliga försiktighet.",,"Sign and store contracts online. All data you provide to Scrive
- or its services are handled with highest possible carefulness"
+"_privacyPolicyPageHeader","SEKRETESSPOLICY 2012:03",,"PRIVACY POLICY (2012:03)"
+"_privacyPolicyPageP1","All information Ni delger Scrive hanteras med största möjliga försiktighet och innehållets säkerhet har högsta prioritet för Scrive. Er integritet är viktig för oss.",,"All information You share with Scrive or its Services is handled with the highest caution possible and the security of the contents is of the highest priority to Scrive. Your integrity is important to us."
+"_privacyPolicyPageP2","Nedan följer en beskrivning av hur Scrive hanterar Er information. Vid vidare frågor kontakta oss på support@skrivapa.se.",,"A description of how your data is handled by Scrive follows below. If you have further questions please contact Scrive at support@scrive.com."
+"_privacyPolicyPage1Header","1. Återförsäljning eller delgivning av information",,"1. Retailing or sharing of data"
+"_privacyPolicyPage1","Scrive kommer inte att sälja, hyra eller låna ut eller på annat sätt till tredje part delge Er information annat än på så vis som överenskommits i de allmänna villkoren eller genom Ert skriftliga medgivande. Detta gäller både information insamlad genom tjänsten och information som delgetts Scrive genom Er kontakt med oss på annat sätt.",,"Scrive will not sell, rent out or lend, or in any other way share data that you have provided to Scrive through the service or in any other way to a to a Third-party except for in those cases regulated by the Terms Of Service or your written approval. This applies both to information collected through the service and information shared with Scrive though your contact with us by other means."
+"_privacyPolicyPage2Header","2. Webbläsarinformation på hemsidan",,"2. Browser information in the homepage"
+"_privacyPolicyPage2","Scrive analyserar kontinuerligt loggfiler från webbservern för att utvärdera och utveckla tjänsten. Loggfilerna hanteras med samma noggrannhet avseende sekretess som övrig information i tjänsten. Våra servrar identifierar också användarnas IP-adresser. En IP-adress är ett nummer som automatiskt tillskrivs en dator när den används på internet. Vi använder IP-adresser för att identifiera Tjänstens Användare, analysera trender, följa Användares navigering av hemsidan och insamla statistisk data. Signerande parters IP-adresser visas i signerade dokuments verifikat som en extra säkerhets- och identifieringstjänst till signerande parter.",,"Scrive continuously analyzes its logs from the webserver for the purpose of evaluating and developing the service. The logs are handled with the same cautiousness and secrecy as all other information in the service. Our servers also identify the user’s IP-addresses. An IP-address is a number that a computer is given automatically when connecting to the internet. We use the IP-address to identify the service users, analyse trends, register user movements and gather statistical data. The signing parties’ IP-addresses are displayed in the verification certificate for extra security and as an extra identification service to the parties."
+"_privacyPolicyPage3Header","3. Lagring av information",,"3. Information storage"
+"_privacyPolicyPage3","Avtal, offerter och andra dokument som användare anförtror åt Scrive omfattas av sekretess. De alternativ för lagring av dokument som Scrive erbjuder uppfyller därför de högsta kraven på dataintegritet och säkerhet.",,"Contracts, quotes and other documents that users entrust to Scrive remain confidential. The options Scrive offers for storage of documents meet the highest standards of data integrity and security."
+"_privacyPolicyPage4Header","4. Kommunikation",,"4. Communication"
+"_privacyPolicyPage4","En av grunderna i tjänsten är att tillhandahålla erforderlig sekretess och dataintegritet. Därför är all kommunikation mellan användaren och Tjänstens webbsida säkrad med digitala certifikat för kryptering av information som utbyts och för att säkerställa att det är Scrives tjänst som användaren nyttjar.",,"One of the basics of the service is to provide the requisite confidentiality and data integrity. Therefore, all communication between the user and the service's Web page is secured with digital certificates for encryption of data exchanged and to ensure that it is Scrives service that the user is using."
+"_privacyPolicyPage5Header","5. Användning av cookies",,"5. Usage of Cookies"
+"_privacyPolicyPage5","Scrive använder cookies för att förenkla Användarens inloggning och kontohantering. Dessa cookies kommer inte att säljas, hyras eller lånas ut eller på annat sätt visas till tredje part. Vidare ger webbläsaren inte tillgång till sådana cookies till andra webbplatser än Scrives med mindre än att användaren ger sitt explicita tillstånd till detta.",,"Scrive use cookies to simplify the user's login and account management. These cookies will not be sold, rented or loaned, or otherwise shown to third parties. Furthermore, the browser does not give access to such cookies to sites other than Scrives unless the user have given their explicit permission to do so."
 "_privacyPolicyPageTitle","| Sekretesspolicy",,"| Privacy Policy"
 "_problemWithPDF","Problem med PDF",,"Problem with PDF"
 "_backToArchive","Tillbaka till Arkiv",,"Back to Archive"
@@ -2510,293 +2468,37 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_tbsGenerationMessage3",". Undertecknande parter är:",,". Signing parties are:"
 "_tbsYouSignWithEleg","Du undertecknar ""$documentname$"" med transaktionsnummer ""$documentnumber$"".
  Undertecknande parter är:$tbssigentries$",,"You are signing  ""$documentname$"" with transactional number ""$documentnumber$"". The signing parties are: $tbssigentries$"
-"_termsPageH1","Scrive Allmänna VILLKOR (2011:02)",,"Scrive TERMS OF SERVICE (2011:02)"
-"_termsPageH1Body","Scrive CM AB tillhandahåller en tjänst som äntligen löser de
- problem med pappershantering och organisering som de traditionella
- metoderna att underteckna dokument på distans – brev, fax och
- e-post – inte kunnat lösa, samtidigt som vi bibehåller en hög
- säkerhetsstandard. Vår absolut främsta prioritet är att skydda
- Er integritet och säkerhet i vår tjänst. Scrive Allmänna Villkor
- (”Villkoren”) gäller för användning av hemsidan scrive.com
- (Tjänsten) och den elektroniska tjänsten för att administrera
- och som deltagande part underteckna dokument (""Part"" eller ""Avtalspart"") (också
- Tjänsten) och är ett avtal mellan Er som använder Tjänsten (”Användaren”
- eller ”Ni”) och Scrive CM AB (”Företaget” eller ”Scrive”).
- Tjänsten tillhör Scrive. Genom att använda hemsidan, skapa
- ett konto och/eller genom att logga in på tjänsten accepterar
- ni Villkoren. Vid användning av Tjänsten för att underteckna
- dokument garanterar ni dessutom att ni har samtliga rättigheter
- som krävs för att lagligt underteckna dokumentet. Scrive reserverar
- sig rätten att utan förpliktelser när som helst ändra, lägga
- till eller ta bort delar i Villkoren. Det är Ert eget ansvar
- att vara uppdaterad på Villkoren varje gång Ni använder Tjänsten.
- Er fortsatta användning av Tjänsten efter att ändringar i Villkoren
- gjorts innebär att Ni accepterar dessa ändringar. Så länge Ni
- respekterar Villkoren, erbjuder Scrive en personlig, icke-exklusiv,
- icke-överförbar, rätt att använda Tjänsten i enlighet med Villkoren.",,"Scrive CM AB provides Scrive.com, a service that finally solves the problems with paperwork and organization which the traditional methods to sign the document at a distance - mail, fax and e-mail – are unable to solve, while maintaining a high security standard. Our main priority is to protect your privacy and the security of our service. Scrive Terms of Service (""Terms"") apply to the use of the site Scrive.com (Service) and the electronic service for the administration and participant signing the document (""Party"" or ""Contractor"") (including service) and is an agreement between the persons who use the Service (""User"" or ""You"") and Scrive CM AB (the ""Company"" or ""Scrive""). The Service belongs to Scrive. By using the website, create an account and/or by logging onto the Service, you accept the Terms. When using the Service to sign documents, You are also guaranteeing that You have all rights necessary to legally sign the document. Scrive reserves the right to, at any time, amend, add or remove parts of these Terms. It is your own responsibility to be informed of any update of the Terms each time You use the Service. Your continued use of the Service after changes have been made in the Terms means that You accept those changes. As long as You respect these conditions, Scrive offers a personal, non-exclusive, non-transferable right to use the Service in accordance with the Terms."
-"_termsPageH2Communication","6. Vår Kommunikation med Er",,"6. Our communication with You"
-"_termsPageH2CommunicationBody","Genom att öppna ett konto på Tjänsten ger Ni Scrive tillstånd
- att genom Tjänsten eller genom en representant kontakta Er via
- Er telefon eller e-postadress. Om Ni vill sluta få våra utskick
- via e-post ska Ni skicka ett e-postmeddelande till oss på support@scrive.com.
- Observera att Scrive fortfarande kommer att behöva kommunicera
- med Er via e-post om Era transaktioner och andra kontorelaterade
- frågor, och att dessa e-postmeddelanden inte är e-postreklam
- och inte elimineras genom ovanstående förfarande.",,"By opening an account on the Service, You give permission to Scrive to, through the Service or through a representative, contact You via your telephone or e-mail address. If You do not wish to receive our mailings via email, please send an email to support@scrive.com. Please note that Scrive will still need to communicate with You via email about your transactions and other account-related issues, and that these emails are not commercial emails and will not be eliminated by the above procedure."
-"_termsPageH2Datahandeling","3. Datahanteringspolicy",,"3. Data Management Policy"
-"_termsPageH2DatahandelingBody1","Scrive Arkiv är ett säkert och smidigt dokumenthanterings-
- och arkiveringssystem som är en del av Tjänsten. Scrive lagrar
- även användardata i syfte att stärka bevisstyrkan av dokument
- undertecknade genom Tjänsten. Båda dessa deltjänster kräver
- att vi samlar in och lagrar användardata automatiskt. Därför
- har vi en datahanteringspolicy.",,"Scrive Archive is a secure and easy document management and archiving system that is part of the Service. Scrive also stores user data in order to enhance the weight of the evidence of the document signed by the Service. Both of these services require that we collect and store user data automatically. Therefore we have a data management policy."
-"_termsPageH2DatahandelingBody2","<h4>a. Datahantering:</h4> Tjänsten lagrar automatiskt information
- om Användare, kommunikation och dokument. Vilken information
- som lagras och hur denna hanteras beskrivs närmare i vår sekretesspolicy.
- Scrive förbehåller sig rätten att fortsätta lagra denna information
- på obegränsad tid på våra servrar, detta gäller även information
- från Användare som sagt upp eller blivit uppsagda från sitt
- konto och den information som Användaren själv valt att radera
- från sitt användarkonto.",,"<H4>a. Data Management:</H4> The Service automatically stores information about users, communications and records. The information that is stored and how it is managed is described in detail in our Privacy Policy. Scrive reserves the right to continue to store this information indefinitely on our servers. This also includes information from users who have resigned or been dismissed from his account as well as the information that the user has chosen to delete from their user account."
-"_termsPageH2DatahandelingBody3","<h4>b. PUL:</h4> I den mån Tjänsten kan komma att behandla personuppgifter
- i samband med fullgörandet av Villkoren ska kunden vara personuppgiftsansvarig
- och Scrive personuppgiftsbiträde (enligt definitionerna i
- personuppgiftslagen). Scrive får endast behandla personuppgifter
- enligt kundens instruktioner eller i den mån det krävs för att
- kunna uppfylla sina åtaganden enligt Villkoren.",,"<h4>b. PDA:</h4> To the extent that the Service may process personal information in connection with the performance of these Terms, Customer shall be responsible for personal information and will also be Scrive’s personal data assistant (as defined in the Swedish Data Protection Act). Scrive may only process personal data according to customer's instructions or to the extent necessary to meet its obligations under the Terms."
-"_termsPageH2DatahandelingBody4","<h4>c. Datalagring:</h4> Scrive lagrar dokument som undertecknats
- av alla parter mot en överenskommen årlig avgift. För dokument
- som inte är färdigställda och undertecknats av alla parter lagras
- dokumentet kostnadsfritt i 100 dagar efter att dokumentet skapats,
- Tjänsten lagrar dock max 1GB kostnadsfritt per konto. Efter
- överstigen tidsfrist eller lagringsmängd kan Ni välja om Ni
- vill fortsätta lagra era utkast genom att betala den överenskomna
- årliga lagringsavgiften.",,"<h4>c. Data storage:</h4> Scrive stores documents signed by all parties against an agreed annual fee. For documents that are not completed and signed by all parties, Scrive stores the document fee free for 100 days after the document was created. The service stores max 1GB free per account. After the 100 days have been exceeded, You can choose time or amount of storage, if You want to continue storing your draft, by paying the agreed annual storage fee."
-"_termsPageH2Info","1. Information",,"1. Information"
-"_termsPageH2InfoBody","Det är Ert ansvar att utvärdera korrektheten, fullständigheten
- och användbarheten av all information, åsikter, råd, dokument,
- kontrakt, eller annat innehåll tillgängligt genom Scrive.
- Ingen del av Tjänsten ska ses som juridisk rådgivning. Varken
- Scrive eller dess samarbetspartners ska vara ansvariga för
- några fel eller brister i innehållet eller för konsekvenserna
- av handlingar där man förlitat sig på innehållet.",,"It is your responsibility to evaluate the accuracy, completeness, or usefulness of any information, opinions, advice, documents, contracts, or other content available through Scrive. No part of the Service shall be regarded as legal advice. Neither Scrive nor its affiliates shall be liable for any errors or omissions in the content, or for the consequences of actions based on reliance on any content."
-"_termsPageH2Law","9. Tillämplig Lag och Jurisdiktion",,"9. Applicable Law and Jurisdiction"
-"_termsPageH2LawBody","Dokument som undertecknas genom Tjänsten ska – såvida inte annat
- anges i avtalet – regleras av och tolkas i enlighet med svensk
- materiell rätt. Dessa Villkor och alla frågeställningar kring
- dem och alla frågeställningar som rör Tjänsten regleras av och
- tolkas i enlighet med svensk materiell rätt och prövning skall
- ske av svensk domstol med Stockholms tingsrätt som första instans.
- Oavsett ovan nämnda förfarande för att lösa meningsskiljaktigheter
- har vi rätt att väcka talan angående förfallna fordringar i
- domstolar som har jurisdiktion över Användaren eller någon av
- Användarens tillgångar.",,"Document signed by the Service shall - unless otherwise specified in the contract – be governed by and construed in accordance with Swedish law. These Terms and all issues concerning them and all issues relating to the Service is governed by and construed in accordance with Swedish law and must be examined by a Swedish court in the District Court of Stockholm. Regardless of the above procedure to resolve disagreements, we have the right to bring an action on outstanding debts in the courts having jurisdiction over the User or any of the user's assets."
-"_termsPageH2Ownerrights","7. Äganderättigheter",,"7. Proprietary Rights"
-"_termsPageH2OwnerrightsBody1","Ni bekräftar och accepterar att Scrive (eller Företagets licensgivare)
- innehar fullständig äganderätt till Tjänsten och alla intressen
- däri, inklusive immateriella rättigheter som finns i Tjänsten
- (oavsett om dessa rättigheter är registrerade eller inte, och
- oavsett var i världen dessa rättigheter förekommer). Ni bekräftar
- vidare att Tjänsten kan innehålla information som av Scrive
- är avsedd att vara konfidentiell och att Ni inte, utan ett föregående
- skriftligt samtycke från Scrive, skall lämna ut någon sådan
- information. Om inte annat skriftligen avtalats med Scrive
- skall inte något i Villkoren ge Er en rätt att använda något
- av Företagets firmanamn, varumärken, logotyper, domännamn eller
- annat särskiljande kännetecken. Förutom den begränsade licens
- som beviljas i detta kapitel punkt a, bekräftar och accepterar
- Scrive att Scrive inte enligt dessa Villkor erhåller någon
- rätt, äganderätt eller intressen från Er (eller Era licensgivare)
- i eller till något Material Ni skickar in, lägger upp, överför
- eller visar på eller genom Tjänsten, inklusive immateriella
- rättigheter som finns i detta Material (oavsett om dessa rättigheter
- är registrerade eller inte, och oavsett var i världen dessa
- rättigheter förekommer). Om Ni inte skriftligen avtalat annat
- med Scrive, accepterar Ni att Ni är ansvarig för att skydda
- och upprätthålla dessa rättigheter och att Scrive inte har
- någon skyldighet att göra detta för Er räkning. Om Ni inte fått
- uttrycklig skriftlig tillåtelse från Scrive, accepterar Ni
- att Ni i Er användning av Tjänsterna inte skall använda något
- företags eller någon organisations varumärke, firmanamn eller
- logotyp på ett sätt som sannolikt kan eller är avsett att orsaka
- förväxling avseende ägaren eller behörig användare av sådana
- märken, namn eller logotyper.",,"You acknowledge and agree that Scrive (or the Company's licensors) own all property rights to the Service and all interests therein, including intellectual property rights contained in the Service (whether those rights are registered or not, and wherever in the World those rights may exist). You further acknowledge that the Service that may contain information of Scrive is intended to be confidential and that You may not, without the prior written consent from Scrive, disclose any such information. Unless otherwise agreed in writing with Scrive nothing in the Terms gives You the right to use any of the Company trade names, trademarks, logos, domain names or other distinguishing marks. Except for the limited license granted in section 7 (a), Scrive acknowledges and agrees that Scrive under these conditions obtains no right, title or interest from You (or your licensors) in or to any content You submit, post, transmit or display on or through the Service, including intellectual property rights which subsist in that content (whether those rights are registered or not, and wherever in the world those rights may exist). If You have not agreed otherwise in writing with Scrive, You agree that You are responsible for protecting and enforcing those rights and that Scrive does not have any obligation to do so on your behalf. If You have not received the express written permission from Scrive, You agree that You in your use of the Services shall not use any company or organization's trademark, trade name or logo in a manner that is likely or intended to cause confusion about the owner or authorized user of such marks, names or logos."
-"_termsPageH2OwnerrightsBody2","<h4>a. Feedback:</h4> Ni godkänner att Scrive offentliggör
- och på andra sätt kan använda Era kommentarer och feedback utan
- betalning eller annan förpliktelse jämtemot Er. Ni accepterar
- att alla kommentarer Ni gör om Scrive direkt till oss via
- e-post, via vårt kontaktformulär, eller på vårt forum, kan användas
- som omdömen om Tjänsten och kan användas i vår marknadsföring
- utan någon betalning eller annan förpliktelse mot Er. När Ni
- har delgivit Scrive feedback kan den inte längre ändras av
- Er.",,"<h4>a. Feedback:</h4> You agree that Scrive may, at its own option, publish and otherwise use your comments and feedback, without payment or other obligations to You. You agree that any comments you make about Scrive directly to Scrive via email, via our contact form, or on our forums, may be used as attributes of the Service and may be used in our marketing without any payment or other obligation to You. Once You have served Scrive feedback it cannot be changed by You."
-"_termsPageH2Responsability","8. Ansvarsbegränsning",,"8. Disclaimer"
-"_termsPageH2ResponsabilityBody","Ni accepterar att hålla Scrive och dess moderbolag, systerbolag,
- dotterbolag, filialer, tjänsteleverantörer, andra Användare,
- distributörer, licensgivare, tjänstemän, chefer och anställda
- fria från anspråk eller krav, inklusive alla advokatkostnader,
- från Er eller någon tredje part för någon direkt, indirekt,
- slumpmässig, speciell, följande eller specifik skada, inklusive,
- men inte begränsat till, skador för utebliven vinst, goodwill,
- användning, data, eller andra ickefysiska förluster (även om
- Scrive har blivit delgivna denna möjlighet), och inklusive
- skador resulterande från: (i) dokument eller transaktioner skickade
- genom Tjänsten där Scrive inte varit en direkt avtalspart;
- (ii) användningen eller oförmågan att använda, inklusive fel/misstag,
- avbrott eller förseningar; otillåten access till eller ändring
- i Era dokument eller transaktioner; eller (iii) någon annan
- fråga som relaterar till Tjänsten. Företagets ansvar ska inte
- övergå, totalt, summan av det minsta beloppet av antingen (A)
- Era totala betalningar för användandet av Hemsidan och Tjänsten
- under detta avtal inom senaste 12-månadersperioden eller, (B)
- max femtusen kronor.",,"You agree to hold Scrive and its parent companies, sister companies, subsidiaries, affiliates, service providers, other Users, distributors, licensors, officers, directors and employees free from any claim or demand, including all attorneys' fees, from You or any Third-party for any direct, indirect, random, special, following or specific injury, including but not limited to, damages for loss of profits, goodwill, use, data or other intangible losses (even if Scrive has been notified of this option), and including injuries resulting from: (i) documents or transactions submitted by the Service where Scrive not been a direct party to the agreement, (ii) the use or inability to use, including errors/mistakes, interruptions or delays; unauthorized access to or alteration of your documents or transactions or (iii) any other issue relating to the Service. Scrive's responsibility shall not exceed, in total, the sum of the minimum amount of either (A) Your total payments for the use of the Website and the Service under these Terms within the past 12 months or, (B) maximum five thousand kronor."
-"_termsPageH2Signprocess","4. Signerade dokument och signeringsprocess",,"4. Signed documents and the signing process"
-"_termsPageH2SignprocessBody1","Scrive tillhandahåller Tjänsten som ett verktyg för Användaren
- att kunna underteckna dokument med tredje part. Följande bestämmelser
- gäller för dokument undertecknade genom Scrive.",,"Scrive provides the Service as a tool for the user to sign documents with third parties. The following rules apply to documents signed by Scrive."
-"_termsPageH2SignprocessBody2","<h4>a. Scrive är aldrig en avtalspart:</h4> Som en del av Tjänsten
- stämplar Scrive dokument som undertecknats av alla parter
- med certifikat som bekräftar att Scrive bevittnat transaktionen.
- Syftet med att Scrive bevittnar transaktionen är att stärka
- dokumentets bevisstyrka i domstol. Scrive kan dock aldrig
- genom denna procedur anses bli undertecknande part i dokumentet
- och Scrive skall inte ha något som helst ansvar gällande giltigheten,
- verkställandet eller parternas efterlevande av sådana dokument.
-  Scrive kan endast anses bundet av innehållet i ett dokument
- om en registrerad eller befullmäktigad firmatecknare genom en
- registrerad Användare av Tjänsten i eget namn och i Företagets
- räkning undertecknar ett dokument genom Tjänsten.",,"<h4>a. Scrive is never a party to the agreement:</h4> As part of the Service Scrive ensures that the document is signed by all parties by issuing a certificate confirming that Scrive has witnessed the transaction. The purpose of Scrive witnessing the transaction is to strengthen the document evidence, for the unlikely event that it is needed in a court of law. By this procedure Scrive is never considered to be a signatory of the document and Scrive shall have no liability whatsoever regarding the validity, content, enforcement or parties’ survivors of such documents. Scrive can only be bound by the contents of a document if a registered or authorized signatory by a registered user of the Service in its own name and on behalf of the Company signs a document through the Service."
-"_termsPageH2SignprocessBody3","<h4>b. Parternas förpliktelser och Scrive´s ansvarsfirhet:</h4>
- När samtliga parter undertecknat ett dokument genom Tjänsten
- och dokumentets färdigställande bekräftats av Tjänsten blir
- de undertecknande parterna förpliktigade och berättigade i enlighet
- med överenskommelserna i dokumentet. Scrive blir dock aldrig
- ansvarigt eller på något som helst sätt skyldigt att övervaka
- eller ingripa om undertecknande parter bryter mot sina förpliktelser
- eller felaktigt utnyttjar sina rättigheter enligt överenskommelse
- i det undertecknade dokumentet.",,"<h4>b. The parties' obligations and Scrive's limitation of liability:</h4> Once all parties have signed a document through the Service, and document completion has been confirmed by the Service, the signatories have the obligations and rights in accordance with the agreement/s in the document. Scrive will never be responsible or in any way obligated to monitor or intervene, should the signatories not abide by their obligations in the agreement or improperly exercise their rights as agreed in the signed document."
-"_termsPageH2SignprocessBody4","<h4>c. Dispyter och extratjänsten Scrive Bevis:</h4> Om oenighet
- uppkommer mellan parterna med anledning av ett dokument som
- har färdigställts genom Scrive, ska Scrive inte ha något
- ansvar eller skyldighet med avseende på denna konflikt förutom
- genom företagets vanliga kundsupport hjälpa Användarna hitta
- och hantera den information som finns tillgänglig genom Tjänsten.
- För ytterligare bevismaterial tillhandahåller Scrive extratjänsten
- Scrive Bevis som ger Användaren möjligheten att mot betalning
- och i enlighet med våra Särskilda Utdragsvillkor göra utdrag
- ur Företagets lagrade bevisunderlag.",,"<h4>c. Disputes and the extra service “Scrive Proof”:</h4> If any disagreement arises between the parties regarding a document that was prepared by Scrive, Scrive will have no liability or obligation with respect to this conflict except through the company's usual customer support to help users find and manage the information available through the Service. For further evidence Scrive provides the extra service Scrive Proof that gives the user the ability to revert for payment in accordance with our Special Extract Terms of extracts from the Company recorded evidence base."
-"_termsPageH2SignprocessBody5","<h4>d. Företagets kommunikation med inbjudna personer:</h4> Ni
- godkänner och befullmäktigar Scrive att genom Tjänsten eller
- genom representanter för Scrive kommunicera med av Er direkt
- eller indirekt inbjudna personer (en indirekt inbjuden person
- är t.ex. åskådare som genom er tillåtelse bjudits in av någon
- av era direkt inbjuda personer) gällande de dokument som ska
- undertecknas och delge dem de dokument och den information som
- rimligen behövs för att de ska kunna (1) granska dokumentet,
- (2) granska undertecknande parters identitet, (3) veta huruvida
- dokumentet undertecknats eller inte undertecknats och förstå
- omständigheterna kring händelseförloppet och (4) i efterhand
- kunna granska av Scrive genererade och lagrade bevismaterial
- kring transaktionen. Sådan information kan omfatta, men är inte
- begränsad till, ert namn, e-postadress, personnummer, fotografi
- och IP-adress.",,"<h4>d. Scrive's communications with invited guests:</h4> You agree and hereby authorize Scrive to, through the Service or by representatives of Scrive, communicate with persons directly or indirectly invited by You (an indirect invited person is e.g. spectators invited through your permission by one of your directly invited individuals) regarding the documents to be signed and serve them the documents and information reasonably necessary to enable them to (1) review the document, (2) examine the signing parties’ identities, (3) to know whether the document is signed or not signed and understand the circumstances surrounding the events and (4) retrospectively examine the Scrive generated and stored evidence of the operation. Such information may include, but is not limited to, your name, email address, date of birth, photograph and IP address."
-"_termsPageH2SignprocessBody6","<h4>e. Företagets användning av dokument och information:</h4>
- Genom att delge Scrive dokument och/eller information som
- skall undertecknas och/eller administreras via Tjänsten, godkänner
- Ni att Scrive trycker sitt sigill och Era och inbjudna personers
- uppgifter på det färdigställda dokumentet och Ni ger Scrive
- tillstånd att automatiskt och/eller manuellt distribuera kopior
- av det färdigställda dokumentet till Er och alla deltagande
- personer.",,"e. Company's use of documents and information: By submitting Scrive documents and/or information to be signed and/or administered through the Service, You agree that Scrive may press its seal as well as your and your invited gusts’ information on the completed document, and You give permission Scrive to automatically and/or manually distribute copies of the completed document to You and all participating individuals."
-"_termsPageH2SignprocessBody7","<h4>f. Dokuments rättsliga verkan och Scrive´s ansvarsfrihet:</h4>
- Alla påståenden gjorda av Scrive om giltigheten av dokument
- som undertecknats på elektronisk väg är inte avsedda för, och
- ska inte tolkas som, juridisk rådgivning. Scrive frånsäger
- sig allt ansvar för att säkerställa att dokument som undertecknats
- genom Tjänsten är giltiga eller tvingande enligt lagstiftningen
- i ett visst land, stat eller annan jurisdiktion.  Om Ni önskar
- kontrollera giltigheten eller verkställbarheten av något dokument
- Ni planerar att underteckna eller undertecknat genom Tjänsten,
- eller vill driva igenom ett dokument som undertecknats genom
- tjänsten, bör Ni rådgöra med en behörig jurist med lämplig juridisk
- sakkunskap.",,"<h4>f. Dokuments legal effect and Scrive's discharge:</h4> All statements made by Scrive regarding the validity of documents signed electronically are not intended to be, and should not be interpreted as, legal advice. Scrive disclaims any responsibility to ensure that the documents signed by the Service are valid or enforceable under the laws of a particular country, state or other jurisdiction. If You wish to review the validity or enforceability of any documents You plan to sign or signed by the Service, or want to push through a document signed by the Service, You should consult with appropriate legal expertise."
-"_termsPageH2SignprocessBody8","<h4>g. Skatter:</h4> Ni accepterar att Ni och varje annan part
- som undertecknat ett dokument genom tjänsten själva ansvarar
- för (1) fastställandet av skatter som Ni kan vara skyldig till
- följd av sådana dokument, och (2) insamling, betalning och rapportering
- av nödvändig avgifter enligt gällande lag. Ni accepterar att
- Scrive inte har något ansvar att betala, samla in eller rapportera
- tillämpliga skatter i samband med Ert dokument, och Ni accepterar
- även att kompensera, försvara och hålla Scrive skadeslösa
- från alla anspråk, krav, skadestånd, viten, böter, kostnader
- och andra utgifter relaterade till dokumentet.",,"<h4>g. Taxes:</h4> You agree that You and any other party signed a document through the Service itself is responsible for (a) the determination of taxes You may owe as a result of such documents, and (2) the collection, payment and reporting of required fees under the appropriate law. You agree to Scrive has no responsibility to pay, collect or report applicable taxes associated with your document, and You also agree to indemnify, defend and hold Scrive harmless from all claims, demands, damages, penalties, fines, costs and other expenses related to the document."
-"_termsPageH2Useraccounts","2. Användarkonton",,"2. User Accounts"
-"_termsPageH2UseraccountsBody1","Ni är ansvarig för att hemlighålla och skydda Er kontoinformation,
- inklusive koder, och ansvarar för all annan aktivitet som sker
- via Ert konto. Ni ska omedelbart meddela Scrive vid misstanke
- om otillåten användning eller försök till användning av Ert
- konto eller Er kod, eller andra brott mot säkerheten. Ni får
- inte heller vid något tillfälle använda någon annans kod eller
- konto eller på annat ej auktoriserat vis försöka få tillgång
- till Tjänsten.",,"You are responsible for maintaining the confidentiality and to protect your account information, including codes, and You are also responsible for any other activity on your account. You shall immediately notify Scrive on suspicion of unauthorized use or attempted use of your account or your code, or other security breach. You must not, at any time, use someone else's code or account or in any other unauthorized way attempt to get access to the Service."
-"_termsPageH2UseraccountsBody2","<h4>a. Kontovillkor:</h4> Ni accepterar att Ni ska ge Scrive
- korrekt, uppdaterad och fullständig information om Er själv
- och Er faktura-/betalinformation. Ni ska uppdatera all kontoinformation
- genom att följa de procedurer som Tjänsten tillhandahåller.
- Ni får inte använda någon automatisk apparat, program, algoritm,
- metod, eller någon liknande manuell process, för att komma åt,
- införskaffa, kopiera, sondera, indexera, manipulera, testa eller
- övervaka någon del av Tjänsten eller något Innehåll, eller på
- något som helst sätt reproducera eller kringgå Tjänstens struktur
- eller presentation, eller för att försöka införskaffa något
- material, dokument, eller information på något annat sätt än
- genom den infrastruktur som skapats och gjorts tillgänglig av
- Scrive eller dess samarbetspartners i detta syfte. Ni accepterar
- att Ni inte kommer att göra något som utsätter Tjänstens infrastruktur,
- eller några system eller nätverk som är del av eller anknutna
- till Tjänsten för en orimlig belastning.",,"<h4>a. Account Terms:</h4> You agree that You will give Scrive accurate, current and complete information about yourself and your invoice/payment information. You shall update all account information by following the procedures, which the Service provides. You may not use any automated device, program, algorithm, method, or any similar manual process, to access, acquire, copy, probe, index, manipulate, test or monitor any portion of the Service or any Content, or in any way reproduce or circumvent the Service's structure or presentation, or to attempt to obtain any materials, documents or information through any means other than the infrastructure created and made available by Scrive, or its partners, to that end. You agree that You will not perform any action that exposes the Service's infrastructure, or subject any systems or networks that are part of or affiliated with the Service, to an excessive burden."
-"_termsPageH2UseraccountsBody3","<h4>b. Användarinnehåll:</h4> Ni accepterar att Ni inte kommer
- att använda Tjänsten i illegala syften, för att störa Tjänsten
- eller för att sprida innehåll som bryter mot integritet, upphovsrätt
- eller ägarrätt för någon tredje part, eller för syften som av
- Scrive uppfattas som olagliga, obscena, kränkande, förolämpande,
- hotfulla, vulgära eller på andra sätt klandervärda. Scrive
- är inte ansvarigt för misslyckanden eller förseningar av att
- ta bort sådant innehåll. Scrive har rätt, men inte någon skyldighet,
- att övervaka allt användargenererat innehåll, inklusive kommentarer
- och kommunikation, för att avgöra huruvida Villkoren efterlevs
- av Användaren, för att tillgodose att lagar och regler efterföljs
- eller för att tillfredställa förfrågningar från en statlig myndighet.
- Scrive och dess samarbetspartners har rätt att när som helst
- ta bort, blockera och processa mot Användare och användarinnehåll
- som, enligt Scrive anses bryta mot Villkoren eller på annat
- sätt bryter mot gällande lagar och regler. Ni är själv fullt
- ansvarig för innehållet i Ert konto och de transaktioner som
- görs med Ert konto genom Tjänsten.",,"<h4>b. User Content:</h4> You agree that You will not use the Service for illegal purposes, to disrupt the Service or to disseminate content that violates privacy, copyright or proprietary right of any Third-party, or for purposes of Scrive that are or may be perceived as illegal, obscene, abusive, libelous, threatening, vulgar or otherwise reprehensible. Scrive is not responsible for any failure or delay in removing such content. Scrive has the right, but not the obligation, to monitor all user-generated content, including comments and communications, in order to determine whether conditions are complied with by the user, to ascertain that the laws and rules are abided by or to satisfy requests from a government agency. Scrive and its partners have the right to, at any time, delete, reject and litigate against users and user content, if Scrive deems it to violate the Terms or otherwise violate any applicable laws and regulations. You yourself are fully responsible for the contents of your account and transactions made with your account through the Service."
-"_termsPageH2UseraccountsBody4","<h4>c. Kostnader och betalning:</h4> Scrive tar betalt månadsvis
- för Era upplupna kostnader enligt gällande prisplan genom fakturering
- eller genom att dra pengarna från Ert registrerade kreditkort.
- Våra fakturor förfaller till betalning 14 dagar efter fakturadatum.
- För påminnelse debiteras en påminnelseavgift om 50 SEK. Vi kommer
- att debitera dröjsmålsränta från förfallodagen till datum för
- betalning. Räntan är 15% plus den aktuella statslåneräntan.
- Vi tillämpar en administrationsavgift om 50 SEK exklusive moms
- per faktura som understiger ett värde om 500 SEK.",,"<h4>c. Cost and payment:</h4> Scrive charges monthly for your pending charges under an existing price plan by billing or by pulling money from your registered credit card. Our invoices are due 14 days after invoice date. Reminders will be charged at a late payment fee of 50 SEK. We will charge interest from the due date to the date of payment. The interest rate is 15% plus the current government borrowing rate. We apply an administration fee of 50 SEK excluding VAT per invoice, which is below a value of 500 SEK."
-"_termsPageH2UseraccountsBody5","<h4>d. Avbrott i Tjänsten eller uppsägning:</h4> Ni accepterar
- att Scrive när som helst, utan förvarning, kan frysa Ert konto
- eller på annat sätt stoppa Er tillgång till Tjänsten vid (1)
- misstankar om brott mot Villkoren, (2) våra försök att åtgärda
- säkerhetsbrister i mjukvaran eller för att skydda Innehåll,
- (3) modifiering av Tjänsten, (4) oväntade operativa avbrott
- eller problem, (5) försenade betalningar eller (6) uttrycklig
- åtgärdsförfrågan från lagorgan eller andra statliga myndigheter.
- Ni accepterar att Scrive också har rätt att med en veckas
- förvarning avsluta ert konto vid (1) konstaterade brott mot
- Villkoren, (2) Användares inaktivitet under mer än 12 månader,
- (3) betalning förfallen till kronofogden eller (4) uttrycklig
- åtgärdsförfrågan från lagorgan eller andra statliga myndigheter.
- Scrive kommer inte att vara skyldig Er eller någon tredje
- part för att Ert konto på Tjänsten frysts eller avslutats.",,"<h4>d. Suspension of Service or termination:</h4> You agree to that Scrive at any time, without notice, may freeze your account or otherwise stop your access to the Service at (a) alleged breaches of the conditions, (2) our attempt to address safety in the software or to protect the contents, (3) modification of the Service, (4) unexpected operational interruptions or problems, (5) deferred payment or (6) explicit action request from any legal authority or other government authorities. You agree to that Scrive also is entitled to, with a week's notice, terminate your account at (1) clear violations of the conditions, (2) User inactivity for more than 12 months, (3) payment due to the bailiff, or (4) explicit action request from any legal authority or other government authorities. Scrive will not be liable to You or any Third-party to your account based on the Service being frozen or terminated."
+"_termsPageHeader","Scrive ALLMÄNNA VILLKOR 2012:03",,"Scrive TERMS OF SERVICE 2012:03"
+"_termsPage0","Dessa allmänna villkor (”Villkoren”) gäller för användning av hemsidan www.scrive.com (”Tjänsten”) och den elektroniska tjänsten för att signera dokument (också ”Tjänsten”) mellan olika parter (""Part"" eller ""Parter""). Villkoren är ett avtal mellan dig (“Ni” eller “Användare”) och SkrivaPå CM AB (”Scrive”). Genom att använda, skapa ett konto och/eller genom att logga in på Tjänsten accepterar Ni Villkoren. Scrive reserverar sig rätten att utan förpliktelser när som helst ändra, lägga till eller ta bort delar i Villkoren. Det är Ert ansvar att vara uppdaterad på Villkoren varje gång Ni begagnar Er av Tjänsten. Er fortsatta användning av Tjänsten efter ändringar i Villkoren innebär att Ni accepterar dessa ändringar.",,"These terms of service (""Terms"") apply to the use of the site www.scrive.com (""Service"") and the electronic service for signing documents (also ""Service"") between different parties (""Party"" or ""Parties""). The Terms are an agreement between you (""You"" or ""User"") and SkrivaPå CM AB (""Scrive""). By using, creating an account and/or by logging onto the Service, You accept the Terms. Scrive reserves the right to, at any time, amend, add or remove parts of these Terms. It is Your own responsibility to be informed of any update of the Terms each time You use the Service. Your continued use of the Service after changes have been made in the Terms means that You accept those changes."
+"_termsPage3Header","3. Signerade Dokument",,"3. Signed documents"
+"_termsPage3","Följande bestämmelser gäller för dokument signerande genom Tjänsten.",,"The following provisions apply to documents signed through the Service."
+"_termsPage3a","<h4>a. Scrive är aldrig Part:</h4> Som en del av Tjänsten stämplar Scrive dokument som signerats av alla Parter med ett speciellt Scrive-sigill och en digital signatur som bekräftar att Scrive bevittnat transaktionen. Syftet med att Scrive bevittnar transaktionen är att stärka dokumentets bevisstyrka. Scrive kan dock aldrig genom denna procedur anses bli Part i dokumentet och Scrive skall inte ha något som helst ansvar gällande giltigheten, verkställandet eller Parternas efterlevande av sådana dokument. Scrive kan endast anses bundet av innehållet i ett dokument om en registrerad eller befullmäktigad firmatecknare genom en registrerad Användare i Tjänsten i eget namn och för Scrives räkning signerar ett dokument genom Tjänsten.",,"<H4>a. Scrive is never a Party:</H4>  As part of the Service Scrive stamp documents signed by all Parties with a special Scrive seal and a digital signature confirming that Scrive has witnessed the transaction. The purpose of Scrive witnessing the transaction is to strengthen the document evidence. By this procedure Scrive is never considered to be a signatory of the document and Scrive shall have no liability whatsoever regarding the validity, content or enforcement of such documents. Scrive can only be bound by the contents of a document if a registered or authorized signatory by a registered user of the Service in its own name and on behalf of Scrive signs a document through the Service."
+"_termsPage3b","<h4>b. Parternas förpliktelser:</h4> När samtliga Parter signerat ett dokument genom Tjänsten och dokumentets färdigställande bekräftats av Tjänsten blir dessa Parter förpliktigade och berättigade i enlighet med eventuella överenskommelser i dokumentet. Scrive blir dock aldrig ansvarigt eller skyldigt att övervaka eller ingripa om Parterna bryter mot sina förpliktelser eller felaktigt utnyttjar sina rättigheter som överenskommits i det signerade dokumentet.",,"<h4>b. The Parties' obligations:</h4> Once all Parties have signed a document through the Service, and document completion has been confirmed by the Service, the Parties accrue the rights and obligations in accordance with the agreements in the document. Scrive will never be responsible or obliged to monitor or intervene, should the signatories not abide by their obligations in the agreement or improperly exercise their rights as agreed in the signed document."
+"_termsPage3c","<h4>c. Dispyter mellan Parter:</h4> Om oenighet uppkommer mellan Parterna med anledning av ett dokument som har färdigställts genom Scrive, ska Scrive inte ha något ansvar eller skyldighet med avseende på denna konflikt förutom att genom Scrives vanliga kundsupport hjälpa Parterna hitta och hantera den Information som finns tillgänglig genom Tjänsten. För ytterligare bevismaterial gällande dokument i tvist tillhandahåller Scrive extratjänsten Scrive Bevis som ger Användaren möjligheten att i enlighet med våra Särskilda Utdragsvillkor göra utdrag ur Scrives lagrade bevisunderlag.",,"<h4>c. Disputes between Parties:</h4> If any disagreement arises between the Parties regarding a document that was completed through Scrive, Scrive will have no liability or obligation with respect to this conflict except to, through the Scrive's usual customer support, help the Parties to find and manage the Information available through the Service. For further evidence relating to the document in dispute Scrive provides the extra service Scrive Proof that give You the ability to, in accordance with our Special Extract Terms of Extracts, make extra extracts from the Service recorded evidence base."
+"_termsPage3d","<h4>d. Dokuments rättsliga verkan:</h4> Alla påståenden gjorda av Scrive om giltigheten av dokument som signerats på elektronisk väg är inte avsedda för, och ska inte tolkas som, juridisk rådgivning. Scrive frånsäger sig allt ansvar för att säkerställa att dokument som signerats genom Tjänsten är giltiga eller tvingande enligt lagstiftningen i ett visst land, stat eller annan jurisdiktion.  Om Ni önskar kontrollera giltigheten eller verkställbarheten av något dokument Ni planerar att signera eller signerat genom Tjänsten, bör Ni rådgöra med en behörig jurist med lämplig juridisk sakkunskap. ",,"<h4>d. Document's legal effect:</h4> All statements made by Scrive regarding the validity of documents signed electronically are not intended to be, and should not be interpreted as, legal advice. Scrive disclaims any responsibility to ensure that the documents signed by the Service are valid or enforceable under the laws of a particular country, state or other jurisdiction. If You wish to review the validity or enforceability of any documents You plan to sign or have signed through the Service, You should consult with appropriate legal expertise."
+"_termsPage1Header","1. Användarkonton",,"1. User accounts"
+"_termsPage1","Ni är ansvarig för att hemlighålla och skydda Er kontoinformation, inklusive koder, och Ni ansvarar för all aktivitet som sker via Ert konto. Ni ska omedelbart meddela Scrive vid misstanke om otillåten användning eller försök till otillåten användning av Ert konto eller Er kod, eller andra brott mot säkerheten.",,"You are responsible for maintaining the confidentiality of, and protecting Your account information, including passwords. You are responsible for all activity on Your account. You shall immediately notify Scrive on suspicion of unauthorized use or attempted unauthorized use of Your account or Your code, or other security breach."
+"_termsPage1a","<h4>a. Kontovillkor:</h4>  Ni accepterar att Ni ska ge Scrive korrekt, uppdaterad och fullständig information om Er själva och Er faktura-/betalinformation. Ni ska uppdatera all kontoinformation genom att följa de procedurer som Tjänsten tillhandahåller. Ni får inte använda någon automatisk apparat, program, algoritm, metod, eller någon liknande manuell process, för att komma åt, införskaffa, kopiera, sondera, indexera, manipulera, testa eller övervaka någon del av Tjänsten eller något Innehåll, eller på något som helst sätt reproducera eller kringgå Tjänstens struktur eller presentation, eller för att försöka införskaffa något material, dokument, eller information på något annat sätt än genom den infrastruktur som skapats och gjorts tillgänglig av Scrive, eller dess samarbetspartners, i detta syfte. Ni accepterar att Ni inte kommer att göra något som utsätter Tjänstens infrastruktur, eller några system eller nätverk som är del av eller anknutna till Tjänsten för en orimlig belastning.",,"<h4>a. Account Terms:</h4> You agree that You will give Scrive accurate, current and complete information about Yourself and Your invoice/payment information. You shall update all account information by following the procedures provided by the Service. You may not use any automated device, program, algorithm, method, or any similar manual process, to access, acquire, copy, probe, index, manipulate, test or monitor any portion of the Service or any Content, or in any way reproduce or circumvent the Service's structure or presentation, or to attempt to obtain any materials, documents or information through any means other than the infrastructure created and made available by Scrive, or its partners, to that end. You agree that You will not perform any action that exposes the Service's infrastructure, or subject any systems or networks that are part of or affiliated with the Service, to an excessive burden."
+"_termsPage1b","<h4>b. Användarinnehåll:</h4> Ni accepterar att Ni inte kommer att använda Tjänsten i illegala syften, för att störa Tjänsten eller för att sprida innehåll som bryter mot integritet, upphovsrätt eller ägarrätt för någon tredje part, eller för syften som av Scrive kan uppfattas som olagliga, obscena, kränkande, förolämpande, hotfulla, vulgära eller på andra sätt klandervärda. Scrive är inte ansvarigt för misslyckanden eller förseningar orsakade av borttagning av sådant innehåll. Scrive har rätt att när som helst ta bort, blockera och processa mot Användare och Användarinnehåll som, enligt Scrive anses bryta mot Villkoren eller på annat sätt bryter mot gällande lagar och regler. Ni är själv fullt ansvarig för innehållet i Ert konto och de transaktioner som görs med Ert konto genom Tjänsten.",,"<h4>b. User Content:</h4> You agree that You will not use the Service for illegal purposes. This includes disrupting the Service, disseminating content that violates privacy, copyright or proprietary right of any Third-party, or using Scrive for any purposes that are or may be perceived as illegal, obscene, abusive, libellous, threatening, vulgar or otherwise reprehensible. Scrive is not responsible for any failure or delay in removing such content. Scrive has the right to, at any time, delete, reject and litigate against User and User content if Scrive deems it to violate the Terms or otherwise violate any applicable laws and regulations. You are fully responsible for the contents of Your account and any transactions made with Your account through the Service."
+"_termsPage1c","<h4>c. Kostnader och betalning:</h4> enskilda individer kan använda tjänsten utan kostnad med upp till 5 fria signaturer i månaden. Grupper och företag kan använda tjänsten enligt gällande prisplan på hemsidan eller enligt offererat pris från Scrive eller en auktoriserad återförsäljare. Utöver den fasta månatliga supportavgiften tar Scrive betalt av Användaren per stängd signatur enligt gällande pris på hemsidan eller anpassad offert. En stängd signatur definieras som en deltagares signatur i ett dokument som signerats av samtliga signerande parter, som tillförts ett verifikat och där dokumentet stämplats med en digital signatur. Scrive fakturerar med 14 dagar netto och tar ut en förseningsavgift på 150kr på förfallna fakturor. Räntan på försenade betalningar är 15% plus den aktuella statslåneräntan. ",,"<h4>c. Costs and payment:</h4> Individuals can use the Services free of charge for up to 5 signatures a month. Groups and companies can use the Service according to existing price plan published on the website, or according to a customized offering from Scrive or an authorised reseller.  Except for the monthly fixed support cost Scrive also charges the User per closed signature according to the existing price plan published on the website or a customized offering. A closed signature is defined as a participant signature in a document that has been signed by all signing parties, where a verification page has been added and the document has been stamped with a digital signature. Scrive invoices are due 14 days after invoice date. Reminders will be charged a late payment fee of 15 EUR. The interest rate on late payments is 15% plus the current government borrowing rate."
+"_termsPage1d","<h4>d. Avbrott i Tjänsten eller Uppsägning:</h4> Ni accepterar att Scrive när som helst, utan förvarning, kan frysa Ert konto eller på annat sätt stoppa Er tillgång till Tjänsten vid (1) misstankar om brott mot Villkoren, (2) våra försök att åtgärda säkerhetsbrister i mjukvaran eller för att skydda innehåll, (3) modifiering av Tjänsten, (4) oväntade operativa avbrott eller problem, (5) försenade betalningar eller (6) uttrycklig åtgärdsförfrågan från lagorgan eller andra statliga myndigheter. Ni accepterar att Scrive också har rätt att med en månads förvarning avsluta Ert konto vid (1) konstaterade brott mot Villkoren, (2) ej betalande Användares inaktivitet under mer än 12 månader, (3) betalning förfallen till Kronofogdemyndigheten eller (4) uttrycklig åtgärdsförfrågan från lagorgan eller andra statliga myndigheter. Scrive kommer inte att vara skyldig Er eller någon tredje part för att Ert konto på Tjänsten frysts eller avslutats.",,"<h4>d. Suspension of Service or termination:</h4> You agree that Scrive at any time, without notice, may freeze Your account or otherwise stop Your access to the Service for (1) alleged breach of the Terms, (2) our attempts to address safety in the software or to protect the contents, (3) modification of the Service, (4) unexpected operational interruptions or problems, (5) deferred payment or (6) explicit action requested from any legal authority or other government authorities. You agree that Scrive also is entitled to, with a week's notice, terminate Your account for (1) clear violations of the Terms, (2) non-paying Users inactivity for more than 12 months, (3) payment due to the bailiff, or (4) explicit action request from any legal authority or other government authorities. Scrive will not be liable to You or any third-party using Your account based on the Service being frozen or terminated."
+"_termsPage4Header","4. Vår kommunikation med Er",,"4. Our communication with You"
+"_termsPage4","Genom att öppna ett konto på Tjänsten ger Ni Scrive tillstånd att genom Tjänsten eller genom en representant kontakta Er på Er telefon eller e-postadress. Om Ni vill sluta få våra utskick via e-post ska Ni skicka ett e-postmeddelande till oss på support@scrive.com. Observera att Scrive fortfarande kommer att behöva kommunicera med Er via e-post om Era transaktioner och andra kontorelaterade frågor, och att dessa e-postmeddelanden inte är marknadsföring och inte elimineras genom ovanstående förfarande.",,"By opening an account on the Service, You give permission to Scrive to, through the Service or through a representative, contact You via Your phone or email address. If You do not wish to receive our mailings via email, please send an email to support@scrive.com. Please note that Scrive will still need to communicate with You via email about Your transactions and other account related issues, and that these emails are not marketing and will not be eliminated by the above procedure."
+"_termsPage2Header","2. Datadelning",,"2. Data management"
+"_termsPage2","Utöver dokument och personuppgifter som delgivits Tjänsten av Parterna insamlar Scrive även information om Parters kommunikation genom och beteende i Tjänsten och annan identifierande information så som exempelvis IP-adress, språkinställningar och digitala fingeravtryck som kan stärka Parternas bevisposition (”Information”). Scrive har som syfte att med hjälp av Informationen som oberoende tredje part minska transaktionskostnader, stärka bevisstyrkan av signerade dokument och att minska administration och juridiska omkostnader. Därmed, som en del av Tjänsten, tillhandahåller Scrive Parterna, betalande eller icke-betalande, lika möjlighet till olika former av lagring, hantering och bearbetning av Informationen via Tjänsten som kan vara till juridisk nytta för Parterna. Uppdraget kräver att Scrive hanterar Parters Information automatiskt enligt nedanstående riktlinjer och Ni godkänner och befullmäktigar Scrive att hantera Parters Information i enlighet med dessa riktlinjer.",,"Besides the documents and personal information that has been shared with the Services by the Parties, Scrive also collects information about the Parties' communication and behaviour in the services, for example IP-addresses, language settings and digital fingerprints that can strengthen the Parties legal position (""Information""). Scrive have a purpose to, with the help of the Information, as an independent third party decrease transaction costs, strengthen the evidence trail of signed documents and to decrease administrative and legal costs. Thus, as part of the Services, Scrive provide the Parties, paying or non-paying, with equal opportunities to different forms of storage, handling and processing of the Information through the Services that can be of legal use to the Parties. The assignment requires that Scrive handles Parties Information automatically according to the following guidelines and You accept and authorize Scrive to handle the Parties Information in accordance with these guidelines."
+"_termsPage2a","<h4>a. Datadelning:</h4> Scrive har rätt att kommunicera med av Er direkt eller indirekt inbjudna Parter (en indirekt inbjuden Part är en tredje part som bjudits in av någon av era direkt inbjudna Parter) gällande de dokument som ska signeras. Scrive har även rätt att delge den Information som rimligen behövs för att Parterna ska kunna (1) granska dokumentet, (2) granska signerande Parters identitet, (3) veta huruvida dokumentet signerats eller inte signerats och förstå omständigheterna kring händelseförloppet och (4) i efterhand kunna granska all Information gällande dokumentet och transaktionen.",,"<h4>a. Sharing data:</h4> Scrive has the right to communicate with You and also directly or indirectly the invited Parties (an indirectly invited Party is a third party that has been invited by one of Your directly invited Parties) regarding the documents to be signed. Scrive has the right to share the Information that is reasonably needed for the Parties to be able to (1) review the document, (2) examine the identities of the signing parties, (3) to know whether the document is signed or not signed and understand the circumstances surrounding the events and (4) retrospectively examine the stored evidence of the operation."
+"_termsPage2b","<h4>b. Datalagring:</h4> All Information lagras ärendevis med minst två säkerhetskopior per ärende och samtliga Parter, betalande eller icke-betalande, får lika möjlighet att få tillgång till ärendet. När ett ärende raderats av samtliga Parter som valt att ha tillgång till ärendet raderas även ärendet och samtliga säkerhetskopior permanent från Tjänsten inom 6 månader. Ärenden för dokument som signerats genom Tjänsten av samtliga Parter lagras kostnadsfritt i upp till 10 år från att sista Part signerat. Ärenden för dokument som inte signerats av samtliga Parter lagras kostnadsfritt i minst 1 år efter att dokumentet skapats. Tjänsten lagrar dock max 1GB kostnadsfritt per konto.",,"<h4>b. Data storage:</h4> All Information is stored per errand with at least two backups per errand and all Parties, paying or non-paying, get equal opportunity to access the errand. When all Parties that had access have deleted an errand, the errand and all backups are permanently deleted from the Service within 6 months. Errands containing documents that have been signed through the Service by all Parties are stored free of charge up to 10 years from the date that the last Party signed. Errands containing documents that have not been signed by all Parties are stored free of charge at least 1 year after the document was created. The service stores no more than 1GB free of charge per account."
+"_termsPage2c","<h4>c. Dataintegritet:</h4> Informationen får bearbetas automatiskt av Tjänsten i syfte att generera juridiskt och administrativt eller statistiskt användbara material till Parterna. Tjänsten måste exempelvis, för att kunna generera det elektroniska originalet som slutprodukt efter att samtliga Parter signerat, trycka utdrag ur loggar, sigill och Parters personuppgifter i dokumentets sidfot, verifikat och extra bilagor med bevismaterial och därefter stämpla dokumentet med en digital signatur. Informationen får användas av Scrive i anonymiserad form för statistisk analys och i syfte att marknadsföra eller utveckla Tjänsten. Parters dokument är inte tillgängliga för anställda på Scrive för manuell hantering om inte någondera Part själv begärt och gett sitt uttryckliga godkännande till en sådan hantering och dokumentet eller dokumenten som ett resultat av denna begäran tillgängliggjorts av speciellt auktoriserade tekniker på Scrive.",,"<h4>c. Data integrity:</h4> In order to generate legally and statistically useful materials for the Parties the Service may process the Information automatically. The Service must for example, to be able to generate the electronic original as the final product after all Parties have signed, be able to print extracts of logs, the Scrive seal and the Parties personal information in the documents footer, verification page and extra evidence attachments and thereafter stamp the document with a digital signature. The Information may be used by Scrive in anonymous form for statistical analysis and in order to promote or develop the Service. The Parties documents are not available to Scrive employees for manual handling unless either Party has requested or given their explicit consent of such handling and the document or documents as a result of such request have been made available by specially authorised technicians at Scrive."
+"_termsPage5Header","5. Äganderättigheter",,"5. Proprietary Rights"
+"_termsPage5","Ni bekräftar och accepterar att Scrive (eller Tjänstens licensgivare) innehar fullständig äganderätt till Tjänsten och alla intressen däri, inklusive immateriella rättigheter som finns i Tjänsten (oavsett om dessa rättigheter är registrerade eller inte, och oavsett var i världen Tjänsten används). Om inte annat skriftligen avtalats med Scrive skall inte något i Villkoren ge Er en rätt att använda något av Scrives firmanamn, varumärken, logotyper, domännamn eller annat särskiljande kännetecken. Förutom den begränsade licens som beviljas i detta stycke 5a (”Feedback”), bekräftar och accepterar Scrive att Scrive enligt dessa Villkor inte erhåller någon rätt, äganderätt eller intressen från Er i eller till något material Ni skickar in, lägger upp, överför eller visar på eller genom Tjänsten, inklusive immateriella rättigheter som finns i detta material (oavsett om dessa rättigheter är registrerade eller inte, och oavsett var i världen Tjänsten används).",,"You acknowledge and agree that Scrive (or the Service's licensors) own all property rights to the Service and all interests therein, including intellectual property rights contained in the Service (whether those rights are registered or not, and wherever in the World those rights may exist). Unless otherwise agreed in writing with Scrive nothing in the Terms gives You the right to use any of the Scrive trade names, trademarks, logos, domain names or other distinguishing marks. Except for the limited license granted in section 5a (“Feedback”), Scrive acknowledges and agrees that Scrive under these conditions obtains no right, title or interest from You (or Your licensors) in or to any content You submit, post, transmit or display on or through the Service, including intellectual property rights which subsist in that content (whether those rights are registered or not, and wherever in the world those rights may exist)."
+"_termsPage5a","<h4>a. Feedback:</h4> Ni godkänner att Scrive offentliggör och på andra sätt kan använda Era kommentarer och feedback utan betalning eller annan förpliktelse gentemot Er. Ni accepterar att alla kommentarer Ni gör om Scrive direkt till oss via e-post, via vårt kontaktformulär, eller på vårt forum, kan användas som omdömen om Tjänsten och kan användas i vår marknadsföring utan någon betalning eller annan förpliktelse mot Er. ",,"<h4>a. Feedback:</h4> You agree that Scrive may, at its own option, publish and otherwise use Your comments and feedback, without payment or other obligations to You. You agree that any comments You make about Scrive directly to Scrive via email, via our contact form, or on our forums, may be used as attributes of the Service and may be used in our marketing without any payment or other obligation to You."
+"_termsPage6Header","6. Övertagande av rättigheter",,"6. Assignment"
+"_termsPage6","Utöver vad som anges I Villkoren, får inte Användaren eller Scrive överföra, tillskriva eller licensiera sina rättigheter eller skyldigheter i Villkoren till någon annan tredje part, i sin helhet eller i delar, utan skriftligt godkännande från motparten. Användaren eller Scrive får trots ovanstående överföra sina rättigheter och skyldigheter i Villkoren i samband med en sammanslagning, omorganisering eller försäljning av dess tillgångar eller kapitalstock.",,"Unless otherwise provided for in this Agreement, neither party shall transfer, assign or sublicense its rights under this Agreement to any other third party, in whole or in part, without the prior written consent of the other party. Notwithstanding the foregoing, a party may assign this Agreement in connection with its merger, reorganization, or sale of substantially all of its assets or capital stock."
+"_termsPage7Header","7. Ansvarsbegränsning",,"7. Disclaimer"
+"_termsPage7a","<h4>a. Ingen juridisk rådgivning:</h4> Det är Ert ansvar att utvärdera korrektheten, fullständigheten och användbarheten av all information, åsikter, råd, dokument, kontrakt, eller annat innehåll tillgängligt genom Scrive. Ingen del av Tjänsten ska ses som juridisk rådgivning. Varken Scrive eller dess samarbetspartners kan hållas ansvariga för några fel eller brister i innehållet eller för konsekvenserna av handlingar där man förlitat sig på innehållet.",,"<h4>a. No legal advice:</h4> It is Your responsibility to evaluate the accuracy, completeness, or usefulness of any information, opinions, advice, documents, contracts, or other content available through Scrive. No part of the Service shall be regarded as legal advice. Neither Scrive nor its affiliates shall be liable for any errors or omissions in the content, or for the consequences of actions based on reliance on any content."
+"_termsPage7b","<h4>b. Ansvarsbegränsning:</h4> Ni accepterar att hålla Scrive och dess moderbolag, systerbolag, dotterbolag, filialer, tjänsteleverantörer, andra Användare, distributörer, licensgivare, tjänstemän, chefer och anställda fria från anspråk eller krav, inklusive alla advokatkostnader, från Er för direkt eller indirekt skada, inklusive, men inte begränsat till, skador för utebliven vinst, goodwill, användning, data, eller andra immateriella förluster (även om Scrive har blivit delgivna denna möjlighet), och inklusive skador resulterande från: (i) dokument eller transaktioner skickade genom Tjänsten där Scrive inte varit en Part; (ii) användningen eller oförmågan att använda, inklusive fel/misstag, avbrott eller förseningar; otillåten access till eller ändring i Era dokument eller transaktioner; eller (iii) någon annan fråga som relaterar till Tjänsten. Scrives ansvar ska inte övergå, totalt, summan av Era totala betalningar för användandet av Tjänsten under detta avtal inom senaste 12-månadersperioden. ",,"<h4>b. Limitation of liability:</h4> You agree to hold Scrive and its parent companies, sister companies, subsidiaries, affiliates, service providers, other users, distributors, licensors, officers, directors and employees free from any claim or demand, including all attorneys' fees, from You for any direct, indirect, random, special, following or specific injury, including but not limited to, damages for loss of profits, goodwill, use, data or other intangible losses (even if Scrive has been notified of this option), and including injuries resulting from: (i) documents or transactions submitted to the Service where Scrive has not been a direct party to the agreement, (ii) the use or inability to use, including errors/mistakes, interruptions or delays; unauthorized access to or alteration of Your documents or transactions or (iii) any other issue relating to the Service. Scrive's responsibility shall not exceed, in total, the sum of Your total payments for the use of the Service under this agreement within the last 12-months period."
+"_termsPage8Header","8. Tillämplig lag och jurisdiktion",,"8. Applicable law and jurisdiction"
+"_termsPage8","Dokument som signeras genom Tjänsten ska – såvida inte annat anges i avtalet – regleras av och tolkas i enlighet med svensk rätt. Dessa Villkor och alla frågeställningar kring dem och alla frågeställningar som rör Tjänsten regleras av och tolkas i enlighet med svensk rätt och prövning skall ske av svensk domstol med Stockholms tingsrätt som första instans. Oavsett ovan nämnda förfarande för att lösa meningsskiljaktigheter har vi rätt att väcka talan angående förfallna fordringar i domstolar som har jurisdiktion över Er eller någon av Era tillgångar.",,"Documents signed through the Service shall - unless otherwise specified in the document – be governed by and construed in accordance with Swedish law. These Terms and all issues concerning them and all issues relating to the Service are governed by and construed in accordance with Swedish law and must be examined by a Swedish court in the District Court of Stockholm. Regardless of the above procedure to resolve disagreements, we have the right to bring an action on outstanding debts in the courts having jurisdiction over You or any of the Your assets."
 "_termsPageMetaDescription","Signera och arkivera dina avtal elektroniskt. All information
  ni delger Scrive eller dess tjänster hanteras med största
 Möjliga försiktighet.",,"Sign and store your contracts online. All information you share with Scrive and its services are handled with great care."
