@@ -2102,61 +2102,19 @@ _descriptionSoon,"Beskrivning kommer snart.","Description coming soon","Descript
 "_priceplanPageTableRow9","<td>Tredjepartsverifiering</td><td>$_descriptionSoon()$</td>",,"<td>Third-party verification</td><td>$_descriptionSoon()$</td>"
 "_priceplanPageTitle","| Prisplan",,"| Price plan"
 "_priceplanPageVAT","* Alla priser är exkl moms.",,"* All prices exclude VAT"
-"_privacyPolicyPageH1","SEKRETESSPOLICY (2011:02)",,"PRIVACY POLICY (2011:02)"
-"_privacyPolicyPageH1Body","<p>All information Ni delger Scrive eller dess Tjänster hanteras
- med största möjliga försiktighet och innehållets säkerhet har
- högsta prioritet för Scrive. Er integritet är viktig för oss.</p><br
- /><p>Nedan följer en mer detaljerad beskrivning av hur Scrive
- hanterar Er information. Vid vidare frågor, vänligen kontakta
- oss på info@scrive.com.</p>",,"<p>All the data You provide to Scrive or its Services is handled
- with the highest caution possible and the security of the contents
- is of the highest priority to Scrive. Your integrity is important
- to us.</p><br /><p>A more detailed description of how your data
- is handled by Scrive follows below. If you have further questions,
- please contact Scrive at info@scrive.com.</p>"
-"_privacyPolicyPageH21","Återförsäljning eller delgivning av information",,"Retailing or sharing of data"
-"_privacyPolicyPageH21Body","Scrive kommer inte att sälja, hyra eller låna ut eller på annat
- sätt till tredje part delge Er information insamlad genom Tjänsten
- eller genom Er kontakt med oss på annat sätt, än som uttryckligen
- överenskommits i de Allmänna Villkoren eller genom Ert skriftliga
- medgivande. Vi använder dock från tid till annan Användarinformation
- i anonymiserad form för att göra statistiska analyser som vi
- kan komma att göra tillgängliga för tredje part eller våra samarbetspartners.",,"Scrive will not sell, rent out or lend, or in any other way share
- data that you have provided to Scrive through the service or in any
- other way to a to a Third-party except for in those cases regulated
- by the Terms Of Service or your written approval. Though, we
- sometimes use anonymous user data for statistical analyses
- that are available to third parties or our partners."
-"_privacyPolicyPageH23","Webbläsarinformation på Hemsidan",,"Browser information in the homepage"
-"_privacyPolicyPageH23Body","Scrive analyserar våra webbloggar för att kontinuerligt utvärdera
- hemsidans innehåll och hur det tillfredställer Användarnas behov.
- Loggarna använder ingen personligt identifierbar information.
- Vår server identifierar också användarnas IP-adresser. En IP-adress
- är ett nummer som automatiskt tillskrivs en dator när den används
- på internet. Vi använder IP-adresser för att identifiera Tjänstens
- Användare, analysera trender, följa Användares förflyttning
- och insamla statistisk data. Avtalsparternas IP-adresser visas
- i undertecknade avtals certifikat som en extra säkerhet och
- identifieringstjänst till avtalsparterna.",,"Scrive analysis its logs in purpose of continuously evaluate
- the contents of the homepage and how it satisfies user needs.
- The logs does not contain any personal identifiable information.
- Our servers also identifies the user’s IP-addresses. An IP-address
- is a number that a computer is given automatically when connecting
- to the internet. We use the IP-address to identify the service
- users, analyse trends, register user movements and gather
- statistical data. The parties’ IP-addresses are displayed in
- the verification certificate for extra security and as an extra
- identification service to the parties."
-"_privacyPolicyPageH24","Användning av Cookies",,"Usage of Cookies"
-"_privacyPolicyPageH24Body","Scrive använder cookies för att förenkla Användarens login
- och kontohantering. Dessa cookies kommer inte att säljas, hyras
- eller lånas ut eller på annat sätt visas till tredje part.",,"Scrive uses cookies to simplify user log in and account management.
- These cookies will not be sold, rented out or lent, or in
- any other way shared with a Third-party."
-"_privacyPolicyPageMetaDescription","Signera och arkivera dina avtal elektroniskt. All information
- ni delger Scrive eller dess tjänster hanteras med största
- möjliga försiktighet.",,"Sign and store contracts online. All data you provide to Scrive
- or its services are handled with highest possible carefulness"
+"_privacyPolicyPageHeader","SEKRETESSPOLICY 2012:03",,"PRIVACY POLICY (2012:03)"
+"_privacyPolicyPageP1","All information Ni delger Scrive hanteras med största möjliga försiktighet och innehållets säkerhet har högsta prioritet för Scrive. Er integritet är viktig för oss.",,"All information You share with Scrive or its Services is handled with the highest caution possible and the security of the contents is of the highest priority to Scrive. Your integrity is important to us."
+"_privacyPolicyPageP2","Nedan följer en beskrivning av hur Scrive hanterar Er information. Vid vidare frågor kontakta oss på support@skrivapa.se.",,"A description of how your data is handled by Scrive follows below. If you have further questions please contact Scrive at support@scrive.com."
+"_privacyPolicyPage1Header","1. Återförsäljning eller delgivning av information",,"1. Retailing or sharing of data"
+"_privacyPolicyPage1","Scrive kommer inte att sälja, hyra eller låna ut eller på annat sätt till tredje part delge Er information annat än på så vis som överenskommits i de allmänna villkoren eller genom Ert skriftliga medgivande. Detta gäller både information insamlad genom tjänsten och information som delgetts Scrive genom Er kontakt med oss på annat sätt.",,"Scrive will not sell, rent out or lend, or in any other way share data that you have provided to Scrive through the service or in any other way to a to a Third-party except for in those cases regulated by the Terms Of Service or your written approval. This applies both to information collected through the service and information shared with Scrive though your contact with us by other means."
+"_privacyPolicyPage2Header","2. Webbläsarinformation på hemsidan",,"2. Browser information in the homepage"
+"_privacyPolicyPage2","Scrive analyserar kontinuerligt loggfiler från webbservern för att utvärdera och utveckla tjänsten. Loggfilerna hanteras med samma noggrannhet avseende sekretess som övrig information i tjänsten. Våra servrar identifierar också användarnas IP-adresser. En IP-adress är ett nummer som automatiskt tillskrivs en dator när den används på internet. Vi använder IP-adresser för att identifiera Tjänstens Användare, analysera trender, följa Användares navigering av hemsidan och insamla statistisk data. Signerande parters IP-adresser visas i signerade dokuments verifikat som en extra säkerhets- och identifieringstjänst till signerande parter.",,"Scrive continuously analyzes its logs from the webserver for the purpose of evaluating and developing the service. The logs are handled with the same cautiousness and secrecy as all other information in the service. Our servers also identify the user’s IP-addresses. An IP-address is a number that a computer is given automatically when connecting to the internet. We use the IP-address to identify the service users, analyse trends, register user movements and gather statistical data. The signing parties’ IP-addresses are displayed in the verification certificate for extra security and as an extra identification service to the parties."
+"_privacyPolicyPage3Header","3. Lagring av information",,"3. Information storage"
+"_privacyPolicyPage3","Avtal, offerter och andra dokument som användare anförtror åt Scrive omfattas av sekretess. De alternativ för lagring av dokument som Scrive erbjuder uppfyller därför de högsta kraven på dataintegritet och säkerhet.",,"Contracts, quotes and other documents that users entrust to Scrive remain confidential. The options Scrive offers for storage of documents meet the highest standards of data integrity and security."
+"_privacyPolicyPage4Header","4. Kommunikation",,"4. Communication"
+"_privacyPolicyPage4","En av grunderna i tjänsten är att tillhandahålla erforderlig sekretess och dataintegritet. Därför är all kommunikation mellan användaren och Tjänstens webbsida säkrad med digitala certifikat för kryptering av information som utbyts och för att säkerställa att det är Scrives tjänst som användaren nyttjar.",,"One of the basics of the service is to provide the requisite confidentiality and data integrity. Therefore, all communication between the user and the service's Web page is secured with digital certificates for encryption of data exchanged and to ensure that it is Scrives service that the user is using."
+"_privacyPolicyPage5Header","5. Användning av cookies",,"5. Usage of Cookies"
+"_privacyPolicyPage5","Scrive använder cookies för att förenkla Användarens inloggning och kontohantering. Dessa cookies kommer inte att säljas, hyras eller lånas ut eller på annat sätt visas till tredje part. Vidare ger webbläsaren inte tillgång till sådana cookies till andra webbplatser än Scrives med mindre än att användaren ger sitt explicita tillstånd till detta.",,"Scrive use cookies to simplify the user's login and account management. These cookies will not be sold, rented or loaned, or otherwise shown to third parties. Furthermore, the browser does not give access to such cookies to sites other than Scrives unless the user have given their explicit permission to do so."
 "_privacyPolicyPageTitle","| Sekretesspolicy",,"| Privacy Policy"
 "_problemWithPDF","Problem med PDF",,"Problem with PDF"
 "_backToArchive","Tillbaka till Arkiv",,"Back to Archive"
