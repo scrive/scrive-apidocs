@@ -254,16 +254,15 @@ rejectDocument documentid
  -}
 handleSignShowOldRedirectToNew :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
 handleSignShowOldRedirectToNew did sid mh = do
-  doc<- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
-  invitedlink <- guardJust $ getSigLinkFor doc sid
-  return $ LinkSignDoc doc invitedlink
+  modifyContext (\ctx -> ctx { ctxmagichashes = Map.insert sid mh (ctxmagichashes ctx) })
+  return $ LinkSignDocNoMagicHash did sid
 
 handleSignShow :: DocumentID -> SignatoryLinkID -> Kontra Response
 handleSignShow documentid
                signatorylinkid = do
-  mmh <- readField "magichash"
+  mmh <- readField "magichash" 
   case mmh of
-    Just mh -> do
+    Just mh -> do -- IMPORTANT!!! Keep this just for historical reasons
       modifyContext (\ctx -> ctx { ctxmagichashes = Map.insert signatorylinkid mh (ctxmagichashes ctx) })
       toResp (LinkSignDocNoMagicHash documentid signatorylinkid)
     Nothing -> do
