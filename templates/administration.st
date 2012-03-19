@@ -957,7 +957,7 @@ admindocumentslist =
                 $if(admin)$
                 new Cell({name: "DAVE", width:"30px", field:"id", special:"rendered",
                           rendering: function(value, idx, doc) {
-                            return jQuery("<a href='/dave/document/" + value + "' class='gotodave'>");
+                            return jQuery("<a href='/dave/document/" + value + "/' class='gotodave'>");
                           }})
                 $endif$
 
@@ -994,3 +994,17 @@ $else$
 $endif$
 <BR/>
 </div>
+####
+daveSignatoryLink=
+$daveBody:noescape()$
+
+<div style="border:10px solid red;padding:10px">
+<center> <h1>This option is extreme. Use this only if really needed </h1></center>
+This will record the change in the evidence log.
+<BR/>
+<BR/>
+<BR/>
+<BR/>
+$fields:{field | <form action="/adminonly/updatefields/$docid$/$slid$" method="post">$field.label$: <input type="hidden" name="fieldname" value="$field.fieldname$" /><input type="text" name="fieldvalue" value="$field.fieldvalue$" /><input type="submit" /></form> }$
+</div>
+####

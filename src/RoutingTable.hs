@@ -257,12 +257,14 @@ staticRoutes = choice
 
      , dir "adminonly" $ dir "log" $ hGetWrap (onlyAdmin . https) $ toK1 $ Administration.serveLogDirectory
 
+     , dir "adminonly" $ dir "updatefields" $ hPost $ toK2 $ Administration.updateFields
 
-     , dir "dave" $ dir "document"    $ hGet $ toK1 $ Administration.daveDocument
-     , dir "dave" $ dir "user"        $ hGet $ toK1 $ Administration.daveUser
-     , dir "dave" $ dir "userhistory" $ hGet $ toK1 $ Administration.daveUserHistory
-     , dir "dave" $ dir "company"     $ hGet $ toK1 $ Administration.daveCompany
-     , dir "dave" $ dir "company"     $ hGet $ toK3 $ Administration.companyClosedFilesZip
+     , dir "dave" $ dir "document"      $ hGet $ toK1 $ Administration.daveDocument
+     , dir "dave" $ dir "document"      $ hGet $ toK2 $ Administration.daveSignatoryLink
+     , dir "dave" $ dir "user"          $ hGet $ toK1 $ Administration.daveUser
+     , dir "dave" $ dir "userhistory"   $ hGet $ toK1 $ Administration.daveUserHistory
+     , dir "dave" $ dir "company"       $ hGet $ toK1 $ Administration.daveCompany
+     , dir "dave" $ dir "company"       $ hGet $ toK3 $ Administration.companyClosedFilesZip
 
      -- account stuff
      , dir "logout"      $ hGet  $ toK0 $ handleLogout

@@ -50,9 +50,9 @@ $(deriveInspectXML ''SignatoryDetails)
 
 --Link creating types
 instance InspectXML DocumentID where
-    inspectXML x = "<a href='/dave/document/" ++ show x ++ "'>"  ++ show x ++"</a>"
+    inspectXML x = "<a href='/dave/document/" ++ show x ++ "/'>"  ++ show x ++"</a>"
 instance InspectXML SignatoryLinkID where
-    inspectXML x =  "<a href='/dave/signatorylink/" ++ show x ++ "'>"  ++ show x ++"</a>"
+    inspectXML x =  "<a href='" ++ show x ++ "'>" ++ show x ++"</a>"
 instance InspectXML UserID where
     inspectXML x =  "<a href='/dave/user/" ++ show x ++ "'>"  ++ show x ++"</a>"
 instance InspectXML File where

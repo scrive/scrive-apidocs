@@ -26,9 +26,9 @@ import User.Model
 import Mails.MailsData
 
 import Data.Char
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as E
-import qualified Data.ByteString as BS
+import Data.String.Utils
+import Data.List
+import qualified Data.ByteString.UTF8 as BS
 
 -- | Anything that might have a first name and last name, or personalnumber
 class HasSomeUserInfo a where
@@ -73,19 +73,19 @@ emailFromSigLink sl = (getFullName sl, getEmail sl)
 -- | Get the full name (first last)
 getFullName :: (HasSomeUserInfo a) => a -> BS.ByteString
 getFullName a =
-  let fn = T.strip $ E.decodeUtf8 $ getFirstName a
-      ln = T.strip $ E.decodeUtf8 $ getLastName  a
-  in E.encodeUtf8 $ T.strip $ T.intercalate " " [fn, ln]
+  let fn = strip $ BS.toString $ getFirstName a
+      ln = strip $ BS.toString  $ getLastName  a
+  in BS.fromString  $ strip $ intercalate " " [fn, ln]
 
 -- | If the full name is empty, return the email
 -- (no check if email is empty)
 getSmartName :: (HasSomeUserInfo a) => a -> BS.ByteString
 getSmartName a =
-  let fn = T.strip $ E.decodeUtf8 $ getFullName a
-      em = T.strip $ E.decodeUtf8 $ getEmail    a
-  in if T.all isSpace fn
-     then E.encodeUtf8 em
-     else E.encodeUtf8 fn
+  let fn = strip $ BS.toString $ getFullName a
+      em = strip $ BS.toString $ getEmail    a
+  in if all isSpace fn
+     then BS.fromString  em
+     else BS.fromString  fn
 
 -- | Get a MailAddress
 getMailAddress :: (HasSomeUserInfo a) => a -> MailAddress

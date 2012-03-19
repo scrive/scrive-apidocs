@@ -253,19 +253,18 @@ rejectDocument documentid
  -}
 handleSignShowOldRedirectToNew :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m (Either KontraLink String)
 handleSignShowOldRedirectToNew did sid mh = do
-  doc<- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
-  invitedlink <- guardJust $ getSigLinkFor doc sid
+  modifyContext (\ctx -> ctx { ctxmagichashes = Map.insert sid mh (ctxmagichashes ctx) })
   iphone <- isIphone
   if iphone -- For iphones we are returning full page due to cookie bug in mobile safari
-    then return $ Left $ LinkSignDoc doc invitedlink
+    then return $ Left $ LinkSignDocNoMagicHash did sid
     else Right <$> handleSignShow2 did sid
 
 handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Either KontraLink String)
 handleSignShow documentid
                signatorylinkid = do
-  mmh <- readField "magichash"
+  mmh <- readField "magichash" 
   case mmh of
-    Just mh -> do
+    Just mh -> do -- IMPORTANT!!! Keep this just for historical reasons
       modifyContext (\ctx -> ctx { ctxmagichashes = Map.insert signatorylinkid mh (ctxmagichashes ctx) })
       return $ Left (LinkSignDocNoMagicHash documentid signatorylinkid)
     Nothing -> Right <$> handleSignShow2 documentid signatorylinkid

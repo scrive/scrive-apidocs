@@ -15,6 +15,7 @@ module EvidenceLog.Model
          DocumentEvidenceEvent(..),
          copyEvidenceLogToNewDocument,
          mkAuthorActor,
+         mkAdminActor,
          htmlDocFromEvidenceLog
        )
        where
@@ -69,6 +70,11 @@ instance Actor SystemActor where
 mkAuthorActor :: Context -> Maybe AuthorActor
 mkAuthorActor ctx = case ctxmaybeuser ctx of
   Just user -> Just $ AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (BS.toString $ getEmail user)
+  Nothing   -> Nothing
+
+mkAdminActor :: Context -> Maybe AdminActor
+mkAdminActor ctx = case ctxmaybeuser ctx of
+  Just user -> Just $ AdminActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (BS.toString $ getEmail user)
   Nothing   -> Nothing
 
 -- | For an action that requires an operation on a document and an
