@@ -62,7 +62,7 @@ termsPageContents=
 <br />
 <h2>$_termsPage5Header()$</h2>
 <br />
-<p>$_termsPage5()$</h2>
+<p>$_termsPage5()$</p>
 <br />
 <p>$_termsPage5a()$</p>
 <br />
