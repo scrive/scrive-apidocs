@@ -377,16 +377,15 @@ window.CompanyBrandingSampleView = Backbone.View.extend({
   },
   renderLogoWithSrc: function(src) {
     console.log("rendering logo with src " + src);
-    /**all this hiding and showing seems to be necessary
-     * to make the browser re-display the logo.  gah!*/
-    this.logo.hide();
-    this.logo.empty();
     var img = $("<img />");
     img.attr("src", src);
-    img.hide();
+
+    this.logo.empty();
     this.logo.append(img);
-    this.logo.show();
+
+    img.hide();
     img.fadeIn();
+
     return this.logo;
   },
   render: function() {
