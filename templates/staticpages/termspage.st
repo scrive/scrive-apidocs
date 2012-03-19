@@ -18,70 +18,66 @@ termsPage=
 termsPageContents=
 
 					<div class="nicetext">
-<h1>$_termsPageH1()$</h1>
+<h1>$_termsPageHeader()$</h1>
 <br />
-<p>$_termsPageH1Body()$</p>
+<p>$_termsPage0()$</p>
 <br />
-<h2>$_termsPageH2Info()$</h2>
+<h2>$_termsPage1Header()$</h2>
 <br />
-<p>$_termsPageH2InfoBody()$</p>
+<p>$_termsPage1()$</p>
 <br />
-<h2>$_termsPageH2Useraccounts()$</h2>
+<p>$_termsPage1a()$</p>
 <br />
-<p>$_termsPageH2UseraccountsBody1()$</p>
+<p>$_termsPage1b()$</p>
 <br />
-<p>$_termsPageH2UseraccountsBody2()$</p>
+<p>$_termsPage1c()$</p>
 <br />
-<p>$_termsPageH2UseraccountsBody3()$</p>
+<p>$_termsPage1d()$</p>
 <br />
-<p>$_termsPageH2UseraccountsBody4()$</p>
+<h2>$_termsPage2Header()$</h2>
 <br />
-<p>$_termsPageH2UseraccountsBody5()$</p>
+<p>$_termsPage2()$</p>
 <br />
-<h2>$_termsPageH2Datahandeling()$</h2>
+<p>$_termsPage2a()$</p>
 <br />
-<p>$_termsPageH2DatahandelingBody1()$</p>
+<p>$_termsPage2b()$</p>
 <br />
-<p>$_termsPageH2DatahandelingBody2()$</p>
+<p>$_termsPage2c()$</p>
 <br />
-<p>$_termsPageH2DatahandelingBody3()$</p>
+<h2>$_termsPage3Header()$</h2>
 <br />
-<p>$_termsPageH2DatahandelingBody4()$</p>
+<p>$_termsPage3()$</p>
 <br />
-<h2>$_termsPageH2Signprocess()$</h2>
+<p>$_termsPage3a()$</p>
 <br />
-<p>$_termsPageH2SignprocessBody1()$</p>
+<p>$_termsPage3b()$</p>
 <br />
-<p>$_termsPageH2SignprocessBody2()$</p>
+<p>$_termsPage3c()$</p>
 <br />
-<p>$_termsPageH2SignprocessBody3()$</p>
+<p>$_termsPage3d()$</p>
 <br />
-<p>$_termsPageH2SignprocessBody4()$</p>
+<h2>$_termsPage4Header()$</h2>
 <br />
-<p>$_termsPageH2SignprocessBody5()$</p>
+<p>$_termsPage4()$</p>
 <br />
-<p>$_termsPageH2SignprocessBody6()$</p>
+<h2>$_termsPage5Header()$</h2>
 <br />
-<p>$_termsPageH2SignprocessBody7()$</p>
+<p>$_termsPage5()$</h2>
 <br />
-<p>$_termsPageH2SignprocessBody8()$</p>
+<p>$_termsPage5a()$</p>
 <br />
-<h2>$_termsPageH2Communication()$</h2>
+<h2>$_termsPage6Header()$</h2>
 <br />
-<p>$_termsPageH2CommunicationBody()$</p>
+<p>$_termsPage6()$</p>
 <br />
-<h2>$_termsPageH2Ownerrights()$</h2>
+<h2>$_termsPage7Header()$</h2>
 <br />
-<p>$_termsPageH2OwnerrightsBody1()$</p>
+<p>$_termsPage7a()$</p>
 <br />
-<p>$_termsPageH2OwnerrightsBody2()$</p>
+<p>$_termsPage7b()$</p>
 <br />
-<h2>$_termsPageH2Responsability()$</h2>
+<h2>$_termsPage8Header()$</h2>
 <br />
-<p>$_termsPageH2ResponsabilityBody()$</p>
-<br />
-<h2>$_termsPageH2Law()$</h2>
-<br />
-<p>$_termsPageH2LawBody()$</p>
+<p>$_termsPage8()$</p>
 </div>
 ###
