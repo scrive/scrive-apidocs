@@ -1,11 +1,12 @@
+{-# OPTIONS_GHC -Wwarn #-}
 module Control.Concurrent.MVar.Util where
 
 import Control.Concurrent.MVar (MVar, tryTakeMVar, putMVar)
-import Control.Exception (mask_)
+import Control.Exception (block)
 
 -- | A non-blocking version of 'readMVar'.
 tryReadMVar :: MVar a -> IO (Maybe a)
-tryReadMVar v = mask_ $ do
+tryReadMVar v = block $ do
   ma <- tryTakeMVar v
   case ma of
     Nothing -> return Nothing
