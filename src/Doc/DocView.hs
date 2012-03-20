@@ -286,7 +286,7 @@ documentJSON msl _crttime doc = do
        ("template", return $ JSBool $ isTemplate doc),
        ("functionality", return $ JSString $ toJSString $ "basic" <| documentfunctionality doc == BasicFunctionality |> "advanced"),
        ("daystosign", return $ maybe JSNull (JSRational True . toRational) $ documentdaystosign doc),
-       ("invitationmessage", return $ if (BS.null $ documentinvitetext doc ) then JSNull else JSString $ toJSString $ BS.toString $ documentinvitetext doc)  
+       ("invitationmessage", return $ if (BS.null $ documentinvitetext doc ) then JSNull else JSString $ toJSString $ BS.toString $ documentinvitetext doc)
      ]
 
 authorizationJSON :: IdentificationType -> JSValue
@@ -314,7 +314,7 @@ signatoryJSON doc viewer siglink = do
       , ("attachments", fmap JSArray $ sequence $ signatoryAttachmentJSON <$> signatoryattachments siglink)
       , ("csv", case (csvcontents <$> signatorylinkcsvupload siglink) of
                      Just a1 ->  return $ JSArray $ for a1 (\a2 -> JSArray $ map (JSString . toJSString . BS.toString) a2 )
-                     Nothing -> return $ JSNull) 
+                     Nothing -> return $ JSNull)
       ]
     where
     datamismatch = case documentcancelationreason doc of
@@ -329,8 +329,8 @@ signatoryAttachmentJSON :: (TemplatesMonad m, DBMonad m) => SignatoryAttachment 
 signatoryAttachmentJSON sa = do
   mfile <- case (signatoryattachmentfile sa) of
                 Just fid -> runDBQuery $ GetFileByFileID fid
-                _ -> return Nothing 
-  return $ (JSObject . toJSObject) $ 
+                _ -> return Nothing
+  return $ (JSObject . toJSObject) $
      [ ("name", JSString $ toJSString $ BS.toString $ signatoryattachmentname sa)
      , ("description", JSString $ toJSString $ BS.toString $ signatoryattachmentdescription sa)
      , ("file", fromMaybe JSNull $ jsonPack <$> fileJSON <$> mfile)
@@ -359,7 +359,7 @@ signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{si
     ftOrder PersonalNumberFT _ = LT
     ftOrder CompanyNumberFT _ = LT
     ftOrder _ _ = EQ
-    
+
 fieldJSON :: Document -> String -> BS.ByteString -> Bool -> [FieldPlacement] -> IO JSValue
 fieldJSON  doc name value closed placements = json $ do
     JSON.field "name" name
@@ -417,7 +417,7 @@ processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
       , ("signbuttontextauthor", text processsignbuttontextauthor)
       , ("signatorysignmodaltitle", text processsignatorysignmodaltitle)
       , ("authorsignlastbutton", text processauthorsignlastbuttontext)
-      
+
       , ("authorname", text processauthorname)
       , ("authorsignatoryname", text processauthorsignatoryname)
       , ("signatoryname", text processsignatoryname)
@@ -429,11 +429,11 @@ processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
         text  k = JSString <$> toJSString <$> renderTextForProcess doc k
         bool k = return $ JSBool <$> fromMaybe False $ getValueForProcess doc k
 
-        
+
 regionJSON  :: Document -> IO JSValue
 regionJSON doc = json $ do
-      JSON.field "haspeopleids" $ regionhaspeopleids $ getRegionInfo doc 
-      JSON.field "iselegavailable" $ regionelegavailable $ getRegionInfo doc 
+      JSON.field "haspeopleids" $ regionhaspeopleids $ getRegionInfo doc
+      JSON.field "iselegavailable" $ regionelegavailable $ getRegionInfo doc
       JSON.field "gb" $ REGION_GB == getRegion doc
       JSON.field "se" $ REGION_SE == getRegion doc
 
