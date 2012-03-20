@@ -107,7 +107,7 @@ showUser =
             <input type="submit" class="hidden" />
             <div class="account-footer">
                   $if(!iscompanyaccount)$
-                  <a href="#" id="createcompany"></a>
+                  <span class="createcompanybuttonbox"></span>
                   $endif$
                   <a href="#" class="btn-small green submit">
                     <div class="left"></div>
@@ -173,6 +173,7 @@ showUser =
           acceptButtonText: "$_changeEmailRequestAcceptText()$",
           content: body
         });
+        return false;
       }
     });
 
@@ -241,7 +242,7 @@ showUser =
             jQuery('[name=validate-message]').remove();
 
             var vresult = [
-                companyname.validate(new NotEmptyValidation({callback: callback, message: "Company name cannot be empty!"})),
+                companyname.validate(new NotEmptyValidation({callback: callback, message: "Company name cannot be empty!"}))
                 ];
 
             if (vresult.every(function(a) {return a;})) {
@@ -260,24 +261,20 @@ showUser =
                 phone: jQuery("input[name='phone']").val(),
                 companyposition: jQuery("input[name='companyposition']").val()
                 }).send();
+              return false;
             }
           },
           title: "$_createCompany()$",
           acceptButtonText: "$_createCompany()$",
           content: body
         });
+        return false;
       }
     });
 
-    /** isn't used yet, because the server might decide to
-        pop up this dialog in response to bad input validation.
-       when validation happens on client we can start using **/
-    var createcompany = jQuery("#createcompany");
-    if (createcompany.length>0) {
-      createcompany.append(addCompanyAccountButton.input());
-      if (/\\?createcompany/.test(window.location.href))
-        addCompanyAccountButton.input().click();
-    }
+  $if(!iscompanyaccount)$
+      jQuery(".createcompanybuttonbox").append(addCompanyAccountButton.input());
+  $endif$
   });
 </script>
 #####

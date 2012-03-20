@@ -155,7 +155,72 @@
 	margin-left: 8px;
 }
 
-.searchBox{
-
+.list-container .col {
+       margin: 0 20px;
+       padding: 15px 0;
+       width: 300px;
 }
 
+/* Select boxes and search boxes for lists */
+
+.list-search {
+        border: 1px solid #e4e4e4;
+        border-radius: 3px;
+        height: 17px;
+        margin: 0 4px 0 0 !important;
+        padding: 3px 6px 3px 6px;
+        width: 180px;
+        -moz-border-radius: 3px;
+        -webkit-border-radius: 3px;
+}
+
+
+.list-dd {
+    font: 12px/24px "Lucida Grande";
+        text-indent: 9px;
+        position: relative;
+    margin-right: 15px;
+}
+
+.list-dd-button {
+        background: url(../img/dropdown.png) no-repeat;
+        height: 25px;
+        position: relative;
+        width: 109px;
+        z-index: 2;
+}
+
+.list-dd-exp {
+       height: 21px;
+}
+
+.list-dd-button > a {
+        color: #000;
+        text-decoration: none;
+}
+
+.list-dd {
+    width: 110px !important;
+}
+
+.list-dd .list-dd-opts {
+        background: #e9e9e9;
+        display: none;
+        left: 0;
+        position: absolute;
+        top: 20px;
+        width: 200px;
+        border: 1px solid #bbbbbb;
+        z-index: 1;
+        padding-top: 5px;
+}
+
+.list-dd .list-dd-opts a {
+        color: #999;
+        display: block;
+        text-decoration: none;
+}
+
+.list-dd .list-dd-opts a:hover {
+        color: #000;
+}

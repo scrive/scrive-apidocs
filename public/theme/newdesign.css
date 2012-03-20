@@ -256,8 +256,9 @@
 
 .tab-viewer .account .col {
    float: left;
-   margin: 0 0 0 40px;
+   margin: 0 20px;
    width: 380px;
+   padding: 15px 0;
 }
 
 .tab-viewer .account-header {

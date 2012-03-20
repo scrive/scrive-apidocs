@@ -18,7 +18,6 @@ import InputValidation
 import Kontra
 import KontraError (internalError)
 import KontraLink
-import ListUtil
 import MagicHash (MagicHash)
 import Mails.SendMail
 import MinutesTime
@@ -80,7 +79,7 @@ handleUserPost = do
     Just link -> return link
     Nothing -> do
        addFlashM flashMessageUserDetailsSaved
-       return $ LinkAccount False
+       return $ LinkAccount
 
 -- please treat this function like a public query form, it's not secure
 handleRequestPhoneCall :: Kontrakcja m => m KontraLink
@@ -120,7 +119,7 @@ handleRequestChangeEmail = do
     (Just newemail, Just newemailagain) | newemail /= newemailagain -> do
        addFlashM flashMessageMismatchedEmails
     _ -> return ()
-  return $ LinkAccount False
+  return $ LinkAccount
 
 sendChangeToExistingEmailInternalWarningMail :: Kontrakcja m => User -> Email -> m ()
 sendChangeToExistingEmailInternalWarningMail user newemail = do
@@ -161,24 +160,20 @@ handleCreateCompany :: Kontrakcja m => m KontraLink
 handleCreateCompany = do
   ctx <- getContext
   user <- guardJust $ ctxmaybeuser ctx
-  mcompany <- getCompanyForUser user
-  mcompanyname <- getRequiredField asValidCompanyName "companyname"
-  case (mcompany, mcompanyname) of
-    (Nothing, Just _companyname) -> do
-          company <- runDBUpdate $ CreateCompany Nothing Nothing
-          mailapikey <- random
-          _ <- runDBUpdate $ SetCompanyMailAPIKey (companyid company) mailapikey 1000
-          _ <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid company)
-          _ <- runDBUpdate $ SetUserCompanyAdmin (userid user) True
-          upgradeduser <- guardJustM $ runDBQuery $ GetUserByID $ userid user
-          _ <- addUserCreateCompanyStatEvent (ctxtime ctx) upgradeduser
-          _ <- runDBUpdate
-                   $ LogHistoryDetailsChanged (userid user) (ctxipnumber ctx) (ctxtime ctx)
+  company <- runDBUpdate $ CreateCompany Nothing Nothing
+  mailapikey <- random
+  _ <- runDBUpdate $ SetCompanyMailAPIKey (companyid company) mailapikey 1000
+  _ <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid company)
+  _ <- runDBUpdate $ SetUserCompanyAdmin (userid user) True
+  upgradeduser <- guardJustM $ runDBQuery $ GetUserByID $ userid user
+  _ <- addUserCreateCompanyStatEvent (ctxtime ctx) upgradeduser
+  _ <- runDBUpdate $ LogHistoryDetailsChanged (userid user) (ctxipnumber ctx) (ctxtime ctx)
                                               [("is_company_admin", "false", "true")]
                                               (Just $ userid user)
-          addFlashM flashMessageCompanyCreated
-          return $ LinkCompanyAccounts emptyListParams
-    _ -> return $ LinkAccount True  --we could remove this ugly flag with more javascript validation
+  companyinfoupdate <- getCompanyInfoUpdate -- This is redundant to standard usage - bu I want to leave it here because of consistency
+  _ <- runDBUpdate $ SetCompanyInfo (companyid company) (companyinfoupdate $ companyinfo company)
+  addFlashM flashMessageCompanyCreated
+  return LoopBack
 
 handleGetChangeEmail :: Kontrakcja m => ActionID -> MagicHash -> m (Either KontraLink Response)
 handleGetChangeEmail actionid hash = withUserGet $ do
@@ -211,7 +206,7 @@ handlePostChangeEmail actionid hash = withUserPost $ do
         else addFlashM $ flashMessageProblemWithEmailChange
     Just _password -> do
       addFlashM $ flashMessageProblemWithPassword
-  return $ LinkAccount False
+  return $ LinkAccount
 
 getNewEmailFromAction :: Kontrakcja m => ActionID -> MagicHash -> m (Maybe Email)
 getNewEmailFromAction actionid hash = do

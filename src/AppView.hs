@@ -258,7 +258,7 @@ firstPage ctx loginOn referer email =
 -}
 mainLinksFields :: MonadIO m => Locale -> Fields m
 mainLinksFields locale = do
-    field "linkaccount"          $ show (LinkAccount False)
+    field "linkaccount"          $ show (LinkAccount)
     field "linkforgotenpassword" $ show LinkForgotPassword
     field "linkinvite"           $ show LinkInvite
     field "linkissue"            $ show LinkContracts

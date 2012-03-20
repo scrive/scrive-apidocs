@@ -89,7 +89,7 @@ showUser user mcompany createcompany = renderTemplateFM "showUser" $ do
     userFields user
     companyFields mcompany
     field "createcompany" $ createcompany
-    field "linkaccount" $ show (LinkAccount False)
+    field "linkaccount" $ show LinkAccount
 
 companyFields :: MonadIO m => Maybe Company -> Fields m
 companyFields mcompany = do

@@ -387,7 +387,7 @@ handlePostBecomeCompanyAccountOld inviterid = withUserPost $ do
   _ <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid company)
   _ <- resaveDocsForUser (userid user)
   addFlashM $ flashMessageUserHasBecomeCompanyAccount company
-  return $ LinkAccount False
+  return $ LinkAccount
 
 {- |
     This handles the company account takeover links, and replaces
@@ -412,7 +412,7 @@ handlePostBecomeCompanyAccount cid = withUserPost $ do
   _ <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid newcompany)
   _ <- resaveDocsForUser (userid user)
   addFlashM $ flashMessageUserHasBecomeCompanyAccount newcompany
-  return $ LinkAccount False
+  return $ LinkAccount
 
 {- |
     Resaving the user's documents means that their new company
