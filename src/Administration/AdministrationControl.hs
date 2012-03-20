@@ -721,6 +721,7 @@ jsonDocuments = onlySalesOrAdmin $ do
     params <- getListParamsNew
     let documents = documentsSortSearchPage params docs
     Log.debug $ "Document on current list:" ++ show (length $ list documents)
+    Log.debug $ "Force execution due to stack overflow:" ++ show (length $ show $ list documents)
     return $ JSObject
            $ toJSObject
             [("list", JSArray $ map (\doc -> 
