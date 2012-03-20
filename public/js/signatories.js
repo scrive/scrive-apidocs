@@ -132,7 +132,6 @@ window.SignatoryAttachmentUploadView = Backbone.View.extend({
   },
   render: function() {
     var attachment = this.model;
-
     var container = $("<div class='upload' />");
     if (attachment.get('loading')){
       container.append($("<img class='loading'>").attr('src', "/theme/images/wait30trans.gif"));
@@ -468,7 +467,8 @@ window.Signatory = Backbone.Model.extend({
         return new Mail({
                 document: this.document(),
                 signatory: this,
-                type: "remind"
+                type: "remind",
+                editWidth: (this.canSign() && !this.hasSigned()) ? 300 : undefined
         })
     },
     rejectMail: function() {
