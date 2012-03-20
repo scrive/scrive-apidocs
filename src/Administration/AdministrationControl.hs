@@ -715,9 +715,12 @@ showDocuments = onlySalesOrAdmin $ adminDocuments =<< getContext
 jsonDocuments :: Kontrakcja m => m JSValue
 jsonDocuments = onlySalesOrAdmin $ do
     srvs <- runDBQuery $ GetServices
+    Log.debug "Document list for admin per service"
     docs <- join <$> (sequence $ map (runDBQuery . GetDocuments) (Nothing:(map (Just . serviceid) srvs)))
+    Log.debug $ "Total document found:" ++ show (length docs)
     params <- getListParamsNew
     let documents = documentsSortSearchPage params docs
+    Log.debug $ "Document on current list:" ++ show (length $ list documents)
     return $ JSObject
            $ toJSObject
             [("list", JSArray $ map (\doc -> 
