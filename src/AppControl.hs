@@ -111,9 +111,13 @@ handleError e = do
             addFlashM V.modalError
             linkmain <- getHomeOrUploadLink
             sendRedirect linkmain
-         Just _ -> embeddedErrorPage
+         _ -> embeddedErrorPage
   handleError' Respond404 = do
-    notFound =<< notFoundPage
+    ctx <- getContext
+    case ctxservice ctx of
+         Nothing -> notFoundPage >>= notFound
+         _ -> embeddedErrorPage
+
 {- |
    Creates a default amazon configuration based on the
    given AppConf
