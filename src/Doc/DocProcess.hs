@@ -118,13 +118,8 @@ data DocProcessInfo =
   , processflashmessagearchivedone :: String
   , processflashmessagebulkremindssent :: String
   , processflashmessagenobulkremindssent :: String
-  , processflashmessagepleasesign :: String
 
   -- process specific modal templates
-  , processmodalsignedviewclosedhasaccount :: String
-  , processmodalsignedviewnotclosedhasaccount :: String
-  , processmodalsignedviewclosednoaccount :: String
-  , processmodalsignedviewnotclosednoaccount :: String
   , processmodalsendconfirmation :: String
 
   -- process specific seal information
@@ -145,7 +140,7 @@ data DocProcessInfo =
   , processsignedinfotext :: String
   , processstatusinfotext :: String
   , processauthorsignlastbuttontext :: String
-  
+
   -- process specific design view titles of parties
   , processauthorname :: String
   , processauthorsignatoryname :: String
@@ -214,13 +209,8 @@ contractProcess =
   , processflashmessagearchivedone = "flashMessageContractArchiveDone"
   , processflashmessagebulkremindssent = "flashMessageBulkContractRemindsSent"
   , processflashmessagenobulkremindssent = "flashMessageNoBulkContractRemindsSent"
-  , processflashmessagepleasesign = "flashMessagePleaseSignContract"
 
   -- process specific modal templates
-  , processmodalsignedviewclosedhasaccount = "modalSignedViewClosedHasAccount"
-  , processmodalsignedviewnotclosedhasaccount = "modalSignedViewNotClosedHasAccount"
-  , processmodalsignedviewclosednoaccount = "modalSignedViewClosedNoAccount"
-  , processmodalsignedviewnotclosednoaccount = "modalSignedViewNotClosedNoAccount"
   , processmodalsendconfirmation = "modalSignInviteView"
 
   -- process specific seal information
@@ -241,7 +231,7 @@ contractProcess =
   , processsignedinfotext = "contractsignedinfotext"
   , processstatusinfotext = "contractstatusinfotext"
   , processauthorsignlastbuttontext = "contractauthorsignlastbuttontext"
-  
+
   , processauthorname = "contractauthorname"
   , processauthorsignatoryname = "contractauthorsignatoryname"
   , processsignatoryname = "contractsignatoryname"
@@ -280,7 +270,7 @@ offerProcess =
   , processcancelbuttontext = "offercancelbuttontext"
   , processcancelmodaltitle = "offercancelmodaltitle"
   , processcancelmodaltext = "offercancelmodaltext"
-  
+
   , processrejectbuttontext = "offerrejectbuttontext"
   , processsignatorysignmodaltitle = "offersignatorysignmodaltitle"
   , processsignatorysignmodalcontentlast = "offersignatorysignmodalcontentlast"
@@ -310,13 +300,8 @@ offerProcess =
   , processflashmessagearchivedone = "flashMessageOfferArchiveDone"
   , processflashmessagebulkremindssent = "flashMessageBulkOfferRemindsSent"
   , processflashmessagenobulkremindssent = "flashMessageNoBulkOfferRemindsSent"
-  , processflashmessagepleasesign = "flashMessagePleaseSignOffer"
 
   -- process specific modal templates
-  , processmodalsignedviewclosedhasaccount = "modalOfferSignedHasAccount"
-  , processmodalsignedviewnotclosedhasaccount = "modalOfferSignedHasAccount"
-  , processmodalsignedviewclosednoaccount = "modalOfferSignedNoAccount"
-  , processmodalsignedviewnotclosednoaccount = "modalOfferSignedNoAccount"
   , processmodalsendconfirmation = "modalOfferCreated"
 
   -- process specific seal information
@@ -336,8 +321,8 @@ offerProcess =
   , processsignedinfoheader = "offersignedinfoheader"
   , processsignedinfotext = "offersignedinfotext"
   , processstatusinfotext = "offerstatusinfotext"
-  , processauthorsignlastbuttontext = "offerauthorsignlastbuttontext"  
-  
+  , processauthorsignlastbuttontext = "offerauthorsignlastbuttontext"
+
   , processauthorname = "offerauthorname"
   , processauthorsignatoryname = "offerauthorsignatoryname"
   , processsignatoryname = "offersignatoryname"
@@ -407,13 +392,8 @@ orderProcess =
   , processflashmessagearchivedone = "flashMessageOrderArchiveDone"
   , processflashmessagebulkremindssent = "flashMessageBulkOrderRemindsSent"
   , processflashmessagenobulkremindssent = "flashMessageNoBulkOrderRemindsSent"
-  , processflashmessagepleasesign = "flashMessagePleaseSignOrder"
 
   -- process specific modal templates
-  , processmodalsignedviewclosedhasaccount = "modalSignedViewOrderClosedHasAccount"
-  , processmodalsignedviewnotclosedhasaccount = "modalSignedViewOrderNotClosedHasAccount"
-  , processmodalsignedviewclosednoaccount = "modalSignedViewOrderClosedNoAccount"
-  , processmodalsignedviewnotclosednoaccount = "modalSignedViewOrderNotClosedNoAccount"
   , processmodalsendconfirmation = "modalOrderCreated"
 
   -- process specific seal information
@@ -433,8 +413,8 @@ orderProcess =
   , processsignedinfoheader = "ordersignedinfoheader"
   , processsignedinfotext = "ordersignedinfotext"
   , processstatusinfotext = "orderstatusinfotext"
-  , processauthorsignlastbuttontext = "orderauthorsignlastbuttontext"    
-  
+  , processauthorsignlastbuttontext = "orderauthorsignlastbuttontext"
+
   , processauthorname = "orderauthorname"
   , processauthorsignatoryname = "orderauthorsignatoryname"
   , processsignatoryname = "ordersignatoryname"

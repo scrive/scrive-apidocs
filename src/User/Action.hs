@@ -1,4 +1,4 @@
-module User.Action 
+module User.Action
     (
      handleAccountSetupFromSign,
      handleActivate,
@@ -59,7 +59,7 @@ handleActivate mfstname msndname actvuser signupmethod = do
   switchLocale (getLocale actvuser)
   ctx <- getContext
   mtos <- getDefaultedField False asValidCheckBox "tos"
-  callme <- isFieldSet "callme"      
+  callme <- isFieldSet "callme"
   phone <-  fromMaybe "" <$> getField "phone"
   mpassword <- getRequiredField asValidPassword "password"
   mpassword2 <- getRequiredField asValidPassword "password2"
@@ -76,7 +76,7 @@ handleActivate mfstname msndname actvuser signupmethod = do
                        , usersndname = sndname
                        , userphone = phone
                        }
-                _ <- dbUpdate $ LogHistoryUserInfoChanged (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) 
+                _ <- dbUpdate $ LogHistoryUserInfoChanged (userid actvuser) (ctxipnumber ctx) (ctxtime ctx)
                                                           (userinfo actvuser) ((userinfo actvuser){ userfstname = fstname , usersndname = sndname })
                                                           (userid <$> ctxmaybeuser ctx)
                 _ <- dbUpdate $ SetUserPassword (userid actvuser) passwordhash
@@ -86,14 +86,14 @@ handleActivate mfstname msndname actvuser signupmethod = do
                 _ <- dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
                 return ()
               mdelays <- runDBQuery $ GetMailAPIDelaysForEmail (getEmail actvuser) (ctxtime ctx)
-              
+
               newdocs <- case mdelays of
                 Nothing -> return []
                 Just (delayid, texts) -> do
                   results <- forM texts (\t -> catchError (MailAPI.doMailAPI t) (\_ -> return Nothing))
                   runDBUpdate $ DeleteMailAPIDelays delayid (ctxtime ctx)
                   return $ catMaybes results
- 
+
               tosuser <- guardJustM $ runDBQuery $ GetUserByID (userid actvuser)
               _ <- addUserSignTOSStatEvent tosuser
               _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
@@ -115,7 +115,7 @@ createInvitedUser names email mlocale = do
     passwd <- createPassword =<< randomPassword
     muser <- runDBUpdate $ AddUser names email (Just passwd) False Nothing Nothing locale
     case muser of
-      Just user -> do 
+      Just user -> do
                    _ <- runDBUpdate $ LogHistoryAccountCreated (userid user) (ctxipnumber ctx) (ctxtime ctx) (Email email) (userid <$> ctxmaybeuser ctx)
                    return muser
       _         -> return muser

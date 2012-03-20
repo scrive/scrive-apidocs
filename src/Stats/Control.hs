@@ -82,7 +82,7 @@ showAdminUserUsageStats userid = onlySalesOrAdmin $ do
   let stats = calculateStatsByDay rawevents
   content <- adminUserUsageStatsPage user mcompany $ do
     fieldFL "statistics" $ statisticsFieldsByDay stats
-  renderFromBody TopEmpty kontrakcja content
+  renderFromBody kontrakcja content
 
 showAdminCompanyUsageStats :: Kontrakcja m => CompanyID -> m Response
 showAdminCompanyUsageStats companyid = onlySalesOrAdmin $ do
@@ -92,7 +92,7 @@ showAdminCompanyUsageStats companyid = onlySalesOrAdmin $ do
   fullnames <- convertUserIDToFullName [] stats
   content <- adminCompanyUsageStatsPage companyid $ do
     fieldFL "statistics" $ statisticsCompanyFieldsByDay fullnames
-  renderFromBody TopEmpty kontrakcja content
+  renderFromBody kontrakcja content
 
 showAdminSystemUsageStats :: Kontrakcja m => m Response
 showAdminSystemUsageStats = onlySalesOrAdmin $ do
@@ -108,7 +108,7 @@ showAdminSystemUsageStats = onlySalesOrAdmin $ do
   content <- adminUserStatisticsPage $ do
     fieldFL "statisticsbyday" $ statisticsFieldsByDay statsByDay
     fieldFL "statisticsbymonth" $ statisticsFieldsByMonth statsByMonth
-  renderFromBody TopEmpty kontrakcja content
+  renderFromBody kontrakcja content
 
 handleDocStatsCSV :: Kontrakcja m => m Response
 handleDocStatsCSV = onlySalesOrAdmin $ do

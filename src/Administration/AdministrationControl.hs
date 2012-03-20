@@ -33,6 +33,8 @@ module Administration.AdministrationControl(
           , daveUser
           , daveCompany
           , daveUserHistory
+          , daveSignatoryLink
+          , updateFields
           , serveLogDirectory
           , jsonUsersList
           , jsonCompanies
@@ -698,9 +700,13 @@ showDocuments = onlySalesOrAdmin $ adminDocuments =<< getContext
 jsonDocuments :: Kontrakcja m => m JSValue
 jsonDocuments = onlySalesOrAdmin $ do
     srvs <- runDBQuery $ GetServices
+    Log.debug "Document list for admin per service"
     docs <- join <$> (sequence $ map (runDBQuery . GetDocuments) (Nothing:(map (Just . serviceid) srvs)))
+    Log.debug $ "Total document found:" ++ show (length docs)
     params <- getListParamsNew
     let documents = documentsSortSearchPage params docs
+    Log.debug $ "Document on current list:" ++ show (length $ list documents)
+    Log.debug $ "Force execution due to stack overflow:" ++ show (length $ show $ list documents)
     return $ JSObject
            $ toJSObject
             [("list", JSArray $ map (\doc -> 
@@ -796,13 +802,60 @@ replaceMainFile did = onlyAdmin $ do
 {- |
    Used by super users to inspect a particular document.
 -}
-daveDocument :: Kontrakcja m => DocumentID -> m  String
+daveDocument :: Kontrakcja m => DocumentID -> m (Either KontraLink String)
 daveDocument documentid = onlyAdmin $ do
-    document <- queryOrFail $ GetDocumentByDocumentID documentid
-    renderTemplateFM  "daveDocument" $ do
+    -- for dave, we want a slash at the end, so redirect if there is no slash
+    -- we have a relative link for signatorylinkids, so we need a slash at the end
+    -- of the dave/document links; I evaluated a few other ways (using javascript, etc)
+    -- but I could not come up with a better one than this
+    --  -Eric
+    location <- rqUri <$> askRq
+    Log.debug $ "location: " ++ location
+    if "/" `isSuffixOf` location
+     then do
+      document <- queryOrFail $ GetDocumentByDocumentID documentid
+      r <- renderTemplateFM  "daveDocument" $ do
         field "daveBody" $  inspectXML document
         field "id" $ show documentid
         field "closed" $ documentstatus document == Closed
+      return $ Right r
+     else return $ Left $ LinkDaveDocument documentid
+
+{- |
+   Used by super users to inspect a particular signatory link.
+-}
+daveSignatoryLink :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m  String
+daveSignatoryLink documentid siglinkid = onlyAdmin $ do
+    document <- queryOrFail $ GetDocumentByDocumentID documentid
+    siglink <- guardJust $ getSigLinkFor document siglinkid
+    renderTemplateFM  "daveSignatoryLink" $ do
+        field "daveBody" $ inspectXML siglink
+        field "docid" $ show documentid
+        field "slid" $ show siglinkid
+        fieldFL "fields" $ for (signatoryfields $ signatorydetails siglink) $ \sf -> do
+            field "fieldname" $ fieldTypeToString (sfType sf)
+            field "fieldvalue" $ sfValue sf
+            field "label" $ show $ sfType sf
+      where fieldTypeToString sf = case sf of
+              FirstNameFT      -> "sigfstname"
+              LastNameFT       -> "sigsndname"
+              EmailFT          -> "sigemail"
+              CompanyFT        -> "sigco"
+              PersonalNumberFT -> "sigpersnr"
+              CompanyNumberFT  -> "sigcompnr"
+              SignatureFT      -> "signature"
+              CustomFT label _ -> label
+
+
+updateFields :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
+updateFields did slid = onlyAdmin $ do
+  Log.debug $ "Changing signatory fields | SUPER CRITICAL | If you see this check who did this ask who did this and why"
+  fieldname <- getDataFnM (look "fieldname")
+  fieldvalue <- getDataFnM (look "fieldvalue")
+  ctx <- getContext
+  actor <- guardJust $ mkAdminActor ctx
+  _ <- runDBUpdate $ UpdateFieldsNoStatusCheck did slid (fieldname, fieldvalue) actor
+  return LoopBack
 
 {- |
    Used by super users to inspect a particular user.

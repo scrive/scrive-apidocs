@@ -40,14 +40,14 @@ describe "rejecting document" do
 
     @emailhelper.follow_link_in_latest_mail_for @ctx.props.first_counterpart_email
 
-    puts "make sure it's got the opened icon displayed"
-    @wait.until { @driver.find_element :css => "div.icon.status.opened" }
+    puts "make sure it's a signatory is in an opened state"
+    @wait.until { @driver.find_element :css => ".summary.opened" }
 
     puts "reject the document"
-    (@wait.until { @driver.find_element :css => "#signViewBottomBoxContainerLeft a" }).click
+    (@wait.until { @driver.find_element :css => ".rejectwrapper a" }).click
     (@wait.until { @driver.find_element :css => ".modal-container a.btn-small.float-right" }).click
 
-    puts "make sure there are two cancelled icons"
-    @wait.until { (@driver.find_elements :css => "div.icon.status.cancelled").length==2 }
+    puts "make sure there's a cancelled signatory"
+    @wait.until { @driver.find_elements :css => ".summary.cancelled" }
   end
 end

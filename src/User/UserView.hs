@@ -450,5 +450,6 @@ userBasicFields u mc = do
     field "email" $ getEmail u
     field "company" $ getCompanyName mc
     field "phone" $ userphone $ userinfo u
+    field "position" $ usercompanyposition $ userinfo u
     field "iscompanyadmin" $ useriscompanyadmin u
     field "TOSdate" $ maybe "-" show (userhasacceptedtermsofservice u)
