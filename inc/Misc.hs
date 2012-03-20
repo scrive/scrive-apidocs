@@ -339,6 +339,12 @@ thd3 :: (t1, t2, t3) -> t3
 thd3 (_,_,c) = c
 
 -- HTTPS utils
+isIphone::ServerMonad m => m Bool
+isIphone =  do
+    magent <- fmap BS.toString  `liftM` (getHeaderM "User-Agent")
+    case magent of
+         Nothing -> return False
+         Just agent -> return $ "iphone" `isInfixOf` (map toLower agent)
 
 isSecure::ServerMonad m => m Bool
 isSecure = do
