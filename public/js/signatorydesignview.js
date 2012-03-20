@@ -159,7 +159,8 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
       var signatory = this.model;
       var signatoriesCount = signatory.document().signatories().length;
       for(var i=1;i<=signatoriesCount;i++)
-      { 
+      {
+        if (signatory.author() && (i != 1 && i != signatoriesCount ))  continue; // Author can only select first or last.
         var option = $("<option value='"+i+"'>"+i+"</option>");
         if (i == signatory.signorder())
             option.attr("selected","Yes");
@@ -221,8 +222,8 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
             top.append(this.setCsvSignatoryIcon())
         if (signatory.signs())
             top.append(this.setSignOrderIcon());
-        if (signatory.signs() && !signatory.author() )
-            top.append(this.placeSignatureIcon());
+        //if (signatory.signs() && !signatory.author() )
+            //top.append(this.placeSignatureIcon());
         top.append(this.addFieldButton());
         if (signatory.signs() && document.view.signOrderVisible())
             top.append(this.signOrderSelector());

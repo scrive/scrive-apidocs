@@ -122,6 +122,8 @@ userFields user = do
     field "fullnameOrEmail" $ fullnameOrEmail
     field "fullnamePlusEmail" $ fullnamePlusEmail
     field "iscompanyaccount" $ isJust $ usercompany user
+    field "usercompanyname" $ getCompanyName user
+    field "usercompanynumber" $ getCompanyNumber user
 
     --field "invoiceaddress" $ BS.toString $ useraddress $ userinfo user
     menuFields user
@@ -448,5 +450,6 @@ userBasicFields u mc = do
     field "email" $ getEmail u
     field "company" $ getCompanyName mc
     field "phone" $ userphone $ userinfo u
+    field "position" $ usercompanyposition $ userinfo u
     field "iscompanyadmin" $ useriscompanyadmin u
     field "TOSdate" $ maybe "-" show (userhasacceptedtermsofservice u)

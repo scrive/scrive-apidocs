@@ -41,6 +41,7 @@ standardHeaderContents=
         <link rel="stylesheet" type="text/css" href="$prefix$/theme/account.css" />
         <link href="$prefix$/theme/flash.css" rel="stylesheet" type="text/css" media="screen" />
         <link href="/css/main.css" rel="stylesheet" type="text/css" />
+        <link href="$prefix$/theme/docsignview.css" rel="stylesheet" type="text/css" media="screen" />
         <script src="$if(production)$$protocol$//ajax.googleapis.com/ajax/libs/jquery/1.5.1$else$/js$endif$/jquery.min.js"
                 type="text/javascript"></script>
         <script src="$if(production)$$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.11$else$/js$endif$/jquery-ui.min.js"
@@ -104,6 +105,8 @@ standardHeaderContents=
 		<script src="$prefix$/js/confirmationsWithEmails.js"
                 type="text/javascript"></script>
         <script src="$prefix$/js/docview.js"
+                type="text/javascript"></script>
+        <script src="$prefix$/js/docsignview.js"
                 type="text/javascript"></script>
         <script src="$prefix$/js/signatorydesignview.js"
                 type="text/javascript"></script>

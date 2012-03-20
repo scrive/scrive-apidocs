@@ -69,6 +69,7 @@ module Doc.Model
   , TimeoutDocument(..)
   , UpdateFields(..)
   , SetSigAttachments(..)
+  , UpdateFieldsNoStatusCheck(..)
   , UpdateDraft(..)
   , SetDocumentModificationData(..)
   ) where
@@ -2062,6 +2063,39 @@ instance Actor a => DBUpdate (UpdateFields a) (Either String Document) where
         actor
       getOneDocumentAffected "UpdateFields" r did
     s -> return $ Left $ "Cannot updateFields on document " ++ show did ++ " because " ++ concat s
+
+data Actor a => UpdateFieldsNoStatusCheck a = UpdateFieldsNoStatusCheck DocumentID SignatoryLinkID (String, String) a
+instance Actor a => DBUpdate (UpdateFieldsNoStatusCheck a) (Either String Document) where
+  dbUpdate (UpdateFieldsNoStatusCheck did slid (fieldname, fieldvalue) actor) = do
+  Just document <- dbQuery $ GetDocumentByDocumentID did
+  let updateSigField sf =
+        let updateF n = if n == fieldname
+                        then sf { sfValue = fieldvalue }
+                        else sf
+        in case sfType sf of
+              FirstNameFT      -> updateF $ "sigfstname"
+              LastNameFT       -> updateF $ "sigsndname"
+              EmailFT          -> updateF $ "sigemail"
+              CompanyFT        -> updateF $ "sigco"
+              PersonalNumberFT -> updateF $ "sigpersnr"
+              CompanyNumberFT  -> updateF $ "sigcompnr"
+              SignatureFT      -> updateF $ "signature"
+              CustomFT label _ -> updateF $  label
+
+  let Just sl = getSigLinkFor document slid
+  r <- kRun $ mkSQL UPDATE tableSignatoryLinks [
+    sql "fields" $ map updateSigField $ signatoryfields $ signatorydetails sl
+    ] <++> SQL "WHERE document_id = ? AND id = ? " [
+      toSql did
+    , toSql slid
+    ]
+  when_ (r == 1) $
+    dbUpdate $ InsertEvidenceEvent
+      UpdateFieldsEvidence
+      ("Information for signatory with email \"" ++  (getEmail sl) ++ "\" for field \"" ++ fieldname ++ "\" was set to \"" ++ fieldvalue ++ "\" by " ++ actorWho actor ++ ".")
+      (Just did)
+      actor
+  getOneDocumentAffected "UpdateFields" r did
 
 data Actor a => PendingToAwaitingAuthor a = PendingToAwaitingAuthor DocumentID a
 instance Actor a => DBUpdate (PendingToAwaitingAuthor a) (Either String Document) where

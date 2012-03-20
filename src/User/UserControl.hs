@@ -65,7 +65,7 @@ handleUserPost = do
   user <- guardJustM $ runDBQuery $ GetUserByID (userid user')
   infoUpdate <- getUserInfoUpdate
   _ <- runDBUpdate $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
-  _ <- runDBUpdate $ LogHistoryUserInfoChanged (userid user) (ctxipnumber ctx) (ctxtime ctx) 
+  _ <- runDBUpdate $ LogHistoryUserInfoChanged (userid user) (ctxipnumber ctx) (ctxtime ctx)
                                                (userinfo user) (infoUpdate $ userinfo user)
                                                (userid <$> ctxmaybeuser ctx)
   mcompany <- getCompanyForUser user
@@ -81,6 +81,25 @@ handleUserPost = do
     Nothing -> do
        addFlashM flashMessageUserDetailsSaved
        return $ LinkAccount False
+
+-- please treat this function like a public query form, it's not secure
+handleRequestPhoneCall :: Kontrakcja m => m KontraLink
+handleRequestPhoneCall = do
+  Context{ctxmaybeuser} <- getContext
+  memail <- getOptionalField asValidEmail "email"
+  mphone <-  getOptionalField asValidPhone "phone"
+  case (memail, mphone) of
+    (Just email, Just phone) -> do
+      user <- guardJustM $ runDBQuery $ GetUserByEmail (ctxmaybeuser >>= userservice) (Email email)
+      --only set the phone number if they're actually logged in
+      -- it is possible to request a phone call from the sign view without being logged in!
+      -- this function could be called by anyone!
+      when (isJust ctxmaybeuser && fmap userid ctxmaybeuser == Just (userid user)) $ do
+        _ <- runDBUpdate $ SetUserInfo (userid user) $ (userinfo user){ userphone = phone }
+        return ()
+      phoneMeRequest user
+    _ -> return ()
+  return $ LinkUpload
 
 handleRequestChangeEmail :: Kontrakcja m => m KontraLink
 handleRequestChangeEmail = do
@@ -153,9 +172,9 @@ handleCreateCompany = do
           _ <- runDBUpdate $ SetUserCompanyAdmin (userid user) True
           upgradeduser <- guardJustM $ runDBQuery $ GetUserByID $ userid user
           _ <- addUserCreateCompanyStatEvent (ctxtime ctx) upgradeduser
-          _ <- runDBUpdate 
-                   $ LogHistoryDetailsChanged (userid user) (ctxipnumber ctx) (ctxtime ctx) 
-                                              [("is_company_admin", "false", "true")] 
+          _ <- runDBUpdate
+                   $ LogHistoryDetailsChanged (userid user) (ctxipnumber ctx) (ctxtime ctx)
+                                              [("is_company_admin", "false", "true")]
                                               (Just $ userid user)
           addFlashM flashMessageCompanyCreated
           return $ LinkCompanyAccounts emptyListParams
@@ -185,7 +204,7 @@ handlePostChangeEmail actionid hash = withUserPost $ do
                       mnewemail
       if changed
         then do
-            _ <- runDBUpdate $ LogHistoryDetailsChanged (userid user) ctxipnumber ctxtime 
+            _ <- runDBUpdate $ LogHistoryDetailsChanged (userid user) ctxipnumber ctxtime
                                                      [("email", unEmail $ useremail $ userinfo user, unEmail $ fromJust mnewemail)]
                                                      (Just $ userid user)
             addFlashM $ flashMessageYourEmailHasChanged
@@ -469,9 +488,9 @@ createUser email fstname sndname mcompany = do
   passwd <- createPassword =<< randomPassword
   muser <- runDBUpdate $ AddUser (fstname, sndname) (unEmail email) (Just passwd) False Nothing (fmap companyid mcompany) (ctxlocale ctx)
   case muser of
-    Just user -> do 
-                 _ <- runDBUpdate $ 
-                      LogHistoryAccountCreated (userid user) (ctxipnumber ctx) 
+    Just user -> do
+                 _ <- runDBUpdate $
+                      LogHistoryAccountCreated (userid user) (ctxipnumber ctx)
                                                (ctxtime ctx) email (userid <$> ctxmaybeuser ctx)
                  return muser
     _         -> return muser

@@ -104,13 +104,13 @@ class DocHelper
   def signAndSend
     (@wait.until { @driver.find_element :css => ".finalbutton" }).click
     puts "Final aproval modal"
-    acceptStandardModal 
+    acceptStandardModal
     puts "Closing confirmation modal"
-    acceptStandardModal 
+    acceptStandardModal
   end
 
  def acceptStandardModal
     (@wait.until { @driver.find_element :css => ".modal-footer .btn-small.float-right" }).click
- end   
+ end
 
 end
