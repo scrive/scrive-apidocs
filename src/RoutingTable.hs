@@ -87,7 +87,9 @@ staticRoutes = choice
      , dir "s" $ hGet $ toK3    $ DocControl.handleSignShowOldRedirectToNew -- Redirect for old version to version above, remove not earlier then 31.12.2012.
 
      , dir "s" $ param "sign"           $ hPostNoXToken $ toK2 $ DocControl.signDocument
+     , dir "s" $ param "sign"           $ hPostNoXToken $ toK3 $ DocControl.signDocumentIphoneCase
      , dir "s" $ param "reject"         $ hPostNoXToken $ toK2 $ DocControl.rejectDocument
+     , dir "s" $ param "reject"         $ hPostNoXToken $ toK3 $ DocControl.rejectDocumentIphoneCase
      , dir "s" $ param "acceptaccount"  $ hPostNoXToken $ toK3 $ DocControl.handleAcceptAccountFromSign
      , dir "s" $ param "sigattachment"  $ hPostNoXToken $ toK2 $ DocControl.handleSigAttach
      , dir "s" $ param "deletesigattachment" $ hPostNoXToken $ toK2 $ DocControl.handleDeleteSigAttach
@@ -258,12 +260,14 @@ staticRoutes = choice
 
      , dir "adminonly" $ dir "log" $ hGetWrap (onlyAdmin . https) $ toK1 $ Administration.serveLogDirectory
 
+     , dir "adminonly" $ dir "updatefields" $ hPost $ toK2 $ Administration.updateFields
 
-     , dir "dave" $ dir "document"    $ hGet $ toK1 $ Administration.daveDocument
-     , dir "dave" $ dir "user"        $ hGet $ toK1 $ Administration.daveUser
-     , dir "dave" $ dir "userhistory" $ hGet $ toK1 $ Administration.daveUserHistory
-     , dir "dave" $ dir "company"     $ hGet $ toK1 $ Administration.daveCompany
-     , dir "dave" $ dir "company"     $ hGet $ toK3 $ Administration.companyClosedFilesZip
+     , dir "dave" $ dir "document"      $ hGet $ toK1 $ Administration.daveDocument
+     , dir "dave" $ dir "document"      $ hGet $ toK2 $ Administration.daveSignatoryLink
+     , dir "dave" $ dir "user"          $ hGet $ toK1 $ Administration.daveUser
+     , dir "dave" $ dir "userhistory"   $ hGet $ toK1 $ Administration.daveUserHistory
+     , dir "dave" $ dir "company"       $ hGet $ toK1 $ Administration.daveCompany
+     , dir "dave" $ dir "company"       $ hGet $ toK3 $ Administration.companyClosedFilesZip
 
      -- account stuff
      , dir "logout"      $ hGet  $ toK0 $ handleLogout
