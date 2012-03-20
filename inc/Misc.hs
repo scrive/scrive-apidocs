@@ -271,6 +271,12 @@ para :: String -> String
 para s = "<p>" ++ s ++ "</p>"
 
 -- HTTPS utils
+isIphone::ServerMonad m => m Bool
+isIphone =  do
+    magent <- fmap BS.toString  `liftM` (getHeaderM "User-Agent")
+    case magent of
+         Nothing -> return False
+         Just agent -> return $ "iphone" `isInfixOf` (map toLower agent)
 
 isSecure::ServerMonad m => m Bool
 isSecure = (Just (BS.fromString "http") /=) `liftM` getHeaderM "scheme"

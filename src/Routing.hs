@@ -82,7 +82,7 @@ page pageBody = do
     pb <- pageBody
     ctx <- getContext
     if (isNothing $ ctxservice ctx)
-     then renderFromBody TopDocument kontrakcja pb
+     then renderFromBody kontrakcja pb
      else embeddedPage pb
 
 

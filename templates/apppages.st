@@ -1,4 +1,9 @@
 ###
+notFound=<strong>
+            $_notFound()$. <a href="/">$_notFoundGoHome()$.</a>
+         </strong>
+
+###
 pageLogin=
     <div class="centerdivnarrow">
       <p class="headline">$_login()$</p>
