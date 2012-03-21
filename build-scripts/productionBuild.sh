@@ -31,14 +31,12 @@ ZIP="$BUILD_ID".".production.tar.gz"
 
 echo "Creating zip file"
 
-cd $DIR
 tar zcf "$TMP/$ZIP"                        \
     --exclude=.git*                   \
     --exclude=_local*                 \
     --exclude=_darcs*                 \
     --exclude=_locakal_ticket_backup* \
     *
-cd -
 ls -lh "$TMP/$ZIP"
 
 echo "Generating signature hash"
@@ -93,13 +91,14 @@ python scripts/parsesignresponse.py "$soapresponse" "$signed64"
 
 echo "Decoding base64 response"
 finalfile="$BUILD_ID.production.enhanced.tar.gz"
-signedmime="$TMP/$BUILD_ID.signature.mime"
-base64 -d "$signed64" > "$signedmime"
+signedmime=$BUILD_ID.signature.mime
+base64 -d "$signed64" > "$TMP/$signedmime"
 
 echo "Creating final enhanced deployment file"
 
-tar zcf "$TMP/$finalfile" "$signedmime" "$TMP/$ZIP"
-
+cd $TMP
+tar zcf "$finalfile" "$signedmime" "$ZIP"
+cd -
 ls -lh "$TMP/$finalfile"
 
 echo "Pushing to amazon"
