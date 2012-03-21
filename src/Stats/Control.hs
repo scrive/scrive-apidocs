@@ -68,7 +68,7 @@ import qualified Data.ByteString.UTF8 as BS
 import Happstack.Server
 import Control.Monad
 import Control.Applicative
-
+import qualified Data.Map as Map
 import User.Utils
 
 showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
@@ -114,10 +114,11 @@ handleDocStatsCSV = onlySalesOrAdmin $ do
   let docstatsheader = ["userid", "user", "date", "event", "count", "docid", "serviceid", "company", "companyid", "doctype"]
   csvstrings <- docStatsToString stats [] []
   let csv = toCSV docstatsheader csvstrings
+  let res = Response 200 Map.empty nullRsFlags (toCSV docstatsheader csvstrings) Nothing
   Log.debug $ "All doc stats length: " ++ (show $ length stats) ++ " " ++ (show $ length $ show csv)
   ok $ setHeader "Content-Disposition" "attachment;filename=docstats.csv"
      $ setHeader "Content-Type" "text/csv"
-     $ toResponse csv
+     $ res
 
 docStatsToString :: Kontrakcja m => [DocStatEvent] -> [(UserID, String)] -> [(CompanyID, String)] -> m [[String]]
 docStatsToString [] _ _ = return []
