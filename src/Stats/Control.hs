@@ -113,9 +113,8 @@ handleDocStatsCSV = onlySalesOrAdmin $ do
   stats <- runDBQuery GetDocStatEvents
   let docstatsheader = ["userid", "user", "date", "event", "count", "docid", "serviceid", "company", "companyid", "doctype"]
   csvstrings <- docStatsToString stats [] []
-  let csv = toCSV docstatsheader csvstrings
   let res = Response 200 Map.empty nullRsFlags (toCSV docstatsheader csvstrings) Nothing
-  Log.debug $ "All doc stats length: " ++ (show $ length stats) ++ " " ++ (show $ length $ show csv)
+  Log.debug $ "All doc stats length with bytestring" ++ (show $ length stats) ++ " " ++ (show $ length $ show $ rsBody res)
   ok $ setHeader "Content-Disposition" "attachment;filename=docstats.csv"
      $ setHeader "Content-Type" "text/csv"
      $ res
