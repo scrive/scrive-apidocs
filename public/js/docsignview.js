@@ -178,7 +178,7 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
           el: $("<div class='field' />")
         });
         if (fieldview.dragfield != undefined) {
-          this.dragfields.push(fieldview.dragfield);
+          view.dragfields.push(fieldview.dragfield);
         }
         fieldwrapper.append($(fieldview.el));
         inputbits.append(fieldwrapper);
