@@ -233,6 +233,7 @@ window.Field = Backbone.Model.extend({
 window.FieldStandardView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'cleanredborder');
+         this.model.bind('change:inlineedited', this.render);
         this.model.bind('change', this.cleanredborder);
         this.model.view = this;
         this.render();

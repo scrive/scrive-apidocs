@@ -27,6 +27,7 @@ module MinutesTime
        , parseMinutesTimeISO
        , monthsBefore
        , daysBefore
+       , daysAfter
        ) where
 
 import Control.Monad.IO.Class
@@ -256,6 +257,9 @@ minutesBefore i (MinutesTime s) = MinutesTime (s - i * 60)
 
 daysBefore :: Int -> MinutesTime -> MinutesTime
 daysBefore i mt = minutesBefore (i * 60 * 24) mt
+
+daysAfter :: Int -> MinutesTime -> MinutesTime
+daysAfter i mt = minutesAfter (i * 60 * 24) mt
 
 monthsBefore :: Int -> MinutesTime -> MinutesTime
 monthsBefore i mt = daysBefore (i * 31) mt

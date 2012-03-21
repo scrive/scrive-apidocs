@@ -626,6 +626,15 @@ color: white;
     background-repeat: no-repeat;
     background-position: center center;
 }
+.loadingMail
+{
+    margin-left:40%;
+    margin-right:40%;
+    height: 400px;
+    background-image: url(images/wait30trans.gif);
+    background-repeat: no-repeat;
+    background-position: center center;
+}
 .pagejpg
 {
     width: 943px;
@@ -3032,4 +3041,29 @@ a#attachmentback {
     font-weight: bold;
     font-family: "Courier New", Courier, monospace;
 
+}
+
+.inlineEditing .acceptIcon {
+    height:14px;
+    width:14px;
+    margin:2px;
+    display: block;
+    float:right;
+    background: url("../img/spr-icons.png") no-repeat scroll 0 0 transparent;
+    background-position: -171px 0px;
+    width: 14px;
+    float:right;
+}
+.inlineEditing {
+    border: 1px solid #DDDDDD;
+    height: 18px;
+}
+.inlineEditing input{
+    border: 0px solid #DDDDDD;
+    float: left;
+    padding: 0px;
+    margin: 0px;
+}
+.inlineEditing input:focus{
+    outline:0px;
 }

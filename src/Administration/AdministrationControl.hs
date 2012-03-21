@@ -72,9 +72,11 @@ import Doc.DocSeal (sealDocument)
 import Util.HasSomeUserInfo
 import InputValidation
 import User.Utils
+import ScriveByMail.Model
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString as BSS
 import qualified Data.ByteString.UTF8 as BS
+import Crypto.RNG(random)
 
 import InspectXMLInstances ()
 import InspectXML
@@ -115,7 +117,10 @@ showAdminCompanies :: Kontrakcja m => m String
 showAdminCompanies = onlySalesOrAdmin $  adminCompaniesPage
 
 showAdminCompany :: Kontrakcja m => CompanyID -> m String
-showAdminCompany companyid = onlySalesOrAdmin $ adminCompanyPage =<< (guardJustM . runDBQuery $ GetCompany companyid)
+showAdminCompany companyid = onlySalesOrAdmin $ do
+  company  <- guardJustM . runDBQuery $ GetCompany companyid
+  mmailapi <- runDBQuery $ GetCompanyMailAPI companyid
+  adminCompanyPage company mmailapi
 
 jsonCompanies :: Kontrakcja m => m JSValue
 jsonCompanies = onlySalesOrAdmin $ do
@@ -414,6 +419,10 @@ handleCompanyChange companyid = onlySalesOrAdmin $ do
   company <- runDBOrFail $ dbQuery $ GetCompany companyid
   companyInfoChange <- getCompanyInfoChange
   _ <- runDBUpdate $ SetCompanyInfo companyid (companyInfoChange $ companyinfo company)
+  mmailapi <- runDBQuery $ GetCompanyMailAPI companyid
+  when_ (isNothing mmailapi) $ do
+    key <- random
+    runDBUpdate $ SetCompanyMailAPIKey companyid key 1000
   return $ LinkCompanyAdmin $ Just companyid
 
 handleCreateUser :: Kontrakcja m => m KontraLink
@@ -481,6 +490,7 @@ getCompanyInfoChange = do
   mcompanyzip     <- getFieldUTF "companyzip"
   mcompanycity    <- getFieldUTF "companycity"
   mcompanycountry <- getFieldUTF "companycountry"
+  mcompanyemaildomain <- getFieldUTF "companyemaildomain"
   return $ \CompanyInfo {
       companyname
     , companynumber
@@ -495,6 +505,9 @@ getCompanyInfoChange = do
       , companyzip = fromMaybe companyzip mcompanyzip
       , companycity  = fromMaybe companycity mcompanycity
       , companycountry = fromMaybe companycountry mcompanycountry
+      , companyemaildomain = case mcompanyemaildomain of
+                               Just a | not $ BSS.null a -> Just a
+                               _                         -> Nothing
     }
 
 {- | Reads params and returns function for conversion of user settings.  No param leaves fields unchanged -}
@@ -681,7 +694,7 @@ instance HasFunctionalityStats Document where
     ]
     where
       anyField p doc =
-        any p . concat . map (signatoryfields . signatorydetails) $ documentsignatorylinks doc
+        any p . concatMap (signatoryfields . signatorydetails) $ documentsignatorylinks doc
       hasPlacement SignatoryField{sfPlacements} = not $ null sfPlacements
       isCustom SignatoryField{sfType} =
         case sfType of
@@ -702,9 +715,13 @@ showDocuments = onlySalesOrAdmin $ adminDocuments =<< getContext
 jsonDocuments :: Kontrakcja m => m JSValue
 jsonDocuments = onlySalesOrAdmin $ do
     srvs <- runDBQuery $ GetServices
+    Log.debug "Document list for admin per service"
     docs <- join <$> (sequence $ map (runDBQuery . GetDocuments) (Nothing:(map (Just . serviceid) srvs)))
+    Log.debug $ "Total document found:" ++ show (length docs)
     params <- getListParamsNew
     let documents = documentsSortSearchPage params docs
+    Log.debug $ "Document on current list:" ++ show (length $ list documents)
+    Log.debug $ "Force execution due to stack overflow:" ++ show (length $ show $ list documents)
     return $ JSObject
            $ toJSObject
             [("list", JSArray $ map (\doc -> 
@@ -900,7 +917,7 @@ companyClosedFilesZip cid start _filenamefordownload = onlyAdmin $ do
 companyFilesArchive :: Kontrakcja m => CompanyID -> Int -> m Archive
 companyFilesArchive cid start = do
     Log.debug $ "Getting all files archive for company " ++ show cid
-    docs <- runDB $ dbQuery $ GetDocumentsByCompanyAndTags Nothing cid []
+    docs <- runDB $ dbQuery $ GetDocumentsByCompanyWithFiltering Nothing cid [] Nothing Nothing Nothing
     let cdocs = sortBy (\d1 d2 -> compare (documentid d1) (documentid d2)) $ filter (\doc -> documentstatus doc == Closed)  $ docs
     let sdocs = take zipCount $ drop (zipCount*start) $ cdocs
     Log.debug $ "Found  " ++ show (length $ filter (\doc -> documentstatus doc == Closed)  $ docs) ++ "document"
@@ -908,6 +925,7 @@ companyFilesArchive cid start = do
     return $ foldr addEntryToArchive emptyArchive $ map fromJust $ filter isJust $ mentries
   where
     zipCount = 80
+    
 docToEntry ::  Kontrakcja m => Document -> m (Maybe Entry)
 docToEntry doc = do
       let snpart = concat $ for (take 5 $ documentsignatorylinks doc) $ \sl -> (take 8 $ BS.toString $ getFirstName sl) ++ "_"++(take 8 $ BS.toString $ getFirstName sl) ++ "_"

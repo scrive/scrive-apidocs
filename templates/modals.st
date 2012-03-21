@@ -211,7 +211,7 @@ modalAccountSetup=
 window.onload = function() {
 jQuery('form[action="$signuplink$"]').submit(function(){
     var callback = function(t,e,v) {
-        e.css("background", "red"); 
+        e.css("background", "red");
         jQuery(document.createElement('div'))
             .attr("name", "validate-message")
             .addClass('failed-validation')
@@ -375,7 +375,6 @@ modalSignedViewClosedHasAccountNotLoggedIn=
     <div class="modal-footer">
       <div class="float-left">
         <a class="close cancel">$_close()$</a>
-        <a href="#" class="txt-link message">$_modalSignedViewClosedHasAccountNotLoggedInFooterForgottenPassword()$</a>
       </div>
       <a href="#" class="btn-small blue float-right submit">
         <div class="left"></div>
@@ -719,7 +718,7 @@ accountFromSignScript=
 window.onload = function() {
 jQuery('#accountFromSignForm').submit(function(){
     var callback = function(t,e,v) {
-        e.css("background", "red"); 
+        e.css("background", "red");
         jQuery(document.createElement('div'))
             .attr("name", "validate-message")
             .addClass('failed-validation')
@@ -742,7 +741,7 @@ jQuery('#accountFromSignForm').submit(function(){
 
     var vresult = [
         password.validate(new PasswordValidation({
-              callback: callback 
+              callback: callback
             , message: localization.validation.passwordLessThanMinLength
             , message_max: localization.validation.passwordExceedsMaxLength
             , message_digits: localization.validation.passwordNeedsLetterAndDigit
@@ -1163,6 +1162,58 @@ modalUserSignupDone=
   <div class="modal-body">
     <div class="modal-content">
       <p>$_modalUserSignupDoneBody()$</p>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <a class="btn-small green float-right close">
+      <div class="left"></div>
+      <div class="label">
+        <p>$_close()$</p>
+        <div class="btn-symbol green arrow-left"></div>
+      </div>
+      <div class="right"></div>
+    </a>
+  </div>
+</div>
+#####
+modalDenyDelay=
+<div class="modal-container">
+  <div class="modal-header">
+    <span class="modal-icon message"></span>
+    <span class="modal-title">
+      <h3>$_signatoryMessageIfTimedout()$</h3>
+    </span>
+    <a class="modal-close close"> </a>
+  </div>
+  <div class="modal-body">
+    <div class="modal-content">
+      <p>$_modalDenyDelay()$</p>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <a class="btn-small green float-right close">
+      <div class="left"></div>
+      <div class="label">
+        <p>$_close()$</p>
+        <div class="btn-symbol green arrow-left"></div>
+      </div>
+      <div class="right"></div>
+    </a>
+  </div>
+</div>
+#####
+modalConfirmDelay=
+<div class="modal-container">
+  <div class="modal-header">
+    <span class="modal-icon message"></span>
+    <span class="modal-title">
+      <h3>$_modalUserSignupDoneHeader()$</h3>
+    </span>
+    <a class="modal-close close"> </a>
+  </div>
+  <div class="modal-body">
+    <div class="modal-content">
+      <p>$_modalConfirmDelay()$</p>
     </div>
   </div>
   <div class="modal-footer">

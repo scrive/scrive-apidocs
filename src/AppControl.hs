@@ -15,7 +15,7 @@ import AppConf
 import API.Service.Model
 
 import AppView as V
-import Crypto.RNG (CryptoRNGState)
+import Crypto.RNG (CryptoRNGState, random, inIO)
 import DB.Classes
 import Doc.DocStateData
 import Kontra
@@ -200,7 +200,8 @@ appHandler handleRoutes appConf appGlobals = do
       let newelegtrans = ctxelegtransactions ctx'
       let newmagichashes = ctxmagichashes ctx'
       F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
-      updateSessionWithContextData session newsessionuser newelegtrans newmagichashes
+      rng <- inIO (cryptorng appGlobals) random
+      updateSessionWithContextData rng session newsessionuser newelegtrans newmagichashes
       stats <- liftIO $ getNexusStats (nexus $ ctxdbenv ctx')
 
       Log.debug $ "SQL for " ++ rqUri rq ++ ": " ++ show stats

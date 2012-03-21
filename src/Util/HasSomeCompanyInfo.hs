@@ -26,7 +26,7 @@ class HasSomeCompanyInfo a where
   getCompanyNumber :: a -> BS.ByteString
 
 instance HasSomeCompanyInfo Company where
-  getCompanyName   = companyname . companyinfo
+  getCompanyName   = companyname   . companyinfo
   getCompanyNumber = companynumber . companyinfo
 
 instance HasSomeCompanyInfo (Maybe Company) where
@@ -38,7 +38,7 @@ instance HasSomeCompanyInfo SignatoryDetails where
   getCompanyNumber = getValueOfType CompanyNumberFT
 
 instance HasSomeCompanyInfo SignatoryLink where
-  getCompanyName   = getCompanyName . signatorydetails
+  getCompanyName   = getCompanyName   . signatorydetails
   getCompanyNumber = getCompanyNumber . signatorydetails
 
 instance HasSomeCompanyInfo Document where

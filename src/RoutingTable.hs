@@ -26,7 +26,7 @@ import qualified Doc.DocControl as DocControl
 import qualified Archive.Control as ArchiveControl
 import qualified ELegitimation.BankID as BankID
 import qualified User.UserControl as UserControl
-import qualified API.MailAPI as MailAPI
+import qualified ScriveByMail.Control as MailAPI
 import Doc.API
 
 import Control.Monad.Error
@@ -75,7 +75,8 @@ staticRoutes = choice
      , dir "sitemap"         $ hGetAllowHttp $ handleSitemapPage
 
      -- this is SMTP to HTTP gateway
-     , dir "mailapi" $ hPostNoXToken $ toK0 $ MailAPI.handleMailAPI
+     , dir "mailapi" $ hPostNoXToken             $ toK0 $ MailAPI.handleMailAPI
+     , dir "mailapi" $ dir "confirmdelay" $ hGet $ toK3 $ MailAPI.handleConfirmDelay
 
      -- Only download function | unified for author and signatories
      , dir "download"                     $ hGet  $ toK3 $ DocControl.handleDownloadFile
@@ -86,7 +87,9 @@ staticRoutes = choice
      , dir "s" $ hGet $ toK3    $ DocControl.handleSignShowOldRedirectToNew -- Redirect for old version to version above, remove not earlier then 31.12.2012.
 
      , dir "s" $ param "sign"           $ hPostNoXToken $ toK2 $ DocControl.signDocument
+     , dir "s" $ param "sign"           $ hPostNoXToken $ toK3 $ DocControl.signDocumentIphoneCase
      , dir "s" $ param "reject"         $ hPostNoXToken $ toK2 $ DocControl.rejectDocument
+     , dir "s" $ param "reject"         $ hPostNoXToken $ toK3 $ DocControl.rejectDocumentIphoneCase
      , dir "s" $ param "acceptaccount"  $ hPostNoXToken $ toK3 $ DocControl.handleAcceptAccountFromSign
      , dir "s" $ param "sigattachment"  $ hPostNoXToken $ toK2 $ DocControl.handleSigAttach
      , dir "s" $ param "deletesigattachment" $ hPostNoXToken $ toK2 $ DocControl.handleDeleteSigAttach
@@ -131,7 +134,7 @@ staticRoutes = choice
      , dir "d" $ param "archive"   $ hPost $ toK0 $ ArchiveControl.handleContractArchive
      , dir "d" $ param "remind"    $ hPost $ toK0 $ DocControl.handleBulkContractRemind
      , dir "d"                     $ hPost $ toK1 $ DocControl.handleIssueShowPost
-     , dir "docs"                  $ hGet  $ toK0 $ DocControl.jsonDocumentsList
+     , dir "docs"                  $ hGet  $ toK0 $ ArchiveControl.jsonDocumentsList
      , dir "doc"                   $ hGet  $ toK1 $ DocControl.jsonDocument
      , dir "save"                  $ hPost $ toK1 $ DocControl.handleSaveDraft
      , dir "setattachments"        $ hPost $ toK1 $ DocControl.handleSetAttachments -- Since setting attachments can have file upload, we need extra handler for it.

@@ -114,7 +114,7 @@ handleDocStatsCSV = onlySalesOrAdmin $ do
   let docstatsheader = ["userid", "user", "date", "event", "count", "docid", "serviceid", "company", "companyid", "doctype"]
   csvstrings <- docStatsToString stats [] []
   let csv = toCSV docstatsheader csvstrings
-  Log.debug $ "All doc stats length: " ++ (show $ length stats)
+  Log.debug $ "All doc stats length: " ++ (show $ length stats) ++ " " ++ (show $ length $ show csv)
   ok $ setHeader "Content-Disposition" "attachment;filename=docstats.csv"
      $ setHeader "Content-Type" "text/csv"
      $ toResponse csv

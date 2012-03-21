@@ -220,7 +220,6 @@ window.CompanyBrandingLogoView = Backbone.View.extend({
     }).input();
 
     this.customdiv = $("<div />");
-    this.customdiv.append($("<div class='logonote' />").append(localization.recommendedLogoSize));
     this.customdiv.append($("<div class='logocustomise' />").append(this.upload));
 
     var container = $("<div/>");
@@ -376,6 +375,19 @@ window.CompanyBrandingSampleView = Backbone.View.extend({
 
     return this;
   },
+  renderLogoWithSrc: function(src) {
+    console.log("rendering logo with src " + src);
+    var img = $("<img />");
+    img.attr("src", src);
+
+    this.logo.empty();
+    this.logo.append(img);
+
+    img.hide();
+    img.fadeIn();
+
+    return this.logo;
+  },
   render: function() {
     var company = this.model;
 
@@ -383,10 +395,7 @@ window.CompanyBrandingSampleView = Backbone.View.extend({
     var bbcolour = company.barsbackground().colour();
     var btcolour = company.barstextcolour().colour();
 
-    console.log("displaying logo " + logourl);
-    this.logo.hide();
-    this.logo.css("background-image", "url('" + location.protocol + "//" + location.host + logourl + "')");
-    this.logo.show();
+    this.renderLogoWithSrc(location.protocol + "//" + location.host + logourl);
     if (company.logo().loading()) {
       this.header.css("background-color", "transparent");
     } else {

@@ -12,21 +12,18 @@ module User.Model (
   , InviteInfo(..)
   , User(..)
   , UserInfo(..)
-  , UserMailAPI(..)
   , UserSettings(..)
   , GetUsers(..)
   , GetUserByID(..)
   , GetUserByEmail(..)
   , GetCompanyAccounts(..)
   , GetInviteInfo(..)
-  , GetUserMailAPI(..)
   , SetUserCompany(..)
   , DeleteUser(..)
   , AddUser(..)
   , SetUserEmail(..)
   , SetUserPassword(..)
   , SetInviteInfo(..)
-  , SetUserMailAPI(..)
   , SetUserInfo(..)
   , SetUserSettings(..)
   , SetPreferredDesignMode(..)
@@ -38,7 +35,7 @@ module User.Model (
 
 import Control.Applicative
 import Data.Data
-import Data.Int
+--import Data.Int
 import Database.HDBC
 import Happstack.State
 import qualified Control.Exception as E
@@ -50,14 +47,13 @@ import DB.Classes
 import DB.Derive
 import DB.Fetcher2
 import DB.Utils
-import MagicHash (MagicHash)
+--import MagicHash (MagicHash)
 import MinutesTime
 import Misc
 import User.Lang
 import User.Locale
 import User.Password
 import User.Region
-import User.Tables
 import User.UserID
 
 -- newtypes
@@ -109,12 +105,6 @@ data UserInfo = UserInfo {
   , useremail           :: Email
   } deriving (Eq, Ord, Show)
 
-data UserMailAPI = UserMailAPI {
-    umapiKey          :: MagicHash
-  , umapiDailyLimit   :: Int32
-  , umapiSentToday    :: Int32
-  } deriving (Eq, Ord, Show)
-
 data UserSettings  = UserSettings {
     preferreddesignmode :: Maybe DesignMode
   , locale              :: Locale
@@ -130,31 +120,31 @@ instance HasLocale UserSettings where
 data GetUsers = GetUsers
 instance DBQuery GetUsers [User] where
   dbQuery GetUsers = do
-    kPrepare $ selectUsersSQL ++ " WHERE u.deleted = FALSE ORDER BY u.first_name || ' ' || u.last_name DESC"
+    kPrepare $ selectUsersSQL ++ " WHERE deleted = FALSE ORDER BY first_name || ' ' || last_name DESC"
     _ <- kExecute []
     fetchUsers
 
 data GetUserByID = GetUserByID UserID
 instance DBQuery GetUserByID (Maybe User) where
   dbQuery (GetUserByID uid) = do
-    kPrepare $ selectUsersSQL ++ " WHERE u.id = ? AND u.deleted = FALSE"
+    kPrepare $ selectUsersSQL ++ " WHERE id = ? AND deleted = FALSE"
     _ <- kExecute [toSql uid]
     fetchUsers >>= oneObjectReturnedGuard
 
 data GetUserByEmail = GetUserByEmail (Maybe ServiceID) Email
 instance DBQuery GetUserByEmail (Maybe User) where
   dbQuery (GetUserByEmail msid email) = do
-    kPrepare $ selectUsersSQL ++ " WHERE u.deleted = FALSE AND u.service_id IS NOT DISTINCT FROM ? AND u.email = ?"
+    kPrepare $ selectUsersSQL ++ " WHERE deleted = FALSE AND service_id IS NOT DISTINCT FROM ? AND email = ?"
     _ <- kExecute [toSql msid, toSql email]
     fetchUsers >>= oneObjectReturnedGuard
 
 data GetCompanyAccounts = GetCompanyAccounts CompanyID
 instance DBQuery GetCompanyAccounts [User] where
   dbQuery (GetCompanyAccounts cid) = do
-    kPrepare $ selectUsersSQL ++ " WHERE u.company_id = ? AND u.deleted = FALSE ORDER BY u.email DESC"
+    kPrepare $ selectUsersSQL ++ " WHERE company_id = ? AND deleted = FALSE ORDER BY email DESC"
     _ <- kExecute [toSql cid]
     fetchUsers
-
+    
 data GetInviteInfo = GetInviteInfo UserID
 instance DBQuery GetInviteInfo (Maybe InviteInfo) where
   dbQuery (GetInviteInfo uid) = do
@@ -166,19 +156,6 @@ instance DBQuery GetInviteInfo (Maybe InviteInfo) where
           userinviter = inviter_id
         , invitetime = invite_time
         , invitetype = invite_type
-        } : acc
-
-data GetUserMailAPI = GetUserMailAPI UserID
-instance DBQuery GetUserMailAPI (Maybe UserMailAPI) where
-  dbQuery (GetUserMailAPI uid) = do
-    kPrepare "SELECT key, daily_limit, (CASE WHEN last_sent_date = now()::DATE THEN sent_today ELSE 0 END) FROM user_mail_apis WHERE user_id = ?"
-    _ <- kExecute [toSql uid]
-    foldDB fetchUserMailAPIs [] >>= oneObjectReturnedGuard
-    where
-      fetchUserMailAPIs acc key daily_limit sent_today = UserMailAPI {
-          umapiKey = key
-        , umapiDailyLimit = daily_limit
-        , umapiSentToday = sent_today
         } : acc
 
 data SetUserCompany = SetUserCompany UserID (Maybe CompanyID)
@@ -206,15 +183,12 @@ instance DBUpdate AddUser (Maybe User) where
     let handle e = case e of
           NoObject{} -> return Nothing
           _ -> E.throw e
-    _ <- kRunRaw "LOCK TABLE users IN ACCESS EXCLUSIVE MODE"
     mu <- dbQuery (GetUserByEmail msid $ Email email) `catchDB` handle
     case mu of
       Just _ -> return Nothing -- user with the same email address exists
       Nothing -> do
-        uid <- getUniqueID tableUsers
-        kPrepare $ "INSERT INTO users ("
-          ++ "  id"
-          ++ ", password"
+        kPrepare $ "INSERT INTO users"
+          ++ "( password"
           ++ ", salt"
           ++ ", is_company_admin"
           ++ ", account_suspended"
@@ -232,10 +206,11 @@ instance DBUpdate AddUser (Maybe User) where
           ++ ", preferred_design_mode"
           ++ ", lang"
           ++ ", region"
-          ++ ", deleted) VALUES (?, decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        _ <- kExecute $ [
-            toSql uid
-          , toSql $ pwdHash <$> mpwd
+          ++ ", deleted) VALUES (decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+          ++ " RETURNING " ++ selectUsersSelectors
+
+        _ <- kExecute $
+          [ toSql $ pwdHash <$> mpwd
           , toSql $ pwdSalt <$> mpwd
           , toSql iscompadmin
           , toSql False
@@ -252,7 +227,7 @@ instance DBUpdate AddUser (Maybe User) where
             , toSql $ getRegion l
             , toSql False
             ]
-        dbQuery $ GetUserByID uid
+        fetchUsers >>= oneObjectReturnedGuard
 
 data SetUserEmail = SetUserEmail (Maybe ServiceID) UserID Email
 instance DBUpdate SetUserEmail Bool where
@@ -308,47 +283,6 @@ instance DBUpdate SetInviteInfo Bool where
           Nothing -> do
             kPrepare "DELETE FROM user_invite_infos WHERE user_id = ?"
             kExecute01 [toSql uid]
-      else return False
-
-data SetUserMailAPI = SetUserMailAPI UserID (Maybe UserMailAPI)
-instance DBUpdate SetUserMailAPI Bool where
-  dbUpdate (SetUserMailAPI uid musermailapi) = do
-    exists <- checkIfUserExists uid
-    if exists
-      then case musermailapi of
-        Just mailapi -> do
-          _ <- kRunRaw "LOCK TABLE user_mail_apis IN ACCESS EXCLUSIVE MODE"
-          rec_exists <- checkIfAnyReturned $ SQL "SELECT 1 FROM user_mail_apis WHERE user_id = ?" [toSql uid]
-          if rec_exists
-            then do
-              kPrepare $ "UPDATE user_mail_apis SET"
-                  ++ "  key = ?"
-                  ++ ", daily_limit = ?"
-                  ++ ", sent_today = ?"
-                  ++ ", last_sent_date = now()"
-                  ++ "  WHERE user_id = ?"
-              kExecute01 [
-                  toSql $ umapiKey mailapi
-                , toSql $ umapiDailyLimit mailapi
-                , toSql $ umapiSentToday mailapi
-                , toSql uid
-                ]
-            else do
-              kPrepare $ "INSERT INTO user_mail_apis ("
-                ++ "  user_id"
-                ++ ", key"
-                ++ ", daily_limit"
-                ++ ", sent_today"
-                ++ ", last_sent_date) VALUES (?, ?, ?, ?, now())"
-              kExecute01 [
-                  toSql uid
-                , toSql $ umapiKey mailapi
-                , toSql $ umapiDailyLimit mailapi
-                , toSql $ umapiSentToday mailapi
-                ]
-        Nothing -> do
-          kPrepare "DELETE FROM user_mail_apis WHERE user_id = ?"
-          kExecute01 [toSql uid]
       else return False
 
 data SetUserInfo = SetUserInfo UserID UserInfo
@@ -436,29 +370,30 @@ checkIfUserExists uid = checkIfAnyReturned
   $ SQL "SELECT 1 FROM users WHERE id = ? AND deleted = FALSE" [toSql uid]
 
 selectUsersSQL :: String
-selectUsersSQL = "SELECT "
- ++ "  u.id"
- ++ ", encode(u.password, 'base64')"
- ++ ", encode(u.salt, 'base64')"
- ++ ", u.is_company_admin"
- ++ ", u.account_suspended"
- ++ ", u.has_accepted_terms_of_service"
- ++ ", u.signup_method"
- ++ ", u.service_id"
- ++ ", u.company_id"
- ++ ", u.first_name"
- ++ ", u.last_name"
- ++ ", u.personal_number"
- ++ ", u.company_position"
- ++ ", u.phone"
- ++ ", u.mobile"
- ++ ", u.email"
- ++ ", u.preferred_design_mode"
- ++ ", u.lang"
- ++ ", u.region"
- ++ ", u.customfooter"
- ++ "  FROM users u"
- ++ " "
+selectUsersSQL = "SELECT " ++ selectUsersSelectors ++ " FROM users"
+
+selectUsersSelectors :: String
+selectUsersSelectors =
+ "  id"
+ ++ ", encode(password, 'base64')"
+ ++ ", encode(salt, 'base64')"
+ ++ ", is_company_admin"
+ ++ ", account_suspended"
+ ++ ", has_accepted_terms_of_service"
+ ++ ", signup_method"
+ ++ ", service_id"
+ ++ ", company_id"
+ ++ ", first_name"
+ ++ ", last_name"
+ ++ ", personal_number"
+ ++ ", company_position"
+ ++ ", phone"
+ ++ ", mobile"
+ ++ ", email"
+ ++ ", preferred_design_mode"
+ ++ ", lang"
+ ++ ", region"
+ ++ ", customfooter"
 
 fetchUsers :: DB [User]
 fetchUsers = foldDB decoder []

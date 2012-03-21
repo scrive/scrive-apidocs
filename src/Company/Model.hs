@@ -11,6 +11,8 @@ module Company.Model (
   , SetCompanyInfo(..)
   , UpdateCompanyUI(..)
   , GetOrCreateCompanyWithExternalID(..)
+  , GetCompanyByEmailDomain(..)
+  , SetCompanyEmailDomain(..)
   ) where
 
 import Data.Monoid
@@ -41,12 +43,13 @@ data Company = Company {
   } deriving (Eq, Ord, Show)
 
 data CompanyInfo = CompanyInfo {
-    companyname    :: BS.ByteString
-  , companynumber  :: BS.ByteString
-  , companyaddress :: BS.ByteString
-  , companyzip     :: BS.ByteString
-  , companycity    :: BS.ByteString
-  , companycountry :: BS.ByteString
+    companyname        :: BS.ByteString
+  , companynumber      :: BS.ByteString
+  , companyaddress     :: BS.ByteString
+  , companyzip         :: BS.ByteString
+  , companycity        :: BS.ByteString
+  , companycountry     :: BS.ByteString
+  , companyemaildomain :: Maybe BS.ByteString
   } deriving (Eq, Ord, Show)
 
 data CompanyUI = CompanyUI {
@@ -58,29 +61,26 @@ data CompanyUI = CompanyUI {
 data GetCompanies = GetCompanies (Maybe ServiceID)
 instance DBQuery GetCompanies [Company] where
   dbQuery (GetCompanies msid) = do
-    _ <- kRun $ selectCompaniesSQL <++> SQL "WHERE c.service_id IS NOT DISTINCT FROM ? ORDER BY c.id DESC" [toSql msid]
+    _ <- kRun $ selectCompaniesSQL <++> SQL "WHERE service_id IS NOT DISTINCT FROM ? ORDER BY id DESC" [toSql msid]
     fetchCompanies
 
 data GetCompany = GetCompany CompanyID
 instance DBQuery GetCompany (Maybe Company) where
   dbQuery (GetCompany cid) = do
-    _ <- kRun $ selectCompaniesSQL <++> SQL "WHERE c.id = ?" [toSql cid]
+    _ <- kRun $ selectCompaniesSQL <++> SQL "WHERE id = ?" [toSql cid]
     fetchCompanies >>= oneObjectReturnedGuard
 
 data GetCompanyByExternalID = GetCompanyByExternalID (Maybe ServiceID) ExternalCompanyID
 instance DBQuery GetCompanyByExternalID (Maybe Company) where
   dbQuery (GetCompanyByExternalID msid ecid) = do
-    _ <- kRun $ selectCompaniesSQL <++> SQL "WHERE c.service_id IS NOT DISTINCT FROM ? AND c.external_id = ?" [toSql msid, toSql ecid]
+    _ <- kRun $ selectCompaniesSQL <++> SQL "WHERE service_id IS NOT DISTINCT FROM ? AND external_id = ?" [toSql msid, toSql ecid]
     fetchCompanies >>= oneObjectReturnedGuard
 
 data CreateCompany = CreateCompany (Maybe ServiceID) (Maybe ExternalCompanyID)
 instance DBUpdate CreateCompany Company where
   dbUpdate (CreateCompany msid mecid) = do
-    _ <- kRunRaw "LOCK TABLE companies IN ACCESS EXCLUSIVE MODE"
-    cid <- getUniqueID tableCompanies
-    _ <- kRun $ mkSQL INSERT tableCompanies [
-        sql "id" cid
-      , sql "external_id" mecid
+    _ <- kRun $ mkSQL INSERT tableCompanies
+      [ sql "external_id" mecid
       , sql "service_id" msid
       , sql "name" ""
       , sql "number" ""
@@ -88,8 +88,8 @@ instance DBUpdate CreateCompany Company where
       , sql "zip" ""
       , sql "city" ""
       , sql "country" ""
-      ]
-    dbQuery (GetCompany cid) >>= maybe (E.throw $ NoObject mempty) return
+      ] <++> SQL (" RETURNING " ++ selectCompaniesSelectors) []
+    fetchCompanies >>= oneObjectReturnedGuard >>= maybe (E.throw $ NoObject mempty) return
 
 data SetCompanyInfo = SetCompanyInfo CompanyID CompanyInfo
 instance DBUpdate SetCompanyInfo Bool where
@@ -101,6 +101,7 @@ instance DBUpdate SetCompanyInfo Bool where
       , sql "zip" companyzip
       , sql "city" companycity
       , sql "country" companycountry
+      , sql "email_domain" companyemaildomain
       ] <++> SQL "WHERE id = ?" [toSql cid]
 
 data UpdateCompanyUI = UpdateCompanyUI CompanyID CompanyUI
@@ -128,28 +129,29 @@ instance DBUpdate GetOrCreateCompanyWithExternalID Company where
 
 -- helpers
 
+selectCompaniesSelectors :: String
+selectCompaniesSelectors = "id"
+  ++ ", external_id"
+  ++ ", service_id"
+  ++ ", name"
+  ++ ", number"
+  ++ ", address"
+  ++ ", zip"
+  ++ ", city"
+  ++ ", country"
+  ++ ", bars_background"
+  ++ ", bars_textcolour"
+  ++ ", encode(logo, 'base64')"
+  ++ ", email_domain"
+
 selectCompaniesSQL :: SQL
-selectCompaniesSQL = SQL ("SELECT"
-  ++ "  c.id"
-  ++ ", c.external_id"
-  ++ ", c.service_id"
-  ++ ", c.name"
-  ++ ", c.number"
-  ++ ", c.address"
-  ++ ", c.zip"
-  ++ ", c.city"
-  ++ ", c.country"
-  ++ ", c.bars_background"
-  ++ ", c.bars_textcolour"
-  ++ ", encode(c.logo, 'base64')"
-  ++ "  FROM companies c"
-  ++ " ") []
+selectCompaniesSQL = SQL ("SELECT " ++ selectCompaniesSelectors ++ " FROM companies ") []
 
 fetchCompanies :: DB [Company]
 fetchCompanies = foldDB decoder []
   where
     decoder acc cid eid sid name number address zip' city country
-      bars_background bars_textcolour logo = Company {
+      bars_background bars_textcolour logo email_domain = Company {
         companyid = cid
       , companyexternalid = eid
       , companyservice = sid
@@ -160,6 +162,7 @@ fetchCompanies = foldDB decoder []
         , companyzip = zip'
         , companycity = city
         , companycountry = country
+        , companyemaildomain = email_domain
         }
       , companyui = CompanyUI {
           companybarsbackground = bars_background
@@ -167,3 +170,15 @@ fetchCompanies = foldDB decoder []
         , companylogo = logo
         }
       } : acc
+
+data SetCompanyEmailDomain = SetCompanyEmailDomain CompanyID (Maybe String)
+instance DBUpdate SetCompanyEmailDomain Bool where
+  dbUpdate (SetCompanyEmailDomain cid mdomain) = do    
+    kPrepare $ "UPDATE companies SET email_domain = ? WHERE id = ? AND NOT EXISTS (SELECT 1 FROM companies WHERE email_domain = ?)"
+    kExecute01 [toSql mdomain, toSql cid, toSql mdomain]
+    
+data GetCompanyByEmailDomain = GetCompanyByEmailDomain String
+instance DBQuery GetCompanyByEmailDomain (Maybe Company) where
+  dbQuery (GetCompanyByEmailDomain domain) = do
+    _ <- kRun $ selectCompaniesSQL <++> SQL "WHERE email_domain = ?" [toSql domain]
+    fetchCompanies >>= oneObjectReturnedGuard

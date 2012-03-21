@@ -1,3 +1,4 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -fcontext-stack=50  #-}
 module Doc.Model
   ( module File.File
@@ -26,7 +27,7 @@ module Doc.Model
   , GetDeletedDocumentsByUser(..)
   , GetDocumentByDocumentID(..)
   , GetDocuments(..)
-  , GetDocumentsByCompanyAndTags(..)
+  , GetDocumentsByCompanyWithFiltering(..)
   , GetDocumentsByAuthor(..)
   , GetTemplatesByAuthor(..)
   , GetAvaibleTemplates(..)
@@ -67,8 +68,8 @@ module Doc.Model
   , TemplateFromDocument(..)
   , TimeoutDocument(..)
   , UpdateFields(..)
+  , SetSigAttachments(..)
   , UpdateFieldsNoStatusCheck(..)
-  , UpdateSigAttachments(..)
   , UpdateDraft(..)
   , SetDocumentModificationData(..)
   ) where
@@ -86,14 +87,15 @@ import User.UserID
 import User.Model
 import Company.Model
 import MinutesTime
+import OurPrelude
 import Doc.DocStateData
 import Doc.Invariants
 import Database.HDBC
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
-import Data.Maybe
+import Data.Maybe hiding (fromJust)
 import Misc
-import Data.List
+import Data.List hiding (tail, head)
 import Data.Monoid
 import qualified Data.Map as M
 import Doc.Tables
@@ -105,7 +107,6 @@ import qualified Log
 import Control.Monad.IO.Class
 import Control.Monad
 import qualified Control.Exception as E
-import File.Model
 import Util.MonadUtils
 
 import EvidenceLog.Model
@@ -154,11 +155,10 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
   where
     message = "Documents aren't equal in " ++ concat (map showInequality inequalities)
     showInequality (name,obj1,obj2) = name ++ ": \n" ++ obj1 ++ "\n" ++ obj2 ++ "\n"
-    sl1 = sort $ documentsignatorylinks d1
-    sl2 = sort $ documentsignatorylinks d2
+    sl1 = documentsignatorylinks d1
+    sl2 = documentsignatorylinks d2
     checkSigLink s1 s2 = map (\f -> f s1 s2)
-                         [ checkEqualBy "signatorylinkid" signatorylinkid
-                         , checkEqualBy "signatorydetails" signatorydetails
+                         [ checkEqualBy "signatorydetails" signatorydetails
                          , checkEqualBy "signatorymagichash" signatorymagichash
                          , checkEqualByAllowSecondNothing "maybesignatory" maybesignatory
                          , checkEqualByAllowSecondNothing "maybesupervisor" maybesupervisor
@@ -175,9 +175,8 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                          ]
 
     inequalities = catMaybes $ map (\f -> f d1 d2)
-                   [ checkEqualBy "documentid" documentid
-                   , checkEqualBy "documenttitle" documenttitle
-                   --, checkEqualBy "documentfiles" documentfiles -- Mariusz: I skipped this test, since for migration I put drop files that are no avaible in database (broken)
+                   [ checkEqualBy "documenttitle" documenttitle
+                   , checkEqualBy "documentfiles" documentfiles
                    , checkEqualBy "documentsealedfiles" documentsealedfiles
                    , checkEqualBy "documentstatus" documentstatus
                    , checkEqualBy "documenttype" documenttype
@@ -197,7 +196,6 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documentservice" documentservice
                    , checkEqualBy "documentdeleted" documentdeleted
                    , checkEqualBy "documentauthorattachments" documentauthorattachments
-                   , checkEqualBy "documentsignatoryattachments" documentsignatoryattachments
                    , checkEqualBy "documentui" documentui
                    , checkEqualBy "documentregion" documentregion
                    , checkEqualBy "documentsignatorylinks count" (length . documentsignatorylinks)
@@ -282,13 +280,12 @@ fetchDocuments = foldDB decoder []
        , documentservice = service
        , documentdeleted = deleted
        , documentauthorattachments = []
-       , documentsignatoryattachments = []
        , documentui = DocumentUI mail_footer
        , documentregion = region
        } : acc
 
-signatoryLinksSelectors :: String
-signatoryLinksSelectors = intercalate ", " [
+signatoryLinksSelectorsWith :: String -> String
+signatoryLinksSelectorsWith i = intercalate i [
     "id"
   , "document_id"
   , "user_id"
@@ -317,57 +314,81 @@ signatoryLinksSelectors = intercalate ", " [
   , "really_deleted"
   ]
 
+signatoryLinksSelectors :: String
+signatoryLinksSelectors = signatoryLinksSelectorsWith ", "
+
 selectSignatoryLinksSQL :: SQL
 selectSignatoryLinksSQL = SQL ("SELECT "
-  ++ signatoryLinksSelectors
-  ++ " FROM signatory_links ") []
+  ++ signatoryLinksSelectorsWith ", sl."
+  ++ ", sa.file_id as sigfileid "
+  ++ ", sa.name as signame "
+  ++ ", sa.description as sigdesc "
+  ++ " FROM signatory_links sl "
+  ++ " LEFT JOIN signatory_attachments sa "
+  ++ " ON sa.document_id = sl.document_id "
+  ++ " AND sa.signatory_link_id = sl.id ") []
 
 fetchSignatoryLinks :: DB (M.Map DocumentID [SignatoryLink])
-fetchSignatoryLinks = foldDB decoder M.empty
+fetchSignatoryLinks = do
+  sigs <- foldDB decoder (nulldocid, [], M.empty)
+  return $ (\(d, l, m) -> M.insertWith' (++) d l m) sigs
   where
-    decoder acc slid document_id user_id company_id fields sign_order token
-     sign_time sign_ip seen_time seen_ip read_invitation invitation_delivery_status
-     signinfo_text signinfo_signature signinfo_certificate signinfo_provider
-     signinfo_first_name_verified signinfo_last_name_verified
-     signinfo_personal_number_verified roles csv_title csv_contents
-     csv_signatory_index deleted really_deleted =
-       M.insertWith' (++) document_id [SignatoryLink {
-           signatorylinkid = slid
-         , signatorydetails = SignatoryDetails {
-             signatorysignorder = sign_order
-           , signatoryfields = fields
-         }
-         , signatorymagichash = token
-         , maybesignatory = user_id
-         , maybesupervisor = Nothing
-         , maybecompany = company_id
-         , maybesigninfo = SignInfo <$> sign_time <*> sign_ip
-         , maybeseeninfo = SignInfo <$> seen_time <*> seen_ip
-         , maybereadinvite = read_invitation
-         , invitationdeliverystatus = invitation_delivery_status
-         , signatorysignatureinfo = do -- Maybe Monad
-             signinfo_text' <- signinfo_text
-             signinfo_signature' <- signinfo_signature
-             signinfo_certificate' <- signinfo_certificate
-             signinfo_provider' <- signinfo_provider
-             signinfo_first_name_verified' <- signinfo_first_name_verified
-             signinfo_last_name_verified' <- signinfo_last_name_verified
-             signinfo_personal_number_verified' <- signinfo_personal_number_verified
-             return $ SignatureInfo {
-                 signatureinfotext        = signinfo_text'
-               , signatureinfosignature   = signinfo_signature'
-               , signatureinfocertificate = signinfo_certificate'
-               , signatureinfoprovider    = signinfo_provider'
-               , signaturefstnameverified = signinfo_first_name_verified'
-               , signaturelstnameverified = signinfo_last_name_verified'
-               , signaturepersnumverified = signinfo_personal_number_verified'
-               }
-         , signatoryroles = roles
-         , signatorylinkdeleted = deleted
-         , signatorylinkreallydeleted = really_deleted
-         , signatorylinkcsvupload =
-             CSVUpload <$> csv_title <*> csv_contents <*> csv_signatory_index
-         }] acc
+    nulldocid = unsafeDocumentID $ -1
+    decoder (docid, links, linksmap) slid document_id user_id company_id fields
+     sign_order token sign_time sign_ip seen_time seen_ip read_invitation
+     invitation_delivery_status signinfo_text signinfo_signature signinfo_certificate
+     signinfo_provider signinfo_first_name_verified signinfo_last_name_verified
+     signinfo_personal_number_verified roles csv_title csv_contents csv_signatory_index
+     deleted really_deleted safileid saname sadesc
+      | docid == nulldocid                      = (document_id, [link], linksmap)
+      | docid /= document_id                    = (document_id, [link], M.insertWith' (++) docid links linksmap)
+      | signatorylinkid ($(head) links) == slid = (docid, addSigAtt ($(head) links) : $(tail) links, linksmap)
+      | otherwise                               = (docid, link : links, linksmap)
+      where
+        addSigAtt l = l { signatoryattachments = sigAtt ++ signatoryattachments l }
+        sigAtt = maybe [] (\name -> [SignatoryAttachment {
+            signatoryattachmentfile = safileid
+          , signatoryattachmentname = name
+          , signatoryattachmentdescription = fromMaybe BS.empty sadesc
+          }]) saname
+        link = SignatoryLink {
+            signatorylinkid = slid
+          , signatorydetails = SignatoryDetails {
+              signatorysignorder = sign_order
+            , signatoryfields = fields
+          }
+          , signatorymagichash = token
+          , maybesignatory = user_id
+          , maybesupervisor = Nothing
+          , maybecompany = company_id
+          , maybesigninfo = SignInfo <$> sign_time <*> sign_ip
+          , maybeseeninfo = SignInfo <$> seen_time <*> seen_ip
+          , maybereadinvite = read_invitation
+          , invitationdeliverystatus = invitation_delivery_status
+          , signatorysignatureinfo = do -- Maybe Monad
+              signinfo_text' <- signinfo_text
+              signinfo_signature' <- signinfo_signature
+              signinfo_certificate' <- signinfo_certificate
+              signinfo_provider' <- signinfo_provider
+              signinfo_first_name_verified' <- signinfo_first_name_verified
+              signinfo_last_name_verified' <- signinfo_last_name_verified
+              signinfo_personal_number_verified' <- signinfo_personal_number_verified
+              return $ SignatureInfo {
+                  signatureinfotext        = signinfo_text'
+                , signatureinfosignature   = signinfo_signature'
+                , signatureinfocertificate = signinfo_certificate'
+                , signatureinfoprovider    = signinfo_provider'
+                , signaturefstnameverified = signinfo_first_name_verified'
+                , signaturelstnameverified = signinfo_last_name_verified'
+                , signaturepersnumverified = signinfo_personal_number_verified'
+                }
+          , signatoryroles = roles
+          , signatorylinkdeleted = deleted
+          , signatorylinkreallydeleted = really_deleted
+          , signatorylinkcsvupload =
+              CSVUpload <$> csv_title <*> csv_contents <*> csv_signatory_index
+          , signatoryattachments = sigAtt
+          }
 
 insertSignatoryLinkAsIs :: DocumentID -> SignatoryLink -> DB (Maybe SignatoryLink)
 insertSignatoryLinkAsIs documentid link = do
@@ -385,8 +406,7 @@ insertSignatoryLinkAsIs documentid link = do
         Just _ -> return (Just userid1)
 
   _ <- kRun $ mkSQL INSERT tableSignatoryLinks [
-      sql "id" $ signatorylinkid link
-    , sql "document_id" documentid
+      sql "document_id" documentid
     , sql "user_id" $ ruserid
     , sql "roles" $ signatoryroles link
     , sql "company_id" $ maybecompany link
@@ -411,7 +431,7 @@ insertSignatoryLinkAsIs documentid link = do
     , sql "csv_signatory_index" $ csvsignatoryindex `fmap` signatorylinkcsvupload link
     , sql "deleted" $ signatorylinkdeleted link
     , sql "really_deleted" $ signatorylinkreallydeleted link
-    ] <++> SQL ("RETURNING " ++ signatoryLinksSelectors) []
+    ] <++> SQL ("RETURNING " ++ signatoryLinksSelectors ++ ", NULL, NULL, NULL") []
 
   fetchSignatoryLinks
     >>= oneObjectReturnedGuard . concatMap snd . M.toList
@@ -445,47 +465,9 @@ insertAuthorAttachmentAsIs documentid attach = do
   fetchAuthorAttachments
     >>= oneObjectReturnedGuard . concatMap snd . M.toList
 
-signatoryAttachmentsSelectors :: String
-signatoryAttachmentsSelectors = intercalate ", " [
-    "document_id"
-  , "file_id"
-  , "email"
-  , "name"
-  , "description"
-  ]
-
-selectSignatoryAttachmentsSQL :: SQL
-selectSignatoryAttachmentsSQL = SQL ("SELECT "
-  ++ signatoryAttachmentsSelectors
-  ++ " FROM signatory_attachments ") []
-
-fetchSignatoryAttachments :: DB (M.Map DocumentID [SignatoryAttachment])
-fetchSignatoryAttachments = foldDB decoder M.empty
-  where
-    decoder acc document_id file_id email name description =
-      M.insertWith' (++) document_id [SignatoryAttachment {
-          signatoryattachmentfile = file_id
-        , signatoryattachmentemail = email
-        , signatoryattachmentname = name
-        , signatoryattachmentdescription = description
-        }] acc
-
-insertSignatoryAttachmentAsIs :: DocumentID -> SignatoryAttachment -> DB (Maybe SignatoryAttachment)
-insertSignatoryAttachmentAsIs documentid attach = do
-  _ <- kRun $ mkSQL INSERT tableSignatoryAttachments [
-      sql "file_id" $ signatoryattachmentfile attach
-    , sql "document_id" $ documentid
-    , sql "email" $ signatoryattachmentemail attach
-    , sql "name" $ signatoryattachmentname attach
-    , sql "description" $ signatoryattachmentdescription attach
-    ] <++> SQL ("RETURNING " ++ signatoryAttachmentsSelectors) []
-  fetchSignatoryAttachments
-    >>= oneObjectReturnedGuard . concatMap snd . M.toList
-
 insertDocumentAsIs :: Document -> DB (Maybe Document)
 insertDocumentAsIs document = do
-    let Document { documentid
-                 , documenttitle
+    let Document { documenttitle
                  , documentsignatorylinks
                  , documentfiles
                  , documentsealedfiles
@@ -507,22 +489,16 @@ insertDocumentAsIs document = do
                  , documentservice
                  , documentdeleted
                  , documentauthorattachments
-                 , documentsignatoryattachments
                  , documentui
                  , documentregion
                  } = document
         process = toDocumentProcess documenttype
-    files <-  sequence $ map (dbQuery . GetFileByFileID)  documentfiles
-    let fileLost = (length $ concatMap maybeToList files) <  length documentfiles
-    when (fileLost) $
-        Log.error $ "!!!!MIGRATION WARN: Document  " ++ (show documentid) ++ " has files ("++ show documentfiles ++ "), but they are not in database. FileID will be dropped."
-            ++ "Document was created "++ show documentctime
+
     _ <- kRun $ mkSQL INSERT tableDocuments [
-        sql "id" documentid
-      , sql "title" documenttitle
+        sql "title" documenttitle
       , sql "tags" documenttags
-      , sql "file_id" $ Nothing<| fileLost |> (listToMaybe documentfiles)
-      , sql "sealed_file_id" (listToMaybe documentsealedfiles)
+      , sql "file_id" $ listToMaybe documentfiles
+      , sql "sealed_file_id" $ listToMaybe documentsealedfiles
       , sql "status" documentstatus
       , sql "error_text" $ case documentstatus of
           DocumentError msg -> toSql msg
@@ -554,26 +530,22 @@ insertDocumentAsIs document = do
     case mdoc of
       Nothing -> return Nothing
       Just doc -> do
-        mlinks <- mapM (insertSignatoryLinkAsIs documentid) documentsignatorylinks
-        mauthorattachments <- mapM (insertAuthorAttachmentAsIs documentid) documentauthorattachments
-        msignatoryattachments <- mapM (insertSignatoryAttachmentAsIs documentid) documentsignatoryattachments
-        if any isNothing mlinks || any isNothing mauthorattachments || any isNothing msignatoryattachments
+        mlinks <- mapM (insertSignatoryLinkAsIs (documentid doc)) documentsignatorylinks
+        mauthorattachments <- mapM (insertAuthorAttachmentAsIs (documentid doc)) documentauthorattachments
+        if any isNothing mlinks || any isNothing mauthorattachments
          then return Nothing
          else do
           let newdocument = doc { documentsignatorylinks = catMaybes mlinks
                                 , documentauthorattachments = catMaybes mauthorattachments
-                                , documentsignatoryattachments = catMaybes msignatoryattachments
                                 }
           assertEqualDocuments document newdocument
           return (Just newdocument)
 
 insertNewDocument :: Document -> DB Document
 insertNewDocument doc = do
-  kRunRaw "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
-  docid <- getUniqueID tableDocuments
   now <- getMinutesTime
-  let docWithId = doc {documentid = docid, documentmtime  = now, documentctime = now}
-  newdoc <- insertDocumentAsIs docWithId
+  let docWithTime = doc {documentmtime  = now, documentctime = now}
+  newdoc <- insertDocumentAsIs docWithTime
   case newdoc of
     Just d -> return d
     Nothing -> error "insertNewDocument failed for some reason"
@@ -863,19 +835,19 @@ instance Actor a => DBUpdate (CloseDocument a) (Either String Document) where
             getOneDocumentAffected "CloseDocument" r docid
           s -> return $ Left $ "Cannot CloseDocument " ++ show docid ++ " because " ++ concat s
 
-data Actor a => DeleteSigAttachment a = DeleteSigAttachment DocumentID BS.ByteString FileID a
+data Actor a => DeleteSigAttachment a = DeleteSigAttachment DocumentID SignatoryLinkID FileID a
 instance Actor a => DBUpdate (DeleteSigAttachment a) (Either String Document) where
-  dbUpdate (DeleteSigAttachment did email fid actor) = do
+  dbUpdate (DeleteSigAttachment did slid fid actor) = do
     r <- kRun $ mkSQL UPDATE tableSignatoryAttachments [sql "file_id" SqlNull]
-      <++> SQL "WHERE document_id = ? AND email = ? AND file_id = ?" [
+      <++> SQL "WHERE document_id = ? AND file_id = ? AND signatory_link_id = ?" [
         toSql did
-      , toSql email
       , toSql fid
+      , toSql slid
       ]
     when_ (r == 1) $
       dbUpdate $ InsertEvidenceEvent
       DeleteSigAttachmentEvidence
-      ("Signatory attachment for signatory with email \"" ++ (BS.toString email) ++ "\" was deleted by " ++ actorWho actor ++ ".")
+      ("Signatory attachment for signatory was deleted by " ++ actorWho actor ++ ".")
       (Just did)
       actor
     getOneDocumentAffected "DeleteSigAttachment" r did
@@ -904,22 +876,19 @@ instance Actor a => DBUpdate (DocumentFromSignatoryData a) (Either String Docume
     toNewDoc :: Document -> Document
     toNewDoc d = d { documentsignatorylinks = map toNewSigLink (documentsignatorylinks d)
                     , documenttype = newDocType $ documenttype d
-                    , documentsignatoryattachments = map replaceCSV (documentsignatoryattachments d)
                     , documentctime = now
                     , documentmtime = now
                     }
-    replaceCSV :: SignatoryAttachment -> SignatoryAttachment
-    replaceCSV sa =
-      if signatoryattachmentemail sa == BS.fromString "csv"
-      then sa { signatoryattachmentemail = email }
-      else sa
     newDocType :: DocumentType -> DocumentType
     newDocType (Signable p) = Signable p
     newDocType (Template p) = Signable p
     newDocType dt = dt
     toNewSigLink :: SignatoryLink -> SignatoryLink
     toNewSigLink sl
-      | isJust (signatorylinkcsvupload sl) = pumpData sl { signatorylinkcsvupload = Nothing }
+      | isJust (signatorylinkcsvupload sl) = let pumpedData = pumpData sl 
+                                             in pumpedData { signatorylinkcsvupload = Nothing
+                                                           , signatoryattachments = signatoryattachments pumpedData
+                                                           }
       | otherwise = sl
     pumpData :: SignatoryLink -> SignatoryLink
     pumpData siglink = replaceSignatoryData siglink fstname sndname email company personalnumber companynumber fieldvalues
@@ -953,14 +922,11 @@ selectDocuments query = do
     _ <- kRun $ SQL "SELECT * FROM docs" []
     docs <- fetchDocuments
 
-    _ <- kRun $ selectSignatoryLinksSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE signatory_links.document_id = docs.id) ORDER BY document_id DESC, internal_insert_order DESC" []
+    _ <- kRun $ selectSignatoryLinksSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE sl.document_id = docs.id) ORDER BY document_id DESC, internal_insert_order DESC" []
     sls <- fetchSignatoryLinks
 
     _ <- kRun $ selectAuthorAttachmentsSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE author_attachments.document_id = docs.id) ORDER BY document_id DESC" []
     ats <- fetchAuthorAttachments
-
-    _ <- kRun $ selectSignatoryAttachmentsSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE signatory_attachments.document_id = docs.id) ORDER BY document_id DESC" []
-    sas <- fetchSignatoryAttachments
 
     kRunRaw "DROP TABLE docs"
 
@@ -970,7 +936,6 @@ selectDocuments query = do
         fill doc = doc {
             documentsignatorylinks       = findEmpty doc sls
           , documentauthorattachments    = findEmpty doc ats
-          , documentsignatoryattachments = findEmpty doc sas
           }
 
     return $ map fill docs
@@ -989,13 +954,24 @@ instance DBQuery GetDocuments [Document] where
       <++> SQL "WHERE service_id IS NOT DISTINCT FROM ?" [toSql msid]
 
 {- |
-    Fetches documents by company and tags, this won't return documents that have been deleted (so ones
+    Fetches documents by company with filtering by tags, edate, and status.
+    this won't return documents that have been deleted (so ones
     that would appear in the recycle bin//trash can.)  It also makes sure to respect the sign order in
     cases where the company is linked via a signatory that hasn't yet been activated.
+
+    Filters
+    ----------------------------
+    Service must match
+    CompanyID must match Author
+    Author must not be deleted
+    All DocumentTags must be present and match (currently still done in Haskell)
+    If isJust stime, the last change on the document must be greater than or equal to stime
+    if isJust ftime, the last change on the document must be less than or equal to ftime
+    if isJust statuses, the document status must be element of statuses
 -}
-data GetDocumentsByCompanyAndTags = GetDocumentsByCompanyAndTags (Maybe ServiceID) CompanyID [DocumentTag]
-instance DBQuery GetDocumentsByCompanyAndTags [Document] where
-  dbQuery (GetDocumentsByCompanyAndTags mservice companyid doctags) = do
+data GetDocumentsByCompanyWithFiltering = GetDocumentsByCompanyWithFiltering (Maybe ServiceID) CompanyID [DocumentTag] (Maybe MinutesTime) (Maybe MinutesTime) (Maybe [DocumentStatus])
+instance DBQuery GetDocumentsByCompanyWithFiltering [Document] where
+  dbQuery (GetDocumentsByCompanyWithFiltering mservice companyid doctags stime ftime mstatuses) = do
     docs <- selectDocumentsBySignatoryLink $ mconcat [
         SQL "signatory_links.deleted = FALSE AND signatory_links.company_id = ? AND "
           [toSql companyid]
@@ -1004,10 +980,29 @@ instance DBQuery GetDocumentsByCompanyAndTags [Document] where
           toSql [SignatoryAuthor]
         , toSql [SignatoryAuthor, SignatoryPartner]
         ]
-      , SQL "AND service_id IS NOT DISTINCT FROM ? " [toSql mservice]
+      , SQL " AND service_id IS NOT DISTINCT FROM ? " [toSql mservice]
+      , case (stime, ftime) of
+          (Nothing, Nothing) -> SQL "" []
+          (Just s, Nothing)  -> SQL (" AND " ++ maxselect ++ " >= ? ") [toSql s]
+          (Nothing, Just f)  -> SQL (" AND " ++ maxselect ++ " <= ? ") [toSql f]
+          (Just s, Just f)   -> SQL (" AND " ++ maxselect ++ " BETWEEN ? AND ? ") [toSql s, toSql f]
+      , case mstatuses of
+          Nothing -> SQL "" []
+          Just [] -> SQL "AND FALSE " []
+          Just statuses -> SQL (" AND documents.status in (" ++ intercalate "," (map (const "?") statuses) ++ ") ")
+                               (map toSql statuses)
       ]
+    -- There is no perfect way to filter by tags; we could do a partial job, but we will always have to filter in Haskell.
     return (filter hasTags docs)
     where hasTags doc = all (`elem` (documenttags doc)) doctags
+          maxselect = " (select max(greatest(signatory_links.sign_time"
+                                        ++ ",signatory_links.seen_time"
+                                        ++ ",signatory_links.read_invitation"
+                                        ++ ",documents.invite_time"
+                                        ++ ",documents.rejection_time"
+                                        ++ ",documents.mtime"
+                                        ++ ",documents.ctime"
+                                        ++ ")) from signatory_links where signatory_links.document_id = documents.id) "
 
 selectDocumentsBySignatoryLink :: SQL -> DB [Document]
 selectDocumentsBySignatoryLink extendedWhere = selectDocuments $ mconcat [
@@ -1241,38 +1236,32 @@ instance Actor a => DBUpdate (NewDocument a) (Either String Document) where
   if fmap companyid mcompany /= usercompany user
     then return $ Left "company and user don't match"
     else do
-      kRunRaw "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
-      kRunRaw "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
-      did <- getUniqueID tableDocuments
 
       let authorRoles = if ((Just True) == getValueForProcess documenttype processauthorsend)
                         then [SignatoryAuthor]
                         else [SignatoryPartner, SignatoryAuthor]
-      linkid <- getUniqueID tableSignatoryLinks
 
       magichash <- random
 
       let authorlink0 = signLinkFromDetails'
                         (signatoryDetailsFromUser user mcompany)
-                        authorRoles linkid magichash
+                        authorRoles magichash
 
       let authorlink = authorlink0 {
                          maybesignatory = Just $ userid user,
                          maybecompany = usercompany user }
-                         
+
       othersignatories <- sequence $ replicate nrOfOtherSignatories $ do
-                        l <- getUniqueID tableSignatoryLinks
                         mh <- random
                         return $ signLinkFromDetails'
                                 SignatoryDetails
                                                 {  signatorysignorder = SignOrder 1
                                                  , signatoryfields   = emptySignatoryFields
                                                 }
-                                [SignatoryPartner] l mh                  
-          
+                                [SignatoryPartner] mh
+
       let doc = blankDocument
-                { documentid                   = did
-                , documenttitle                = title
+                { documenttitle                = title
                 , documentsignatorylinks       = authorlink:othersignatories
                 , documenttype                 = documenttype
                 , documentregion               = getRegion user
@@ -1281,7 +1270,6 @@ instance Actor a => DBUpdate (NewDocument a) (Either String Document) where
                 , documentmtime                = ctime
                 , documentservice              = userservice user
                 , documentauthorattachments    = []
-                , documentsignatoryattachments = []
                 , documentallowedidtypes       = [EmailIdentification]
                 , documentui                   = (documentui blankDocument) {documentmailfooter = BS.fromString <$> (customfooter $ usersettings user)}
                 } `appendHistory` [DocumentHistoryCreated ctime]
@@ -1292,7 +1280,7 @@ instance Actor a => DBUpdate (NewDocument a) (Either String Document) where
            midoc <- insertDocumentAsIs doc
            case midoc of
              Just doc' -> do
-               _<- dbUpdate $ InsertEvidenceEvent           
+               _<- dbUpdate $ InsertEvidenceEvent
                  NewDocumentEvidence
                  ("Document \"" ++ BS.toString title ++ "\" created by " ++ actorWho actor ++ ".")
                  (Just $ documentid doc')
@@ -1400,10 +1388,9 @@ instance Actor a => DBUpdate (RestartDocument a) (Either String Document) where
     clearSignInfofromDoc = do
       let signatoriesDetails = map (\x -> (signatorydetails x, signatoryroles x, signatorylinkid x)) $ documentsignatorylinks doc
           Just asl = getAuthorSigLink doc
-      newSignLinks <- flip mapM signatoriesDetails $ do \(a,b,c) -> do
-                                                             magichash <- random
-
-                                                             return $ signLinkFromDetails' a b c magichash
+      newSignLinks <- forM signatoriesDetails $ \(details,roles,linkid) -> do
+                           magichash <- random
+                           return $ (signLinkFromDetails' details roles magichash) { signatorylinkid = linkid }
       let Just authorsiglink0 = find isAuthor newSignLinks
           authorsiglink = authorsiglink0 {
                             maybesignatory = maybesignatory asl,
@@ -1467,19 +1454,19 @@ instance Actor a => DBUpdate (SaveDocumentForUser a) (Either String Document) wh
     If there's a problem such as the document isn't in a pending or awaiting author state,
     or the document does not exist a Left is returned.
 -}
-data Actor a => SaveSigAttachment a = SaveSigAttachment DocumentID BS.ByteString BS.ByteString FileID a
+data Actor a => SaveSigAttachment a = SaveSigAttachment DocumentID SignatoryLinkID BS.ByteString FileID a
 instance Actor a => DBUpdate (SaveSigAttachment a) (Either String Document) where
-  dbUpdate (SaveSigAttachment did name email fid actor) = do
+  dbUpdate (SaveSigAttachment did slid name fid actor) = do
     r <- kRun $ mkSQL UPDATE tableSignatoryAttachments [sql "file_id" fid]
-      <++> SQL "WHERE document_id = ? AND email = ? AND file_id IS NULL AND name = ? " [
+      <++> SQL "WHERE document_id = ? AND file_id IS NULL AND name = ? AND signatory_link_id = ?" [
         toSql did
-      , toSql email
       , toSql name
+      , toSql slid
       ]
     when_ (r == 1) $
       dbUpdate $ InsertEvidenceEvent
       SaveSigAttachmentEvidence
-      ("Saving attachment with name \"" ++ (BS.toString name) ++ "\" for signatory with email \"" ++ (BS.toString email) ++ "\" by " ++ actorWho actor ++ ".")
+      ("Saving attachment with name \"" ++ (BS.toString name) ++ "\" for signatory by " ++ actorWho actor ++ ".")
       (Just did)
       actor
     getOneDocumentAffected "SaveSigAttachment" r did
@@ -1842,10 +1829,10 @@ instance Actor a => DBUpdate (SignDocument a) (Either String Document) where
 data Actor a => ResetSignatoryDetails a = ResetSignatoryDetails DocumentID [(SignatoryDetails, [SignatoryRole])] a
 instance Actor a => DBUpdate (ResetSignatoryDetails a) (Either String Document) where
   dbUpdate (ResetSignatoryDetails documentid signatories actor) = 
-    dbUpdate (ResetSignatoryDetails2 documentid (map (\(a,b) -> (a,b,Nothing)) signatories) actor)
+    dbUpdate (ResetSignatoryDetails2 documentid (map (\(a,b) -> (a,b,[],Nothing)) signatories) actor)
 
 
-data Actor a => ResetSignatoryDetails2 a = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryRole], Maybe CSVUpload)] a
+data Actor a => ResetSignatoryDetails2 a = ResetSignatoryDetails2 DocumentID [(SignatoryDetails, [SignatoryRole], [SignatoryAttachment], Maybe CSVUpload)] a
 instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document) where
   dbUpdate (ResetSignatoryDetails2 documentid signatories actor) = do
     mdocument <- dbQuery $ GetDocumentByDocumentID documentid
@@ -1854,19 +1841,13 @@ instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document)
       Just document ->
         case checkResetSignatoryData document signatories of
           [] -> do
-
-            kPrepare "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
-            _ <- kExecute []
             kPrepare "DELETE FROM signatory_links WHERE document_id = ?"
             _ <- kExecute [toSql documentid]
 
             let mauthorsiglink = getAuthorSigLink document
-            forM_ signatories $ \(details, roles, mcsvupload) -> do
-                     linkid <- getUniqueID tableSignatoryLinks
-
+            forM_ signatories $ \(details, roles, atts, mcsvupload) -> do
                      magichash <- random
-
-                     let link' = (signLinkFromDetails' details roles linkid magichash)
+                     let link' = (signLinkFromDetails' details roles magichash)
                                  { signatorylinkcsvupload = mcsvupload }
                          link = if isAuthor link'
                                 then link' { maybesignatory = maybe Nothing maybesignatory mauthorsiglink
@@ -1874,10 +1855,11 @@ instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document)
                                            }
                                 else link'
                      r1 <- insertSignatoryLinkAsIs documentid link
+                     when_ (isJust r1) $ dbUpdate $ SetSigAttachments documentid (signatorylinkid $ $(fromJust) r1) atts actor
                      when (not (isJust r1)) $
                           error "ResetSignatoryDetails signatory_links did not manage to insert a row"
 
-            let (old, _, new) = listDiff (map signatorydetails $ documentsignatorylinks document) (map (\(sd, _, _)-> sd) signatories)
+            let (old, _, new) = listDiff (map signatorydetails $ documentsignatorylinks document) (map (\(sd, _, _, _)-> sd) signatories)
 
             forM_ (emailsOfRemoved old new) $ \eml ->
               dbUpdate $ InsertEvidenceEvent
@@ -1914,7 +1896,7 @@ instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document)
                   actor
 
             Just newdocument <- dbQuery $ GetDocumentByDocumentID documentid
-            let moldcvsupload = msum (map (\(_,_,a) -> a) signatories)
+            let moldcvsupload = msum (map (\(_,_,_,a) -> a) signatories)
             let mnewcsvupload = msum (map (signatorylinkcsvupload) (documentsignatorylinks newdocument))
 
             when (moldcvsupload /= mnewcsvupload) $ do
@@ -1935,13 +1917,10 @@ instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document)
 data SignLinkFromDetailsForTest = SignLinkFromDetailsForTest SignatoryDetails [SignatoryRole]
 instance DBUpdate SignLinkFromDetailsForTest SignatoryLink where
   dbUpdate (SignLinkFromDetailsForTest details roles) = do
-      kRunRaw "LOCK TABLE signatory_links IN ACCESS EXCLUSIVE MODE"
-      linkid <- getUniqueID tableSignatoryLinks
-
       magichash <- random
 
       let link = signLinkFromDetails' details
-                        roles linkid magichash
+                        roles magichash
 
       return link
 
@@ -1990,10 +1969,7 @@ instance Actor a => DBUpdate (SignableFromDocumentIDWithUpdatedAuthor a) (Either
 data StoreDocumentForTesting = StoreDocumentForTesting Document
 instance DBUpdate StoreDocumentForTesting DocumentID where
   dbUpdate (StoreDocumentForTesting document) = do
-    -- FIXME: this requires more thinking...
-    kRunRaw "LOCK TABLE documents IN ACCESS EXCLUSIVE MODE"
-    did <- getUniqueID tableDocuments
-    Just doc <- insertDocumentAsIs (document { documentid = did })
+    Just doc <- insertDocumentAsIs document
     return (documentid doc)
 
 {-
@@ -2198,44 +2174,26 @@ instance Actor a => DBUpdate (RemoveDocumentAttachment a) (Either String Documen
                        _ -> return $ Left "bad document status"
       Nothing -> return $ Left "no such document"
 
-data Actor a => UpdateSigAttachments a = UpdateSigAttachments DocumentID [SignatoryAttachment] a
-instance Actor a => DBUpdate (UpdateSigAttachments a) (Either String Document) where
-  dbUpdate (UpdateSigAttachments did sigatts actor) = do
-    ed <- dbQuery $ GetDocumentByDocumentID did
-    let (remove, _, new) = case ed of
-          Nothing -> ([],[],[])
-          Just d -> listDiff (documentsignatoryattachments d) sigatts
-    _ <- kRun $ SQL "DELETE FROM signatory_attachments WHERE document_id = ?" [toSql did]
-    forM_ remove $ \SignatoryAttachment {signatoryattachmentname, signatoryattachmentemail} ->
-      dbUpdate $ InsertEvidenceEvent
-         RemoveSigAttachmentsEvidence
-         ("Signatory attachment request for \"" ++ (BS.toString signatoryattachmentname) ++ "\" from signatory with email \"" ++ (BS.toString signatoryattachmentemail) ++ "\" removed by " ++ actorWho actor ++ ".")
-         (Just did)
-         actor
-    forM_ sigatts doInsert
-    forM_ new $ \SignatoryAttachment {signatoryattachmentname, signatoryattachmentemail} ->
-      dbUpdate $ InsertEvidenceEvent
-        AddSigAttachmentEvidence
-        ("Signatory attachment request added for \"" ++ (BS.toString signatoryattachmentname) ++ "\" from signatory with email \"" ++ (BS.toString signatoryattachmentemail) ++ "\" by " ++ actorWho actor ++ ".")
-        (Just did)
-        actor
-
-    getOneDocumentAffected "UpdateSigAttachments" 1 did
+data Actor a => SetSigAttachments a = SetSigAttachments DocumentID SignatoryLinkID [SignatoryAttachment] a
+instance Actor a => DBUpdate (SetSigAttachments a) () where
+  dbUpdate (SetSigAttachments did slid sigatts _actor) = do
+    _ <-doDeleteAll
+    forM_ sigatts doInsertOne
     where
-     doInsert SignatoryAttachment{..} = do
+     doDeleteAll = kRun $ SQL "DELETE FROM signatory_attachments WHERE document_id = ? AND signatory_link_id = ?" [toSql did, toSql slid]
+     doInsertOne SignatoryAttachment{..} = do
         kRun $ mkSQL INSERT tableSignatoryAttachments [
             sql "file_id" signatoryattachmentfile
-          , sql "email" signatoryattachmentemail
           , sql "name" signatoryattachmentname
           , sql "description" signatoryattachmentdescription
           , sql "document_id" did
+          , sql "signatory_link_id" slid
           ]
 
 data Actor a => UpdateDraft a =  UpdateDraft DocumentID  Document  a
 instance Actor a => DBUpdate (UpdateDraft a) (Either String Document) where
   dbUpdate (UpdateDraft did document actor) = do
      _ <- dbUpdate $ SetDocumentTitle did (documenttitle document) actor
-     _ <- dbUpdate $ UpdateSigAttachments  did (documentsignatoryattachments document) actor
      _ <- dbUpdate $ SetDaysToSign  did (documentdaystosign document) actor  
      _ <- dbUpdate $ SetDocumentFunctionality did (documentfunctionality document) actor
      _ <- dbUpdate $ SetDocumentLocale did (getLocale document) actor

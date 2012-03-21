@@ -33,6 +33,7 @@ module Util.JSON (
     , JSONPath()
     , pathList
     , jsonType
+    , jsonPack
     )where
 
 import Text.JSON
@@ -277,3 +278,8 @@ jsonType (JSRational _ _) = "number"
 jsonType (JSBool _) = "bool"
 jsonType (JSNull) = "null"
 jsonType (JSArray _) = "array"
+
+
+jsonPack :: [(String,String)] -> JSValue
+jsonPack = JSObject . toJSObject . (mapSnd (JSString . toJSString))
+

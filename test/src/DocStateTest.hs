@@ -2,7 +2,6 @@
 module DocStateTest where
 
 import DB.Classes
-import DB.Utils
 import User.Model
 import Doc.Model
 import Doc.DocUtils
@@ -10,7 +9,6 @@ import Doc.DocStateData
 import Misc
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
-import Doc.Tables
 import TestingUtil
 import Company.Model
 import Doc.Invariants
@@ -75,7 +73,6 @@ docStateTests env = testGroup "DocState" [
   testThat "ErrorDocument adds to the log" env testErrorDocumentEvidenceLog,
   testThat "DocumentFromSignatoryData adds to the log" env testDocumentFromSignatoryDataEvidenceLog,
   testThat "SaveSigAttachment adds to the log" env testSaveSigAttachmentEvidenceLog,
-  testThat "UpdateSigAttachment adds to the log" env testUpdateSigAttachmentsEvidenceLog,
   testThat "DeleteSigAttachment adds to the log" env testDeleteSigAttachmentEvidenceLog,
   testThat "CloseDocument adds to the log" env testCloseDocumentEvidenceLog,
   testThat "ChangeSignatoryEmailWhenUndelivered adds to the log" env testChangeSignatoryEmailWhenUndeliveredEvidenceLog,
@@ -88,10 +85,10 @@ docStateTests env = testGroup "DocState" [
   testThat "AddInvitationEvidence adds to the log" env testAddInvitationEvidenceLog,
   testThat "NewDocument adds to the log" env testNewDocumentEvidenceLog,
   testThat "AddDocumentAttachment adds to the log" env testAddDocumentAttachmentEvidenceLog,
-  testThat "GetDocumentsByCompanyAndTags filters" env testGetDocumentsByCompanyAndTagsFilters,
-  testThat "GetDocumentsByCompanyAndTags finds" env testGetDocumentsByCompanyAndTagsFinds,
-  testThat "GetDocumentsByCompanyAndTags finds with multiple" env testGetDocumentsByCompanyAndTagsFindsMultiple,  
-  testThat "GetDocumentsByCompanyAndTags finds with company filter" env testGetDocumentsByCompanyAndTagsCompany,
+  testThat "GetDocumentsByCompanyWithFiltering filters" env testGetDocumentsByCompanyWithFilteringFilters,
+  testThat "GetDocumentsByCompanyWithFiltering finds" env testGetDocumentsByCompanyWithFilteringFinds,
+  testThat "GetDocumentsByCompanyWithFiltering finds with multiple" env testGetDocumentsByCompanyWithFilteringFindsMultiple,  
+  testThat "GetDocumentsByCompanyWithFiltering finds with company filter" env testGetDocumentsByCompanyWithFilteringCompany,
   testThat "NewDocument inserts a new contract for a single user successfully" env testNewDocumentForNonCompanyUserInsertsANewContract,
   testThat "NewDocument inserts a new contract for a company user successfully" env testNewDocumentForACompanyUserInsertsANewContract,
   testThat "NewDocument inserts a new offer for a single user successfully" env testNewDocumentForNonCompanyUserInsertsANewOffer,
@@ -243,7 +240,7 @@ docStateTests env = testGroup "DocState" [
   testThat "ReallyDeleteDocument fails if the document hasn't been archived" env testReallyDeleteNotArchivedLeft,
 
   testThat "GetDocumentsByAuthor doesn't return archived docs" env testGetDocumentsByAuthorNoArchivedDocs,
-  testThat "GetDocumentsByCompanyAndTags doesn't return archived docs" env testGetDocumentsByCompanyAndTagsNoArchivedDocs,
+  testThat "GetDocumentsByCompanyWithFiltering doesn't return archived docs" env testGetDocumentsByCompanyWithFilteringNoArchivedDocs,
   testThat "GetDocumentsBySignatory doesn't return archived docs" env testGetDocumentsBySignatoryNoArchivedDocs,
   testThat "GetDeletedDocumentsByUser returns archived docs" env testGetDeletedDocumentsByUserArchivedDocs
 
@@ -444,7 +441,8 @@ testSetDocumentTimeoutTimeEvidenceLog :: DB ()
 testSetDocumentTimeoutTimeEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPreparation)
-  etdoc <- randomUpdate $ \o t->SetDocumentTimeoutTime (documentid doc) o (SystemActor t)
+  _ <- randomUpdate $ \t->SetDocumentTimeoutTime (documentid doc) (fromMinutes 0) (SystemActor t)
+  etdoc <- randomUpdate $ \t->SetDocumentTimeoutTime (documentid doc) (fromMinutes 10000) (SystemActor t)
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == SetDocumentTimeoutTimeEvidence) lg
@@ -542,7 +540,8 @@ testSignableFromDocumentIDWithUpdatedAuthorEvidenceLog :: DB ()
 testSignableFromDocumentIDWithUpdatedAuthorEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isTemplate &&^ isPreparation)
-  _<- randomUpdate $ \i t->SetInviteText (documentid doc) i (SystemActor t)
+  _<- randomUpdate $ \t->SetInviteText (documentid doc) "" (SystemActor t)
+  _<- randomUpdate $ \t->SetInviteText (documentid doc) "new invite text" (SystemActor t)
   etdoc <- randomUpdate $ \t->SignableFromDocumentIDWithUpdatedAuthor author Nothing (documentid doc) (SystemActor t)
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid $ fromRight etdoc)
@@ -641,16 +640,14 @@ testDocumentFromSignatoryDataEvidenceLog :: DB ()
 testDocumentFromSignatoryDataEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isPreparation &&^ ((<=) 2 . length . documentsignatorylinks))
-  _<-randomUpdate $ \t->UpdateSigAttachments (documentid doc) 
+  randomUpdate $ \t->SetSigAttachments (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0)
                         [SignatoryAttachment { signatoryattachmentfile        = Nothing
-                                             , signatoryattachmentemail       = BS.fromString "hello@goodbye.com"
                                              , signatoryattachmentname        = BS.fromString "attachment"
                                              , signatoryattachmentdescription = BS.fromString "gimme!"
                                              }] (SystemActor t)
   etdoc <- randomUpdate $ \t a b c d e f -> DocumentFromSignatoryData (documentid doc) a b c d e f [] (SystemActor t)
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid $ fromRight etdoc)
-  assertJust $ find (\e -> evType e == AddSigAttachmentEvidence) lg
   assertJust $ find (\e -> evType e == AuthorUsesCSVEvidence)    lg
 
 testSaveSigAttachmentEvidenceLog :: DB ()
@@ -658,45 +655,28 @@ testSaveSigAttachmentEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   file <- addNewRandomFile
-  _<-randomUpdate $ \t->UpdateSigAttachments (documentid doc) 
+  randomUpdate $ \t->SetSigAttachments (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0)
                         [SignatoryAttachment { signatoryattachmentfile        = Nothing
-                                             , signatoryattachmentemail       = BS.fromString "hello@goodbye.com"
                                              , signatoryattachmentname        = BS.fromString "attachment"
                                              , signatoryattachmentdescription = BS.fromString "gimme!"
                                              }] (SystemActor t)
   _ <- randomUpdate $ \t->PreparationToPending (documentid doc) (SystemActor t)
-  etdoc <- randomUpdate $ \t->SaveSigAttachment (documentid doc) (BS.fromString "attachment") (BS.fromString "hello@goodbye.com") (fileid file) (SystemActor t)
+  etdoc <- randomUpdate $ \t->SaveSigAttachment (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) (BS.fromString "attachment") (fileid file) (SystemActor t)
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == SaveSigAttachmentEvidence) lg
-  
-testUpdateSigAttachmentsEvidenceLog :: DB ()
-testUpdateSigAttachmentsEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  file <- addNewRandomFile
-  etdoc<-randomUpdate $ \t->UpdateSigAttachments (documentid doc) 
-                        [SignatoryAttachment { signatoryattachmentfile        = Just $ (fileid file)
-                                             , signatoryattachmentemail       = BS.fromString "hello@goodbye.com"
-                                             , signatoryattachmentname        = BS.fromString "attachment"
-                                             , signatoryattachmentdescription = BS.fromString "gimme!"
-                                             }] (SystemActor t)
-  assertRight etdoc
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == AddSigAttachmentEvidence) lg
   
 testDeleteSigAttachmentEvidenceLog :: DB ()
 testDeleteSigAttachmentEvidenceLog = do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
   file <- addNewRandomFile
-  _<-randomUpdate $ \t->UpdateSigAttachments (documentid doc) 
+  _<-randomUpdate $ \t->SetSigAttachments (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0)
                         [SignatoryAttachment { signatoryattachmentfile        = Just $ (fileid file)
-                                             , signatoryattachmentemail       = BS.fromString "hello@goodbye.com"
                                              , signatoryattachmentname        = BS.fromString "attachment"
                                              , signatoryattachmentdescription = BS.fromString "gimme!"
                                              }] (SystemActor t)
-  etdoc <- randomUpdate $ \t->DeleteSigAttachment (documentid doc) (BS.fromString "hello@goodbye.com") (fileid file) (SystemActor t)
+  etdoc <- randomUpdate $ \t->DeleteSigAttachment (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) (fileid file) (SystemActor t)
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == DeleteSigAttachmentEvidence) lg
@@ -840,7 +820,7 @@ assertGoodNewDocument mcompany doctype title authorsigns (user, time, edoc) = do
     assertEqual "Doc modification time" time (documentmtime doc)
     assertEqual "Doc has user's service" (userservice user) (documentservice doc)
     assertEqual "No author attachments" [] (documentauthorattachments doc)
-    assertEqual "No sig attachments" [] (documentsignatoryattachments doc)
+    assertEqual "No sig attachments" [] (concatMap signatoryattachments $ documentsignatorylinks doc)
     assertEqual "Uses email identification only" [EmailIdentification] (documentallowedidtypes doc)
     assertEqual "Doc has user's footer" (customfooter $ usersettings user) (fmap BS.toString <$> documentmailfooter $ documentui doc)
     assertEqual "In preparation" Preparation (documentstatus doc)
@@ -1063,9 +1043,9 @@ testGetDocumentsByAuthorNoArchivedDocs :: DB ()
 testGetDocumentsByAuthorNoArchivedDocs =
   checkQueryDoesntContainArchivedDocs (GetDocumentsByAuthor . userid)
 
-testGetDocumentsByCompanyAndTagsNoArchivedDocs :: DB ()
-testGetDocumentsByCompanyAndTagsNoArchivedDocs =
-  checkQueryDoesntContainArchivedDocs (\u -> GetDocumentsByCompanyAndTags Nothing (fromJust $ usercompany u) [])
+testGetDocumentsByCompanyWithFilteringNoArchivedDocs :: DB ()
+testGetDocumentsByCompanyWithFilteringNoArchivedDocs =
+  checkQueryDoesntContainArchivedDocs (\u -> GetDocumentsByCompanyWithFiltering Nothing (fromJust $ usercompany u) [] Nothing Nothing Nothing)
 
 testGetDocumentsBySignatoryNoArchivedDocs :: DB ()
 testGetDocumentsBySignatoryNoArchivedDocs =
@@ -1447,7 +1427,7 @@ testPreparationAttachCSVUploadNonExistingSignatoryLink = doTimes 3 $ do
   (csvupload, time) <- rand 10 arbitrary
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
-  slid <- getUniqueID tableSignatoryLinks
+  slid <- unsafeSignatoryLinkID <$> rand 10 arbitrary
   --execute
   edoc <- dbUpdate $ AttachCSVUpload (documentid doc) 
           slid csvupload (SystemActor time)
@@ -1574,20 +1554,6 @@ testRemoveDocumentAttachmentOk = doTimes 10 $ do
 
 ---------------------------------------------------------------------
 
--- DeleteSigAttachment, SaveSigAttachment, UpdateSigAttachments
-
-{-
-testUpdateSigAttachmentsFailsIfNotPreparation :: DB ()
-testAddDocumentAttachmentFailsIfNotPreparation = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
-  file <- addNewRandomFile
-  --execute
-  edoc <- randomUpdate $ AddDocumentAttachment (documentid doc) (fileid file)
-  --assert
-  validTest $ assertLeft edoc
--}
-
 testUpdateSigAttachmentsAttachmentsOk :: DB ()
 testUpdateSigAttachmentsAttachmentsOk = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
@@ -1598,36 +1564,35 @@ testUpdateSigAttachmentsAttachmentsOk = doTimes 10 $ do
   let email1 = BS.fromString "g1@g.com"
       name1 = BS.fromString "att1"
   let att1 = SignatoryAttachment { signatoryattachmentfile = Just (fileid file1)
-                                 , signatoryattachmentemail = email1
                                  , signatoryattachmentname = name1
                                  , signatoryattachmentdescription = BS.fromString "att1 description"
                                  }
   let att2 = SignatoryAttachment { signatoryattachmentfile = Nothing
-                                 , signatoryattachmentemail = BS.fromString "g2@g.com"
                                  , signatoryattachmentname = BS.fromString "att2"
                                  , signatoryattachmentdescription = BS.fromString "att2 description"
                                  }
   (time, sl) <- rand 10 arbitrary
   let sa = SignatoryActor time (IPAddress 0) Nothing (BS.toString email1) sl
-  edoc1 <- randomUpdate $ UpdateSigAttachments (documentid doc) [att1, att2] sa
+  randomUpdate $ SetSigAttachments (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) [att1, att2] sa
+  edoc1 <- dbQuery $ GetDocumentByDocumentID (documentid doc)
+  edoc2 <- randomUpdate $ DeleteSigAttachment (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) (fileid file1) sa
 
-  edoc2 <- randomUpdate $ DeleteSigAttachment (documentid doc) email1 (fileid file1) sa
-
-  edoc3 <- randomUpdate $ SaveSigAttachment (documentid doc) name1 email1 (fileid file2) sa
+  edoc3 <- randomUpdate $ SaveSigAttachment (documentid doc) (signatorylinkid $ (documentsignatorylinks doc) !! 0) name1 (fileid file2) sa
 
   --assert
   validTest $ do
-    assertRight edoc1
-    let doc1 = fromRight edoc1
-    assertEqual "Both attachments were attached" 2 (length (documentsignatoryattachments doc1))
+    assertJust edoc1
+    let doc1 = fromJust edoc1
+    assertEqual "Both attachments were attached" 2 (length (signatoryattachments $ (documentsignatorylinks doc1) !! 0))
     assertRight edoc2
     let doc2 = fromRight edoc2
-    assertBool "All signatory attachments are not connected to files" (all (isNothing . signatoryattachmentfile) (documentsignatoryattachments doc2))
+    assertBool "All signatory attachments are not connected to files" (all (isNothing . signatoryattachmentfile) 
+                                                                           (signatoryattachments $ (documentsignatorylinks doc2) !! 0))
 
     assertRight edoc3
     let doc3 = fromRight edoc3
     assertBool "Attachment connected to signatory"
-                 (Just (fileid file2) `elem` map signatoryattachmentfile (documentsignatoryattachments doc3))
+                 (Just (fileid file2) `elem` map signatoryattachmentfile (signatoryattachments $ (documentsignatorylinks doc3) !! 0))
 
 
 {-
@@ -2214,8 +2179,8 @@ propbitfieldDeriveConvertibleId ss =
   in ss' == convert (convert ss' :: SqlValue)
      
      
-testGetDocumentsByCompanyAndTagsCompany :: DB ()
-testGetDocumentsByCompanyAndTagsCompany = doTimes 10 $ do
+testGetDocumentsByCompanyWithFilteringCompany :: DB ()
+testGetDocumentsByCompanyWithFilteringCompany = doTimes 10 $ do
   (name, value) <- rand 10 arbitrary
   company <- addNewCompany
   company2 <- addNewCompany
@@ -2226,30 +2191,30 @@ testGetDocumentsByCompanyAndTagsCompany = doTimes 10 $ do
   time <- getMinutesTime
   let actor = SystemActor time
   _ <- dbUpdate $ SetDocumentTags did [DocumentTag name value] actor
-  docs <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company2) []
-  docs' <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) []
+  docs <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company2) [] Nothing Nothing Nothing
+  docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [] Nothing Nothing Nothing
   validTest $ do
     assertEqual "Should have no documents returned" docs []
     assertEqual "Should have 1 document returned" (length docs') 1    
      
 
-testGetDocumentsByCompanyAndTagsFilters :: DB ()
-testGetDocumentsByCompanyAndTagsFilters = doTimes 10 $ do
+testGetDocumentsByCompanyWithFilteringFilters :: DB ()
+testGetDocumentsByCompanyWithFilteringFilters = doTimes 10 $ do
   (name, value) <- rand 10 arbitrary
   company <- addNewCompany
   author <- addNewRandomUser
   _ <- dbUpdate $ SetUserCompany (userid author) (Just (companyid company))
   Just author' <- dbQuery $ GetUserByID (userid author)
   _ <- addRandomDocumentWithAuthor author'
-  docs <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name value]
-  docs' <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) []
+  docs <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [DocumentTag name value] Nothing Nothing Nothing
+  docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [] Nothing Nothing Nothing
   validTest $ do
     assertEqual "Should have no documents returned" docs []
     assertEqual "Should have 1 document returned" (length docs') 1    
     
 
-testGetDocumentsByCompanyAndTagsFinds :: DB ()
-testGetDocumentsByCompanyAndTagsFinds = doTimes 10 $ do
+testGetDocumentsByCompanyWithFilteringFinds :: DB ()
+testGetDocumentsByCompanyWithFilteringFinds = doTimes 10 $ do
   (name, value) <- rand 10 arbitrary
   company <- addNewCompany
   author <- addNewRandomUser
@@ -2259,14 +2224,14 @@ testGetDocumentsByCompanyAndTagsFinds = doTimes 10 $ do
   time <- getMinutesTime
   let actor = SystemActor time
   _ <- dbUpdate $ SetDocumentTags did [DocumentTag name value] actor
-  docs <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name value]
-  docs' <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) []
+  docs <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [DocumentTag name value] Nothing Nothing Nothing
+  docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [] Nothing Nothing Nothing
   validTest $ do
     assertEqual "Should have one document returned" (length docs) 1
     assertEqual "Should have one document returned" (length docs') 1
   
-testGetDocumentsByCompanyAndTagsFindsMultiple :: DB ()
-testGetDocumentsByCompanyAndTagsFindsMultiple = doTimes 10 $ do
+testGetDocumentsByCompanyWithFilteringFindsMultiple :: DB ()
+testGetDocumentsByCompanyWithFilteringFindsMultiple = doTimes 10 $ do
   (name1, value1) <- rand 10 arbitrary
   (name2, value2) <- rand 10 arbitrary
   (name3, value3) <- rand 10 arbitrary
@@ -2279,11 +2244,11 @@ testGetDocumentsByCompanyAndTagsFindsMultiple = doTimes 10 $ do
   did <- addRandomDocumentWithAuthor author'
 
   _ <- dbUpdate $ SetDocumentTags did [DocumentTag name1 value1, DocumentTag name2 value2] actor
-  docs <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name1 value1]  
-  docs' <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name2 value2]
-  docs'' <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name1 value1, DocumentTag name2 value2]  
-  docs''' <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) []
-  docs'''' <- dbQuery $ GetDocumentsByCompanyAndTags Nothing (companyid company) [DocumentTag name1 value1, DocumentTag name2 value2, DocumentTag name3 value3]  
+  docs <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [DocumentTag name1 value1] Nothing Nothing Nothing
+  docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [DocumentTag name2 value2] Nothing Nothing Nothing
+  docs'' <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [DocumentTag name1 value1, DocumentTag name2 value2] Nothing Nothing Nothing
+  docs''' <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [] Nothing Nothing Nothing
+  docs'''' <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [DocumentTag name1 value1, DocumentTag name2 value2, DocumentTag name3 value3] Nothing Nothing Nothing
   validTest $ do
     assertEqual "Should have one document returned" (length docs) 1  
     assertEqual "Should have one document returned" (length docs') 1
