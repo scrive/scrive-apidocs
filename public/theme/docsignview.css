@@ -105,6 +105,11 @@ body.signview {
   margin-right: 10px;
   position: relative;
   top: -7px;
+  /*   believe it or not these lines do inline-blocking for IE7 */
+    zoom: 1;
+    *display: inline;
+    _height: 15px;
+  /*   end of IE7 junk */
 }
 
 .signview .instructions .subheadline .menuwrapper {
@@ -112,6 +117,11 @@ body.signview {
   margin-left: 10px;
   margin-right: 10px;
   margin-top: 6px;
+  /*   believe it or not these lines do inline-blocking for IE7 */
+    zoom: 1;
+    *display: inline;
+    _height: 21px;
+  /*   end of IE7 junk */
 }
 
 .signview .menu .download .icon {
@@ -414,6 +424,7 @@ body.signview {
   background-color: white;
   background-image: url(../img/horizontal-shading-bar.png);
   background-repeat: no-repeat;
+  overflow: hidden;
 }
 
 .signview .section.highlight {
@@ -605,17 +616,31 @@ body.signview {
   font-weight: bold;
 }
 
+.signview .signatories .signatory .summary .labelwrapper {
+  margin: 0px auto;
+}
+
 .signview .signatories .signatory .summary.signed {
   color: #83bc39;
 }
 
 .signview .signatories .signatory .summary .icon {
   float: none;
-  display: inline-block
+  display: inline-block;
+/*   believe it or not these lines do inline-blocking for IE7 */
+  zoom: 1;
+  *display: inline;
+  _height: 11px;
+/*   end of IE7 junk */
 }
 
 .signview .signatories .signatory .summary .label {
   display: inline-block;
+/*   believe it or not these lines do inline-blocking for IE7 */
+  zoom: 1;
+  *display: inline;
+  _height: 11px;
+/*   end of IE7 junk */
 }
 
 .signview .signatories .signatory.current .fieldwrapper {

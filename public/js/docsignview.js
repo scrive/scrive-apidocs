@@ -216,17 +216,18 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
     var signatory = this.model;
 
     var container = $("<div class='summary' />");
+    var labelwrapper = $("<div class='labelwrapper' />");
     if (signatory.signs()) {
       container.addClass(signatory.status());
       if (signatory.hasSigned()) {
         container.addClass("signed");
-        container.append($("<div class='icon status signed' />"));
+        labelwrapper.append($("<div class='icon status signed' />"));
       }
-      container.append($("<div class='label' />").text(this.signatorySummary()));
+      labelwrapper.append($("<div class='label' />").text(this.signatorySummary()));
     } else {
-      container.append($("<div class='label' />").text(signatory.document().process().authorissecretarytext()));
+      labelwrapper.append($("<div class='label' />").text(signatory.document().process().authorissecretarytext()));
     }
-    container.append($("<div class='clearfix' />"));
+    container.append(labelwrapper);
     return container;
   },
   render: function() {
@@ -315,8 +316,6 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
     });
 
     if (this.model.currentSignatory().signs()) {
-      console.log("current signatory can sign?");
-      console.log(this.model.currentSignatory().signs());
       var currentsigview = signatoriesview.createSignatoryView(this.model.currentSignatory());
       this.customfieldelems = currentsigview.customfieldelems;
       var currentitem = $("<div class='column' />").append($(currentsigview.el));
