@@ -613,19 +613,36 @@ body.signview {
   margin-top: 10px;
 }
 
+/** this stuff is kind of messy, need to improve when do inline field editing*/
+.signview .signatories .signatory .closedinputs .fieldvalue,
 .signview .signatories .signatory.other .fieldvalue {
   border: none;
   height: 17px;
   line-height: 17px;
 }
 
+.signview .signatories .signatory .closedinputs .label {
+  display: none;
+}
+
+.signview .signatories .signatory .closedinputs .fieldwrapper {
+  margin-top: 0px;
+}
+
 /*Hide the info text on the custom fields, cos
  * we're using labels.
  */
-.signview .signatories .signatory .dragfield .grayed {
+.signview .signatories .signatory .field .grayed {
   color: white;
 }
 
+.signview .signatories .signatory .field input {
+  width: 195px;
+}
+
+.signview .signatories .signatory .fieldwrapper {
+  width: 200px;
+}
 
 .signview .rejectwrapper {
   float: left;
