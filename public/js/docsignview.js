@@ -88,7 +88,7 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
     this.model.bind('change', this.render);
     this.onExpand = args.onExpand;
     this.onCollapse = args.onCollapse;
-    this.dragfields = [];
+    this.customfieldelems = [];
     this.render();
   },
   signatorySummary: function() {
@@ -158,6 +158,10 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
     bottombit.append($("<div class='email' />").text(signatory.email()));
     container.append(bottombit);
 
+    /** this stuff is messy, need to improve when do inline field editing*/
+    var closedinputbits = $("<div class='grouping closedinputs' />");
+    var isclosedinputs = false;
+
     var inputbits = $("<div class='grouping' />");
     var isinputs = false;
     var isInputField = this.isInputField;
@@ -168,7 +172,6 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
         if (field.value() == "" && !signatory.current()) {
           return;
         }
-        isinputs = true;
         var fieldwrapper = $("<div class='fieldwrapper'/>");
         if (signatory.current()) {
           fieldwrapper.append($("<div class='label' />").text(field.nicename() + ":"));
@@ -177,13 +180,21 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
           model: field,
           el: $("<div class='field' />")
         });
-        if (fieldview.dragfield != undefined) {
-          view.dragfields.push(fieldview.dragfield);
+        var customfield = $(fieldview.el);
+        view.customfieldelems.push(customfield);
+        fieldwrapper.append(customfield);
+        if (field.isClosed()) {
+          closedinputbits.append(fieldwrapper);
+          isclosedinputs = true;
+        } else {
+          inputbits.append(fieldwrapper);
+          isinputs = true;
         }
-        fieldwrapper.append($(fieldview.el));
-        inputbits.append(fieldwrapper);
       }
     });
+    if (isclosedinputs) {
+      container.append(closedinputbits);
+    }
     if (isinputs) {
       container.append(inputbits);
     }
@@ -247,7 +258,7 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
     _.bindAll(this, 'render');
     this.onExpand = args.onExpand;
     this.onCollapse = args.onCollapse;
-    this.dragfields = [];
+    this.customfieldelems = [];
     this.render();
   },
   orderedOtherSignatories: function() {
@@ -303,7 +314,7 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
     });
 
     var currentsigview = signatoriesview.createSignatoryView(this.model.currentSignatory());
-    this.dragfields = currentsigview.dragfields;
+    this.customfieldelems = currentsigview.customfieldelems;
     var currentitem = $("<div class='column' />").append($(currentsigview.el));
     if (row == undefined) {
       row = $("<div class='row' />").append($("<div class='column' />"));
@@ -1015,7 +1026,7 @@ window.DocumentSignView = Backbone.View.extend({
         if (this.isDisplaySignatories()) {
           var signatoriesview = this.createSignatoriesView(triggerArrowChange);
           if (this.model.currentSignatoryCanSign()) {
-            _.each(this.customFieldTasks(signatoriesview.dragfields), function(task) {
+            _.each(this.customFieldTasks(signatoriesview.customfieldelems), function(task) {
               tasks.push(task);
             });
           }
