@@ -682,6 +682,11 @@ body.signview {
   background-repeat: no-repeat;
 }
 
+/** this is a bit of a cheat way to override the visibility stuff*/
+.signview .arrows .down.arrow.infooter {
+  height: 0px;
+}
+
 .signview .arrows .up.arrow {
   top: 50px;
   background: url(../img/sign-arrow-up.png);

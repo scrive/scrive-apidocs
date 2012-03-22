@@ -313,17 +313,21 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
       }
     });
 
-    var currentsigview = signatoriesview.createSignatoryView(this.model.currentSignatory());
-    this.customfieldelems = currentsigview.customfieldelems;
-    var currentitem = $("<div class='column' />").append($(currentsigview.el));
-    if (row == undefined) {
-      row = $("<div class='row' />").append($("<div class='column' />"));
-    }
-    row.append(currentitem);
-    row.append($("<div class='clearfix' />"));
-    list.append(row);
+    if (this.model.currentSignatory().signs()) {
+      console.log("current signatory can sign?");
+      console.log(this.model.currentSignatory().signs());
+      var currentsigview = signatoriesview.createSignatoryView(this.model.currentSignatory());
+      this.customfieldelems = currentsigview.customfieldelems;
+      var currentitem = $("<div class='column' />").append($(currentsigview.el));
+      if (row == undefined) {
+        row = $("<div class='row' />").append($("<div class='column' />"));
+      }
+      row.append(currentitem);
+      row.append($("<div class='clearfix' />"));
+      list.append(row);
 
-    list.append($("<div class='clearfix' />"));
+      list.append($("<div class='clearfix' />"));
+    }
 
     container.append(list);
     container.append($("<div class='clearfix' />"));
@@ -1054,8 +1058,9 @@ window.DocumentSignView = Backbone.View.extend({
       }
       this.container.append(subcontainer);
 
-      if (this.model.signingInProcess() &&
-           !this.model.currentSignatory().hasSigned()) {
+      if ((this.model.signingInProcess() &&
+           !this.model.currentSignatory().hasSigned()) ||
+             !this.model.currentSignatory().signs()) {
         this.container.prepend(this.createArrowsElems(tasks));
       }
 
@@ -1176,6 +1181,19 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
       }
     };
     updateActionArrowPosition();
+
+    var checkIfDownArrowInFooter = function() {
+      var footertop = $(".pagefooter").offset().top;
+      var downarrowbottom = downarrow.offset().top + downarrow.height();
+      if (downarrowbottom + 100 > footertop) {
+        downarrow.addClass("infooter");
+      } else {
+        downarrow.removeClass("infooter");
+      }
+    };
+    $(window).resize(checkIfDownArrowInFooter);
+    $(window).scroll(checkIfDownArrowInFooter);
+    checkIfDownArrowInFooter();
 
     var updateVisibility = function() {
 
