@@ -341,8 +341,8 @@
 "_backToStepTwoAndFillPersonNumber","Var vänlig gå tillbaka till steg 2 och fyll i personnummer.",,"Please go back to step 2 and enter personal security number."
 "_cancel","Avbryt",,"Cancel"
 "_cancelDialogOwnMessage","Skriv eget meddelande",,"Write your own message"
-"_cantSendReminder1","Det går inte att skicka påminnelser för",,"It is impossible to send reminders for"
-"_cantSendReminder2","som inte är skickade eller öppna.",,"which has not been sent or opened."
+"_cantSendReminder1","Det går inte att skicka påminnelser för ",,"It is impossible to send reminders for "
+"_cantSendReminder2"," som inte är skickade eller öppna.",," which have not been sent or opened."
 "_checkBoxFieldName","check box",,"check box"
 "_city","Postort",,"City"
 "_clientsPageCusomer1","Account Factory",,"Account Factory"
@@ -366,11 +366,11 @@
 "_clientsPageCusomer4About",,,
 "_clientsPageCusomer4Web","www.accenture.com",,"www.accenture.com"
 "_clientsPageCusomer5","COOP Nord",,"COOP Nord"
-"_clientsPageCusomer5About",,,
+"_clientsPageCusomer5About","",,""
 "_clientsPageCusomer5Web","www.coop.se/konsumnord",,"www.coop.se/konsumnord"
 "_clientsPageCusomer6","IPAS",,"IPAS"
-"_clientsPageCusomer6About",,,
-"_clientsPageCusomer6Web",,,
+"_clientsPageCusomer6About","",,""
+"_clientsPageCusomer6Web","",,""
 "_clientsPageCusomerVid","Go Enterprise",,"Go Enterprise"
 "_clientsPageCusomerVidAbout","Go Enterprise är ett ungt managementbolag där vi brinner för
  tillväxt, entreprenörskap och samhällsutveckling. Genom våra
@@ -1508,7 +1508,7 @@ profits and reduce frustration. The following mateials shall only
 "_listReallyDeleteDialogHead","Radera permanent",,"Permanent Delete"
 "_listRestoreDialogBody","Vill du återsätlla följande dokument?",,"Would you like to restore the selected documents?"
 "_listRestoreDialogHead","Återställ",,"Restore"
-"_listShareDialogBody","Vill du dela detta med alla i din organisation.",,"Do you want to share this with everyone on your organisation?"
+"_listShareDialogBody","Vill du dela detta med alla i din organisation.",,"Do you want to share this with everyone in your organisation?"
 "_listShareDialogHead","Dela",,"Share"
 "_listand","och",,"and"
 "_listyou","du",,"you"
