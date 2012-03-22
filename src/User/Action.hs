@@ -98,7 +98,7 @@ handleActivate mfstname msndname actvuser signupmethod = do
               _ <- addUserSignTOSStatEvent tosuser
               _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
               logUserToContext $ Just tosuser
-              when (callme) $ phoneMeRequest tosuser
+              when (callme) $ phoneMeRequest tosuser phone
               return $ Just (tosuser, newdocs)
             else do
               addFlashM flashMessageMustAcceptTOS
@@ -120,14 +120,14 @@ createInvitedUser names email mlocale = do
                    return muser
       _         -> return muser
 
-phoneMeRequest :: Kontrakcja m => User -> m ()
-phoneMeRequest user = do
+phoneMeRequest :: Kontrakcja m => User -> String -> m ()
+phoneMeRequest user phone = do
   ctx <- getContext
   let content = "<p>User " ++ getFirstName user ++ " "
                     ++ getLastName user ++ " "
                     ++ "&lt;" ++ getEmail user ++ "&gt; "
                     ++ "has requested a call on "
-                    ++ "&lt;" ++ (userphone $ userinfo user ) ++ "&gt;.  "
+                    ++ "&lt;" ++ phone ++ "&gt;.  "
                     ++ "They have just signed the TOS, "
                     ++ "and they're setup with lang "
                     ++ "&lt;" ++ (codeFromLang $ getLang user) ++ "&gt;.</p>"

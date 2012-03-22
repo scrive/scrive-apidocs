@@ -188,11 +188,16 @@ body.signview {
   margin-bottom: 11px;
 }
 
-.signview .save .highlight .email {
+.signview .save .email {
   margin-top: 3px;
   font-weight: bold;
   border: solid #bababc 1px;
   padding: 1px;
+  max-width: 168px;
+}
+
+.signview .save input {
+  max-width: 168px;
 }
 
 .signview .save .item {
