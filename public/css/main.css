@@ -911,6 +911,8 @@ a.new-btn-small.black p {
 .body-container .highlight-container .highlight-rows li.top {
 	height: 75px;
 	padding-top: 38px;
+        margin-right: auto;
+        margin-left: auto;
 }
 
 .body-container .highlight-container .highlight-rows li.top h3 {
