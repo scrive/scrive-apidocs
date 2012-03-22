@@ -26,6 +26,31 @@ window.DocumentViewer = Backbone.Model.extend({
     }
 });
 
+window.DocumentAuthor =  Backbone.Model.extend({
+   defaults: {
+       fullname: "",
+       email: "",
+       company: "",
+       phone : "",
+       position: ""
+    },
+    fullname: function() {
+        return this.get("fullname")
+    },
+    email:  function() {
+        return this.get("email")
+    },
+    company : function() {
+        return this.get("company")
+    },
+    phone :  function() {
+        return this.get("phone")
+    },
+    position: function() {
+        return this.get("position")
+    }
+});
+
 window.Document = Backbone.Model.extend({
     defaults: {
         id : 0,
@@ -39,7 +64,10 @@ window.Document = Backbone.Model.extend({
         viewer: new DocumentViewer(),
         infotext: "",
         authorization: "email",
-        template : false
+        template : false,
+        //logo : undefined
+        //barsbackgroundcolor : undefined
+        //barsbackgroundtextcolor : undefined
     },
     initialize: function (args) {
         this.url = "/doc/" + args.id;
@@ -353,6 +381,18 @@ window.Document = Backbone.Model.extend({
                               && this.awaitingauthor();
       return canSignAsSig || canSignAsAuthor;
     },
+    logo :function() {
+        return this.get("logo");
+    },
+    barsbackgroundcolor : function() {
+        return this.get("barsbackgroundcolor");
+    },
+    barsbackgroundtextcolor : function() {
+        return this.get("barsbackgroundtextcolor");
+    },
+    authoruser : function() {
+        return this.get("authoruser");
+    },
     parse: function(args) {
      var document = this;
      setTimeout(function() {
@@ -376,6 +416,7 @@ window.Document = Backbone.Model.extend({
       signatories : _.map(args.signatories, function(signatoryargs){
                 return new Signatory(extendedWithDocument(signatoryargs));
       }),
+      authoruser :  new DocumentAuthor(extendedWithDocument(args.author)),
       process: new Process(args.process),
       region: new Region(args.region),
       infotext : args.infotext,
@@ -390,6 +431,9 @@ window.Document = Backbone.Model.extend({
       functionality : args.functionality,
       daystosign: args.daystosign,
       invitationmessage : args.invitationmessage,
+      logo : args.logo,
+      barsbackgroundcolor : args.barsbackgroundcolor,
+      barsbackgroundtextcolor :  args.barsbackgroundtextcolor,
       ready: true
       };
     }

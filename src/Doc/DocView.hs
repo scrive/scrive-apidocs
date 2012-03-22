@@ -199,6 +199,22 @@ documentJSON msl _crttime doc = do
     sealedfiles <- runDB $ documentsealedfilesM doc
     authorattachmentfiles <- mapM (runDBQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
     let isauthoradmin = maybe False (flip isAuthorAdmin doc) (ctxmaybeuser ctx)
+    mauthor <- maybe (return Nothing) (runDBQuery . GetUserByID) (getAuthorSigLink doc >>= maybesignatory)
+    mservice <- maybe (return Nothing) (runDBQuery . GetService) (documentservice doc)
+    mcompany <- maybe (return Nothing) (runDBQuery . GetCompany) (getAuthorSigLink doc >>= maybecompany)
+    let logo  = if (isJust mcompany && isJust (companylogo $ companyui (fromJust mcompany)))
+                  then show <$> LinkCompanyLogo <$> companyid <$> mcompany
+                  else if ((isJust mservice) &&  (isJust $ servicelogo $ serviceui $ fromJust mservice))
+                        then show <$> LinkServiceLogo <$> serviceid <$> mservice
+                        else Nothing
+    let bbc  = if (isJust mcompany && isJust (companybarsbackground $ companyui (fromJust mcompany)))
+                  then companybarsbackground $ companyui (fromJust mcompany)
+                  else if ((isJust mservice) &&  (isJust $ servicebarsbackground $ serviceui $ fromJust mservice))
+                        then servicebarsbackground $ serviceui $ fromJust mservice
+                        else Nothing
+    let bbtc  = if (isJust mcompany && isJust (companybarstextcolour $ companyui (fromJust mcompany)))
+                  then companybarstextcolour $ companyui (fromJust mcompany)
+                  else Nothing
     fmap toJSObject $ propagateMonad  $
      [ ("title",return $ JSString $ toJSString $ documenttitle doc),
        ("files", return $ JSArray $ jsonPack <$> fileJSON <$> files ),
@@ -218,7 +234,11 @@ documentJSON msl _crttime doc = do
        ("template", return $ JSBool $ isTemplate doc),
        ("functionality", return $ JSString $ toJSString $ "basic" <| documentfunctionality doc == BasicFunctionality |> "advanced"),
        ("daystosign", return $ maybe JSNull (JSRational True . toRational) $ documentdaystosign doc),
-       ("invitationmessage", return $ if (null $ documentinvitetext doc) then JSNull else JSString $ toJSString $ documentinvitetext doc)
+       ("invitationmessage", return $ if (null $ documentinvitetext doc) then JSNull else JSString $ toJSString $ documentinvitetext doc),
+       ("logo", return $ maybe JSNull (JSString . toJSString)  logo),
+       ("barsbackgroundcolor", return $ maybe JSNull (JSString . toJSString)  $ bbc),
+       ("barsbackgroundtextcolor",  return $ maybe JSNull (JSString . toJSString)  $ bbtc),
+       ("author", liftIO $ authorJSON mauthor mcompany)
      ]
 
 authorizationJSON :: IdentificationType -> JSValue
@@ -377,6 +397,14 @@ fileJSON file =
     [  ("id",   show $ fileid file),
        ("name", filename file)
     ]
+
+authorJSON :: Maybe User -> Maybe Company -> IO JSValue
+authorJSON mauthor mcompany = json $ do
+    JSON.field "fullname" $ getFullName <$> mauthor
+    JSON.field "email" $ getEmail <$> mauthor
+    JSON.field "company" $ (\a -> getCompanyName (a,mcompany)) <$> mauthor 
+    JSON.field "phone"  $ userphone <$> userinfo <$> mauthor
+    JSON.field "position"  $ usercompanyposition <$> userinfo <$>mauthor
 
 {- |
     We want the documents to be ordered like the icons in the bottom
