@@ -15,7 +15,6 @@ import Doc.DocUtils
 import ELegitimation.ELegTransaction
 import Happstack.Server
 import Kontra
-import KontraError (internalError)
 import MagicHash (MagicHash)
 import MinutesTime
 import Misc

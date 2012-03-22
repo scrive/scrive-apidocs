@@ -10,12 +10,9 @@ Keep this one as unorganized dump.
 -}
 module Misc where
 
-import KontraError(KontraError, internalError)
-
 import Control.Applicative
 import Control.Arrow
 import Control.Concurrent
-import Control.Monad.Error (MonadError)
 import Control.Monad.State
 import Data.Char
 import Data.Data
@@ -65,19 +62,11 @@ randomString n allowed_chars =
   where
     len = length allowed_chars - 1
 
--- | Extract data from GET or POST request. Fail with 'internalError' if param
--- variable not present or when it cannot be read.
-getDataFnM :: (HasRqData m, MonadIO m, ServerMonad m, MonadError KontraError m) => RqData a -> m a
-getDataFnM fun = either (const internalError) return =<< getDataFn fun
-
 -- | Since we sometimes want to get 'Maybe' and also we wont work with
 -- newer versions of happstack here is.  This should be droped when
 -- new version is globaly established.
 getDataFn' :: (HasRqData m, MonadIO m, ServerMonad m) => RqData a -> m (Maybe a)
 getDataFn' fun = either (const Nothing) Just `liftM` getDataFn fun
-
-getAsString :: (HasRqData m, MonadIO m, ServerMonad m, MonadError KontraError m) => String -> m String
-getAsString = getDataFnM . look
 
 -- | Useful inside the 'RqData' monad.  Gets the named input parameter
 -- (either from a @POST@ or a @GET@)

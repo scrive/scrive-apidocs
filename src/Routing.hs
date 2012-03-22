@@ -28,7 +28,6 @@ import AppView as V
 import Data.Maybe
 import Happstack.Server(Response, Method(GET, POST, DELETE, PUT), rsCode)
 import Happstack.StaticRouting
-import KontraError (internalError)
 import KontraLink
 import Misc
 import Kontra

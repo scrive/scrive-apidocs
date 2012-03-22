@@ -12,7 +12,6 @@ import CompanyAccounts.CompanyAccountsControl
 import DB.Classes
 import Doc.DocStateData
 import Kontra
-import KontraError (internalError)
 import Control.Monad.Trans
 import qualified Data.ByteString.Lazy as BSL
 

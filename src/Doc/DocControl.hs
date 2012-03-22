@@ -72,7 +72,6 @@ import Doc.DocViewMail
 import InputValidation
 import File.Model
 import Kontra
-import KontraError (internalError)
 import KontraLink
 import MagicHash (MagicHash)
 import MinutesTime

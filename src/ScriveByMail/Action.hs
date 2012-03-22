@@ -16,7 +16,6 @@ import Doc.Model
 import EvidenceLog.Model
 import File.Model
 import Kontra
-import KontraError (internalError)
 import KontraLink
 import MagicHash
 import Mails.SendMail

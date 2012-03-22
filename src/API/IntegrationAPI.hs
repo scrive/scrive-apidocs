@@ -36,7 +36,6 @@ import MinutesTime
 import Misc
 import Session
 import Kontra
-import KontraError (internalError)
 import AppView
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS

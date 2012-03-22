@@ -1,7 +1,7 @@
-module Kontra
-    ( Context(..)
-    , Kontrakcja
-    , KontraMonad(..)
+module Kontra 
+    ( module KontraError
+    , module KontraMonad
+    , module Context
     , Kontra(..)
     , Kontra'(..)
     , runKontra'
@@ -18,6 +18,8 @@ module Kontra
     , newAccountCreatedLink
     , runDBOrFail
     , queryOrFail
+    , getAsString
+    , getDataFnM
     , currentService
     , currentServiceID
     , HasService(..)
@@ -187,6 +189,16 @@ queryOrFail :: (MonadError KontraError m, DBMonad m, Monad m, MonadIO m, DBQuery
 queryOrFail q = do
   mres <- runDBQuery q
   guardJust mres
+
+-- data fetchers specific to Kontra
+
+getAsString :: (HasRqData m, MonadIO m, ServerMonad m, MonadError KontraError m) => String -> m String
+getAsString = getDataFnM . look
+
+-- | Extract data from GET or POST request. Fail with 'internalError' if param
+-- variable not present or when it cannot be read.
+getDataFnM :: (HasRqData m, MonadIO m, ServerMonad m, MonadError KontraError m) => RqData a -> m a
+getDataFnM fun = either (const internalError) return =<< getDataFn fun
 
 -- | Current service id
 

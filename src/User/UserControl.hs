@@ -16,7 +16,6 @@ import Doc.Model
 import Company.Model
 import InputValidation
 import Kontra
-import KontraError (internalError)
 import KontraLink
 import MagicHash (MagicHash)
 import Mails.SendMail

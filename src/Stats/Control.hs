@@ -51,7 +51,6 @@ import Doc.DocInfo
 import Doc.DocStateData
 import Doc.Model
 import Kontra
-import KontraError (KontraError)
 import KontraLink
 import MinutesTime
 import Misc

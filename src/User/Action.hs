@@ -17,7 +17,6 @@ import Doc.Model
 import Doc.DocStateData
 import InputValidation
 import Kontra
-import KontraError
 import Mails.SendMail
 import Misc
 import Templates.Templates

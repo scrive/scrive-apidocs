@@ -33,7 +33,6 @@ import Doc.Model
 import Doc.DocStateData
 import InputValidation
 import Kontra
-import KontraError (internalError)
 import KontraLink
 import ListUtil
 import Mails.SendMail
