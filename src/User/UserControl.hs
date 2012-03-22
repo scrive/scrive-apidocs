@@ -14,6 +14,7 @@ import DB.Classes
 import qualified Doc.Action
 import Doc.Model
 import Company.Model
+import Control.Logic
 import InputValidation
 import Kontra
 import KontraLink

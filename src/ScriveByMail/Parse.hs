@@ -1,5 +1,6 @@
 module ScriveByMail.Parse where
 
+import Control.Logic
 import Data.Maybe
 import Data.String.Utils
 import Control.Monad

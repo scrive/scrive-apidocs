@@ -271,9 +271,6 @@ window.Document = Backbone.Model.extend({
     pending: function() {
         return this.status() == "Pending";
     },
-    awaitingauthor: function() {
-        return this.status() == "AwaitingAuthor";
-    },
     timedout: function() {
         return this.status() == "Timedout";
     },
@@ -284,7 +281,7 @@ window.Document = Backbone.Model.extend({
         return this.status() == "Closed";
     },
     signingInProcess: function() {
-        return this.pending() || this.awaitingauthor();
+        return this.pending();
     },
     datamismatch: function() {
         return _.any(this.signatory, function() {return this.datamismatch() == true;});
@@ -358,6 +355,20 @@ window.Document = Backbone.Model.extend({
             });
 
     },
+    authorCanSignLast: function() {
+        for (var i = 0; i < this.signatories().length; ++i) {
+            var sig = this.signatories()[i];
+            if (sig.author()) {
+                if (!sig.signs() || sig.hasSigned())
+                    return false;
+            }
+            else {
+                if (sig.signs() && !sig.hasSigned())
+                    return false;
+            }
+        }
+        return true;
+    },
     allowsDD: function() {
         return this.preparation() && !this.isBasic();
     },
@@ -375,7 +386,7 @@ window.Document = Backbone.Model.extend({
                               this.currentSignatory() != undefined &&
                               this.currentSignatory().canSign();
       var canSignAsAuthor = this.currentViewerIsAuthor() &&
-                                 this.awaitingauthor();
+                                 this.authorCanSignLast();
       return canSignAsSig || canSignAsAuthor;
     },
     logo: function() {

@@ -8,6 +8,7 @@ module Doc.Action
     )
     where
 
+import Control.Logic
 import Data.Char
 import DB.Classes
 import Doc.DocSeal
@@ -22,7 +23,6 @@ import File.Model
 import Kontra
 import KontraLink
 import Mails.SendMail
-import Misc
 import Redirect
 import User.Model
 import Util.HasSomeUserInfo
@@ -58,11 +58,13 @@ postDocumentChangeAction document@Document  { documentstatus
       (not $ hasSigned $ getAuthorSigLink document) &&
       (isSignatory $ getAuthorSigLink document) = do
           Log.docevent $ "All have signed but author; Pending -> AwaitingAuthor: " ++ show documentid
+          Log.docevent $ "Pending -> AwaitingAuthor; Send email to author: " ++ show documentid
           ctx <- getContext
-          d <- guardRightM $ runDBUpdate $ PendingToAwaitingAuthor documentid (SystemActor $ ctxtime ctx)
-          postDocumentChangeAction d olddocument msignalinkid
-    | (documentstatus == Pending ||
-       documentstatus == AwaitingAuthor) &&
+          author <- getDocAuthor
+          Log.server $ "Sending awaiting email for document #" ++ show documentid ++ ": " ++ documenttitle
+          sendAwaitingEmail ctx document author
+          return ()
+    | documentstatus == Pending &&
       (all (isSignatory =>>^ hasSigned) $ documentsignatorylinks document) = do
           Log.docevent $ "All have signed; " ++ show documentstatus ++ " -> Closed: " ++ show documentid
           ctx <- getContext
@@ -113,19 +115,9 @@ postDocumentChangeAction document@Document  { documentstatus
              Right newdoc -> runTemplatesT (ctxlocale, ctxglobaltemplates) $ sendClosedEmails newctx newdoc
              Left errmsg -> Log.error $ "Sealing of document #" ++ show documentid ++ " failed, could not send document confirmations: " ++ errmsg
         return ()
-    -- Pending -> AwaitingAuthor
-    -- main action: sendAwaitingEmail
-    | oldstatus == Pending && documentstatus == AwaitingAuthor = do
-        Log.docevent $ "Pending -> AwaitingAuthor; Send email to author: " ++ show documentid
-        ctx <- getContext
-        -- we don't need to forkIO here since we only schedule emails here
-        author <- getDocAuthor
-        Log.server $ "Sending awaiting email for document #" ++ show documentid ++ ": " ++ documenttitle
-        sendAwaitingEmail ctx document author
-        return ()
     -- Pending -> Closed OR AwaitingAuthor -> Closed
     -- main action: sendClosedEmails
-    | (oldstatus == Pending || oldstatus == AwaitingAuthor) && documentstatus == Closed = do
+    | oldstatus == Pending && documentstatus == Closed = do
         Log.docevent $ show oldstatus ++ " -> Closed; Sending emails: " ++ show documentid
         _ <- addDocumentCloseStatEvents document
         ctx@Context{ctxlocale, ctxglobaltemplates} <- getContext

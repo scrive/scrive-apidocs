@@ -349,9 +349,9 @@ handleIssueShowPost docid = withUserPost $ do
   send              <- isFieldSet "send"
   -- Behold!
   case documentstatus document of
-    Preparation | sign              -> handleIssueSign                 document
-    Preparation | send              -> handleIssueSend                 document
-    AwaitingAuthor                  -> handleIssueSignByAuthor         document
+    Preparation | sign             -> handleIssueSign         document
+    Preparation | send             -> handleIssueSend         document
+    _ | canAuthorSignLast document -> handleIssueSignByAuthor document
     _ -> return $ LinkContracts
 
 handleIssueSign :: Kontrakcja m => Document -> m KontraLink
@@ -780,8 +780,8 @@ handleIssueBulkRemind doctype = do
         doc <- queryOrFail $ GetDocumentByDocumentID docid
         case (documentstatus doc) of
           Pending -> do
-            let isElegible = isEligibleForReminder (Just user) doc
-                unsignedsiglinks = filter isElegible $ documentsignatorylinks doc
+            let isEligible = isEligibleForReminder user doc
+                unsignedsiglinks = filter isEligible $ documentsignatorylinks doc
             sequence . map (sendReminderEmail Nothing ctx doc) $ unsignedsiglinks
           _ -> return []
 
@@ -857,7 +857,7 @@ handleCancel :: Kontrakcja m => DocumentID -> m KontraLink
 handleCancel docid = withUserPost $ do
   doc <- guardRightM $ getDocByDocID docid
   actor <- guardJustM $ mkAuthorActor <$> getContext
-  if isPending doc || isAwaitingAuthor doc
+  if isPending doc
     then do
     mdoc' <- runDBUpdate $ CancelDocument (documentid doc) ManualCancel actor
     case mdoc' of

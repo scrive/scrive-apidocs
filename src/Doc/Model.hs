@@ -38,7 +38,6 @@ module Doc.Model
   , MarkDocumentSeen(..)
   , MarkInvitationRead(..)
   , NewDocument(..)
-  , PendingToAwaitingAuthor(..)
   , PreparationToPending(..)
   , ReallyDeleteDocument(..)
   , RejectDocument(..)
@@ -88,6 +87,7 @@ import User.Model
 import Company.Model
 import MinutesTime
 import OurPrelude
+import Control.Logic
 import Doc.DocStateData
 import Doc.Invariants
 import Database.HDBC
@@ -605,11 +605,10 @@ instance Actor a => DBUpdate (ArchiveDocument a) (Either String Document) where
       updateArchivableDoc whereClause = kRun $ mconcat [
           mkSQL UPDATE tableSignatoryLinks [sql "deleted" True]
         , whereClause
-        , SQL " AND document_id = ? AND EXISTS (SELECT 1 FROM documents WHERE id = ? AND status <> ? AND status <> ?)" [
+        , SQL " AND document_id = ? AND EXISTS (SELECT 1 FROM documents WHERE id = ? AND status <> ?)" [
             toSql did
           , toSql did
           , toSql Pending
-          , toSql AwaitingAuthor
           ]
         ]
 
@@ -757,9 +756,8 @@ instance Actor a => DBUpdate (ChangeSignatoryEmailWhenUndelivered a) (Either Str
       , sql "fields" $ setEmail $ signatoryfields $ signatorydetails sl
       , sql "user_id" $ fmap userid muser
       , sql "company_id" $ muser >>= usercompany
-      ] <++> SQL "WHERE EXISTS (SELECT 1 FROM documents WHERE documents.id = signatory_links.document_id AND (documents.status = ? OR documents.status = ?)) AND id = ?" [
+      ] <++> SQL "WHERE EXISTS (SELECT 1 FROM documents WHERE documents.id = signatory_links.document_id AND documents.status = ?) AND id = ?" [
         toSql Pending
-      , toSql AwaitingAuthor
       , toSql slid
       ]
     when_ (r == 1) $ 
@@ -2049,9 +2047,8 @@ instance Actor a => DBUpdate (UpdateFields a) (Either String Document) where
           eml     = getEmail sl
       r <- kRun $ mkSQL UPDATE tableSignatoryLinks [
           sql "fields" $ map updateSigField $ signatoryfields $ signatorydetails sl
-        ] <++> SQL "WHERE EXISTS (SELECT 1 FROM documents WHERE documents.id = signatory_links.document_id AND (documents.status = ? OR documents.status = ?)) AND document_id = ? AND id = ? " [
+        ] <++> SQL "WHERE EXISTS (SELECT 1 FROM documents WHERE documents.id = signatory_links.document_id AND documents.status = ?) AND document_id = ? AND id = ? " [
           toSql Pending
-        , toSql AwaitingAuthor
         , toSql did
         , toSql slid
         ]
@@ -2096,34 +2093,6 @@ instance Actor a => DBUpdate (UpdateFieldsNoStatusCheck a) (Either String Docume
       (Just did)
       actor
   getOneDocumentAffected "UpdateFields" r did
-
-data Actor a => PendingToAwaitingAuthor a = PendingToAwaitingAuthor DocumentID a
-instance Actor a => DBUpdate (PendingToAwaitingAuthor a) (Either String Document) where
-  dbUpdate (PendingToAwaitingAuthor docid actor) = do
-    mdocument <- dbQuery $ GetDocumentByDocumentID docid
-    case mdocument of
-      Nothing -> return $ Left $ "Cannot PendingToAwaitingAuthor document " ++ show docid ++ " because it does not exist"
-      Just document ->
-        case checkPendingToAwaitingAuthor document of
-          [] -> do
-            let time = actorTime actor
-            r <- kRun $ mkSQL UPDATE tableDocuments [
-                sql "status" AwaitingAuthor
-              , sql "mtime" time
-              , sqlLog time "Changed to AwaitingAuthor status"
-              ] <++> SQL "WHERE id = ? AND type = ?" [
-                toSql docid
-              , toSql $ Signable undefined
-              ]
-            when_ (r == 1) $
-              dbUpdate $ InsertEvidenceEvent
-              PendingToAwaitingAuthorEvidence
-              ("Document moved from Pending to AwaitingAuthor status when all signatories had signed but author by " ++ actorWho actor ++ ".")
-              (Just docid)
-              actor
-
-            getOneDocumentAffected "PendingToAwaitingAuthor" r docid
-          s -> return $ Left $ "Cannot PendingToAwaitingAuthor document " ++ show docid ++ " because " ++ concat s
 
 data Actor a => AddDocumentAttachment a = AddDocumentAttachment DocumentID FileID a
 instance Actor a => DBUpdate (AddDocumentAttachment a) (Either String Document) where

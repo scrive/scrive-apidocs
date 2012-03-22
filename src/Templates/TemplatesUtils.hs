@@ -12,13 +12,12 @@
 module Templates.TemplatesUtils
 (option,soption,Option(..),markParity,kontramail,kontramaillocal,contextFields) where
 
+import Control.Logic
 import Control.Monad.IO.Class
 import Data.Data
 import Templates.Templates
 import Mails.SendMail
-import Misc
 import Data.Char
-import qualified Log ()
 import Kontra
 import User.Locale
 

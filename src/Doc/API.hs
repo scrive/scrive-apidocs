@@ -10,8 +10,7 @@ import Doc.DocStateQuery
 import Doc.DocStateData
 import Doc.Model
 import Doc.JSON
---import Control.Applicative
---import Control.Monad
+import Control.Logic
 import Control.Monad.Trans
 import Misc
 import Data.Maybe

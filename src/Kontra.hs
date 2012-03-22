@@ -32,6 +32,7 @@ import API.Service.Model
 import ActionSchedulerState
 import Context
 import Control.Applicative
+import Control.Logic
 import Control.Monad.Error (MonadError, ErrorT, runErrorT)
 import Control.Monad.Reader
 import Control.Monad.State
@@ -114,8 +115,6 @@ onlyAdmin m = ifM (isAdmin <$> getContext) m respond404
 -}
 onlySalesOrAdmin :: Kontrakcja m => m a -> m a
 onlySalesOrAdmin m = ifM ((isAdmin ||^ isSales) <$> getContext) m respond404
-
-
 
 {- |
     Will 404 if the testing backdoor isn't open.

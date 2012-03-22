@@ -24,6 +24,7 @@ module API.IntegrationAPI (
     ) where
 
 import Control.Monad.State
+import Control.Logic
 import Data.Functor
 import Data.Maybe
 import DB.Classes
@@ -382,7 +383,7 @@ getDocuments = do
       Just s  -> case parseMinutesTimeISO s of
         Just t  -> return $ Just t
         Nothing -> throwApiError API_ERROR_PARSING $ "to_date unrecognized format: " ++ show s
-    let allstatuses = [Preparation, Pending, Closed, Rejected, Timedout, Canceled, AwaitingAuthor, DocumentError ""]
+    let allstatuses = [Preparation, Pending, Closed, Rejected, Timedout, Canceled, DocumentError ""]
         mstatuses   = case (mFromState, mToState) of
           (Nothing, Nothing) -> Nothing
           _ -> Just [s | s <- allstatuses
