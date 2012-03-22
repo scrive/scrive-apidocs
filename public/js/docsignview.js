@@ -218,7 +218,8 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
     var container = $("<div class='summary' />");
     if (signatory.signs()) {
       container.addClass(signatory.status());
-      if (signatory.status() == "signed") {
+      if (signatory.hasSigned()) {
+        container.addClass("signed");
         container.append($("<div class='icon status signed' />"));
       }
       container.append($("<div class='label' />").text(this.signatorySummary()));

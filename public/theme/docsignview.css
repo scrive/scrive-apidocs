@@ -607,11 +607,15 @@ body.signview {
 
 .signview .signatories .signatory .summary.signed {
   color: #83bc39;
-  padding-left: 90px;
 }
 
-.signview .signatories .signatory .summary.signed .label {
-  float: left;
+.signview .signatories .signatory .summary .icon {
+  float: none;
+  display: inline-block
+}
+
+.signview .signatories .signatory .summary .label {
+  display: inline-block;
 }
 
 .signview .signatories .signatory.current .fieldwrapper {
