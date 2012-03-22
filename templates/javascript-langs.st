@@ -81,6 +81,8 @@ javascriptLocalisation =
              , you : "$_you()$"
              , searchBoxButtonText : "$_searchBoxButtonText()$"
              , downloadPDF : "$_DownloadPDF()$"
+             , reviewPDF: "$_ReviewPDF()$"
+             , deletePDF: "$_DeletePDF()$"
              , document : "$_Document()$"
              , onlyPDFAllowed : "$_updateAttachmentsDialogUpLoadOnlyPDF()$"
              , attachment : "$_Attachment()$"
@@ -103,9 +105,7 @@ javascriptLocalisation =
                                  }
                     }
              , signByAuthor : {
-                          guardCBoxForAuthorLabel : "$_signGuardField1()$"
-                        , guardCBoxForAuthorAfterLabel : "$_signGuardField2()$"
-                        , modalTitle : "$_dialogConfirmSignByAuthorHead()$"
+                          modalTitle : "$_dialogConfirmSignByAuthorHead()$"
                         , modalBody1 : "$_dialogConfirmSignByAuthorBody1()$"
                         , modalBody2 : "$_dialogConfirmSignByAuthorBody2()$"
                         , modalBody3 : "$_dialogConfirmSignByAuthorBody3()$"
@@ -135,10 +135,13 @@ javascriptLocalisation =
                        , signed : "$_signatoryMessageIfSigned()$"
                        , cancelled : "$_signatoryMessageIfCancelled()$"
                        , other : "$_signatoryMessageIfElse()$"
+                       , waitingForSignature: "$_waitingForSignature()$"
                     }
             , authorAttachmentBoxHeader : "$_signViewNotsignedbymeAttachmentBoxHead()$"
             , signatoryAttachmentBoxHeader : "$_signViewSigAttachmentBoxHead()$"
             , signatoryAttachmentUploadButton: "$_signViewSigAttachmentBoxChooseFile()$"
+            , uploadedAttachments: "$_uploadedAttachments()$"
+            , waitingForAttachment: "$_waitingForAttachment()$"
             , templateTitle : "$_signStepsTitleRowTextContainerIfTemplate()$"
             , step1template : "$_step1selectIfTemplate()$"
             , step2template : "$_step2selectIfTemplate()$"
@@ -225,9 +228,9 @@ javascriptLocalisation =
                 selectLanguage : "$_documentLanguageLabel()$"
               , en : "$_English()$"
               , se : "$_Swedish()$"
-              , changeEnglishToSwedishText :  "$_signInEnglishConfirmText()$"
+              , changeEnglishToSwedishText :  "$_signInSwedishConfirmText()$"
               , signInSwedish : "$_signInSwedish()$"
-              , changeSwedishToEnglishText: "$_signInSwedishConfirmText()$"
+              , changeSwedishToEnglishText: "$_signInEnglishConfirmText()$" 
               , signInEnglish:  "$_signInEnglish()$"
             }
          , csv : {
@@ -293,7 +296,44 @@ javascriptLocalisation =
               logMeIn : "$_login()$"
          }
          , cancel : "$_cancel()$"
-
+         , docsignview : {
+            followArrowToSign: "$_followArrowToSign()$"
+          , followArrowToReview: "$_followArrowToReview()$"
+          , signedNotClosed: "$_signedNotClosed()$"
+          , signedNotClosedSubText: "$_signedNotClosedSubText()$"
+          , signedAndClosed: "$_signedAndClosed()$"
+          , signedAndClosedSubText: "$_signedAndClosedSubText()$"
+          , unavailableForSign: "$_unavailableForSign()$"
+          , dueDate: "$_dueDate()$"
+          , showDetails: "$_showDetails()$"
+          , hideDetails: "$_hideDetails()$"
+          , companyNumberLabel: "$_companyNumberLabel()$"
+          , personalNumberLabel: "$_personalNumberLabel()$"
+          , authorAttachmentsTitleForOne: "$_signViewAuthorAttachmentsTitleForOne()$"
+          , authorAttachmentsTitleForLots: "$_signViewAuthorAttachmentsTitleForLots()$"
+          , signatoryAttachmentsTitleForOne: "$_signViewSignatoryAttachmentsTitleForOne()$"
+          , signatoryAttachmentsTitleForLots: "$_signViewSignatoryAttachmentsTitleForLots()$"
+          , uploadedAttachmentsTitleForOne: "$_signViewUploadedAttachmentsTitleForOne()$"
+          , uploadedAttachmentsTitleForLots: "$_signViewUploadedAttachmentsTitleForLots()$"
+          , signatoriesTitle: "$_signViewSignatoriesTitle()$"
+          , newAccountTitle: "$_signViewCreateAccountTitle()$"
+          , newAccountSubTitle: "$_signViewCreateAccountSubTitle()$"
+          , emailLabel: "$_email()$:"
+          , passwordLabel: "$_modalAccountSetupChoosePassword()$"
+          , password2Label: "$_modalAccountSetupRepeatPassword()$"
+          , acceptTOSLabel: '$_accountFromSignInputsBodyAcceptTOS()$'
+          , newAccountButton: "$_signViewCreateAccountLabel()$"
+          , createdAccountTitle: "$_signViewCreatedAccountTitle()$"
+          , createdAccountSubtitle: "$_signViewCreatedAccountSubtitle()$"
+          , shareTitle: "$_signViewShareTitle()$"
+          , facebookButtonLabel: "$_facebookButtonLabel()$"
+          , tweetButtonLabel: "$_tweetButtonLabel()$"
+          , phoneButtonLabel: "$_phoneButtonLabel()$"
+          , phoneFormDescription: "$_phoneFormDescription()$"
+          , phoneSubmitButtonLabel: "$_phoneSubmitButtonLabel()$"
+          , phoneConfirmationText: "$_phoneConfirmationText()$"
+          , startButtonLabel: "$_startButtonLabel()$"
+        }
     }
 
 ####

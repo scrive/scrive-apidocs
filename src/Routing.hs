@@ -48,6 +48,9 @@ class ToResp a where
 instance ToResp Response where
     toResp = return
 
+instance ToResp (Kontra Response) where
+    toResp = id
+
 instance ToResp KontraLink where
     toResp = sendRedirect
 
@@ -79,7 +82,7 @@ page pageBody = do
     pb <- pageBody
     ctx <- getContext
     if (isNothing $ ctxservice ctx)
-     then renderFromBody TopDocument kontrakcja pb
+     then renderFromBody kontrakcja pb
      else embeddedPage pb
 
 

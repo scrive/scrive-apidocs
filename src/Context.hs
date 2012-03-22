@@ -21,7 +21,7 @@ import Mails.MailsConfig
 import API.Service.Model
 import Company.Model
 import MagicHash (MagicHash)
-import Misc (IPAddress)
+import IPAddress
 
 data Context = Context
     { ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.

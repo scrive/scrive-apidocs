@@ -49,9 +49,9 @@ import Data.Either
 import Data.Maybe
 import DB.Derive
 import Happstack.Data
+import IPAddress
 import MagicHash (MagicHash)
 import MinutesTime
-import Misc
 import User.Model
 --import qualified Data.ByteString as BS
 --import qualified Data.ByteString.UTF8 as BS

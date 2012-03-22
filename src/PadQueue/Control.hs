@@ -26,6 +26,8 @@ import Util.FlashUtil
 import User.UserView
 import Doc.Model
 import KontraError
+import AppView
+import Happstack.Server.Types
 
 -- PadQueue STATE
 padQueueState ::  (Kontrakcja m) =>  m JSValue
@@ -60,8 +62,8 @@ clearQueue = do
     liftIO $ json $ return ()
 
 -- PadQueue Pages
-showPadQueuePage::  (Kontrakcja m) =>  m String
-showPadQueuePage = padQueuePage 
+showPadQueuePage::  (Kontrakcja m) =>  m Response
+showPadQueuePage = padQueuePage >>= simpleResponse
 
 
 padQueueToSignatoryData :: (Kontrakcja m) => PadQueue -> m (Maybe (Document,SignatoryLink))

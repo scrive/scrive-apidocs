@@ -15,6 +15,7 @@ module EvidenceLog.Model
          DocumentEvidenceEvent(..),
          copyEvidenceLogToNewDocument,
          mkAuthorActor,
+         mkAdminActor,
          htmlDocFromEvidenceLog
        )
        where
@@ -29,6 +30,7 @@ import DB.Fetcher2
 import DB.Utils
 import Doc.DocStateData
 import EvidenceLog.Tables
+import IPAddress
 import MinutesTime
 import Misc
 import User.Model
@@ -69,6 +71,11 @@ instance Actor SystemActor where
 mkAuthorActor :: Context -> Maybe AuthorActor
 mkAuthorActor ctx = case ctxmaybeuser ctx of
   Just user -> Just $ AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (getEmail user)
+  Nothing   -> Nothing
+
+mkAdminActor :: Context -> Maybe AdminActor
+mkAdminActor ctx = case ctxmaybeuser ctx of
+  Just user -> Just $ AdminActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (getEmail user)
   Nothing   -> Nothing
 
 -- | For an action that requires an operation on a document and an
@@ -212,7 +219,7 @@ htmlDocFromEvidenceLog title elog = do
     field "documenttitle" title
     fieldFL "entries" $ for elog $ \entry -> do
       field "time" $ formatMinutesTimeUTC (evTime entry) ++ " UTC"
-      field "ip"   $ fmap formatIP (evIP4 entry)
+      field "ip"   $ show $ evIP4 entry
       field "text" $ evText entry
 
 data GetEvidenceLog = GetEvidenceLog DocumentID

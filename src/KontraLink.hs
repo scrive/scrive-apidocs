@@ -52,7 +52,7 @@ data KontraLink
     | LinkOrders
     | LinkAttachments
     | LinkRubbishBin
-    | LinkAccount Bool -- show create company modal?
+    | LinkAccount
     | LinkAccountCompany
     | LinkCompanyLogo CompanyID
     | LinkChangeUserEmail ActionID MagicHash
@@ -162,8 +162,7 @@ instance Show KontraLink where
     showsPrec _ (LinkAttachments) = (++) $ "/a"
     showsPrec _ (LinkRubbishBin) = (++) $ "/r"
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
-    showsPrec _ (LinkAccount False) = (++) "/account"
-    showsPrec _ (LinkAccount True) = (++) "/account/?createcompany"
+    showsPrec _ (LinkAccount) = (++) "/account"
     showsPrec _ LinkAccountCompany = (++) "/account/company"
     showsPrec _ (LinkCompanyLogo cid) = (++) $ "/account/company/" ++ show cid
     showsPrec _ (LinkChangeUserEmail actionid magichash) =
@@ -184,7 +183,7 @@ instance Show KontraLink where
         (++) $ "/df/" ++ show fileid ++ "/" ++ filename
     showsPrec _ (LinkSignDoc document signatorylink) =
         (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++
-                 "?" ++ "magichash="++ show (signatorymagichash signatorylink)
+                 "/"++ show (signatorymagichash signatorylink)
     showsPrec _ (LinkSignDocNoMagicHash documentid signatorylinkid) =
         (++) $ "/s/" ++ show documentid ++ "/" ++ show signatorylinkid
     showsPrec _ (LinkAccountFromSign document signatorylink) =
@@ -208,7 +207,7 @@ instance Show KontraLink where
     showsPrec _ (LinkWithdrawn did ) = (++) $ "/withdrawn/"++show did
     showsPrec _ LoopBack = (++) $ "/" -- this should never be used
     showsPrec _ BackToReferer = (++) $ "/" -- this should never be used
-    showsPrec _ (LinkDaveDocument docid) = (++) ("/dave/document/" ++ show docid)
+    showsPrec _ (LinkDaveDocument docid) = (++) ("/dave/document/" ++ show docid ++"/")
     showsPrec _ (LinkAskQuestion) = (++) ("/question")
     showsPrec _ (LinkInvite) = (++) "/invite"
     showsPrec _ (LinkSignCanceledDataMismatch docid sigid) = (++) $ "/landpage/signcanceleddatamismatch/" ++ show docid ++ "/" ++ show sigid

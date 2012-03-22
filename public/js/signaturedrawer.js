@@ -282,7 +282,7 @@ var SignatureForDrawingView = Backbone.View.extend({
         if (this.mychange) return; 
         var signature = this.signature;
         var view = this;
-        this.container = this.el;
+        this.container = $(this.el);
         this.container.addClass("signatureDrawingBox");
         if (this.model.isReady())
                this.container.addClass("ready");

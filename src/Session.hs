@@ -365,7 +365,7 @@ handleSession r = do
                       now <- liftIO getMinutesTime
                       if (now >= (expires $ sessionData $ session))
                           then do
-                             -- _ <- update $ DelSession (sessionId session)
+                             _ <- update $ DelSession (sessionId session)
                              liftIO $ inIO r $ startSession
                           else return session
         Nothing -> inIO r $ startSession
@@ -395,8 +395,8 @@ updateSessionWithContextData rng (Session i sd) u trans magichashes' pu = do
            when (isNothing (userID sd) && isJust u) $ do
                msess <- query $ GetSessionByUserId $ fromJust u
                case msess of
-                    Just _sess -> do
-                        -- _ <- update $ DelSession $ sessionId sess
+                    Just sess -> do
+                        _ <- update $ DelSession $ sessionId sess
                         return ()
                     Nothing   -> return ()
            update (NewSession rng newsd) >>= startSessionCookie
@@ -477,7 +477,7 @@ createServiceSession userorcompany loc = do
     case moldsession of
       Just s -> if now >= expires (sessionData s)
                 then do
-                  -- _ <- update $ DelSession $ sessionId s
+                  _ <- update $ DelSession $ sessionId s
                   newSession' userorcompany loc
                 else return $ sessionId s
       Nothing -> newSession' userorcompany loc

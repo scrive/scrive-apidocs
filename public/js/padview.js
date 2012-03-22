@@ -66,13 +66,13 @@ window.PadQueueView = Backbone.View.extend({
     },
     documentView : function() {
         var padqueue = this.model;
-        var doc =  KontraStandardDocument.init({
-                            id: padqueue.documentid(),
-                            viewer : new DocumentViewer({
-                                signatoryid : padqueue.signatorylinkid(),
-                                magichash : padqueue.magichash()
-                            })
-                        });
+        var doc =  KontraSignDocument.init({
+                    id: padqueue.documentid(),
+                    viewer : new DocumentViewer({
+                        signatoryid : padqueue.signatorylinkid(),
+                        magichash : padqueue.magichash()
+                      })
+                   });
         return doc.view.el;
     },
     noDocumentView : function() {
@@ -120,7 +120,7 @@ window.PadQueueView = Backbone.View.extend({
     },
     render: function () {
         var padqueue = this.model;
-        var container = this.el;
+        var container = $(this.el);
         container.empty();
         if (padqueue.ready()) {
             if (padqueue.hasDocument())

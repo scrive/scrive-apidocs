@@ -38,7 +38,8 @@ window.TableView = Backbone.View.extend({
     },
     render: function () {
         var model = this.model;
-        this.el.children().detach();
+        var container = $(this.el)
+        container.children().detach();
         var table = $("<table/>");
         var tbody = $("<tbody/>")
         for(var i =0; i < model.rows(); i++)
@@ -59,7 +60,7 @@ window.TableView = Backbone.View.extend({
             tbody.append(tr);
         }    
         table.append(tbody);
-        this.el.append(table);
+        container.append(table);
         return this;
 
     }

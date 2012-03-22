@@ -70,7 +70,7 @@ import Happstack.Server
 import Control.Monad
 import Control.Monad.Error (MonadError, catchError)
 import Control.Applicative
-
+import qualified Data.Map as Map
 import User.Utils
 
 showAdminUserUsageStats :: Kontrakcja m => UserID -> m Response
@@ -82,7 +82,7 @@ showAdminUserUsageStats userid = onlySalesOrAdmin $ do
   let stats = calculateStatsByDay rawevents
   content <- adminUserUsageStatsPage user mcompany $ do
     fieldFL "statistics" $ statisticsFieldsByDay stats
-  renderFromBody TopEmpty kontrakcja content
+  renderFromBody kontrakcja content
 
 showAdminCompanyUsageStats :: Kontrakcja m => CompanyID -> m Response
 showAdminCompanyUsageStats companyid = onlySalesOrAdmin $ do
@@ -92,7 +92,7 @@ showAdminCompanyUsageStats companyid = onlySalesOrAdmin $ do
   fullnames <- convertUserIDToFullName [] stats
   content <- adminCompanyUsageStatsPage companyid $ do
     fieldFL "statistics" $ statisticsCompanyFieldsByDay fullnames
-  renderFromBody TopEmpty kontrakcja content
+  renderFromBody kontrakcja content
 
 showAdminSystemUsageStats :: Kontrakcja m => m Response
 showAdminSystemUsageStats = onlySalesOrAdmin $ do
@@ -108,18 +108,18 @@ showAdminSystemUsageStats = onlySalesOrAdmin $ do
   content <- adminUserStatisticsPage $ do
     fieldFL "statisticsbyday" $ statisticsFieldsByDay statsByDay
     fieldFL "statisticsbymonth" $ statisticsFieldsByMonth statsByMonth
-  renderFromBody TopEmpty kontrakcja content
+  renderFromBody kontrakcja content
 
 handleDocStatsCSV :: Kontrakcja m => m Response
 handleDocStatsCSV = onlySalesOrAdmin $ do
   stats <- runDBQuery GetDocStatEvents
   let docstatsheader = ["userid", "user", "date", "event", "count", "docid", "serviceid", "company", "companyid", "doctype"]
   csvstrings <- docStatsToString stats [] []
-  let csv = toCSV docstatsheader csvstrings
-  Log.debug $ "All doc stats length: " ++ (show $ length stats)
+  let res = Response 200 Map.empty nullRsFlags (toCSV docstatsheader csvstrings) Nothing
+  Log.debug $ "All doc stats length with bytestring" ++ (show $ length stats) ++ " " ++ (show $ length $ show $ rsBody res)
   ok $ setHeader "Content-Disposition" "attachment;filename=docstats.csv"
      $ setHeader "Content-Type" "text/csv"
-     $ toResponse csv
+     $ res
 
 docStatsToString :: Kontrakcja m => [DocStatEvent] -> [(UserID, String)] -> [(CompanyID, String)] -> m [[String]]
 docStatsToString [] _ _ = return []

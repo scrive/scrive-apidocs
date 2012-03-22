@@ -35,7 +35,7 @@ import Kontra ( Kontra, unKontra', unKontra)
 import Context
 import Mails.MailsConfig
 import MinutesTime
-import Misc (unknownIPAddress)
+import IPAddress
 import Templates.Templates
 import qualified MemCache
 import User.Locale
@@ -159,7 +159,7 @@ mkContext locale globaltemplates = liftIO $ do
         , ctxflashmessages = []
         , ctxtime = time
         , ctxnormalizeddocuments = docs
-        , ctxipnumber = unknownIPAddress
+        , ctxipnumber = noIP
         , ctxdbenv = error "dbenv is not defined"
         , ctxdocstore = error "docstore is not defined"
         , ctxs3action = AWS.S3Action {

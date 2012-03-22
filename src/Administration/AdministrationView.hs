@@ -195,4 +195,6 @@ userFields u =  do
         field "iscompanyaccount" $ isJust $ usercompany u
         field "iscompanyadmin"   $ useriscompanyadmin u
         field "id"               $ show (userid u)
+        field "companynumber"    $ getCompanyNumber u
+        field "companyname"      $ getCompanyName   u
 

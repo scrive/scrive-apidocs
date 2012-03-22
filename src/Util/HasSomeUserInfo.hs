@@ -21,12 +21,13 @@ module Util.HasSomeUserInfo (
   HasSomeUserInfo
   ) where
 
-import Data.Char
-import Data.String.Utils
 
 import Doc.DocStateData
 import User.Model
 import Mails.MailsData
+import Data.Char
+import Data.String.Utils
+
 
 -- | Anything that might have a first name and last name, or personalnumber
 class HasSomeUserInfo a where
@@ -70,20 +71,15 @@ emailFromSigLink sl = (getFullName sl, getEmail sl)
 
 -- | Get the full name (first last)
 getFullName :: (HasSomeUserInfo a) => a -> String
-getFullName a =
-  let fn = strip $ getFirstName a
-      ln = strip $ getLastName  a
-  in fn ++ " " ++ ln
+getFullName a = (strip $ getFirstName a) ++ " " ++ (strip $ getLastName  a)
+
 
 -- | If the full name is empty, return the email
 -- (no check if email is empty)
 getSmartName :: (HasSomeUserInfo a) => a -> String
-getSmartName a =
-  let fn = strip $ getFullName a
-      em = strip $ getEmail    a
-  in if all isSpace fn
-     then em
-     else fn
+getSmartName a = if (all isSpace (getFullName a))
+                    then strip $ getEmail a   
+                    else strip $ getFullName a
 
 -- | Get a MailAddress
 getMailAddress :: (HasSomeUserInfo a) => a -> MailAddress

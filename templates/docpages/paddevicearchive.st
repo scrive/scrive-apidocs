@@ -108,6 +108,22 @@ jQuery(function(){
 </script>
 ####
 padQueueCurrentPage=
+$doctype()$
+<html>
+  <head>
+    <title>Pad signing</title>
+    $standardHeaderContents()$
+  </head>
+  <body class="signview">
+    <div class="mainContainer960" >
+      <div class="body-container">
+        $padQueueCurrentPageContent()$
+      </div>
+    </div>
+  </body>
+</html>
+#####
+padQueueCurrentPageContent=
 <div class="padview"></div>
 <script>
 jQuery(function(){
@@ -116,3 +132,4 @@ jQuery(function(){
 });
 
 </script>
+######

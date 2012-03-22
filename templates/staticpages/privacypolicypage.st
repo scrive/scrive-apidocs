@@ -15,20 +15,30 @@ privacyPolicyPage=
 ###
 privacyPolicyPageContents=
 <div class="nicetext">
-<h1>$_privacyPolicyPageH1()$</h1>
+<h1>$_privacyPolicyPageHeader()$</h1>
 <br />
-$_privacyPolicyPageH1Body()$
+<p>$_privacyPolicyPageP1()$</p>
 <br />
-<h2>$_privacyPolicyPageH21()$</h2>
+<p>$_privacyPolicyPageP2()$</p>
 <br />
-<p>$_privacyPolicyPageH21Body()$</p>
+<h2>$_privacyPolicyPage1Header()$</h2>
 <br />
-<h2>$_privacyPolicyPageH23()$</h2>
+<p>$_privacyPolicyPage1()$</p>
 <br />
-<p>$_privacyPolicyPageH23Body()$</p>
+<h2>$_privacyPolicyPage2Header()$</h2>
 <br />
-<h2>$_privacyPolicyPageH24()$</h2>
+<p>$_privacyPolicyPage2()$</p>
 <br />
-<p>$_privacyPolicyPageH24Body()$</p>
+<h2>$_privacyPolicyPage3Header()$</h2>
+<br />
+<p>$_privacyPolicyPage3()$</p>
+<br />
+<h2>$_privacyPolicyPage4Header()$</h2>
+<br />
+<p>$_privacyPolicyPage4()$</p>
+<br />
+<h2>$_privacyPolicyPage5Header()$</h2>
+<br />
+<p>$_privacyPolicyPage5()$</p>
 </div>
 ###

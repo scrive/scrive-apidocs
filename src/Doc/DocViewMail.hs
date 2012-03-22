@@ -15,6 +15,7 @@ module Doc.DocViewMail (
     , documentMailWithDocLocale
     , mailFooterForDocument
     , mailFooterForUser
+    , companyBrandFields
     ) where
 
 import API.Service.Model
@@ -280,9 +281,10 @@ mailDocumentAwaitingForAuthor ctx document authorlocale = do
     signatories <- renderLocalListTemplate authorlocale $ map getSmartName $ partySignedList document
     documentMail authorlocale ctx document "mailDocumentAwaitingForAuthor" $ do
         field "authorname" $ getSmartName $ fromJust $ getAuthorSigLink document
-        field "documentlink" $ (ctxhostpart ctx) ++ (show $ LinkIssueDoc $ documentid document)
+        field "documentlink" $ (ctxhostpart ctx) ++ show (LinkSignDoc document $ fromJust $ getAuthorSigLink document)
         field "partylist" signatories
         field "companyname" $ nothingIfEmpty $ getCompanyName document
+        fieldM "footer" $ mailFooterForDocument ctx document
 
 mailMismatchSignatory :: TemplatesMonad m
                         => Context
