@@ -147,6 +147,7 @@ body.signview {
   border: solid #bababc 1px;
   text-align: center;
   padding: 20px;
+  overflow: none;
 }
 
 .signview .save .title {
@@ -189,6 +190,7 @@ body.signview {
   padding-right: 9px;
   border: solid #89c041 1px;
   background-color: #e7f6d5;
+  overflow: none;
 }
 
 .signview .save .highlight .row {
@@ -204,6 +206,7 @@ body.signview {
   border: solid #bababc 1px;
   padding: 1px;
   max-width: 168px;
+  overflow-x: auto;
 }
 
 .signview .save input {
@@ -241,7 +244,11 @@ body.signview {
 
 .signview .save .tos .check {
   float: left;
-  width: 20px;
+  margin-right: 10px;
+}
+
+.signview .save .tos input {
+  background: transparent;
 }
 
 .signview .save .tos .label {
@@ -491,6 +498,7 @@ body.signview {
 .signview .signatoryattachments .list .item .column {
   float: left;
   margin-right: 20px;
+  overflow: none;
 }
 
 .signview .signatoryattachments .list .item .first.column {
@@ -594,6 +602,10 @@ body.signview {
 
 .signview .signatories .grouping {
   margin-bottom: 10px;
+}
+
+.signview .signatories .email {
+  overflow-x: auto;
 }
 
 .signview .signatories .signatory .name {
