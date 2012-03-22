@@ -17,6 +17,7 @@ body.signview {
   width: 960px;
   padding-top: 10px;
   padding-bottom: 10px;
+  min-height: 70px;
 }
 
 .signview .pageheader .logowrapper {
@@ -35,13 +36,12 @@ body.signview {
 .signview .pageheader .content .sender {
   float: right;
   margin-top: 20px;
-  margin-bottom: 20px;
   text-align: right;
 }
 
 .signview .pageheader.withcustomlogo .content .sender.shoved {
   float: none;
-  position: fixed;
+  position: absolute;
   top: 10px;
   right: 100px;
 }
