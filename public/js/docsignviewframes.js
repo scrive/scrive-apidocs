@@ -13,7 +13,7 @@ window.DocumentSignViewHeader = Backbone.View.extend({
   },
   tagName : "div",
   updateHeaderSenderPosition : function() {
-    if (jQuery(window).width() < 1150) {
+    if ($(window).width() < 1150) {
         this.sender.addClass("shoved");
     } else {
         this.sender.removeClass("shoved");
