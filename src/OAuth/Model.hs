@@ -46,9 +46,9 @@ instance Convertible APIPrivilege Int where
 
 instance Convertible Int APIPrivilege where
   safeConvert 1 = return APIDocCreate
-  safeConvert s = Left ConvertError { convSourceValue = show s
-                                    , convSourceType = "Int"
-                                    , convDestType = "APIPrivilege"
+  safeConvert s = Left ConvertError { convSourceValue  = show s
+                                    , convSourceType   = "Int"
+                                    , convDestType     = "APIPrivilege"
                                     , convErrorMessage = "Convertion error: value " ++ show s ++ " not mapped"
                                     }
 
@@ -130,13 +130,19 @@ data GetRequestedPrivileges = GetRequestedPrivileges
                               APIToken 
                               String -- email address
                               MinutesTime
-instance DBQuery GetRequestedPrivileges [APIPrivilege] where
+instance DBQuery GetRequestedPrivileges (Maybe (String, [APIPrivilege])) where
   dbQuery (GetRequestedPrivileges token email time) = do
-    kPrepare (   "SELECT privilege FROM oauth_temp_privileges p " 
-              ++ "JOIN oauth_temp_credential c ON p.temp_token_id = c.id "
-              ++ " WHERE c.temp_token = ? AND c.id = ? AND c.email = ? AND expires > ?")
+    kPrepare (   "SELECT com.name, p.privilege FROM oauth_temp_privileges p " 
+              ++ "JOIN oauth_temp_credential c ON p.temp_token_id =   c.id "
+              ++ "JOIN oauth_api_token t       ON c.api_token_id  =   t.id "
+              ++ "JOIN users u                 ON t.user_id       =   u.id "
+              ++ "JOIN companies com           ON u.company_id    = com.id "
+              ++ "WHERE c.temp_token = ? AND c.id = ? AND c.email = ? AND expires > ?")
     _ <- kExecute [ toSql $ atToken token, toSql $ atID token, toSql email, toSql time ]
-    foldDB (\acc pr -> pr:acc) []
+    foldDB f Nothing
+    where f :: Maybe (String, [APIPrivilege]) -> String -> APIPrivilege -> Maybe (String, [APIPrivilege])
+          f Nothing         name pr = Just (name, [pr])
+          f (Just (_, acc)) name pr = Just (name, pr:acc)
 
 -- do we need to check the email address?
 data RequestAccessToken = RequestAccessToken

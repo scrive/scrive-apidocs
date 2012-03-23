@@ -1,4 +1,5 @@
 {-# LANGUAGE OverlappingInstances #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Util.JSON (
     -- Stuff that was here before
       getJSONField
@@ -47,7 +48,8 @@ import qualified Data.List.Utils as List
 import Misc
 import Text.JSON.String
 import Happstack.Server (HasRqData,ServerMonad)
-
+import qualified Data.Text as T
+import Control.Applicative
 
 fromJSONString :: JSValue -> String
 fromJSONString (JSString s) = fromJSString s
@@ -77,6 +79,10 @@ getJSONStringField name obj =
     case (getJSONField name obj) of
         Just (JSString s) -> fromJSString s
         _ -> ""
+
+instance JSON T.Text where
+  readJSON a = T.pack <$> readJSON a
+  showJSON = showJSON . T.unpack
 
 -- | Class of containers where inside sits JSON object
 -- | Getter an setter are required. 

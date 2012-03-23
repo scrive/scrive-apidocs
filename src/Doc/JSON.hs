@@ -6,7 +6,6 @@ module Doc.JSON
        , jsonDocumentID
        , jsonDocumentType
        , jsonSigAttachmentWithFile
-       , jsonDocumentMetadata
        , jsonDocumentForAuthor
        , dcrFromJSON
        , DocumentCreationRequest(..)
@@ -85,12 +84,6 @@ instance SafeEnum [IdentificationType] where
     toSafeEnum 10 = Just [ELegitimationIdentification]
     toSafeEnum _  = Nothing
 
-jsonDocumentMetadata :: Document -> JSValue
-jsonDocumentMetadata doc = fromRight $
-                           (Right jsempty) >>=
-                           (jsset "url" $ show $ LinkAPIDocumentMetadata (documentid doc)) >>=
-                           (jsset "title" $ documenttitle doc)
-
 jsonDocumentForAuthor :: Document -> String -> JSValue
 jsonDocumentForAuthor doc hostpart = 
   fromRight              $ (Right jsempty)                       >>=                    
@@ -101,7 +94,6 @@ jsonDocumentForAuthor doc hostpart =
   (jsset "type"          $ fromSafeEnumInt $ documenttype doc)   >>=                    
   (jsset "status"        $ fromSafeEnumInt $ documentstatus doc) >>=                    
 
-  (jsset "metadata"      $ jsonDocumentMetadata doc)             >>= -- up for deletion 
   (jsset "designurl"     $ show $ LinkIssueDoc (documentid doc)) >>= -- up for deletion 
   (jsset "authorization" $ fromSafeEnumInt $ documentallowedidtypes doc)              
 
@@ -112,7 +104,6 @@ jsonDocumentForSignatory doc =
   (jsset "title"         $ documenttitle doc)                    >>=                        
   (jsset "type"          $ fromSafeEnumInt $ documenttype doc)   >>=       
   (jsset "status"        $ fromSafeEnumInt $ documentstatus doc) >>=
-  (jsset "metadata"      $ jsonDocumentMetadata doc)             >>=
   (jsset "authorization" $ fromSafeEnumInt $ documentallowedidtypes doc)
 
 
@@ -130,11 +121,11 @@ jsonSigAttachmentWithFile sa mfile =
                                              (jsset "name" $ (filename file))))
 
 data DocumentCreationRequest = DocumentCreationRequest {
-  dcrTitle       :: String,
+  dcrTitle       :: Maybe String,
   dcrType        :: DocumentType,
   dcrTags        :: [DocumentTag],
   dcrInvolved    :: [InvolvedRequest],
-  dcrMainFile    :: String, -- filename
+  dcrMainFile    :: Maybe String, -- filename
   dcrAttachments :: [String] -- filenames
   }
                              deriving (Show, Eq)
@@ -199,23 +190,20 @@ tagFromJSON jsv = do
   JSString (JSONString value) <- jsget "value" jsv
   return $ DocumentTag { tagname = BS.fromString name, tagvalue = BS.fromString value }
 
+-- make this only require type; everything else is implied
 dcrFromJSON :: JSValue -> Either String DocumentCreationRequest
 dcrFromJSON jsv = do
-  f <- fileNameFromJSON =<< jsget "mainfile" jsv
-  JSString (JSONString title) <- jsgetdef "title" (showJSON f) jsv
   tp''@(JSRational _ _) <- jsgetdef "type" (showJSON (1::Int)) jsv
   let Just (tp'::Int) = fromJSON tp''
   tp <- maybe (Left $ "Unrecognized document type: " ++ show tp') Right $ toSafeEnum tp'
   JSArray tags' <- jsgetdef "tags" (showJSON ([]::[JSValue])) jsv
   tags <- mapM tagFromJSON tags'
-  JSArray inv' <- jsget "involved" jsv
+  JSArray inv' <- jsgetdef "involved" (showJSON ([]::[JSValue])) jsv
   inv <- mapM irFromJSON inv'
-  JSArray att' <- jsgetdef "attachments" (JSArray []) jsv
-  att <- mapM fileNameFromJSON att'
-  return $ DocumentCreationRequest { dcrTitle    = title
+  return $ DocumentCreationRequest { dcrTitle    = Nothing
                                    , dcrType     = tp
                                    , dcrTags     = tags
                                    , dcrInvolved = inv
-                                   , dcrMainFile = f
-                                   , dcrAttachments = att
+                                   , dcrMainFile = Nothing
+                                   , dcrAttachments = []
                                    }

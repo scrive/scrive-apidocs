@@ -217,6 +217,22 @@ data DocumentEvidenceEvent = DocumentEvidenceEvent { evDocumentID :: DocumentID
                                                    , evAPI        :: Maybe String
                                                    }
 
+instance (Actor a, Actor b) => Actor (Either a b) where
+  actorTime      (Left a)  = actorTime a
+  actorTime      (Right a) = actorTime a
+  actorIP        (Left a)  = actorIP a
+  actorIP        (Right a) = actorIP a
+  actorUserID    (Left a)  = actorUserID a
+  actorUserID    (Right a) = actorUserID a
+  actorEmail     (Left a)  = actorEmail a
+  actorEmail     (Right a) = actorEmail a
+  actorSigLinkID (Left a)  = actorSigLinkID a
+  actorSigLinkID (Right a) = actorSigLinkID a
+  actorAPIString (Left a)  = actorAPIString a
+  actorAPIString (Right a) = actorAPIString a
+  actorWho       (Left a)  = actorWho a
+  actorWho       (Right a) = actorWho a
+
 htmlDocFromEvidenceLog :: TemplatesMonad m => String -> [DocumentEvidenceEvent] -> m String
 htmlDocFromEvidenceLog title elog = do
   renderTemplateFM "htmlevidencelog" $ do

@@ -28,15 +28,15 @@ import Data.Maybe
 import Control.Monad.Error
 import Network.URI
 
-import qualified Log
+--import qualified Log
 
 oauthAPI :: Route (Kontra Response)
 oauthAPI = choice [
-  dir "oauth" $ dir "temporarycredentials" $ hGet $ toK0 $ tempCredRequest,
-  dir "oauth" $ dir "authorization" $ hGet $ toK0 $ authorization,
+  dir "oauth" $ dir "temporarycredentials" $ hGet  $ toK0 $ tempCredRequest,
+  dir "oauth" $ dir "authorization"        $ hGet  $ toK0 $ authorization,
   dir "oauth" $ dir "authorizationconfirm" $ hPost $ toK0 $ authorizationGranted,
-  dir "oauth" $ dir "authorizationdeny" $ hPost $ toK0 $ authorizationDenied,
-  dir "oauth" $ dir "tokencredentials" $ hGet $ toK0 $ tokenCredRequest
+  dir "oauth" $ dir "authorizationdeny"    $ hPost $ toK0 $ authorizationDenied,
+  dir "oauth" $ dir "tokencredentials"     $ hGet  $ toK0 $ tokenCredRequest
   ]
 
 tempCredRequest :: Kontrakcja m => m Response
@@ -44,48 +44,31 @@ tempCredRequest = api $ do
   time <- ctxtime <$> getContext
   rq <- lift askRq
   let headers = rqHeaders rq
-  Log.debug $ "Got headers: " ++ show headers
 
-  HeaderPair _ auths <- apiGuard' BadInput $ Map.lookup (BS.fromString "authorization") headers
+  HeaderPair _ auths <- apiGuard (badInput "Authorization header is required.") $ Map.lookup (BS.fromString "authorization") headers
 
-  Log.debug $ "Got Authorization: headers: " ++ show auths
-
-  auth <- apiGuard' BadInput $ BS.toString <$> listToMaybe auths
+  auth <- apiGuard' $ BS.toString <$> listToMaybe auths
 
   -- pull the data out of Authorization
   let params = splitAuthorization auth
 
-  Log.debug $ "Split Authorization header into params: " ++ show params
+  sigtype <- apiGuard (badInput "oauth_signature_method is required") $ maybeRead =<< lookup "oauth_signature_method" params
+  when (sigtype /= "PLAINTEXT") $ throwError $ badInput "oauth_signature_method must be 'PLAINTEXT'."
 
-  sigtype <- apiGuard' BadInput $ maybeRead =<< lookup "oauth_signature_method" params
-  when (sigtype /= "PLAINTEXT") $ throwError BadInput
+  (mapisecret, _) <- apiGuard (badInput "oauth_signature was missing or in bad format.") $ splitSignature =<< maybeRead =<< lookup "oauth_signature" params
+  apisecret <- apiGuard (badInput "API Secret is missing or in bad format.") mapisecret
 
-  (mapisecret, _) <- apiGuard' BadInput $ splitSignature =<< maybeRead =<< lookup "oauth_signature" params
-  apisecret <- apiGuard' Forbidden mapisecret
+  callback <- apiGuard (badInput "oauth_callback is required and must be a valid URL.") $ UTF.decode <$> (URL.decode =<< maybeRead =<< lookup "oauth_callback" params)
 
-  Log.debug $ "Got api secret: " ++ show apisecret
-     
-  callback <- apiGuard' BadInput $ UTF.decode <$> (URL.decode =<< maybeRead =<< lookup "oauth_callback" params)
+  apitoken <- apiGuard (badInput "oauth_consumer_key is missing or is invalid.") $ maybeRead =<< maybeRead =<< lookup "oauth_consumer_key" params
 
-  Log.debug $ "Got callback: " ++ show callback
+  privilegesstring <- apiGuardL (badInput "'privileges' parameter must exist.") $ getDataFn' (look "privileges")
 
-  apitoken <- apiGuard' BadInput $ maybeRead =<< maybeRead =<< lookup "oauth_consumer_key" params
+  privileges <- apiGuard (badInput "'privileges' parameter is invalid.") $ readPrivileges privilegesstring
 
-  Log.debug $ "Got token: " ++ show apitoken
+  email <- apiGuardL (badInput "useremail is missing.") $ getDataFn' (look "useremail")
 
-  privilegesstring <- apiGuardL' BadInput $ getDataFn' (look "privileges")
-
-  privileges <- apiGuard' BadInput $ readPrivileges privilegesstring
-
-  Log.debug $ "Got privileges: " ++ show privileges
-
-  email <- apiGuardL' BadInput $ getDataFn' (look "useremail")
-
-  Log.debug $ "Got email: " ++ show email
-
-  (temptoken, tempsecret) <- apiGuardL' Forbidden $ runDBUpdate $ RequestTempCredentials apitoken apisecret email privileges callback time
-
-  Log.debug $ "Got temp stuff: " ++ show (temptoken, tempsecret)
+  (temptoken, tempsecret) <- apiGuardL' $ runDBUpdate $ RequestTempCredentials apitoken apisecret email privileges callback time
 
   return $ FormEncoded [("oauth_token", show temptoken),
                         ("oauth_token_secret", show tempsecret),
@@ -93,23 +76,22 @@ tempCredRequest = api $ do
 
 authorization :: Kontrakcja m => m (Either KontraLink String)
 authorization = do
-  muser <- ctxmaybeuser <$> getContext
-  time <- ctxtime <$> getContext
-  locale <- ctxlocale <$> getContext
+  muser  <- ctxmaybeuser <$> getContext
+  time   <- ctxtime      <$> getContext
+  locale <- ctxlocale    <$> getContext
   case muser of
+    -- soon this should be custom page, not login
     Nothing -> return $ Left $ LinkLogin locale NotLogged
     Just user -> do
       let email = BS.toString $ getEmail user
       mtk <- getDataFn' (look "oauth_token")
       token <- guardJust $ maybeRead =<< mtk
 
-      Log.debug $ "token: " ++ show token
+      mprivs <- runDBQuery $ GetRequestedPrivileges token email time
 
-      privileges <- runDBQuery $ GetRequestedPrivileges token email time
-
-      case privileges of
-        [] -> return $ Left $ LinkHome locale
-        _  -> Right <$> pagePrivilegesConfirm privileges "Scrive, Inc." token
+      case mprivs of
+        Just (companyname, p:ps) -> Right <$> pagePrivilegesConfirm (p:ps) companyname token
+        _ -> return $ Left $ LinkHome locale
 
 authorizationDenied :: Kontrakcja m => m Response
 authorizationDenied = do
@@ -122,8 +104,6 @@ authorizationDenied = do
       let email = BS.toString $ getEmail user
       mtk <- getDataFn' (look "oauth_token")
       token <- guardJust $ maybeRead =<< mtk
-
-      Log.debug $ "token: " ++ show token
 
       _ <- runDBUpdate $ DenyCredentials token email time
 
@@ -141,15 +121,9 @@ authorizationGranted = do
       mtk <- getDataFn' (look "oauth_token")
       token <- guardJust $ maybeRead =<< mtk
 
-      Log.debug $ "token: " ++ show token
-
       (callback, verifier) <- guardJustM $ runDBUpdate $ VerifyCredentials token email time
 
-      Log.debug $ "got callback + verifier: " ++ show (callback, verifier)
-
       url <- guardJust $ parseURI callback
-
-      Log.debug $ "url: " ++ show url
 
       sendRedirect $ LinkOAuthCallback url token verifier
 
@@ -158,38 +132,27 @@ tokenCredRequest = api $ do
   time <- ctxtime <$> getContext
   rq <- lift askRq
   let headers = rqHeaders rq
-  Log.debug $ "Got headers: " ++ show headers
 
-  HeaderPair _ auths <- apiGuard' BadInput $ Map.lookup (BS.fromString "authorization") headers
+  HeaderPair _ auths <- apiGuard (badInput "Authorization header is required.") $ Map.lookup (BS.fromString "authorization") headers
 
-  Log.debug $ "Got Authorization: headers: " ++ show auths
-
-  auth <- apiGuard' BadInput $ BS.toString <$> listToMaybe auths
+  auth <- apiGuard (badInput "Authorization header is required.") $ BS.toString <$> listToMaybe auths
 
   -- pull the data out of Authorization
-  let params = splitAuthorization auth                 
+  let params = splitAuthorization auth
 
-  Log.debug $ "Split Authorization header into params: " ++ show params
+  sigtype <- apiGuard (badInput "oauth_signature_method is required") $ maybeRead =<< lookup "oauth_signature_method" params
+  when (sigtype /= "PLAINTEXT") $ throwError $ badInput "oauth_signature_method must be PLAINTEXT."
 
-  sigtype <- apiGuard' BadInput $ maybeRead =<< lookup "oauth_signature_method" params
-  when (sigtype /= "PLAINTEXT") $ throwError BadInput
+  (mapisecret, mtoksecret) <- apiGuard (badInput "oauth_signature is required.") $ splitSignature =<< maybeRead =<< lookup "oauth_signature" params
+  apisecret <- apiGuard (badInput "API Secret is in bad format.") mapisecret
+  tokensecret <- apiGuard (badInput "Token Secret is in bad format.") mtoksecret
 
-  (mapisecret, mtoksecret) <- apiGuard' BadInput $ splitSignature =<< maybeRead =<< lookup "oauth_signature" params
-  apisecret <- apiGuard' Forbidden mapisecret
-  tokensecret <- apiGuard' Forbidden mtoksecret
+  apitoken <- apiGuard (badInput "oauth_consumer_key is required.") $ maybeRead =<< maybeRead =<< lookup "oauth_consumer_key" params
 
-  Log.debug $ "Got api secret: " ++ show apisecret
-     
-  apitoken <- apiGuard' BadInput $ maybeRead =<< maybeRead =<< lookup "oauth_consumer_key" params
+  temptoken <- apiGuard (badInput "oauth_token is required.") $ maybeRead =<< maybeRead =<< lookup "oauth_token" params
+  verifier  <- apiGuard (badInput "oauth_verifier is required.") $ maybeRead =<< maybeRead =<< lookup "oauth_verifier" params
 
-  temptoken <- apiGuard' BadInput $ maybeRead =<< maybeRead =<< lookup "oauth_token" params
-  verifier  <- apiGuard' BadInput $ maybeRead =<< maybeRead =<< lookup "oauth_verifier" params
-
-  Log.debug $ "Got token: " ++ show apitoken
-
-  (accesstoken, accesssecret) <- apiGuardL' Forbidden $ runDBUpdate $ RequestAccessToken apitoken apisecret temptoken tokensecret verifier time
-
-  Log.debug $ "Got temp stuff: " ++ show (accesstoken, accesssecret)
+  (accesstoken, accesssecret) <- apiGuardL' $ runDBUpdate $ RequestAccessToken apitoken apisecret temptoken tokensecret verifier time
 
   return $ FormEncoded [("oauth_token",        show accesstoken)
                        ,("oauth_token_secret", show accesssecret)

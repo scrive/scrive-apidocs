@@ -100,7 +100,6 @@ data KontraLink
     | LinkServiceButtonsRest ServiceID
     | LinkCSVLandPage Int
     | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID
-    | LinkAPIDocumentMetadata DocumentID
     | LinkAPIDocumentSignatoryAttachment DocumentID SignatoryLinkID String
     | LinkOAuthCallback URI APIToken MagicHash
     deriving (Eq)
@@ -227,7 +226,6 @@ instance Show KontraLink where
                  "/" ++ show fid)
     showsPrec _ (LinkDocumentPreview did Nothing fid) = (++) ("/preview/" ++ show did ++
                  "/" ++ show fid)
-    showsPrec _ (LinkAPIDocumentMetadata did) = (++) ("/api/document/" ++ show did ++ "/metadata")
     showsPrec _ (LinkAPIDocumentSignatoryAttachment did sid name) =
       (++) ("/api/document/" ++ show did ++ "/signatory/" ++ show sid ++ "/attachment/" ++ name)
     showsPrec _ (LinkOAuthCallback url token verifier) = 

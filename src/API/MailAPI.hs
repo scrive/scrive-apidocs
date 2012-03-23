@@ -193,7 +193,8 @@ jsonMailAPI mailapi username user pdfs plains content = do
     mzero
 
   -- the mainfile is attached
-  let mpdf = getByAttachmentName (strip $ dcrMainFile dcr) pdfs
+  let mpdf = listToMaybe pdfs
+  --let mpdf = getByAttachmentName (strip $ dcrMainFile dcr) pdfs
 
   when (isNothing mpdf) $ do
     Log.jsonMailAPI $ (show $ toSeconds ctxtime) ++ " Missing pdf attachment: " ++ show (dcrMainFile dcr)
@@ -202,9 +203,9 @@ jsonMailAPI mailapi username user pdfs plains content = do
 
     mzero
 
-  let Just pdf = mpdf
+  let Just (pdfType, pdfBinary) = mpdf
 
-  let pdfBinary = snd pdf
+  let Just pdffilename = lookup "filename" $ MIME.mimeParams pdfType
 
   -- create document
   -- set to advanced
@@ -240,7 +241,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
       title = dcrTitle dcr
       actor = MailAPIActor ctxtime (userid user) (BS.toString $ getEmail user)
       
-  edoc <- runDBUpdate $ NewDocument user mcompany (BS.fromString title) doctype actor
+  edoc <- runDBUpdate $ NewDocument user mcompany (BS.fromString $ fromMaybe pdffilename title) doctype actor
 
   when (isLeft edoc) $ do
     let Left msg = edoc
