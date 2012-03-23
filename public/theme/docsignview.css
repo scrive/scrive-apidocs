@@ -493,20 +493,19 @@ body.signview {
 
 .signview .signatoryattachments .list .item {
   margin-bottom: 10px;
-}
-
-.signview .signatoryattachments .list .item .column {
-  float: left;
-  margin-right: 20px;
   overflow: none;
 }
 
 .signview .signatoryattachments .list .item .first.column {
+  float: left;
+  display: block;
   width: 350px;
   margin-right: 30px;
 }
 
 .signview .signatoryattachments .list .item .second.column {
+  float: left;
+  display: block;
   width: 200px;
 }
 
