@@ -21,6 +21,8 @@ import Util.JSON
 import Misc
 import KontraLink
 
+import Control.Applicative
+
 instance SafeEnum [SignatoryRole] where
   fromSafeEnum srs =
     case srs of
@@ -199,10 +201,16 @@ dcrFromJSON jsv = do
   tags <- mapM tagFromJSON tags'
   JSArray inv' <- jsgetdef "involved" (showJSON ([]::[JSValue])) jsv
   inv <- mapM irFromJSON inv'
-  return $ DocumentCreationRequest { dcrTitle    = Nothing
+  let mtitle = case jsget "title" jsv of
+                 Right (JSString s) -> Just $ fromJSString s
+                 _ -> Nothing
+  mmainfile <- case jsget "mainfile" jsv of
+                 Left _ -> return Nothing
+                 Right o -> Just <$> fileNameFromJSON o
+  return $ DocumentCreationRequest { dcrTitle    = mtitle
                                    , dcrType     = tp
                                    , dcrTags     = tags
                                    , dcrInvolved = inv
-                                   , dcrMainFile = Nothing
+                                   , dcrMainFile = mmainfile
                                    , dcrAttachments = []
                                    }
