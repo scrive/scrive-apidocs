@@ -1675,6 +1675,7 @@ the document <strong>$documenttitle$</strong>. The agreement
 "_message","Meddelande",,"Message"
 "_missingNames","Du har inte namngett alla fält. Vänligen försök igen.",,"You have not names all fields. Please try again."
 "_missingSignatoryNames","Du har inte skrivit in något namn på en eller flera motparter. Vänligen försök igen.",,"You have not entered names for one or several counterparts. Please try again."
+"_missingCustomFieldValue","You have not entered values for some of your own created fields.",,"You have not entered values for some of your own created fields."
 "_modalAccountSetupBodyAcceptTOS","Jag har läst och accepterar Scrive Allmänna Villkor",,"I have read and accept the Scrive Terms of Service"
 "_modalAccountSetupChoosePassword","Välj lösenord:",,"Choose password:"
 "_modalAccountSetupFooter","Skapa konto!",,"Create account!"

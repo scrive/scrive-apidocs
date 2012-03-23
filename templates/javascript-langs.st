@@ -229,7 +229,7 @@ javascriptLocalisation =
               , se : "$_Swedish()$"
               , changeEnglishToSwedishText :  "$_signInSwedishConfirmText()$"
               , signInSwedish : "$_signInSwedish()$"
-              , changeSwedishToEnglishText: "$_signInEnglishConfirmText()$" 
+              , changeSwedishToEnglishText: "$_signInEnglishConfirmText()$"
               , signInEnglish:  "$_signInEnglish()$"
             }
          , csv : {
@@ -249,6 +249,7 @@ javascriptLocalisation =
                       missingOrWrongEmail : "$_emptyOrNotValidEmail()$"
                     , missingOrWrongNames:  "$_missingSignatoryNames()$"
                     , missingOrWrongPersonalNumber : "$_backToStepTwoAndFillPersonNumber()$"
+                    , missingOrWrongCustomFieldValue: "$_missingCustomFieldValue()$"
                     , sameMails : "$_repetedEmailAddress()$"
                     , atLeastOnePersonOtherThenAuthor : "$_atLeastOnePersonOtherThenAuthor()$"
                     , notReadyField : "$_setAllFields()$"
