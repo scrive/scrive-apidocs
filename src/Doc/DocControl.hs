@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 {- |
    DocControl represents the controler (in MVC) of the document.
  -}
@@ -6,7 +5,6 @@ module Doc.DocControl(
     -- Exported utils or test functions
       sendReminderEmail
     -- Top level handlers
-    , postDocumentChangeAction
     , handleDownloadFile
     , handleSignShow
     , handleSignShowOldRedirectToNew
@@ -170,7 +168,7 @@ signDocument documentid
                     BankID.Sign sinfo ->  Right <$>  signDocumentWithEleg documentid signatorylinkid magichash fields sinfo
   case edoc of
     Right (Right (doc, olddoc)) -> do
-      postDocumentChangeAction doc olddoc (Just signatorylinkid)
+      postDocumentPendingChange doc olddoc
       udoc <- guardJustM $ runDBQuery $ GetDocumentByDocumentID documentid
       handleAfterSigning udoc signatorylinkid
     Right (Left (DBActionNotAvailable message)) -> do
@@ -197,7 +195,7 @@ handleMismatch doc sid msg sfn sln spn = do
                          (maybesignatory sl)
                          (getEmail sl)
                          sid)
-        postDocumentChangeAction newdoc doc (Just sid)
+        postDocumentCanceledChange newdoc
 
 {- |
     Call after signing in order to save the document for any user, and
@@ -224,16 +222,12 @@ rejectDocumentIphoneCase did sid _ = rejectDocument did sid
    Control rejecting the document
    URL: /s/{docid}/{signatorylinkid1}/{magichash1}
  -}
-rejectDocument :: Kontrakcja m
-               => DocumentID
-               -> SignatoryLinkID
-               -> m KontraLink
-rejectDocument documentid
-               signatorylinkid1 = do
+rejectDocument :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
+rejectDocument documentid siglinkid = do
   magichash <- guardJustM $ readField "magichash"
   customtext <- getCustomTextField "customtext"
 
-  edocs <- rejectDocumentWithChecks documentid signatorylinkid1 magichash customtext
+  edocs <- rejectDocumentWithChecks documentid siglinkid magichash customtext
 
   case edocs of
     Left (DBActionNotAvailable message) -> do
@@ -243,8 +237,8 @@ rejectDocument documentid
       addFlash (OperationFailed, message)
       getHomeOrUploadLink
     Left _ -> internalError
-    Right (document, olddocument) -> do
-      postDocumentChangeAction document olddocument (Just signatorylinkid1)
+    Right document -> do
+      postDocumentRejectedChange document siglinkid
       addFlashM $ modalRejectedView document
       return $ LoopBack
 
@@ -361,8 +355,8 @@ handleIssueSign document = do
     mdocs <- splitUpDocument document
     case mdocs of
       Right docs -> do
-        mndocs <- mapM (forIndividual document) docs
-        case (lefts mndocs, rights mndocs) of
+        mndocs <- mapM forIndividual docs
+        case partitionEithers mndocs of
           ([], [d]) -> do
             addFlashM $ modalSendConfirmationView d
             return $ LinkIssueDoc (documentid d)
@@ -385,8 +379,8 @@ handleIssueSign document = do
             return LoopBack
       Left link -> return link
     where
-      forIndividual :: Kontrakcja m => Document -> Document -> m (Either KontraLink Document)
-      forIndividual udoc doc = do
+      forIndividual :: Kontrakcja m => Document -> m (Either KontraLink Document)
+      forIndividual doc = do
         mprovider <- readField "eleg"
         mndoc <- case mprovider of
                    Nothing ->  Right <$> authorSignDocument (documentid doc) Nothing
@@ -400,7 +394,7 @@ handleIssueSign document = do
                         BankID.Sign sinfo -> Right <$>  authorSignDocument (documentid doc) (Just sinfo)
         case mndoc of
           Right (Right newdocument) -> do
-            postDocumentChangeAction newdocument udoc Nothing
+            postDocumentPreparationChange newdocument
             return $ Right newdocument
           _ -> return $ Left LoopBack
 
@@ -412,8 +406,8 @@ handleIssueSend document = do
     mdocs <- splitUpDocument document
     case mdocs of
       Right docs -> do
-        mndocs <- mapM (forIndividual document) docs
-        case (lefts mndocs, rights mndocs) of
+        mndocs <- mapM forIndividual docs
+        case partitionEithers mndocs of
           ([], [d]) -> do
             addFlashM $ modalSendConfirmationView d
             return $ LinkIssueDoc (documentid d)
@@ -436,12 +430,10 @@ handleIssueSend document = do
             internalError
       Left link -> return link
     where
-      forIndividual udoc doc = do
+      forIndividual doc = do
         mndoc <- authorSendDocument (documentid doc)
         case mndoc of
-          Right newdocument -> do
-            postDocumentChangeAction newdocument udoc Nothing
-            return ()
+          Right newdocument -> postDocumentPreparationChange newdocument
           Left _ -> return ()
         return mndoc
 
@@ -499,7 +491,7 @@ handleIssueSignByAuthor doc = do
 
      case mndoc of
          Right (Right ndoc) -> do
-             postDocumentChangeAction ndoc doc Nothing
+             postDocumentPendingChange ndoc doc
              addFlashM flashAuthorSigned
              return $ LinkIssueDoc (documentid doc)
          _ -> return LoopBack
@@ -1162,7 +1154,7 @@ handleUpsalesDeleted = onlyAdmin $ do
 handleParseCSV :: Kontrakcja m => m JSValue
 handleParseCSV = do
   ctx <- getContext
-  guardJust $ ctxmaybeuser ctx
+  _ <- guardJust $ ctxmaybeuser ctx
   Log.debug "Csv parsing"
   customfieldscount <- guardJustM $ maybeReadIntM $ getField "customfieldscount"
   input <- getDataFn' (lookInput "csv")

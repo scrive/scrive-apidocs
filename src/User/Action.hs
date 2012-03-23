@@ -51,7 +51,7 @@ handleAccountSetupFromSign document signatorylink = do
       return $ Just activateduser
     Nothing -> return Nothing
 
-handleActivate :: Kontrakcja m => Maybe String -> Maybe String -> User -> SignupMethod -> m (Maybe (User, [(Document, Document, Maybe SignatoryLinkID)]))
+handleActivate :: Kontrakcja m => Maybe String -> Maybe String -> User -> SignupMethod -> m (Maybe (User, [Document]))
 handleActivate mfstname msndname actvuser signupmethod = do
   Log.debug $ "Attempting to activate account for user " ++ (show $ getEmail actvuser)
   when (isJust $ userhasacceptedtermsofservice actvuser) internalError

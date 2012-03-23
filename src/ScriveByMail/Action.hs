@@ -57,7 +57,7 @@ checkThat s b = Nothing <| b |> Just s
 charset :: MIME.Type -> String
 charset mimetype = fromMaybe "us-ascii" $ lookup "charset" (MIME.mimeParams mimetype)        
 
-doMailAPI :: Kontrakcja m => BS.ByteString -> m (Maybe (Document, Document, Maybe SignatoryLinkID))
+doMailAPI :: Kontrakcja m => BS.ByteString -> m (Maybe Document)
 doMailAPI content = do
   let (mime, allParts) = parseEmailMessageToParts content
 
@@ -177,7 +177,7 @@ scriveByMail :: (Kontrakcja m) =>
                 -> [(MIME.Type, BS.ByteString)]
                 -> [(MIME.Type, BS.ByteString)]
                 -> BS.ByteString
-                -> m (Document, Document, Maybe SignatoryLinkID)
+                -> m Document
 scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   ctx@Context{ctxtime} <- getContext
 
@@ -310,7 +310,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
 
   sendMailAPIConfirmEmail ctx doc2
 
-  return $ (doc2, doc, Nothing)
+  return doc2
 
 sendMailAPIConfirmEmail :: Kontrakcja m => Context -> Document -> m ()
 sendMailAPIConfirmEmail ctx document =
@@ -378,7 +378,7 @@ jsonMailAPI :: (Kontrakcja m) =>
                 -> [(MIME.Type, BS.ByteString)]
                 -> [(MIME.Type, BS.ByteString)]
                 -> BS.ByteString
-                -> m (Document, Document, Maybe SignatoryLinkID)
+                -> m Document
 jsonMailAPI mailapi username user pdfs plains content = do
   ctx@Context{ctxtime} <- getContext
   when (umapiDailyLimit (unTagMailAPIInfo mailapi) <= umapiSentToday (unTagMailAPIInfo mailapi)) $ do
@@ -561,7 +561,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
 
   sendMailAPIConfirmEmail ctx doc2
 
-  return $ (doc2, doc, Nothing)
+  return doc2
 
 getByAttachmentName :: String -> [(MIME.Type, BS.ByteString)] -> Maybe (MIME.Type, BS.ByteString)
 getByAttachmentName name ps =
