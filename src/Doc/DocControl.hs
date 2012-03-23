@@ -293,10 +293,7 @@ handleSignShow2 documentid
   _ <- runDB $ addSignStatLinkEvent document invitedlink
 
   ctx <- getContext
-  mservice <- maybe (return Nothing) (runDBQuery . GetService) (documentservice document)
-  mcompany <- maybe (return Nothing) (runDBQuery . GetCompany) (getAuthorSigLink document >>= maybecompany)
-  mauthor <- maybe (return Nothing) (runDBQuery . GetUserByID) (getAuthorSigLink document >>= maybesignatory)
-  content <- pageDocumentSignView ctx mservice mcompany mauthor document invitedlink
+  content <- pageDocumentSignView ctx document invitedlink
   simpleResponse content
 
 {- |
@@ -325,14 +322,11 @@ handleIssueShowGet docid = checkUserTOSGet $ do
       msiglink = find (isSigLinkFor $ userid user) $ documentsignatorylinks document
 
   ctx <- getContext
-  mservice <- maybe (return Nothing) (runDBQuery . GetService) (documentservice document)
-  mcompany <- maybe (return Nothing) (runDBQuery . GetCompany) (getAuthorSigLink document >>= maybecompany)
-  mauthor <- maybe (return Nothing) (runDBQuery . GetUserByID) (getAuthorSigLink document >>= maybesignatory)
   case (ispreparation, msiglink) of
     (True,  _) | isattachment        -> pageAttachmentDesign document
     (True,  _)                       -> pageDocumentDesign document
     (False, _) | isauthororincompany -> pageDocumentView document msiglink
-    (False, Just siglink)            -> pageDocumentSignView ctx mservice mcompany mauthor document siglink
+    (False, Just siglink)            -> pageDocumentSignView ctx document siglink
     _                                -> internalError
 
 {- |

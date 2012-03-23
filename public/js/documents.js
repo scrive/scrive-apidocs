@@ -26,6 +26,31 @@ window.DocumentViewer = Backbone.Model.extend({
     }
 });
 
+window.DocumentAuthor =  Backbone.Model.extend({
+   defaults: {
+       fullname: "",
+       email: "",
+       company: "",
+       phone : "",
+       position: ""
+    },
+    fullname: function() {
+        return this.get("fullname")
+    },
+    email:  function() {
+        return this.get("email")
+    },
+    company : function() {
+        return this.get("company")
+    },
+    phone :  function() {
+        return this.get("phone")
+    },
+    position: function() {
+        return this.get("position")
+    }
+});
+
 window.Document = Backbone.Model.extend({
     defaults: {
         id : 0,
@@ -39,7 +64,10 @@ window.Document = Backbone.Model.extend({
         viewer: new DocumentViewer(),
         infotext: "",
         authorization: "email",
-        template : false
+        template : false,
+        //logo : undefined
+        //barsbackgroundcolor : undefined
+        //barsbackgroundtextcolor : undefined
     },
     initialize: function (args) {
         this.url = "/doc/" + args.id;
@@ -363,6 +391,18 @@ window.Document = Backbone.Model.extend({
                               && this.awaitingauthor();
       return canSignAsSig || canSignAsAuthor;
     },
+    logo :function() {
+        return this.get("logo");
+    },
+    barsbackgroundcolor : function() {
+        return this.get("barsbackgroundcolor");
+    },
+    barsbackgroundtextcolor : function() {
+        return this.get("barsbackgroundtextcolor");
+    },
+    authoruser : function() {
+        return this.get("authoruser");
+    },
     parse: function(args) {
      var document = this;
      setTimeout(function() {
@@ -372,6 +412,13 @@ window.Document = Backbone.Model.extend({
      var extendedWithDocument = function(hash){
                 hash.document = document;
                 return hash; };
+     /**this way of doing it is safe for IE7 which doesnt
+      * naturally parse stuff like 2012-03-29 so new Date(datestr)
+      * doesnt work*/
+     var parseDate = function(datestr) {
+        var dateValues = datestr.split('-');
+        return new Date(dateValues[0],dateValues[1],dateValues[2]);
+     };
      return {
       title : args.title,
       files : _.map(args.files, function(fileargs) {
@@ -386,6 +433,7 @@ window.Document = Backbone.Model.extend({
       signatories : _.map(args.signatories, function(signatoryargs){
                 return new Signatory(extendedWithDocument(signatoryargs));
       }),
+      authoruser :  new DocumentAuthor(extendedWithDocument(args.author)),
       process: new Process(args.process),
       region: new Region(args.region),
       infotext : args.infotext,
@@ -393,13 +441,16 @@ window.Document = Backbone.Model.extend({
       canbecanceled : args.canbecanceled,
       canseeallattachments: args.canseeallattachments,
       status : args.status,
-      timeouttime  : args.timeouttime  == undefined ? undefined :  new Date(args.timeouttime),
+      timeouttime  : args.timeouttime  == undefined ? undefined :  parseDate(args.timeouttime),
       signorder : args.signorder,
       authorization : args.authorization,
       template : args.template,
       functionality : args.functionality,
       daystosign: args.daystosign,
       invitationmessage : args.invitationmessage,
+      logo : args.logo,
+      barsbackgroundcolor : args.barsbackgroundcolor,
+      barsbackgroundtextcolor :  args.barsbackgroundtextcolor,
       ready: true
       };
     }
