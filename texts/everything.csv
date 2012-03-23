@@ -11,7 +11,7 @@
  5 fria signaturer per månad och 50 dokument i lagring.</p>",,"<h3>Free for personal use</h3>
                     <p>We offer a support free account for small users. This includes 5 free  signatures per month and storage of up to 50 documents.</p>"
 "_Bemefit1","Nöjdare kunder",,"More satisfied customers"
-"_Bemefit1Body","Den mest positiva feedbacken kommer inte sällan från våra kunders kunder. Scrive minskar den administrativa bördan för alla parter.","The most positive feedback often comes from our customers´ customers. Scrive decrease the administrative burden of all parties.",
+"_Bemefit1Body","Den mest positiva feedbacken kommer inte sällan från våra kunders kunder. Scrive minskar den administrativa bördan för alla parter.","The most positive feedback often comes from our customers' customers. Scrive decrease the administrative burden of all parties.",
 "_Bemefit2","Snabbare avslut",,"Quick completion"
 "_Bemefit2Body","Snabbare avslut leder till fler avslut. Vi hjälper dig att öka
  din omsättning.",,"Less time on admin means more time to grow your business.  Professional tools to increase your profit."
@@ -341,8 +341,8 @@
 "_backToStepTwoAndFillPersonNumber","Var vänlig gå tillbaka till steg 2 och fyll i personnummer.",,"Please go back to step 2 and enter personal security number."
 "_cancel","Avbryt",,"Cancel"
 "_cancelDialogOwnMessage","Skriv eget meddelande",,"Write your own message"
-"_cantSendReminder1","Det går inte att skicka påminnelser för",,"It is impossible to send reminders for"
-"_cantSendReminder2","som inte är skickade eller öppna.",,"which has not been sent or opened."
+"_cantSendReminder1","Det går inte att skicka påminnelser för ",,"It is impossible to send reminders for "
+"_cantSendReminder2"," som inte är skickade eller öppna.",," which have not been sent or opened."
 "_checkBoxFieldName","check box",,"check box"
 "_city","Postort",,"City"
 "_clientsPageCusomer1","Account Factory",,"Account Factory"
@@ -366,11 +366,11 @@
 "_clientsPageCusomer4About",,,
 "_clientsPageCusomer4Web","www.accenture.com",,"www.accenture.com"
 "_clientsPageCusomer5","COOP Nord",,"COOP Nord"
-"_clientsPageCusomer5About",,,
+"_clientsPageCusomer5About","",,""
 "_clientsPageCusomer5Web","www.coop.se/konsumnord",,"www.coop.se/konsumnord"
 "_clientsPageCusomer6","IPAS",,"IPAS"
-"_clientsPageCusomer6About",,,
-"_clientsPageCusomer6Web",,,
+"_clientsPageCusomer6About","",,""
+"_clientsPageCusomer6Web","",,""
 "_clientsPageCusomerVid","Go Enterprise",,"Go Enterprise"
 "_clientsPageCusomerVidAbout","Go Enterprise är ett ungt managementbolag där vi brinner för
  tillväxt, entreprenörskap och samhällsutveckling. Genom våra
@@ -864,7 +864,7 @@ profits and reduce frustration. The following mateials shall only
  be seen as a description of Scrive as a company and service.
  The material is under no circumstances intended as legal advice."
 "_legalPageH2IntroH31","Juridiskt syfte",,"Legal objective"
-"_legalPageH2IntroH31Body1","Scrive´s juridiska syfte är att tillhandahålla bästa möjliga
+"_legalPageH2IntroH31Body1","Scrive's juridiska syfte är att tillhandahålla bästa möjliga
  juridiska ramverk för att maximera den juridiska säkerheten,
  minimera riskexponeringen samt minimera antalet obehagliga överraskningar
  för våra användare.",,"Scrive's legal objective is to provide the best possible framework
@@ -905,7 +905,7 @@ profits and reduce frustration. The following mateials shall only
  When that party fulfills its burden of proof, it is the other
  party's burden to prove the opposite, and so the trial will continue until the court finally judge upon the presented evidence
  Whether the document is valid or not."
-"_legalPageH2IntroH31Body3","Scrive´s syfte är att vara ett användbart redskap för båda
+"_legalPageH2IntroH31Body3","Scrive's syfte är att vara ett användbart redskap för båda
  parter i alla steg av processen. Genom att Scrive som oberoende
  tredje part bevittnat och lagrar bevismaterialet kan parterna
  använda Scrive som ett effektivt och trovärdigt redskap för
@@ -994,14 +994,14 @@ profits and reduce frustration. The following mateials shall only
  styrka sin talan och att de framlagda bevismaterial som stödjer
  olika ståndpunkter sedan vägs mot varandra. Detta gäller även
  vid tvister gällande undertecknade dokument, exempelvis i avtalstvister.
- I Scrive´s fall betyder det att inte endast de undertecknande
+ I Scrive's fall betyder det att inte endast de undertecknande
  parternas handlingar genom tjänsten Scrive kan inräknas som
  bevismaterial, utan även parternas handlingar utanför tjänsten
  som exempelvis telefonsamtal, sms och e-mailkonversationer.
  Scrive kan givetvis endast utöva sitt juridiska uppdrag inom
  ramarna för tjänsten och tar aldrig, varken explicit eller implicit,
  något ansvar för vad användarna gör utanför ramarna för tjänsten.
- Följande är de viktigaste faktorerna inom Scrive´s kontrollområde
+ Följande är de viktigaste faktorerna inom Scrive's kontrollområde
  som påverkar styrkan hos bevismaterial genererade vid användning
  av tjänsten Scrive:",,"Swedish law prevails in free assessment of evidence. This means
  that litigants may present any evidence to support his claim,
@@ -1119,7 +1119,7 @@ profits and reduce frustration. The following mateials shall only
  annan mailkommunikation från e-postkontot, telefonsamtal eller
  sms. Eftersom Scrive i dagsläget helt saknar metoder för registrering
  av sådan övrig kommunikation räknar vi den som att den ligger
- utanför Scrive´s kontrolldomän. Vi rekommenderar därmed våra
+ utanför Scrive's kontrolldomän. Vi rekommenderar därmed våra
  användare att inte använda e-postkonton som hör till öppna domäner
  för identifiering vid signering av dokument. Det stora flertalet
  privata användare använder e-postkonton tillhörande just öppna
@@ -1225,7 +1225,7 @@ profits and reduce frustration. The following mateials shall only
  av en bedragare i en situation då ett e-postkonto kapats eller
  verifikationskoden till en e-legitimation stulits? Svaret måste
  tyvärr bli att Scrive inte kan förhindra detta eftersom människors
- e-postkonton och koder ligger utanför Scrive´s kontrolldomän.
+ e-postkonton och koder ligger utanför Scrive's kontrolldomän.
  Innan man drar några slutsatser av detta bör man dock fråga
  sig: vad är egentligen skillnaden mellan dagens standard med
  handskriven signatur och de elektroniska signeringsmetoder som
@@ -1508,7 +1508,7 @@ profits and reduce frustration. The following mateials shall only
 "_listReallyDeleteDialogHead","Radera permanent",,"Permanent Delete"
 "_listRestoreDialogBody","Vill du återsätlla följande dokument?",,"Would you like to restore the selected documents?"
 "_listRestoreDialogHead","Återställ",,"Restore"
-"_listShareDialogBody","Vill du dela detta med alla i din organisation.",,"Do you want to share this with everyone on your organisation?"
+"_listShareDialogBody","Vill du dela detta med alla i din organisation.",,"Do you want to share this with everyone in your organisation?"
 "_listShareDialogHead","Dela",,"Share"
 "_listand","och",,"and"
 "_listyou","du",,"you"
@@ -1906,7 +1906,7 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_pageFooterContact4","<strong>Maila Scrive</strong>     <BR/>     <a href=""mailto:info@scrive.com"">info@scrive.com</a>",,"<strong>Send email to Scrive</strong>    <BR/>      <a href=""mailto:info@scrive.com"">info@scrive.com</a>"
 "_pageFooterContact5","<strong>Adress</strong>  <BR/>   Scrive<BR/>Saltmätargatan 19<BR/>113 59 Stockholm",,"<strong>Address</strong>  <BR/>     Scrive<BR/>Saltmätargatan 19<BR/>113 59 Stockholm"
 "_pageFooterContact6","<strong>Bloggar</strong>  <BR/>  <a href='http://blog.scrive.com'>Business</a><br/><a href='http://labs.scrive.com'>Labs</a>",,"<strong>Blogs</strong>   <BR/>  <a href='http://blog.scrive.com'>Business</a><BR/><a href='http://labs.scrive.com'>Labs</a>"
-"_pageFooterContact7","<strong>Twitter</strong><BR/><a href='http://twitter.com/scrive'>Sverige</a><br /><a href='http://twitter.com/scriveuk'>Storbritannien</a>",,"<strong>Twitter</strong><BR/><a href='http://twitter.com/scriveuk'>UK</a><br /><a href='http://twitter.com/scrive'>Sweden</a>"
+"_pageFooterContact7","<strong>Twitter</strong><BR/><a href='http://twitter.com/scrive'>@scrive</a>",,"<strong>Twitter</strong><BR/><a href='http://twitter.com/scrive'>@scrive</a>"
 "_pageFooterContact8","<strong>Företagsinformation</strong><br />SkrivaPå CM AB<BR />556816-6804<br />Stockholm",,"<strong>Company Information</strong><br />SkrivaPå CM AB<BR />556816-6804<br />Stockholm"
 "_pageFooterCustomers","Kunder",,"Customers"
 "_pageFooterContactUs","Kontakta Scrive",,"Contact Scrive"
@@ -1927,7 +1927,7 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_partnerName","Namn på motpart",,"Counterpart's name"
 "_partnerNumber","Orgnr/Persnr",,"Company Reg No"
 "_partnerTitle","Titel, företag",,"Position, company"
-"_partnersPageH1","Scrive´s Partners",,"Scrive's partners"
+"_partnersPageH1","Scrive's Partners",,"Scrive's partners"
 "_partnersPageH1Body","Scrive är en tjänst för att underteckna och arkivera dokument
  elektroniskt. Vi har ett nära samarbete med ett flertal framstående
  aktörer inom datasäkerhet och signeringsteknik.",,"Scrive is a service for signing and storing documents online.

@@ -96,7 +96,7 @@ handleRequestPhoneCall = do
       when (isJust ctxmaybeuser && fmap userid ctxmaybeuser == Just (userid user)) $ do
         _ <- runDBUpdate $ SetUserInfo (userid user) $ (userinfo user){ userphone = phone }
         return ()
-      phoneMeRequest user
+      phoneMeRequest user phone
     _ -> return ()
   return $ LinkUpload
 

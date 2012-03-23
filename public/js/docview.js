@@ -3,7 +3,7 @@
  */
 
 
-(function(window){
+(function(window) {
 
 
 window.DocumentDownloadView = Backbone.View.extend({
@@ -14,7 +14,7 @@ window.DocumentDownloadView = Backbone.View.extend({
   render: function() {
     $(this.el).empty();
 
-    if (this.model.mainfile()==undefined) {
+    if (this.model.mainfile() == undefined) {
       return this;
     }
 
@@ -77,7 +77,7 @@ window.DocumentAuthorAttachmentsView = Backbone.View.extend({
     }
 
     var container = $("<div class='authorattachments' />");
-    container.append($("<h2/>").text(this.title==undefined ? localization.authorAttachmentBoxHeader : this.title));
+    container.append($("<h2/>").text(this.title == undefined ? localization.authorAttachmentBoxHeader : this.title));
     var list = $("<div class='list' />");
     var createAuthorAttachmentElems = this.createAuthorAttachmentElems;
     _.each(this.model.authorattachments(), function(attachment) {
@@ -104,7 +104,7 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
   createSignatoryAttachmentView: function(attachment) {
     return new SignatoryAttachmentView({
       model: attachment,
-      el : $("<div/>")
+      el: $("<div/>")
     });
   },
   render: function() {
@@ -116,10 +116,10 @@ window.DocumentSignatoryAttachmentsView = Backbone.View.extend({
     }
 
     var container = $("<div class='signatoryattachments' />");
-    container.append($("<h2/>").text(this.title==undefined ? localization.requestedAttachments : this.title));
+    container.append($("<h2/>").text(this.title == undefined ? localization.requestedAttachments : this.title));
 
     var list = $("<div class='list'/>");
-    _.each(this.model.currentSignatory().attachments(), function (attachment) {
+    _.each(this.model.currentSignatory().attachments(), function(attachment) {
       var attachmentview = view.createSignatoryAttachmentView(attachment);
       view.uploadElems.push(attachmentview.uploadElems);
       list.append($(attachmentview.el));
@@ -143,7 +143,7 @@ window.DocumentUploadedSignatoryAttachmentsView = Backbone.View.extend({
   createUploadedAttachmentElems: function(attachment) {
     return $(new UploadedSignatoryAttachmentView({
       model: attachment,
-      el : $("<div/>")
+      el: $("<div/>")
     }).el);
   },
   render: function() {
@@ -154,11 +154,11 @@ window.DocumentUploadedSignatoryAttachmentsView = Backbone.View.extend({
     }
 
     var container = $("<div class='uploadedsignatoryattachments' />");
-    container.append($("<h2/>").text(this.title==undefined ? localization.uploadedAttachments : this.title));
+    container.append($("<h2/>").text(this.title == undefined ? localization.uploadedAttachments : this.title));
 
     var createUploadedAttachmentElems = this.createUploadedAttachmentElems;
     var list = $("<div class='list'/>");
-    _.each(this.model.signatoryattachments(), function (attachment) {
+    _.each(this.model.signatoryattachments(), function(attachment) {
       list.append(createUploadedAttachmentElems(attachment));
     });
     container.append(list);
@@ -186,7 +186,7 @@ window.GuardModel = Backbone.Model.extend({
     if (checked) {
       this.set({
         ischecked: true,
-        ishighlighted: false,
+        ishighlighted: false
       });
     } else {
       this.set({ ischecked: false });
@@ -229,7 +229,7 @@ window.DocumentSignGuardView = Backbone.View.extend({
 
     var guard = this.model;
 
-    var checkbox =  $("<input type='checkbox'  id='signGuardCBox' autocomplete='off'/>");
+    var checkbox = $("<input type='checkbox'  id='signGuardCBox' autocomplete='off'/>");
     checkbox.click(function() {
       guard.setChecked(checkbox.is(":checked"));
     });
@@ -320,15 +320,15 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var telia = $("<a href='#' class='author2 telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
     var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
     bankid.click(function() {
-      Eleg.bankidSign(document,signatory, document.sign());
+      Eleg.bankidSign(document, signatory, document.sign());
       return false;
     });
     telia.click(function() {
-      Eleg.teliaSign(document,signatory, document.sign());
+      Eleg.teliaSign(document, signatory, document.sign());
       return false;
     });
     nordea.click(function() {
-      Eleg.nordeaSign(document,signatory, document.sign());
+      Eleg.nordeaSign(document, signatory, document.sign());
       return false;
     });
     return $("<span />").append(bankid).append(telia).append(nordea);
@@ -356,7 +356,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       var content = $("<div />").append(document.lastSignatoryLeft() ? $(document.process().signatorysignmodalcontentauthorlast()) : $(document.process().signatorysignmodalcontentnotlast()));
       if (document.elegAuthorization()) {
         var subhead = $("<h3/>").text(localization.signByAuthor.eleg.subhead);
-        var a = $("<a target='_new' />").text(localization.signByAuthor.eleg.clickHere).attr("href","http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");
+        var a = $("<a target='_new' />").text(localization.signByAuthor.eleg.clickHere).attr("href", "http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");
         var p = $("<p/>").append(localization.signByAuthor.eleg.body1).append(a).append(localization.signByAuthor.eleg.body2);
         content.add($("<span/>").append(subhead).append(p));
       }
@@ -365,7 +365,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       var content = $("<div />").append(document.lastSignatoryLeft() ? $(document.process().signatorysignmodalcontentlast()) : $(document.process().signatorysignmodalcontentnotlast()));
       if (document.elegAuthorization()) {
         var subhead = $("<h3/>").text(localization.sign.eleg.subhead);
-        var a = $("<a target='_new' />").text(localization.sign.eleg.clickHere).attr("href","http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");
+        var a = $("<a target='_new' />").text(localization.sign.eleg.clickHere).attr("href", "http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");
         var p = $("<p/>").append(localization.sign.eleg.body1).append(a).append(localization.sign.eleg.body2);
         content.add($("<span/>").append(subhead).append(p));
       }
@@ -443,7 +443,7 @@ window.DocumentStandardView = Backbone.View.extend({
     var middlebox = $("<div class='float-left signViewBodyBox'/>");
     if (document.currentSignatory() != undefined) {
         if (document.currentSignatory().author() || document.currentSignatory().signs()) {
-          var currentsignatoryview = new SignatoryStandardView({model : document.currentSignatory(), el : $("<div/>")});
+          var currentsignatoryview = new SignatoryStandardView({model: document.currentSignatory(), el: $("<div/>")});
           middlebox.append($(currentsignatoryview.el));
         }
     }
@@ -452,7 +452,7 @@ window.DocumentStandardView = Backbone.View.extend({
     var othersignatories = document.otherSignatories();
     _.each(document.otherSignatories(), function(signatory) {
         if (signatory.author() || signatory.signs()) {
-          var signatoryview = new SignatoryStandardView({model : signatory, el : $("<div/>")});
+          var signatoryview = new SignatoryStandardView({model: signatory, el: $("<div/>")});
           lastbox.append($(signatoryview.el));
         }
     });
@@ -477,7 +477,7 @@ window.DocumentStandardView = Backbone.View.extend({
       color: "red",
       size: "small",
       text: document.process().restartbuttontext(),
-      onClick: function(){ document.restart().send(); }
+      onClick: function() { document.restart().send(); }
     }).input();
   },
   createCancelButtonElems: function() {
@@ -486,7 +486,7 @@ window.DocumentStandardView = Backbone.View.extend({
       color: "red",
       size: "small",
       text: document.process().cancelbuttontext(),
-      onClick: function(){
+      onClick: function() {
         Confirmation.popup({
           title: document.process().cancelmodaltitle(),
           content: document.process().cancelmodaltext(),
@@ -501,13 +501,13 @@ window.DocumentStandardView = Backbone.View.extend({
         }
     }).input();
   },
-  createAuthorAttachmentsElems : function() {
+  createAuthorAttachmentsElems: function() {
     return $(new DocumentAuthorAttachmentsView({
       model: this.model,
       el: $("<div />")
     }).el);
   },
-  createSignatoryAttachmentsElems : function() {
+  createSignatoryAttachmentsElems: function() {
     return $(new DocumentSignatoryAttachmentsView({
       model: this.model,
       el: $("<div />")
@@ -540,7 +540,7 @@ window.DocumentStandardView = Backbone.View.extend({
     }
 
     if (!signatory.allFieldsReadyForSign()) {
-      _.each(signatory.fields(),function(field) {
+      _.each(signatory.fields(), function(field) {
         if (!field.readyForSign() && field.view != undefined)
           field.view.redborder();
       });
@@ -549,7 +549,7 @@ window.DocumentStandardView = Backbone.View.extend({
     }
 
     if (!signatory.allAttachemntHaveFile()) {
-      _.each(signatory.attachments(),function(attachment) {
+      _.each(signatory.attachments(), function(attachment) {
         if (!attachment.hasFile())
           $(attachment.view.el).addClass("redborder");
       });
@@ -563,7 +563,7 @@ window.DocumentStandardView = Backbone.View.extend({
     var document = this.model;
     var signatory = document.currentSignatory();
     return Button.init({
-      size:"small",
+      size: "small",
       color: "red",
       text: document.process().rejectbuttontext(),
       style: "width: 150px;margin-right: 12px;",
@@ -572,7 +572,7 @@ window.DocumentStandardView = Backbone.View.extend({
           title: document.process().signatorycancelmodaltitle(),
           mail: signatory.rejectMail(),
           acceptText: localization.reject.send,
-          editText:  localization.reject.editMessage,
+          editText: localization.reject.editMessage,
           rejectText: localization.cancel,
           acceptColor: "red",
           onAccept: function(customtext) {
@@ -599,7 +599,7 @@ window.DocumentStandardView = Backbone.View.extend({
 
     return box;
   },
-  render: function () {
+  render: function() {
     var document = this.model;
     if (!document.ready())
         return this;
@@ -618,7 +618,7 @@ window.DocumentStandardView = Backbone.View.extend({
           !document.currentSignatory().author() &&
           document.authorattachments().length > 0 &&
           document.signingInProcess()) {
-      bottomparts.append(this.authorAttachments()) ;
+      bottomparts.append(this.authorAttachments());
     }
 
     // Signatory attachment box
@@ -627,7 +627,7 @@ window.DocumentStandardView = Backbone.View.extend({
             !document.currentSignatory().hasSigned() &&
             document.currentSignatory().attachments().length > 0 &&
             document.signingInProcess()) {
-      bottomparts.append(this.createSignatoryAttachmentsElems()) ;
+      bottomparts.append(this.createSignatoryAttachmentsElems());
     }
 
     if (document.currentSignatoryCanSign()) {
@@ -642,24 +642,24 @@ window.DocumentStandardView = Backbone.View.extend({
     title: jQuery.merge(titlepart, this.createMenuElems()),
     tabs: [
       new Tab({
-        name : localization.document,
-        elems: [ this.createSignatoriesTabElems(),
-                 $(file.view.el),
-                 bottomparts
+        name: localization.document,
+        elems: [this.createSignatoriesTabElems(),
+                $(file.view.el),
+                bottomparts
                ]
         }),
       new Tab({
           name: localization.attachments,
-          elems: [ this.createAttachmentsTabElems(),
-                   $(file.view.el),
-                   bottomparts
+          elems: [this.createAttachmentsTabElems(),
+                  $(file.view.el),
+                  bottomparts
                  ],
           disabled: !this.model.hasAnyAttachments() ||
-                      ( document.currentSignatory() != undefined &&
-                        document.currentSignatory().signs() &&
-                        !document.currentSignatory().hasSigned() &&
-                        document.signingInProcess() &&
-                        !document.currentSignatory().author()
+                      (document.currentSignatory() != undefined &&
+                       document.currentSignatory().signs() &&
+                       !document.currentSignatory().hasSigned() &&
+                       document.signingInProcess() &&
+                       !document.currentSignatory().author()
                       )
         })
       ]

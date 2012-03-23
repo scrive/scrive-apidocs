@@ -258,7 +258,6 @@ window.FieldStandardView = Backbone.View.extend({
         else
         {
             $(this.el).addClass("dragfield");
-            this.dragfield = $(this.el);
             var wrapper = $("<div style='border: medium none ! important;' class='dragfield'/>");
             if (field.value() ==  "" && SessionStorage.get(signatory.document().documentid(),field.name()) != undefined ) {
                 field.setValue(SessionStorage.get(signatory.document().documentid(),field.name()));

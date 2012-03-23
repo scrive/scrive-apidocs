@@ -513,10 +513,10 @@ basename filename =
 ($^^) (f : fs) a = fs $^^ f a
 
 
-toCSV :: [String] -> [[String]] -> String
+toCSV :: [String] -> [[String]] -> BSL.ByteString -- Use bytestrings here for speed. Else you can get stack overflow
 toCSV header ls =
-  concatMap csvline (header:ls)
-    where csvline line = "\"" ++ intercalate "\",\"" line ++ "\"\n"
+   BSL.concat $ map csvline (header:ls)
+    where csvline line = BSL.concat $ [BSL.fromString "\"", BSL.intercalate (BSL.fromString "\",\"") (map BSL.fromString line),BSL.fromString  "\"\n"]
 
 {- Version of elem that as a value takes Maybe-}    
 melem :: (Eq a) => Maybe a -> [a] -> Bool
