@@ -220,7 +220,7 @@ handleAfterSigning document@Document{documentid} signatorylinkid = do
 
 rejectDocumentIphoneCase :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
 rejectDocumentIphoneCase did sid _ = rejectDocument did sid
- 
+
 {- |
    Control rejecting the document
    URL: /s/{docid}/{signatorylinkid1}/{magichash1}
@@ -252,7 +252,7 @@ rejectDocument documentid
 {- |
    Show the document to be signed
  -}
- 
+
 handleSignShowOldRedirectToNew :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m (Either KontraLink Response)
 handleSignShowOldRedirectToNew did sid mh = do
   modifyContext (\ctx -> ctx { ctxmagichashes = Map.insert sid mh (ctxmagichashes ctx) })
@@ -264,7 +264,7 @@ handleSignShowOldRedirectToNew did sid mh = do
 handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Either KontraLink Response)
 handleSignShow documentid
                signatorylinkid = do
-  mmh <- readField "magichash" 
+  mmh <- readField "magichash"
   case mmh of
     Just mh -> do -- IMPORTANT!!! Keep this just for historical reasons
       modifyContext (\ctx -> ctx { ctxmagichashes = Map.insert signatorylinkid mh (ctxmagichashes ctx) })
@@ -1139,7 +1139,7 @@ handleSetAttachments did = do
                      content <- liftIO $ BSL.readFile filepath
                      let title = basename filename
                      doc <- guardRightM $ newDocument title Attachment 0
-                     doc' <- guardRightM $  attachFile (documentid doc) (title ++ ".pdf") (concatChunks content)
+                     doc' <- guardRightM $  attachFile (documentid doc) title (concatChunks content)
                      return $ listToMaybe $ documentfiles  doc'
                  Just (Input  (Right c)  _ _)  -> do
                       case maybeRead (BSL.toString c) of
