@@ -121,7 +121,7 @@ window.Field = Backbone.Model.extend({
     },
     canBeIgnored: function(){
         var name = this.name();
-        return this.value() == "" && this.placements().length == 0 && (name == "sigco" || name == "sigpersnr" || name == "sigcompnr" || name == "signature");
+        return this.value() == "" && this.placements().length == 0 && (name == "fstname" || name == "sndname" || name == "sigco" || name == "sigpersnr" || name == "sigcompnr" || name == "signature");
     },
     hasRestrictedName : function() {
         return this.isStandard() || this.isSignature(); //this checks are name based
