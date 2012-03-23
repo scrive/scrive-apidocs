@@ -65,7 +65,6 @@ window.PadQueue = Backbone.Model.extend({
 window.PadQueueView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
-        this.model.bind('reset', this.render);
         this.model.bind('change', this.render);
         this.model.view = this;
         this.render();
@@ -81,6 +80,7 @@ window.PadQueueView = Backbone.View.extend({
                    });
         $('body').prepend(new DocumentSignViewHeader({model : doc.model}).el)
         $('body').append(new DocumentSignViewFooter({model : doc.model}).el)
+        console.log("Adding header and footer");
         return doc.view.el;
     },
     noDocumentView : function() {

@@ -744,13 +744,14 @@ window.DocumentSignView = Backbone.View.extend({
       }).el);
     },
     createSaveAfterSignViewElems: function() {
-      if (this.model.padAuthorization()) return $("<div/>")  
+      if (this.model.padAuthorization()) return $("<div/>"); 
       return $(new DocumentSaveAfterSignView({
        model: this.saveAfterSignModel,
        el: $("<div />")
       }).el);
     },
     createShareAfterSignViewElems: function() {
+      if (this.model.padAuthorization()) return $("<div/>");
       return $(new DocumentShareAfterSignView({
         model: this.saveAfterSignModel,
         el: $("<div />")
