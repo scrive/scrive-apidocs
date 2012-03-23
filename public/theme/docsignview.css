@@ -17,6 +17,7 @@ body.signview {
   width: 960px;
   padding-top: 10px;
   padding-bottom: 10px;
+  min-height: 70px;
 }
 
 .signview .pageheader .logowrapper {
@@ -35,13 +36,12 @@ body.signview {
 .signview .pageheader .content .sender {
   float: right;
   margin-top: 20px;
-  margin-bottom: 20px;
   text-align: right;
 }
 
 .signview .pageheader.withcustomlogo .content .sender.shoved {
   float: none;
-  position: fixed;
+  position: absolute;
   top: 10px;
   right: 100px;
 }
@@ -105,6 +105,11 @@ body.signview {
   margin-right: 10px;
   position: relative;
   top: -7px;
+  /*   believe it or not these lines do inline-blocking for IE7 */
+    zoom: 1;
+    *display: inline;
+    _height: 15px;
+  /*   end of IE7 junk */
 }
 
 .signview .instructions .subheadline .menuwrapper {
@@ -112,6 +117,11 @@ body.signview {
   margin-left: 10px;
   margin-right: 10px;
   margin-top: 6px;
+  /*   believe it or not these lines do inline-blocking for IE7 */
+    zoom: 1;
+    *display: inline;
+    _height: 21px;
+  /*   end of IE7 junk */
 }
 
 .signview .menu .download .icon {
@@ -137,6 +147,7 @@ body.signview {
   border: solid #bababc 1px;
   text-align: center;
   padding: 20px;
+  overflow: none;
 }
 
 .signview .save .title {
@@ -179,6 +190,7 @@ body.signview {
   padding-right: 9px;
   border: solid #89c041 1px;
   background-color: #e7f6d5;
+  overflow: none;
 }
 
 .signview .save .highlight .row {
@@ -188,11 +200,17 @@ body.signview {
   margin-bottom: 11px;
 }
 
-.signview .save .highlight .email {
+.signview .save .email {
   margin-top: 3px;
   font-weight: bold;
   border: solid #bababc 1px;
   padding: 1px;
+  max-width: 168px;
+  overflow-x: auto;
+}
+
+.signview .save input {
+  max-width: 168px;
 }
 
 .signview .save .item {
@@ -226,7 +244,11 @@ body.signview {
 
 .signview .save .tos .check {
   float: left;
-  width: 20px;
+  margin-right: 10px;
+}
+
+.signview .save .tos input {
+  background: transparent;
 }
 
 .signview .save .tos .label {
@@ -409,6 +431,7 @@ body.signview {
   background-color: white;
   background-image: url(../img/horizontal-shading-bar.png);
   background-repeat: no-repeat;
+  overflow: hidden;
 }
 
 .signview .section.highlight {
@@ -475,6 +498,7 @@ body.signview {
 .signview .signatoryattachments .list .item .column {
   float: left;
   margin-right: 20px;
+  overflow: none;
 }
 
 .signview .signatoryattachments .list .item .first.column {
@@ -580,6 +604,10 @@ body.signview {
   margin-bottom: 10px;
 }
 
+.signview .signatories .email {
+  overflow-x: auto;
+}
+
 .signview .signatories .signatory .name {
   color: black;
   font-weight: bold;
@@ -600,32 +628,67 @@ body.signview {
   font-weight: bold;
 }
 
-.signview .signatories .signatory .summary.signed {
-  color: #83bc39;
-  padding-left: 90px;
+.signview .signatories .signatory .summary .labelwrapper {
+  margin: 0px auto;
 }
 
-.signview .signatories .signatory .summary.signed .label {
-  float: left;
+.signview .signatories .signatory .summary.signed {
+  color: #83bc39;
+}
+
+.signview .signatories .signatory .summary .icon {
+  float: none;
+  display: inline-block;
+/*   believe it or not these lines do inline-blocking for IE7 */
+  zoom: 1;
+  *display: inline;
+  _height: 11px;
+/*   end of IE7 junk */
+}
+
+.signview .signatories .signatory .summary .label {
+  display: inline-block;
+/*   believe it or not these lines do inline-blocking for IE7 */
+  zoom: 1;
+  *display: inline;
+  _height: 11px;
+/*   end of IE7 junk */
 }
 
 .signview .signatories .signatory.current .fieldwrapper {
   margin-top: 10px;
 }
 
+/** this stuff is kind of messy, need to improve when do inline field editing*/
+.signview .signatories .signatory .closedinputs .fieldvalue,
 .signview .signatories .signatory.other .fieldvalue {
   border: none;
   height: 17px;
   line-height: 17px;
 }
 
+.signview .signatories .signatory .closedinputs .label {
+  display: none;
+}
+
+.signview .signatories .signatory .closedinputs .fieldwrapper {
+  margin-top: 0px;
+}
+
 /*Hide the info text on the custom fields, cos
  * we're using labels.
  */
-.signview .signatories .signatory .dragfield .grayed {
+.signview .signatories .signatory .field .grayed {
   color: white;
 }
 
+.signview .signatories .signatory .field input {
+  width: 195px;
+}
+
+.signview .signatories .signatory .fieldwrapper {
+  width: 200px;
+}
 
 .signview .rejectwrapper {
   float: left;
@@ -658,6 +721,11 @@ body.signview {
   bottom: 50px;
   background: url(../img/sign-arrow-down.png);
   background-repeat: no-repeat;
+}
+
+/** this is a bit of a cheat way to override the visibility stuff*/
+.signview .arrows .down.arrow.infooter {
+  height: 0px;
 }
 
 .signview .arrows .up.arrow {

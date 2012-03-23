@@ -88,7 +88,7 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
     this.model.bind('change', this.render);
     this.onExpand = args.onExpand;
     this.onCollapse = args.onCollapse;
-    this.dragfields = [];
+    this.customfieldelems = [];
     this.render();
   },
   signatorySummary: function() {
@@ -158,6 +158,10 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
     bottombit.append($("<div class='email' />").text(signatory.email()));
     container.append(bottombit);
 
+    /** this stuff is messy, need to improve when do inline field editing*/
+    var closedinputbits = $("<div class='grouping closedinputs' />");
+    var isclosedinputs = false;
+
     var inputbits = $("<div class='grouping' />");
     var isinputs = false;
     var isInputField = this.isInputField;
@@ -168,7 +172,6 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
         if (field.value() == "" && !signatory.current()) {
           return;
         }
-        isinputs = true;
         var fieldwrapper = $("<div class='fieldwrapper'/>");
         if (signatory.current()) {
           fieldwrapper.append($("<div class='label' />").text(field.nicename() + ":"));
@@ -177,13 +180,21 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
           model: field,
           el: $("<div class='field' />")
         });
-        if (fieldview.dragfield != undefined) {
-          view.dragfields.push(fieldview.dragfield);
+        var customfield = $(fieldview.el);
+        view.customfieldelems.push(customfield);
+        fieldwrapper.append(customfield);
+        if (field.isClosed()) {
+          closedinputbits.append(fieldwrapper);
+          isclosedinputs = true;
+        } else {
+          inputbits.append(fieldwrapper);
+          isinputs = true;
         }
-        fieldwrapper.append($(fieldview.el));
-        inputbits.append(fieldwrapper);
       }
     });
+    if (isclosedinputs) {
+      container.append(closedinputbits);
+    }
     if (isinputs) {
       container.append(inputbits);
     }
@@ -205,16 +216,18 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
     var signatory = this.model;
 
     var container = $("<div class='summary' />");
+    var labelwrapper = $("<div class='labelwrapper' />");
     if (signatory.signs()) {
       container.addClass(signatory.status());
-      if (signatory.status() == "signed") {
-        container.append($("<div class='icon status signed' />"));
+      if (signatory.hasSigned()) {
+        container.addClass("signed");
+        labelwrapper.append($("<div class='icon status signed' />"));
       }
-      container.append($("<div class='label' />").text(this.signatorySummary()));
+      labelwrapper.append($("<div class='label' />").text(this.signatorySummary()));
     } else {
-      container.append($("<div class='label' />").text(signatory.document().process().authorissecretarytext()));
+      labelwrapper.append($("<div class='label' />").text(signatory.document().process().authorissecretarytext()));
     }
-    container.append($("<div class='clearfix' />"));
+    container.append(labelwrapper);
     return container;
   },
   render: function() {
@@ -247,7 +260,7 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
     _.bindAll(this, 'render');
     this.onExpand = args.onExpand;
     this.onCollapse = args.onCollapse;
-    this.dragfields = [];
+    this.customfieldelems = [];
     this.render();
   },
   orderedOtherSignatories: function() {
@@ -302,17 +315,19 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
       }
     });
 
-    var currentsigview = signatoriesview.createSignatoryView(this.model.currentSignatory());
-    this.dragfields = currentsigview.dragfields;
-    var currentitem = $("<div class='column' />").append($(currentsigview.el));
-    if (row == undefined) {
-      row = $("<div class='row' />").append($("<div class='column' />"));
-    }
-    row.append(currentitem);
-    row.append($("<div class='clearfix' />"));
-    list.append(row);
+    if (this.model.currentSignatory().signs()) {
+      var currentsigview = signatoriesview.createSignatoryView(this.model.currentSignatory());
+      this.customfieldelems = currentsigview.customfieldelems;
+      var currentitem = $("<div class='column' />").append($(currentsigview.el));
+      if (row == undefined) {
+        row = $("<div class='row' />").append($("<div class='column' />"));
+      }
+      row.append(currentitem);
+      row.append($("<div class='clearfix' />"));
+      list.append(row);
 
-    list.append($("<div class='clearfix' />"));
+      list.append($("<div class='clearfix' />"));
+    }
 
     container.append(list);
     container.append($("<div class='clearfix' />"));
@@ -1015,7 +1030,7 @@ window.DocumentSignView = Backbone.View.extend({
         if (this.isDisplaySignatories()) {
           var signatoriesview = this.createSignatoriesView(triggerArrowChange);
           if (this.model.currentSignatoryCanSign()) {
-            _.each(this.customFieldTasks(signatoriesview.dragfields), function(task) {
+            _.each(this.customFieldTasks(signatoriesview.customfieldelems), function(task) {
               tasks.push(task);
             });
           }
@@ -1043,8 +1058,9 @@ window.DocumentSignView = Backbone.View.extend({
       }
       this.container.append(subcontainer);
 
-      if (this.model.signingInProcess() &&
-           !this.model.currentSignatory().hasSigned()) {
+      if ((this.model.signingInProcess() &&
+           !this.model.currentSignatory().hasSigned()) ||
+             !this.model.currentSignatory().signs()) {
         this.container.prepend(this.createArrowsElems(tasks));
       }
 
@@ -1165,6 +1181,19 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
       }
     };
     updateActionArrowPosition();
+
+    var checkIfDownArrowInFooter = function() {
+      var footertop = $(".pagefooter").offset().top;
+      var downarrowbottom = downarrow.offset().top + downarrow.height();
+      if (downarrowbottom + 100 > footertop) {
+        downarrow.addClass("infooter");
+      } else {
+        downarrow.removeClass("infooter");
+      }
+    };
+    $(window).resize(checkIfDownArrowInFooter);
+    $(window).scroll(checkIfDownArrowInFooter);
+    checkIfDownArrowInFooter();
 
     var updateVisibility = function() {
 

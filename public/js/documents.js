@@ -402,6 +402,13 @@ window.Document = Backbone.Model.extend({
      var extendedWithDocument = function(hash){
                 hash.document = document;
                 return hash; };
+     /**this way of doing it is safe for IE7 which doesnt
+      * naturally parse stuff like 2012-03-29 so new Date(datestr)
+      * doesnt work*/
+     var parseDate = function(datestr) {
+        var dateValues = datestr.split('-');
+        return new Date(dateValues[0],dateValues[1],dateValues[2]);
+     };
      return {
       title : args.title,
       files : _.map(args.files, function(fileargs) {
@@ -424,7 +431,7 @@ window.Document = Backbone.Model.extend({
       canbecanceled : args.canbecanceled,
       canseeallattachments: args.canseeallattachments,
       status : args.status,
-      timeouttime  : args.timeouttime  == undefined ? undefined :  new Date(args.timeouttime),
+      timeouttime  : args.timeouttime  == undefined ? undefined :  parseDate(args.timeouttime),
       signorder : args.signorder,
       authorization : args.authorization,
       template : args.template,
