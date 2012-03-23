@@ -872,7 +872,7 @@ $if(cond)$
 <tr>
     $if(noescp)$
     <td>
-      <table width="300px" style="font-family:'Lucida Grande', sans-serif;font-size:12px;margin-left:30px">
+      <table width="290px" style="font-family:'Lucida Grande', sans-serif;font-size:12px;margin-left:30px">
       <tbody><tr><td>$elems:noescape()$</td></tr></tbody>
       </table>
     </td>
