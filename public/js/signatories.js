@@ -341,22 +341,22 @@ window.Signatory = Backbone.Model.extend({
         else
          return this.email();
     },
-    personalnumber: function() {
-        var pn = this.field("sigpersnr").value();
+    personalnumber : function() {
+        var pn = this.field("sigpersnr") != undefined ? this.field("sigpersnr").value(): undefined;
         if (pn != undefined)
             return pn;
         else
             return "";
     },
     company: function() {
-        var pn = this.field("sigco").value();
+        var pn = this.field("sigco") != undefined ? this.field("sigco").value(): undefined;
         if (pn != undefined)
             return pn;
         else
             return "";
     },
     companynumber: function() {
-        var pn = this.field("sigcompnr").value();
+        var pn = this.field("sigcompnr") != undefined ? this.field("sigcompnr").value(): undefined;
         if (pn != undefined)
             return pn;
         else
