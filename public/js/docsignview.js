@@ -1183,6 +1183,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
     updateActionArrowPosition();
 
     var checkIfDownArrowInFooter = function() {
+      if ($(".pagefooter").size() == 0) return;
       var footertop = $(".pagefooter").offset().top;
       var downarrowbottom = downarrow.offset().top + downarrow.height();
       if (downarrowbottom + 100 > footertop) {
