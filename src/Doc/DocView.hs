@@ -45,7 +45,7 @@ module Doc.DocView (
   , signatoryStatusClass
   ) where
 
-import AppView (kontrakcja, serviceFields, standardPageFields)
+import AppView (kontrakcja, standardPageFields)
 import API.Service.Model
 import Company.Model
 import Doc.DocProcess
@@ -64,7 +64,6 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import User.Model
-import User.UserView (userBasicFields)
 import Doc.JSON()
 import Doc.DocInfo
 import Control.Applicative ((<$>))
@@ -532,26 +531,15 @@ pageDocumentView document msiglink =
 
 pageDocumentSignView :: TemplatesMonad m
                     => Context
-                    -> Maybe Service
-                    -> Maybe Company
-                    -> Maybe User
                     -> Document
                     -> SignatoryLink
                     -> m String
-pageDocumentSignView ctx mservice mcompany mauthor document siglink =
+pageDocumentSignView ctx document siglink =
   renderTemplateFM "pageDocumentSignView" $ do
       field "documentid" $ show $ documentid document
       field "siglinkid" $ show $ signatorylinkid siglink
       field "sigmagichash" $ show $  signatorymagichash siglink
       standardPageFields ctx kontrakcja Nothing False False Nothing Nothing
-      when (isJust mcompany) $ do
-          let (Just company) = mcompany
-          fieldF "companybrand" $ companyBrandFields company
-      when (isJust mservice) $
-          fieldF "service" $ serviceFields "" mservice
-      when (isJust mauthor) $ do
-          let (Just author) = mauthor
-          fieldF "author" $ userBasicFields author mcompany
 
 csvLandPage :: TemplatesMonad m => Int -> m String
 csvLandPage count = renderTemplateFM "csvlandpage" $ do
