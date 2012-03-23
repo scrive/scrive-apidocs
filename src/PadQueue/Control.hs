@@ -69,6 +69,7 @@ showPadQueuePage = padQueuePage >>= simpleResponse
 padQueueToSignatoryData :: (Kontrakcja m) => PadQueue -> m (Maybe (Document,SignatoryLink))
 padQueueToSignatoryData Nothing = return Nothing
 padQueueToSignatoryData (Just (did,slid)) = do
+        Log.debug $ "Some document for padqueue found"
         doc <- guardJustM $ runDBQuery $ GetDocumentByDocumentID did
         sl <- guardJust $ getSigLinkFor doc slid
         if (Preparation /= documentstatus doc)

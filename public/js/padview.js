@@ -9,6 +9,7 @@
     
 window.PadQueue = Backbone.Model.extend({
     defaults: {
+        needFullRefresh  : false,
         ready : false
     },
     initialize: function (args) {
@@ -43,12 +44,17 @@ window.PadQueue = Backbone.Model.extend({
     logged : function() {
         return this.get("logged") == "true";
     },
+    needFullRefresh : function() {
+        return this.get("needFullRefresh");  
+    },
     parse: function(args) {
      return {
       documentid : args.documentid,
       signatorylinkid: args.signatorylinkid,
       magichash : args.magichash,
       logged : args.logged,
+      needFullRefresh : this.documentid() != undefined && this.signatorylinkid() != undefined &&
+                        (this.signatorylinkid() != args.signatorylinkid) && (this.documentid() != args.documentid),
       ready: true
       };
     }
@@ -73,6 +79,8 @@ window.PadQueueView = Backbone.View.extend({
                         magichash : padqueue.magichash()
                       })
                    });
+        $('body').prepend(new DocumentSignViewHeader({model : doc.model}).el)
+        $('body').append(new DocumentSignViewFooter({model : doc.model}).el)
         return doc.view.el;
     },
     noDocumentView : function() {
@@ -123,7 +131,9 @@ window.PadQueueView = Backbone.View.extend({
         var container = $(this.el);
         container.empty();
         if (padqueue.ready()) {
-            if (padqueue.hasDocument())
+            if (padqueue.needFullRefresh())
+               window.location = window.location; // We reload if content has changes so much that it is not good to keep it opened. 
+            else if (padqueue.hasDocument())
                 container.append(this.documentView())
             else if (padqueue.logged())
                 container.append(this.noDocumentView())      

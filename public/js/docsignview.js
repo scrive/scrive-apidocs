@@ -744,6 +744,7 @@ window.DocumentSignView = Backbone.View.extend({
       }).el);
     },
     createSaveAfterSignViewElems: function() {
+      if (this.model.padAuthorization()) return $("<div/>")  
       return $(new DocumentSaveAfterSignView({
        model: this.saveAfterSignModel,
        el: $("<div />")
@@ -1183,6 +1184,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
     updateActionArrowPosition();
 
     var checkIfDownArrowInFooter = function() {
+      if ($(".pagefooter").size() == 0) return;
       var footertop = $(".pagefooter").offset().top;
       var downarrowbottom = downarrow.offset().top + downarrow.height();
       if (downarrowbottom + 100 > footertop) {
