@@ -24,7 +24,7 @@ window.DocumentSignViewHeader = Backbone.View.extend({
     var document = this.model;
     if (!document.ready()) return this;
     var maindiv = $(this.el)
-
+    maindiv.empty();
     maindiv.addClass("pageheader");
     maindiv.addClass(document.logo() == undefined ? 'withstandardlogo': 'withcustomlogo');
     if (document.barsbackgroundcolor() != undefined)
@@ -71,6 +71,7 @@ window.DocumentSignViewFooter = Backbone.View.extend({
     var document = this.model;
     if (!document.ready()) return this;
     var maindiv = $(this.el)
+    maindiv.empty();
     maindiv.addClass("pagefooter");
     if (document.barsbackgroundcolor() != undefined)
     {

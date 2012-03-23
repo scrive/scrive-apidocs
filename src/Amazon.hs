@@ -23,6 +23,8 @@ import Misc (concatChunks)
 import qualified Log
 import DB.Classes
 import Control.Monad.IO.Class
+import qualified Data.ByteString.Char8 as BS8
+import qualified Data.ByteString.UTF8 as BS hiding (length)
 
 -- | Convert a file to Amazon URL. We use the following format:
 --
@@ -33,7 +35,7 @@ urlFromFile :: File -> String
 urlFromFile File{filename, fileid} =
     -- here we use BSC.unpack, as HTTP.urlEncode
     -- does only %-escaping for 8bit values
-    "file" </> show fileid </> HTTP.urlEncode filename ++ ".pdf"
+    "file" </> show fileid </> (HTTP.urlEncode . BS8.unpack . BS.fromString $ filename) ++ ".pdf"
 
 -- | Upload a document file. This means one of:
 --
