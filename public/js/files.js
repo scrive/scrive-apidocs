@@ -183,7 +183,7 @@ var FilePageView = Backbone.View.extend({
     renderDragables : function() {
         var view = this;
         var page = this.model;
-        var container = this.el;
+        var container = $(this.el);
         var file = page.file();
         var document =file.document();
         $(".placedfield",container).remove();
@@ -198,14 +198,14 @@ var FilePageView = Backbone.View.extend({
         var page = this.model;
         var file = page.file();
         var document =file.document();
-        var container = this.el;
+        var container = $(this.el);
         container.empty();
         container.attr("id", "page" + page.number());
         container.addClass("pagediv");
         
         // Page part with image
         this.pagejpg = $("<div class='pagejpg'/>")
-        var pagelink = "/pages/" + document.documentid() + "/" + file.fileid()  + "/" + page.number() + document.viewer().urlPart() ;
+        var pagelink = location.protocol + "//" + location.host + "/pages/" + document.documentid() + "/" + file.fileid()  + "/" + page.number() + document.viewer().urlPart() ;
         this.pagejpg.css("background-image", "url(" +pagelink +")");
         this.pagejpg.append($("<input type='hidden' name='width'/>").val(page.width()));
         this.pagejpg.append($("<input type='hidden' name='height'/>").val(page.height()));
@@ -228,7 +228,7 @@ var FileView = Backbone.View.extend({
     },
     render: function () {
         var file = this.model;
-        var docbox = this.el
+        var docbox = $(this.el)
         docbox.attr("id","documentBox");
         docbox.empty();
         if (!file.ready()) {
@@ -237,7 +237,7 @@ var FileView = Backbone.View.extend({
         } else {
             _.each(file.pages(),function(page){
                  var pageview = new FilePageView({model : page, el: $("<div/>")});
-                 docbox.append(pageview.el);
+                 docbox.append($(pageview.el));
             })
         }
         return this;

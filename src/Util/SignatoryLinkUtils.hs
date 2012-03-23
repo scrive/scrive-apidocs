@@ -48,15 +48,13 @@ import Data.List
 import Data.Maybe
 import Data.Functor
 
-import qualified Data.ByteString as BS
-
 {- |
    Anything that could identify a SignatoryLink
  -}
 class SignatoryLinkIdentity a where
   isJustSigLinkFor :: a -> SignatoryLink -> Bool
 
-instance SignatoryLinkIdentity BS.ByteString where
+instance SignatoryLinkIdentity String where
   isJustSigLinkFor email sl = email == getEmail sl
 
 instance SignatoryLinkIdentity Email where
@@ -157,7 +155,7 @@ getAuthorSigLink doc = getSigLinkFor doc SignatoryAuthor
      * First Name + Last Name
      * email address if no name info
 -}
-getAuthorName :: Document -> BS.ByteString
+getAuthorName :: Document -> String
 getAuthorName doc =
   let Just authorsiglink = getAuthorSigLink doc
   in getSmartName authorsiglink

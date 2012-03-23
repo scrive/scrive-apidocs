@@ -8,7 +8,6 @@ import Text.JSON.Types
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit (Assertion)
-import qualified Data.ByteString.UTF8 as BS
 
 import Company.CompanyControl
 import Company.Model
@@ -75,33 +74,36 @@ test_settingUIWithHandlePostCompany env = withTestEnvironment env $ do
   ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
-  req1 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"barsbackground\":\"green\"}")
+  req1 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"barsbackground\":\"green\",\"barstextcolour\":\"yellow\"}")
                         , ("logo", inFile "public/img/email-logo.png")
                         ]
   (res1, _ctx') <- runTestKontra req1 ctx $ handlePostCompany >>= sendRedirect
 
   assertEqual "Response code is 303" 303 (rsCode res1)
   Just newcompany1 <- dbQuery $ GetCompany (companyid company)
-  assertEqual "Colour was set" (Just $ BS.fromString "green") (companybarsbackground $ companyui newcompany1)
+  assertEqual "Background colour was set" (Just "green") (companybarsbackground $ companyui newcompany1)
+  assertEqual "Text colour was set" (Just "yellow") (companybarstextcolour $ companyui newcompany1)
   assertBool "File was set" $ isJust (companylogo $ companyui newcompany1)
 
-  req2 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"barsbackground\":\"\"}")
+  req2 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"barsbackground\":\"\",\"barstextcolour\":\"\"}")
                          ]
   (res2, _ctx') <- runTestKontra req2 ctx $ handlePostCompany >>= sendRedirect
 
   assertEqual "Response code is 303" 303 (rsCode res2)
   Just newcompany2 <- dbQuery $ GetCompany (companyid company)
-  assertEqual "Colour reset" Nothing (companybarsbackground $ companyui newcompany2)
+  assertEqual "Background colour reset" Nothing (companybarsbackground $ companyui newcompany2)
+  assertEqual "Text colour reset" Nothing (companybarstextcolour $ companyui newcompany2)
   assertEqual "File still intact" (companylogo $ companyui newcompany1) (companylogo $ companyui newcompany2)
 
-  req3 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"barsbackground\":\"blue\"}")
+  req3 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"barsbackground\":\"blue\",\"barstextcolour\":\"pink\"}")
                          , ("islogo", inText "false")
                          ]
   (res3, _ctx') <- runTestKontra req3 ctx $ handlePostCompany >>= sendRedirect
 
   assertEqual "Response code is 303" 303 (rsCode res3)
   Just newcompany3 <- dbQuery $ GetCompany (companyid company)
-  assertEqual "Colour was set" (Just $ BS.fromString "blue") (companybarsbackground $ companyui newcompany3)
+  assertEqual "Background colour was set" (Just "blue") (companybarsbackground $ companyui newcompany3)
+  assertEqual "Text colour was set" (Just "pink") (companybarstextcolour $ companyui newcompany3)
   assertEqual "File reset" Nothing (companylogo $ companyui newcompany3)
 
 test_handleCompanyLogo :: DBEnv -> Assertion

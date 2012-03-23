@@ -1,0 +1,122 @@
+/* Tab Viewer */
+
+.tab-viewer {
+	width: 960px;
+}
+
+.tab-content h5 {
+	color: #000;
+	margin-bottom: 6px;
+}
+
+.tab-content h5 em {
+	color: #9a9a9a;
+}
+
+.tab-content .basicinfo {
+    color: #414241 !important;
+    font: 12px "Helvetica Neue";
+    text-decoration: none;
+    padding: 48px 0 36px 50px;
+    width: 230px;
+}
+
+
+.tab-viewer .tab-header {
+	background: url(../img/bg-header.jpg);
+	border: solid #000;
+	border-width: 1px 1px 0 1px;
+	color: #fff;
+	height: 18px;
+	padding: 3px 3px 3px 20px;
+	position: relative;
+}
+
+.tab-viewer .tab-header span {
+	font: 10px "Lucida Grande";
+	text-transform: uppercase;
+}
+
+.tab-viewer .tab-header h3 {
+	display: inline;
+	font: 16px/24px "Lucida Grande";
+	text-transform: uppercase;
+}
+
+.tab-viewer .tab-header .doc-rename {
+	color: #2e99d3;
+	font: 10px "Lucida Grande";
+	text-decoration: none;
+	text-transform: uppercase;
+}
+
+.tab-viewer .tab-header .next-step {
+	right: 10px;
+	position: absolute;
+	top: 6px;
+}
+
+.tab-viewer .tabs {
+	background: #f4f4f4;
+	border: solid #808080;
+	border-width: 0 1px 1px 0px;
+	height: 24px;
+}
+
+.tab-viewer .tabs li:first-child {
+    border: solid #808080;
+    border-width: 0 0px 0px 1px;
+}
+.tab-viewer .tabs li.active:first-child {
+    border-width: 0;
+}
+.tab-viewer .tabs li {
+	color: #4b4b4b;
+	float: left;
+	font: 11px "Lucida Grande";
+	height: 16px;
+	padding: 4px 30px;
+}
+
+.tab-viewer .tabs li a {
+	color: #000;
+	font: 11px "Helvetica Neue";
+    display: inline-block;
+    padding-top:2px;
+}
+
+.tab-viewer .tabs li.active a {
+	color: #fff;
+    padding-top:0px;
+
+}
+
+.tab-viewer .tabs li.active {
+	background: url(../img/bg-header.jpg);
+	color: #d9d9d9;
+}
+
+.tab-viewer .tab-container {
+	background: #fff;
+	border: solid #808080;
+	border-width: 0 1px 1px 1px;
+	font: 10px "Lucida Grande";
+	-moz-border-radius: 0 0 5px 5px;
+	-webkit-border-radius: 0 0 5px 5px;
+}
+
+.tab-container a{
+    cursor : pointer
+}
+
+.tab-viewer .tab-content .tab-box {
+	border: 1px solid #e6e7ef;
+	min-height: 90px;
+	padding: 10px;
+	width: 220px;
+}
+
+.tab-viewer .tab-content .tab-box a {
+	color: #2e99d3;
+	text-decoration: none;
+}

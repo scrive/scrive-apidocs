@@ -1,6 +1,5 @@
 module User.History.Model (
     UserHistory(..)
-  , UserHistoryID(..)
   , UserHistoryEvent(..)
   , UserHistoryEventType(..)
   , LogHistoryLoginAttempt(..)
@@ -11,18 +10,11 @@ module User.History.Model (
   , LogHistoryTOSAccept(..)
   , LogHistoryDetailsChanged(..)
   , LogHistoryUserInfoChanged(..)
-  , AddUserHistory(..)
-  , GetUserHistoryByID(..)
   , GetUserHistoryByUserID(..)
   ) where
 
-import Control.Applicative
-import Data.Data
-import Data.Int
 import Data.List (intersperse)
 import Database.HDBC
-import Happstack.State
-import qualified Data.ByteString.Char8 as BS
 import Text.JSON
 
 import qualified Paths_kontrakcja as Paths
@@ -33,6 +25,7 @@ import DB.Derive
 import DB.Fetcher2
 import DB.Utils
 
+import IPAddress
 import MinutesTime
 import Misc
 
@@ -40,20 +33,12 @@ import User.History.Tables
 import User.UserID
 import User.Model
 
-newtype UserHistoryID = UserHistoryID Int64
-  deriving (Eq, Typeable)
-$(newtypeDeriveConvertible ''UserHistoryID)
-$(newtypeDeriveUnderlyingReadShow ''UserHistoryID)
-$(deriveSerialize ''UserHistoryID)
-instance Version UserHistoryID
-
 data UserHistory = UserHistory {
-    uhid               :: UserHistoryID
-  , uhuserid           :: UserID
+    uhuserid           :: UserID
   , uhevent            :: UserHistoryEvent
   , uhip               :: IPAddress
   , uhtime             :: MinutesTime
-  , uhsystemversion    :: BS.ByteString
+  , uhsystemversion    :: String
   , uhperforminguserid :: Maybe UserID -- Nothing means no user changed it (like the system)
   }
   deriving (Eq, Show)
@@ -88,137 +73,111 @@ instance Convertible UserHistoryEventType SqlValue where
 
 instance Convertible SqlValue UserHistoryEventType where
   safeConvert a = case (fromSql a :: Int) of
-                  1 -> return UserLoginAttempt
-                  2 -> return UserLoginSuccess
-                  3 -> return UserPasswordSetup
-                  4 -> return UserPasswordSetupReq
-                  5 -> return UserAccountCreated
-                  6 -> return UserDetailsChange
-                  7 -> return UserTOSAccept
-                  s -> Left ConvertError {
-                          convSourceValue = show s
-                        , convSourceType = "Int"
-                        , convDestType = "UserHistoryEventType"
-                        , convErrorMessage = "Convertion error: value " 
-                                             ++ show s ++ " not mapped"
-                        } 
-
-data AddUserHistory = AddUserHistory UserID UserHistoryEvent IPAddress MinutesTime (Maybe UserID) 
-instance DBUpdate AddUserHistory (Maybe UserHistory) where
-  dbUpdate (AddUserHistory user event ip time mpuser) = do
-    uid <- UserHistoryID <$> getUniqueID tableUsersHistory
-    _ <- kRun $ mkSQL INSERT tableUsersHistory [
-        sql "id" uid
-      , sql "user_id" user
-      , sql "event_type" $ uheventtype event
-      , sql "event_data" $ maybe "" encode $ uheventdata event
-      , sql "ip" ip
-      , sql "time" time
-      , sql "system_version" $ concat $ intersperse "." $ Ver.versionTags Paths.version
-      , sql "performing_user_id" mpuser
-      ]
-    dbQuery $ GetUserHistoryByID uid
-
-data GetUserHistoryByID = GetUserHistoryByID UserHistoryID
-instance DBQuery GetUserHistoryByID (Maybe UserHistory) where
-  dbQuery (GetUserHistoryByID uid) = do
-    _ <- kRun $ selectUserHistorySQL
-      <++> SQL "WHERE id = ?" [toSql uid]
-    fetchUserHistory
-      >>= oneObjectReturnedGuard
+    1 -> return UserLoginAttempt
+    2 -> return UserLoginSuccess
+    3 -> return UserPasswordSetup
+    4 -> return UserPasswordSetupReq
+    5 -> return UserAccountCreated
+    6 -> return UserDetailsChange
+    7 -> return UserTOSAccept
+    n -> Left ConvertError {
+        convSourceValue = show n
+      , convSourceType = "Int"
+      , convDestType = "UserHistoryEventType"
+      , convErrorMessage = "Convertion error: value " ++ show n ++ " not mapped"
+    }
 
 data GetUserHistoryByUserID = GetUserHistoryByUserID UserID
-instance DBQuery GetUserHistoryByUserID (Maybe [UserHistory]) where
+instance DBQuery GetUserHistoryByUserID [UserHistory] where
   dbQuery (GetUserHistoryByUserID uid) = do
     _ <- kRun $ selectUserHistorySQL
-      <++> SQL "WHERE user_id = ? ORDER BY time DESC" [toSql uid]
-    hist <- fetchUserHistory
-    return $ if null hist then Nothing else Just hist
+      <++> SQL "WHERE user_id = ? ORDER BY time" [toSql uid]
+    fetchUserHistory
 
 data LogHistoryLoginAttempt = LogHistoryLoginAttempt UserID IPAddress MinutesTime
-instance DBUpdate LogHistoryLoginAttempt (Maybe UserHistory) where
-  dbUpdate (LogHistoryLoginAttempt userid ip time) = dbUpdate $
-    AddUserHistory userid 
-                   (UserHistoryEvent {uheventtype = UserLoginAttempt, uheventdata = Nothing})
-                   ip
-                   time
-                   Nothing
+instance DBUpdate LogHistoryLoginAttempt Bool where
+  dbUpdate (LogHistoryLoginAttempt userid ip time) = addUserHistory
+    userid
+    UserHistoryEvent {uheventtype = UserLoginAttempt, uheventdata = Nothing}
+    ip
+    time
+    Nothing
 
 data LogHistoryLoginSuccess = LogHistoryLoginSuccess UserID IPAddress MinutesTime
-instance DBUpdate LogHistoryLoginSuccess (Maybe UserHistory) where
-  dbUpdate (LogHistoryLoginSuccess userid ip time) = dbUpdate $ 
-    AddUserHistory userid 
-                   (UserHistoryEvent {uheventtype = UserLoginSuccess, uheventdata = Nothing})
-                   ip
-                   time
-                   (Just userid)
+instance DBUpdate LogHistoryLoginSuccess Bool where
+  dbUpdate (LogHistoryLoginSuccess userid ip time) = addUserHistory
+    userid
+    UserHistoryEvent {uheventtype = UserLoginSuccess, uheventdata = Nothing}
+    ip
+    time
+    (Just userid)
 
 data LogHistoryPasswordSetup = LogHistoryPasswordSetup UserID IPAddress MinutesTime (Maybe UserID)
-instance DBUpdate LogHistoryPasswordSetup (Maybe UserHistory) where
-  dbUpdate (LogHistoryPasswordSetup userid ip time mpuser) = dbUpdate $ 
-    AddUserHistory userid 
-                   (UserHistoryEvent {uheventtype = UserPasswordSetup, uheventdata = Nothing})
-                   ip
-                   time
-                   mpuser
+instance DBUpdate LogHistoryPasswordSetup Bool where
+  dbUpdate (LogHistoryPasswordSetup userid ip time mpuser) = addUserHistory
+    userid
+    UserHistoryEvent {uheventtype = UserPasswordSetup, uheventdata = Nothing}
+    ip
+    time
+    mpuser
 
 data LogHistoryPasswordSetupReq = LogHistoryPasswordSetupReq UserID IPAddress MinutesTime (Maybe UserID)
-instance DBUpdate LogHistoryPasswordSetupReq (Maybe UserHistory) where
-  dbUpdate (LogHistoryPasswordSetupReq userid ip time mpuser) = dbUpdate $ 
-    AddUserHistory userid 
-                   (UserHistoryEvent {uheventtype = UserPasswordSetupReq, uheventdata = Nothing})
-                   ip
-                   time
-                   mpuser
+instance DBUpdate LogHistoryPasswordSetupReq Bool where
+  dbUpdate (LogHistoryPasswordSetupReq userid ip time mpuser) = addUserHistory
+    userid
+    UserHistoryEvent {uheventtype = UserPasswordSetupReq, uheventdata = Nothing}
+    ip
+    time
+    mpuser
 
 data LogHistoryAccountCreated = LogHistoryAccountCreated UserID IPAddress MinutesTime Email (Maybe UserID)
-instance DBUpdate LogHistoryAccountCreated (Maybe UserHistory) where
-  dbUpdate (LogHistoryAccountCreated userid ip time email mpuser) = dbUpdate $ 
-    AddUserHistory userid 
-                   (UserHistoryEvent {
-                       uheventtype = UserAccountCreated
-                     , uheventdata = Just $ JSArray $ [JSObject . toJSObject $ [
-                        ("field", JSString $ toJSString "email")
-                      , ("oldval", JSString $ toJSString "")
-                      , ("newval", JSString $ toJSString $ BS.unpack $ unEmail email)
-                      ]]})
-                   ip
-                   time
-                   mpuser
+instance DBUpdate LogHistoryAccountCreated Bool where
+  dbUpdate (LogHistoryAccountCreated userid ip time email mpuser) = addUserHistory
+    userid
+    UserHistoryEvent {
+        uheventtype = UserAccountCreated
+      , uheventdata = Just $ JSArray $ [JSObject . toJSObject $ [
+          ("field", JSString $ toJSString "email")
+        , ("oldval", JSString $ toJSString "")
+        , ("newval", JSString $ toJSString $ unEmail email)
+        ]]
+      }
+    ip
+    time
+    mpuser
 
 data LogHistoryTOSAccept = LogHistoryTOSAccept UserID IPAddress MinutesTime (Maybe UserID)
-instance DBUpdate LogHistoryTOSAccept (Maybe UserHistory) where
-  dbUpdate (LogHistoryTOSAccept userid ip time mpuser) = dbUpdate $ 
-    AddUserHistory userid 
-                   (UserHistoryEvent {
-                       uheventtype = UserTOSAccept
-                     , uheventdata = Nothing})
-                   ip
-                   time
-                   mpuser
+instance DBUpdate LogHistoryTOSAccept Bool where
+  dbUpdate (LogHistoryTOSAccept userid ip time mpuser) = addUserHistory
+    userid
+    UserHistoryEvent {uheventtype = UserTOSAccept, uheventdata = Nothing}
+    ip
+    time
+    mpuser
 
 data LogHistoryDetailsChanged = LogHistoryDetailsChanged UserID IPAddress MinutesTime [(String, String, String)] (Maybe UserID)
-instance DBUpdate LogHistoryDetailsChanged (Maybe UserHistory) where
-  dbUpdate (LogHistoryDetailsChanged userid ip time details mpuser) = dbUpdate $ 
-    AddUserHistory userid 
-                   (UserHistoryEvent {
-                       uheventtype = UserDetailsChange
-                     , uheventdata = Just $ JSArray $ map (\(field, oldv, newv) -> 
-                                        JSObject . toJSObject $ [
-                                            ("field", JSString $ toJSString field)
-                                          , ("oldval", JSString $ toJSString oldv)
-                                          , ("newval", JSString $ toJSString newv)
-                                          ]) details})
-                   ip
-                   time
-                   mpuser
+instance DBUpdate LogHistoryDetailsChanged Bool where
+  dbUpdate (LogHistoryDetailsChanged userid ip time details mpuser) = addUserHistory
+    userid
+    UserHistoryEvent {
+        uheventtype = UserDetailsChange
+      , uheventdata = Just $ JSArray $ map (\(field, oldv, newv) ->
+        JSObject . toJSObject $ [
+            ("field", JSString $ toJSString field)
+          , ("oldval", JSString $ toJSString oldv)
+          , ("newval", JSString $ toJSString newv)
+          ]) details
+      }
+    ip
+    time
+    mpuser
 
 data LogHistoryUserInfoChanged = LogHistoryUserInfoChanged UserID IPAddress MinutesTime UserInfo UserInfo (Maybe UserID)
-instance DBUpdate LogHistoryUserInfoChanged (Maybe UserHistory) where
+instance DBUpdate LogHistoryUserInfoChanged Bool where
   dbUpdate (LogHistoryUserInfoChanged userid ip time oldinfo newinfo mpuser) = do
     let diff = diffUserInfos oldinfo newinfo
-    case diff of 
-      [] -> return Nothing
+    case diff of
+      [] -> return False
       _  -> dbUpdate $ LogHistoryDetailsChanged userid ip time diff mpuser
 
 diffUserInfos :: UserInfo -> UserInfo -> [(String, String, String)]
@@ -230,32 +189,43 @@ diffUserInfos old new = fstNameDiff
   ++ mobileDiff 
   ++ emailDiff
   where
-    fstNameDiff = if (userfstname old) /= (userfstname new) 
-                    then [("first_name", BS.unpack $ userfstname old, BS.unpack $ userfstname new)] 
-                    else []
+    fstNameDiff = if (userfstname old) /= (userfstname new)
+      then [("first_name", userfstname old, userfstname new)]
+      else []
     sndNameDiff = if (usersndname old) /= (usersndname new) 
-                    then [("last_name", BS.unpack $ usersndname old, BS.unpack $ usersndname new)] 
-                    else []
+      then [("last_name", usersndname old, usersndname new)]
+      else []
     personalNumberDiff = if (userpersonalnumber old) /= (userpersonalnumber new) 
-                            then [("personal_number", BS.unpack $ userpersonalnumber old, BS.unpack $ userpersonalnumber new)] 
-                            else []
+      then [("personal_number", userpersonalnumber old, userpersonalnumber new)]
+      else []
     companyPositionDiff = if (usercompanyposition old) /= (usercompanyposition new) 
-                            then [("company_position", BS.unpack $ usercompanyposition old, BS.unpack $ usercompanyposition new)] 
-                            else []
+      then [("company_position", usercompanyposition old, usercompanyposition new)]
+      else []
     phoneDiff = if (userphone old) /= (userphone new) 
-                            then [("phone", BS.unpack $ userphone old, BS.unpack $ userphone new)] 
-                            else []
+      then [("phone", userphone old, userphone new)]
+      else []
     mobileDiff = if (usermobile old) /= (usermobile new) 
-                            then [("mobile", BS.unpack $ usermobile old, BS.unpack $ usermobile new)] 
-                            else []
+      then [("mobile", usermobile old, usermobile new)]
+      else []
     emailDiff = if (useremail old) /= (useremail new) 
-                            then [("email", BS.unpack $ unEmail $ useremail old, BS.unpack $ unEmail $ useremail new)] 
-                            else []
+      then [("email", unEmail $ useremail old, unEmail $ useremail new)]
+      else []
+
+addUserHistory :: UserID -> UserHistoryEvent -> IPAddress -> MinutesTime -> Maybe UserID -> DB Bool
+addUserHistory user event ip time mpuser =
+  kRun01 $ mkSQL INSERT tableUsersHistory [
+      sql "user_id" user
+    , sql "event_type" $ uheventtype event
+    , sql "event_data" $ maybe "" encode $ uheventdata event
+    , sql "ip" ip
+    , sql "time" time
+    , sql "system_version" $ concat $ intersperse "." $ Ver.versionTags Paths.version
+    , sql "performing_user_id" mpuser
+    ]
 
 selectUserHistorySQL :: SQL
 selectUserHistorySQL = SQL ("SELECT"
- ++ "  id"
- ++ ", user_id"
+ ++ "  user_id"
  ++ ", event_type"
  ++ ", event_data"
  ++ ", ip"
@@ -266,14 +236,13 @@ selectUserHistorySQL = SQL ("SELECT"
  ++ " ") []
 
 fetchUserHistory :: DB [UserHistory]
-fetchUserHistory = reverse `fmap` foldDB decoder []
+fetchUserHistory = foldDB decoder []
   where
-    decoder acc uid userid eventtype meventdata ip time sysver mpuser = UserHistory {
-        uhid = uid
-      , uhuserid = userid
+    decoder acc userid eventtype meventdata ip time sysver mpuser = UserHistory {
+        uhuserid = userid
       , uhevent = UserHistoryEvent {
           uheventtype = eventtype
-        , uheventdata = maybe Nothing (\d -> case decode $ BS.unpack d of
+        , uheventdata = maybe Nothing (\d -> case decode d of
                                         Ok a -> Just a
                                         _    -> Nothing) meventdata
         }

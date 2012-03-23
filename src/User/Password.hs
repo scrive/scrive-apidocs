@@ -4,6 +4,7 @@ import Control.Monad (liftM)
 import Control.Monad.Trans (MonadIO)
 import Crypto.RNG(CryptoRNG, randomBytes)
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Digest.SHA256 as D
 
 import DB.Types
@@ -13,7 +14,7 @@ data Password = Password {
   , pwdSalt :: Binary
   } deriving (Eq, Ord, Show)
 
-createPassword :: (MonadIO m, CryptoRNG m) => BS.ByteString -> m Password
+createPassword :: (MonadIO m, CryptoRNG m) => String -> m Password
 createPassword password = do
   salt <- Binary `liftM` randomBytes 10
   return Password {
@@ -21,11 +22,11 @@ createPassword password = do
     , pwdSalt = salt
   }
 
-hashPassword :: BS.ByteString -> Binary -> Binary
+hashPassword :: String -> Binary -> Binary
 hashPassword password salt =
-  Binary . BS.pack . D.hash . BS.unpack $ unBinary salt `BS.append` password
+  Binary . BS.pack . D.hash . BS.unpack $ unBinary salt `BS.append` BSU.fromString password
 
-verifyPassword :: Maybe Password -> BS.ByteString -> Bool
+verifyPassword :: Maybe Password -> String -> Bool
 verifyPassword Nothing _ = False
 verifyPassword (Just Password{pwdHash, pwdSalt}) password =
   pwdHash == hashPassword password pwdSalt

@@ -72,8 +72,6 @@ import Mails.SendMail(Mail)
 import Templates.Templates
 import Templates.TemplatesUtils
 import Text.StringTemplate.GenericStandard()
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS
 import FlashMessage
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
@@ -83,13 +81,15 @@ import Util.JSON
 import Text.JSON
 import Data.Either
 import Misc
+import ScriveByMail.Model
+import ScriveByMail.View
 
 showUser :: TemplatesMonad m => User -> Maybe Company -> Bool -> m String
 showUser user mcompany createcompany = renderTemplateFM "showUser" $ do
     userFields user
     companyFields mcompany
     field "createcompany" $ createcompany
-    field "linkaccount" $ show (LinkAccount False)
+    field "linkaccount" $ show LinkAccount
 
 companyFields :: MonadIO m => Maybe Company -> Fields m
 companyFields mcompany = do
@@ -104,11 +104,11 @@ companyFields mcompany = do
 
 userFields :: MonadIO m => User -> Fields m
 userFields user = do
-    let fullname          = BS.toString $ getFullName user
-        fullnameOrEmail   = BS.toString $ getSmartName user
+    let fullname          = getFullName user
+        fullnameOrEmail   = getSmartName user
         fullnamePlusEmail = if null fullname
-                            then              "<" ++ (BS.toString $ getEmail user) ++ ">"
-                            else fullname ++ " <" ++ (BS.toString $ getEmail user) ++ ">"
+                            then              "<" ++ (getEmail user) ++ ">"
+                            else fullname ++ " <" ++ (getEmail user) ++ ">"
     field "id" $ show $ userid user
     field "fstname" $ getFirstName user
     field "sndname" $ getLastName user
@@ -122,6 +122,8 @@ userFields user = do
     field "fullnameOrEmail" $ fullnameOrEmail
     field "fullnamePlusEmail" $ fullnamePlusEmail
     field "iscompanyaccount" $ isJust $ usercompany user
+    field "usercompanyname" $ getCompanyName user
+    field "usercompanynumber" $ getCompanyNumber user
 
     --field "invoiceaddress" $ BS.toString $ useraddress $ userinfo user
     menuFields user
@@ -142,14 +144,14 @@ showUserSecurity user = renderTemplateFM "showUserSecurity" $ do
     field "advancedMode" $ Just AdvancedMode == (preferreddesignmode $ usersettings user)
     menuFields user
 
-showUserMailAPI :: TemplatesMonad m => User -> Maybe UserMailAPI -> m String
-showUserMailAPI user mapi =
+showUserMailAPI :: TemplatesMonad m => User -> Maybe MailAPIInfo -> Maybe MailAPIInfo -> m String
+showUserMailAPI user mapi mcapi =
     renderTemplateFM "showUserMailAPI" $ do
         field "linkmailapi" $ show LinkUserMailAPI
         field "mailapienabled" $ isJust mapi
-        field "mailapikey" $ show . umapiKey <$> mapi
-        field "mapidailylimit" $ show . umapiDailyLimit <$> mapi
-        field "mapisenttoday" $ show . umapiSentToday <$> mapi
+        when (isJust mapi) $ mailAPIInfoFields (fromJust mapi)
+        field "hascompanymailapi" $ isJust mcapi
+        when (isJust mcapi) $ fieldF "company" $ mailAPIInfoFields (fromJust mcapi)
         menuFields user
 
 _usageStatisticsFieldsByDay :: (Functor m, MonadIO m) => [(Int, [Int])] -> [Fields m]
@@ -253,31 +255,31 @@ resetPasswordMail hostname user setpasslink = do
     field "passwordlink" $ show setpasslink
     field "ctxhostpart"  $ hostname
 
-newUserMail :: TemplatesMonad m => String -> BS.ByteString -> BS.ByteString -> KontraLink -> m Mail
+newUserMail :: TemplatesMonad m => String -> String -> String -> KontraLink -> m Mail
 newUserMail hostpart emailaddress personname activatelink = do
   kontramail "newUserMail" $ do
-    field "personname"   $ BS.toString personname
-    field "email"        $ BS.toString emailaddress
+    field "personname"   $ personname
+    field "email"        $ emailaddress
     field "activatelink" $ show activatelink
     field "ctxhostpart"  $ hostpart
 
-viralInviteMail :: TemplatesMonad m => Context -> BS.ByteString -> KontraLink -> m Mail
+viralInviteMail :: TemplatesMonad m => Context -> String -> KontraLink -> m Mail
 viralInviteMail ctx invitedemail setpasslink = do
-  let invitername = BS.toString $ maybe BS.empty getSmartName (ctxmaybeuser ctx)
+  let invitername = maybe "" getSmartName (ctxmaybeuser ctx)
   kontramail "mailViralInvite" $ do
-    field "email"        $ BS.toString invitedemail
+    field "email"        $ invitedemail
     field "invitername"  $ invitername
     field "ctxhostpart"  $ ctxhostpart ctx
     field "passwordlink" $ show setpasslink
 
 
-mailNewAccountCreatedByAdmin :: (HasLocale a, TemplatesMonad m) => Context -> a -> BS.ByteString -> BS.ByteString -> KontraLink -> Maybe String -> m Mail
+mailNewAccountCreatedByAdmin :: (HasLocale a, TemplatesMonad m) => Context -> a -> String -> String -> KontraLink -> Maybe String -> m Mail
 mailNewAccountCreatedByAdmin ctx locale personname email setpasslink custommessage = do
   kontramaillocal locale "mailNewAccountCreatedByAdmin" $ do
-    field "personname"    $ BS.toString personname
-    field "email"         $ BS.toString email
+    field "personname"    $ personname
+    field "email"         $ email
     field "passwordlink"  $ show setpasslink
-    field "creatorname"   $ BS.toString $ maybe BS.empty getSmartName (ctxmaybeuser ctx)
+    field "creatorname"   $ maybe "" getSmartName (ctxmaybeuser ctx)
     field "ctxhostpart"   $ ctxhostpart ctx
     field "custommessage"   custommessage
 
@@ -415,7 +417,7 @@ modalNewPasswordView aid hash = do
 modalUserSignupDone :: TemplatesMonad m => Email -> m FlashMessage
 modalUserSignupDone email =
   toModal <$> (renderTemplateFM "modalUserSignupDone" $ do
-                 field "email" $ BS.toString (unEmail email))
+                 field "email" $ unEmail email)
 
 flashMessageChangeEmailMailSent :: TemplatesMonad m => Email -> m FlashMessage
 flashMessageChangeEmailMailSent newemail =
@@ -448,5 +450,6 @@ userBasicFields u mc = do
     field "email" $ getEmail u
     field "company" $ getCompanyName mc
     field "phone" $ userphone $ userinfo u
+    field "position" $ usercompanyposition $ userinfo u
     field "iscompanyadmin" $ useriscompanyadmin u
     field "TOSdate" $ maybe "-" show (userhasacceptedtermsofservice u)

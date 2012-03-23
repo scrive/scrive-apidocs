@@ -30,7 +30,7 @@ import Network.URI
 
 --import qualified Log
 
-oauthAPI :: Route (Kontra Response)
+oauthAPI :: Route (Kontra' Response)
 oauthAPI = choice [
   dir "oauth" $ dir "temporarycredentials" $ hGet  $ toK0 $ tempCredRequest,
   dir "oauth" $ dir "authorization"        $ hGet  $ toK0 $ authorization,
@@ -83,7 +83,7 @@ authorization = do
     -- soon this should be custom page, not login
     Nothing -> return $ Left $ LinkLogin locale NotLogged
     Just user -> do
-      let email = BS.toString $ getEmail user
+      let email = getEmail user
       mtk <- getDataFn' (look "oauth_token")
       token <- guardJust $ maybeRead =<< mtk
 
@@ -101,7 +101,7 @@ authorizationDenied = do
   case muser of
     Nothing -> sendRedirect $ LinkLogin locale NotLogged
     Just user -> do
-      let email = BS.toString $ getEmail user
+      let email = getEmail user
       mtk <- getDataFn' (look "oauth_token")
       token <- guardJust $ maybeRead =<< mtk
 
@@ -117,7 +117,7 @@ authorizationGranted = do
   case muser of
     Nothing -> sendRedirect $ LinkLogin locale NotLogged
     Just user -> do
-      let email = BS.toString $ getEmail user
+      let email = getEmail user
       mtk <- getDataFn' (look "oauth_token")
       token <- guardJust $ maybeRead =<< mtk
 

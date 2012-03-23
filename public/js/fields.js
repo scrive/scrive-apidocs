@@ -1,6 +1,6 @@
 /* Fields of signatories
  * Placement of fields + support for moving them to files
- * View of field in sign view 
+ * View of field in sign view
  */
 
 
@@ -11,7 +11,7 @@ window.FieldPlacement = Backbone.Model.extend({
         x : 0,
         y : 0,
         placed : false
-        
+
     },
     initialize : function(args){
         var placement = this;
@@ -35,10 +35,10 @@ window.FieldPlacement = Backbone.Model.extend({
                 this.set({placed : true});
                 page.addPlacement(placement);
              }
-                      
+
           }
          return setTimeout(function() {placement.addToPage();},100);
-         
+
     },
     x : function() {
         return this.get("x");
@@ -66,14 +66,14 @@ window.FieldPlacement = Backbone.Model.extend({
         var document = this.field().signatory().document();
         var fileid = this.get("fileid");
         var page = document.getFile(fileid).page(this.get("page"));
-        return { 
+        return {
             x : parseInt(this.x()),
             y : parseInt(this.y()),
             pagewidth : page.width(),
             pageheight : page.height(),
-            page : page.number()                              
+            page : page.number()
         }
-    }    
+    }
 });
 
 window.Field = Backbone.Model.extend({
@@ -97,7 +97,6 @@ window.Field = Backbone.Model.extend({
         this.bind("change",function() {
             field.signatory().document().trigger("change:signatories")
         });
-
     },
     name : function() {
         return this.get("name");
@@ -122,7 +121,7 @@ window.Field = Backbone.Model.extend({
     },
     canBeIgnored: function(){
         var name = this.name();
-        return this.value() == "" && this.placements().length == 0 && (name == "sigco" || name == "sigpersnr" || name == "sigcompnr" || name == "signature");
+        return this.value() == "" && this.placements().length == 0 && (name == "fstname" || name == "sndname" || name == "sigco" || name == "sigpersnr" || name == "sigcompnr" || name == "signature");
     },
     hasRestrictedName : function() {
         return this.isStandard() || this.isSignature(); //this checks are name based
@@ -134,15 +133,15 @@ window.Field = Backbone.Model.extend({
         var name = this.name();
         if (name == "fstname")
             return localization.fstname;
-        if (name == "sndname" )     
+        if (name == "sndname" )
             return localization.sndname;
-        if (name == "email") 
+        if (name == "email")
             return localization.email;
         if (name == "sigco")
             return localization.company;
-        if (name == "sigpersnr" )     
+        if (name == "sigpersnr" )
             return localization.personamNumber;
-        if (name == "sigcompnr") 
+        if (name == "sigcompnr")
             return localization.companyNumber;
         return name;
     },
@@ -155,37 +154,37 @@ window.Field = Backbone.Model.extend({
     validation: function() {
         var field = this;
         var name  = this.name()
-        
-        if (!this.signatory().author() && (name == "fstname" ||name == "sndname")) {
+
+        if (!this.signatory().author() && (name == "fstname" ||name == "sndname") && !this.signatory().isCsv()) {
             var msg = localization.designview.validation.missingOrWrongNames;
             return new NameValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
-        
-        if (!this.signatory().author() && name == "email"){
+
+        if (!this.signatory().author() && name == "email" && !this.signatory().isCsv() ){
             var msg = localization.designview.validation.missingOrWrongEmail;
             return new EmailValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
-        
-        if (this.signatory().document().elegAuthorization() && name == "sigpersnr" ) {
+
+        if (this.signatory().document().elegAuthorization() && name == "sigpersnr" && this.signatory().signs()  && !this.signatory().isCsv() ) {
             var msg = localization.designview.validation.missingOrWrongPersonalNumber
             return new NotEmptyValidation({message: msg});
         }
-        
+
         if (this.isCustom()) {
             var msg = localization.designview.validation.notReadyField
             return new Validation({validates : function() {return field.isReady()}, message : msg});
         }
-        
+
         return new Validation();
     },
     isStandard: function() {
         var name = this.name();
         return  (name == "fstname")
-             || (name == "sndname" )     
-             || (name == "email") 
+             || (name == "sndname" )
+             || (name == "email")
              || (name == "sigco")
-             || (name == "sigpersnr" )     
-             || (name == "sigcompnr") 
+             || (name == "sigpersnr" )
+             || (name == "sigcompnr")
     },
     isCustom: function() {
         return !this.isStandard() && !this.isSignature();
@@ -195,7 +194,7 @@ window.Field = Backbone.Model.extend({
 
     },
     isReady: function(){
-      return this.get("fresh") == false;  
+      return this.get("fresh") == false;
     },
     makeReady : function() {
       this.set({fresh: false});
@@ -211,11 +210,11 @@ window.Field = Backbone.Model.extend({
       return {   name : this.name()
                , value : this.value()
                , placements : _.map(this.placements(), function(placement) {return placement.draftData();})
-             }  
+             }
     },
    addPlacement : function(placement) {
       var newplacements = new Array(); //Please don't ask why we rewrite this array
-      for(var i=0;i<this.placements().length;i++) 
+      for(var i=0;i<this.placements().length;i++)
          newplacements.push(this.placements()[i]);
       newplacements.push(placement);
       this.set({placements : newplacements});
@@ -234,29 +233,31 @@ window.Field = Backbone.Model.extend({
 window.FieldStandardView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'cleanredborder');
+         this.model.bind('change:inlineedited', this.render);
         this.model.bind('change', this.cleanredborder);
         this.model.view = this;
         this.render();
     },
     render: function(){
         var field = this.model;
-        this.el.empty();
+        $(this.el).empty();
         var signatory = field.signatory();
         if (!signatory.canSign() || field.isClosed() || !signatory.current()) {
-            this.el.addClass("field");
+            $(this.el).addClass("field");
             input = $("<input class='fieldvalue' autocomplete='off' readonly=''/>");
             if (field.value() != "")
                 input.val(field.value());
             else
                 {
                 input.val(field.nicename());
+                $(this.el).addClass("required");
                 input.addClass("grayed");
                 }
-        this.el.append(input);
+        $(this.el).append(input);
         }
         else
         {
-            this.el.addClass("dragfield");
+            $(this.el).addClass("dragfield");
             var wrapper = $("<div style='border: medium none ! important;' class='dragfield'/>");
             if (field.value() ==  "" && SessionStorage.get(signatory.document().documentid(),field.name()) != undefined ) {
                 field.setValue(SessionStorage.get(signatory.document().documentid(),field.name()));
@@ -264,19 +265,18 @@ window.FieldStandardView = Backbone.View.extend({
             var input = InfoTextInput.init({
                                  infotext: field.nicename(),
                                  value: field.value(),
-                                 cssClass :'fieldvalue',       
+                                 cssClass :'fieldvalue',
                                  onChange : function(value) {
-                                    field.setValue(value);    
+                                    field.setValue(value);
                                     SessionStorage.set(signatory.document().documentid(),field.name(),value);
                                   }
                             }).input();
-            this.redborderhere = input;                            
-            input.attr("autocomplete","off");                
+            this.redborderhere = input;
+            input.attr("autocomplete","off");
             wrapper.append(input);
-            this.el.append(wrapper);    
-            
+            $(this.el).append(wrapper);
         }
-        
+
         return this;
     },
     redborder : function() {
@@ -294,35 +294,36 @@ window.FieldBasicDesignView = Backbone.View.extend({
         _.bindAll(this, 'render', 'cleanredborder');
         this.model.view = this;
         this.model.bind('change', this.cleanredborder);
+        this.model.signatory().document().bind('change:authorization', this.cleanredborder);
         this.render();
     },
     render: function(){
         var field = this.model;
-        this.el.empty();
+        $(this.el).empty();
         var signatory = field.signatory();
-        this.el.addClass("field");
+        $(this.el).addClass("field");
         var input = InfoTextInput.init({
                                  infotext: field.nicename(),
                                  value: field.value(),
                                  cssClass :'fieldvalue',
                                  inputname : field.name(), //Added only for selenium tests
                                  onChange : function(value) {
-                                    field.setValue(value);    
+                                    field.setValue(value);
                                   }
                             }).input();
-        if (field.isClosed())  
-        { 
-            this.el.addClass('closed');
+        if (field.isClosed())
+        {
+            $(this.el).addClass('closed');
             input.attr("readonly","yes");
-        }    
-        this.el.append(input);    
+        }
+        $(this.el).append(input);
         return this;
     },
     redborder : function() {
-        this.el.addClass("redborder");
+        $(this.el).addClass("redborder");
     },
     cleanredborder : function() {
-        this.el.removeClass("redborder");
+        $(this.el).removeClass("redborder");
     }
 });
 
@@ -331,6 +332,7 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
         _.bindAll(this, 'render', 'cleanredborder');
         this.model.bind('change', this.cleanredborder);
         this.model.bind('ready', this.render);
+        this.model.signatory().document().bind('change:authorization', this.cleanredborder);
         this.model.view = this;
         this.render();
     },
@@ -358,12 +360,12 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
                     onDrop: function(page, x,y ){
                           field.addPlacement(new FieldPlacement({
                               page: page.number(),
-                              fileid: page.file().fileid(),                                  
+                              fileid: page.file().fileid(),
                               field: field,
                               x : x,
-                              y : y  
+                              y : y
                             }))
-                    } 
+                    }
             });
         }
         return icon;
@@ -373,16 +375,26 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
     },
     setNameIcon : function() {
         var field = this.model;
+        var input = this.input;
         var icon =  $("<a class='setNameIcon' href='#'/>")
-        icon.click(function(){
-            if (!field.hasRestrictedName())
-                field.makeReady();
-            else  FlashMessages.add({
-                    color : "red",
-                    content: localization.designview.validation.restrictedName
-                    })
-            return false;
-        })
+        var fn = function(){
+          if (!field.hasRestrictedName())
+            field.makeReady();
+          else  FlashMessages.add({
+            color : "red",
+            content: localization.designview.validation.restrictedName
+          })
+          return false;
+        };
+        icon.click(fn);
+        input.keypress(function(event) {
+          if(event.which === 13)
+            return fn();
+        });
+
+        // I'm not putting a blur handler that sets the name
+        // because it's a little odd. Neither is perfect. Eric
+
         return icon;
     },
     removeIcon: function() {
@@ -396,57 +408,57 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
     },
     render: function(){
         var field = this.model;
-        this.el.empty();
+        $(this.el).empty();
         var signatory = field.signatory();
-        this.el.addClass("field");
+        $(this.el).addClass("field");
         if (field.isReady()) {
-          this.el.append(this.ddIcon());
+          $(this.el).append(this.ddIcon());
           this.input = InfoTextInput.init({
                                  infotext: field.nicename(),
                                  value: field.value(),
                                  cssClass :'fieldvalue',
                                  inputname : field.name(), //Added only for selenium tests
                                  onChange : function(value) {
-                                    field.setValue(value);    
+                                    field.setValue(value);
                                   }
                             }).input();
-          if (field.isClosed())  
-            { 
-                this.el.addClass('closed');
+          if (field.isClosed())
+            {
+                $(this.el).addClass('closed');
                 this.input.attr("readonly","yes");
             }
           else if (!field.isStandard())
            {
                this.input.addClass("shorter");
-               this.el.append(this.removeIcon())  
+               $(this.el).append(this.removeIcon())
            }
-          this.el.append(this.input);
+          $(this.el).append(this.input);
         }
         else {
-           this.el.append(this.prepIcon());
+           $(this.el).append(this.prepIcon());
            this.input = InfoTextInput.init({
                                  infotext: localization.fieldName,
                                  value: field.name(),
                                  cssClass :'fieldvalue',
                                  inputname : field.name(), //Added only for selenium tests
                                  onChange : function(value) {
-                                    field.setName(value);    
+                                    field.setName(value);
                                   }
                }).input();
            this.input.addClass("much-shorter");
-           this.el.append(this.input);
-           this.el.append(this.removeIcon());
-           this.el.append(this.setNameIcon());
+           $(this.el).append(this.input);
+           $(this.el).append(this.removeIcon());
+           $(this.el).append(this.setNameIcon());
 
         }
         return this;
     },
     redborder : function() {
-        this.el.addClass("redborder");
+        $(this.el).addClass("redborder");
     },
     cleanredborder : function() {
-        this.el.removeClass("redborder");
+        $(this.el).removeClass("redborder");
     }
 });
-    
-})(window); 
+
+})(window);

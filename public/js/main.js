@@ -113,19 +113,19 @@ $(document).ready(function() {
     }
 
     // Options dropdown on archive, sub accounts etc.
-    $('.tab-dd').click(function() {
-        $(this).children('.tab-dd-opts').toggle();
-        var button = $(this).find(".tab-dd-button");
-        if (button.hasClass("tab-dd-exp")) {
-            button.removeClass("tab-dd-exp");
+    $('.list-dd').click(function() {
+        $(this).children('.list-dd-opts').toggle();
+        var button = $(this).find(".list-dd-button");
+        if (button.hasClass("list-dd-exp")) {
+            button.removeClass("list-dd-exp");
         } else {
-            button.addClass("tab-dd-exp");
+            button.addClass("list-dd-exp");
         }
         return false;
     }).mouseleave(function() {
         $.data(this, 'dd', setTimeout(function() {
-            $('.tab-dd').children('.tab-dd-opts').hide();
-            $('.tab-dd').find(".tab-dd-button").removeClass("tab-dd-exp");
+            $('.list-dd').children('.list-dd-opts').hide();
+            $('.list-dd').find(".list-dd-button").removeClass("list-dd-exp");
         }, 500));
     }).mouseenter(function() {
         clearTimeout($.data(this, 'dd'));

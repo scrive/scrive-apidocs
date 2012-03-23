@@ -24,6 +24,7 @@ module Administration.AdministrationControl(
           , handleCreateUser
           , handlePostAdminCompanyUsers
           , handleCreateService
+          , handleUsersListCSV
           , showFunctionalityStats
           , handleBackdoorQuery
           , resealFile
@@ -32,22 +33,26 @@ module Administration.AdministrationControl(
           , daveUser
           , daveCompany
           , daveUserHistory
+          , daveSignatoryLink
+          , updateFields
           , serveLogDirectory
           , jsonUsersList
           , jsonCompanies
           , jsonDocuments
+          , companyClosedFilesZip
           ) where
 import Control.Monad.State
 import Data.Functor
 import Happstack.Server hiding (simpleHTTP)
 import Misc
 import Kontra
+import KontraError (respond404)
 import Administration.AdministrationView
 import Crypto.RNG (CryptoRNG)
 import Doc.Model
 import Doc.DocStateData
-import qualified Data.ByteString.Char8 as BSC
 import Company.Model
+import KontraError (internalError)
 import KontraLink
 import MinutesTime
 import System.Directory
@@ -58,7 +63,6 @@ import User.Model
 import Data.Maybe
 import Data.Char
 import API.Service.Model
-import Data.Monoid
 import Templates.Templates
 import Util.FlashUtil
 import Data.List
@@ -68,8 +72,12 @@ import Doc.DocSeal (sealDocument)
 import Util.HasSomeUserInfo
 import InputValidation
 import User.Utils
+import ScriveByMail.Model
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString as BSS
 import qualified Data.ByteString.UTF8 as BS
+import Crypto.RNG(random)
+
 import InspectXMLInstances ()
 import InspectXML
 import File.Model
@@ -83,6 +91,9 @@ import Util.SignatoryLinkUtils
 import Stats.Control (getUsersAndStats)
 import EvidenceLog.Model
 import User.History.Model
+import Codec.Archive.Zip
+import qualified Data.Map as Map
+import Doc.DocStorage
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m String
@@ -99,14 +110,17 @@ showAdminUsers Nothing = onlySalesOrAdmin adminUsersPage
 showAdminUsers (Just userId) = onlySalesOrAdmin $ do
   muser <- runDBQuery $ GetUserByID userId
   case muser of
-    Nothing -> mzero
+    Nothing -> internalError
     Just user -> adminUserPage user =<< getCompanyForUser user
     
 showAdminCompanies :: Kontrakcja m => m String
 showAdminCompanies = onlySalesOrAdmin $  adminCompaniesPage
 
 showAdminCompany :: Kontrakcja m => CompanyID -> m String
-showAdminCompany companyid = onlySalesOrAdmin $ adminCompanyPage =<< (guardJustM . runDBQuery $ GetCompany companyid)
+showAdminCompany companyid = onlySalesOrAdmin $ do
+  company  <- guardJustM . runDBQuery $ GetCompany companyid
+  mmailapi <- runDBQuery $ GetCompanyMailAPI companyid
+  adminCompanyPage company mmailapi
 
 jsonCompanies :: Kontrakcja m => m JSValue
 jsonCompanies = onlySalesOrAdmin $ do
@@ -118,12 +132,12 @@ jsonCompanies = onlySalesOrAdmin $ do
             JSObject . toJSObject $
                 [("fields", JSObject . toJSObject $
                     [("id",             jsFromString . show . companyid $ company)
-                    ,("companyname",    jsFromBString . getCompanyName $ company)
-                    ,("companynumber",  jsFromBString . getCompanyNumber $ company)
-                    ,("companyaddress", jsFromBString . companyaddress . companyinfo $ company)
-                    ,("companyzip",     jsFromBString . companyzip . companyinfo $ company)
-                    ,("companycity",    jsFromBString . companycity . companyinfo $ company)
-                    ,("companycountry", jsFromBString . companycountry . companyinfo $ company)
+                    ,("companyname",    jsFromString . getCompanyName $ company)
+                    ,("companynumber",  jsFromString . getCompanyNumber $ company)
+                    ,("companyaddress", jsFromString . companyaddress . companyinfo $ company)
+                    ,("companyzip",     jsFromString . companyzip . companyinfo $ company)
+                    ,("companycity",    jsFromString . companycity . companyinfo $ company)
+                    ,("companycountry", jsFromString . companycountry . companyinfo $ company)
                     ]
                  )
                 ,("link", jsFromString . show . LinkCompanyAdmin . Just . companyid $ company)
@@ -155,12 +169,12 @@ companiesSearchFunc search_str company =
      any (isInfixOf (map toUpper search_str) . (map toUpper))
     $ [
         show $ companyid company
-      , BS.toString $ companyname    $ companyinfo $ company
-      , BS.toString $ companynumber  $ companyinfo $ company
-      , BS.toString $ companyaddress $ companyinfo $ company
-      , BS.toString $ companyzip     $ companyinfo $ company
-      , BS.toString $ companycity    $ companyinfo $ company
-      , BS.toString $ companycountry $ companyinfo $ company
+      , companyname    $ companyinfo $ company
+      , companynumber  $ companyinfo $ company
+      , companyaddress $ companyinfo $ company
+      , companyzip     $ companyinfo $ company
+      , companycity    $ companyinfo $ company
+      , companycountry $ companyinfo $ company
       ]
 
 
@@ -174,6 +188,32 @@ showAdminCompanyUsers cid = onlySalesOrAdmin $ adminCompanyUsersPage cid
 showAdminUsersForSales :: Kontrakcja m => m String
 showAdminUsersForSales = onlySalesOrAdmin $ adminUsersPageForSales
 
+handleUsersListCSV :: Kontrakcja m => m Response
+handleUsersListCSV = onlySalesOrAdmin $ do
+  users <- getUsersAndStatsInv
+  ok $ setHeader "Content-Disposition" "attachment;filename=userslist.csv"
+     $ setHeader "Content-Type" "text/csv"
+     $ toResponse (usersListCSV users)
+
+usersListCSV :: [(User, Maybe Company, DocStats, InviteType)] -> String
+usersListCSV users = 
+  "\"" ++ intercalate "\";\""  
+  ["id", "fstname", "sndname", "email", "company", "position","tos"]
+  ++ "\"\n" ++
+  (concat $ map csvline $ filter active users)
+    where
+        active (u,_,_,_) =   (not (useraccountsuspended u)) && (isJust $ userhasacceptedtermsofservice u) && (isNothing $ userservice u)
+        csvline (u,mc,_,_) = "\"" ++ intercalate "\";\""
+                          [ show $ userid u
+                          , getFirstName u
+                          , getLastName u
+                          , getEmail u
+                          , getCompanyName mc
+                          , usercompanyposition $ userinfo u
+                          , show $ fromJust $ userhasacceptedtermsofservice u
+                          ]
+                          ++ "\"\n"
+
 jsonUsersList ::Kontrakcja m => m JSValue
 jsonUsersList = do
     params <- getListParamsNew
@@ -185,10 +225,10 @@ jsonUsersList = do
                 JSObject $ toJSObject
                     [("fields", JSObject $ toJSObject
                         [("id",       jsFromString . show $ userid user)
-                        ,("username", jsFromBString $ getFullName user)
-                        ,("email",    jsFromBString $ getEmail user)
-                        ,("company",  jsFromBString $ getCompanyName mcompany)
-                        ,("phone",    jsFromBString $ userphone $ userinfo user)
+                        ,("username", jsFromString $ getFullName user)
+                        ,("email",    jsFromString $ getEmail user)
+                        ,("company",  jsFromString $ getCompanyName mcompany)
+                        ,("phone",    jsFromString $ userphone $ userinfo user)
                         ,("tos",      jsFromString $ maybe "-" show (userhasacceptedtermsofservice user))
                         ,("signed_1m",     jsFromString . show $ signaturecount1m docstats)
                         ,("signed_2m",     jsFromString . show $ signaturecount2m docstats)
@@ -207,9 +247,6 @@ jsonUsersList = do
 
 jsFromString :: String -> JSValue
 jsFromString = JSString . toJSString
-
-jsFromBString :: BS.ByteString -> JSValue
-jsFromBString = JSString . toJSString . BS.toString
 
 isAdminInvite :: InviteType -> Bool
 isAdminInvite Viral = False
@@ -252,7 +289,7 @@ usersSortFunc _                = const $ const EQ
 usersSearchFunc :: SearchingFunction (User, Maybe Company, DocStats, InviteType)
 usersSearchFunc s userdata = userMatch userdata s
   where
-      match s' m = isInfixOf (map toUpper s') (map toUpper (BS.toString m))
+      match s' m = isInfixOf (map toUpper s') (map toUpper m)
       userMatch (u,mc,_,_) s' = match s' (getCompanyName mc)
                              || match s' (getFirstName u)
                              || match s' (getLastName  u)
@@ -285,10 +322,10 @@ showAllUsersTable = onlySalesOrAdmin $ do
 handleUserChange :: Kontrakcja m => UserID -> m KontraLink
 handleUserChange uid = onlySalesOrAdmin $ do
   ctx <- getContext
-  _ <- getAsStrictBS "change"
-  museraccounttype <- getFieldUTF "useraccounttype"
+  _ <- getAsString "change"
+  museraccounttype <- getField "useraccounttype"
   olduser <- runDBOrFail $ dbQuery $ GetUserByID uid
-  user <- case (fmap BS.toString museraccounttype, usercompany olduser, useriscompanyadmin olduser) of
+  user <- case (museraccounttype, usercompany olduser, useriscompanyadmin olduser) of
     (Just "companyadminaccount", Just _companyid, False) -> do
       --then we just want to make this account an admin
       newuser <- runDBOrFail $ do
@@ -366,7 +403,7 @@ handleUserChange uid = onlySalesOrAdmin $ do
 resaveDocsForUser :: Kontrakcja m => UserID -> m ()
 resaveDocsForUser uid = onlySalesOrAdmin $ do
   Context{ctxmaybeuser = Just admin, ctxtime, ctxipnumber} <- getContext
-  let actor = AdminActor ctxtime ctxipnumber (userid admin) (BS.toString $ getEmail admin)
+  let actor = AdminActor ctxtime ctxipnumber (userid admin) (getEmail admin)
   user <- runDBOrFail $ dbQuery $ GetUserByID uid
   userdocs <- runDBQuery $ GetDocumentsByAuthor uid
   mapM_ (\doc -> runDBUpdate $ AdminOnlySaveForUser (documentid doc) user actor) userdocs 
@@ -375,19 +412,22 @@ resaveDocsForUser uid = onlySalesOrAdmin $ do
 {- | Handling company details change. It reads user info change -}
 handleCompanyChange :: Kontrakcja m => CompanyID -> m KontraLink
 handleCompanyChange companyid = onlySalesOrAdmin $ do
-  _ <- getAsStrictBS "change"
+  _ <- getAsString "change"
   company <- runDBOrFail $ dbQuery $ GetCompany companyid
   companyInfoChange <- getCompanyInfoChange
   _ <- runDBUpdate $ SetCompanyInfo companyid (companyInfoChange $ companyinfo company)
+  mmailapi <- runDBQuery $ GetCompanyMailAPI companyid
+  when_ (isNothing mmailapi) $ do
+    key <- random
+    runDBUpdate $ SetCompanyMailAPIKey companyid key 1000
   return $ LinkCompanyAdmin $ Just companyid
 
 handleCreateUser :: Kontrakcja m => m KontraLink
 handleCreateUser = onlySalesOrAdmin $ do
     ctx <- getContext
-    email' <- getAsStrictBS "email"
-    let email = BSC.map toLower email'
-    fstname <- getAsStrictBS "fstname"
-    sndname <- getAsStrictBS "sndname"
+    email <- map toLower <$> getAsString "email"
+    fstname <- getAsString "fstname"
+    sndname <- getAsString "sndname"
     custommessage <- getField "custommessage"
     region <- guardJustM $ readField "region"
     muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage (mkLocaleFromRegion region)
@@ -425,42 +465,38 @@ handleCreateCompanyUser companyid = onlySalesOrAdmin $ do
   email <- getCriticalField asValidEmail "email"
   fstname <- getCriticalField asValidName "fstname"
   sndname <- getCriticalField asValidName "sndname"
-  custommessage <- getField "custommessage"
+  custommessage <- joinEmpty <$> getField "custommessage"
+  Log.debug $ "Custom message when creating an account " ++ show custommessage
   region <- guardJustM $ readField "region"
-  madmin <- getOptionalField asValidCheckBox "iscompanyadmin"
+  admin <- isFieldSet "iscompanyadmin"
   muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage (mkLocaleFromRegion region)
   case muser of
     Just (User{userid}) -> do
       _ <- runDBUpdate $ SetUserCompany userid (Just companyid)
-      when (fromMaybe False madmin) $ do
-        _ <- runDBUpdate $ SetUserCompanyAdmin userid True
-        return ()
+      when_ admin $ runDBUpdate $ SetUserCompanyAdmin userid True
     Nothing -> addFlashM flashMessageUserWithSameEmailExists
   return ()
 
 {- | Reads params and returns function for conversion of company info.  With no param leaves fields unchanged -}
 getCompanyInfoChange :: Kontrakcja m => m (CompanyInfo -> CompanyInfo)
 getCompanyInfoChange = do
-  mcompanyname    <- getFieldUTF "companyname"
-  mcompanynumber  <- getFieldUTF "companynumber"
-  mcompanyaddress <- getFieldUTF "companyaddress"
-  mcompanyzip     <- getFieldUTF "companyzip"
-  mcompanycity    <- getFieldUTF "companycity"
-  mcompanycountry <- getFieldUTF "companycountry"
-  return $ \CompanyInfo {
-      companyname
-    , companynumber
-    , companyaddress
-    , companyzip
-    , companycity
-    , companycountry
-    } ->  CompanyInfo {
-        companyname =  fromMaybe companyname mcompanyname
-      , companynumber  =  fromMaybe companynumber mcompanynumber
-      , companyaddress =  fromMaybe companyaddress mcompanyaddress
-      , companyzip = fromMaybe companyzip mcompanyzip
-      , companycity  = fromMaybe companycity mcompanycity
-      , companycountry = fromMaybe companycountry mcompanycountry
+  mcompanyname    <- getField "companyname"
+  mcompanynumber  <- getField "companynumber"
+  mcompanyaddress <- getField "companyaddress"
+  mcompanyzip     <- getField "companyzip"
+  mcompanycity    <- getField "companycity"
+  mcompanycountry <- getField "companycountry"
+  mcompanyemaildomain <- getField "companyemaildomain"
+  return $ \CompanyInfo{..} ->  CompanyInfo {
+        companyname        = fromMaybe companyname mcompanyname
+      , companynumber      = fromMaybe companynumber mcompanynumber
+      , companyaddress     = fromMaybe companyaddress mcompanyaddress
+      , companyzip         = fromMaybe companyzip mcompanyzip
+      , companycity        = fromMaybe companycity mcompanycity
+      , companycountry     = fromMaybe companycountry mcompanycountry
+      , companyemaildomain = case mcompanyemaildomain of
+                               Just a | not $ null a -> Just a
+                               _                     -> Nothing
     }
 
 {- | Reads params and returns function for conversion of user settings.  No param leaves fields unchanged -}
@@ -474,45 +510,41 @@ getUserSettingsChange = do
 {- | Reads params and returns function for conversion of user info. With no param leaves fields unchanged -}
 getUserInfoChange :: Kontrakcja m => m (UserInfo -> UserInfo)
 getUserInfoChange = do
-  muserfstname         <- getFieldUTF "userfstname"
-  musersndname         <- getFieldUTF "usersndname"
-  muserpersonalnumber  <- getFieldUTF "userpersonalnumber"
-  musercompanyposition <- getFieldUTF "usercompanyposition"
-  muserphone           <- getFieldUTF "userphone"
-  musermobile          <- getFieldUTF "usermobile"
-  museremail           <- fmap Email <$> getFieldUTF "useremail"
-  return $ \UserInfo {
-      userfstname
-    , usersndname
-    , userpersonalnumber
-    , usercompanyposition
-    , userphone
-    , usermobile
-    , useremail
-    } ->  UserInfo {
-      userfstname = fromMaybe userfstname muserfstname
-      , usersndname = fromMaybe usersndname musersndname
-      , userpersonalnumber = fromMaybe userpersonalnumber muserpersonalnumber
+  muserfstname         <- getField "userfstname"
+  musersndname         <- getField "usersndname"
+  muserpersonalnumber  <- getField "userpersonalnumber"
+  musercompanyposition <- getField "usercompanyposition"
+  muserphone           <- getField "userphone"
+  musermobile          <- getField "usermobile"
+  museremail           <- fmap Email <$> getField "useremail"
+  musercompanyname     <- getField "usercompanyname"
+  musercompanynumber   <- getField "usercompanynumber"
+  return $ \UserInfo{..} -> UserInfo {
+        userfstname         = fromMaybe userfstname muserfstname
+      , usersndname         = fromMaybe usersndname musersndname
+      , userpersonalnumber  = fromMaybe userpersonalnumber muserpersonalnumber
       , usercompanyposition = fromMaybe usercompanyposition musercompanyposition
-      , userphone = fromMaybe userphone muserphone
-      , usermobile = fromMaybe usermobile musermobile
-      , useremail =  fromMaybe useremail museremail
+      , userphone           = fromMaybe userphone muserphone
+      , usermobile          = fromMaybe usermobile musermobile
+      , useremail           = fromMaybe useremail museremail
+      , usercompanyname     = fromMaybe usercompanyname musercompanyname
+      , usercompanynumber   = fromMaybe usercompanynumber musercompanynumber
     }
 
 
 {- Create service-}
 handleCreateService :: (CryptoRNG m, Kontrakcja m) => m KontraLink
 handleCreateService = onlySalesOrAdmin $ do
-    name <- guardJustM $ getFieldUTF "name"
-    Log.debug $ "name: " ++ show name
-    admin <- guardJustM $ liftMM  (runDBQuery . GetUserByEmail Nothing . Email) (getFieldUTF "admin")
+    name <- guardJustM $ getField "name"
+    Log.debug $ "name: " ++ name
+    admin <- guardJustM $ liftMM  (runDBQuery . GetUserByEmail Nothing . Email) (getField "admin")
     Log.debug $ "admin: " ++ show admin
-    pwdBS <- getFieldUTFWithDefault mempty "password"
+    pwdBS <- getField' "password"
     Log.debug $ "password: " ++ show pwdBS
     pwd <- createPassword pwdBS
-    service <- guardJustM $ runDBUpdate $ CreateService (ServiceID name) (Just pwd) (userid admin)
+    service <- guardJustM $ runDBUpdate $ CreateService (ServiceID $ BS.fromString name) (Just pwd) (userid admin)
     Log.debug $ "service: " ++ show service
-    location <- getFieldUTF "location"
+    location <- getField "location"
     Log.debug $ "location: " ++ show location
     _ <- runDBUpdate $ UpdateServiceSettings (serviceid service) (servicesettings service)
                                                {servicelocation = ServiceLocation <$> location}
@@ -647,7 +679,7 @@ instance HasFunctionalityStats Document where
     ]
     where
       anyField p doc =
-        any p . concat . map (signatoryfields . signatorydetails) $ documentsignatorylinks doc
+        any p . concatMap (signatoryfields . signatorydetails) $ documentsignatorylinks doc
       hasPlacement SignatoryField{sfPlacements} = not $ null sfPlacements
       isCustom SignatoryField{sfType} =
         case sfType of
@@ -668,9 +700,13 @@ showDocuments = onlySalesOrAdmin $ adminDocuments =<< getContext
 jsonDocuments :: Kontrakcja m => m JSValue
 jsonDocuments = onlySalesOrAdmin $ do
     srvs <- runDBQuery $ GetServices
+    Log.debug "Document list for admin per service"
     docs <- join <$> (sequence $ map (runDBQuery . GetDocuments) (Nothing:(map (Just . serviceid) srvs)))
+    Log.debug $ "Total document found:" ++ show (length docs)
     params <- getListParamsNew
     let documents = documentsSortSearchPage params docs
+    Log.debug $ "Document on current list:" ++ show (length $ list documents)
+    Log.debug $ "Force execution due to stack overflow:" ++ show (length $ show $ list documents)
     return $ JSObject
            $ toJSObject
             [("list", JSArray $ map (\doc -> 
@@ -680,15 +716,15 @@ jsonDocuments = onlySalesOrAdmin $ do
                         , ("ctime", jsFromString . showMinutesTimeForAPI $ documentctime doc) 
                         , ("mtime", jsFromString . showMinutesTimeForAPI $ documentmtime doc) 
                         , ("author", JSObject $ toJSObject [
-                              ("name", jsFromBString $ maybe (BS.fromString "") getSmartName $ getAuthorSigLink doc)
-                            , ("email", jsFromBString $ maybe (BS.fromString "") getEmail $ getAuthorSigLink doc)
-                            , ("company", jsFromBString $ maybe (BS.fromString "") getCompanyName $ getAuthorSigLink doc)
+                              ("name", jsFromString $ maybe "" getSmartName $ getAuthorSigLink doc)
+                            , ("email", jsFromString $ maybe "" getEmail $ getAuthorSigLink doc)
+                            , ("company", jsFromString $ maybe "" getCompanyName $ getAuthorSigLink doc)
                             ])
-                        , ("title", jsFromBString $ documenttitle doc)
+                        , ("title", jsFromString $ documenttitle doc)
                         , ("service", jsFromString $ maybe "" show $ documentservice doc)
                         , ("status", jsFromString $ take 20 $ show $ documentstatus doc)
                         , ("type", jsFromString . show $ documenttype doc)
-                        , ("signs", JSArray $ map (jsFromBString . getSmartName) $ documentsignatorylinks doc)
+                        , ("signs", JSArray $ map (jsFromString . getSmartName) $ documentsignatorylinks doc)
                         ])
                     ]) (list documents))
             , ("paging", pagingParamsJSON documents)
@@ -701,26 +737,26 @@ documentsSortSearchPage =
 documentsSortFunc :: SortingFunction Document
 documentsSortFunc "ctime"      = viewComparing documentctime
 documentsSortFunc "ctimeREV"   = viewComparingRev documentctime
-documentsSortFunc "author"     = viewComparing ((maybe (BS.fromString "") getSmartName) . getAuthorSigLink)
-documentsSortFunc "authorREV"  = viewComparingRev ((maybe (BS.fromString "") getSmartName) . getAuthorSigLink)
+documentsSortFunc "author"     = viewComparing (maybe "" getSmartName . getAuthorSigLink)
+documentsSortFunc "authorREV"  = viewComparingRev (maybe "" getSmartName . getAuthorSigLink)
 documentsSortFunc "title"      = viewComparing documenttitle
 documentsSortFunc "titleREV"   = viewComparingRev documenttitle
-documentsSortFunc "service"    = viewComparing ((maybe "" show) . documentservice)
-documentsSortFunc "serviceREV" = viewComparingRev ((maybe "" show) . documentservice)
-documentsSortFunc "status"     = viewComparing ((take 20) . show . documentstatus)
-documentsSortFunc "statusREV"  = viewComparingRev ((take 20) . show . documentstatus)
+documentsSortFunc "service"    = viewComparing (maybe "" show . documentservice)
+documentsSortFunc "serviceREV" = viewComparingRev (maybe "" show . documentservice)
+documentsSortFunc "status"     = viewComparing (take 20 . show . documentstatus)
+documentsSortFunc "statusREV"  = viewComparingRev (take 20 . show . documentstatus)
 documentsSortFunc "type"       = viewComparing documenttype
 documentsSortFunc "typeREV"    = viewComparingRev documenttype
-documentsSortFunc "signs"      = viewComparing ((map getSmartName) . documentsignatorylinks)
-documentsSortFunc "signsREV"   = viewComparingRev ((map getSmartName) . documentsignatorylinks)
+documentsSortFunc "signs"      = viewComparing (map getSmartName . documentsignatorylinks)
+documentsSortFunc "signsREV"   = viewComparingRev (map getSmartName . documentsignatorylinks)
 documentsSortFunc _            = const $ const EQ
 
 documentsSearchFunc :: SearchingFunction Document
 documentsSearchFunc s doc =  nameMatch doc || signMatch doc
     where
     match m = isInfixOf (map toUpper s) (map toUpper m)
-    nameMatch = match . BS.toString . documenttitle
-    signMatch d = any (match . BS.toString . getSmartName) (documentsignatorylinks d)
+    nameMatch = match . documenttitle
+    signMatch d = any (match . getSmartName) (documentsignatorylinks d)
 
 documentsPageSize :: Int
 documentsPageSize = 100
@@ -755,24 +791,71 @@ replaceMainFile did = onlyAdmin $ do
             content <- case contentspec of
                 Left filepath -> liftIO $ BSL.readFile filepath
                 Right c -> return c
-            fn <- fromMaybe (BS.fromString "file") <$> fmap filename <$> (runDB $ dbQuery $ GetFileByFileID cf)
+            fn <- fromMaybe "file" <$> fmap filename <$> (runDB $ dbQuery $ GetFileByFileID cf)
             Context{ctxipnumber,ctxtime, ctxmaybeuser = Just user} <- getContext
-            let actor = AdminActor ctxtime ctxipnumber (userid user) (BS.toString $ getEmail user)
+            let actor = AdminActor ctxtime ctxipnumber (userid user) (getEmail user)
             file <- runDB $ dbUpdate $ NewFile fn (concatChunks content)
             _ <- runDBUpdate $ ChangeMainfile did (fileid file) actor
             return LoopBack
-       _ -> mzero
+       _ -> internalError
 
 {- |
    Used by super users to inspect a particular document.
 -}
-daveDocument :: Kontrakcja m => DocumentID -> m  String
+daveDocument :: Kontrakcja m => DocumentID -> m (Either KontraLink String)
 daveDocument documentid = onlyAdmin $ do
-    document <- queryOrFail $ GetDocumentByDocumentID documentid
-    renderTemplateFM  "daveDocument" $ do
+    -- for dave, we want a slash at the end, so redirect if there is no slash
+    -- we have a relative link for signatorylinkids, so we need a slash at the end
+    -- of the dave/document links; I evaluated a few other ways (using javascript, etc)
+    -- but I could not come up with a better one than this
+    --  -Eric
+    location <- rqUri <$> askRq
+    Log.debug $ "location: " ++ location
+    if "/" `isSuffixOf` location
+     then do
+      document <- queryOrFail $ GetDocumentByDocumentID documentid
+      r <- renderTemplateFM  "daveDocument" $ do
         field "daveBody" $  inspectXML document
         field "id" $ show documentid
         field "closed" $ documentstatus document == Closed
+      return $ Right r
+     else return $ Left $ LinkDaveDocument documentid
+
+{- |
+   Used by super users to inspect a particular signatory link.
+-}
+daveSignatoryLink :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m  String
+daveSignatoryLink documentid siglinkid = onlyAdmin $ do
+    document <- queryOrFail $ GetDocumentByDocumentID documentid
+    siglink <- guardJust $ getSigLinkFor document siglinkid
+    renderTemplateFM  "daveSignatoryLink" $ do
+        field "daveBody" $ inspectXML siglink
+        field "docid" $ show documentid
+        field "slid" $ show siglinkid
+        fieldFL "fields" $ for (signatoryfields $ signatorydetails siglink) $ \sf -> do
+            field "fieldname" $ fieldTypeToString (sfType sf)
+            field "fieldvalue" $ sfValue sf
+            field "label" $ show $ sfType sf
+      where fieldTypeToString sf = case sf of
+              FirstNameFT      -> "sigfstname"
+              LastNameFT       -> "sigsndname"
+              EmailFT          -> "sigemail"
+              CompanyFT        -> "sigco"
+              PersonalNumberFT -> "sigpersnr"
+              CompanyNumberFT  -> "sigcompnr"
+              SignatureFT      -> "signature"
+              CustomFT label _ -> label
+
+
+updateFields :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
+updateFields did slid = onlyAdmin $ do
+  Log.debug $ "Changing signatory fields | SUPER CRITICAL | If you see this check who did this ask who did this and why"
+  fieldname <- getDataFnM (look "fieldname")
+  fieldvalue <- getDataFnM (look "fieldvalue")
+  ctx <- getContext
+  actor <- guardJust $ mkAdminActor ctx
+  _ <- runDBUpdate $ UpdateFieldsNoStatusCheck did slid (fieldname, fieldvalue) actor
+  return LoopBack
 
 {- |
    Used by super users to inspect a particular user.
@@ -787,7 +870,7 @@ daveUser userid = onlyAdmin $ do
 -}
 daveUserHistory :: Kontrakcja m => UserID -> m String
 daveUserHistory userid = onlyAdmin $ do
-    history <- runDBOrFail $ dbQuery $ GetUserHistoryByUserID userid
+    history <- runDBQuery $ GetUserHistoryByUserID userid
     return $ inspectXML history
 
 {- |
@@ -804,6 +887,40 @@ serveLogDirectory filename = onlyAdmin $ do
     contents <- liftIO $ getDirectoryContents "log"
     when (filename `notElem` contents) $ do
         Log.debug $ "Log '" ++ filename ++ "' not found"
-        mzero
+        respond404
     (_,bsstdout,_) <- liftIO $ readProcessWithExitCode' "tail" ["log/" ++ filename, "-n", "40"] BSL.empty
     ok $ addHeader "Refresh" "5" $ toResponseBS (BS.fromString "text/plain; charset=utf-8") $ bsstdout
+
+
+companyClosedFilesZip :: Kontrakcja m => CompanyID -> Int  -> String -> m Response
+companyClosedFilesZip cid start _filenamefordownload = onlyAdmin $ do
+  archive <- companyFilesArchive cid start
+  let res = Response 200 Map.empty nullRsFlags (fromArchive archive) Nothing
+  return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "archive/zip") res
+
+
+companyFilesArchive :: Kontrakcja m => CompanyID -> Int -> m Archive
+companyFilesArchive cid start = do
+    Log.debug $ "Getting all files archive for company " ++ show cid
+    docs <- runDB $ dbQuery $ GetDocumentsByCompanyWithFiltering Nothing cid [] Nothing Nothing Nothing
+    let cdocs = sortBy (\d1 d2 -> compare (documentid d1) (documentid d2)) $ filter (\doc -> documentstatus doc == Closed)  $ docs
+    let sdocs = take zipCount $ drop (zipCount*start) $ cdocs
+    Log.debug $ "Found  " ++ show (length $ filter (\doc -> documentstatus doc == Closed)  $ docs) ++ "document"
+    mentries <- mapM docToEntry $  sdocs
+    return $ foldr addEntryToArchive emptyArchive $ map fromJust $ filter isJust $ mentries
+  where
+    zipCount = 80
+    
+docToEntry ::  Kontrakcja m => Document -> m (Maybe Entry)
+docToEntry doc = do
+      let snpart = concat $ for (take 5 $ documentsignatorylinks doc) $ \sl -> (take 8 $ getFirstName sl) ++ "_"++(take 8 $ getFirstName sl) ++ "_"
+      let name = filter ((/= ' ')) $ filter (isAscii) $ (documenttitle doc) ++ "_" ++ (show $ documentmtime doc) ++ "_" ++ snpart ++".pdf"
+      ctx <- getContext
+      case (documentsealedfiles doc) of
+        [fid] -> do
+            Log.debug $ "Getting content for the file " ++ show fid
+            content <- liftIO $ getFileIDContents ctx fid
+            return $ Just $ toEntry name 0 $ BSL.pack $ BSS.unpack content
+        _ -> do
+            Log.debug $ "Bad sealed file number " ++ show (documentid doc)
+            return Nothing

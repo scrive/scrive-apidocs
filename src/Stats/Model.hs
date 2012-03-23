@@ -148,6 +148,8 @@ selectUsersAndStatsSQL (q1, q2) = SQL ("SELECT "
   ++ ", u.lang"
   ++ ", u.region"
   ++ ", u.customfooter"
+  ++ ", u.company_name"
+  ++ ", u.company_number"
   -- Company:
   ++ ", c.id AS company_id"
   ++ ", c.external_id"
@@ -159,7 +161,9 @@ selectUsersAndStatsSQL (q1, q2) = SQL ("SELECT "
   ++ ", c.city"
   ++ ", c.country"
   ++ ", c.bars_background"
+  ++ ", c.bars_textcolour"
   ++ ", encode(c.logo, 'base64')"
+  ++ ", email_domain"
   -- Events:
   ++ ", e.time"
   ++ ", e.quantity"
@@ -180,8 +184,8 @@ fetchUsersAndStats = reverse `fmap` foldDB decoder []
     decoder acc uid password salt is_company_admin account_suspended
      has_accepted_terms_of_service signup_method service_id company_id
      first_name last_name personal_number company_position phone mobile
-     email preferred_design_mode lang region customfooter cid eid sid
-     name number address zip' city country bars_background logo time quantity amount = (
+     email preferred_design_mode lang region customfooter company_name company_number cid eid sid
+     name number address zip' city country bars_background bars_textcolour logo email_domain time quantity amount = (
        User {
            userid = uid
          , userpassword = maybePassword (password, salt)
@@ -197,6 +201,8 @@ fetchUsersAndStats = reverse `fmap` foldDB decoder []
            , userphone = phone
            , usermobile = mobile
            , useremail = email
+           , usercompanyname = company_name
+           , usercompanynumber = company_number
            }
          , usersettings = UserSettings {
              preferreddesignmode = preferred_design_mode
@@ -218,9 +224,11 @@ fetchUsersAndStats = reverse `fmap` foldDB decoder []
                 , companyzip = $(fromJust) zip'
                 , companycity = $(fromJust) city
                 , companycountry = $(fromJust) country
+                , companyemaildomain = email_domain
                 }
               , companyui = CompanyUI {
                   companybarsbackground = bars_background
+                , companybarstextcolour = bars_textcolour
                 , companylogo = logo
                 }
               }
@@ -320,9 +328,6 @@ instance DBUpdate AddUserStatEvent Bool where
       , sql "amount" usAmount
       , sql "service_id" usServiceID
       , sql "company_id" usCompanyID
-      ] <++> SQL "WHERE NOT EXISTS (SELECT 1 FROM user_stat_events WHERE user_id = ? AND quantity = ?)" [
-        toSql usUserID
-      , toSql usQuantity
       ]
 
 {------ Signatory Stats ------}

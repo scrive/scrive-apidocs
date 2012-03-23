@@ -15,11 +15,11 @@ import Doc.DocUtils
 import ELegitimation.ELegTransaction
 import Happstack.Server
 import Kontra
+import KontraError (internalError)
 import MagicHash (MagicHash)
 import MinutesTime
 import Misc
 import Text.XML.HaXml.XmlContent.Parser
-import qualified Data.ByteString as BS
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
 import Doc.DocStateQuery
@@ -27,9 +27,6 @@ import Text.JSON
 import Text.JSON.Fields
 import ELegitimation.BankIDUtils
 import ELegitimation.BankIDRequests
-
-
-
 
 {- |
    Handle the Ajax request for initiating a BankID transaction.
@@ -45,7 +42,7 @@ generateBankIDTransaction docid signid = do
     -- sanity check
     document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
 
-    unless (document `allowsIdentification` ELegitimationIdentification) mzero
+    unless (document `allowsIdentification` ELegitimationIdentification) internalError
     -- request a nonce
 
     nonceresponse <- generateChallenge provider
@@ -86,9 +83,9 @@ generateBankIDTransactionForAuthor  docid = do
     tbs <- case documentstatus document of
         Preparation    -> getDataFnM $ look "tbs" -- tbs will be sent as post param
         AwaitingAuthor -> getTBS document         -- tbs is stored in document
-        _              -> mzero
+        _              -> internalError
 
-    guard $ isAuthor (document, author) -- necessary because someone other than author cannot initiate eleg
+    unless (isAuthor (document, author)) internalError -- necessary because someone other than author cannot initiate eleg
 
     nonceresponse <- generateChallenge provider
     case nonceresponse of
@@ -130,7 +127,7 @@ generationFailed desc code msg = do
  -}
 
 data VerifySignatureResult  = Problem String
-                            | Mismatch String BS.ByteString BS.ByteString BS.ByteString
+                            | Mismatch String String String String
                             | Sign SignatureInfo
 
 verifySignatureAndGetSignInfo ::  Kontrakcja m =>
@@ -154,7 +151,8 @@ verifySignatureAndGetSignInfo docid signid magic provider signature transactioni
                     , transactionnonce
                     } <- findTransactionByIDOrFail elegtransactions transactionid
 
-    guard (tdocid   == docid && mtsignid == Just signid && mtmagic  == Just magic )
+    unless (tdocid   == docid && mtsignid == Just signid && mtmagic  == Just magic )
+           internalError
      -- end validation
     Log.eleg $ "Successfully found eleg transaction: " ++ show transactionid
     -- send signature to ELeg
@@ -217,14 +215,14 @@ verifySignatureAndGetSignInfo docid signid magic provider signature transactioni
  -}
 
 
-verifySignatureAndGetSignInfoForAuthor :: Kontrakcja m => DocumentID -> SignatureProvider -> String  -> String -> m VerifySignatureResult
+verifySignatureAndGetSignInfoForAuthor :: Kontrakcja m => DocumentID -> SignatureProvider -> String -> String -> m VerifySignatureResult
 verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = do
     Log.eleg $ ("Document " ++ show docid ) ++ ": Author is signing with eleg for document "
     elegtransactions  <- ctxelegtransactions <$> getContext
     author   <- guardJustM  $ ctxmaybeuser <$> getContext
     doc <- guardRightM $ getDocByDocID docid
 
-    guard $ isAuthor (doc, author) -- necessary because someone other than author cannot initiate eleg
+    unless (isAuthor (doc, author)) internalError -- necessary because someone other than author cannot initiate eleg
     Log.eleg $ ("Document " ++ show docid ) ++ ": Author verified"
     ELegTransaction { transactiondocumentid
                     , transactiontbs
@@ -232,10 +230,10 @@ verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = 
                     , transactionnonce
                     } <- findTransactionByIDOrFail elegtransactions transactionid
 
-    guard $ transactiondocumentid == docid
+    unless (transactiondocumentid == docid) internalError
     Log.eleg $ ("Document " ++ show docid ) ++ ": Transaction validated"
     Log.eleg $ ("Document " ++ show docid ) ++ ": Document matched"
-    guard (doc `allowsIdentification` ELegitimationIdentification)
+    unless (doc `allowsIdentification` ELegitimationIdentification) internalError
     Log.eleg $ ("Document " ++ show docid ) ++ ": Document allows eleg"
     res <- verifySignature provider
                     transactionencodedtbs

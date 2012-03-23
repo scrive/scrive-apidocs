@@ -31,9 +31,6 @@ import Data.Maybe
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Happstack.State (query, update)
 
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS
-
 {- |
    Handles submission of the password reset form
 -}
@@ -47,7 +44,7 @@ forgotPasswordPagePost = do
       muser <- runDBQuery $ GetUserByEmail Nothing $ Email email
       case muser of
         Nothing -> do
-          Log.security $ "ip " ++ (show $ ctxipnumber ctx) ++ " made a failed password reset request for non-existant account " ++ (BS.toString email)
+          Log.security $ "ip " ++ (show $ ctxipnumber ctx) ++ " made a failed password reset request for non-existant account " ++ email
         Just user -> do
           now <- liftIO getMinutesTime
           minv <- checkValidity now <$> (query $ GetPasswordReminder $ userid user)
@@ -96,7 +93,7 @@ signupPagePost = do
         (Nothing, Nothing) -> do
           -- this email address is new to the system, so create the user
           -- and send an invite
-          mnewuser <- UserControl.createUser (Email email) BS.empty BS.empty Nothing
+          mnewuser <- UserControl.createUser (Email email) "" "" Nothing
           maybe (return ()) UserControl.sendNewUserMail mnewuser
         (_, _) -> return ()
       -- whatever happens we want the same outcome, we just claim we sent the activation link,
@@ -116,7 +113,7 @@ handleLoginGet = do
          referer <- getField "referer"
          email   <- getField "email"
          content <- V.pageLogin referer email
-         V.renderFromBody V.TopNone V.kontrakcja content
+         V.renderFromBody V.kontrakcja content
 
 {- |
    Handles submission of a login form.  On failure will redirect back to referer, if there is one.
@@ -126,7 +123,7 @@ handleLoginPost = do
     ctx <- getContext
     memail  <- getOptionalField asDirtyEmail    "email"
     mpasswd <- getOptionalField asDirtyPassword "password"
-    let linkemail = maybe "" BS.toString memail
+    let linkemail = fromMaybe "" memail
     case (memail, mpasswd) of
         (Just email, Just passwd) -> do
             -- check the user things here

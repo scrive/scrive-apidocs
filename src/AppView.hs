@@ -1,10 +1,10 @@
 {- |
    Defines the App level views.
 -}
-module AppView( TopMenu(..)
-              , kontrakcja
+module AppView( kontrakcja
               , renderFromBody
               , embeddedPage
+              , notFoundPage
               , signupPageView
               , signupVipPageView
               , pageLogin
@@ -22,10 +22,11 @@ module AppView( TopMenu(..)
               , clientsPage
               , contactUsPage
               , apiPage
-              , scriveByMailPage              
+              , scriveByMailPage
               , modalError
               , embeddedErrorPage
               , serviceFields
+              , standardPageFields
               ) where
 
 import API.Service.Model
@@ -48,12 +49,6 @@ import qualified Data.ByteString.UTF8 as BS (fromString)
 
 
 {- |
-   Defines the different sorts of things we can have at the top of the page
--}
-data TopMenu = TopNew | TopDocument | TopAccount | TopNone | TopEmpty
-             deriving (Eq,Ord)
-
-{- |
    The name of our application (the codebase is known as kontrakcja,
    and this is the pretty public name)
 -}
@@ -66,11 +61,10 @@ kontrakcja = "Scrive"
    Renders some page body xml into a complete reponse
 -}
 renderFromBody :: Kontrakcja m
-               => TopMenu
-               -> String
+               => String
                -> String
                -> m Response
-renderFromBody _topmenu title content = do
+renderFromBody title content = do
     htmlPage <- (isSuffixOf ".html") . concat . rqPaths <$> askRq
     loginOn <- getLoginOn
     loginreferer <- getLoginReferer
@@ -115,12 +109,15 @@ embeddedPage pb = do
     clearFlashMsgs
     return res
 
-embeddedErrorPage :: Kontra Response
+embeddedErrorPage :: Kontrakcja m => m Response
 embeddedErrorPage = do
     ctx <- getContext
     content <- renderTemplateFM "embeddedErrorPage" $ do
         serviceFields (ctxlocation ctx) (ctxservice ctx)
     simpleResponse content
+
+notFoundPage :: Kontrakcja m => m Response
+notFoundPage = renderTemplateM "notFound" () >>= renderFromBody kontrakcja
 
 serviceFields :: MonadIO m => String -> Maybe Service -> Fields m
 serviceFields location (Just service)  = do
@@ -261,7 +258,7 @@ firstPage ctx loginOn referer email =
 -}
 mainLinksFields :: MonadIO m => Locale -> Fields m
 mainLinksFields locale = do
-    field "linkaccount"          $ show (LinkAccount False)
+    field "linkaccount"          $ show (LinkAccount)
     field "linkforgotenpassword" $ show LinkForgotPassword
     field "linkinvite"           $ show LinkInvite
     field "linkissue"            $ show LinkContracts

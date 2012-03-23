@@ -8,7 +8,7 @@ import DB.Model
 tableDocuments :: Table
 tableDocuments = Table {
     tblName = "documents"
-  , tblVersion = 2
+  , tblVersion = 3
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("service_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
@@ -95,6 +95,11 @@ tableDocuments = Table {
       ++ " ADD CONSTRAINT fk_documents_sealed_file_id FOREIGN KEY(sealed_file_id)"
       ++ " REFERENCES files(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
+      -- create the sequence
+    kRunRaw $ "CREATE SEQUENCE documents_id_seq"
+    kRunRaw $ "SELECT setval('documents_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM documents))"
+    kRunRaw $ "ALTER TABLE documents ALTER id SET DEFAULT nextval('documents_id_seq')"
+    return ()
   }
 
 
@@ -128,28 +133,29 @@ tableAuthorAttachments = Table {
 tableSignatoryAttachments :: Table
 tableSignatoryAttachments = Table {
     tblName = "signatory_attachments"
-  , tblVersion = 2
+  , tblVersion = 3
   , tblCreateOrValidate = \desc -> case desc of
       [  ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
-       , ("email", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("description", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("signatory_link_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE signatory_attachments "
           ++ "( file_id BIGINT NULL"
           ++ ", document_id BIGINT NOT NULL"
-          ++ ", email TEXT NOT NULL"
           ++ ", description TEXT NOT NULL"
           ++ ", name TEXT NOT NULL"
-          ++ ", CONSTRAINT pk_signatory_attachments PRIMARY KEY (document_id, name, email)"
+          ++ ", signatory_link_id BIGINT NOT NULL DEFAULT 0"
+          ++ ", CONSTRAINT pk_signatory_attachments PRIMARY KEY (document_id, signatory_link_id, name)"
           ++ ")"
         return TVRcreated
       _ -> do
         return TVRinvalid
   , tblPutProperties = do
     kRunRaw $ "CREATE INDEX idx_signatory_attachments_document_id ON signatory_attachments(document_id)"
+    kRunRaw $ "CREATE INDEX idx_signatory_attachments_signatory_link_id ON signatory_attachments(signatory_link_id)"
     kRunRaw $ "ALTER TABLE signatory_attachments"
       ++ " ADD CONSTRAINT fk_signatory_attachments_files FOREIGN KEY(file_id)"
       ++ " REFERENCES files(id) ON DELETE CASCADE ON UPDATE RESTRICT"
@@ -158,12 +164,16 @@ tableSignatoryAttachments = Table {
       ++ " ADD CONSTRAINT fk_signatory_attachments_documents FOREIGN KEY(document_id)"
       ++ " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
+    kRunRaw $ "ALTER TABLE signatory_attachments"
+      ++ " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(signatory_link_id, document_id)"
+      ++ " REFERENCES signatory_links(id, document_id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
 
 tableSignatoryLinks :: Table
 tableSignatoryLinks = Table {
     tblName = "signatory_links"
-  , tblVersion = 3
+  , tblVersion = 5
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -230,6 +240,7 @@ tableSignatoryLinks = Table {
   , tblPutProperties = do
     kRunRaw $ "CREATE INDEX idx_signatory_links_user_id ON signatory_links(user_id)"
     kRunRaw $ "CREATE INDEX idx_signatory_links_company_id ON signatory_links(company_id)"
+    kRunRaw $ "CREATE INDEX idx_signatory_links_document_id ON signatory_links(document_id)"
     kRunRaw $ "ALTER TABLE signatory_links"
       ++ " ADD CONSTRAINT fk_signatory_links_document_id FOREIGN KEY(document_id)"
       ++ " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"
@@ -242,4 +253,9 @@ tableSignatoryLinks = Table {
       ++ " ADD CONSTRAINT fk_signatory_links_company_id FOREIGN KEY(company_id)"
       ++ " REFERENCES companies(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
+    kRunRaw $ "CREATE SEQUENCE signatory_links_id_seq"
+      -- set start value to be one more than maximum already in the table or 1000 if table is empty
+    kRunRaw $ "SELECT setval('signatory_links_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM signatory_links))"
+      -- and finally attach serial default value to files.id
+    kRunRaw $ "ALTER TABLE signatory_links ALTER id SET DEFAULT nextval('signatory_links_id_seq')"
   }

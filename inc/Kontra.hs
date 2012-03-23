@@ -1,11 +1,10 @@
-{-# LANGUAGE CPP #-}
-
 module Kontra
     ( Context(..)
     , Kontrakcja
     , KontraMonad(..)
-    , Kontra
-    , runKontra
+    , Kontra(..)
+    , Kontra'(..)
+    , runKontra'
     , clearFlashMsgs
     , addELegTransaction
     , logUserToContext
@@ -31,6 +30,7 @@ import API.Service.Model
 import ActionSchedulerState
 import Context
 import Control.Applicative
+import Control.Monad.Error (MonadError, ErrorT, runErrorT)
 import Control.Monad.Reader
 import Control.Monad.State
 import Crypto.RNG (CryptoRNG, getCryptoRNGState)
@@ -38,6 +38,7 @@ import DB.Classes
 import ELegitimation.ELegTransaction
 import Doc.DocStateData
 import Happstack.Server
+import KontraError (internalError, respond404)
 import KontraLink
 import KontraMonad
 import Mails.MailsConfig
@@ -45,36 +46,52 @@ import Templates.Templates
 import User.Model
 import Util.HasSomeUserInfo
 import qualified Log
-import qualified Data.ByteString.UTF8 as BS
 import Util.MonadUtils
 import Misc
 
-newtype Kontra a = Kontra { unKontra :: ServerPartT (StateT Context IO) a }
-    deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadIO, MonadPlus, ServerMonad, WebMonad Response)
+-- | Kontra' is 'MonadPlus', but it should only be used on toplevel
+-- for interfacing with static routing.
+newtype Kontra' a = Kontra' { unKontra' :: ServerPartT (ErrorT KontraError (StateT Context IO)) a }
+    deriving (MonadPlus, Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadIO, MonadError KontraError, ServerMonad, WebMonad Response)
+
+-- | Kontra is a traditional Happstack handler monad except that it's
+-- not MonadZero.
+--
+-- Since we use static routing, there is no need for mzero inside a
+-- handler.  Instead we signal errors explicitly through
+-- 'KontraError'.
+newtype Kontra a = Kontra { unKontra :: Kontra' a }
+    deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadIO, MonadError KontraError, ServerMonad, WebMonad Response, CryptoRNG, KontraMonad, DBMonad, TemplatesMonad)
 
 instance Kontrakcja Kontra
+instance Kontrakcja Kontra'
 
-instance CryptoRNG Kontra where
-  getCryptoRNGState = Kontra $ gets (rngstate . ctxdbenv)
+instance CryptoRNG Kontra' where
+  getCryptoRNGState = Kontra' $ gets (rngstate . ctxdbenv)
 
-instance DBMonad Kontra where
+instance DBMonad Kontra' where
   getDBEnv = ctxdbenv <$> getContext
   handleDBError e = do
     Log.error $ show e
-    mzero
+    internalError
 
-instance KontraMonad Kontra where
-    getContext    = Kontra get
-    modifyContext = Kontra . modify
+instance KontraMonad Kontra' where
+    getContext    = Kontra' get
+    modifyContext = Kontra' . modify
 
-instance TemplatesMonad Kontra where
+instance TemplatesMonad Kontra' where
     getTemplates = ctxtemplates <$> getContext
     getLocalTemplates locale = do
       Context{ctxglobaltemplates} <- getContext
       return $ localizedVersion locale ctxglobaltemplates
 
-runKontra :: Context -> Kontra a -> ServerPartT IO a
-runKontra ctx = mapServerPartT (\s -> evalStateT s ctx) . unKontra
+-- | In case of KontraError, remove all Happstack filters
+runKontra' :: Context -> Kontra' a -> ServerPartT IO (Either KontraError a)
+runKontra' ctx = mapServerPartT (\s -> trans `fmap` evalStateT (runErrorT s) ctx) . unKontra'
+  where trans (Left e)                   = Just (Right (Left e), filterFun id)
+        trans (Right (Just (Left r,f)))  = Just (Left r,f)
+        trans (Right (Just (Right a,f))) = Just (Right (Right a),f)
+        trans (Right Nothing)            = Nothing
 
 {- Logged in user is admin-}
 isAdmin :: Context -> Bool
@@ -85,28 +102,28 @@ isSales :: Context -> Bool
 isSales ctx = (useremail <$> userinfo <$> ctxmaybeuser ctx) `melem` (ctxsalesaccounts ctx) && scriveService ctx
 
 {- |
-   Will mzero if not logged in as an admin.
+   Will 404 if not logged in as an admin.
 -}
 onlyAdmin :: Kontrakcja m => m a -> m a
-onlyAdmin = guardTrueM $ isAdmin <$> getContext
+onlyAdmin m = ifM (isAdmin <$> getContext) m respond404
 
 {- |
-   Will mzero if not logged in as a sales admin.
+   Will 404 if not logged in as a sales admin.
 -}
 onlySalesOrAdmin :: Kontrakcja m => m a -> m a
-onlySalesOrAdmin = guardTrueM $ (isAdmin ||^ isSales) <$> getContext
+onlySalesOrAdmin m = ifM ((isAdmin ||^ isSales) <$> getContext) m respond404
 
 
 
 {- |
-    Will mzero if the testing backdoor isn't open.
+    Will 404 if the testing backdoor isn't open.
 -}
 onlyBackdoorOpen :: Kontrakcja m => m a -> m a
 onlyBackdoorOpen a = do
   backdoorOpen <- isBackdoorOpen . ctxmailsconfig <$> getContext
   if backdoorOpen
     then a
-    else mzero
+    else respond404
 
 {- |
    Adds an Eleg Transaction to the context.
@@ -150,23 +167,23 @@ newViralInvitationSentLink email inviterid = do
     action <- newViralInvitationSent email inviterid
     return $ LinkViralInvitationSent (actionID action)
                                      (visToken $ actionType action)
-                                     (BS.toString $ unEmail email)
+                                     (unEmail email)
 
 newAccountCreatedLink :: (MonadIO m, CryptoRNG m) => User -> m KontraLink
 newAccountCreatedLink user = do
     action <- newAccountCreated user
     return $ LinkAccountCreated (actionID action)
                                 (acToken $ actionType action)
-                                (BS.toString $ getEmail user)
+                                (getEmail user)
 
--- | Runs DB action and mzeroes if it returned Nothing
-runDBOrFail :: (DBMonad m, MonadPlus m) => DB (Maybe r) -> m r
+-- | Runs DB action and fails if it returned Nothing
+runDBOrFail :: (DBMonad m, MonadError KontraError m) => DB (Maybe r) -> m r
 runDBOrFail f = runDB f >>= guardJust
 
 {- |
-   Perform a query (like with query) but if it returns Nothing, mzero; otherwise, return fromJust
+   Perform a query (like with query) but if it returns Nothing, fail; otherwise, return fromJust
  -}
-queryOrFail :: (MonadPlus m, DBMonad m, Monad m, MonadIO m, DBQuery ev (Maybe res)) => ev -> m res
+queryOrFail :: (MonadError KontraError m, DBMonad m, Monad m, MonadIO m, DBQuery ev (Maybe res)) => ev -> m res
 queryOrFail q = do
   mres <- runDBQuery q
   guardJust mres

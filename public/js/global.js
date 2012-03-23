@@ -105,17 +105,17 @@ function listString(names) {
     if (names.length === 0)
         return "";
     if (names.length === 1)
-        return "<strong>" + names[0] + "</strong>";
+        return "<strong>" + escapeHTML(names[0]) + "</strong>";
     if (names.length === 2)
-        return "<strong>" + names[0] + "</strong> " + localization.and + " <strong>" + names[1] + "</strong>";
+        return "<strong>" + escapeHTML(names[0]) + "</strong> " + localization.and + " <strong>" + escapeHTML(names[1]) + "</strong>";
     return listStringMany(names);
 }
 
 function listStringMany(names) {
     var name0 = names.shift();
     if (names.length === 1)
-        return "<strong>" + name0 + "</strong> " + localization.listand + " <strong>" + names[0] + "</strong>";
-    return "<strong>" + name0 + "</strong>, " + listStringMany(names);
+        return "<strong>" + escapeHTML(name0) + "</strong> " + localization.listand + " <strong>" + escapeHTML(names[0]) + "</strong>";
+    return "<strong>" + escapeHTML(name0) + "</strong>, " + listStringMany(names);
 }
 
 /*
@@ -385,7 +385,7 @@ function loadpages() {
                         content: errormsg.text(),
                         cantCancel : true,
                         acceptColor: "red",
-                        acceptText : "Back to Archive"
+                        acceptText : localization.backToArchive
                     });
                 } else {
                     $('#documentBox').html(content);
@@ -1238,7 +1238,8 @@ function showModal() {
             opacity: 0.9
         },
         speed: 0,
-        fixed: false
+        fixed: false,
+       top: standardDialogTop
     });
     if (modalbox.size() > 0) {
         modalbox.first().data("overlay").load();
@@ -1601,7 +1602,8 @@ safeReady(function() {
 function displayLoadingOverlay(message) {
     $("#loadingmessage").html(message);
     $("#loadingdialog").overlay({
-        fixed:false
+        fixed:false,
+      top:standardDialogTop
     }).load();
 }
 
@@ -1668,7 +1670,7 @@ safeReady(function() {
                         content: errormsg.text(),
                         cantCancel : true,
                         acceptColor: "red",
-                        acceptText : "Back to Archive"
+                        acceptText : localization.backToArchive
                     });
 
                 } else {
@@ -1726,7 +1728,7 @@ safeReady(function() {
 
 safeReady(function() {
     $(".campaign-play-video").click(function(){
-        window.open('http://player.vimeo.com/video/33833466','','scrollbars=no,menubar=no,height=500,width=700,resizable=yes,toolbar=no,location=no,status=no');
+        window.open('http://player.vimeo.com/video/37373913','','scrollbars=no,menubar=no,height=500,width=700,resizable=yes,toolbar=no,location=no,status=no');
         return false;
     })
 });

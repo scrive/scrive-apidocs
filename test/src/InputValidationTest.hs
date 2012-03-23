@@ -1,8 +1,5 @@
-{-# OPTIONS_GHC -fno-warn-unused-binds #-}
-{-# LANGUAGE OverloadedStrings #-}
 module InputValidationTest (inputValidationTests) where
 
-import qualified Data.ByteString.UTF8 as BS
 import Data.Char
 import Data.Int
 import Test.Framework (Test, testGroup)
@@ -158,12 +155,12 @@ testValidEmailExamplePasses = do
 testValidEmailLowercases :: Assertion
 testValidEmailLowercases = do
     let results = map asValidEmail goodEmailExamples
-    assert $ all (isLowerCase . BS.toString . fromGood) results
+    assert $ all (isLowerCase . fromGood) results
 
 testValidEmailStripsWhitespace :: Assertion
 testValidEmailStripsWhitespace = do
     let results = map (asValidEmail . surroundWithWhitespace) goodEmailExamples
-    assert $ all (not . isWhitespace . BS.toString . fromGood) results
+    assert $ all (not . isWhitespace . fromGood) results
     where surroundWithWhitespace :: String -> String
           surroundWithWhitespace xs = "\t\n " ++ xs ++ "\n\t "
 
@@ -176,7 +173,7 @@ propValidEmailWhitespaceIsEmpty = propWhitespaceIsEmpty asValidEmail
 propDirtyEmailLowercases :: String -> Property
 propDirtyEmailLowercases xs =
     (not (isLowerCase xs) && not (isEmptyInput xs))
-    ==> (isLowerCase . BS.toString . fromGood . asDirtyEmail $ xs)
+    ==> (isLowerCase . fromGood . asDirtyEmail $ xs)
 
 propDirtyEmailStripsWhitespace :: [WhitespaceChar] -> String -> Property
 propDirtyEmailStripsWhitespace = propStripWhitespace asDirtyEmail
@@ -398,11 +395,6 @@ propValidDaysToSignIsMax99 n =
     n > 99
     ==> isBad . asValidDaysToSign $ show n
 
-propValidDaysToSignMustBeInt :: String -> Property
-propValidDaysToSignMustBeInt xs =
-    not (all isDigit xs) && not (isEmptyInput xs)
-    ==> isBad $ asValidDaysToSign xs
-
 propValidDaysToSignGoodExamples :: Int -> Property
 propValidDaysToSignGoodExamples n =
     n >= 1 && n <= 99
@@ -411,22 +403,12 @@ propValidDaysToSignGoodExamples n =
 testValidDocIDNullIsEmpty :: Assertion
 testValidDocIDNullIsEmpty = testNullIsEmpty asValidDocID
 
-propValidDocIDMustBeInt64 :: String -> Property
-propValidDocIDMustBeInt64 xs =
-    not (all isDigit xs)
-    ==> isBad $ asValidDocID xs
-
 propValidDocIDGoodExamples :: Int64 -> Property
 propValidDocIDGoodExamples n = 
     True ==> isGood . asValidDocID $ show n
 
 testValidIDNullIsEmpty :: Assertion
 testValidIDNullIsEmpty = testNullIsEmpty asValidID
-
-propValidIDMustBeInt :: String -> Property
-propValidIDMustBeInt xs =
-    not (all isDigit xs)
-    ==> isBad $ asValidID xs
 
 propValidIDGoodExamples :: Int -> Property
 propValidIDGoodExamples n = 
@@ -439,11 +421,6 @@ propValidPlaceIsMin0 :: Int -> Property
 propValidPlaceIsMin0 n =
     n < 0
     ==> isBad . asValidPlace $ show n
-
-propValidPlaceMustBeInt :: String -> Property
-propValidPlaceMustBeInt xs =
-    not (all isDigit xs)
-    ==> isBad $ asValidPlace xs
 
 propValidPlaceGoodExamples :: Int -> Property
 propValidPlaceGoodExamples n =
@@ -536,24 +513,24 @@ testValidInviteTextGoodExamples = do
                        ]
     assert $ all (isGood . asValidInviteText) goodexamples
 
-propJustAllowed :: (String -> Result BS.ByteString) -> [Char -> Bool] -> String -> Property
+propJustAllowed :: (String -> Result String) -> [Char -> Bool] -> String -> Property
 propJustAllowed f ps xs =
     isTrimmed xs
       && any isInvalidChar xs
     ==> isBad $ f xs
     where isInvalidChar c = all (\p -> not $ p c) ps
 
-propIsMinSize :: (String -> Result BS.ByteString) -> Int -> String -> Property
+propIsMinSize :: (String -> Result String) -> Int -> String -> Property
 propIsMinSize f n xs =
     length xs < n && length xs > 0
     ==> isBad $ f xs
 
-propStripWhitespace :: (String -> Result BS.ByteString) -> [WhitespaceChar] -> String -> Property
+propStripWhitespace :: (String -> Result String) -> [WhitespaceChar] -> String -> Property
 propStripWhitespace f ws xs =
     let padding = map wc ws
         result = f (padding ++ xs ++ padding) in
     isGood result
-    ==> isTrimmed . BS.toString . fromGood $ result
+    ==> isTrimmed . fromGood $ result
 
 propWhitespaceIsEmpty :: (String -> Result a) -> [WhitespaceChar] -> Property
 propWhitespaceIsEmpty f xs =

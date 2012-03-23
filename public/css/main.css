@@ -806,8 +806,10 @@ a.new-btn-small.black p {
 }
 
 .body-container .price-plan td a {
-	color: #999;
 	text-decoration: none;
+	color: #35A4D6;
+	font: 12px "Lucida Grande";
+	text-transform: uppercase;
 }
 
 .body-container .price-plan td a:hover {
@@ -819,17 +821,20 @@ a.new-btn-small.black p {
 }
 
 .body-container .price-plan tr.big-row {
-	height: 70px;
 }
 
 .body-container .price-plan tr.big-row td {
-	font: italic 14px "Georgia";
+    line-height: 1.7em;
 }
 
 .body-container .price-plan tr.big-row h4 {
         color: #666;
 	font: 16px "Georgia";
         font-weight: bold;
+}
+
+.price-plan-page .price-plan tr.big-row td a {
+    display: none;
 }
 
 .body-container .price-plan tr.big-row td a {
@@ -865,6 +870,14 @@ a.new-btn-small.black p {
     height: 910px;
 }
 
+.body-container .price-plan-page .highlight-container {
+  top: -6px;
+}
+
+.body-container .price-plan-page .highlight-container .highlight-rows {
+    height: 260px;
+}
+
 .body-container .highlight-container .highlight-rows {
 	padding: 0 10px;
 	width: 224px;
@@ -874,15 +887,21 @@ a.new-btn-small.black p {
 .body-container .highlight-container .highlight-rows li {
 	border-bottom: 1px solid #ccc;
 	color: #999;
-	font: 12px "Lucida Grande";
-	height: 21px;
-	line-height: 21px;
+	font: 14px "Lucida Grande";
+	height: 28px;
+	line-height: 28px;
 	text-align: center;
 }
 
+.price-plan-page .highlight-container .highlight-rows li a {
+    display: none;
+}
+
 .body-container .highlight-container .highlight-rows li a {
-	color: #999;
 	text-decoration: none;
+	color: #35A4D6;
+	font: 10px "Lucida Grande";
+	text-transform: uppercase;
 }
 
 .body-container .highlight-container .highlight-rows li a:hover {
@@ -890,8 +909,10 @@ a.new-btn-small.black p {
 }
 
 .body-container .highlight-container .highlight-rows li.top {
-	height: 78px;
-	padding-top: 25px;
+	height: 75px;
+	padding-top: 38px;
+        margin-right: auto;
+        margin-left: auto;
 }
 
 .body-container .highlight-container .highlight-rows li.top h3 {
@@ -903,7 +924,7 @@ a.new-btn-small.black p {
 .body-container .highlight-container .highlight-rows li.top p {
 	color: #666;
 	font: italic 14px "Georgia";
-	margin-top: 4px;
+	margin-top: 8px;
 }
 
 .body-container .highlight-container .highlight-rows li.odd {
@@ -982,11 +1003,11 @@ div.price-plan-details {
 }
 
 .ribbon.swedish {
-	background: url(../img/highlight-ribbon-swedish.png) no-repeat transparent;
+	background: url(../img/highlight-ribbon-small-swedish.png) no-repeat transparent;
 }
 
 .ribbon.english {
-	background: url(../img/highlight-ribbon-english.png) no-repeat transparent;
+	background: url(../img/highlight-ribbon-small-english.png) no-repeat transparent;
 }
 
 .big-pp-container .ribbon.swedish {
@@ -1420,7 +1441,6 @@ div.price-plan-details {
 	font: 12px "Lucida Grande";
 	text-align: center;
 	vertical-align: middle;
-	width: 169px;
 }
 
 .body-container .big-pp-container td:first-child {
@@ -2036,18 +2056,6 @@ a {
     font: 14px "Copse";
 }
 
-.page-change{
-    padding: 3px;
-    font-size: 11px;
-    color: #007CAC;
-    cursor: pointer;
-}
-.page-change.current{
-    color: #333333;
-    font-weight : bold;
-    cursor: default;
-
-}
 .gotodave {
     display: block;
     width: 15px;

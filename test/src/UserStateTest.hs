@@ -3,11 +3,9 @@ module UserStateTest (userStateTests) where
 import Control.Monad
 import Data.Maybe
 import Test.Framework
-import qualified Data.ByteString.UTF8 as BS
 
 import Company.Model
 import DB.Classes
-import MagicHash (unsafeMagicHash)
 import MinutesTime
 import User.Model
 import TestingUtil
@@ -38,7 +36,6 @@ userStateTests env = testGroup "UserState" [
     ]
   , testThat "SetUserCompanyAdmin/GetCompanyAccounts works" env test_getCompanyAccounts
   , testThat "GetInviteInfo/SetInviteInfo works" env test_getInviteInfo
-  , testThat "GetUserMailAPI/SetUserMailAPI works" env test_getUserMailAPI
   , testThat "SetUserCompany works" env test_setUserCompany
   , testThat "DeleteUser works" env test_deleteUser
   , testThat "SetUserInfo works" env test_setUserInfo
@@ -50,13 +47,13 @@ userStateTests env = testGroup "UserState" [
 
 test_getUserByEmail_returnsNothing :: DB ()
 test_getUserByEmail_returnsNothing = do
-  queriedUser <- dbQuery $ GetUserByEmail Nothing (Email (BS.fromString "emily@green.com"))
+  queriedUser <- dbQuery $ GetUserByEmail Nothing (Email "emily@green.com")
   assert (isNothing queriedUser)
 
 test_getUserByEmail_returnsTheRightUser :: DB ()
 test_getUserByEmail_returnsTheRightUser = do
   Just user <- addNewUser "Emily" "Green" "emily@green.com"
-  queriedUser <- dbQuery $ GetUserByEmail Nothing (Email $ BS.fromString "emily@green.com")
+  queriedUser <- dbQuery $ GetUserByEmail Nothing (Email "emily@green.com")
   assert (isJust queriedUser)
   assertEqual "For GetUserByEmail result" user (fromJust queriedUser)
 
@@ -84,10 +81,10 @@ test_getAllUsers_returnsAllUsers = do
 test_setUserPassword_changesPassword :: DB ()
 test_setUserPassword_changesPassword = do
   Just user <- addNewUser "Emily" "Green" "emily@green.com"
-  passwordhash <- createPassword (BS.fromString "Secret Password!")
+  passwordhash <- createPassword "Secret Password!"
   _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
-  queriedUser <- dbQuery $ GetUserByEmail Nothing (Email (BS.fromString "emily@green.com"))
-  assert $ verifyPassword (userpassword (fromJust queriedUser)) (BS.fromString "Secret Password!")
+  queriedUser <- dbQuery $ GetUserByEmail Nothing (Email "emily@green.com")
+  assert $ verifyPassword (userpassword (fromJust queriedUser)) "Secret Password!"
 
 test_addUser_repeatedEmailReturnsNothing :: DB ()
 test_addUser_repeatedEmailReturnsNothing = do
@@ -127,27 +124,6 @@ test_getInviteInfo = do
   noii <- dbQuery $ GetInviteInfo userid
   assertBool "No InviteInfo returned" $ isNothing noii
 
-test_getUserMailAPI :: DB ()
-test_getUserMailAPI = do
-  Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  let mapi = UserMailAPI {
-      umapiKey = unsafeMagicHash 0
-    , umapiDailyLimit = 1
-    , umapiSentToday = 0
-  }
-  res <- dbUpdate $ SetUserMailAPI userid $ Just mapi
-  assertBool "UserMailAPI created correctly" res
-  Just mapi2 <- dbQuery $ GetUserMailAPI userid
-  assertBool "Correct UserMailAPI returned" $ mapi == mapi2
-  res2 <- dbUpdate $ SetUserMailAPI userid $ Just mapi { umapiSentToday = 1 }
-  assertBool "UserMailAPI updated correctly" res2
-  Just mapi3 <- dbQuery $ GetUserMailAPI userid
-  assertBool "Correct updated UserMailAPI returned" $ mapi { umapiSentToday = 1 } == mapi3
-  res3 <- dbUpdate $ SetUserMailAPI userid Nothing
-  assertBool "UserMailAPI erased correctly" res3
-  nomapi <- dbQuery $ GetUserMailAPI userid
-  assertBool "No UserMailAPI returned" $ isNothing nomapi
-
 test_setUserCompany :: DB ()
 test_setUserCompany = do
   Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
@@ -169,10 +145,10 @@ test_setUserInfo :: DB ()
 test_setUserInfo = do
   Just User{userid, userinfo} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   let ui = userinfo {
-      userpersonalnumber = BS.fromString "1234567"
-    , usercompanyposition = BS.fromString "blabla"
-    , userphone = BS.fromString "66346343"
-    , usermobile = BS.fromString "989834343"
+      userpersonalnumber = "1234567"
+    , usercompanyposition = "blabla"
+    , userphone = "66346343"
+    , usermobile = "989834343"
   }
   res <- dbUpdate $ SetUserInfo userid ui
   assertBool "UserInfo updated correctly" res

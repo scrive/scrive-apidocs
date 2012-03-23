@@ -4,8 +4,7 @@ window.Validation = Backbone.Model.extend({
     defaults : {
         validates : function() {return true;},
         callback : function() {},
-        message : "Validation has failed",
-        next: undefined
+        message : "Validation has failed"
     },
     concat: function(nextValidation) {
         if (this.get("next") == undefined)
@@ -41,7 +40,8 @@ window.Validation = Backbone.Model.extend({
 window.NotEmptyValidation = Validation.extend({
     defaults: {
            validates: function(t) {
-                    if (/^\s*$/.test(t))
+
+                    if (/^\s*$/.test(t)) // only spaces
                         return false;
                     
                     return true;
@@ -53,6 +53,7 @@ window.NotEmptyValidation = Validation.extend({
 window.EmailValidation = Validation.extend({
      defaults: {
             validates: function(t) {
+                // this does not allow international characters, which for the moment is good
                 if (/^[\w._%+-]+@[\w.-]+[.][a-z]{2,4}$/i.test(t))
                     return true;
                 return false;
@@ -66,10 +67,11 @@ window.NameValidation = Validation.extend({
             validates: function(t) {
                 var t = $.trim(t);
 
-                if (t.length == 0 || t.length > 100)
+                if (t.length === 0 || t.length > 100)
                     return false;
-
-                if (/[^a-z-' ]/i.test(t))
+                // we want to match international characters
+                // http://stackoverflow.com/questions/1073412/javascript-validation-issue-with-international-characters
+                if (/[^a-z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF-' ]/i.test(t))
                     return false;
 
                 return true;
@@ -90,6 +92,7 @@ window.CheckboxReqValidation = Validation.extend({
 window.DigitsLettersValidation = Validation.extend({
     defaults: {
         validates: function(t) {
+            // we don't allow international in password; good or bad?
             if (!/[a-z].*[a-z]/i.test(t))
                 return false;
             if (!/[0-9].*[0-9]/.test(t))
@@ -106,7 +109,7 @@ window.PasswordValidation = Validation.extend({
         validates: function(t) { return t.length >= 8; },
         message: "Password must contain 8 characters at least!",
         message_max: "Password must contain 250 characters at most!",
-        message_digits: "Password must have minimum two digits and two letters!",
+        message_digits: "Password must have minimum two digits and two letters!"
     },
     initialize: function() {
         this.set({"next": new Validation({
@@ -124,7 +127,6 @@ window.PasswordValidation = Validation.extend({
 
 window.PasswordEqValidation = Validation.extend({
     defaults: {
-        with: undefined,
         validates: function(t) {
             var p1 = this.get("with") ? this.get("with").val() : undefined;
 

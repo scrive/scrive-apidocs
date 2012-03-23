@@ -626,6 +626,15 @@ color: white;
     background-repeat: no-repeat;
     background-position: center center;
 }
+.loadingMail
+{
+    margin-left:40%;
+    margin-right:40%;
+    height: 400px;
+    background-image: url(images/wait30trans.gif);
+    background-repeat: no-repeat;
+    background-position: center center;
+}
 .pagejpg
 {
     width: 943px;
@@ -930,8 +939,14 @@ a.button {
 
 .placedfield, .placedfieldhelper {
     position: absolute;
+    cursor: pointer;
     font-family: Helvetica;
-    font-size: 15.93px; /* keep in sync with .pagediv font-size propery */
+    font-size: 15.93px;
+}
+
+.placedfieldvalue{
+    font-family: Helvetica;
+    font-size: 15.93px;
 }
 
 .placedfieldhelper {
@@ -1122,6 +1137,10 @@ input[type=submit].hidden
 #signStepsTitleRow .download a{
     color: #999999;
     text-transform: uppercase;
+}
+
+#signStepsTitleRow .download .docname {
+  display: none;
 }
 
 
@@ -2159,7 +2178,8 @@ form {
     text-decoration: none;
 }
 
-#signViewAttachmentBox, #signViewSigAttachmentBox
+.docview .authorattachments,
+.docview .signatoryattachments
 {
     /* 002 float: left;*/
     margin-top: 30px;
@@ -2174,11 +2194,101 @@ form {
     padding: 30px;
 }
 
-#signViewAttachmentBoxList {
+.docview .authorattachments .list .item {
+  margin-bottom: 10px;
+}
 
-    position:relative;
-    top:-20px;
-    margin-left:250px;
+.docview .authorattachments .item .icon {
+  float: left;
+  width: 13px;
+  height: 14px;
+  background: url(../img/attachment-icon.png);
+}
+
+.docview .authorattachments .item .label {
+  float: left;
+  margin-left: 10px;
+}
+
+.docview .authorattachments .item .name {
+  font-weight: bold;
+  color: black;
+}
+
+.docview .authorattachments .item a {
+  text-decoration: underline;
+}
+
+
+.docview .uploadedsignatoryattachments .item .icon {
+  float: left;
+  width: 13px;
+  height: 14px;
+  background: url(../img/attachment-icon.png);
+}
+
+.docview .uploadedsignatoryattachments .item {
+  margin-bottom: 10px;
+}
+
+.docview .uploadedsignatoryattachments .item .label {
+  float: left;
+  margin-left: 10px;
+}
+
+.docview .uploadedsignatoryattachments .list .item .name {
+  font-weight: bold;
+  color: black;
+}
+
+.docview .uploadedsignatoryattachments .list .item .from {
+  font-style: italic;
+}
+
+.docview .uploadedsignatoryattachments .list .item a {
+  text-decoration: underline;
+}
+
+.docview .attachmentstab .section {
+  float: left;
+  margin-right: 20px;
+}
+
+.docview .attachmentstab h2 {
+  font-size: small;
+  margin-bottom: 10px;
+}
+
+.docview .attachmentstab .authorattachments {
+  width: auto;
+  border: none;
+  margin: auto;
+  padding: 0px;
+}
+
+.docview .attachmentstab .list {
+  position: auto;
+  top: auto;
+  margin-left: auto;
+}
+
+.signguard {
+  height: 80px;
+  padding: 20px;
+}
+
+.signguard .check {
+  float:left;
+  width: 25px;
+}
+
+.signguard .label {
+  float: left;
+  width: 300px;
+}
+
+.docview .dragfield .label {
+  display: none;
 }
 
 #signViewBottomBox
@@ -2692,9 +2802,6 @@ input#cancel {
     font-size: 8pt;
 }
 
-.searchBox{
-
-}
 .centered {
     margin: 10%;
 }
@@ -2959,6 +3066,26 @@ table.authorsigattachment {
     width: 100%;
 }
 
+.docview .signatoryattachments .column {
+  float: left;
+  width: 400px;
+
+  min-height: 20px;
+}
+
+.docview .signatoryattachments .list {
+  min-height: 50px;
+  margin-top: 20px;
+}
+
+.docview .signatoryattachments .list .item {
+  min-height: 50px;
+}
+
+.docview .signatoryattachments .list .item .name {
+  font-weight: bold;
+}
+
 table#signViewSigAttachmentBoxList {
     width: 100%;
 }
@@ -3026,4 +3153,29 @@ a#attachmentback {
     font-weight: bold;
     font-family: "Courier New", Courier, monospace;
 
+}
+
+.inlineEditing .acceptIcon {
+    height:14px;
+    width:14px;
+    margin:2px;
+    display: block;
+    float:right;
+    background: url("../img/spr-icons.png") no-repeat scroll 0 0 transparent;
+    background-position: -171px 0px;
+    width: 14px;
+    float:right;
+}
+.inlineEditing {
+    border: 1px solid #DDDDDD;
+    height: 18px;
+}
+.inlineEditing input{
+    border: 0px solid #DDDDDD;
+    float: left;
+    padding: 0px;
+    margin: 0px;
+}
+.inlineEditing input:focus{
+    outline:0px;
 }

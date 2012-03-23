@@ -26,14 +26,14 @@ import qualified Doc.DocControl as DocControl
 import qualified Archive.Control as ArchiveControl
 import qualified ELegitimation.BankID as BankID
 import qualified User.UserControl as UserControl
-import qualified API.MailAPI as MailAPI
+import qualified ScriveByMail.Control as MailAPI
 import Doc.API
 import OAuth.Control
 
 import Control.Monad.Error
 import Data.Functor
 import Data.List
-import Happstack.Server hiding (simpleHTTP, host, dir, path)
+import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
 
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
@@ -54,7 +54,7 @@ import Util.MonadUtils
    That is, all routing logic should be in this table to ensure that we can find
    the function for any given path and method.
 -}
-staticRoutes :: Route (Kontra Response)
+staticRoutes :: Route (Kontra' Response)
 staticRoutes = choice
      [ allLocaleDirs $ const $ hGetAllowHttp $ toK0 handleHomepage
      , hGetAllowHttp $ getContext >>= (redirectKontraResponse . LinkHome . ctxlocale)
@@ -76,7 +76,8 @@ staticRoutes = choice
      , dir "sitemap"         $ hGetAllowHttp $ handleSitemapPage
 
      -- this is SMTP to HTTP gateway
-     , dir "mailapi" $ hPostNoXToken $ toK0 $ MailAPI.handleMailAPI
+     , dir "mailapi" $ hPostNoXToken             $ toK0 $ MailAPI.handleMailAPI
+     , dir "mailapi" $ dir "confirmdelay" $ hGet $ toK3 $ MailAPI.handleConfirmDelay
 
      -- Only download function | unified for author and signatories
      , dir "download"                     $ hGet  $ toK3 $ DocControl.handleDownloadFile
@@ -87,7 +88,9 @@ staticRoutes = choice
      , dir "s" $ hGet $ toK3    $ DocControl.handleSignShowOldRedirectToNew -- Redirect for old version to version above, remove not earlier then 31.12.2012.
 
      , dir "s" $ param "sign"           $ hPostNoXToken $ toK2 $ DocControl.signDocument
+     , dir "s" $ param "sign"           $ hPostNoXToken $ toK3 $ DocControl.signDocumentIphoneCase
      , dir "s" $ param "reject"         $ hPostNoXToken $ toK2 $ DocControl.rejectDocument
+     , dir "s" $ param "reject"         $ hPostNoXToken $ toK3 $ DocControl.rejectDocumentIphoneCase
      , dir "s" $ param "acceptaccount"  $ hPostNoXToken $ toK3 $ DocControl.handleAcceptAccountFromSign
      , dir "s" $ param "sigattachment"  $ hPostNoXToken $ toK2 $ DocControl.handleSigAttach
      , dir "s" $ param "deletesigattachment" $ hPostNoXToken $ toK2 $ DocControl.handleDeleteSigAttach
@@ -132,7 +135,7 @@ staticRoutes = choice
      , dir "d" $ param "archive"   $ hPost $ toK0 $ ArchiveControl.handleContractArchive
      , dir "d" $ param "remind"    $ hPost $ toK0 $ DocControl.handleBulkContractRemind
      , dir "d"                     $ hPost $ toK1 $ DocControl.handleIssueShowPost
-     , dir "docs"                  $ hGet  $ toK0 $ DocControl.jsonDocumentsList
+     , dir "docs"                  $ hGet  $ toK0 $ ArchiveControl.jsonDocumentsList
      , dir "doc"                   $ hGet  $ toK1 $ DocControl.jsonDocument
      , dir "save"                  $ hPost $ toK1 $ DocControl.handleSaveDraft
      , dir "setattachments"        $ hPost $ toK1 $ DocControl.handleSetAttachments -- Since setting attachments can have file upload, we need extra handler for it.
@@ -180,6 +183,7 @@ staticRoutes = choice
      , dir "account" $ dir "usagestats" $ dir "months" $ dir "json" $ hGet $ toK0 $ UserControl.handleUsageStatsJSONForUserMonths
      , dir "accepttos" $ hGet  $ toK0 $ UserControl.handleAcceptTOSGet
      , dir "accepttos" $ hPost $ toK0 $ UserControl.handleAcceptTOSPost
+     , dir "account" $ dir "phoneme" $ hPostNoXToken $ toK0 $ UserControl.handleRequestPhoneCall
 
      --CompanyAccountsControl
      , dir "account" $ dir "companyaccounts" $ hGet  $ toK0 $ CompanyAccounts.handleGetCompanyAccounts
@@ -218,6 +222,7 @@ staticRoutes = choice
      , dir "adminonly" $ dir "signstatscsv" $ path GET id $ Stats.handleSignStatsCSV
      , dir "adminonly" $ dir "dochistorycsv" $ path GET id $ Stats.handleDocHistoryCSV
      , dir "adminonly" $ dir "signhistorycsv" $ path GET id $ Stats.handleSignHistoryCSV
+     , dir "adminonly" $ dir "userslistcsv" $ path GET id $ Administration.handleUsersListCSV
 
      , dir "adminonly" $ dir "runstatsonalldocs" $ hGet $ toK0 $ Stats.addAllDocsToStats
      , dir "adminonly" $ dir "stats1to2" $ hGet $ toK0 $ Stats.handleMigrate1To2
@@ -256,11 +261,14 @@ staticRoutes = choice
 
      , dir "adminonly" $ dir "log" $ hGetWrap (onlyAdmin . https) $ toK1 $ Administration.serveLogDirectory
 
+     , dir "adminonly" $ dir "updatefields" $ hPost $ toK2 $ Administration.updateFields
 
-     , dir "dave" $ dir "document"    $ hGet $ toK1 $ Administration.daveDocument
-     , dir "dave" $ dir "user"        $ hGet $ toK1 $ Administration.daveUser
-     , dir "dave" $ dir "userhistory" $ hGet $ toK1 $ Administration.daveUserHistory
-     , dir "dave" $ dir "company"     $ hGet $ toK1 $ Administration.daveCompany
+     , dir "dave" $ dir "document"      $ hGet $ toK1 $ Administration.daveDocument
+     , dir "dave" $ dir "document"      $ hGet $ toK2 $ Administration.daveSignatoryLink
+     , dir "dave" $ dir "user"          $ hGet $ toK1 $ Administration.daveUser
+     , dir "dave" $ dir "userhistory"   $ hGet $ toK1 $ Administration.daveUserHistory
+     , dir "dave" $ dir "company"       $ hGet $ toK1 $ Administration.daveCompany
+     , dir "dave" $ dir "company"       $ hGet $ toK3 $ Administration.companyClosedFilesZip
 
      -- account stuff
      , dir "logout"      $ hGet  $ toK0 $ handleLogout
@@ -290,7 +298,7 @@ staticRoutes = choice
 {- |
     This is a helper function for routing a public dir.
 -}
-publicDir :: String -> String -> (Locale -> KontraLink) -> Kontra Response -> Route (Kontra Response)
+publicDir :: String -> String -> (Locale -> KontraLink) -> Kontra Response -> Route (Kontra' Response)
 publicDir swedish english link handler = choice [
     -- the correct url with region/lang/publicdir where the publicdir must be in the correct lang
     allLocaleDirs $ \locale -> dirByLang locale swedish english $ hGetAllowHttp $ handler
@@ -383,12 +391,12 @@ handleWholePage f = do
 {- |
    Serves out the static html files.
 -}
-serveHTMLFiles :: Kontra Response
+serveHTMLFiles :: (Kontrakcja m, MonadPlus m) => m Response
 serveHTMLFiles =  do
   rq <- askRq
   let fileName = last (rqPaths rq)
   guard ((length (rqPaths rq) > 0) && (isSuffixOf ".html" fileName))
   s <- guardJustM $ (liftIO $ catch (fmap Just $ BS.readFile ("html/" ++ fileName))
                                       (const $ return Nothing))
-  renderFromBody V.TopNone V.kontrakcja $ BS.toString s
+  renderFromBody V.kontrakcja $ BS.toString s
 

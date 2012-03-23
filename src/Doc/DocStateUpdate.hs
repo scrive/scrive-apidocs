@@ -5,7 +5,7 @@ module Doc.DocStateUpdate
     , rejectDocumentWithChecks
     , authorSignDocument
     , authorSendDocument
-    , updateSigAttachments
+    , setSigAttachments
     , authorSignDocumentFinal
     , signableFromTemplateWithUpdatedAuthor
     , updateDocAuthorAttachments
@@ -38,8 +38,6 @@ import EvidenceLog.Model
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 
-import qualified Data.ByteString.UTF8 as BS hiding (length)
-
 {- |
    Securely
  -}
@@ -57,7 +55,7 @@ restartDocument doc = withUser $ \user -> do
 {- |
    Sign a document with email identification (typical, non-eleg).
  -}
-signDocumentWithEmail :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(BS.ByteString, BS.ByteString)] -> m (Either DBError (Document, Document))
+signDocumentWithEmail :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(String, String)] -> m (Either DBError (Document, Document))
 signDocumentWithEmail did slid mh fields = do
   edoc <- getDocByDocIDSigLinkIDAndMagicHash did slid mh
   case edoc of
@@ -69,7 +67,7 @@ signDocumentWithEmail did slid mh fields = do
       True  -> do
         Context{ ctxtime, ctxipnumber } <- getContext
         let Just sl' = getSigLinkFor olddoc slid
-        let actor = SignatoryActor ctxtime ctxipnumber (maybesignatory sl') (BS.toString $ getEmail sl') slid
+        let actor = SignatoryActor ctxtime ctxipnumber (maybesignatory sl') (getEmail sl') slid
         ed1 <- runDBUpdate $ UpdateFields did slid fields actor
         case ed1 of
           Left err -> return $ Left $ DBActionNotAvailable err
@@ -84,7 +82,7 @@ signDocumentWithEmail did slid mh fields = do
                 return $ Right (doc, olddoc)
 
 
-signDocumentWithEleg :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(BS.ByteString, BS.ByteString)] -> SignatureInfo -> m (Either DBError (Document, Document))
+signDocumentWithEleg :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(String, String)] -> SignatureInfo -> m (Either DBError (Document, Document))
 signDocumentWithEleg did slid mh fields sinfo = do
   Context{ ctxtime, ctxipnumber } <- getContext
   edoc <- getDocByDocIDSigLinkIDAndMagicHash did slid mh
@@ -96,7 +94,7 @@ signDocumentWithEleg did slid mh fields sinfo = do
       False -> return $ Left (DBActionNotAvailable "This document does not allow signing using email identification.")
       True  -> do
         let Just sl' = getSigLinkFor olddoc slid
-        let actor = SignatoryActor ctxtime ctxipnumber (maybesignatory sl') (BS.toString $ getEmail sl') slid
+        let actor = SignatoryActor ctxtime ctxipnumber (maybesignatory sl') (getEmail sl') slid
         ed1 <- runDBUpdate $ UpdateFields did slid fields actor
         case ed1 of
           Left err -> return $ Left $ DBActionNotAvailable err
@@ -113,7 +111,7 @@ signDocumentWithEleg did slid mh fields sinfo = do
 {- |
    Reject a document with security checks.
  -}
-rejectDocumentWithChecks :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> Maybe BS.ByteString -> m (Either DBError (Document, Document))
+rejectDocumentWithChecks :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> Maybe String -> m (Either DBError (Document, Document))
 rejectDocumentWithChecks did slid mh customtext = do
   edoc <- getDocByDocIDSigLinkIDAndMagicHash did slid mh
   case edoc of
@@ -122,7 +120,7 @@ rejectDocumentWithChecks did slid mh customtext = do
       switchLocale (getLocale olddocument)
       Context{ ctxtime, ctxipnumber } <- getContext
       let Just sll = getSigLinkFor olddocument slid
-      let sa = SignatoryActor ctxtime ctxipnumber (maybesignatory sll) (BS.toString $ getEmail sll) slid
+      let sa = SignatoryActor ctxtime ctxipnumber (maybesignatory sll) (getEmail sll) slid
       mdocument <- runDBUpdate $ RejectDocument did slid customtext sa
       case mdocument of
         Left msg -> return $ Left (DBActionNotAvailable msg)
@@ -184,12 +182,12 @@ authorSendDocument did = onlyAuthor did $ do
           transActionNotAvailable <$> runDBUpdate (MarkDocumentSeen did signatorylinkid signatorymagichash actor)
 
 {- |
-  The Author can add new SigAttachments.
+  Reseting all signatory attachments when document is in preparation | State of document is not checked
  -}
-updateSigAttachments :: (Kontrakcja m) => DocumentID -> [SignatoryAttachment] -> m (Either DBError Document)
-updateSigAttachments did sigatts = onlyAuthor did $ do
+setSigAttachments :: (Kontrakcja m) => DocumentID -> SignatoryLinkID -> [SignatoryAttachment] -> m (Either DBError ())
+setSigAttachments did sid sigatts = onlyAuthor did $ do
   actor <- guardJustM $ mkAuthorActor <$> getContext
-  transActionNotAvailable <$> runDBUpdate (UpdateSigAttachments did sigatts actor)
+  transActionNotAvailable <$> Right <$> runDBUpdate (SetSigAttachments did sid sigatts actor)
 
 {- |
    Only the author can Close a document when its in AwaitingAuthor status.
@@ -251,7 +249,7 @@ updateDocAuthorAttachments did adds removes = onlyAuthor did $ do
         [] -> return $ Right $ last rs
         (a:_) -> return $ Left $ DBActionNotAvailable a
 
-attachFile :: (Kontrakcja m) => DocumentID -> BS.ByteString -> BS.ByteString -> m (Either DBError Document)
+attachFile :: (Kontrakcja m) => DocumentID -> String -> BS.ByteString -> m (Either DBError Document)
 attachFile docid filename content = onlyAuthor docid $ do
   -- we need to downgrade the PDF to 1.4 that has uncompressed structure
   -- we use gs to do that of course
@@ -261,11 +259,11 @@ attachFile docid filename content = onlyAuthor docid $ do
   actor <- guardJustM $ mkAuthorActor <$> getContext
   transActionNotAvailable <$> runDBUpdate (AttachFile docid (fileid file) actor)
 
-newDocument :: (Kontrakcja m) => BS.ByteString -> DocumentType -> m (Either DBError Document)
-newDocument title doctype = withUser $ \user -> do
+newDocument :: (Kontrakcja m) => String -> DocumentType -> Int -> m (Either DBError Document)
+newDocument title doctype nrOrOtherSignatories = withUser $ \user -> do
   mcompany <- getCompanyForUser user
   actor <- guardJustM $ mkAuthorActor <$> getContext
-  transActionNotAvailable <$> runDBUpdate (NewDocument user mcompany title doctype actor)
+  transActionNotAvailable <$> runDBUpdate (NewDocument user mcompany title doctype nrOrOtherSignatories actor)
 
 withUser :: Kontrakcja m => (User -> m (Either DBError a)) -> m (Either DBError a)
 withUser action = do

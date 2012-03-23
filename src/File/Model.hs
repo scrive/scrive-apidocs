@@ -19,7 +19,6 @@ import DB.Types
 import DB.Utils
 import File.File
 import File.FileID
-import File.Tables
 import OurPrelude
 
 data GetFileByFileID = GetFileByFileID FileID
@@ -29,19 +28,16 @@ instance DBQuery GetFileByFileID (Maybe File) where
     _ <- kExecute [toSql fid]
     fetchFiles >>= oneObjectReturnedGuard
 
-data NewFile = NewFile BS.ByteString BS.ByteString
+data NewFile = NewFile String BS.ByteString
 instance DBUpdate NewFile File where
   dbUpdate (NewFile filename content) = do
-     fid :: FileID <- getUniqueID tableFiles
-     kPrepare $ "INSERT INTO files ("
-       ++ "  id"
-       ++ ", name"
+     kPrepare $ "INSERT INTO files"
+       ++ "( name"
        ++ ", content"
-       ++ ") VALUES (?, ?, decode(?,'base64'))"
+       ++ ") SELECT ?, decode(?,'base64')"
        ++ " RETURNING id, name, encode(content,'base64'), amazon_bucket, amazon_url, disk_path"
-     _ <- kExecute [
-        toSql fid
-      , toSql filename
+     _ <- kExecute
+      [ toSql filename
       , toSql (Binary content)
       ]
      fs <- fetchFiles
@@ -64,7 +60,7 @@ instance DBUpdate PutFileUnchecked () where
                               [SqlNull,SqlNull,SqlNull,toSql path]
     return ()
 
-data FileMovedToAWS = FileMovedToAWS FileID BS.ByteString BS.ByteString
+data FileMovedToAWS = FileMovedToAWS FileID String String
 instance DBUpdate FileMovedToAWS () where
   dbUpdate (FileMovedToAWS fid bucket url) = do 
     kPrepare "UPDATE files SET content = NULL, amazon_bucket = ?, amazon_url = ? WHERE id = ?"

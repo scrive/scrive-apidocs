@@ -232,7 +232,7 @@ getSessionUser = do
   ctx <- getContext
   case ctxmaybeuser ctx of
     Nothing -> return Nothing
-    Just user -> return $ Just (user, AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (BS.toString $ getEmail user))
+    Just user -> return $ Just (user, AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (getEmail user))
 
 getOAuthUser :: Kontrakcja m => APIMonad m (Maybe (User, APIActor))
 getOAuthUser = do
@@ -261,5 +261,5 @@ getOAuthUser = do
   
       user <- apiGuardL (serverError "The User account for those credentials does not exist.") $ runDBQuery $ GetUserByID userid
 
-      let actor = APIActor (ctxtime ctx) (ctxipnumber ctx) userid (BS.toString $ getEmail user) apistring
+      let actor = APIActor (ctxtime ctx) (ctxipnumber ctx) userid (getEmail user) apistring
       return $ Just (user, actor)

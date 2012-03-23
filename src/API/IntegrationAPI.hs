@@ -36,6 +36,7 @@ import MinutesTime
 import Misc
 import Session
 import Kontra
+import KontraError (internalError)
 import AppView
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
@@ -50,7 +51,7 @@ import Doc.DocUtils
 import Company.Model
 import User.Model
 import Data.Foldable (fold)
-import Crypto.RNG (CryptoRNG, randomBytes)
+import Crypto.RNG (CryptoRNG)
 import Util.SignatoryLinkUtils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
@@ -79,7 +80,7 @@ type IntegrationAPIFunction m a = APIFunction m IntegrationAPIContext a
 instance APIContext IntegrationAPIContext where
     apiContext  = do
         mservice <- integrationService
-        mbody <- runGetJSON readJSObject <$> getFieldWithDefault "" "body"
+        mbody <- runGetJSON readJSObject <$> getField' "body"
         case (mservice, mbody)  of
              (Just service, Right body2) -> do
                 Log.integration $ "API call from service:" ++ show (serviceid service)
@@ -94,17 +95,17 @@ instance JSONContainer IntegrationAPIContext where
 
 integrationService :: Kontrakcja m => m (Maybe Service)
 integrationService = do
-    sid <- getFieldUTFWithDefault BS.empty "service"
-    mservice <- runDBQuery $ GetService $ ServiceID sid
+    mservice <- getField' "service"
+      >>= runDBQuery . GetService . ServiceID . BS.fromString
     case mservice of
          Just service -> do
-             passwd <- getFieldUTFWithDefault BS.empty "password"
+             passwd <- getField' "password"
              if (verifyPassword (servicepassword $ servicesettings service) passwd)
                 then return $ Just service
                 else return Nothing
          Nothing -> return Nothing
 
-integrationAPI :: Route (Kontra Response)
+integrationAPI :: Route (Kontra' Response)
 integrationAPI = dir "integration" $ choice [
       dir "api" $
         choice
@@ -134,7 +135,7 @@ embeddDocumentFrame = do
     ctx <- getContext
     srvs <-  service <$> ask
     let sid = serviceid srvs
-    let slocation = fromMaybe (ctxhostpart ctx) $ (BS.toString . unServiceLocation) <$> (servicelocation $ servicesettings srvs)
+    let slocation = fromMaybe (ctxhostpart ctx) $ unServiceLocation <$> (servicelocation $ servicesettings srvs)
     let returnLink l =  return $ toJSObject [ ("link",JSString $ toJSString $ slocation ++ show l)]
     location <- fold <$> fromJSONField "location"
     doc <- documentFromParam
@@ -142,7 +143,7 @@ embeddDocumentFrame = do
     when (isNothing mcomp) $ throwApiError API_ERROR_MISSING_VALUE "At least company connected to document must be provided."
     let comp = fromJust mcomp
     when (not $ isAuthoredByCompany (companyid comp) doc) $ throwApiError API_ERROR_NO_DOCUMENT "No document exists"
-    msiglink <- liftMM (\(bs::BS.ByteString) -> return $ getSigLinkFor doc bs) (fromJSONField "email")
+    msiglink <- liftMM (\(s::String) -> return $ getSigLinkFor doc s) (fromJSONField "email")
     case msiglink of
          Nothing -> do
              when (not $ sameService srvs comp) $ throwApiError API_ERROR_MISSING_VALUE "Not matching company | This should never happend"
@@ -205,7 +206,7 @@ createDocument = do
 
 createDocFromTemplate ::(Kontrakcja m) =>
                         DocumentID
-                        -> BS.ByteString
+                        -> String
                         -> User
                         -> Maybe Company
                         -> MinutesTime
@@ -214,7 +215,7 @@ createDocFromTemplate templateid title user mcompany time = do
   ctx <- getContext
   sid <- serviceid <$> service <$> ask
   let mecid = maybe Nothing companyexternalid mcompany
-  let ia = IntegrationAPIActor time (ctxipnumber ctx) sid (BS.toString . unExternalCompanyID <$> mecid)
+  let ia = IntegrationAPIActor time (ctxipnumber ctx) sid (unExternalCompanyID <$> mecid)
   edoc <- runDBUpdate $ SignableFromDocumentIDWithUpdatedAuthor user mcompany templateid ia
   when (isLeft edoc) $
     throwApiError API_ERROR_OTHER $ "Cannot create document!"
@@ -224,10 +225,10 @@ createDocFromTemplate templateid title user mcompany time = do
     Log.integration $ "Could not set title on doc " ++ show (documentid doc)
   return $ either (const $ Just doc) Just edoc'
 
-createDocFromFiles :: (Kontrakcja m) =>
-                      BS.ByteString
+createDocFromFiles :: (Kontrakcja m)
+                      => String
                       -> DocumentType
-                      -> [(BS.ByteString, BS.ByteString)]
+                      -> [(String, BS.ByteString)]
                       -> User
                       -> Maybe Company
                       -> MinutesTime
@@ -236,8 +237,8 @@ createDocFromFiles title doctype files user mcompany time = do
   ctx <- getContext
   sid <- serviceid <$> service <$> ask
   let mecid = maybe Nothing companyexternalid mcompany
-  let ia = IntegrationAPIActor time (ctxipnumber ctx) sid (BS.toString . unExternalCompanyID <$> mecid)
-  edoc <- runDBUpdate $ NewDocument user mcompany title doctype ia
+  let ia = IntegrationAPIActor time (ctxipnumber ctx) sid (unExternalCompanyID <$> mecid)
+  edoc <- runDBUpdate $ NewDocument user mcompany title doctype 0 ia
   case edoc of
     Left _ -> throwApiError API_ERROR_OTHER $ "Cannot create document"
     Right doc -> do
@@ -289,7 +290,7 @@ createAPIDocument comp' (authorTMP:signTMPS) tags mlocale createFun = do
     mdoc <- createFun docAuthor (Just comp) now
     when (isNothing mdoc) $ throwApiError API_ERROR_OTHER "Problem creating a document | This may be because the company and author don't match"
     let doc = fromJust mdoc
-        actor = IntegrationAPIActor (ctxtime ctx) (ctxipnumber ctx) sid (Just $ BS.toString cid)
+        actor = IntegrationAPIActor (ctxtime ctx) (ctxipnumber ctx) sid (Just cid)
     _ <- runDBUpdate $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality actor
     _ <- runDBUpdate $ SetDocumentTags (documentid doc) tags actor
     when (isJust mlocale) $
@@ -305,14 +306,14 @@ createAPIDocument comp' (authorTMP:signTMPS) tags mlocale createFun = do
 userFromTMP :: Kontrakcja m => SignatoryTMP -> Company -> IntegrationAPIFunction m User
 userFromTMP uTMP comp = do
     sid <- serviceid <$> service <$> ask
-    let remail = fold $ asValidEmail . BS.toString <$> email uTMP
+    let remail = fold $ asValidEmail <$> email uTMP
     when (not $ isGood $ remail) $ throwApiError API_ERROR_OTHER "NOT valid email for first involved person"
     muser <- runDBQuery $ GetUserByEmail (Just sid) $ Email $ fromGood remail
     Context{ctxtime,ctxipnumber} <- getContext
     user <- case muser of
               Just u -> return u
               Nothing -> do
-                password <- createPassword =<< randomBytes 12
+                password <- createPassword =<< randomPassword
                 mu <- runDBUpdate $ AddUser (fold $ fstname uTMP,fold $ sndname uTMP) (fromGood remail) (Just password) False (Just sid) (Just $ companyid comp) (mkLocaleFromRegion defaultValue)
                 when (isNothing mu) $ throwApiError API_ERROR_OTHER "Problem creating a user (BASE) | This should never happend"
                 let u = fromJust mu
@@ -382,17 +383,18 @@ getDocuments = do
       Just s  -> case parseMinutesTimeISO s of
         Just t  -> return $ Just t
         Nothing -> throwApiError API_ERROR_PARSING $ "to_date unrecognized format: " ++ show s
-    linkeddocuments <- runDBQuery $ GetDocumentsByCompanyAndTags (Just sid) (companyid comp) tags
+    let allstatuses = [Preparation, Pending, Closed, Rejected, Timedout, Canceled, AwaitingAuthor, DocumentError ""]
+        mstatuses   = case (mFromState, mToState) of
+          (Nothing, Nothing) -> Nothing
+          _ -> Just [s | s <- allstatuses
+                       , maybe True (fromSafeEnum s >=) mFromState
+                       , maybe True (fromSafeEnum s <=) mToState
+                       ]
+    linkeddocuments <- runDBQuery $ GetDocumentsByCompanyWithFiltering (Just sid) (companyid comp) tags mFromDate mToDate mstatuses
     api_docs <- sequence [api_document_read False d  
                          | d <- linkeddocuments
-                         , isAuthoredByCompany (companyid comp) d
-                         , not $ isDeletedFor $ getAuthorSigLink d
                          , not $ isAttachment d
-                         -- we avoid filtering when the filter is not defined
-                         , maybe True (recentDate d >=) mFromDate
-                         , maybe True (recentDate d <=) mToDate
-                         , maybe True ((fromSafeEnum $ documentstatus d) >=) mFromState
-                         , maybe True ((fromSafeEnum $ documentstatus d) <=) mToState]
+                         ]
     return $ toJSObject $ [("documents"  , JSArray $ api_docs)] ++
                           ([] <| isNothing mFromDate  |> [("from_date",  showJSON $ showMinutesTimeForAPI (fromJust mFromDate ))]) ++
                           ([] <| isNothing mToDate    |> [("to_date",    showJSON $ showMinutesTimeForAPI (fromJust mToDate   ))]) ++
@@ -441,11 +443,11 @@ removeDocument = do
 connectUserToSessionPost :: Kontrakcja m => ServiceID -> UserID -> SessionId -> m KontraLink
 connectUserToSessionPost sid uid ssid = do
     matchingService <-sameService sid <$> (runDBQuery $ GetUserByID uid)
-    when (not matchingService) mzero
+    when (not matchingService) internalError
     loaded <- loadServiceSession (Right uid) ssid
     -- just send back empty string
-    when loaded $ finishWith $ toResponseBS (BS.fromString "text/html;charset=utf-8") (BSL.fromString "")
-    mzero
+    if loaded then finishWith $ toResponseBS (BS.fromString "text/html;charset=utf-8") (BSL.fromString "")
+              else internalError
 
 connectUserToSessionGet :: Kontrakcja m => ServiceID -> UserID -> SessionId -> m Response
 connectUserToSessionGet _sid _uid _ssid = do
@@ -462,11 +464,11 @@ connectUserToSessionGet _sid _uid _ssid = do
 connectCompanyToSession :: Kontrakcja m => ServiceID -> CompanyID -> SessionId -> m KontraLink
 connectCompanyToSession sid cid ssid = do
     matchingService <- sameService sid <$> (runDBQuery $ GetCompany cid)
-    when (not matchingService) mzero
+    when (not matchingService) internalError
     loaded <- loadServiceSession (Left cid) ssid
     if (loaded)
      then return $ BackToReferer
-     else mzero
+     else internalError
 
 getDaveDoc :: Kontrakcja m => IntegrationAPIFunction m APIResponse
 getDaveDoc = do

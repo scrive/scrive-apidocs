@@ -10,7 +10,6 @@ module Mails.SendMail
 
 import Control.Applicative
 import Control.Monad
-import qualified Data.ByteString.UTF8 as BSU
 
 import API.Service.Model
 import DB.Classes
@@ -45,7 +44,7 @@ scheduleEmailSendout' MailsConfig{..} mail@Mail{..} = do
           Nothing -> do
             niceAddress <- fromNiceAddress mailInfo ourInfoEmailNiceName
             return Address {addrName = niceAddress, addrEmail = ourInfoEmail }
-          Just address -> return Address { addrName = "", addrEmail = BSU.toString address }
+          Just address -> return Address { addrName = "", addrEmail = address }
       token <- random
       now <- getMinutesTime
       mid <- dbUpdate $ CreateEmail token fromAddr (map toAddress to) now
@@ -54,8 +53,8 @@ scheduleEmailSendout' MailsConfig{..} mail@Mail{..} = do
       return ()
   where
     toAddress MailAddress{..} = Address {
-        addrName  = BSU.toString fullname
-      , addrEmail = BSU.toString email
+        addrName  = fullname
+      , addrEmail = email
     }
     toAttachment (name, cont) = M.Attachment {
         attName = name
@@ -65,7 +64,7 @@ scheduleEmailSendout' MailsConfig{..} mail@Mail{..} = do
     -- Mail is unsendable if there is no to adress provided
     unsendable = any (not . valid) . map email
       where
-        valid x = case asValidEmail $ BSU.toString x of
+        valid x = case asValidEmail x of
           Good _ -> True
           _ -> False
 
@@ -90,7 +89,7 @@ fromNiceAddress (Invitation did _) servicename = do
   mdoc <- dbQuery $ GetDocumentByDocumentID did
   case mdoc of
     Nothing -> return $ servicename
-    Just doc -> case (documentregion doc, BSU.toString $ getAuthorName doc) of
+    Just doc -> case (documentregion doc, getAuthorName doc) of
       (_,         []) -> return $ servicename
       (REGION_SE, an) -> return $ an ++ " genom " ++ servicename
       (REGION_GB, an) -> return $ an ++ " through " ++ servicename

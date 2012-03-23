@@ -8,7 +8,7 @@ import DB.Model
 tableCompanies :: Table
 tableCompanies = Table {
     tblName = "companies"
-  , tblVersion = 2
+  , tblVersion = 5
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("external_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
@@ -21,6 +21,8 @@ tableCompanies = Table {
        , ("country", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("bars_background", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("logo", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
+       , ("bars_textcolour", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
+       , ("email_domain", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE companies ("
@@ -35,6 +37,8 @@ tableCompanies = Table {
           ++ ", country TEXT NOT NULL"
           ++ ", bars_background TEXT NULL"
           ++ ", logo BYTEA NULL"
+          ++ ", bars_textcolour TEXT NULL"
+          ++ ", email_domain TEXT NULL"
           ++ ", CONSTRAINT pk_companies PRIMARY KEY (id)"
           ++ ")"
         return TVRcreated
@@ -46,4 +50,8 @@ tableCompanies = Table {
       ++ " ADD CONSTRAINT fk_companies_services FOREIGN KEY(service_id)"
       ++ " REFERENCES services(id) ON DELETE RESTRICT ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
+    kRunRaw $ "CREATE SEQUENCE companies_id_seq"
+    kRunRaw $ "SELECT setval('companies_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM companies))"
+    kRunRaw $ "ALTER TABLE companies ALTER id SET DEFAULT nextval('companies_id_seq')"
   }
+

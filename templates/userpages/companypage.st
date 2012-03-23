@@ -12,12 +12,14 @@ viewCompany =
       <li><a href="/account/usagestats">$_HeadUsageStats()$</a></li>
   </ul>
   <div class="tab-container">
-      <div class="tab-content account" style="height:360px;">
+      <div class="tab-content account">
       </div>
   </div>
 </div>
 <script>
 var company = CompanyBranding.init();
-jQuery(".tab-content").append(company.input);
+var tabcontent = jQuery(".tab-content");
+tabcontent.append(company.input());
+tabcontent.append(jQuery("<div class='clearfix' />"));
 </script>
 #####

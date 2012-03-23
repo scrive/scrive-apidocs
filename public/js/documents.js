@@ -26,6 +26,31 @@ window.DocumentViewer = Backbone.Model.extend({
     }
 });
 
+window.DocumentAuthor =  Backbone.Model.extend({
+   defaults: {
+       fullname: "",
+       email: "",
+       company: "",
+       phone : "",
+       position: ""
+    },
+    fullname: function() {
+        return this.get("fullname")
+    },
+    email:  function() {
+        return this.get("email")
+    },
+    company : function() {
+        return this.get("company")
+    },
+    phone :  function() {
+        return this.get("phone")
+    },
+    position: function() {
+        return this.get("position")
+    }
+});
+
 window.Document = Backbone.Model.extend({
     defaults: {
         id : 0,
@@ -39,7 +64,10 @@ window.Document = Backbone.Model.extend({
         viewer: new DocumentViewer(),
         infotext: "",
         authorization: "email",
-        template : false
+        template : false,
+        //logo : undefined
+        //barsbackgroundcolor : undefined
+        //barsbackgroundtextcolor : undefined
     },
     initialize: function (args) {
         this.url = "/doc/" + args.id;
@@ -135,6 +163,9 @@ window.Document = Backbone.Model.extend({
 						type: "cancel"
 			});
     },
+    canseeallattachments: function() {
+      return this.get("canseeallattachments");
+    },
     setInvitationMessage : function(customtext)
     {
         this.set({invitationmessage: customtext},{silent: true});
@@ -142,7 +173,8 @@ window.Document = Backbone.Model.extend({
     inviteMail : function(){
                 return new Mail({
                                                 document: this,
-                                                type: "invite"
+                                                type: "invite",
+                                                editWidth: 300
                         });
     },
     sign : function() {
@@ -164,13 +196,13 @@ window.Document = Backbone.Model.extend({
     sendByAuthor : function() {
         return new Submit({
               send : "YES",
-              method: "POST",
+              method: "POST"
           });
     },
     signByAuthor : function() {
         return new Submit({
               sign : "YES",
-              method: "POST",
+              method: "POST"
           });
     },
     save : function() {
@@ -184,10 +216,11 @@ window.Document = Backbone.Model.extend({
         return new Submit({
               url: "/setattachments/" + this.documentid(),
               method: "POST",
+              ajax: true
           });
     },
     draftData : function() {
-      return { 
+      return {
           title : this.title(),
           functionality : this.get("functionality"),
           invitationmessage : this.get("invitationmessage"),
@@ -196,7 +229,7 @@ window.Document = Backbone.Model.extend({
           signatories : _.map(this.signatories(), function(sig) {return sig.draftData()}),
           region : this.region().draftData(),
           template : this.isTemplate()
-      };  
+      };
     },
     switchFunctionalityToAdvanced : function() {
           var newfunctionality = this.isBasic() ? "advanced" : "basic";
@@ -217,16 +250,16 @@ window.Document = Backbone.Model.extend({
        });
     },
     removeSignatory : function(sig) {
-       if (this.signatories().length < 2) 
+       if (this.signatories().length < 2)
            return;
-       var newsigs = new Array();    
+       var newsigs = new Array();
        newsigs.push(this.signatories()[0]);
        var removed = false;
        for(var i=1;i<this.signatories().length;i++)
           if ((sig !== this.signatories()[i] && i < this.signatories().length -1)
               || removed)
              newsigs.push(this.signatories()[i]);
-          else 
+          else
              removed = true;
        this.set({signatories : newsigs});
 
@@ -280,9 +313,12 @@ window.Document = Backbone.Model.extend({
     },
     setElegVerification : function() {
           this.set({"authorization":"eleg"}, {silent: true});
+          this.trigger("change:authorization");
     },
     setEmailVerification : function() {
           this.set({"authorization":"email"}, {silent: true});
+          this.trigger("change:authorization");
+
     },
     elegTBS : function() {
         var text = this.title() + " "+  this.documentid() ;
@@ -304,7 +340,7 @@ window.Document = Backbone.Model.extend({
     },
     isBasic: function() {
        return this.get("functionality") == "basic";
-    },    
+    },
     recall : function() {
        this.fetch({data: this.viewer().forFetch(),   processData:  true, cache : false});
     },
@@ -328,6 +364,35 @@ window.Document = Backbone.Model.extend({
     allowsDD : function() {
         return this.preparation() && !this.isBasic();
     },
+    isAuthorAttachments: function() {
+      return this.authorattachments().length>0;
+    },
+    isSignatoryAttachments: function() {
+      return this.currentSignatory().attachments().length>0;
+    },
+    isUploadedAttachments: function() {
+      return this.canseeallattachments() && this.signatoryattachments().length>0;
+    },
+    currentSignatoryCanSign: function() {
+      var canSignAsSig = !this.currentViewerIsAuthor() &&
+                              this.currentSignatory()!=undefined &&
+                              this.currentSignatory().canSign();
+      var canSignAsAuthor = this.currentViewerIsAuthor()
+                              && this.awaitingauthor();
+      return canSignAsSig || canSignAsAuthor;
+    },
+    logo :function() {
+        return this.get("logo");
+    },
+    barsbackgroundcolor : function() {
+        return this.get("barsbackgroundcolor");
+    },
+    barsbackgroundtextcolor : function() {
+        return this.get("barsbackgroundtextcolor");
+    },
+    authoruser : function() {
+        return this.get("authoruser");
+    },
     parse: function(args) {
      var document = this;
      setTimeout(function() {
@@ -337,6 +402,13 @@ window.Document = Backbone.Model.extend({
      var extendedWithDocument = function(hash){
                 hash.document = document;
                 return hash; };
+     /**this way of doing it is safe for IE7 which doesnt
+      * naturally parse stuff like 2012-03-29 so new Date(datestr)
+      * doesnt work*/
+     var parseDate = function(datestr) {
+        var dateValues = datestr.split('-');
+        return new Date(dateValues[0],dateValues[1],dateValues[2]);
+     };
      return {
       title : args.title,
       files : _.map(args.files, function(fileargs) {
@@ -351,19 +423,24 @@ window.Document = Backbone.Model.extend({
       signatories : _.map(args.signatories, function(signatoryargs){
                 return new Signatory(extendedWithDocument(signatoryargs));
       }),
+      authoruser :  new DocumentAuthor(extendedWithDocument(args.author)),
       process: new Process(args.process),
       region: new Region(args.region),
       infotext : args.infotext,
       canberestarted : args.canberestarted,
       canbecanceled : args.canbecanceled,
+      canseeallattachments: args.canseeallattachments,
       status : args.status,
-      timeouttime  : args.timeouttime  == undefined ? undefined :  new Date(args.timeouttime),
+      timeouttime  : args.timeouttime  == undefined ? undefined :  parseDate(args.timeouttime),
       signorder : args.signorder,
       authorization : args.authorization,
       template : args.template,
       functionality : args.functionality,
       daystosign: args.daystosign,
       invitationmessage : args.invitationmessage,
+      logo : args.logo,
+      barsbackgroundcolor : args.barsbackgroundcolor,
+      barsbackgroundtextcolor :  args.barsbackgroundtextcolor,
       ready: true
       };
     }
@@ -379,15 +456,25 @@ window.DocumentDataFiller = {
         $(".documenttitle", object).text(title);
 
         // Filling unsigned signatories
-        var unsignedpartynotcurrent = [localization.you];
+        var unsignedpartynotcurrent = [];
+        var unsignedparty= [];
+
         var signatories = _.select(document.signatories(), function(signatory){
-            return signatory.signs() && !signatory.hasSigned() && !signatory.current();
+            return signatory.signs() && !signatory.hasSigned();
         });
 
         for(var i=0;i<signatories.length;i++)
-            unsignedpartynotcurrent.push(signatories[i].smartname());
-        var ls = listString(unsignedpartynotcurrent);
-        $(".unsignedpartynotcurrent", object).html(ls);
+            if (signatories[i].current())
+            {
+                unsignedparty.push(localization.you);
+            }
+            else
+            {
+                unsignedparty.push(signatories[i].smartname());
+                unsignedpartynotcurrent.push(signatories[i].smartname());
+            }
+        $(".unsignedpart", object).html(listString(unsignedparty));
+        $(".unsignedpartynotcurrent", object).html(listString(unsignedpartynotcurrent));
         return object;
         // Something more can come up
     }

@@ -1,10 +1,8 @@
 module Doc.TestJSON where
 
-import qualified Data.ByteString.UTF8 as BS
 import Test.Framework
 import Test.QuickCheck
 import Text.JSON
---import Text.JSON.String
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 
 import Util.JSON
@@ -26,7 +24,7 @@ documentJSONTests = testGroup "Document JSON tests" [
 
   testProperty "title must be equal"
   (\doc -> True ==>
-           (BS.toString $ documenttitle doc) == (fromJSONString $ fromRight $ jsget "title" (jsonDocumentForSignatory doc))),
+           (documenttitle doc) == (fromJSONString $ fromRight $ jsget "title" (jsonDocumentForSignatory doc))),
 
   testGroup "type must be correct" [
     testProperty "Signable Contract" 
@@ -93,16 +91,16 @@ dcrTest = doNTimes 100 $ do
                                             ("email",   JSObject $ toJSObject $
                                                         [("value", JSString $ toJSString em)])])]])]
       dcr :: Either String DocumentCreationRequest = Right $ DocumentCreationRequest {
-        dcrTitle = title,
+        dcrTitle = Just title,
         dcrType  = Signable Contract,
         dcrTags  = [],
         dcrInvolved = [InvolvedRequest { irRole = [SignatoryPartner],
-                                         irData = [SignatoryField FirstNameFT (BS.fromString fn) [],
-                                                   SignatoryField LastNameFT  (BS.fromString sn) [],
-                                                   SignatoryField EmailFT     (BS.fromString em) []],
+                                         irData = [SignatoryField FirstNameFT fn [],
+                                                   SignatoryField LastNameFT  sn [],
+                                                   SignatoryField EmailFT     em []],
                                          irAttachments = [],
                                          irSignOrder = Nothing }],
-        dcrMainFile = mainfile,
+        dcrMainFile = Just mainfile,
         dcrAttachments = []
         }
   assertEqual ("Are not the same! " ++ show o ++ " and " ++ show dcr) o dcr

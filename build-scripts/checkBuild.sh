@@ -49,8 +49,6 @@ cat ../*.mime | python $DIR/build-scripts/getBuildInfo.py | grep "dist/build" | 
 echo "Checking binary sha512 sums from files"
 find checksums -type f -exec sha512sum -c {} \;
 
-# TODO check signature with Trustweaver
-
 cd ..
 
 # For https authentication of Trustweaver

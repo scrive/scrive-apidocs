@@ -22,6 +22,7 @@ import Doc.Model
 import Doc.DocStorage
 import Doc.DocView
 import Doc.DocUtils
+import IPAddress
 import Misc
 import System.Directory
 import System.Exit
@@ -45,17 +46,17 @@ import File.Model
 import DB.Classes
 import Control.Applicative
 import EvidenceLog.Model
-
+import Control.Concurrent
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
-    Seal.Person { Seal.fullname = (BS.toString $ getFullName details) ++
-                                  if not (BS.null $ getPersonalNumber details)
-                                     then " (" ++ (BS.toString $ getPersonalNumber details) ++ ")"
+    Seal.Person { Seal.fullname = (getFullName details) ++
+                                  if not (null $ getPersonalNumber details)
+                                     then " (" ++ (getPersonalNumber details) ++ ")"
                                      else ""
-                , Seal.company = BS.toString $ getCompanyName details
-                , Seal.email = BS.toString $ getEmail details
-                , Seal.personalnumber = BS.toString $ getPersonalNumber details
-                , Seal.companynumber = BS.toString $ getCompanyNumber details
+                , Seal.company = getCompanyName details
+                , Seal.email = getEmail details
+                , Seal.personalnumber = getPersonalNumber details
+                , Seal.companynumber = getCompanyNumber details
                 , Seal.fullnameverified = False
                 , Seal.companyverified = False
                 , Seal.numberverified = False
@@ -92,7 +93,7 @@ personsFromDocument document =
               , signinfo
               , isAuthor sl
               , maybe Nothing (Just . signatureinfoprovider) signatorysignatureinfo
-              , map head $ words $ BS.toString $ getFullName signatorydetails
+              , map head $ words $ getFullName signatorydetails
               )
                   where fullnameverified = maybe False (\s -> signaturefstnameverified s
                                                         && signaturelstnameverified s)
@@ -111,7 +112,7 @@ fieldsFromSignatory SignatoryDetails{signatoryfields} =
                          SignatureFT -> map (fieldJPEGFromPlacement (sfValue sf)) (sfPlacements sf) 
                          _ -> map (fieldFromPlacement (sfValue sf)) (sfPlacements sf) 
     fieldFromPlacement sf placement = Seal.Field {
-        Seal.value = BS.toString sf
+        Seal.value = sf
       , Seal.x = placementx placement
       , Seal.y = placementy placement
       , Seal.page = placementpage placement
@@ -119,7 +120,7 @@ fieldsFromSignatory SignatoryDetails{signatoryfields} =
       , Seal.h = placementpageheight placement
      }
     fieldJPEGFromPlacement sf placement = Seal.FieldJPG
-      { valueBase64      =  dropWhile (\c -> c == ';' || c == ',') $ BS.toString sf
+      { valueBase64      =  dropWhile (\c -> c == ';' || c == ',') sf
       , Seal.x = placementx placement
       , Seal.y = placementy placement + 17 -- Fix for signature box header from UI
       , Seal.page = placementpage placement
@@ -170,7 +171,7 @@ sealSpecFromDocument hostpart document elog inputpath outputpath =
                                        documentInfoFields document
                                        documentAuthorInfo document
                                        field "oneSignatory"  (length signatories>1)
-                                       field "personname" $  listToMaybe $ map  (BS.toString . getFullName)  signatoriesdetails
+                                       field "personname" $ listToMaybe $ map getFullName  signatoriesdetails
                                        field "ip" $ formatIP ipnumber
                                    return  [ Seal.HistEntry
                                       { Seal.histdate = show time
@@ -210,7 +211,7 @@ sealSpecFromDocument hostpart document elog inputpath outputpath =
       -- Log.debug ("read texts: " ++ show readtexts)
 
       -- Creating HTML Evidence Log
-      htmllogs <- htmlDocFromEvidenceLog (BS.toString $ documenttitle document) elog
+      htmllogs <- htmlDocFromEvidenceLog (documenttitle document) elog
       let evidenceattachment = Seal.SealAttachment { Seal.fileName = "evidencelog.html"
                                                    , Seal.fileBase64Content = BS.toString $ B64.encode $ BS.fromString htmllogs }
 
@@ -273,10 +274,11 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplat
     let tmpout = tmppath ++ "/output.pdf"
     content <- liftIO $ getFileContents ctx file
     liftIO $ BS.writeFile tmpin content
-
     config <- runTemplatesT (ctxlocale, ctxglobaltemplates) $ sealSpecFromDocument ctxhostpart document elog tmpin tmpout
     Log.debug $ "Config " ++ show config
     (code,_stdout,stderr) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
+    liftIO $ threadDelay 500000
+
     Log.debug $ "Sealing completed with " ++ show code
     case code of
       ExitSuccess -> do
@@ -295,7 +297,7 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplat
                 Log.trustWeaver $ msg
                 return newfilepdf1
               Right result -> do
-                let msg = "TrustWeaver signed doc #" ++ show documentid ++ " file #" ++ show fileid ++ ": " ++ BS.toString documenttitle
+                let msg = "TrustWeaver signed doc #" ++ show documentid ++ " file #" ++ show fileid ++ ": " ++ documenttitle
                 Log.trustWeaver msg
                 return result
         Log.debug $ "Adding new sealed file to DB"

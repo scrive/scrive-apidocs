@@ -77,7 +77,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
         var attachmentsList = this.model;
         var box = $("<div class='option-box'>");
         var header = $("<div class='header'/>").text(localization.selectFileToUpload);
-        var subheader = $("<div class='sheader'/>").text(localization.onlyPDFAllowed);
+        var subheader = $("<div class='sheader'/>").text(localization.onlyPDF);
         this.uploadButton = UploadButton.init({
                 color : "green",
                 size: "small",
@@ -160,7 +160,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
                 })
             });
         documentsTable.view.render();
-        box.append(documentsTable.view.el);
+        box.append($(documentsTable.view.el));
         return box;
     },
     attachmentList : function() {
@@ -184,7 +184,7 @@ var DesignAuthorAttachmentsView = Backbone.View.extend({
         this.attachmentListBox.append(this.attachmentList());
     },
     render: function () {
-        this.container = this.el;
+        this.container = $(this.el);
         this.container.addClass("selectAuthorAttachmentPopupContent");
         this.container.empty();
         if (!this.showAvaibleAttachmentsList) {
@@ -218,7 +218,7 @@ window.DesignAuthorAttachmentsPopup = {
          var model = new DesignAuthorAttachments({ document : document  });
          var view = new DesignAuthorAttachmentsView({model : model, el : $("<div/>")})
          Confirmation.popup({
-              content  : view.el,
+              content  : $(view.el),
               title  : localization.attachments.selectAttachments,
               acceptText: localization.attachments.attach,
               width: "800px",
@@ -228,14 +228,19 @@ window.DesignAuthorAttachmentsPopup = {
                   _.each(model.attachments(), function(att){
                       var name = "attachment_" + counter;
                       if (att.isServerFile())
-                        submit.add(name,att.serverFileId());
+                        submit.add(name, att.serverFileId());
                       else
-                        submit.addInputs(att.fileUpload().attr("name",name));
+                        submit.addInputs(att.fileUpload().attr("name", name));
                       counter++;     
-                   })
-                  
-                  submit.send();
-                  return false;
+                   });
+
+                submit.success(function(){
+                  SessionStorage.set(document.documentid(), "step", "3");
+                  window.location = window.location;
+                });
+                LoadingDialog.open();
+                submit.send();
+                return false;
             }
 
 
@@ -391,7 +396,7 @@ var DesignSignatoryAttachmentsView = Backbone.View.extend({
     render: function () {
         var view = this;
         var attachments = this.model;
-        this.container = this.el;
+        this.container = $(this.el);
         this.container.addClass("designSignatoryAttachmentsPopupContent");
         this.container.empty();
         if (!attachments.isEmpty())
@@ -420,7 +425,7 @@ window.DesignSignatoryAttachmentsPopup = {
          var model = new DesignSignatoryAttachments({ document : document  });
          var view = new DesignSignatoryAttachmentsView({model : model, el : $("<div/>")})
          Confirmation.popup({
-              content  : view.el,
+              content  : $(view.el),
               title  : localization.signatoryAttachments.requestAttachments,
               acceptText: localization.save,
               width: "800px",

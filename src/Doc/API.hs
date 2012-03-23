@@ -15,18 +15,17 @@ import Doc.JSON
 import Control.Monad.Trans
 import Misc
 import Data.Maybe
-import Util.MonadUtils
 
-import Text.JSON.String
+--import Text.JSON.String
 
 --import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS hiding (length)
+--import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.ByteString.Lazy as BSL
 import Util.SignatoryLinkUtils
 import Util.HasSomeUserInfo
 import Happstack.Server.RqData
 import Doc.DocStorage
-import qualified Doc.DocControl as DocControl
+--import qualified Doc.DocControl as DocControl
 --import Doc.DocControl
 --import Control.Concurrent.MVar
 
@@ -41,12 +40,12 @@ import API.Monad
 import Control.Monad.Error
 import qualified Log
 import Stats.Control
-import Control.Applicative
+--import Control.Applicative
 --import Data.String.Utils
 --import MinutesTime
 import EvidenceLog.Model
 
-documentAPI :: Route (Kontra Response)
+documentAPI :: Route (Kontra' Response)
 documentAPI = choice [
   dir "api" $ dir "document" $ hPostNoXToken $ toK0 $ documentNew,
 --  dir "api" $ dir "document" $ hGet          $ toK1 $ documentView,
@@ -128,7 +127,7 @@ documentNewMultiPart = do
   -- pdf exists  
   Input contentspec (Just filename') _contentType <- apiGuardL (badInput "The main file of the document must be attached in the MIME part 'file'.") $ getDataFn' (lookInput "file")
   
-  let filename = (BS.fromString $ basename filename')
+  let filename = basename filename'
       
   content1 <- case contentspec of
     Left filepath -> liftIO $ BSL.readFile filepath
@@ -138,14 +137,17 @@ documentNewMultiPart = do
   -- we use gs to do that of course
   ctx <- getContext
   
-  d1 <- apiGuardL' $ runDBUpdate $ NewDocument user mcompany filename doctype actor
-  content <- apiGuardL (badInput "The PDF was invalid.") $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
-  file <- lift $ runDB $ dbUpdate $ NewFile filename content
+  let aa = AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (getEmail user)
+  d1 <- apiGuardL' $ runDBUpdate $ NewDocument user mcompany filename doctype 1 aa 
+  
+  file <- lift $ runDBUpdate $ NewFile filename $ concatChunks content1
 
   d2 <- apiGuardL' $ runDBUpdate $ AttachFile (documentid d1) (fileid file) actor
   _ <- lift $ addDocumentCreateStatEvents d2
   return $ Created $ jsonDocumentForAuthor d2 (ctxhostpart ctx)
 
+--documentView :: (Kontrakcja m) => DocumentID -> m Response
+--documentView (_ :: DocumentID) = api $  undefined
 data SignatoryResource = SignatoryResource
 instance FromReqURI SignatoryResource where
     fromReqURI s = Just SignatoryResource <| s == "signatory" |> Nothing
@@ -178,7 +180,7 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   sl  <- apiGuard (forbidden "There is no signatory by that id.") $ getSigLinkFor doc sid
   let email = getEmail sl
   
-  sigattach <- apiGuard (forbidden "There is not signatory attachment request of that name.") $ getSignatoryAttachment email (BS.fromString aname) doc
+  sigattach <- apiGuard (forbidden "There is no signatory attachment request of that name.") $ getSignatoryAttachment doc slid aname
   
   -- attachment must have no file
   apiGuard (actionNotAvailable "There is already a file attached for that attachment request.") (isNothing $ signatoryattachmentfile sigattach)
@@ -196,12 +198,12 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
 
   content <- apiGuardL (badInput "The PDF was invalid.") $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
   
-  file <- lift $ runDB $ dbUpdate $ NewFile (BS.fromString $ basename filename) content
-  let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) (BS.toString email) slid
-  d <- apiGuardL' $ runDBUpdate $ SaveSigAttachment (documentid doc) (BS.fromString aname) email (fileid file) actor
+  file <- lift $ runDBUpdate $ NewFile (basename filename) content
+  let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) email slid
+  d <- apiGuardL' $ runDBUpdate $ SaveSigAttachment (documentid doc) sid aname (fileid file) actor
   
   -- let's dig the attachment out again
-  sigattach' <- apiGuard' $ getSignatoryAttachment email (BS.fromString aname) d
+  sigattach' <- apiGuard' $ getSignatoryAttachment d sid aname
   
   return $ Created $ jsonSigAttachmentWithFile sigattach' (Just file)
 
@@ -217,16 +219,16 @@ documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
   
   
   -- sigattachexists
-  sigattach <- apiGuard (forbidden "The attachment with that name does not exist for the signatory.") $ getSignatoryAttachment email (BS.fromString aname) doc
+  sigattach <- apiGuard (forbidden "The attachment with that name does not exist for the signatory.") $ getSignatoryAttachment doc sid aname
 
   -- attachment must have a file
   fileid <- apiGuard (actionNotAvailable "That signatory attachment request does not have a file uploaded for it, or it has been previously deleted.") $ signatoryattachmentfile sigattach
 
-  d <- apiGuardL' $ runDBUpdate $ DeleteSigAttachment (documentid doc) email fileid 
-       (SignatoryActor ctxtime ctxipnumber muid (BS.toString email) sid)
+  d <- apiGuardL' $ runDBUpdate $ DeleteSigAttachment (documentid doc) sid fileid 
+       (SignatoryActor ctxtime ctxipnumber muid email sid)
   
   -- let's dig the attachment out again
-  sigattach' <- apiGuard' $ getSignatoryAttachment email (BS.fromString aname) d
+  sigattach' <- apiGuard' $ getSignatoryAttachment d sid aname
   
   return $ jsonSigAttachmentWithFile sigattach' Nothing
 

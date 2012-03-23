@@ -1,8 +1,8 @@
 /* We have a lot of popups where body if a preview of the mail.
  * This modal downloads email preview from server and shows such modal allowing edit of some part of email
- * 
+ *
 */
-  
+
 $(function(){
 
 /* InfoTextInput model. Has value, infotext and information if its focused  */
@@ -10,7 +10,8 @@ window.Mail = Backbone.Model.extend({
 	defaults : {
 		ready : false,
 		content : jQuery("<div/>"),
-		editable : false
+		editable : false,
+		editWidth: 540
 	},
 	initialize: function (args) {
 		var sigid = args.signatory != undefined ? args.signatory.signatoryid() : "0";
@@ -19,7 +20,7 @@ window.Mail = Backbone.Model.extend({
     },
 	parse : function(response) {
 		this.set({
-			content : $("<div>").html(response.content), 
+			content : $("<div>").html(response.content),
 			ready : true
 		});
 		this.trigger('ready');
@@ -35,7 +36,10 @@ window.Mail = Backbone.Model.extend({
 	},
 	ready : function() {
 		return this.get("ready");
-	}
+	},
+        editWidth: function() {
+                return this.get("editWidth");
+        }
 });
 
 window.MailView = Backbone.View.extend({
@@ -51,7 +55,9 @@ window.MailView = Backbone.View.extend({
 	{	var view = this;
 		var content = this.model.content().clone();
 		var editablePart = $(".editable", content);
-        var wrapper = $("<div/>").append($("<textarea style='width:540px;height:0px;border:0px;padding:0px;margin:0px'/>").html(editablePart.html()));
+        var textarea = $("<textarea style='height:0px;border:0px;padding:0px;margin:0px'/>").html(editablePart.html());
+        textarea.css("width", this.model.editWidth() + "px");
+        var wrapper = $("<div/>").append(textarea);
         wrapper.append(this.textarea);
         editablePart.replaceWith(wrapper);
 		$('textarea',wrapper).livequery(function() {
@@ -68,23 +74,28 @@ window.MailView = Backbone.View.extend({
 			});
 		});
 		return content;
-		
+
 	},
 	render : function() {
 		var mail = this.model;
-		var container = this.el;
-		if (!mail.ready()) return this;
-        container.empty();
-		if (!mail.editable())
-			container.append(mail.content());
-		else
-			container.append(this.editableMailContent());
-		return this;
+		var container = $(this.el);
+		if (!mail.ready()) {
+                    container.addClass('loadingMail')
+                }
+                else {
+                    container.removeClass('loadingMail')
+                    container.empty();
+                    if (!mail.editable())
+                            container.append(mail.content());
+                    else
+                            container.append(this.editableMailContent());
+                }
+               return this;
 	},
 	customtext : function() {
-		if (this.editor != undefined)  
+		if (this.editor != undefined)
 			return this.editor.val();
-			
+
 	}
 });
 
@@ -120,14 +131,14 @@ var ConfirmationWithEmailModel = Backbone.Model.extend({
   mail: function() {
        return this.get("mail");
   }
-  
+
 });
 
 
 var ConfirmationWithEmailView = Backbone.View.extend({
   events: {
         "click .close"  :  "reject",
-		"click .edit"  :  "edit"
+	"click .edit"  :  "edit"
     },
     initialize: function (args) {
         _.bindAll(this, 'render', 'reject');
@@ -139,23 +150,23 @@ var ConfirmationWithEmailView = Backbone.View.extend({
     render: function () {
        var model = this.model;
        var view = this;
-       this.el.addClass("modal-container");
-       this.el.addClass("email-preview");
-	   
+       $(this.el).addClass("modal-container");
+       $(this.el).addClass("email-preview");
+
 	   //Modal header
        var header = $("<div class='modal-header'><span class='modal-icon message'></span></div>");
        var title = $("<span class='modal-title'/>");
        title.append($("<h2/>").append(this.model.title()));
        header.append(title);
        header.append("<a class='modal-close close'/>");
-	   
+
 	   //Modal body
        var body = $("<div class='modal-body'>");
        var content = $("<div class='modal-content'>");
 	   var mailview = new MailView({model: model.mail(), el : $("<div/>")});
-       content.html(mailview.el);
+       content.html($(mailview.el));
        body.append(content);
-	   
+
 	   //Modal footer
        var footer = $("<div class='modal-footer'>");
        var cancelOption = $("<a class='cancel close float-left'/>");
@@ -168,17 +179,17 @@ var ConfirmationWithEmailView = Backbone.View.extend({
                                  size: "small",
                                  cssClass: "float-right",
                                  text: this.model.acceptText(),
-                                 onClick : function() { 
+                                 onClick : function() {
 									 var customtext = mailview.customtext();
-									 var res = model.accept(customtext); 
-                                                                         if (res == true) view.el.data("overlay").close();
-									 
+									 var res = model.accept(customtext);
+                                                                         if (res == true) $(view.el).data("overlay").close();
+
 								}
         });
        footer.append(accept.input());
-       this.el.append(header);
-       this.el.append(body);
-       this.el.append(footer);
+       $(this.el).append(header);
+       $(this.el).append(body);
+       $(this.el).append(footer);
        return this;
     },
     reject: function(){
@@ -192,7 +203,7 @@ var ConfirmationWithEmailView = Backbone.View.extend({
     clear: function(){
         this.model.destroy();
         this.model.view = undefined;
-        this.el.remove();
+        $(this.el).remove();
     }
 
 });
@@ -200,34 +211,19 @@ var ConfirmationWithEmailView = Backbone.View.extend({
 
 window.ConfirmationWithEmail = {
     popup: function (args) {
-          var model = new ConfirmationWithEmailModel({
-                      onAccept : args.onAccept,
-                      title  : args.title,
-                      acceptText: args.acceptText,
-                      acceptColor : args.acceptColor,
-                      rejectText: args.rejectText,
-					  editText : args.editText,
-                      mail  : args.mail
-                    });
+          var model = new ConfirmationWithEmailModel(args);
           var overlay = $("<div/>");
           var view = new ConfirmationWithEmailView({model : model, el : overlay});
-          whenReady(args.mail,function() {
-                    $("body").append(overlay);
-                    overlay.overlay({load: true,
+          $("body").append(overlay);
+          overlay.overlay({load: true,
                            target:overlay,
                            speed : 0,
                            mask: standardDialogMask,
                            top: standardDialogTop,
                            fixed: false
                           });
-          });
    }
-    
-};
 
-var whenReady = function(object, callback) {
-        if (object.ready()) callback();
-        else setTimeout(function() {whenReady(object,callback);},50);
 };
 
 });

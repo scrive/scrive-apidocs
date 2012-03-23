@@ -44,38 +44,35 @@ describe "sign up after signing a document" do
     @emailhelper.follow_link_in_latest_mail_for random_email
 
     puts "sign the doc"
-    (@wait.until { @driver.find_element :id => "signGuardCBox" }).click
-    (@wait.until { @driver.find_element :css => "#signViewBottomBoxContainerRight a" }).click
+    (@wait.until { @driver.find_element :css => ".sign a" }).click
+    (@wait.until { @driver.find_element :css => ".signguard input[type='checkbox']"  }).click
     (@wait.until { @driver.find_element :css => ".modal-container a.btn-small.float-right" }).click
 
-    puts "make sure we get a validation error - checkbox not checked"
-    (@wait.until { @driver.find_element :css => ".modal-footer .btn-small.float-right" }).click
-    @wait.until { @driver.find_element :css => ".failed-validation" }
-
-
     puts "we should be given the option to accept the tos"
-    @wait.until { @driver.find_element :id => "tosCBox" }.click
-    puts "make sure we get a red flash if we try to activate without filling in the password details"
-    (@wait.until { @driver.find_element :css => ".modal-footer .btn-small.float-right" }).click
-    @wait.until { @driver.find_element :css => ".failed-validation" }
+    @wait.until { @driver.find_element :css => ".tos input[type='checkbox']" }.click
+    puts "make sure we get invalid elements if we try to activate without filling in the password details"
+    (@wait.until { @driver.find_element :css => ".save .btn-small" }).click
+    @wait.until { @driver.find_element :css => ".invalid" }
 
-    puts "fill in the password details incorrectly and make sure we get red flash message"
+    puts "fill in the password details incorrectly and make sure we get invalid elements"
     (@wait.until { @driver.find_element :name => "password" }).send_keys "password-12"
     (@wait.until { @driver.find_element :name => "password2" }).send_keys "password-123"
-    (@wait.until { @driver.find_element :css => ".modal-footer .btn-small.float-right" }).click
-    @wait.until { @driver.find_element :css => ".failed-validation" }
+    (@wait.until { @driver.find_element :css => ".save .btn-small" }).click
+    @wait.until { @driver.find_element :css => ".invalid" }
 
+    puts "clear password2 and really activate"
     (@wait.until { @driver.find_element :name => "password2" }).send_keys "\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83"
     (@wait.until { @driver.find_element :name => "password2" }).send_keys "\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83"
     (@wait.until { @driver.find_element :name => "password2" }).send_keys "\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83\xEE\x80\x83"
 
     (@wait.until { @driver.find_element :name => "password2" }).send_keys "password-12"
-
-    puts "submit the signup form"
-    (@wait.until { @driver.find_element :css => ".modal-footer .btn-small.float-right" }).click
+    (@wait.until { @driver.find_element :css => ".save .btn-small" }).click
 
     puts "should be logged in"
-    @wait.until { @driver.find_element :css => "a.logout" }
+    @wait.until { @driver.find_element :css => ".save.done" }
+
+    puts "go to the server"
+    (@wait.until { @driver.find_element :css => ".start.btn" }).click();
 
     @loginhelper.logout
 

@@ -9,7 +9,7 @@ window.FieldPlacementView = Backbone.View.extend({
         if (args.model.isSignature())
             return new SignaturePlacementView(args);
         else return new StandardPlacementView(args);
-    },
+    }
 });
 
 window.FieldPlacementPlacedView = Backbone.View.extend({
@@ -17,7 +17,7 @@ window.FieldPlacementPlacedView = Backbone.View.extend({
         if (args.model.field().isSignature())
             return new SignaturePlacementPlacedView(args);
         else return new StandardPlacementPlacedView(args);
-    },
+    }
 });
 
 
@@ -29,8 +29,8 @@ var StandardPlacementView = Backbone.View.extend({
     },
     render: function() {
             var field =   this.model;
-            var box = this.el;
-            box.addClass('value');
+            var box = $(this.el);
+            box.addClass('placedfieldvalue value');
             box.text(field.nicetext());
             field.bind('change', function() {
                 box.text(field.nicetext());
@@ -47,16 +47,21 @@ var StandardPlacementPlacedView = Backbone.View.extend({
         this.render();
     },
     render: function() {
+            var view = this;
             var placement = this.model;
             var field =  placement.field();
             var document = field.signatory().document();
-            var place = this.el;
+            var place = $(this.el);
+            if (this.placed != true)
+            {   this.placed = true;
+                place.addClass('placedfield').css('position','absolute');
+                place.offset({
+                    left: placement.x(),
+                    top: placement.y()
+                });
+            }
+            place.empty();
             var fileview = field.signatory().document().mainfile().view;
-            place.addClass('placedfield').css('position','absolute');
-            place.offset({
-                left: placement.x(),
-                top: placement.y()
-            });
             place.append(new StandardPlacementView({model: placement.field(), el: $("<div/>")}).el);
             
             if (document.allowsDD())
@@ -86,6 +91,39 @@ var StandardPlacementPlacedView = Backbone.View.extend({
                             }))
                     }
             });
+            if (field.signatory().canSign() && !field.isClosed() && field.signatory().current() && view.inlineediting != true)
+            place.click(function() {
+                  if (view.inlineediting == true) return false;
+                  view.inlineediting = true;
+                  console.log('Input was clicked');
+                  var width = place.width() > 80 ? place.width() : 80;
+                  place.empty();
+                  var box = $("<div class='inlineEditing'/>").width(width+24);
+                  var iti = $("<input type='text'/>").val(field.value()).width(width+5);
+                  var acceptIcon = $("<span class='acceptIcon'/>");
+                  place.append(box.append(iti).append(acceptIcon));
+                  iti.focus();
+                  field.bind('change',function() { view.inlineediting  = false; view.render();});
+                  var accept =  function() {
+                      view.inlineediting = false;
+                      var val = iti.val();
+                      field.setValue(val);
+                      SessionStorage.set(field.signatory().document().documentid(),field.name(),val);
+                      field.trigger('change:inlineedited');
+                      view.render();
+                  }
+                  acceptIcon.click(function() {
+                      accept();
+                      return false;
+                  });
+                  iti.keypress(function(event) {
+                    if(event.which === 13)
+                    {   accept();
+                        return false;
+                    }   
+                  });
+                  return false;
+            })
             return this;
     }
 });
@@ -98,8 +136,8 @@ var SignaturePlacementViewForDrawing = Backbone.View.extend({
     render: function() {
             var view = this;
             var signatory = this.model.signatory();
-            var box = this.el;
-            box.append(SignatureDrawer.init({signaturefield : this.model}).view.el);
+            var box = $(this.el);
+            box.append($(SignatureDrawer.init({signaturefield : this.model}).view.el));
             return this;
     }
 });
@@ -127,7 +165,7 @@ var SignaturePlacementView = Backbone.View.extend({
     render: function() {
             var view = this;
             var signatory = this.model.signatory();
-            var box = this.el;
+            var box = $(this.el);
             box.empty();
             box.addClass('signatureBoxNotDrawing');
             box.append(this.header());
@@ -161,7 +199,7 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
             var field =  placement.field();
             var signatory =  field.signatory();
             var document = signatory.document();
-            var place = this.el;
+            var place = $(this.el);
             var fileview = field.signatory().document().mainfile().view;
             place.addClass('placedfield').css('position','absolute');
             place.offset({

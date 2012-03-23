@@ -35,10 +35,10 @@ var DocumentDesignView = Backbone.View.extend({
     },
     prerender: function(){
         this.contrainer = $("<div class='mainContainer' />");
-        this.el.append(this.contrainer);
-        this.el.addClass("body-container");
-        this.el.append("<div class='clearfix'/>");
-        this.el.append("<div class='spacer40'/>");
+        $(this.el).append(this.contrainer);
+        $(this.el).addClass("body-container");
+        $(this.el).append("<div class='clearfix'/>");
+        $(this.el).append("<div class='spacer40'/>");
        
     },
     titlerow : function() {
@@ -64,13 +64,21 @@ var DocumentDesignView = Backbone.View.extend({
         display.append(iconedit).append(titleshow);
         edit.append(iconok).append(titleedit);
         namepart.append(display).append(edit);
-        iconok.click(function() {
-            document.setTitle(titleedit.val());
-            titleshow.text(document.title());
-            edit.hide();
-            display.show();
-            return false;
-        });      
+        var fn = function() {
+          document.setTitle(titleedit.val());
+          titleshow.text(document.title());
+          edit.hide();
+          display.show();
+          return false;
+        };
+        iconok.click(fn);      
+        titleedit.keypress(function(event) {
+          if(event.which === 13)
+            return fn();
+        });
+        titleedit.blur(function() {
+          fn();
+        });
         iconedit.click(function() { 
             display.hide();
             edit.show();
@@ -115,8 +123,8 @@ var DocumentDesignView = Backbone.View.extend({
               document.makeTemplate();
               document.save().sendAjax(function() {
                                new Submit().send();
-                               return false;
                             });
+              return false;
                      });
         return a;
     },                                               
@@ -125,7 +133,7 @@ var DocumentDesignView = Backbone.View.extend({
         var box = $("<div class='signStepsBody basicMode'/>");
         document.fixForBasic();
         this.signatoriesView = new SignatoriesDesignBasicView({model: document, el: $("<div/>"), extra: this.finalBasicBox()})
-        box.append(this.signatoriesView.el);
+        box.append($(this.signatoriesView.el));
         return box;
     },
     finalBasicBox : function() {
@@ -145,7 +153,7 @@ var DocumentDesignView = Backbone.View.extend({
         var document = this.model;
         var box = $("<div class='signStepsBody advancedMode'/>");
         this.signatoriesView  = new SignatoriesDesignAdvancedView({model: document, el: $("<div/>") , extra: this.nextStepButton()})
-        box.append(this.signatoriesView.el);
+        box.append($(this.signatoriesView.el));
         return box;
     },
     nextStepButton : function() {
@@ -357,6 +365,7 @@ var DocumentDesignView = Backbone.View.extend({
         var box = $("<div class='authorattachmentssetup'/>");
         var icon = $("<span class='authorattachmentssetupicon'/>");
         var text = $("<span class='authorattachmentssetuptext'/>").text(localization.attachments.changeAuthorAttachments);
+        var countspan = $("<span class='countspan' />").text("(" + document.authorattachments().length + ")").appendTo(text);
         box.append(icon).append(text);
 
         box.click(function() {
@@ -371,8 +380,12 @@ var DocumentDesignView = Backbone.View.extend({
         var box = $("<div class='signatoryattachmentssetup'/>");
         var icon = $("<span class='signatoryattachmentssetupicon'/>");
         var text = $("<span class='signatoryattachmentssetuptext'/>").text(localization.signatoryAttachments.requestAttachments);
+        var countspan = $("<span class='countspan' />").text("(" + document.signatoryattachments().length + ")");
+      text.append(countspan);
         box.append(icon).append(text);
-
+        document.bind("change:attachments", function(){
+          countspan.text("(" + document.signatoryattachments().length + ")");
+        });
         box.click(function() {
             document.save().sendAjax();
             DesignSignatoryAttachmentsPopup.popup({document: document});
@@ -431,7 +444,8 @@ var DocumentDesignView = Backbone.View.extend({
                         text: document.process().signbuttontext(),
                         onClick: function() {
                             if (!view.verificationBeforeSendingOrSigning()) return;
-                               document.save().sendAjax( function() {view.signConfirmation()});   
+                               document.save().sendAjax();
+                               view.signConfirmation();
                         }
                       });
        else  
@@ -442,7 +456,8 @@ var DocumentDesignView = Backbone.View.extend({
                         text: document.process().sendbuttontext(),
                         onClick: function() {
                             if (!view.verificationBeforeSendingOrSigning()) return;
-                                document.save().sendAjax( function() {view.sendConfirmation()});    
+                                document.save().sendAjax();
+                                view.sendConfirmation();
                         }
                       });
         this.finalButtonBox.append(button.input())
@@ -480,7 +495,7 @@ var DocumentDesignView = Backbone.View.extend({
                   color : "blue",
                   icon : $("<span class='btn-symbol cross' style='margin-left: 10px'/>"),
                   text : document.process().signbuttontext(),
-                  onClick : function() {                    
+                  onClick : function() {
                       document.signByAuthor().send();
                     }
                 }).input();
@@ -506,7 +521,7 @@ var DocumentDesignView = Backbone.View.extend({
     sendConfirmation : function() {
        var document = this.model;
        var signatory = document.currentSignatory();
-       var content = $("<p>" + document.process().confirmsendtext() + " <strong class='documenttitle'/> " + localization.to + "<strong class='unsignedpartynotcurrent'/></p>");
+       var content = $("<p>" + document.process().confirmsendtext() + " <strong class='documenttitle'/> " + localization.to + "<span class='unsignedpartynotcurrent'/></p>");
        Confirmation.popup({
               title : document.process().confirmsendtitle(),
               acceptButton : Button.init({
@@ -580,41 +595,40 @@ var DocumentDesignView = Backbone.View.extend({
         var designbody2 = document.isBasic() ? $("Nothing") : this.designStep2();
 
         var file = KontraFile.init({file: document.mainfile()});
-        
         this.tabs = KontraTabs.init({
             title : this.titlerow(),
             tabsTail : (document.isBasic()) ? [this.switchFunctionalityOption()] : (!document.isTemplate()) ?  [this.saveAsTemplateOption()] : [] ,
             tabs: [
                 this.tab1 = new Tab({
                     name : document.isTemplate() ? localization.step1template : document.process().step1text(),
-                    clickable : false,    
+                    clickable : false    
                   }),
                 this.tab2 = new Tab({
                     name  : document.isTemplate() ? localization.step2template : document.isBasic() ? localization.step2basic : localization.step2normal,
-                    active :  document.isBasic() || SessionStorage.get(document.documentid, "step") != "3",
+                    active :  document.isBasic() || SessionStorage.get(document.documentid(), "step") != "3",
                     onActivate : function() {
-                         SessionStorage.set(document.documentid, "step", "2");
+                         SessionStorage.set(document.documentid(), "step", "2");
                     },    
                     elems : [
                               designbody1,
-                              file.view.el
+                              $(file.view.el)
                             ]  
                   }),
                 this.tab3 = new Tab({
                     name  : document.isTemplate() ? localization.step3template : localization.step3normal,
-                    active :  !document.isBasic() && SessionStorage.get(document.documentid, "step") == "3",
+                    active :  !document.isBasic() && SessionStorage.get(document.documentid(), "step") == "3",
                     onActivate : function() {
-                         SessionStorage.set(document.documentid, "step", "3");
+                         SessionStorage.set(document.documentid(), "step", "3");
                     },    
                     elems : [
                             designbody2,
-                            file.view.el
+                            $(file.view.el)
                             ],
                     disabled : document.isBasic()    
                   })
                 ]
         });
-        this.contrainer.append(this.tabs.view.el);
+        this.contrainer.append($(this.tabs.view.el));
 
         new ScrollFixer({object : designbody1.add(designbody2)});
     }
@@ -642,7 +656,6 @@ window.KontraDesignDocument = {
     init : function(args){
        this.model = new Document({
                         id : args.id
-                       
                     });
        this.view = new DocumentDesignView({
                         model: this.model,

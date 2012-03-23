@@ -10,6 +10,10 @@ import DB.Fetcher2
 import DB.Model
 import DB.Utils
 import Doc.Tables
+import Log
+import Doc.DocumentID
+import Doc.DocStateData()
+import qualified Data.ByteString as BS
 
 removeOldSignatoryLinkIDFromCancelationReason :: Migration
 removeOldSignatoryLinkIDFromCancelationReason = Migration {
@@ -44,6 +48,48 @@ addColumnToRecordInternalInsertionOrder =
       return ()
   }
 
+addDocumentIdIndexOnSignatoryLinks :: Migration
+addDocumentIdIndexOnSignatoryLinks =
+  Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 3
+  , mgrDo = do
+      kRunRaw $ "CREATE INDEX idx_signatory_links_document_id ON signatory_links(document_id)"
+      return ()
+  }
+
+addIdSerialOnSignatoryLinks :: Migration
+addIdSerialOnSignatoryLinks =
+  Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 4
+  , mgrDo = do
+      -- create the sequence
+      _ <- kRunRaw $ "CREATE SEQUENCE signatory_links_id_seq"
+      -- set start value to be one more than maximum already in the table or 1000 if table is empty
+      Just n <- getOne $ SQL "SELECT setval('signatory_links_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM signatory_links))" []
+      Log.debug $ "Table signatory_links has yet " ++ show (maxBound - n :: Int64) ++ " values to go"
+      -- and finally attach serial default value to files.id
+      _ <- kRunRaw $ "ALTER TABLE signatory_links ALTER id SET DEFAULT nextval('signatory_links_id_seq')"
+      return ()
+  }
+
+addIdSerialOnDocuments :: Migration
+addIdSerialOnDocuments =
+  Migration {
+    mgrTable = tableDocuments
+  , mgrFrom = 2
+  , mgrDo = do
+      -- create the sequence
+      _ <- kRunRaw $ "CREATE SEQUENCE documents_id_seq"
+      -- set start value to be one more than maximum already in the table or 1000 if table is empty
+      Just n <- getOne $ SQL "SELECT setval('documents_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM documents))" []
+      Log.debug $ "Table documents has yet " ++ show (maxBound - n :: Int64) ++ " values to go"
+      -- and finally attach serial default value to files.id
+      _ <- kRunRaw $ "ALTER TABLE documents ALTER id SET DEFAULT nextval('documents_id_seq')"
+      return ()
+  }
+
 addNameColumnInSignatoryAttachments :: Migration
 addNameColumnInSignatoryAttachments =
   Migration {
@@ -64,3 +110,45 @@ addCSVUploadDataFromDocumentToSignatoryLink =
         ++ " ADD COLUMN csv_contents TEXT NULL,"
         ++ " ADD COLUMN csv_signatory_index INTEGER NULL"
   }
+
+addSignatoryLinkIdToSignatoryAttachment :: Migration
+addSignatoryLinkIdToSignatoryAttachment =
+  Migration {
+    mgrTable = tableSignatoryAttachments
+  , mgrFrom = 2
+  , mgrDo = do
+    kRunRaw $ "ALTER TABLE signatory_attachments"
+      ++ " ADD COLUMN signatory_link_id BIGINT NOT NULL DEFAULT 0"
+    -- set the new column signatory_link_id from signatory_links that have the same email and document_id
+    kRunRaw $ "UPDATE signatory_attachments "
+      ++ "SET signatory_link_id = sl.id "
+      ++ "FROM signatory_links sl "
+      ++ "WHERE sl.document_id = signatory_attachments.document_id "
+      ++ "AND regexp_replace(sl.fields, '^.*EmailFT\",\"sfValue\":\"([a-zA-Z0-9@-_.]+)\".*$', E'\\\\1') = signatory_attachments.email"
+    kRunRaw $ "ALTER TABLE signatory_attachments DROP CONSTRAINT pk_signatory_attachments"
+    -- delete attachments which have emails and document_id that don't exist in signatory_links  
+    logAndDeleteBadAttachments
+    kRunRaw $ "ALTER TABLE signatory_attachments DROP COLUMN email"
+    kRunRaw $ "ALTER TABLE signatory_attachments ADD CONSTRAINT pk_signatory_attachments PRIMARY KEY (document_id, signatory_link_id, name)"
+    kRunRaw $ "ALTER TABLE signatory_attachments"
+      ++ " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(signatory_link_id, document_id)"
+      ++ " REFERENCES signatory_links(id, document_id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
+    kRunRaw $ "CREATE INDEX idx_signatory_attachments_signatory_link_id ON signatory_attachments(signatory_link_id)"
+  }
+  where
+    logAndDeleteBadAttachments :: DB ()
+    logAndDeleteBadAttachments = do 
+      kRunRaw $ "SELECT document_id, name, email, description FROM signatory_attachments WHERE signatory_link_id = 0"
+      atts <- foldDB decoder []
+      kRunRaw $ "DELETE FROM signatory_attachments WHERE signatory_link_id = 0"
+      mapM_ (\(d, n, e, s) -> 
+        Log.debug $ "Deleted bad attachment: document_id = " ++ show d
+                 ++ ", name = " ++ show n
+                 ++ ", email = " ++ show e
+                 ++ ", description = " ++ show s) atts
+      return ()
+      where
+        decoder :: [(DocumentID, BS.ByteString, BS.ByteString, BS.ByteString)] -> DocumentID -> BS.ByteString -> BS.ByteString -> BS.ByteString -> [(DocumentID, BS.ByteString, BS.ByteString, BS.ByteString)]
+        decoder acc docid name email desc = (docid, name, email, desc) : acc
+

@@ -17,7 +17,6 @@ module Mails.Events (
 
 import Data.Maybe
 import Control.Monad.Reader
-import qualified Data.ByteString.UTF8 as BS
 
 import AppConf
 import ActionScheduler
@@ -57,7 +56,7 @@ processEvents = runDBQuery GetUnreadEvents >>= mapM_ processEvent
             Just doc -> do
               let msl = getSigLinkFor doc signlinkid
                   muid = maybe Nothing maybesignatory msl
-              let signemail = maybe "" (BS.toString . getEmail) msl
+              let signemail = maybe "" getEmail msl
               sd <- ask
               templates <- getGlobalTemplates
               let host = hostpart $ sdAppConf sd
@@ -114,7 +113,7 @@ handleDeliveredInvitation mc doc signlinkid = do
           to = [getMailAddress $ fromJust $ getAuthorSigLink doc]
         }
       time <- getMinutesTime
-      let actor = MailSystemActor time (maybesignatory signlink) (BS.toString $ getEmail signlink) signlinkid
+      let actor = MailSystemActor time (maybesignatory signlink) (getEmail signlink) signlinkid
       _ <- runDBUpdate $ SetInvitationDeliveryStatus (documentid doc) signlinkid Delivered actor
       return ()
     Nothing -> return ()
@@ -151,7 +150,7 @@ handleUndeliveredInvitation (hostpart, mc) doc signlinkid = do
   case getSigLinkFor doc signlinkid of
     Just signlink -> do
       time <- getMinutesTime
-      let actor = MailSystemActor time (maybesignatory signlink) (BS.toString $ getEmail signlink) signlinkid
+      let actor = MailSystemActor time (maybesignatory signlink) (getEmail signlink) signlinkid
       _ <- runDBUpdate $ SetInvitationDeliveryStatus (documentid doc) signlinkid Undelivered actor
       mail <- mailUndeliveredInvitation hostpart doc signlink
       scheduleEmailSendout mc $ mail {
@@ -164,7 +163,7 @@ mailDeliveredInvitation doc signlink =
   kontramail "invitationMailDeliveredAfterDeferred" $ do
     field "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
     field "email" $ getEmail signlink
-    field "documenttitle" $ BS.toString $ documenttitle doc
+    field "documenttitle" $ documenttitle doc
 
 mailDeferredInvitation :: TemplatesMonad m => String -> Document -> m Mail
 mailDeferredInvitation hostpart doc = kontramail "invitationMailDeferred" $ do

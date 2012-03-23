@@ -109,6 +109,7 @@ var SignatureForDrawingView = Backbone.View.extend({
                         text: "Done",
                         onClick : function() {
                              view.model.makeReady(view.canvas[0].toDataURL("image/jpeg"));
+                             view.reloadonrender = true;
                              view.unzoom();
                         }
                     }).input();
@@ -267,6 +268,11 @@ var SignatureForDrawingView = Backbone.View.extend({
           img.src = image;
           img.onload = function() {
                 view.picture.drawImage(img,0,0,view.canvas[0].width,view.canvas[0].height);
+                if (view.reloadonrender == true)
+                {
+                    view.model.setImage(view.canvas[0].toDataURL("image/jpeg",1.0));
+                    view.reloadonrender = false;
+                }
           };
        }
     },
@@ -288,7 +294,6 @@ var SignatureForDrawingView = Backbone.View.extend({
         this.container.append(this.signatureBoxTitle());
         
         this.canvas = $("<canvas class='signatureCanvas'  width='250' height='100'/>");
-         //ToolTip.set({on: this.canvas, tip : $("<span> Accept signatue </span>" )});
 
         this.picture =  this.canvas[0].getContext('2d');
         view.drawImage(this.model.image());

@@ -3,12 +3,11 @@ module UserHistoryTest (userHistoryTests) where
 import Test.HUnit (Assertion)
 import Test.Framework
 import Test.Framework.Providers.HUnit
-import qualified Data.ByteString.Char8 as BS
 import StateHelper
 import TestingUtil
+import IPAddress
 import Misc
 import DB.Classes
-import Data.Maybe
 import MinutesTime
 import User.Model
 import User.UserControl
@@ -18,7 +17,6 @@ import TestKontra as T
 import Control.Applicative
 import Happstack.Server
 import Templates.TemplatesLoader
---import AppControl
 import Text.JSON
 import ActionSchedulerState
 import Login
@@ -54,70 +52,66 @@ testLoginAttempt :: DBEnv -> Assertion
 testLoginAttempt env = withTestEnvironment env $ do
     User{userid} <- createTestUser
     now <- getMinutesTime
-    Just history <- dbUpdate $ LogHistoryLoginAttempt userid unknownIPAddress now
-    history2 <- dbQuery $ GetUserHistoryByID $ uhid history
-    assert (isJust history2)
-    assertEqual "For LogHistoryLoginAttempt result" history (fromJust history2)
+    success <- dbUpdate $ LogHistoryLoginAttempt userid noIP now
+    assertBool "LogHistoryLoginAttempt inserted correctly" success
+    history <- dbQuery $ GetUserHistoryByUserID userid
+    assertBool "User's history is not empty" (not $ null history)
 
 testLoginSuccess :: DBEnv -> Assertion
 testLoginSuccess env = withTestEnvironment env $ do
     User{userid} <- createTestUser
     now <- getMinutesTime
-    Just history <- dbUpdate $ LogHistoryLoginSuccess userid unknownIPAddress now
-    history2 <- dbQuery $ GetUserHistoryByID $ uhid history
-    assert (isJust history2)
-    assertEqual "For LogHistoryLoginSuccess result" history (fromJust history2)
+    success <- dbUpdate $ LogHistoryLoginSuccess userid noIP now
+    assertBool "LogHistoryLoginSuccess inserted correctly" success
+    history <- dbQuery $ GetUserHistoryByUserID userid
+    assertBool "User's history is not empty" (not $ null history)
 
 testPasswordSetup :: DBEnv -> Assertion
 testPasswordSetup env = withTestEnvironment env $ do
     User{userid} <- createTestUser
     now <- getMinutesTime
-    Just history <- dbUpdate $ LogHistoryPasswordSetup userid unknownIPAddress now Nothing
-    history2 <- dbQuery $ GetUserHistoryByID $ uhid history
-    assert (isJust history2)
-    assertEqual "For LogHistoryPasswordSetup result" history (fromJust history2)
+    success <- dbUpdate $ LogHistoryPasswordSetup userid noIP now Nothing
+    assertBool "LogHistoryPasswordSetup inserted correctly" success
+    history <- dbQuery $ GetUserHistoryByUserID userid
+    assertBool "User's history is not empty" (not $ null history)
 
 testPasswordSetupReq :: DBEnv -> Assertion
 testPasswordSetupReq env = withTestEnvironment env $ do
     User{userid} <- createTestUser
     now <- getMinutesTime
-    Just history <- dbUpdate $ LogHistoryPasswordSetupReq userid unknownIPAddress now Nothing
-    history2 <- dbQuery $ GetUserHistoryByID $ uhid history
-    assert (isJust history2)
-    assertEqual "For LogHistoryPasswordSetupReq result" history (fromJust history2)
+    success <- dbUpdate $ LogHistoryPasswordSetupReq userid noIP now Nothing
+    assertBool "LogHistoryPasswordSetupReq inserted correctly" success
+    history <- dbQuery $ GetUserHistoryByUserID userid
+    assertBool "User's history is not empty" (not $ null history)
 
 testAccountCreated :: DBEnv -> Assertion
 testAccountCreated env = withTestEnvironment env $ do
     User{userid} <- createTestUser
     now <- getMinutesTime
-    Just history <- dbUpdate $ 
-                    LogHistoryAccountCreated userid unknownIPAddress now 
-                                            (Email $ BS.pack"test@test.com") 
-                                            Nothing
-    history2 <- dbQuery $ GetUserHistoryByID $ uhid history
-    assert (isJust history2)
-    assertEqual "For LogHistoryAccountCreated result" history (fromJust history2)
+    success <- dbUpdate $ LogHistoryAccountCreated userid noIP now
+      (Email "test@test.com") Nothing
+    assertBool "LogHistoryAccountCreated inserted correctly" success
+    history <- dbQuery $ GetUserHistoryByUserID userid
+    assertBool "User's history is not empty" (not $ null history)
 
 testTOSAccept :: DBEnv -> Assertion
 testTOSAccept env = withTestEnvironment env $ do
     User{userid} <- createTestUser
     now <- getMinutesTime
-    Just history <- dbUpdate $ LogHistoryTOSAccept userid unknownIPAddress now Nothing
-    history2 <- dbQuery $ GetUserHistoryByID $ uhid history
-    assert (isJust history2)
-    assertEqual "For LogHistoryTOSAccept result" history (fromJust history2)
+    success <- dbUpdate $ LogHistoryTOSAccept userid noIP now Nothing
+    assertBool "LogHistoryTOSAccept inserted correctly" success
+    history <- dbQuery $ GetUserHistoryByUserID userid
+    assertBool "User's history is not empty" (not $ null history)
 
 testDetailsChanged :: DBEnv -> Assertion
 testDetailsChanged env = withTestEnvironment env $ do
     User{userid} <- createTestUser
     now <- getMinutesTime
-    Just history <- dbUpdate $ 
-                    LogHistoryDetailsChanged userid unknownIPAddress now 
-                                             [("email", "test@test.com", "test2@test.com")] 
-                                             Nothing
-    history2 <- dbQuery $ GetUserHistoryByID $ uhid history
-    assert (isJust history2)
-    assertEqual "For LogHistoryDetailsChanged result" history (fromJust history2)
+    success <- dbUpdate $ LogHistoryDetailsChanged userid noIP now
+      [("email", "test@test.com", "test2@test.com")] Nothing
+    assertBool "LogHistoryTOSAccept inserted correctly" success
+    history <- dbQuery $ GetUserHistoryByUserID userid
+    assertBool "User's history is not empty" (not $ null history)
 
 testHandlerForLoginAttempt :: DBEnv -> Assertion
 testHandlerForLoginAttempt env = withTestEnvironment env $ do
@@ -130,10 +124,9 @@ testHandlerForLoginAttempt env = withTestEnvironment env $ do
                           ]
     _ <- runTestKontra req ctx $ handleLoginPost
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
-    assertBool "History log exists" $ 
-               (isJust history) && (not . null $ fromJust history)
+    assertBool "History log exists" (not . null $ history)
     assertBool "History log contains login attempt event" 
-                $ compareEventTypeFromList UserLoginAttempt $ fromJust history
+                $ compareEventTypeFromList UserLoginAttempt history
 
 testHandlerForLoginSuccess :: DBEnv -> Assertion
 testHandlerForLoginSuccess env = withTestEnvironment env $ do
@@ -146,10 +139,9 @@ testHandlerForLoginSuccess env = withTestEnvironment env $ do
                           ]
     _ <- runTestKontra req ctx $ handleLoginPost
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
-    assertBool "History log exists" $ 
-               (isJust history) && (not . null $ fromJust history)
+    assertBool "History log exists" (not . null $ history)
     assertBool "History log contains login success event" 
-                $ compareEventTypeFromList UserLoginSuccess $ fromJust history
+                $ compareEventTypeFromList UserLoginSuccess history
 
 testHandlerForPasswordSetup :: DBEnv -> Assertion
 testHandlerForPasswordSetup env = withTestEnvironment env $ do
@@ -163,10 +155,9 @@ testHandlerForPasswordSetup env = withTestEnvironment env $ do
                           ]
     _ <- runTestKontra req ctx $ handlePostUserSecurity
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
-    assertBool "History log exists" $ 
-               (isJust history) && (not . null $ fromJust history)
+    assertBool "History log exists" (not . null $ history)
     assertBool "History log contains password setup event" 
-                $ compareEventTypeFromList UserPasswordSetup $ fromJust history
+                $ compareEventTypeFromList UserPasswordSetup $ history
 
 testHandlerForPasswordSetupReq :: DBEnv -> Assertion
 testHandlerForPasswordSetupReq env = withTestEnvironment env $ do
@@ -180,10 +171,9 @@ testHandlerForPasswordSetupReq env = withTestEnvironment env $ do
                           ]
     _ <- runTestKontra req ctx $ handlePostUserSecurity
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
-    assertBool "History log exists" $ 
-               (isJust history) && (not . null $ fromJust history)
+    assertBool "History log exists" (not . null $ history)
     assertBool "History log contains password setup event" 
-                $ compareEventTypeFromList UserPasswordSetupReq $ fromJust history
+                $ compareEventTypeFromList UserPasswordSetupReq $ history
 
 testHandlerForAccountCreated :: DBEnv -> Assertion
 testHandlerForAccountCreated env = withTestEnvironment env $ do
@@ -192,15 +182,14 @@ testHandlerForAccountCreated env = withTestEnvironment env $ do
       <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     req <- mkRequest POST [ ("email", inText "test@test.com")]
     _ <- runTestKontra req ctx $ signupPagePost
-    Just user <- dbQuery $ GetUserByEmail Nothing $ Email $ BS.pack "test@test.com"
+    Just user <- dbQuery $ GetUserByEmail Nothing $ Email "test@test.com"
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
-    assertBool "History log exists" $ 
-               (isJust history) && (not . null $ fromJust history)
+    assertBool "History log exists" (not . null $ history)
     assertBool "History log contains account created event" 
-               $ compareEventTypeFromList UserAccountCreated $ fromJust history
+               $ compareEventTypeFromList UserAccountCreated $ history
     assertBool "History log contains user's email"
                $ compareEventDataFromList [("email", "", "test@test.com")] 
-               $ fromJust history
+               $ history
 
 testHandlerForTOSAccept :: DBEnv -> Assertion
 testHandlerForTOSAccept env = withTestEnvironment env $ do
@@ -220,10 +209,9 @@ testHandlerForTOSAccept env = withTestEnvironment env $ do
                            ]
     _ <- runTestKontra req2 ctx1 $ handleAccountSetupPost aid token 
     history <- dbQuery $ GetUserHistoryByUserID uid
-    assertBool "History log exists" $ 
-               (isJust history) && (not . null $ fromJust history)
+    assertBool "History log exists" (not . null $ history)
     assertBool "History log contains TOS accept event"
-               $ compareEventTypeFromList UserTOSAccept $ fromJust history
+               $ compareEventTypeFromList UserTOSAccept $ history
 
 testHandlerForDetailsChanged :: DBEnv -> Assertion
 testHandlerForDetailsChanged env = withTestEnvironment env $ do
@@ -239,10 +227,9 @@ testHandlerForDetailsChanged env = withTestEnvironment env $ do
                           ]
     _ <- runTestKontra req ctx $ handleUserPost
     history <- dbQuery $ GetUserHistoryByUserID $ userid user
-    assertBool "History log exists" $ 
-               (isJust history) && (not . null $ fromJust history)
+    assertBool "History log exists" (not . null $ history)
     assertBool "History log contains details changed event" 
-                $ compareEventTypeFromList UserDetailsChange $ fromJust history
+                $ compareEventTypeFromList UserDetailsChange $ history
     assertBool "History log contains valid data"
                $ compareEventDataFromList [
                       ("first_name", "", "Karol")
@@ -251,7 +238,7 @@ testHandlerForDetailsChanged env = withTestEnvironment env $ do
                     , ("company_position", "", "Engineer")
                     , ("phone", "", "2221122")
                     ] 
-               $ fromJust history
+               $ history
 
 compareEventTypeFromList :: UserHistoryEventType -> [UserHistory] -> Bool
 compareEventTypeFromList t l = not . null . filter (\h -> (uheventtype . uhevent $ h) == t) $ l
@@ -266,9 +253,9 @@ compareEventDataFromList d l = (uheventdata . uhevent . head $ l) == (Just $ JSA
 
 createTestUser :: DB User
 createTestUser = do
-    pwd <- createPassword $ BS.pack "test_password"
-    muser <- dbUpdate $ AddUser (BS.empty, BS.empty) 
-                                (BS.pack "karol@skrivapa.se") 
+    pwd <- createPassword "test_password"
+    muser <- dbUpdate $ AddUser ("", "")
+                                "karol@skrivapa.se"
                                 (Just pwd) 
                                 False 
                                 Nothing 

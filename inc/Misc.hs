@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP, TupleSections #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-| Dump bin for things that do not fit anywhere else
 
@@ -10,19 +10,20 @@ Keep this one as unorganized dump.
 -}
 module Misc where
 
+import KontraError(KontraError, internalError)
+
 import Control.Applicative
 import Control.Arrow
 import Control.Concurrent
+import Control.Monad.Error (MonadError)
 import Control.Monad.State
 import Data.Char
 import Data.Data
 import Data.List
 import Data.Maybe
 import Data.Monoid
-import Data.Word
 import Numeric (readDec)
 import Happstack.Server hiding (simpleHTTP,dir)
-import Happstack.State
 import Happstack.Util.Common hiding  (mapFst,mapSnd)
 import System.Directory
 import System.Exit
@@ -38,7 +39,6 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS
-import Data.Bits
 import Network.HTTP (urlDecode)
 
 -- | Infix version of mappend, provided for convenience.
@@ -52,16 +52,8 @@ infixl 8  ||^
 infixr 9 $^ 
 infixr 9 $^^
 
-selectFormAction :: (HasRqData m, MonadIO m,MonadPlus m,ServerMonad m) => [(String,m a)] -> m a
-selectFormAction [] = mzero
-selectFormAction ((button,action):rest) = do
-  maybepressed <- getDataFn (look button)
-  either (\_ -> selectFormAction rest) (\_ -> action) maybepressed
-
-guardFormAction :: (HasRqData m, MonadIO m,ServerMonad m, MonadPlus m) => String -> m ()
-guardFormAction button = do
-  maybepressed <- getDataFn (look button)
-  either (\_ -> mzero) (\_ -> return ()) maybepressed
+randomPassword :: (MonadIO m, CryptoRNG m) => m String
+randomPassword = randomString 8 (['0'..'9'] ++ ['A'..'Z'] ++ ['a'..'z'])
 
 concatChunks :: BSL.ByteString -> BS.ByteString
 concatChunks = BS.concat . BSL.toChunks
@@ -70,54 +62,30 @@ concatChunks = BS.concat . BSL.toChunks
 -- chars.
 randomString :: (MonadIO m, CryptoRNG m) => Int -> [Char] -> m String
 randomString n allowed_chars =
-    sequence $ replicate n $ ((!!) allowed_chars `liftM` randomR (0, len))
-    where
-        len = length allowed_chars - 1
+  sequence $ replicate n $ ((!!) allowed_chars `liftM` randomR (0, len))
+  where
+    len = length allowed_chars - 1
 
--- | Extract data from GET or POST request. Fail with 'mzero' if param
+-- | Extract data from GET or POST request. Fail with 'internalError' if param
 -- variable not present or when it cannot be read.
-getDataFnM :: (HasRqData m, MonadIO m, ServerMonad m, MonadPlus m) => RqData a -> m a
-getDataFnM fun = do
-  m <- getDataFn fun
-  either (\_ -> mzero) (return) m
+getDataFnM :: (HasRqData m, MonadIO m, ServerMonad m, MonadError KontraError m) => RqData a -> m a
+getDataFnM fun = either (const internalError) return =<< getDataFn fun
 
 -- | Since we sometimes want to get 'Maybe' and also we wont work with
 -- newer versions of happstack here is.  This should be droped when
 -- new version is globaly established.
 getDataFn' :: (HasRqData m, MonadIO m, ServerMonad m) => RqData a -> m (Maybe a)
-getDataFn' fun = do
-  m <- getDataFn fun
-  either (\_ -> return Nothing) (return . Just ) m
+getDataFn' fun = either (const Nothing) Just `liftM` getDataFn fun
 
--- | This is a nice attempt at generating database queries directly
--- from URL parts.
-pathdb
-  :: (FromReqURI a,
-      MonadPlus m,
-      ServerMonad m,
-      MonadIO m,
-      QueryEvent a1 (Maybe t)) =>
-     (a -> a1) -> (t -> m b) -> m b
-pathdb getfn action = path $ \idd -> do
-  m <- query $ getfn idd
-  case m of
-    Nothing -> mzero
-    Just obj -> action obj
-
--- | Get param as strict ByteString instead of a lazy one.
-getAsStrictBS :: (HasRqData f, MonadIO f, ServerMonad f, MonadPlus f, Functor f) =>
-     String -> f BS.ByteString
-getAsStrictBS name = fmap concatChunks (getDataFnM (lookBS name))
+getAsString :: (HasRqData m, MonadIO m, ServerMonad m, MonadError KontraError m) => String -> m String
+getAsString = getDataFnM . look
 
 -- | Useful inside the 'RqData' monad.  Gets the named input parameter
 -- (either from a @POST@ or a @GET@)
 lookInputList :: String -> RqData [BSL.ByteString]
-lookInputList name
-    = do
-         inputs <- (\(a, b, _) -> a ++ fromMaybe [] b) <$> askRqEnv
-         let isname (xname,(Input value _ _)) | xname == name = [value]
-             isname _ = []
-         return [value | k <- inputs, eithervalue <- isname k, Right value <- [eithervalue]]
+lookInputList name = do
+  inputs <- lookInputs name
+  return [value | Input (Right value) _ _ <- inputs]
 
 -- | Create an external process with arguments. Feed it input, collect
 -- exit code, stdout and stderr.
@@ -187,20 +155,6 @@ readCurl :: [String]                 -- ^ any arguments
          -> IO (ExitCode,BSL.ByteString,BSL.ByteString) -- ^ exitcode, stdout, stderr
 readCurl args input = readProcessWithExitCode' curl_exe args input
 
-
--- | Run action, record failure if any.
-logErrorWithDefault :: IO (Either String a)  -- ^ action to run
-                    -> b                     -- ^ default value in case action failed
-                    -> (a -> IO b)           -- ^ action that uses value
-                    -> IO b                  -- ^ result
-logErrorWithDefault c d f = do
-    c' <- c
-    case c' of
-        Right c'' ->  f c''
-        Left err  ->  do
-                Log.error err
-                return d
-
 -- | Select first alternative from a list of options.
 --
 -- Remeber LISP and its cond!
@@ -214,17 +168,15 @@ allValues::(Bounded a, Enum a) => [a]
 allValues = enumFromTo minBound maxBound
 
 class HasDefaultValue a where
-    defaultValue :: a
+  defaultValue :: a
 
 instance (Bounded a) => HasDefaultValue a where
-    defaultValue = minBound
-
-
+  defaultValue = minBound
 
 -- | Extra classes for one way enums
 class SafeEnum a where
-    fromSafeEnum::(Integral b) =>  a -> b
-    toSafeEnum::(Integral b) =>  b -> Maybe a
+  fromSafeEnum :: Integral b =>  a -> b
+  toSafeEnum   :: Integral b =>  b -> Maybe a
 
 fromSafeEnumInt :: (SafeEnum a) => a -> Int
 fromSafeEnumInt = fromSafeEnum
@@ -239,42 +191,23 @@ for = flip map
 isFieldSet :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) => String -> f Bool
 isFieldSet name = isJust <$> getField name
 
-getFields :: (HasRqData m, MonadIO m, ServerMonad m,Functor m) => String -> m [String]
-getFields name = (map BSL.toString)  <$> (fromMaybe []) <$> getDataFn' (lookInputList name)
+getFields :: (HasRqData m, MonadIO m, ServerMonad m) => String -> m [String]
+getFields name = map BSL.toString `liftM` fromMaybe [] `liftM` getDataFn' (lookInputList name)
 
-getField :: (HasRqData m, MonadIO m, ServerMonad m,Functor m) => String -> m (Maybe String)
-getField name = listToMaybe . reverse <$> getFields name
+getField :: (HasRqData m, MonadIO m, ServerMonad m) => String -> m (Maybe String)
+getField name = (listToMaybe . reverse) `liftM` getFields name
 
-getFieldBS :: (HasRqData m, MonadIO m, ServerMonad m,Functor m) => String -> m (Maybe BSL.ByteString)
-getFieldBS name = getDataFn' (lookBS name)
+getField' :: (HasRqData m, MonadIO m, ServerMonad m) => String -> m String
+getField' name = fromMaybe "" `liftM` getField name
 
-getFieldUTF
-  :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) => String -> f (Maybe BS.ByteString)
-getFieldUTF name = (fmap BS.fromString) <$> getField name
-
-getFieldWithDefault
-  :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) => String -> String -> f String
-getFieldWithDefault d name =   (fromMaybe d) <$> getField name
-
-getFieldBSWithDefault
-  :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) =>
-     BSL.ByteString -> String -> f BSL.ByteString
-getFieldBSWithDefault  d name = (fromMaybe d) <$> getFieldBS name
-
-getFieldUTFWithDefault
-  :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) =>
-     BS.ByteString -> String -> f BS.ByteString
-getFieldUTFWithDefault  d name = (fromMaybe d) <$> getFieldUTF name
-
-readField
-  :: (HasRqData f, MonadIO f, Read a, Functor f, ServerMonad f) => String -> f (Maybe a)
+readField :: (HasRqData f, MonadIO f, Read a, Functor f, ServerMonad f) => String -> f (Maybe a)
 readField name =  (join . (fmap readM)) <$> getField name
 
-whenMaybe::(Functor m,Monad m) => Bool -> m a -> m (Maybe a)
-whenMaybe True  c = fmap Just c
+whenMaybe :: Monad m => Bool -> m a -> m (Maybe a)
+whenMaybe True  c = liftM Just c
 whenMaybe False _ = return Nothing
 
-getFileField:: (HasRqData f, MonadIO f, Functor f, ServerMonad f) => String -> f (Maybe BS.ByteString)
+getFileField :: (HasRqData f, MonadIO f, Functor f, ServerMonad f) => String -> f (Maybe BS.ByteString)
 getFileField name = do
     finput <- getDataFn (lookInput name)
     case finput of
@@ -296,10 +229,6 @@ joinEmpty m = do
                 if mv == mempty
                  then mzero
                  else return mv
-
-
-mapIf::(a -> Bool) -> (a -> a) -> [a] -> [a]
-mapIf cond f = map (\a -> if (cond a) then f a else a)
 
 {-| This function is useful when creating 'Typeable' instance when we
 want a specific name for type.  Example of use:
@@ -339,65 +268,64 @@ snd3 (_,b,_) = b
 thd3 :: (t1, t2, t3) -> t3
 thd3 (_,_,c) = c
 
+para :: String -> String
+para s = "<p>" ++ s ++ "</p>"
+
 -- HTTPS utils
+isIphone::ServerMonad m => m Bool
+isIphone =  do
+    magent <- fmap BS.toString  `liftM` (getHeaderM "User-Agent")
+    case magent of
+         Nothing -> return False
+         Just agent -> return $ "iphone" `isInfixOf` (map toLower agent)
 
 isSecure::ServerMonad m => m Bool
-isSecure = do
-     (Just (BS.fromString "http") /=) `liftM` (getHeaderM "scheme")
+isSecure = (Just (BS.fromString "http") /=) `liftM` getHeaderM "scheme"
 
 isHTTPS :: (ServerMonad m) => m Bool
 isHTTPS = do
-    rq <- askRq
-    let mscheme = getHeader "scheme" rq
-    return $ mscheme == Just (BS.fromString "https")
+  rq <- askRq
+  let mscheme = getHeader "scheme" rq
+  return $ mscheme == Just (BS.fromString "https")
 
-getHostpart :: (ServerMonad m, Functor m) => m String
+getHostpart :: ServerMonad m => m String
 getHostpart = do
   rq <- askRq
-  let hostpart = maybe "skrivapa.se" BS.toString $ getHeader "host" rq
+  let hostpart = maybe "scrive.com" BS.toString $ getHeader "host" rq
   let scheme = maybe "http" BS.toString $ getHeader "scheme" rq
   return $ scheme ++ "://" ++ hostpart
 
-getSecureLink :: (ServerMonad m, Functor m) => m String
-getSecureLink = (++) "https://" <$>  currentLinkBody
+getSecureLink :: ServerMonad m => m String
+getSecureLink = (++) "https://" `liftM` currentLinkBody
 
-
-currentLink :: (ServerMonad m, Functor m) => m String -- We use this since we can switch to HTTPS whenever we wan't
+currentLink :: ServerMonad m => m String -- We use this since we can switch to HTTPS whenever we wan't
 currentLink = do
   secure <- isHTTPS
-  urlbody   <- currentLinkBody
-  if secure
-    then return $ "https://" ++ urlbody
-    else return $ "http://"  ++ urlbody
+  urlbody <- currentLinkBody
+  return $ if secure
+    then "https://" ++ urlbody
+    else "http://"  ++ urlbody
 
-currentLinkBody :: (ServerMonad m, Functor m) => m String
+currentLinkBody :: ServerMonad m => m String
 currentLinkBody = do
   rq <- askRq
-  let hostpart = maybe "skrivapa.se" BS.toString $ getHeader "host" rq
+  let hostpart = maybe "scrive.com" BS.toString $ getHeader "host" rq
   let fixurl a1 a2 = if ("/" `isSuffixOf` a1 && "/" `isPrefixOf` a2)
                      then drop 1 a2
                      else a2
   return $ hostpart ++ fixurl hostpart (rqUri rq) ++ fixurl (rqUri rq) (rqURL rq)
 
-para :: String -> String
-para s = "<p>" ++ s ++ "</p>"
-
-encodeString :: String -> String
-encodeString = URL.encode . map (toEnum . ord)
-
-qs :: [(String, Either a String)] -> String
-qs qsPairs =
-    let relevantPairs = [ (k, v) | (k, Right v) <- qsPairs ]
-        empties       = [ encodeString k | (k, "") <- relevantPairs ]
-        withValues    = [ encodeString k ++ "=" ++ encodeString v | (k, v) <- relevantPairs, length v > 0 ]
-    in if Data.List.null relevantPairs
-        then ""
-        else "?" ++ intercalate "&" (empties ++ withValues)
-
 querystring :: (ServerMonad m, HasRqData m, MonadIO m) => m String
-querystring = do
-    qsPairs <- queryString lookPairs
-    return $ qs qsPairs
+querystring = qs `liftM` queryString lookPairs
+  where
+    qs qsPairs =
+      let encodeString  = URL.encode . map (toEnum . ord)
+          relevantPairs = [ (k, v) | (k, Right v) <- qsPairs ]
+          empties       = [ encodeString k | (k, "") <- relevantPairs ]
+          withValues    = [ encodeString k ++ "=" ++ encodeString v | (k, v) <- relevantPairs, length v > 0 ]
+      in if Data.List.null relevantPairs
+          then ""
+          else "?" ++ intercalate "&" (empties ++ withValues)
 
 pureString::String -> String
 pureString s = unwords $ words $ filter (not . isControl) s
@@ -441,17 +369,15 @@ fromLeft :: Either a b -> a
 fromLeft (Left a) = a
 fromLeft _ = error "Reading Left for Right"
 
-
 fromRight :: Either a b -> b
 fromRight (Right b) = b
 fromRight _ = error "Reading Right for Left"
-
 
 toMaybe :: Either a b -> Maybe b
 toMaybe (Right a) = Just a
 toMaybe _ = Nothing
 
-joinB:: Maybe Bool -> Bool
+joinB :: Maybe Bool -> Bool
 joinB (Just b) = b
 joinB _ = False
 
@@ -466,9 +392,6 @@ mapSnd = fmap . second
 
 propagateFst :: (a,[b]) -> [(a,b)]
 propagateFst (a,bs) = for bs (\b -> (a,b))
-
-mapPair::(Functor f) => (a -> b) -> f (a,a)  -> f (b,b)
-mapPair f = fmap (\(a1,a2) -> (f a1, f a2))
 
 propagateMonad :: (Monad m)  => [(a, m b)] -> m [(a,b)]
 propagateMonad ((a,mb):rest) = do
@@ -567,41 +490,14 @@ sortWith k ls = sortBy (\a b-> compare (k a) (k b)) ls
 groupWith :: Eq b => (a -> b) -> [a] -> [[a]]
 groupWith k ls = Data.List.groupBy (\a b -> k a == k b) ls
 
-newtype IPAddress = IPAddress Word32
-  deriving (Eq, Ord, Typeable, Serialize, Version)
-
-unknownIPAddress :: IPAddress
-unknownIPAddress = IPAddress 0
-
-instance Show IPAddress where
-  showsPrec p (IPAddress n) = showsPrec p n
-
-instance Read IPAddress where
-  readsPrec _ = map (first IPAddress) . readDec
-
--- oh boy, this is really network byte order!
-formatIP :: IPAddress -> String
-formatIP (IPAddress 0) = ""
--- formatIP 0x7f000001 = ""
-formatIP (IPAddress x) =
-              " (IP: " ++ show ((x `shiftR` 0) .&. 255) ++
-                   "." ++ show ((x `shiftR` 8) .&. 255) ++
-                   "." ++ show ((x `shiftR` 16) .&. 255) ++
-                   "." ++ show ((x `shiftR` 24) .&. 255) ++ ")"
-
 ignore :: Monad m => m a -> m ()
-ignore acc = do
-  _ <- acc
-  return ()
-  
-pair :: a -> b -> (a, b)
-pair a b = (a, b)
+ignore a = a >> return ()
 
 mapassoc :: (a -> b) -> [a] -> [(a, b)]
-mapassoc f l = map (\a -> pair a $ f a) l
+mapassoc f = map (id &&& f)
 
 mapassocM :: Monad m => (a -> m b) -> [a] -> m [(a, b)]
-mapassocM f l = mapM (\a -> (return . pair a) =<< f a) l
+mapassocM f = mapM (\a -> return . (a,) =<< f a)
 
 basename :: String -> String
 basename filename =
@@ -618,10 +514,10 @@ basename filename =
 ($^^) (f : fs) a = fs $^^ f a
 
 
-toCSV :: [String] -> [[String]] -> String
+toCSV :: [String] -> [[String]] -> BSL.ByteString -- Use bytestrings here for speed. Else you can get stack overflow
 toCSV header ls =
-  concatMap csvline (header:ls)
-    where csvline line = "\"" ++ intercalate "\",\"" line ++ "\"\n"
+   BSL.concat $ map csvline (header:ls)
+    where csvline line = BSL.concat $ [BSL.fromString "\"", BSL.intercalate (BSL.fromString "\",\"") (map BSL.fromString line),BSL.fromString  "\"\n"]
 
 {- Version of elem that as a value takes Maybe-}    
 melem :: (Eq a) => Maybe a -> [a] -> Bool
@@ -656,3 +552,14 @@ urlDecodeVars s = makeKV (splitOver "&" s) []
           (k, '=':v) -> makeKV ks ((urlDecode k, urlDecode v):a)
           (k, "") -> makeKV ks ((urlDecode k, ""):a)
           _ -> Nothing
+          
+containsAll :: Eq a => [a] -> [a] -> Bool
+containsAll elems inList = foldl (\a e-> a && e `elem` inList) True elems
+
+listsEqualNoOrder :: Eq a => [a] -> [a] -> Bool
+listsEqualNoOrder a b = containsAll a b && containsAll b a
+
+listDiff :: Eq a => [a] -> [a] -> ([a], [a], [a])
+listDiff a b = ([x|x <- a, x `notElem` b], 
+                [x|x <- a, x `elem`    b],
+                [x|x <- b, x `notElem` a])
