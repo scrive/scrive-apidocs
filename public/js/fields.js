@@ -170,6 +170,12 @@ window.Field = Backbone.Model.extend({
             return new NotEmptyValidation({message: msg});
         }
 
+        if (this.isCustom() && this.signatory().author()) {
+          var msg1 = localization.designview.validation.notReadyField;
+          var msg2 = localization.designview.validation.missingOrWrongCustomFieldValue;
+          return new Validation({validates: function() {return field.isReady()}, message: msg1}).concat(new NotEmptyValidation({message: msg2}));
+        }
+
         if (this.isCustom()) {
             var msg = localization.designview.validation.notReadyField
             return new Validation({validates : function() {return field.isReady()}, message : msg});
