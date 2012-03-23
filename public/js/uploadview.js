@@ -70,7 +70,7 @@
                     method : "POST",
                     url : url,
                     ajax: true,
-                    type: wiz.get('process').signable,
+                  json: '{"type" : ' + wiz.get('process').signable + '}',
                     expectedType: 'json',
                     beforeSend: function() {
                         console.log("first");

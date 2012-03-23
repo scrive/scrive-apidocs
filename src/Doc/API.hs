@@ -54,75 +54,21 @@ documentAPI = choice [
   ]
 
 documentNew :: Kontrakcja m => m Response
-documentNew = api $ documentNewMultiPart
-{-
-  mjson <- lift $ getDataFn' (look "json")
-  case mjson of
-    Just _ -> documentWithJSON
-    Nothing -> documentNewMultiPart
-
-documentWithJSON :: Kontrakcja m => APIMonad m (Created JSValue)
-documentWithJSON = do
+documentNew = api $ do
   (user, actor) <- getAPIUser
   mcompany <- case usercompany user of
     Just companyid -> lift $ runDBQuery $ GetCompany companyid
     Nothing -> return Nothing
+  
+  jsons <- apiGuardL (badInput "The MIME part 'json' must exist and must be a JSON.") $ getDataFn' (look "json")
 
-  jsonString <- apiGuardL (badInput "The request must contain a MIME part called 'json'." ) $ getDataFn' (look "json")
-  json       <- apiGuard  (badInput "The 'json' part must be valid JSON."                 ) $ runGetJSON readJSValue jsonString
-  dcr        <- apiGuard  (badInput "The JSON does not describe a document."              ) $ dcrFromJSON json
+  json <- apiGuard (badInput "The MIME part 'json' must be a valid JSON.") $ case decode jsons of
+                                                                               Ok js -> Just js
+                                                                               _     -> Nothing
 
-  -- exactly one author
-  let aus = length [a | a <- dcrInvolved dcr, elem SignatoryAuthor $ irRole a]
-  when (aus /= 1) $ do
-    throwError $ badInput $ "Should have exactly one author; instead, has " ++ show aus
-
-  -- the mainfile is attached
-  (Input contentspec (Just _filename') _contentType) <- apiGuardL (badInput $ "The attachment described in mainfile \"" ++ dcrMainFile dcr ++ "\" was not found.")  $ getDataFn' (lookInput $ dcrMainFile dcr)
-
-  content1 <- case contentspec of
-    Left filepath -> liftIO $ BSL.readFile filepath
-    Right content -> return content
-
+  dcr <- either (throwError . badInput) return $ dcrFromJSON json
+  
   let doctype = dcrType dcr
-      title = dcrTitle dcr
-
-  doc <- apiGuardL' $ runDBUpdate $ NewDocument user mcompany (BS.fromString title) doctype actor
-
-  gscmd <- ctxgscmd <$> getContext
-  content14 <- apiGuardL (badInput "PDF was invalid.") $ liftIO $ preCheckPDF gscmd (concatChunks content1)
-
-  file <- lift $ runDBUpdate $ NewFile (BS.fromString title) content14
-  _ <- apiGuardL' $ runDBUpdate (AttachFile (documentid doc) (fileid file) actor)
-  
-  when_ (length (dcrInvolved dcr) > 2) $
-    lift $ runDBUpdate $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality actor
-
-  _ <- lift $ runDBUpdate $ SetDocumentIdentification (documentid doc) [EmailIdentification] actor
-
-  let signatories = for (dcrInvolved dcr) $ \InvolvedRequest{irRole,irData} ->
-        (SignatoryDetails{signatorysignorder = SignOrder 0, signatoryfields = irData},
-         irRole)
-  
-  doc2 <- apiGuardL' $ runDBUpdate $ ResetSignatoryDetails (documentid doc) signatories actor
-  
-  _ <- lift $ DocControl.postDocumentChangeAction doc2 doc Nothing
-
-  hostpart <- ctxhostpart <$> getContext
-  return $ Created $ jsonDocumentForAuthor doc2 hostpart
--}
-documentNewMultiPart :: Kontrakcja m => APIMonad m (Created JSValue)
-documentNewMultiPart = do
-  (user, actor) <- getAPIUser
-  mcompany <- case usercompany user of
-    Just companyid -> lift $ runDBQuery $ GetCompany companyid
-    Nothing -> return Nothing
-  
-  doctypes <- apiGuardL (badInput "The MIME part 'type' must exist and must be an integer.") $ getDataFn' (look "type")
-  
-  doctypei <- apiGuard (badInput "The document type (param 'type') must be an integer.") $ maybeRead doctypes
-  
-  doctype <- apiGuard (badInput "The document type (param 'type') was not recognized.") $ toSafeEnumInt doctypei
   
   -- pdf exists  
   Input contentspec (Just filename') _contentType <- apiGuardL (badInput "The main file of the document must be attached in the MIME part 'file'.") $ getDataFn' (lookInput "file")
@@ -137,8 +83,7 @@ documentNewMultiPart = do
   -- we use gs to do that of course
   ctx <- getContext
   
-  let aa = AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (getEmail user)
-  d1 <- apiGuardL' $ runDBUpdate $ NewDocument user mcompany filename doctype 1 aa 
+  d1 <- apiGuardL' $ runDBUpdate $ NewDocument user mcompany filename doctype 1 actor
   
   file <- lift $ runDBUpdate $ NewFile filename $ concatChunks content1
 
