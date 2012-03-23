@@ -54,8 +54,8 @@ testBrandedDocumentMails env mailTo = withTestEnvironment env $ do
   company' <- addNewCompany
   author <- addNewRandomCompanyUser (companyid company') False
   let cui = CompanyUI {
-        companybarsbackground = Just "red"
-      , companybarstextcolour = Just "gray"
+        companybarsbackground = Just "orange"
+      , companybarstextcolour = Just "green"
       , companylogo = Nothing
       }
   _ <- dbUpdate $ UpdateCompanyUI (companyid company') cui
@@ -178,29 +178,23 @@ mailingContext locale env = do
               }
 
 
+
 sendoutForManualChecking ::  String -> Request -> Context ->  Maybe String -> Mail -> DB ()
 sendoutForManualChecking _ _ _ _ _ = assertSuccess
-{-
-sendoutForManualChecking _ _ _ Nothing _ = assertSuccess
-sendoutForManualChecking titleprefix req ctx (Just email) m = do
-    _ <- runTestKontra req ctx $ do
-            let mailToSend =  m {to = [MailAddress {fullname=BS.fromString "Tester",
-                                                email=BS.fromString email}],
-                                 title = BS.fromString $ "(" ++ titleprefix ++"): " ++ (BS.toString $ title m)}
-            a <- rand 10 arbitrary
-            success <- sendMail testMailer a mailToSend
-            assertBool "Mail could not be send" success
-    assertSuccess
 
-testMailer:: Mailer
-testMailer = createSendgridMailer $ MailsSendgrid {
-        isBackdoorOpen = False,
-        ourInfoEmail = "test@scrive.com",
-        ourInfoEmailNiceName = "test",
-        sendgridSMTP = "smtps://smtp.sendgrid.net",
-        sendgridRestAPI = "https://sendgrid.com/api",
-        sendgridUser = "duzyrak@gmail.com",
-        sendgridPassword = "zimowisko"}
+
+{-
+sendoutForManualChecking ::  String -> Request -> Context ->  Maybe String -> Mail -> DB ()
+sendoutForManualChecking _ _ _ Nothing _ = assertSuccess
+sendoutForManualChecking _ req ctx (Just email) m = do
+    _ <- runTestKontra req ctx $ do
+           _ <- scheduleEmailSendout (ctxmailsconfig ctx) $ m {
+                  to = [MailAddress { fullname = BS.fromString "Tester",
+                                      email = BS.fromString email}]
+                , from = Nothing
+           }
+           assertSuccess
+    assertSuccess
 -}
 
 toMailAddress :: [String] -> Maybe String

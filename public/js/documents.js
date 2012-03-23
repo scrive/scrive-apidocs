@@ -3,177 +3,206 @@
  */
 
 
-(function(window){
+(function(window) {
 
 window.DocumentViewer = Backbone.Model.extend({
-    signatoryid : function(){
+    signatoryid: function() {
       return this.get("signatoryid");
     },
-    magichash : function(){
+    magichash: function() {
       return this.get("magichash");
     },
-    urlPart : function() {
+    urlPart: function() {
         if (this.signatoryid() != undefined && this.magichash() != undefined)
             return "?signatorylinkid=" + this.signatoryid() + "&magichash=" + this.magichash();
         else return "";
     },
 
-    forFetch : function() {
+    forFetch: function() {
         return {
-            signatoryid : this.signatoryid(),
-            magichash :  this.magichash()
+            signatoryid: this.signatoryid(),
+            magichash: this.magichash()
         };
+    }
+});
+
+window.DocumentAuthor = Backbone.Model.extend({
+   defaults: {
+       fullname: "",
+       email: "",
+       company: "",
+       phone: "",
+       position: ""
+    },
+    fullname: function() {
+        return this.get("fullname");
+    },
+    email: function() {
+        return this.get("email");
+    },
+    company: function() {
+        return this.get("company");
+    },
+    phone: function() {
+        return this.get("phone");
+    },
+    position: function() {
+        return this.get("position");
     }
 });
 
 window.Document = Backbone.Model.extend({
     defaults: {
-        id : 0,
-        title : "",
+        id: 0,
+        title: "",
         signatories: [],
-        files : [],
-        sealedfiles : [],
-        authorattachments : [],
-        signatoryattachments : [],
+        files: [],
+        sealedfiles: [],
+        authorattachments: [],
+        signatoryattachments: [],
         ready: false,
         viewer: new DocumentViewer(),
         infotext: "",
         authorization: "email",
-        template : false
+        template: false
     },
-    initialize: function (args) {
+    initialize: function(args) {
         this.url = "/doc/" + args.id;
     },
-    viewer : function(){
+    viewer: function() {
         return this.get("viewer");
     },
-    signed : function(){
+    signed: function() {
         return this.get("signed");
     },
-    documentid: function(){
+    documentid: function() {
         return this.get("id");
     },
-    signatories: function(){
+    signatories: function() {
         return this.get("signatories");
     },
     fixForBasic: function() {
-        while (this.signatories().length <2 ) {
+        while (this.signatories().length < 2) {
               this.addSignatory();
         }
     },
-    addSignatory : function(){
+    addSignatory: function() {
         var document = this;
         var signatories = this.signatories();
-        var nsig = new Signatory({"document": document, signs: true})
+        var nsig = new Signatory({"document": document, signs: true});
         signatories[signatories.length] = nsig;
-        document.set({"signatories" : signatories});
+        document.set({"signatories": signatories});
         document.change();
         return nsig;
     },
-    mainfile: function(){
+    mainfile: function() {
         var file;
         if (this.closed())
-            file =  this.get("sealedfiles")[0];
+            file = this.get("sealedfiles")[0];
         else
             file = this.get("files")[0];
         return file;
     },
-    authorattachments: function(){
+    authorattachments: function() {
         return this.get("authorattachments");
     },
-    signatoryattachments: function(){
-        return _.flatten(_.map(this.signatories(), function(sig){ return sig.attachments(); } ));
+    signatoryattachments: function() {
+        return _.flatten(_.map(this.signatories(), function(sig) { return sig.attachments(); }));
     },
     hasAnyAttachments: function() {
         return this.authorattachments().length > 0 || this.signatoryattachments().length > 0;
     },
-    ready: function(){
+    ready: function() {
         return this.get("ready");
     },
-    process: function(){
+    process: function() {
         return this.get("process");
     },
-    region: function(){
+    region: function() {
         return this.get("region");
     },
-    title : function(){
+    title: function() {
         return this.get("title");
     },
-    setTitle : function(title) {
+    setTitle: function(title) {
         this.set({title: title}, {silent: true});
     },
-    daystosign : function() {
+    daystosign: function() {
           return this.get("daystosign");
     },
-    setDaystosign : function(daystosign) {
+    setDaystosign: function(daystosign) {
          this.set({daystosign: daystosign}, {silent: true});
     },
-    infotext : function(){
+    infotext: function() {
         return this.get("infotext");
     },
-    canberestarted : function() {
+    canberestarted: function() {
         return this.get("canberestarted");
     },
-    restart : function(){
+    restart: function() {
           return new Submit({
               url: "/restart/" + this.documentid(),
               method: "POST"
           });
     },
-    canbecanceled : function() {
+    canbecanceled: function() {
         return this.get("canbecanceled");
     },
-    cancel : function(){
+    cancel: function() {
           return new Submit({
               url: "/cancel/" + this.documentid(),
               method: "POST"
           });
     },
-    cancelMail : function(){
-          	return new Mail({
-						document: this,
-						type: "cancel"
-			});
+    cancelMail: function() {
+              return new Mail({
+                        document: this,
+                        type: "cancel"
+            });
     },
-    setInvitationMessage : function(customtext)
+    canseeallattachments: function() {
+      return this.get("canseeallattachments");
+    },
+    setInvitationMessage: function(customtext)
     {
         this.set({invitationmessage: customtext},{silent: true});
     },
-    inviteMail : function(){
+    inviteMail: function() {
                 return new Mail({
                                                 document: this,
-                                                type: "invite"
+                                                type: "invite",
+                                                editWidth: 300
                         });
     },
-    sign : function() {
+    sign: function() {
         var fieldnames = [];
         var fieldvalues = [];
-        _.each(this.currentSignatory().fields(),function(field){
+        _.each(this.currentSignatory().fields(), function(field) {
             if (field.isClosed()) return;
             fieldnames.push(field.name());
             fieldvalues.push(field.value());
         });
           return new Submit({
-              sign : "YES",
+              sign: "YES",
               method: "POST",
-              magichash : this.viewer().magichash(),
-              fieldname : fieldnames,
-              fieldvalue : fieldvalues
+              magichash: this.viewer().magichash(),
+              fieldname: fieldnames,
+              fieldvalue: fieldvalues
           });
     },
-    sendByAuthor : function() {
+    sendByAuthor: function() {
         return new Submit({
-              send : "YES",
+              send: "YES",
               method: "POST"
           });
     },
-    signByAuthor : function() {
+    signByAuthor: function() {
         return new Submit({
-              sign : "YES",
+              sign: "YES",
               method: "POST"
           });
     },
-    save : function() {
+    save: function() {
          return new Submit({
               url: "/save/" + this.documentid(),
               method: "POST",
@@ -187,54 +216,54 @@ window.Document = Backbone.Model.extend({
               ajax: true
           });
     },
-    draftData : function() {
-      return { 
-          title : this.title(),
-          functionality : this.get("functionality"),
-          invitationmessage : this.get("invitationmessage"),
-          daystosign : this.get("daystosign"),
-          authorization : this.get("authorization"),
-          signatories : _.map(this.signatories(), function(sig) {return sig.draftData()}),
-          region : this.region().draftData(),
-          template : this.isTemplate()
-      };  
+    draftData: function() {
+      return {
+          title: this.title(),
+          functionality: this.get("functionality"),
+          invitationmessage: this.get("invitationmessage"),
+          daystosign: this.get("daystosign"),
+          authorization: this.get("authorization"),
+          signatories: _.map(this.signatories(), function(sig) {return sig.draftData()}),
+          region: this.region().draftData(),
+          template: this.isTemplate()
+      };
     },
-    switchFunctionalityToAdvanced : function() {
+    switchFunctionalityToAdvanced: function() {
           var newfunctionality = this.isBasic() ? "advanced" : "basic";
-          this.set({functionality: newfunctionality}, {silent : true});
+          this.set({functionality: newfunctionality}, {silent: true});
     },
-    status : function() {
+    status: function() {
           return this.get("status");
     },
-    currentSignatory : function() {
+    currentSignatory: function() {
        return _.detect(this.signatories(), function(signatory) {
            return signatory.current();
         });
 
     },
-    otherSignatories : function(){
+    otherSignatories: function() {
        return _.select(this.signatories(), function(signatory) {
            return !signatory.current();
        });
     },
-    removeSignatory : function(sig) {
-       if (this.signatories().length < 2) 
+    removeSignatory: function(sig) {
+       if (this.signatories().length < 2)
            return;
-       var newsigs = new Array();    
+       var newsigs = new Array();
        newsigs.push(this.signatories()[0]);
        var removed = false;
-       for(var i=1;i<this.signatories().length;i++)
-          if ((sig !== this.signatories()[i] && i < this.signatories().length -1)
-              || removed)
+       for (var i = 1; i < this.signatories().length; i++)
+          if ((sig !== this.signatories()[i] && i < this.signatories().length - 1) ||
+                 removed)
              newsigs.push(this.signatories()[i]);
-          else 
+          else
              removed = true;
-       this.set({signatories : newsigs});
+       this.set({signatories: newsigs});
 
     },
-    currentViewerIsAuthor : function() {
-        var csig  = this.currentSignatory();
-        return  (csig != undefined && csig.author());
+    currentViewerIsAuthor: function() {
+        var csig = this.currentSignatory();
+        return (csig != undefined && csig.author());
     },
     preparation: function() {
         return this.status() == "Preparation";
@@ -245,19 +274,19 @@ window.Document = Backbone.Model.extend({
     awaitingauthor: function() {
         return this.status() == "AwaitingAuthor";
     },
-    timedout :function() {
+    timedout: function() {
         return this.status() == "Timedout";
     },
-    canceled :function() {
+    canceled: function() {
         return this.status() == "Canceled";
     },
-    closed :function() {
+    closed: function() {
         return this.status() == "Closed";
     },
-    signingInProcess: function(){
+    signingInProcess: function() {
         return this.pending() || this.awaitingauthor();
     },
-    datamismatch :function() {
+    datamismatch: function() {
         return _.any(this.signatory, function() {return this.datamismatch() == true;});
 
     },
@@ -270,67 +299,96 @@ window.Document = Backbone.Model.extend({
            return file.fileid() == fileid;
         });
     },
-    signorder : function() {
+    signorder: function() {
       return this.get("signorder");
     },
-    emailAuthorization : function() {
+    emailAuthorization: function() {
           return this.get("authorization") == "email";
     },
-    elegAuthorization : function() {
+    elegAuthorization: function() {
           return this.get("authorization") == "eleg";
     },
-    setElegVerification : function() {
-          this.set({"authorization":"eleg"}, {silent: true});
+    setElegVerification: function() {
+          this.set({"authorization": "eleg"}, {silent: true});
           this.trigger("change:authorization");
     },
-    setEmailVerification : function() {
-          this.set({"authorization":"email"}, {silent: true});
+    setEmailVerification: function() {
+          this.set({"authorization": "email"}, {silent: true});
           this.trigger("change:authorization");
 
     },
-    elegTBS : function() {
-        var text = this.title() + " "+  this.documentid() ;
-        _.each(this.signatories(),function(signatory) {
-            text += " "+signatory.name() + " " + signatory.personalnumber();
+    elegTBS: function() {
+        var text = this.title() + " " + this.documentid();
+        _.each(this.signatories(), function(signatory) {
+            text += " " + signatory.name() + " " + signatory.personalnumber();
         });
         return text;
     },
-    lastSignatoryLeft : function() {
+    lastSignatoryLeft: function() {
         return _.all(this.signatories(), function(signatory) {
           return (signatory.signs() && signatory.hasSigned()) || !signatory.signs() || signatory.current();
         });
     },
     isTemplate: function() {
-       return this.get("template") == true
+       return this.get("template") == true;
     },
-    makeTemplate : function() {
-       return this.set({"template": true}, {silent : true});
+    makeTemplate: function() {
+       return this.set({"template": true}, {silent: true});
     },
     isBasic: function() {
        return this.get("functionality") == "basic";
-    },    
-    recall : function() {
-       this.fetch({data: this.viewer().forFetch(),   processData:  true, cache : false});
     },
-    needRecall : function() {
+    recall: function() {
+       this.fetch({data: this.viewer().forFetch(), processData: true, cache: false});
+    },
+    needRecall: function() {
         return this.mainfile() == undefined;
     },
     author: function() {
-      for(var i=0;i<this.signatories().length;i++)
+      for (var i = 0; i < this.signatories().length; i++)
           if (this.signatories()[i].author())
               return this.signatories()[i];
     },
-    authorCanSignFirst : function() {
+    authorCanSignFirst: function() {
         if (!this.author().signs())
             return false;
         var aidx = this.author().signorder();
-        return ! _.any(this.signatories(), function(sig ){
-            return sig.signs() && sig.signorder() < aidx
-            })
+        return ! _.any(this.signatories(), function(sig) {
+            return sig.signs() && sig.signorder() < aidx;
+            });
 
     },
-    allowsDD : function() {
+    allowsDD: function() {
         return this.preparation() && !this.isBasic();
+    },
+    isAuthorAttachments: function() {
+      return this.authorattachments().length > 0;
+    },
+    isSignatoryAttachments: function() {
+      return this.currentSignatory().attachments().length > 0;
+    },
+    isUploadedAttachments: function() {
+      return this.canseeallattachments() && this.signatoryattachments().length > 0;
+    },
+    currentSignatoryCanSign: function() {
+      var canSignAsSig = !this.currentViewerIsAuthor() &&
+                              this.currentSignatory() != undefined &&
+                              this.currentSignatory().canSign();
+      var canSignAsAuthor = this.currentViewerIsAuthor() &&
+                                 this.awaitingauthor();
+      return canSignAsSig || canSignAsAuthor;
+    },
+    logo: function() {
+        return this.get("logo");
+    },
+    barsbackgroundcolor: function() {
+        return this.get("barsbackgroundcolor");
+    },
+    barsbackgroundtextcolor: function() {
+        return this.get("barsbackgroundtextcolor");
+    },
+    authoruser: function() {
+        return this.get("authoruser");
     },
     parse: function(args) {
      var document = this;
@@ -338,36 +396,48 @@ window.Document = Backbone.Model.extend({
          if (document.needRecall())
             document.recall();
      },1000);
-     var extendedWithDocument = function(hash){
+     var extendedWithDocument = function(hash) {
                 hash.document = document;
                 return hash; };
+     /**this way of doing it is safe for IE7 which doesnt
+      * naturally parse stuff like 2012-03-29 so new Date(datestr)
+      * doesnt work*/
+     var parseDate = function(datestr) {
+        var dateValues = datestr.split('-');
+        return new Date(dateValues[0], dateValues[1], dateValues[2]);
+     };
      return {
-      title : args.title,
-      files : _.map(args.files, function(fileargs) {
+      title: args.title,
+      files: _.map(args.files, function(fileargs) {
                 return new File(extendedWithDocument(fileargs));
               }),
-      sealedfiles : _.map(args.sealedfiles, function(fileargs) {
+      sealedfiles: _.map(args.sealedfiles, function(fileargs) {
                 return new File(extendedWithDocument(fileargs));
               }),
-      authorattachments : _.map(args.authorattachments, function(fileargs) {
+      authorattachments: _.map(args.authorattachments, function(fileargs) {
                 return new File(extendedWithDocument(fileargs));
               }),
-      signatories : _.map(args.signatories, function(signatoryargs){
+      signatories: _.map(args.signatories, function(signatoryargs) {
                 return new Signatory(extendedWithDocument(signatoryargs));
       }),
+      authoruser: new DocumentAuthor(extendedWithDocument(args.author)),
       process: new Process(args.process),
       region: new Region(args.region),
-      infotext : args.infotext,
-      canberestarted : args.canberestarted,
-      canbecanceled : args.canbecanceled,
-      status : args.status,
-      timeouttime  : args.timeouttime  == undefined ? undefined :  new Date(args.timeouttime),
-      signorder : args.signorder,
-      authorization : args.authorization,
-      template : args.template,
-      functionality : args.functionality,
+      infotext: args.infotext,
+      canberestarted: args.canberestarted,
+      canbecanceled: args.canbecanceled,
+      canseeallattachments: args.canseeallattachments,
+      status: args.status,
+      timeouttime: args.timeouttime == undefined ? undefined : parseDate(args.timeouttime),
+      signorder: args.signorder,
+      authorization: args.authorization,
+      template: args.template,
+      functionality: args.functionality,
       daystosign: args.daystosign,
-      invitationmessage : args.invitationmessage,
+      invitationmessage: args.invitationmessage,
+      logo: args.logo,
+      barsbackgroundcolor: args.barsbackgroundcolor,
+      barsbackgroundtextcolor: args.barsbackgroundtextcolor,
       ready: true
       };
     }
@@ -377,20 +447,20 @@ window.Document = Backbone.Model.extend({
 
 // This is an object that allows you to fill a dom element
 window.DocumentDataFiller = {
-    fill : function (document,object) {
+    fill: function(document, object) {
         // Filling title
         var title = document.title();
         $(".documenttitle", object).text(title);
 
         // Filling unsigned signatories
         var unsignedpartynotcurrent = [];
-        var unsignedparty= [];
+        var unsignedparty = [];
 
-        var signatories = _.select(document.signatories(), function(signatory){
+        var signatories = _.select(document.signatories(), function(signatory) {
             return signatory.signs() && !signatory.hasSigned();
         });
 
-        for(var i=0;i<signatories.length;i++)
+        for (var i = 0; i < signatories.length; i++)
             if (signatories[i].current())
             {
                 unsignedparty.push(localization.you);
@@ -405,6 +475,6 @@ window.DocumentDataFiller = {
         return object;
         // Something more can come up
     }
-}
+};
 
 })(window);

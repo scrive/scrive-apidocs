@@ -941,12 +941,12 @@ a.button {
     position: absolute;
     cursor: pointer;
     font-family: Helvetica;
-    font-size: 15.93px; 
+    font-size: 15.93px;
 }
 
 .placedfieldvalue{
     font-family: Helvetica;
-    font-size: 15.93px; 
+    font-size: 15.93px;
 }
 
 .placedfieldhelper {
@@ -1137,6 +1137,10 @@ input[type=submit].hidden
 #signStepsTitleRow .download a{
     color: #999999;
     text-transform: uppercase;
+}
+
+#signStepsTitleRow .download .docname {
+  display: none;
 }
 
 
@@ -2174,7 +2178,8 @@ form {
     text-decoration: none;
 }
 
-#signViewAttachmentBox, #signViewSigAttachmentBox
+.docview .authorattachments,
+.docview .signatoryattachments
 {
     /* 002 float: left;*/
     margin-top: 30px;
@@ -2189,11 +2194,101 @@ form {
     padding: 30px;
 }
 
-#signViewAttachmentBoxList {
+.docview .authorattachments .list .item {
+  margin-bottom: 10px;
+}
 
-    position:relative;
-    top:-20px;
-    margin-left:250px;
+.docview .authorattachments .item .icon {
+  float: left;
+  width: 13px;
+  height: 14px;
+  background: url(../img/attachment-icon.png);
+}
+
+.docview .authorattachments .item .label {
+  float: left;
+  margin-left: 10px;
+}
+
+.docview .authorattachments .item .name {
+  font-weight: bold;
+  color: black;
+}
+
+.docview .authorattachments .item a {
+  text-decoration: underline;
+}
+
+
+.docview .uploadedsignatoryattachments .item .icon {
+  float: left;
+  width: 13px;
+  height: 14px;
+  background: url(../img/attachment-icon.png);
+}
+
+.docview .uploadedsignatoryattachments .item {
+  margin-bottom: 10px;
+}
+
+.docview .uploadedsignatoryattachments .item .label {
+  float: left;
+  margin-left: 10px;
+}
+
+.docview .uploadedsignatoryattachments .list .item .name {
+  font-weight: bold;
+  color: black;
+}
+
+.docview .uploadedsignatoryattachments .list .item .from {
+  font-style: italic;
+}
+
+.docview .uploadedsignatoryattachments .list .item a {
+  text-decoration: underline;
+}
+
+.docview .attachmentstab .section {
+  float: left;
+  margin-right: 20px;
+}
+
+.docview .attachmentstab h2 {
+  font-size: small;
+  margin-bottom: 10px;
+}
+
+.docview .attachmentstab .authorattachments {
+  width: auto;
+  border: none;
+  margin: auto;
+  padding: 0px;
+}
+
+.docview .attachmentstab .list {
+  position: auto;
+  top: auto;
+  margin-left: auto;
+}
+
+.signguard {
+  height: 80px;
+  padding: 20px;
+}
+
+.signguard .check {
+  float:left;
+  width: 25px;
+}
+
+.signguard .label {
+  float: left;
+  width: 300px;
+}
+
+.docview .dragfield .label {
+  display: none;
 }
 
 #signViewBottomBox
@@ -2707,9 +2802,6 @@ input#cancel {
     font-size: 8pt;
 }
 
-.searchBox{
-
-}
 .centered {
     margin: 10%;
 }
@@ -2972,6 +3064,26 @@ input.attachmentname {
 
 table.authorsigattachment {
     width: 100%;
+}
+
+.docview .signatoryattachments .column {
+  float: left;
+  width: 400px;
+
+  min-height: 20px;
+}
+
+.docview .signatoryattachments .list {
+  min-height: 50px;
+  margin-top: 20px;
+}
+
+.docview .signatoryattachments .list .item {
+  min-height: 50px;
+}
+
+.docview .signatoryattachments .list .item .name {
+  font-weight: bold;
 }
 
 table#signViewSigAttachmentBoxList {

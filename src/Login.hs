@@ -113,7 +113,7 @@ handleLoginGet = do
          referer <- getField "referer"
          email   <- getField "email"
          content <- V.pageLogin referer email
-         V.renderFromBody V.TopNone V.kontrakcja content
+         V.renderFromBody V.kontrakcja content
 
 {- |
    Handles submission of a login form.  On failure will redirect back to referer, if there is one.

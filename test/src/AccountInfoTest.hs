@@ -32,7 +32,6 @@ import Util.HasSomeUserInfo
 accountInfoTests :: DBEnv -> Test
 accountInfoTests env = testGroup "AccountInfo" [
       testCase "lets private account upgrade to company account" $ testPrivateToCompanyUpgrade env
-    , testCase "company upgrade requires a company name" $ testCompanyUpgradeRequiresCompanyName env
     , testCase "lets users change their email addresses" $ testChangeEmailAddress env
     , testCase  "requesting email change fails is the entered emails are mismatched" $ testAddressesMustMatchToRequestEmailChange env
     , testCase "need two addresses to request email changes" $ testNeedTwoAddressesToRequestEmailChange env
@@ -56,18 +55,6 @@ testPrivateToCompanyUpgrade env = withTestEnvironment env $ do
   (res1, ctx1) <- upgradeCompanyForUser env user upgradeinfo
 
   assertCompanyUpgradeSuccessful (userid user) upgradeinfo (res1, ctx1)
-
-testCompanyUpgradeRequiresCompanyName :: DBEnv -> Assertion
-testCompanyUpgradeRequiresCompanyName env = withTestEnvironment env $ do
-  Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  let upgradeinfo = UpgradeInfo ""
-                                "Andrzejj"
-                                "Rybczakk"
-                                "Tester"
-                                "12345"
-  (res1, ctx1) <- upgradeCompanyForUser env user upgradeinfo
-
-  assertCompanyUpgradeFailed (userid user) (res1, ctx1)
 
 data UpgradeInfo = UpgradeInfo String String String String String
 
@@ -96,7 +83,6 @@ assertCompanyUpgradeSuccessful uid (UpgradeInfo cname fstname sndname position p
   mcompany <- getCompanyForUser' user
 
   assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "Location is /account/companyaccounts" (Just "/account/companyaccounts?page=1") (T.getHeader "location" (rsHeaders res))
   assertEqual "User is logged in" (Just $ userid user) (fmap userid $ ctxmaybeuser ctx)
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx)
   assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx) `isFlashOfType` OperationDone
@@ -107,19 +93,6 @@ assertCompanyUpgradeSuccessful uid (UpgradeInfo cname fstname sndname position p
   assertEqual "Last name was saved on user" sndname (getLastName user)
   assertEqual "Company position was saved on user" position (usercompanyposition $ userinfo user)
   assertEqual "Phone number was saved on user" phone (userphone $ userinfo user)
-
-assertCompanyUpgradeFailed :: UserID -> (Response, Context) -> DB ()
-assertCompanyUpgradeFailed uid (res, ctx) = do
-  Just user <- dbQuery $ GetUserByID uid
-  mcompany <- getCompanyForUser' user
-
-  assertEqual "Response code is 303" 303 (rsCode res)
-  assertEqual "Location is /account/?createcompany" (Just "/account/?createcompany") (T.getHeader "location" (rsHeaders res))
-  assertEqual "User is logged in" (Just uid) (fmap userid $ ctxmaybeuser ctx)
-  assertEqual "Flash message was added" 1 (length $ ctxflashmessages ctx)
-  assertBool "Flash has type indicating a failure" $ head (ctxflashmessages ctx) `isFlashOfType` OperationFailed
-  assertBool "User isn't a company admin" (not $ useriscompanyadmin user)
-  assertEqual "There is no company" Nothing mcompany
 
 testChangeEmailAddress :: DBEnv -> Assertion
 testChangeEmailAddress env = withTestEnvironment env $ do

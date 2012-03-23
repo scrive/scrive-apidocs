@@ -11,7 +11,9 @@ module Doc.DocControl(
     , handleSignShow
     , handleSignShowOldRedirectToNew
     , signDocument
+    , signDocumentIphoneCase
     , rejectDocument
+    , rejectDocumentIphoneCase
     , handleAcceptAccountFromSign
     , handleSigAttach
     , handleDeleteSigAttach
@@ -51,7 +53,7 @@ module Doc.DocControl(
     , handleCSVLandpage
     , handleInvariantViolations
     , handleUpsalesDeleted
-  
+
 ) where
 
 import AppView
@@ -76,7 +78,6 @@ import MagicHash (MagicHash)
 import MinutesTime
 import Misc
 import Redirect
-import Routing(toResp)
 import User.Model
 import Util.HasSomeUserInfo
 import qualified Log
@@ -133,11 +134,7 @@ handleAcceptAccountFromSign documentid
                             magichash = do
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
-  muser <- User.Action.handleAccountSetupFromSign document signatorylink
-  case muser of
-    Nothing | isClosed document -> addFlashM $ modalSignedClosedNoAccount document signatorylink
-    Nothing -> addFlashM $ modalSignedNotClosedNoAccount document signatorylink
-    Just _ -> addFlashM $ flashMessageAccountActivatedFromSign
+  _ <- guardJustM $ User.Action.handleAccountSetupFromSign document signatorylink
   return $ LinkSignDoc document signatorylink
 
 {- |
@@ -145,6 +142,9 @@ handleAcceptAccountFromSign documentid
    URL: /s/{docid}/{signatorylinkid1}/{magichash1}
    Method: POST
  -}
+signDocumentIphoneCase :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
+signDocumentIphoneCase did sid _ = signDocument did sid
+
 signDocument :: Kontrakcja m
              => DocumentID      -- ^ The DocumentID of the document to sign
              -> SignatoryLinkID -- ^ The SignatoryLinkID that is in the URL
@@ -213,17 +213,13 @@ handleAfterSigning document@Document{documentid} signatorylinkid = do
     Just user | isJust $ userhasacceptedtermsofservice user-> do
       let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx)  (maybesignatory signatorylink) (getEmail signatorylink) (signatorylinkid)
       _ <- runDBUpdate $ SaveDocumentForUser documentid user signatorylinkid actor
-      let userlocale = locale $ usersettings user
-      if isClosed document
-        then addFlashM $ modalSignedClosedHasAccount userlocale document signatorylink (isJust $ ctxmaybeuser ctx)
-        else addFlashM $ modalSignedNotClosedHasAccount userlocale document signatorylink (isJust $ ctxmaybeuser ctx)
-    _ -> do
-      Log.debug $ "the doc " ++ (show $ documentid) ++ ".isClosed = " ++ (show $ isClosed document)
-      Log.debug $ "doc " ++ (show document)
-      if isClosed document
-        then addFlashM $ modalSignedClosedNoAccount document signatorylink
-        else addFlashM $ modalSignedNotClosedNoAccount document signatorylink
+      return ()
+    _ -> return ()
   return $ LinkSignDoc document signatorylink
+
+
+rejectDocumentIphoneCase :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
+rejectDocumentIphoneCase did sid _ = rejectDocument did sid
 
 {- |
    Control rejecting the document
@@ -256,31 +252,30 @@ rejectDocument documentid
 {- |
    Show the document to be signed
  -}
-handleSignShowOldRedirectToNew :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m KontraLink
-handleSignShowOldRedirectToNew did sid mh = do
-  doc<- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash did sid mh
-  invitedlink <- guardJust $ getSigLinkFor doc sid
-  return $ LinkSignDoc doc invitedlink
 
-handleSignShow :: DocumentID -> SignatoryLinkID -> Kontra Response
+handleSignShowOldRedirectToNew :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m (Either KontraLink Response)
+handleSignShowOldRedirectToNew did sid mh = do
+  modifyContext (\ctx -> ctx { ctxmagichashes = Map.insert sid mh (ctxmagichashes ctx) })
+  iphone <- isIphone
+  if iphone -- For iphones we are returning full page due to cookie bug in mobile safari
+    then Right <$> handleSignShow2 did sid
+    else return $ Left $ LinkSignDocNoMagicHash did sid
+
+handleSignShow :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Either KontraLink Response)
 handleSignShow documentid
                signatorylinkid = do
   mmh <- readField "magichash"
   case mmh of
-    Just mh -> do
+    Just mh -> do -- IMPORTANT!!! Keep this just for historical reasons
       modifyContext (\ctx -> ctx { ctxmagichashes = Map.insert signatorylinkid mh (ctxmagichashes ctx) })
-      toResp (LinkSignDocNoMagicHash documentid signatorylinkid)
-    Nothing -> do
-      v <- handleSignShow2 documentid signatorylinkid
-      (toResp v)
+      return $ Left (LinkSignDocNoMagicHash documentid signatorylinkid)
+    Nothing -> Right <$> handleSignShow2 documentid signatorylinkid
 
-
-handleSignShow2 :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m String
+handleSignShow2 :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 handleSignShow2 documentid
                 signatorylinkid = do
   Context { ctxtime
           , ctxipnumber
-          , ctxflashmessages
           , ctxmagichashes } <- getContext
   let mmagichash = Map.lookup signatorylinkid ctxmagichashes
 
@@ -297,64 +292,43 @@ handleSignShow2 documentid
   _ <- runDBUpdate $ MarkDocumentSeen documentid signatorylinkid magichash
        (SignatoryActor ctxtime ctxipnumber (maybesignatory invitedlink) (getEmail invitedlink) signatorylinkid)
   _ <- runDB $ addSignStatLinkEvent document invitedlink
-  let isFlashNeeded = Data.List.null ctxflashmessages
-                        && not (hasSigned invitedlink)
-  -- add a flash if needed
-  case document of
-    _ | not isFlashNeeded -> return ()
-    _ | not (isSignatory invitedlink) ->
-      addFlashM flashMessageOnlyHaveRightsToViewDoc
-    _ | document `allowsIdentification` ELegitimationIdentification ->
-      addFlashM flashMessagePleaseSignWithEleg
-    _ -> addFlashM $ flashMessagePleaseSign document
 
   ctx <- getContext
-  case document of
-    _ | isAttachment document ->
-      pageAttachmentForSignatory document invitedlink
-    _ | isSignatory invitedlink ->
-      pageDocumentForSignatory (LinkSignDoc document invitedlink) document ctx invitedlink
-    _ -> pageDocumentForViewer ctx document (Just invitedlink)
+  content <- pageDocumentSignView ctx document invitedlink
+  simpleResponse content
 
 {- |
-   Handles the request to show a document to a user.
-   There are two cases:
-    1. author in which case they get pageDocumentForAuthor
-    2. Within company of author in which case they get pageDocumentForViewer
+   Handles the request to show a document to a logged in user.
    URL: /d/{documentid}
    Method: GET
  -}
-handleIssueShowGet :: Kontrakcja m => DocumentID -> m (Either KontraLink (Either KontraLink String))
-handleIssueShowGet docid = do
-  checkUserTOSGet $ do
-    document <- guardRightM $ getDocByDocID docid
-    ctx@Context { ctxmaybeuser } <- getContext
-    disableLocalSwitch -- Not show locale flag on this page
-    switchLocale (getLocale document)
-    case (isAuthor (document, ctxmaybeuser),
-              ctxmaybeuser >>= maybeInvitedLink document,
-              isAttachment document,
-              documentstatus document) of
-          (True, _, True, Preparation) -> Right <$> pageAttachmentDesign document
-          (_, _, True, _) -> Right <$> pageAttachmentView document
-          (True, _, _, _) -> do
-            let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
-            when (isCanceled document && isJust mMismatchMessage) $
-              addFlash (OperationFailed, fromJust mMismatchMessage)
-            ctx2 <- getContext -- need to get new context because we may have added flash msg
-            case (documentstatus document) of
-              Preparation -> Right <$> pageDocumentDesign document
-              _ ->  Right <$> pageDocumentForAuthor ctx2 document
-          (_, Just invitedlink, _, _) -> Right <$> pageDocumentForSignatory (LinkSignDoc document invitedlink) document ctx invitedlink
-          -- others in company can just look (but not touch)
-          (False, _, _, _) -> Right <$> pageDocumentForViewer ctx document Nothing
-     where
-       maybeInvitedLink :: Document -> User -> Maybe SignatoryLink
-       maybeInvitedLink doc user =
-         (find (isSigLinkFor $ userid user) $ documentsignatorylinks doc) >>=
-           (\sl -> if SignatoryPartner `elem` signatoryroles sl && isNothing (maybesigninfo sl)
-                     then Just sl
-                     else Nothing)
+handleIssueShowGet :: Kontrakcja m => DocumentID -> m (Either KontraLink String)
+handleIssueShowGet docid = checkUserTOSGet $ do
+  document <- guardRightM $ getDocByDocID docid
+  disableLocalSwitch -- Don't show locale flag on this page
+  switchLocale (getLocale document)
+  user <- guardJustM $ ctxmaybeuser <$> getContext
+
+  let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
+  when (isAuthor (document, user) && isCanceled document && isJust mMismatchMessage) $
+    addFlash (OperationFailed, fromJust mMismatchMessage)
+
+  authorsiglink <- guardJust $ getAuthorSigLink document
+  let ispreparation = documentstatus document == Preparation
+      isauthor = (Just $ userid user) == maybesignatory authorsiglink
+      isincompany = isJust (maybecompany authorsiglink) &&
+                      usercompany user == maybecompany authorsiglink
+      isauthororincompany = isauthor || isincompany
+      isattachment = isAttachment document
+      msiglink = find (isSigLinkFor $ userid user) $ documentsignatorylinks document
+
+  ctx <- getContext
+  case (ispreparation, msiglink) of
+    (True,  _) | isattachment        -> pageAttachmentDesign document
+    (True,  _)                       -> pageDocumentDesign document
+    (False, _) | isauthororincompany -> pageDocumentView document msiglink
+    (False, Just siglink)            -> pageDocumentSignView ctx document siglink
+    _                                -> internalError
 
 {- |
    Modify a document. Typically called with the "Underteckna" or "Save" button
@@ -1035,7 +1009,7 @@ handleDeleteSigAttach docid siglinkid = do
   Context{ctxtime, ctxipnumber} <- getContext
   let email = getEmail siglink
   Log.debug $ "delete Sig attachment " ++ (show fid) ++ "  " ++ email
-  _ <- runDBUpdate $ DeleteSigAttachment docid siglinkid fid 
+  _ <- runDBUpdate $ DeleteSigAttachment docid siglinkid fid
        (SignatoryActor ctxtime ctxipnumber (maybesignatory siglink) email siglinkid)
   return $ LinkSignDoc doc siglink
 
@@ -1066,7 +1040,9 @@ jsonDocument did = do
     cttime <- liftIO $ getMinutesTime
     rsp <- case mdoc of
          Nothing -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "No document avaible")]
-         Just doc -> JSObject <$> documentJSON msiglink cttime doc
+         Just doc -> do
+             switchLocale (getLocale doc)
+             JSObject <$> documentJSON msiglink cttime doc
     return rsp
 
 jsonDocumentGetterWithPermissionCheck ::   Kontrakcja m => DocumentID -> m (Maybe Document, Maybe SignatoryLink)
@@ -1163,9 +1139,9 @@ handleSetAttachments did = do
                      content <- liftIO $ BSL.readFile filepath
                      let title = basename filename
                      doc <- guardRightM $ newDocument title Attachment 0
-                     doc' <- guardRightM $  attachFile (documentid doc) (title ++ ".pdf") (concatChunks content)
+                     doc' <- guardRightM $  attachFile (documentid doc) title (concatChunks content)
                      return $ listToMaybe $ documentfiles  doc'
-                 Just (Input  (Right c)  _ _)  -> do 
+                 Just (Input  (Right c)  _ _)  -> do
                       case maybeRead (BSL.toString c) of
                           Just fid -> (fmap fileid) <$> (runDB $ dbQuery $ GetFileByFileID fid)
                           Nothing -> return $ Nothing

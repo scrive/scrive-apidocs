@@ -233,18 +233,6 @@ flashMessageMultipleAttachmentShareDone=	$_flashMessageMultipleAttachmentShareDo
 ###
 flashMessageUserHasBecomeCompanyAccount=$_flashMessageUserHasBecomeCompanyAccount()$
 ###
-flashMessageAccountActivatedFromSign=	$_flashMessageAccountActivatedFromSign()$
-###
-flashMessageOnlyHaveRightsToViewDoc=	$_flashMessageOnlyHaveRightsToViewDoc()$
-###
-flashMessagePleaseSignWithEleg=	$_flashMessagePleaseSignWithEleg()$
-###
-flashMessagePleaseSignContract=	$_flashMessagePleaseSignContract()$
-###
-flashMessagePleaseSignOffer=	$_flashMessagePleaseSignOffer()$
-###
-flashMessagePleaseSignOrder=   $_flashMessagePleaseSignOrder()$
-###
 flashMessageUserHasLiveDocs=$_flashMessageUserHasLiveDocs()$
 ###
 flashMessageCompanyAccountDeleted=$_flashMessageCompanyAccountDeleted()$

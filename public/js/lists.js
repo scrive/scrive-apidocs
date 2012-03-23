@@ -229,7 +229,7 @@
             var filtering = this.model;
             var searchBox = InfoTextInput.init({ infotext: filtering.infotext(),
                                                  value: filtering.text(),
-                                                 cssClass: "tab-search float-right" });
+                                                 cssClass: "list-search float-right" });
             searchBox.input().keypress(function(event) {
                 var keycode = (event.keyCode ? event.keyCode : event.which);
                 if (keycode == '13') {
@@ -727,11 +727,13 @@
             return this;
         },
         toggleSelectAll: function() {
+            this.model.off('change');
             if (this.model.hasUnselected()) {
                 this.model.selectAll();
             } else {
                 this.model.selectNone();
             }
+            this.model.bind('change', this.render);
         }
     });
 
@@ -752,7 +754,7 @@
                 model: this.model,
                 schema: args.schema,
                 loading: this.loading,
-                el: $("<div/>"),
+                el: $("<div class='list-container'/>"),
                 headerExtras: args.headerExtras,
                 bottomExtras: args.bottomExtras
             });

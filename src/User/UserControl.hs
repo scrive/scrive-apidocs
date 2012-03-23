@@ -18,7 +18,6 @@ import InputValidation
 import Kontra
 import KontraError (internalError)
 import KontraLink
-import ListUtil
 import MagicHash (MagicHash)
 import Mails.SendMail
 import MinutesTime
@@ -45,7 +44,7 @@ handleUserGet = checkUserTOSGet $ do
     case (ctxmaybeuser ctx) of
          Just user -> do
            mcompany <- getCompanyForUser user
-           showUser user mcompany createcompany >>= renderFromBody TopAccount kontrakcja
+           showUser user mcompany createcompany >>= renderFromBody kontrakcja
          Nothing -> sendRedirect $ LinkLogin (ctxlocale ctx) NotLogged
 
 handleUserPost :: Kontrakcja m => m KontraLink
@@ -65,7 +64,7 @@ handleUserPost = do
   user <- guardJustM $ runDBQuery $ GetUserByID (userid user')
   infoUpdate <- getUserInfoUpdate
   _ <- runDBUpdate $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
-  _ <- runDBUpdate $ LogHistoryUserInfoChanged (userid user) (ctxipnumber ctx) (ctxtime ctx) 
+  _ <- runDBUpdate $ LogHistoryUserInfoChanged (userid user) (ctxipnumber ctx) (ctxtime ctx)
                                                (userinfo user) (infoUpdate $ userinfo user)
                                                (userid <$> ctxmaybeuser ctx)
   mcompany <- getCompanyForUser user
@@ -80,7 +79,26 @@ handleUserPost = do
     Just link -> return link
     Nothing -> do
        addFlashM flashMessageUserDetailsSaved
-       return $ LinkAccount False
+       return $ LinkAccount
+
+-- please treat this function like a public query form, it's not secure
+handleRequestPhoneCall :: Kontrakcja m => m KontraLink
+handleRequestPhoneCall = do
+  Context{ctxmaybeuser} <- getContext
+  memail <- getOptionalField asValidEmail "email"
+  mphone <-  getOptionalField asValidPhone "phone"
+  case (memail, mphone) of
+    (Just email, Just phone) -> do
+      user <- guardJustM $ runDBQuery $ GetUserByEmail (ctxmaybeuser >>= userservice) (Email email)
+      --only set the phone number if they're actually logged in
+      -- it is possible to request a phone call from the sign view without being logged in!
+      -- this function could be called by anyone!
+      when (isJust ctxmaybeuser && fmap userid ctxmaybeuser == Just (userid user)) $ do
+        _ <- runDBUpdate $ SetUserInfo (userid user) $ (userinfo user){ userphone = phone }
+        return ()
+      phoneMeRequest user phone
+    _ -> return ()
+  return $ LinkUpload
 
 handleRequestChangeEmail :: Kontrakcja m => m KontraLink
 handleRequestChangeEmail = do
@@ -101,7 +119,7 @@ handleRequestChangeEmail = do
     (Just newemail, Just newemailagain) | newemail /= newemailagain -> do
        addFlashM flashMessageMismatchedEmails
     _ -> return ()
-  return $ LinkAccount False
+  return $ LinkAccount
 
 sendChangeToExistingEmailInternalWarningMail :: Kontrakcja m => User -> Email -> m ()
 sendChangeToExistingEmailInternalWarningMail user newemail = do
@@ -142,24 +160,20 @@ handleCreateCompany :: Kontrakcja m => m KontraLink
 handleCreateCompany = do
   ctx <- getContext
   user <- guardJust $ ctxmaybeuser ctx
-  mcompany <- getCompanyForUser user
-  mcompanyname <- getRequiredField asValidCompanyName "companyname"
-  case (mcompany, mcompanyname) of
-    (Nothing, Just _companyname) -> do
-          company <- runDBUpdate $ CreateCompany Nothing Nothing
-          mailapikey <- random
-          _ <- runDBUpdate $ SetCompanyMailAPIKey (companyid company) mailapikey 1000
-          _ <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid company)
-          _ <- runDBUpdate $ SetUserCompanyAdmin (userid user) True
-          upgradeduser <- guardJustM $ runDBQuery $ GetUserByID $ userid user
-          _ <- addUserCreateCompanyStatEvent (ctxtime ctx) upgradeduser
-          _ <- runDBUpdate 
-                   $ LogHistoryDetailsChanged (userid user) (ctxipnumber ctx) (ctxtime ctx) 
-                                              [("is_company_admin", "false", "true")] 
+  company <- runDBUpdate $ CreateCompany Nothing Nothing
+  mailapikey <- random
+  _ <- runDBUpdate $ SetCompanyMailAPIKey (companyid company) mailapikey 1000
+  _ <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid company)
+  _ <- runDBUpdate $ SetUserCompanyAdmin (userid user) True
+  upgradeduser <- guardJustM $ runDBQuery $ GetUserByID $ userid user
+  _ <- addUserCreateCompanyStatEvent (ctxtime ctx) upgradeduser
+  _ <- runDBUpdate $ LogHistoryDetailsChanged (userid user) (ctxipnumber ctx) (ctxtime ctx)
+                                              [("is_company_admin", "false", "true")]
                                               (Just $ userid user)
-          addFlashM flashMessageCompanyCreated
-          return $ LinkCompanyAccounts emptyListParams
-    _ -> return $ LinkAccount True  --we could remove this ugly flag with more javascript validation
+  companyinfoupdate <- getCompanyInfoUpdate -- This is redundant to standard usage - bu I want to leave it here because of consistency
+  _ <- runDBUpdate $ SetCompanyInfo (companyid company) (companyinfoupdate $ companyinfo company)
+  addFlashM flashMessageCompanyCreated
+  return LoopBack
 
 handleGetChangeEmail :: Kontrakcja m => ActionID -> MagicHash -> m (Either KontraLink Response)
 handleGetChangeEmail actionid hash = withUserGet $ do
@@ -170,7 +184,7 @@ handleGetChangeEmail actionid hash = withUserGet $ do
   Context{ctxmaybeuser = Just user} <- getContext
   mcompany <- getCompanyForUser user
   content <- showUser user mcompany False
-  renderFromBody TopAccount kontrakcja content
+  renderFromBody kontrakcja content
 
 handlePostChangeEmail :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
 handlePostChangeEmail actionid hash = withUserPost $ do
@@ -185,14 +199,14 @@ handlePostChangeEmail actionid hash = withUserPost $ do
                       mnewemail
       if changed
         then do
-            _ <- runDBUpdate $ LogHistoryDetailsChanged (userid user) ctxipnumber ctxtime 
+            _ <- runDBUpdate $ LogHistoryDetailsChanged (userid user) ctxipnumber ctxtime
                                                      [("email", unEmail $ useremail $ userinfo user, unEmail $ fromJust mnewemail)]
                                                      (Just $ userid user)
             addFlashM $ flashMessageYourEmailHasChanged
         else addFlashM $ flashMessageProblemWithEmailChange
     Just _password -> do
       addFlashM $ flashMessageProblemWithPassword
-  return $ LinkAccount False
+  return $ LinkAccount
 
 getNewEmailFromAction :: Kontrakcja m => ActionID -> MagicHash -> m (Maybe Email)
 getNewEmailFromAction actionid hash = do
@@ -252,7 +266,7 @@ getCompanyInfoUpdate = do
 handleUsageStatsForUser :: Kontrakcja m => m (Either KontraLink Response)
 handleUsageStatsForUser = withUserGet $ do
   Context{ctxmaybeuser = Just user} <- getContext
-  showUsageStats user >>= renderFromBody TopAccount kontrakcja
+  showUsageStats user >>= renderFromBody kontrakcja
 
 handleUsageStatsJSONForUserDays :: Kontrakcja m => m JSValue
 handleUsageStatsJSONForUserDays = do
@@ -314,7 +328,7 @@ handleGetUserMailAPI = withUserGet $ do
     Context{ctxmaybeuser = Just user@User{userid}} <- getContext
     mapi <- runDBQuery $ GetUserMailAPI userid
     mcapi <- maybe (return Nothing) (runDBQuery . GetCompanyMailAPI) $ usercompany user
-    showUserMailAPI user mapi mcapi >>= renderFromBody TopAccount kontrakcja
+    showUserMailAPI user mapi mcapi >>= renderFromBody kontrakcja
 
 handlePostUserMailAPI :: Kontrakcja m => m KontraLink
 handlePostUserMailAPI = withUserPost $ do
@@ -352,7 +366,7 @@ handleGetUserSecurity :: Kontrakcja m => m Response
 handleGetUserSecurity = do
     ctx <- getContext
     case (ctxmaybeuser ctx) of
-         Just user -> showUserSecurity user >>= renderFromBody TopAccount kontrakcja
+         Just user -> showUserSecurity user >>= renderFromBody kontrakcja
          Nothing -> sendRedirect $ LinkLogin (ctxlocale ctx) NotLogged
 
 handlePostUserLocale :: Kontrakcja m => m KontraLink
@@ -469,9 +483,9 @@ createUser email fstname sndname mcompany = do
   passwd <- createPassword =<< randomPassword
   muser <- runDBUpdate $ AddUser (fstname, sndname) (unEmail email) (Just passwd) False Nothing (fmap companyid mcompany) (ctxlocale ctx)
   case muser of
-    Just user -> do 
-                 _ <- runDBUpdate $ 
-                      LogHistoryAccountCreated (userid user) (ctxipnumber ctx) 
+    Just user -> do
+                 _ <- runDBUpdate $
+                      LogHistoryAccountCreated (userid user) (ctxipnumber ctx)
                                                (ctxtime ctx) email (userid <$> ctxmaybeuser ctx)
                  return muser
     _         -> return muser
@@ -501,7 +515,7 @@ createNewUserByAdmin ctx names email _freetill custommessage locale = do
 
 handleAcceptTOSGet :: Kontrakcja m => m (Either KontraLink Response)
 handleAcceptTOSGet = withUserGet $ do
-    renderFromBody TopNone kontrakcja =<< pageAcceptTOS
+    renderFromBody kontrakcja =<< pageAcceptTOS
 
 handleAcceptTOSPost :: Kontrakcja m => m KontraLink
 handleAcceptTOSPost = withUserPost $ do
@@ -567,7 +581,7 @@ handleAccountSetupGet aid hash = do
     (False, Nothing) -> do
       -- this is a very disgusting page.  i didn't even know it existed
       content <- activatePageViewNotValidLink ""
-      renderFromBody TopNone kontrakcja content
+      renderFromBody kontrakcja content
   where
     -- looks up the user using the value in the optional email param
     getUserByEmail = do

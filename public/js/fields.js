@@ -1,6 +1,6 @@
 /* Fields of signatories
  * Placement of fields + support for moving them to files
- * View of field in sign view 
+ * View of field in sign view
  */
 
 
@@ -11,7 +11,7 @@ window.FieldPlacement = Backbone.Model.extend({
         x : 0,
         y : 0,
         placed : false
-        
+
     },
     initialize : function(args){
         var placement = this;
@@ -35,10 +35,10 @@ window.FieldPlacement = Backbone.Model.extend({
                 this.set({placed : true});
                 page.addPlacement(placement);
              }
-                      
+
           }
          return setTimeout(function() {placement.addToPage();},100);
-         
+
     },
     x : function() {
         return this.get("x");
@@ -66,14 +66,14 @@ window.FieldPlacement = Backbone.Model.extend({
         var document = this.field().signatory().document();
         var fileid = this.get("fileid");
         var page = document.getFile(fileid).page(this.get("page"));
-        return { 
+        return {
             x : parseInt(this.x()),
             y : parseInt(this.y()),
             pagewidth : page.width(),
             pageheight : page.height(),
-            page : page.number()                              
+            page : page.number()
         }
-    }    
+    }
 });
 
 window.Field = Backbone.Model.extend({
@@ -121,7 +121,7 @@ window.Field = Backbone.Model.extend({
     },
     canBeIgnored: function(){
         var name = this.name();
-        return this.value() == "" && this.placements().length == 0 && (name == "sigco" || name == "sigpersnr" || name == "sigcompnr" || name == "signature");
+        return this.value() == "" && this.placements().length == 0 && (name == "fstname" || name == "sndname" || name == "sigco" || name == "sigpersnr" || name == "sigcompnr" || name == "signature");
     },
     hasRestrictedName : function() {
         return this.isStandard() || this.isSignature(); //this checks are name based
@@ -133,15 +133,15 @@ window.Field = Backbone.Model.extend({
         var name = this.name();
         if (name == "fstname")
             return localization.fstname;
-        if (name == "sndname" )     
+        if (name == "sndname" )
             return localization.sndname;
-        if (name == "email") 
+        if (name == "email")
             return localization.email;
         if (name == "sigco")
             return localization.company;
-        if (name == "sigpersnr" )     
+        if (name == "sigpersnr" )
             return localization.personamNumber;
-        if (name == "sigcompnr") 
+        if (name == "sigcompnr")
             return localization.companyNumber;
         return name;
     },
@@ -154,37 +154,43 @@ window.Field = Backbone.Model.extend({
     validation: function() {
         var field = this;
         var name  = this.name()
-        
+
         if (!this.signatory().author() && (name == "fstname" ||name == "sndname") && !this.signatory().isCsv()) {
             var msg = localization.designview.validation.missingOrWrongNames;
             return new NameValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
-        
+
         if (!this.signatory().author() && name == "email" && !this.signatory().isCsv() ){
             var msg = localization.designview.validation.missingOrWrongEmail;
             return new EmailValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
-        
+
         if (this.signatory().document().elegAuthorization() && name == "sigpersnr" && this.signatory().signs()  && !this.signatory().isCsv() ) {
             var msg = localization.designview.validation.missingOrWrongPersonalNumber
             return new NotEmptyValidation({message: msg});
         }
-        
+
+        if (this.isCustom() && this.signatory().author()) {
+          var msg1 = localization.designview.validation.notReadyField;
+          var msg2 = localization.designview.validation.missingOrWrongCustomFieldValue;
+          return new Validation({validates: function() {return field.isReady()}, message: msg1}).concat(new NotEmptyValidation({message: msg2}));
+        }
+
         if (this.isCustom()) {
             var msg = localization.designview.validation.notReadyField
             return new Validation({validates : function() {return field.isReady()}, message : msg});
         }
-        
+
         return new Validation();
     },
     isStandard: function() {
         var name = this.name();
         return  (name == "fstname")
-             || (name == "sndname" )     
-             || (name == "email") 
+             || (name == "sndname" )
+             || (name == "email")
              || (name == "sigco")
-             || (name == "sigpersnr" )     
-             || (name == "sigcompnr") 
+             || (name == "sigpersnr" )
+             || (name == "sigcompnr")
     },
     isCustom: function() {
         return !this.isStandard() && !this.isSignature();
@@ -194,7 +200,7 @@ window.Field = Backbone.Model.extend({
 
     },
     isReady: function(){
-      return this.get("fresh") == false;  
+      return this.get("fresh") == false;
     },
     makeReady : function() {
       this.set({fresh: false});
@@ -210,11 +216,11 @@ window.Field = Backbone.Model.extend({
       return {   name : this.name()
                , value : this.value()
                , placements : _.map(this.placements(), function(placement) {return placement.draftData();})
-             }  
+             }
     },
    addPlacement : function(placement) {
       var newplacements = new Array(); //Please don't ask why we rewrite this array
-      for(var i=0;i<this.placements().length;i++) 
+      for(var i=0;i<this.placements().length;i++)
          newplacements.push(this.placements()[i]);
       newplacements.push(placement);
       this.set({placements : newplacements});
@@ -250,6 +256,7 @@ window.FieldStandardView = Backbone.View.extend({
             else
                 {
                 input.val(field.nicename());
+                $(this.el).addClass("required");
                 input.addClass("grayed");
                 }
         $(this.el).append(input);
@@ -264,19 +271,18 @@ window.FieldStandardView = Backbone.View.extend({
             var input = InfoTextInput.init({
                                  infotext: field.nicename(),
                                  value: field.value(),
-                                 cssClass :'fieldvalue',       
+                                 cssClass :'fieldvalue',
                                  onChange : function(value) {
-                                    field.setValue(value);    
+                                    field.setValue(value);
                                     SessionStorage.set(signatory.document().documentid(),field.name(),value);
                                   }
                             }).input();
-            this.redborderhere = input;                            
-            input.attr("autocomplete","off");                
+            this.redborderhere = input;
+            input.attr("autocomplete","off");
             wrapper.append(input);
-            $(this.el).append(wrapper);    
-            
+            $(this.el).append(wrapper);
         }
-        
+
         return this;
     },
     redborder : function() {
@@ -308,15 +314,15 @@ window.FieldBasicDesignView = Backbone.View.extend({
                                  cssClass :'fieldvalue',
                                  inputname : field.name(), //Added only for selenium tests
                                  onChange : function(value) {
-                                    field.setValue(value);    
+                                    field.setValue(value);
                                   }
                             }).input();
-        if (field.isClosed())  
-        { 
+        if (field.isClosed())
+        {
             $(this.el).addClass('closed');
             input.attr("readonly","yes");
-        }    
-        $(this.el).append(input);    
+        }
+        $(this.el).append(input);
         return this;
     },
     redborder : function() {
@@ -360,12 +366,12 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
                     onDrop: function(page, x,y ){
                           field.addPlacement(new FieldPlacement({
                               page: page.number(),
-                              fileid: page.file().fileid(),                                  
+                              fileid: page.file().fileid(),
                               field: field,
                               x : x,
-                              y : y  
+                              y : y
                             }))
-                    } 
+                    }
             });
         }
         return icon;
@@ -385,7 +391,7 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
             content: localization.designview.validation.restrictedName
           })
           return false;
-        };  
+        };
         icon.click(fn);
         input.keypress(function(event) {
           if(event.which === 13)
@@ -419,18 +425,18 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
                                  cssClass :'fieldvalue',
                                  inputname : field.name(), //Added only for selenium tests
                                  onChange : function(value) {
-                                    field.setValue(value);    
+                                    field.setValue(value);
                                   }
                             }).input();
-          if (field.isClosed())  
-            { 
+          if (field.isClosed())
+            {
                 $(this.el).addClass('closed');
                 this.input.attr("readonly","yes");
             }
           else if (!field.isStandard())
            {
                this.input.addClass("shorter");
-               $(this.el).append(this.removeIcon())  
+               $(this.el).append(this.removeIcon())
            }
           $(this.el).append(this.input);
         }
@@ -442,7 +448,7 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
                                  cssClass :'fieldvalue',
                                  inputname : field.name(), //Added only for selenium tests
                                  onChange : function(value) {
-                                    field.setName(value);    
+                                    field.setName(value);
                                   }
                }).input();
            this.input.addClass("much-shorter");
@@ -460,5 +466,5 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
         $(this.el).removeClass("redborder");
     }
 });
-    
-})(window); 
+
+})(window);

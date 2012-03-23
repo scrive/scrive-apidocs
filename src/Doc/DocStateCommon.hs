@@ -26,7 +26,7 @@ signLinkFromDetails' :: SignatoryDetails
                      -> [SignatoryRole]
                      -> MagicHash
                      -> SignatoryLink
-signLinkFromDetails' details roles magichash = 
+signLinkFromDetails' details roles magichash =
   SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 0
                 , signatorydetails = details
                 , signatorymagichash = magichash
@@ -48,8 +48,8 @@ signLinkFromDetails' details roles magichash =
 
 emptySignatoryFields :: [SignatoryField]
 emptySignatoryFields = [
-          sf FirstNameFT 
-        , sf LastNameFT 
+          sf FirstNameFT
+        , sf LastNameFT
         , sf CompanyFT
         , sf PersonalNumberFT
         , sf CompanyNumberFT
@@ -71,7 +71,7 @@ blankDocument =
           , documentstatus               = Preparation
           , documenttype                 = Signable Contract
           , documentfunctionality        = BasicFunctionality
-          , documentctime                = fromSeconds 0 
+          , documentctime                = fromSeconds 0
           , documentmtime                = fromSeconds 0
           , documentdaystosign           = Nothing
           , documenttimeouttime          = Nothing
@@ -100,7 +100,7 @@ blankDocument =
 -}
 newDocumentFunctionality :: DocumentType -> User -> DocumentFunctionality
 newDocumentFunctionality documenttype user =
-  case (getValueForProcess documenttype processbasicavailable, 
+  case (getValueForProcess documenttype processbasicavailable,
         preferreddesignmode $ usersettings user) of
     (Just True, Nothing) -> BasicFunctionality
     (Just True, Just BasicMode) -> BasicFunctionality
@@ -114,7 +114,7 @@ checkCloseDocument doc = catMaybes $
   [ trueOrMessage (isSignable doc) ("document is not signable")
   , trueOrMessage (documentstatus doc == Pending || documentstatus doc == AwaitingAuthor)
                     ("document should be pending or awaiting author but it is " ++ (show $ documentstatus doc))
-  , trueOrMessage (all (isSignatory =>>^ hasSigned) (documentsignatorylinks doc)) 
+  , trueOrMessage (all (isSignatory =>>^ hasSigned) (documentsignatorylinks doc))
                     ("Not all signatories have signed")
   ]
 
@@ -169,7 +169,7 @@ checkSignDocument doc slid mh = catMaybes $
   ]
 
 checkResetSignatoryData :: Document -> [(SignatoryDetails, [SignatoryRole], [SignatoryAttachment], Maybe CSVUpload)] -> [String]
-checkResetSignatoryData doc sigs = 
+checkResetSignatoryData doc sigs =
   let authors    = [ r | (_, r, _, _) <- sigs, SignatoryAuthor `elem` r]
   in catMaybes $
       [ trueOrMessage (documentstatus doc == Preparation) $ "Document is not in preparation, is in " ++ show (documentstatus doc)
@@ -247,7 +247,7 @@ replaceSignatoryUser siglink user mcompany =
 
 checkUpdateFields :: Document -> SignatoryLinkID -> [String]
 checkUpdateFields doc slid = catMaybes $
-  [ trueOrMessage (documentstatus doc == Pending) $ "Document is not in Pending (is " ++ (show $ documentstatus doc) ++ ")"
+  [ trueOrMessage (documentstatus doc == Pending || documentstatus doc == AwaitingAuthor) $ "Document is not in Pending or AwaitingAuthor (is " ++ (show $ documentstatus doc) ++ ")"
   , trueOrMessage (isJust $ getSigLinkFor doc slid) $ "Signatory does not exist"
   , trueOrMessage (not $ hasSigned (doc, slid)) "Signatory has already signed."
   ]
@@ -261,9 +261,9 @@ checkAddEvidence doc slid = catMaybes $
 
 checkPendingToAwaitingAuthor :: Document -> [String]
 checkPendingToAwaitingAuthor doc = catMaybes $
-  [ trueOrMessage (documentstatus doc == Pending) 
+  [ trueOrMessage (documentstatus doc == Pending)
                     ("document should be pending but it is " ++ (show $ documentstatus doc))
-  , trueOrMessage (all ((isSignatory &&^ (not . isAuthor)) =>>^ hasSigned) (documentsignatorylinks doc)) 
+  , trueOrMessage (all ((isSignatory &&^ (not . isAuthor)) =>>^ hasSigned) (documentsignatorylinks doc))
                     ("Not all non-author signatories have signed")
   , trueOrMessage (not $ hasSigned $ getAuthorSigLink doc) "Author has already signed"
   ]
