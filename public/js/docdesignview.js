@@ -12,7 +12,6 @@ var DocumentDesignView = Backbone.View.extend({
         this.model.bind('change:ready', this.render);
         this.model.bind('change:signatories', this.refreshFinalButton);
         this.model.view = this;
-        this.document;
         this.prerender();
         this.render();
     },
