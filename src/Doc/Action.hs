@@ -46,9 +46,8 @@ import EvidenceLog.Model
 
 postDocumentPreparationChange :: Kontrakcja m => Document -> m ()
 postDocumentPreparationChange doc@Document{documentid, documenttitle} = do
-  unless (isPending doc) $ do
-    Log.debug "Ops, not in Pending state"
-    internalError
+  unless (isPending doc) $
+    stateMismatchError "postDocumentPreparationChange" Pending doc
   Log.docevent $ "Preparation -> Pending; Sending invitation emails: " ++ show documentid
   ctx <- getContext
   msaveddoc <- saveDocumentForSignatories doc
@@ -72,9 +71,8 @@ postDocumentPreparationChange doc@Document{documentid, documenttitle} = do
 
 postDocumentPendingChange :: Kontrakcja m => Document -> Document -> m ()
 postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc = do
-  unless (isPending doc) $ do
-    Log.debug "Ops, not in Pending state"
-    internalError
+  unless (isPending doc) $
+    stateMismatchError "postDocumentPendingChange" Pending doc
   case undefined of
     _ | canAuthorSignLast doc -> do
       Log.docevent $ "All have signed but author: " ++ show documentid
@@ -109,9 +107,8 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc = do
 
 postDocumentRejectedChange :: Kontrakcja m => Document -> SignatoryLinkID -> m ()
 postDocumentRejectedChange doc@Document{..} siglinkid = do
-  unless (isRejected doc) $ do
-    Log.debug "Ops, not in Rejected state"
-    internalError
+  unless (isRejected doc) $
+    stateMismatchError "postDocumentRejectedChange" Rejected doc
   Log.docevent $ "Pending -> Rejected; send reject emails: " ++ show documentid
   _ <- addDocumentRejectStatEvents doc
   Log.server $ "Sending rejection emails for document #" ++ show documentid ++ ": " ++ documenttitle
@@ -122,9 +119,8 @@ postDocumentRejectedChange doc@Document{..} siglinkid = do
 
 postDocumentCanceledChange :: Kontrakcja m => Document -> m ()
 postDocumentCanceledChange doc@Document{..} = do
-  unless (isCanceled doc) $ do
-    Log.debug "Ops, not in Canceled state"
-    internalError
+  unless (isCanceled doc) $
+    stateMismatchError "postDocumentCanceledChange" Canceled doc
   Log.docevent $ "Pending -> Canceled (ElegDataMismatch); Sending cancelation emails: " ++ show documentid
   _ <- addDocumentCancelStatEvents doc
   -- if canceled because of ElegDataMismatch, send out emails
@@ -136,6 +132,11 @@ postDocumentCanceledChange doc@Document{..} = do
       sendElegDataMismatchEmails ctx doc author
     -- should we send cancelation emails?
     _ -> return ()
+
+stateMismatchError :: Kontrakcja m => String -> DocumentStatus -> Document -> m a
+stateMismatchError funame expected Document{documentstatus, documentid} = do
+  Log.debug $ funame ++ ": document #" ++ show documentid ++ " in " ++ show documentstatus ++ " state, expected " ++ show expected
+  internalError
 
 getDocAuthor :: Kontrakcja m => Document -> m User
 getDocAuthor doc = do
