@@ -7,7 +7,6 @@ import Control.Arrow
 import Control.Monad.Reader
 import Data.Either
 import Data.Maybe
-import Data.Time.LocalTime
 import Database.HDBC
 
 import DB.Classes
@@ -15,27 +14,19 @@ import DB.Model
 import DB.Utils
 import DB.Versions
 
-getDatabaseName :: DB String
-getDatabaseName = do
-  fromMaybe "<database>" <$> getOne (SQL "SELECT current_catalog" [])
-
 -- | Runs all checks on a database
 performDBChecks :: (String -> DB ()) -> [Table] -> [Migration] -> DB ()
 performDBChecks logger tables migrations = do
   checkDBTimeZone logger
   checkDBConsistency logger (tableVersions : tables) migrations
 
--- | Checks whether database returns timestamps in UTC
+-- |  Checks whether database returns timestamps in UTC
 checkDBTimeZone :: (String -> DB ()) -> DB ()
 checkDBTimeZone logger = do
-  logger "Checking whether database returns timestamps in UTC..."
-  tz <- maybe (error "'SELECT now()' returned Nothing") zonedTimeZone
-    <$> getOne (SQL "SELECT now()" [])
-  if timeZoneMinutes tz == 0
-     then return ()
-     else do
-       dbname <- getDatabaseName
-       error $ "Database returns timestamps using time zone " ++ show tz ++ ". Execute query \"ALTER DATABASE " ++ dbname ++ " SET TIMEZONE = 'UTC'\" and try again."
+  Just dbname <- getOne (SQL "SELECT current_catalog" [])
+  logger $ "Setting '" ++ dbname ++ "' database to return timestamps in UTC"
+  _ <- kRun $ SQL ("ALTER DATABASE " ++ dbname ++ " SET TIMEZONE = 'UTC'") []
+  return ()
 
 -- | Checks whether database is consistent (performs migrations if necessary)
 checkDBConsistency :: (String -> DB ()) -> [Table] -> [Migration] -> DB ()
