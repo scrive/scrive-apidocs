@@ -1472,12 +1472,12 @@ testGetDocumentsSharedInCompany = doTimes 10 $ do
   _ <- dbUpdate $ SetDocumentSharing [docid4] False
   _ <- dbUpdate $ SetDocumentSharing [docid1, docid2, docid3, docid5, docid6] True
 
-  dlist1 <- dbQuery $ GetAvaibleTemplates (userid user1)
-  dlist2 <- dbQuery $ GetAvaibleTemplates (userid user2)
-  dlist3 <- dbQuery $ GetAvaibleTemplates (userid user3)
-  dlist4 <- dbQuery $ GetAvaibleTemplates (userid user4)
-  dlist5 <- dbQuery $ GetAvaibleTemplates (userid user5)
-  dlist6 <- dbQuery $ GetAvaibleTemplates (userid user6)
+  dlist1 <- dbQuery $ GetAvailableTemplates (userid user1) [Offer, Order, Contract]
+  dlist2 <- dbQuery $ GetAvailableTemplates (userid user2) [Offer, Order, Contract]
+  dlist3 <- dbQuery $ GetAvailableTemplates (userid user3) [Offer, Order, Contract]
+  dlist4 <- dbQuery $ GetAvailableTemplates (userid user4) [Offer, Order, Contract]
+  dlist5 <- dbQuery $ GetAvailableTemplates (userid user5) [Offer, Order, Contract]
+  dlist6 <- dbQuery $ GetAvailableTemplates (userid user6) [Offer, Order, Contract]
 
   mapM_ (liftIO . putStrLn . show . map documentid) [dlist1, dlist2, dlist3, dlist4, dlist5, dlist6]
 

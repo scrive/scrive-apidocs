@@ -130,9 +130,9 @@ jsonDocumentsList = withUserGet $ do
     "Template" -> runDBQuery $ GetTemplatesByAuthor uid
     "Attachment" -> runDBQuery $ GetAttachmentsByAuthor uid
     "Rubbish" -> runDBQuery $ GetDeletedDocumentsByUser uid
-    "Template|Contract" -> filter (\d -> documenttype d == Template Contract) <$> (runDBQuery $ GetAvaibleTemplates  uid)
-    "Template|Offer" ->  filter (\d -> documenttype d == Template Offer) <$>  (runDBQuery $ GetAvaibleTemplates  uid)
-    "Template|Order" -> filter (\d -> documenttype d == Template Order) <$> (runDBQuery $ GetAvaibleTemplates  uid)
+    "Template|Contract" -> runDBQuery $ GetAvailableTemplates uid [Contract]
+    "Template|Offer" ->  runDBQuery $ GetAvailableTemplates uid [Offer]
+    "Template|Order" -> runDBQuery $ GetAvailableTemplates uid [Order]
     _ -> do
       Log.error "Documents list: No valid document type provided"
       return []

@@ -32,7 +32,7 @@ module Doc.Model
   , GetDocumentsByCompanyWithFiltering(..)
   , GetDocumentsByAuthor(..)
   , GetTemplatesByAuthor(..)
-  , GetAvaibleTemplates(..)
+  , GetAvailableTemplates(..)
   , GetAttachmentsByAuthor(..)
   , GetDocumentsBySignatory(..)
   , GetDocumentsOfTypeBySignatory(..)
@@ -122,7 +122,7 @@ data DocumentFilter
   | DocumentFilterMaxChangeTime MinutesTime
   | DocumentFilterByService (Maybe ServiceID)
   | DocumentFilterByRole SignatoryRole
-  | DocumentFilterByProcess DocumentProcess
+  | DocumentFilterByProcess [DocumentProcess]
 
 data DocumentDomain
   = DocumentsOfAuthor UserID
@@ -213,8 +213,8 @@ documentFilterToSQL (DocumentFilterMaxChangeTime ctime) =
   SQL (maxselect ++ " <= ?") [toSql ctime]
 documentFilterToSQL (DocumentFilterByService mservice) =
   SQL "documents.service_id IS NOT DISTINCT FROM ?" [toSql mservice]
-documentFilterToSQL (DocumentFilterByProcess process) =
-  SQL "documents.process = ?" [toSql process]
+documentFilterToSQL (DocumentFilterByProcess processes) =
+  sqlConcatOR $ map (\process -> SQL "documents.process = ?" [toSql process]) processes
 documentFilterToSQL (DocumentFilterByRole role) =
   SQL "(signatory_links.roles & ?) <> 0" [toSql [role]]
 documentFilterToSQL (DocumentFilterByTags []) =
@@ -1205,10 +1205,10 @@ instance DBQuery GetTemplatesByAuthor [Document] where
   dbQuery (GetTemplatesByAuthor uid) = 
     dbQuery (GetDocuments [TemplatesOfAuthor uid] [])
 
-data GetAvaibleTemplates = GetAvaibleTemplates UserID
-instance DBQuery GetAvaibleTemplates [Document] where
-  dbQuery (GetAvaibleTemplates uid) =
-    dbQuery (GetDocuments [TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid] [])
+data GetAvailableTemplates = GetAvailableTemplates UserID [DocumentProcess]
+instance DBQuery GetAvailableTemplates [Document] where
+  dbQuery (GetAvailableTemplates uid processes) =
+    dbQuery (GetDocuments [TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid] [DocumentFilterByProcess processes])
 
 {- |
     All documents where the user is a signatory that are not deleted.  An author is a type
@@ -1224,7 +1224,7 @@ instance DBQuery GetDocumentsBySignatory [Document] where
 data GetDocumentsOfTypeBySignatory = GetDocumentsOfTypeBySignatory DocumentProcess UserID
 instance DBQuery GetDocumentsOfTypeBySignatory [Document] where
   dbQuery (GetDocumentsOfTypeBySignatory process uid) =
-    dbQuery (GetDocuments [DocumentsForSignatory uid] [DocumentFilterByProcess process])
+    dbQuery (GetDocuments [DocumentsForSignatory uid] [DocumentFilterByProcess [process]])
 
 data GetTimeoutedButPendingDocuments = GetTimeoutedButPendingDocuments MinutesTime
 instance DBQuery GetTimeoutedButPendingDocuments [Document] where
