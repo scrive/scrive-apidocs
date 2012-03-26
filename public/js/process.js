@@ -101,7 +101,7 @@ window.Process = Backbone.Model.extend({
     },
     authorsignatoryname : function() {
         return this.get("authorsignatoryname");
-    },  
+    },
     signatoryname : function() {
         return this.get("signatoryname");
     },
@@ -127,15 +127,15 @@ window.Region = Backbone.Model.extend({
         return this.get("se");
     },
     setGB : function() {
-        this.set({gb: true, se: false})
+        this.set({gb: true, se: false});
     },
     setSE : function() {
-        this.set({gb: false, se: true})
+        this.set({gb: false, se: true});
     },
     draftData : function() {
         if (this.gb())
             return "gb";
-        return "se";    
+        return "se";
     }
 });
 
