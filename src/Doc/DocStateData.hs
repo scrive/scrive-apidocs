@@ -211,7 +211,6 @@ data DocumentProcess = Contract | Offer | Order
 data DocumentType = Signable DocumentProcess
                   | Template DocumentProcess
                   | Attachment
-                  | AttachmentTemplate
   deriving (Eq, Ord, Show)
 
 instance Convertible DocumentType SqlValue where
@@ -219,20 +218,17 @@ instance Convertible DocumentType SqlValue where
     Signable _ -> 1
     Template _ -> 2
     Attachment -> 3
-    AttachmentTemplate -> 4
 
 documentType :: (Int, Maybe DocumentProcess) -> DocumentType
 documentType (1, Just p) = Signable p
 documentType (2, Just p) = Template p
 documentType (3, Nothing) = Attachment
-documentType (4, Nothing) = AttachmentTemplate
 documentType v = error $ "documentType: wrong values: " ++ show v
 
 toDocumentProcess :: DocumentType -> Maybe DocumentProcess
 toDocumentProcess (Signable p) = Just p
 toDocumentProcess (Template p) = Just p
 toDocumentProcess (Attachment) = Nothing
-toDocumentProcess (AttachmentTemplate) = Nothing
 
 -- | Terrible, I know. Better idea?
 -- | TODO: to be KILLED.
@@ -244,7 +240,6 @@ doctypeFromString "Template Contract"  = Template Contract
 doctypeFromString "Template Offer"     = Template Offer
 doctypeFromString "Template Order"     = Template Order
 doctypeFromString "Attachment"         = Attachment
-doctypeFromString "AttachmentTemplate" = AttachmentTemplate
 doctypeFromString _                    = error "Bad document type"
 
 data DocumentFunctionality = BasicFunctionality | AdvancedFunctionality

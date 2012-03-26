@@ -248,7 +248,6 @@ documentAllTypes = [ Signable Contract
                    , Template Order
                    , Template Offer
                    , Attachment
-                   , AttachmentTemplate
                    ]
 
 documentSignableTypes :: [DocumentType]

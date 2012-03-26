@@ -128,7 +128,6 @@ docFieldsListForJSON tl crtime doc =  propagateMonad [
       pn <- renderTextForProcess doc processname
       case documenttype doc of
         Attachment -> renderTemplateFM "docListAttachmentLabel" $ do return ()
-        AttachmentTemplate -> renderTemplateFM "docListAttachmentLabel" $ do return ()
         Template _ -> renderTemplateFM "docListTemplateLabel" $ do field "processname" pn
         Signable _ -> return pn
 
