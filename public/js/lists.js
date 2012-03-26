@@ -340,10 +340,6 @@
         isUnsaved: function() {
             return this.get("unsaved");
         },
-        toggleSelect: function() {
-            this.set({ "selected": !this.isSelected() }, { silent: true });
-            this.trigger("selected:change");
-        },
         select: function() {
             this.set({ "selected": true });
         },
@@ -488,14 +484,17 @@
             }
         },
         selectCheck: function(e) {
-            this.model.toggleSelect();
+          if(e.target.checked)
+            this.model.select();
+          else
+            this.model.unselect();
         },
         selectRow: function(e) {
             // ignore checkboxes and links
             if (!$(e.target).is(":checkbox, a")) {
                 // select only this one
                 this.model.collection.selectNone();
-                this.model.toggleSelect();
+                this.model.select();
             }
         },
         toggleExpand: function() {
