@@ -2563,6 +2563,7 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_PasswordValidationMessagePasswordsDontMatch","Nytt lösenord matchar inte med Upprepa lösenord",,"The two passwords do not match."
 "_modalAccountSetupCallMe","Jag vill veta mer, ring mig!",,"I want to know more, call me!"
 "_modalAccountSetupPhone","Telefonnummer",,"Phone"
+"_uploadNewFile","Vänligen välj en ny fil.",,"Please select a new file to upload."
 _CompanyMailAPI,"Company Settings",,"Company Settings"
 _modalDenyDelay,"This confirmation link has expired.",,"This confirmation link has expired."
 _modalConfirmDelay,"An account for your company has been created for $email$. Thank you.",,"An account for your company has been created for $email$. Thank you."

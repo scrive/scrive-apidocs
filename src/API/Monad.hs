@@ -42,6 +42,9 @@ instance ToAPIResponse JSValue where
 instance ToAPIResponse a => ToAPIResponse (Created a) where
   toAPIResponse (Created a) = (toAPIResponse a) { rsCode = 201 }
   
+instance ToAPIResponse () where
+  toAPIResponse () = toResponse ""
+  
 newtype APIMonad m a = AM { runAPIMonad :: ErrorT APIError m a }
                      deriving (MonadTrans, Monad, MonadError APIError, Functor, Applicative, MonadIO)
                               
@@ -141,8 +144,7 @@ instance Monad m => APIGuard m Bool () where
 instance (Monad m, JSON b) => APIGuard m (Result b) b where
   guardEither (Error _) = return $ Left BadInput
   guardEither (Ok v) = return $ Right v
-
-
+  
 getAPIUser :: Kontrakcja m => APIMonad m User
 getAPIUser = do
   Context {ctxmaybeuser} <- getContext
