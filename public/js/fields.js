@@ -121,7 +121,7 @@ window.Field = Backbone.Model.extend({
     },
     canBeIgnored: function(){
         var name = this.name();
-        return this.value() == "" && this.placements().length == 0 && (name == "sigco" || name == "sigpersnr" || name == "sigcompnr" || name == "signature");
+        return this.value() == "" && this.placements().length == 0 && (name == "fstname" || name == "sndname" || name == "sigco" || name == "sigpersnr" || name == "sigcompnr" || name == "signature");
     },
     hasRestrictedName : function() {
         return this.isStandard() || this.isSignature(); //this checks are name based
@@ -168,6 +168,12 @@ window.Field = Backbone.Model.extend({
         if (this.signatory().document().elegAuthorization() && name == "sigpersnr" && this.signatory().signs()  && !this.signatory().isCsv() ) {
             var msg = localization.designview.validation.missingOrWrongPersonalNumber
             return new NotEmptyValidation({message: msg});
+        }
+
+        if (this.isCustom() && this.signatory().author()) {
+          var msg1 = localization.designview.validation.notReadyField;
+          var msg2 = localization.designview.validation.missingOrWrongCustomFieldValue;
+          return new Validation({validates: function() {return field.isReady()}, message: msg1}).concat(new NotEmptyValidation({message: msg2}));
         }
 
         if (this.isCustom()) {
