@@ -262,6 +262,9 @@ documentTemplateTypes = [ Template Contract
                         , Template Offer
                         ]
 
+instance Arbitrary DocumentProcess where
+  arbitrary = elements [Contract, Order, Offer]
+
 instance Arbitrary DocumentType where
   arbitrary = elements documentAllTypes
 
