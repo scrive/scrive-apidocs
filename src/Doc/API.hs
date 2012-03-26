@@ -10,7 +10,7 @@ import Doc.DocStateQuery
 import Doc.DocStateData
 import Doc.Model
 import Doc.JSON
---import Control.Applicative
+import Control.Applicative
 --import Control.Monad
 import Control.Monad.Trans
 import Misc
@@ -48,6 +48,9 @@ import EvidenceLog.Model
 documentAPI :: Route (Kontra' Response)
 documentAPI = choice [
   dir "api" $ dir "document" $ hPostNoXToken $ toK0 $ documentNew,
+  -- /api/mainfile/{docid} ==> Change main file
+  dir "api" $ dir "mainfile" $ hPostNoXToken $ toK1 $ documentChangeMainFile,
+
 --  dir "api" $ dir "document" $ hGet          $ toK1 $ documentView,
   dir "api" $ dir "document" $ hPostNoXToken $ toK6 $ documentUploadSignatoryAttachment,
   dir "api" $ dir "document" $ hDelete       $ toK6 $ documentDeleteSignatoryAttachment
@@ -90,6 +93,41 @@ documentNew = api $ do
   d2 <- apiGuardL' $ runDBUpdate $ AttachFile (documentid d1) (fileid file) actor
   _ <- lift $ addDocumentCreateStatEvents d2
   return $ Created $ jsonDocumentForAuthor d2 (ctxhostpart ctx)
+
+-- this one must be standard post with post params because it needs to
+-- be posted from a browser form
+-- Change main file, file stored in input "file" OR templateid stored in "template"
+documentChangeMainFile :: Kontrakcja m => DocumentID -> m Response
+documentChangeMainFile docid = api $ do
+  ctx <- getContext
+  aa <- apiGuard (forbidden "No user is logged in.") $ mkAuthorActor ctx
+  doc <- apiGuardL forbidden' $ getDocByDocID docid
+  apiGuard (forbidden "Logged in user is not author of document.") (isAuthor $ getSigLinkFor doc (ctxmaybeuser ctx))
+
+  fileinput <- lift $ getDataFn' (lookInput "file")
+  templateinput <- lift $ getDataFn' (look "template")
+
+  fileid <- case (fileinput, templateinput) of
+            (Just (Input contentspec (Just filename') _contentType), _) -> do
+              content1 <- case contentspec of
+                Left filepath -> liftIO $ BSL.readFile filepath
+                Right content -> return content
+                
+              -- we need to downgrade the PDF to 1.4 that has uncompressed structure
+              -- we use gs to do that of course
+              content <- apiGuardL (badInput "PDF precheck failed.") $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
+              let filename = basename filename'
+      
+              fileid <$> (lift $ runDB $ dbUpdate $ NewFile filename content)
+            (_, Just templateids) -> do
+              templateid <- apiGuard (badInput $ "Template id in bad format: " ++ templateids) $ maybeRead templateids
+              temp <- apiGuardL' $ getDocByDocID templateid
+              apiGuard (badInput "No template found for that id (or you don't have permissions).") $ listToMaybe $ documentfiles temp
+            _ -> throwError $ badInput "This API call requires one of 'file' or 'template' POST parameters."
+  
+  _ <- apiGuardL' $ runDBUpdate $ AttachFile docid fileid aa
+  return ()
+
 
 --documentView :: (Kontrakcja m) => DocumentID -> m Response
 --documentView (_ :: DocumentID) = api $  undefined

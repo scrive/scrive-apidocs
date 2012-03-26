@@ -121,8 +121,10 @@ instance ToAPIResponse a => ToAPIResponse (Created a) where
 
 instance ToAPIResponse FormEncoded where
   toAPIResponse (FormEncoded kvs) = 
-    let r1 = Web.toResponse $ urlEncodeVars kvs
+    let r1 = Web.toResponse $ urlEncodeVars kvs  
     in setHeader "Content-Type" "application/x-www-form-urlencoded" r1
+    
+    
 
 newtype APIMonad m a = AM { runAPIMonad :: ErrorT APIError m a }
                      deriving (MonadTrans, Monad, MonadError APIError, Functor, Applicative, MonadIO)
@@ -211,11 +213,10 @@ instance (Monad m, JSON b) => APIGuard m (Result b) b where
   guardEither (Error _) = return $ Left $ BadInput
   guardEither (Ok v) = return $ Right v
 -}
-
+  
 -- get the user for the api; it can either be 
 --  1. OAuth using Authorization header
 --  2. Session for Ajax client
-
 getAPIUser :: Kontrakcja m => APIMonad m (User, Either AuthorActor APIActor)
 getAPIUser = do
   moauthuser <- getOAuthUser

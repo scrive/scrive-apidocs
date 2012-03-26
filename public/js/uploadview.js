@@ -47,11 +47,13 @@
             var model = view.model;
             var wiz = model.wizard();
             var t = $(view.text);
-            t.find("a.jswizardback").click(function() {
+            if(t.find("a.jswizardback").length > 0)
+              t.find("a.jswizardback").click(function() {
                 wiz.previousStep();
                 return false;
-            });
-            t.find(".jsprompt").text(wiz.get('process').prompt);
+              });
+            if(t.find(".jsprompt").length > 0)
+              t.find(".jsprompt").text(wiz.get('process').prompt);
             $(view.el).append(t);
             var url = "/api/document";
             var upbutton = UploadButton.init({
@@ -70,7 +72,7 @@
                     method : "POST",
                     url : url,
                     ajax: true,
-                  json: '{"type" : ' + wiz.get('process').signable + '}',
+                  json: '{"type" : ' + (wiz.get('process')?wiz.get('process').signable:"1") + '}',
                     expectedType: 'json',
                     beforeSend: function() {
                         console.log("first");
@@ -99,7 +101,8 @@
             up.find(".signStepsBodyUploadBox .signStepsButtonContainer").append(upbutton.input());
             $(view.el).append(up);
             var temps = $(view.template);
-            temps.find("a").click(function() {
+            temps.find("a").click(function(event) {
+                event.preventDefault();
                 wiz.nextStep();
                 return false;
             });
