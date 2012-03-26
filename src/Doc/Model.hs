@@ -28,7 +28,7 @@ module Doc.Model
   , ErrorDocument(..)
   , GetDeletedDocumentsByUser(..)
   , GetDocumentByDocumentID(..)
-  , GetDocuments(..)
+  , GetDocumentsByService(..)
   , GetDocumentsByCompanyWithFiltering(..)
   , GetDocumentsByAuthor(..)
   , GetTemplatesByAuthor(..)
@@ -982,9 +982,9 @@ instance DBQuery GetDocumentByDocumentID (Maybe Document) where
       <++> SQL "WHERE id = ? AND deleted = FALSE" [toSql did])
       >>= oneObjectReturnedGuard
 
-data GetDocuments = GetDocuments (Maybe ServiceID)
-instance DBQuery GetDocuments [Document] where
-  dbQuery (GetDocuments msid) = do
+data GetDocumentsByService = GetDocumentsByService (Maybe ServiceID)
+instance DBQuery GetDocumentsByService [Document] where
+  dbQuery (GetDocumentsByService msid) = do
     selectDocuments $ selectDocumentsSQL
       <++> SQL "WHERE service_id IS NOT DISTINCT FROM ?" [toSql msid]
 

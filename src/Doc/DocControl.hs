@@ -1067,7 +1067,7 @@ jsonDocumentGetterWithPermissionCheck did = do
 handleInvariantViolations :: Kontrakcja m => m Response
 handleInvariantViolations = onlyAdmin $ do
   Context{ ctxtime } <- getContext
-  docs <- runDBQuery $ GetDocuments Nothing
+  docs <- runDBQuery $ GetDocumentsByService Nothing
   let probs = listInvariantProblems ctxtime docs
       res = case probs of
         [] -> "No problems!"
@@ -1149,7 +1149,7 @@ handleSetAttachments did = do
 
 handleUpsalesDeleted :: Kontrakcja m => m Response
 handleUpsalesDeleted = onlyAdmin $ do
-  docs <- runDBQuery $ GetDocuments $ Just $ ServiceID $ BS.fromString "upsales"
+  docs <- runDBQuery $ GetDocumentsByService $ Just $ ServiceID $ BS.fromString "upsales"
   let deleteddocs = [[show $ documentid d, showDateYMD $ documentctime d, documenttitle d]
                     | d <- docs
                     , isDeletedFor $ getAuthorSigLink d

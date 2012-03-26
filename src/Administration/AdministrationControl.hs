@@ -654,7 +654,7 @@ showFunctionalityStats :: Kontrakcja m => m String
 showFunctionalityStats = onlySalesOrAdmin $ do
   ctx@Context{ ctxtime } <- getContext
   users <- runDBQuery GetUsers
-  documents <- runDBQuery $ GetDocuments $ currentServiceID ctx
+  documents <- runDBQuery $ GetDocumentsByService $ currentServiceID ctx
   adminFunctionalityStatsPage (mkStats ctxtime users)
                               (mkStats ctxtime documents)
   where
@@ -701,7 +701,7 @@ jsonDocuments :: Kontrakcja m => m JSValue
 jsonDocuments = onlySalesOrAdmin $ do
     srvs <- runDBQuery $ GetServices
     Log.debug "Document list for admin per service"
-    docs <- join <$> (sequence $ map (runDBQuery . GetDocuments) (Nothing:(map (Just . serviceid) srvs)))
+    docs <- join <$> (sequence $ map (runDBQuery . GetDocumentsByService) (Nothing:(map (Just . serviceid) srvs)))
     Log.debug $ "Total document found:" ++ show (length docs)
     params <- getListParamsNew
     let documents = documentsSortSearchPage params docs

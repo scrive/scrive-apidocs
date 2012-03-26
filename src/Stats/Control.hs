@@ -532,7 +532,7 @@ addAllDocsToStats = onlyAdmin $ do
   stats <- runDBQuery GetDocStatEvents
   let stats' = sort $ map seDocumentID stats
   _ <- forM allservices $ \s -> do
-    docs <- runDBQuery $ GetDocuments s
+    docs <- runDBQuery $ GetDocumentsByService s
     let docs' = sortBy (\d1 d2 -> compare (documentid d1) (documentid d2)) docs
         docs'' = filterMissing stats' docs'
     mapM allDocStats docs''
@@ -924,7 +924,7 @@ addAllSigsToStats = onlyAdmin $ do
   let stats' = sort $ map ssDocumentID stats
   Context{ctxtime} <- getContext
   _ <- forM allservices $ \s -> do
-    docs <- runDBQuery $ GetDocuments s
+    docs <- runDBQuery $ GetDocumentsByService s
     let docs' = sortBy (\d1 d2 -> compare (documentid d1) (documentid d2)) docs
         docs'' = filterMissing stats' docs'
     sequence $ [runDB $ allSignStats d sl ctxtime
