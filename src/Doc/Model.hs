@@ -123,6 +123,7 @@ data DocumentFilter
   | DocumentFilterByService (Maybe ServiceID)
   | DocumentFilterByRole SignatoryRole
   | DocumentFilterByProcess [DocumentProcess]
+  | DocumentFilterByString String
 
 data DocumentDomain
   = DocumentsOfAuthor UserID
@@ -226,6 +227,32 @@ documentFilterToSQL (DocumentFilterByTags tags) =
       escape '%' = "\\%"
       escape '_' = "\\_"
       escape c = [c]
+documentFilterToSQL (DocumentFilterByString string) =
+  SQL "documents.title ILIKE ?" [sqlpat] `sqlOR` 
+     sqlJoinWithAND (map (\wordpat -> SQL "documents.fields ILIKE ?" [wordpat]) sqlwordpat)
+  where
+      sqlpat = toSql $ "%" ++ concatMap escape string ++ "%"
+      sqlwordpat = map (\word -> toSql $ "%" ++ concatMap escape word ++ "%") (words string)
+      escape '\\' = "\\\\"
+      escape '%' = "\\%"
+      escape '_' = "\\_"
+      escape c = [c]
+
+sqlOR :: SQL -> SQL -> SQL
+sqlOR sql1 sql2 = mconcat [parenthesize sql1, SQL " OR " [], parenthesize sql2]
+
+sqlAND :: SQL -> SQL -> SQL
+sqlAND sql1 sql2 = mconcat [parenthesize sql1, SQL " AND " [], parenthesize sql2]
+
+sqlJoinWith :: SQL -> [SQL] -> SQL
+sqlJoinWith comm list = mconcat $ intersperse comm $ map parenthesize list
+
+
+sqlJoinWithOR :: [SQL] -> SQL
+sqlJoinWithOR = sqlJoinWith (SQL " OR " [])
+
+sqlJoinWithAND :: [SQL] -> SQL
+sqlJoinWithAND = sqlJoinWith (SQL " AND " [])
 
 sqlLog :: MinutesTime -> String -> (String, String, SqlValue)
 sqlLog time text = sql' "log" "log || ?" logmsg
