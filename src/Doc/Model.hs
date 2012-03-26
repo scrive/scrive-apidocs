@@ -33,7 +33,7 @@ module Doc.Model
   , GetDocumentsByAuthor(..)
   , GetTemplatesByAuthor(..)
   , GetAvaibleTemplates(..)
-  , GetDocumentsOfTypeByAuthor(..)
+  , GetAttachmentsByAuthor(..)
   , GetDocumentsBySignatory(..)
   , GetDocumentsOfTypeBySignatory(..)
   , GetTimeoutedButPendingDocuments(..)
@@ -102,6 +102,7 @@ import qualified Data.Map as M
 import Doc.Tables
 import Control.Applicative
 import Util.SignatoryLinkUtils
+import Text.JSON.Generic
 import Doc.DocProcess
 import Doc.DocStateCommon
 import qualified Log
@@ -121,6 +122,7 @@ data DocumentFilter
   | DocumentFilterMaxChangeTime MinutesTime
   | DocumentFilterByService (Maybe ServiceID)
   | DocumentFilterByRole SignatoryRole
+  | DocumentFilterByProcess DocumentProcess
 
 data DocumentDomain
   = DocumentsOfAuthor UserID
@@ -132,9 +134,10 @@ data DocumentDomain
   | TemplatesOfAuthor UserID
   | TemplatesOfAuthorDeleted UserID
   | TemplatesOfAuthorDeleteValue UserID Bool
-  | TemplatesAvailableToUser UserID
+  | TemplatesSharedInUsersCompany UserID
   | DocumentsOfService (Maybe ServiceID)
   | DocumentsOfCompany CompanyID
+  | AttachmentsOfAuthorDeleteValue UserID Bool
 
 documentDomainToSQL :: DocumentDomain -> SQL
 documentDomainToSQL (DocumentsOfAuthorDeleteValue uid deleted) =
@@ -157,25 +160,34 @@ documentDomainToSQL (DocumentsForSignatoryDeleteValue uid deleted) =
        ++ "  AND sl2.sign_order < signatory_links.sign_order)))")
         [toSql uid, toSql deleted, toSql [SignatoryAuthor], toSql [SignatoryPartner], toSql [SignatoryPartner]]
 documentDomainToSQL (TemplatesOfAuthorDeleteValue uid deleted) =
-  SQL "(signatory_links.roles & ?) <> 0 AND signatory_links.user_id = ? AND signatory_links.deleted = ? AND documents.type = 2"
-        [toSql [SignatoryAuthor], toSql uid, toSql deleted]
+  SQL ("signatory_links.user_id = ?"
+       ++ " AND signatory_links.deleted = ?"
+       ++ " AND signatory_links.really_deleted = FALSE"
+       ++ " AND documents.type = 2")
+        [toSql uid, toSql deleted]
 documentDomainToSQL (TemplatesOfAuthor uid) =
   documentDomainToSQL (TemplatesOfAuthorDeleteValue uid False)
 documentDomainToSQL (TemplatesOfAuthorDeleted uid) =
   documentDomainToSQL (TemplatesOfAuthorDeleteValue uid True)
-documentDomainToSQL (TemplatesAvailableToUser uid) =
-  SQL ("(signatory_links.roles & ?) <> 0 AND signatory_links.deleted = TRUE AND documents.type = 2"
+documentDomainToSQL (TemplatesSharedInUsersCompany uid) =
+  SQL ("signatory_links.deleted = FALSE"
+       ++ " AND documents.type = 2"
+       ++ " AND documents.sharing = ?"
+       ++ " AND signatory_links.really_deleted = FALSE"
        ++ " AND EXISTS (SELECT 1 FROM users AS usr1, users AS usr2 "
        ++ "                WHERE signatory_links.user_id = usr2.id "
        ++ "                  AND usr2.company_id = usr1.company_id "
        ++ "                  AND usr1.id = ?)")
-        [toSql [SignatoryAuthor], toSql uid]
+        [toSql Shared, toSql uid]
 documentDomainToSQL (DocumentsOfService sid) =
   SQL "documents.service_id IS NOT DISTINCT FROM ? AND documents.type = 1"
         [toSql sid]
 documentDomainToSQL (DocumentsOfCompany cid) =
   SQL "signatory_links.company_id = ? AND signatory_links.deleted = FALSE"
         [toSql cid]
+documentDomainToSQL (AttachmentsOfAuthorDeleteValue uid deleted) =
+  SQL "signatory_links.user_id = ? AND signatory_links.deleted = ? AND documents.type = 3"
+        [toSql uid, toSql deleted]
 
 
 
@@ -201,10 +213,19 @@ documentFilterToSQL (DocumentFilterMaxChangeTime ctime) =
   SQL (maxselect ++ " <= ?") [toSql ctime]
 documentFilterToSQL (DocumentFilterByService mservice) =
   SQL "documents.service_id IS NOT DISTINCT FROM ?" [toSql mservice]
+documentFilterToSQL (DocumentFilterByProcess process) =
+  SQL "documents.process = ?" [toSql process]
 documentFilterToSQL (DocumentFilterByRole role) =
   SQL "(signatory_links.roles & ?) <> 0" [toSql [role]]
-documentFilterToSQL (DocumentFilterByTags _) =
+documentFilterToSQL (DocumentFilterByTags []) =
   SQL "TRUE" []
+documentFilterToSQL (DocumentFilterByTags tags) =
+  sqlConcatAND $ map (\tag -> SQL "documents.tags LIKE ?" [toSql $ "%" ++ concatMap escape (encodeJSON tag) ++ "%"]) tags
+  where
+      escape '\\' = "\\\\"
+      escape '%' = "\\%"
+      escape '_' = "\\_"
+      escape c = [c]
 
 sqlLog :: MinutesTime -> String -> (String, String, SqlValue)
 sqlLog time text = sql' "log" "log || ?" logmsg
@@ -1047,7 +1068,7 @@ instance DBQuery GetDocumentsByService [Document] where
 data GetDocuments = GetDocuments [DocumentDomain] [DocumentFilter]
 instance DBQuery GetDocuments [Document] where
   dbQuery (GetDocuments domains filters) = do
-    docs <- selectDocumentsBySignatoryLink $ mconcat
+    selectDocumentsBySignatoryLink $ mconcat
             [ SQL "(" []
             , sqlConcatOR (map documentDomainToSQL domains)
             , SQL ")" []
@@ -1055,11 +1076,6 @@ instance DBQuery GetDocuments [Document] where
               then SQL " AND " [] `mappend` sqlConcatAND (map documentFilterToSQL filters)
               else SQL "" []
             ]
-    -- There is no perfect way to filter by tags; we could do a partial job, but we will always have to filter in Haskell.
-    return (foldl' (.) id (map filterByTags filters) $ docs)
-    where hasTags tags doc = all (`elem` (documenttags doc)) tags
-          filterByTags (DocumentFilterByTags tags) = filter (hasTags tags)
-          filterByTags _ = id
 
 
 sqlConcatAND :: [SQL] -> SQL
@@ -1173,27 +1189,26 @@ instance DBQuery GetDeletedDocumentsByUser [Document] where
 -}
 data GetDocumentsByAuthor = GetDocumentsByAuthor UserID
 instance DBQuery GetDocumentsByAuthor [Document] where
-  dbQuery (GetDocumentsByAuthor uid) = selectDocumentsBySignatoryLink
-    $ whereAuthorIs uid
+  dbQuery (GetDocumentsByAuthor uid) =
+    dbQuery (GetDocuments [DocumentsOfAuthor uid, TemplatesOfAuthor uid] [])
 
-data GetDocumentsOfTypeByAuthor = GetDocumentsOfTypeByAuthor DocumentType UserID
-instance DBQuery GetDocumentsOfTypeByAuthor [Document] where
-  dbQuery (GetDocumentsOfTypeByAuthor dtype uid) = selectDocumentsBySignatoryLink
-    $ whereAuthorIs uid <++> andDocumentTypeIs dtype
+data GetAttachmentsByAuthor = GetAttachmentsByAuthor UserID
+instance DBQuery GetAttachmentsByAuthor [Document] where
+  dbQuery (GetAttachmentsByAuthor uid) =
+    dbQuery (GetDocuments [AttachmentsOfAuthorDeleteValue uid False] [])
 
 parenthesize :: SQL -> SQL
 parenthesize (SQL command values) = SQL ("(" ++ command ++ ")") values
 
 data GetTemplatesByAuthor = GetTemplatesByAuthor UserID
 instance DBQuery GetTemplatesByAuthor [Document] where
-  dbQuery (GetTemplatesByAuthor uid) = selectDocumentsBySignatoryLink
-    $ parenthesize (whereAuthorIs uid <++> (SQL " AND type = ?" [toSql $ Template undefined]))
+  dbQuery (GetTemplatesByAuthor uid) = 
+    dbQuery (GetDocuments [TemplatesOfAuthor uid] [])
 
 data GetAvaibleTemplates = GetAvaibleTemplates UserID
 instance DBQuery GetAvaibleTemplates [Document] where
-  dbQuery (GetAvaibleTemplates uid) = selectDocumentsBySignatoryLink
-    $ parenthesize (whereAuthorIs uid <++> (SQL " AND type = ?" [toSql $ Template undefined]) 
-                    <++> orDocumentIsSharedInUsersCompany uid)
+  dbQuery (GetAvaibleTemplates uid) =
+    dbQuery (GetDocuments [TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid] [])
 
 {- |
     All documents where the user is a signatory that are not deleted.  An author is a type
@@ -1203,14 +1218,13 @@ instance DBQuery GetAvaibleTemplates [Document] where
 -}
 data GetDocumentsBySignatory = GetDocumentsBySignatory UserID
 instance DBQuery GetDocumentsBySignatory [Document] where
-  dbQuery (GetDocumentsBySignatory uid) = selectDocumentsBySignatoryLink
-    $ whereSignatoryIsAndDeletedIs uid False
+  dbQuery (GetDocumentsBySignatory uid) =
+    dbQuery (GetDocuments [DocumentsForSignatory uid] [])
 
-data GetDocumentsOfTypeBySignatory = GetDocumentsOfTypeBySignatory DocumentType UserID
+data GetDocumentsOfTypeBySignatory = GetDocumentsOfTypeBySignatory DocumentProcess UserID
 instance DBQuery GetDocumentsOfTypeBySignatory [Document] where
-  dbQuery (GetDocumentsOfTypeBySignatory dtype uid) = selectDocumentsBySignatoryLink
-    $ whereSignatoryIsAndDeletedIs uid False
-    <++> andDocumentTypeIs dtype
+  dbQuery (GetDocumentsOfTypeBySignatory process uid) =
+    dbQuery (GetDocuments [DocumentsForSignatory uid] [DocumentFilterByProcess process])
 
 data GetTimeoutedButPendingDocuments = GetTimeoutedButPendingDocuments MinutesTime
 instance DBQuery GetTimeoutedButPendingDocuments [Document] where

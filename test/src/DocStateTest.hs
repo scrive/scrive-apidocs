@@ -1055,7 +1055,7 @@ checkQueryDoesntContainArchivedDocs :: DBQuery q [Document] => (User -> q) -> DB
 checkQueryDoesntContainArchivedDocs qry = doTimes 10 $ do
   company <- addNewCompany
   author <- addNewRandomCompanyUser (companyid company) True
-  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
+  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> (isPreparation d || isClosed d) && (isSignable d))
   docsbeforearchive <- dbQuery (qry author)
   assertEqual "Expecting one doc before archive" [documentid doc] (map documentid docsbeforearchive)
   _ <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (SystemActor t)
@@ -2250,8 +2250,8 @@ testGetDocumentsByCompanyWithFilteringFindsMultiple = doTimes 10 $ do
   docs''' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) []
   docs'''' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name1 value1, DocumentTag name2 value2, DocumentTag name3 value3]]
   validTest $ do
-    assertEqual "Should have one document returned" (length docs) 1  
-    assertEqual "Should have one document returned" (length docs') 1
-    assertEqual "Should have one document returned" (length docs'') 1
-    assertEqual "Should have one document returned" (length docs''') 1
-    assertEqual "Should have zero documents returned" (length docs'''') 0    
+    assertEqual "Should have one document returned" 1 (length docs)
+    assertEqual "Should have one document returned" 1 (length docs')
+    assertEqual "Should have one document returned" 1 (length docs'')
+    assertEqual "Should have one document returned" 1 (length docs''')
+    assertEqual "Should have zero documents returned" 0 (length docs'''')

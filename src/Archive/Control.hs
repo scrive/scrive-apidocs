@@ -124,11 +124,11 @@ jsonDocumentsList = withUserGet $ do
   lang <- getLang . ctxlocale <$> getContext
   doctype <- getField' "documentType"
   allDocs <- case (doctype) of
-    "Contract" -> runDBQuery $ GetDocumentsOfTypeBySignatory (Signable Contract) uid
-    "Offer" -> runDBQuery $ GetDocumentsOfTypeBySignatory (Signable Offer) uid
-    "Order" -> runDBQuery $ GetDocumentsOfTypeBySignatory (Signable Order) uid
+    "Contract" -> runDBQuery $ GetDocumentsOfTypeBySignatory Contract uid
+    "Offer" -> runDBQuery $ GetDocumentsOfTypeBySignatory Offer uid
+    "Order" -> runDBQuery $ GetDocumentsOfTypeBySignatory Order uid
     "Template" -> runDBQuery $ GetTemplatesByAuthor uid
-    "Attachment" -> runDBQuery $ GetDocumentsOfTypeByAuthor Attachment uid
+    "Attachment" -> runDBQuery $ GetAttachmentsByAuthor uid
     "Rubbish" -> runDBQuery $ GetDeletedDocumentsByUser uid
     "Template|Contract" -> filter (\d -> documenttype d == Template Contract) <$> (runDBQuery $ GetAvaibleTemplates  uid)
     "Template|Offer" ->  filter (\d -> documenttype d == Template Offer) <$>  (runDBQuery $ GetAvaibleTemplates  uid)
