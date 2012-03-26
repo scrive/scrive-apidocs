@@ -63,7 +63,7 @@ var StandardPlacementPlacedView = Backbone.View.extend({
             place.empty();
             var fileview = field.signatory().document().mainfile().view;
             place.append(new StandardPlacementView({model: placement.field(), el: $("<div/>")}).el);
-            
+
             if (document.allowsDD())
               place.draggable({
                     appendTo: "body",
@@ -88,7 +88,7 @@ var StandardPlacementPlacedView = Backbone.View.extend({
                               field: field,
                               x : x,
                               y : y
-                            }))
+                            }));
                     }
             });
             if (field.signatory().canSign() && !field.isClosed() && field.signatory().current() && view.inlineediting != true)
@@ -120,10 +120,10 @@ var StandardPlacementPlacedView = Backbone.View.extend({
                     if(event.which === 13)
                     {   accept();
                         return false;
-                    }   
+                    }
                   });
                   return false;
-            })
+            });
             return this;
     }
 });
@@ -155,7 +155,7 @@ var SignaturePlacementView = Backbone.View.extend({
         if (sname == "")
         {
             if (signatory.isCsv())
-             sname =  localization.csv.title
+             sname =  localization.csv.title;
             else
              sname =  process.signatoryname() + (process.numberedsignatories() ? " " + signatory.signIndex() : "");
         }
@@ -174,7 +174,7 @@ var SignaturePlacementView = Backbone.View.extend({
             });
             if (this.model.value() == undefined || this.model.value() == "")
             {
-                var img = $("<div class='signatureDummy'>")
+                var img = $("<div class='signatureDummy'>");
                 box.append(img);
 
             }
@@ -208,7 +208,7 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
             });
             if (document.signingInProcess() && signatory.canSign() && signatory.current())
                 place.append(new SignaturePlacementViewForDrawing({model: placement.field(), el: $("<div/>")}).el);
-            else    
+            else
                 place.append(new SignaturePlacementView({model: placement.field(), el: $("<div/>")}).el);
 
             if (document.allowsDD())
@@ -232,7 +232,7 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
                               field: field,
                               x : x,
                               y : y
-                            }))
+                            }));
                     }
             });
             return this;

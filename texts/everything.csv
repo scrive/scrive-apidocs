@@ -422,7 +422,7 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_contractconfirmsendtitle","Skicka inbjudan",,"Send invitation"
 "_contractexpirytext","Undertecknas inom",,"Expiration in"
 "_contractexpirywarntext","Varning: Om du väljer ett förfallodatum kan du inte återkalla
- inbjudan innan datumet förfallit. Detta regleras av avtalslagen.",,"OBSERVE: If you choose an expiration date, you cannot withdraw
+ inbjudan innan datumet förfallit. Detta regleras av avtalslagen.",,"WARNING: If you choose an expiration date, you cannot withdraw
  the invitation before the expiration. This is controlled by
  the Swedish Law of Contracts."
 "_contracthassignedformailtext","Har undertecknat",,"Has signed"
@@ -1759,7 +1759,7 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_offerconfirmsendtitle","Skicka offert ",,"Send offer "
 "_offerexpirytext","Förfallodatum",,"Expiration date"
 "_offerexpirywarntext","Observera! Du kan ej återkalla offerten om du väljer ett förfallodatum.
- Detta regleras av avtalslagen.",,"OBSERVE: If you choose an expiration date, you cannot withdraw
+ Detta regleras av avtalslagen.",,"WARNING: If you choose an expiration date, you cannot withdraw
  the invitation before the expiration. This is controlled by
  the Swedish Law of Contracts."
 "_offerhassignedformailtext","Har accepterat ",,"Has accepted "
@@ -1830,7 +1830,7 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_orderconfirmsendtitle","Skicka orderbekräftelse",,"Send order confirmation"
 "_orderexpirytext","Förfallodatum",,"Expiration date"
 "_orderexpirywarntext","Varning: Om du väljer ett förfallodatum kan du inte återkalla
- inbjudan innan datumet förfallit. Detta regleras av avtalslagen.",,"OBSERVE: If you choose an expiration date, you cannot withdraw
+ inbjudan innan datumet förfallit. Detta regleras av avtalslagen.",,"WARNING: If you choose an expiration date, you cannot withdraw
  the invitation before the expiration. This is controlled by
  the Swedish Law of Contracts."
 "_orderhassignedformailtext","Har bekräftat",,"Has confirmed"
@@ -1884,7 +1884,7 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_pageAttachmentAttachments","BILAGOR:",,"ATTACHMENTS:"
 "_pageAttachmentDownloadPDF","Ladda ned PDF",,"Download PDF"
 "_pageAttachmentListIfShared","Delad",,"Shared"
-"_pageAttachmentListNewAttachment","Nya Bilagor",,"New attachments"
+"_pageAttachmentListNewAttachment","Nya Bilaga",,"New attachment"
 "_pageAttachmentListSearchInfo","Sök dokument",,"Search document"
 "_pageAttachmentListShare","Dela",,"Share"
 "_pageDocumentForAuthorHelpersLocalDialogsAddAttachment","Lägg till bilaga",,"Add attachment"
@@ -2505,7 +2505,7 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_modalResendCompanyAccountInviteConfirm","Skicka",,"Send"
 "_pendingcompanyaccount","Väntar",,"Pending"
 "_changeEmail","Ändra e-post",,"Change e-mail"
-"_changeEmailRequestExplanation","Din e-post och ditt användarnamn är samma i Scrive. Genom att ändra e-post kommer du också att ändra ditt användarnamn vid inloggning.  För att bekräfta din nya adress skickar vi ett bekräftelsemail med en länk. Vänligen följ instruktionerna för att fullfölja ändringen.",,"Your email and user name are the same in Scrive. By changing the email you will also change the username for logging in.  To verify your new address we will send you an confirmation mail with a link. Please follow the instructions to complete the change."
+"_changeEmailRequestExplanation","Din e-post och ditt användarnamn är samma i Scrive. Genom att ändra e-post kommer du också att ändra ditt användarnamn vid inloggning.  För att bekräfta din nya adress skickar vi ett bekräftelsemail med en länk. Vänligen följ instruktionerna för att fullfölja ändringen.",,"Your email and user name are the same in Scrive. By changing the email you will also change the username for logging in.  To verify your new address we will send you a confirmation mail with a link. Please follow the instructions in the email to complete the change."
 "_newemail","Ny e-post",,"New email"
 "_newemailagain","Ny e-post igen",,"New email again"
 "_changeEmailRequestTitle","Ändra användarnamn och e-post",,"Change username and email"

@@ -1,12 +1,12 @@
 /*Module for basic system schema called tabs. Like three steps in design view or Conteacts | Offers | Orders | .. in Archive
  *
- * Tab contails of name and body, 
+ * Tab contails of name and body,
  * Tabs is collection of Tabs with some title.
  * By default first one is active.
  *
- * 
+ *
  */
-  
+
 $(function(){
 
 
@@ -16,7 +16,7 @@ window.Tab = Backbone.Model.extend({
     disabled : false,
     clickable : true,
     onActivate : function() {}
-    }  
+    }
   ,
   name : function() {
       return this.get("name");
@@ -42,10 +42,10 @@ window.Tab = Backbone.Model.extend({
         return this.get("number");
   },
   hasNumber : function() {
-     return this.number() != undefined;  
+     return this.number() != undefined;
   },
   setNumber: function(number)
-  { 
+  {
        this.set({number:number});
   }
 });
@@ -55,19 +55,19 @@ window.Tab = Backbone.Model.extend({
 var Tabs = Backbone.Model.extend({
    defaults: {
        numbers : true
-    },  
+    },
    title: function(){
      return this.get("title");
     },
    numbers : function() {
      return   this.get("numbers") == true;
-   }, 
+   },
    initialize : function(args){
        if (_.all(args.tabs,function(t) {return !t.active(); }))
           this.activate(args.tabs[0]);
-       if (this.numbers())    
+       if (this.numbers())
         this.addTabsNumbers();
-   }, 
+   },
    activate: function(newtab)
    {
         var tabs = this.tabs();
@@ -87,15 +87,15 @@ var Tabs = Backbone.Model.extend({
    {    var tabs = this.tabs();
         for(var i=0;i<tabs.length;i++)
         {
-            _.each(tabs[i].elems(), function(e) {e.hide();})
-        }    
+            _.each(tabs[i].elems(), function(e) {e.hide();});
+        }
    },
    activeTab : function()
    {    var tabs = this.tabs();
         for(var i=0;i<tabs.length;i++)
           if (tabs[i].active())
               return tabs[i];
-       
+
    },
    tabs : function(){
         return this.get("tabs");
@@ -114,7 +114,7 @@ var Tabs = Backbone.Model.extend({
             if (!tabs[i].disabled()) {
                   tabs[i].setNumber(number);
                   number++;
-            }     
+            }
    },
    tabsTail: function(){
      return this.get("tabsTail");
@@ -138,18 +138,18 @@ var TabsView = Backbone.View.extend({
         this.toprow = $("<div id='signStepsContainer'/>");
         container.append(this.toprow);
         _.each(this.model.tabs(), function(t) {
-            _.each(t.elems(), function(e) {container.append(e);})
-        })
+            _.each(t.elems(), function(e) {container.append(e);});
+        });
     },
     render: function () {
         var tabsview = this;
         this.toprow.children().detach();
         // Top part , with title and the tabs
-        var titlepart = $("<div id='signStepsTitleRow'/>")
+        var titlepart = $("<div id='signStepsTitleRow'/>");
         titlepart.append(this.model.title());
-        var tabsrow = $("<ul class='tabs'/>")
-        var model = this.model
-        _.each(this.model.tabs(), function(tab) 
+        var tabsrow = $("<ul class='tabs'/>");
+        var model = this.model;
+        _.each(this.model.tabs(), function(tab)
         {
             if (tab.disabled()) return;
             var li = $("<li/>");
@@ -168,15 +168,15 @@ var TabsView = Backbone.View.extend({
         this.toprow.append(titlepart);
         if (model.hasManyTabs())
             this.toprow.append(tabsrow);
-        if (model.tabsTail() != undefined) 
+        if (model.tabsTail() != undefined)
            _.each(model.tabsTail(), function (elem) {
            var li = $("<li style= 'float:right;padding-left:0px;padding-right:20px;'/>").append(elem);
-           tabsrow.append(li);    
-        }) 
-           
-        
+           tabsrow.append(li);
+        });
+
+
         this.model.hideAll();
-        _.each(this.model.activeTab().elems(), function(e) {e.show();})
+        _.each(this.model.activeTab().elems(), function(e) {e.show();});
         return this;
     },
     numberIcon : function(number) {
@@ -189,11 +189,11 @@ var TabsView = Backbone.View.extend({
 
 window.KontraTabs = {
     init : function(args){
-        this.model = new Tabs(args)
+        this.model = new Tabs(args);
         this.view = new TabsView({
                         model: this.model,
                         el : $("<div/>")
-                    })
+                    });
         return this;
     },
     next : function() {
@@ -202,7 +202,7 @@ window.KontraTabs = {
     activate : function(tab) {
         this.model.activate(tab);
     }
-}
+};
 
 
 

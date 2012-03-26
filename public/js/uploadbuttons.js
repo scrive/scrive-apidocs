@@ -117,7 +117,7 @@ var UploadButtonView = Backbone.View.extend({
                     fileinput.n--;
                     _.each(fileinput.slaves, function(slave) {
                         $(slave).remove();
-                    })
+                    });
                     fileinput.slaves = [];
                     return false;
                 }

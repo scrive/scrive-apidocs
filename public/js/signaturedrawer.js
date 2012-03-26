@@ -23,11 +23,11 @@ var SignatureForDrawing = Backbone.Model.extend({
                         image : "",
                         ready : false
                     });
-            }     
+            }
         };
     initWithValue();
     sf.bind('change',initWithValue);
-    sf.bind('empty', function() {sd.trigger('empty');})    
+    sf.bind('empty', function() {sd.trigger('empty');});
     },
     signaturefield : function() {
         return this.get("signaturefield");
@@ -43,14 +43,14 @@ var SignatureForDrawing = Backbone.Model.extend({
        this.signaturefield().setValue(image);
     },
     setImage : function(image) {
-       this.signaturefield().setValue(image);   
+       this.signaturefield().setValue(image);
     },
     image : function() {
        return this.get("image");
     },
     hasImage : function() {
        return this.get("image") != "";
- 
+
     }
 });
 
@@ -98,8 +98,8 @@ var SignatureForDrawingView = Backbone.View.extend({
 
                         }
                     }).input();
-       
-      
+
+
 
        var done = Button.init({
                         color: "green",
@@ -115,7 +115,7 @@ var SignatureForDrawingView = Backbone.View.extend({
                     }).input();
 
        this.zoomed.append($("<div class='footer'>").append(clear).append(done));
-       
+
        this.zoomed.overlay({
             mask: standardDialogMask,
             top: standardDialogTop,
@@ -132,7 +132,7 @@ var SignatureForDrawingView = Backbone.View.extend({
        this.zoomed.remove();
        this.zoomed = undefined;
        this.render();
-        
+
     },
     startDrawing : function()
     {
@@ -150,7 +150,7 @@ var SignatureForDrawingView = Backbone.View.extend({
         document.ontouchmove = function(e){
             return state;
         }
-        
+
         document.ontouchstart = function(e){
             return state;
         }
@@ -160,7 +160,7 @@ var SignatureForDrawingView = Backbone.View.extend({
                 view.mychange = true;
                 view.model.setImage(view.canvas[0].toDataURL("image/jpeg",1.0));
                 view.mychange = false;
-        },100)
+        },100);
     },
     lineWith : function() {
         return Math.floor(this.canvas[0].height / 100);
@@ -175,8 +175,8 @@ var SignatureForDrawingView = Backbone.View.extend({
             this.picture.arc(x, y, this.lineWith() > 1 ? 2 : 1, 0,  Math.PI*2, true);
             this.picture.fill();
             this.picture.closePath();
-       
-    },    
+
+    },
     drawingtoolDown : function(x,y) {
       var view = this;
       this.startDrawing();
@@ -197,13 +197,13 @@ var SignatureForDrawingView = Backbone.View.extend({
       this.picture.lineJoin = 'round';
 
 
-    
+
     },
     drawingtoolMove : function(x,y) {
       if (this.drawing) {
         this.picture.lineTo(x, y);
         this.picture.stroke();
-      } 
+      }
     },
     drawingtoolUp : function(x,y) {
       this.uped = true;
@@ -213,7 +213,7 @@ var SignatureForDrawingView = Backbone.View.extend({
 
     },
     zoomIcon : function() {
-        var icon = $("<div class='zoomDrawing'/>")
+        var icon = $("<div class='zoomDrawing'/>");
         var view = this;
         icon.click(function() {
              view.zoom();
@@ -222,7 +222,7 @@ var SignatureForDrawingView = Backbone.View.extend({
         return icon;
     },
     clearIcon : function() {
-        var icon = $("<div class='clearIcon'/>")
+        var icon = $("<div class='clearIcon'/>");
         var view = this;
         icon.click(function() {
              view.drawImage(undefined);
@@ -238,12 +238,12 @@ var SignatureForDrawingView = Backbone.View.extend({
         if (!this.noZoom()) box.append(this.zoomIcon());
         box.append(view.clearIcon());
         $(window).scroll(function() {
-               $('.zoomDrawing',box).remove()
-               $('.clearIcon',box).remove()
+               $('.zoomDrawing',box).remove();
+               $('.clearIcon',box).remove();
                if (!view.noZoom())
                     box.append(view.zoomIcon());
                     box.append(view.clearIcon());
-               
+
         });
         return box;
     },
@@ -262,7 +262,7 @@ var SignatureForDrawingView = Backbone.View.extend({
        var view = this;
        view.picture.fillStyle = "#ffffff";
        view.picture.fillRect (0,0,view.canvas[0].width,view.canvas[0].height);
-       if (image != undefined && image != "") { 
+       if (image != undefined && image != "") {
           var img = new Image();
           img.type = 'image/jpeg';
           img.src = image;
@@ -279,7 +279,7 @@ var SignatureForDrawingView = Backbone.View.extend({
     render: function () {
         $('.signatureHeader', this.el).removeClass("redborder");
         if (this.zoomed != undefined) return;
-        if (this.mychange) return; 
+        if (this.mychange) return;
         var signature = this.signature;
         var view = this;
         this.container = this.el;
@@ -288,18 +288,18 @@ var SignatureForDrawingView = Backbone.View.extend({
                this.container.addClass("ready");
         else
                this.container.removeClass("ready");
-       
+
         this.container.empty();
-        
+
         this.container.append(this.signatureBoxTitle());
-        
+
         this.canvas = $("<canvas class='signatureCanvas'  width='250' height='100'/>");
 
         this.picture =  this.canvas[0].getContext('2d');
         view.drawImage(this.model.image());
         this.initDrawing();
         this.container.append($("<div class='canvasWrapper'/>").append(this.canvas));
-        
+
         return this;
     }
 });
@@ -310,13 +310,13 @@ window.SignatureDrawer = {
     init : function(args){
         this.model = new SignatureForDrawing({
                         signaturefield : args.signaturefield
-                    })
+                    });
         this.view = new SignatureForDrawingView({
                         model: this.model,
                         el : $("<div/>")
-                    })
+                    });
         return this;
     }
-}
+};
 
 })(window);
