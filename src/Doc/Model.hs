@@ -10,6 +10,8 @@ module Doc.Model
   , insertDocumentAsIs
   , toDocumentProcess
 
+  , DocumentFilter(..)
+
   , AddDocumentAttachment(..)
   , AddInvitationEvidence(..)
   , AdminOnlySaveForUser(..)
@@ -110,6 +112,42 @@ import Util.MonadUtils
 
 import EvidenceLog.Model
 import Util.HasSomeUserInfo
+
+
+data DocumentFilter
+  = DocumentFilterStatuses [DocumentStatus]
+  | DocumentFilterByTags [DocumentTag]
+  | DocumentFilterMinChangeTime MinutesTime
+  | DocumentFilterMaxChangeTime MinutesTime
+  | DocumentFilterByService (Maybe ServiceID)
+  | DocumentFilterByRole SignatoryRole
+
+maxselect :: String
+maxselect = "(SELECT max(greatest(signatory_links.sign_time"
+            ++ ", signatory_links.seen_time"
+            ++ ", signatory_links.read_invitation"
+            ++ ", documents.invite_time"
+            ++ ", documents.rejection_time"
+            ++ ", documents.mtime"
+            ++ ", documents.ctime"
+            ++ ")) FROM signatory_links WHERE signatory_links.document_id = documents.id)"
+
+documentFilterToSQL :: DocumentFilter -> SQL
+documentFilterToSQL (DocumentFilterStatuses []) =
+  SQL "FALSE" []
+documentFilterToSQL (DocumentFilterStatuses statuses) =
+  SQL ("documents.status IN (" ++ intercalate "," (map (const "?") statuses) ++ ")")
+                               (map toSql statuses)
+documentFilterToSQL (DocumentFilterMinChangeTime ctime) =
+  SQL (maxselect ++ " >= ?") [toSql ctime]
+documentFilterToSQL (DocumentFilterMaxChangeTime ctime) =
+  SQL (maxselect ++ " <= ?") [toSql ctime]
+documentFilterToSQL (DocumentFilterByService mservice) =
+  SQL "documents.service_id IS NOT DISTINCT FROM ?" [toSql mservice]
+documentFilterToSQL (DocumentFilterByRole role) =
+  SQL "(signatory_links.roles & ?) <> 0" [toSql [role]]
+documentFilterToSQL (DocumentFilterByTags _) =
+  SQL "TRUE" []
 
 sqlLog :: MinutesTime -> String -> (String, String, SqlValue)
 sqlLog time text = sql' "log" "log || ?" logmsg
@@ -950,6 +988,14 @@ instance DBQuery GetDocuments [Document] where
     selectDocuments $ selectDocumentsSQL
       <++> SQL "WHERE service_id IS NOT DISTINCT FROM ?" [toSql msid]
 
+sqlConcatAND :: [SQL] -> SQL
+sqlConcatAND sqls =
+  mconcat $ intercalate [SQL " AND " []] (map (\s -> [SQL "(" [], s, SQL ")" [] ]) sqls)
+
+sqlConcatOR :: [SQL] -> SQL
+sqlConcatOR sqls =
+  mconcat $ intercalate [SQL " OR " []] (map (\s -> [SQL "(" [], s, SQL ")" [] ]) sqls)
+
 {- |
     Fetches documents by company with filtering by tags, edate, and status.
     this won't return documents that have been deleted (so ones
@@ -966,40 +1012,22 @@ instance DBQuery GetDocuments [Document] where
     if isJust ftime, the last change on the document must be less than or equal to ftime
     if isJust statuses, the document status must be element of statuses
 -}
-data GetDocumentsByCompanyWithFiltering = GetDocumentsByCompanyWithFiltering (Maybe ServiceID) CompanyID [DocumentTag] (Maybe MinutesTime) (Maybe MinutesTime) (Maybe [DocumentStatus])
+data GetDocumentsByCompanyWithFiltering = GetDocumentsByCompanyWithFiltering CompanyID [DocumentFilter]
+-- (Maybe ServiceID) [DocumentTag] (Maybe MinutesTime) (Maybe MinutesTime) (Maybe [DocumentStatus])
 instance DBQuery GetDocumentsByCompanyWithFiltering [Document] where
-  dbQuery (GetDocumentsByCompanyWithFiltering mservice companyid doctags stime ftime mstatuses) = do
-    docs <- selectDocumentsBySignatoryLink $ mconcat [
-        SQL "signatory_links.deleted = FALSE AND signatory_links.company_id = ? AND "
-          [toSql companyid]
-      , activatedSQL
-      , SQL "AND (signatory_links.roles = ? OR signatory_links.roles = ?) " [
-          toSql [SignatoryAuthor]
-        , toSql [SignatoryAuthor, SignatoryPartner]
-        ]
-      , SQL " AND service_id IS NOT DISTINCT FROM ? " [toSql mservice]
-      , case (stime, ftime) of
-          (Nothing, Nothing) -> SQL "" []
-          (Just s, Nothing)  -> SQL (" AND " ++ maxselect ++ " >= ? ") [toSql s]
-          (Nothing, Just f)  -> SQL (" AND " ++ maxselect ++ " <= ? ") [toSql f]
-          (Just s, Just f)   -> SQL (" AND " ++ maxselect ++ " BETWEEN ? AND ? ") [toSql s, toSql f]
-      , case mstatuses of
-          Nothing -> SQL "" []
-          Just [] -> SQL "AND FALSE " []
-          Just statuses -> SQL (" AND documents.status in (" ++ intercalate "," (map (const "?") statuses) ++ ") ")
-                               (map toSql statuses)
-      ]
+  dbQuery (GetDocumentsByCompanyWithFiltering companyid filters) = do
+    docs <- selectDocumentsBySignatoryLink $ mconcat 
+            [ SQL "signatory_links.deleted = FALSE AND signatory_links.company_id = ? AND "
+                    [toSql companyid]
+            , activatedSQL
+            , SQL " AND " []
+            , sqlConcatAND (map documentFilterToSQL (DocumentFilterByRole SignatoryAuthor : filters))
+            ]
     -- There is no perfect way to filter by tags; we could do a partial job, but we will always have to filter in Haskell.
-    return (filter hasTags docs)
-    where hasTags doc = all (`elem` (documenttags doc)) doctags
-          maxselect = " (select max(greatest(signatory_links.sign_time"
-                                        ++ ",signatory_links.seen_time"
-                                        ++ ",signatory_links.read_invitation"
-                                        ++ ",documents.invite_time"
-                                        ++ ",documents.rejection_time"
-                                        ++ ",documents.mtime"
-                                        ++ ",documents.ctime"
-                                        ++ ")) from signatory_links where signatory_links.document_id = documents.id) "
+    return (foldl' (.) id (map filterByTags filters) $ docs)
+    where hasTags tags doc = all (`elem` (documenttags doc)) tags
+          filterByTags (DocumentFilterByTags tags) = filter (hasTags tags)
+          filterByTags _ = id
 
 selectDocumentsBySignatoryLink :: SQL -> DB [Document]
 selectDocumentsBySignatoryLink extendedWhere = selectDocuments $ mconcat [

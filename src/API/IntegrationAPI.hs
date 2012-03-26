@@ -390,7 +390,15 @@ getDocuments = do
                        , maybe True (fromSafeEnum s >=) mFromState
                        , maybe True (fromSafeEnum s <=) mToState
                        ]
-    linkeddocuments <- runDBQuery $ GetDocumentsByCompanyWithFiltering (Just sid) (companyid comp) tags mFromDate mToDate mstatuses
+    linkeddocuments <- runDBQuery $ GetDocumentsByCompanyWithFiltering (companyid comp)
+                       ([ DocumentFilterByService (Just sid)
+                        , DocumentFilterByTags tags
+                        ] ++
+                        catMaybes
+                        [ DocumentFilterMinChangeTime <$> mFromDate
+                        , DocumentFilterMaxChangeTime <$> mToDate
+                        , DocumentFilterStatuses<$> mstatuses
+                        ])
     api_docs <- sequence [api_document_read False d  
                          | d <- linkeddocuments
                          , not $ isAttachment d

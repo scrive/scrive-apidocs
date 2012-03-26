@@ -902,7 +902,9 @@ companyClosedFilesZip cid start _filenamefordownload = onlyAdmin $ do
 companyFilesArchive :: Kontrakcja m => CompanyID -> Int -> m Archive
 companyFilesArchive cid start = do
     Log.debug $ "Getting all files archive for company " ++ show cid
-    docs <- runDB $ dbQuery $ GetDocumentsByCompanyWithFiltering Nothing cid [] Nothing Nothing Nothing
+    docs <- runDB $ dbQuery $ GetDocumentsByCompanyWithFiltering cid [ DocumentFilterByService Nothing
+                                                                     , DocumentFilterStatuses [Closed]
+                                                                     ]
     let cdocs = sortBy (\d1 d2 -> compare (documentid d1) (documentid d2)) $ filter (\doc -> documentstatus doc == Closed)  $ docs
     let sdocs = take zipCount $ drop (zipCount*start) $ cdocs
     Log.debug $ "Found  " ++ show (length $ filter (\doc -> documentstatus doc == Closed)  $ docs) ++ "document"
