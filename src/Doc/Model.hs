@@ -122,6 +122,63 @@ data DocumentFilter
   | DocumentFilterByService (Maybe ServiceID)
   | DocumentFilterByRole SignatoryRole
 
+data DocumentDomain
+  = DocumentsOfAuthor UserID
+  | DocumentsOfAuthorDeleted UserID
+  | DocumentsOfAuthorDeleteValue UserID Bool
+  | DocumentsForSignatory UserID
+  | DocumentsForSignatoryDeleted UserID
+  | DocumentsForSignatoryDeleteValue UserID Bool
+  | TemplatesOfAuthor UserID
+  | TemplatesOfAuthorDeleted UserID
+  | TemplatesOfAuthorDeleteValue UserID Bool
+  | TemplatesAvailableToUser UserID
+  | DocumentsOfService (Maybe ServiceID)
+  | DocumentsOfCompany CompanyID
+
+documentDomainToSQL :: DocumentDomain -> SQL
+documentDomainToSQL (DocumentsOfAuthorDeleteValue uid deleted) =
+  SQL "(signatory_links.roles & ?) <> 0 AND signatory_links.user_id = ? AND signatory_links.deleted = ? AND documents.type = 1"
+        [toSql [SignatoryAuthor], toSql uid, toSql deleted]
+documentDomainToSQL (DocumentsOfAuthor uid) =
+  documentDomainToSQL (DocumentsOfAuthorDeleteValue uid False)
+documentDomainToSQL (DocumentsOfAuthorDeleted uid) =
+  documentDomainToSQL (DocumentsOfAuthorDeleteValue uid True)
+documentDomainToSQL (DocumentsForSignatory uid) =
+  documentDomainToSQL (DocumentsForSignatoryDeleteValue uid False)
+documentDomainToSQL (DocumentsForSignatoryDeleted uid) =
+  documentDomainToSQL (DocumentsForSignatoryDeleteValue uid True)
+documentDomainToSQL (DocumentsForSignatoryDeleteValue uid deleted) =
+  SQL ("signatory_links.user_id = ? AND signatory_links.deleted = ? AND documents.type = 1 AND "
+       ++ "((signatory_links.roles & ?) <> 0 OR ((signatory_links.roles & ?) <> 0 AND NOT EXISTS (SELECT 1 FROM signatory_links AS sl2"
+       ++ " WHERE signatory_links.document_id = sl2.document_id"
+       ++ "  AND ((sl2.roles & ?) <> 0)"
+       ++ "  AND sl2.sign_time IS NULL"
+       ++ "  AND sl2.sign_order < signatory_links.sign_order)))")
+        [toSql uid, toSql deleted, toSql [SignatoryAuthor], toSql [SignatoryPartner], toSql [SignatoryPartner]]
+documentDomainToSQL (TemplatesOfAuthorDeleteValue uid deleted) =
+  SQL "(signatory_links.roles & ?) <> 0 AND signatory_links.user_id = ? AND signatory_links.deleted = ? AND documents.type = 2"
+        [toSql [SignatoryAuthor], toSql uid, toSql deleted]
+documentDomainToSQL (TemplatesOfAuthor uid) =
+  documentDomainToSQL (TemplatesOfAuthorDeleteValue uid False)
+documentDomainToSQL (TemplatesOfAuthorDeleted uid) =
+  documentDomainToSQL (TemplatesOfAuthorDeleteValue uid True)
+documentDomainToSQL (TemplatesAvailableToUser uid) =
+  SQL ("(signatory_links.roles & ?) <> 0 AND signatory_links.deleted = TRUE AND documents.type = 2"
+       ++ " AND EXISTS (SELECT 1 FROM users AS usr1, users AS usr2 "
+       ++ "                WHERE signatory_links.user_id = usr2.id "
+       ++ "                  AND usr2.company_id = usr1.company_id "
+       ++ "                  AND usr1.id = ?)")
+        [toSql [SignatoryAuthor], toSql uid]
+documentDomainToSQL (DocumentsOfService sid) =
+  SQL "documents.service_id IS NOT DISTINCT FROM ? AND documents.type = 1"
+        [toSql sid]
+documentDomainToSQL (DocumentsOfCompany cid) =
+  SQL "signatory_links.company_id = ? AND signatory_links.deleted = FALSE"
+        [toSql cid]
+
+
+
 maxselect :: String
 maxselect = "(SELECT max(greatest(signatory_links.sign_time"
             ++ ", signatory_links.seen_time"
@@ -984,9 +1041,26 @@ instance DBQuery GetDocumentByDocumentID (Maybe Document) where
 
 data GetDocumentsByService = GetDocumentsByService (Maybe ServiceID)
 instance DBQuery GetDocumentsByService [Document] where
-  dbQuery (GetDocumentsByService msid) = do
-    selectDocuments $ selectDocumentsSQL
-      <++> SQL "WHERE service_id IS NOT DISTINCT FROM ?" [toSql msid]
+  dbQuery (GetDocumentsByService msid) =
+    dbQuery (GetDocuments [DocumentsOfService msid] [])
+
+data GetDocuments = GetDocuments [DocumentDomain] [DocumentFilter]
+instance DBQuery GetDocuments [Document] where
+  dbQuery (GetDocuments domains filters) = do
+    docs <- selectDocumentsBySignatoryLink $ mconcat
+            [ SQL "(" []
+            , sqlConcatOR (map documentDomainToSQL domains)
+            , SQL ")" []
+            , if not (null filters)
+              then SQL " AND " [] `mappend` sqlConcatAND (map documentFilterToSQL filters)
+              else SQL "" []
+            ]
+    -- There is no perfect way to filter by tags; we could do a partial job, but we will always have to filter in Haskell.
+    return (foldl' (.) id (map filterByTags filters) $ docs)
+    where hasTags tags doc = all (`elem` (documenttags doc)) tags
+          filterByTags (DocumentFilterByTags tags) = filter (hasTags tags)
+          filterByTags _ = id
+
 
 sqlConcatAND :: [SQL] -> SQL
 sqlConcatAND sqls =
@@ -1013,26 +1087,14 @@ sqlConcatOR sqls =
     if isJust statuses, the document status must be element of statuses
 -}
 data GetDocumentsByCompanyWithFiltering = GetDocumentsByCompanyWithFiltering CompanyID [DocumentFilter]
--- (Maybe ServiceID) [DocumentTag] (Maybe MinutesTime) (Maybe MinutesTime) (Maybe [DocumentStatus])
 instance DBQuery GetDocumentsByCompanyWithFiltering [Document] where
-  dbQuery (GetDocumentsByCompanyWithFiltering companyid filters) = do
-    docs <- selectDocumentsBySignatoryLink $ mconcat 
-            [ SQL "signatory_links.deleted = FALSE AND signatory_links.company_id = ? AND "
-                    [toSql companyid]
-            , activatedSQL
-            , SQL " AND " []
-            , sqlConcatAND (map documentFilterToSQL (DocumentFilterByRole SignatoryAuthor : filters))
-            ]
-    -- There is no perfect way to filter by tags; we could do a partial job, but we will always have to filter in Haskell.
-    return (foldl' (.) id (map filterByTags filters) $ docs)
-    where hasTags tags doc = all (`elem` (documenttags doc)) tags
-          filterByTags (DocumentFilterByTags tags) = filter (hasTags tags)
-          filterByTags _ = id
+  dbQuery (GetDocumentsByCompanyWithFiltering companyid filters) =
+    dbQuery (GetDocuments [DocumentsOfCompany companyid] filters)
 
 selectDocumentsBySignatoryLink :: SQL -> DB [Document]
 selectDocumentsBySignatoryLink extendedWhere = selectDocuments $ mconcat [
     selectDocumentsSQL
-  , SQL "WHERE EXISTS (SELECT 1 FROM signatory_links WHERE documents.id = document_id AND " []
+  , SQL "WHERE EXISTS (SELECT 1 FROM signatory_links WHERE documents.id = signatory_links.document_id AND " []
   , extendedWhere
   , SQL ") ORDER BY mtime" []
   ]
