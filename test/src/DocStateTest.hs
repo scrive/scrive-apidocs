@@ -1130,7 +1130,7 @@ testDocumentCanBeCreatedAndFetchedByAllDocs = doTimes 10 $ do
   -- execute
   now <- liftIO $ getMinutesTime
   let aa = AuthorActor now noIP (userid author) (getEmail author)
-  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany (fromSNN title) doctype 0 aa)
+  edoc <- randomUpdate $ (\title processtype -> NewDocument author mcompany (fromSNN title) (Signable processtype) 0 aa)
 
   let doc = case edoc of
           Left msg -> error $ show msg
@@ -2227,8 +2227,8 @@ testGetDocumentsByCompanyWithFilteringFinds = doTimes 10 $ do
   docs <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name value]]
   docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) []
   validTest $ do
-    assertEqual "Should have one document returned" (length docs) 1
-    assertEqual "Should have one document returned" (length docs') 1
+    assertEqual "Should have one document returned" 1 (length docs)
+    assertEqual "Should have one document returned" 1 (length docs')
   
 testGetDocumentsByCompanyWithFilteringFindsMultiple :: DB ()
 testGetDocumentsByCompanyWithFilteringFindsMultiple = doTimes 10 $ do
