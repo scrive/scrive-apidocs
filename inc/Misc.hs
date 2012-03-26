@@ -10,12 +10,9 @@ Keep this one as unorganized dump.
 -}
 module Misc where
 
-import KontraError(KontraError, internalError)
-
 import Control.Applicative
 import Control.Arrow
 import Control.Concurrent
-import Control.Monad.Error (MonadError)
 import Control.Monad.State
 import Data.Char
 import Data.Data
@@ -45,12 +42,6 @@ import qualified Data.ByteString.UTF8 as BS
 (<++>) = mappend
 infixr 6 <++>
 
--- We want this operators to bind strongly but weeker then . to do cond1 &&^ not . cond2
-infixl 8  &&^
-infixl 8  ||^
-infixr 9 $^ 
-infixr 9 $^^
-
 randomPassword :: (MonadIO m, CryptoRNG m) => m String
 randomPassword = randomString 8 (['0'..'9'] ++ ['A'..'Z'] ++ ['a'..'z'])
 
@@ -65,19 +56,11 @@ randomString n allowed_chars =
   where
     len = length allowed_chars - 1
 
--- | Extract data from GET or POST request. Fail with 'internalError' if param
--- variable not present or when it cannot be read.
-getDataFnM :: (HasRqData m, MonadIO m, ServerMonad m, MonadError KontraError m) => RqData a -> m a
-getDataFnM fun = either (const internalError) return =<< getDataFn fun
-
 -- | Since we sometimes want to get 'Maybe' and also we wont work with
 -- newer versions of happstack here is.  This should be droped when
 -- new version is globaly established.
 getDataFn' :: (HasRqData m, MonadIO m, ServerMonad m) => RqData a -> m (Maybe a)
 getDataFn' fun = either (const Nothing) Just `liftM` getDataFn fun
-
-getAsString :: (HasRqData m, MonadIO m, ServerMonad m, MonadError KontraError m) => String -> m String
-getAsString = getDataFnM . look
 
 -- | Useful inside the 'RqData' monad.  Gets the named input parameter
 -- (either from a @POST@ or a @GET@)
@@ -412,12 +395,6 @@ splitOver = splitOver' []
              then (reverse c) : (splitOver' [] a (drop (length a) b) )
              else splitOver' (bh:c) a bt
 
-(||^):: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
-(||^) f g a =  f a || g a
-
-(&&^):: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
-(&&^) f g a =  f a && g a
-
 -- To be extended
 smartZip::[Maybe a] -> [b] -> [(a,b)]
 smartZip ((Just a): as) (b:bs) = (a,b):(smartZip as bs)
@@ -453,36 +430,6 @@ instance (Enum a, Bounded a, Enum b, Bounded b) => Enum (a,b) where
 none :: (a -> Bool) -> [a] -> Bool
 none f l = not $ any f l
 
--- | Simple logical inference operator (arrow)
-(=>>) :: Bool -> Bool -> Bool
-(=>>) a b = not a || b
-
--- | Higher order inference
-(=>>^) :: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
-(=>>^) a b x = a x =>> b x
-
--- | Double Inference
-(<<=>>) :: Bool -> Bool -> Bool
-(<<=>>) = (==)
-
--- | Higher order double inference
-(<<==>>^) :: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
-(<<==>>^) a b x = a x == b x
-
--- | Conditional choice operator
--- Use it like this: a <| condition |> b  is equivalent to if condition then a else b
--- http://zenzike.com/posts/2011-08-01-the-conditional-choice-operator
-(|>) :: Bool -> a -> Maybe a
-True  |> _ = Nothing
-False |> y = Just y
-
-(<|) :: a -> Maybe a -> a
-x <| Nothing = x
-_ <| Just y  = y
-
-infixr 0 <|
-infixr 0 |>
-
 sortWith :: Ord b => (a -> b) -> [a] -> [a]
 sortWith k ls = sortBy (\a b-> compare (k a) (k b)) ls
 
@@ -507,11 +454,12 @@ basename filename =
 ($^) :: Maybe (a -> a) -> a -> a
 ($^) Nothing  a = a
 ($^) (Just f) a = f a
+infixr 9 $^
 
 ($^^) :: [a -> a] -> a -> a
 ($^^) []  a = a
 ($^^) (f : fs) a = fs $^^ f a
-
+infixr 9 $^^
 
 toCSV :: [String] -> [[String]] -> BSL.ByteString -- Use bytestrings here for speed. Else you can get stack overflow
 toCSV header ls =

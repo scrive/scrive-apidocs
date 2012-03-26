@@ -111,7 +111,7 @@ signDocumentWithEleg did slid mh fields sinfo = do
 {- |
    Reject a document with security checks.
  -}
-rejectDocumentWithChecks :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> Maybe String -> m (Either DBError (Document, Document))
+rejectDocumentWithChecks :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> Maybe String -> m (Either DBError Document)
 rejectDocumentWithChecks did slid mh customtext = do
   edoc <- getDocByDocIDSigLinkIDAndMagicHash did slid mh
   case edoc of
@@ -128,7 +128,7 @@ rejectDocumentWithChecks did slid mh customtext = do
           _ <- case getSigLinkFor document slid of
             Just sl -> runDB $ addSignStatRejectEvent document sl
             _       -> return False
-          return $ Right (document, olddocument)
+          return $ Right document
 
 {- |
   The Author signs a document with security checks.

@@ -11,6 +11,7 @@
 
 module Doc.DocUtils where
 
+import Control.Logic
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Doc.DocStateData
@@ -26,20 +27,15 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Data.List hiding (insert)
 import Data.Maybe
---import qualified Data.ByteString as BS
 import File.Model
 import Control.Applicative
 import MinutesTime
-
---import Happstack.State
-
 
 {- |
     Checks whether the document is deletable, this is not the case for live documents.
 -}
 isDeletableDocument :: Document -> Bool
-isDeletableDocument doc =
-    (not  $ (documentstatus doc) `elem` [Pending, AwaitingAuthor]) -- We dont allow to delete pending documents
+isDeletableDocument doc = documentstatus doc /= Pending -- We dont allow to delete pending documents
 
 {- |
    Given a Document, return all of the signatory details for all signatories (exclude viewers but include author if he must sign).
@@ -270,43 +266,26 @@ isELegDataMismatch _                            = False
 allowsIdentification :: Document -> IdentificationType -> Bool
 allowsIdentification document idtype = idtype `elem` documentallowedidtypes document
 
--- Not ready to refactor this quite yet.
-isEligibleForReminder :: Maybe User -> Document -> SignatoryLink -> Bool
-isEligibleForReminder muser doc siglink = isEligibleForReminder'' muser doc siglink
-
--- this should actually not take Maybe User but User instead
 {- |
     Checks whether a signatory link is eligible for sending a reminder.
     The user must be the author, and the signatory musn't be the author.
     Also the signatory must be next in the signorder, and also not be a viewer.
     In addition the document must be in the correct state.  There's quite a lot to check!
 -}
-isEligibleForReminder' :: User -> Document -> SignatoryLink -> Bool
-isEligibleForReminder' user document siglink =
-  isActivatedSignatory (documentcurrentsignorder document) siglink
-  && isAuthor (document, user)
-  && not (isSigLinkFor user siglink)
-  && isDocumentEligibleForReminder document
-  && not (isUndelivered siglink)
-  && not (isDeferred siglink)
-  && isClosed document
-  && isSignatory siglink
-
-isEligibleForReminder'' :: Maybe User -> Document -> SignatoryLink -> Bool
-isEligibleForReminder'' muser document@Document{documentstatus} siglink =
+isEligibleForReminder :: User -> Document -> SignatoryLink -> Bool
+isEligibleForReminder user document@Document{documentstatus} siglink = 
   signatoryActivated
     && userIsAuthor
     && not isUserSignator
     && not dontShowAnyReminder
     && invitationdeliverystatus siglink /= Undelivered
     && invitationdeliverystatus siglink /= Deferred
-    && (isClosed' || not wasSigned)
+    && wasNotSigned
     && isSignatoryPartner
   where
-    userIsAuthor = isAuthor (document, muser)
-    isUserSignator = isSigLinkFor muser siglink
-    wasSigned = isJust (maybesigninfo siglink) && not (isUserSignator && (documentstatus == AwaitingAuthor))
-    isClosed' = documentstatus == Closed
+    userIsAuthor = isAuthor (document, user)
+    isUserSignator = isSigLinkFor user siglink
+    wasNotSigned = isNothing (maybesigninfo siglink)
     signatoryActivated = documentcurrentsignorder document >= signatorysignorder (signatorydetails siglink)
     dontShowAnyReminder = documentstatus `elem` [Timedout, Canceled, Rejected]
     isSignatoryPartner = SignatoryPartner `elem` signatoryroles siglink

@@ -11,6 +11,7 @@ import Test.HUnit (Assertion)
 
 import ActionSchedulerState
 import Context
+import Control.Logic
 import DB.Classes
 import FlashMessage
 import MagicHash (MagicHash)
