@@ -18,7 +18,7 @@ module API.Monad (
                  apiGuardL',
                  api,
                  Created(..),
-                 APIMonad(),
+                 APIMonad(..),
                  getAPIUser,
                  FormEncoded(..)
                  
@@ -124,10 +124,8 @@ instance ToAPIResponse FormEncoded where
     let r1 = Web.toResponse $ urlEncodeVars kvs  
     in setHeader "Content-Type" "application/x-www-form-urlencoded" r1
     
-    
-
 newtype APIMonad m a = AM { runAPIMonad :: ErrorT APIError m a }
-                     deriving (MonadTrans, Monad, MonadError APIError, Functor, Applicative, MonadIO)
+    deriving (MonadTrans, Monad, MonadError APIError, Functor, Applicative, MonadIO)
                               
 instance KontraMonad m => KontraMonad (APIMonad m) where
   getContext = lift getContext
