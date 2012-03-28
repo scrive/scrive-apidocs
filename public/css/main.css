@@ -1720,12 +1720,12 @@ top: 0px;
       background: url(../img/team/daniel-2.jpg) center no-repeat;
 }
 
-.portrait-image a.marcus {
-      background: url(../img/team/marcus-1.png) center no-repeat;
+.portrait-image a.joakim {
+      background: url(../img/team/joakim-1.png) center no-repeat;
 }
 
-.portrait-image a.marcus:hover {
-      background: url(../img/team/marcus-2.png) center no-repeat;
+.portrait-image a.joakim:hover {
+      background: url(../img/team/joakim-2.png) center no-repeat;
 }
 
 .portrait-image a.dudek {
