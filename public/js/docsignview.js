@@ -452,7 +452,7 @@ window.DocumentSaveAfterSignView = Backbone.View.extend({
       form.append(row);
     };
 
-    appendFormInput(localization.docsignview.emailLabel, $("<div class='email'/>").text(this.model.email()));
+    appendFormInput(localization.docsignview.emailLabel, ($("<input type='text' class='email'/>").attr("disabled", "true")).val(this.model.email()));
 
     var passwordinput = $("<input type='password' name='password' autocomplete='off' />");
     appendFormInput(localization.docsignview.passwordLabel, passwordinput);
