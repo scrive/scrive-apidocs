@@ -231,8 +231,10 @@ window.Document = Backbone.Model.extend({
           if ((sig !== this.signatories()[i] && i < this.signatories().length -1)
               || removed)
              newsigs.push(this.signatories()[i]);
-          else
-             removed = true;
+          else {
+            this.signatories()[i].removed();
+            removed = true;
+          }
        this.set({signatories : newsigs});
 
     },

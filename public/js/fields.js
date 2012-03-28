@@ -16,6 +16,11 @@ window.FieldPlacement = Backbone.Model.extend({
     initialize : function(args){
         var placement = this;
         setTimeout(function() {placement.addToPage();},100);
+        args.field.bind('removed', function() {
+            placement.trigger("removed")
+            placement.remove();
+        });
+
     },
     placed : function() {
           return this.get("placed");
@@ -61,6 +66,7 @@ window.FieldPlacement = Backbone.Model.extend({
        var page = document.getFile(fileid).page(this.get("page"));
        page.removePlacement(this);
        this.field().removePlacement(this);
+       this.off();
     },
     draftData : function() {
         var document = this.field().signatory().document();
@@ -97,6 +103,11 @@ window.Field = Backbone.Model.extend({
         this.bind("change",function() {
             field.signatory().document().trigger("change:signatories")
         });
+        args.signatory.bind("removed",function() {
+            field.trigger("removed");
+            field.off();
+        });
+
     },
     name : function() {
         return this.get("name");
@@ -211,6 +222,7 @@ window.Field = Backbone.Model.extend({
             placement.remove();
         });
       this.signatory().deleteField(this);
+      this.trigger("removed");
     },
     draftData : function() {
       return {   name : this.name()
