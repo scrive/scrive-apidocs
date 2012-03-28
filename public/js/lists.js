@@ -250,7 +250,7 @@
     window.Schema = Backbone.Model.extend({
         defaults: {
             sorting: new Sorting({ disabled: true }),
-            filtering: new Filtering({ disabled: true }),
+            filtering: new Filtering({ disabled: true}),
             paging: new Paging({ disabled: true }),
             options: [],
             extraParams: {}
@@ -258,6 +258,12 @@
         initialize: function() {
             _.bindAll(this, 'change');
             var schema = this;
+          var paging = this.paging();
+          // we reset the page to 0 when we change the filtering
+          // if we do this first, the right thing happens, otherwise, 
+          // it goes into infinite loop -- Eric
+          this.filtering().bind('change', function(){paging.changePage(0);})
+
             this.filtering().bind('change', function() {schema.trigger('change')});
             this.sorting().bind('change', function() {schema.trigger('change')});
             this.paging().bind('change:pageCurrent', function() {schema.trigger('change')});
