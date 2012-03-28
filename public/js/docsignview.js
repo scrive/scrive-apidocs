@@ -1133,10 +1133,10 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
 
     var container = $("<div class='arrows' />");
 
-    var downarrow = $("<div class='down arrow' />");
+    var downarrow = $("<div class='down arrow' style='display:none'/>");
     container.append(downarrow);
 
-    var uparrow = $("<div class='up arrow' />");
+    var uparrow = $("<div class='up arrow' style='display:none'/>");
     container.append(uparrow);
 
     if (taskmodel.isIncompleteTask()) {
@@ -1197,13 +1197,12 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
 
     var updateVisibility = function() {
 
-      downarrow.hide();
-      uparrow.hide();
-      actionarrow.hide();
       $(".signview .section").removeClass("highlight");
 
       if (!taskmodel.isIncompleteTask()) {
         downarrow.show();
+        uparrow.hide();
+        actionarrow.hide();
       } else {
         var scrolltop = $(window).scrollTop();
         var scrollbottom = scrolltop + $(window).height();
@@ -1220,10 +1219,16 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
           taskmodel.nextIncompleteTask().el.parents(".signview .section").addClass("highlight");
           updateActionArrowPosition();
           actionarrow.show();
+          uparrow.hide();
+          downarrow.hide();
         } else if ((elbottom + bottommargin) > scrollbottom) {
           downarrow.show();
+          uparrow.hide();
+          actionarrow.hide();
         } else {
           uparrow.show();
+          downarrow.hide();
+          actionarrow.hide();
         }
       }
     };
