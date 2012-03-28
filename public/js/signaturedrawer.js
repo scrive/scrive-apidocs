@@ -2,137 +2,12 @@
 
 (function(window){
 
-var SignatureForDrawing = Backbone.Model.extend({
-    defaults: {
-        ready : false,
-        image : ""
-    },
+
+var SignatureDrawer = Backbone.View.extend({
     initialize: function (args) {
-        var sf  = args.signaturefield;
-        var sd = this;
-        var initWithValue = function() {
-            if (sf.value() != undefined && sf.value() != "")
-                {
-                    sd.set({
-                        image :sf.value(),
-                        ready : true
-                    });
-                }
-            else {
-                  sd.set({
-                        image : "",
-                        ready : false
-                    });
-            }     
-        };
-    initWithValue();
-    sf.bind('change',initWithValue);
-    sf.bind('empty', function() {sd.trigger('empty');})    
-    },
-    signaturefield : function() {
-        return this.get("signaturefield");
-    },
-    isReady: function() {
-       return this.get("ready");
-    },
-    clean : function() {
-       this.signaturefield().setValue("");
-    },
-    makeReady : function(image) {
-       this.set({"ready" : true, image : image});
-       this.signaturefield().setValue(image);
-    },
-    setImage : function(image) {
-       this.signaturefield().setValue(image);   
-    },
-    image : function() {
-       return this.get("image");
-    },
-    hasImage : function() {
-       return this.get("image") != "";
- 
-    }
-});
-
-
-
-
-var SignatureForDrawingView = Backbone.View.extend({
-    initialize: function (args) {
-        _.bindAll(this, 'render', 'redborder');
-        this.model.bind('change', this.render);
-        this.model.bind('empty', this.redborder);
-
+        _.bindAll(this, 'render');
         this.model.view = this;
-        this.drawing = false;
-        this.ready = false;
         this.render();
-    },
-    redborder: function() {
-        $('.signatureHeader', this.el).addClass("redborder");
-    },
-    noZoom : function() {
-        return (window.innerWidth != undefined && window.innerWidth <= 900);
-    },
-    zoom : function() {
-       if (this.noZoom()) return false;
-       var view = this;
-       this.stopDrawing();
-       var previousimage = view.canvas[0].toDataURL("image/jpeg",1.0);
-       this.zoomed = $("<div style='width:875px;height:389px;' class='overlay drawing-modal'/>");
-       this.canvas = $("<canvas class='signatureCanvas'  width='875' height='350'/>");
-       this.picture =  this.canvas[0].getContext('2d');
-       this.drawImage(previousimage);
-       this.initDrawing();
-
-       this.zoomed.append($("<div class='canvasWrapper'/>").append(this.canvas));
-       var clear =  Button.init({
-                        color: "red",
-                        size: "tiny",
-                        text: "Clean",
-                        cssClass : "float-left",
-                        style : "padding: 5px",
-                        onClick : function() {
-                            view.drawImage(undefined);
-                            view.model.setImage("");
-
-                        }
-                    }).input();
-       
-      
-
-       var done = Button.init({
-                        color: "green",
-                        size: "tiny",
-                        cssClass : "float-right close",
-                        style : "padding: 5px",
-                        text: "Done",
-                        onClick : function() {
-                             view.model.makeReady(view.canvas[0].toDataURL("image/jpeg"));
-                             view.reloadonrender = true;
-                             view.unzoom();
-                        }
-                    }).input();
-
-       this.zoomed.append($("<div class='footer'>").append(clear).append(done));
-       
-       this.zoomed.overlay({
-            mask: standardDialogMask,
-            top: standardDialogTop,
-            resizable: false,
-            closeOnClick: false,
-            closeOnEsc: false,
-            load: false,
-            fixed:false
-          });
-      $('body').append( this.zoomed );
-      this.zoomed.overlay({ fixed:false }).load();
-    },
-    unzoom : function() {
-       this.zoomed.remove();
-       this.zoomed = undefined;
-       this.render();
-        
     },
     startDrawing : function()
     {
@@ -154,28 +29,23 @@ var SignatureForDrawingView = Backbone.View.extend({
         document.ontouchstart = function(e){
             return state;
         }
-        // After we are done drowing we will propagete image - but we don't want to catch very short breaks.
-        setTimeout(function() {
-            if (!view.drawing)
-                view.mychange = true;
-                view.model.setImage(view.canvas[0].toDataURL("image/jpeg",1.0));
-                view.mychange = false;
-        },100)
     },
     lineWith : function() {
-        return Math.floor(this.canvas[0].height / 100);
+        return 3;
     },
     updateDrawingPoint : function(x,y) {
       this.drawingPointX = x;
       this.drawingPointY = y;
     },
     drawCircle : function(x,y) {
-            this.picture.beginPath();
+          
+            if (!this.drawing)
+              this.picture.beginPath();
             this.picture.fillStyle = "#000000";
-            this.picture.arc(x, y, this.lineWith() > 1 ? 2 : 1, 0,  Math.PI*2, true);
+            this.picture.arc(x, y,  2 , 0,  Math.PI*2, true);
             this.picture.fill();
-            this.picture.closePath();
-       
+            if (!this.drawing)
+              this.picture.closePath();
     },    
     drawingtoolDown : function(x,y) {
       var view = this;
@@ -186,7 +56,7 @@ var SignatureForDrawingView = Backbone.View.extend({
             {
                 view.drawCircle(x,y);
             }
-          else if (i <10 )
+          else if (i < 2 )
               setTimeout(function() {circleDraw(i+1)}, 100);
       };
       circleDraw(0);
@@ -206,46 +76,10 @@ var SignatureForDrawingView = Backbone.View.extend({
       } 
     },
     drawingtoolUp : function(x,y) {
-      this.uped = true;
       this.picture.lineTo(x, y);
       this.picture.closePath();
       this.stopDrawing();
-
-    },
-    zoomIcon : function() {
-        var icon = $("<div class='zoomDrawing'/>")
-        var view = this;
-        icon.click(function() {
-             view.zoom();
-             return false;
-        });
-        return icon;
-    },
-    clearIcon : function() {
-        var icon = $("<div class='clearIcon'/>")
-        var view = this;
-        icon.click(function() {
-             view.drawImage(undefined);
-             view.model.setImage("");
-             return false;
-        });
-        return icon;
-    },
-    signatureBoxTitle : function() {
-        var view = this;
-        var box = $("<div class='signatureHeader'>");
-        box.text(localization.signature.placeYour);
-        if (!this.noZoom()) box.append(this.zoomIcon());
-        box.append(view.clearIcon());
-        $(window).scroll(function() {
-               $('.zoomDrawing',box).remove()
-               $('.clearIcon',box).remove()
-               if (!view.noZoom())
-                    box.append(view.zoomIcon());
-                    box.append(view.clearIcon());
-               
-        });
-        return box;
+      this.uped = true;
     },
     initDrawing : function() {
            var view = this;
@@ -257,6 +91,9 @@ var SignatureForDrawingView = Backbone.View.extend({
            this.canvas.mouseup(function(e){view.drawingtoolUp(e.layerX, e.layerY);} );
            //this.canvas.mouseout(function(e){settimeout(function() {view.drawingtoolUp(e.layerX, e.layerY);})}, 100 );
 
+    },
+    saveImage : function() {
+        
     },
     drawImage : function(image) {
        var view = this;
@@ -277,45 +114,120 @@ var SignatureForDrawingView = Backbone.View.extend({
        }
     },
     render: function () {
-        $('.signatureHeader', this.el).removeClass("redborder");
-        if (this.zoomed != undefined) return;
-        if (this.mychange) return; 
-        var signature = this.signature;
+        var signature = this.model;
         var view = this;
         this.container = $(this.el);
         this.container.addClass("signatureDrawingBox");
-        if (this.model.isReady())
-               this.container.addClass("ready");
-        else
-               this.container.removeClass("ready");
        
-        this.container.empty();
         
-        this.container.append(this.signatureBoxTitle());
-        
-        this.canvas = $("<canvas class='signatureCanvas'  width='250' height='100'/>");
-
+        this.canvas = $("<canvas class='signatureCanvas' />");
+        this.canvas.attr("width",signature.swidth());
+        this.canvas.width(signature.swidth());
+        this.canvas.attr("height",signature.sheight());
+        this.canvas.height(signature.sheight());
         this.picture =  this.canvas[0].getContext('2d');
-        view.drawImage(this.model.image());
+        //view.drawImage(this.model.image());
         this.initDrawing();
-        this.container.append($("<div class='canvasWrapper'/>").append(this.canvas));
+        this.container.append(this.canvas);
+        return this;
+    }
+});
+
+var SignatureDrawerWrapper = Backbone.View.extend({
+    initialize: function (args) {
+        _.bindAll(this, 'render');
+        this.overlay = args.overlay;
+        this.render();
+    },
+    tagname : "div",
+    header: function() {
+        var h = $("<h1>").text(localization.pad.drawSignatureBoxHeader);
+        return $("<div class='header'/>").append(h);
+    },
+    separator: function() {
+        return $("<div style='width:90%;margin:auto;height:1px;background-color: #999999'/>");
+    },
+    drawingBox : function() {
+        var div = $("<div class='signatureDrawingBoxWrapper'>")
+        this.drawer = new SignatureDrawer({model : this.model});
+        div.append(this.drawer.el);
+        div.width(this.model.swidth() );
+        div.height(this.model.sheight() );
+        return div;
+    },
+    acceptButton : function() {
+        var document = this.model.document();
+        return Button.init({
+                color : 'blue',
+                size: 'tiny',
+                text: document.process().signbuttontext(),
+                onClick : function(){
+                    this.drawer.saveImage();
+                    view.overlay.data('overlay').close();
+                    return false;
+                }
+        }).input();
         
+    },
+    cancelButton : function() {
+        var view = this;
+        return Button.init({
+                color : 'red',
+                size: 'tiny',
+                text: localization.cancel,
+                onClick : function() {
+                    view.overlay.data('overlay').close();
+                    return false;
+                }
+        }).input();
+    },
+    footer : function() {
+           var author = this.model.document().authoruser();
+           var abutton = this.acceptButton();
+           abutton.addClass("float-right");
+           var detailsBox = $("<div class='details-box' />");
+           var name = author.fullname();
+           var phone = author.phone();
+           var company = author.company();
+           detailsBox.append($("<h1/>").text(name));
+           detailsBox.append($("<h2/>").text(phone + " " + company ));
+           var cbutton = this.cancelButton();
+           cbutton.addClass("float-left");
+           return $("<div class='footer'/>").append(cbutton).append(abutton).append(detailsBox);
+    },
+    render: function () {
+        var box = $(this.el);
+        box.append(this.header());
+        box.append(this.separator());
+        box.append(this.drawingBox());
+        box.append(this.separator());
+        box.append(this.footer());
         return this;
     }
 });
 
 
-
-window.SignatureDrawer = {
-    init : function(args){
-        this.model = new SignatureForDrawing({
-                        signaturefield : args.signaturefield
-                    })
-        this.view = new SignatureForDrawingView({
-                        model: this.model,
-                        el : $("<div/>")
-                    })
-        return this;
+window.SignatureDrawerPopup = {
+    popup : function(args){
+        document.ontouchmove = function(e){
+            return state;
+        }
+        this.overlay = $("<div style='width:900px;' class='overlay drawing-modal'/>");
+        this.overlay.append(new SignatureDrawerWrapper({model : args.signature, overlay : this.overlay}).el);
+        $('body').append( this.overlay );
+        this.overlay.overlay({
+            mask:  {
+                color: '#ffffff',
+                loadSpeed: 200,
+                opacity: 0.1
+            },
+            top: standardDialogTop,
+            resizable: false,
+            closeOnClick: false,
+            closeOnEsc: false,
+            load: true,
+            fixed:false
+          });
     }
 }
 

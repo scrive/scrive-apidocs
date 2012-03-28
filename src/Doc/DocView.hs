@@ -650,3 +650,6 @@ documentsToFixView docs = do
             field "id" $ show $ documentid doc
             field "involved" $ map getEmail  $ documentsignatorylinks doc
             field "cdate" $  show $ documentctime doc
+
+
+            

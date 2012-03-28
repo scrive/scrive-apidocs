@@ -53,8 +53,8 @@ window.PadQueue = Backbone.Model.extend({
       signatorylinkid: args.signatorylinkid,
       magichash : args.magichash,
       logged : args.logged,
-      needFullRefresh : this.documentid() != undefined && this.signatorylinkid() != undefined &&
-                        (this.signatorylinkid() != args.signatorylinkid) && (this.documentid() != args.documentid),
+      needFullRefresh : this.documentid() != undefined &&
+                        ((this.signatorylinkid() != args.signatorylinkid) || (this.documentid() != args.documentid)),
       ready: true
       };
     }

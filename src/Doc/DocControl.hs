@@ -132,6 +132,7 @@ handleAcceptAccountFromSign documentid
                             signatorylinkid
                             magichash = do
   document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash documentid signatorylinkid magichash
+  when (document `allowsIdentification` PadIdentification) internalError
   signatorylink <- guardJust $ getSigLinkFor document signatorylinkid
   _ <- guardJustM $ User.Action.handleAccountSetupFromSign document signatorylink
   return $ LinkSignDoc document signatorylink
@@ -340,8 +341,8 @@ handleIssueShowGet docid = checkUserTOSGet $ do
    URL: /d/{documentid}
    Method: POST
  -}
-handleIssueShowPost :: Kontrakcja m => DocumentID -> m KontraLink
-handleIssueShowPost docid = withUserPost $ do
+handleIssueShowPost :: Kontrakcja m => DocumentID -> m (Either KontraLink JSValue)
+handleIssueShowPost docid = do
   document <- guardRightM $ getDocByDocID docid
   Context { ctxmaybeuser = muser } <- getContext
   unless (isAuthor (document, muser)) internalError -- still need this because others can read document
@@ -349,11 +350,17 @@ handleIssueShowPost docid = withUserPost $ do
   send              <- isFieldSet "send"
   -- Behold!
   case documentstatus document of
-    Preparation | sign              -> handleIssueSign                 document
-    Preparation | send              -> handleIssueSend                 document
-    AwaitingAuthor                  -> handleIssueSignByAuthor         document
-    _ -> return $ LinkContracts
+    Preparation | sign              -> Right <$> (linkAsJSON $ handleIssueSign document)
+    Preparation | send              -> Right <$> (linkAsJSON $ handleIssueSend document)
+    AwaitingAuthor                  -> Left  <$> handleIssueSignByAuthor document
+    _ -> return $ Left LinkContracts
+ where
+     linkAsJSON :: (Kontrakcja m) => m KontraLink -> m JSValue
+     linkAsJSON lg = do
+         l <- lg
+         liftIO $ json $ JSON.field "link" (show l)
 
+     
 handleIssueSign :: Kontrakcja m => Document -> m KontraLink
 handleIssueSign document = do
     Log.debug "handleIssueSign"

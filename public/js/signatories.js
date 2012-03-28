@@ -259,7 +259,15 @@ window.Signatory = Backbone.Model.extend({
         var fields = _.map(args.fields, function(field) {
                 return new Field(extendedWithSignatory(field));
         });
-
+        // Make sure that all basic fields are initiated
+        for(var i = 0; i < this.defaults.fields.length; i++)
+        {   var isSet = false;
+            for(var j=0;j < args.fields.length;j++ )
+                if (this.defaults.fields[i].name == args.fields[j].name)
+                    isSet = true;
+            if (!isSet)
+                fields.push(new Field(extendedWithSignatory(this.defaults.fields[i])));
+        }
         var attachments = _.map(args.attachments, function(attachment) {
                 return new SignatoryAttachment(extendedWithSignatory(attachment));
         });
@@ -422,7 +430,7 @@ window.Signatory = Backbone.Model.extend({
         this.set({attachments: []});
     },
     canSign: function() {
-        var canSign = this.document().pending() &&
+        var canSign = this.document().signingInProcess() &&
             this.signs() &&
             !this.hasSigned() &&
             this.signorder() == this.document().signorder();
@@ -529,6 +537,10 @@ window.Signatory = Backbone.Model.extend({
     },
     inpadqueue : function() {
        return this.get("inpadqueue");
+    },
+    removed : function() {
+        this.trigger("removed"); 
+        this.off();
     },
     draftData : function() {
         return {
@@ -750,19 +762,19 @@ window.SignatoryStandardView = Backbone.View.extend({
 
        if (signatory.document().currentViewerIsAuthor() &&
                !signatory.author() &&
-               ((signatory.document().pending() && signatory.canSign()) ||
+               ((signatory.document().signingInProcess() && signatory.canSign()) ||
                    signatory.document().closed()))
           container.append(this.remidenMailOption());
 
         if (signatory.undeliveredEmail() && signatory.document().currentViewerIsAuthor() && signatory.document().pending())
           container.append(this.changeEmailOption());
-
+        console.log("Can sign : " + signatory.canSign())
         if (signatory.document().currentViewerIsAuthor()
-            && !signatory.author()
-            && signatory.document().pending()
+            && signatory.document().signingInProcess()
             && signatory.canSign()
             && signatory.document().padAuthorization()) {
-                  container.append(this.giveForSigningOnThisDeviceOption());
+                  if (!signatory.author())
+                      container.append(this.giveForSigningOnThisDeviceOption());
                   if (signatory.inpadqueue())
                       container.append(this.removeFromPadQueueOption());
                   else    

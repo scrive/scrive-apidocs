@@ -1,8 +1,61 @@
-.signatureBox {
-    width: 100px;
-    height: 100px;
+
+.signatureDrawingBox canvas {
 }
-.signatureBox canvas{
-    width: 100px;
-    height: 100px;
+
+.drawing-modal {
+    width: 900px;
+    border: 
+}
+
+.drawing-modal .signatureDrawingBox {
+    position: relative; /*Important for dealing with drawing events*/
+    background-color: #ffffff;
+}
+
+.drawing-modal .signatureDrawingBoxWrapper {
+    margin: 10px auto
+}
+
+.drawing-modal {
+    background-color: #FEFEFE;
+    border: 5px solid  #666666;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+}
+
+.drawing-modal .header h1 {
+    text-align: center;
+    font-size : 20pt;
+    color : #000000;
+    margin: 20px auto;
+}
+
+.drawing-modal .footer .details-box {
+    text-align: center;
+    margin: 5px auto;
+}
+
+.drawing-modal .footer .details-box h1 {
+    font-family: "Copse";
+    font-size: large;
+    font-style: italic;
+    color : #444444;
+    margin: 0px auto;
+}
+
+.drawing-modal .footer .details-box h2 {
+    text-align: center;
+    font-family: "Copse";
+    font-size: small;
+    color : #777777;
+    margin: 2px auto;
+}
+
+.drawing-modal .footer .btn-tiny {
+     margin: 12px 40px;
+}
+.drawing-modal .footer .btn-tiny .label{
+     min-width: 100px;
+     text-align: center;
 }

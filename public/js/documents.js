@@ -263,9 +263,10 @@ window.Document = Backbone.Model.extend({
               || removed)
              newsigs.push(this.signatories()[i]);
           else
-             removed = true;
+          {   this.signatories()[i].removed();
+              removed = true;
+          }
        this.set({signatories : newsigs});
-
     },
     currentViewerIsAuthor : function() {
         var csig  = this.currentSignatory();
@@ -363,7 +364,7 @@ window.Document = Backbone.Model.extend({
               return this.signatories()[i];
     },
     authorCanSignFirst : function() {
-        if (!this.author().signs())
+        if (!this.author().signs() || this.padAuthorization())
             return false;
         var aidx = this.author().signorder();
         return ! _.any(this.signatories(), function(sig ){

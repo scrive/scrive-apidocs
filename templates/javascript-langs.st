@@ -241,12 +241,12 @@ javascriptLocalisation =
               , selectOtherFile: "$_dialogCsvupload2CSVMultiChooseFile()$"
             }
          , signature : {
-              placeFor : function(s) { return s + " $_signaturePlaceFor()$"; }
-            , missing : "$_signatureMissing()$"
-            , placeYour : "$_signaturePlaceYour()$"
+               placeFor : function(s) { return s + " $_signaturePlaceFor()$"; }
+             , missing : "$_signatureMissing()$"
+             , placeYour : "$_signaturePlaceYour()$"
            }
          , designview : {
-             validation : {
+              validation : {
                       missingOrWrongEmail : "$_emptyOrNotValidEmail()$"
                     , missingOrWrongNames:  "$_missingSignatoryNames()$"
                     , missingOrWrongPersonalNumber : "$_backToStepTwoAndFillPersonNumber()$"
@@ -255,6 +255,11 @@ javascriptLocalisation =
                     , notReadyField : "$_setAllFields()$"
                     , restrictedName : "$_fieldnameRestricted()$"
                     , notPlacedSignature : "Signature must be placed for signing party with pad authorization"
+                }
+             , messages : {
+                      sendingDocument: "Sending document"
+                    , reloadingDocument : "Reloading document"
+                    , aditionalActions : "Performing aditional actions"
                 }
            }
 
@@ -285,6 +290,10 @@ javascriptLocalisation =
              ,  addToPadQueueAdded : "Document send to pad device"
              ,  addToPadQueueNotAdded : "Document could not be send to pad device"
              ,  removeFromPadQueue : "Remove from pad device"
+             ,  drawSignatureBoxHeader : "Sign document"
+             ,  drawSignatureBoxAcceptButton : "Sign document"
+             ,  drawSignatureBoxCancelButton : "Cancel"
+
              
         }
          , sampleEmailHeader: "$_SampleEmailHeader()$"
@@ -335,7 +344,6 @@ javascriptLocalisation =
              , startButtonLabel: "$_startButtonLabel()$"
         }
         , poweredByScrive : "$_poweredByScrive()$"
-
     }
 
 ####

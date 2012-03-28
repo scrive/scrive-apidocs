@@ -372,7 +372,6 @@
                 }       
                 else
                    SessionStorage.set(namespace, "expanded" + id, "" + (this.get("expanded") == true));
-
             }    
             return this.get("expanded") == true;
         },
@@ -383,7 +382,8 @@
             var id = this.field("id");
             if (namespace != undefined && id != undefined)
                 SessionStorage.set(namespace, "expanded" + id, "" + !val);
-            this.set({ "expanded": !val });
+            this.set({ "expanded": !val }, {silent : true});
+            this.trigger("change");
         }
     });
 

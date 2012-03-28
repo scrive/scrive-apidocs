@@ -454,6 +454,7 @@ var DocumentDesignView = Backbone.View.extend({
     refreshAuthorizationDependantOptions : function() {
         this.refreshInvitationMessageOption();
         this.refreshSignatoryAttachmentsOption();
+        this.refreshFinalButton();
     },
     refreshFinalButton : function() {
         if (this.finalButtonBox != undefined)
@@ -559,21 +560,36 @@ var DocumentDesignView = Backbone.View.extend({
           
     },
     sendConfirmation : function() {
+       var view = this;
        var document = this.model;
        var signatory = document.currentSignatory();
+       var box = $("<div>")
        var content = $("<p>" + document.process().confirmsendtext() + " <strong class='documenttitle'/> " + localization.to + "<span class='unsignedpartynotcurrent'/></p>");
+       box.append(DocumentDataFiller.fill(document,content));
+       var padDesignViewUtil = undefined;
+       if (document.padAuthorization())
+       {   var padDesignViewUtil = new PadDesignViewUtilsModel({document : document});
+           box.append(new PadDesignViewUtilsView({model : padDesignViewUtil}).el);
+       }    
        Confirmation.popup({
               title : document.process().confirmsendtitle(),
               acceptButton : Button.init({
                                 size: "small",
                                 color : "green",
                                 text : document.process().sendbuttontext(),
-                                onClick : function() {                    
-                                    document.sendByAuthor().send();
-                                }
-                }).input(),
+                                onClick : function() {
+                                    LoadingDialog.open(localization.designview.messages.sendingDocument);
+                                    document.sendByAuthor().sendAjax(function(resp) {
+                                        var link = JSON.parse(resp).link;
+                                        if (padDesignViewUtil != undefined)
+                                            padDesignViewUtil.postSendAction(link);
+                                        else
+                                            window.localization = link;
+                                    });
+                                }  
+                              }).input(),
               rejectText: localization.cancel,
-              content  : DocumentDataFiller.fill(document,content)
+              content  : box
         });
     },
     verificationBeforeSendingOrSigning : function() {

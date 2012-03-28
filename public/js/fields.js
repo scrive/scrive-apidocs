@@ -16,6 +16,10 @@ window.FieldPlacement = Backbone.Model.extend({
     initialize : function(args){
         var placement = this;
         setTimeout(function() {placement.addToPage();},100);
+        args.field.bind('removed', function() {
+            placement.trigger("removed")
+            placement.remove();
+        });
     },
     placed : function() {
           return this.get("placed");
@@ -61,6 +65,7 @@ window.FieldPlacement = Backbone.Model.extend({
        var page = document.getFile(fileid).page(this.get("page"));
        page.removePlacement(this);
        this.field().removePlacement(this);
+       this.off();
     },
     draftData : function() {
         var document = this.field().signatory().document();
@@ -96,6 +101,10 @@ window.Field = Backbone.Model.extend({
         this.set({"placements": placements});
         this.bind("change",function() {
             field.signatory().document().trigger("change:signatories")
+        });
+        args.signatory.bind("removed",function() {
+            field.trigger("removed");
+            field.off();
         });
     },
     name : function() {
@@ -174,7 +183,7 @@ window.Field = Backbone.Model.extend({
             var msg = localization.designview.validation.notReadyField
             return new Validation({validates : function() {return field.isReady()}, message : msg});
         }
-        if (!this.signatory().author() && this.signatory().signs() && this.signatory().document().padAuthorization() && this.isSignature()) {
+        if (this.signatory().signs() && this.signatory().document().padAuthorization() && this.isSignature()) {
             var msg = localization.designview.validation.notPlacedSignature
             return new Validation({validates : function() {return field.hasPlacements()}, message : msg});
         }
@@ -208,6 +217,7 @@ window.Field = Backbone.Model.extend({
             placement.remove();
         });
       this.signatory().deleteField(this);
+      this.trigger("removed");
     },
     draftData : function() {
       return {   name : this.name()

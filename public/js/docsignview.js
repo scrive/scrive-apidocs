@@ -55,6 +55,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     }
   },
   createMenuElems: function() {
+    if (this.model.padAuthorization()) return $("<div>");  
     return $(new DocumentActionMenuView({
       model: this.model,
       el: $("<div class='menuwrapper'/>")

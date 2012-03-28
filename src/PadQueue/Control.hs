@@ -28,7 +28,7 @@ import Doc.Model
 import KontraError
 import AppView
 import Happstack.Server.Types
-
+import Data.Char (toLower)
 -- PadQueue STATE
 padQueueState ::  (Kontrakcja m) =>  m JSValue
 padQueueState = do
@@ -85,7 +85,7 @@ handlePadLogin = do
     case (memail, mpasswd) of
         (Just email, Just passwd) -> do
             -- check the user things here
-            maybeuser <- runDBQuery $ GetUserByEmail Nothing (Email $ email)
+            maybeuser <- runDBQuery $ GetUserByEmail Nothing (Email $ map toLower $ email)
             case maybeuser of
                Just user@User{userpassword}
                     | verifyPassword userpassword passwd -> do

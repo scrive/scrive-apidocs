@@ -82,7 +82,7 @@ var padTable = KontraList().init({
                                 }).sendAjax(function() { LoadingDialog.close(); padTable.recall(); });
                             });
                         }
-                    else if (listobject.subfield(idx,"author") != "true")
+                    else 
                         {
                             actionIcon.addClass("addtoqueue");
                             ToolTip.set({on: actionIcon, tip : "Send to pad device"});
