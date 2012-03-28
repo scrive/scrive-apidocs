@@ -430,8 +430,37 @@ insertSignatoryLinkAsIs documentid link = do
     , sql "really_deleted" $ signatorylinkreallydeleted link
     ] <++> SQL ("RETURNING " ++ signatoryLinksSelectors ++ ", NULL, NULL, NULL") []
 
-  fetchSignatoryLinks
-    >>= oneObjectReturnedGuard . concatMap snd . M.toList
+  msiglink <- fetchSignatoryLinks
+              >>= oneObjectReturnedGuard . concatMap snd . M.toList
+
+  case msiglink of
+    Nothing -> return Nothing
+    Just siglink -> do
+      msigattaches <- mapM (insertSignatoryAttachmentAsIs documentid (signatorylinkid siglink)) (signatoryattachments link)
+      if any isNothing msigattaches
+        then return Nothing
+        else do
+          let newsiglink = link { signatoryattachments = catMaybes msigattaches }
+          return (Just newsiglink)
+
+signatoryAttachmentsSelectors :: String
+signatoryAttachmentsSelectors = intercalate ", " [
+    "document_id"
+  , "signatory_link_id"
+  , "file_id"
+  , "name"
+  , "description"
+  ]
+
+fetchSignatoryAttachments :: DB (M.Map (DocumentID, SignatoryLinkID) [SignatoryAttachment])
+fetchSignatoryAttachments = foldDB decoder M.empty
+  where decoder acc document_id signatory_link_id file_id name description =
+            M.insertWith' (++) (document_id, signatory_link_id) [SignatoryAttachment {
+                                                                   signatoryattachmentfile = file_id
+                                                                 , signatoryattachmentname = name
+                                                                 , signatoryattachmentdescription = description
+                                                                 }] acc
+
 
 authorAttachmentsSelectors :: String
 authorAttachmentsSelectors = intercalate ", " [
@@ -460,6 +489,19 @@ insertAuthorAttachmentAsIs documentid attach = do
     ] <++> SQL ("RETURNING " ++ authorAttachmentsSelectors) []
 
   fetchAuthorAttachments
+    >>= oneObjectReturnedGuard . concatMap snd . M.toList
+
+insertSignatoryAttachmentAsIs :: DocumentID -> SignatoryLinkID -> SignatoryAttachment -> DB (Maybe SignatoryAttachment)
+insertSignatoryAttachmentAsIs did slid SignatoryAttachment {..} = do
+  _ <- kRun $ mkSQL INSERT tableSignatoryAttachments [
+        sql "file_id" signatoryattachmentfile
+       , sql "name" signatoryattachmentname
+       , sql "description" signatoryattachmentdescription
+       , sql "document_id" did
+       , sql "signatory_link_id" slid
+       ] <++> SQL ("RETURNING " ++ signatoryAttachmentsSelectors) []
+
+  fetchSignatoryAttachments
     >>= oneObjectReturnedGuard . concatMap snd . M.toList
 
 insertDocumentAsIs :: Document -> DB (Maybe Document)
@@ -852,7 +894,8 @@ instance Actor a => DBUpdate (DeleteSigAttachment a) (Either String Document) wh
 data Actor a => DocumentFromSignatoryData a = DocumentFromSignatoryData DocumentID String String String String String String [String] a
 instance Actor a => DBUpdate (DocumentFromSignatoryData a) (Either String Document) where
   dbUpdate (DocumentFromSignatoryData docid fstname sndname email company personalnumber companynumber fieldvalues actor) = do
-    ed <- newFromDocument toNewDoc docid    
+    mh <- random -- one new magichash is sufficient if we assume only one CSV signatory, which appears to be the case.
+    ed <- newFromDocument (toNewDoc mh) docid    
     when_ (isRight ed) $ 
       let Right d = ed 
       in do
@@ -869,26 +912,23 @@ instance Actor a => DBUpdate (DocumentFromSignatoryData a) (Either String Docume
           actor
     return ed
    where
-    now = actorTime actor 
-    toNewDoc :: Document -> Document
-    toNewDoc d = d { documentsignatorylinks = map toNewSigLink (documentsignatorylinks d)
-                    , documenttype = newDocType $ documenttype d
-                    , documentctime = now
-                    , documentmtime = now
-                    }
-    newDocType :: DocumentType -> DocumentType
-    newDocType (Signable p) = Signable p
-    newDocType (Template p) = Signable p
-    newDocType dt = dt
-    toNewSigLink :: SignatoryLink -> SignatoryLink
-    toNewSigLink sl
-      | isJust (signatorylinkcsvupload sl) = let pumpedData = pumpData sl 
-                                             in pumpedData { signatorylinkcsvupload = Nothing
-                                                           , signatoryattachments = signatoryattachments pumpedData
-                                                           }
-      | otherwise = sl
-    pumpData :: SignatoryLink -> SignatoryLink
-    pumpData siglink = replaceSignatoryData siglink fstname sndname email company personalnumber companynumber fieldvalues
+     now = actorTime actor 
+     toNewDoc :: MagicHash -> Document -> Document
+     toNewDoc mh d = d { documentsignatorylinks = map (toNewSigLink mh) (documentsignatorylinks d)
+                       , documenttype = newDocType $ documenttype d
+                       , documentctime = now
+                       , documentmtime = now
+                       }
+     newDocType :: DocumentType -> DocumentType
+     newDocType (Signable p) = Signable p
+     newDocType (Template p) = Signable p
+     newDocType dt = dt
+     toNewSigLink :: MagicHash -> SignatoryLink -> SignatoryLink
+     toNewSigLink mh sl
+         | isJust (signatorylinkcsvupload sl) = (pumpData sl) { signatorylinkcsvupload = Nothing, signatorymagichash = mh }
+         | otherwise = sl
+     pumpData :: SignatoryLink -> SignatoryLink
+     pumpData siglink = replaceSignatoryData siglink fstname sndname email company personalnumber companynumber fieldvalues
 
 data Actor a => ErrorDocument a = ErrorDocument DocumentID String a
 instance Actor a => DBUpdate (ErrorDocument a) (Either String Document) where
@@ -1844,14 +1884,14 @@ instance Actor a => DBUpdate (ResetSignatoryDetails2 a) (Either String Document)
             forM_ signatories $ \(details, roles, atts, mcsvupload) -> do
                      magichash <- random
                      let link' = (signLinkFromDetails' details roles magichash)
-                                 { signatorylinkcsvupload = mcsvupload }
+                                 { signatorylinkcsvupload = mcsvupload
+                                 , signatoryattachments   = atts }
                          link = if isAuthor link'
                                 then link' { maybesignatory = maybe Nothing maybesignatory mauthorsiglink
                                            , maybecompany   = maybe Nothing maybecompany   mauthorsiglink
                                            }
                                 else link'
                      r1 <- insertSignatoryLinkAsIs documentid link
-                     when_ (isJust r1) $ dbUpdate $ SetSigAttachments documentid (signatorylinkid $ $(fromJust) r1) atts actor
                      when (not (isJust r1)) $
                           error "ResetSignatoryDetails signatory_links did not manage to insert a row"
 
