@@ -1182,8 +1182,8 @@ instance Actor a => DBUpdate (MarkDocumentSeen a) (Either String Document) where
     mdoc <- dbQuery $ GetDocumentByDocumentID did
     case mdoc of
       Nothing -> return $ Left $ "document does not exist with id " ++ show did
-      Just doc -> case maybe Nothing (\_ -> getSigLinkFor doc mh) (getSigLinkFor doc slid) of
-        Nothing -> return $ Left $ "signatory link id and magic hash do not match!"
+      Just doc -> case (getSigLinkFor doc (slid, mh)) of
+        Nothing -> return $ Left $ "signatory link id and magic hash do not match! documentid: " ++ show did ++ " slid: " ++ show slid ++ " mh: " ++ show mh
         Just _ -> do
           let time = actorTime actor
               ipnumber = fromMaybe noIP $ actorIP actor
