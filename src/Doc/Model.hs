@@ -894,27 +894,31 @@ instance Actor a => DBUpdate (DeleteSigAttachment a) (Either String Document) wh
 data Actor a => DocumentFromSignatoryData a = DocumentFromSignatoryData DocumentID String String String String String String [String] a
 instance Actor a => DBUpdate (DocumentFromSignatoryData a) (Either String Document) where
   dbUpdate (DocumentFromSignatoryData docid fstname sndname email company personalnumber companynumber fieldvalues actor) = do
-    mh <- random -- one new magichash is sufficient if we assume only one CSV signatory, which appears to be the case.
-    ed <- newFromDocument (toNewDoc mh) docid    
-    when_ (isRight ed) $ 
-      let Right d = ed 
-      in do
-        copyEvidenceLogToNewDocument docid (documentid d)
-        _ <- dbUpdate $ InsertEvidenceEvent
-          AuthorUsesCSVEvidence
-          ("Document created from CSV file by " ++ actorWho actor ++ ".")
-          (Just $ documentid d)
-          actor
-        dbUpdate $ InsertEvidenceEvent
-          AuthorUsesCSVEvidence
-          ("Documents created from this document using CSV file by " ++ actorWho actor ++ ".")
-          (Just $ docid)
-          actor
-    return ed
+    mdoc <- dbQuery $ GetDocumentByDocumentID docid
+    case mdoc of
+      Nothing -> return $ Left $ "In DocumentFromSignatoryData: Document does not exist for id: " ++ show docid
+      Just doc -> do
+        mhs <- mapM (\_ -> random) (documentsignatorylinks doc)
+        ed <- newFromDocument (toNewDoc mhs) docid    
+        when_ (isRight ed) $ 
+          let Right d = ed 
+          in do
+            copyEvidenceLogToNewDocument docid (documentid d)
+            _ <- dbUpdate $ InsertEvidenceEvent
+                 AuthorUsesCSVEvidence
+                 ("Document created from CSV file by " ++ actorWho actor ++ ".")
+                 (Just $ documentid d)
+                 actor
+            dbUpdate $ InsertEvidenceEvent
+              AuthorUsesCSVEvidence
+              ("Documents created from this document using CSV file by " ++ actorWho actor ++ ".")
+              (Just $ docid)
+              actor
+        return ed
    where
      now = actorTime actor 
-     toNewDoc :: MagicHash -> Document -> Document
-     toNewDoc mh d = d { documentsignatorylinks = map (toNewSigLink mh) (documentsignatorylinks d)
+     toNewDoc :: [MagicHash] -> Document -> Document
+     toNewDoc mhs d = d { documentsignatorylinks = zipWith toNewSigLink mhs (documentsignatorylinks d)
                        , documenttype = newDocType $ documenttype d
                        , documentctime = now
                        , documentmtime = now
@@ -926,7 +930,7 @@ instance Actor a => DBUpdate (DocumentFromSignatoryData a) (Either String Docume
      toNewSigLink :: MagicHash -> SignatoryLink -> SignatoryLink
      toNewSigLink mh sl
          | isJust (signatorylinkcsvupload sl) = (pumpData sl) { signatorylinkcsvupload = Nothing, signatorymagichash = mh }
-         | otherwise = sl
+         | otherwise = sl { signatorymagichash = mh }
      pumpData :: SignatoryLink -> SignatoryLink
      pumpData siglink = replaceSignatoryData siglink fstname sndname email company personalnumber companynumber fieldvalues
 
