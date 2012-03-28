@@ -254,6 +254,15 @@ window.Signatory = Backbone.Model.extend({
         var fields = _.map(args.fields, function(field) {
                 return new Field(extendedWithSignatory(field));
         });
+        // Make sure that all basic fields are initiated
+        for(var i = 0; i < this.defaults.fields.length; i++)
+        {   var isSet = false;
+            for(var j=0;j < args.fields.length;j++ )
+                if (this.defaults.fields[i].name == args.fields[j].name)
+                    isSet = true;
+            if (!isSet)
+                fields.push(new Field(extendedWithSignatory(this.defaults.fields[i])));
+        }
 
         var attachments = _.map(args.attachments, function(attachment) {
                 return new SignatoryAttachment(extendedWithSignatory(attachment));
@@ -503,6 +512,10 @@ window.Signatory = Backbone.Model.extend({
          this.set({"csv": csv});
          this.trigger("change:csv");
 
+    },
+    removed : function() {
+        this.trigger("removed"); 
+        this.off();
     },
     draftData: function() {
         return {
