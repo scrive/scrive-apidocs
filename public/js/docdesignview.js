@@ -278,7 +278,7 @@ var DocumentDesignView = Backbone.View.extend({
         var icon = $("<span class='editinvitemessageicon'/>");
         var text = $("<span class='editinvitemessagetext'/>").text(localization.editInviteText);
         box.append(icon).append(text);
-        box.click(function() {
+        box.find("span").click(function() {
               document.save().sendAjax( function() {
                          ConfirmationWithEmail.popup({
                             title :localization.editInviteDialogHead, 
@@ -368,7 +368,7 @@ var DocumentDesignView = Backbone.View.extend({
         var countspan = $("<span class='countspan' />").text("(" + document.authorattachments().length + ")").appendTo(text);
         box.append(icon).append(text);
 
-        box.click(function() {
+        box.find("span").click(function() {
             document.save().sendAjax();
             DesignAuthorAttachmentsPopup.popup({document: document});
         });
@@ -386,7 +386,7 @@ var DocumentDesignView = Backbone.View.extend({
         document.bind("change:attachments", function(){
           countspan.text("(" + document.signatoryattachments().length + ")");
         });
-        box.click(function() {
+        box.find("span").click(function() {
             document.save().sendAjax();
             DesignSignatoryAttachmentsPopup.popup({document: document});
         });
