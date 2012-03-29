@@ -260,9 +260,9 @@
             var schema = this;
           var paging = this.paging();
           // we reset the page to 0 when we change the filtering
-          // if we do this first, the right thing happens, otherwise, 
+          // if we do this first, the right thing happens, otherwise,
           // it goes into infinite loop -- Eric
-          this.filtering().bind('change', function(){paging.changePage(0);})
+          this.filtering().bind('change', function(){paging.changePage(0);});
 
             this.filtering().bind('change', function() {schema.trigger('change')});
             this.sorting().bind('change', function() {schema.trigger('change')});
@@ -443,9 +443,9 @@
                         td.html($("<a href='#' class='expand'>" + value + "</a>"));
                     } else if (cell.isBool()) {
                         if (value)  td.append("<center><a href='" + this.model.link() + "'>&#10003;</a></center>");
-                    } else 
+                    } else
                             td.append($("<a href='" + this.model.link() + "'>" + value + "</a>"));
-                    } 
+                    }
                    else if (value != undefined) {
                         var span = $("<span >" + value + "</span>");
                         td.html(span);

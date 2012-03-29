@@ -30,7 +30,7 @@ var StandardPlacementView = Backbone.View.extend({
     },
     clear: function() {
         this.off();
-        $(this.el).remove()
+        $(this.el).remove();
     },
     render: function() {
             var field =   this.model;
@@ -54,7 +54,7 @@ var StandardPlacementPlacedView = Backbone.View.extend({
     },
     clear: function() {
         this.off();
-        $(this.el).remove()
+        $(this.el).remove();
     },
     render: function() {
             var view = this;
@@ -141,14 +141,14 @@ var StandardPlacementPlacedView = Backbone.View.extend({
 var SignaturePlacementViewForDrawing = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'clear');
-        this.model.bind('removed', this.clear)
-        this.signature = new Signature({field : this.model})
+        this.model.bind('removed', this.clear);
+        this.signature = new Signature({field : this.model});
 
         this.render();
     },
     clear: function() {
         this.off();
-        $(this.el).remove()
+        $(this.el).remove();
     },
     render: function() {
             var view = this;
@@ -158,7 +158,7 @@ var SignaturePlacementViewForDrawing = Backbone.View.extend({
             box.css('border', "1px solid black");
             box.width(this.signature.width());
             box.height(this.signature.height());
-            box.click(function() {SignatureDrawerPopup.popup({signature: view.signature})})
+            box.click(function() {SignatureDrawerPopup.popup({signature: view.signature})});
             return this;
     }
 });
@@ -166,13 +166,13 @@ var SignaturePlacementViewForDrawing = Backbone.View.extend({
 var SignaturePlacementView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'clear');
-        this.model.bind('removed', this.clear)
-        this.signature = new Signature({field : this.model})
+        this.model.bind('removed', this.clear);
+        this.signature = new Signature({field : this.model});
         this.render();
     },
     clear: function() {
         this.off();
-        $(this.el).remove()
+        $(this.el).remove();
     },
     header : function() {
         var signatory = this.model.signatory();
@@ -218,9 +218,9 @@ var SignaturePlacementView = Backbone.View.extend({
 var SignaturePlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'clear');
-        this.model.bind('removed', this.clear)
+        this.model.bind('removed', this.clear);
         this.model.view = this;
-        this.signature = new Signature({field : this.model.field()})
+        this.signature = new Signature({field : this.model.field()});
 
         this.render();
     },

@@ -17,7 +17,7 @@ window.FieldPlacement = Backbone.Model.extend({
         var placement = this;
         setTimeout(function() {placement.addToPage();},100);
         args.field.bind('removed', function() {
-            placement.trigger("removed")
+            placement.trigger("removed");
             placement.remove();
         });
 
