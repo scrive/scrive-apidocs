@@ -452,6 +452,22 @@ signatoryLinksSelectors = intercalate ", "
   , "signatory_links.csv_signatory_index"
   , "signatory_links.deleted"
   , "signatory_links.really_deleted"
+
+  , -- this is to fetch status class, so we can do sorting according to that class
+    --  0 Draft - 1 Cancel - 2 Fall due - 3 Sent - 4 Opened - 5 Signed
+    -- FIXME: we should really be using constants from Haskell, but this after some refactoring
+    -- this has to stay a single string for now
+  "CASE "
+  ++ " WHEN documents.status IN (7,8) THEN 1"                      -- (errorStatus documentstatus, SCCancelled)
+  ++ " WHEN documents.status = 1 THEN 0"                           -- (documentstatus==Preparation, SCDraft)
+  ++ " WHEN documents.status IN (4,5,6) THEN 1"                    -- (documentstatus==Canceled, SCCancelled)
+  ++ " WHEN signatory_links.sign_time IS NOT NULL THEN 6"          -- (isJust maybesigninfo, SCSigned)
+  ++ " WHEN signatory_links.seen_time IS NOT NULL THEN 5"          -- (isJust maybeseeninfo, SCOpened)
+  ++ " WHEN signatory_links.read_invitation IS NOT NULL THEN 4"    -- (isJust maybereadinvite, SCRead)
+  ++ " WHEN signatory_links.invitation_delivery_status = 2 THEN 1" -- (invitationdeliverystatus==Undelivered,  SCCancelled)
+  ++ " WHEN signatory_links.invitation_delivery_status = 1 THEN 3" -- (invitationdeliverystatus==Delivered, SCDelivered)
+  ++ " ELSE 2"                                                     -- SCSent
+  ++ " END AS status_class"
   ]
 
 selectSignatoryLinksSQL :: SQL
@@ -460,10 +476,12 @@ selectSignatoryLinksSQL = SQL ("SELECT "
   ++ ", signatory_attachments.file_id as sigfileid "
   ++ ", signatory_attachments.name as signame "
   ++ ", signatory_attachments.description as sigdesc "
-  ++ " FROM signatory_links "
+  ++ " FROM (signatory_links "
   ++ " LEFT JOIN signatory_attachments "
   ++ " ON signatory_attachments.document_id = signatory_links.document_id "
-  ++ " AND signatory_attachments.signatory_link_id = signatory_links.id ") []
+  ++ " AND signatory_attachments.signatory_link_id = signatory_links.id) "
+  ++ " JOIN documents "
+  ++ " ON signatory_links.document_id = documents.id ") []
 
 fetchSignatoryLinks :: DB (M.Map DocumentID [SignatoryLink])
 fetchSignatoryLinks = do
@@ -476,7 +494,9 @@ fetchSignatoryLinks = do
      invitation_delivery_status signinfo_text signinfo_signature signinfo_certificate
      signinfo_provider signinfo_first_name_verified signinfo_last_name_verified
      signinfo_personal_number_verified roles csv_title csv_contents csv_signatory_index
-     deleted really_deleted safileid saname sadesc
+     deleted really_deleted status_class
+     safileid saname sadesc
+      | status_class == (5::Int) && False       = undefined -- never happens, ensures typing of status_class
       | docid == nulldocid                      = (document_id, [link], linksmap)
       | docid /= document_id                    = (document_id, [link], M.insertWith' (++) docid links linksmap)
       | signatorylinkid ($(head) links) == slid = (docid, addSigAtt ($(head) links) : $(tail) links, linksmap)
@@ -529,49 +549,42 @@ fetchSignatoryLinks = do
 
 insertSignatoryLinkAsIs :: DocumentID -> SignatoryLink -> DB (Maybe SignatoryLink)
 insertSignatoryLinkAsIs documentid link = do
-  ruserid <- case maybesignatory link of
-    Nothing -> return Nothing
-    Just userid1 -> do
-      muser <- dbQuery $ GetUserByID userid1
-      case muser of
-        Nothing ->
-          do
-            Just doc <- dbQuery $ GetDocumentByDocumentID documentid
-            Log.server $ "User " ++ show (maybesignatory link) ++ " of document #" ++
-               show documentid ++ " '" ++ documenttitle doc ++ "' does not exist, setting to NULL"
-            return Nothing
-        Just _ -> return (Just userid1)
 
-  _ <- kRun $ mkSQL INSERT tableSignatoryLinks [
-      sql "document_id" documentid
-    , sql "user_id" $ ruserid
-    , sql "roles" $ signatoryroles link
-    , sql "company_id" $ maybecompany link
-    , sql "token" $ signatorymagichash link
-    , sql "fields" $ signatoryfields $ signatorydetails link
-    , sql "sign_order"$ signatorysignorder $ signatorydetails link
-    , sql "sign_time" $ signtime `fmap` maybesigninfo link
-    , sql "sign_ip" $ signipnumber `fmap` maybesigninfo link
-    , sql "seen_time" $ signtime `fmap` maybeseeninfo link
-    , sql "seen_ip" $ signipnumber `fmap` maybeseeninfo link
-    , sql "read_invitation" $ maybereadinvite link
-    , sql "invitation_delivery_status" $ invitationdeliverystatus link
-    , sql "signinfo_text" $ signatureinfotext `fmap` signatorysignatureinfo link
-    , sql "signinfo_signature" $ signatureinfosignature `fmap` signatorysignatureinfo link
-    , sql "signinfo_certificate" $ signatureinfocertificate `fmap` signatorysignatureinfo link
-    , sql "signinfo_provider" $ signatureinfoprovider `fmap` signatorysignatureinfo link
-    , sql "signinfo_first_name_verified" $ signaturefstnameverified `fmap` signatorysignatureinfo link
-    , sql "signinfo_last_name_verified" $ signaturelstnameverified `fmap` signatorysignatureinfo link
-    , sql "signinfo_personal_number_verified" $ signaturepersnumverified `fmap` signatorysignatureinfo link
-    , sql "csv_title" $ csvtitle `fmap` signatorylinkcsvupload link
-    , sql "csv_contents" $ csvcontents `fmap` signatorylinkcsvupload link
-    , sql "csv_signatory_index" $ csvsignatoryindex `fmap` signatorylinkcsvupload link
-    , sql "deleted" $ signatorylinkdeleted link
-    , sql "really_deleted" $ signatorylinkreallydeleted link
-    ] <++> SQL ("RETURNING " ++ signatoryLinksSelectors ++ ", NULL, NULL, NULL") []
+  _ <- kRun $ mkSQL INSERT tableSignatoryLinks
+           [ sql "document_id" documentid
+           , sql "user_id" $ maybesignatory link
+           , sql "roles" $ signatoryroles link
+           , sql "company_id" $ maybecompany link
+           , sql "token" $ signatorymagichash link
+           , sql "fields" $ signatoryfields $ signatorydetails link
+           , sql "sign_order"$ signatorysignorder $ signatorydetails link
+           , sql "sign_time" $ signtime `fmap` maybesigninfo link
+           , sql "sign_ip" $ signipnumber `fmap` maybesigninfo link
+           , sql "seen_time" $ signtime `fmap` maybeseeninfo link
+           , sql "seen_ip" $ signipnumber `fmap` maybeseeninfo link
+           , sql "read_invitation" $ maybereadinvite link
+           , sql "invitation_delivery_status" $ invitationdeliverystatus link
+           , sql "signinfo_text" $ signatureinfotext `fmap` signatorysignatureinfo link
+           , sql "signinfo_signature" $ signatureinfosignature `fmap` signatorysignatureinfo link
+           , sql "signinfo_certificate" $ signatureinfocertificate `fmap` signatorysignatureinfo link
+           , sql "signinfo_provider" $ signatureinfoprovider `fmap` signatorysignatureinfo link
+           , sql "signinfo_first_name_verified" $ signaturefstnameverified `fmap` signatorysignatureinfo link
+           , sql "signinfo_last_name_verified" $ signaturelstnameverified `fmap` signatorysignatureinfo link
+           , sql "signinfo_personal_number_verified" $ signaturepersnumverified `fmap` signatorysignatureinfo link
+           , sql "csv_title" $ csvtitle `fmap` signatorylinkcsvupload link
+           , sql "csv_contents" $ csvcontents `fmap` signatorylinkcsvupload link
+           , sql "csv_signatory_index" $ csvsignatoryindex `fmap` signatorylinkcsvupload link
+           , sql "deleted" $ signatorylinkdeleted link
+           , sql "really_deleted" $ signatorylinkreallydeleted link
+           ] <++> SQL " RETURNING id" []
+
+  slids <- foldDB (\acc slid -> slid : acc) []
+
+  _ <- kRun $ selectSignatoryLinksSQL <++> SQL "WHERE signatory_links.id = ? AND signatory_links.document_id = ? ORDER BY internal_insert_order DESC" 
+       [$(head) slids, toSql documentid]
 
   fetchSignatoryLinks
-    >>= oneObjectReturnedGuard . concatMap snd . M.toList
+        >>= oneObjectReturnedGuard . concatMap snd . M.toList
 
 authorAttachmentsSelectors :: String
 authorAttachmentsSelectors = intercalate ", " [
