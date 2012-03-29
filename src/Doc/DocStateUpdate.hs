@@ -171,12 +171,12 @@ authorSendDocument did = onlyAuthor did $ do
   edoc <- getDocByDocID did
   case edoc of
     Left m -> return $ Left m
-    Right doc -> do
-      let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink doc
+    Right _ -> do
       ed1 <- runDBUpdate (PreparationToPending did (SystemActor (ctxtime ctx)))
       case ed1 of
         Left m -> return $ Left $ DBActionNotAvailable m
-        Right _ -> do
+        Right doc -> do
+          let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink doc
           _ <- runDBUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
           _ <- runDBUpdate $ MarkInvitationRead did signatorylinkid (SystemActor (ctxtime ctx))
           transActionNotAvailable <$> runDBUpdate (MarkDocumentSeen did signatorylinkid signatorymagichash actor)
