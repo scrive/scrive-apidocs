@@ -722,6 +722,7 @@ window.DocumentSignView = Backbone.View.extend({
         _.bindAll(this, 'render');
         this.model.bind('reset', this.render);
         this.model.bind('change', this.render);
+        this.model.bind('file:change', this.render);
         this.model.view = this;
         this.saveAfterSignModel = new DocumentSaveAfterSignModel({
           document: this.model
@@ -756,11 +757,14 @@ window.DocumentSignView = Backbone.View.extend({
       }).el);
     },
     createMainFileElems: function() {
-      var file = KontraFile.init({
-        file: this.model.mainfile(),
-        document: this.model
-      });
-      return $(file.view.el);
+      if (this.mainfileelems == undefined) {
+        var file = KontraFile.init({
+          file: this.model.mainfile(),
+          document: this.model
+        });
+        this.mainfileelems = $(file.view.el);
+      }
+      return this.mainfileelems;
     },
     authorAttachmentsTitle: function() {
       if (!this.model.signingInProcess() || !this.model.currentSignatoryCanSign()) {
@@ -951,24 +955,6 @@ window.DocumentSignView = Backbone.View.extend({
         el: $("<div />")
       }).el);
     },
-    makeVisibleWhenMainFileReady: function(elems) {
-      if (this.mainfilebound == undefined) {
-        var mainfile = this.model.mainfile();
-        var updateElemsVisibility = function() {
-          _.each(elems, function(elem) {
-            if (mainfile.ready()) {
-              elem.show();
-            } else {
-              elem.hide();
-            }
-          });
-        };
-        this.model.mainfile().bind('reset', updateElemsVisibility);
-        this.model.mainfile().bind('change', updateElemsVisibility);
-        updateElemsVisibility();
-        this.mainfilebound = true;
-      }
-    },
     isDisplaySignatories: function() {
       return !this.model.closed();
     },
@@ -985,15 +971,6 @@ window.DocumentSignView = Backbone.View.extend({
 
       this.container.empty();
 
-      var tasks = [];
-
-      var triggerTask = undefined;
-      var triggerArrowChange = function() {
-        if (triggerTask != undefined) {
-          triggerTask.trigger("change");
-        }
-      };
-
       this.container.append(this.createSignInstructionElems());
       if (document.currentSignatory().hasSigned()) {
         if (!document.currentSignatory().saved()) {
@@ -1004,7 +981,24 @@ window.DocumentSignView = Backbone.View.extend({
 
       var subcontainer = $("<div class='subcontainer'/>");
 
-      subcontainer.append(this.createMainFileElems());
+      var mainfileelems = this.createMainFileElems();
+      subcontainer.append(mainfileelems);
+
+      if (!document.mainfile().ready()) {
+        this.container.append(subcontainer);
+        return this;
+      }
+
+      mainfileelems.css("min-height", "1352px");
+
+      var tasks = [];
+
+      var triggerTask = undefined;
+      var triggerArrowChange = function() {
+        if (triggerTask != undefined) {
+          triggerTask.trigger("change");
+        }
+      };
 
       if (this.isBottomStuff()) {
         var bottomstuff = $("<div class='bottomstuff' />");
@@ -1053,8 +1047,6 @@ window.DocumentSignView = Backbone.View.extend({
 
         subcontainer.append($("<div class='end' />"));
         subcontainer.append($("<div class='cleafix' />"));
-
-        this.makeVisibleWhenMainFileReady([bottomstuff]);
       }
       this.container.append(subcontainer);
 

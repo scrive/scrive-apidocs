@@ -15,6 +15,7 @@ window.File = Backbone.Model.extend({
     },
     initialize: function (args) {
         this.url = "/filepages/" + args.document.documentid() + "/" + args.id;
+        this.bind('change:pages', function() { args.document.trigger('file:change'); });
     },
     downloadLink : function() {
         return "/download/"+ this.document().documentid() + "/" + this.fileid() +"/"+ this.name() + ".pdf" + this.document().viewer().urlPart();
@@ -40,6 +41,9 @@ window.File = Backbone.Model.extend({
     },
     ready : function(){
         return this.pages().length > 0 ;
+    },
+    rendered : function() {
+      return this.get("rendered");
     },
     broken : function(){
         return this.get("broken");
