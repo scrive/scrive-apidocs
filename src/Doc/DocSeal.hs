@@ -119,17 +119,22 @@ fieldsFromSignatory SignatoryDetails{signatoryfields} =
       , Seal.w = placementpagewidth placement
       , Seal.h = placementpageheight placement
      }
-    fieldJPEGFromPlacement sf placement = Seal.FieldJPG
-      { valueBase64      =  dropWhile (\c -> c == ';' || c == ',') sf
+    fieldJPEGFromPlacement v placement =
+     let
+      (w,_:r) = span (\c -> c /= '|') v
+      (h,_:r') = span (\c -> c /= '|') r
+      content  = drop 1 $ dropWhile (\c -> c /= ',') r' 
+     in Seal.FieldJPG
+      { valueBase64      =  content
       , Seal.x = placementx placement
-      , Seal.y = placementy placement + 17 -- Fix for signature box header from UI
+      , Seal.y = placementy placement 
       , Seal.page = placementpage placement
       , Seal.w = placementpagewidth placement
       , Seal.h = placementpageheight placement
-      , Seal.image_w       = 250
-      , Seal.image_h       = 100
-      , Seal.internal_image_w = 250
-      , Seal.internal_image_h = 100
+      , Seal.image_w       = read w
+      , Seal.image_h       = read h
+      , Seal.internal_image_w = read w
+      , Seal.internal_image_h = read h
       }
 
 sealSpecFromDocument :: TemplatesMonad m => String -> Document -> [DocumentEvidenceEvent] -> String -> String -> m Seal.SealSpec

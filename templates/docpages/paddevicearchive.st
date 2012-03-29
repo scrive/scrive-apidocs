@@ -113,6 +113,9 @@ $doctype()$
   <head>
     <title>Pad signing</title>
     $standardHeaderContents()$
+    <link rel="apple-touch-startup-image" href="/img/logo-scrive-big-black.png">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/img/ipad-logo.jpg"/>
   </head>
   <body class="signview">
     <div class="mainContainer960" >

@@ -293,7 +293,8 @@ javascriptLocalisation =
              ,  drawSignatureBoxHeader : "Sign document"
              ,  drawSignatureBoxAcceptButton : "Sign document"
              ,  drawSignatureBoxCancelButton : "Cancel"
-
+             ,  signingOnSameDeviceFor :  "Give for signing on this device to  "
+             ,  addToPadQueueFor :  "Send to pad device to be signed by "
              
         }
          , sampleEmailHeader: "$_SampleEmailHeader()$"

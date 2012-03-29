@@ -26,6 +26,10 @@ window.Signature = Backbone.Model.extend({
     image : function() {
         return this.get("image");
     },
+    setImage : function(image) {
+        this.set({image: image});
+        this.saveToField();
+    },
     width : function(){
         return this.get("width");
     },

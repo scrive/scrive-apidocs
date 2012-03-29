@@ -93,25 +93,24 @@ var SignatureDrawer = Backbone.View.extend({
 
     },
     saveImage : function() {
-        
-    },
-    drawImage : function(image) {
-       var view = this;
-       view.picture.fillStyle = "#ffffff";
-       view.picture.fillRect (0,0,view.canvas[0].width,view.canvas[0].height);
-       if (image != undefined && image != "") { 
-          var img = new Image();
-          img.type = 'image/jpeg';
-          img.src = image;
-          img.onload = function() {
-                view.picture.drawImage(img,0,0,view.canvas[0].width,view.canvas[0].height);
-                if (view.reloadonrender == true)
-                {
-                    view.model.setImage(view.canvas[0].toDataURL("image/jpeg",1.0));
-                    view.reloadonrender = false;
-                }
+           var signature = this.model
+           var image = this.canvas[0].toDataURL("image/png",1.0)
+           console.log(image.length);
+           var img = new Image();
+           img.type = 'image/png';
+           img.src = image;
+           img.onload = function() {
+                var canvas = $("<canvas class='signatureCanvas' />");
+                canvas.attr("width",signature.width());
+                canvas.attr("height",signature.height());
+                canvas[0].getContext('2d').fillStyle = "#ffffff";
+                canvas[0].getContext('2d').fillRect (0,0,signature.width(),signature.height());
+                canvas[0].getContext('2d').drawImage(img,0,0,signature.width(),signature.height());
+                var image = canvas[0].toDataURL("image/jpeg",1.0);
+                console.log(image.length);
+                signature.setImage(image);
+               
           };
-       }
     },
     render: function () {
         var signature = this.model;
@@ -156,13 +155,14 @@ var SignatureDrawerWrapper = Backbone.View.extend({
         return div;
     },
     acceptButton : function() {
+        var view = this;
         var document = this.model.document();
         return Button.init({
                 color : 'blue',
                 size: 'tiny',
                 text: document.process().signbuttontext(),
                 onClick : function(){
-                    this.drawer.saveImage();
+                    view.drawer.saveImage();
                     view.overlay.data('overlay').close();
                     return false;
                 }
