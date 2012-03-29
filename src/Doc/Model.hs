@@ -1988,6 +1988,7 @@ instance Actor a => DBUpdate (SignableFromDocumentIDWithUpdatedAuthor a) (Either
                                        -- FIXME: Need to remove authorfields?
               , documentctime = time
               , documentmtime = time
+              , documentui    = DocumentUI { documentmailfooter = customfooter (usersettings user) }
               }
           case r of 
             Right d -> do
