@@ -1479,8 +1479,6 @@ testGetDocumentsSharedInCompany = doTimes 10 $ do
   dlist5 <- dbQuery $ GetAvailableTemplates (userid user5) [Offer, Order, Contract]
   dlist6 <- dbQuery $ GetAvailableTemplates (userid user6) [Offer, Order, Contract]
 
-  mapM_ (liftIO . putStrLn . show . map documentid) [dlist1, dlist2, dlist3, dlist4, dlist5, dlist6]
-
   validTest $ do
     assertEqual "Documents not shared in user without company (X) by user 5" 1 (length dlist5)
     assertEqual "Documents not shared in user without company (Y) by user 6" 1 (length dlist6)
@@ -1816,7 +1814,7 @@ testMarkInvitationRead = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author 
          (isPending &&^ (all (isNothing . maybereadinvite) . documentsignatorylinks))
-  forM_ (documentsignatorylinks doc) $ \sl -> Log.debug $ "maybereadinvite: " ++ show (maybereadinvite sl)
+
   sl' <- rand 10 $ elements $ documentsignatorylinks doc
   let slid = signatorylinkid sl'
   time <- getMinutesTime

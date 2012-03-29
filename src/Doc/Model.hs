@@ -424,49 +424,46 @@ fetchDocuments = foldDB decoder []
        , documentregion = region
        } : acc
 
-signatoryLinksSelectorsWith :: String -> String
-signatoryLinksSelectorsWith i = intercalate i [
-    "id"
-  , "document_id"
-  , "user_id"
-  , "company_id"
-  , "fields"
-  , "sign_order"
-  , "token"
-  , "sign_time"
-  , "sign_ip"
-  , "seen_time"
-  , "seen_ip"
-  , "read_invitation"
-  , "invitation_delivery_status"
-  , "signinfo_text"
-  , "signinfo_signature"
-  , "signinfo_certificate"
-  , "signinfo_provider"
-  , "signinfo_first_name_verified"
-  , "signinfo_last_name_verified"
-  , "signinfo_personal_number_verified"
-  , "roles"
-  , "csv_title"
-  , "csv_contents"
-  , "csv_signatory_index"
-  , "deleted"
-  , "really_deleted"
-  ]
-
 signatoryLinksSelectors :: String
-signatoryLinksSelectors = signatoryLinksSelectorsWith ", "
+signatoryLinksSelectors = intercalate ", " 
+  [ "signatory_links.id"
+  , "signatory_links.document_id"
+  , "signatory_links.user_id"
+  , "signatory_links.company_id"
+  , "signatory_links.fields"
+  , "signatory_links.sign_order"
+  , "signatory_links.token"
+  , "signatory_links.sign_time"
+  , "signatory_links.sign_ip"
+  , "signatory_links.seen_time"
+  , "signatory_links.seen_ip"
+  , "signatory_links.read_invitation"
+  , "signatory_links.invitation_delivery_status"
+  , "signatory_links.signinfo_text"
+  , "signatory_links.signinfo_signature"
+  , "signatory_links.signinfo_certificate"
+  , "signatory_links.signinfo_provider"
+  , "signatory_links.signinfo_first_name_verified"
+  , "signatory_links.signinfo_last_name_verified"
+  , "signatory_links.signinfo_personal_number_verified"
+  , "signatory_links.roles"
+  , "signatory_links.csv_title"
+  , "signatory_links.csv_contents"
+  , "signatory_links.csv_signatory_index"
+  , "signatory_links.deleted"
+  , "signatory_links.really_deleted"
+  ]
 
 selectSignatoryLinksSQL :: SQL
 selectSignatoryLinksSQL = SQL ("SELECT "
-  ++ signatoryLinksSelectorsWith ", sl."
-  ++ ", sa.file_id as sigfileid "
-  ++ ", sa.name as signame "
-  ++ ", sa.description as sigdesc "
-  ++ " FROM signatory_links sl "
-  ++ " LEFT JOIN signatory_attachments sa "
-  ++ " ON sa.document_id = sl.document_id "
-  ++ " AND sa.signatory_link_id = sl.id ") []
+  ++ signatoryLinksSelectors
+  ++ ", signatory_attachments.file_id as sigfileid "
+  ++ ", signatory_attachments.name as signame "
+  ++ ", signatory_attachments.description as sigdesc "
+  ++ " FROM signatory_links "
+  ++ " LEFT JOIN signatory_attachments "
+  ++ " ON signatory_attachments.document_id = signatory_links.document_id "
+  ++ " AND signatory_attachments.signatory_link_id = signatory_links.id ") []
 
 fetchSignatoryLinks :: DB (M.Map DocumentID [SignatoryLink])
 fetchSignatoryLinks = do
@@ -1062,7 +1059,7 @@ selectDocuments query = do
     _ <- kRun $ SQL "SELECT * FROM docs" []
     docs <- fetchDocuments
 
-    _ <- kRun $ selectSignatoryLinksSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE sl.document_id = docs.id) ORDER BY document_id DESC, internal_insert_order DESC" []
+    _ <- kRun $ selectSignatoryLinksSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE signatory_links.document_id = docs.id) ORDER BY document_id DESC, internal_insert_order DESC" []
     sls <- fetchSignatoryLinks
 
     _ <- kRun $ selectAuthorAttachmentsSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE author_attachments.document_id = docs.id) ORDER BY document_id DESC" []
