@@ -14,7 +14,7 @@ window.PadQueue = Backbone.Model.extend({
     },
     initialize: function (args) {
         var padqueue = this;
-        this.url = "padqueue/state";
+        this.url = "/padqueue/state";
         padqueue.refresher();
     },
     refresher : function() {

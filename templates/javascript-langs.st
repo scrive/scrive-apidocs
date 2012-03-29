@@ -295,6 +295,7 @@ javascriptLocalisation =
              ,  drawSignatureBoxCancelButton : "Cancel"
              ,  signingOnSameDeviceFor :  "Give for signing on this device to  "
              ,  addToPadQueueFor :  "Send to pad device to be signed by "
+             ,  cleanImage : "Clean image"
              
         }
          , sampleEmailHeader: "$_SampleEmailHeader()$"

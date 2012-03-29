@@ -112,6 +112,10 @@ var SignatureDrawer = Backbone.View.extend({
                
           };
     },
+    clear: function() {
+          this.canvas[0].getContext('2d').fillStyle = "#ffffff";
+          this.canvas[0].getContext('2d').fillRect (0,0,this.model.swidth(),this.model.sheight());
+    },
     render: function () {
         var signature = this.model;
         var view = this;
@@ -169,14 +173,14 @@ var SignatureDrawerWrapper = Backbone.View.extend({
         }).input();
         
     },
-    cancelButton : function() {
+    clearButton : function() {
         var view = this;
         return Button.init({
                 color : 'red',
                 size: 'tiny',
-                text: localization.cancel,
+                text: localization.pad.cleanImage,
                 onClick : function() {
-                    view.overlay.data('overlay').close();
+                    view.drawer.clear();
                     return false;
                 }
         }).input();
@@ -191,7 +195,7 @@ var SignatureDrawerWrapper = Backbone.View.extend({
            var company = author.company();
            detailsBox.append($("<h1/>").text(name));
            detailsBox.append($("<h2/>").text(phone + " " + company ));
-           var cbutton = this.cancelButton();
+           var cbutton = this.clearButton();
            cbutton.addClass("float-left");
            return $("<div class='footer'/>").append(cbutton).append(abutton).append(detailsBox);
     },
