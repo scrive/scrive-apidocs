@@ -127,6 +127,9 @@ window.Field = Backbone.Model.extend({
     placements : function() {
         return this.get("placements");
     },
+    isPlaced: function() {
+      return this.placements().length > 0;
+    },
     signatory : function(){
         return this.get("signatory");
     },
@@ -181,15 +184,15 @@ window.Field = Backbone.Model.extend({
             return new NotEmptyValidation({message: msg});
         }
 
-        if (this.isCustom() && this.signatory().author()) {
-          var msg1 = localization.designview.validation.notReadyField;
-          var msg2 = localization.designview.validation.missingOrWrongCustomFieldValue;
-          return new Validation({validates: function() {return field.isReady()}, message: msg1}).concat(new NotEmptyValidation({message: msg2}));
-        }
-
         if (this.isCustom()) {
-            var msg = localization.designview.validation.notReadyField;
-            return new Validation({validates : function() {return field.isReady()}, message : msg});
+          var msg1 = localization.designview.validation.notReadyField;
+          var msg2 = localization.designview.validation.notPlacedField;
+          var validation = new Validation({validates: function() {return field.isReady()}, message: msg1}).concat(new Validation({validates: function() {return field.isPlaced()}, message: msg2}));
+          if (this.signatory().author()) {
+            return validation.concat(new NotEmptyValidation({message: localization.designview.validation.missingOrWrongCustomFieldValue}));
+          } else {
+            return validation;
+          }
         }
 
         return new Validation();
