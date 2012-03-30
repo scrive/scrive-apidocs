@@ -158,47 +158,6 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
     bottombit.append($("<div class='email' />").text(signatory.email()));
     container.append(bottombit);
 
-    /** this stuff is messy, need to improve when do inline field editing*/
-    var closedinputbits = $("<div class='grouping closedinputs' />");
-    var isclosedinputs = false;
-
-    var inputbits = $("<div class='grouping' />");
-    var isinputs = false;
-    var isInputField = this.isInputField;
-    _.each(signatory.fields(), function(field) {
-      if (isInputField(field)) {
-        /**don't show other people's custom fields that
-        still need filling**/
-        if (field.value() == "" && !signatory.current()) {
-          return;
-        }
-        var fieldwrapper = $("<div class='fieldwrapper'/>");
-        if (signatory.current()) {
-          fieldwrapper.append($("<div class='label' />").text(field.nicename() + ":"));
-        }
-        var fieldview = new FieldStandardView({
-          model: field,
-          el: $("<div class='field' />")
-        });
-        var customfield = $(fieldview.el);
-        view.customfieldelems.push(customfield);
-        fieldwrapper.append(customfield);
-        if (field.isClosed()) {
-          closedinputbits.append(fieldwrapper);
-          isclosedinputs = true;
-        } else {
-          inputbits.append(fieldwrapper);
-          isinputs = true;
-        }
-      }
-    });
-    if (isclosedinputs) {
-      container.append(closedinputbits);
-    }
-    if (isinputs) {
-      container.append(inputbits);
-    }
-
     if (!signatory.current()) {
       var compactlink = $("<a />");
       compactlink.click(function() {
@@ -720,9 +679,11 @@ window.DocumentShareAfterSignView = Backbone.View.extend({
 window.DocumentSignView = Backbone.View.extend({
     initialize: function(args) {
         _.bindAll(this, 'render');
+        var view = this;
         this.model.bind('reset', this.render);
         this.model.bind('change', this.render);
-        this.model.bind('file:change', this.render);
+        //kind of icky.  this is required because the of the timeouts in FieldPlacement
+        this.model.bind('file:change', function() { window.setTimeout(view.render, 500); });
         this.model.view = this;
         this.saveAfterSignModel = new DocumentSaveAfterSignModel({
           document: this.model
@@ -756,15 +717,40 @@ window.DocumentSignView = Backbone.View.extend({
         el: $("<div />")
       }).el);
     },
-    createMainFileElems: function() {
-      if (this.mainfileelems == undefined) {
+    getOrCreateMainFileView: function() {
+      if (this.mainfileview == undefined) {
         var file = KontraFile.init({
           file: this.model.mainfile(),
           document: this.model
         });
-        this.mainfileelems = $(file.view.el);
+        this.mainfileview = file.view;
       }
-      return this.mainfileelems;
+      return this.mainfileview;
+    },
+    getRenderedPlacements: function() {
+      var renderedPlacements = [];
+      var mainfileview = this.getOrCreateMainFileView();
+      _.each(this.getOrCreateMainFileView().pageviews, function(pageview) {
+        _.each(pageview.renderedPlacements, function(placement) {
+          renderedPlacements.push(placement);
+        });
+      });
+      var roundDown = function(n) {
+        return n - (n % 10);
+      };
+      renderedPlacements = renderedPlacements.sort(function(a, b) {
+        var pdiff = a.placement.page() - b.placement.page();
+        if (pdiff!=0) {
+          return pdiff;
+        }
+        //put a fudge into the y, so it doesnt matter if people don't line things up
+        var ydiff = a.placement.y() - b.placement.y();
+        if (ydiff>10 || ydiff<(-10)) {
+          return ydiff;
+        }
+        return a.placement.x() - b.placement.x();
+      });
+      return renderedPlacements;
     },
     authorAttachmentsTitle: function() {
       if (!this.model.signingInProcess() || !this.model.currentSignatoryCanSign()) {
@@ -819,69 +805,19 @@ window.DocumentSignView = Backbone.View.extend({
         el: el
       });
     },
-    customFieldTasks: function(fieldels) {
-      var fields = this.model.currentSignatory().customFields();
-      if (fields.length != fieldels.length) {
-        console.error("expected to find an element per custom field");
-        console.log("****info*****");
-        console.log("fields");
-        console.log(fields);
-        console.log("fieldels");
-        console.log(fieldels);
-        console.log("*****");
-        return;
-      }
-      var tasks = [];
-      for (var i = 0; i < fields.length; i++) {
-        tasks.push(this.customFieldTask(fields[i], fieldels[i]));
-      }
-      return tasks;
-    },
-    customFieldTask: function(field, el) {
-      /**
-       * this stuff is kind of disgusting
-       * the idea is to delay completing a field for
-       * a little while to give the person a change
-       * to type it all in before moving the arrow
-       */
-      var completiontime = undefined;
-      var lastvalue = undefined;
-      var queueChange = function(update) {
-        console.log("Delaying field completion...");
-        window.setTimeout(function() {
-          update();
-        }, 500);
-      };
+    createInlineFieldTask: function(renderedPlacement) {
+      var placement = renderedPlacement.placement;
+      var elem = renderedPlacement.elem;
       return new DocumentSignViewTask({
-        model: field,
+        model: placement.field(),
         isComplete: function() {
-          var newvalue = field.value() != "";
-          var returnvalue = lastvalue;
-          if (lastvalue == undefined ||
-                !newvalue ||
-                (lastvalue && newvalue)) {
-            returnvalue = newvalue;
-          } else if (!lastvalue &&
-                       newvalue &&
-                       completiontime == undefined) {
-            completiontime = new Date();
-            queueChange(this.update);
-          } else if (!lastvalue &&
-                       newvalue &&
-                       completiontime != undefined) {
-            var elapsedtime = (new Date()).getTime() - completiontime.getTime();
-            if (elapsedtime >= 2000) {
-              completiontime = undefined;
-              returnvalue = newvalue;
-            } else {
-              queueChange(this.update);
-            }
-          }
-
-          lastvalue = returnvalue;
-          return returnvalue;
+          return placement.field().value().trim()!="";
         },
-        el: el
+        el: elem,
+        beforePointing: function() {
+          elem.trigger("click");
+        },
+        label: placement.field().nicename()
       });
     },
     createUploadedAttachmentsElems: function() {
@@ -965,9 +901,13 @@ window.DocumentSignView = Backbone.View.extend({
                this.isDisplaySignatories();
     },
     render: function() {
+      var view = this;
       var document = this.model;
       if (!document.ready())
           return this;
+
+      var mainfileelems = $(this.getOrCreateMainFileView().el);
+      mainfileelems.detach();
 
       this.container.empty();
 
@@ -981,7 +921,7 @@ window.DocumentSignView = Backbone.View.extend({
 
       var subcontainer = $("<div class='subcontainer'/>");
 
-      var mainfileelems = this.createMainFileElems();
+      var mainfileelems = $(this.getOrCreateMainFileView().el);
       subcontainer.append(mainfileelems);
 
       if (!document.mainfile().ready()) {
@@ -999,6 +939,10 @@ window.DocumentSignView = Backbone.View.extend({
           triggerTask.trigger("change");
         }
       };
+
+      _.each(this.getRenderedPlacements(), function(renderedPlacement) {
+        tasks.push(view.createInlineFieldTask(renderedPlacement));
+      });
 
       if (this.isBottomStuff()) {
         var bottomstuff = $("<div class='bottomstuff' />");
@@ -1022,12 +966,9 @@ window.DocumentSignView = Backbone.View.extend({
         }
 
         if (this.isDisplaySignatories()) {
+          //triggerArrowChange will cause the arrow to repaint if the signatories
+          //are expanded or compressed, because this means any sign arrow may need to move
           var signatoriesview = this.createSignatoriesView(triggerArrowChange);
-          if (this.model.currentSignatoryCanSign()) {
-            _.each(this.customFieldTasks(signatoriesview.customfieldelems), function(task) {
-              tasks.push(task);
-            });
-          }
           bottomstuff.append($(signatoriesview.el));
         }
 
@@ -1068,6 +1009,8 @@ window.DocumentSignViewTask = Backbone.Model.extend({
     _.bindAll(this, 'update');
     this.model = args.model;
     this.isComplete = args.isComplete;
+    this.beforePointing = args.beforePointing;
+    this.label = args.label;
     this.el = args.el;
     this.model.bind('reset', this.update);
     this.model.bind('change', this.update);
@@ -1118,6 +1061,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
     this.render();
   },
   render: function() {
+    var view = this;
     console.log("rendering arrows");
     $(this.el).empty();
 
@@ -1150,6 +1094,16 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
     }
 
     var actionarrow = $("<div class='action arrow'/>");
+    var setActionArrowText = function(txt) {
+      actionarrow.empty();
+      var front = $("<div class='front' />");
+      if (txt!=undefined) {
+        front.append($("<div class='label' />").text(txt));
+      }
+      actionarrow.append(front);
+      actionarrow.append($("<div class='back' />"));
+      actionarrow.append($("<div class='clearfix' />"));
+    };
     container.append(actionarrow);
 
     var updateRightMargin = function() {
@@ -1160,7 +1114,6 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
       }
       downarrow.css("right", margin + "px");
       uparrow.css("right", margin + "px");
-      actionarrow.css("right", (margin - 20) + "px");
     };
     $(window).resize(updateRightMargin);
     updateRightMargin();
@@ -1169,7 +1122,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
       if (taskmodel.isIncompleteTask()) {
         var el = taskmodel.nextIncompleteTask().el;
         actionarrow.css("top", (el.offset().top + (el.height() / 2) - 14) + "px");
-        actionarrow.css("right", ($(window).width() - (el.offset().left + el.width() + 102)) + "px");
+        actionarrow.css("left", (el.offset().left + el.width() + 10) + "px");
       }
     };
     updateActionArrowPosition();
@@ -1208,20 +1161,29 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
         if ((scrolltop >= 0) && (elbottom <= eltop)) {
           console.log("waiting to show arrow ....");
           window.setTimeout(updateVisibility, 500);
+          view.pointingAt = undefined;
         } else if (((elbottom + bottommargin) <= scrollbottom) && ((eltop - topmargin) >= scrolltop)) {
-          taskmodel.nextIncompleteTask().el.parents(".signview .section").addClass("highlight");
+          var nextTask = taskmodel.nextIncompleteTask();
+          nextTask.el.parents(".signview .section").addClass("highlight");
+          if (nextTask.beforePointing!=undefined && (view.pointingAt==undefined || view.pointingAt!=nextTask)) {
+            nextTask.beforePointing();
+          }
+          setActionArrowText(nextTask.label);
           updateActionArrowPosition();
           actionarrow.show();
           uparrow.hide();
           downarrow.hide();
+          view.pointingAt = nextTask;
         } else if ((elbottom + bottommargin) > scrollbottom) {
           downarrow.show();
           uparrow.hide();
           actionarrow.hide();
+          view.pointingAt = undefined;
         } else {
           uparrow.show();
           downarrow.hide();
           actionarrow.hide();
+          view.pointingAt = undefined;
         }
       }
     };

@@ -699,12 +699,11 @@ body.signview {
   display: block;
 
   position: fixed;
-  right: 205px;
 
   z-index: 5000;
 
   height: 112px;
-  width: 112px;
+  min-width: 112px;
 }
 
 .signview .arrows .down.arrow {
@@ -726,10 +725,29 @@ body.signview {
 
 .signview .arrows .action.arrow {
   position: absolute;
-  background: url(../img/sign-arrow-action.png);
+}
+
+.signview .arrows .action.arrow .front {
+  background: url(../img/sign-arrow-action-front.png);
   background-repeat: no-repeat;
-  width: 92px;
+  min-width: 84px;
   height: 28px;
+  float: left;
+}
+
+.signview .arrows .action.arrow .back {
+  background: url(../img/sign-arrow-action-back.png);
+  background-repeat: no-repeat;
+  width: 8px;
+  height: 28px;
+  float: left;
+}
+
+.signview .arrows .action.arrow .label {
+  color: white;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 5px;
 }
 
 .signview .pagefooter {
