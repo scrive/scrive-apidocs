@@ -2071,3 +2071,14 @@ a {
     font: 10px "Lucida Grande";
     padding: 20px;
 }
+
+.notfound {
+    font-size: 16px;
+    padding: 60px 160px;
+    border: 1px solid black;
+}
+
+.notfound h2, .notfound h3 {
+    margin-bottom: 14px;
+    margin-top: 14px;
+}
