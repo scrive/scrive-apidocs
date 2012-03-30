@@ -140,6 +140,28 @@ data DocumentDomain
   | DocumentsOfCompany CompanyID
   | AttachmentsOfAuthorDeleteValue UserID Bool
 
+data DocumentOrderBy
+  = DocumentOrderByTitle
+  | DocumentOrderByMTime
+  | DocumentOrderByStatusClass
+  | DocumentOrderByType
+  | DocumentOrderByProcess
+
+
+data AscDesc a = Asc a | Desc a
+
+documentOrderByToSQL :: DocumentOrderBy -> SQL
+documentOrderByToSQL DocumentOrderByTitle = SQL "documents.title" []
+documentOrderByToSQL DocumentOrderByMTime = SQL "documents.mtime" []
+documentOrderByToSQL DocumentOrderByStatusClass = SQL ("(SELECT COALESCE( SELECT " ++ statusClassCaseExpression ++ ", 3))") []
+documentOrderByToSQL DocumentOrderByType = SQL "documents.type" []
+documentOrderByToSQL DocumentOrderByProcess = SQL "documents.process" []
+
+documentOrderByAscDescToSQL :: AscDesc DocumentOrderBy -> SQL
+documentOrderByAscDescToSQL (Asc x) = documentOrderByToSQL x
+documentOrderByAscDescToSQL (Desc x) = documentOrderByToSQL x <++> SQL " DESC" []
+
+
 documentDomainToSQL :: DocumentDomain -> SQL
 documentDomainToSQL (DocumentsOfAuthorDeleteValue uid deleted) =
   SQL "(signatory_links.roles & ?) <> 0 AND signatory_links.user_id = ? AND signatory_links.deleted = ? AND documents.type = 1"
@@ -424,6 +446,20 @@ fetchDocuments = foldDB decoder []
        , documentregion = region
        } : acc
 
+statusClassCaseExpression :: String
+statusClassCaseExpression =
+  "CASE "
+  ++ " WHEN documents.status IN (7,8) THEN 1"                      -- (errorStatus documentstatus, SCCancelled)
+  ++ " WHEN documents.status = 1 THEN 0"                           -- (documentstatus==Preparation, SCDraft)
+  ++ " WHEN documents.status IN (4,5,6) THEN 1"                    -- (documentstatus==Canceled, SCCancelled)
+  ++ " WHEN signatory_links.sign_time IS NOT NULL THEN 6"          -- (isJust maybesigninfo, SCSigned)
+  ++ " WHEN signatory_links.seen_time IS NOT NULL THEN 5"          -- (isJust maybeseeninfo, SCOpened)
+  ++ " WHEN signatory_links.read_invitation IS NOT NULL THEN 4"    -- (isJust maybereadinvite, SCRead)
+  ++ " WHEN signatory_links.invitation_delivery_status = 2 THEN 1" -- (invitationdeliverystatus==Undelivered,  SCCancelled)
+  ++ " WHEN signatory_links.invitation_delivery_status = 1 THEN 3" -- (invitationdeliverystatus==Delivered, SCDelivered)
+  ++ " ELSE 2"                                                     -- SCSent
+  ++ " END"
+
 signatoryLinksSelectors :: String
 signatoryLinksSelectors = intercalate ", " 
   [ "signatory_links.id"
@@ -457,17 +493,7 @@ signatoryLinksSelectors = intercalate ", "
     --  0 Draft - 1 Cancel - 2 Fall due - 3 Sent - 4 Opened - 5 Signed
     -- FIXME: we should really be using constants from Haskell, but this after some refactoring
     -- this has to stay a single string for now
-  "CASE "
-  ++ " WHEN documents.status IN (7,8) THEN 1"                      -- (errorStatus documentstatus, SCCancelled)
-  ++ " WHEN documents.status = 1 THEN 0"                           -- (documentstatus==Preparation, SCDraft)
-  ++ " WHEN documents.status IN (4,5,6) THEN 1"                    -- (documentstatus==Canceled, SCCancelled)
-  ++ " WHEN signatory_links.sign_time IS NOT NULL THEN 6"          -- (isJust maybesigninfo, SCSigned)
-  ++ " WHEN signatory_links.seen_time IS NOT NULL THEN 5"          -- (isJust maybeseeninfo, SCOpened)
-  ++ " WHEN signatory_links.read_invitation IS NOT NULL THEN 4"    -- (isJust maybereadinvite, SCRead)
-  ++ " WHEN signatory_links.invitation_delivery_status = 2 THEN 1" -- (invitationdeliverystatus==Undelivered,  SCCancelled)
-  ++ " WHEN signatory_links.invitation_delivery_status = 1 THEN 3" -- (invitationdeliverystatus==Delivered, SCDelivered)
-  ++ " ELSE 2"                                                     -- SCSent
-  ++ " END AS status_class"
+    statusClassCaseExpression ++ " AS status_class"
   ]
 
 selectSignatoryLinksSQL :: SQL
@@ -1105,15 +1131,17 @@ instance DBQuery GetDocumentsByService [Document] where
 data GetDocuments = GetDocuments [DocumentDomain] [DocumentFilter]
 instance DBQuery GetDocuments [Document] where
   dbQuery (GetDocuments domains filters) = do
-    selectDocumentsBySignatoryLink $ mconcat
-            [ SQL "(" []
-            , sqlConcatOR (map documentDomainToSQL domains)
-            , SQL ")" []
-            , if not (null filters)
-              then SQL " AND " [] `mappend` sqlConcatAND (map documentFilterToSQL filters)
-              else SQL "" []
-            ]
-
+    selectDocuments $ mconcat
+      [ selectDocumentsSQL
+      , SQL "WHERE EXISTS (SELECT 1 FROM signatory_links WHERE documents.id = signatory_links.document_id AND " []
+      , SQL "(" []
+      , sqlConcatOR (map documentDomainToSQL domains)
+      , SQL ")" []
+      , if not (null filters)
+        then SQL " AND " [] `mappend` sqlConcatAND (map documentFilterToSQL filters)
+        else SQL "" []
+      , SQL ") ORDER BY mtime" []
+      ]
 
 sqlConcatAND :: [SQL] -> SQL
 sqlConcatAND sqls =
@@ -1144,13 +1172,6 @@ instance DBQuery GetDocumentsByCompanyWithFiltering [Document] where
   dbQuery (GetDocumentsByCompanyWithFiltering companyid filters) =
     dbQuery (GetDocuments [DocumentsOfCompany companyid] filters)
 
-selectDocumentsBySignatoryLink :: SQL -> DB [Document]
-selectDocumentsBySignatoryLink extendedWhere = selectDocuments $ mconcat [
-    selectDocumentsSQL
-  , SQL "WHERE EXISTS (SELECT 1 FROM signatory_links WHERE documents.id = signatory_links.document_id AND " []
-  , extendedWhere
-  , SQL ") ORDER BY mtime" []
-  ]
 
 activatedSQL :: SQL
 activatedSQL = mconcat [
@@ -1218,8 +1239,8 @@ andDocumentTypeIs dtype = SQL
 
 data GetDeletedDocumentsByUser = GetDeletedDocumentsByUser UserID
 instance DBQuery GetDeletedDocumentsByUser [Document] where
-  dbQuery (GetDeletedDocumentsByUser uid) = selectDocumentsBySignatoryLink
-    $ whereSignatoryIsAndDeletedIs uid True
+  dbQuery (GetDeletedDocumentsByUser uid) =
+    dbQuery (GetDocuments [DocumentsForSignatoryDeleteValue uid True] [])
 
 {- |
     All documents authored by the user that have never been deleted.
