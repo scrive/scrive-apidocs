@@ -294,14 +294,14 @@ signatoryFieldsJSON:: Document -> SignatoryLink -> IO JSValue
 signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}}) = fmap JSArray $
   forM orderedFields $ \sf@SignatoryField{sfType, sfValue, sfPlacements} ->
     case sfType of
-      FirstNameFT -> fieldJSON doc "fstname" sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
-      LastNameFT -> fieldJSON doc "sndname" sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
-      EmailFT -> fieldJSON doc "email" sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
-      PersonalNumberFT -> fieldJSON doc "sigpersnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
-      CompanyFT -> fieldJSON doc "sigco" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
-      CompanyNumberFT -> fieldJSON doc "sigcompnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
-      SignatureFT -> fieldJSON doc "signature" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
-      CustomFT label closed -> fieldJSON doc label sfValue (closed  && (not $ isPreparation doc))  sfPlacements
+      FirstNameFT           -> fieldJSON doc "fstname"   sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      LastNameFT            -> fieldJSON doc "sndname"   sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      EmailFT               -> fieldJSON doc "email"     sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      PersonalNumberFT      -> fieldJSON doc "sigpersnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      CompanyFT             -> fieldJSON doc "sigco"     sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      CompanyNumberFT       -> fieldJSON doc "sigcompnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      SignatureFT           -> fieldJSON doc "signature" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      CustomFT label closed -> fieldJSON doc label       sfValue (closed  && (not $ isPreparation doc))  sfPlacements
   where
     closedF sf = ((not $ null $ sfValue sf) || (null $ sfPlacements sf))
     orderedFields = sortBy (\f1 f2 -> ftOrder (sfType f1) (sfType f2)) signatoryfields
