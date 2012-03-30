@@ -113,16 +113,14 @@ var SignatureDrawer = Backbone.View.extend({
           };
     },
     clear: function() {
-          this.canvas[0].getContext('2d').fillStyle = "#ffffff";
-          this.canvas[0].getContext('2d').fillRect (0,0,this.model.swidth(),this.model.sheight());
+          this.canvas[0].getContext('2d').clearRect(0,0,this.model.swidth(),this.model.sheight());
+          this.canvas[0].width = this.canvas[0].width
     },
     render: function () {
         var signature = this.model;
         var view = this;
         this.container = $(this.el);
         this.container.addClass("signatureDrawingBox");
-       
-        
         this.canvas = $("<canvas class='signatureCanvas' />");
         this.canvas.attr("width",signature.swidth());
         this.canvas.width(signature.swidth());
@@ -132,6 +130,11 @@ var SignatureDrawer = Backbone.View.extend({
         //view.drawImage(this.model.image());
         this.initDrawing();
         this.container.append(this.canvas);
+        this.container.append("<div class='canvasSeparator' style='top:"+1+"px'>");
+        this.container.append("<div class='canvasSeparator' style='top:"+(2*signature.sheight()/3)+"px''>");
+        this.container.append("<div class='canvasSeparator' style='top:"+(signature.sheight()/3)+"px'>");
+        this.container.append("<div class='canvasSeparator' style='top:"+(signature.sheight() -1)+"px''>");
+     
         return this;
     }
 });
@@ -202,9 +205,9 @@ var SignatureDrawerWrapper = Backbone.View.extend({
     render: function () {
         var box = $(this.el);
         box.append(this.header());
-        box.append(this.separator());
+        //box.append(this.separator());
         box.append(this.drawingBox());
-        box.append(this.separator());
+        //box.append(this.separator());
         box.append(this.footer());
         return this;
     }

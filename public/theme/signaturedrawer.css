@@ -1,5 +1,13 @@
 
 .signatureDrawingBox canvas {
+    position:absolute;
+    z-index: 1000;
+}
+.signatureDrawingBox .canvasSeparator{
+    width:100%;
+    height:1px;
+    background-color: #CCCCCC;
+    position:absolute
 }
 
 .drawing-modal {
