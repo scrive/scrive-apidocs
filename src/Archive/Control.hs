@@ -177,7 +177,7 @@ docSortFunc "processREV" = viewComparingRev documenttype
 docSortFunc "type" = viewComparing documenttype
 docSortFunc "typeREV" = viewComparingRev documenttype
 docSortFunc "author" = viewComparing getAuthorName
-docSortFunc "authorRev" = viewComparingRev getAuthorName
+docSortFunc "authorREV" = viewComparingRev getAuthorName
 docSortFunc _ = const $ const EQ
 
 partnerComps :: Document -> String
