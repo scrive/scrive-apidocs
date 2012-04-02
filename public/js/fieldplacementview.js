@@ -224,6 +224,10 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
 
         this.render();
     },
+    clear: function() {
+        this.off();
+        $(this.el).remove();
+    },
     render: function() {
             var placement = this.model;
             var field =  placement.field();
