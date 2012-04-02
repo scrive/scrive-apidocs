@@ -11,6 +11,10 @@ module Doc.Model
   , toDocumentProcess
 
   , DocumentFilter(..)
+  , DocumentDomain(..)
+  , DocumentPagination(..)
+  , AscDesc(..)
+  , DocumentOrderBy(..)
 
   , AddDocumentAttachment(..)
   , AddInvitationEvidence(..)
@@ -27,6 +31,7 @@ module Doc.Model
   , DocumentFromSignatoryData(..)
   , ErrorDocument(..)
   , GetDeletedDocumentsByUser(..)
+  , GetDocuments(..)
   , GetDocumentByDocumentID(..)
   , GetDocumentsByService(..)
   , GetDocumentsByCompanyWithFiltering(..)
@@ -157,7 +162,7 @@ data AscDesc a = Asc a | Desc a
 documentOrderByToSQL :: DocumentOrderBy -> SQL
 documentOrderByToSQL DocumentOrderByTitle = SQL "documents.title" []
 documentOrderByToSQL DocumentOrderByMTime = SQL "documents.mtime" []
-documentOrderByToSQL DocumentOrderByStatusClass = SQL ("(SELECT COALESCE( SELECT " ++ statusClassCaseExpression ++ ", 3))") []
+documentOrderByToSQL DocumentOrderByStatusClass = SQL ("(COALESCE((SELECT min(" ++ statusClassCaseExpression ++ ") FROM signatory_links WHERE signatory_links.document_id = documents.id), 3))") []
 documentOrderByToSQL DocumentOrderByType = SQL "documents.type" []
 documentOrderByToSQL DocumentOrderByProcess = SQL "documents.process" []
 

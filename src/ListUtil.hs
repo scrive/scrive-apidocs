@@ -40,6 +40,10 @@ module ListUtil(
             , viewComparing
             , viewComparingRev
             , pagingParamsJSON
+
+            , listParamsSearching
+            , listParamsSorting
+            , listParamsPage
           ) where
 import Control.Applicative ((<$>))
 import Control.Monad.Trans
@@ -70,6 +74,15 @@ data ListParams = ListParams {
     , search       :: Maybe String
     , page         :: Int }
     deriving (Eq)
+
+listParamsSorting :: ListParams -> [String]
+listParamsSorting = sorting
+
+listParamsSearching :: ListParams -> String
+listParamsSearching params = fromMaybe "" (search params)
+
+listParamsPage :: ListParams -> Int
+listParamsPage = page
 
 instance Show ListParams where
     show params = intercalate "&" $ pg ++ srch ++ srt

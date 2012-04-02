@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module Archive.Control
        (
        handleAttachmentArchive,
@@ -123,6 +124,8 @@ jsonDocumentsList = withUserGet $ do
   Just user@User{userid = uid} <- ctxmaybeuser <$> getContext
   lang <- getLang . ctxlocale <$> getContext
   doctype <- getField' "documentType"
+
+#if 0
   allDocs <- case (doctype) of
     "Contract" -> runDBQuery $ GetDocumentsBySignatory [Contract] uid
     "Offer" -> runDBQuery $ GetDocumentsBySignatory [Offer] uid
@@ -136,15 +139,80 @@ jsonDocumentsList = withUserGet $ do
     _ -> do
       Log.error "Documents list: No valid document type provided"
       return []
-  Log.debug $ "Documents list: Number of documents found "  ++  (show $ length allDocs)
+#endif
+
   params <- getListParamsNew
-  let docs = docSortSearchPage params allDocs
+  -- let docs = docSortSearchPage params allDocs
+
+  let (domain,filters) = case doctype of
+                          "Contract"          -> ([DocumentsForSignatory uid],[DocumentFilterByProcess [Contract]])
+                          "Offer"             -> ([DocumentsForSignatory uid],[DocumentFilterByProcess [Offer]])
+                          "Order"             -> ([DocumentsForSignatory uid],[DocumentFilterByProcess [Order]])
+                          "Template"          -> ([TemplatesOfAuthor uid],[])
+                          "Attachment"        -> ([AttachmentsOfAuthorDeleteValue uid False],[])
+                          "Rubbish"           -> ([DocumentsForSignatoryDeleteValue uid True], [])
+                          "Template|Contract" -> ([TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid],[DocumentFilterByProcess [Contract]])
+                          "Template|Offer"    -> ([TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid],[DocumentFilterByProcess [Offer]])
+                          "Template|Order"    -> ([TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid],[DocumentFilterByProcess [Order]])
+                          _ -> ([],[])
+
+  let sorting    = docSortingFromParams params
+      searching  = docSearchingFromParams params
+      pagination = docPaginationFromParams docsPageSize params
+
+  allDocs <- runDBQuery $ GetDocuments domain (searching ++ filters) sorting pagination
+
+  Log.debug $ "Documents list: Number of documents found "  ++  (show $ length allDocs)
+
+  let docs = PagedList { list       = allDocs
+                       , params     = params
+                       , totalCount = 500 -- FIXME: we are NOT going to count all documents that meet criteria as this is too costly
+                       , pageSize   = docsPageSize
+                       }
+
   cttime <- getMinutesTime
   docsJSONs <- mapM (fmap JSObject . docForListJSON (timeLocaleForLang lang) cttime user) $ list docs
   return $ JSObject $ toJSObject [
       ("list", JSArray docsJSONs)
     , ("paging", pagingParamsJSON docs)
     ]
+
+docSortingFromParams :: ListParams -> [AscDesc DocumentOrderBy]
+docSortingFromParams params =
+   concatMap x (listParamsSorting params)
+  where
+    x "status"            = [Asc DocumentOrderByStatusClass]
+    x "statusREV"         = [Desc DocumentOrderByStatusClass]
+    x "title"             = [Asc DocumentOrderByTitle]
+    x "titleREV"          = [Desc DocumentOrderByTitle]
+    x "time"              = [Asc DocumentOrderByMTime]
+    x "timeREV"           = [Desc DocumentOrderByMTime]
+    -- x "party"          = comparePartners
+    -- x "partyREV"       = revComparePartners
+    -- x "partner"        = comparePartners
+    -- x "partnerREV"     = revComparePartners
+    -- x "partnercomp"    = viewComparing partnerComps
+    -- x "partnercompREV" = viewComparingRev partnerComps
+    x "process"           = [Asc DocumentOrderByProcess]
+    x "processREV"        = [Desc DocumentOrderByProcess]
+    x "type"              = [Asc DocumentOrderByType]
+    x "typeREV"           = [Desc DocumentOrderByType]
+    -- x "author"         = viewComparing getAuthorName
+    -- x "authorRev"      = viewComparingRev getAuthorName
+    x _                   = []
+
+
+
+docSearchingFromParams :: ListParams -> [DocumentFilter]
+docSearchingFromParams params =
+  case listParamsSearching params of
+    "" -> []
+    x -> [DocumentFilterByString x]
+
+
+docPaginationFromParams :: Int -> ListParams -> DocumentPagination
+docPaginationFromParams pageSize params = DocumentPagination ((listParamsPage params - 1) * pageSize) pageSize
+
 
 
 -- Searching, sorting and paging

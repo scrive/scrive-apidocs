@@ -65,6 +65,8 @@ docStateTests env = testGroup "DocState" [
   testThat "TimeoutDocument adds to the log" env testTimeoutDocumentEvidenceLog,
   testThat "UpdateFields adds to the log" env testUpdateFieldsEvidenceLog,
   testThat "Documents are shared in company properly" env testGetDocumentsSharedInCompany,
+
+  testThat "Documents sorting SQL syntax is correct" env testGetDocumentsSQLSorted,
  
   testThat "PreparationToPending adds to the log" env testPreparationToPendingEvidenceLog,
   testThat "PendingToAwaitingAuthor adds to the log" env testPendingToAwaitingAuthorEvidenceLog,
@@ -1486,6 +1488,39 @@ testGetDocumentsSharedInCompany = doTimes 10 $ do
     assertEqual "Documents properly shared in company (2) by user 4" 2 (length dlist4)
     assertEqual "Documents properly shared in company (1) by user 1" 2 (length dlist1)
     assertEqual "Documents properly shared in company (1) by user 2" 2 (length dlist2)
+
+
+testGetDocumentsSQLSorted :: DB ()
+testGetDocumentsSQLSorted = doTimes 10 $ do
+  -- setup
+  author <- addNewRandomAdvancedUser
+  _doc <- addRandomDocumentWithAuthorAndCondition author (const True)
+
+  _ <- dbQuery $ GetDocuments 
+            [ DocumentsOfAuthor (userid author)
+            , DocumentsOfAuthorDeleted (userid author)
+            , DocumentsOfAuthorDeleteValue (userid author) True
+            , DocumentsForSignatory (userid author)
+            , DocumentsForSignatoryDeleted (userid author)
+            , DocumentsForSignatoryDeleteValue (userid author) True
+            , TemplatesOfAuthor (userid author)
+            , TemplatesOfAuthorDeleted (userid author)
+            , TemplatesOfAuthorDeleteValue (userid author) True
+            , TemplatesSharedInUsersCompany (userid author)
+            -- , DocumentsOfService (Maybe ServiceID)
+            -- , DocumentsOfCompany CompanyID
+            , AttachmentsOfAuthorDeleteValue (userid author) True
+            ]
+            []
+            [ Desc DocumentOrderByTitle
+            , Desc DocumentOrderByMTime
+            , Desc DocumentOrderByStatusClass
+            , Desc DocumentOrderByType
+            , Desc DocumentOrderByProcess
+            ]
+            (DocumentPagination 0 maxBound)
+  return (Just (return ()))
+
 
 testCreateFromSharedTemplate :: DB ()
 testCreateFromSharedTemplate = do
