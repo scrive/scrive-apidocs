@@ -158,7 +158,7 @@ runArchiveProblemsCheck = do
   return ()
   where
     getPersonalDocs user = do
-      docs <- runDBQuery $ GetDocumentsBySignatory user
+      docs <- runDBQuery $ GetDocumentsBySignatory [Contract, Offer, Order] user
       return (user, docs)
     getSupervisedDocs user = do
       docs <- runDBQuery $ GetDocumentsByCompany user

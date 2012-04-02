@@ -35,7 +35,6 @@ module Doc.Model
   , GetAvailableTemplates(..)
   , GetAttachmentsByAuthor(..)
   , GetDocumentsBySignatory(..)
-  , GetDocumentsOfTypeBySignatory(..)
   , GetTimeoutedButPendingDocuments(..)
   , MarkDocumentSeen(..)
   , MarkInvitationRead(..)
@@ -114,6 +113,11 @@ import Util.MonadUtils
 import EvidenceLog.Model
 import Util.HasSomeUserInfo
 
+data DocumentPagination =
+  DocumentPagination
+  { documentOffset :: Int
+  , documentLimit  :: Int
+  }
 
 data DocumentFilter
   = DocumentFilterStatuses [DocumentStatus]
@@ -1292,15 +1296,10 @@ instance DBQuery GetAvailableTemplates [Document] where
     This also filters so that documents where a user is a signatory, but that signatory
     has not yet been activated according to the document's sign order, are excluded.
 -}
-data GetDocumentsBySignatory = GetDocumentsBySignatory UserID
+data GetDocumentsBySignatory = GetDocumentsBySignatory [DocumentProcess] UserID
 instance DBQuery GetDocumentsBySignatory [Document] where
-  dbQuery (GetDocumentsBySignatory uid) =
-    dbQuery (GetDocuments [DocumentsForSignatory uid] [] [Asc DocumentOrderByMTime])
-
-data GetDocumentsOfTypeBySignatory = GetDocumentsOfTypeBySignatory DocumentProcess UserID
-instance DBQuery GetDocumentsOfTypeBySignatory [Document] where
-  dbQuery (GetDocumentsOfTypeBySignatory process uid) =
-    dbQuery (GetDocuments [DocumentsForSignatory uid] [DocumentFilterByProcess [process]] [Asc DocumentOrderByMTime])
+  dbQuery (GetDocumentsBySignatory processes uid) =
+    dbQuery (GetDocuments [DocumentsForSignatory uid] [DocumentFilterByProcess processes] [Asc DocumentOrderByMTime])
 
 data GetTimeoutedButPendingDocuments = GetTimeoutedButPendingDocuments MinutesTime
 instance DBQuery GetTimeoutedButPendingDocuments [Document] where
