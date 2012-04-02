@@ -540,9 +540,8 @@
 
 } 
 
-.signatureBoxNotDrawing {
+.signatureBox{
     display: block;
-    width: 250px;
     min-width: 10px;
     text-align: center;
     border: 1px solid #999999;
@@ -554,7 +553,7 @@
     -webkit-border-radius: 2px;
 }
 
-.signatureBoxNotDrawing .signatureHeader{
+.signatureBox .signatureHeader{
     background-image: url("/img/drag.png");
     background-position: 2px 2px;
     background-repeat: no-repeat;

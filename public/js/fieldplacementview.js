@@ -141,10 +141,12 @@ var StandardPlacementPlacedView = Backbone.View.extend({
 var SignaturePlacementViewForDrawing = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'clear');
-        this.model.bind('removed', this.clear)
+        this.model.bind('removed', this.clear);
+        this.model.bind('change', this.render)
         this.signature = new Signature({field : this.model})
         this.render();
     },
+    tagname: 'div',
     clear: function() {
         this.off();
         $(this.el).remove()
@@ -153,21 +155,56 @@ var SignaturePlacementViewForDrawing = Backbone.View.extend({
             var view = this;
             var signatory = this.model.signatory();
             var box = $(this.el);
-            box.css('border', "1px solid black");
-            box.width(this.signature.width());
-            box.height(this.signature.height());
+            box.empty();
+            box.attr("style","");
+            box.addClass('signatureBox');
+            if (!this.signature.hasImage())
+            {
+                box.width(this.signature.width());
+                box.height(this.signature.height());
+                var button = $("<div/>")
+                if (!signatory.canPadSignQuickSign()){
+                    button.addClass('placesignaturebutton')
+                    button.append($("<span class='text'/>").text(localization.signature.placeYour));
+                }
+                else {
+                    button.addClass('placesignatureandsignbutton')
+                    button.append($("<span class='text'/>").text(localization.signature.placeAndSign));
+                }
+                 if (this.signature.width() < button.width() || this.signature.height() < button.height())
+                    box.css("border-width","0px");
+                if (this.signature.width() > button.width()) {
+                    button.css("margin-left", Math.floor((this.signature.width() - button.width()) / 2) + "px")
+                }
+                if (this.signature.height() > button.height()) {
+                
+                    button.css("margin-top", Math.floor((this.signature.height() - button.height()) / 2) + "px")
+                }
+                box.append(button);
+            }
+            else {
+                box.css("border-color","#DDDDDD");
+                var img = $("<img alt='signature'/>");
+                box.attr("width",view.signature.width());
+                box.attr("height",view.signature.height());
+                img.attr('src',this.signature.image());
+                box.append(img);
+            }
             box.click(function() {SignatureDrawerPopup.popup({signature: view.signature})})
             return this;
     }
 });
 
+
 var SignaturePlacementView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'clear');
         this.model.bind('removed', this.clear)
+        this.model.bind('change', this.render)
         this.signature = new Signature({field : this.model})
         this.render();
     },
+    tagname: 'div',
     clear: function() {
         this.off();
         $(this.el).remove()
@@ -192,7 +229,7 @@ var SignaturePlacementView = Backbone.View.extend({
             var signatory = this.model.signatory();
             var box = $(this.el);
             box.empty();
-            box.addClass('signatureBoxNotDrawing');
+            box.addClass('signatureBox');
             box.append(this.header());
             signatory.bind('change', function() {
                     $(".signatureHeader",box).replaceWith(view.header());
@@ -207,8 +244,10 @@ var SignaturePlacementView = Backbone.View.extend({
                 })
             }
             else {
-                var img = $("<img alt='signature'  width='250' height='100'/>");
-                img.attr('src',this.model.value());
+                var img = $("<img alt='signature'/>");
+                box.attr("width",view.signature.width());
+                box.attr("height",view.signature.height());
+                img.attr('src',this.signature.image());
                 box.append(img);
             }
 
@@ -242,23 +281,23 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
                 top: placement.y()
             });
             if (document.signingInProcess() && signatory.canSign() && signatory.current())
-                place.append(new SignaturePlacementViewForDrawing({model: placement.field(), el: $("<div/>")}).el);
+                place.append(new SignaturePlacementViewForDrawing({model: placement.field()}).el);
             else  if (document.preparation()) {
-                    var placementView = $(new SignaturePlacementView({model: placement.field(), el: $("<div/>")}).el);
+                    var placementView = $(new SignaturePlacementView({model: placement.field()}).el);
                     placementView.resizable({resize : function(e, ui) {
                            signature.setSize(ui.size.width,ui.size.height);
                         }});
                     place.append(placementView);
                 }    
             else {
-                
+                place.append(new SignaturePlacementView({model: placement.field()}).el);
             }
 
             if (document.allowsDD())
               place.draggable({
                     appendTo: "body",
                     helper: function(event) {
-                        return new SignaturePlacementView({model: placement.field(), el: $("<div/>")}).el;
+                        return new SignaturePlacementView({model: placement.field()}).el;
                     },
                     start: function(event, ui) {
                         place.hide();

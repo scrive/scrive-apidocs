@@ -130,10 +130,10 @@ var SignatureDrawer = Backbone.View.extend({
         //view.drawImage(this.model.image());
         this.initDrawing();
         this.container.append(this.canvas);
-        this.container.append("<div class='canvasSeparator' style='top:"+1+"px'>");
-        this.container.append("<div class='canvasSeparator' style='top:"+(2*signature.sheight()/3)+"px''>");
-        this.container.append("<div class='canvasSeparator' style='top:"+(signature.sheight()/3)+"px'>");
-        this.container.append("<div class='canvasSeparator' style='top:"+(signature.sheight() -1)+"px''>");
+        this.container.append("<div class='canvasSeparator' style='margin: 3px;top:"+1+"px'>");
+        this.container.append("<div class='canvasSeparator' style='margin: 3px;top:"+Math.floor(signature.sheight()/3)+"px'>");
+        this.container.append("<div class='canvasSeparator' style='margin: 3px;top:"+Math.floor(2*signature.sheight()/3)+"px'>");
+        this.container.append("<div class='canvasSeparator' style='margin: 3px;top:"+(signature.sheight() -1)+"px'>");
      
         return this;
     }
@@ -163,17 +163,34 @@ var SignatureDrawerWrapper = Backbone.View.extend({
     },
     acceptButton : function() {
         var view = this;
-        var document = this.model.document();
-        return Button.init({
-                color : 'blue',
-                size: 'tiny',
-                text: document.process().signbuttontext(),
-                onClick : function(){
-                    view.drawer.saveImage();
-                    view.overlay.data('overlay').close();
-                    return false;
-                }
-        }).input();
+        var signatory = this.model.field().signatory();
+        var document = signatory.document();
+        if (signatory.canPadSignQuickSign())
+            return Button.init({
+                    color : 'blue',
+                    size: 'tiny',
+                    text: document.process().signbuttontext(),
+                    onClick : function(){
+                        view.drawer.saveImage();
+                        document.sign().send();
+                        view.overlay.data('overlay').close();
+                        return false;
+                    }
+            }).input();
+        else
+           return Button.init({
+                    color : 'green',
+                    size: 'tiny',
+                    text: localization.signature.confirmSignature,
+                    onClick : function(){
+                        view.drawer.saveImage();
+                        view.overlay.data('overlay').close();
+                        return false;
+                    }
+            }).input();
+
+        
+
         
     },
     clearButton : function() {
@@ -219,7 +236,7 @@ window.SignatureDrawerPopup = {
         document.ontouchmove = function(e){
             return state;
         }
-        this.overlay = $("<div style='width:900px;' class='overlay drawing-modal'/>");
+        this.overlay = $("<div style='width:900px;' class='overlay drawing-modal'><div class='close modal-close float-right' style='margin:5px;'/></div>");
         this.overlay.append(new SignatureDrawerWrapper({model : args.signature, overlay : this.overlay}).el);
         $('body').append( this.overlay );
         this.overlay.overlay({

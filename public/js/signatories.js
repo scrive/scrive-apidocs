@@ -436,6 +436,9 @@ window.Signatory = Backbone.Model.extend({
             this.signorder() == this.document().signorder();
         return canSign;
     },
+    canPadSignQuickSign : function() {
+       return this.document().padAuthorization() && this.canSign() && !this.document().hasAnyAttachments && this.allFieldsButSignatureReadyForSign();
+    },
     allAttachemntHaveFile: function() {
         return _.all(this.attachments(), function(attachment) {
             return attachment.hasFile();
@@ -444,6 +447,11 @@ window.Signatory = Backbone.Model.extend({
     allFieldsReadyForSign: function() {
         return _.all(this.fields(), function(field) {
             return field.readyForSign();
+        });
+    },
+    allFieldsButSignatureReadyForSign: function() {
+        return _.all(this.fields(), function(field) {
+            return field.readyForSign() || field.signature();
         });
     },
     signatureReadyForSign: function() {
@@ -763,7 +771,7 @@ window.SignatoryStandardView = Backbone.View.extend({
        if (signatory.document().currentViewerIsAuthor() &&
                !signatory.author() &&
                ((signatory.document().signingInProcess() && signatory.canSign()) ||
-                   signatory.document().closed()))
+                   signatory.document().closed()) && !signatory.document().padAuthorization())
           container.append(this.remidenMailOption());
 
         if (signatory.undeliveredEmail() && signatory.document().currentViewerIsAuthor() && signatory.document().pending())

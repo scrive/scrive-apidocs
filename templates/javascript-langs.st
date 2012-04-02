@@ -244,6 +244,8 @@ javascriptLocalisation =
                placeFor : function(s) { return s + " $_signaturePlaceFor()$"; }
              , missing : "$_signatureMissing()$"
              , placeYour : "$_signaturePlaceYour()$"
+             , placeAndSign : "Sign"
+             , confirmSignature : "Confirm signature"
            }
          , designview : {
               validation : {
