@@ -164,7 +164,11 @@ documentOrderByAscDescToSQL (Desc x) = documentOrderByToSQL x <++> SQL " DESC" [
 
 documentDomainToSQL :: DocumentDomain -> SQL
 documentDomainToSQL (DocumentsOfAuthorDeleteValue uid deleted) =
-  SQL "(signatory_links.roles & ?) <> 0 AND signatory_links.user_id = ? AND signatory_links.deleted = ? AND documents.type = 1"
+  SQL ("(signatory_links.roles & ?) <> 0"
+       ++ " AND signatory_links.user_id = ?"
+       ++ " AND signatory_links.deleted = ?"
+       ++ " AND signatory_links.really_deleted = FALSE"
+       ++ " AND documents.type = 1")
         [toSql [SignatoryAuthor], toSql uid, toSql deleted]
 documentDomainToSQL (DocumentsOfAuthor uid) =
   documentDomainToSQL (DocumentsOfAuthorDeleteValue uid False)
@@ -175,12 +179,17 @@ documentDomainToSQL (DocumentsForSignatory uid) =
 documentDomainToSQL (DocumentsForSignatoryDeleted uid) =
   documentDomainToSQL (DocumentsForSignatoryDeleteValue uid True)
 documentDomainToSQL (DocumentsForSignatoryDeleteValue uid deleted) =
-  SQL ("signatory_links.user_id = ? AND signatory_links.deleted = ? AND documents.type = 1 AND "
-       ++ "((signatory_links.roles & ?) <> 0 OR ((signatory_links.roles & ?) <> 0 AND NOT EXISTS (SELECT 1 FROM signatory_links AS sl2"
-       ++ " WHERE signatory_links.document_id = sl2.document_id"
-       ++ "  AND ((sl2.roles & ?) <> 0)"
-       ++ "  AND sl2.sign_time IS NULL"
-       ++ "  AND sl2.sign_order < signatory_links.sign_order)))")
+  SQL ("signatory_links.user_id = ?"
+       ++ " AND signatory_links.deleted = ?"
+       ++ " AND signatory_links.really_deleted = FALSE"
+       ++ " AND documents.type = 1"
+       ++ " AND ((signatory_links.roles & ?) <> 0"
+       ++ "      OR ((signatory_links.roles & ?) <> 0"
+       ++ "          AND NOT EXISTS (SELECT 1 FROM signatory_links AS sl2"
+       ++ "                           WHERE signatory_links.document_id = sl2.document_id"
+       ++ "                             AND ((sl2.roles & ?) <> 0)"
+       ++ "                             AND sl2.sign_time IS NULL"
+       ++ "                             AND sl2.sign_order < signatory_links.sign_order)))")
         [toSql uid, toSql deleted, toSql [SignatoryAuthor], toSql [SignatoryPartner], toSql [SignatoryPartner]]
 documentDomainToSQL (TemplatesOfAuthorDeleteValue uid deleted) =
   SQL ("signatory_links.user_id = ?"
@@ -209,7 +218,10 @@ documentDomainToSQL (DocumentsOfCompany cid) =
   SQL "signatory_links.company_id = ? AND signatory_links.deleted = FALSE"
         [toSql cid]
 documentDomainToSQL (AttachmentsOfAuthorDeleteValue uid deleted) =
-  SQL "signatory_links.user_id = ? AND signatory_links.deleted = ? AND documents.type = 3"
+  SQL ("signatory_links.user_id = ?"
+       ++ " AND signatory_links.deleted = ?"
+       ++ " AND signatory_links.really_deleted = FALSE"
+       ++ " AND documents.type = 3")
         [toSql uid, toSql deleted]
 
 
