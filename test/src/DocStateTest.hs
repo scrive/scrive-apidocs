@@ -1073,10 +1073,10 @@ checkQueryContainsArchivedDocs :: DBQuery q [Document] => (User -> q) -> DB ()
 checkQueryContainsArchivedDocs qry = doTimes 10 $ do
   company <- addNewCompany
   author <- addNewRandomCompanyUser (companyid company) True
-  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (isPreparation ||^ isClosed))
   docsbeforearchive <- dbQuery (qry author)
   assertEqual "Expecting no docs before archive" [] (map documentid docsbeforearchive)
-  _ <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (SystemActor t)
+  _ <- randomUpdate $ \t -> ArchiveDocument author (documentid doc) (SystemActor t)
   docsafterarchive <- dbQuery (qry author)
   assertEqual "Expecting 1 doc after archive" [documentid doc] (map documentid docsafterarchive)
   _ <- randomUpdate $ \t -> ReallyDeleteDocument author (documentid doc) (SystemActor t)
