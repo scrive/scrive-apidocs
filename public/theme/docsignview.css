@@ -31,12 +31,14 @@ body.signview {
   height: 33px;
   width: 200px;
   background-repeat: no-repeat;
+  margin-left: 30px;
 }
 
 .signview .pageheader .content .sender {
   float: right;
   margin-top: 20px;
   text-align: right;
+  margin-right: 30px;
 }
 
 .signview .pageheader.withcustomlogo .content .sender.shoved {
@@ -140,6 +142,7 @@ body.signview {
   text-align: left;
   text-decoration: underline;
   font-weight: normal;
+  color: grey;
 }
 
 .signview .save {

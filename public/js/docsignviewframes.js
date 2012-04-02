@@ -47,9 +47,10 @@ window.DocumentSignViewHeader = Backbone.View.extend({
     }
 
     this.sender = $("<div class='sender' />");
+    var author = $("<div class='author' />").text((document.authoruser().fullname().trim()||document.authoruser().phone().trim())?localization.author:"");
     var name = $("<div class='name' />").text(document.authoruser().fullname());
     var phone = $("<div class='phone' />").text(document.authoruser().phone());
-    this.sender.append(name).append(phone);
+    this.sender.append(author).append(name).append(phone);
     this.updateHeaderSenderPosition();
     $(window).resize(function() { view.updateHeaderSenderPosition();});
 

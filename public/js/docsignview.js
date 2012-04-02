@@ -1163,10 +1163,16 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
     var updateRightMargin = function() {
       var space = $(window).width() - 941;
       var margin = 0;
+      var bigarrowmargin = 0;
       if (space > 0) {
         margin = space / 2;
+        bigarrowmargin = (space + 941 - 112) / 2;
+      } else {
+        bigarrowmargin = (941 - 112) / 2;
       }
-      downarrow.css("right", margin + "px");
+      // I'm keeping this in case we want to revert it. -- Eric
+      //      downarrow.css("right", margin + "px");
+      downarrow.css("right", bigarrowmargin + "px");
       uparrow.css("right", margin + "px");
       actionarrow.css("right", (margin - 20) + "px");
     };
