@@ -158,6 +158,49 @@ window.DocumentSignSignatoryView = Backbone.View.extend({
     bottombit.append($("<div class='email' />").text(signatory.email()));
     container.append(bottombit);
 
+    /** this stuff is messy, it's there to cope with fields that aren't placed,
+        it may be deletable in the future, depending on what happens to custom fields that
+        aren't placed*/
+    var closedinputbits = $("<div class='grouping closedinputs' />");
+    var isclosedinputs = false;
+
+    var inputbits = $("<div class='grouping' />");
+    var isinputs = false;
+    var isInputField = this.isInputField;
+    _.each(signatory.fields(), function(field) {
+      if (isInputField(field) && !field.isPlaced()) {
+        /**don't show other people's custom fields that
+        still need filling**/
+        if (field.value() == "" && !signatory.current()) {
+          return;
+        }
+        var fieldwrapper = $("<div class='fieldwrapper'/>");
+        if (signatory.current()) {
+          fieldwrapper.append($("<div class='label' />").text(field.nicename() + ":"));
+        }
+        var fieldview = new FieldStandardView({
+          model: field,
+          el: $("<div class='field' />")
+        });
+        var customfield = $(fieldview.el);
+        view.customfieldelems.push(customfield);
+        fieldwrapper.append(customfield);
+        if (field.isClosed()) {
+          closedinputbits.append(fieldwrapper);
+          isclosedinputs = true;
+        } else {
+          inputbits.append(fieldwrapper);
+          isinputs = true;
+        }
+      }
+    });
+    if (isclosedinputs) {
+      container.append(closedinputbits);
+    }
+    if (isinputs) {
+      container.append(inputbits);
+    }
+
     if (!signatory.current()) {
       var compactlink = $("<a />");
       compactlink.click(function() {
@@ -729,15 +772,11 @@ window.DocumentSignView = Backbone.View.extend({
     },
     getRenderedPlacements: function() {
       var renderedPlacements = [];
-      var mainfileview = this.getOrCreateMainFileView();
       _.each(this.getOrCreateMainFileView().pageviews, function(pageview) {
         _.each(pageview.renderedPlacements, function(placement) {
           renderedPlacements.push(placement);
         });
       });
-      var roundDown = function(n) {
-        return n - (n % 10);
-      };
       renderedPlacements = renderedPlacements.sort(function(a, b) {
         var pdiff = a.placement.page() - b.placement.page();
         if (pdiff!=0) {
@@ -760,6 +799,74 @@ window.DocumentSignView = Backbone.View.extend({
       } else {
         return localization.docsignview.authorAttachmentsTitleForOne;
       }
+    },
+    unPlacedFieldTasks: function(fieldels) {
+      var allfields = this.model.currentSignatory().customFields();
+      var fields = allfields.filter(function(field) {
+        return !field.isPlaced();
+      });
+      if (fields.length != fieldels.length) {
+        console.error("expected to find an element per custom field");
+        console.log("****info*****");
+        console.log("fields");
+        console.log(fields);
+        console.log("fieldels");
+        console.log(fieldels);
+        console.log("*****");
+        return;
+      }
+      var tasks = [];
+      for (var i = 0; i < fields.length; i++) {
+        tasks.push(this.unPlacedFieldTask(fields[i], fieldels[i]));
+      }
+      return tasks;
+    },
+    unPlacedFieldTask: function(field, el) {
+      /**
+       * this stuff is kind of disgusting
+       * the idea is to delay completing a field for
+       * a little while to give the person a change
+       * to type it all in before moving the arrow
+       */
+      var completiontime = undefined;
+      var lastvalue = undefined;
+      var queueChange = function(update) {
+        console.log("Delaying field completion...");
+        window.setTimeout(function() {
+          update();
+        }, 500);
+      };
+      return new DocumentSignViewTask({
+        model: field,
+        isComplete: function() {
+          var newvalue = field.value() != "";
+          var returnvalue = lastvalue;
+          if (lastvalue == undefined ||
+                !newvalue ||
+                (lastvalue && newvalue)) {
+            returnvalue = newvalue;
+          } else if (!lastvalue &&
+                       newvalue &&
+                       completiontime == undefined) {
+            completiontime = new Date();
+            queueChange(this.update);
+          } else if (!lastvalue &&
+                       newvalue &&
+                       completiontime != undefined) {
+            var elapsedtime = (new Date()).getTime() - completiontime.getTime();
+            if (elapsedtime >= 2000) {
+              completiontime = undefined;
+              returnvalue = newvalue;
+            } else {
+              queueChange(this.update);
+            }
+          }
+
+          lastvalue = returnvalue;
+          return returnvalue;
+        },
+        el: el
+      });
     },
     createAuthorAttachmentsElems: function() {
       return $(new DocumentAuthorAttachmentsView({
@@ -811,7 +918,7 @@ window.DocumentSignView = Backbone.View.extend({
       return new DocumentSignViewTask({
         model: placement.field(),
         isComplete: function() {
-          return placement.field().value().trim()!="";
+          return placement.field().value().length>0;
         },
         el: elem,
         beforePointing: function() {
@@ -903,7 +1010,7 @@ window.DocumentSignView = Backbone.View.extend({
     render: function() {
       var view = this;
       var document = this.model;
-      if (!document.ready())
+      if (!document.ready() || document.mainfile()==undefined)
           return this;
 
       var mainfileelems = $(this.getOrCreateMainFileView().el);
@@ -941,7 +1048,10 @@ window.DocumentSignView = Backbone.View.extend({
       };
 
       _.each(this.getRenderedPlacements(), function(renderedPlacement) {
-        tasks.push(view.createInlineFieldTask(renderedPlacement));
+        //the signatory only needs to fill in their own tasks
+        if (renderedPlacement.placement.field().signatory().current()) {
+          tasks.push(view.createInlineFieldTask(renderedPlacement));
+        }
       });
 
       if (this.isBottomStuff()) {
@@ -969,6 +1079,11 @@ window.DocumentSignView = Backbone.View.extend({
           //triggerArrowChange will cause the arrow to repaint if the signatories
           //are expanded or compressed, because this means any sign arrow may need to move
           var signatoriesview = this.createSignatoriesView(triggerArrowChange);
+          if (this.model.currentSignatoryCanSign()) {
+            _.each(this.unPlacedFieldTasks(signatoriesview.customfieldelems), function(task) {
+              tasks.push(task);
+            });
+          }
           bottomstuff.append($(signatoriesview.el));
         }
 
@@ -1008,13 +1123,29 @@ window.DocumentSignViewTask = Backbone.Model.extend({
   initialize: function(args) {
     _.bindAll(this, 'update');
     this.model = args.model;
-    this.isComplete = args.isComplete;
-    this.beforePointing = args.beforePointing;
-    this.label = args.label;
-    this.el = args.el;
     this.model.bind('reset', this.update);
     this.model.bind('change', this.update);
     this.update();
+  },
+  isComplete: function() {
+    var f = this.get("isComplete");
+    if (f==undefined) {
+      return undefined;
+    }
+    return f();
+  },
+  el: function() {
+    return this.get("el");
+  },
+  label: function() {
+    return this.get("label");
+  },
+  beforePointing: function() {
+    var f = this.get("beforePointing");
+    if (f==undefined) {
+      return undefined;
+    }
+    return f();
   },
   update: function() {
     var complete = this.isComplete();
@@ -1078,7 +1209,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
     if (taskmodel.isIncompleteTask()) {
       downarrow.css("cursor", "pointer");
       downarrow.click(function() {
-        var el = taskmodel.nextIncompleteTask().el;
+        var el = taskmodel.nextIncompleteTask().el();
         var scrollbottom = el.offset().top + el.height() + 100;
         $('html,body').animate({
           scrollTop: scrollbottom - $(window).height()
@@ -1086,7 +1217,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
       });
       uparrow.css("cursor", "pointer");
       uparrow.click(function() {
-        var el = taskmodel.nextIncompleteTask().el;
+        var el = taskmodel.nextIncompleteTask().el();
         $('html,body').animate({
           scrollTop: el.offset().top - 100
         }, 1000);
@@ -1120,7 +1251,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
 
     var updateActionArrowPosition = function() {
       if (taskmodel.isIncompleteTask()) {
-        var el = taskmodel.nextIncompleteTask().el;
+        var el = taskmodel.nextIncompleteTask().el();
         actionarrow.css("top", (el.offset().top + (el.height() / 2) - 14) + "px");
         actionarrow.css("left", (el.offset().left + el.width() + 10) + "px");
       }
@@ -1152,8 +1283,8 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
       } else {
         var scrolltop = $(window).scrollTop();
         var scrollbottom = scrolltop + $(window).height();
-        var eltop = taskmodel.nextIncompleteTask().el.offset().top;
-        var elbottom = eltop + taskmodel.nextIncompleteTask().el.height();
+        var eltop = taskmodel.nextIncompleteTask().el().offset().top;
+        var elbottom = eltop + taskmodel.nextIncompleteTask().el().height();
 
         var bottommargin = 0;
         var topmargin = 0;
@@ -1164,11 +1295,11 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
           view.pointingAt = undefined;
         } else if (((elbottom + bottommargin) <= scrollbottom) && ((eltop - topmargin) >= scrolltop)) {
           var nextTask = taskmodel.nextIncompleteTask();
-          nextTask.el.parents(".signview .section").addClass("highlight");
-          if (nextTask.beforePointing!=undefined && (view.pointingAt==undefined || view.pointingAt!=nextTask)) {
+          nextTask.el().parents(".signview .section").addClass("highlight");
+          if (view.pointingAt==undefined || view.pointingAt!=nextTask) {
             nextTask.beforePointing();
           }
-          setActionArrowText(nextTask.label);
+          setActionArrowText(nextTask.label());
           updateActionArrowPosition();
           actionarrow.show();
           uparrow.hide();
