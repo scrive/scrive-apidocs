@@ -1126,11 +1126,11 @@ instance DBQuery GetDocumentByDocumentID (Maybe Document) where
 data GetDocumentsByService = GetDocumentsByService (Maybe ServiceID)
 instance DBQuery GetDocumentsByService [Document] where
   dbQuery (GetDocumentsByService msid) =
-    dbQuery (GetDocuments [DocumentsOfService msid] [])
+    dbQuery (GetDocuments [DocumentsOfService msid] [] [Desc DocumentOrderByMTime])
 
-data GetDocuments = GetDocuments [DocumentDomain] [DocumentFilter]
+data GetDocuments = GetDocuments [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy]
 instance DBQuery GetDocuments [Document] where
-  dbQuery (GetDocuments domains filters) = do
+  dbQuery (GetDocuments domains filters orderbys) = do
     selectDocuments $ mconcat
       [ selectDocumentsSQL
       , SQL "WHERE EXISTS (SELECT 1 FROM signatory_links WHERE documents.id = signatory_links.document_id AND " []
@@ -1140,8 +1140,15 @@ instance DBQuery GetDocuments [Document] where
       , if not (null filters)
         then SQL " AND " [] `mappend` sqlConcatAND (map documentFilterToSQL filters)
         else SQL "" []
-      , SQL ") ORDER BY mtime" []
+      , SQL ")" []
+      , if not (null orderbys)
+        then SQL " ORDER BY " [] `mappend` sqlConcatComma (map documentOrderByAscDescToSQL orderbys)
+        else SQL "" []
       ]
+
+sqlConcatComma :: [SQL] -> SQL
+sqlConcatComma sqls =
+  mconcat $ intersperse (SQL ", " []) sqls
 
 sqlConcatAND :: [SQL] -> SQL
 sqlConcatAND sqls =
@@ -1170,7 +1177,7 @@ sqlConcatOR sqls =
 data GetDocumentsByCompanyWithFiltering = GetDocumentsByCompanyWithFiltering CompanyID [DocumentFilter]
 instance DBQuery GetDocumentsByCompanyWithFiltering [Document] where
   dbQuery (GetDocumentsByCompanyWithFiltering companyid filters) =
-    dbQuery (GetDocuments [DocumentsOfCompany companyid] filters)
+    dbQuery (GetDocuments [DocumentsOfCompany companyid] filters [Desc DocumentOrderByMTime])
 
 
 activatedSQL :: SQL
@@ -1240,7 +1247,7 @@ andDocumentTypeIs dtype = SQL
 data GetDeletedDocumentsByUser = GetDeletedDocumentsByUser UserID
 instance DBQuery GetDeletedDocumentsByUser [Document] where
   dbQuery (GetDeletedDocumentsByUser uid) =
-    dbQuery (GetDocuments [DocumentsForSignatoryDeleteValue uid True] [])
+    dbQuery (GetDocuments [DocumentsForSignatoryDeleteValue uid True] [] [Desc DocumentOrderByMTime])
 
 {- |
     All documents authored by the user that have never been deleted.
@@ -1248,12 +1255,12 @@ instance DBQuery GetDeletedDocumentsByUser [Document] where
 data GetDocumentsByAuthor = GetDocumentsByAuthor UserID
 instance DBQuery GetDocumentsByAuthor [Document] where
   dbQuery (GetDocumentsByAuthor uid) =
-    dbQuery (GetDocuments [DocumentsOfAuthor uid, TemplatesOfAuthor uid] [])
+    dbQuery (GetDocuments [DocumentsOfAuthor uid, TemplatesOfAuthor uid] [] [Desc DocumentOrderByMTime])
 
 data GetAttachmentsByAuthor = GetAttachmentsByAuthor UserID
 instance DBQuery GetAttachmentsByAuthor [Document] where
   dbQuery (GetAttachmentsByAuthor uid) =
-    dbQuery (GetDocuments [AttachmentsOfAuthorDeleteValue uid False] [])
+    dbQuery (GetDocuments [AttachmentsOfAuthorDeleteValue uid False] [] [Desc DocumentOrderByMTime])
 
 parenthesize :: SQL -> SQL
 parenthesize (SQL command values) = SQL ("(" ++ command ++ ")") values
@@ -1261,12 +1268,14 @@ parenthesize (SQL command values) = SQL ("(" ++ command ++ ")") values
 data GetTemplatesByAuthor = GetTemplatesByAuthor UserID
 instance DBQuery GetTemplatesByAuthor [Document] where
   dbQuery (GetTemplatesByAuthor uid) = 
-    dbQuery (GetDocuments [TemplatesOfAuthor uid] [])
+    dbQuery (GetDocuments [TemplatesOfAuthor uid] [] [Desc DocumentOrderByMTime])
 
 data GetAvailableTemplates = GetAvailableTemplates UserID [DocumentProcess]
 instance DBQuery GetAvailableTemplates [Document] where
   dbQuery (GetAvailableTemplates uid processes) =
-    dbQuery (GetDocuments [TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid] [DocumentFilterByProcess processes])
+    dbQuery (GetDocuments [TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid]
+                            [DocumentFilterByProcess processes]
+                            [Desc DocumentOrderByMTime])
 
 {- |
     All documents where the user is a signatory that are not deleted.  An author is a type
@@ -1277,12 +1286,12 @@ instance DBQuery GetAvailableTemplates [Document] where
 data GetDocumentsBySignatory = GetDocumentsBySignatory UserID
 instance DBQuery GetDocumentsBySignatory [Document] where
   dbQuery (GetDocumentsBySignatory uid) =
-    dbQuery (GetDocuments [DocumentsForSignatory uid] [])
+    dbQuery (GetDocuments [DocumentsForSignatory uid] [] [Desc DocumentOrderByMTime])
 
 data GetDocumentsOfTypeBySignatory = GetDocumentsOfTypeBySignatory DocumentProcess UserID
 instance DBQuery GetDocumentsOfTypeBySignatory [Document] where
   dbQuery (GetDocumentsOfTypeBySignatory process uid) =
-    dbQuery (GetDocuments [DocumentsForSignatory uid] [DocumentFilterByProcess [process]])
+    dbQuery (GetDocuments [DocumentsForSignatory uid] [DocumentFilterByProcess [process]] [Desc DocumentOrderByMTime])
 
 data GetTimeoutedButPendingDocuments = GetTimeoutedButPendingDocuments MinutesTime
 instance DBQuery GetTimeoutedButPendingDocuments [Document] where
