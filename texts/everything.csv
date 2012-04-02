@@ -1544,9 +1544,9 @@ profits and reduce frustration. The following mateials shall only
 "_mailContractClosedContentSignedBy","Dokumentet <strong>$documenttitle$</strong> har undertecknats
          av $partylist:noescape()$. Avtalet är nu bindande.",,"The document <strong>$documenttitle$</strong> has been signed by $partylist:noescape()$. This agreement is now legally binding."
 "_mailDocumentAwaitingForAuthorContentInstruction","För att färdigställa dokumentet gör följande:<br/>      1. Klicka
- på länken <a href=""$documentlink$"">$documenttitle$</a><br/>
+ på den här länken <a href=""$documentlink$"">$documenttitle$</a><br/>
       2. Granska uppgifterna<br/>      3. Underteckna
- För att avtalet skall färdigställas krävs din underskrift.",,"To finalise the document:<br/>      1. Click  the link <a href=""$documentlink$"">$documenttitle$</a><br/>2. Review<br/>3. Sign the  agreement"
+ För att avtalet skall färdigställas krävs din underskrift.",,"To finalise the document:<br/>      1. Click this link <a href=""$documentlink$"">$documenttitle$</a><br/>2. Review<br/>3. Sign the  agreement"
 "_mailDocumentAwaitingForAuthorContentSignedBy","Dokumentet <strong>$documenttitle$</strong> har undertecknats
  av $partylist:noescape()$.      Därmed är det bara du kvar innan
  dokumentet är färdigställt.",,"The document <strong>$documenttitle$</strong> has been signed  by $partylist:noescape()$.  Therefore it only remains for you sign before the document is final."
@@ -1562,20 +1562,20 @@ profits and reduce frustration. The following mateials shall only
  contact you when fix is available.",,"Our technicians were notified about this issue. We will contact you when a fix is available."
 "_mailDocumentErrorContentBodyThird","Processen har därmed avbrutits.",,"The process has therefore been canceled"
 "_mailDocumentErrorTitle","Scrive could no handle $documenttitle$",,"Scrive could not handle $documenttitle$"
-"_mailInvitationToSignContractContentIfNotSignatoryInstruction","Du har behörighet att se detta dokument    Klicka på länken
- nedan för att se dokumentet:",,"You are authorised to view this document    Click to view:"
-"_mailInvitationToSignContractContentIfSignatoryInstruction","<i>Så här går du vidare</i><br/>      1. Klicka på <a href=""$link$"">länken</a><br/>      2. Granska
+"_mailInvitationToSignContractContentIfNotSignatoryInstruction","Du har behörighet att se detta dokument    Klicka på den här länken
+ nedan för att se dokumentet:",,"You are authorised to view this document    Click this link to view:"
+"_mailInvitationToSignContractContentIfSignatoryInstruction","<i>Så här går du vidare</i><br/>      1. Klicka på <a href=""$link$"">den här länken</a><br/>      2. Granska
  online<br/>      3. Underteckna (eller avvisa)<br/>       4.
- Färdig",,"<i>To continue:</i><br/>      1. Click this <a href=""$link$"">link</a><br/>      2. Review online<br/>       3. Sign (or return)<br/>       4. Done"
+ Färdig",,"<i>To continue:</i><br/>      1. Click <a href=""$link$"">this link</a><br/>      2. Review online<br/>       3. Sign (or return)<br/>       4. Done"
 "_mailInvitationToSignContractContentInfo","Översiktlig information",,"General information"
 "_mailInvitationToSignContractContentPartys","Parter:",,"Parties:"
 "_mailInvitationToSignContractDefaultHeader","<strong>$creatorname$</strong> har bjudit in dig att underteckna dokumentet <strong>$documenttitle$</strong>.",,"<strong>$creatorname$</strong>  has invited you to sign the document <strong>$documenttitle$</strong>."
 "_mailInvitationToSignContractDefaultHeaderWithService","<strong>$creatorname$</strong> har bjudit in dig att underteckna dokumentet <strong>$documenttitle$</strong> online.",,"<strong>$creatorname$</strong>  has invited you to sign the document <strong>$documenttitle$</strong> online."
-"_mailInvitationToSignOfferContentIfNotSignatoryInstruction","Du har behörighet att se detta dokument    Klicka på länken
- nedan för att se dokumentet:",,"You are authorised to view this document    Click to view:"
-"_mailInvitationToSignOfferContentIfSignatoryInstruction","1. Klicka på <a href=""$link$"">länken</a><br/>
+"_mailInvitationToSignOfferContentIfNotSignatoryInstruction","Du har behörighet att se detta dokument    Klicka på den här länken
+ nedan för att se dokumentet:",,"You are authorised to view this document    Click this link to view:"
+"_mailInvitationToSignOfferContentIfSignatoryInstruction","1. Klicka på <a href=""$link$"">den här länken</a><br/>
       2. Granska online<br/>      3. Acceptera offert (eller
- avvisa)<br/>       4. Färdig",,"1. Click this <a href=""$link$"">link</a><br/>
+ avvisa)<br/>       4. Färdig",,"1. Click <a href=""$link$"">this link</a><br/>
       2. Review online<br/>      3. Accept offer (or return)<br/>
        4. Done"
 "_mailInvitationToSignOfferContentInfo","Översiktlig information",,"General information"
@@ -1583,11 +1583,11 @@ profits and reduce frustration. The following mateials shall only
 "_mailInvitationToSignOfferContentSender","Avsändare:",,"Sender:"
 "_mailInvitationToSignOfferDefaultHeader","<strong>$creatorname$</strong> har skickat offerten <strong>$documenttitle$</strong> till dig och önskar din accept.      Acceptera eller avvisa offerten genom
  att följa instruktionerna nedan.",,"<strong>$creatorname$</strong> has sent the offer <strong>$documenttitle$</strong> to you and wants you to accept it.     To accept or return the offer:"
-"_mailInvitationToSignOrderContentIfNotSignatoryInstruction","Du har behörighet att se detta dokument    Klicka på länken
- Nedan för att se dokumentet:",,"You are authorised to view this document    Click to view:"
-"_mailInvitationToSignOrderContentIfSignatoryInstruction","1. Klicka på <a href=""$link$"">länken</a><br/>
+"_mailInvitationToSignOrderContentIfNotSignatoryInstruction","Du har behörighet att se detta dokument    Klicka på den här länken
+ Nedan för att se dokumentet:",,"You are authorised to view this document    Click this link to view:"
+"_mailInvitationToSignOrderContentIfSignatoryInstruction","1. Klicka på <a href=""$link$"">den här länken</a><br/>
       2. Bekräfta ordern<br/>      3. Underteckna (eller avvisa)<br/>
-       4. Färdig",,"1. Click this <a href=""$link$"">link</a><br/>
+       4. Färdig",,"1. Click <a href=""$link$"">this link</a><br/>
       2. Confirm your order <br/>      3. Sign (or return)<br/>
        4. Done"
 "_mailInvitationToSignOrderContentInfo","Översiktlig information",,"General information"
@@ -2072,25 +2072,25 @@ simply better."
 "_queryColumnPhone","Telefon: +46 8 519 779 00",,"Phone: +46 8 519 779 00"
 "_queryColumnQuestions","Frågor? Kontakta oss!",,"Questions? Contact us."
 "_remindMailNotSignedContractContentInfo","Översiktlig information",,"General information"
-"_remindMailNotSignedContractContentInstruction","<i>Så här går du vidare</i><br/>        1. Klicka på <a href=""$link$"">länken</a><br/>        2.
+"_remindMailNotSignedContractContentInstruction","<i>Så här går du vidare</i><br/>        1. Klicka på <a href=""$link$"">den här länken</a><br/>        2.
  Granska online<br/>        3. Underteckna (eller avvisa)<br/>
-         4. Färdig",,"<i>To continue</i><br/>        1. Click this <a href=""$link$"">link</a><br/>        2. Review online<br/>         3. Sign (or return)<br/>         4. Done"
+         4. Färdig",,"<i>To continue</i><br/>        1. Click <a href=""$link$"">this link</a><br/>        2. Review online<br/>         3. Sign (or return)<br/>         4. Done"
 "_remindMailNotSignedContractStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte undertecknat eller avvisat
  dokument <strong>$documenttitle$</strong> ännu.",,"<strong>$author$</strong> wants to remind you that you haven't
 signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_remindMailNotSignedOfferContentInfo","Översiktlig information",,"General information"
-"_remindMailNotSignedOfferContentInstruction","1. Klicka på <a href=""$link$"">länken</a><br/>
+"_remindMailNotSignedOfferContentInstruction","1. Klicka på <a href=""$link$"">den här länken</a><br/>
         2. Granska online<br/>        3.  Acceptera offert (eller
- avvisa)<br/>        4. Färdig",,"1. Click this <a href=""$link$"">link</a><br/>
+ avvisa)<br/>        4. Färdig",,"1. Click <a href=""$link$"">this link</a><br/>
         2. Review online<br/>        3.  Accept the offer (or
  return)<br/>        4. Done"
 "_remindMailNotSignedOfferStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte accepterat
  offerten <strong>$documenttitle$</strong> ännu.        Acceptera eller avvisa
  offerten genom att följa instruktionerna nedan.",,"<strong>$author$</strong>  wants to remind you that you haven't  confirmed or returned the offer  <strong>$documenttitle$</strong> yet. To do so:"
 "_remindMailNotSignedOrderContentInfo","Översiktlig information",,"General information"
-"_remindMailNotSignedOrderContentInstruction","1. Klicka på <a href=""$link$"">länken</a><br/>
+"_remindMailNotSignedOrderContentInstruction","1. Klicka på <a href=""$link$"">den här länken</a><br/>
         2. Granska online<br/>        3. Bekräfta ordern (eller
- avvisa)<br/>         4. Färdig",,"1. Click this <a href=""$link$"">link</a><br/>
+ avvisa)<br/>         4. Färdig",,"1. Click <a href=""$link$"">this link</a><br/>
         2. Review online<br/>        3. Confirm the order (or
  return)<br/>         4. Done"
 "_remindMailNotSignedOrderStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte bekräftat
