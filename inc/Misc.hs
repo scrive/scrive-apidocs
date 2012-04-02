@@ -478,6 +478,15 @@ firstWithDefault (ma:mas) da = do
     case a of
          Just a' -> return a'
          Nothing -> firstWithDefault mas da
+
+firstOrNothing :: (Monad m) => [m (Maybe a)] -> m (Maybe a)
+firstOrNothing [] = return Nothing
+firstOrNothing (ma:mas) = do
+    a <- ma
+    case a of
+         Just a' -> return $ Just a'
+         Nothing -> firstOrNothing mas
+
          
 -- changing an element in a list
 chng :: [a] -> Int -> a -> [a]

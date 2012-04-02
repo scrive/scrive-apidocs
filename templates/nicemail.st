@@ -54,11 +54,11 @@ nicemail=
                     <tr>
                         <td style="padding-left:25px; padding-right: 25px; padding-top: 5px; padding-bottom: 5px; margin: auto;"><img src="$ctxhostpart$/img/email-line.jpg" alt="" width="540" height="10" /></td>
                     </tr>
-                    $if(mailp1)$ $nicemailparagraph(p=mailp1)$ $endif$
-                    $if(mailp2)$ $nicemailparagraph(p=mailp2)$ $endif$
-                    $if(mailp3)$ $nicemailparagraph(p=mailp3)$ $endif$
-                    $if(mailp4)$ $nicemailparagraph(p=mailp4)$ $endif$
-                    $if(mailp5)$ $nicemailparagraph(p=mailp5)$ $endif$
+                    $if(mailp1)$ $nicemailparagraph(p=mailp1;l=maill1)$ $endif$
+                    $if(mailp2)$ $nicemailparagraph(p=mailp2;l=maill2)$ $endif$
+                    $if(mailp3)$ $nicemailparagraph(p=mailp3;l=maill3)$ $endif$
+                    $if(mailp4)$ $nicemailparagraph(p=mailp4;l=maill4)$ $endif$
+                    $if(mailp5)$ $nicemailparagraph(p=mailp5;l=maill5)$ $endif$
                 </table>
             </td>
         </tr>
@@ -81,7 +81,9 @@ nicemailparagraph =
       <tr>
         <td style="padding-left:25px; padding-right:25px; padding-top: 5px; padding-bottom: 5px; margin: auto;">$p:noescape()$</td>
       </tr>
+      $if(!l)$
       <tr>
          <td style="padding-left:25px; padding-right:25px; padding-top: 5px; padding-bottom: 5px; margin: auto;"><img src="$ctxhostpart$/img/email-line.jpg" alt="" width="540" height="10" /></td>
       </tr>
+      $endif$
 ####
