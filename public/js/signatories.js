@@ -268,6 +268,7 @@ window.Signatory = Backbone.Model.extend({
             if (!isSet)
                 fields.push(new Field(extendedWithSignatory(this.defaults.fields[i])));
         }
+
         var attachments = _.map(args.attachments, function(attachment) {
                 return new SignatoryAttachment(extendedWithSignatory(attachment));
         });

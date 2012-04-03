@@ -15,11 +15,11 @@ module Util.HasSomeCompanyInfo (
 
 import Data.Maybe
 
+import Control.Logic
 import User.Model
 import Doc.DocStateData
 import Company.Model
 import Util.SignatoryLinkUtils
-import Misc
 
 -- | Anything that might have a company name and number
 class HasSomeCompanyInfo a where

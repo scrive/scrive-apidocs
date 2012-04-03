@@ -24,7 +24,6 @@ import DB.Types
 import Company.CompanyView
 import Company.Model
 import Kontra
-import KontraError (internalError)
 import KontraLink
 import Misc
 import Redirect

@@ -748,7 +748,7 @@ a.new-btn-small.black p {
 .body-container .price-plan-container {
 	background: #fff;
 	border: 1px solid #ccc;
-	height: 250px;
+	height: 400px;
 	margin-top: 35px;
 	position: relative;
 	width: 938px;
@@ -759,7 +759,7 @@ a.new-btn-small.black p {
 }
 
 .body-container .price-plan {
-	height: 254px;
+	height: 404px;
 	position: absolute;
 	width: 938px;
 	z-index: 1;
@@ -778,6 +778,7 @@ a.new-btn-small.black p {
 .body-container .price-plan th p {
 	color: #999;
 	font: italic 14px "Georgia";
+        padding:5px;
 }
 
 .body-container .price-plan td, .body-container .price-plan th {
@@ -827,25 +828,25 @@ a.new-btn-small.black p {
     line-height: 1.7em;
 }
 
-.body-container .price-plan tr.big-row h4 {
-        color: #666;
-	font: 16px "Georgia";
-        font-weight: bold;
+
+.price-plan-container .price {
+        display:block;
+        color: #000;
+        font: 16px "Copse";
+        margin:2px;
 }
 
-.price-plan-page .price-plan tr.big-row td a {
-    display: none;
-}
+.price-plan-container .highlight-rows .price {
+        margin-top:8px;
+        font: 17px "Copse";
+        margin-bottom: 4px;
+} 
 
-.body-container .price-plan tr.big-row td a {
-	color: #35A4D6;
-	font: 10px "Lucida Grande";
-	text-transform: uppercase;
-}
+.price-plan-container .price-comment {
+        display:block;
+        font: 11px "Copse";
+        margin:2px;
 
-.body-container .price-plan tr.big-row td a:hover {
-	border-color: #000;
-	color: #000;
 }
 
 /* Price Plan Highlight */
@@ -875,20 +876,20 @@ a.new-btn-small.black p {
 }
 
 .body-container .price-plan-page .highlight-container .highlight-rows {
-    height: 260px;
+    height: 410px;
 }
 
 .body-container .highlight-container .highlight-rows {
 	padding: 0 10px;
 	width: 224px;
-    height: 290px;
+        height: 424px;
 }
 
 .body-container .highlight-container .highlight-rows li {
 	border-bottom: 1px solid #ccc;
 	color: #999;
 	font: 14px "Lucida Grande";
-	height: 28px;
+	height: 30px;
 	line-height: 28px;
 	text-align: center;
 }
@@ -1720,12 +1721,12 @@ top: 0px;
       background: url(../img/team/daniel-2.jpg) center no-repeat;
 }
 
-.portrait-image a.marcus {
-      background: url(../img/team/marcus-1.png) center no-repeat;
+.portrait-image a.joakim {
+      background: url(../img/team/joakim-1.png) center no-repeat;
 }
 
-.portrait-image a.marcus:hover {
-      background: url(../img/team/marcus-2.png) center no-repeat;
+.portrait-image a.joakim:hover {
+      background: url(../img/team/joakim-2.png) center no-repeat;
 }
 
 .portrait-image a.dudek {
@@ -2070,4 +2071,15 @@ a {
     border-width: 1px;
     font: 10px "Lucida Grande";
     padding: 20px;
+}
+
+.notfound {
+    font-size: 16px;
+    padding: 60px 160px;
+    border: 1px solid black;
+}
+
+.notfound h2, .notfound h3 {
+    margin-bottom: 14px;
+    margin-top: 14px;
 }

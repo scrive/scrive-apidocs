@@ -24,17 +24,29 @@ priceplanPageContents=
                                         <table class="price-plan">
                                                 <tr>$_PriceTableHead()$
                                                 </tr>
-                                                <tr class="odd-row">
+                                                <tr>
                                                         $_PriceTableRow1()$
                                                 </tr>
                                                 <tr>
                                                         $_PriceTableRow2()$
                                                 </tr>
-                                                <tr class="odd-row">
+                                                <tr>
                                                         $_PriceTableRow3()$
                                                 </tr>
                                                 <tr>
                                                         $_PriceTableRow4()$
+                                                </tr>
+                                                <tr>
+                                                        $_PriceTableRow5()$
+                                                </tr>
+                                                <tr>
+                                                        $_PriceTableRow6()$
+                                                </tr>
+                                                <tr>
+                                                        $_PriceTableRow7()$
+                                                </tr>
+                                                <tr>
+                                                        $_PriceTableRow8()$
                                                 </tr>
                                                 <tr class="big-row">
                                                         $_PriceTablePriceRow()$
@@ -46,14 +58,9 @@ priceplanPageContents=
                                         </div>
                                 </div>
                 <br />
-                <div>$_priceplanPageVAT()$</div>
+                <div>$_priceplanPageSignLimit()$</div>
                 <div class="big-price-plan">$_priceplanPageBelowTable1()$
                 </div>
-                <div class="big-price-plan">$_priceplanPageBelowTable2()$
-                </div>
-                <div class="big-price-plan">$_priceplanPageBelowTable3()$
-                </div>
-
 
                 <div class="big-pp-container">
                     <table>

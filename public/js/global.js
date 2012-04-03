@@ -717,8 +717,8 @@ safeReady(function() {
             for(var i=0;i<partners.length;i++)
             {
                 var p = $("<p class='partnersmailpreview' style='font-weight:bold;'></p>");
-                p.text(partners[i])
-                p.append("<BR/>")
+                p.text(partners[i]);
+                p.append("<BR/>");
                 plist.append(p);
             }
         },
@@ -1730,7 +1730,7 @@ safeReady(function() {
     $(".campaign-play-video").click(function(){
         window.open('http://player.vimeo.com/video/37373913','','scrollbars=no,menubar=no,height=500,width=700,resizable=yes,toolbar=no,location=no,status=no');
         return false;
-    })
+    });
 });
 /*
  * Function to deal with the situation when page is very big (more then 3000px)

@@ -61,9 +61,7 @@ import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Types
 
-import KontraError (internalError)
-import KontraMonad
-import Context
+import Kontra
 import Doc.DocumentID
 import Numeric
 import qualified Log (security)

@@ -253,7 +253,7 @@
     window.Schema = Backbone.Model.extend({
         defaults: {
             sorting: new Sorting({ disabled: true }),
-            filtering: new Filtering({ disabled: true }),
+            filtering: new Filtering({ disabled: true}),
             paging: new Paging({ disabled: true }),
             options: [],
             extraParams: {}
@@ -261,6 +261,12 @@
         initialize: function() {
             _.bindAll(this, 'change');
             var schema = this;
+          var paging = this.paging();
+          // we reset the page to 0 when we change the filtering
+          // if we do this first, the right thing happens, otherwise,
+          // it goes into infinite loop -- Eric
+          this.filtering().bind('change', function(){paging.changePage(0);});
+
             this.filtering().bind('change', function() {schema.trigger('change')});
             this.sorting().bind('change', function() {schema.trigger('change')});
             this.paging().bind('change:pageCurrent', function() {schema.trigger('change')});
@@ -346,10 +352,6 @@
         },
         isUnsaved: function() {
             return this.get("unsaved");
-        },
-        toggleSelect: function() {
-            this.set({ "selected": !this.isSelected() }, { silent: true });
-            this.trigger("selected:change");
         },
         select: function() {
             this.set({ "selected": true });
@@ -470,9 +472,9 @@
                         td.html($("<a href='#' class='expand'>" + value + "</a>"));
                     } else if (cell.isBool()) {
                         if (value)  td.append("<center><a href='" + this.model.link() + "'>&#10003;</a></center>");
-                    } else 
+                    } else
                             td.append($("<a href='" + this.model.link() + "'>" + value + "</a>"));
-                    } 
+                    }
                    else if (value != undefined) {
                         var span = $("<span >" + value + "</span>");
                         td.html(span);
@@ -520,14 +522,17 @@
             }
         },
         selectCheck: function(e) {
-            this.model.toggleSelect();
+          if(e.target.checked)
+            this.model.select();
+          else
+            this.model.unselect();
         },
         selectRow: function(e) {
             // ignore checkboxes and links
             if (!$(e.target).is(":checkbox, a")) {
                 // select only this one
                 this.model.collection.selectNone();
-                this.model.toggleSelect();
+                this.model.select();
             }
         },
         toggleExpand: function() {

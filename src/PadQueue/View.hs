@@ -8,7 +8,7 @@ import Text.JSON
 import Text.JSON.Fields as JSON (json)
 import qualified Text.JSON.Fields as JSON (field)
 import Control.Monad.Trans
-import Misc
+import Control.Logic
 
 padQueueStateJSON :: (TemplatesMonad m) => Bool -> Maybe (Document,SignatoryLink) -> m JSValue
 padQueueStateJSON systemlogged mds = liftIO $ json $ do

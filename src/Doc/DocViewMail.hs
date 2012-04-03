@@ -20,6 +20,7 @@ module Doc.DocViewMail (
 
 import API.Service.Model
 import Company.Model
+import Control.Logic
 import Doc.DocProcess
 import Doc.DocStateData
 import Doc.DocUtils

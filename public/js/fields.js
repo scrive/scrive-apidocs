@@ -77,7 +77,7 @@ window.FieldPlacement = Backbone.Model.extend({
             pagewidth : page.width(),
             pageheight : page.height(),
             page : page.number()
-        }
+        };
     }
 });
 
@@ -100,7 +100,7 @@ window.Field = Backbone.Model.extend({
         });
         this.set({"placements": placements});
         this.bind("change",function() {
-            field.signatory().document().trigger("change:signatories")
+            field.signatory().document().trigger("change:signatories");
         });
         args.signatory.bind("removed",function() {
             field.trigger("removed");
@@ -124,6 +124,9 @@ window.Field = Backbone.Model.extend({
     },
     placements : function() {
         return this.get("placements");
+    },
+    isPlaced: function() {
+      return this.placements().length > 0;
     },
     signatory : function(){
         return this.get("signatory");
@@ -162,7 +165,7 @@ window.Field = Backbone.Model.extend({
     },
     validation: function() {
         var field = this;
-        var name  = this.name()
+        var name  = this.name();
 
         if (!this.signatory().author() && (name == "fstname" ||name == "sndname") && !this.signatory().isCsv()) {
             var msg = localization.designview.validation.missingOrWrongNames;
@@ -175,13 +178,19 @@ window.Field = Backbone.Model.extend({
         }
 
         if (this.signatory().document().elegAuthorization() && name == "sigpersnr" && this.signatory().signs()  && !this.signatory().isCsv() ) {
-            var msg = localization.designview.validation.missingOrWrongPersonalNumber
+            var msg = localization.designview.validation.missingOrWrongPersonalNumber;
             return new NotEmptyValidation({message: msg});
         }
 
         if (this.isCustom()) {
-            var msg = localization.designview.validation.notReadyField
-            return new Validation({validates : function() {return field.isReady()}, message : msg});
+          var msg1 = localization.designview.validation.notReadyField;
+          var msg2 = localization.designview.validation.notPlacedField;
+          var validation = new Validation({validates: function() {return field.isReady()}, message: msg1}).concat(new Validation({validates: function() {return field.isPlaced()}, message: msg2}));
+          if (this.signatory().author()) {
+            return validation.concat(new NotEmptyValidation({message: localization.designview.validation.missingOrWrongCustomFieldValue}));
+          } else {
+            return validation;
+          }
         }
         if (this.signatory().signs() && this.signatory().document().padAuthorization() && this.isSignature()) {
             var msg = localization.designview.validation.notPlacedSignature
@@ -196,7 +205,7 @@ window.Field = Backbone.Model.extend({
              || (name == "email")
              || (name == "sigco")
              || (name == "sigpersnr" )
-             || (name == "sigcompnr")
+             || (name == "sigcompnr");
     },
     isCustom: function() {
         return !this.isStandard() && !this.isSignature();
@@ -223,7 +232,7 @@ window.Field = Backbone.Model.extend({
       return {   name : this.name()
                , value : this.value()
                , placements : _.map(this.placements(), function(placement) {return placement.draftData();})
-             }
+             };
     },
    hasPlacements : function() {
       return this.get("placements").length > 0;
@@ -353,7 +362,7 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
         this.render();
     },
     ddIcon : function() {
-        var icon =  $("<div class='ddIcon' />")
+        var icon =  $("<div class='ddIcon' />");
         var field = this.model;
         var document = field.signatory().document();
         if (document.mainfile() != undefined && document.mainfile().view != undefined)
@@ -380,26 +389,26 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
                               field: field,
                               x : x,
                               y : y
-                            }))
+                            }));
                     }
             });
         }
         return icon;
     },
     prepIcon : function() {
-        return $("<a class='prepIcon' href='#'/>")
+        return $("<a class='prepIcon' href='#'/>");
     },
     setNameIcon : function() {
         var field = this.model;
         var input = this.input;
-        var icon =  $("<a class='setNameIcon' href='#'/>")
+        var icon =  $("<a class='setNameIcon' href='#'/>");
         var fn = function(){
           if (!field.hasRestrictedName())
             field.makeReady();
           else  FlashMessages.add({
             color : "red",
             content: localization.designview.validation.restrictedName
-          })
+          });
           return false;
         };
         icon.click(fn);
@@ -415,11 +424,11 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
     },
     removeIcon: function() {
         var field = this.model;
-        var icon = $("<a class='removeField' href='#'/>")
+        var icon = $("<a class='removeField' href='#'/>");
         icon.click(function(){
             field.remove();
             return false;
-        })
+        });
         return icon;
     },
     render: function(){
@@ -446,7 +455,7 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
           else if (!field.isStandard())
            {
                this.input.addClass("shorter");
-               $(this.el).append(this.removeIcon())
+               $(this.el).append(this.removeIcon());
            }
           $(this.el).append(this.input);
         }

@@ -200,15 +200,6 @@ body.signview {
   margin-bottom: 11px;
 }
 
-.signview .save .email {
-  margin-top: 3px;
-  font-weight: bold;
-  border: solid #bababc 1px;
-  padding: 1px;
-  max-width: 168px;
-  overflow-x: auto;
-}
-
 .signview .save input {
   max-width: 168px;
 }
@@ -493,20 +484,19 @@ body.signview {
 
 .signview .signatoryattachments .list .item {
   margin-bottom: 10px;
-}
-
-.signview .signatoryattachments .list .item .column {
-  float: left;
-  margin-right: 20px;
   overflow: none;
 }
 
 .signview .signatoryattachments .list .item .first.column {
+  float: left;
+  display: block;
   width: 350px;
   margin-right: 30px;
 }
 
 .signview .signatoryattachments .list .item .second.column {
+  float: left;
+  display: block;
   width: 200px;
 }
 
@@ -709,12 +699,11 @@ body.signview {
   display: block;
 
   position: fixed;
-  right: 205px;
 
   z-index: 5000;
 
   height: 112px;
-  width: 112px;
+  min-width: 112px;
 }
 
 .signview .arrows .down.arrow {
@@ -736,10 +725,29 @@ body.signview {
 
 .signview .arrows .action.arrow {
   position: absolute;
-  background: url(../img/sign-arrow-action.png);
+}
+
+.signview .arrows .action.arrow .front {
+  background: url(../img/sign-arrow-action-front.png);
   background-repeat: no-repeat;
-  width: 92px;
+  min-width: 84px;
   height: 28px;
+  float: left;
+}
+
+.signview .arrows .action.arrow .back {
+  background: url(../img/sign-arrow-action-back.png);
+  background-repeat: no-repeat;
+  width: 8px;
+  height: 28px;
+  float: left;
+}
+
+.signview .arrows .action.arrow .label {
+  color: white;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 5px;
 }
 
 .signview .pagefooter {
@@ -759,7 +767,6 @@ body.signview {
   width: 960px;
   padding-top: 40px;
   padding-bottom: 40px;
-  text-shadow: black 1px -1px 1px;
 }
 
 .signview .pagefooter .sender {

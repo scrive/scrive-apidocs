@@ -25,6 +25,7 @@ import Control.Applicative
 import Data.Maybe
 
 import MinutesTime
+import Control.Logic
 import Misc
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo

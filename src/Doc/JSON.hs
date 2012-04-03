@@ -67,7 +67,6 @@ jsonDocumentID = showJSON . show
 instance SafeEnum DocumentStatus where
     fromSafeEnum Preparation       = 0
     fromSafeEnum Pending           = 10
-    fromSafeEnum AwaitingAuthor    = 10
     fromSafeEnum Timedout          = 20
     fromSafeEnum Rejected          = 20
     fromSafeEnum Canceled          = 20

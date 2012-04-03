@@ -1,7 +1,6 @@
+module Doc.DocStateCommon where
 
-module Doc.DocStateCommon
-where
-
+import Control.Logic
 import Company.Model
 import Data.Maybe
 import Doc.DocInfo
@@ -112,8 +111,8 @@ newDocumentFunctionality documenttype user =
 checkCloseDocument :: Document -> [String]
 checkCloseDocument doc = catMaybes $
   [ trueOrMessage (isSignable doc) ("document is not signable")
-  , trueOrMessage (documentstatus doc == Pending || documentstatus doc == AwaitingAuthor)
-                    ("document should be pending or awaiting author but it is " ++ (show $ documentstatus doc))
+  , trueOrMessage (isPending doc)
+                    ("document should be pending but it is " ++ (show $ documentstatus doc))
   , trueOrMessage (all (isSignatory =>>^ hasSigned) (documentsignatorylinks doc))
                     ("Not all signatories have signed")
   ]
@@ -124,8 +123,8 @@ checkCloseDocument doc = catMaybes $
 checkCancelDocument :: Document -> [String]
 checkCancelDocument doc = catMaybes $
   [ trueOrMessage (isSignable doc) ("document is not signable")
-  , trueOrMessage (documentstatus doc == Pending || documentstatus doc == AwaitingAuthor)
-                    ("document should be pending or awaiting author but it is " ++ (show $ documentstatus doc))
+  , trueOrMessage (isPending doc)
+                    ("document should be pending but it is " ++ (show $ documentstatus doc))
   ]
 
 
@@ -134,7 +133,7 @@ checkCancelDocument doc = catMaybes $
 checkPreparationToPending :: Document -> [String]
 checkPreparationToPending document = catMaybes $
   [ trueOrMessage (isSignable document) ("document is not signable")
-  , trueOrMessage (documentstatus document == Preparation)
+  , trueOrMessage (isPreparation document)
                     ("Document status is not pending (is " ++ (show . documentstatus) document ++ ")")
   , trueOrMessage (length (filter isAuthor $ documentsignatorylinks document) == 1)
                     ("Number of authors was not 1")
@@ -153,15 +152,15 @@ checkPreparationToPending document = catMaybes $
 checkRejectDocument :: Document -> SignatoryLinkID -> [String]
 checkRejectDocument doc slid = catMaybes $
   [ trueOrMessage (isSignable doc) ("document is not signable")
-  , trueOrMessage (documentstatus doc == Pending || documentstatus doc == AwaitingAuthor)
-                    ("document should be pending or awaiting author but it is " ++ (show $ documentstatus doc))
+  , trueOrMessage (isPending doc)
+                    ("document should be pending but it is " ++ (show $ documentstatus doc))
   , trueOrMessage (any ((== slid) . signatorylinkid) (documentsignatorylinks doc))
                   ("signatory #" ++ show slid ++ " is not in the list of document signatories")
   ]
 
 checkSignDocument :: Document -> SignatoryLinkID -> MagicHash -> [String]
 checkSignDocument doc slid mh = catMaybes $
-  [ trueOrMessage (isPending doc || isAwaitingAuthor doc) "Document is not in pending"
+  [ trueOrMessage (isPending doc) "Document is not in pending"
   , trueOrMessage (not $ hasSigned (doc, slid)) "Signatory has already signed"
   , trueOrMessage (hasSeen (doc, slid)) "Signatory has not seen"
   , trueOrMessage (isJust $ getSigLinkFor doc slid) "Signatory does not exist"
@@ -247,23 +246,13 @@ replaceSignatoryUser siglink user mcompany =
 
 checkUpdateFields :: Document -> SignatoryLinkID -> [String]
 checkUpdateFields doc slid = catMaybes $
-  [ trueOrMessage (documentstatus doc == Pending || documentstatus doc == AwaitingAuthor) $ "Document is not in Pending or AwaitingAuthor (is " ++ (show $ documentstatus doc) ++ ")"
+  [ trueOrMessage (isPending doc) $ "Document is not in Pending (is " ++ (show $ documentstatus doc) ++ ")"
   , trueOrMessage (isJust $ getSigLinkFor doc slid) $ "Signatory does not exist"
   , trueOrMessage (not $ hasSigned (doc, slid)) "Signatory has already signed."
   ]
 
 checkAddEvidence :: Document -> SignatoryLinkID -> [String]
 checkAddEvidence doc slid = catMaybes $
-  [ trueOrMessage (documentstatus doc == Pending) "Document is not in pending"
+  [ trueOrMessage (isPending doc) "Document is not in pending"
   , trueOrMessage (isSignatory (doc, slid)) "Given signatorylinkid is not a signatory"
-  ]
-
-
-checkPendingToAwaitingAuthor :: Document -> [String]
-checkPendingToAwaitingAuthor doc = catMaybes $
-  [ trueOrMessage (documentstatus doc == Pending)
-                    ("document should be pending but it is " ++ (show $ documentstatus doc))
-  , trueOrMessage (all ((isSignatory &&^ (not . isAuthor)) =>>^ hasSigned) (documentsignatorylinks doc))
-                    ("Not all non-author signatories have signed")
-  , trueOrMessage (not $ hasSigned $ getAuthorSigLink doc) "Author has already signed"
   ]

@@ -50,6 +50,7 @@ kontraMigrations = [
   , addIdSerialOnUsers
   , addEmailDomainOnCompanies
   , addCompanyNameNumberOnUsers
+  , updateDocumentStatusAfterRemovingAwaitingAuthor
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

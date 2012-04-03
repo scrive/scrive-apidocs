@@ -11,12 +11,12 @@ import ActionSchedulerState
 import AppView
 import Crypto.RNG (CryptoRNG, random)
 import DB.Classes
-import qualified Doc.Action
+import Doc.Action
 import Doc.Model
 import Company.Model
+import Control.Logic
 import InputValidation
 import Kontra
-import KontraError (internalError)
 import KontraLink
 import MagicHash (MagicHash)
 import Mails.SendMail
@@ -609,7 +609,7 @@ handleAccountSetupPost aid hash = do
             Just (_activateduser, docs) -> do
               dropExistingAction aid
 
-              forM_ docs $ \(doc2, doc, mslid) -> Doc.Action.postDocumentChangeAction doc2 doc mslid
+              forM_ docs postDocumentPreparationChange
 
               addFlashM flashMessageUserActivated
               return ()

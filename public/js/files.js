@@ -15,6 +15,7 @@ window.File = Backbone.Model.extend({
     },
     initialize: function (args) {
         this.url = "/filepages/" + args.document.documentid() + "/" + args.id;
+        this.bind('change:pages', function() { args.document.trigger('file:change'); });
     },
     downloadLink : function() {
         return "/download/"+ this.document().documentid() + "/" + this.fileid() +"/"+ this.name() + ".pdf" + this.document().viewer().urlPart();
@@ -60,19 +61,19 @@ window.File = Backbone.Model.extend({
         else {
           var pages  = new Array();
           for(var i = 0;i < response.pages.length; i++){
-              pages[i] = new FilePage({number : i + 1, file: this, width: response.pages[i].width, height: response.pages[i].height})
+              pages[i] = new FilePage({number : i + 1, file: this, width: response.pages[i].width, height: response.pages[i].height});
           }
           this.set({pages: pages});
           return this;
         }
-        
-        
+
+
     }
 });
 
 /*
     File has some id, knows what document it belongs and what pages does it has
-    
+
 */
 
 var FilePage = Backbone.Model.extend({
@@ -106,7 +107,7 @@ var FilePage = Backbone.Model.extend({
         this.trigger("change:dragables");
     },
     removePlacement : function(placement) {
-       var newplacements = new Array();    
+       var newplacements = new Array();
        for(var i=0;i<this.placements().length;i++)
           if (placement !== this.placements()[i])
              newplacements.push(this.placements()[i]);
@@ -123,6 +124,7 @@ var FilePageView = Backbone.View.extend({
         _.bindAll(this, 'render', 'renderDragables');
         this.model.bind('change:dragables', this.renderDragables);
         this.model.view = this;
+        this.renderedPlacements = [];
         this.render();
     },
     vline: function() {
@@ -143,8 +145,8 @@ var FilePageView = Backbone.View.extend({
        this.hline().css({
                 top: Math.min(this.pagejpg.height() - 1, Math.max(0, helper.offset().top - this.pagejpg.offset().top + helper.height() - 4)) + "px"
             });
-       
-      
+
+
        this.vline().css({
                 left: Math.min(this.pagejpg.width() - 1, Math.max(0, helper.offset().left - this.pagejpg.offset().left)) + "px"
             });
@@ -166,9 +168,9 @@ var FilePageView = Backbone.View.extend({
         $("body").unbind("mousemove");
     },
     makeDropable : function() {
-      var page = this.model;  
-      var pagejpg = this.pagejpg;  
-      pagejpg.droppable({ 
+      var page = this.model;
+      var pagejpg = this.pagejpg;
+      pagejpg.droppable({
         drop: function(event, ui) {
             var helper = $(ui.helper);
             var top = helper.offset().top -  pagejpg.offset().top;
@@ -177,8 +179,8 @@ var FilePageView = Backbone.View.extend({
             var onDrop = options.onDrop;
             onDrop(page,left,top);
             return false;
-          }  
-       })  
+          }
+       });
     },
     renderDragables : function() {
         var view = this;
@@ -186,13 +188,21 @@ var FilePageView = Backbone.View.extend({
         var container = $(this.el);
         var file = page.file();
         var document =file.document();
+        this.renderedPlacements = [];
         $(".placedfield",container).remove();
         _.each(page.placements(), function(placement) {
             var placement = placement;
             if (placement.page()==page.number()) {
-                container.append(new FieldPlacementPlacedView({model: placement, el : $("<div>")}).el);
+                var elem = new FieldPlacementPlacedView({model: placement, el : $("<div>")}).el;
+                container.append(elem);
+                if (!placement.field().isClosed()) {
+                  view.renderedPlacements.push({
+                    placement: placement,
+                    elem: $(elem)
+                  });
+                }
             }
-        })
+        });
     },
     render: function () {
         var page = this.model;
@@ -202,9 +212,9 @@ var FilePageView = Backbone.View.extend({
         container.empty();
         container.attr("id", "page" + page.number());
         container.addClass("pagediv");
-        
+
         // Page part with image
-        this.pagejpg = $("<div class='pagejpg'/>")
+        this.pagejpg = $("<div class='pagejpg'/>");
         var pagelink = location.protocol + "//" + location.host + "/pages/" + document.documentid() + "/" + file.fileid()  + "/" + page.number() + document.viewer().urlPart() ;
         this.pagejpg.css("background-image", "url(" +pagelink +")");
         this.pagejpg.append($("<input type='hidden' name='width'/>").val(page.width()));
@@ -223,22 +233,26 @@ var FileView = Backbone.View.extend({
         this.model.bind('reset', this.render);
         this.model.bind('change', this.render);
         this.model.view = this;
+        this.pageviews = [];
         this.model.fetch({data: this.model.document().viewer().forFetch(),   processData:  true, cache : false});
         this.render();
     },
     render: function () {
+        var view = this;
         var file = this.model;
-        var docbox = $(this.el)
+        var docbox = $(this.el);
         docbox.attr("id","documentBox");
         docbox.empty();
         if (!file.ready()) {
-            var waitbox = $("<div class='waiting4page'/>")
+            var waitbox = $("<div class='waiting4page'/>");
             docbox.append(waitbox);
         } else {
+            this.pageviews = [];
             _.each(file.pages(),function(page){
                  var pageview = new FilePageView({model : page, el: $("<div/>")});
+                 view.pageviews.push(pageview);
                  docbox.append($(pageview.el));
-            })
+            });
         }
         return this;
 
@@ -247,41 +261,41 @@ var FileView = Backbone.View.extend({
         var file = this.model;
         _.each(file.pages(),function(page){
                  page.view.moveCoordinateAxes(helper);
-            })
+            });
     },
 
     showCoordinateAxes : function(helper) {
         var file = this.model;
         _.each(file.pages(),function(page){
                  page.view.showCoordinateAxes(helper);
-            })
+            });
     },
 
     hideCoordinateAxes : function() {
         var file = this.model;
         _.each(file.pages(),function(page){
                  page.view.hideCoordinateAxes();
-            })
+            });
     }
 });
-  
+
 
 window.KontraFile = {
     init : function(args){
         if (args.file != undefined)
-           this.model = args.file
+           this.model = args.file;
         else
             this.model = new File({
                         id : args.id,
                         name : args.name,
                         document : args.document
-                    })
+                    });
         this.view = new FileView({
                         model: this.model,
                         el : $("<div/>")
-                    })
+                    });
         return this;
     }
-}
+};
 
-})(window); 
+})(window);

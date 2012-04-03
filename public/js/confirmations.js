@@ -5,13 +5,13 @@
  *                   size: "tiny | small | big",
  *                   text: "Text that will be put inside of button"
  *                   onClick* : "Function to be called when button is clicked" })
- *  will return Button object. 
+ *  will return Button object.
  *
  * It exports method input that returns jQuery object to be inserted anywere you want
  *
  * button.input()
 */
-  
+
 $(function(){
 
 /* InfoTextInput model. Has value, infotext and information if its focused  */
@@ -68,12 +68,12 @@ var ConfirmationModel = Backbone.Model.extend({
   width: function() {
       return this.get("width");
   },
-  
+
   showAccept : function() {
-      this.set({acceptVisible : true})
+      this.set({acceptVisible : true});
   },
   hideAccept : function() {
-      this.set({acceptVisible : false})
+      this.set({acceptVisible : false});
   },
   acceptVisible : function() {
       return this.get("acceptVisible");   
@@ -85,7 +85,7 @@ var ConfirmationModel = Backbone.Model.extend({
 
 /* Fixer for background overlay
    We need to extend it if the page is changing dinamicly in backgroud, else it may only match half screen.
-   It gets initialized by confirmation view on confirmation object, and will self-destroy when confirmation will loose connection to view 
+   It gets initialized by confirmation view on confirmation object, and will self-destroy when confirmation will loose connection to view
  */
 
 window.ExposeMaskFixer =  Backbone.Model.extend({
@@ -125,7 +125,7 @@ var ConfirmationView = Backbone.View.extend({
           this.acceptButton.show();
         else
           this.acceptButton.hide();
-       
+
     },
     render: function () {
        var view = this;
@@ -138,7 +138,7 @@ var ConfirmationView = Backbone.View.extend({
        var title = $("<span class='modal-title'/>");
        title.append($("<h2/>").append(this.model.title()));
        header.append(title);
-       if (model.canCancel()) 
+       if (model.canCancel())
         header.append("<a class='modal-close close'/>");
        var body = $("<div class='modal-body'>");
        var content = $("<div class='modal-content'/>");
@@ -149,7 +149,7 @@ var ConfirmationView = Backbone.View.extend({
         var cancel = $("<a class='cancel close float-left'/>");
         cancel.text(this.model.rejectText());
         footer.append(cancel);
-       } 
+       }
        this.acceptButton = model.acceptButton() != undefined ?  model.acceptButton().addClass("float-right") :
             Button.init({color:model.acceptColor(),
                                  size: "small",
@@ -169,7 +169,7 @@ var ConfirmationView = Backbone.View.extend({
        return this;
     },
     reject: function(){
-        this.model.reject()
+        this.model.reject();
         this.clear();
     },
     clear: function(){
@@ -177,7 +177,7 @@ var ConfirmationView = Backbone.View.extend({
         this.model.destroy();
         this.model.view = undefined;
         $(this.el).remove();
-      
+
     }
 
 });
@@ -194,11 +194,11 @@ window.Confirmation = {
                            speed : 0,
                            mask: standardDialogMask,
                            top: standardDialogTop,
-                           fixed: false      
+                           fixed: false
                           });
           return model;
    }
-    
+
 };
 
 });

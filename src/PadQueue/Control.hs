@@ -25,7 +25,6 @@ import Misc
 import Util.FlashUtil
 import User.UserView
 import Doc.Model
-import KontraError
 import AppView
 import Happstack.Server.Types
 import Data.Char (toLower)

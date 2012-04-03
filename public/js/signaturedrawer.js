@@ -25,7 +25,7 @@ var SignatureDrawer = Backbone.View.extend({
         document.ontouchmove = function(e){
             return state;
         }
-        
+
         document.ontouchstart = function(e){
             return state;
         }
@@ -67,13 +67,13 @@ var SignatureDrawer = Backbone.View.extend({
       this.picture.lineJoin = 'round';
 
 
-    
+
     },
     drawingtoolMove : function(x,y) {
       if (this.drawing) {
         this.picture.lineTo(x, y);
         this.picture.stroke();
-      } 
+      }
     },
     drawingtoolUp : function(x,y) {
       this.picture.lineTo(x, y);
@@ -110,7 +110,6 @@ var SignatureDrawer = Backbone.View.extend({
                 console.log(image.length);
                 signature.setImage(image);
                 if (callback != undefined) callback();
-               
           };
     },
     clear: function() {
@@ -135,7 +134,6 @@ var SignatureDrawer = Backbone.View.extend({
         this.container.append("<div class='canvasSeparator' style='margin: 3px;top:"+Math.floor(signature.sheight()/3)+"px'>");
         this.container.append("<div class='canvasSeparator' style='margin: 3px;top:"+Math.floor(2*signature.sheight()/3)+"px'>");
         this.container.append("<div class='canvasSeparator' style='margin: 3px;top:"+(signature.sheight() -1)+"px'>");
-     
         return this;
     }
 });
@@ -189,11 +187,7 @@ var SignatureDrawerWrapper = Backbone.View.extend({
                         view.overlay.data('overlay').close();
                         return false;
                     }
-            }).input();
-
-        
-
-        
+            }).input();      
     },
     clearButton : function() {
         var view = this;

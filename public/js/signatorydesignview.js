@@ -16,26 +16,26 @@ window.SignatoryDesignViewBasic = Backbone.View.extend({
         this.render();
     },
     name : function() {
-       var signatory = this.model; 
+       var signatory = this.model;
        var process = signatory.document().process();
        if (signatory.isCsv())
-        return localization.csv.title
+        return localization.csv.title;
        if (signatory.signs() &&  signatory.author())
         return process.authorsignatoryname() + (process.numberedsignatories() ? " " + signatory.signIndex() : "");
-       else if(signatory.author())    
+       else if(signatory.author())
         return process.authorname();
-       else if (signatory.signs()) 
+       else if (signatory.signs())
         return process.signatoryname() + (process.numberedsignatories() ? " " + signatory.signIndex() : "");
-       else 
-        return process.nonsignatoryname()
+       else
+        return process.nonsignatoryname();
     },
     top : function() {
-        var top = $("<div class='top'/>")
+        var top = $("<div class='top'/>");
         top.text(this.name().toUpperCase());
         return top;
     },
     fieldView : function (args) {
-        return new FieldBasicDesignView(args);  
+        return new FieldBasicDesignView(args);
     },
     postRender : function() {
         // Use this to bind extra post basic rendering in subclasses
@@ -47,7 +47,7 @@ window.SignatoryDesignViewBasic = Backbone.View.extend({
         this.container.addClass('sigview');
         this.container.children().detach();
         this.container.append(this.top());
-        var fields = $("<div class='fields'/>")
+        var fields = $("<div class='fields'/>");
         var makeField = function(field) {
                        if (field != undefined)
                         fields.append(view.fieldView(
@@ -62,7 +62,7 @@ window.SignatoryDesignViewBasic = Backbone.View.extend({
             if (field.name() != "fstname" &&
                 field.name() != "sndname" &&
                 field.name() != "email"   &&
-                !field.isSignature()) 
+                !field.isSignature())
                 makeField(field);
         });
         this.container.append(fields);
@@ -82,7 +82,7 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
         return addFieldButton;
    } ,
    fieldView : function (args) {
-        return new FieldAdvancedDesignView(args);  
+        return new FieldAdvancedDesignView(args);
    },
    refreshRoleSelector: function() {
        var view = this;
@@ -98,33 +98,33 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
                view.setRoleIcon.removeClass("selected");
                if (view.setRoleBox!= undefined)  view.setRoleBox.remove();
                view.showRoleSelector = false;
-               return false; 
-           })
+               return false;
+           });
            this.setRoleBox.append(closeButton);
-       
-           
+
+
            var makeSignatoryWrapper = $("<div class='option'/>");
            var makeSignatoryCheckbox =  $("<input class='radio' type='radio'/>");
            if (signatory.signs())
-               makeSignatoryCheckbox.attr("checked","yes")
+               makeSignatoryCheckbox.attr("checked","yes");
            else
                makeSignatoryCheckbox.click(function() {
                    signatory.makeSignatory();
-            })
+            });
            makeSignatoryWrapper.append(makeSignatoryCheckbox).append("<span class='radiolabel'>"+localization.isSigningParty+"</span>");
            this.setRoleBox.append(makeSignatoryWrapper);
-    
-           
+
+
            var makeNotSignatoryWrapper = $("<div class='option'>");
            var makeNotSignatoryCheckbox =  $("<input class='radio' type='radio'>");
            makeNotSignatoryWrapper.append(makeNotSignatoryCheckbox).append("<span class='radiolabel'>"+localization.isNotSigningParty+"</span>");
            this.setRoleBox.append(makeNotSignatoryWrapper);
            if (!signatory.signs())
-               makeNotSignatoryCheckbox.attr("checked","yes")
+               makeNotSignatoryCheckbox.attr("checked","yes");
            else
                makeNotSignatoryCheckbox.click(function() {
                    signatory.makeViewer();
-            })
+            });
        }
        else {
            this.setRoleIcon.removeClass("selected");
@@ -168,7 +168,7 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
       }
       select.change(function(){
             signatory.setSignOrder($(this).val());
-      })
+      });
       return select;
    },
    setCsvSignatoryIcon : function() {
@@ -178,7 +178,7 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
        setCsvSignatoryIcon.click(function() {
             CsvSignatoryDesignPopup.popup({signatory: signatory});
             return false;
-       })
+       });
        return setCsvSignatoryIcon;
    },
    placeSignatureIcon : function() {
@@ -194,7 +194,7 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
                     handle: ".ddIcon",
                     appendTo: "body",
                     helper: function(event) {
-                        return new FieldPlacementView({model: field, el : $("<div/>")}).el
+                        return new FieldPlacementView({model: field, el : $("<div/>")}).el;
                     },
                     start: function(event, ui) {
                     },
@@ -209,20 +209,20 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
                               field: field,
                               x : x,
                               y : y
-                            }))
+                            }));
                     }
             });
-       
+
        return placeSignatureIcon;
    },
    top : function() {
-        var top = $("<div class='top'/>")
+        var top = $("<div class='top'/>");
         var signatory = this.model;
         var document = signatory.document();
         top.append($("<span class='signame'/>").text(this.name().toUpperCase()));
         top.append(this.setRoleFieldIcon());
         if (!signatory.author())
-            top.append(this.setCsvSignatoryIcon())
+            top.append(this.setCsvSignatoryIcon());
         if (signatory.signs())
             top.append(this.setSignOrderIcon());
         if (signatory.signs())
@@ -230,7 +230,7 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
         top.append(this.addFieldButton());
         if (signatory.signs() && document.view.signOrderVisible())
             top.append(this.signOrderSelector());
-    
+
 
         return top;
     },
@@ -238,7 +238,7 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
         this.refreshRoleSelector();
     }
 
-})
+});
 
 window.SignatoriesDesignBasicView = Backbone.View.extend({
     initialize: function (args) {
@@ -263,8 +263,8 @@ window.SignatoriesDesignBasicView = Backbone.View.extend({
     showSignatory : function() {
         return true;
     }
-})
-    
+});
+
 window.SignatoriesDesignAdvancedView = SignatoriesDesignBasicView.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'signatoriesList');
@@ -284,13 +284,13 @@ window.SignatoriesDesignAdvancedView = SignatoriesDesignBasicView.extend({
             var nsig = document.addSignatory();
             view.showSignatory(nsig);
             return false;
-        })
+        });
         var removeLink = $("<a class='removeSignatory' href='#'/>").text(localization.removeSignatory);
         removeLink.click(function() {
             document.removeSignatory(view.current);
             return false;
 
-        })
+        });
         box.append(addLink).append(removeLink).append(this.extra);
         return box;
     },
@@ -314,14 +314,14 @@ window.SignatoriesDesignAdvancedView = SignatoriesDesignBasicView.extend({
         _.each(document.signatories(),function(sig) {
             var sigline = $("<a href='#' class='signame'/>");
             var setSiglineContent= function() {
-                var text = sig.isCsv() ?  localization.csv.title : sig.nameOrEmail()
+                var text = sig.isCsv() ?  localization.csv.title : sig.nameOrEmail();
                 if (text == undefined || text == "")
                    text = "(" + localization.noNamePerson + ")";
                 var number = sig.signs()? sig.signorder() : "-";
                 sigline.empty();
-                sigline.append($("<span/>").text(text))
+                sigline.append($("<span/>").text(text));
                 if (document.view.signOrderVisible())
-                  sigline.append($("<span class='float-right'/>").text(number))
+                  sigline.append($("<span class='float-right'/>").text(number));
             }
             sig.bind('change', function() { setSiglineContent();} );
             setSiglineContent();
@@ -329,9 +329,9 @@ window.SignatoriesDesignAdvancedView = SignatoriesDesignBasicView.extend({
                 view.current= sig;
                 view.render();
                 return false;
-            })
+            });
             view.signatoriesListBox.append(sigline);
-        })
+        });
         return view.signatoriesListBox;
     },
     render: function(){
@@ -341,25 +341,25 @@ window.SignatoriesDesignAdvancedView = SignatoriesDesignBasicView.extend({
         box.addClass('signatoriesbox');
         var document = this.model;
         if (document.signatories().length == 1)
-        { 
+        {
             var s1view = new SignatoryDesignViewAdvanced({model: document.signatories()[0], el: $("<div/>")});
             box.append(s1view.el);
-            box.append($("<div class='sigview dummy'/>"))
+            box.append($("<div class='sigview dummy'/>"));
         }
         else if (document.signatories().length == 2)
-        { 
+        {
             var s1view = new SignatoryDesignViewAdvanced({model: document.signatories()[0], el: $("<div/>")});
             var s2view = new SignatoryDesignViewAdvanced({model: document.signatories()[1], el: $("<div/>")});
             box.append(s1view.el);
             box.append(s2view.el);
-        
+
         }
-        else 
-        { 
+        else
+        {
            box.append(this.signatoriesList());
            var sview = new SignatoryDesignViewAdvanced({model: this.current, el: $("<div/>")});
            box.append(sview.el);
-        
+
         }
         box.append(this.addRemoveSignatoryBox());
         return this;
@@ -369,7 +369,7 @@ window.SignatoriesDesignAdvancedView = SignatoriesDesignBasicView.extend({
         this.render();
         return true;
     }
-})
-    
+});
+
 
 })(window);

@@ -30,7 +30,7 @@ var StandardPlacementView = Backbone.View.extend({
     },
     clear: function() {
         this.off();
-        $(this.el).remove()
+        $(this.el).remove();
     },
     render: function() {
             var field =   this.model;
@@ -73,7 +73,7 @@ var StandardPlacementPlacedView = Backbone.View.extend({
             place.empty();
             var fileview = field.signatory().document().mainfile().view;
             place.append(new StandardPlacementView({model: placement.field(), el: $("<div/>")}).el);
-            
+
             if (document.allowsDD())
               place.draggable({
                     appendTo: "body",
@@ -98,7 +98,7 @@ var StandardPlacementPlacedView = Backbone.View.extend({
                               field: field,
                               x : x,
                               y : y
-                            }))
+                            }));
                     }
             });
             if (field.signatory().canSign() && !field.isClosed() && field.signatory().current() && view.inlineediting != true)
@@ -113,6 +113,8 @@ var StandardPlacementPlacedView = Backbone.View.extend({
                   var acceptIcon = $("<span class='acceptIcon'/>");
                   place.append(box.append(iti).append(acceptIcon));
                   iti.focus();
+                  //clear the value underneath - while they're editing it is undetermined
+                  field.setValue("");
                   field.bind('change',function() { view.inlineediting  = false; view.render();});
                   var accept =  function() {
                       view.inlineediting = false;
@@ -126,14 +128,14 @@ var StandardPlacementPlacedView = Backbone.View.extend({
                       accept();
                       return false;
                   });
-                  iti.keypress(function(event) {
-                    if(event.which === 13)
+                  iti.keydown(function(event) {
+                    if(event.which === 13 || event.which === 9)
                     {   accept();
                         return false;
-                    }   
+                    }
                   });
                   return false;
-            })
+            });
             return this;
     }
 });
@@ -219,7 +221,7 @@ var SignaturePlacementView = Backbone.View.extend({
         if (sname == "")
         {
             if (signatory.isCsv())
-             sname =  localization.csv.title
+             sname =  localization.csv.title;
             else
              sname =  process.signatoryname() + (process.numberedsignatories() ? " " + signatory.signIndex() : "");
         }
@@ -260,9 +262,9 @@ var SignaturePlacementView = Backbone.View.extend({
 var SignaturePlacementPlacedView = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render', 'clear');
-        this.model.bind('removed', this.clear)
+        this.model.bind('removed', this.clear);
         this.model.view = this;
-        this.signature = new Signature({field : this.model.field()})
+        this.signature = new Signature({field : this.model.field()});
         this.render();
     },
     clear: function() {
@@ -294,7 +296,6 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
             else {
                 place.append(new SignaturePlacementView({model: placement.field()}).el);
             }
-
             if (document.allowsDD())
               place.draggable({
                     appendTo: "body",
@@ -316,7 +317,7 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
                               field: field,
                               x : x,
                               y : y
-                            }))
+                            }));
                     }
             });
             return this;

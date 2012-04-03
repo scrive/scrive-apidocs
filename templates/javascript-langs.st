@@ -230,7 +230,7 @@ javascriptLocalisation =
               , se : "$_Swedish()$"
               , changeEnglishToSwedishText :  "$_signInSwedishConfirmText()$"
               , signInSwedish : "$_signInSwedish()$"
-              , changeSwedishToEnglishText: "$_signInEnglishConfirmText()$" 
+              , changeSwedishToEnglishText: "$_signInEnglishConfirmText()$"
               , signInEnglish:  "$_signInEnglish()$"
             }
          , csv : {
@@ -252,9 +252,11 @@ javascriptLocalisation =
                       missingOrWrongEmail : "$_emptyOrNotValidEmail()$"
                     , missingOrWrongNames:  "$_missingSignatoryNames()$"
                     , missingOrWrongPersonalNumber : "$_backToStepTwoAndFillPersonNumber()$"
+                    , missingOrWrongCustomFieldValue: "$_missingCustomFieldValue()$"
                     , sameMails : "$_repetedEmailAddress()$"
                     , atLeastOnePersonOtherThenAuthor : "$_atLeastOnePersonOtherThenAuthor()$"
                     , notReadyField : "$_setAllFields()$"
+                    , notPlacedField : "$_placeAllFields()$"
                     , restrictedName : "$_fieldnameRestricted()$"
                     , notPlacedSignature : "Signature must be placed for signing party with pad authorization"
                 }
@@ -309,6 +311,12 @@ javascriptLocalisation =
               logMeIn : "$_login()$"
          }
          , cancel : "$_cancel()$"
+         , docupload : {
+             choosefile: "$_signStepsBodyUploadBoxStep1UpLoadChooseFile()$"
+            ,choosetemplate: "$_signStepsBodyUploadBoxStep1ChooseTemplate()$"
+            ,templatesaved: "$_signStepsBodyUploadBoxStep1TemplateSaved()$"
+            ,uploadinfo: "$_contractuploadprompttext()$"
+         }
          , docsignview : {
                followArrowToSign: "$_followArrowToSign()$"
              , followArrowToReview: "$_followArrowToReview()$"
