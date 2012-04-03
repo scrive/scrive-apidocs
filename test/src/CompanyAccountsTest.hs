@@ -340,7 +340,7 @@ test_removingCompanyAccountWorks env = withTestEnvironment env $ do
 
   assertCompanyInvitesAre company []
 
-  companydocs <- dbQuery $ GetDocumentsBySignatory [Contract, Offer, Order] $ userid adminuser
+  companydocs <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) []
   assertEqual "Company still owns users docs" 1 (length companydocs)
   assertEqual "Docid matches" docid (documentid $ head companydocs)
 

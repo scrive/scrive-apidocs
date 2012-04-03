@@ -120,56 +120,62 @@ import Util.HasSomeUserInfo
 
 data DocumentPagination =
   DocumentPagination
-  { documentOffset :: Int
-  , documentLimit  :: Int
+  { documentOffset :: Int        -- ^ use for SQL OFFSET command
+  , documentLimit  :: Int        -- ^ use for SQL LIMIT command
   }
 
 data DocumentFilter
-  = DocumentFilterStatuses [DocumentStatus]
-  | DocumentFilterByTags [DocumentTag]
-  | DocumentFilterMinChangeTime MinutesTime
-  | DocumentFilterMaxChangeTime MinutesTime
-  | DocumentFilterByService (Maybe ServiceID)
-  | DocumentFilterByRole SignatoryRole
-  | DocumentFilterByProcess [DocumentProcess]
-  | DocumentFilterByString String
+  = DocumentFilterStatuses [DocumentStatus]   -- ^ Any of listed statuses
+  | DocumentFilterByTags [DocumentTag]        -- ^ All of listed tags
+  | DocumentFilterMinChangeTime MinutesTime   -- ^ Minimal mtime
+  | DocumentFilterMaxChangeTime MinutesTime   -- ^ Maximum mtime
+  | DocumentFilterByService (Maybe ServiceID) -- ^ Only documents belonging to a service
+  | DocumentFilterByRole SignatoryRole        -- ^ Signatory must have role
+  | DocumentFilterByProcess [DocumentProcess] -- ^ Any of listed processes
+  | DocumentFilterByString String             -- ^ Contains the string in title, list of people involved or anywhere
 
 data DocumentDomain
-  = DocumentsOfAuthor UserID
-  | DocumentsOfAuthorDeleted UserID
-  | DocumentsOfAuthorDeleteValue UserID Bool
-  | DocumentsForSignatory UserID
-  | DocumentsForSignatoryDeleted UserID
-  | DocumentsForSignatoryDeleteValue UserID Bool
-  | TemplatesOfAuthor UserID
-  | TemplatesOfAuthorDeleted UserID
-  | TemplatesOfAuthorDeleteValue UserID Bool
-  | TemplatesSharedInUsersCompany UserID
-  | DocumentsOfService (Maybe ServiceID)
-  | DocumentsOfCompany CompanyID
-  | AttachmentsOfAuthorDeleteValue UserID Bool
+  = DocumentsOfAuthor UserID                     -- ^ Documents by author, not deleted
+  | DocumentsOfAuthorDeleted UserID              -- ^ Documents by author, deleted
+  | DocumentsOfAuthorDeleteValue UserID Bool     -- ^ Documents by author, with delete flag
+  | DocumentsForSignatory UserID                 -- ^ Documents by signatory, not deleted
+  | DocumentsForSignatoryDeleted UserID          -- ^ Documents by signatory, deleted
+  | DocumentsForSignatoryDeleteValue UserID Bool -- ^ Documents by signatory, with delete flag
+  | TemplatesOfAuthor UserID                     -- ^ Templates by author, not deleted
+  | TemplatesOfAuthorDeleted UserID              -- ^ Templates by author, deleted
+  | TemplatesOfAuthorDeleteValue UserID Bool     -- ^ Templates by author, with deleted flag
+  | TemplatesSharedInUsersCompany UserID         -- ^ Templates shared in company
+  | DocumentsOfService (Maybe ServiceID)         -- ^ All documents of service
+  | DocumentsOfCompany CompanyID                 -- ^ All documents of a company, not deleted
+  | AttachmentsOfAuthorDeleteValue UserID Bool   -- ^ Attachments of user, with deleted flag
 
+-- | These are possible order by clauses that make documents sorted by.
 data DocumentOrderBy
-  = DocumentOrderByTitle
-  | DocumentOrderByMTime
-  | DocumentOrderByStatusClass
-  | DocumentOrderByType
-  | DocumentOrderByProcess
+  = DocumentOrderByTitle       -- ^ Order by title, alphabetically, case insensitive
+  | DocumentOrderByMTime       -- ^ Order by modification time
+  | DocumentOrderByStatusClass -- ^ Order by status class.
+  | DocumentOrderByType        -- ^ Order by document type.
+  | DocumentOrderByProcess     -- ^ Order by process
 
-
+-- | 'AscDesc' marks ORDER BY order as ascending or descending.
+-- Conversion to SQL adds DESC marker to descending and no marker
+-- to ascending order.
 data AscDesc a = Asc a | Desc a
 
+-- | Convert DocumentOrderBy enumeration into proper SQL order by statement
 documentOrderByToSQL :: DocumentOrderBy -> SQL
 documentOrderByToSQL DocumentOrderByTitle = SQL "documents.title" []
 documentOrderByToSQL DocumentOrderByMTime = SQL "documents.mtime" []
-documentOrderByToSQL DocumentOrderByStatusClass = SQL ("(COALESCE((SELECT min(" ++ statusClassCaseExpression ++ ") FROM signatory_links WHERE signatory_links.document_id = documents.id), 3))") []
+documentOrderByToSQL DocumentOrderByStatusClass = 
+  SQL ("(COALESCE((SELECT min(" ++ statusClassCaseExpression ++ ")"
+       ++         "  FROM signatory_links"
+       ++         " WHERE signatory_links.document_id = documents.id), 3))") []
 documentOrderByToSQL DocumentOrderByType = SQL "documents.type" []
 documentOrderByToSQL DocumentOrderByProcess = SQL "documents.process" []
 
 documentOrderByAscDescToSQL :: AscDesc DocumentOrderBy -> SQL
 documentOrderByAscDescToSQL (Asc x) = documentOrderByToSQL x
 documentOrderByAscDescToSQL (Desc x) = documentOrderByToSQL x <++> SQL " DESC" []
-
 
 documentDomainToSQL :: DocumentDomain -> SQL
 documentDomainToSQL (DocumentsOfAuthorDeleteValue uid deleted) =
@@ -296,6 +302,22 @@ sqlJoinWithOR = sqlJoinWith (SQL " OR " [])
 
 sqlJoinWithAND :: [SQL] -> SQL
 sqlJoinWithAND = sqlJoinWith (SQL " AND " [])
+
+sqlConcatComma :: [SQL] -> SQL
+sqlConcatComma sqls =
+  mconcat $ intersperse (SQL ", " []) sqls
+
+sqlConcatAND :: [SQL] -> SQL
+sqlConcatAND sqls =
+  mconcat $ intercalate [SQL " AND " []] (map (\s -> [SQL "(" [], s, SQL ")" [] ]) sqls)
+
+sqlConcatOR :: [SQL] -> SQL
+sqlConcatOR sqls =
+  mconcat $ intercalate [SQL " OR " []] (map (\s -> [SQL "(" [], s, SQL ")" [] ]) sqls)
+
+parenthesize :: SQL -> SQL
+parenthesize (SQL command values) = SQL ("(" ++ command ++ ")") values
+
 
 sqlLog :: MinutesTime -> String -> (String, String, SqlValue)
 sqlLog time text = sql' "log" "log || ?" logmsg
@@ -1146,6 +1168,17 @@ instance DBQuery GetDocumentsByService [Document] where
   dbQuery (GetDocumentsByService msid) =
     dbQuery (GetDocuments [DocumentsOfService msid] [] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
 
+-- | GetDocuments is central switch for documents list queries.
+--
+-- GetDocuments domains filters sorting pagination
+--
+-- * domains are connected with OR, so documents falling into ANY of domains will be returned
+-- * filters weed out documents from domains, are connected with AND so a document must pass through ALL filters
+-- * sortings returns documents in order
+-- * pagination is a place to put OFFSET and LIMIT values
+--
+-- GetDocuments returns documents in proper order, no reverse is needed.
+--
 data GetDocuments = GetDocuments [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy] DocumentPagination
 instance DBQuery GetDocuments [Document] where
   dbQuery (GetDocuments domains filters orderbys pagination) = do
@@ -1165,17 +1198,6 @@ instance DBQuery GetDocuments [Document] where
       , SQL (" OFFSET " ++ show (documentOffset pagination) ++ " LIMIT " ++ show (documentLimit pagination)) []
       ]
 
-sqlConcatComma :: [SQL] -> SQL
-sqlConcatComma sqls =
-  mconcat $ intersperse (SQL ", " []) sqls
-
-sqlConcatAND :: [SQL] -> SQL
-sqlConcatAND sqls =
-  mconcat $ intercalate [SQL " AND " []] (map (\s -> [SQL "(" [], s, SQL ")" [] ]) sqls)
-
-sqlConcatOR :: [SQL] -> SQL
-sqlConcatOR sqls =
-  mconcat $ intercalate [SQL " OR " []] (map (\s -> [SQL "(" [], s, SQL ")" [] ]) sqls)
 
 {- |
     Fetches documents by company with filtering by tags, edate, and status.
@@ -1198,71 +1220,6 @@ instance DBQuery GetDocumentsByCompanyWithFiltering [Document] where
   dbQuery (GetDocumentsByCompanyWithFiltering companyid filters) =
     dbQuery (GetDocuments [DocumentsOfCompany companyid] filters [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
 
-
-activatedSQL :: SQL
-activatedSQL = mconcat [
-    SQL " (NOT EXISTS (" []
-  , SQL ("SELECT 1 FROM signatory_links AS sl2"
-    ++ " WHERE signatory_links.document_id = sl2.document_id"
-    ++ "  AND ((sl2.roles & ?) <> 0)"
-    ++ "  AND sl2.sign_time IS NULL"
-    ++ "  AND sl2.sign_order < signatory_links.sign_order")
-    [toSql [SignatoryAuthor]]
-  , SQL ")) " []
-  ]
-
-whereAuthorIs :: UserID -> SQL
-whereAuthorIs uid = SQL
-  "(signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?) <> 0))" [
-      toSql uid
-    , toSql [SignatoryAuthor]
-    ]
-
--- | If there is another user, that belongs to the same company, and
--- document has the sharing bit set and is owned by that user.
-orDocumentIsSharedInUsersCompany :: UserID -> SQL
-orDocumentIsSharedInUsersCompany uid = SQL
-  ("OR (signatory_links.deleted = FALSE " ++ 
-   "    AND documents.sharing = ?" ++
-   "    AND documents.type = ?" ++
-   "    AND ((signatory_links.roles & ?) <> 0) " ++
-   "    AND EXISTS (SELECT 1 FROM users AS usr1, users AS usr2 " ++
-   "                WHERE signatory_links.user_id = usr2.id " ++
-   "                  AND usr2.company_id = usr1.company_id " ++
-   "                  AND usr1.id = ?))")
-  [ toSql Shared
-  , toSql $ Template undefined
-  , toSql [SignatoryAuthor]
-  , toSql uid
-  ]
-
-whereSignatoryIsAndDeletedIs :: UserID -> Bool -> SQL
-whereSignatoryIsAndDeletedIs userid deleted = mconcat [
-    SQL "signatory_links.deleted = ? AND signatory_links.really_deleted = FALSE"
-      [toSql deleted]
-  , if deleted then mempty else SQL " AND " [] <++> activatedSQL
-  , SQL (" AND (signatory_links.user_id = ?"
-    ++  "   OR EXISTS (SELECT 1 FROM users "
-    ++  "    WHERE users.id = ? "
-    ++  "    AND signatory_links.company_id = users.company_id "
-    ++  "    AND users.is_company_admin = TRUE)) ") [
-      toSql userid
-    , toSql userid
-    ]
-  ]
-
--- | Note: I'm not sure why, but using 'process IS NOT DISTINCT FROM ?'
--- gives very sucky performance and since 'convoluted' alternative
--- behaves normally, we should use it here instead.
-andDocumentTypeIs :: DocumentType -> SQL
-andDocumentTypeIs dtype = SQL
-  " AND type = ? AND ((?::INT IS NULL AND process IS NULL) OR process = ?)" [
-      toSql dtype
-    , process
-    , process
-    ]
-  where process = toSql $ toDocumentProcess dtype
-
 data GetDeletedDocumentsByUser = GetDeletedDocumentsByUser UserID
 instance DBQuery GetDeletedDocumentsByUser [Document] where
   dbQuery (GetDeletedDocumentsByUser uid) =
@@ -1280,9 +1237,6 @@ data GetAttachmentsByAuthor = GetAttachmentsByAuthor UserID
 instance DBQuery GetAttachmentsByAuthor [Document] where
   dbQuery (GetAttachmentsByAuthor uid) =
     dbQuery (GetDocuments [AttachmentsOfAuthorDeleteValue uid False] [] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
-
-parenthesize :: SQL -> SQL
-parenthesize (SQL command values) = SQL ("(" ++ command ++ ")") values
 
 data GetTemplatesByAuthor = GetTemplatesByAuthor UserID
 instance DBQuery GetTemplatesByAuthor [Document] where

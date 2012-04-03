@@ -34,17 +34,13 @@ import Util.MonadUtils
 import Control.Applicative
 import Util.SignatoryLinkUtils
 import Stats.Control
-import Data.Char
-import Data.List
 import EvidenceLog.Model
 import Util.HasSomeUserInfo
 import Text.JSON
 import qualified Log as Log
 import ListUtil
 import MinutesTime
-import Doc.DocView
 import Misc
-import Util.HasSomeCompanyInfo
 
 handleContractArchive :: Kontrakcja m => m KontraLink
 handleContractArchive = do
@@ -142,7 +138,6 @@ jsonDocumentsList = withUserGet $ do
 #endif
 
   params <- getListParamsNew
-  -- let docs = docSortSearchPage params allDocs
 
   let (domain,filters) = case doctype of
                           "Contract"          -> ([DocumentsForSignatory uid],[DocumentFilterByProcess [Contract]])
@@ -213,53 +208,8 @@ docSearchingFromParams params =
 docPaginationFromParams :: Int -> ListParams -> DocumentPagination
 docPaginationFromParams pageSize params = DocumentPagination ((listParamsPage params - 1) * pageSize) pageSize
 
-
-
--- Searching, sorting and paging
-docSortSearchPage :: ListParams -> [Document] -> PagedList Document
-docSortSearchPage  = listSortSearchPage docSortFunc docSearchFunc docsPageSize
-
-docSearchFunc::SearchingFunction Document
-docSearchFunc s doc =  nameMatch doc || signMatch doc
-    where
-    match m = isInfixOf (map toUpper s) (map toUpper m)
-    nameMatch = match . documenttitle
-    signMatch d = any (match . getSmartName) (documentsignatorylinks d)
-
-
-docSortFunc:: SortingFunction Document
-docSortFunc "status" = compareStatus
-docSortFunc "statusREV" = revCompareStatus
-docSortFunc "title" = viewComparing documenttitle
-docSortFunc "titleREV" = viewComparingRev documenttitle
-docSortFunc "time" = viewComparing documentmtime
-docSortFunc "timeREV" = viewComparingRev documentmtime
-docSortFunc "party" = comparePartners
-docSortFunc "partyREV" = revComparePartners
-docSortFunc "partner" = comparePartners
-docSortFunc "partnerREV" = revComparePartners
-docSortFunc "partnercomp" = viewComparing partnerComps
-docSortFunc "partnercompREV" = viewComparingRev partnerComps
-docSortFunc "process" = viewComparing documenttype
-docSortFunc "processREV" = viewComparingRev documenttype
-docSortFunc "type" = viewComparing documenttype
-docSortFunc "typeREV" = viewComparingRev documenttype
-docSortFunc "author" = viewComparing getAuthorName
-docSortFunc "authorRev" = viewComparingRev getAuthorName
-docSortFunc _ = const $ const EQ
-
-partnerComps :: Document -> String
-partnerComps = concatMap getCompanyName . getSignatoryPartnerLinks
-
-revCompareStatus :: Document -> Document -> Ordering
-revCompareStatus doc1 doc2 = compareStatus doc2 doc1
-
-compareStatus :: Document -> Document -> Ordering
-compareStatus doc1 doc2 = compare (documentStatusClass doc1) (documentStatusClass doc2)
-
-revComparePartners :: Document -> Document -> Ordering
-revComparePartners doc1 doc2 = comparePartners doc2 doc1
-
+#if 0
+-- this needs to be transferred to SQL
 {- |
     Special comparison for partners, because we need to compare each signatory,
     and also then inside the signatory compare the fst and snd names separately.
@@ -281,6 +231,7 @@ comparePartners doc1 doc2 =
       case (compare fst1 fst2) of
         EQ -> compare snd1 snd2
         x -> x
+#endif
 
 docsPageSize :: Int
-docsPageSize = 100  
+docsPageSize = 100
