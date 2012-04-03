@@ -37,7 +37,7 @@ clientsPageContents=
 								<blockquote>$_Quote1()$</blockquote>
 								<em>$_Quote1By()$</em>
 								<p>$_clientsPageCusomer1About()$</p>
-								<a href="http://www.accountfactory.se">$_clientsPageCusomer1Web()$</a>
+								<a href="http://www.accountfactory.com">$_clientsPageCusomer1Web()$</a>
 							</li>
 							<li>
 								<div class="partner-image">
@@ -71,22 +71,22 @@ clientsPageContents=
 							</li>
                                                         <li>
 								<div class="partner-image">
-									<!--<img src="" /> -->
+									<img src="/img/coop-logo.png" />
 								</div>
 								<h2>$_clientsPageCusomer5()$</h2>
 								<blockquote>$_Quote5()$</blockquote>
 								<em>$_Quote5By()$</em>
 								<p>$_clientsPageCusomer5About()$</p>
-								<a href="http://www.coop.se/konsumnord">$_clientsPageCusomer5Web()$</a>
+								<a href="http://www.coop.se/coopnord">$_clientsPageCusomer5Web()$</a>
 							</li>                                                        <li>
 								<div class="partner-image">
-									<!--<img src="" /> -->
+									<img src="/img/ipas-logo.gif"  style="padding:68px 8px;background-color:black;"/>
 								</div>
 								<h2>$_clientsPageCusomer6()$</h2>
 								<blockquote>$_Quote6()$</blockquote>
 								<em>$_Quote6By()$</em>
 								<p>$_clientsPageCusomer6About()$</p>
-								<a href="">$_clientsPageCusomer6Web()$</a>
+								<a href="http://www.ipas.se/">$_clientsPageCusomer6Web()$</a>
 							</li>
 						</ul>
 					</div>
