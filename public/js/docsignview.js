@@ -802,8 +802,12 @@ window.DocumentSignView = Backbone.View.extend({
     },
     unPlacedFieldTasks: function(fieldels) {
       var allfields = this.model.currentSignatory().customFields();
-      var fields = allfields.filter(function(field) {
-        return !field.isPlaced();
+      //calling .filter will fail in IE7.  so have to do this instead
+      var fields = [];
+      _.each(allfields, function(field) {
+        if (!field.isPlaced()) {
+          fields.push(field);
+        }
       });
       if (fields.length != fieldels.length) {
         console.error("expected to find an element per custom field");
@@ -1010,8 +1014,10 @@ window.DocumentSignView = Backbone.View.extend({
     render: function() {
       var view = this;
       var document = this.model;
-      if (!document.ready() || document.mainfile()==undefined)
+      if (!document.ready() || document.mainfile()==undefined) {
+          this.mainfileview = undefined;
           return this;
+      }
 
       var mainfileelems = $(this.getOrCreateMainFileView().el);
       mainfileelems.detach();
