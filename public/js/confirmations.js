@@ -100,8 +100,9 @@ window.ExposeMaskFixer =  Backbone.Model.extend({
         {
             var em = $("#exposeMask");
             var body = $("body");
-            if (em.size() == 1 && (body.height() != em.height()))
-                em.height(body.height());
+            var height = Math.max(body.height(),$(document).height())
+            if (em.size() == 1 && (height != em.height()))
+                em.height(height);
             setTimeout(function() {fixer.fixer();},1000);
         }
     }

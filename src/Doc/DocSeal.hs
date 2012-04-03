@@ -47,6 +47,8 @@ import DB.Classes
 import Control.Applicative
 import EvidenceLog.Model
 import Control.Concurrent
+import Data.String.Utils
+
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
     Seal.Person { Seal.fullname = (getFullName details) ++
@@ -109,8 +111,8 @@ fieldsFromSignatory SignatoryDetails{signatoryfields} =
   where
     makeSealField :: SignatoryField -> [Seal.Field]
     makeSealField sf = case  sfType sf of
-                         SignatureFT -> map (fieldJPEGFromPlacement (sfValue sf)) (sfPlacements sf) 
-                         _ -> map (fieldFromPlacement (sfValue sf)) (sfPlacements sf) 
+                         SignatureFT -> concatMap (maybeToList . (fieldJPEGFromPlacement (sfValue sf))) (sfPlacements sf)
+                         _ -> map (fieldFromPlacement (sfValue sf)) (sfPlacements sf)
     fieldFromPlacement sf placement = Seal.Field {
         Seal.value = sf
       , Seal.x = placementx placement
@@ -120,22 +122,23 @@ fieldsFromSignatory SignatoryDetails{signatoryfields} =
       , Seal.h = placementpageheight placement
      }
     fieldJPEGFromPlacement v placement =
-     let
-      (w,_:r) = span (\c -> c /= '|') v
-      (h,_:r') = span (\c -> c /= '|') r
-      content  = drop 1 $ dropWhile (\c -> c /= ',') r' 
-     in Seal.FieldJPG
-      { valueBase64      =  content
-      , Seal.x = placementx placement
-      , Seal.y = placementy placement 
-      , Seal.page = placementpage placement
-      , Seal.w = placementpagewidth placement
-      , Seal.h = placementpageheight placement
-      , Seal.image_w       = read w
-      , Seal.image_h       = read h
-      , Seal.internal_image_w = read w
-      , Seal.internal_image_h = read h
-      }
+      case split "|" v of
+              [w,h,c] -> do
+                wi <- maybeRead w -- NOTE: Maybe monad usage
+                hi <- maybeRead h
+                Just $ Seal.FieldJPG
+                 {  valueBase64      =  drop 1 $ dropWhile (\e -> e /= ',') c
+                  , Seal.x = placementx placement
+                  , Seal.y = placementy placement
+                  , Seal.page = placementpage placement
+                  , Seal.w = placementpagewidth placement
+                  , Seal.h = placementpageheight placement
+                  , Seal.image_w       = wi
+                  , Seal.image_h       = hi
+                  , Seal.internal_image_w = wi
+                  , Seal.internal_image_h = hi
+                 }
+              _ -> Nothing
 
 sealSpecFromDocument :: TemplatesMonad m => String -> Document -> [DocumentEvidenceEvent] -> String -> String -> m Seal.SealSpec
 sealSpecFromDocument hostpart document elog inputpath outputpath =

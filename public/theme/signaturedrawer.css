@@ -110,4 +110,18 @@
         padding-left: 25px;
 }
 
+.go-back-image{
+    display: block;
+    margin:1px;
+    height: 16px;
+    width: 16px;
+    background: url(/img/undo.png) 0 -0 no-repeat;
+}
+.logout-image{
+    display: block;
+    margin:1px;
+    height: 16px;
+    width: 16px;
+    background: url(/img/exit.png) 0 -0 no-repeat;
+
 }

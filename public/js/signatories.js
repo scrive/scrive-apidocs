@@ -437,7 +437,7 @@ window.Signatory = Backbone.Model.extend({
         return canSign;
     },
     canPadSignQuickSign : function() {
-       return this.document().padAuthorization() && this.canSign() && !this.document().hasAnyAttachments && this.allFieldsButSignatureReadyForSign();
+       return this.document().padAuthorization() && this.canSign() && !this.document().hasAnyAttachments() && this.allFieldsButSignatureReadyForSign();
     },
     allAttachemntHaveFile: function() {
         return _.all(this.attachments(), function(attachment) {
@@ -451,7 +451,7 @@ window.Signatory = Backbone.Model.extend({
     },
     allFieldsButSignatureReadyForSign: function() {
         return _.all(this.fields(), function(field) {
-            return field.readyForSign() || field.signature();
+            return field.readyForSign() || field.isSignature();
         });
     },
     signatureReadyForSign: function() {

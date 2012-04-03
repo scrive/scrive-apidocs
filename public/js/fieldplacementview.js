@@ -171,14 +171,16 @@ var SignaturePlacementViewForDrawing = Backbone.View.extend({
                     button.addClass('placesignatureandsignbutton')
                     button.append($("<span class='text'/>").text(localization.signature.placeAndSign));
                 }
-                 if (this.signature.width() < button.width() || this.signature.height() < button.height())
+                var bwidth = 253;
+                var bheight = 48;
+                 if (this.signature.width() < bwidth || this.signature.height() < bheight)
                     box.css("border-width","0px");
-                if (this.signature.width() > button.width()) {
-                    button.css("margin-left", Math.floor((this.signature.width() - button.width()) / 2) + "px")
+                if (this.signature.width() > bwidth) {
+                    button.css("margin-left", Math.floor((this.signature.width() - bwidth) / 2) + "px")
                 }
-                if (this.signature.height() > button.height()) {
+                if (this.signature.height() >bheight) {
                 
-                    button.css("margin-top", Math.floor((this.signature.height() - button.height()) / 2) + "px")
+                    button.css("margin-top", Math.floor((this.signature.height() - bheight) / 2) + "px")
                 }
                 box.append(button);
             }

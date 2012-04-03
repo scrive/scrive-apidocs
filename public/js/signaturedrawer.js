@@ -92,7 +92,7 @@ var SignatureDrawer = Backbone.View.extend({
            //this.canvas.mouseout(function(e){settimeout(function() {view.drawingtoolUp(e.layerX, e.layerY);})}, 100 );
 
     },
-    saveImage : function() {
+    saveImage : function(callback) {
            var signature = this.model
            var image = this.canvas[0].toDataURL("image/png",1.0)
            console.log(image.length);
@@ -109,6 +109,7 @@ var SignatureDrawer = Backbone.View.extend({
                 var image = canvas[0].toDataURL("image/jpeg",1.0);
                 console.log(image.length);
                 signature.setImage(image);
+                if (callback != undefined) callback();
                
           };
     },
@@ -171,9 +172,10 @@ var SignatureDrawerWrapper = Backbone.View.extend({
                     size: 'tiny',
                     text: document.process().signbuttontext(),
                     onClick : function(){
-                        view.drawer.saveImage();
-                        document.sign().send();
-                        view.overlay.data('overlay').close();
+                        view.drawer.saveImage(function(){
+                            document.sign().send();
+                            view.overlay.data('overlay').close();
+                        });
                         return false;
                     }
             }).input();

@@ -1,4 +1,4 @@
-module PadQueue.Control (addToQueue,clearQueue,showPadQueuePage, padQueueState, handlePadLogin)
+module PadQueue.Control (addToQueue,clearQueue,showPadQueuePage, padQueueState, handlePadLogin, handlePadLogout)
     where
         
 import PadQueue.Model
@@ -29,6 +29,8 @@ import KontraError
 import AppView
 import Happstack.Server.Types
 import Data.Char (toLower)
+import Data.Maybe
+
 -- PadQueue STATE
 padQueueState ::  (Kontrakcja m) =>  m JSValue
 padQueueState = do
@@ -41,7 +43,7 @@ padQueueState = do
          Just user -> do
              pq <- runDB $ dbQuery $ GetPadQueue (userid user)
              msdata <- padQueueToSignatoryData pq
-             padQueueStateJSON msdata
+             padQueueStateJSON (isJust $ ctxmaybeuser ctx)  msdata
 
 -- PadQueue ACTIONS
 addToQueue :: (Kontrakcja m) => DocumentID ->  SignatoryLinkID -> m JSValue
@@ -91,14 +93,26 @@ handlePadLogin = do
                     | verifyPassword userpassword passwd -> do
                        Log.debug "Logged in"
                        loginPadUser user
-                       return LinkPadDeviceView
+                       return LoopBack
                _ -> do
                    addFlashM $ flashMessageLoginRedirectReason (InvalidLoginInfo undefined)
-                   return $ LinkPadDeviceView
-        _ -> return $ LinkPadDeviceView              
+                   return $ LoopBack
+        _ -> return $ LoopBack              
                     
 
+-- PadQueue Login
+handlePadLogout :: Kontrakcja m => m KontraLink
+handlePadLogout = do
+    Log.debug "Loging out of pad device"
+    logoutPadUser
+    return LoopBack
+                    
 loginPadUser :: Kontrakcja m => User -> m ()
 loginPadUser user = do
     -- Some event loging should be done here
-    logPadUserToContext (Just user)         
+    logPadUserToContext (Just user)
+
+logoutPadUser :: Kontrakcja m => m ()
+logoutPadUser = do
+    -- Some event loging should be done here
+    logPadUserToContext Nothing    

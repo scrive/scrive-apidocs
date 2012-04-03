@@ -42,10 +42,19 @@ window.PadQueue = Backbone.Model.extend({
         return this.documentid() != undefined && this.signatorylinkid() != undefined && this.magichash() != undefined;
     },
     logged : function() {
-        return this.get("logged") == "true";
+        return this.loggedToSystem() || this.loggedToPad();
+    },
+    loggedToSystem : function() {
+        return this.get("logged") == "system";
+    },
+    loggedToPad : function() {
+        return this.get("logged") == "pad";
     },
     needFullRefresh : function() {
         return this.get("needFullRefresh");  
+    },
+    logout : function() {
+        return new Submit({method: "POST", url : "/padqueue/logout"});
     },
     parse: function(args) {
      return {
@@ -94,9 +103,12 @@ window.PadQueueView = Backbone.View.extend({
     logToPadDevicePopup : function() {
         var wrapper = $("<div class='body'>");
         var loginForm= $("<form class='wrapper'/>");
-        var email = InfoTextInput.init({infotext:localization.email});
+        var emailValue = LocalStorage.get("Pad", "email")
+        console.log("Email " + emailValue);
+        var email = InfoTextInput.init({infotext:localization.email,  inputtype : 'email', value : emailValue});
         var password = InfoTextInput.init({infotext:localization.password, inputtype : 'password'});
         var sendLogin = function() {
+                LocalStorage.set("Pad", "email", email.value())
                 new Submit({
                     url : "/padqueue/login",
                     method : "POST",
@@ -126,6 +138,21 @@ window.PadQueueView = Backbone.View.extend({
             onAccept : sendLogin
             });
     },
+    padLogoutIcon : function() {
+        var icon = $("<div class='logout-image' style='float: right;position: absolute;top: 0;right:0'>")
+        var padqueue = this.model;
+        icon.click(function() {padqueue.logout().send();})
+        return icon;
+    },
+    backToSystemIcon : function() {
+        var padqueue = this.model;
+        var icon = $("<div class='go-back-image' style='float:right;position: absolute;top: 0;right:0'>");
+        icon.click(function() { if (padqueue.hasDocument())
+                                 window.location = '/d/' + padqueue.documentid();
+                                else
+                                 window.location = '/d'})
+        return icon;
+    },
     render: function () {
         var padqueue = this.model;
         var container = $(this.el);
@@ -139,6 +166,12 @@ window.PadQueueView = Backbone.View.extend({
                 container.append(this.noDocumentView())      
             else 
                 this.logToPadDevicePopup();
+
+            if (padqueue.loggedToPad())
+               $('body').append(this.padLogoutIcon())
+            if (padqueue.loggedToSystem())
+               $('body').append(this.backToSystemIcon())
+
         }
         return this;
 

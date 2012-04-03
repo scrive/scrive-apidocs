@@ -171,7 +171,8 @@ staticRoutes = choice
      , dir "padqueue" $ dir "state" $ hGet $ toK0 $ PadQueue.padQueueState
      , dir "padqueue" $ hGet $ toK0 $ PadQueue.showPadQueuePage
      , dir "padqueue" $ dir "archive" $ hGet $ toK0 $ ArchiveControl.showPadDeviceArchive
-     , dir "padqueue" $ dir "login" $ hPostNoXToken $ toK0 $ PadQueue.handlePadLogin
+     , dir "padqueue" $ dir "login"  $ hPostNoXToken $ toK0 $ PadQueue.handlePadLogin
+     , dir "padqueue" $ dir "logout" $ hPostNoXToken $ toK0 $ PadQueue.handlePadLogout
 
      -- UserControl
      , dir "account"                    $ hGet  $ toK0 $ UserControl.handleUserGet

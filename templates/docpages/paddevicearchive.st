@@ -117,7 +117,7 @@ $doctype()$
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <link rel="apple-touch-icon" href="/img/ipad-logo.jpg"/>
   </head>
-  <body class="signview">
+  <body class="signview" style="min-height:100%">
     <div class="mainContainer960" >
       <div class="body-container">
         $padQueueCurrentPageContent()$
