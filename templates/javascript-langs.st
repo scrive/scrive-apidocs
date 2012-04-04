@@ -253,6 +253,7 @@ javascriptLocalisation =
                     , sameMails : "$_repetedEmailAddress()$"
                     , atLeastOnePersonOtherThenAuthor : "$_atLeastOnePersonOtherThenAuthor()$"
                     , notReadyField : "$_setAllFields()$"
+                    , notPlacedField : "$_placeAllFields()$"
                     , restrictedName : "$_fieldnameRestricted()$"
                 }
            }

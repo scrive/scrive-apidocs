@@ -370,7 +370,7 @@
 "_clientsPageCusomer1About","Account Factory sköter bokföringen för småföretag. Bara fasta
  priser och allt på webben.",,"Account Factory manage accounting for small companies. Only fixed
  prices and everything is online."
-"_clientsPageCusomer1Web","www.accountfactory.se",,"www.accountfactory.se"
+"_clientsPageCusomer1Web","www.accountfactory.com",,"www.accountfactory.com"
 "_clientsPageCusomer2","Green Hat People",,"Green Hat People"
 "_clientsPageCusomer2About","Green hat People genomför oslagbara teambuildingaktiviteter i
  form av mobilstyrda spel där omgivningen utgör spelplanen. De
@@ -384,14 +384,14 @@
 "_clientsPageCusomer3About","Din partner för konferens, kick-off och företagsresor.",,"Your partner in conferences, kick-offs and company travels."
 "_clientsPageCusomer3Web","www.eventbook.se",,"www.eventbook.se"
 "_clientsPageCusomer4","Accenture Management Consulting",,"Accenture Management Consulting"
-"_clientsPageCusomer4About",,,
+"_clientsPageCusomer4About","Accenture är ett globalt företag inom managementkonsulting, IT och outsourcing, med mer än 246.000 medarbetare och kunder i fler än 120 länder.",," Accenture is a global management consulting, technology services and outsourcing company, with more than 246,000 people serving clients in more than 120 countries."
 "_clientsPageCusomer4Web","www.accenture.com",,"www.accenture.com"
 "_clientsPageCusomer5","COOP Nord",,"COOP Nord"
-"_clientsPageCusomer5About","",,""
-"_clientsPageCusomer5Web","www.coop.se/konsumnord",,"www.coop.se/konsumnord"
+"_clientsPageCusomer5About","Dagligvaruaktör som ägs av konsumentkooperationen, och som äger ett antal företag inklusive Coop Forum, Konsum och Coop Nära.",,"Grocery Trader owned by consumer cooperatives, which own a number of companies including Coop Forum, Coop Konsum and Coop Nära."
+"_clientsPageCusomer5Web","www.coop.se/coopnord",,"www.coop.se/coopnord"
 "_clientsPageCusomer6","IPAS",,"IPAS"
-"_clientsPageCusomer6About","",,""
-"_clientsPageCusomer6Web","",,""
+"_clientsPageCusomer6About","IPAS är ett kunskapsföretag som projekterar, driftsätter och underhåller kameraövervakningssystem.",,"IPAS is a company that installs and maintains CCTV systems."
+"_clientsPageCusomer6Web","www.ipas.se",,"www.ipas.se"
 "_clientsPageCusomerVid","Go Enterprise",,"Go Enterprise"
 "_clientsPageCusomerVidAbout","Go Enterprise är ett ungt managementbolag där vi brinner för
  tillväxt, entreprenörskap och samhällsutveckling. Genom våra
@@ -2305,6 +2305,7 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_senderNumber","Avsändarens Orgnr/Persnr",,"Sender's Company Reg No"
 "_senderTitle","Avsändarens  titel, företag",,"Sender's position, company"
 "_setAllFields","Var vänlig namnge alla skapade fält",,"Please name all created fields"
+"_placeAllFields","Var vänlig placera alla skapade fält i dokumentet",,"Please place all created fields on the document"
 "_share","Dela",,"Share"
 "_shared","Delad",,"Shared"
 "_showFileImagesError","Vi beklagar, det var något problem med formateringen på din PDF. Vänligen kontrollera dokumentet och försök igen.",,"We are sorry, something was wrong with the format in your PDF. Please check the document and try again."
