@@ -8,7 +8,7 @@ pagingFooter=	<div class="table-paginate">
                         </div>
                         <div class="right"></div>
                     </a>
-                   $endif$ 
+                   $endif$
                    $if(elements.lastPageAvaible)$
                     <a href="$currentlink$&amp;page=$elements.nextPage$" class="btn-tiny black float-right">
                         <div class="left"></div>
@@ -23,59 +23,22 @@ pagingFooter=	<div class="table-paginate">
                         $if(!elements.none)$
 						 <strong>$elements.min$$if(!elements.single)$-$elements.max$ $endif$ $_of()$ $elements.total$</strong>
                         $endif$
-						 $pages:{page | 
+						 $pages:{page |
                          $if(page.current)$
                           $page.nr$
                          $else$
                           <a href="$currentlink$&amp;page=$page.nr$">$page.nr$</a>
                          $endif$
                         }$
-                        
+
 					</div>
 					<div class="clearfix"></div>
 				</div>
-###		
+###
 searchBox=
 <div class="searchBox float-right">
 <a href="#" class="btn-tiny black float-right submit"><div class="left"></div><div class="label">$_searchBoxSearch()$</div><div class="right"></div></a>
 <input type="text" class="tab-search float-right" name="search" value="$if(params.search)$$params.search$$endif$" infotext="$infotext$" />
 
 </div>
-###    
-####
-listLocalDialogs=
-<div class="localdialogs">
-
-  <form method="post" name="form" action="$currentlink$" class="overlay redirectsubmitform" id="dialog-list-delete-confirm" rel=".listForm">
-    <input type="hidden" name="archive" value="true" />
-    <input type="hidden" name="remove" value="true" />
-    <div class="modal-container">
-      <div class="modal-header">
-        <span class="modal-icon message"></span>
-        <span class="modal-title">
-          <h2>$_delete()$</h2>
-        </span>
-        <a class="modal-close close"> </a>
-      </div>
-      <div class="modal-body">
-        <div class="modal-content">
-          <div>
-            $_listLocalDialogsBody()$<span class="deletionDetails"></span>?
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">        
-        <a class="cancel close float-left" style="height:40px;">  
-          <div class="label">$_cancel()$</div>
-        </a>
-        <a class="btn-small green float-right submiter" href="#">
-          <div class="left"></div>
-          <div class="label"><p>$_ok()$</p></div>
-          <div class="right"></div>
-        </a>
-      </div>
-    </div>
-  </form>
-
-</div>
-####
+###
