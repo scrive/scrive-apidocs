@@ -134,22 +134,20 @@ data DocumentCreationRequest = DocumentCreationRequest {
 data InvolvedRequest = InvolvedRequest {
   irRole        :: [SignatoryRole],
   irData        :: [SignatoryField],
-  irAttachments :: [AttachmentRequest],
+  irAttachments :: [SignatoryAttachment],
   irSignOrder   :: Maybe Int
   }
                      deriving (Show, Eq)
 
-data AttachmentRequest = AttachmentRequest {
-  arName        :: String,
-  arDescription :: String
-  }
-                       deriving (Show, Eq)
-
-arFromJSON :: JSValue -> Either String AttachmentRequest
+arFromJSON :: JSValue -> Either String SignatoryAttachment
 arFromJSON jsv = do
   JSString (JSONString name) <- jsget "name" jsv
   JSString (JSONString description) <- jsgetdef "description" (showJSON "") jsv
-  return $ AttachmentRequest { arName = name, arDescription = description}
+  return $ SignatoryAttachment {
+                                signatoryattachmentfile        = Nothing
+                               ,signatoryattachmentname        = name
+                               ,signatoryattachmentdescription = description
+                               }
 
 sfFromJSON :: (String, JSValue) -> Either String SignatoryField
 sfFromJSON (name, jsv) = do
