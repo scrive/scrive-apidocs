@@ -484,6 +484,25 @@ window.DocumentDataFiller = {
                 unsignedpartynotcurrent.push(signatories[i].smartname());
             }
 
+        var escapeHTML = function(s) {
+            var result = '';
+            for (var i = 0; i < s.length;++i) {
+                var c = s.charAt(i);
+                if (c == '&')
+                    result += '&amp';
+                else if (c == '\'')
+                    result += '&#39;';
+                else if (c == '"')
+                    result += '&quot;';
+                else if (c == '<')
+                    result += '&lt;';
+                else if (c == '>')
+                    result += '&gt;';
+                else
+                    result += c;
+            }
+            return result;
+        };
         var listStringMany = function(names) {
             var name0 = names.shift();
             if (names.length === 1)
