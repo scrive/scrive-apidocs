@@ -147,7 +147,7 @@ instance Show KontraLink where
     showsPrec _ (LinkScriveByMailPage locale)
       | getLang locale == LANG_SE = (++) $ localeFolder locale ++ "/scrivebymail"
       | otherwise = (++) $ localeFolder locale ++ "/scrivebymail"
-    showsPrec _ (LinkLogin locale LoginTry) = (++) $ localeFolder locale ++ "/login?"
+    showsPrec _ (LinkLogin locale LoginTry) = (++) $ localeFolder locale ++ "/login?ignore"
     showsPrec _ (LinkLogin locale (InvalidLoginInfo email)) = (++) $ localeFolder locale ++ "/?logging&email=" ++ (URL.encode . UTF.encode $ email)
     showsPrec _ (LinkLogin locale _) = (++) $ localeFolder locale ++ "/?logging"
     showsPrec _ LinkLogout = (++) "/logout"
