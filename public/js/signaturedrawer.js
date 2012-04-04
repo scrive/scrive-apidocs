@@ -7,6 +7,7 @@ var SignatureDrawer = Backbone.View.extend({
     initialize: function (args) {
         _.bindAll(this, 'render');
         this.model.view = this;
+        this.empty = true;
         this.render();
     },
     startDrawing : function()
@@ -49,6 +50,7 @@ var SignatureDrawer = Backbone.View.extend({
     },    
     drawingtoolDown : function(x,y) {
       var view = this;
+      this.empty = false;
       this.startDrawing();
       view.uped = false;
       var circleDraw = function(i) {
@@ -93,28 +95,34 @@ var SignatureDrawer = Backbone.View.extend({
 
     },
     saveImage : function(callback) {
-           var signature = this.model
-           var image = this.canvas[0].toDataURL("image/png",1.0)
-           console.log(image.length);
-           var img = new Image();
-           img.type = 'image/png';
-           img.src = image;
-           img.onload = function() {
-                var canvas = $("<canvas class='signatureCanvas' />");
-                canvas.attr("width",signature.width());
-                canvas.attr("height",signature.height());
-                canvas[0].getContext('2d').fillStyle = "#ffffff";
-                canvas[0].getContext('2d').fillRect (0,0,signature.width(),signature.height());
-                canvas[0].getContext('2d').drawImage(img,0,0,signature.width(),signature.height());
-                var image = canvas[0].toDataURL("image/jpeg",1.0);
-                console.log(image.length);
-                signature.setImage(image);
-                if (callback != undefined) callback();
-          };
+        if (this.empty) {
+          this.model.setImage("");
+          if (callback != undefined) callback();
+        } else {
+          var signature = this.model
+          var image = this.canvas[0].toDataURL("image/png",1.0)
+          console.log(image.length);
+          var img = new Image();
+          img.type = 'image/png';
+          img.src = image;
+          img.onload = function() {
+               var canvas = $("<canvas class='signatureCanvas' />");
+               canvas.attr("width",signature.width());
+               canvas.attr("height",signature.height());
+               canvas[0].getContext('2d').fillStyle = "#ffffff";
+               canvas[0].getContext('2d').fillRect (0,0,signature.width(),signature.height());
+               canvas[0].getContext('2d').drawImage(img,0,0,signature.width(),signature.height());
+               var image = canvas[0].toDataURL("image/jpeg",1.0);
+               console.log(image.length);
+               signature.setImage(image);
+               if (callback != undefined) callback();
+         };
+       }   
     },
     clear: function() {
           this.canvas[0].getContext('2d').clearRect(0,0,this.model.swidth(),this.model.sheight());
           this.canvas[0].width = this.canvas[0].width
+          this.empty  = true;
     },
     render: function () {
         var signature = this.model;
@@ -162,6 +170,7 @@ var SignatureDrawerWrapper = Backbone.View.extend({
     },
     acceptButton : function() {
         var view = this;
+        var field = this.model.field();
         var signatory = this.model.field().signatory();
         var document = signatory.document();
         if (signatory.canPadSignQuickSign())
@@ -171,8 +180,11 @@ var SignatureDrawerWrapper = Backbone.View.extend({
                     text: document.process().signbuttontext(),
                     onClick : function(){
                         view.drawer.saveImage(function(){
-                            document.sign().send();
-                            view.overlay.data('overlay').close();
+                            if (field.signature().hasImage()) {
+                                document.sign().send();
+                                view.overlay.data('overlay').close();
+                                view.overlay.detach();
+                            }    
                         });
                         return false;
                     }
@@ -185,6 +197,7 @@ var SignatureDrawerWrapper = Backbone.View.extend({
                     onClick : function(){
                         view.drawer.saveImage();
                         view.overlay.data('overlay').close();
+                        view.overlay.detach();
                         return false;
                     }
             }).input();      
@@ -229,13 +242,14 @@ var SignatureDrawerWrapper = Backbone.View.extend({
 
 window.SignatureDrawerPopup = {
     popup : function(args){
+        var popup = this;
         document.ontouchmove = function(e){
             return state;
         }
-        this.overlay = $("<div style='width:900px;' class='overlay drawing-modal'><div class='close modal-close float-right' style='margin:5px;'/></div>");
-        this.overlay.append(new SignatureDrawerWrapper({model : args.signature, overlay : this.overlay}).el);
-        $('body').append( this.overlay );
-        this.overlay.overlay({
+        popup.overlay = $("<div style='width:900px;' class='overlay drawing-modal'><div class='close modal-close float-right' style='margin:5px;'/></div>");
+        popup.overlay.append(new SignatureDrawerWrapper({model : args.signature, overlay : popup.overlay}).el);
+        $('body').append( popup.overlay );
+        popup.overlay.overlay({
             mask:  {
                 color: '#ffffff',
                 loadSpeed: 200,

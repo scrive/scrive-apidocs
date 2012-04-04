@@ -106,6 +106,8 @@ window.Field = Backbone.Model.extend({
             field.trigger("removed");
             field.off();
         });
+        if (this.isSignature())
+            this.set({"signature" : new Signature({field: this}, {silent : true})});
     },
     name : function() {
         return this.get("name");
@@ -139,7 +141,7 @@ window.Field = Backbone.Model.extend({
         return this.isStandard() || this.isSignature(); //this checks are name based
     },
     readyForSign : function(){
-        return this.value() != "" || this.canBeIgnored();
+        return (!this.isSignature() && ((this.value() != "") || (this.canBeIgnored()))) || (this.isSignature() && this.signature().hasImage());
     },
     nicename : function() {
         var name = this.name();
@@ -212,7 +214,9 @@ window.Field = Backbone.Model.extend({
     },
     isSignature : function() {
         return this.name() == "signature";
-
+    },
+    signature : function() {
+        return this.get("signature");
     },
     isReady: function(){
       return this.get("fresh") == false;

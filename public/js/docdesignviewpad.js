@@ -72,9 +72,10 @@ window.PadDesignViewUtilsModel = Backbone.Model.extend({
                 });
               else if (gssignatory.signatoryid() != 0 &&  padDesignViewUtilsModel.giveForSigning())
                   gssignatory.addtoPadQueue().sendAjax(function() {
-                      window.open(gssignatory.padSigningURL(),'Pad signing');
-                      window.location = window.location;                     
-                });
+                      window.location = gssignatory.padSigningURL();               
+                })
+              else
+                 window.location = link;
        });
        ndocument.recall();
    }           
@@ -114,7 +115,7 @@ window.PadDesignViewUtilsView = Backbone.View.extend({
            var model = this.model;
            box.empty();
            box.addClass('padoptions');
-           var giveForSigningRadio = $("<input type='radio' name='padsend'/>")
+           var giveForSigningRadio = $("<input type='checkbox' name='padsend'/>")
            var giveForSigningSelector = this.sigSelector(function() {return model.giveForSigningSignatory()}, function(a) {model.setGiveForSigningSignatory(a)});
            var giveForSigningLabel =  $("<span class='label'/>").append($("<span/>").text(localization.pad.signingOnSameDeviceFor)).append(giveForSigningSelector);
            var giveForSigning = $("<div class='padoption'/>").append(giveForSigningRadio)
@@ -127,7 +128,7 @@ window.PadDesignViewUtilsView = Backbone.View.extend({
             })
 
            
-           var sendToPadRadio = $("<input type='radio' name='padsend'/>")
+           var sendToPadRadio = $("<input type='checkbox' name='padsend'/>")
            var sendToPadSelector = this.sigSelector(function() {return model.sendToPadSignatory()}, function(a) {model.setSendToPadSignatory(a)})
            var sendToPadLabel =  $("<span class='label'/>").append($("<span/>").text(localization.pad.addToPadQueueFor)).append(sendToPadSelector);
            var sendToPad = $("<div class='padoption'/>").append(sendToPadRadio)
@@ -138,7 +139,11 @@ window.PadDesignViewUtilsView = Backbone.View.extend({
            sendToPadRadio.change(function() {
                model.toogleSendToPad();
             })
-           box.append(giveForSigning).append(sendToPad);
+
+           if (BrowserInfo.isIpad())
+            box.append(giveForSigning)
+           else
+            box.append(sendToPad);
            return this; 
     }
 });

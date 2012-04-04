@@ -267,8 +267,8 @@ allowsIdentification :: Document -> IdentificationType -> Bool
 allowsIdentification document idtype = idtype `elem` documentallowedidtypes document
 
 {- | Determine is document is designed to be signed using pad - this determines if invitation emais are send and if author can get access to siglink -}
-invitationMailsAvaible :: Document -> Bool
-invitationMailsAvaible doc = not $ doc `allowsIdentification` PadIdentification
+sendMailsDurringSigning :: Document -> Bool
+sendMailsDurringSigning doc = not $ doc `allowsIdentification` PadIdentification
 
 {- |
     Checks whether a signatory link is eligible for sending a reminder.

@@ -145,7 +145,7 @@ var SignaturePlacementViewForDrawing = Backbone.View.extend({
         _.bindAll(this, 'render', 'clear');
         this.model.bind('removed', this.clear);
         this.model.bind('change', this.render)
-        this.signature = new Signature({field : this.model})
+        this.signature = this.model.signature();
         this.render();
     },
     tagname: 'div',
@@ -188,9 +188,9 @@ var SignaturePlacementViewForDrawing = Backbone.View.extend({
             }
             else {
                 box.css("border-color","#DDDDDD");
-                var img = $("<img alt='signature'/>");
-                box.attr("width",view.signature.width());
-                box.attr("height",view.signature.height());
+                var img = $("<img alt=''/>");
+                box.css("width",view.signature.width());
+                box.css("height",view.signature.height());
                 img.attr('src',this.signature.image());
                 box.append(img);
             }
@@ -205,7 +205,7 @@ var SignaturePlacementView = Backbone.View.extend({
         _.bindAll(this, 'render', 'clear');
         this.model.bind('removed', this.clear)
         this.model.bind('change', this.render)
-        this.signature = new Signature({field : this.model})
+        this.signature = this.model.signature();
         this.render();
     },
     tagname: 'div',
@@ -225,7 +225,8 @@ var SignaturePlacementView = Backbone.View.extend({
             else
              sname =  process.signatoryname() + (process.numberedsignatories() ? " " + signatory.signIndex() : "");
         }
-        box.text(localization.signature.placeFor(sname));
+        if (!this.signature.hasImage())
+            box.text(localization.signature.placeFor(sname));
         return box;
     },
     render: function() {
@@ -248,9 +249,9 @@ var SignaturePlacementView = Backbone.View.extend({
                 })
             }
             else {
-                var img = $("<img alt='signature'/>");
-                box.attr("width",view.signature.width());
-                box.attr("height",view.signature.height());
+                var img = $("<img alt=''/>");
+                box.css("width",view.signature.width());
+                box.css("height",view.signature.height());
                 img.attr('src',this.signature.image());
                 box.append(img);
             }
@@ -264,7 +265,7 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
         _.bindAll(this, 'render', 'clear');
         this.model.bind('removed', this.clear);
         this.model.view = this;
-        this.signature = new Signature({field : this.model.field()});
+        this.signature = this.model.field().signature();
         this.render();
     },
     clear: function() {

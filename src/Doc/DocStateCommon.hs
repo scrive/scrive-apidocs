@@ -27,7 +27,7 @@ signLinkFromDetails' :: SignatoryDetails
                      -> SignatoryLink
 signLinkFromDetails' details roles magichash =
   SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 0
-                , signatorydetails = details
+                , signatorydetails = signatoryLinkClearDetails details
                 , signatorymagichash = magichash
                 , maybesignatory = Nothing
                 , maybesupervisor = Nothing  -- This field is now deprecated should use maybecompany instead
@@ -44,6 +44,13 @@ signLinkFromDetails' details roles magichash =
                 , signatoryattachments = []
                 }
 
+signatoryLinkClearDetails :: SignatoryDetails -> SignatoryDetails
+signatoryLinkClearDetails sd = sd {signatoryfields = map signatoryLinkClearField $ signatoryfields sd}
+
+signatoryLinkClearField :: SignatoryField -> SignatoryField
+signatoryLinkClearField field =  case sfType field of
+                                      SignatureFT -> field {sfValue = reverse $ dropWhile ((/=) '|' ) $ reverse $ sfValue field}
+                                      _ -> field
 
 emptySignatoryFields :: [SignatoryField]
 emptySignatoryFields = [

@@ -6,8 +6,8 @@
 
 window.Signature = Backbone.Model.extend({
     defaults: {
-        width :  250,
-        height : 100
+        width :  260,
+        height : 102
         //image : undefined
         //field : undefined
 

@@ -438,7 +438,7 @@ window.Signatory = Backbone.Model.extend({
         return canSign;
     },
     canPadSignQuickSign : function() {
-       return this.document().padAuthorization() && this.canSign() && !this.document().hasAnyAttachments() && this.allFieldsButSignatureReadyForSign();
+       return this.document().padAuthorization() && this.canSign() && !this.document().hasAnyAttachments() && this.allFieldsButSignatureDontRequiredFilling();
     },
     allAttachemntHaveFile: function() {
         return _.all(this.attachments(), function(attachment) {
@@ -450,9 +450,9 @@ window.Signatory = Backbone.Model.extend({
             return field.readyForSign();
         });
     },
-    allFieldsButSignatureReadyForSign: function() {
+    allFieldsButSignatureDontRequiredFilling: function() {
         return _.all(this.fields(), function(field) {
-            return field.readyForSign() || field.isSignature();
+            return (field.isClosed() || field.placements().length == 0) || field.isSignature();
         });
     },
     signatureReadyForSign: function() {
@@ -645,7 +645,7 @@ window.SignatoryStandardView = Backbone.View.extend({
                                         {
                                            signatory.addtoPadQueue(function(resp) {
                                                if (resp.error == undefined)
-                                                   window.open(signatory.padSigningURL(),'Pad signing');
+                                                   window.location = signatory.padSigningURL();
                                                else
                                                    FlashMessages.add({
                                                        content: localization.pad.addToPadQueueNotAdded,
@@ -782,12 +782,14 @@ window.SignatoryStandardView = Backbone.View.extend({
             && signatory.document().signingInProcess()
             && signatory.canSign()
             && signatory.document().padAuthorization()) {
-                  if (!signatory.author())
+                  if (!signatory.author() && BrowserInfo.isIpad())
                       container.append(this.giveForSigningOnThisDeviceOption());
-                  if (signatory.inpadqueue())
+                  if (!BrowserInfo.isIpad()) {
+                    if (signatory.inpadqueue())
                       container.append(this.removeFromPadQueueOption());
-                  else    
+                    else    
                       container.append(this.addToPadQueueOption());
+                  }
            }
 
                   
