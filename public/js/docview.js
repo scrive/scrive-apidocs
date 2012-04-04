@@ -170,6 +170,8 @@ window.DocumentUploadedSignatoryAttachmentsView = Backbone.View.extend({
   }
 });
 
+// Remove sign guard (Lukas's choice) --Eric
+/*
 window.GuardModel = Backbone.Model.extend({
   defaults: {
     ischecked: false,
@@ -210,8 +212,10 @@ window.GuardModel = Backbone.Model.extend({
     }
   }
 });
+*/
 
-
+// Remove sign guard (Lukas's choice) --Eric
+/*
 window.DocumentSignGuardView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
@@ -263,6 +267,7 @@ window.DocumentSignGuardView = Backbone.View.extend({
     }
   }
 });
+*/
 
 window.DocumentSignButtonView = Backbone.View.extend({
   initialize: function(args) {
@@ -301,6 +306,8 @@ window.DocumentSignConfirmation = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'popup');
     _.bindAll(this, 'createContentElems');
+    // Remove sign guard (Lukas's choice) --Eric
+    /*
     var guardWarnText = this.model.process().signguardwarntext();
     this.guardModel = new GuardModel({
       onAlert: function() {
@@ -311,6 +318,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       },
       isrequired: this.model.process().requiressignguard()
     });
+    */
   },
   createElegButtonElems: function() {
     var document = this.model;
@@ -342,9 +350,9 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       icon: $("<span class='btn-symbol cross' />"),
       text: document.process().signbuttontext(),
       onClick: function() {
-        if (guardModel.ensureChecked()) {
-          document.sign().send();
-        }
+        // Remove sign guard (Lukas's choice) --Eric
+        //if (guardModel.ensureChecked())
+        document.sign().send();
       }
     }).input();
   },
@@ -372,16 +380,20 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       return content;
     }
   },
+  // Remove sign guard (Lukas's choice) -- Eric
+  /*
   createSignGuardElems: function() {
     return $(new DocumentSignGuardView({
       model: this.guardModel,
       el: $("<div />")
     }).el);
   },
+  */
   createContentElems: function() {
     var content = $("<div />");
     content.append(this.createPreambleElems());
-    content.append(this.createSignGuardElems());
+    // Remove sign guard (Lukas's choice) -- Eric
+    //content.append(this.createSignGuardElems());
     return content;
   },
   popup: function() {
