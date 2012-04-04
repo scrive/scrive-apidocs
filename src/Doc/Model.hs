@@ -167,9 +167,7 @@ documentOrderByToSQL :: DocumentOrderBy -> SQL
 documentOrderByToSQL DocumentOrderByTitle = SQL "documents.title" []
 documentOrderByToSQL DocumentOrderByMTime = SQL "documents.mtime" []
 documentOrderByToSQL DocumentOrderByStatusClass = 
-  SQL ("(COALESCE((SELECT min(" ++ statusClassCaseExpression ++ ")"
-       ++         "  FROM signatory_links"
-       ++         " WHERE signatory_links.document_id = documents.id), 3))") []
+  SQL (documentStatusClassExpression) []
 documentOrderByToSQL DocumentOrderByType = SQL "documents.type" []
 documentOrderByToSQL DocumentOrderByProcess = SQL "documents.process" []
 
@@ -438,6 +436,7 @@ documentsSelectors = intercalate ", " [
   , "mail_footer"
   , "region"
   , "sharing"
+  , documentStatusClassExpression
   ]
 
 selectDocumentsSQL :: SQL
@@ -454,7 +453,7 @@ fetchDocuments = foldDB decoder []
      process functionality ctime mtime days_to_sign timeout_time invite_time
      invite_ip dlog invite_text allowed_id_types cancelationreason rejection_time
      rejection_signatory_link_id rejection_reason tags service deleted mail_footer
-     region sharing = Document {
+     region sharing status_class = Document {
          documentid = did
        , documenttitle = title
        , documentsignatorylinks = []
@@ -487,18 +486,24 @@ fetchDocuments = foldDB decoder []
        , documentauthorattachments = []
        , documentui = DocumentUI mail_footer
        , documentregion = region
+       , documentstatusclass = toEnum (status_class :: Int)
        } : acc
+
+documentStatusClassExpression :: String
+documentStatusClassExpression =
+  "(COALESCE((SELECT min(" ++ statusClassCaseExpression ++ ")"
+  ++         "  FROM signatory_links"
+  ++         " WHERE signatory_links.document_id = documents.id AND ((signatory_links.roles&1)<>0)), 0))"
 
 statusClassCaseExpression :: String
 statusClassCaseExpression =
   "CASE "
-  ++ " WHEN documents.status IN (7,8) THEN 1"                      -- (errorStatus documentstatus, SCCancelled)
-  ++ " WHEN documents.status = 1 THEN 0"                           -- (documentstatus==Preparation, SCDraft)
-  ++ " WHEN documents.status IN (4,5,6) THEN 1"                    -- (documentstatus==Canceled, SCCancelled)
+  ++ " WHEN documents.status IN (1) THEN 0"                        -- (documentstatus==Preparation, SCDraft)
+  ++ " WHEN documents.status IN (4,5,6,7,8) THEN 1"                -- (documentstatus==Canceled, SCCancelled)
   ++ " WHEN signatory_links.sign_time IS NOT NULL THEN 6"          -- (isJust maybesigninfo, SCSigned)
   ++ " WHEN signatory_links.seen_time IS NOT NULL THEN 5"          -- (isJust maybeseeninfo, SCOpened)
   ++ " WHEN signatory_links.read_invitation IS NOT NULL THEN 4"    -- (isJust maybereadinvite, SCRead)
-  ++ " WHEN signatory_links.invitation_delivery_status = 2 THEN 1" -- (invitationdeliverystatus==Undelivered,  SCCancelled)
+  ++ " WHEN signatory_links.invitation_delivery_status = 2 THEN 1" -- (invitationdeliverystatus==Undelivered, SCCancelled)
   ++ " WHEN signatory_links.invitation_delivery_status = 1 THEN 3" -- (invitationdeliverystatus==Delivered, SCDelivered)
   ++ " ELSE 2"                                                     -- SCSent
   ++ " END"
@@ -565,7 +570,6 @@ fetchSignatoryLinks = do
      signinfo_personal_number_verified roles csv_title csv_contents csv_signatory_index
      deleted really_deleted status_class
      safileid saname sadesc
-      | status_class == (5::Int) && False       = undefined -- never happens, ensures typing of status_class
       | docid == nulldocid                      = (document_id, [link], linksmap)
       | docid /= document_id                    = (document_id, [link], M.insertWith' (++) docid links linksmap)
       | signatorylinkid ($(head) links) == slid = (docid, addSigAtt ($(head) links) : $(tail) links, linksmap)
@@ -614,6 +618,7 @@ fetchSignatoryLinks = do
           , signatorylinkcsvupload =
               CSVUpload <$> csv_title <*> csv_contents <*> csv_signatory_index
           , signatoryattachments = sigAtt
+          , signatorylinkstatusclass = toEnum (status_class :: Int)
           }
 
 insertSignatoryLinkAsIs :: DocumentID -> SignatoryLink -> DB (Maybe SignatoryLink)

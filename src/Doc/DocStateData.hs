@@ -33,6 +33,7 @@ module Doc.DocStateData (
   , TimeoutTime(..)
   , AuthorAttachment(..)
   , SignatoryAttachment(..)
+  , StatusClass(..)
   , getFieldOfType
   , getValueOfType
   , documentHistoryToDocumentLog
@@ -74,6 +75,31 @@ instance Show TimeoutTime where
 newtype SignOrder = SignOrder { unSignOrder :: Integer }
   deriving (Eq, Ord)
 $(newtypeDeriveUnderlyingReadShow ''SignOrder)
+
+
+{- |
+    We want the documents to be ordered like the icons in the bottom
+    of the document list.  So this means:
+    0 Draft - 1 Cancel - 2 Fall due - 3 Sent - 4 Opened - 5 Signed
+-}
+
+data StatusClass = SCDraft
+                  | SCCancelled
+                  | SCSent
+                  | SCDelivered
+                  | SCRead
+                  | SCOpened
+                  | SCSigned
+                  deriving (Eq, Ord, Enum)
+
+instance Show StatusClass where
+  show SCDraft = "draft"
+  show SCCancelled = "cancelled"
+  show SCSent = "sent"
+  show SCDelivered = "delivered"
+  show SCRead = "read"
+  show SCOpened = "opened"
+  show SCSigned = "signed"
 
 data IdentificationType = EmailIdentification
                         | ELegitimationIdentification
@@ -140,6 +166,7 @@ data SignatoryLink = SignatoryLink {
   , signatorylinkreallydeleted :: Bool -- ^ when true it means that the doc has been removed from the recycle bin
   , signatorylinkcsvupload     :: Maybe CSVUpload
   , signatoryattachments       :: [SignatoryAttachment]
+  , signatorylinkstatusclass   :: StatusClass
   } deriving (Eq, Ord, Show)
 
 data SignatoryRole = SignatoryPartner | SignatoryAuthor
@@ -393,6 +420,7 @@ data Document = Document {
   , documentauthorattachments      :: [AuthorAttachment]
   , documentui                     :: DocumentUI
   , documentregion                 :: Region
+  , documentstatusclass            :: StatusClass
   } deriving (Eq, Ord, Show)
 
 instance HasLocale Document where

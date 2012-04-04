@@ -41,8 +41,6 @@ module Doc.DocView (
   , uploadPage
   , documentJSON
   , csvLandPage
-  , documentStatusClass
-  , signatoryStatusClass
   ) where
 
 import AppView (kontrakcja, standardPageFields)
@@ -76,7 +74,6 @@ import DB.Classes
 import Text.JSON.Fields as JSON (json)
 import qualified Text.JSON.Fields as JSON (field)
 import Util.JSON
-
 
 modalMismatch :: TemplatesMonad m => String -> SignatoryLink -> m FlashMessage
 modalMismatch msg author = toModal <$>  do
@@ -263,7 +260,7 @@ signatoryJSON doc viewer siglink = do
       , ("readdate", return $ jsonDate $ maybereadinvite siglink)
       , ("rejecteddate", return $ jsonDate $ rejectedDate)
       , ("fields", liftIO $ signatoryFieldsJSON doc siglink)
-      , ("status", return $ JSString $ toJSString  $ show $ signatoryStatusClass doc siglink)
+      , ("status", return $ JSString $ toJSString  $ show $ signatorylinkstatusclass siglink)
       , ("attachments", fmap JSArray $ sequence $ signatoryAttachmentJSON <$> signatoryattachments siglink)
       , ("csv", case (csvcontents <$> signatorylinkcsvupload siglink) of
                      Just a1 ->  return $ JSArray $ for a1 (\a2 -> JSArray $ map (JSString . toJSString) a2 )
@@ -405,64 +402,8 @@ authorJSON mauthor mcompany = json $ do
     JSON.field "phone"  $ userphone <$> userinfo <$> mauthor
     JSON.field "position"  $ usercompanyposition <$> userinfo <$>mauthor
 
-{- |
-    We want the documents to be ordered like the icons in the bottom
-    of the document list.  So this means:
-    0 Draft - 1 Cancel - 2 Fall due - 3 Sent - 4 Opened - 5 Signed
--}
 
-data StatusClass = SCDraft
-                  | SCCancelled
-                  | SCSent
-                  | SCDelivered
-                  | SCRead
-                  | SCOpened
-                  | SCSigned
-                  deriving (Eq, Ord)
 
-instance Show StatusClass where
-  show SCDraft = "draft"
-  show SCCancelled = "cancelled"
-  show SCSent = "sent"
-  show SCDelivered = "delivered"
-  show SCRead = "read"
-  show SCOpened = "opened"
-  show SCSigned = "signed"
-
-signatoryStatusClass :: Document -> SignatoryLink -> StatusClass
-signatoryStatusClass
-  Document {
-    documentstatus
-  }
-  SignatoryLink {
-    maybesigninfo
-  , maybeseeninfo
-  , maybereadinvite
-  , invitationdeliverystatus
-  } =
-  caseOf [
-      (errorStatus documentstatus, SCCancelled)
-    , (documentstatus==Preparation, SCDraft)
-    , (documentstatus==Canceled, SCCancelled)
-    , (documentstatus==Rejected, SCCancelled)
-    , (documentstatus==Timedout, SCCancelled)
-    , (isJust maybesigninfo, SCSigned)
-    , (isJust maybeseeninfo, SCOpened)
-    , (isJust maybereadinvite, SCRead)
-    , (invitationdeliverystatus==Undelivered,  SCCancelled)
-    , (invitationdeliverystatus==Delivered, SCDelivered)
-    ] SCSent
-  where
-      errorStatus (DocumentError _) = True
-      errorStatus _ = False
-
-documentStatusClass :: Document -> StatusClass
-documentStatusClass doc =
-  case (map (signatoryStatusClass doc) $ getSignatoryPartnerLinks doc) of
-    [] -> SCDraft
-    xs -> minimum xs
-
---
 showFileImages :: TemplatesMonad m => DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> FileID -> JpegPages -> m String
 showFileImages _ _ _ JpegPagesPending =
   renderTemplateM "showFileImagesPending" ()

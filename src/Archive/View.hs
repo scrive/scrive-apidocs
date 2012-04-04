@@ -33,7 +33,6 @@ import Control.Monad.Reader
 import Text.JSON
 import Data.List (intercalate)
 
-import Doc.DocView
 import Util.JSON
 import Doc.DocUtils
 
@@ -110,7 +109,7 @@ docFieldsListForJSON :: (TemplatesMonad m) => KontraTimeLocale -> MinutesTime ->
 docFieldsListForJSON tl crtime doc =  propagateMonad [
     ("id", return $ show $ documentid doc),
     ("title",return $ documenttitle doc),
-    ("status", return $ show $ documentStatusClass doc),
+    ("status", return $ show $ documentstatusclass doc),
     ("party", return $ intercalate ", " $ map getSmartName $ getSignatoryPartnerLinks doc),
     ("partner", return $ intercalate ", " $ map getSmartName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)),
     ("partnercomp", return $ intercalate ", " $ map getCompanyName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)),
@@ -133,7 +132,7 @@ docFieldsListForJSON tl crtime doc =  propagateMonad [
 
 signatoryFieldsListForJSON :: (TemplatesMonad m) => KontraTimeLocale -> MinutesTime -> Document ->  SignatoryLink -> m [(String,String)]
 signatoryFieldsListForJSON tl crtime doc sl = propagateMonad [
-    ("status", return $ show $ signatoryStatusClass doc sl ),
+    ("status", return $ show $ signatorylinkstatusclass sl ),
     ("name", return $ getSmartName sl),
     ("time", return $ fromMaybe "" $ (showDateAbbrev tl crtime) <$> (sign `mplus` reject `mplus` seen `mplus` open)),
     ("invitationundelivered", return $ show $ isUndelivered sl && Pending == documentstatus doc)

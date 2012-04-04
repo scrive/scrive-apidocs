@@ -849,11 +849,14 @@ testCancelDocumentCancelsDocument = doTimes 10 $ do
   when (isLeft edoc) $ Log.debug (fromLeft edoc)
   assertRight edoc
   let (Right canceleddoc) = edoc
+  let doNotCompareStatusClass x = x { signatorylinkstatusclass = SCDraft }
   validTest $ do
     assertEqual "In canceled state" Canceled (documentstatus canceleddoc)
     assertEqual "Updated modification time" time (documentmtime canceleddoc)
     assertEqual "Matching cancellation reason" (Just ManualCancel) (documentcancelationreason canceleddoc)
-    assertEqual "Siglinks are unchanged" (documentsignatorylinks doc) (documentsignatorylinks canceleddoc)
+    assertEqual "Siglinks are unchanged" 
+                  (map doNotCompareStatusClass (documentsignatorylinks doc))
+                  (map doNotCompareStatusClass (documentsignatorylinks canceleddoc))
     assertEqual "Doc title is unchanged" (documenttitle doc) (documenttitle canceleddoc)
 
 testCancelDocumentReturnsLeftIfDocInWrongState :: DB ()
