@@ -47,7 +47,7 @@ documentJSONTests = testGroup "Document JSON tests" [
              let s = (fromJSONRational $ fromRight $ jsget "status" (jsonDocumentForSignatory doc)) in
              0 <= s && s <= 9),
     testProperty "Pending"
-    (\doc -> documentstatus doc == Pending || documentstatus doc == AwaitingAuthor ==>
+    (\doc -> documentstatus doc == Pending ==>
              let s = (fromJSONRational $ fromRight $ jsget "status" (jsonDocumentForSignatory doc)) in
              10 <= s && s <= 19),
     testProperty "Rejected"

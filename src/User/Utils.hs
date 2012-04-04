@@ -7,7 +7,6 @@ import DB.Classes
 import Doc.DocStateData
 import Company.Model
 import Kontra
-import KontraError
 import KontraLink
 import User.Model
 import Util.SignatoryLinkUtils

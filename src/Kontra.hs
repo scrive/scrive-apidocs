@@ -1,7 +1,7 @@
-module Kontra
-    ( Context(..)
-    , Kontrakcja
-    , KontraMonad(..)
+module Kontra 
+    ( module KontraError
+    , module KontraMonad
+    , module Context
     , Kontra(..)
     , Kontra'(..)
     , runKontra'
@@ -18,6 +18,8 @@ module Kontra
     , newAccountCreatedLink
     , runDBOrFail
     , queryOrFail
+    , getAsString
+    , getDataFnM
     , currentService
     , currentServiceID
     , HasService(..)
@@ -30,6 +32,7 @@ import API.Service.Model
 import ActionSchedulerState
 import Context
 import Control.Applicative
+import Control.Logic
 import Control.Monad.Error (MonadError, ErrorT, runErrorT)
 import Control.Monad.Reader
 import Control.Monad.State
@@ -113,8 +116,6 @@ onlyAdmin m = ifM (isAdmin <$> getContext) m respond404
 onlySalesOrAdmin :: Kontrakcja m => m a -> m a
 onlySalesOrAdmin m = ifM ((isAdmin ||^ isSales) <$> getContext) m respond404
 
-
-
 {- |
     Will 404 if the testing backdoor isn't open.
 -}
@@ -187,6 +188,16 @@ queryOrFail :: (MonadError KontraError m, DBMonad m, Monad m, MonadIO m, DBQuery
 queryOrFail q = do
   mres <- runDBQuery q
   guardJust mres
+
+-- data fetchers specific to Kontra
+
+getAsString :: (HasRqData m, MonadIO m, ServerMonad m, MonadError KontraError m) => String -> m String
+getAsString = getDataFnM . look
+
+-- | Extract data from GET or POST request. Fail with 'internalError' if param
+-- variable not present or when it cannot be read.
+getDataFnM :: (HasRqData m, MonadIO m, ServerMonad m, MonadError KontraError m) => RqData a -> m a
+getDataFnM fun = either (const internalError) return =<< getDataFn fun
 
 -- | Current service id
 

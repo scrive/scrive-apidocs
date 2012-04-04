@@ -1,7 +1,10 @@
 ###
-notFound=<strong>
-            $_notFound()$. <a href="/">$_notFoundGoHome()$.</a>
-         </strong>
+notFound=
+        <div class="notfound">
+            $_notFound()$
+
+            $_notFoundGoHome()$
+        </div>
 
 ###
 pageLogin=

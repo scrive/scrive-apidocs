@@ -9,13 +9,14 @@ module ELegitimation.BankID
 
 import Redirect
 import qualified Log
+import Control.Logic
 import Control.Monad.State
+import Doc.DocInfo
 import Doc.DocStateData as D
 import Doc.DocUtils
 import ELegitimation.ELegTransaction
 import Happstack.Server
 import Kontra
-import KontraError (internalError)
 import MagicHash (MagicHash)
 import MinutesTime
 import Misc
@@ -82,7 +83,7 @@ generateBankIDTransactionForAuthor  docid = do
     document <- guardRightM $ getDocByDocID docid
     tbs <- case documentstatus document of
         Preparation    -> getDataFnM $ look "tbs" -- tbs will be sent as post param
-        AwaitingAuthor -> getTBS document         -- tbs is stored in document
+        _ | canAuthorSignLast document -> getTBS document -- tbs is stored in document
         _              -> internalError
 
     unless (isAuthor (document, author)) internalError -- necessary because someone other than author cannot initiate eleg

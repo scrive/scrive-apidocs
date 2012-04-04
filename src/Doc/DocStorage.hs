@@ -26,7 +26,6 @@ import Doc.DocStateData
 import File.Model
 import ForkAction
 import Kontra
-import KontraError (internalError)
 import Misc
 import System.Directory
 import System.Exit

@@ -8,8 +8,8 @@
  alltid jobba nära kunden i tätt samarbete. Tyvärr har vi inte
  möjlighet att hjälpa alla målgrupper aktivt. Därför erbjuder
  vi ett supportfritt konto för alla mindre användare. 1 användare,
- 5 fria signaturer per månad och 50 dokument i lagring.</p>",,"<h3>Free for personal use</h3>
-                    <p>We offer a support free account for small users. This includes 5 free  signatures per month and storage of up to 50 documents.</p>"
+ 3 fria signaturer per månad och 50 dokument i lagring.</p>",,"<h3>Free for personal use</h3>
+                    <p>We offer a support free account for small users. This includes 3 free  signatures per month and storage of up to 50 documents.</p>"
 "_Bemefit1","Nöjdare kunder",,"More satisfied customers"
 "_Bemefit1Body","Den mest positiva feedbacken kommer inte sällan från våra kunders kunder. Scrive minskar den administrativa bördan för alla parter.","The most positive feedback often comes from our customers' customers. Scrive decrease the administrative burden of all parties.",
 "_Bemefit2","Snabbare avslut",,"Quick completion"
@@ -78,129 +78,150 @@
 "_PresentPassword","Nuvarande lösenord:",,"Present password:"
 "_PriceTableHead","<th>
 
-    <h3>Private</h3>
-                      <p>För privatperson och entreprenör.</p>
+    <h3>Basic</h3>
+                      <p>För distanssignering.</p>
                                                         </th>
                                                         <th>
 
-    <h3>Kickstart team</h3>
-                     <p>Ingen bindningstid. Börja genast.</p>
+    <h3>Branded</h3>
+                     <p>För distanssignering.</p>
                                                         </th>
                                                         <th>
 
-    <h3>Kickstart business</h3>
-                         <p>Ingen bindningstid. Börja genast.</p>
+    <h3>Advanced</h3>
+                         <p>För många olika tillämpningar.</p>
                                                         </th>
                                                         <th>
 
     <h3>Enterprise</h3>
-                           <p>För större organisationer.</p>
+                           <p> För större organisationer och speciella behov.</p>
            </th>",,"<th>
 
-    <h3>Private</h3>
-                      <p>For private use and small companies.</p>
+    <h3>Basic</h3>
+                      <p>For distance signing.</p>
                                                     </th>
                                                      <th>
 
- <h3>Kickstart team</h3>
-                  <p>No commitment. Get started now.</p>
+ <h3>Branded</h3>
+                  <p>Customize with your logo and colors.</p>
                                                  </th>
                                                   <th>
-                                                          <h3>Kickstart business</h3>
+                                                          <h3>Advanced</h3>
 
-    <p>No commitment. Get started now.</p>
+    <p>For multiple applications.</p>
                                    </th>
                                     <th>
                                             <h3>Enterprise</h3>
 
-    <p>For larger organisations.</p>
+    <p> For larger organisations and
+ special needs.
+</p>
                                                     </th>"
-"_PriceTableHighlightedColumn","<ul class=""highlight-rows"">
-                       <li class=""top"">
-                                           <h3>Kickstart business</h3>
-
-    <p>Ingen bindningstid. Börja genast.</p>
-                                                      </li>
-                                                       <li class=""odd"">2000 kr/månad</li>
-           <li>
-                   <p>20 kr/signatur</p>
-                                        </li>
-                                         <li class=""odd"">Ingen bindning</li>
-         <li>50 användare</li>
-         <li>Alla features<br /><a href=""$linkpriceplan$"">Detaljerad prisplan</a></li>
-       </ul>","<ul class=""highlight-rows"">
-                       <li class=""top"">
-                                           <h3>Kickstart business</h3>
-
-    <p>No commitment. Get started now.</p>
-                                   </li>
-                                    <li class=""odd"">200 €/month</li>
-                                                        <li>
-
-    <p>2.0 €/signature</p>
-                           </li>
-                            <li class=""odd"">No commitment</li>
-                                                        <li>50 users</li>
-                           <li>All features<br /><a href=""$linkpriceplan$"">Detailed Priceplan</a></li>
-                      </ul>","<ul class=""highlight-rows"">
-                       <li class=""top"">
-                                           <h3>Kickstart business</h3>
-
-    <p>No commitment. Get started now.</p>
-                                   </li>
-                                    <li class=""odd"">200 €/month</li>
-                                                        <li>
-
-    <p>2.0 €/signature</p>
-                           </li>
-                            <li class=""odd"">No commitment</li>
-                                                        <li>50 users</li>
-                           <li>All features<br /><a href=""$linkpriceplan$"">Detailed Priceplan</a></li>
-                      </ul>"
-"_PriceTablePriceRow","<td>Alla features<br /><a href=""$linkpriceplan$"">Detaljerad prisplan</a></td><td>Alla features<br /><a href=""$linkpriceplan$"">Detaljerad prisplan</a></td><td>Alla features<br /><a href=""$linkpriceplan$"">Detaljerad prisplan</a></td><td>Alla features<br /><a href=""$linkpriceplan$"">Detaljerad prisplan</a></td>","<td>All features<br /><a href=""$linkpriceplan$"">Detailed  price plan</a></td><td>All features<br /><a href=""$linkpriceplan$"">Detailed  price plan</a></td>                                                         <td>All features<br /><a href=""$linkpriceplan$"">Detailed  price plan</a>                                                               </td>                                                         <td>All features<br /><a href=""$linkpriceplan$"">Detailed price plan</a>                                                         </td>","<td>All features<br /><a href=""$linkpriceplan$"">Detailed
- price plan</a>
-          </td>
-           <td>All features<br /><a href=""$linkpriceplan$"">Detailed
- price plan</a>
-          </td>
-           <td>All features<br /><a href=""$linkpriceplan$"">Detailed
- price plan</a>
-
- </td>
-  <td>All features<br /><a href=""$linkpriceplan$"">Detailed price plan</a>
-                                                        </td>"
-"_PriceTableRow1","<td>0 kr/månad</td>
-                <td>500 kr/månad</td>
-                                 <td>2000 kr/månad</td>
-                                                  <td>Offert</td>",,"<td>0 €/month</td>
-                <td>50 €/month</td>
-                                 <td>200 €/month</td>
-                                                  <td>Offer</td>"
-"_PriceTableRow2","<td>5 fria signaturer/månad</td>
-                      <td>25 kr/signatur</td>
-                                             <td>20 kr/signatur</td>
-                                                        <td>Offert</td>",,"<td>5 free signatures/month</td>
-                        <td>2.5 €/signature</td>
-                                                 <td>2.0 €/signature</td>
-                                                        <td>Offer</td>"
-"_PriceTableRow3","<td>Ingen bindning</td>
-                   <td>Ingen bindning</td>
-                                          <td>Obegränsad lagring</td>
-                                                        <td>Offert</td>",,"<td>No commitment</td>                                                         <td>No commitment</td>                                                         <td>No commitment</td>                                                         <td>Offer</td>"
-"_PriceTableRow4","<td>1 användare</td>
-                  <td>10 användare</td>
-                                    <td>50 användare</td>
-                                                        <td>Offert</td>",,"<td>1 user</td>
-                   <td>10 users</td>
-                                      <td>50 users</td>
-                                                        <td>Offer</td>"
-"_PriceTableRow5","<td>Alla features</td>
-                  <td>Alla features</td>
-                                    <td>Alla features</td>
-                                                        <td>Alla features</td>",,"<td>All features</td>
-                   <td>All features</td>
-                                      <td>All features</td>
-                                                        <td>All features</td>"
+"_PriceTableHighlightedColumn","
+    <ul class=""highlight-rows"">
+        <li class=""top"">
+           <h3>Advanced</h3>
+           <p>För många olika tillämpningar.</p>
+        </li>
+        <li>Fria signaturer *</li>
+        <li> <p>Distanssignering</p> </li>
+        <li>Branding</li>
+        <li>Scrive by Mail</li>
+        <li>Pad-signering</li>
+        <li> </li>
+        <li> </li>
+        <li> </li>
+        <li> <span class='price'>299kr/månad</span><span class='price-comment'>Per användare.</span>
+        </li>
+    </ul>","
+    <ul class=""highlight-rows"">
+        <li class=""top"">
+           <h3>Advanced</h3>
+           <p>  For multiple applications.</p>
+        </li>
+        <li>Free signatures *</li>
+        <li>Signing over distance</li>
+        <li>Branding</li>
+        <li>Scrive by Mail</li>
+        <li>Pad-signing</li>
+        <li> </li>
+        <li> </li>
+        <li> </li>
+        <li> <span class='price'>29.99 €/month</span><span class='price-comment'>Per user.</span>
+        </li>
+    </ul>"
+"_PriceTablePriceRow","<td><span class='price'>99 kr/månad </span><span class='price-comment'>Per användare.</span></td>
+                       <td><span class='price'>249kr/månad </span><span class='price-comment'>Per användare.</span></td>
+                       <td><span class='price'>299kr/månad</span><span class='price-comment'>Per användare.</span></td>
+                       <td><span class='price'>Från 2999kr/månad</span><span class='price-comment'>Kontakta oss för offert!</span></td>",,"
+                       <td><span class='price'>9.99 €/month</span><span class='price-comment'>Per user.</span></td>
+                       <td><span class='price'>24.99 €/month </span><span class='price-comment'>Per user.</span></td>
+                       <td><span class='price'>29.99 €/month</span><span class='price-comment'>Per user.</span></td>
+                       <td><span class='price'>From 299 €/month</span><span class='price-comment'>Contact us for your offer!</span></td>"
+"_PriceTableRow1","<td>Fria signaturer *</td>
+                   <td>Fria signaturer *</td>
+                   <td>Fria signaturer *</td>
+                   <td>Signaturpris enligt offert</td>",,"
+                   <td>Free signatures *</td>
+                   <td>Free signatures *</td>
+                   <td>Free signatures *</td>
+                   <td>Signature price according to offer</td>"
+"_PriceTableRow2","<td>Distanssignering</td>
+                   <td>Distanssignering</td>
+                   <td>Distanssignering</td>
+                   <td>Distanssignering</td>",,"
+                   <td>Signing over distance</td>
+                   <td>Signing over distance</td>
+                   <td>Signing over distance</td>
+                   <td>Signing over distance</td>"
+"_PriceTableRow3","<td></td>
+                   <td>Branding</td>
+                   <td>Branding</td>
+                   <td>Branding</td>",,"
+                   <td></td>
+                   <td>Branding</td>
+                   <td>Branding</td>
+                   <td>Branding</td>"
+"_PriceTableRow4","<td></td>
+                   <td></td>
+                   <td>Scrive by Mail</td>
+                   <td>Scrive by Mail</td>",,"
+                   <td></td>
+                   <td></td>
+                   <td>Scrive by Mail</td>
+                   <td>Scrive by Mail</td>"
+"_PriceTableRow5","<td></td>
+                   <td></td>
+                   <td>Pad-signering</td>
+                   <td>Pad-signering</td>",,"
+                   <td></td>
+                   <td></td>
+                   <td>Pad-signing</td>
+                   <td>Pad-signing</td>"
+"_PriceTableRow6","<td></td>
+                   <td></td>
+                   <td></td>
+                   <td>Integration via Scrive API</td>",,"
+                   <td></td>
+                   <td></td>
+                   <td></td>
+                   <td>Integration by Scrive API</td>"
+"_PriceTableRow7","<td></td>
+                   <td></td>
+                   <td></td>
+                   <td>Anpassad integration</td>",,"
+                   <td></td>
+                   <td></td>
+                   <td></td>
+                   <td>Customized integration</td>"
+"_PriceTableRow8","<td></td>
+                   <td></td>
+                   <td></td>
+                   <td> Mass-signing</td>",,"
+                   <td></td>
+                   <td></td>
+                   <td></td>
+                   <td>Mass-signing</td>"
 "_Quote1","”Skönt. Snabbare vändor med kund och man slipper arkivera papper.”",,"""Nice. Faster responses from customers and no paper archiving."""
 "_Quote1By","Mikael Green, VD, Account Factory, Redovisningsbyrå",,"Mikael Green, CEO, Account Factory, Accounting firm"
 "_Quote2","”Man har mycket bättre koll på de avtal som ingåtts. Det är grejen
@@ -281,9 +302,9 @@
 "_aboutPagePerson3Body","Daniel har en bakgrund som säljare inom olika branscher och som grundare av städbolaget Blomquists Städservice. Daniel är en hejare på sociala medier och driver sin egen säljblogg där han diskuterar personlig utveckling hur säljare kan förbättra prestation och resultat. Daniel är säljare på Scrive.",,"Daniel has worked as a sales rep within many industries and was a founder of the facility services company Blomquists Städservice. Daniel is a master of social media and runs his own sales blog where he discusses personal development and how to improve sales rep performance. Daniel is a sales representative at Scrive. "
 "_aboutPagePerson3Contact","daniel@scrive.com <BR/> +46 735 44 56 81",,"daniel@scrive.com <BR/> +46 735 44 56 81"
 "_aboutPagePerson3Position","SALES REP",,"SALES REP"
-"_aboutPagePerson4","Marcus Zurek",,"Marcus Zurek"
-"_aboutPagePerson4Body","Marcus har en bakgrund ...",,"Marcus ..."
-"_aboutPagePerson4Contact","marcus@scrive.com <BR/> +46 76 52 77 513",,"marcus@scrive.com <BR/> +46 76 52 77 513"
+"_aboutPagePerson4","Joakim Larsson",,"Joakim Larsson"
+"_aboutPagePerson4Body","",,""
+"_aboutPagePerson4Contact","joakim@scrive.com <BR/>",,"joakim@scrive.com <BR/>"
 "_aboutPagePerson4Position","SALES REP",,"SALES REP"
 "_aboutPagePerson5","Daniel Dudek",,"Daniel Dudek"
 "_aboutPagePerson5Body","Daniel är Civilekonom från Handelshögskolan i Stockholm. Han har en bred bakgrund inom affärsutveckling, ledning och försäljning. Under 2011 headhuntades Daniel till verksamheten och kommer närmast från Universum där han var ansvarig för nyckelkunder på den Polska marknaden.",,"Daniel holds a Masters in Business and Economics from the Stockholm School of Economics. He has a broad background within business development, executive management and sales. During 2011 Daniel was headhunted by Scrive from Universum where he was responsible for key clients within the Polish market."
@@ -349,7 +370,7 @@
 "_clientsPageCusomer1About","Account Factory sköter bokföringen för småföretag. Bara fasta
  priser och allt på webben.",,"Account Factory manage accounting for small companies. Only fixed
  prices and everything is online."
-"_clientsPageCusomer1Web","www.accountfactory.se",,"www.accountfactory.se"
+"_clientsPageCusomer1Web","www.accountfactory.com",,"www.accountfactory.com"
 "_clientsPageCusomer2","Green Hat People",,"Green Hat People"
 "_clientsPageCusomer2About","Green hat People genomför oslagbara teambuildingaktiviteter i
  form av mobilstyrda spel där omgivningen utgör spelplanen. De
@@ -363,14 +384,14 @@
 "_clientsPageCusomer3About","Din partner för konferens, kick-off och företagsresor.",,"Your partner in conferences, kick-offs and company travels."
 "_clientsPageCusomer3Web","www.eventbook.se",,"www.eventbook.se"
 "_clientsPageCusomer4","Accenture Management Consulting",,"Accenture Management Consulting"
-"_clientsPageCusomer4About",,,
+"_clientsPageCusomer4About","Accenture är ett globalt företag inom managementkonsulting, IT och outsourcing, med mer än 246.000 medarbetare och kunder i fler än 120 länder.",," Accenture is a global management consulting, technology services and outsourcing company, with more than 246,000 people serving clients in more than 120 countries."
 "_clientsPageCusomer4Web","www.accenture.com",,"www.accenture.com"
 "_clientsPageCusomer5","COOP Nord",,"COOP Nord"
-"_clientsPageCusomer5About","",,""
-"_clientsPageCusomer5Web","www.coop.se/konsumnord",,"www.coop.se/konsumnord"
+"_clientsPageCusomer5About","Dagligvaruaktör som ägs av konsumentkooperationen, och som äger ett antal företag inklusive Coop Forum, Konsum och Coop Nära.",,"Grocery Trader owned by consumer cooperatives, which own a number of companies including Coop Forum, Coop Konsum and Coop Nära."
+"_clientsPageCusomer5Web","www.coop.se/coopnord",,"www.coop.se/coopnord"
 "_clientsPageCusomer6","IPAS",,"IPAS"
-"_clientsPageCusomer6About","",,""
-"_clientsPageCusomer6Web","",,""
+"_clientsPageCusomer6About","IPAS är ett kunskapsföretag som projekterar, driftsätter och underhåller kameraövervakningssystem.",,"IPAS is a company that installs and maintains CCTV systems."
+"_clientsPageCusomer6Web","www.ipas.se",,"www.ipas.se"
 "_clientsPageCusomerVid","Go Enterprise",,"Go Enterprise"
 "_clientsPageCusomerVidAbout","Go Enterprise är ett ungt managementbolag där vi brinner för
  tillväxt, entreprenörskap och samhällsutveckling. Genom våra
@@ -737,7 +758,7 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_forgotpassword","Glömt lösenord",,"Forgot password"
 "_h1","Signera offerter och avtal med Scrive",,"Sign tenders and contracts with Scrive"
 "_h1Body","Stäng affärer snabbare. Mindre administration. Nöjdare kunder.",,"Close deals faster. Less administration. More satisfied customers."
-"_h3CreateAccount","5 fria signaturer per månad!",,"5 free signatures per month!"
+"_h3CreateAccount","3 fria signaturer per månad!",,"3 free signatures per month!"
 "_h3CreateAccountBody","Kom igång omedelbart. Inga installationer. Inga dolda kostnader.",,"Get started instantly. No installation. No hidden costs."
 "_headerAccount","Konto",,"Account"
 "_headerArchive","Arkiv",,"Archive"
@@ -1675,7 +1696,7 @@ the document <strong>$documenttitle$</strong>. The agreement
 "_message","Meddelande",,"Message"
 "_missingNames","Du har inte namngett alla fält. Vänligen försök igen.",,"You have not names all fields. Please try again."
 "_missingSignatoryNames","Du har inte skrivit in något namn på en eller flera motparter. Vänligen försök igen.",,"You have not entered names for one or several counterparts. Please try again."
-"_missingCustomFieldValue","You have not entered values for some of your own created fields.",,"You have not entered values for some of your own created fields."
+"_missingCustomFieldValue","Du har inte fyllt i alla fält. Vänliga fyll i de rödmarkerade fälten.",,"You have not entered values for some of your own created fields."
 "_modalAccountSetupBodyAcceptTOS","Jag har läst och accepterar Scrive Allmänna Villkor",,"I have read and accept the Scrive Terms of Service"
 "_modalAccountSetupChoosePassword","Välj lösenord:",,"Choose password:"
 "_modalAccountSetupFooter","Skapa konto!",,"Create account!"
@@ -1734,8 +1755,8 @@ Thank you for creating an account with us."
 "_noTeliaInstalled","Du har inte Telias e-legitimation installerad.",,"You do not have Telia e-ID installed on your computer."
 "_nonsignatory","Ej undertecknande part",,"Non-signing party"
 "_noonehadsignedtext","Ingen har undertecknat dokumentet ännu",,"No one has signed the document yet"
-"_notFound","Sidan kunde inte hittas",,"Page not found"
-"_notFoundGoHome","Prova med startsidan istället",,"Try the start page instead"
+"_notFound","<h2>Oj! Sidan kunde inte hittas</h2><p>Du kanske hamnade här för att sidan inte finns eller har flyttats.</p>",,"<h2>Oops, the page couldn't be found</h2><p>You may have landed here because the page doesn't exist or has been moved.</p>"
+"_notFoundGoHome","<h3>Besök någon av dessa sidor istället:</h3><p><a href='/'>Startsidan</a></p><p><a href='/upload'>Min sida</a></p><p><a href='#' onClick='history.go(-1);return false;'>Bakåt</a></p>",,"<h3>Visit any of these pages instead:</h3><p><a href='/'>Homepage</a></p><p><a href='/upload'>My page</a></p><p><a href='#' onClick='history.go(-1);return false;'>Back</a></p>"
 "_of","av",,"of"
 "_offerAuthor","Avsändare",,"Sender"
 "_offerInvitationSentEntry"," skickar offerten till ",," sends the offer to "
@@ -1983,18 +2004,14 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_phone","Telefonnummer",,"Phone"
 "_placeFieldName","place",,"place"
 "_poweredByScrive","Med vänliga hälsningar",,"Best regards"
-"_priceplanPageBelowTable1","<h2>Vi tar bara betalt för signaturer när du tjänar pengar</h2>
-                    <p>Signaturer räknas endast när ett dokument signerats av samtliga parter.</p>",,"<h2>We only charge for signatures when you make money</h2>
-                    <p>Signatures are counted only when a document has been signed by all parties.</p>"
-"_priceplanPageBelowTable2","<h2>20% rabatt</h2>
-                    <p>Den månatliga supportkostnaden rabatteras med 20% vid 12 månaders bundet abonnemang.</p>",,"<h2>20% discount</h2>                     <p>We give you 20% discount on the monthly support fee if you choose to subscribe for 12 months.</p>"
-"_priceplanPageBelowTable3","<h2>Rabatter till ej vinstdrivande organisationer</h2>
-                    <p>Vi gillar engagemang och eldsjälar som
- vill förändra. Därför stödjer vi ej vinstdrivande organisationer
- genom att erbjuda bra rabatter på våra listpriser.</p>",,"<h2>Discounts for non-profit organisations</h2>                     <p>We appreciate dedicated enthusiasts who  want to make a difference. Therefore we support non-profit organisations  by offering them discounts on our list prices.</p>"
+"_priceplanPageBelowTable1","
+                     <h2>Vill du testa tjänsten först?</h2>
+                    <p>Vi bjuder på 3 fria signaturer i månaden.</p>",,"
+                    <h2>Do you want to try the service first?</h2>
+                    <p>We offer you 3 free signatures per month.</p>"
 "_priceplanPageH1","Priser",,"Prices"
 "_priceplanPageH1Body1","E-signera dokument snabbt, smidigt och säkert.",,"E-sign documents quickly, simply and securely. "
-"_priceplanPageH1Body2","Registrera dig på under minuten och få 5 fria signaturer per månad redan idag!",,"Register in less than a minute and get 5 free signatures per month today!"
+"_priceplanPageH1Body2","Registrera dig på under minuten och få 3 fria signaturer per månad redan idag!",,"Register in less than a minute and get 3 free signatures per month today!"
 "_priceplanPageMetaDescription","Signera och arkivera dina avtal elektroniskt. Välj prisplan efter
  dina behov – Free, Small, Business eller Enterprise.",,"Sign and store your contracts online. Select a price plan that
  matches your needs Small, Team, Business or Enterprise."
@@ -2030,7 +2047,7 @@ _descriptionSoon,"Beskrivning kommer snart.","Description coming soon","Descript
 "_priceplanPageTableRow8","<td>Avtals-, offert- eller orderprocess</td><td>$_descriptionSoon()$</td>",,"<td>Contract, offer or order</td><td>$_descriptionSoon()$</td>"
 "_priceplanPageTableRow9","<td>Tredjepartsverifiering</td><td>$_descriptionSoon()$</td>",,"<td>Third-party verification</td><td>$_descriptionSoon()$</td>"
 "_priceplanPageTitle","| Prisplan",,"| Price plan"
-"_priceplanPageVAT","* Alla priser är exkl moms.",,"* All prices exclude VAT"
+"_priceplanPageSignLimit","* Fria signaturer inom gränserna för normal användning. Normal användning definieras i Scrives allmänna villkor.",,"* Free signatures within normal usage limits. Normal usage is defined in Scrive terms of service."
 "_privacyPolicyPageHeader","SEKRETESSPOLICY 2012:03",,"PRIVACY POLICY (2012:03)"
 "_privacyPolicyPageP1","All information Ni delger Scrive hanteras med största möjliga försiktighet och innehållets säkerhet har högsta prioritet för Scrive. Er integritet är viktig för oss.",,"All information You share with Scrive or its Services is handled with the highest caution possible and the security of the contents is of the highest priority to Scrive. Your integrity is important to us."
 "_privacyPolicyPageP2","Nedan följer en beskrivning av hur Scrive hanterar Er information. Vid vidare frågor kontakta oss på support@skrivapa.se.",,"A description of how your data is handled by Scrive follows below. If you have further questions please contact Scrive at support@scrive.com."
@@ -2049,7 +2066,7 @@ _descriptionSoon,"Beskrivning kommer snart.","Description coming soon","Descript
 "_backToArchive","Tillbaka till Arkiv",,"Back to Archive"
 "_queryColumnBody1","Stäng affärerna snabbare. Mindre administrativt krångel. Nöjdare kunder. Scrive gör ditt liv lite enklare och lite bättre.",,"Close deals faster. Less administration. More satisfied customers. Simpler and
 simply better."
-"_queryColumnBody2","5 fria signaturer per månad. Ingen inlåsning, inga konstigheter.",,"5 free signatures per month. No commitments. Cancel any time."
+"_queryColumnBody2","3 fria signaturer per månad. Ingen inlåsning, inga konstigheter.",,"3 free signatures per month. No commitments. Cancel any time."
 "_queryColumnEmail","E-post: info@scrive.com",,"Email: info@scrive.com"
 "_queryColumnHead","Varför vänta?",,"Why wait?"
 "_queryColumnPhone","Telefon: +46 8 519 779 00",,"Phone: +46 8 519 779 00"
@@ -2288,6 +2305,7 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_senderNumber","Avsändarens Orgnr/Persnr",,"Sender's Company Reg No"
 "_senderTitle","Avsändarens  titel, företag",,"Sender's position, company"
 "_setAllFields","Var vänlig namnge alla skapade fält",,"Please name all created fields"
+"_placeAllFields","Var vänlig placera alla skapade fält i dokumentet",,"Please place all created fields on the document"
 "_share","Dela",,"Share"
 "_shared","Delad",,"Shared"
 "_showFileImagesError","Vi beklagar, det var något problem med formateringen på din PDF. Vänligen kontrollera dokumentet och försök igen.",,"We are sorry, something was wrong with the format in your PDF. Please check the document and try again."
@@ -2363,7 +2381,7 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_signupVipPageViewHead","Gratis Scrive till och med 31 december!",,"Free Scrive through December 31!"
 "_skrivapa","Scrive",,"Scrive"
 "_standardBodyWrapperBody","Ingen inlåsning, inga konstigheter.",,"No commitment. Cancel any time."
-"_standardBodyWrapperHead","5 fria signaturer per månad",,"5 free signatures per month!"
+"_standardBodyWrapperHead","3 fria signaturer per månad",,"3 free signatures per month!"
 "_startingSaveSigning","Inleder säker signering . . .",,"Initiates secure signing . . ."
 "_step1select","Välj dokument",,"Select document"
 "_step1selectIfTemplate","Välj mall",,"Select template"
@@ -2401,7 +2419,7 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_termsPage1","Ni är ansvarig för att hemlighålla och skydda Er kontoinformation, inklusive koder, och Ni ansvarar för all aktivitet som sker via Ert konto. Ni ska omedelbart meddela Scrive vid misstanke om otillåten användning eller försök till otillåten användning av Ert konto eller Er kod, eller andra brott mot säkerheten.",,"You are responsible for maintaining the confidentiality of, and protecting Your account information, including passwords. You are responsible for all activity on Your account. You shall immediately notify Scrive on suspicion of unauthorized use or attempted unauthorized use of Your account or Your code, or other security breach."
 "_termsPage1a","<h4>a. Kontovillkor:</h4>  Ni accepterar att Ni ska ge Scrive korrekt, uppdaterad och fullständig information om Er själva och Er faktura-/betalinformation. Ni ska uppdatera all kontoinformation genom att följa de procedurer som Tjänsten tillhandahåller. Ni får inte använda någon automatisk apparat, program, algoritm, metod, eller någon liknande manuell process, för att komma åt, införskaffa, kopiera, sondera, indexera, manipulera, testa eller övervaka någon del av Tjänsten eller något Innehåll, eller på något som helst sätt reproducera eller kringgå Tjänstens struktur eller presentation, eller för att försöka införskaffa något material, dokument, eller information på något annat sätt än genom den infrastruktur som skapats och gjorts tillgänglig av Scrive, eller dess samarbetspartners, i detta syfte. Ni accepterar att Ni inte kommer att göra något som utsätter Tjänstens infrastruktur, eller några system eller nätverk som är del av eller anknutna till Tjänsten för en orimlig belastning.",,"<h4>a. Account Terms:</h4> You agree that You will give Scrive accurate, current and complete information about Yourself and Your invoice/payment information. You shall update all account information by following the procedures provided by the Service. You may not use any automated device, program, algorithm, method, or any similar manual process, to access, acquire, copy, probe, index, manipulate, test or monitor any portion of the Service or any Content, or in any way reproduce or circumvent the Service's structure or presentation, or to attempt to obtain any materials, documents or information through any means other than the infrastructure created and made available by Scrive, or its partners, to that end. You agree that You will not perform any action that exposes the Service's infrastructure, or subject any systems or networks that are part of or affiliated with the Service, to an excessive burden."
 "_termsPage1b","<h4>b. Användarinnehåll:</h4> Ni accepterar att Ni inte kommer att använda Tjänsten i illegala syften, för att störa Tjänsten eller för att sprida innehåll som bryter mot integritet, upphovsrätt eller ägarrätt för någon tredje part, eller för syften som av Scrive kan uppfattas som olagliga, obscena, kränkande, förolämpande, hotfulla, vulgära eller på andra sätt klandervärda. Scrive är inte ansvarigt för misslyckanden eller förseningar orsakade av borttagning av sådant innehåll. Scrive har rätt att när som helst ta bort, blockera och processa mot Användare och Användarinnehåll som, enligt Scrive anses bryta mot Villkoren eller på annat sätt bryter mot gällande lagar och regler. Ni är själv fullt ansvarig för innehållet i Ert konto och de transaktioner som görs med Ert konto genom Tjänsten.",,"<h4>b. User Content:</h4> You agree that You will not use the Service for illegal purposes. This includes disrupting the Service, disseminating content that violates privacy, copyright or proprietary right of any Third-party, or using Scrive for any purposes that are or may be perceived as illegal, obscene, abusive, libellous, threatening, vulgar or otherwise reprehensible. Scrive is not responsible for any failure or delay in removing such content. Scrive has the right to, at any time, delete, reject and litigate against User and User content if Scrive deems it to violate the Terms or otherwise violate any applicable laws and regulations. You are fully responsible for the contents of Your account and any transactions made with Your account through the Service."
-"_termsPage1c","<h4>c. Kostnader och betalning:</h4> enskilda individer kan använda tjänsten utan kostnad med upp till 5 fria signaturer i månaden. Grupper och företag kan använda tjänsten enligt gällande prisplan på hemsidan eller enligt offererat pris från Scrive eller en auktoriserad återförsäljare. Utöver den fasta månatliga supportavgiften tar Scrive betalt av Användaren per stängd signatur enligt gällande pris på hemsidan eller anpassad offert. En stängd signatur definieras som en deltagares signatur i ett dokument som signerats av samtliga signerande parter, som tillförts ett verifikat och där dokumentet stämplats med en digital signatur. Scrive fakturerar med 14 dagar netto och tar ut en förseningsavgift på 150kr på förfallna fakturor. Räntan på försenade betalningar är 15% plus den aktuella statslåneräntan. ",,"<h4>c. Costs and payment:</h4> Individuals can use the Services free of charge for up to 5 signatures a month. Groups and companies can use the Service according to existing price plan published on the website, or according to a customized offering from Scrive or an authorised reseller.  Except for the monthly fixed support cost Scrive also charges the User per closed signature according to the existing price plan published on the website or a customized offering. A closed signature is defined as a participant signature in a document that has been signed by all signing parties, where a verification page has been added and the document has been stamped with a digital signature. Scrive invoices are due 14 days after invoice date. Reminders will be charged a late payment fee of 15 EUR. The interest rate on late payments is 15% plus the current government borrowing rate."
+"_termsPage1c","<h4>c. Kostnader och betalning:</h4> enskilda individer kan använda tjänsten utan kostnad med upp till 3 fria signaturer i månaden. Grupper och företag kan använda tjänsten enligt gällande prisplan på hemsidan eller enligt offererat pris från Scrive eller en auktoriserad återförsäljare. Utöver den fasta månatliga supportavgiften tar Scrive betalt av Användaren per stängd signatur enligt gällande pris på hemsidan eller anpassad offert. En stängd signatur definieras som en deltagares signatur i ett dokument som signerats av samtliga signerande parter, som tillförts ett verifikat och där dokumentet stämplats med en digital signatur. Scrive fakturerar med 14 dagar netto och tar ut en förseningsavgift på 150kr på förfallna fakturor. Räntan på försenade betalningar är 15% plus den aktuella statslåneräntan. ",,"<h4>c. Costs and payment:</h4> Individuals can use the Services free of charge for up to 3 signatures a month. Groups and companies can use the Service according to existing price plan published on the website, or according to a customized offering from Scrive or an authorised reseller.  Except for the monthly fixed support cost Scrive also charges the User per closed signature according to the existing price plan published on the website or a customized offering. A closed signature is defined as a participant signature in a document that has been signed by all signing parties, where a verification page has been added and the document has been stamped with a digital signature. Scrive invoices are due 14 days after invoice date. Reminders will be charged a late payment fee of 15 EUR. The interest rate on late payments is 15% plus the current government borrowing rate."
 "_termsPage1d","<h4>d. Avbrott i Tjänsten eller Uppsägning:</h4> Ni accepterar att Scrive när som helst, utan förvarning, kan frysa Ert konto eller på annat sätt stoppa Er tillgång till Tjänsten vid (1) misstankar om brott mot Villkoren, (2) våra försök att åtgärda säkerhetsbrister i mjukvaran eller för att skydda innehåll, (3) modifiering av Tjänsten, (4) oväntade operativa avbrott eller problem, (5) försenade betalningar eller (6) uttrycklig åtgärdsförfrågan från lagorgan eller andra statliga myndigheter. Ni accepterar att Scrive också har rätt att med en månads förvarning avsluta Ert konto vid (1) konstaterade brott mot Villkoren, (2) ej betalande Användares inaktivitet under mer än 12 månader, (3) betalning förfallen till Kronofogdemyndigheten eller (4) uttrycklig åtgärdsförfrågan från lagorgan eller andra statliga myndigheter. Scrive kommer inte att vara skyldig Er eller någon tredje part för att Ert konto på Tjänsten frysts eller avslutats.",,"<h4>d. Suspension of Service or termination:</h4> You agree that Scrive at any time, without notice, may freeze Your account or otherwise stop Your access to the Service for (1) alleged breach of the Terms, (2) our attempts to address safety in the software or to protect the contents, (3) modification of the Service, (4) unexpected operational interruptions or problems, (5) deferred payment or (6) explicit action requested from any legal authority or other government authorities. You agree that Scrive also is entitled to, with a week's notice, terminate Your account for (1) clear violations of the Terms, (2) non-paying Users inactivity for more than 12 months, (3) payment due to the bailiff, or (4) explicit action request from any legal authority or other government authorities. Scrive will not be liable to You or any third-party using Your account based on the Service being frozen or terminated."
 "_termsPage4Header","4. Vår kommunikation med Er",,"4. Our communication with You"
 "_termsPage4","Genom att öppna ett konto på Tjänsten ger Ni Scrive tillstånd att genom Tjänsten eller genom en representant kontakta Er på Er telefon eller e-postadress. Om Ni vill sluta få våra utskick via e-post ska Ni skicka ett e-postmeddelande till oss på support@scrive.com. Observera att Scrive fortfarande kommer att behöva kommunicera med Er via e-post om Era transaktioner och andra kontorelaterade frågor, och att dessa e-postmeddelanden inte är marknadsföring och inte elimineras genom ovanstående förfarande.",,"By opening an account on the Service, You give permission to Scrive to, through the Service or through a representative, contact You via Your phone or email address. If You do not wish to receive our mailings via email, please send an email to support@scrive.com. Please note that Scrive will still need to communicate with You via email about Your transactions and other account related issues, and that these emails are not marketing and will not be eliminated by the above procedure."

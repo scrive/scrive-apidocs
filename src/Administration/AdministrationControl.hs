@@ -46,13 +46,11 @@ import Data.Functor
 import Happstack.Server hiding (simpleHTTP)
 import Misc
 import Kontra
-import KontraError (respond404)
 import Administration.AdministrationView
 import Crypto.RNG (CryptoRNG)
 import Doc.Model
 import Doc.DocStateData
 import Company.Model
-import KontraError (internalError)
 import KontraLink
 import MinutesTime
 import System.Directory

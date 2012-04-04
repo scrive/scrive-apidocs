@@ -48,6 +48,7 @@ module Doc.DocView (
 import AppView (kontrakcja, standardPageFields)
 import API.Service.Model
 import Company.Model
+import Control.Logic
 import Doc.DocProcess
 import Doc.DocRegion
 import Doc.DocStateData
@@ -223,7 +224,7 @@ documentJSON msl _crttime doc = do
        ("region",  liftIO $ regionJSON doc ),
        ("infotext", JSString <$> toJSString <$> documentInfoText ctx doc msl),
        ("canberestarted", return $ JSBool $  isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])),
-       ("canbecanceled", return $ JSBool $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending && isNothing (documenttimeouttime doc)),
+       ("canbecanceled", return $ JSBool $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending && not (canAuthorSignLast doc) && isNothing (documenttimeouttime doc)),
        ("canseeallattachments", return $ JSBool $ isAuthor msl || isauthoradmin),
        ("timeouttime", return $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc),
        ("status", return $ JSString $ toJSString $ show $ documentstatus doc),
@@ -611,7 +612,7 @@ documentStatusFields document = do
   field "timedout" $ documentstatus document == Timedout
   field "rejected" $ documentstatus document == Rejected
   field "signed" $ documentstatus document == Closed
-  field "awaitingauthor" $ documentstatus document == AwaitingAuthor
+  field "awaitingauthor" $ canAuthorSignLast document
   field "datamismatch" $ (documentstatus document == Canceled
       && case documentcancelationreason document of
            Just (ELegDataMismatch _ _ _ _ _) -> True

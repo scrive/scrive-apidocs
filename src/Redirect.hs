@@ -17,7 +17,6 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 
 import Kontra
-import KontraError (internalError)
 import KontraLink
 import qualified Log
 import Misc
