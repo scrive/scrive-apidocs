@@ -339,7 +339,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     return Button.init({
       size: "small",
       color: "blue",
-      icon: $("<span class='btn-symbol cross' style='margin-left: 10px'/>"),
+      icon: $("<span class='btn-symbol cross' />"),
       text: document.process().signbuttontext(),
       onClick: function() {
         if (guardModel.ensureChecked()) {

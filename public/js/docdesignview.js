@@ -515,7 +515,7 @@ var DocumentDesignView = Backbone.View.extend({
             acceptButton = Button.init({
                   size: "small",
                   color : "blue",
-                  icon : $("<span class='btn-symbol cross' style='margin-left: 10px'/>"),
+                  icon : $("<span class='btn-symbol cross' />"),
                   text : document.process().signbuttontext(),
                   onClick : function() {
                       document.signByAuthor().send();
