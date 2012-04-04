@@ -446,7 +446,9 @@ $(document).ready(function() {
   };
 })(jQuery);
 
+//stuff for public pages
 $(document).ready(function() {
+  //this stuff is for the login/forgot password popup
   var emailform = $(".login-container input[type=email]");
   emailform.focus();
   if (emailform.length > 0 && emailform.val().length > 0) {
@@ -484,6 +486,8 @@ $(document).ready(function() {
     $('.recovery-container').data("overlay").load();
     return false;
   });
+
+  //this loads the tweets
   var tweetelems = $(".tweet");
   if (tweetelems.length > 0) {
     setTimeout(function() {
@@ -494,25 +498,6 @@ $(document).ready(function() {
       });
     }, 1000);
   }
-
-  // Options dropdown on archive, sub accounts etc.
-  $('.list-dd').click(function() {
-    $(this).children('.list-dd-opts').toggle();
-    var button = $(this).find(".list-dd-button");
-    if (button.hasClass("list-dd-exp")) {
-        button.removeClass("list-dd-exp");
-    } else {
-        button.addClass("list-dd-exp");
-    }
-    return false;
-  }).mouseleave(function() {
-    $.data(this, 'dd', setTimeout(function() {
-        $('.list-dd').children('.list-dd-opts').hide();
-        $('.list-dd').find(".list-dd-button").removeClass("list-dd-exp");
-    }, 500));
-  }).mouseenter(function() {
-    clearTimeout($.data(this, 'dd'));
-  });
 
   $('a.submit').altSubmit();
 });
