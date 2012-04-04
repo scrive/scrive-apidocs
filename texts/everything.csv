@@ -539,14 +539,14 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_dialogConfirmSignByAuthorElegClickHere1","Klicka här",,"Click here"
 "_dialogConfirmSignByAuthorElegClickHere2","för att läsa mer.",,"to read more."
 "_dialogConfirmSignByAuthorElegSubHead","Välj typ av e-legitimation",,"Select type of e-ID"
-"_dialogConfirmSignByAuthorHead","Underteckna",,"Sign"
+"_dialogConfirmSignByAuthorHead","Signera",,"Sign"
 "_dialogConfirmSigninviteBody","Är du säker att du vill underteckna dokumentet",,"Are you sure you want to sign the document"
 "_dialogConfirmSigninviteBody2","När du undertecknat kommer en automatisk inbjudan att skickas
  till",,"When you have signed, an invitation will be automatically sent
  to"
 "_dialogConfirmSigninviteBody2OnlyAuthor","När du undertecknat kommer det färdigställda dokumentet att skickas till samtliga parter med e-post.",,"Once signed the completed document will be emailed to all parties."
 "_dialogConfirmSigninviteBody3","med e-post.",,"by e-mail."
-"_dialogConfirmSigninviteHead","Underteckna",,"Sign"
+"_dialogConfirmSigninviteHead","Signera",,"Sign"
 "_dialogConfirmSigninviteSubBody","Har du ingen e-legitimation? Du kan ladda ned en
   e-legitimation från din internetbank eller från
    Telia.",,"No e-ID? You can download an e-ID from you online
