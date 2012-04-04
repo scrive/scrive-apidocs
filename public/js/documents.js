@@ -483,6 +483,22 @@ window.DocumentDataFiller = {
                 unsignedparty.push(signatories[i].smartname());
                 unsignedpartynotcurrent.push(signatories[i].smartname());
             }
+
+        var listStringMany = function(names) {
+            var name0 = names.shift();
+            if (names.length === 1)
+                return "<strong>" + escapeHTML(name0) + "</strong> " + localization.listand + " <strong>" + escapeHTML(names[0]) + "</strong>";
+            return "<strong>" + escapeHTML(name0) + "</strong>, " + listStringMany(names);
+        };
+        var listString = function(names) {
+            if (names.length === 0)
+                return "";
+            if (names.length === 1)
+                return "<strong>" + escapeHTML(names[0]) + "</strong>";
+            if (names.length === 2)
+                return "<strong>" + escapeHTML(names[0]) + "</strong> " + localization.and + " <strong>" + escapeHTML(names[1]) + "</strong>";
+            return listStringMany(names);
+        };
         $(".unsignedpart", object).html(listString(unsignedparty));
         $(".unsignedpartynotcurrent", object).html(listString(unsignedpartynotcurrent));
         return object;
