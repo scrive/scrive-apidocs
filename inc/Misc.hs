@@ -270,13 +270,6 @@ isHTTPS = do
   let mscheme = getHeader "scheme" rq
   return $ mscheme == Just (BS.fromString "https")
 
-getHostpart :: ServerMonad m => m String
-getHostpart = do
-  rq <- askRq
-  let hostpart = maybe "scrive.com" BS.toString $ getHeader "host" rq
-  let scheme = maybe "http" BS.toString $ getHeader "scheme" rq
-  return $ scheme ++ "://" ++ hostpart
-
 getSecureLink :: ServerMonad m => m String
 getSecureLink = (++) "https://" `liftM` currentLinkBody
 
@@ -466,7 +459,7 @@ toCSV header ls =
    BSL.concat $ map csvline (header:ls)
     where csvline line = BSL.concat $ [BSL.fromString "\"", BSL.intercalate (BSL.fromString "\",\"") (map BSL.fromString line),BSL.fromString  "\"\n"]
 
-{- Version of elem that as a value takes Maybe-}    
+{- Version of elem that as a value takes Maybe-}
 melem :: (Eq a) => Maybe a -> [a] -> Bool
 melem Nothing   _  = False
 melem (Just  e) es = elem e es
@@ -478,7 +471,7 @@ firstWithDefault (ma:mas) da = do
     case a of
          Just a' -> return a'
          Nothing -> firstWithDefault mas da
-         
+
 -- changing an element in a list
 chng :: [a] -> Int -> a -> [a]
 chng ls i v = let (h, t) = splitAt i ls
@@ -498,6 +491,6 @@ listsEqualNoOrder :: Eq a => [a] -> [a] -> Bool
 listsEqualNoOrder a b = containsAll a b && containsAll b a
 
 listDiff :: Eq a => [a] -> [a] -> ([a], [a], [a])
-listDiff a b = ([x|x <- a, x `notElem` b], 
+listDiff a b = ([x|x <- a, x `notElem` b],
                 [x|x <- a, x `elem`    b],
                 [x|x <- b, x `notElem` a])

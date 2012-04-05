@@ -25,7 +25,7 @@ checkDBTimeZone :: (String -> DB ()) -> DB ()
 checkDBTimeZone logger = do
   Just dbname <- getOne (SQL "SELECT current_catalog" [])
   logger $ "Setting '" ++ dbname ++ "' database to return timestamps in UTC"
-  _ <- kRun $ SQL ("ALTER DATABASE " ++ dbname ++ " SET TIMEZONE = 'UTC'") []
+  _ <- kRun $ SQL ("ALTER DATABASE \"" ++ dbname ++ "\" SET TIMEZONE = 'UTC'") []
   return ()
 
 -- | Checks whether database is consistent (performs migrations if necessary)
