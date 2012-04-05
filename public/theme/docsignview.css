@@ -203,8 +203,28 @@ body.signview {
   margin-bottom: 11px;
 }
 
-.signview .save input {
-  max-width: 168px;
+.signview .save .item input {
+    background-color: white;
+    border: medium none;
+    font-size: 12px;
+    height: 18px;
+    line-height: 18px;
+    margin: 0;
+    outline: medium none;
+    overflow: hidden;
+    position: relative;
+    top: 1px;
+    width: 132px;
+    font-style: italic;
+    border: 1px solid #6782A5;
+    border-radius: 2px 2px 2px 2px;
+    display: block;
+    float: left;
+    margin: 3px 5px 0 0;
+    overflow: hidden;
+    padding: 0;
+    width: 161px;
+    position: relative;
 }
 
 .signview .save .item {
