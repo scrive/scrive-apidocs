@@ -4,6 +4,7 @@ import Happstack.StaticRouting
 import Text.JSON
 import KontraMonad
 --import Util.JSON
+import Happstack.Server.SimpleHTTP (askRq)
 import Happstack.Server.Types
 import Routing
 import Doc.DocStateQuery
@@ -62,6 +63,9 @@ documentNew = api $ do
   mcompany <- case usercompany user of
     Just companyid -> lift $ runDBQuery $ GetCompany companyid
     Nothing -> return Nothing
+
+  rq <- lift $ askRq
+  Log.debug $ show $ rqHeaders rq
   
   jsons <- apiGuardL (badInput "The MIME part 'json' must exist and must be a JSON.") $ getDataFn' (look "json")
 
