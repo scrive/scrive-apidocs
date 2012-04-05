@@ -7,27 +7,27 @@
 window.DocumentSignInstructionsView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
+    this.model.bind('change', this.render);
     this.render();
   },
   isSigning: function() {
-    var signatory = this.model.currentSignatory();
-    return this.model.signingInProcess() && signatory.signs() && !signatory.hasSigned();
+    var signatory = this.model.document.currentSignatory();
+    return this.model.document.signingInProcess() && signatory.signs() && !signatory.hasSigned();
   },
   isReviewing: function() {
-    var signatory = this.model.currentSignatory();
-    return (this.model.signingInProcess() || this.model.closed()) && !signatory.signs();
+    var signatory = this.model.document.currentSignatory();
+    return (this.model.document.signingInProcess() || this.model.document.closed()) && !signatory.signs();
   },
   isSignedNotClosed: function() {
-    var signatory = this.model.currentSignatory();
-    return this.model.signingInProcess() && signatory.hasSigned() && !this.model.closed();
+    var signatory = this.model.document.currentSignatory();
+    return this.model.document.signingInProcess() && signatory.hasSigned() && !this.model.closed();
   },
   isSignedAndClosed: function() {
-    var signatory = this.model.currentSignatory();
-    return signatory.hasSigned() && this.model.closed();
+    var signatory = this.model.document.currentSignatory();
+    return signatory.hasSigned() && this.model.document.closed();
   },
   isUnavailableForSign: function() {
-    var signatory = this.model.currentSignatory();
-    return !this.model.signingInProcess() && !this.model.closed();
+    return !this.model.document.signingInProcess() && !this.model.document.closed();
   },
   text: function() {
     if (this.isSigning()) {
@@ -56,20 +56,23 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
   },
   createMenuElems: function() {
     return $(new DocumentActionMenuView({
-      model: this.model,
+      model: this.model.document,
       el: $("<div class='menuwrapper'/>")
     }).el);
   },
   render: function() {
     $(this.el).empty();
 
+    if(this.model.justSaved())
+      return this;
+
     var container = $("<div class='instructions' />");
     container.append($("<div class='headline' />").text(this.text()));
     container.append($("<div class='subheadline' />").text(this.subtext()));
 
     var smallerbit = $("<div />");
-    var timeout = this.model.timeouttime();
-    if (timeout != undefined && this.model.signingInProcess()) {
+    var timeout = this.model.document.timeouttime();
+    if (timeout != undefined && this.model.document.signingInProcess()) {
       smallerbit.append($("<div class='duedate' />").text(localization.docsignview.dueDate + " " + timeout.getFullYear() + "-" + timeout.getMonth() + "-" + timeout.getDate()));
     }
     smallerbit.append(this.createMenuElems());
@@ -343,7 +346,8 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
 window.DocumentSaveAfterSignModel = Backbone.Model.extend({
   defaults: {
     saved: false,
-    saving: false
+    saving: false,
+    justsaved: false
   },
   initialize: function(args) {
     this.document = args.document;
@@ -353,6 +357,9 @@ window.DocumentSaveAfterSignModel = Backbone.Model.extend({
   },
   hasSigned: function() {
     return this.document.currentSignatory().hasSigned();
+  },
+  justSaved: function() {
+    return this.get('justsaved');
   },
   saved: function() {
     return this.document.currentSignatory().saved() || this.get("saved");
@@ -365,7 +372,9 @@ window.DocumentSaveAfterSignModel = Backbone.Model.extend({
   },
   setSaved: function() {
     this.set({ saved: true,
-               saving: false });
+               saving: false,
+               justsaved: true});
+    this.document.trigger('change');
   },
   saveurl: function() {
     return this.document.currentSignatory().saveurl();
@@ -511,6 +520,8 @@ window.DocumentSaveAfterSignView = Backbone.View.extend({
            ajaxsuccess: function(d) {
              console.log("successfully created account");
              model.setSaved();
+             console.log(
+               model.document.currentSignatory());
            }
          }).send();
         }
@@ -527,6 +538,7 @@ window.DocumentSaveAfterSignView = Backbone.View.extend({
     $(this.el).empty();
 
     if (!this.model.hasSigned()) {
+      console.log("not rendering save view");
       return this;
     }
 
@@ -535,9 +547,9 @@ window.DocumentSaveAfterSignView = Backbone.View.extend({
     if (this.model.saving()) {
       container.addClass("saving");
     } else if (this.model.saved()) {
-      container.addClass("done");
-      container.append($("<div class='title'/>").text(localization.docsignview.createdAccountTitle));
-      container.append($("<div class='subtitle'/>").text(localization.docsignview.createdAccountSubtitle));
+      container.append($("<div class='headline'/>").text(localization.docsignview.createdAccountTitle));
+      container.append($("<div class='subheadline'/>").text(localization.docsignview.createdAccountSubtitle));
+      container.addClass('done');
     } else {
       container.append(this.createNewAccountElems());
     }
@@ -744,8 +756,8 @@ window.DocumentSignView = Backbone.View.extend({
     },
     createSignInstructionElems: function() {
       return $(new DocumentSignInstructionsView({
-        model: this.model,
-        el: $("<div/>")
+        model: this.saveAfterSignModel,
+        el: $("<div />")
       }).el);
     },
     createSaveAfterSignViewElems: function() {
@@ -1026,12 +1038,15 @@ window.DocumentSignView = Backbone.View.extend({
 
       this.container.append(this.createSignInstructionElems());
       if (document.currentSignatory().hasSigned()) {
-        if (!document.currentSignatory().saved()) {
+        if (!document.currentSignatory().saved() || view.saveAfterSignModel.justSaved()) {
           this.container.append(this.createSaveAfterSignViewElems());
         }
         this.container.append(this.createShareAfterSignViewElems());
       }
 
+      if(view.saveAfterSignModel.justSaved()) {
+        this.container.append('<iframe src="http://player.vimeo.com/video/37373913" width="960" height="600" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>');
+      } else {
       var subcontainer = $("<div class='subcontainer'/>");
 
       var mainfileelems = $(this.getOrCreateMainFileView().el);
@@ -1111,7 +1126,7 @@ window.DocumentSignView = Backbone.View.extend({
         subcontainer.append($("<div class='cleafix' />"));
       }
       this.container.append(subcontainer);
-
+      }
       if ((this.model.signingInProcess() &&
            !this.model.currentSignatory().hasSigned()) ||
              !this.model.currentSignatory().signs()) {

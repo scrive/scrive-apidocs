@@ -175,14 +175,29 @@ body.signview {
 }
 
 .signview .save.done {
-  border: solid #89c041 1px;
-  background-color: #e7f6d5;
-  color: #89c041;
+  background-color: white;
+  padding-top: 31px;
+  padding-bottom: 15px;
+  margin-bottom: 7px;
+  border: solid #bababc 1px;
+  text-align: center;
+  font-weight: bold;
 }
 
-.signview .save.done .title {
-  color: #89c041;
+.signview .save .headline {
+  text-transform: uppercase;
+  color: black;
+  font-size: x-large;
+  margin-bottom: 5px;
 }
+
+.signview .save .subheadline {
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 0px;
+  margin-bottom: 5px;
+}
+
 
 .signview .save .highlight {
   margin-left: 158px;
