@@ -380,7 +380,7 @@ processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
 
      ]
     where
-        text  k = JSString <$> toJSString <$> renderTextForProcess doc k
+        text  k = JSString <$> toJSString <$> renderTemplateForProcess doc k (documentInfoFields doc)
         bool k = return $ JSBool <$> fromMaybe False $ getValueForProcess doc k
 
 
@@ -540,6 +540,7 @@ pageDocumentSignView ctx document siglink =
       field "documentid" $ show $ documentid document
       field "siglinkid" $ show $ signatorylinkid siglink
       field "sigmagichash" $ show $  signatorymagichash siglink
+      field "documenttitle" $ documenttitle document  
       standardPageFields ctx kontrakcja Nothing False False Nothing Nothing
 
 csvLandPage :: TemplatesMonad m => Int -> m String
