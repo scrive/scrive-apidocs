@@ -217,7 +217,6 @@ appHandler handleRoutes appConf appGlobals = do
 
     createContext session = do
       rq <- askRq
-      currhostpart <- getHostpart
       -- FIXME: we should read some headers from upstream proxy, if any
       let peerhost = case getHeader "x-real-ip" rq of
                        Just name -> BS.toString name
@@ -262,7 +261,7 @@ appHandler handleRoutes appConf appGlobals = do
       let elegtrans = getELegTransactions session
           ctx = Context
                 { ctxmaybeuser = muser
-                , ctxhostpart = currhostpart
+                , ctxhostpart = hostpart appConf
                 , ctxflashmessages = flashmessages
                 , ctxtime = minutestime
                 , ctxnormalizeddocuments = docscache appGlobals

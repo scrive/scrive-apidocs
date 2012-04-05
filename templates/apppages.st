@@ -32,7 +32,7 @@ doctype=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.
 standardHeaderContents=
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta http-equiv="content-language" content="$ctxlang$" />
-        <link href='https//fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css"/>
+        <link href='https://fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css"/>
         <link rel="stylesheet" type="text/css" href="$hostpart$/theme/newdesign.css" media="screen"/>
         <link rel="stylesheet" type="text/css" href="$hostpart$/theme/designview.css" media="screen"/>
         <link rel="stylesheet" type="text/css" href="$hostpart$/theme/style.css" media="screen"/>
