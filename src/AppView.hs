@@ -303,8 +303,7 @@ contextInfoFields :: TemplatesMonad m => Context -> Fields m
 contextInfoFields ctx@Context{ ctxlocale } = do
     field "logged" $ isJust (ctxmaybeuser ctx)
     fieldFL "flashmessages" $ map flashMessageFields $ ctxflashmessages ctx
-    field "protocol" $ if (ctxproduction ctx) then "https:" else "http:"
-    field "prefix" ""
+    field "hostpart" $ ctxhostpart ctx
     field "production" (ctxproduction ctx)
     field "ctxregion" $ codeFromRegion (getRegion ctxlocale)
     field "ctxlang" $ codeFromLang (getLang ctxlocale)
