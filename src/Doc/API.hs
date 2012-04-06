@@ -59,14 +59,14 @@ documentAPI = choice [
 
 documentNew :: Kontrakcja m => m Response
 documentNew = api $ do
+  rq <- lift $ askRq
+  Log.debug $ show $ rqHeaders rq
+  
   (user, actor) <- getAPIUser
   mcompany <- case usercompany user of
     Just companyid -> lift $ runDBQuery $ GetCompany companyid
     Nothing -> return Nothing
 
-  rq <- lift $ askRq
-  Log.debug $ show $ rqHeaders rq
-  
   jsons <- apiGuardL (badInput "The MIME part 'json' must exist and must be a JSON.") $ getDataFn' (look "json")
 
   json <- apiGuard (badInput "The MIME part 'json' must be a valid JSON.") $ case decode jsons of
