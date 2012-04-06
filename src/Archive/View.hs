@@ -33,8 +33,7 @@ import Data.List (intercalate)
 
 import Doc.DocView
 import Doc.DocUtils
-import Text.JSON.Gen hiding (field)
-import qualified Text.JSON.Gen as J
+import Text.JSON.Gen as J
 
 flashMessageSignableArchiveDone :: TemplatesMonad m => DocumentType -> m FlashMessage
 flashMessageSignableArchiveDone doctype = do
@@ -47,7 +46,6 @@ flashMessageTemplateArchiveDone =
 flashMessageAttachmentArchiveDone :: TemplatesMonad m => m FlashMessage
 flashMessageAttachmentArchiveDone =
   toFlashMsg OperationDone <$> renderTemplateM "flashMessageAttachmentArchiveDone" ()
-  
 
 pageContractsList :: TemplatesMonad m => User -> m String
 pageContractsList = pageList' "pageContractsList" LinkContracts
@@ -100,25 +98,25 @@ docForListJSON tl crtime user doc = do
         _                           -> LinkIssueDoc $ documentid doc
       sigFilter sl =   isSignatory sl && (documentstatus doc /= Preparation)
   runJSONGenT $ do
-    J.field "fields" $ docFieldsListForJSON tl crtime doc
-    J.field "subfields" $ map (signatoryFieldsListForJSON tl crtime doc) (filter sigFilter (documentsignatorylinks doc))
-    J.field "link" $ show link
+    J.object "fields" $ docFieldsListForJSON tl crtime doc
+    J.objects "subfields" $ map (signatoryFieldsListForJSON tl crtime doc) (filter sigFilter (documentsignatorylinks doc))
+    J.value "link" $ show link
 
 docFieldsListForJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> Document -> JSONGenT m ()
 docFieldsListForJSON tl crtime doc = do
-    J.field "id" $ show $ documentid doc
-    J.field "title" $ documenttitle doc
-    J.field "status" $ show $ documentStatusClass doc
-    J.field "party" $ intercalate ", " $ map getSmartName $ getSignatoryPartnerLinks doc
-    J.field "partner" $ intercalate ", " $ map getSmartName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)
-    J.field "partnercomp" $ intercalate ", " $ map getCompanyName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)
-    J.field "author" $ intercalate ", " $ map getSmartName $ filter isAuthor $ (documentsignatorylinks doc)
-    J.field "time" $ showDateAbbrev tl crtime (documentmtime doc)
-    J.field "process" =<< lift (renderTextForProcess doc processname)
-    J.field "type" =<< lift renderDocType
-    J.field "anyinvitationundelivered" $ show $ anyInvitationUndelivered  doc && Pending == documentstatus doc
-    J.field "shared" $ show $ documentsharing doc == Shared
-    J.field "file" $ fromMaybe "" $ show <$> (listToMaybe $ (documentsealedfiles doc) ++ (documentfiles doc))
+    J.value "id" $ show $ documentid doc
+    J.value "title" $ documenttitle doc
+    J.value "status" $ show $ documentStatusClass doc
+    J.value "party" $ intercalate ", " $ map getSmartName $ getSignatoryPartnerLinks doc
+    J.value "partner" $ intercalate ", " $ map getSmartName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)
+    J.value "partnercomp" $ intercalate ", " $ map getCompanyName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)
+    J.value "author" $ intercalate ", " $ map getSmartName $ filter isAuthor $ (documentsignatorylinks doc)
+    J.value "time" $ showDateAbbrev tl crtime (documentmtime doc)
+    J.value "process" =<< lift (renderTextForProcess doc processname)
+    J.value "type" =<< lift renderDocType
+    J.value "anyinvitationundelivered" $ show $ anyInvitationUndelivered  doc && Pending == documentstatus doc
+    J.value "shared" $ show $ documentsharing doc == Shared
+    J.value "file" $ fromMaybe "" $ show <$> (listToMaybe $ (documentsealedfiles doc) ++ (documentfiles doc))
   where
     renderDocType = do
       pn <- renderTextForProcess doc processname
@@ -130,10 +128,10 @@ docFieldsListForJSON tl crtime doc = do
 
 signatoryFieldsListForJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> Document -> SignatoryLink -> JSONGenT m ()
 signatoryFieldsListForJSON tl crtime doc sl = do
-    J.field "status" $ show $ signatoryStatusClass doc sl
-    J.field "name" $ getSmartName sl
-    J.field "time" $ fromMaybe "" $ (showDateAbbrev tl crtime) <$> (sign `mplus` reject `mplus` seen `mplus` open)
-    J.field "invitationundelivered" $ show $ isUndelivered sl && Pending == documentstatus doc
+    J.value "status" $ show $ signatoryStatusClass doc sl
+    J.value "name" $ getSmartName sl
+    J.value "time" $ fromMaybe "" $ (showDateAbbrev tl crtime) <$> (sign `mplus` reject `mplus` seen `mplus` open)
+    J.value "invitationundelivered" $ show $ isUndelivered sl && Pending == documentstatus doc
     where
         sign = signtime <$> maybesigninfo sl
         seen = signtime <$> maybesigninfo sl

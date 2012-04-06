@@ -1,11 +1,12 @@
-{-# LANGUAGE FunctionalDependencies, OverlappingInstances #-}
-module Text.JSON.Gen (
+ module Text.JSON.Gen (
     module Text.JSON.ToJSValue
   , JSONGen
   , runJSONGen
   , JSONGenT
   , runJSONGenT
-  , field
+  , value
+  , object
+  , objects
   ) where
 
 import Control.Applicative
@@ -32,18 +33,15 @@ instance MonadIO m => MonadIO (JSONGenT m) where
 runJSONGenT :: Monad m => JSONGenT m () -> m JSValue
 runJSONGenT (JSONGenT f) = (JSObject . toJSObject . toList) `liftM` execStateT f S.empty
 
-class JSField m a | a -> m where
-  field :: String -> a -> JSONGenT m ()
+value :: (Monad m, ToJSValue a) => String -> a -> JSONGenT m ()
+value name val = JSONGenT $ modify (|> (name, toJSValue val))
 
-instance (Monad m, ToJSValue a) => JSField m a where
-  field name value = JSONGenT $ modify (|> (name, toJSValue value))
+object :: Monad m => String -> JSONGenT m () -> JSONGenT m ()
+object name json = JSONGenT $ do
+  val <- lift $ runJSONGenT json
+  modify (|> (name, toJSValue val))
 
-instance Monad m => JSField m (JSONGenT m ()) where
-  field name json = JSONGenT $ do
-    value <- lift $ runJSONGenT json
-    modify (|> (name, toJSValue value))
-
-instance Monad m => JSField m [JSONGenT m ()] where
-  field name jsons = JSONGenT $ do
-    values <- mapM (lift . runJSONGenT) jsons
-    modify (|> (name, toJSValue values))
+objects :: Monad m => String -> [JSONGenT m ()] -> JSONGenT m ()
+objects name jsons = JSONGenT $ do
+  val <- mapM (lift . runJSONGenT) jsons
+  modify (|> (name, toJSValue val))

@@ -74,7 +74,7 @@ import Text.JSON
 import Data.List (sortBy)
 import File.Model
 import DB.Classes
-import Text.JSON.Gen hiding (field)
+import Text.JSON.Gen hiding (value)
 import qualified Text.JSON.Gen as J
 
 modalMismatch :: TemplatesMonad m => String -> SignatoryLink -> m FlashMessage
@@ -214,29 +214,29 @@ documentJSON msl _crttime doc = do
                   then companybarstextcolour $ companyui (fromJust mcompany)
                   else Nothing
     runJSONGenT $ do
-      J.field "title" $ documenttitle doc
-      J.field "files" $ map fileJSON files
-      J.field "sealedfiles" $ map fileJSON sealedfiles
-      J.field "authorattachments" $ map fileJSON (catMaybes authorattachmentfiles)
-      J.field "process" $ processJSON doc
-      J.field "region" $ regionJSON doc
-      J.field "infotext" =<< lift (documentInfoText ctx doc msl)
-      J.field "canberestarted" $ isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])
-      J.field "canbecanceled" $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending && not (canAuthorSignLast doc) && isNothing (documenttimeouttime doc)
-      J.field "canseeallattachments" $ isAuthor msl || isauthoradmin
-      J.field "timeouttime" $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc
-      J.field "status" $ show $ documentstatus doc
-      J.field "signatories" $ map (signatoryJSON doc msl) (documentsignatorylinks doc)
-      J.field "signorder" $ unSignOrder $ documentcurrentsignorder doc
-      J.field "authorization" $ authorizationJSON $ head $ (documentallowedidtypes doc) ++ [EmailIdentification]
-      J.field "template" $ isTemplate doc
-      J.field "functionality" $ "basic" <| documentfunctionality doc == BasicFunctionality |> "advanced"
-      J.field "daystosign" $ documentdaystosign doc
-      J.field "invitationmessage" $ documentinvitetext doc
-      J.field "logo" logo
-      J.field "barsbackgroundcolor" bbc
-      J.field "barsbackgroundtextcolor" bbtc
-      J.field "author" $ authorJSON mauthor mcompany
+      J.value "title" $ documenttitle doc
+      J.value "files" $ map fileJSON files
+      J.value "sealedfiles" $ map fileJSON sealedfiles
+      J.value "authorattachments" $ map fileJSON (catMaybes authorattachmentfiles)
+      J.object "process" $ processJSON doc
+      J.value "region" $ regionJSON doc
+      J.value "infotext" =<< lift (documentInfoText ctx doc msl)
+      J.value "canberestarted" $ isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])
+      J.value "canbecanceled" $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending && not (canAuthorSignLast doc) && isNothing (documenttimeouttime doc)
+      J.value "canseeallattachments" $ isAuthor msl || isauthoradmin
+      J.value "timeouttime" $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc
+      J.value "status" $ show $ documentstatus doc
+      J.objects "signatories" $ map (signatoryJSON doc msl) (documentsignatorylinks doc)
+      J.value "signorder" $ unSignOrder $ documentcurrentsignorder doc
+      J.value "authorization" $ authorizationJSON $ head $ (documentallowedidtypes doc) ++ [EmailIdentification]
+      J.value "template" $ isTemplate doc
+      J.value "functionality" $ "basic" <| documentfunctionality doc == BasicFunctionality |> "advanced"
+      J.value "daystosign" $ documentdaystosign doc
+      J.value "invitationmessage" $ documentinvitetext doc
+      J.value "logo" logo
+      J.value "barsbackgroundcolor" bbc
+      J.value "barsbackgroundtextcolor" bbtc
+      J.value "author" $ authorJSON mauthor mcompany
 
 authorizationJSON :: IdentificationType -> JSValue
 authorizationJSON EmailIdentification = toJSValue "email"
@@ -244,23 +244,23 @@ authorizationJSON ELegitimationIdentification = toJSValue "eleg"
 
 signatoryJSON :: (TemplatesMonad m, DBMonad m) => Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
 signatoryJSON doc viewer siglink = do
-    J.field "id" $ show $ signatorylinkid siglink
-    J.field "current" $ (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink)
-    J.field "signorder" $ unSignOrder $ signatorysignorder $ signatorydetails siglink
-    J.field "undeliveredEmail" $ invitationdeliverystatus siglink == Undelivered
-    J.field "deliveredEmail" $ invitationdeliverystatus siglink == Delivered
-    J.field "signs" $ isSignatory siglink
-    J.field "author" $ isAuthor siglink
-    J.field "saved" $ isJust . maybesignatory $ siglink
-    J.field "datamismatch" datamismatch
-    J.field "signdate" $ jsonDate $ signtime <$> maybesigninfo siglink
-    J.field "seendate" $ jsonDate $ signtime <$> maybeseeninfo siglink
-    J.field "readdate" $ jsonDate $ maybereadinvite siglink
-    J.field "rejecteddate" $ jsonDate rejectedDate
-    J.field "fields" $ signatoryFieldsJSON doc siglink
-    J.field "status" $ show $ signatoryStatusClass doc siglink
-    J.field "attachments" $ map signatoryAttachmentJSON (signatoryattachments siglink)
-    J.field "csv" $ csvcontents <$> signatorylinkcsvupload siglink
+    J.value "id" $ show $ signatorylinkid siglink
+    J.value "current" $ (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink)
+    J.value "signorder" $ unSignOrder $ signatorysignorder $ signatorydetails siglink
+    J.value "undeliveredEmail" $ invitationdeliverystatus siglink == Undelivered
+    J.value "deliveredEmail" $ invitationdeliverystatus siglink == Delivered
+    J.value "signs" $ isSignatory siglink
+    J.value "author" $ isAuthor siglink
+    J.value "saved" $ isJust . maybesignatory $ siglink
+    J.value "datamismatch" datamismatch
+    J.value "signdate" $ jsonDate $ signtime <$> maybesigninfo siglink
+    J.value "seendate" $ jsonDate $ signtime <$> maybeseeninfo siglink
+    J.value "readdate" $ jsonDate $ maybereadinvite siglink
+    J.value "rejecteddate" $ jsonDate rejectedDate
+    J.value "fields" $ signatoryFieldsJSON doc siglink
+    J.value "status" $ show $ signatoryStatusClass doc siglink
+    J.objects "attachments" $ map signatoryAttachmentJSON (signatoryattachments siglink)
+    J.value "csv" $ csvcontents <$> signatorylinkcsvupload siglink
     where
       datamismatch = case documentcancelationreason doc of
         Just (ELegDataMismatch _ sid _ _ _) -> sid == signatorylinkid siglink
@@ -274,9 +274,9 @@ signatoryAttachmentJSON sa = do
   mfile <- lift $ case (signatoryattachmentfile sa) of
     Just fid -> runDBQuery $ GetFileByFileID fid
     _ -> return Nothing
-  J.field "name" $ signatoryattachmentname sa
-  J.field "description" $ signatoryattachmentdescription sa
-  J.field "file" $ fileJSON <$> mfile
+  J.value "name" $ signatoryattachmentname sa
+  J.value "description" $ signatoryattachmentdescription sa
+  J.value "file" $ fileJSON <$> mfile
 
 signatoryFieldsJSON :: Document -> SignatoryLink -> JSValue
 signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}}) = JSArray $
@@ -303,86 +303,86 @@ signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{si
 
 fieldJSON :: Document -> String -> String -> Bool -> [FieldPlacement] -> JSValue
 fieldJSON  doc name value closed placements = runJSONGen $ do
-    J.field "name" name
-    J.field "value" value
-    J.field "closed" closed
-    J.field "placements" $ map (placementJSON doc) placements
+    J.value "name" name
+    J.value "value" value
+    J.value "closed" closed
+    J.value "placements" $ map (placementJSON doc) placements
 
 placementJSON :: Document -> FieldPlacement -> JSValue
 placementJSON doc placement = runJSONGen $ do
-    J.field "x" $ placementx placement
-    J.field "y" $ placementy placement
-    J.field "page" $ placementpage placement
-    J.field "fileid" $ fromMaybe "" $ show <$> (listToMaybe $ documentfiles doc)
+    J.value "x" $ placementx placement
+    J.value "y" $ placementy placement
+    J.value "page" $ placementpage placement
+    J.value "fileid" $ fromMaybe "" $ show <$> (listToMaybe $ documentfiles doc)
 
 jsonDate :: Maybe MinutesTime -> JSValue
 jsonDate mdate = toJSValue $ showDateYMD <$> mdate
 
 processJSON :: TemplatesMonad m => Document -> JSONGenT m ()
 processJSON doc = do
-    J.field "title" =<< text processtitle
-    J.field "name" =<< text processname
+    J.value "title" =<< text processtitle
+    J.value "name" =<< text processname
     -- used in the design view
-    J.field "basicavailable" $ bool processbasicavailable
-    J.field "authorsend" $ bool processauthorsend
-    J.field "validationchoiceforbasic" $ bool processvalidationchoiceforbasic
-    J.field "expiryforbasic" $ bool processexpiryforbasic
-    J.field "step1text" =<< text processstep1text
-    J.field "expirywarntext" =<< text processexpirywarntext
-    J.field "sendbuttontext" =<< text processsendbuttontext
-    J.field "confirmsendtitle" =<< text processconfirmsendtitle
-    J.field "confirmsendtext" =<< text processconfirmsendtext
-    J.field "expirytext" =<< text processexpirytext
+    J.value "basicavailable" $ bool processbasicavailable
+    J.value "authorsend" $ bool processauthorsend
+    J.value "validationchoiceforbasic" $ bool processvalidationchoiceforbasic
+    J.value "expiryforbasic" $ bool processexpiryforbasic
+    J.value "step1text" =<< text processstep1text
+    J.value "expirywarntext" =<< text processexpirywarntext
+    J.value "sendbuttontext" =<< text processsendbuttontext
+    J.value "confirmsendtitle" =<< text processconfirmsendtitle
+    J.value "confirmsendtext" =<< text processconfirmsendtext
+    J.value "expirytext" =<< text processexpirytext
     -- some buttons texts
-    J.field "restartbuttontext" =<< text processrestartbuttontext
-    J.field "cancelbuttontext" =<< text processcancelbuttontext
-    J.field "rejectbuttontext" =<< text processrejectbuttontext
-    J.field "cancelmodaltitle" =<< text processcancelmodaltitle
-    J.field "cancelmodaltext" =<< text processcancelmodaltext
+    J.value "restartbuttontext" =<< text processrestartbuttontext
+    J.value "cancelbuttontext" =<< text processcancelbuttontext
+    J.value "rejectbuttontext" =<< text processrejectbuttontext
+    J.value "cancelmodaltitle" =<< text processcancelmodaltitle
+    J.value "cancelmodaltext" =<< text processcancelmodaltext
 
-    J.field "authorissecretarytext" =<< text processauthorissecretarytext
-    J.field "remindagainbuttontext" =<< text processremindagainbuttontext
+    J.value "authorissecretarytext" =<< text processauthorissecretarytext
+    J.value "remindagainbuttontext" =<< text processremindagainbuttontext
     -- And more
-    J.field "requiressignguard" $ bool processrequiressignguard
-    J.field "signbuttontext" =<< text processsignbuttontext
-    J.field "signatorycancelmodaltitle" =<< text processsignatorycancelmodaltitle
-    J.field "signguardwarntext" =<< text processsignguardwarntext
-    J.field "signatorysignmodalcontentlast" =<< text processsignatorysignmodalcontentlast
-    J.field "signatorysignmodalcontentnotlast" =<< text processsignatorysignmodalcontentnotlast
-    J.field "signatorysignmodalcontentauthorlast" =<< text processsignatorysignmodalcontentauthorlast
-    J.field "signbuttontext" =<< text processsignbuttontext
-    J.field "signbuttontextauthor" =<< text processsignbuttontextauthor
-    J.field "signatorysignmodaltitle" =<< text processsignatorysignmodaltitle
-    J.field "authorsignlastbutton" =<< text processauthorsignlastbuttontext
+    J.value "requiressignguard" $ bool processrequiressignguard
+    J.value "signbuttontext" =<< text processsignbuttontext
+    J.value "signatorycancelmodaltitle" =<< text processsignatorycancelmodaltitle
+    J.value "signguardwarntext" =<< text processsignguardwarntext
+    J.value "signatorysignmodalcontentlast" =<< text processsignatorysignmodalcontentlast
+    J.value "signatorysignmodalcontentnotlast" =<< text processsignatorysignmodalcontentnotlast
+    J.value "signatorysignmodalcontentauthorlast" =<< text processsignatorysignmodalcontentauthorlast
+    J.value "signbuttontext" =<< text processsignbuttontext
+    J.value "signbuttontextauthor" =<< text processsignbuttontextauthor
+    J.value "signatorysignmodaltitle" =<< text processsignatorysignmodaltitle
+    J.value "authorsignlastbutton" =<< text processauthorsignlastbuttontext
 
-    J.field "authorname" =<< text processauthorname
-    J.field "authorsignatoryname" =<< text processauthorsignatoryname
-    J.field "signatoryname" =<< text processsignatoryname
-    J.field "nonsignatoryname" =<< text processnonsignatoryname
-    J.field "numberedsignatories" $ bool processnumberedsignatories
+    J.value "authorname" =<< text processauthorname
+    J.value "authorsignatoryname" =<< text processauthorsignatoryname
+    J.value "signatoryname" =<< text processsignatoryname
+    J.value "nonsignatoryname" =<< text processnonsignatoryname
+    J.value "numberedsignatories" $ bool processnumberedsignatories
     where
       text = lift . renderTextForProcess doc
       bool = fromMaybe False . getValueForProcess doc
 
 regionJSON :: Document -> JSValue
 regionJSON doc = runJSONGen $ do
-    J.field "haspeopleids" $ regionhaspeopleids $ getRegionInfo doc
-    J.field "iselegavailable" $ regionelegavailable $ getRegionInfo doc
-    J.field "gb" $ REGION_GB == getRegion doc
-    J.field "se" $ REGION_SE == getRegion doc
+    J.value "haspeopleids" $ regionhaspeopleids $ getRegionInfo doc
+    J.value "iselegavailable" $ regionelegavailable $ getRegionInfo doc
+    J.value "gb" $ REGION_GB == getRegion doc
+    J.value "se" $ REGION_SE == getRegion doc
 
 fileJSON :: File -> JSValue
 fileJSON file = runJSONGen $ do
-    J.field "id" $ show $ fileid file
-    J.field "name" $ filename file
+    J.value "id" $ show $ fileid file
+    J.value "name" $ filename file
 
 authorJSON :: Maybe User -> Maybe Company -> JSValue
 authorJSON mauthor mcompany = runJSONGen $ do
-    J.field "fullname" $ getFullName <$> mauthor
-    J.field "email" $ getEmail <$> mauthor
-    J.field "company" $ (\a -> getCompanyName (a,mcompany)) <$> mauthor
-    J.field "phone" $ userphone <$> userinfo <$> mauthor
-    J.field "position" $ usercompanyposition <$> userinfo <$>mauthor
+    J.value "fullname" $ getFullName <$> mauthor
+    J.value "email" $ getEmail <$> mauthor
+    J.value "company" $ (\a -> getCompanyName (a,mcompany)) <$> mauthor
+    J.value "phone" $ userphone <$> userinfo <$> mauthor
+    J.value "position" $ usercompanyposition <$> userinfo <$>mauthor
 
 {- |
     We want the documents to be ordered like the icons in the bottom

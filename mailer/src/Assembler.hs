@@ -13,7 +13,7 @@ import Data.List
 import Data.Maybe
 import Text.HTML.TagSoup
 import Text.HTML.TagSoup.Entity
-import Text.JSON.Gen
+import Text.JSON.Gen as J
 import qualified Codec.Binary.QuotedPrintable as QP
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
@@ -31,11 +31,11 @@ assembleContent :: (MonadIO m, CryptoRNG m) => Mail -> m BSL.ByteString
 assembleContent Mail{..} = do
   (boundaryMixed, boundaryAlternative) <- createBoundaries
   let datafields = do
-        field "email_id" $ show mailID
-        field "email_token" $ show mailToken
-        forM_ (fromXSMTPAttrs mailXSMTPAttrs) $ uncurry field
+        J.value "email_id" $ show mailID
+        J.value "email_token" $ show mailToken
+        forM_ (fromXSMTPAttrs mailXSMTPAttrs) $ uncurry J.value
       mailgundata = runJSONGen datafields
-      xsmtpapi = runJSONGen $ field "unique_args" datafields
+      xsmtpapi = runJSONGen $ J.object "unique_args" datafields
   let -- FIXME: add =?UTF8?B= everywhere it is needed here
       headerEmail =
         -- FIXME: encoded word should not be longer than 75 bytes including everything

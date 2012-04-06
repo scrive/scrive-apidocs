@@ -27,7 +27,7 @@ import Doc.DocStateQuery
 import Text.JSON
 import ELegitimation.BankIDUtils
 import ELegitimation.BankIDRequests
-import Text.JSON.Gen
+import Text.JSON.Gen as J
 
 {- |
    Handle the Ajax request for initiating a BankID transaction.
@@ -69,11 +69,11 @@ generateBankIDTransaction docid signid = do
                                             }
                     Log.eleg "Eleg chalenge generation sucessfull"
                     return $ runJSONGen $ do
-                        field "status" (0::Int)
-                        field "servertime" $ show seconds
-                        field "nonce" nonce
-                        field "tbs" txt
-                        field "transactionid" transactionid
+                        J.value "status" (0::Int)
+                        J.value "servertime" $ show seconds
+                        J.value "nonce" nonce
+                        J.value "tbs" txt
+                        J.value "transactionid" transactionid
 
 generateBankIDTransactionForAuthor :: Kontrakcja m => DocumentID -> m JSValue
 generateBankIDTransactionForAuthor  docid = do
@@ -110,19 +110,19 @@ generateBankIDTransactionForAuthor  docid = do
                                         , transactionnonce           = nonce
                                         }
                     return $ runJSONGen $ do
-                        field "status" (0::Int)
-                        field "servertime"  $ show $ toSeconds time
-                        field "nonce" nonce
-                        field "tbs" txt
-                        field "transactionid"  transactionid
+                        J.value "status" (0::Int)
+                        J.value "servertime"  $ show $ toSeconds time
+                        J.value "nonce" nonce
+                        J.value "tbs" txt
+                        J.value "transactionid"  transactionid
 
 
 generationFailed:: Kontrakcja m => String -> Int -> String -> m JSValue
 generationFailed desc code msg = do
   Log.eleg $ desc ++  " | code: " ++ show code ++" msg: "++ msg ++ " |"
   return $ runJSONGen $ do
-    field "status" code
-    field "msg" msg
+    J.value "status" code
+    J.value "msg" msg
 
 {- |
    Validating eleg-data passed when signing

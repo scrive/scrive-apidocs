@@ -106,7 +106,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import Text.JSON hiding (Result)
-import Text.JSON.Gen hiding (field)
+import Text.JSON.Gen hiding (value)
 import qualified Text.JSON.Gen as J
 import Doc.DocDraft as Draft
 import qualified User.Action
@@ -1171,13 +1171,13 @@ handleParseCSV = do
                    | otherwise -> do
                        let (problems, csvdata) = cleanCSVContents eleg customfieldscount contents
                        runJSONGenT $ do
-                         J.field "problems" $ for problems $ \p -> do
-                           J.field "description" =<< lift (csvProblemToDescription p)
+                         J.objects "problems" $ for problems $ \p -> do
+                           J.value "description" =<< lift (csvProblemToDescription p)
                            when (isJust $ problemRow p) $
-                             J.field "row" $ fromJust $ problemRow p
+                             J.value "row" $ fromJust $ problemRow p
                            when (isJust $ problemCell p) $
-                             J.field "cell" $ fromJust $ problemCell p
-                           J.field "rows" $ csvbody csvdata
+                             J.value "cell" $ fromJust $ problemCell p
+                           J.value "rows" $ csvbody csvdata
 
         _ -> do
             oneProblemJSON $ renderTemplateM "flashMessageFailedToParseCSV" ()
@@ -1185,6 +1185,6 @@ handleParseCSV = do
   where
       oneProblemJSON :: Kontrakcja m => m String -> m JSValue
       oneProblemJSON desc = runJSONGenT $ do
-        J.field "problems" $ do
-          J.field "description" =<< lift desc
-        J.field "rows" ([]::[String])
+        J.object "problems" $ do
+          J.value "description" =<< lift desc
+        J.value "rows" ([]::[String])
