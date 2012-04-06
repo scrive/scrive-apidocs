@@ -74,10 +74,8 @@ import Text.JSON
 import Data.List (sortBy)
 import File.Model
 import DB.Classes
-import Text.JSON.Fields as JSON (json)
-import qualified Text.JSON.Fields as JSON (field)
-import Util.JSON
-
+import Text.JSON.Gen hiding (value)
+import qualified Text.JSON.Gen as J
 
 modalMismatch :: TemplatesMonad m => String -> SignatoryLink -> m FlashMessage
 modalMismatch msg author = toModal <$>  do
@@ -192,7 +190,7 @@ flashMessageMultipleAttachmentShareDone :: TemplatesMonad m => m FlashMessage
 flashMessageMultipleAttachmentShareDone =
   toFlashMsg OperationDone <$> renderTemplateM "flashMessageMultipleAttachmentShareDone" ()
 
-documentJSON :: (TemplatesMonad m, KontraMonad m, DBMonad m) => Maybe SignatoryLink -> MinutesTime -> Document -> m (JSObject JSValue)
+documentJSON :: (TemplatesMonad m, KontraMonad m, DBMonad m) => Maybe SignatoryLink -> MinutesTime -> Document -> m JSValue
 documentJSON msl _crttime doc = do
     ctx <- getContext
     files <- runDB $ documentfilesM doc
@@ -215,85 +213,74 @@ documentJSON msl _crttime doc = do
     let bbtc  = if (isJust mcompany && isJust (companybarstextcolour $ companyui (fromJust mcompany)))
                   then companybarstextcolour $ companyui (fromJust mcompany)
                   else Nothing
-    fmap toJSObject $ propagateMonad  $
-     [ ("title",return $ JSString $ toJSString $ documenttitle doc),
-       ("files", return $ JSArray $ jsonPack <$> fileJSON <$> files ),
-       ("sealedfiles", return $ JSArray $ jsonPack <$> fileJSON <$> sealedfiles ),
-       ("authorattachments", return $ JSArray $ jsonPack <$> fileJSON <$> catMaybes authorattachmentfiles),
-       ("process", processJSON doc ),
-       ("region",  liftIO $ regionJSON doc ),
-       ("infotext", JSString <$> toJSString <$> documentInfoText ctx doc msl),
-       ("canberestarted", return $ JSBool $  isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])),
-       ("canbecanceled", return $ JSBool $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending && not (canAuthorSignLast doc) && isNothing (documenttimeouttime doc)),
-       ("canseeallattachments", return $ JSBool $ isAuthor msl || isauthoradmin),
-       ("timeouttime", return $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc),
-       ("status", return $ JSString $ toJSString $ show $ documentstatus doc),
-       ("signatories", JSArray <$> mapM (signatoryJSON doc msl) (documentsignatorylinks doc)),
-       ("signorder", return $ JSRational True (toRational $ unSignOrder $ documentcurrentsignorder doc)),
-       ("authorization", return $ authorizationJSON $ head $ (documentallowedidtypes doc) ++ [EmailIdentification] ),
-       ("template", return $ JSBool $ isTemplate doc),
-       ("functionality", return $ JSString $ toJSString $ "basic" <| documentfunctionality doc == BasicFunctionality |> "advanced"),
-       ("daystosign", return $ maybe JSNull (JSRational True . toRational) $ documentdaystosign doc),
-       ("invitationmessage", return $ if (null $ documentinvitetext doc) then JSNull else JSString $ toJSString $ documentinvitetext doc),
-       ("logo", return $ maybe JSNull (JSString . toJSString)  logo),
-       ("barsbackgroundcolor", return $ maybe JSNull (JSString . toJSString)  $ bbc),
-       ("barsbackgroundtextcolor",  return $ maybe JSNull (JSString . toJSString)  $ bbtc),
-       ("author", liftIO $ authorJSON mauthor mcompany)
-     ]
+    runJSONGenT $ do
+      J.value "title" $ documenttitle doc
+      J.value "files" $ map fileJSON files
+      J.value "sealedfiles" $ map fileJSON sealedfiles
+      J.value "authorattachments" $ map fileJSON (catMaybes authorattachmentfiles)
+      J.object "process" $ processJSON doc
+      J.value "region" $ regionJSON doc
+      J.value "infotext" =<< lift (documentInfoText ctx doc msl)
+      J.value "canberestarted" $ isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])
+      J.value "canbecanceled" $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending && not (canAuthorSignLast doc) && isNothing (documenttimeouttime doc)
+      J.value "canseeallattachments" $ isAuthor msl || isauthoradmin
+      J.value "timeouttime" $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc
+      J.value "status" $ show $ documentstatus doc
+      J.objects "signatories" $ map (signatoryJSON doc msl) (documentsignatorylinks doc)
+      J.value "signorder" $ unSignOrder $ documentcurrentsignorder doc
+      J.value "authorization" $ authorizationJSON $ head $ (documentallowedidtypes doc) ++ [EmailIdentification]
+      J.value "template" $ isTemplate doc
+      J.value "functionality" $ "basic" <| documentfunctionality doc == BasicFunctionality |> "advanced"
+      J.value "daystosign" $ documentdaystosign doc
+      J.value "invitationmessage" $ documentinvitetext doc
+      J.value "logo" logo
+      J.value "barsbackgroundcolor" bbc
+      J.value "barsbackgroundtextcolor" bbtc
+      J.value "author" $ authorJSON mauthor mcompany
 
 authorizationJSON :: IdentificationType -> JSValue
-authorizationJSON EmailIdentification = JSString $ toJSString "email"
-authorizationJSON ELegitimationIdentification = JSString $ toJSString "eleg"
+authorizationJSON EmailIdentification = toJSValue "email"
+authorizationJSON ELegitimationIdentification = toJSValue "eleg"
 
-
-
-signatoryJSON :: (TemplatesMonad m, DBMonad m) => Document -> Maybe SignatoryLink -> SignatoryLink -> m JSValue
+signatoryJSON :: (TemplatesMonad m, DBMonad m) => Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
 signatoryJSON doc viewer siglink = do
-    fmap (JSObject . toJSObject) $ propagateMonad $ [
-        ("id", return $ JSString $ toJSString  $ show $ signatorylinkid siglink)
-      , ("current", return $ JSBool $ (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink))
-      , ("signorder",return $ JSRational True (toRational $ unSignOrder $ signatorysignorder $ signatorydetails siglink))
-      , ("undeliveredEmail", return $ JSBool $ (invitationdeliverystatus siglink == Undelivered))
-      , ("deliveredEmail", return $ JSBool $ (invitationdeliverystatus siglink == Delivered))
-      , ("signs", return $ JSBool $ isSignatory siglink)
-      , ("author",return $ JSBool $ isAuthor siglink)
-      , ("saved", return $ JSBool $ isJust . maybesignatory $ siglink)
-      , ("datamismatch", return $ JSBool datamismatch)
-      , ("signdate", return $ jsonDate $ signtime <$> maybesigninfo siglink)
-      , ("seendate", return $ jsonDate $ signtime <$> maybeseeninfo siglink)
-      , ("readdate", return $ jsonDate $ maybereadinvite siglink)
-      , ("rejecteddate", return $ jsonDate $ rejectedDate)
-      , ("fields", liftIO $ signatoryFieldsJSON doc siglink)
-      , ("status", return $ JSString $ toJSString  $ show $ signatoryStatusClass doc siglink)
-      , ("attachments", fmap JSArray $ sequence $ signatoryAttachmentJSON <$> signatoryattachments siglink)
-      , ("csv", case (csvcontents <$> signatorylinkcsvupload siglink) of
-                     Just a1 ->  return $ JSArray $ for a1 (\a2 -> JSArray $ map (JSString . toJSString) a2 )
-                     Nothing -> return $ JSNull)
-      ]
+    J.value "id" $ show $ signatorylinkid siglink
+    J.value "current" $ (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink)
+    J.value "signorder" $ unSignOrder $ signatorysignorder $ signatorydetails siglink
+    J.value "undeliveredEmail" $ invitationdeliverystatus siglink == Undelivered
+    J.value "deliveredEmail" $ invitationdeliverystatus siglink == Delivered
+    J.value "signs" $ isSignatory siglink
+    J.value "author" $ isAuthor siglink
+    J.value "saved" $ isJust . maybesignatory $ siglink
+    J.value "datamismatch" datamismatch
+    J.value "signdate" $ jsonDate $ signtime <$> maybesigninfo siglink
+    J.value "seendate" $ jsonDate $ signtime <$> maybeseeninfo siglink
+    J.value "readdate" $ jsonDate $ maybereadinvite siglink
+    J.value "rejecteddate" $ jsonDate rejectedDate
+    J.value "fields" $ signatoryFieldsJSON doc siglink
+    J.value "status" $ show $ signatoryStatusClass doc siglink
+    J.objects "attachments" $ map signatoryAttachmentJSON (signatoryattachments siglink)
+    J.value "csv" $ csvcontents <$> signatorylinkcsvupload siglink
     where
-    datamismatch = case documentcancelationreason doc of
-                    Just (ELegDataMismatch _ sid _ _ _) -> sid == signatorylinkid siglink
-                    _                                   -> False
-    rejectedDate = case documentrejectioninfo doc of
-                    Just (rt, slid, _)
-                        | slid == signatorylinkid siglink -> Just rt
-                    _                             -> Nothing
+      datamismatch = case documentcancelationreason doc of
+        Just (ELegDataMismatch _ sid _ _ _) -> sid == signatorylinkid siglink
+        _                                   -> False
+      rejectedDate = case documentrejectioninfo doc of
+        Just (rt, slid, _) | slid == signatorylinkid siglink -> Just rt
+        _                                                    -> Nothing
 
-signatoryAttachmentJSON :: (TemplatesMonad m, DBMonad m) => SignatoryAttachment -> m JSValue
+signatoryAttachmentJSON :: DBMonad m => SignatoryAttachment -> JSONGenT m ()
 signatoryAttachmentJSON sa = do
-  mfile <- case (signatoryattachmentfile sa) of
-                Just fid -> runDBQuery $ GetFileByFileID fid
-                _ -> return Nothing
-  return $ (JSObject . toJSObject) $
-     [ ("name", JSString $ toJSString $ signatoryattachmentname sa)
-     , ("description", JSString $ toJSString $ signatoryattachmentdescription sa)
-     , ("file", fromMaybe JSNull $ jsonPack <$> fileJSON <$> mfile)
-     ]
+  mfile <- lift $ case (signatoryattachmentfile sa) of
+    Just fid -> runDBQuery $ GetFileByFileID fid
+    _ -> return Nothing
+  J.value "name" $ signatoryattachmentname sa
+  J.value "description" $ signatoryattachmentdescription sa
+  J.value "file" $ fileJSON <$> mfile
 
-
-signatoryFieldsJSON:: Document -> SignatoryLink -> IO JSValue
-signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}}) = fmap JSArray $
-  forM orderedFields $ \sf@SignatoryField{sfType, sfValue, sfPlacements} ->
+signatoryFieldsJSON :: Document -> SignatoryLink -> JSValue
+signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}}) = JSArray $
+  for orderedFields $ \sf@SignatoryField{sfType, sfValue, sfPlacements} ->
     case sfType of
       FirstNameFT -> fieldJSON doc "fstname" sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
       LastNameFT -> fieldJSON doc "sndname" sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
@@ -314,97 +301,88 @@ signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{si
     ftOrder CompanyNumberFT _ = LT
     ftOrder _ _ = EQ
 
-fieldJSON :: Document -> String -> String -> Bool -> [FieldPlacement] -> IO JSValue
-fieldJSON  doc name value closed placements = json $ do
-    JSON.field "name" name
-    JSON.field "value" value
-    JSON.field "closed" closed
-    JSON.field "placements"  $ map (placementJSON doc) placements
+fieldJSON :: Document -> String -> String -> Bool -> [FieldPlacement] -> JSValue
+fieldJSON  doc name value closed placements = runJSONGen $ do
+    J.value "name" name
+    J.value "value" value
+    J.value "closed" closed
+    J.value "placements" $ map (placementJSON doc) placements
 
 placementJSON :: Document -> FieldPlacement -> JSValue
-placementJSON doc placement = JSObject $ toJSObject $
-    [   ("x", JSRational True (toRational $ placementx  placement))
-      , ("y", JSRational True (toRational $ placementy  placement))
-      , ("page", JSRational True (toRational $ placementpage  placement))
-      , ("fileid", JSString $ toJSString $ fromMaybe "" $ show <$> (listToMaybe $ documentfiles doc))
-    ]
-
+placementJSON doc placement = runJSONGen $ do
+    J.value "x" $ placementx placement
+    J.value "y" $ placementy placement
+    J.value "page" $ placementpage placement
+    J.value "fileid" $ fromMaybe "" $ show <$> (listToMaybe $ documentfiles doc)
 
 jsonDate :: Maybe MinutesTime -> JSValue
-jsonDate mdate = fromMaybe JSNull $ JSString <$> toJSString <$> showDateYMD <$> mdate
+jsonDate mdate = toJSValue $ showDateYMD <$> mdate
 
+processJSON :: TemplatesMonad m => Document -> JSONGenT m ()
+processJSON doc = do
+    J.value "title" =<< text processtitle
+    J.value "name" =<< text processname
+    -- used in the design view
+    J.value "basicavailable" $ bool processbasicavailable
+    J.value "authorsend" $ bool processauthorsend
+    J.value "validationchoiceforbasic" $ bool processvalidationchoiceforbasic
+    J.value "expiryforbasic" $ bool processexpiryforbasic
+    J.value "step1text" =<< text processstep1text
+    J.value "expirywarntext" =<< text processexpirywarntext
+    J.value "sendbuttontext" =<< text processsendbuttontext
+    J.value "confirmsendtitle" =<< text processconfirmsendtitle
+    J.value "confirmsendtext" =<< text processconfirmsendtext
+    J.value "expirytext" =<< text processexpirytext
+    -- some buttons texts
+    J.value "restartbuttontext" =<< text processrestartbuttontext
+    J.value "cancelbuttontext" =<< text processcancelbuttontext
+    J.value "rejectbuttontext" =<< text processrejectbuttontext
+    J.value "cancelmodaltitle" =<< text processcancelmodaltitle
+    J.value "cancelmodaltext" =<< text processcancelmodaltext
 
-processJSON :: (TemplatesMonad m) => Document -> m JSValue
-processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
-      [
-        ("title", text processtitle)
-      , ("name", text processname)
-        -- used in the design view
-      , ("basicavailable", bool processbasicavailable)
-      , ("authorsend", bool processauthorsend)
-      , ("validationchoiceforbasic", bool processvalidationchoiceforbasic)
-      , ("expiryforbasic", bool processexpiryforbasic)
-      , ("step1text", text processstep1text )
-      , ("expirywarntext", text processexpirywarntext )
-      , ("sendbuttontext", text processsendbuttontext )
-      , ("confirmsendtitle", text processconfirmsendtitle )
-      , ("confirmsendtext", text processconfirmsendtext )
-      , ("expirytext", text processexpirytext )
-      -- some buttons texts
-      , ("restartbuttontext", text processrestartbuttontext)
-      , ("cancelbuttontext", text processcancelbuttontext)
-      , ("rejectbuttontext", text processrejectbuttontext)
-      , ("cancelmodaltitle", text processcancelmodaltitle)
-      , ("cancelmodaltext", text processcancelmodaltext)
+    J.value "authorissecretarytext" =<< text processauthorissecretarytext
+    J.value "remindagainbuttontext" =<< text processremindagainbuttontext
+    -- And more
+    J.value "requiressignguard" $ bool processrequiressignguard
+    J.value "signbuttontext" =<< text processsignbuttontext
+    J.value "signatorycancelmodaltitle" =<< text processsignatorycancelmodaltitle
+    J.value "signguardwarntext" =<< text processsignguardwarntext
+    J.value "signatorysignmodalcontentlast" =<< text processsignatorysignmodalcontentlast
+    J.value "signatorysignmodalcontentnotlast" =<< text processsignatorysignmodalcontentnotlast
+    J.value "signatorysignmodalcontentauthorlast" =<< text processsignatorysignmodalcontentauthorlast
+    J.value "signbuttontext" =<< text processsignbuttontext
+    J.value "signbuttontextauthor" =<< text processsignbuttontextauthor
+    J.value "signatorysignmodaltitle" =<< text processsignatorysignmodaltitle
+    J.value "authorsignlastbutton" =<< text processauthorsignlastbuttontext
 
-      , ("authorissecretarytext", text processauthorissecretarytext)
-      , ("remindagainbuttontext", text processremindagainbuttontext)
-      -- And more
-      , ("requiressignguard", bool processrequiressignguard)
-      , ("signbuttontext", text processsignbuttontext)
-      , ("signatorycancelmodaltitle", text processsignatorycancelmodaltitle)
-      , ("signguardwarntext", text processsignguardwarntext)
-      , ("signatorysignmodalcontentlast", text processsignatorysignmodalcontentlast)
-      , ("signatorysignmodalcontentnotlast", text processsignatorysignmodalcontentnotlast)
-      , ("signatorysignmodalcontentauthorlast", text processsignatorysignmodalcontentauthorlast)
-      , ("signbuttontext", text processsignbuttontext)
-      , ("signbuttontextauthor", text processsignbuttontextauthor)
-      , ("signatorysignmodaltitle", text processsignatorysignmodaltitle)
-      , ("authorsignlastbutton", text processauthorsignlastbuttontext)
-
-      , ("authorname", text processauthorname)
-      , ("authorsignatoryname", text processauthorsignatoryname)
-      , ("signatoryname", text processsignatoryname)
-      , ("nonsignatoryname", text processnonsignatoryname)
-      , ("numberedsignatories", bool processnumberedsignatories)
-
-     ]
+    J.value "authorname" =<< text processauthorname
+    J.value "authorsignatoryname" =<< text processauthorsignatoryname
+    J.value "signatoryname" =<< text processsignatoryname
+    J.value "nonsignatoryname" =<< text processnonsignatoryname
+    J.value "numberedsignatories" $ bool processnumberedsignatories
     where
-        text  k = JSString <$> toJSString <$> renderTemplateForProcess doc k (documentInfoFields doc)
-        bool k = return $ JSBool <$> fromMaybe False $ getValueForProcess doc k
+      text k = lift $ renderTemplateForProcess doc k (documentInfoFields doc)
+      bool = fromMaybe False . getValueForProcess doc
 
+regionJSON :: Document -> JSValue
+regionJSON doc = runJSONGen $ do
+    J.value "haspeopleids" $ regionhaspeopleids $ getRegionInfo doc
+    J.value "iselegavailable" $ regionelegavailable $ getRegionInfo doc
+    J.value "gb" $ REGION_GB == getRegion doc
+    J.value "se" $ REGION_SE == getRegion doc
 
-regionJSON  :: Document -> IO JSValue
-regionJSON doc = json $ do
-      JSON.field "haspeopleids" $ regionhaspeopleids $ getRegionInfo doc
-      JSON.field "iselegavailable" $ regionelegavailable $ getRegionInfo doc
-      JSON.field "gb" $ REGION_GB == getRegion doc
-      JSON.field "se" $ REGION_SE == getRegion doc
+fileJSON :: File -> JSValue
+fileJSON file = runJSONGen $ do
+    J.value "id" $ show $ fileid file
+    J.value "name" $ filename file
 
-
-fileJSON :: File ->  [(String,String)]
-fileJSON file =
-    [  ("id",   show $ fileid file),
-       ("name", filename file)
-    ]
-
-authorJSON :: Maybe User -> Maybe Company -> IO JSValue
-authorJSON mauthor mcompany = json $ do
-    JSON.field "fullname" $ getFullName <$> mauthor
-    JSON.field "email" $ getEmail <$> mauthor
-    JSON.field "company" $ (\a -> getCompanyName (a,mcompany)) <$> mauthor 
-    JSON.field "phone"  $ userphone <$> userinfo <$> mauthor
-    JSON.field "position"  $ usercompanyposition <$> userinfo <$>mauthor
+authorJSON :: Maybe User -> Maybe Company -> JSValue
+authorJSON mauthor mcompany = runJSONGen $ do
+    J.value "fullname" $ getFullName <$> mauthor
+    J.value "email" $ getEmail <$> mauthor
+    J.value "company" $ (\a -> getCompanyName (a,mcompany)) <$> mauthor
+    J.value "phone" $ userphone <$> userinfo <$> mauthor
+    J.value "position" $ usercompanyposition <$> userinfo <$>mauthor
 
 {- |
     We want the documents to be ordered like the icons in the bottom

@@ -49,7 +49,6 @@ import qualified Data.List.Utils as List
 import Misc
 import Text.JSON.String
 import Happstack.Server (HasRqData,ServerMonad)
-import Text.JSON.Fields
 
 fromJSONString :: JSValue -> String
 fromJSONString (JSString s) = fromJSString s
@@ -280,14 +279,5 @@ jsonType (JSBool _) = "bool"
 jsonType (JSNull) = "null"
 jsonType (JSArray _) = "array"
 
-
 jsonPack :: [(String,String)] -> JSValue
 jsonPack = JSObject . toJSObject . (mapSnd (JSString . toJSString))
-
-
--- Move this to library when you can
-
-instance (JSField a) => JSField (Maybe a) where
-    field n Nothing = field n JSNull
-    field n (Just a) = field n a
-    

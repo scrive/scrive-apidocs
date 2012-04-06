@@ -171,7 +171,7 @@ window.DocumentUploadedSignatoryAttachmentsView = Backbone.View.extend({
 });
 
 // Remove sign guard (Lukas's choice) --Eric
-/*
+/* Remove after May 1, 2012
 window.GuardModel = Backbone.Model.extend({
   defaults: {
     ischecked: false,
@@ -215,7 +215,7 @@ window.GuardModel = Backbone.Model.extend({
 */
 
 // Remove sign guard (Lukas's choice) --Eric
-/*
+/* Remove after May 1, 2012
 window.DocumentSignGuardView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
@@ -307,7 +307,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     _.bindAll(this, 'popup');
     _.bindAll(this, 'createContentElems');
     // Remove sign guard (Lukas's choice) --Eric
-    /*
+    /* Remove after May 1, 2012
     var guardWarnText = this.model.process().signguardwarntext();
     this.guardModel = new GuardModel({
       onAlert: function() {
@@ -351,6 +351,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       text: document.process().signbuttontext(),
       onClick: function() {
         // Remove sign guard (Lukas's choice) --Eric
+          // Remove after May 1, 2012
         //if (guardModel.ensureChecked())
         document.sign().send();
       }
@@ -381,7 +382,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     }
   },
   // Remove sign guard (Lukas's choice) -- Eric
-  /*
+  /* Remove after May 1, 2012
   createSignGuardElems: function() {
     return $(new DocumentSignGuardView({
       model: this.guardModel,
@@ -393,6 +394,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var content = $("<div />");
     content.append(this.createPreambleElems());
     // Remove sign guard (Lukas's choice) -- Eric
+      // Remove after May 1, 2012
     //content.append(this.createSignGuardElems());
     return content;
   },

@@ -375,15 +375,6 @@ mapSnd = fmap . second
 propagateFst :: (a,[b]) -> [(a,b)]
 propagateFst (a,bs) = for bs (\b -> (a,b))
 
-propagateMonad :: (Monad m)  => [(a, m b)] -> m [(a,b)]
-propagateMonad ((a,mb):rest) = do
-    b <- mb
-    rest' <- propagateMonad rest
-    return $ (a,b): rest'
-
-propagateMonad _ = return []
-
-
 -- Splits string over some substring
 splitOver:: (Eq a) => [a] -> [a] -> [[a]]
 splitOver = splitOver' []
@@ -479,14 +470,14 @@ firstWithDefault (ma:mas) da = do
          Just a' -> return a'
          Nothing -> firstWithDefault mas da
 
-firstOrNothing :: (Monad m) => [m (Maybe a)] -> m (Maybe a)
-firstOrNothing [] = return Nothing
-firstOrNothing (ma:mas) = do
-    a <- ma
-    case a of
-         Just a' -> return $ Just a'
-         Nothing -> firstOrNothing mas
+findM :: Monad f => (a -> Bool) -> [f a] -> f (Maybe a)
+findM _ [] = return Nothing
+findM f (a:as) = do
+      a' <- a
+      if f a' then return $ Just a' else findM f as
 
+firstOrNothing :: (Monad m, Functor m) => [m (Maybe a)] -> m (Maybe a)
+firstOrNothing l = join <$> findM isJust l
          
 -- changing an element in a list
 chng :: [a] -> Int -> a -> [a]

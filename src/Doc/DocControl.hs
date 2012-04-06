@@ -79,7 +79,6 @@ import User.Model
 import Util.HasSomeUserInfo
 import qualified Log
 import Templates.Templates
-import Templates.Trans
 import Util.CSVUtil
 import Util.FlashUtil
 import Util.KontraLinkUtils
@@ -107,8 +106,8 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import Text.JSON hiding (Result)
-import Text.JSON.Fields as JSON (json)
-import qualified Text.JSON.Fields as JSON (field)
+import Text.JSON.Gen hiding (value)
+import qualified Text.JSON.Gen as J
 import Doc.DocDraft as Draft
 import qualified User.Action
 import Util.JSON
@@ -1033,7 +1032,7 @@ jsonDocument did = do
          Nothing -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "No document avaible")]
          Just doc -> do
              switchLocale (getLocale doc)
-             JSObject <$> documentJSON msiglink cttime doc
+             documentJSON msiglink cttime doc
     return rsp
 
 jsonDocumentGetterWithPermissionCheck ::   Kontrakcja m => DocumentID -> m (Maybe Document, Maybe SignatoryLink)
@@ -1171,23 +1170,21 @@ handleParseCSV = do
                    | length contents > 1000 -> oneProblemJSON $ renderTemplateFM "flashMessageCSVHasTooManyRows" $ field "maxrows" (1000::Int)
                    | otherwise -> do
                        let (problems, csvdata) = cleanCSVContents eleg customfieldscount contents
-                       liftIO $ json $ do
-                            JSON.field "problems" $ for problems $ \p -> do
-                                JSON.field "description" $ ((runTemplatesT (ctxlocale ctx, ctxglobaltemplates ctx) $ csvProblemToDescription p) :: IO String)
-                                when (isJust $ problemRow p) $
-                                    JSON.field "row" $ fromJust $ problemRow p
-                                when (isJust $ problemCell p) $
-                                    JSON.field "cell" $ fromJust $ problemCell p
-                            JSON.field "rows" $ csvbody csvdata
+                       runJSONGenT $ do
+                         J.objects "problems" $ for problems $ \p -> do
+                           J.value "description" =<< lift (csvProblemToDescription p)
+                           when (isJust $ problemRow p) $
+                             J.value "row" $ fromJust $ problemRow p
+                           when (isJust $ problemCell p) $
+                             J.value "cell" $ fromJust $ problemCell p
+                           J.value "rows" $ csvbody csvdata
 
         _ -> do
             oneProblemJSON $ renderTemplateM "flashMessageFailedToParseCSV" ()
   return res
   where
       oneProblemJSON :: Kontrakcja m => m String -> m JSValue
-      oneProblemJSON ms = do
-          s <- ms
-          liftIO $ json $ do
-            JSON.field "problems" $ do
-                JSON.field "description" s
-            JSON.field "rows" ([]::[String])
+      oneProblemJSON desc = runJSONGenT $ do
+        J.object "problems" $ do
+          J.value "description" =<< lift desc
+        J.value "rows" ([]::[String])

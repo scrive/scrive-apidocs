@@ -446,7 +446,7 @@ If the other party clicks on the signing link after you withdrawn the invitation
  inbjudan innan datumet förfallit. Detta regleras av avtalslagen.",,"WARNING: If you choose an expiration date, you cannot withdraw
  the invitation before the expiration. This is controlled by
  the Swedish Law of Contracts."
-"_contracthassignedformailtext","Har undertecknat",,"Has signed"
+"_contracthassignedformailtext","Har signeraat",,"Has signed"
 "_contractname","Avtal",,"Contract"
 "_documentpendinginfoheader","Väntar",,"Waiting"
 "_documentpendingviewonly","Detta är ett bara visa, och inga åtgärder kan vidtas.",,"This is a view only, and no actions can be taken."
@@ -466,7 +466,7 @@ If the other party clicks on the signing link after you withdrawn the invitation
 "_contractsealingtextsorgNumberText","Org.nr.",,"Company Reg No"
 "_contractsealingtextspartnerText","Parter",,"Parties"
 "_contractsealingtextssecretaryText","Ej undertecknande part",,"Non-signing party"
-"_contractsealingtextssignedText","Undertecknat",,"Signed"
+"_contractsealingtextssignedText","Signerat",,"Signed"
 "_contractsealingtextsverificationFooterRow1","Detta verifikat är utfärdat av Scrive CM AB och styrker att
  dokument nummer $documentid$ har undertecknats",,"This verification was issued by Scrive and supports that the
  document $documentid$ has been signed"
@@ -1417,7 +1417,7 @@ profits and reduce frustration. The following mateials shall only
  process through Scrive in which it was a signatory. The sender
  is assumed to understand the service.</td>"
 "_legalPageH2SignProcessH31Body2Table10","<td>10</td>             <td>Mottagare</td>              <td>Då mottagaren tryckt på
- knappen ”Underteckna” visas ett pop-up- fönster där sändaren
+ knappen ”Signera” visas ett pop-up- fönster där sändaren
  frågas om den verkligen är säker på att den vill underteckna
  dokumentet.</td>",,"<td>10</td>                <td>Recipient</td>              <td>When the recipient presses
  the button ""Sign"", a pop-up shows where the signatory is asked
@@ -1453,21 +1453,21 @@ profits and reduce frustration. The following mateials shall only
  upp ett dokument, sedan fyller den i inbjudna parters uppgifter
  och definierar fält i dokumentet som eventuellt ska fyllas i
  av mottagaren. I sista steget kan avsändaren underteckna dokumentet
- genom att klicka på knappen ”Underteckna”.</td>",,"<td>4</td>          <td>Sener</td>          <td>When the sender is inviting
+ genom att klicka på knappen ”Signera”.</td>",,"<td>4</td>          <td>Sener</td>          <td>When the sender is inviting
  the other party, it follows a three step process. First, a document
  is uploaded. Second, information about the counterpart is
  filled in and fields are that the counterpart is supposed to
  fill in are defined. In the last step, the sender signs the
  document by clicking ""Sign"".</td>"
 "_legalPageH2SignProcessH31Body2Table5","<td>5</td>               <td>Avsändare</td>              <td>Då avsändaren trycker på
- knappen ”Underteckna” visas ett pop-up-fönster där avsändaren
+ knappen ”Signera” visas ett pop-up-fönster där avsändaren
  frågas om den verkligen är säker på att den vill underteckna
- dokumentet. När den klickat ”Underteckna” skickas en inbjudan
+ dokumentet. När den klickat ”Signera” skickas en inbjudan
  via e-post till definierade parter och avsändaren informeras
  att det undertecknade dokumentet nu undertecknats och skickats.
  </td>",,"<td>5</td>            <td>Sender</td>         <td>When the sender clicks the
- button ""Sign"", a pop-up shows where the sender is asked if it
- s really sure about signing the document. When ""Sign""
+ button ""Sign"", a pop-up shows where the sender is asked if he
+ is really sure about signing the document. When ""Sign""
  is clicked, an invitation is sent by e-mail to the involved
  Counterparts, and the sender is informed that the document
  has been signed and sent.</td>"
@@ -1495,7 +1495,7 @@ profits and reduce frustration. The following mateials shall only
 "_legalPageH2SignProcessH31Body2Table9","<td>9</td>               <td>Mottagare</td>              <td>När mottagaren bläddrat
  ned genom hela dokumentet till slutet och med största sannolikt
  noterat att den bläddrar genom ett dokument kan mottagaren slutligen
- klicka i en knapp med texten ”Underteckna”.</td>",,"<td>9</td>         <td>Recipient</td>              <td>When the recipient has
+ klicka i en knapp med texten ”Signera”.</td>",,"<td>9</td>         <td>Recipient</td>              <td>When the recipient has
  scrolled through the whole document, he clicks a button with
  the text ""Sign"" if he wants to sign.</td>"
 "_legalPageH2SignProcessH31Body2TableHead","<th>Steg</th>         <th>Användare</th>              <th>Juridisk orsak</th>",,"<th>Step</th>                <th>User</th>           <th>Legal reason</th>"
@@ -1545,7 +1545,7 @@ profits and reduce frustration. The following mateials shall only
          av $partylist:noescape()$. Avtalet är nu bindande.",,"The document <strong>$documenttitle$</strong> has been signed by $partylist:noescape()$. This agreement is now legally binding."
 "_mailDocumentAwaitingForAuthorContentInstruction","För att färdigställa dokumentet gör följande:<br/>      1. Klicka
  på den här länken <a href=""$documentlink$"">$documenttitle$</a><br/>
-      2. Granska uppgifterna<br/>      3. Underteckna
+      2. Granska uppgifterna<br/>      3. Signera
  För att avtalet skall färdigställas krävs din underskrift.",,"To finalise the document:<br/>      1. Click this link <a href=""$documentlink$"">$documenttitle$</a><br/>2. Review<br/>3. Sign the  agreement"
 "_mailDocumentAwaitingForAuthorContentSignedBy","Dokumentet <strong>$documenttitle$</strong> har undertecknats
  av $partylist:noescape()$.      Därmed är det bara du kvar innan
@@ -1565,7 +1565,7 @@ profits and reduce frustration. The following mateials shall only
 "_mailInvitationToSignContractContentIfNotSignatoryInstruction","Du har behörighet att se detta dokument    Klicka på den här länken
  nedan för att se dokumentet:",,"You are authorised to view this document    Click this link to view:"
 "_mailInvitationToSignContractContentIfSignatoryInstruction","<i>Så här går du vidare</i><br/>      1. Klicka på <a href=""$link$"">den här länken</a><br/>      2. Granska
- online<br/>      3. Underteckna (eller avvisa)<br/>       4.
+ online<br/>      3. Signera (eller avvisa)<br/>       4.
  Färdig",,"<i>To continue:</i><br/>      1. Click <a href=""$link$"">this link</a><br/>      2. Review online<br/>       3. Sign (or return)<br/>       4. Done"
 "_mailInvitationToSignContractContentInfo","Översiktlig information",,"General information"
 "_mailInvitationToSignContractContentPartys","Parter:",,"Parties:"
@@ -1586,7 +1586,7 @@ profits and reduce frustration. The following mateials shall only
 "_mailInvitationToSignOrderContentIfNotSignatoryInstruction","Du har behörighet att se detta dokument    Klicka på den här länken
  Nedan för att se dokumentet:",,"You are authorised to view this document    Click this link to view:"
 "_mailInvitationToSignOrderContentIfSignatoryInstruction","1. Klicka på <a href=""$link$"">den här länken</a><br/>
-      2. Bekräfta ordern<br/>      3. Underteckna (eller avvisa)<br/>
+      2. Bekräfta ordern<br/>      3. Signera (eller avvisa)<br/>
        4. Färdig",,"1. Click <a href=""$link$"">this link</a><br/>
       2. Confirm your order <br/>      3. Sign (or return)<br/>
        4. Done"
@@ -2073,7 +2073,7 @@ simply better."
 "_queryColumnQuestions","Frågor? Kontakta oss!",,"Questions? Contact us."
 "_remindMailNotSignedContractContentInfo","Översiktlig information",,"General information"
 "_remindMailNotSignedContractContentInstruction","<i>Så här går du vidare</i><br/>        1. Klicka på <a href=""$link$"">den här länken</a><br/>        2.
- Granska online<br/>        3. Underteckna (eller avvisa)<br/>
+ Granska online<br/>        3. Signera (eller avvisa)<br/>
          4. Färdig",,"<i>To continue</i><br/>        1. Click <a href=""$link$"">this link</a><br/>        2. Review online<br/>         3. Sign (or return)<br/>         4. Done"
 "_remindMailNotSignedContractStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte undertecknat eller avvisat
  dokument <strong>$documenttitle$</strong> ännu.",,"<strong>$author$</strong> wants to remind you that you haven't
@@ -2366,7 +2366,7 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_signatorycanceledordertext","Order återkallad",,"Order withdrawn"
 "_signatoryname","Fullständigt namn",,"Full name"
 "_signatoryremove","Ta bort",,"Remove"
-"_signatorysignedcontracttext","Undertecknat",,"Signed"
+"_signatorysignedcontracttext","Signerat",,"Signed"
 "_signatorysignedoffertext","Accepterat offert",,"Accepted offer"
 "_signatorysignedordertext","Ordern bekräftad",,"Order confirmed"
 "_signupLinkEmailPartClickLink","Vänligen klicka på länken för att aktivera kontot:<br/>    <br/>",,"Click to activate:<br/>    <br/>"
@@ -2389,11 +2389,11 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_step2selectIfElse","Lägg till parter",,"Add parties"
 "_step2selectIfTemplate","Utforma mall",,"Design template"
 "_step2selectIfisbasic","Lägg till part &amp; Skicka!",,"Add party &amp; Send!"
-"_step3select","Underteckna &amp; skicka!",,"Sign &amp; send!"
-"_step3selectIfNotTemplate","Underteckna och skicka!",,"Sign and send!"
+"_step3select","Signera &amp; skicka!",,"Sign &amp; send!"
+"_step3selectIfNotTemplate","Signera och skicka!",,"Sign and send!"
 "_step3selectIfTemplate","Färdigställ och spara",,"Finish and save"
 "_switchercheckboxNotSignatory","Ej undertecknande part",,"Non-signing party"
-"_switchercheckboxSignLast","Underteckna sist",,"Sign last"
+"_switchercheckboxSignLast","Signera sist",,"Sign last"
 "_tablestatusesCancelled","Avbrutet",,"Canceled"
 "_tablestatusesConfirmed","Bekräftat",,"Confirmed"
 "_tablestatusesDelivered","Levererat",,"Delivered"
