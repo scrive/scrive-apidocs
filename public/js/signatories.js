@@ -8,7 +8,8 @@ window.SignatoryAttachment = Backbone.Model.extend({
     defaults: {
         name: "",
         description: "",
-        loading: false
+        loading: false,
+        reviewed: false
     },
     initialize: function(args) {
       if (args.file != undefined)
@@ -19,7 +20,7 @@ window.SignatoryAttachment = Backbone.Model.extend({
         return this.get("file");
     },
     setFile: function(file) {
-        return this.set({'file': file});
+        return this.set({'file': file, 'reviewed':false});
     },
     description: function() {
         return this.get("description");
@@ -29,6 +30,13 @@ window.SignatoryAttachment = Backbone.Model.extend({
     },
     hasFile: function() {
         return this.file() != undefined;
+    },
+    isReviewed: function() {
+        return this.get('reviewed');
+    },
+    review: function() {
+        this.set({'reviewed':true});
+        return this;
     },
     signatory: function() {
         return this.get("signatory");
@@ -85,9 +93,14 @@ window.SignatoryAttachmentUploadView = Backbone.View.extend({
       });
     return removelink;
   },
-  fileLink: function() {
-    return $("<a target='_blank'/>").text(localization.reviewPDF).attr("href", this.model.file().downloadLink());
-  },
+    // Review attachment change
+    // please delete on or after May 1, 2012
+    // -- Eric
+    /*
+    fileLink: function() {
+        return $("<a target='_blank'/>").text(localization.reviewPDF).attr("href", this.model.file().downloadLink());
+    },
+    */
   uploadButton: function() {
     var attachment = this.model;
     var uploadurl = this.apiURL();
@@ -130,32 +143,48 @@ window.SignatoryAttachmentUploadView = Backbone.View.extend({
       })
     });
   },
+  reviewButton: function() {
+      var model = this.model;
+      var button = Button.init({color: "green", text: localization.reviewPDF, width: 90, size:'small', onClick: function() {
+          model.review();
+          window.open(model.file().downloadLink(), '_blank');
+          }});
+      return button;
+  },
   render: function() {
-    var attachment = this.model;
-    var container = $("<div class='upload' />");
-    if (attachment.get('loading')) {
-      container.append($("<img class='loading'>").attr('src', "/theme/images/wait30trans.gif"));
-    } else if (attachment.hasFile()) {
-      container.append($("<div class='icon' />"));
-      var label = $("<div class='file' />");
-      label.append($("<div class='name' />").text(this.model.file().name() + ".pdf"));
-      var actions = $("<div />");
-      actions.append($("<div class='action' />").append(this.fileLink()));
-      if (!attachment.signatory().hasSigned()) {
-        actions.append($("<div class='action' />").append(this.removeLink()));
-      }
-      actions.append($("<div class='clearfix' />"));
-      label.append(actions);
-      label.append($("<div class='clearfix' />"));
-      container.append(label);
-    } else {
-      container.append(this.uploadButton().input());
-    }
-    container.append($("<div class='clearfix' />"));
+      var attachment = this.model;
+      var container = $("<div class='upload' />");
+      if (attachment.get('loading')) {
+          container.append($("<img class='loading'>").attr('src', "/theme/images/wait30trans.gif"));
+      } else if (attachment.hasFile()) {
+          container.append($("<div class='icon' />"));
+          var label = $("<div class='file' />");
+          label.append($("<div class='name' />").text(this.model.file().name() + ".pdf"));
+          var actions = $("<div />");
+          //review button change
+          //please delete this line after May 1, 2012
+          // -- Eric
+          //actions.append($("<div class='action' />").append(this.fileLink()));
+          if (!attachment.signatory().hasSigned()) {
+              actions.append($("<div class='action' />").append(this.removeLink()));
+          }
+          actions.append($("<div class='clearfix' />"));
+          label.append(actions);
+          label.append($("<div class='clearfix' />"));
+          container.append(label);
+          var buttonbox = $('<div class="buttonbox" />');
+          buttonbox.append(this.reviewButton().input());
+          container.append(buttonbox);
 
-    $(this.el).empty();
-    $(this.el).append(container);
-    return this;
+      } else {
+          container.append(this.uploadButton().input());
+      }
+      container.append($("<div class='clearfix' />"));
+
+      $(this.el).empty();
+      $(this.el).append(container);
+
+      return this;
   }
 });
 

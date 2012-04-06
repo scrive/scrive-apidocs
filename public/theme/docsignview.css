@@ -514,7 +514,7 @@ body.signview {
 
 .signview .signatoryattachments .list {
   float: left;
-
+  width: 605px;
   margin-right: 20px;
 }
 
@@ -526,14 +526,12 @@ body.signview {
 .signview .signatoryattachments .list .item .first.column {
   float: left;
   display: block;
-  width: 350px;
   margin-right: 30px;
 }
 
 .signview .signatoryattachments .list .item .second.column {
-  float: left;
+  float: right;
   display: block;
-  width: 200px;
 }
 
 .signview .signatoryattachments .list .item .loading {
@@ -876,4 +874,14 @@ div.spacing.butt {
 
 .section.signatories {
     padding-top: 20px;
+}
+
+.section .signatoryattachments {
+    padding-top: 20px;
+    padding-bottom: 10px; /* An extra 10px snuck in somewhere! */
+}
+
+.signatoryattachments .buttonbox {
+    float: left;
+    margin-left: 10px;
 }

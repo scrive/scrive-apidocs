@@ -799,16 +799,15 @@ window.DocumentSignView = Backbone.View.extend({
         return;
       }
       var tasks = [];
-      for (var i = 0; i < attachments.length; i++) {
-        tasks.push(this.signatoryAttachmentTask(attachments[i], attachmentels[i]));
-      }
+      for (var i = 0; i < attachments.length; i++)
+          tasks.push(this.signatoryAttachmentTask(attachments[i], attachmentels[i]));
       return tasks;
     },
     signatoryAttachmentTask: function(attachment, el) {
       return new DocumentSignViewTask({
         model: attachment,
         isComplete: function() {
-          return attachment.hasFile();
+          return attachment.hasFile() && attachment.isReviewed();
         },
         el: el
       });
@@ -842,8 +841,6 @@ window.DocumentSignView = Backbone.View.extend({
           // here. --Eric
         model: new DocumentSignSignatoryBox({document:this.model}),
         el: $("<div class='section signatories spacing'/>"),
-        onExpand: triggerArrowChange,
-        onCollapse: triggerArrowChange
       });
     },
     createRejectButtonElems: function() {
@@ -972,11 +969,8 @@ window.DocumentSignView = Backbone.View.extend({
 
         if (this.model.isSignatoryAttachments()) {
           var attachmentsview = this.createSignatoryAttachmentsView();
-          if (this.model.currentSignatoryCanSign()) {
-            _.each(this.signatoryAttachmentTasks(attachmentsview.uploadElems), function(task) {
-              tasks.push(task);
-            });
-          }
+          if (this.model.currentSignatoryCanSign())
+            _.each(this.signatoryAttachmentTasks(attachmentsview.uploadElems), function(task) { tasks.push(task); });
           bottomstuff.append($(attachmentsview.el));
         }
 
@@ -1081,13 +1075,7 @@ window.DocumentSignViewTasks = Backbone.Model.extend({
     return this.nextIncompleteTask() != undefined;
   },
   nextIncompleteTask: function() {
-    var tasks = this.tasks();
-    for (var i = 0; i < tasks.length; i++) {
-      if (!tasks[i].complete()) {
-        return tasks[i];
-      }
-    }
-    return undefined;
+      return _.find(this.tasks(), function(t) { return !t.complete(); });
   }
 });
 
