@@ -162,8 +162,10 @@ var SignaturePlacementViewForDrawing = Backbone.View.extend({
             box.addClass('signatureBox');
             if (!this.signature.hasImage())
             {
-                box.width(this.signature.width());
-                box.height(this.signature.height());
+                var bwidth = 253;
+                var bheight = 48;
+                box.width(Math.max(this.signature.width(),bwidth));
+                box.height(Math.max(this.signature.height(),bheight));
                 var button = $("<div/>")
                 if (!signatory.canPadSignQuickSign()){
                     button.addClass('placesignaturebutton')

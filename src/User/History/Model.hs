@@ -10,6 +10,8 @@ module User.History.Model (
   , LogHistoryTOSAccept(..)
   , LogHistoryDetailsChanged(..)
   , LogHistoryUserInfoChanged(..)
+  , LogHistoryPadLoginAttempt(..)
+  , LogHistoryPadLoginSuccess(..)
   , GetUserHistoryByUserID(..)
   ) where
 
@@ -56,6 +58,8 @@ data UserHistoryEventType = UserLoginAttempt
                           | UserAccountCreated 
                           | UserDetailsChange 
                           | UserTOSAccept
+                          | UserPadLoginAttempt
+                          | UserPadLoginSuccess
   deriving (Eq, Show)
 
 {- |
@@ -70,7 +74,8 @@ instance Convertible UserHistoryEventType SqlValue where
   safeConvert UserAccountCreated   = return . toSql $ (5 :: Int)
   safeConvert UserDetailsChange    = return . toSql $ (6 :: Int)
   safeConvert UserTOSAccept        = return . toSql $ (7 :: Int)
-
+  safeConvert UserPadLoginAttempt  = return . toSql $ (8 :: Int)
+  safeConvert UserPadLoginSuccess  = return . toSql $ (9 :: Int)
 instance Convertible SqlValue UserHistoryEventType where
   safeConvert a = case (fromSql a :: Int) of
     1 -> return UserLoginAttempt
@@ -80,6 +85,8 @@ instance Convertible SqlValue UserHistoryEventType where
     5 -> return UserAccountCreated
     6 -> return UserDetailsChange
     7 -> return UserTOSAccept
+    8 -> return UserPadLoginAttempt
+    9 -> return UserPadLoginSuccess
     n -> Left ConvertError {
         convSourceValue = show n
       , convSourceType = "Int"
@@ -112,6 +119,25 @@ instance DBUpdate LogHistoryLoginSuccess Bool where
     time
     (Just userid)
 
+data LogHistoryPadLoginAttempt = LogHistoryPadLoginAttempt UserID IPAddress MinutesTime
+instance DBUpdate LogHistoryPadLoginAttempt Bool where
+  dbUpdate (LogHistoryPadLoginAttempt userid ip time) = addUserHistory
+    userid
+    UserHistoryEvent {uheventtype = UserPadLoginAttempt, uheventdata = Nothing}
+    ip
+    time
+    Nothing
+
+data LogHistoryPadLoginSuccess = LogHistoryPadLoginSuccess UserID IPAddress MinutesTime
+instance DBUpdate LogHistoryPadLoginSuccess Bool where
+  dbUpdate (LogHistoryPadLoginSuccess userid ip time) = addUserHistory
+    userid
+    UserHistoryEvent {uheventtype = UserPadLoginSuccess, uheventdata = Nothing}
+    ip
+    time
+    (Just userid)
+
+    
 data LogHistoryPasswordSetup = LogHistoryPasswordSetup UserID IPAddress MinutesTime (Maybe UserID)
 instance DBUpdate LogHistoryPasswordSetup Bool where
   dbUpdate (LogHistoryPasswordSetup userid ip time mpuser) = addUserHistory

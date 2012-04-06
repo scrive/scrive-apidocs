@@ -1,4 +1,5 @@
 /* Signature - format, parsing, to-and-from field conversion
+ * 
  */
 
 
@@ -37,13 +38,13 @@ window.Signature = Backbone.Model.extend({
         return this.get("height");
     },
     swidth : function(){
-        return this.width() * this.drawScaling();
+        return Math.floor(this.width() * this.drawScaling());
     },
     sheight : function(){
-        return this.height() * this.drawScaling();
+        return Math.floor(this.height() * this.drawScaling());
     },
     setSize: function(width, height) {
-        this.set({width: width, height : height, image : undefined});
+        this.set({width: Math.floor(width), height : Math.floor(height), image : undefined});
         this.saveToField();
     },
     restoreFromField : function() {

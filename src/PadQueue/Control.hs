@@ -29,7 +29,8 @@ import AppView
 import Happstack.Server.Types
 import Data.Char (toLower)
 import Data.Maybe
-
+import EvidenceLog.Model
+import User.History.Model
 -- PadQueue STATE
 padQueueState ::  (Kontrakcja m) =>  m JSValue
 padQueueState = do
@@ -52,14 +53,16 @@ addToQueue did slid = do
     _ <- guardJust $ getSigLinkFor doc slid
     if (doc `allowsIdentification` PadIdentification)
         then do
-            runDB $ dbUpdate $ AddToPadQueue uid did slid
+            actor <- guardJustM $ mkAuthorActor <$> getContext
+            runDB $ dbUpdate $ AddToPadQueue uid did slid actor
             liftIO $ json $ return ()
         else internalError
 
 clearQueue :: (Kontrakcja m) =>  m JSValue
 clearQueue = do
     uid <- userid <$> (guardJustM $ ctxmaybeuser <$> getContext)
-    runDB $ dbUpdate $ ClearPadQueue uid 
+    actor <- guardJustM $ mkAuthorActor <$> getContext
+    runDB $ dbUpdate $ ClearPadQueue uid actor
     liftIO $ json $ return ()
 
 -- PadQueue Pages
@@ -87,6 +90,10 @@ handlePadLogin = do
         (Just email, Just passwd) -> do
             -- check the user things here
             maybeuser <- runDBQuery $ GetUserByEmail Nothing (Email $ map toLower $ email)
+            when_ (isJust maybeuser) $ do
+                 ctx <- getContext
+                 _ <- runDBUpdate $ LogHistoryPadLoginAttempt (userid $ fromJust maybeuser) (ctxipnumber ctx) (ctxtime ctx)
+                 return ();
             case maybeuser of
                Just user@User{userpassword}
                     | verifyPassword userpassword passwd -> do
@@ -109,6 +116,8 @@ handlePadLogout = do
 loginPadUser :: Kontrakcja m => User -> m ()
 loginPadUser user = do
     -- Some event loging should be done here
+    ctx <- getContext
+    _ <- runDBUpdate $ LogHistoryPadLoginSuccess (userid user) (ctxipnumber ctx) (ctxtime ctx)
     logPadUserToContext (Just user)
 
 logoutPadUser :: Kontrakcja m => m ()
