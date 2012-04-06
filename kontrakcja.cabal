@@ -184,7 +184,6 @@ Executable kontrakcja-server
   Build-depends: directory
   Build-depends: explicit-exception == 0.1.6
   Build-depends: extensible-exceptions
-  Build-depends: fields-json==0.1
   Build-depends: filepath
   Build-depends: hS3 == 0.5.6
   Build-depends: happstack-data==6.0.1

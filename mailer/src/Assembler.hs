@@ -13,7 +13,7 @@ import Data.List
 import Data.Maybe
 import Text.HTML.TagSoup
 import Text.HTML.TagSoup.Entity
-import Text.JSON.Fields
+import Text.JSON.Gen
 import qualified Codec.Binary.QuotedPrintable as QP
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
@@ -34,8 +34,8 @@ assembleContent Mail{..} = do
         field "email_id" $ show mailID
         field "email_token" $ show mailToken
         forM_ (fromXSMTPAttrs mailXSMTPAttrs) $ uncurry field
-  mailgundata <- liftIO $ json datafields
-  xsmtpapi <- liftIO $ json $ field "unique_args" $ datafields
+      mailgundata = runJSONGen datafields
+      xsmtpapi = runJSONGen $ field "unique_args" datafields
   let -- FIXME: add =?UTF8?B= everywhere it is needed here
       headerEmail =
         -- FIXME: encoded word should not be longer than 75 bytes including everything

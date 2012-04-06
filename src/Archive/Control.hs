@@ -140,7 +140,7 @@ jsonDocumentsList = withUserGet $ do
   params <- getListParamsNew
   let docs = docSortSearchPage params allDocs
   cttime <- getMinutesTime
-  docsJSONs <- mapM (fmap JSObject . docForListJSON (timeLocaleForLang lang) cttime user) $ list docs
+  docsJSONs <- mapM (docForListJSON (timeLocaleForLang lang) cttime user) $ list docs
   return $ JSObject $ toJSObject [
       ("list", JSArray docsJSONs)
     , ("paging", pagingParamsJSON docs)

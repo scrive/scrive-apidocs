@@ -25,9 +25,9 @@ import Util.SignatoryLinkUtils
 import Util.MonadUtils
 import Doc.DocStateQuery
 import Text.JSON
-import Text.JSON.Fields
 import ELegitimation.BankIDUtils
 import ELegitimation.BankIDRequests
+import Text.JSON.Gen
 
 {- |
    Handle the Ajax request for initiating a BankID transaction.
@@ -68,12 +68,12 @@ generateBankIDTransaction docid signid = do
                                             , transactionnonce = nonce
                                             }
                     Log.eleg "Eleg chalenge generation sucessfull"
-                    liftIO $ json $ do
+                    return $ runJSONGen $ do
                         field "status" (0::Int)
-                        field "servertime"  $ show seconds
+                        field "servertime" $ show seconds
                         field "nonce" nonce
                         field "tbs" txt
-                        field "transactionid"  transactionid
+                        field "transactionid" transactionid
 
 generateBankIDTransactionForAuthor :: Kontrakcja m => DocumentID -> m JSValue
 generateBankIDTransactionForAuthor  docid = do
@@ -109,7 +109,7 @@ generateBankIDTransactionForAuthor  docid = do
                                         , transactionmagichash       = Nothing
                                         , transactionnonce           = nonce
                                         }
-                    liftIO $ json $ do
+                    return $ runJSONGen $ do
                         field "status" (0::Int)
                         field "servertime"  $ show $ toSeconds time
                         field "nonce" nonce
@@ -120,9 +120,10 @@ generateBankIDTransactionForAuthor  docid = do
 generationFailed:: Kontrakcja m => String -> Int -> String -> m JSValue
 generationFailed desc code msg = do
   Log.eleg $ desc ++  " | code: " ++ show code ++" msg: "++ msg ++ " |"
-  liftIO $ json $ do
-                field "status" code
-                field "msg" msg
+  return $ runJSONGen $ do
+    field "status" code
+    field "msg" msg
+
 {- |
    Validating eleg-data passed when signing
  -}
