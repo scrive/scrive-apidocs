@@ -454,9 +454,7 @@ body.signview {
 
 .signview .section {
   clear: both;
-
   margin: 7px;
-  padding: 20px;
   background-color: white;
   background-image: url(../img/horizontal-shading-bar.png);
   background-repeat: no-repeat;
@@ -612,95 +610,103 @@ body.signview {
   cursor: pointer;
 }
 
-.signview .signatories .list {
-  float: left;
+.signview .signatories .list .sig .statustext {
+    width: 124px;
+    float: left;
+    text-transform: uppercase;
+    font-size: 11px;
+    vertical-align: middle;
+    line-height: 15px;
 }
 
-.signview .signatories .list .column {
-  float: left;
-  width: 280px;
-  margin-right: 20px;
-  min-height: 10px;
+.statustext.signed {
+    color: black;
 }
 
-.signview .signatories .signatory {
-  border: solid #bababc 1px;
-  padding: 10px;
+.statustext.opened {
+    color: #83BC39;
 }
 
-.signview .signatories .grouping {
-  margin-bottom: 10px;
+.statustext.sent {
+    color: #83BC39;
 }
 
-.signview .signatories .email {
-  overflow-x: auto;
+.signview .signatories .column {
+    width: 260px;
+    float: left;
+    border: solid #bababc 1px;
+    height: 185px;
 }
 
-.signview .signatories .signatory .name {
-  color: black;
-  font-weight: bold;
+.signview .signatories .name {
+    font-weight: bold;
+    color: black;
+    font-size: 14px;
+    height: 19px;
 }
 
-.signview .signatories .signatory .company {
-  color: black;
-  font-weight: bold;
-  font-size: smaller;
+ .signview .signatories .company {
+    font-weight: bold;
+    color: black;
+    height: 15px;
 }
 
-.signview .signatories .signatory .summary {
-  border-top-style: dotted;
-  border-top-color: #bababc;
-  border-top-width: 1px;
-  padding-top: 10px;
-  text-align: center;
-  font-weight: bold;
+.signview .signatories .face {
+    background-image: url('../img/missing-portrait.png');
+    background-size: cover;
+    width: 60px;
+    height: 50px;
+    float: left;
 }
 
-.signview .signatories .signatory .summary .labelwrapper {
-  margin: 0px auto;
+.signview .signatories .inner {
+    margin-top: 10px;
+    min-height: 72px;
 }
 
-.signview .signatories .signatory .summary.signed {
-  color: #83bc39;
+.signview .signatories .numspace {
+    float:left;
+    width: 130px;
+    height: 32px;
+    padding: 0px;
 }
 
-.signview .signatories .signatory .summary .icon {
-  float: none;
-  display: inline-block;
-/*   believe it or not these lines do inline-blocking for IE7 */
-  zoom: 1;
-  *display: inline;
-  _height: 11px;
-/*   end of IE7 junk */
+.signview .signatories .contactspace {
+    float:left;
+    width: 130px;
+    height: 32px;
+    padding: 0px;
+
 }
 
-.signview .signatories .signatory .summary .label {
-  display: inline-block;
-/*   believe it or not these lines do inline-blocking for IE7 */
-  zoom: 1;
-  *display: inline;
-  _height: 11px;
-/*   end of IE7 junk */
+.signview .signatories .statusbox {
+    border-top: 1px dashed;
+    text-align: center;
+    font-weight: bold;
+    font-size: 14px;
+    vertical-align: middle;
 }
 
-.signview .signatories .signatory.current .fieldwrapper {
-  margin-top: 10px;
+.signview .signatories .statusbox .spacing {
+    margin-left: auto;
+    margin-right: auto;
 }
 
-/** this stuff is kind of messy, need to improve when do inline field editing*/
-.signview .signatories .signatory .closedinputs .fieldvalue,
-.signview .signatories .signatory.other .fieldvalue {
-  border: none;
-  height: 17px;
-  line-height: 17px;
+.signview .signatories .statusbox .icon.status {
+    display: inline-block;
+    float: none;
 }
 
-.signview .signatories .signatory .closedinputs .label {
-  display: none;
+.signview .signatories .statusbox .signed {
+    color: black;
 }
 
-.signview .signatories .signatory .closedinputs .fieldwrapper {
-  margin-top: 0px;
+.signview .signatories .statusbox .opened {
+    color: #83BC39;
+}
+
+.signview .signatories .statusbox .sent {
+    color: #83BC39;
 }
 
 /*Hide the info text on the custom fields, cos
@@ -844,3 +850,30 @@ body.signview {
   text-decoration: none;
 }
 
+div.spacing {
+    margin: 4px;
+    padding: 8px;
+}
+
+div.spacing.butt {
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+}
+
+.sig.first {
+    margin-top: 0px;
+    padding-top: 0px;
+}
+
+.sig {
+    margin-top: 2px;
+    padding-top: 6px;
+}
+
+.column.spacing {
+    margin-right: 20px;
+}
+
+.section.signatories {
+    padding-top: 20px;
+}

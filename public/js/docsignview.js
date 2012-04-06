@@ -84,262 +84,147 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
   }
 });
 
-window.DocumentSignSignatoryView = Backbone.View.extend({
-  initialize: function(args) {
-    _.bindAll(this, 'render');
-    this.model.bind('reset', this.render);
-    this.model.bind('change', this.render);
-    this.onExpand = args.onExpand;
-    this.onCollapse = args.onCollapse;
-    this.customfieldelems = [];
-    this.render();
-  },
-  signatorySummary: function() {
-    var signatory = this.model;
-    var document = signatory.document();
-    if (signatory.signdate() != undefined)
-      return localization.signatoryMessage.signed;
-    else if (signatory.datamismatch() == true ||
-               document.timedout() ||
-               document.canceled() ||
-               document.datamismatch())
-      return localization.docsignview.unavailableForSign;
-    else if (signatory.rejecteddate() != undefined)
-      return localization.signatoryMessage.rejected;
-    else
-      return localization.signatoryMessage.waitingForSignature;
-  },
-  isInputField: function(field) {
-    return (field.name() != "fstname" &&
-              field.name() != "sndname" &&
-              field.name() != "email" &&
-              field.name() != "sigco" &&
-              field.name() != "sigpersnr" &&
-              field.name() != "sigcompnr" &&
-              field.name() != "signature");
-  },
-  createCompactInfoElements: function() {
-    var view = this;
-    var signatory = this.model;
-
-    var container = $("<div />");
-    container.append($("<div class='grouping' />").append($("<div class='name' />").text(this.model.name())));
-    var expandlink = $("<a />");
-    expandlink.click(function() {
-      view.expanded = true;
-      signatory.trigger("change");
-      view.onExpand();
-    });
-    expandlink.text(localization.docsignview.showDetails);
-    container.append($("<div class='grouping' />").append(expandlink));
-
-    return container;
-  },
-  createDetailedInfoElements: function() {
-    var signatory = this.model;
-    var view = this;
-
-    var container = $("<div />");
-
-    var topbit = $("<div class='grouping' />");
-    topbit.append($("<div class='name' />").text(signatory.name()));
-    topbit.append($("<div class='company' />").text(signatory.company()));
-    container.append(topbit);
-
-    if (signatory.companynumber() != "" || signatory.personalnumber() != "") {
-      var middlebit = $("<div class='grouping' />");
-      if (signatory.companynumber() != "") {
-        middlebit.append($("<div class='companynumber'/>").text(localization.docsignview.companyNumberLabel + ": " + signatory.companynumber()));
-      }
-      if (signatory.personalnumber() != "") {
-        middlebit.append($("<div class='personalnumber'/>").text(localization.docsignview.personalNumberLabel + ": " + signatory.personalnumber()));
-      }
-      container.append(middlebit);
+window.DocumentSignSignatoryBox = Backbone.Model.extend({
+    defaults: {
+        index: 0
+    },
+    initialize: function(args) {
+        var me = this;
+        this.document().bind('change', function(){ me.trigger('change:document'); });
+    },
+    currentSignatoryIndex: function() {
+        return this.get('index');
+    },
+    setSignatoryIndex: function(i) {
+        this.set({index:i});
+        return this;
+    },
+    document: function() {
+        return this.get('document');
+    },
+    signatories: function() {
+        var signatories = this.document().signatories();
+        var current = _.find  (signatories, function(s) { return  s.current(); });
+        var others  = _.filter(signatories, function(s) { return !s.current(); });
+        return [current].concat(others);
+    },
+    currentSignatory: function() {
+        return this.signatories()[this.currentSignatoryIndex()];
     }
-
-    var bottombit = $("<div class='grouping' />");
-    bottombit.append($("<div class='email' />").text(signatory.email()));
-    container.append(bottombit);
-
-    /** this stuff is messy, it's there to cope with fields that aren't placed,
-        it may be deletable in the future, depending on what happens to custom fields that
-        aren't placed*/
-    var closedinputbits = $("<div class='grouping closedinputs' />");
-    var isclosedinputs = false;
-
-    var inputbits = $("<div class='grouping' />");
-    var isinputs = false;
-    var isInputField = this.isInputField;
-    _.each(signatory.fields(), function(field) {
-      if (isInputField(field) && !field.isPlaced()) {
-        /**don't show other people's custom fields that
-        still need filling**/
-        if (field.value() == "" && !signatory.current()) {
-          return;
-        }
-        var fieldwrapper = $("<div class='fieldwrapper'/>");
-        if (signatory.current()) {
-          fieldwrapper.append($("<div class='label' />").text(field.nicename() + ":"));
-        }
-        var fieldview = new FieldStandardView({
-          model: field,
-          el: $("<div class='field' />")
-        });
-        var customfield = $(fieldview.el);
-        view.customfieldelems.push(customfield);
-        fieldwrapper.append(customfield);
-        if (field.isClosed()) {
-          closedinputbits.append(fieldwrapper);
-          isclosedinputs = true;
-        } else {
-          inputbits.append(fieldwrapper);
-          isinputs = true;
-        }
-      }
-    });
-    if (isclosedinputs) {
-      container.append(closedinputbits);
-    }
-    if (isinputs) {
-      container.append(inputbits);
-    }
-
-    if (!signatory.current()) {
-      var compactlink = $("<a />");
-      compactlink.click(function() {
-        view.expanded = false;
-        signatory.trigger("change");
-        view.onCollapse();
-      });
-      compactlink.text(localization.docsignview.hideDetails);
-      container.append($("<div class='grouping' />").append(compactlink));
-    }
-
-    return container;
-  },
-  createSummaryElements: function() {
-    var signatory = this.model;
-
-    var container = $("<div class='summary' />");
-    var labelwrapper = $("<div class='labelwrapper' />");
-    if (signatory.signs()) {
-      container.addClass(signatory.status());
-      if (signatory.hasSigned()) {
-        container.addClass("signed");
-        labelwrapper.append($("<div class='icon status signed' />"));
-      }
-      labelwrapper.append($("<div class='label' />").text(this.signatorySummary()));
-    } else {
-      labelwrapper.append($("<div class='label' />").text(signatory.document().process().authorissecretarytext()));
-    }
-    container.append(labelwrapper);
-    return container;
-  },
-  render: function() {
-    $(this.el).empty();
-
-    var signatory = this.model;
-
-    var container = $("<div class='signatory' />");
-    if (signatory.current()) {
-      container.addClass("current");
-    } else {
-      container.addClass("other");
-    }
-
-    if (!signatory.current() && !this.expanded) {
-      container.append(this.createCompactInfoElements());
-    } else {
-      container.append(this.createDetailedInfoElements());
-    }
-
-    container.append(this.createSummaryElements());
-
-    $(this.el).append(container);
-    return this;
-  }
 });
 
 window.DocumentSignSignatoriesView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
-    this.onExpand = args.onExpand;
-    this.onCollapse = args.onCollapse;
-    this.customfieldelems = [];
+    this.model.bind('change', this.render);
     this.render();
   },
-  orderedOtherSignatories: function() {
-    var document = this.model;
-    var othersignatories = new Array();
-
-    if (!document.currentSignatory().author()) {
-      othersignatories.push(document.author());
-    }
-
-    var pushOthersWhereHasSignedIs = function(hassigned) {
-      _.each(document.otherSignatories(), function(signatory) {
-        if (!signatory.author() && signatory.signs() && signatory.hasSigned() == hassigned) {
-          othersignatories.push(signatory);
-        }
-      });
-    };
-
-    pushOthersWhereHasSignedIs(true);
-    pushOthersWhereHasSignedIs(false);
-
-    return othersignatories;
+  signatorySummary: function(signatory) {
+      var document = signatory.document();
+      if (signatory.signdate() != undefined)
+        return localization.signatoryMessage.signed;
+      else if (signatory.datamismatch() == true ||
+               document.timedout() ||
+               document.canceled() ||
+               document.datamismatch())
+          return localization.docsignview.unavailableForSign;
+      else if (signatory.rejecteddate() != undefined)
+          return localization.signatoryMessage.rejected;
+      else
+          return localization.signatoryMessage.waitingForSignature;
   },
-  createSignatoryView: function(signatory) {
-    return new DocumentSignSignatoryView({
-      model: signatory,
-      el: $("<div />"),
-      onExpand: this.onExpand,
-      onCollapse: this.onCollapse
-    });
+  siglist: function(signatories) {
+      var sigbox = this.model;
+      var list = $("<div class='list spacing' />");
+      _.each(signatories, function(signatory, index) {
+          var sigdiv     = $("<div class='sig' />");
+          if(index === 0)
+              sigdiv.addClass('first');
+          var name       = $("<div class='name' />").text(signatory.name);
+          var statusicon = $("<div class='icon status' />").addClass(signatory.statusicon);
+          var status     = $("<span class='statustext' />").addClass(signatory.statusicon).text(signatory.status);
+          var details    = $('<a class="details" href="#" />').text(localization.docsignview.showDetails);
+
+          details.click(function() {
+              sigbox.setSignatoryIndex(index);
+              return false;
+          });
+
+          sigdiv.append(name).append(statusicon).append(status).append(details);
+          list.append(sigdiv);
+      });
+      return list;
+  },
+  statusbox: function(signatory) {
+      var statusbox  = $('<div  class="statusbox" />');
+      var space = $('<div class="spacing butt" />');
+      var statusicon = $("<span class='icon status' />").addClass(signatory.status());
+      var status     = $("<span class='status' />").text(this.signatorySummary(signatory));
+      space.append(statusicon).append(status).addClass(signatory.status());
+      statusbox.append(space);
+      return statusbox;
+  },
+  sigbox: function(signatory) {
+      var box     = $('<div class="sigbox" />');
+
+      var titleinfo = $('<div class="titleinfo spacing" />');
+      var name      = $('<div class="name" />').text(signatory.name());
+      var company   = $('<div class="company" />').text(signatory.company());
+      titleinfo.append(name).append(company);
+      box.append(titleinfo);
+
+      var inner   = $('<div class="inner spacing" />');
+
+      var face    = $('<div class="face" />');
+      
+      var numspace = $('<div class="spacing numspace" />');
+      var orgnum  = $('<div class="orgnum" />').text(localization.docsignview.companyNumberLabel + ": " + signatory.companynumber());
+      var persnum = $('<div class="persnum" />').text(localization.docsignview.personalNumberLabel + ": " + signatory.personalnumber());
+      if(signatory.companynumber().trim())
+          numspace.append(orgnum);
+      if(signatory.personalnumber().trim())
+          numspace.append(persnum);
+
+      var contactspace = $('<div class="spacing contactspace" />');
+      var email   = $('<div class="email" />').text(signatory.email());
+      contactspace.append(email);
+
+      inner.append(face);
+
+      inner.append(numspace);
+      inner.append(contactspace);
+      box.append(inner);
+
+      box.append(this.statusbox(signatory));
+
+      return box;
   },
   render: function() {
-    $(this.el).empty();
+      var view = this;
+      var $el = $(this.el);
+      $el.empty();
 
-    var container = $("<div class='signatories' />");
-    container.append($("<h2 />").text(localization.docsignview.signatoriesTitle));
+      $el.append($("<h2 />").text(localization.docsignview.signatoriesTitle));
+      var box1 = $('<div class="column spacing" />');
+      var box2 = $('<div class="column spacing" />');
 
-    var signatoriesview = this;
-    var list = $("<div class='list' />");
-    var otheritem = undefined;
-    var row = undefined;
-    _.each(this.orderedOtherSignatories(), function(signatory) {
-      var item = $("<div class='column' />").append($(signatoriesview.createSignatoryView(signatory).el));
-      if (row == undefined) {
-        row = $("<div class='row' />").append(item);
-        otheritem = item;
-      } else {
-        row.append(item);
-        row.append($("<div class='clearfix' />"));
-        list.append(row);
-        row = undefined;
+      $el.append(box1).append(box2);
+
+      var sigbox = view.model;
+
+      var signatories = sigbox.signatories();
+
+      if(signatories.length > 2) {
+          var signatories_min = _.map(signatories, function(s) { return {name:s.nameOrEmail(),statusicon:s.status(),status:view.signatorySummary(s)} });
+          box1.append(view.siglist(signatories_min));
+          box2.append(view.sigbox(sigbox.currentSignatory()));
+      } else if (signatories.length === 2) {
+          box1.append(view.sigbox(signatories[0]));
+          box2.append(view.sigbox(signatories[1]));
+      } else if (signatories.length === 1) {
+          box1.append(view.sigbox(signatories[0]));
       }
-    });
-
-    if (this.model.currentSignatory().signs()) {
-      var currentsigview = signatoriesview.createSignatoryView(this.model.currentSignatory());
-      this.customfieldelems = currentsigview.customfieldelems;
-      var currentitem = $("<div class='column' />").append($(currentsigview.el));
-      if (row == undefined) {
-        row = $("<div class='row' />").append($("<div class='column' />"));
-      }
-      row.append(currentitem);
-      row.append($("<div class='clearfix' />"));
-      list.append(row);
-
-      list.append($("<div class='clearfix' />"));
-    }
-
-    container.append(list);
-    container.append($("<div class='clearfix' />"));
-
-    $(this.el).append(container);
-
-    return this;
+      return this;
   }
 });
 
@@ -952,8 +837,11 @@ window.DocumentSignView = Backbone.View.extend({
     },
     createSignatoriesView: function(triggerArrowChange) {
       return new DocumentSignSignatoriesView({
-        model: this.model,
-        el: $("<div class='section'/>"),
+          // I apologize for putting this model in the view, but 
+          // the model/view split was already messed up when I got
+          // here. --Eric
+        model: new DocumentSignSignatoryBox({document:this.model}),
+        el: $("<div class='section signatories spacing'/>"),
         onExpand: triggerArrowChange,
         onCollapse: triggerArrowChange
       });
@@ -1101,9 +989,9 @@ window.DocumentSignView = Backbone.View.extend({
           //are expanded or compressed, because this means any sign arrow may need to move
           var signatoriesview = this.createSignatoriesView(triggerArrowChange);
           if (this.model.currentSignatoryCanSign()) {
-            _.each(this.unPlacedFieldTasks(signatoriesview.customfieldelems), function(task) {
-              tasks.push(task);
-            });
+            //_.each(this.unPlacedFieldTasks(signatoriesview.customfieldelems), function(task) {
+            //  tasks.push(task);
+            //});
           }
           bottomstuff.append($(signatoriesview.el));
         }
