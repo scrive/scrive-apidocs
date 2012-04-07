@@ -80,6 +80,7 @@ var padTable = KontraList().init({
                                     url: "/padqueue/clear" ,
                                     method: "POST"
                                 }).sendAjax(function() { LoadingDialog.close(); padTable.recall(); });
+                            return false;    
                             });
                         }
                     else 

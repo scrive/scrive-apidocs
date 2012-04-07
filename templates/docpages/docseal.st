@@ -109,7 +109,11 @@ orderSignHistEntry=
 ###
 signMethod=
         $if(!provider)$
+          $if(email)$
             $_signMethodEmail()$
+          $elseif(pad)$
+            $_signMethodPad()$
+          $endif$
         $elseif(bankid)$
             $_signMethodElegBankID()$
         $elseif(norder)$

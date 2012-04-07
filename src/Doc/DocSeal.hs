@@ -65,8 +65,8 @@ personFromSignatoryDetails details =
                 , Seal.emailverified = True
                 }
 
-personFields :: MonadIO m => (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider,String) -> Fields m
-personFields (person, signinfo,_seeninfo, _ , mprovider, _initials) = do
+personFields :: MonadIO m => Document -> (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider,String) -> Fields m
+personFields doc (person, signinfo,_seeninfo, _ , mprovider, _initials) = do
    field "personname" $ Seal.fullname person
    field "signip" $  formatIP (signipnumber signinfo)
    field "seenip" $  formatIP (signipnumber signinfo)
@@ -74,7 +74,8 @@ personFields (person, signinfo,_seeninfo, _ , mprovider, _initials) = do
    field "bankid" $ mprovider == Just BankIDProvider
    field "nordea" $ mprovider == Just NordeaProvider
    field "telia"  $ mprovider == Just TeliaProvider
-
+   field "email"  $ EmailIdentification `elem` (documentallowedidtypes doc)
+   field "pad"    $ PadIdentification `elem` (documentallowedidtypes doc)
 
 personsFromDocument :: Document -> [(Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, String)]
 personsFromDocument document =
@@ -158,13 +159,13 @@ sealSpecFromDocument hostpart document elog inputpath outputpath =
       initials = concatComma initialsx
       makeHistoryEntryFromSignatory personInfo@(_ ,seen, signed, isauthor, _, _)  = do
           seenDesc <- renderLocalTemplateForProcess document processseenhistentry $ do
-                        personFields personInfo
+                        personFields document personInfo
                         documentInfoFields document
           let seenEvent = Seal.HistEntry
                             { Seal.histdate = show (signtime seen)
                             , Seal.histcomment = pureString seenDesc}
           signDesc <- renderLocalTemplateForProcess document processsignhistentry $ do
-                        personFields personInfo
+                        personFields document personInfo
                         documentInfoFields document
           let signEvent = Seal.HistEntry
                             { Seal.histdate = show (signtime signed)
@@ -172,9 +173,8 @@ sealSpecFromDocument hostpart document elog inputpath outputpath =
           return $ if (isauthor)
                     then [signEvent]
                     else [seenEvent,signEvent]
-      invitationSentEntry = case documentinvitetime document of
-                                Nothing -> return []
-                                Just (SignInfo time ipnumber) -> do
+      invitationSentEntry = case (documentinvitetime document,sendMailsDurringSigning document) of
+                                (Just (SignInfo time ipnumber),True) -> do
                                    desc <-  renderLocalTemplateForProcess document processinvitationsententry $ do
                                        documentInfoFields document
                                        documentAuthorInfo document
@@ -185,7 +185,7 @@ sealSpecFromDocument hostpart document elog inputpath outputpath =
                                       { Seal.histdate = show time
                                       , Seal.histcomment = pureString desc
                                       }]
-
+                                _ -> return []   
       maxsigntime = maximum (map (signtime . (\(_,_,c,_,_,_) -> c)) signatories)
       concatComma = concat . intersperse ", "
 

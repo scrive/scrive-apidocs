@@ -244,8 +244,8 @@ javascriptLocalisation =
                placeFor : function(s) { return s + " $_signaturePlaceFor()$"; }
              , missing : "$_signatureMissing()$"
              , placeYour : "$_signaturePlaceYour()$"
-             , placeAndSign : "Sign"
-             , confirmSignature : "Confirm signature"
+             , placeAndSign : "$_signatureSign()$"
+             , confirmSignature : "$_signatureConfirm()$"
            }
          , designview : {
               validation : {
@@ -261,9 +261,9 @@ javascriptLocalisation =
                     , notPlacedSignature : "Signature must be placed for signing party with pad authorization"
                 }
              , messages : {
-                      sendingDocument: "Sending document"
-                    , reloadingDocument : "Reloading document"
-                    , aditionalActions : "Performing aditional actions"
+                      sendingDocument: "$_designViewMessageSending()$"
+                    , reloadingDocument : "$_designViewMessageReloading()$"
+                    , extraActions : "$_designViewMessageExtraActions()$"
                 }
            }
 
@@ -284,23 +284,20 @@ javascriptLocalisation =
          , selectImageLabel: "$_SelectImageLabel()$"
          , saveBranding: "$_SaveSettings()$"
          , pad : {
-                authorization : "Pad"
-             ,  signingOnSameDevice : "Give for signing on same device"
-             ,  signingOnSameDeviceConfirmHeader : "Are you sure you want to sign on same device"
-             ,  signingOnSameDeviceConfirmText : function(name) { return "You are about to give this document to sign to " + name +". Sign page will be opened in other card or window depending on your browser.";}
-             ,  addToPadQueue : "Send for pad signing"
-             ,  addToPadQueueConfirmHeader : "Are you sure you want to send this document for pad signing"
-             ,  addToPadQueueConfirmText : "Document will be send to pad device for signing. Any other document waiting to be signed on this device will be removed from the queue, but can be added to it later. "
-             ,  addToPadQueueAdded : "Document send to pad device"
-             ,  addToPadQueueNotAdded : "Document could not be send to pad device"
-             ,  removeFromPadQueue : "Remove from pad device"
-             ,  drawSignatureBoxHeader : "Sign document"
-             ,  drawSignatureBoxAcceptButton : "Sign document"
-             ,  drawSignatureBoxCancelButton : "Cancel"
-             ,  signingOnSameDeviceFor :  "Give for signing on this device to  "
-             ,  addToPadQueueFor :  "Send to pad device to be signed by "
-             ,  cleanImage : "Clean image"
-             
+                authorization : "$_padAuthorization()$"
+             ,  signingOnSameDevice : "$_padSigningOnSameDevice()$"
+             ,  signingOnSameDeviceConfirmHeader : "$_padSigningOnSameDeviceConfirmHeader()$"
+             ,  signingOnSameDeviceConfirmText : "$_padSigningOnSameDeviceConfirmText()$"
+             ,  addToPadQueue : "$_padAddToPadQueue()$"
+             ,  addToPadQueueConfirmHeader : "$_padAddToPadQueueConfirmHeader()$"
+             ,  addToPadQueueConfirmText : "$_padAddToPadQueueConfirmText()$"
+             ,  addToPadQueueAdded : "$_padAddToPadQueueAdded()$"
+             ,  addToPadQueueNotAdded : "$_padAddToPadQueueNotAdded()$"
+             ,  removeFromPadQueue : "$_padRemoveFromPadQueue()$"
+             ,  drawSignatureBoxHeader : "$_padDrawSignatureBoxHeader()$"
+             ,  signingOnSameDeviceFor :  "$_padSigningOnSameDeviceFor()$"
+             ,  addToPadQueueFor :  "$_padAddToPadQueueFor()$"
+             ,  cleanImage : "$_padCleanImage()$"             
         }
          , sampleEmailHeader: "$_SampleEmailHeader()$"
          , sampleEmailSubheader: "$_mailsubheader()$"

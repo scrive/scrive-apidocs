@@ -59,7 +59,7 @@ window.PadDesignViewUtilsModel = Backbone.Model.extend({
        var ndocument = new Document({id : this.document().documentid()});
        ndocument.bind('change', function() {
               if (!ndocument.ready()) return;
-              LoadingDialog.changeMessage(localization.designview.messages.aditionalActions);
+              LoadingDialog.changeMessage(localization.designview.messages.extraActions);
               _.each(ndocument.signatories(), function(sig) {
                 if (sig.email() == spsignatory.email())
                          spsignatory = sig;

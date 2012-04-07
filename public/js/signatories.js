@@ -638,7 +638,7 @@ window.SignatoryStandardView = Backbone.View.extend({
                  button.click(function() {
                          Confirmation.popup({
                                 title : localization.pad.signingOnSameDeviceConfirmHeader,
-                                content : localization.pad.signingOnSameDeviceConfirmText(signatory.nameOrEmail()),
+                                content : localization.pad.signingOnSameDeviceConfirmText,
                                 acceptText : localization.pad.signingOnSameDevice ,
                                 rejectText : localization.cancel,
                                 onAccept : function()

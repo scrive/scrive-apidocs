@@ -24,7 +24,6 @@ data Actor a => AddToPadQueue a = AddToPadQueue UserID DocumentID SignatoryLinkI
 instance Actor a => DBUpdate (AddToPadQueue a) () where
   dbUpdate (AddToPadQueue uid did slid a) = do
     dbUpdate $ ClearPadQueue uid a
-    _ <- kExecute01 [toSql uid]
     kPrepare $ "INSERT INTO padqueue( user_id, document_id, signatorylink_id) VALUES(?,?,?)"
     r <- kExecute [toSql uid, toSql did, toSql slid]
     when_ (r == 1) $
@@ -42,13 +41,14 @@ instance Actor a => DBUpdate (ClearPadQueue a) () where
     when_ (isJust pq) $ do 
         kPrepare "DELETE FROM padqueue WHERE user_id = ?"
         r <- kExecute [toSql uid]
-        when_ ((r == 1) && isJust pq ) $
-         dbUpdate $ InsertEvidenceEvent
+        when_ ((r == 1) && isJust pq ) $ do
+         _<- dbUpdate $ InsertEvidenceEvent
                 RemovedFromPadDevice
                 ("Document removed from pad device for signatory \"" ++ show (snd $ $(fromJust) pq) ++ "\" by " ++ actorWho a ++ ".")
                 (fst <$> pq)
                 a
-        
+         return ()
+         
 data GetPadQueue = GetPadQueue UserID
 instance DBQuery GetPadQueue PadQueue where
   dbQuery ( GetPadQueue uid) = do
