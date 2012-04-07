@@ -18,8 +18,7 @@ import Control.Applicative
 import Control.Monad
 
 import Text.JSON hiding (Result)
-import Text.JSON.Fields as JSON (json)
-import Control.Monad.Trans
+import Text.JSON.Gen hiding (value)
 import KontraLink
 import Misc
 import Util.FlashUtil
@@ -55,7 +54,7 @@ addToQueue did slid = do
         then do
             actor <- guardJustM $ mkAuthorActor <$> getContext
             runDB $ dbUpdate $ AddToPadQueue uid did slid actor
-            liftIO $ json $ return ()
+            runJSONGenT $ return ()
         else internalError
 
 clearQueue :: (Kontrakcja m) =>  m JSValue
@@ -63,7 +62,7 @@ clearQueue = do
     uid <- userid <$> (guardJustM $ ctxmaybeuser <$> getContext)
     actor <- guardJustM $ mkAuthorActor <$> getContext
     runDB $ dbUpdate $ ClearPadQueue uid actor
-    liftIO $ json $ return ()
+    runJSONGenT $ return ()
 
 -- PadQueue Pages
 showPadQueuePage::  (Kontrakcja m) =>  m Response

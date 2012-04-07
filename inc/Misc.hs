@@ -375,15 +375,6 @@ mapSnd = fmap . second
 propagateFst :: (a,[b]) -> [(a,b)]
 propagateFst (a,bs) = for bs (\b -> (a,b))
 
-propagateMonad :: (Monad m)  => [(a, m b)] -> m [(a,b)]
-propagateMonad ((a,mb):rest) = do
-    b <- mb
-    rest' <- propagateMonad rest
-    return $ (a,b): rest'
-
-propagateMonad _ = return []
-
-
 -- Splits string over some substring
 splitOver:: (Eq a) => [a] -> [a] -> [[a]]
 splitOver = splitOver' []
