@@ -1,17 +1,18 @@
 module KontraError where
 
-import Control.Monad.Error (MonadError, Error, noMsg, throwError)
+import Control.Monad.Base
+import Data.Typeable
+import qualified Control.Exception.Lifted as E
 
 data KontraError =
     Respond404
   | InternalError
-  deriving Show
+  deriving (Show, Typeable)
 
-instance Error KontraError where
-  noMsg = InternalError
+instance E.Exception KontraError
 
-internalError :: MonadError KontraError m => m a
-internalError = throwError InternalError
+internalError :: MonadBase IO m => m a
+internalError = E.throwIO InternalError
 
-respond404 :: MonadError KontraError m => m a
-respond404 = throwError Respond404
+respond404 :: MonadBase IO m => m a
+respond404 = E.throwIO Respond404

@@ -2,6 +2,7 @@
 :set -idist/build/autogen
 :set -iinc -isrc -imailer/inc -imailer/src -ipdfseal/src -ipdfseal/inc -itest/src
 :set -XBangPatterns
+:set -XDatatypeContexts
 :set -XDeriveDataTypeable
 :set -XFlexibleContexts
 :set -XFlexibleInstances

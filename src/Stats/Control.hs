@@ -64,10 +64,11 @@ import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import qualified Log
 
+import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.UTF8 as BS
 import Happstack.Server
 import Control.Monad
-import Control.Monad.Error (MonadError, catchError)
+import Control.Monad.Trans.Control
 import Control.Applicative
 import qualified Data.Map as Map
 import User.Utils
@@ -282,15 +283,15 @@ calculateCompanyDocStatsByMonth events =
 
 -- some utility functions
 
-falseOnError :: MonadError e m => m Bool -> m Bool
-falseOnError m = m `catchError` const (return False)
+falseOnError :: MonadBaseControl IO m => m Bool -> m Bool
+falseOnError m = m `E.catch` (\(_::KontraError) -> return False)
 
 -- | Two stats get created for a document close:
 --   1. Count 1 for StatDocumentClose
 --   2. Count the number of signatures in StatDocumentSignatures
 -- Note that this will roll over (using mplus) in case there is
 -- an error.
-addDocumentCloseStatEvents :: (DBMonad m, MonadError KontraError m) => Document -> m Bool
+addDocumentCloseStatEvents :: (DBMonad m, MonadBaseControl IO m) => Document -> m Bool
 addDocumentCloseStatEvents doc = falseOnError $ do
     if not (isClosed doc)
       then do
@@ -330,7 +331,7 @@ addDocumentCloseStatEvents doc = falseOnError $ do
       unless b $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show q
       return (a && b)
 
-addDocumentSendStatEvents :: (DBMonad m, MonadError KontraError m) => Document -> m Bool
+addDocumentSendStatEvents :: (DBMonad m, MonadBaseControl IO m) => Document -> m Bool
 addDocumentSendStatEvents doc = falseOnError $ do
     if isNothing $ documentinvitetime doc
       then do
@@ -368,7 +369,7 @@ addDocumentSendStatEvents doc = falseOnError $ do
       unless b $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show q
       return (a && b)
 
-addDocumentCancelStatEvents :: (DBMonad m, MonadError KontraError m) => Document -> m Bool
+addDocumentCancelStatEvents :: (DBMonad m, MonadBaseControl IO m) => Document -> m Bool
 addDocumentCancelStatEvents doc = falseOnError $ do
     if not $ isCanceled doc
       then do
@@ -405,7 +406,7 @@ addDocumentCancelStatEvents doc = falseOnError $ do
       unless b $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show q
       return (a && b)
 
-addDocumentRejectStatEvents :: (DBMonad m, MonadError KontraError m) => Document -> m Bool
+addDocumentRejectStatEvents :: (DBMonad m, MonadBaseControl IO m) => Document -> m Bool
 addDocumentRejectStatEvents doc = falseOnError $ do
     if not $ isRejected doc
       then do
@@ -442,7 +443,7 @@ addDocumentRejectStatEvents doc = falseOnError $ do
       unless b $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show q
       return (a && b)
 
-addDocumentCreateStatEvents :: (DBMonad m, MonadError KontraError m) => Document -> m Bool
+addDocumentCreateStatEvents :: (DBMonad m, MonadBaseControl IO m) => Document -> m Bool
 addDocumentCreateStatEvents doc = falseOnError $ do
       sl  <- guardJust $ getAuthorSigLink doc
       uid <- guardJust $ maybesignatory sl
@@ -504,7 +505,7 @@ addDocumentTimeoutStatEvents doc = do
       return (a && b)
 
 
-allDocStats ::  (DBMonad m, MonadError KontraError m) => Document -> m ()
+allDocStats :: (DBMonad m, MonadBaseControl IO m) => Document -> m ()
 allDocStats doc = do
     _ <- addDocumentSendStatEvents doc
     _ <- addDocumentCloseStatEvents doc

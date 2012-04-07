@@ -8,9 +8,10 @@ module User.Action
     )
     where
 
-import Control.Monad.Error
+import Control.Monad
 import Data.Functor
 import Data.Maybe
+import qualified Control.Exception.Lifted as E
 
 import DB.Classes
 import Doc.Model
@@ -89,7 +90,7 @@ handleActivate mfstname msndname actvuser signupmethod = do
               newdocs <- case mdelays of
                 Nothing -> return []
                 Just (delayid, texts) -> do
-                  results <- forM texts (\t -> catchError (MailAPI.doMailAPI t) (\_ -> return Nothing))
+                  results <- forM texts (\t -> MailAPI.doMailAPI t `E.catch` (\(_::KontraError) -> return Nothing))
                   runDBUpdate $ DeleteMailAPIDelays delayid (ctxtime ctx)
                   return $ catMaybes results
 

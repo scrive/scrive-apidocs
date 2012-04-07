@@ -1,17 +1,16 @@
 module KontraMonad (
-      KontraError
-    , Kontrakcja
+      Kontrakcja
     , KontraMonad(..)
     ) where
 
 import Control.Applicative
+import Control.Monad.Base
 import Control.Monad.State
-import Control.Monad.Error (MonadError)
+import Control.Monad.Trans.Control
 import Happstack.Server
 
 import Context
 import DB.Classes
-import KontraError (KontraError)
 import Templates.Templates
 
 -- | This is for grouping things together so we won't need to
@@ -21,7 +20,8 @@ class ( Applicative m
       , FilterMonad Response m
       , HasRqData m
       , KontraMonad m
-      , MonadError KontraError m
+      , MonadBase IO m
+      , MonadBaseControl IO m
       , MonadIO m
       , ServerMonad m
       , TemplatesMonad m

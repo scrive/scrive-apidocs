@@ -22,7 +22,6 @@ module Routing ( hGet
                , ToResp, toResp
                  )where
 
-import Control.Monad.Error (catchError)
 import Data.Functor
 import AppView as V
 import Data.Maybe
@@ -34,6 +33,7 @@ import Kontra
 import qualified User.UserControl as UserControl
 import Redirect
 import Text.JSON
+import qualified Control.Exception.Lifted as E
 
 type RedirectOrContent = Either KontraLink String
 
@@ -92,8 +92,8 @@ hGetAjax :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response
 hGetAjax = hGetWrap wrapAjax
 
 wrapAjax :: Kontra Response -> Kontra Response
-wrapAjax action = noRedirect action `catchError`
-                  const ajaxError -- Soft redirects should be supported here, ask MR
+wrapAjax action = noRedirect action `E.catch` (\(_::KontraError) -> ajaxError)
+  -- Soft redirects should be supported here, ask MR
 
 noRedirect::Kontra Response -> Kontra Response
 noRedirect action = do

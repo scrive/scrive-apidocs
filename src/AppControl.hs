@@ -15,12 +15,12 @@ import AppConf
 import API.Service.Model
 
 import AppView as V
-import Crypto.RNG (CryptoRNGState, random, inIO)
+import Crypto.RNG
 import DB.Classes
+import DB.Core as C
 import Doc.DocStateData
 import IPAddress
 import Kontra
-import KontraError (KontraError(..))
 import MinutesTime
 import Misc
 import Redirect
@@ -42,15 +42,14 @@ import Data.Functor
 import Data.List
 import Data.Maybe
 import Database.HDBC
-import Database.HDBC.PostgreSQL
 import DB.Nexus
-import GHC.Int (Int64(..))
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Happstack.Server.Internal.Cookie
 import Network.Socket
 import System.Directory
 import System.Time
 
+import Control.Exception.Lifted as E
 
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
@@ -92,31 +91,6 @@ getStandardLocale muser = do
       newlocalecookie = mkCookie "locale" (show newlocale)
   addCookie (MaxAge (60*60*24*366)) newlocalecookie
   return newlocale
-
-{- |
-    Handles an error by displaying the home page with a modal error dialog.
--}
-handleError :: (MonadIO m, Kontrakcja m) => KontraError -> m Response
-handleError e = do
-     rq <- askRq
-     Log.error (show e)
-     liftIO (tryReadMVar (rqInputsBody rq)) >>= Log.error . showRequest rq
-     handleError' e
-  where
-  handleError' :: Kontrakcja m => KontraError -> m Response
-  handleError' InternalError = do
-    ctx <- getContext
-    case ctxservice ctx of
-         Nothing -> do
-            addFlashM V.modalError
-            linkmain <- getHomeOrUploadLink
-            sendRedirect linkmain
-         _ -> embeddedErrorPage
-  handleError' Respond404 = do
-    ctx <- getContext
-    case ctxservice ctx of
-         Nothing -> notFoundPage >>= notFound
-         _ -> embeddedErrorPage
 
 {- |
    Creates a default amazon configuration based on the
@@ -176,85 +150,115 @@ showRequest rq maybeInputsBody =
    Creates a context, routes the request, and handles the session.
 -}
 appHandler :: KontraPlus Response -> AppConf -> AppGlobals -> ServerPartT IO Response
-appHandler handleRoutes appConf appGlobals = do
-  startTime <- liftIO getClockTime
+appHandler handleRoutes appConf appGlobals = measureResponseTime $
+  withPostgreSQL_ (dbConfig appConf) (cryptorng appGlobals) $ do
+    let quota = 10000000
+    temp <- liftIO getTemporaryDirectory
+    decodeBody (defaultBodyPolicy temp quota quota quota)
+    session <- handleSession
+    ctx <- createContext session
 
-  let quota :: GHC.Int.Int64 = 10000000
+    (res, ctx') <- routeHandlers ctx
 
-  temp <- liftIO $ getTemporaryDirectory
-  decodeBody (defaultBodyPolicy temp quota quota quota)
+    let newsessionuser = userid <$> ctxmaybeuser ctx'
+        newsessionpaduser = userid <$> ctxmaybepaduser ctx'
+        newflashmessages = ctxflashmessages ctx'
+        newelegtrans = ctxelegtransactions ctx'
+        newmagichashes = ctxmagichashes ctx'
+    F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
+    updateSessionWithContextData session newsessionuser newelegtrans newmagichashes newsessionpaduser
 
-  session <- handleSession (cryptorng appGlobals)
-  ctx <- createContext session
-  response <- handle session ctx
-  finishTime <- liftIO getClockTime
-  let TOD ss sp = startTime
-      TOD fs fp = finishTime
-      diff = (fs - ss) * 1000000000000 + fp - sp
-  Log.debug $ "Response time " ++ show (diff `div` 1000000000) ++ "ms"
-  return response
+    rq <- askRq
+    stats <- getNexusStats =<< envNexus `fmap` C.getDBEnv
+    Log.debug $ "SQL for " ++ rqUri rq ++ ": " ++ show stats
+
+    case res of
+      Right response -> return response
+      Left response -> do
+        -- if exception was thrown, rollback everything
+        liftIO . rollback =<< envNexus `fmap` C.getDBEnv
+        return response
   where
-    handle :: Session -> Context -> ServerPartT IO Response
-    handle session ctx = do
-      Right (res, ctx') <- runKontraPlus ctx $ do
-          res <- (handleRoutes `mplus` throwError Respond404) `catchError` handleError
-          ctx' <- getContext
-          return (res,ctx')
-
-      let newsessionuser = fmap userid $ ctxmaybeuser ctx'
-      let newsessionpaduser = fmap userid $ ctxmaybepaduser ctx'
-      let newflashmessages = ctxflashmessages ctx'
-      let newelegtrans = ctxelegtransactions ctx'
-      let newmagichashes = ctxmagichashes ctx'
-      F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
-      rng <- inIO (cryptorng appGlobals) random
-      updateSessionWithContextData rng session newsessionuser newelegtrans newmagichashes newsessionpaduser
-      stats <- liftIO $ getNexusStats (nexus $ ctxdbenv ctx')
-      rq <- askRq
-      Log.debug $ "SQL for " ++ rqUri rq ++ ": " ++ show stats
-
-      liftIO $ disconnect $ nexus $ ctxdbenv ctx'
+    measureResponseTime :: ServerPartT IO Response -> ServerPartT IO Response
+    measureResponseTime action = do
+      startTime <- liftIO getClockTime
+      res <- action
+      finishTime <- liftIO getClockTime
+      let TOD ss sp = startTime
+          TOD fs fp = finishTime
+          diff = (fs - ss) * 1000000000000 + fp - sp
+      Log.debug $ "Response time " ++ show (diff `div` 1000000000) ++ "ms"
       return res
 
-    createContext session = do
-      rq <- askRq
-      currhostpart <- getHostpart
-      reshostpart <- getResourceHostpart
-      -- FIXME: we should read some headers from upstream proxy, if any
-      let peerhost = case getHeader "x-real-ip" rq of
-                       Just name -> BS.toString name
-                       Nothing -> fst (rqPeer rq)
+    routeHandlers :: Context -> DBT (ServerPartT IO) (Either Response Response, Context)
+    routeHandlers ctx = runKontraPlus ctx $ do
+      res <- (Right <$> handleRoutes `mplus` E.throwIO Respond404) `E.catches` [
+          E.Handler handleKontraError
+        , E.Handler $ \(e::E.SomeException) -> do
+          Log.error $ "Exception caught in routeHandlers: " ++ show e
+          handleKontraError InternalError
+        ]
+      ctx' <- getContext
+      return (res, ctx')
 
+    handleKontraError :: KontraError -> KontraPlus (Either Response Response)
+    handleKontraError e = Left <$> do
+      rq <- askRq
+      Log.error $ show e
+      liftIO (tryReadMVar $ rqInputsBody rq)
+        >>= Log.error . showRequest rq
+      service <- ctxservice <$> getContext
+      case e of
+        InternalError -> case service of
+          Nothing -> do
+            addFlashM V.modalError
+            linkmain <- getHomeOrUploadLink
+            sendRedirect linkmain
+          _ -> embeddedErrorPage
+        Respond404 -> case service of
+          Nothing -> notFoundPage >>= notFound
+          _ -> embeddedErrorPage
+
+    createContext :: Session -> DBT (ServerPartT IO) Context
+    createContext session = do
       -- rqPeer hostname comes always from showHostAddress
       -- so it is a bunch of numbers, just read them out
       -- getAddrInfo is strange that it can throw exceptions
       -- if exception is thrown, whole page load fails with
       -- error notification
-      let hints = defaultHints { addrFlags = [AI_ADDRCONFIG, AI_NUMERICHOST] }
-      addrs <- liftIO $ getAddrInfo (Just hints) (Just peerhost) Nothing
-      let addr = head addrs
-      let peerip = case addrAddress addr of
-            SockAddrInet _ hostip -> unsafeIPAddress hostip
-            _                     -> noIP
+      peerip <- do
+        rq <- askRq
+        -- FIXME: we should read some headers from upstream proxy, if any
+        let peerhost = case getHeader "x-real-ip" rq of
+              Just name -> BS.toString name
+              Nothing -> fst (rqPeer rq)
+            hints = defaultHints { addrFlags = [AI_ADDRCONFIG, AI_NUMERICHOST] }
+        addrs <- liftIO $ getAddrInfo (Just hints) (Just peerhost) Nothing
+        return $ case addrAddress $ head addrs of
+          SockAddrInet _ hostip -> unsafeIPAddress hostip
+          _                     -> noIP
 
-      psqlconn <- liftIO $ connectPostgreSQL $ dbConfig appConf
-      dbenv <- mkDBEnv psqlconn (cryptorng appGlobals)
-      minutestime <- liftIO getMinutesTime
+      dbenv <- C.getDBEnv
+
+      currhostpart <- getHostpart
+      reshostpart <- getResourceHostpart
+      minutestime <- getMinutesTime
       muser <- getUserFromSession dbenv session
       mcompany <- getCompanyFromSession dbenv session
       mpaduser <- getPadUserFromSession dbenv session
-      location <- getLocationFromSession session
-      mservice <- currentLink >>= \clink -> if (hostpart appConf `isPrefixOf` clink)
-                                             then return Nothing
-                                             else ioRunDB dbenv $ dbQuery $ GetServiceByLocation $ toServiceLocation clink
+      mservice <- do
+        clink <- currentLink
+        if hostpart appConf `isPrefixOf` clink
+          then return Nothing
+          else liftIO $ ioRunDB dbenv $ dbQuery $ GetServiceByLocation $ toServiceLocation clink
 
       flashmessages <- withDataFn F.flashDataFromCookie $ maybe (return []) $ \fval ->
-          case F.fromCookieValue (aesConfig appConf) fval of
-               Just flashes -> return flashes
-               Nothing -> do
-                   Log.error $ "Couldn't read flash messages from value: " ++ fval
-                   F.removeFlashCookie
-                   return []
+        case F.fromCookieValue (aesConfig appConf) fval of
+          Just flashes -> return flashes
+          Nothing -> do
+            Log.error $ "Couldn't read flash messages from value: " ++ fval
+            F.removeFlashCookie
+            return []
 
       -- do reload templates in non-production code
       templates2 <- liftIO $ maybeReadTemplates (templates appGlobals)
@@ -262,42 +266,39 @@ appHandler handleRoutes appConf appGlobals = do
       -- work out the region and language
       userlocale <- getStandardLocale muser
 
-      let elegtrans = getELegTransactions session
-          ctx = Context
-                { ctxmaybeuser = muser
-                , ctxhostpart = currhostpart
-                , ctxresourcehostpart = reshostpart
-                , ctxflashmessages = flashmessages
-                , ctxtime = minutestime
-                , ctxnormalizeddocuments = docscache appGlobals
-                , ctxipnumber = peerip
-                , ctxdbenv = dbenv
-                , ctxdocstore = docstore appConf
-                , ctxs3action = defaultAWSAction appConf
-                , ctxgscmd = gsCmd appConf
-                , ctxproduction = production appConf
-                , ctxtemplates = localizedVersion userlocale templates2
-                , ctxglobaltemplates = templates2
-                , ctxlocale = userlocale
-                , ctxlocaleswitch = True
-                , ctxmailsconfig = mailsConfig appConf
-                , ctxtwconf = TW.TrustWeaverConf
-                              { TW.signConf = trustWeaverSign appConf
-                              , TW.adminConf = trustWeaverAdmin appConf
-                              , TW.storageConf = trustWeaverStorage appConf
-                              , TW.retries = 3
-                              , TW.timeout = 60000
-                              }
-                , ctxelegtransactions = elegtrans
-                , ctxfilecache = filecache appGlobals
-                , ctxxtoken = getSessionXToken session
-                , ctxcompany = mcompany
-                , ctxservice = mservice
-                , ctxlocation = location
-                , ctxadminaccounts = admins appConf
-                , ctxsalesaccounts = sales appConf
-                , ctxmagichashes = getMagicHashes session
-                , ctxmaybepaduser = mpaduser
-                }
-      return ctx
-
+      return Context {
+          ctxmaybeuser = muser
+        , ctxhostpart = currhostpart
+        , ctxresourcehostpart = reshostpart
+        , ctxflashmessages = flashmessages
+        , ctxtime = minutestime
+        , ctxnormalizeddocuments = docscache appGlobals
+        , ctxipnumber = peerip
+        , ctxdbenv = dbenv
+        , ctxdocstore = docstore appConf
+        , ctxs3action = defaultAWSAction appConf
+        , ctxgscmd = gsCmd appConf
+        , ctxproduction = production appConf
+        , ctxtemplates = localizedVersion userlocale templates2
+        , ctxglobaltemplates = templates2
+        , ctxlocale = userlocale
+        , ctxlocaleswitch = True
+        , ctxmailsconfig = mailsConfig appConf
+        , ctxtwconf = TW.TrustWeaverConf {
+            TW.signConf = trustWeaverSign appConf
+          , TW.adminConf = trustWeaverAdmin appConf
+          , TW.storageConf = trustWeaverStorage appConf
+          , TW.retries = 3
+          , TW.timeout = 60000
+          }
+        , ctxelegtransactions = getELegTransactions session
+        , ctxfilecache = filecache appGlobals
+        , ctxxtoken = getSessionXToken session
+        , ctxcompany = mcompany
+        , ctxservice = mservice
+        , ctxlocation = getLocationFromSession session
+        , ctxadminaccounts = admins appConf
+        , ctxsalesaccounts = sales appConf
+        , ctxmagichashes = getMagicHashes session
+        , ctxmaybepaduser = mpaduser
+        }

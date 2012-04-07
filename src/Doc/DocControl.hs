@@ -589,7 +589,7 @@ handlePageOfDocument docid = checkUserTOSGet $ handlePageOfDocument' docid Nothi
 
 handlePageOfDocumentForSignatory :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> m Response
 handlePageOfDocumentForSignatory docid siglinkid sigmagichash = do
-    doc <- queryOrFail $ GetDocumentByDocumentID docid
+    doc <- runDBOrFail . dbQuery $ GetDocumentByDocumentID docid
     checkLinkIDAndMagicHash doc siglinkid sigmagichash
     handlePageOfDocument' docid $ Just (siglinkid, sigmagichash)
 
@@ -775,7 +775,7 @@ handleIssueBulkRemind doctype = do
     where
       docRemind :: Kontrakcja m => Context -> User -> DocumentID -> m [SignatoryLink]
       docRemind ctx user docid = do
-        doc <- queryOrFail $ GetDocumentByDocumentID docid
+        doc <- runDBOrFail . dbQuery $ GetDocumentByDocumentID docid
         case (documentstatus doc) of
           Pending -> do
             let isEligible = isEligibleForReminder user doc
@@ -812,7 +812,7 @@ showPreview docid fileid = withAuthorisedViewer docid $ do
 
 showPreviewForSignatory:: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> FileID -> m (Either KontraLink Response)
 showPreviewForSignatory docid siglinkid sigmagichash fileid = do
-    doc <- queryOrFail $ GetDocumentByDocumentID docid
+    doc <- runDBOrFail . dbQuery $ GetDocumentByDocumentID docid
     checkLinkIDAndMagicHash doc siglinkid sigmagichash
     iprev <- preview docid fileid 0
     case iprev of
@@ -949,7 +949,7 @@ handleCreateFromTemplate = withUserPost $ do
   case docid of
     Just did -> do
       user <- guardJustM $ ctxmaybeuser <$> getContext
-      document <- queryOrFail $ GetDocumentByDocumentID $ did
+      document <- runDBOrFail . dbQuery $ GetDocumentByDocumentID $ did
       Log.debug $ show "Matching document found"
       auid <- guardJust $ join $ maybesignatory <$> getAuthorSigLink document
       auser <- guardJustM $ runDBQuery $ GetUserByID auid

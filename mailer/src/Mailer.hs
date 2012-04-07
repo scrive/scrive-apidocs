@@ -15,7 +15,7 @@ newtype Mailer a = Mailer { unMailer :: ServerPartT (ReaderT DBEnv IO) a }
   deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadIO, MonadPlus, ServerMonad, WebMonad Response, MonadReader DBEnv)
 
 instance CryptoRNG Mailer where
-  getCryptoRNGState = asks rngstate
+  getCryptoRNGState = asks envRNG
 
 instance DBMonad Mailer where
   getDBEnv = Mailer ask

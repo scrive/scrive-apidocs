@@ -78,7 +78,7 @@ initDatabaseEntries :: DBEnv -> [(Email,String)] -> IO ()
 initDatabaseEntries env iusers = do
   -- create initial database entries
   flip mapM_ iusers $ \(email,passwordstring) -> do
-      passwd <- inIO (rngstate env) $ createPassword passwordstring
+      passwd <- inIO (envRNG env) $ createPassword passwordstring
       maybeuser <- ioRunDB env $ dbQuery $ GetUserByEmail Nothing email
       case maybeuser of
           Nothing -> do

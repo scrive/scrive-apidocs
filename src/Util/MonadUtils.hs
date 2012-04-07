@@ -11,12 +11,12 @@ module Util.MonadUtils where
 
 import Control.Applicative
 import Control.Monad
-import Control.Monad.Error (MonadError)
+import Control.Monad.Base
 import Control.Monad.Trans
 import Data.Traversable (sequenceA)
 import qualified Log
 
-import KontraError (KontraError, internalError)
+import KontraError
 
 
 ifM :: Monad m => m Bool -> m a -> m a -> m a
@@ -27,28 +27,28 @@ ifM ma mb mc = do
 {- |
    Get the value from a Just or fail if it is Nothing
  -}
-guardJust :: MonadError KontraError m => Maybe a -> m a
+guardJust :: MonadBase IO m => Maybe a -> m a
 guardJust = maybe internalError return
 
 {- |
    Get the value from a Just or fail if it is Nothing
  -}
-guardJustM :: MonadError KontraError m => m (Maybe b) -> m b
+guardJustM :: MonadBase IO m => m (Maybe b) -> m b
 guardJustM action = guardJust =<< action
 
 {- |
    Get the value from a Right or log an error and fail if it is Left
  -}
-guardRight' :: (MonadError KontraError m, Monad m, MonadIO m, Show msg) => Either msg a -> m a
+guardRight' :: (MonadBase IO m, MonadIO m, Show msg) => Either msg a -> m a
 guardRight' (Right val) = return val
 guardRight' (Left  msg) = do 
   Log.debug (show msg)
   internalError
-  
+
 {- |
    Get the value from a Right or log an error and fail if it is a left
  -}
-guardRightM' :: (MonadError KontraError m, MonadIO m, Show msg) => m (Either msg b) -> m b
+guardRightM' :: (MonadBase IO m, MonadIO m, Show msg) => m (Either msg b) -> m b
 guardRightM' action = guardRight' =<< action
 
 -- | 'sequenceA' says that if we maybe have @(Maybe (m a))@ a computation

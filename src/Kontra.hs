@@ -1,4 +1,4 @@
-module Kontra 
+module Kontra
     ( module KontraError
     , module KontraMonad
     , module Context
@@ -18,7 +18,6 @@ module Kontra
     , newViralInvitationSentLink
     , newAccountCreatedLink
     , runDBOrFail
-    , queryOrFail
     , getAsString
     , getDataFnM
     , currentService
@@ -34,15 +33,16 @@ import ActionSchedulerState
 import Context
 import Control.Applicative
 import Control.Logic
-import Control.Monad.Error (MonadError, ErrorT, runErrorT)
+import Control.Monad.Base
 import Control.Monad.Reader
 import Control.Monad.State
-import Crypto.RNG (CryptoRNG, getCryptoRNGState)
+import Control.Monad.Trans.Control
+import Crypto.RNG
 import DB.Classes
 import ELegitimation.ELegTransaction
 import Doc.DocStateData
 import Happstack.Server
-import KontraError (internalError, respond404)
+import KontraError
 import KontraLink
 import KontraMonad
 import Mails.MailsConfig
@@ -53,25 +53,26 @@ import qualified Log
 import Util.MonadUtils
 import Misc
 
+type InKontraPlus = StateT Context (DBT (ServerPartT IO))
+
 -- | KontraPlus is 'MonadPlus', but it should only be used on toplevel
 -- for interfacing with static routing.
-newtype KontraPlus a = KontraPlus { unKontraPlus :: ServerPartT (ErrorT KontraError (StateT Context IO)) a }
-    deriving (MonadPlus, Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadIO, MonadError KontraError, ServerMonad, WebMonad Response)
+newtype KontraPlus a = KontraPlus { unKontraPlus :: InKontraPlus a }
+  deriving (MonadPlus, Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadIO, ServerMonad, WebMonad Response)
 
--- | Kontra is a traditional Happstack handler monad except that it's
--- not MonadZero.
---
--- Since we use static routing, there is no need for mzero inside a
--- handler.  Instead we signal errors explicitly through
--- 'KontraError'.
-newtype Kontra a = Kontra { unKontra :: KontraPlus a }
-    deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadIO, MonadError KontraError, ServerMonad, WebMonad Response, CryptoRNG, KontraMonad, DBMonad, TemplatesMonad)
+runKontraPlus :: Context -> KontraPlus a -> DBT (ServerPartT IO) a
+runKontraPlus ctx f = evalStateT (unKontraPlus f) ctx
 
-instance Kontrakcja Kontra
 instance Kontrakcja KontraPlus
 
+instance MonadBaseControl IO KontraPlus where
+  newtype StM KontraPlus a = StKontraPlus { unStKontraPlus :: StM InKontraPlus a }
+  liftBaseWith f = KontraPlus $ liftBaseWith $ \runInIO ->
+                     f $ liftM StKontraPlus . runInIO . unKontraPlus
+  restoreM = KontraPlus . restoreM . unStKontraPlus
+
 instance CryptoRNG KontraPlus where
-  getCryptoRNGState = KontraPlus $ gets (rngstate . ctxdbenv)
+  getCryptoRNGState = KontraPlus $ gets (envRNG . ctxdbenv)
 
 instance DBMonad KontraPlus where
   getDBEnv = ctxdbenv <$> getContext
@@ -80,22 +81,30 @@ instance DBMonad KontraPlus where
     internalError
 
 instance KontraMonad KontraPlus where
-    getContext    = KontraPlus get
-    modifyContext = KontraPlus . modify
+  getContext    = KontraPlus get
+  modifyContext = KontraPlus . modify
 
 instance TemplatesMonad KontraPlus where
-    getTemplates = ctxtemplates <$> getContext
-    getLocalTemplates locale = do
-      Context{ctxglobaltemplates} <- getContext
-      return $ localizedVersion locale ctxglobaltemplates
+  getTemplates = ctxtemplates <$> getContext
+  getLocalTemplates locale = do
+    Context{ctxglobaltemplates} <- getContext
+    return $ localizedVersion locale ctxglobaltemplates
 
--- | In case of KontraError, remove all Happstack filters
-runKontraPlus :: Context -> KontraPlus a -> ServerPartT IO (Either KontraError a)
-runKontraPlus ctx = mapServerPartT (\s -> trans `fmap` evalStateT (runErrorT s) ctx) . unKontraPlus
-  where trans (Left e)                   = Just (Right (Left e), filterFun id)
-        trans (Right (Just (Left r,f)))  = Just (Left r,f)
-        trans (Right (Just (Right a,f))) = Just (Right (Right a),f)
-        trans (Right Nothing)            = Nothing
+-- | Kontra is a traditional Happstack handler monad except that it's
+-- not MonadZero.
+--
+-- Since we use static routing, there is no need for mzero inside a
+-- handler. Instead we signal errors explicitly through 'KontraError'.
+newtype Kontra a = Kontra { unKontra :: KontraPlus a }
+  deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadIO, ServerMonad, WebMonad Response, CryptoRNG, KontraMonad, DBMonad, TemplatesMonad)
+
+instance Kontrakcja Kontra
+
+instance MonadBaseControl IO Kontra where
+  newtype StM Kontra a = StKontra { unStKontra :: StM KontraPlus a }
+  liftBaseWith f = Kontra $ liftBaseWith $ \runInIO ->
+                     f $ liftM StKontra . runInIO . unKontra
+  restoreM = Kontra . restoreM . unStKontra
 
 {- Logged in user is admin-}
 isAdmin :: Context -> Bool
@@ -183,25 +192,17 @@ newAccountCreatedLink user = do
                                 (getEmail user)
 
 -- | Runs DB action and fails if it returned Nothing
-runDBOrFail :: (DBMonad m, MonadError KontraError m) => DB (Maybe r) -> m r
+runDBOrFail :: (DBMonad m, MonadBase IO m) => DB (Maybe r) -> m r
 runDBOrFail f = runDB f >>= guardJust
-
-{- |
-   Perform a query (like with query) but if it returns Nothing, fail; otherwise, return fromJust
- -}
-queryOrFail :: (MonadError KontraError m, DBMonad m, Monad m, MonadIO m, DBQuery ev (Maybe res)) => ev -> m res
-queryOrFail q = do
-  mres <- runDBQuery q
-  guardJust mres
 
 -- data fetchers specific to Kontra
 
-getAsString :: (HasRqData m, MonadIO m, ServerMonad m, MonadError KontraError m) => String -> m String
+getAsString :: (HasRqData m, MonadBase IO m, MonadIO m, ServerMonad m) => String -> m String
 getAsString = getDataFnM . look
 
 -- | Extract data from GET or POST request. Fail with 'internalError' if param
 -- variable not present or when it cannot be read.
-getDataFnM :: (HasRqData m, MonadIO m, ServerMonad m, MonadError KontraError m) => RqData a -> m a
+getDataFnM :: (HasRqData m, MonadBase IO m, MonadIO m, ServerMonad m) => RqData a -> m a
 getDataFnM fun = either (const internalError) return =<< getDataFn fun
 
 -- | Current service id

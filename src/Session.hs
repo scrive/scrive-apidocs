@@ -40,7 +40,7 @@ import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie,
   readCookieValue, withDataFn, ServerPartT, HasRqData, CookieLife(MaxAge), FromReqURI(..))
 import System.Random (StdGen, randomR)
 import System.Random.CryptoRNG ()
-import Crypto.RNG (CryptoRNGState, CryptoRNG, random, inIO)
+import Crypto.RNG (CryptoRNG, random)
 import Happstack.Util.Common ( readM)
 import Misc (mkTypeOf, isSecure, isHTTPS)
 import ELegitimation.ELegTransaction
@@ -291,19 +291,17 @@ startSessionCookie session = do
 
 -- | Read current session cookie from request.
 currentSessionInfoCookie:: RqData (Maybe SessionCookieInfo)
-currentSessionInfoCookie = (optional (readCookieValue "sessionId"))
+currentSessionInfoCookie = optional (readCookieValue "sessionId")
 
 -- | Get current session based on cookies set.
 currentSession ::(HasRqData m, MonadIO m, ServerMonad m, MonadPlus m, FilterMonad Response m) => m (Maybe Session)
-currentSession =
-    withDataFn currentSessionInfoCookie $ \mscd ->
-        case mscd of
-            Just scd -> do
-                session <- query $ GetSession $ cookieSessionId scd
-                case session of
-                    Just s | sessionAndCookieHashMatch s scd -> return $ Just s
-                    _ -> return Nothing
-            Nothing ->  return Nothing
+currentSession = withDataFn currentSessionInfoCookie $ \mscd -> case mscd of
+  Just scd -> do
+    session <- query $ GetSession $ cookieSessionId scd
+    case session of
+      Just s | sessionAndCookieHashMatch s scd -> return $ Just s
+      _ -> return Nothing
+  Nothing ->  return Nothing
 
 -- | Create empty session data. It has proper timeout already set.
 emptySessionData :: (MonadIO m, CryptoRNG m) => m SessionData
@@ -339,50 +337,48 @@ startSession :: (MonadIO m, CryptoRNG m) => m Session
 startSession = emptySessionData >>= return . Session tempSessionID
 
 -- | Get 'User' record from database based on userid in session
-getUserFromSession :: DBEnv -> Session -> ServerPartT IO (Maybe User)
+getUserFromSession :: MonadIO m => DBEnv -> Session -> m (Maybe User)
 getUserFromSession dbenv s =
   liftMM (ioRunDB dbenv . dbQuery . GetUserByID) (return $ userID $ sessionData s)
 
-getPadUserFromSession :: DBEnv -> Session -> ServerPartT IO (Maybe User)
+getPadUserFromSession :: MonadIO m => DBEnv -> Session -> m (Maybe User)
 getPadUserFromSession dbenv s =
   liftMM (ioRunDB dbenv . dbQuery . GetUserByID) (return $ padUserID $ sessionData s)
 
-
-getCompanyFromSession :: DBEnv -> Session -> ServerPartT IO (Maybe Company)
+getCompanyFromSession :: MonadIO m => DBEnv -> Session -> m (Maybe Company)
 getCompanyFromSession dbenv s =
   liftMM (ioRunDB dbenv . dbQuery . GetCompany) (return $ company $ sessionData s)
 
-getLocationFromSession :: Session -> ServerPartT IO String
-getLocationFromSession s = return $ location $ sessionData s
-
+getLocationFromSession :: Session -> String
+getLocationFromSession = location . sessionData
 
 -- | Handles session timeout. Starts new session when old session timed out.
-handleSession :: CryptoRNGState -> ServerPartT IO Session
-handleSession r = do
-    msession <- currentSession
-    case msession of
-        Just session ->do
-                      now <- liftIO getMinutesTime
-                      if (now >= (expires $ sessionData $ session))
-                          then do
-                             _ <- update $ DelSession (sessionId session)
-                             liftIO $ inIO r $ startSession
-                          else return session
-        Nothing -> inIO r $ startSession
+handleSession :: (CryptoRNG m, FilterMonad Response m, HasRqData m, MonadIO m, MonadPlus m, ServerMonad m) => m Session
+handleSession = do
+  msession <- currentSession
+  case msession of
+    Just session -> do
+      now <- getMinutesTime
+      if now >= (expires $ sessionData $ session)
+        then do
+          _ <- update $ DelSession (sessionId session)
+          startSession
+        else return session
+    Nothing -> startSession
 
 -- | Updates session data. If session is temporary and new
 -- session data is non-empty, register session in the system
 -- and add a cookie. Is user loggs in, check whether there is
 -- an old session with his userid and throw it away.
-updateSessionWithContextData :: StdGen
-                             -> Session
+updateSessionWithContextData :: Session
                              -> Maybe UserID
                              -> [ELegTransaction]
                              -> Map.Map SignatoryLinkID MagicHash
                              -> Maybe UserID
-                             -> ServerPartT IO ()
-updateSessionWithContextData rng (Session i sd) u trans magichashes' pu = do
-    now <- liftIO getMinutesTime
+                             -> DBT (ServerPartT IO) ()
+updateSessionWithContextData (Session i sd) u trans magichashes' pu = do
+    now <- getMinutesTime
+    rng <- random
     let newsd = sd
                 { userID = u
                 , expires = 60 `minutesAfter` now

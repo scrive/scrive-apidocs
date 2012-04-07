@@ -40,7 +40,7 @@ newtype ActionScheduler a = AS { unAS :: ReaderT SchedulerData' (ReaderT DBEnv I
     deriving (Monad, Functor, MonadIO, MonadReader SchedulerData')
 
 instance CryptoRNG ActionScheduler where
-  getCryptoRNGState = AS $ lift $ asks rngstate
+  getCryptoRNGState = AS $ lift $ asks envRNG
 
 instance DBMonad ActionScheduler where
     getDBEnv = AS $ lift ask

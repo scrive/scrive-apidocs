@@ -16,7 +16,7 @@ import Control.Concurrent.MVar
 import System.Time
 import Numeric
 import qualified Database.HDBC as HDBC
-import DB.Classes (DBEnv, cloneDBEnv, nexus)
+import DB.Classes (DBEnv, cloneDBEnv, envNexus)
 import Context
 import qualified Log
 
@@ -55,7 +55,7 @@ allActions = unsafePerformIO $ newMVar Map.empty
 forkActionIO :: DBEnv -> String -> (DBEnv -> IO ()) -> IO ()
 forkActionIO env title' action = do
   env' <- cloneDBEnv env
-  let conn' = nexus env'
+  let conn' = envNexus env'
   _ <- C.forkIO $ flip C.finally (HDBC.disconnect conn') $ do
     startTime <- getClockTime
     key <- modifyMVar allActions $ \themap -> do

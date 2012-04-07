@@ -811,7 +811,7 @@ daveDocument documentid = onlyAdmin $ do
     Log.debug $ "location: " ++ location
     if "/" `isSuffixOf` location
      then do
-      document <- queryOrFail $ GetDocumentByDocumentID documentid
+      document <- runDBOrFail . dbQuery $ GetDocumentByDocumentID documentid
       r <- renderTemplateFM  "daveDocument" $ do
         field "daveBody" $  inspectXML document
         field "id" $ show documentid
@@ -824,7 +824,7 @@ daveDocument documentid = onlyAdmin $ do
 -}
 daveSignatoryLink :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m  String
 daveSignatoryLink documentid siglinkid = onlyAdmin $ do
-    document <- queryOrFail $ GetDocumentByDocumentID documentid
+    document <- runDBOrFail . dbQuery $ GetDocumentByDocumentID documentid
     siglink <- guardJust $ getSigLinkFor document siglinkid
     renderTemplateFM  "daveSignatoryLink" $ do
         field "daveBody" $ inspectXML siglink
