@@ -31,8 +31,7 @@ import qualified Network.AWS.AWSConnection as AWS
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 
-import Kontra ( Kontra, unKontra', unKontra)
-import Context
+import Kontra
 import Mails.MailsConfig
 import MinutesTime
 import IPAddress
@@ -47,7 +46,7 @@ runTestKontra' :: MonadIO m => Request -> Context -> TestKontra a ->
                   m ((Either Response a, FilterFun Response), Context)
 runTestKontra' rq ctx tk = do
     let noflashctx = ctx{ctxflashmessages=[]}
-    (mres, ctx') <- liftIO $ runStateT (runErrorT $ ununWebT $ runServerPartT (unKontra' $ unKontra tk) rq) noflashctx
+    (mres, ctx') <- liftIO $ runStateT (runErrorT $ ununWebT $ runServerPartT (unKontraPlus $ unKontra tk) rq) noflashctx
     case mres of
         Left e -> fail $ "runTestKontra' uncaught error: " ++ show e
         Right Nothing -> fail "runTestKontra' mzero"

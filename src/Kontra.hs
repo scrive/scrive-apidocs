@@ -3,8 +3,8 @@ module Kontra
     , module KontraMonad
     , module Context
     , Kontra(..)
-    , Kontra'(..)
-    , runKontra'
+    , KontraPlus(..)
+    , runKontraPlus
     , clearFlashMsgs
     , addELegTransaction
     , logUserToContext
@@ -53,9 +53,9 @@ import qualified Log
 import Util.MonadUtils
 import Misc
 
--- | Kontra' is 'MonadPlus', but it should only be used on toplevel
+-- | KontraPlus is 'MonadPlus', but it should only be used on toplevel
 -- for interfacing with static routing.
-newtype Kontra' a = Kontra' { unKontra' :: ServerPartT (ErrorT KontraError (StateT Context IO)) a }
+newtype KontraPlus a = KontraPlus { unKontraPlus :: ServerPartT (ErrorT KontraError (StateT Context IO)) a }
     deriving (MonadPlus, Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadIO, MonadError KontraError, ServerMonad, WebMonad Response)
 
 -- | Kontra is a traditional Happstack handler monad except that it's
@@ -64,34 +64,34 @@ newtype Kontra' a = Kontra' { unKontra' :: ServerPartT (ErrorT KontraError (Stat
 -- Since we use static routing, there is no need for mzero inside a
 -- handler.  Instead we signal errors explicitly through
 -- 'KontraError'.
-newtype Kontra a = Kontra { unKontra :: Kontra' a }
+newtype Kontra a = Kontra { unKontra :: KontraPlus a }
     deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadIO, MonadError KontraError, ServerMonad, WebMonad Response, CryptoRNG, KontraMonad, DBMonad, TemplatesMonad)
 
 instance Kontrakcja Kontra
-instance Kontrakcja Kontra'
+instance Kontrakcja KontraPlus
 
-instance CryptoRNG Kontra' where
-  getCryptoRNGState = Kontra' $ gets (rngstate . ctxdbenv)
+instance CryptoRNG KontraPlus where
+  getCryptoRNGState = KontraPlus $ gets (rngstate . ctxdbenv)
 
-instance DBMonad Kontra' where
+instance DBMonad KontraPlus where
   getDBEnv = ctxdbenv <$> getContext
   handleDBError e = do
     Log.error $ show e
     internalError
 
-instance KontraMonad Kontra' where
-    getContext    = Kontra' get
-    modifyContext = Kontra' . modify
+instance KontraMonad KontraPlus where
+    getContext    = KontraPlus get
+    modifyContext = KontraPlus . modify
 
-instance TemplatesMonad Kontra' where
+instance TemplatesMonad KontraPlus where
     getTemplates = ctxtemplates <$> getContext
     getLocalTemplates locale = do
       Context{ctxglobaltemplates} <- getContext
       return $ localizedVersion locale ctxglobaltemplates
 
 -- | In case of KontraError, remove all Happstack filters
-runKontra' :: Context -> Kontra' a -> ServerPartT IO (Either KontraError a)
-runKontra' ctx = mapServerPartT (\s -> trans `fmap` evalStateT (runErrorT s) ctx) . unKontra'
+runKontraPlus :: Context -> KontraPlus a -> ServerPartT IO (Either KontraError a)
+runKontraPlus ctx = mapServerPartT (\s -> trans `fmap` evalStateT (runErrorT s) ctx) . unKontraPlus
   where trans (Left e)                   = Just (Right (Left e), filterFun id)
         trans (Right (Just (Left r,f)))  = Just (Left r,f)
         trans (Right (Just (Right a,f))) = Just (Right (Right a),f)

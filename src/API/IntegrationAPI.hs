@@ -105,7 +105,7 @@ integrationService = do
                 else return Nothing
          Nothing -> return Nothing
 
-integrationAPI :: Route (Kontra' Response)
+integrationAPI :: Route (KontraPlus Response)
 integrationAPI = dir "integration" $ choice [
       dir "api" $
         choice

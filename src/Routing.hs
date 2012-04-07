@@ -37,8 +37,8 @@ import Text.JSON
 
 type RedirectOrContent = Either KontraLink String
 
-kpath :: (Path Kontra Kontra' h a) => Method -> (Kontra a -> Kontra b) -> h
-      -> Route (Kontra' b)
+kpath :: (Path Kontra KontraPlus h a) => Method -> (Kontra a -> Kontra b) -> h
+      -> Route (KontraPlus b)
 kpath m h = path m (unKontra . h)
 
 class ToResp a where
@@ -62,20 +62,19 @@ instance ToResp JSValue where
 instance (ToResp a , ToResp b) => ToResp (Either a b) where
     toResp = either toResp toResp
 
-hPostWrap :: Path Kontra Kontra' a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra' Response)
+hPostWrap :: Path Kontra KontraPlus a Response => (Kontra Response -> Kontra Response) -> a -> Route (KontraPlus Response)
 hPostWrap = kpath POST
 
-hGetWrap :: Path Kontra Kontra' a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra' Response)
+hGetWrap :: Path Kontra KontraPlus a Response => (Kontra Response -> Kontra Response) -> a -> Route (KontraPlus Response)
 hGetWrap = kpath GET
 
-hDeleteWrap :: Path Kontra Kontra' a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra' Response)
+hDeleteWrap :: Path Kontra KontraPlus a Response => (Kontra Response -> Kontra Response) -> a -> Route (KontraPlus Response)
 hDeleteWrap = kpath DELETE
 
-hPutWrap :: Path Kontra Kontra' a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra' Response)
+hPutWrap :: Path Kontra KontraPlus a Response => (Kontra Response -> Kontra Response) -> a -> Route (KontraPlus Response)
 hPutWrap = kpath PUT
 
-
-{- To change standard string to page-}
+{- To change standard string to page -}
 page:: Kontra String -> Kontra Response
 page pageBody = do
     pb <- pageBody
@@ -84,16 +83,12 @@ page pageBody = do
      then renderFromBody kontrakcja pb
      else embeddedPage pb
 
-
-
-
-
 {- Use this to mark that request will try to get data from our service and embed it on our website
    It returns a script that if embeded on site will force redirect to main page
    Ajax request should not contain redirect
 -}
 
-hGetAjax :: Path Kontra Kontra' a Response => a -> Route (Kontra' Response)
+hGetAjax :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
 hGetAjax = hGetWrap wrapAjax
 
 wrapAjax :: Kontra Response -> Kontra Response
@@ -106,25 +101,25 @@ noRedirect action = do
     if (rsCode response == 303) then internalError
                                 else return response
 
-hPost :: Path Kontra Kontra' a Response => a -> Route (Kontra' Response)
+hPost :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
 hPost = hPostWrap (https . guardXToken)
 
-hGet :: Path Kontra Kontra' a Response => a -> Route (Kontra' Response)
+hGet :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
 hGet = hGetWrap https
 
-hDelete :: Path Kontra Kontra' a Response => a -> Route (Kontra' Response)
+hDelete :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
 hDelete = hDeleteWrap https
 
-hPut :: Path Kontra Kontra' a Response => a -> Route (Kontra' Response)
+hPut :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
 hPut = hPutWrap https
 
-hGetAllowHttp :: Path Kontra Kontra' a Response => a -> Route (Kontra' Response)
+hGetAllowHttp :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
 hGetAllowHttp = hGetWrap allowHttp
 
-hPostAllowHttp :: Path Kontra Kontra' a Response => a -> Route (Kontra' Response)
+hPostAllowHttp :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
 hPostAllowHttp = hPostWrap allowHttp
 
-hPostNoXToken :: Path Kontra Kontra' a Response => a -> Route (Kontra' Response)
+hPostNoXToken :: Path Kontra KontraPlus a Response => a -> Route (KontraPlus Response)
 hPostNoXToken = hPostWrap https
 
 https:: Kontra Response -> Kontra Response
@@ -133,7 +128,6 @@ https action = do
     if secure
        then action
        else sendSecureLoopBack
-
 
 allowHttp:: Kontrakcja m => m Response -> m Response
 allowHttp action = do

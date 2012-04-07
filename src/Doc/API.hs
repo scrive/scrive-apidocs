@@ -36,7 +36,7 @@ import Stats.Control
 
 import EvidenceLog.Model
 
-documentAPI :: Route (Kontra' Response)
+documentAPI :: Route (KontraPlus Response)
 documentAPI = choice [
   dir "api" $ dir "document" $ hPostNoXToken $ toK0 $ documentNew,
 

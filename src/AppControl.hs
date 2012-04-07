@@ -175,7 +175,7 @@ showRequest rq maybeInputsBody =
 {- |
    Creates a context, routes the request, and handles the session.
 -}
-appHandler :: Kontra' Response -> AppConf -> AppGlobals -> ServerPartT IO Response
+appHandler :: KontraPlus Response -> AppConf -> AppGlobals -> ServerPartT IO Response
 appHandler handleRoutes appConf appGlobals = do
   startTime <- liftIO getClockTime
 
@@ -196,7 +196,7 @@ appHandler handleRoutes appConf appGlobals = do
   where
     handle :: Session -> Context -> ServerPartT IO Response
     handle session ctx = do
-      Right (res, ctx') <- runKontra' ctx $ do
+      Right (res, ctx') <- runKontraPlus ctx $ do
           res <- (handleRoutes `mplus` throwError Respond404) `catchError` handleError
           ctx' <- getContext
           return (res,ctx')
