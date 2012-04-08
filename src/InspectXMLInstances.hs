@@ -107,3 +107,4 @@ instance InspectXML Region where
 instance InspectXML IPAddress where
 instance InspectXML UserHistoryEventType where
 instance InspectXML JSValue where
+instance InspectXML StatusClass where

@@ -42,6 +42,7 @@ signLinkFromDetails' details roles magichash =
                 , signatorylinkreallydeleted = False
                 , signatorylinkcsvupload = Nothing
                 , signatoryattachments = []
+                , signatorylinkstatusclass = SCDraft
                 }
 
 
@@ -90,6 +91,7 @@ blankDocument =
           , documentdeleted              = False
           -- , documentattachments          = []
           , documentregion               = defaultValue
+          , documentstatusclass          = SCDraft
           }
 
 

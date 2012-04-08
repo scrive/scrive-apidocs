@@ -10,6 +10,12 @@ module Doc.Model
   , insertDocumentAsIs
   , toDocumentProcess
 
+  , DocumentFilter(..)
+  , DocumentDomain(..)
+  , DocumentPagination(..)
+  , AscDesc(..)
+  , DocumentOrderBy(..)
+
   , AddDocumentAttachment(..)
   , AddInvitationEvidence(..)
   , AdminOnlySaveForUser(..)
@@ -25,15 +31,16 @@ module Doc.Model
   , DocumentFromSignatoryData(..)
   , ErrorDocument(..)
   , GetDeletedDocumentsByUser(..)
-  , GetDocumentByDocumentID(..)
   , GetDocuments(..)
+  , GetDocumentsCount(..)
+  , GetDocumentByDocumentID(..)
+  , GetDocumentsByService(..)
   , GetDocumentsByCompanyWithFiltering(..)
   , GetDocumentsByAuthor(..)
   , GetTemplatesByAuthor(..)
-  , GetAvaibleTemplates(..)
-  , GetDocumentsOfTypeByAuthor(..)
+  , GetAvailableTemplates(..)
+  , GetAttachmentsByAuthor(..)
   , GetDocumentsBySignatory(..)
-  , GetDocumentsOfTypeBySignatory(..)
   , GetTimeoutedButPendingDocuments(..)
   , MarkDocumentSeen(..)
   , MarkInvitationRead(..)
@@ -100,6 +107,7 @@ import qualified Data.Map as M
 import Doc.Tables
 import Control.Applicative
 import Util.SignatoryLinkUtils
+import Text.JSON.Generic
 import Doc.DocProcess
 import Doc.DocStateCommon
 import qualified Log
@@ -110,6 +118,205 @@ import Util.MonadUtils
 
 import EvidenceLog.Model
 import Util.HasSomeUserInfo
+
+data DocumentPagination =
+  DocumentPagination
+  { documentOffset :: Int        -- ^ use for SQL OFFSET command
+  , documentLimit  :: Int        -- ^ use for SQL LIMIT command
+  }
+
+data DocumentFilter
+  = DocumentFilterStatuses [DocumentStatus]   -- ^ Any of listed statuses
+  | DocumentFilterByTags [DocumentTag]        -- ^ All of listed tags
+  | DocumentFilterMinChangeTime MinutesTime   -- ^ Minimal mtime
+  | DocumentFilterMaxChangeTime MinutesTime   -- ^ Maximum mtime
+  | DocumentFilterByService (Maybe ServiceID) -- ^ Only documents belonging to a service
+  | DocumentFilterByRole SignatoryRole        -- ^ Signatory must have role
+  | DocumentFilterByProcess [DocumentProcess] -- ^ Any of listed processes
+  | DocumentFilterByString String             -- ^ Contains the string in title, list of people involved or anywhere
+
+data DocumentDomain
+  = DocumentsOfAuthor UserID                     -- ^ Documents by author, not deleted
+  | DocumentsOfAuthorDeleted UserID              -- ^ Documents by author, deleted
+  | DocumentsOfAuthorDeleteValue UserID Bool     -- ^ Documents by author, with delete flag
+  | DocumentsForSignatory UserID                 -- ^ Documents by signatory, not deleted
+  | DocumentsForSignatoryDeleted UserID          -- ^ Documents by signatory, deleted
+  | DocumentsForSignatoryDeleteValue UserID Bool -- ^ Documents by signatory, with delete flag
+  | TemplatesOfAuthor UserID                     -- ^ Templates by author, not deleted
+  | TemplatesOfAuthorDeleted UserID              -- ^ Templates by author, deleted
+  | TemplatesOfAuthorDeleteValue UserID Bool     -- ^ Templates by author, with deleted flag
+  | TemplatesSharedInUsersCompany UserID         -- ^ Templates shared in company
+  | DocumentsOfService (Maybe ServiceID)         -- ^ All documents of service
+  | DocumentsOfCompany CompanyID                 -- ^ All documents of a company, not deleted
+  | AttachmentsOfAuthorDeleteValue UserID Bool   -- ^ Attachments of user, with deleted flag
+
+-- | These are possible order by clauses that make documents sorted by.
+data DocumentOrderBy
+  = DocumentOrderByTitle       -- ^ Order by title, alphabetically, case insensitive
+  | DocumentOrderByMTime       -- ^ Order by modification time
+  | DocumentOrderByStatusClass -- ^ Order by status class.
+  | DocumentOrderByType        -- ^ Order by document type.
+  | DocumentOrderByProcess     -- ^ Order by process
+
+-- | 'AscDesc' marks ORDER BY order as ascending or descending.
+-- Conversion to SQL adds DESC marker to descending and no marker
+-- to ascending order.
+data AscDesc a = Asc a | Desc a
+
+-- | Convert DocumentOrderBy enumeration into proper SQL order by statement
+documentOrderByToSQL :: DocumentOrderBy -> SQL
+documentOrderByToSQL DocumentOrderByTitle = SQL "documents.title" []
+documentOrderByToSQL DocumentOrderByMTime = SQL "documents.mtime" []
+documentOrderByToSQL DocumentOrderByStatusClass = 
+  SQL (documentStatusClassExpression) []
+documentOrderByToSQL DocumentOrderByType = SQL "documents.type" []
+documentOrderByToSQL DocumentOrderByProcess = SQL "documents.process" []
+
+documentOrderByAscDescToSQL :: AscDesc DocumentOrderBy -> SQL
+documentOrderByAscDescToSQL (Asc x) = documentOrderByToSQL x
+documentOrderByAscDescToSQL (Desc x) = documentOrderByToSQL x <++> SQL " DESC" []
+
+documentDomainToSQL :: DocumentDomain -> SQL
+documentDomainToSQL (DocumentsOfAuthorDeleteValue uid deleted) =
+  SQL ("(signatory_links.roles & ?) <> 0"
+       ++ " AND signatory_links.user_id = ?"
+       ++ " AND signatory_links.deleted = ?"
+       ++ " AND signatory_links.really_deleted = FALSE"
+       ++ " AND documents.type = 1")
+        [toSql [SignatoryAuthor], toSql uid, toSql deleted]
+documentDomainToSQL (DocumentsOfAuthor uid) =
+  documentDomainToSQL (DocumentsOfAuthorDeleteValue uid False)
+documentDomainToSQL (DocumentsOfAuthorDeleted uid) =
+  documentDomainToSQL (DocumentsOfAuthorDeleteValue uid True)
+documentDomainToSQL (DocumentsForSignatory uid) =
+  documentDomainToSQL (DocumentsForSignatoryDeleteValue uid False)
+documentDomainToSQL (DocumentsForSignatoryDeleted uid) =
+  documentDomainToSQL (DocumentsForSignatoryDeleteValue uid True)
+documentDomainToSQL (DocumentsForSignatoryDeleteValue uid deleted) =
+  SQL ("signatory_links.user_id = ?"
+       ++ " AND signatory_links.deleted = ?"
+       ++ " AND signatory_links.really_deleted = FALSE"
+       ++ " AND documents.type = 1"
+       ++ " AND ((signatory_links.roles & ?) <> 0"
+       ++ "      OR ((signatory_links.roles & ?) <> 0"
+       ++ "          AND NOT EXISTS (SELECT 1 FROM signatory_links AS sl2"
+       ++ "                           WHERE signatory_links.document_id = sl2.document_id"
+       ++ "                             AND ((sl2.roles & ?) <> 0)"
+       ++ "                             AND sl2.sign_time IS NULL"
+       ++ "                             AND sl2.sign_order < signatory_links.sign_order)))")
+        [toSql uid, toSql deleted, toSql [SignatoryAuthor], toSql [SignatoryPartner], toSql [SignatoryPartner]]
+documentDomainToSQL (TemplatesOfAuthorDeleteValue uid deleted) =
+  SQL ("signatory_links.user_id = ?"
+       ++ " AND signatory_links.deleted = ?"
+       ++ " AND signatory_links.really_deleted = FALSE"
+       ++ " AND documents.type = 2")
+        [toSql uid, toSql deleted]
+documentDomainToSQL (TemplatesOfAuthor uid) =
+  documentDomainToSQL (TemplatesOfAuthorDeleteValue uid False)
+documentDomainToSQL (TemplatesOfAuthorDeleted uid) =
+  documentDomainToSQL (TemplatesOfAuthorDeleteValue uid True)
+documentDomainToSQL (TemplatesSharedInUsersCompany uid) =
+  SQL ("signatory_links.deleted = FALSE"
+       ++ " AND documents.type = 2"
+       ++ " AND documents.sharing = ?"
+       ++ " AND signatory_links.really_deleted = FALSE"
+       ++ " AND EXISTS (SELECT 1 FROM users AS usr1, users AS usr2 "
+       ++ "                WHERE signatory_links.user_id = usr2.id "
+       ++ "                  AND usr2.company_id = usr1.company_id "
+       ++ "                  AND usr1.id = ?)")
+        [toSql Shared, toSql uid]
+documentDomainToSQL (DocumentsOfService sid) =
+  SQL "documents.service_id IS NOT DISTINCT FROM ? AND documents.type = 1"
+        [toSql sid]
+documentDomainToSQL (DocumentsOfCompany cid) =
+  SQL "signatory_links.company_id = ? AND signatory_links.deleted = FALSE"
+        [toSql cid]
+documentDomainToSQL (AttachmentsOfAuthorDeleteValue uid deleted) =
+  SQL ("signatory_links.user_id = ?"
+       ++ " AND signatory_links.deleted = ?"
+       ++ " AND signatory_links.really_deleted = FALSE"
+       ++ " AND documents.type = 3")
+        [toSql uid, toSql deleted]
+
+
+
+maxselect :: String
+maxselect = "(SELECT max(greatest(signatory_links.sign_time"
+            ++ ", signatory_links.seen_time"
+            ++ ", signatory_links.read_invitation"
+            ++ ", documents.invite_time"
+            ++ ", documents.rejection_time"
+            ++ ", documents.mtime"
+            ++ ", documents.ctime"
+            ++ ")) FROM signatory_links WHERE signatory_links.document_id = documents.id)"
+
+documentFilterToSQL :: DocumentFilter -> SQL
+documentFilterToSQL (DocumentFilterStatuses []) =
+  SQL "FALSE" []
+documentFilterToSQL (DocumentFilterStatuses statuses) =
+  SQL ("documents.status IN (" ++ intercalate "," (map (const "?") statuses) ++ ")")
+                               (map toSql statuses)
+documentFilterToSQL (DocumentFilterMinChangeTime ctime) =
+  SQL (maxselect ++ " >= ?") [toSql ctime]
+documentFilterToSQL (DocumentFilterMaxChangeTime ctime) =
+  SQL (maxselect ++ " <= ?") [toSql ctime]
+documentFilterToSQL (DocumentFilterByService mservice) =
+  SQL "documents.service_id IS NOT DISTINCT FROM ?" [toSql mservice]
+documentFilterToSQL (DocumentFilterByProcess processes) =
+  sqlConcatOR $ map (\process -> SQL "documents.process = ?" [toSql process]) processes
+documentFilterToSQL (DocumentFilterByRole role) =
+  SQL "(signatory_links.roles & ?) <> 0" [toSql [role]]
+documentFilterToSQL (DocumentFilterByTags []) =
+  SQL "TRUE" []
+documentFilterToSQL (DocumentFilterByTags tags) =
+  sqlConcatAND $ map (\tag -> SQL "documents.tags LIKE ?" [toSql $ "%" ++ concatMap escape (encodeJSON tag) ++ "%"]) tags
+  where
+      escape '\\' = "\\\\"
+      escape '%' = "\\%"
+      escape '_' = "\\_"
+      escape c = [c]
+documentFilterToSQL (DocumentFilterByString string) =
+  SQL "documents.title ILIKE ?" [sqlpat] `sqlOR` 
+     sqlJoinWithAND (map (\wordpat -> SQL "documents.fields ILIKE ?" [wordpat]) sqlwordpat)
+  where
+      sqlpat = toSql $ "%" ++ concatMap escape string ++ "%"
+      sqlwordpat = map (\word -> toSql $ "%" ++ concatMap escape word ++ "%") (words string)
+      escape '\\' = "\\\\"
+      escape '%' = "\\%"
+      escape '_' = "\\_"
+      escape c = [c]
+
+sqlOR :: SQL -> SQL -> SQL
+sqlOR sql1 sql2 = mconcat [parenthesize sql1, SQL " OR " [], parenthesize sql2]
+
+sqlAND :: SQL -> SQL -> SQL
+sqlAND sql1 sql2 = mconcat [parenthesize sql1, SQL " AND " [], parenthesize sql2]
+
+sqlJoinWith :: SQL -> [SQL] -> SQL
+sqlJoinWith comm list = mconcat $ intersperse comm $ map parenthesize list
+
+
+sqlJoinWithOR :: [SQL] -> SQL
+sqlJoinWithOR = sqlJoinWith (SQL " OR " [])
+
+sqlJoinWithAND :: [SQL] -> SQL
+sqlJoinWithAND = sqlJoinWith (SQL " AND " [])
+
+sqlConcatComma :: [SQL] -> SQL
+sqlConcatComma sqls =
+  mconcat $ intersperse (SQL ", " []) sqls
+
+sqlConcatAND :: [SQL] -> SQL
+sqlConcatAND sqls =
+  mconcat $ intercalate [SQL " AND " []] (map (\s -> [SQL "(" [], s, SQL ")" [] ]) sqls)
+
+sqlConcatOR :: [SQL] -> SQL
+sqlConcatOR sqls =
+  mconcat $ intercalate [SQL " OR " []] (map (\s -> [SQL "(" [], s, SQL ")" [] ]) sqls)
+
+parenthesize :: SQL -> SQL
+parenthesize (SQL command values) = SQL ("(" ++ command ++ ")") values
+
 
 sqlLog :: MinutesTime -> String -> (String, String, SqlValue)
 sqlLog time text = sql' "log" "log || ?" logmsg
@@ -230,6 +437,7 @@ documentsSelectors = intercalate ", " [
   , "mail_footer"
   , "region"
   , "sharing"
+  , documentStatusClassExpression
   ]
 
 selectDocumentsSQL :: SQL
@@ -246,7 +454,7 @@ fetchDocuments = foldDB decoder []
      process functionality ctime mtime days_to_sign timeout_time invite_time
      invite_ip dlog invite_text allowed_id_types cancelationreason rejection_time
      rejection_signatory_link_id rejection_reason tags service deleted mail_footer
-     region sharing = Document {
+     region sharing status_class = Document {
          documentid = did
        , documenttitle = title
        , documentsignatorylinks = []
@@ -279,51 +487,76 @@ fetchDocuments = foldDB decoder []
        , documentauthorattachments = []
        , documentui = DocumentUI mail_footer
        , documentregion = region
+       , documentstatusclass = toEnum (status_class :: Int)
        } : acc
 
-signatoryLinksSelectorsWith :: String -> String
-signatoryLinksSelectorsWith i = intercalate i [
-    "id"
-  , "document_id"
-  , "user_id"
-  , "company_id"
-  , "fields"
-  , "sign_order"
-  , "token"
-  , "sign_time"
-  , "sign_ip"
-  , "seen_time"
-  , "seen_ip"
-  , "read_invitation"
-  , "invitation_delivery_status"
-  , "signinfo_text"
-  , "signinfo_signature"
-  , "signinfo_certificate"
-  , "signinfo_provider"
-  , "signinfo_first_name_verified"
-  , "signinfo_last_name_verified"
-  , "signinfo_personal_number_verified"
-  , "roles"
-  , "csv_title"
-  , "csv_contents"
-  , "csv_signatory_index"
-  , "deleted"
-  , "really_deleted"
-  ]
+documentStatusClassExpression :: String
+documentStatusClassExpression =
+  "(COALESCE((SELECT min(" ++ statusClassCaseExpression ++ ")"
+  ++         "  FROM signatory_links"
+  ++         " WHERE signatory_links.document_id = documents.id AND ((signatory_links.roles&1)<>0)), 0))"
+
+statusClassCaseExpression :: String
+statusClassCaseExpression =
+  "CASE "
+  ++ " WHEN documents.status IN (1) THEN 0"                        -- (documentstatus==Preparation, SCDraft)
+  ++ " WHEN documents.status IN (4,5,6,7,8) THEN 1"                -- (documentstatus==Canceled, SCCancelled)
+  ++ " WHEN signatory_links.sign_time IS NOT NULL THEN 6"          -- (isJust maybesigninfo, SCSigned)
+  ++ " WHEN signatory_links.seen_time IS NOT NULL THEN 5"          -- (isJust maybeseeninfo, SCOpened)
+  ++ " WHEN signatory_links.read_invitation IS NOT NULL THEN 4"    -- (isJust maybereadinvite, SCRead)
+  ++ " WHEN signatory_links.invitation_delivery_status = 2 THEN 1" -- (invitationdeliverystatus==Undelivered, SCCancelled)
+  ++ " WHEN signatory_links.invitation_delivery_status = 1 THEN 3" -- (invitationdeliverystatus==Delivered, SCDelivered)
+  ++ " ELSE 2"                                                     -- SCSent
+  ++ " END"
 
 signatoryLinksSelectors :: String
-signatoryLinksSelectors = signatoryLinksSelectorsWith ", "
+signatoryLinksSelectors = intercalate ", " 
+  [ "signatory_links.id"
+  , "signatory_links.document_id"
+  , "signatory_links.user_id"
+  , "signatory_links.company_id"
+  , "signatory_links.fields"
+  , "signatory_links.sign_order"
+  , "signatory_links.token"
+  , "signatory_links.sign_time"
+  , "signatory_links.sign_ip"
+  , "signatory_links.seen_time"
+  , "signatory_links.seen_ip"
+  , "signatory_links.read_invitation"
+  , "signatory_links.invitation_delivery_status"
+  , "signatory_links.signinfo_text"
+  , "signatory_links.signinfo_signature"
+  , "signatory_links.signinfo_certificate"
+  , "signatory_links.signinfo_provider"
+  , "signatory_links.signinfo_first_name_verified"
+  , "signatory_links.signinfo_last_name_verified"
+  , "signatory_links.signinfo_personal_number_verified"
+  , "signatory_links.roles"
+  , "signatory_links.csv_title"
+  , "signatory_links.csv_contents"
+  , "signatory_links.csv_signatory_index"
+  , "signatory_links.deleted"
+  , "signatory_links.really_deleted"
+
+  , -- this is to fetch status class, so we can do sorting according to that class
+    --  0 Draft - 1 Cancel - 2 Fall due - 3 Sent - 4 Opened - 5 Signed
+    -- FIXME: we should really be using constants from Haskell, but this after some refactoring
+    -- this has to stay a single string for now
+    statusClassCaseExpression ++ " AS status_class"
+  ]
 
 selectSignatoryLinksSQL :: SQL
 selectSignatoryLinksSQL = SQL ("SELECT "
-  ++ signatoryLinksSelectorsWith ", sl."
-  ++ ", sa.file_id as sigfileid "
-  ++ ", sa.name as signame "
-  ++ ", sa.description as sigdesc "
-  ++ " FROM signatory_links sl "
-  ++ " LEFT JOIN signatory_attachments sa "
-  ++ " ON sa.document_id = sl.document_id "
-  ++ " AND sa.signatory_link_id = sl.id ") []
+  ++ signatoryLinksSelectors
+  ++ ", signatory_attachments.file_id as sigfileid "
+  ++ ", signatory_attachments.name as signame "
+  ++ ", signatory_attachments.description as sigdesc "
+  ++ " FROM (signatory_links "
+  ++ " LEFT JOIN signatory_attachments "
+  ++ " ON signatory_attachments.document_id = signatory_links.document_id "
+  ++ " AND signatory_attachments.signatory_link_id = signatory_links.id) "
+  ++ " JOIN documents "
+  ++ " ON signatory_links.document_id = documents.id ") []
 
 fetchSignatoryLinks :: DB (M.Map DocumentID [SignatoryLink])
 fetchSignatoryLinks = do
@@ -336,7 +569,8 @@ fetchSignatoryLinks = do
      invitation_delivery_status signinfo_text signinfo_signature signinfo_certificate
      signinfo_provider signinfo_first_name_verified signinfo_last_name_verified
      signinfo_personal_number_verified roles csv_title csv_contents csv_signatory_index
-     deleted really_deleted safileid saname sadesc
+     deleted really_deleted status_class
+     safileid saname sadesc
       | docid == nulldocid                      = (document_id, [link], linksmap)
       | docid /= document_id                    = (document_id, [link], M.insertWith' (++) docid links linksmap)
       | signatorylinkid ($(head) links) == slid = (docid, addSigAtt ($(head) links) : $(tail) links, linksmap)
@@ -385,50 +619,44 @@ fetchSignatoryLinks = do
           , signatorylinkcsvupload =
               CSVUpload <$> csv_title <*> csv_contents <*> csv_signatory_index
           , signatoryattachments = sigAtt
+          , signatorylinkstatusclass = toEnum (status_class :: Int)
           }
 
 insertSignatoryLinkAsIs :: DocumentID -> SignatoryLink -> DB (Maybe SignatoryLink)
 insertSignatoryLinkAsIs documentid link = do
-  ruserid <- case maybesignatory link of
-    Nothing -> return Nothing
-    Just userid1 -> do
-      muser <- dbQuery $ GetUserByID userid1
-      case muser of
-        Nothing ->
-          do
-            Just doc <- dbQuery $ GetDocumentByDocumentID documentid
-            Log.server $ "User " ++ show (maybesignatory link) ++ " of document #" ++
-               show documentid ++ " '" ++ documenttitle doc ++ "' does not exist, setting to NULL"
-            return Nothing
-        Just _ -> return (Just userid1)
 
-  _ <- kRun $ mkSQL INSERT tableSignatoryLinks [
-      sql "document_id" documentid
-    , sql "user_id" $ ruserid
-    , sql "roles" $ signatoryroles link
-    , sql "company_id" $ maybecompany link
-    , sql "token" $ signatorymagichash link
-    , sql "fields" $ signatoryfields $ signatorydetails link
-    , sql "sign_order"$ signatorysignorder $ signatorydetails link
-    , sql "sign_time" $ signtime `fmap` maybesigninfo link
-    , sql "sign_ip" $ signipnumber `fmap` maybesigninfo link
-    , sql "seen_time" $ signtime `fmap` maybeseeninfo link
-    , sql "seen_ip" $ signipnumber `fmap` maybeseeninfo link
-    , sql "read_invitation" $ maybereadinvite link
-    , sql "invitation_delivery_status" $ invitationdeliverystatus link
-    , sql "signinfo_text" $ signatureinfotext `fmap` signatorysignatureinfo link
-    , sql "signinfo_signature" $ signatureinfosignature `fmap` signatorysignatureinfo link
-    , sql "signinfo_certificate" $ signatureinfocertificate `fmap` signatorysignatureinfo link
-    , sql "signinfo_provider" $ signatureinfoprovider `fmap` signatorysignatureinfo link
-    , sql "signinfo_first_name_verified" $ signaturefstnameverified `fmap` signatorysignatureinfo link
-    , sql "signinfo_last_name_verified" $ signaturelstnameverified `fmap` signatorysignatureinfo link
-    , sql "signinfo_personal_number_verified" $ signaturepersnumverified `fmap` signatorysignatureinfo link
-    , sql "csv_title" $ csvtitle `fmap` signatorylinkcsvupload link
-    , sql "csv_contents" $ csvcontents `fmap` signatorylinkcsvupload link
-    , sql "csv_signatory_index" $ csvsignatoryindex `fmap` signatorylinkcsvupload link
-    , sql "deleted" $ signatorylinkdeleted link
-    , sql "really_deleted" $ signatorylinkreallydeleted link
-    ] <++> SQL ("RETURNING " ++ signatoryLinksSelectors ++ ", NULL, NULL, NULL") []
+  _ <- kRun $ mkSQL INSERT tableSignatoryLinks
+           [ sql "document_id" documentid
+           , sql "user_id" $ maybesignatory link
+           , sql "roles" $ signatoryroles link
+           , sql "company_id" $ maybecompany link
+           , sql "token" $ signatorymagichash link
+           , sql "fields" $ signatoryfields $ signatorydetails link
+           , sql "sign_order"$ signatorysignorder $ signatorydetails link
+           , sql "sign_time" $ signtime `fmap` maybesigninfo link
+           , sql "sign_ip" $ signipnumber `fmap` maybesigninfo link
+           , sql "seen_time" $ signtime `fmap` maybeseeninfo link
+           , sql "seen_ip" $ signipnumber `fmap` maybeseeninfo link
+           , sql "read_invitation" $ maybereadinvite link
+           , sql "invitation_delivery_status" $ invitationdeliverystatus link
+           , sql "signinfo_text" $ signatureinfotext `fmap` signatorysignatureinfo link
+           , sql "signinfo_signature" $ signatureinfosignature `fmap` signatorysignatureinfo link
+           , sql "signinfo_certificate" $ signatureinfocertificate `fmap` signatorysignatureinfo link
+           , sql "signinfo_provider" $ signatureinfoprovider `fmap` signatorysignatureinfo link
+           , sql "signinfo_first_name_verified" $ signaturefstnameverified `fmap` signatorysignatureinfo link
+           , sql "signinfo_last_name_verified" $ signaturelstnameverified `fmap` signatorysignatureinfo link
+           , sql "signinfo_personal_number_verified" $ signaturepersnumverified `fmap` signatorysignatureinfo link
+           , sql "csv_title" $ csvtitle `fmap` signatorylinkcsvupload link
+           , sql "csv_contents" $ csvcontents `fmap` signatorylinkcsvupload link
+           , sql "csv_signatory_index" $ csvsignatoryindex `fmap` signatorylinkcsvupload link
+           , sql "deleted" $ signatorylinkdeleted link
+           , sql "really_deleted" $ signatorylinkreallydeleted link
+           ] <++> SQL " RETURNING id" []
+
+  slids <- foldDB (\acc slid -> slid : acc) []
+
+  _ <- kRun $ selectSignatoryLinksSQL <++> SQL "WHERE signatory_links.id = ? AND signatory_links.document_id = ? ORDER BY internal_insert_order DESC" 
+       [$(head) slids, toSql documentid]
 
   msiglink <- fetchSignatoryLinks
               >>= oneObjectReturnedGuard . concatMap snd . M.toList
@@ -460,7 +688,6 @@ fetchSignatoryAttachments = foldDB decoder M.empty
                                                                  , signatoryattachmentname = name
                                                                  , signatoryattachmentdescription = description
                                                                  }] acc
-
 
 authorAttachmentsSelectors :: String
 authorAttachmentsSelectors = intercalate ", " [
@@ -959,9 +1186,9 @@ selectDocuments query = do
     _ <- kRun $ SQL "CREATE TEMP TABLE docs AS " [] <++> query
 
     _ <- kRun $ SQL "SELECT * FROM docs" []
-    docs <- fetchDocuments
+    docs <- reverse <$> fetchDocuments
 
-    _ <- kRun $ selectSignatoryLinksSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE sl.document_id = docs.id) ORDER BY document_id DESC, internal_insert_order DESC" []
+    _ <- kRun $ selectSignatoryLinksSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE signatory_links.document_id = docs.id) ORDER BY document_id DESC, internal_insert_order DESC" []
     sls <- fetchSignatoryLinks
 
     _ <- kRun $ selectAuthorAttachmentsSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE author_attachments.document_id = docs.id) ORDER BY document_id DESC" []
@@ -969,13 +1196,10 @@ selectDocuments query = do
 
     kRunRaw "DROP TABLE docs"
 
-    let findEmpty :: Document -> M.Map DocumentID [a] -> [a]
-        findEmpty doc = fromMaybe [] . M.lookup (documentid doc)
-
-        fill doc = doc {
-            documentsignatorylinks       = findEmpty doc sls
-          , documentauthorattachments    = findEmpty doc ats
-          }
+    let fill doc = doc
+                   { documentsignatorylinks       = M.findWithDefault [] (documentid doc) sls
+                   , documentauthorattachments    = M.findWithDefault [] (documentid doc) ats
+                   }
 
     return $ map fill docs
 
@@ -986,11 +1210,58 @@ instance DBQuery GetDocumentByDocumentID (Maybe Document) where
       <++> SQL "WHERE id = ? AND deleted = FALSE" [toSql did])
       >>= oneObjectReturnedGuard
 
-data GetDocuments = GetDocuments (Maybe ServiceID)
+data GetDocumentsByService = GetDocumentsByService (Maybe ServiceID)
+instance DBQuery GetDocumentsByService [Document] where
+  dbQuery (GetDocumentsByService msid) =
+    dbQuery (GetDocuments [DocumentsOfService msid] [] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
+
+-- | GetDocuments is central switch for documents list queries.
+--
+-- GetDocuments domains filters sorting pagination
+--
+-- * domains are connected with OR, so documents falling into ANY of domains will be returned
+-- * filters weed out documents from domains, are connected with AND so a document must pass through ALL filters
+-- * sortings returns documents in order
+-- * pagination is a place to put OFFSET and LIMIT values
+--
+-- GetDocuments returns documents in proper order, no reverse is needed.
+--
+data GetDocuments = GetDocuments [DocumentDomain] [DocumentFilter] [AscDesc DocumentOrderBy] DocumentPagination
 instance DBQuery GetDocuments [Document] where
-  dbQuery (GetDocuments msid) = do
-    selectDocuments $ selectDocumentsSQL
-      <++> SQL "WHERE service_id IS NOT DISTINCT FROM ?" [toSql msid]
+  dbQuery (GetDocuments domains filters orderbys pagination) = do
+    selectDocuments $ mconcat
+      [ selectDocumentsSQL
+      , SQL "WHERE EXISTS (SELECT 1 FROM signatory_links WHERE documents.id = signatory_links.document_id AND " []
+      , SQL "(" []
+      , sqlConcatOR (map documentDomainToSQL domains)
+      , SQL ")" []
+      , if not (null filters)
+        then SQL " AND " [] `mappend` sqlConcatAND (map documentFilterToSQL filters)
+        else SQL "" []
+      , SQL ")" []
+      , if not (null orderbys)
+        then SQL " ORDER BY " [] `mappend` sqlConcatComma (map documentOrderByAscDescToSQL orderbys)
+        else SQL "" []
+      , SQL (" OFFSET " ++ show (documentOffset pagination) ++ " LIMIT " ++ show (documentLimit pagination)) []
+      ]
+
+data GetDocumentsCount = GetDocumentsCount [DocumentDomain] [DocumentFilter]
+instance DBQuery GetDocumentsCount Int where
+  dbQuery (GetDocumentsCount domains filters) = do
+    _ <- kRun $ mconcat
+      [ SQL "SELECT count(*) FROM documents " []
+      , SQL "WHERE EXISTS (SELECT 1 FROM signatory_links WHERE documents.id = signatory_links.document_id AND " []
+      , SQL "(" []
+      , sqlConcatOR (map documentDomainToSQL domains)
+      , SQL ")" []
+      , if not (null filters)
+        then SQL " AND " [] `mappend` sqlConcatAND (map documentFilterToSQL filters)
+        else SQL "" []
+      , SQL ")" []
+      ]
+    count <- foldDB (\(_acc::Int) (val::Int) -> val) 0
+    return count
+
 
 {- |
     Fetches documents by company with filtering by tags, edate, and status.
@@ -1008,144 +1279,41 @@ instance DBQuery GetDocuments [Document] where
     if isJust ftime, the last change on the document must be less than or equal to ftime
     if isJust statuses, the document status must be element of statuses
 -}
-data GetDocumentsByCompanyWithFiltering = GetDocumentsByCompanyWithFiltering (Maybe ServiceID) CompanyID [DocumentTag] (Maybe MinutesTime) (Maybe MinutesTime) (Maybe [DocumentStatus])
+data GetDocumentsByCompanyWithFiltering = GetDocumentsByCompanyWithFiltering CompanyID [DocumentFilter]
 instance DBQuery GetDocumentsByCompanyWithFiltering [Document] where
-  dbQuery (GetDocumentsByCompanyWithFiltering mservice companyid doctags stime ftime mstatuses) = do
-    docs <- selectDocumentsBySignatoryLink $ mconcat [
-        SQL "signatory_links.deleted = FALSE AND signatory_links.company_id = ? AND "
-          [toSql companyid]
-      , activatedSQL
-      , SQL "AND (signatory_links.roles = ? OR signatory_links.roles = ?) " [
-          toSql [SignatoryAuthor]
-        , toSql [SignatoryAuthor, SignatoryPartner]
-        ]
-      , SQL " AND service_id IS NOT DISTINCT FROM ? " [toSql mservice]
-      , case (stime, ftime) of
-          (Nothing, Nothing) -> SQL "" []
-          (Just s, Nothing)  -> SQL (" AND " ++ maxselect ++ " >= ? ") [toSql s]
-          (Nothing, Just f)  -> SQL (" AND " ++ maxselect ++ " <= ? ") [toSql f]
-          (Just s, Just f)   -> SQL (" AND " ++ maxselect ++ " BETWEEN ? AND ? ") [toSql s, toSql f]
-      , case mstatuses of
-          Nothing -> SQL "" []
-          Just [] -> SQL "AND FALSE " []
-          Just statuses -> SQL (" AND documents.status in (" ++ intercalate "," (map (const "?") statuses) ++ ") ")
-                               (map toSql statuses)
-      ]
-    -- There is no perfect way to filter by tags; we could do a partial job, but we will always have to filter in Haskell.
-    return (filter hasTags docs)
-    where hasTags doc = all (`elem` (documenttags doc)) doctags
-          maxselect = " (select max(greatest(signatory_links.sign_time"
-                                        ++ ",signatory_links.seen_time"
-                                        ++ ",signatory_links.read_invitation"
-                                        ++ ",documents.invite_time"
-                                        ++ ",documents.rejection_time"
-                                        ++ ",documents.mtime"
-                                        ++ ",documents.ctime"
-                                        ++ ")) from signatory_links where signatory_links.document_id = documents.id) "
-
-selectDocumentsBySignatoryLink :: SQL -> DB [Document]
-selectDocumentsBySignatoryLink extendedWhere = selectDocuments $ mconcat [
-    selectDocumentsSQL
-  , SQL "WHERE EXISTS (SELECT 1 FROM signatory_links WHERE documents.id = document_id AND " []
-  , extendedWhere
-  , SQL ") ORDER BY mtime" []
-  ]
-
-activatedSQL :: SQL
-activatedSQL = mconcat [
-    SQL " (NOT EXISTS (" []
-  , SQL ("SELECT 1 FROM signatory_links AS sl2"
-    ++ " WHERE signatory_links.document_id = sl2.document_id"
-    ++ "  AND ((sl2.roles & ?) <> 0)"
-    ++ "  AND sl2.sign_time IS NULL"
-    ++ "  AND sl2.sign_order < signatory_links.sign_order")
-    [toSql [SignatoryAuthor]]
-  , SQL ")) " []
-  ]
-
-whereAuthorIs :: UserID -> SQL
-whereAuthorIs uid = SQL
-  "(signatory_links.deleted = FALSE AND signatory_links.user_id = ? AND ((signatory_links.roles & ?) <> 0))" [
-      toSql uid
-    , toSql [SignatoryAuthor]
-    ]
-
--- | If there is another user, that belongs to the same company, and
--- document has the sharing bit set and is owned by that user.
-orDocumentIsSharedInUsersCompany :: UserID -> SQL
-orDocumentIsSharedInUsersCompany uid = SQL
-  ("OR (signatory_links.deleted = FALSE " ++ 
-   "    AND documents.sharing = ?" ++
-   "    AND documents.type = ?" ++
-   "    AND ((signatory_links.roles & ?) <> 0) " ++
-   "    AND EXISTS (SELECT 1 FROM users AS usr1, users AS usr2 " ++
-   "                WHERE signatory_links.user_id = usr2.id " ++
-   "                  AND usr2.company_id = usr1.company_id " ++
-   "                  AND usr1.id = ?))")
-  [ toSql Shared
-  , toSql $ Template undefined
-  , toSql [SignatoryAuthor]
-  , toSql uid
-  ]
-
-whereSignatoryIsAndDeletedIs :: UserID -> Bool -> SQL
-whereSignatoryIsAndDeletedIs userid deleted = mconcat [
-    SQL "signatory_links.deleted = ? AND signatory_links.really_deleted = FALSE"
-      [toSql deleted]
-  , if deleted then mempty else SQL " AND " [] <++> activatedSQL
-  , SQL (" AND (signatory_links.user_id = ?"
-    ++  "   OR EXISTS (SELECT 1 FROM users "
-    ++  "    WHERE users.id = ? "
-    ++  "    AND signatory_links.company_id = users.company_id "
-    ++  "    AND users.is_company_admin = TRUE)) ") [
-      toSql userid
-    , toSql userid
-    ]
-  ]
-
--- | Note: I'm not sure why, but using 'process IS NOT DISTINCT FROM ?'
--- gives very sucky performance and since 'convoluted' alternative
--- behaves normally, we should use it here instead.
-andDocumentTypeIs :: DocumentType -> SQL
-andDocumentTypeIs dtype = SQL
-  " AND type = ? AND ((?::INT IS NULL AND process IS NULL) OR process = ?)" [
-      toSql dtype
-    , process
-    , process
-    ]
-  where process = toSql $ toDocumentProcess dtype
+  dbQuery (GetDocumentsByCompanyWithFiltering companyid filters) =
+    dbQuery (GetDocuments [DocumentsOfCompany companyid] filters [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
 
 data GetDeletedDocumentsByUser = GetDeletedDocumentsByUser UserID
 instance DBQuery GetDeletedDocumentsByUser [Document] where
-  dbQuery (GetDeletedDocumentsByUser uid) = selectDocumentsBySignatoryLink
-    $ whereSignatoryIsAndDeletedIs uid True
+  dbQuery (GetDeletedDocumentsByUser uid) =
+    dbQuery (GetDocuments [DocumentsForSignatoryDeleteValue uid True] [] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
 
 {- |
     All documents authored by the user that have never been deleted.
 -}
 data GetDocumentsByAuthor = GetDocumentsByAuthor UserID
 instance DBQuery GetDocumentsByAuthor [Document] where
-  dbQuery (GetDocumentsByAuthor uid) = selectDocumentsBySignatoryLink
-    $ whereAuthorIs uid
+  dbQuery (GetDocumentsByAuthor uid) =
+    dbQuery (GetDocuments [DocumentsOfAuthor uid, TemplatesOfAuthor uid] [] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
 
-data GetDocumentsOfTypeByAuthor = GetDocumentsOfTypeByAuthor DocumentType UserID
-instance DBQuery GetDocumentsOfTypeByAuthor [Document] where
-  dbQuery (GetDocumentsOfTypeByAuthor dtype uid) = selectDocumentsBySignatoryLink
-    $ whereAuthorIs uid <++> andDocumentTypeIs dtype
-
-parenthesize :: SQL -> SQL
-parenthesize (SQL command values) = SQL ("(" ++ command ++ ")") values
+data GetAttachmentsByAuthor = GetAttachmentsByAuthor UserID
+instance DBQuery GetAttachmentsByAuthor [Document] where
+  dbQuery (GetAttachmentsByAuthor uid) =
+    dbQuery (GetDocuments [AttachmentsOfAuthorDeleteValue uid False] [] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
 
 data GetTemplatesByAuthor = GetTemplatesByAuthor UserID
 instance DBQuery GetTemplatesByAuthor [Document] where
-  dbQuery (GetTemplatesByAuthor uid) = selectDocumentsBySignatoryLink
-    $ parenthesize (whereAuthorIs uid <++> (SQL " AND type = ?" [toSql $ Template undefined]))
+  dbQuery (GetTemplatesByAuthor uid) = 
+    dbQuery (GetDocuments [TemplatesOfAuthor uid] [] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
 
-data GetAvaibleTemplates = GetAvaibleTemplates UserID
-instance DBQuery GetAvaibleTemplates [Document] where
-  dbQuery (GetAvaibleTemplates uid) = selectDocumentsBySignatoryLink
-    $ parenthesize (whereAuthorIs uid <++> (SQL " AND type = ?" [toSql $ Template undefined]) 
-                    <++> orDocumentIsSharedInUsersCompany uid)
+data GetAvailableTemplates = GetAvailableTemplates UserID [DocumentProcess]
+instance DBQuery GetAvailableTemplates [Document] where
+  dbQuery (GetAvailableTemplates uid processes) =
+    dbQuery (GetDocuments [TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid]
+                            [DocumentFilterByProcess processes]
+                            [Asc DocumentOrderByMTime]
+                            (DocumentPagination 0 maxBound))
 
 {- |
     All documents where the user is a signatory that are not deleted.  An author is a type
@@ -1153,16 +1321,10 @@ instance DBQuery GetAvaibleTemplates [Document] where
     This also filters so that documents where a user is a signatory, but that signatory
     has not yet been activated according to the document's sign order, are excluded.
 -}
-data GetDocumentsBySignatory = GetDocumentsBySignatory UserID
+data GetDocumentsBySignatory = GetDocumentsBySignatory [DocumentProcess] UserID
 instance DBQuery GetDocumentsBySignatory [Document] where
-  dbQuery (GetDocumentsBySignatory uid) = selectDocumentsBySignatoryLink
-    $ whereSignatoryIsAndDeletedIs uid False
-
-data GetDocumentsOfTypeBySignatory = GetDocumentsOfTypeBySignatory DocumentType UserID
-instance DBQuery GetDocumentsOfTypeBySignatory [Document] where
-  dbQuery (GetDocumentsOfTypeBySignatory dtype uid) = selectDocumentsBySignatoryLink
-    $ whereSignatoryIsAndDeletedIs uid False
-    <++> andDocumentTypeIs dtype
+  dbQuery (GetDocumentsBySignatory processes uid) =
+    dbQuery (GetDocuments [DocumentsForSignatory uid] [DocumentFilterByProcess processes] [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
 
 data GetTimeoutedButPendingDocuments = GetTimeoutedButPendingDocuments MinutesTime
 instance DBQuery GetTimeoutedButPendingDocuments [Document] where

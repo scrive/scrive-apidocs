@@ -126,7 +126,6 @@ class MaybeTemplate a where
 
 instance MaybeTemplate DocumentType where
    isTemplate (Template _) = True
-   isTemplate AttachmentTemplate = True
    isTemplate _ = False
    isSignable (Signable _) = True
    isSignable _ = False
@@ -139,7 +138,7 @@ class MaybeAttachment a where
    isAttachment :: a -> Bool
 
 instance  MaybeAttachment DocumentType where
-   isAttachment t =  (t == AttachmentTemplate) || (t == Attachment)
+   isAttachment t = (t == Attachment)
 
 instance  MaybeAttachment Document where
    isAttachment =  isAttachment . documenttype

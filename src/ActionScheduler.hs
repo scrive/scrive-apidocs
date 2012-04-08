@@ -116,7 +116,7 @@ runDocumentProblemsCheck :: ActionScheduler ()
 runDocumentProblemsCheck = do
   sd <- ask
   now <- liftIO getMinutesTime
-  docs <- runDBQuery $ GetDocuments Nothing
+  docs <- runDBQuery $ GetDocumentsByService Nothing
   let probs = listInvariantProblems now docs
   when (probs /= []) $ mailDocumentProblemsCheck $
     "<p>"  ++ (hostpart $ sdAppConf sd) ++ "/dave/document/" ++
@@ -158,7 +158,7 @@ runArchiveProblemsCheck = do
   return ()
   where
     getPersonalDocs user = do
-      docs <- runDBQuery $ GetDocumentsBySignatory user
+      docs <- runDBQuery $ GetDocumentsBySignatory [Contract, Offer, Order] user
       return (user, docs)
     getSupervisedDocs user = do
       docs <- runDBQuery $ GetDocumentsByCompany user

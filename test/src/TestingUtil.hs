@@ -199,6 +199,7 @@ instance Arbitrary SignatoryLink where
                            , signatorylinkreallydeleted = False
                            , signatorylinkcsvupload     = Nothing
                            , signatoryattachments       = []
+                           , signatorylinkstatusclass   = SCDraft
                            }
 
 instance Arbitrary SignatureProvider where
@@ -248,7 +249,6 @@ documentAllTypes = [ Signable Contract
                    , Template Order
                    , Template Offer
                    , Attachment
-                   , AttachmentTemplate
                    ]
 
 documentSignableTypes :: [DocumentType]
@@ -262,6 +262,9 @@ documentTemplateTypes = [ Template Contract
                         , Template Order
                         , Template Offer
                         ]
+
+instance Arbitrary DocumentProcess where
+  arbitrary = elements [Contract, Order, Offer]
 
 instance Arbitrary DocumentType where
   arbitrary = elements documentAllTypes
@@ -429,6 +432,7 @@ signatoryLinkExample1 = SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 
                                                                             }
                                       , signatorylinkcsvupload = Nothing
                                       , signatoryattachments   = []
+                                      , signatorylinkstatusclass = SCDraft
                                       }
 
 blankUser :: User
