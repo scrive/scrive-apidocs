@@ -49,7 +49,7 @@ import User.Model
 import Mails.Events
 -- import qualified User.UserState as U
 import qualified Amazon as AWS
-import Templates.Templates (readGlobalTemplates, getTemplatesModTime)
+import Templates.TemplatesLoader
 import Misc
 import qualified MemCache
 import File.Model

@@ -29,7 +29,7 @@ import Util.SignatoryLinkUtils
 import Doc.Model
 import Doc.DocStateData
 
-scheduleEmailSendout :: DBMonad m => MailsConfig -> Mail -> m ()
+scheduleEmailSendout :: MonadDB m => MailsConfig -> Mail -> m ()
 scheduleEmailSendout mc = runDB . scheduleEmailSendout' mc
 
 scheduleEmailSendout' :: MailsConfig -> Mail -> DB ()

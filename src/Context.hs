@@ -12,7 +12,7 @@ import User.Model
 import qualified Data.ByteString as BS
 import qualified Data.Map as Map
 import qualified Network.AWS.Authentication as AWS
-import Templates.Templates
+import Templates.TemplatesLoader
 import qualified TrustWeaver as TW
 import ELegitimation.ELegTransaction
 import qualified MemCache

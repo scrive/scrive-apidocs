@@ -20,6 +20,7 @@ import FlashMessage
 import KontraLink
 import Templates.Templates
 import User.Model
+import qualified Templates.Fields as F
 
 import Control.Applicative
 import Data.Maybe
@@ -44,11 +45,11 @@ flashMessageSignableArchiveDone doctype = do
 
 flashMessageTemplateArchiveDone :: TemplatesMonad m => m FlashMessage
 flashMessageTemplateArchiveDone =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageTemplateArchiveDone" ()
+  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageTemplateArchiveDone"
 
 flashMessageAttachmentArchiveDone :: TemplatesMonad m => m FlashMessage
 flashMessageAttachmentArchiveDone =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageAttachmentArchiveDone" ()
+  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageAttachmentArchiveDone"
 
 pageContractsList :: TemplatesMonad m => User -> m String
 pageContractsList = pageList' "pageContractsList" LinkContracts 
@@ -80,24 +81,23 @@ pageList' :: TemplatesMonad m
           -> KontraLink
           -> User
           -> m String
-pageList' templatename currentlink user =
-  renderTemplateFM templatename $ do
-    field "canReallyDeleteDocs" $ useriscompanyadmin user || isNothing (usercompany user)
-    field "currentlink" $ show $ currentlink
-    field "linkdoclist" $ show $ LinkContracts 
-    field "documentactive" $ (LinkContracts == currentlink)
-    field "linkofferlist" $ show $ LinkOffers 
-    field "offeractive" $ (LinkOffers == currentlink)
-    field "linkorderlist" $ show $ LinkOrders
-    field "orderactive" $ (LinkOrders == currentlink)
-    field "linktemplatelist" $ show $ LinkTemplates
-    field "templateactive" $ (LinkTemplates == currentlink)
-    field "linkattachmentlist" $ show $ LinkAttachments 
-    field "attachmentactive" $ (LinkAttachments == currentlink)
-    field "linkrubbishbinlist" $ show $ LinkRubbishBin
-    field "rubbishbinactive" $ (LinkRubbishBin == currentlink)
-    field "linkpaddevicearchive" $ show LinkPadDeviceArchive 
-    field "paddevicearchiveactive" $ (LinkPadDeviceArchive == currentlink)
+pageList' templatename currentlink user = renderTemplate templatename $ do
+  F.value "canReallyDeleteDocs" $ useriscompanyadmin user || isNothing (usercompany user)
+  F.value "currentlink" $ show $ currentlink
+  F.value "linkdoclist" $ show $ LinkContracts
+  F.value "documentactive" $ (LinkContracts == currentlink)
+  F.value "linkofferlist" $ show $ LinkOffers
+  F.value "offeractive" $ (LinkOffers == currentlink)
+  F.value "linkorderlist" $ show $ LinkOrders
+  F.value "orderactive" $ (LinkOrders == currentlink)
+  F.value "linktemplatelist" $ show $ LinkTemplates
+  F.value "templateactive" $ (LinkTemplates == currentlink)
+  F.value "linkattachmentlist" $ show $ LinkAttachments
+  F.value "attachmentactive" $ (LinkAttachments == currentlink)
+  F.value "linkrubbishbinlist" $ show $ LinkRubbishBin
+  F.value "rubbishbinactive" $ (LinkRubbishBin == currentlink)
+  F.value "linkpaddevicearchive" $ show LinkPadDeviceArchive
+  F.value "paddevicearchiveactive" $ (LinkPadDeviceArchive == currentlink)
 
 docForListJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> User -> PadQueue ->  Document -> m JSValue
 docForListJSON tl crtime user padqueue doc = do
@@ -130,8 +130,8 @@ docFieldsListForJSON tl crtime padqueue doc = do
     renderDocType = do
       pn <- renderTextForProcess doc processname
       case documenttype doc of
-        Attachment -> renderTemplateM "docListAttachmentLabel" ()
-        Template _ -> renderTemplateFM "docListTemplateLabel" $ field "processname" pn
+        Attachment -> renderTemplate_ "docListAttachmentLabel"
+        Template _ -> renderTemplate "docListTemplateLabel" $ F.value "processname" pn
         Signable _ -> return pn
 
 signatoryFieldsListForJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> PadQueue -> Document -> SignatoryLink -> JSONGenT m ()

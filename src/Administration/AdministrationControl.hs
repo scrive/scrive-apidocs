@@ -92,6 +92,7 @@ import User.History.Model
 import Codec.Archive.Zip
 import qualified Data.Map as Map
 import Doc.DocStorage
+import qualified Templates.Fields as F
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m String
@@ -552,9 +553,8 @@ handleCreateService = onlySalesOrAdmin $ do
 {- Services page-}
 showServicesPage :: Kontrakcja m => m String
 showServicesPage = onlySalesOrAdmin $ do
-  env <- getDBEnv
   services <- runDBQuery GetServices
-  servicesAdminPage env services
+  servicesAdminPage services
 
 
 {-
@@ -812,10 +812,10 @@ daveDocument documentid = onlyAdmin $ do
     if "/" `isSuffixOf` location
      then do
       document <- runDBOrFail . dbQuery $ GetDocumentByDocumentID documentid
-      r <- renderTemplateFM  "daveDocument" $ do
-        field "daveBody" $  inspectXML document
-        field "id" $ show documentid
-        field "closed" $ documentstatus document == Closed
+      r <- renderTemplate "daveDocument" $ do
+        F.value "daveBody" $  inspectXML document
+        F.value "id" $ show documentid
+        F.value "closed" $ documentstatus document == Closed
       return $ Right r
      else return $ Left $ LinkDaveDocument documentid
 
@@ -826,14 +826,14 @@ daveSignatoryLink :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m  String
 daveSignatoryLink documentid siglinkid = onlyAdmin $ do
     document <- runDBOrFail . dbQuery $ GetDocumentByDocumentID documentid
     siglink <- guardJust $ getSigLinkFor document siglinkid
-    renderTemplateFM  "daveSignatoryLink" $ do
-        field "daveBody" $ inspectXML siglink
-        field "docid" $ show documentid
-        field "slid" $ show siglinkid
-        fieldFL "fields" $ for (signatoryfields $ signatorydetails siglink) $ \sf -> do
-            field "fieldname" $ fieldTypeToString (sfType sf)
-            field "fieldvalue" $ sfValue sf
-            field "label" $ show $ sfType sf
+    renderTemplate  "daveSignatoryLink" $ do
+        F.value "daveBody" $ inspectXML siglink
+        F.value "docid" $ show documentid
+        F.value "slid" $ show siglinkid
+        F.objects "fields" $ for (signatoryfields $ signatorydetails siglink) $ \sf -> do
+            F.value "fieldname" $ fieldTypeToString (sfType sf)
+            F.value "fieldvalue" $ sfValue sf
+            F.value "label" $ show $ sfType sf
       where fieldTypeToString sf = case sf of
               FirstNameFT      -> "sigfstname"
               LastNameFT       -> "sigsndname"

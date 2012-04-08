@@ -22,9 +22,9 @@ import Doc.DocInfo
 import Company.Model
 import DB.Classes
 import Misc
+import qualified Templates.Fields as F
 
 import Control.Monad
-import Control.Monad.IO.Class
 import Data.List hiding (insert)
 import Data.Maybe
 import File.Model
@@ -80,21 +80,21 @@ joinWith s (x:xs) = x ++ s ++ joinWith s xs
 
 -- where does this go? -EN
 renderListTemplate :: TemplatesMonad m => [String] -> m String
-renderListTemplate = renderListTemplate' renderTemplateFM
+renderListTemplate = renderListTemplateHelper renderTemplate
 
 renderLocalListTemplate :: (HasLocale a, TemplatesMonad m) => a -> [String] -> m String
-renderLocalListTemplate haslocale = renderListTemplate' (renderLocalTemplateFM haslocale)
+renderLocalListTemplate = renderListTemplateHelper .renderLocalTemplate
 
-renderListTemplate' :: TemplatesMonad m
-                       => (String -> Fields m -> m String)
-                       -> [String]
-                       -> m String
-renderListTemplate' renderFunc list =
+renderListTemplateHelper :: TemplatesMonad m
+                         => (String -> Fields m () -> m String)
+                         -> [String]
+                         -> m String
+renderListTemplateHelper renderFunc list =
   if length list > 1
      then renderFunc "morethenonelist" $ do
-         field "list" $ init list
-         field "last" $ last list
-     else renderFunc "nomorethanonelist" $ field "list" list
+         F.value "list" $ init list
+         F.value "last" $ last list
+     else renderFunc "nomorethanonelist" $ F.value "list" list
 
 -- CHECKERS
 
@@ -403,7 +403,7 @@ getFileIDsByStatus doc
   | isClosed doc =  documentsealedfiles doc
   | otherwise    =  documentfiles doc
 
-getFilesByStatus :: (MonadIO m, DBMonad m) => Document -> m [File]
+getFilesByStatus :: MonadDB m => Document -> m [File]
 getFilesByStatus doc = liftM catMaybes $ mapM runDBQuery (GetFileByFileID <$> (getFileIDsByStatus doc))
 
 

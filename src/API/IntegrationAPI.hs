@@ -67,6 +67,7 @@ import Doc.SignatoryTMP
 import qualified Log (integration)
 import Doc.DocStorage
 import User.History.Model
+import qualified Templates.Fields as F
 
 import EvidenceLog.Model
 
@@ -464,9 +465,9 @@ connectUserToSessionGet _sid _uid _ssid = do
   Log.integration $ "uri: " ++ uri
   referer <- look "referer"
   Log.integration $ "referer: " ++ referer
-  bdy <- renderTemplateFM "connectredirect" $ do
-    field "url" uri
-    field "referer" referer
+  bdy <- renderTemplate "connectredirect" $ do
+    F.value "url" uri
+    F.value "referer" referer
   simpleResponse bdy
 
 connectCompanyToSession :: Kontrakcja m => ServiceID -> CompanyID -> SessionId -> m KontraLink

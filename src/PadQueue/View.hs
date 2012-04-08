@@ -8,17 +8,16 @@ import Text.JSON
 import Control.Logic
 import Text.JSON.Gen as JSON
 
-
-padQueueStateJSON :: (TemplatesMonad m) => Bool -> Maybe (Document,SignatoryLink) -> m JSValue
+padQueueStateJSON :: Monad m => Bool -> Maybe (Document, SignatoryLink) -> m JSValue
 padQueueStateJSON systemlogged mds = JSON.runJSONGenT $ do
-        JSON.value "documentid" $ show <$> documentid <$> fst <$> mds
-        JSON.value "signatorylinkid" $ show <$> signatorylinkid <$> snd <$> mds
-        JSON.value "magichash" $ show  <$> signatorymagichash <$> snd <$> mds
-        JSON.value "logged" $ "system" <| systemlogged |> "pad"
-        
-padQueueStateJSONNotLoggedIn :: (TemplatesMonad m) =>  m JSValue
-padQueueStateJSONNotLoggedIn = JSON.runJSONGenT $ do
-        JSON.value "logged" $ JSNull
+  JSON.value "documentid" $ show <$> documentid <$> fst <$> mds
+  JSON.value "signatorylinkid" $ show <$> signatorylinkid <$> snd <$> mds
+  JSON.value "magichash" $ show  <$> signatorymagichash <$> snd <$> mds
+  JSON.value "logged" $ "system" <| systemlogged |> "pad"
 
-padQueuePage :: (TemplatesMonad m) => m String
-padQueuePage = renderTemplateFM "padQueueCurrentPage" $ return ()        
+padQueueStateJSONNotLoggedIn :: Monad m => m JSValue
+padQueueStateJSONNotLoggedIn = JSON.runJSONGenT $ do
+  JSON.value "logged" $ JSNull
+
+padQueuePage :: TemplatesMonad m => m String
+padQueuePage = renderTemplate_ "padQueueCurrentPage"

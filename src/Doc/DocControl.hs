@@ -113,6 +113,8 @@ import Util.JSON
 import qualified ELegitimation.BankID as BankID
 import EvidenceLog.Model
 import PadQueue.Model
+import qualified Templates.Fields as F
+
 {-
   Document state transitions are described in DocState.
 
@@ -1177,9 +1179,9 @@ handleParseCSV = do
                        Right content -> return content
           let _title = BS.fromString (basename filename)
           case parseCSV content of
-                 Left _ -> oneProblemJSON $ renderTemplateM "flashMessageFailedToParseCSV" ()
+                 Left _ -> oneProblemJSON $ renderTemplate_ "flashMessageFailedToParseCSV"
                  Right contents
-                   | length contents > 1000 -> oneProblemJSON $ renderTemplateFM "flashMessageCSVHasTooManyRows" $ field "maxrows" (1000::Int)
+                   | length contents > 1000 -> oneProblemJSON $ renderTemplate "flashMessageCSVHasTooManyRows" $ F.value "maxrows" (1000::Int)
                    | otherwise -> do
                        let (problems, csvdata) = cleanCSVContents eleg customfieldscount contents
                        runJSONGenT $ do
@@ -1192,7 +1194,7 @@ handleParseCSV = do
                          J.value "rows" $ csvbody csvdata
 
         _ -> do
-            oneProblemJSON $ renderTemplateM "flashMessageFailedToParseCSV" ()
+            oneProblemJSON $ renderTemplate_ "flashMessageFailedToParseCSV"
   return res
   where
       oneProblemJSON :: Kontrakcja m => m String -> m JSValue

@@ -14,8 +14,7 @@ module FlashMessage (
     , flashDataFromCookie
     ) where
 
-import Control.Applicative ((<$>))
-import Control.Monad.Trans (MonadIO)
+import Control.Monad.IO.Class
 import Happstack.Server
 import Happstack.Util.Common (readM)
 import qualified Codec.Compression.GZip as GZip
@@ -28,6 +27,7 @@ import Cookies
 import Crypto
 import Misc (isHTTPS, optional)
 import Templates.Templates
+import Templates.TemplatesLoader
 
 data FlashType
     = SigningRelated
@@ -79,8 +79,9 @@ unFlashMessage (FlashMessage ftype msg) = Just (ftype, msg)
 unFlashMessage _ = Nothing
 
 instantiate :: TemplatesMonad m => FlashMessage -> m FlashMessage
-instantiate (FlashTemplate ftype templatename fields) =
-    toFlashMsg ftype <$> renderTemplateM templatename fields
+instantiate (FlashTemplate ftype templatename fields) = do
+  ts <- getTemplates
+  return $ toFlashMsg ftype $ renderTemplateMain ts templatename fields id
 instantiate fm = return fm
 
 updateFlashCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m, Functor m) => AESConf -> [FlashMessage] -> [FlashMessage] -> m ()

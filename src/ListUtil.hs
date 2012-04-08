@@ -54,6 +54,7 @@ import Data.Foldable (foldMap)
 import Data.Ord
 import Misc
 import Templates.Templates
+import qualified Templates.Fields as F
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Char8 as BS8
 import Data.Char (toUpper)
@@ -148,25 +149,25 @@ getListParamsForSearch = do
 
 
 {- Standard fields-}
-pagedListFields :: (Functor m, MonadIO m) => PagedList a -> Fields m
+pagedListFields :: Monad m => PagedList a -> Fields m ()
 pagedListFields (PagedList{list,pageSize,totalCount,params}) = do
-    fieldF "params" $ do
-        fieldF "sorting" $ mapM_ (\sp -> field sp sp) $ sorting params
-        field "search" $ join $ nothingIfEmpty <$> search params
-    fieldFL "pages" $ for [1..totalPages] $ \n -> do
-        field "nr" $ show $ n
-        field "current" $ n == (page params)
-    fieldF "elements" $ do
-        field "min" $ show $ minElementIndex
-        field "max" $ show $ minElementIndex + length list - 1
-        field "total" $ show totalCount
-        field "totalPages" $ show $ totalPages
-        field "none" $ null list
-        field "single" $ length list == 1
-        field "firstPageAvaible" $ page params > 1 && not (null list)
-        field "lastPageAvaible" $ page params < totalPages && not (null list)
-        field "nextPage" $ show $ page params + 1
-        field "lastPage" $ show $ page params - 1
+    F.object "params" $ do
+        F.object "sorting" $ mapM_ (\sp -> F.value sp sp) $ sorting params
+        F.value "search" $ join $ nothingIfEmpty <$> search params
+    F.objects "pages" $ for [1..totalPages] $ \n -> do
+        F.value "nr" $ show $ n
+        F.value "current" $ n == (page params)
+    F.object "elements" $ do
+        F.value "min" $ show $ minElementIndex
+        F.value "max" $ show $ minElementIndex + length list - 1
+        F.value "total" $ show totalCount
+        F.value "totalPages" $ show $ totalPages
+        F.value "none" $ null list
+        F.value "single" $ length list == 1
+        F.value "firstPageAvaible" $ page params > 1 && not (null list)
+        F.value "lastPageAvaible" $ page params < totalPages && not (null list)
+        F.value "nextPage" $ show $ page params + 1
+        F.value "lastPage" $ show $ page params - 1
 
     where
     totalPages = (totalCount -1) `div` pageSize + 1

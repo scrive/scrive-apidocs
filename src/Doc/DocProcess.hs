@@ -18,10 +18,10 @@ class HasProcess a where
   getValueForProcess doctype fieldname =
     fmap fieldname (getProcess doctype)
 
-  renderTemplateForProcess :: TemplatesMonad m => a -> (DocProcessInfo -> String) -> Fields m -> m String
+  renderTemplateForProcess :: TemplatesMonad m => a -> (DocProcessInfo -> String) -> Fields m () -> m String
   renderTemplateForProcess hasprocess fieldname fields =
     case getValueForProcess hasprocess fieldname of
-      (Just templatename) -> renderTemplateFM templatename fields
+      Just templatename -> renderTemplate templatename fields
       _ -> return ""
 
   renderTextForProcess :: TemplatesMonad m => a -> (DocProcessInfo -> String) -> m String
@@ -31,11 +31,11 @@ class HasProcess a where
 renderLocalTemplateForProcess :: (HasLocale a, HasProcess a, TemplatesMonad m)
                                  => a
                                  -> (DocProcessInfo -> String)
-                                 -> Fields m
+                                 -> Fields m ()
                                  -> m String
 renderLocalTemplateForProcess hasprocess fieldname fields =
   case getValueForProcess hasprocess fieldname of
-    (Just templatename) -> renderLocalTemplateFM hasprocess templatename fields
+    Just templatename -> renderLocalTemplate hasprocess templatename fields
     _ -> return ""
 
 renderLocalTextForProcess :: (HasLocale a, HasProcess a, TemplatesMonad m)

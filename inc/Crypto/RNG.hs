@@ -87,13 +87,13 @@ class CryptoRNG m where
   getCryptoRNGState :: m CryptoRNGState
 
 instance (Monad m, CryptoRNG m) => CryptoRNG (ReaderT c m) where
- getCryptoRNGState = lift $ getCryptoRNGState
+  getCryptoRNGState = lift getCryptoRNGState
 
 instance (Error e, Monad m, CryptoRNG m) => CryptoRNG (ErrorT e m) where
- getCryptoRNGState = lift $ getCryptoRNGState
+  getCryptoRNGState = lift getCryptoRNGState
 
 instance (Monad m, CryptoRNG m) => CryptoRNG (StateT s m) where
- getCryptoRNGState = lift $ getCryptoRNGState
+  getCryptoRNGState = lift getCryptoRNGState
 
 -- | Monad transformer with RNG state.
 newtype CryptoRNGIO m a = CryptoRNGIO (ReaderT CryptoRNGState m a)

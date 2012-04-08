@@ -144,12 +144,11 @@ handleChangeServiceSettings sid = do
 handleShowService :: Kontrakcja m => ServiceID -> m (Either KontraLink String)
 handleShowService sid = do
     ctx <- getContext
-    conn <- getDBEnv
     mservice <- runDBQuery $ GetService sid
     if ((isJust mservice)
         && (sameUser (ctxmaybeuser ctx) (serviceadmin . servicesettings <$> mservice)
             || isAdmin ctx))
-       then Right <$> serviceAdminPage conn (isAdmin ctx) (fromJust mservice)
+       then Right <$> serviceAdminPage (isAdmin ctx) (fromJust mservice)
        else do
               linkmain <- getHomeOrUploadLink
               return $ Left linkmain

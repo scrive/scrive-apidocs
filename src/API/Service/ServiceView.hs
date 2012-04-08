@@ -14,7 +14,6 @@ module API.Service.ServiceView(
 ) where
 
 import Templates.Templates
-import Text.StringTemplate.GenericStandard()
 import Misc
 import API.Service.Model
 import Util.HasSomeUserInfo
@@ -23,31 +22,29 @@ import User.Model
 import Data.Functor
 import KontraLink
 import DB.Classes
+import qualified Templates.Fields as F
 
-serviceAdminPage :: TemplatesMonad m => DBEnv -> Bool -> Service -> m String
-serviceAdminPage dbenv superuser service =
-    renderTemplateFM "serviceAdminPage" $ do
-       field "name" $ show $ serviceid service
-       field "nameforurl" $ encodeForURL $ serviceid service
-       field "mailfooter"  $ servicemailfooter $ serviceui service
-       field "mailfromaddress"  $ servicemailfromaddress $ servicesettings service
-       field "buttons" $ isJust $ servicebuttons $ serviceui service
-       field "buttonBodyLink"  $ show $ LinkServiceButtonsBody $ serviceid service
-       field "buttonRestLink"  $ show $ LinkServiceButtonsRest $  serviceid service
-       field "buttonstextcolor"  $ servicebuttonstextcolor $ serviceui service
-       field "background"  $ servicebackground $ serviceui service
-       field "overlaybackground"  $ serviceoverlaybackground $ serviceui service
-       field "barsbackground"  $ servicebarsbackground $ serviceui service
-       field "logo" $ isJust $ servicelogo $ serviceui service
-       field "logoLink"  $ show $ LinkServiceLogo $ serviceid service
-       fieldM "admin" $ fmap getSmartName <$> (ioRunDB dbenv $ dbQuery $ GetUserByID $ serviceadmin $ servicesettings service)
-       field "location" $ fmap unServiceLocation $ servicelocation $ servicesettings service
-       field "allowToChangeSettings" $ superuser
+serviceAdminPage :: (MonadDB m, TemplatesMonad m) => Bool -> Service -> m String
+serviceAdminPage superuser service = renderTemplate "serviceAdminPage" $ do
+  F.value "name" $ show $ serviceid service
+  F.value "nameforurl" $ encodeForURL $ serviceid service
+  F.value "mailfooter" $ servicemailfooter $ serviceui service
+  F.value "mailfromaddress" $ servicemailfromaddress $ servicesettings service
+  F.value "buttons" $ isJust $ servicebuttons $ serviceui service
+  F.value "buttonBodyLink" $ show $ LinkServiceButtonsBody $ serviceid service
+  F.value "buttonRestLink" $ show $ LinkServiceButtonsRest $  serviceid service
+  F.value "buttonstextcolor" $ servicebuttonstextcolor $ serviceui service
+  F.value "background" $ servicebackground $ serviceui service
+  F.value "overlaybackground" $ serviceoverlaybackground $ serviceui service
+  F.value "barsbackground" $ servicebarsbackground $ serviceui service
+  F.value "logo" $ isJust $ servicelogo $ serviceui service
+  F.value "logoLink" $ show $ LinkServiceLogo $ serviceid service
+  F.valueM "admin" $ fmap getSmartName <$> (runDBQuery $ GetUserByID $ serviceadmin $ servicesettings service)
+  F.value "location" $ fmap unServiceLocation $ servicelocation $ servicesettings service
+  F.value "allowToChangeSettings" $ superuser
 
 servicesListPage :: TemplatesMonad m => [Service] -> m String
-servicesListPage services =
-    renderTemplateFM "serviceList" $ do
-       fieldFL "services" $
-            for services $ \srvs -> do
-                field "name" $ show $ serviceid srvs
-                field "nameforurl" $ encodeForURL $ serviceid srvs
+servicesListPage services = renderTemplate "serviceList" $ do
+  F.objects "services" $ for services $ \srvs -> do
+    F.value "name" $ show $ serviceid srvs
+    F.value "nameforurl" $ encodeForURL $ serviceid srvs

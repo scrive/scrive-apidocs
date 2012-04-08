@@ -25,19 +25,19 @@ import ListUtil
 import Mails.SendMail(Mail)
 import Templates.Templates
 import Templates.TemplatesUtils
-import Text.StringTemplate.GenericStandard()
 import User.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
+import qualified Templates.Fields as F
 
 viewCompanyAccounts :: TemplatesMonad m => m String
 viewCompanyAccounts =
-  renderTemplateFM "viewCompanyAccounts" $
-    field "currentlink" $ show $ LinkCompanyAccounts emptyListParams
+  renderTemplate "viewCompanyAccounts" $
+    F.value "currentlink" $ show $ LinkCompanyAccounts emptyListParams
 
 ----------------------------------------------------------------------------
 
-mailNewCompanyUserInvite :: (TemplatesMonad m,  HasSomeUserInfo a, HasLocale a, HasSomeUserInfo b, HasSomeCompanyInfo c) =>
+mailNewCompanyUserInvite :: (TemplatesMonad m, HasSomeUserInfo a, HasLocale a, HasSomeUserInfo b, HasSomeCompanyInfo c) =>
                                String -> a -> b -> c -> KontraLink -> m Mail
 mailNewCompanyUserInvite hostpart invited inviter company link =
   kontramail "mailNewCompanyUserInvite" $ do
@@ -52,47 +52,46 @@ mailTakeoverPrivateUserInvite hostpart invited inviter company link =
     basicCompanyInviteFields invited inviter company
     basicLinkFields hostpart link
 
-basicCompanyInviteFields :: (TemplatesMonad m, HasSomeUserInfo a, HasSomeUserInfo b, HasSomeCompanyInfo c) =>
-                            a -> b -> c -> Fields m
+basicCompanyInviteFields :: (TemplatesMonad m, HasSomeUserInfo a, HasSomeUserInfo b, HasSomeCompanyInfo c) => a -> b -> c -> Fields m ()
 basicCompanyInviteFields invited inviter company = do
-  field "invitedname" $ getFullName invited
-  field "invitedemail" $ getEmail invited
-  field "invitername" $ getSmartName inviter
-  field "companyname" $ getCompanyName company
+  F.value "invitedname" $ getFullName invited
+  F.value "invitedemail" $ getEmail invited
+  F.value "invitername" $ getSmartName inviter
+  F.value "companyname" $ getCompanyName company
 
-basicLinkFields :: TemplatesMonad m => String -> KontraLink -> Fields m
+basicLinkFields :: TemplatesMonad m => String -> KontraLink -> Fields m ()
 basicLinkFields hostpart link = do
-  field "ctxhostpart" hostpart
-  field "link" $ show link
+  F.value "ctxhostpart" hostpart
+  F.value "link" $ show link
 
 -------------------------------------------------------------------------------
 
 modalDoYouWantToBeCompanyAccount :: (TemplatesMonad m,  HasSomeCompanyInfo c) => c -> m FlashMessage
 modalDoYouWantToBeCompanyAccount company =
-  toModal <$> renderTemplateFM "modalDoYouWantToBeCompanyAccount"
-                 (field "companyname" $ getCompanyName company)
+  toModal <$> renderTemplate "modalDoYouWantToBeCompanyAccount"
+                 (F.value "companyname" $ getCompanyName company)
 
 -------------------------------------------------------------------------------
 
 flashMessageCompanyAccountInviteSent :: TemplatesMonad m => m FlashMessage
 flashMessageCompanyAccountInviteSent =
-  toFlashMsg OperationDone <$> renderTemplateM "flashCompanyAccountInviteSent" ()
+  toFlashMsg OperationDone <$> renderTemplate_ "flashCompanyAccountInviteSent"
 
 flashMessageCompanyAccountInviteResent :: TemplatesMonad m => m FlashMessage
 flashMessageCompanyAccountInviteResent =
-  toFlashMsg OperationDone <$> renderTemplateM "flashCompanyAccountInviteResent" ()
+  toFlashMsg OperationDone <$> renderTemplate_ "flashCompanyAccountInviteResent"
 
 flashMessageUserHasBecomeCompanyAccount :: (TemplatesMonad m,  HasSomeCompanyInfo c) => c -> m FlashMessage
 flashMessageUserHasBecomeCompanyAccount company =
-  toFlashMsg OperationDone <$> renderTemplateFM "flashMessageUserHasBecomeCompanyAccount"
-                                  (field "companyname" $ getCompanyName company)
+  toFlashMsg OperationDone <$> renderTemplate "flashMessageUserHasBecomeCompanyAccount"
+                                  (F.value "companyname" $ getCompanyName company)
 
 flashMessageUserHasLiveDocs :: TemplatesMonad m => m FlashMessage
 flashMessageUserHasLiveDocs =
-  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageUserHasLiveDocs" ()
+  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageUserHasLiveDocs"
 
 flashMessageCompanyAccountDeleted :: TemplatesMonad m => m FlashMessage
 flashMessageCompanyAccountDeleted =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageCompanyAccountDeleted" ()
+  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageCompanyAccountDeleted"
 
 -------------------------------------------------------------------------------

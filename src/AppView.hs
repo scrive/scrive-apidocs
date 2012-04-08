@@ -44,6 +44,7 @@ import Templates.Templates
 import User.Lang
 import User.Locale
 import User.Region
+import qualified Templates.Fields as F
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
 import qualified Data.ByteString.UTF8 as BS (fromString)
 
@@ -65,14 +66,14 @@ renderFromBody :: Kontrakcja m
                -> String
                -> m Response
 renderFromBody title content = do
-    htmlPage <- (isSuffixOf ".html") . concat . rqPaths <$> askRq
-    loginOn <- getLoginOn
-    loginreferer <- getLoginReferer
-    ctx <- getContext
-    let showCreateAccount = htmlPage && (isNothing $ ctxmaybeuser ctx)
-    res <- simpleResponse =<< pageFromBody ctx loginOn loginreferer Nothing showCreateAccount title content
-    clearFlashMsgs
-    return res
+  htmlPage <- (isSuffixOf ".html") . concat . rqPaths <$> askRq
+  loginOn <- getLoginOn
+  loginreferer <- getLoginReferer
+  ctx <- getContext
+  let showCreateAccount = htmlPage && (isNothing $ ctxmaybeuser ctx)
+  res <- simpleResponse =<< pageFromBody ctx loginOn loginreferer Nothing showCreateAccount title content
+  clearFlashMsgs
+  return res
 
 
 {- |
@@ -87,61 +88,55 @@ pageFromBody :: TemplatesMonad m
              -> String
              -> String
              -> m String
-pageFromBody ctx
-             loginOn
-             referer
-             email
-             showCreateAccount
-             title
-             bodytext = do
-    renderTemplateFM "wholePage" $ do
-        field "content" bodytext
-        standardPageFields ctx title Nothing showCreateAccount loginOn referer email
+pageFromBody ctx loginOn referer email showCreateAccount title bodytext =
+  renderTemplate "wholePage" $ do
+    F.value "content" bodytext
+    standardPageFields ctx title Nothing showCreateAccount loginOn referer email
 
 embeddedPage :: String -> Kontra Response
 embeddedPage pb = do
-    ctx <- getContext
-    bdy <- renderTemplateFM "embeddedPage" $ do
-        field "content" pb
-        serviceFields (ctxlocation ctx) (ctxservice ctx)
-        standardPageFields ctx "" Nothing False False Nothing Nothing
-    res <- simpleResponse bdy
-    clearFlashMsgs
-    return res
+  ctx <- getContext
+  bdy <- renderTemplate "embeddedPage" $ do
+    F.value "content" pb
+    serviceFields (ctxlocation ctx) (ctxservice ctx)
+    standardPageFields ctx "" Nothing False False Nothing Nothing
+  res <- simpleResponse bdy
+  clearFlashMsgs
+  return res
 
 embeddedErrorPage :: Kontrakcja m => m Response
 embeddedErrorPage = do
-    ctx <- getContext
-    content <- renderTemplateFM "embeddedErrorPage" $ do
-        serviceFields (ctxlocation ctx) (ctxservice ctx)
-    simpleResponse content
+  ctx <- getContext
+  content <- renderTemplate "embeddedErrorPage" $ do
+    serviceFields (ctxlocation ctx) (ctxservice ctx)
+  simpleResponse content
 
 notFoundPage :: Kontrakcja m => m Response
-notFoundPage = renderTemplateM "notFound" () >>= renderFromBody kontrakcja
+notFoundPage = renderTemplate_ "notFound" >>= renderFromBody kontrakcja
 
-serviceFields :: MonadIO m => String -> Maybe Service -> Fields m
+serviceFields :: MonadIO m => String -> Maybe Service -> Fields m ()
 serviceFields location (Just service)  = do
-    field "location" location
-    field "buttons" $ isJust $ servicebuttons $ serviceui service
-    field "buttonBodyLink"  $ show $ LinkServiceButtonsBody $ serviceid service
-    field "buttonRestLink"  $ show $ LinkServiceButtonsRest $  serviceid service
-    field "buttonstextcolor"  $ servicebuttonstextcolor $ serviceui service
-    field "background"  $ servicebackground $ serviceui service
-    field "overlaybackground"  $ serviceoverlaybackground $ serviceui service
-    field "barsbackground"  $ servicebarsbackground $ serviceui service
-    field "logo" $ isJust $ servicelogo $ serviceui service
-    field "logoLink"  $ show $ LinkServiceLogo $ serviceid service
+  F.value "location" location
+  F.value "buttons" $ isJust $ servicebuttons $ serviceui service
+  F.value "buttonBodyLink"  $ show $ LinkServiceButtonsBody $ serviceid service
+  F.value "buttonRestLink"  $ show $ LinkServiceButtonsRest $  serviceid service
+  F.value "buttonstextcolor"  $ servicebuttonstextcolor $ serviceui service
+  F.value "background"  $ servicebackground $ serviceui service
+  F.value "overlaybackground"  $ serviceoverlaybackground $ serviceui service
+  F.value "barsbackground"  $ servicebarsbackground $ serviceui service
+  F.value "logo" $ isJust $ servicelogo $ serviceui service
+  F.value "logoLink"  $ show $ LinkServiceLogo $ serviceid service
 serviceFields location Nothing =
-    field "location" location
+  F.value "location" location
 
 sitemapPage :: Kontrakcja m => m String
 sitemapPage = do
-    hostpart <- ctxhostpart <$> getContext
-    renderTemplateFM "sitemapPage" $ do
-        field "hostpart" $ case hostpart of
-                                ('h':'t':'t':'p':'s':xs) -> "http" ++ xs
-                                xs -> xs
-        fieldFL "locales" $ map staticLinksFields targetedLocales
+  hostpart <- ctxhostpart <$> getContext
+  renderTemplate "sitemapPage" $ do
+    F.value "hostpart" $ case hostpart of
+                            ('h':'t':'t':'p':'s':xs) -> "http" ++ xs
+                            xs -> xs
+    F.objects "locales" $ map staticLinksFields targetedLocales
 
 priceplanPage :: Kontra String
 priceplanPage = getContext >>= \ctx -> renderTemplateAsPage ctx "priceplanPage" (Just LinkPriceplan) True
@@ -181,60 +176,59 @@ scriveByMailPage = getContext >>= \ctx -> renderTemplateAsPage ctx "scrivebymail
 -}
 renderTemplateAsPage :: Kontrakcja m => Context -> String -> Maybe (Locale -> KontraLink) -> Bool -> m String
 renderTemplateAsPage ctx templateName mpubliclink showCreateAccount = do
-    loginOn <- getLoginOn
-    loginreferer <- getLoginReferer
-    let showCreateAccount2 = showCreateAccount && (isNothing $ ctxmaybeuser ctx)
-    wholePage <- renderTemplateFM templateName $ do
-        standardPageFields ctx kontrakcja mpubliclink showCreateAccount2 loginOn loginreferer Nothing
-    return wholePage
+  loginOn <- getLoginOn
+  loginreferer <- getLoginReferer
+  let showCreateAccount2 = showCreateAccount && (isNothing $ ctxmaybeuser ctx)
+  wholePage <- renderTemplate templateName $ do
+    standardPageFields ctx kontrakcja mpubliclink showCreateAccount2 loginOn loginreferer Nothing
+  return wholePage
 
 getLoginOn :: Kontrakcja m => m Bool
 getLoginOn = do
-    loginOn <- isFieldSet "logging"
-    return loginOn
+  loginOn <- isFieldSet "logging"
+  return loginOn
 
 getLoginReferer :: Kontrakcja m => m (Maybe String)
 getLoginReferer = do
-    curr <- rqUri <$> askRq
-    referer <- getField "referer"
-    qstr <- querystring
-    let loginreferer = Just $ fromMaybe (curr ++ qstr) referer
-    return loginreferer
+  curr <- rqUri <$> askRq
+  referer <- getField "referer"
+  qstr <- querystring
+  let loginreferer = Just $ fromMaybe (curr ++ qstr) referer
+  return loginreferer
 
-standardPageFields :: TemplatesMonad m => Context -> String -> Maybe (Locale -> KontraLink) -> Bool -> Bool -> Maybe String -> Maybe String -> Fields m
+standardPageFields :: TemplatesMonad m => Context -> String -> Maybe (Locale -> KontraLink) -> Bool -> Bool -> Maybe String -> Maybe String -> Fields m ()
 standardPageFields ctx title mpubliclink showCreateAccount loginOn referer email = do
-    field "title" title
-    field "showCreateAccount" showCreateAccount
-    mainLinksFields $ ctxlocale ctx
-    staticLinksFields $ ctxlocale ctx
-    localeSwitcherFields ctx mpubliclink
-    contextInfoFields ctx
-    publicSafeFlagField ctx loginOn (isJust mpubliclink)
-    loginModal loginOn referer email
+  F.value "title" title
+  F.value "showCreateAccount" showCreateAccount
+  mainLinksFields $ ctxlocale ctx
+  staticLinksFields $ ctxlocale ctx
+  localeSwitcherFields ctx mpubliclink
+  contextInfoFields ctx
+  publicSafeFlagField ctx loginOn (isJust mpubliclink)
+  loginModal loginOn referer email
 
 {- |
    The contents of the signup page.  This is read from a template.
 -}
-signupPageView :: KontrakcjaTemplates -> IO String
-signupPageView templates = renderTemplate templates "signupPageView" ()
+signupPageView :: TemplatesMonad m => m String
+signupPageView = renderTemplate_ "signupPageView"
 
-signupVipPageView :: KontrakcjaTemplates -> IO String
-signupVipPageView templates = renderTemplate templates "signupVipPageView" ()
+signupVipPageView :: TemplatesMonad m => m String
+signupVipPageView = renderTemplate_ "signupVipPageView"
 
 {- |
    The contents of the login page.  This is read from a template.
 -}
 pageLogin :: TemplatesMonad m => Maybe String -> Maybe String -> m String
-pageLogin referer email =
-  renderTemplateFM "pageLogin" $ do
-      field "referer" referer
-      field "email" email
+pageLogin referer email = renderTemplate "pageLogin" $ do
+  F.value "referer" referer
+  F.value "email" email
 
 {- |
    Changing our pages into reponses, and clearing flash messages.
 -}
 simpleResponse :: Kontrakcja m => String -> m Response
-simpleResponse s = ok $ toResponseBS (BS.fromString "text/html;charset=utf-8") (BSL.fromString s)
+simpleResponse = ok . toResponseBS (BS.fromString "text/html;charset=utf-8") . BSL.fromString
     -- change this to HtmlString from helpers package
     -- (didn't want to connect it one day before prelaunch)
 
@@ -244,105 +238,103 @@ ajaxError = simpleResponse "<script>window.location='/'</script>"
    The landing page contents.  Read from template.
 -}
 firstPage :: TemplatesMonad m => Context -> Bool -> Maybe String -> Maybe String -> m String
-firstPage ctx loginOn referer email =
-    renderTemplateFM "firstPage" $ do
-        contextInfoFields ctx
-        publicSafeFlagField ctx loginOn True
-        mainLinksFields $ ctxlocale ctx
-        staticLinksFields $ ctxlocale ctx
-        localeSwitcherFields ctx (Just LinkHome)
-        loginModal loginOn referer email
+firstPage ctx loginOn referer email = renderTemplate "firstPage" $ do
+  contextInfoFields ctx
+  publicSafeFlagField ctx loginOn True
+  mainLinksFields $ ctxlocale ctx
+  staticLinksFields $ ctxlocale ctx
+  localeSwitcherFields ctx (Just LinkHome)
+  loginModal loginOn referer email
 
 {- |
    Defines the main links as fields handy for substituting into templates.
 -}
-mainLinksFields :: MonadIO m => Locale -> Fields m
+mainLinksFields :: Monad m => Locale -> Fields m ()
 mainLinksFields locale = do
-    field "linkaccount"          $ show (LinkAccount)
-    field "linkforgotenpassword" $ show LinkForgotPassword
-    field "linkinvite"           $ show LinkInvite
-    field "linkissue"            $ show LinkContracts
-    field "linklogin"            $ show (LinkLogin locale LoginTry)
-    field "linklogout"           $ show LinkLogout
-    field "linkupload"           $ show LinkUpload
-    field "linkquestion"         $ show LinkAskQuestion
-    field "linksignup"           $ show LinkSignup
+  F.value "linkaccount"          $ show (LinkAccount)
+  F.value "linkforgotenpassword" $ show LinkForgotPassword
+  F.value "linkinvite"           $ show LinkInvite
+  F.value "linkissue"            $ show LinkContracts
+  F.value "linklogin"            $ show (LinkLogin locale LoginTry)
+  F.value "linklogout"           $ show LinkLogout
+  F.value "linkupload"           $ show LinkUpload
+  F.value "linkquestion"         $ show LinkAskQuestion
+  F.value "linksignup"           $ show LinkSignup
 
-localeSwitcherFields :: MonadIO m => Context -> Maybe (Locale -> KontraLink) -> Fields m
-localeSwitcherFields Context{ ctxlocale, ctxlocaleswitch } mlink = do
-  field "islocaleswitch" $ ctxlocaleswitch
-  field "localesweden" $ getLang ctxlocale == LANG_SE
-  field "localebritain" $ getLang ctxlocale == LANG_EN
-  field "langsv" $ getLang ctxlocale == LANG_SE
-  field "langen" $ getLang ctxlocale == LANG_EN
-  field "linklocaleswitch" $ show LinkLocaleSwitch
-  field "linksesv" $ fmap (\l -> show $ l (mkLocale REGION_SE LANG_SE)) mlink
-  field "linkgben" $ fmap (\l -> show $ l (mkLocale REGION_GB LANG_EN)) mlink
+localeSwitcherFields :: Monad m => Context -> Maybe (Locale -> KontraLink) -> Fields m ()
+localeSwitcherFields Context{ctxlocale, ctxlocaleswitch} mlink = do
+  F.value "islocaleswitch" $ ctxlocaleswitch
+  F.value "localesweden" $ getLang ctxlocale == LANG_SE
+  F.value "localebritain" $ getLang ctxlocale == LANG_EN
+  F.value "langsv" $ getLang ctxlocale == LANG_SE
+  F.value "langen" $ getLang ctxlocale == LANG_EN
+  F.value "linklocaleswitch" $ show LinkLocaleSwitch
+  F.value "linksesv" $ fmap (\l -> show $ l (mkLocale REGION_SE LANG_SE)) mlink
+  F.value "linkgben" $ fmap (\l -> show $ l (mkLocale REGION_GB LANG_EN)) mlink
 
 {- |
     Defines the static links which are region and language sensitive.
 -}
-staticLinksFields :: MonadIO m => Locale -> Fields m
+staticLinksFields :: Monad m => Locale -> Fields m ()
 staticLinksFields locale = do
-    field "linkhome"  $ show $ LinkHome locale
-    field "linkpriceplan"  $ show $ LinkPriceplan locale
-    field "linksecurity"  $ show $ LinkSecurity locale
-    field "linklegal"  $ show $ LinkLegal locale
-    field "linkprivacypolicy"  $ show $ LinkPrivacyPolicy locale
-    field "linkterms"  $ show $ LinkTerms locale
-    field "linkabout"  $ show $ LinkAbout locale
-    field "linkpartners"  $ show $ LinkPartners locale
-    field "linkclients"  $ show $ LinkClients locale
-    field "linkcontactus" $ show $ LinkContactUs locale
+  F.value "linkhome"  $ show $ LinkHome locale
+  F.value "linkpriceplan"  $ show $ LinkPriceplan locale
+  F.value "linksecurity"  $ show $ LinkSecurity locale
+  F.value "linklegal"  $ show $ LinkLegal locale
+  F.value "linkprivacypolicy"  $ show $ LinkPrivacyPolicy locale
+  F.value "linkterms"  $ show $ LinkTerms locale
+  F.value "linkabout"  $ show $ LinkAbout locale
+  F.value "linkpartners"  $ show $ LinkPartners locale
+  F.value "linkclients"  $ show $ LinkClients locale
+  F.value "linkcontactus" $ show $ LinkContactUs locale
 
 {- |
    Defines some standard context information as fields handy for substitution
    into templates.
 -}
-contextInfoFields :: TemplatesMonad m => Context -> Fields m
+contextInfoFields :: TemplatesMonad m => Context -> Fields m ()
 contextInfoFields ctx@Context{ ctxlocale } = do
-    field "logged" $ isJust (ctxmaybeuser ctx)
-    fieldFL "flashmessages" $ map flashMessageFields $ ctxflashmessages ctx
-    field "hostpart" $ ctxhostpart ctx
-    field "resourcehostpart" $ ctxresourcehostpart ctx
-    field "production" (ctxproduction ctx)
-    field "ctxregion" $ codeFromRegion (getRegion ctxlocale)
-    field "ctxlang" $ codeFromLang (getLang ctxlocale)
+  F.value "logged" $ isJust (ctxmaybeuser ctx)
+  F.objects "flashmessages" $ map flashMessageFields $ ctxflashmessages ctx
+  F.value "hostpart" $ ctxhostpart ctx
+  F.value "resourcehostpart" $ ctxresourcehostpart ctx
+  F.value "production" (ctxproduction ctx)
+  F.value "ctxregion" $ codeFromRegion (getRegion ctxlocale)
+  F.value "ctxlang" $ codeFromLang (getLang ctxlocale)
 
 {- |
     Only public safe is explicitely set as a public page,
     and nobody is trying to login, and a user isn't logged in.
     The flag means that things like snoobi won't be contacted.
 -}
-publicSafeFlagField :: MonadIO m => Context -> Bool -> Bool -> Fields m
+publicSafeFlagField :: Monad m => Context -> Bool -> Bool -> Fields m ()
 publicSafeFlagField ctx loginOn publicpage = do
-    field "publicsafe" $ publicpage
-                           && (not loginOn)
-                           && (isNothing $ ctxmaybeuser ctx)
+  F.value "publicsafe" $ publicpage
+                      && (not loginOn)
+                      && (isNothing $ ctxmaybeuser ctx)
 
-flashMessageFields :: TemplatesMonad m => FlashMessage -> Fields m
+flashMessageFields :: TemplatesMonad m => FlashMessage -> Fields m ()
 flashMessageFields flash = do
-    fieldM "type" $ (\t ->
-        case t of
-             SigningRelated  -> "blue"
-             OperationDone   -> "green"
-             OperationFailed -> "red"
-             _               -> "") <$> ftype
-    fieldM "message" $ jsText <$> msg
-    fieldM "isModal" $ (== Modal) <$> ftype
-    where
-        fm :: TemplatesMonad m => m (FlashType, String)
-        fm = fromJust . unFlashMessage <$> instantiate flash
-        ftype :: TemplatesMonad m => m FlashType
-        ftype = fst <$> fm
-        msg :: TemplatesMonad m => m String
-        msg = snd <$> fm
+  F.valueM "type" $ (\t -> case t of
+    SigningRelated  -> "blue"
+    OperationDone   -> "green"
+    OperationFailed -> "red"
+    _               -> "") <$> ftype
+  F.valueM "message" $ jsText <$> msg
+  F.valueM "isModal" $ (== Modal) <$> ftype
+  where
+    fm :: TemplatesMonad m => m (FlashType, String)
+    fm = fromJust . unFlashMessage <$> instantiate flash
+    ftype :: TemplatesMonad m => m FlashType
+    ftype = fst <$> fm
+    msg :: TemplatesMonad m => m String
+    msg = snd <$> fm
 
-loginModal :: MonadIO m => Bool -> Maybe String -> Maybe String -> Fields m
+loginModal :: Monad m => Bool -> Maybe String -> Maybe String -> Fields m ()
 loginModal on referer email = do
-    field "loginModal" $ on
-    field "referer"    $ referer
-    field "email"      $ email
+  F.value "loginModal" $ on
+  F.value "referer"    $ referer
+  F.value "email"      $ email
 
 modalError :: TemplatesMonad m => m FlashMessage
-modalError = toModal <$> renderTemplateM "modalError" ()
+modalError = toModal <$> renderTemplate_ "modalError"

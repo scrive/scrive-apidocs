@@ -48,6 +48,7 @@ import Control.Applicative
 import EvidenceLog.Model
 import Control.Concurrent
 import Data.String.Utils
+import qualified Templates.Fields as F
 
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
@@ -65,17 +66,17 @@ personFromSignatoryDetails details =
                 , Seal.emailverified = True
                 }
 
-personFields :: MonadIO m => Document -> (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider,String) -> Fields m
+personFields :: Monad m => Document -> (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, String) -> Fields m ()
 personFields doc (person, signinfo,_seeninfo, _ , mprovider, _initials) = do
-   field "personname" $ Seal.fullname person
-   field "signip" $  formatIP (signipnumber signinfo)
-   field "seenip" $  formatIP (signipnumber signinfo)
-   field "provider" $ isJust mprovider
-   field "bankid" $ mprovider == Just BankIDProvider
-   field "nordea" $ mprovider == Just NordeaProvider
-   field "telia"  $ mprovider == Just TeliaProvider
-   field "email"  $ EmailIdentification `elem` (documentallowedidtypes doc)
-   field "pad"    $ PadIdentification `elem` (documentallowedidtypes doc)
+   F.value "personname" $ Seal.fullname person
+   F.value "signip" $  formatIP (signipnumber signinfo)
+   F.value "seenip" $  formatIP (signipnumber signinfo)
+   F.value "provider" $ isJust mprovider
+   F.value "bankid" $ mprovider == Just BankIDProvider
+   F.value "nordea" $ mprovider == Just NordeaProvider
+   F.value "telia"  $ mprovider == Just TeliaProvider
+   F.value "email"  $ EmailIdentification `elem` (documentallowedidtypes doc)
+   F.value "pad"    $ PadIdentification `elem` (documentallowedidtypes doc)
 
 personsFromDocument :: Document -> [(Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, String)]
 personsFromDocument document =
@@ -178,9 +179,9 @@ sealSpecFromDocument hostpart document elog inputpath outputpath =
                                    desc <-  renderLocalTemplateForProcess document processinvitationsententry $ do
                                        documentInfoFields document
                                        documentAuthorInfo document
-                                       field "oneSignatory"  (length signatories>1)
-                                       field "personname" $ listToMaybe $ map getFullName  signatoriesdetails
-                                       field "ip" $ formatIP ipnumber
+                                       F.value "oneSignatory"  (length signatories>1)
+                                       F.value "personname" $ listToMaybe $ map getFullName  signatoriesdetails
+                                       F.value "ip" $ formatIP ipnumber
                                    return  [ Seal.HistEntry
                                       { Seal.histdate = show time
                                       , Seal.histcomment = pureString desc
@@ -213,7 +214,7 @@ sealSpecFromDocument hostpart document elog inputpath outputpath =
       -- Log.debug ("about to render staticTexts")
       staticTexts <- renderLocalTemplateForProcess document processsealingtext $ do
                         documentInfoFields document
-                        field "hostpart" hostpart
+                        F.value "hostpart" hostpart
       -- Log.debug ("finished staticTexts: " ++ show staticTexts)
       let readtexts :: Seal.SealingTexts = read staticTexts -- this should never fail since we control templates
       -- Log.debug ("read texts: " ++ show readtexts)

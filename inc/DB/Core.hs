@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-unused-imports #-}
 module DB.Core where
 
 import Control.Applicative
@@ -94,13 +95,16 @@ instance WebMonad r m => WebMonad r (DBT m) where
 
 -- Class for accessing DBEnv object
 
-class Monad m => MonadDB m where
+class (CryptoRNG m, MonadIO m) => MonadDB m where
   getDBEnv :: m DBEnv
 
-instance Monad m => MonadDB (DBT m) where
+instance MonadIO m => MonadDB (DBT m) where
   getDBEnv = DBT get
 
-instance MonadDB m => MonadDB (ContT r m) where
+instance (CryptoRNG (ReaderT r m), MonadDB m) => MonadDB (ReaderT r m) where
+  getDBEnv = lift getDBEnv
+
+{-instance MonadDB m => MonadDB (ContT r m) where
   getDBEnv = lift getDBEnv
 
 instance (Error e, MonadDB m) => MonadDB (ErrorT e m) where
@@ -126,3 +130,4 @@ instance (MonadDB m, Monoid w) => MonadDB (LW.WriterT w m) where
 
 instance (MonadDB m, Monoid w) => MonadDB (SW.WriterT w m) where
   getDBEnv = lift getDBEnv
+  -}

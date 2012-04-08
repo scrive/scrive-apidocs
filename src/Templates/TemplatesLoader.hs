@@ -14,10 +14,7 @@ module Templates.TemplatesLoader
     , KontrakcjaTemplate
     , KontrakcjaGlobalTemplates
     , renderTemplateMain
-    , templateList
     , getTemplatesModTime
-    , toKontrakcjaTemplates
-    , getTemplates
     , readGlobalTemplates
     , localizedVersion
     ) where
@@ -28,7 +25,6 @@ import Control.Monad
 import Control.Monad.IO.Class
 import qualified Data.Map as Map
 import Data.Map ((!))
-import qualified Log
 import Text.Html (stringToHtmlString)
 import System.Directory
 import System.Time
@@ -43,7 +39,7 @@ type KontrakcjaTemplates = STGroup String
 type KontrakcjaTemplate = StringTemplate String
 type KontrakcjaGlobalTemplates = Map.Map Locale KontrakcjaTemplates
 
-localizedVersion:: Locale -> KontrakcjaGlobalTemplates -> KontrakcjaTemplates
+localizedVersion :: Locale -> KontrakcjaGlobalTemplates -> KontrakcjaTemplates
 localizedVersion locale mtemplates = mtemplates ! locale
 
 -- Fixme: Make this do only one read of all files !!
@@ -59,69 +55,32 @@ readTemplates locale = do
     texts <- getTextTemplates (getRegion locale) (getLang locale)
     return $ groupStringTemplates $ fmap (\(n,v) -> (n,newSTMP v)) $ (concat ts) ++ texts
 
---This is avaible only for special cases
-renderTemplateMain :: (ToSElem a) => KontrakcjaTemplates -> String -> [(String, a)]
-                   -> (KontrakcjaTemplate -> KontrakcjaTemplate) -> IO String
-renderTemplateMain ts name params f = do
-    let ts' = setEncoderGroup stringToHtmlString ts
-    let noescape = groupStringTemplates [("noescape", newSTMP "$it$" :: StringTemplate String)]
-    let mt =  getStringTemplate name $ mergeSTGroups noescape ts'
-    case mt of
-        Just t -> do
-                let t'= f (setManyAttrib params  t)
-                -- let (e,p,st) = checkTemplateDeep t'
-                -- when (not (null e) || not (null p) || not (null st)) $
-                --     Log.error $ "Template " ++ name ++ " problem with message " ++ (show (e,p,st))
-                return $ render t'
-        Nothing -> do
-                Log.error $ "No template named " ++ name
-                return ""
-
 getTemplatesModTime :: IO ClockTime
 getTemplatesModTime = do
     mtimes <- mapM getModificationTime templatesFilesPath
     mt <- getTextTemplatesMTime
-    return (maximum $ mt:mtimes)
+    return $ maximum $ mt : mtimes
 
-{- Template checker, printing info about params-}
-templateList :: IO ()
-templateList = do
-    ts <- fmap concat $ sequence (map getTemplates templatesFilesPath)
-    let tsnames = map fst ts
-    let tsgroup :: KontrakcjaTemplates =  groupStringTemplates $ fmap (\(n,v) -> (n,newSTMP v)) ts
-    sequence_ $ map (printTemplateData tsgroup) tsnames
-
-
-printTemplateData :: STGroup String -> String -> IO ()
-printTemplateData tsgroup name = do
-    let Just t = getStringTemplate name tsgroup
-    let (e,p,st) = checkTemplateDeep t
-    putStrLn $ name ++ ": "
-    if (not $ null e)
-        then putStrLn $ "PARSE ERROR " ++ (show e)
-        else if (not $ null st)
-             then putStrLn $ "MISSING SUBTEMPLATES " ++ (show st)
-             else do
-                 sequence_ $ map (putStrLn . ("    " ++ )) p
-                 putStrLn ""
-
-
+renderTemplateMain :: ToSElem a => KontrakcjaTemplates -> String -> [(String, a)]
+                   -> (KontrakcjaTemplate -> KontrakcjaTemplate) -> String
+renderTemplateMain ts name params f = case mt of
+  Just t  -> render $ f (setManyAttrib params t)
+  Nothing -> error  $ "No template named " ++ name
+  where
+    ts' = setEncoderGroup stringToHtmlString ts
+    noescape = groupStringTemplates [("noescape", newSTMP "$it$" :: StringTemplate String)]
+    mt = getStringTemplate name $ mergeSTGroups noescape ts'
 
 {- For some reasons the SElem a is not of class ToSElem -}
 instance (Stringable a) => ToSElem (SElem a) where
-   toSElem (STR a) = (STR a)
-   toSElem (BS a) = (BS a)
-   toSElem (STSH a) = (STSH a)
-   toSElem (SM a) = (SM $ fmap (toSElem) a)
-   toSElem (LI a) = (LI $ fmap (toSElem) a)
-   toSElem (SBLE a ) = (SBLE $ convert a)
-   toSElem (SNAT a ) = (SNAT $ convert a)
-   toSElem SNull = SNull
-
+  toSElem (STR a) = (STR a)
+  toSElem (BS a) = (BS a)
+  toSElem (STSH a) = (STSH a)
+  toSElem (SM a) = (SM $ fmap (toSElem) a)
+  toSElem (LI a) = (LI $ fmap (toSElem) a)
+  toSElem (SBLE a) = (SBLE $ convert a)
+  toSElem (SNAT a) = (SNAT $ convert a)
+  toSElem SNull = SNull
 
 convert :: (Stringable a, Stringable b) => a -> b
 convert = stFromString . stToString
-
-
-toKontrakcjaTemplates::[(String,String)] ->  IO KontrakcjaTemplates
-toKontrakcjaTemplates ts = return $ groupStringTemplates $ map (\(n,l) -> (n, newSTMP l)) ts

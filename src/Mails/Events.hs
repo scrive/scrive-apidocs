@@ -40,6 +40,7 @@ import Util.SignatoryLinkUtils
 import qualified Log
 import EvidenceLog.Model
 import Stats.Control
+import qualified Templates.Fields as F
 
 processEvents :: ActionScheduler ()
 processEvents = runDBQuery GetUnreadEvents >>= mapM_ processEvent
@@ -95,14 +96,14 @@ processEvents = runDBQuery GetUnreadEvents >>= mapM_ processEvent
       when (not success) $
         Log.error $ "Couldn't mark event #" ++ show eid ++ " as read"
 
-    deleteEmail :: DBMonad m => MailID -> m ()
+    deleteEmail :: MonadDB m => MailID -> m ()
     deleteEmail mid = do
       success <- runDBUpdate $ DeleteEmail mid
       if (not success) 
         then Log.error $ "Couldn't delete email #" ++ show mid
         else Log.debug $ "Deleted email #" ++ show mid
 
-handleDeliveredInvitation :: (DBMonad m, TemplatesMonad m) => MailsConfig -> Document -> SignatoryLinkID -> m ()
+handleDeliveredInvitation :: (MonadDB m, TemplatesMonad m) => MailsConfig -> Document -> SignatoryLinkID -> m ()
 handleDeliveredInvitation mc doc signlinkid = do
   case getSigLinkFor doc signlinkid of
     Just signlink -> do
@@ -118,7 +119,7 @@ handleDeliveredInvitation mc doc signlinkid = do
       return ()
     Nothing -> return ()
 
-handleOpenedInvitation :: DBMonad m => Document -> SignatoryLinkID -> String -> Maybe UserID -> m ()
+handleOpenedInvitation :: MonadDB m => Document -> SignatoryLinkID -> String -> Maybe UserID -> m ()
 handleOpenedInvitation doc signlinkid email muid = do
   now  <- getMinutesTime
   edoc <- runDBUpdate $ MarkInvitationRead (documentid doc) signlinkid 
@@ -129,7 +130,7 @@ handleOpenedInvitation doc signlinkid email muid = do
       _ -> return ()
     _ -> return ()
 
-handleDeferredInvitation :: (DBMonad m, TemplatesMonad m) => (String, MailsConfig) -> Document -> SignatoryLinkID -> String -> m ()
+handleDeferredInvitation :: (MonadDB m, TemplatesMonad m) => (String, MailsConfig) -> Document -> SignatoryLinkID -> String -> m ()
 handleDeferredInvitation (hostpart, mc) doc signlinkid email = do
   time <- getMinutesTime
   case getSigLinkFor doc signlinkid of
@@ -145,7 +146,7 @@ handleDeferredInvitation (hostpart, mc) doc signlinkid email = do
         Left _ -> return ()
     Nothing -> return ()
 
-handleUndeliveredInvitation :: (DBMonad m, TemplatesMonad m) => (String, MailsConfig) -> Document -> SignatoryLinkID -> m ()
+handleUndeliveredInvitation :: (MonadDB m, TemplatesMonad m) => (String, MailsConfig) -> Document -> SignatoryLinkID -> m ()
 handleUndeliveredInvitation (hostpart, mc) doc signlinkid = do
   case getSigLinkFor doc signlinkid of
     Just signlink -> do
@@ -161,21 +162,21 @@ handleUndeliveredInvitation (hostpart, mc) doc signlinkid = do
 mailDeliveredInvitation :: TemplatesMonad m =>  Document -> SignatoryLink -> m Mail
 mailDeliveredInvitation doc signlink =
   kontramail "invitationMailDeliveredAfterDeferred" $ do
-    field "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
-    field "email" $ getEmail signlink
-    field "documenttitle" $ documenttitle doc
+    F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
+    F.value "email" $ getEmail signlink
+    F.value "documenttitle" $ documenttitle doc
 
 mailDeferredInvitation :: TemplatesMonad m => String -> Document -> m Mail
 mailDeferredInvitation hostpart doc = kontramail "invitationMailDeferred" $ do
-  field "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
-  field "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
-  field "ctxhostpart" hostpart
+  F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
+  F.value "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
+  F.value "ctxhostpart" hostpart
 
 mailUndeliveredInvitation :: TemplatesMonad m => String -> Document -> SignatoryLink -> m Mail
 mailUndeliveredInvitation hostpart doc signlink =
   kontramail "invitationMailUndelivered" $ do
-    field "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
-    field "documenttitle" $ documenttitle doc
-    field "email" $ getEmail signlink
-    field "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
-    field "ctxhostpart" hostpart
+    F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
+    F.value "documenttitle" $ documenttitle doc
+    F.value "email" $ getEmail signlink
+    F.value "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
+    F.value "ctxhostpart" hostpart

@@ -27,7 +27,7 @@ import Mails.MailsData
 import Mails.MailsConfig
 import Mails.SendMail
 import Session
-import Templates.Templates
+import Templates.TemplatesLoader
 import qualified Log
 import System.Time
 import Doc.Invariants
@@ -42,9 +42,8 @@ newtype ActionScheduler a = AS { unAS :: ReaderT SchedulerData' (ReaderT DBEnv I
 instance CryptoRNG ActionScheduler where
   getCryptoRNGState = AS $ lift $ asks envRNG
 
-instance DBMonad ActionScheduler where
+instance MonadDB ActionScheduler where
     getDBEnv = AS $ lift ask
-    handleDBError = E.throw
 
 -- Note: Do not define TemplatesMonad instance for ActionScheduler, use
 -- LocalTemplates instead. Reason? We don't have access to currently used

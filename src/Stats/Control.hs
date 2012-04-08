@@ -56,13 +56,13 @@ import MinutesTime
 import Misc
 import Stats.Model
 import Stats.View
-import Templates.Templates
 import User.Model
 import Util.FlashUtil
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import qualified Log
+import qualified Templates.Fields as F
 
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.UTF8 as BS
@@ -81,7 +81,7 @@ showAdminUserUsageStats userid = onlySalesOrAdmin $ do
   let rawevents = catMaybes $ map statEventToDocStatTuple statEvents
   let stats = calculateStatsByDay rawevents
   content <- adminUserUsageStatsPage user mcompany $ do
-    fieldFL "statistics" $ statisticsFieldsByDay stats
+    F.objects "statistics" $ statisticsFieldsByDay stats
   renderFromBody kontrakcja content
 
 showAdminCompanyUsageStats :: Kontrakcja m => CompanyID -> m Response
@@ -91,7 +91,7 @@ showAdminCompanyUsageStats companyid = onlySalesOrAdmin $ do
   let stats = calculateCompanyDocStats rawevents
   fullnames <- convertUserIDToFullName [] stats
   content <- adminCompanyUsageStatsPage companyid $ do
-    fieldFL "statistics" $ statisticsCompanyFieldsByDay fullnames
+    F.objects "statistics" $ statisticsCompanyFieldsByDay fullnames
   renderFromBody kontrakcja content
 
 showAdminSystemUsageStats :: Kontrakcja m => m Response
@@ -106,8 +106,8 @@ showAdminSystemUsageStats = onlySalesOrAdmin $ do
   let statsByDay = calculateStatsByDay $ filter (\s -> (fst s) >= som) rawstats
       statsByMonth = calculateStatsByMonth rawstats
   content <- adminUserStatisticsPage $ do
-    fieldFL "statisticsbyday" $ statisticsFieldsByDay statsByDay
-    fieldFL "statisticsbymonth" $ statisticsFieldsByMonth statsByMonth
+    F.objects "statisticsbyday" $ statisticsFieldsByDay statsByDay
+    F.objects "statisticsbymonth" $ statisticsFieldsByMonth statsByMonth
   renderFromBody kontrakcja content
 
 handleDocStatsCSV :: Kontrakcja m => m Response
@@ -291,7 +291,7 @@ falseOnError m = m `E.catch` (\(_::KontraError) -> return False)
 --   2. Count the number of signatures in StatDocumentSignatures
 -- Note that this will roll over (using mplus) in case there is
 -- an error.
-addDocumentCloseStatEvents :: (DBMonad m, MonadBaseControl IO m) => Document -> m Bool
+addDocumentCloseStatEvents :: (MonadDB m, MonadBaseControl IO m) => Document -> m Bool
 addDocumentCloseStatEvents doc = falseOnError $ do
     if not (isClosed doc)
       then do
@@ -331,7 +331,7 @@ addDocumentCloseStatEvents doc = falseOnError $ do
       unless b $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show q
       return (a && b)
 
-addDocumentSendStatEvents :: (DBMonad m, MonadBaseControl IO m) => Document -> m Bool
+addDocumentSendStatEvents :: (MonadDB m, MonadBaseControl IO m) => Document -> m Bool
 addDocumentSendStatEvents doc = falseOnError $ do
     if isNothing $ documentinvitetime doc
       then do
@@ -369,7 +369,7 @@ addDocumentSendStatEvents doc = falseOnError $ do
       unless b $ Log.stats $ "Skipping existing doccument stat for docid: " ++ show did ++ " and quantity: " ++ show q
       return (a && b)
 
-addDocumentCancelStatEvents :: (DBMonad m, MonadBaseControl IO m) => Document -> m Bool
+addDocumentCancelStatEvents :: (MonadDB m, MonadBaseControl IO m) => Document -> m Bool
 addDocumentCancelStatEvents doc = falseOnError $ do
     if not $ isCanceled doc
       then do
@@ -406,7 +406,7 @@ addDocumentCancelStatEvents doc = falseOnError $ do
       unless b $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show q
       return (a && b)
 
-addDocumentRejectStatEvents :: (DBMonad m, MonadBaseControl IO m) => Document -> m Bool
+addDocumentRejectStatEvents :: (MonadDB m, MonadBaseControl IO m) => Document -> m Bool
 addDocumentRejectStatEvents doc = falseOnError $ do
     if not $ isRejected doc
       then do
@@ -443,7 +443,7 @@ addDocumentRejectStatEvents doc = falseOnError $ do
       unless b $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show q
       return (a && b)
 
-addDocumentCreateStatEvents :: (DBMonad m, MonadBaseControl IO m) => Document -> m Bool
+addDocumentCreateStatEvents :: (MonadDB m, MonadBaseControl IO m) => Document -> m Bool
 addDocumentCreateStatEvents doc = falseOnError $ do
       sl  <- guardJust $ getAuthorSigLink doc
       uid <- guardJust $ maybesignatory sl
@@ -461,7 +461,7 @@ addDocumentCreateStatEvents doc = falseOnError $ do
       unless a $ Log.stats $ "Skipping existing document stat for docid: " ++ show did ++ " and quantity: " ++ show DocStatCreate
       return a
 
-addDocumentTimeoutStatEvents :: (DBMonad m) => Document -> m Bool
+addDocumentTimeoutStatEvents :: (MonadDB m) => Document -> m Bool
 addDocumentTimeoutStatEvents doc = do
   case (isTimedout doc, getAuthorSigLink doc, maybesignatory =<< getAuthorSigLink doc, documenttimeouttime doc) of
     (False,_,_,_) -> do
@@ -505,7 +505,7 @@ addDocumentTimeoutStatEvents doc = do
       return (a && b)
 
 
-allDocStats :: (DBMonad m, MonadBaseControl IO m) => Document -> m ()
+allDocStats :: (MonadDB m, MonadBaseControl IO m) => Document -> m ()
 allDocStats doc = do
     _ <- addDocumentSendStatEvents doc
     _ <- addDocumentCloseStatEvents doc
@@ -568,7 +568,7 @@ addUserCreateCompanyStatEvent time user = falseOnError $ do
 addUserSignTOSStatEvent :: Kontrakcja m => User -> m Bool
 addUserSignTOSStatEvent = addUserStatEventWithTOSTime UserSignTOS
 
-addUserIDSignTOSStatEvent :: (DBMonad m) => UserID -> MinutesTime -> Maybe CompanyID -> Maybe ServiceID -> m Bool
+addUserIDSignTOSStatEvent :: (MonadDB m) => UserID -> MinutesTime -> Maybe CompanyID -> Maybe ServiceID -> m Bool
 addUserIDSignTOSStatEvent = addUserIDStatEvent UserSignTOS
 
 addUserSaveAfterSignStatEvent :: Kontrakcja m => User -> m Bool
@@ -588,7 +588,7 @@ addUserStatEventWithTOSTime qty user = falseOnError $ do
                 else mt
       addUserIDStatEvent qty (userid user) mt' (usercompany user) (userservice user)
 
-addUserIDStatEvent :: (DBMonad m) => UserStatQuantity -> UserID -> MinutesTime -> Maybe CompanyID -> Maybe ServiceID -> m Bool
+addUserIDStatEvent :: (MonadDB m) => UserStatQuantity -> UserID -> MinutesTime -> Maybe CompanyID -> Maybe ServiceID -> m Bool
 addUserIDStatEvent qty uid mt mcid msid =  do
     a <- runDBUpdate $ AddUserStatEvent $ UserStatEvent { usUserID     = uid
                                                         , usTime       = mt

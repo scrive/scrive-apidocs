@@ -118,5 +118,3 @@ parseLines handle = do
         else if e
             then return [l]
             else fmap ((:) l) (parseLines handle)
-
-

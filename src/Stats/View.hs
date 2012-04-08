@@ -14,50 +14,50 @@ module Stats.View
        )
        where
 
-import Control.Monad.Trans
-import Templates.Templates
 import Misc
 import Stats.Model
 import MinutesTime
 import API.Service.Model
+import Templates.Templates
+import qualified Templates.Fields as F
 
 import Data.List
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 
 
-statisticsFieldsByDay :: (Functor m, MonadIO m) => [(Int, [Int])] -> [Fields m]
+statisticsFieldsByDay :: Monad m => [(Int, [Int])] -> [Fields m ()]
 statisticsFieldsByDay stats = for stats f
   where f (ct, c:s:i:u:_) = do
-                field "date" $ showAsDate ct
-                field "closed" c
-                field "signatures" s
-                field "sent" i
-                field "users" u
-                field "avg" (if c == 0 then 0 else ((fromIntegral s / fromIntegral c) :: Double))
+                F.value "date" $ showAsDate ct
+                F.value "closed" c
+                F.value "signatures" s
+                F.value "sent" i
+                F.value "users" u
+                F.value "avg" (if c == 0 then 0 else ((fromIntegral s / fromIntegral c) :: Double))
         f _ = error $ "statisticsFieldsByDay: bad stats"
 
-statisticsFieldsByMonth :: (Functor m, MonadIO m) => [(Int, [Int])] -> [Fields m]
+statisticsFieldsByMonth :: Monad m => [(Int, [Int])] -> [Fields m ()]
 statisticsFieldsByMonth stats = for stats f
   where f (ct, c:s:i:u:_) = do
-                field "date" $ showAsMonth ct
-                field "closed" c
-                field "signatures" s
-                field "sent" i
-                field "users" u
-                field "avg" (if c == 0 then 0 else ((fromIntegral s / fromIntegral c) :: Double))
+                F.value "date" $ showAsMonth ct
+                F.value "closed" c
+                F.value "signatures" s
+                F.value "sent" i
+                F.value "users" u
+                F.value "avg" (if c == 0 then 0 else ((fromIntegral s / fromIntegral c) :: Double))
         f _ = error $ "statisticsFieldsByMonth: bad stats"
 
 
-statisticsCompanyFieldsByDay :: (Functor m, MonadIO m) => [(Int, String, [Int])] -> [Fields m]
+statisticsCompanyFieldsByDay :: Monad m => [(Int, String, [Int])] -> [Fields m ()]
 statisticsCompanyFieldsByDay stats = for stats f
   where f (ct, u, c:s:i:_) = do
-                field "date" $ showAsDate ct
-                field "user" u
-                field "istotal" (u == "Total")
-                field "closed" c
-                field "signatures" s
-                field "sent" i
-                field "avg" (if c == 0 then 0 else ((fromIntegral s / fromIntegral c) :: Double))
+                F.value "date" $ showAsDate ct
+                F.value "user" u
+                F.value "istotal" (u == "Total")
+                F.value "closed" c
+                F.value "signatures" s
+                F.value "sent" i
+                F.value "avg" (if c == 0 then 0 else ((fromIntegral s / fromIntegral c) :: Double))
         f _ = error $ "statisticsCompanyFieldsByDay: bad stats"
 
 statisticsCSV :: [DocStatEvent] -> String

@@ -17,7 +17,6 @@ import API.Service.Model
 import AppView as V
 import Crypto.RNG
 import DB.Classes
-import DB.Core as C
 import Doc.DocStateData
 import IPAddress
 import Kontra
@@ -25,7 +24,7 @@ import MinutesTime
 import Misc
 import Redirect
 import Session
-import Templates.Templates
+import Templates.TemplatesLoader
 import User.Model
 import qualified Log (error, debug)
 import qualified FlashMessage as F
@@ -169,14 +168,14 @@ appHandler handleRoutes appConf appGlobals = measureResponseTime $
     updateSessionWithContextData session newsessionuser newelegtrans newmagichashes newsessionpaduser
 
     rq <- askRq
-    stats <- getNexusStats =<< envNexus `fmap` C.getDBEnv
+    stats <- getNexusStats =<< envNexus `fmap` getDBEnv
     Log.debug $ "SQL for " ++ rqUri rq ++ ": " ++ show stats
 
     case res of
       Right response -> return response
       Left response -> do
         -- if exception was thrown, rollback everything
-        liftIO . rollback =<< envNexus `fmap` C.getDBEnv
+        liftIO . rollback =<< envNexus `fmap` getDBEnv
         return response
   where
     measureResponseTime :: ServerPartT IO Response -> ServerPartT IO Response
@@ -238,7 +237,7 @@ appHandler handleRoutes appConf appGlobals = measureResponseTime $
           SockAddrInet _ hostip -> unsafeIPAddress hostip
           _                     -> noIP
 
-      dbenv <- C.getDBEnv
+      dbenv <- getDBEnv
 
       currhostpart <- getHostpart
       reshostpart <- getResourceHostpart

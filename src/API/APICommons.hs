@@ -125,7 +125,7 @@ api_document mfiles doc = JSObject $ toJSObject $ [
   Just files -> [("files", JSArray files)]
 
 
-api_document_read :: (APIContext c, Kontrakcja m, DBMonad m) => Bool -> Document -> APIFunction m c JSValue
+api_document_read :: (APIContext c, Kontrakcja m, MonadDB m) => Bool -> Document -> APIFunction m c JSValue
 api_document_read False doc = do
   return $ api_document Nothing doc
 api_document_read True doc = do

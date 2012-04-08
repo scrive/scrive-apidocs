@@ -91,14 +91,16 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc = do
       _ <- addDocumentCloseStatEvents closeddoc
       author <- getDocAuthor closeddoc
       forkAction ("Sealing document #" ++ show documentid ++ ": " ++ documenttitle) $ \env -> do
-        let newctx = ctx {ctxdbenv = env}
-        enewdoc <- ioRunDB env $ sealDocument newctx closeddoc
-        case enewdoc of
-          Right newdoc -> runTemplatesT (ctxlocale, ctxglobaltemplates) $ sendClosedEmails newctx newdoc
-          Left errmsg -> do
-            _ <- ioRunDB env $ dbUpdate $ ErrorDocument documentid errmsg (SystemActor $ ctxtime ctx)
-            Log.server $ "Sending seal error emails for document #" ++ show documentid ++ ": " ++ documenttitle
-            runTemplatesT (ctxlocale, ctxglobaltemplates) $ sendDocumentErrorEmail newctx closeddoc author
+        _ <- runDBT env $ do
+          let newctx = ctx {ctxdbenv = env}
+          enewdoc <- runDB $ sealDocument newctx closeddoc
+          case enewdoc of
+            Right newdoc -> runTemplatesT (ctxlocale, ctxglobaltemplates) $ sendClosedEmails newctx newdoc
+            Left errmsg -> do
+              _ <- runDBUpdate $ ErrorDocument documentid errmsg (SystemActor $ ctxtime ctx)
+              Log.server $ "Sending seal error emails for document #" ++ show documentid ++ ": " ++ documenttitle
+              runTemplatesT (ctxlocale, ctxglobaltemplates) $ sendDocumentErrorEmail newctx closeddoc author
+        return ()
     _ -> when (documentcurrentsignorder doc /= documentcurrentsignorder olddoc) $ do
       ctx <- getContext
       Log.server $ "Resending invitation emails for document #" ++ show documentid ++ ": " ++ documenttitle
@@ -224,7 +226,7 @@ sendDataMismatchEmailAuthor ctx document author badname bademail = do
    Say sorry about this to them.
    ??: Should this be in DocControl or in an email-sepecific file?
  -}
-sendDocumentErrorEmail :: TemplatesMonad m => Context -> Document -> User -> m ()
+sendDocumentErrorEmail :: (MonadDB m, TemplatesMonad m) => Context -> Document -> User -> m ()
 sendDocumentErrorEmail ctx document author = do
   let signlinks = documentsignatorylinks document
   forM_ signlinks (\sl -> if isAuthor sl
@@ -234,7 +236,7 @@ sendDocumentErrorEmail ctx document author = do
     sendDocumentErrorEmailToAuthor = do
       let authorlink = $(fromJust) $ getAuthorSigLink document
       mail <- mailDocumentErrorForAuthor ctx document (getLocale author)
-      ioRunDB (ctxdbenv ctx) $ scheduleEmailSendout' (ctxmailsconfig ctx) $ mail {
+      scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
           to = [getMailAddress authorlink]
         , from = documentservice document
       }
@@ -245,7 +247,7 @@ sendDocumentErrorEmail ctx document author = do
                         , signatorydetails } = signatorylink
           Document { documentid } = document
       mail <- mailDocumentErrorForSignatory ctx document
-      ioRunDB (ctxdbenv ctx) $ scheduleEmailSendout' (ctxmailsconfig ctx) $ mail {
+      scheduleEmailSendout (ctxmailsconfig ctx) $ mail {
             to = [getMailAddress signatorydetails]
           , mailInfo = Invitation documentid  signatorylinkid
           , from = documentservice document
@@ -308,12 +310,12 @@ sendReminderEmail custommessage ctx doc siglink = do
 {- |
    Send emails to all parties when a document is closed.
  -}
-sendClosedEmails :: TemplatesMonad m => Context -> Document -> m ()
+sendClosedEmails :: (MonadDB m, TemplatesMonad m) => Context -> Document -> m ()
 sendClosedEmails ctx document = do
     let signatorylinks = documentsignatorylinks document
     mail <- mailDocumentClosed ctx document
     mailattachments <- liftIO $ makeMailAttachments ctx document
-    ioRunDB (ctxdbenv ctx) $ scheduleEmailSendout' (ctxmailsconfig ctx) $
+    scheduleEmailSendout (ctxmailsconfig ctx) $
       mail { to = map getMailAddress signatorylinks
            , attachments = mailattachments
            , from = documentservice document

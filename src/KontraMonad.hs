@@ -16,10 +16,10 @@ import Templates.Templates
 -- | This is for grouping things together so we won't need to
 -- write all that each time we write function type signature
 class ( Applicative m
-      , DBMonad m
       , FilterMonad Response m
       , HasRqData m
       , KontraMonad m
+      , MonadDB m
       , MonadBase IO m
       , MonadBaseControl IO m
       , MonadIO m

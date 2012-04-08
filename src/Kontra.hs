@@ -47,9 +47,9 @@ import KontraLink
 import KontraMonad
 import Mails.MailsConfig
 import Templates.Templates
+import Templates.TemplatesLoader
 import User.Model
 import Util.HasSomeUserInfo
-import qualified Log
 import Util.MonadUtils
 import Misc
 
@@ -74,11 +74,8 @@ instance MonadBaseControl IO KontraPlus where
 instance CryptoRNG KontraPlus where
   getCryptoRNGState = KontraPlus $ gets (envRNG . ctxdbenv)
 
-instance DBMonad KontraPlus where
+instance MonadDB KontraPlus where
   getDBEnv = ctxdbenv <$> getContext
-  handleDBError e = do
-    Log.error $ show e
-    internalError
 
 instance KontraMonad KontraPlus where
   getContext    = KontraPlus get
@@ -96,7 +93,7 @@ instance TemplatesMonad KontraPlus where
 -- Since we use static routing, there is no need for mzero inside a
 -- handler. Instead we signal errors explicitly through 'KontraError'.
 newtype Kontra a = Kontra { unKontra :: KontraPlus a }
-  deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadIO, ServerMonad, WebMonad Response, CryptoRNG, KontraMonad, DBMonad, TemplatesMonad)
+  deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadIO, ServerMonad, WebMonad Response, CryptoRNG, KontraMonad, MonadDB, TemplatesMonad)
 
 instance Kontrakcja Kontra
 
@@ -192,7 +189,7 @@ newAccountCreatedLink user = do
                                 (getEmail user)
 
 -- | Runs DB action and fails if it returned Nothing
-runDBOrFail :: (DBMonad m, MonadBase IO m) => DB (Maybe r) -> m r
+runDBOrFail :: (MonadDB m, MonadBase IO m) => DB (Maybe r) -> m r
 runDBOrFail f = runDB f >>= guardJust
 
 -- data fetchers specific to Kontra

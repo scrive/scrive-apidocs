@@ -64,6 +64,7 @@ forkActionIO env title' action = do
             Just ((k,_),_) -> k + 1
       return (Map.insert newkey (ForkedActionStarted title' startTime) themap, newkey)
     result <- C.try (action env')
+    HDBC.commit $ envNexus env'
     endTime <- getClockTime
     case result of
       Left someException -> do

@@ -16,7 +16,7 @@ import Util.MonadUtils
     This looks up the company for the given user, if the user doesn't
     have a company then it returns Nothing.
 -}
-getCompanyForUser :: DBMonad m => User -> m (Maybe Company)
+getCompanyForUser :: MonadDB m => User -> m (Maybe Company)
 getCompanyForUser = maybe (return Nothing) (runDBQuery . GetCompany) . usercompany
 
 -- | Version to be executed within DB monad (currently used in tests only)

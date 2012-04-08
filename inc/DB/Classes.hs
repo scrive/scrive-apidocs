@@ -29,7 +29,6 @@ module DB.Classes
   ( module DB.Core
   , DBQuery(..)
   , DBUpdate(..)
-  , DBMonad(..)
   , DBState(..)
   , DB
   , mkDBEnv
@@ -67,7 +66,7 @@ import qualified Control.Exception as E
 import qualified Control.Exception.Lifted as EE
 import qualified Database.HDBC as HDBC
 
-import DB.Core (DBEnv(..), DBT, runDBT)
+import DB.Core (DBEnv(..), DBT, MonadDB(..), runDBT)
 import DB.Exception
 import DB.Nexus
 import DB.SQL
@@ -237,13 +236,6 @@ class DBUpdate q r | q -> r where
 -- In such case we want to interrupt what we're currently doing and exit
 -- gracefully, most likely logging an error is some way. Since a way of
 -- handling such case may vary in different monads, hence this function.
-class (Functor m, MonadIO m, CryptoRNG m) => DBMonad m where
-  getDBEnv :: m DBEnv
-  -- | From the point of view of the implementor of instances of
-  -- 'DBMonad': handle a database error.  However, code that uses
-  -- 'handleDBError' throws an exception - compare with 'throw', or
-  -- 'fail'.
-  handleDBError :: DBException -> m a
 
 runit :: MonadIO m => DB a -> DBEnv -> m a
 runit action env = do
@@ -275,13 +267,13 @@ withPostgreSQLDB cs rng f = withPostgreSQLDB' cs rng (flip ioRunDB f)
 
 
 -- | Runs DB action in a DB compatible monad
-runDB :: DBMonad m => DB a -> m a
+runDB :: MonadDB m => DB a -> m a
 runDB f = do
   env <- getDBEnv
   res <- liftIO $ (Right <$> ioRunDB env f) `E.catches` handlers
   case res of
     Right r -> return r
-    Left e  -> handleDBError e
+    Left e  -> liftIO $ E.throwIO e
   where
     -- we catch only SqlError/DBException here
     handlers = [
@@ -290,11 +282,11 @@ runDB f = do
       ]
 
 -- | Runs single db query (provided for convenience).
-runDBQuery :: (DBMonad m, DBQuery q r) => q -> m r
+runDBQuery :: (MonadDB m, DBQuery q r) => q -> m r
 runDBQuery = runDB . dbQuery
 
 -- | Runs single db update (provided for convenience).
-runDBUpdate :: (DBMonad m, DBUpdate q r) => q -> m r
+runDBUpdate :: (MonadDB m, DBUpdate q r) => q -> m r
 runDBUpdate = runDB . dbUpdate
 
 -- | Catch in DB monad
