@@ -1247,21 +1247,17 @@ instance DBQuery GetDocuments [Document] where
 
 data GetDocumentsCount = GetDocumentsCount [DocumentDomain] [DocumentFilter]
 instance DBQuery GetDocumentsCount Int where
-  dbQuery (GetDocumentsCount domains filters) = do
-    _ <- kRun $ mconcat
-      [ SQL "SELECT count(*) FROM documents " []
-      , SQL "WHERE EXISTS (SELECT 1 FROM signatory_links WHERE documents.id = signatory_links.document_id AND " []
-      , SQL "(" []
-      , sqlConcatOR (map documentDomainToSQL domains)
-      , SQL ")" []
-      , if not (null filters)
-        then SQL " AND " [] `mappend` sqlConcatAND (map documentFilterToSQL filters)
-        else SQL "" []
-      , SQL ")" []
-      ]
-    count <- foldDB (\(_acc::Int) (val::Int) -> val) 0
-    return count
-
+  dbQuery (GetDocumentsCount domains filters) = $(fromJust) <$> getOne (mconcat
+    [ SQL "SELECT count(*) FROM documents " []
+    , SQL "WHERE EXISTS (SELECT 1 FROM signatory_links WHERE documents.id = signatory_links.document_id AND " []
+    , SQL "(" []
+    , sqlConcatOR (map documentDomainToSQL domains)
+    , SQL ")" []
+    , if not (null filters)
+      then SQL " AND " [] `mappend` sqlConcatAND (map documentFilterToSQL filters)
+      else SQL "" []
+    , SQL ")" []
+    ])
 
 {- |
     Fetches documents by company with filtering by tags, edate, and status.
