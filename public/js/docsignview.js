@@ -840,7 +840,7 @@ window.DocumentSignView = Backbone.View.extend({
           // the model/view split was already messed up when I got
           // here. --Eric
         model: new DocumentSignSignatoryBox({document:this.model}),
-        el: $("<div class='section signatories spacing'/>"),
+        el: $("<div class='section signatories spacing'/>")
       });
     },
     createRejectButtonElems: function() {
