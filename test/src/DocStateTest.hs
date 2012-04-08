@@ -1499,22 +1499,23 @@ testGetDocumentsSQLSorted = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   _doc <- addRandomDocumentWithAuthorAndCondition author (const True)
 
-  _ <- dbQuery $ GetDocuments 
-            [ DocumentsOfAuthor (userid author)
-            , DocumentsOfAuthorDeleted (userid author)
-            , DocumentsOfAuthorDeleteValue (userid author) True
-            , DocumentsForSignatory (userid author)
-            , DocumentsForSignatoryDeleted (userid author)
-            , DocumentsForSignatoryDeleteValue (userid author) True
-            , TemplatesOfAuthor (userid author)
-            , TemplatesOfAuthorDeleted (userid author)
-            , TemplatesOfAuthorDeleteValue (userid author) True
-            , TemplatesSharedInUsersCompany (userid author)
-            -- , DocumentsOfService (Maybe ServiceID)
-            -- , DocumentsOfCompany CompanyID
-            , AttachmentsOfAuthorDeleteValue (userid author) True
-            ]
-            []
+  let domains = [ DocumentsOfAuthor (userid author)
+                , DocumentsOfAuthorDeleted (userid author)
+                , DocumentsOfAuthorDeleteValue (userid author) True
+                , DocumentsForSignatory (userid author)
+                , DocumentsForSignatoryDeleted (userid author)
+                , DocumentsForSignatoryDeleteValue (userid author) True
+                , TemplatesOfAuthor (userid author)
+                , TemplatesOfAuthorDeleted (userid author)
+                , TemplatesOfAuthorDeleteValue (userid author) True
+                , TemplatesSharedInUsersCompany (userid author)
+                  -- , DocumentsOfService (Maybe ServiceID)
+                  -- , DocumentsOfCompany CompanyID
+                , AttachmentsOfAuthorDeleteValue (userid author) True
+                ]
+      filters = []
+  count <- dbQuery $ GetDocumentsCount domains filters
+  docs <- dbQuery $ GetDocuments domains filters
             [ Desc DocumentOrderByTitle
             , Desc DocumentOrderByMTime
             , Desc DocumentOrderByStatusClass
@@ -1522,8 +1523,8 @@ testGetDocumentsSQLSorted = doTimes 10 $ do
             , Desc DocumentOrderByProcess
             ]
             (DocumentPagination 0 maxBound)
-  return (Just (return ()))
-
+  validTest $ do
+    assertEqual "GetDocuments and GetDocumentsCount are compatible" (length docs) count
 
 testCreateFromSharedTemplate :: DB ()
 testCreateFromSharedTemplate = do

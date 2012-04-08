@@ -156,12 +156,13 @@ jsonDocumentsList = withUserGet $ do
       pagination = docPaginationFromParams docsPageSize params
 
   allDocs <- runDBQuery $ GetDocuments domain (searching ++ filters) sorting pagination
+  totalCount <- runDBQuery $ GetDocumentsCount domain (searching ++ filters)
 
   Log.debug $ "Documents list: Number of documents found "  ++  (show $ length allDocs)
 
   let docs = PagedList { list       = allDocs
                        , params     = params
-                       , totalCount = 500 -- FIXME: we are NOT going to count all documents that meet criteria as this is too costly
+                       , totalCount = totalCount
                        , pageSize   = docsPageSize
                        }
 
