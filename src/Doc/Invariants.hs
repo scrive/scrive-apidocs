@@ -4,6 +4,7 @@ module Doc.Invariants (
   , documentInvariants
   ) where
 
+import Control.Logic
 import Doc.DocStateData
 import Util.SignatoryLinkUtils
 import MinutesTime
@@ -43,7 +44,6 @@ documentInvariants = [ documentHasOneAuthor
                      , allSignedWhenClosed
                      , maxLengthOnFields
                      , maxNumberOfPlacements
-                     , awaitingAuthorAuthorNotSigned
                      , atLeaseOneIdentification
                      , atLeastOneSignatory
                      , notSignatoryNotSigned
@@ -83,7 +83,7 @@ oldishDocumentHasFiles now document =
 noDeletedSigLinksForSigning :: MinutesTime -> Document -> Maybe String
 noDeletedSigLinksForSigning _ document =
   assertInvariant "document has a deleted siglink when it is due to be signed" $
-    (isPending document || isAwaitingAuthor document) =>>
+    (isPending document) =>>
     none isDeletedFor (documentsignatorylinks document)
 
 {- |
@@ -187,20 +187,12 @@ maxNumberOfPlacements _ document =
   assertInvariant ("document had too many placements: " ++ show m ++ ". max is " ++ show maxlength ++ " (25 * number of fields)") $ m <= maxlength
     
 {- |
-   AwaitingAuthor implies Author has not signed
- -}
-awaitingAuthorAuthorNotSigned :: MinutesTime -> Document -> Maybe String
-awaitingAuthorAuthorNotSigned _ document =
-  assertInvariant "Author has signed but still in AwaitingAuthor" $
-    (isAwaitingAuthor document =>> (not $ hasSigned $ getAuthorSigLink document))
-    
-{- |
    At least one signatory in Pending AwaitingAuthor or Closed
  -}
 atLeastOneSignatory :: MinutesTime -> Document -> Maybe String
 atLeastOneSignatory _ document =
   assertInvariant "there are no signatories, though doc is pending, awaiting author, or closed" $
-    (isPending document || isAwaitingAuthor document || isClosed document) =>>
+    (isPending document || isClosed document) =>>
     (any isSignatory (documentsignatorylinks document))
     
 
@@ -237,7 +229,7 @@ maxCustomFields _ document =
 _hasFirstName :: MinutesTime -> Document -> Maybe String
 _hasFirstName _ document =
   assertInvariant "has a signatory with no first name" $
-    all (\sl -> (isPending document || isClosed document || isAwaitingAuthor document) =>>
+    all (\sl -> (isPending document || isClosed document) =>>
                 (not $ null $ getFirstName sl))
         (documentsignatorylinks document)
 
@@ -245,7 +237,7 @@ _hasFirstName _ document =
 _hasLastName :: MinutesTime -> Document -> Maybe String
 _hasLastName _ document =
   assertInvariant "has a signatory with no last name" $
-    all (\sl -> (isPending document || isClosed document || isAwaitingAuthor document) =>>
+    all (\sl -> (isPending document || isClosed document) =>>
                 (not $ null $ getLastName sl))
         (documentsignatorylinks document)
 
@@ -253,7 +245,7 @@ _hasLastName _ document =
 hasValidEmail :: MinutesTime -> Document -> Maybe String
 hasValidEmail _ document =
   assertInvariant "has a signatory with invalid email" $
-    all (\sl -> (isPending document || isClosed document || isAwaitingAuthor document) =>>
+    all (\sl -> (isPending document || isClosed document) =>>
                 (isGood $ asValidEmail $ getEmail sl))
         (documentsignatorylinks document)
     

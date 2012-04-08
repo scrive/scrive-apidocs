@@ -196,17 +196,29 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         <table class="price-plan">
                                                 <tr>$_PriceTableHead()$
                                                 </tr>
-                                                <tr class="odd-row">
+                                                <tr>
                                                         $_PriceTableRow1()$
                                                 </tr>
                                                 <tr>
                                                         $_PriceTableRow2()$
                                                 </tr>
-                                                <tr class="odd-row">
+                                                <tr>
                                                         $_PriceTableRow3()$
                                                 </tr>
                                                 <tr>
                                                         $_PriceTableRow4()$
+                                                </tr>
+                                                <tr>
+                                                        $_PriceTableRow5()$
+                                                </tr>
+                                                <tr>
+                                                        $_PriceTableRow6()$
+                                                </tr>
+                                                <tr>
+                                                        $_PriceTableRow7()$
+                                                </tr>
+                                                <tr>
+                                                        $_PriceTableRow8()$
                                                 </tr>
                                                 <tr class="big-row">
                                                         $_PriceTablePriceRow()$
@@ -218,14 +230,10 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         </div>
                                 </div>
                                 <div class="price-plan-annotation">
-                                $_priceplanPageVAT()$
+                                $_priceplanPageSignLimit()$
                                 </div>
 
                 <div class="big-price-plan">$_priceplanPageBelowTable1()$
-                </div>
-                <div class="big-price-plan">$_priceplanPageBelowTable2()$
-                </div>
-                <div class="big-price-plan">$_priceplanPageBelowTable3()$
                 </div>
 
                                 <div class="spacer70"></div>

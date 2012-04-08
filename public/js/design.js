@@ -8,7 +8,7 @@
   // add in default implementations of methods for getters and setters
   // should be added to individual prototype objects (one for each "class")
   var addGettersAndSetters = function(obj, names) {
-    for(var i = 0, var l = names.length; i < l; i++) {
+    for(var i = 0; i < names.length; i++) {
       var name = names[i];
       obj["set" + name] = function(v) {
         return this.set(name, v);
@@ -115,7 +115,7 @@
   // create a placement
   var newPlacement = function() {
     // add div
-    return { parent = placementPrototype };
+    return { parent: placementPrototype };
   };
 
   // Field Definition
@@ -124,14 +124,14 @@
     updateValue: function() {
       this.div.find("input").val(this.getValue());
       var pls = this.getPlacements();
-      for(var i = 0, var l = pls.length; i < l; i++) {
+      for(var i = 0; i < pls.length; i++) {
         pls.updateFieldMaster();
       }
     },
     updateInfoText: function() {
       this.div.find("input").attr("infotext", this.getInfoText());
       var pls = this.getPlacements();
-      for(var i = 0, var l = pls.length; i < l; i++) {
+      for(var i = 0; i < pls.length; i++) {
         pls.updateFieldMaster();
       }
     },
@@ -139,7 +139,7 @@
       this.getSignatoryMaster().removeField(this);
       this.div.detach();
       var pls = this.getPlacements();
-      for(var i = 0, var l = pls.length; i < l; i++) {
+      for(var i = 0; i < pls.length; i++) {
         pls.detach();
       }
       return this;
@@ -147,7 +147,7 @@
     detach: function() {
       this.div.detach();
       var pls = this.getPlacements();
-      for(var i = 0, var l = pls.length; i < l; i++) {
+      for(var i = 0; i < pls.length; i++) {
         pls.detach();
       }
       return this;
@@ -156,7 +156,7 @@
       // this is not the right selector
       this.getSignatoryMaster().div.find("signatories").append(this.div);
       var pls = this.getPlacements();
-      for(var i = 0, var l = pls.length; i < l; i++) {
+      for(var i = 0; i < pls.length; i++) {
         pls.attach();
       }
       return this;
@@ -167,8 +167,8 @@
   };
 
   addGettersAndSetters(fieldPrototype, ["Value", "InfoText", "Status", "Type", "SignatoryMaster"]);
-  addCollectionMethods(fieldPrototype, 
-                       "Placement", 
+  addCollectionMethods(fieldPrototype,
+                       "Placement",
                        function(field) { return newPlacement().setFieldMaster(field); });
 
 
@@ -179,12 +179,12 @@
   };
 
   var signatoryPrototype = {
-    parent = modelPrototype
+    parent: modelPrototype
   };
 
   addGettersAndSetters(signatoryPrototype, ["Title", "Secretary", "Signatory", "State"]);
-  addCollectionMethods(signatoryPrototype, 
-                       "Field", 
+  addCollectionMethods(signatoryPrototype,
+                       "Field",
                        function(sig) {
                          return newField().setSignatoryMaster(sig);
                        });
@@ -213,8 +213,8 @@
     },
     updateMode: function() {
       if(this.getMode() === "2 Mode") {
-        
-      } else if(this.getMode() +++ "List Mode") {
+
+      } else if(this.getMode() === "List Mode") {
 
       } else {
         console.log("What mode is this? " + this.getMode());
@@ -232,7 +232,7 @@
   };
 
   addGettersAndSetters(statePrototype, ["Author", "Mode", "Step", "CurrentPartner"]);
-  addCollectionMethods(statePrototype, 
+  addCollectionMethods(statePrototype,
                        "Partner",
                        function(state) {
                          return newSignatory().setState(state);

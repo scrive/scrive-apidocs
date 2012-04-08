@@ -303,7 +303,6 @@ documentAllStatuses = [ Preparation
                       , Canceled
                       , Timedout
                       , Rejected
-                      , AwaitingAuthor
                       , DocumentError "Bad document."
                       ]
 
@@ -546,7 +545,6 @@ randomDocumentAllowsDefault user = RandomDocumentAllows
                                                                 , Canceled
                                                                 , Timedout
                                                                 , Rejected
-                                                                , AwaitingAuthor
                                                                 , DocumentError "Bad document."
                                                                 ]
                               , randomDocumentAuthor = user
@@ -567,9 +565,6 @@ randomSigLinkByStatus Preparation = do
 randomSigLinkByStatus Pending = do
   (sl) <- arbitrary
   return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatoryroles=[SignatoryPartner]}
-randomSigLinkByStatus AwaitingAuthor = do
-  (sl,sign,seen) <- arbitrary
-  return $ sl{maybesigninfo = Just sign, maybeseeninfo = Just seen, signatoryroles=[SignatoryPartner]}
 randomSigLinkByStatus _ = arbitrary
 
 randomAuthorLinkByStatus :: DocumentStatus -> Gen SignatoryLink
@@ -580,9 +575,6 @@ randomAuthorLinkByStatus Preparation = do
   (sl) <- arbitrary
   return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatoryroles=[SignatoryAuthor]}
 randomAuthorLinkByStatus Pending = do
-  (sl) <- arbitrary
-  return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatoryroles=[SignatoryAuthor]}
-randomAuthorLinkByStatus AwaitingAuthor = do
   (sl) <- arbitrary
   return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing, signatoryroles=[SignatoryAuthor]}
 randomAuthorLinkByStatus _ = arbitrary

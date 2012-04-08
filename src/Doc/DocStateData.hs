@@ -228,7 +228,6 @@ data DocumentStatus = Preparation
                     | Canceled
                     | Timedout
                     | Rejected
-                    | AwaitingAuthor
                     | DocumentError String
   deriving (Eq, Ord, Show)
 

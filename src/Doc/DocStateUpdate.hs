@@ -111,7 +111,7 @@ signDocumentWithEleg did slid mh fields sinfo = do
 {- |
    Reject a document with security checks.
  -}
-rejectDocumentWithChecks :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> Maybe String -> m (Either DBError (Document, Document))
+rejectDocumentWithChecks :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> Maybe String -> m (Either DBError Document)
 rejectDocumentWithChecks did slid mh customtext = do
   edoc <- getDocByDocIDSigLinkIDAndMagicHash did slid mh
   case edoc of
@@ -128,7 +128,7 @@ rejectDocumentWithChecks did slid mh customtext = do
           _ <- case getSigLinkFor document slid of
             Just sl -> runDB $ addSignStatRejectEvent document sl
             _       -> return False
-          return $ Right (document, olddocument)
+          return $ Right document
 
 {- |
   The Author signs a document with security checks.
@@ -171,12 +171,12 @@ authorSendDocument did = onlyAuthor did $ do
   edoc <- getDocByDocID did
   case edoc of
     Left m -> return $ Left m
-    Right doc -> do
-      let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink doc
+    Right _ -> do
       ed1 <- runDBUpdate (PreparationToPending did (SystemActor (ctxtime ctx)))
       case ed1 of
         Left m -> return $ Left $ DBActionNotAvailable m
-        Right _ -> do
+        Right doc -> do
+          let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink doc
           _ <- runDBUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
           _ <- runDBUpdate $ MarkInvitationRead did signatorylinkid (SystemActor (ctxtime ctx))
           transActionNotAvailable <$> runDBUpdate (MarkDocumentSeen did signatorylinkid signatorymagichash actor)

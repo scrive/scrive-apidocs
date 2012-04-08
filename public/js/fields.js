@@ -16,6 +16,11 @@ window.FieldPlacement = Backbone.Model.extend({
     initialize : function(args){
         var placement = this;
         setTimeout(function() {placement.addToPage();},100);
+        args.field.bind('removed', function() {
+            placement.trigger("removed");
+            placement.remove();
+        });
+
     },
     placed : function() {
           return this.get("placed");
@@ -61,6 +66,7 @@ window.FieldPlacement = Backbone.Model.extend({
        var page = document.getFile(fileid).page(this.get("page"));
        page.removePlacement(this);
        this.field().removePlacement(this);
+       this.off();
     },
     draftData : function() {
         var document = this.field().signatory().document();
@@ -97,6 +103,11 @@ window.Field = Backbone.Model.extend({
         this.bind("change",function() {
             field.signatory().document().trigger("change:signatories");
         });
+        args.signatory.bind("removed",function() {
+            field.trigger("removed");
+            field.off();
+        });
+
     },
     name : function() {
         return this.get("name");
@@ -115,6 +126,9 @@ window.Field = Backbone.Model.extend({
     },
     placements : function() {
         return this.get("placements");
+    },
+    isPlaced: function() {
+      return this.placements().length > 0;
     },
     signatory : function(){
         return this.get("signatory");
@@ -170,15 +184,15 @@ window.Field = Backbone.Model.extend({
             return new NotEmptyValidation({message: msg});
         }
 
-        if (this.isCustom() && this.signatory().author()) {
-          var msg1 = localization.designview.validation.notReadyField;
-          var msg2 = localization.designview.validation.missingOrWrongCustomFieldValue;
-          return new Validation({validates: function() {return field.isReady()}, message: msg1}).concat(new NotEmptyValidation({message: msg2}));
-        }
-
         if (this.isCustom()) {
-            var msg = localization.designview.validation.notReadyField;
-            return new Validation({validates : function() {return field.isReady()}, message : msg});
+          var msg1 = localization.designview.validation.notReadyField;
+          var msg2 = localization.designview.validation.notPlacedField;
+          var validation = new Validation({validates: function() {return field.isReady()}, message: msg1}).concat(new Validation({validates: function() {return field.isPlaced()}, message: msg2}));
+          if (this.signatory().author()) {
+            return validation.concat(new NotEmptyValidation({message: localization.designview.validation.missingOrWrongCustomFieldValue}));
+          } else {
+            return validation;
+          }
         }
 
         return new Validation();
@@ -211,6 +225,7 @@ window.Field = Backbone.Model.extend({
             placement.remove();
         });
       this.signatory().deleteField(this);
+      this.trigger("removed");
     },
     draftData : function() {
       return {   name : this.name()

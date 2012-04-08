@@ -9,17 +9,17 @@ module Doc.CSVUtils (
     )
 where
 
+import Control.Monad
 import Data.Char
 import Data.Maybe
 import Data.List
 
+import Control.Logic
 import Doc.DocStateData
 import Doc.DocUtils
 import InputValidation
 import Templates.Templates
 import Util.SignatoryLinkUtils
-import Misc
-import Control.Monad
 
 data CSVProblem = NumberNotValid       Int Int    | -- Row Cell
                   EmailNotValid        Int Int    | -- Row Cell

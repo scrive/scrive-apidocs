@@ -12,7 +12,6 @@ var DocumentDesignView = Backbone.View.extend({
         this.model.bind('change:ready', this.render);
         this.model.bind('change:signatories', this.refreshFinalButton);
         this.model.view = this;
-        this.document;
         this.prerender();
         this.render();
     },
@@ -127,6 +126,29 @@ var DocumentDesignView = Backbone.View.extend({
               return false;
                      });
         return a;
+    },
+    designChangeMainFile: function() {
+      var document = this.model;
+      var box = $("<div class='signStepsBody table tbody' />");
+
+      var wizard = new Wizard;
+      var wizardview = new WizardView({model: wizard});
+
+
+      window.UploadWizardView = wizardview;
+
+      var up = new WizardStep;
+      var upview = new ChangeFileUploadView({model: up});
+      
+      var tmp = new WizardStep;
+      var tmpview = new ChangeFileTemplateView({model: tmp});
+
+      wizard.addStep(up);
+      wizard.addStep(tmp);
+
+      wizardview.render();
+      box.append(wizardview.el);
+      return box;
     },
     designStepBasic: function() {
         var document = this.model;
@@ -278,7 +300,7 @@ var DocumentDesignView = Backbone.View.extend({
         var icon = $("<span class='editinvitemessageicon'/>");
         var text = $("<span class='editinvitemessagetext'/>").text(localization.editInviteText);
         box.append(icon).append(text);
-        box.click(function() {
+        box.find("span").click(function() {
               document.save().sendAjax( function() {
                          ConfirmationWithEmail.popup({
                             title :localization.editInviteDialogHead,
@@ -368,7 +390,7 @@ var DocumentDesignView = Backbone.View.extend({
         var countspan = $("<span class='countspan' />").text("(" + document.authorattachments().length + ")").appendTo(text);
         box.append(icon).append(text);
 
-        box.click(function() {
+        box.find("span").click(function() {
             document.save().sendAjax();
             DesignAuthorAttachmentsPopup.popup({document: document});
         });
@@ -386,7 +408,7 @@ var DocumentDesignView = Backbone.View.extend({
         document.bind("change:attachments", function(){
           countspan.text("(" + document.signatoryattachments().length + ")");
         });
-        box.click(function() {
+        box.find("span").click(function() {
             document.save().sendAjax();
             DesignSignatoryAttachmentsPopup.popup({document: document});
         });
@@ -594,6 +616,8 @@ var DocumentDesignView = Backbone.View.extend({
         var designbody1 = document.isBasic() ? this.designStepBasic() : this.designStep1();
         var designbody2 = document.isBasic() ? $("Nothing") : this.designStep2();
 
+        var changemainfile = this.designChangeMainFile();
+
         var file = KontraFile.init({file: document.mainfile()});
         this.tabs = KontraTabs.init({
             title : this.titlerow(),
@@ -601,11 +625,19 @@ var DocumentDesignView = Backbone.View.extend({
             tabs: [
                 this.tab1 = new Tab({
                     name : document.isTemplate() ? localization.step1template : document.process().step1text(),
-                    clickable : false
+                    active :  SessionStorage.get(document.documentid(), "step") == "1",
+                    onActivate : function() {
+                      KontraDesignDocument.model.save().sendAjax();
+                      SessionStorage.set(document.documentid(), "step", "1");
+                      window.UploadWizardView.model.setStepIndex(0);
+                    },    
+                    elems : [
+                      changemainfile
+                            ]  
                   }),
                 this.tab2 = new Tab({
                     name  : document.isTemplate() ? localization.step2template : document.isBasic() ? localization.step2basic : localization.step2normal,
-                    active :  document.isBasic() || SessionStorage.get(document.documentid(), "step") != "3",
+                    active :  SessionStorage.get(document.documentid(), "step") != "1" && SessionStorage.get(document.documentid(), "step") != "3",
                     onActivate : function() {
                          SessionStorage.set(document.documentid(), "step", "2");
                     },

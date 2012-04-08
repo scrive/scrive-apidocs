@@ -1,6 +1,6 @@
-{-# LANGUAGE CPP, OverloadedStrings #-}
 module DocStateTest where
 
+import Control.Logic
 import DB.Classes
 import User.Model
 import Doc.Model
@@ -69,7 +69,6 @@ docStateTests env = testGroup "DocState" [
   testThat "Documents sorting SQL syntax is correct" env testGetDocumentsSQLSorted,
  
   testThat "PreparationToPending adds to the log" env testPreparationToPendingEvidenceLog,
-  testThat "PendingToAwaitingAuthor adds to the log" env testPendingToAwaitingAuthorEvidenceLog,
   testThat "MarkInvitationRead adds to the log" env testMarkInvitationReadEvidenceLog,
   testThat "MarkDocumentSeen adds to the log" env testMarkDocumentSeenEvidenceLog,
   testThat "ErrorDocument adds to the log" env testErrorDocumentEvidenceLog,
@@ -112,19 +111,10 @@ docStateTests env = testGroup "DocState" [
 
   testThat "CloseDocument fails when doc is not signable" env testCloseDocumentNotSignableNothing,
   testThat "CloseDocument fails when doc doesn't exist" env testCloseDocumentNotNothing,
-  testThat "CloseDocument succeeds when doc is signable and awaiting author" env testCloseDocumentSignableAwaitingAuthorJust,
   testThat "CloseDocument fails when doc is signable and awaiting author" env testCloseDocumentSignableNotAwaitingAuthorNothing,
 
   testThat "CancelDocument fails when doc is not signable" env testCancelDocumentNotSignableNothing,
   testThat "CancelDocument fails when doc doesn't exist" env testCancelDocumentNotNothing,
-  testThat "CancelDocument succeeds when doc is signable and awaiting author" env testCancelDocumentSignableAwaitingAuthorJust,
-  testThat "CancelDocument fails when doc is signable and awaiting author" env testCancelDocumentSignableNotAwaitingAuthorNothing,
-
-  testThat "PendingToAwaitingAuthor fails when doc is not signable" env testPendingToAwaitingAuthorDocumentNotSignableNothing,
-  testThat "PendingToAwaitingAuthor fails when doc doesn't exist" env testPendingToAwaitingAuthorDocumentNotNothing,
-  testThat "PendingToAwaitingAuthor succeeds when doc is signable and awaiting author" env testPendingToAwaitingAuthorDocumentSignableAwaitingAuthorJust,
-  testThat "PendingToAwaitingAuthor fails when doc is signable and awaiting author" env testPendingToAwaitingAuthorDocumentSignableNotAwaitingAuthorNothing,
-
 
   testThat "SetDocumentTags fails when does not exist" env testSetDocumentTagsNotLeft,
   testThat "SetDocumentTags succeeds" env testSetDocumentTagsRight,
@@ -587,20 +577,6 @@ testPreparationToPendingEvidenceLog = do
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == PreparationToPendingEvidence) lg
-  
-testPendingToAwaitingAuthorEvidenceLog :: DB ()
-testPendingToAwaitingAuthorEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
-  forM_ (filter (not . isAuthor) $ documentsignatorylinks doc) $ \sl-> do
-    m <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (SystemActor t)
-    assertRight m
-    s <- randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing (SystemActor t)
-    assertRight s
-  etdoc <- randomUpdate $ \t->PendingToAwaitingAuthor (documentid doc) (SystemActor t)
-  assertRight etdoc
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == PendingToAwaitingAuthorEvidence) lg
 
 testMarkInvitationReadEvidenceLog :: DB ()    
 testMarkInvitationReadEvidenceLog = do
@@ -757,7 +733,7 @@ testAttachSealedFileEvidenceLog = do
 testCancelDocumentEvidenceLog :: DB ()
 testCancelDocumentEvidenceLog = do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (isPending ||^ isAwaitingAuthor))
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
   etdoc <- randomUpdate $ \t-> CancelDocument (documentid doc) ManualCancel (SystemActor t)
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
@@ -843,7 +819,7 @@ assertGoodNewDocument mcompany doctype title authorsigns (user, time, edoc) = do
 testCancelDocumentCancelsDocument :: DB ()
 testCancelDocumentCancelsDocument = doTimes 10 $ do
   user <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition user (\d -> isSignable d && documentstatus d `elem` [AwaitingAuthor, Pending])
+  doc <- addRandomDocumentWithAuthorAndCondition user (isSignable &&^ isPending)
   time <- getMinutesTime
   edoc <- randomUpdate $ CancelDocument (documentid doc) ManualCancel (AuthorActor time noIP (userid user) (getEmail user))
   when (isLeft edoc) $ Log.debug (fromLeft edoc)
@@ -862,7 +838,7 @@ testCancelDocumentCancelsDocument = doTimes 10 $ do
 testCancelDocumentReturnsLeftIfDocInWrongState :: DB ()
 testCancelDocumentReturnsLeftIfDocInWrongState = doTimes 10 $ do
   user <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition user (\d -> isSignable d && not (documentstatus d `elem` [AwaitingAuthor, Pending]))
+  doc <- addRandomDocumentWithAuthorAndCondition user (isSignable &&^ not . isPending)
   time <- getMinutesTime
   edoc <- randomUpdate $ CancelDocument (documentid doc) ManualCancel (AuthorActor time noIP (userid user) (getEmail user))
   validTest $ assertLeft edoc
@@ -910,7 +886,7 @@ assertNoArchivedSigLink etdoc =
 testArchiveDocumentPendingLeft :: DB ()
 testArchiveDocumentPendingLeft = doTimes 10 $ do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> (isPending d || isAwaitingAuthor d))
+  doc <- addRandomDocumentWithAuthorAndCondition author isPending
   etdoc <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (SystemActor t)
   validTest $ assertLeft etdoc
 
@@ -1295,7 +1271,7 @@ testGetTimedOutButPendingDocuments = doTimes 1 $ do
   -- setup
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isPending &&^ (isJust . documenttimeouttime))
-  _doc2 <- addRandomDocumentWithAuthorAndCondition author (not . (isPending ||^ isAwaitingAuthor))
+  _doc2 <- addRandomDocumentWithAuthorAndCondition author (not . isPending)
 
   let t = unTimeoutTime $ fromJust $ documenttimeouttime doc
   --execute
@@ -1821,7 +1797,7 @@ testRejectDocumentNotSignableLeft = doTimes 10 $ do
 testRejectDocumentSignableNotPendingLeft :: DB ()
 testRejectDocumentSignableNotPendingLeft = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . (isPending ||^ isAwaitingAuthor)))
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ not . isPending)
   let Just sl = getSigLinkFor doc author
   time <- rand 10 arbitrary
   etdoc <- randomUpdate $ RejectDocument (documentid doc) (signatorylinkid sl) Nothing 
@@ -2015,21 +1991,6 @@ testSetDocumentUIRight = doTimes 10 $ do
   etdoc <- randomUpdate $ (\ui -> SetDocumentUI (documentid doc) ui ac)
   validTest $ assertRight etdoc
 
-testCloseDocumentSignableAwaitingAuthorJust :: DB ()
-testCloseDocumentSignableAwaitingAuthorJust = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
-  doc <- addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentAllowedTypes = documentSignableTypes
-         , randomDocumentAllowedStatuses = [AwaitingAuthor]
-         , randomDocumentCondition = const True
-         }
-  sa :: SystemActor <- rand 10 arbitrary
-  let Just sl = getAuthorSigLink doc
-  _ <- randomUpdate (MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl)  sa)      
-  _ <- randomUpdate (\si -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si sa)
-  etdoc <- randomUpdate (CloseDocument (documentid doc) sa)
-  validTest $ assertRight etdoc
-
 testCloseDocumentSignableNotAwaitingAuthorNothing :: DB ()
 testCloseDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
@@ -2062,35 +2023,6 @@ testCloseDocumentNotNothing = doTimes 10 $ do
   etdoc <- randomUpdate $ CloseDocument did sa
   validTest $ assertLeft etdoc
 
-
-testCancelDocumentSignableAwaitingAuthorJust :: DB ()
-testCancelDocumentSignableAwaitingAuthorJust = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
-  doc <- addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentAllowedTypes = documentSignableTypes
-         , randomDocumentAllowedStatuses = [AwaitingAuthor]
-         , randomDocumentCondition =  const True
-         }
-  time <- rand 10 arbitrary
-  --let Just sl = getAuthorSigLink doc
-  let actor = AuthorActor time noIP (userid author) (getEmail author)
-  etdoc <- randomUpdate (CancelDocument (documentid doc) ManualCancel actor)
-  validTest $ assertRight etdoc
-
-testCancelDocumentSignableNotAwaitingAuthorNothing :: DB ()
-testCancelDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
-  doc <- addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentAllowedTypes = documentSignableTypes
-         , randomDocumentAllowedStatuses = [AwaitingAuthor, Pending]
-         , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
-         }
-  time <- rand 10 arbitrary
-  etdoc <- randomUpdate $ CancelDocument (documentid doc) ManualCancel
-           (AuthorActor time noIP (userid author) (getEmail author))
-
-  validTest $ assertRight etdoc
-
 testCancelDocumentNotSignableNothing :: DB ()
 testCancelDocumentNotSignableNothing = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
@@ -2107,57 +2039,6 @@ testCancelDocumentNotNothing = doTimes 10 $ do
   aa :: AuthorActor <- rand 10 arbitrary
   etdoc <- randomUpdate $ (\did -> CancelDocument did ManualCancel aa)
   validTest $ assertLeft etdoc
-
-
-testPendingToAwaitingAuthorDocumentSignableAwaitingAuthorJust :: DB ()
-testPendingToAwaitingAuthorDocumentSignableAwaitingAuthorJust = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
-  doc <- addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentAllowedTypes = documentSignableTypes
-         , randomDocumentAllowedStatuses = [Pending]
-         , randomDocumentCondition = const True
-         }
-
-  (actor::SystemActor) <- rand 10 arbitrary
-  forM_ (filter (not . isAuthor) $ documentsignatorylinks doc) $ \s -> do
-    _ <- randomUpdate (MarkDocumentSeen (documentid doc) (signatorylinkid s) (signatorymagichash s) actor)
-    _ <- randomUpdate $ \si -> SignDocument (documentid doc) (signatorylinkid s) (signatorymagichash s) si actor
-    return ()
-  etdoc <- randomUpdate (PendingToAwaitingAuthor (documentid doc) actor) 
-           
-  validTest $ assertRight etdoc
-
-testPendingToAwaitingAuthorDocumentSignableNotAwaitingAuthorNothing :: DB ()
-testPendingToAwaitingAuthorDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
-  doc <- addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentAllowedTypes = documentSignableTypes
-         , randomDocumentAllowedStatuses = [Pending]
-         , randomDocumentCondition = ((<=) 2 . length . documentsignatorylinks)
-         }
-
-  (actor::SystemActor) <- rand 10 arbitrary
-  etdoc <- randomUpdate $ PendingToAwaitingAuthor (documentid doc) actor
-
-  validTest $ assertLeft etdoc
-
-testPendingToAwaitingAuthorDocumentNotSignableNothing :: DB ()
-testPendingToAwaitingAuthorDocumentNotSignableNothing = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
-  doc <- addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentAllowedTypes = documentAllTypes \\ documentSignableTypes
-         , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
-         }
-  (actor::SystemActor) <- rand 10 arbitrary
-  etdoc <- randomUpdate $ PendingToAwaitingAuthor (documentid doc) actor
-  validTest $ assertLeft etdoc
-
-testPendingToAwaitingAuthorDocumentNotNothing :: DB ()
-testPendingToAwaitingAuthorDocumentNotNothing = doTimes 10 $ do
-  (actor::SystemActor) <- rand 10 arbitrary
-  etdoc <- randomUpdate $ (\did -> PendingToAwaitingAuthor did actor)
-  validTest $ assertLeft etdoc
-
 
 testSetDocumentTitleNotLeft :: DB ()
 testSetDocumentTitleNotLeft = doTimes 10 $ do

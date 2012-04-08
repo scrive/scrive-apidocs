@@ -15,6 +15,7 @@ window.File = Backbone.Model.extend({
     },
     initialize: function (args) {
         this.url = "/filepages/" + args.document.documentid() + "/" + args.id;
+        this.bind('change:pages', function() { args.document.trigger('file:change'); });
     },
     downloadLink : function() {
         return "/download/"+ this.document().documentid() + "/" + this.fileid() +"/"+ this.name() + ".pdf" + this.document().viewer().urlPart();
@@ -123,6 +124,7 @@ var FilePageView = Backbone.View.extend({
         _.bindAll(this, 'render', 'renderDragables');
         this.model.bind('change:dragables', this.renderDragables);
         this.model.view = this;
+        this.renderedPlacements = [];
         this.render();
     },
     vline: function() {
@@ -186,11 +188,19 @@ var FilePageView = Backbone.View.extend({
         var container = $(this.el);
         var file = page.file();
         var document =file.document();
+        this.renderedPlacements = [];
         $(".placedfield",container).remove();
         _.each(page.placements(), function(placement) {
             var placement = placement;
             if (placement.page()==page.number()) {
-                container.append(new FieldPlacementPlacedView({model: placement, el : $("<div>")}).el);
+                var elem = new FieldPlacementPlacedView({model: placement, el : $("<div>")}).el;
+                container.append(elem);
+                if (!placement.field().isClosed()) {
+                  view.renderedPlacements.push({
+                    placement: placement,
+                    elem: $(elem)
+                  });
+                }
             }
         });
     },
@@ -223,10 +233,12 @@ var FileView = Backbone.View.extend({
         this.model.bind('reset', this.render);
         this.model.bind('change', this.render);
         this.model.view = this;
+        this.pageviews = [];
         this.model.fetch({data: this.model.document().viewer().forFetch(),   processData:  true, cache : false});
         this.render();
     },
     render: function () {
+        var view = this;
         var file = this.model;
         var docbox = $(this.el);
         docbox.attr("id","documentBox");
@@ -235,8 +247,10 @@ var FileView = Backbone.View.extend({
             var waitbox = $("<div class='waiting4page'/>");
             docbox.append(waitbox);
         } else {
+            this.pageviews = [];
             _.each(file.pages(),function(page){
                  var pageview = new FilePageView({model : page, el: $("<div/>")});
+                 view.pageviews.push(pageview);
                  docbox.append($(pageview.el));
             });
         }

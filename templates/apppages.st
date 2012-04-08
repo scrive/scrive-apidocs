@@ -1,7 +1,10 @@
 ###
-notFound=<strong>
-            $_notFound()$. <a href="/">$_notFoundGoHome()$.</a>
-         </strong>
+notFound=
+        <div class="notfound">
+            $_notFound()$
+
+            $_notFoundGoHome()$
+        </div>
 
 ###
 pageLogin=
@@ -135,6 +138,8 @@ standardHeaderContents=
        <script src="/js/fieldplacementview.js"
                 type="text/javascript"></script>
        <script src="/js/companybranding.js"
+                type="text/javascript"></script>
+       <script src="/js/changemainfile.js"
                 type="text/javascript"></script>
        $if(publicsafe)$
         <script src="/js/jquery.tweet.js"

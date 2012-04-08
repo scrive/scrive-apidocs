@@ -98,6 +98,9 @@ instance SignatoryLinkIdentity MagicHash where
 instance SignatoryLinkIdentity MailsDeliveryStatus where
   isJustSigLinkFor mds sl = mds == invitationdeliverystatus sl
 
+instance (SignatoryLinkIdentity a, SignatoryLinkIdentity b) => SignatoryLinkIdentity (a, b) where
+  isJustSigLinkFor (a, b) sl = isJustSigLinkFor a sl && isJustSigLinkFor b sl
+
 {- |
    Anything that could resolve to a SignatoryLink.
  -}
