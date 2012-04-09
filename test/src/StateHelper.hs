@@ -10,6 +10,8 @@ module StateHelper(
 import AppState
 import DB.Classes
 
+import Control.Monad.IO.Class
+import Database.HDBC
 import Happstack.Data (Proxy(..))
 import Happstack.State (runTxSystem, TxControl, shutdownSystem, Saver(..))
 
@@ -28,14 +30,17 @@ withTestDB :: DBEnv -> DB () -> IO ()
 withTestDB env f = do
   er <- ioRunDB env $ do
     er <- tryDB f
-    clearTables
+    let conn = envNexus env
+    liftIO $ rollback conn
+    --clearTables
+    --liftIO $ commit conn
     return er
   case er of
     Right () -> return ()
     Left (e::E.SomeException) -> E.throw e
 
-clearTables :: DB ()
-clearTables = do
+_clearTables :: DB ()
+_clearTables = do
   kRunRaw "UPDATE users SET service_id = NULL, company_id = NULL"
   kRunRaw "DELETE FROM evidence_log"
   kRunRaw "DELETE FROM doc_stat_events"

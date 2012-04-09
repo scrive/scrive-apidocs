@@ -6,7 +6,6 @@ import Test.HUnit (Assertion)
 import Test.Framework
 import Redirect
 import Test.Framework.Providers.HUnit (testCase)
-import Control.Monad.Error (catchError)
 import Control.Applicative
 import Data.List
 import DBError
@@ -15,9 +14,11 @@ import StateHelper
 import Templates.TemplatesLoader
 import Happstack.Server
 import Context
+import KontraError
 import TestingUtil
 import TestKontra as T
 import User.Locale
+import qualified Control.Exception.Lifted as E
 
 redirectTests :: Test
 redirectTests = testGroup "RedirectTests"
@@ -43,8 +44,8 @@ testStringGuardMZeroLeft = withTestState $ do
     globaltemplates <- readGlobalTemplates
     ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
-    (res, _) <- runTestKontra req ctx (catchError (guardRight $ (Left "error" :: Either String String))
-                                                  (const (return testResponse)))
+    (res, _) <- runTestKontra req ctx (E.catch (guardRight $ (Left "error" :: Either String String))
+                                                  (\(_::KontraError) -> return testResponse))
     assertEqual "should be equal" res testResponse
 
 testDBErrorGuardRedirectLeftDBNotLoggedIn :: Assertion
@@ -65,6 +66,6 @@ testDBErrorGuardMZeroLeft = withTestState $ do
   globaltemplates <- readGlobalTemplates
   ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
   req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
-  (res, _ctx') <- runTestKontra req ctx (catchError (guardRight $ (Left DBResourceNotAvailable))
-                                                    (const (return testResponse)))
+  (res, _ctx') <- runTestKontra req ctx (E.catch (guardRight $ (Left DBResourceNotAvailable))
+                                                    (\(_::KontraError) -> return testResponse))
   assertEqual "Should be equal" res testResponse

@@ -12,8 +12,7 @@ import Text.XML.HaXml.Types
 import Control.Monad
 
 import Templates.TemplatesFiles
-import Templates.Templates (renderTemplate)
-import Templates.TemplatesLoader (KontrakcjaTemplates, readGlobalTemplates, localizedVersion)
+import Templates.TemplatesLoader (KontrakcjaTemplates, readGlobalTemplates, localizedVersion, renderTemplateMain)
 import Templates.TextTemplates
 import User.Locale
 
@@ -65,7 +64,7 @@ testNoNestedP = do
 assertNoNestedP :: [String] -> KontrakcjaTemplates -> Assertion
 assertNoNestedP tnames templates = do
   _ <- forM (filter (not . (flip elem) excludedTemplates) tnames) $ \n -> do
-    t <- emptyRender templates n
+    let t = renderTemplateMain templates n ([]::[(String, String)]) id
     case parseStringAsXML (n, removeScripts t) of
       Left msg -> assertFailure msg
       Right (Document _ _ root _) -> checkXMLForNestedP n $ CElem root undefined
@@ -91,10 +90,6 @@ isPAndHasP (CElem (Elem tag _ children) _) =
   then any isPOrHasP children
   else any isPAndHasP children
 isPAndHasP _ = False
-
-emptyRender :: KontrakcjaTemplates -> String -> IO String
-emptyRender templates name =
-  renderTemplate templates name ()
 
 assertNoUnecessaryDoubleDivs :: (String, String) -> Assertion
 assertNoUnecessaryDoubleDivs t@(name,_) =

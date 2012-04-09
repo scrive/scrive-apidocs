@@ -236,7 +236,7 @@ testMany (args, ts) = Log.withLogger $ do
     -- so have to get around that 'feature'!!
     bracket_ (return ())
              (do
-               stats <- getNexusStats (nexus dbenv)
+               stats <- getNexusStats (envNexus dbenv)
                putStrLn $ "SQL: " ++ show stats)
 
              (defaultMainWithArgs (map ($ dbenv) ts) args)

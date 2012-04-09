@@ -2,7 +2,6 @@ module CompanyAccountsTest (companyAccountsTests) where
 
 import Control.Applicative
 import Control.Monad.State
-import Control.Monad.Error (catchError)
 import Data.List
 import Data.Ord
 import Happstack.Server hiding (simpleHTTP)
@@ -20,6 +19,7 @@ import DB.Classes
 import Doc.DocStateData
 import Doc.Model
 import FlashMessage
+import KontraError
 import Mails.Model
 import MinutesTime
 import Misc
@@ -29,7 +29,7 @@ import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
 import Util.HasSomeUserInfo
-
+import qualified Control.Exception.Lifted as E
 
 companyAccountsTests :: DBEnv -> Test
 companyAccountsTests env = testGroup "CompanyAccounts" [
@@ -116,7 +116,7 @@ test_addingANewCompanyAccount env = withTestEnvironment env $ do
   actions <- getAccountCreatedActions
   assertEqual "An AccountCreated action was made" 1 (length $ actions)
 
-  emails <- dbQuery GetIncomingEmails
+  emails <- dbQuery GetEmails
   assertEqual "An email was sent" 1 (length emails)
 
 test_addingExistingPrivateUserAsCompanyAccount :: DBEnv -> Assertion
@@ -144,7 +144,7 @@ test_addingExistingPrivateUserAsCompanyAccount env = withTestEnvironment env $ d
 
   assertCompanyInvitesAre company [mkInvite company "bob@blue.com" "Bob" "Blue"]
 
-  emails <- dbQuery GetIncomingEmails
+  emails <- dbQuery GetEmails
   assertEqual "An email was sent" 1 (length emails)
 
 test_addingExistingCompanyUserAsCompanyAccount :: DBEnv -> Assertion
@@ -173,7 +173,7 @@ test_addingExistingCompanyUserAsCompanyAccount env = withTestEnvironment env $ d
 
   assertCompanyInvitesAre company [mkInvite company "bob@blue.com" "Bob" "Blue"]
 
-  emails <- dbQuery GetIncomingEmails
+  emails <- dbQuery GetEmails
   assertEqual "An email was sent" 1 (length emails)
 
 test_resendingInviteToNewCompanyAccount :: DBEnv -> Assertion
@@ -200,7 +200,7 @@ test_resendingInviteToNewCompanyAccount env = withTestEnvironment env $ do
   actions <- getAccountCreatedActions
   assertEqual "An AccountCreated action was made" 1 (length $ actions)
 
-  emails <- dbQuery GetIncomingEmails
+  emails <- dbQuery GetEmails
   assertEqual "An email was sent" 1 (length emails)
 
 test_resendingInviteToPrivateUser :: DBEnv -> Assertion
@@ -224,7 +224,7 @@ test_resendingInviteToPrivateUser env = withTestEnvironment env $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
 
-  emails <- dbQuery GetIncomingEmails
+  emails <- dbQuery GetEmails
   assertEqual "An email was sent" 1 (length emails)
 
 test_resendingInviteToCompanyUser :: DBEnv -> Assertion
@@ -248,7 +248,7 @@ test_resendingInviteToCompanyUser env = withTestEnvironment env $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
 
-  emails <- dbQuery GetIncomingEmails
+  emails <- dbQuery GetEmails
   assertEqual "An email was sent" 1 (length emails)
 
 test_switchingStandardToAdminUser :: DBEnv -> Assertion
@@ -388,7 +388,7 @@ test_mustBeInvitedForTakeoverToWork env = withTestEnvironment env $ do
   req <- mkRequest POST []
   (l, _ctx') <- runTestKontra req ctx $
     (handlePostBecomeCompanyAccount (companyid company) >> return False)
-      `catchError` const (return True)
+      `E.catch` (\(_::KontraError) -> return True)
   assertEqual "Exception thrown" True l
   Just updateduser <- dbQuery $ GetUserByID (userid user)
   assertEqual "User is still not in company" Nothing (usercompany updateduser)

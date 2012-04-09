@@ -37,6 +37,8 @@ import AppDB
 import Configuration
 import Data.Version
 import Data.List
+import Control.Monad.IO.Class
+import Database.HDBC
 import Crypto.RNG(CryptoRNGState, newCryptoRNGState, inIO)
 import DB.Checks
 import DB.Classes
@@ -129,6 +131,7 @@ runKontrakcjaServer = Log.withLogger $ do
       Left (e::E.SomeException) -> do
         Log.error $ "Error while checking DB consistency: " ++ show e
       Right _ -> do
+        liftIO $ commit $ envNexus dbenv
         let appGlobals = AppGlobals {
             templates = templates
           , filecache = filecache'

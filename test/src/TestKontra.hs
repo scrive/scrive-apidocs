@@ -31,11 +31,12 @@ import qualified Network.AWS.AWSConnection as AWS
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 
+import DB.Core
 import Kontra
 import Mails.MailsConfig
 import MinutesTime
 import IPAddress
-import Templates.Templates
+import Templates.TemplatesLoader
 import qualified MemCache
 import User.Locale
 import qualified Data.Map as Map
@@ -46,11 +47,13 @@ runTestKontra' :: MonadIO m => Request -> Context -> TestKontra a ->
                   m ((Either Response a, FilterFun Response), Context)
 runTestKontra' rq ctx tk = do
     let noflashctx = ctx{ctxflashmessages=[]}
-    (mres, ctx') <- liftIO $ runStateT (runErrorT $ ununWebT $ runServerPartT (unKontraPlus $ unKontra tk) rq) noflashctx
+        env = ctxdbenv ctx
+    --(mres, ctx') <- liftIO $ runStateT (runErrorT $ ununWebT $ runServerPartT (unKontraPlus $ unKontra tk) rq) noflashctx
+    mres <- liftIO $ ununWebT $ runServerPartT (runDBT env $ runStateT (unKontraPlus $ unKontra tk) noflashctx) rq
     case mres of
-        Left e -> fail $ "runTestKontra' uncaught error: " ++ show e
-        Right Nothing -> fail "runTestKontra' mzero"
-        Right (Just a) -> return (a, ctx')
+      Nothing -> fail "runTestKontra' mzero"
+      Just (Right ((res, ctx'), _), fs) -> return ((Right res, fs), ctx')
+      Just (Left res, fs) -> return ((Left res, fs), noflashctx)
 
 -- | Typeclass for running handlers within TestKontra monad
 class RunnableTestKontra a where

@@ -62,7 +62,7 @@ testSignupAndActivate conn = withTestEnvironment conn $ do
   assertAccountActivatedFor uid "Andrzej" "Rybczak" (res3, ctx3)
   Just uuser <- dbQuery $ GetUserByID  uid
   assertEqual "Phone number was saved" "123" (userphone $ userinfo uuser)
-  emails <- dbQuery GetIncomingEmails
+  emails <- dbQuery GetEmails
   assertEqual "An email was sent" 2 (length emails) -- Two mail - one for user and one to info adress.
 
 

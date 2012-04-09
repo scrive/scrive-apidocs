@@ -123,7 +123,7 @@ testChangeEmailAddress env = withTestEnvironment env $ do
   assertEqual "Inviter id is correct" (userid user) inviterid
   assertEqual "Action email is correct" (Email "jim@bob.com") invitedemail
 
-  emails <- dbQuery GetIncomingEmails
+  emails <- dbQuery GetEmails
   assertEqual "An email was sent" 1 (length emails)
 
   req2 <- mkRequest POST [("password", inText "abc123")]

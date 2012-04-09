@@ -134,7 +134,7 @@ testSendingDocumentSendsInvites env = withTestEnvironment env $ do
 
   Just sentdoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "Should be pending" Pending (documentstatus sentdoc)
-  emails <- dbQuery GetIncomingEmails
+  emails <- dbQuery GetEmails
   assertBool "Emails sent" (length emails > 0)
 
 testSigningDocumentFromDesignViewSendsInvites :: DBEnv -> Assertion
@@ -157,7 +157,7 @@ testSigningDocumentFromDesignViewSendsInvites env = withTestEnvironment env $ do
 
   Just sentdoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "Not in pending state" Pending (documentstatus sentdoc)
-  emails <- dbQuery GetIncomingEmails
+  emails <- dbQuery GetEmails
   assertBool "Emails sent" (length emails > 0)
 
 testNonLastPersonSigningADocumentRemainsPending :: DBEnv -> Assertion
@@ -199,7 +199,7 @@ testNonLastPersonSigningADocumentRemainsPending env = withTestEnvironment env $ 
   Just signeddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "In pending state" Pending (documentstatus signeddoc)
   assertEqual "One left to sign" 1 (length $ filter isUnsigned (documentsignatorylinks signeddoc))
-  emails <- dbQuery GetIncomingEmails
+  emails <- dbQuery GetEmails
   assertEqual "No email sent" 0 (length emails)
 
 testLastPersonSigningADocumentClosesIt :: DBEnv -> Assertion
@@ -242,7 +242,7 @@ testLastPersonSigningADocumentClosesIt env = withTestEnvironment env $ do
   assertEqual "In closed state" Closed (documentstatus signeddoc)
   --TODO: this should be commented out really, I guess it's a bug
   --assertEqual "None left to sign" 0 (length $ filter isUnsigned (documentsignatorylinks doc))
-  --emails <- dbQuery GetIncomingEmails
+  --emails <- dbQuery GetEmails
   --assertEqual "Confirmation email sent" 1 (length emails)
 
 testSendReminderEmailUpdatesLastModifiedDate :: DBEnv -> Assertion
