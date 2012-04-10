@@ -679,11 +679,11 @@ window.SignatoryStandardView = Backbone.View.extend({
                                                    FlashMessages.add({
                                                        content: localization.pad.addToPadQueueNotAdded,
                                                        color: "red"
-                                                   })
+                                                   });
                                             }).send();
                                            return true;
                                         }
-                        })
+                        });
                  });
                  return button;
     },
@@ -717,15 +717,15 @@ window.SignatoryStandardView = Backbone.View.extend({
                                         {
                                            signatory.addtoPadQueue(function(resp) {
                                                if (resp.error == undefined)
-                                                   FlashMessages.add({
+                                               {    FlashMessages.add({
                                                        content: localization.pad.addToPadQueueAdded,
                                                        color: "green"
-                                                    })
-                                               else
+                                                    }); }
+                                               else {
                                                    FlashMessages.add({
                                                        content: localization.pad.addToPadQueueNotAdded,
                                                        color: "red"
-                                                   });
+                                                   }); };
                                             }).sendAjax();
                                            window.location = window.location; // Fix at some point not to reload the page
                                            return true;
