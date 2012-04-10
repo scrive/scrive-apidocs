@@ -489,7 +489,7 @@ If the other party clicks on the signing link after you have withdrawn the invit
  as expiration date, templates, multiple send-out, etc."
 "_dialogConfirmAdvancedCheck","Använd alltid den avancerade vyn för nya dokument.",,"Always use the advanced view for new documents."
 "_dialogConfirmAdvancedChangeToFooterChangeProcess","Byt vy",,"Change vy"
-"_dialogConfirmAdvancedChangeToHead","Vill du byta till avancerad vy?",,"Do you want to change to advanced vy?"
+"_dialogConfirmAdvancedChangeToHead","Vill du byta till avancerad vy?",,"Do you want to change to advanced view?"
 "_dialogConfirmBasicChangeToBody","Du kan byta till förenklad vy för att göra processen ännu smidigare. Du kan givetvis byta tillbaks när du vill.",,"You can change to simplified view to make the process even smoother. You can of course change back whenever you want."
 "_dialogConfirmBasicChangeToBody2","När du byter till förenklad vy riskerar du att förlora information som inte stödjs i denna vy. Är du säker att du vill byta vy?",,"When you switch to the simplified view, you risk losing information that is not supported in this view. Are you sure you want to change the view?"
 "_dialogConfirmBasicChangeToChangeProcess","Byt vy",,"Change view"
