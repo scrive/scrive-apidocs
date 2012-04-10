@@ -103,6 +103,7 @@ instance Show StatusClass where
 
 data IdentificationType = EmailIdentification
                         | ELegitimationIdentification
+                        | PadIdentification
   deriving (Eq, Ord, Bounded, Enum, Show)
 
 data SignatureInfo = SignatureInfo {

@@ -38,43 +38,15 @@ import EvidenceLog.Model
 
 documentAPI :: Route (Kontra' Response)
 documentAPI = choice [
-  dir "api" $ dir "document" $ hGet          $ toK0 $ documentList,
   dir "api" $ dir "document" $ hPostNoXToken $ toK0 $ documentNew,
+
   -- /api/mainfile/{docid} ==> Change main file
   dir "api" $ dir "mainfile" $ hPostNoXToken $ toK1 $ documentChangeMainFile,
 
---  dir "api" $ dir "document" $ hGet          $ toK1 $ documentView,
   dir "api" $ dir "document" $ hPostNoXToken $ toK6 $ documentUploadSignatoryAttachment,
   dir "api" $ dir "document" $ hDelete       $ toK6 $ documentDeleteSignatoryAttachment,
   dir "api" $ dir "document" $ hPostNoXToken $ toK2 $ documentChangeMetadata
-  --dir "api" $ dir "login"    $ hPostNoXToken $ toK0 $ apiLogin
   ]
-
-{-              
-_apiLogin :: Kontrakcja m => m Response
-_apiLogin = api $ do
-  memail  <- getDataFn' (look "email")
-  mpasswd <- getDataFn' (look "password")
-  case (memail, mpasswd) of
-    (Just email, Just passwd) -> do
-      -- check the user things here
-      maybeuser <- lift $ runDBQuery $ GetUserByEmail Nothing (Email $ BS.fromString email)
-      case maybeuser of
-        Just user@User{userpassword}
-          | verifyPassword userpassword (BS.fromString passwd) -> do
-            muuser <- runDBQuery $ GetUserByID (userid user)
-            lift $ logUserToContext muuser
-            apiOK jsempty
-        _ -> apiForbidden
-    _ -> apiBadInput
--}              
-
--- | Return a list of documents the logged in user can see
-documentList :: Kontrakcja m => m Response
-documentList = api $ do
-  docs <- apiGuardL getDocsByLoggedInUser
-  jdocs <- lift $ mapM jsonDocumentAndFiles docs
-  return $ showJSON jdocs
 
 -- this one must be standard post with post params because it needs to
 -- be posted from a browser form
@@ -266,11 +238,4 @@ documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
   
   return $ jsonSigAttachmentWithFile sigattach' Nothing
 
-  
--- helpers
-
-jsonDocumentAndFiles :: Kontrakcja m => Document -> m JSValue
-jsonDocumentAndFiles doc = do
-  --files <- getFilesByStatus doc
-  return $ jsonDocumentForSignatory doc
-  
+   

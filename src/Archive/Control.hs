@@ -14,7 +14,8 @@ module Archive.Control
        showOrdersList,
        showRubbishBinList,
        showTemplatesList,
-       jsonDocumentsList,
+       showPadDeviceArchive,
+       jsonDocumentsList
        )
        where
 
@@ -41,6 +42,8 @@ import qualified Log as Log
 import ListUtil
 import MinutesTime
 import Misc
+import PadQueue.Model
+
 
 handleContractArchive :: Kontrakcja m => m KontraLink
 handleContractArchive = do
@@ -108,6 +111,9 @@ showAttachmentList = archivePage pageAttachmentList
 showRubbishBinList :: Kontrakcja m => m (Either KontraLink String)
 showRubbishBinList = archivePage pageRubbishBinList
 
+showPadDeviceArchive :: Kontrakcja m => m (Either KontraLink String)
+showPadDeviceArchive = archivePage pagePadDeviceArchive
+
 {- |
     Helper function for showing lists of documents.
 -}
@@ -132,6 +138,7 @@ jsonDocumentsList = withUserGet $ do
     "Template|Contract" -> runDBQuery $ GetAvailableTemplates uid [Contract]
     "Template|Offer" ->  runDBQuery $ GetAvailableTemplates uid [Offer]
     "Template|Order" -> runDBQuery $ GetAvailableTemplates uid [Order]
+    "Pad" -> (runDBQuery $ GetDocumentsByAuthor [Contract,Offer,Order] uid) -- Not working and disabled. It should do filtering of only pad documents.
     _ -> do
       Log.error "Documents list: No valid document type provided"
       return []
@@ -149,6 +156,7 @@ jsonDocumentsList = withUserGet $ do
                           "Template|Contract" -> ([TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid],[DocumentFilterByProcess [Contract]])
                           "Template|Offer"    -> ([TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid],[DocumentFilterByProcess [Offer]])
                           "Template|Order"    -> ([TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid],[DocumentFilterByProcess [Order]])
+                          "Pad"               -> ([DocumentsOfAuthor uid],[DocumentFilterByIdentification PadIdentification, DocumentFilterStatuses [Pending,Closed]])
                           _ -> ([],[])
 
   let sorting    = docSortingFromParams params
@@ -167,7 +175,8 @@ jsonDocumentsList = withUserGet $ do
                        }
 
   cttime <- getMinutesTime
-  docsJSONs <- mapM (docForListJSON (timeLocaleForLang lang) cttime user) $ list docs
+  padqueue <- runDBQuery $ GetPadQueue $ userid user
+  docsJSONs <- mapM (docForListJSON (timeLocaleForLang lang) cttime user padqueue) $ list docs
   return $ JSObject $ toJSObject [
       ("list", JSArray docsJSONs)
     , ("paging", pagingParamsJSON docs)
@@ -235,4 +244,5 @@ comparePartners doc1 doc2 =
 #endif
 
 docsPageSize :: Int
-docsPageSize = 100
+docsPageSize = 100  
+

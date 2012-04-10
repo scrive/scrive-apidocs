@@ -1,8 +1,127 @@
-.signatureBox {
-    width: 100px;
-    height: 100px;
+
+.signatureDrawingBox canvas {
+    position:absolute;
+    z-index: 1000;
 }
-.signatureBox canvas{
-    width: 100px;
-    height: 100px;
+.signatureDrawingBox .canvasSeparator{
+    width:100%;
+    height:1px;
+    background-color: #CCCCCC;
+    position:absolute
+}
+
+.drawing-modal {
+    width: 900px;
+    border: 
+}
+
+.drawing-modal .signatureDrawingBox {
+    position: relative; /*Important for dealing with drawing events*/
+    background-color: #ffffff;
+}
+
+.drawing-modal .signatureDrawingBoxWrapper {
+    margin: 10px auto
+}
+
+.drawing-modal {
+    background-color: #FEFEFE;
+    border: 5px solid  #666666;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+}
+
+.drawing-modal .header h1 {
+    text-align: center;
+    font-size : 20pt;
+    color : #000000;
+    margin: 20px auto;
+}
+
+.drawing-modal .footer .details-box {
+    text-align: center;
+    margin: 5px auto;
+}
+
+.drawing-modal .footer .details-box h1 {
+    font-family: "Copse";
+    font-size: large;
+    font-style: italic;
+    color : #444444;
+    margin: 0px auto;
+}
+
+.drawing-modal .footer .details-box h2 {
+    text-align: center;
+    font-family: "Copse";
+    font-size: small;
+    color : #777777;
+    margin: 2px auto;
+}
+
+.drawing-modal .footer .btn-tiny {
+     margin: 12px 40px;
+}
+.drawing-modal .footer .btn-tiny .label{
+     min-width: 100px;
+     text-align: center;
+}
+
+.placesignatureandsignbutton {
+        background-image: url(/img/pad-btns.png);
+        float: left;
+        height: 48px;
+        width: 253px;
+        margin:0px;
+}
+
+.placesignatureandsignbutton .text {
+        font-size: 14px;
+        margin-top:13px;
+        margin-left: auto;
+        margin-right: auto;
+        color: #fff;
+        white-space: nowrap;
+        font-weight: bold;
+        background: url(/img/x.png) 0 0 no-repeat;
+        display: inline-block;
+        padding-left: 40px;
+}
+
+.placesignaturebutton {
+        background-image: url(/img/pad-btns.png);
+        float: left;
+        height: 48px;
+        width: 253px;
+        background-position: 0 -48px;
+}
+
+.placesignaturebutton .text {
+        font-size: 14px;
+        margin-top:13px;
+        margin-left: auto;
+        margin-right: auto;
+        color: #fff;
+        white-space: nowrap;
+        font-weight: bold;
+        background: url(/img/drag.png) 0 -7px no-repeat;
+        display: inline-block;
+        padding-left: 25px;
+}
+
+.go-back-image{
+    display: block;
+    margin:1px;
+    height: 16px;
+    width: 16px;
+    background: url(/img/undo.png) 0 -0 no-repeat;
+}
+.logout-image{
+    display: block;
+    margin:1px;
+    height: 16px;
+    width: 16px;
+    background: url(/img/exit.png) 0 -0 no-repeat;
+
 }

@@ -134,6 +134,7 @@ data DocumentFilter
   | DocumentFilterByRole SignatoryRole        -- ^ Signatory must have role
   | DocumentFilterByProcess [DocumentProcess] -- ^ Any of listed processes
   | DocumentFilterByString String             -- ^ Contains the string in title, list of people involved or anywhere
+  | DocumentFilterByIdentification IdentificationType -- ^ Only documents that use selected identification type
 
 data DocumentDomain
   = DocumentsOfAuthor UserID                     -- ^ Documents by author, not deleted
@@ -285,6 +286,8 @@ documentFilterToSQL (DocumentFilterByString string) =
       escape '%' = "\\%"
       escape '_' = "\\_"
       escape c = [c]
+documentFilterToSQL (DocumentFilterByIdentification identification) =
+  SQL ("(documents.allowed_id_types & ?) <> 0") [toSql [identification]]
 
 sqlOR :: SQL -> SQL -> SQL
 sqlOR sql1 sql2 = mconcat [parenthesize sql1, SQL " OR " [], parenthesize sql2]
