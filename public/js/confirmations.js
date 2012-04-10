@@ -25,7 +25,7 @@ var ConfirmationModel = Backbone.Model.extend({
       content  : jQuery("<p/>"),
       cantCancel : false,
       width: "640px",
-      acceptVisible : true,
+      acceptVisible : true
   },
   title : function(){
        return this.get("title");
