@@ -69,7 +69,7 @@ aboutPageContents=
                                                                         </div>
                                                                         <h2>$_aboutPagePerson4()$</h2>
                                                                         <em>$_aboutPagePerson4Position()$</em>
-                                                                        <p><!-- $_aboutPagePerson4Body()$ --></p>
+                                                                        <p>$_aboutPagePerson4Body()$</p>
                                                                         $_aboutPagePerson4Contact()$
                                                                 </li>
 								<li>
