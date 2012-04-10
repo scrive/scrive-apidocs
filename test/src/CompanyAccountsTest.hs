@@ -369,7 +369,10 @@ test_privateUserTakoverWorks env = withTestEnvironment env $ do
   companydocs <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) []
   assertEqual "Company owns users docs" 1 (length companydocs)
   assertEqual "Docid matches" docid (documentid $ head companydocs)
-  userdocs <- dbQuery $ GetDocumentsBySignatory [Contract, Offer, Order] $ userid user
+  docs <- dbQuery $ GetDocumentsBySignatory [Contract, Offer, Order] $ userid user
+  templates <- dbQuery $ GetAttachmentsByAuthor $ userid user
+  attachments <- dbQuery $ GetTemplatesByAuthor $ userid user
+  let userdocs = docs ++ templates ++ attachments
   assertEqual "User is still linked to their docs" 1 (length userdocs)
   assertEqual "Docid matches" docid (documentid $ head userdocs)
 
