@@ -156,6 +156,7 @@ mkContext locale globaltemplates = liftIO $ do
     return Context {
           ctxmaybeuser = Nothing
         , ctxhostpart = "http://testkontra.fake"
+        , ctxresourcehostpart = "http://testkontra.fake"
         , ctxflashmessages = []
         , ctxtime = time
         , ctxnormalizeddocuments = docs

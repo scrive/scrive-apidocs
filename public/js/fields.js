@@ -74,9 +74,9 @@ window.FieldPlacement = Backbone.Model.extend({
         return {
             x : parseInt(this.x()),
             y : parseInt(this.y()),
-            pagewidth : page.width(),
-            pageheight : page.height(),
-            page : page.number()
+            pagewidth : page != undefined ? page.width() : 943,
+            pageheight : page != undefined ? page.height() : 1335,
+            page : page != undefined ? page.number() : this.get("page")
         };
     }
 });

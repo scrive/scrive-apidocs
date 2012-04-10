@@ -206,6 +206,7 @@ var SignaturePlacementView = Backbone.View.extend({
         this.model.bind('removed', this.clear)
         this.model.bind('change', this.render)
         this.signature = this.model.signature();
+        this.resizable = args.resizable
         this.render();
     },
     tagname: 'div',
@@ -255,7 +256,11 @@ var SignaturePlacementView = Backbone.View.extend({
                 img.attr('src',this.signature.image());
                 box.append(img);
             }
-
+            box.resizable("destroy")
+            if (this.resizable)
+                box.resizable({resize : function(e, ui) {
+                           view.signature.setSize(ui.size.width,ui.size.height);
+                        }});
             return this;
     }
 });
@@ -288,10 +293,7 @@ var SignaturePlacementPlacedView = Backbone.View.extend({
             if (document.signingInProcess() && signatory.canSign() && signatory.current())
                 place.append(new SignaturePlacementViewForDrawing({model: placement.field()}).el);
             else  if (document.preparation()) {
-                    var placementView = $(new SignaturePlacementView({model: placement.field()}).el);
-                    placementView.resizable({resize : function(e, ui) {
-                           signature.setSize(ui.size.width,ui.size.height);
-                        }});
+                    var placementView = $(new SignaturePlacementView({model: placement.field(), resizable : true}).el);
                     place.append(placementView);
                 }    
             else {

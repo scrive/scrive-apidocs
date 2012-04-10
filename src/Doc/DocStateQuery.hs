@@ -91,7 +91,7 @@ getDocByDocID docid = do
         Just doc -> if isJust $ getSigLinkFor doc (companyid company)
                     then return $ Right doc
                     else return $ Left DBResourceNotAvailable
-                    
+
 {- | Same as getDocByDocID, but works only for author -}
 getDocByDocIDForAuthor :: Kontrakcja m => DocumentID -> m (Either DBError Document)
 getDocByDocIDForAuthor docid = do
@@ -102,7 +102,7 @@ getDocByDocIDForAuthor docid = do
                            then return $ Right doc
                            else return $ Left DBResourceNotAvailable
            e -> return e
-           
+
 {- |
    Get a document using docid, siglink, and magichash.
    ALWAYS FAILS THE SAME WAY FOR SECURITY PURPOSES (Left DBResourceNotAvailable).

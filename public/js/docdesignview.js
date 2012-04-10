@@ -533,16 +533,21 @@ var DocumentDesignView = Backbone.View.extend({
             var bankid = $("<a href='#' class='bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
             var telia = $("<a href='#' class='telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
             var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
+            var callback = function(submit) {   submit.sendAjax(function(resp) {
+                                                var link = JSON.parse(resp).link;
+                                                window.location = link;
+                                            });
+                            }
             bankid.click(function() {
-                    Eleg.bankidSign(document,signatory, document.signByAuthor());
+                    Eleg.bankidSign(document,signatory, document.signByAuthor(),callback);
                     return false;
             });
             telia.click(function() {
-                    Eleg.teliaSign(document,signatory, document.signByAuthor());
+                    Eleg.teliaSign(document,signatory, document.signByAuthor(),callback);
                     return false;
             });
             nordea.click(function() {
-                    Eleg.nordeaSign(document,signatory, document.signByAuthor());
+                    Eleg.nordeaSign(document,signatory, document.signByAuthor(),callback);
                     return false;
             });
             acceptButton.append(bankid).append(telia).append(nordea);
@@ -552,10 +557,13 @@ var DocumentDesignView = Backbone.View.extend({
             acceptButton = Button.init({
                   size: "small",
                   color : "blue",
-                  icon : $("<span class='btn-symbol cross' style='margin-left: 10px'/>"),
+                  icon : $("<span class='btn-symbol cross' />"),
                   text : document.process().signbuttontext(),
                   onClick : function() {
-                      document.signByAuthor().send();
+                      document.signByAuthor().sendAjax(function(resp) {
+                                        var link = JSON.parse(resp).link;
+                                        window.location = link;
+                                    });;
                     }
                 }).input();
         }
@@ -602,7 +610,7 @@ var DocumentDesignView = Backbone.View.extend({
                                         if (padDesignViewUtil != undefined)
                                             padDesignViewUtil.postSendAction(link);
                                         else
-                                            window.localization = link;
+                                            window.location = link;
                                     });
                                 }  
                               }).input(),

@@ -259,11 +259,14 @@ testDocumentsFilteringFromDate env = withTestEnvironment env $ do
 testDocumentsFilteringFromDate2 :: DBEnv -> Assertion
 testDocumentsFilteringFromDate2 env = withTestEnvironment env $ do
     createTestService
-    dids <- getJSONStringField "document_id" <$> (makeAPIRequest env createDocument =<< createDocumentJSONFriend "test_company1" "mariusz@skrivapa.se" "eric@scrive.com")
-    let Just did = maybeRead dids
+    apiresult <- makeAPIRequest env createDocument =<< createDocumentJSONFriend "test_company1" "mariusz@skrivapa.se" "eric@scrive.com"
+    let dids = getJSONStringField "document_id" apiresult
+    let mdid = maybeRead dids
+        Just did = mdid
+    assertBool ("Document created successfully " ++ dids) (isJust mdid)
     apiReqDocs3 <- getDocumentsJSON "test_company1" "mariusz@skrivapa.se"
     apiRespDocs3 <- makeAPIRequest env getDocuments $ apiReqDocs3
-    assertBool ("Should have 1 document but " ++ (show $ docsCount apiRespDocs3) ++ " were found") $ (docsCount apiRespDocs3) == 1
+    assertEqual ("getDocuments " ++ show apiReqDocs3 ++ " returned docs") 1 (docsCount apiRespDocs3)
     ctxtime <- getMinutesTime
     let tm = minutesAfter 1000 ctxtime
         tms = showMinutesTimeForAPI tm
@@ -274,14 +277,17 @@ testDocumentsFilteringFromDate2 env = withTestEnvironment env $ do
     if docsCount apiRespDocsFilter == -1 
       then Log.debug $ "got a weird response: " ++ show apiRespDocsFilter
       else return ()
-    assertBool ("All documents should be filtered out but " ++ (show $ docsCount apiRespDocsFilter) ++ " were found") $ (docsCount apiRespDocsFilter) == 0
+    assertEqual ("getDocuments " ++ encode apiReqDocsFilter ++ " returned wrong number of documents")
+                 0 (docsCount apiRespDocsFilter)
 
     Right apiReqDocsFilter2 <- jsset "from_date" tmbefore <$> getDocumentsJSON "test_company1" "mariusz@skrivapa.se"
     apiRespDocsFilter2 <- makeAPIRequest env getDocuments apiReqDocsFilter2
     if docsCount apiRespDocsFilter2 == -1 
       then Log.debug $ "got a weird response: " ++ show apiRespDocsFilter2
       else return ()
-    assertBool ("Should be one document but got " ++ (show $ docsCount apiRespDocsFilter2) ++ " were found") $ (docsCount apiRespDocsFilter2) == 1
+
+    assertEqual ("getDocuments " ++ encode apiReqDocsFilter2 ++ " returned wrong numbers of documents")
+                  1 (docsCount apiRespDocsFilter2)
     
     Just doc <- dbQuery $ GetDocumentByDocumentID did
     _ <- dbUpdate $ PreparationToPending did (SystemActor ctxtime)
@@ -299,7 +305,8 @@ testDocumentsFilteringFromDate2 env = withTestEnvironment env $ do
     if docsCount apiRespDocsFilter3 == -1 
       then Log.debug $ "got a weird response: " ++ show apiRespDocsFilter3
       else return ()
-    assertBool ("Should be one document but got " ++ (show $ docsCount apiRespDocsFilter3) ++ "") $ (docsCount apiRespDocsFilter3) == 1
+    assertEqual ("getDocuments " ++ encode apiReqDocsFilter3 ++ " returned wrong numbers of documents (after MarkDocumentSeen)")
+                 1 (docsCount apiRespDocsFilter3)
 
 
 testNewDocumentWithSpecificExample :: DBEnv -> Assertion

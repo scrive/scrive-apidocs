@@ -30,7 +30,6 @@ signLinkFromDetails' details roles magichash =
                 , signatorydetails = signatoryLinkClearDetails details
                 , signatorymagichash = magichash
                 , maybesignatory = Nothing
-                , maybesupervisor = Nothing  -- This field is now deprecated should use maybecompany instead
                 , maybecompany = Nothing
                 , maybesigninfo  = Nothing
                 , maybeseeninfo  = Nothing
@@ -42,6 +41,7 @@ signLinkFromDetails' details roles magichash =
                 , signatorylinkreallydeleted = False
                 , signatorylinkcsvupload = Nothing
                 , signatoryattachments = []
+                , signatorylinkstatusclass = SCDraft
                 }
 
 signatoryLinkClearDetails :: SignatoryDetails -> SignatoryDetails
@@ -97,6 +97,7 @@ blankDocument =
           , documentdeleted              = False
           -- , documentattachments          = []
           , documentregion               = defaultValue
+          , documentstatusclass          = SCDraft
           }
 
 

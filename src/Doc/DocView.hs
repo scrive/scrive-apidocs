@@ -41,8 +41,6 @@ module Doc.DocView (
   , uploadPage
   , documentJSON
   , csvLandPage
-  , documentStatusClass
-  , signatoryStatusClass
   ) where
 
 import AppView (kontrakcja, standardPageFields)
@@ -260,7 +258,7 @@ signatoryJSON pq doc viewer siglink = do
     J.value "readdate" $ jsonDate $ maybereadinvite siglink
     J.value "rejecteddate" $ jsonDate rejectedDate
     J.value "fields" $ signatoryFieldsJSON doc siglink
-    J.value "status" $ show $ signatoryStatusClass doc siglink
+    J.value "status" $ show $ signatorylinkstatusclass siglink
     J.objects "attachments" $ map signatoryAttachmentJSON (signatoryattachments siglink)
     J.value "csv" $ csvcontents <$> signatorylinkcsvupload siglink
     J.value "inpadqueue"  $ (fmap fst pq == Just (documentid doc)) && (fmap snd pq == Just (signatorylinkid siglink))
@@ -285,14 +283,14 @@ signatoryFieldsJSON :: Document -> SignatoryLink -> JSValue
 signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}}) = JSArray $
   for orderedFields $ \sf@SignatoryField{sfType, sfValue, sfPlacements} ->
     case sfType of
-      FirstNameFT -> fieldJSON doc "fstname" sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
-      LastNameFT -> fieldJSON doc "sndname" sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
-      EmailFT -> fieldJSON doc "email" sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
-      PersonalNumberFT -> fieldJSON doc "sigpersnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
-      CompanyFT -> fieldJSON doc "sigco" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
-      CompanyNumberFT -> fieldJSON doc "sigcompnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
-      SignatureFT -> fieldJSON doc "signature" sfValue (closedSignatureF sf  && (not $ isPreparation doc)) sfPlacements
-      CustomFT label closed -> fieldJSON doc label sfValue (closed  && (not $ isPreparation doc))  sfPlacements
+      FirstNameFT           -> fieldJSON doc "fstname"   sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      LastNameFT            -> fieldJSON doc "sndname"   sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      EmailFT               -> fieldJSON doc "email"     sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      PersonalNumberFT      -> fieldJSON doc "sigpersnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      CompanyFT             -> fieldJSON doc "sigco"     sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      CompanyNumberFT       -> fieldJSON doc "sigcompnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      SignatureFT           -> fieldJSON doc "signature" sfValue (closedSignatureF sf  && (not $ isPreparation doc)) sfPlacements
+      CustomFT label closed -> fieldJSON doc label       sfValue (closed  && (not $ isPreparation doc))  sfPlacements
   where
     closedF sf = ((not $ null $ sfValue sf) || (null $ sfPlacements sf))
     closedSignatureF sf = ((not $ null $ dropWhile (/= ',') $ sfValue sf) || (null $ sfPlacements sf))
@@ -365,7 +363,7 @@ processJSON doc = do
     J.value "nonsignatoryname" =<< text processnonsignatoryname
     J.value "numberedsignatories" $ bool processnumberedsignatories
     where
-      text = lift . renderTextForProcess doc
+      text k = lift $ renderTemplateForProcess doc k (documentInfoFields doc)
       bool = fromMaybe False . getValueForProcess doc
 
 regionJSON :: Document -> JSValue
@@ -388,64 +386,8 @@ authorJSON mauthor mcompany = runJSONGen $ do
     J.value "phone" $ userphone <$> userinfo <$> mauthor
     J.value "position" $ usercompanyposition <$> userinfo <$>mauthor
 
-{- |
-    We want the documents to be ordered like the icons in the bottom
-    of the document list.  So this means:
-    0 Draft - 1 Cancel - 2 Fall due - 3 Sent - 4 Opened - 5 Signed
--}
 
-data StatusClass = SCDraft
-                  | SCCancelled
-                  | SCSent
-                  | SCDelivered
-                  | SCRead
-                  | SCOpened
-                  | SCSigned
-                  deriving (Eq, Ord)
 
-instance Show StatusClass where
-  show SCDraft = "draft"
-  show SCCancelled = "cancelled"
-  show SCSent = "sent"
-  show SCDelivered = "delivered"
-  show SCRead = "read"
-  show SCOpened = "opened"
-  show SCSigned = "signed"
-
-signatoryStatusClass :: Document -> SignatoryLink -> StatusClass
-signatoryStatusClass
-  Document {
-    documentstatus
-  }
-  SignatoryLink {
-    maybesigninfo
-  , maybeseeninfo
-  , maybereadinvite
-  , invitationdeliverystatus
-  } =
-  caseOf [
-      (errorStatus documentstatus, SCCancelled)
-    , (documentstatus==Preparation, SCDraft)
-    , (documentstatus==Canceled, SCCancelled)
-    , (documentstatus==Rejected, SCCancelled)
-    , (documentstatus==Timedout, SCCancelled)
-    , (isJust maybesigninfo, SCSigned)
-    , (isJust maybeseeninfo, SCOpened)
-    , (isJust maybereadinvite, SCRead)
-    , (invitationdeliverystatus==Undelivered,  SCCancelled)
-    , (invitationdeliverystatus==Delivered, SCDelivered)
-    ] SCSent
-  where
-      errorStatus (DocumentError _) = True
-      errorStatus _ = False
-
-documentStatusClass :: Document -> StatusClass
-documentStatusClass doc =
-  case (map (signatoryStatusClass doc) $ getSignatoryPartnerLinks doc) of
-    [] -> SCDraft
-    xs -> minimum xs
-
---
 showFileImages :: TemplatesMonad m => DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> FileID -> JpegPages -> m String
 showFileImages _ _ _ JpegPagesPending =
   renderTemplateM "showFileImagesPending" ()
@@ -522,6 +464,7 @@ pageDocumentSignView ctx document siglink =
       field "documentid" $ show $ documentid document
       field "siglinkid" $ show $ signatorylinkid siglink
       field "sigmagichash" $ show $  signatorymagichash siglink
+      field "documenttitle" $ documenttitle document  
       standardPageFields ctx kontrakcja Nothing False False Nothing Nothing
 
 csvLandPage :: TemplatesMonad m => Int -> m String

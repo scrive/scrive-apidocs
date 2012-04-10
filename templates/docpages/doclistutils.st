@@ -12,7 +12,7 @@ docListTabs=
   $docListTabItem(active=orderactive;link=linkorderlist;name=_docListTabsOrders())$
   $docListTabItem(active=templateactive;link=linktemplatelist;name=_docListTabsTemplates())$
   $docListTabItem(active=attachmentactive;link=linkattachmentlist;name=_docListTabsAttachemtns())$
-  $docListTabItem(active=paddevicearchiveactive;link=linkpaddevicearchive;name=_PadDevice())$
+  <!-- $docListTabItem(active=paddevicearchiveactive;link=linkpaddevicearchive;name=_PadDevice())$ -->
   $endif$
 </ul>
 ####

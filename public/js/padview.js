@@ -87,8 +87,8 @@ window.PadQueueView = Backbone.View.extend({
                         magichash : padqueue.magichash()
                       })
                    });
-        $('body').prepend(new DocumentSignViewHeader({model : doc.model}).el)
-        $('body').append(new DocumentSignViewFooter({model : doc.model}).el)
+        $('body').prepend(new DocumentSignViewHeader({model : doc.view.saveAfterSignModel}).el)
+        $('body').append(new DocumentSignViewFooter({model : doc.view.saveAfterSignModel}).el)
         console.log("Adding header and footer");
         return doc.view.el;
     },

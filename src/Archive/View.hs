@@ -33,7 +33,6 @@ import Control.Monad.Reader
 import Text.JSON
 import Data.List (intercalate)
 
-import Doc.DocView
 import Doc.DocUtils
 import PadQueue.Model
 import Text.JSON.Gen as J
@@ -115,7 +114,7 @@ docFieldsListForJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime ->  
 docFieldsListForJSON tl crtime padqueue doc = do
     J.value "id" $ show $ documentid doc
     J.value "title" $ documenttitle doc
-    J.value "status" $ show $ documentStatusClass doc
+    J.value "status" $ show $ documentstatusclass doc
     J.value "party" $ intercalate ", " $ map getSmartName $ getSignatoryPartnerLinks doc
     J.value "partner" $ intercalate ", " $ map getSmartName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)
     J.value "partnercomp" $ intercalate ", " $ map getCompanyName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)
@@ -132,14 +131,13 @@ docFieldsListForJSON tl crtime padqueue doc = do
       pn <- renderTextForProcess doc processname
       case documenttype doc of
         Attachment -> renderTemplateM "docListAttachmentLabel" ()
-        AttachmentTemplate -> renderTemplateM "docListAttachmentLabel" ()
         Template _ -> renderTemplateFM "docListTemplateLabel" $ field "processname" pn
         Signable _ -> return pn
 
 signatoryFieldsListForJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> PadQueue -> Document -> SignatoryLink -> JSONGenT m ()
 signatoryFieldsListForJSON tl crtime padqueue doc sl = do
     J.value "id" $ show $ signatorylinkid sl 
-    J.value "status" $ show $ signatoryStatusClass doc sl
+    J.value "status" $ show $ signatorylinkstatusclass sl
     J.value "name" $ getSmartName sl
     J.value "time" $ fromMaybe "" $ (showDateAbbrev tl crtime) <$> (sign `mplus` reject `mplus` seen `mplus` open)
     J.value "invitationundelivered" $ show $ isUndelivered sl && Pending == documentstatus doc
