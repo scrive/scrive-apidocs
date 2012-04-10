@@ -30,7 +30,6 @@ signLinkFromDetails' details roles magichash =
                 , signatorydetails = details
                 , signatorymagichash = magichash
                 , maybesignatory = Nothing
-                , maybesupervisor = Nothing  -- This field is now deprecated should use maybecompany instead
                 , maybecompany = Nothing
                 , maybesigninfo  = Nothing
                 , maybeseeninfo  = Nothing
