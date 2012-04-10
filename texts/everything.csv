@@ -1516,9 +1516,9 @@ profits and reduce frustration. The following mateials shall only
 "_mailInvitationToSignOrderContentPartys","Parter:",,"Parties:"
 "_mailInvitationToSignOrderDefaultHeader","<strong>$creatorname$</strong> har skickat orderbekräftelsen  <strong>$documenttitle$</strong> till dig och önskar din bekräftelse. Bekräfta eller avvisa ordern genom att
  följa instruktionerna nedan.",,"<strong>$creatorname$</strong> has sent the order confirmation <strong>$documenttitle$</strong> to you and wants your confirmation. To confirm or return the order follow the instructions."
-"_mailInvitationToSignTitleContract","Avtal att e-signera $if(companyname)$från $companyname$ $endif$ ",,"Contract to e-sign $if(companyname)$ from $companyname$ $endif$"
-"_mailInvitationToSignTitleOffer","Offert att e-signera $if(companyname)$från $companyname$ $endif$ ",,"Offer to e-sign $if(companyname)$ from $companyname$ $endif$"
-"_mailInvitationToSignTitleOrder","Orderbekräftelse att e-signera $if(companyname)$från $companyname$ $endif$ ",,"Order confirmation to e-sign $if(companyname)$ from $companyname$ $endif$"
+"_mailInvitationToSignTitleContract","Avtal att e-signera: $documenttitle$",,"Contract to e-sign: $documenttitle$"
+"_mailInvitationToSignTitleOffer","Offert att e-signera: $documenttitle$",,"Offer to e-sign: $documenttitle$"
+"_mailInvitationToSignTitleOrder","Orderbekräftelse att e-signera: $documenttitle$",,"Order confirmation to e-sign: $documenttitle$"
 "_mailInvitationToViewDefaultHeader","<strong>$creatorname$</strong> har bjudit in dig att granska dokumentet <strong>$documenttitle$</strong>.",,"<strong>$creatorname$</strong> has invited you to review the document <strong>$creatorname$</strong>."
 "_mailInvitationToViewDefaultHeaderWithService","<strong>$creatorname$</strong> har bjudit in dig att granska dokumentet <strong>$documenttitle$</strong>.",,"<strong>$creatorname$</strong> has invited you to review the document <strong>$creatorname$</strong>."
 "_mailInvitationToViewTitleContract","Inbjudan från $creatorname$ till $documenttitle$",,"Invite from $creatorname$ for $documenttitle$"
@@ -1990,9 +1990,9 @@ signed or returned the contract  <strong>$documenttitle$</strong> yet."
 "_remindMailNotSignedOrderStandardHeaderRemind","<strong>$author$</strong> vill påminna dig om att du inte bekräftat
  ordern <strong>$documenttitle$</strong> ännu. Bekräfta ordern eller avvisa
  genom att följa instruktionerna nedan.",,"<strong>$author$</strong> wants to remind you that you haven't  confirmed or returned the order <strong>$documenttitle$</strong> yet. To do so:"
-"_remindMailNotSignedTitleContract","Påminnelse att e-signera avtal $if(companyname)$från $companyname$ $endif$",,"Reminder to e-sign contract $if(companyname)$from $companyname$ $endif$"
-"_remindMailNotSignedTitleOffer","Påminnelse att e-signera offert $if(companyname)$från $companyname$ $endif$",,"Reminder to e-sign offer $if(companyname)$from $companyname$ $endif$"
-"_remindMailNotSignedTitleOrder","Påminnelse att e-signera orderbekräftelse $if(companyname)$från $companyname$ $endif$",,"Reminder to e-sign order confirmation $if(companyname)$from $companyname$ $endif$"
+"_remindMailNotSignedTitleContract","Påminnelse att e-signera avtal: $documenttitle$",,"Reminder to e-sign contract: $documenttitle$"
+"_remindMailNotSignedTitleOffer","Påminnelse att e-signera offert: $documenttitle$",,"Reminder to e-sign offer: $documenttitle$"
+"_remindMailNotSignedTitleOrder","Påminnelse att e-signera orderbekräftelse: $documenttitle$",,"Reminder to e-sign order confirmation: $documenttitle$"
 "_remindMailSignedContractStandardHeaderSendRequest","<strong>$author$</strong> vill skicka
  <strong>$documenttitle$</strong>        till dig. Dokumentet
  har signerats av dig via tjänsten Scrive. Dokumentet bifogas
