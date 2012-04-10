@@ -187,7 +187,6 @@ instance Arbitrary SignatoryLink where
                            , signatorydetails           = sd
                            , signatorymagichash         = mh
                            , maybesignatory             = Nothing
-                           , maybesupervisor            = Nothing
                            , maybecompany               = Nothing
                            , maybesigninfo              = signinfo
                            , maybeseeninfo              = seeninfo
@@ -408,7 +407,6 @@ signatoryLinkExample1 :: SignatoryLink
 signatoryLinkExample1 = SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 0
                                       , signatorymagichash = unsafeMagicHash 0
                                       , maybesignatory = Nothing
-                                      , maybesupervisor = Nothing
                                       , maybecompany = Nothing
                                       , maybesigninfo = Just $ SignInfo (fromSeconds 0) noIP
                                       , maybeseeninfo = Just $ SignInfo (fromSeconds 0) noIP

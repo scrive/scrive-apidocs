@@ -365,7 +365,6 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                          [ checkEqualBy "signatorydetails" signatorydetails
                          , checkEqualBy "signatorymagichash" signatorymagichash
                          , checkEqualByAllowSecondNothing "maybesignatory" maybesignatory
-                         , checkEqualByAllowSecondNothing "maybesupervisor" maybesupervisor
                          , checkEqualBy "maybecompany" maybecompany
                          , checkEqualBy "maybesigninfo" maybesigninfo
                          , checkEqualBy "maybeseeninfo" maybeseeninfo
@@ -590,7 +589,6 @@ fetchSignatoryLinks = do
           }
           , signatorymagichash = token
           , maybesignatory = user_id
-          , maybesupervisor = Nothing
           , maybecompany = company_id
           , maybesigninfo = SignInfo <$> sign_time <*> sign_ip
           , maybeseeninfo = SignInfo <$> seen_time <*> seen_ip
