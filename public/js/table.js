@@ -49,12 +49,12 @@ window.TableView = Backbone.View.extend({
             {
                 var td = $("<td>");
                 var v = model.field(i,j);
-                if (v == undefined)
-                    ;
-                else if ("string" == typeof v)
+                if (v != undefined)
+                { if ("string" == typeof v)
                     td.text(v);
-                else 
+                  else 
                     td.append(v);
+                } 
                 tr.append(td)
             }
             tbody.append(tr);

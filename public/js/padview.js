@@ -122,7 +122,7 @@ window.PadQueueView = Backbone.View.extend({
                         fields: 
                         [
                             [$("<span class='txt'>").text(localization.email), email.input()],
-                            [$("<span class='txt'>").text(localization.password), password.input()],
+                            [$("<span class='txt'>").text(localization.password), password.input()]
                             
                         ]
                     })
