@@ -385,7 +385,8 @@ testNewDocumentWithCompanyNr env = withTestEnvironment env $ do
 createDocumentJSON :: String -> String -> DB JSValue
 createDocumentJSON company author = do
      dt <- rand 10 $  elements [1,3,5]
-     randomCall $ \title fname sname -> JSObject $ toJSObject $
+     title <- rand 10 $ arbString 1 10
+     randomCall $ \fname sname -> JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
          ,("title" , JSString $ toJSString $ title)
          ,("type" , JSRational True (dt%1))
