@@ -270,6 +270,20 @@ isHTTPS = do
   let mscheme = getHeader "scheme" rq
   return $ mscheme == Just (BS.fromString "https")
 
+getHostpart :: ServerMonad m => m String
+getHostpart = do
+  rq <- askRq
+  let hostpart = maybe "scrive.com" BS.toString $ getHeader "host" rq
+  let scheme = maybe "http" BS.toString $ getHeader "scheme" rq
+  return $ scheme ++ "://" ++ hostpart
+
+getResourceHostpart :: ServerMonad m => m String
+getResourceHostpart = do
+  rq <- askRq
+  let hostpart = maybe "scrive.com" BS.toString $ getHeader "host" rq
+  let scheme = maybe "http" (const "https") $ getHeader "scheme" rq
+  return $ scheme ++ "://" ++ hostpart
+
 getSecureLink :: ServerMonad m => m String
 getSecureLink = (++) "https://" `liftM` currentLinkBody
 
