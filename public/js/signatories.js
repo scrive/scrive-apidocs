@@ -523,7 +523,7 @@ window.Signatory = Backbone.Model.extend({
           });
     },
     padSigningURL : function() {
-        return "/padqueue"
+        return "/padqueue";
     },
     changeEmail: function(email) {
         return new Submit({
@@ -659,8 +659,8 @@ window.SignatoryStandardView = Backbone.View.extend({
     },
     giveForSigningOnThisDeviceOption : function() {
                  var signatory = this.model;
-                 var button = $("<a  class='giveForSigning'/>")
-                 var icon = $("<div class='giveForSigningIcon'/>")
+                 var button = $("<a  class='giveForSigning'/>");
+                 var icon = $("<div class='giveForSigningIcon'/>");
                  var text = localization.pad.signingOnSameDevice; 
                  var textbox = $("<div class='sendLinkText'/>").text(text);
                  button.append(icon).append(textbox);
@@ -684,13 +684,13 @@ window.SignatoryStandardView = Backbone.View.extend({
                                            return true;
                                         }
                         })
-                 })
+                 });
                  return button;
     },
     removeFromPadQueueOption :  function() {
         var signatory = this.model;
-        var button = $("<a  class='removeFromPad'/>")
-        var icon = $("<div class='removeFromPadIcon'/>")
+        var button = $("<a  class='removeFromPad'/>");
+        var icon = $("<div class='removeFromPadIcon'/>");
         var text = localization.pad.removeFromPadQueue;
         var textbox = $("<div class='sendLinkText'/>").text(text);
         button.append(icon).append(textbox);
@@ -702,8 +702,8 @@ window.SignatoryStandardView = Backbone.View.extend({
     },
     addToPadQueueOption : function() {
                  var signatory = this.model;
-                 var button = $("<a  class='addToPad'/>")
-                 var icon = $("<div class='addToPadIcon'/>")
+                 var button = $("<a  class='addToPad'/>");
+                 var icon = $("<div class='addToPadIcon'/>");
                  var text = localization.pad.addToPadQueue;
                  var textbox = $("<div class='sendLinkText'/>").text(text);
                  button.append(icon).append(textbox);
@@ -725,14 +725,15 @@ window.SignatoryStandardView = Backbone.View.extend({
                                                    FlashMessages.add({
                                                        content: localization.pad.addToPadQueueNotAdded,
                                                        color: "red"
-                                                   })
+                                                   });
                                             }).sendAjax();
                                            window.location = window.location; // Fix at some point not to reload the page
                                            return true;
                                            
                                         }
-                        })
-                 })
+                        });
+                        return false;
+                 });
                  return button;
     },
     remidenMailOption: function() {
@@ -806,7 +807,7 @@ window.SignatoryStandardView = Backbone.View.extend({
 
         if (signatory.undeliveredEmail() && signatory.document().currentViewerIsAuthor() && signatory.document().pending())
           container.append(this.changeEmailOption());
-        console.log("Can sign : " + signatory.canSign())
+
         if (signatory.document().currentViewerIsAuthor()
             && signatory.document().signingInProcess()
             && signatory.canSign()

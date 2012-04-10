@@ -55,7 +55,7 @@ window.PadDesignViewUtilsModel = Backbone.Model.extend({
        var padDesignViewUtilsModel = this;
        var spsignatory = this.sendToPadSignatory();
        var gssignatory = this.giveForSigningSignatory();
-       LoadingDialog.changeMessage(localization.designview.messages.reloadingDocument)
+       LoadingDialog.changeMessage(localization.designview.messages.reloadingDocument);
        var ndocument = new Document({id : this.document().documentid()});
        ndocument.bind('change', function() {
               if (!ndocument.ready()) return;
@@ -68,12 +68,12 @@ window.PadDesignViewUtilsModel = Backbone.Model.extend({
               });
               if (spsignatory.signatoryid() != 0 && padDesignViewUtilsModel.sendToPad())
                   spsignatory.addtoPadQueue().sendAjax(function() {
-                      window.location = link                      
+                      window.location = link;                      
                 });
               else if (gssignatory.signatoryid() != 0 &&  padDesignViewUtilsModel.giveForSigning())
                   gssignatory.addtoPadQueue().sendAjax(function() {
                       window.location = gssignatory.padSigningURL();               
-                })
+                });
               else
                  window.location = link;
        });
@@ -95,7 +95,7 @@ window.PadDesignViewUtilsView = Backbone.View.extend({
          return $("<strong/>").text(source().smartname());
         var select = $("<select/>");
         _.each(model.document().signatories(),function(sig) {
-            var option = $("<option>").text(sig.smartname()).val(sig.email())
+            var option = $("<option>").text(sig.smartname()).val(sig.email());
             if (sig == source())
                 option.attr("selected","YES");
             select.append(option);
@@ -106,7 +106,7 @@ window.PadDesignViewUtilsView = Backbone.View.extend({
                 if (sig.email() == email)
                     callback(sig);
             });
-        })
+        });
         return select;    
         
     },
@@ -115,33 +115,33 @@ window.PadDesignViewUtilsView = Backbone.View.extend({
            var model = this.model;
            box.empty();
            box.addClass('padoptions');
-           var giveForSigningRadio = $("<input type='checkbox' name='padsend'/>")
+           var giveForSigningRadio = $("<input type='checkbox' name='padsend'/>");
            var giveForSigningSelector = this.sigSelector(function() {return model.giveForSigningSignatory()}, function(a) {model.setGiveForSigningSignatory(a)});
            var giveForSigningLabel =  $("<span class='label'/>").append($("<span/>").text(localization.pad.signingOnSameDeviceFor)).append(giveForSigningSelector);
            var giveForSigning = $("<div class='padoption'/>").append(giveForSigningRadio)
-                                                             .append(giveForSigningLabel)
+                                                             .append(giveForSigningLabel);
                                                             
            if (model.giveForSigning())
                giveForSigningRadio.attr("checked","checked");
            giveForSigningRadio.change(function() {
                model.toogleGiveForSigning();
-            })
+            });
 
            
-           var sendToPadRadio = $("<input type='checkbox' name='padsend'/>")
-           var sendToPadSelector = this.sigSelector(function() {return model.sendToPadSignatory()}, function(a) {model.setSendToPadSignatory(a)})
+           var sendToPadRadio = $("<input type='checkbox' name='padsend'/>");
+           var sendToPadSelector = this.sigSelector(function() {return model.sendToPadSignatory()}, function(a) {model.setSendToPadSignatory(a)});
            var sendToPadLabel =  $("<span class='label'/>").append($("<span/>").text(localization.pad.addToPadQueueFor)).append(sendToPadSelector);
            var sendToPad = $("<div class='padoption'/>").append(sendToPadRadio)
-                                                        .append(sendToPadLabel)
+                                                        .append(sendToPadLabel);
 
            if (model.sendToPad())
                sendToPadRadio.attr("checked","checked");
            sendToPadRadio.change(function() {
                model.toogleSendToPad();
-            })
+            });
 
            if (BrowserInfo.isIpad())
-            box.append(giveForSigning)
+            box.append(giveForSigning);
            else
             box.append(sendToPad);
            return this; 

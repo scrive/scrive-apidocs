@@ -87,14 +87,14 @@ window.PadQueueView = Backbone.View.extend({
                         magichash : padqueue.magichash()
                       })
                    });
-        $('body').prepend(new DocumentSignViewHeader({model : doc.view.saveAfterSignModel}).el)
-        $('body').append(new DocumentSignViewFooter({model : doc.view.saveAfterSignModel}).el)
+        $('body').prepend(new DocumentSignViewHeader({model : doc.view.saveAfterSignModel}).el);
+        $('body').append(new DocumentSignViewFooter({model : doc.view.saveAfterSignModel}).el);
         console.log("Adding header and footer");
         return doc.view.el;
     },
     noDocumentView : function() {
         var box = $("<div class='noDocumentAvaible'> </div>");
-        var header = $("<div class='header'>No document is avaible</div>")
+        var header = $("<div class='header'>No document is avaible</div>");
         var sheader = $("<div class='sheader'>Waiting for device owner to send a document</div>");
         box.append(header).append(sheader);
         return box;
@@ -103,7 +103,7 @@ window.PadQueueView = Backbone.View.extend({
     logToPadDevicePopup : function() {
         var wrapper = $("<div class='body'>");
         var loginForm= $("<form class='wrapper'/>");
-        var emailValue = LocalStorage.get("Pad", "email")
+        var emailValue = LocalStorage.get("Pad", "email");
         console.log("Email " + emailValue);
         var email = InfoTextInput.init({infotext:localization.email,  inputtype : 'email', value : emailValue});
         var password = InfoTextInput.init({infotext:localization.password, inputtype : 'password'});
@@ -125,7 +125,7 @@ window.PadQueueView = Backbone.View.extend({
                             [$("<span class='txt'>").text(localization.password), password.input()]
                             
                         ]
-                    })
+                    });
         loginForm.append(table.view.el);
         loginForm.append("<input class='hidden' type='submit'>");    
         loginForm.submit(sendLogin);     
@@ -139,9 +139,9 @@ window.PadQueueView = Backbone.View.extend({
             });
     },
     padLogoutIcon : function() {
-        var icon = $("<div class='logout-image' style='float: right;position: absolute;top: 0;right:0'>")
+        var icon = $("<div class='logout-image' style='float: right;position: absolute;top: 0;right:0'>");
         var padqueue = this.model;
-        icon.click(function() {padqueue.logout().send();})
+        icon.click(function() {padqueue.logout().send();});
         return icon;
     },
     backToSystemIcon : function() {
@@ -150,7 +150,7 @@ window.PadQueueView = Backbone.View.extend({
         icon.click(function() { if (padqueue.hasDocument())
                                  window.location = '/d/' + padqueue.documentid();
                                 else
-                                 window.location = '/d'})
+                                 window.location = '/d';});
         return icon;
     },
     render: function () {
@@ -161,16 +161,16 @@ window.PadQueueView = Backbone.View.extend({
             if (padqueue.needFullRefresh())
                window.location = window.location; // We reload if content has changes so much that it is not good to keep it opened. 
             else if (padqueue.hasDocument())
-                container.append(this.documentView())
+                container.append(this.documentView());
             else if (padqueue.logged())
-                container.append(this.noDocumentView())      
+                container.append(this.noDocumentView())  ;    
             else 
                 this.logToPadDevicePopup();
 
             if (padqueue.loggedToPad())
-               $('body').append(this.padLogoutIcon())
+               $('body').append(this.padLogoutIcon());
             if (padqueue.loggedToSystem())
-               $('body').append(this.backToSystemIcon())
+               $('body').append(this.backToSystemIcon());
 
         }
         return this;

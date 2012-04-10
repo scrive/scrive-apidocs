@@ -18,7 +18,7 @@ window.ToolTip= {
                 var checker = function() {
                     if ($(':hover',args.on).size() == 0)
                     {
-                        container.remove()
+                        container.remove();
                     }
                     else
                         setTimeout(checker,1000);

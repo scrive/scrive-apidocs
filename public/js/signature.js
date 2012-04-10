@@ -53,7 +53,7 @@ window.Signature = Backbone.Model.extend({
           this.set({width: values[0], height : values[1], image : values[2]});
     },
     saveToField: function () {
-       var value = this.width() + "|" + this.height() + "|" + (this.hasImage() ? this.image() : "")
+       var value = this.width() + "|" + this.height() + "|" + (this.hasImage() ? this.image() : "");
        this.field().setValue(value);
     },
     field : function(){
@@ -72,7 +72,7 @@ window.Signature = Backbone.Model.extend({
        if (this.width() <= 450&& this.height() <= 100)
             return 2;
        return 1; */
-       return 820/this.width()
+       return 820/this.width();
        
     }
 });

@@ -9,11 +9,11 @@ window.TableModel = Backbone.Model.extend({
     initialize: function (args) {
     },
     fields : function() {
-        return this.get("fields")
+        return this.get("fields");
     },
     field : function(i,j) {
        if (this.fields()[i] != undefined) 
-          return this.fields()[i][j]
+          return this.fields()[i][j];
        return undefined;   
     },
     rows: function(){
@@ -24,7 +24,7 @@ window.TableModel = Backbone.Model.extend({
         _.each(this.fields(), function(field) {
           if (field!= undefined && field.length > max)
             max = field.length;
-        })
+        });
         return max;
     }
 
@@ -38,13 +38,13 @@ window.TableView = Backbone.View.extend({
     },
     render: function () {
         var model = this.model;
-        var container = $(this.el)
+        var container = $(this.el);
         container.children().detach();
         var table = $("<table/>");
-        var tbody = $("<tbody/>")
+        var tbody = $("<tbody/>");
         for(var i =0; i < model.rows(); i++)
         {
-            var tr = $("<tr/>")
+            var tr = $("<tr/>");
             for(var j =0; j < model.cols(); j++)
             {
                 var td = $("<td>");
@@ -55,7 +55,7 @@ window.TableView = Backbone.View.extend({
                   else 
                     td.append(v);
                 } 
-                tr.append(td)
+                tr.append(td);
             }
             tbody.append(tr);
         }    

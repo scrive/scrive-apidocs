@@ -35,7 +35,7 @@ var Filters = {
     var h = sh;
     var tmpCanvas = document.createElement('canvas');
     var tmpCtx = tmpCanvas.getContext('2d');
-    var output = tmpCtx.createImageData(w,h)
+    var output = tmpCtx.createImageData(w,h);
     var dst = output.data;
     // go through the destination image pixels
     var alphaFac = opaque ? 1 : 0;
@@ -132,7 +132,7 @@ var Filters = {
     }
   canvas.getContext('2d').putImageData(output, 0, 0);
   } */
-}
+};
     
 var SignatureDrawer = Backbone.View.extend({
     initialize: function (args) {
@@ -230,7 +230,7 @@ var SignatureDrawer = Backbone.View.extend({
           this.model.setImage("");
           if (callback != undefined) callback();
         } else {
-          var signature = this.model
+          var signature = this.model;
           var idata = Filters.filterImage(Filters.convolute, this.canvas[0],
                 [ 1/9, 1/9, 1/9,
                 1/9, 1/9, 1/9,
@@ -252,7 +252,7 @@ var SignatureDrawer = Backbone.View.extend({
                 );
           this.canvas[0].getContext('2d').putImageData(idata, 0, 0);   
           */
-          var image = this.canvas[0].toDataURL("image/png",1.0)
+          var image = this.canvas[0].toDataURL("image/png",1.0);
           console.log(image.length);
           var img = new Image();
           img.type = 'image/png';
@@ -275,7 +275,7 @@ var SignatureDrawer = Backbone.View.extend({
     },
     clear: function() {
           this.canvas[0].getContext('2d').clearRect(0,0,this.model.swidth(),this.model.sheight());
-          this.canvas[0].width = this.canvas[0].width
+          this.canvas[0].width = this.canvas[0].width;
           this.empty  = true;
     },
     render: function () {
@@ -315,7 +315,7 @@ var SignatureDrawerWrapper = Backbone.View.extend({
         return $("<div style='width:90%;margin:auto;height:1px;background-color: #999999'/>");
     },
     drawingBox : function() {
-        var div = $("<div class='signatureDrawingBoxWrapper'>")
+        var div = $("<div class='signatureDrawingBoxWrapper'>");
         this.drawer = new SignatureDrawer({model : this.model});
         div.append(this.drawer.el);
         div.width(this.model.swidth() );
@@ -417,6 +417,6 @@ window.SignatureDrawerPopup = {
             fixed:false
           });
     }
-}
+};
 
 })(window);

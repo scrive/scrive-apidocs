@@ -17,7 +17,7 @@ window.FieldPlacement = Backbone.Model.extend({
         var placement = this;
         setTimeout(function() {placement.addToPage();},100);
         args.field.bind('removed', function() {
-            placement.trigger("removed")
+            placement.trigger("removed");
             placement.remove();
         });
     },
@@ -195,7 +195,7 @@ window.Field = Backbone.Model.extend({
           }
         }
         if (this.signatory().signs() && this.signatory().document().padAuthorization() && this.isSignature()) {
-            var msg = localization.designview.validation.notPlacedSignature
+            var msg = localization.designview.validation.notPlacedSignature;
             return new Validation({validates : function() {return field.hasPlacements()}, message : msg});
         }
         return new Validation();

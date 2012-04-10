@@ -415,7 +415,7 @@ var DocumentDesignView = Backbone.View.extend({
     },
     signatoryAttachmentSetup : function() {
         var document = this.model;
-        if (document.padAuthorization()) return $("<div style='display:none'/>")
+        if (document.padAuthorization()) return $("<div style='display:none'/>");
 
         var box = $("<div class='signatoryattachmentssetup'/>");
         var icon = $("<span class='signatoryattachmentssetupicon'/>");
@@ -589,7 +589,7 @@ var DocumentDesignView = Backbone.View.extend({
        var view = this;
        var document = this.model;
        var signatory = document.currentSignatory();
-       var box = $("<div>")
+       var box = $("<div>");
        var content = $("<p>" + document.process().confirmsendtext() + " <strong class='documenttitle'/> " + localization.to + "<span class='unsignedpartynotcurrent'/></p>");
        box.append(DocumentDataFiller.fill(document,content));
        var padDesignViewUtil = undefined;

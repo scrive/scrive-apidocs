@@ -322,7 +322,7 @@ window.Document = Backbone.Model.extend({
     },
     setPadVerification : function() {
           this.set({"authorization":"pad"}, {silent: true});
-          _.each(this.signatories(), function(sig) {sig.clearAttachments();})
+          _.each(this.signatories(), function(sig) {sig.clearAttachments();});
           this.trigger("change:authorization");
     },
     elegTBS: function() {
