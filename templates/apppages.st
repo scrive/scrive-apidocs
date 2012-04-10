@@ -33,116 +33,116 @@ standardHeaderContents=
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta http-equiv="content-language" content="$ctxlang$" />
         <link href='https://fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css"/>
-        <link rel="stylesheet" type="text/css" href="$hostpart$/theme/newdesign.css" media="screen"/>
-        <link rel="stylesheet" type="text/css" href="$hostpart$/theme/designview.css" media="screen"/>
-        <link rel="stylesheet" type="text/css" href="$hostpart$/theme/style.css" media="screen"/>
-        <link rel="stylesheet" type="text/css" href="$hostpart$/theme/calendar.css" media="screen"/>
-        <link rel="stylesheet" type="text/css" href="$hostpart$/theme/signaturedrawer.css" media="screen"/>
-        <link rel="stylesheet" type="text/css" href="$hostpart$/theme/symbols.css" media="screen"/>
-        <link rel="stylesheet" type="text/css" href="$hostpart$/theme/tabs.css" media="screen"/>
-        <link rel="stylesheet" type="text/css" href="$hostpart$/theme/lists.css" media="screen"/>
-        <link rel="stylesheet" type="text/css" href="$hostpart$/theme/buttons.css" media="screen"/>
-        <link rel="stylesheet" type="text/css" href="$hostpart$/theme/account.css" media="screen"/>
-        <link rel="stylesheet" type="text/css" href="$hostpart$/theme/flash.css" media="screen"/>
-        <link rel="stylesheet" type="text/css" href="$hostpart$/theme/docsignview.css" media="screen" />
-        <link rel="stylesheet" type="text/css" href="$hostpart$/css/main.css" media="screen"/>
-        <script src="$if(production)$https://ajax.googleapis.com/ajax/libs/jquery/1.5.1$else$$hostpart$/js$endif$/jquery.min.js"
+        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/newdesign.css" media="screen"/>
+        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/designview.css" media="screen"/>
+        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/style.css" media="screen"/>
+        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/calendar.css" media="screen"/>
+        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/signaturedrawer.css" media="screen"/>
+        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/symbols.css" media="screen"/>
+        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/tabs.css" media="screen"/>
+        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/lists.css" media="screen"/>
+        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/buttons.css" media="screen"/>
+        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/account.css" media="screen"/>
+        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/flash.css" media="screen"/>
+        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/docsignview.css" media="screen" />
+        <link rel="stylesheet" type="text/css" href="$resourcehostpart$/css/main.css" media="screen"/>
+        <script src="$if(production)$https://ajax.googleapis.com/ajax/libs/jquery/1.5.1$else$$resourcehostpart$/js$endif$/jquery.min.js"
                 type="text/javascript"></script>
-        <script src="$if(production)$https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.11$else$$hostpart$/js$endif$/jquery-ui.min.js"
+        <script src="$if(production)$https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.11$else$$resourcehostpart$/js$endif$/jquery-ui.min.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/jquery.tools.min.js"
+        <script src="$resourcehostpart$/js/jquery.tools.min.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/jquery.MultiFile.js"
+        <script src="$resourcehostpart$/js/jquery.MultiFile.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/tiny_mce/jquery.tinymce.js"
+        <script src="$resourcehostpart$/tiny_mce/jquery.tinymce.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/json2.js"
+        <script src="$resourcehostpart$/js/json2.js"
                 type="text/javascript"></script>
         <script type="text/javascript">
                 $javascriptLocalisation()$</script>
-        <script src="$hostpart$/js/global.js"
+        <script src="$resourcehostpart$/js/global.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/underscore.js"
+        <script src="$resourcehostpart$/js/underscore.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/backbone.js"
+        <script src="$resourcehostpart$/js/backbone.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/storage.js"
+        <script src="$resourcehostpart$/js/storage.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/livequery.js"
+        <script src="$resourcehostpart$/js/livequery.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/loading.js"
+        <script src="$resourcehostpart$/js/loading.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/flashmessages.js"
+        <script src="$resourcehostpart$/js/flashmessages.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/infotextinputs.js"
+        <script src="$resourcehostpart$/js/infotextinputs.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/buttons.js"
+        <script src="$resourcehostpart$/js/buttons.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/uploadbuttons.js"
+        <script src="$resourcehostpart$/js/uploadbuttons.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/tooltips.js"
+        <script src="$resourcehostpart$/js/tooltips.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/calendar.js"
+        <script src="$resourcehostpart$/js/calendar.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/submits.js"
+        <script src="$resourcehostpart$/js/submits.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/confirmations.js"
+        <script src="$resourcehostpart$/js/confirmations.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/selects.js"
+        <script src="$resourcehostpart$/js/selects.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/lists.js"
+        <script src="$resourcehostpart$/js/lists.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/tabs.js"
+        <script src="$resourcehostpart$/js/tabs.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/files.js"
+        <script src="$resourcehostpart$/js/files.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/process.js"
+        <script src="$resourcehostpart$/js/process.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/fields.js"
+        <script src="$resourcehostpart$/js/fields.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/signatories.js"
+        <script src="$resourcehostpart$/js/signatories.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/documents.js"
+        <script src="$resourcehostpart$/js/documents.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/confirmationsWithEmails.js"
+        <script src="$resourcehostpart$/js/confirmationsWithEmails.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/docview.js"
+        <script src="$resourcehostpart$/js/docview.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/docsignviewframes.js"
+        <script src="$resourcehostpart$/js/docsignviewframes.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/docsignview.js"
+        <script src="$resourcehostpart$/js/docsignview.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/signatorydesignview.js"
+        <script src="$resourcehostpart$/js/signatorydesignview.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/docdesignview.js"
+        <script src="$resourcehostpart$/js/docdesignview.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/bankid.js"
+        <script src="$resourcehostpart$/js/bankid.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/jquery.form.js"
+        <script src="$resourcehostpart$/js/jquery.form.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/wizard.js"
+        <script src="$resourcehostpart$/js/wizard.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/uploadview.js"
+        <script src="$resourcehostpart$/js/uploadview.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/attachmentsdesignview.js"
+        <script src="$resourcehostpart$/js/attachmentsdesignview.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/csvsignatorydesign.js"
+        <script src="$resourcehostpart$/js/csvsignatorydesign.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/validation.js"
+        <script src="$resourcehostpart$/js/validation.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/signaturedrawer.js"
+        <script src="$resourcehostpart$/js/signaturedrawer.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/fieldplacementview.js"
+        <script src="$resourcehostpart$/js/fieldplacementview.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/companybranding.js"
+        <script src="$resourcehostpart$/js/companybranding.js"
                 type="text/javascript"></script>
-        <script src="$hostpart$/js/changemainfile.js"
+        <script src="$resourcehostpart$/js/changemainfile.js"
                 type="text/javascript"></script>
         $if(publicsafe)$
-        <script src="$hostpart$/js/jquery.tweet.js"
+        <script src="$resourcehostpart$/js/jquery.tweet.js"
                 type="text/javascript"></script>
         $if(production)$
-            <script src="$hostpart$/js/analytics.js" type="text/javascript"></script>
+            <script src="$resourcehostpart$/js/analytics.js" type="text/javascript"></script>
         $endif$
         $endif$
         <script src="/js/main.js"
