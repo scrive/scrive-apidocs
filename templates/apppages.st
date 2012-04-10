@@ -145,8 +145,6 @@ standardHeaderContents=
             <script src="$resourcehostpart$/js/analytics.js" type="text/javascript"></script>
         $endif$
         $endif$
-        <script src="/js/main.js"
-                type="text/javascript"></script>
 ####
 standardBodyWithQueryCol=
        $standardBodyWrapper(unwrappedbody=contentsWithQueryCol(unwrappedbody=unwrappedbody))$

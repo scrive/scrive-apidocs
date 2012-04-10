@@ -35,7 +35,6 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                <script src="$resourcehostpart$/js/validation.js"
                 type="text/javascript"></script>
                 <script src="$resourcehostpart$/js/jquery.tweet.js" type="text/javascript"></script>
-                <script src="$resourcehostpart$/js/main.js" type="text/javascript"></script>
                 $if(production)$
                 <script src="$resourcehostpart$/js/analytics.js" type="text/javascript"></script>
                 $endif$
