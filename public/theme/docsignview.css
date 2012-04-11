@@ -647,7 +647,7 @@ body.signview {
     text-transform: uppercase;
     font-size: 11px;
     vertical-align: middle;
-    line-height: 15px;
+    line-height: 11px;
 }
 
 .statustext.signed {
@@ -655,11 +655,19 @@ body.signview {
 }
 
 .statustext.opened {
-    color: #83BC39;
+    color: #71a0c2;
 }
 
 .statustext.sent {
-    color: #83BC39;
+    color: #eea045;
+}
+
+.statustext.canceled {
+    color: #d55d5d;
+}
+
+.statustext.delivered {
+    color: #d55d5d;
 }
 
 .signview .signatories .column {
@@ -734,18 +742,6 @@ body.signview {
 .signview .signatories .statusbox .icon.status {
     display: inline-block;
     float: none;
-}
-
-.signview .signatories .statusbox .signed {
-    color: black;
-}
-
-.signview .signatories .statusbox .opened {
-    color: #83BC39;
-}
-
-.signview .signatories .statusbox .sent {
-    color: #83BC39;
 }
 
 /*Hide the info text on the custom fields, cos
@@ -905,9 +901,16 @@ div.spacing.butt {
 }
 
 .sig {
-    margin-top: 2px;
-    padding-top: 6px;
+    margin-top: 4px;
 }
+
+.sig .name {
+    margin-bottom: 2px;
+} 
+
+.sig .name.first {
+    margin-top: 0px;
+} 
 
 .column.spacing {
     margin-right: 20px;
