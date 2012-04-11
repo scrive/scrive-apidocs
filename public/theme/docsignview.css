@@ -35,6 +35,10 @@ body.signview {
   margin-left: 30px;
 }
 
+.signview .logo {
+    margin-left: 30px;
+}
+
 .signview .pageheader .content .sender {
   text-align: right;
   float: right;
