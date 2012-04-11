@@ -883,7 +883,7 @@ body.signview {
 }
 
 .signview .pagefooter .poweredbyscrive a {
-  color: white;
+  /*  color: white; */
   font-size: small;
   text-transform: uppercase;
   text-decoration: none;
