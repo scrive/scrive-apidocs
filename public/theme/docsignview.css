@@ -18,15 +18,16 @@ body.signview {
   padding-top: 10px;
   padding-bottom: 10px;
   min-height: 70px;
+  display: table;
+  overflow: hidden;
+  #position: relative;
 }
 
 .signview .pageheader .logowrapper {
-  float: left;
   width : 200px;
 }
 
 .signview .pageheader div.logo {
-  margin-top: 20px;
   background: url(../img/logo-scrive-small.png);
   height: 33px;
   width: 200px;
@@ -34,11 +35,18 @@ body.signview {
   margin-left: 30px;
 }
 
+.signview .logo {
+    margin-left: 30px;
+}
+
 .signview .pageheader .content .sender {
-  float: right;
-  margin-top: 20px;
   text-align: right;
+  float: right;
   margin-right: 30px;
+  #position: absolute; 
+  #top: 50%;
+  display: table-cell; 
+  vertical-align: middle;
 }
 
 .signview .pageheader.withcustomlogo .content .sender.shoved {
@@ -50,6 +58,12 @@ body.signview {
 
 .signview .pageheader .content .sender .name {
   font-weight: bold;
+  vertical-align: middle;
+}
+
+.signview .pageheader .content .sender .phone {
+  font-weight: bold;
+  vertical-align: middle;
 }
 
 .signview .pageheader .poweredbyscrive {
@@ -66,6 +80,10 @@ body.signview {
   display: none;
 }
 
+.signview .mainContainer960 {
+    width: 980px;
+}
+
 .signview .body-container {
   padding-top: 10px;
   background-color: transparent;
@@ -80,6 +98,8 @@ body.signview {
   border: solid #bababc 1px;
   text-align: center;
   font-weight: bold;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .signview .instructions .headline {
@@ -143,6 +163,10 @@ body.signview {
   text-decoration: underline;
   font-weight: normal;
   color: grey;
+}
+
+.signview .pagejpg {
+    width: 958px;
 }
 
 .signview .save {
@@ -430,9 +454,13 @@ body.signview {
 }
 
 .signview .subcontainer {
+    width: 977px;
   background-color: #e1e1e1;
   background-image: url(../img/horizontal-shading-bar.png);
   background-repeat: no-repeat;
+  box-shadow: 3px 3px 5px #505050;
+  -moz-box-shadow: 3px 3px 5px #505050;
+  -webkit-box-shadow: 3px 3px 5px #505050;
 }
 
 .signview .subcontainer .end {
@@ -444,12 +472,13 @@ body.signview {
 .signview .pagediv {
   margin-top: 10px;
   margin-bottom: 5px;
-  margin-left: 6px;
-  margin-right: 6px;
-  width: 945px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 960px;
   box-shadow: 0px 0px 5px #505050;
   -moz-box-shadow: 0px 0px 5px #505050;
   -webkit-box-shadow: 0px 0px 5px #505050;
+  overflow-x: hidden;
 }
 
 .signview .section {
@@ -465,6 +494,9 @@ body.signview {
   border: 5px solid #83bc39;
   padding: 15px;
   background-image: none;
+  width: 920px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .signview .section h2 {
@@ -874,6 +906,9 @@ div.spacing.butt {
 
 .section.signatories {
     padding-top: 20px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 944px;
 }
 
 .section .signatoryattachments {
@@ -884,4 +919,29 @@ div.spacing.butt {
 .signatoryattachments .buttonbox {
     float: left;
     margin-left: 10px;
+}
+
+.signview .author {
+    margin: 0px;
+    font-size: 0.9em;
+}
+
+/* # sign is an ie hack; most browsers ignore after #*/
+/* This will vertical align */
+/* from http://www.jakpsatweb.cz/css/css-vertical-center-solution.html */
+.signview .logowrapper {
+    #position: absolute;
+    #top: 50%;
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.signview .logo {
+    #position: relative;
+    #top: -50%;
+}
+
+.signview .sender .inner {
+    #position: relative;
+    #top: -50%;
 }
