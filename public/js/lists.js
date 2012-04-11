@@ -361,10 +361,12 @@
             return this.get("unsaved");
         },
         select: function() {
-            this.set({ "selected": true });
+            this.set({ "selected": true }, {silent: true});
+            this.trigger("selected:change");
         },
         unselect: function() {
-            this.set({ "selected": false });
+            this.set({ "selected": false }, {silent: true});
+            this.trigger("selected:change");
         },
         isExpanded: function() {
             return this.get("expanded") == true;
@@ -442,11 +444,6 @@
             this.render();
         },
         render: function() {
-            if ($(this.el).size() === 1) {
-                for (var j = 0; j < this.model.subfieldsSize(); j++) {
-                    this.el = $(this.el).add($("<tr />"));
-                }
-            }
             $(this.el).empty();
             var mainrow = $(this.el).first();
             for (var i = 0; i < this.schema.size(); i++) {
@@ -472,7 +469,14 @@
                     }
                 mainrow.append(td);
             }
-            for (var j = 0; j < this.model.subfieldsSize(); j++) {
+            if (this.model.isExpanded()) {
+             if ($(this.el).size() === 1) {
+                    for (var j = 0; j < this.model.subfieldsSize(); j++) {
+                        this.el = $(this.el).add($("<tr />"));
+                    }
+             }
+
+             for (var j = 0; j < this.model.subfieldsSize(); j++) {
                 var subrow = $(this.el).eq(j + 1);
                 for (var i = 0; i < this.schema.size(); i++) {
                     var div = $("<div/>").attr('style',this.schema.cell(i).substyle());
@@ -490,11 +494,7 @@
                     }
                     subrow.append(td);
                 }
-                if (this.model.isExpanded()) {
-                    subrow.css("display", "");
-                } else {
-                    subrow.css("display", "none");
-                }
+             }
             }
             this.renderSelection();
             return this;
