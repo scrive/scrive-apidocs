@@ -363,8 +363,13 @@ processJSON doc = do
     J.value "nonsignatoryname" =<< text processnonsignatoryname
     J.value "numberedsignatories" $ bool processnumberedsignatories
     where
-      text k = lift $ renderTemplateForProcess doc k (documentInfoFields doc)
+      text k = lift $ do
+                        partylist <- renderListTemplate . map getSmartName $ partyList doc
+                        renderTemplateForProcess doc k (do
+                                                        field "partylist" partylist
+                                                        documentInfoFields doc)
       bool = fromMaybe False . getValueForProcess doc
+      
 
 regionJSON :: Document -> JSValue
 regionJSON doc = runJSONGen $ do
