@@ -58,7 +58,32 @@ offerstatusinfotext=$_offerstatusinfotext()$
 orderstatusinfotext=$_orderstatusinfotext()$
 ##########
 documentInfoText=
-                $if(pending)$
+                $if(awaitingauthor)$
+
+                     $if(notsignedbyme)$
+                            <span class="header">
+                                 $_documentInfoTextNotsignedbymeAwaitingauthorHead()$
+                            </span><br/>
+                            <span class="text">
+                              $_documentInfoTextNotsignedbymeAwaitingauthorBody()$
+                            </span>
+                     $elseif(signedbyme)$
+                        <span class="header">
+                             $_documentInfoTextSignedbymeAwaitingauthorHead()$
+                        </span><br/>
+                        <span class="text">
+                            $_documentInfoTextSignedbymeAwaitingauthorBody()$
+                        </span>
+                     $else$
+                        <span class="header">
+                             $_documentInfoTextElseAwaitingauthorHead()$
+                        </span><br/>
+                        <span class="text">
+                           $_documentInfoTextElseAwaitingauthorBody()$
+                        </span>
+                     $endif$
+
+                $elseif(pending)$
                      $if(notsignedbyme)$
                         $if(iamauthor)$
                             <span class="header">
@@ -202,30 +227,6 @@ documentInfoText=
                         <span class="text">
                            $process.signedinfotext$
                         </span>
-                 $elseif(awaitingauthor)$
-
-                     $if(notsignedbyme)$
-                            <span class="header">
-                                 $_documentInfoTextNotsignedbymeAwaitingauthorHead()$
-                            </span><br/>
-                            <span class="text">
-                              $_documentInfoTextNotsignedbymeAwaitingauthorBody()$
-                            </span>
-                     $elseif(signedbyme)$
-                        <span class="header">
-                             $_documentInfoTextSignedbymeAwaitingauthorHead()$
-                        </span><br/>
-                        <span class="text">
-                            $_documentInfoTextSignedbymeAwaitingauthorBody()$
-                        </span>
-                     $else$
-                        <span class="header">
-                             $_documentInfoTextElseAwaitingauthorHead()$
-                        </span><br/>
-                        <span class="text">
-                           $_documentInfoTextElseAwaitingauthorBody()$
-                        </span>
-                     $endif$
 
                   $elseif(preparation)$
                         <span class="header">

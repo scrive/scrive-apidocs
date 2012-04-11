@@ -20,6 +20,7 @@ module Doc.DocViewMail (
 
 import API.Service.Model
 import Company.Model
+import Control.Logic
 import Doc.DocProcess
 import Doc.DocStateData
 import Doc.DocUtils
@@ -334,12 +335,12 @@ makeEditable name this =
       3. a custom footer configured for the document's service
       4. the default powered by scrive footer
 -}
-mailFooterForDocument :: TemplatesMonad m => Context -> Document -> m String
+mailFooterForDocument :: TemplatesMonad m => Context -> Document -> m (Maybe String)
 mailFooterForDocument ctx doc =
-  firstWithDefault  [   getDocumentFooter doc
-                      , getUserFooter ctx
-                      , getServiceFooter ctx doc
-                   ] (defaultFooter ctx)
+  firstOrNothing  [ getDocumentFooter doc
+                  , getUserFooter ctx
+                  , getServiceFooter ctx doc
+                  ]
 
 
 {- |

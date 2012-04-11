@@ -9,13 +9,14 @@ module ELegitimation.BankID
 
 import Redirect
 import qualified Log
+import Control.Logic
 import Control.Monad.State
+import Doc.DocInfo
 import Doc.DocStateData as D
 import Doc.DocUtils
 import ELegitimation.ELegTransaction
 import Happstack.Server
 import Kontra
-import KontraError (internalError)
 import MagicHash (MagicHash)
 import MinutesTime
 import Misc
@@ -24,9 +25,9 @@ import Util.SignatoryLinkUtils
 import Util.MonadUtils
 import Doc.DocStateQuery
 import Text.JSON
-import Text.JSON.Fields
 import ELegitimation.BankIDUtils
 import ELegitimation.BankIDRequests
+import Text.JSON.Gen as J
 
 {- |
    Handle the Ajax request for initiating a BankID transaction.
@@ -67,12 +68,12 @@ generateBankIDTransaction docid signid = do
                                             , transactionnonce = nonce
                                             }
                     Log.eleg "Eleg chalenge generation sucessfull"
-                    liftIO $ json $ do
-                        field "status" (0::Int)
-                        field "servertime"  $ show seconds
-                        field "nonce" nonce
-                        field "tbs" txt
-                        field "transactionid"  transactionid
+                    return $ runJSONGen $ do
+                        J.value "status" (0::Int)
+                        J.value "servertime" $ show seconds
+                        J.value "nonce" nonce
+                        J.value "tbs" txt
+                        J.value "transactionid" transactionid
 
 generateBankIDTransactionForAuthor :: Kontrakcja m => DocumentID -> m JSValue
 generateBankIDTransactionForAuthor  docid = do
@@ -82,7 +83,7 @@ generateBankIDTransactionForAuthor  docid = do
     document <- guardRightM $ getDocByDocID docid
     tbs <- case documentstatus document of
         Preparation    -> getDataFnM $ look "tbs" -- tbs will be sent as post param
-        AwaitingAuthor -> getTBS document         -- tbs is stored in document
+        _ | canAuthorSignLast document -> getTBS document -- tbs is stored in document
         _              -> internalError
 
     unless (isAuthor (document, author)) internalError -- necessary because someone other than author cannot initiate eleg
@@ -108,20 +109,21 @@ generateBankIDTransactionForAuthor  docid = do
                                         , transactionmagichash       = Nothing
                                         , transactionnonce           = nonce
                                         }
-                    liftIO $ json $ do
-                        field "status" (0::Int)
-                        field "servertime"  $ show $ toSeconds time
-                        field "nonce" nonce
-                        field "tbs" txt
-                        field "transactionid"  transactionid
+                    return $ runJSONGen $ do
+                        J.value "status" (0::Int)
+                        J.value "servertime"  $ show $ toSeconds time
+                        J.value "nonce" nonce
+                        J.value "tbs" txt
+                        J.value "transactionid"  transactionid
 
 
 generationFailed:: Kontrakcja m => String -> Int -> String -> m JSValue
 generationFailed desc code msg = do
   Log.eleg $ desc ++  " | code: " ++ show code ++" msg: "++ msg ++ " |"
-  liftIO $ json $ do
-                field "status" code
-                field "msg" msg
+  return $ runJSONGen $ do
+    J.value "status" code
+    J.value "msg" msg
+
 {- |
    Validating eleg-data passed when signing
  -}

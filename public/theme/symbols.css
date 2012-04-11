@@ -208,6 +208,7 @@
     display: inline-block;
     height: 22px;
     width: 31px;
+    margin-left: 10px;
 }
 
 .icon.lock-closed{

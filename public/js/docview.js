@@ -170,6 +170,8 @@ window.DocumentUploadedSignatoryAttachmentsView = Backbone.View.extend({
   }
 });
 
+// Remove sign guard (Lukas's choice) --Eric
+/* Remove after May 1, 2012
 window.GuardModel = Backbone.Model.extend({
   defaults: {
     ischecked: false,
@@ -210,8 +212,10 @@ window.GuardModel = Backbone.Model.extend({
     }
   }
 });
+*/
 
-
+// Remove sign guard (Lukas's choice) --Eric
+/* Remove after May 1, 2012
 window.DocumentSignGuardView = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'render');
@@ -263,6 +267,7 @@ window.DocumentSignGuardView = Backbone.View.extend({
     }
   }
 });
+*/
 
 window.DocumentSignButtonView = Backbone.View.extend({
   initialize: function(args) {
@@ -301,6 +306,8 @@ window.DocumentSignConfirmation = Backbone.View.extend({
   initialize: function(args) {
     _.bindAll(this, 'popup');
     _.bindAll(this, 'createContentElems');
+    // Remove sign guard (Lukas's choice) --Eric
+    /* Remove after May 1, 2012
     var guardWarnText = this.model.process().signguardwarntext();
     this.guardModel = new GuardModel({
       onAlert: function() {
@@ -311,6 +318,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       },
       isrequired: this.model.process().requiressignguard()
     });
+    */
   },
   createElegButtonElems: function() {
     var document = this.model;
@@ -339,12 +347,13 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     return Button.init({
       size: "small",
       color: "blue",
-      icon: $("<span class='btn-symbol cross' style='margin-left: 10px'/>"),
+      icon: $("<span class='btn-symbol cross' />"),
       text: document.process().signbuttontext(),
       onClick: function() {
-        if (guardModel.ensureChecked()) {
-          document.sign().send();
-        }
+        // Remove sign guard (Lukas's choice) --Eric
+          // Remove after May 1, 2012
+        //if (guardModel.ensureChecked())
+        document.sign().send();
       }
     }).input();
   },
@@ -372,16 +381,21 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       return content;
     }
   },
+  // Remove sign guard (Lukas's choice) -- Eric
+  /* Remove after May 1, 2012
   createSignGuardElems: function() {
     return $(new DocumentSignGuardView({
       model: this.guardModel,
       el: $("<div />")
     }).el);
   },
+  */
   createContentElems: function() {
     var content = $("<div />");
     content.append(this.createPreambleElems());
-    content.append(this.createSignGuardElems());
+    // Remove sign guard (Lukas's choice) -- Eric
+      // Remove after May 1, 2012
+    //content.append(this.createSignGuardElems());
     return content;
   },
   popup: function() {

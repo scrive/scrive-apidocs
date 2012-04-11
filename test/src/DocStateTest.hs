@@ -1,6 +1,6 @@
-{-# LANGUAGE CPP, OverloadedStrings #-}
 module DocStateTest where
 
+import Control.Logic
 import DB.Classes
 import User.Model
 import Doc.Model
@@ -65,9 +65,10 @@ docStateTests env = testGroup "DocState" [
   testThat "TimeoutDocument adds to the log" env testTimeoutDocumentEvidenceLog,
   testThat "UpdateFields adds to the log" env testUpdateFieldsEvidenceLog,
   testThat "Documents are shared in company properly" env testGetDocumentsSharedInCompany,
+
+  testThat "Documents sorting SQL syntax is correct" env testGetDocumentsSQLSorted,
  
   testThat "PreparationToPending adds to the log" env testPreparationToPendingEvidenceLog,
-  testThat "PendingToAwaitingAuthor adds to the log" env testPendingToAwaitingAuthorEvidenceLog,
   testThat "MarkInvitationRead adds to the log" env testMarkInvitationReadEvidenceLog,
   testThat "MarkDocumentSeen adds to the log" env testMarkDocumentSeenEvidenceLog,
   testThat "ErrorDocument adds to the log" env testErrorDocumentEvidenceLog,
@@ -110,19 +111,10 @@ docStateTests env = testGroup "DocState" [
 
   testThat "CloseDocument fails when doc is not signable" env testCloseDocumentNotSignableNothing,
   testThat "CloseDocument fails when doc doesn't exist" env testCloseDocumentNotNothing,
-  testThat "CloseDocument succeeds when doc is signable and awaiting author" env testCloseDocumentSignableAwaitingAuthorJust,
   testThat "CloseDocument fails when doc is signable and awaiting author" env testCloseDocumentSignableNotAwaitingAuthorNothing,
 
   testThat "CancelDocument fails when doc is not signable" env testCancelDocumentNotSignableNothing,
   testThat "CancelDocument fails when doc doesn't exist" env testCancelDocumentNotNothing,
-  testThat "CancelDocument succeeds when doc is signable and awaiting author" env testCancelDocumentSignableAwaitingAuthorJust,
-  testThat "CancelDocument fails when doc is signable and awaiting author" env testCancelDocumentSignableNotAwaitingAuthorNothing,
-
-  testThat "PendingToAwaitingAuthor fails when doc is not signable" env testPendingToAwaitingAuthorDocumentNotSignableNothing,
-  testThat "PendingToAwaitingAuthor fails when doc doesn't exist" env testPendingToAwaitingAuthorDocumentNotNothing,
-  testThat "PendingToAwaitingAuthor succeeds when doc is signable and awaiting author" env testPendingToAwaitingAuthorDocumentSignableAwaitingAuthorJust,
-  testThat "PendingToAwaitingAuthor fails when doc is signable and awaiting author" env testPendingToAwaitingAuthorDocumentSignableNotAwaitingAuthorNothing,
-
 
   testThat "SetDocumentTags fails when does not exist" env testSetDocumentTagsNotLeft,
   testThat "SetDocumentTags succeeds" env testSetDocumentTagsRight,
@@ -174,7 +166,7 @@ docStateTests env = testGroup "DocState" [
   testThat "TimeoutDocument fails when the document is Signable but not in Pending" env testTimeoutDocumentSignableNotPendingLeft,
   testThat "create document and check invariants" env testNewDocumentDependencies,
   testThat "can create new document and read it back with the returned id" env testDocumentCanBeCreatedAndFetchedByID,
-  testThat "can create new document and read it back with GetDocuments" env testDocumentCanBeCreatedAndFetchedByAllDocs,
+  testThat "can create new document and read it back with GetDocumentsByService" env testDocumentCanBeCreatedAndFetchedByAllDocs,
 
 {-
   testThat "when I call update document, it doesn't change the document id" env testDocumentUpdateDoesNotChangeID,
@@ -585,20 +577,6 @@ testPreparationToPendingEvidenceLog = do
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == PreparationToPendingEvidence) lg
-  
-testPendingToAwaitingAuthorEvidenceLog :: DB ()
-testPendingToAwaitingAuthorEvidenceLog = do
-  author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
-  forM_ (filter (not . isAuthor) $ documentsignatorylinks doc) $ \sl-> do
-    m <- randomUpdate $ \t->MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl) (SystemActor t)
-    assertRight m
-    s <- randomUpdate $ \t->SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) Nothing (SystemActor t)
-    assertRight s
-  etdoc <- randomUpdate $ \t->PendingToAwaitingAuthor (documentid doc) (SystemActor t)
-  assertRight etdoc
-  lg <- dbQuery $ GetEvidenceLog (documentid doc)
-  assertJust $ find (\e -> evType e == PendingToAwaitingAuthorEvidence) lg
 
 testMarkInvitationReadEvidenceLog :: DB ()    
 testMarkInvitationReadEvidenceLog = do
@@ -755,7 +733,7 @@ testAttachSealedFileEvidenceLog = do
 testCancelDocumentEvidenceLog :: DB ()
 testCancelDocumentEvidenceLog = do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (isPending ||^ isAwaitingAuthor))
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ isPending)
   etdoc <- randomUpdate $ \t-> CancelDocument (documentid doc) ManualCancel (SystemActor t)
   assertRight etdoc
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
@@ -841,23 +819,26 @@ assertGoodNewDocument mcompany doctype title authorsigns (user, time, edoc) = do
 testCancelDocumentCancelsDocument :: DB ()
 testCancelDocumentCancelsDocument = doTimes 10 $ do
   user <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition user (\d -> isSignable d && documentstatus d `elem` [AwaitingAuthor, Pending])
+  doc <- addRandomDocumentWithAuthorAndCondition user (isSignable &&^ isPending)
   time <- getMinutesTime
   edoc <- randomUpdate $ CancelDocument (documentid doc) ManualCancel (AuthorActor time noIP (userid user) (getEmail user))
   when (isLeft edoc) $ Log.debug (fromLeft edoc)
   assertRight edoc
   let (Right canceleddoc) = edoc
+  let doNotCompareStatusClass x = x { signatorylinkstatusclass = SCDraft }
   validTest $ do
     assertEqual "In canceled state" Canceled (documentstatus canceleddoc)
     assertEqual "Updated modification time" time (documentmtime canceleddoc)
     assertEqual "Matching cancellation reason" (Just ManualCancel) (documentcancelationreason canceleddoc)
-    assertEqual "Siglinks are unchanged" (documentsignatorylinks doc) (documentsignatorylinks canceleddoc)
+    assertEqual "Siglinks are unchanged" 
+                  (map doNotCompareStatusClass (documentsignatorylinks doc))
+                  (map doNotCompareStatusClass (documentsignatorylinks canceleddoc))
     assertEqual "Doc title is unchanged" (documenttitle doc) (documenttitle canceleddoc)
 
 testCancelDocumentReturnsLeftIfDocInWrongState :: DB ()
 testCancelDocumentReturnsLeftIfDocInWrongState = doTimes 10 $ do
   user <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition user (\d -> isSignable d && not (documentstatus d `elem` [AwaitingAuthor, Pending]))
+  doc <- addRandomDocumentWithAuthorAndCondition user (isSignable &&^ not . isPending)
   time <- getMinutesTime
   edoc <- randomUpdate $ CancelDocument (documentid doc) ManualCancel (AuthorActor time noIP (userid user) (getEmail user))
   validTest $ assertLeft edoc
@@ -905,7 +886,7 @@ assertNoArchivedSigLink etdoc =
 testArchiveDocumentPendingLeft :: DB ()
 testArchiveDocumentPendingLeft = doTimes 10 $ do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> (isPending d || isAwaitingAuthor d))
+  doc <- addRandomDocumentWithAuthorAndCondition author isPending
   etdoc <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (SystemActor t)
   validTest $ assertLeft etdoc
 
@@ -1045,17 +1026,17 @@ testGetDocumentsByAuthorNoArchivedDocs =
 
 testGetDocumentsByCompanyWithFilteringNoArchivedDocs :: DB ()
 testGetDocumentsByCompanyWithFilteringNoArchivedDocs =
-  checkQueryDoesntContainArchivedDocs (\u -> GetDocumentsByCompanyWithFiltering Nothing (fromJust $ usercompany u) [] Nothing Nothing Nothing)
+  checkQueryDoesntContainArchivedDocs (\u -> GetDocumentsByCompanyWithFiltering (fromJust $ usercompany u) [])
 
 testGetDocumentsBySignatoryNoArchivedDocs :: DB ()
 testGetDocumentsBySignatoryNoArchivedDocs =
-  checkQueryDoesntContainArchivedDocs (GetDocumentsBySignatory . userid)
+  checkQueryDoesntContainArchivedDocs (GetDocumentsBySignatory [Contract, Offer, Order]. userid)
 
 checkQueryDoesntContainArchivedDocs :: DBQuery q [Document] => (User -> q) -> DB ()
 checkQueryDoesntContainArchivedDocs qry = doTimes 10 $ do
   company <- addNewCompany
   author <- addNewRandomCompanyUser (companyid company) True
-  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
+  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> (isPreparation d || isClosed d) && (isSignable d))
   docsbeforearchive <- dbQuery (qry author)
   assertEqual "Expecting one doc before archive" [documentid doc] (map documentid docsbeforearchive)
   _ <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (SystemActor t)
@@ -1073,10 +1054,10 @@ checkQueryContainsArchivedDocs :: DBQuery q [Document] => (User -> q) -> DB ()
 checkQueryContainsArchivedDocs qry = doTimes 10 $ do
   company <- addNewCompany
   author <- addNewRandomCompanyUser (companyid company) True
-  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (isPreparation ||^ isClosed))
   docsbeforearchive <- dbQuery (qry author)
   assertEqual "Expecting no docs before archive" [] (map documentid docsbeforearchive)
-  _ <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (SystemActor t)
+  _ <- randomUpdate $ \t -> ArchiveDocument author (documentid doc) (SystemActor t)
   docsafterarchive <- dbQuery (qry author)
   assertEqual "Expecting 1 doc after archive" [documentid doc] (map documentid docsafterarchive)
   _ <- randomUpdate $ \t -> ReallyDeleteDocument author (documentid doc) (SystemActor t)
@@ -1130,12 +1111,12 @@ testDocumentCanBeCreatedAndFetchedByAllDocs = doTimes 10 $ do
   -- execute
   now <- liftIO $ getMinutesTime
   let aa = AuthorActor now noIP (userid author) (getEmail author)
-  edoc <- randomUpdate $ (\title doctype -> NewDocument author mcompany (fromSNN title) doctype 0 aa)
+  edoc <- randomUpdate $ (\title processtype -> NewDocument author mcompany (fromSNN title) (Signable processtype) 0 aa)
 
   let doc = case edoc of
           Left msg -> error $ show msg
           Right d -> d
-  docs <- dbQuery $ GetDocuments Nothing
+  docs <- dbQuery $ GetDocumentsByService Nothing
   -- assert
   validTest $ do
     assertJust $ find (sameDocID doc) docs
@@ -1290,7 +1271,7 @@ testGetTimedOutButPendingDocuments = doTimes 1 $ do
   -- setup
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author (isPending &&^ (isJust . documenttimeouttime))
-  _doc2 <- addRandomDocumentWithAuthorAndCondition author (not . (isPending ||^ isAwaitingAuthor))
+  _doc2 <- addRandomDocumentWithAuthorAndCondition author (not . isPending)
 
   let t = unTimeoutTime $ fromJust $ documenttimeouttime doc
   --execute
@@ -1472,14 +1453,12 @@ testGetDocumentsSharedInCompany = doTimes 10 $ do
   _ <- dbUpdate $ SetDocumentSharing [docid4] False
   _ <- dbUpdate $ SetDocumentSharing [docid1, docid2, docid3, docid5, docid6] True
 
-  dlist1 <- dbQuery $ GetAvaibleTemplates (userid user1)
-  dlist2 <- dbQuery $ GetAvaibleTemplates (userid user2)
-  dlist3 <- dbQuery $ GetAvaibleTemplates (userid user3)
-  dlist4 <- dbQuery $ GetAvaibleTemplates (userid user4)
-  dlist5 <- dbQuery $ GetAvaibleTemplates (userid user5)
-  dlist6 <- dbQuery $ GetAvaibleTemplates (userid user6)
-
-  mapM_ (liftIO . putStrLn . show . map documentid) [dlist1, dlist2, dlist3, dlist4, dlist5, dlist6]
+  dlist1 <- dbQuery $ GetAvailableTemplates (userid user1) [Offer, Order, Contract]
+  dlist2 <- dbQuery $ GetAvailableTemplates (userid user2) [Offer, Order, Contract]
+  dlist3 <- dbQuery $ GetAvailableTemplates (userid user3) [Offer, Order, Contract]
+  dlist4 <- dbQuery $ GetAvailableTemplates (userid user4) [Offer, Order, Contract]
+  dlist5 <- dbQuery $ GetAvailableTemplates (userid user5) [Offer, Order, Contract]
+  dlist6 <- dbQuery $ GetAvailableTemplates (userid user6) [Offer, Order, Contract]
 
   validTest $ do
     assertEqual "Documents not shared in user without company (X) by user 5" 1 (length dlist5)
@@ -1488,6 +1467,40 @@ testGetDocumentsSharedInCompany = doTimes 10 $ do
     assertEqual "Documents properly shared in company (2) by user 4" 2 (length dlist4)
     assertEqual "Documents properly shared in company (1) by user 1" 2 (length dlist1)
     assertEqual "Documents properly shared in company (1) by user 2" 2 (length dlist2)
+
+
+testGetDocumentsSQLSorted :: DB ()
+testGetDocumentsSQLSorted = doTimes 10 $ do
+  -- setup
+  author <- addNewRandomAdvancedUser
+  _doc <- addRandomDocumentWithAuthorAndCondition author (const True)
+
+  let domains = [ DocumentsOfAuthor (userid author)
+                , DocumentsOfAuthorDeleted (userid author)
+                , DocumentsOfAuthorDeleteValue (userid author) True
+                , DocumentsForSignatory (userid author)
+                , DocumentsForSignatoryDeleted (userid author)
+                , DocumentsForSignatoryDeleteValue (userid author) True
+                , TemplatesOfAuthor (userid author)
+                , TemplatesOfAuthorDeleted (userid author)
+                , TemplatesOfAuthorDeleteValue (userid author) True
+                , TemplatesSharedInUsersCompany (userid author)
+                  -- , DocumentsOfService (Maybe ServiceID)
+                  -- , DocumentsOfCompany CompanyID
+                , AttachmentsOfAuthorDeleteValue (userid author) True
+                ]
+      filters = []
+  count <- dbQuery $ GetDocumentsCount domains filters
+  docs <- dbQuery $ GetDocuments domains filters
+            [ Desc DocumentOrderByTitle
+            , Desc DocumentOrderByMTime
+            , Desc DocumentOrderByStatusClass
+            , Desc DocumentOrderByType
+            , Desc DocumentOrderByProcess
+            ]
+            (DocumentPagination 0 maxBound)
+  validTest $ do
+    assertEqual "GetDocuments and GetDocumentsCount are compatible" (length docs) count
 
 testCreateFromSharedTemplate :: DB ()
 testCreateFromSharedTemplate = do
@@ -1784,7 +1797,7 @@ testRejectDocumentNotSignableLeft = doTimes 10 $ do
 testRejectDocumentSignableNotPendingLeft :: DB ()
 testRejectDocumentSignableNotPendingLeft = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ (not . (isPending ||^ isAwaitingAuthor)))
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable &&^ not . isPending)
   let Just sl = getSigLinkFor doc author
   time <- rand 10 arbitrary
   etdoc <- randomUpdate $ RejectDocument (documentid doc) (signatorylinkid sl) Nothing 
@@ -1816,7 +1829,7 @@ testMarkInvitationRead = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
   doc <- addRandomDocumentWithAuthorAndCondition author 
          (isPending &&^ (all (isNothing . maybereadinvite) . documentsignatorylinks))
-  forM_ (documentsignatorylinks doc) $ \sl -> Log.debug $ "maybereadinvite: " ++ show (maybereadinvite sl)
+
   sl' <- rand 10 $ elements $ documentsignatorylinks doc
   let slid = signatorylinkid sl'
   time <- getMinutesTime
@@ -1978,21 +1991,6 @@ testSetDocumentUIRight = doTimes 10 $ do
   etdoc <- randomUpdate $ (\ui -> SetDocumentUI (documentid doc) ui ac)
   validTest $ assertRight etdoc
 
-testCloseDocumentSignableAwaitingAuthorJust :: DB ()
-testCloseDocumentSignableAwaitingAuthorJust = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
-  doc <- addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentAllowedTypes = documentSignableTypes
-         , randomDocumentAllowedStatuses = [AwaitingAuthor]
-         , randomDocumentCondition = const True
-         }
-  sa :: SystemActor <- rand 10 arbitrary
-  let Just sl = getAuthorSigLink doc
-  _ <- randomUpdate (MarkDocumentSeen (documentid doc) (signatorylinkid sl) (signatorymagichash sl)  sa)      
-  _ <- randomUpdate (\si -> SignDocument (documentid doc) (signatorylinkid sl) (signatorymagichash sl) si sa)
-  etdoc <- randomUpdate (CloseDocument (documentid doc) sa)
-  validTest $ assertRight etdoc
-
 testCloseDocumentSignableNotAwaitingAuthorNothing :: DB ()
 testCloseDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
@@ -2025,35 +2023,6 @@ testCloseDocumentNotNothing = doTimes 10 $ do
   etdoc <- randomUpdate $ CloseDocument did sa
   validTest $ assertLeft etdoc
 
-
-testCancelDocumentSignableAwaitingAuthorJust :: DB ()
-testCancelDocumentSignableAwaitingAuthorJust = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
-  doc <- addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentAllowedTypes = documentSignableTypes
-         , randomDocumentAllowedStatuses = [AwaitingAuthor]
-         , randomDocumentCondition =  const True
-         }
-  time <- rand 10 arbitrary
-  --let Just sl = getAuthorSigLink doc
-  let actor = AuthorActor time noIP (userid author) (getEmail author)
-  etdoc <- randomUpdate (CancelDocument (documentid doc) ManualCancel actor)
-  validTest $ assertRight etdoc
-
-testCancelDocumentSignableNotAwaitingAuthorNothing :: DB ()
-testCancelDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
-  doc <- addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentAllowedTypes = documentSignableTypes
-         , randomDocumentAllowedStatuses = [AwaitingAuthor, Pending]
-         , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
-         }
-  time <- rand 10 arbitrary
-  etdoc <- randomUpdate $ CancelDocument (documentid doc) ManualCancel
-           (AuthorActor time noIP (userid author) (getEmail author))
-
-  validTest $ assertRight etdoc
-
 testCancelDocumentNotSignableNothing :: DB ()
 testCancelDocumentNotSignableNothing = doTimes 10 $ do
   author <- addNewRandomAdvancedUser
@@ -2070,57 +2039,6 @@ testCancelDocumentNotNothing = doTimes 10 $ do
   aa :: AuthorActor <- rand 10 arbitrary
   etdoc <- randomUpdate $ (\did -> CancelDocument did ManualCancel aa)
   validTest $ assertLeft etdoc
-
-
-testPendingToAwaitingAuthorDocumentSignableAwaitingAuthorJust :: DB ()
-testPendingToAwaitingAuthorDocumentSignableAwaitingAuthorJust = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
-  doc <- addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentAllowedTypes = documentSignableTypes
-         , randomDocumentAllowedStatuses = [Pending]
-         , randomDocumentCondition = const True
-         }
-
-  (actor::SystemActor) <- rand 10 arbitrary
-  forM_ (filter (not . isAuthor) $ documentsignatorylinks doc) $ \s -> do
-    _ <- randomUpdate (MarkDocumentSeen (documentid doc) (signatorylinkid s) (signatorymagichash s) actor)
-    _ <- randomUpdate $ \si -> SignDocument (documentid doc) (signatorylinkid s) (signatorymagichash s) si actor
-    return ()
-  etdoc <- randomUpdate (PendingToAwaitingAuthor (documentid doc) actor) 
-           
-  validTest $ assertRight etdoc
-
-testPendingToAwaitingAuthorDocumentSignableNotAwaitingAuthorNothing :: DB ()
-testPendingToAwaitingAuthorDocumentSignableNotAwaitingAuthorNothing = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
-  doc <- addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentAllowedTypes = documentSignableTypes
-         , randomDocumentAllowedStatuses = [Pending]
-         , randomDocumentCondition = ((<=) 2 . length . documentsignatorylinks)
-         }
-
-  (actor::SystemActor) <- rand 10 arbitrary
-  etdoc <- randomUpdate $ PendingToAwaitingAuthor (documentid doc) actor
-
-  validTest $ assertLeft etdoc
-
-testPendingToAwaitingAuthorDocumentNotSignableNothing :: DB ()
-testPendingToAwaitingAuthorDocumentNotSignableNothing = doTimes 10 $ do
-  author <- addNewRandomAdvancedUser
-  doc <- addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentAllowedTypes = documentAllTypes \\ documentSignableTypes
-         , randomDocumentCondition = (not . (all (isSignatory =>>^ hasSigned) . documentsignatorylinks))
-         }
-  (actor::SystemActor) <- rand 10 arbitrary
-  etdoc <- randomUpdate $ PendingToAwaitingAuthor (documentid doc) actor
-  validTest $ assertLeft etdoc
-
-testPendingToAwaitingAuthorDocumentNotNothing :: DB ()
-testPendingToAwaitingAuthorDocumentNotNothing = doTimes 10 $ do
-  (actor::SystemActor) <- rand 10 arbitrary
-  etdoc <- randomUpdate $ (\did -> PendingToAwaitingAuthor did actor)
-  validTest $ assertLeft etdoc
-
 
 testSetDocumentTitleNotLeft :: DB ()
 testSetDocumentTitleNotLeft = doTimes 10 $ do
@@ -2191,8 +2109,8 @@ testGetDocumentsByCompanyWithFilteringCompany = doTimes 10 $ do
   time <- getMinutesTime
   let actor = SystemActor time
   _ <- dbUpdate $ SetDocumentTags did [DocumentTag name value] actor
-  docs <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company2) [] Nothing Nothing Nothing
-  docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [] Nothing Nothing Nothing
+  docs <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company2) []
+  docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) []
   validTest $ do
     assertEqual "Should have no documents returned" docs []
     assertEqual "Should have 1 document returned" (length docs') 1    
@@ -2206,8 +2124,8 @@ testGetDocumentsByCompanyWithFilteringFilters = doTimes 10 $ do
   _ <- dbUpdate $ SetUserCompany (userid author) (Just (companyid company))
   Just author' <- dbQuery $ GetUserByID (userid author)
   _ <- addRandomDocumentWithAuthor author'
-  docs <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [DocumentTag name value] Nothing Nothing Nothing
-  docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [] Nothing Nothing Nothing
+  docs <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name value]]
+  docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) []
   validTest $ do
     assertEqual "Should have no documents returned" docs []
     assertEqual "Should have 1 document returned" (length docs') 1    
@@ -2224,11 +2142,11 @@ testGetDocumentsByCompanyWithFilteringFinds = doTimes 10 $ do
   time <- getMinutesTime
   let actor = SystemActor time
   _ <- dbUpdate $ SetDocumentTags did [DocumentTag name value] actor
-  docs <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [DocumentTag name value] Nothing Nothing Nothing
-  docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [] Nothing Nothing Nothing
+  docs <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name value]]
+  docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) []
   validTest $ do
-    assertEqual "Should have one document returned" (length docs) 1
-    assertEqual "Should have one document returned" (length docs') 1
+    assertEqual "Should have one document returned" 1 (length docs)
+    assertEqual "Should have one document returned" 1 (length docs')
   
 testGetDocumentsByCompanyWithFilteringFindsMultiple :: DB ()
 testGetDocumentsByCompanyWithFilteringFindsMultiple = doTimes 10 $ do
@@ -2244,14 +2162,14 @@ testGetDocumentsByCompanyWithFilteringFindsMultiple = doTimes 10 $ do
   did <- addRandomDocumentWithAuthor author'
 
   _ <- dbUpdate $ SetDocumentTags did [DocumentTag name1 value1, DocumentTag name2 value2] actor
-  docs <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [DocumentTag name1 value1] Nothing Nothing Nothing
-  docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [DocumentTag name2 value2] Nothing Nothing Nothing
-  docs'' <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [DocumentTag name1 value1, DocumentTag name2 value2] Nothing Nothing Nothing
-  docs''' <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [] Nothing Nothing Nothing
-  docs'''' <- dbQuery $ GetDocumentsByCompanyWithFiltering Nothing (companyid company) [DocumentTag name1 value1, DocumentTag name2 value2, DocumentTag name3 value3] Nothing Nothing Nothing
+  docs <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name1 value1]]
+  docs' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name2 value2]]
+  docs'' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name1 value1, DocumentTag name2 value2]]
+  docs''' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) []
+  docs'''' <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) [DocumentFilterByTags [DocumentTag name1 value1, DocumentTag name2 value2, DocumentTag name3 value3]]
   validTest $ do
-    assertEqual "Should have one document returned" (length docs) 1  
-    assertEqual "Should have one document returned" (length docs') 1
-    assertEqual "Should have one document returned" (length docs'') 1
-    assertEqual "Should have one document returned" (length docs''') 1
-    assertEqual "Should have zero documents returned" (length docs'''') 0    
+    assertEqual "Should have one document returned" 1 (length docs)
+    assertEqual "Should have one document returned" 1 (length docs')
+    assertEqual "Should have one document returned" 1 (length docs'')
+    assertEqual "Should have one document returned" 1 (length docs''')
+    assertEqual "Should have zero documents returned" 0 (length docs'''')

@@ -17,6 +17,7 @@ module Templates.TextTemplates
     , updateCSV
     ) where
 
+import Control.Logic
 import Misc
 import Templates.TemplatesFiles
 

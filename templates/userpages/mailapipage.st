@@ -10,7 +10,7 @@ showUserMailAPI =
         $if(iscompanyadmin)$<li><a href="/account/company">$_CompanySettings()$</a></li>$endif$
        $if(iscompanyadmin)$<li><a href="/account/companyaccounts">$_CompanyAccounts()$</a></li>$endif$
        <li class="active"><a href="/account/mailapi">$_HeadMailApi()$</a></li>
-       <li><a href="/account/usagestats">$_HeadUsageStats()$</a></li>
+       <li><a href="/account/usagestats">$_HeadUsageStats()$</a></li>z
    </ul>
    <div class="tab-container">
      <div class="tab-content account">
@@ -24,14 +24,14 @@ showUserMailAPI =
                <div style="margin-top: 10px">
                  $_MailAPIActiveEmail()$
                  <ul id="mailapiemailslist">
-                  <li><a href="mailto:contract$if(!production)$-staging$endif$+$mailapikey$@api.scrive.com">
-                    contract$if(!production)$-staging$endif$+$mailapikey$@api.scrive.com
+                  <li><a href="mailto:contract+$mailapikey$@api.scrive.com">
+                    contract+$mailapikey$@api.scrive.com
                    </a></li>
-                   <li><a href="mailto:offer$if(!production)$-staging$endif$+$mailapikey$@api.scrive.com">
-                     offer$if(!production)$-staging$endif$+$mailapikey$@api.scrive.com
+                   <li><a href="mailto:offer+$mailapikey$@api.scrive.com">
+                     offer+$mailapikey$@api.scrive.com
                    </a></li>
-                   <li><a href="mailto:order$if(!production)$-staging$endif$+$mailapikey$@api.scrive.com">
-                     order$if(!production)$-staging$endif$+$mailapikey$@api.scrive.com
+                   <li><a href="mailto:order+$mailapikey$@api.scrive.com">
+                     order+$mailapikey$@api.scrive.com
                    </a></li>
                  </ul>
                  <input type="checkbox" id="resetapikeycbox" name="reset_key" />
@@ -70,14 +70,14 @@ showUserMailAPI =
                <div style="margin-top: 10px">
                  $_MailAPIActiveEmail()$
                  <ul id="mailapiemailslist">
-                  <li><a href="mailto:contract$if(!production)$-staging$endif$+$company.mailapikey$@api.scrive.com">
-                    contract$if(!production)$-staging$endif$+$company.mailapikey$@api.scrive.com
+                  <li><a href="mailto:contract+$company.mailapikey$@api.scrive.com">
+                    contract+$company.mailapikey$@api.scrive.com
                    </a></li>
-                   <li><a href="mailto:offer$if(!production)$-staging$endif$+$company.mailapikey$@api.scrive.com">
-                     offer$if(!production)$-staging$endif$+$company.mailapikey$@api.scrive.com
+                   <li><a href="mailto:offer+$company.mailapikey$@api.scrive.com">
+                     offer+$company.mailapikey$@api.scrive.com
                    </a></li>
-                   <li><a href="mailto:order$if(!production)$-staging$endif$+$company.mailapikey$@api.scrive.com">
-                     order$if(!production)$-staging$endif$+$company.mailapikey$@api.scrive.com
+                   <li><a href="mailto:order+$company.mailapikey$@api.scrive.com">
+                     order+$company.mailapikey$@api.scrive.com
                    </a></li>
                  </ul>
                  <br />

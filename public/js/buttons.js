@@ -5,13 +5,13 @@
  *                   size: "tiny | small | big",
  *                   text: "Text that will be put inside of button"
  *                   onClick* : "Function to be called when button is clicked" })
- *  will return Button object. 
+ *  will return Button object.
  *
  * It exports method input that returns jQuery object to be inserted anywere you want
  *
  * button.input()
 */
-  
+
 (function(window){
 /* InfoTextInput model. Has value, infotext and information if its focused  */
 var ButtonModel = Backbone.Model.extend({
@@ -43,7 +43,7 @@ var ButtonModel = Backbone.Model.extend({
        return this.get("labelstyle");
   },
   width: function() {
-       return this.get("width")   
+       return this.get("width");
   }
 });
 
@@ -63,7 +63,7 @@ var ButtonView = Backbone.View.extend({
         $(this.el).addClass(this.model.color());
         $(this.el).addClass("btn-"+this.model.size());
         $(this.el).append("<div class='left'/>");
-        
+
         var label = $("<div class='label'/>").text(this.model.text());
         if (this.model.width() != undefined)
             label.css("width",(this.model.width() - 2 * Button.borderWidth(this.model.size())) + "px");
@@ -71,7 +71,7 @@ var ButtonView = Backbone.View.extend({
         if (this.model.labelstyle() != undefined)
             label.attr("style",this.model.labelstyle());
         $(this.el).append(label);
-        
+
         $(this.el).append("<div class='right'/>");
         return this;
     },
@@ -110,7 +110,7 @@ window.Button = {
         return 6;
     else if (size == "big")
         return 22;
-  }    
+  }
 };
 
-})(window); 
+})(window);

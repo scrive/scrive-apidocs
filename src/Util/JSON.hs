@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE OverlappingInstances #-}
 module Util.JSON (
     -- Stuff that was here before
@@ -48,7 +49,6 @@ import qualified Data.List.Utils as List
 import Misc
 import Text.JSON.String
 import Happstack.Server (HasRqData,ServerMonad)
-
 
 fromJSONString :: JSValue -> String
 fromJSONString (JSString s) = fromJSString s
@@ -279,7 +279,5 @@ jsonType (JSBool _) = "bool"
 jsonType (JSNull) = "null"
 jsonType (JSArray _) = "array"
 
-
 jsonPack :: [(String,String)] -> JSValue
 jsonPack = JSObject . toJSObject . (mapSnd (JSString . toJSString))
-

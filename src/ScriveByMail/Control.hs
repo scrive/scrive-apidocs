@@ -12,7 +12,6 @@ import CompanyAccounts.CompanyAccountsControl
 import DB.Classes
 import Doc.DocStateData
 import Kontra
-import KontraError (internalError)
 import Control.Monad.Trans
 import qualified Data.ByteString.Lazy as BSL
 
@@ -26,7 +25,7 @@ import User.Model
 import User.UserControl
 import Util.FlashUtil
 import Util.MonadUtils
-import qualified Doc.DocControl as DocControl
+import Doc.Action
 
 import Control.Applicative
 import Control.Monad
@@ -46,8 +45,8 @@ handleMailAPI = do
     Right content -> return content
   mresult <- doMailAPI content
   case mresult of
-    Just (doc2, doc, msiglinkid) -> do
-        _ <- DocControl.postDocumentChangeAction doc2 doc msiglinkid
+    Just doc -> do
+        _ <- postDocumentPreparationChange doc
         return $ show $ documentid doc
     Nothing -> return ""
 

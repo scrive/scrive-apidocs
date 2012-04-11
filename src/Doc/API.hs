@@ -10,8 +10,8 @@ import Doc.DocStateQuery
 import Doc.DocStateData
 import Doc.Model
 import Doc.JSON
---import Control.Applicative
---import Control.Monad
+import Control.Applicative
+import Control.Logic
 import Control.Monad.Trans
 import Misc
 import Data.Maybe
@@ -38,44 +38,18 @@ import EvidenceLog.Model
 
 documentAPI :: Route (Kontra' Response)
 documentAPI = choice [
-  dir "api" $ dir "document" $ hGet          $ toK0 $ documentList,
   dir "api" $ dir "document" $ hPostNoXToken $ toK0 $ documentNew,
---  dir "api" $ dir "document" $ hGet          $ toK1 $ documentView,
+
+  -- /api/mainfile/{docid} ==> Change main file
+  dir "api" $ dir "mainfile" $ hPostNoXToken $ toK1 $ documentChangeMainFile,
+
   dir "api" $ dir "document" $ hPostNoXToken $ toK6 $ documentUploadSignatoryAttachment,
   dir "api" $ dir "document" $ hDelete       $ toK6 $ documentDeleteSignatoryAttachment,
   dir "api" $ dir "document" $ hPostNoXToken $ toK2 $ documentChangeMetadata
-  --dir "api" $ dir "login"    $ hPostNoXToken $ toK0 $ apiLogin
   ]
 
-{-              
-_apiLogin :: Kontrakcja m => m Response
-_apiLogin = api $ do
-  memail  <- getDataFn' (look "email")
-  mpasswd <- getDataFn' (look "password")
-  case (memail, mpasswd) of
-    (Just email, Just passwd) -> do
-      -- check the user things here
-      maybeuser <- lift $ runDBQuery $ GetUserByEmail Nothing (Email $ BS.fromString email)
-      case maybeuser of
-        Just user@User{userpassword}
-          | verifyPassword userpassword (BS.fromString passwd) -> do
-            muuser <- runDBQuery $ GetUserByID (userid user)
-            lift $ logUserToContext muuser
-            apiOK jsempty
-        _ -> apiForbidden
-    _ -> apiBadInput
--}              
-
--- | Return a list of documents the logged in user can see
-documentList :: Kontrakcja m => m Response
-documentList = api $ do
-  docs <- apiGuardL getDocsByLoggedInUser
-  jdocs <- lift $ mapM jsonDocumentAndFiles docs
-  return $ showJSON jdocs
-
 -- this one must be standard post with post params because it needs to
--- be posted from a browser form; we will have a better one for more
--- capable clients that follows the api standards
+-- be posted from a browser form
 documentNew :: Kontrakcja m => m Response
 documentNew = api $ do
   user <- getAPIUser
@@ -114,6 +88,41 @@ documentNew = api $ do
   d2 <- apiGuardL $ runDBUpdate $ AttachFile (documentid d1) (fileid file) aa
   _ <- lift $ addDocumentCreateStatEvents d2
   return $ Created $ jsonDocumentForAuthor d2
+
+-- this one must be standard post with post params because it needs to
+-- be posted from a browser form
+-- Change main file, file stored in input "file" OR templateid stored in "template"
+documentChangeMainFile :: Kontrakcja m => DocumentID -> m Response
+documentChangeMainFile docid = api $ do
+  ctx <- getContext
+  aa <- apiGuard' Forbidden $ mkAuthorActor ctx
+  doc <- apiGuardL' Forbidden $ getDocByDocID docid
+  apiGuard' Forbidden (isAuthor $ getAuthorSigLink doc)
+
+  fileinput <- lift $ getDataFn' (lookInput "file")
+  templateinput <- lift $ getDataFn' (look "template")
+
+  fileid <- case (fileinput, templateinput) of
+            (Just (Input contentspec (Just filename') _contentType), _) -> do
+              content1 <- case contentspec of
+                Left filepath -> liftIO $ BSL.readFile filepath
+                Right content -> return content
+                
+              -- we need to downgrade the PDF to 1.4 that has uncompressed structure
+              -- we use gs to do that of course
+              content <- apiGuardL' BadInput $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
+              let filename = basename filename'
+      
+              fileid <$> (lift $ runDB $ dbUpdate $ NewFile filename content)
+            (_, Just templateids) -> do
+              templateid <- apiGuard' BadInput $ maybeRead templateids
+              temp <- apiGuardL $ getDocByDocID templateid
+              apiGuard' BadInput $ listToMaybe $ documentfiles temp
+            _ -> throwError BadInput
+  
+  _ <- apiGuardL $ runDBUpdate $ AttachFile docid fileid aa
+  return ()
+
 
 documentChangeMetadata :: Kontrakcja m => DocumentID -> MetadataResource -> m Response
 documentChangeMetadata docid _ = api $ do
@@ -229,11 +238,4 @@ documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
   
   return $ jsonSigAttachmentWithFile sigattach' Nothing
 
-  
--- helpers
-
-jsonDocumentAndFiles :: Kontrakcja m => Document -> m JSValue
-jsonDocumentAndFiles doc = do
-  --files <- getFilesByStatus doc
-  return $ jsonDocumentForSignatory doc
-  
+   

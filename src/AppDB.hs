@@ -20,6 +20,7 @@ import Stats.Migrations
 import File.Tables
 import File.Migrations
 import Mails.Tables
+import PadQueue.Tables
 import Mails.Migrations
 import ScriveByMail.Tables
 import EvidenceLog.Tables
@@ -49,6 +50,7 @@ kontraMigrations = [
   , addIdSerialOnUsers
   , addEmailDomainOnCompanies
   , addCompanyNameNumberOnUsers
+  , updateDocumentStatusAfterRemovingAwaitingAuthor
   ] ++ mailerMigrations
 
 kontraTables :: [Table]
@@ -70,6 +72,7 @@ kontraTables = [
   , tableAuthorAttachments
   , tableSignatoryAttachments
   , tableEvidenceLog
+  , tablePadQueue
   , tableCompanyMailAPIs
   , tableUserRequest
   , tableMailAPIDelay

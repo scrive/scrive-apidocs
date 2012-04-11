@@ -80,10 +80,10 @@ window.MailView = Backbone.View.extend({
 		var mail = this.model;
 		var container = $(this.el);
 		if (!mail.ready()) {
-                    container.addClass('loadingMail')
+                    container.addClass('loadingMail');
                 }
                 else {
-                    container.removeClass('loadingMail')
+                    container.removeClass('loadingMail');
                     container.empty();
                     if (!mail.editable())
                             container.append(mail.content());

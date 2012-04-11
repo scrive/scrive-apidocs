@@ -33,6 +33,7 @@ module Doc.DocStateData (
   , TimeoutTime(..)
   , AuthorAttachment(..)
   , SignatoryAttachment(..)
+  , StatusClass(..)
   , getFieldOfType
   , getValueOfType
   , documentHistoryToDocumentLog
@@ -75,8 +76,34 @@ newtype SignOrder = SignOrder { unSignOrder :: Integer }
   deriving (Eq, Ord)
 $(newtypeDeriveUnderlyingReadShow ''SignOrder)
 
+
+{- |
+    We want the documents to be ordered like the icons in the bottom
+    of the document list.  So this means:
+    0 Draft - 1 Cancel - 2 Fall due - 3 Sent - 4 Opened - 5 Signed
+-}
+
+data StatusClass = SCDraft
+                  | SCCancelled
+                  | SCSent
+                  | SCDelivered
+                  | SCRead
+                  | SCOpened
+                  | SCSigned
+                  deriving (Eq, Ord, Enum)
+
+instance Show StatusClass where
+  show SCDraft = "draft"
+  show SCCancelled = "cancelled"
+  show SCSent = "sent"
+  show SCDelivered = "delivered"
+  show SCRead = "read"
+  show SCOpened = "opened"
+  show SCSigned = "signed"
+
 data IdentificationType = EmailIdentification
                         | ELegitimationIdentification
+                        | PadIdentification
   deriving (Eq, Ord, Bounded, Enum, Show)
 
 data SignatureInfo = SignatureInfo {
@@ -128,7 +155,6 @@ data SignatoryLink = SignatoryLink {
   , signatorydetails           :: SignatoryDetails    -- ^ details of this person as filled in invitation
   , signatorymagichash         :: MagicHash           -- ^ authentication code
   , maybesignatory             :: Maybe UserID        -- ^ if this document has been saved to an account, that is the user id
-  , maybesupervisor            :: Maybe UserID        -- ^ THIS IS NOW DEPRECATED - use maybecompany instead
   , maybecompany               :: Maybe CompanyID     -- ^ if this document has been saved to a company account this is the companyid
   , maybesigninfo              :: Maybe SignInfo      -- ^ when a person has signed this document
   , maybeseeninfo              :: Maybe SignInfo      -- ^ when a person has first seen this document
@@ -140,6 +166,7 @@ data SignatoryLink = SignatoryLink {
   , signatorylinkreallydeleted :: Bool -- ^ when true it means that the doc has been removed from the recycle bin
   , signatorylinkcsvupload     :: Maybe CSVUpload
   , signatoryattachments       :: [SignatoryAttachment]
+  , signatorylinkstatusclass   :: StatusClass
   } deriving (Eq, Ord, Show)
 
 data SignatoryRole = SignatoryPartner | SignatoryAuthor
@@ -201,7 +228,6 @@ data DocumentStatus = Preparation
                     | Canceled
                     | Timedout
                     | Rejected
-                    | AwaitingAuthor
                     | DocumentError String
   deriving (Eq, Ord, Show)
 
@@ -211,7 +237,6 @@ data DocumentProcess = Contract | Offer | Order
 data DocumentType = Signable DocumentProcess
                   | Template DocumentProcess
                   | Attachment
-                  | AttachmentTemplate
   deriving (Eq, Ord, Show)
 
 instance Convertible DocumentType SqlValue where
@@ -219,20 +244,17 @@ instance Convertible DocumentType SqlValue where
     Signable _ -> 1
     Template _ -> 2
     Attachment -> 3
-    AttachmentTemplate -> 4
 
 documentType :: (Int, Maybe DocumentProcess) -> DocumentType
 documentType (1, Just p) = Signable p
 documentType (2, Just p) = Template p
 documentType (3, Nothing) = Attachment
-documentType (4, Nothing) = AttachmentTemplate
 documentType v = error $ "documentType: wrong values: " ++ show v
 
 toDocumentProcess :: DocumentType -> Maybe DocumentProcess
 toDocumentProcess (Signable p) = Just p
 toDocumentProcess (Template p) = Just p
 toDocumentProcess (Attachment) = Nothing
-toDocumentProcess (AttachmentTemplate) = Nothing
 
 -- | Terrible, I know. Better idea?
 -- | TODO: to be KILLED.
@@ -244,7 +266,6 @@ doctypeFromString "Template Contract"  = Template Contract
 doctypeFromString "Template Offer"     = Template Offer
 doctypeFromString "Template Order"     = Template Order
 doctypeFromString "Attachment"         = Attachment
-doctypeFromString "AttachmentTemplate" = AttachmentTemplate
 doctypeFromString _                    = error "Bad document type"
 
 data DocumentFunctionality = BasicFunctionality | AdvancedFunctionality
@@ -398,6 +419,7 @@ data Document = Document {
   , documentauthorattachments      :: [AuthorAttachment]
   , documentui                     :: DocumentUI
   , documentregion                 :: Region
+  , documentstatusclass            :: StatusClass
   } deriving (Eq, Ord, Show)
 
 instance HasLocale Document where

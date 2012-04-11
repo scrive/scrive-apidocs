@@ -24,6 +24,7 @@ module API.IntegrationAPI (
     ) where
 
 import Control.Monad.State
+import Control.Logic
 import Data.Functor
 import Data.Maybe
 import DB.Classes
@@ -36,7 +37,6 @@ import MinutesTime
 import Misc
 import Session
 import Kontra
-import KontraError (internalError)
 import AppView
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
@@ -383,14 +383,22 @@ getDocuments = do
       Just s  -> case parseMinutesTimeISO s of
         Just t  -> return $ Just t
         Nothing -> throwApiError API_ERROR_PARSING $ "to_date unrecognized format: " ++ show s
-    let allstatuses = [Preparation, Pending, Closed, Rejected, Timedout, Canceled, AwaitingAuthor, DocumentError ""]
+    let allstatuses = [Preparation, Pending, Closed, Rejected, Timedout, Canceled, DocumentError ""]
         mstatuses   = case (mFromState, mToState) of
           (Nothing, Nothing) -> Nothing
           _ -> Just [s | s <- allstatuses
                        , maybe True (fromSafeEnum s >=) mFromState
                        , maybe True (fromSafeEnum s <=) mToState
                        ]
-    linkeddocuments <- runDBQuery $ GetDocumentsByCompanyWithFiltering (Just sid) (companyid comp) tags mFromDate mToDate mstatuses
+    linkeddocuments <- runDBQuery $ GetDocumentsByCompanyWithFiltering (companyid comp)
+                       ([ DocumentFilterByService (Just sid)
+                        , DocumentFilterByTags tags
+                        ] ++
+                        catMaybes
+                        [ DocumentFilterMinChangeTime <$> mFromDate
+                        , DocumentFilterMaxChangeTime <$> mToDate
+                        , DocumentFilterStatuses<$> mstatuses
+                        ])
     api_docs <- sequence [api_document_read False d  
                          | d <- linkeddocuments
                          , not $ isAttachment d

@@ -31,12 +31,14 @@ body.signview {
   height: 33px;
   width: 200px;
   background-repeat: no-repeat;
+  margin-left: 30px;
 }
 
 .signview .pageheader .content .sender {
   float: right;
   margin-top: 20px;
   text-align: right;
+  margin-right: 30px;
 }
 
 .signview .pageheader.withcustomlogo .content .sender.shoved {
@@ -140,6 +142,7 @@ body.signview {
   text-align: left;
   text-decoration: underline;
   font-weight: normal;
+  color: grey;
 }
 
 .signview .save {
@@ -172,14 +175,29 @@ body.signview {
 }
 
 .signview .save.done {
-  border: solid #89c041 1px;
-  background-color: #e7f6d5;
-  color: #89c041;
+  background-color: white;
+  padding-top: 31px;
+  padding-bottom: 15px;
+  margin-bottom: 7px;
+  border: solid #bababc 1px;
+  text-align: center;
+  font-weight: bold;
 }
 
-.signview .save.done .title {
-  color: #89c041;
+.signview .save .headline {
+  text-transform: uppercase;
+  color: black;
+  font-size: x-large;
+  margin-bottom: 5px;
 }
+
+.signview .save .subheadline {
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 0px;
+  margin-bottom: 5px;
+}
+
 
 .signview .save .highlight {
   margin-left: 158px;
@@ -200,8 +218,28 @@ body.signview {
   margin-bottom: 11px;
 }
 
-.signview .save input {
-  max-width: 168px;
+.signview .save .item input {
+    background-color: white;
+    border: medium none;
+    font-size: 12px;
+    height: 18px;
+    line-height: 18px;
+    margin: 0;
+    outline: medium none;
+    overflow: hidden;
+    position: relative;
+    top: 1px;
+    width: 132px;
+    font-style: italic;
+    border: 1px solid #6782A5;
+    border-radius: 2px 2px 2px 2px;
+    display: block;
+    float: left;
+    margin: 3px 5px 0 0;
+    overflow: hidden;
+    padding: 0;
+    width: 161px;
+    position: relative;
 }
 
 .signview .save .item {
@@ -416,9 +454,7 @@ body.signview {
 
 .signview .section {
   clear: both;
-
   margin: 7px;
-  padding: 20px;
   background-color: white;
   background-image: url(../img/horizontal-shading-bar.png);
   background-repeat: no-repeat;
@@ -478,7 +514,7 @@ body.signview {
 
 .signview .signatoryattachments .list {
   float: left;
-
+  width: 605px;
   margin-right: 20px;
 }
 
@@ -490,14 +526,12 @@ body.signview {
 .signview .signatoryattachments .list .item .first.column {
   float: left;
   display: block;
-  width: 350px;
   margin-right: 30px;
 }
 
 .signview .signatoryattachments .list .item .second.column {
-  float: left;
+  float: right;
   display: block;
-  width: 200px;
 }
 
 .signview .signatoryattachments .list .item .loading {
@@ -574,95 +608,103 @@ body.signview {
   cursor: pointer;
 }
 
-.signview .signatories .list {
-  float: left;
+.signview .signatories .list .sig .statustext {
+    width: 124px;
+    float: left;
+    text-transform: uppercase;
+    font-size: 11px;
+    vertical-align: middle;
+    line-height: 15px;
 }
 
-.signview .signatories .list .column {
-  float: left;
-  width: 280px;
-  margin-right: 20px;
-  min-height: 10px;
+.statustext.signed {
+    color: black;
 }
 
-.signview .signatories .signatory {
-  border: solid #bababc 1px;
-  padding: 10px;
+.statustext.opened {
+    color: #83BC39;
 }
 
-.signview .signatories .grouping {
-  margin-bottom: 10px;
+.statustext.sent {
+    color: #83BC39;
 }
 
-.signview .signatories .email {
-  overflow-x: auto;
+.signview .signatories .column {
+    width: 260px;
+    float: left;
+    border: solid #bababc 1px;
+    height: 185px;
 }
 
-.signview .signatories .signatory .name {
-  color: black;
-  font-weight: bold;
+.signview .signatories .name {
+    font-weight: bold;
+    color: black;
+    font-size: 14px;
+    height: 19px;
 }
 
-.signview .signatories .signatory .company {
-  color: black;
-  font-weight: bold;
-  font-size: smaller;
+ .signview .signatories .company {
+    font-weight: bold;
+    color: black;
+    height: 15px;
 }
 
-.signview .signatories .signatory .summary {
-  border-top-style: dotted;
-  border-top-color: #bababc;
-  border-top-width: 1px;
-  padding-top: 10px;
-  text-align: center;
-  font-weight: bold;
+.signview .signatories .face {
+    background-image: url('../img/missing-portrait.png');
+    background-size: cover;
+    width: 60px;
+    height: 50px;
+    float: left;
 }
 
-.signview .signatories .signatory .summary .labelwrapper {
-  margin: 0px auto;
+.signview .signatories .inner {
+    margin-top: 10px;
+    min-height: 72px;
 }
 
-.signview .signatories .signatory .summary.signed {
-  color: #83bc39;
+.signview .signatories .numspace {
+    float:left;
+    width: 130px;
+    height: 32px;
+    padding: 0px;
 }
 
-.signview .signatories .signatory .summary .icon {
-  float: none;
-  display: inline-block;
-/*   believe it or not these lines do inline-blocking for IE7 */
-  zoom: 1;
-  *display: inline;
-  _height: 11px;
-/*   end of IE7 junk */
+.signview .signatories .contactspace {
+    float:left;
+    width: 130px;
+    height: 32px;
+    padding: 0px;
+
 }
 
-.signview .signatories .signatory .summary .label {
-  display: inline-block;
-/*   believe it or not these lines do inline-blocking for IE7 */
-  zoom: 1;
-  *display: inline;
-  _height: 11px;
-/*   end of IE7 junk */
+.signview .signatories .statusbox {
+    border-top: 1px dashed;
+    text-align: center;
+    font-weight: bold;
+    font-size: 14px;
+    vertical-align: middle;
 }
 
-.signview .signatories .signatory.current .fieldwrapper {
-  margin-top: 10px;
+.signview .signatories .statusbox .spacing {
+    margin-left: auto;
+    margin-right: auto;
 }
 
-/** this stuff is kind of messy, need to improve when do inline field editing*/
-.signview .signatories .signatory .closedinputs .fieldvalue,
-.signview .signatories .signatory.other .fieldvalue {
-  border: none;
-  height: 17px;
-  line-height: 17px;
+.signview .signatories .statusbox .icon.status {
+    display: inline-block;
+    float: none;
 }
 
-.signview .signatories .signatory .closedinputs .label {
-  display: none;
+.signview .signatories .statusbox .signed {
+    color: black;
 }
 
-.signview .signatories .signatory .closedinputs .fieldwrapper {
-  margin-top: 0px;
+.signview .signatories .statusbox .opened {
+    color: #83BC39;
+}
+
+.signview .signatories .statusbox .sent {
+    color: #83BC39;
 }
 
 /*Hide the info text on the custom fields, cos
@@ -699,12 +741,11 @@ body.signview {
   display: block;
 
   position: fixed;
-  right: 205px;
 
   z-index: 5000;
 
   height: 112px;
-  width: 112px;
+  min-width: 112px;
 }
 
 .signview .arrows .down.arrow {
@@ -726,10 +767,29 @@ body.signview {
 
 .signview .arrows .action.arrow {
   position: absolute;
-  background: url(../img/sign-arrow-action.png);
+}
+
+.signview .arrows .action.arrow .front {
+  background: url(../img/sign-arrow-action-front.png);
   background-repeat: no-repeat;
-  width: 92px;
+  min-width: 84px;
   height: 28px;
+  float: left;
+}
+
+.signview .arrows .action.arrow .back {
+  background: url(../img/sign-arrow-action-back.png);
+  background-repeat: no-repeat;
+  width: 8px;
+  height: 28px;
+  float: left;
+}
+
+.signview .arrows .action.arrow .label {
+  color: white;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-top: 5px;
 }
 
 .signview .pagefooter {
@@ -788,3 +848,40 @@ body.signview {
   text-decoration: none;
 }
 
+div.spacing {
+    margin: 4px;
+    padding: 8px;
+}
+
+div.spacing.butt {
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+}
+
+.sig.first {
+    margin-top: 0px;
+    padding-top: 0px;
+}
+
+.sig {
+    margin-top: 2px;
+    padding-top: 6px;
+}
+
+.column.spacing {
+    margin-right: 20px;
+}
+
+.section.signatories {
+    padding-top: 20px;
+}
+
+.section .signatoryattachments {
+    padding-top: 20px;
+    padding-bottom: 10px; /* An extra 10px snuck in somewhere! */
+}
+
+.signatoryattachments .buttonbox {
+    float: left;
+    margin-left: 10px;
+}

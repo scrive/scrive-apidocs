@@ -259,11 +259,14 @@ testDocumentsFilteringFromDate env = withTestEnvironment env $ do
 testDocumentsFilteringFromDate2 :: DBEnv -> Assertion
 testDocumentsFilteringFromDate2 env = withTestEnvironment env $ do
     createTestService
-    dids <- getJSONStringField "document_id" <$> (makeAPIRequest env createDocument =<< createDocumentJSONFriend "test_company1" "mariusz@skrivapa.se" "eric@scrive.com")
-    let Just did = maybeRead dids
+    apiresult <- makeAPIRequest env createDocument =<< createDocumentJSONFriend "test_company1" "mariusz@skrivapa.se" "eric@scrive.com"
+    let dids = getJSONStringField "document_id" apiresult
+    let mdid = maybeRead dids
+        Just did = mdid
+    assertBool ("Document created successfully " ++ dids) (isJust mdid)
     apiReqDocs3 <- getDocumentsJSON "test_company1" "mariusz@skrivapa.se"
     apiRespDocs3 <- makeAPIRequest env getDocuments $ apiReqDocs3
-    assertBool ("Should have 1 document but " ++ (show $ docsCount apiRespDocs3) ++ " were found") $ (docsCount apiRespDocs3) == 1
+    assertEqual ("getDocuments " ++ show apiReqDocs3 ++ " returned docs") 1 (docsCount apiRespDocs3)
     ctxtime <- getMinutesTime
     let tm = minutesAfter 1000 ctxtime
         tms = showMinutesTimeForAPI tm
@@ -274,14 +277,17 @@ testDocumentsFilteringFromDate2 env = withTestEnvironment env $ do
     if docsCount apiRespDocsFilter == -1 
       then Log.debug $ "got a weird response: " ++ show apiRespDocsFilter
       else return ()
-    assertBool ("All documents should be filtered out but " ++ (show $ docsCount apiRespDocsFilter) ++ " were found") $ (docsCount apiRespDocsFilter) == 0
+    assertEqual ("getDocuments " ++ encode apiReqDocsFilter ++ " returned wrong number of documents")
+                 0 (docsCount apiRespDocsFilter)
 
     Right apiReqDocsFilter2 <- jsset "from_date" tmbefore <$> getDocumentsJSON "test_company1" "mariusz@skrivapa.se"
     apiRespDocsFilter2 <- makeAPIRequest env getDocuments apiReqDocsFilter2
     if docsCount apiRespDocsFilter2 == -1 
       then Log.debug $ "got a weird response: " ++ show apiRespDocsFilter2
       else return ()
-    assertBool ("Should be one document but got " ++ (show $ docsCount apiRespDocsFilter2) ++ " were found") $ (docsCount apiRespDocsFilter2) == 1
+
+    assertEqual ("getDocuments " ++ encode apiReqDocsFilter2 ++ " returned wrong numbers of documents")
+                  1 (docsCount apiRespDocsFilter2)
     
     Just doc <- dbQuery $ GetDocumentByDocumentID did
     _ <- dbUpdate $ PreparationToPending did (SystemActor ctxtime)
@@ -289,9 +295,9 @@ testDocumentsFilteringFromDate2 env = withTestEnvironment env $ do
     _ <- forM (documentsignatorylinks doc) $ \sl ->
       if isAuthor sl 
       then dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl) 
-           (AuthorActor (minutesAfter 100 tm) noIP (fromJust $ maybesignatory sl) (getEmail sl))
+           (AuthorActor (minutesAfter 1000 tm) noIP (fromJust $ maybesignatory sl) (getEmail sl))
       else dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl) 
-           (SignatoryActor (minutesAfter 100 tm) noIP (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
+           (SignatoryActor (minutesAfter 1000 tm) noIP (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
 
     Just _doc' <- dbQuery $ GetDocumentByDocumentID did
     Right apiReqDocsFilter3 <- jsset "from_date" tms <$> getDocumentsJSON "test_company1" "mariusz@skrivapa.se"
@@ -299,7 +305,8 @@ testDocumentsFilteringFromDate2 env = withTestEnvironment env $ do
     if docsCount apiRespDocsFilter3 == -1 
       then Log.debug $ "got a weird response: " ++ show apiRespDocsFilter3
       else return ()
-    assertBool ("Should be one document but got " ++ (show $ docsCount apiRespDocsFilter3) ++ "") $ (docsCount apiRespDocsFilter3) == 1
+    assertEqual ("getDocuments " ++ encode apiReqDocsFilter3 ++ " returned wrong numbers of documents (after MarkDocumentSeen)")
+                 1 (docsCount apiRespDocsFilter3)
 
 
 testNewDocumentWithSpecificExample :: DBEnv -> Assertion
@@ -378,9 +385,10 @@ testNewDocumentWithCompanyNr env = withTestEnvironment env $ do
 createDocumentJSON :: String -> String -> DB JSValue
 createDocumentJSON company author = do
      dt <- rand 10 $  elements [1,3,5]
-     randomCall $ \title fname sname -> JSObject $ toJSObject $
+     title <- rand 10 $ arbString 1 10
+     randomCall $ \fname sname -> JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
-         ,("title" , JSString $ toJSString $ fromSNN title)
+         ,("title" , JSString $ toJSString $ title)
          ,("type" , JSRational True (dt%1))
          ,("involved" , JSArray [ JSObject $ toJSObject $
                                     [ ("fstname", JSString $ toJSString fname),
@@ -393,9 +401,10 @@ createDocumentJSON company author = do
 createDocumentJSONFriend :: String -> String -> String -> DB JSValue
 createDocumentJSONFriend company author friend = do
      dt <- rand 10 $  elements [1,3,5]
-     randomCall $ \title fname sname fname2 sname2 -> JSObject $ toJSObject $
+     title <- rand 10 $ arbString 1 10
+     randomCall $ \fname sname fname2 sname2 -> JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
-         ,("title" , JSString $ toJSString $ fromSNN title)
+         ,("title" , JSString $ toJSString $ title)
          ,("type" , JSRational True (dt%1))
          ,("files", JSArray [JSObject $ toJSObject $
                              [("name", JSString $ toJSString "file.pdf")
@@ -420,9 +429,11 @@ createDocumentJSONFriend company author friend = do
 
 
 createOrderJSON :: String -> String -> DB JSValue
-createOrderJSON company author = randomCall $ \title fname sname fname2 sname2 em2 -> JSObject $ toJSObject $
+createOrderJSON company author = do
+    title <- rand 10 $ arbString 1 10
+    randomCall $ \fname sname fname2 sname2 em2 -> JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
-         ,("title" , JSString $ toJSString $ fromSNN title)
+         ,("title" , JSString $ toJSString $ title)
          ,("type" , JSRational True (5%1))
          ,("involved" , JSArray [ JSObject $ toJSObject $
                                     [ ("fstname", JSString $ toJSString fname),
@@ -729,7 +740,9 @@ containsCompanyEmbedLink obj = "connectcompany" `isInfixOf` (getJSONStringField 
   
 
 createTemplateJSON :: String -> String -> DB JSValue
-createTemplateJSON company author = randomCall $ \title fname sname -> JSObject $ toJSObject $
+createTemplateJSON company author = do
+    title <- rand 10 $ arbString 1 10
+    randomCall $ \fname sname -> JSObject $ toJSObject $
         [ ("company_id", JSString $ toJSString company)
          ,("title" , JSString $ toJSString  title)
          ,("type" , JSRational True (2%1))

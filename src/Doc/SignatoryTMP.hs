@@ -32,6 +32,7 @@ module Doc.SignatoryTMP (
     
 ) where
 
+import Control.Logic
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
 import Doc.DocStateData

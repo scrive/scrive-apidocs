@@ -47,6 +47,8 @@ import DB.Classes
 import Control.Applicative
 import EvidenceLog.Model
 import Control.Concurrent
+import Data.String.Utils
+
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
     Seal.Person { Seal.fullname = (getFullName details) ++
@@ -63,8 +65,8 @@ personFromSignatoryDetails details =
                 , Seal.emailverified = True
                 }
 
-personFields :: MonadIO m => (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider,String) -> Fields m
-personFields (person, signinfo,_seeninfo, _ , mprovider, _initials) = do
+personFields :: MonadIO m => Document -> (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider,String) -> Fields m
+personFields doc (person, signinfo,_seeninfo, _ , mprovider, _initials) = do
    field "personname" $ Seal.fullname person
    field "signip" $  formatIP (signipnumber signinfo)
    field "seenip" $  formatIP (signipnumber signinfo)
@@ -72,7 +74,8 @@ personFields (person, signinfo,_seeninfo, _ , mprovider, _initials) = do
    field "bankid" $ mprovider == Just BankIDProvider
    field "nordea" $ mprovider == Just NordeaProvider
    field "telia"  $ mprovider == Just TeliaProvider
-
+   field "email"  $ EmailIdentification `elem` (documentallowedidtypes doc)
+   field "pad"    $ PadIdentification `elem` (documentallowedidtypes doc)
 
 personsFromDocument :: Document -> [(Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, String)]
 personsFromDocument document =
@@ -109,8 +112,8 @@ fieldsFromSignatory SignatoryDetails{signatoryfields} =
   where
     makeSealField :: SignatoryField -> [Seal.Field]
     makeSealField sf = case  sfType sf of
-                         SignatureFT -> map (fieldJPEGFromPlacement (sfValue sf)) (sfPlacements sf) 
-                         _ -> map (fieldFromPlacement (sfValue sf)) (sfPlacements sf) 
+                         SignatureFT -> concatMap (maybeToList . (fieldJPEGFromPlacement (sfValue sf))) (sfPlacements sf)
+                         _ -> map (fieldFromPlacement (sfValue sf)) (sfPlacements sf)
     fieldFromPlacement sf placement = Seal.Field {
         Seal.value = sf
       , Seal.x = placementx placement
@@ -119,18 +122,24 @@ fieldsFromSignatory SignatoryDetails{signatoryfields} =
       , Seal.w = placementpagewidth placement
       , Seal.h = placementpageheight placement
      }
-    fieldJPEGFromPlacement sf placement = Seal.FieldJPG
-      { valueBase64      =  dropWhile (\c -> c == ';' || c == ',') sf
-      , Seal.x = placementx placement
-      , Seal.y = placementy placement + 17 -- Fix for signature box header from UI
-      , Seal.page = placementpage placement
-      , Seal.w = placementpagewidth placement
-      , Seal.h = placementpageheight placement
-      , Seal.image_w       = 250
-      , Seal.image_h       = 100
-      , Seal.internal_image_w = 250
-      , Seal.internal_image_h = 100
-      }
+    fieldJPEGFromPlacement v placement =
+      case split "|" v of
+              [w,h,c] -> do
+                wi <- maybeRead w -- NOTE: Maybe monad usage
+                hi <- maybeRead h
+                Just $ Seal.FieldJPG
+                 {  valueBase64      =  drop 1 $ dropWhile (\e -> e /= ',') c
+                  , Seal.x = placementx placement
+                  , Seal.y = placementy placement
+                  , Seal.page = placementpage placement
+                  , Seal.w = placementpagewidth placement
+                  , Seal.h = placementpageheight placement
+                  , Seal.image_w       = wi
+                  , Seal.image_h       = hi
+                  , Seal.internal_image_w = wi
+                  , Seal.internal_image_h = hi
+                 }
+              _ -> Nothing
 
 sealSpecFromDocument :: TemplatesMonad m => String -> Document -> [DocumentEvidenceEvent] -> String -> String -> m Seal.SealSpec
 sealSpecFromDocument hostpart document elog inputpath outputpath =
@@ -150,13 +159,13 @@ sealSpecFromDocument hostpart document elog inputpath outputpath =
       initials = concatComma initialsx
       makeHistoryEntryFromSignatory personInfo@(_ ,seen, signed, isauthor, _, _)  = do
           seenDesc <- renderLocalTemplateForProcess document processseenhistentry $ do
-                        personFields personInfo
+                        personFields document personInfo
                         documentInfoFields document
           let seenEvent = Seal.HistEntry
                             { Seal.histdate = show (signtime seen)
                             , Seal.histcomment = pureString seenDesc}
           signDesc <- renderLocalTemplateForProcess document processsignhistentry $ do
-                        personFields personInfo
+                        personFields document personInfo
                         documentInfoFields document
           let signEvent = Seal.HistEntry
                             { Seal.histdate = show (signtime signed)
@@ -164,9 +173,8 @@ sealSpecFromDocument hostpart document elog inputpath outputpath =
           return $ if (isauthor)
                     then [signEvent]
                     else [seenEvent,signEvent]
-      invitationSentEntry = case documentinvitetime document of
-                                Nothing -> return []
-                                Just (SignInfo time ipnumber) -> do
+      invitationSentEntry = case (documentinvitetime document,sendMailsDurringSigning document) of
+                                (Just (SignInfo time ipnumber),True) -> do
                                    desc <-  renderLocalTemplateForProcess document processinvitationsententry $ do
                                        documentInfoFields document
                                        documentAuthorInfo document
@@ -177,7 +185,7 @@ sealSpecFromDocument hostpart document elog inputpath outputpath =
                                       { Seal.histdate = show time
                                       , Seal.histcomment = pureString desc
                                       }]
-
+                                _ -> return []   
       maxsigntime = maximum (map (signtime . (\(_,_,c,_,_,_) -> c)) signatories)
       concatComma = concat . intersperse ", "
 

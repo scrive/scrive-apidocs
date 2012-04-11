@@ -641,6 +641,7 @@ a.btn-tiny.red:active .label {
 	right: 5px;
         top: 5px;
 	width: 22px;
+        margin-left: 10px;
 }
 
 .btn-big .btn-symbol.cross {
@@ -649,6 +650,7 @@ a.btn-tiny.red:active .label {
 	margin-right: 4px;
 	top: 11px;
 	width: 30px;
+        margin-left: 10px;
 }
 
 .btn-symbol.none {

@@ -6,38 +6,37 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
                 <meta http-equiv="content-language" content="$ctxlang$" />
                 <meta name="description" content="$_firstPageMetaDescription()$" />
-                <link href='$protocol$//fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css"/>
-                <link href="/css/main.css" rel="stylesheet" type="text/css" />
-                <link href="/theme/flash.css" rel="stylesheet" type="text/css" />
-                <link rel="stylesheet" type="text/css" href="$prefix$/theme/symbols.css" media="screen"/>
-                <link rel="stylesheet" type="text/css" href="$prefix$/theme/newdesign.css" media="screen"/>
-                <link rel="stylesheet" type="text/css" href="$prefix$/theme/buttons.css" media="screen"/>
-               <script src="$protocol$//ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"
+                <link href='https://fonts.googleapis.com/css?family=Copse' rel="stylesheet" type="text/css"/>
+                <link href="$resourcehostpart$/css/main.css" rel="stylesheet" type="text/css" />
+                <link href="$resourcehostpart$/theme/flash.css" rel="stylesheet" type="text/css" />
+                <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/symbols.css" media="screen"/>
+                <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/newdesign.css" media="screen"/>
+                <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/buttons.css" media="screen"/>
+               <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"
                 type="text/javascript"></script>
-               <script src="$protocol$//ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/jquery-ui.min.js"
+               <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.11/jquery-ui.min.js"
                 type="text/javascript"></script>
-               <script src="$prefix$/js/jquery.tools.min.js"
+               <script src="$resourcehostpart$/js/jquery.tools.min.js"
                 type="text/javascript"></script>
-               <script src="$prefix$/js/jquery.MultiFile.js"
+               <script src="$resourcehostpart$/js/jquery.MultiFile.js"
                 type="text/javascript"></script>
-               <script src="$prefix$/tiny_mce/jquery.tinymce.js"
+               <script src="$resourcehostpart$/tiny_mce/jquery.tinymce.js"
                 type="text/javascript"></script>
                <script type="text/javascript">
                 $javascriptLocalisation()$</script>
-               <script src="$prefix$/js/global.js"
+               <script src="$resourcehostpart$/js/global.js"
                 type="text/javascript"></script>
-               <script src="$prefix$/js/underscore.js"
+               <script src="$resourcehostpart$/js/underscore.js"
                 type="text/javascript"></script>
-               <script src="$prefix$/js/backbone.js"
+               <script src="$resourcehostpart$/js/backbone.js"
                 type="text/javascript"></script>
-               <script src="$prefix$/js/flashmessages.js"
+               <script src="$resourcehostpart$/js/flashmessages.js"
                 type="text/javascript"></script>
-               <script src="$prefix$/js/validation.js"
+               <script src="$resourcehostpart$/js/validation.js"
                 type="text/javascript"></script>
-                <script src="/js/jquery.tweet.js" type="text/javascript"></script>
-                <script src="/js/main.js" type="text/javascript"></script>
+                <script src="$resourcehostpart$/js/jquery.tweet.js" type="text/javascript"></script>
                 $if(production)$
-                <script src="$prefix$/js/analytics.js" type="text/javascript"></script>
+                <script src="$resourcehostpart$/js/analytics.js" type="text/javascript"></script>
                 $endif$
         </head>
         <body>
@@ -58,7 +57,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <h3>$_h3CreateAccount()$</h3>
                                                 <p class="introtext">$_h3CreateAccountBody()$</p>
                                                 <form method="post" action="$linksignup$" class="requestAccount">
-                                                  <input class="shiny" type="email" name="email" infotext="$_FillInEmail()$" autocomplete="off" /> 
+                                                  <input class="shiny" type="email" name="email" infotext="$_FillInEmail()$" autocomplete="off" />
                                                   <a href="#" class="submit new-btn-small green2 center"><p>$_ButtonCreateAccount()$</p></a>
                                                   <input type="submit" class="hidden" />
                                                 </form>
@@ -80,7 +79,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                   class="toplink ">$_pageFooterPrices()$</a>
                                   $localeSwitcher()$
                                   </span>
-                                        
+
                                         <div class="campaign-container">
                                                 <div class="campaign-play campaign-play-video"></div>
                                                 <div class="campaign-text campaign-play-video">
@@ -112,7 +111,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <div class="text-container">
                                                   <h2>$_Bemefit1()$</h2>
                                                   <p>$_Bemefit1Body()$</p>
-                                                </div>  
+                                                </div>
                                         </div>
                                         <div class="smallbox float-left">
                                                 <div class="icon-container">
@@ -144,7 +143,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         </div>
                                 </div>
                                 </div>
-                                
+
                                 <div class="productdescriptionbox">
                                 <div class="separator"> </div>
                                 <h2 class="productdescriptiontitle">$_productDescriptionTitle()$</h2>
@@ -186,27 +185,39 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                   <p>$_Product3Body()$</p>
                                                 </div>
                                         </div>
-                 
+
                                 </div>
                                 </div>
                                 <div class="spacer50"></div>
                                 <div class="clearfix"></div>
-                               
+
                                 <div class="price-plan-container">
                                         <table class="price-plan">
                                                 <tr>$_PriceTableHead()$
                                                 </tr>
-                                                <tr class="odd-row">
+                                                <tr>
                                                         $_PriceTableRow1()$
                                                 </tr>
                                                 <tr>
                                                         $_PriceTableRow2()$
                                                 </tr>
-                                                <tr class="odd-row">
+                                                <tr>
                                                         $_PriceTableRow3()$
                                                 </tr>
                                                 <tr>
                                                         $_PriceTableRow4()$
+                                                </tr>
+                                                <tr>
+                                                        $_PriceTableRow5()$
+                                                </tr>
+                                                <tr>
+                                                        $_PriceTableRow6()$
+                                                </tr>
+                                                <tr>
+                                                        $_PriceTableRow7()$
+                                                </tr>
+                                                <tr>
+                                                        $_PriceTableRow8()$
                                                 </tr>
                                                 <tr class="big-row">
                                                         $_PriceTablePriceRow()$
@@ -218,14 +229,10 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                         </div>
                                 </div>
                                 <div class="price-plan-annotation">
-                                $_priceplanPageVAT()$
+                                $_priceplanPageSignLimit()$
                                 </div>
 
                 <div class="big-price-plan">$_priceplanPageBelowTable1()$
-                </div>
-                <div class="big-price-plan">$_priceplanPageBelowTable2()$
-                </div>
-                <div class="big-price-plan">$_priceplanPageBelowTable3()$
                 </div>
 
                                 <div class="spacer70"></div>
@@ -272,7 +279,7 @@ legalModal=
     <a class="modal-close close"> </a>
   </div>
   <div class="modal-body">
-    <div class="modal-content">     
+    <div class="modal-content">
 
       <div>
         <img src="/img/Lawyer picture.jpg" class="float-left" />
@@ -288,9 +295,9 @@ legalModal=
 
       <div class="clearfix"></div>
       <div class="spacer40"></div>
-      
+
       <h3>Finns det papper och penna i molnet?</h3>
-      
+
       <p>
         För en tid sedan träffade jag för en klients räkning ett
         förlikningsavtal i en tvist. Det var ingen stor fråga och det
@@ -356,7 +363,7 @@ legalModal=
         företag har börjat tillhandahålla. I molnet behövs varken
         papper eller penna. Jag ser fram emot att i framtiden slippa
         gå till posten för att hämta ut onödiga REK!
-      </p>      
+      </p>
     </div>
   </div>
   <div class="modal-footer">

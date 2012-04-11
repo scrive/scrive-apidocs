@@ -23,7 +23,6 @@ import Control.Monad.State
 import Data.Functor
 import Misc
 import Kontra
-import KontraError (internalError)
 import KontraLink
 import Data.Maybe
 import API.Service.Model

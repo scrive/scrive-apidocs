@@ -15,6 +15,17 @@ import Doc.DocumentID
 import Doc.DocStateData()
 import qualified Data.ByteString as BS
 
+updateDocumentStatusAfterRemovingAwaitingAuthor :: Migration
+updateDocumentStatusAfterRemovingAwaitingAuthor = Migration {
+    mgrTable = tableDocuments
+  , mgrFrom = 3
+  , mgrDo = do
+    -- change AwaitingAuthor to Pending
+    kRunRaw "UPDATE documents SET status = 2 WHERE status = 7"
+    -- update DocumentError so it has proper value
+    kRunRaw "UPDATE documents SET status = 7 WHERE status = 8"
+  }
+
 removeOldSignatoryLinkIDFromCancelationReason :: Migration
 removeOldSignatoryLinkIDFromCancelationReason = Migration {
     mgrTable = tableDocuments

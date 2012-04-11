@@ -40,6 +40,7 @@ instance FromJSON DocumentFunctionality where
 instance FromJSON IdentificationType where
     fromJSValue j = case fromJSValue j of 
              Just "eleg" -> Just ELegitimationIdentification
+             Just "pad" -> Just PadIdentification
              _ -> Just EmailIdentification
                  
 instance FromJSON Region where
