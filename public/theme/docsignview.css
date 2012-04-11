@@ -17,7 +17,7 @@ body.signview {
   width: 960px;
   padding-top: 10px;
   padding-bottom: 10px;
-  min-height: 70px;
+  height: 76px;
   display: table;
   overflow: hidden;
   #position: relative;
@@ -41,8 +41,6 @@ body.signview {
 
 .signview .pageheader .content .sender {
   text-align: right;
-  float: right;
-  margin-right: 30px;
   #position: absolute; 
   #top: 50%;
   display: table-cell; 
@@ -960,4 +958,5 @@ div.spacing.butt {
 .signview .sender .inner {
     #position: relative;
     #top: -50%;
+    margin-right: 30px;
 }
