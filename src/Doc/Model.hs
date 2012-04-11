@@ -278,7 +278,7 @@ documentFilterToSQL (DocumentFilterByTags tags) =
       escape c = [c]
 documentFilterToSQL (DocumentFilterByString string) =
   SQL "documents.title ILIKE ?" [sqlpat] `sqlOR` 
-     sqlJoinWithAND (map (\wordpat -> SQL "documents.fields ILIKE ?" [wordpat]) sqlwordpat)
+     sqlJoinWithAND (map (\wordpat -> SQL "signatory_links.fields ILIKE ?" [wordpat]) sqlwordpat)
   where
       sqlpat = toSql $ "%" ++ concatMap escape string ++ "%"
       sqlwordpat = map (\word -> toSql $ "%" ++ concatMap escape word ++ "%") (words string)
