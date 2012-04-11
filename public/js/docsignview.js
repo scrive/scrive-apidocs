@@ -189,12 +189,13 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
       var persnum = $('<div class="persnum field" />').text(localization.docsignview.personalNumberLabel + ": " 
                                                             + (signatory.personalnumber().trim() || localization.docsignview.notEntered))
         .attr('title', signatory.personalnumber());
+      var contactspace = $('<div class="spacing contactspace" />');
+      var email   = $('<div class="email field" />').text(signatory.email()).attr('title', signatory.email());
+
       numspace.append(orgnum);
       numspace.append(persnum);
 
-      var contactspace = $('<div class="spacing contactspace" />');
-      var email   = $('<div class="email field" />').text(signatory.email()).attr('title', signatory.email());
-      contactspace.append(email);
+      numspace.append(email);
 
       inner.append(face);
 
@@ -1013,7 +1014,6 @@ window.DocumentSignView = Backbone.View.extend({
 
         subcontainer.append(bottomstuff);
 
-        subcontainer.append($("<div class='end' />"));
         subcontainer.append($("<div class='cleafix' />"));
       }
       this.container.append(subcontainer);
