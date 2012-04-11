@@ -485,16 +485,17 @@ body.signview {
   clear: both;
   margin: 7px;
   background-color: white;
-  background-image: url(../img/horizontal-shading-bar.png);
+  /* background-image: url(../img/horizontal-shading-bar.png); */
   background-repeat: no-repeat;
   overflow: hidden;
+  margin-top: 17px;
 }
 
 .signview .section.highlight {
   border: 5px solid #83bc39;
   padding: 15px;
   background-image: none;
-  width: 920px;
+  width: 924px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -692,21 +693,29 @@ body.signview {
 .signview .signatories .inner {
     margin-top: 10px;
     min-height: 72px;
+    color : #505050;
+    font-size: 0.9em;
 }
 
 .signview .signatories .numspace {
     float:left;
-    width: 130px;
     height: 32px;
     padding: 0px;
+    margin-top:0px;
+}
+
+.signview .field {
+    height: 14px;
+    width: 160px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow:hidden;
 }
 
 .signview .signatories .contactspace {
     float:left;
-    width: 130px;
     height: 32px;
     padding: 0px;
-
 }
 
 .signview .signatories .statusbox {
@@ -874,7 +883,7 @@ body.signview {
 }
 
 .signview .pagefooter .poweredbyscrive a {
-  color: white;
+  /*  color: white; */
   font-size: small;
   text-transform: uppercase;
   text-decoration: none;
@@ -904,11 +913,15 @@ div.spacing.butt {
     margin-right: 20px;
 }
 
+.section.spacing {
+    padding: 15px;
+}
+
 .section.signatories {
     padding-top: 20px;
     margin-left: auto;
     margin-right: auto;
-    width: 944px;
+    width: 932px;
 }
 
 .section .signatoryattachments {
