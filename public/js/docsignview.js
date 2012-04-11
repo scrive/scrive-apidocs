@@ -1180,9 +1180,8 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
     $(window).scroll(checkIfDownArrowInFooter);
     checkIfDownArrowInFooter();
 
+      var scrollpoint = 0;
     var updateVisibility = function() {
-
-      $(".signview .section").removeClass("highlight");
 
       if (!taskmodel.isIncompleteTask()) {
         downarrow.show();
@@ -1203,6 +1202,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
           view.pointingAt = undefined;
         } else if (((elbottom + bottommargin) <= scrollbottom) && ((eltop - topmargin) >= scrolltop)) {
           var nextTask = taskmodel.nextIncompleteTask();
+            $(".signview .section").removeClass("highlight");
           nextTask.el().parents(".signview .section").addClass("highlight");
           if (view.pointingAt==undefined || view.pointingAt!=nextTask) {
             nextTask.beforePointing();
@@ -1214,15 +1214,23 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
           downarrow.hide();
           view.pointingAt = nextTask;
         } else if ((elbottom + bottommargin) > scrollbottom) {
-          downarrow.show();
-          uparrow.hide();
-          actionarrow.hide();
-          view.pointingAt = undefined;
+            if(scrollpoint !== 16) {
+                scrollpoint = 6;
+                console.log("6");
+                downarrow.show();
+                uparrow.hide();
+                actionarrow.hide();
+                view.pointingAt = undefined;
+            }
         } else {
-          uparrow.show();
-          downarrow.hide();
-          actionarrow.hide();
-          view.pointingAt = undefined;
+            if(scrollpoint !== 17) {
+                scrollpoint = 7;
+                console.log("7");
+                uparrow.show();
+                downarrow.hide();
+                actionarrow.hide();
+                view.pointingAt = undefined;
+            }
         }
       }
     };
