@@ -57,7 +57,9 @@ postDocumentPreparationChange doc@Document{documentid, documenttitle} = do
       return doc
     Right saveddoc -> return saveddoc
   Log.server $ "Sending invitation emails for document #" ++ show documentid ++ ": " ++ documenttitle
-  edoc <- sendInvitationEmails ctx document'
+  edoc <- if (sendMailsDurringSigning document')
+             then sendInvitationEmails ctx document'
+             else return $ Right $ document'
   _ <- case edoc of
     Left _ -> do
       _ <- addDocumentSendStatEvents document'
@@ -80,7 +82,7 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc = do
       ctx <- getContext
       author <- getDocAuthor doc
       Log.server $ "Sending awaiting email for document #" ++ show documentid ++ ": " ++ documenttitle
-      sendAwaitingEmail ctx doc author
+      when (sendMailsDurringSigning doc) $ sendAwaitingEmail ctx doc author
     _ | allSignatoriesSigned doc -> do
       Log.docevent $ "All have signed; " ++ show documentstatus ++ " -> Closed: " ++ show documentid
       ctx@Context{ctxlocale, ctxglobaltemplates} <- getContext
@@ -100,7 +102,8 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc = do
     _ -> when (documentcurrentsignorder doc /= documentcurrentsignorder olddoc) $ do
       ctx <- getContext
       Log.server $ "Resending invitation emails for document #" ++ show documentid ++ ": " ++ documenttitle
-      _ <- sendInvitationEmails ctx doc
+      when_ (sendMailsDurringSigning doc) $
+          sendInvitationEmails ctx doc
       return ()
   where
     allSignatoriesSigned = all (isSignatory =>>^ hasSigned) . documentsignatorylinks
@@ -114,7 +117,8 @@ postDocumentRejectedChange doc@Document{..} siglinkid = do
   Log.server $ "Sending rejection emails for document #" ++ show documentid ++ ": " ++ documenttitle
   ctx <- getContext
   customMessage <- getCustomTextField "customtext"
-  sendRejectEmails customMessage ctx doc ($(fromJust) $ getSigLinkFor doc siglinkid)
+  when_ (sendMailsDurringSigning doc) $
+    sendRejectEmails customMessage ctx doc ($(fromJust) $ getSigLinkFor doc siglinkid)
   return ()
 
 postDocumentCanceledChange :: Kontrakcja m => Document -> m ()

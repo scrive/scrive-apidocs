@@ -51,4 +51,5 @@ data Context = Context
     , ctxadminaccounts       :: [Email] -- ^
     , ctxsalesaccounts       :: [Email] -- ^
     , ctxmagichashes         :: Map.Map SignatoryLinkID MagicHash
+    , ctxmaybepaduser        :: Maybe User -- ^ If we are loged in to the pad view
     }

@@ -189,4 +189,5 @@ mkContext locale globaltemplates = liftIO $ do
         , ctxadminaccounts = []
         , ctxsalesaccounts = []
         , ctxmagichashes = Map.empty
+        , ctxmaybepaduser = Nothing
     }

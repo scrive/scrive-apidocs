@@ -10,13 +10,13 @@ pageAcceptTOS =
             <a class="modal-close close"> </a>
         </div>
         <div class="modal-body">
-            <div class="modal-content">     
+            <div class="modal-content">
                 $termsPageContents()$
             </div>
         </div>
         <div class="modal-footer">
             <div style="float:left"><input type="checkbox" name="tos" id="tos" /> <label for="tos">$_ReadUnderstoodTOS()$</label><br/> </div>
-            <a href="#" class="btn-small green float-right submit submiter" id="editing-invite-text-finished">
+            <a href="#" class="btn-small green float-right submit" id="editing-invite-text-finished">
                 <div class="left"></div>
                 <div class="label">
                     <p>$_send()$</p>

@@ -2929,6 +2929,49 @@ width: 340px;
 .prepareToSendReminderMail {
     padding-top: 6px;
 }
+.giveForSigning {
+    padding-top: 4px;
+    height: 16px;
+    display: block;
+    cursor: pointer;
+
+}
+
+.giveForSigningIcon {
+    background: url(../img/give.png) 0 0 no-repeat;
+    display: inline-block;
+    height: 16px;
+    width: 16px;
+    float:left;
+}
+.addToPad{
+    padding-top: 4px;
+    height: 16px;
+    display: block;
+    cursor: pointer;
+}
+
+.addToPadIcon {
+    background: url(../img/pad.png) 0 0 no-repeat; 
+    display: inline-block;
+    height: 16px;
+    width: 16px;
+    float:left;
+}
+.removeFromPad{
+    padding-top: 4px;
+    height: 16px;
+    display: block;
+    cursor: pointer;
+}
+
+.removeFromPadIcon {
+    background: url(../img/icon-delete.png) 0 0 no-repeat; 
+    display: inline-block;
+    height: 16px;
+    width: 16px;
+    float:left;
+}
 
 .prepareToSendReminderMail:hover{
     font-weight: bold;

@@ -265,6 +265,10 @@ isELegDataMismatch _                            = False
 allowsIdentification :: Document -> IdentificationType -> Bool
 allowsIdentification document idtype = idtype `elem` documentallowedidtypes document
 
+{- | Determine is document is designed to be signed using pad - this determines if invitation emais are send and if author can get access to siglink -}
+sendMailsDurringSigning :: Document -> Bool
+sendMailsDurringSigning doc = not $ doc `allowsIdentification` PadIdentification
+
 {- |
     Checks whether a signatory link is eligible for sending a reminder.
     The user must be the author, and the signatory musn't be the author.

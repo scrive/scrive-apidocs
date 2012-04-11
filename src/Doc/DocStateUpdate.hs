@@ -1,6 +1,6 @@
 module Doc.DocStateUpdate
     ( restartDocument
-    , signDocumentWithEmail
+    , signDocumentWithEmailOrPad
     , signDocumentWithEleg
     , rejectDocumentWithChecks
     , authorSignDocument
@@ -55,14 +55,15 @@ restartDocument doc = withUser $ \user -> do
 {- |
    Sign a document with email identification (typical, non-eleg).
  -}
-signDocumentWithEmail :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(String, String)] -> m (Either DBError (Document, Document))
-signDocumentWithEmail did slid mh fields = do
+
+signDocumentWithEmailOrPad :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> [(String, String)] -> m (Either DBError (Document, Document))
+signDocumentWithEmailOrPad did slid mh fields = do
   edoc <- getDocByDocIDSigLinkIDAndMagicHash did slid mh
   case edoc of
     Left err -> return $ Left err
     Right olddoc -> do
      switchLocale (getLocale olddoc)
-     case olddoc `allowsIdentification` EmailIdentification of
+     case olddoc `allowsIdentification` EmailIdentification || olddoc `allowsIdentification` PadIdentification of
       False -> return $ Left (DBActionNotAvailable "This document does not allow signing using email identification.")
       True  -> do
         Context{ ctxtime, ctxipnumber } <- getContext

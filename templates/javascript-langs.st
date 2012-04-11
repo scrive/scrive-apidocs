@@ -47,6 +47,7 @@ javascriptLocalisation =
              , companyposition : "$_companyposition()$"
              , phone : "$_phone()$"
              , email : "$_email()$"
+             , password : "$_password()$"
              , niceEmail : "$_niceEmail()$"
              , company : "$_company()$"
              , personamNumber : "$_personnumber()$"
@@ -240,12 +241,14 @@ javascriptLocalisation =
               , selectOtherFile: "$_dialogCsvupload2CSVMultiChooseFile()$"
             }
          , signature : {
-              placeFor : function(s) { return s + " $_signaturePlaceFor()$"; }
-            , missing : "$_signatureMissing()$"
-            , placeYour : "$_signaturePlaceYour()$"
+               placeFor : function(s) { return s + " $_signaturePlaceFor()$"; }
+             , missing : "$_signatureMissing()$"
+             , placeYour : "$_signaturePlaceYour()$"
+             , placeAndSign : "$_signatureSign()$"
+             , confirmSignature : "$_signatureConfirm()$"
            }
          , designview : {
-             validation : {
+              validation : {
                       missingOrWrongEmail : "$_emptyOrNotValidEmail()$"
                     , missingOrWrongNames:  "$_missingSignatoryNames()$"
                     , missingOrWrongPersonalNumber : "$_backToStepTwoAndFillPersonNumber()$"
@@ -255,6 +258,12 @@ javascriptLocalisation =
                     , notReadyField : "$_setAllFields()$"
                     , notPlacedField : "$_placeAllFields()$"
                     , restrictedName : "$_fieldnameRestricted()$"
+                    , notPlacedSignature : "Signature must be placed for signing party with pad authorization"
+                }
+             , messages : {
+                      sendingDocument: "$_designViewMessageSending()$"
+                    , reloadingDocument : "$_designViewMessageReloading()$"
+                    , extraActions : "$_designViewMessageExtraActions()$"
                 }
            }
 
@@ -274,11 +283,30 @@ javascriptLocalisation =
          , customiseLogo: "$_CustomiseLogo()$"
          , selectImageLabel: "$_SelectImageLabel()$"
          , saveBranding: "$_SaveSettings()$"
+         , pad : {
+                authorization : "$_padAuthorization()$"
+             ,  signingOnSameDevice : "$_padSigningOnSameDevice()$"
+             ,  signingOnSameDeviceConfirmHeader : "$_padSigningOnSameDeviceConfirmHeader()$"
+             ,  signingOnSameDeviceConfirmText : "$_padSigningOnSameDeviceConfirmText()$"
+             ,  addToPadQueue : "$_padAddToPadQueue()$"
+             ,  addToPadQueueConfirmHeader : "$_padAddToPadQueueConfirmHeader()$"
+             ,  addToPadQueueConfirmText : "$_padAddToPadQueueConfirmText()$"
+             ,  addToPadQueueAdded : "$_padAddToPadQueueAdded()$"
+             ,  addToPadQueueNotAdded : "$_padAddToPadQueueNotAdded()$"
+             ,  removeFromPadQueue : "$_padRemoveFromPadQueue()$"
+             ,  drawSignatureBoxHeader : "$_padDrawSignatureBoxHeader()$"
+             ,  signingOnSameDeviceFor :  "$_padSigningOnSameDeviceFor()$"
+             ,  addToPadQueueFor :  "$_padAddToPadQueueFor()$"
+             ,  cleanImage : "$_padCleanImage()$"             
+        }
          , sampleEmailHeader: "$_SampleEmailHeader()$"
          , sampleEmailSubheader: "$_mailsubheader()$"
          , sampleEmailContent: "$_SampleEmailContent()$"
          , changeEmail : "$_changeEmail()$"
          , onlyPDF : "$_onlyPDF()$"
+         , login : {
+              logMeIn : "$_login()$"
+         }
          , cancel : "$_cancel()$"
          , docupload : {
              choosefile: "$_signStepsBodyUploadBoxStep1UpLoadChooseFile()$"
@@ -325,6 +353,6 @@ javascriptLocalisation =
              , startButtonLabel: "$_startButtonLabel()$"
         }
         , poweredByScrive : "$_poweredByScrive()$"
-
     }
+
 ####

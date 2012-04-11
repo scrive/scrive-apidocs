@@ -38,6 +38,8 @@ standardHeaderContents=
         <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/style.css" media="screen"/>
         <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/calendar.css" media="screen"/>
         <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/signaturedrawer.css" media="screen"/>
+        <link rel="stylesheet" type="text/css" href="$prefix$/theme/archive.css" media="screen"/>
+
         <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/symbols.css" media="screen"/>
         <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/tabs.css" media="screen"/>
         <link rel="stylesheet" type="text/css" href="$resourcehostpart$/theme/lists.css" media="screen"/>
@@ -67,6 +69,8 @@ standardHeaderContents=
         <script src="$resourcehostpart$/js/backbone.js"
                 type="text/javascript"></script>
         <script src="$resourcehostpart$/js/storage.js"
+                type="text/javascript"></script>
+        <script src="$resourcehostpart$/js/browserinfo.js"
                 type="text/javascript"></script>
         <script src="$resourcehostpart$/js/livequery.js"
                 type="text/javascript"></script>
@@ -100,6 +104,8 @@ standardHeaderContents=
                 type="text/javascript"></script>
         <script src="$resourcehostpart$/js/fields.js"
                 type="text/javascript"></script>
+        <script src="$resourcehostpart$/js/signature.js"
+                type="text/javascript"></script>
         <script src="$resourcehostpart$/js/signatories.js"
                 type="text/javascript"></script>
         <script src="$resourcehostpart$/js/documents.js"
@@ -113,6 +119,8 @@ standardHeaderContents=
         <script src="$resourcehostpart$/js/docsignview.js"
                 type="text/javascript"></script>
         <script src="$resourcehostpart$/js/signatorydesignview.js"
+                type="text/javascript"></script>
+        <script src="$resourcehostpart$/js/docdesignviewpad.js"
                 type="text/javascript"></script>
         <script src="$resourcehostpart$/js/docdesignview.js"
                 type="text/javascript"></script>
@@ -136,7 +144,9 @@ standardHeaderContents=
                 type="text/javascript"></script>
         <script src="$resourcehostpart$/js/companybranding.js"
                 type="text/javascript"></script>
-        <script src="$resourcehostpart$/js/changemainfile.js"
+       <script src="$resourcehostpart$/js/padview.js"
+                type="text/javascript"></script>
+       <script src="$resourcehostpart$/js/changemainfile.js"
                 type="text/javascript"></script>
         $if(publicsafe)$
         <script src="$resourcehostpart$/js/jquery.tweet.js"
@@ -145,8 +155,6 @@ standardHeaderContents=
             <script src="$resourcehostpart$/js/analytics.js" type="text/javascript"></script>
         $endif$
         $endif$
-        <script src="/js/main.js"
-                type="text/javascript"></script>
 ####
 standardBodyWithQueryCol=
        $standardBodyWrapper(unwrappedbody=contentsWithQueryCol(unwrappedbody=unwrappedbody))$

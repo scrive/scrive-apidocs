@@ -9,6 +9,7 @@ module Archive.View
          pageOrdersList,
          pageRubbishBinList,
          pageTemplatesList,
+         pagePadDeviceArchive,
          docForListJSON
        )
        where
@@ -24,6 +25,7 @@ import Control.Applicative
 import Data.Maybe
 
 import MinutesTime
+import Control.Logic
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -32,7 +34,9 @@ import Text.JSON
 import Data.List (intercalate)
 
 import Doc.DocUtils
+import PadQueue.Model
 import Text.JSON.Gen as J
+
 
 flashMessageSignableArchiveDone :: TemplatesMonad m => DocumentType -> m FlashMessage
 flashMessageSignableArchiveDone doctype = do
@@ -47,22 +51,26 @@ flashMessageAttachmentArchiveDone =
   toFlashMsg OperationDone <$> renderTemplateM "flashMessageAttachmentArchiveDone" ()
 
 pageContractsList :: TemplatesMonad m => User -> m String
-pageContractsList = pageList' "pageContractsList" LinkContracts
+pageContractsList = pageList' "pageContractsList" LinkContracts 
 
 pageTemplatesList :: TemplatesMonad m => User -> m String
-pageTemplatesList = pageList' "pageTemplatesList" LinkTemplates
+pageTemplatesList = pageList' "pageTemplatesList" LinkTemplates 
 
 pageAttachmentList :: TemplatesMonad m =>  User -> m String
-pageAttachmentList = pageList' "pageAttachmentList" LinkAttachments
+pageAttachmentList = pageList' "pageAttachmentList" LinkAttachments 
 
 pageOffersList :: TemplatesMonad m => User -> m String
 pageOffersList = pageList' "pageOffersList" LinkOffers
 
 pageOrdersList :: TemplatesMonad m => User -> m String
-pageOrdersList = pageList' "pageOrdersList" LinkOrders
+pageOrdersList = pageList' "pageOrdersList" LinkOrders 
 
 pageRubbishBinList :: TemplatesMonad m => User ->  m String
-pageRubbishBinList = pageList' "pageRubbishBinList" LinkRubbishBin
+pageRubbishBinList = pageList' "pageRubbishBinList" LinkRubbishBin 
+
+pagePadDeviceArchive :: TemplatesMonad m => User ->  m String
+pagePadDeviceArchive = pageList' "pagePadDeviceArchive" LinkPadDeviceArchive
+    
 
 {- |
     Helper function for list pages
@@ -72,7 +80,7 @@ pageList' :: TemplatesMonad m
           -> KontraLink
           -> User
           -> m String
-pageList' templatename currentlink user  =
+pageList' templatename currentlink user =
   renderTemplateFM templatename $ do
     field "canReallyDeleteDocs" $ useriscompanyadmin user || isNothing (usercompany user)
     field "currentlink" $ show $ currentlink
@@ -88,21 +96,22 @@ pageList' templatename currentlink user  =
     field "attachmentactive" $ (LinkAttachments == currentlink)
     field "linkrubbishbinlist" $ show $ LinkRubbishBin
     field "rubbishbinactive" $ (LinkRubbishBin == currentlink)
+    field "linkpaddevicearchive" $ show LinkPadDeviceArchive 
+    field "paddevicearchiveactive" $ (LinkPadDeviceArchive == currentlink)
 
-
-docForListJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> User -> Document -> m JSValue
-docForListJSON tl crtime user doc = do
+docForListJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> User -> PadQueue ->  Document -> m JSValue
+docForListJSON tl crtime user padqueue doc = do
   let link = case getSigLinkFor doc user of
         Just sl | not $ isAuthor sl -> LinkSignDoc doc sl
         _                           -> LinkIssueDoc $ documentid doc
       sigFilter sl =   isSignatory sl && (documentstatus doc /= Preparation)
   runJSONGenT $ do
-    J.object "fields" $ docFieldsListForJSON tl crtime doc
-    J.objects "subfields" $ map (signatoryFieldsListForJSON tl crtime doc) (filter sigFilter (documentsignatorylinks doc))
+    J.object "fields" $ docFieldsListForJSON tl crtime padqueue doc
+    J.objects "subfields" $ map (signatoryFieldsListForJSON tl crtime padqueue doc) (filter sigFilter (documentsignatorylinks doc))
     J.value "link" $ show link
 
-docFieldsListForJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> Document -> JSONGenT m ()
-docFieldsListForJSON tl crtime doc = do
+docFieldsListForJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime ->  PadQueue -> Document -> JSONGenT m ()
+docFieldsListForJSON tl crtime padqueue doc = do
     J.value "id" $ show $ documentid doc
     J.value "title" $ documenttitle doc
     J.value "status" $ show $ documentstatusclass doc
@@ -116,6 +125,7 @@ docFieldsListForJSON tl crtime doc = do
     J.value "anyinvitationundelivered" $ show $ anyInvitationUndelivered  doc && Pending == documentstatus doc
     J.value "shared" $ show $ documentsharing doc == Shared
     J.value "file" $ fromMaybe "" $ show <$> (listToMaybe $ (documentsealedfiles doc) ++ (documentfiles doc))
+    J.value "inpadqueue" $ "true" <| (fmap fst padqueue == Just (documentid doc)) |> "false"
   where
     renderDocType = do
       pn <- renderTextForProcess doc processname
@@ -124,12 +134,15 @@ docFieldsListForJSON tl crtime doc = do
         Template _ -> renderTemplateFM "docListTemplateLabel" $ field "processname" pn
         Signable _ -> return pn
 
-signatoryFieldsListForJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> Document -> SignatoryLink -> JSONGenT m ()
-signatoryFieldsListForJSON tl crtime doc sl = do
+signatoryFieldsListForJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> PadQueue -> Document -> SignatoryLink -> JSONGenT m ()
+signatoryFieldsListForJSON tl crtime padqueue doc sl = do
+    J.value "id" $ show $ signatorylinkid sl 
     J.value "status" $ show $ signatorylinkstatusclass sl
     J.value "name" $ getSmartName sl
     J.value "time" $ fromMaybe "" $ (showDateAbbrev tl crtime) <$> (sign `mplus` reject `mplus` seen `mplus` open)
     J.value "invitationundelivered" $ show $ isUndelivered sl && Pending == documentstatus doc
+    J.value "inpadqueue" $ "true" <| (fmap fst padqueue == Just (documentid doc)) && (fmap snd padqueue == Just (signatorylinkid sl)) |> "false"
+    J.value "author" $ "true" <| isAuthor sl |> "false" 
     where
         sign = signtime <$> maybesigninfo sl
         seen = signtime <$> maybesigninfo sl
@@ -137,3 +150,4 @@ signatoryFieldsListForJSON tl crtime doc sl = do
           Just (rt, slid, _) | slid == signatorylinkid sl -> Just rt
           _                                               -> Nothing
         open = maybereadinvite sl
+

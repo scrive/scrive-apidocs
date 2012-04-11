@@ -37,7 +37,7 @@ import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import Util.MonadUtils
-
+import qualified PadQueue.Control as PadQueue
 
 {- |
    The routing table for the app.
@@ -127,6 +127,7 @@ staticRoutes = choice
      , dir "r" $ param "restore" $ hPost $ toK0 $ DocControl.handleRubbishRestore
      , dir "r" $ param "reallydelete" $ hPost $ toK0 $ DocControl.handleRubbishReallyDelete
 
+
      , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showContractsList
      , dir "d"                     $ hGet  $ toK1 $ DocControl.handleIssueShowGet
      , dir "d" $ dir "eleg"        $ hGet  $ toK1 $ BankID.generateBankIDTransactionForAuthor
@@ -163,6 +164,15 @@ staticRoutes = choice
      , dir "pagesofdoc" $ hGetAjax $ toK3 $ DocControl.handlePageOfDocumentForSignatory
 
      , dir "csvlandpage" $ hGet $ toK1 $ DocControl.handleCSVLandpage
+
+     , dir "padqueue" $ dir "add" $ hPost $ toK2 $ PadQueue.addToQueue
+     , dir "padqueue" $ dir "clear" $ hPost $ toK0 $ PadQueue.clearQueue
+    
+     , dir "padqueue" $ dir "state" $ hGet $ toK0 $ PadQueue.padQueueState
+     , dir "padqueue" $ hGet $ toK0 $ PadQueue.showPadQueuePage
+     , dir "padqueue" $ dir "archive" $ hGet $ toK0 $ ArchiveControl.showPadDeviceArchive
+     , dir "padqueue" $ dir "login"  $ hPostNoXToken $ toK0 $ PadQueue.handlePadLogin
+     , dir "padqueue" $ dir "logout" $ hPostNoXToken $ toK0 $ PadQueue.handlePadLogout
 
      -- UserControl
      , dir "account"                    $ hGet  $ toK0 $ UserControl.handleUserGet

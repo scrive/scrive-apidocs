@@ -103,6 +103,7 @@ instance Show StatusClass where
 
 data IdentificationType = EmailIdentification
                         | ELegitimationIdentification
+                        | PadIdentification
   deriving (Eq, Ord, Bounded, Enum, Show)
 
 data SignatureInfo = SignatureInfo {
@@ -154,7 +155,6 @@ data SignatoryLink = SignatoryLink {
   , signatorydetails           :: SignatoryDetails    -- ^ details of this person as filled in invitation
   , signatorymagichash         :: MagicHash           -- ^ authentication code
   , maybesignatory             :: Maybe UserID        -- ^ if this document has been saved to an account, that is the user id
-  , maybesupervisor            :: Maybe UserID        -- ^ THIS IS NOW DEPRECATED - use maybecompany instead
   , maybecompany               :: Maybe CompanyID     -- ^ if this document has been saved to a company account this is the companyid
   , maybesigninfo              :: Maybe SignInfo      -- ^ when a person has signed this document
   , maybeseeninfo              :: Maybe SignInfo      -- ^ when a person has first seen this document
