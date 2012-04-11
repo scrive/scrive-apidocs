@@ -6,11 +6,11 @@
 
 window.DocumentSignViewHeader = Backbone.View.extend({
  initialize: function(args) {
-    _.bindAll(this, 'render');
-    this.model.document.bind('reset', this.render);
-    this.model.document.bind('change', this.render);
-   this.model.bind('change', this.render);
-    this.render();
+     _.bindAll(this, 'render');
+     this.model.document.bind('reset', this.render);
+     this.model.document.bind('change', this.render);
+     this.model.bind('change', this.render);
+     this.render();
   },
   tagName: "div",
   updateHeaderSenderPosition: function() {
@@ -45,15 +45,17 @@ window.DocumentSignViewHeader = Backbone.View.extend({
       logowrapper.append("<img class='logo' src='" + document.logo() + "'></img>");
     
     this.sender = $("<div class='sender' />");
+    var inner = $('<div class="inner" />');
+      this.sender.append(inner);
     if(model.hasSigned() && model.saved()) {
       var name = $("<div class='name' />").text("Scrive help desk");
       var phone = $("<div class='phone' />").text("+46 8 519 779 00");
-      this.sender.append(name).append(phone);
+      inner.append(name).append(phone);
     } else {
       var author = $("<div class='author' />").text((document.authoruser().fullname().trim()||document.authoruser().phone().trim())?localization.author:"");
       var name = $("<div class='name' />").text(document.authoruser().fullname());
       var phone = $("<div class='phone' />").text(document.authoruser().phone());
-      this.sender.append(author).append(name).append(phone);
+      inner.append(author).append(name).append(phone);
     }
     
 
