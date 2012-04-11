@@ -775,7 +775,7 @@ window.DocumentSignView = Backbone.View.extend({
     createAuthorAttachmentsElems: function() {
       return $(new DocumentAuthorAttachmentsView({
         model: this.model,
-        el: $("<div class='section'/>"),
+        el: $("<div class='section spacing'/>"),
         title: this.authorAttachmentsTitle()
       }).el);
     },
@@ -791,7 +791,7 @@ window.DocumentSignView = Backbone.View.extend({
     createSignatoryAttachmentsView: function() {
       return new DocumentSignatoryAttachmentsView({
         model: this.model,
-        el: $("<div class='section'/>"),
+        el: $("<div class='section spacing'/>"),
         title: this.signatoryAttachmentsTitle()
       });
     },
@@ -833,7 +833,7 @@ window.DocumentSignView = Backbone.View.extend({
     createUploadedAttachmentsElems: function() {
       return $(new DocumentUploadedSignatoryAttachmentsView({
         model: this.model,
-        el: $("<div class='section' />"),
+        el: $("<div class='section spacing' />"),
         title: localization.docsignview.uploadedAttachmentsTitle
       }).el);
     },
@@ -994,7 +994,7 @@ window.DocumentSignView = Backbone.View.extend({
         }
 
         if (this.model.currentSignatoryCanSign() && (!this.model.currentSignatory().canPadSignQuickSign())) {
-          var signsection = $("<div class='section' />");
+          var signsection = $("<div class='section spacing' />");
           signsection.append(this.createRejectButtonElems());
           var signButton = this.createSignButtonElems(jQuery.extend({}, tasks));
           var signButtonTask = this.signButtonTask(signButton);
@@ -1150,7 +1150,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
       // I'm keeping this in case we want to revert it. -- Eric
       //      downarrow.css("right", margin + "px");
       downarrow.css("right", bigarrowmargin + "px");
-      uparrow.css("right", margin + "px");
+      uparrow.css("right", bigarrowmargin + "px");
     };
     $(window).resize(updateRightMargin);
     updateRightMargin();

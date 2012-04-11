@@ -485,9 +485,10 @@ body.signview {
   clear: both;
   margin: 7px;
   background-color: white;
-  background-image: url(../img/horizontal-shading-bar.png);
+  /* background-image: url(../img/horizontal-shading-bar.png); */
   background-repeat: no-repeat;
   overflow: hidden;
+  margin-top: 17px;
 }
 
 .signview .section.highlight {
@@ -902,6 +903,10 @@ div.spacing.butt {
 
 .column.spacing {
     margin-right: 20px;
+}
+
+.section.spacing {
+    padding: 15px;
 }
 
 .section.signatories {
