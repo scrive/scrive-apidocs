@@ -131,8 +131,12 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
           return localization.docsignview.unavailableForSign;
       else if (signatory.rejecteddate() != undefined)
           return localization.signatoryMessage.rejected;
+      else if (signatory.status() == 'opened')
+          return localization.signatoryMessage.seen;
+      else if (signatory.status() == 'sent')
+          return localization.signatoryMessage.other;
       else
-          return localization.signatoryMessage.waitingForSignature;
+          return localization.signatorymessage[signatory.status()];
   },
   siglist: function(signatories) {
       var sigbox = this.model;
@@ -160,7 +164,7 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
       var statusbox  = $('<div  class="statusbox" />');
       var space = $('<div class="spacing butt" />');
       var statusicon = $("<span class='icon status' />").addClass(signatory.status());
-      var status     = $("<span class='status' />").text(this.signatorySummary(signatory));
+      var status     = $("<span class='status statustext' />").text(this.signatorySummary(signatory)).addClass(signatory.status());
       space.append(statusicon).append(status).addClass(signatory.status());
       statusbox.append(space);
       return statusbox;
