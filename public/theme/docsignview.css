@@ -453,12 +453,16 @@ body.signview {
 
 .signview .subcontainer {
   background-color: #e1e1e1;
+  box-shadow: inset 0px 0px 5px #505050;
+  -moz-box-shadow: inset 0px 0px 5px #505050;
+  -webkit-box-shadow: inset 0px 0px 5px #505050;
   background-image: url(../img/horizontal-shading-bar.png);
   background-repeat: no-repeat;
+  padding-bottom:3px;
 }
 
 .signview .subcontainer .end {
-  background-image: url(../img/horizontal-shading-bar.png);
+  /*background-image: url(../img/horizontal-shading-bar.png); */
   background-repeat: no-repeat;
   height: 2px;
 }
@@ -708,6 +712,7 @@ body.signview {
     height: 32px;
     padding: 0px;
     margin-top:0px;
+    margin-left: 12px;
 }
 
 .signview .field {
@@ -716,12 +721,7 @@ body.signview {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow:hidden;
-}
-
-.signview .signatories .contactspace {
-    float:left;
-    height: 32px;
-    padding: 0px;
+    margin-bottom: 5px;
 }
 
 .signview .signatories .statusbox {
