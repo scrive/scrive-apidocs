@@ -90,12 +90,11 @@ window.DocumentSignViewFooter = Backbone.View.extend({
     }
 
     if (document.barsbackgroundtextcolor() != undefined)
-      maindiv.css("color", document.barsbackgroundtextcolor());
-
+        maindiv.css("color", document.barsbackgroundtextcolor());
 
     var content = $("<div class='content' />");
     var dogtooth = $("<div class='dogtooth' />");
-    var powerdiv = $("<div class='poweredbyscrive'/>").append($("<a href='/'>").text(localization.poweredByScrive));
+    var powerdiv = $("<div class='poweredbyscrive'/>").append($("<a href='/'>").text(localization.poweredByScrive).css("color", document.barsbackgroundtextcolor()));
     var sender = $("<div class='sender' />");
 
     if(model.hasSigned() && model.saved()) {

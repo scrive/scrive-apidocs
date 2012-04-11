@@ -179,15 +179,17 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
       var face    = $('<div class="face" />');
       
       var numspace = $('<div class="spacing numspace" />');
-      var orgnum  = $('<div class="orgnum" />').text(localization.docsignview.companyNumberLabel + ": " + signatory.companynumber());
-      var persnum = $('<div class="persnum" />').text(localization.docsignview.personalNumberLabel + ": " + signatory.personalnumber());
-      if(signatory.companynumber().trim())
-          numspace.append(orgnum);
-      if(signatory.personalnumber().trim())
-          numspace.append(persnum);
+      var orgnum  = $('<div class="orgnum field" />').text(localization.docsignview.companyNumberLabel + ": " 
+                                                           + (signatory.companynumber().trim() || localization.docsignview.notEntered))
+          .attr('title', signatory.companynumber());
+      var persnum = $('<div class="persnum field" />').text(localization.docsignview.personalNumberLabel + ": " 
+                                                            + (signatory.personalnumber().trim() || localization.docsignview.notEntered))
+        .attr('title', signatory.personalnumber());
+      numspace.append(orgnum);
+      numspace.append(persnum);
 
       var contactspace = $('<div class="spacing contactspace" />');
-      var email   = $('<div class="email" />').text(signatory.email());
+      var email   = $('<div class="email field" />').text(signatory.email()).attr('title', signatory.email());
       contactspace.append(email);
 
       inner.append(face);
@@ -775,7 +777,7 @@ window.DocumentSignView = Backbone.View.extend({
     createAuthorAttachmentsElems: function() {
       return $(new DocumentAuthorAttachmentsView({
         model: this.model,
-        el: $("<div class='section'/>"),
+        el: $("<div class='section spacing'/>"),
         title: this.authorAttachmentsTitle()
       }).el);
     },
@@ -791,7 +793,7 @@ window.DocumentSignView = Backbone.View.extend({
     createSignatoryAttachmentsView: function() {
       return new DocumentSignatoryAttachmentsView({
         model: this.model,
-        el: $("<div class='section'/>"),
+        el: $("<div class='section spacing'/>"),
         title: this.signatoryAttachmentsTitle()
       });
     },
@@ -833,7 +835,7 @@ window.DocumentSignView = Backbone.View.extend({
     createUploadedAttachmentsElems: function() {
       return $(new DocumentUploadedSignatoryAttachmentsView({
         model: this.model,
-        el: $("<div class='section' />"),
+        el: $("<div class='section spacing' />"),
         title: localization.docsignview.uploadedAttachmentsTitle
       }).el);
     },
@@ -994,7 +996,7 @@ window.DocumentSignView = Backbone.View.extend({
         }
 
         if (this.model.currentSignatoryCanSign() && (!this.model.currentSignatory().canPadSignQuickSign())) {
-          var signsection = $("<div class='section' />");
+          var signsection = $("<div class='section spacing' />");
           signsection.append(this.createRejectButtonElems());
           var signButton = this.createSignButtonElems(jQuery.extend({}, tasks));
           var signButtonTask = this.signButtonTask(signButton);
@@ -1150,7 +1152,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
       // I'm keeping this in case we want to revert it. -- Eric
       //      downarrow.css("right", margin + "px");
       downarrow.css("right", bigarrowmargin + "px");
-      uparrow.css("right", margin + "px");
+      uparrow.css("right", bigarrowmargin + "px");
     };
     $(window).resize(updateRightMargin);
     updateRightMargin();
