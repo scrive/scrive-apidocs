@@ -332,6 +332,13 @@
             expanded: false,
             unsaved: false
         },
+        initialize: function (args) {
+            if (this.collection != undefined && this.collection.schema != undefined &&  this.field("id") != undefined)
+            {
+                var namespace = this.collection.schema.namespace();
+                this.set({ "expanded": SessionStorage.get(namespace, "expanded" + this.field("id")) == "true" });
+            }
+        },
         field: function(name) {
             return this.get("fields")[name];
         },
@@ -360,30 +367,14 @@
             this.set({ "selected": false });
         },
         isExpanded: function() {
-            console.log("checking");
-            var namespace = this.view.schema.namespace();
-            var id = this.field("id");
-            if (namespace != undefined && id != undefined) {
-                if (SessionStorage.get(namespace, "expanded" + id) == "true")
-                {   this.set({ "expanded": true }, {silent : true});
-                    return true;
-                }    
-                else if (SessionStorage.get(namespace, "expanded" + id) == "false")
-                {   this.set({ "expanded": false }, {silent : true});
-                    return false;
-                }       
-                else
-                   SessionStorage.set(namespace, "expanded" + id, "" + (this.get("expanded") == true));
-            }    
             return this.get("expanded") == true;
         },
         toggleExpand: function() {
             console.log("toggling");
             var val = this.isExpanded();
-            var namespace = this.view.schema.namespace();
+            var namespace = this.collection.schema.namespace();
             var id = this.field("id");
-            if (namespace != undefined && id != undefined)
-                SessionStorage.set(namespace, "expanded" + id, "" + !val);
+            SessionStorage.set(namespace, "expanded" + id, "" + !val);
             this.set({ "expanded": !val }, {silent : true});
             this.trigger("change");
         }
