@@ -40,6 +40,9 @@ data DBException
     { originalQuery :: SQL
     , message :: String
     }
+  | NoStatementPrepared
+    { originalQuery :: SQL
+    }
     deriving Typeable
 
 instance E.Exception DBException
@@ -52,3 +55,4 @@ instance Show DBException where
   show CannotParseRow{originalQuery, message} = message ++ " in " ++ show originalQuery
   show TooManyObjects{originalQuery, tmoExpected, tmoGiven} =
     "Query result error: Too many objects returned/affected by query (" ++ show tmoExpected ++ " expected, " ++ show tmoGiven ++ " given) in " ++ show originalQuery
+  show (NoStatementPrepared _) = "Call to kExecute when there was no statement prepared"

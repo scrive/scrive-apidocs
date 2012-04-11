@@ -27,7 +27,7 @@ main = Log.withLogger $ do
   appname <- getProgName
   conf <- readConfig Log.mailingServer appname [] "mailing_server.conf"
   rng <- newCryptoRNGState
-  withPostgreSQLDB (mscDBConfig conf) rng $
+  withPostgreSQL (mscDBConfig conf) $
     performDBChecks Log.mailingServer mailerTables mailerMigrations
   E.bracket (do
     let (iface, port) = mscHttpBindAddress conf

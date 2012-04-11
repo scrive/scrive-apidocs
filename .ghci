@@ -14,6 +14,7 @@
 :set -XRecordWildCards
 :set -XScopedTypeVariables
 :set -XTemplateHaskell
+:set -XTupleSections
 :set -XTypeFamilies
 :set -XTypeOperators
 :set -XTypeSynonymInstances

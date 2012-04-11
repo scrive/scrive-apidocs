@@ -41,18 +41,17 @@
 -- * Calculate time spend in database related activities. Watch out
 -- with this one: measuring time around miliseconds can be to costly
 -- (timer query is costly).
-module DB.Nexus 
-( Nexus
-, NexusStats(..)
-, mkNexus
-, getNexusStats
-)
-where
+module DB.Nexus (
+    Nexus
+  , NexusStats(..)
+  , mkNexus
+  , getNexusStats
+  ) where
 
-import Control.Monad.Trans (liftIO, MonadIO)
+import Control.Monad.IO.Class
+import Data.IORef
 import Database.HDBC
 import Database.HDBC.Statement
-import Data.IORef
 
 -- | Statistics that a 'Nexus' can gather.
 data NexusStats = NexusStats

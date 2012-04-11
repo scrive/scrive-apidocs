@@ -3,6 +3,7 @@ module DB.Fetcher2 (
   , foldDB
   ) where
 
+import Control.Monad
 import Control.Monad.IO.Class
 import Data.Convertible
 import Data.Maybe
@@ -51,18 +52,16 @@ instance Fetcher r r where
 -- (usually it's not neccessary since compiler will be able to infer them,
 -- but if it won't, you have to expect quite ugly error message about
 -- missing instances).
-foldDB :: Fetcher a b => (b -> a) -> b -> DB b
+foldDB :: MonadDB m => Fetcher a b => (b -> a) -> b -> DBEnv m b
 foldDB decoder !init_acc = do
-  DBState{..} <- getDBState
-  case dbStatement of
-    Nothing -> return init_acc
-    Just st -> do
-      res <- liftIO $ worker st init_acc
-      case res of
-        Right acc -> return acc
-        Left err -> kFinish >> E.throw err {
-            originalQuery = SQL (HDBC.originalQuery st) dbValues
-          }
+  res <- withDBEnvSt $ \s@DBEnvSt{..} -> (, s) `liftM` case dbStatement of
+    Nothing -> return (Right init_acc, undefined, undefined)
+    Just st -> (, st, dbValues) `liftM` liftIO (worker st init_acc)
+  case res of
+    (Right acc, _, _) -> return acc
+    (Left err, st, values) -> kFinish >> E.throw err {
+        originalQuery = SQL (HDBC.originalQuery st) values
+      }
   where
     worker st !acc = do
       mrow <- fetchRow st

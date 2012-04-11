@@ -46,22 +46,22 @@ checkIfOneObjectReturned xs =
   oneObjectReturnedGuard xs
     >>= return . maybe False (const True)
 
-getOne :: Convertible SqlValue a => SQL -> DB (Maybe a)
-getOne query = do
-  _ <- kRun query
+getOne :: MonadDB m => Convertible SqlValue a => SQL -> DBEnv m (Maybe a)
+getOne sqlq = do
+  _ <- kRun sqlq
   foldDB (\acc v -> v : acc) []
     >>= oneObjectReturnedGuard
 
-checkIfAnyReturned :: SQL -> DB Bool
-checkIfAnyReturned query =
-  (getOne query :: DB (Maybe SqlValue))
+checkIfAnyReturned :: forall m. MonadDB m => SQL -> DBEnv m Bool
+checkIfAnyReturned sqlq =
+  (getOne sqlq :: DBEnv m (Maybe SqlValue))
     >>= checkIfOneObjectReturned . maybeToList
 
-kRun :: SQL -> DB Integer
-kRun (SQL query values) = kPrepare query >> kExecute values
+kRun :: MonadDB m => SQL -> DBEnv m Integer
+kRun (SQL sqlq values) = kPrepare sqlq >> kExecute values
 
-kRun01 :: SQL -> DB Bool
-kRun01 (SQL query values) = kPrepare query >> kExecute01 values
+kRun01 :: MonadDB m => SQL -> DBEnv m Bool
+kRun01 (SQL sqlq values) = kPrepare sqlq >> kExecute01 values
 
 -- for INSERT/UPDATE statements generation
 

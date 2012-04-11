@@ -55,8 +55,8 @@ serviceAvailabilityChecker rng dbconf (master, slave) msender = do
       threadDelay $ 5 * 60 * second
       loop
   where
-    inDB :: DB a -> IO a
-    inDB f = withPostgreSQLDB' dbconf rng $ \dbenv -> ioRunDB dbenv f
+    inDB :: CryptoRNGT (DBT IO) a -> IO a
+    inDB = withPostgreSQL dbconf . runCryptoRNGT rng
 
     isDelivered mid (_, emid, _, SendGridEvent _ SG_Delivered{} _) = mid == emid
     isDelivered mid (_, emid, _, MailGunEvent _ MG_Delivered) = mid == emid

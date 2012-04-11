@@ -23,27 +23,21 @@
 -- >    r <- kExecute [toSql docid]
 -- >    Just doc <- kFetchRow decodeRowAsDocument
 -- >    return doc
---  
+--
 
-module DB.Classes
-  ( module DB.Core
+module DB.Classes (
+    module DB.Core
+  , module DB.Exception
+  , DBEnvSt(..)
+  , DBEnv
+  , mapDBEnv
+  , runDBEnv
+  , withDBEnvSt
   , DBQuery(..)
   , DBUpdate(..)
-  , DBState(..)
-  , DB
-  , mkDBEnv
-  , cloneDBEnv
-  , ioRunDB
-  , withPostgreSQL_
-  , withPostgreSQLDB
-  , withPostgreSQLDB'
-  , runDB
-  , runDBQuery
-  , runDBUpdate
-  , getDBState
-  , DBException(..)
-  , catchDB
-  , tryDB
+  , dbQuery
+  , dbUpdate
+  , withPostgreSQL
   , kPrepare
   , kExecute
   , kExecute1
@@ -55,102 +49,103 @@ module DB.Classes
   ) where
 
 import Control.Applicative
-import Control.Monad.Trans.Control
+import Control.Monad.Base
 import Control.Monad.IO.Class
-import Control.Monad.RWS
-import Crypto.RNG (CryptoRNG, CryptoRNGState, getCryptoRNGState)
+import Control.Monad.State.Strict hiding (state)
+import Control.Monad.Trans.Control
 import Data.Maybe
+import Data.Monoid
 import Database.HDBC hiding (originalQuery)
-import Database.HDBC.PostgreSQL
 import qualified Control.Exception as E
-import qualified Control.Exception.Lifted as EE
+import qualified Control.Exception.Lifted as EL
 import qualified Database.HDBC as HDBC
+import qualified Database.HDBC.PostgreSQL as PG
 
-import DB.Core (DBEnv(..), DBT, MonadDB(..), runDBT)
+import Control.Monad.Trans.Control.Util
+import DB.Core
 import DB.Exception
 import DB.Nexus
-import DB.SQL
+import DB.SQL hiding (sql)
 
-type DBInside a = RWST DBEnv () DBState IO a
-
-data DBState = DBState {
-    dbStatement :: Maybe Statement
-  , dbValues    :: [SqlValue]
+data DBEnvSt = DBEnvSt {
+    dbStatement :: !(Maybe Statement)
+  , dbValues    :: ![SqlValue]
   }
 
-mkDBEnv :: (MonadIO m, IConnection conn) => conn -> CryptoRNGState -> m DBEnv
-mkDBEnv conn rng = DBEnv rng `liftM` mkNexus conn
+type InnerDBEnv = StateT DBEnvSt
 
-cloneDBEnv :: DBEnv -> IO DBEnv
-cloneDBEnv env = DBEnv (envRNG env) `liftM` HDBC.clone (envNexus env)
+-- | 'DBEnv' is a monad transformer that adds state management of executed
+-- database action, handle exceptions correctly, closes statement when it
+-- is not useful anymore, etc.
+newtype DBEnv m a = DBEnv { unDBEnv :: InnerDBEnv m a }
+  deriving (Applicative, Functor, Monad, MonadIO, MonadPlus, MonadTrans)
 
--- | 'DB' is a monad that wraps access to database. It hold onto
--- Connection and current statement. Manages to handle exceptions
--- correctly, closes statement when it is not useful anymore, etc.
---
--- To keep privacy internals of this monad are not exported. There
--- should not be MonadIO instance either. We can think about
--- MonadRandom instance though.
---
--- Wrapper for calling db related functions in controlled environment
--- (DB/unDB is not exposed so functions may enter DB wrapper, but they
--- can't escape it in any other way than by runDB function).
---
--- In future we are going to remove the MonadIO instance so that DB
--- does not cause troublesome side effects.
---
--- Note: Do NOT try to provide DBMonad instance for DB. DBMonad instance
--- allows you to call runDB function, which executes a statement within
--- transaction. But, since we are in DB monad, we are already in such
--- transaction! And because there is no such thing as nested transactions,
--- this basically kills its 'transactional' character.
-newtype DB a = DB { unDB :: DBInside a }
-  deriving (Applicative, Functor, Monad, MonadIO)
+instance MonadBase b m => MonadBase b (DBEnv m) where
+  liftBase = liftBaseDefault
 
+instance MonadTransControl DBEnv where
+  newtype StT DBEnv a = StDBEnv { unStDBEnv :: StT InnerDBEnv a }
+  liftWith = defaultLiftWith DBEnv unDBEnv StDBEnv
+  restoreT = defaultRestoreT DBEnv unStDBEnv
 
--- | Get current statement (if any is prepared)
-getDBState :: DB DBState
-getDBState = DB get
+instance MonadBaseControl b m => MonadBaseControl b (DBEnv m) where
+  newtype StM (DBEnv m) a = StMDBEnv { unStMDBEnv :: ComposeSt DBEnv m a }
+  liftBaseWith = defaultLiftBaseWith StMDBEnv
+  restoreM     = defaultRestoreM unStMDBEnv
 
-instance CryptoRNG DB where
-  getCryptoRNGState = DB $ asks envRNG
+mapDBEnv :: (m (a, DBEnvSt) -> n (b, DBEnvSt)) -> DBEnv m a -> DBEnv n b
+mapDBEnv f m = withDBEnvSt $ f . runStateT (unDBEnv m)
+
+runDBEnv :: Monad m => DBEnv m a -> m a
+runDBEnv f = evalStateT (unDBEnv f) (DBEnvSt Nothing [])
+
+withDBEnvSt :: (DBEnvSt -> m (a, DBEnvSt)) -> DBEnv m a
+withDBEnvSt = DBEnv . StateT
+
+-- query typeclasses
+class MonadDB m => DBQuery m q r | q -> r where
+  query :: q -> DBEnv m r
+
+class MonadDB m => DBUpdate m q r | q -> r where
+  update :: q -> DBEnv m r
+
+dbQuery :: DBQuery m q r => q -> m r
+dbQuery = runDBEnv . query
+
+dbUpdate :: DBUpdate m q r => q -> m r
+dbUpdate = runDBEnv . update
 
 -- | Prepares new SQL query given as string. If there was another
 -- query prepared in this monad, it will be finished first.
-kPrepare :: String -> DB ()
-kPrepare query = DB $ do
-  let sqlquery = SQL query []
-  conn <- asks envNexus
-  statement <- protIO sqlquery $ prepare conn query
-  oldstatement <- dbStatement <$> get
-  modify $ \s -> s { dbStatement = Just statement }
-  case oldstatement of
-    Just st -> protIO sqlquery $ finish st
-    Nothing -> return ()
+kPrepare :: MonadDB m => String -> DBEnv m ()
+kPrepare q = do
+  kFinish
+  withDBEnvSt $ \s -> do
+    let sqlquery = SQL q []
+    conn <- getNexus
+    st <- protIO sqlquery $ prepare conn q
+    return ((), s { dbStatement = Just st })
 
 -- | Execute recently prepared query. Values given as param serve as
 -- positional arguments for SQL query binding. See 'execute' for more
 -- details.
-kExecute :: [SqlValue] -> DB Integer
-kExecute values = DB $ do
-  state@DBState{dbStatement} <- get
+kExecute :: MonadDB m => [SqlValue] -> DBEnv m Integer
+kExecute values = withDBEnvSt $ \s@DBEnvSt{dbStatement} -> do
   let sqlquery = SQL (getQuery dbStatement) values
-  put $ state { dbValues = values }
-  case dbStatement of
-    Nothing -> return $ -1 -- no statement prepared
+  (, s { dbValues = values }) `liftM` case dbStatement of
+    Nothing -> liftIO . E.throwIO $ NoStatementPrepared mempty
     Just st -> protIO sqlquery $ execute st values
 
 -- | Execute recently prepared query and check if it returned exactly
 -- 1 row affected result. Useful for INSERT, DELETE or UPDATE
 -- statements. Watch out for RETURNING clauses though: they make
 -- everything return 0.
-kExecute1 :: [SqlValue] -> DB ()
+kExecute1 :: MonadDB m => [SqlValue] -> DBEnv m ()
 kExecute1 values = do
   result <- kExecute values
-  when (result /= 1) $ DB $ do
-    mst <- dbStatement <$> get
+  when (result /= 1) $ withDBEnvSt $ \DBEnvSt{dbStatement} ->
     E.throw TooManyObjects {
-        originalQuery = SQL (getQuery mst) values
+        originalQuery = SQL (getQuery dbStatement) values
       , tmoExpected = 1
       , tmoGiven = result
     }
@@ -159,13 +154,12 @@ kExecute1 values = do
 -- row affected result. Useful for INSERT, DELETE or UPDATE
 -- statements. Watch out for RETURNING clauses though: they make
 -- everything return 0.
-kExecute01 :: [SqlValue] -> DB Bool
+kExecute01 :: MonadDB m => [SqlValue] -> DBEnv m Bool
 kExecute01 values = do
   result <- kExecute values
-  when (result > 1) $ DB $ do
-    mst <- dbStatement <$> get
+  when (result > 1) $ withDBEnvSt $ \DBEnvSt{dbStatement} ->
     E.throw TooManyObjects {
-        originalQuery = SQL (getQuery mst) values
+        originalQuery = SQL (getQuery dbStatement) values
       , tmoExpected = 1
       , tmoGiven = result
     }
@@ -175,13 +169,12 @@ kExecute01 values = do
 -- more rows affected result. Useful for INSERT, DELETE or UPDATE
 -- statements. Watch out for RETURNING clauses though: they make
 -- everything return 0.
-kExecute1P :: [SqlValue] -> DB Integer
+kExecute1P :: MonadDB m => [SqlValue] -> DBEnv m Integer
 kExecute1P values = do
   result <- kExecute values
-  when (result < 1) $ DB $ do
-    mst <- dbStatement <$> get
+  when (result < 1) $ withDBEnvSt $ \DBEnvSt{dbStatement} ->
     E.throw TooManyObjects {
-        originalQuery = SQL (getQuery mst) values
+        originalQuery = SQL (getQuery dbStatement) values
       , tmoExpected = 1
       , tmoGiven = result
     }
@@ -189,116 +182,35 @@ kExecute1P values = do
 
 -- | Finish current statement. 'kPrepare' and 'kExecute' call
 -- 'kFinish' before they alter query.
-kFinish :: DB ()
-kFinish = DB $ do
-  DBState{..} <- get
+kFinish :: MonadDB m => DBEnv m ()
+kFinish = withDBEnvSt $ \s@DBEnvSt{..} -> do
   case dbStatement of
-    Just st -> do
-      put $ DBState { dbStatement = Nothing, dbValues = [] }
-      protIO (SQL (getQuery dbStatement) dbValues) $ finish st
-    Nothing -> return ()
+    Just st -> (, DBEnvSt { dbStatement = Nothing, dbValues = [] })
+      `liftM` protIO (SQL (getQuery dbStatement) dbValues) (finish st)
+    Nothing -> return ((), s)
 
-kRunRaw :: String -> DB ()
-kRunRaw query = DB $ do
-  conn <- asks envNexus
-  protIO (SQL query []) $ runRaw conn query
+kRunRaw :: MonadDB m => String -> DBEnv m ()
+kRunRaw sql = DBEnv $ do
+  conn <- getNexus
+  protIO mempty $ runRaw conn sql
+
+kDescribeTable :: MonadDB m => String -> DBEnv m [(String, SqlColDesc)]
+kDescribeTable table = DBEnv $ getNexus >>= \c -> liftIO (describeTable c table)
+
+withPostgreSQL :: (MonadBaseControl IO m, MonadIO m) => String -> DBT m a -> m a
+withPostgreSQL conf m =
+  EL.bracket (liftIO $ PG.connectPostgreSQL conf) (liftIO . disconnect) $ \conn -> do
+    nex <- mkNexus conn
+    res <- runDBT nex m
+    liftIO $ commit conn
+    return res
+
+-- internals
 
 getQuery :: Maybe Statement -> String
-getQuery mst = fromMaybe "" $ HDBC.originalQuery `fmap` mst
+getQuery = fromMaybe "" . fmap HDBC.originalQuery
 
 -- | Protected 'liftIO'. Properly catches 'SqlError' and converts it
 -- to 'DBException'. Adds 'HDBC.originalQuery' that should help a lot.
-protIO :: SQL -> IO a -> DBInside a
-protIO query action = do
-  conn <- asks envNexus
-  liftIO $ actionWithCatch conn
-  where
-    actionWithCatch conn = do
-      action `E.catch` \e -> do
-        -- for some unknown reason we need to do rollback here
-        -- ourselves otherwise something underneath will try to issue
-        -- some commands and those will fail with 'transaction
-        -- aborted, ignoring commands till the end of the block'
-        rollback conn
-        E.throwIO $ SQLError query e
-
--- query typeclasses
-class DBQuery q r | q -> r where
-  dbQuery :: q -> DB r
-
-class DBUpdate q r | q -> r where
-  dbUpdate :: q -> DB r
-
--- | DBMonad class. getDBEnv function is used for getting connection
--- from underlying state object (obviously). If it comes to handleDBError,
--- it's for handling hard db errors like lost connection, sql errors of
--- all kind or the fact that query did something that should never happen.
--- In such case we want to interrupt what we're currently doing and exit
--- gracefully, most likely logging an error is some way. Since a way of
--- handling such case may vary in different monads, hence this function.
-
-runit :: MonadIO m => DB a -> DBEnv -> m a
-runit action env = do
-  let actionWithFinish = (action >>= \result -> kFinish >> return result)
-  (a, _, _) <- liftIO $ runRWST (unDB actionWithFinish) env
-    DBState { dbStatement = Nothing, dbValues = [] }
-  return a
-
--- | Runs DB action in single transaction (IO monad). Note that since
--- it runs in IO, you need to pass Connecion object explicitly. Also,
--- sql releated exceptions are not handled, so you probably need to do
--- it yourself. Use this function ONLY if there is no way to use runDB.
-ioRunDB :: MonadIO m => DBEnv -> DB a -> m a
-ioRunDB env f = runit f env
-
-withPostgreSQL_ :: (MonadBaseControl IO m, MonadIO m) => String -> CryptoRNGState -> DBT m a -> m a
-withPostgreSQL_ conf rng m =
-  EE.bracket (liftIO $ connectPostgreSQL conf) (liftIO . disconnect) $ \conn -> do
-    (res, env) <- mkDBEnv conn rng >>= \env -> runDBT env m
-    liftIO $ commit $ envNexus env
-    return res
-
-withPostgreSQLDB' :: String -> CryptoRNGState -> (DBEnv -> IO a) -> IO a
-withPostgreSQLDB' cs rng f = withPostgreSQL cs $ \conn ->
-  mkDBEnv conn rng >>= f
-
-withPostgreSQLDB :: String -> CryptoRNGState -> DB a -> IO a
-withPostgreSQLDB cs rng f = withPostgreSQLDB' cs rng (flip ioRunDB f)
-
-
--- | Runs DB action in a DB compatible monad
-runDB :: MonadDB m => DB a -> m a
-runDB f = do
-  env <- getDBEnv
-  res <- liftIO $ (Right <$> ioRunDB env f) `E.catches` handlers
-  case res of
-    Right r -> return r
-    Left e  -> liftIO $ E.throwIO e
-  where
-    -- we catch only SqlError/DBException here
-    handlers = [
-        E.Handler (return . Left . SQLError (SQL "<unknown SQL query>" []))
-      , E.Handler (return . Left)
-      ]
-
--- | Runs single db query (provided for convenience).
-runDBQuery :: (MonadDB m, DBQuery q r) => q -> m r
-runDBQuery = runDB . dbQuery
-
--- | Runs single db update (provided for convenience).
-runDBUpdate :: (MonadDB m, DBUpdate q r) => q -> m r
-runDBUpdate = runDB . dbUpdate
-
--- | Catch in DB monad
-catchDB :: E.Exception e => DB a -> (e -> DB a) -> DB a
-catchDB f exhandler = DB $ do
-  env <- ask
-  let handler e = runit (exhandler e) env
-  liftIO $ runit f env `E.catch` handler
-
--- | Try in DB monad
-tryDB :: E.Exception e => DB a -> DB (Either e a)
-tryDB f = DB $ ask >>= liftIO . E.try . runit f
-
-kDescribeTable :: String -> DB [(String, SqlColDesc)]
-kDescribeTable table = DB (asks envNexus) >>= \c -> liftIO (describeTable c table)
+protIO :: MonadDB m => SQL -> IO a -> m a
+protIO sql m = liftIO $ m `E.catch` (liftIO . E.throwIO . SQLError sql)

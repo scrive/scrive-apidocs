@@ -9,8 +9,8 @@ data TableValidationResult = TVRvalid | TVRcreated | TVRinvalid
 data Table = Table {
     tblName             :: String
   , tblVersion          :: Int
-  , tblCreateOrValidate :: [(String, SqlColDesc)] -> DB TableValidationResult
-  , tblPutProperties    :: DB ()
+  , tblCreateOrValidate :: MonadDB m => [(String, SqlColDesc)] -> DBEnv m TableValidationResult
+  , tblPutProperties    :: MonadDB m => DBEnv m ()
   }
 
 -- | Migration object. Fields description:
@@ -23,5 +23,5 @@ data Table = Table {
 data Migration = Migration {
     mgrTable :: Table
   , mgrFrom  :: Int
-  , mgrDo    :: DB ()
+  , mgrDo    :: MonadDB m => DBEnv m ()
   }
