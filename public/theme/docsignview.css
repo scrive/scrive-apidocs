@@ -495,7 +495,7 @@ body.signview {
   border: 5px solid #83bc39;
   padding: 15px;
   background-image: none;
-  width: 920px;
+  width: 924px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -693,21 +693,29 @@ body.signview {
 .signview .signatories .inner {
     margin-top: 10px;
     min-height: 72px;
+    color : #505050;
+    font-size: 0.9em;
 }
 
 .signview .signatories .numspace {
     float:left;
-    width: 130px;
     height: 32px;
     padding: 0px;
+    margin-top:0px;
+}
+
+.signview .field {
+    height: 14px;
+    width: 160px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow:hidden;
 }
 
 .signview .signatories .contactspace {
     float:left;
-    width: 130px;
     height: 32px;
     padding: 0px;
-
 }
 
 .signview .signatories .statusbox {
@@ -913,7 +921,7 @@ div.spacing.butt {
     padding-top: 20px;
     margin-left: auto;
     margin-right: auto;
-    width: 944px;
+    width: 932px;
 }
 
 .section .signatoryattachments {
