@@ -126,7 +126,6 @@ class MaybeTemplate a where
 
 instance MaybeTemplate DocumentType where
    isTemplate (Template _) = True
-   isTemplate AttachmentTemplate = True
    isTemplate _ = False
    isSignable (Signable _) = True
    isSignable _ = False
@@ -139,7 +138,7 @@ class MaybeAttachment a where
    isAttachment :: a -> Bool
 
 instance  MaybeAttachment DocumentType where
-   isAttachment t =  (t == AttachmentTemplate) || (t == Attachment)
+   isAttachment t = (t == Attachment)
 
 instance  MaybeAttachment Document where
    isAttachment =  isAttachment . documenttype
@@ -265,6 +264,10 @@ isELegDataMismatch _                            = False
  -}
 allowsIdentification :: Document -> IdentificationType -> Bool
 allowsIdentification document idtype = idtype `elem` documentallowedidtypes document
+
+{- | Determine is document is designed to be signed using pad - this determines if invitation emais are send and if author can get access to siglink -}
+sendMailsDurringSigning :: Document -> Bool
+sendMailsDurringSigning doc = not $ doc `allowsIdentification` PadIdentification
 
 {- |
     Checks whether a signatory link is eligible for sending a reminder.

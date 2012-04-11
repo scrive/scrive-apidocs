@@ -151,8 +151,7 @@ mailInvitationToSignContract=
         mailheader= mailInvitationTitleContract();
         mailp1 = mailInvitationToSignContractP1();
         mailp2 = footer;
-        mailp3 = legalparagraph();
-        maill3 = 'true'
+        mailp3 = legalparagraph()
     )$
 ###
 mailInvitationToSignContractP1=

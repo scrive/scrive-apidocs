@@ -106,57 +106,6 @@ $endif$
 ###
 secretaryMessage =
     $process.authorissecretarytext$
-### FORM and button for reminding message
-###
-reminderForm =
-<span>
-  <a  class=" btn-tiny green prepareToSendReminderMail" rel="#siglnk$signatory.id$">
-    <div class="$if(signatory.signdate)$ reminderForSignedIcon $else$ reminderForSendIcon $endif$"></div>
-    <div class="sendLinkText">
-        $if(signatory.signdate)$
-            $process.remindagainbuttontext$
-        $else$
-            $_sendReminder()$
-        $endif$
-    </div>
-  </a>
-  <form class="overlay" action="$signatory.linkremind$" method="POST" id="siglnk$signatory.id$">
-    <div class="modal-container">
-        <div class="modal-header">
-            <span class="modal-icon message"></span>
-            <span class="modal-title">
-                  <h2>
-                    $if(signatory.signdate)$
-                        $process.remindagainbuttontext$
-                    $else$
-                        $_reminderFormHead()$
-                    $endif$
-                  </h2>
-            </span>
-            <a class="modal-close close"> </a>
-        </div>
-        <div class="modal-body">
-            <div class="modal-content disablelinks">
-                 $signatory.reminderMessage:noescape()$
-            </div>
-        </div>
-        <div class="modal-footer">
-           <input type="hidden" name="sign" value="automatic" />
-           <div class="float-left">
-                <a  class="close cancel">$_cancel()$</a>
-                <a  class="editer message">$_reminderFormFooterOwnMessage()$</a>
-           </div>
-           <a href="#" class="btn-small green float-right submiter">
-                <div class="left"></div>
-                <div class="label">
-                   $if(signatory.signdate)$ $_send()$ $else$ $_reminderFormSendReminder()$$endif$
-                <div class="btn-symbol green arrow-left"></div></div>
-                <div class="right"></div>
-            </a>
-        </div>
-    </div>
-  </form>
-</span>
 ####
 #### For change signatory email
 ####

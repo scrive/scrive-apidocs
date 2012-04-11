@@ -340,13 +340,13 @@ test_removingCompanyAccountWorks env = withTestEnvironment env $ do
 
   assertCompanyInvitesAre company []
 
-  companydocs <- dbQuery $ GetDocumentsBySignatory $ userid adminuser
+  companydocs <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) []
   assertEqual "Company still owns users docs" 1 (length companydocs)
   assertEqual "Docid matches" docid (documentid $ head companydocs)
 
 test_privateUserTakoverWorks :: DBEnv -> Assertion
 test_privateUserTakoverWorks env = withTestEnvironment env $ do
-  (adminuser, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
+  (_adminuser, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   docid <- addRandomDocumentWithAuthor user
 
@@ -366,10 +366,13 @@ test_privateUserTakoverWorks env = withTestEnvironment env $ do
   assertEqual "User belongs to the company" (usercompany updateduser)
                                             (Just $ companyid company)
   assertBool "User is a standard user" (not $ useriscompanyadmin updateduser)
-  companydocs <- dbQuery $ GetDocumentsBySignatory $ userid adminuser
+  companydocs <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) []
   assertEqual "Company owns users docs" 1 (length companydocs)
   assertEqual "Docid matches" docid (documentid $ head companydocs)
-  userdocs <- dbQuery $ GetDocumentsBySignatory $ userid user
+  docs <- dbQuery $ GetDocumentsBySignatory [Contract, Offer, Order] $ userid user
+  templates <- dbQuery $ GetAttachmentsByAuthor $ userid user
+  attachments <- dbQuery $ GetTemplatesByAuthor $ userid user
+  let userdocs = docs ++ templates ++ attachments
   assertEqual "User is still linked to their docs" 1 (length userdocs)
   assertEqual "Docid matches" docid (documentid $ head userdocs)
 

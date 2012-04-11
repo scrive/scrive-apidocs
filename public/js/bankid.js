@@ -369,7 +369,7 @@ window.Eleg = {
      return text;
    },
 
-    bankidSign : function(document, signatory, submit) {
+    bankidSign : function(document, signatory, submit, callback) {
       if (!checkPlugin(hasSign2PluginIE, hasSign2PluginMozilla, flashBankIDMessage))
         return false;
       LoadingDialog.open(localization.startingSaveSigning);
@@ -423,7 +423,10 @@ window.Eleg = {
                 submit.add("signature",signresult);
                 submit.add("transactionid", data.transactionid);
                 submit.add("eleg" , "bankid");
-                submit.send();
+                if (callback == undefined)
+                    submit.send();
+                else
+                    callback(submit);
             }    
             else
                 FlashMessages.add({ content: data.msg, color: "red"});
@@ -432,7 +435,7 @@ window.Eleg = {
             error: repeatForeverWithDelay(250)
       });  
     },
-    nordeaSign : function(document, signatory, submit) {
+    nordeaSign : function(document, signatory, submit, callback) {
       if (!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage))
         return;
       var url;
@@ -489,7 +492,10 @@ window.Eleg = {
                 submit.add("signature",signresult);
                 submit.add("transactionid", data.transactionid);
                 submit.add("eleg" , "nordea");
-                submit.send();
+                if (callback == undefined)
+                    submit.send();
+                else
+                    callback(submit);
             }    
             else
                 FlashMessages.add({ content: data.msg, color: "red"});
@@ -501,7 +507,7 @@ window.Eleg = {
     
     
     },
-    teliaSign : function(document, signatory, submit) {
+    teliaSign : function(document, signatory, submit, callback) {
       if (!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage))
         return false;
       var url;
@@ -555,7 +561,10 @@ window.Eleg = {
                 submit.add("signature",signresult);
                 submit.add("transactionid", data.transactionid);
                 submit.add("eleg" , "telia");
-                submit.send();
+                if (callback == undefined)
+                    submit.send();
+                else
+                    callback(submit);
 
             }    
             else

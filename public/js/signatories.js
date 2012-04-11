@@ -267,11 +267,16 @@ window.Signatory = Backbone.Model.extend({
                  {name: "sigcompnr"},
                  {name: "signature"}
         ],
+        current : false,
+        attachments : [],
+        signorder : 1,
+        csv : undefined,
         current: false,
         attachments: [],
         signorder: 1,
         csv: undefined,
-        saved: false
+        saved: false,
+        ispadqueue : false
     },
 
     initialize: function(args) {
@@ -455,11 +460,14 @@ window.Signatory = Backbone.Model.extend({
         this.set({attachments: []});
     },
     canSign: function() {
-        var canSign = this.document().pending() &&
+        var canSign = this.document().signingInProcess() &&
             this.signs() &&
             !this.hasSigned() &&
             this.signorder() == this.document().signorder();
         return canSign;
+    },
+    canPadSignQuickSign : function() {
+       return this.document().padAuthorization() && this.canSign() && !this.document().hasAnyAttachments() && this.allFieldsButSignatureDontRequiredFilling();
     },
     allAttachemntHaveFile: function() {
         return _.all(this.attachments(), function(attachment) {
@@ -469,6 +477,11 @@ window.Signatory = Backbone.Model.extend({
     allFieldsReadyForSign: function() {
         return _.all(this.fields(), function(field) {
             return field.readyForSign();
+        });
+    },
+    allFieldsButSignatureDontRequiredFilling: function() {
+        return _.all(this.fields(), function(field) {
+            return (field.isClosed() || field.placements().length == 0) || field.isSignature();
         });
     },
     signatureReadyForSign: function() {
@@ -484,6 +497,22 @@ window.Signatory = Backbone.Model.extend({
               customtext: customtext
           });
     },
+    addtoPadQueue : function(callback) {
+        return new Submit({
+              url: "/padqueue/add/"+ this.document().documentid() + "/" + this.signatoryid(),
+              method: "POST",
+              ajax : true,
+              ajaxsuccess : callback
+          });
+    },
+    removeFromPadQueue : function(callback) {
+       return new Submit({
+              url: "/padqueue/clear",
+              method: "POST",
+              ajax : true,
+              ajaxsuccess : callback
+       });
+    },
     reject: function(customtext) {
         return new Submit({
               url: "/s/" + this.document().documentid() + "/" + this.document().viewer().signatoryid(),
@@ -493,7 +522,9 @@ window.Signatory = Backbone.Model.extend({
               reject: "YES"
           });
     },
-
+    padSigningURL : function() {
+        return "/padqueue";
+    },
     changeEmail: function(email) {
         return new Submit({
                 url: "/changeemail/" + this.document().documentid() + "/" + this.signatoryid(),
@@ -542,11 +573,14 @@ window.Signatory = Backbone.Model.extend({
          this.trigger("change:csv");
 
     },
+    inpadqueue : function() {
+       return this.get("inpadqueue");
+    },
     removed : function() {
         this.trigger("removed"); 
         this.off();
     },
-    draftData: function() {
+    draftData : function() {
         return {
               fields: _.map(this.readyFields(), function(field) {
                   return field.draftData();
@@ -623,6 +657,85 @@ window.SignatoryStandardView = Backbone.View.extend({
         container.append(fstbutton.input());
         return container;
     },
+    giveForSigningOnThisDeviceOption : function() {
+                 var signatory = this.model;
+                 var button = $("<a  class='giveForSigning'/>");
+                 var icon = $("<div class='giveForSigningIcon'/>");
+                 var text = localization.pad.signingOnSameDevice; 
+                 var textbox = $("<div class='sendLinkText'/>").text(text);
+                 button.append(icon).append(textbox);
+                 button.click(function() {
+                         Confirmation.popup({
+                                title : localization.pad.signingOnSameDeviceConfirmHeader,
+                                content : localization.pad.signingOnSameDeviceConfirmText,
+                                acceptText : localization.pad.signingOnSameDevice ,
+                                rejectText : localization.cancel,
+                                onAccept : function()
+                                        {
+                                           signatory.addtoPadQueue(function(resp) {
+                                               if (resp.error == undefined)
+                                                   window.location = signatory.padSigningURL();
+                                               else
+                                                   FlashMessages.add({
+                                                       content: localization.pad.addToPadQueueNotAdded,
+                                                       color: "red"
+                                                   });
+                                            }).send();
+                                           return true;
+                                        }
+                        });
+                 });
+                 return button;
+    },
+    removeFromPadQueueOption :  function() {
+        var signatory = this.model;
+        var button = $("<a  class='removeFromPad'/>");
+        var icon = $("<div class='removeFromPadIcon'/>");
+        var text = localization.pad.removeFromPadQueue;
+        var textbox = $("<div class='sendLinkText'/>").text(text);
+        button.append(icon).append(textbox);
+        button.click(function() {
+            signatory.removeFromPadQueue().sendAjax( function() { window.location = window.location;}); // Fix at some point not to reload the page
+        });
+        return button;
+
+    },
+    addToPadQueueOption : function() {
+                 var signatory = this.model;
+                 var button = $("<a  class='addToPad'/>");
+                 var icon = $("<div class='addToPadIcon'/>");
+                 var text = localization.pad.addToPadQueue;
+                 var textbox = $("<div class='sendLinkText'/>").text(text);
+                 button.append(icon).append(textbox);
+                 button.click(function() {
+                         Confirmation.popup({
+                                title : localization.pad.addToPadQueueConfirmHeader,
+                                content : localization.pad.addToPadQueueConfirmText,
+                                acceptText : localization.pad.addToPadQueue ,
+                                rejectText : localization.cancel,
+                                onAccept : function()
+                                        {
+                                           signatory.addtoPadQueue(function(resp) {
+                                               if (resp.error == undefined)
+                                               {    FlashMessages.add({
+                                                       content: localization.pad.addToPadQueueAdded,
+                                                       color: "green"
+                                                    }); }
+                                               else {
+                                                   FlashMessages.add({
+                                                       content: localization.pad.addToPadQueueNotAdded,
+                                                       color: "red"
+                                                   }); };
+                                            }).sendAjax();
+                                           window.location = window.location; // Fix at some point not to reload the page
+                                           return true;
+                                           
+                                        }
+                        });
+                        return false;
+                 });
+                 return button;
+    },
     remidenMailOption: function() {
          var signatory = this.model;
          var button = $("<a  class='btn-tiny green prepareToSendReminderMail'/>");
@@ -685,15 +798,31 @@ window.SignatoryStandardView = Backbone.View.extend({
         }
         container.append(textsummary);
 
-        if (signatory.document().currentViewerIsAuthor() &&
+
+       if (signatory.document().currentViewerIsAuthor() &&
                !signatory.author() &&
-               ((signatory.document().pending() && signatory.canSign()) ||
-                   signatory.document().closed()))
+               ((signatory.document().signingInProcess() && signatory.canSign()) ||
+                   signatory.document().closed()) && !signatory.document().padAuthorization())
           container.append(this.remidenMailOption());
 
         if (signatory.undeliveredEmail() && signatory.document().currentViewerIsAuthor() && signatory.document().pending())
           container.append(this.changeEmailOption());
 
+        if (signatory.document().currentViewerIsAuthor()
+            && signatory.document().signingInProcess()
+            && signatory.canSign()
+            && signatory.document().padAuthorization()) {
+                  if (!signatory.author() && BrowserInfo.isIpad())
+                      container.append(this.giveForSigningOnThisDeviceOption());
+                  if (!BrowserInfo.isIpad()) {
+                    if (signatory.inpadqueue())
+                      container.append(this.removeFromPadQueueOption());
+                    else    
+                      container.append(this.addToPadQueueOption());
+                  }
+           }
+
+                  
         return this;
     }
 });

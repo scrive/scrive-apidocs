@@ -346,7 +346,9 @@ data EvidenceEventType =
   AdminOnlySaveForUserEvidence                    |
   SignableFromDocumentEvidence                    |
   TemplateFromDocumentEvidence                    |
-  AttachCSVUploadEvidence
+  AttachCSVUploadEvidence                         |
+  SendToPadDevice                                 |
+  RemovedFromPadDevice
   deriving (Eq, Show, Read, Ord)
 
 instance Convertible EvidenceEventType Int where
@@ -403,6 +405,8 @@ instance Convertible EvidenceEventType Int where
   safeConvert SignableFromDocumentEvidence                    = return 51
   safeConvert TemplateFromDocumentEvidence                    = return 52
   safeConvert AttachCSVUploadEvidence                         = return 53
+  safeConvert SendToPadDevice                                 = return 54
+  safeConvert RemovedFromPadDevice                            = return 55
   
 instance Convertible Int EvidenceEventType where
     safeConvert 1  = return AddSigAttachmentEvidence
@@ -458,6 +462,8 @@ instance Convertible Int EvidenceEventType where
     safeConvert 51 = return SignableFromDocumentEvidence
     safeConvert 52 = return TemplateFromDocumentEvidence
     safeConvert 53 = return AttachCSVUploadEvidence
+    safeConvert 54 = return SendToPadDevice
+    safeConvert 55 = return RemovedFromPadDevice
     safeConvert s  = Left ConvertError { convSourceValue = show s
                                        , convSourceType = "Int"
                                        , convDestType = "EvidenceEventType"

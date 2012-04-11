@@ -15,6 +15,15 @@ window.ToolTip= {
            container.append(arrow);
            container.append(body);
             $(args.on).mouseenter(function(e) {
+                var checker = function() {
+                    if ($(':hover',args.on).size() == 0)
+                    {
+                        container.remove();
+                    }
+                    else
+                        setTimeout(checker,1000);
+                }
+                setTimeout(checker,1000);
                 container.appendTo('body');
                 container.css({
                     left: $(this).offset().left + $(this).width() + 19,

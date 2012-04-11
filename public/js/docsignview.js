@@ -55,6 +55,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
     }
   },
   createMenuElems: function() {
+    if (this.model.document.padAuthorization()) return $("<div>");  
     return $(new DocumentActionMenuView({
       model: this.model.document,
       el: $("<div class='menuwrapper'/>")
@@ -646,12 +647,14 @@ window.DocumentSignView = Backbone.View.extend({
       }).el);
     },
     createSaveAfterSignViewElems: function() {
+      if (this.model.padAuthorization()) return $("<div/>"); 
       return $(new DocumentSaveAfterSignView({
        model: this.saveAfterSignModel,
        el: $("<div />")
       }).el);
     },
     createShareAfterSignViewElems: function() {
+      if (this.model.padAuthorization()) return $("<div/>");
       return $(new DocumentShareAfterSignView({
         model: this.saveAfterSignModel,
         el: $("<div />")
@@ -818,13 +821,13 @@ window.DocumentSignView = Backbone.View.extend({
       return new DocumentSignViewTask({
         model: placement.field(),
         isComplete: function() {
-          return placement.field().value().length>0;
+          return placement.field().readyForSign();
         },
         el: elem,
         beforePointing: function() {
           elem.trigger("click");
         },
-        label: placement.field().nicename()
+        label: placement.field().isSignature() ? "" : placement.field().nicename()
       });
     },
     createUploadedAttachmentsElems: function() {
@@ -840,7 +843,7 @@ window.DocumentSignView = Backbone.View.extend({
           // the model/view split was already messed up when I got
           // here. --Eric
         model: new DocumentSignSignatoryBox({document:this.model}),
-        el: $("<div class='section signatories spacing'/>"),
+        el: $("<div class='section signatories spacing'/>")
       });
     },
     createRejectButtonElems: function() {
@@ -990,7 +993,7 @@ window.DocumentSignView = Backbone.View.extend({
           bottomstuff.append($(signatoriesview.el));
         }
 
-        if (this.model.currentSignatoryCanSign()) {
+        if (this.model.currentSignatoryCanSign() && (!this.model.currentSignatory().canPadSignQuickSign())) {
           var signsection = $("<div class='section' />");
           signsection.append(this.createRejectButtonElems());
           var signButton = this.createSignButtonElems(jQuery.extend({}, tasks));

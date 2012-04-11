@@ -20,7 +20,6 @@ window.FieldPlacement = Backbone.Model.extend({
             placement.trigger("removed");
             placement.remove();
         });
-
     },
     placed : function() {
           return this.get("placed");
@@ -75,9 +74,9 @@ window.FieldPlacement = Backbone.Model.extend({
         return {
             x : parseInt(this.x()),
             y : parseInt(this.y()),
-            pagewidth : page.width(),
-            pageheight : page.height(),
-            page : page.number()
+            pagewidth : page != undefined ? page.width() : 943,
+            pageheight : page != undefined ? page.height() : 1335,
+            page : page != undefined ? page.number() : this.get("page")
         };
     }
 });
@@ -107,7 +106,8 @@ window.Field = Backbone.Model.extend({
             field.trigger("removed");
             field.off();
         });
-
+        if (this.isSignature())
+            this.set({"signature" : new Signature({field: this}, {silent : true})});
     },
     name : function() {
         return this.get("name");
@@ -141,7 +141,7 @@ window.Field = Backbone.Model.extend({
         return this.isStandard() || this.isSignature(); //this checks are name based
     },
     readyForSign : function(){
-        return this.value() != "" || this.canBeIgnored();
+        return (!this.isSignature() && ((this.value() != "") || (this.canBeIgnored()))) || (this.isSignature() && this.signature().hasImage());
     },
     nicename : function() {
         var name = this.name();
@@ -194,7 +194,10 @@ window.Field = Backbone.Model.extend({
             return validation;
           }
         }
-
+        if (this.signatory().signs() && this.signatory().document().padAuthorization() && this.isSignature()) {
+            var msg = localization.designview.validation.notPlacedSignature;
+            return new Validation({validates : function() {return field.hasPlacements()}, message : msg});
+        }
         return new Validation();
     },
     isStandard: function() {
@@ -211,7 +214,9 @@ window.Field = Backbone.Model.extend({
     },
     isSignature : function() {
         return this.name() == "signature";
-
+    },
+    signature : function() {
+        return this.get("signature");
     },
     isReady: function(){
       return this.get("fresh") == false;
@@ -233,6 +238,9 @@ window.Field = Backbone.Model.extend({
                , placements : _.map(this.placements(), function(placement) {return placement.draftData();})
              };
     },
+   hasPlacements : function() {
+      return this.get("placements").length > 0;
+   },
    addPlacement : function(placement) {
       var newplacements = new Array(); //Please don't ask why we rewrite this array
       for(var i=0;i<this.placements().length;i++)

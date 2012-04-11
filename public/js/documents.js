@@ -82,7 +82,9 @@ window.Document = Backbone.Model.extend({
         return this.get("signatories");
     },
     fixForBasic: function() {
-        while (this.signatories().length < 2) {
+        if (this.padAuthorization())
+            this.setEmailVerification();
+        while (this.signatories().length <2 ) {
               this.addSignatory();
         }
     },
@@ -183,7 +185,8 @@ window.Document = Backbone.Model.extend({
             fieldvalues.push(field.value());
         });
           return new Submit({
-              sign: "YES",
+              sign : "YES",
+              url : "/s/" + this.documentid() + "/" + this.viewer().signatoryid(), 
               method: "POST",
               magichash: this.viewer().magichash(),
               fieldname: fieldnames,
@@ -256,12 +259,11 @@ window.Document = Backbone.Model.extend({
           if ((sig !== this.signatories()[i] && i < this.signatories().length - 1) ||
                  removed)
              newsigs.push(this.signatories()[i]);
-          else {
-            this.signatories()[i].removed();
-            removed = true;
+          else
+          {   this.signatories()[i].removed();
+              removed = true;
           }
-       this.set({signatories: newsigs});
-
+       this.set({signatories : newsigs});
     },
     currentViewerIsAuthor: function() {
         var csig = this.currentSignatory();
@@ -307,14 +309,21 @@ window.Document = Backbone.Model.extend({
     elegAuthorization: function() {
           return this.get("authorization") == "eleg";
     },
-    setElegVerification: function() {
-          this.set({"authorization": "eleg"}, {silent: true});
+    padAuthorization : function() {
+          return this.get("authorization") == "pad";
+    },
+    setElegVerification : function() {
+          this.set({"authorization":"eleg"}, {silent: true});
           this.trigger("change:authorization");
     },
     setEmailVerification: function() {
           this.set({"authorization": "email"}, {silent: true});
           this.trigger("change:authorization");
-
+    },
+    setPadVerification : function() {
+          this.set({"authorization":"pad"}, {silent: true});
+          _.each(this.signatories(), function(sig) {sig.clearAttachments();});
+          this.trigger("change:authorization");
     },
     elegTBS: function() {
         var text = this.title() + " " + this.documentid();
@@ -348,8 +357,8 @@ window.Document = Backbone.Model.extend({
           if (this.signatories()[i].author())
               return this.signatories()[i];
     },
-    authorCanSignFirst: function() {
-        if (!this.author().signs())
+    authorCanSignFirst : function() {
+        if (!this.author().signs() || this.padAuthorization())
             return false;
         var aidx = this.author().signorder();
         return ! _.any(this.signatories(), function(sig) {
@@ -483,6 +492,41 @@ window.DocumentDataFiller = {
                 unsignedparty.push(signatories[i].smartname());
                 unsignedpartynotcurrent.push(signatories[i].smartname());
             }
+
+        var escapeHTML = function(s) {
+            var result = '';
+            for (var i = 0; i < s.length;++i) {
+                var c = s.charAt(i);
+                if (c == '&')
+                    result += '&amp';
+                else if (c == '\'')
+                    result += '&#39;';
+                else if (c == '"')
+                    result += '&quot;';
+                else if (c == '<')
+                    result += '&lt;';
+                else if (c == '>')
+                    result += '&gt;';
+                else
+                    result += c;
+            }
+            return result;
+        };
+        var listStringMany = function(names) {
+            var name0 = names.shift();
+            if (names.length === 1)
+                return "<strong>" + escapeHTML(name0) + "</strong> " + localization.listand + " <strong>" + escapeHTML(names[0]) + "</strong>";
+            return "<strong>" + escapeHTML(name0) + "</strong>, " + listStringMany(names);
+        };
+        var listString = function(names) {
+            if (names.length === 0)
+                return "";
+            if (names.length === 1)
+                return "<strong>" + escapeHTML(names[0]) + "</strong>";
+            if (names.length === 2)
+                return "<strong>" + escapeHTML(names[0]) + "</strong> " + localization.and + " <strong>" + escapeHTML(names[1]) + "</strong>";
+            return listStringMany(names);
+        };
         $(".unsignedpart", object).html(listString(unsignedparty));
         $(".unsignedpartynotcurrent", object).html(listString(unsignedpartynotcurrent));
         return object;

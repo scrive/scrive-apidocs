@@ -41,8 +41,6 @@ module Doc.DocView (
   , uploadPage
   , documentJSON
   , csvLandPage
-  , documentStatusClass
-  , signatoryStatusClass
   ) where
 
 import AppView (kontrakcja, standardPageFields)
@@ -74,6 +72,7 @@ import Text.JSON
 import Data.List (sortBy)
 import File.Model
 import DB.Classes
+import PadQueue.Model
 import Text.JSON.Gen hiding (value)
 import qualified Text.JSON.Gen as J
 
@@ -190,8 +189,8 @@ flashMessageMultipleAttachmentShareDone :: TemplatesMonad m => m FlashMessage
 flashMessageMultipleAttachmentShareDone =
   toFlashMsg OperationDone <$> renderTemplateM "flashMessageMultipleAttachmentShareDone" ()
 
-documentJSON :: (TemplatesMonad m, KontraMonad m, DBMonad m) => Maybe SignatoryLink -> MinutesTime -> Document -> m JSValue
-documentJSON msl _crttime doc = do
+documentJSON :: (TemplatesMonad m, KontraMonad m, DBMonad m) => PadQueue -> Maybe SignatoryLink -> MinutesTime -> Document -> m JSValue
+documentJSON pq msl _crttime doc = do
     ctx <- getContext
     files <- runDB $ documentfilesM doc
     sealedfiles <- runDB $ documentsealedfilesM doc
@@ -226,7 +225,7 @@ documentJSON msl _crttime doc = do
       J.value "canseeallattachments" $ isAuthor msl || isauthoradmin
       J.value "timeouttime" $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc
       J.value "status" $ show $ documentstatus doc
-      J.objects "signatories" $ map (signatoryJSON doc msl) (documentsignatorylinks doc)
+      J.objects "signatories" $ map (signatoryJSON pq doc msl) (documentsignatorylinks doc)
       J.value "signorder" $ unSignOrder $ documentcurrentsignorder doc
       J.value "authorization" $ authorizationJSON $ head $ (documentallowedidtypes doc) ++ [EmailIdentification]
       J.value "template" $ isTemplate doc
@@ -241,9 +240,10 @@ documentJSON msl _crttime doc = do
 authorizationJSON :: IdentificationType -> JSValue
 authorizationJSON EmailIdentification = toJSValue "email"
 authorizationJSON ELegitimationIdentification = toJSValue "eleg"
+authorizationJSON PadIdentification = toJSValue "pad"
 
-signatoryJSON :: (TemplatesMonad m, DBMonad m) => Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
-signatoryJSON doc viewer siglink = do
+signatoryJSON :: (TemplatesMonad m, DBMonad m) => PadQueue -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
+signatoryJSON pq doc viewer siglink = do
     J.value "id" $ show $ signatorylinkid siglink
     J.value "current" $ (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink)
     J.value "signorder" $ unSignOrder $ signatorysignorder $ signatorydetails siglink
@@ -258,9 +258,10 @@ signatoryJSON doc viewer siglink = do
     J.value "readdate" $ jsonDate $ maybereadinvite siglink
     J.value "rejecteddate" $ jsonDate rejectedDate
     J.value "fields" $ signatoryFieldsJSON doc siglink
-    J.value "status" $ show $ signatoryStatusClass doc siglink
+    J.value "status" $ show $ signatorylinkstatusclass siglink
     J.objects "attachments" $ map signatoryAttachmentJSON (signatoryattachments siglink)
     J.value "csv" $ csvcontents <$> signatorylinkcsvupload siglink
+    J.value "inpadqueue"  $ (fmap fst pq == Just (documentid doc)) && (fmap snd pq == Just (signatorylinkid siglink))
     where
       datamismatch = case documentcancelationreason doc of
         Just (ELegDataMismatch _ sid _ _ _) -> sid == signatorylinkid siglink
@@ -282,16 +283,17 @@ signatoryFieldsJSON :: Document -> SignatoryLink -> JSValue
 signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}}) = JSArray $
   for orderedFields $ \sf@SignatoryField{sfType, sfValue, sfPlacements} ->
     case sfType of
-      FirstNameFT -> fieldJSON doc "fstname" sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
-      LastNameFT -> fieldJSON doc "sndname" sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
-      EmailFT -> fieldJSON doc "email" sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
-      PersonalNumberFT -> fieldJSON doc "sigpersnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
-      CompanyFT -> fieldJSON doc "sigco" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
-      CompanyNumberFT -> fieldJSON doc "sigcompnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
-      SignatureFT -> fieldJSON doc "signature" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
-      CustomFT label closed -> fieldJSON doc label sfValue (closed  && (not $ isPreparation doc))  sfPlacements
+      FirstNameFT           -> fieldJSON doc "fstname"   sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      LastNameFT            -> fieldJSON doc "sndname"   sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      EmailFT               -> fieldJSON doc "email"     sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      PersonalNumberFT      -> fieldJSON doc "sigpersnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      CompanyFT             -> fieldJSON doc "sigco"     sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      CompanyNumberFT       -> fieldJSON doc "sigcompnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      SignatureFT           -> fieldJSON doc "signature" sfValue (closedSignatureF sf  && (not $ isPreparation doc)) sfPlacements
+      CustomFT label closed -> fieldJSON doc label       sfValue (closed  && (not $ isPreparation doc))  sfPlacements
   where
     closedF sf = ((not $ null $ sfValue sf) || (null $ sfPlacements sf))
+    closedSignatureF sf = ((not $ null $ dropWhile (/= ',') $ sfValue sf) || (null $ sfPlacements sf))
     orderedFields = sortBy (\f1 f2 -> ftOrder (sfType f1) (sfType f2)) signatoryfields
     ftOrder FirstNameFT _ = LT
     ftOrder LastNameFT _ = LT
@@ -384,64 +386,8 @@ authorJSON mauthor mcompany = runJSONGen $ do
     J.value "phone" $ userphone <$> userinfo <$> mauthor
     J.value "position" $ usercompanyposition <$> userinfo <$>mauthor
 
-{- |
-    We want the documents to be ordered like the icons in the bottom
-    of the document list.  So this means:
-    0 Draft - 1 Cancel - 2 Fall due - 3 Sent - 4 Opened - 5 Signed
--}
 
-data StatusClass = SCDraft
-                  | SCCancelled
-                  | SCSent
-                  | SCDelivered
-                  | SCRead
-                  | SCOpened
-                  | SCSigned
-                  deriving (Eq, Ord)
 
-instance Show StatusClass where
-  show SCDraft = "draft"
-  show SCCancelled = "cancelled"
-  show SCSent = "sent"
-  show SCDelivered = "delivered"
-  show SCRead = "read"
-  show SCOpened = "opened"
-  show SCSigned = "signed"
-
-signatoryStatusClass :: Document -> SignatoryLink -> StatusClass
-signatoryStatusClass
-  Document {
-    documentstatus
-  }
-  SignatoryLink {
-    maybesigninfo
-  , maybeseeninfo
-  , maybereadinvite
-  , invitationdeliverystatus
-  } =
-  caseOf [
-      (errorStatus documentstatus, SCCancelled)
-    , (documentstatus==Preparation, SCDraft)
-    , (documentstatus==Canceled, SCCancelled)
-    , (documentstatus==Rejected, SCCancelled)
-    , (documentstatus==Timedout, SCCancelled)
-    , (isJust maybesigninfo, SCSigned)
-    , (isJust maybeseeninfo, SCOpened)
-    , (isJust maybereadinvite, SCRead)
-    , (invitationdeliverystatus==Undelivered,  SCCancelled)
-    , (invitationdeliverystatus==Delivered, SCDelivered)
-    ] SCSent
-  where
-      errorStatus (DocumentError _) = True
-      errorStatus _ = False
-
-documentStatusClass :: Document -> StatusClass
-documentStatusClass doc =
-  case (map (signatoryStatusClass doc) $ getSignatoryPartnerLinks doc) of
-    [] -> SCDraft
-    xs -> minimum xs
-
---
 showFileImages :: TemplatesMonad m => DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> FileID -> JpegPages -> m String
 showFileImages _ _ _ JpegPagesPending =
   renderTemplateM "showFileImagesPending" ()
@@ -630,3 +576,6 @@ documentsToFixView docs = do
             field "id" $ show $ documentid doc
             field "involved" $ map getEmail  $ documentsignatorylinks doc
             field "cdate" $  show $ documentctime doc
+
+
+            
