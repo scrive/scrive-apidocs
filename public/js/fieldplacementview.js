@@ -189,6 +189,10 @@ var SignaturePlacementViewForDrawing = Backbone.View.extend({
             else {
                 box.css("border-color","#DDDDDD");
                 var img = $("<img alt=''/>");
+                img.css("width",view.signature.width());
+                img.attr("width",view.signature.width());
+                img.css("height",view.signature.height());
+                img.attr("height",view.signature.height());
                 box.css("width",view.signature.width());
                 box.css("height",view.signature.height());
                 img.attr('src',this.signature.image());
@@ -254,7 +258,11 @@ var SignaturePlacementView = Backbone.View.extend({
                 box.css("width",view.signature.width());
                 box.css("height",view.signature.height());
                 img.attr('src',this.signature.image());
-                box.append(img);
+                img.css("width",view.signature.width());
+                img.attr("width",view.signature.width());
+                img.css("height",view.signature.height());
+                img.attr("height",view.signature.height());
+                img.append(img);
             }
             box.resizable("destroy");
             if (this.resizable)

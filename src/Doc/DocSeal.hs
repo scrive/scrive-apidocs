@@ -136,8 +136,8 @@ fieldsFromSignatory SignatoryDetails{signatoryfields} =
                   , Seal.h = placementpageheight placement
                   , Seal.image_w       = wi
                   , Seal.image_h       = hi
-                  , Seal.internal_image_w = wi
-                  , Seal.internal_image_h = hi
+                  , Seal.internal_image_w = 4 * wi
+                  , Seal.internal_image_h = 4 * hi
                  }
               _ -> Nothing
 

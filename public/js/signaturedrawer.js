@@ -151,11 +151,11 @@ var SignatureDrawer = Backbone.View.extend({
           img.src = image;
           img.onload = function() {
                var canvas = $("<canvas class='signatureCanvas' />");
-               canvas.attr("width",signature.width());
-               canvas.attr("height",signature.height());
+               canvas.attr("width",4* signature.width());
+               canvas.attr("height",4* signature.height());
                canvas[0].getContext('2d').fillStyle = "#ffffff";
-               canvas[0].getContext('2d').fillRect (0,0,signature.width(),signature.height());
-               canvas[0].getContext('2d').drawImage(img,0,0,signature.width(),signature.height());
+               canvas[0].getContext('2d').fillRect (0,0,4*signature.width(),4*signature.height());
+               canvas[0].getContext('2d').drawImage(img,0,0,4*signature.width(),4*signature.height());
 
 
                var image = canvas[0].toDataURL("image/jpeg",1.0);
