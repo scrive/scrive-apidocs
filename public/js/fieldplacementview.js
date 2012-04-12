@@ -262,7 +262,7 @@ var SignaturePlacementView = Backbone.View.extend({
                 img.attr("width",view.signature.width());
                 img.css("height",view.signature.height());
                 img.attr("height",view.signature.height());
-                img.append(img);
+                box.append(img);
             }
             box.resizable("destroy");
             if (this.resizable)
