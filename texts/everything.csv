@@ -452,12 +452,10 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_contractsealingtextssecretaryText","Ej signerande part",,"Non-signing party"
 "_contractsealingtextssignedText","Signerat",,"Signed"
 "_contractsealingtextsverificationFooterRow1","Detta verifikat är utfärdat av Scrive och styrker att
- dokument nummer $documentid$ har signerats",,"This verification was issued by Scrive and supports that the
- document $documentid$ has been signed"
-"_contractsealingtextsverificationFooterRow2","av parterna. Kursiverad information
- är säkert verifierad genom Scrive.",,"by the parties. Italic data has been safely
- verified by Scrive."
-"_contractsealingtextsverificationFooterRow3","Dokumentet är en fristående handling oberoende av Scrive. Du kan dock kontrollera dokumentets äkthet genom följande länk:",,"The document is an independent act independent of Scrive. You can nevertheless verify the documents originality by following
+ dokument nummer $documentid$ har signerats av parterna.",,"This verification was issued by Scrive and supports that the
+ document $documentid$ has been signed by the parties."
+"_contractsealingtextsverificationFooterRow2","Kursiverad information är säkert verifierad genom Scrive. Dokumentet är en fristående handling oberoende av Scrive.",,"Italic data has been safely verified by Scrive. The document is an independent act independent of Scrive."
+"_contractsealingtextsverificationFooterRow3","Du kan dock kontrollera dokumentets äkthet genom följande länk:",,"You can nevertheless verify the documents originality by following
  the link:"
 "_contractsendtext","Skicka",,"Send"
 "_contractsignatorycancelmodaltitleBody","När du avvisat kommer Scrive att skicka ett e-post för
@@ -488,7 +486,7 @@ If the other party clicks on the signing link after you have withdrawn the invit
  funktioner så som förfallodatum, mallar, massutskick mm.",,"Change to advanced view to enjoy more advanced features such
  as expiration date, templates, multiple send-out, etc."
 "_dialogConfirmAdvancedCheck","Använd alltid den avancerade vyn för nya dokument.",,"Always use the advanced view for new documents."
-"_dialogConfirmAdvancedChangeToFooterChangeProcess","Byt vy",,"Change vy"
+"_dialogConfirmAdvancedChangeToFooterChangeProcess","Byt vy",,"Change view"
 "_dialogConfirmAdvancedChangeToHead","Vill du byta till avancerad vy?",,"Do you want to change to advanced view?"
 "_dialogConfirmBasicChangeToBody","Du kan byta till förenklad vy för att göra processen ännu smidigare. Du kan givetvis byta tillbaks när du vill.",,"You can change to simplified view to make the process even smoother. You can of course change back whenever you want."
 "_dialogConfirmBasicChangeToBody2","När du byter till förenklad vy riskerar du att förlora information som inte stödjs i denna vy. Är du säker att du vill byta vy?",,"When you switch to the simplified view, you risk losing information that is not supported in this view. Are you sure you want to change the view?"
@@ -1699,12 +1697,12 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_offersealingtextssecretaryText","Avsändare",,"Sender"
 "_offersealingtextssignedText","Offert accepterad",,"Offer accepted"
 "_offersealingtextsverificationFooterRow1","Detta verifikat är utfärdat av Scrive och styrker att
- dokument nummer $documentid$ har signerats",,"This verification was issued by Scrive and supports that the
- document $documentid$ has been signed"
-"_offersealingtextsverificationFooterRow2","av parterna. Kursiverad information
- är säkert verifierad genom Scrive.",,"by the parties. Italic data has been safely
- verified by Scrive."
-"_offersealingtextsverificationFooterRow3","Dokumentet är en fristående handling oberoende av Scrive. Du kan dock kontrollera dokumentets äkthet genom följande länk:",,"The document is an independent act independent of Scrive. You can nevertheless verify the documents originality by following
+ dokument nummer $documentid$ har signerats av parterna.",,"This verification was issued by Scrive and supports that the
+ document $documentid$ has been signed by the parties."
+"_offersealingtextsverificationFooterRow2","Kursiverad information
+ är säkert verifierad genom Scrive. Dokumentet är en fristående handling oberoende av Scrive.",,"Italic data has been safely
+ verified by Scrive. The document is an independent act independent of Scrive."
+"_offersealingtextsverificationFooterRow3","Du kan dock kontrollera dokumentets äkthet genom följande länk:",,"You can nevertheless verify the documents originality by following
  the link:"
 "_offersealingtextsverificationTitle","Acceptverifikat",,"Acceptance verification"
 "_offersendtext","Skicka",,"Send"
@@ -1769,12 +1767,10 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_ordersealingtextssecretaryText","Avsändare",,"Sender"
 "_ordersealingtextssignedText","Ordern bekräftad",,"Order confirmed"
 "_ordersealingtextsverificationFooterRow1","Detta verifikat är utfärdat av Scrive och styrker att
- dokument nummer $documentid$ har signerats",,"This verification was issued by Scrive and supports that the
- document $documentid$ has been signed"
-"_ordersealingtextsverificationFooterRow2","av parterna. Kursiverad information
- är säkert verifierad genom Scrive.",,"by the parties. Italic data has been safely
- verified by Scrive."
-"_ordersealingtextsverificationFooterRow3","Dokumentet är en fristående handling oberoende av Scrive. Du kan dock kontrollera dokumentets äkthet genom följande länk:",,"The document is an independent act independent of Scrive. You can nevertheless verify the documents originality by following
+ dokument nummer $documentid$ har signerats av parterna.",,"This verification was issued by Scrive and supports that the document $documentid$ has been signed by the parties."
+"_ordersealingtextsverificationFooterRow2","Kursiverad information är säkert verifierad genom Scrive. Dokumentet är en fristående handling oberoende av Scrive.",,"Italic data has been safely
+ verified by Scrive. The document is an independent act independent of Scrive."
+"_ordersealingtextsverificationFooterRow3","Du kan dock kontrollera dokumentets äkthet genom följande länk:",,"You can nevertheless verify the documents originality by following
  the link:"
 "_ordersealingtextsverificationTitle","Orderbekräftelse",,"Order confirmation"
 "_ordersendtext","Skicka",,"Send"
