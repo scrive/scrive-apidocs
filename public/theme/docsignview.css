@@ -670,7 +670,7 @@ body.signview {
 }
 
 .statustext.delivered {
-    color: #d55d5d;
+    color: black;
 }
 
 .signview .signatories .column {
