@@ -187,7 +187,7 @@ var SignaturePlacementViewForDrawing = Backbone.View.extend({
                 box.append(button);
             }
             else {
-                box.css("border-color","#DDDDDD");
+                box.css("border-width","0px");
                 var img = $("<img alt=''/>");
                 img.css("width",view.signature.width());
                 img.attr("width",view.signature.width());
@@ -239,13 +239,13 @@ var SignaturePlacementView = Backbone.View.extend({
             var signatory = this.model.signatory();
             var box = $(this.el);
             box.empty();
-            box.addClass('signatureBox');
-            box.append(this.header());
-            signatory.bind('change', function() {
-                    $(".signatureHeader",box).replaceWith(view.header());
-            });
             if (!this.signature.hasImage())
             {
+                box.addClass('signatureBox');
+                box.append(this.header());
+                signatory.bind('change', function() {
+                    $(".signatureHeader",box).replaceWith(view.header());
+                });
                 box.width(this.signature.width());
                 box.height(this.signature.height());
                 this.signature.bind('change', function() {
@@ -254,6 +254,7 @@ var SignaturePlacementView = Backbone.View.extend({
                 });
             }
             else {
+                box.removeClass('signatureBox');
                 var img = $("<img alt=''/>");
                 box.css("width",view.signature.width());
                 box.css("height",view.signature.height());
