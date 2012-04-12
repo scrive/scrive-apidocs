@@ -136,7 +136,7 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
       else if (signatory.status() == 'sent')
           return localization.signatoryMessage.other;
       else
-          return localization.signatorymessage[signatory.status()];
+          return localization.signatoryMessage[signatory.status()];
   },
   siglist: function(signatories) {
       var sigbox = this.model;
