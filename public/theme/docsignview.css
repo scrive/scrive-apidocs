@@ -963,3 +963,8 @@ div.spacing.butt {
     #top: -50%;
     margin-right: 30px;
 }
+
+.signview .signbuttons.section {
+    padding-top: 35px;
+    padding-bottom:35px;
+}
