@@ -458,7 +458,8 @@ body.signview {
   -webkit-box-shadow: inset 0px 0px 5px #505050;
   background-image: url(../img/horizontal-shading-bar.png);
   background-repeat: no-repeat;
-  padding-bottom:3px;
+  padding-bottom:23px;
+  padding-top:10px;
 }
 
 .signview .subcontainer .end {
@@ -669,7 +670,7 @@ body.signview {
 }
 
 .statustext.delivered {
-    color: #d55d5d;
+    color: black;
 }
 
 .signview .signatories .column {
@@ -730,6 +731,8 @@ body.signview {
     font-weight: bold;
     font-size: 14px;
     vertical-align: middle;
+    line-height: 11px;
+    padding-top:1px;
 }
 
 .signview .signatories .statusbox .spacing {
@@ -922,7 +925,6 @@ div.spacing.butt {
     padding-top: 20px;
     margin-left: auto;
     margin-right: auto;
-    width: 925px;
 }
 
 .section .signatoryattachments {
@@ -959,4 +961,15 @@ div.spacing.butt {
     #position: relative;
     #top: -50%;
     margin-right: 30px;
+}
+
+.signview .signbuttons.section {
+    padding-top: 35px;
+    padding-bottom:35px;
+}
+
+.signview .section {
+  box-shadow: 0px 0px 5px #505050;
+  -moz-box-shadow: 0px 0px 5px #505050;
+  -webkit-box-shadow: 0px 0px 5px #505050;
 }
