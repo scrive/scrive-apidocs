@@ -20,7 +20,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
   },
   isSignedNotClosed: function() {
     var signatory = this.model.document.currentSignatory();
-    return this.model.document.signingInProcess() && signatory.hasSigned() && !this.model.closed();
+    return this.model.document.signingInProcess() && signatory.hasSigned() && !this.model.document.closed();
   },
   isSignedAndClosed: function() {
     var signatory = this.model.document.currentSignatory();
