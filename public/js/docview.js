@@ -644,7 +644,7 @@ window.DocumentStandardView = Backbone.View.extend({
       bottomparts.append(this.createSignatoryAttachmentsElems());
     }
 
-    if (document.currentSignatoryCanSign()) {
+    if (document.currentSignatoryCanSign() && !(document.currentSignatory() != undefined && document.currentSignatory().canPadSignQuickSign())) {
       bottomparts.append(this.createSignBoxElems());
     }
 
