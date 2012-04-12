@@ -731,6 +731,8 @@ body.signview {
     font-weight: bold;
     font-size: 14px;
     vertical-align: middle;
+    line-height: 11px;
+    padding-top:1px;
 }
 
 .signview .signatories .statusbox .spacing {
