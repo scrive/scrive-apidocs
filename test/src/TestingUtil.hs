@@ -67,7 +67,7 @@ instance Arbitrary SignOrder where
   arbitrary = SignOrder <$> arbitrary
 
 instance Arbitrary DocumentTag where
-  arbitrary = DocumentTag <$> arbitrary <*> arbitrary
+  arbitrary = DocumentTag <$> (fromSNN <$> arbitrary) <*> (fromSNN <$> arbitrary)
 
 instance Arbitrary UserID where
   arbitrary = unsafeUserID . abs <$> arbitrary
