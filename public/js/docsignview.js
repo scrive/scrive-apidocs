@@ -1001,7 +1001,7 @@ window.DocumentSignView = Backbone.View.extend({
         }
 
         if (this.model.currentSignatoryCanSign() && (!this.model.currentSignatory().canPadSignQuickSign())) {
-          var signsection = $("<div class='section spacing' />");
+          var signsection = $("<div class='section spacing signbuttons' />");
           signsection.append(this.createRejectButtonElems());
           var signButton = this.createSignButtonElems(jQuery.extend({}, tasks));
           var signButtonTask = this.signButtonTask(signButton);
