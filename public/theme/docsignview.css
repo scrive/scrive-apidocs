@@ -925,7 +925,6 @@ div.spacing.butt {
     padding-top: 20px;
     margin-left: auto;
     margin-right: auto;
-    width: 925px;
 }
 
 .section .signatoryattachments {
@@ -967,4 +966,10 @@ div.spacing.butt {
 .signview .signbuttons.section {
     padding-top: 35px;
     padding-bottom:35px;
+}
+
+.signview .section {
+  box-shadow: 0px 0px 5px #505050;
+  -moz-box-shadow: 0px 0px 5px #505050;
+  -webkit-box-shadow: 0px 0px 5px #505050;
 }
