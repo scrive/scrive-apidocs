@@ -57,6 +57,8 @@ import qualified System.Mem as System.Mem
 
 import qualified Paths_kontrakcja as Paths
 
+import Doc.Model (migrateDocumentTagsFromJSONToTable)
+
 startTestSystemState' :: (Component st, Methods st) => Proxy st -> IO (MVar TxControl)
 startTestSystemState' proxy = do
   runTxSystem NullSaver proxy
@@ -124,7 +126,10 @@ runKontrakcjaServer = Log.withLogger $ do
      else createDirectoryIfMissing True $ docstore appConf
 
   withPostgreSQLDB' (dbConfig appConf) rng $ \dbenv -> do
-    res <- ioRunDB dbenv $ tryDB $ performDBChecks Log.server kontraTables kontraMigrations
+    res <- ioRunDB dbenv $ tryDB $ do
+             performDBChecks Log.server kontraTables kontraMigrations
+             migrateDocumentTagsFromJSONToTable
+
     case res of
       Left (e::E.SomeException) -> do
         Log.error $ "Error while checking DB consistency: " ++ show e

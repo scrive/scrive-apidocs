@@ -10,6 +10,8 @@ module Doc.Model
   , insertDocumentAsIs
   , toDocumentProcess
 
+  , migrateDocumentTagsFromJSONToTable
+
   , DocumentFilter(..)
   , DocumentDomain(..)
   , DocumentPagination(..)
@@ -687,6 +689,23 @@ fetchSignatoryAttachments = foldDB decoder M.empty
 
 
 
+migrateDocumentTagsFromJSONToTable :: DB ()
+migrateDocumentTagsFromJSONToTable = do
+  _ <- kRun $ SQL "SELECT id, tags FROM documents WHERE tags <> '' AND tags <> '[]'" [];
+  let decoder :: [(DocumentID,[DocumentTag])] -> DocumentID -> [DocumentTag] -> [(DocumentID,[DocumentTag])]
+      decoder acc docid tags = (docid,tags) : acc
+  tagsmap <- foldDB decoder []
+  flip mapM_ tagsmap $ \(docid, tags) -> do
+    mapM_ (insertDocumentTagAsIs docid) tags
+    _ <- kRun $ selectDocumentTagsSQL <++> SQL "WHERE document_tags.document_id = ?" [toSql docid]
+    newtagsmap <- fetchDocumentTags
+    let newtags = snd $ $(head) $ M.toList newtagsmap
+    when (sort newtags /= sort tags) $
+         error $ "migrateDocumentTagsFromJSONToTable failed to preserve tags:\nold tags =\n" ++ show (sort tags) ++ "\nnew tags =\n" ++ show (sort newtags)
+
+    _ <- kRun $ SQL "UPDATE documents SET tags = '[]' WHERE id = ?" [toSql docid]
+    return ()
+  return ()
 
 documentTagsSelectors :: String
 documentTagsSelectors = intercalate ", " [
