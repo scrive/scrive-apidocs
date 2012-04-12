@@ -255,6 +255,9 @@ window.Field = Backbone.Model.extend({
              newplacements.push(this.placements()[i]);
        this.set({placements : newplacements});
 
+    },
+    removeAllPlacements : function() {
+        _.each(this.placements(), function(p) {p.remove();})
     }
 });
 

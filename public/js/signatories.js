@@ -444,6 +444,8 @@ window.Signatory = Backbone.Model.extend({
     },
     makeViewer: function() {
         this.set({signs: false});
+        if (this.signature() != undefined)
+           this.signature().removeAllPlacements();
         this.trigger("change:role");
     },
     hasSigned: function() {
@@ -811,7 +813,7 @@ window.SignatoryStandardView = Backbone.View.extend({
         if (signatory.document().currentViewerIsAuthor()
             && signatory.document().signingInProcess()
             && signatory.canSign()
-            && signatory.document().padAuthorization()) {
+            && signatory.document().padAuthorization() && !signatory.author()) {
                   if (!signatory.author() && BrowserInfo.isIpad())
                       container.append(this.giveForSigningOnThisDeviceOption());
                   if (!BrowserInfo.isIpad()) {
