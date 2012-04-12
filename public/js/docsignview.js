@@ -131,8 +131,12 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
           return localization.docsignview.unavailableForSign;
       else if (signatory.rejecteddate() != undefined)
           return localization.signatoryMessage.rejected;
+      else if (signatory.status() == 'opened')
+          return localization.signatoryMessage.seen;
+      else if (signatory.status() == 'sent')
+          return localization.signatoryMessage.other;
       else
-          return localization.signatoryMessage.waitingForSignature;
+          return localization.signatorymessage[signatory.status()];
   },
   siglist: function(signatories) {
       var sigbox = this.model;
@@ -160,7 +164,7 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
       var statusbox  = $('<div  class="statusbox" />');
       var space = $('<div class="spacing butt" />');
       var statusicon = $("<span class='icon status' />").addClass(signatory.status());
-      var status     = $("<span class='status' />").text(this.signatorySummary(signatory));
+      var status     = $("<span class='status statustext' />").text(this.signatorySummary(signatory)).addClass(signatory.status());
       space.append(statusicon).append(status).addClass(signatory.status());
       statusbox.append(space);
       return statusbox;
@@ -185,12 +189,13 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
       var persnum = $('<div class="persnum field" />').text(localization.docsignview.personalNumberLabel + ": " 
                                                             + (signatory.personalnumber().trim() || localization.docsignview.notEntered))
         .attr('title', signatory.personalnumber());
+      var contactspace = $('<div class="spacing contactspace" />');
+      var email   = $('<div class="email field" />').text(signatory.email()).attr('title', signatory.email());
+
       numspace.append(orgnum);
       numspace.append(persnum);
 
-      var contactspace = $('<div class="spacing contactspace" />');
-      var email   = $('<div class="email field" />').text(signatory.email()).attr('title', signatory.email());
-      contactspace.append(email);
+      numspace.append(email);
 
       inner.append(face);
 
@@ -1009,7 +1014,6 @@ window.DocumentSignView = Backbone.View.extend({
 
         subcontainer.append(bottomstuff);
 
-        subcontainer.append($("<div class='end' />"));
         subcontainer.append($("<div class='cleafix' />"));
       }
       this.container.append(subcontainer);
@@ -1180,9 +1184,8 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
     $(window).scroll(checkIfDownArrowInFooter);
     checkIfDownArrowInFooter();
 
+      var scrollpoint = 0;
     var updateVisibility = function() {
-
-      $(".signview .section").removeClass("highlight");
 
       if (!taskmodel.isIncompleteTask()) {
         downarrow.show();
@@ -1203,6 +1206,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
           view.pointingAt = undefined;
         } else if (((elbottom + bottommargin) <= scrollbottom) && ((eltop - topmargin) >= scrolltop)) {
           var nextTask = taskmodel.nextIncompleteTask();
+            $(".signview .section").removeClass("highlight");
           nextTask.el().parents(".signview .section").addClass("highlight");
           if (view.pointingAt==undefined || view.pointingAt!=nextTask) {
             nextTask.beforePointing();
@@ -1214,15 +1218,23 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
           downarrow.hide();
           view.pointingAt = nextTask;
         } else if ((elbottom + bottommargin) > scrollbottom) {
-          downarrow.show();
-          uparrow.hide();
-          actionarrow.hide();
-          view.pointingAt = undefined;
+            if(scrollpoint !== 16) {
+                scrollpoint = 6;
+                console.log("6");
+                downarrow.show();
+                uparrow.hide();
+                actionarrow.hide();
+                view.pointingAt = undefined;
+            }
         } else {
-          uparrow.show();
-          downarrow.hide();
-          actionarrow.hide();
-          view.pointingAt = undefined;
+            if(scrollpoint !== 17) {
+                scrollpoint = 7;
+                console.log("7");
+                uparrow.show();
+                downarrow.hide();
+                actionarrow.hide();
+                view.pointingAt = undefined;
+            }
         }
       }
     };
