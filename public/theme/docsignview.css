@@ -458,7 +458,8 @@ body.signview {
   -webkit-box-shadow: inset 0px 0px 5px #505050;
   background-image: url(../img/horizontal-shading-bar.png);
   background-repeat: no-repeat;
-  padding-bottom:3px;
+  padding-bottom:23px;
+  padding-top:10px;
 }
 
 .signview .subcontainer .end {
