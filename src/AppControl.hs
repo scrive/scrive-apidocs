@@ -150,7 +150,7 @@ showRequest rq maybeInputsBody =
 -}
 appHandler :: KontraPlus Response -> AppConf -> AppGlobals -> ServerPartT IO Response
 appHandler handleRoutes appConf appGlobals = measureResponseTime $
-  withPostgreSQL_ (dbConfig appConf) (cryptorng appGlobals) $ do
+  withPostgreSQL (dbConfig appConf) . runCryptoRNGT (cryptorng appGlobals) $ do
     let quota = 10000000
     temp <- liftIO getTemporaryDirectory
     decodeBody (defaultBodyPolicy temp quota quota quota)
@@ -168,17 +168,16 @@ appHandler handleRoutes appConf appGlobals = measureResponseTime $
     updateSessionWithContextData session newsessionuser newelegtrans newmagichashes newsessionpaduser
 
     rq <- askRq
-    stats <- getNexusStats =<< envNexus `fmap` getDBEnv
+    stats <- getNexusStats =<< getNexus
     Log.debug $ "SQL for " ++ rqUri rq ++ ": " ++ show stats
 
     case res of
       Right response -> return response
       Left response -> do
         -- if exception was thrown, rollback everything
-        liftIO . rollback =<< envNexus `fmap` getDBEnv
+        liftIO . rollback =<< getNexus
         return response
   where
-    measureResponseTime :: ServerPartT IO Response -> ServerPartT IO Response
     measureResponseTime action = do
       startTime <- liftIO getClockTime
       res <- action
@@ -189,7 +188,6 @@ appHandler handleRoutes appConf appGlobals = measureResponseTime $
       Log.debug $ "Response time " ++ show (diff `div` 1000000000) ++ "ms"
       return res
 
-    routeHandlers :: Context -> DBT (ServerPartT IO) (Either Response Response, Context)
     routeHandlers ctx = runKontraPlus ctx $ do
       res <- (Right <$> handleRoutes `mplus` E.throwIO Respond404) `E.catches` [
           E.Handler handleKontraError
@@ -200,7 +198,6 @@ appHandler handleRoutes appConf appGlobals = measureResponseTime $
       ctx' <- getContext
       return (res, ctx')
 
-    handleKontraError :: KontraError -> KontraPlus (Either Response Response)
     handleKontraError e = Left <$> do
       rq <- askRq
       Log.error $ show e
@@ -218,7 +215,6 @@ appHandler handleRoutes appConf appGlobals = measureResponseTime $
           Nothing -> notFoundPage >>= notFound
           _ -> embeddedErrorPage
 
-    createContext :: Session -> DBT (ServerPartT IO) Context
     createContext session = do
       -- rqPeer hostname comes always from showHostAddress
       -- so it is a bunch of numbers, just read them out
@@ -237,19 +233,17 @@ appHandler handleRoutes appConf appGlobals = measureResponseTime $
           SockAddrInet _ hostip -> unsafeIPAddress hostip
           _                     -> noIP
 
-      dbenv <- getDBEnv
-
       currhostpart <- getHostpart
       reshostpart <- getResourceHostpart
       minutestime <- getMinutesTime
-      muser <- getUserFromSession dbenv session
-      mcompany <- getCompanyFromSession dbenv session
-      mpaduser <- getPadUserFromSession dbenv session
+      muser <- getUserFromSession session
+      mcompany <- getCompanyFromSession session
+      mpaduser <- getPadUserFromSession session
       mservice <- do
         clink <- currentLink
         if hostpart appConf `isPrefixOf` clink
           then return Nothing
-          else liftIO $ ioRunDB dbenv $ dbQuery $ GetServiceByLocation $ toServiceLocation clink
+          else dbQuery $ GetServiceByLocation $ toServiceLocation clink
 
       flashmessages <- withDataFn F.flashDataFromCookie $ maybe (return []) $ \fval ->
         case F.fromCookieValue (aesConfig appConf) fval of
@@ -273,7 +267,6 @@ appHandler handleRoutes appConf appGlobals = measureResponseTime $
         , ctxtime = minutestime
         , ctxnormalizeddocuments = docscache appGlobals
         , ctxipnumber = peerip
-        , ctxdbenv = dbenv
         , ctxdocstore = docstore appConf
         , ctxs3action = defaultAWSAction appConf
         , ctxgscmd = gsCmd appConf

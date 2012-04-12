@@ -153,7 +153,7 @@ servicesAdminPage services = do
         F.value "adminlink" $ show $ LinkAdminOnly
         F.objects "services" $ for services $ \ service -> do
             F.value "name"  $ show $ serviceid service
-            F.valueM "admin" $ fmap getSmartName <$> (runDBQuery $ GetUserByID $ serviceadmin $ servicesettings service)
+            F.valueM "admin" $ fmap getSmartName <$> (dbQuery $ GetUserByID $ serviceadmin $ servicesettings service)
             F.value "location" $ show $ servicelocation $ servicesettings service
 
 mkUserInfoView :: Monad m => (User, Maybe Company, DocStats) -> Fields m ()

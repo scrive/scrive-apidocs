@@ -53,17 +53,16 @@ handleMailAPI = do
 handleConfirmDelay :: Kontrakcja m => String -> Int64 -> MagicHash -> m KontraLink
 handleConfirmDelay adminemail delayid key = do
   ctx <- getContext
-  mdelay <- runDBQuery $ GetMailAPIUserRequest delayid key (ctxtime ctx)
+  mdelay <- dbQuery $ GetMailAPIUserRequest delayid key (ctxtime ctx)
   case mdelay of
     Nothing -> addFlashM $ modalDenyDelay
     Just (email, companyid) -> do
-      company   <- guardJustM $ runDBQuery $ GetCompany companyid
-      adminuser <- guardJustM $ runDBQuery $ GetUserByEmail Nothing (Email adminemail)
+      company   <- guardJustM $ dbQuery $ GetCompany companyid
+      adminuser <- guardJustM $ dbQuery $ GetUserByEmail Nothing (Email adminemail)
       unless (Just companyid == usercompany adminuser && useriscompanyadmin adminuser)
              internalError
       newuser   <- guardJustM $ createUser (Email email) "" "" (Just company)
-      _ <- runDBUpdate $ ConfirmBossDelay delayid (ctxtime ctx)
+      _ <- dbUpdate $ ConfirmBossDelay delayid (ctxtime ctx)
       _ <- sendNewCompanyUserMail adminuser company newuser
       addFlashM $ modalConfirmDelay email
   return $ LinkHome (ctxlocale ctx)
-      

@@ -9,8 +9,8 @@ import Text.JSON (JSValue(..), toJSObject, showJSON)
 
 import ActionSchedulerState
 import AppView
-import Crypto.RNG (CryptoRNG, random)
-import DB.Classes
+import Crypto.RNG
+import DB.Classes hiding (update, query)
 import Doc.Action
 import Doc.Model
 import Company.Model
@@ -61,17 +61,17 @@ handleUserPost = do
   ctx <- getContext
   user' <- guardJust $ ctxmaybeuser ctx
   --requery for the user as they may have been upgraded
-  user <- guardJustM $ runDBQuery $ GetUserByID (userid user')
+  user <- guardJustM $ dbQuery $ GetUserByID (userid user')
   infoUpdate <- getUserInfoUpdate
-  _ <- runDBUpdate $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
-  _ <- runDBUpdate $ LogHistoryUserInfoChanged (userid user) (ctxipnumber ctx) (ctxtime ctx)
+  _ <- dbUpdate $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
+  _ <- dbUpdate $ LogHistoryUserInfoChanged (userid user) (ctxipnumber ctx) (ctxtime ctx)
                                                (userinfo user) (infoUpdate $ userinfo user)
                                                (userid <$> ctxmaybeuser ctx)
   mcompany <- getCompanyForUser user
   case (useriscompanyadmin user, mcompany) of
     (True, Just company) -> do
       companyinfoupdate <- getCompanyInfoUpdate
-      _ <- runDBUpdate $ SetCompanyInfo (companyid company) (companyinfoupdate $ companyinfo company)
+      _ <- dbUpdate $ SetCompanyInfo (companyid company) (companyinfoupdate $ companyinfo company)
       return ()
     _ -> return ()
 
@@ -89,12 +89,12 @@ handleRequestPhoneCall = do
   mphone <-  getOptionalField asValidPhone "phone"
   case (memail, mphone) of
     (Just email, Just phone) -> do
-      user <- guardJustM $ runDBQuery $ GetUserByEmail (ctxmaybeuser >>= userservice) (Email email)
+      user <- guardJustM $ dbQuery $ GetUserByEmail (ctxmaybeuser >>= userservice) (Email email)
       --only set the phone number if they're actually logged in
       -- it is possible to request a phone call from the sign view without being logged in!
       -- this function could be called by anyone!
       when (isJust ctxmaybeuser && fmap userid ctxmaybeuser == Just (userid user)) $ do
-        _ <- runDBUpdate $ SetUserInfo (userid user) $ (userinfo user){ userphone = phone }
+        _ <- dbUpdate $ SetUserInfo (userid user) $ (userinfo user){ userphone = phone }
         return ()
       phoneMeRequest user phone
     _ -> return ()
@@ -108,7 +108,7 @@ handleRequestChangeEmail = do
   mnewemailagain <- getRequiredField asValidEmail "newemailagain"
   case (Email <$> mnewemail, Email <$> mnewemailagain) of
     (Just newemail, Just newemailagain) | newemail == newemailagain -> do
-       mexistinguser <- runDBQuery $ GetUserByEmail (userservice user) newemail
+       mexistinguser <- dbQuery $ GetUserByEmail (userservice user) newemail
        case mexistinguser of
          Just _existinguser ->
            sendChangeToExistingEmailInternalWarningMail user newemail
@@ -160,18 +160,18 @@ handleCreateCompany :: Kontrakcja m => m KontraLink
 handleCreateCompany = do
   ctx <- getContext
   user <- guardJust $ ctxmaybeuser ctx
-  company <- runDBUpdate $ CreateCompany Nothing Nothing
+  company <- dbUpdate $ CreateCompany Nothing Nothing
   mailapikey <- random
-  _ <- runDBUpdate $ SetCompanyMailAPIKey (companyid company) mailapikey 1000
-  _ <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid company)
-  _ <- runDBUpdate $ SetUserCompanyAdmin (userid user) True
-  upgradeduser <- guardJustM $ runDBQuery $ GetUserByID $ userid user
+  _ <- dbUpdate $ SetCompanyMailAPIKey (companyid company) mailapikey 1000
+  _ <- dbUpdate $ SetUserCompany (userid user) (Just $ companyid company)
+  _ <- dbUpdate $ SetUserCompanyAdmin (userid user) True
+  upgradeduser <- guardJustM $ dbQuery $ GetUserByID $ userid user
   _ <- addUserCreateCompanyStatEvent (ctxtime ctx) upgradeduser
-  _ <- runDBUpdate $ LogHistoryDetailsChanged (userid user) (ctxipnumber ctx) (ctxtime ctx)
+  _ <- dbUpdate $ LogHistoryDetailsChanged (userid user) (ctxipnumber ctx) (ctxtime ctx)
                                               [("is_company_admin", "false", "true")]
                                               (Just $ userid user)
   companyinfoupdate <- getCompanyInfoUpdate -- This is redundant to standard usage - bu I want to leave it here because of consistency
-  _ <- runDBUpdate $ SetCompanyInfo (companyid company) (companyinfoupdate $ companyinfo company)
+  _ <- dbUpdate $ SetCompanyInfo (companyid company) (companyinfoupdate $ companyinfo company)
   addFlashM flashMessageCompanyCreated
   return LoopBack
 
@@ -195,11 +195,11 @@ handlePostChangeEmail actionid hash = withUserPost $ do
     Nothing -> return ()
     Just password | verifyPassword (userpassword user) password -> do
       changed <- maybe (return False)
-                      (runDBUpdate . SetUserEmail (userservice user) (userid user))
+                      (dbUpdate . SetUserEmail (userservice user) (userid user))
                       mnewemail
       if changed
         then do
-            _ <- runDBUpdate $ LogHistoryDetailsChanged (userid user) ctxipnumber ctxtime
+            _ <- dbUpdate $ LogHistoryDetailsChanged (userid user) ctxipnumber ctxtime
                                                      [("email", unEmail $ useremail $ userinfo user, unEmail $ fromJust mnewemail)]
                                                      (Just $ userid user)
             addFlashM $ flashMessageYourEmailHasChanged
@@ -326,26 +326,26 @@ handleUsageStatsJSONForUserMonths = do
 handleGetUserMailAPI :: Kontrakcja m => m (Either KontraLink Response)
 handleGetUserMailAPI = withUserGet $ do
     Context{ctxmaybeuser = Just user@User{userid}} <- getContext
-    mapi <- runDBQuery $ GetUserMailAPI userid
-    mcapi <- maybe (return Nothing) (runDBQuery . GetCompanyMailAPI) $ usercompany user
+    mapi <- dbQuery $ GetUserMailAPI userid
+    mcapi <- maybe (return Nothing) (dbQuery . GetCompanyMailAPI) $ usercompany user
     showUserMailAPI user mapi mcapi >>= renderFromBody kontrakcja
 
 handlePostUserMailAPI :: Kontrakcja m => m KontraLink
 handlePostUserMailAPI = withUserPost $ do
     User{userid} <- fromJust . ctxmaybeuser <$> getContext
-    mapi <- runDBQuery $ GetUserMailAPI userid
+    mapi <- dbQuery $ GetUserMailAPI userid
     getDefaultedField False asValidCheckBox "api_enabled"
       >>= maybe (return LinkUserMailAPI) (\enabledapi -> do
         case mapi of
              Nothing -> do
                  when enabledapi $ do
                      apikey <- random
-                     _ <- runDBUpdate $ SetUserMailAPIKey userid apikey 50
+                     _ <- dbUpdate $ SetUserMailAPIKey userid apikey 50
                      return ()
              Just api -> do
                  if not enabledapi
                     then do
-                        _ <- runDBUpdate $ RemoveUserMailAPI userid
+                        _ <- dbUpdate $ RemoveUserMailAPI userid
                         return ()
                     else do
                         mresetkey <- getDefaultedField False asValidCheckBox "reset_key"
@@ -356,8 +356,8 @@ handlePostUserMailAPI = withUserPost $ do
                                  newkey <- if resetkey
                                    then random
                                    else return $ umapiKey api
-                                 _ <- runDBUpdate $ SetUserMailAPIKey userid newkey dailylimit
-                                 when_ resetsenttoday $ runDBUpdate $ ResetUserMailAPI userid
+                                 _ <- dbUpdate $ SetUserMailAPIKey userid newkey dailylimit
+                                 when_ resetsenttoday $ dbUpdate $ ResetUserMailAPI userid
                                  return ()
                              _ -> return ()
         return LinkUserMailAPI)
@@ -374,7 +374,7 @@ handlePostUserLocale = do
   ctx <- getContext
   user <- guardJust $ ctxmaybeuser ctx
   mregion <- readField "region"
-  _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
+  _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
            locale = maybe (locale $ usersettings user) mkLocaleFromRegion mregion
          }
   referer <- getField "referer"
@@ -395,25 +395,25 @@ handlePostUserSecurity = do
           case (verifyPassword (userpassword user) oldpassword,
                   checkPasswordsMatch password password2) of
             (False,_) -> do
-              _ <- runDBUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
+              _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
               addFlashM flashMessageBadOldPassword
             (_, Left f) -> do
-              _ <- runDBUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
+              _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
               addFlashM f
             _ ->  do
               passwordhash <- createPassword password
-              _ <- runDBUpdate $ SetUserPassword (userid user) passwordhash
-              _ <- runDBUpdate $ LogHistoryPasswordSetup (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
+              _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
+              _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
               addFlashM flashMessageUserDetailsSaved
         _ | isJust moldpassword || isJust mpassword || isJust mpassword2 -> do
-              _ <- runDBUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
+              _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
               addFlashM flashMessageMissingRequiredField
         _ -> return ()
       mregion <- readField "region"
       advancedMode <- isFieldSet "advancedMode"
       footer <- getField "customfooter"
       footerCheckbox <- isFieldSet "footerCheckbox"
-      _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
+      _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
              locale = maybe (locale $ usersettings user) mkLocaleFromRegion mregion,
              preferreddesignmode = Just AdvancedMode  <| advancedMode |> Nothing,
              customfooter = footer <| footerCheckbox |> Nothing
@@ -426,7 +426,7 @@ handlePostUserSecurity = do
 -}
 isUserDeletable :: Kontrakcja m => User -> m Bool
 isUserDeletable user = do
-  userdocs <- runDBQuery $ GetDocumentsByAuthor (userid user)
+  userdocs <- dbQuery $ GetDocumentsByAuthor (userid user)
   return $ all isDeletableDocument userdocs
 
 handleViralInvite :: Kontrakcja m => m KontraLink
@@ -434,7 +434,7 @@ handleViralInvite = withUserPost $ do
   getOptionalField asValidEmail "invitedemail" >>= maybe (return ())
     (\invitedemail -> do
         ctx@Context{ctxmaybeuser = Just user} <- getContext
-        muser <- runDBQuery $ GetUserByEmail Nothing $ Email invitedemail
+        muser <- dbQuery $ GetUserByEmail Nothing $ Email invitedemail
         if isJust muser
            -- we leak user information here! SECURITY!!!!
            -- you can find out if a given email is already a user
@@ -481,10 +481,10 @@ createUser :: Kontrakcja m => Email
 createUser email fstname sndname mcompany = do
   ctx <- getContext
   passwd <- createPassword =<< randomPassword
-  muser <- runDBUpdate $ AddUser (fstname, sndname) (unEmail email) (Just passwd) False Nothing (fmap companyid mcompany) (ctxlocale ctx)
+  muser <- dbUpdate $ AddUser (fstname, sndname) (unEmail email) (Just passwd) False Nothing (fmap companyid mcompany) (ctxlocale ctx)
   case muser of
     Just user -> do
-                 _ <- runDBUpdate $
+                 _ <- dbUpdate $
                       LogHistoryAccountCreated (userid user) (ctxipnumber ctx)
                                                (ctxtime ctx) email (userid <$> ctxmaybeuser ctx)
                  return muser
@@ -506,7 +506,7 @@ createNewUserByAdmin ctx names email _freetill custommessage locale = do
          Just user -> do
              let fullname = composeFullName names
              now <- liftIO $ getMinutesTime
-             _ <- runDBUpdate $ SetInviteInfo (userid <$> ctxmaybeuser ctx) now Admin (userid user)
+             _ <- dbUpdate $ SetInviteInfo (userid <$> ctxmaybeuser ctx) now Admin (userid user)
              chpwdlink <- newAccountCreatedLink user
              mail <- mailNewAccountCreatedByAdmin ctx (getLocale user) fullname email chpwdlink custommessage
              scheduleEmailSendout (ctxmailsconfig ctx) $ mail { to = [MailAddress { fullname = fullname, email = email }]}
@@ -523,10 +523,10 @@ handleAcceptTOSPost = withUserPost $ do
   tos <- getDefaultedField False asValidCheckBox "tos"
   case tos of
     Just True -> do
-      _ <- runDBUpdate $ AcceptTermsOfService userid ctxtime
-      user <- guardJustM $ runDBQuery $ GetUserByID userid
+      _ <- dbUpdate $ AcceptTermsOfService userid ctxtime
+      user <- guardJustM $ dbQuery $ GetUserByID userid
       _ <- addUserSignTOSStatEvent user
-      _ <- runDBUpdate $ LogHistoryTOSAccept userid ctxipnumber ctxtime (Just userid)
+      _ <- dbUpdate $ LogHistoryTOSAccept userid ctxipnumber ctxtime (Just userid)
       addFlashM flashMessageUserDetailsSaved
       return LinkUpload
     Just False -> do
@@ -588,7 +588,7 @@ handleAccountSetupGet aid hash = do
       memail <- getOptionalField asValidEmail "email"
       case memail of
         Nothing -> return Nothing
-        Just email -> runDBQuery $ GetUserByEmail Nothing (Email email)
+        Just email -> dbQuery $ GetUserByEmail Nothing (Email email)
 
 handleAccountSetupPost :: Kontrakcja m => ActionID -> MagicHash -> m KontraLink
 handleAccountSetupPost aid hash = do
@@ -632,8 +632,8 @@ handleAccountSetupPost aid hash = do
           muser <- createInvitedUser ("", "") (unEmail email) Nothing
           case muser of
             Just user -> do -- user created, we need to fill in some info
-              minviter <- runDBQuery $ GetUserByID inviterid
-              _ <- runDBUpdate $ SetInviteInfo (userid <$> minviter) invtime Viral (userid user)
+              minviter <- dbQuery $ GetUserByID inviterid
+              _ <- dbUpdate $ SetInviteInfo (userid <$> minviter) invtime Viral (userid user)
               return $ Just user
             Nothing -> return Nothing
         _ -> return mactionuser
@@ -645,7 +645,7 @@ handleAccountSetupPost aid hash = do
         _ -> Nothing
     -- Generates another activation link
     generateActivationLink email = do
-      user <- guardJustM $ runDBQuery $ GetUserByEmail Nothing (Email email)
+      user <- guardJustM $ dbQuery $ GetUserByEmail Nothing (Email email)
       if isNothing $ userhasacceptedtermsofservice user
         then do
           ctx <- getContext
@@ -669,8 +669,8 @@ getActionByActionID actionid = do
 getUserFromAction :: Kontrakcja m => Action -> m (Maybe User)
 getUserFromAction action =
   case actionType action of
-    (ViralInvitationSent email _ _ _ _) -> runDBQuery $ GetUserByEmail Nothing email
-    (AccountCreated uid _) ->  runDBQuery $ GetUserByID uid
+    (ViralInvitationSent email _ _ _ _) -> dbQuery $ GetUserByEmail Nothing email
+    (AccountCreated uid _) ->  dbQuery $ GetUserByID uid
     _ -> return Nothing
 
 -- Guards so that the token in the given action matches the given magic hash.
@@ -724,19 +724,19 @@ handlePasswordReminderPost aid hash = do
                           Right () -> do
                               dropExistingAction aid
                               passwordhash <- createPassword password
-                              _ <- runDBUpdate $ SetUserPassword (userid user) passwordhash
-                              _ <- runDBUpdate $ LogHistoryPasswordSetup (userid user) (ctxipnumber) (ctxtime) (userid <$> ctxmaybeuser)
+                              _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
+                              _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) (ctxipnumber) (ctxtime) (userid <$> ctxmaybeuser)
                               addFlashM flashMessageUserPasswordChanged
                               _ <- addUserLoginStatEvent ctxtime user
                               logUserToContext $ Just user
                               return LinkUpload
                           Left flash -> do
-                              _ <- runDBUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber) (ctxtime) (userid <$> ctxmaybeuser)
+                              _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber) (ctxtime) (userid <$> ctxmaybeuser)
                               addFlashM flash
                               addFlashM $ modalNewPasswordView aid hash
                               getHomeOrUploadLink
                  _ -> do
-                   _ <- runDBUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber) (ctxtime) (userid <$> ctxmaybeuser)
+                   _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber) (ctxtime) (userid <$> ctxmaybeuser)
                    addFlashM $ modalNewPasswordView aid hash
                    getHomeOrUploadLink
 
@@ -749,7 +749,7 @@ getUserFromActionOfType atypeid aid hash = do
              if atypeid == (actionTypeID $ actionType action)
                 then getUID action >>= maybe
                          (return Nothing)
-                         (runDBQuery . GetUserByID)
+                         (dbQuery . GetUserByID)
                 else return Nothing
          Nothing -> return Nothing
     where

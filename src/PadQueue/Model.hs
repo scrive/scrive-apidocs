@@ -1,5 +1,4 @@
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 module PadQueue.Model (
       AddToPadQueue(..)
     , GetPadQueue(..)
@@ -7,6 +6,7 @@ module PadQueue.Model (
     , PadQueue
     ) where
 
+import Control.Monad
 import Database.HDBC
 import DB.Classes
 import DB.Fetcher2
@@ -21,13 +21,13 @@ import Util.MonadUtils
 type PadQueue = Maybe (DocumentID,SignatoryLinkID)
 
 data Actor a => AddToPadQueue a = AddToPadQueue UserID DocumentID SignatoryLinkID a
-instance Actor a => DBUpdate (AddToPadQueue a) () where
-  dbUpdate (AddToPadQueue uid did slid a) = do
-    dbUpdate $ ClearPadQueue uid a
+instance (Actor a, MonadDB m) => DBUpdate m (AddToPadQueue a) () where
+  update (AddToPadQueue uid did slid a) = do
+    update $ ClearPadQueue uid a
     kPrepare $ "INSERT INTO padqueue( user_id, document_id, signatorylink_id) VALUES(?,?,?)"
     r <- kExecute [toSql uid, toSql did, toSql slid]
     when_ (r == 1) $
-                dbUpdate $ InsertEvidenceEvent
+                update $ InsertEvidenceEvent
                 SendToPadDevice
                 ("Document send to pad device for signatory \"" ++ show slid ++ "\" by " ++ actorWho a ++ ".")
                 (Just did)
@@ -35,28 +35,28 @@ instance Actor a => DBUpdate (AddToPadQueue a) () where
     return ()
 
 data Actor a => ClearPadQueue a = ClearPadQueue UserID a
-instance Actor a => DBUpdate (ClearPadQueue a) () where
-  dbUpdate (ClearPadQueue uid a) = do
-    pq <- dbQuery $ GetPadQueue uid
+instance (Actor a, MonadDB m) => DBUpdate m (ClearPadQueue a) () where
+  update (ClearPadQueue uid a) = do
+    pq <- query $ GetPadQueue uid
     when_ (isJust pq) $ do 
         kPrepare "DELETE FROM padqueue WHERE user_id = ?"
         r <- kExecute [toSql uid]
         when_ ((r == 1) && isJust pq ) $ do
-         _<- dbUpdate $ InsertEvidenceEvent
+         _ <- update $ InsertEvidenceEvent
                 RemovedFromPadDevice
                 ("Document removed from pad device for signatory \"" ++ show (snd $ $(fromJust) pq) ++ "\" by " ++ actorWho a ++ ".")
                 (fst <$> pq)
                 a
          return ()
-         
+
 data GetPadQueue = GetPadQueue UserID
-instance DBQuery GetPadQueue PadQueue where
-  dbQuery ( GetPadQueue uid) = do
+instance MonadDB m => DBQuery m GetPadQueue PadQueue where
+  query ( GetPadQueue uid) = do
     kPrepare $ "SELECT document_id, signatorylink_id FROM padqueue WHERE user_id = ?"
     _ <- kExecute [toSql uid]
     fetchPadQueue
 
-fetchPadQueue :: DB PadQueue
-fetchPadQueue = listToMaybe <$> foldDB decoder []
+fetchPadQueue :: MonadDB m => DBEnv m PadQueue
+fetchPadQueue = listToMaybe `liftM` foldDB decoder []
   where
-    decoder acc did slid  = (did,slid) : acc
+    decoder acc did slid  = (did, slid) : acc

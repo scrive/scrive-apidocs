@@ -45,10 +45,9 @@ import Misc
 import MinutesTime
 import User.Model
 
-data SchedulerData a b c = SchedulerData {
+data SchedulerData a b = SchedulerData {
       sdAppConf      :: a
     , sdTemplates    :: b
-    , sdMailsConfig  :: c
 }
 
 newtype ActionID = ActionID Integer

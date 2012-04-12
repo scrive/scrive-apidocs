@@ -56,7 +56,7 @@ documentNew = api $ do
   mcompany <- case usercompany user of
     Nothing -> return Nothing
     Just cid -> do
-      a <- apiGuardL $ runDBQuery $ GetCompany cid
+      a <- apiGuardL $ dbQuery $ GetCompany cid
       return $ Just a
   
   doctypes <- apiGuardL' BadInput $ getDataFn' (look "type")
@@ -80,12 +80,12 @@ documentNew = api $ do
   let now = ctxtime ctx
   
   let aa = AuthorActor now (ctxipnumber ctx) (userid user) (getEmail user)
-  d1 <- apiGuardL $ runDBUpdate $ NewDocument user mcompany filename doctype 1 aa 
+  d1 <- apiGuardL $ dbUpdate $ NewDocument user mcompany filename doctype 1 aa
   
   content <- apiGuardL' BadInput $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
-  file <- lift $ runDBUpdate $ NewFile filename content
+  file <- lift $ dbUpdate $ NewFile filename content
 
-  d2 <- apiGuardL $ runDBUpdate $ AttachFile (documentid d1) (fileid file) aa
+  d2 <- apiGuardL $ dbUpdate $ AttachFile (documentid d1) (fileid file) aa
   _ <- lift $ addDocumentCreateStatEvents d2
   return $ Created $ jsonDocumentForAuthor d2
 
@@ -113,21 +113,21 @@ documentChangeMainFile docid = api $ do
               content <- apiGuardL' BadInput $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
               let filename = basename filename'
       
-              fileid <$> (lift $ runDB $ dbUpdate $ NewFile filename content)
+              fileid <$> (dbUpdate $ NewFile filename content)
             (_, Just templateids) -> do
               templateid <- apiGuard' BadInput $ maybeRead templateids
               temp <- apiGuardL $ getDocByDocID templateid
               apiGuard' BadInput $ listToMaybe $ documentfiles temp
             _ -> throwError BadInput
   
-  _ <- apiGuardL $ runDBUpdate $ AttachFile docid fileid aa
+  _ <- apiGuardL $ dbUpdate $ AttachFile docid fileid aa
   return ()
 
 
 documentChangeMetadata :: Kontrakcja m => DocumentID -> MetadataResource -> m Response
 documentChangeMetadata docid _ = api $ do
   user <- getAPIUser  
-  doc <- apiGuardL $ runDBQuery $ GetDocumentByDocumentID docid
+  doc <- apiGuardL $ dbQuery $ GetDocumentByDocumentID docid
   
   asl <- apiGuard $ getAuthorSigLink doc
   
@@ -145,7 +145,7 @@ documentChangeMetadata docid _ = api $ do
   d <- case jsget "title" json of
     Left _ -> return doc
     Right (JSString s) ->
-      apiGuardL $ runDBUpdate $ SetDocumentTitle docid (fromJSString s) actor
+      apiGuardL $ dbUpdate $ SetDocumentTitle docid (fromJSString s) actor
     Right _ -> throwError BadInput
       
   return $ jsonDocumentMetadata d
@@ -204,9 +204,9 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
 
   content <- apiGuardL' BadInput $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
   
-  file <- lift $ runDBUpdate $ NewFile (basename filename) content
+  file <- lift $ dbUpdate $ NewFile (basename filename) content
   let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) email slid
-  d <- apiGuardL $ runDBUpdate $ SaveSigAttachment (documentid doc) sid aname (fileid file) actor
+  d <- apiGuardL $ dbUpdate $ SaveSigAttachment (documentid doc) sid aname (fileid file) actor
   
   -- let's dig the attachment out again
   sigattach' <- apiGuard $ getSignatoryAttachment d sid aname
@@ -230,7 +230,7 @@ documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
   -- attachment must have a file
   fileid <- apiGuard' ActionNotAvailable $ signatoryattachmentfile sigattach
 
-  d <- apiGuardL $ runDBUpdate $ DeleteSigAttachment (documentid doc) sid fileid 
+  d <- apiGuardL $ dbUpdate $ DeleteSigAttachment (documentid doc) sid fileid
        (SignatoryActor ctxtime ctxipnumber muid email sid)
   
   -- let's dig the attachment out again

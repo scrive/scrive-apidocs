@@ -192,13 +192,13 @@ flashMessageMultipleAttachmentShareDone =
 documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m) => PadQueue -> Maybe SignatoryLink -> MinutesTime -> Document -> m JSValue
 documentJSON pq msl _crttime doc = do
     ctx <- getContext
-    files <- runDB $ documentfilesM doc
-    sealedfiles <- runDB $ documentsealedfilesM doc
-    authorattachmentfiles <- mapM (runDBQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
+    files <- documentfilesM doc
+    sealedfiles <- documentsealedfilesM doc
+    authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
     let isauthoradmin = maybe False (flip isAuthorAdmin doc) (ctxmaybeuser ctx)
-    mauthor <- maybe (return Nothing) (runDBQuery . GetUserByID) (getAuthorSigLink doc >>= maybesignatory)
-    mservice <- maybe (return Nothing) (runDBQuery . GetService) (documentservice doc)
-    mcompany <- maybe (return Nothing) (runDBQuery . GetCompany) (getAuthorSigLink doc >>= maybecompany)
+    mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) (getAuthorSigLink doc >>= maybesignatory)
+    mservice <- maybe (return Nothing) (dbQuery . GetService) (documentservice doc)
+    mcompany <- maybe (return Nothing) (dbQuery . GetCompany) (getAuthorSigLink doc >>= maybecompany)
     let logo  = if (isJust mcompany && isJust (companylogo $ companyui (fromJust mcompany)))
                   then show <$> LinkCompanyLogo <$> companyid <$> mcompany
                   else if ((isJust mservice) &&  (isJust $ servicelogo $ serviceui $ fromJust mservice))
@@ -276,7 +276,7 @@ signatoryJSON pq doc viewer siglink = do
 signatoryAttachmentJSON :: MonadDB m => SignatoryAttachment -> JSONGenT m ()
 signatoryAttachmentJSON sa = do
   mfile <- lift $ case (signatoryattachmentfile sa) of
-    Just fid -> runDBQuery $ GetFileByFileID fid
+    Just fid -> dbQuery $ GetFileByFileID fid
     _ -> return Nothing
   J.value "name" $ signatoryattachmentname sa
   J.value "description" $ signatoryattachmentdescription sa
@@ -371,12 +371,11 @@ processJSON doc = do
     J.value "numberedsignatories" $ bool processnumberedsignatories
     where
       text k = lift $ do
-                        partylist <- renderListTemplate . map getSmartName $ partyList doc
-                        renderTemplateForProcess doc k (do
-                                                        field "partylist" partylist
-                                                        documentInfoFields doc)
+        partylist <- renderListTemplate . map getSmartName $ partyList doc
+        renderTemplateForProcess doc k $ do
+          F.value "partylist" partylist
+          documentInfoFields doc
       bool = fromMaybe False . getValueForProcess doc
-      
 
 regionJSON :: Document -> JSValue
 regionJSON doc = runJSONGen $ do

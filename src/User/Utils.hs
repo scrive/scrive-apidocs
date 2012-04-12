@@ -17,11 +17,7 @@ import Util.MonadUtils
     have a company then it returns Nothing.
 -}
 getCompanyForUser :: MonadDB m => User -> m (Maybe Company)
-getCompanyForUser = maybe (return Nothing) (runDBQuery . GetCompany) . usercompany
-
--- | Version to be executed within DB monad (currently used in tests only)
-getCompanyForUser' :: User -> DB (Maybe Company)
-getCompanyForUser' = maybe (return Nothing) (dbQuery . GetCompany) . usercompany
+getCompanyForUser = maybe (return Nothing) (dbQuery . GetCompany) . usercompany
 
 {- |
    Guard against a POST with no logged in user.

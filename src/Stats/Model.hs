@@ -25,6 +25,7 @@ module Stats.Model
 
        where
 
+import Control.Monad
 import Database.HDBC
 
 import DB.Classes
@@ -90,7 +91,7 @@ selectDocStatEventsSQL = SQL ("SELECT "
  ++ "  FROM doc_stat_events e"
  ++ " ") []
 
-fetchDocStats :: DB [DocStatEvent]
+fetchDocStats :: MonadDB m => DBEnv m [DocStatEvent]
 fetchDocStats = foldDB decoder []
   where
     decoder acc uid time quantity amount documentid serviceid
@@ -106,21 +107,21 @@ fetchDocStats = foldDB decoder []
        } : acc
 
 data GetDocStatEvents = GetDocStatEvents
-instance DBQuery GetDocStatEvents [DocStatEvent] where
-  dbQuery GetDocStatEvents = do
+instance MonadDB m => DBQuery m GetDocStatEvents [DocStatEvent] where
+  query GetDocStatEvents = do
     _ <- kRun selectDocStatEventsSQL
     fetchDocStats
 
 data GetDocStatEventsByUserID = GetDocStatEventsByUserID UserID
-instance DBQuery GetDocStatEventsByUserID [DocStatEvent] where
-  dbQuery (GetDocStatEventsByUserID userid) = do
+instance MonadDB m => DBQuery m GetDocStatEventsByUserID [DocStatEvent] where
+  query (GetDocStatEventsByUserID userid) = do
     _ <- kRun $ selectDocStatEventsSQL
       <++> SQL "WHERE e.user_id = ?" [toSql userid]
     fetchDocStats
 
 data GetDocStatEventsByCompanyID = GetDocStatEventsByCompanyID CompanyID
-instance DBQuery GetDocStatEventsByCompanyID [DocStatEvent] where
-  dbQuery (GetDocStatEventsByCompanyID companyid) = do
+instance MonadDB m => DBQuery m GetDocStatEventsByCompanyID [DocStatEvent] where
+  query (GetDocStatEventsByCompanyID companyid) = do
     _ <- kRun $ selectDocStatEventsSQL
       <++> SQL "WHERE e.company_id = ?" [toSql companyid]
     fetchDocStats
@@ -176,10 +177,11 @@ selectUsersAndStatsSQL (q1, q2) = SQL ("SELECT "
   ++ "  ORDER BY u.first_name || ' ' || u.last_name ASC, u.email ASC, userid ASC")
   [toSql q1, toSql q2]
 
-fetchUsersAndStats :: DB [(User, Maybe Company, ( Maybe MinutesTime
-                                                , Maybe DocStatQuantity
-                                                , Maybe Int))]
-fetchUsersAndStats = reverse `fmap` foldDB decoder []
+fetchUsersAndStats :: MonadDB m => DBEnv m 
+  [(User, Maybe Company, ( Maybe MinutesTime
+                         , Maybe DocStatQuantity
+                         , Maybe Int))]
+fetchUsersAndStats = reverse `liftM` foldDB decoder []
   where
     decoder acc uid password salt is_company_admin account_suspended
      has_accepted_terms_of_service signup_method service_id company_id
@@ -239,18 +241,19 @@ fetchUsersAndStats = reverse `fmap` foldDB decoder []
         ) : acc
 
 data GetUsersAndStats = GetUsersAndStats
-instance DBQuery GetUsersAndStats [(User, Maybe Company, ( Maybe MinutesTime
-                                                         , Maybe DocStatQuantity
-                                                         , Maybe Int))] where
-  dbQuery GetUsersAndStats = do
+instance MonadDB m => DBQuery m GetUsersAndStats
+  [(User, Maybe Company, ( Maybe MinutesTime
+                         , Maybe DocStatQuantity
+                         , Maybe Int))] where
+  query GetUsersAndStats = do
     _ <- kRun $ selectUsersAndStatsSQL (DocStatCreate, DocStatClose)
     fetchUsersAndStats
 
 {-------- Doc Stat Updates --}
 
 data AddDocStatEvent = AddDocStatEvent DocStatEvent
-instance DBUpdate AddDocStatEvent Bool where
-  dbUpdate (AddDocStatEvent DocStatEvent{..}) =
+instance MonadDB m => DBUpdate m AddDocStatEvent Bool where
+  update (AddDocStatEvent DocStatEvent{..}) =
     kRun01 $ mkSQL INSERT tableDocStatEvents [
         sql "user_id" seUserID
       , sql "time" seTime
@@ -266,8 +269,8 @@ instance DBUpdate AddDocStatEvent Bool where
       ]
 
 data FlushDocStats = FlushDocStats
-instance DBUpdate FlushDocStats () where
-  dbUpdate FlushDocStats = kRunRaw "DELETE FROM doc_stat_events"
+instance MonadDB m => DBUpdate m FlushDocStats () where
+  update FlushDocStats = kRunRaw "DELETE FROM doc_stat_events"
 
 {------ User Stats ------}
 
@@ -300,7 +303,7 @@ selectUserStatEventsSQL = SQL ("SELECT"
  ++ "  FROM user_stat_events e"
  ++ " ") []
 
-fetchUserStats :: DB [UserStatEvent]
+fetchUserStats :: MonadDB m => DBEnv m [UserStatEvent]
 fetchUserStats = foldDB decoder []
   where
     decoder acc uid time quantity amount serviceid companyid = UserStatEvent {
@@ -313,14 +316,14 @@ fetchUserStats = foldDB decoder []
       } : acc
 
 data GetUserStatEvents = GetUserStatEvents
-instance DBQuery GetUserStatEvents [UserStatEvent] where
-  dbQuery GetUserStatEvents = do
+instance MonadDB m => DBQuery m GetUserStatEvents [UserStatEvent] where
+  query GetUserStatEvents = do
     _ <- kRun selectUserStatEventsSQL
     fetchUserStats
 
 data AddUserStatEvent = AddUserStatEvent UserStatEvent
-instance DBUpdate AddUserStatEvent Bool where
-  dbUpdate (AddUserStatEvent UserStatEvent{..}) =
+instance MonadDB m => DBUpdate m AddUserStatEvent Bool where
+  update (AddUserStatEvent UserStatEvent{..}) =
     kRun01 $ mkSQL INSERT tableUserStatEvents [
         sql "user_id" usUserID
       , sql "time" usTime
@@ -365,7 +368,7 @@ selectSignStatEventsSQL = SQL ("SELECT"
  ++ "  FROM sign_stat_events e"
  ++ " ") []
 
-fetchSignStats :: DB [SignStatEvent]
+fetchSignStats :: MonadDB m => DBEnv m [SignStatEvent]
 fetchSignStats = foldDB decoder []
   where
     decoder acc docid slid time quantity serviceid
@@ -380,14 +383,14 @@ fetchSignStats = foldDB decoder []
        } : acc
 
 data GetSignStatEvents = GetSignStatEvents
-instance DBQuery GetSignStatEvents [SignStatEvent] where
-  dbQuery GetSignStatEvents = do
+instance MonadDB m => DBQuery m GetSignStatEvents [SignStatEvent] where
+  query GetSignStatEvents = do
     _ <- kRun selectSignStatEventsSQL
     fetchSignStats
 
 data AddSignStatEvent = AddSignStatEvent SignStatEvent
-instance DBUpdate AddSignStatEvent Bool where
-  dbUpdate (AddSignStatEvent SignStatEvent{..}) =
+instance MonadDB m => DBUpdate m AddSignStatEvent Bool where
+  update (AddSignStatEvent SignStatEvent{..}) =
     kRun01 $ mkSQL INSERT tableSignStatEvents [
         sql "document_id" ssDocumentID
       , sql "signatory_link_id" ssSignatoryLinkID

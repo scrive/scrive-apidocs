@@ -11,6 +11,7 @@
 -----------------------------------------------------------------------------
 module Doc.DocSeal(sealDocument) where
 
+import Control.Monad.Trans.Control
 import Control.Monad.Reader
 import Data.Maybe
 import Data.List
@@ -27,9 +28,7 @@ import Misc
 import System.Directory
 import System.Exit
 import Kontra
-import Templates.Trans
 import Templates.Templates
-import qualified Control.Exception as E
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
@@ -239,18 +238,16 @@ sealSpecFromDocument hostpart document elog inputpath outputpath =
             }
 
 
-sealDocument :: Context
-             -> Document
-             -> DB (Either String Document)
-sealDocument ctx document = do
+sealDocument :: (MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m)
+             => Document
+             -> m (Either String Document)
+sealDocument document = do
   files <- documentfilesM document
   Log.debug $ "Sealing document"
-  mapM_ (sealDocumentFile ctx document) files
+  mapM_ (sealDocumentFile document) files
   Log.debug $ "Sealing should be done now"
   Just newdocument <- dbQuery $ GetDocumentByDocumentID (documentid document)
   return $ Right newdocument
-
-
 
 {- Someday:
 
@@ -265,25 +262,20 @@ sealDocument ctx document = do
                return ()
  -}
 
-
-sealDocumentFile :: Context
-                 -> Document
+sealDocumentFile :: (MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m)
+                 => Document
                  -> File
-                 -> DB (Either String Document)
-sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplates}
-                 document@Document{documentid, documenttitle}
-                 file@File{fileid, filename} = do
-  tmppath <- liftIO $ do
-    tmpdir <- getTemporaryDirectory
-    createTempDirectory tmpdir $ "seal-" ++ show documentid ++ "-" ++ show fileid ++ "-"
-  result <- tryDB $ do
+                 -> m (Either String Document)
+sealDocumentFile document@Document{documentid, documenttitle} file@File{fileid, filename} =
+  withSystemTempDirectory' ("seal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
+    Context{ctxtwconf, ctxhostpart, ctxtime} <- getContext
     elog <- dbQuery $ GetEvidenceLog documentid
     Log.debug ("sealing: " ++ show fileid)
     let tmpin = tmppath ++ "/input.pdf"
     let tmpout = tmppath ++ "/output.pdf"
-    content <- liftIO $ getFileContents ctx file
+    content <- getFileContents file
     liftIO $ BS.writeFile tmpin content
-    config <- runTemplatesT (ctxlocale, ctxglobaltemplates) $ sealSpecFromDocument ctxhostpart document elog tmpin tmpout
+    config <- sealSpecFromDocument ctxhostpart document elog tmpin tmpout
     Log.debug $ "Config " ++ show config
     (code,_stdout,stderr) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
     liftIO $ threadDelay 500000
@@ -312,14 +304,14 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplat
         Log.debug $ "Adding new sealed file to DB"
         File{fileid = sealedfileid} <- dbUpdate $ NewFile filename newfilepdf
         Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
-        res <- dbUpdate $ AttachSealedFile documentid sealedfileid (SystemActor (ctxtime ctx))
+        res <- dbUpdate $ AttachSealedFile documentid sealedfileid (SystemActor ctxtime)
         Log.debug $ "Should be attached to document; is it? " ++ show ((elem sealedfileid . documentsealedfiles) <$> res)
         return res
       ExitFailure _ -> do
         -- error handling
         msg <- liftIO $ do
           systmp <- getTemporaryDirectory
-          (path,handle) <- openTempFile systmp ("seal-failed-" ++ show documentid ++ "-" ++ show fileid ++ "-.pdf")
+          (path, handle) <- openTempFile systmp ("seal-failed-" ++ show documentid ++ "-" ++ show fileid ++ "-.pdf")
           let msg = "Cannot seal document #" ++ show documentid ++ " because of file #" ++ show fileid
           Log.error $ msg ++ ": " ++ path
           Log.error $ BSL.toString stderr
@@ -327,9 +319,5 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplat
           BS.hPutStr handle content
           hClose handle
           return msg
-        _ <- dbUpdate $ ErrorDocument documentid ("Could not seal document because of file #" ++ show fileid) (SystemActor (ctxtime ctx))
+        _ <- dbUpdate $ ErrorDocument documentid ("Could not seal document because of file #" ++ show fileid) (SystemActor ctxtime)
         return $ Left msg
-  liftIO $ removeDirectoryRecursive tmppath
-  case result of
-    Right res -> return res
-    Left (e::E.SomeException) -> E.throw e

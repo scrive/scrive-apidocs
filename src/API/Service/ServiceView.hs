@@ -39,7 +39,7 @@ serviceAdminPage superuser service = renderTemplate "serviceAdminPage" $ do
   F.value "barsbackground" $ servicebarsbackground $ serviceui service
   F.value "logo" $ isJust $ servicelogo $ serviceui service
   F.value "logoLink" $ show $ LinkServiceLogo $ serviceid service
-  F.valueM "admin" $ fmap getSmartName <$> (runDBQuery $ GetUserByID $ serviceadmin $ servicesettings service)
+  F.valueM "admin" $ fmap getSmartName <$> (dbQuery $ GetUserByID $ serviceadmin $ servicesettings service)
   F.value "location" $ fmap unServiceLocation $ servicelocation $ servicesettings service
   F.value "allowToChangeSettings" $ superuser
 

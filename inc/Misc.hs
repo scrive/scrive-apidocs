@@ -14,6 +14,7 @@ import Control.Applicative
 import Control.Arrow
 import Control.Concurrent
 import Control.Monad.State
+import Control.Monad.Trans.Control
 import Data.Char
 import Data.Data
 import Data.List
@@ -36,6 +37,10 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS
+
+withSystemTempDirectory' :: MonadBaseControl IO m => String -> (FilePath -> m a) -> m a
+withSystemTempDirectory' dir handler =
+  control $ \runInIO -> withSystemTempDirectory dir (runInIO . handler)
 
 -- | Infix version of mappend, provided for convenience.
 (<++>) :: Monoid m => m -> m -> m

@@ -1,7 +1,6 @@
 module ActionScheduler (
       ActionScheduler
     , runScheduler
-    , runEnforceableScheduler
     , actionScheduler
     , oldScheduler
     , runDocumentProblemsCheck
@@ -9,22 +8,24 @@ module ActionScheduler (
     , getGlobalTemplates
     ) where
 
+import Control.Applicative
 import Control.Concurrent
+import Control.Monad.Base
 import Control.Monad.Reader
+import Control.Monad.Trans.Control
 import Data.List
-import Data.Maybe
+import Database.HDBC
 import Happstack.State
-import qualified Control.Exception as E
+import qualified Control.Exception.Lifted as E
 
 import AppControl (AppConf(..))
 import ActionSchedulerState
-import Crypto.RNG (CryptoRNG, getCryptoRNGState, CryptoRNGState)
-import DB.Classes
+import Crypto.RNG
+import DB.Classes hiding (update, query)
 import Doc.DocStateData
 import Doc.Model
 import MinutesTime
 import Mails.MailsData
-import Mails.MailsConfig
 import Mails.SendMail
 import Session
 import Templates.TemplatesLoader
@@ -34,16 +35,18 @@ import Doc.Invariants
 import Stats.Control
 import EvidenceLog.Model
 
-type SchedulerData' = SchedulerData AppConf (MVar (ClockTime, KontrakcjaGlobalTemplates)) MailsConfig
+type SchedulerData' = SchedulerData AppConf (MVar (ClockTime, KontrakcjaGlobalTemplates))
 
-newtype ActionScheduler a = AS { unAS :: ReaderT SchedulerData' (ReaderT DBEnv IO) a }
-    deriving (Monad, Functor, MonadIO, MonadReader SchedulerData')
+type InnerAS = ReaderT SchedulerData' (CryptoRNGT (DBT IO))
 
-instance CryptoRNG ActionScheduler where
-  getCryptoRNGState = AS $ lift $ asks envRNG
+newtype ActionScheduler a = AS { unAS :: InnerAS a }
+  deriving (Applicative, CryptoRNG, Functor, Monad, MonadBase IO, MonadDB, MonadIO, MonadReader SchedulerData')
 
-instance MonadDB ActionScheduler where
-    getDBEnv = AS $ lift ask
+instance MonadBaseControl IO ActionScheduler where
+  newtype StM ActionScheduler a = StAS { unStAS :: StM InnerAS a }
+  liftBaseWith f = AS $ liftBaseWith $ \runInIO ->
+                     f $ liftM StAS . runInIO . unAS
+  restoreM = AS . restoreM . unStAS
 
 -- Note: Do not define TemplatesMonad instance for ActionScheduler, use
 -- LocalTemplates instead. Reason? We don't have access to currently used
@@ -53,39 +56,34 @@ instance MonadDB ActionScheduler where
 
 runScheduler :: CryptoRNGState -> ActionScheduler () -> SchedulerData' -> IO ()
 runScheduler rng sched sd =
-    withPostgreSQLDB' (dbConfig $ sdAppConf sd) rng $
-      runReaderT (runReaderT (unAS sched) sd)
-
--- | Creates scheduler that may be forced to look up for actions to execute
-runEnforceableScheduler :: CryptoRNGState -> Int -> MVar () -> ActionScheduler () -> SchedulerData' -> IO ()
-runEnforceableScheduler rng interval enforcer sched sd = listen 0
-    where
-        listen delay = do
-            run_now <- tryTakeMVar enforcer
-            if isJust run_now || delay >= interval
-               then runScheduler rng sched sd >> listen 0
-               else threadDelay 1000000 >> (listen $! delay+1)
+  withPostgreSQL (dbConfig $ sdAppConf sd) . runCryptoRNGT rng $
+    runReaderT (unAS sched) sd
 
 -- | Gets 'expired' actions and evaluates them
 actionScheduler :: ActionImportance -> ActionScheduler ()
-actionScheduler imp = do
-    sd <- ask
-    env <- getDBEnv
-    let runAction a = runReaderT (runReaderT (unAS $ evaluateAction a) sd) env `E.catch` catchEverything a
-    liftIO $ getMinutesTime
-         >>= query . GetExpiredActions imp
-         >>= sequence_ . map runAction
-    where
-        catchEverything :: Action -> E.SomeException -> IO ()
-        catchEverything a e =
-            Log.error $ "Oops, evaluateAction with " ++ show a ++ " failed with error: " ++ show e
+actionScheduler imp = getMinutesTime
+  >>= query . GetExpiredActions imp
+  >>= mapM_ (\a -> do
+    res <- E.try $ evaluateAction a
+    nex <- getNexus
+    liftIO $ case res of
+      Left (e::E.SomeException) -> do
+        rollback nex
+        printError a e
+      Right () -> do
+        printSuccess a
+        commit nex
+    )
+  where
+    printSuccess a = Log.debug $ "Action " ++ show a ++ " evaluated successfully"
+    printError a e = Log.error $ "Oops, evaluateAction with " ++ show a ++ " failed with error: " ++ show e
 
 -- | Old scheduler (used as main one before action scheduler was implemented)
 oldScheduler :: ActionScheduler ()
 oldScheduler = do
-    now <- liftIO getMinutesTime
-    timeoutDocuments now
-    dropExpiredSessions now
+  now <- getMinutesTime
+  timeoutDocuments now
+  dropExpiredSessions now
 
 -- Internal stuff
 
@@ -115,7 +113,7 @@ runDocumentProblemsCheck :: ActionScheduler ()
 runDocumentProblemsCheck = do
   sd <- ask
   now <- liftIO getMinutesTime
-  docs <- runDBQuery $ GetDocumentsByService Nothing
+  docs <- dbQuery $ GetDocumentsByService Nothing
   let probs = listInvariantProblems now docs
   when (probs /= []) $ mailDocumentProblemsCheck $
     "<p>"  ++ (hostpart $ sdAppConf sd) ++ "/dave/document/" ++
@@ -127,13 +125,14 @@ runDocumentProblemsCheck = do
 mailDocumentProblemsCheck :: String -> ActionScheduler ()
 mailDocumentProblemsCheck msg = do
   sd <- ask
-  scheduleEmailSendout (sdMailsConfig sd) $ Mail { to = zipWith MailAddress documentProblemsCheckEmails documentProblemsCheckEmails
-                                                  , title = "Document problems report " ++ (hostpart $ sdAppConf sd)
-                                                  , content = msg
-                                                  , attachments = []
-                                                  , from = Nothing
-                                                  , mailInfo = None
-                                                  }
+  scheduleEmailSendout (mailsConfig $ sdAppConf sd) $ Mail {
+      to = zipWith MailAddress documentProblemsCheckEmails documentProblemsCheckEmails
+    , title = "Document problems report " ++ (hostpart $ sdAppConf sd)
+    , content = msg
+    , attachments = []
+    , from = Nothing
+    , mailInfo = None
+    }
 
 -- | A message will be sent to these email addresses when there is an inconsistent document found in the database.
 documentProblemsCheckEmails :: [String]
@@ -147,7 +146,7 @@ runArchiveProblemsCheck = do
 
   This requires reorganization as there is no difference between personal and company documents now.
 
-  users <- runDBQuery $ GetUsers
+  users <- dbQuery $ GetUsers
   personaldocs <- mapM getPersonalDocs users
   superviseddocs <- mapM getSupervisedDocs users
   let personaldocprobs = listPersonalDocInvariantProblems personaldocs
@@ -157,10 +156,10 @@ runArchiveProblemsCheck = do
   return ()
   where
     getPersonalDocs user = do
-      docs <- runDBQuery $ GetDocumentsBySignatory [Contract, Offer, Order] user
+      docs <- dbQuery $ GetDocumentsBySignatory [Contract, Offer, Order] user
       return (user, docs)
     getSupervisedDocs user = do
-      docs <- runDBQuery $ GetDocumentsByCompany user
+      docs <- dbQuery $ GetDocumentsByCompany user
       return (user, docs)
 
 mailArchiveProblemsCheck :: String -> ActionScheduler ()
@@ -193,9 +192,9 @@ getGlobalTemplates = do
 
 timeoutDocuments :: MinutesTime -> ActionScheduler ()
 timeoutDocuments now = do
-    docs <- runDBQuery $ GetTimeoutedButPendingDocuments now
+    docs <- dbQuery $ GetTimeoutedButPendingDocuments now
     forM_ docs $ \doc -> do
-        edoc <- runDBUpdate $ TimeoutDocument (documentid doc) (SystemActor now)
+        edoc <- dbUpdate $ TimeoutDocument (documentid doc) (SystemActor now)
         case edoc of
           Left _ -> return ()
           Right doc' -> do

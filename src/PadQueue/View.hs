@@ -1,6 +1,6 @@
 module PadQueue.View (padQueueStateJSON, padQueuePage, padQueueStateJSONNotLoggedIn)
     where
-        
+
 import Doc.DocStateData
 import Templates.Templates
 import Control.Applicative

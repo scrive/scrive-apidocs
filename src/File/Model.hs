@@ -22,15 +22,15 @@ import File.FileID
 import OurPrelude
 
 data GetFileByFileID = GetFileByFileID FileID
-instance DBQuery GetFileByFileID (Maybe File) where
-  dbQuery (GetFileByFileID fid) = do
+instance MonadDB m => DBQuery m GetFileByFileID (Maybe File) where
+  query (GetFileByFileID fid) = do
     kPrepare $ "SELECT id, name, encode(content,'base64'), amazon_bucket, amazon_url, disk_path FROM files WHERE id = ?"
     _ <- kExecute [toSql fid]
     fetchFiles >>= oneObjectReturnedGuard
 
 data NewFile = NewFile String BS.ByteString
-instance DBUpdate NewFile File where
-  dbUpdate (NewFile filename content) = do
+instance MonadDB m => DBUpdate m NewFile File where
+  update (NewFile filename content) = do
      kPrepare $ "INSERT INTO files"
        ++ "( name"
        ++ ", content"
@@ -43,11 +43,11 @@ instance DBUpdate NewFile File where
      fs <- fetchFiles
      case fs of
             [file] -> return file
-            _ ->  dbUpdate (NewFile filename content) 
+            _ ->  update (NewFile filename content)
 
 data PutFileUnchecked = PutFileUnchecked File
-instance DBUpdate PutFileUnchecked () where
-  dbUpdate (PutFileUnchecked file) = do
+instance MonadDB m => DBUpdate m PutFileUnchecked () where
+  update (PutFileUnchecked file) = do
     kPrepare ("INSERT INTO files (id, name, content, amazon_bucket, amazon_url, disk_path) VALUES (?,?,decode(?,'base64'),?,?,?)") 
     _ <- kExecute1 $ [ toSql (fileid file)
                      , toSql (filename file)
@@ -61,27 +61,27 @@ instance DBUpdate PutFileUnchecked () where
     return ()
 
 data FileMovedToAWS = FileMovedToAWS FileID String String
-instance DBUpdate FileMovedToAWS () where
-  dbUpdate (FileMovedToAWS fid bucket url) = do 
+instance MonadDB m => DBUpdate m FileMovedToAWS () where
+  update (FileMovedToAWS fid bucket url) = do
     kPrepare "UPDATE files SET content = NULL, amazon_bucket = ?, amazon_url = ? WHERE id = ?"
     _ <- kExecute1 [toSql bucket, toSql url, toSql fid]
     return ()
 
 data FileMovedToDisk = FileMovedToDisk FileID FilePath
-instance DBUpdate FileMovedToDisk () where
-  dbUpdate (FileMovedToDisk fid path) = do
+instance MonadDB m => DBUpdate m FileMovedToDisk () where
+  update (FileMovedToDisk fid path) = do
     kPrepare "UPDATE files SET content = NULL, disk_path = ? WHERE id = ?"
     _ <- kExecute1 [toSql path, toSql fid]
     return ()
 
 data GetFileThatShouldBeMovedToAmazon = GetFileThatShouldBeMovedToAmazon
-instance DBQuery GetFileThatShouldBeMovedToAmazon (Maybe File) where
-  dbQuery GetFileThatShouldBeMovedToAmazon = do
+instance MonadDB m => DBQuery m GetFileThatShouldBeMovedToAmazon (Maybe File) where
+  query GetFileThatShouldBeMovedToAmazon = do
     kPrepare $ "SELECT id, name, encode(content,'base64'), amazon_bucket, amazon_url, disk_path FROM files WHERE content IS NOT NULL LIMIT 1"
     _ <- kExecute []
     fetchFiles >>= oneObjectReturnedGuard
 
-fetchFiles :: DB [File]
+fetchFiles :: MonadDB m => DBEnv m [File]
 fetchFiles = foldDB decoder []
   where
     decoder acc fid fname content amazon_bucket amazon_url disk_path = File {

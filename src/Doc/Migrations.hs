@@ -176,7 +176,7 @@ addSignatoryLinkIdToSignatoryAttachment =
     kRunRaw $ "CREATE INDEX idx_signatory_attachments_signatory_link_id ON signatory_attachments(signatory_link_id)"
   }
   where
-    logAndDeleteBadAttachments :: DB ()
+    logAndDeleteBadAttachments :: MonadDB m => DBEnv m ()
     logAndDeleteBadAttachments = do 
       kRunRaw $ "SELECT document_id, name, email, description FROM signatory_attachments WHERE signatory_link_id = 0"
       atts <- foldDB decoder []

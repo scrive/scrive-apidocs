@@ -404,16 +404,16 @@ getFileIDsByStatus doc
   | otherwise    =  documentfiles doc
 
 getFilesByStatus :: MonadDB m => Document -> m [File]
-getFilesByStatus doc = liftM catMaybes $ mapM runDBQuery (GetFileByFileID <$> (getFileIDsByStatus doc))
+getFilesByStatus doc = liftM catMaybes $ mapM dbQuery (GetFileByFileID <$> (getFileIDsByStatus doc))
 
 
-documentfilesM :: Document -> DB [File]
+documentfilesM :: MonadDB m => Document -> m [File]
 documentfilesM Document{documentfiles} = do
-    liftM catMaybes $ mapM (dbQuery . GetFileByFileID) documentfiles
+  catMaybes `liftM` mapM (dbQuery . GetFileByFileID) documentfiles
 
-documentsealedfilesM :: Document -> DB [File]
+documentsealedfilesM :: MonadDB m => Document -> m [File]
 documentsealedfilesM Document{documentsealedfiles} = do
-    liftM catMaybes $ mapM (dbQuery . GetFileByFileID) documentsealedfiles
+  catMaybes `liftM` mapM (dbQuery . GetFileByFileID) documentsealedfiles
 
 fileInDocument :: Document -> FileID -> Bool
 fileInDocument doc fid =

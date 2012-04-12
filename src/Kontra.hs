@@ -17,7 +17,6 @@ module Kontra
     , newPasswordReminderLink
     , newViralInvitationSentLink
     , newAccountCreatedLink
-    , runDBOrFail
     , getAsString
     , getDataFnM
     , currentService
@@ -53,14 +52,14 @@ import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Misc
 
-type InKontraPlus = StateT Context (DBT (ServerPartT IO))
+type InKontraPlus = StateT Context (CryptoRNGT (DBT (ServerPartT IO)))
 
 -- | KontraPlus is 'MonadPlus', but it should only be used on toplevel
 -- for interfacing with static routing.
 newtype KontraPlus a = KontraPlus { unKontraPlus :: InKontraPlus a }
-  deriving (MonadPlus, Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadIO, ServerMonad, WebMonad Response)
+  deriving (MonadPlus, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadDB, MonadIO, ServerMonad, WebMonad Response)
 
-runKontraPlus :: Context -> KontraPlus a -> DBT (ServerPartT IO) a
+runKontraPlus :: Context -> KontraPlus a -> CryptoRNGT (DBT (ServerPartT IO)) a
 runKontraPlus ctx f = evalStateT (unKontraPlus f) ctx
 
 instance Kontrakcja KontraPlus
@@ -70,12 +69,6 @@ instance MonadBaseControl IO KontraPlus where
   liftBaseWith f = KontraPlus $ liftBaseWith $ \runInIO ->
                      f $ liftM StKontraPlus . runInIO . unKontraPlus
   restoreM = KontraPlus . restoreM . unStKontraPlus
-
-instance CryptoRNG KontraPlus where
-  getCryptoRNGState = KontraPlus $ gets (envRNG . ctxdbenv)
-
-instance MonadDB KontraPlus where
-  getDBEnv = ctxdbenv <$> getContext
 
 instance KontraMonad KontraPlus where
   getContext    = KontraPlus get
@@ -187,10 +180,6 @@ newAccountCreatedLink user = do
     return $ LinkAccountCreated (actionID action)
                                 (acToken $ actionType action)
                                 (getEmail user)
-
--- | Runs DB action and fails if it returned Nothing
-runDBOrFail :: (MonadDB m, MonadBase IO m) => DB (Maybe r) -> m r
-runDBOrFail f = runDB f >>= guardJust
 
 -- data fetchers specific to Kontra
 

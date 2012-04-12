@@ -74,7 +74,7 @@ getDocByDocID docid = do
   case (ctxmaybeuser, ctxcompany) of
     (Nothing, Nothing) -> return $ Left DBNotLoggedIn
     (Just user, _) -> do
-      mdoc <- runDBQuery $ GetDocumentByDocumentID docid
+      mdoc <- dbQuery $ GetDocumentByDocumentID docid
       case mdoc of
         Nothing  -> do
           Log.debug "Does not exist"
@@ -85,7 +85,7 @@ getDocByDocID docid = do
             True  -> return $ Right doc
     (_, Just company) -> do
       Log.debug "Logged in as company"
-      mdoc <- runDBQuery $ GetDocumentByDocumentID docid
+      mdoc <- dbQuery $ GetDocumentByDocumentID docid
       case mdoc of
         Nothing  -> return $ Left DBResourceNotAvailable
         Just doc -> if isJust $ getSigLinkFor doc (companyid company)
@@ -116,7 +116,7 @@ getDocByDocIDSigLinkIDAndMagicHash :: Kontrakcja m
                                    -> MagicHash
                                    -> m (Either DBError Document)
 getDocByDocIDSigLinkIDAndMagicHash docid sigid mh = do
-  mdoc <- runDBQuery $ GetDocumentByDocumentID docid
+  mdoc <- dbQuery $ GetDocumentByDocumentID docid
   case mdoc of
     Just doc | (isJust $ getSigLinkFor doc mh) 
                && (isJust $ getSigLinkFor doc sigid) -> return $ Right doc

@@ -37,7 +37,7 @@ import User.Model
 import Numeric
 import MinutesTime
 import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie,
-  readCookieValue, withDataFn, ServerPartT, HasRqData, CookieLife(MaxAge), FromReqURI(..))
+  readCookieValue, withDataFn, HasRqData, CookieLife(MaxAge), FromReqURI(..))
 import System.Random (StdGen, randomR)
 import System.Random.CryptoRNG ()
 import Crypto.RNG (CryptoRNG, random)
@@ -47,7 +47,7 @@ import ELegitimation.ELegTransaction
 import Data.Typeable
 import Cookies
 import Company.Model
-import DB.Classes
+import DB.Classes hiding (query, update)
 import MagicHash (MagicHash)
 import Util.MonadUtils
 import Doc.SignatoryLinkID
@@ -281,7 +281,7 @@ sessionAndCookieHashMatch session sci = (cookieSessionHash sci) == (hash $ sessi
 
 
 -- | Add a session cookie to browser.
-startSessionCookie :: (FilterMonad Response m,ServerMonad m, MonadIO m, Functor m) => Session -> m ()
+startSessionCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m) => Session -> m ()
 startSessionCookie session = do
     issecure <- isSecure
     ishttps  <- isHTTPS
@@ -337,17 +337,14 @@ startSession :: (MonadIO m, CryptoRNG m) => m Session
 startSession = emptySessionData >>= return . Session tempSessionID
 
 -- | Get 'User' record from database based on userid in session
-getUserFromSession :: MonadIO m => DBEnv -> Session -> m (Maybe User)
-getUserFromSession dbenv s =
-  liftMM (ioRunDB dbenv . dbQuery . GetUserByID) (return $ userID $ sessionData s)
+getUserFromSession :: MonadDB m => Session -> m (Maybe User)
+getUserFromSession = liftMM (dbQuery . GetUserByID) . return . userID . sessionData
 
-getPadUserFromSession :: MonadIO m => DBEnv -> Session -> m (Maybe User)
-getPadUserFromSession dbenv s =
-  liftMM (ioRunDB dbenv . dbQuery . GetUserByID) (return $ padUserID $ sessionData s)
+getPadUserFromSession :: MonadDB m => Session -> m (Maybe User)
+getPadUserFromSession = liftMM (dbQuery . GetUserByID) . return . padUserID . sessionData
 
-getCompanyFromSession :: MonadIO m => DBEnv -> Session -> m (Maybe Company)
-getCompanyFromSession dbenv s =
-  liftMM (ioRunDB dbenv . dbQuery . GetCompany) (return $ company $ sessionData s)
+getCompanyFromSession :: MonadDB m => Session -> m (Maybe Company)
+getCompanyFromSession = liftMM (dbQuery . GetCompany) . return . company . sessionData
 
 getLocationFromSession :: Session -> String
 getLocationFromSession = location . sessionData
@@ -370,12 +367,13 @@ handleSession = do
 -- session data is non-empty, register session in the system
 -- and add a cookie. Is user loggs in, check whether there is
 -- an old session with his userid and throw it away.
-updateSessionWithContextData :: Session
+updateSessionWithContextData :: (FilterMonad Response m, ServerMonad m, MonadDB m, CryptoRNG m)
+                             => Session
                              -> Maybe UserID
                              -> [ELegTransaction]
                              -> Map.Map SignatoryLinkID MagicHash
                              -> Maybe UserID
-                             -> DBT (ServerPartT IO) ()
+                             -> m ()
 updateSessionWithContextData (Session i sd) u trans magichashes' pu = do
     now <- getMinutesTime
     rng <- random
@@ -398,28 +396,14 @@ updateSessionWithContextData (Session i sd) u trans magichashes' pu = do
            update (NewSession rng newsd) >>= startSessionCookie
        else update $ UpdateSession (Session i newsd)
 
--- | This are special sessions used for passwords reminder links. Such links should be carefully.
-{-createLongTermSession :: (MonadIO m) =>  UserID -> m Session
-createLongTermSession uid = do
-    now <- liftIO $ getMinutesTime
-    magicHash <- liftIO $ randomIO
-    let longUserSession = SessionData { userID = Just uid
-                                      , flashMessages = []
-                                      , expires = (60 * 12) `minutesAfter` now
-                                      , hash = magicHash
-                                      , elegtransactions = []
-                                      }
-    update $ NewSession $ longUserSession
-    -}
-
 -- | Find session in the database. Check auth token match. Check timeout.
-findSession :: (MonadIO m) => SessionId -> MagicHash -> m (Maybe Session)
+findSession :: MonadIO m => SessionId -> MagicHash -> m (Maybe Session)
 findSession sid mh = do
     ms <- query $ GetSession $ sid
     case ms of
         Just session ->
             do
-                now <- liftIO getMinutesTime
+                now <- getMinutesTime
                 let hashmatch = mh == (hash $ sessionData session)
                 let notexpired = now <= (expires $ sessionData $ session)
                 if (hashmatch && notexpired)
@@ -491,7 +475,7 @@ newSession' userorcompany loc = do
 
 
 -- This is used to connect user or company to session when it was created by same service
-loadServiceSession :: (MonadIO m, Functor m, ServerMonad m, FilterMonad Response m) => Either CompanyID UserID -> SessionId -> m Bool
+loadServiceSession :: (MonadIO m, ServerMonad m, FilterMonad Response m) => Either CompanyID UserID -> SessionId -> m Bool
 loadServiceSession userorcompany ssid  = do
     msession <- query $ GetSession ssid
     case msession of

@@ -9,6 +9,7 @@ import Happstack.Server.Response
 import Control.Monad.Error
 import Control.Applicative
 
+import DB.Classes
 import Util.JSON
 import Misc
 import Kontra
@@ -18,14 +19,14 @@ import User.Model
 import Doc.DocStorage
 
 data Created a = Created a
-                    
+
 data APIError = BadInput
               | NotLoggedIn
               | Forbidden
               | ActionNotAvailable
               | ServerError
               deriving (Show, Eq)
-                     
+
 instance Error APIError where
   noMsg = ServerError
 
@@ -34,41 +35,27 @@ class ToAPIResponse a where
 
 instance ToAPIResponse Response where
   toAPIResponse = id
-  
+
 instance ToAPIResponse JSValue where
   toAPIResponse jv = let r1 = toResponse $ encode jv in
     setHeader "Content-Type" "text/plain" r1 -- must be text/plain to allow browsers who want to save stuff to files
-    
+
 instance ToAPIResponse a => ToAPIResponse (Created a) where
   toAPIResponse (Created a) = (toAPIResponse a) { rsCode = 201 }
-  
+
 instance ToAPIResponse () where
   toAPIResponse () = toResponse ""
-  
+
 newtype APIMonad m a = AM { runAPIMonad :: ErrorT APIError m a }
-                     deriving (MonadTrans, Monad, MonadError APIError, Functor, Applicative, MonadIO)
-                              
+  deriving (Applicative, Functor, Monad, MonadDB, MonadError APIError, MonadIO, MonadTrans)
+
 instance KontraMonad m => KontraMonad (APIMonad m) where
   getContext = lift getContext
   modifyContext = lift . modifyContext
-  
-{-
-instance ServerMonad m => ServerMonad (APIMonad m) where
-  askRq = lift askRq
-  localRq a b = AM $ lift $ localRq a b
-  
-instance (Monad m, HasRqData m) => HasRqData (APIMonad m) where
-  askRqEnv = lift askRqEnv
-  localRqEnv a b = AM $ lift $ localRqEnv a b
-  rqDataError a = lift $ rqDataError a
-  -}
-
---instance MonadTrans APIMonad where
---  lift = AM . (liftM )
 
 jsonError :: JSValue
 jsonError = fromRight $ jsset "status" "error" jsempty
-            
+
 -- | convert the return type to the appropriate response
 -- This defines the possible outputs of the api.
 api :: (Kontrakcja m, ToAPIResponse v) => APIMonad m v -> m Response

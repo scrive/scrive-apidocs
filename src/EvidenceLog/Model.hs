@@ -186,8 +186,8 @@ data Actor a => InsertEvidenceEvent a = InsertEvidenceEvent
                                         String                  -- Text for evidence
                                         (Maybe DocumentID)      -- The documentid if this event is about a document
                                         a                       -- Actor
-instance Actor a => DBUpdate (InsertEvidenceEvent a) Bool where
-  dbUpdate (InsertEvidenceEvent event text mdid actor) =
+instance (Actor a, MonadDB m) => DBUpdate m (InsertEvidenceEvent a) Bool where
+  update (InsertEvidenceEvent event text mdid actor) =
     kRun01 $ mkSQL INSERT tableEvidenceLog [
       sql "document_id" mdid
     , sql "time" $ actorTime actor
@@ -201,18 +201,19 @@ instance Actor a => DBUpdate (InsertEvidenceEvent a) Bool where
     , sql "api_user" $ actorAPIString actor
     ]
 
-data DocumentEvidenceEvent = DocumentEvidenceEvent { evDocumentID :: DocumentID
-                                                   , evTime       :: MinutesTime
-                                                   , evText       :: String
-                                                   , evType       :: EvidenceEventType
-                                                   , evVersionID  :: String
-                                                   , evEmail      :: Maybe String
-                                                   , evUserID     :: Maybe UserID
-                                                   , evIP4        :: Maybe IPAddress
-                                                   , evIP6        :: Maybe IPAddress
-                                                   , evSigLinkID  :: Maybe SignatoryLinkID
-                                                   , evAPI        :: Maybe String
-                                                   }
+data DocumentEvidenceEvent = DocumentEvidenceEvent {
+    evDocumentID :: DocumentID
+  , evTime       :: MinutesTime
+  , evText       :: String
+  , evType       :: EvidenceEventType
+  , evVersionID  :: String
+  , evEmail      :: Maybe String
+  , evUserID     :: Maybe UserID
+  , evIP4        :: Maybe IPAddress
+  , evIP6        :: Maybe IPAddress
+  , evSigLinkID  :: Maybe SignatoryLinkID
+  , evAPI        :: Maybe String
+  }
 
 htmlDocFromEvidenceLog :: TemplatesMonad m => String -> [DocumentEvidenceEvent] -> m String
 htmlDocFromEvidenceLog title elog = do
@@ -224,8 +225,8 @@ htmlDocFromEvidenceLog title elog = do
       F.value "text" $ evText entry
 
 data GetEvidenceLog = GetEvidenceLog DocumentID
-instance DBQuery GetEvidenceLog [DocumentEvidenceEvent] where
-  dbQuery (GetEvidenceLog docid) = do
+instance MonadDB m => DBQuery m GetEvidenceLog [DocumentEvidenceEvent] where
+  query (GetEvidenceLog docid) = do
     _ <- kRun $ SQL ("SELECT "
       ++ "  document_id"
       ++ ", time"
@@ -260,7 +261,7 @@ instance DBQuery GetEvidenceLog [DocumentEvidenceEvent] where
           , evAPI        = api
           } : acc
 
-copyEvidenceLogToNewDocument :: DocumentID -> DocumentID -> DB ()
+copyEvidenceLogToNewDocument :: MonadDB m => DocumentID -> DocumentID -> DBEnv m ()
 copyEvidenceLogToNewDocument fromdoc todoc = do
   _ <- kRun $ SQL ("INSERT INTO evidence_log ("
     ++ "  document_id"

@@ -84,10 +84,10 @@ handleIssueArchive = do
     docids <- getCriticalFieldList asValidDocID "doccheck"
     let actor = UserActor ctxtime ctxipnumber (userid user) (getEmail user)
     mapM_ (\did -> do
-              doc <- guardRightM' $ runDBUpdate $ ArchiveDocument user did actor
+              doc <- guardRightM' $ dbUpdate $ ArchiveDocument user did actor
               case getSigLinkFor doc user of
-                Just sl -> runDB $ addSignStatDeleteEvent doc sl ctxtime
-                _ -> return False)
+                Just sl -> addSignStatDeleteEvent doc sl ctxtime
+                _ -> return False) 
       docids
 
 {- |
@@ -129,16 +129,16 @@ jsonDocumentsList = withUserGet $ do
 
 #if 0
   allDocs <- case (doctype) of
-    "Contract" -> runDBQuery $ GetDocumentsBySignatory [Contract] uid
-    "Offer" -> runDBQuery $ GetDocumentsBySignatory [Offer] uid
-    "Order" -> runDBQuery $ GetDocumentsBySignatory [Order] uid
-    "Template" -> runDBQuery $ GetTemplatesByAuthor uid
-    "Attachment" -> runDBQuery $ GetAttachmentsByAuthor uid
-    "Rubbish" -> runDBQuery $ GetDeletedDocumentsByUser uid
-    "Template|Contract" -> runDBQuery $ GetAvailableTemplates uid [Contract]
-    "Template|Offer" ->  runDBQuery $ GetAvailableTemplates uid [Offer]
-    "Template|Order" -> runDBQuery $ GetAvailableTemplates uid [Order]
-    "Pad" -> (runDBQuery $ GetDocumentsByAuthor [Contract,Offer,Order] uid) -- Not working and disabled. It should do filtering of only pad documents.
+    "Contract" -> dbQuery $ GetDocumentsBySignatory [Contract] uid
+    "Offer" -> dbQuery $ GetDocumentsBySignatory [Offer] uid
+    "Order" -> dbQuery $ GetDocumentsBySignatory [Order] uid
+    "Template" -> dbQuery $ GetTemplatesByAuthor uid
+    "Attachment" -> dbQuery $ GetAttachmentsByAuthor uid
+    "Rubbish" -> dbQuery $ GetDeletedDocumentsByUser uid
+    "Template|Contract" -> dbQuery $ GetAvailableTemplates uid [Contract]
+    "Template|Offer" ->  dbQuery $ GetAvailableTemplates uid [Offer]
+    "Template|Order" -> dbQuery $ GetAvailableTemplates uid [Order]
+    "Pad" -> (dbQuery $ GetDocumentsByAuthor [Contract,Offer,Order] uid) -- Not working and disabled. It should do filtering of only pad documents.
     _ -> do
       Log.error "Documents list: No valid document type provided"
       return []
@@ -163,8 +163,8 @@ jsonDocumentsList = withUserGet $ do
       searching  = docSearchingFromParams params
       pagination = docPaginationFromParams docsPageSize params
 
-  allDocs <- runDBQuery $ GetDocuments domain (searching ++ filters) sorting pagination
-  totalCount <- runDBQuery $ GetDocumentsCount domain (searching ++ filters)
+  allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting pagination
+  totalCount <- dbQuery $ GetDocumentsCount domain (searching ++ filters)
 
   Log.debug $ "Documents list: Number of documents found "  ++  (show $ length allDocs)
 
@@ -175,7 +175,7 @@ jsonDocumentsList = withUserGet $ do
                        }
 
   cttime <- getMinutesTime
-  padqueue <- runDBQuery $ GetPadQueue $ userid user
+  padqueue <- dbQuery $ GetPadQueue $ userid user
   docsJSONs <- mapM (docForListJSON (timeLocaleForLang lang) cttime user padqueue) $ list docs
   return $ JSObject $ toJSObject [
       ("list", JSArray docsJSONs)

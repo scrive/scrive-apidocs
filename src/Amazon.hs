@@ -42,7 +42,7 @@ urlFromFile File{filename, fileid} =
 -- - upload a file to Amazon storage
 -- - save a file in a local directory
 -- - do nothing and keep it in memory database
-uploadFile :: FilePath -> S3Action -> File -> DB ()
+uploadFile :: MonadDB m => FilePath -> S3Action -> File -> m ()
 uploadFile docstore@(_:_) AWS.S3Action{AWS.s3bucket = ""} File{fileid, filename, filestorage = FileStorageMemory content} = do
     let filepath = docstore </> show fileid ++ '-' : filename ++ ".pdf"
     liftIO $ BS.writeFile filepath content

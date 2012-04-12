@@ -10,12 +10,14 @@ import Control.Monad.Trans.Control
 import Happstack.Server
 
 import Context
+import Crypto.RNG
 import DB.Classes
 import Templates.Templates
 
 -- | This is for grouping things together so we won't need to
 -- write all that each time we write function type signature
 class ( Applicative m
+      , CryptoRNG m
       , FilterMonad Response m
       , HasRqData m
       , KontraMonad m
@@ -29,5 +31,5 @@ class ( Applicative m
       ) => Kontrakcja m
 
 class (Functor m, Monad m) => KontraMonad m where
-    getContext    :: m Context
-    modifyContext :: (Context -> Context) -> m ()
+  getContext    :: m Context
+  modifyContext :: (Context -> Context) -> m ()

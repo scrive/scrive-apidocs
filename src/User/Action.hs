@@ -39,7 +39,7 @@ handleAccountSetupFromSign document signatorylink = do
   let firstname = getFirstName signatorylink
       lastname = getLastName signatorylink
       email = getEmail signatorylink
-  muser <- runDBQuery $ GetUserByEmail (currentServiceID ctx) (Email email)
+  muser <- dbQuery $ GetUserByEmail (currentServiceID ctx) (Email email)
   user <- maybe (guardJustM $ createInvitedUser (firstname, lastname) email Nothing)
                 return
                 muser
@@ -47,7 +47,7 @@ handleAccountSetupFromSign document signatorylink = do
   case mactivateduser of
     Just (activateduser, _) -> do
       let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx)  (maybesignatory signatorylink)  (getEmail signatorylink) (signatorylinkid signatorylink)
-      _ <- runDBUpdate $ SaveDocumentForUser (documentid document) activateduser (signatorylinkid signatorylink) actor
+      _ <- dbUpdate $ SaveDocumentForUser (documentid document) activateduser (signatorylinkid signatorylink) actor
       _ <- addUserSaveAfterSignStatEvent activateduser
       return $ Just activateduser
     Nothing -> return Nothing
@@ -70,31 +70,30 @@ handleActivate mfstname msndname actvuser signupmethod = do
           if tos
             then do
               passwordhash <- createPassword password
-              runDB $ do
-                _ <- dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser){
-                         userfstname = fstname
-                       , usersndname = sndname
-                       , userphone = phone
-                       }
-                _ <- dbUpdate $ LogHistoryUserInfoChanged (userid actvuser) (ctxipnumber ctx) (ctxtime ctx)
-                                                          (userinfo actvuser) ((userinfo actvuser){ userfstname = fstname , usersndname = sndname })
-                                                          (userid <$> ctxmaybeuser ctx)
-                _ <- dbUpdate $ SetUserPassword (userid actvuser) passwordhash
-                _ <- dbUpdate $ LogHistoryPasswordSetup (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
-                _ <- dbUpdate $ AcceptTermsOfService (userid actvuser) (ctxtime ctx)
-                _ <- dbUpdate $ LogHistoryTOSAccept (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
-                _ <- dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
-                return ()
-              mdelays <- runDBQuery $ GetMailAPIDelaysForEmail (getEmail actvuser) (ctxtime ctx)
+              _ <- dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser) {
+                  userfstname = fstname
+                , usersndname = sndname
+                , userphone = phone
+              }
+              _ <- dbUpdate $ LogHistoryUserInfoChanged (userid actvuser)
+                (ctxipnumber ctx) (ctxtime ctx) (userinfo actvuser)
+                ((userinfo actvuser) { userfstname = fstname , usersndname = sndname })
+                (userid <$> ctxmaybeuser ctx)
+              _ <- dbUpdate $ SetUserPassword (userid actvuser) passwordhash
+              _ <- dbUpdate $ LogHistoryPasswordSetup (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
+              _ <- dbUpdate $ AcceptTermsOfService (userid actvuser) (ctxtime ctx)
+              _ <- dbUpdate $ LogHistoryTOSAccept (userid actvuser) (ctxipnumber ctx) (ctxtime ctx) (userid <$> ctxmaybeuser ctx)
+              _ <- dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
 
+              mdelays <- dbQuery $ GetMailAPIDelaysForEmail (getEmail actvuser) (ctxtime ctx)
               newdocs <- case mdelays of
                 Nothing -> return []
                 Just (delayid, texts) -> do
                   results <- forM texts (\t -> MailAPI.doMailAPI t `E.catch` (\(_::KontraError) -> return Nothing))
-                  runDBUpdate $ DeleteMailAPIDelays delayid (ctxtime ctx)
+                  dbUpdate $ DeleteMailAPIDelays delayid (ctxtime ctx)
                   return $ catMaybes results
 
-              tosuser <- guardJustM $ runDBQuery $ GetUserByID (userid actvuser)
+              tosuser <- guardJustM $ dbQuery $ GetUserByID (userid actvuser)
               _ <- addUserSignTOSStatEvent tosuser
               _ <- addUserLoginStatEvent (ctxtime ctx) tosuser
               logUserToContext $ Just tosuser
@@ -113,10 +112,10 @@ createInvitedUser names email mlocale = do
     ctx <- getContext
     let locale = fromMaybe (ctxlocale ctx) mlocale
     passwd <- createPassword =<< randomPassword
-    muser <- runDBUpdate $ AddUser names email (Just passwd) False Nothing Nothing locale
+    muser <- dbUpdate $ AddUser names email (Just passwd) False Nothing Nothing locale
     case muser of
       Just user -> do
-                   _ <- runDBUpdate $ LogHistoryAccountCreated (userid user) (ctxipnumber ctx) (ctxtime ctx) (Email email) (userid <$> ctxmaybeuser ctx)
+                   _ <- dbUpdate $ LogHistoryAccountCreated (userid user) (ctxipnumber ctx) (ctxtime ctx) (Email email) (userid <$> ctxmaybeuser ctx)
                    return muser
       _         -> return muser
 

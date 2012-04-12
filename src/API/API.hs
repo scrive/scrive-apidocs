@@ -27,9 +27,7 @@ module API.API(
      , API_ERROR(..)
       ) where
 
-
-import Control.Monad.State
-import Data.Functor
+import Control.Applicative
 import AppView as V
 import Happstack.Server (Response, Method(POST)) -- GHC 6.12.3 workaround hack
 import Happstack.StaticRouting (Route, Path, dir, path, remainingPath)
@@ -49,23 +47,20 @@ type APIRequestBody = JSValue
 
 {- | API functions are build over Kontra with an ability to exit, and with some context -}
 newtype APIFunction m c a = AF { unAF :: ReaderT c (ErrorT (API_ERROR, String) m) a }
-    deriving (Functor, Monad, MonadError (API_ERROR, String), MonadIO, MonadReader c, CryptoRNG)
+    deriving (Applicative, CryptoRNG, Functor, Monad, MonadDB, MonadError (API_ERROR, String), MonadIO, MonadReader c)
 
-instance (APIContext c, Kontrakcja m, CryptoRNG m) => MonadDB (APIFunction m c) where
-    getDBEnv = liftKontra getDBEnv
-
-instance Kontrakcja m => TemplatesMonad (APIFunction m c) where
+instance TemplatesMonad m => TemplatesMonad (APIFunction m c) where
     getTemplates = liftKontra getTemplates
     getLocalTemplates = liftKontra . getLocalTemplates
 
-instance Kontrakcja m => KontraMonad (APIFunction m c) where
+instance KontraMonad m => KontraMonad (APIFunction m c) where
     getContext    = liftKontra getContext
     modifyContext = liftKontra . modifyContext
 
 runApiFunction :: Kontrakcja m => APIFunction m c a -> c -> m (Either (API_ERROR, String) a)
-runApiFunction f ctx = runErrorT $ runReaderT (unAF f) ctx
+runApiFunction f = runErrorT . runReaderT (unAF f)
 
-liftKontra :: Kontrakcja m => m a -> APIFunction m c a
+liftKontra :: Monad m => m a -> APIFunction m c a
 liftKontra = AF . lift . lift
 
 {- |  Used to convert json object to HTTP response-}
