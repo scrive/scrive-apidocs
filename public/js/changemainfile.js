@@ -119,7 +119,7 @@
                 name : "Templates table",
                 schema: new Schema({
                     url: "/docs",
-                    extraParams : { documentType : "Template|" + KontraDesignDocument.model.process().name() },
+                    extraParams : { documentType : "Template|" + KontraDesignDocument.model.process().corename() },
                     sorting: new Sorting({ fields: ["title"]}),
                     paging: new Paging({}),
                     filtering: new Filtering({text: "", infotext: localization.searchTemplate}),

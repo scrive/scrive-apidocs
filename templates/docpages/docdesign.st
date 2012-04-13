@@ -23,6 +23,13 @@ offername=$_offername()$
 ###
 ordername=$_ordername()$
 ###
+###
+contractcorename=Contract
+###
+offercorename=Offer
+###
+ordercorename=Order
+###
 contractstep1text=$_contractstep1text()$
 ####
 offerstep1text=$_offerstep1text()$
