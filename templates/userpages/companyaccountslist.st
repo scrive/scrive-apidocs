@@ -8,7 +8,7 @@ viewCompanyAccounts =
         <li><a href="/account/company">$_CompanySettings()$</a></li>
         <li class="active"><a href="/account/companyaccounts">$_CompanyAccounts()$</a></li>
         <li><a href="/account/mailapi">$_HeadMailApi()$</a></li>
-        <li><a href="/account/usagestats">$_HeadUsageStats()$</a></li>z
+        <li><a href="/account/usagestats">$_HeadUsageStats()$</a></li>
       </ul>
 </div>
 

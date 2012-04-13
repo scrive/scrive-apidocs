@@ -1,138 +1,6 @@
-/* Core parts canvas processing code comes from Ilmari Heikkinen blog-post.
-*/
+
 (function(window){
 
-var Filters = {
-  getPixels : function(img) {
-    var c = this.getCanvas(img.width, img.height);
-    var ctx = c.getContext('2d');
-    ctx.drawImage(img,0,0,img.width, img.height);
-    return ctx.getImageData(0,0,c.width,c.height);
-   },
-
-  getCanvas : function(w,h) {
-    var c = document.createElement('canvas');
-    c.width = w;
-    c.height = h;
-    return c;
-  },
-
-  filterImage : function(filter, image, var_args) {
-    var args = [this.getPixels(image)];
-    for (var i=2; i<arguments.length; i++) {
-        args.push(arguments[i]);
-    }
-    return filter.apply(null, args);
-  },
- convolute : function(pixels, weights, opaque) {
-    var side = Math.round(Math.sqrt(weights.length));
-    var halfSide = Math.floor(side/2);
-    var src = pixels.data;
-    var sw = pixels.width;
-    var sh = pixels.height;
-    // pad output by the convolution matrix
-    var w = sw;
-    var h = sh;
-    var tmpCanvas = document.createElement('canvas');
-    var tmpCtx = tmpCanvas.getContext('2d');
-    var output = tmpCtx.createImageData(w,h);
-    var dst = output.data;
-    // go through the destination image pixels
-    var alphaFac = opaque ? 1 : 0;
-    for (var y=0; y<h; y++) {
-      for (var x=0; x<w; x++) {
-        var sy = y;
-        var sx = x;
-        var dstOff = (y*w+x)*4;
-        // calculate the weighed sum of the source image pixels that
-        // fall under the convolution matrix
-        var r=0, g=0, b=0, a=0;
-        for (var cy=0; cy<side; cy++) {
-          for (var cx=0; cx<side; cx++) {
-            var scy = sy + cy - halfSide;
-            var scx = sx + cx - halfSide;
-            if (scy >= 0 && scy < sh && scx >= 0 && scx < sw) {
-              var srcOff = (scy*sw+scx)*4;
-              var wt = weights[cy*side+cx];
-              r += src[srcOff] * wt;
-              g += src[srcOff+1] * wt;
-              b += src[srcOff+2] * wt;
-              a += src[srcOff+3] * wt;
-            }
-          }
-        }
-        dst[dstOff] = r;
-        dst[dstOff+1] = g;
-        dst[dstOff+2] = b;
-        dst[dstOff+3] = a + alphaFac*(255-a);
-      }
-    }
-  return output;
-  } /*, Smooth was dropped for now due to poor performance. But this is good base to replace blur usage in future.
- smooth : function(canvas) {
-    var ctx = canvas.getContext('2d');
-    var pixels = ctx.getImageData(0,0,canvas.width,canvas.height);
-    
-    var src = pixels.data;
-    var sw = pixels.width;
-    var sh = pixels.height;
-    // pad output by the convolution matrix
-    var w = sw;
-    var h = sh;
-    var tmpCanvas = document.createElement('canvas');
-    var tmpCtx = tmpCanvas.getContext('2d');
-    var output = tmpCtx.createImageData(w,h)
-    var dst = output.data;
-    // go through the destination image pixels
-    for (var y=0; y<h; y++) {
-      for (var x=0; x<w; x++) {
-        var sy = y;
-        var sx = x;
-        var dstOff = (y*w+x)*4;
-        // calculate the weighed sum of the source image pixels that
-        // fall under the convolution matrix
-        var black=0, grey=0, white =0; isGrey = false, isWhite = false; isBlack = false; sum = 0;
-        for (var cy=0; cy<3; cy++) {
-          for (var cx=0; cx<3; cx++) {
-            var scy = sy + cy - 1;
-            var scx = sx + cx - 1;
-            if (scy >= 0 && scy < sh && scx >= 0 && scx < sw) {
-              var srcOff = (scy*sw+scx)*4;
-              var c = src[srcOff] + src[srcOff+1] + src[srcOff+2];
-              sum += c;
-              if (c == 0 && src[srcOff+3] > 0)
-              { black++;
-                if (cy == 1 && cx == 1) isBlack = true;
-              }
-              else if ( c == 765 || src[srcOff+3] == 0)
-              {
-                white++;
-                if (cy == 1 && cx == 1) isWhite = true;
-              }
-              else
-              {
-                grey++;
-                if (cy == 1 && cx == 1) isGrey = true;
-                
-              }   
-            }
-          }
-        }
-        var c = undefined;
-        if (black > 6) c = 0;
-        else if (white > 6) c = 255;
-        else if (black > 3 && !isBlack) c = 128;
-
- 
-        dst[dstOff] =  c != undefined ? c : src[dstOff];
-        dst[dstOff+1] = c != undefined ? c : src[dstOff + 1];
-        dst[dstOff+2] = c != undefined ? c : src[dstOff + 2];
-        dst[dstOff+3] = c != undefined ? 255 - c : src[dstOff+3];
-      }
-    }
-  canvas.getContext('2d').putImageData(output, 0, 0);
-  } */
-};
     
 var SignatureDrawer = Backbone.View.extend({
     initialize: function (args) {
@@ -195,6 +63,10 @@ var SignatureDrawer = Backbone.View.extend({
       circleDraw(0);
       this.picture.beginPath();
       this.picture.moveTo(x, y);
+      this.x_ = undefined;
+      this.y_ = undefined;
+      this.x = x;
+      this.y = y;
       this.picture.lineWidth = this.lineWith();
       this.picture.lineCap = 'round';
       this.picture.lineJoin = 'round';
@@ -204,9 +76,51 @@ var SignatureDrawer = Backbone.View.extend({
     },
     drawingtoolMove : function(x,y) {
       if (this.drawing) {
-        this.picture.lineTo(x, y);
-        this.picture.stroke();
+        var moved = function(x1,x2) { return (x1 * 2 + x2 * 1) / 3; }
+        if (this.x_ != undefined && this.y_ != undefined) {
+            this.drawNiceCurve(this.x_, this.y_ ,this.x, this.y, moved(this.x,x), moved(this.y,y));
+            this.drawNiceLine(moved(this.x,x), moved(this.y,y),moved(x,this.x), moved(y,this.y));
+        }
+        else
+            this.drawNiceLine(this.x, this.y,moved(x,this.x), moved(y,this.y));
+        this.x_ = moved(x,this.x);
+        this.y_ = moved(y,this.y);
+        this.x = x;
+        this.y = y;
       }
+    },
+    drawNiceLine : function(sx,sy,ex,ey) {
+        this.drawLine(sx,sy,ex,ey,this.lineWith() + 1, "#FEFEFE", 'butt');
+        this.drawLine(sx,sy,ex,ey,this.lineWith()    , "#555555", 'round');
+        this.drawLine(sx,sy,ex,ey,this.lineWith() - 1, "#222222", 'round');
+        this.drawLine(sx,sy,ex,ey,this.lineWith() - 2, "#000000", 'round');
+    },
+    drawNiceCurve : function(sx,sy,cx,cy,ex,ey) {
+        this.drawCurve(sx,sy,cx,cy,ex,ey,this.lineWith() + 1, "#FEFEFE", 'butt');
+        this.drawCurve(sx,sy,cx,cy,ex,ey,this.lineWith()    , "#555555", 'round');
+        this.drawCurve(sx,sy,cx,cy,ex,ey,this.lineWith() - 1, "#222222", 'round');
+        this.drawCurve(sx,sy,cx,cy,ex,ey,this.lineWith() - 2, "#000000", 'round');
+    },
+    drawCurve : function(sx,sy,cx,cy,ex,ey,w,c ,lc) {
+        this.picture.closePath();
+        this.picture.beginPath();
+        this.picture.moveTo(sx, sy);
+        this.picture.strokeStyle = c;
+        this.picture.lineWidth = w;
+        this.picture.lineCap = lc
+        this.picture.quadraticCurveTo(cx,cy,ex,ey)
+        this.picture.stroke();
+    },
+    drawLine : function(sx,sy,ex,ey,w,c, lc)
+    {   this.picture.closePath();
+        this.picture.beginPath();
+        this.picture.moveTo(sx, sy);
+        this.picture.strokeStyle = c;
+        this.picture.lineWidth = w;
+        this.picture.lineCap = lc
+        this.picture.lineTo(ex, ey);
+        this.picture.stroke();
+
     },
     drawingtoolUp : function(x,y) {
       this.picture.lineTo(x, y);
@@ -231,39 +145,17 @@ var SignatureDrawer = Backbone.View.extend({
           if (callback != undefined) callback();
         } else {
           var signature = this.model;
-          var idata = Filters.filterImage(Filters.convolute, this.canvas[0],
-                [ 1/9, 1/9, 1/9,
-                1/9, 1/9, 1/9,
-                1/9, 1/9, 1/9 ]
-                );
-          this.canvas[0].getContext('2d').putImageData(idata, 0, 0);
-          /* You may want to try this in the future, but for this is best I can do with current canvas implementaition.
-           * var idata = Filters.filterImage(Filters.convolute, this.canvas[0],
-                [  0, -1,  0,
-                  -1,  5, -1,
-                   0, -1,  0 ]
-                );
-          this.canvas[0].getContext('2d').putImageData(idata, 0, 0);
-          
-          var idata = Filters.filterImage(Filters.convolute, this.canvas[0],
-                [ 1/9, 1/9, 1/9,
-                1/9, 1/9, 1/9,
-                1/9, 1/9, 1/9 ]
-                );
-          this.canvas[0].getContext('2d').putImageData(idata, 0, 0);   
-          */
           var image = this.canvas[0].toDataURL("image/png",1.0);
-          console.log(image.length);
           var img = new Image();
           img.type = 'image/png';
           img.src = image;
           img.onload = function() {
                var canvas = $("<canvas class='signatureCanvas' />");
-               canvas.attr("width",signature.width());
-               canvas.attr("height",signature.height());
+               canvas.attr("width",4* signature.width());
+               canvas.attr("height",4* signature.height());
                canvas[0].getContext('2d').fillStyle = "#ffffff";
-               canvas[0].getContext('2d').fillRect (0,0,signature.width(),signature.height());
-               canvas[0].getContext('2d').drawImage(img,0,0,signature.width(),signature.height());
+               canvas[0].getContext('2d').fillRect (0,0,4*signature.width(),4*signature.height());
+               canvas[0].getContext('2d').drawImage(img,0,0,4*signature.width(),4*signature.height());
 
 
                var image = canvas[0].toDataURL("image/jpeg",1.0);
@@ -396,6 +288,11 @@ var SignatureDrawerWrapper = Backbone.View.extend({
 
 window.SignatureDrawerPopup = {
     popup : function(args){
+        if ($.browser.msie && $.browser.version <= 9)
+        {
+            alert('Drawing signature is not avaible for older versions of Internet Explorer. Please update your browser.');
+            return;
+        }
         var popup = this;
         document.ontouchmove = function(e){
             return state;

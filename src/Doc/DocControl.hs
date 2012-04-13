@@ -362,7 +362,8 @@ handleIssueSign document = do
         mndocs <- mapM forIndividual docs
         case partitionEithers mndocs of
           ([], [d]) -> do
-            addFlashM $ modalSendConfirmationView d
+            when_ (sendMailsDurringSigning d) $ do
+                addFlashM $ modalSendConfirmationView d
             return $ LinkIssueDoc (documentid d)
           ([], ds) -> do
             if isJust $ ctxservice ctx
@@ -413,7 +414,8 @@ handleIssueSend document = do
         mndocs <- mapM forIndividual docs
         case partitionEithers mndocs of
           ([], [d]) -> do
-            addFlashM $ modalSendConfirmationView d
+            when_ (sendMailsDurringSigning d) $ do
+                addFlashM $ modalSendConfirmationView d
             return $ LinkIssueDoc (documentid d)
           ([], ds) -> do
             if isJust $ ctxservice ctx

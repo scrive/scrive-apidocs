@@ -39,7 +39,7 @@
 "_CompanyAccounts","Användare",,"Users"
 "_CompanySettings","Branding",,"Branding"
 "_EmailBranding","Branding av e-post",,"Email branding"
-"_CustomiseBackgroundColour","Välj backgrundsfärg",,"Customise background colour"
+"_CustomiseBackgroundColour","Välj bakgrundsfärg",,"Customise background colour"
 "_CustomiseTextColour","Välj textfärg",,"Customise text colour"
 "_CustomiseLogo","Välj logo",,"Customise logo"
 "_SelectImageLabel","Välj fil (.png)",,"Select file (.png)"
@@ -452,20 +452,18 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_contractsealingtextssecretaryText","Ej signerande part",,"Non-signing party"
 "_contractsealingtextssignedText","Signerat",,"Signed"
 "_contractsealingtextsverificationFooterRow1","Detta verifikat är utfärdat av Scrive och styrker att
- dokument nummer $documentid$ har signerats",,"This verification was issued by Scrive and supports that the
- document $documentid$ has been signed"
-"_contractsealingtextsverificationFooterRow2","av parterna. Kursiverad information
- är säkert verifierad genom Scrive.",,"by the parties. Italic data has been safely
- verified by Scrive."
-"_contractsealingtextsverificationFooterRow3","Dokumentet är en fristående handling oberoende av Scrive. Du kan dock kontrollera dokumentets äkthet genom följande länk:",,"The document is an independent act independent of Scrive. You can nevertheless verify the documents originality by following
+ dokument nummer $documentid$ har signerats av parterna.",,"This verification was issued by Scrive and supports that the
+ document $documentid$ has been signed by the parties."
+"_contractsealingtextsverificationFooterRow2","Kursiverad information är säkert verifierad genom Scrive. Dokumentet är en fristående handling oberoende av Scrive.",,"Italic data has been safely verified by Scrive. The document is an independent act independent of Scrive."
+"_contractsealingtextsverificationFooterRow3","Du kan dock kontrollera dokumentets äkthet genom följande länk:",,"You can nevertheless verify the documents originality by following
  the link:"
 "_contractsendtext","Skicka",,"Send"
 "_contractsignatorycancelmodaltitleBody","När du avvisat kommer Scrive att skicka ett e-post för
  att meddela",,"When you have rejected, Scrive will send an e-mail to notify"
 "_contractsignatorycancelmodaltitleHead","Avvisa",,"Return"
-"_contractsignatorysignmodalcontentlast","När du signerat blir avtalet juridiskt bindande och det färdigställda avtalet skickas till din e-post.",,"When you have signed the contract it will become legally binding and the completed contract will be sent to your e-mail."
-"_contractsignatorysignmodalcontentauthorlast","När du signerat blir avtalet juridiskt bindande och det färdigställda avtalet skickas till din e-post.",,"When you have signed the contract it will become legally binding and the completed contract will be sent to your e-mail."
-"_contractsignatorysignmodalcontentnotlast","När <span class='unsignedpartynotcurrent'/> signerat blir avtalet juridiskt bindande och det färdigställda avtalet skickas till din e-post.",,"When <span class='unsignedpartynotcurrent'/> have signed, the contract will become legally binding and the completed contract will be sent to your e-mail."
+"_contractsignatorysignmodalcontentlast","Genom att klicka på den blåa knappen kommer du att signera avtalet <b>$documenttitle$</b> med parterna $partylist:noescape()$.",,"By clicking the blue button you will sign the contract <b>$documenttitle$</b> with the parties $partylist:noescape()$."
+"_contractsignatorysignmodalcontentauthorlast","Genom att klicka på den blåa knappen kommer du att signera avtalet <b>$documenttitle$</b> med parterna $partylist:noescape()$.",,"By clicking the blue button you will sign the contract <b>$documenttitle$</b> with the parties $partylist:noescape()$."
+"_contractsignatorysignmodalcontentnotlast","Genom att klicka på den blåa knappen kommer du att signera avtalet <b>$documenttitle$</b> med parterna $partylist:noescape()$.",,"By clicking the blue button you will sign the contract <b>$documenttitle$</b> with the parties $partylist:noescape()$."
 "_contractsignatorysignmodaltitle","Är du säker att du vill signera?",,"Are you sure you want to sign?"
 "_contractsignbuttontext","Signera",,"Sign"
 "_contractsignbuttontextauthor","Signera",,"Sign"
@@ -488,7 +486,7 @@ If the other party clicks on the signing link after you have withdrawn the invit
  funktioner så som förfallodatum, mallar, massutskick mm.",,"Change to advanced view to enjoy more advanced features such
  as expiration date, templates, multiple send-out, etc."
 "_dialogConfirmAdvancedCheck","Använd alltid den avancerade vyn för nya dokument.",,"Always use the advanced view for new documents."
-"_dialogConfirmAdvancedChangeToFooterChangeProcess","Byt vy",,"Change vy"
+"_dialogConfirmAdvancedChangeToFooterChangeProcess","Byt vy",,"Change view"
 "_dialogConfirmAdvancedChangeToHead","Vill du byta till avancerad vy?",,"Do you want to change to advanced view?"
 "_dialogConfirmBasicChangeToBody","Du kan byta till förenklad vy för att göra processen ännu smidigare. Du kan givetvis byta tillbaks när du vill.",,"You can change to simplified view to make the process even smoother. You can of course change back whenever you want."
 "_dialogConfirmBasicChangeToBody2","När du byter till förenklad vy riskerar du att förlora information som inte stödjs i denna vy. Är du säker att du vill byta vy?",,"When you switch to the simplified view, you risk losing information that is not supported in this view. Are you sure you want to change the view?"
@@ -1699,12 +1697,12 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_offersealingtextssecretaryText","Avsändare",,"Sender"
 "_offersealingtextssignedText","Offert accepterad",,"Offer accepted"
 "_offersealingtextsverificationFooterRow1","Detta verifikat är utfärdat av Scrive och styrker att
- dokument nummer $documentid$ har signerats",,"This verification was issued by Scrive and supports that the
- document $documentid$ has been signed"
-"_offersealingtextsverificationFooterRow2","av parterna. Kursiverad information
- är säkert verifierad genom Scrive.",,"by the parties. Italic data has been safely
- verified by Scrive."
-"_offersealingtextsverificationFooterRow3","Dokumentet är en fristående handling oberoende av Scrive. Du kan dock kontrollera dokumentets äkthet genom följande länk:",,"The document is an independent act independent of Scrive. You can nevertheless verify the documents originality by following
+ dokument nummer $documentid$ har signerats av parterna.",,"This verification was issued by Scrive and supports that the
+ document $documentid$ has been signed by the parties."
+"_offersealingtextsverificationFooterRow2","Kursiverad information
+ är säkert verifierad genom Scrive. Dokumentet är en fristående handling oberoende av Scrive.",,"Italic data has been safely
+ verified by Scrive. The document is an independent act independent of Scrive."
+"_offersealingtextsverificationFooterRow3","Du kan dock kontrollera dokumentets äkthet genom följande länk:",,"You can nevertheless verify the documents originality by following
  the link:"
 "_offersealingtextsverificationTitle","Acceptverifikat",,"Acceptance verification"
 "_offersendtext","Skicka",,"Send"
@@ -1712,9 +1710,9 @@ If the other party clicks on the signing link after you have withdrawn the invit
  att meddela",,"When you return a document, an e-mail is sent to notify"
 "_offersignatorycancelmodaltitleBody2",".             Du kan granska meddelandet nedan och justera innehållet genom att klicka på ""skriv eget meddelande"".",,".             You can review the message below and adjust it by clicking ""Write own message""."
 "_offersignatorycancelmodaltitleHead","Är du säker på att du vill avvisa?",,"Are you sure you want to return the document?"
-"_offersignatorysignmodalcontentlast","Genom att klicka på den blåa knappen kommer du att acceptera offerten $documenttitle$ som du just granskat och som du fortfarande kan se i bakgrunden.",,"By clicking the blue button you will accept the tender $documenttitle$ that you have just reviewed and that you can still see in the background."
-"_offersignatorysignmodalcontentauthorlast","Genom att klicka på den blåa knappen kommer du att acceptera offerten $documenttitle$ som du just granskat och som du fortfarande kan se i bakgrunden.",,"By clicking the blue button you will accept the tender $documenttitle$ that you have just reviewed and that you can still see in the background."
-"_offersignatorysignmodalcontentnotlast","Genom att klicka på den blåa knappen kommer du att acceptera offerten $documenttitle$ som du just granskat och som du fortfarande kan se i bakgrunden.",,"By clicking the blue button you will accept the tender $documenttitle$ that you have just reviewed and that you can still see in the background."
+"_offersignatorysignmodalcontentlast","Genom att klicka på den blåa knappen kommer du att acceptera offerten <b>$documenttitle$</b> med parterna $partylist:noescape()$.",,"By clicking the blue button you will accept the tender <b>$documenttitle$</b> with the parties $partylist:noescape()$."
+"_offersignatorysignmodalcontentauthorlast","Genom att klicka på den blåa knappen kommer du att acceptera offerten <b>$documenttitle$</b> med parterna $partylist:noescape()$.",,"By clicking the blue button you will accept the tender <b>$documenttitle$</b> with the parties $partylist:noescape()$."
+"_offersignatorysignmodalcontentnotlast","Genom att klicka på den blåa knappen kommer du att acceptera offerten <b>$documenttitle$</b> med parterna $partylist:noescape()$.",,"By clicking the blue button you will accept the tender <b>$documenttitle$</b> with the parties $partylist:noescape()$."
 "_offersignatorysignmodaltitle","Är du säker att du vill acceptera offerten?",,"Are you sure you want to accept the offer?"
 "_offersignbuttontext","Acceptera offert",,"Accept offer"
 "_offersignbuttontextauthor","Signera",,"Sign"
@@ -1769,21 +1767,19 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_ordersealingtextssecretaryText","Avsändare",,"Sender"
 "_ordersealingtextssignedText","Ordern bekräftad",,"Order confirmed"
 "_ordersealingtextsverificationFooterRow1","Detta verifikat är utfärdat av Scrive och styrker att
- dokument nummer $documentid$ har signerats",,"This verification was issued by Scrive and supports that the
- document $documentid$ has been signed"
-"_ordersealingtextsverificationFooterRow2","av parterna. Kursiverad information
- är säkert verifierad genom Scrive.",,"by the parties. Italic data has been safely
- verified by Scrive."
-"_ordersealingtextsverificationFooterRow3","Dokumentet är en fristående handling oberoende av Scrive. Du kan dock kontrollera dokumentets äkthet genom följande länk:",,"The document is an independent act independent of Scrive. You can nevertheless verify the documents originality by following
+ dokument nummer $documentid$ har signerats av parterna.",,"This verification was issued by Scrive and supports that the document $documentid$ has been signed by the parties."
+"_ordersealingtextsverificationFooterRow2","Kursiverad information är säkert verifierad genom Scrive. Dokumentet är en fristående handling oberoende av Scrive.",,"Italic data has been safely
+ verified by Scrive. The document is an independent act independent of Scrive."
+"_ordersealingtextsverificationFooterRow3","Du kan dock kontrollera dokumentets äkthet genom följande länk:",,"You can nevertheless verify the documents originality by following
  the link:"
 "_ordersealingtextsverificationTitle","Orderbekräftelse",,"Order confirmation"
 "_ordersendtext","Skicka",,"Send"
 "_ordersignatorycancelmodaltitleBody","När du avvisat kommer vi att skicka ett e-postmeddelande för att meddela",,"When you return a document, an e-mail is sent to notify"
 "_ordersignatorycancelmodaltitleBody2",".             Du kan granska meddelandet nedan och justera innehållet genom att klicka på ""skriv eget meddelande"".",,".        You can review the message below and adjust it by clicking ""Write own message""."
 "_ordersignatorycancelmodaltitleHead","Är du säker på att du vill avvisa?",,"Are you sure you want to return the document?"
-"_ordersignatorysignmodalcontentlast","Genom att klicka 'bekräfta' kommer du att bekräfta ordern $documenttitle$. När du har bekräftat kommer dokumentet att färdigställas och ett original kommer att skickas till dig och dina motparter.",,"Confirm the order $documenttitle$ by clicking 'confirm'. When you have confirmed, the document will be finalized and an original will be sent to you and your counterparts."
-"_ordersignatorysignmodalcontentauthorlast","Genom att klicka 'bekräfta' kommer du att bekräfta ordern $documenttitle$. När du har bekräftat kommer dokumentet att färdigställas och ett original kommer att skickas till dig och dina motparter.",,"Confirm the order $documenttitle$ by clicking 'confirm'. When you have confirmed, the document will be finalized and an original will be sent to you and your counterparts."
-"_ordersignatorysignmodalcontentnotlast","Genom att klicka 'bekräfta' kommer du att bekräfta ordern $documenttitle$. När du har bekräftat kommer dokumentet att färdigställas och ett original kommer att skickas till dig och dina motparter.",,"Confirm the order $documenttitle$ by clicking 'confirm'. When you have confirmed, the document will be finalized and an original will be sent to you and your counterparts."
+"_ordersignatorysignmodalcontentlast","Genom att klicka på den blåa knappen kommer du att bekräfta orderbekräftelsen <b>$documenttitle$</b> med parterna $partylist:noescape()$.",,"By clicking the blue button you will confirm the order <b>$documenttitle$</b> with the parties $partylist:noescape()$."
+"_ordersignatorysignmodalcontentauthorlast","Genom att klicka på den blåa knappen kommer du att bekräfta orderbekräftelsen <b>$documenttitle$</b> med parterna $partylist:noescape()$.",,"By clicking the blue button you will confirm the order <b>$documenttitle$</b> with the parties $partylist:noescape()$."
+"_ordersignatorysignmodalcontentnotlast","Genom att klicka på den blåa knappen kommer du att bekräfta orderbekräftelsen <b>$documenttitle$</b> med parterna $partylist:noescape()$.",,"By clicking the blue button you will confirm the order <b>$documenttitle$</b> with the parties $partylist:noescape()$."
 "_ordersignatorysignmodaltitle","Är du säker att du vill bekräfta ordern?",,"Are you sure you want to confirm the order?"
 "_ordersignbuttontext","Bekräfta",,"Confirm"
 "_ordersignbuttontextauthor","Signera",,"Sign"
@@ -2505,10 +2501,10 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_signedAndClosedSubText","En kopia har skickats till din e-post. Bläddra ned för att se dokumentet och ett verifikat som utfärdats av e-signeringstjänsten Scrive som verifierat signeringen som oberoende tredje part.",,"A copy has been sent to your email.  Scroll down to view the document and a verification that has been issued by the e-signing service Scrive that has verified the signing as an independent third party."
 "_unavailableForSign","Dokumentet går ej längre att signera",,"No longer available for signing"
 "_dueDate","Förfallodatum ",,"Due date "
-"_showDetails","Visa uppgifter",,"Show Details"
+"_showDetails","Visa more",,"Show more"
 "_hideDetails","Göm uppgifter",,"Hide Details"
-"_companyNumberLabel","Org.-nr",,"Org.-nr"
-"_personalNumberLabel","Pers.-nr",,"Pers.-nr"
+"_companyNumberLabel","Org.nr",,"Org.nr"
+"_personalNumberLabel","Pers.nr",,"Pers.nr"
 "_signViewAuthorAttachmentsTitleForOne","Granska bilaga",,"Read Attachment"
 "_signViewAuthorAttachmentsTitleForLots","Granska bilagor",,"Read Attachments"
 "_signViewSignatoryAttachmentsTitleForOne","Ladda upp bilaga",,"Upload Attachment"
@@ -2550,3 +2546,4 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_padCleanImage","Clean image",,"Clean image"
 "_notFound","<h2>Oj! Sidan kunde inte hittas</h2><p>Du kanske hamnade här för att sidan inte finns eller har flyttats.</p>",,"<h2>Oops, the page couldn't be found</h2><p>You may have landed here because the page doesn't exist or has been moved.</p>"
 "_notFoundGoHome","<h3>Besök någon av dessa sidor istället:</h3><p><a href='/'>Startsidan</a></p><p><a href='/upload'>Min sida</a></p><p><a href='#' onClick='history.go(-1);return false;'>Bakåt</a></p>",,"<h3>Visit any of these pages instead:</h3><p><a href='/'>Homepage</a></p><p><a href='/upload'>My page</a></p><p><a href='#' onClick='history.go(-1);return false;'>Back</a></p>"
+"_notEntered","ej ifylld",,"not entered"

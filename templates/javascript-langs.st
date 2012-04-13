@@ -351,6 +351,7 @@ javascriptLocalisation =
              , phoneSubmitButtonLabel: "$_phoneSubmitButtonLabel()$"
              , phoneConfirmationText: "$_phoneConfirmationText()$"
              , startButtonLabel: "$_startButtonLabel()$"
+             , notEntered: "$_notEntered()$"
         }
         , poweredByScrive : "$_poweredByScrive()$"
     }

@@ -332,6 +332,13 @@
             expanded: false,
             unsaved: false
         },
+        initialize: function (args) {
+            if (this.collection != undefined && this.collection.schema != undefined &&  this.field("id") != undefined)
+            {
+                var namespace = this.collection.schema.namespace();
+                this.set({ "expanded": SessionStorage.get(namespace, "expanded" + this.field("id")) == "true" });
+            }
+        },
         field: function(name) {
             return this.get("fields")[name];
         },
@@ -354,36 +361,22 @@
             return this.get("unsaved");
         },
         select: function() {
-            this.set({ "selected": true });
+            this.set({ "selected": true }, {silent: true});
+            this.trigger("selected:change");
         },
         unselect: function() {
-            this.set({ "selected": false });
+            this.set({ "selected": false }, {silent: true});
+            this.trigger("selected:change");
         },
         isExpanded: function() {
-            console.log("checking");
-            var namespace = this.view.schema.namespace();
-            var id = this.field("id");
-            if (namespace != undefined && id != undefined) {
-                if (SessionStorage.get(namespace, "expanded" + id) == "true")
-                {   this.set({ "expanded": true }, {silent : true});
-                    return true;
-                }    
-                else if (SessionStorage.get(namespace, "expanded" + id) == "false")
-                {   this.set({ "expanded": false }, {silent : true});
-                    return false;
-                }       
-                else
-                   SessionStorage.set(namespace, "expanded" + id, "" + (this.get("expanded") == true));
-            }    
             return this.get("expanded") == true;
         },
         toggleExpand: function() {
             console.log("toggling");
             var val = this.isExpanded();
-            var namespace = this.view.schema.namespace();
+            var namespace = this.collection.schema.namespace();
             var id = this.field("id");
-            if (namespace != undefined && id != undefined)
-                SessionStorage.set(namespace, "expanded" + id, "" + !val);
+            SessionStorage.set(namespace, "expanded" + id, "" + !val);
             this.set({ "expanded": !val }, {silent : true});
             this.trigger("change");
         }
@@ -451,11 +444,6 @@
             this.render();
         },
         render: function() {
-            if ($(this.el).size() === 1) {
-                for (var j = 0; j < this.model.subfieldsSize(); j++) {
-                    this.el = $(this.el).add($("<tr />"));
-                }
-            }
             $(this.el).empty();
             var mainrow = $(this.el).first();
             for (var i = 0; i < this.schema.size(); i++) {
@@ -481,7 +469,14 @@
                     }
                 mainrow.append(td);
             }
-            for (var j = 0; j < this.model.subfieldsSize(); j++) {
+            if (this.model.isExpanded()) {
+             if ($(this.el).size() === 1) {
+                    for (var j = 0; j < this.model.subfieldsSize(); j++) {
+                        this.el = $(this.el).add($("<tr />"));
+                    }
+             }
+
+             for (var j = 0; j < this.model.subfieldsSize(); j++) {
                 var subrow = $(this.el).eq(j + 1);
                 for (var i = 0; i < this.schema.size(); i++) {
                     var div = $("<div/>").attr('style',this.schema.cell(i).substyle());
@@ -499,11 +494,7 @@
                     }
                     subrow.append(td);
                 }
-                if (this.model.isExpanded()) {
-                    subrow.css("display", "");
-                } else {
-                    subrow.css("display", "none");
-                }
+             }
             }
             this.renderSelection();
             return this;

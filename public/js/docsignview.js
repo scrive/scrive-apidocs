@@ -20,7 +20,7 @@ window.DocumentSignInstructionsView = Backbone.View.extend({
   },
   isSignedNotClosed: function() {
     var signatory = this.model.document.currentSignatory();
-    return this.model.document.signingInProcess() && signatory.hasSigned() && !this.model.closed();
+    return this.model.document.signingInProcess() && signatory.hasSigned() && !this.model.document.closed();
   },
   isSignedAndClosed: function() {
     var signatory = this.model.document.currentSignatory();
@@ -131,8 +131,12 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
           return localization.docsignview.unavailableForSign;
       else if (signatory.rejecteddate() != undefined)
           return localization.signatoryMessage.rejected;
+      else if (signatory.status() == 'opened')
+          return localization.signatoryMessage.seen;
+      else if (signatory.status() == 'sent')
+          return localization.signatoryMessage.other;
       else
-          return localization.signatoryMessage.waitingForSignature;
+          return localization.signatoryMessage[signatory.status()];
   },
   siglist: function(signatories) {
       var sigbox = this.model;
@@ -160,7 +164,7 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
       var statusbox  = $('<div  class="statusbox" />');
       var space = $('<div class="spacing butt" />');
       var statusicon = $("<span class='icon status' />").addClass(signatory.status());
-      var status     = $("<span class='status' />").text(this.signatorySummary(signatory));
+      var status     = $("<span class='status statustext' />").text(this.signatorySummary(signatory)).addClass(signatory.status());
       space.append(statusicon).append(status).addClass(signatory.status());
       statusbox.append(space);
       return statusbox;
@@ -179,16 +183,19 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
       var face    = $('<div class="face" />');
       
       var numspace = $('<div class="spacing numspace" />');
-      var orgnum  = $('<div class="orgnum" />').text(localization.docsignview.companyNumberLabel + ": " + signatory.companynumber());
-      var persnum = $('<div class="persnum" />').text(localization.docsignview.personalNumberLabel + ": " + signatory.personalnumber());
-      if(signatory.companynumber().trim())
-          numspace.append(orgnum);
-      if(signatory.personalnumber().trim())
-          numspace.append(persnum);
-
+      var orgnum  = $('<div class="orgnum field" />').text(localization.docsignview.companyNumberLabel + ": " 
+                                                           + (signatory.companynumber().trim() || localization.docsignview.notEntered))
+          .attr('title', signatory.companynumber());
+      var persnum = $('<div class="persnum field" />').text(localization.docsignview.personalNumberLabel + ": " 
+                                                            + (signatory.personalnumber().trim() || localization.docsignview.notEntered))
+        .attr('title', signatory.personalnumber());
       var contactspace = $('<div class="spacing contactspace" />');
-      var email   = $('<div class="email" />').text(signatory.email());
-      contactspace.append(email);
+      var email   = $('<div class="email field" />').text(signatory.email()).attr('title', signatory.email());
+
+      numspace.append(orgnum);
+      numspace.append(persnum);
+
+      numspace.append(email);
 
       inner.append(face);
 
@@ -775,7 +782,7 @@ window.DocumentSignView = Backbone.View.extend({
     createAuthorAttachmentsElems: function() {
       return $(new DocumentAuthorAttachmentsView({
         model: this.model,
-        el: $("<div class='section'/>"),
+        el: $("<div class='section spacing'/>"),
         title: this.authorAttachmentsTitle()
       }).el);
     },
@@ -791,7 +798,7 @@ window.DocumentSignView = Backbone.View.extend({
     createSignatoryAttachmentsView: function() {
       return new DocumentSignatoryAttachmentsView({
         model: this.model,
-        el: $("<div class='section'/>"),
+        el: $("<div class='section spacing'/>"),
         title: this.signatoryAttachmentsTitle()
       });
     },
@@ -833,7 +840,7 @@ window.DocumentSignView = Backbone.View.extend({
     createUploadedAttachmentsElems: function() {
       return $(new DocumentUploadedSignatoryAttachmentsView({
         model: this.model,
-        el: $("<div class='section' />"),
+        el: $("<div class='section spacing' />"),
         title: localization.docsignview.uploadedAttachmentsTitle
       }).el);
     },
@@ -994,7 +1001,7 @@ window.DocumentSignView = Backbone.View.extend({
         }
 
         if (this.model.currentSignatoryCanSign() && (!this.model.currentSignatory().canPadSignQuickSign())) {
-          var signsection = $("<div class='section' />");
+          var signsection = $("<div class='section spacing signbuttons' />");
           signsection.append(this.createRejectButtonElems());
           var signButton = this.createSignButtonElems(jQuery.extend({}, tasks));
           var signButtonTask = this.signButtonTask(signButton);
@@ -1007,7 +1014,6 @@ window.DocumentSignView = Backbone.View.extend({
 
         subcontainer.append(bottomstuff);
 
-        subcontainer.append($("<div class='end' />"));
         subcontainer.append($("<div class='cleafix' />"));
       }
       this.container.append(subcontainer);
@@ -1150,7 +1156,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
       // I'm keeping this in case we want to revert it. -- Eric
       //      downarrow.css("right", margin + "px");
       downarrow.css("right", bigarrowmargin + "px");
-      uparrow.css("right", margin + "px");
+      uparrow.css("right", bigarrowmargin + "px");
     };
     $(window).resize(updateRightMargin);
     updateRightMargin();
@@ -1178,9 +1184,8 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
     $(window).scroll(checkIfDownArrowInFooter);
     checkIfDownArrowInFooter();
 
+      var scrollpoint = 0;
     var updateVisibility = function() {
-
-      $(".signview .section").removeClass("highlight");
 
       if (!taskmodel.isIncompleteTask()) {
         downarrow.show();
@@ -1201,6 +1206,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
           view.pointingAt = undefined;
         } else if (((elbottom + bottommargin) <= scrollbottom) && ((eltop - topmargin) >= scrolltop)) {
           var nextTask = taskmodel.nextIncompleteTask();
+            $(".signview .section").removeClass("highlight");
           nextTask.el().parents(".signview .section").addClass("highlight");
           if (view.pointingAt==undefined || view.pointingAt!=nextTask) {
             nextTask.beforePointing();
@@ -1212,15 +1218,23 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
           downarrow.hide();
           view.pointingAt = nextTask;
         } else if ((elbottom + bottommargin) > scrollbottom) {
-          downarrow.show();
-          uparrow.hide();
-          actionarrow.hide();
-          view.pointingAt = undefined;
+            if(scrollpoint !== 16) {
+                scrollpoint = 6;
+                console.log("6");
+                downarrow.show();
+                uparrow.hide();
+                actionarrow.hide();
+                view.pointingAt = undefined;
+            }
         } else {
-          uparrow.show();
-          downarrow.hide();
-          actionarrow.hide();
-          view.pointingAt = undefined;
+            if(scrollpoint !== 17) {
+                scrollpoint = 7;
+                console.log("7");
+                uparrow.show();
+                downarrow.hide();
+                actionarrow.hide();
+                view.pointingAt = undefined;
+            }
         }
       }
     };

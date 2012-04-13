@@ -10,7 +10,7 @@ showUserMailAPI =
         $if(iscompanyadmin)$<li><a href="/account/company">$_CompanySettings()$</a></li>$endif$
        $if(iscompanyadmin)$<li><a href="/account/companyaccounts">$_CompanyAccounts()$</a></li>$endif$
        <li class="active"><a href="/account/mailapi">$_HeadMailApi()$</a></li>
-       <li><a href="/account/usagestats">$_HeadUsageStats()$</a></li>z
+       <li><a href="/account/usagestats">$_HeadUsageStats()$</a></li>
    </ul>
    <div class="tab-container">
      <div class="tab-content account">

@@ -46,7 +46,7 @@ SealingTexts
       , historyText="$_ordersealingtextshistoryText()$"
       , verificationFooter=[
           "$_ordersealingtextsverificationFooterRow1()$"
-        , "$_ordersealingtextsverificationFooterRow2()$."
+        , "$_ordersealingtextsverificationFooterRow2()$"
         , "$_ordersealingtextsverificationFooterRow3()$ $hostpart$/d/$documentid$."]
     }
 #####
