@@ -2518,7 +2518,7 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_signViewCreateAccountSubTitle","Vill du spara en egen säkerhetskopia i Scrives e-arkiv? Det kostar inget.",,"Do you want to save your own safety copy in Scrive's e-archive? It's free of charge."
 "_signViewCreateAccountLabel","Spara dokumentet",,"Save document"
 "_signViewCreatedAccountTitle","Dokumentet sparat!",,"Document Saved!"
-"_signViewCreatedAccountSubtitle","En säkerhetskopia av ditt dokument har sparats hos Scrive. För att hämta dokumentet i framtiden: logga in med din e-post och lösenord på www.scrive.com.",,"Your document has been securely saved with Scrive.  To retrieve in the future login with your email and password at www.scrive.com."
+"_signViewCreatedAccountSubtitle","Logga in med din e-post och lösenord på www.scrive.com för att hämta dokumentet i framtiden.",,"Log in with your email and password on www.scrive.com to fetch the document in the future."
 "_signViewShareTitle","Gillade du denna signeringsupplevelse?",,"Did you like this signing experience?"
 "_facebookButtonLabel","Gilla oss på Facebook",,"Like us on Facebook"
 "_tweetButtonLabel","Twittra om Scrive",,"Tweet about Scrive"

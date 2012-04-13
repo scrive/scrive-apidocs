@@ -326,26 +326,26 @@ body.signview {
 
 .signview .share {
   background-color: white;
-  padding-top: 31px;
-  padding-bottom: 15px;
+  padding-top: 45px;
+  padding-bottom: 45px;
   margin-bottom: 7px;
   margin-top: 7px;
   border: solid #bababc 1px;
   text-align: center;
   font-weight: bold;
-  padding-left: 20px;
-  padding-right: 20px;
+  padding-left: 45px;
+  padding-right: 45px;
 }
 
 .signview .share .title {
-  font-size: medium;
+  font-size: 24px;
   font-weight: normal;
-  margin-bottom: 20px;
+  margin-bottom: 45px;
 }
 
 .signview .share .panel {
-  margin-left: 95px;
-  margin-right: 95px;
+    margin:auto;
+    width: 728px;
 }
 
 .signview .share .item {
@@ -989,4 +989,23 @@ div.spacing.butt {
     width: 590px;
     margin: auto;
     padding 
+}
+
+.signview.just-signed .panel {
+    width: 182px;
+    float: left;
+}
+
+.signview .sbox {
+    padding: 10px;
+}
+
+.signview .video {
+   box-shadow: inset 0px 0px 5px #505050;
+  -moz-box-shadow: inset 0px 0px 5px #505050;
+  -webkit-box-shadow: inset 0px 0px 5px #505050;
+   background-color: #e1e1e1;
+   padding: 30px;
+   margin-left: 227px;
+   height: 328px;
 }
