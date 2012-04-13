@@ -355,6 +355,7 @@ javascriptLocalisation =
              , phoneConfirmationText: "$_phoneConfirmationText()$"
              , startButtonLabel: "$_startButtonLabel()$"
              , notEntered: "$_notEntered()$"
+             , contact: "$_contact()$"
         }
         , poweredByScrive : "$_poweredByScrive()$"
     }
