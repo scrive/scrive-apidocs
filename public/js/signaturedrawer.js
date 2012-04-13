@@ -107,8 +107,8 @@ var SignatureDrawer = Backbone.View.extend({
         this.picture.moveTo(sx, sy);
         this.picture.strokeStyle = c;
         this.picture.lineWidth = w;
-        this.picture.lineCap = lc
-        this.picture.quadraticCurveTo(cx,cy,ex,ey)
+        this.picture.lineCap = lc;
+        this.picture.quadraticCurveTo(cx,cy,ex,ey);
         this.picture.stroke();
     },
     drawLine : function(sx,sy,ex,ey,w,c, lc)
@@ -117,7 +117,7 @@ var SignatureDrawer = Backbone.View.extend({
         this.picture.moveTo(sx, sy);
         this.picture.strokeStyle = c;
         this.picture.lineWidth = w;
-        this.picture.lineCap = lc
+        this.picture.lineCap = lc;
         this.picture.lineTo(ex, ey);
         this.picture.stroke();
 
