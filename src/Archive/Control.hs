@@ -184,7 +184,7 @@ jsonDocumentsList = withUserGet $ do
 
 docSortingFromParams :: ListParams -> [AscDesc DocumentOrderBy]
 docSortingFromParams params =
-   concatMap x (listParamsSorting params)
+   (concatMap x (listParamsSorting params))  ++ [Desc DocumentOrderByMTime]
   where
     x "status"            = [Asc DocumentOrderByStatusClass]
     x "statusREV"         = [Desc DocumentOrderByStatusClass]
