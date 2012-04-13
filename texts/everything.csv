@@ -128,7 +128,7 @@
         <li> </li>
         <li> </li>
         <li> </li>
-        <li> <span class='price'>299kr/månad</span><span class='price-comment'>Per användare.</span>
+        <li class='last-child'> <span class='price'>299kr/månad</span><span class='price-comment'>Per användare.</span>
         </li>
     </ul>","
     <ul class=""highlight-rows"">
@@ -144,7 +144,7 @@
         <li> </li>
         <li> </li>
         <li> </li>
-        <li> <span class='price'>29.99 €/month</span><span class='price-comment'>Per user.</span>
+        <li class='last-child'> <span class='price'>29.99 €/month</span><span class='price-comment'>Per user.</span>
         </li>
     </ul>",
 "_PriceTablePriceRow","<td><span class='price'>99 kr/månad </span><span class='price-comment'>Per användare.</span></td>

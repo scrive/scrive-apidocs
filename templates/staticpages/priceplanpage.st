@@ -48,7 +48,7 @@ priceplanPageContents=
                                                 <tr>
                                                         $_PriceTableRow8()$
                                                 </tr>
-                                                <tr class="big-row">
+                                                <tr class="big-row last-child">
                                                         $_PriceTablePriceRow()$
                                                 </tr>
                                         </table>
@@ -126,7 +126,7 @@ priceplanPageContents=
                             <tr class="odd-row">$_priceplanPageTableRow28()$                            </tr>
                             <tr>$_priceplanPageTableRow29()$
                             </tr>
-                            <tr class="odd-row">$_priceplanPageTableRow30()$                            </tr>
+                            <tr class="odd-row last-child">$_priceplanPageTableRow30()$                            </tr>
                         </tbody>
                     </table>
                 </div>
