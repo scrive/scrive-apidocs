@@ -2503,7 +2503,7 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_signedAndClosedSubText","Dokumentet med registrerad signeringshistorik har skickats till din inkorg.",,"The document with registered signing history has been sent to your inbox."
 "_unavailableForSign","Dokumentet går ej längre att signera",,"No longer available for signing"
 "_dueDate","Förfallodatum ",,"Due date "
-"_showDetails","Visa more",,"Show more"
+"_showDetails","Visa mer",,"Show more"
 "_hideDetails","Göm uppgifter",,"Hide Details"
 "_companyNumberLabel","Org.nr",,"Org.nr"
 "_personalNumberLabel","Pers.nr",,"Pers.nr"
