@@ -362,8 +362,14 @@ window.DocumentSignConfirmation = Backbone.View.extend({
     var signatory = document.currentSignatory();
 
     if (signatory.author) {
-      var content = $("<div />").append(document.lastSignatoryLeft() ? $(document.process().signatorysignmodalcontentauthorlast()) : $(document.process().signatorysignmodalcontentnotlast()));
-      if (document.elegAuthorization()) {
+     var content = $("<div />")
+     if (document.elegAuthorization)
+          content.append(document.process().signatorysignmodalcontentsignvieweleg());
+      if (document.lastSignatoryLeft())
+          content.append(document.process().signatorysignmodalcontentauthorlast());
+      else
+          content.append(document.process().signatorysignmodalcontentnotlast());
+     if (document.elegAuthorization()) {
         var subhead = $("<h3/>").text(localization.signByAuthor.eleg.subhead);
         var a = $("<a target='_new' />").text(localization.signByAuthor.eleg.clickHere).attr("href", "http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");
         var p = $("<p/>").append(localization.signByAuthor.eleg.body1).append(a).append(localization.signByAuthor.eleg.body2);
@@ -371,7 +377,13 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       }
       return content;
     } else {
-      var content = $("<div />").append(document.lastSignatoryLeft() ? $(document.process().signatorysignmodalcontentlast()) : $(document.process().signatorysignmodalcontentnotlast()));
+      var content = $("<div />");
+      if (document.elegAuthorization)
+          content.append(document.process().signatorysignmodalcontentsignvieweleg());
+      if (document.lastSignatoryLeft())
+          content.append(document.process().signatorysignmodalcontentlast());
+      else
+          content.append(document.process().signatorysignmodalcontentnotlast());
       if (document.elegAuthorization()) {
         var subhead = $("<h3/>").text(localization.sign.eleg.subhead);
         var a = $("<a target='_new' />").text(localization.sign.eleg.clickHere).attr("href", "http://www.e-legitimation.se/Elegitimation/Templates/LogolistPageTypeB.aspx?id=86");

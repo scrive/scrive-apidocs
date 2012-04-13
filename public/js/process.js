@@ -90,6 +90,12 @@ window.Process = Backbone.Model.extend({
     signatorysignmodalcontentlast:  function() {
         return this.get("signatorysignmodalcontentlast");
     },
+    signatorysignmodalcontentdesignvieweleg:  function() {
+        return this.get("signatorysignmodalcontentdesignvieweleg");
+    },
+    signatorysignmodalcontentsignvieweleg:  function() {
+        return this.get("signatorysignmodalcontentsignvieweleg");
+    },
     signatorysignmodaltitle : function() {
         return this.get("signatorysignmodaltitle");
     },
