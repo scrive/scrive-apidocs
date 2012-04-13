@@ -33,22 +33,41 @@ window.DocumentSignViewHeader = Backbone.View.extend({
     if (!document.ready()) return this;
     var maindiv = $(this.el);
     maindiv.empty();
+      maindiv.removeClass();
+      maindiv.attr("style","");
     maindiv.addClass("pageheader");
-    maindiv.addClass(document.logo() == undefined ? 'withstandardlogo' : 'withcustomlogo');
-    if (document.barsbackgroundcolor() != undefined)
-    {
-        maindiv.css('background-image', 'none');
-        maindiv.css('background-color', document.barsbackgroundcolor());
-    }
-    if (document.barsbackgroundtextcolor() != undefined)
-        maindiv.css("color", document.barsbackgroundtextcolor());
+    if(model.hasSigned() && model.saved()) {
+        maindiv.addClass('withstandardlogo');
+/*
+        if (document.barsbackgroundcolor() != undefined)
+        {
+            maindiv.css('background-image', 'none');
+            maindiv.css('background-color', document.barsbackgroundcolor());
+        }
+        if (document.barsbackgroundtextcolor() != undefined)
+            maindiv.css("color", document.barsbackgroundtextcolor());
+*/
+        var content = $("<div class='content' />");
+        var logowrapper = $("<div class='logowrapper' />");
+        logowrapper.append("<a href='/'><div class='logo'></div></a>");
 
-    var content = $("<div class='content' />");
-    var logowrapper = $("<div class='logowrapper' />");
-    if (document.logo() == undefined)
-      logowrapper.append("<a href='/'><div class='logo'></div></a>");
-    else
-      logowrapper.append("<img class='logo' src='" + document.logo() + "'></img>");
+    } else {
+        maindiv.addClass(document.logo() == undefined ? 'withstandardlogo' : 'withcustomlogo');
+        if (document.barsbackgroundcolor() != undefined)
+        {
+            maindiv.css('background-image', 'none');
+            maindiv.css('background-color', document.barsbackgroundcolor());
+        }
+        if (document.barsbackgroundtextcolor() != undefined)
+            maindiv.css("color", document.barsbackgroundtextcolor());
+
+        var content = $("<div class='content' />");
+        var logowrapper = $("<div class='logowrapper' />");
+        if (document.logo() == undefined)
+            logowrapper.append("<a href='/'><div class='logo'></div></a>");
+        else
+            logowrapper.append("<img class='logo' src='" + document.logo() + "'></img>");
+    }
     
     this.sender = $("<div class='sender' />");
     var inner = $('<div class="inner" />');
