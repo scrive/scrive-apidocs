@@ -236,6 +236,7 @@ documentJSON pq msl _crttime doc = do
       J.value "barsbackgroundcolor" bbc
       J.value "barsbackgroundtextcolor" bbtc
       J.value "author" $ authorJSON mauthor mcompany
+      J.value "whitelabel" $ isJust mservice
 
 authorizationJSON :: IdentificationType -> JSValue
 authorizationJSON EmailIdentification = toJSValue "email"
@@ -245,7 +246,7 @@ authorizationJSON PadIdentification = toJSValue "pad"
 signatoryJSON :: (TemplatesMonad m, DBMonad m) => PadQueue -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
 signatoryJSON pq doc viewer siglink = do
     J.value "id" $ show $ signatorylinkid siglink
-    J.value "current" $ (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink)
+    J.value "current" $ isCurrent
     J.value "signorder" $ unSignOrder $ signatorysignorder $ signatorydetails siglink
     J.value "undeliveredEmail" $ invitationdeliverystatus siglink == Undelivered
     J.value "deliveredEmail" $ invitationdeliverystatus siglink == Delivered
@@ -262,10 +263,12 @@ signatoryJSON pq doc viewer siglink = do
     J.objects "attachments" $ map signatoryAttachmentJSON (signatoryattachments siglink)
     J.value "csv" $ csvcontents <$> signatorylinkcsvupload siglink
     J.value "inpadqueue"  $ (fmap fst pq == Just (documentid doc)) && (fmap snd pq == Just (signatorylinkid siglink))
+    J.value "hasUser" $ isJust (maybesignatory siglink) && isCurrent -- we only inform about current user
     where
       datamismatch = case documentcancelationreason doc of
         Just (ELegDataMismatch _ sid _ _ _) -> sid == signatorylinkid siglink
         _                                   -> False
+      isCurrent = (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink)
       rejectedDate = case documentrejectioninfo doc of
         Just (rt, slid, _) | slid == signatorylinkid siglink -> Just rt
         _                                                    -> Nothing
@@ -353,6 +356,9 @@ processJSON doc = do
     J.value "signatorysignmodalcontentlast" =<< text processsignatorysignmodalcontentlast
     J.value "signatorysignmodalcontentnotlast" =<< text processsignatorysignmodalcontentnotlast
     J.value "signatorysignmodalcontentauthorlast" =<< text processsignatorysignmodalcontentauthorlast
+    J.value "signatorysignmodalcontentdesignvieweleg" =<< text processsignatorysignmodalcontentdesignvieweleg
+    J.value "signatorysignmodalcontentsignvieweleg" =<< text processsignatorysignmodalcontentdesignvieweleg
+
     J.value "signbuttontext" =<< text processsignbuttontext
     J.value "signbuttontextauthor" =<< text processsignbuttontextauthor
     J.value "signatorysignmodaltitle" =<< text processsignatorysignmodaltitle
