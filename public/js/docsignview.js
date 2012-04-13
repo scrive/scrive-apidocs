@@ -624,6 +624,8 @@ window.DocumentShareAfterSignView = Backbone.View.extend({
     panel.append($("<div class='clearfix' />"));
     container.append(panel);
 
+
+
     $(this.el).append(container);
     return this;
   }
@@ -945,28 +947,33 @@ window.DocumentSignView = Backbone.View.extend({
       }
 
       if(view.saveAfterSignModel.justSaved()) {
-        this.container.append('<iframe src="http://player.vimeo.com/video/37373913" width="960" height="600" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>');
+          var sbox = $('<div class="sbox" />');
+          var video = $('<div class="video" />');
+          sbox.append(video);
+          video.append('<iframe src="http://player.vimeo.com/video/37373913" width="620" height="330" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>');
+          this.container.find(".share").append(sbox);
+          this.container.addClass("just-signed");
       } else {
-      var subcontainer = $("<div class='subcontainer'/>");
-
-      var mainfileelems = $(this.getOrCreateMainFileView().el);
-      subcontainer.append(mainfileelems);
-
-      if (!document.mainfile().ready()) {
-        this.container.append(subcontainer);
-        return this;
-      }
-
-      mainfileelems.css("min-height", "1352px");
-
-      var tasks = [];
-
-      var triggerTask = undefined;
-      var triggerArrowChange = function() {
-        if (triggerTask != undefined) {
-          triggerTask.trigger("change");
-        }
-      };
+          var subcontainer = $("<div class='subcontainer'/>");
+          
+          var mainfileelems = $(this.getOrCreateMainFileView().el);
+          subcontainer.append(mainfileelems);
+          
+          if (!document.mainfile().ready()) {
+              this.container.append(subcontainer);
+              return this;
+          }
+          
+          mainfileelems.css("min-height", "1352px");
+          
+          var tasks = [];
+          
+          var triggerTask = undefined;
+          var triggerArrowChange = function() {
+              if (triggerTask != undefined) {
+                  triggerTask.trigger("change");
+              }
+          };
 
       _.each(this.getRenderedPlacements(), function(renderedPlacement) {
         //the signatory only needs to fill in their own tasks
