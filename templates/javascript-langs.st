@@ -339,7 +339,7 @@ javascriptLocalisation =
              , signatoriesTitle: "$_signViewSignatoriesTitle()$"
              , newAccountTitle: "$_signViewCreateAccountTitle()$"
              , newAccountSubTitle: "$_signViewCreateAccountSubTitle()$"
-             , emailLabel: "$_email()$:"
+             , emailLabel: "$_email()$"
              , passwordLabel: "$_modalAccountSetupChoosePassword()$"
              , password2Label: "$_modalAccountSetupRepeatPassword()$"
              , acceptTOSLabel: '$_accountFromSignInputsBodyAcceptTOS()$'

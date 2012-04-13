@@ -52,7 +52,7 @@ instance Fetcher r r where
 -- but if it won't, you have to expect quite ugly error message about
 -- missing instances).
 foldDB :: Fetcher a b => (b -> a) -> b -> DB b
-foldDB decoder init_acc = do
+foldDB decoder !init_acc = do
   DBState{..} <- getDBState
   case dbStatement of
     Nothing -> return init_acc
@@ -64,7 +64,7 @@ foldDB decoder init_acc = do
             originalQuery = SQL (HDBC.originalQuery st) dbValues
           }
   where
-    worker st acc = do
+    worker st !acc = do
       mrow <- fetchRow st
       case mrow of
         Nothing -> return $ Right acc
