@@ -1189,7 +1189,7 @@ handleParseCSV = do
                              J.value "row" $ fromJust $ problemRow p
                            when (isJust $ problemCell p) $
                              J.value "cell" $ fromJust $ problemCell p
-                           J.value "rows" $ csvbody csvdata
+                         J.value "rows" $ csvbody csvdata
 
         _ -> do
             oneProblemJSON $ renderTemplateM "flashMessageFailedToParseCSV" ()
