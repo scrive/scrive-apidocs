@@ -10,10 +10,38 @@ import DB.Fetcher2
 import DB.Model
 import DB.Utils
 import Doc.Tables
-import Log
+import qualified Log
 import Doc.DocumentID
 import Doc.DocStateData()
 import qualified Data.ByteString as BS
+
+moveDocumentTagsFromDocumentsTableToDocumentTagsTable :: Migration
+moveDocumentTagsFromDocumentsTableToDocumentTagsTable = Migration {
+    mgrTable = tableDocuments
+  , mgrFrom = 4
+  , mgrDo = do
+    _ <- kRun $ SQL "SELECT id, tags FROM documents WHERE tags <> '' AND tags <> '[]'" [];
+    values <- foldDB fetch []
+    forM_ values $ \(docid, tags) -> do
+      forM_ tags $ \tag -> do
+        let Just (JSString tagname) = lookup "tagname" tag
+            Just (JSString tagvalue) = lookup "tagvalue" tag
+        kRun $ mkSQL INSERT tableDocumentTags
+           [ sql "name" $ fromJSString tagname
+           , sql "value" $ fromJSString tagvalue
+           , sql "document_id" docid
+           ]
+      return ()
+    kRunRaw $ "ALTER TABLE documents DROP COLUMN tags"
+  }
+  where
+    fetch acc docid tagsstr = (docid :: Int64, tags) : acc
+      where
+        Ok (JSArray arr) = decode tagsstr
+        fromJSValue (JSObject obj) = fromJSObject obj
+        fromJSValue x = 
+          error $ "moveDocumentTagsFromDocumentsTableToDocumentTagsTable: expected {tagname:'',tagvalue:''}, got: " ++ encode x
+        tags = map fromJSValue arr
 
 updateDocumentStatusAfterRemovingAwaitingAuthor :: Migration
 updateDocumentStatusAfterRemovingAwaitingAuthor = Migration {

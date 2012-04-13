@@ -8,7 +8,7 @@ import DB.Model
 tableDocuments :: Table
 tableDocuments = Table {
     tblName = "documents"
-  , tblVersion = 4
+  , tblVersion = 5
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("service_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
@@ -38,7 +38,6 @@ tableDocuments = Table {
        , ("rejection_time", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True})
        , ("rejection_signatory_link_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("rejection_reason", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("tags", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("mail_footer", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("region", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})
@@ -73,7 +72,6 @@ tableDocuments = Table {
           ++ ", rejection_time TIMESTAMPTZ NULL"
           ++ ", rejection_signatory_link_id BIGINT NULL"
           ++ ", rejection_reason TEXT NULL"
-          ++ ", tags TEXT NOT NULL DEFAULT ''"
           ++ ", mail_footer TEXT NULL"
           ++ ", region SMALLINT NOT NULL"
           ++ ", deleted BOOL NOT NULL"
