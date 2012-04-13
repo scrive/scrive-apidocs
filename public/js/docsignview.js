@@ -609,7 +609,7 @@ window.DocumentShareAfterSignView = Backbone.View.extend({
   render: function() {
     $(this.el).empty();
 
-    if (!this.model.hasSigned() || !this.model.saved() || this.model.document.isWhiteLabeled()) {
+    if (!this.model.hasSigned() || !this.model.saved() || this.model.document.isWhiteLabeled() || this.model.document.currentSignatory().hasUser()) {
       return this;
     }
 

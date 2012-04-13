@@ -582,6 +582,9 @@ window.Signatory = Backbone.Model.extend({
         this.trigger("removed"); 
         this.off();
     },
+    hasUser: function() {
+        return this.get("hasUser");
+    },
     draftData : function() {
         return {
               fields: _.map(this.readyFields(), function(field) {
