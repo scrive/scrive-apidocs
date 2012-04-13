@@ -58,7 +58,7 @@ window.DocumentSignViewHeader = Backbone.View.extend({
       var phone = $("<div class='phone' />").text("+46 8 519 779 00");
       inner.append(name).append(phone);
     } else {
-      var author = $("<div class='author' />").text((document.authoruser().fullname().trim()||document.authoruser().phone().trim())?localization.author:"");
+      var author = $("<div class='author' />").text((document.authoruser().fullname().trim()||document.authoruser().phone().trim())?localization.docsignview.contact:"");
       var name = $("<div class='name' />").text(document.authoruser().fullname());
       var phone = $("<div class='phone' />").text(document.authoruser().phone());
       inner.append(author).append(name).append(phone);
