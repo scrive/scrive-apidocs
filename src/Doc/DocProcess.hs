@@ -94,6 +94,8 @@ data DocProcessInfo =
   , processsignatorysignmodalcontentlast :: String
   , processsignatorysignmodalcontentnotlast :: String
   , processsignatorysignmodalcontentauthorlast :: String
+  , processsignatorysignmodalcontentdesignvieweleg :: String
+  , processsignatorysignmodalcontentsignvieweleg :: String
   , processsignbuttontext :: String
   , processsignbuttontextauthor :: String
   , processsignatorycancelmodaltitle :: String
@@ -185,6 +187,8 @@ contractProcess =
   , processsignatorysignmodalcontentlast = "contractsignatorysignmodalcontentlast"
   , processsignatorysignmodalcontentnotlast = "contractsignatorysignmodalcontentnotlast"
   , processsignatorysignmodalcontentauthorlast = "contractsignatorysignmodalcontentauthorlast"
+  , processsignatorysignmodalcontentdesignvieweleg = "contractsignatorysignmodalcontentdesignvieweleg"
+  , processsignatorysignmodalcontentsignvieweleg = "contractsignatorysignmodalcontentsignvieweleg"
   , processsignbuttontext = "contractsignbuttontext"
   , processsignbuttontextauthor = "contractsignbuttontextauthor"
   , processsignatorycancelmodaltitle = "contractsignatorycancelmodaltitle"
@@ -277,6 +281,8 @@ offerProcess =
   , processsignatorysignmodalcontentlast = "offersignatorysignmodalcontentlast"
   , processsignatorysignmodalcontentnotlast = "offersignatorysignmodalcontentnotlast"
   , processsignatorysignmodalcontentauthorlast = "offersignatorysignmodalcontentauthorlast"
+  , processsignatorysignmodalcontentdesignvieweleg = "offersignatorysignmodalcontentdesignvieweleg"
+  , processsignatorysignmodalcontentsignvieweleg = "offersignatorysignmodalcontentsignvieweleg"
   , processsignbuttontext = "offersignbuttontext"
   , processsignbuttontextauthor = "offersignbuttontextauthor"
   , processsignatorycancelmodaltitle = "offersignatorycancelmodaltitle"
@@ -370,6 +376,8 @@ orderProcess =
   , processsignatorysignmodalcontentlast = "ordersignatorysignmodalcontentlast"
   , processsignatorysignmodalcontentnotlast = "ordersignatorysignmodalcontentnotlast"
   , processsignatorysignmodalcontentauthorlast = "ordersignatorysignmodalcontentauthorlast"
+  , processsignatorysignmodalcontentdesignvieweleg = "ordersignatorysignmodalcontentdesignvieweleg"
+  , processsignatorysignmodalcontentsignvieweleg = "ordersignatorysignmodalcontentsignvieweleg"
   , processsignbuttontext = "ordersignbuttontext"
   , processsignbuttontextauthor = "ordersignbuttontextauthor"
   , processsignatorycancelmodaltitle = "ordersignatorycancelmodaltitle"

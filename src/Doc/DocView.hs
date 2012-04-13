@@ -353,6 +353,9 @@ processJSON doc = do
     J.value "signatorysignmodalcontentlast" =<< text processsignatorysignmodalcontentlast
     J.value "signatorysignmodalcontentnotlast" =<< text processsignatorysignmodalcontentnotlast
     J.value "signatorysignmodalcontentauthorlast" =<< text processsignatorysignmodalcontentauthorlast
+    J.value "signatorysignmodalcontentdesignvieweleg" =<< text processsignatorysignmodalcontentdesignvieweleg
+    J.value "signatorysignmodalcontentsignvieweleg" =<< text processsignatorysignmodalcontentdesignvieweleg
+
     J.value "signbuttontext" =<< text processsignbuttontext
     J.value "signbuttontextauthor" =<< text processsignbuttontextauthor
     J.value "signatorysignmodaltitle" =<< text processsignatorysignmodaltitle
