@@ -83,11 +83,11 @@ handleIssueArchive = do
     Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- getContext
     docids <- getCriticalFieldList asValidDocID "doccheck"
     let actor = UserActor ctxtime ctxipnumber (userid user) (getEmail user)
-    mapM_ (\did -> do 
+    mapM_ (\did -> do
               doc <- guardRightM' $ runDBUpdate $ ArchiveDocument user did actor
               case getSigLinkFor doc user of
                 Just sl -> runDB $ addSignStatDeleteEvent doc sl ctxtime
-                _ -> return False) 
+                _ -> return False)
       docids
 
 {- |
@@ -184,7 +184,7 @@ jsonDocumentsList = withUserGet $ do
 
 docSortingFromParams :: ListParams -> [AscDesc DocumentOrderBy]
 docSortingFromParams params =
-   concatMap x (listParamsSorting params)
+   (concatMap x (listParamsSorting params)) ++ [Desc DocumentOrderByMTime] -- default order by mtime
   where
     x "status"            = [Asc DocumentOrderByStatusClass]
     x "statusREV"         = [Desc DocumentOrderByStatusClass]
@@ -244,5 +244,5 @@ comparePartners doc1 doc2 =
 #endif
 
 docsPageSize :: Int
-docsPageSize = 100  
+docsPageSize = 100
 
