@@ -141,7 +141,7 @@ window.Field = Backbone.Model.extend({
         return this.isStandard() || this.isSignature(); //this checks are name based
     },
     readyForSign : function(){
-        return (!this.isSignature() && ((this.value() != "") || (this.canBeIgnored()))) || (this.isSignature() && this.signature().hasImage());
+        return (!this.isSignature() && ((this.value() != "") || (this.canBeIgnored()))) || (this.isSignature() && (this.signature().hasImage() || this.placements().length == 0));
     },
     nicename : function() {
         var name = this.name();
