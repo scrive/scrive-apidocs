@@ -500,7 +500,7 @@ var DocumentDesignView = Backbone.View.extend({
                         color: "blue",
                         size: document.isBasic() ? "small" : "big" ,
                         cssClass: "finalbutton",
-                        text: localization.sign,
+                        text: localization.designview.sign,
                         onClick: function() {
                             if (!view.verificationBeforeSendingOrSigning()) return;
                                document.save().sendAjax();
