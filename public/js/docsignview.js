@@ -107,7 +107,7 @@ window.DocumentSignSignatoryBox = Backbone.Model.extend({
         var signatories = this.document().signatories();
         var current = _.find  (signatories, function(s) { return  s.current(); });
         var others  = _.filter(signatories, function(s) { return !s.current(); });
-        return [current].concat(others);
+        return _.filter([current].concat(others), function(s) { return s.signs(); });
     },
     currentSignatory: function() {
         return this.signatories()[this.currentSignatoryIndex()];
@@ -230,7 +230,8 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
           box1.append(view.sigbox(signatories[0]));
           box2.append(view.sigbox(signatories[1]));
       } else if (signatories.length === 1) {
-          box1.append(view.sigbox(signatories[0]));
+          box1.css("border-color","#ffffff");
+          box2.append(view.sigbox(signatories[0]));
       }
       return this;
   }
