@@ -131,7 +131,7 @@ function doSignNetID(tbs, nonce, servertime) {
 
 // success fns
 function sign1Success(transactionid, tbs, nonce, servertime, posturl, formselector) {
-    closeLoadingOverlay(); // this was opened just before starting
+    LoadingOverlay.close(); // this was opened just before starting
     // ajax request
     if ($.browser.msie && hasIESigner1Plugin())
         IEInstallSigner1Object();
@@ -143,7 +143,7 @@ function sign1Success(transactionid, tbs, nonce, servertime, posturl, formselect
 }
 
 function sign2Success(transactionid, tbs, nonce, servertime, posturl, formselector) {
-    closeLoadingOverlay();
+    LoadingOverlay.close();
     if ($.browser.msie && hasSign2PluginIE())
         installSign2IE();
     else if (hasSign2PluginMozilla())
@@ -154,7 +154,7 @@ function sign2Success(transactionid, tbs, nonce, servertime, posturl, formselect
 }
 
 function netIDSuccess(transactionid, tbs, nonce, servertime, posturl, formselector) {
-    closeLoadingOverlay();
+    LoadingOverlay.close();
     if ($.browser.msie && hasNetIDPluginIE())
         installNetIDIE();
     else if (hasNetIDPluginMozilla())
@@ -169,7 +169,7 @@ function sign1Author() {
     if (!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage))
         return false;
 
-    displayLoadingOverlay(localization.startingSaveSigning);
+    LoadingOverlay.open(localization.startingSaveSigning);
     var url = window.location.pathname.substring(2);
     var ajaxurl = "/d/eleg" + url;
     var posturl = "/d" + url;
@@ -182,7 +182,7 @@ function sign2Author() {
     if (!checkPlugin(hasSign2PluginIE, hasSign2PluginMozilla, flashBankIDMessage))
         return false;
 
-    displayLoadingOverlay(localization.startingSaveSigning);
+    LoadingOverlay.open(localization.startingSaveSigning);
     var url = window.location.pathname.substring(2);
     var ajaxurl = "/d/eleg" + url;
     var posturl = "/d" + url;
@@ -195,7 +195,7 @@ function netIDSignAuthor() {
     if (!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage))
         return false;
 
-    displayLoadingOverlay(localization.startingSaveSigning);
+    LoadingDialog.open(localization.startingSaveSigning);
     var url = window.location.pathname.substring(2);
     var ajaxurl = "/d/eleg" + url;
     var posturl = "/d" + url;
@@ -221,7 +221,7 @@ function flashTeliaMessage() {
 
 function failEleg(msg) {
     FlashMessages.add({ content: msg, color: "red"});
-    closeLoadingOverlay();
+    LoadingDialog.close();
     return null;
 }
 
@@ -340,7 +340,7 @@ function postBack(sig, provider, formselector, transactionid, posturl) {
     if (!sig)
         return false;
 
-    displayLoadingOverlay(localization.verifyingSignature);
+    LoadingOverlay.open(localization.verifyingSignature);
     var form = $(formselector);
     form.find("#signatureinput").val(sig);
     form.find("#transactionidinput").val(transactionid);
@@ -390,7 +390,7 @@ window.Eleg = {
             'scriptCharset': "utf-8",
             'success': function(data) {
               if (data && data.status === 0)  {
-               closeLoadingOverlay(); // this was opened just before starting
+               LoadingOverlay.close(); // this was opened just before starting
                 if ($.browser.msie && hasSign2PluginIE())
                     installSign2IE();
                 else if (hasSign2PluginMozilla())
@@ -456,7 +456,7 @@ window.Eleg = {
             'scriptCharset': "utf-8",
             'success': function(data) {
               if (data && data.status === 0)  {
-               closeLoadingOverlay(); // this was opened just before starting
+               LoadingOverlay.close(); // this was opened just before starting
                 if ($.browser.msie && hasIESigner1Plugin())
                     IEInstallSigner1Object();
                 else if (hasMozillaSigner1Plugin())
