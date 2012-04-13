@@ -365,9 +365,9 @@ window.DocumentSignConfirmation = Backbone.View.extend({
      var content = $("<div />")
      if (document.elegAuthorization)
           content.append(document.process().signatorysignmodalcontentsignvieweleg());
-      if (document.lastSignatoryLeft())
+     else if (document.lastSignatoryLeft())
           content.append(document.process().signatorysignmodalcontentauthorlast());
-      else
+     else
           content.append(document.process().signatorysignmodalcontentnotlast());
      if (document.elegAuthorization()) {
         var subhead = $("<h3/>").text(localization.signByAuthor.eleg.subhead);
@@ -380,7 +380,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       var content = $("<div />");
       if (document.elegAuthorization)
           content.append(document.process().signatorysignmodalcontentsignvieweleg());
-      if (document.lastSignatoryLeft())
+      else if (document.lastSignatoryLeft())
           content.append(document.process().signatorysignmodalcontentlast());
       else
           content.append(document.process().signatorysignmodalcontentnotlast());
@@ -675,7 +675,7 @@ window.DocumentStandardView = Backbone.View.extend({
                ]
         }),
       new Tab({
-          name: localization.attachments,
+          name: localization.attachmentsWord,
           elems: [this.createAttachmentsTabElems(),
                   $(file.view.el),
                   bottomparts
