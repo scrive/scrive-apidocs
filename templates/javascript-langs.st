@@ -297,7 +297,8 @@ javascriptLocalisation =
              ,  addToPadQueueNotAdded : "$_padAddToPadQueueNotAdded()$"
              ,  removeFromPadQueue : "$_padRemoveFromPadQueue()$"
              ,  drawSignatureBoxHeader : "$_padDrawSignatureBoxHeader()$"
-             ,  signingOnSameDeviceFor :  "$_padSigningOnSameDeviceFor()$"
+             ,  signingOnSameDeviceFor1 :  "$_padSigningOnSameDeviceFor1()$"
+             ,  signingOnSameDeviceFor2 :  "$_padSigningOnSameDeviceFor2()$"
              ,  addToPadQueueFor :  "$_padAddToPadQueueFor()$"
              ,  cleanImage : "$_padCleanImage()$"
         }
@@ -338,7 +339,7 @@ javascriptLocalisation =
              , signatoriesTitle: "$_signViewSignatoriesTitle()$"
              , newAccountTitle: "$_signViewCreateAccountTitle()$"
              , newAccountSubTitle: "$_signViewCreateAccountSubTitle()$"
-             , emailLabel: "$_email()$:"
+             , emailLabel: "$_email()$"
              , passwordLabel: "$_modalAccountSetupChoosePassword()$"
              , password2Label: "$_modalAccountSetupRepeatPassword()$"
              , acceptTOSLabel: '$_accountFromSignInputsBodyAcceptTOS()$'
