@@ -324,6 +324,7 @@ processJSON :: TemplatesMonad m => Document -> JSONGenT m ()
 processJSON doc = do
     J.value "title" =<< text processtitle
     J.value "name" =<< text processname
+    J.value "corename" =<< text processcorename
     -- used in the design view
     J.value "basicavailable" $ bool processbasicavailable
     J.value "authorsend" $ bool processauthorsend

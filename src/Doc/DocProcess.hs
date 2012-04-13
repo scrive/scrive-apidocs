@@ -64,7 +64,7 @@ data DocProcessInfo =
   -- templates used in lots of different places
     processtitle :: String
   , processname :: String
-
+  , processcorename :: String
   -- used when uploading
   , processuploadprompttext :: String
   , processuploadname :: String
@@ -156,7 +156,7 @@ contractProcess =
   -- templates used in lots of different places
     processtitle = "contracttitle"
   , processname = "contractname"
-
+  , processcorename = "contractcorename"
   -- used when uploading
   , processuploadprompttext = "contractuploadprompttext"
   , processuploadname = "contractuploadname"
@@ -246,6 +246,7 @@ offerProcess =
   -- templates used in lots of different places
     processtitle = "offertitle"
   , processname = "offername"
+  , processcorename = "offercorename"
 
   -- used when uploading
   , processuploadname = "offeruploadname"
@@ -338,6 +339,7 @@ orderProcess =
   -- templates used in lots of different places
     processtitle = "ordertitle"
   , processname = "ordername"
+  , processcorename = "ordercorename"
 
   -- used when uploading
   , processuploadprompttext = "orderuploadprompttext"

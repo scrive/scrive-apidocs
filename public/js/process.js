@@ -12,6 +12,9 @@ window.Process = Backbone.Model.extend({
     name : function(){
         return this.get("name");
     },
+    corename : function() { // The name of process used in comunication with server
+        return this.get("corename");
+    },
     title : function(){
         return this.get("title");
     },
