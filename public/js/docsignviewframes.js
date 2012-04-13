@@ -11,6 +11,12 @@ window.DocumentSignViewHeader = Backbone.View.extend({
      this.model.document.bind('change', this.render);
      this.model.bind('change', this.render);
      this.render();
+
+     /*$(window).resize(function() {
+         var width = Math.max($('body').width(),$(document).width());
+         if (width > $(this.el).width())
+             $(this.el).width(width);
+     })*/
   },
   tagName: "div",
   updateHeaderSenderPosition: function() {
@@ -73,6 +79,11 @@ window.DocumentSignViewFooter = Backbone.View.extend({
     _.bindAll(this, 'render');
     this.model.document.bind('reset', this.render);
     this.model.document.bind('change', this.render);
+    /*$(window).resize(function() {
+         var width = Math.max($('body').width(),$(document).width());
+         if (width > $(this.el).width())
+             $(this.el).width(width);
+    })*/
     this.render();
   },
   tagName: "div",

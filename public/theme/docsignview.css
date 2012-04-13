@@ -1,5 +1,6 @@
 body.signview {
-  font-family: "Lucida Grande"
+  font-family: "Lucida Grande";
+  width: 100%;
 }
 
 .signview .clearfix {
@@ -8,6 +9,7 @@ body.signview {
 
 .signview .pageheader {
   min-width: 1020px;
+  width: 100%;
   background: url(../img/bg-header.jpg);
   color: white;
   border-bottom: solid #bababc 1px;
@@ -833,6 +835,7 @@ body.signview {
 .signview .pagefooter {
   padding-bottom: 30px;
   min-width: 1020px;
+  width: 100%;
   min-height: 200px;
   background: url(../img/bg-header.jpg);
   color: white;
