@@ -223,6 +223,7 @@ javascriptLocalisation =
               , select            : "$_pageDocumentForAuthorHelpersLocalDialogsRecipient()$"
             }
           , save : "$_save()$"
+          , sign : "$_sign()$"
           , signLast : "$_switchercheckboxSignLast()$"
           , languages : {
                 selectLanguage : "$_documentLanguageLabel()$"
@@ -297,7 +298,7 @@ javascriptLocalisation =
              ,  drawSignatureBoxHeader : "$_padDrawSignatureBoxHeader()$"
              ,  signingOnSameDeviceFor :  "$_padSigningOnSameDeviceFor()$"
              ,  addToPadQueueFor :  "$_padAddToPadQueueFor()$"
-             ,  cleanImage : "$_padCleanImage()$"             
+             ,  cleanImage : "$_padCleanImage()$"
         }
          , sampleEmailHeader: "$_SampleEmailHeader()$"
          , sampleEmailSubheader: "$_mailsubheader()$"
