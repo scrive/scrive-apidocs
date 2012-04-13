@@ -795,11 +795,16 @@
             this.loading.stop();
         },
         recall: function() {
+            var list = this;
             this.beforeFetch();
             this.model.fetch({ data: this.schema.getSchemaUrlParams(),
                                processData: true,
                                cache: false,
-                               success: this.afterFetch
+                               success: this.afterFetch,
+                               error: function() {
+                                 console.error("Failed to fetch list, trying again ...");
+                                 window.setTimeout(list.recall, 1000);
+                               }
             });
         }
     };};
