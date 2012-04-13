@@ -422,9 +422,10 @@ resaveDocsForUser :: Kontrakcja m => UserID -> m ()
 resaveDocsForUser uid = do
   user <- runDBOrFail $ dbQuery $ GetUserByID uid
   userdocs <- runDBQuery $ GetDocumentsByAuthor uid
+  attachments <- runDBQuery $  GetAttachmentsByAuthor uid
   time <- ctxtime <$> getContext
   let actor = SystemActor time
-  mapM_ (\doc -> runDBUpdate $ AdminOnlySaveForUser (documentid doc) user actor) userdocs
+  mapM_ (\doc -> runDBUpdate $ AdminOnlySaveForUser (documentid doc) user actor) (userdocs ++ attachments)
   return ()
 
 {- |
