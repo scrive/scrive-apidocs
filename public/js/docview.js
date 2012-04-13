@@ -675,7 +675,7 @@ window.DocumentStandardView = Backbone.View.extend({
                ]
         }),
       new Tab({
-          name: localization.attachments,
+          name: localization.attachmentsWord,
           elems: [this.createAttachmentsTabElems(),
                   $(file.view.el),
                   bottomparts
