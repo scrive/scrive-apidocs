@@ -140,7 +140,7 @@ var DocumentDesignView = Backbone.View.extend({
 
       var up = new WizardStep;
       var upview = new ChangeFileUploadView({model: up});
-      
+
       var tmp = new WizardStep;
       var tmpview = new ChangeFileTemplateView({model: tmp});
 
@@ -162,12 +162,12 @@ var DocumentDesignView = Backbone.View.extend({
     finalBasicBox : function() {
         var document = this.model;
         var finalBox = $("<div class='finalbox'/>");
-        
+
         finalBox.append(this.verifikationMethodSelection());
         finalBox.append(this.finalDateSelection());
         finalBox.append(this.editInvitationOption());
         finalBox.append(this.finalButton());
-        
+
         return finalBox;
 
     },
@@ -225,7 +225,7 @@ var DocumentDesignView = Backbone.View.extend({
         var email = $("<option value='email'/>").text(localization.email);
         var pad = $("<option value='pad'/>").text(localization.pad.authorization);
         select.append(email);
-        if (elegAvaible) select.append(eleg); 
+        if (elegAvaible) select.append(eleg);
         if (padAvaible) select.append(pad);
         box.text(localization.verification.selectmethod);
         box.append(select);
@@ -238,7 +238,7 @@ var DocumentDesignView = Backbone.View.extend({
           eleg.attr("selected","");
           email.attr("selected","");
           pad.attr("selected","YES");
-          
+
         }
         else if  (document.emailAuthorization()) {
           eleg.attr("selected","");
@@ -246,13 +246,13 @@ var DocumentDesignView = Backbone.View.extend({
           email.attr("selected","YES");
 
         }
-       
+
         select.change(function(){
             if ($(this).val() == 'eleg')
                 document.setElegVerification();
             else if ($(this).val() == 'pad')
                 document.setPadVerification();
-            else 
+            else
                 document.setEmailVerification();
         });
         return box;
@@ -500,7 +500,7 @@ var DocumentDesignView = Backbone.View.extend({
                         color: "blue",
                         size: document.isBasic() ? "small" : "big" ,
                         cssClass: "finalbutton",
-                        text: document.process().signbuttontext(),
+                        text: localization.sign,
                         onClick: function() {
                             if (!view.verificationBeforeSendingOrSigning()) return;
                                document.save().sendAjax();
@@ -596,7 +596,7 @@ var DocumentDesignView = Backbone.View.extend({
        if (document.padAuthorization())
        {   var padDesignViewUtil = new PadDesignViewUtilsModel({document : document});
            box.append(new PadDesignViewUtilsView({model : padDesignViewUtil}).el);
-       }    
+       }
        Confirmation.popup({
               title : document.process().confirmsendtitle(),
               acceptButton : Button.init({
@@ -612,7 +612,7 @@ var DocumentDesignView = Backbone.View.extend({
                                         else
                                             window.location = link;
                                     });
-                                }  
+                                }
                               }).input(),
               rejectText: localization.cancel,
               content  : box
@@ -690,10 +690,10 @@ var DocumentDesignView = Backbone.View.extend({
                       KontraDesignDocument.model.save().sendAjax();
                       SessionStorage.set(document.documentid(), "step", "1");
                       window.UploadWizardView.model.setStepIndex(0);
-                    },    
+                    },
                     elems : [
                       changemainfile
-                            ]  
+                            ]
                   }),
                 this.tab2 = new Tab({
                     name  : document.isTemplate() ? localization.step2template : document.isBasic() ? localization.step2basic : localization.step2normal,
