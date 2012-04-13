@@ -174,6 +174,15 @@ safeReady(function() {
   });
 });
 
+//used by the frontpage to show the legal popup
+safeReady(function() {
+  $(".openmodal").overlay({
+    mask: standardDialogMask,
+    top: standardDialogTop,
+    fixed: false
+  });
+});
+
 //not really sure why we have this - but it seems like
 //something that's a bug fix - em
 safeReady(function() {
