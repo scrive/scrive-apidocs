@@ -58,7 +58,7 @@ nicemail=
                      $nicemailparagraph(p=mailp2;l=mailp3)$
                      $nicemailparagraph(p=mailp3;l=mailp4)$
                      $nicemailparagraph(p=mailp4;l=mailp5)$
-                     $nicemailparagraph(p=mailp5;l='')$
+                     $nicemailparagraph(p=mailp5;l=false)$
                 </table>
             </td>
         </tr>
