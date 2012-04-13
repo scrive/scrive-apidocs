@@ -609,7 +609,7 @@ window.DocumentShareAfterSignView = Backbone.View.extend({
   render: function() {
     $(this.el).empty();
 
-    if (!this.model.hasSigned() || !this.model.saved()) {
+    if (!this.model.hasSigned() || !this.model.saved() || this.model.document.isWhiteLabeled()) {
       return this;
     }
 
@@ -623,8 +623,6 @@ window.DocumentShareAfterSignView = Backbone.View.extend({
     panel.append($("<div class='item' />").append(this.createGetStartedElems()));
     panel.append($("<div class='clearfix' />"));
     container.append(panel);
-
-
 
     $(this.el).append(container);
     return this;
@@ -946,7 +944,7 @@ window.DocumentSignView = Backbone.View.extend({
         this.container.append(this.createShareAfterSignViewElems());
       }
 
-      if(view.saveAfterSignModel.justSaved()) {
+      if(view.saveAfterSignModel.justSaved() && !document.isWhiteLabeled()) {
           var sbox = $('<div class="sbox" />');
           var video = $('<div class="video" />');
           sbox.append(video);

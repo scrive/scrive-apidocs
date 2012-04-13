@@ -236,6 +236,7 @@ documentJSON pq msl _crttime doc = do
       J.value "barsbackgroundcolor" bbc
       J.value "barsbackgroundtextcolor" bbtc
       J.value "author" $ authorJSON mauthor mcompany
+      J.value "whitelabel" $ True
 
 authorizationJSON :: IdentificationType -> JSValue
 authorizationJSON EmailIdentification = toJSValue "email"
