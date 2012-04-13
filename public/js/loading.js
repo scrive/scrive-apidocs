@@ -34,7 +34,10 @@ window.LoadingDialog = {
           $('body').append(dialog);
         }
         return dialog;
-    },   
+    },
+    changeMessage : function(message) {
+         $("#loadingmessage").text(message);
+    },
     open: function (message) {
          var dialog = LoadingDialog.dialog();
          $("#loadingmessage", dialog).html(message);

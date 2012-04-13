@@ -15,8 +15,6 @@ import Data.List
 import Data.Maybe
 import Happstack.State
 import qualified Control.Exception as E
-import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.UTF8 as BS hiding (length)
 
 import AppControl (AppConf(..))
 import ActionSchedulerState
@@ -118,7 +116,7 @@ runDocumentProblemsCheck :: ActionScheduler ()
 runDocumentProblemsCheck = do
   sd <- ask
   now <- liftIO getMinutesTime
-  docs <- runDBQuery $ GetDocuments Nothing
+  docs <- runDBQuery $ GetDocumentsByService Nothing
   let probs = listInvariantProblems now docs
   when (probs /= []) $ mailDocumentProblemsCheck $
     "<p>"  ++ (hostpart $ sdAppConf sd) ++ "/dave/document/" ++
@@ -139,8 +137,8 @@ mailDocumentProblemsCheck msg = do
                                                   }
 
 -- | A message will be sent to these email addresses when there is an inconsistent document found in the database.
-documentProblemsCheckEmails :: [BS.ByteString]
-documentProblemsCheckEmails = map BS.fromString ["bugs@skrivapa.se"]
+documentProblemsCheckEmails :: [String]
+documentProblemsCheckEmails = ["bugs@skrivapa.se"]
 
 runArchiveProblemsCheck :: ActionScheduler ()
 runArchiveProblemsCheck = do
@@ -160,7 +158,7 @@ runArchiveProblemsCheck = do
   return ()
   where
     getPersonalDocs user = do
-      docs <- runDBQuery $ GetDocumentsBySignatory user
+      docs <- runDBQuery $ GetDocumentsBySignatory [Contract, Offer, Order] user
       return (user, docs)
     getSupervisedDocs user = do
       docs <- runDBQuery $ GetDocumentsByCompany user

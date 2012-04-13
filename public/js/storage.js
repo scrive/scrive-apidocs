@@ -20,4 +20,18 @@ window.SessionStorage = {
     }
 };
 
+window.LocalStorage = {
+    set : function(namespace, field, value ){
+        if (window.localStorage != undefined)
+            window.localStorage.setItem(namespace + " " + field, value);
+
+    },
+    get : function(namespace,field) {
+        if (window.localStorage != undefined)
+            return window.localStorage.getItem(namespace + " " + field);
+
+    }
+};
+
+
 })(window); 

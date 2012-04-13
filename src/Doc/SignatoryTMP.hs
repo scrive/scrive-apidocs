@@ -32,11 +32,10 @@ module Doc.SignatoryTMP (
     
 ) where
 
+import Control.Logic
 import Util.HasSomeUserInfo
 import Util.HasSomeCompanyInfo
 import Doc.DocStateData
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS
 import Misc
 import Data.List
 import Doc.DocUtils
@@ -74,46 +73,46 @@ emptySignatoryTMP = SignatoryTMP
 liftTMP ::  (SignatoryDetails -> SignatoryDetails) -> SignatoryTMP -> SignatoryTMP
 liftTMP f s = s {details  =  f $ details s}
 
-fstname:: SignatoryTMP -> Maybe BS.ByteString
+fstname:: SignatoryTMP -> Maybe String
 fstname = nothingIfEmpty . getFirstName . details
 
-setFstname:: BS.ByteString -> SignatoryTMP -> SignatoryTMP
+setFstname:: String -> SignatoryTMP -> SignatoryTMP
 setFstname = replaceFieldValue FirstNameFT
 
-sndname::SignatoryTMP -> Maybe BS.ByteString
+sndname::SignatoryTMP -> Maybe String
 sndname = nothingIfEmpty . getLastName . details
 
-setSndname:: BS.ByteString -> SignatoryTMP -> SignatoryTMP
+setSndname:: String -> SignatoryTMP -> SignatoryTMP
 setSndname = replaceFieldValue LastNameFT
   
-company::SignatoryTMP -> Maybe BS.ByteString
+company::SignatoryTMP -> Maybe String
 company = nothingIfEmpty . getCompanyName . details
 
-setCompany:: BS.ByteString -> SignatoryTMP -> SignatoryTMP
+setCompany:: String -> SignatoryTMP -> SignatoryTMP
 setCompany = replaceFieldValue CompanyFT
     
-personalnumber::SignatoryTMP -> Maybe BS.ByteString
+personalnumber::SignatoryTMP -> Maybe String
 personalnumber = nothingIfEmpty . getPersonalNumber . details
 
-setPersonalnumber:: BS.ByteString -> SignatoryTMP -> SignatoryTMP
+setPersonalnumber:: String -> SignatoryTMP -> SignatoryTMP
 setPersonalnumber =  replaceFieldValue PersonalNumberFT
 
-companynumber::SignatoryTMP -> Maybe BS.ByteString
+companynumber::SignatoryTMP -> Maybe String
 companynumber = nothingIfEmpty . getCompanyNumber . details
 
-setCompanynumber:: BS.ByteString -> SignatoryTMP -> SignatoryTMP
+setCompanynumber:: String -> SignatoryTMP -> SignatoryTMP
 setCompanynumber =  replaceFieldValue CompanyNumberFT
 
-customField ::  BS.ByteString  -> SignatoryTMP -> Maybe BS.ByteString
+customField :: String  -> SignatoryTMP -> Maybe String
 customField name = (fmap sfValue) . (findCustomField name) . details
 
-setCustomField :: BS.ByteString -> BS.ByteString -> SignatoryTMP -> SignatoryTMP
-setCustomField name value = replaceFieldValue (CustomFT name (not $ BS.null value)) value
+setCustomField :: String -> String -> SignatoryTMP -> SignatoryTMP
+setCustomField name = replaceFieldValue (CustomFT name False)
 
-email::SignatoryTMP -> Maybe BS.ByteString
+email::SignatoryTMP -> Maybe String
 email = nothingIfEmpty . getEmail . details
 
-setEmail:: BS.ByteString -> SignatoryTMP -> SignatoryTMP
+setEmail:: String -> SignatoryTMP -> SignatoryTMP
 setEmail =  replaceFieldValue EmailFT
 
 setCSV :: (Maybe CSVUpload) -> SignatoryTMP -> SignatoryTMP
@@ -149,7 +148,7 @@ toSignatoryDetails1 sTMP = (\(x,y,_,_) ->(x,y)) (toSignatoryDetails2 sTMP)
 -- To SignatoryLink or SignatoryDetails conversion
 toSignatoryDetails2 :: SignatoryTMP -> (SignatoryDetails,[SignatoryRole], [SignatoryAttachment], Maybe CSVUpload)
 toSignatoryDetails2 sTMP  = 
-    let sig = makeSignatory [] [] BS.empty
+    let sig = makeSignatory [] [] ""
                  (fold $ fstname sTMP)
                  (fold $ sndname sTMP)
                  (fold $ email sTMP)
@@ -191,7 +190,7 @@ instance FromJSON SignatoryField where
         placements <- fromJSONField "placements" 
         case (ftype,value) of 
           (Just ft, Just v) -> do
-              let fixFT (CustomFT name _)= CustomFT name (not $ BS.null v)
+              let fixFT (CustomFT name _)= CustomFT name (not $ null v)
                   fixFT t = t
               return $ Just $ SignatoryField (fixFT ft) v (concat $ maybeToList placements)
           _ -> return Nothing
@@ -218,9 +217,9 @@ instance FromJSON FieldType where
          Just "sigco"     -> Just $ CompanyFT
          Just "sigcompnr" -> Just $ CompanyNumberFT
          Just "signature" -> Just $ SignatureFT
-         Just name        -> Just $ CustomFT (BS.fromString name) False
+         Just name        -> Just $ CustomFT  name False
          _ -> Nothing
-         
+
 instance FromJSON FieldPlacement where
     fromJSON = do
          x          <- fromJSONField "x"
@@ -235,7 +234,7 @@ instance FromJSON CSVUpload  where
         rows <- fromJSON
         case rows of
              Just rs -> return $ Just $ CSVUpload {
-                    csvtitle = BS.empty
+                    csvtitle = ""
                     , csvcontents = rs
                     , csvsignatoryindex = 0}
-             _ -> return Nothing       
+             _ -> return Nothing

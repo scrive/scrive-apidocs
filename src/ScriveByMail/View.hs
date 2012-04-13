@@ -19,7 +19,6 @@ import FlashMessage
 import Control.Applicative
 import Control.Monad.IO.Class
 import Data.Int
-import qualified Data.ByteString.UTF8 as BS
 
 mailMailAPIConfirm :: TemplatesMonad m
                       => Context
@@ -36,11 +35,11 @@ mailMailAPIConfirm ctx document siglink = do
                                   field "time" $ show time
                  Nothing -> return ""
         fieldM "partnersinfo" $ do
-             renderLocalListTemplate document $ map (BS.toString . getSmartName) $ partyList document
+             renderLocalListTemplate document $ map getSmartName $ partyList document
         fieldM "whohadsignedinfo" $ do
              do
                    signedlist <- if (not $ null $ partySignedList document)
-                                    then fmap Just $ renderLocalListTemplate document $  map (BS.toString . getSmartName) $ partySignedList document
+                                    then fmap Just $ renderLocalListTemplate document $  map getSmartName $ partySignedList document
                                     else return Nothing
                    renderLocalTemplateForProcess document processwhohadsignedinfoformail $ do
                        field "signedlist" signedlist

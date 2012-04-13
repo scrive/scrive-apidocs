@@ -22,6 +22,7 @@ import Doc.Model
 import Doc.DocStorage
 import Doc.DocView
 import Doc.DocUtils
+import IPAddress
 import Misc
 import System.Directory
 import System.Exit
@@ -46,24 +47,26 @@ import DB.Classes
 import Control.Applicative
 import EvidenceLog.Model
 import Control.Concurrent
+import Data.String.Utils
+
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
-    Seal.Person { Seal.fullname = (BS.toString $ getFullName details) ++
-                                  if not (BS.null $ getPersonalNumber details)
-                                     then " (" ++ (BS.toString $ getPersonalNumber details) ++ ")"
+    Seal.Person { Seal.fullname = (getFullName details) ++
+                                  if not (null $ getPersonalNumber details)
+                                     then " (" ++ (getPersonalNumber details) ++ ")"
                                      else ""
-                , Seal.company = BS.toString $ getCompanyName details
-                , Seal.email = BS.toString $ getEmail details
-                , Seal.personalnumber = BS.toString $ getPersonalNumber details
-                , Seal.companynumber = BS.toString $ getCompanyNumber details
+                , Seal.company = getCompanyName details
+                , Seal.email = getEmail details
+                , Seal.personalnumber = getPersonalNumber details
+                , Seal.companynumber = getCompanyNumber details
                 , Seal.fullnameverified = False
                 , Seal.companyverified = False
                 , Seal.numberverified = False
                 , Seal.emailverified = True
                 }
 
-personFields :: MonadIO m => (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider,String) -> Fields m
-personFields (person, signinfo,_seeninfo, _ , mprovider, _initials) = do
+personFields :: MonadIO m => Document -> (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider,String) -> Fields m
+personFields doc (person, signinfo,_seeninfo, _ , mprovider, _initials) = do
    field "personname" $ Seal.fullname person
    field "signip" $  formatIP (signipnumber signinfo)
    field "seenip" $  formatIP (signipnumber signinfo)
@@ -71,7 +74,8 @@ personFields (person, signinfo,_seeninfo, _ , mprovider, _initials) = do
    field "bankid" $ mprovider == Just BankIDProvider
    field "nordea" $ mprovider == Just NordeaProvider
    field "telia"  $ mprovider == Just TeliaProvider
-
+   field "email"  $ EmailIdentification `elem` (documentallowedidtypes doc)
+   field "pad"    $ PadIdentification `elem` (documentallowedidtypes doc)
 
 personsFromDocument :: Document -> [(Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, String)]
 personsFromDocument document =
@@ -92,7 +96,7 @@ personsFromDocument document =
               , signinfo
               , isAuthor sl
               , maybe Nothing (Just . signatureinfoprovider) signatorysignatureinfo
-              , map head $ words $ BS.toString $ getFullName signatorydetails
+              , map head $ words $ getFullName signatorydetails
               )
                   where fullnameverified = maybe False (\s -> signaturefstnameverified s
                                                         && signaturelstnameverified s)
@@ -108,28 +112,34 @@ fieldsFromSignatory SignatoryDetails{signatoryfields} =
   where
     makeSealField :: SignatoryField -> [Seal.Field]
     makeSealField sf = case  sfType sf of
-                         SignatureFT -> map (fieldJPEGFromPlacement (sfValue sf)) (sfPlacements sf) 
-                         _ -> map (fieldFromPlacement (sfValue sf)) (sfPlacements sf) 
+                         SignatureFT -> concatMap (maybeToList . (fieldJPEGFromPlacement (sfValue sf))) (sfPlacements sf)
+                         _ -> map (fieldFromPlacement (sfValue sf)) (sfPlacements sf)
     fieldFromPlacement sf placement = Seal.Field {
-        Seal.value = BS.toString sf
+        Seal.value = sf
       , Seal.x = placementx placement
       , Seal.y = placementy placement
       , Seal.page = placementpage placement
       , Seal.w = placementpagewidth placement
       , Seal.h = placementpageheight placement
      }
-    fieldJPEGFromPlacement sf placement = Seal.FieldJPG
-      { valueBase64      =  dropWhile (\c -> c == ';' || c == ',') $ BS.toString sf
-      , Seal.x = placementx placement
-      , Seal.y = placementy placement + 17 -- Fix for signature box header from UI
-      , Seal.page = placementpage placement
-      , Seal.w = placementpagewidth placement
-      , Seal.h = placementpageheight placement
-      , Seal.image_w       = 250
-      , Seal.image_h       = 100
-      , Seal.internal_image_w = 250
-      , Seal.internal_image_h = 100
-      }
+    fieldJPEGFromPlacement v placement =
+      case split "|" v of
+              [w,h,c] -> do
+                wi <- maybeRead w -- NOTE: Maybe monad usage
+                hi <- maybeRead h
+                Just $ Seal.FieldJPG
+                 {  valueBase64      =  drop 1 $ dropWhile (\e -> e /= ',') c
+                  , Seal.x = placementx placement
+                  , Seal.y = placementy placement
+                  , Seal.page = placementpage placement
+                  , Seal.w = placementpagewidth placement
+                  , Seal.h = placementpageheight placement
+                  , Seal.image_w       = wi
+                  , Seal.image_h       = hi
+                  , Seal.internal_image_w = 4 * wi
+                  , Seal.internal_image_h = 4 * hi
+                 }
+              _ -> Nothing
 
 sealSpecFromDocument :: TemplatesMonad m => String -> Document -> [DocumentEvidenceEvent] -> String -> String -> m Seal.SealSpec
 sealSpecFromDocument hostpart document elog inputpath outputpath =
@@ -149,13 +159,13 @@ sealSpecFromDocument hostpart document elog inputpath outputpath =
       initials = concatComma initialsx
       makeHistoryEntryFromSignatory personInfo@(_ ,seen, signed, isauthor, _, _)  = do
           seenDesc <- renderLocalTemplateForProcess document processseenhistentry $ do
-                        personFields personInfo
+                        personFields document personInfo
                         documentInfoFields document
           let seenEvent = Seal.HistEntry
                             { Seal.histdate = show (signtime seen)
                             , Seal.histcomment = pureString seenDesc}
           signDesc <- renderLocalTemplateForProcess document processsignhistentry $ do
-                        personFields personInfo
+                        personFields document personInfo
                         documentInfoFields document
           let signEvent = Seal.HistEntry
                             { Seal.histdate = show (signtime signed)
@@ -163,20 +173,19 @@ sealSpecFromDocument hostpart document elog inputpath outputpath =
           return $ if (isauthor)
                     then [signEvent]
                     else [seenEvent,signEvent]
-      invitationSentEntry = case documentinvitetime document of
-                                Nothing -> return []
-                                Just (SignInfo time ipnumber) -> do
+      invitationSentEntry = case (documentinvitetime document,sendMailsDurringSigning document) of
+                                (Just (SignInfo time ipnumber),True) -> do
                                    desc <-  renderLocalTemplateForProcess document processinvitationsententry $ do
                                        documentInfoFields document
                                        documentAuthorInfo document
                                        field "oneSignatory"  (length signatories>1)
-                                       field "personname" $  listToMaybe $ map  (BS.toString . getFullName)  signatoriesdetails
+                                       field "personname" $ listToMaybe $ map getFullName  signatoriesdetails
                                        field "ip" $ formatIP ipnumber
                                    return  [ Seal.HistEntry
                                       { Seal.histdate = show time
                                       , Seal.histcomment = pureString desc
                                       }]
-
+                                _ -> return []   
       maxsigntime = maximum (map (signtime . (\(_,_,c,_,_,_) -> c)) signatories)
       concatComma = concat . intersperse ", "
 
@@ -210,7 +219,7 @@ sealSpecFromDocument hostpart document elog inputpath outputpath =
       -- Log.debug ("read texts: " ++ show readtexts)
 
       -- Creating HTML Evidence Log
-      htmllogs <- htmlDocFromEvidenceLog (BS.toString $ documenttitle document) elog
+      htmllogs <- htmlDocFromEvidenceLog (documenttitle document) elog
       let evidenceattachment = Seal.SealAttachment { Seal.fileName = "evidencelog.html"
                                                    , Seal.fileBase64Content = BS.toString $ B64.encode $ BS.fromString htmllogs }
 
@@ -296,7 +305,7 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplat
                 Log.trustWeaver $ msg
                 return newfilepdf1
               Right result -> do
-                let msg = "TrustWeaver signed doc #" ++ show documentid ++ " file #" ++ show fileid ++ ": " ++ BS.toString documenttitle
+                let msg = "TrustWeaver signed doc #" ++ show documentid ++ " file #" ++ show fileid ++ ": " ++ documenttitle
                 Log.trustWeaver msg
                 return result
         Log.debug $ "Adding new sealed file to DB"

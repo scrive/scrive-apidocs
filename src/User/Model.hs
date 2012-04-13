@@ -39,7 +39,6 @@ import Data.Data
 import Database.HDBC
 import Happstack.State
 import qualified Control.Exception as E
-import qualified Data.ByteString.Char8 as BS
 
 import API.Service.Model
 import Company.Model
@@ -49,7 +48,6 @@ import DB.Fetcher2
 import DB.Utils
 --import MagicHash (MagicHash)
 import MinutesTime
-import Misc
 import User.Lang
 import User.Locale
 import User.Password
@@ -57,7 +55,7 @@ import User.Region
 import User.UserID
 
 -- newtypes
-newtype Email = Email { unEmail :: BS.ByteString }
+newtype Email = Email { unEmail :: String }
   deriving (Eq, Ord, Typeable)
 $(newtypeDeriveConvertible ''Email)
 $(newtypeDeriveUnderlyingReadShow ''Email)
@@ -96,13 +94,15 @@ data User = User {
   } deriving (Eq, Ord, Show)
 
 data UserInfo = UserInfo {
-    userfstname         :: BS.ByteString
-  , usersndname         :: BS.ByteString
-  , userpersonalnumber  :: BS.ByteString
-  , usercompanyposition :: BS.ByteString
-  , userphone           :: BS.ByteString
-  , usermobile          :: BS.ByteString
+    userfstname         :: String
+  , usersndname         :: String
+  , userpersonalnumber  :: String
+  , usercompanyposition :: String
+  , userphone           :: String
+  , usermobile          :: String
   , useremail           :: Email
+  , usercompanyname     :: String
+  , usercompanynumber   :: String
   } deriving (Eq, Ord, Show)
 
 data UserSettings  = UserSettings {
@@ -177,7 +177,7 @@ instance DBUpdate DeleteUser Bool where
     kExecute01 [toSql True, toSql uid]
 
 -- | TODO: Fix this AddUser, it shouldn't lock.
-data AddUser = AddUser (BS.ByteString, BS.ByteString) BS.ByteString (Maybe Password) Bool (Maybe ServiceID) (Maybe CompanyID) Locale
+data AddUser = AddUser (String, String) String (Maybe Password) Bool (Maybe ServiceID) (Maybe CompanyID) Locale
 instance DBUpdate AddUser (Maybe User) where
   dbUpdate (AddUser (fname, lname) email mpwd iscompadmin msid mcid l) = do
     let handle e = case e of
@@ -200,13 +200,15 @@ instance DBUpdate AddUser (Maybe User) where
           ++ ", last_name"
           ++ ", personal_number"
           ++ ", company_position"
+          ++ ", company_name"
+          ++ ", company_number"
           ++ ", phone"
           ++ ", mobile"
           ++ ", email"
           ++ ", preferred_design_mode"
           ++ ", lang"
           ++ ", region"
-          ++ ", deleted) VALUES (decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+          ++ ", deleted) VALUES (decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
           ++ " RETURNING " ++ selectUsersSelectors
 
         _ <- kExecute $
@@ -220,7 +222,7 @@ instance DBUpdate AddUser (Maybe User) where
           , toSql mcid
           , toSql fname
           , toSql lname
-          ] ++ replicate 4 (toSql "")
+          ] ++ replicate 6 (toSql "")
             ++ [toSql email] ++ [
               SqlNull
             , toSql $ getLang l
@@ -296,6 +298,8 @@ instance DBUpdate SetUserInfo Bool where
       ++ ", phone = ?"
       ++ ", mobile = ?"
       ++ ", email = ?"
+      ++ ", company_name = ?"
+      ++ ", company_number = ?"
       ++ "  WHERE id = ? AND deleted = FALSE"
     kExecute01 [
         toSql $ userfstname info
@@ -305,6 +309,8 @@ instance DBUpdate SetUserInfo Bool where
       , toSql $ userphone info
       , toSql $ usermobile info
       , toSql $ useremail info
+      , toSql $ usercompanyname info
+      , toSql $ usercompanynumber info
       , toSql uid
       ]
 
@@ -360,10 +366,10 @@ instance DBUpdate SetUserCompanyAdmin Bool where
 
 -- helpers
 
-composeFullName :: (BS.ByteString, BS.ByteString) -> BS.ByteString
-composeFullName (fstname, sndname) = if BS.null sndname
+composeFullName :: (String, String) -> String
+composeFullName (fstname, sndname) = if null sndname
   then fstname
-  else fstname <++> BS.pack " " <++> sndname
+  else fstname ++ " " ++ sndname
 
 checkIfUserExists :: UserID -> DB Bool
 checkIfUserExists uid = checkIfAnyReturned
@@ -394,6 +400,8 @@ selectUsersSelectors =
  ++ ", lang"
  ++ ", region"
  ++ ", customfooter"
+ ++ ", company_name"
+ ++ ", company_number"
 
 fetchUsers :: DB [User]
 fetchUsers = foldDB decoder []
@@ -403,7 +411,8 @@ fetchUsers = foldDB decoder []
     decoder acc uid password salt is_company_admin account_suspended
       has_accepted_terms_of_service signup_method service_id company_id
       first_name last_name personal_number company_position phone mobile
-      email preferred_design_mode lang region customfooter = User {
+      email preferred_design_mode lang region customfooter
+      company_name company_number = User {
           userid = uid
         , userpassword = maybePassword (password, salt)
         , useriscompanyadmin = is_company_admin
@@ -418,6 +427,8 @@ fetchUsers = foldDB decoder []
           , userphone = phone
           , usermobile = mobile
           , useremail = email
+          , usercompanyname  = company_name
+          , usercompanynumber = company_number
           }
         , usersettings = UserSettings {
             preferreddesignmode = preferred_design_mode

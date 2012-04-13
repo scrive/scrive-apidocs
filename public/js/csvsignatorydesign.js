@@ -10,12 +10,12 @@ var CsvProblem = Backbone.Model.extend({
       description : "Some problem"
   },
   row: function() {
-     return this.get("row");  
+     return this.get("row");
   },
   cell: function() {
      return this.get("cell");
   },
-  
+
   aboutCell: function(r,c)
   {
      return this.row() == r && this.cell() == c;
@@ -25,7 +25,7 @@ var CsvProblem = Backbone.Model.extend({
      return this.row() == r && this.cell() == undefined;
   },
   description: function() {
-     return this.get("description");   
+     return this.get("description");
   },
   generalProblem: function() {
        return this.row() == undefined && this.cell() == undefined;
@@ -38,7 +38,7 @@ var CsvProblem = Backbone.Model.extend({
       problems : []
   },
   problems : function() {
-     return this.get("problems");    
+     return this.get("problems");
   },
   ready : function() {
            return (this.rows().length > 0) &&  (this.problems().length  == 0);
@@ -50,7 +50,7 @@ var CsvProblem = Backbone.Model.extend({
     var max = 0;
     _.each(this.rows(),function(r){
          max = (max > r.length) ? max : r.length;
-    })
+    });
     return max;
   },
   isEmpty : function() {
@@ -61,22 +61,22 @@ var CsvProblem = Backbone.Model.extend({
   },
   initialize: function (args) {
       if (args.signatory.isCsv())
-          this.set({"rows" : args.signatory.csv()})
+          this.set({"rows" : args.signatory.csv()});
   },
   problemWithRow : function(r) {
       var res;
       _.each(this.problems(),function(p) {
           if (p.aboutRow(r))
               res = p;
-        })
+        });
       return res;
   },
   problemWithCell : function(r,c) {
       var res;
       _.each(this.problems(),function(p) {
           if (p.aboutCell(r,c))
-              res = p
-        })
+              res = p;
+        });
       return res;
   },
   generalProblems : function() {
@@ -84,12 +84,12 @@ var CsvProblem = Backbone.Model.extend({
       _.each(this.problems(),function(p) {
           if (p.generalProblem())
               res.push(p);
-        })
+        });
       return res;
   },
   upload : function(input) {
        var sigdesign = this;
-       var submit = new Submit({ url : "/parsecsv", method : "POST"})
+       var submit = new Submit({ url : "/parsecsv", method : "POST"});
        submit.add("customfieldscount",this.signatory().customFields().length);
        if (this.signatory().document().elegAuthorization())
         submit.add("eleg","YES");
@@ -97,7 +97,7 @@ var CsvProblem = Backbone.Model.extend({
        submit.sendAjax(function (resp) {
            var jresp = JSON.parse(resp);
            sigdesign.set({'rows': jresp.rows, 'problems': _.map(jresp.problems, function(pdata) {return new CsvProblem(pdata);}) });
-           sigdesign.trigger("change")
+           sigdesign.trigger("change");
           });
   }
 });
@@ -116,14 +116,14 @@ var CsvSignatoryDesignView = Backbone.View.extend({
        var box = $("<div class='generalProblems'>");
        _.each(model.generalProblems(), function(p) {
           box.append($("<div class='problem'>").text(p.description()));
-        })
+        });
        return box;
     },
     dataTable : function() {
       var model = this.model;
       var fields = model.signatory().fields();
       var table = $("<table class='csvDataTable'/>");
-      var thead = $("<thead/>")
+      var thead = $("<thead/>");
       var tbody = $("<tbody/>");
       table.append(thead).append(tbody);
       for (var i=0;i< fields.length;i++)
@@ -140,14 +140,14 @@ var CsvSignatoryDesignView = Backbone.View.extend({
            td.append($("<div>").text(rows[i][j]));
              if (model.problemWithCell(i,j) != undefined)
                 td.append($("<div class='problem'>").text(model.problemWithCell(i,j).description()));
-           
+
            tr.append(td);
          }
          if (model.problemWithRow(i) != undefined)
          {
            var td = $("<td>");
            td.append($("<div class='problem'>").text(model.problemWithRow().description()));
-           tr.append(td);    
+           tr.append(td);
          }
          tbody.append(tr);
       }
@@ -216,7 +216,7 @@ window.CsvSignatoryDesignPopup = {
     popup: function(args) {
          var signatory = args.signatory;
          var model = new CsvSignatoryDesign({ signatory : signatory  });
-         var view = new CsvSignatoryDesignView({model : model, el : $("<div/>")})
+         var view = new CsvSignatoryDesignView({model : model, el : $("<div/>")});
          var popup = Confirmation.popup({
               content  : $(view.el),
               title  : localization.csv.title,
@@ -234,7 +234,7 @@ window.CsvSignatoryDesignPopup = {
                  popup.showAccept();
              else
                  popup.hideAccept(); });
-         
+
     }
 };
 

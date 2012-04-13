@@ -64,7 +64,7 @@ data DocProcessInfo =
   -- templates used in lots of different places
     processtitle :: String
   , processname :: String
-
+  , processcorename :: String
   -- used when uploading
   , processuploadprompttext :: String
   , processuploadname :: String
@@ -94,6 +94,8 @@ data DocProcessInfo =
   , processsignatorysignmodalcontentlast :: String
   , processsignatorysignmodalcontentnotlast :: String
   , processsignatorysignmodalcontentauthorlast :: String
+  , processsignatorysignmodalcontentdesignvieweleg :: String
+  , processsignatorysignmodalcontentsignvieweleg :: String
   , processsignbuttontext :: String
   , processsignbuttontextauthor :: String
   , processsignatorycancelmodaltitle :: String
@@ -118,13 +120,8 @@ data DocProcessInfo =
   , processflashmessagearchivedone :: String
   , processflashmessagebulkremindssent :: String
   , processflashmessagenobulkremindssent :: String
-  , processflashmessagepleasesign :: String
 
   -- process specific modal templates
-  , processmodalsignedviewclosedhasaccount :: String
-  , processmodalsignedviewnotclosedhasaccount :: String
-  , processmodalsignedviewclosednoaccount :: String
-  , processmodalsignedviewnotclosednoaccount :: String
   , processmodalsendconfirmation :: String
 
   -- process specific seal information
@@ -145,7 +142,7 @@ data DocProcessInfo =
   , processsignedinfotext :: String
   , processstatusinfotext :: String
   , processauthorsignlastbuttontext :: String
-  
+
   -- process specific design view titles of parties
   , processauthorname :: String
   , processauthorsignatoryname :: String
@@ -161,7 +158,7 @@ contractProcess =
   -- templates used in lots of different places
     processtitle = "contracttitle"
   , processname = "contractname"
-
+  , processcorename = "contractcorename"
   -- used when uploading
   , processuploadprompttext = "contractuploadprompttext"
   , processuploadname = "contractuploadname"
@@ -190,6 +187,8 @@ contractProcess =
   , processsignatorysignmodalcontentlast = "contractsignatorysignmodalcontentlast"
   , processsignatorysignmodalcontentnotlast = "contractsignatorysignmodalcontentnotlast"
   , processsignatorysignmodalcontentauthorlast = "contractsignatorysignmodalcontentauthorlast"
+  , processsignatorysignmodalcontentdesignvieweleg = "contractsignatorysignmodalcontentdesignvieweleg"
+  , processsignatorysignmodalcontentsignvieweleg = "contractsignatorysignmodalcontentsignvieweleg"
   , processsignbuttontext = "contractsignbuttontext"
   , processsignbuttontextauthor = "contractsignbuttontextauthor"
   , processsignatorycancelmodaltitle = "contractsignatorycancelmodaltitle"
@@ -214,13 +213,8 @@ contractProcess =
   , processflashmessagearchivedone = "flashMessageContractArchiveDone"
   , processflashmessagebulkremindssent = "flashMessageBulkContractRemindsSent"
   , processflashmessagenobulkremindssent = "flashMessageNoBulkContractRemindsSent"
-  , processflashmessagepleasesign = "flashMessagePleaseSignContract"
 
   -- process specific modal templates
-  , processmodalsignedviewclosedhasaccount = "modalSignedViewClosedHasAccount"
-  , processmodalsignedviewnotclosedhasaccount = "modalSignedViewNotClosedHasAccount"
-  , processmodalsignedviewclosednoaccount = "modalSignedViewClosedNoAccount"
-  , processmodalsignedviewnotclosednoaccount = "modalSignedViewNotClosedNoAccount"
   , processmodalsendconfirmation = "modalSignInviteView"
 
   -- process specific seal information
@@ -241,7 +235,7 @@ contractProcess =
   , processsignedinfotext = "contractsignedinfotext"
   , processstatusinfotext = "contractstatusinfotext"
   , processauthorsignlastbuttontext = "contractauthorsignlastbuttontext"
-  
+
   , processauthorname = "contractauthorname"
   , processauthorsignatoryname = "contractauthorsignatoryname"
   , processsignatoryname = "contractsignatoryname"
@@ -256,6 +250,7 @@ offerProcess =
   -- templates used in lots of different places
     processtitle = "offertitle"
   , processname = "offername"
+  , processcorename = "offercorename"
 
   -- used when uploading
   , processuploadname = "offeruploadname"
@@ -280,12 +275,14 @@ offerProcess =
   , processcancelbuttontext = "offercancelbuttontext"
   , processcancelmodaltitle = "offercancelmodaltitle"
   , processcancelmodaltext = "offercancelmodaltext"
-  
+
   , processrejectbuttontext = "offerrejectbuttontext"
   , processsignatorysignmodaltitle = "offersignatorysignmodaltitle"
   , processsignatorysignmodalcontentlast = "offersignatorysignmodalcontentlast"
   , processsignatorysignmodalcontentnotlast = "offersignatorysignmodalcontentnotlast"
   , processsignatorysignmodalcontentauthorlast = "offersignatorysignmodalcontentauthorlast"
+  , processsignatorysignmodalcontentdesignvieweleg = "offersignatorysignmodalcontentdesignvieweleg"
+  , processsignatorysignmodalcontentsignvieweleg = "offersignatorysignmodalcontentsignvieweleg"
   , processsignbuttontext = "offersignbuttontext"
   , processsignbuttontextauthor = "offersignbuttontextauthor"
   , processsignatorycancelmodaltitle = "offersignatorycancelmodaltitle"
@@ -310,13 +307,8 @@ offerProcess =
   , processflashmessagearchivedone = "flashMessageOfferArchiveDone"
   , processflashmessagebulkremindssent = "flashMessageBulkOfferRemindsSent"
   , processflashmessagenobulkremindssent = "flashMessageNoBulkOfferRemindsSent"
-  , processflashmessagepleasesign = "flashMessagePleaseSignOffer"
 
   -- process specific modal templates
-  , processmodalsignedviewclosedhasaccount = "modalOfferSignedHasAccount"
-  , processmodalsignedviewnotclosedhasaccount = "modalOfferSignedHasAccount"
-  , processmodalsignedviewclosednoaccount = "modalOfferSignedNoAccount"
-  , processmodalsignedviewnotclosednoaccount = "modalOfferSignedNoAccount"
   , processmodalsendconfirmation = "modalOfferCreated"
 
   -- process specific seal information
@@ -336,8 +328,8 @@ offerProcess =
   , processsignedinfoheader = "offersignedinfoheader"
   , processsignedinfotext = "offersignedinfotext"
   , processstatusinfotext = "offerstatusinfotext"
-  , processauthorsignlastbuttontext = "offerauthorsignlastbuttontext"  
-  
+  , processauthorsignlastbuttontext = "offerauthorsignlastbuttontext"
+
   , processauthorname = "offerauthorname"
   , processauthorsignatoryname = "offerauthorsignatoryname"
   , processsignatoryname = "offersignatoryname"
@@ -353,6 +345,7 @@ orderProcess =
   -- templates used in lots of different places
     processtitle = "ordertitle"
   , processname = "ordername"
+  , processcorename = "ordercorename"
 
   -- used when uploading
   , processuploadprompttext = "orderuploadprompttext"
@@ -383,6 +376,8 @@ orderProcess =
   , processsignatorysignmodalcontentlast = "ordersignatorysignmodalcontentlast"
   , processsignatorysignmodalcontentnotlast = "ordersignatorysignmodalcontentnotlast"
   , processsignatorysignmodalcontentauthorlast = "ordersignatorysignmodalcontentauthorlast"
+  , processsignatorysignmodalcontentdesignvieweleg = "ordersignatorysignmodalcontentdesignvieweleg"
+  , processsignatorysignmodalcontentsignvieweleg = "ordersignatorysignmodalcontentsignvieweleg"
   , processsignbuttontext = "ordersignbuttontext"
   , processsignbuttontextauthor = "ordersignbuttontextauthor"
   , processsignatorycancelmodaltitle = "ordersignatorycancelmodaltitle"
@@ -407,13 +402,8 @@ orderProcess =
   , processflashmessagearchivedone = "flashMessageOrderArchiveDone"
   , processflashmessagebulkremindssent = "flashMessageBulkOrderRemindsSent"
   , processflashmessagenobulkremindssent = "flashMessageNoBulkOrderRemindsSent"
-  , processflashmessagepleasesign = "flashMessagePleaseSignOrder"
 
   -- process specific modal templates
-  , processmodalsignedviewclosedhasaccount = "modalSignedViewOrderClosedHasAccount"
-  , processmodalsignedviewnotclosedhasaccount = "modalSignedViewOrderNotClosedHasAccount"
-  , processmodalsignedviewclosednoaccount = "modalSignedViewOrderClosedNoAccount"
-  , processmodalsignedviewnotclosednoaccount = "modalSignedViewOrderNotClosedNoAccount"
   , processmodalsendconfirmation = "modalOrderCreated"
 
   -- process specific seal information
@@ -433,8 +423,8 @@ orderProcess =
   , processsignedinfoheader = "ordersignedinfoheader"
   , processsignedinfotext = "ordersignedinfotext"
   , processstatusinfotext = "orderstatusinfotext"
-  , processauthorsignlastbuttontext = "orderauthorsignlastbuttontext"    
-  
+  , processauthorsignlastbuttontext = "orderauthorsignlastbuttontext"
+
   , processauthorname = "orderauthorname"
   , processauthorsignatoryname = "orderauthorsignatoryname"
   , processsignatoryname = "ordersignatoryname"

@@ -38,16 +38,16 @@ describe "sign up on front page" do
     (@wait.until { @driver.find_element :css => ".requestAccount .submit" }).click
     (@wait.until { @driver.find_element :css => ".modal-container .close" }).click
 
-    puts "we should get an email to a page where we can accept the tos" 
+    puts "we should get an email to a page where we can accept the tos"
     @emailhelper.follow_link_in_latest_mail_for random_email
     @wait.until { @driver.find_element :id => "tosCBox" }
 
-    puts "make sure we get a red flash if we try to activate without signing the tos" 
+    puts "make sure we get a red flash if we try to activate without signing the tos"
     (@wait.until { @driver.find_element :css => ".modal-footer .btn-small.float-right" }).click
-    
+
     @wait.until { @driver.find_element :css => ".failed-validation" }
 
-    puts "accept the tos" 
+    puts "accept the tos"
     (@wait.until { @driver.find_element :id => "tosCBox" }).click
 
     puts "make sure we get a red flash if we try to activate without filling in a name"

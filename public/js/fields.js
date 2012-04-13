@@ -1,6 +1,6 @@
 /* Fields of signatories
  * Placement of fields + support for moving them to files
- * View of field in sign view 
+ * View of field in sign view
  */
 
 
@@ -11,11 +11,15 @@ window.FieldPlacement = Backbone.Model.extend({
         x : 0,
         y : 0,
         placed : false
-        
+
     },
     initialize : function(args){
         var placement = this;
         setTimeout(function() {placement.addToPage();},100);
+        args.field.bind('removed', function() {
+            placement.trigger("removed");
+            placement.remove();
+        });
     },
     placed : function() {
           return this.get("placed");
@@ -35,10 +39,10 @@ window.FieldPlacement = Backbone.Model.extend({
                 this.set({placed : true});
                 page.addPlacement(placement);
              }
-                      
+
           }
          return setTimeout(function() {placement.addToPage();},100);
-         
+
     },
     x : function() {
         return this.get("x");
@@ -61,19 +65,20 @@ window.FieldPlacement = Backbone.Model.extend({
        var page = document.getFile(fileid).page(this.get("page"));
        page.removePlacement(this);
        this.field().removePlacement(this);
+       this.off();
     },
     draftData : function() {
         var document = this.field().signatory().document();
         var fileid = this.get("fileid");
         var page = document.getFile(fileid).page(this.get("page"));
-        return { 
+        return {
             x : parseInt(this.x()),
             y : parseInt(this.y()),
-            pagewidth : page.width(),
-            pageheight : page.height(),
-            page : page.number()                              
-        }
-    }    
+            pagewidth : page != undefined ? page.width() : 943,
+            pageheight : page != undefined ? page.height() : 1335,
+            page : page != undefined ? page.number() : this.get("page")
+        };
+    }
 });
 
 window.Field = Backbone.Model.extend({
@@ -95,8 +100,14 @@ window.Field = Backbone.Model.extend({
         });
         this.set({"placements": placements});
         this.bind("change",function() {
-            field.signatory().document().trigger("change:signatories")
+            field.signatory().document().trigger("change:signatories");
         });
+        args.signatory.bind("removed",function() {
+            field.trigger("removed");
+            field.off();
+        });
+        if (this.isSignature())
+            this.set({"signature" : new Signature({field: this}, {silent : true})});
     },
     name : function() {
         return this.get("name");
@@ -116,32 +127,35 @@ window.Field = Backbone.Model.extend({
     placements : function() {
         return this.get("placements");
     },
+    isPlaced: function() {
+      return this.placements().length > 0;
+    },
     signatory : function(){
         return this.get("signatory");
     },
     canBeIgnored: function(){
         var name = this.name();
-        return this.value() == "" && this.placements().length == 0 && (name == "sigco" || name == "sigpersnr" || name == "sigcompnr" || name == "signature");
+        return this.value() == "" && this.placements().length == 0 && (name == "fstname" || name == "sndname" || name == "sigco" || name == "sigpersnr" || name == "sigcompnr" || name == "signature");
     },
     hasRestrictedName : function() {
         return this.isStandard() || this.isSignature(); //this checks are name based
     },
     readyForSign : function(){
-        return this.value() != "" || this.canBeIgnored();
+        return (!this.isSignature() && ((this.value() != "") || (this.canBeIgnored()))) || (this.isSignature() && (this.signature().hasImage() || this.placements().length == 0));
     },
     nicename : function() {
         var name = this.name();
         if (name == "fstname")
             return localization.fstname;
-        if (name == "sndname" )     
+        if (name == "sndname" )
             return localization.sndname;
-        if (name == "email") 
+        if (name == "email")
             return localization.email;
         if (name == "sigco")
             return localization.company;
-        if (name == "sigpersnr" )     
+        if (name == "sigpersnr" )
             return localization.personamNumber;
-        if (name == "sigcompnr") 
+        if (name == "sigcompnr")
             return localization.companyNumber;
         return name;
     },
@@ -153,48 +167,64 @@ window.Field = Backbone.Model.extend({
     },
     validation: function() {
         var field = this;
-        var name  = this.name()
-        
+        var name  = this.name();
+
         if (!this.signatory().author() && (name == "fstname" ||name == "sndname") && !this.signatory().isCsv()) {
             var msg = localization.designview.validation.missingOrWrongNames;
             return new NameValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
-        
+
         if (!this.signatory().author() && name == "email" && !this.signatory().isCsv() ){
             var msg = localization.designview.validation.missingOrWrongEmail;
             return new EmailValidation({message: msg}).concat(new NotEmptyValidation({message: msg}));
         }
-        
+
         if (this.signatory().document().elegAuthorization() && name == "sigpersnr" && this.signatory().signs()  && !this.signatory().isCsv() ) {
-            var msg = localization.designview.validation.missingOrWrongPersonalNumber
+            var msg = localization.designview.validation.missingOrWrongPersonalNumber;
             return new NotEmptyValidation({message: msg});
         }
-        
-        if (this.isCustom()) {
-            var msg = localization.designview.validation.notReadyField
-            return new Validation({validates : function() {return field.isReady()}, message : msg});
+
+        if (this.signatory().author() && !this.isCustom() && !this.signature() && this.hasPlacements()) {
+          var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
+          return new NotEmptyValidation({message: msg});
         }
-        
+
+        if (this.isCustom()) {
+          var msg1 = localization.designview.validation.notReadyField;
+          var msg2 = localization.designview.validation.notPlacedField;
+          var validation = new Validation({validates: function() {return field.isReady()}, message: msg1}).concat(new Validation({validates: function() {return field.isPlaced()}, message: msg2}));
+          if (this.signatory().author()) {
+            return validation.concat(new NotEmptyValidation({message: localization.designview.validation.missingOrWrongCustomFieldValue}));
+          } else {
+            return validation;
+          }
+        }
+        if (this.signatory().signs() && this.signatory().document().padAuthorization() && this.isSignature()) {
+            var msg = localization.designview.validation.notPlacedSignature;
+            return new Validation({validates : function() {return field.hasPlacements()}, message : msg});
+        }
         return new Validation();
     },
     isStandard: function() {
         var name = this.name();
         return  (name == "fstname")
-             || (name == "sndname" )     
-             || (name == "email") 
+             || (name == "sndname" )
+             || (name == "email")
              || (name == "sigco")
-             || (name == "sigpersnr" )     
-             || (name == "sigcompnr") 
+             || (name == "sigpersnr" )
+             || (name == "sigcompnr");
     },
     isCustom: function() {
         return !this.isStandard() && !this.isSignature();
     },
     isSignature : function() {
         return this.name() == "signature";
-
+    },
+    signature : function() {
+        return this.get("signature");
     },
     isReady: function(){
-      return this.get("fresh") == false;  
+      return this.get("fresh") == false;
     },
     makeReady : function() {
       this.set({fresh: false});
@@ -205,16 +235,20 @@ window.Field = Backbone.Model.extend({
             placement.remove();
         });
       this.signatory().deleteField(this);
+      this.trigger("removed");
     },
     draftData : function() {
       return {   name : this.name()
                , value : this.value()
                , placements : _.map(this.placements(), function(placement) {return placement.draftData();})
-             }  
+             };
     },
+   hasPlacements : function() {
+      return this.get("placements").length > 0;
+   },
    addPlacement : function(placement) {
       var newplacements = new Array(); //Please don't ask why we rewrite this array
-      for(var i=0;i<this.placements().length;i++) 
+      for(var i=0;i<this.placements().length;i++)
          newplacements.push(this.placements()[i]);
       newplacements.push(placement);
       this.set({placements : newplacements});
@@ -226,6 +260,9 @@ window.Field = Backbone.Model.extend({
              newplacements.push(this.placements()[i]);
        this.set({placements : newplacements});
 
+    },
+    removeAllPlacements : function() {
+        _.each(this.placements(), function(p) {p.remove();});
     }
 });
 
@@ -250,6 +287,7 @@ window.FieldStandardView = Backbone.View.extend({
             else
                 {
                 input.val(field.nicename());
+                $(this.el).addClass("required");
                 input.addClass("grayed");
                 }
         $(this.el).append(input);
@@ -264,19 +302,18 @@ window.FieldStandardView = Backbone.View.extend({
             var input = InfoTextInput.init({
                                  infotext: field.nicename(),
                                  value: field.value(),
-                                 cssClass :'fieldvalue',       
+                                 cssClass :'fieldvalue',
                                  onChange : function(value) {
-                                    field.setValue(value);    
+                                    field.setValue(value);
                                     SessionStorage.set(signatory.document().documentid(),field.name(),value);
                                   }
                             }).input();
-            this.redborderhere = input;                            
-            input.attr("autocomplete","off");                
+            this.redborderhere = input;
+            input.attr("autocomplete","off");
             wrapper.append(input);
-            $(this.el).append(wrapper);    
-            
+            $(this.el).append(wrapper);
         }
-        
+
         return this;
     },
     redborder : function() {
@@ -308,15 +345,15 @@ window.FieldBasicDesignView = Backbone.View.extend({
                                  cssClass :'fieldvalue',
                                  inputname : field.name(), //Added only for selenium tests
                                  onChange : function(value) {
-                                    field.setValue(value);    
+                                    field.setValue(value);
                                   }
                             }).input();
-        if (field.isClosed())  
-        { 
+        if (field.isClosed())
+        {
             $(this.el).addClass('closed');
             input.attr("readonly","yes");
-        }    
-        $(this.el).append(input);    
+        }
+        $(this.el).append(input);
         return this;
     },
     redborder : function() {
@@ -337,7 +374,7 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
         this.render();
     },
     ddIcon : function() {
-        var icon =  $("<div class='ddIcon' />")
+        var icon =  $("<div class='ddIcon' />");
         var field = this.model;
         var document = field.signatory().document();
         if (document.mainfile() != undefined && document.mainfile().view != undefined)
@@ -360,32 +397,32 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
                     onDrop: function(page, x,y ){
                           field.addPlacement(new FieldPlacement({
                               page: page.number(),
-                              fileid: page.file().fileid(),                                  
+                              fileid: page.file().fileid(),
                               field: field,
                               x : x,
-                              y : y  
-                            }))
-                    } 
+                              y : y
+                            }));
+                    }
             });
         }
         return icon;
     },
     prepIcon : function() {
-        return $("<a class='prepIcon' href='#'/>")
+        return $("<a class='prepIcon' href='#'/>");
     },
     setNameIcon : function() {
         var field = this.model;
         var input = this.input;
-        var icon =  $("<a class='setNameIcon' href='#'/>")
+        var icon =  $("<a class='setNameIcon' href='#'/>");
         var fn = function(){
           if (!field.hasRestrictedName())
             field.makeReady();
           else  FlashMessages.add({
             color : "red",
             content: localization.designview.validation.restrictedName
-          })
+          });
           return false;
-        };  
+        };
         icon.click(fn);
         input.keypress(function(event) {
           if(event.which === 13)
@@ -399,11 +436,11 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
     },
     removeIcon: function() {
         var field = this.model;
-        var icon = $("<a class='removeField' href='#'/>")
+        var icon = $("<a class='removeField' href='#'/>");
         icon.click(function(){
             field.remove();
             return false;
-        })
+        });
         return icon;
     },
     render: function(){
@@ -419,18 +456,18 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
                                  cssClass :'fieldvalue',
                                  inputname : field.name(), //Added only for selenium tests
                                  onChange : function(value) {
-                                    field.setValue(value);    
+                                    field.setValue(value);
                                   }
                             }).input();
-          if (field.isClosed())  
-            { 
+          if (field.isClosed())
+            {
                 $(this.el).addClass('closed');
                 this.input.attr("readonly","yes");
             }
           else if (!field.isStandard())
            {
                this.input.addClass("shorter");
-               $(this.el).append(this.removeIcon())  
+               $(this.el).append(this.removeIcon());
            }
           $(this.el).append(this.input);
         }
@@ -442,7 +479,7 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
                                  cssClass :'fieldvalue',
                                  inputname : field.name(), //Added only for selenium tests
                                  onChange : function(value) {
-                                    field.setName(value);    
+                                    field.setName(value);
                                   }
                }).input();
            this.input.addClass("much-shorter");
@@ -460,5 +497,5 @@ window.FieldAdvancedDesignView = FieldBasicDesignView.extend({
         $(this.el).removeClass("redborder");
     }
 });
-    
-})(window); 
+
+})(window);

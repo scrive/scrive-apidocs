@@ -28,7 +28,7 @@ instance DBQuery GetFileByFileID (Maybe File) where
     _ <- kExecute [toSql fid]
     fetchFiles >>= oneObjectReturnedGuard
 
-data NewFile = NewFile BS.ByteString BS.ByteString
+data NewFile = NewFile String BS.ByteString
 instance DBUpdate NewFile File where
   dbUpdate (NewFile filename content) = do
      kPrepare $ "INSERT INTO files"
@@ -60,7 +60,7 @@ instance DBUpdate PutFileUnchecked () where
                               [SqlNull,SqlNull,SqlNull,toSql path]
     return ()
 
-data FileMovedToAWS = FileMovedToAWS FileID BS.ByteString BS.ByteString
+data FileMovedToAWS = FileMovedToAWS FileID String String
 instance DBUpdate FileMovedToAWS () where
   dbUpdate (FileMovedToAWS fid bucket url) = do 
     kPrepare "UPDATE files SET content = NULL, amazon_bucket = ?, amazon_url = ? WHERE id = ?"

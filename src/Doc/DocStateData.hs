@@ -33,6 +33,7 @@ module Doc.DocStateData (
   , TimeoutTime(..)
   , AuthorAttachment(..)
   , SignatoryAttachment(..)
+  , StatusClass(..)
   , getFieldOfType
   , getValueOfType
   , documentHistoryToDocumentLog
@@ -49,12 +50,12 @@ import Data.Either
 import Data.Maybe
 import DB.Derive
 import Happstack.Data
+import IPAddress
 import MagicHash (MagicHash)
 import MinutesTime
-import Misc
 import User.Model
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS
+--import qualified Data.ByteString as BS
+--import qualified Data.ByteString.UTF8 as BS
 import File.FileID
 import File.File
 import Doc.DocumentID
@@ -75,8 +76,34 @@ newtype SignOrder = SignOrder { unSignOrder :: Integer }
   deriving (Eq, Ord)
 $(newtypeDeriveUnderlyingReadShow ''SignOrder)
 
+
+{- |
+    We want the documents to be ordered like the icons in the bottom
+    of the document list.  So this means:
+    0 Draft - 1 Cancel - 2 Fall due - 3 Sent - 4 Opened - 5 Signed
+-}
+
+data StatusClass = SCDraft
+                  | SCCancelled
+                  | SCSent
+                  | SCDelivered
+                  | SCRead
+                  | SCOpened
+                  | SCSigned
+                  deriving (Eq, Ord, Enum)
+
+instance Show StatusClass where
+  show SCDraft = "draft"
+  show SCCancelled = "cancelled"
+  show SCSent = "sent"
+  show SCDelivered = "delivered"
+  show SCRead = "read"
+  show SCOpened = "opened"
+  show SCSigned = "signed"
+
 data IdentificationType = EmailIdentification
                         | ELegitimationIdentification
+                        | PadIdentification
   deriving (Eq, Ord, Bounded, Enum, Show)
 
 data SignatureInfo = SignatureInfo {
@@ -95,13 +122,13 @@ data FieldType = FirstNameFT
                | PersonalNumberFT
                | CompanyNumberFT
                | EmailFT
-               | CustomFT BS.ByteString Bool -- label filledbyauthor
+               | CustomFT String Bool -- label filledbyauthor
                | SignatureFT
   deriving (Eq, Ord, Show, Data, Typeable)
 
 data SignatoryField = SignatoryField {
     sfType       :: FieldType
-  , sfValue      :: BS.ByteString
+  , sfValue      :: String
   , sfPlacements :: [FieldPlacement]
   } deriving (Eq, Ord, Show, Data, Typeable)
 
@@ -128,7 +155,6 @@ data SignatoryLink = SignatoryLink {
   , signatorydetails           :: SignatoryDetails    -- ^ details of this person as filled in invitation
   , signatorymagichash         :: MagicHash           -- ^ authentication code
   , maybesignatory             :: Maybe UserID        -- ^ if this document has been saved to an account, that is the user id
-  , maybesupervisor            :: Maybe UserID        -- ^ THIS IS NOW DEPRECATED - use maybecompany instead
   , maybecompany               :: Maybe CompanyID     -- ^ if this document has been saved to a company account this is the companyid
   , maybesigninfo              :: Maybe SignInfo      -- ^ when a person has signed this document
   , maybeseeninfo              :: Maybe SignInfo      -- ^ when a person has first seen this document
@@ -140,14 +166,15 @@ data SignatoryLink = SignatoryLink {
   , signatorylinkreallydeleted :: Bool -- ^ when true it means that the doc has been removed from the recycle bin
   , signatorylinkcsvupload     :: Maybe CSVUpload
   , signatoryattachments       :: [SignatoryAttachment]
+  , signatorylinkstatusclass   :: StatusClass
   } deriving (Eq, Ord, Show)
 
 data SignatoryRole = SignatoryPartner | SignatoryAuthor
     deriving (Eq, Ord, Bounded, Enum, Show)
 
 data CSVUpload = CSVUpload {
-    csvtitle :: BS.ByteString
-  , csvcontents  :: [[BS.ByteString]]
+    csvtitle :: String
+  , csvcontents  :: [[String]]
   , csvsignatoryindex :: Int
   } deriving (Eq, Ord, Show)
 
@@ -201,7 +228,6 @@ data DocumentStatus = Preparation
                     | Canceled
                     | Timedout
                     | Rejected
-                    | AwaitingAuthor
                     | DocumentError String
   deriving (Eq, Ord, Show)
 
@@ -211,7 +237,6 @@ data DocumentProcess = Contract | Offer | Order
 data DocumentType = Signable DocumentProcess
                   | Template DocumentProcess
                   | Attachment
-                  | AttachmentTemplate
   deriving (Eq, Ord, Show)
 
 instance Convertible DocumentType SqlValue where
@@ -219,20 +244,17 @@ instance Convertible DocumentType SqlValue where
     Signable _ -> 1
     Template _ -> 2
     Attachment -> 3
-    AttachmentTemplate -> 4
 
 documentType :: (Int, Maybe DocumentProcess) -> DocumentType
 documentType (1, Just p) = Signable p
 documentType (2, Just p) = Template p
 documentType (3, Nothing) = Attachment
-documentType (4, Nothing) = AttachmentTemplate
 documentType v = error $ "documentType: wrong values: " ++ show v
 
 toDocumentProcess :: DocumentType -> Maybe DocumentProcess
 toDocumentProcess (Signable p) = Just p
 toDocumentProcess (Template p) = Just p
 toDocumentProcess (Attachment) = Nothing
-toDocumentProcess (AttachmentTemplate) = Nothing
 
 -- | Terrible, I know. Better idea?
 -- | TODO: to be KILLED.
@@ -244,7 +266,6 @@ doctypeFromString "Template Contract"  = Template Contract
 doctypeFromString "Template Offer"     = Template Offer
 doctypeFromString "Template Order"     = Template Order
 doctypeFromString "Attachment"         = Attachment
-doctypeFromString "AttachmentTemplate" = AttachmentTemplate
 doctypeFromString _                    = error "Bad document type"
 
 data DocumentFunctionality = BasicFunctionality | AdvancedFunctionality
@@ -255,12 +276,12 @@ data DocumentSharing = Private
   deriving (Eq, Ord, Show)
 
 data DocumentTag = DocumentTag {
-    tagname :: BS.ByteString
-  , tagvalue :: BS.ByteString
+    tagname :: String
+  , tagvalue :: String
   } deriving (Eq, Ord, Show, Data, Typeable)
 
 data DocumentUI = DocumentUI {
-    documentmailfooter :: Maybe BS.ByteString
+    documentmailfooter :: Maybe String
   } deriving (Eq, Ord, Show)
 
 emptyDocumentUI :: DocumentUI
@@ -301,18 +322,18 @@ data DocumentHistoryEntry =
     , ipnumber :: IPAddress
   } deriving (Eq, Ord, Show)
 
-data DocumentLogEntry = DocumentLogEntry MinutesTime BS.ByteString
+data DocumentLogEntry = DocumentLogEntry MinutesTime String
   deriving (Eq, Ord)
 
 instance Show DocumentLogEntry where
   show (DocumentLogEntry time rest) =
-    formatMinutesTimeUTC time ++ " " ++ BS.toString rest
+    formatMinutesTimeUTC time ++ " " ++ rest
 
 instance Read DocumentLogEntry where
   readsPrec _ text =
     -- 2011-01-02 13:45:22 = 19 chars
     case parseMinutesTimeUTC timepart of
-      Just time -> [(DocumentLogEntry time (BS.fromString (drop 1 restpart)),"")]
+      Just time -> [(DocumentLogEntry time $ drop 1 restpart, "")]
       Nothing -> []
     where
      (timepart, restpart) = splitAt 19 text
@@ -341,26 +362,26 @@ getFieldOfType _ [] = Nothing
 getFieldOfType t (sf:rest) =
   if sfType sf == t then Just sf else getFieldOfType t rest
 
-getValueOfType :: FieldType -> SignatoryDetails -> BS.ByteString
-getValueOfType t = fromMaybe BS.empty . fmap sfValue . getFieldOfType t . signatoryfields
+getValueOfType :: FieldType -> SignatoryDetails -> String
+getValueOfType t = fromMaybe "" . fmap sfValue . getFieldOfType t . signatoryfields
 
 documentHistoryToDocumentLog :: DocumentHistoryEntry -> DocumentLogEntry
 documentHistoryToDocumentLog DocumentHistoryCreated{..} =
-  DocumentLogEntry dochisttime $ BS.fromString "Document created"
+  DocumentLogEntry dochisttime $ "Document created"
 documentHistoryToDocumentLog DocumentHistoryInvitationSent{..} =
-  DocumentLogEntry dochisttime $ BS.fromString $ "Invitations sent to signatories" ++ formatIP ipnumber
+  DocumentLogEntry dochisttime $ "Invitations sent to signatories" ++ formatIP ipnumber
 documentHistoryToDocumentLog DocumentHistoryTimedOut{..} =
-  DocumentLogEntry dochisttime $ BS.fromString "Document timed out"
+  DocumentLogEntry dochisttime $ "Document timed out"
 documentHistoryToDocumentLog DocumentHistorySigned{..} =
-  DocumentLogEntry dochisttime $ BS.fromString $ "Document signed by a signatory" ++ formatIP ipnumber
+  DocumentLogEntry dochisttime $ "Document signed by a signatory" ++ formatIP ipnumber
 documentHistoryToDocumentLog DocumentHistoryRejected{..} =
-  DocumentLogEntry dochisttime $ BS.fromString $ "Document rejected by a signatory" ++ formatIP ipnumber
+  DocumentLogEntry dochisttime $ "Document rejected by a signatory" ++ formatIP ipnumber
 documentHistoryToDocumentLog DocumentHistoryClosed{..} =
-  DocumentLogEntry dochisttime $ BS.fromString $ "Document closed" ++ formatIP ipnumber
+  DocumentLogEntry dochisttime $ "Document closed" ++ formatIP ipnumber
 documentHistoryToDocumentLog DocumentHistoryCanceled{..} =
-  DocumentLogEntry dochisttime $ BS.fromString $ "Document canceled" ++ formatIP ipnumber
+  DocumentLogEntry dochisttime $ "Document canceled" ++ formatIP ipnumber
 documentHistoryToDocumentLog DocumentHistoryRestarted{..} =
-  DocumentLogEntry dochisttime $ BS.fromString $ "Document restarted" ++ formatIP ipnumber
+  DocumentLogEntry dochisttime $ "Document restarted" ++ formatIP ipnumber
 
 data DocStats = DocStats {
     doccount          :: !Int
@@ -374,7 +395,7 @@ data DocStats = DocStats {
 
 data Document = Document {
     documentid                     :: DocumentID
-  , documenttitle                  :: BS.ByteString
+  , documenttitle                  :: String
   , documentsignatorylinks         :: [SignatoryLink]
   , documentfiles                  :: [FileID]
   , documentsealedfiles            :: [FileID]
@@ -387,17 +408,18 @@ data Document = Document {
   , documenttimeouttime            :: Maybe TimeoutTime
   , documentinvitetime             :: Maybe SignInfo
   , documentlog                    :: [DocumentLogEntry]      -- to be made into plain text
-  , documentinvitetext             :: BS.ByteString
+  , documentinvitetext             :: String
   , documentallowedidtypes         :: [IdentificationType]
   , documentcancelationreason      :: Maybe CancelationReason -- When a document is cancelled, there are two (for the moment) possible explanations. Manually cancelled by the author and automatically cancelled by the eleg service because the wrong person was signing.
   , documentsharing                :: DocumentSharing
-  , documentrejectioninfo          :: Maybe (MinutesTime, SignatoryLinkID, BS.ByteString)
+  , documentrejectioninfo          :: Maybe (MinutesTime, SignatoryLinkID, String)
   , documenttags                   :: [DocumentTag]
   , documentservice                :: Maybe ServiceID
   , documentdeleted                :: Bool -- set to true when doc is deleted - the other fields will be cleared too, so it is really truely deleting, it's just we want to avoid re-using the docid.
   , documentauthorattachments      :: [AuthorAttachment]
   , documentui                     :: DocumentUI
   , documentregion                 :: Region
+  , documentstatusclass            :: StatusClass
   } deriving (Eq, Ord, Show)
 
 instance HasLocale Document where
@@ -406,7 +428,7 @@ instance HasLocale Document where
 data CancelationReason = ManualCancel
                         -- The data returned by ELeg server
                         --                 msg                    fn            ln            num
-                        | ELegDataMismatch String SignatoryLinkID BS.ByteString BS.ByteString BS.ByteString
+                        | ELegDataMismatch String SignatoryLinkID String String String
   deriving (Eq, Ord, Show, Data, Typeable)
 
 
@@ -415,8 +437,8 @@ newtype AuthorAttachment = AuthorAttachment { authorattachmentfile :: FileID }
 
 data SignatoryAttachment = SignatoryAttachment {
     signatoryattachmentfile            :: Maybe FileID
-  , signatoryattachmentname            :: BS.ByteString
-  , signatoryattachmentdescription     :: BS.ByteString
+  , signatoryattachmentname            :: String
+  , signatoryattachmentdescription     :: String
   } deriving (Eq, Ord, Show)
 
 data MailsDeliveryStatus = Delivered
@@ -439,4 +461,4 @@ $(newtypeDeriveConvertible ''DocumentID)
 $(enumDeriveConvertible ''DocumentSharing)
 $(jsonableDeriveConvertible [t| [DocumentTag] |])
 $(jsonableDeriveConvertible [t| CancelationReason |])
-$(jsonableDeriveConvertible [t| [[BS.ByteString ]] |])
+$(jsonableDeriveConvertible [t| [[String]] |])

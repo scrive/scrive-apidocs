@@ -211,367 +211,43 @@
         width: 136px;
 }
 
-.tab-table {
-	background: #f4f4f4;
-	border-radius: 0 0 5px 5px;
-	border-top: 1px solid #ccc;
-	padding: 4px;
-	-moz-border-radius: 0 0 5px 5px;
-	-webkit-border-radius: 0 0 5px 5px;
+
+#mailapiemailslist {
+    margin-bottom: 5px;
 }
 
-.tab-table table {
-	background: #fff;
-	border: 1px solid #e0e0e0;
-	font: 12px "Lucida Grande";
-	width: 100%;
-    table-layout: fixed;
+#mailapiemailslist li {
+    margin: 5px 0 0 5px;
 }
 
-.tab-table table th {
-	height: 40px;
-	padding-bottom: 4px;
-	padding-left: 15px;
-	text-align: left;
-	vertical-align: bottom;
+.tab-viewer .mailapitable td:first-child {
+   width: 250px !important;
 }
 
-.tab-table table th a {
-	color: #000 !important;
-	font: 12px "Helvetica Neue";
-	text-decoration: none;
-}
-
-.tab-table table th a:hover {
-	color: #388add !important;
-}
-
-.tab-table table th em {
-	font-size: 9px;
-}
-
-.tab-table table td {
-	color: #666;
-	height: 22px;
-	margin-bottom: 1px;
-	padding-left: 15px;
-    overflow-x:hidden;
-}
-
-.tab-table table td em {
-	font-size: 9px;
-}
-
-.tab-table table td.right {
-	padding-right: 12px;
-	text-align: right;
-}
-
-.tab-table table td a {
-	color: #666 !important;
-}
-
-.tab-table table td a:hover {
-	color: #000 !important;
-}
-
-.tab-table table td input.infotext {
-	width: 94%;
-}
-
-.tab-table table tr.odd td {
-	background: #f6f6f6;
-}
-
-.tab-table table tr {
-	border-top: 1px solid #e0e0e0;
-}
-
-.tab-table table th.col1 {
-	width: 35px;
-}
-
-.tab-table table th.col2 {
-	width: 65px;
-}
-
-.tab-table table th.col3 {
-	width: 85px;
-}
-
-.tab-table table th.col4 {
-	width: 225px;
-}
-
-.tab-table .table-paginate {
-	margin-top: 10px;
-	padding: 10px 20px;
-}
-
-.tab-table .table-paginate > a {
-	color: #fff !important;
-}
-
-.tab-table .table-paginate .pages {
-	color: #999;
-	font: 12px/18px "Lucida Grande";
-	margin: 0 auto;
-	text-align: center;
-	width: 600px;
-}
-
-.tab-table .table-paginate .pages strong {
-	color: #000;
-	display: block;
-	font: 12px/18px "Helvetica Neue";
-}
-
-.tab-table .table-paginate .pages a {
-	color: #666;
-    padding-left: 5px;
-	text-decoration: none;
-}
-
-.tab-table .table-paginate .pages a:hover {
-	color: #000;
-}
-
-.tab-table .table-statuses {
-	background: #fff;
-	border: 1px solid #e0e0e0;
-	border-radius: 3px;
-	color: #999;
-	font-size: 9px;
-	margin-top: 10px;
-	padding: 10px;
-    height: 12px;
-	text-transform: uppercase;
-	-moz-border-radius: 3px;
-	-webkit-border-radius: 3px;
-}
-
-.tab-table .table-statuses .icon {
-	margin-bottom: -1px;
-	margin-left: 8px;
-}
-
-/* Tab Viewer */
-
-.tab-viewer {
-	width: 960px;
-}
-
-.tab-content h5 {
-	color: #000;
-	margin-bottom: 6px;
-}
-
-.tab-content h5 em {
-	color: #9a9a9a;
-}
-
-.tab-content .basicinfo {
-    color: #414241 !important;
-    font: 12px "Helvetica Neue";
-    text-decoration: none;
-    padding: 48px 0 36px 50px;
-    width: 230px;
-}
-
-.tab-content .search {
-    padding-top:11px;
-    padding-bottom:7px;
-    width:250px;
+.tab-viewer .mailapitable input {
+    width: 70px !important;
 }
 
 
-.tab-viewer .tab-header {
-	background: url(../img/bg-header.jpg);
-	border: solid #000;
-	border-width: 1px 1px 0 1px;
-	color: #fff;
-	height: 18px;
-	padding: 3px 3px 3px 20px;
-	position: relative;
+.account-body table,
+.tab-viewer .account-body table {
+   color: #666;
+   margin-top: 10px;
+   margin-bottom: 10px;
+   text-transform: uppercase;
 }
 
-.tab-viewer .tab-header span {
-	font: 10px "Lucida Grande";
-	text-transform: uppercase;
+.tab-viewer .account-body table td {
+   padding: 4px;
 }
 
-.tab-viewer .tab-header h3 {
-	display: inline;
-	font: 16px/24px "Lucida Grande";
-	text-transform: uppercase;
+.tab-viewer .account-body table td:first-child {
+   width: 120px;
 }
 
-.tab-viewer .tab-header .doc-rename {
-	color: #2e99d3;
-	font: 10px "Lucida Grande";
-	text-decoration: none;
-	text-transform: uppercase;
-}
-
-.tab-viewer .tab-header .next-step {
-	right: 10px;
-	position: absolute;
-	top: 6px;
-}
-
-.tab-viewer .tabs {
-	background: #f4f4f4;
-	border: solid #808080;
-	border-width: 0 1px 1px 0px;
-	height: 24px;
-}
-
-.tab-viewer .tabs li:first-child {
-    border: solid #808080;
-    border-width: 0 0px 0px 1px;
-}
-.tab-viewer .tabs li.active:first-child {
-    border-width: 0;
-}
-.tab-viewer .tabs li {
-	color: #4b4b4b;
-	float: left;
-	font: 11px "Lucida Grande";
-	height: 16px;
-	padding: 4px 30px;
-}
-
-.tab-viewer .tabs li a {
-	color: #000;
-	font: 11px "Helvetica Neue";
-    display: inline-block;
-    padding-top:2px;
-}
-
-.tab-viewer .tabs li.active a {
-	color: #fff;
-    padding-top:0px;
-
-}
-
-.tab-viewer .tabs li.active {
-	background: url(../img/bg-header.jpg);
-	color: #d9d9d9;
-}
-
-.tab-viewer .tab-container {
-	background: #fff;
-	border: solid #808080;
-	border-width: 0 1px 1px 1px;
-	font: 10px "Lucida Grande";
-	-moz-border-radius: 0 0 5px 5px;
-	-webkit-border-radius: 0 0 5px 5px;
-}
-
-.tab-container a{
-    cursor : pointer
-}
-
-.tab-viewer .tab-content {
-
-}
-
-.tab-viewer .tab-content .col {
-	margin: 0 20px;
-	padding: 15px 0;
-    width: 300px;
-}
-
-.tab-viewer .tab-content .tab-box {
-	border: 1px solid #e6e7ef;
-	min-height: 90px;
-	padding: 10px;
-	width: 220px;
-}
-
-.tab-viewer .tab-content .tab-box a {
-	color: #2e99d3;
-	text-decoration: none;
-}
-
-.tab-container .tab-search {
-	border: 1px solid #e4e4e4;
-	border-radius: 3px;
-	height: 17px;
-	margin: 0 4px 0 0 !important;
-	padding: 3px 6px 3px 6px;
-	width: 180px;
-	-moz-border-radius: 3px;
-	-webkit-border-radius: 3px;
-}
-
-.tab-container .tab-input {
-	border: 1px solid #e4e4e4;
-	border-radius: 3px;
-	height: 17px;
-	margin: 0 4px 0 0 !important;
-	padding: 3px 6px 3px 6px;
-	width: 205px;
-	-moz-border-radius: 3px;
-	-webkit-border-radius: 3px;
-}
-
-.tab-viewer .tab-dd {
-    font: 12px/24px "Lucida Grande";
-	text-indent: 9px;
-	position: relative;
-    margin-right: 15px;
-}
-
-.tab-viewer .tab-dd-button {
-	background: url(../img/dropdown.png) no-repeat;
-	height: 25px;
-	position: relative;
-	width: 109px;
-        z-index: 2;
-}
-
-.tab-viewer .tab-dd-exp {
-       height: 21px;
-}
-
-.tab-viewer .tab-dd-button > a {
-	color: #000;
-	text-decoration: none;
-}
-
-.tab-viewer .tab-dd {
-    width: 110px !important;
-}
-
-.tab-viewer .tab-dd .tab-dd-opts {
-	background: #e9e9e9;
-	display: none;
-	left: 0;
-	position: absolute;
-	top: 20px;
-	width: 200px;
-        border: 1px solid #bbbbbb;
-        z-index: 1;
-        padding-top: 5px;
-}
-
-.tab-viewer .tab-dd .tab-dd-opts a {
-	color: #999;
-	display: block;
-	text-decoration: none;
-}
-
-.tab-viewer .tab-dd .tab-dd-opts a:hover {
-	color: #000;
-}
-
-.tab-content .vert-divider {
-	border-left: 1px solid #e6e7ef;
-	float: left;
-	height: 150px;
-	position: relative;
-	width: 1px;
+.account-body table td,
+.tab-viewer .account-body table td {
+   padding: 4px;
 }
 
 .tab-viewer .account {
@@ -580,8 +256,9 @@
 
 .tab-viewer .account .col {
    float: left;
-   margin: 0 0 0 40px;
+   margin: 0 20px;
    width: 380px;
+   padding: 15px 0;
 }
 
 .tab-viewer .account-header {
@@ -660,44 +337,6 @@
 
 .tab-viewer .mailapi .mailapibox {
     margin: 10px;
-}
-
-#mailapiemailslist {
-    margin-bottom: 5px;
-}
-
-#mailapiemailslist li {
-    margin: 5px 0 0 5px;
-}
-
-.tab-viewer .mailapitable td:first-child {
-   width: 250px !important;
-}
-
-.tab-viewer .mailapitable input {
-    width: 70px !important;
-}
-
-
-.account-body table,
-.tab-viewer .account-body table {
-   color: #666;
-   margin-top: 10px;
-   margin-bottom: 10px;
-   text-transform: uppercase;
-}
-
-.tab-viewer .account-body table td {
-   padding: 4px;
-}
-
-.tab-viewer .account-body table td:first-child {
-   width: 120px;
-}
-
-.account-body table td,
-.tab-viewer .account-body table td {
-   padding: 4px;
 }
 
 .tab-viewer .account-footer {
@@ -894,6 +533,7 @@
 	text-decoration: none;
     cursor:pointer;
     display:inline-block;
+    font-weight: bold;
     /*width: 48px;*/
 }
 

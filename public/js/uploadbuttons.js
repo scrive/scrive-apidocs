@@ -117,7 +117,7 @@ var UploadButtonView = Backbone.View.extend({
                     fileinput.n--;
                     _.each(fileinput.slaves, function(slave) {
                         $(slave).remove();
-                    })
+                    });
                     fileinput.slaves = [];
                     return false;
                 }
@@ -145,12 +145,73 @@ var UploadButtonView = Backbone.View.extend({
 window.UploadButton = {
     init: function (args) {
           var model = new UploadButtonModel(args);
-          var input = $("<div style='position:relative;overflow:hidden;padding-bottom:5px'/>");
+          var input = $("<div style='position:relative;overflow:hidden;'/>");
           var view = new UploadButtonView({model : model, el : input});
           return new Object({
               input : function() {return input;}
             });
         }
 };
+
+window.UploadBoxModel = Backbone.Model.extend({
+  defaults: {
+    headertext: "",
+    subtext: "",
+    button: undefined
+  },
+  getHeaderText: function() {
+    return this.get('headertext');
+  },
+  getSubText: function() {
+    return this.get('subtext');
+  },
+  getButton: function() {
+    return this.get('button');
+  }
+});
+
+window.UploadBoxView = Backbone.View.extend({
+  initialize: function (args) {
+    _.bindAll(this, 'render');
+    this.model.view = this;
+    this.render();
+  },
+  tagName: 'td',
+  
+  render: function () {
+    var td = $(this.el);
+    td.empty();
+    var div = $('<div class="signStepsBodyUploadBox">').appendTo($(td));
+
+    var header = $('<span class="header">').text(this.model.getHeaderText()).appendTo(div);
+    $('<br />').appendTo(div);
+    var text = $('<span class="text">').text(this.model.getSubText()).appendTo(div);
+    $('<br />').appendTo(div);
+    var b = this.model.getButton().input();
+    $('<div>').addClass('signStepsButtonContainer').append(b).appendTo(div);
+    return this;
+    }
+});
+
+window.UploadTextView = Backbone.View.extend({
+  initialize: function (args) {
+    _.bindAll(this, 'render');
+    this.text = args.text;
+    this.render();
+  },
+  tagName: 'td',
+  
+  render: function () {
+    var td = $(this.el);
+    td.empty();
+    var div = $('<div class="signStepsBodyUploadBox">')
+      .attr("style", "border:0px;text-align:left;width: 250px;font-weight:bold")
+      .appendTo($(td));
+    $('<p class="text">')
+      .attr("style", "padding-top:25px;")
+      .text(this.text).appendTo(div);
+    return this;
+  }
+});
 
 })(window);

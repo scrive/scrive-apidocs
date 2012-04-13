@@ -53,15 +53,6 @@ aboutPageContents=
 									<p>$_aboutPagePerson3Body()$</p>
 									$_aboutPagePerson3Contact()$
 								</li>
-                                                                <li>
-                                                                        <div class="portrait-image">
-                                                                          <a class="marcus"></a>
-                                                                        </div>
-                                                                        <h2>$_aboutPagePerson4()$</h2>
-                                                                        <em>$_aboutPagePerson4Position()$</em>
-                                                                        <p><!-- $_aboutPagePerson4Body()$ --></p>
-                                                                        $_aboutPagePerson4Contact()$
-                                                                </li>
 								<li>
 									<div class="portrait-image">
 								          <a class="dudek"></a>
@@ -72,6 +63,15 @@ aboutPageContents=
 									$_aboutPagePerson5Contact()$
 
 								</li>
+                                                                <li>
+                                                                        <div class="portrait-image">
+                                                                          <a class="joakim"></a>
+                                                                        </div>
+                                                                        <h2>$_aboutPagePerson4()$</h2>
+                                                                        <em>$_aboutPagePerson4Position()$</em>
+                                                                        <p>$_aboutPagePerson4Body()$</p>
+                                                                        $_aboutPagePerson4Contact()$
+                                                                </li>
 								<li>
 									<div class="portrait-image">
 								          <a class="gracjan"></a>

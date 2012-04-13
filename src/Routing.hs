@@ -22,7 +22,7 @@ module Routing ( hGet
                , ToResp, toResp
                  )where
 
-import Control.Monad.State
+import Control.Monad.Error (catchError)
 import Data.Functor
 import AppView as V
 import Data.Maybe
@@ -37,11 +37,18 @@ import Text.JSON
 
 type RedirectOrContent = Either KontraLink String
 
+kpath :: (Path Kontra Kontra' h a) => Method -> (Kontra a -> Kontra b) -> h
+      -> Route (Kontra' b)
+kpath m h = path m (unKontra . h)
+
 class ToResp a where
     toResp:: a -> Kontra Response
 
 instance ToResp Response where
     toResp = return
+
+instance ToResp (Kontra Response) where
+    toResp = id
 
 instance ToResp KontraLink where
     toResp = sendRedirect
@@ -55,17 +62,17 @@ instance ToResp JSValue where
 instance (ToResp a , ToResp b) => ToResp (Either a b) where
     toResp = either toResp toResp
 
-hPostWrap :: Path Kontra a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
-hPostWrap = path POST
+hPostWrap :: Path Kontra Kontra' a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra' Response)
+hPostWrap = kpath POST
 
-hGetWrap :: Path Kontra a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
-hGetWrap = path GET
+hGetWrap :: Path Kontra Kontra' a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra' Response)
+hGetWrap = kpath GET
 
-hDeleteWrap :: Path Kontra a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
-hDeleteWrap = path DELETE
+hDeleteWrap :: Path Kontra Kontra' a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra' Response)
+hDeleteWrap = kpath DELETE
 
-hPutWrap :: Path Kontra a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
-hPutWrap = path PUT
+hPutWrap :: Path Kontra Kontra' a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra' Response)
+hPutWrap = kpath PUT
 
 
 {- To change standard string to page-}
@@ -74,7 +81,7 @@ page pageBody = do
     pb <- pageBody
     ctx <- getContext
     if (isNothing $ ctxservice ctx)
-     then renderFromBody TopDocument kontrakcja pb
+     then renderFromBody kontrakcja pb
      else embeddedPage pb
 
 
@@ -86,38 +93,38 @@ page pageBody = do
    Ajax request should not contain redirect
 -}
 
-hGetAjax :: Path Kontra a Response => a -> Route (Kontra Response)
+hGetAjax :: Path Kontra Kontra' a Response => a -> Route (Kontra' Response)
 hGetAjax = hGetWrap wrapAjax
 
 wrapAjax :: Kontra Response -> Kontra Response
-wrapAjax action = (noRedirect action) `mplus` ajaxError -- Soft redirects should be supported here, ask MR
+wrapAjax action = noRedirect action `catchError`
+                  const ajaxError -- Soft redirects should be supported here, ask MR
 
 noRedirect::Kontra Response -> Kontra Response
 noRedirect action = do
     response <- action
-    if (rsCode response /= 303)
-       then return response
-       else mzero
+    if (rsCode response == 303) then internalError
+                                else return response
 
-hPost :: Path Kontra a Response => a -> Route (Kontra Response)
+hPost :: Path Kontra Kontra' a Response => a -> Route (Kontra' Response)
 hPost = hPostWrap (https . guardXToken)
 
-hGet :: Path Kontra a Response => a -> Route (Kontra Response)
+hGet :: Path Kontra Kontra' a Response => a -> Route (Kontra' Response)
 hGet = hGetWrap https
 
-hDelete :: Path Kontra a Response => a -> Route (Kontra Response)
+hDelete :: Path Kontra Kontra' a Response => a -> Route (Kontra' Response)
 hDelete = hDeleteWrap https
 
-hPut :: Path Kontra a Response => a -> Route (Kontra Response)
+hPut :: Path Kontra Kontra' a Response => a -> Route (Kontra' Response)
 hPut = hPutWrap https
 
-hGetAllowHttp :: Path Kontra a Response => a -> Route (Kontra Response)
+hGetAllowHttp :: Path Kontra Kontra' a Response => a -> Route (Kontra' Response)
 hGetAllowHttp = hGetWrap allowHttp
 
-hPostAllowHttp :: Path Kontra a Response => a -> Route (Kontra Response)
+hPostAllowHttp :: Path Kontra Kontra' a Response => a -> Route (Kontra' Response)
 hPostAllowHttp = hPostWrap allowHttp
 
-hPostNoXToken :: Path Kontra a Response => a -> Route (Kontra Response)
+hPostNoXToken :: Path Kontra Kontra' a Response => a -> Route (Kontra' Response)
 hPostNoXToken = hPostWrap https
 
 https:: Kontra Response -> Kontra Response
@@ -128,7 +135,7 @@ https action = do
        else sendSecureLoopBack
 
 
-allowHttp:: Kontra Response -> Kontra Response
+allowHttp:: Kontrakcja m => m Response -> m Response
 allowHttp action = do
     secure <- isSecure
     loging <- isFieldSet "logging"

@@ -30,6 +30,7 @@ import DB.Fetcher2
 import DB.Utils
 import Doc.DocStateData
 import EvidenceLog.Tables
+import IPAddress
 import MinutesTime
 import Misc
 import User.Model
@@ -69,12 +70,12 @@ instance Actor SystemActor where
 
 mkAuthorActor :: Context -> Maybe AuthorActor
 mkAuthorActor ctx = case ctxmaybeuser ctx of
-  Just user -> Just $ AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (BS.toString $ getEmail user)
+  Just user -> Just $ AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (getEmail user)
   Nothing   -> Nothing
 
 mkAdminActor :: Context -> Maybe AdminActor
 mkAdminActor ctx = case ctxmaybeuser ctx of
-  Just user -> Just $ AdminActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (BS.toString $ getEmail user)
+  Just user -> Just $ AdminActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (getEmail user)
   Nothing   -> Nothing
 
 -- | For an action that requires an operation on a document and an
@@ -218,7 +219,7 @@ htmlDocFromEvidenceLog title elog = do
     field "documenttitle" title
     fieldFL "entries" $ for elog $ \entry -> do
       field "time" $ formatMinutesTimeUTC (evTime entry) ++ " UTC"
-      field "ip"   $ fmap formatIP (evIP4 entry)
+      field "ip"   $ show $ evIP4 entry
       field "text" $ evText entry
 
 data GetEvidenceLog = GetEvidenceLog DocumentID
@@ -345,7 +346,9 @@ data EvidenceEventType =
   AdminOnlySaveForUserEvidence                    |
   SignableFromDocumentEvidence                    |
   TemplateFromDocumentEvidence                    |
-  AttachCSVUploadEvidence
+  AttachCSVUploadEvidence                         |
+  SendToPadDevice                                 |
+  RemovedFromPadDevice
   deriving (Eq, Show, Read, Ord)
 
 instance Convertible EvidenceEventType Int where
@@ -402,6 +405,8 @@ instance Convertible EvidenceEventType Int where
   safeConvert SignableFromDocumentEvidence                    = return 51
   safeConvert TemplateFromDocumentEvidence                    = return 52
   safeConvert AttachCSVUploadEvidence                         = return 53
+  safeConvert SendToPadDevice                                 = return 54
+  safeConvert RemovedFromPadDevice                            = return 55
   
 instance Convertible Int EvidenceEventType where
     safeConvert 1  = return AddSigAttachmentEvidence
@@ -457,6 +462,8 @@ instance Convertible Int EvidenceEventType where
     safeConvert 51 = return SignableFromDocumentEvidence
     safeConvert 52 = return TemplateFromDocumentEvidence
     safeConvert 53 = return AttachCSVUploadEvidence
+    safeConvert 54 = return SendToPadDevice
+    safeConvert 55 = return RemovedFromPadDevice
     safeConvert s  = Left ConvertError { convSourceValue = show s
                                        , convSourceType = "Int"
                                        , convDestType = "EvidenceEventType"

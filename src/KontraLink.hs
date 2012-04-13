@@ -5,6 +5,8 @@ import MagicHash (MagicHash)
 import Misc
 import ActionSchedulerState (ActionID)
 import User.Model
+import qualified Codec.Binary.Url as URL
+import qualified Codec.Binary.UTF8.String as UTF
 import ListUtil
 import Session
 import API.Service.Model
@@ -12,9 +14,6 @@ import Company.Model
 import File.FileID
 
 import Data.Int
-import qualified Codec.Binary.Url as URL
-import qualified Codec.Binary.UTF8.String as UTF
-import qualified Data.ByteString.UTF8 as BS
 
 {- |
    Defines the reason why we are redirected to login page
@@ -53,7 +52,7 @@ data KontraLink
     | LinkOrders
     | LinkAttachments
     | LinkRubbishBin
-    | LinkAccount Bool -- show create company modal?
+    | LinkAccount
     | LinkAccountCompany
     | LinkCompanyLogo CompanyID
     | LinkChangeUserEmail ActionID MagicHash
@@ -86,7 +85,7 @@ data KontraLink
     | LoopBack
     | BackToReferer
     | LinkDaveDocument DocumentID
-    | LinkFile FileID BS.ByteString
+    | LinkFile FileID String
     | LinkAskQuestion
     | LinkInvite
     | LinkSignCanceledDataMismatch DocumentID SignatoryLinkID
@@ -101,7 +100,10 @@ data KontraLink
     | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID
     | LinkAPIDocumentMetadata DocumentID
     | LinkAPIDocumentSignatoryAttachment DocumentID SignatoryLinkID String
+    | LinkPadDeviceArchive 
+    | LinkPadDeviceView
     | LinkMailAPIDelayConfirmation String Int64 MagicHash
+
     deriving (Eq)
 
 localeFolder :: Locale -> String
@@ -160,8 +162,7 @@ instance Show KontraLink where
     showsPrec _ (LinkAttachments) = (++) $ "/a"
     showsPrec _ (LinkRubbishBin) = (++) $ "/r"
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
-    showsPrec _ (LinkAccount False) = (++) "/account"
-    showsPrec _ (LinkAccount True) = (++) "/account/?createcompany"
+    showsPrec _ (LinkAccount) = (++) "/account"
     showsPrec _ LinkAccountCompany = (++) "/account/company"
     showsPrec _ (LinkCompanyLogo cid) = (++) $ "/account/company/" ++ show cid
     showsPrec _ (LinkChangeUserEmail actionid magichash) =
@@ -175,11 +176,11 @@ instance Show KontraLink where
     showsPrec _ (LinkDesignDoc did) =  (++) $ "/" ++ show did
     showsPrec _ (LinkRenameAttachment documentid) = (++) $ "/a/rename/" ++ show documentid
     showsPrec _ (LinkIssueDocPDF Nothing document) =
-        (++) $ "/d/" ++ show (documentid document) ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"
+        (++) $ "/d/" ++ show (documentid document) ++ "/" ++ documenttitle document ++ ".pdf"
     showsPrec _ (LinkIssueDocPDF (Just SignatoryLink{signatorylinkid, signatorymagichash}) document) =
-        (++) $ "/d/" ++ show (documentid document) ++ "/" ++ show signatorylinkid ++ "/" ++ show signatorymagichash ++ "/" ++ BS.toString (documenttitle document) ++ ".pdf"
+        (++) $ "/d/" ++ show (documentid document) ++ "/" ++ show signatorylinkid ++ "/" ++ show signatorymagichash ++ "/" ++ documenttitle document ++ ".pdf"
     showsPrec _ (LinkFile fileid filename) =
-        (++) $ "/df/" ++ show fileid ++ "/" ++ BS.toString filename
+        (++) $ "/df/" ++ show fileid ++ "/" ++ filename
     showsPrec _ (LinkSignDoc document signatorylink) =
         (++) $ "/s/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++
                  "/"++ show (signatorymagichash signatorylink)
@@ -229,4 +230,9 @@ instance Show KontraLink where
     showsPrec _ (LinkAPIDocumentMetadata did) = (++) ("/api/document/" ++ show did ++ "/metadata")
     showsPrec _ (LinkAPIDocumentSignatoryAttachment did sid name) =
       (++) ("/api/document/" ++ show did ++ "/signatory/" ++ show sid ++ "/attachment/" ++ name)
+    showsPrec _ (LinkPadDeviceArchive) =
+      (++) ("/padqueue/archive")
+    showsPrec _ (LinkPadDeviceView) =
+      (++) ("/padqueue")
     showsPrec _ (LinkMailAPIDelayConfirmation email delayid key) = (++) ("/mailapi/confirmdelay/" ++ (URL.encode $ UTF.encode email) ++ "/" ++ show delayid ++ "/" ++ show key)
+

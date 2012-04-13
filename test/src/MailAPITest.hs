@@ -7,7 +7,6 @@ import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit (Assertion)
 import System.IO.Temp
-import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
 import qualified Codec.MIME.Type as MIME
 import Doc.DocStateData
@@ -86,7 +85,7 @@ testSuccessfulDocCreation env emlfile sigs = withMyTestEnvironment env $ \tmpdir
     
     assertBool ("document status should be pending, is " ++ show (documentstatus doc)) $ documentstatus doc == Pending
     assertBool "document has file no attached" $ (length $ documentfiles doc) == 1
-    assertBool ("doc has iso encoded title " ++ show (documenttitle doc)) $ not $ "=?iso" `isInfixOf` (BS.toString $ documenttitle doc)
+    assertBool ("doc has iso encoded title " ++ show (documenttitle doc)) $ not $ "=?iso" `isInfixOf` (documenttitle doc)
     Just doc' <- dbQuery $ GetDocumentByDocumentID $ fromJust mdocid
     assertBool "document is in error!" $ not $ isDocumentError doc'
 
@@ -136,7 +135,7 @@ withMyTestEnvironment env f =
 
 createTestUser :: DB UserID
 createTestUser = do
-    Just User{userid} <- dbUpdate $ AddUser (BSC.empty, BSC.empty) (BSC.pack "andrzej@skrivapa.se") Nothing False Nothing Nothing (mkLocaleFromRegion defaultValue)
+    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" Nothing False Nothing Nothing (mkLocaleFromRegion defaultValue)
     return userid
 
 test_getUserMailAPI :: DB ()

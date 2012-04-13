@@ -12,7 +12,6 @@
 :set -XRankNTypes
 :set -XRecordWildCards
 :set -XScopedTypeVariables
-:set -XStandaloneDeriving
 :set -XTemplateHaskell
 :set -XTypeFamilies
 :set -XTypeOperators

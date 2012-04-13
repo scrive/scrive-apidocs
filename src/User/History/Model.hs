@@ -10,12 +10,13 @@ module User.History.Model (
   , LogHistoryTOSAccept(..)
   , LogHistoryDetailsChanged(..)
   , LogHistoryUserInfoChanged(..)
+  , LogHistoryPadLoginAttempt(..)
+  , LogHistoryPadLoginSuccess(..)
   , GetUserHistoryByUserID(..)
   ) where
 
 import Data.List (intersperse)
 import Database.HDBC
-import qualified Data.ByteString.Char8 as BS
 import Text.JSON
 
 import qualified Paths_kontrakcja as Paths
@@ -26,6 +27,7 @@ import DB.Derive
 import DB.Fetcher2
 import DB.Utils
 
+import IPAddress
 import MinutesTime
 import Misc
 
@@ -38,7 +40,7 @@ data UserHistory = UserHistory {
   , uhevent            :: UserHistoryEvent
   , uhip               :: IPAddress
   , uhtime             :: MinutesTime
-  , uhsystemversion    :: BS.ByteString
+  , uhsystemversion    :: String
   , uhperforminguserid :: Maybe UserID -- Nothing means no user changed it (like the system)
   }
   deriving (Eq, Show)
@@ -56,6 +58,8 @@ data UserHistoryEventType = UserLoginAttempt
                           | UserAccountCreated 
                           | UserDetailsChange 
                           | UserTOSAccept
+                          | UserPadLoginAttempt
+                          | UserPadLoginSuccess
   deriving (Eq, Show)
 
 {- |
@@ -70,7 +74,8 @@ instance Convertible UserHistoryEventType SqlValue where
   safeConvert UserAccountCreated   = return . toSql $ (5 :: Int)
   safeConvert UserDetailsChange    = return . toSql $ (6 :: Int)
   safeConvert UserTOSAccept        = return . toSql $ (7 :: Int)
-
+  safeConvert UserPadLoginAttempt  = return . toSql $ (8 :: Int)
+  safeConvert UserPadLoginSuccess  = return . toSql $ (9 :: Int)
 instance Convertible SqlValue UserHistoryEventType where
   safeConvert a = case (fromSql a :: Int) of
     1 -> return UserLoginAttempt
@@ -80,6 +85,8 @@ instance Convertible SqlValue UserHistoryEventType where
     5 -> return UserAccountCreated
     6 -> return UserDetailsChange
     7 -> return UserTOSAccept
+    8 -> return UserPadLoginAttempt
+    9 -> return UserPadLoginSuccess
     n -> Left ConvertError {
         convSourceValue = show n
       , convSourceType = "Int"
@@ -112,6 +119,25 @@ instance DBUpdate LogHistoryLoginSuccess Bool where
     time
     (Just userid)
 
+data LogHistoryPadLoginAttempt = LogHistoryPadLoginAttempt UserID IPAddress MinutesTime
+instance DBUpdate LogHistoryPadLoginAttempt Bool where
+  dbUpdate (LogHistoryPadLoginAttempt userid ip time) = addUserHistory
+    userid
+    UserHistoryEvent {uheventtype = UserPadLoginAttempt, uheventdata = Nothing}
+    ip
+    time
+    Nothing
+
+data LogHistoryPadLoginSuccess = LogHistoryPadLoginSuccess UserID IPAddress MinutesTime
+instance DBUpdate LogHistoryPadLoginSuccess Bool where
+  dbUpdate (LogHistoryPadLoginSuccess userid ip time) = addUserHistory
+    userid
+    UserHistoryEvent {uheventtype = UserPadLoginSuccess, uheventdata = Nothing}
+    ip
+    time
+    (Just userid)
+
+    
 data LogHistoryPasswordSetup = LogHistoryPasswordSetup UserID IPAddress MinutesTime (Maybe UserID)
 instance DBUpdate LogHistoryPasswordSetup Bool where
   dbUpdate (LogHistoryPasswordSetup userid ip time mpuser) = addUserHistory
@@ -139,7 +165,7 @@ instance DBUpdate LogHistoryAccountCreated Bool where
       , uheventdata = Just $ JSArray $ [JSObject . toJSObject $ [
           ("field", JSString $ toJSString "email")
         , ("oldval", JSString $ toJSString "")
-        , ("newval", JSString $ toJSString $ BS.unpack $ unEmail email)
+        , ("newval", JSString $ toJSString $ unEmail email)
         ]]
       }
     ip
@@ -190,25 +216,25 @@ diffUserInfos old new = fstNameDiff
   ++ emailDiff
   where
     fstNameDiff = if (userfstname old) /= (userfstname new)
-      then [("first_name", BS.unpack $ userfstname old, BS.unpack $ userfstname new)]
+      then [("first_name", userfstname old, userfstname new)]
       else []
     sndNameDiff = if (usersndname old) /= (usersndname new) 
-      then [("last_name", BS.unpack $ usersndname old, BS.unpack $ usersndname new)]
+      then [("last_name", usersndname old, usersndname new)]
       else []
     personalNumberDiff = if (userpersonalnumber old) /= (userpersonalnumber new) 
-      then [("personal_number", BS.unpack $ userpersonalnumber old, BS.unpack $ userpersonalnumber new)]
+      then [("personal_number", userpersonalnumber old, userpersonalnumber new)]
       else []
     companyPositionDiff = if (usercompanyposition old) /= (usercompanyposition new) 
-      then [("company_position", BS.unpack $ usercompanyposition old, BS.unpack $ usercompanyposition new)]
+      then [("company_position", usercompanyposition old, usercompanyposition new)]
       else []
     phoneDiff = if (userphone old) /= (userphone new) 
-      then [("phone", BS.unpack $ userphone old, BS.unpack $ userphone new)]
+      then [("phone", userphone old, userphone new)]
       else []
     mobileDiff = if (usermobile old) /= (usermobile new) 
-      then [("mobile", BS.unpack $ usermobile old, BS.unpack $ usermobile new)]
+      then [("mobile", usermobile old, usermobile new)]
       else []
     emailDiff = if (useremail old) /= (useremail new) 
-      then [("email", BS.unpack $ unEmail $ useremail old, BS.unpack $ unEmail $ useremail new)]
+      then [("email", unEmail $ useremail old, unEmail $ useremail new)]
       else []
 
 addUserHistory :: UserID -> UserHistoryEvent -> IPAddress -> MinutesTime -> Maybe UserID -> DB Bool
@@ -242,7 +268,7 @@ fetchUserHistory = foldDB decoder []
         uhuserid = userid
       , uhevent = UserHistoryEvent {
           uheventtype = eventtype
-        , uheventdata = maybe Nothing (\d -> case decode $ BS.unpack d of
+        , uheventdata = maybe Nothing (\d -> case decode d of
                                         Ok a -> Just a
                                         _    -> Nothing) meventdata
         }

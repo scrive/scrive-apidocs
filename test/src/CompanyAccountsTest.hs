@@ -2,6 +2,7 @@ module CompanyAccountsTest (companyAccountsTests) where
 
 import Control.Applicative
 import Control.Monad.State
+import Control.Monad.Error (catchError)
 import Data.List
 import Data.Ord
 import Happstack.Server hiding (simpleHTTP)
@@ -9,7 +10,6 @@ import Happstack.State (query)
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit (Assertion)
-import qualified Data.ByteString.UTF8 as BS
 
 import ActionSchedulerState
 import Company.Model
@@ -84,7 +84,7 @@ test_removingExistingInvite = do
 test_removingNonExistantInvite :: DB ()
 test_removingNonExistantInvite = do
   company <- addNewCompany
-  _ <- dbUpdate $ RemoveCompanyInvite (companyid company) (Email $ BS.fromString "a@a.com")
+  _ <- dbUpdate $ RemoveCompanyInvite (companyid company) (Email "a@a.com")
   assertCompanyInvitesAre company []
 
 test_addingANewCompanyAccount :: DBEnv -> Assertion
@@ -106,10 +106,10 @@ test_addingANewCompanyAccount env = withTestEnvironment env $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating success" $ head (ctxflashmessages ctx') `isFlashOfType` OperationDone
 
-  Just newuser <- dbQuery $ GetUserByEmail Nothing (Email $ BS.fromString "bob@blue.com")
+  Just newuser <- dbQuery $ GetUserByEmail Nothing (Email "bob@blue.com")
   assertEqual "New user is in company" (Just $ companyid company) (usercompany newuser)
   assertEqual "New user is standard user" False (useriscompanyadmin newuser)
-  assertEqual "New user has the invited name" (BS.fromString "Bob Blue") (getFullName newuser)
+  assertEqual "New user has the invited name" "Bob Blue" (getFullName newuser)
 
   assertCompanyInvitesAre company [mkInvite company "bob@blue.com" "Bob" "Blue"]
 
@@ -340,13 +340,13 @@ test_removingCompanyAccountWorks env = withTestEnvironment env $ do
 
   assertCompanyInvitesAre company []
 
-  companydocs <- dbQuery $ GetDocumentsBySignatory $ userid adminuser
+  companydocs <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) []
   assertEqual "Company still owns users docs" 1 (length companydocs)
   assertEqual "Docid matches" docid (documentid $ head companydocs)
 
 test_privateUserTakoverWorks :: DBEnv -> Assertion
 test_privateUserTakoverWorks env = withTestEnvironment env $ do
-  (adminuser, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
+  (_adminuser, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   docid <- addRandomDocumentWithAuthor user
 
@@ -366,10 +366,13 @@ test_privateUserTakoverWorks env = withTestEnvironment env $ do
   assertEqual "User belongs to the company" (usercompany updateduser)
                                             (Just $ companyid company)
   assertBool "User is a standard user" (not $ useriscompanyadmin updateduser)
-  companydocs <- dbQuery $ GetDocumentsBySignatory $ userid adminuser
+  companydocs <- dbQuery $ GetDocumentsByCompanyWithFiltering (companyid company) []
   assertEqual "Company owns users docs" 1 (length companydocs)
   assertEqual "Docid matches" docid (documentid $ head companydocs)
-  userdocs <- dbQuery $ GetDocumentsBySignatory $ userid user
+  docs <- dbQuery $ GetDocumentsBySignatory [Contract, Offer, Order] $ userid user
+  templates <- dbQuery $ GetAttachmentsByAuthor $ userid user
+  attachments <- dbQuery $ GetTemplatesByAuthor $ userid user
+  let userdocs = docs ++ templates ++ attachments
   assertEqual "User is still linked to their docs" 1 (length userdocs)
   assertEqual "Docid matches" docid (documentid $ head userdocs)
 
@@ -383,9 +386,10 @@ test_mustBeInvitedForTakeoverToWork env = withTestEnvironment env $ do
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST []
-  (res, _ctx') <- runTestKontra req ctx $ handlePostBecomeCompanyAccount (companyid company) >>= sendRedirect
-
-  assertEqual "Response code is 500" 500 (rsCode res)
+  (l, _ctx') <- runTestKontra req ctx $
+    (handlePostBecomeCompanyAccount (companyid company) >> return False)
+      `catchError` const (return True)
+  assertEqual "Exception thrown" True l
   Just updateduser <- dbQuery $ GetUserByID (userid user)
   assertEqual "User is still not in company" Nothing (usercompany updateduser)
 
@@ -412,9 +416,9 @@ addNewAdminUserAndCompany fstname sndname email = do
 mkInvite :: Company -> String -> String -> String -> CompanyInvite
 mkInvite company email fstname sndname =
   CompanyInvite {
-      invitedemail = Email $ BS.fromString email
-    , invitedfstname = BS.fromString fstname
-    , invitedsndname = BS.fromString sndname
+      invitedemail = Email email
+    , invitedfstname = fstname
+    , invitedsndname = sndname
     , invitingcompany = companyid company
   }
 

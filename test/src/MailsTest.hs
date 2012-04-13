@@ -13,14 +13,13 @@ import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
 import User.Model
+import IPAddress
 import Misc
 import Doc.Model
 import Doc.DocViewMail
 import Doc.DocStateData
 import Mails.SendMail
 import Company.Model
---import Mails.MailsConfig
-import qualified Data.ByteString.UTF8 as BS
 import Test.QuickCheck
 import Control.Monad
 import MinutesTime
@@ -55,8 +54,8 @@ testBrandedDocumentMails env mailTo = withTestEnvironment env $ do
   company' <- addNewCompany
   author <- addNewRandomCompanyUser (companyid company') False
   let cui = CompanyUI {
-        companybarsbackground = Just $ BS.fromString "red"
-      , companybarstextcolour = Just $ BS.fromString "gray"
+        companybarsbackground = Just "orange"
+      , companybarstextcolour = Just "green"
       , companylogo = Nothing
       }
   _ <- dbUpdate $ UpdateCompanyUI (companyid company') cui
@@ -76,8 +75,8 @@ sendDocumentMails env mailTo author mcompany = do
         -- make  the context, user and document all use the same locale
         ctx <- mailingContext l env
         _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { locale = l }
-        let aa = AuthorActor (ctxtime ctx) (IPAddress 0) (userid author) (BS.toString $ getEmail author)
-        d' <- gRight $ randomUpdate $ NewDocument author mcompany (BS.fromString "Document title") (Signable doctype) 0 aa
+        let aa = AuthorActor (ctxtime ctx) noIP (userid author) (getEmail author)
+        d' <- gRight $ randomUpdate $ NewDocument author mcompany "Document title" (Signable doctype) 0 aa
         d <- gRight . dbUpdate $ SetDocumentLocale (documentid d') l (SystemActor $ ctxtime ctx)
 
         let docid = documentid d
@@ -94,7 +93,7 @@ sendDocumentMails env mailTo author mcompany = do
         d2 <- gRight $ randomUpdate $ PreparationToPending docid (SystemActor now)
         let asl2 = head $ documentsignatorylinks d2
         _ <- gRight $ randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2)
-             (SignatoryActor now (IPAddress 0) (maybesignatory asl2) (BS.toString $ getEmail asl2) (signatorylinkid asl2))
+             (SignatoryActor now noIP (maybesignatory asl2) (getEmail asl2) (signatorylinkid asl2))
         doc <- gRight $ randomUpdate $ \si -> SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) si (SystemActor now)
         let [sl] = filter (not . isAuthor) (documentsignatorylinks doc)
         req <- mkRequest POST []
@@ -117,7 +116,7 @@ sendDocumentMails env mailTo author mcompany = do
           checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc (mkLocaleFromRegion defaultValue)
         -- Virtual signing
         _ <- randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl) (signatorymagichash sl) Nothing
-                                   (SignatoryActor (10 `minutesAfter` now) ip (maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl))
+                                   (SignatoryActor (10 `minutesAfter` now) ip (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
         (Just sdoc) <- randomQuery $ GetDocumentByDocumentID docid
         -- Sending closed email
         checkMail "Closed" $ mailDocumentClosed ctx sdoc
@@ -179,29 +178,23 @@ mailingContext locale env = do
               }
 
 
+
 sendoutForManualChecking ::  String -> Request -> Context ->  Maybe String -> Mail -> DB ()
 sendoutForManualChecking _ _ _ _ _ = assertSuccess
-{-
-sendoutForManualChecking _ _ _ Nothing _ = assertSuccess
-sendoutForManualChecking titleprefix req ctx (Just email) m = do
-    _ <- runTestKontra req ctx $ do
-            let mailToSend =  m {to = [MailAddress {fullname=BS.fromString "Tester",
-                                                email=BS.fromString email}],
-                                 title = BS.fromString $ "(" ++ titleprefix ++"): " ++ (BS.toString $ title m)}
-            a <- rand 10 arbitrary
-            success <- sendMail testMailer a mailToSend
-            assertBool "Mail could not be send" success
-    assertSuccess
 
-testMailer:: Mailer
-testMailer = createSendgridMailer $ MailsSendgrid {
-        isBackdoorOpen = False,
-        ourInfoEmail = "test@scrive.com",
-        ourInfoEmailNiceName = "test",
-        sendgridSMTP = "smtps://smtp.sendgrid.net",
-        sendgridRestAPI = "https://sendgrid.com/api",
-        sendgridUser = "duzyrak@gmail.com",
-        sendgridPassword = "zimowisko"}
+
+{-
+sendoutForManualChecking ::  String -> Request -> Context ->  Maybe String -> Mail -> DB ()
+sendoutForManualChecking _ _ _ Nothing _ = assertSuccess
+sendoutForManualChecking _ req ctx (Just email) m = do
+    _ <- runTestKontra req ctx $ do
+           _ <- scheduleEmailSendout (ctxmailsconfig ctx) $ m {
+                  to = [MailAddress { fullname = BS.fromString "Tester",
+                                      email = BS.fromString email}]
+                , from = Nothing
+           }
+           assertSuccess
+    assertSuccess
 -}
 
 toMailAddress :: [String] -> Maybe String

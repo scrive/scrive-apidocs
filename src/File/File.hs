@@ -8,13 +8,13 @@ import qualified Data.ByteString.UTF8 as BS
 
 data FileStorage =
     FileStorageMemory BS.ByteString
-  | FileStorageAWS BS.ByteString BS.ByteString -- ^ bucket, url inside bucket
+  | FileStorageAWS String String -- ^ bucket, url inside bucket
   | FileStorageDisk FilePath -- ^ filepath
     deriving (Eq, Ord, Show)
 
 data File = File {
     fileid      :: FileID
-  , filename    :: BS.ByteString
+  , filename    :: String
   , filestorage :: FileStorage
   }
 
@@ -26,4 +26,4 @@ instance Ord File where
                 | otherwise = compare (fileid a,filename a)
                                       (fileid b,filename b)
 instance Show File where
-    showsPrec _prec file = (++) (BS.toString (filename file))
+    showsPrec _prec file = (++) (filename file)

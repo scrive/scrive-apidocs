@@ -34,6 +34,8 @@ termsPageContents=
 <br />
 <p>$_termsPage1d()$</p>
 <br />
+<p>$_termsPage1e()$</p>
+<br />
 <h2>$_termsPage2Header()$</h2>
 <br />
 <p>$_termsPage2()$</p>

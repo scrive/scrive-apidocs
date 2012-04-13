@@ -378,7 +378,7 @@ window.CompanyBrandingSampleView = Backbone.View.extend({
   renderLogoWithSrc: function(src) {
     console.log("rendering logo with src " + src);
     var img = $("<img />");
-    img.attr("src", src);
+    img.attr("src", src + "?time=" + (new Date()).getTime());
 
     this.logo.empty();
     this.logo.append(img);

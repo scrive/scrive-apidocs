@@ -52,13 +52,13 @@ nicemail=
             <td>
                 <table id="content" width="590" cellspacing="0" align="center" style="margin: auto;color:#212121;font-family:'Lucida Grande', sans-serif;font-size:12px;">
                     <tr>
-                        <td style="padding:5px; margin: auto;"><img src="$ctxhostpart$/img/email-line.jpg" alt="" width="540" height="10" /></td>
+                        <td style="padding-left:25px; padding-right: 25px; padding-top: 5px; padding-bottom: 5px; margin: auto;"><img src="$ctxhostpart$/img/email-line.jpg" alt="" width="540" height="10" /></td>
                     </tr>
-                    $if(mailp1)$ $nicemailparagraph(p=mailp1)$ $endif$
-                    $if(mailp2)$ $nicemailparagraph(p=mailp2)$ $endif$
-                    $if(mailp3)$ $nicemailparagraph(p=mailp3)$ $endif$
-                    $if(mailp4)$ $nicemailparagraph(p=mailp4)$ $endif$
-                    $if(mailp5)$ $nicemailparagraph(p=mailp5)$ $endif$
+                     $nicemailparagraph(p=mailp1;l=mailp2)$
+                     $nicemailparagraph(p=mailp2;l=mailp3)$
+                     $nicemailparagraph(p=mailp3;l=mailp4)$
+                     $nicemailparagraph(p=mailp4;l=mailp5)$
+                     $nicemailparagraph(p=mailp5;l=false)$
                 </table>
             </td>
         </tr>
@@ -78,10 +78,14 @@ nicemailfgcolour=$if(!companybrand.barstextcolour)$#ffffff$else$$companybrand.ba
 nicemaillogo=$if(!service.logo)$$if(!companybrand.logo)$$ctxhostpart$/img/email-logo.png$else$$ctxhostpart$$companybrand.logoLink$$endif$$else$$ctxhostpart$$service.logoLink$$endif$
 #####
 nicemailparagraph =
+      $if(p)$
       <tr>
-        <td style="padding:5px; margin: auto;">$p:noescape()$</td>
+        <td style="padding-left:25px; padding-right:25px; padding-top: 5px; padding-bottom: 5px; margin: auto;">$p:noescape()$</td>
       </tr>
+      $endif$
+      $if(l)$
       <tr>
-         <td style="padding:5px; margin: auto;"><img src="$ctxhostpart$/img/email-line.jpg" alt="" width="540" height="10" /></td>
+         <td style="padding-left:25px; padding-right:25px; padding-top: 5px; padding-bottom: 5px; margin: auto;"><img src="$ctxhostpart$/img/email-line.jpg" alt="" width="540" height="10" /></td>
       </tr>
+      $endif$
 ####

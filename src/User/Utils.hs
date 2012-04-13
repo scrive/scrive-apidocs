@@ -2,16 +2,12 @@ module User.Utils where
 
 import Control.Monad.State
 import Data.Functor
-import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.UTF8 as BS
 
-import Crypto.RNG (CryptoRNG)
 import DB.Classes
 import Doc.DocStateData
 import Company.Model
 import Kontra
 import KontraLink
-import Misc
 import User.Model
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
@@ -58,7 +54,7 @@ withDocumentAuthor document action = do
   ctx <- getContext
   user <- guardJust $ ctxmaybeuser ctx
   sl <- guardJust $ getAuthorSigLink document
-  guard $ isSigLinkFor user sl
+  unless (isSigLinkFor user sl) internalError
   action
 
 {- |
@@ -74,7 +70,3 @@ checkUserTOSGet action = do
         Nothing -> case (ctxcompany ctx) of
              Just _company -> Right <$> action
              Nothing -> return $ Left $ LinkLogin (ctxlocale ctx) NotLogged
-
-randomPassword :: (MonadIO m, CryptoRNG m) => m BS.ByteString
-randomPassword =
-    BS.fromString `liftM` randomString 8 (['0'..'9'] ++ ['A'..'Z'] ++ ['a'..'z'])

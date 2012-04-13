@@ -1,12 +1,12 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 module StatsTest (statsTests) where
 
+import Control.Logic
 import DB.Classes
 import User.Model
 import Doc.Model
 import Doc.DocUtils
 import Doc.DocStateData
-import Misc
+import IPAddress
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import TestingUtil
@@ -20,8 +20,6 @@ import Test.Framework.Providers.HUnit (testCase)
 import Stats.Control
 import Stats.Model
 import StateHelper
-
-import qualified Data.ByteString.UTF8 as BS
 
 import qualified Log
 
@@ -100,9 +98,9 @@ testOpenStat env = withTestEnvironment env $ do
   _ <- forM (documentsignatorylinks doc')
        (\sl -> if isAuthor sl
                then dbUpdate $ MarkInvitationRead (documentid doc') (signatorylinkid sl)
-                    (AuthorActor time (IPAddress 0) (userid author) (BS.toString $ getEmail author))
+                    (AuthorActor time noIP (userid author) (getEmail author))
                else dbUpdate $ MarkInvitationRead (documentid doc') (signatorylinkid sl)
-                    (SignatoryActor time (IPAddress 0) (maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl)))
+                    (SignatoryActor time noIP (maybesignatory sl) (getEmail sl) (signatorylinkid sl)))
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatOpenEvent doc sl)
   stats'' <- dbQuery $ GetSignStatEvents
@@ -125,9 +123,9 @@ testLinkStat env = withTestEnvironment env $ do
   _ <- forM (documentsignatorylinks doc')
        (\sl -> if isAuthor sl
                then dbUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid sl) (signatorymagichash sl)
-                    (AuthorActor time (IPAddress 0) (fromJust $ maybesignatory sl) (BS.toString $ getEmail sl))
+                    (AuthorActor time noIP (fromJust $ maybesignatory sl) (getEmail sl))
                else dbUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid sl) (signatorymagichash sl)
-                    (SignatoryActor time (IPAddress 0) (maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl)))
+                    (SignatoryActor time noIP (maybesignatory sl) (getEmail sl) (signatorylinkid sl)))
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatLinkEvent doc sl)
   stats'' <- dbQuery $ GetSignStatEvents
@@ -150,10 +148,10 @@ testSignStat env = withTestEnvironment env $ do
   _ <- forM (documentsignatorylinks doc')
        (\sl -> if isAuthor sl
                then dbUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid sl) (signatorymagichash sl)
-                    (AuthorActor time (IPAddress 0) (fromJust $ maybesignatory sl) (BS.toString $ getEmail sl))
+                    (AuthorActor time noIP (fromJust $ maybesignatory sl) (getEmail sl))
                else dbUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid sl) (signatorymagichash sl)
-                    (SignatoryActor time (IPAddress 0) (maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl)))
-  _ <- forM (filter isSignatory $ documentsignatorylinks doc') (\sl -> dbUpdate $ SignDocument (documentid doc') (signatorylinkid sl) (signatorymagichash sl) Nothing (SignatoryActor time (IPAddress 0) (maybesignatory sl) (BS.toString $ getEmail sl) (signatorylinkid sl)))
+                    (SignatoryActor time noIP (maybesignatory sl) (getEmail sl) (signatorylinkid sl)))
+  _ <- forM (filter isSignatory $ documentsignatorylinks doc') (\sl -> dbUpdate $ SignDocument (documentid doc') (signatorylinkid sl) (signatorymagichash sl) Nothing (SignatoryActor time noIP (maybesignatory sl) (getEmail sl) (signatorylinkid sl)))
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatSignEvent doc sl)
   stats'' <- dbQuery $ GetSignStatEvents
@@ -175,7 +173,7 @@ testRejectStat env = withTestEnvironment env $ do
   _ <- dbUpdate $ PreparationToPending (documentid doc') (SystemActor time)
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   let Just asl' = getAuthorSigLink doc
-      aa = AuthorActor time (IPAddress 0) (userid author) (BS.toString $ getEmail author)
+      aa = AuthorActor time noIP (userid author) (getEmail author)
   _ <- dbUpdate $ RejectDocument (documentid doc)
          (signatorylinkid asl')
          Nothing
@@ -236,11 +234,11 @@ testGetUsersAndStats :: DBEnv -> Assertion
 testGetUsersAndStats env = withTestEnvironment env $ do
   time <- getMinutesTime
   us <- catMaybes <$> (forM (range (0, 100::Int)) $ \i->
-                        dbUpdate $ AddUser (BS.fromString "F", BS.fromString "L") (BS.fromString $ "e" ++ show i ++ "@yoyo.com")
+                        dbUpdate $ AddUser ("F", "L") ("e" ++ show i ++ "@yoyo.com")
                         Nothing False Nothing Nothing (mkLocale REGION_SE LANG_SE))
   _ <- forM [(u, i) | u <- us, i <- range (0, 10::Int)] $ \(u,_) -> do
-    let aa = AuthorActor time (IPAddress 0) (userid u) (BS.toString $ getEmail u)
-    dbUpdate $ NewDocument u Nothing (BS.fromString "doc!") (Signable Contract) 0 aa
+    let aa = AuthorActor time noIP (userid u) (getEmail u)
+    dbUpdate $ NewDocument u Nothing "doc!" (Signable Contract) 0 aa
 
   Log.debug $ "Set up test, now running query."
   t0 <- getMinutesTime

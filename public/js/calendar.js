@@ -4,11 +4,11 @@ window.Calendar = Backbone.Model.extend({
     defaults: {
         on : $('<div/>'),
         change : function() {return false},
-        value : 0                                
+        value : 0
     },
     initialize : function(args){
-        var activator  = this.get("on")
-        var onchange = this.get("change")
+        var activator  = this.get("on");
+        var onchange = this.get("change");
         activator.dateinput({
             format: 'dd-mm-yy',
             change: function() {
@@ -30,5 +30,5 @@ window.Calendar = Backbone.Model.extend({
 
 
 
-    
-})(window); 
+
+})(window);

@@ -1,3 +1,28 @@
+###
+contractrestartbuttontext=$_contractrestartbuttontext()$
+###
+offerrestartbuttontext=$_offerrestartbuttontext()$
+###
+orderrestartbuttontext=$_orderrestartbuttontext()$
+###
+contractcancelbuttontext=$_contractcancelbuttontext()$
+###
+offercancelbuttontext=$_offercancelbuttontext()$
+###
+ordercancelbuttontext=$_ordercancelbuttontext()$
+###
+contractcancelmodaltitle=$_contractcancelmodaltitle()$
+###
+offercancelmodaltitle=$_offercancelmodaltitle()$
+###
+ordercancelmodaltitle=$_ordercancelmodaltitle()$
+###
+###
+contractcancelmodaltext=$_contractcancelmodaltext()$
+###
+offercancelmodaltext=$_offercancelmodaltext()$
+###
+ordercancelmodaltext=$_ordercancelmodaltext()$
 ####
 contractrejectbuttontext=$_contractrejectbuttontext()$
 ####
@@ -15,19 +40,31 @@ contractsignatorysignmodalcontentlast= <p>$_contractsignatorysignmodalcontentlas
 ####
 offersignatorysignmodalcontentlast=<p> $_offersignatorysignmodalcontentlast()$ </p>
 ####
-ordersignatorysignmodalcontentlast=<p> $_ordersignatorysignmodalcontentlast()$ </p>      
+ordersignatorysignmodalcontentlast=<p> $_ordersignatorysignmodalcontentlast()$ </p>
 ####
 contractsignatorysignmodalcontentnotlast=<p> $_contractsignatorysignmodalcontentnotlast()$ </p>
 ####
 offersignatorysignmodalcontentnotlast=<p> $_offersignatorysignmodalcontentnotlast()$ </p>
 ####
-ordersignatorysignmodalcontentnotlast= <p> $_ordersignatorysignmodalcontentnotlast()$ </p>         
+ordersignatorysignmodalcontentnotlast= <p> $_ordersignatorysignmodalcontentnotlast()$ </p>
 ####
 contractsignatorysignmodalcontentauthorlast=<p> $_contractsignatorysignmodalcontentauthorlast()$ </p>
 ####
 offersignatorysignmodalcontentauthorlast=<p> $_offersignatorysignmodalcontentauthorlast()$ </p>
 ####
-ordersignatorysignmodalcontentauthorlast= <p> $_ordersignatorysignmodalcontentauthorlast()$ </p>  
+ordersignatorysignmodalcontentauthorlast= <p> $_ordersignatorysignmodalcontentauthorlast()$ </p>
+####
+contractsignatorysignmodalcontentdesignvieweleg=<p> $_contractsignatorysignmodalcontentdesignvieweleg()$ </p>
+####
+offersignatorysignmodalcontentdesignvieweleg=<p> $_offersignatorysignmodalcontentdesignvieweleg()$ </p>
+####
+ordersignatorysignmodalcontentdesignvieweleg=<p> $_offersignatorysignmodalcontentdesignvieweleg()$ </p>
+####
+contractsignatorysignmodalcontentsignvieweleg=<p>  $_contractsignatorysignmodalcontentsignvieweleg()$ </p>
+####
+offersignatorysignmodalcontentsignvieweleg=<p>  $_offersignatorysignmodalcontentsignvieweleg()$ </p>
+####
+ordersignatorysignmodalcontentsignvieweleg=<p>  $_ordersignatorysignmodalcontentsignvieweleg()$ </p>
 ####
 contractauthorsignlastbuttontext=$_contractauthorsignlastbuttontext()$
 ####
@@ -90,18 +127,44 @@ orderauthorsignatoryname=$_orderauthorsignatoryname()$
 ordersignatoryname=$_ordersignatoryname()$
 #####
 ordernonsignatoryname=$_ordernonsignatoryname()$
-######
-pageDocumentForSignContent=
+####
+pageDocumentForViewerHelpers=
+<span class="templating_insert">
+  <div id="signatory_template" class="signatorybox" alt="$_pageDocumentForViewerHelpersPartyName()$">
+  <input name="signatoryname" type="text" value="" autocomplete="off"
+         infotext="$_signatoryname()$" /><br/>
+  <input name="signatorycompany" type="text" value="" autocomplete="off"
+         infotext="$_company()$" /><br/>
+  <input name="signatorypersonalnumber" type="text" value="" autocomplete="off"
+         infotext="$_personnumber()$" /><br/>
+  <input name="signatorycompanynumber" type="text" value="" autocomplete="off"
+         infotext="$_orgnumber()$" /><br/>
+  <input name="signatoryemail"  type="email" value="" autocomplete="off"
+         infotext="$_email()$" /><br/>
+  <small><a onclick="return signatoryremove(this.parentNode);" href="#">$_signatoryremove()$</a></small>
+  </div>
+</span>,
+<script type="text/javascript">
+  var documentid = "$documentid$";
+  $if(siglinkid)$
+  var siglinkid = "$siglinkid$", sigmagichash = "$sigmagichash$";
+  $endif$
+</script>
+###
+pageDocumentView=
 <script>
+var docview;
 jQuery(function(){
-var docview = KontraStandardDocument.init({
-	id:"$documentid$",
-	viewer : new DocumentViewer({
-				signatoryid : "$siglinkid$",
-				magichash : "$sigmagichash$"
-			})
-	});
+docview = KontraStandardDocument.init({
+    id:"$documentid$"
+     $if(siglinkid)$
+    , viewer : new DocumentViewer({
+        signatoryid : "$siglinkid$",
+        magichash : "$sigmagichash$"
+        })
+    $endif$
+});
 jQuery(".body-container").replaceWith(docview.view.el)
 })
 </script>
-#####
+####

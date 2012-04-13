@@ -8,10 +8,10 @@ import Happstack.State (query)
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit (Assertion)
-import qualified Data.ByteString.UTF8 as BS
 
 import ActionSchedulerState
 import Context
+import Control.Logic
 import DB.Classes
 import FlashMessage
 import MagicHash (MagicHash)
@@ -61,7 +61,7 @@ testSignupAndActivate conn = withTestEnvironment conn $ do
   (res3, ctx3) <- activateAccount ctx1 aid token True "Andrzej" "Rybczak" "password12" "password12" (Just "123")
   assertAccountActivatedFor uid "Andrzej" "Rybczak" (res3, ctx3)
   Just uuser <- dbQuery $ GetUserByID  uid
-  assertEqual "Phone number was saved" "123" (BS.toString . userphone $ userinfo uuser)
+  assertEqual "Phone number was saved" "123" (userphone $ userinfo uuser)
   emails <- dbQuery GetIncomingEmails
   assertEqual "An email was sent" 2 (length emails) -- Two mail - one for user and one to info adress.
 
@@ -218,7 +218,7 @@ assertInviteSuccessful expectedid expectedemail (res, ctx) = do
   assertEqual "A ViralInvite action was made" 1 (length $ actions)
   let action = head actions
       (ViralInvitationSent email _ inviterid _ _) = actionType action
-  assertEqual "Action email is correct" (Email $ BS.fromString expectedemail) email
+  assertEqual "Action email is correct" (Email expectedemail) email
   assertEqual "Inviter id is correct" expectedid inviterid
   return action
 
@@ -262,8 +262,8 @@ assertAccountActivated fstname sndname (res, ctx) = do
   --shouldn't this flash just indicate success and not that it's signing related?!
   assertBool "Flash message has type indicating signing related" $ any (`isFlashOfType` SigningRelated) (ctxflashmessages ctx)
   assertBool "Accepted TOS" $ isJust ((ctxmaybeuser ctx) >>= userhasacceptedtermsofservice)
-  assertEqual "First name was set" (Just fstname) (fmap (BS.toString . getFirstName) $ ctxmaybeuser ctx)
-  assertEqual "Second name was set" (Just sndname) (fmap (BS.toString . getLastName) $ ctxmaybeuser ctx)
+  assertEqual "First name was set" (Just fstname) (getFirstName <$> ctxmaybeuser ctx)
+  assertEqual "Second name was set" (Just sndname) (getLastName <$> ctxmaybeuser ctx)
 
 assertAccountActivationFailed :: MonadIO m => (Response, Context) -> m ()
 assertAccountActivationFailed (res, ctx) = do

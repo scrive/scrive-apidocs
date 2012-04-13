@@ -5,6 +5,7 @@
 -- Stability   :  development
 -- Portability :  portable
 --
+-- // Description is not right and this will be refactored as rest of the code.
 -- Each exported function is a middle-man between the Controller and the Model.
 -- It handles HTTP-related security, including checking whether a user is logged
 -- in.
@@ -25,9 +26,8 @@
 
 module Doc.DocStateQuery
     ( getDocByDocID
-    , getDocsByLoggedInUser
+    , getDocByDocIDForAuthor
     , getDocByDocIDSigLinkIDAndMagicHash
-    , canUserViewDoc
     ) where
 
 import Control.Applicative
@@ -92,18 +92,16 @@ getDocByDocID docid = do
                     then return $ Right doc
                     else return $ Left DBResourceNotAvailable
 
-{- |
-   Get all of the documents a user can view.
-   User must be logged in.
-   Logged in user is in the documentsignatorylinks
-   What about companies?
- -}
-getDocsByLoggedInUser :: Kontrakcja m => m (Either DBError [Document])
-getDocsByLoggedInUser = do
-  ctx <- getContext
-  case ctxmaybeuser ctx of
-    Nothing   -> return $ Left DBNotLoggedIn
-    Just user -> Right <$> (runDBQuery $ GetDocumentsBySignatory $ userid user)
+{- | Same as getDocByDocID, but works only for author -}
+getDocByDocIDForAuthor :: Kontrakcja m => DocumentID -> m (Either DBError Document)
+getDocByDocIDForAuthor docid = do
+      muser <- ctxmaybeuser <$> getContext
+      edoc <- getDocByDocID docid
+      case edoc of
+           Right doc -> if (isAuthor (doc, muser))
+                           then return $ Right doc
+                           else return $ Left DBResourceNotAvailable
+           e -> return e
 
 {- |
    Get a document using docid, siglink, and magichash.

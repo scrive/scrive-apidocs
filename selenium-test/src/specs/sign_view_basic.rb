@@ -45,21 +45,22 @@ describe "basic signing" do
 
     @emailhelper.follow_link_in_latest_mail_for @ctx.props.first_counterpart_email
 
-    puts "make sure it's got the opened icon displayed"
-    @wait.until { @driver.find_element :css => "div.status.opened" }
+    puts "make sure it's a signatory is in an opened state"
+    @wait.until { @driver.find_element :css => ".summary.opened" }
 
     puts "try and sign the doc without checking the sign guard"
-    (@wait.until { @driver.find_element :css => "#signViewBottomBoxContainerRight a" }).click
-    puts "make sure we get a red flash message"
-    @wait.until { @driver.find_element :css => ".flash-container.red" }
-
-    puts "sign the doc"
-    (@wait.until { @driver.find_element :id => "signGuardCBox" }).click
-    (@wait.until { @driver.find_element :css => "#signViewBottomBoxContainerRight a" }).click
+    (@wait.until { @driver.find_element :css => ".sign a" }).click
     (@wait.until { @driver.find_element :css => ".modal-container a.btn-small.float-right" }).click
 
-    puts "make sure there are two signed icons"
-    @wait.until { (@driver.find_elements :css => "div.icon.status.signed").length==2 }
+    puts "make sure we can still see the signguard"
+    @wait.until { @driver.find_element :css => ".signguard" }
+
+    puts "sign the doc"
+    (@wait.until { @driver.find_element :css => ".signguard input[type='checkbox']"  }).click
+    (@wait.until { @driver.find_element :css => ".modal-container a.btn-small.float-right" }).click
+
+    puts "make sure you're given a save option"
+    @wait.until { @driver.find_elements :css => ".save" }
   end
 
 end

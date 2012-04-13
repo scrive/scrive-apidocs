@@ -27,7 +27,6 @@ import KontraLink
 import Data.Maybe
 import API.Service.Model
 import qualified Data.ByteString.UTF8 as BS
-import qualified Data.ByteString as BS
 import API.Service.ServiceView
 import Doc.DocUtils
 import qualified Data.ByteString.Lazy as BSL
@@ -48,13 +47,13 @@ handleChangeServiceUI sid = do
     case (mservice,sameUser (ctxmaybeuser ctx) (serviceadmin . servicesettings <$> mservice)
                    || isAdmin ctx,clear) of
         (Just service,True,False) -> do
-           mailfooter <- getFieldUTF "mailfooter"
+           mailfooter <- getField "mailfooter"
            buttonBody <- fmap Binary <$> getFileField "button-body"
            buttonRest <- fmap Binary <$> getFileField "button-rest"
-           buttonstextcolor <- getFieldUTF "buttonstextcolor"
-           background <- getFieldUTF "background"
-           overlaybackground <- getFieldUTF "overlaybackground"
-           barsbackground <- getFieldUTF "barsbackground"
+           buttonstextcolor <- getField "buttonstextcolor"
+           background <- getField "background"
+           overlaybackground <- getField "overlaybackground"
+           barsbackground <- getField "barsbackground"
            logo <- fmap Binary <$> getFileField "logo"
            let ui = serviceui service
            _ <- runDBUpdate $ UpdateServiceUI sid $ ui {
@@ -92,9 +91,9 @@ handleChangeServicePassword sid = do
     case (mservice,sameUser (ctxmaybeuser ctx) (serviceadmin . servicesettings <$> mservice)
                    || isAdmin ctx) of
      (Just service,True) -> do
-            password <- getFieldUTFWithDefault BS.empty "oldpassword"
-            newpassword1 <- getFieldUTFWithDefault BS.empty "newpassword1"
-            newpassword2 <- getFieldUTFWithDefault BS.empty "newpassword2"
+            password <- getField' "oldpassword"
+            newpassword1 <- getField' "newpassword1"
+            newpassword2 <- getField' "newpassword2"
             if (verifyPassword (servicepassword $ servicesettings service) password) && (newpassword1 == newpassword2)
                 then do
                     pwd <- createPassword newpassword1
@@ -109,8 +108,7 @@ handleChangeServicePassword sid = do
          return LoopBack
 
 handleChangeServicePasswordAdminOnly :: Kontrakcja m => ServiceID -> String -> m KontraLink
-handleChangeServicePasswordAdminOnly sid passwordString = do
-    let password = BS.fromString passwordString
+handleChangeServicePasswordAdminOnly sid password = do
     ctx <- getContext
     mservice <- runDBQuery $ GetService sid
     case (mservice, isAdmin ctx) of
@@ -119,7 +117,7 @@ handleChangeServicePasswordAdminOnly sid passwordString = do
        _ <- runDBUpdate $ UpdateServiceSettings sid $ (servicesettings service) {servicepassword = Just pwd}
        addFlash (OperationDone, "Password changed")
        getHomeOrUploadLink
-     _ -> mzero
+     _ -> internalError
 
 handleChangeServiceSettings :: Kontrakcja m => ServiceID -> m KontraLink
 handleChangeServiceSettings sid = do
@@ -127,9 +125,9 @@ handleChangeServiceSettings sid = do
     mservice <- runDBQuery $ GetService sid
     case (mservice, isAdmin ctx) of
      (Just service,True) -> do
-            location <- getFieldUTF "location"
-            admin <- liftMM (runDBQuery . GetUserByEmail Nothing) (fmap Email <$> getFieldUTF "admin")
-            mailfromaddress <- getFieldUTF "mailfromaddress"
+            location <- getField "location"
+            admin <- liftMM (runDBQuery . GetUserByEmail Nothing) (fmap Email <$> getField "admin")
+            mailfromaddress <- getField "mailfromaddress"
             _ <- runDBUpdate $ UpdateServiceSettings sid $ (servicesettings service)
                         {   servicelocation = (ServiceLocation <$> location) `mplus` (servicelocation $ servicesettings  service)
                           , servicemailfromaddress  = mailfromaddress `mplus` (servicemailfromaddress $ servicesettings  service)
@@ -166,7 +164,7 @@ handleShowServiceList = do
          (_, True) -> do
              srvs <- runDBQuery GetServices
              servicesListPage srvs
-         _ -> mzero
+         _ -> internalError
 
 handleServiceLogo :: Kontrakcja m => ServiceID -> m Response
 handleServiceLogo = handleServiceBinary (servicelogo . serviceui)

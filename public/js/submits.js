@@ -6,7 +6,7 @@
  *              });
 */
 
-(function( window){  
+(function( window){
 window.Submit = Backbone.Model.extend({
     defaults : {
         url : "",
@@ -23,10 +23,10 @@ window.Submit = Backbone.Model.extend({
     },
     ignored : function(k)
     {
-      return k == "url" || 
-            k == "method" || 
-            k == "inputs" || 
-            k == "ajax" || 
+      return k == "url" ||
+            k == "method" ||
+            k == "inputs" ||
+            k == "ajax" ||
             k == "ajaxsuccess" ||
             k == "ajaxerror" ||
             k == "expectedType" ||
@@ -63,7 +63,7 @@ window.Submit = Backbone.Model.extend({
         for (var k in this.attributes) {
             var val = this.get(k);
             if (this.ignored(k))
-                continue ;  
+                continue ;
             else if (!$.isArray(val)) {
                 var input = $("<input type='hidden' />");
                 input.attr("name", k);
@@ -94,5 +94,5 @@ window.Submit = Backbone.Model.extend({
     this.set({ajaxsuccess: f || function(){}}, {silent:true});
     return this;
   }
-})
-})(window); 
+});
+})(window);

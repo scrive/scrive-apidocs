@@ -47,6 +47,7 @@ javascriptLocalisation =
              , companyposition : "$_companyposition()$"
              , phone : "$_phone()$"
              , email : "$_email()$"
+             , password : "$_password()$"
              , niceEmail : "$_niceEmail()$"
              , company : "$_company()$"
              , personamNumber : "$_personnumber()$"
@@ -80,6 +81,8 @@ javascriptLocalisation =
              , you : "$_you()$"
              , searchBoxButtonText : "$_searchBoxButtonText()$"
              , downloadPDF : "$_DownloadPDF()$"
+             , reviewPDF: "$_ReviewPDF()$"
+             , deletePDF: "$_DeletePDF()$"
              , document : "$_Document()$"
              , onlyPDFAllowed : "$_updateAttachmentsDialogUpLoadOnlyPDF()$"
              , attachment : "$_Attachment()$"
@@ -102,9 +105,7 @@ javascriptLocalisation =
                                  }
                     }
              , signByAuthor : {
-                          guardCBoxForAuthorLabel : "$_signGuardField1()$"
-                        , guardCBoxForAuthorAfterLabel : "$_signGuardField2()$"
-                        , modalTitle : "$_dialogConfirmSignByAuthorHead()$"
+                          modalTitle : "$_dialogConfirmSignByAuthorHead()$"
                         , modalBody1 : "$_dialogConfirmSignByAuthorBody1()$"
                         , modalBody2 : "$_dialogConfirmSignByAuthorBody2()$"
                         , modalBody3 : "$_dialogConfirmSignByAuthorBody3()$"
@@ -134,10 +135,13 @@ javascriptLocalisation =
                        , signed : "$_signatoryMessageIfSigned()$"
                        , cancelled : "$_signatoryMessageIfCancelled()$"
                        , other : "$_signatoryMessageIfElse()$"
+                       , waitingForSignature: "$_waitingForSignature()$"
                     }
             , authorAttachmentBoxHeader : "$_signViewNotsignedbymeAttachmentBoxHead()$"
             , signatoryAttachmentBoxHeader : "$_signViewSigAttachmentBoxHead()$"
             , signatoryAttachmentUploadButton: "$_signViewSigAttachmentBoxChooseFile()$"
+            , uploadedAttachments: "$_uploadedAttachments()$"
+            , waitingForAttachment: "$_waitingForAttachment()$"
             , templateTitle : "$_signStepsTitleRowTextContainerIfTemplate()$"
             , step1template : "$_step1selectIfTemplate()$"
             , step2template : "$_step2selectIfTemplate()$"
@@ -226,7 +230,7 @@ javascriptLocalisation =
               , se : "$_Swedish()$"
               , changeEnglishToSwedishText :  "$_signInSwedishConfirmText()$"
               , signInSwedish : "$_signInSwedish()$"
-              , changeSwedishToEnglishText: "$_signInEnglishConfirmText()$" 
+              , changeSwedishToEnglishText: "$_signInEnglishConfirmText()$"
               , signInEnglish:  "$_signInEnglish()$"
             }
          , csv : {
@@ -237,20 +241,32 @@ javascriptLocalisation =
               , selectOtherFile: "$_dialogCsvupload2CSVMultiChooseFile()$"
             }
          , signature : {
-              placeFor : function(s) { return s + " $_signaturePlaceFor()$"; }
-            , missing : "$_signatureMissing()$"
-            , placeYour : "$_signaturePlaceYour()$"
+               placeFor : function(s) { return s + " $_signaturePlaceFor()$"; }
+             , missing : "$_signatureMissing()$"
+             , placeYour : "$_signaturePlaceYour()$"
+             , placeAndSign : "$_signatureSign()$"
+             , confirmSignature : "$_signatureConfirm()$"
            }
          , designview : {
-             validation : {
+              validation : {
                       missingOrWrongEmail : "$_emptyOrNotValidEmail()$"
                     , missingOrWrongNames:  "$_missingSignatoryNames()$"
                     , missingOrWrongPersonalNumber : "$_backToStepTwoAndFillPersonNumber()$"
+                    , missingOrWrongPlacedAuthorField : "$_missingPlacedAuthorFieldValue()$"
+                    , missingOrWrongCustomFieldValue: "$_missingCustomFieldValue()$"
                     , sameMails : "$_repetedEmailAddress()$"
                     , atLeastOnePersonOtherThenAuthor : "$_atLeastOnePersonOtherThenAuthor()$"
                     , notReadyField : "$_setAllFields()$"
+                    , notPlacedField : "$_placeAllFields()$"
                     , restrictedName : "$_fieldnameRestricted()$"
+                    , notPlacedSignature : "Signature must be placed for signing party with pad authorization"
                 }
+             , messages : {
+                      sendingDocument: "$_designViewMessageSending()$"
+                    , reloadingDocument : "$_designViewMessageReloading()$"
+                    , extraActions : "$_designViewMessageExtraActions()$"
+                }
+             , sign : "$_sign()$"
            }
 
          , validation : {
@@ -269,11 +285,79 @@ javascriptLocalisation =
          , customiseLogo: "$_CustomiseLogo()$"
          , selectImageLabel: "$_SelectImageLabel()$"
          , saveBranding: "$_SaveSettings()$"
+         , pad : {
+                authorization : "$_padAuthorization()$"
+             ,  signingOnSameDevice : "$_padSigningOnSameDevice()$"
+             ,  signingOnSameDeviceConfirmHeader : "$_padSigningOnSameDeviceConfirmHeader()$"
+             ,  signingOnSameDeviceConfirmText : "$_padSigningOnSameDeviceConfirmText()$"
+             ,  addToPadQueue : "$_padAddToPadQueue()$"
+             ,  addToPadQueueConfirmHeader : "$_padAddToPadQueueConfirmHeader()$"
+             ,  addToPadQueueConfirmText : "$_padAddToPadQueueConfirmText()$"
+             ,  addToPadQueueAdded : "$_padAddToPadQueueAdded()$"
+             ,  addToPadQueueNotAdded : "$_padAddToPadQueueNotAdded()$"
+             ,  removeFromPadQueue : "$_padRemoveFromPadQueue()$"
+             ,  drawSignatureBoxHeader : "$_padDrawSignatureBoxHeader()$"
+             ,  signingOnSameDeviceFor1 :  "$_padSigningOnSameDeviceFor1()$"
+             ,  signingOnSameDeviceFor2 :  "$_padSigningOnSameDeviceFor2()$"
+             ,  addToPadQueueFor :  "$_padAddToPadQueueFor()$"
+             ,  cleanImage : "$_padCleanImage()$"
+        }
          , sampleEmailHeader: "$_SampleEmailHeader()$"
          , sampleEmailSubheader: "$_mailsubheader()$"
          , sampleEmailContent: "$_SampleEmailContent()$"
          , changeEmail : "$_changeEmail()$"
          , onlyPDF : "$_onlyPDF()$"
+         , login : {
+              logMeIn : "$_login()$"
+         }
          , cancel : "$_cancel()$"
+         , docupload : {
+             choosefile: "$_signStepsBodyUploadBoxStep1UpLoadChooseFile()$"
+            ,choosetemplate: "$_signStepsBodyUploadBoxStep1ChooseTemplate()$"
+            ,templatesaved: "$_signStepsBodyUploadBoxStep1TemplateSaved()$"
+            ,uploadinfo: "$_contractuploadprompttext()$"
+         }
+         , docsignview : {
+               followArrowToSign: "$_followArrowToSign()$"
+             , followArrowToReview: "$_followArrowToReview()$"
+             , signedNotClosed: "$_signedNotClosed()$"
+             , signedNotClosedSubText: "$_signedNotClosedSubText()$"
+             , signedAndClosed: "$_signedAndClosed()$"
+             , signedAndClosedSubText: "$_signedAndClosedSubText()$"
+             , unavailableForSign: "$_unavailableForSign()$"
+             , dueDate: "$_dueDate()$"
+             , showDetails: "$_showDetails()$"
+             , hideDetails: "$_hideDetails()$"
+             , companyNumberLabel: "$_companyNumberLabel()$"
+             , personalNumberLabel: "$_personalNumberLabel()$"
+             , authorAttachmentsTitleForOne: "$_signViewAuthorAttachmentsTitleForOne()$"
+             , authorAttachmentsTitleForLots: "$_signViewAuthorAttachmentsTitleForLots()$"
+             , signatoryAttachmentsTitleForOne: "$_signViewSignatoryAttachmentsTitleForOne()$"
+             , signatoryAttachmentsTitleForLots: "$_signViewSignatoryAttachmentsTitleForLots()$"
+             , uploadedAttachmentsTitleForOne: "$_signViewUploadedAttachmentsTitleForOne()$"
+             , uploadedAttachmentsTitleForLots: "$_signViewUploadedAttachmentsTitleForLots()$"
+             , signatoriesTitle: "$_signViewSignatoriesTitle()$"
+             , newAccountTitle: "$_signViewCreateAccountTitle()$"
+             , newAccountSubTitle: "$_signViewCreateAccountSubTitle()$"
+             , emailLabel: "$_email()$"
+             , passwordLabel: "$_modalAccountSetupChoosePassword()$"
+             , password2Label: "$_modalAccountSetupRepeatPassword()$"
+             , acceptTOSLabel: '$_accountFromSignInputsBodyAcceptTOS()$'
+             , newAccountButton: "$_signViewCreateAccountLabel()$"
+             , createdAccountTitle: "$_signViewCreatedAccountTitle()$"
+             , createdAccountSubtitle: "$_signViewCreatedAccountSubtitle()$"
+             , shareTitle: "$_signViewShareTitle()$"
+             , facebookButtonLabel: "$_facebookButtonLabel()$"
+             , tweetButtonLabel: "$_tweetButtonLabel()$"
+             , phoneButtonLabel: "$_phoneButtonLabel()$"
+             , phoneFormDescription: "$_phoneFormDescription()$"
+             , phoneSubmitButtonLabel: "$_phoneSubmitButtonLabel()$"
+             , phoneConfirmationText: "$_phoneConfirmationText()$"
+             , startButtonLabel: "$_startButtonLabel()$"
+             , notEntered: "$_notEntered()$"
+             , contact: "$_contact()$"
+        }
+        , poweredByScrive : "$_poweredByScrive()$"
     }
+
 ####

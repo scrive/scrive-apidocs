@@ -11,51 +11,44 @@ module Util.MonadUtils where
 
 import Control.Applicative
 import Control.Monad
+import Control.Monad.Error (MonadError)
 import Control.Monad.Trans
 import Data.Traversable (sequenceA)
 import qualified Log
 
+import KontraError (KontraError, internalError)
 
-    
-{- |
-   Guards true
- -}
-guardTrue :: (MonadPlus m) => Bool -> m a -> m a
-guardTrue b a = if b then a else mzero 
 
-{- |
-   Guards true in moad
- -}
-guardTrueM :: (MonadPlus m) => m Bool -> m a -> m a
-guardTrueM  mb a = do 
-    b <- mb 
-    guardTrue b a
+ifM :: Monad m => m Bool -> m a -> m a -> m a
+ifM ma mb mc = do
+    b <- ma
+    if b then mb else mc
 
 {- |
-   Get the value from a Just or mzero if it is Nothing
+   Get the value from a Just or fail if it is Nothing
  -}
-guardJust :: (MonadPlus m) => Maybe a -> m a
-guardJust = maybe mzero return
+guardJust :: MonadError KontraError m => Maybe a -> m a
+guardJust = maybe internalError return
 
 {- |
-   Get the value from a Just or mzero if it is Nothing
+   Get the value from a Just or fail if it is Nothing
  -}
-guardJustM :: (MonadPlus m) => m (Maybe b) -> m b
+guardJustM :: MonadError KontraError m => m (Maybe b) -> m b
 guardJustM action = guardJust =<< action
 
 {- |
-   Get the value from a Right or log an error and mzero if it is Left
+   Get the value from a Right or log an error and fail if it is Left
  -}
-guardRight' :: (MonadPlus m, Monad m, MonadIO m, Show msg) => Either msg a -> m a
+guardRight' :: (MonadError KontraError m, Monad m, MonadIO m, Show msg) => Either msg a -> m a
 guardRight' (Right val) = return val
 guardRight' (Left  msg) = do 
   Log.debug (show msg)
-  mzero
+  internalError
   
 {- |
-   Get the value from a Right or log an error and mzero if it is a left
+   Get the value from a Right or log an error and fail if it is a left
  -}
-guardRightM' :: (MonadPlus m, MonadIO m, Show msg) => m (Either msg b) -> m b
+guardRightM' :: (MonadError KontraError m, MonadIO m, Show msg) => m (Either msg b) -> m b
 guardRightM' action = guardRight' =<< action
 
 -- | 'sequenceA' says that if we maybe have @(Maybe (m a))@ a computation

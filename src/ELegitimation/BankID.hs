@@ -9,7 +9,9 @@ module ELegitimation.BankID
 
 import Redirect
 import qualified Log
+import Control.Logic
 import Control.Monad.State
+import Doc.DocInfo
 import Doc.DocStateData as D
 import Doc.DocUtils
 import ELegitimation.ELegTransaction
@@ -19,17 +21,13 @@ import MagicHash (MagicHash)
 import MinutesTime
 import Misc
 import Text.XML.HaXml.XmlContent.Parser
-import qualified Data.ByteString as BS
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
 import Doc.DocStateQuery
 import Text.JSON
-import Text.JSON.Fields
 import ELegitimation.BankIDUtils
 import ELegitimation.BankIDRequests
-
-
-
+import Text.JSON.Gen as J
 
 {- |
    Handle the Ajax request for initiating a BankID transaction.
@@ -45,7 +43,7 @@ generateBankIDTransaction docid signid = do
     -- sanity check
     document <- guardRightM $ getDocByDocIDSigLinkIDAndMagicHash docid signid magic
 
-    unless (document `allowsIdentification` ELegitimationIdentification) mzero
+    unless (document `allowsIdentification` ELegitimationIdentification) internalError
     -- request a nonce
 
     nonceresponse <- generateChallenge provider
@@ -70,12 +68,12 @@ generateBankIDTransaction docid signid = do
                                             , transactionnonce = nonce
                                             }
                     Log.eleg "Eleg chalenge generation sucessfull"
-                    liftIO $ json $ do
-                        field "status" (0::Int)
-                        field "servertime"  $ show seconds
-                        field "nonce" nonce
-                        field "tbs" txt
-                        field "transactionid"  transactionid
+                    return $ runJSONGen $ do
+                        J.value "status" (0::Int)
+                        J.value "servertime" $ show seconds
+                        J.value "nonce" nonce
+                        J.value "tbs" txt
+                        J.value "transactionid" transactionid
 
 generateBankIDTransactionForAuthor :: Kontrakcja m => DocumentID -> m JSValue
 generateBankIDTransactionForAuthor  docid = do
@@ -85,10 +83,10 @@ generateBankIDTransactionForAuthor  docid = do
     document <- guardRightM $ getDocByDocID docid
     tbs <- case documentstatus document of
         Preparation    -> getDataFnM $ look "tbs" -- tbs will be sent as post param
-        AwaitingAuthor -> getTBS document         -- tbs is stored in document
-        _              -> mzero
+        _ | canAuthorSignLast document -> getTBS document -- tbs is stored in document
+        _              -> internalError
 
-    guard $ isAuthor (document, author) -- necessary because someone other than author cannot initiate eleg
+    unless (isAuthor (document, author)) internalError -- necessary because someone other than author cannot initiate eleg
 
     nonceresponse <- generateChallenge provider
     case nonceresponse of
@@ -111,26 +109,27 @@ generateBankIDTransactionForAuthor  docid = do
                                         , transactionmagichash       = Nothing
                                         , transactionnonce           = nonce
                                         }
-                    liftIO $ json $ do
-                        field "status" (0::Int)
-                        field "servertime"  $ show $ toSeconds time
-                        field "nonce" nonce
-                        field "tbs" txt
-                        field "transactionid"  transactionid
+                    return $ runJSONGen $ do
+                        J.value "status" (0::Int)
+                        J.value "servertime"  $ show $ toSeconds time
+                        J.value "nonce" nonce
+                        J.value "tbs" txt
+                        J.value "transactionid"  transactionid
 
 
 generationFailed:: Kontrakcja m => String -> Int -> String -> m JSValue
 generationFailed desc code msg = do
   Log.eleg $ desc ++  " | code: " ++ show code ++" msg: "++ msg ++ " |"
-  liftIO $ json $ do
-                field "status" code
-                field "msg" msg
+  return $ runJSONGen $ do
+    J.value "status" code
+    J.value "msg" msg
+
 {- |
    Validating eleg-data passed when signing
  -}
 
 data VerifySignatureResult  = Problem String
-                            | Mismatch String BS.ByteString BS.ByteString BS.ByteString
+                            | Mismatch String String String String
                             | Sign SignatureInfo
 
 verifySignatureAndGetSignInfo ::  Kontrakcja m =>
@@ -154,7 +153,8 @@ verifySignatureAndGetSignInfo docid signid magic provider signature transactioni
                     , transactionnonce
                     } <- findTransactionByIDOrFail elegtransactions transactionid
 
-    guard (tdocid   == docid && mtsignid == Just signid && mtmagic  == Just magic )
+    unless (tdocid   == docid && mtsignid == Just signid && mtmagic  == Just magic )
+           internalError
      -- end validation
     Log.eleg $ "Successfully found eleg transaction: " ++ show transactionid
     -- send signature to ELeg
@@ -217,14 +217,14 @@ verifySignatureAndGetSignInfo docid signid magic provider signature transactioni
  -}
 
 
-verifySignatureAndGetSignInfoForAuthor :: Kontrakcja m => DocumentID -> SignatureProvider -> String  -> String -> m VerifySignatureResult
+verifySignatureAndGetSignInfoForAuthor :: Kontrakcja m => DocumentID -> SignatureProvider -> String -> String -> m VerifySignatureResult
 verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = do
     Log.eleg $ ("Document " ++ show docid ) ++ ": Author is signing with eleg for document "
     elegtransactions  <- ctxelegtransactions <$> getContext
     author   <- guardJustM  $ ctxmaybeuser <$> getContext
     doc <- guardRightM $ getDocByDocID docid
 
-    guard $ isAuthor (doc, author) -- necessary because someone other than author cannot initiate eleg
+    unless (isAuthor (doc, author)) internalError -- necessary because someone other than author cannot initiate eleg
     Log.eleg $ ("Document " ++ show docid ) ++ ": Author verified"
     ELegTransaction { transactiondocumentid
                     , transactiontbs
@@ -232,10 +232,10 @@ verifySignatureAndGetSignInfoForAuthor docid provider signature transactionid = 
                     , transactionnonce
                     } <- findTransactionByIDOrFail elegtransactions transactionid
 
-    guard $ transactiondocumentid == docid
+    unless (transactiondocumentid == docid) internalError
     Log.eleg $ ("Document " ++ show docid ) ++ ": Transaction validated"
     Log.eleg $ ("Document " ++ show docid ) ++ ": Document matched"
-    guard (doc `allowsIdentification` ELegitimationIdentification)
+    unless (doc `allowsIdentification` ELegitimationIdentification) internalError
     Log.eleg $ ("Document " ++ show docid ) ++ ": Document allows eleg"
     res <- verifySignature provider
                     transactionencodedtbs

@@ -28,28 +28,28 @@ apiCommonsTest = testGroup "API Commons Test" [
 
 testTagJSON :: Assertion
 testTagJSON = do
-  let tag = DocumentTag (BS.fromString "hello") (BS.fromString "goodbye")
+  let tag = DocumentTag "hello" "goodbye"
       js  = api_document_tag tag
-  testJSONStringLookup "value" js $ BS.toString $ tagvalue tag
-  testJSONStringLookup "name" js $ BS.toString $ tagname tag
+  testJSONStringLookup "value" js $ tagvalue tag
+  testJSONStringLookup "name" js $ tagname tag
     
 testTagJSONRandom :: Assertion
 testTagJSONRandom = doNTimes 100 $ do
   tag <- rand 20 arbitrary
   let js  = api_document_tag tag
-  testJSONStringLookup "value" js $ BS.toString $ tagvalue tag
-  testJSONStringLookup "name" js $ BS.toString $ tagname tag
+  testJSONStringLookup "value" js $ tagvalue tag
+  testJSONStringLookup "name" js $ tagname tag
   
 testInvolvedJSON :: Assertion
 testInvolvedJSON = do
   let sl = signatoryLinkExample1
       js = api_signatory sl
-  testJSONStringLookup "email"      js $ BS.toString $ getEmail          sl
-  testJSONStringLookup "fstname"    js $ BS.toString $ getFirstName      sl
-  testJSONStringLookup "sndname"    js $ BS.toString $ getLastName       sl
-  testJSONStringLookup "company"    js $ BS.toString $ getCompanyName    sl
-  testJSONStringLookup "companynr"  js $ BS.toString $ getCompanyNumber  sl
-  testJSONStringLookup "personalnr" js $ BS.toString $ getPersonalNumber sl
+  testJSONStringLookup "email"      js $ getEmail          sl
+  testJSONStringLookup "fstname"    js $ getFirstName      sl
+  testJSONStringLookup "sndname"    js $ getLastName       sl
+  testJSONStringLookup "company"    js $ getCompanyName    sl
+  testJSONStringLookup "companynr"  js $ getCompanyNumber  sl
+  testJSONStringLookup "personalnr" js $ getPersonalNumber sl
   testJSONStringLookup "seen" js $ showMinutesTimeForAPI $ fromSeconds 0
   testJSONStringLookup "sign" js $ showMinutesTimeForAPI $ fromSeconds 0
   case js of
@@ -64,13 +64,13 @@ testInvolvedJSON = do
 testFileJSON :: Assertion
 testFileJSON = do
   let base64data = BASE64.encode (BS.unpack $ BS.fromString "abc")
-  let js = api_file (BS.fromString "file1") (BS.fromString "abc")
+  let js = api_file "file1" (BS.fromString "abc")
   testJSONStringLookup "name" js "file1"
   testJSONStringLookup "content" js  base64data
   
 testDocumentJSON :: Assertion
 testDocumentJSON = do
-  let doc = blankDocument { documenttitle = BS.fromString "Cool Contract", documentallowedidtypes = [EmailIdentification] }
+  let doc = blankDocument { documenttitle = "Cool Contract", documentallowedidtypes = [EmailIdentification] }
       jsv = api_document (Just []) doc
   testJSONStringLookup "title" jsv "Cool Contract"
   testJSONStringLookup "document_id" jsv "0"

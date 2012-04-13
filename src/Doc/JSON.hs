@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Doc.JSON 
+module Doc.JSON
        (
          jsonDocumentForSignatory
        , jsonDocumentID
@@ -20,15 +20,13 @@ import Text.JSON.Types
 import Util.JSON
 import Misc
 import KontraLink
-import qualified Data.ByteString.UTF8 as BS
---import Control.Applicative
 
 instance SafeEnum [SignatoryRole] where
   fromSafeEnum srs =
     case srs of
       [SignatoryAuthor]                   -> 1
       [SignatoryPartner, SignatoryAuthor] -> 2
-      [SignatoryAuthor, SignatoryPartner] -> 2      
+      [SignatoryAuthor, SignatoryPartner] -> 2
       [SignatoryPartner]                  -> 5
       []                                  -> 10
       _                                   -> 20
@@ -47,9 +45,7 @@ instance SafeEnum DocumentType where
   fromSafeEnum (Signable Order)    = 5
   fromSafeEnum (Template Order)    = 6
   fromSafeEnum (Attachment)        = 20
-  -- what to do with AttachmentTemplate?
-  fromSafeEnum (AttachmentTemplate)= 21
-  
+
   toSafeEnum 1  = Just (Signable Contract)
   toSafeEnum 2  = Just (Template Contract)
   toSafeEnum 3  = Just (Signable Offer)
@@ -57,7 +53,6 @@ instance SafeEnum DocumentType where
   toSafeEnum 5  = Just (Signable Order)
   toSafeEnum 6  = Just (Template Order)
   toSafeEnum 20 = Just (Attachment)
-  toSafeEnum 21 = Just (AttachmentTemplate)
   toSafeEnum _  = Nothing
 
 jsonDocumentType :: DocumentType -> JSValue
@@ -69,7 +64,6 @@ jsonDocumentID = showJSON . show
 instance SafeEnum DocumentStatus where
     fromSafeEnum Preparation       = 0
     fromSafeEnum Pending           = 10
-    fromSafeEnum AwaitingAuthor    = 10
     fromSafeEnum Timedout          = 20
     fromSafeEnum Rejected          = 20
     fromSafeEnum Canceled          = 20
@@ -92,22 +86,22 @@ jsonDocumentMetadata doc = fromRight $
                            (jsset "title" $ documenttitle doc)
 
 jsonDocumentForAuthor :: Document -> JSValue
-jsonDocumentForAuthor doc = 
-  fromRight            $ (Right jsempty)                          >>=                                
+jsonDocumentForAuthor doc =
+  fromRight            $ (Right jsempty)                          >>=
   (jsset "designurl"   $ show $ LinkIssueDoc (documentid doc))    >>=
-  (jsset "document_id" $ jsonDocumentID $ documentid doc)         >>=    
-  (jsset "title"       $ documenttitle doc)                       >>=                        
-  (jsset "type"        $ fromSafeEnumInt $ documenttype doc)     >>=       
+  (jsset "document_id" $ jsonDocumentID $ documentid doc)         >>=
+  (jsset "title"       $ documenttitle doc)                       >>=
+  (jsset "type"        $ fromSafeEnumInt $ documenttype doc)     >>=
   (jsset "status"      $ fromSafeEnumInt $ documentstatus doc) >>=
   (jsset "metadata"    $ jsonDocumentMetadata doc) >>=
   (jsset "authorization" $ fromSafeEnumInt $ documentallowedidtypes doc)
 
 jsonDocumentForSignatory :: Document -> JSValue
-jsonDocumentForSignatory doc = 
-  fromRight            $ (Right jsempty)                          >>=                                
-  (jsset "document_id" $ jsonDocumentID $ documentid doc)         >>=    
-  (jsset "title"       $ documenttitle doc)                       >>=                        
-  (jsset "type"        $ fromSafeEnumInt $ documenttype doc)     >>=       
+jsonDocumentForSignatory doc =
+  fromRight            $ (Right jsempty)                          >>=
+  (jsset "document_id" $ jsonDocumentID $ documentid doc)         >>=
+  (jsset "title"       $ documenttitle doc)                       >>=
+  (jsset "type"        $ fromSafeEnumInt $ documenttype doc)     >>=
   (jsset "status"      $ fromSafeEnumInt $ documentstatus doc) >>=
   (jsset "metadata"    $ jsonDocumentMetadata doc) >>=
   (jsset "authorization" $ fromSafeEnumInt $ documentallowedidtypes doc)
@@ -124,7 +118,7 @@ jsonSigAttachmentWithFile sa mfile =
       Nothing   -> jsset "requested" True
       Just file -> jsset "file" $ fromRight ((Right jsempty) >>=
                                              (jsset "id" $ show (fileid file)) >>=
-                                             (jsset "name" $ (filename file))))
+                                             (jsset "name" $ filename file)))
 
 data DocumentCreationRequest = DocumentCreationRequest {
   dcrTitle    :: String,
@@ -134,14 +128,14 @@ data DocumentCreationRequest = DocumentCreationRequest {
   dcrMainFile :: String -- filename
   }
                              deriving (Show, Eq)
-                               
+
 data InvolvedRequest = InvolvedRequest {
   irRole        :: [SignatoryRole],
   irData        :: [SignatoryField],
   irAttachments :: [AttachmentRequest]
   }
                      deriving (Show, Eq)
-                       
+
 data AttachmentRequest = AttachmentRequest {
   arName        :: String,
   arDescription :: String
@@ -153,7 +147,7 @@ arFromJSON jsv = do
   JSString (JSONString name) <- jsget "name" jsv
   JSString (JSONString description) <- jsgetdef "description" (showJSON "") jsv
   return $ AttachmentRequest { arName = name, arDescription = description}
-  
+
 sfFromJSON :: (String, JSValue) -> Either String SignatoryField
 sfFromJSON (name, jsv) = do
   JSString (JSONString value) <- jsgetdef "value" (showJSON "") jsv
@@ -165,10 +159,10 @@ sfFromJSON (name, jsv) = do
     "company"    -> Right CompanyFT
     "companynr"  -> Right CompanyNumberFT
     "personalnr" -> Right PersonalNumberFT
-    s            -> Right $ CustomFT (BS.fromString s) req
+    s            -> Right $ CustomFT s req
   -- do placements later /Eric
-  return $ SignatoryField { sfType = tp, sfValue = BS.fromString value, sfPlacements = [] }
-  
+  return $ SignatoryField { sfType = tp, sfValue = value, sfPlacements = [] }
+
 irFromJSON :: JSValue -> Either String InvolvedRequest
 irFromJSON jsv = do
   i'@(JSRational _ _) <- jsgetdef "role" (showJSON (5::Int)) jsv
@@ -186,12 +180,12 @@ fileNameFromJSON :: JSValue -> Either String String
 fileNameFromJSON jsv = do
   JSString (JSONString name) <- jsget "name" jsv
   return name
-  
+
 tagFromJSON :: JSValue -> Either String DocumentTag
 tagFromJSON jsv = do
   JSString (JSONString name)  <- jsget "name"  jsv
   JSString (JSONString value) <- jsget "value" jsv
-  return $ DocumentTag { tagname = BS.fromString name, tagvalue = BS.fromString value }
+  return $ DocumentTag { tagname = name, tagvalue = value }
 
 dcrFromJSON :: JSValue -> Either String DocumentCreationRequest
 dcrFromJSON jsv = do

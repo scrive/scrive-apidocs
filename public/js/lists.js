@@ -66,6 +66,9 @@
         },
         tdclass: function() {
             return this.get('tdclass') || "";
+        },
+        substyle : function() {
+            return this.get('substyle') == undefined ?  "margin-left:10px" : this.get('substyle') ;
         }
     });
 
@@ -229,7 +232,7 @@
             var filtering = this.model;
             var searchBox = InfoTextInput.init({ infotext: filtering.infotext(),
                                                  value: filtering.text(),
-                                                 cssClass: "tab-search float-right" });
+                                                 cssClass: "list-search float-right" });
             searchBox.input().keypress(function(event) {
                 var keycode = (event.keyCode ? event.keyCode : event.which);
                 if (keycode == '13') {
@@ -250,7 +253,7 @@
     window.Schema = Backbone.Model.extend({
         defaults: {
             sorting: new Sorting({ disabled: true }),
-            filtering: new Filtering({ disabled: true }),
+            filtering: new Filtering({ disabled: true}),
             paging: new Paging({ disabled: true }),
             options: [],
             extraParams: {}
@@ -258,6 +261,12 @@
         initialize: function() {
             _.bindAll(this, 'change');
             var schema = this;
+          var paging = this.paging();
+          // we reset the page to 0 when we change the filtering
+          // if we do this first, the right thing happens, otherwise,
+          // it goes into infinite loop -- Eric
+          this.filtering().bind('change', function(){paging.changePage(0);});
+
             this.filtering().bind('change', function() {schema.trigger('change')});
             this.sorting().bind('change', function() {schema.trigger('change')});
             this.paging().bind('change:pageCurrent', function() {schema.trigger('change')});
@@ -297,7 +306,11 @@
         url: function() {
             return this.get("url");
         },
-        setSessionStorageNamespace: function(name) {
+        namespace: function() {
+            return this.get('namespace');
+        },
+        initSessionStorageNamespace: function(name) {
+            this.set({ namespace: name });
             this.filtering().setSessionStorageNamespace(name);
             this.sorting().setSessionStorageNamespace(name);
         },
@@ -318,6 +331,13 @@
             selected: false,
             expanded: false,
             unsaved: false
+        },
+        initialize: function (args) {
+            if (this.collection != undefined && this.collection.schema != undefined &&  this.field("id") != undefined)
+            {
+                var namespace = this.collection.schema.namespace();
+                this.set({ "expanded": SessionStorage.get(namespace, "expanded" + this.field("id")) == "true" });
+            }
         },
         field: function(name) {
             return this.get("fields")[name];
@@ -340,21 +360,25 @@
         isUnsaved: function() {
             return this.get("unsaved");
         },
-        toggleSelect: function() {
-            this.set({ "selected": !this.isSelected() }, { silent: true });
+        select: function() {
+            this.set({ "selected": true }, {silent: true});
             this.trigger("selected:change");
         },
-        select: function() {
-            this.set({ "selected": true });
-        },
         unselect: function() {
-            this.set({ "selected": false });
+            this.set({ "selected": false }, {silent: true});
+            this.trigger("selected:change");
         },
         isExpanded: function() {
             return this.get("expanded") == true;
         },
         toggleExpand: function() {
-            this.set({ "expanded": !this.isExpanded() });
+            console.log("toggling");
+            var val = this.isExpanded();
+            var namespace = this.collection.schema.namespace();
+            var id = this.field("id");
+            SessionStorage.set(namespace, "expanded" + id, "" + !val);
+            this.set({ "expanded": !val }, {silent : true});
+            this.trigger("change");
         }
     });
 
@@ -420,11 +444,6 @@
             this.render();
         },
         render: function() {
-            if ($(this.el).size() === 1) {
-                for (var j = 0; j < this.model.subfieldsSize(); j++) {
-                    this.el = $(this.el).add($("<tr />"));
-                }
-            }
             $(this.el).empty();
             var mainrow = $(this.el).first();
             for (var i = 0; i < this.schema.size(); i++) {
@@ -441,35 +460,41 @@
                         td.html($("<a href='#' class='expand'>" + value + "</a>"));
                     } else if (cell.isBool()) {
                         if (value)  td.append("<center><a href='" + this.model.link() + "'>&#10003;</a></center>");
-                    } else 
+                    } else
                             td.append($("<a href='" + this.model.link() + "'>" + value + "</a>"));
-                    } 
+                    }
                    else if (value != undefined) {
                         var span = $("<span >" + value + "</span>");
                         td.html(span);
                     }
                 mainrow.append(td);
             }
-            for (var j = 0; j < this.model.subfieldsSize(); j++) {
+            if (this.model.isExpanded()) {
+             if ($(this.el).size() === 1) {
+                    for (var j = 0; j < this.model.subfieldsSize(); j++) {
+                        this.el = $(this.el).add($("<tr />"));
+                    }
+             }
+
+             for (var j = 0; j < this.model.subfieldsSize(); j++) {
                 var subrow = $(this.el).eq(j + 1);
                 for (var i = 0; i < this.schema.size(); i++) {
-                    var div = $("<div style='margin-left:10px;' />");
+                    var div = $("<div/>").attr('style',this.schema.cell(i).substyle());
                     var td = $("<td></td>").append(div);
                     var value = this.model.subfield(j, (this.schema.cell(i).subfield()));
                     if (value != undefined) {
                         if (this.schema.cell(i).isRendered()) {
                             div.append(this.schema.cell(i).rendering(value, j, this.model));
-                        } else {
+                        }
+                        else if (this.schema.cell(i).isSelect()) {
+                        }
+                        else {
                             div.text(value);
                         }
                     }
                     subrow.append(td);
                 }
-                if (this.model.isExpanded()) {
-                    subrow.css("display", "");
-                } else {
-                    subrow.css("display", "none");
-                }
+             }
             }
             this.renderSelection();
             return this;
@@ -488,14 +513,17 @@
             }
         },
         selectCheck: function(e) {
-            this.model.toggleSelect();
+          if(e.target.checked)
+            this.model.select();
+          else
+            this.model.unselect();
         },
         selectRow: function(e) {
             // ignore checkboxes and links
             if (!$(e.target).is(":checkbox, a")) {
                 // select only this one
                 this.model.collection.selectNone();
-                this.model.toggleSelect();
+                this.model.select();
             }
         },
         toggleExpand: function() {
@@ -727,11 +755,13 @@
             return this;
         },
         toggleSelectAll: function() {
+            this.model.off('change');
             if (this.model.hasUnselected()) {
                 this.model.selectAll();
             } else {
                 this.model.selectNone();
             }
+            this.model.bind('change', this.render);
         }
     });
 
@@ -742,9 +772,7 @@
             this.loading = new Loading({
                 schema: this.schema
             });
-            if (args.name != undefined) {
-                this.schema.setSessionStorageNamespace(args.name);
-            }
+            this.schema.initSessionStorageNamespace(args.name);
             this.model = new List({
                 schema: args.schema
             });
@@ -752,7 +780,7 @@
                 model: this.model,
                 schema: args.schema,
                 loading: this.loading,
-                el: $("<div/>"),
+                el: $("<div class='list-container'/>"),
                 headerExtras: args.headerExtras,
                 bottomExtras: args.bottomExtras
             });
@@ -767,11 +795,16 @@
             this.loading.stop();
         },
         recall: function() {
+            var list = this;
             this.beforeFetch();
             this.model.fetch({ data: this.schema.getSchemaUrlParams(),
                                processData: true,
                                cache: false,
-                               success: this.afterFetch
+                               success: this.afterFetch,
+                               error: function() {
+                                 console.error("Failed to fetch list, trying again ...");
+                                 window.setTimeout(list.recall, 1000);
+                               }
             });
         }
     };};

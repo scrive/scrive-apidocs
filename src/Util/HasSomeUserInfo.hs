@@ -21,21 +21,20 @@ module Util.HasSomeUserInfo (
   HasSomeUserInfo
   ) where
 
+
 import Doc.DocStateData
 import User.Model
 import Mails.MailsData
-
 import Data.Char
 import Data.String.Utils
-import Data.List
-import qualified Data.ByteString.UTF8 as BS
+
 
 -- | Anything that might have a first name and last name, or personalnumber
 class HasSomeUserInfo a where
-  getEmail          :: a -> BS.ByteString
-  getFirstName      :: a -> BS.ByteString
-  getLastName       :: a -> BS.ByteString
-  getPersonalNumber :: a -> BS.ByteString
+  getEmail          :: a -> String
+  getFirstName      :: a -> String
+  getLastName       :: a -> String
+  getPersonalNumber :: a -> String
 
 instance HasSomeUserInfo UserInfo where
   getEmail          = unEmail . useremail
@@ -67,29 +66,24 @@ instance HasSomeUserInfo SignatoryLink where
    Useful for sending emails.
    Refactor note: change this to getNameEmailPair, move to Util.HasSomeUserInfo
  -}
-emailFromSigLink :: SignatoryLink -> (BS.ByteString, BS.ByteString)
+emailFromSigLink :: SignatoryLink -> (String, String)
 emailFromSigLink sl = (getFullName sl, getEmail sl)
 
 -- | Get the full name (first last)
-getFullName :: (HasSomeUserInfo a) => a -> BS.ByteString
-getFullName a =
-  let fn = strip $ BS.toString $ getFirstName a
-      ln = strip $ BS.toString  $ getLastName  a
-  in BS.fromString  $ strip $ intercalate " " [fn, ln]
+getFullName :: (HasSomeUserInfo a) => a -> String
+getFullName a = (strip $ getFirstName a) ++ " " ++ (strip $ getLastName  a)
+
 
 -- | If the full name is empty, return the email
 -- (no check if email is empty)
-getSmartName :: (HasSomeUserInfo a) => a -> BS.ByteString
-getSmartName a =
-  let fn = strip $ BS.toString $ getFullName a
-      em = strip $ BS.toString $ getEmail    a
-  in if all isSpace fn
-     then BS.fromString  em
-     else BS.fromString  fn
+getSmartName :: (HasSomeUserInfo a) => a -> String
+getSmartName a = if (all isSpace (getFullName a))
+                    then strip $ getEmail a   
+                    else strip $ getFullName a
 
 -- | Get a MailAddress
 getMailAddress :: (HasSomeUserInfo a) => a -> MailAddress
-getMailAddress a =
-  MailAddress { fullname = getFullName a
-              , email    = getEmail a
-              }
+getMailAddress a = MailAddress {
+    fullname = getFullName a
+  , email    = getEmail a
+  }

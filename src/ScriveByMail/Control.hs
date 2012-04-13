@@ -12,6 +12,9 @@ import CompanyAccounts.CompanyAccountsControl
 import DB.Classes
 import Doc.DocStateData
 import Kontra
+import Control.Monad.Trans
+import qualified Data.ByteString.Lazy as BSL
+
 import KontraLink
 import MagicHash
 import Misc
@@ -22,16 +25,12 @@ import User.Model
 import User.UserControl
 import Util.FlashUtil
 import Util.MonadUtils
-import qualified Doc.DocControl as DocControl
+import Doc.Action
 
 import Control.Applicative
 import Control.Monad
-import Control.Monad.Trans
 import Data.Int
 import Happstack.Server hiding (simpleHTTP, host)
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.UTF8 as BS
 
 {- |
 
@@ -46,8 +45,8 @@ handleMailAPI = do
     Right content -> return content
   mresult <- doMailAPI content
   case mresult of
-    Just (doc2, doc, msiglinkid) -> do
-        _ <- DocControl.postDocumentChangeAction doc2 doc msiglinkid
+    Just doc -> do
+        _ <- postDocumentPreparationChange doc
         return $ show $ documentid doc
     Nothing -> return ""
 
@@ -59,9 +58,10 @@ handleConfirmDelay adminemail delayid key = do
     Nothing -> addFlashM $ modalDenyDelay
     Just (email, companyid) -> do
       company   <- guardJustM $ runDBQuery $ GetCompany companyid
-      adminuser <- guardJustM $ runDBQuery $ GetUserByEmail Nothing (Email $ BS.fromString adminemail)
-      guard (Just companyid == usercompany adminuser && useriscompanyadmin adminuser)
-      newuser   <- guardJustM $ createUser (Email $ BS.fromString email) BS.empty BS.empty (Just company)
+      adminuser <- guardJustM $ runDBQuery $ GetUserByEmail Nothing (Email adminemail)
+      unless (Just companyid == usercompany adminuser && useriscompanyadmin adminuser)
+             internalError
+      newuser   <- guardJustM $ createUser (Email email) "" "" (Just company)
       _ <- runDBUpdate $ ConfirmBossDelay delayid (ctxtime ctx)
       _ <- sendNewCompanyUserMail adminuser company newuser
       addFlashM $ modalConfirmDelay email

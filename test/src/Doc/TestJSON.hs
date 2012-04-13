@@ -1,10 +1,8 @@
 module Doc.TestJSON where
 
-import qualified Data.ByteString.UTF8 as BS
 import Test.Framework
 import Test.QuickCheck
 import Text.JSON
---import Text.JSON.String
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 
 import Util.JSON
@@ -26,7 +24,7 @@ documentJSONTests = testGroup "Document JSON tests" [
 
   testProperty "title must be equal"
   (\doc -> True ==>
-           (BS.toString $ documenttitle doc) == (fromJSONString $ fromRight $ jsget "title" (jsonDocumentForSignatory doc))),
+           (documenttitle doc) == (fromJSONString $ fromRight $ jsget "title" (jsonDocumentForSignatory doc))),
 
   testGroup "type must be correct" [
     testProperty "Signable Contract" 
@@ -49,7 +47,7 @@ documentJSONTests = testGroup "Document JSON tests" [
              let s = (fromJSONRational $ fromRight $ jsget "status" (jsonDocumentForSignatory doc)) in
              0 <= s && s <= 9),
     testProperty "Pending"
-    (\doc -> documentstatus doc == Pending || documentstatus doc == AwaitingAuthor ==>
+    (\doc -> documentstatus doc == Pending ==>
              let s = (fromJSONRational $ fromRight $ jsget "status" (jsonDocumentForSignatory doc)) in
              10 <= s && s <= 19),
     testProperty "Rejected"
@@ -97,9 +95,9 @@ dcrTest = doNTimes 100 $ do
         dcrType  = Signable Contract,
         dcrTags  = [],
         dcrInvolved = [InvolvedRequest { irRole = [SignatoryPartner],
-                                         irData = [SignatoryField FirstNameFT (BS.fromString fn) [],
-                                                   SignatoryField LastNameFT  (BS.fromString sn) [],
-                                                   SignatoryField EmailFT     (BS.fromString em) []],
+                                         irData = [SignatoryField FirstNameFT fn [],
+                                                   SignatoryField LastNameFT  sn [],
+                                                   SignatoryField EmailFT     em []],
                                          irAttachments = [] }],
         dcrMainFile = mainfile
         }

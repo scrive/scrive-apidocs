@@ -18,10 +18,11 @@ import AppView as V
 import Crypto.RNG (CryptoRNGState, random, inIO)
 import DB.Classes
 import Doc.DocStateData
+import IPAddress
 import Kontra
+import KontraError (KontraError(..))
 import MinutesTime
 import Misc
---import PayEx.PayExInterface ()-- Import so at least we check if it compiles
 import Redirect
 import Session
 import Templates.Templates
@@ -35,6 +36,7 @@ import Util.KontraLinkUtils
 import File.FileID
 
 import Control.Concurrent
+import Control.Concurrent.MVar.Util (tryReadMVar)
 import Control.Monad.Error
 import Data.Functor
 import Data.List
@@ -94,15 +96,27 @@ getStandardLocale muser = do
 {- |
     Handles an error by displaying the home page with a modal error dialog.
 -}
-handleError :: Kontra Response
-handleError = do
+handleError :: (MonadIO m, Kontrakcja m) => KontraError -> m Response
+handleError e = do
+     rq <- askRq
+     Log.error (show e)
+     liftIO (tryReadMVar (rqInputsBody rq)) >>= Log.error . showRequest rq
+     handleError' e
+  where
+  handleError' :: Kontrakcja m => KontraError -> m Response
+  handleError' InternalError = do
     ctx <- getContext
-    case (ctxservice ctx) of
+    case ctxservice ctx of
          Nothing -> do
             addFlashM V.modalError
             linkmain <- getHomeOrUploadLink
             sendRedirect linkmain
-         Just _ -> embeddedErrorPage
+         _ -> embeddedErrorPage
+  handleError' Respond404 = do
+    ctx <- getContext
+    case ctxservice ctx of
+         Nothing -> notFoundPage >>= notFound
+         _ -> embeddedErrorPage
 
 {- |
    Creates a default amazon configuration based on the
@@ -161,7 +175,7 @@ showRequest rq maybeInputsBody =
 {- |
    Creates a context, routes the request, and handles the session.
 -}
-appHandler :: Kontra Response -> AppConf -> AppGlobals -> ServerPartT IO Response
+appHandler :: Kontra' Response -> AppConf -> AppGlobals -> ServerPartT IO Response
 appHandler handleRoutes appConf appGlobals = do
   startTime <- liftIO getClockTime
 
@@ -170,11 +184,9 @@ appHandler handleRoutes appConf appGlobals = do
   temp <- liftIO $ getTemporaryDirectory
   decodeBody (defaultBodyPolicy temp quota quota quota)
 
-  rq <- askRq
-
   session <- handleSession (cryptorng appGlobals)
-  ctx <- createContext rq session
-  response <- handle rq session ctx
+  ctx <- createContext session
+  response <- handle session ctx
   finishTime <- liftIO getClockTime
   let TOD ss sp = startTime
       TOD fs fp = finishTime
@@ -182,35 +194,32 @@ appHandler handleRoutes appConf appGlobals = do
   Log.debug $ "Response time " ++ show (diff `div` 1000000000) ++ "ms"
   return response
   where
-    handle :: Request -> Session -> Context -> ServerPartT IO Response
-    handle rq session ctx = do
-      (res, ctx') <- runKontra ctx $ do
-          res <- handleRoutes  `mplus` do
-             rqcontent <- liftIO $ tryTakeMVar (rqInputsBody rq)
-             when (isJust rqcontent) $
-                 liftIO $ putMVar (rqInputsBody rq) (fromJust rqcontent)
-             Log.error $ showRequest rq rqcontent
-             response <- handleError
-             setRsCode 404 response
+    handle :: Session -> Context -> ServerPartT IO Response
+    handle session ctx = do
+      Right (res, ctx') <- runKontra' ctx $ do
+          res <- (handleRoutes `mplus` throwError Respond404) `catchError` handleError
           ctx' <- getContext
           return (res,ctx')
 
       let newsessionuser = fmap userid $ ctxmaybeuser ctx'
+      let newsessionpaduser = fmap userid $ ctxmaybepaduser ctx'
       let newflashmessages = ctxflashmessages ctx'
       let newelegtrans = ctxelegtransactions ctx'
       let newmagichashes = ctxmagichashes ctx'
       F.updateFlashCookie (aesConfig appConf) (ctxflashmessages ctx) newflashmessages
       rng <- inIO (cryptorng appGlobals) random
-      updateSessionWithContextData rng session newsessionuser newelegtrans newmagichashes
+      updateSessionWithContextData rng session newsessionuser newelegtrans newmagichashes newsessionpaduser
       stats <- liftIO $ getNexusStats (nexus $ ctxdbenv ctx')
-
+      rq <- askRq
       Log.debug $ "SQL for " ++ rqUri rq ++ ": " ++ show stats
 
       liftIO $ disconnect $ nexus $ ctxdbenv ctx'
       return res
 
-    createContext rq session = do
+    createContext session = do
+      rq <- askRq
       currhostpart <- getHostpart
+      reshostpart <- getResourceHostpart
       -- FIXME: we should read some headers from upstream proxy, if any
       let peerhost = case getHeader "x-real-ip" rq of
                        Just name -> BS.toString name
@@ -225,14 +234,15 @@ appHandler handleRoutes appConf appGlobals = do
       addrs <- liftIO $ getAddrInfo (Just hints) (Just peerhost) Nothing
       let addr = head addrs
       let peerip = case addrAddress addr of
-                     SockAddrInet _ hostip -> IPAddress hostip
-                     _ -> unknownIPAddress
+            SockAddrInet _ hostip -> unsafeIPAddress hostip
+            _                     -> noIP
 
       psqlconn <- liftIO $ connectPostgreSQL $ dbConfig appConf
       dbenv <- mkDBEnv psqlconn (cryptorng appGlobals)
       minutestime <- liftIO getMinutesTime
       muser <- getUserFromSession dbenv session
       mcompany <- getCompanyFromSession dbenv session
+      mpaduser <- getPadUserFromSession dbenv session
       location <- getLocationFromSession session
       mservice <- currentLink >>= \clink -> if (hostpart appConf `isPrefixOf` clink)
                                              then return Nothing
@@ -256,6 +266,7 @@ appHandler handleRoutes appConf appGlobals = do
           ctx = Context
                 { ctxmaybeuser = muser
                 , ctxhostpart = currhostpart
+                , ctxresourcehostpart = reshostpart
                 , ctxflashmessages = flashmessages
                 , ctxtime = minutestime
                 , ctxnormalizeddocuments = docscache appGlobals
@@ -286,6 +297,7 @@ appHandler handleRoutes appConf appGlobals = do
                 , ctxadminaccounts = admins appConf
                 , ctxsalesaccounts = sales appConf
                 , ctxmagichashes = getMagicHashes session
+                , ctxmaybepaduser = mpaduser
                 }
       return ctx
 

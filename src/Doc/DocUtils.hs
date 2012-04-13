@@ -11,6 +11,7 @@
 
 module Doc.DocUtils where
 
+import Control.Logic
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Doc.DocStateData
@@ -26,21 +27,15 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Data.List hiding (insert)
 import Data.Maybe
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS
 import File.Model
 import Control.Applicative
 import MinutesTime
-
---import Happstack.State
-
 
 {- |
     Checks whether the document is deletable, this is not the case for live documents.
 -}
 isDeletableDocument :: Document -> Bool
-isDeletableDocument doc =
-    (not  $ (documentstatus doc) `elem` [Pending, AwaitingAuthor]) -- We dont allow to delete pending documents
+isDeletableDocument doc = documentstatus doc /= Pending -- We dont allow to delete pending documents
 
 {- |
    Given a Document, return all of the signatory details for all signatories (exclude viewers but include author if he must sign).
@@ -131,7 +126,6 @@ class MaybeTemplate a where
 
 instance MaybeTemplate DocumentType where
    isTemplate (Template _) = True
-   isTemplate AttachmentTemplate = True
    isTemplate _ = False
    isSignable (Signable _) = True
    isSignable _ = False
@@ -144,7 +138,7 @@ class MaybeAttachment a where
    isAttachment :: a -> Bool
 
 instance  MaybeAttachment DocumentType where
-   isAttachment t =  (t == AttachmentTemplate) || (t == Attachment)
+   isAttachment t = (t == Attachment)
 
 instance  MaybeAttachment Document where
    isAttachment =  isAttachment . documenttype
@@ -178,20 +172,19 @@ instance HasFields  [SignatoryField] where
     replaceField f fs = if (any (matchingFieldType f) fs) 
                                 then map (\f' ->  f <| (matchingFieldType f f') |> f' )  fs
                                 else fs  ++ [f]
-               
+
 instance HasFields SignatoryDetails where
     getAllFields = getAllFields . signatoryfields
     replaceField f s = s {signatoryfields = replaceField f (signatoryfields s) } 
-    
+
 instance HasFields SignatoryLink where
     getAllFields =  getAllFields . signatorydetails
     replaceField f s = s {signatorydetails = replaceField f (signatorydetails s) }     
-            
-replaceFieldValue::(HasFields a) =>  FieldType -> BS.ByteString -> a -> a
+
+replaceFieldValue :: HasFields a =>  FieldType -> String -> a -> a
 replaceFieldValue ft v a = case (find (matchingFieldType ft) $ getAllFields a) of
                             Just f  -> replaceField (f { sfType = ft, sfValue = v}) a
                             Nothing -> replaceField (SignatoryField { sfType = ft, sfValue = v, sfPlacements =[]}) a
-
 
 -- does this need to change now? -EN
 checkCSVSigIndex :: [SignatoryLink] -> Int -> Either String Int
@@ -240,9 +233,9 @@ signatoryDetailsFromUser user mcompany = SignatoryDetails {
       toSF FirstNameFT $ getFirstName user
     , toSF LastNameFT $ getLastName user
     , toSF EmailFT $ getEmail user
-    , toSF CompanyFT $ getCompanyName mcompany
+    , toSF CompanyFT $ getCompanyName (user, mcompany)
     , toSF PersonalNumberFT $ getPersonalNumber user
-    , toSF CompanyNumberFT $ getCompanyNumber mcompany
+    , toSF CompanyNumberFT $ getCompanyNumber (user, mcompany)
     ]
   }
   where
@@ -272,43 +265,30 @@ isELegDataMismatch _                            = False
 allowsIdentification :: Document -> IdentificationType -> Bool
 allowsIdentification document idtype = idtype `elem` documentallowedidtypes document
 
--- Not ready to refactor this quite yet.
-isEligibleForReminder :: Maybe User -> Document -> SignatoryLink -> Bool
-isEligibleForReminder muser doc siglink = isEligibleForReminder'' muser doc siglink
+{- | Determine is document is designed to be signed using pad - this determines if invitation emais are send and if author can get access to siglink -}
+sendMailsDurringSigning :: Document -> Bool
+sendMailsDurringSigning doc = not $ doc `allowsIdentification` PadIdentification
 
--- this should actually not take Maybe User but User instead
 {- |
     Checks whether a signatory link is eligible for sending a reminder.
     The user must be the author, and the signatory musn't be the author.
     Also the signatory must be next in the signorder, and also not be a viewer.
     In addition the document must be in the correct state.  There's quite a lot to check!
 -}
-isEligibleForReminder' :: User -> Document -> SignatoryLink -> Bool
-isEligibleForReminder' user document siglink =
-  isActivatedSignatory (documentcurrentsignorder document) siglink
-  && isAuthor (document, user)
-  && not (isSigLinkFor user siglink)
-  && isDocumentEligibleForReminder document
-  && not (isUndelivered siglink)
-  && not (isDeferred siglink)
-  && isClosed document
-  && isSignatory siglink
-
-isEligibleForReminder'' :: Maybe User -> Document -> SignatoryLink -> Bool
-isEligibleForReminder'' muser document@Document{documentstatus} siglink =
+isEligibleForReminder :: User -> Document -> SignatoryLink -> Bool
+isEligibleForReminder user document@Document{documentstatus} siglink = 
   signatoryActivated
     && userIsAuthor
     && not isUserSignator
     && not dontShowAnyReminder
     && invitationdeliverystatus siglink /= Undelivered
     && invitationdeliverystatus siglink /= Deferred
-    && (isClosed' || not wasSigned)
+    && wasNotSigned
     && isSignatoryPartner
   where
-    userIsAuthor = isAuthor (document, muser)
-    isUserSignator = isSigLinkFor muser siglink
-    wasSigned = isJust (maybesigninfo siglink) && not (isUserSignator && (documentstatus == AwaitingAuthor))
-    isClosed' = documentstatus == Closed
+    userIsAuthor = isAuthor (document, user)
+    isUserSignator = isSigLinkFor user siglink
+    wasNotSigned = isNothing (maybesigninfo siglink)
     signatoryActivated = documentcurrentsignorder document >= signatorysignorder (signatorydetails siglink)
     dontShowAnyReminder = documentstatus `elem` [Timedout, Canceled, Rejected]
     isSignatoryPartner = SignatoryPartner `elem` signatoryroles siglink
@@ -339,7 +319,7 @@ replaceSignOrder signorder sd = sd { signatorysignorder = signorder }
 {- |
    Can the user view this document directly?
  -}
-canUserInfoViewDirectly :: UserID -> BS.ByteString -> Document -> Bool
+canUserInfoViewDirectly :: UserID -> String -> Document -> Bool
 canUserInfoViewDirectly userid email doc =
     (checkSigLink' $ getSigLinkFor doc userid) || (checkSigLink' $ getSigLinkFor doc email)
   where 
@@ -374,7 +354,7 @@ isCurrentSignatory signorder siglink =
   (not $ isAuthor siglink) &&
   signorder == signatorysignorder (signatorydetails siglink)
 
-type CustomSignatoryField = (SignatoryField, BS.ByteString, Bool)
+type CustomSignatoryField = (SignatoryField, String, Bool)
 
 filterCustomField :: [SignatoryField] -> [CustomSignatoryField]
 filterCustomField l = [(sf, cs, cb) | sf@SignatoryField{sfType = CustomFT cs cb} <- l]
@@ -388,20 +368,20 @@ isStandardField SignatoryField{sfType = CustomFT{}} = False
 isStandardField SignatoryField{sfType = SignatureFT{}} = False
 isStandardField _ = True
 
-findCustomField :: (HasFields a ) => BS.ByteString -> a -> Maybe SignatoryField
-findCustomField name = find (matchingFieldType (CustomFT name False) ) . getAllFields
+findCustomField :: HasFields a => String -> a -> Maybe SignatoryField
+findCustomField name = find (matchingFieldType (CustomFT name False)) . getAllFields
 
 {- | Add a tag to tag list -}
-addTag:: [DocumentTag] -> (BS.ByteString,BS.ByteString) -> [DocumentTag]
+addTag:: [DocumentTag] -> (String, String) -> [DocumentTag]
 addTag ((DocumentTag n v):ts) (n',v') = if n == n'
                            then (DocumentTag n v') : ts
                            else (DocumentTag n v)  : (addTag ts (n',v'))
 addTag _ (n,v) = [DocumentTag n v]
 
-samenameanddescription :: BS.ByteString -> BS.ByteString -> (BS.ByteString, BS.ByteString, [(BS.ByteString, BS.ByteString)]) -> Bool
+samenameanddescription :: String -> String -> (String, String, [(String, String)]) -> Bool
 samenameanddescription n d (nn, dd, _) = n == nn && d == dd
 
-getSignatoryAttachment :: Document -> SignatoryLinkID -> BS.ByteString -> Maybe SignatoryAttachment
+getSignatoryAttachment :: Document -> SignatoryLinkID -> String -> Maybe SignatoryAttachment
 getSignatoryAttachment doc slid name = join $ find (\a -> name == signatoryattachmentname a) 
                                        <$> signatoryattachments 
                                        <$> (find (\sl -> slid == signatorylinkid sl) $ documentsignatorylinks doc)
@@ -442,73 +422,29 @@ fileInDocument doc fid =
                  ++ (fmap authorattachmentfile $ documentauthorattachments doc)
                  ++ (catMaybes $ fmap signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
 
-makePlacements :: [BS.ByteString]
-               -> [BS.ByteString]
-               -> [Int]
-               -> [Int]
-               -> [Int]
-               -> [Int]
-               -> [Int]
-               -> [(BS.ByteString, BS.ByteString, FieldPlacement)]
-makePlacements placedsigids
-               placedfieldids
-               placedxs
-               placedys
-               placedpages
-               placedwidths
-               placedheights =
-    let placements = zipWith5 FieldPlacement
-                        placedxs
-                        placedys
-                        placedpages
-                        placedwidths
-                        placedheights
-    in zip3 placedsigids placedfieldids placements
-
-filterPlacementsByID :: [(BS.ByteString, BS.ByteString, FieldPlacement)]
-                        -> BS.ByteString
-                        -> BS.ByteString
+filterPlacementsByID :: [(String, String, FieldPlacement)]
+                        -> String
+                        -> String
                         -> [FieldPlacement]
 filterPlacementsByID placements sigid fieldid =
     [x | (s, f, x) <- placements, s == sigid, f == fieldid]
 
-fieldDefAndSigID :: [(BS.ByteString, BS.ByteString, FieldPlacement)]
-                    -> BS.ByteString
-                    -> BS.ByteString
-                    -> BS.ByteString
-                    -> BS.ByteString
-                    -> (BS.ByteString, SignatoryField)
-fieldDefAndSigID placements fn fv fid sigid = (sigid,
-  SignatoryField {
-      sfType = CustomFT fn $ not $ BS.null fv
-    , sfValue = fv
-    , sfPlacements = filterPlacementsByID placements sigid fid
-  })
-
-makeFieldDefs :: [(BS.ByteString, BS.ByteString, FieldPlacement)]
-              -> [BS.ByteString]
-              -> [BS.ByteString]
-              -> [BS.ByteString]
-              -> [BS.ByteString]
-              -> [(BS.ByteString, SignatoryField)]
-makeFieldDefs placements = zipWith4 (fieldDefAndSigID placements)
-
-filterFieldDefsByID :: [(BS.ByteString, SignatoryField)]
-                    -> BS.ByteString
+filterFieldDefsByID :: [(String, SignatoryField)]
+                    -> String
                     -> [SignatoryField]
 filterFieldDefsByID fielddefs sigid =
     [x | (s, x) <- fielddefs, s == sigid]
 
-makeSignatory ::[(BS.ByteString, BS.ByteString, FieldPlacement)]
-                -> [(BS.ByteString, SignatoryField)]
-                -> BS.ByteString
-                -> BS.ByteString
-                -> BS.ByteString
-                -> BS.ByteString
+makeSignatory ::[(String, String, FieldPlacement)]
+                -> [(String, SignatoryField)]
+                -> String
+                -> String
+                -> String
+                -> String
                 -> SignOrder
-                -> BS.ByteString
-                -> BS.ByteString
-                -> BS.ByteString
+                -> String
+                -> String
+                -> String
                 -> SignatoryDetails
 makeSignatory pls fds sid sfn  ssn  se  sso  sc  spn  scn = SignatoryDetails {
     signatorysignorder = sso
@@ -525,7 +461,7 @@ makeSignatory pls fds sid sfn  ssn  se  sso  sc  spn  scn = SignatoryDetails {
     sf ftype value texttype = SignatoryField {
         sfType = ftype
       , sfValue = value
-      , sfPlacements = filterPlacementsByID pls sid (BS.fromString texttype)
+      , sfPlacements = filterPlacementsByID pls sid texttype
     }
 
 recentDate :: Document -> MinutesTime

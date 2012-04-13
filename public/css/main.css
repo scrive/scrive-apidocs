@@ -790,7 +790,7 @@ a.new-btn-small.black p {
 	border-right: 0;
 }
 
-.body-container .price-plan tr:last-child td {
+.body-container .price-plan tr.last-child td {
 	border-bottom: 0;
 }
 
@@ -840,7 +840,7 @@ a.new-btn-small.black p {
         margin-top:8px;
         font: 17px "Copse";
         margin-bottom: 4px;
-} 
+}
 
 .price-plan-container .price-comment {
         display:block;
@@ -912,6 +912,8 @@ a.new-btn-small.black p {
 .body-container .highlight-container .highlight-rows li.top {
 	height: 75px;
 	padding-top: 38px;
+        margin-right: auto;
+        margin-left: auto;
 }
 
 .body-container .highlight-container .highlight-rows li.top h3 {
@@ -956,7 +958,7 @@ a.new-btn-small.black p {
 	color: #000;
 }
 
-.body-container .highlight-container .highlight-rows li:last-child {
+.body-container .highlight-container .highlight-rows li.last-child {
 	border: 0;
 }
 
@@ -1423,7 +1425,7 @@ div.price-plan-details {
 	border-right: 0;
 }
 
-.body-container .big-pp-container tr:last-child td {
+.body-container .big-pp-container tr.last-child td {
 	border-bottom: 0;
 }
 
@@ -1719,12 +1721,12 @@ top: 0px;
       background: url(../img/team/daniel-2.jpg) center no-repeat;
 }
 
-.portrait-image a.marcus {
-      background: url(../img/team/marcus-1.png) center no-repeat;
+.portrait-image a.joakim {
+      background: url(../img/team/joakim-1.png) center no-repeat;
 }
 
-.portrait-image a.marcus:hover {
-      background: url(../img/team/marcus-2.png) center no-repeat;
+.portrait-image a.joakim:hover {
+      background: url(../img/team/joakim-2.png) center no-repeat;
 }
 
 .portrait-image a.dudek {
@@ -2046,27 +2048,11 @@ a {
     /*overflow: scroll;*/
 }
 
-.createaccountbox {
-    height: 250px;
-}
-
 .contactus strong{
     color: #000000;
     font: 14px "Copse";
 }
 
-.page-change{
-    padding: 3px;
-    font-size: 11px;
-    color: #007CAC;
-    cursor: pointer;
-}
-.page-change.current{
-    color: #333333;
-    font-weight : bold;
-    cursor: default;
-
-}
 .gotodave {
     display: block;
     width: 15px;
@@ -2081,4 +2067,15 @@ a {
     border-width: 1px;
     font: 10px "Lucida Grande";
     padding: 20px;
+}
+
+.notfound {
+    font-size: 16px;
+    padding: 60px 160px;
+    border: 1px solid black;
+}
+
+.notfound h2, .notfound h3 {
+    margin-bottom: 14px;
+    margin-top: 14px;
 }

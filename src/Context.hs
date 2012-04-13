@@ -21,11 +21,12 @@ import Mails.MailsConfig
 import API.Service.Model
 import Company.Model
 import MagicHash (MagicHash)
-import Misc (IPAddress)
+import IPAddress
 
 data Context = Context
     { ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
     , ctxhostpart            :: String -- ^ The hostname of the URL for the request.
+    , ctxresourcehostpart    :: String -- ^ The hostname for the resources (will be https if possible)
     , ctxflashmessages       :: [FlashMessage] -- ^ The flash messages for the NEXT request.
     , ctxtime                :: MinutesTime -- ^ The time of the request.
     , ctxnormalizeddocuments :: MVar (Map.Map FileID JpegPages) -- ^
@@ -50,4 +51,5 @@ data Context = Context
     , ctxadminaccounts       :: [Email] -- ^
     , ctxsalesaccounts       :: [Email] -- ^
     , ctxmagichashes         :: Map.Map SignatoryLinkID MagicHash
+    , ctxmaybepaduser        :: Maybe User -- ^ If we are loged in to the pad view
     }
