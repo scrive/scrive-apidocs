@@ -20,6 +20,11 @@ Flag mailing-server
   Manual: True
   Default: True
 
+Flag doc-converter
+  Description: Build document converter
+  Manual: True
+  Default: True
+
 Flag server
   Description: Build server
   Manual: True
@@ -289,6 +294,47 @@ Executable mailing-server
 
   cpp-options: -DMailingServer=Main
   Main-is: MailingServer.hs
+
+  Extensions: BangPatterns,
+              DeriveDataTypeable,
+              FlexibleContexts,
+              FlexibleInstances,
+              GeneralizedNewtypeDeriving,
+              MultiParamTypeClasses,
+              NamedFieldPuns,
+              PatternGuards,
+              RankNTypes,
+              RecordWildCards,
+              ScopedTypeVariables,
+              TemplateHaskell,
+              TypeFamilies,
+              TypeOperators,
+              TypeSynonymInstances,
+              UndecidableInstances
+
+Executable doc-converter
+  if flag(doc-converter)
+    Buildable: True
+  else
+    Buildable: False
+
+  Hs-source-dirs: docconv/src
+
+  GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
+  if !flag(allow-warnings)
+    GHC-Options: -Werror
+  if flag(server-coverage)
+    GHC-Options: -fhpc
+  if !os(windows)
+    -- don't do threaded on Windows because it uses blocking listen and accept
+    GHC-Options: -threaded
+  if os(windows)
+    cpp-options: -DWINDOWS
+  if impl(ghc >= 7)
+    ghc-options: -rtsopts
+
+  cpp-options: -DDocConverterMain=Main
+  Main-is: DocConverterMain.hs
 
   Extensions: BangPatterns,
               DeriveDataTypeable,
