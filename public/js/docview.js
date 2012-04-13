@@ -363,7 +363,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
 
     if (signatory.author) {
      var content = $("<div />")
-     if (document.elegAuthorization)
+     if (document.elegAuthorization())
           content.append(document.process().signatorysignmodalcontentsignvieweleg());
      else if (document.lastSignatoryLeft())
           content.append(document.process().signatorysignmodalcontentauthorlast());
@@ -378,7 +378,7 @@ window.DocumentSignConfirmation = Backbone.View.extend({
       return content;
     } else {
       var content = $("<div />");
-      if (document.elegAuthorization)
+      if (document.elegAuthorization())
           content.append(document.process().signatorysignmodalcontentsignvieweleg());
       else if (document.lastSignatoryLeft())
           content.append(document.process().signatorysignmodalcontentlast());
