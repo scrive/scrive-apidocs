@@ -219,7 +219,7 @@ firstPage=<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w
                                                 <tr>
                                                         $_PriceTableRow8()$
                                                 </tr>
-                                                <tr class="big-row">
+                                                <tr class="big-row last-child">
                                                         $_PriceTablePriceRow()$
                                                 </tr>
                                         </table>

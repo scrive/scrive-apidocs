@@ -252,6 +252,7 @@ javascriptLocalisation =
                       missingOrWrongEmail : "$_emptyOrNotValidEmail()$"
                     , missingOrWrongNames:  "$_missingSignatoryNames()$"
                     , missingOrWrongPersonalNumber : "$_backToStepTwoAndFillPersonNumber()$"
+                    , missingOrWrongPlacedAuthorField : "$_missingPlacedAuthorFieldValue()$"
                     , missingOrWrongCustomFieldValue: "$_missingCustomFieldValue()$"
                     , sameMails : "$_repetedEmailAddress()$"
                     , atLeastOnePersonOtherThenAuthor : "$_atLeastOnePersonOtherThenAuthor()$"
@@ -265,6 +266,7 @@ javascriptLocalisation =
                     , reloadingDocument : "$_designViewMessageReloading()$"
                     , extraActions : "$_designViewMessageExtraActions()$"
                 }
+             , sign : "$_sign()$"
            }
 
          , validation : {
@@ -297,7 +299,7 @@ javascriptLocalisation =
              ,  drawSignatureBoxHeader : "$_padDrawSignatureBoxHeader()$"
              ,  signingOnSameDeviceFor :  "$_padSigningOnSameDeviceFor()$"
              ,  addToPadQueueFor :  "$_padAddToPadQueueFor()$"
-             ,  cleanImage : "$_padCleanImage()$"             
+             ,  cleanImage : "$_padCleanImage()$"
         }
          , sampleEmailHeader: "$_SampleEmailHeader()$"
          , sampleEmailSubheader: "$_mailsubheader()$"
