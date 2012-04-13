@@ -223,7 +223,6 @@ javascriptLocalisation =
               , select            : "$_pageDocumentForAuthorHelpersLocalDialogsRecipient()$"
             }
           , save : "$_save()$"
-          , sign : "$_sign()$"
           , signLast : "$_switchercheckboxSignLast()$"
           , languages : {
                 selectLanguage : "$_documentLanguageLabel()$"
@@ -267,6 +266,7 @@ javascriptLocalisation =
                     , reloadingDocument : "$_designViewMessageReloading()$"
                     , extraActions : "$_designViewMessageExtraActions()$"
                 }
+             , sign : "$_sign()$"
            }
 
          , validation : {
