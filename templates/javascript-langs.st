@@ -297,7 +297,8 @@ javascriptLocalisation =
              ,  addToPadQueueNotAdded : "$_padAddToPadQueueNotAdded()$"
              ,  removeFromPadQueue : "$_padRemoveFromPadQueue()$"
              ,  drawSignatureBoxHeader : "$_padDrawSignatureBoxHeader()$"
-             ,  signingOnSameDeviceFor :  "$_padSigningOnSameDeviceFor()$"
+             ,  signingOnSameDeviceFor1 :  "$_padSigningOnSameDeviceFor1()$"
+             ,  signingOnSameDeviceFor2 :  "$_padSigningOnSameDeviceFor2()$"
              ,  addToPadQueueFor :  "$_padAddToPadQueueFor()$"
              ,  cleanImage : "$_padCleanImage()$"
         }
