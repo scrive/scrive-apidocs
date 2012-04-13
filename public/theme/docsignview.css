@@ -224,22 +224,23 @@ body.signview {
 
 
 .signview .save .highlight {
-  margin-left: 158px;
-  margin-right: 158px;
+  margin-left: auto;
+  margin-right: auto;
   text-align: left;
-  padding-top: 20px;
-  padding-left: 9px;
-  padding-right: 9px;
+  padding-top: 40px;
+  padding-left: 20px;
+  padding-right: 20px;
+  padding-bottom: 40px;
   border: solid #89c041 1px;
   background-color: #e7f6d5;
   overflow: none;
+  width: 640px;
 }
 
 .signview .save .highlight .row {
   clear: both;
   margin-left: 11px;
-  margin-right: 11px;
-  margin-bottom: 11px;
+  margin-top: 10px;
 }
 
 .signview .save .item input {
@@ -264,6 +265,13 @@ body.signview {
     padding: 0;
     width: 161px;
     position: relative;
+
+    border: 1px solid #9e9e9e;
+    font: 11px "Lucida Grande";
+    margin-bottom: 3px;
+    padding: 5px 10px;
+    width: 146px;
+
 }
 
 .signview .save .item {
@@ -289,6 +297,7 @@ body.signview {
 
 .signview .save .tos {
   margin-bottom: 2px;
+  vertical-align: middle;
 }
 
 .signview .save .invalid.tos {
@@ -306,14 +315,13 @@ body.signview {
 
 .signview .save .tos .label {
   float: left;
-  width: 300px;
-  margin-top: 3px;
+  line-height: 19px;
 }
 
 .signview .save .acceptbutton {
   float: right;
   margin-right: 22px;
-  margin-bottom: 22px;
+  margin-top: 4px;
 }
 
 .signview .share {
@@ -975,4 +983,10 @@ div.spacing.butt {
   box-shadow: 0px 0px 5px #505050;
   -moz-box-shadow: 0px 0px 5px #505050;
   -webkit-box-shadow: 0px 0px 5px #505050;
+}
+
+.signview .newaccount .inner {
+    width: 590px;
+    margin: auto;
+    padding 
 }

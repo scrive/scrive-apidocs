@@ -348,6 +348,10 @@ window.DocumentSaveAfterSignView = Backbone.View.extend({
     container.append($("<div class='subtitle' />").text(localization.docsignview.newAccountSubTitle));
 
     var form = $("<div class='highlight'/>");
+    var inner = $("<div class='inner' />");
+      form.append(inner);
+      container.append(form);
+      form = inner;
 
     var appendFormInput = function(labeltext, input) {
       var row = $("<div class='item' />");
@@ -423,7 +427,7 @@ window.DocumentSaveAfterSignView = Backbone.View.extend({
     form.append($("<div class='acceptbutton' />").append(newAccountButton));
     form.append("<div class='clearfix' />");
 
-    container.append(form);
+
 
     return container;
   },
