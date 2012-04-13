@@ -435,7 +435,7 @@ window.DocumentSaveAfterSignView = Backbone.View.extend({
   render: function() {
     $(this.el).empty();
 
-    if (!this.model.hasSigned()) {
+    if (!this.model.hasSigned() || this.model.document.isWhiteLabeled()) {
       console.log("not rendering save view");
       return this;
     }
