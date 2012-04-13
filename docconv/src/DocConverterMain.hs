@@ -1,36 +1,28 @@
 {-# LANGUAGE CPP #-}
 module DocConverterMain where
 
-
-import Data.Char
-import System.Environment
-import System.FilePath
 import qualified Data.ByteString as BS
 
-import Configuration
 import LiveDocx
-import qualified Log (withLogger, docConverter)
 
 main :: IO ()
-main = Log.withLogger $ do
-  args <- getArgs
-  appname <- getProgName
-  case args of
-    (filein : []) -> do
-      conf <- readConfig Log.docConverter appname [] "doc_converter.conf"
-      let fileout = replaceExtension filein "pdf"
-      filecontents <- BS.readFile filein
-      let fileformat = read . map toUpper . tail $ takeExtension filein
-      Log.docConverter $ "Converting from " ++ show fileformat ++ " to PDF"
-      result <- convertToPDF conf filecontents fileformat
-      case result of
-        Left msg -> do
-          putStrLn $ "Error: " ++ msg
-          return ()
-        Right pdfcontents -> do
-          BS.writeFile fileout pdfcontents
-          putStrLn $ "Written file to " ++ fileout
-          return ()
-    _ -> do
-      putStrLn $ "Usage: doc-converter inputfile.doc"
+main = do
+  let
+    conf = LiveDocxConf {
+      url = "https://api.livedocx.com/1.2/mailmerge.asmx"
+    , username = "emilymaygreen"
+    , password = "monkey69"
+    }
+    filepathin = "/home/emily/Scrive - Executive Summary - em.docx"
+    filepathout = "/home/emily/10000-emdev.pdf"
+    filename = "10000-emdev.docx"
+  filecontents <- BS.readFile filepathin
+  let result = convertToPDF conf filename filecontents
+  case result of
+    Left msg -> do
+      putStrLn $ "Error: " ++ msg
+      return ()
+    Right pdfcontents -> do
+      BS.writeFile filepathout pdfcontents
+      putStrLn $ "Written file to " ++ filepathout
       return ()
