@@ -184,6 +184,11 @@ window.Field = Backbone.Model.extend({
             return new NotEmptyValidation({message: msg});
         }
 
+        if (this.signatory().author() && !this.isCustom() && this.hasPlacements()) {
+          var msg = localization.designview.validation.missingOrWrongPlacedAuthorField;
+          return new NotEmptyValidation({message: msg});
+        }
+
         if (this.isCustom()) {
           var msg1 = localization.designview.validation.notReadyField;
           var msg2 = localization.designview.validation.notPlacedField;
