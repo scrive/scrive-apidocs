@@ -117,7 +117,9 @@ window.PadDesignViewUtilsView = Backbone.View.extend({
            box.addClass('padoptions');
            var giveForSigningRadio = $("<input type='checkbox' name='padsend'/>");
            var giveForSigningSelector = this.sigSelector(function() {return model.giveForSigningSignatory()}, function(a) {model.setGiveForSigningSignatory(a)});
-           var giveForSigningLabel =  $("<span class='label'/>").append($("<span/>").text(localization.pad.signingOnSameDeviceFor)).append(giveForSigningSelector);
+           var giveForSigningLabel =  $("<span class='label'/>").append($("<span/>").text(localization.pad.signingOnSameDeviceFor1))
+                                                                .append(giveForSigningSelector)
+                                                                .append($("<span/>").text(localization.pad.signingOnSameDeviceFor2));
            var giveForSigning = $("<div class='padoption'/>").append(giveForSigningRadio)
                                                              .append(giveForSigningLabel);
                                                             
