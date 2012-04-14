@@ -2,20 +2,20 @@
 module TestMain where
 
 import Control.Applicative
+import Control.Monad.IO.Class
 import Data.Char
 import Data.Either
 import System.Environment.UTF8
 import System.IO
 import Test.Framework
 import qualified Log
+import qualified Control.Exception as E
 import qualified Data.ByteString as BS
 
-import Crypto.RNG (unsafeCryptoRNGState)
 import AppDB
+import Crypto.RNG
 import DB.Checks
 import DB.Classes
-import Control.Exception
-import DB.Nexus
 
 -- Note: if you add new testsuites here, please add them in a similar
 -- manner to existing ones, i.e. wrap them around ifdefs and add appropriate
@@ -115,7 +115,7 @@ import StatsTest
 import EvidenceLogTest
 #endif
 
-allTests :: [(String, [String] -> DBEnv -> Test)]
+allTests :: [(String, [String] -> (Nexus, CryptoRNGState) -> Test)]
 allTests = tail tests
   where
     tests = [
@@ -157,7 +157,7 @@ allTests = tail tests
       , ("mailapi", const $ mailApiTests)
 #endif
 #ifndef NO_REDIRECT
-      , ("redirect", const $ const redirectTests)
+      , ("redirect", const redirectTests)
 #endif
 #ifndef NO_SERVICESTATE
       , ("servicestate", const $ serviceStateTests)
@@ -210,7 +210,7 @@ allTests = tail tests
 #endif
       ]
 
-testsToRun :: [String] -> [Either String (DBEnv -> Test)]
+testsToRun :: [String] -> [Either String ((Nexus, CryptoRNGState) -> Test)]
 testsToRun [] = []
 testsToRun (t:ts)
   | lt == "$" = []
@@ -223,29 +223,24 @@ testsToRun (t:ts)
     rest = testsToRun ts
     params = drop 1 $ dropWhile (/= ("$")) ts
 
-testMany :: ([String],[(DBEnv -> Test)]) -> IO ()
+testMany :: ([String],[((Nexus, CryptoRNGState) -> Test)]) -> IO ()
 testMany (args, ts) = Log.withLogger $ do
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
   pgconf <- readFile "kontrakcja_test.conf"
   rng <- unsafeCryptoRNGState (BS.pack (replicate 128 0))
-  withPostgreSQLDB' pgconf rng $ \dbenv -> do
-    ioRunDB dbenv $ performDBChecks Log.debug kontraTables kontraMigrations
-
-    -- defaultMainWithArgs does not feel like returning like a normal function
-    -- so have to get around that 'feature'!!
-    bracket_ (return ())
-             (do
-               stats <- getNexusStats (envNexus dbenv)
-               putStrLn $ "SQL: " ++ show stats)
-
-             (defaultMainWithArgs (map ($ dbenv) ts) args)
+  withPostgreSQL pgconf $ do
+    performDBChecks Log.debug kontraTables kontraMigrations
+    nex <- getNexus
+    liftIO $ flip E.finally (defaultMainWithArgs (map ($ (nex, rng)) ts) args) $ do
+      stats <- getNexusStats nex
+      putStrLn $ "SQL: " ++ show stats
 
 -- | Useful for running an individual test in ghci like so:
 --   @
 --    testone flip (testThat "") testPreparationAttachCSVUploadNonExistingSignatoryLink
 --   @
-testone :: (DBEnv -> Test) -> IO ()
+testone :: ((Nexus, CryptoRNGState) -> Test) -> IO ()
 testone t = do
   args <- getArgs
   testMany (args, [t])

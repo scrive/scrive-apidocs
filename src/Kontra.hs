@@ -69,6 +69,8 @@ instance MonadBaseControl IO KontraPlus where
   liftBaseWith f = KontraPlus $ liftBaseWith $ \runInIO ->
                      f $ liftM StKontraPlus . runInIO . unKontraPlus
   restoreM = KontraPlus . restoreM . unStKontraPlus
+  {-# INLINE liftBaseWith #-}
+  {-# INLINE restoreM #-}
 
 instance KontraMonad KontraPlus where
   getContext    = KontraPlus get

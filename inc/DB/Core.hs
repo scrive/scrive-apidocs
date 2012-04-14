@@ -42,11 +42,15 @@ instance MonadTransControl DBT where
   newtype StT DBT a = StDBT { unStDBT :: StT InnerDBT a }
   liftWith = defaultLiftWith DBT unDBT StDBT
   restoreT = defaultRestoreT DBT unStDBT
+  {-# INLINE liftWith #-}
+  {-# INLINE restoreT #-}
 
 instance MonadBaseControl b m => MonadBaseControl b (DBT m) where
   newtype StM (DBT m) a = StMDBT { unStMDBT :: ComposeSt DBT m a }
   liftBaseWith = defaultLiftBaseWith StMDBT
   restoreM     = defaultRestoreM unStMDBT
+  {-# INLINE liftBaseWith #-}
+  {-# INLINE restoreM #-}
 
 instance MonadError e m => MonadError e (DBT m) where
   throwError     = lift . throwError

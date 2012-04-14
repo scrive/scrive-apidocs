@@ -3,12 +3,10 @@ module MailsTest (mailsTests) where
 import Control.Applicative
 import Happstack.Server
 import Test.Framework
-import Test.Framework.Providers.HUnit
-import Test.HUnit (Assertion)
 
+import Crypto.RNG
 import DB.Classes
 import Context
-import StateHelper
 import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
@@ -33,12 +31,12 @@ import Text.XML.HaXml.Parse (xmlParse')
 import Control.Monad.Trans
 import EvidenceLog.Model
 
-mailsTests :: [String] -> DBEnv -> Test
+mailsTests :: [String] -> (Nexus, CryptoRNGState) -> Test
 mailsTests params env  = testGroup "Mails" [
-    testCase "Document emails" $ testDocumentMails env (toMailAddress params),
-    testCase "Branded document emails" $ testBrandedDocumentMails env (toMailAddress params),
-    testCase "User emails" $ testUserMails env (toMailAddress params)
-    ]
+    testThat "Document emails" env $ testDocumentMails $ toMailAddress params
+  , testThat "Branded document emails" env $ testBrandedDocumentMails $ toMailAddress params
+  , testThat "User emails" env $ testUserMails $ toMailAddress params
+  ]
 
 gRight :: (Show a, MonadIO m) => m (Either a b) -> m b
 gRight ac = do
@@ -49,8 +47,8 @@ gRight ac = do
       return undefined
     Right d -> return d
 
-testBrandedDocumentMails :: DBEnv -> Maybe String -> Assertion
-testBrandedDocumentMails env mailTo = withTestEnvironment env $ do
+testBrandedDocumentMails :: Maybe String -> TestEnv ()
+testBrandedDocumentMails mailTo = do
   company' <- addNewCompany
   author <- addNewRandomCompanyUser (companyid company') False
   let cui = CompanyUI {
@@ -60,20 +58,20 @@ testBrandedDocumentMails env mailTo = withTestEnvironment env $ do
       }
   _ <- dbUpdate $ UpdateCompanyUI (companyid company') cui
   mcompany <- dbQuery $ GetCompany (companyid company')
-  sendDocumentMails env mailTo author mcompany
+  sendDocumentMails mailTo author mcompany
 
-testDocumentMails :: DBEnv -> Maybe String -> Assertion
-testDocumentMails env mailTo = withTestEnvironment env $ do
+testDocumentMails :: Maybe String -> TestEnv ()
+testDocumentMails mailTo = do
   author <- addNewRandomAdvancedUser
   mcompany <- maybe (return Nothing) (dbQuery . GetCompany) $ usercompany author
-  sendDocumentMails env mailTo author mcompany
+  sendDocumentMails mailTo author mcompany
 
-sendDocumentMails :: DBEnv -> Maybe String -> User -> Maybe Company -> DB ()
-sendDocumentMails env mailTo author mcompany = do
+sendDocumentMails :: Maybe String -> User -> Maybe Company -> TestEnv ()
+sendDocumentMails mailTo author mcompany = do
   forM_ allLocales $ \l ->
     forM_ [Contract,Offer,Order] $ \doctype -> do
         -- make  the context, user and document all use the same locale
-        ctx <- mailingContext l env
+        ctx <- mailingContext l
         _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { locale = l }
         let aa = AuthorActor (ctxtime ctx) noIP (userid author) (getEmail author)
         d' <- gRight $ randomUpdate $ NewDocument author mcompany "Document title" (Signable doctype) 0 aa
@@ -124,11 +122,11 @@ sendDocumentMails env mailTo author mcompany = do
         checkMail "Reminder signed" $ mailDocumentRemind Nothing ctx doc (head $ documentsignatorylinks sdoc)
 
 
-testUserMails :: DBEnv -> Maybe String -> Assertion
-testUserMails env mailTo = withTestEnvironment env $ do
+testUserMails :: Maybe String -> TestEnv ()
+testUserMails mailTo = do
   forM_ allLocales $ \l ->  do
     -- make a user and context that use the same locale
-    ctx <- mailingContext l env
+    ctx <- mailingContext l
     user <- addNewRandomAdvancedUserWithLocale l
 
     req <- mkRequest POST []
@@ -148,7 +146,7 @@ testUserMails env mailTo = withTestEnvironment env $ do
 
 
 -- MAIL TESTING UTILS
-validMail :: String -> Mail -> DB ()
+validMail :: String -> Mail -> TestEnv ()
 validMail name m = do
     let c = content m
     let exml = xmlParse' name c
@@ -159,7 +157,7 @@ validMail name m = do
          Right _ -> assertSuccess
          Left err -> assertFailure ("Not valid HTML mail " ++ name ++ " : " ++ c ++ " " ++ err)
 
-addNewRandomAdvancedUserWithLocale :: Locale -> DB User
+addNewRandomAdvancedUserWithLocale :: Locale -> TestEnv User
 addNewRandomAdvancedUserWithLocale l = do
   user <- addNewRandomAdvancedUser
   _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
@@ -168,20 +166,14 @@ addNewRandomAdvancedUserWithLocale l = do
   (Just uuser) <- dbQuery $ GetUserByID (userid user)
   return uuser
 
-mailingContext :: Locale -> DBEnv -> DB Context
-mailingContext locale env = do
+mailingContext :: Locale -> TestEnv Context
+mailingContext locale = do
     globaltemplates <- readGlobalTemplates
     ctx <- mkContext locale globaltemplates
-    return $ ctx {
-                ctxdbenv = env,
-                ctxhostpart = "http://dev.skrivapa.se"
-              }
+    return $ ctx { ctxhostpart = "http://dev.skrivapa.se" }
 
-
-
-sendoutForManualChecking ::  String -> Request -> Context ->  Maybe String -> Mail -> DB ()
+sendoutForManualChecking ::  String -> Request -> Context ->  Maybe String -> Mail -> TestEnv ()
 sendoutForManualChecking _ _ _ _ _ = assertSuccess
-
 
 {-
 sendoutForManualChecking ::  String -> Request -> Context ->  Maybe String -> Mail -> DB ()

@@ -388,6 +388,7 @@ Executable kontrakcja-test
               ScopedTypeVariables,
               StandaloneDeriving,
               TemplateHaskell,
+              TupleSections,
               TypeFamilies,
               TypeOperators,
               TypeSynonymInstances,

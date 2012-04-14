@@ -1,21 +1,19 @@
 module CompanyAccountsTest (companyAccountsTests) where
 
 import Control.Applicative
-import Control.Monad.State
 import Data.List
 import Data.Ord
 import Happstack.Server hiding (simpleHTTP)
 import Happstack.State (query)
 import Test.Framework
-import Test.Framework.Providers.HUnit
-import Test.HUnit (Assertion)
 
 import ActionSchedulerState
 import Company.Model
 import CompanyAccounts.CompanyAccountsControl
 import CompanyAccounts.Model
 import Context
-import DB.Classes
+import Crypto.RNG
+import DB.Classes hiding (query, update)
 import Doc.DocStateData
 import Doc.Model
 import FlashMessage
@@ -24,14 +22,13 @@ import Mails.Model
 import MinutesTime
 import Misc
 import Redirect
-import StateHelper
 import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
 import Util.HasSomeUserInfo
 import qualified Control.Exception.Lifted as E
 
-companyAccountsTests :: DBEnv -> Test
+companyAccountsTests :: (Nexus, CryptoRNGState) -> Test
 companyAccountsTests env = testGroup "CompanyAccounts" [
     testGroup "Model" [
         testThat "Adding an invite for a new email works" env test_addInviteForNewEmail
@@ -40,22 +37,22 @@ companyAccountsTests env = testGroup "CompanyAccounts" [
       , testThat "Removing a non-existant invite works" env test_removingNonExistantInvite
       ]
   , testGroup "Control" [
-        testCase "Admin user can add a new user to their company" $ test_addingANewCompanyAccount env
-      , testCase "Admin user can invite a private user to their company" $ test_addingExistingPrivateUserAsCompanyAccount env
-      , testCase "Admin user can invite a company user to their company" $ test_addingExistingCompanyUserAsCompanyAccount env
-      , testCase "Admin user can resend invite to a new user" $ test_resendingInviteToNewCompanyAccount env
-      , testCase "Admin user can resend invite to an existing private user" $ test_resendingInviteToPrivateUser env
-      , testCase "Admin user can resend invite to an existing company user" $ test_resendingInviteToCompanyUser env
-      , testCase "Admin user can switch a standard user to admin" $ test_switchingStandardToAdminUser env
-      , testCase "Admin user can switch an admin user to standard" $ test_switchingAdminToStandardUser env
-      , testCase "Admin user can remove a company account invite" $ test_removingCompanyAccountInvite env
-      , testCase "Admin user can remove a company account user" $ test_removingCompanyAccountWorks env
-      , testCase "Existing private user can follow link to be taken over" $ test_privateUserTakoverWorks env
-      , testCase "Company takeovers fail if there is no saved invite" $ test_mustBeInvitedForTakeoverToWork env
+        testThat "Admin user can add a new user to their company" env test_addingANewCompanyAccount
+      , testThat "Admin user can invite a private user to their company" env test_addingExistingPrivateUserAsCompanyAccount
+      , testThat "Admin user can invite a company user to their company" env test_addingExistingCompanyUserAsCompanyAccount
+      , testThat "Admin user can resend invite to a new user" env test_resendingInviteToNewCompanyAccount
+      , testThat "Admin user can resend invite to an existing private user" env test_resendingInviteToPrivateUser
+      , testThat "Admin user can resend invite to an existing company user" env test_resendingInviteToCompanyUser
+      , testThat "Admin user can switch a standard user to admin" env test_switchingStandardToAdminUser
+      , testThat "Admin user can switch an admin user to standard" env test_switchingAdminToStandardUser
+      , testThat "Admin user can remove a company account invite" env test_removingCompanyAccountInvite
+      , testThat "Admin user can remove a company account user" env test_removingCompanyAccountWorks
+      , testThat "Existing private user can follow link to be taken over" env test_privateUserTakoverWorks
+      , testThat "Company takeovers fail if there is no saved invite" env test_mustBeInvitedForTakeoverToWork
       ]
   ]
 
-test_addInviteForNewEmail :: DB ()
+test_addInviteForNewEmail :: TestEnv ()
 test_addInviteForNewEmail = do
   company <- addNewCompany
   let firstinvite = mkInvite company "a@a.com" "Anna" "Android"
@@ -64,7 +61,7 @@ test_addInviteForNewEmail = do
   _ <- dbUpdate $ AddCompanyInvite secondinvite
   assertCompanyInvitesAre company [firstinvite, secondinvite]
 
-test_addInviteForExistingEmail :: DB ()
+test_addInviteForExistingEmail :: TestEnv ()
 test_addInviteForExistingEmail = do
   company <- addNewCompany
   let firstinvite = mkInvite company "a@a.com" "Anna" "Android"
@@ -73,7 +70,7 @@ test_addInviteForExistingEmail = do
   _ <- dbUpdate $ AddCompanyInvite secondinvite
   assertCompanyInvitesAre company [secondinvite]
 
-test_removingExistingInvite :: DB ()
+test_removingExistingInvite :: TestEnv ()
 test_removingExistingInvite = do
   company <- addNewCompany
   let invite = mkInvite company "a@a.com" "Anna" "Android"
@@ -81,18 +78,18 @@ test_removingExistingInvite = do
   _ <- dbUpdate $ RemoveCompanyInvite (companyid company) (invitedemail invite)
   assertCompanyInvitesAre company []
 
-test_removingNonExistantInvite :: DB ()
+test_removingNonExistantInvite :: TestEnv ()
 test_removingNonExistantInvite = do
   company <- addNewCompany
   _ <- dbUpdate $ RemoveCompanyInvite (companyid company) (Email "a@a.com")
   assertCompanyInvitesAre company []
 
-test_addingANewCompanyAccount :: DBEnv -> Assertion
-test_addingANewCompanyAccount env = withTestEnvironment env $ do
+test_addingANewCompanyAccount :: TestEnv ()
+test_addingANewCompanyAccount = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [ ("add", inText "True")
@@ -119,13 +116,13 @@ test_addingANewCompanyAccount env = withTestEnvironment env $ do
   emails <- dbQuery GetEmails
   assertEqual "An email was sent" 1 (length emails)
 
-test_addingExistingPrivateUserAsCompanyAccount :: DBEnv -> Assertion
-test_addingExistingPrivateUserAsCompanyAccount env = withTestEnvironment env $ do
+test_addingExistingPrivateUserAsCompanyAccount :: TestEnv ()
+test_addingExistingPrivateUserAsCompanyAccount = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   Just existinguser <- addNewUser "Bob" "Blue" "bob@blue.com"
 
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [ ("add", inText "True")
@@ -147,13 +144,13 @@ test_addingExistingPrivateUserAsCompanyAccount env = withTestEnvironment env $ d
   emails <- dbQuery GetEmails
   assertEqual "An email was sent" 1 (length emails)
 
-test_addingExistingCompanyUserAsCompanyAccount :: DBEnv -> Assertion
-test_addingExistingCompanyUserAsCompanyAccount env = withTestEnvironment env $ do
+test_addingExistingCompanyUserAsCompanyAccount :: TestEnv ()
+test_addingExistingCompanyUserAsCompanyAccount = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   (existinguser, existingcompany) <- addNewAdminUserAndCompany "Bob" "Blue" "bob@blue.com"
 
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [ ("add", inText "True")
@@ -176,14 +173,14 @@ test_addingExistingCompanyUserAsCompanyAccount env = withTestEnvironment env $ d
   emails <- dbQuery GetEmails
   assertEqual "An email was sent" 1 (length emails)
 
-test_resendingInviteToNewCompanyAccount :: DBEnv -> Assertion
-test_resendingInviteToNewCompanyAccount env = withTestEnvironment env $ do
+test_resendingInviteToNewCompanyAccount :: TestEnv ()
+test_resendingInviteToNewCompanyAccount = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   Just newuser <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "bob@blue.com" "Bob" "Blue"
 
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [ ("resend", inText "True")
@@ -203,14 +200,14 @@ test_resendingInviteToNewCompanyAccount env = withTestEnvironment env $ do
   emails <- dbQuery GetEmails
   assertEqual "An email was sent" 1 (length emails)
 
-test_resendingInviteToPrivateUser :: DBEnv -> Assertion
-test_resendingInviteToPrivateUser env = withTestEnvironment env $ do
+test_resendingInviteToPrivateUser :: TestEnv ()
+test_resendingInviteToPrivateUser = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   Just _existinguser <- addNewUser "Bob" "Blue" "bob@blue.com"
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "bob@blue.com" "Bob" "Blue"
 
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [ ("resend", inText "True")
@@ -227,14 +224,14 @@ test_resendingInviteToPrivateUser env = withTestEnvironment env $ do
   emails <- dbQuery GetEmails
   assertEqual "An email was sent" 1 (length emails)
 
-test_resendingInviteToCompanyUser :: DBEnv -> Assertion
-test_resendingInviteToCompanyUser env = withTestEnvironment env $ do
+test_resendingInviteToCompanyUser :: TestEnv ()
+test_resendingInviteToCompanyUser = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   (_existinguser, _existingcompany) <- addNewAdminUserAndCompany "Bob" "Blue" "bob@blue.com"
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "bob@blue.com" "Bob" "Blue"
 
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [ ("resend", inText "True")
@@ -251,13 +248,13 @@ test_resendingInviteToCompanyUser env = withTestEnvironment env $ do
   emails <- dbQuery GetEmails
   assertEqual "An email was sent" 1 (length emails)
 
-test_switchingStandardToAdminUser :: DBEnv -> Assertion
-test_switchingStandardToAdminUser env = withTestEnvironment env $ do
+test_switchingStandardToAdminUser :: TestEnv ()
+test_switchingStandardToAdminUser = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   Just standarduser <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
 
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [ ("changerole", inText "True")
@@ -273,15 +270,15 @@ test_switchingStandardToAdminUser env = withTestEnvironment env $ do
   assertEqual "User belongs to the same company" (usercompany updateduser)
                                                  (Just $ companyid company)
 
-test_switchingAdminToStandardUser :: DBEnv -> Assertion
-test_switchingAdminToStandardUser env = withTestEnvironment env $ do
+test_switchingAdminToStandardUser :: TestEnv ()
+test_switchingAdminToStandardUser = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   Just standarduser <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
   _ <- dbUpdate $ SetUserCompanyAdmin (userid standarduser) True
   Just adminuser <- dbQuery $ GetUserByID (userid user)
 
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [ ("changerole", inText "True")
@@ -297,13 +294,13 @@ test_switchingAdminToStandardUser env = withTestEnvironment env $ do
   assertEqual "User belongs to the same company" (usercompany updateduser)
                                                  (Just $ companyid company)
 
-test_removingCompanyAccountInvite :: DBEnv -> Assertion
-test_removingCompanyAccountInvite env = withTestEnvironment env $ do
+test_removingCompanyAccountInvite :: TestEnv ()
+test_removingCompanyAccountInvite = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "bob@blue.com" "Bob" "Blue"
 
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [ ("remove", inText "True")
@@ -316,8 +313,8 @@ test_removingCompanyAccountInvite env = withTestEnvironment env $ do
 
   assertCompanyInvitesAre company []
 
-test_removingCompanyAccountWorks :: DBEnv -> Assertion
-test_removingCompanyAccountWorks env = withTestEnvironment env $ do
+test_removingCompanyAccountWorks :: TestEnv ()
+test_removingCompanyAccountWorks = do
   (adminuser, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
   Just standarduser <- addNewCompanyUser "Bob" "Blue" "jony@blue.com" (companyid company)
   doc <- addRandomDocumentWithAuthorAndCondition standarduser (\d -> documentstatus d `elem` [Preparation, Closed])
@@ -326,7 +323,7 @@ test_removingCompanyAccountWorks env = withTestEnvironment env $ do
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "jony@blue.com" "Bob" "Blue"
 
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just adminuser })
+  ctx <- (\c -> c { ctxmaybeuser = Just adminuser })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [ ("remove", inText "True")
@@ -344,8 +341,8 @@ test_removingCompanyAccountWorks env = withTestEnvironment env $ do
   assertEqual "Company still owns users docs" 1 (length companydocs)
   assertEqual "Docid matches" docid (documentid $ head companydocs)
 
-test_privateUserTakoverWorks :: DBEnv -> Assertion
-test_privateUserTakoverWorks env = withTestEnvironment env $ do
+test_privateUserTakoverWorks :: TestEnv ()
+test_privateUserTakoverWorks = do
   (_adminuser, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   docid <- addRandomDocumentWithAuthor user
@@ -353,7 +350,7 @@ test_privateUserTakoverWorks env = withTestEnvironment env $ do
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "bob@blue.com" "Bob" "Blue"
 
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST []
@@ -376,13 +373,13 @@ test_privateUserTakoverWorks env = withTestEnvironment env $ do
   assertEqual "User is still linked to their docs" 1 (length userdocs)
   assertEqual "Docid matches" docid (documentid $ head userdocs)
 
-test_mustBeInvitedForTakeoverToWork :: DBEnv -> Assertion
-test_mustBeInvitedForTakeoverToWork env = withTestEnvironment env $ do
+test_mustBeInvitedForTakeoverToWork :: TestEnv ()
+test_mustBeInvitedForTakeoverToWork = do
   company <- addNewCompany
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
 
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST []
@@ -393,7 +390,7 @@ test_mustBeInvitedForTakeoverToWork env = withTestEnvironment env $ do
   Just updateduser <- dbQuery $ GetUserByID (userid user)
   assertEqual "User is still not in company" Nothing (usercompany updateduser)
 
-assertCompanyInvitesAre :: Company -> [CompanyInvite] -> DB ()
+assertCompanyInvitesAre :: Company -> [CompanyInvite] -> TestEnv ()
 assertCompanyInvitesAre company expectedinvites = do
   actualinvites <- dbQuery $ GetCompanyInvites (companyid company)
   assertEqual "Wrong company invites" (inviteSort expectedinvites)
@@ -405,7 +402,7 @@ assertCompanyInvitesAre company expectedinvites = do
       mactualinvite <- dbQuery $ GetCompanyInvite (companyid company) (invitedemail expectedinvite)
       assertEqual "Wrong company invite" (Just expectedinvite) mactualinvite
 
-addNewAdminUserAndCompany :: String -> String -> String -> DB (User, Company)
+addNewAdminUserAndCompany :: String -> String -> String -> TestEnv (User, Company)
 addNewAdminUserAndCompany fstname sndname email = do
   company <- addNewCompany
   Just user <- addNewCompanyUser fstname sndname email (companyid company)
@@ -422,7 +419,7 @@ mkInvite company email fstname sndname =
     , invitingcompany = companyid company
   }
 
-getAccountCreatedActions :: MonadIO m => m [Action]
+getAccountCreatedActions :: TestEnv [Action]
 getAccountCreatedActions = do
   now <- getMinutesTime
   let expirytime = (24 * 60 + 1) `minutesAfter` now

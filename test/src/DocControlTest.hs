@@ -5,16 +5,14 @@ module DocControlTest(
 import Control.Applicative
 import Data.Maybe
 import Happstack.Server
-import Test.HUnit (Assertion)
 import Test.Framework
-import Test.Framework.Providers.HUnit
-import StateHelper
 import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
 import Mails.Model
 import Misc
 import Context
+import Crypto.RNG
 import DB.Classes
 import Doc.Model
 import Doc.DocStateData
@@ -27,71 +25,49 @@ import Util.SignatoryLinkUtils
 import EvidenceLog.Model
 import Util.HasSomeUserInfo
 
-docControlTests :: DBEnv -> Test
-docControlTests conn =  testGroup "Templates"
-                           [   testCase "Sending a reminder updates last modified date on doc" $ testSendReminderEmailUpdatesLastModifiedDate conn
-                             , testCase "Create document from template" $ testDocumentFromTemplate conn
-                             , testCase "Uploading file as contract makes doc" $ testUploadingFileAsContract conn
-                             , testCase "Create document from template | Shared" $ testDocumentFromTemplateShared conn
-                             , testCase "Uploading file as offer makes doc" $ testUploadingFileAsOffer conn
-                             , testCase "Uploading file as order makes doc" $ testUploadingFileAsOrder conn
-                             , testCase "Sending document sends invites" $ testSendingDocumentSendsInvites conn
-                             , testCase "Signing document from design view sends invites" $ testSigningDocumentFromDesignViewSendsInvites conn
-                             , testCase "Person who isn't last signing a doc leaves it pending" $ testNonLastPersonSigningADocumentRemainsPending conn
-                             , testCase "Last person signing a doc closes it" $ testLastPersonSigningADocumentClosesIt conn
-                           ]
+docControlTests :: (Nexus, CryptoRNGState) -> Test
+docControlTests env = testGroup "Templates" [
+    testThat "Sending a reminder updates last modified date on doc" env testSendReminderEmailUpdatesLastModifiedDate
+  , testThat "Create document from template" env testDocumentFromTemplate
+  , testThat "Uploading file as contract makes doc" env testUploadingFileAsContract
+  , testThat "Create document from template | Shared" env testDocumentFromTemplateShared
+  , testThat "Uploading file as offer makes doc" env testUploadingFileAsOffer
+  , testThat "Uploading file as order makes doc" env testUploadingFileAsOrder
+  , testThat "Sending document sends invites" env testSendingDocumentSendsInvites
+  , testThat "Signing document from design view sends invites" env testSigningDocumentFromDesignViewSendsInvites
+  , testThat "Person who isn't last signing a doc leaves it pending" env testNonLastPersonSigningADocumentRemainsPending
+  , testThat "Last person signing a doc closes it" env testLastPersonSigningADocumentClosesIt
+  ]
 
-{-
-                     [testGroup "sendDocumentErrorEmail1"
-                           [
-                             testCase "sends one mail" test_sendDocumentErrorEmail1_sendsOneMail
-                           ]
-                     ]
-
-test_sendDocumentErrorEmail1_sendsOneMail = do
-  counter <- newIORef 0
-  let ctx = aTestCtx{ctxmailer=countingMailer counter}
-      doc = anUnsignedDocument
-      siglink = head $ documentsignatorylinks doc
-  sendDocumentErrorEmail1 ctx doc siglink
-  numberSent <- readIORef counter
-  assertEqual "for mail count" 1 numberSent
-    where countMail _ = return ()
-
-countingMailer counter mail = do
-    modifyIORef counter $ (+) 1
-
- -}
-
-testUploadingFileAsContract :: DBEnv -> Assertion
-testUploadingFileAsContract conn = withTestEnvironment conn $ do
-  (user, link) <- uploadDocAsNewUser conn Contract
+testUploadingFileAsContract :: TestEnv ()
+testUploadingFileAsContract = do
+  (user, link) <- uploadDocAsNewUser Contract
   docs <- randomQuery $ GetDocumentsByAuthor (userid user)
   assertEqual "New doc" 1 (length docs)
   let newdoc = head docs
   assertEqual "Links to /d/docid" ("/d/" ++ (show $ documentid newdoc)) (show link)
 
-testUploadingFileAsOffer :: DBEnv -> Assertion
-testUploadingFileAsOffer conn = withTestEnvironment conn $ do
-  (user, link) <- uploadDocAsNewUser conn Offer
+testUploadingFileAsOffer :: TestEnv ()
+testUploadingFileAsOffer = do
+  (user, link) <- uploadDocAsNewUser Offer
   docs <- randomQuery $ GetDocumentsByAuthor (userid user)
   assertEqual "New doc" 1 (length docs)
   let newdoc = head docs
   assertEqual "Links to /d/docid" ("/d/" ++ (show $ documentid newdoc)) (show link)
 
-testUploadingFileAsOrder :: DBEnv -> Assertion
-testUploadingFileAsOrder conn = withTestEnvironment conn $ do
-  (user, link) <- uploadDocAsNewUser conn Order
+testUploadingFileAsOrder :: TestEnv ()
+testUploadingFileAsOrder = do
+  (user, link) <- uploadDocAsNewUser Order
   docs <- randomQuery $ GetDocumentsByAuthor (userid user)
   assertEqual "New doc" 1 (length docs)
   let newdoc = head docs
   assertEqual "Links to /d/docid" ("/d/" ++ (show $ documentid newdoc)) (show link)
 
-uploadDocAsNewUser :: DBEnv -> DocumentProcess -> DB (User, KontraLink)
-uploadDocAsNewUser env doctype = do
+uploadDocAsNewUser :: DocumentProcess -> TestEnv (User, KontraLink)
+uploadDocAsNewUser doctype = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   req <- mkRequest POST [ ("doctype", inText (show doctype))
@@ -99,11 +75,11 @@ uploadDocAsNewUser env doctype = do
   (link, _ctx') <- runTestKontra req ctx $ handleIssueNewDocument
   return (user, link)
 
-testSendingDocumentSendsInvites :: DBEnv -> Assertion
-testSendingDocumentSendsInvites env = withTestEnvironment env $ do
+testSendingDocumentSendsInvites :: TestEnv ()
+testSendingDocumentSendsInvites = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   doc <- addRandomDocumentWithAuthorAndCondition user (\d -> documentstatus d == Preparation
@@ -137,11 +113,11 @@ testSendingDocumentSendsInvites env = withTestEnvironment env $ do
   emails <- dbQuery GetEmails
   assertBool "Emails sent" (length emails > 0)
 
-testSigningDocumentFromDesignViewSendsInvites :: DBEnv -> Assertion
-testSigningDocumentFromDesignViewSendsInvites env = withTestEnvironment env $ do
+testSigningDocumentFromDesignViewSendsInvites :: TestEnv ()
+testSigningDocumentFromDesignViewSendsInvites = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   doc <- addRandomDocumentWithAuthorAndCondition user (\d -> documentstatus d == Preparation
@@ -160,11 +136,11 @@ testSigningDocumentFromDesignViewSendsInvites env = withTestEnvironment env $ do
   emails <- dbQuery GetEmails
   assertBool "Emails sent" (length emails > 0)
 
-testNonLastPersonSigningADocumentRemainsPending :: DBEnv -> Assertion
-testNonLastPersonSigningADocumentRemainsPending env = withTestEnvironment env $ do
+testNonLastPersonSigningADocumentRemainsPending :: TestEnv ()
+testNonLastPersonSigningADocumentRemainsPending = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   doc' <- addRandomDocumentWithAuthorAndCondition
@@ -202,11 +178,11 @@ testNonLastPersonSigningADocumentRemainsPending env = withTestEnvironment env $ 
   emails <- dbQuery GetEmails
   assertEqual "No email sent" 0 (length emails)
 
-testLastPersonSigningADocumentClosesIt :: DBEnv -> Assertion
-testLastPersonSigningADocumentClosesIt env = withTestEnvironment env $ do
+testLastPersonSigningADocumentClosesIt :: TestEnv ()
+testLastPersonSigningADocumentClosesIt = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   doc' <- addRandomDocumentWithAuthorAndCondition
@@ -245,11 +221,11 @@ testLastPersonSigningADocumentClosesIt env = withTestEnvironment env $ do
   --emails <- dbQuery GetEmails
   --assertEqual "Confirmation email sent" 1 (length emails)
 
-testSendReminderEmailUpdatesLastModifiedDate :: DBEnv -> Assertion
-testSendReminderEmailUpdatesLastModifiedDate env = withTestEnvironment env $ do
+testSendReminderEmailUpdatesLastModifiedDate :: TestEnv ()
+testSendReminderEmailUpdatesLastModifiedDate = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
     <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
 
   doc <- addRandomDocumentWithAuthorAndCondition
@@ -269,23 +245,23 @@ testSendReminderEmailUpdatesLastModifiedDate env = withTestEnvironment env $ do
   Just updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertEqual "Modified date is updated" (ctxtime ctx) (documentmtime updateddoc)
 
-testDocumentFromTemplate :: DBEnv -> Assertion
-testDocumentFromTemplate env =  withTestEnvironment env $ do
+testDocumentFromTemplate :: TestEnv ()
+testDocumentFromTemplate = do
     (Just user) <- addNewUser "aaa" "bbb" "xxx@xxx.pl"
     doc <- addRandomDocumentWithAuthorAndCondition user (\d -> case documenttype d of
                                                             Template _ -> True
                                                             _ -> False)
     docs1 <- randomQuery $ GetDocumentsByAuthor (userid user)
     globaltemplates <- readGlobalTemplates
-    ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
+    ctx <- (\c -> c { ctxmaybeuser = Just user })
       <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     req <- mkRequest POST [("template", inText (show $ documentid doc))]
     _ <- runTestKontra req ctx $ handleCreateFromTemplate
     docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
     assertBool "No new document" (length docs2 == 1+ length docs1)
 
-testDocumentFromTemplateShared :: DBEnv -> Assertion
-testDocumentFromTemplateShared env = withTestEnvironment env $ do
+testDocumentFromTemplateShared :: TestEnv ()
+testDocumentFromTemplateShared = do
     (Company {companyid}) <- addNewCompany
     (Just author) <- addNewCompanyUser "aaa" "bbb" "xxx@xxx.pl" companyid
     doc <- addRandomDocumentWithAuthorAndCondition author (\d -> case documenttype d of
@@ -295,7 +271,7 @@ testDocumentFromTemplateShared env = withTestEnvironment env $ do
     (Just user) <- addNewCompanyUser "ccc" "ddd" "zzz@zzz.pl" companyid
     docs1 <- randomQuery $ GetDocumentsByAuthor (userid user)
     globaltemplates <- readGlobalTemplates
-    ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
+    ctx <- (\c -> c { ctxmaybeuser = Just user })
       <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     req <- mkRequest POST [("template", inText (show $ documentid doc))]
     _ <- runTestKontra req ctx $ handleCreateFromTemplate

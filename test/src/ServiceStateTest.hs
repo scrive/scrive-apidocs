@@ -6,11 +6,13 @@ import Data.Maybe
 import Test.Framework
 
 import API.Service.Model
+import Crypto.RNG
 import DB.Classes
 import User.Model
 import TestingUtil
+import TestKontra
 
-serviceStateTests :: DBEnv -> Test
+serviceStateTests :: (Nexus, CryptoRNGState) -> Test
 serviceStateTests env = testGroup "ServiceState" [
     testThat "CreateService works" env test_createService
   , testThat "GetService works" env test_getService
@@ -20,30 +22,30 @@ serviceStateTests env = testGroup "ServiceState" [
   , testThat "UpdateServiceSettings/GetServiceByLocation works" env test_updateServiceSettings
   ]
 
-test_createService :: DB ()
+test_createService :: TestEnv ()
 test_createService = do
   mservice <- addTestService
   assertBool "Service created" $ isJust mservice
 
-test_getService :: DB ()
+test_getService :: TestEnv ()
 test_getService = do
   Just Service{serviceid} <- addTestService
   mservice <- dbQuery $ GetService serviceid
   assertBool "Service returned" $ isJust mservice
 
-test_getServicesForAdmin :: DB ()
+test_getServicesForAdmin :: TestEnv ()
 test_getServicesForAdmin = do
   (uid, _, services) <- addTestServices
   result <- dbQuery $ GetServicesForAdmin uid
   assertBool "GetServicesForAdmin returned correct result" $ services == result
 
-test_getServices :: DB ()
+test_getServices :: TestEnv ()
 test_getServices = do
   (_, service, services) <- addTestServices
   result <- dbQuery GetServices
   assertBool "GetServicesForAdmin returned correct result" $ service : services == result
 
-test_updateServiceUI :: DB ()
+test_updateServiceUI :: TestEnv ()
 test_updateServiceUI = do
   Just Service{serviceid = sid, serviceui} <- addTestService
   let sui = serviceui {
@@ -56,7 +58,7 @@ test_updateServiceUI = do
   Just Service{serviceui = newsui} <- dbQuery $ GetService sid
   assertBool "Correct ServiceUI returned" $ sui == newsui
 
-test_updateServiceSettings :: DB ()
+test_updateServiceSettings :: TestEnv ()
 test_updateServiceSettings = do
   Just Service{serviceid = sid, servicesettings} <- addTestService
   let ss = servicesettings {
@@ -70,12 +72,12 @@ test_updateServiceSettings = do
   Just Service{serviceid = newsid} <- dbQuery $ GetServiceByLocation $ fromJust $ servicelocation ss
   assertBool "Correct Service returned" $ sid == newsid
 
-addTestService :: DB (Maybe Service)
+addTestService :: TestEnv (Maybe Service)
 addTestService = do
   Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   addService "test" userid
 
-addTestServices :: DB (UserID, Service, [Service])
+addTestServices :: TestEnv (UserID, Service, [Service])
 addTestServices = do
   Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   Just User{userid = other_userid} <- addNewUser "Emily" "Green" "emily@green.com"

@@ -1,46 +1,32 @@
-{-# LANGUAGE CPP #-}
-
-module StateHelper(
-      withTestEnvironment
-    , withTestDB
-    , withTestState
-    , withTemporaryDirectory
-    ) where
+module StateHelper (runTestEnv) where
 
 import AppState
+import Crypto.RNG
 import DB.Classes
+import Misc
+import TestKontra
 
+import Control.Concurrent (MVar)
 import Control.Monad.IO.Class
 import Database.HDBC
 import Happstack.Data (Proxy(..))
 import Happstack.State (runTxSystem, TxControl, shutdownSystem, Saver(..))
-
-import Control.Concurrent (MVar)
-import System.IO.Temp
-import qualified Control.Exception as E
+import qualified Control.Exception.Lifted as E
 
 -- create test environment
-withTestEnvironment :: DBEnv -> DB () -> IO ()
-withTestEnvironment env = withTestState . withTestDB env
+runTestEnv :: (Nexus, CryptoRNGState) -> TestEnv () -> IO ()
+runTestEnv (nex, rng) = runDBT nex . runCryptoRNGT rng . withTestState . withTestDB
 
 -- pgsql database --
 
 -- | Runs set of sql queries within one transaction and clears all tables in the end
-withTestDB :: DBEnv -> DB () -> IO ()
-withTestDB env f = do
-  er <- ioRunDB env $ do
-    er <- tryDB f
-    let conn = envNexus env
-    liftIO $ rollback conn
-    --clearTables
-    --liftIO $ commit conn
-    return er
-  case er of
-    Right () -> return ()
-    Left (e::E.SomeException) -> E.throw e
+withTestDB :: TestEnv () -> TestEnv ()
+withTestDB m = E.finally m $ do
+  clearTables
+  liftIO . commit =<< getNexus
 
-_clearTables :: DB ()
-_clearTables = do
+clearTables :: TestEnv ()
+clearTables = runDBEnv $ do
   kRunRaw "UPDATE users SET service_id = NULL, company_id = NULL"
   kRunRaw "DELETE FROM evidence_log"
   kRunRaw "DELETE FROM doc_stat_events"
@@ -62,34 +48,17 @@ _clearTables = do
 
 -- happstack-state --
 
-startUp :: Saver -> IO (MVar TxControl)
-startUp saver = runTxSystem saver stateProxy
-    where stateProxy = Proxy :: Proxy AppState
+startUp :: Saver -> TestEnv (MVar TxControl)
+startUp saver = liftIO $ runTxSystem saver (Proxy :: Proxy AppState)
 
-shutdown :: MVar TxControl -> IO ()
-shutdown control = shutdownSystem control
+withSaver :: Saver -> TestEnv () -> TestEnv ()
+withSaver saver m = E.bracket (startUp saver) (liftIO . shutdownSystem) (const m)
 
-withSaver :: Saver -> IO () -> IO ()
-withSaver saver action =
-    E.bracket (startUp saver) (\control -> shutdown control) (\_control -> action)
+withFileSaver :: FilePath -> TestEnv () ->TestEnv ()
+withFileSaver dir m = withSaver (Queue (FileSaver dir)) m
 
-withFileSaver :: FilePath -> IO () -> IO ()
-withFileSaver dir action = withSaver (Queue (FileSaver dir)) action
+withTemporaryDirectory :: (FilePath -> TestEnv a) -> TestEnv a
+withTemporaryDirectory = withSystemTempDirectory' "kontrakcja-test-"
 
---this was taken from happstack test code
--- http://patch-tag.com/r/mae/happstack/snapshot/current/content/pretty/happstack-state/tests/Happstack/State/Tests/Helpers.hs
-{-withTemporaryDirectory :: (FilePath -> IO a) -> IO a
-withTemporaryDirectory action
-    = do tmp <- getTemporaryDirectory
-         n <- randomIO
-         let dir = tmp </> (show (abs n :: Int))
-         exist <- doesDirectoryExist dir
-         if exist
-            then withTemporaryDirectory action
-            else finally (action dir)  (removeDirectoryRecursive dir)-}
-
-withTemporaryDirectory :: (FilePath -> IO a) -> IO a
-withTemporaryDirectory = withSystemTempDirectory "kontrakcja-test-"
-
-withTestState :: IO () -> IO ()
-withTestState action = withTemporaryDirectory (\tmpDir -> withFileSaver tmpDir action)
+withTestState :: TestEnv () -> TestEnv ()
+withTestState m = withTemporaryDirectory (\tmpDir -> withFileSaver tmpDir m)

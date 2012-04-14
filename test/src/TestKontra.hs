@@ -1,6 +1,6 @@
 {-# LANGUAGE OverlappingInstances #-}
 module TestKontra (
-      TestKontra
+      TestEnv
     , runTestKontra
     , inText
     , inFile
@@ -31,6 +31,7 @@ import qualified Network.AWS.AWSConnection as AWS
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 
+import Crypto.RNG
 import DB.Core
 import Kontra
 import Mails.MailsConfig
@@ -41,37 +42,35 @@ import qualified MemCache
 import User.Locale
 import qualified Data.Map as Map
 
-type TestKontra a = Kontra a
+type TestEnv = CryptoRNGT (DBT IO)
 
-runTestKontra' :: MonadIO m => Request -> Context -> TestKontra a ->
-                  m ((Either Response a, FilterFun Response), Context)
-runTestKontra' rq ctx tk = do
-    let noflashctx = ctx{ctxflashmessages=[]}
-        env = ctxdbenv ctx
-    --(mres, ctx') <- liftIO $ runStateT (runErrorT $ ununWebT $ runServerPartT (unKontraPlus $ unKontra tk) rq) noflashctx
-    mres <- liftIO $ ununWebT $ runServerPartT (runDBT env $ runStateT (unKontraPlus $ unKontra tk) noflashctx) rq
-    case mres of
-      Nothing -> fail "runTestKontra' mzero"
-      Just (Right ((res, ctx'), _), fs) -> return ((Right res, fs), ctx')
-      Just (Left res, fs) -> return ((Left res, fs), noflashctx)
+runTestKontraHelper :: Request -> Context -> Kontra a -> TestEnv (Either Response a, Context, FilterFun Response)
+runTestKontraHelper rq ctx tk = do
+  let noflashctx = ctx { ctxflashmessages = [] }
+  mres <- mapCryptoRNGT (mapDBT $ \m -> ununWebT $ runServerPartT m rq) $
+    runStateT (unKontraPlus $ unKontra tk) noflashctx
+  case mres of
+    Nothing -> fail "runTestKontraHelper mzero"
+    Just (Right (res, ctx'), fs) -> return (Right res, ctx', fs)
+    Just (Left res, fs) -> return (Left res, noflashctx, fs)
 
 -- | Typeclass for running handlers within TestKontra monad
 class RunnableTestKontra a where
-    runTestKontra :: MonadIO m => Request -> Context -> TestKontra a -> m (a, Context)
+  runTestKontra :: Request -> Context -> Kontra a -> TestEnv (a, Context)
 
 instance RunnableTestKontra a where
-    runTestKontra rq ctx tk = do
-        ((mres, _), ctx') <- runTestKontra' rq ctx tk
-        case mres of
-             Right res -> return (res, ctx')
-             Left  _   -> error "finishWith called in function that doesn't return Response"
+  runTestKontra rq ctx tk = do
+    (eres, ctx', _) <- runTestKontraHelper rq ctx tk
+    case eres of
+      Right res -> return (res, ctx')
+      Left  _   -> error "finishWith called in function that doesn't return Response"
 
 instance RunnableTestKontra Response where
-    runTestKontra rq ctx tk = do
-        ((mres, f), ctx') <- runTestKontra' rq ctx tk
-        case mres of
-             Right res -> return (unFilterFun f res, ctx')
-             Left  res -> return (unFilterFun f res, ctx')
+  runTestKontra rq ctx tk = do
+    (eres, ctx', f) <- runTestKontraHelper rq ctx tk
+    case eres of
+      Right res -> return (unFilterFun f res, ctx')
+      Left  res -> return (unFilterFun f res, ctx')
 
 -- Various helpers for constructing appropriate Context/Request
 
@@ -163,7 +162,6 @@ mkContext locale globaltemplates = liftIO $ do
         , ctxtime = time
         , ctxnormalizeddocuments = docs
         , ctxipnumber = noIP
-        , ctxdbenv = error "dbenv is not defined"
         , ctxdocstore = error "docstore is not defined"
         , ctxs3action = AWS.S3Action {
               AWS.s3conn = AWS.amazonS3Connection "" ""

@@ -1,9 +1,9 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -fno-warn-orphans  #-}
 module FileTest (fileTests) where
 
+import Crypto.RNG
 import DB.Classes
 import TestingUtil
+import TestKontra
 
 import Test.Framework
 import Test.QuickCheck
@@ -16,7 +16,7 @@ import Happstack.Server.SimpleHTTP
 import Control.Monad.Trans
 import File.File
 
-fileTests :: DBEnv -> Test
+fileTests :: (Nexus, CryptoRNGState) -> Test
 fileTests env = testGroup "Files" [
   
   -- Primitive properties
@@ -54,7 +54,7 @@ testFileEquality = doNTimes 100 $  do
    assertBool "file == file <-> fileid == fileid" ((f1 == f2) == (fileid f1 == fileid f2))  
    
    
-testFileNewFile ::   DB ()
+testFileNewFile :: TestEnv ()
 testFileNewFile  = doNTimes 100 $ do
   (name, content) <- fileData 
   File { fileid = fileid , filename = fname1 , filestorage = FileStorageMemory fcontent1} <- dbUpdate $  NewFile name content
@@ -64,7 +64,7 @@ testFileNewFile  = doNTimes 100 $ do
   assertBool "File data doesn't change after storing" ( name == fname2 && content == fcontent2) 
   
   
-testFileMovedToDisc ::   DB ()
+testFileMovedToDisc :: TestEnv ()
 testFileMovedToDisc  = doNTimes 100 $ do
   (name,content) <- fileData
   (pth) <- rand 10 $  arbString 10 100
@@ -74,7 +74,7 @@ testFileMovedToDisc  = doNTimes 100 $ do
   assertBool "File data name does not change" ( name == fname ) 
   assertBool "Path is persistent" ( pth ==  fpath ) 
     
-testFileMovedToAWS ::   DB ()
+testFileMovedToAWS :: TestEnv ()
 testFileMovedToAWS  = doNTimes 100 $ do
   (name,content) <- fileData
   bucket <- viewableS
@@ -85,7 +85,7 @@ testFileMovedToAWS  = doNTimes 100 $ do
   assertBool "File data name does not change" ( name == fname ) 
   assertBool "Bucket and url are persistent" ( bucket == fbucket && url == furl ) 
         
-testNewFileThatShouldBeMovedToAWS ::   DB ()
+testNewFileThatShouldBeMovedToAWS :: TestEnv ()
 testNewFileThatShouldBeMovedToAWS  = do
   (name,content) <- fileData
   file <- dbUpdate $  NewFile name content
@@ -102,7 +102,7 @@ testNewFileThatShouldBeMovedToAWS  = do
        Nothing ->  assertFailure  "Newly created file will not" 
         
 
-testUncheckedStoring :: DB ()
+testUncheckedStoring :: TestEnv ()
 testUncheckedStoring  = sequence_ $ replicate 10 $ do
   (name,content) <- fileData
   fid <- rand 10 arbitrary
@@ -115,10 +115,10 @@ testUncheckedStoring  = sequence_ $ replicate 10 $ do
         mf1 <-  dbQuery $ GetFileByFileID (fid)
         assertBool "We can put file in db with mem starage" ( Just f1 == mf1 ) 
 
-viewableS :: (MonadIO m) => m String
+viewableS :: MonadIO m => m String
 viewableS = rand 10 $ arbString 10 100
 
-fileData :: (MonadIO m) =>  m (String, BS.ByteString)
+fileData :: MonadIO m => m (String, BS.ByteString)
 fileData = do
     n <- viewableS
     c <- rand 10 arbitrary

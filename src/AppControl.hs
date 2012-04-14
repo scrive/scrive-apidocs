@@ -41,7 +41,6 @@ import Data.Functor
 import Data.List
 import Data.Maybe
 import Database.HDBC
-import DB.Nexus
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Happstack.Server.Internal.Cookie
 import Network.Socket

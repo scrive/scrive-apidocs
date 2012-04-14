@@ -22,6 +22,7 @@ import qualified Test.HUnit as T
 
 import File.FileID
 import API.API
+import Crypto.RNG
 import DB.Classes
 import MagicHash (MagicHash, unsafeMagicHash)
 import Company.Model
@@ -44,6 +45,7 @@ import Doc.Invariants
 import Doc.DocProcess
 import ActionSchedulerState
 import Text.JSON
+import TestKontra
 
 import EvidenceLog.Model
 
@@ -458,32 +460,32 @@ blankUser = User { userid                        = unsafeUserID 0
                  , usercompany = Nothing
                  }
 
-testThat :: String -> DBEnv -> DB () -> Test
-testThat s env a = testCase s (withTestEnvironment env a)
+testThat :: String -> (Nexus, CryptoRNGState) -> TestEnv () -> Test
+testThat s env = testCase s . runTestEnv env
 
-addNewCompany ::  DB Company
+addNewCompany :: TestEnv Company
 addNewCompany = do
     eid <- rand 10 arbitrary
     dbUpdate $ CreateCompany Nothing eid
 
-addNewFile :: String -> BS.ByteString -> DB File
+addNewFile :: String -> BS.ByteString -> TestEnv File
 addNewFile filename content = dbUpdate $ NewFile filename content
 
-addNewRandomFile :: DB File
+addNewRandomFile :: TestEnv File
 addNewRandomFile = do
   fn <- rand 10 $ arbString 3 30
   cnt <- rand 10 $ arbString 3 30
   addNewFile fn (BS.fromString cnt)
 
-addNewUser :: String -> String -> String -> DB (Maybe User)
+addNewUser :: String -> String -> String -> TestEnv (Maybe User)
 addNewUser firstname secondname email =
   dbUpdate $ AddUser (firstname, secondname) email Nothing False Nothing Nothing (mkLocaleFromRegion defaultValue)
 
-addNewCompanyUser :: String -> String -> String -> CompanyID -> DB (Maybe User)
+addNewCompanyUser :: String -> String -> String -> CompanyID -> TestEnv (Maybe User)
 addNewCompanyUser firstname secondname email cid =
   dbUpdate $ AddUser (firstname, secondname) email Nothing False Nothing (Just cid) (mkLocaleFromRegion defaultValue)
 
-addNewRandomUser :: DB User
+addNewRandomUser :: TestEnv User
 addNewRandomUser = do
   fn <- rand 10 $ arbString 3 30
   ln <- rand 10 $ arbString 3 30
@@ -495,14 +497,14 @@ addNewRandomUser = do
       Log.debug "Could not create user, trying again."
       addNewRandomUser
 
-addNewRandomAdvancedUser :: DB User
+addNewRandomAdvancedUser :: TestEnv User
 addNewRandomAdvancedUser = do
   User{userid,usersettings} <- addNewRandomUser
   True <- dbUpdate $ SetUserSettings userid (usersettings{ preferreddesignmode = Just AdvancedMode })
   Just user <- dbQuery $ GetUserByID userid
   return user
 
-addNewRandomCompanyUser :: CompanyID -> Bool -> DB User
+addNewRandomCompanyUser :: CompanyID -> Bool -> TestEnv User
 addNewRandomCompanyUser cid isadmin = do
   User{userid} <- addNewRandomUser
   _ <- dbUpdate $ SetUserCompany userid (Just cid)
@@ -510,7 +512,7 @@ addNewRandomCompanyUser cid isadmin = do
   Just user <- dbQuery $ GetUserByID userid
   return user
 
-addService :: String -> UserID -> DB (Maybe Service)
+addService :: String -> UserID -> TestEnv (Maybe Service)
 addService name uid =
   dbUpdate $ CreateService (ServiceID $ BS.fromString name) Nothing uid
 
@@ -549,7 +551,7 @@ randomDocumentAllowsDefault user = RandomDocumentAllows
                               , randomDocumentCondition = const True
                               }
 
-addRandomDocumentWithAuthor :: User -> DB DocumentID
+addRandomDocumentWithAuthor :: User -> TestEnv DocumentID
 addRandomDocumentWithAuthor user = documentid <$> addRandomDocument (randomDocumentAllowsDefault user)
 
 
@@ -588,11 +590,11 @@ getPossibleAuthorRoles doc = [SignatoryAuthor] :
     Just True -> [[SignatoryAuthor]]
     _ ->  [[SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]]
 
-addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> DB Document
+addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> TestEnv Document
 addRandomDocumentWithAuthorAndCondition user p =
   addRandomDocument ((randomDocumentAllowsDefault user) { randomDocumentCondition = p})
 
-addRandomDocument :: RandomDocumentAllows -> DB Document
+addRandomDocument :: RandomDocumentAllows -> TestEnv Document
 addRandomDocument rda = do
   file <- addNewRandomFile
   now <- liftIO getMinutesTime
@@ -661,7 +663,7 @@ untilCondition cond gen = do
   v <- gen
   if cond v then return v else untilCondition cond gen
 
-addRandomDocumentWithAuthor' :: User -> DB Document
+addRandomDocumentWithAuthor' :: User -> TestEnv Document
 addRandomDocumentWithAuthor' user = addRandomDocumentWithAuthorAndCondition user (\_ -> True)
 
 doNTimes :: (Monad m) => Int -> m () -> m ()
@@ -670,7 +672,7 @@ doNTimes n a = do
   _ <- a
   doNTimes (n - 1) a
 
-doTimes :: Int -> DB (Maybe (DB ())) -> DB ()
+doTimes :: Int -> TestEnv (Maybe (TestEnv ())) -> TestEnv ()
 doTimes i action
   | i == 0 = return ()
   | otherwise = do
@@ -681,19 +683,19 @@ doTimes i action
         _ <- ass
         doTimes (i - 1) action
 
-invalidateTest :: DB (Maybe (DB ()))
+invalidateTest :: TestEnv (Maybe (TestEnv ()))
 invalidateTest = return Nothing
 
-validTest :: DB () -> DB (Maybe (DB ()))
+validTest :: TestEnv () -> TestEnv (Maybe (TestEnv ()))
 validTest = return . Just
 
 -- Random gen
 
 --Random query
 class RandomQuery a b where
-  randomQuery :: a -> DB b
+  randomQuery :: a -> TestEnv b
 
-instance (DBQuery ev res) => RandomQuery ev res where
+instance (DBQuery TestEnv ev res) => RandomQuery ev res where
   randomQuery = dbQuery
 
 instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
@@ -703,9 +705,9 @@ instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
 
 --Random update
 class RandomUpdate a b where
-  randomUpdate :: a -> DB b
+  randomUpdate :: a -> TestEnv b
 
-instance (DBUpdate ev res) => RandomUpdate ev res where
+instance (DBUpdate TestEnv ev res) => RandomUpdate ev res where
   randomUpdate = dbUpdate
 
 instance (Arbitrary a, RandomUpdate c b) => RandomUpdate (a -> c) b where

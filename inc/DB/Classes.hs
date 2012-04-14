@@ -28,6 +28,7 @@
 module DB.Classes (
     module DB.Core
   , module DB.Exception
+  , module DB.Nexus
   , DBEnvSt(..)
   , DBEnv
   , mapDBEnv
@@ -201,7 +202,7 @@ withPostgreSQL :: (MonadBaseControl IO m, MonadIO m) => String -> DBT m a -> m a
 withPostgreSQL conf m =
   EL.bracket (liftIO $ PG.connectPostgreSQL conf) (liftIO . disconnect) $ \conn -> do
     nex <- mkNexus conn
-    res <- runDBT nex m
+    !res <- runDBT nex m
     liftIO $ commit conn
     return res
 

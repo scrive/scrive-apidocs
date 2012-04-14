@@ -1,16 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 module RedirectTest where
 
-import Test.HUnit (Assertion)
 import Test.Framework
 import Redirect
-import Test.Framework.Providers.HUnit (testCase)
 import Control.Applicative
 import Data.List
+import Crypto.RNG
+import DB.Classes
 import DBError
 import Misc
-import StateHelper
 import Templates.TemplatesLoader
 import Happstack.Server
 import Context
@@ -20,27 +18,27 @@ import TestKontra as T
 import User.Locale
 import qualified Control.Exception.Lifted as E
 
-redirectTests :: Test
-redirectTests = testGroup "RedirectTests"
-                  [testCase "return Right if Right" testGuardRight
-                  ,testCase "return mzero if Left" testStringGuardMZeroLeft
-                  ,testCase "finishWith if Left DBNotLoggedIn" testDBErrorGuardRedirectLeftDBNotLoggedIn
-                  ,testCase "mzero if Left DBResourceNotAvailable" testDBErrorGuardMZeroLeft
-                  ]
+redirectTests :: (Nexus, CryptoRNGState) -> Test
+redirectTests env = testGroup "RedirectTests" [
+    testThat "return Right if Right" env testGuardRight
+  , testThat "return mzero if Left" env testStringGuardMZeroLeft
+  , testThat "finishWith if Left DBNotLoggedIn" env testDBErrorGuardRedirectLeftDBNotLoggedIn
+  , testThat "mzero if Left DBResourceNotAvailable" env testDBErrorGuardMZeroLeft
+  ]
 
 testResponse :: String
 testResponse = "hello"
 
-testGuardRight :: Assertion
-testGuardRight = withTestState $ do
+testGuardRight :: TestEnv ()
+testGuardRight = do
     globaltemplates <- readGlobalTemplates
     ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
     (res, _) <- runTestKontra req ctx (guardRight $ (Right testResponse :: Either String String))
     assertEqual "should be equal" res testResponse
 
-testStringGuardMZeroLeft :: Assertion
-testStringGuardMZeroLeft = withTestState $ do
+testStringGuardMZeroLeft :: TestEnv ()
+testStringGuardMZeroLeft =  do
     globaltemplates <- readGlobalTemplates
     ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
@@ -48,8 +46,8 @@ testStringGuardMZeroLeft = withTestState $ do
                                                   (\(_::KontraError) -> return testResponse))
     assertEqual "should be equal" res testResponse
 
-testDBErrorGuardRedirectLeftDBNotLoggedIn :: Assertion
-testDBErrorGuardRedirectLeftDBNotLoggedIn = withTestState $ do
+testDBErrorGuardRedirectLeftDBNotLoggedIn :: TestEnv ()
+testDBErrorGuardRedirectLeftDBNotLoggedIn = do
   globaltemplates <- readGlobalTemplates
   ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
   req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
@@ -61,8 +59,8 @@ testDBErrorGuardRedirectLeftDBNotLoggedIn = withTestState $ do
   assertBool "One flash message was added" $ length (ctxflashmessages ctx') == 1
 --    assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
-testDBErrorGuardMZeroLeft :: Assertion
-testDBErrorGuardMZeroLeft = withTestState $ do
+testDBErrorGuardMZeroLeft :: TestEnv ()
+testDBErrorGuardMZeroLeft = do
   globaltemplates <- readGlobalTemplates
   ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
   req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]

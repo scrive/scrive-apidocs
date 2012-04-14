@@ -133,11 +133,15 @@ instance MonadTransControl CryptoRNGT where
   newtype StT CryptoRNGT a = StCryptoRNGT { unStCryptoRNGT :: StT InnerCryptoRNGT a }
   liftWith = defaultLiftWith CryptoRNGT unCryptoRNGT StCryptoRNGT
   restoreT = defaultRestoreT CryptoRNGT unStCryptoRNGT
+  {-# INLINE liftWith #-}
+  {-# INLINE restoreT #-}
 
 instance MonadBaseControl b m => MonadBaseControl b (CryptoRNGT m) where
   newtype StM (CryptoRNGT m) a = StMCryptoRNGT { unStMCryptoRNGT :: ComposeSt CryptoRNGT m a }
   liftBaseWith = defaultLiftBaseWith StMCryptoRNGT
   restoreM     = defaultRestoreM unStMCryptoRNGT
+  {-# INLINE liftBaseWith #-}
+  {-# INLINE restoreM #-}
 
 instance MonadError e m => MonadError e (CryptoRNGT m) where
   throwError     = lift . throwError

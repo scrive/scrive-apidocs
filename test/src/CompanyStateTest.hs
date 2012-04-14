@@ -4,38 +4,40 @@ import Control.Monad
 import Test.Framework
 
 import Company.Model
+import Crypto.RNG
 import DB.Classes
 import TestingUtil
+import TestKontra
 
-companyStateTests :: DBEnv -> Test
-companyStateTests conn = testGroup "CompanyState" [
-    testThat "CreateCompany works" conn test_createCompany
-  , testThat "GetCompanies works" conn test_getCompanies
-  , testThat "GetCompany works" conn test_getCompany
-  , testThat "GetCompanyByExternalID works" conn test_getCompanyByExternalID
-  , testThat "SetCompanyInfo works" conn test_setCompanyInfo
-  , testThat "GetOrCreateCompanyWithExternalID works" conn test_getOrCreateCompanyWithExternalID
-  , testThat "UpdateCompanyUI works" conn test_updateCompanyUI
+companyStateTests :: (Nexus, CryptoRNGState) -> Test
+companyStateTests env = testGroup "CompanyState" [
+    testThat "CreateCompany works" env test_createCompany
+  , testThat "GetCompanies works" env test_getCompanies
+  , testThat "GetCompany works" env test_getCompany
+  , testThat "GetCompanyByExternalID works" env test_getCompanyByExternalID
+  , testThat "SetCompanyInfo works" env test_setCompanyInfo
+  , testThat "GetOrCreateCompanyWithExternalID works" env test_getOrCreateCompanyWithExternalID
+  , testThat "UpdateCompanyUI works" env test_updateCompanyUI
   ]
 
-test_createCompany :: DB ()
+test_createCompany :: TestEnv ()
 test_createCompany = do
   forM_ ["", "external_id"] addTestCompany
   assertSuccess
 
-test_getCompanies :: DB ()
+test_getCompanies :: TestEnv ()
 test_getCompanies = do
   companies <- forM ["", "external_id"] addTestCompany
   result <- dbQuery $ GetCompanies Nothing
   assertBool "GetCompanies returned correct result" $ and $ map (`elem` result) companies
 
-test_getCompany :: DB ()
+test_getCompany :: TestEnv ()
 test_getCompany = do
   Company{companyid = cid} <- addTestCompany ""
   Just company <- dbQuery $ GetCompany cid
   assertBool "GetCompany returned correct result" $ companyid company == cid
 
-test_getCompanyByExternalID :: DB ()
+test_getCompanyByExternalID :: TestEnv ()
 test_getCompanyByExternalID = do
   let seid = "external_id"
       eid = ExternalCompanyID seid
@@ -43,7 +45,7 @@ test_getCompanyByExternalID = do
   Just company <- dbQuery $ GetCompanyByExternalID Nothing eid
   assertBool "GetCompanyByExternalID returned correct result" $ companyid company == cid
 
-test_setCompanyInfo :: DB ()
+test_setCompanyInfo :: TestEnv ()
 test_setCompanyInfo = do
   Company{companyid = cid, companyinfo} <- addTestCompany ""
   let ci = companyinfo {
@@ -59,7 +61,7 @@ test_setCompanyInfo = do
   Just Company{companyinfo = newci} <- dbQuery $ GetCompany cid
   assertBool "Returned CompanyInfo is correct" $ ci == newci
 
-test_updateCompanyUI :: DB ()
+test_updateCompanyUI :: TestEnv ()
 test_updateCompanyUI = do
   Company{companyid = cid, companyui} <- addTestCompany ""
   let cui = companyui {
@@ -72,14 +74,14 @@ test_updateCompanyUI = do
   Just Company{companyui = newcui} <- dbQuery $ GetCompany cid
   assertEqual "Returned CompanyUI is correct" cui newcui
 
-test_getOrCreateCompanyWithExternalID :: DB ()
+test_getOrCreateCompanyWithExternalID :: TestEnv ()
 test_getOrCreateCompanyWithExternalID = do
   let eid = ExternalCompanyID "external_id"
   Company{companyid = cid} <- dbUpdate $ GetOrCreateCompanyWithExternalID Nothing eid
   company <- dbUpdate $ GetOrCreateCompanyWithExternalID Nothing eid
   assertBool "GetOrCreateCompanyWithExternalID returned the same company it created before" $ companyid company == cid
 
-addTestCompany :: String -> DB Company
+addTestCompany :: String -> TestEnv Company
 addTestCompany seid = dbUpdate $ CreateCompany Nothing eid
   where
     eid = case seid of
