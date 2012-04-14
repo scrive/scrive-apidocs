@@ -48,6 +48,8 @@ instance MonadBaseControl IO ActionScheduler where
   liftBaseWith f = AS $ liftBaseWith $ \runInIO ->
                      f $ liftM StAS . runInIO . unAS
   restoreM = AS . restoreM . unStAS
+  {-# INLINE liftBaseWith #-}
+  {-# INLINE restoreM #-}
 
 -- Note: Do not define TemplatesMonad instance for ActionScheduler, use
 -- LocalTemplates instead. Reason? We don't have access to currently used
