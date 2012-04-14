@@ -3,7 +3,7 @@ module Company.Migrations where
 import DB
 import Company.Tables
 
-addEmailBrandingToCompany :: Migration
+addEmailBrandingToCompany :: MonadDB m => Migration m
 addEmailBrandingToCompany =
   Migration {
     mgrTable = tableCompanies
@@ -14,7 +14,7 @@ addEmailBrandingToCompany =
       return ()
   }
 
-addTextColourToEmailBranding :: Migration
+addTextColourToEmailBranding :: MonadDB m => Migration m
 addTextColourToEmailBranding =
   Migration {
     mgrTable = tableCompanies
@@ -22,7 +22,7 @@ addTextColourToEmailBranding =
   , mgrDo = kRunRaw "ALTER TABLE companies ADD COLUMN bars_textcolour TEXT NULL"
   }
 
-addIdSerialOnCompanies :: Migration
+addIdSerialOnCompanies :: MonadDB m => Migration m
 addIdSerialOnCompanies =
   Migration {
     mgrTable = tableCompanies
@@ -33,7 +33,7 @@ addIdSerialOnCompanies =
       kRunRaw $ "ALTER TABLE companies ALTER id SET DEFAULT nextval('companies_id_seq')"
   }
 
-addEmailDomainOnCompanies :: Migration
+addEmailDomainOnCompanies :: MonadDB m => Migration m
 addEmailDomainOnCompanies =
   Migration {
     mgrTable = tableCompanies

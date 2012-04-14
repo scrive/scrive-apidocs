@@ -21,8 +21,8 @@ data Table = Table {
 --   if mgrFrom is 2, that means that after that migration is run, table
 --   version will equal 3
 -- * mgrDo is actual body of a migration
-data Migration = Migration {
+data Migration m = Migration {
     mgrTable :: Table
   , mgrFrom  :: Int
-  , mgrDo    :: MonadDB m => DBEnv m ()
+  , mgrDo    :: DBEnv m ()
   }

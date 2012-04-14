@@ -10,7 +10,7 @@ import DB
 import Doc.Tables
 import qualified Log
 
-moveDocumentTagsFromDocumentsTableToDocumentTagsTable :: Migration
+moveDocumentTagsFromDocumentsTableToDocumentTagsTable :: MonadDB m => Migration m
 moveDocumentTagsFromDocumentsTableToDocumentTagsTable = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 4
@@ -38,7 +38,7 @@ moveDocumentTagsFromDocumentsTableToDocumentTagsTable = Migration {
           error $ "moveDocumentTagsFromDocumentsTableToDocumentTagsTable: expected {tagname:'',tagvalue:''}, got: " ++ encode x
         tags = map fromJSValue arr
 
-updateDocumentStatusAfterRemovingAwaitingAuthor :: Migration
+updateDocumentStatusAfterRemovingAwaitingAuthor :: MonadDB m => Migration m
 updateDocumentStatusAfterRemovingAwaitingAuthor = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 3
@@ -49,7 +49,7 @@ updateDocumentStatusAfterRemovingAwaitingAuthor = Migration {
     kRunRaw "UPDATE documents SET status = 7 WHERE status = 8"
   }
 
-removeOldSignatoryLinkIDFromCancelationReason :: Migration
+removeOldSignatoryLinkIDFromCancelationReason :: MonadDB m => Migration m
 removeOldSignatoryLinkIDFromCancelationReason = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 1
@@ -70,7 +70,7 @@ removeOldSignatoryLinkIDFromCancelationReason = Migration {
         Ok (JSObject o) = decode reason
         [("ELegDataMismatch", JSArray params)] = fromJSObject o
 
-addColumnToRecordInternalInsertionOrder :: Migration
+addColumnToRecordInternalInsertionOrder :: MonadDB m => Migration m
 addColumnToRecordInternalInsertionOrder =
   Migration {
     mgrTable = tableSignatoryLinks
@@ -82,7 +82,7 @@ addColumnToRecordInternalInsertionOrder =
       return ()
   }
 
-addDocumentIdIndexOnSignatoryLinks :: Migration
+addDocumentIdIndexOnSignatoryLinks :: MonadDB m => Migration m
 addDocumentIdIndexOnSignatoryLinks =
   Migration {
     mgrTable = tableSignatoryLinks
@@ -92,7 +92,7 @@ addDocumentIdIndexOnSignatoryLinks =
       return ()
   }
 
-addIdSerialOnSignatoryLinks :: Migration
+addIdSerialOnSignatoryLinks :: MonadDB m => Migration m
 addIdSerialOnSignatoryLinks =
   Migration {
     mgrTable = tableSignatoryLinks
@@ -108,7 +108,7 @@ addIdSerialOnSignatoryLinks =
       return ()
   }
 
-addIdSerialOnDocuments :: Migration
+addIdSerialOnDocuments :: MonadDB m => Migration m
 addIdSerialOnDocuments =
   Migration {
     mgrTable = tableDocuments
@@ -124,7 +124,7 @@ addIdSerialOnDocuments =
       return ()
   }
 
-addNameColumnInSignatoryAttachments :: Migration
+addNameColumnInSignatoryAttachments :: MonadDB m => Migration m
 addNameColumnInSignatoryAttachments =
   Migration {
     mgrTable = tableSignatoryAttachments
@@ -133,7 +133,7 @@ addNameColumnInSignatoryAttachments =
       kRunRaw "ALTER TABLE signatory_attachments ADD COLUMN name TEXT NOT NULL DEFAULT ''"
   }
 
-addCSVUploadDataFromDocumentToSignatoryLink :: Migration
+addCSVUploadDataFromDocumentToSignatoryLink :: MonadDB m => Migration m
 addCSVUploadDataFromDocumentToSignatoryLink =
   Migration {
     mgrTable = tableSignatoryLinks
@@ -145,7 +145,7 @@ addCSVUploadDataFromDocumentToSignatoryLink =
         ++ " ADD COLUMN csv_signatory_index INTEGER NULL"
   }
 
-addSignatoryLinkIdToSignatoryAttachment :: Migration
+addSignatoryLinkIdToSignatoryAttachment :: MonadDB m => Migration m
 addSignatoryLinkIdToSignatoryAttachment =
   Migration {
     mgrTable = tableSignatoryAttachments
@@ -171,7 +171,6 @@ addSignatoryLinkIdToSignatoryAttachment =
     kRunRaw $ "CREATE INDEX idx_signatory_attachments_signatory_link_id ON signatory_attachments(signatory_link_id)"
   }
   where
-    logAndDeleteBadAttachments :: MonadDB m => DBEnv m ()
     logAndDeleteBadAttachments = do 
       kRunRaw $ "SELECT document_id, name, email, description FROM signatory_attachments WHERE signatory_link_id = 0"
       atts <- foldDB decoder []
@@ -183,6 +182,4 @@ addSignatoryLinkIdToSignatoryAttachment =
                  ++ ", description = " ++ show s) atts
       return ()
       where
-        decoder :: [(Int64, BS.ByteString, BS.ByteString, BS.ByteString)] -> Int64 -> BS.ByteString -> BS.ByteString -> BS.ByteString -> [(Int64, BS.ByteString, BS.ByteString, BS.ByteString)]
-        decoder acc docid name email desc = (docid, name, email, desc) : acc
-
+        decoder acc docid name email desc = (docid :: Int64, name :: BS.ByteString, email :: BS.ByteString, desc :: BS.ByteString) : acc

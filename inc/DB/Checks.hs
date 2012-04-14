@@ -17,7 +17,7 @@ import DB.Utils
 import DB.Versions
 
 -- | Runs all checks on a database
-performDBChecks :: MonadDB m => (String -> m ()) -> [Table] -> [Migration] -> m ()
+performDBChecks :: MonadDB m => (String -> m ()) -> [Table] -> [Migration m] -> m ()
 performDBChecks logger tables migrations = runDBEnv $ do
   let liftedLogger = lift . logger
   checkDBTimeZone liftedLogger
@@ -32,7 +32,7 @@ checkDBTimeZone logger = do
   return ()
 
 -- | Checks whether database is consistent (performs migrations if necessary)
-checkDBConsistency :: MonadDB m => (String -> DBEnv m ()) -> [Table] -> [Migration] -> DBEnv m ()
+checkDBConsistency :: MonadDB m => (String -> DBEnv m ()) -> [Table] -> [Migration m] -> DBEnv m ()
 checkDBConsistency logger tables migrations = do
   (created, to_migration) <- checkTables
   forM_ created $ \table -> do

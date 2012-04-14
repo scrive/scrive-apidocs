@@ -5,7 +5,7 @@ import Misc
 import User.Region
 import User.Tables
 
-addUserCustomFooter :: Migration
+addUserCustomFooter :: MonadDB m => Migration m
 addUserCustomFooter =
   Migration {
     mgrTable = tableUsers
@@ -16,7 +16,7 @@ addUserCustomFooter =
       return ()
   }
 
-removeSystemServer :: Migration
+removeSystemServer :: MonadDB m => Migration m
 removeSystemServer =
   Migration {
     mgrTable = tableUsers
@@ -25,7 +25,7 @@ removeSystemServer =
       kRunRaw "ALTER TABLE users DROP COLUMN system_server CASCADE"
   }
 
-addRegionToUserSettings :: Migration
+addRegionToUserSettings :: MonadDB m => Migration m
 addRegionToUserSettings =
   Migration {
     mgrTable = tableUsers
@@ -36,7 +36,7 @@ addRegionToUserSettings =
       kRunRaw "ALTER TABLE users ALTER COLUMN region SET NOT NULL"
   }
 
-addIdSerialOnUsers :: Migration
+addIdSerialOnUsers :: MonadDB m => Migration m
 addIdSerialOnUsers =
   Migration {
     mgrTable = tableUsers
@@ -48,7 +48,7 @@ addIdSerialOnUsers =
       return ()
   }
 
-addCompanyNameNumberOnUsers :: Migration
+addCompanyNameNumberOnUsers :: MonadDB m => Migration m
 addCompanyNameNumberOnUsers =
   Migration {
     mgrTable = tableUsers

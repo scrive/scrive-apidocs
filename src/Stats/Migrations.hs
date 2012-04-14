@@ -4,7 +4,7 @@ import DB
 import Doc.DocStateData
 import Stats.Tables
 
-addServiceAndCompanyToStats :: Migration
+addServiceAndCompanyToStats :: MonadDB m => Migration m
 addServiceAndCompanyToStats =
   Migration {
     mgrTable = tableDocStatEvents
@@ -27,7 +27,7 @@ addServiceAndCompanyToStats =
            ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
 
-makeUserStatsRepeatableByChangingPK :: Migration
+makeUserStatsRepeatableByChangingPK :: MonadDB m => Migration m
 makeUserStatsRepeatableByChangingPK =
   Migration {
     mgrTable = tableUserStatEvents

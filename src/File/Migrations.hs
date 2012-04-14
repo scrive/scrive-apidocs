@@ -6,7 +6,7 @@ import DB
 import File.Tables
 import qualified Log
 
-addFileIdSequence :: Migration
+addFileIdSequence :: MonadDB m => Migration m
 addFileIdSequence = Migration {
     mgrTable = tableFiles
   , mgrFrom = 1
