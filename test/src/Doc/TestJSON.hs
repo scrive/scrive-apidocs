@@ -5,19 +5,19 @@ import Test.QuickCheck
 import Text.JSON
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 
+import Crypto.RNG
+import DB.Nexus
 import Util.JSON
 import Misc
 import Doc.JSON
-import TestingUtil()
 import Doc.DocStateData
 import Doc.DocInfo
-import Test.HUnit (Assertion)
-import Test.Framework.Providers.HUnit (testCase);
 import TestingUtil
+import TestKontra
 
-documentJSONTests :: Test
-documentJSONTests = testGroup "Document JSON tests" [
-  testCase "test general api document json creation" dcrTest,
+documentJSONTests :: (Nexus, CryptoRNGState) -> Test
+documentJSONTests env = testGroup "Document JSON tests" [
+  testThat "test general api document json creation" env dcrTest,
   testProperty "document_id must be equal" 
   (\doc -> True ==> 
            documentid doc == (read $ fromJSONString $ fromRight $ jsget "document_id" (jsonDocumentForSignatory doc))),
@@ -75,7 +75,7 @@ documentJSONTests = testGroup "Document JSON tests" [
       ]
   ]
 
-dcrTest :: Assertion
+dcrTest :: TestEnv ()
 dcrTest = doNTimes 100 $ do
   (mainfile, title, fn, sn, em) <- rand 10 arbitrary
   let o = dcrFromJSON $ JSObject $ toJSObject $

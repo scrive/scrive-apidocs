@@ -189,16 +189,16 @@ allTests = tail tests
       , ("mails", mailsTests )
 #endif
 #ifndef NO_MAILS
-      , ("apicommons", const $ const apiCommonsTest )
+      , ("apicommons", const apiCommonsTest )
 #endif
 #ifndef NO_JSON
-      , ("jsonutil", const $ const jsonUtilTests )
+      , ("jsonutil", const jsonUtilTests )
 #endif
 #ifndef NO_FILE
       , ("file", const $ fileTests )
 #endif
 #ifndef NO_DOCJSON
-      , ("docjson", const $ const documentJSONTests)
+      , ("docjson", const documentJSONTests)
 #endif
 #ifndef NO_SQLUTILS
       , ("sqlutil", const sqlUtilsTests )

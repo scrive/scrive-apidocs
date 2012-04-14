@@ -8,7 +8,6 @@ import Test.Framework.Providers.HUnit (testCase)
 import Control.Applicative
 import Data.Char
 import Data.Word
-import System.Random (newStdGen)
 import Test.QuickCheck
 import Happstack.Server
 import Doc.DocUtils
@@ -147,9 +146,9 @@ instance Arbitrary ActionID where
 -}
 class ExtendWithRandomnes a where
     moreRandom :: a -> Gen a
-    extendRandomness :: MonadIO m => a -> m a
+    extendRandomness :: a -> TestEnv a
     extendRandomness a = do
-          stdgen <- liftIO newStdGen
+          stdgen <- random
           return $ unGen (moreRandom a) stdgen 10
 
 instance ExtendWithRandomnes SignatoryDetails where
@@ -580,7 +579,7 @@ randomAuthorLinkByStatus Pending = do
 randomAuthorLinkByStatus _ = arbitrary
 
 
-getRandomAuthorRoles :: MonadIO m => Document -> m [SignatoryRole]
+getRandomAuthorRoles :: Document -> TestEnv [SignatoryRole]
 getRandomAuthorRoles doc =
   rand 10000 (elements $ getPossibleAuthorRoles doc)
 
@@ -604,7 +603,7 @@ addRandomDocument rda = do
     Nothing  -> return Nothing
     Just cid -> dbQuery $ GetCompany cid
   --liftIO $ print $ "about to generate document"
-  document <- liftIO $ worker file now user p mcompany
+  document <- worker file now user p mcompany
   docid <- dbUpdate $ StoreDocumentForTesting document
   mdoc  <- dbQuery  $ GetDocumentByDocumentID docid
   case mdoc of
@@ -614,7 +613,6 @@ addRandomDocument rda = do
     Just doc' -> do
               return doc'
   where
-    worker :: File -> MinutesTime -> User -> (Document -> Bool) -> (Maybe Company) -> IO Document
     worker file now user p _mcompany = do
       doc' <- rand 10 arbitrary
       xtype <- rand 10 (elements $ randomDocumentAllowedTypes rda)
@@ -653,9 +651,9 @@ addRandomDocument rda = do
       --asl <- dbUpdate $ SignLinkFromDetailsForTest asd roles
 
 
-rand :: MonadIO m => Int -> Gen a -> m a
+rand :: Int -> Gen a -> TestEnv a
 rand i a = do
-  stdgn <- liftIO newStdGen
+  stdgn <- random
   return $ unGen a stdgn i
 
 untilCondition :: (Monad m) => (b -> Bool) -> m b -> m b
@@ -717,7 +715,7 @@ instance (Arbitrary a, RandomUpdate c b) => RandomUpdate (a -> c) b where
 
 -- Other functions
 class RandomCallable a b where
-  randomCall :: MonadIO m => a -> m b
+  randomCall :: a -> TestEnv b
 
 instance RandomCallable (IO res) res where
   randomCall = liftIO

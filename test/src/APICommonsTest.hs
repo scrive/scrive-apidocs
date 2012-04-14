@@ -1,5 +1,6 @@
 module APICommonsTest (apiCommonsTest) where
---import Control.Applicative
+
+import Control.Monad.IO.Class
 import Test.HUnit (Assertion)
 import Test.Framework
 import Test.Framework.Providers.HUnit
@@ -16,11 +17,14 @@ import qualified Data.ByteString as BS
 import qualified  Codec.Binary.Base64 as BASE64
 import MinutesTime
 import Doc.DocStateCommon
+import DB.Nexus
+import Crypto.RNG
+import TestKontra
 
-apiCommonsTest :: Test
-apiCommonsTest = testGroup "API Commons Test" [
+apiCommonsTest :: (Nexus, CryptoRNGState) -> Test
+apiCommonsTest env = testGroup "API Commons Test" [
   testCase "Tag JSON 1" testTagJSON,
-  testCase "Tag JSON Random" testTagJSONRandom,
+  testThat "Tag JSON Random" env testTagJSONRandom,
   testCase "Involved JSON 1" testInvolvedJSON,
   testCase "File JSON" testFileJSON,
   testCase "Document JSON" testDocumentJSON
@@ -32,14 +36,14 @@ testTagJSON = do
       js  = api_document_tag tag
   testJSONStringLookup "value" js $ tagvalue tag
   testJSONStringLookup "name" js $ tagname tag
-    
-testTagJSONRandom :: Assertion
+
+testTagJSONRandom :: TestEnv ()
 testTagJSONRandom = doNTimes 100 $ do
   tag <- rand 20 arbitrary
   let js  = api_document_tag tag
   testJSONStringLookup "value" js $ tagvalue tag
   testJSONStringLookup "name" js $ tagname tag
-  
+
 testInvolvedJSON :: Assertion
 testInvolvedJSON = do
   let sl = signatoryLinkExample1
@@ -60,14 +64,14 @@ testInvolvedJSON = do
         testJSONStringLookup "value" phone "504-302-3742"
       Just _ -> assertFailure ("fields should be an array with one element in: " ++ show js)
     _ -> assertFailure $ "Expected Object bug got: " ++ show js
-    
+
 testFileJSON :: Assertion
 testFileJSON = do
   let base64data = BASE64.encode (BS.unpack $ BS.fromString "abc")
   let js = api_file "file1" (BS.fromString "abc")
   testJSONStringLookup "name" js "file1"
   testJSONStringLookup "content" js  base64data
-  
+
 testDocumentJSON :: Assertion
 testDocumentJSON = do
   let doc = blankDocument { documenttitle = "Cool Contract", documentallowedidtypes = [EmailIdentification] }
@@ -89,14 +93,13 @@ testDocumentJSON = do
       testFieldExists "involved" js
       testFieldExists "tags" js
     _ -> assertFailure $ "Expected JSObject but got " ++ show jsv
-    
-    
+
 testFieldExists :: String -> JSObject JSValue -> Assertion
 testFieldExists k js = case getJSONField k js of
   Nothing -> assertFailure $ "Could not find field " ++ show k ++ " in " ++ show js
   _ -> assertSuccess
-  
-testJSONStringLookup :: String -> JSValue -> String -> Assertion
+
+testJSONStringLookup :: MonadIO m => String -> JSValue -> String -> m ()
 testJSONStringLookup k js e =
     case getJSONStringFieldSafe k js of
     Right v -> assertBool (k ++ " did not match; expected: " ++ show e ++ ", got: " ++ show v ++ " in json " ++ show js) $ v == e
