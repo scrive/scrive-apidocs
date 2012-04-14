@@ -294,7 +294,7 @@ handleSignShow2 documentid
    URL: /d/{documentid}
    Method: GET
  -}
-handleIssueShowGet :: Kontrakcja m => DocumentID -> m (Either KontraLink String)
+handleIssueShowGet :: Kontrakcja m => DocumentID -> m (Either KontraLink (Either Response String))
 handleIssueShowGet docid = checkUserTOSGet $ do
   document <- guardRightM $ getDocByDocID docid
   disableLocalSwitch -- Don't show locale flag on this page
@@ -316,10 +316,10 @@ handleIssueShowGet docid = checkUserTOSGet $ do
 
   ctx <- getContext
   case (ispreparation, msiglink) of
-    (True,  _) | isattachment        -> pageAttachmentDesign document
-    (True,  _)                       -> pageDocumentDesign document
-    (False, _) | isauthororincompany -> pageDocumentView document msiglink
-    (False, Just siglink)            -> pageDocumentSignView ctx document siglink
+    (True,  _) | isattachment        -> Right <$> pageAttachmentDesign document
+    (True,  _)                       -> Right <$> pageDocumentDesign document
+    (False, _) | isauthororincompany -> Right <$> pageDocumentView document msiglink
+    (False, Just siglink)            -> Left  <$> (simpleResponse =<< pageDocumentSignView ctx document siglink)
     _                                -> internalError
 
 {- |
