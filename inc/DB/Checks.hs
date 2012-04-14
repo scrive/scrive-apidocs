@@ -8,8 +8,11 @@ import Data.Either
 import Data.Maybe
 import Database.HDBC
 
-import DB.Classes
+import DB.Core
+import DB.Env
+import DB.Functions
 import DB.Model
+import DB.SQL
 import DB.Utils
 import DB.Versions
 

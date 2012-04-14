@@ -37,7 +37,7 @@ import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Trans.Control
 import Crypto.RNG
-import DB.Classes
+import DB
 import ELegitimation.ELegTransaction
 import Doc.DocStateData
 import Happstack.Server

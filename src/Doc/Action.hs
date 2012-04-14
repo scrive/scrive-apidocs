@@ -12,7 +12,7 @@ module Doc.Action (
 import Control.Logic
 import Crypto.RNG
 import Data.Char
-import DB.Classes
+import DB
 import Doc.DocSeal
 import Doc.Model
 import Doc.DocInfo

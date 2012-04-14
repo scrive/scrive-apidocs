@@ -8,7 +8,7 @@ import Test.HUnit (Assertion)
 
 import AppControl
 import Crypto.RNG
-import DB.Classes
+import DB
 import Doc.Model
 import Doc.DocStateData
 import Context

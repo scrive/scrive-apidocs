@@ -11,7 +11,7 @@ import ActionSchedulerState
 import Context
 import Control.Logic
 import Crypto.RNG
-import DB.Classes hiding (query, update)
+import DB hiding (query, update)
 import FlashMessage
 import MagicHash (MagicHash)
 import Mails.Model

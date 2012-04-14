@@ -2,7 +2,7 @@ module StatsTest (statsTests) where
 
 import Control.Logic
 import Crypto.RNG
-import DB.Classes
+import DB
 import User.Model
 import Doc.Model
 import Doc.DocUtils

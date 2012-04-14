@@ -2,7 +2,8 @@ module DB.Model where
 
 import Database.HDBC
 
-import DB.Classes
+import DB.Core
+import DB.Env
 
 data TableValidationResult = TVRvalid | TVRcreated | TVRinvalid
 

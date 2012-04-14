@@ -4,11 +4,11 @@ module Handlers (
   ) where
 
 import Control.Monad.Reader
-import DB.Classes
 import Happstack.Server hiding (dir, path)
 import Happstack.StaticRouting
 import System.Directory
 
+import DB.PostgreSQL
 import Crypto.RNG
 import MailGun
 import MailingServerConf

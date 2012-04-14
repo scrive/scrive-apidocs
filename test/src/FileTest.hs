@@ -1,7 +1,7 @@
 module FileTest (fileTests) where
 
 import Crypto.RNG
-import DB.Classes
+import DB
 import TestingUtil
 import TestKontra
 

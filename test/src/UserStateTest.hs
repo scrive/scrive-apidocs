@@ -6,7 +6,7 @@ import Test.Framework
 
 import Company.Model
 import Crypto.RNG
-import DB.Classes
+import DB
 import MinutesTime
 import User.Model
 import TestingUtil

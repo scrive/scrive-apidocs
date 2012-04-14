@@ -1,12 +1,13 @@
 module Templates.Trans (
-      TemplatesT
-    , runTemplatesT
-    ) where
+    TemplatesT
+  , runTemplatesT
+  ) where
 
+import Control.Applicative
 import Control.Monad.Reader
 
-import Crypto.RNG(CryptoRNG)
-import DB.Classes
+import Crypto.RNG
+import DB
 import Templates.Templates
 import Templates.TemplatesLoader
 import User.Locale
@@ -14,7 +15,7 @@ import User.Locale
 -- | Monad transformer for adding templates functionality to underlying monad
 newtype TemplatesT m a =
   TemplatesT { unTT :: ReaderT (Locale, KontrakcjaGlobalTemplates) m a }
-    deriving (Functor, Monad, MonadDB, MonadIO, MonadTrans, CryptoRNG)
+    deriving (Applicative, CryptoRNG, Functor, Monad, MonadDB, MonadIO, MonadTrans)
 
 runTemplatesT :: (Functor m, Monad m) => (Locale, KontrakcjaGlobalTemplates) -> TemplatesT m a -> m a
 runTemplatesT ts action = runReaderT (unTT action) ts
@@ -26,5 +27,3 @@ instance (Functor m, Monad m) => TemplatesMonad (TemplatesT m) where
   getLocalTemplates locale = TemplatesT $ do
     (_, ts) <- ask
     return $ localizedVersion locale ts
-
--- add more instances if neccessary...

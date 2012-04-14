@@ -44,7 +44,7 @@ import API.Service.Model
 import Administration.AdministrationView
 import AppView
 import Company.Model
-import DB.Classes
+import DB
 import Data.List
 import Data.Maybe
 import Doc.DocInfo

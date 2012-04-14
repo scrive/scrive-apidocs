@@ -44,8 +44,7 @@ import Misc
 import Data.Maybe
 import Data.Functor
 import Control.Monad
-import DB.Classes
-import qualified Log ()
+import DB
 import Util.JSON
 import User.Lang
 import User.Region

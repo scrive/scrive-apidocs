@@ -1,8 +1,7 @@
 module DB.Versions where
 
 import Database.HDBC
-
-import DB.Classes
+import DB.Functions
 import DB.Model
 
 tableVersions :: Table

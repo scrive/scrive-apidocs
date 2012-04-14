@@ -12,7 +12,7 @@ import Company.Model
 import CompanyAccounts.Model
 import Context
 import Crypto.RNG
-import DB.Classes
+import DB
 import Misc
 import Redirect
 import Templates.TemplatesLoader

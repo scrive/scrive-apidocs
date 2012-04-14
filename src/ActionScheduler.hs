@@ -21,7 +21,8 @@ import qualified Control.Exception.Lifted as E
 import AppControl (AppConf(..))
 import ActionSchedulerState
 import Crypto.RNG
-import DB.Classes hiding (update, query)
+import DB hiding (update, query)
+import DB.PostgreSQL
 import Doc.DocStateData
 import Doc.Model
 import MinutesTime

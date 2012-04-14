@@ -16,7 +16,7 @@ import Util.HasSomeUserInfo
 import Data.List
 import User.Region
 import Doc.Model
-import DB.Classes
+import DB
 import EvidenceLog.Model
 import Util.MonadUtils
 

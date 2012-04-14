@@ -20,7 +20,7 @@ import User.Model
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Company.Model
-import DB.Classes
+import DB
 import Misc
 import qualified Templates.Fields as F
 

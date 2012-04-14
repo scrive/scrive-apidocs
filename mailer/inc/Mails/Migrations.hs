@@ -2,11 +2,7 @@ module Mails.Migrations (
     mailerMigrations
   ) where
 
-import Database.HDBC
-
-import DB.Classes
-import DB.Model
-import DB.Utils
+import DB
 import Mails.Tables
 
 -- Note: ALWAYS append new migrations TO THE END of this list.

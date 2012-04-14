@@ -21,7 +21,7 @@ import Data.Maybe
 import User.Model
 import Data.Functor
 import KontraLink
-import DB.Classes
+import DB
 import qualified Templates.Fields as F
 
 serviceAdminPage :: (MonadDB m, TemplatesMonad m) => Bool -> Service -> m String

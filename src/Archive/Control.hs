@@ -24,7 +24,7 @@ import Archive.View
 import InputValidation
 import KontraLink
 import Kontra
-import DB.Classes
+import DB
 import Doc.DocStateData
 import Doc.Model
 import User.Model

@@ -8,8 +8,7 @@ module PadQueue.Model (
 
 import Control.Monad
 import Database.HDBC
-import DB.Classes
-import DB.Fetcher2
+import DB
 import OurPrelude
 import User.Model
 import Doc.DocStateData

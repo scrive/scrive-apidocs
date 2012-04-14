@@ -13,7 +13,7 @@ import Data.Functor
 import Data.Maybe
 import qualified Control.Exception.Lifted as E
 
-import DB.Classes
+import DB
 import Doc.Model
 import Doc.DocStateData
 import InputValidation

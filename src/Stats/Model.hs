@@ -28,10 +28,7 @@ module Stats.Model
 import Control.Monad
 import Database.HDBC
 
-import DB.Classes
-import DB.Derive
-import DB.Utils
-import DB.Fetcher2
+import DB
 import Misc
 import MinutesTime
 import User.Model

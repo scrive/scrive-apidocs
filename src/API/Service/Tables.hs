@@ -1,9 +1,6 @@
 module API.Service.Tables where
 
-import Database.HDBC
-
-import DB.Classes
-import DB.Model
+import DB
 
 tableServices :: Table
 tableServices = Table {

@@ -19,11 +19,7 @@ import Data.Monoid
 import Database.HDBC
 import qualified Control.Exception as E
 
-import DB.Classes
-import DB.Derive
-import DB.Fetcher2
-import DB.Types
-import DB.Utils
+import DB
 import API.Service.Model
 import Company.CompanyID
 import Company.Tables

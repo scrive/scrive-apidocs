@@ -1,13 +1,6 @@
-module EvidenceLog.Tables 
-       (
-         tableEvidenceLog
-       )
-       where
+module EvidenceLog.Tables (tableEvidenceLog) where
 
-import Database.HDBC
-
-import DB.Classes
-import DB.Model
+import DB
 
 {- |
 

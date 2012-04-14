@@ -11,8 +11,8 @@ import qualified Control.Exception as E
 import Crypto.RNG (newCryptoRNGState)
 import Configuration
 import Dispatcher
-import DB.Classes
 import DB.Checks
+import DB.PostgreSQL
 import Handlers
 import Mails.Migrations
 import Mails.Tables

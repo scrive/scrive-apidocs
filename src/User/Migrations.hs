@@ -1,10 +1,6 @@
 module User.Migrations where
 
-import Database.HDBC
-
-import DB.Classes
-import DB.Model
-import DB.Utils
+import DB
 import Misc
 import User.Region
 import User.Tables

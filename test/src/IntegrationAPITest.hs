@@ -16,7 +16,7 @@ import API.API
 import API.Service.Model
 import API.IntegrationAPI
 import Crypto.RNG
-import DB.Classes
+import DB
 import Text.JSON
 import Data.Ratio
 import Data.List

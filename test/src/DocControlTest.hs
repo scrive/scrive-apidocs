@@ -13,7 +13,7 @@ import Mails.Model
 import Misc
 import Context
 import Crypto.RNG
-import DB.Classes
+import DB
 import Doc.Model
 import Doc.DocStateData
 import Doc.DocControl

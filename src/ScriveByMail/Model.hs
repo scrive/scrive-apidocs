@@ -24,10 +24,7 @@ module ScriveByMail.Model
     where
 
 import Crypto.RNG
-import DB.Classes
-import DB.Derive
-import DB.Fetcher2
-import DB.Utils
+import DB
 import MagicHash
 import MinutesTime
 import qualified Data.ByteString as BS
@@ -38,7 +35,6 @@ import qualified Log
 import Control.Monad
 import Control.Monad.Trans
 import Data.Maybe
-import Database.HDBC
 import Data.Int
 
 data MailAPIInfo = MailAPIInfo {

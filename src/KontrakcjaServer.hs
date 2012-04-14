@@ -39,8 +39,9 @@ import Data.Version
 import Control.Monad
 import Data.List
 import Crypto.RNG
+import DB
 import DB.Checks
-import DB.Classes
+import DB.PostgreSQL
 import Network
 import qualified Control.Exception as E
 import Happstack.State.Saver

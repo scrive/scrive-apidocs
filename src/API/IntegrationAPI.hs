@@ -27,7 +27,7 @@ import Control.Monad.State
 import Control.Logic
 import Data.Functor
 import Data.Maybe
-import DB.Classes
+import DB
 import Doc.Model
 import Doc.DocStateData
 import Happstack.Server (Response, finishWith, askRq, rqUri, look, toResponseBS)
@@ -51,7 +51,7 @@ import Doc.DocUtils
 import Company.Model
 import User.Model
 import Data.Foldable (fold)
-import Crypto.RNG (CryptoRNG)
+import Crypto.RNG
 import Util.SignatoryLinkUtils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo

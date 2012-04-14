@@ -1,70 +1,85 @@
-module DB.Fetcher
-  ( Fetcher(..)
-  , fetchValues
+module DB.Fetcher (
+    Fetcher
+  , foldDB
   ) where
 
-import Data.Monoid
-import Database.HDBC as HDBC
-import qualified Control.Exception as E
-
-import DB.Exception as DB
-import DB.SQL
-import Control.Monad.IO.Class
 import Control.Monad
+import Control.Monad.IO.Class
 import Data.Convertible
+import Data.Maybe
+import Data.Monoid
+import Database.HDBC hiding (originalQuery)
+import qualified Control.Exception as E
+import qualified Database.HDBC as HDBC
 
-class Fetcher a where
-    type FetchResult a :: *
-    fetchWorker :: Int -> a -> [SqlValue] -> Either DBException (FetchResult a)
-    fetchArity :: a -> Int
+import DB.Core
+import DB.Env
+import DB.Exception
+import DB.Functions
+import DB.SQL
 
-instance Fetcher (Either DBException r) where
-    type FetchResult (Either DBException r) = r
+class Fetcher a r where
+  apply :: Int -> [SqlValue] -> a -> Either DBException r
+  arity :: a -> r -> Int
 
-    fetchWorker _ action [] = action
-    fetchWorker n _ xs = 
-      Left $ RowLengthMismatch mempty n (n + length xs)
+instance (Fetcher b r, Convertible SqlValue t) => Fetcher (t -> b) r where
+  apply n (x:xs) f = either
+    (Left . CannotConvertSqlValue mempty n "")
+    (apply (n+1) xs . f)
+    (safeFromSql x)
+  apply n _ f = Left RowLengthMismatch {
+      originalQuery = mempty
+    , expected = n + arity f (undefined :: r)
+    , delivered = n
+  }
 
-    fetchArity _ = 0
+  arity f r = 1 + arity (f undefined) r
 
-instance (Fetcher b, Convertible SqlValue t) => Fetcher (t -> b) where
-    type FetchResult (t -> b) = FetchResult b
+instance Fetcher r r where
+  apply _ [] r = Right r
+  apply n xs _ = Left RowLengthMismatch {
+      originalQuery = mempty
+    , expected = n
+    , delivered = n + length xs
+  }
 
-    fetchWorker n action (x:xs) = 
-      case safeFromSql x of
-        Right value -> fetchWorker (n+1) (action value) xs
-        Left cnvError -> Left $ CannotConvertSqlValue mempty n "" cnvError
+  arity _ _ = 0
 
-    fetchWorker n action _ = do
-      Left $ RowLengthMismatch mempty (n + fetchArity action) n
-
-    fetchArity action = 1 + fetchArity (action undefined) 
-
-fetchValues :: (MonadIO m, Fetcher fetcher) => Statement -> fetcher -> m [FetchResult fetcher]
-fetchValues st decoder = liftM reverse (worker [])
+-- | Fold over executed statement to get results.
+--
+-- Note: decoder is a function that takes current accumulator value and
+-- then arbitrary numer of arguments (it has to match number of columns we
+-- are expected to get from a query, otherwise an exception will be thrown)
+-- and returns updated accumulator (just like foldl does). Also, keep in mind
+-- that you need to annotate types of all arguments this function takes
+-- (usually it's not neccessary since compiler will be able to infer them,
+-- but if it won't, you have to expect quite ugly error message about
+-- missing instances).
+foldDB :: MonadDB m => Fetcher a b => (b -> a) -> b -> DBEnv m b
+foldDB decoder !init_acc = do
+  res <- withDBEnvSt $ \s@DBEnvSt{..} -> (, s) `liftM` case dbStatement of
+    Nothing -> return (Right init_acc, undefined, undefined)
+    Just st -> (, st, dbValues) `liftM` liftIO (worker st init_acc)
+  case res of
+    (Right acc, _, _) -> return acc
+    (Left err, st, values) -> kFinish >> E.throw err {
+        originalQuery = SQL (HDBC.originalQuery st) values
+      }
   where
-    worker acc = do
-      mrow <- liftIO $ fetchRow st
+    worker st !acc = do
+      mrow <- fetchRow st
       case mrow of
-        Nothing -> return acc
-        Just row -> 
-          case fetchWorker 0 decoder row of
-            Right value -> worker (value : acc)
-            Left left@CannotConvertSqlValue{position = pos} -> do
-                   -- getColumnNames is not defined... I cannot find
-                   -- why, but lets catch this exception here and
-                   -- ignore it for now
-                   columns <- liftIO $ (getColumnNames st `E.catch` \(_ :: E.SomeException) -> return [])
-                   let column = if pos<0 || pos>= length columns
-                                then ""
-                                else columns !! pos
-                   liftIO $ finish st
-                   liftIO $ E.throwIO $ CannotConvertSqlValue
-                            { DB.originalQuery = SQL (HDBC.originalQuery st) []
-                            , DB.columnName    = column
-                            , DB.position      = DB.position left
-                            , DB.convertError  = DB.convertError left
-                            }
-            Left left -> do
-                   liftIO $ finish st
-                   liftIO $ E.throwIO $ left { DB.originalQuery = SQL (HDBC.originalQuery st) [] }
+        Nothing -> return $ Right acc
+        Just row ->
+          case apply 0 row (decoder acc) of
+            Right acc' -> worker st acc'
+            Left err@CannotConvertSqlValue{position = pos} -> do
+              column <- liftIO $ getColumnNames st
+                >>= return . fromMaybe "" . listToMaybe . drop pos
+              return $ Left CannotConvertSqlValue {
+                  originalQuery = mempty
+                , columnName    = column
+                , position      = position err
+                , convertError  = convertError err
+                }
+            Left err -> return $ Left err

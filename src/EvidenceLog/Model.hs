@@ -20,14 +20,9 @@ module EvidenceLog.Model
        )
        where
 
-import Database.HDBC
-
 import API.Service.Model
 import Context
-import DB.Classes
-import DB.Derive
-import DB.Fetcher2
-import DB.Utils
+import DB
 import Doc.DocStateData
 import EvidenceLog.Tables
 import IPAddress

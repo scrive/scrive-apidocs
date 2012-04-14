@@ -6,11 +6,11 @@ module Dispatcher (
 import Control.Concurrent
 import Control.Monad
 import Control.Monad.IO.Class
-import Database.HDBC
 import qualified Control.Exception as E
 
 import Crypto.RNG
-import DB.Classes
+import DB
+import DB.PostgreSQL
 import Sender
 import Mails.Model
 import MinutesTime
@@ -46,7 +46,7 @@ dispatcher rng master msender dbconf = do
              when (not res) $
                error $ "CRITICAL: deferring email #" ++ show mailID ++ " failed."
       -- commit after email was handled properly
-      liftIO . commit =<< getNexus
+      dbCommit
   case res of
     Right () -> threadDelay $ 5 * second
     Left (e::E.SomeException) -> do

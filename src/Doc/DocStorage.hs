@@ -21,7 +21,7 @@ import Control.Concurrent.MVar.Lifted
 import Control.Monad
 import Control.Monad.Error
 import Data.Typeable
-import DB.Classes
+import DB
 import Doc.DocStateData
 import File.Model
 import ForkAction

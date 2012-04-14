@@ -9,7 +9,7 @@ import Test.Framework
 import ActionSchedulerState
 import Context
 import Crypto.RNG
-import DB.Classes hiding (query, update)
+import DB hiding (query, update)
 import FlashMessage
 import MagicHash (unsafeMagicHash)
 import Mails.Model

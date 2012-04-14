@@ -34,7 +34,7 @@ import Templates.TemplatesUtils
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
-import DB.Classes
+import DB
 import Control.Monad
 import Data.Functor
 import Data.Maybe

@@ -32,8 +32,7 @@ import Doc.DocUtils
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Map as Map
 import Happstack.Server.SimpleHTTP
-import DB.Classes
-import DB.Types
+import DB
 import User.Model
 import Util.FlashUtil
 import Util.KontraLinkUtils

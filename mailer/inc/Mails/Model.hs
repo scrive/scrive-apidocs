@@ -18,12 +18,9 @@ module Mails.Model (
   ) where
 
 import Control.Monad
-import Database.HDBC
 
-import DB.Classes
-import DB.Fetcher2
-import DB.Utils
-import MagicHash (MagicHash)
+import DB
+import MagicHash
 import Mails.Data
 import Mails.Tables
 import MinutesTime

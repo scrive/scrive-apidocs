@@ -24,7 +24,7 @@ import Happstack.Server hiding (simpleHTTP)
 import Text.JSON (JSValue(..), toJSObject, toJSString)
 
 import AppView
-import DB.Classes
+import DB
 import Company.CompanyControl (withCompanyAdmin)
 import Company.Model
 import CompanyAccounts.Model

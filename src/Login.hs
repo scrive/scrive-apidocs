@@ -8,7 +8,7 @@ module Login (
 
 import ActionSchedulerState
 import AppView as V
-import DB.Classes hiding (update, query)
+import DB hiding (update, query)
 import InputValidation
 import Kontra
 import KontraLink

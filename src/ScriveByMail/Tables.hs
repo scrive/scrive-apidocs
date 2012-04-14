@@ -1,16 +1,11 @@
-module ScriveByMail.Tables 
-       (
-         tableMailAPIDelay,
-         tableUserMailAPIs,
-         tableUserRequest,
-         tableCompanyMailAPIs
-       )
-    where
+module ScriveByMail.Tables (
+    tableMailAPIDelay
+  , tableUserMailAPIs
+  , tableUserRequest
+  , tableCompanyMailAPIs
+  ) where
 
-import Database.HDBC
-
-import DB.Classes
-import DB.Model
+import DB
 
 tableUserRequest :: Table
 tableUserRequest = Table  {

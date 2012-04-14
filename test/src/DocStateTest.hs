@@ -2,7 +2,7 @@ module DocStateTest where
 
 import Control.Logic
 import Crypto.RNG
-import DB.Classes
+import DB
 import User.Model
 import Doc.Model
 import Doc.DocUtils
@@ -23,8 +23,7 @@ import Util.HasSomeCompanyInfo
 
 import Data.Functor
 import Data.Maybe
-import Data.Convertible(convert)
-import Database.HDBC(SqlValue)
+import Data.Convertible (convert)
 import Control.Monad
 import Control.Monad.Trans
 import Data.List

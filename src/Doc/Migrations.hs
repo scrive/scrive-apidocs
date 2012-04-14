@@ -4,16 +4,11 @@ import Control.Monad
 import Data.Int
 import Database.HDBC
 import Text.JSON
+import qualified Data.ByteString as BS
 
-import DB.Classes
-import DB.Fetcher2
-import DB.Model
-import DB.Utils
+import DB
 import Doc.Tables
 import qualified Log
-import Doc.DocumentID
-import Doc.DocStateData()
-import qualified Data.ByteString as BS
 
 moveDocumentTagsFromDocumentsTableToDocumentTagsTable :: Migration
 moveDocumentTagsFromDocumentsTableToDocumentTagsTable = Migration {
@@ -188,6 +183,6 @@ addSignatoryLinkIdToSignatoryAttachment =
                  ++ ", description = " ++ show s) atts
       return ()
       where
-        decoder :: [(DocumentID, BS.ByteString, BS.ByteString, BS.ByteString)] -> DocumentID -> BS.ByteString -> BS.ByteString -> BS.ByteString -> [(DocumentID, BS.ByteString, BS.ByteString, BS.ByteString)]
+        decoder :: [(Int64, BS.ByteString, BS.ByteString, BS.ByteString)] -> Int64 -> BS.ByteString -> BS.ByteString -> BS.ByteString -> [(Int64, BS.ByteString, BS.ByteString, BS.ByteString)]
         decoder acc docid name email desc = (docid, name, email, desc) : acc
 

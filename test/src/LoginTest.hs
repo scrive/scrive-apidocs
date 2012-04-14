@@ -7,7 +7,7 @@ import Test.Framework
 
 import ActionSchedulerState
 import Crypto.RNG
-import DB.Classes
+import DB
 import Context
 import FlashMessage
 import Login

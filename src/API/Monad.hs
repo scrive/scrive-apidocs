@@ -1,5 +1,4 @@
 {-# LANGUAGE FunctionalDependencies #-}
-
 module API.Monad where
 
 import Control.Monad.Trans
@@ -9,7 +8,7 @@ import Happstack.Server.Response
 import Control.Monad.Error
 import Control.Applicative
 
-import DB.Classes
+import DB
 import Util.JSON
 import Misc
 import Kontra

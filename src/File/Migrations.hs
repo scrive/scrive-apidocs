@@ -2,9 +2,7 @@ module File.Migrations where
 
 import Data.Int
 
-import DB.Classes
-import DB.Model
-import DB.Utils
+import DB
 import File.Tables
 import qualified Log
 

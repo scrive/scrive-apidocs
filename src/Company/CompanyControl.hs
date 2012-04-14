@@ -19,8 +19,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Map as Map
 
-import DB.Classes
-import DB.Types
+import DB
 import Company.CompanyView
 import Company.Model
 import Kontra

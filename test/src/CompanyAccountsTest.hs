@@ -13,7 +13,7 @@ import CompanyAccounts.CompanyAccountsControl
 import CompanyAccounts.Model
 import Context
 import Crypto.RNG
-import DB.Classes hiding (query, update)
+import DB hiding (query, update)
 import Doc.DocStateData
 import Doc.Model
 import FlashMessage

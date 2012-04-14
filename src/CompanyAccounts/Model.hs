@@ -9,13 +9,10 @@ module CompanyAccounts.Model (
   ) where
 
 import Data.Monoid
-import Database.HDBC
 import qualified Control.Exception as E
 
 import Company.Model
-import DB.Classes
-import DB.Fetcher2
-import DB.Utils
+import DB
 import User.Model
 
 {- |

@@ -1,44 +1,7 @@
-{-# LANGUAGE FunctionalDependencies #-}
-
--- | This module defines a nice monad for SQL statement execution. This has the following properties:
--- 
--- * keeps connection hidden in the monad
---
--- * keeps current statement in the monad
---
--- * if any command throws SqlError exception it will be wrapped in
--- 'DBException' as 'SQLError' and have 'originalQuery' set with
--- information. Great help in debugging.
---
--- * automatically converts from and to ['SqlValue'] rows
---
--- * properly does 'rollback' when exception is thrown (a bug in HDBC)
---
--- * provides for less noisy style
---
--- Example:
---
--- > runDBInDB $ do
--- >    kPrepare "SELECT title FROM documents WHERE id = ?"
--- >    r <- kExecute [toSql docid]
--- >    Just doc <- kFetchRow decodeRowAsDocument
--- >    return doc
---
-
-module DB.Classes (
-    module DB.Core
-  , module DB.Exception
-  , module DB.Nexus
-  , DBEnvSt(..)
-  , DBEnv
-  , mapDBEnv
-  , runDBEnv
-  , withDBEnvSt
-  , DBQuery(..)
-  , DBUpdate(..)
-  , dbQuery
-  , dbUpdate
-  , withPostgreSQL
+module DB.Functions (
+    dbCommit
+  , dbRollback
+  , dbClone
   , kPrepare
   , kExecute
   , kExecute1
@@ -46,75 +9,34 @@ module DB.Classes (
   , kExecute1P
   , kFinish
   , kRunRaw
+  , kRun
+  , kRun01
+  , kGetTables
   , kDescribeTable
   ) where
 
-import Control.Applicative
-import Control.Monad.Base
 import Control.Monad.IO.Class
 import Control.Monad.State.Strict hiding (state)
-import Control.Monad.Trans.Control
 import Data.Maybe
 import Data.Monoid
 import Database.HDBC hiding (originalQuery)
 import qualified Control.Exception as E
-import qualified Control.Exception.Lifted as EL
 import qualified Database.HDBC as HDBC
-import qualified Database.HDBC.PostgreSQL as PG
 
-import Control.Monad.Trans.Control.Util
 import DB.Core
+import DB.Env
 import DB.Exception
 import DB.Nexus
 import DB.SQL hiding (sql)
 
-data DBEnvSt = DBEnvSt {
-    dbStatement :: !(Maybe Statement)
-  , dbValues    :: ![SqlValue]
-  }
+dbCommit :: MonadDB m => m ()
+dbCommit = getNexus >>= liftIO . commit
 
-type InnerDBEnv = StateT DBEnvSt
+dbRollback :: MonadDB m => m ()
+dbRollback = getNexus >>= liftIO . rollback
 
--- | 'DBEnv' is a monad transformer that adds state management of executed
--- database action, handle exceptions correctly, closes statement when it
--- is not useful anymore, etc.
-newtype DBEnv m a = DBEnv { unDBEnv :: InnerDBEnv m a }
-  deriving (Applicative, Functor, Monad, MonadIO, MonadPlus, MonadTrans)
-
-instance MonadBase b m => MonadBase b (DBEnv m) where
-  liftBase = liftBaseDefault
-
-instance MonadTransControl DBEnv where
-  newtype StT DBEnv a = StDBEnv { unStDBEnv :: StT InnerDBEnv a }
-  liftWith = defaultLiftWith DBEnv unDBEnv StDBEnv
-  restoreT = defaultRestoreT DBEnv unStDBEnv
-
-instance MonadBaseControl b m => MonadBaseControl b (DBEnv m) where
-  newtype StM (DBEnv m) a = StMDBEnv { unStMDBEnv :: ComposeSt DBEnv m a }
-  liftBaseWith = defaultLiftBaseWith StMDBEnv
-  restoreM     = defaultRestoreM unStMDBEnv
-
-mapDBEnv :: (m (a, DBEnvSt) -> n (b, DBEnvSt)) -> DBEnv m a -> DBEnv n b
-mapDBEnv f m = withDBEnvSt $ f . runStateT (unDBEnv m)
-
-runDBEnv :: Monad m => DBEnv m a -> m a
-runDBEnv f = evalStateT (unDBEnv f) (DBEnvSt Nothing [])
-
-withDBEnvSt :: (DBEnvSt -> m (a, DBEnvSt)) -> DBEnv m a
-withDBEnvSt = DBEnv . StateT
-
--- query typeclasses
-class MonadDB m => DBQuery m q r | q -> r where
-  query :: q -> DBEnv m r
-
-class MonadDB m => DBUpdate m q r | q -> r where
-  update :: q -> DBEnv m r
-
-dbQuery :: DBQuery m q r => q -> m r
-dbQuery = runDBEnv . query
-
-dbUpdate :: DBUpdate m q r => q -> m r
-dbUpdate = runDBEnv . update
+dbClone :: MonadDB m => m Nexus
+dbClone = getNexus >>= liftIO . clone
 
 -- | Prepares new SQL query given as string. If there was another
 -- query prepared in this monad, it will be finished first.
@@ -144,7 +66,7 @@ kExecute values = withDBEnvSt $ \s@DBEnvSt{dbStatement} -> do
 kExecute1 :: MonadDB m => [SqlValue] -> DBEnv m ()
 kExecute1 values = do
   result <- kExecute values
-  when (result /= 1) $ withDBEnvSt $ \DBEnvSt{dbStatement} ->
+  when (result /= 1) $ withDBEnv $ \DBEnvSt{dbStatement} ->
     E.throw TooManyObjects {
         originalQuery = SQL (getQuery dbStatement) values
       , tmoExpected = 1
@@ -158,7 +80,7 @@ kExecute1 values = do
 kExecute01 :: MonadDB m => [SqlValue] -> DBEnv m Bool
 kExecute01 values = do
   result <- kExecute values
-  when (result > 1) $ withDBEnvSt $ \DBEnvSt{dbStatement} ->
+  when (result > 1) $ withDBEnv $ \DBEnvSt{dbStatement} ->
     E.throw TooManyObjects {
         originalQuery = SQL (getQuery dbStatement) values
       , tmoExpected = 1
@@ -173,7 +95,7 @@ kExecute01 values = do
 kExecute1P :: MonadDB m => [SqlValue] -> DBEnv m Integer
 kExecute1P values = do
   result <- kExecute values
-  when (result < 1) $ withDBEnvSt $ \DBEnvSt{dbStatement} ->
+  when (result < 1) $ withDBEnv $ \DBEnvSt{dbStatement} ->
     E.throw TooManyObjects {
         originalQuery = SQL (getQuery dbStatement) values
       , tmoExpected = 1
@@ -191,20 +113,19 @@ kFinish = withDBEnvSt $ \s@DBEnvSt{..} -> do
     Nothing -> return ((), s)
 
 kRunRaw :: MonadDB m => String -> DBEnv m ()
-kRunRaw sql = DBEnv $ do
-  conn <- getNexus
-  protIO mempty $ runRaw conn sql
+kRunRaw sql = withDBEnv $ \_ -> getNexus >>= \c -> liftIO (runRaw c sql)
+
+kRun :: MonadDB m => SQL -> DBEnv m Integer
+kRun (SQL sqlq values) = kPrepare sqlq >> kExecute values
+
+kRun01 :: MonadDB m => SQL -> DBEnv m Bool
+kRun01 (SQL sqlq values) = kPrepare sqlq >> kExecute01 values
+
+kGetTables :: MonadDB m => DBEnv m [String]
+kGetTables = withDBEnv $ \_ -> getNexus >>= liftIO . getTables
 
 kDescribeTable :: MonadDB m => String -> DBEnv m [(String, SqlColDesc)]
-kDescribeTable table = DBEnv $ getNexus >>= \c -> liftIO (describeTable c table)
-
-withPostgreSQL :: (MonadBaseControl IO m, MonadIO m) => String -> DBT m a -> m a
-withPostgreSQL conf m =
-  EL.bracket (liftIO $ PG.connectPostgreSQL conf) (liftIO . disconnect) $ \conn -> do
-    nex <- mkNexus conn
-    !res <- runDBT nex m
-    liftIO $ commit conn
-    return res
+kDescribeTable table = withDBEnv $ \_ -> getNexus >>= \c -> liftIO (describeTable c table)
 
 -- internals
 

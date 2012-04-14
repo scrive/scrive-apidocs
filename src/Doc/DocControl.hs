@@ -54,7 +54,7 @@ module Doc.DocControl(
 ) where
 
 import AppView
-import DB.Classes
+import DB
 import DBError
 import Doc.Action
 import Doc.CSVUtils
@@ -70,7 +70,7 @@ import InputValidation
 import File.Model
 import Kontra
 import KontraLink
-import MagicHash (MagicHash)
+import MagicHash
 import MinutesTime
 import Misc
 import Redirect

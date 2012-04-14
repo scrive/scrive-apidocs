@@ -8,7 +8,7 @@ module ScriveByMail.Action
 
 import Company.Model
 import Control.Logic
-import DB.Classes
+import DB
 import Doc.DocStateData
 import Doc.DocStorage
 import Doc.DocUtils

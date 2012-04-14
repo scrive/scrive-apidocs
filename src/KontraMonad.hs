@@ -11,7 +11,7 @@ import Happstack.Server
 
 import Context
 import Crypto.RNG
-import DB.Classes
+import DB.Core
 import Templates.Templates
 
 -- | This is for grouping things together so we won't need to

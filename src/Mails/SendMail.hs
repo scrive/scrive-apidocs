@@ -11,7 +11,7 @@ import Control.Applicative
 import Control.Monad
 
 import API.Service.Model
-import DB.Classes
+import DB
 import Crypto.RNG
 import InputValidation
 import Mails.MailsConfig

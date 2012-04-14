@@ -21,7 +21,7 @@ import Util.SignatoryLinkUtils
 import Util.HasSomeUserInfo
 import Happstack.Server.RqData
 import Doc.DocStorage
-import DB.Classes
+import DB
 import File.Model
 import MagicHash (MagicHash)
 import Kontra

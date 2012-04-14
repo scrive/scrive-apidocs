@@ -2,7 +2,7 @@ module StateHelper (runTestEnv) where
 
 import AppState
 import Crypto.RNG
-import DB.Classes
+import DB
 import Misc
 import TestKontra
 

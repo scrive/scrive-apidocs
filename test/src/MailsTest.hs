@@ -5,7 +5,7 @@ import Happstack.Server
 import Test.Framework
 
 import Crypto.RNG
-import DB.Classes
+import DB
 import Context
 import Templates.TemplatesLoader
 import TestingUtil

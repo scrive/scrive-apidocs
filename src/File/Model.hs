@@ -13,10 +13,7 @@ module File.Model (
 import Database.HDBC
 import qualified Data.ByteString.Char8 as BS
 
-import DB.Classes
-import DB.Fetcher2
-import DB.Types
-import DB.Utils
+import DB
 import File.File
 import File.FileID
 import OurPrelude

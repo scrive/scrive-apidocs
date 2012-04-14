@@ -16,7 +16,8 @@ import API.Service.Model
 
 import AppView as V
 import Crypto.RNG
-import DB.Classes
+import DB
+import DB.PostgreSQL
 import Doc.DocStateData
 import IPAddress
 import Kontra

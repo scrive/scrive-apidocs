@@ -21,7 +21,7 @@ import File.File
 import File.Model
 import Misc (concatChunks)
 import qualified Log
-import DB.Classes
+import DB
 import Control.Monad.IO.Class
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.UTF8 as BS hiding (length)

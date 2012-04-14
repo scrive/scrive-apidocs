@@ -1,10 +1,6 @@
 module Stats.Migrations where
 
-import Database.HDBC
-
-import DB.Classes
-import DB.Model
-import DB.Utils
+import DB
 import Doc.DocStateData
 import Stats.Tables
 

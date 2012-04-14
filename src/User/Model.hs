@@ -42,10 +42,7 @@ import qualified Control.Exception.Lifted as E
 
 import API.Service.Model
 import Company.Model
-import DB.Classes
-import DB.Derive
-import DB.Fetcher2
-import DB.Utils
+import DB
 import MinutesTime
 import User.Lang
 import User.Locale

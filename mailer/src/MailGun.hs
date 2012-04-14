@@ -8,7 +8,7 @@ import Control.Monad
 import Data.Maybe
 import Happstack.Server
 
-import DB.Classes
+import DB
 import Mails.Model
 import Mailer
 import Misc

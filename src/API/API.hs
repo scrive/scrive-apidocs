@@ -36,8 +36,8 @@ import KontraMonad
 import Text.JSON
 import Control.Monad.Reader
 import Control.Monad.Error
-import Crypto.RNG (CryptoRNG)
-import DB.Classes
+import Crypto.RNG
+import DB
 import Templates.Templates
 import Util.JSON
 

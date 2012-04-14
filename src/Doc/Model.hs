@@ -82,11 +82,9 @@ module Doc.Model
 
 import API.Service.Model
 import Control.Monad.Trans
-import DB.Classes
-import DB.Fetcher2
+import DB
 import MagicHash
 import Crypto.RNG
-import DB.Utils
 import File.File
 import File.FileID
 import Doc.DocUtils
@@ -98,7 +96,6 @@ import OurPrelude
 import Control.Logic
 import Doc.DocStateData
 import Doc.Invariants
-import Database.HDBC
 import Data.Maybe hiding (fromJust)
 import Misc
 import IPAddress

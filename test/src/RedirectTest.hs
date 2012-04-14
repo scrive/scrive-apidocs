@@ -6,7 +6,7 @@ import Redirect
 import Control.Applicative
 import Data.List
 import Crypto.RNG
-import DB.Classes
+import DB
 import DBError
 import Misc
 import Templates.TemplatesLoader

@@ -23,7 +23,7 @@ import qualified Test.HUnit as T
 import File.FileID
 import API.API
 import Crypto.RNG
-import DB.Classes
+import DB
 import MagicHash (MagicHash, unsafeMagicHash)
 import Company.Model
 import FlashMessage

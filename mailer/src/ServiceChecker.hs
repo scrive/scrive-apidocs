@@ -9,7 +9,8 @@ import Data.Monoid
 import qualified Control.Exception as E
 
 import Crypto.RNG
-import DB.Classes
+import DB
+import DB.PostgreSQL
 import Mails.Model
 import MinutesTime
 import Sender

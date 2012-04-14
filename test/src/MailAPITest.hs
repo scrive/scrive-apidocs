@@ -12,7 +12,7 @@ import Doc.DocStateData
 import Data.List
 
 import Crypto.RNG
-import DB.Classes
+import DB
 import MagicHash
 import Context
 import Doc.Model

@@ -7,7 +7,7 @@ import Test.Framework
 
 import API.Service.Model
 import Crypto.RNG
-import DB.Classes
+import DB
 import User.Model
 import TestingUtil
 import TestKontra

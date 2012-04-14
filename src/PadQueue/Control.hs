@@ -2,7 +2,7 @@ module PadQueue.Control (addToQueue,clearQueue,showPadQueuePage, padQueueState, 
     where
 
 import PadQueue.Model
-import DB.Classes
+import DB
 import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocUtils

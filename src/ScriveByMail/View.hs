@@ -3,7 +3,7 @@ module ScriveByMail.View where
 import Templates.Templates
 import Templates.TemplatesUtils
 import Context
-import DB.Classes
+import DB
 import Doc.DocStateData
 import Util.HasSomeUserInfo
 import Doc.DocUtils

@@ -1,9 +1,6 @@
 module Stats.Tables where
 
-import Database.HDBC
-
-import DB.Classes
-import DB.Model
+import DB
 
 tableDocStatEvents :: Table
 tableDocStatEvents = Table {

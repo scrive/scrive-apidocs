@@ -11,7 +11,7 @@ import qualified Control.Exception.Lifted as E
 import qualified Data.Map as Map
 import qualified Database.HDBC as HDBC
 
-import DB.Classes
+import DB
 import qualified Log
 
 data ForkedAction = ForkedActionStarted  {

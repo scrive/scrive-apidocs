@@ -29,7 +29,7 @@ import KontraLink
 import Templates.Templates
 import Control.Applicative
 import Data.Maybe
-import DB.Classes
+import DB
 import Misc
 import User.UserView
 import User.Model

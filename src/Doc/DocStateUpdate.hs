@@ -18,8 +18,6 @@ import DBError
 import Doc.Model
 import Doc.DocStateData
 import Kontra
---import MinutesTime
---import Misc
 import Util.SignatoryLinkUtils
 import Doc.DocStateQuery
 import qualified Data.ByteString as BS
@@ -31,7 +29,7 @@ import Doc.DocStorage
 import User.Utils
 import File.Model
 import Redirect
-import DB.Classes
+import DB
 import Data.Either
 import Stats.Control
 import EvidenceLog.Model

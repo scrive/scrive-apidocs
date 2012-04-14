@@ -22,11 +22,7 @@ import Happstack.State (Version, deriveSerialize)
 import qualified Codec.Binary.Base16 as B16
 import qualified Data.ByteString as BS
 
-import DB.Classes
-import DB.Derive
-import DB.Fetcher2
-import DB.Utils
-import DB.Types
+import DB
 import Misc
 import User.Password
 import User.UserID

@@ -14,8 +14,9 @@ import qualified Data.ByteString as BS
 
 import AppDB
 import Crypto.RNG
+import DB
 import DB.Checks
-import DB.Classes
+import DB.PostgreSQL
 
 -- Note: if you add new testsuites here, please add them in a similar
 -- manner to existing ones, i.e. wrap them around ifdefs and add appropriate
@@ -200,7 +201,7 @@ allTests = tail tests
       , ("docjson", const $ const documentJSONTests)
 #endif
 #ifndef NO_SQLUTILS
-      , ("sqlutil", const $ const sqlUtilsTests )
+      , ("sqlutil", const sqlUtilsTests )
 #endif
 #ifndef NO_STATS
       , ("stats", const $ statsTests)

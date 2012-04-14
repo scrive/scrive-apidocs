@@ -3,7 +3,7 @@ module User.Utils where
 import Control.Monad.State
 import Data.Functor
 
-import DB.Classes
+import DB
 import Doc.DocStateData
 import Company.Model
 import Kontra

@@ -1,9 +1,6 @@
 module PadQueue.Tables (tablePadQueue) where
 
-import Database.HDBC
-
-import DB.Classes
-import DB.Model
+import DB
 
 tablePadQueue :: Table
 tablePadQueue = Table {

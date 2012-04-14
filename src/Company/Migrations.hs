@@ -1,7 +1,6 @@
 module Company.Migrations where
 
-import DB.Classes
-import DB.Model
+import DB
 import Company.Tables
 
 addEmailBrandingToCompany :: Migration

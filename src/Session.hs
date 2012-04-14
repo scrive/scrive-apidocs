@@ -47,7 +47,7 @@ import ELegitimation.ELegTransaction
 import Data.Typeable
 import Cookies
 import Company.Model
-import DB.Classes hiding (query, update)
+import DB hiding (getOne, query, update)
 import MagicHash (MagicHash)
 import Util.MonadUtils
 import Doc.SignatoryLinkID

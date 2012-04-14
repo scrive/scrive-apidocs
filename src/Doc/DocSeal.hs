@@ -42,7 +42,7 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import File.Model
-import DB.Classes
+import DB
 import Control.Applicative
 import EvidenceLog.Model
 import Control.Concurrent

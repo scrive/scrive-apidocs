@@ -71,7 +71,7 @@ import Data.Maybe
 import Text.JSON
 import Data.List (sortBy)
 import File.Model
-import DB.Classes
+import DB
 import PadQueue.Model
 import Text.JSON.Gen hiding (value)
 import qualified Text.JSON.Gen as J

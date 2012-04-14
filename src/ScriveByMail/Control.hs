@@ -1,15 +1,11 @@
-module ScriveByMail.Control 
-       (
-
-         handleMailAPI,
-         handleConfirmDelay
-       )
-       
-       where
+module ScriveByMail.Control (
+    handleMailAPI
+  , handleConfirmDelay
+  ) where
 
 import Company.Model
 import CompanyAccounts.CompanyAccountsControl
-import DB.Classes
+import DB
 import Doc.DocStateData
 import Kontra
 import Control.Monad.Trans

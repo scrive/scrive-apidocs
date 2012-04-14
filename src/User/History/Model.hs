@@ -16,17 +16,12 @@ module User.History.Model (
   ) where
 
 import Data.List (intersperse)
-import Database.HDBC
 import Text.JSON
 
 import qualified Paths_kontrakcja as Paths
 import qualified Data.Version as Ver
 
-import DB.Classes
-import DB.Derive
-import DB.Fetcher2
-import DB.Utils
-
+import DB
 import IPAddress
 import MinutesTime
 import Misc

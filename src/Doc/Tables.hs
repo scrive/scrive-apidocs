@@ -1,9 +1,6 @@
 module Doc.Tables where
 
-import Database.HDBC
-
-import DB.Classes
-import DB.Model
+import DB
 
 tableDocuments :: Table
 tableDocuments = Table {

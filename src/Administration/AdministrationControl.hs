@@ -54,7 +54,7 @@ import Company.Model
 import KontraLink
 import MinutesTime
 import System.Directory
-import DB.Classes
+import DB
 import User.UserControl
 import User.UserView
 import User.Model

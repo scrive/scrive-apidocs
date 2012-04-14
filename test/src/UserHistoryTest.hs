@@ -5,7 +5,7 @@ import TestingUtil
 import IPAddress
 import Misc
 import Crypto.RNG
-import DB.Classes
+import DB
 import MinutesTime
 import User.Model
 import User.UserControl

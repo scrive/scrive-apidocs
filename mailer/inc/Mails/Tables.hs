@@ -4,10 +4,7 @@ module Mails.Tables (
   , tableMailEvents
   ) where
 
-import Database.HDBC
-
-import DB.Classes
-import DB.Model
+import DB
 
 mailerTables :: [Table]
 mailerTables = [

@@ -10,7 +10,7 @@ import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit.Base (Assertion)
 import TestingUtil
 import Crypto.RNG
-import DB.Classes
+import DB
 
 evidenceLogTests :: (Nexus, CryptoRNGState) -> Test
 evidenceLogTests _ = testGroup "Evidence Log" [

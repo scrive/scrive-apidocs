@@ -10,7 +10,7 @@ import Text.JSON (JSValue(..), toJSObject, showJSON)
 import ActionSchedulerState
 import AppView
 import Crypto.RNG
-import DB.Classes hiding (update, query)
+import DB hiding (update, query)
 import Doc.Action
 import Doc.Model
 import Company.Model
