@@ -19,8 +19,7 @@ import Control.Monad.Error
 import Control.Monad.State
 import Data.Maybe
 import Happstack.Server hiding (mkHeaders, getHeader, method, path)
-import Happstack.Server.Internal.Monads (FilterFun, ununWebT, runServerPartT,
-  unFilterFun)
+import Happstack.Server.Internal.Monads
 import System.FilePath
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BSU
@@ -40,19 +39,21 @@ import IPAddress
 import Templates.TemplatesLoader
 import qualified MemCache
 import User.Locale
+import Util.FinishWith
 import qualified Data.Map as Map
+import qualified Control.Exception.Lifted as E
 
 type TestEnv = CryptoRNGT (DBT IO)
 
-runTestKontraHelper :: Request -> Context -> Kontra a -> TestEnv (Either Response a, Context, FilterFun Response)
+runTestKontraHelper :: Request -> Context -> Kontra a -> TestEnv (a, Context, FilterFun Response)
 runTestKontraHelper rq ctx tk = do
   let noflashctx = ctx { ctxflashmessages = [] }
   mres <- mapCryptoRNGT (mapDBT $ \m -> ununWebT $ runServerPartT m rq) $
     runStateT (unKontraPlus $ unKontra tk) noflashctx
   case mres of
     Nothing -> fail "runTestKontraHelper mzero"
-    Just (Right (res, ctx'), fs) -> return (Right res, ctx', fs)
-    Just (Left res, fs) -> return (Left res, noflashctx, fs)
+    Just (Left _res, _fs) -> fail "This should never happen since we don't use finishWith"
+    Just (Right (res, ctx'), fs) -> return (res, ctx', fs)
 
 -- | Typeclass for running handlers within TestKontra monad
 class RunnableTestKontra a where
@@ -60,17 +61,15 @@ class RunnableTestKontra a where
 
 instance RunnableTestKontra a where
   runTestKontra rq ctx tk = do
-    (eres, ctx', _) <- runTestKontraHelper rq ctx tk
-    case eres of
-      Right res -> return (res, ctx')
-      Left  _   -> error "finishWith called in function that doesn't return Response"
+    (res, ctx', _) <- runTestKontraHelper rq ctx tk
+      `E.catch` (\(FinishWith _ _) -> error "finishWith called in function that doesn't return Response")
+    return (res, ctx')
 
 instance RunnableTestKontra Response where
   runTestKontra rq ctx tk = do
-    (eres, ctx', f) <- runTestKontraHelper rq ctx tk
-    case eres of
-      Right res -> return (unFilterFun f res, ctx')
-      Left  res -> return (unFilterFun f res, ctx')
+    (res, ctx', f) <- runTestKontraHelper rq ctx tk
+      `E.catch` (\(FinishWith res ctx') -> return (res, ctx', filterFun id))
+    return (unFilterFun f res, ctx')
 
 -- Various helpers for constructing appropriate Context/Request
 

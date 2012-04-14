@@ -31,6 +31,7 @@ import qualified Log (error, debug)
 import qualified FlashMessage as F
 import qualified MemCache
 import qualified TrustWeaver as TW
+import Util.FinishWith
 import Util.FlashUtil
 import Util.KontraLinkUtils
 import File.FileID
@@ -191,6 +192,9 @@ appHandler handleRoutes appConf appGlobals = measureResponseTime $
     routeHandlers ctx = runKontraPlus ctx $ do
       res <- (Right <$> handleRoutes `mplus` E.throwIO Respond404) `E.catches` [
           E.Handler handleKontraError
+        , E.Handler $ \(FinishWith res ctx') -> do
+            modifyContext $ const ctx'
+            return $ Right res
         , E.Handler $ \(e::E.SomeException) -> do
           Log.error $ "Exception caught in routeHandlers: " ++ show e
           handleKontraError InternalError

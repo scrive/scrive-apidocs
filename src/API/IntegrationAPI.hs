@@ -30,7 +30,7 @@ import Data.Maybe
 import DB
 import Doc.Model
 import Doc.DocStateData
-import Happstack.Server (Response, finishWith, askRq, rqUri, look, toResponseBS)
+import Happstack.Server (Response, askRq, rqUri, look, toResponseBS)
 import Happstack.StaticRouting(Route, dir, choice)
 import KontraLink
 import MinutesTime
@@ -60,6 +60,7 @@ import Util.MonadUtils
 import Templates.Templates
 import Stats.Control
 import File.Model
+import Util.FinishWith
 import Util.JSON
 import Text.JSON.String
 import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
@@ -455,8 +456,9 @@ connectUserToSessionPost sid uid ssid = do
     when (not matchingService) internalError
     loaded <- loadServiceSession (Right uid) ssid
     -- just send back empty string
-    if loaded then finishWith $ toResponseBS (BS.fromString "text/html;charset=utf-8") (BSL.fromString "")
-              else internalError
+    if loaded
+       then finishWith $ return $ toResponseBS (BS.fromString "text/html;charset=utf-8") (BSL.fromString "")
+       else internalError
 
 connectUserToSessionGet :: Kontrakcja m => ServiceID -> UserID -> SessionId -> m Response
 connectUserToSessionGet _sid _uid _ssid = do

@@ -88,7 +88,7 @@ instance TemplatesMonad KontraPlus where
 -- Since we use static routing, there is no need for mzero inside a
 -- handler. Instead we signal errors explicitly through 'KontraError'.
 newtype Kontra a = Kontra { unKontra :: KontraPlus a }
-  deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadIO, ServerMonad, WebMonad Response, CryptoRNG, KontraMonad, MonadDB, TemplatesMonad)
+  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadIO, MonadDB, ServerMonad, KontraMonad, TemplatesMonad)
 
 instance Kontrakcja Kontra
 

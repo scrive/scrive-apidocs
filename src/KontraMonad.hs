@@ -27,7 +27,6 @@ class ( Applicative m
       , MonadIO m
       , ServerMonad m
       , TemplatesMonad m
-      , WebMonad Response m
       ) => Kontrakcja m
 
 class (Functor m, Monad m) => KontraMonad m where

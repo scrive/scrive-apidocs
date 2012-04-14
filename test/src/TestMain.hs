@@ -233,7 +233,7 @@ testMany (args, ts) = Log.withLogger $ do
   withPostgreSQL pgconf $ do
     performDBChecks Log.debug kontraTables kontraMigrations
     nex <- getNexus
-    liftIO $ flip E.finally (defaultMainWithArgs (map ($ (nex, rng)) ts) args) $ do
+    liftIO $ E.finally (defaultMainWithArgs (map ($ (nex, rng)) ts) args) $ do
       stats <- getNexusStats nex
       putStrLn $ "SQL: " ++ show stats
 
