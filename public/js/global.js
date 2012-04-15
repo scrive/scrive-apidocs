@@ -323,7 +323,7 @@ safeReady(function() {
 //shows the video on the front page
 safeReady(function() {
   $(".campaign-play-video").click(function() {
-    window.open('http://player.vimeo.com/video/37373913', '', 'scrollbars=no,menubar=no,height=500,width=700,resizable=yes,toolbar=no,location=no,status=no');
+    window.open('https://player.vimeo.com/video/37373913', '', 'scrollbars=no,menubar=no,height=500,width=700,resizable=yes,toolbar=no,location=no,status=no');
     return false;
   });
 });

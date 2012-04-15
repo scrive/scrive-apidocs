@@ -948,7 +948,7 @@ window.DocumentSignView = Backbone.View.extend({
           var sbox = $('<div class="sbox" />');
           var video = $('<div class="video" />');
           sbox.append(video);
-          video.append('<iframe src="http://player.vimeo.com/video/37373913" width="620" height="330" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>');
+          video.append('<iframe src="https://player.vimeo.com/video/37373913" width="620" height="330" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>');
           this.container.find(".share").append(sbox);
           this.container.addClass("just-signed");
       } else {
