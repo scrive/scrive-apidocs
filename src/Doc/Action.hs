@@ -84,7 +84,7 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc = do
     _ | allSignatoriesSigned doc -> do
       Log.docevent $ "All have signed; " ++ show documentstatus ++ " -> Closed: " ++ show documentid
       time <- ctxtime `liftM` getContext
-      closeddoc <- guardRightM $ dbUpdate $ CloseDocument documentid (SystemActor time)
+      closeddoc <- guardRightM $ dbUpdate $ CloseDocument documentid (systemActor time)
       Log.docevent $ "Pending -> Closed; Sending emails: " ++ show documentid
       _ <- addDocumentCloseStatEvents closeddoc
       author <- getDocAuthor closeddoc
@@ -93,7 +93,7 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc = do
         case enewdoc of
           Right newdoc -> sendClosedEmails newdoc
           Left errmsg -> do
-            _ <- dbUpdate $ ErrorDocument documentid errmsg (SystemActor time)
+            _ <- dbUpdate $ ErrorDocument documentid errmsg (systemActor time)
             Log.server $ "Sending seal error emails for document #" ++ show documentid ++ ": " ++ documenttitle
             sendDocumentErrorEmail closeddoc author
         return ()
@@ -173,7 +173,7 @@ saveDocumentForSignatories doc@Document{documentsignatorylinks} =
         Nothing -> return $ Right doc'
         Just user -> do
           Context{ctxtime, ctxipnumber} <- getContext
-          let actor = SignatoryActor ctxtime ctxipnumber (Just $ userid user) sigemail signatorylinkid
+          let actor = signatoryActor ctxtime ctxipnumber (Just $ userid user) sigemail signatorylinkid
           udoc <- dbUpdate $ SaveDocumentForUser documentid user signatorylinkid actor
           return udoc
 
@@ -284,7 +284,7 @@ sendInvitationEmail1 ctx document signatorylink = do
       , mailInfo = Invitation documentid signatorylinkid
       , from = documentservice document
   }
-  dbUpdate $ AddInvitationEvidence documentid signatorylinkid (SystemActor (ctxtime ctx))
+  dbUpdate $ AddInvitationEvidence documentid signatorylinkid (systemActor (ctxtime ctx))
 
 {- |
     Send a reminder email (and update the modification time on the document)

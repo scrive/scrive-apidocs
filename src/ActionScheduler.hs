@@ -195,7 +195,7 @@ timeoutDocuments :: MinutesTime -> ActionScheduler ()
 timeoutDocuments now = do
     docs <- dbQuery $ GetTimeoutedButPendingDocuments now
     forM_ docs $ \doc -> do
-        edoc <- dbUpdate $ TimeoutDocument (documentid doc) (SystemActor now)
+        edoc <- dbUpdate $ TimeoutDocument (documentid doc) (systemActor now)
         case edoc of
           Left _ -> return ()
           Right doc' -> do

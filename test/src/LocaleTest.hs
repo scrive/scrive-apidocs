@@ -134,7 +134,7 @@ createTestElegDoc user ctxtime = do
   doc <- addRandomDocumentWithAuthorAndCondition user
            (\d -> documentstatus d == Preparation
                   && documentfunctionality d == AdvancedFunctionality)
-  (Right elegdoc) <- dbUpdate $ SetDocumentIdentification (documentid doc) [ELegitimationIdentification] (SystemActor ctxtime)
+  (Right elegdoc) <- dbUpdate $ SetDocumentIdentification (documentid doc) [ELegitimationIdentification] (systemActor ctxtime)
   return elegdoc
 
 createTestUser :: Region -> Lang -> TestEnv User

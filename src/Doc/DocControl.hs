@@ -192,7 +192,7 @@ handleMismatch doc sid msg sfn sln spn = do
         let Just sl = getSigLinkFor doc sid
         Log.eleg $ "Information from eleg did not match information stored for signatory in document." ++ show msg
         Right newdoc <- dbUpdate $ CancelDocument (documentid doc) (ELegDataMismatch msg sid sfn sln spn)
-                        (SignatoryActor (ctxtime ctx)
+                        (signatoryActor (ctxtime ctx)
                          (ctxipnumber ctx)
                          (maybesignatory sl)
                          (getEmail sl)
@@ -210,7 +210,7 @@ handleAfterSigning document@Document{documentid} signatorylinkid = do
   maybeuser <- dbQuery $ GetUserByEmail (currentServiceID ctx) (Email $ getEmail signatorylink)
   case maybeuser of
     Just user | isJust $ userhasacceptedtermsofservice user-> do
-      let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx)  (maybesignatory signatorylink) (getEmail signatorylink) (signatorylinkid)
+      let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx)  (maybesignatory signatorylink) (getEmail signatorylink) (signatorylinkid)
       _ <- dbUpdate $ SaveDocumentForUser documentid user signatorylinkid actor
       return ()
     _ -> return ()
@@ -284,7 +284,7 @@ handleSignShow2 documentid
   switchLocale (getLocale document)
   invitedlink <- guardJust $ getSigLinkFor document signatorylinkid
   _ <- dbUpdate $ MarkDocumentSeen documentid signatorylinkid magichash
-       (SignatoryActor ctxtime ctxipnumber (maybesignatory invitedlink) (getEmail invitedlink) signatorylinkid)
+       (signatoryActor ctxtime ctxipnumber (maybesignatory invitedlink) (getEmail invitedlink) signatorylinkid)
   _ <- addSignStatLinkEvent document invitedlink
 
   ctx <- getContext
@@ -1000,7 +1000,7 @@ handleDeleteSigAttach docid siglinkid = do
   let email = getEmail siglink
   Log.debug $ "delete Sig attachment " ++ (show fid) ++ "  " ++ email
   _ <- dbUpdate $ DeleteSigAttachment docid siglinkid fid
-       (SignatoryActor ctxtime ctxipnumber (maybesignatory siglink) email siglinkid)
+       (signatoryActor ctxtime ctxipnumber (maybesignatory siglink) email siglinkid)
   return $ LinkSignDoc doc siglink
 
 handleSigAttach :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m KontraLink
@@ -1020,7 +1020,7 @@ handleSigAttach docid siglinkid = do
   ctx <- getContext
   content <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
   file <- dbUpdate $ NewFile attachname content
-  let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory siglink) email siglinkid
+  let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory siglink) email siglinkid
   d <- guardRightM $ dbUpdate $ SaveSigAttachment docid siglinkid attachname (fileid file) actor
   return $ LinkSignDoc d siglink
 
@@ -1034,7 +1034,7 @@ jsonDocument did = do
     when_ (isJust mdoc && isJust msiglink) $ do 
          let sl = fromJust msiglink 
          dbUpdate $ MarkDocumentSeen did (signatorylinkid sl) (signatorymagichash sl)
-              (SignatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
+              (signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
     cttime <- liftIO $ getMinutesTime
     case mdoc of
          Nothing -> return $ JSObject $ toJSObject [("error",JSString $ toJSString "No document avaible")]

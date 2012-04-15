@@ -156,15 +156,15 @@ testNonLastPersonSigningADocumentRemainsPending = do
                    (signatorydetails . fromJust $ getAuthorSigLink doc', [SignatoryAuthor])
                  , (mkSigDetails "Fred" "Frog" "fred@frog.com", [SignatoryPartner])
                  , (mkSigDetails "Gordon" "Gecko" "gord@geck.com", [SignatoryPartner])
-               ]) (SystemActor $ documentctime doc')
+               ]) (systemActor $ documentctime doc')
 
-  Right doc'' <- randomUpdate $ PreparationToPending (documentid doc') (SystemActor (documentctime doc'))
+  Right doc'' <- randomUpdate $ PreparationToPending (documentid doc') (systemActor (documentctime doc'))
 
   let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
       siglink = head $ filter isUnsigned (documentsignatorylinks doc'')
 
   Right doc <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink) 
-               (SignatoryActor (documentctime doc') (ctxipnumber ctx) (maybesignatory siglink) (getEmail $ siglink) (signatorylinkid siglink))
+               (signatoryActor (documentctime doc') (ctxipnumber ctx) (maybesignatory siglink) (getEmail $ siglink) (signatorylinkid siglink))
 
   assertEqual "Two left to sign" 2 (length $ filter isUnsigned (documentsignatorylinks doc))
 
@@ -197,16 +197,16 @@ testLastPersonSigningADocumentClosesIt = do
   Right _ <- randomUpdate $ ResetSignatoryDetails (documentid doc') ([
                    (signatorydetails . fromJust $ getAuthorSigLink doc', [SignatoryAuthor])
                  , (mkSigDetails "Fred" "Frog" "fred@frog.com", [SignatoryPartner])
-               ]) (SystemActor $ documentctime doc')
+               ]) (systemActor $ documentctime doc')
 
 
-  Right doc'' <- randomUpdate $ PreparationToPending (documentid doc') (SystemActor (documentctime doc'))
+  Right doc'' <- randomUpdate $ PreparationToPending (documentid doc') (systemActor (documentctime doc'))
 
   let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
       siglink = head $ filter isUnsigned (documentsignatorylinks doc'')
 
   Right doc <- randomUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid siglink) (signatorymagichash siglink) 
-               (SignatoryActor (documentctime doc') (ctxipnumber ctx) (maybesignatory siglink) (getEmail siglink) (signatorylinkid siglink))
+               (signatoryActor (documentctime doc') (ctxipnumber ctx) (maybesignatory siglink) (getEmail siglink) (signatorylinkid siglink))
 
   assertEqual "One left to sign" 1 (length $ filter isUnsigned (documentsignatorylinks doc))
 

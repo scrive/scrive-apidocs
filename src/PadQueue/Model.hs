@@ -19,8 +19,8 @@ import Util.MonadUtils
 
 type PadQueue = Maybe (DocumentID,SignatoryLinkID)
 
-data Actor a => AddToPadQueue a = AddToPadQueue UserID DocumentID SignatoryLinkID a
-instance (Actor a, MonadDB m) => DBUpdate m (AddToPadQueue a) () where
+data AddToPadQueue = AddToPadQueue UserID DocumentID SignatoryLinkID Actor
+instance MonadDB m => DBUpdate m AddToPadQueue () where
   update (AddToPadQueue uid did slid a) = do
     update $ ClearPadQueue uid a
     kPrepare $ "INSERT INTO padqueue( user_id, document_id, signatorylink_id) VALUES(?,?,?)"
@@ -33,8 +33,8 @@ instance (Actor a, MonadDB m) => DBUpdate m (AddToPadQueue a) () where
                 a
     return ()
 
-data Actor a => ClearPadQueue a = ClearPadQueue UserID a
-instance (Actor a, MonadDB m) => DBUpdate m (ClearPadQueue a) () where
+data ClearPadQueue = ClearPadQueue UserID Actor
+instance MonadDB m => DBUpdate m ClearPadQueue () where
   update (ClearPadQueue uid a) = do
     pq <- query $ GetPadQueue uid
     when_ (isJust pq) $ do 
@@ -50,7 +50,7 @@ instance (Actor a, MonadDB m) => DBUpdate m (ClearPadQueue a) () where
 
 data GetPadQueue = GetPadQueue UserID
 instance MonadDB m => DBQuery m GetPadQueue PadQueue where
-  query ( GetPadQueue uid) = do
+  query (GetPadQueue uid) = do
     kPrepare $ "SELECT document_id, signatorylink_id FROM padqueue WHERE user_id = ?"
     _ <- kExecute [toSql uid]
     fetchPadQueue

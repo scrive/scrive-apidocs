@@ -71,7 +71,7 @@ instance FromJSON DraftData where
                                  }
             _ -> return Nothing
 
-applyDraftDataToDocument :: (Actor a) =>  Kontrakcja m =>  Document -> DraftData -> a -> m (Either String Document)
+applyDraftDataToDocument :: Kontrakcja m =>  Document -> DraftData -> Actor -> m (Either String Document)
 applyDraftDataToDocument doc draft actor = do
     _ <- dbUpdate $ UpdateDraft (documentid doc) ( doc {
                                   documenttitle = title draft

@@ -217,7 +217,7 @@ createDocFromTemplate templateid title user mcompany time = do
   ctx <- getContext
   sid <- serviceid <$> service <$> ask
   let mecid = maybe Nothing companyexternalid mcompany
-  let ia = IntegrationAPIActor time (ctxipnumber ctx) sid (unExternalCompanyID <$> mecid)
+  let ia = integrationAPIActor time (ctxipnumber ctx) sid (unExternalCompanyID <$> mecid)
   edoc <- dbUpdate $ SignableFromDocumentIDWithUpdatedAuthor user mcompany templateid ia
   when (isLeft edoc) $
     throwApiError API_ERROR_OTHER $ "Cannot create document!"
@@ -239,7 +239,7 @@ createDocFromFiles title doctype files user mcompany time = do
   ctx <- getContext
   sid <- serviceid <$> service <$> ask
   let mecid = maybe Nothing companyexternalid mcompany
-  let ia = IntegrationAPIActor time (ctxipnumber ctx) sid (unExternalCompanyID <$> mecid)
+  let ia = integrationAPIActor time (ctxipnumber ctx) sid (unExternalCompanyID <$> mecid)
   edoc <- dbUpdate $ NewDocument user mcompany title doctype 0 ia
   case edoc of
     Left _ -> throwApiError API_ERROR_OTHER $ "Cannot create document"
@@ -258,7 +258,7 @@ updateDocumentWithDocumentUI :: Kontrakcja m => Document -> IntegrationAPIFuncti
 updateDocumentWithDocumentUI doc = do
   ctx <- getContext    
   sid <- serviceid <$> service <$> ask
-  let actor = IntegrationAPIActor (ctxtime ctx) (ctxipnumber ctx) sid Nothing
+  let actor = integrationAPIActor (ctxtime ctx) (ctxipnumber ctx) sid Nothing
   mailfooter <- fromJSONField "mailfooter"
   ndoc <- dbUpdate $ SetDocumentUI (documentid doc) ((documentui doc) {documentmailfooter = mailfooter}) actor
   return $ either (const doc) id ndoc
@@ -292,7 +292,7 @@ createAPIDocument comp' (authorTMP:signTMPS) tags mlocale createFun = do
     mdoc <- createFun docAuthor (Just comp) now
     when (isNothing mdoc) $ throwApiError API_ERROR_OTHER "Problem creating a document | This may be because the company and author don't match"
     let doc = fromJust mdoc
-        actor = IntegrationAPIActor (ctxtime ctx) (ctxipnumber ctx) sid (Just cid)
+        actor = integrationAPIActor (ctxtime ctx) (ctxipnumber ctx) sid (Just cid)
     _ <- dbUpdate $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality actor
     _ <- dbUpdate $ SetDocumentTags (documentid doc) tags actor
     when (isJust mlocale) $
@@ -426,7 +426,7 @@ setDocumentTag =  do
   sid <- serviceid <$> service <$> ask
   Context{ctxtime,ctxipnumber} <- getContext
   let tags = addTag (documenttags doc) (fromJust mtag)
-      actor = IntegrationAPIActor ctxtime ctxipnumber sid Nothing
+      actor = integrationAPIActor ctxtime ctxipnumber sid Nothing
   res <- dbUpdate $ SetDocumentTags (documentid doc) tags actor
   when (isLeft res) $ throwApiError API_ERROR_NO_USER $ "Changing tag problem:" ++ fromLeft res
   return $ toJSObject []
@@ -442,7 +442,7 @@ removeDocument = do
                      (dbQuery . GetUserByID)
                      (getAuthorSigLink doc >>= maybesignatory)
     when (isNothing mauthor) $ throwApiError API_ERROR_NO_USER $ "Error while removing a document: Failed to find author"
-    let actor = IntegrationAPIActor ctxtime ctxipnumber sid Nothing
+    let actor = integrationAPIActor ctxtime ctxipnumber sid Nothing
     res <- dbUpdate $ ArchiveDocument (fromJust mauthor) (documentid doc) actor
     when (isLeft res) $ throwApiError API_ERROR_NO_DOCUMENT $ "Error while removing a document: " ++ fromLeft res
     return $ toJSObject []

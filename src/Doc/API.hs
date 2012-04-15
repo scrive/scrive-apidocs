@@ -79,7 +79,7 @@ documentNew = api $ do
   ctx <- getContext
   let now = ctxtime ctx
   
-  let aa = AuthorActor now (ctxipnumber ctx) (userid user) (getEmail user)
+  let aa = authorActor now (ctxipnumber ctx) (userid user) (getEmail user)
   d1 <- apiGuardL $ dbUpdate $ NewDocument user mcompany filename doctype 1 aa
   
   content <- apiGuardL' BadInput $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
@@ -141,7 +141,7 @@ documentChangeMetadata docid _ = api $ do
   json <- apiGuard $ decode jstring
   ctx <- getContext
   let now = ctxtime ctx
-  let actor = AuthorActor now (ctxipnumber ctx) (userid user) (getEmail user)
+  let actor = authorActor now (ctxipnumber ctx) (userid user) (getEmail user)
   d <- case jsget "title" json of
     Left _ -> return doc
     Right (JSString s) ->
@@ -205,7 +205,7 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   content <- apiGuardL' BadInput $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
   
   file <- lift $ dbUpdate $ NewFile (basename filename) content
-  let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) email slid
+  let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) email slid
   d <- apiGuardL $ dbUpdate $ SaveSigAttachment (documentid doc) sid aname (fileid file) actor
   
   -- let's dig the attachment out again
@@ -231,7 +231,7 @@ documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
   fileid <- apiGuard' ActionNotAvailable $ signatoryattachmentfile sigattach
 
   d <- apiGuardL $ dbUpdate $ DeleteSigAttachment (documentid doc) sid fileid
-       (SignatoryActor ctxtime ctxipnumber muid email sid)
+       (signatoryActor ctxtime ctxipnumber muid email sid)
   
   -- let's dig the attachment out again
   sigattach' <- apiGuard $ getSignatoryAttachment d sid aname

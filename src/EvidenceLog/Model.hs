@@ -1,24 +1,22 @@
-module EvidenceLog.Model 
-       (
-         EvidenceEventType(..),
-         InsertEvidenceEvent(..),
-         Actor(..),
-         AuthorActor(..),
-         SignatoryActor(..),
-         SystemActor(..),
-         MailAPIActor(..),  
-         MailSystemActor(..),
-         IntegrationAPIActor(..),
-         UserActor(..),
-         AdminActor(..),
-         GetEvidenceLog(..),
-         DocumentEvidenceEvent(..),
-         copyEvidenceLogToNewDocument,
-         mkAuthorActor,
-         mkAdminActor,
-         htmlDocFromEvidenceLog
-       )
-       where
+module EvidenceLog.Model (
+    Actor(actorTime, actorIP, actorUserID, actorEmail, actorSigLinkID, actorAPIString, actorWho)
+  , authorActor
+  , signatoryActor
+  , systemActor
+  , mailAPIActor
+  , mailSystemActor
+  , integrationAPIActor
+  , userActor
+  , adminActor
+  , EvidenceEventType(..)
+  , InsertEvidenceEvent(..)
+  , GetEvidenceLog(..)
+  , DocumentEvidenceEvent(..)
+  , copyEvidenceLogToNewDocument
+  , mkAuthorActor
+  , mkAdminActor
+  , htmlDocFromEvidenceLog
+  ) where
 
 import API.Service.Model
 import Context
@@ -35,153 +33,138 @@ import qualified Data.ByteString.UTF8 as BS
 import Templates.Templates
 import qualified Templates.Fields as F
 
--- | Actor describes who is performing an action and when
-class Actor a where
-  -- | the time the action is taken
-  actorTime      :: a -> MinutesTime
-  -- | If the action is originated on another machine, its IP
-  actorIP        :: a -> Maybe IPAddress
-  actorIP _      = Nothing
-  -- | If the action is originated by a logged in user
-  actorUserID    :: a -> Maybe UserID
-  actorUserID _  = Nothing
-  -- | If the action is originated by a person with email address
-  actorEmail     :: a -> Maybe String
-  actorEmail _   = Nothing
-  -- | If the action is originated by a signatory on the document being acted on
-  actorSigLinkID :: a -> Maybe SignatoryLinkID
-  actorSigLinkID _ = Nothing
-  -- | If the action is originated by an api call, a string to describe it
-  actorAPIString :: a -> Maybe String
-  actorAPIString _ = Nothing
-  -- | A textual string describing this actor, used for building evidence strings
-  actorWho       :: a -> String
-
--- | The Scrive System acting on its own
-data SystemActor = SystemActor MinutesTime
-                   deriving (Eq, Ord, Show)
-instance Actor SystemActor where
-  actorTime (SystemActor t) = t
-  actorWho _ = "the Scrive system"
-
-mkAuthorActor :: Context -> Maybe AuthorActor
+mkAuthorActor :: Context -> Maybe Actor
 mkAuthorActor ctx = case ctxmaybeuser ctx of
-  Just user -> Just $ AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (getEmail user)
+  Just user -> Just $ authorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (getEmail user)
   Nothing   -> Nothing
 
-mkAdminActor :: Context -> Maybe AdminActor
+mkAdminActor :: Context -> Maybe Actor
 mkAdminActor ctx = case ctxmaybeuser ctx of
-  Just user -> Just $ AdminActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (getEmail user)
+  Just user -> Just $ adminActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (getEmail user)
   Nothing   -> Nothing
+
+-- | Actor describes who is performing an action and when
+data Actor = Actor {
+    -- | the time the action is taken
+    actorTime      :: MinutesTime
+    -- | If the action is originated on another machine, its IP
+  , actorIP        :: Maybe IPAddress
+    -- | If the action is originated by a logged in user
+  , actorUserID    :: Maybe UserID
+    -- | If the action is originated by a person with email address
+  , actorEmail     :: Maybe String
+    -- | If the action is originated by a signatory on the document being acted on
+  , actorSigLinkID :: Maybe SignatoryLinkID
+    -- | If the action is originated by an api call, a string to describe it
+  , actorAPIString :: Maybe String
+    -- | A textual string describing this actor, used for building evidence strings
+  , actorWho       :: String
+  } deriving Show
+
+systemActor :: MinutesTime -> Actor
+systemActor time = Actor {
+    actorTime = time
+  , actorIP = Nothing
+  , actorUserID = Nothing
+  , actorEmail = Nothing
+  , actorSigLinkID = Nothing
+  , actorAPIString = Nothing
+  , actorWho = "the Scrive system"
+}
 
 -- | For an action that requires an operation on a document and an
 -- author to be logged in
-data AuthorActor = AuthorActor 
-                   MinutesTime 
-                   IPAddress 
-                   UserID 
-                   String -- ^ Email address
-                   deriving (Eq, Ord, Show)
-instance Actor AuthorActor where
-  actorTime   (AuthorActor t _ _ _) = t
-  actorIP     (AuthorActor _ i _ _) = Just i
-  actorUserID (AuthorActor _ _ u _) = Just u
-  actorEmail  (AuthorActor _ _ _ e) = Just e
-  actorWho    (AuthorActor _ _ _ e) = "the author (" ++ e ++ ")"
+authorActor :: MinutesTime -> IPAddress -> UserID -> String -> Actor
+authorActor time ip uid email = Actor {
+    actorTime = time
+  , actorIP = Just ip
+  , actorUserID = Just uid
+  , actorEmail = Just email
+  , actorSigLinkID = Nothing
+  , actorAPIString = Nothing
+  , actorWho = "the author (" ++ email ++ ")"
+}
 
 -- | For an action requiring a signatory with siglinkid and token (such as signing)
-data SignatoryActor = SignatoryActor 
-                      MinutesTime 
-                      IPAddress 
-                      (Maybe UserID) 
-                      String -- ^ Email address
-                      SignatoryLinkID
-                   deriving (Eq, Ord, Show)
-instance Actor SignatoryActor where
-  actorTime      (SignatoryActor t _ _ _ _) = t
-  actorIP        (SignatoryActor _ i _ _ _) = Just i
-  actorUserID    (SignatoryActor _ _ u _ _) = u
-  actorEmail     (SignatoryActor _ _ _ e _) = Just e
-  actorSigLinkID (SignatoryActor _ _ _ _ s) = Just s
-  actorWho       (SignatoryActor _ _ _ e _) = "the signatory with email " ++ show e
-  
+signatoryActor :: MinutesTime -> IPAddress -> Maybe UserID -> String -> SignatoryLinkID -> Actor
+signatoryActor time ip muid email slid = Actor {
+    actorTime = time
+  , actorIP = Just ip
+  , actorUserID = muid
+  , actorEmail = Just email
+  , actorSigLinkID = Just slid
+  , actorAPIString = Nothing
+  , actorWho = "the signatory with email \"" ++ email ++ "\""
+}
+
 -- | For documents created using mailapi/scrivebymail
-data MailAPIActor = MailAPIActor 
-                    MinutesTime 
-                    UserID 
-                    String -- ^ Email address
-                   deriving (Eq, Ord, Show)
-instance Actor MailAPIActor where
-  actorTime   (MailAPIActor t _ _) = t
-  actorUserID (MailAPIActor _ u _) = Just u
-  actorEmail  (MailAPIActor _ _ e) = Just e
-  actorWho    (MailAPIActor _ _ e) = "the user with email " ++ show e ++ " using the Mail API"
-  actorAPIString _ = Just "Mail API"
-                    
+mailAPIActor :: MinutesTime -> UserID -> String -> Actor
+mailAPIActor time uid email = Actor {
+    actorTime = time
+  , actorIP = Nothing
+  , actorUserID = Just uid
+  , actorEmail = Just email
+  , actorSigLinkID = Nothing
+  , actorAPIString = Just "Mail API"
+  , actorWho = "the user with email \"" ++ email ++ "\" using the Mail API"
+}
+
 -- | For delivery/reading notifications from the mail system
-data MailSystemActor = MailSystemActor 
-                       MinutesTime 
-                       (Maybe UserID) 
-                       String -- ^ Email address
-                       SignatoryLinkID
-                   deriving (Eq, Ord, Show)
-instance Actor MailSystemActor where
-  actorTime      (MailSystemActor t _ _ _) = t
-  actorUserID    (MailSystemActor _ u _ _) = u
-  actorEmail     (MailSystemActor _ _ e _) = Just e
-  actorSigLinkID (MailSystemActor _ _ _ s) = Just s
-  actorWho       (MailSystemActor _ _ e _) = "the signatory with email " ++ show e ++ " (reported by the Mail subsystem)"
+mailSystemActor :: MinutesTime -> Maybe UserID -> String -> SignatoryLinkID -> Actor
+mailSystemActor time muid email slid = Actor {
+    actorTime = time
+  , actorIP = Nothing
+  , actorUserID = muid
+  , actorEmail = Just email
+  , actorSigLinkID = Just slid
+  , actorAPIString = Nothing
+  , actorWho = "the signatory with email \"" ++ email ++ "\" (reported by the Mail subsystem)"
+}
 
 -- | For actions originating from the integration api
-data IntegrationAPIActor = IntegrationAPIActor 
-                           MinutesTime 
-                           IPAddress 
-                           ServiceID 
-                           (Maybe String) -- ^ Company name
-                         deriving (Eq, Ord, Show)
-instance Actor IntegrationAPIActor where
-  actorTime      (IntegrationAPIActor t _ _ _) = t
-  actorIP        (IntegrationAPIActor _ i _ _) = Just i
-  actorAPIString (IntegrationAPIActor _ _ a _) = Just $ BS.toString $ unServiceID a
-  actorWho       (IntegrationAPIActor _ _ _ c) = 
-    case c of
-      Just c' -> "the company " ++ show c' ++ " using the Integration API"
-      Nothing -> "the Integration API" 
-  
--- | For actions performed by logged in user
-data UserActor = UserActor 
-                 MinutesTime 
-                 IPAddress 
-                 UserID 
-                 String -- ^ email address
-               deriving (Eq, Ord, Show)
-instance Actor UserActor where
-  actorTime      (UserActor t _ _ _) = t
-  actorIP        (UserActor _ i _ _) = Just i
-  actorUserID    (UserActor _ _ u _) = Just u
-  actorEmail     (UserActor _ _ _ e) = Just e
-  actorWho       (UserActor _ _ _ e) = "the user with email " ++ show e
-  
--- | For actions performed by an admin
-data AdminActor = AdminActor 
-                  MinutesTime 
-                  IPAddress 
-                  UserID 
-                  String -- ^ Email address
-                  deriving (Eq, Ord, Show)
-instance Actor AdminActor where
-  actorTime      (AdminActor t _ _ _) = t
-  actorIP        (AdminActor _ i _ _) = Just i
-  actorUserID    (AdminActor _ _ u _) = Just u
-  actorEmail     (AdminActor _ _ _ e) = Just e
-  actorWho       (AdminActor _ _ _ e) = "the admin with email " ++ show e
+integrationAPIActor :: MinutesTime -> IPAddress -> ServiceID -> Maybe String -> Actor
+integrationAPIActor time ip sid mcompany = Actor {
+    actorTime = time
+  , actorIP = Just ip
+  , actorUserID = Nothing
+  , actorEmail = Nothing
+  , actorSigLinkID = Nothing
+  , actorAPIString = Just $ BS.toString $ unServiceID sid
+  , actorWho = case mcompany of
+      Just company -> "the company \"" ++ company ++ "\" using the Integration API"
+      Nothing -> "the Integration API"
+}
 
-data Actor a => InsertEvidenceEvent a = InsertEvidenceEvent 
-                                        EvidenceEventType       -- A code for the event
-                                        String                  -- Text for evidence
-                                        (Maybe DocumentID)      -- The documentid if this event is about a document
-                                        a                       -- Actor
-instance (Actor a, MonadDB m) => DBUpdate m (InsertEvidenceEvent a) Bool where
+-- | For actions performed by logged in user
+userActor :: MinutesTime -> IPAddress -> UserID -> String -> Actor
+userActor time ip uid email = Actor {
+    actorTime = time
+  , actorIP = Just ip
+  , actorUserID = Just uid
+  , actorEmail = Just email
+  , actorSigLinkID = Nothing
+  , actorAPIString = Nothing
+  , actorWho = "the user with email \"" ++ email ++ "\""
+}
+
+-- | For actions performed by an admin
+adminActor :: MinutesTime -> IPAddress -> UserID -> String -> Actor
+adminActor time ip uid email = Actor {
+    actorTime = time
+  , actorIP = Just ip
+  , actorUserID = Just uid
+  , actorEmail = Just email
+  , actorSigLinkID = Nothing
+  , actorAPIString = Nothing
+  , actorWho = "the admin with email \"" ++ email ++ "\""
+}
+
+data InsertEvidenceEvent = InsertEvidenceEvent
+                           EvidenceEventType      -- A code for the event
+                           String                 -- Text for evidence
+                           (Maybe DocumentID)     -- The documentid if this event is about a document
+                           Actor                  -- Actor
+instance MonadDB m => DBUpdate m InsertEvidenceEvent Bool where
   update (InsertEvidenceEvent event text mdid actor) =
     kRun01 $ mkSQL INSERT tableEvidenceLog [
       sql "document_id" mdid

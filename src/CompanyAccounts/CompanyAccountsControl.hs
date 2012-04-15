@@ -424,7 +424,7 @@ resaveDocsForUser uid = do
   userdocs <- dbQuery $ GetDocumentsByAuthor uid
   attachments <- dbQuery $ GetAttachmentsByAuthor uid
   time <- ctxtime <$> getContext
-  let actor = SystemActor time
+  let actor = systemActor time
   mapM_ (\doc -> dbUpdate $ AdminOnlySaveForUser (documentid doc) user actor) (userdocs ++ attachments)
   return ()
 

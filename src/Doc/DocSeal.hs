@@ -304,7 +304,7 @@ sealDocumentFile document@Document{documentid, documenttitle} file@File{fileid, 
         Log.debug $ "Adding new sealed file to DB"
         File{fileid = sealedfileid} <- dbUpdate $ NewFile filename newfilepdf
         Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
-        res <- dbUpdate $ AttachSealedFile documentid sealedfileid (SystemActor ctxtime)
+        res <- dbUpdate $ AttachSealedFile documentid sealedfileid (systemActor ctxtime)
         Log.debug $ "Should be attached to document; is it? " ++ show ((elem sealedfileid . documentsealedfiles) <$> res)
         return res
       ExitFailure _ -> do
@@ -319,5 +319,5 @@ sealDocumentFile document@Document{documentid, documenttitle} file@File{fileid, 
           BS.hPutStr handle content
           hClose handle
           return msg
-        _ <- dbUpdate $ ErrorDocument documentid ("Could not seal document because of file #" ++ show fileid) (SystemActor ctxtime)
+        _ <- dbUpdate $ ErrorDocument documentid ("Could not seal document because of file #" ++ show fileid) (systemActor ctxtime)
         return $ Left msg

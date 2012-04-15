@@ -82,7 +82,7 @@ handleIssueArchive :: Kontrakcja m => m ()
 handleIssueArchive = do
     Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- getContext
     docids <- getCriticalFieldList asValidDocID "doccheck"
-    let actor = UserActor ctxtime ctxipnumber (userid user) (getEmail user)
+    let actor = userActor ctxtime ctxipnumber (userid user) (getEmail user)
     mapM_ (\did -> do
               doc <- guardRightM' $ dbUpdate $ ArchiveDocument user did actor
               case getSigLinkFor doc user of

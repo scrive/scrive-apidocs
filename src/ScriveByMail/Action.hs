@@ -256,7 +256,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   
   let userDetails = signatoryDetailsFromUser user mcompany
 
-  let actor = MailAPIActor ctxtime (userid user) (getEmail user)
+  let actor = mailAPIActor ctxtime (userid user) (getEmail user)
   edoc <- dbUpdate $ NewDocument user mcompany title doctype 0 actor
   
   when (isLeft edoc) $ do
@@ -343,9 +343,9 @@ markDocumentAuthorReadAndSeen doc@Document{documentid} = do
         getAuthorSigLink doc
   time <- ctxtime <$> getContext
   _ <- dbUpdate $ MarkInvitationRead documentid signatorylinkid
-       (MailAPIActor time (fromJust maybesignatory) (getEmail sl))
+       (mailAPIActor time (fromJust maybesignatory) (getEmail sl))
   _ <- dbUpdate $ MarkDocumentSeen documentid signatorylinkid signatorymagichash
-       (MailAPIActor time (fromJust maybesignatory) (getEmail sl))
+       (mailAPIActor time (fromJust maybesignatory) (getEmail sl))
   return ()
 
 parseEmailMessageToParts :: BS.ByteString -> (MIME.MIMEValue, [(MIME.Type, BS.ByteString)])
@@ -509,7 +509,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
 
   let doctype = dcrType dcr
       title = dcrTitle dcr
-      actor = MailAPIActor ctxtime (userid user) (getEmail user)
+      actor = mailAPIActor ctxtime (userid user) (getEmail user)
       
   edoc <- dbUpdate $ NewDocument user mcompany title doctype 0 actor
 

@@ -73,26 +73,26 @@ sendDocumentMails mailTo author mcompany = do
         -- make  the context, user and document all use the same locale
         ctx <- mailingContext l
         _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { locale = l }
-        let aa = AuthorActor (ctxtime ctx) noIP (userid author) (getEmail author)
+        let aa = authorActor (ctxtime ctx) noIP (userid author) (getEmail author)
         d' <- gRight $ randomUpdate $ NewDocument author mcompany "Document title" (Signable doctype) 0 aa
-        d <- gRight . dbUpdate $ SetDocumentLocale (documentid d') l (SystemActor $ ctxtime ctx)
+        d <- gRight . dbUpdate $ SetDocumentLocale (documentid d') l (systemActor $ ctxtime ctx)
 
         let docid = documentid d
         let asl = head $ documentsignatorylinks d
         let authordetails = signatorydetails asl
         file <- addNewRandomFile
-        _ <- gRight $ randomUpdate $ AttachFile docid (fileid file) (SystemActor $ ctxtime ctx)
+        _ <- gRight $ randomUpdate $ AttachFile docid (fileid file) (systemActor $ ctxtime ctx)
 
         isl <- rand 10 arbitrary
         now <- getMinutesTime
         let authorrole = [SignatoryAuthor, SignatoryPartner]
             sigs = [(authordetails,authorrole), (isl,[SignatoryPartner])]
-        _ <- gRight $ randomUpdate $ ResetSignatoryDetails docid sigs (SystemActor now)
-        d2 <- gRight $ randomUpdate $ PreparationToPending docid (SystemActor now)
+        _ <- gRight $ randomUpdate $ ResetSignatoryDetails docid sigs (systemActor now)
+        d2 <- gRight $ randomUpdate $ PreparationToPending docid (systemActor now)
         let asl2 = head $ documentsignatorylinks d2
         _ <- gRight $ randomUpdate $ MarkDocumentSeen docid (signatorylinkid asl2) (signatorymagichash asl2)
-             (SignatoryActor now noIP (maybesignatory asl2) (getEmail asl2) (signatorylinkid asl2))
-        doc <- gRight $ randomUpdate $ \si -> SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) si (SystemActor now)
+             (signatoryActor now noIP (maybesignatory asl2) (getEmail asl2) (signatorylinkid asl2))
+        doc <- gRight $ randomUpdate $ \si -> SignDocument docid (signatorylinkid asl2) (signatorymagichash asl2) si (systemActor now)
         let [sl] = filter (not . isAuthor) (documentsignatorylinks doc)
         req <- mkRequest POST []
         --Invitation Mails
@@ -114,7 +114,7 @@ sendDocumentMails mailTo author mcompany = do
           checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor  ctx doc (mkLocaleFromRegion defaultValue)
         -- Virtual signing
         _ <- randomUpdate $ \ip -> SignDocument docid (signatorylinkid sl) (signatorymagichash sl) Nothing
-                                   (SignatoryActor (10 `minutesAfter` now) ip (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
+                                   (signatoryActor (10 `minutesAfter` now) ip (maybesignatory sl) (getEmail sl) (signatorylinkid sl))
         (Just sdoc) <- randomQuery $ GetDocumentByDocumentID docid
         -- Sending closed email
         checkMail "Closed" $ mailDocumentClosed ctx sdoc

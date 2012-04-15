@@ -46,7 +46,7 @@ handleAccountSetupFromSign document signatorylink = do
   mactivateduser <- handleActivate (Just $ firstname) (Just $ lastname) user BySigning
   case mactivateduser of
     Just (activateduser, _) -> do
-      let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx)  (maybesignatory signatorylink)  (getEmail signatorylink) (signatorylinkid signatorylink)
+      let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx)  (maybesignatory signatorylink)  (getEmail signatorylink) (signatorylinkid signatorylink)
       _ <- dbUpdate $ SaveDocumentForUser (documentid document) activateduser (signatorylinkid signatorylink) actor
       _ <- addUserSaveAfterSignStatEvent activateduser
       return $ Just activateduser

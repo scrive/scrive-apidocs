@@ -66,7 +66,7 @@ signDocumentWithEmailOrPad did slid mh fields = do
       True  -> do
         Context{ ctxtime, ctxipnumber } <- getContext
         let Just sl' = getSigLinkFor olddoc slid
-        let actor = SignatoryActor ctxtime ctxipnumber (maybesignatory sl') (getEmail sl') slid
+        let actor = signatoryActor ctxtime ctxipnumber (maybesignatory sl') (getEmail sl') slid
         ed1 <- dbUpdate $ UpdateFields did slid fields actor
         case ed1 of
           Left err -> return $ Left $ DBActionNotAvailable err
@@ -93,7 +93,7 @@ signDocumentWithEleg did slid mh fields sinfo = do
       False -> return $ Left (DBActionNotAvailable "This document does not allow signing using email identification.")
       True  -> do
         let Just sl' = getSigLinkFor olddoc slid
-        let actor = SignatoryActor ctxtime ctxipnumber (maybesignatory sl') (getEmail sl') slid
+        let actor = signatoryActor ctxtime ctxipnumber (maybesignatory sl') (getEmail sl') slid
         ed1 <- dbUpdate $ UpdateFields did slid fields actor
         case ed1 of
           Left err -> return $ Left $ DBActionNotAvailable err
@@ -119,7 +119,7 @@ rejectDocumentWithChecks did slid mh customtext = do
       switchLocale (getLocale olddocument)
       Context{ ctxtime, ctxipnumber } <- getContext
       let Just sll = getSigLinkFor olddocument slid
-      let sa = SignatoryActor ctxtime ctxipnumber (maybesignatory sll) (getEmail sll) slid
+      let sa = signatoryActor ctxtime ctxipnumber (maybesignatory sll) (getEmail sll) slid
       mdocument <- dbUpdate $ RejectDocument did slid customtext sa
       case mdocument of
         Left msg -> return $ Left (DBActionNotAvailable msg)
@@ -141,12 +141,12 @@ authorSignDocument did msigninfo = onlyAuthor did $ do
     Left m -> return $ Left m
     Right doc -> do
       let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink doc
-      ed1 <- dbUpdate (PreparationToPending did (SystemActor (ctxtime ctx)))
+      ed1 <- dbUpdate (PreparationToPending did (systemActor (ctxtime ctx)))
       case ed1 of
         Left m -> return $ Left $ DBActionNotAvailable m
         Right _ -> do
           _ <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
-          _ <- dbUpdate $ MarkInvitationRead did signatorylinkid (SystemActor (ctxtime ctx))
+          _ <- dbUpdate $ MarkInvitationRead did signatorylinkid (systemActor (ctxtime ctx))
           ed2 <- dbUpdate $ MarkDocumentSeen did signatorylinkid signatorymagichash actor
           case ed2 of
             Left m -> return $ Left $ DBActionNotAvailable m
@@ -171,13 +171,13 @@ authorSendDocument did = onlyAuthor did $ do
   case edoc of
     Left m -> return $ Left m
     Right _ -> do
-      ed1 <- dbUpdate (PreparationToPending did (SystemActor (ctxtime ctx)))
+      ed1 <- dbUpdate (PreparationToPending did (systemActor (ctxtime ctx)))
       case ed1 of
         Left m -> return $ Left $ DBActionNotAvailable m
         Right doc -> do
           let Just (SignatoryLink{signatorylinkid, signatorymagichash}) = getAuthorSigLink doc
           _ <- dbUpdate $ SetDocumentInviteTime did (ctxtime ctx) actor
-          _ <- dbUpdate $ MarkInvitationRead did signatorylinkid (SystemActor (ctxtime ctx))
+          _ <- dbUpdate $ MarkInvitationRead did signatorylinkid (systemActor (ctxtime ctx))
           transActionNotAvailable <$> dbUpdate (MarkDocumentSeen did signatorylinkid signatorymagichash actor)
 
 {- |
@@ -207,7 +207,7 @@ authorSignDocumentFinal did msigninfo = onlyAuthor did $ do
           _ <- case getSigLinkFor d1 signatorylinkid of
             Just sl -> addSignStatSignEvent d1 sl
             _ -> return False
-          ed2 <- dbUpdate (CloseDocument did (SystemActor (ctxtime ctx)))
+          ed2 <- dbUpdate (CloseDocument did (systemActor (ctxtime ctx)))
           return $ transActionNotAvailable ed2
 
 
