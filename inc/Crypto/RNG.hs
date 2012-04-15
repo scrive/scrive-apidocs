@@ -115,7 +115,7 @@ type InnerCryptoRNGT = ReaderT CryptoRNGState
 
 -- | Monad transformer with RNG state.
 newtype CryptoRNGT m a = CryptoRNGT { unCryptoRNGT :: InnerCryptoRNGT m a }
-  deriving (Applicative, Functor, Monad, MonadIO, MonadPlus, MonadTrans)
+  deriving (Applicative, Functor, Monad, MonadBase b, MonadIO, MonadPlus, MonadTrans)
 
 mapCryptoRNGT :: (m a -> n b) -> CryptoRNGT m a -> CryptoRNGT n b
 mapCryptoRNGT f m = withCryptoRNGState $ \s -> f (runCryptoRNGT s m)
@@ -125,9 +125,6 @@ runCryptoRNGT gv m = runReaderT (unCryptoRNGT m) gv
 
 withCryptoRNGState :: (CryptoRNGState -> m a) -> CryptoRNGT m a
 withCryptoRNGState = CryptoRNGT . ReaderT
-
-instance MonadBase b m => MonadBase b (CryptoRNGT m) where
-  liftBase = liftBaseDefault
 
 instance MonadTransControl CryptoRNGT where
   newtype StT CryptoRNGT a = StCryptoRNGT { unStCryptoRNGT :: StT InnerCryptoRNGT a }

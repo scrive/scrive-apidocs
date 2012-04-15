@@ -1,4 +1,10 @@
-module DB.Core where
+module DB.Core (
+    DBT(..)
+  , mapDBT
+  , runDBT
+  , withNexus
+  , MonadDB(..)
+  ) where
 
 import Control.Applicative
 import Control.Monad.Base
@@ -24,7 +30,7 @@ import DB.Nexus
 type InnerDBT = ReaderT Nexus
 
 newtype DBT m a = DBT { unDBT :: InnerDBT m a }
-  deriving (Applicative, Functor, Monad, MonadIO, MonadPlus, MonadTrans)
+  deriving (Applicative, Functor, Monad, MonadBase b, MonadIO, MonadPlus, MonadTrans)
 
 mapDBT :: (m a -> n b) -> DBT m a -> DBT n b
 mapDBT f m = withNexus $ \nex -> f (runDBT nex m)
@@ -34,9 +40,6 @@ runDBT env f = runReaderT (unDBT f) env
 
 withNexus :: (Nexus -> m a) -> DBT m a
 withNexus = DBT . ReaderT
-
-instance MonadBase b m => MonadBase b (DBT m) where
-  liftBase = liftBaseDefault
 
 instance MonadTransControl DBT where
   newtype StT DBT a = StDBT { unStDBT :: StT InnerDBT a }

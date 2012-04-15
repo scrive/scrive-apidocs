@@ -53,11 +53,11 @@ import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Misc
 
-type InKontraPlus = StateT Context (CryptoRNGT (DBT (ServerPartT IO)))
+type InnerKontraPlus = StateT Context (CryptoRNGT (DBT (ServerPartT IO)))
 
 -- | KontraPlus is 'MonadPlus', but it should only be used on toplevel
 -- for interfacing with static routing.
-newtype KontraPlus a = KontraPlus { unKontraPlus :: InKontraPlus a }
+newtype KontraPlus a = KontraPlus { unKontraPlus :: InnerKontraPlus a }
   deriving (MonadPlus, Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadDB, MonadIO, ServerMonad, WebMonad Response)
 
 runKontraPlus :: Context -> KontraPlus a -> CryptoRNGT (DBT (ServerPartT IO)) a
@@ -66,7 +66,7 @@ runKontraPlus ctx f = evalStateT (unKontraPlus f) ctx
 instance Kontrakcja KontraPlus
 
 instance MonadBaseControl IO KontraPlus where
-  newtype StM KontraPlus a = StKontraPlus { unStKontraPlus :: StM InKontraPlus a }
+  newtype StM KontraPlus a = StKontraPlus { unStKontraPlus :: StM InnerKontraPlus a }
   liftBaseWith = newtypeLiftBaseWith KontraPlus unKontraPlus StKontraPlus
   restoreM     = newtypeRestoreM KontraPlus unStKontraPlus
   {-# INLINE liftBaseWith #-}

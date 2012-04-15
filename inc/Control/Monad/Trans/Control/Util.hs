@@ -25,10 +25,10 @@ defaultRestoreT con unSt = con . restoreT . liftM unSt
 
 {-# INLINE newtypeLiftBaseWith #-}
 newtypeLiftBaseWith ∷ (Monad m, MonadBaseControl b mInner)
-                    ⇒ (mInner α → m α)               -- ^ Constructor
-                    → (∀ β. m β → mInner β)          -- ^ Deconstructor
-                    → (∀ β. StM mInner β -> StM m β) -- ^ State constructor
-                    → ((RunInBase m b -> b α) → m α)
+                    ⇒ (mInner α → m α)              -- ^ Constructor
+                    → (∀ β. m β → mInner β)         -- ^ Deconstructor
+                    → (∀ β. StM mInner β → StM m β) -- ^ State constructor
+                    → ((RunInBase m b → b α) → m α)
 newtypeLiftBaseWith con deCon st = \f → con $ liftBaseWith $ \run →
                                           f $ liftM st . run . deCon
 

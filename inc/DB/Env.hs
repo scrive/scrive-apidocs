@@ -49,20 +49,21 @@ type InnerDBEnv = StateT DBEnvSt
 -- database action, handle exceptions correctly, closes statement when it
 -- is not useful anymore, etc.
 newtype DBEnv m a = DBEnv { unDBEnv :: InnerDBEnv m a }
-  deriving (Applicative, Functor, Monad, MonadIO, MonadPlus, MonadTrans)
-
-instance MonadBase b m => MonadBase b (DBEnv m) where
-  liftBase = liftBaseDefault
+  deriving (Applicative, Functor, Monad, MonadBase b, MonadIO, MonadPlus, MonadTrans)
 
 instance MonadTransControl DBEnv where
   newtype StT DBEnv a = StDBEnv { unStDBEnv :: StT InnerDBEnv a }
   liftWith = defaultLiftWith DBEnv unDBEnv StDBEnv
   restoreT = defaultRestoreT DBEnv unStDBEnv
+  {-# INLINE liftWith #-}
+  {-# INLINE restoreT #-}
 
 instance MonadBaseControl b m => MonadBaseControl b (DBEnv m) where
   newtype StM (DBEnv m) a = StMDBEnv { unStMDBEnv :: ComposeSt DBEnv m a }
   liftBaseWith = defaultLiftBaseWith StMDBEnv
   restoreM     = defaultRestoreM unStMDBEnv
+  {-# INLINE liftBaseWith #-}
+  {-# INLINE restoreM #-}
 
 mapDBEnv :: (m (a, DBEnvSt) -> n (b, DBEnvSt)) -> DBEnv m a -> DBEnv n b
 mapDBEnv f m = withDBEnvSt $ f . runStateT (unDBEnv m)
