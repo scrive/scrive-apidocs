@@ -19,7 +19,7 @@ import DB.Functions
 import DB.SQL
 
 class Fetcher a r where
-  apply :: Int -> [SqlValue] -> a -> Either DBException r
+  apply :: Int -> [SqlValue] -> a -> Either SQLError r
   arity :: a -> r -> Int
 
 instance (Fetcher b r, Convertible SqlValue t) => Fetcher (t -> b) r where
@@ -62,9 +62,9 @@ foldDB decoder !init_acc = do
     Just st -> (, st, dbValues) `liftM` liftIO (worker st init_acc)
   case res of
     (Right acc, _, _) -> return acc
-    (Left err, st, values) -> kFinish >> E.throw err {
-        originalQuery = SQL (HDBC.originalQuery st) values
-      }
+    (Left err, st, values) -> do
+      kFinish
+      liftIO $ E.throwIO err { originalQuery = SQL (HDBC.originalQuery st) values }
   where
     worker st !acc = do
       mrow <- fetchRow st

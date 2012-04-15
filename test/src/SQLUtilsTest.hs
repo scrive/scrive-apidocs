@@ -5,7 +5,6 @@ import Control.Monad.IO.Class
 import Test.Framework (Test, testGroup)
 import Database.HDBC
 import Database.HDBC.Statement as HDBC
-import Data.Monoid
 import Data.IORef
 import Data.Typeable
 import qualified Control.Exception.Lifted as E
@@ -50,7 +49,7 @@ decodeA acc i s d = A i s d : acc
 
 decodeANonZero :: [A] -> Int -> String -> Double -> [A]
 decodeANonZero acc i s d = if i == 0
-  then E.throw $ CannotParseRow mempty "I do not like zeros"
+  then error "I do not like zeros"
   else A i s d : acc
 
 sqlTestFetcherProperData :: TestEnv ()
@@ -135,7 +134,7 @@ sqlTestFetcherUserConvertError = runDBEnv $ do
   v <- E.try $ foldDB decodeANonZero []
   assertEqual "user convert error was thrown" True $
               case v of
-                Left CannotParseRow{} -> True
+                Left E.ErrorCall{} -> True
                 _ -> False
 
   (r, _fc) <- liftIO $ readIORef k

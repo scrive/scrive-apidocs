@@ -25,7 +25,7 @@ import Control.Monad.State
 import Control.Monad.Trans.Control
 import Data.Maybe
 import Happstack.Data (Proxy(..))
-import Happstack.Server hiding (mkHeaders, getHeader, method, path)
+import Happstack.Server hiding (mkHeaders, dir, getHeader, method, path)
 import Happstack.Server.Internal.Monads
 import Happstack.State (runTxSystem, TxControl, shutdownSystem, Saver(..))
 import System.FilePath

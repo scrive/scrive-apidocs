@@ -15,9 +15,7 @@ module Company.Model (
   , SetCompanyEmailDomain(..)
   ) where
 
-import Data.Monoid
-import Database.HDBC
-import qualified Control.Exception as E
+import Data.Typeable
 
 import DB
 import API.Service.Model
@@ -35,7 +33,7 @@ data Company = Company {
   , companyservice    :: Maybe ServiceID
   , companyinfo       :: CompanyInfo
   , companyui         :: CompanyUI
-  } deriving (Eq, Ord, Show)
+  } deriving (Eq, Ord, Show, Typeable)
 
 data CompanyInfo = CompanyInfo {
     companyname    :: String
@@ -84,7 +82,7 @@ instance MonadDB m => DBUpdate m CreateCompany Company where
       , sql "city" ""
       , sql "country" ""
       ] <++> SQL (" RETURNING " ++ selectCompaniesSelectors) []
-    fetchCompanies >>= oneObjectReturnedGuard >>= maybe (E.throw $ NoObject mempty) return
+    fetchCompanies >>= exactlyOneObjectReturnedGuard
 
 data SetCompanyInfo = SetCompanyInfo CompanyID CompanyInfo
 instance MonadDB m => DBUpdate m SetCompanyInfo Bool where

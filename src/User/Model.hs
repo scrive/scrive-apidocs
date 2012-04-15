@@ -34,11 +34,9 @@ module User.Model (
   ) where
 
 import Control.Applicative
-import Control.Monad.Trans.Control
 import Data.Data
 import Database.HDBC
 import Happstack.State (Version, deriveSerialize)
-import qualified Control.Exception.Lifted as E
 
 import API.Service.Model
 import Company.Model
@@ -172,14 +170,10 @@ instance MonadDB m => DBUpdate m DeleteUser Bool where
     kPrepare $ "UPDATE users SET deleted = ? WHERE id = ? AND deleted = FALSE"
     kExecute01 [toSql True, toSql uid]
 
--- | TODO: Fix this AddUser, it shouldn't lock.
 data AddUser = AddUser (String, String) String (Maybe Password) Bool (Maybe ServiceID) (Maybe CompanyID) Locale
-instance (MonadBaseControl IO m, MonadDB m) => DBUpdate m AddUser (Maybe User) where
+instance MonadDB m => DBUpdate m AddUser (Maybe User) where
   update (AddUser (fname, lname) email mpwd iscompadmin msid mcid l) = do
-    let handle e = case e of
-          NoObject{} -> return Nothing
-          _ -> E.throw e
-    mu <- query (GetUserByEmail msid $ Email email) `E.catch` handle
+    mu <- query $ GetUserByEmail msid $ Email email
     case mu of
       Just _ -> return Nothing -- user with the same email address exists
       Nothing -> do
@@ -206,7 +200,6 @@ instance (MonadBaseControl IO m, MonadDB m) => DBUpdate m AddUser (Maybe User) w
           ++ ", region"
           ++ ", deleted) VALUES (decode(?, 'base64'), decode(?, 'base64'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
           ++ " RETURNING " ++ selectUsersSelectors
-
         _ <- kExecute $
           [ toSql $ pwdHash <$> mpwd
           , toSql $ pwdSalt <$> mpwd

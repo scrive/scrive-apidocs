@@ -18,7 +18,6 @@ module DB.Functions (
 import Control.Monad.IO.Class
 import Control.Monad.State.Strict hiding (state)
 import Data.Maybe
-import Data.Monoid
 import Database.HDBC hiding (originalQuery)
 import qualified Control.Exception as E
 import qualified Database.HDBC as HDBC
@@ -27,7 +26,7 @@ import DB.Core
 import DB.Env
 import DB.Exception
 import DB.Nexus
-import DB.SQL hiding (sql)
+import DB.SQL (SQL(..))
 
 dbCommit :: MonadDB m => m ()
 dbCommit = getNexus >>= liftIO . commit
@@ -56,7 +55,7 @@ kExecute :: MonadDB m => [SqlValue] -> DBEnv m Integer
 kExecute values = withDBEnvSt $ \s@DBEnvSt{dbStatement} -> do
   let sqlquery = SQL (getQuery dbStatement) values
   (, s { dbValues = values }) `liftM` case dbStatement of
-    Nothing -> liftIO . E.throwIO $ NoStatementPrepared mempty
+    Nothing -> liftIO $ E.throwIO NoStatementPrepared
     Just st -> protIO sqlquery $ execute st values
 
 -- | Execute recently prepared query and check if it returned exactly
@@ -67,7 +66,7 @@ kExecute1 :: MonadDB m => [SqlValue] -> DBEnv m ()
 kExecute1 values = do
   result <- kExecute values
   when (result /= 1) $ withDBEnv $ \DBEnvSt{dbStatement} ->
-    E.throw TooManyObjects {
+    liftIO $ E.throwIO TooManyObjects {
         originalQuery = SQL (getQuery dbStatement) values
       , tmoExpected = 1
       , tmoGiven = result
@@ -81,7 +80,7 @@ kExecute01 :: MonadDB m => [SqlValue] -> DBEnv m Bool
 kExecute01 values = do
   result <- kExecute values
   when (result > 1) $ withDBEnv $ \DBEnvSt{dbStatement} ->
-    E.throw TooManyObjects {
+    liftIO $ E.throwIO TooManyObjects {
         originalQuery = SQL (getQuery dbStatement) values
       , tmoExpected = 1
       , tmoGiven = result
@@ -96,7 +95,7 @@ kExecute1P :: MonadDB m => [SqlValue] -> DBEnv m Integer
 kExecute1P values = do
   result <- kExecute values
   when (result < 1) $ withDBEnv $ \DBEnvSt{dbStatement} ->
-    E.throw TooManyObjects {
+    liftIO $ E.throwIO TooManyObjects {
         originalQuery = SQL (getQuery dbStatement) values
       , tmoExpected = 1
       , tmoGiven = result
@@ -116,10 +115,10 @@ kRunRaw :: MonadDB m => String -> DBEnv m ()
 kRunRaw sql = withDBEnv $ \_ -> getNexus >>= \c -> liftIO (runRaw c sql)
 
 kRun :: MonadDB m => SQL -> DBEnv m Integer
-kRun (SQL sqlq values) = kPrepare sqlq >> kExecute values
+kRun (SQL sql values) = kPrepare sql >> kExecute values
 
 kRun01 :: MonadDB m => SQL -> DBEnv m Bool
-kRun01 (SQL sqlq values) = kPrepare sqlq >> kExecute01 values
+kRun01 (SQL sql values) = kPrepare sql >> kExecute01 values
 
 kGetTables :: MonadDB m => DBEnv m [String]
 kGetTables = withDBEnv $ \_ -> getNexus >>= liftIO . getTables

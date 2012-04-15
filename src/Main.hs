@@ -2,7 +2,6 @@ module Main where
 
 import Control.Concurrent
 import Control.Monad
-import Control.Monad.Trans.Control hiding (control)
 import Data.List
 import Data.Version
 import Happstack.Server
@@ -115,7 +114,7 @@ startSystem appGlobals appConf =
             waitForTermination
             Log.server $ "Termination request received"
 
-initDatabaseEntries :: (CryptoRNG m, MonadBaseControl IO m, MonadDB m) => [(Email, String)] -> m ()
+initDatabaseEntries :: (CryptoRNG m, MonadDB m) => [(Email, String)] -> m ()
 initDatabaseEntries = mapM_ $ \(email, passwordstring) -> do
   -- create initial database entries
   passwd <- createPassword passwordstring

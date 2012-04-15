@@ -1,3 +1,4 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 module CompanyAccounts.Model (
     module User.Model
   , module Company.Model
@@ -8,11 +9,11 @@ module CompanyAccounts.Model (
   , GetCompanyInvites(..)
   ) where
 
-import Data.Monoid
-import qualified Control.Exception as E
+import Control.Monad
 
 import Company.Model
 import DB
+import OurPrelude
 import User.Model
 
 {- |
@@ -44,8 +45,7 @@ instance MonadDB m => DBUpdate m AddCompanyInvite CompanyInvite where
       , toSql invitedsndname
       , toSql invitingcompany
       ]
-    query (GetCompanyInvite invitingcompany invitedemail)
-      >>= maybe (E.throw $ NoObject mempty) return
+    $fromJust `liftM` query (GetCompanyInvite invitingcompany invitedemail)
 
 data RemoveCompanyInvite = RemoveCompanyInvite CompanyID Email
 instance MonadDB m => DBUpdate m RemoveCompanyInvite Bool where
