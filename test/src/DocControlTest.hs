@@ -6,13 +6,11 @@ import Control.Applicative
 import Data.Maybe
 import Happstack.Server
 import Test.Framework
-import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
 import Mails.Model
 import Misc
 import Context
-import Crypto.RNG
 import DB
 import Doc.Model
 import Doc.DocStateData
@@ -25,7 +23,7 @@ import Util.SignatoryLinkUtils
 import EvidenceLog.Model
 import Util.HasSomeUserInfo
 
-docControlTests :: (Nexus, CryptoRNGState) -> Test
+docControlTests :: TestEnvSt -> Test
 docControlTests env = testGroup "Templates" [
     testThat "Sending a reminder updates last modified date on doc" env testSendReminderEmailUpdatesLastModifiedDate
   , testThat "Create document from template" env testDocumentFromTemplate
@@ -66,9 +64,8 @@ testUploadingFileAsOrder = do
 uploadDocAsNewUser :: DocumentProcess -> TestEnv (User, KontraLink)
 uploadDocAsNewUser doctype = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [ ("doctype", inText (show doctype))
                         , ("doc", inFile "test/pdfs/simple.pdf") ]
@@ -78,9 +75,8 @@ uploadDocAsNewUser doctype = do
 testSendingDocumentSendsInvites :: TestEnv ()
 testSendingDocumentSendsInvites = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   doc <- addRandomDocumentWithAuthorAndCondition user (\d -> documentstatus d == Preparation
                                                              && 2 <= length (filterSigLinksFor SignatoryPartner d)
@@ -116,9 +112,8 @@ testSendingDocumentSendsInvites = do
 testSigningDocumentFromDesignViewSendsInvites :: TestEnv ()
 testSigningDocumentFromDesignViewSendsInvites = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   doc <- addRandomDocumentWithAuthorAndCondition user (\d -> documentstatus d == Preparation
                                                                && case documenttype d of
@@ -139,9 +134,8 @@ testSigningDocumentFromDesignViewSendsInvites = do
 testNonLastPersonSigningADocumentRemainsPending :: TestEnv ()
 testNonLastPersonSigningADocumentRemainsPending = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   doc' <- addRandomDocumentWithAuthorAndCondition
             user
@@ -181,9 +175,8 @@ testNonLastPersonSigningADocumentRemainsPending = do
 testLastPersonSigningADocumentClosesIt :: TestEnv ()
 testLastPersonSigningADocumentClosesIt = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   doc' <- addRandomDocumentWithAuthorAndCondition
             user
@@ -224,9 +217,8 @@ testLastPersonSigningADocumentClosesIt = do
 testSendReminderEmailUpdatesLastModifiedDate :: TestEnv ()
 testSendReminderEmailUpdatesLastModifiedDate = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   doc <- addRandomDocumentWithAuthorAndCondition
             user
@@ -252,9 +244,8 @@ testDocumentFromTemplate = do
                                                             Template _ -> True
                                                             _ -> False)
     docs1 <- randomQuery $ GetDocumentsByAuthor (userid user)
-    globaltemplates <- readGlobalTemplates
     ctx <- (\c -> c { ctxmaybeuser = Just user })
-      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+      <$> mkContext (mkLocaleFromRegion defaultValue)
     req <- mkRequest POST [("template", inText (show $ documentid doc))]
     _ <- runTestKontra req ctx $ handleCreateFromTemplate
     docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
@@ -270,9 +261,8 @@ testDocumentFromTemplateShared = do
     _ <- randomUpdate $ SetDocumentSharing [documentid doc] True
     (Just user) <- addNewCompanyUser "ccc" "ddd" "zzz@zzz.pl" companyid
     docs1 <- randomQuery $ GetDocumentsByAuthor (userid user)
-    globaltemplates <- readGlobalTemplates
     ctx <- (\c -> c { ctxmaybeuser = Just user })
-      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+      <$> mkContext (mkLocaleFromRegion defaultValue)
     req <- mkRequest POST [("template", inText (show $ documentid doc))]
     _ <- runTestKontra req ctx $ handleCreateFromTemplate
     docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)

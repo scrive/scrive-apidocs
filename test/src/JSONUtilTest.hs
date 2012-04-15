@@ -6,15 +6,13 @@ import Test.HUnit (Assertion)
 import TestingUtil
 import Test.QuickCheck
 
-import Crypto.RNG
-import DB.Nexus
 import Util.JSON
 import TestKontra
 import Text.JSON
 import Text.JSON.String
 import qualified Data.ByteString.UTF8 as BS
 
-jsonUtilTests :: (Nexus, CryptoRNGState) -> Test
+jsonUtilTests :: TestEnvSt -> Test
 jsonUtilTests env = testGroup "JSONUtil" [
     testGroup "JSON Container Test" [
       testThat "Check basic corelation between getJSON and putJSON" env testJSONContainer

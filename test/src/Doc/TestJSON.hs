@@ -5,8 +5,6 @@ import Test.QuickCheck
 import Text.JSON
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 
-import Crypto.RNG
-import DB.Nexus
 import Util.JSON
 import Misc
 import Doc.JSON
@@ -15,7 +13,7 @@ import Doc.DocInfo
 import TestingUtil
 import TestKontra
 
-documentJSONTests :: (Nexus, CryptoRNGState) -> Test
+documentJSONTests :: TestEnvSt -> Test
 documentJSONTests env = testGroup "Document JSON tests" [
   testThat "test general api document json creation" env dcrTest,
   testProperty "document_id must be equal" 

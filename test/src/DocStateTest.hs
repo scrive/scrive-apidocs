@@ -1,7 +1,6 @@
 module DocStateTest where
 
 import Control.Logic
-import Crypto.RNG
 import DB
 import User.Model
 import Doc.Model
@@ -37,7 +36,7 @@ import qualified Log
 
 import EvidenceLog.Model
 
-docStateTests :: (Nexus, CryptoRNGState) -> Test
+docStateTests :: TestEnvSt -> Test
 docStateTests env = testGroup "DocState" [
   dataStructureProperties,
   testThat "ReallyDeleteDocument adds to the log" env testReallyDeleteDocumentEvidenceLog,

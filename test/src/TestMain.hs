@@ -17,6 +17,8 @@ import Crypto.RNG
 import DB
 import DB.Checks
 import DB.PostgreSQL
+import Templates.TemplatesLoader
+import TestKontra
 
 -- Note: if you add new testsuites here, please add them in a similar
 -- manner to existing ones, i.e. wrap them around ifdefs and add appropriate
@@ -116,22 +118,22 @@ import StatsTest
 import EvidenceLogTest
 #endif
 
-allTests :: [(String, [String] -> (Nexus, CryptoRNGState) -> Test)]
+allTests :: [(String, [String] -> TestEnvSt -> Test)]
 allTests = tail tests
   where
     tests = [
         undefined
 #ifndef NO_COMPANYSTATE
-      , ("companystate", const $ companyStateTests)
+      , ("companystate", const companyStateTests)
 #endif
 #ifndef NO_COMPANYCONTROL
-      , ("companycontrol", const $ companyControlTests)
+      , ("companycontrol", const companyControlTests)
 #endif
 #ifndef NO_DOCSTATE
-      , ("docstate", const $ docStateTests)
+      , ("docstate", const docStateTests)
 #endif
 #ifndef NO_DOCCONTROL
-      , ("doccontrol", const $ docControlTests)
+      , ("doccontrol", const docControlTests)
 #endif
 #ifndef NO_DOCSTATEQUERY
       , ("docstatequery", const $ const docStateQueryTests)
@@ -143,35 +145,35 @@ allTests = tail tests
       , ("inputvalidation", const $ const inputValidationTests)
 #endif
 #ifndef NO_INTEGRATIONAPI
-      , ("integrationapi", const $ integrationAPITests)
+      , ("integrationapi", const integrationAPITests)
 #endif
 #ifndef NO_LOGIN
-      , ("login", const $ loginTests)
+      , ("login", const loginTests)
 #endif
 #ifndef NO_SIGNUP
-      , ("signup", const $ signupTests)
+      , ("signup", const signupTests)
 #endif
 #ifndef NO_ACCOUNTINFO
-     , ("accountinfo", const $ accountInfoTests)
+     , ("accountinfo", const accountInfoTests)
 #endif
 #ifndef NO_MAILAPI
-      , ("mailapi", const $ mailApiTests)
+      , ("mailapi", const mailApiTests)
 #endif
 #ifndef NO_REDIRECT
       , ("redirect", const redirectTests)
 #endif
 #ifndef NO_SERVICESTATE
-      , ("servicestate", const $ serviceStateTests)
+      , ("servicestate", const serviceStateTests)
 #endif
 #ifndef NO_TRUSTWEAVER
       -- everything fails for trustweaver, so commenting out for now
       , ("trustweaver", const $ const trustWeaverTests)
 #endif
 #ifndef NO_USERSTATE
-      , ("userstate", const $ userStateTests)
+      , ("userstate", const userStateTests)
 #endif
 #ifndef NO_USERSTATE
-      , ("userhistory", const $ userHistoryTests)
+      , ("userhistory", const userHistoryTests)
 #endif
 #ifndef NO_CSVUTIL
       , ("csvutil", const $ const csvUtilTests)
@@ -180,10 +182,10 @@ allTests = tail tests
       , ("simplemail", const $ const simpleMailTests)
 #endif
 #ifndef NO_LOCALE
-      , ("locale", const $ localeTests)
+      , ("locale", const localeTests)
 #endif
 #ifndef NO_COMPANYACCOUNTS
-      , ("companyaccounts", const $ companyAccountsTests)
+      , ("companyaccounts", const companyAccountsTests)
 #endif
 #ifndef NO_MAILS
       , ("mails", mailsTests )
@@ -195,7 +197,7 @@ allTests = tail tests
       , ("jsonutil", const jsonUtilTests )
 #endif
 #ifndef NO_FILE
-      , ("file", const $ fileTests )
+      , ("file", const fileTests )
 #endif
 #ifndef NO_DOCJSON
       , ("docjson", const documentJSONTests)
@@ -204,14 +206,14 @@ allTests = tail tests
       , ("sqlutil", const sqlUtilsTests )
 #endif
 #ifndef NO_STATS
-      , ("stats", const $ statsTests)
+      , ("stats", const statsTests)
 #endif
 #ifndef NO_EVIDENCELOG
-      , ("evidencelog", const $ evidenceLogTests)
+      , ("evidencelog", const evidenceLogTests)
 #endif
       ]
 
-testsToRun :: [String] -> [Either String ((Nexus, CryptoRNGState) -> Test)]
+testsToRun :: [String] -> [Either String (TestEnvSt -> Test)]
 testsToRun [] = []
 testsToRun (t:ts)
   | lt == "$" = []
@@ -224,16 +226,22 @@ testsToRun (t:ts)
     rest = testsToRun ts
     params = drop 1 $ dropWhile (/= ("$")) ts
 
-testMany :: ([String],[((Nexus, CryptoRNGState) -> Test)]) -> IO ()
+testMany :: ([String], [(TestEnvSt -> Test)]) -> IO ()
 testMany (args, ts) = Log.withLogger $ do
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
   pgconf <- readFile "kontrakcja_test.conf"
   rng <- unsafeCryptoRNGState (BS.pack (replicate 128 0))
+  templates <- readGlobalTemplates
   withPostgreSQL pgconf $ do
     performDBChecks Log.debug kontraTables kontraMigrations
     nex <- getNexus
-    liftIO $ E.finally (defaultMainWithArgs (map ($ (nex, rng)) ts) args) $ do
+    let env = TestEnvSt {
+          teNexus = nex
+        , teRNGState = rng
+        , teGlobalTemplates = templates
+        }
+    liftIO $ E.finally (defaultMainWithArgs (map ($ env) ts) args) $ do
       stats <- getNexusStats nex
       putStrLn $ "SQL: " ++ show stats
 
@@ -241,7 +249,7 @@ testMany (args, ts) = Log.withLogger $ do
 --   @
 --    testone flip (testThat "") testPreparationAttachCSVUploadNonExistingSignatoryLink
 --   @
-testone :: ((Nexus, CryptoRNGState) -> Test) -> IO ()
+testone :: (TestEnvSt -> Test) -> IO ()
 testone t = do
   args <- getArgs
   testMany (args, [t])

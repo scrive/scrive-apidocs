@@ -7,7 +7,6 @@ import Test.Framework.Providers.HUnit
 import Test.HUnit (Assertion)
 
 import AppControl
-import Crypto.RNG
 import DB
 import Doc.Model
 import Doc.DocStateData
@@ -16,7 +15,6 @@ import Kontra (Kontra(..))
 import Login
 import MinutesTime
 import Redirect
-import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
 import User.Locale
@@ -25,7 +23,7 @@ import User.UserControl
 import Misc
 import EvidenceLog.Model
 
-localeTests :: (Nexus, CryptoRNGState) -> Test
+localeTests :: TestEnvSt -> Test
 localeTests env = testGroup "Locale" [
       testCase "restricts allowed locales" $ testRestrictsAllowedLocales
     , testThat "logged in locale switching" env testLoggedInLocaleSwitching
@@ -60,9 +58,8 @@ testLoggedInLocaleSwitching :: TestEnv ()
 testLoggedInLocaleSwitching = do
     --create a new uk user and login
     user <- createTestUser REGION_GB LANG_EN
-    globaltemplates <- readGlobalTemplates
     ctx0 <- (\c -> c { ctxlocale = mkLocale REGION_GB LANG_EN })
-      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+      <$> mkContext (mkLocaleFromRegion defaultValue)
     req0 <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
     (res1, ctx1) <- runTestKontra req0 ctx0 $ handleLoginPost >>= sendRedirect
     assertLoggedInAndOnUploadPage (userid user) res1 ctx1
@@ -104,9 +101,8 @@ testLoggedInLocaleSwitching = do
 testDocumentLocaleSwitchToBritain :: TestEnv ()
 testDocumentLocaleSwitchToBritain = do
   user <- createTestUser REGION_SE LANG_SE
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
   doc <- createTestElegDoc user (ctxtime ctx)
 
   --make sure the doc locale matches the author locale
@@ -119,9 +115,8 @@ testDocumentLocaleSwitchToBritain = do
 testDocumentLocaleSwitchToSweden :: TestEnv ()
 testDocumentLocaleSwitchToSweden = do
   user <- createTestUser REGION_GB LANG_EN
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
   doc <- createTestElegDoc user (ctxtime ctx)
 
   -- make sure the doc locale matches the author locale

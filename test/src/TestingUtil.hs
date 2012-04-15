@@ -27,7 +27,6 @@ import MagicHash (MagicHash, unsafeMagicHash)
 import Company.Model
 import FlashMessage
 import qualified Log
-import StateHelper
 import Doc.Model
 import Doc.DocStateData
 import Doc.DocStateCommon
@@ -464,7 +463,7 @@ blankUser = User { userid                        = unsafeUserID 0
                  , usercompany = Nothing
                  }
 
-testThat :: String -> (Nexus, CryptoRNGState) -> TestEnv () -> Test
+testThat :: String -> TestEnvSt -> TestEnv () -> Test
 testThat s env = testCase s . runTestEnv env
 
 addNewCompany :: TestEnv Company

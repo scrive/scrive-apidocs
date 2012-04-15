@@ -10,7 +10,6 @@ import Test.Framework
 import ActionSchedulerState
 import Context
 import Control.Logic
-import Crypto.RNG
 import DB hiding (query, update)
 import FlashMessage
 import MagicHash (MagicHash)
@@ -20,14 +19,13 @@ import LoginTest (assertLoginEventRecordedFor)
 import MinutesTime
 import Misc
 import Redirect
-import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
 import User.Model
 import User.UserControl
 import Util.HasSomeUserInfo
 
-signupTests :: (Nexus, CryptoRNGState) -> Test
+signupTests :: TestEnvSt -> Test
 signupTests env = testGroup "Signup" [
       testThat "can self signup and activate an account" env testSignupAndActivate
     , testThat "can send viral invite which can be used to activate an account" env testViralInviteAndActivate
@@ -41,8 +39,7 @@ signupTests env = testGroup "Signup" [
 
 testSignupAndActivate :: TestEnv ()
 testSignupAndActivate = do
-  globaltemplates <- readGlobalTemplates
-  ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- mkContext (mkLocaleFromRegion defaultValue)
 
   -- enter the email to signup
   (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
@@ -66,8 +63,7 @@ testSignupAndActivate = do
 
 testLoginEventRecordedWhenLoggedInAfterActivation :: TestEnv ()
 testLoginEventRecordedWhenLoggedInAfterActivation = do
-  globaltemplates <- readGlobalTemplates
-  ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- mkContext (mkLocaleFromRegion defaultValue)
 
   -- enter the email to signup
   (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
@@ -83,9 +79,8 @@ testLoginEventRecordedWhenLoggedInAfterActivation = do
 testViralInviteAndActivate :: TestEnv ()
 testViralInviteAndActivate = do
   Just inviter <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just inviter })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
    -- enter the email to invite
   (res1, ctx1) <- inviteToAccount ctx "emily@scrive.com"
@@ -104,8 +99,7 @@ testViralInviteAndActivate = do
 
 testAcceptTOSToActivate :: TestEnv ()
 testAcceptTOSToActivate = do
-  globaltemplates <- readGlobalTemplates
-  ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- mkContext (mkLocaleFromRegion defaultValue)
 
   -- enter the email to signup
   (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
@@ -119,8 +113,7 @@ testAcceptTOSToActivate = do
 
 testNeedFirstNameToActivate :: TestEnv ()
 testNeedFirstNameToActivate = do
-  globaltemplates <- readGlobalTemplates
-  ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- mkContext (mkLocaleFromRegion defaultValue)
 
   -- enter the email to signup
   (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
@@ -134,8 +127,7 @@ testNeedFirstNameToActivate = do
 
 testNeedLastNameToActivate :: TestEnv ()
 testNeedLastNameToActivate = do
-  globaltemplates <- readGlobalTemplates
-  ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- mkContext (mkLocaleFromRegion defaultValue)
 
   -- enter the email to signup
   (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
@@ -149,8 +141,7 @@ testNeedLastNameToActivate = do
 
 testNeedPasswordToActivate :: TestEnv ()
 testNeedPasswordToActivate = do
-  globaltemplates <- readGlobalTemplates
-  ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- mkContext (mkLocaleFromRegion defaultValue)
 
   -- enter the email to signup
   (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"
@@ -164,8 +155,7 @@ testNeedPasswordToActivate = do
 
 testPasswordsMatchToActivate :: TestEnv ()
 testPasswordsMatchToActivate = do
-  globaltemplates <- readGlobalTemplates
-  ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- mkContext (mkLocaleFromRegion defaultValue)
 
   -- enter the email to signup
   (res1, ctx1) <- signupForAccount ctx "andrzej@skrivapa.se"

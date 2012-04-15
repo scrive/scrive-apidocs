@@ -17,11 +17,9 @@ import qualified Data.ByteString as BS
 import qualified  Codec.Binary.Base64 as BASE64
 import MinutesTime
 import Doc.DocStateCommon
-import DB.Nexus
-import Crypto.RNG
 import TestKontra
 
-apiCommonsTest :: (Nexus, CryptoRNGState) -> Test
+apiCommonsTest :: TestEnvSt -> Test
 apiCommonsTest env = testGroup "API Commons Test" [
   testCase "Tag JSON 1" testTagJSON,
   testThat "Tag JSON Random" env testTagJSONRandom,

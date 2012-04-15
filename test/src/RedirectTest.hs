@@ -5,11 +5,8 @@ import Test.Framework
 import Redirect
 import Control.Applicative
 import Data.List
-import Crypto.RNG
-import DB
 import DBError
 import Misc
-import Templates.TemplatesLoader
 import Happstack.Server
 import Context
 import KontraError
@@ -18,7 +15,7 @@ import TestKontra as T
 import User.Locale
 import qualified Control.Exception.Lifted as E
 
-redirectTests :: (Nexus, CryptoRNGState) -> Test
+redirectTests :: TestEnvSt -> Test
 redirectTests env = testGroup "RedirectTests" [
     testThat "return Right if Right" env testGuardRight
   , testThat "return mzero if Left" env testStringGuardMZeroLeft
@@ -31,16 +28,14 @@ testResponse = "hello"
 
 testGuardRight :: TestEnv ()
 testGuardRight = do
-    globaltemplates <- readGlobalTemplates
-    ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    ctx <- mkContext $ mkLocaleFromRegion defaultValue
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
     (res, _) <- runTestKontra req ctx (guardRight $ (Right testResponse :: Either String String))
     assertEqual "should be equal" res testResponse
 
 testStringGuardMZeroLeft :: TestEnv ()
 testStringGuardMZeroLeft =  do
-    globaltemplates <- readGlobalTemplates
-    ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    ctx <- mkContext $ mkLocaleFromRegion defaultValue
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
     (res, _) <- runTestKontra req ctx (E.catch (guardRight $ (Left "error" :: Either String String))
                                                   (\(_::KontraError) -> return testResponse))
@@ -48,8 +43,7 @@ testStringGuardMZeroLeft =  do
 
 testDBErrorGuardRedirectLeftDBNotLoggedIn :: TestEnv ()
 testDBErrorGuardRedirectLeftDBNotLoggedIn = do
-  globaltemplates <- readGlobalTemplates
-  ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- mkContext $ mkLocaleFromRegion defaultValue
   req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
   (res, ctx') <- runTestKontra req ctx (do
                                            _ <- guardRight $ Left DBNotLoggedIn
@@ -61,8 +55,7 @@ testDBErrorGuardRedirectLeftDBNotLoggedIn = do
 
 testDBErrorGuardMZeroLeft :: TestEnv ()
 testDBErrorGuardMZeroLeft = do
-  globaltemplates <- readGlobalTemplates
-  ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- mkContext $ mkLocaleFromRegion defaultValue
   req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
   (res, _ctx') <- runTestKontra req ctx (E.catch (guardRight $ (Left DBResourceNotAvailable))
                                                     (\(_::KontraError) -> return testResponse))

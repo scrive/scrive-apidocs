@@ -5,7 +5,6 @@ import Data.Maybe
 import Test.Framework
 
 import Company.Model
-import Crypto.RNG
 import DB
 import MinutesTime
 import User.Model
@@ -17,7 +16,7 @@ sortByEmail :: [User] -> [User]
 sortByEmail = sortBy (\a b -> compare (f a) (f b))
   where f = useremail . userinfo
 
-userStateTests :: (Nexus, CryptoRNGState) -> Test
+userStateTests :: TestEnvSt -> Test
 userStateTests env = testGroup "UserState" [
     testGroup "getUserByEmail" [
       testThat "returns nothing when there isn't a user with a matching email" env test_getUserByEmail_returnsNothing

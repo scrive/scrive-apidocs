@@ -5,7 +5,6 @@ import Happstack.Server
 import Test.HUnit (Assertion)
 import Test.Framework
 import qualified Data.ByteString.Char8 as BS
-import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
 import Kontra (Kontra)
@@ -15,7 +14,6 @@ import Misc
 import API.API
 import API.Service.Model
 import API.IntegrationAPI
-import Crypto.RNG
 import DB
 import Text.JSON
 import Data.Ratio
@@ -35,7 +33,7 @@ import EvidenceLog.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
-integrationAPITests :: (Nexus, CryptoRNGState) -> Test
+integrationAPITests :: TestEnvSt -> Test
 integrationAPITests env = testGroup "Integration API" [
       testThat "Test creating a offer from template" env testDocumentCreationFromTemplate
     , testThat "Test from state filtering" env testDocumentsFilteringFromState
@@ -460,8 +458,7 @@ getEmbedDocumentaJSON  documentid company email = randomCall $ JSObject $ toJSOb
 -- Making requests
 makeAPIRequest :: IntegrationAPIFunction Kontra APIResponse -> APIRequestBody -> TestEnv APIResponse
 makeAPIRequest handler req = do
-    globaltemplates <- readGlobalTemplates
-    ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    ctx <- mkContext (mkLocaleFromRegion defaultValue)
     rq <- mkRequest POST [("service", inText "test_service"), ("password", inText "test_password") ,("body", inText $ encode req)]
     fmap fst $ runTestKontra rq ctx $ testAPI handler
 

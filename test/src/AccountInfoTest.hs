@@ -8,7 +8,6 @@ import Test.Framework
 
 import ActionSchedulerState
 import Context
-import Crypto.RNG
 import DB hiding (query, update)
 import FlashMessage
 import MagicHash (unsafeMagicHash)
@@ -16,7 +15,6 @@ import Mails.Model
 import MinutesTime
 import Misc
 import Redirect
-import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
 import User.Locale
@@ -26,7 +24,7 @@ import User.Utils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 
-accountInfoTests :: (Nexus, CryptoRNGState) -> Test
+accountInfoTests :: TestEnvSt -> Test
 accountInfoTests env = testGroup "AccountInfo" [
     testThat "lets private account upgrade to company account" env testPrivateToCompanyUpgrade
   , testThat "lets users change their email addresses" env testChangeEmailAddress
@@ -57,9 +55,8 @@ data UpgradeInfo = UpgradeInfo String String String String String
 
 upgradeCompanyForUser :: User -> UpgradeInfo -> TestEnv (Response, Context)
 upgradeCompanyForUser user (UpgradeInfo cname fstname sndname position phone) = do
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [ ("createcompany", inText "true")
                         , ("companyname", inText cname)
@@ -93,9 +90,8 @@ testChangeEmailAddress = do
   passwordhash <- createPassword "abc123"
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req1 <- mkRequest POST [ ("changeemail", inText "true")
                         , ("newemail", inText "jim@bob.com")
@@ -131,9 +127,8 @@ testChangeEmailAddress = do
 testAddressesMustMatchToRequestEmailChange :: TestEnv ()
 testAddressesMustMatchToRequestEmailChange = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req1 <- mkRequest POST [ ("changeemail", inText "true")
                         , ("newemail", inText "jim@bob.com")
@@ -148,9 +143,8 @@ testAddressesMustMatchToRequestEmailChange = do
 testNeedTwoAddressesToRequestEmailChange :: TestEnv ()
 testNeedTwoAddressesToRequestEmailChange = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req1 <- mkRequest POST [ ("changeemail", inText "true")
                         , ("newemail", inText "jim@bob.com")
@@ -166,9 +160,8 @@ testNeedEmailToBeUniqueToRequestChange :: TestEnv ()
 testNeedEmailToBeUniqueToRequestChange = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   _ <- addNewUser "Jim" "Bob" "jim@bob.com"
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req1 <- mkRequest POST [ ("changeemail", inText "true")
                         , ("newemail", inText "jim@bob.com")
@@ -188,9 +181,8 @@ testEmailChangeFailsIfActionIDIsWrong = do
   passwordhash <- createPassword "abc123"
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [("password", inText "abc123")]
   action <- newRequestEmailChange user (Email "jim@bob.com")
@@ -206,9 +198,8 @@ testEmailChangeFailsIfMagicHashIsWrong = do
   passwordhash <- createPassword "abc123"
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [("password", inText "abc123")]
   action <- newRequestEmailChange user (Email "jim@bob.com")
@@ -224,9 +215,8 @@ testEmailChangeIfForAnotherUser = do
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   Just anotheruser <- addNewUser "Fred" "Frog" "fred@frog.com"
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [("password", inText "abc123")]
   action <- newRequestEmailChange anotheruser (Email "jim@bob.com")
@@ -242,9 +232,8 @@ testEmailChangeFailsIfEmailInUse = do
   passwordhash <- createPassword "abc123"
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [("password", inText "abc123")]
   action <- newRequestEmailChange user (Email "jim@bob.com")
@@ -261,9 +250,8 @@ testEmailChangeFailsIfPasswordWrong = do
   passwordhash <- createPassword "abc123"
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [("password", inText "wrongpassword")]
   action <- newRequestEmailChange user (Email "jim@bob.com")
@@ -280,9 +268,8 @@ testEmailChangeFailsIfNoPassword = do
   passwordhash <- createPassword "abc123"
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [("password", inText "")]
   action <- newRequestEmailChange user (Email "jim@bob.com")

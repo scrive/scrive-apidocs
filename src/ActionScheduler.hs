@@ -19,6 +19,7 @@ import qualified Control.Exception.Lifted as E
 
 import AppControl (AppConf(..))
 import ActionSchedulerState
+import Control.Monad.Trans.Control.Util
 import Crypto.RNG
 import DB hiding (update, query)
 import DB.PostgreSQL
@@ -44,9 +45,8 @@ newtype ActionScheduler a = AS { unAS :: InnerAS a }
 
 instance MonadBaseControl IO ActionScheduler where
   newtype StM ActionScheduler a = StAS { unStAS :: StM InnerAS a }
-  liftBaseWith f = AS $ liftBaseWith $ \runInIO ->
-                     f $ liftM StAS . runInIO . unAS
-  restoreM = AS . restoreM . unStAS
+  liftBaseWith = newtypeLiftBaseWith AS unAS StAS
+  restoreM = newtypeRestoreM AS unStAS
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 

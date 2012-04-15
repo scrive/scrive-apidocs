@@ -36,6 +36,7 @@ import Control.Monad.Base
 import Control.Monad.Reader
 import Control.Monad.State
 import Control.Monad.Trans.Control
+import Control.Monad.Trans.Control.Util
 import Crypto.RNG
 import DB
 import ELegitimation.ELegTransaction
@@ -66,9 +67,8 @@ instance Kontrakcja KontraPlus
 
 instance MonadBaseControl IO KontraPlus where
   newtype StM KontraPlus a = StKontraPlus { unStKontraPlus :: StM InKontraPlus a }
-  liftBaseWith f = KontraPlus $ liftBaseWith $ \runInIO ->
-                     f $ liftM StKontraPlus . runInIO . unKontraPlus
-  restoreM = KontraPlus . restoreM . unStKontraPlus
+  liftBaseWith = newtypeLiftBaseWith KontraPlus unKontraPlus StKontraPlus
+  restoreM     = newtypeRestoreM KontraPlus unStKontraPlus
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
@@ -83,7 +83,7 @@ instance TemplatesMonad KontraPlus where
     return $ localizedVersion locale ctxglobaltemplates
 
 -- | Kontra is a traditional Happstack handler monad except that it's
--- not MonadZero.
+-- not MonadZero and WebMonad.
 --
 -- Since we use static routing, there is no need for mzero inside a
 -- handler. Instead we signal errors explicitly through 'KontraError'.
@@ -94,9 +94,10 @@ instance Kontrakcja Kontra
 
 instance MonadBaseControl IO Kontra where
   newtype StM Kontra a = StKontra { unStKontra :: StM KontraPlus a }
-  liftBaseWith f = Kontra $ liftBaseWith $ \runInIO ->
-                     f $ liftM StKontra . runInIO . unKontra
-  restoreM = Kontra . restoreM . unStKontra
+  liftBaseWith = newtypeLiftBaseWith Kontra unKontra StKontra
+  restoreM     = newtypeRestoreM Kontra unStKontra
+  {-# INLINE liftBaseWith #-}
+  {-# INLINE restoreM #-}
 
 {- Logged in user is admin-}
 isAdmin :: Context -> Bool

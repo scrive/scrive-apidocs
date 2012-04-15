@@ -12,7 +12,6 @@ import Company.Model
 import CompanyAccounts.CompanyAccountsControl
 import CompanyAccounts.Model
 import Context
-import Crypto.RNG
 import DB hiding (query, update)
 import Doc.DocStateData
 import Doc.Model
@@ -22,13 +21,12 @@ import Mails.Model
 import MinutesTime
 import Misc
 import Redirect
-import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
 import Util.HasSomeUserInfo
 import qualified Control.Exception.Lifted as E
 
-companyAccountsTests :: (Nexus, CryptoRNGState) -> Test
+companyAccountsTests :: TestEnvSt -> Test
 companyAccountsTests env = testGroup "CompanyAccounts" [
     testGroup "Model" [
         testThat "Adding an invite for a new email works" env test_addInviteForNewEmail
@@ -88,9 +86,8 @@ test_addingANewCompanyAccount :: TestEnv ()
 test_addingANewCompanyAccount = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [ ("add", inText "True")
                         , ("email", inText "bob@blue.com")
@@ -121,9 +118,8 @@ test_addingExistingPrivateUserAsCompanyAccount = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   Just existinguser <- addNewUser "Bob" "Blue" "bob@blue.com"
 
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [ ("add", inText "True")
                         , ("email", inText "bob@blue.com")
@@ -149,9 +145,8 @@ test_addingExistingCompanyUserAsCompanyAccount = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   (existinguser, existingcompany) <- addNewAdminUserAndCompany "Bob" "Blue" "bob@blue.com"
 
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [ ("add", inText "True")
                         , ("email", inText "bob@blue.com")
@@ -179,9 +174,8 @@ test_resendingInviteToNewCompanyAccount = do
   Just newuser <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "bob@blue.com" "Bob" "Blue"
 
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [ ("resend", inText "True")
                         , ("resendid", inText $ show (userid newuser))
@@ -206,9 +200,8 @@ test_resendingInviteToPrivateUser = do
   Just _existinguser <- addNewUser "Bob" "Blue" "bob@blue.com"
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "bob@blue.com" "Bob" "Blue"
 
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [ ("resend", inText "True")
                         , ("resendid", inText "0")
@@ -230,9 +223,8 @@ test_resendingInviteToCompanyUser = do
   (_existinguser, _existingcompany) <- addNewAdminUserAndCompany "Bob" "Blue" "bob@blue.com"
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "bob@blue.com" "Bob" "Blue"
 
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [ ("resend", inText "True")
                         , ("resendid", inText "0")
@@ -253,9 +245,8 @@ test_switchingStandardToAdminUser = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   Just standarduser <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
 
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [ ("changerole", inText "True")
                         , ("changeid", inText $ show (userid standarduser))
@@ -277,9 +268,8 @@ test_switchingAdminToStandardUser = do
   _ <- dbUpdate $ SetUserCompanyAdmin (userid standarduser) True
   Just adminuser <- dbQuery $ GetUserByID (userid user)
 
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [ ("changerole", inText "True")
                         , ("changeid", inText $ show (userid adminuser))
@@ -299,9 +289,8 @@ test_removingCompanyAccountInvite = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "bob@blue.com" "Bob" "Blue"
 
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [ ("remove", inText "True")
                         , ("removeid", inText $ "0")
@@ -322,9 +311,8 @@ test_removingCompanyAccountWorks = do
 
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "jony@blue.com" "Bob" "Blue"
 
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just adminuser })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [ ("remove", inText "True")
                         , ("removeid", inText $ show (userid standarduser))
@@ -349,9 +337,8 @@ test_privateUserTakoverWorks = do
 
   _ <- dbUpdate $ AddCompanyInvite $ mkInvite company "bob@blue.com" "Bob" "Blue"
 
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST []
   (res, ctx') <- runTestKontra req ctx $ handlePostBecomeCompanyAccount (companyid company) >>= sendRedirect
@@ -378,9 +365,8 @@ test_mustBeInvitedForTakeoverToWork = do
   company <- addNewCompany
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
 
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST []
   (l, _ctx') <- runTestKontra req ctx $

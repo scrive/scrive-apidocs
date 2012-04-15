@@ -6,21 +6,19 @@ import Happstack.Server
 import Test.Framework
 
 import ActionSchedulerState
-import Crypto.RNG
 import DB
 import Context
 import FlashMessage
 import Login
 import Redirect
 import Stats.Model
-import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
 import User.Model
 import User.UserControl
 import Misc
 
-loginTests :: (Nexus, CryptoRNGState) -> Test
+loginTests :: TestEnvSt -> Test
 loginTests env = testGroup "Login" [
       testThat "can login with valid user and password" env testSuccessfulLogin
     , testThat "can't login with invalid user" env testCantLoginWithInvalidUser
@@ -33,8 +31,7 @@ loginTests env = testGroup "Login" [
 testSuccessfulLogin :: TestEnv ()
 testSuccessfulLogin = do
     uid <- createTestUser
-    globaltemplates <- readGlobalTemplates
-    ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    ctx <- mkContext (mkLocaleFromRegion defaultValue)
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
     assertBool "Response code is 303" $ rsCode res == 303
@@ -45,8 +42,7 @@ testSuccessfulLogin = do
 testCantLoginWithInvalidUser :: TestEnv ()
 testCantLoginWithInvalidUser = do
     _ <- createTestUser
-    globaltemplates <- readGlobalTemplates
-    ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    ctx <- mkContext (mkLocaleFromRegion defaultValue)
     req <- mkRequest POST [("email", inText "emily@skrivapa.se"), ("password", inText "admin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
     loginFailureChecks res ctx'
@@ -54,8 +50,7 @@ testCantLoginWithInvalidUser = do
 testCantLoginWithInvalidPassword :: TestEnv ()
 testCantLoginWithInvalidPassword = do
     _ <- createTestUser
-    globaltemplates <- readGlobalTemplates
-    ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    ctx <- mkContext (mkLocaleFromRegion defaultValue)
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "invalid")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
     loginFailureChecks res ctx'
@@ -63,8 +58,7 @@ testCantLoginWithInvalidPassword = do
 testSuccessfulLoginSavesAStatEvent :: TestEnv ()
 testSuccessfulLoginSavesAStatEvent = do
   uid <- createTestUser
-  globaltemplates <- readGlobalTemplates
-  ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- mkContext (mkLocaleFromRegion defaultValue)
   req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
   (_res, ctx') <- runTestKontra req ctx $ handleLoginPost >>= sendRedirect
   assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx') == Just uid
@@ -86,8 +80,7 @@ createUserAndResetPassword = do
   pwd <- createPassword "admin"
   Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) False Nothing Nothing (mkLocaleFromRegion defaultValue)
   Action{ actionID, actionType = PasswordReminder { prToken } } <- newPasswordReminder user
-  globaltemplates <- readGlobalTemplates
-  ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- mkContext (mkLocaleFromRegion defaultValue)
   req <- mkRequest POST [("password", inText "password123"),
                          ("password2", inText "password123")]
   (res, ctx') <- runTestKontra req ctx $ handlePasswordReminderPost actionID prToken >>= sendRedirect

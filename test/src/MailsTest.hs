@@ -4,10 +4,8 @@ import Control.Applicative
 import Happstack.Server
 import Test.Framework
 
-import Crypto.RNG
 import DB
 import Context
-import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
 import User.Model
@@ -31,7 +29,7 @@ import Text.XML.HaXml.Parse (xmlParse')
 import Control.Monad.Trans
 import EvidenceLog.Model
 
-mailsTests :: [String] -> (Nexus, CryptoRNGState) -> Test
+mailsTests :: [String] -> TestEnvSt -> Test
 mailsTests params env  = testGroup "Mails" [
     testThat "Document emails" env $ testDocumentMails $ toMailAddress params
   , testThat "Branded document emails" env $ testBrandedDocumentMails $ toMailAddress params
@@ -168,8 +166,7 @@ addNewRandomAdvancedUserWithLocale l = do
 
 mailingContext :: Locale -> TestEnv Context
 mailingContext locale = do
-    globaltemplates <- readGlobalTemplates
-    ctx <- mkContext locale globaltemplates
+    ctx <- mkContext locale
     return $ ctx { ctxhostpart = "http://dev.skrivapa.se" }
 
 sendoutForManualChecking ::  String -> Request -> Context ->  Maybe String -> Mail -> TestEnv ()

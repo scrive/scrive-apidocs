@@ -4,7 +4,6 @@ import Test.Framework
 import TestingUtil
 import IPAddress
 import Misc
-import Crypto.RNG
 import DB
 import MinutesTime
 import User.Model
@@ -14,13 +13,12 @@ import Context
 import TestKontra as T
 import Control.Applicative
 import Happstack.Server
-import Templates.TemplatesLoader
 import Text.JSON
 import ActionSchedulerState
 import Login
 import SignupTest (getAccountCreatedActions)
 
-userHistoryTests :: (Nexus, CryptoRNGState) -> Test
+userHistoryTests :: TestEnvSt -> Test
 userHistoryTests env = testGroup "User's history" [
       testThat "Test creating login attempt event"          env testLoginAttempt
     , testThat "Test creating login success event"          env testLoginSuccess
@@ -114,8 +112,7 @@ testDetailsChanged = do
 testHandlerForLoginAttempt :: TestEnv ()
 testHandlerForLoginAttempt = do
     user <- createTestUser
-    globaltemplates <- readGlobalTemplates
-    ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    ctx <- mkContext (mkLocaleFromRegion defaultValue)
     req <- mkRequest POST [ ("email", inText "karol@skrivapa.se")
                           , ("password", inText "test")
                           ]
@@ -128,8 +125,7 @@ testHandlerForLoginAttempt = do
 testHandlerForLoginSuccess :: TestEnv ()
 testHandlerForLoginSuccess = do
     user <- createTestUser
-    globaltemplates <- readGlobalTemplates
-    ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    ctx <- mkContext (mkLocaleFromRegion defaultValue)
     req <- mkRequest POST [ ("email", inText "karol@skrivapa.se")
                           , ("password", inText "test_password")
                           ]
@@ -142,9 +138,8 @@ testHandlerForLoginSuccess = do
 testHandlerForPasswordSetup :: TestEnv ()
 testHandlerForPasswordSetup = do
     user <- createTestUser
-    globaltemplates <- readGlobalTemplates
     ctx <- (\c -> c { ctxmaybeuser = Just user})
-      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+      <$> mkContext (mkLocaleFromRegion defaultValue)
     req <- mkRequest POST [ ("oldpassword", inText "test_password")
                           , ("password", inText "test1111test")
                           , ("password2", inText "test1111test")
@@ -158,9 +153,8 @@ testHandlerForPasswordSetup = do
 testHandlerForPasswordSetupReq :: TestEnv ()
 testHandlerForPasswordSetupReq = do
     user <- createTestUser
-    globaltemplates <- readGlobalTemplates
     ctx <- (\c -> c { ctxmaybeuser = Just user})
-      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+      <$> mkContext (mkLocaleFromRegion defaultValue)
     req <- mkRequest POST [ ("oldpassword", inText "test")
                           , ("password", inText "test1111test")
                           , ("password2", inText "test1111test")
@@ -173,8 +167,7 @@ testHandlerForPasswordSetupReq = do
 
 testHandlerForAccountCreated :: TestEnv ()
 testHandlerForAccountCreated = do
-    globaltemplates <- readGlobalTemplates
-    ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    ctx <- mkContext (mkLocaleFromRegion defaultValue)
     req <- mkRequest POST [ ("email", inText "test@test.com")]
     _ <- runTestKontra req ctx $ signupPagePost
     Just user <- dbQuery $ GetUserByEmail Nothing $ Email "test@test.com"
@@ -188,8 +181,7 @@ testHandlerForAccountCreated = do
 
 testHandlerForTOSAccept :: TestEnv ()
 testHandlerForTOSAccept = do
-    globaltemplates <- readGlobalTemplates
-    ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    ctx <- mkContext (mkLocaleFromRegion defaultValue)
     req1 <- mkRequest POST [("email", inText "karol@skrivapa.se")]
     (_, ctx1) <- runTestKontra req1 ctx $ signupPagePost
     actions <- getAccountCreatedActions
@@ -210,9 +202,8 @@ testHandlerForTOSAccept = do
 testHandlerForDetailsChanged :: TestEnv ()
 testHandlerForDetailsChanged = do
     user <- createTestUser
-    globaltemplates <- readGlobalTemplates
     ctx <- (\c -> c { ctxmaybeuser = Just user})
-      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+      <$> mkContext (mkLocaleFromRegion defaultValue)
     req <- mkRequest POST [ ("fstname", inText "Karol")
                           , ("sndname", inText "Samborski")
                           , ("personalnumber", inText "123")

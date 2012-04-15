@@ -10,12 +10,11 @@ import Data.IORef
 import Data.Typeable
 import qualified Control.Exception.Lifted as E
 
-import Crypto.RNG
 import DB
 import TestingUtil
 import TestKontra
 
-sqlUtilsTests :: (Nexus, CryptoRNGState) -> Test
+sqlUtilsTests :: TestEnvSt -> Test
 sqlUtilsTests env = testGroup "SQLUtils" [
     testThat "fetcher proper data works"               env sqlTestFetcherProperData
   , testThat "fetcher proper data works for many rows" env sqlTestFetcherProperDataManyRows

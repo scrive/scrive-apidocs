@@ -11,7 +11,6 @@ import qualified Codec.MIME.Type as MIME
 import Doc.DocStateData
 import Data.List
 
-import Crypto.RNG
 import DB
 import MagicHash
 import Context
@@ -19,7 +18,6 @@ import Doc.Model
 import Misc
 import User.Model
 import TestingUtil
-import Templates.TemplatesLoader
 import TestKontra as T
 import Doc.DocInfo
 import qualified Log
@@ -28,7 +26,7 @@ import ScriveByMail.Control
 import ScriveByMail.Model
 import ScriveByMail.Action
 
-mailApiTests :: (Nexus, CryptoRNGState) -> Test
+mailApiTests :: TestEnvSt -> Test
 mailApiTests env = testGroup "MailAPI" [
       testThat "GetUserMailAPI/SetUserMailAPI works" env test_getUserMailAPI
     , testThat "Create simple email document with one signatory"      env $ testSuccessfulDocCreation "test/mailapi/email_simple_onesig.eml" 2
@@ -65,9 +63,8 @@ testSuccessfulDocCreation emlfile sigs = withSystemTempDirectory' "mailapi-test-
     req <- mkRequest POST [("mail", inFile emlfile)]
     uid <- createTestUser
     muser <- dbQuery $ GetUserByID uid
-    globaltemplates <- readGlobalTemplates
     ctx <- (\c -> c { ctxdocstore = tmpdir, ctxmaybeuser = muser })
-      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+      <$> mkContext (mkLocaleFromRegion defaultValue)
     _ <- dbUpdate $ SetUserMailAPIKey uid (read "ef545848bcd3f7d8") 1
     (res, _) <- runTestKontra req ctx handleMailAPI
 

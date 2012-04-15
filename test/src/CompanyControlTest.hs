@@ -11,16 +11,14 @@ import Company.CompanyControl
 import Company.Model
 import CompanyAccounts.Model
 import Context
-import Crypto.RNG
 import DB
 import Misc
 import Redirect
-import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
 import Util.JSON
 
-companyControlTests :: (Nexus, CryptoRNGState) -> Test
+companyControlTests :: TestEnvSt -> Test
 companyControlTests env = testGroup "CompanyControl" [
     testThat "handleGetCompany works" env test_handleGetCompany
   , testThat "handleGetCompanyJSON works" env test_handleGetCompanyJSON
@@ -32,9 +30,8 @@ test_handleGetCompany :: TestEnv ()
 test_handleGetCompany = do
   (user, _company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest GET []
   (res, _ctx') <- runTestKontra req ctx $ handleGetCompany
@@ -45,9 +42,8 @@ test_handleGetCompanyJSON :: TestEnv ()
 test_handleGetCompanyJSON = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest GET []
   (jsv, _ctx') <- runTestKontra req ctx $ handleGetCompanyJSON
@@ -68,9 +64,8 @@ test_settingUIWithHandlePostCompany :: TestEnv ()
 test_settingUIWithHandlePostCompany = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
-  globaltemplates <- readGlobalTemplates
   ctx <- (\c -> c { ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req1 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"barsbackground\":\"green\",\"barstextcolour\":\"yellow\"}")
                         , ("logo", inFile "public/img/email-logo.png")
@@ -108,8 +103,7 @@ test_handleCompanyLogo :: TestEnv ()
 test_handleCompanyLogo = do
   (_user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
-  globaltemplates <- readGlobalTemplates
-  ctx <- mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- mkContext $ mkLocaleFromRegion defaultValue
 
   req <- mkRequest GET []
   (res, _ctx') <- runTestKontra req ctx $ handleCompanyLogo (companyid company)

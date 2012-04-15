@@ -6,13 +6,12 @@ import Data.Maybe
 import Test.Framework
 
 import API.Service.Model
-import Crypto.RNG
 import DB
 import User.Model
 import TestingUtil
 import TestKontra
 
-serviceStateTests :: (Nexus, CryptoRNGState) -> Test
+serviceStateTests :: TestEnvSt -> Test
 serviceStateTests env = testGroup "ServiceState" [
     testThat "CreateService works" env test_createService
   , testThat "GetService works" env test_getService

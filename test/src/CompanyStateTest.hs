@@ -4,12 +4,11 @@ import Control.Monad
 import Test.Framework
 
 import Company.Model
-import Crypto.RNG
 import DB
 import TestingUtil
 import TestKontra
 
-companyStateTests :: (Nexus, CryptoRNGState) -> Test
+companyStateTests :: TestEnvSt -> Test
 companyStateTests env = testGroup "CompanyState" [
     testThat "CreateCompany works" env test_createCompany
   , testThat "GetCompanies works" env test_getCompanies

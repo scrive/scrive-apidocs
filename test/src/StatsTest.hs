@@ -1,7 +1,6 @@
 module StatsTest (statsTests) where
 
 import Control.Logic
-import Crypto.RNG
 import DB
 import User.Model
 import Doc.Model
@@ -28,7 +27,7 @@ import Util.HasSomeUserInfo
 import Data.Maybe
 import EvidenceLog.Model
 
-statsTests :: (Nexus, CryptoRNGState) -> Test
+statsTests :: TestEnvSt -> Test
 statsTests env = testGroup "Stats" [
     testThat "test invite stat"                  env testInviteStat
   , testThat "test receive stat"                 env testReceiveStat

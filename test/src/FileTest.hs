@@ -1,6 +1,5 @@
 module FileTest (fileTests) where
 
-import Crypto.RNG
 import DB
 import TestingUtil
 import TestKontra
@@ -13,7 +12,7 @@ import qualified Data.ByteString.UTF8 as BS
 import Happstack.Server.SimpleHTTP
 import File.File
 
-fileTests :: (Nexus, CryptoRNGState) -> Test
+fileTests :: TestEnvSt -> Test
 fileTests env = testGroup "Files" [
   -- Primitive properties
   testThat "FileID read - show works" env testFileIDReadShow,

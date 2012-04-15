@@ -9,10 +9,9 @@ import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit.Base (Assertion)
 import TestingUtil
-import Crypto.RNG
-import DB
+import TestKontra
 
-evidenceLogTests :: (Nexus, CryptoRNGState) -> Test
+evidenceLogTests :: TestEnvSt -> Test
 evidenceLogTests _ = testGroup "Evidence Log" [
       testCase "Testing EvidenceEventType conversions not equal" conversionNEq,
       testCase "Testing EvidenceEventType conversions equal" conversionEq
