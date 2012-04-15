@@ -261,15 +261,14 @@ var SignatureDrawerWrapper = Backbone.View.extend({
         }).input();
     },
     footer : function() {
-           var author = this.model.document().authoruser();
+           var signatory = this.model.document().currentSignatory();
            var abutton = this.acceptButton();
            abutton.addClass("float-right");
            var detailsBox = $("<div class='details-box' />");
-           var name = author.fullname();
-           var phone = author.phone();
-           var company = author.company();
+           var name = signatory.nameOrEmail();
+           var company = signatory.company();
            detailsBox.append($("<h1/>").text(name));
-           detailsBox.append($("<h2/>").text(phone + " " + company ));
+           detailsBox.append($("<h2/>").text(company ));
            var cbutton = this.clearButton();
            cbutton.addClass("float-left");
            return $("<div class='footer'/>").append(cbutton).append(abutton).append(detailsBox);
