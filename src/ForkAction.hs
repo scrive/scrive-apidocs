@@ -1,15 +1,15 @@
 module ForkAction (forkAction) where
 
-import Control.Concurrent.MVar.Lifted
+import Control.Concurrent.MVar
 import Control.Monad.Trans
 import Control.Monad.Trans.Control
+import Database.HDBC
 import Numeric
 import System.IO.Unsafe
 import System.Time
 import qualified Control.Concurrent.Lifted as C
 import qualified Control.Exception.Lifted as E
 import qualified Data.Map as Map
-import qualified Database.HDBC as HDBC
 
 import DB
 import qualified Log
@@ -45,23 +45,23 @@ allActions = unsafePerformIO $ newMVar Map.empty
 
 forkAction :: (MonadBaseControl IO m, MonadDB m) => String -> m () -> m ()
 forkAction title action = do
-  nex <- liftIO . HDBC.clone =<< getNexus
-  _ <- C.fork $ flip E.finally (liftIO $ HDBC.disconnect nex) $ do
+  nex <- dbClone
+  _ <- C.fork $ flip E.finally (liftIO $ disconnect nex) $ localNexus (const nex) $ do
     startTime <- liftIO getClockTime
     key <- liftIO $ modifyMVar allActions $ \themap -> do
       let newkey = case Map.maxViewWithKey themap of
             Nothing -> 0
             Just ((k,_),_) -> k + 1
       return (Map.insert newkey (ForkedActionStarted title startTime) themap, newkey)
-    result <- E.try $ localNexus (const nex) action
-    liftIO $ do
-      endTime <- getClockTime
-      case result of
-        Left e -> do
-          HDBC.rollback nex
-          Log.error $ "forkAction: " ++ title ++ ": " ++ show e
-          modifyMVar_ allActions $ return . Map.insert key (ForkedActionError title startTime endTime e)
-        Right _ -> do
-          HDBC.commit nex
-          modifyMVar_ allActions $ return . Map.insert key (ForkedActionDone title startTime endTime)
+    result <- E.try action
+    endTime <- liftIO getClockTime
+    retval <- case result of
+      Left e -> do
+        dbRollback
+        Log.error $ "forkAction: " ++ title ++ ": " ++ show e
+        return $ ForkedActionError title startTime endTime e
+      Right _ -> do
+        dbCommit
+        return $ ForkedActionDone title startTime endTime
+    liftIO $ modifyMVar_ allActions $ return . Map.insert key retval
   return ()

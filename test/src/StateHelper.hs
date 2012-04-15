@@ -8,7 +8,6 @@ import TestKontra
 
 import Control.Concurrent (MVar)
 import Control.Monad.IO.Class
-import Database.HDBC
 import Happstack.Data (Proxy(..))
 import Happstack.State (runTxSystem, TxControl, shutdownSystem, Saver(..))
 import qualified Control.Exception.Lifted as E
@@ -23,7 +22,7 @@ runTestEnv (nex, rng) = runDBT nex . runCryptoRNGT rng . withTestState . withTes
 withTestDB :: TestEnv () -> TestEnv ()
 withTestDB m = E.finally m $ do
   clearTables
-  liftIO . commit =<< getNexus
+  dbCommit
 
 clearTables :: TestEnv ()
 clearTables = runDBEnv $ do

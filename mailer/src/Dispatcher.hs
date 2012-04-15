@@ -45,8 +45,7 @@ dispatcher rng master msender dbconf = do
              res <- dbUpdate $ DeferEmail mailID $ 5 `minutesAfter` now
              when (not res) $
                error $ "CRITICAL: deferring email #" ++ show mailID ++ " failed."
-      -- commit after email was handled properly
-      dbCommit
+      dbCommit -- commit after email was handled properly
   case res of
     Right () -> threadDelay $ 5 * second
     Left (e::E.SomeException) -> do

@@ -42,15 +42,13 @@ import Control.Monad.Error
 import Data.Functor
 import Data.List
 import Data.Maybe
-import Database.HDBC
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
 import Happstack.Server.Internal.Cookie
 import Network.Socket
 import System.Directory
 import System.Time
 
-import Control.Exception.Lifted as E
-
+import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
@@ -175,8 +173,7 @@ appHandler handleRoutes appConf appGlobals = measureResponseTime $
     case res of
       Right response -> return response
       Left response -> do
-        -- if exception was thrown, rollback everything
-        liftIO . rollback =<< getNexus
+        dbRollback -- if exception was thrown, rollback everything
         return response
   where
     measureResponseTime action = do

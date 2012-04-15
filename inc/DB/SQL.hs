@@ -16,7 +16,7 @@ import DB.Model
 
 -- | Instance provided for convenience
 instance Convertible SqlValue SqlValue where
-    safeConvert = Right
+  safeConvert = Right
 
 data SQL = SQL String [SqlValue]
   deriving (Eq, Show)

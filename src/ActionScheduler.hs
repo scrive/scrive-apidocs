@@ -14,7 +14,6 @@ import Control.Monad.Base
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Data.List
-import Database.HDBC
 import Happstack.State
 import qualified Control.Exception.Lifted as E
 
@@ -68,14 +67,13 @@ actionScheduler imp = getMinutesTime
   >>= query . GetExpiredActions imp
   >>= mapM_ (\a -> do
     res <- E.try $ evaluateAction a
-    nex <- getNexus
-    liftIO $ case res of
+    case res of
       Left (e::E.SomeException) -> do
-        rollback nex
         printError a e
+        dbRollback
       Right () -> do
         printSuccess a
-        commit nex
+        dbCommit
     )
   where
     printSuccess a = Log.debug $ "Action " ++ show a ++ " evaluated successfully"
