@@ -186,7 +186,7 @@ window.Document = Backbone.Model.extend({
         });
           return new Submit({
               sign : "YES",
-              url : "/s/" + this.documentid() + "/" + this.viewer().signatoryid(), 
+              url : "/s/" + this.documentid() + "/" + this.viewer().signatoryid(),
               method: "POST",
               magichash: this.viewer().magichash(),
               fieldname: fieldnames,
@@ -347,7 +347,15 @@ window.Document = Backbone.Model.extend({
        return this.get("functionality") == "basic";
     },
     recall: function() {
-       this.fetch({data: this.viewer().forFetch(), processData: true, cache: false});
+       var doc = this;
+       this.fetch({data: this.viewer().forFetch(),
+                   processData: true,
+                   cache: false,
+                   error: function() {
+                    console.error("Failed to fetch doc, trying again ...");
+                    window.setTimeout(doc.recall, 1000);
+                  }
+      });
     },
     needRecall: function() {
         return this.mainfile() == undefined;
