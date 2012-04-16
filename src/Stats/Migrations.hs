@@ -42,3 +42,14 @@ makeUserStatsRepeatableByChangingPK =
            ++ " ADD CONSTRAINT pk_user_stat_events PRIMARY KEY (id)"
       return ()
   }
+
+addAPIStringDocStats :: MonadDB m => Migration m
+addAPIStringDocStats =
+  Migration {
+      mgrTable = tableDocStatEvents
+    , mgrFrom = 2
+    , mgrDo = do
+        kRunRaw $ "ALTER TABLE doc_stat_events "
+          ++      "ADD COLUMN api_string TEXT NOT NULL DEFAULT 'unknown'" 
+        return ()
+    }
