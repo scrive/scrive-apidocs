@@ -1179,7 +1179,7 @@ handleParseCSV = do
                        let (problems, csvdata) = cleanCSVContents eleg customfieldscount contents
                        runJSONGenT $ do
                          J.objects "problems" $ for problems $ \p -> do
-                           J.value "description" =<< lift (csvProblemToDescription p)
+                           J.valueM "description" $ csvProblemToDescription p
                            when (isJust $ problemRow p) $
                              J.value "row" $ fromJust $ problemRow p
                            when (isJust $ problemCell p) $
@@ -1193,5 +1193,5 @@ handleParseCSV = do
       oneProblemJSON :: Kontrakcja m => m String -> m JSValue
       oneProblemJSON desc = runJSONGenT $ do
         J.object "problems" $ do
-          J.value "description" =<< lift desc
+          J.valueM "description" desc
         J.value "rows" ([]::[String])

@@ -219,7 +219,7 @@ documentJSON pq msl _crttime doc = do
       J.value "authorattachments" $ map fileJSON (catMaybes authorattachmentfiles)
       J.object "process" $ processJSON doc
       J.value "region" $ regionJSON doc
-      J.value "infotext" =<< lift (documentInfoText ctx doc msl)
+      J.valueM "infotext" $ documentInfoText ctx doc msl
       J.value "canberestarted" $ isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])
       J.value "canbecanceled" $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending && not (canAuthorSignLast doc) && isNothing (documenttimeouttime doc)
       J.value "canseeallattachments" $ isAuthor msl || isauthoradmin
@@ -325,52 +325,52 @@ jsonDate mdate = toJSValue $ showDateYMD <$> mdate
 
 processJSON :: TemplatesMonad m => Document -> JSONGenT m ()
 processJSON doc = do
-    J.value "title" =<< text processtitle
-    J.value "name" =<< text processname
-    J.value "corename" =<< text processcorename
+    J.valueM "title" $ text processtitle
+    J.valueM "name" $ text processname
+    J.valueM "corename" $ text processcorename
     -- used in the design view
     J.value "basicavailable" $ bool processbasicavailable
     J.value "authorsend" $ bool processauthorsend
     J.value "validationchoiceforbasic" $ bool processvalidationchoiceforbasic
     J.value "expiryforbasic" $ bool processexpiryforbasic
-    J.value "step1text" =<< text processstep1text
-    J.value "expirywarntext" =<< text processexpirywarntext
-    J.value "sendbuttontext" =<< text processsendbuttontext
-    J.value "confirmsendtitle" =<< text processconfirmsendtitle
-    J.value "confirmsendtext" =<< text processconfirmsendtext
-    J.value "expirytext" =<< text processexpirytext
+    J.valueM "step1text" $ text processstep1text
+    J.valueM "expirywarntext" $ text processexpirywarntext
+    J.valueM "sendbuttontext" $ text processsendbuttontext
+    J.valueM "confirmsendtitle" $ text processconfirmsendtitle
+    J.valueM "confirmsendtext" $ text processconfirmsendtext
+    J.valueM "expirytext" $ text processexpirytext
     -- some buttons texts
-    J.value "restartbuttontext" =<< text processrestartbuttontext
-    J.value "cancelbuttontext" =<< text processcancelbuttontext
-    J.value "rejectbuttontext" =<< text processrejectbuttontext
-    J.value "cancelmodaltitle" =<< text processcancelmodaltitle
-    J.value "cancelmodaltext" =<< text processcancelmodaltext
+    J.valueM "restartbuttontext" $ text processrestartbuttontext
+    J.valueM "cancelbuttontext" $ text processcancelbuttontext
+    J.valueM "rejectbuttontext" $ text processrejectbuttontext
+    J.valueM "cancelmodaltitle" $ text processcancelmodaltitle
+    J.valueM "cancelmodaltext" $ text processcancelmodaltext
 
-    J.value "authorissecretarytext" =<< text processauthorissecretarytext
-    J.value "remindagainbuttontext" =<< text processremindagainbuttontext
+    J.valueM "authorissecretarytext" $ text processauthorissecretarytext
+    J.valueM "remindagainbuttontext" $ text processremindagainbuttontext
     -- And more
     J.value "requiressignguard" $ bool processrequiressignguard
-    J.value "signbuttontext" =<< text processsignbuttontext
-    J.value "signatorycancelmodaltitle" =<< text processsignatorycancelmodaltitle
-    J.value "signguardwarntext" =<< text processsignguardwarntext
-    J.value "signatorysignmodalcontentlast" =<< text processsignatorysignmodalcontentlast
-    J.value "signatorysignmodalcontentnotlast" =<< text processsignatorysignmodalcontentnotlast
-    J.value "signatorysignmodalcontentauthorlast" =<< text processsignatorysignmodalcontentauthorlast
-    J.value "signatorysignmodalcontentdesignvieweleg" =<< text processsignatorysignmodalcontentdesignvieweleg
-    J.value "signatorysignmodalcontentsignvieweleg" =<< text processsignatorysignmodalcontentdesignvieweleg
+    J.valueM "signbuttontext" $ text processsignbuttontext
+    J.valueM "signatorycancelmodaltitle" $ text processsignatorycancelmodaltitle
+    J.valueM "signguardwarntext" $ text processsignguardwarntext
+    J.valueM "signatorysignmodalcontentlast" $ text processsignatorysignmodalcontentlast
+    J.valueM "signatorysignmodalcontentnotlast" $ text processsignatorysignmodalcontentnotlast
+    J.valueM "signatorysignmodalcontentauthorlast" $ text processsignatorysignmodalcontentauthorlast
+    J.valueM "signatorysignmodalcontentdesignvieweleg" $ text processsignatorysignmodalcontentdesignvieweleg
+    J.valueM "signatorysignmodalcontentsignvieweleg" $ text processsignatorysignmodalcontentdesignvieweleg
 
-    J.value "signbuttontext" =<< text processsignbuttontext
-    J.value "signbuttontextauthor" =<< text processsignbuttontextauthor
-    J.value "signatorysignmodaltitle" =<< text processsignatorysignmodaltitle
-    J.value "authorsignlastbutton" =<< text processauthorsignlastbuttontext
+    J.valueM "signbuttontext" $ text processsignbuttontext
+    J.valueM "signbuttontextauthor" $ text processsignbuttontextauthor
+    J.valueM "signatorysignmodaltitle" $ text processsignatorysignmodaltitle
+    J.valueM "authorsignlastbutton" $ text processauthorsignlastbuttontext
 
-    J.value "authorname" =<< text processauthorname
-    J.value "authorsignatoryname" =<< text processauthorsignatoryname
-    J.value "signatoryname" =<< text processsignatoryname
-    J.value "nonsignatoryname" =<< text processnonsignatoryname
+    J.valueM "authorname" $ text processauthorname
+    J.valueM "authorsignatoryname" $ text processauthorsignatoryname
+    J.valueM "signatoryname" $ text processsignatoryname
+    J.valueM "nonsignatoryname" $ text processnonsignatoryname
     J.value "numberedsignatories" $ bool processnumberedsignatories
     where
-      text k = lift $ do
+      text k = do
         partylist <- renderListTemplate . map getSmartName $ partyList doc
         renderTemplateForProcess doc k $ do
           F.value "partylist" partylist

@@ -5,6 +5,7 @@
   , JSONGenT
   , runJSONGenT
   , value
+  , valueM
   , object
   , objects
   ) where
@@ -35,6 +36,9 @@ runJSONGenT (JSONGenT f) = (JSObject . toJSObject . toList) `liftM` execStateT f
 
 value :: (Monad m, ToJSValue a) => String -> a -> JSONGenT m ()
 value name val = JSONGenT $ modify (|> (name, toJSValue val))
+
+valueM :: (Monad m, ToJSValue a) => String -> m a -> JSONGenT m ()
+valueM name mval = lift mval >>= value name
 
 object :: Monad m => String -> JSONGenT m () -> JSONGenT m ()
 object name json = JSONGenT $ do

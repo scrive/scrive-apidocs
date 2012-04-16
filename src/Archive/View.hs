@@ -120,8 +120,8 @@ docFieldsListForJSON tl crtime padqueue doc = do
     J.value "partnercomp" $ intercalate ", " $ map getCompanyName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)
     J.value "author" $ intercalate ", " $ map getSmartName $ filter isAuthor $ (documentsignatorylinks doc)
     J.value "time" $ showDateAbbrev tl crtime (documentmtime doc)
-    J.value "process" =<< lift (renderTextForProcess doc processname)
-    J.value "type" =<< lift renderDocType
+    J.valueM "process" $ renderTextForProcess doc processname
+    J.valueM "type" renderDocType
     J.value "anyinvitationundelivered" $ show $ anyInvitationUndelivered  doc && Pending == documentstatus doc
     J.value "shared" $ show $ documentsharing doc == Shared
     J.value "file" $ fromMaybe "" $ show <$> (listToMaybe $ (documentsealedfiles doc) ++ (documentfiles doc))
