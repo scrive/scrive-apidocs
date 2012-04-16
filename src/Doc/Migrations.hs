@@ -12,8 +12,11 @@ import DB.Utils
 import Doc.Tables
 import Log
 import Doc.DocumentID
-import Doc.DocStateData()
+import Doc.DocStateData
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as BS
+import Misc
+import Data.Maybe
 
 updateDocumentStatusAfterRemovingAwaitingAuthor :: Migration
 updateDocumentStatusAfterRemovingAwaitingAuthor = Migration {
@@ -163,3 +166,32 @@ addSignatoryLinkIdToSignatoryAttachment =
         decoder :: [(DocumentID, BS.ByteString, BS.ByteString, BS.ByteString)] -> DocumentID -> BS.ByteString -> BS.ByteString -> BS.ByteString -> [(DocumentID, BS.ByteString, BS.ByteString, BS.ByteString)]
         decoder acc docid name email desc = (docid, name, email, desc) : acc
 
+fixSignatoryLinksSwedishChars :: Migration
+fixSignatoryLinksSwedishChars =
+  Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 5
+  , mgrDo = do
+     Log.debug "Starting migration for swedish chars"
+     kRunRaw $ "SELECT id,document_id, fields FROM signatory_links"
+     sls <- foldDB decoder []
+     forM_ sls $ \(sid,did,fields) -> kRun $ SQL "UPDATE signatory_links SET fields = ? WHERE id = ? AND document_id = ?" [ toSql (fixSwedishChars fields)
+                                                                                                                           , toSql sid
+                                                                                                                           , toSql did ]
+     Log.debug "Migration for swedish chars done"
+  }
+    where
+        decoder :: [(SignatoryLinkID, DocumentID, [SignatoryField])] ->  SignatoryLinkID ->  DocumentID -> [SignatoryField] -> [(SignatoryLinkID, DocumentID, [SignatoryField])]
+        decoder acc sid did fields = (sid,did,fields) : acc
+        fixSwedishChars :: [SignatoryField] ->  [SignatoryField]
+        fixSwedishChars = map fixSwedishCharsForAField
+        fixSwedishCharsForAField :: SignatoryField -> SignatoryField
+        fixSwedishCharsForAField f = f {  sfType = fixSwedishCharsForAFieldType (sfType f)
+                                        , sfValue = fixSwedishCharsForAString (sfValue f)
+                                       }
+        fixSwedishCharsForAFieldType (CustomFT s b) = CustomFT (fixSwedishCharsForAString s) b
+        fixSwedishCharsForAFieldType a = a
+        fixSwedishCharsForAString :: String -> String
+        fixSwedishCharsForAString s = if (('\\' `elem` s) && (isJust $ (maybeRead (show s) :: Maybe BS.ByteString)))
+                                        then BS.toString $ fromJust $ maybeRead (show s)
+                                        else s

@@ -51,6 +51,7 @@ kontraMigrations = [
   , addEmailDomainOnCompanies
   , addCompanyNameNumberOnUsers
   , updateDocumentStatusAfterRemovingAwaitingAuthor
+  , fixSignatoryLinksSwedishChars
   ] ++ mailerMigrations
 
 kontraTables :: [Table]
