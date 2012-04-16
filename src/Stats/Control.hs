@@ -106,7 +106,7 @@ showAdminSystemUsageStats = onlySalesOrAdmin $ do
 handleDocStatsCSV :: Kontrakcja m => m Response
 handleDocStatsCSV = onlySalesOrAdmin $ do
   stats <- dbQuery GetDocStatEvents
-  let docstatsheader = ["userid", "user", "date", "event", "count", "docid", "serviceid", "company", "companyid", "doctype"]
+  let docstatsheader = ["userid", "user", "date", "event", "count", "docid", "serviceid", "company", "companyid", "doctype", "api"]
   csvstrings <- docStatsToString stats [] []
   let res = Response 200 Map.empty nullRsFlags (toCSV docstatsheader csvstrings) Nothing
   Log.debug $ "All doc stats length with bytestring" ++ (show $ length stats) ++ " " ++ (show $ length $ show $ rsBody res)
@@ -133,6 +133,7 @@ docStatsToString (e:es) usernames companynames = do
            , companyname
            , maybe "" show $ seCompanyID e
            , show $ seDocumentType e
+           , show $ seAPIString e
            ] : rest
 
 dbUserIDLookup :: (Kontrakcja m) => UserID -> [(UserID, String)] -> m (String, [(UserID, String)])
