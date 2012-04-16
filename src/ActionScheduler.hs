@@ -199,7 +199,7 @@ timeoutDocuments now = do
         case edoc of
           Left _ -> return ()
           Right doc' -> do
-            _ <- addDocumentTimeoutStatEvents doc'
+            _ <- addDocumentTimeoutStatEvents doc' "scheduler"
             return ()
         Log.debug $ "Document timedout " ++ (show $ documenttitle doc)
 

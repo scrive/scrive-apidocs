@@ -609,7 +609,7 @@ handleAccountSetupPost aid hash = do
             Just (_activateduser, docs) -> do
               dropExistingAction aid
 
-              forM_ docs postDocumentPreparationChange
+              forM_ docs (\d->postDocumentPreparationChange d "mailapi")
 
               addFlashM flashMessageUserActivated
               return ()

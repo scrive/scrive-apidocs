@@ -292,7 +292,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
     internalError
 
   let Right resdoc = last res
-  _ <- addDocumentCreateStatEvents resdoc
+  _ <- addDocumentCreateStatEvents resdoc "mailapi+simple"
 
   edoc2 <- dbUpdate $ PreparationToPending (documentid doc) actor    
   
@@ -557,7 +557,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
     internalError
 
   let Right resdoc = last res
-  _ <- addDocumentCreateStatEvents resdoc
+  _ <- addDocumentCreateStatEvents resdoc "mailapi+json"
 
   edoc2 <- dbUpdate $ PreparationToPending (documentid doc) actor
   when (isLeft edoc2) $ do

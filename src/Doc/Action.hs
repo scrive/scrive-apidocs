@@ -43,8 +43,8 @@ import Data.Maybe hiding (fromJust)
 import qualified Data.ByteString as BS
 import ForkAction
 
-postDocumentPreparationChange :: Kontrakcja m => Document -> m ()
-postDocumentPreparationChange doc@Document{documentid, documenttitle} = do
+postDocumentPreparationChange :: Kontrakcja m => Document -> String -> m ()
+postDocumentPreparationChange doc@Document{documentid, documenttitle} apistring = do
   unless (isPending doc) $
     stateMismatchError "postDocumentPreparationChange" Pending doc
   Log.docevent $ "Preparation -> Pending; Sending invitation emails: " ++ show documentid
@@ -61,16 +61,16 @@ postDocumentPreparationChange doc@Document{documentid, documenttitle} = do
              else return $ Right $ document'
   case edoc of
     Left _ -> do
-      _ <- addDocumentSendStatEvents document'
+      _ <- addDocumentSendStatEvents document' apistring
       forM_ (documentsignatorylinks document') $ \sl ->
         addSignStatInviteEvent document' sl (ctxtime ctx)
     Right doc2 -> do
-      _ <- addDocumentSendStatEvents doc2
+      _ <- addDocumentSendStatEvents doc2 apistring
       forM_ (documentsignatorylinks doc2) $ \sl ->
         addSignStatInviteEvent doc2 sl (ctxtime ctx)
 
-postDocumentPendingChange :: Kontrakcja m => Document -> Document -> m ()
-postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc = do
+postDocumentPendingChange :: Kontrakcja m => Document -> Document -> String -> m ()
+postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc apistring = do
   unless (isPending doc) $
     stateMismatchError "postDocumentPendingChange" Pending doc
   case undefined of
@@ -86,7 +86,7 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc = do
       time <- ctxtime `liftM` getContext
       closeddoc <- guardRightM $ dbUpdate $ CloseDocument documentid (systemActor time)
       Log.docevent $ "Pending -> Closed; Sending emails: " ++ show documentid
-      _ <- addDocumentCloseStatEvents closeddoc
+      _ <- addDocumentCloseStatEvents closeddoc apistring
       author <- getDocAuthor closeddoc
       forkAction ("Sealing document #" ++ show documentid ++ ": " ++ documenttitle) $ do
         enewdoc <- sealDocument closeddoc
@@ -106,12 +106,12 @@ postDocumentPendingChange doc@Document{documentid, documenttitle} olddoc = do
   where
     allSignatoriesSigned = all (isSignatory =>>^ hasSigned) . documentsignatorylinks
 
-postDocumentRejectedChange :: Kontrakcja m => Document -> SignatoryLinkID -> m ()
-postDocumentRejectedChange doc@Document{..} siglinkid = do
+postDocumentRejectedChange :: Kontrakcja m => Document -> SignatoryLinkID -> String -> m ()
+postDocumentRejectedChange doc@Document{..} siglinkid apistring = do
   unless (isRejected doc) $
     stateMismatchError "postDocumentRejectedChange" Rejected doc
   Log.docevent $ "Pending -> Rejected; send reject emails: " ++ show documentid
-  _ <- addDocumentRejectStatEvents doc
+  _ <- addDocumentRejectStatEvents doc apistring
   Log.server $ "Sending rejection emails for document #" ++ show documentid ++ ": " ++ documenttitle
   ctx <- getContext
   customMessage <- getCustomTextField "customtext"
@@ -119,12 +119,12 @@ postDocumentRejectedChange doc@Document{..} siglinkid = do
     sendRejectEmails customMessage ctx doc ($(fromJust) $ getSigLinkFor doc siglinkid)
   return ()
 
-postDocumentCanceledChange :: Kontrakcja m => Document -> m ()
-postDocumentCanceledChange doc@Document{..} = do
+postDocumentCanceledChange :: Kontrakcja m => Document -> String -> m ()
+postDocumentCanceledChange doc@Document{..} apistring = do
   unless (isCanceled doc) $
     stateMismatchError "postDocumentCanceledChange" Canceled doc
   Log.docevent $ "Pending -> Canceled (ElegDataMismatch); Sending cancelation emails: " ++ show documentid
-  _ <- addDocumentCancelStatEvents doc
+  _ <- addDocumentCancelStatEvents doc apistring
   -- if canceled because of ElegDataMismatch, send out emails
   case documentcancelationreason of
     Just reason | isELegDataMismatch reason -> do

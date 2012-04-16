@@ -85,7 +85,7 @@ documentNew = api $ do
   file <- lift $ dbUpdate $ NewFile filename content
 
   d2 <- apiGuardL $ dbUpdate $ AttachFile (documentid d1) (fileid file) aa
-  _ <- lift $ addDocumentCreateStatEvents d2
+  _ <- lift $ addDocumentCreateStatEvents d2 "web"
   return $ Created $ jsonDocumentForAuthor d2
 
 -- this one must be standard post with post params because it needs to

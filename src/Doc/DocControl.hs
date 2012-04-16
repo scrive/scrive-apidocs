@@ -169,7 +169,7 @@ signDocument documentid
                     BankID.Sign sinfo ->  Right <$>  signDocumentWithEleg documentid signatorylinkid magichash fields sinfo
   case edoc of
     Right (Right (doc, olddoc)) -> do
-      postDocumentPendingChange doc olddoc
+      postDocumentPendingChange doc olddoc "web"
       udoc <- guardJustM $ dbQuery $ GetDocumentByDocumentID documentid
       handleAfterSigning udoc signatorylinkid
       return LoopBack
@@ -197,7 +197,7 @@ handleMismatch doc sid msg sfn sln spn = do
                          (maybesignatory sl)
                          (getEmail sl)
                          sid)
-        postDocumentCanceledChange newdoc
+        postDocumentCanceledChange newdoc "web+eleg"
 
 {- |
     Call after signing in order to save the document for any user, and
@@ -239,7 +239,7 @@ rejectDocument documentid siglinkid = do
       getHomeOrUploadLink
     Left _ -> internalError
     Right document -> do
-      postDocumentRejectedChange document siglinkid
+      postDocumentRejectedChange document siglinkid "web"
       addFlashM $ modalRejectedView document
       return $ LoopBack
 
@@ -401,7 +401,7 @@ handleIssueSign document = do
                         BankID.Sign sinfo -> Right <$>  authorSignDocument (documentid doc) (Just sinfo)
         case mndoc of
           Right (Right newdocument) -> do
-            postDocumentPreparationChange newdocument
+            postDocumentPreparationChange newdocument "web"
             return $ Right newdocument
           _ -> return $ Left LoopBack
 
@@ -441,7 +441,7 @@ handleIssueSend document = do
       forIndividual doc = do
         mndoc <- authorSendDocument (documentid doc)
         case mndoc of
-          Right newdocument -> postDocumentPreparationChange newdocument
+          Right newdocument -> postDocumentPreparationChange newdocument "web"
           Left _ -> return ()
         return mndoc
 
@@ -499,7 +499,7 @@ handleIssueSignByAuthor doc = do
 
      case mndoc of
          Right (Right ndoc) -> do
-             postDocumentPendingChange ndoc doc
+             postDocumentPendingChange ndoc doc "web"
              addFlashM flashAuthorSigned
              return $ LinkIssueDoc (documentid doc)
          _ -> return LoopBack
@@ -646,7 +646,7 @@ handleIssueNewDocument = withUserPost $ do
       Nothing -> return LinkUpload
       Just doc -> do
         Log.debug $ "Document #" ++ show (documentid doc) ++ " created"
-        _ <- addDocumentCreateStatEvents doc
+        _ <- addDocumentCreateStatEvents doc "web"
         return $ LinkIssueDoc $ documentid doc
 
 handleCreateNewTemplate:: Kontrakcja m => m KontraLink
@@ -656,7 +656,7 @@ handleCreateNewTemplate = withUserPost $ do
   case mdoc of
     Nothing -> return $ LinkTemplates
     Just doc -> do
-      _ <- addDocumentCreateStatEvents doc
+      _ <- addDocumentCreateStatEvents doc "web"
       return $ LinkIssueDoc $ documentid doc
 
 handleCreateNewAttachment:: Kontrakcja m => m KontraLink
@@ -664,7 +664,7 @@ handleCreateNewAttachment = withUserPost $ do
   input <- getDataFnM (lookInput "doc")
   mdoc <- makeDocumentFromFile Attachment input 0
   when (isJust mdoc) $ do
-    _<- addDocumentCreateStatEvents $ fromJust mdoc
+    _<- addDocumentCreateStatEvents (fromJust mdoc) "web"
     return ()
   return LinkAttachments
 
@@ -964,7 +964,7 @@ handleCreateFromTemplate = withUserPost $ do
                     else internalError
       case enewdoc of
         Right newdoc -> do
-          _ <- addDocumentCreateStatEvents newdoc
+          _ <- addDocumentCreateStatEvents newdoc "web"
           Log.debug $ show "Document created from template"
           return $ LinkIssueDoc $ documentid newdoc
         Left _ -> internalError
