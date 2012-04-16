@@ -51,6 +51,7 @@ kontraMigrations = [
   , addEmailDomainOnCompanies
   , addCompanyNameNumberOnUsers
   , updateDocumentStatusAfterRemovingAwaitingAuthor
+  , moveDocumentTagsFromDocumentsTableToDocumentTagsTable
   ] ++ mailerMigrations
 
 kontraTables :: [Table]
@@ -76,4 +77,5 @@ kontraTables = [
   , tableCompanyMailAPIs
   , tableUserRequest
   , tableMailAPIDelay
+  , tableDocumentTags
   ] ++ mailerTables

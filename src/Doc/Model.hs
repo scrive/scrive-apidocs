@@ -107,7 +107,6 @@ import qualified Data.Map as M
 import Doc.Tables
 import Control.Applicative
 import Util.SignatoryLinkUtils
-import Text.JSON.Generic
 import Doc.DocProcess
 import Doc.DocStateCommon
 import qualified Log
@@ -270,12 +269,8 @@ documentFilterToSQL (DocumentFilterByRole role) =
 documentFilterToSQL (DocumentFilterByTags []) =
   SQL "TRUE" []
 documentFilterToSQL (DocumentFilterByTags tags) =
-  sqlConcatAND $ map (\tag -> SQL "documents.tags LIKE ?" [toSql $ "%" ++ concatMap escape (encodeJSON tag) ++ "%"]) tags
-  where
-      escape '\\' = "\\\\"
-      escape '%' = "\\%"
-      escape '_' = "\\_"
-      escape c = [c]
+  sqlConcatAND $ map (\tag -> SQL "EXISTS (SELECT 1 FROM document_tags WHERE name = ? AND value = ? AND document_id = documents.id)"
+                              [toSql $ tagname tag, toSql $ tagvalue tag]) tags
 documentFilterToSQL (DocumentFilterByString string) =
   SQL "documents.title ILIKE ?" [sqlpat] `sqlOR` 
      sqlJoinWithAND (map (\wordpat -> SQL "signatory_links.fields ILIKE ?" [wordpat]) sqlwordpat)
@@ -398,7 +393,7 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    , checkEqualBy "documentcancelationreason" documentcancelationreason
                    , checkEqualBy "documentsharing" documentsharing
                    , checkEqualBy "documentrejectioninfo" documentrejectioninfo
-                   , checkEqualBy "documenttags" documenttags
+                   , checkEqualBy "documenttags" (sort . documenttags)
                    , checkEqualBy "documentservice" documentservice
                    , checkEqualBy "documentdeleted" documentdeleted
                    , checkEqualBy "documentauthorattachments" documentauthorattachments
@@ -433,7 +428,6 @@ documentsSelectors = intercalate ", " [
   , "rejection_time"
   , "rejection_signatory_link_id"
   , "rejection_reason"
-  , "tags"
   , "service_id"
   , "deleted"
   , "mail_footer"
@@ -455,7 +449,7 @@ fetchDocuments = foldDB decoder []
     decoder acc did title file_id sealed_file_id status error_text simple_type
      process functionality ctime mtime days_to_sign timeout_time invite_time
      invite_ip dlog invite_text allowed_id_types cancelationreason rejection_time
-     rejection_signatory_link_id rejection_reason tags service deleted mail_footer
+     rejection_signatory_link_id rejection_reason service deleted mail_footer
      region sharing status_class = Document {
          documentid = did
        , documenttitle = title
@@ -483,7 +477,7 @@ fetchDocuments = foldDB decoder []
        , documentrejectioninfo = case (rejection_time, rejection_signatory_link_id, rejection_reason) of
            (Just t, Just sl, mr) -> Just (t, sl, fromMaybe "" mr)
            _ -> Nothing
-       , documenttags = tags
+       , documenttags = []
        , documentservice = service
        , documentdeleted = deleted
        , documentauthorattachments = []
@@ -690,6 +684,51 @@ fetchSignatoryAttachments = foldDB decoder M.empty
                                                                  , signatoryattachmentdescription = description
                                                                  }] acc
 
+
+
+
+
+documentTagsSelectors :: String
+documentTagsSelectors = intercalate ", " [
+    "document_id"
+  , "name"
+  , "value"
+  ]
+
+selectDocumentTagsSQL :: SQL
+selectDocumentTagsSQL = SQL ("SELECT "
+  ++ documentTagsSelectors
+  ++ " FROM document_tags ") []
+
+fetchDocumentTags :: DB (M.Map DocumentID [DocumentTag])
+fetchDocumentTags = foldDB decoder M.empty
+  where
+    decoder acc document_id name value =
+      M.insertWith' (++) document_id
+         [DocumentTag name value] acc
+
+insertDocumentTagAsIs :: DocumentID -> DocumentTag -> DB (Maybe DocumentTag)
+insertDocumentTagAsIs documentid tag = do
+  _ <- kRun $ mkSQL INSERT tableDocumentTags
+       [ sql "name" $ tagname tag
+       , sql "value" $ tagvalue tag
+       , sql "document_id" documentid
+       ] <++> SQL ("RETURNING " ++ documentTagsSelectors) []
+
+  fetchDocumentTags
+    >>= oneObjectReturnedGuard . concatMap snd . M.toList
+
+
+
+
+
+
+
+
+
+
+
+
 authorAttachmentsSelectors :: String
 authorAttachmentsSelectors = intercalate ", " [
     "document_id"
@@ -763,7 +802,6 @@ insertDocumentAsIs document = do
 
     _ <- kRun $ mkSQL INSERT tableDocuments [
         sql "title" documenttitle
-      , sql "tags" documenttags
       , sql "file_id" $ listToMaybe documentfiles
       , sql "sealed_file_id" $ listToMaybe documentsealedfiles
       , sql "status" documentstatus
@@ -799,11 +837,13 @@ insertDocumentAsIs document = do
       Just doc -> do
         mlinks <- mapM (insertSignatoryLinkAsIs (documentid doc)) documentsignatorylinks
         mauthorattachments <- mapM (insertAuthorAttachmentAsIs (documentid doc)) documentauthorattachments
-        if any isNothing mlinks || any isNothing mauthorattachments
+        mtags <- mapM (insertDocumentTagAsIs (documentid doc)) documenttags
+        if any isNothing mlinks || any isNothing mauthorattachments || any isNothing mtags
          then return Nothing
          else do
-          let newdocument = doc { documentsignatorylinks = catMaybes mlinks
+          let newdocument = doc { documentsignatorylinks    = catMaybes mlinks
                                 , documentauthorattachments = catMaybes mauthorattachments
+                                , documenttags              = catMaybes mtags
                                 }
           assertEqualDocuments document newdocument
           return (Just newdocument)
@@ -1195,11 +1235,15 @@ selectDocuments query = do
     _ <- kRun $ selectAuthorAttachmentsSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE author_attachments.document_id = docs.id) ORDER BY document_id DESC" []
     ats <- fetchAuthorAttachments
 
+    _ <- kRun $ selectDocumentTagsSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE document_tags.document_id = docs.id)" []
+    tags <- fetchDocumentTags
+
     kRunRaw "DROP TABLE docs"
 
     let fill doc = doc
                    { documentsignatorylinks       = M.findWithDefault [] (documentid doc) sls
                    , documentauthorattachments    = M.findWithDefault [] (documentid doc) ats
+                   , documenttags                 = M.findWithDefault [] (documentid doc) tags
                    }
 
     return $ map fill docs
@@ -1676,16 +1720,16 @@ instance Actor a => DBUpdate (SetDocumentTags a) (Either String Document) where
     let changed = case ed of
           Nothing -> True
           Just d -> not $ listsEqualNoOrder doctags $ documenttags d
-    r <- kRun $ mkSQL UPDATE tableDocuments [sql "tags" doctags]
-      <++> SQL "WHERE id = ?" [toSql did]
+    _ <- kRun $ SQL "DELETE FROM document_tags WHERE document_id = ?" [toSql did]
+    mtags <- mapM (insertDocumentTagAsIs did) doctags
     let tagstr = intercalate "; " $ map (\(DocumentTag k v)-> k ++ "=" ++ v) doctags
-    when_ (r == 1 && changed) $
+    when_ (not (any isNothing mtags) && changed) $
       dbUpdate $ InsertEvidenceEvent
       SetDocumentTagsEvidence
       ("Document tags set to " ++ show tagstr ++ " by " ++ actorWho actor ++ ".")
       (Just did)
       actor
-    getOneDocumentAffected "SetDocumentTags" r did
+    getOneDocumentAffected "SetDocumentTags" 1 did
 
 data Actor a => SetDocumentInviteTime a = SetDocumentInviteTime DocumentID MinutesTime a
 instance Actor a => DBUpdate (SetDocumentInviteTime a) (Either String Document) where

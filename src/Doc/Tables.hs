@@ -8,7 +8,7 @@ import DB.Model
 tableDocuments :: Table
 tableDocuments = Table {
     tblName = "documents"
-  , tblVersion = 4
+  , tblVersion = 5
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("service_id", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
@@ -38,7 +38,6 @@ tableDocuments = Table {
        , ("rejection_time", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True})
        , ("rejection_signatory_link_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("rejection_reason", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
-       , ("tags", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("mail_footer", SqlColDesc {colType = SqlVarCharT, colNullable = Just True})
        , ("region", SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
        , ("deleted", SqlColDesc {colType = SqlBitT, colNullable = Just False})
@@ -73,7 +72,6 @@ tableDocuments = Table {
           ++ ", rejection_time TIMESTAMPTZ NULL"
           ++ ", rejection_signatory_link_id BIGINT NULL"
           ++ ", rejection_reason TEXT NULL"
-          ++ ", tags TEXT NOT NULL"
           ++ ", mail_footer TEXT NULL"
           ++ ", region SMALLINT NOT NULL"
           ++ ", deleted BOOL NOT NULL"
@@ -258,4 +256,26 @@ tableSignatoryLinks = Table {
     kRunRaw $ "SELECT setval('signatory_links_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM signatory_links))"
       -- and finally attach serial default value to files.id
     kRunRaw $ "ALTER TABLE signatory_links ALTER id SET DEFAULT nextval('signatory_links_id_seq')"
+  }
+
+
+tableDocumentTags :: Table
+tableDocumentTags = Table {
+    tblName = "document_tags"
+  , tblVersion = 1
+  , tblCreateOrValidate = \desc -> case desc of
+      [ ("document_id", SqlColDesc {colType = SqlBigIntT,  colNullable = Just False})
+       , ("name",        SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       , ("value",       SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
+       ] -> return TVRvalid
+      [] -> do
+        kRunRaw $ "CREATE TABLE document_tags"
+                  ++ "( document_id BIGINT NOT NULL"
+                  ++ ", name        TEXT   NOT NULL"
+                  ++ ", value       TEXT   NOT NULL"
+                  ++ ")"
+        return TVRcreated
+      _ -> return TVRinvalid
+  , tblPutProperties = do
+    kRunRaw $ "CREATE INDEX idx_document_tags_document_id ON document_tags(document_id)"
   }

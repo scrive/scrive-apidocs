@@ -1976,7 +1976,7 @@ testSetDocumentTagsRight = doTimes 10 $ do
   edoc <- randomUpdate $ SetDocumentTags (documentid doc) tags actor
   validTest $ do
     assertRight edoc
-    assertEqual "Tags should be equal" tags $ documenttags (fromRight edoc)
+    assertEqual "Tags should be equal" (sort tags) $ sort (documenttags (fromRight edoc))
 
 testSetDocumentUINotLeft :: DB ()
 testSetDocumentUINotLeft = doTimes 10 $ do
