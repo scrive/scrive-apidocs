@@ -62,7 +62,7 @@ window.Submit = Backbone.Model.extend({
             form.attr("enctype","multipart/form-data");
         for (var k in this.attributes) {
             var val = this.get(k);
-            if (this.ignored(k))
+            if (this.ignored(k) || val == undefined)
                 continue ;
             else if (!$.isArray(val)) {
                 var input = $("<input type='hidden' />");

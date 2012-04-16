@@ -147,7 +147,7 @@ data DocumentDomain
   | TemplatesOfAuthorDeleteValue UserID Bool     -- ^ Templates by author, with deleted flag
   | TemplatesSharedInUsersCompany UserID         -- ^ Templates shared in company
   | DocumentsOfService (Maybe ServiceID)         -- ^ All documents of service
-  | DocumentsOfCompany CompanyID                 -- ^ All documents of a company, not deleted
+  | DocumentsOfCompany CompanyID Bool Bool       -- ^ All documents of a company, with flag for selecting also drafts and deleted
   | AttachmentsOfAuthorDeleteValue UserID Bool   -- ^ Attachments of user, with deleted flag
 
 -- | These are possible order by clauses that make documents sorted by.
@@ -228,9 +228,9 @@ documentDomainToSQL (TemplatesSharedInUsersCompany uid) =
 documentDomainToSQL (DocumentsOfService sid) =
   SQL "documents.service_id IS NOT DISTINCT FROM ? AND documents.type = 1"
         [toSql sid]
-documentDomainToSQL (DocumentsOfCompany cid) =
-  SQL "signatory_links.company_id = ? AND signatory_links.deleted = FALSE"
-        [toSql cid]
+documentDomainToSQL (DocumentsOfCompany cid preparation deleted) =
+  SQL "signatory_links.company_id = ? AND (? OR documents.status <> ?) AND signatory_links.deleted = ? AND signatory_links.really_deleted = FALSE"
+        [toSql cid,toSql preparation, toSql Preparation, toSql deleted]
 documentDomainToSQL (AttachmentsOfAuthorDeleteValue uid deleted) =
   SQL ("signatory_links.user_id = ?"
        ++ " AND signatory_links.deleted = ?"
@@ -893,7 +893,7 @@ data Actor a => ArchiveDocument a = ArchiveDocument User DocumentID a
 instance Actor a => DBUpdate (ArchiveDocument a) (Either String Document) where
   dbUpdate (ArchiveDocument user did actor) = do
     r <- case (usercompany user, useriscompanyadmin user) of
-      (Just cid, True) -> updateArchivableDoc $ SQL "WHERE company_id = ?" [toSql cid]
+      (Just cid, True) -> updateArchivableDoc $ SQL "WHERE (company_id = ? OR user_id = ?)" [toSql cid,toSql $ userid user]
       _ -> updateArchivableDoc $ SQL "WHERE user_id = ?" [toSql $ userid user]
     -- a supervisor could delete both their own and another subaccount's links
     -- on the same document, so this would mean the sig link count affected
@@ -1323,7 +1323,7 @@ instance DBQuery GetDocumentsCount Int where
 data GetDocumentsByCompanyWithFiltering = GetDocumentsByCompanyWithFiltering CompanyID [DocumentFilter]
 instance DBQuery GetDocumentsByCompanyWithFiltering [Document] where
   dbQuery (GetDocumentsByCompanyWithFiltering companyid filters) =
-    dbQuery (GetDocuments [DocumentsOfCompany companyid] filters [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
+    dbQuery (GetDocuments [DocumentsOfCompany companyid True False] filters [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
 
 data GetDeletedDocumentsByUser = GetDeletedDocumentsByUser UserID
 instance DBQuery GetDeletedDocumentsByUser [Document] where
@@ -1542,22 +1542,24 @@ instance Actor a => DBUpdate (ReallyDeleteDocument a) (Either String Document) w
     -- transaction. -EN
     r <- case (usercompany user, useriscompanyadmin user) of
       (Just cid, True) -> deleteDoc $ SQL "WHERE company_id = ?" [toSql cid]
-      _ -> deleteDoc $ SQL "WHERE user_id = ? AND company_id IS NULL" [toSql $ userid user]
+      _ -> deleteDoc $ SQL "WHERE user_id = ? AND (company_id IS NULL OR EXISTS (SELECT 1 FROM documents WHERE id = ? AND status = ?))" [toSql $ userid user,toSql did, toSql Preparation]
     let txt = case (usercompany user, useriscompanyadmin user) of
           (Just _, True) -> "the company with admin email \"" ++ getEmail user ++ "\""
           _ -> "the user with email \"" ++ getEmail user ++ "\""
-    when_ (r == 1) $ do
+    let fudgedr = if r==0 then 0 else 1
+    when_ (fudgedr == 1) $ do
       dbUpdate $ InsertEvidenceEvent
         ReallyDeleteDocumentEvidence
         ("The document was removed from the rubbish bin for " ++ txt ++ " by " ++ actorWho actor ++ ".")
         (Just did)
         actor
-    getOneDocumentAffected "ReallyDeleteDocument" r did
+    getOneDocumentAffected "ReallyDeleteDocument" fudgedr did
     where
       deleteDoc whereClause = kRun $ mconcat [
           mkSQL UPDATE tableSignatoryLinks [sql "really_deleted" True]
         , whereClause
         , SQL " AND document_id = ? AND deleted = TRUE" [toSql did]
+        
         ]
 
 data Actor a => RejectDocument a = RejectDocument DocumentID SignatoryLinkID (Maybe String) a

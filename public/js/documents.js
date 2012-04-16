@@ -70,7 +70,10 @@ window.Document = Backbone.Model.extend({
         this.url = "/doc/" + args.id;
     },
     viewer: function() {
-        return this.get("viewer");
+        if (this.get("viewer") != undefined)
+            return this.get("viewer");
+        else
+            return new DocumentViewer(); // Fix for strande backbone behavior
     },
     signed: function() {
         return this.get("signed");

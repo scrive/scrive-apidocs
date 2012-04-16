@@ -1000,7 +1000,7 @@ testReallyDeleteDocumentCompanyAuthorLeft = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
   _ <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (SystemActor t)
   etdoc <- randomUpdate $ \t->ReallyDeleteDocument author (documentid doc) (SystemActor t)
-  validTest $ assertLeft etdoc
+  validTest $  assertBool "Not admin can only delete drafts" (isLeft etdoc || Preparation == documentstatus doc)
 
 testReallyDeleteDocumentCompanyStandardLeft :: DB ()
 testReallyDeleteDocumentCompanyStandardLeft = doTimes 10 $ do
@@ -1010,7 +1010,7 @@ testReallyDeleteDocumentCompanyStandardLeft = doTimes 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
   _ <- randomUpdate $ \t->ArchiveDocument author (documentid doc) (SystemActor t)
   etdoc <- randomUpdate $ \t->ReallyDeleteDocument standarduser (documentid doc) (SystemActor t)
-  validTest $ assertLeft etdoc
+  validTest $ assertBool "Not admin can only delete drafts" (isLeft etdoc || Preparation == documentstatus doc)
 
 testReallyDeleteNotArchivedLeft :: DB ()
 testReallyDeleteNotArchivedLeft = doTimes 10 $ do
