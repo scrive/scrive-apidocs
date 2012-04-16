@@ -45,7 +45,7 @@ import ActionSchedulerState
 import Text.JSON
 import TestKontra
 
-import EvidenceLog.Model
+import Util.Actor
 
 newtype NotNullWord8 = NotNullWord8 { fromNNW8 :: Word8 }
   deriving (Enum, Eq, Integral, Num, Ord, Real)

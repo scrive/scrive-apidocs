@@ -25,7 +25,7 @@ import Control.Applicative
 import Data.Ix
 import Util.HasSomeUserInfo
 import Data.Maybe
-import EvidenceLog.Model
+import Util.Actor
 
 statsTests :: TestEnvSt -> Test
 statsTests env = testGroup "Stats" [

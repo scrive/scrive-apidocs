@@ -28,7 +28,7 @@ import Util.HasSomeUserInfo
 import qualified Log
 import Util.MonadUtils
 import Stats.Control
-import EvidenceLog.Model
+import Util.Actor
 import User.History.Model
 import ScriveByMail.Model
 import qualified ScriveByMail.Action as MailAPI

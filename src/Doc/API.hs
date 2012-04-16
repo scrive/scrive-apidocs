@@ -17,6 +17,7 @@ import Misc
 import Data.Maybe
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.ByteString.Lazy as BSL
+import Util.Actor
 import Util.SignatoryLinkUtils
 import Util.HasSomeUserInfo
 import Happstack.Server.RqData
@@ -33,8 +34,6 @@ import API.Monad
 import Control.Monad.Error
 import qualified Log
 import Stats.Control
-
-import EvidenceLog.Model
 
 documentAPI :: Route (KontraPlus Response)
 documentAPI = choice [

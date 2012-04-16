@@ -110,6 +110,7 @@ import Doc.DocStateCommon
 import qualified Log
 import Control.Monad
 import qualified Control.Exception as E
+import Util.Actor
 import Util.MonadUtils
 
 import EvidenceLog.Model

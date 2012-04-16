@@ -34,7 +34,7 @@ import qualified Log
 import System.Time
 import Doc.Invariants
 import Stats.Control
-import EvidenceLog.Model
+import Util.Actor
 
 type SchedulerData' = SchedulerData AppConf (MVar (ClockTime, KontrakcjaGlobalTemplates))
 

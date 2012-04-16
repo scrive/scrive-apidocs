@@ -32,7 +32,7 @@ import Redirect
 import DB
 import Data.Either
 import Stats.Control
-import EvidenceLog.Model
+import Util.Actor
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 

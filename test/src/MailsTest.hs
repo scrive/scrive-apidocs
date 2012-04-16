@@ -27,7 +27,7 @@ import Mails.Events
 import Data.Char
 import Text.XML.HaXml.Parse (xmlParse')
 import Control.Monad.Trans
-import EvidenceLog.Model
+import Util.Actor
 
 mailsTests :: [String] -> TestEnvSt -> Test
 mailsTests params env  = testGroup "Mails" [

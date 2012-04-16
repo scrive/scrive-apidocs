@@ -111,7 +111,7 @@ import Doc.DocDraft as Draft
 import qualified User.Action
 import Util.JSON
 import qualified ELegitimation.BankID as BankID
-import EvidenceLog.Model
+import Util.Actor
 import PadQueue.Model
 import qualified Templates.Fields as F
 

@@ -34,6 +34,7 @@ import File.FileID
 
 import qualified Log
 
+import Util.Actor
 import EvidenceLog.Model
 
 docStateTests :: TestEnvSt -> Test

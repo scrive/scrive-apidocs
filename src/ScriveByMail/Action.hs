@@ -14,7 +14,6 @@ import Doc.DocStorage
 import Doc.DocUtils
 import Doc.JSON
 import Doc.Model
-import EvidenceLog.Model
 import File.Model
 import Kontra
 import KontraLink
@@ -28,6 +27,7 @@ import ScriveByMail.Parse
 import ScriveByMail.View
 import Stats.Control
 import User.Model
+import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import qualified Log (scrivebymail, scrivebymailfailure, mailAPI, jsonMailAPI)

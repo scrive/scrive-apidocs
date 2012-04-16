@@ -32,6 +32,7 @@ import User.Model
 import Util.HasSomeUserInfo
 import qualified Log
 import Templates.Templates
+import Util.Actor
 import Util.SignatoryLinkUtils
 import Util.MonadUtils
 import Stats.Control
@@ -41,7 +42,6 @@ import Data.List hiding (head, tail)
 import Data.Maybe hiding (fromJust)
 import qualified Data.ByteString as BS
 import ForkAction
-import EvidenceLog.Model
 
 postDocumentPreparationChange :: Kontrakcja m => Document -> m ()
 postDocumentPreparationChange doc@Document{documentid, documenttitle} = do
