@@ -26,6 +26,7 @@ import Redirect
 import ScriveByMail.Model
 import ScriveByMail.Parse
 import ScriveByMail.View
+import Stats.Control
 import User.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -259,6 +260,7 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   let actor = MailAPIActor ctxtime (userid user) (getEmail user)
   edoc <- runDBUpdate $ NewDocument user mcompany title doctype 0 actor
   
+  
   when (isLeft edoc) $ do
     let Left msg = edoc
     
@@ -270,13 +272,16 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
     internalError
     
   let Right doc = edoc
+
       
   content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) pdfBinary
   file <- runDB $ dbUpdate $ NewFile title content14
   _ <- guardRightM $ runDBUpdate (AttachFile (documentid doc) (fileid file) actor)
   _ <- runDBUpdate $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality actor
   _ <- runDBUpdate $ SetDocumentIdentification (documentid doc) [EmailIdentification] actor
-  errs <- lefts <$> (sequence $ [runDBUpdate $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) actor])
+  res <- (sequence $ [runDBUpdate $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) actor])
+
+  let errs = lefts res
           
   when ([] /= errs) $ do
     Log.scrivebymail $ "Could not set up document: " ++ (intercalate "; " errs)
@@ -285,6 +290,9 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what is wrong. I created it in Scrive, but I cannot get it ready to send. If you want to see your document, you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
     
     internalError
+
+  let Right resdoc = last res
+  _ <- addDocumentCreateStatEvents resdoc
     
   edoc2 <- runDBUpdate $ PreparationToPending (documentid doc) actor           
   
@@ -297,6 +305,8 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
     internalError
   
   let Right doc2 = edoc2
+
+
 
   markDocumentAuthorReadAndSeen doc2
   --_ <- DocControl.postDocumentChangeAction doc2 doc Nothing
@@ -524,6 +534,8 @@ jsonMailAPI mailapi username user pdfs plains content = do
 
   let Right doc = edoc
 
+
+
   content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) pdfBinary
   file <- runDB $ dbUpdate $ NewFile title content14
   _ <- guardRightM $ runDBUpdate (AttachFile (documentid doc) (fileid file) actor)
@@ -535,12 +547,17 @@ jsonMailAPI mailapi username user pdfs plains content = do
         (SignatoryDetails{signatorysignorder = SignOrder 0, signatoryfields = irData},
          irRole)
 
-  errs <- lefts <$> (sequence $ [runDBUpdate $ ResetSignatoryDetails (documentid doc) signatories actor])
+  res <- (sequence $ [runDBUpdate $ ResetSignatoryDetails (documentid doc) signatories actor])
+
+  let errs = lefts res
 
   when ([] /= errs) $ do
     Log.jsonMailAPI $ "Could not set up document: " ++ (intercalate "; " errs)
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what is wrong. I created it in Scrive, but I cannot get it ready to send. If you want to see your document, you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
     internalError
+
+  let Right resdoc = last res
+  _ <- addDocumentCreateStatEvents resdoc
 
   edoc2 <- runDBUpdate $ PreparationToPending (documentid doc) actor
   when (isLeft edoc2) $ do
