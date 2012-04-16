@@ -853,7 +853,7 @@ data Actor a => ArchiveDocument a = ArchiveDocument User DocumentID a
 instance Actor a => DBUpdate (ArchiveDocument a) (Either String Document) where
   dbUpdate (ArchiveDocument user did actor) = do
     r <- case (usercompany user, useriscompanyadmin user) of
-      (Just cid, True) -> updateArchivableDoc $ SQL "WHERE company_id = ? OR user_id = ?" [toSql cid,toSql $ userid user]
+      (Just cid, True) -> updateArchivableDoc $ SQL "WHERE (company_id = ? OR user_id = ?)" [toSql cid,toSql $ userid user]
       _ -> updateArchivableDoc $ SQL "WHERE user_id = ?" [toSql $ userid user]
     -- a supervisor could delete both their own and another subaccount's links
     -- on the same document, so this would mean the sig link count affected
