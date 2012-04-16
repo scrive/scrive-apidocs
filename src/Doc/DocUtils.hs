@@ -474,3 +474,8 @@ recentDate doc =
                                              (maybeToList $ signtime <$> maybesigninfo sl) ++
                                              (maybeToList $ id       <$> maybereadinvite sl)))
 
+identFeatureString :: [IdentificationType] -> String
+identFeatureString []                              = "web"
+identFeatureString (EmailIdentification:_)         = "web+email"
+identFeatureString (ELegitimationIdentification:_) = "web+eleg"
+identFeatureString (PadIdentification:_)           = "web+pad"

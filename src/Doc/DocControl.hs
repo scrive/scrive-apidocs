@@ -169,7 +169,7 @@ signDocument documentid
                     BankID.Sign sinfo ->  Right <$>  signDocumentWithEleg documentid signatorylinkid magichash fields sinfo
   case edoc of
     Right (Right (doc, olddoc)) -> do
-      postDocumentPendingChange doc olddoc "web"
+      postDocumentPendingChange doc olddoc (identFeatureString $ documentallowedidtypes doc)
       udoc <- guardJustM $ dbQuery $ GetDocumentByDocumentID documentid
       handleAfterSigning udoc signatorylinkid
       return LoopBack
@@ -239,7 +239,7 @@ rejectDocument documentid siglinkid = do
       getHomeOrUploadLink
     Left _ -> internalError
     Right document -> do
-      postDocumentRejectedChange document siglinkid "web"
+      postDocumentRejectedChange document siglinkid (identFeatureString $ documentallowedidtypes document)
       addFlashM $ modalRejectedView document
       return $ LoopBack
 
@@ -401,7 +401,7 @@ handleIssueSign document = do
                         BankID.Sign sinfo -> Right <$>  authorSignDocument (documentid doc) (Just sinfo)
         case mndoc of
           Right (Right newdocument) -> do
-            postDocumentPreparationChange newdocument "web"
+            postDocumentPreparationChange newdocument (identFeatureString $ documentallowedidtypes doc)
             return $ Right newdocument
           _ -> return $ Left LoopBack
 
@@ -441,7 +441,7 @@ handleIssueSend document = do
       forIndividual doc = do
         mndoc <- authorSendDocument (documentid doc)
         case mndoc of
-          Right newdocument -> postDocumentPreparationChange newdocument "web"
+          Right newdocument -> postDocumentPreparationChange newdocument (identFeatureString $ documentallowedidtypes doc)
           Left _ -> return ()
         return mndoc
 
@@ -499,7 +499,7 @@ handleIssueSignByAuthor doc = do
 
      case mndoc of
          Right (Right ndoc) -> do
-             postDocumentPendingChange ndoc doc "web"
+             postDocumentPendingChange ndoc doc (identFeatureString $ documentallowedidtypes doc)
              addFlashM flashAuthorSigned
              return $ LinkIssueDoc (documentid doc)
          _ -> return LoopBack
