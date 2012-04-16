@@ -16,8 +16,6 @@ import Doc.DocStateData
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
-import Misc
-import Data.Maybe
 import Debug.Trace
 
 updateDocumentStatusAfterRemovingAwaitingAuthor :: Migration
