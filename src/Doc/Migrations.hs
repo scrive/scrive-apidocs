@@ -14,9 +14,11 @@ import Log
 import Doc.DocumentID
 import Doc.DocStateData
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
 import Misc
 import Data.Maybe
+import Debug.Trace
 
 updateDocumentStatusAfterRemovingAwaitingAuthor :: Migration
 updateDocumentStatusAfterRemovingAwaitingAuthor = Migration {
@@ -173,25 +175,37 @@ fixSignatoryLinksSwedishChars =
   , mgrFrom = 5
   , mgrDo = do
      Log.debug "Starting migration for swedish chars"
-     kRunRaw $ "SELECT id,document_id, fields FROM signatory_links"
+     _ <- kRun $ SQL "SELECT id, document_id, fields FROM signatory_links" []
      sls <- foldDB decoder []
-     forM_ sls $ \(sid,did,fields) -> kRun $ SQL "UPDATE signatory_links SET fields = ? WHERE id = ? AND document_id = ?" [ toSql (fixSwedishChars fields)
-                                                                                                                           , toSql sid
-                                                                                                                           , toSql did ]
+     forM_ sls $ \(sid,did,fields) -> do
+       let fixedfields = fixSwedishChars fields
+       when (fields /= fixedfields) $ do
+         let msg = "Swedish fields migrated for docid #" ++ show did ++ ", slid #" ++ show sid ++ "\n"
+         Log.debug msg
+         _ <- kRun $ SQL "UPDATE signatory_links SET fields = ? WHERE id = ? AND document_id = ?" 
+                [ toSql fixedfields
+                , toSql sid
+                , toSql did
+                ]
+         return ()
+
+     -- _ <- Prelude.error "Bailing out temporarily"
      Log.debug "Migration for swedish chars done"
   }
     where
         decoder :: [(SignatoryLinkID, DocumentID, [SignatoryField])] ->  SignatoryLinkID ->  DocumentID -> [SignatoryField] -> [(SignatoryLinkID, DocumentID, [SignatoryField])]
-        decoder acc sid did fields = (sid,did,fields) : acc
+        decoder !acc sid did fields = (sid,did,fields) : acc
         fixSwedishChars :: [SignatoryField] ->  [SignatoryField]
         fixSwedishChars = map fixSwedishCharsForAField
         fixSwedishCharsForAField :: SignatoryField -> SignatoryField
-        fixSwedishCharsForAField f = f {  sfType = fixSwedishCharsForAFieldType (sfType f)
-                                        , sfValue = fixSwedishCharsForAString (sfValue f)
+        fixSwedishCharsForAField f = f { sfType = fixSwedishCharsForAFieldType (sfType f)
+                                       , sfValue = fixSwedishCharsForAString (sfValue f)
                                        }
         fixSwedishCharsForAFieldType (CustomFT s b) = CustomFT (fixSwedishCharsForAString s) b
         fixSwedishCharsForAFieldType a = a
         fixSwedishCharsForAString :: String -> String
-        fixSwedishCharsForAString s = if (('\\' `elem` s) && (isJust $ (maybeRead (show s) :: Maybe BS.ByteString)))
-                                        then BS.toString $ fromJust $ maybeRead (show s)
-                                        else s
+        fixSwedishCharsForAString s = 
+          let value = BS.toString $ BSC.pack s
+          in if value /= s && BS.replacement_char `notElem` value
+             then trace (show s ++ " -> " ++ show value) $ value
+             else s
