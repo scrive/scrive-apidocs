@@ -43,7 +43,7 @@ import ListUtil
 import MinutesTime
 import Misc
 import PadQueue.Model
-
+import Data.Maybe
 
 handleContractArchive :: Kontrakcja m => m KontraLink
 handleContractArchive = do
@@ -147,17 +147,21 @@ jsonDocumentsList = withUserGet $ do
   params <- getListParamsNew
 
   let (domain,filters) = case doctype of
-                          "Contract"          -> ([DocumentsForSignatory uid],[DocumentFilterByProcess [Contract]])
-                          "Offer"             -> ([DocumentsForSignatory uid],[DocumentFilterByProcess [Offer]])
-                          "Order"             -> ([DocumentsForSignatory uid],[DocumentFilterByProcess [Order]])
+                          "Contract"          -> ([DocumentsForSignatory uid] ++ (maybeCompanyDomain False),[DocumentFilterByProcess [Contract]])
+                          "Offer"             -> ([DocumentsForSignatory uid] ++ (maybeCompanyDomain False),[DocumentFilterByProcess [Offer]])
+                          "Order"             -> ([DocumentsForSignatory uid] ++ (maybeCompanyDomain False),[DocumentFilterByProcess [Order]])
                           "Template"          -> ([TemplatesOfAuthor uid],[])
                           "Attachment"        -> ([AttachmentsOfAuthorDeleteValue uid False],[])
-                          "Rubbish"           -> ([DocumentsForSignatoryDeleteValue uid True], [])
+                          "Rubbish"           -> ([DocumentsForSignatoryDeleteValue uid True] ++ (maybeCompanyDomain True), [])
                           "Template|Contract" -> ([TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid],[DocumentFilterByProcess [Contract]])
                           "Template|Offer"    -> ([TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid],[DocumentFilterByProcess [Offer]])
                           "Template|Order"    -> ([TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid],[DocumentFilterByProcess [Order]])
                           "Pad"               -> ([DocumentsOfAuthor uid],[DocumentFilterByIdentification PadIdentification, DocumentFilterStatuses [Pending,Closed]])
                           _ -> ([],[])
+                         where
+                             maybeCompanyDomain d = if (useriscompanyadmin user && (isJust $ usercompany user))
+                                                   then [DocumentsOfCompany (fromJust $ usercompany user) False d]
+                                                   else []
 
   let sorting    = docSortingFromParams params
       searching  = docSearchingFromParams params
