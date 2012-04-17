@@ -6,19 +6,25 @@
 
 window.DocumentSignViewHeader = Backbone.View.extend({
  initialize: function(args) {
-     _.bindAll(this, 'render');
+     this.mainview = args.mainview;
+     _.bindAll(this, 'render' ,'refresh');
      this.model.document.bind('reset', this.render);
      this.model.document.bind('change', this.render);
      this.model.bind('change', this.render);
+     this.mainview.bind('change:task', this.refresh);
      this.render();
 
-     /*$(window).resize(function() {
-         var width = Math.max($('body').width(),$(document).width());
-         if (width > $(this.el).width())
-             $(this.el).width(width);
-     })*/
   },
   tagName: "div",
+  refresh : function() {
+      var el = $(this.el);
+      var tbd = $("<span/>")
+      $(this.el).append(tbd);
+      setTimeout(function() {tbd.remove();},1)
+      var width = Math.max($('body').width(),$(document).width());
+      if (width > 1020)
+          el.css("min-width",width + "px");
+  },
   updateHeaderSenderPosition: function() {
     if ($(window).width() < 1150) {
         this.sender.addClass("shoved");
@@ -47,9 +53,14 @@ window.DocumentSignViewHeader = Backbone.View.extend({
     var logowrapper = $("<div class='logowrapper' />");
     if (document.logo() == undefined)
       logowrapper.append("<a href='/'><div class='logo'></div></a>");
-    else
-      logowrapper.append("<img class='logo' src='" + document.logo() + "'></img>");
-    
+    else{
+     var img = $("<img class='logo'></img>");
+     img.load(function(){
+        view.refresh();
+     });
+     img.attr('src',document.logo());
+     logowrapper.append(img);
+     }
     this.sender = $("<div class='sender' />");
     var inner = $('<div class="inner" />');
       this.sender.append(inner);
@@ -76,15 +87,21 @@ window.DocumentSignViewHeader = Backbone.View.extend({
 
 window.DocumentSignViewFooter = Backbone.View.extend({
   initialize: function(args) {
-    _.bindAll(this, 'render');
+    this.mainview = args.mainview;
+    _.bindAll(this, 'render' , 'refresh');
     this.model.document.bind('reset', this.render);
     this.model.document.bind('change', this.render);
-    /*$(window).resize(function() {
-         var width = Math.max($('body').width(),$(document).width());
-         if (width > $(this.el).width())
-             $(this.el).width(width);
-    })*/
+    this.mainview.bind('change:task', this.refresh);
     this.render();
+  },
+  refresh : function() {
+      var el = $(this.el);
+      var tbd = $("<span/>")
+      $(this.el).append(tbd);
+      setTimeout(function() {tbd.remove();},1)
+      var width = Math.max($('body').width(),$(document).width());
+      if (width > 1020)
+          el.css("min-width",width + "px");
   },
   tagName: "div",
   render: function() {
