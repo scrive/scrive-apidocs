@@ -160,8 +160,8 @@ tableSignatoryAttachments = Table {
       ++ " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
     kRunRaw $ "ALTER TABLE signatory_attachments"
-      ++ " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(signatory_link_id, document_id)"
-      ++ " REFERENCES signatory_links(id, document_id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      ++ " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(signatory_link_id)"
+      ++ " REFERENCES signatory_links(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
 
@@ -228,7 +228,7 @@ tableSignatoryLinks = Table {
           ++ ", csv_contents TEXT NULL"
           ++ ", csv_signatory_index INTEGER NULL"
           ++ ", internal_insert_order BIGINT NOT NULL DEFAULT nextval('signatory_links_internal_insert_order_seq')"
-          ++ ", CONSTRAINT pk_signatory_links PRIMARY KEY (id, document_id)"
+          ++ ", CONSTRAINT pk_signatory_links PRIMARY KEY (id)"
           ++ ")"
         return TVRcreated
       _ -> return TVRinvalid
