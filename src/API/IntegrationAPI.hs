@@ -204,7 +204,7 @@ createDocument = do
      Nothing -> return $ createDocFromFiles title doctype files
    d <- createAPIDocument comp involved tags mlocale createFun
    doc <- updateDocumentWithDocumentUI d
-   _ <- addDocumentCreateStatEvents doc "integration api"
+   _ <- lift $ addDocumentCreateStatEvents doc "integration api"
    return $ toJSObject [ ("document_id",JSString $ toJSString $ show $ documentid doc)]
 
 createDocFromTemplate ::(Kontrakcja m) =>
