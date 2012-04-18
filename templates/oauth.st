@@ -64,7 +64,7 @@ pagePrivilegesConfirmNoUser=
   </p>
   $endif$
 
-  <div class="login">
+  <div class="login" style="margin:12px;padding:12px">
     <form id="loginForm" method="post" action="/oauth/authorizationconfirmlogin">
       <h2>Log in and confirm privileges</h2>
       <span class="txt">$_email()$</span><input type="email" name="email" value="" infotext="$_email()$" autocomplete="off"/><br />
@@ -75,14 +75,14 @@ pagePrivilegesConfirmNoUser=
       <div class="finalbuttonbox">
         <a class="submit green btn-small">
           <div class="left"></div>
-          <div class="label">Confirm</div>
+          <div class="label">Log in and Confirm</div>
           <div class="right"></div>
         </a>
       </div>
     </form>
   </div>
   
-  <div class="newuser">
+  <div class="newuser" style="margin:12px;padding:12px;width:500px">
     <h2>Create new account (3 free signatures per month!)</h2>
     <form method="post" action="/oauth/authorizationconfirmnewuser" class="requestAccount">
       <input class="shiny float-left"
@@ -91,11 +91,10 @@ pagePrivilegesConfirmNoUser=
              autocomplete="off"
              />
       <input type="hidden" value="$token$" name="oauth_token" />
-      <a href="#" class="submit
-                         new-btn-small green2 center
-                         float-right"><p>$_ButtonCreateAccount()$!</p></a>
-      <input type="submit" class="hidden" />
-      <div class="clearfix" />
+      <a href="#" class="submit new-btn-small green2 center float-right
+                         "><p>Create account</p></a>
+                         <input type="submit" class="hidden" />
+                         <div class="clearfix" />
     </form>
   </div>
 </div>
