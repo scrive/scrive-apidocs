@@ -15,9 +15,7 @@ module API.API(
      , APIRequestBody
      , APIResponse
      , APIContext(..)
-     --, APICall(..)
      , apiCall
-     , liftKontra
      , runApiFunction
      , apiUnknownCall
      , apiError
@@ -46,22 +44,22 @@ type APIResponse = JSObject JSValue
 type APIRequestBody = JSValue
 
 {- | API functions are build over Kontra with an ability to exit, and with some context -}
-newtype APIFunction m c a = AF { unAF :: ReaderT c (ErrorT (API_ERROR, String) m) a }
+newtype APIFunction c m a = AF { unAF :: ReaderT c (ErrorT (API_ERROR, String) m) a }
     deriving (Applicative, CryptoRNG, Functor, Monad, MonadDB, MonadError (API_ERROR, String), MonadIO, MonadReader c)
 
-instance TemplatesMonad m => TemplatesMonad (APIFunction m c) where
-    getTemplates = liftKontra getTemplates
-    getLocalTemplates = liftKontra . getLocalTemplates
+instance MonadTrans (APIFunction c) where
+    lift = AF . lift . lift
 
-instance KontraMonad m => KontraMonad (APIFunction m c) where
-    getContext    = liftKontra getContext
-    modifyContext = liftKontra . modifyContext
+instance TemplatesMonad m => TemplatesMonad (APIFunction c m) where
+    getTemplates = lift getTemplates
+    getLocalTemplates = lift . getLocalTemplates
 
-runApiFunction :: Kontrakcja m => APIFunction m c a -> c -> m (Either (API_ERROR, String) a)
+instance KontraMonad m => KontraMonad (APIFunction c m) where
+    getContext    = lift getContext
+    modifyContext = lift . modifyContext
+
+runApiFunction :: Kontrakcja m => APIFunction c m a -> c -> m (Either (API_ERROR, String) a)
 runApiFunction f = runErrorT . runReaderT (unAF f)
-
-liftKontra :: Monad m => m a -> APIFunction m c a
-liftKontra = AF . lift . lift
 
 {- |  Used to convert json object to HTTP response-}
 apiResponse :: Kontrakcja m => m APIResponse -> m Response
@@ -81,7 +79,7 @@ apiResponse action = action >>= simpleResponse . encode
 -}
 
 apiCall :: (APIContext c, Kontrakcja m, Path m' m' (m Response) Response) =>
-           String -> APIFunction m c APIResponse -> Route (m' Response)
+           String -> APIFunction c m APIResponse -> Route (m' Response)
 apiCall s f = dir s $ path POST id $ do
     --Log.debug $ "API call " ++ s ++ " matched"
     apiResponse $ do
@@ -121,7 +119,7 @@ instance Error (API_ERROR,String) where
     strMsg s = (API_ERROR_OTHER,s)
 
 --This will break the execution and send error message to the user
-throwApiError :: (APIContext c, Kontrakcja m) => API_ERROR -> String -> APIFunction m c a
+throwApiError :: (APIContext c, Kontrakcja m) => API_ERROR -> String -> APIFunction c m a
 throwApiError = curry throwError
 
 
