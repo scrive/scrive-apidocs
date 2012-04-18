@@ -13,7 +13,7 @@ window.PadDesignViewUtilsModel = Backbone.Model.extend({
     },
     initialize: function (args) {
         var sigs = args.document.signatories();
-        for(var i=sigs.length-1;i>0;i--){
+        for(var i=sigs.length-1;i>=0;i--){
             if (sigs[i].signs())
             {
                 this.setGiveForSigningSignatory(sigs[i]);

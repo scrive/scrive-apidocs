@@ -269,6 +269,9 @@ allowsIdentification document idtype = idtype `elem` documentallowedidtypes docu
 sendMailsDurringSigning :: Document -> Bool
 sendMailsDurringSigning doc = not $ doc `allowsIdentification` PadIdentification
 
+hasOtherSignatoriesThenAuthor :: Document -> Bool
+hasOtherSignatoriesThenAuthor doc = not . null $ filter (isSignatory &&^ not . isAuthor) $ documentsignatorylinks doc
+
 {- |
     Checks whether a signatory link is eligible for sending a reminder.
     The user must be the author, and the signatory musn't be the author.

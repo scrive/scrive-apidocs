@@ -627,7 +627,7 @@ var DocumentDesignView = Backbone.View.extend({
         var vres = true;
         var atLeastOneSignatory = false;
         for(var i =0; i< sigs.length; i++)
-        {   if (!sigs[i].author() && sigs[i].signs()) atLeastOneSignatory = true;
+        {   if (sigs[i].signs()) atLeastOneSignatory = true;
             var fields = sigs[i].fields();
             for(var j = 0; j< fields.length; j++) {
                 var field = fields[j];
@@ -644,7 +644,7 @@ var DocumentDesignView = Backbone.View.extend({
 
         if (!atLeastOneSignatory)
         {
-              FlashMessages.add({color: 'red', content : localization.designview.validation.atLeastOnePersonOtherThenAuthor});
+              FlashMessages.add({color: 'red', content : localization.designview.validation.atLeastOnePersonMustSigns});
               this.tabs.activate(this.tab2);
               return false;
         }
