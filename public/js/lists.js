@@ -457,15 +457,17 @@
                     } else if (cell.isRendered() && value != undefined) {
                         td.append(cell.rendering(value, undefined, this.model));
                     } else if (cell.isExpandable() && value != undefined) {
-                        td.html($("<a href='#' class='expand'>" + value + "</a>"));
+                        var a = $("<a href='#' class='expand'>").text(value);
+                        td.append(a);
                     } else if (cell.isBool()) {
                         if (value)  td.append("<center><a href='" + this.model.link() + "'>&#10003;</a></center>");
                     } else
-                            td.append($("<a href='" + this.model.link() + "'>" + value + "</a>"));
+                           var a = $("<a href='" + this.model.link() + "'/>").text(value);
+                           td.append(a);
                     }
                    else if (value != undefined) {
                         var span = $("<span/>").text(value);
-                        td.html(span);
+                        td.append(span);
                     }
                 mainrow.append(td);
             }
