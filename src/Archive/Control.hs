@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module Archive.Control
        (
        handleAttachmentArchive,
@@ -13,7 +14,8 @@ module Archive.Control
        showOrdersList,
        showRubbishBinList,
        showTemplatesList,
-       jsonDocumentsList,
+       showPadDeviceArchive,
+       jsonDocumentsList
        )
        where
 
@@ -22,7 +24,7 @@ import Archive.View
 import InputValidation
 import KontraLink
 import Kontra
-import DB.Classes
+import DB
 import Doc.DocStateData
 import Doc.Model
 import User.Model
@@ -33,17 +35,15 @@ import Util.MonadUtils
 import Control.Applicative
 import Util.SignatoryLinkUtils
 import Stats.Control
-import Data.Char
-import Data.List
 import EvidenceLog.Model
 import Util.HasSomeUserInfo
 import Text.JSON
 import qualified Log as Log
 import ListUtil
 import MinutesTime
-import Doc.DocView
 import Misc
-import Util.HasSomeCompanyInfo
+import PadQueue.Model
+
 
 handleContractArchive :: Kontrakcja m => m KontraLink
 handleContractArchive = do
@@ -82,11 +82,11 @@ handleIssueArchive :: Kontrakcja m => m ()
 handleIssueArchive = do
     Context { ctxmaybeuser = Just user, ctxtime, ctxipnumber } <- getContext
     docids <- getCriticalFieldList asValidDocID "doccheck"
-    let actor = UserActor ctxtime ctxipnumber (userid user) (getEmail user)
-    mapM_ (\did -> do 
-              doc <- guardRightM' $ runDBUpdate $ ArchiveDocument user did actor
+    let actor = userActor ctxtime ctxipnumber (userid user) (getEmail user)
+    mapM_ (\did -> do
+              doc <- guardRightM' $ dbUpdate $ ArchiveDocument user did actor
               case getSigLinkFor doc user of
-                Just sl -> runDB $ addSignStatDeleteEvent doc sl ctxtime
+                Just sl -> addSignStatDeleteEvent doc sl ctxtime
                 _ -> return False) 
       docids
 
@@ -111,6 +111,9 @@ showAttachmentList = archivePage pageAttachmentList
 showRubbishBinList :: Kontrakcja m => m (Either KontraLink String)
 showRubbishBinList = archivePage pageRubbishBinList
 
+showPadDeviceArchive :: Kontrakcja m => m (Either KontraLink String)
+showPadDeviceArchive = archivePage pagePadDeviceArchive
+
 {- |
     Helper function for showing lists of documents.
 -}
@@ -123,75 +126,100 @@ jsonDocumentsList = withUserGet $ do
   Just user@User{userid = uid} <- ctxmaybeuser <$> getContext
   lang <- getLang . ctxlocale <$> getContext
   doctype <- getField' "documentType"
+
+#if 0
   allDocs <- case (doctype) of
-    "Contract" -> runDBQuery $ GetDocumentsOfTypeBySignatory (Signable Contract) uid
-    "Offer" -> runDBQuery $ GetDocumentsOfTypeBySignatory (Signable Offer) uid
-    "Order" -> runDBQuery $ GetDocumentsOfTypeBySignatory (Signable Order) uid
-    "Template" -> runDBQuery $ GetTemplatesByAuthor uid
-    "Attachment" -> runDBQuery $ GetDocumentsOfTypeByAuthor Attachment uid
-    "Rubbish" -> runDBQuery $ GetDeletedDocumentsByUser uid
-    "Template|Contract" -> filter (\d -> documenttype d == Template Contract) <$> (runDBQuery $ GetAvaibleTemplates  uid)
-    "Template|Offer" ->  filter (\d -> documenttype d == Template Offer) <$>  (runDBQuery $ GetAvaibleTemplates  uid)
-    "Template|Order" -> filter (\d -> documenttype d == Template Order) <$> (runDBQuery $ GetAvaibleTemplates  uid)
+    "Contract" -> dbQuery $ GetDocumentsBySignatory [Contract] uid
+    "Offer" -> dbQuery $ GetDocumentsBySignatory [Offer] uid
+    "Order" -> dbQuery $ GetDocumentsBySignatory [Order] uid
+    "Template" -> dbQuery $ GetTemplatesByAuthor uid
+    "Attachment" -> dbQuery $ GetAttachmentsByAuthor uid
+    "Rubbish" -> dbQuery $ GetDeletedDocumentsByUser uid
+    "Template|Contract" -> dbQuery $ GetAvailableTemplates uid [Contract]
+    "Template|Offer" ->  dbQuery $ GetAvailableTemplates uid [Offer]
+    "Template|Order" -> dbQuery $ GetAvailableTemplates uid [Order]
+    "Pad" -> (dbQuery $ GetDocumentsByAuthor [Contract,Offer,Order] uid) -- Not working and disabled. It should do filtering of only pad documents.
     _ -> do
       Log.error "Documents list: No valid document type provided"
       return []
-  Log.debug $ "Documents list: Number of documents found "  ++  (show $ length allDocs)
+#endif
+
   params <- getListParamsNew
-  let docs = docSortSearchPage params allDocs
+
+  let (domain,filters) = case doctype of
+                          "Contract"          -> ([DocumentsForSignatory uid],[DocumentFilterByProcess [Contract]])
+                          "Offer"             -> ([DocumentsForSignatory uid],[DocumentFilterByProcess [Offer]])
+                          "Order"             -> ([DocumentsForSignatory uid],[DocumentFilterByProcess [Order]])
+                          "Template"          -> ([TemplatesOfAuthor uid],[])
+                          "Attachment"        -> ([AttachmentsOfAuthorDeleteValue uid False],[])
+                          "Rubbish"           -> ([DocumentsForSignatoryDeleteValue uid True], [])
+                          "Template|Contract" -> ([TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid],[DocumentFilterByProcess [Contract]])
+                          "Template|Offer"    -> ([TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid],[DocumentFilterByProcess [Offer]])
+                          "Template|Order"    -> ([TemplatesOfAuthor uid, TemplatesSharedInUsersCompany uid],[DocumentFilterByProcess [Order]])
+                          "Pad"               -> ([DocumentsOfAuthor uid],[DocumentFilterByIdentification PadIdentification, DocumentFilterStatuses [Pending,Closed]])
+                          _ -> ([],[])
+
+  let sorting    = docSortingFromParams params
+      searching  = docSearchingFromParams params
+      pagination = docPaginationFromParams docsPageSize params
+
+  allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting pagination
+  totalCount <- dbQuery $ GetDocumentsCount domain (searching ++ filters)
+
+  Log.debug $ "Documents list: Number of documents found "  ++  (show $ length allDocs)
+
+  let docs = PagedList { list       = allDocs
+                       , params     = params
+                       , totalCount = totalCount
+                       , pageSize   = docsPageSize
+                       }
+
   cttime <- getMinutesTime
-  docsJSONs <- mapM (fmap JSObject . docForListJSON (timeLocaleForLang lang) cttime user) $ list docs
+  padqueue <- dbQuery $ GetPadQueue $ userid user
+  docsJSONs <- mapM (docForListJSON (timeLocaleForLang lang) cttime user padqueue) $ list docs
   return $ JSObject $ toJSObject [
       ("list", JSArray docsJSONs)
     , ("paging", pagingParamsJSON docs)
     ]
 
+docSortingFromParams :: ListParams -> [AscDesc DocumentOrderBy]
+docSortingFromParams params =
+   (concatMap x (listParamsSorting params)) ++ [Desc DocumentOrderByMTime] -- default order by mtime
+  where
+    x "status"            = [Asc DocumentOrderByStatusClass]
+    x "statusREV"         = [Desc DocumentOrderByStatusClass]
+    x "title"             = [Asc DocumentOrderByTitle]
+    x "titleREV"          = [Desc DocumentOrderByTitle]
+    x "time"              = [Asc DocumentOrderByMTime]
+    x "timeREV"           = [Desc DocumentOrderByMTime]
+    -- x "party"          = comparePartners
+    -- x "partyREV"       = revComparePartners
+    -- x "partner"        = comparePartners
+    -- x "partnerREV"     = revComparePartners
+    -- x "partnercomp"    = viewComparing partnerComps
+    -- x "partnercompREV" = viewComparingRev partnerComps
+    x "process"           = [Asc DocumentOrderByProcess]
+    x "processREV"        = [Desc DocumentOrderByProcess]
+    x "type"              = [Asc DocumentOrderByType]
+    x "typeREV"           = [Desc DocumentOrderByType]
+    -- x "author"         = viewComparing getAuthorName
+    -- x "authorRev"      = viewComparingRev getAuthorName
+    x _                   = []
 
--- Searching, sorting and paging
-docSortSearchPage :: ListParams -> [Document] -> PagedList Document
-docSortSearchPage  = listSortSearchPage docSortFunc docSearchFunc docsPageSize
-
-docSearchFunc::SearchingFunction Document
-docSearchFunc s doc =  nameMatch doc || signMatch doc
-    where
-    match m = isInfixOf (map toUpper s) (map toUpper m)
-    nameMatch = match . documenttitle
-    signMatch d = any (match . getSmartName) (documentsignatorylinks d)
 
 
-docSortFunc:: SortingFunction Document
-docSortFunc "status" = compareStatus
-docSortFunc "statusREV" = revCompareStatus
-docSortFunc "title" = viewComparing documenttitle
-docSortFunc "titleREV" = viewComparingRev documenttitle
-docSortFunc "time" = viewComparing documentmtime
-docSortFunc "timeREV" = viewComparingRev documentmtime
-docSortFunc "party" = comparePartners
-docSortFunc "partyREV" = revComparePartners
-docSortFunc "partner" = comparePartners
-docSortFunc "partnerREV" = revComparePartners
-docSortFunc "partnercomp" = viewComparing partnerComps
-docSortFunc "partnercompREV" = viewComparingRev partnerComps
-docSortFunc "process" = viewComparing documenttype
-docSortFunc "processREV" = viewComparingRev documenttype
-docSortFunc "type" = viewComparing documenttype
-docSortFunc "typeREV" = viewComparingRev documenttype
-docSortFunc "author" = viewComparing getAuthorName
-docSortFunc "authorREV" = viewComparingRev getAuthorName
-docSortFunc _ = const $ const EQ
+docSearchingFromParams :: ListParams -> [DocumentFilter]
+docSearchingFromParams params =
+  case listParamsSearching params of
+    "" -> []
+    x -> [DocumentFilterByString x]
 
-partnerComps :: Document -> String
-partnerComps = concatMap getCompanyName . getSignatoryPartnerLinks
 
-revCompareStatus :: Document -> Document -> Ordering
-revCompareStatus doc1 doc2 = compareStatus doc2 doc1
+docPaginationFromParams :: Int -> ListParams -> DocumentPagination
+docPaginationFromParams pageSize params = DocumentPagination ((listParamsPage params - 1) * pageSize) pageSize
 
-compareStatus :: Document -> Document -> Ordering
-compareStatus doc1 doc2 = compare (documentStatusClass doc1) (documentStatusClass doc2)
-
-revComparePartners :: Document -> Document -> Ordering
-revComparePartners doc1 doc2 = comparePartners doc2 doc1
-
+#if 0
+-- this needs to be transferred to SQL
 {- |
     Special comparison for partners, because we need to compare each signatory,
     and also then inside the signatory compare the fst and snd names separately.
@@ -213,6 +241,8 @@ comparePartners doc1 doc2 =
       case (compare fst1 fst2) of
         EQ -> compare snd1 snd2
         x -> x
+#endif
 
 docsPageSize :: Int
-docsPageSize = 100  
+docsPageSize = 100
+

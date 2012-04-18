@@ -1,6 +1,9 @@
 {-# LANGUAGE OverlappingInstances #-}
 module TestKontra (
-      TestKontra
+      TestEnv
+    , TestEnvSt(..)
+    , runTestEnv
+    , ununTestEnv
     , runTestKontra
     , inText
     , inFile
@@ -15,12 +18,16 @@ module TestKontra (
 import Control.Applicative
 import Control.Arrow
 import Control.Concurrent
+import Control.Monad.Base
 import Control.Monad.Error
+import Control.Monad.Reader
 import Control.Monad.State
+import Control.Monad.Trans.Control
 import Data.Maybe
-import Happstack.Server hiding (mkHeaders, getHeader, method, path)
-import Happstack.Server.Internal.Monads (FilterFun, ununWebT, runServerPartT,
-  unFilterFun)
+import Happstack.Data (Proxy(..))
+import Happstack.Server hiding (mkHeaders, dir, getHeader, method, path)
+import Happstack.Server.Internal.Monads
+import Happstack.State (runTxSystem, TxControl, shutdownSystem, Saver(..))
 import System.FilePath
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BSU
@@ -31,45 +38,80 @@ import qualified Network.AWS.AWSConnection as AWS
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.HTTP as HTTP
 
-import Kontra ( Kontra, unKontra', unKontra)
-import Context
+import AppState
+import Control.Monad.Trans.Control.Util
+import Crypto.RNG
+import DB
+import Kontra
 import Mails.MailsConfig
 import MinutesTime
+import Misc
 import IPAddress
-import Templates.Templates
+import Templates.TemplatesLoader
 import qualified MemCache
 import User.Locale
+import Util.FinishWith
 import qualified Data.Map as Map
+import qualified Control.Exception.Lifted as E
 
-type TestKontra a = Kontra a
+data TestEnvSt = TestEnvSt {
+    teNexus           :: Nexus
+  , teRNGState        :: CryptoRNGState
+  , teGlobalTemplates :: KontrakcjaGlobalTemplates
+  }
 
-runTestKontra' :: MonadIO m => Request -> Context -> TestKontra a ->
-                  m ((Either Response a, FilterFun Response), Context)
-runTestKontra' rq ctx tk = do
-    let noflashctx = ctx{ctxflashmessages=[]}
-    (mres, ctx') <- liftIO $ runStateT (runErrorT $ ununWebT $ runServerPartT (unKontra' $ unKontra tk) rq) noflashctx
-    case mres of
-        Left e -> fail $ "runTestKontra' uncaught error: " ++ show e
-        Right Nothing -> fail "runTestKontra' mzero"
-        Right (Just a) -> return (a, ctx')
+type InnerTestEnv = ReaderT TestEnvSt IO
+
+newtype TestEnv a = TestEnv { unTestEnv :: InnerTestEnv a }
+  deriving (Applicative, Functor, Monad, MonadBase IO, MonadIO, MonadReader TestEnvSt)
+
+runTestEnv :: TestEnvSt -> TestEnv () -> IO ()
+runTestEnv st = ununTestEnv st . withTestState . withTestDB
+
+ununTestEnv :: TestEnvSt -> TestEnv a -> IO a
+ununTestEnv st m = runReaderT (unTestEnv m) st
+
+instance CryptoRNG TestEnv where
+  getCryptoRNGState = teRNGState <$> ask
+
+instance MonadDB TestEnv where
+  getNexus     = teNexus <$> ask
+  localNexus f = local (\st -> st { teNexus = f (teNexus st) })
+
+instance MonadBaseControl IO TestEnv where
+  newtype StM TestEnv a = StTestEnv { unStTestEnv :: StM InnerTestEnv a }
+  liftBaseWith = newtypeLiftBaseWith TestEnv unTestEnv StTestEnv
+  restoreM     = newtypeRestoreM TestEnv unStTestEnv
+  {-# INLINE liftBaseWith #-}
+  {-# INLINE restoreM #-}
+
+runTestKontraHelper :: Request -> Context -> Kontra a -> TestEnv (a, Context, FilterFun Response)
+runTestKontraHelper rq ctx tk = do
+  let noflashctx = ctx { ctxflashmessages = [] }
+  nex <- getNexus
+  rng <- getCryptoRNGState
+  mres <- liftIO $ ununWebT $ runServerPartT (runDBT nex $ runCryptoRNGT rng $
+    runStateT (unKontraPlus $ unKontra tk) noflashctx) rq
+  case mres of
+    Nothing -> fail "runTestKontraHelper mzero"
+    Just (Left _, _) -> fail "This should never happen since we don't use Happstack's finishWith"
+    Just (Right (res, ctx'), fs) -> return (res, ctx', fs)
 
 -- | Typeclass for running handlers within TestKontra monad
 class RunnableTestKontra a where
-    runTestKontra :: MonadIO m => Request -> Context -> TestKontra a -> m (a, Context)
+  runTestKontra :: Request -> Context -> Kontra a -> TestEnv (a, Context)
 
 instance RunnableTestKontra a where
-    runTestKontra rq ctx tk = do
-        ((mres, _), ctx') <- runTestKontra' rq ctx tk
-        case mres of
-             Right res -> return (res, ctx')
-             Left  _   -> error "finishWith called in function that doesn't return Response"
+  runTestKontra rq ctx tk = do
+    (res, ctx', _) <- runTestKontraHelper rq ctx tk
+      `E.catch` (\(FinishWith _ _) -> error "FinishWith thrown in function that doesn't return Response")
+    return (res, ctx')
 
 instance RunnableTestKontra Response where
-    runTestKontra rq ctx tk = do
-        ((mres, f), ctx') <- runTestKontra' rq ctx tk
-        case mres of
-             Right res -> return (unFilterFun f res, ctx')
-             Left  res -> return (unFilterFun f res, ctx')
+  runTestKontra rq ctx tk = do
+    (res, ctx', f) <- runTestKontraHelper rq ctx tk
+      `E.catch` (\(FinishWith res ctx') -> return (res, ctx', filterFun id))
+    return (unFilterFun f res, ctx')
 
 -- Various helpers for constructing appropriate Context/Request
 
@@ -121,7 +163,7 @@ getCookie :: String -> [(String, Cookie)] -> Maybe String
 getCookie name cookies = cookieValue <$> lookup name cookies
 
 -- | Constructs initial request with given data (POST or GET)
-mkRequest :: MonadIO m => Method -> [(String, Input)] -> m Request
+mkRequest :: Method -> [(String, Input)] -> TestEnv Request
 mkRequest method vars = liftIO $ do
     rqbody <- newEmptyMVar
     ib <- if isReqPost
@@ -148,19 +190,21 @@ mkRequest method vars = liftIO $ do
         isReqPost = method == POST || method == PUT
 
 -- | Constructs initial context with given templates
-mkContext :: MonadIO m => Locale -> KontrakcjaGlobalTemplates -> m Context
-mkContext locale globaltemplates = liftIO $ do
+mkContext :: Locale -> TestEnv Context
+mkContext locale = do
+  globaltemplates <- teGlobalTemplates <$> ask
+  liftIO $ do
     docs <- newMVar M.empty
     memcache <- MemCache.new BS.length 52428800
     time <- getMinutesTime
     return Context {
           ctxmaybeuser = Nothing
         , ctxhostpart = "http://testkontra.fake"
+        , ctxresourcehostpart = "http://testkontra.fake"
         , ctxflashmessages = []
         , ctxtime = time
         , ctxnormalizeddocuments = docs
         , ctxipnumber = noIP
-        , ctxdbenv = error "dbenv is not defined"
         , ctxdocstore = error "docstore is not defined"
         , ctxs3action = AWS.S3Action {
               AWS.s3conn = AWS.amazonS3Connection "" ""
@@ -188,4 +232,51 @@ mkContext locale globaltemplates = liftIO $ do
         , ctxadminaccounts = []
         , ctxsalesaccounts = []
         , ctxmagichashes = Map.empty
+        , ctxmaybepaduser = Nothing
     }
+
+-- pgsql database --
+
+-- | Runs set of sql queries within one transaction and clears all tables in the end
+withTestDB :: TestEnv () -> TestEnv ()
+withTestDB m = E.finally m $ do
+  clearTables
+  dbCommit
+
+clearTables :: TestEnv ()
+clearTables = runDBEnv $ do
+  kRunRaw "UPDATE users SET service_id = NULL, company_id = NULL"
+  kRunRaw "DELETE FROM evidence_log"
+  kRunRaw "DELETE FROM doc_stat_events"
+  kRunRaw "DELETE FROM user_stat_events"
+  kRunRaw "DELETE FROM sign_stat_events"
+  kRunRaw "DELETE FROM companyinvites"
+
+  kRunRaw "DELETE FROM author_attachments"
+  kRunRaw "DELETE FROM signatory_attachments"
+  kRunRaw "DELETE FROM signatory_links"
+  kRunRaw "DELETE FROM documents"
+
+  kRunRaw "DELETE FROM companies"
+  kRunRaw "DELETE FROM services"
+  kRunRaw "DELETE FROM users"
+  kRunRaw "DELETE FROM files"
+
+  kRunRaw "DELETE FROM mails"
+
+-- happstack-state --
+
+startUp :: Saver -> TestEnv (MVar TxControl)
+startUp saver = liftIO $ runTxSystem saver (Proxy :: Proxy AppState)
+
+withSaver :: Saver -> TestEnv () -> TestEnv ()
+withSaver saver m = E.bracket (startUp saver) (liftIO . shutdownSystem) (const m)
+
+withFileSaver :: FilePath -> TestEnv () ->TestEnv ()
+withFileSaver dir m = withSaver (Queue (FileSaver dir)) m
+
+withTemporaryDirectory :: (FilePath -> TestEnv a) -> TestEnv a
+withTemporaryDirectory = withSystemTempDirectory' "kontrakcja-test-"
+
+withTestState :: TestEnv () -> TestEnv ()
+withTestState m = withTemporaryDirectory (\tmpDir -> withFileSaver tmpDir m)

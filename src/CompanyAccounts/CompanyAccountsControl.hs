@@ -24,7 +24,7 @@ import Happstack.Server hiding (simpleHTTP)
 import Text.JSON (JSValue(..), toJSObject, toJSString)
 
 import AppView
-import DB.Classes
+import DB
 import Company.CompanyControl (withCompanyAdmin)
 import Company.Model
 import CompanyAccounts.Model
@@ -78,9 +78,9 @@ handleCompanyAccountsForAdminOnly cid = onlySalesOrAdmin $ do
 handleCompanyAccountsInternal :: Kontrakcja m => CompanyID -> m JSValue
 handleCompanyAccountsInternal cid = do
   Context{ctxmaybeuser = Just user} <- getContext
-  companyusers <- runDBQuery $ GetCompanyAccounts cid
+  companyusers <- dbQuery $ GetCompanyAccounts cid
   deletableuserids <- map userid <$> filterM isUserDeletable companyusers
-  companyinvites <- runDBQuery $ GetCompanyInvites cid
+  companyinvites <- dbQuery $ GetCompanyInvites cid
   let isUser CompanyInvite{invitedemail} = unEmail invitedemail `elem` map getEmail companyusers
   let
     companyaccounts =
@@ -213,7 +213,7 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
   memail <- getOptionalField asValidEmail "email"
   fstname <- fromMaybe "" <$> getOptionalField asValidName "fstname"
   sndname <- fromMaybe "" <$> getOptionalField asValidName "sndname"
-  mexistinguser <- maybe (return Nothing) (runDBQuery . GetUserByEmail Nothing . Email) memail
+  mexistinguser <- maybe (return Nothing) (dbQuery . GetUserByEmail Nothing . Email) memail
   mexistingcompany <- maybe (return Nothing) getCompanyForUser mexistinguser
 
   minvitee <-
@@ -221,16 +221,16 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
       (Just email, Nothing, Nothing) -> do
         --create a new company user
         newuser' <- guardJustM $ createUser (Email email) fstname sndname (Just company)
-        _ <- runDBUpdate $ SetUserInfo (userid newuser') (userinfo newuser') {
+        _ <- dbUpdate $ SetUserInfo (userid newuser') (userinfo newuser') {
                             userfstname = fstname
                           , usersndname = sndname
                           }
-        _ <- runDBUpdate $
+        _ <- dbUpdate $
              LogHistoryUserInfoChanged (userid newuser') (ctxipnumber ctx) (ctxtime ctx)
                                        (userinfo newuser')
                                        ((userinfo newuser') { userfstname = fstname , usersndname = sndname })
                                        (userid <$> ctxmaybeuser ctx)
-        newuser <- guardJustM $ runDBQuery $ GetUserByID (userid newuser')
+        newuser <- guardJustM $ dbQuery $ GetUserByID (userid newuser')
         _ <- sendNewCompanyUserMail user company newuser
         return $ Just newuser
       (Just _email, Just existinguser, Nothing) -> do
@@ -247,7 +247,7 @@ handleAddCompanyAccount = withCompanyAdmin $ \(user, company) -> do
   -- record the invite and flash a message
   when (isJust minvitee) $ do
     email <- guardJust memail
-    _ <- runDBUpdate $ AddCompanyInvite CompanyInvite {
+    _ <- dbUpdate $ AddCompanyInvite CompanyInvite {
             invitedemail = Email email
           , invitedfstname = fstname
           , invitedsndname = sndname
@@ -263,10 +263,10 @@ handleResendToCompanyAccount :: Kontrakcja m => m ()
 handleResendToCompanyAccount = withCompanyAdmin $ \(user, company) -> do
   resendid <- getCriticalField asValidUserID "resendid"
   resendemail <- getCriticalField asValidEmail "resendemail"
-  muserbyid <- runDBQuery $ GetUserByID resendid
+  muserbyid <- dbQuery $ GetUserByID resendid
   mcompanybyid <- maybe (return Nothing) getCompanyForUser muserbyid
-  minvite <- runDBQuery $ GetCompanyInvite (companyid company) (Email resendemail)
-  muserbyemail <- runDBQuery $ GetUserByEmail Nothing (Email resendemail)
+  minvite <- dbQuery $ GetCompanyInvite (companyid company) (Email resendemail)
+  muserbyemail <- dbQuery $ GetUserByEmail Nothing (Email resendemail)
 
   resent <-
     case (muserbyid, mcompanybyid, minvite, muserbyemail) of
@@ -329,10 +329,10 @@ handleChangeRoleOfCompanyAccount :: Kontrakcja m => m ()
 handleChangeRoleOfCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
   changeid <- getCriticalField asValidUserID "changeid"
   makeadmin <- getField "makeadmin"
-  changeuser <- guardJustM $ runDBQuery $ GetUserByID changeid
+  changeuser <- guardJustM $ dbQuery $ GetUserByID changeid
   changecompanyid <- guardJust $ usercompany changeuser
   unless (changecompanyid == companyid company) internalError --make sure user is in same company
-  _ <- runDBUpdate $ SetUserCompanyAdmin changeid (makeadmin == Just "true")
+  _ <- dbUpdate $ SetUserCompanyAdmin changeid (makeadmin == Just "true")
   return ()
 
 {- |
@@ -343,7 +343,7 @@ handleRemoveCompanyAccount :: Kontrakcja m => m ()
 handleRemoveCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
   removeid <- getCriticalField asValidUserID "removeid"
   removeemail <- getCriticalField asValidEmail "removeemail"
-  mremoveuser <- runDBQuery $ GetUserByID removeid
+  mremoveuser <- dbQuery $ GetUserByID removeid
   mremovecompany <- maybe (return Nothing) getCompanyForUser mremoveuser
   isdeletable <- maybe (return False) isUserDeletable mremoveuser
 
@@ -352,13 +352,13 @@ handleRemoveCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
          --there's an actual user to delete
          if isdeletable
            then do
-             _ <- runDBUpdate $ RemoveCompanyInvite (companyid company) (Email $ getEmail removeuser)
-             _ <- runDBUpdate $ DeleteUser (userid removeuser)
+             _ <- dbUpdate $ RemoveCompanyInvite (companyid company) (Email $ getEmail removeuser)
+             _ <- dbUpdate $ DeleteUser (userid removeuser)
              addFlashM flashMessageCompanyAccountDeleted
            else
              addFlashM flashMessageUserHasLiveDocs
     _ -> do
-      _ <- runDBUpdate $ RemoveCompanyInvite (companyid company) (Email removeemail)
+      _ <- dbUpdate $ RemoveCompanyInvite (companyid company) (Email removeemail)
       addFlashM flashMessageCompanyAccountDeleted
 
 {- |
@@ -370,7 +370,7 @@ handleRemoveCompanyAccount = withCompanyAdmin $ \(_user, company) -> do
  -}
 handleGetBecomeCompanyAccountOld :: Kontrakcja m => UserID -> m (Either KontraLink Response)
 handleGetBecomeCompanyAccountOld inviterid = withUserGet $ do
-  inviter <- guardJustM $ runDBQuery $ GetUserByID inviterid
+  inviter <- guardJustM $ dbQuery $ GetUserByID inviterid
   company <- guardJustM $ getCompanyForUser inviter
   addFlashM $ modalDoYouWantToBeCompanyAccount company
   Context{ctxmaybeuser = Just user} <- getContext
@@ -381,9 +381,9 @@ handleGetBecomeCompanyAccountOld inviterid = withUserGet $ do
 handlePostBecomeCompanyAccountOld :: Kontrakcja m => UserID -> m KontraLink
 handlePostBecomeCompanyAccountOld inviterid = withUserPost $ do
   user <- guardJustM $ ctxmaybeuser <$> getContext
-  inviter <- guardJustM $ runDBQuery $ GetUserByID inviterid
+  inviter <- guardJustM $ dbQuery $ GetUserByID inviterid
   company <- guardJustM $ getCompanyForUser inviter
-  _ <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid company)
+  _ <- dbUpdate $ SetUserCompany (userid user) (Just $ companyid company)
   _ <- resaveDocsForUser (userid user)
   addFlashM $ flashMessageUserHasBecomeCompanyAccount company
   return $ LinkAccount
@@ -398,7 +398,7 @@ handleGetBecomeCompanyAccount companyid = withUserGet $ do
   _ <- guardGoodForTakeover companyid
   Context{ctxmaybeuser = Just user} <- getContext
   mcompany <- getCompanyForUser user
-  newcompany <- guardJustM $ runDBQuery $ GetCompany companyid
+  newcompany <- guardJustM $ dbQuery $ GetCompany companyid
   addFlashM $ modalDoYouWantToBeCompanyAccount newcompany
   content <- showUser user mcompany False
   renderFromBody kontrakcja content
@@ -407,8 +407,8 @@ handlePostBecomeCompanyAccount :: Kontrakcja m => CompanyID -> m KontraLink
 handlePostBecomeCompanyAccount cid = withUserPost $ do
   _ <- guardGoodForTakeover cid
   Context{ctxmaybeuser = Just user} <- getContext
-  newcompany <- guardJustM $ runDBQuery $ GetCompany cid
-  _ <- runDBUpdate $ SetUserCompany (userid user) (Just $ companyid newcompany)
+  newcompany <- guardJustM $ dbQuery $ GetCompany cid
+  _ <- dbUpdate $ SetUserCompany (userid user) (Just $ companyid newcompany)
   _ <- resaveDocsForUser (userid user)
   addFlashM $ flashMessageUserHasBecomeCompanyAccount newcompany
   return $ LinkAccount
@@ -420,11 +420,12 @@ handlePostBecomeCompanyAccount cid = withUserPost $ do
 -}
 resaveDocsForUser :: Kontrakcja m => UserID -> m ()
 resaveDocsForUser uid = do
-  user <- runDBOrFail $ dbQuery $ GetUserByID uid
-  userdocs <- runDBQuery $ GetDocumentsByAuthor uid
+  user <- guardJustM $ dbQuery $ GetUserByID uid
+  userdocs <- dbQuery $ GetDocumentsByAuthor uid
+  attachments <- dbQuery $ GetAttachmentsByAuthor uid
   time <- ctxtime <$> getContext
-  let actor = SystemActor time
-  mapM_ (\doc -> runDBUpdate $ AdminOnlySaveForUser (documentid doc) user actor) userdocs
+  let actor = systemActor time
+  mapM_ (\doc -> dbUpdate $ AdminOnlySaveForUser (documentid doc) user actor) (userdocs ++ attachments)
   return ()
 
 {- |
@@ -436,5 +437,5 @@ guardGoodForTakeover :: Kontrakcja m => CompanyID -> m ()
 guardGoodForTakeover companyid = do
   Context{ctxmaybeuser = Just user} <- getContext
   _ <- unless (isNothing (usercompany user)) internalError
-  _ <- guardJustM $ runDBQuery $ GetCompanyInvite companyid (Email $ getEmail user)
+  _ <- guardJustM $ dbQuery $ GetCompanyInvite companyid (Email $ getEmail user)
   return ()

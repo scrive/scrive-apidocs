@@ -23,8 +23,7 @@ import Util.MonadUtils
 import Util.StringUtil
 
 import Templates.Templates
-
-
+import qualified Templates.Fields as F
 
 data MergeResult = MergeMatch
                  | MergeKeep
@@ -55,10 +54,10 @@ findTransactionByIDOrFail transactions transactionsid =
 getTBS :: TemplatesMonad m => D.Document -> m String
 getTBS doc = do
     entries <- getSigEntries doc
-    renderTemplateFM "tbs" $ do
-        field "documentname"   $ documenttitle doc
-        field "documentnumber" $ show $ documentid doc
-        field "tbssigentries"  entries
+    renderTemplate "tbs" $ do
+        F.value "documentname"   $ documenttitle doc
+        F.value "documentnumber" $ show $ documentid doc
+        F.value "tbssigentries"  entries
 
 getSigEntries :: TemplatesMonad m => D.Document -> m String
 getSigEntries doc = do
@@ -67,11 +66,11 @@ getSigEntries doc = do
 
 getSigEntry :: TemplatesMonad m => SignatoryDetails -> m String
 getSigEntry signatorydetails =
-    renderTemplateFM "tbssig" $ do
-        field "firstname" $ getFirstName signatorydetails
-        field "lastname"  $ getLastName signatorydetails
-        field "company"   $ getCompanyName signatorydetails
-        field "number"    $ getPersonalNumber signatorydetails
+    renderTemplate "tbssig" $ do
+        F.value "firstname" $ getFirstName signatorydetails
+        F.value "lastname"  $ getLastName signatorydetails
+        F.value "company"   $ getCompanyName signatorydetails
+        F.value "number"    $ getPersonalNumber signatorydetails
 
 fieldvaluebyid :: String -> [(String, String)] -> String
 fieldvaluebyid _ [] = ""

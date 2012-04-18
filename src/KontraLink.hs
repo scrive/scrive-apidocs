@@ -102,6 +102,8 @@ data KontraLink
     | LinkCSVLandPage Int
     | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID
     | LinkAPIDocumentSignatoryAttachment DocumentID SignatoryLinkID String
+    | LinkPadDeviceArchive 
+    | LinkPadDeviceView
     | LinkMailAPIDelayConfirmation String Int64 MagicHash
     | LinkOAuthCallback URI APIToken MagicHash
     deriving (Eq)
@@ -229,6 +231,10 @@ instance Show KontraLink where
                  "/" ++ show fid)
     showsPrec _ (LinkAPIDocumentSignatoryAttachment did sid name) =
       (++) ("/api/document/" ++ show did ++ "/signatory/" ++ show sid ++ "/attachment/" ++ name)
+    showsPrec _ (LinkPadDeviceArchive) =
+      (++) ("/padqueue/archive")
+    showsPrec _ (LinkPadDeviceView) =
+      (++) ("/padqueue")
     showsPrec _ (LinkMailAPIDelayConfirmation email delayid key) = (++) ("/mailapi/confirmdelay/" ++ (URL.encode $ UTF.encode email) ++ "/" ++ show delayid ++ "/" ++ show key)
     showsPrec _ (LinkOAuthCallback url token verifier) = 
       let newvars = [("oauth_token", show token), ("oauth_verifier", show verifier)]

@@ -3,7 +3,7 @@ module User.Utils where
 import Control.Monad.State
 import Data.Functor
 
-import DB.Classes
+import DB
 import Doc.DocStateData
 import Company.Model
 import Kontra
@@ -16,12 +16,8 @@ import Util.MonadUtils
     This looks up the company for the given user, if the user doesn't
     have a company then it returns Nothing.
 -}
-getCompanyForUser :: DBMonad m => User -> m (Maybe Company)
-getCompanyForUser = maybe (return Nothing) (runDBQuery . GetCompany) . usercompany
-
--- | Version to be executed within DB monad (currently used in tests only)
-getCompanyForUser' :: User -> DB (Maybe Company)
-getCompanyForUser' = maybe (return Nothing) (dbQuery . GetCompany) . usercompany
+getCompanyForUser :: MonadDB m => User -> m (Maybe Company)
+getCompanyForUser = maybe (return Nothing) (dbQuery . GetCompany) . usercompany
 
 {- |
    Guard against a POST with no logged in user.

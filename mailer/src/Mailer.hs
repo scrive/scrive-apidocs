@@ -4,24 +4,26 @@ module Mailer (
   ) where
 
 import Control.Applicative
+import Control.Monad.Base
 import Control.Monad.Reader
+import Control.Monad.Trans.Control
 import Happstack.Server
 
-import Crypto.RNG (CryptoRNG, getCryptoRNGState)
-import DB.Classes
-import qualified Log (mailingServer)
+import Control.Monad.Trans.Control.Util
+import Crypto.RNG
+import DB.Core
 
-newtype Mailer a = Mailer { unMailer :: ServerPartT (ReaderT DBEnv IO) a }
-  deriving (Applicative, FilterMonad Response, Functor, HasRqData, Monad, MonadIO, MonadPlus, ServerMonad, WebMonad Response, MonadReader DBEnv)
+type InnerMailer = CryptoRNGT (DBT (ServerPartT IO))
 
-instance CryptoRNG Mailer where
-  getCryptoRNGState = asks rngstate
+newtype Mailer a = Mailer { unMailer :: InnerMailer a }
+  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadDB, MonadIO, MonadPlus, ServerMonad)
 
-instance DBMonad Mailer where
-  getDBEnv = Mailer ask
-  handleDBError e = do
-    Log.mailingServer $ "SQL error: " ++ show e
-    finishWith =<< internalServerError (toResponse "Internal server error")
+instance MonadBaseControl IO Mailer where
+  newtype StM Mailer a = StMailer { unStMailer :: StM InnerMailer a }
+  liftBaseWith = newtypeLiftBaseWith Mailer unMailer StMailer
+  restoreM     = newtypeRestoreM Mailer unStMailer
+  {-# INLINE liftBaseWith #-}
+  {-# INLINE restoreM #-}
 
-runMailer :: DBEnv -> Mailer a -> ServerPartT IO a
-runMailer env = mapServerPartT (\r -> runReaderT r env) . unMailer
+runMailer :: CryptoRNGState -> Mailer a -> DBT (ServerPartT IO) a
+runMailer rng = runCryptoRNGT rng . unMailer

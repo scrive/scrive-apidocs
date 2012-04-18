@@ -12,6 +12,9 @@ window.Process = Backbone.Model.extend({
     name : function(){
         return this.get("name");
     },
+    corename : function() { // The name of process used in comunication with server
+        return this.get("corename");
+    },
     title : function(){
         return this.get("title");
     },
@@ -86,6 +89,12 @@ window.Process = Backbone.Model.extend({
     },
     signatorysignmodalcontentlast:  function() {
         return this.get("signatorysignmodalcontentlast");
+    },
+    signatorysignmodalcontentdesignvieweleg:  function() {
+        return this.get("signatorysignmodalcontentdesignvieweleg");
+    },
+    signatorysignmodalcontentsignvieweleg:  function() {
+        return this.get("signatorysignmodalcontentsignvieweleg");
     },
     signatorysignmodaltitle : function() {
         return this.get("signatorysignmodaltitle");

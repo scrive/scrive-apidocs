@@ -8,8 +8,9 @@ import Control.Monad
 import Control.Monad.IO.Class
 import qualified Control.Exception as E
 
-import Crypto.RNG (CryptoRNGState)
-import DB.Classes
+import Crypto.RNG
+import DB
+import DB.PostgreSQL
 import Sender
 import Mails.Model
 import MinutesTime
@@ -17,7 +18,7 @@ import qualified Log (mailingServer)
 
 dispatcher :: CryptoRNGState -> Sender -> MVar Sender -> String -> IO ()
 dispatcher rng master msender dbconf = do
-  res <- withPostgreSQLDB' dbconf rng $ \dbenv -> E.try $ ioRunDB dbenv $ do
+  res <- E.try . withPostgreSQL dbconf . runCryptoRNGT rng $ do
     sender <- liftIO $ readMVar msender
     mails <- dbQuery GetIncomingEmails
     forM_ mails $ \mail@Mail{mailID, mailServiceTest} -> do
@@ -44,6 +45,7 @@ dispatcher rng master msender dbconf = do
              res <- dbUpdate $ DeferEmail mailID $ 5 `minutesAfter` now
              when (not res) $
                error $ "CRITICAL: deferring email #" ++ show mailID ++ " failed."
+      dbCommit -- commit after email was handled properly
   case res of
     Right () -> threadDelay $ 5 * second
     Left (e::E.SomeException) -> do

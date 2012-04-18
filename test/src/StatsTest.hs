@@ -1,7 +1,7 @@
 module StatsTest (statsTests) where
 
 import Control.Logic
-import DB.Classes
+import DB
 import User.Model
 import Doc.Model
 import Doc.DocUtils
@@ -12,14 +12,12 @@ import Doc.DocInfo
 import TestingUtil
 import Company.Model
 import MinutesTime
-import Test.HUnit.Base (Assertion)
 
 import Control.Monad
 import Test.Framework
-import Test.Framework.Providers.HUnit (testCase)
 import Stats.Control
 import Stats.Model
-import StateHelper
+import TestKontra
 
 import qualified Log
 
@@ -29,22 +27,21 @@ import Util.HasSomeUserInfo
 import Data.Maybe
 import EvidenceLog.Model
 
-statsTests :: DBEnv -> Test
-statsTests env = testGroup "Stats"
-  [
-    testCase "test invite stat"                  $ testInviteStat       env
-  , testCase "test receive stat"                 $ testReceiveStat      env
-  , testCase "test open stat"                    $ testOpenStat         env
-  , testCase "test link stat"                    $ testLinkStat         env
-  , testCase "test sign stat"                    $ testSignStat         env
-  , testCase "test reject stat"                  $ testRejectStat       env
-  , testCase "test delete stat"                  $ testDeleteStat       env
-  , testCase "test purge stat"                   $ testPurgeStat        env
-  , testCase "test time efficiency of userstats" $ testGetUsersAndStats env
+statsTests :: TestEnvSt -> Test
+statsTests env = testGroup "Stats" [
+    testThat "test invite stat"                  env testInviteStat
+  , testThat "test receive stat"                 env testReceiveStat
+  , testThat "test open stat"                    env testOpenStat
+  , testThat "test link stat"                    env testLinkStat
+  , testThat "test sign stat"                    env testSignStat
+  , testThat "test reject stat"                  env testRejectStat
+  , testThat "test delete stat"                  env testDeleteStat
+  , testThat "test purge stat"                   env testPurgeStat
+  , testThat "test time efficiency of userstats" env testGetUsersAndStats
   ]
 
-testInviteStat :: DBEnv -> Assertion
-testInviteStat env = withTestEnvironment env $ do
+testInviteStat :: TestEnv ()
+testInviteStat = do
   stats' <- dbQuery $ GetSignStatEvents
   assertEqual "Stats should be empty." 0 (length stats')
   company <- addNewCompany
@@ -55,15 +52,15 @@ testInviteStat env = withTestEnvironment env $ do
                                                           isPreparation &&^
                                                           (any isSignatory . documentsignatorylinks))
   time <- getMinutesTime
-  _ <- dbUpdate $ PreparationToPending (documentid doc') (SystemActor time)
-  Right doc <- dbUpdate $ SetDocumentInviteTime (documentid doc') time (SystemActor time)
+  _ <- dbUpdate $ PreparationToPending (documentid doc') (systemActor time)
+  Right doc <- dbUpdate $ SetDocumentInviteTime (documentid doc') time (systemActor time)
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatInviteEvent doc sl time)
   stats'' <- dbQuery $ GetSignStatEvents
   assertEqual "Should have saved stat." (length $ documentsignatorylinks doc) (length stats'')
   forM_ stats'' (\s->assertEqual ("Should be Invite stat but was " ++ show (ssQuantity s)) SignStatInvite (ssQuantity s))
 
-testReceiveStat :: DBEnv -> Assertion
-testReceiveStat env = withTestEnvironment env $ do
+testReceiveStat :: TestEnv ()
+testReceiveStat = do
   stats' <- dbQuery $ GetSignStatEvents
   assertEqual "Stats should be empty." 0 (length stats')
   company <- addNewCompany
@@ -74,16 +71,16 @@ testReceiveStat env = withTestEnvironment env $ do
                                                            isPreparation &&^
                                                            (any isSignatory . documentsignatorylinks))
   time <- getMinutesTime
-  _ <- dbUpdate $ PreparationToPending (documentid doc') (SystemActor time)
-  _ <- forM (documentsignatorylinks doc') (\sl -> dbUpdate $ SetInvitationDeliveryStatus (documentid doc') (signatorylinkid sl) Delivered (SystemActor time))
+  _ <- dbUpdate $ PreparationToPending (documentid doc') (systemActor time)
+  _ <- forM (documentsignatorylinks doc') (\sl -> dbUpdate $ SetInvitationDeliveryStatus (documentid doc') (signatorylinkid sl) Delivered (systemActor time))
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatReceiveEvent doc sl time)
   stats'' <- dbQuery $ GetSignStatEvents
   assertEqual "Should have saved stat." (length $ documentsignatorylinks doc) (length stats'')
   forM_ stats'' (\s->assertEqual "Wrong stat type" SignStatReceive (ssQuantity s))
 
-testOpenStat :: DBEnv -> Assertion
-testOpenStat env = withTestEnvironment env $ do
+testOpenStat :: TestEnv ()
+testOpenStat = do
   stats' <- dbQuery $ GetSignStatEvents
   assertEqual "Stats should be empty." 0 (length stats')
   company <- addNewCompany
@@ -94,21 +91,21 @@ testOpenStat env = withTestEnvironment env $ do
                                                            isPreparation &&^
                                                            (any isSignatory . documentsignatorylinks))
   time <- getMinutesTime
-  _ <- dbUpdate $ PreparationToPending (documentid doc') (SystemActor time)
+  _ <- dbUpdate $ PreparationToPending (documentid doc') (systemActor time)
   _ <- forM (documentsignatorylinks doc')
        (\sl -> if isAuthor sl
                then dbUpdate $ MarkInvitationRead (documentid doc') (signatorylinkid sl)
-                    (AuthorActor time noIP (userid author) (getEmail author))
+                    (authorActor time noIP (userid author) (getEmail author))
                else dbUpdate $ MarkInvitationRead (documentid doc') (signatorylinkid sl)
-                    (SignatoryActor time noIP (maybesignatory sl) (getEmail sl) (signatorylinkid sl)))
+                    (signatoryActor time noIP (maybesignatory sl) (getEmail sl) (signatorylinkid sl)))
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatOpenEvent doc sl)
   stats'' <- dbQuery $ GetSignStatEvents
   assertEqual "Should have saved stat." (length $ documentsignatorylinks doc) (length stats'')
   forM_ stats'' (\s->assertEqual "Wrong stat type" SignStatOpen (ssQuantity s))
 
-testLinkStat :: DBEnv -> Assertion
-testLinkStat env = withTestEnvironment env $ do
+testLinkStat :: TestEnv ()
+testLinkStat = do
   stats' <- dbQuery $ GetSignStatEvents
   assertEqual "Stats should be empty." 0 (length stats')
   company <- addNewCompany
@@ -119,21 +116,21 @@ testLinkStat env = withTestEnvironment env $ do
                                                            isPreparation &&^
                                                            (any isSignatory . documentsignatorylinks))
   time <- getMinutesTime
-  _ <- dbUpdate $ PreparationToPending (documentid doc') (SystemActor time)
+  _ <- dbUpdate $ PreparationToPending (documentid doc') (systemActor time)
   _ <- forM (documentsignatorylinks doc')
        (\sl -> if isAuthor sl
                then dbUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid sl) (signatorymagichash sl)
-                    (AuthorActor time noIP (fromJust $ maybesignatory sl) (getEmail sl))
+                    (authorActor time noIP (fromJust $ maybesignatory sl) (getEmail sl))
                else dbUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid sl) (signatorymagichash sl)
-                    (SignatoryActor time noIP (maybesignatory sl) (getEmail sl) (signatorylinkid sl)))
+                    (signatoryActor time noIP (maybesignatory sl) (getEmail sl) (signatorylinkid sl)))
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatLinkEvent doc sl)
   stats'' <- dbQuery $ GetSignStatEvents
   assertEqual "Should have saved stat." (length $ documentsignatorylinks doc) (length stats'')
   forM_ stats'' (\s->assertEqual "Wrong stat type" SignStatLink (ssQuantity s))
 
-testSignStat :: DBEnv -> Assertion
-testSignStat env = withTestEnvironment env $ do
+testSignStat :: TestEnv ()
+testSignStat = do
   stats' <- dbQuery $ GetSignStatEvents
   assertEqual "Stats should be empty." 0 (length stats')
   company <- addNewCompany
@@ -144,22 +141,22 @@ testSignStat env = withTestEnvironment env $ do
                                                            isPreparation &&^
                                                            (any isSignatory . documentsignatorylinks))
   time <- getMinutesTime
-  _ <- dbUpdate $ PreparationToPending (documentid doc') (SystemActor time)
+  _ <- dbUpdate $ PreparationToPending (documentid doc') (systemActor time)
   _ <- forM (documentsignatorylinks doc')
        (\sl -> if isAuthor sl
                then dbUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid sl) (signatorymagichash sl)
-                    (AuthorActor time noIP (fromJust $ maybesignatory sl) (getEmail sl))
+                    (authorActor time noIP (fromJust $ maybesignatory sl) (getEmail sl))
                else dbUpdate $ MarkDocumentSeen (documentid doc') (signatorylinkid sl) (signatorymagichash sl)
-                    (SignatoryActor time noIP (maybesignatory sl) (getEmail sl) (signatorylinkid sl)))
-  _ <- forM (filter isSignatory $ documentsignatorylinks doc') (\sl -> dbUpdate $ SignDocument (documentid doc') (signatorylinkid sl) (signatorymagichash sl) Nothing (SignatoryActor time noIP (maybesignatory sl) (getEmail sl) (signatorylinkid sl)))
+                    (signatoryActor time noIP (maybesignatory sl) (getEmail sl) (signatorylinkid sl)))
+  _ <- forM (filter isSignatory $ documentsignatorylinks doc') (\sl -> dbUpdate $ SignDocument (documentid doc') (signatorylinkid sl) (signatorymagichash sl) Nothing (signatoryActor time noIP (maybesignatory sl) (getEmail sl) (signatorylinkid sl)))
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   _ <- forM (documentsignatorylinks doc) (\sl -> addSignStatSignEvent doc sl)
   stats'' <- dbQuery $ GetSignStatEvents
   assertEqual "Should have saved stat." (length $ filter isSignatory $ documentsignatorylinks doc) (length stats'')
   forM_ stats'' (\s->assertEqual "Wrong stat type" SignStatSign (ssQuantity s))
 
-testRejectStat :: DBEnv -> Assertion
-testRejectStat env = withTestEnvironment env $ do
+testRejectStat :: TestEnv ()
+testRejectStat = do
   stats' <- dbQuery $ GetSignStatEvents
   assertEqual "Stats should be empty." 0 (length stats')
   company <- addNewCompany
@@ -170,10 +167,10 @@ testRejectStat env = withTestEnvironment env $ do
                                                            isPreparation &&^
                                                            (any isSignatory . documentsignatorylinks))
   time <- getMinutesTime
-  _ <- dbUpdate $ PreparationToPending (documentid doc') (SystemActor time)
+  _ <- dbUpdate $ PreparationToPending (documentid doc') (systemActor time)
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
   let Just asl' = getAuthorSigLink doc
-      aa = AuthorActor time noIP (userid author) (getEmail author)
+      aa = authorActor time noIP (userid author) (getEmail author)
   _ <- dbUpdate $ RejectDocument (documentid doc)
          (signatorylinkid asl')
          Nothing
@@ -185,8 +182,8 @@ testRejectStat env = withTestEnvironment env $ do
   assertEqual "Should have saved stat." 1 (length stats'')
   forM_ stats'' (\s->assertEqual "Wrong stat type" SignStatReject (ssQuantity s))
 
-testDeleteStat :: DBEnv -> Assertion
-testDeleteStat env = withTestEnvironment env $ do
+testDeleteStat :: TestEnv ()
+testDeleteStat = do
   stats' <- dbQuery $ GetSignStatEvents
   assertEqual "Stats should be empty." 0 (length stats')
   company <- addNewCompany
@@ -197,7 +194,7 @@ testDeleteStat env = withTestEnvironment env $ do
                                                            isClosed &&^
                                                            (any isSignatory . documentsignatorylinks))
   time <- getMinutesTime
-  let actor = SystemActor time
+  let actor = systemActor time
   _ <- dbUpdate $ ArchiveDocument author' (documentid doc') actor
 
   Just doc <- dbQuery $ GetDocumentByDocumentID (documentid doc')
@@ -207,13 +204,13 @@ testDeleteStat env = withTestEnvironment env $ do
   assertEqual "Should have saved stat." 1 (length stats'')
   forM_ stats'' (\s->assertEqual "Wrong stat type" SignStatDelete (ssQuantity s))
 
-testPurgeStat :: DBEnv -> Assertion
-testPurgeStat env = withTestEnvironment env $ do
+testPurgeStat :: TestEnv ()
+testPurgeStat = do
   stats' <- dbQuery $ GetSignStatEvents
   assertEqual "Stats should be empty." 0 (length stats')
   author <- addNewRandomUser
   time <- getMinutesTime
-  let actor = SystemActor time
+  let actor = systemActor time
   _ <- dbUpdate $ SetUserCompany (userid author) Nothing
   Just author' <- dbQuery $ GetUserByID (userid author)
   doc' <- addRandomDocumentWithAuthorAndCondition author' (isSignable &&^
@@ -230,14 +227,14 @@ testPurgeStat env = withTestEnvironment env $ do
 
 -- tests for old stats
 
-testGetUsersAndStats :: DBEnv -> Assertion
-testGetUsersAndStats env = withTestEnvironment env $ do
+testGetUsersAndStats :: TestEnv ()
+testGetUsersAndStats = do
   time <- getMinutesTime
   us <- catMaybes <$> (forM (range (0, 100::Int)) $ \i->
                         dbUpdate $ AddUser ("F", "L") ("e" ++ show i ++ "@yoyo.com")
                         Nothing False Nothing Nothing (mkLocale REGION_SE LANG_SE))
   _ <- forM [(u, i) | u <- us, i <- range (0, 10::Int)] $ \(u,_) -> do
-    let aa = AuthorActor time noIP (userid u) (getEmail u)
+    let aa = authorActor time noIP (userid u) (getEmail u)
     dbUpdate $ NewDocument u Nothing "doc!" (Signable Contract) 0 aa
 
   Log.debug $ "Set up test, now running query."

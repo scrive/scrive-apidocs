@@ -2,15 +2,16 @@ module DB.Model where
 
 import Database.HDBC
 
-import DB.Classes
+import DB.Core
+import DB.Env
 
 data TableValidationResult = TVRvalid | TVRcreated | TVRinvalid
 
 data Table = Table {
     tblName             :: String
   , tblVersion          :: Int
-  , tblCreateOrValidate :: [(String, SqlColDesc)] -> DB TableValidationResult
-  , tblPutProperties    :: DB ()
+  , tblCreateOrValidate :: MonadDB m => [(String, SqlColDesc)] -> DBEnv m TableValidationResult
+  , tblPutProperties    :: MonadDB m => DBEnv m ()
   }
 
 -- | Migration object. Fields description:
@@ -20,8 +21,8 @@ data Table = Table {
 --   if mgrFrom is 2, that means that after that migration is run, table
 --   version will equal 3
 -- * mgrDo is actual body of a migration
-data Migration = Migration {
+data Migration m = Migration {
     mgrTable :: Table
   , mgrFrom  :: Int
-  , mgrDo    :: DB ()
+  , mgrDo    :: DBEnv m ()
   }

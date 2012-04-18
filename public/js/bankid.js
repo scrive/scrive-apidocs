@@ -131,7 +131,7 @@ function doSignNetID(tbs, nonce, servertime) {
 
 // success fns
 function sign1Success(transactionid, tbs, nonce, servertime, posturl, formselector) {
-    closeLoadingOverlay(); // this was opened just before starting
+    LoadingDialog.close(); // this was opened just before starting
     // ajax request
     if ($.browser.msie && hasIESigner1Plugin())
         IEInstallSigner1Object();
@@ -143,7 +143,7 @@ function sign1Success(transactionid, tbs, nonce, servertime, posturl, formselect
 }
 
 function sign2Success(transactionid, tbs, nonce, servertime, posturl, formselector) {
-    closeLoadingOverlay();
+    LoadingDialog.close();
     if ($.browser.msie && hasSign2PluginIE())
         installSign2IE();
     else if (hasSign2PluginMozilla())
@@ -154,7 +154,7 @@ function sign2Success(transactionid, tbs, nonce, servertime, posturl, formselect
 }
 
 function netIDSuccess(transactionid, tbs, nonce, servertime, posturl, formselector) {
-    closeLoadingOverlay();
+    LoadingDialog.close();
     if ($.browser.msie && hasNetIDPluginIE())
         installNetIDIE();
     else if (hasNetIDPluginMozilla())
@@ -169,7 +169,7 @@ function sign1Author() {
     if (!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage))
         return false;
 
-    displayLoadingOverlay(localization.startingSaveSigning);
+    LoadingDialog.open(localization.startingSaveSigning);
     var url = window.location.pathname.substring(2);
     var ajaxurl = "/d/eleg" + url;
     var posturl = "/d" + url;
@@ -182,7 +182,7 @@ function sign2Author() {
     if (!checkPlugin(hasSign2PluginIE, hasSign2PluginMozilla, flashBankIDMessage))
         return false;
 
-    displayLoadingOverlay(localization.startingSaveSigning);
+    LoadingDialog.open(localization.startingSaveSigning);
     var url = window.location.pathname.substring(2);
     var ajaxurl = "/d/eleg" + url;
     var posturl = "/d" + url;
@@ -195,7 +195,7 @@ function netIDSignAuthor() {
     if (!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage))
         return false;
 
-    displayLoadingOverlay(localization.startingSaveSigning);
+    LoadingDialog.open(localization.startingSaveSigning);
     var url = window.location.pathname.substring(2);
     var ajaxurl = "/d/eleg" + url;
     var posturl = "/d" + url;
@@ -221,7 +221,7 @@ function flashTeliaMessage() {
 
 function failEleg(msg) {
     FlashMessages.add({ content: msg, color: "red"});
-    closeLoadingOverlay();
+    LoadingDialog.close();
     return null;
 }
 
@@ -340,7 +340,7 @@ function postBack(sig, provider, formselector, transactionid, posturl) {
     if (!sig)
         return false;
 
-    displayLoadingOverlay(localization.verifyingSignature);
+    LoadingDialog.open(localization.verifyingSignature);
     var form = $(formselector);
     form.find("#signatureinput").val(sig);
     form.find("#transactionidinput").val(transactionid);
@@ -369,7 +369,7 @@ window.Eleg = {
      return text;
    },
 
-    bankidSign : function(document, signatory, submit) {
+    bankidSign : function(document, signatory, submit, callback) {
       if (!checkPlugin(hasSign2PluginIE, hasSign2PluginMozilla, flashBankIDMessage))
         return false;
       LoadingDialog.open(localization.startingSaveSigning);
@@ -390,7 +390,7 @@ window.Eleg = {
             'scriptCharset': "utf-8",
             'success': function(data) {
               if (data && data.status === 0)  {
-               closeLoadingOverlay(); // this was opened just before starting
+               LoadingDialog.close(); // this was opened just before starting
                 if ($.browser.msie && hasSign2PluginIE())
                     installSign2IE();
                 else if (hasSign2PluginMozilla())
@@ -423,7 +423,10 @@ window.Eleg = {
                 submit.add("signature",signresult);
                 submit.add("transactionid", data.transactionid);
                 submit.add("eleg" , "bankid");
-                submit.send();
+                if (callback == undefined)
+                    submit.send();
+                else
+                    callback(submit);
             }    
             else
                 FlashMessages.add({ content: data.msg, color: "red"});
@@ -432,7 +435,7 @@ window.Eleg = {
             error: repeatForeverWithDelay(250)
       });  
     },
-    nordeaSign : function(document, signatory, submit) {
+    nordeaSign : function(document, signatory, submit, callback) {
       if (!checkPlugin(hasIESigner1Plugin, hasMozillaSigner1Plugin, flashNordeaMessage))
         return;
       var url;
@@ -453,7 +456,7 @@ window.Eleg = {
             'scriptCharset': "utf-8",
             'success': function(data) {
               if (data && data.status === 0)  {
-               closeLoadingOverlay(); // this was opened just before starting
+               LoadingDialog.close(); // this was opened just before starting
                 if ($.browser.msie && hasIESigner1Plugin())
                     IEInstallSigner1Object();
                 else if (hasMozillaSigner1Plugin())
@@ -489,7 +492,10 @@ window.Eleg = {
                 submit.add("signature",signresult);
                 submit.add("transactionid", data.transactionid);
                 submit.add("eleg" , "nordea");
-                submit.send();
+                if (callback == undefined)
+                    submit.send();
+                else
+                    callback(submit);
             }    
             else
                 FlashMessages.add({ content: data.msg, color: "red"});
@@ -501,7 +507,7 @@ window.Eleg = {
     
     
     },
-    teliaSign : function(document, signatory, submit) {
+    teliaSign : function(document, signatory, submit, callback) {
       if (!checkPlugin(hasNetIDPluginIE, hasNetIDPluginMozilla, flashTeliaMessage))
         return false;
       var url;
@@ -555,7 +561,10 @@ window.Eleg = {
                 submit.add("signature",signresult);
                 submit.add("transactionid", data.transactionid);
                 submit.add("eleg" , "telia");
-                submit.send();
+                if (callback == undefined)
+                    submit.send();
+                else
+                    callback(submit);
 
             }    
             else

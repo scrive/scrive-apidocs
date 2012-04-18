@@ -1,25 +1,20 @@
 module AccountInfoTest (accountInfoTests) where
 
 import Control.Applicative
-import Control.Monad.State
 import Data.Maybe
 import Happstack.Server
 import Happstack.State (query)
 import Test.Framework
-import Test.Framework.Providers.HUnit
-import Test.HUnit (Assertion)
 
 import ActionSchedulerState
 import Context
-import DB.Classes
+import DB hiding (query, update)
 import FlashMessage
 import MagicHash (unsafeMagicHash)
 import Mails.Model
 import MinutesTime
 import Misc
 import Redirect
-import StateHelper
-import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
 import User.Locale
@@ -29,44 +24,39 @@ import User.Utils
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 
-accountInfoTests :: DBEnv -> Test
+accountInfoTests :: TestEnvSt -> Test
 accountInfoTests env = testGroup "AccountInfo" [
-      testCase "lets private account upgrade to company account" $ testPrivateToCompanyUpgrade env
-    , testCase "lets users change their email addresses" $ testChangeEmailAddress env
-    , testCase  "requesting email change fails is the entered emails are mismatched" $ testAddressesMustMatchToRequestEmailChange env
-    , testCase "need two addresses to request email changes" $ testNeedTwoAddressesToRequestEmailChange env
-    , testCase "need unique email to request email change" $ testNeedEmailToBeUniqueToRequestChange env
-    , testCase "need the correct action id to complete email change" $ testEmailChangeFailsIfActionIDIsWrong env
-    , testCase "need the correct hash to complete email change" $ testEmailChangeFailsIfMagicHashIsWrong env
-    , testCase "need the correct user to complete email change" $ testEmailChangeIfForAnotherUser env
-    , testCase "need the email to still be unique to complete email change" $ testEmailChangeFailsIfEmailInUse env
-    , testCase "need the password to the correct to complete the email change" $ testEmailChangeFailsIfPasswordWrong env
-    , testCase "need the password to be entered to complete the email change" $ testEmailChangeFailsIfNoPassword env
-    ]
+    testThat "lets private account upgrade to company account" env testPrivateToCompanyUpgrade
+  , testThat "lets users change their email addresses" env testChangeEmailAddress
+  , testThat  "requesting email change fails is the entered emails are mismatched" env testAddressesMustMatchToRequestEmailChange
+  , testThat "need two addresses to request email changes" env testNeedTwoAddressesToRequestEmailChange
+  , testThat "need unique email to request email change" env testNeedEmailToBeUniqueToRequestChange
+  , testThat "need the correct action id to complete email change" env testEmailChangeFailsIfActionIDIsWrong
+  , testThat "need the correct hash to complete email change" env testEmailChangeFailsIfMagicHashIsWrong
+  , testThat "need the correct user to complete email change" env testEmailChangeIfForAnotherUser
+  , testThat "need the email to still be unique to complete email change" env testEmailChangeFailsIfEmailInUse
+  , testThat "need the password to the correct to complete the email change" env testEmailChangeFailsIfPasswordWrong
+  , testThat "need the password to be entered to complete the email change" env testEmailChangeFailsIfNoPassword
+  ]
 
-testPrivateToCompanyUpgrade :: DBEnv -> Assertion
-testPrivateToCompanyUpgrade env = withTestEnvironment env $ do
+testPrivateToCompanyUpgrade :: TestEnv ()
+testPrivateToCompanyUpgrade = do
   Just user <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   let upgradeinfo = UpgradeInfo "Test Corp"
                                 "Andrzejj"
                                 "Rybczakk"
                                 "Tester"
                                 "12345"
-  (res1, ctx1) <- upgradeCompanyForUser env user upgradeinfo
+  (res1, ctx1) <- upgradeCompanyForUser user upgradeinfo
 
   assertCompanyUpgradeSuccessful (userid user) upgradeinfo (res1, ctx1)
 
 data UpgradeInfo = UpgradeInfo String String String String String
 
-upgradeCompanyForUser :: (MonadIO m, Functor m) =>
-                               DBEnv
-                            -> User
-                            -> UpgradeInfo
-                            -> m (Response, Context)
-upgradeCompanyForUser env user (UpgradeInfo cname fstname sndname position phone) = do
-  globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+upgradeCompanyForUser :: User -> UpgradeInfo -> TestEnv (Response, Context)
+upgradeCompanyForUser user (UpgradeInfo cname fstname sndname position phone) = do
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [ ("createcompany", inText "true")
                         , ("companyname", inText cname)
@@ -77,10 +67,10 @@ upgradeCompanyForUser env user (UpgradeInfo cname fstname sndname position phone
                         ]
   runTestKontra req ctx $ handleUserPost >>= sendRedirect
 
-assertCompanyUpgradeSuccessful :: UserID -> UpgradeInfo -> (Response, Context) -> DB ()
+assertCompanyUpgradeSuccessful :: UserID -> UpgradeInfo -> (Response, Context) -> TestEnv ()
 assertCompanyUpgradeSuccessful uid (UpgradeInfo cname fstname sndname position phone) (res, ctx) = do
   Just user <- dbQuery $ GetUserByID uid
-  mcompany <- getCompanyForUser' user
+  mcompany <- getCompanyForUser user
 
   assertEqual "Response code is 303" 303 (rsCode res)
   assertEqual "User is logged in" (Just $ userid user) (fmap userid $ ctxmaybeuser ctx)
@@ -94,15 +84,14 @@ assertCompanyUpgradeSuccessful uid (UpgradeInfo cname fstname sndname position p
   assertEqual "Company position was saved on user" position (usercompanyposition $ userinfo user)
   assertEqual "Phone number was saved on user" phone (userphone $ userinfo user)
 
-testChangeEmailAddress :: DBEnv -> Assertion
-testChangeEmailAddress env = withTestEnvironment env $ do
+testChangeEmailAddress :: TestEnv ()
+testChangeEmailAddress = do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- createPassword "abc123"
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
-  globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req1 <- mkRequest POST [ ("changeemail", inText "true")
                         , ("newemail", inText "jim@bob.com")
@@ -123,7 +112,7 @@ testChangeEmailAddress env = withTestEnvironment env $ do
   assertEqual "Inviter id is correct" (userid user) inviterid
   assertEqual "Action email is correct" (Email "jim@bob.com") invitedemail
 
-  emails <- dbQuery GetIncomingEmails
+  emails <- dbQuery GetEmails
   assertEqual "An email was sent" 1 (length emails)
 
   req2 <- mkRequest POST [("password", inText "abc123")]
@@ -135,12 +124,11 @@ testChangeEmailAddress env = withTestEnvironment env $ do
   Just uuuser <- dbQuery $ GetUserByID (userid user)
   assertEqual "Email has changed" "jim@bob.com" (getEmail uuuser)
 
-testAddressesMustMatchToRequestEmailChange :: DBEnv -> Assertion
-testAddressesMustMatchToRequestEmailChange env = withTestEnvironment env $ do
+testAddressesMustMatchToRequestEmailChange :: TestEnv ()
+testAddressesMustMatchToRequestEmailChange = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
-  globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req1 <- mkRequest POST [ ("changeemail", inText "true")
                         , ("newemail", inText "jim@bob.com")
@@ -152,12 +140,11 @@ testAddressesMustMatchToRequestEmailChange env = withTestEnvironment env $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx1)
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx1) `isFlashOfType` OperationFailed
 
-testNeedTwoAddressesToRequestEmailChange :: DBEnv -> Assertion
-testNeedTwoAddressesToRequestEmailChange env = withTestEnvironment env $ do
+testNeedTwoAddressesToRequestEmailChange :: TestEnv ()
+testNeedTwoAddressesToRequestEmailChange = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
-  globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req1 <- mkRequest POST [ ("changeemail", inText "true")
                         , ("newemail", inText "jim@bob.com")
@@ -169,13 +156,12 @@ testNeedTwoAddressesToRequestEmailChange env = withTestEnvironment env $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx1)
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx1) `isFlashOfType` OperationFailed
 
-testNeedEmailToBeUniqueToRequestChange :: DBEnv -> Assertion
-testNeedEmailToBeUniqueToRequestChange env = withTestEnvironment env $ do
+testNeedEmailToBeUniqueToRequestChange :: TestEnv ()
+testNeedEmailToBeUniqueToRequestChange = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   _ <- addNewUser "Jim" "Bob" "jim@bob.com"
-  globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req1 <- mkRequest POST [ ("changeemail", inText "true")
                         , ("newemail", inText "jim@bob.com")
@@ -189,15 +175,14 @@ testNeedEmailToBeUniqueToRequestChange env = withTestEnvironment env $ do
   actions <- getRequestChangeEmailActions
   assertEqual "No request email action was made" 0 (length $ actions)
 
-testEmailChangeFailsIfActionIDIsWrong :: DBEnv -> Assertion
-testEmailChangeFailsIfActionIDIsWrong env = withTestEnvironment env $ do
+testEmailChangeFailsIfActionIDIsWrong :: TestEnv ()
+testEmailChangeFailsIfActionIDIsWrong = do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- createPassword "abc123"
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
-  globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [("password", inText "abc123")]
   action <- newRequestEmailChange user (Email "jim@bob.com")
@@ -207,15 +192,14 @@ testEmailChangeFailsIfActionIDIsWrong env = withTestEnvironment env $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
-testEmailChangeFailsIfMagicHashIsWrong :: DBEnv -> Assertion
-testEmailChangeFailsIfMagicHashIsWrong env = withTestEnvironment env $ do
+testEmailChangeFailsIfMagicHashIsWrong :: TestEnv ()
+testEmailChangeFailsIfMagicHashIsWrong = do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- createPassword "abc123"
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
-  globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [("password", inText "abc123")]
   action <- newRequestEmailChange user (Email "jim@bob.com")
@@ -224,16 +208,15 @@ testEmailChangeFailsIfMagicHashIsWrong env = withTestEnvironment env $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
-testEmailChangeIfForAnotherUser :: DBEnv -> Assertion
-testEmailChangeIfForAnotherUser env = withTestEnvironment env $ do
+testEmailChangeIfForAnotherUser :: TestEnv ()
+testEmailChangeIfForAnotherUser = do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- createPassword "abc123"
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   Just anotheruser <- addNewUser "Fred" "Frog" "fred@frog.com"
-  globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [("password", inText "abc123")]
   action <- newRequestEmailChange anotheruser (Email "jim@bob.com")
@@ -243,15 +226,14 @@ testEmailChangeIfForAnotherUser env = withTestEnvironment env $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
-testEmailChangeFailsIfEmailInUse:: DBEnv -> Assertion
-testEmailChangeFailsIfEmailInUse env = withTestEnvironment env $ do
+testEmailChangeFailsIfEmailInUse:: TestEnv ()
+testEmailChangeFailsIfEmailInUse = do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- createPassword "abc123"
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
-  globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [("password", inText "abc123")]
   action <- newRequestEmailChange user (Email "jim@bob.com")
@@ -262,15 +244,14 @@ testEmailChangeFailsIfEmailInUse env = withTestEnvironment env $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
-testEmailChangeFailsIfPasswordWrong :: DBEnv -> Assertion
-testEmailChangeFailsIfPasswordWrong env = withTestEnvironment env $ do
+testEmailChangeFailsIfPasswordWrong :: TestEnv ()
+testEmailChangeFailsIfPasswordWrong = do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- createPassword "abc123"
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
-  globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [("password", inText "wrongpassword")]
   action <- newRequestEmailChange user (Email "jim@bob.com")
@@ -281,15 +262,14 @@ testEmailChangeFailsIfPasswordWrong env = withTestEnvironment env $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
-testEmailChangeFailsIfNoPassword :: DBEnv -> Assertion
-testEmailChangeFailsIfNoPassword env = withTestEnvironment env $ do
+testEmailChangeFailsIfNoPassword :: TestEnv ()
+testEmailChangeFailsIfNoPassword = do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- createPassword "abc123"
   _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
-  globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest POST [("password", inText "")]
   action <- newRequestEmailChange user (Email "jim@bob.com")
@@ -300,7 +280,7 @@ testEmailChangeFailsIfNoPassword env = withTestEnvironment env $ do
   assertEqual "A flash message was added" 1 (length $ ctxflashmessages ctx')
   assertBool "Flash message has type indicating failure" $ head (ctxflashmessages ctx') `isFlashOfType` OperationFailed
 
-getRequestChangeEmailActions :: MonadIO m => m [Action]
+getRequestChangeEmailActions :: TestEnv [Action]
 getRequestChangeEmailActions = do
   now <- getMinutesTime
   let expirytime = (7 * 24 * 60 + 1) `minutesAfter` now

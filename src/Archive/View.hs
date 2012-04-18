@@ -9,6 +9,7 @@ module Archive.View
          pageOrdersList,
          pageRubbishBinList,
          pageTemplatesList,
+         pagePadDeviceArchive,
          docForListJSON
        )
        where
@@ -19,23 +20,24 @@ import FlashMessage
 import KontraLink
 import Templates.Templates
 import User.Model
+import qualified Templates.Fields as F
 
 import Control.Applicative
 import Data.Maybe
 
 import MinutesTime
-import Misc
+import Control.Logic
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
-import Doc.JSON()
 import Control.Monad.Reader
 import Text.JSON
 import Data.List (intercalate)
 
-import Doc.DocView
-import Util.JSON
 import Doc.DocUtils
+import PadQueue.Model
+import Text.JSON.Gen as J
+
 
 flashMessageSignableArchiveDone :: TemplatesMonad m => DocumentType -> m FlashMessage
 flashMessageSignableArchiveDone doctype = do
@@ -43,30 +45,33 @@ flashMessageSignableArchiveDone doctype = do
 
 flashMessageTemplateArchiveDone :: TemplatesMonad m => m FlashMessage
 flashMessageTemplateArchiveDone =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageTemplateArchiveDone" ()
+  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageTemplateArchiveDone"
 
 flashMessageAttachmentArchiveDone :: TemplatesMonad m => m FlashMessage
 flashMessageAttachmentArchiveDone =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageAttachmentArchiveDone" ()
-  
+  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageAttachmentArchiveDone"
 
 pageContractsList :: TemplatesMonad m => User -> m String
-pageContractsList = pageList' "pageContractsList" LinkContracts
+pageContractsList = pageList' "pageContractsList" LinkContracts 
 
 pageTemplatesList :: TemplatesMonad m => User -> m String
-pageTemplatesList = pageList' "pageTemplatesList" LinkTemplates
+pageTemplatesList = pageList' "pageTemplatesList" LinkTemplates 
 
 pageAttachmentList :: TemplatesMonad m =>  User -> m String
-pageAttachmentList = pageList' "pageAttachmentList" LinkAttachments
+pageAttachmentList = pageList' "pageAttachmentList" LinkAttachments 
 
 pageOffersList :: TemplatesMonad m => User -> m String
 pageOffersList = pageList' "pageOffersList" LinkOffers
 
 pageOrdersList :: TemplatesMonad m => User -> m String
-pageOrdersList = pageList' "pageOrdersList" LinkOrders
+pageOrdersList = pageList' "pageOrdersList" LinkOrders 
 
 pageRubbishBinList :: TemplatesMonad m => User ->  m String
-pageRubbishBinList = pageList' "pageRubbishBinList" LinkRubbishBin
+pageRubbishBinList = pageList' "pageRubbishBinList" LinkRubbishBin 
+
+pagePadDeviceArchive :: TemplatesMonad m => User ->  m String
+pagePadDeviceArchive = pageList' "pagePadDeviceArchive" LinkPadDeviceArchive
+    
 
 {- |
     Helper function for list pages
@@ -76,76 +81,73 @@ pageList' :: TemplatesMonad m
           -> KontraLink
           -> User
           -> m String
-pageList' templatename currentlink user  =
-  renderTemplateFM templatename $ do
-    field "canReallyDeleteDocs" $ useriscompanyadmin user || isNothing (usercompany user)
-    field "currentlink" $ show $ currentlink
-    field "linkdoclist" $ show $ LinkContracts 
-    field "documentactive" $ (LinkContracts == currentlink)
-    field "linkofferlist" $ show $ LinkOffers 
-    field "offeractive" $ (LinkOffers == currentlink)
-    field "linkorderlist" $ show $ LinkOrders
-    field "orderactive" $ (LinkOrders == currentlink)
-    field "linktemplatelist" $ show $ LinkTemplates
-    field "templateactive" $ (LinkTemplates == currentlink)
-    field "linkattachmentlist" $ show $ LinkAttachments 
-    field "attachmentactive" $ (LinkAttachments == currentlink)
-    field "linkrubbishbinlist" $ show $ LinkRubbishBin
-    field "rubbishbinactive" $ (LinkRubbishBin == currentlink)
+pageList' templatename currentlink user = renderTemplate templatename $ do
+  F.value "canReallyDeleteDocs" $ useriscompanyadmin user || isNothing (usercompany user)
+  F.value "currentlink" $ show $ currentlink
+  F.value "linkdoclist" $ show $ LinkContracts
+  F.value "documentactive" $ (LinkContracts == currentlink)
+  F.value "linkofferlist" $ show $ LinkOffers
+  F.value "offeractive" $ (LinkOffers == currentlink)
+  F.value "linkorderlist" $ show $ LinkOrders
+  F.value "orderactive" $ (LinkOrders == currentlink)
+  F.value "linktemplatelist" $ show $ LinkTemplates
+  F.value "templateactive" $ (LinkTemplates == currentlink)
+  F.value "linkattachmentlist" $ show $ LinkAttachments
+  F.value "attachmentactive" $ (LinkAttachments == currentlink)
+  F.value "linkrubbishbinlist" $ show $ LinkRubbishBin
+  F.value "rubbishbinactive" $ (LinkRubbishBin == currentlink)
+  F.value "linkpaddevicearchive" $ show LinkPadDeviceArchive
+  F.value "paddevicearchiveactive" $ (LinkPadDeviceArchive == currentlink)
 
-
-docForListJSON :: (TemplatesMonad m) => KontraTimeLocale -> MinutesTime -> User -> Document -> m (JSObject JSValue)
-docForListJSON tl crtime user doc =
+docForListJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> User -> PadQueue ->  Document -> m JSValue
+docForListJSON tl crtime user padqueue doc = do
   let link = case getSigLinkFor doc user of
         Just sl | not $ isAuthor sl -> LinkSignDoc doc sl
         _                           -> LinkIssueDoc $ documentid doc
       sigFilter sl =   isSignatory sl && (documentstatus doc /= Preparation)
-  in fmap toJSObject $ propagateMonad  $
-    [ ("fields" , jsonPack <$> docFieldsListForJSON tl crtime doc),
-      ("subfields" , JSArray <$>  fmap jsonPack <$> (mapM (signatoryFieldsListForJSON tl crtime doc) (filter sigFilter (documentsignatorylinks doc)))),
-      ("link", return $ JSString $ toJSString $  show link)
-    ]
-    
-docFieldsListForJSON :: (TemplatesMonad m) => KontraTimeLocale -> MinutesTime -> Document -> m [(String,String)]
-docFieldsListForJSON tl crtime doc =  propagateMonad [
-    ("id", return $ show $ documentid doc),
-    ("title",return $ documenttitle doc),
-    ("status", return $ show $ documentStatusClass doc),
-    ("party", return $ intercalate ", " $ map getSmartName $ getSignatoryPartnerLinks doc),
-    ("partner", return $ intercalate ", " $ map getSmartName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)),
-    ("partnercomp", return $ intercalate ", " $ map getCompanyName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)),
-    ("author", return $ intercalate ", " $ map getSmartName $ filter isAuthor $ (documentsignatorylinks doc)),
-    ("time", return $ showDateAbbrev tl crtime (documentmtime doc)),
-    ("process", renderTextForProcess doc processname),
-    ("type", renderDocType),
-    ("anyinvitationundelivered", return $ show $ anyInvitationUndelivered  doc && Pending == documentstatus doc),
-    ("shared", return $ show $ (documentsharing doc)==Shared),
-    ("file", return $ fromMaybe "" $ show <$> (listToMaybe $ (documentsealedfiles doc) ++ (documentfiles doc)))
-    ]
+  runJSONGenT $ do
+    J.object "fields" $ docFieldsListForJSON tl crtime padqueue doc
+    J.objects "subfields" $ map (signatoryFieldsListForJSON tl crtime padqueue doc) (filter sigFilter (documentsignatorylinks doc))
+    J.value "link" $ show link
+
+docFieldsListForJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime ->  PadQueue -> Document -> JSONGenT m ()
+docFieldsListForJSON tl crtime padqueue doc = do
+    J.value "id" $ show $ documentid doc
+    J.value "title" $ documenttitle doc
+    J.value "status" $ show $ documentstatusclass doc
+    J.value "party" $ intercalate ", " $ map getSmartName $ getSignatoryPartnerLinks doc
+    J.value "partner" $ intercalate ", " $ map getSmartName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)
+    J.value "partnercomp" $ intercalate ", " $ map getCompanyName $ filter (not . isAuthor) (getSignatoryPartnerLinks doc)
+    J.value "author" $ intercalate ", " $ map getSmartName $ filter isAuthor $ (documentsignatorylinks doc)
+    J.value "time" $ showDateAbbrev tl crtime (documentmtime doc)
+    J.valueM "process" $ renderTextForProcess doc processname
+    J.valueM "type" renderDocType
+    J.value "anyinvitationundelivered" $ show $ anyInvitationUndelivered  doc && Pending == documentstatus doc
+    J.value "shared" $ show $ documentsharing doc == Shared
+    J.value "file" $ fromMaybe "" $ show <$> (listToMaybe $ (documentsealedfiles doc) ++ (documentfiles doc))
+    J.value "inpadqueue" $ "true" <| (fmap fst padqueue == Just (documentid doc)) |> "false"
   where
-    renderDocType :: (TemplatesMonad m) => m String
     renderDocType = do
       pn <- renderTextForProcess doc processname
       case documenttype doc of
-        Attachment -> renderTemplateFM "docListAttachmentLabel" $ do return ()
-        AttachmentTemplate -> renderTemplateFM "docListAttachmentLabel" $ do return ()
-        Template _ -> renderTemplateFM "docListTemplateLabel" $ do field "processname" pn
+        Attachment -> renderTemplate_ "docListAttachmentLabel"
+        Template _ -> renderTemplate "docListTemplateLabel" $ F.value "processname" pn
         Signable _ -> return pn
 
-signatoryFieldsListForJSON :: (TemplatesMonad m) => KontraTimeLocale -> MinutesTime -> Document ->  SignatoryLink -> m [(String,String)]
-signatoryFieldsListForJSON tl crtime doc sl = propagateMonad [
-    ("status", return $ show $ signatoryStatusClass doc sl ),
-    ("name", return $ getSmartName sl),
-    ("time", return $ fromMaybe "" $ (showDateAbbrev tl crtime) <$> (sign `mplus` reject `mplus` seen `mplus` open)),
-    ("invitationundelivered", return $ show $ isUndelivered sl && Pending == documentstatus doc)
-    ]
+signatoryFieldsListForJSON :: TemplatesMonad m => KontraTimeLocale -> MinutesTime -> PadQueue -> Document -> SignatoryLink -> JSONGenT m ()
+signatoryFieldsListForJSON tl crtime padqueue doc sl = do
+    J.value "id" $ show $ signatorylinkid sl 
+    J.value "status" $ show $ signatorylinkstatusclass sl
+    J.value "name" $ getSmartName sl
+    J.value "time" $ fromMaybe "" $ (showDateAbbrev tl crtime) <$> (sign `mplus` reject `mplus` seen `mplus` open)
+    J.value "invitationundelivered" $ show $ isUndelivered sl && Pending == documentstatus doc
+    J.value "inpadqueue" $ "true" <| (fmap fst padqueue == Just (documentid doc)) && (fmap snd padqueue == Just (signatorylinkid sl)) |> "false"
+    J.value "author" $ "true" <| isAuthor sl |> "false" 
     where
         sign = signtime <$> maybesigninfo sl
         seen = signtime <$> maybesigninfo sl
         reject = case documentrejectioninfo doc of
-                    Just (rt, slid, _)
-                        | slid == signatorylinkid sl -> Just $ rt
-                    _                             -> Nothing
+          Just (rt, slid, _) | slid == signatorylinkid sl -> Just rt
+          _                                               -> Nothing
         open = maybereadinvite sl
 
-        

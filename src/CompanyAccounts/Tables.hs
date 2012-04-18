@@ -2,11 +2,7 @@ module CompanyAccounts.Tables (
     tableCompanyInvites
   ) where
 
-import Database.HDBC
-
-import DB.Classes
-import DB.Model
-
+import DB
 
 tableCompanyInvites :: Table
 tableCompanyInvites = Table {

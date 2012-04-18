@@ -47,8 +47,6 @@ instance SafeEnum DocumentType where
   fromSafeEnum (Signable Order)    = 5
   fromSafeEnum (Template Order)    = 6
   fromSafeEnum (Attachment)        = 20
-  -- what to do with AttachmentTemplate?
-  fromSafeEnum (AttachmentTemplate)= 21
 
   toSafeEnum 1  = Just (Signable Contract)
   toSafeEnum 2  = Just (Template Contract)
@@ -57,7 +55,6 @@ instance SafeEnum DocumentType where
   toSafeEnum 5  = Just (Signable Order)
   toSafeEnum 6  = Just (Template Order)
   toSafeEnum 20 = Just (Attachment)
-  toSafeEnum 21 = Just (AttachmentTemplate)
   toSafeEnum _  = Nothing
 
 jsonDocumentType :: DocumentType -> JSValue

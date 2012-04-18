@@ -184,7 +184,6 @@ Executable kontrakcja-server
   Build-depends: directory
   Build-depends: explicit-exception == 0.1.6
   Build-depends: extensible-exceptions
-  Build-depends: fields-json==0.1
   Build-depends: filepath
   Build-depends: hS3 == 0.5.6
   Build-depends: happstack-data==6.0.1
@@ -216,6 +215,9 @@ Executable kontrakcja-server
   Build-depends: test-framework-hunit
   Build-depends: test-framework-quickcheck2
   Build-depends: text == 0.11.1.5
+  Build-depends: monad-control == 0.3.1.1
+  Build-depends: lifted-base == 0.1.0.3
+  Build-depends: transformers-base == 0.4.1
   Build-depends: time
   Build-depends: transformers == 0.2.2.0
   Build-depends: unix
@@ -236,6 +238,7 @@ Executable kontrakcja-server
               RecordWildCards,
               ScopedTypeVariables,
               TemplateHaskell,
+              TupleSections,
               TypeFamilies,
               TypeOperators,
               TypeSynonymInstances,
@@ -303,6 +306,7 @@ Executable mailing-server
               RecordWildCards,
               ScopedTypeVariables,
               TemplateHaskell,
+              TupleSections,
               TypeFamilies,
               TypeOperators,
               TypeSynonymInstances,
@@ -384,6 +388,7 @@ Executable kontrakcja-test
               ScopedTypeVariables,
               StandaloneDeriving,
               TemplateHaskell,
+              TupleSections,
               TypeFamilies,
               TypeOperators,
               TypeSynonymInstances,

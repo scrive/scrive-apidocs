@@ -8,7 +8,7 @@ module Login (
 
 import ActionSchedulerState
 import AppView as V
-import DB.Classes
+import DB hiding (update, query)
 import InputValidation
 import Kontra
 import KontraLink
@@ -25,7 +25,6 @@ import Util.HasSomeUserInfo
 import Stats.Control
 import User.History.Model
 
-import Control.Monad.Error
 import Data.Functor
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP, host, dir, path)
@@ -41,12 +40,12 @@ forgotPasswordPagePost = do
   case memail of
     Nothing -> return LoopBack
     Just email -> do
-      muser <- runDBQuery $ GetUserByEmail Nothing $ Email email
+      muser <- dbQuery $ GetUserByEmail Nothing $ Email email
       case muser of
         Nothing -> do
           Log.security $ "ip " ++ (show $ ctxipnumber ctx) ++ " made a failed password reset request for non-existant account " ++ email
         Just user -> do
-          now <- liftIO getMinutesTime
+          now <- getMinutesTime
           minv <- checkValidity now <$> (query $ GetPasswordReminder $ userid user)
           case minv of
             Just Action{ actionID, actionType = PasswordReminder { prToken, prRemainedEmails, prUserID } } ->
@@ -84,7 +83,7 @@ signupPagePost = do
   case memail of
     Nothing -> return LoopBack
     Just email -> do
-      muser <- runDBQuery $ GetUserByEmail Nothing $ Email $ email
+      muser <- dbQuery $ GetUserByEmail Nothing $ Email $ email
       case (muser, muser >>= userhasacceptedtermsofservice) of
         (Just user, Nothing) -> do
           -- there is an existing user that hasn't been activated
@@ -127,22 +126,22 @@ handleLoginPost = do
     case (memail, mpasswd) of
         (Just email, Just passwd) -> do
             -- check the user things here
-            maybeuser <- runDBQuery $ GetUserByEmail Nothing (Email email)
+            maybeuser <- dbQuery $ GetUserByEmail Nothing (Email email)
             case maybeuser of
                 Just user@User{userpassword}
                     | verifyPassword userpassword passwd -> do
                         Log.debug $ "User " ++ show email ++ " logged in"
-                        _ <- runDBUpdate $ SetUserSettings (userid user) $ (usersettings user) {
+                        _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
                           locale = ctxlocale ctx
                         }
-                        muuser <- runDBQuery $ GetUserByID (userid user)
+                        muuser <- dbQuery $ GetUserByID (userid user)
                         _ <- addUserLoginStatEvent (ctxtime ctx) (fromJust muuser)
-                        _ <- runDBUpdate $ LogHistoryLoginSuccess (userid user) (ctxipnumber ctx) (ctxtime ctx)
+                        _ <- dbUpdate $ LogHistoryLoginSuccess (userid user) (ctxipnumber ctx) (ctxtime ctx)
                         logUserToContext muuser
                         return BackToReferer
                 Just u -> do
                         Log.debug $ "User " ++ show email ++ " login failed (invalid password)"
-                        _ <- runDBUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
+                        _ <- dbUpdate $ LogHistoryLoginAttempt (userid u) (ctxipnumber ctx) (ctxtime ctx)
                         return $ LinkLogin (ctxlocale ctx) $ InvalidLoginInfo linkemail
                 Nothing -> do
                     Log.debug $ "User " ++ show email ++ " login failed (user not found)"

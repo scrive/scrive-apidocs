@@ -17,11 +17,11 @@ module Doc.DocStorage
     , preCheckPDF
     ) where
 
-import Control.Concurrent
+import Control.Concurrent.MVar.Lifted
 import Control.Monad
 import Control.Monad.Error
 import Data.Typeable
-import DB.Classes
+import DB
 import Doc.DocStateData
 import File.Model
 import ForkAction
@@ -33,6 +33,7 @@ import System.IO
 import System.IO.Temp
 import System.Process
 import qualified Amazon as AWS
+import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.Map as Map
@@ -48,23 +49,24 @@ instance GuardRight FileError where
                                      internalError
 
 {- Gets file content from somewere (Amazon for now), putting it to cache and returning as BS -}
-getFileContents :: Context -> File -> IO (BS.ByteString)
-getFileContents ctx file = do
-  mcontent <- MemCache.get (fileid file) (ctxfilecache ctx)
-  case mcontent of
-    Just content -> return content
-    Nothing -> do
-                mcontentAWS <- AWS.getFileContents (ctxs3action ctx) file
-                MemCache.put (fileid file) mcontentAWS (ctxfilecache ctx)
-                return mcontentAWS
+getFileContents :: (KontraMonad m, MonadIO m) => File -> m BS.ByteString
+getFileContents file = do
+  ctx <- getContext
+  liftIO $ do
+    mcontent <- MemCache.get (fileid file) (ctxfilecache ctx)
+    case mcontent of
+      Just content -> return content
+      Nothing -> do
+        mcontentAWS <- AWS.getFileContents (ctxs3action ctx) file
+        MemCache.put (fileid file) mcontentAWS (ctxfilecache ctx)
+        return mcontentAWS
 
-getFileIDContents :: Context -> FileID -> IO BS.ByteString
-getFileIDContents ctx fid = do
-  mfile <- ioRunDB (ctxdbenv ctx) . dbQuery $ GetFileByFileID fid
+getFileIDContents :: (KontraMonad m, MonadDB m) => FileID -> m BS.ByteString
+getFileIDContents fid = do
+  mfile <- dbQuery $ GetFileByFileID fid
   case mfile of
-    Just file -> getFileContents ctx file
+    Just file -> getFileContents file
     Nothing -> return BS.empty
-
 
 {- Upload document to TW-}
 
@@ -93,7 +95,7 @@ resizeImageAndReturnOriginalSize :: String -> IO (BS.ByteString, Int, Int)
 resizeImageAndReturnOriginalSize filepath = do
     (_,Just sizerouthandle,_, sizechecker) <- createProcess $ ( proc "identify" [filepath])
                                               { std_out = CreatePipe }
-    _out <-  hGetContents sizerouthandle
+    _out <- hGetContents sizerouthandle
     sizerexitcode <- waitForProcess sizechecker
     case sizerexitcode of
         ExitFailure _ -> return ()
@@ -106,7 +108,6 @@ resizeImageAndReturnOriginalSize filepath = do
     fcontent <- BS.readFile filepath
     return (fcontent,943,1335)
 
-
 scaleForPreview :: DocumentID -> BS.ByteString -> IO BS.ByteString
 scaleForPreview did image = withSystemTempDirectory "preview" $ \tmppath -> do
     let fpath = tmppath ++ "/" ++ show did ++ ".jpg"
@@ -118,65 +119,65 @@ scaleForPreview did image = withSystemTempDirectory "preview" $ \tmppath -> do
         ExitSuccess -> return ()
     fcontent <- BS.readFile fpath
     return fcontent
-    
+
 {- |
    Convert PDF to jpeg images of pages
  -}
-convertPdfToJpgPages :: Context
+convertPdfToJpgPages :: (KontraMonad m, MonadDB m)
+                     => String
                      -> FileID
                      -> DocumentID
-                     -> IO JpegPages
-convertPdfToJpgPages ctx fid docid = withSystemTempDirectory "pdf2jpeg" $ \tmppath -> do
-  let sourcepath = tmppath ++ "/source.pdf"
+                     -> m JpegPages
+convertPdfToJpgPages gs fid docid = do
+  content <- getFileIDContents fid
+  liftIO $ withSystemTempDirectory "pdf2jpeg" $ \tmppath -> do
+    let sourcepath = tmppath ++ "/source.pdf"
 
-  content <- getFileIDContents ctx fid
+    BS.writeFile sourcepath content
 
-  BS.writeFile sourcepath content
+    let gsproc = (proc gs [ "-sDEVICE=jpeg"
+                          , "-sOutputFile=" ++ tmppath ++ "/output-%d.jpg"
+                          , "-dSAFER"
+                          , "-dBATCH"
+                          , "-dNOPAUSE"
+                          , "-dTextAlphaBits=4"
+                          , "-dGraphicsAlphaBits=4"
+                          --, "-r91.361344537815126050420168067227"
+                          , "-r190"
+                          , sourcepath
+                          ]) { std_out = CreatePipe
+                            , std_err = CreatePipe
+                            }
+    (_, Just outhandle, Just errhandle, gsProcHandle) <- createProcess gsproc
+    errcontent <- BS.hGetContents errhandle
+    outcontent <- BS.hGetContents outhandle
 
-  let gs = ctxgscmd ctx
-      gsproc = (proc gs [ "-sDEVICE=jpeg"
-                        , "-sOutputFile=" ++ tmppath ++ "/output-%d.jpg"
-                        , "-dSAFER"
-                        , "-dBATCH"
-                        , "-dNOPAUSE"
-                        , "-dTextAlphaBits=4"
-                        , "-dGraphicsAlphaBits=4"
-                        --, "-r91.361344537815126050420168067227"
-                        , "-r190"
-                        , sourcepath
-                        ]) { std_out = CreatePipe
-                           , std_err = CreatePipe
-                           }
-  (_, Just outhandle, Just errhandle, gsProcHandle) <- createProcess gsproc
-  errcontent <- BS.hGetContents errhandle
-  outcontent <- BS.hGetContents outhandle
+    exitcode <- waitForProcess gsProcHandle
 
-  exitcode <- waitForProcess gsProcHandle
+    result <- case exitcode of
+      ExitFailure _ -> do
+          systmp <- getTemporaryDirectory
+          (path,handle) <- openTempFile systmp ("pdf2jpg-failed-" ++ show fid ++ "-.pdf")
+          Log.error $ "Cannot pdf2jpg (doc #" ++ show docid ++ ", file #" ++ show fid ++ "): " ++ path
+          BS.hPutStr handle content
+          hClose handle
 
-  result <- case exitcode of
-    ExitFailure _ -> do
-        systmp <- getTemporaryDirectory
-        (path,handle) <- openTempFile systmp ("pdf2jpg-failed-" ++ show fid ++ "-.pdf")
-        Log.error $ "Cannot pdf2jpg (doc #" ++ show docid ++ ", file #" ++ show fid ++ "): " ++ path
-        BS.hPutStr handle content
-        hClose handle
+          return $ JpegPagesError (errcontent `BS.append` outcontent)
+      ExitSuccess -> do
+                    let pathofx x = tmppath ++ "/output-" ++ show x ++ ".jpg"
+                    let existingPages x = do
+                                            exists <- doesFileExist (pathofx x)
+                                            if exists
+                                              then  fmap (x:) $ existingPages (x+1)
+                                              else return []
+                    listofpages <- existingPages (1::Integer)
+                    x <- forM listofpages $ \x -> resizeImageAndReturnOriginalSize (pathofx x)
+                        `catch` \_ -> do
+                                      fcontent <- BS.readFile (pathofx x)
+                                      return (fcontent,943,1335)
 
-        return $ JpegPagesError (errcontent `BS.append` outcontent)
-    ExitSuccess -> do
-                  let pathofx x = tmppath ++ "/output-" ++ show x ++ ".jpg"
-                  let existingPages x = do
-                                          exists <- doesFileExist (pathofx x)
-                                          if exists
-                                            then  fmap (x:) $ existingPages (x+1)
-                                            else return []
-                  listofpages <- existingPages (1::Integer)
-                  x <- forM listofpages $ \x -> resizeImageAndReturnOriginalSize (pathofx x)
-                       `catch` \_ -> do
-                                    fcontent <- BS.readFile (pathofx x)
-                                    return (fcontent,943,1335)
-
-                  return (JpegPages x)
-  return result
+                    return (JpegPages x)
+    return result
 
 {- | Shedules rendering od a file. After forked process is done, images will be put in shared memory.
  FIXME: this is so convoluted that I'm getting lost in this function. Make it clear.
@@ -186,25 +187,22 @@ maybeScheduleRendering :: Kontrakcja m
                        -> DocumentID
                        -> m JpegPages
 maybeScheduleRendering fileid docid = do
-  ctx@Context{ ctxnormalizeddocuments = mvar } <- getContext
+  ctx@Context{ctxnormalizeddocuments = mvar} <- getContext
   (p, start) <- liftIO $ modifyMVar mvar $ \setoffilesrenderednow ->
-      case Map.lookup fileid setoffilesrenderednow of
-         Just pages ->
-           return (setoffilesrenderednow, (pages, False))
-         Nothing -> do
-           return (Map.insert fileid JpegPagesPending setoffilesrenderednow, (JpegPagesPending, True))
+    case Map.lookup fileid setoffilesrenderednow of
+      Just pages -> return (setoffilesrenderednow, (pages, False))
+      Nothing -> return (Map.insert fileid JpegPagesPending setoffilesrenderednow, (JpegPagesPending, True))
 
   when start $
-       forkAction ("Rendering file #" ++ show fileid ++ " of doc #" ++ show docid) $ \env' -> do
-                let newctx = ctx { ctxdbenv = env' }
-                jpegpages <- convertPdfToJpgPages newctx fileid docid
-                case jpegpages of
-                     JpegPagesError _errmsg -> do
-                                        -- FIXME: need to report this error somewhere
-                         -- _ <- runDBUpdate $ ErrorDocument docid $ BS.toString errmsg
-                         return ()
-                     _                     -> return ()
-                modifyMVar_ mvar (\filesrenderednow -> return (Map.insert fileid jpegpages filesrenderednow))
+    forkAction ("Rendering file #" ++ show fileid ++ " of doc #" ++ show docid) $ do
+      jpegpages <- convertPdfToJpgPages (ctxgscmd ctx) fileid docid
+      case jpegpages of
+        JpegPagesError _errmsg -> do
+          -- FIXME: need to report this error somewhere
+          -- _ <- runDBUpdate $ ErrorDocument docid $ BS.toString errmsg
+          return ()
+        _                     -> return ()
+      modifyMVar_ mvar (\filesrenderednow -> return (Map.insert fileid jpegpages filesrenderednow))
   return p
 
 data FileError = FileSizeError Int Int
@@ -217,11 +215,11 @@ data FileError = FileSizeError Int Int
 instance Error FileError where
     strMsg = FileOtherError
 
-preCheckPDF' :: String
-             -> BS.ByteString
-             -> String
-             -> IO (Either FileError BS.ByteString)
-preCheckPDF' gscmd content tmppath = 
+preCheckPDFHelper :: String
+                  -> BS.ByteString
+                  -> String
+                  -> IO (Either FileError BS.ByteString)
+preCheckPDFHelper gscmd content tmppath =
     runErrorT $ do
       checkSize
       checkHeader
@@ -275,7 +273,7 @@ preCheckPDF' gscmd content tmppath =
 
     checkNormalize = do
       liftIO $ BS.writeFile sourcepath content
-    
+
       (exitcode,_stdout,stderr1) <- liftIO $ readProcessWithExitCode' gscmd 
                                    [ "-sDEVICE=pdfwrite"
                                    , "-sOutputFile=" ++ normalizedpath
@@ -293,7 +291,6 @@ preCheckPDF' gscmd content tmppath =
 
         throwError (FileNormalizeError stderr1)
 
-
     checkSealing = do
       (exitcode,_stdout,stderr1) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal" 
                                    [] (BSL.pack (show sealSpec))
@@ -305,7 +302,7 @@ preCheckPDF' gscmd content tmppath =
           hClose handle
 
         throwError (FileSealingError stderr1)
-      
+
     readOutput = liftIO $ BS.readFile normalizedpath
 
 -- | The 'preCheckPDF' function should be invoked just after receiving
@@ -330,9 +327,10 @@ preCheckPDF' gscmd content tmppath =
 preCheckPDF :: String
             -> BS.ByteString
             -> IO (Either FileError BS.ByteString)
-preCheckPDF gscmd content = 
+preCheckPDF gscmd content =
   withSystemTempDirectory "precheck" $ \tmppath -> do
-    value <- preCheckPDF' gscmd content tmppath `Prelude.catch` \e -> return (Left (FileOtherError (show e)))
+    value <- preCheckPDFHelper gscmd content tmppath
+      `E.catch` \(e::IOError) -> return (Left (FileOtherError (show e)))
     case value of
       Left x -> Log.error $ "preCheckPDF: " ++ show x
       Right _ -> return ()

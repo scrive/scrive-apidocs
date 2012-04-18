@@ -1,7 +1,5 @@
 module JSONUtilTest (jsonUtilTests) where
 
-
-
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit (Assertion)
@@ -9,37 +7,37 @@ import TestingUtil
 import Test.QuickCheck
 
 import Util.JSON
+import TestKontra
 import Text.JSON
 import Text.JSON.String
 import qualified Data.ByteString.UTF8 as BS
 
-jsonUtilTests :: Test
-jsonUtilTests = testGroup "JSONUtil"
-    [   testGroup "JSON Container Test"
-       [  testCase "Check basic corelation between getJSON and putJSON" $ testJSONContainer ]
-      , testGroup "Checking diggers"
-       [  testCase "Check primitive JSON digger"  testAskJSON
-        , testCase "Check basic JSON diggers"  testBasicDiggers
-        , testCase "Check advanced JSON diggers" testAdvancedDiggers 
-       ]
+jsonUtilTests :: TestEnvSt -> Test
+jsonUtilTests env = testGroup "JSONUtil" [
+    testGroup "JSON Container Test" [
+      testThat "Check basic corelation between getJSON and putJSON" env testJSONContainer
     ]
+  , testGroup "Checking diggers" [
+      testThat "Check primitive JSON digger" env testAskJSON
+    , testCase "Check basic JSON diggers"  testBasicDiggers
+    , testCase "Check advanced JSON diggers" testAdvancedDiggers
+    ]
+  ]
 
-
-  
-testJSONContainer ::  Assertion
+testJSONContainer :: TestEnv ()
 testJSONContainer = doNTimes 100 $ do
    (initJSON :: JSValue) <- rand 10 arbitrary 
    (newJSON :: JSValue) <- rand 10 arbitrary
    let changedJSON = getJSON (setJSON newJSON initJSON)
    assertBool "New value gets set" (changedJSON == newJSON)  
 
-testAskJSON::  Assertion
+testAskJSON :: TestEnv ()
 testAskJSON = doNTimes 100 $ do
     json <- rand 10 arbitrary
     json' <- withJSON json $ askJSON
     assertBool "Test askJSON" (json == json')
 
-testBasicDiggers ::  Assertion
+testBasicDiggers :: Assertion
 testBasicDiggers= do
     let Right json = runGetJSON readJSObject "{\"a\":\"1\" , \"b\" : 1 , \"c\": [], \"d\": {} }"
     withJSON json $ do
@@ -53,8 +51,8 @@ testBasicDiggers= do
         assertBool "Test fromJSONField List" (c == Just ([]::[String]))  
         d <-  fromJSONField "d"
         assertBool "Test fromJSONField Object" (d == (Just $ JSObject $ toJSObject []))  
-        
-testAdvancedDiggers ::  Assertion
+
+testAdvancedDiggers :: Assertion
 testAdvancedDiggers= do
     let Right json1 = runGetJSON readJSObject "{\"a\": {\"b\" : [{\"c\":1},{\"c\":2},{\"c\":3}] }}"
     withJSON json1 $ do
@@ -66,6 +64,3 @@ testAdvancedDiggers= do
     withJSON json2 $ do
         l <-  fromJSONLocalMap (fromJSONField "a")
         assertBool "Test negative digger" (l == (Nothing::Maybe [String]))  
-        
-        
-                

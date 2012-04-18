@@ -1,9 +1,6 @@
 module User.History.Tables where
 
-import Database.HDBC
-
-import DB.Classes
-import DB.Model
+import DB
 
 tableUsersHistory :: Table
 tableUsersHistory = Table {

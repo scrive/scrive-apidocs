@@ -2,26 +2,29 @@ module DB.Checks (
     performDBChecks
   ) where
 
-import Control.Applicative
 import Control.Arrow
 import Control.Monad.Reader
 import Data.Either
 import Data.Maybe
 import Database.HDBC
 
-import DB.Classes
+import DB.Core
+import DB.Env
+import DB.Functions
 import DB.Model
+import DB.SQL
 import DB.Utils
 import DB.Versions
 
 -- | Runs all checks on a database
-performDBChecks :: (String -> DB ()) -> [Table] -> [Migration] -> DB ()
-performDBChecks logger tables migrations = do
-  checkDBTimeZone logger
-  checkDBConsistency logger (tableVersions : tables) migrations
+performDBChecks :: MonadDB m => (String -> m ()) -> [Table] -> [Migration m] -> m ()
+performDBChecks logger tables migrations = runDBEnv $ do
+  let liftedLogger = lift . logger
+  checkDBTimeZone liftedLogger
+  checkDBConsistency liftedLogger (tableVersions : tables) migrations
 
 -- |  Checks whether database returns timestamps in UTC
-checkDBTimeZone :: (String -> DB ()) -> DB ()
+checkDBTimeZone :: MonadDB m => (String -> DBEnv m ()) -> DBEnv m ()
 checkDBTimeZone logger = do
   Just dbname <- getOne (SQL "SELECT current_catalog" [])
   logger $ "Setting '" ++ dbname ++ "' database to return timestamps in UTC"
@@ -29,7 +32,7 @@ checkDBTimeZone logger = do
   return ()
 
 -- | Checks whether database is consistent (performs migrations if necessary)
-checkDBConsistency :: (String -> DB ()) -> [Table] -> [Migration] -> DB ()
+checkDBConsistency :: MonadDB m => (String -> DBEnv m ()) -> [Table] -> [Migration m] -> DBEnv m ()
 checkDBConsistency logger tables migrations = do
   (created, to_migration) <- checkTables
   forM_ created $ \table -> do
@@ -45,7 +48,7 @@ checkDBConsistency logger tables migrations = do
   where
     descNotMigrated (t, from) = "\n * " ++ tblName t ++ ", current version: " ++ show from ++ ", needed version: " ++ show (tblVersion t)
 
-    checkTables = second catMaybes . partitionEithers <$> mapM checkTable tables
+    checkTables = (second catMaybes . partitionEithers) `liftM` mapM checkTable tables
     checkTable table = do
       desc <- kDescribeTable $ tblName table
       logger $ "Checking table '" ++ tblName table ++ "'..."

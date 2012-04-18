@@ -8,7 +8,6 @@ import Test.Framework.Providers.HUnit (testCase)
 import Control.Applicative
 import Data.Char
 import Data.Word
-import System.Random (newStdGen)
 import Test.QuickCheck
 import Happstack.Server
 import Doc.DocUtils
@@ -22,12 +21,12 @@ import qualified Test.HUnit as T
 
 import File.FileID
 import API.API
-import DB.Classes
+import Crypto.RNG
+import DB
 import MagicHash (MagicHash, unsafeMagicHash)
 import Company.Model
 import FlashMessage
 import qualified Log
-import StateHelper
 import Doc.Model
 import Doc.DocStateData
 import Doc.DocStateCommon
@@ -44,6 +43,7 @@ import Doc.Invariants
 import Doc.DocProcess
 import ActionSchedulerState
 import Text.JSON
+import TestKontra
 
 import EvidenceLog.Model
 
@@ -67,7 +67,7 @@ instance Arbitrary SignOrder where
   arbitrary = SignOrder <$> arbitrary
 
 instance Arbitrary DocumentTag where
-  arbitrary = DocumentTag <$> arbitrary <*> arbitrary
+  arbitrary = DocumentTag <$> (fromSNN <$> arbitrary) <*> (fromSNN <$> arbitrary)
 
 instance Arbitrary UserID where
   arbitrary = unsafeUserID . abs <$> arbitrary
@@ -145,33 +145,38 @@ instance Arbitrary ActionID where
 -}
 class ExtendWithRandomnes a where
     moreRandom :: a -> Gen a
-    extendRandomness :: MonadIO m => a -> m a
+    extendRandomness :: a -> TestEnv a
     extendRandomness a = do
-          stdgen <- liftIO newStdGen
+          stdgen <- random
           return $ unGen (moreRandom a) stdgen 10
 
 instance ExtendWithRandomnes SignatoryDetails where
     moreRandom sl = return sl
 
+newtype AuthorActor    = AuthorActor    { unAuthorActor    :: Actor }
+newtype SystemActor    = SystemActor    { unSystemActor    :: Actor }
+newtype SignatoryActor = SignatoryActor { unSignatoryActor :: Actor }
+newtype MailAPIActor   = MailAPIActor   { unMailAPIActor   :: Actor }
+
 instance Arbitrary AuthorActor where
   arbitrary = do
     (time, ip, uid, eml) <- arbitrary
-    return $ AuthorActor time ip uid eml
+    return $ AuthorActor $ authorActor time ip uid eml
 
 instance Arbitrary SystemActor where
   arbitrary = do
     time <- arbitrary
-    return $ SystemActor time
+    return $ SystemActor $ systemActor time
 
 instance Arbitrary SignatoryActor where
   arbitrary = do
     (time, ip, uid, eml, slid) <- arbitrary
-    return $ SignatoryActor time ip uid eml slid
+    return $ SignatoryActor $ signatoryActor time ip uid eml slid
 
 instance Arbitrary MailAPIActor where
   arbitrary = do
     (time, uid, eml) <- arbitrary
-    return $ MailAPIActor time uid eml
+    return $ MailAPIActor $ mailAPIActor time uid eml
 
 instance Arbitrary SignatoryLinkID where
   arbitrary = unsafeSignatoryLinkID . abs <$> arbitrary
@@ -187,7 +192,6 @@ instance Arbitrary SignatoryLink where
                            , signatorydetails           = sd
                            , signatorymagichash         = mh
                            , maybesignatory             = Nothing
-                           , maybesupervisor            = Nothing
                            , maybecompany               = Nothing
                            , maybesigninfo              = signinfo
                            , maybeseeninfo              = seeninfo
@@ -199,6 +203,7 @@ instance Arbitrary SignatoryLink where
                            , signatorylinkreallydeleted = False
                            , signatorylinkcsvupload     = Nothing
                            , signatoryattachments       = []
+                           , signatorylinkstatusclass   = SCDraft
                            }
 
 instance Arbitrary SignatureProvider where
@@ -248,7 +253,6 @@ documentAllTypes = [ Signable Contract
                    , Template Order
                    , Template Offer
                    , Attachment
-                   , AttachmentTemplate
                    ]
 
 documentSignableTypes :: [DocumentType]
@@ -262,6 +266,9 @@ documentTemplateTypes = [ Template Contract
                         , Template Order
                         , Template Offer
                         ]
+
+instance Arbitrary DocumentProcess where
+  arbitrary = elements [Contract, Order, Offer]
 
 instance Arbitrary DocumentType where
   arbitrary = elements documentAllTypes
@@ -405,7 +412,6 @@ signatoryLinkExample1 :: SignatoryLink
 signatoryLinkExample1 = SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 0
                                       , signatorymagichash = unsafeMagicHash 0
                                       , maybesignatory = Nothing
-                                      , maybesupervisor = Nothing
                                       , maybecompany = Nothing
                                       , maybesigninfo = Just $ SignInfo (fromSeconds 0) noIP
                                       , maybeseeninfo = Just $ SignInfo (fromSeconds 0) noIP
@@ -429,6 +435,7 @@ signatoryLinkExample1 = SignatoryLink { signatorylinkid = unsafeSignatoryLinkID 
                                                                             }
                                       , signatorylinkcsvupload = Nothing
                                       , signatoryattachments   = []
+                                      , signatorylinkstatusclass = SCDraft
                                       }
 
 blankUser :: User
@@ -456,32 +463,32 @@ blankUser = User { userid                        = unsafeUserID 0
                  , usercompany = Nothing
                  }
 
-testThat :: String -> DBEnv -> DB () -> Test
-testThat s env a = testCase s (withTestEnvironment env a)
+testThat :: String -> TestEnvSt -> TestEnv () -> Test
+testThat s env = testCase s . runTestEnv env
 
-addNewCompany ::  DB Company
+addNewCompany :: TestEnv Company
 addNewCompany = do
     eid <- rand 10 arbitrary
     dbUpdate $ CreateCompany Nothing eid
 
-addNewFile :: String -> BS.ByteString -> DB File
+addNewFile :: String -> BS.ByteString -> TestEnv File
 addNewFile filename content = dbUpdate $ NewFile filename content
 
-addNewRandomFile :: DB File
+addNewRandomFile :: TestEnv File
 addNewRandomFile = do
   fn <- rand 10 $ arbString 3 30
   cnt <- rand 10 $ arbString 3 30
   addNewFile fn (BS.fromString cnt)
 
-addNewUser :: String -> String -> String -> DB (Maybe User)
+addNewUser :: String -> String -> String -> TestEnv (Maybe User)
 addNewUser firstname secondname email =
   dbUpdate $ AddUser (firstname, secondname) email Nothing False Nothing Nothing (mkLocaleFromRegion defaultValue)
 
-addNewCompanyUser :: String -> String -> String -> CompanyID -> DB (Maybe User)
+addNewCompanyUser :: String -> String -> String -> CompanyID -> TestEnv (Maybe User)
 addNewCompanyUser firstname secondname email cid =
   dbUpdate $ AddUser (firstname, secondname) email Nothing False Nothing (Just cid) (mkLocaleFromRegion defaultValue)
 
-addNewRandomUser :: DB User
+addNewRandomUser :: TestEnv User
 addNewRandomUser = do
   fn <- rand 10 $ arbString 3 30
   ln <- rand 10 $ arbString 3 30
@@ -493,14 +500,14 @@ addNewRandomUser = do
       Log.debug "Could not create user, trying again."
       addNewRandomUser
 
-addNewRandomAdvancedUser :: DB User
+addNewRandomAdvancedUser :: TestEnv User
 addNewRandomAdvancedUser = do
   User{userid,usersettings} <- addNewRandomUser
   True <- dbUpdate $ SetUserSettings userid (usersettings{ preferreddesignmode = Just AdvancedMode })
   Just user <- dbQuery $ GetUserByID userid
   return user
 
-addNewRandomCompanyUser :: CompanyID -> Bool -> DB User
+addNewRandomCompanyUser :: CompanyID -> Bool -> TestEnv User
 addNewRandomCompanyUser cid isadmin = do
   User{userid} <- addNewRandomUser
   _ <- dbUpdate $ SetUserCompany userid (Just cid)
@@ -508,7 +515,7 @@ addNewRandomCompanyUser cid isadmin = do
   Just user <- dbQuery $ GetUserByID userid
   return user
 
-addService :: String -> UserID -> DB (Maybe Service)
+addService :: String -> UserID -> TestEnv (Maybe Service)
 addService name uid =
   dbUpdate $ CreateService (ServiceID $ BS.fromString name) Nothing uid
 
@@ -547,7 +554,7 @@ randomDocumentAllowsDefault user = RandomDocumentAllows
                               , randomDocumentCondition = const True
                               }
 
-addRandomDocumentWithAuthor :: User -> DB DocumentID
+addRandomDocumentWithAuthor :: User -> TestEnv DocumentID
 addRandomDocumentWithAuthor user = documentid <$> addRandomDocument (randomDocumentAllowsDefault user)
 
 
@@ -576,7 +583,7 @@ randomAuthorLinkByStatus Pending = do
 randomAuthorLinkByStatus _ = arbitrary
 
 
-getRandomAuthorRoles :: MonadIO m => Document -> m [SignatoryRole]
+getRandomAuthorRoles :: Document -> TestEnv [SignatoryRole]
 getRandomAuthorRoles doc =
   rand 10000 (elements $ getPossibleAuthorRoles doc)
 
@@ -586,11 +593,11 @@ getPossibleAuthorRoles doc = [SignatoryAuthor] :
     Just True -> [[SignatoryAuthor]]
     _ ->  [[SignatoryAuthor, SignatoryPartner], [SignatoryPartner, SignatoryAuthor]]
 
-addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> DB Document
+addRandomDocumentWithAuthorAndCondition :: User -> (Document -> Bool) -> TestEnv Document
 addRandomDocumentWithAuthorAndCondition user p =
   addRandomDocument ((randomDocumentAllowsDefault user) { randomDocumentCondition = p})
 
-addRandomDocument :: RandomDocumentAllows -> DB Document
+addRandomDocument :: RandomDocumentAllows -> TestEnv Document
 addRandomDocument rda = do
   file <- addNewRandomFile
   now <- liftIO getMinutesTime
@@ -600,7 +607,7 @@ addRandomDocument rda = do
     Nothing  -> return Nothing
     Just cid -> dbQuery $ GetCompany cid
   --liftIO $ print $ "about to generate document"
-  document <- liftIO $ worker file now user p mcompany
+  document <- worker file now user p mcompany
   docid <- dbUpdate $ StoreDocumentForTesting document
   mdoc  <- dbQuery  $ GetDocumentByDocumentID docid
   case mdoc of
@@ -610,7 +617,6 @@ addRandomDocument rda = do
     Just doc' -> do
               return doc'
   where
-    worker :: File -> MinutesTime -> User -> (Document -> Bool) -> (Maybe Company) -> IO Document
     worker file now user p _mcompany = do
       doc' <- rand 10 arbitrary
       xtype <- rand 10 (elements $ randomDocumentAllowedTypes rda)
@@ -649,9 +655,9 @@ addRandomDocument rda = do
       --asl <- dbUpdate $ SignLinkFromDetailsForTest asd roles
 
 
-rand :: MonadIO m => Int -> Gen a -> m a
+rand :: Int -> Gen a -> TestEnv a
 rand i a = do
-  stdgn <- liftIO newStdGen
+  stdgn <- random
   return $ unGen a stdgn i
 
 untilCondition :: (Monad m) => (b -> Bool) -> m b -> m b
@@ -659,7 +665,7 @@ untilCondition cond gen = do
   v <- gen
   if cond v then return v else untilCondition cond gen
 
-addRandomDocumentWithAuthor' :: User -> DB Document
+addRandomDocumentWithAuthor' :: User -> TestEnv Document
 addRandomDocumentWithAuthor' user = addRandomDocumentWithAuthorAndCondition user (\_ -> True)
 
 doNTimes :: (Monad m) => Int -> m () -> m ()
@@ -668,7 +674,7 @@ doNTimes n a = do
   _ <- a
   doNTimes (n - 1) a
 
-doTimes :: Int -> DB (Maybe (DB ())) -> DB ()
+doTimes :: Int -> TestEnv (Maybe (TestEnv ())) -> TestEnv ()
 doTimes i action
   | i == 0 = return ()
   | otherwise = do
@@ -679,19 +685,19 @@ doTimes i action
         _ <- ass
         doTimes (i - 1) action
 
-invalidateTest :: DB (Maybe (DB ()))
+invalidateTest :: TestEnv (Maybe (TestEnv ()))
 invalidateTest = return Nothing
 
-validTest :: DB () -> DB (Maybe (DB ()))
+validTest :: TestEnv () -> TestEnv (Maybe (TestEnv ()))
 validTest = return . Just
 
 -- Random gen
 
 --Random query
 class RandomQuery a b where
-  randomQuery :: a -> DB b
+  randomQuery :: a -> TestEnv b
 
-instance (DBQuery ev res) => RandomQuery ev res where
+instance (DBQuery TestEnv ev res) => RandomQuery ev res where
   randomQuery = dbQuery
 
 instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
@@ -701,9 +707,9 @@ instance (Arbitrary a, RandomQuery c b) => RandomQuery (a -> c) b where
 
 --Random update
 class RandomUpdate a b where
-  randomUpdate :: a -> DB b
+  randomUpdate :: a -> TestEnv b
 
-instance (DBUpdate ev res) => RandomUpdate ev res where
+instance (DBUpdate TestEnv ev res) => RandomUpdate ev res where
   randomUpdate = dbUpdate
 
 instance (Arbitrary a, RandomUpdate c b) => RandomUpdate (a -> c) b where
@@ -713,7 +719,7 @@ instance (Arbitrary a, RandomUpdate c b) => RandomUpdate (a -> c) b where
 
 -- Other functions
 class RandomCallable a b where
-  randomCall :: MonadIO m => a -> m b
+  randomCall :: a -> TestEnv b
 
 instance RandomCallable (IO res) res where
   randomCall = liftIO

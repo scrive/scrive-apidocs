@@ -20,6 +20,7 @@ import Doc.DocUtils
 import InputValidation
 import Templates.Templates
 import Util.SignatoryLinkUtils
+import qualified Templates.Fields as F
 
 data CSVProblem = NumberNotValid       Int Int    | -- Row Cell
                   EmailNotValid        Int Int    | -- Row Cell
@@ -30,7 +31,7 @@ data CSVProblem = NumberNotValid       Int Int    | -- Row Cell
                   RowLessThenMinCol    Int Int    | -- Row Limit
                   NoDataExceptHeader              |
                   NoData
-                             
+
 data CleanCSVData = CleanCSVData
                     { csvheader :: Maybe [String]
                     , csvbody :: [[String]]
@@ -133,15 +134,15 @@ cleanCSVContents eleg customfieldcount contents =
 
 csvProblemToDescription :: (TemplatesMonad m) => CSVProblem -> m String
 csvProblemToDescription p = case p of
-   (NumberNotValid _ _ )     ->  renderTemplateM "flashMessageValueNotValid" ()
-   (EmailNotValid  _ _ )     ->  renderTemplateM "flashMessageValueNotValid" ()
-   (SecondNameNotValid _ _ ) ->  renderTemplateM "flashMessageValueNotValid" ()
-   (FirstNameNotValid _ _  ) ->  renderTemplateM "flashMessageValueNotValid" ()
-   (ValueNotValid  _ _ )     ->  renderTemplateM "flashMessageValueNotValid" ()
-   (RowMoreThenMaxCol _ l)   ->  renderTemplateFM "flashMessageRowGreaterThanMaxColCount" (field "maxcols" l)
-   (RowLessThenMinCol _ l)   ->  renderTemplateFM "flashMessageRowLessThanMinColCount" (field "mincols" l)
-   (NoDataExceptHeader)      ->  renderTemplateM "flashMessageNoDataInCSVApartFromHeader" ()
-   (NoData)                  ->  renderTemplateM "flashMessageNoDataInCSV" ()
+   (NumberNotValid _ _ )     ->  renderTemplate_ "flashMessageValueNotValid"
+   (EmailNotValid  _ _ )     ->  renderTemplate_ "flashMessageValueNotValid"
+   (SecondNameNotValid _ _ ) ->  renderTemplate_ "flashMessageValueNotValid"
+   (FirstNameNotValid _ _  ) ->  renderTemplate_ "flashMessageValueNotValid"
+   (ValueNotValid  _ _ )     ->  renderTemplate_ "flashMessageValueNotValid"
+   (RowMoreThenMaxCol _ l)   ->  renderTemplate "flashMessageRowGreaterThanMaxColCount" (F.value "maxcols" l)
+   (RowLessThenMinCol _ l)   ->  renderTemplate "flashMessageRowLessThanMinColCount" (F.value "mincols" l)
+   (NoDataExceptHeader)      ->  renderTemplate_ "flashMessageNoDataInCSVApartFromHeader"
+   (NoData)                  ->  renderTemplate_ "flashMessageNoDataInCSV"
 
 problemRow :: CSVProblem -> Maybe Int
 problemRow p = case p of

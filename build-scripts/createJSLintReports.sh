@@ -44,7 +44,7 @@ rm -f jslint-focus.txt;
 cat jslint-files.txt | awk '{print "grep -nH :focus "$1" || true"}' | sh > jslint-focus.txt;
 rm -f jslint-focus-serious.txt;
 #todo we should really get rid of this exception
-(egrep -v "global.js:53" jslint-focus.txt > jslint-focus-serious.txt || true);
+(egrep -v "global.js" jslint-focus.txt > jslint-focus-serious.txt || true);
 if grep -q ":focus" jslint-focus-serious.txt
 then
    cat jslint-focus-serious.txt;

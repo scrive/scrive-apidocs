@@ -18,15 +18,11 @@ import Control.Applicative
 import Data.Data
 import Database.HDBC
 import Happstack.Server
-import Happstack.State
+import Happstack.State (Version, deriveSerialize)
 import qualified Codec.Binary.Base16 as B16
 import qualified Data.ByteString as BS
 
-import DB.Classes
-import DB.Derive
-import DB.Fetcher2
-import DB.Utils
-import DB.Types
+import DB
 import Misc
 import User.Password
 import User.UserID
@@ -79,36 +75,36 @@ data ServiceUI = ServiceUI {
   } deriving (Eq, Ord, Show)
 
 data GetServiceByLocation = GetServiceByLocation ServiceLocation
-instance DBQuery GetServiceByLocation (Maybe Service) where
-  dbQuery (GetServiceByLocation loc) = do
+instance MonadDB m => DBQuery m GetServiceByLocation (Maybe Service) where
+  query (GetServiceByLocation loc) = do
     kPrepare $ selectServicesSQL ++ "WHERE s.location = ?"
     _ <- kExecute [toSql loc]
     fetchServices >>= oneObjectReturnedGuard
 
 data GetService = GetService ServiceID
-instance DBQuery GetService (Maybe Service) where
-  dbQuery (GetService sid) = do
+instance MonadDB m => DBQuery m GetService (Maybe Service) where
+  query (GetService sid) = do
     kPrepare $ selectServicesSQL ++ "WHERE s.id = ?"
     _ <- kExecute [toSql sid]
     fetchServices >>= oneObjectReturnedGuard
 
 data GetServicesForAdmin = GetServicesForAdmin UserID
-instance DBQuery GetServicesForAdmin [Service] where
-  dbQuery (GetServicesForAdmin aid) = do
+instance MonadDB m => DBQuery m GetServicesForAdmin [Service] where
+  query (GetServicesForAdmin aid) = do
     kPrepare $ selectServicesSQL ++ "WHERE s.admin_id = ? ORDER BY s.id DESC"
     _ <- kExecute [toSql aid]
     fetchServices
 
 data GetServices = GetServices
-instance DBQuery GetServices [Service] where
-  dbQuery GetServices = do
+instance MonadDB m => DBQuery m GetServices [Service] where
+  query GetServices = do
     kPrepare $ selectServicesSQL ++ "ORDER BY s.id DESC"
     _ <- kExecute []
     fetchServices
 
 data CreateService = CreateService ServiceID (Maybe Password) UserID
-instance DBUpdate CreateService (Maybe Service) where
-  dbUpdate (CreateService sid pwd aid) = do
+instance MonadDB m => DBUpdate m CreateService (Maybe Service) where
+  update (CreateService sid pwd aid) = do
     _ <- kRunRaw "LOCK TABLE services IN ACCESS EXCLUSIVE MODE"
     exists <- checkIfServiceExists sid
     if exists
@@ -125,11 +121,11 @@ instance DBUpdate CreateService (Maybe Service) where
           , toSql $ pwdSalt <$> pwd
           , toSql aid
           ]
-        dbQuery $ GetService sid
+        query $ GetService sid
 
 data UpdateServiceUI = UpdateServiceUI ServiceID ServiceUI
-instance DBUpdate UpdateServiceUI Bool where
-  dbUpdate (UpdateServiceUI sid sui) = do
+instance MonadDB m => DBUpdate m UpdateServiceUI Bool where
+  update (UpdateServiceUI sid sui) = do
     kPrepare $ "UPDATE services SET"
         ++ "  mail_footer = ?"
         ++ ", button1 = decode(?, 'base64')"
@@ -153,8 +149,8 @@ instance DBUpdate UpdateServiceUI Bool where
       ]
 
 data UpdateServiceSettings = UpdateServiceSettings ServiceID ServiceSettings
-instance DBUpdate UpdateServiceSettings Bool where
-  dbUpdate (UpdateServiceSettings sid ss) = do
+instance MonadDB m => DBUpdate m UpdateServiceSettings Bool where
+  update (UpdateServiceSettings sid ss) = do
     kPrepare $ "UPDATE services SET"
         ++ "  password = decode(?, 'base64')"
         ++ ", salt = decode(?, 'base64')"
@@ -173,7 +169,7 @@ instance DBUpdate UpdateServiceSettings Bool where
 
 -- helpers
 
-checkIfServiceExists :: ServiceID -> DB Bool
+checkIfServiceExists :: MonadDB m => ServiceID -> DBEnv m Bool
 checkIfServiceExists uid = checkIfAnyReturned
   $ SQL "SELECT 1 FROM services WHERE id = ?" [toSql uid]
 
@@ -196,7 +192,7 @@ selectServicesSQL = "SELECT"
   ++ "  FROM services s"
   ++ " "
 
-fetchServices :: DB [Service]
+fetchServices :: MonadDB m => DBEnv m [Service]
 fetchServices = foldDB decoder []
   where
     decoder acc sid password salt admin_id location email_from_address

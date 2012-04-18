@@ -83,94 +83,77 @@ import Data.Either
 import Misc
 import ScriveByMail.Model
 import ScriveByMail.View
+import qualified Templates.Fields as F
 
 showUser :: TemplatesMonad m => User -> Maybe Company -> Bool -> m String
-showUser user mcompany createcompany = renderTemplateFM "showUser" $ do
+showUser user mcompany createcompany = renderTemplate "showUser" $ do
     userFields user
     companyFields mcompany
-    field "createcompany" $ createcompany
-    field "linkaccount" $ show LinkAccount
+    F.value "createcompany" $ createcompany
+    F.value "linkaccount" $ show LinkAccount
 
-companyFields :: MonadIO m => Maybe Company -> Fields m
+companyFields :: Monad m => Maybe Company -> Fields m ()
 companyFields mcompany = do
-    field "companyid" $ show $ fmap companyid mcompany
-    field "address" $ fmap (companyaddress . companyinfo) mcompany
-    field "city" $ fmap (companycity . companyinfo) mcompany
-    field "country" $ fmap (companycountry . companyinfo) mcompany
-    field "zip" $ fmap (companyzip . companyinfo) mcompany
-    field "companyname" $ getCompanyName mcompany
-    field "companynumber" $ getCompanyNumber mcompany
-    field "companyimagelink" False
+    F.value "companyid" $ show $ fmap companyid mcompany
+    F.value "address" $ fmap (companyaddress . companyinfo) mcompany
+    F.value "city" $ fmap (companycity . companyinfo) mcompany
+    F.value "country" $ fmap (companycountry . companyinfo) mcompany
+    F.value "zip" $ fmap (companyzip . companyinfo) mcompany
+    F.value "companyname" $ getCompanyName mcompany
+    F.value "companynumber" $ getCompanyNumber mcompany
+    F.value "companyimagelink" False
 
-userFields :: MonadIO m => User -> Fields m
+userFields :: Monad m => User -> Fields m ()
 userFields user = do
     let fullname          = getFullName user
         fullnameOrEmail   = getSmartName user
         fullnamePlusEmail = if null fullname
                             then              "<" ++ (getEmail user) ++ ">"
                             else fullname ++ " <" ++ (getEmail user) ++ ">"
-    field "id" $ show $ userid user
-    field "fstname" $ getFirstName user
-    field "sndname" $ getLastName user
-    field "email" $ getEmail user
-    field "personalnumber" $ getPersonalNumber user
-    field "phone" $ userphone $ userinfo user
-    field "mobile" $ usermobile $ userinfo user
-    field "companyposition" $ usercompanyposition $ userinfo user
-    field "userimagelink" False
-    field "fullname" $ fullname
-    field "fullnameOrEmail" $ fullnameOrEmail
-    field "fullnamePlusEmail" $ fullnamePlusEmail
-    field "iscompanyaccount" $ isJust $ usercompany user
-    field "usercompanyname" $ getCompanyName user
-    field "usercompanynumber" $ getCompanyNumber user
+    F.value "id" $ show $ userid user
+    F.value "fstname" $ getFirstName user
+    F.value "sndname" $ getLastName user
+    F.value "email" $ getEmail user
+    F.value "personalnumber" $ getPersonalNumber user
+    F.value "phone" $ userphone $ userinfo user
+    F.value "mobile" $ usermobile $ userinfo user
+    F.value "companyposition" $ usercompanyposition $ userinfo user
+    F.value "userimagelink" False
+    F.value "fullname" $ fullname
+    F.value "fullnameOrEmail" $ fullnameOrEmail
+    F.value "fullnamePlusEmail" $ fullnamePlusEmail
+    F.value "iscompanyaccount" $ isJust $ usercompany user
+    F.value "usercompanyname" $ getCompanyName user
+    F.value "usercompanynumber" $ getCompanyNumber user
 
     --field "invoiceaddress" $ BS.toString $ useraddress $ userinfo user
     menuFields user
 
 showUserSecurity :: TemplatesMonad m => User -> m String
-showUserSecurity user = renderTemplateFM "showUserSecurity" $ do
-    field "linksecurity" $ show LinkAccountSecurity
-    field "fstname" $ getFirstName user
-    field "sndname" $ getLastName user
-    field "userimagelink" False
-    fieldF "region" $ do
-        field "se" $ REGION_SE == (getRegion user)
-        field "gb" $ REGION_GB == (getRegion user)
-    fieldF "lang" $ do
-        field "en" $ LANG_EN == (getLang user)
-        field "se" $ LANG_SE == (getLang user)
-    field "footer" $ customfooter $ usersettings user
-    field "advancedMode" $ Just AdvancedMode == (preferreddesignmode $ usersettings user)
+showUserSecurity user = renderTemplate "showUserSecurity" $ do
+    F.value "linksecurity" $ show LinkAccountSecurity
+    F.value "fstname" $ getFirstName user
+    F.value "sndname" $ getLastName user
+    F.value "userimagelink" False
+    F.object "region" $ do
+        F.value "se" $ REGION_SE == (getRegion user)
+        F.value "gb" $ REGION_GB == (getRegion user)
+    F.object "lang" $ do
+        F.value "en" $ LANG_EN == (getLang user)
+        F.value "se" $ LANG_SE == (getLang user)
+    F.value "footer" $ customfooter $ usersettings user
+    F.value "advancedMode" $ Just AdvancedMode == (preferreddesignmode $ usersettings user)
     menuFields user
 
 showUserMailAPI :: TemplatesMonad m => User -> Maybe MailAPIInfo -> Maybe MailAPIInfo -> m String
 showUserMailAPI user mapi mcapi =
-    renderTemplateFM "showUserMailAPI" $ do
-        field "linkmailapi" $ show LinkUserMailAPI
-        field "mailapienabled" $ isJust mapi
+    renderTemplate "showUserMailAPI" $ do
+        F.value "linkmailapi" $ show LinkUserMailAPI
+        F.value "mailapienabled" $ isJust mapi
         when (isJust mapi) $ mailAPIInfoFields (fromJust mapi)
-        field "hascompanymailapi" $ isJust mcapi
-        when (isJust mcapi) $ fieldF "company" $ mailAPIInfoFields (fromJust mcapi)
+        F.value "hascompanymailapi" $ isJust mcapi
+        when (isJust mcapi) $ F.object "company" $ mailAPIInfoFields (fromJust mcapi)
         menuFields user
-
-_usageStatisticsFieldsByDay :: (Functor m, MonadIO m) => [(Int, [Int])] -> [Fields m]
-_usageStatisticsFieldsByDay stats = map f stats
-  where f (ct, s:c:i:_) = do
-                field "date" $ showAsDate ct
-                field "closed" c
-                field "signatures" s
-                field "sent" i
-        f _ = error $ "statisticsFieldsByDay: bad stats"
-
-_usageStatisticsFieldsByMonth :: (Functor m, MonadIO m) => [(Int, [Int])] -> [Fields m]
-_usageStatisticsFieldsByMonth stats = map f stats
-  where f (ct, s:c:i:_) = do
-                field "date" $ showAsMonth ct
-                field "closed" c
-                field "signatures" s
-                field "sent" i
-        f _ = error $ "statisticsFieldsByMonth: bad stats"
 
 userStatsDayToJSON :: [(Int, [Int])] -> JSValue
 userStatsDayToJSON = JSArray . rights . map f
@@ -234,66 +217,65 @@ companyStatsMonthToJSON ts ls = JSArray $ rights $ [f e | e@(_,n,_) <- ls, n=="T
 
 showUsageStats :: TemplatesMonad m => User -> m String
 showUsageStats user =
-    renderTemplateFM "showUsageStats" $ do
+    renderTemplate "showUsageStats" $ do
       menuFields user
 
 pageAcceptTOS :: TemplatesMonad m => m String
-pageAcceptTOS = renderTemplateM "pageAcceptTOS" ()
+pageAcceptTOS = renderTemplate_ "pageAcceptTOS"
 
-menuFields :: MonadIO m => User -> Fields m
-menuFields user = do
-    field "iscompanyadmin" $ useriscompanyadmin user
+menuFields :: Monad m => User -> Fields m ()
+menuFields user = F.value "iscompanyadmin" $ useriscompanyadmin user
 
 activatePageViewNotValidLink :: TemplatesMonad m => String -> m String
 activatePageViewNotValidLink email =
-  renderTemplateFM "activatePageViewNotValidLink" $ field "email" email
+  renderTemplate "activatePageViewNotValidLink" $ F.value "email" email
 
 resetPasswordMail :: TemplatesMonad m => String -> User -> KontraLink -> m Mail
 resetPasswordMail hostname user setpasslink = do
   kontramail "passwordChangeLinkMail" $ do
-    field "personname"   $ getFullName user
-    field "passwordlink" $ show setpasslink
-    field "ctxhostpart"  $ hostname
+    F.value "personname"   $ getFullName user
+    F.value "passwordlink" $ show setpasslink
+    F.value "ctxhostpart"  $ hostname
 
 newUserMail :: TemplatesMonad m => String -> String -> String -> KontraLink -> m Mail
 newUserMail hostpart emailaddress personname activatelink = do
   kontramail "newUserMail" $ do
-    field "personname"   $ personname
-    field "email"        $ emailaddress
-    field "activatelink" $ show activatelink
-    field "ctxhostpart"  $ hostpart
+    F.value "personname"   $ personname
+    F.value "email"        $ emailaddress
+    F.value "activatelink" $ show activatelink
+    F.value "ctxhostpart"  $ hostpart
 
 viralInviteMail :: TemplatesMonad m => Context -> String -> KontraLink -> m Mail
 viralInviteMail ctx invitedemail setpasslink = do
   let invitername = maybe "" getSmartName (ctxmaybeuser ctx)
   kontramail "mailViralInvite" $ do
-    field "email"        $ invitedemail
-    field "invitername"  $ invitername
-    field "ctxhostpart"  $ ctxhostpart ctx
-    field "passwordlink" $ show setpasslink
+    F.value "email"        $ invitedemail
+    F.value "invitername"  $ invitername
+    F.value "ctxhostpart"  $ ctxhostpart ctx
+    F.value "passwordlink" $ show setpasslink
 
 
 mailNewAccountCreatedByAdmin :: (HasLocale a, TemplatesMonad m) => Context -> a -> String -> String -> KontraLink -> Maybe String -> m Mail
 mailNewAccountCreatedByAdmin ctx locale personname email setpasslink custommessage = do
   kontramaillocal locale "mailNewAccountCreatedByAdmin" $ do
-    field "personname"    $ personname
-    field "email"         $ email
-    field "passwordlink"  $ show setpasslink
-    field "creatorname"   $ maybe "" getSmartName (ctxmaybeuser ctx)
-    field "ctxhostpart"   $ ctxhostpart ctx
-    field "custommessage"   custommessage
+    F.value "personname"    $ personname
+    F.value "email"         $ email
+    F.value "passwordlink"  $ show setpasslink
+    F.value "creatorname"   $ maybe "" getSmartName (ctxmaybeuser ctx)
+    F.value "ctxhostpart"   $ ctxhostpart ctx
+    F.value "custommessage"   custommessage
 
 mailRequestChangeEmail :: (TemplatesMonad m, HasSomeUserInfo a) => String -> a -> Email -> KontraLink -> m Mail
 mailRequestChangeEmail hostpart user newemail link = do
   kontramail "mailRequestChangeEmail" $ do
-    field "fullname" $ getFullName user
-    field "newemail" $ unEmail newemail
-    field "hostpart" $ hostpart
-    field "link" $ show link
+    F.value "fullname" $ getFullName user
+    F.value "newemail" $ unEmail newemail
+    F.value "hostpart" $ hostpart
+    F.value "link" $ show link
 
 -------------------------------------------------------------------------------
 
-modalAccountSetup :: MonadIO m => KontraLink -> String -> String -> m FlashMessage
+modalAccountSetup :: Monad m => KontraLink -> String -> String -> m FlashMessage
 modalAccountSetup signuplink fstname sndname = do
   return $ toFlashTemplate Modal "modalAccountSetup" $
     [ ("signuplink", show signuplink)
@@ -302,12 +284,12 @@ modalAccountSetup signuplink fstname sndname = do
 
 modalDoYouWantToChangeEmail :: TemplatesMonad m => Email -> m FlashMessage
 modalDoYouWantToChangeEmail newemail = do
-  toModal <$> (renderTemplateFM "modalDoYouWantToChangeEmail" $
-                 field "newemail" $ unEmail newemail)
+  toModal <$> (renderTemplate "modalDoYouWantToChangeEmail" $
+                 F.value "newemail" $ unEmail newemail)
 
 flashMessageThanksForTheQuestion :: TemplatesMonad m => m FlashMessage
 flashMessageThanksForTheQuestion =
-    toFlashMsg OperationDone <$> renderTemplateM "flashMessageThanksForTheQuestion" ()
+    toFlashMsg OperationDone <$> renderTemplate_ "flashMessageThanksForTheQuestion"
 
 flashMessageLoginRedirectReason :: TemplatesMonad m => LoginRedirectReason -> m (Maybe FlashMessage)
 flashMessageLoginRedirectReason reason =
@@ -318,138 +300,138 @@ flashMessageLoginRedirectReason reason =
        InvalidLoginInfo _   -> render "invloginfo"
   where
     render msg = Just . toFlashMsg OperationFailed <$>
-      (renderTemplateFM "flashMessageLoginPageRedirectReason" $ field msg True)
+      (renderTemplate "flashMessageLoginPageRedirectReason" $ F.value msg True)
 
 flashMessageUserDetailsSaved :: TemplatesMonad m => m FlashMessage
 flashMessageUserDetailsSaved =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageUserDetailsSaved" ()
+  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageUserDetailsSaved"
 
 flashMessageCompanyCreated :: TemplatesMonad m => m FlashMessage
 flashMessageCompanyCreated =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageCompanyCreated" ()
+  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageCompanyCreated"
 
 
 flashMessageNoAccountType :: TemplatesMonad m => m FlashMessage
 flashMessageNoAccountType =
-    toFlashMsg OperationFailed <$> renderTemplateM "flashMessageNoAccountType" ()
+    toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageNoAccountType"
 
 flashMessageInvalidAccountType :: TemplatesMonad m => m FlashMessage
 flashMessageInvalidAccountType =
-    toFlashMsg OperationFailed <$> renderTemplateM "flashMessageInvalidAccountType" ()
+    toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageInvalidAccountType"
 
 flashMessageMustAcceptTOS :: TemplatesMonad m => m FlashMessage
 flashMessageMustAcceptTOS =
-  toFlashMsg SigningRelated <$> renderTemplateM "flashMessageMustAcceptTOS" ()
+  toFlashMsg SigningRelated <$> renderTemplate_ "flashMessageMustAcceptTOS"
 
 
 flashMessageBadOldPassword :: TemplatesMonad m => m FlashMessage
 flashMessageBadOldPassword =
-  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageBadOldPassword" ()
+  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageBadOldPassword"
 
 
 flashMessagePasswordsDontMatch :: TemplatesMonad m => m FlashMessage
 flashMessagePasswordsDontMatch =
-  toFlashMsg OperationFailed <$> renderTemplateM "flashMessagePasswordsDontMatch" ()
+  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessagePasswordsDontMatch"
 
 
 flashMessageUserPasswordChanged :: TemplatesMonad m => m FlashMessage
 flashMessageUserPasswordChanged =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageUserPasswordChanged" ()
+  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageUserPasswordChanged"
 
 flashMessagePasswordChangeLinkNotValid :: TemplatesMonad m => m FlashMessage
 flashMessagePasswordChangeLinkNotValid =
-  toFlashMsg OperationFailed <$> renderTemplateM "flashMessagePasswordChangeLinkNotValid" ()
+  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessagePasswordChangeLinkNotValid"
 
 
 flashMessageUserWithSameEmailExists :: TemplatesMonad m => m FlashMessage
 flashMessageUserWithSameEmailExists =
-  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageUserWithSameEmailExists" ()
+  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageUserWithSameEmailExists"
 
 
 flashMessageViralInviteSent :: TemplatesMonad m => m FlashMessage
 flashMessageViralInviteSent =
-  toFlashMsg SigningRelated <$> renderTemplateM "flashMessageViralInviteSent" ()
+  toFlashMsg SigningRelated <$> renderTemplate_ "flashMessageViralInviteSent"
 
 flashMessageOtherUserSentInvitation :: TemplatesMonad m => m FlashMessage
 flashMessageOtherUserSentInvitation =
-    toFlashMsg OperationFailed <$> renderTemplateM "flashMessageOtherUserSentInvitation" ()
+    toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageOtherUserSentInvitation"
 
 flashMessageNoRemainedInvitationEmails :: TemplatesMonad m => m FlashMessage
 flashMessageNoRemainedInvitationEmails =
-    toFlashMsg OperationFailed <$> renderTemplateM "flashMessageNoRemainedInvitationEmails" ()
+    toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageNoRemainedInvitationEmails"
 
 flashMessageActivationLinkNotValid :: TemplatesMonad m => m FlashMessage
 flashMessageActivationLinkNotValid =
-  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageActivationLinkNotValid" ()
+  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageActivationLinkNotValid"
 
 
 flashMessageUserActivated :: TemplatesMonad m => m FlashMessage
 flashMessageUserActivated =
-  toFlashMsg SigningRelated <$> renderTemplateM "flashMessageUserActivated" ()
+  toFlashMsg SigningRelated <$> renderTemplate_ "flashMessageUserActivated"
 
 
 flashMessageUserAlreadyActivated :: TemplatesMonad m => m FlashMessage
 flashMessageUserAlreadyActivated =
-  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageUserAlreadyActivated" ()
+  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageUserAlreadyActivated"
 
 flashMessageChangePasswordEmailSend :: TemplatesMonad m => m FlashMessage
 flashMessageChangePasswordEmailSend =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageChangePasswordEmailSend" ()
+  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageChangePasswordEmailSend"
 
 flashMessageNoRemainedPasswordReminderEmails :: TemplatesMonad m => m FlashMessage
 flashMessageNoRemainedPasswordReminderEmails =
-    toFlashMsg OperationFailed <$> renderTemplateM "flashMessageNoRemainedPasswordReminderEmails" ()
+    toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageNoRemainedPasswordReminderEmails"
 
 flashMessageNewActivationLinkSend :: TemplatesMonad m => m FlashMessage
 flashMessageNewActivationLinkSend =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageNewActivationLinkSend" ()
+  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageNewActivationLinkSend"
 
 
 flashMessageUserSignupDone :: TemplatesMonad m => m FlashMessage
 flashMessageUserSignupDone =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageUserSignupDone" ()
+  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageUserSignupDone"
 
 modalNewPasswordView :: TemplatesMonad m => ActionID -> MagicHash -> m FlashMessage
 modalNewPasswordView aid hash = do
-  toModal <$> (renderTemplateFM "modalNewPasswordView" $ do
-            field "linkchangepassword" $ show $ LinkPasswordReminder aid hash)
+  toModal <$> (renderTemplate "modalNewPasswordView" $ do
+            F.value "linkchangepassword" $ show $ LinkPasswordReminder aid hash)
 
 modalUserSignupDone :: TemplatesMonad m => Email -> m FlashMessage
 modalUserSignupDone email =
-  toModal <$> (renderTemplateFM "modalUserSignupDone" $ do
-                 field "email" $ unEmail email)
+  toModal <$> (renderTemplate "modalUserSignupDone" $ do
+                 F.value "email" $ unEmail email)
 
 flashMessageChangeEmailMailSent :: TemplatesMonad m => Email -> m FlashMessage
 flashMessageChangeEmailMailSent newemail =
-  toFlashMsg OperationDone <$> (renderTemplateFM "flashMessageChangeEmailMailSent" $
-                                  field "newemail" $ unEmail newemail)
+  toFlashMsg OperationDone <$> (renderTemplate "flashMessageChangeEmailMailSent" $
+                                  F.value "newemail" $ unEmail newemail)
 
 flashMessageMismatchedEmails :: TemplatesMonad m => m FlashMessage
 flashMessageMismatchedEmails =
-  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageMismatchedEmails" ()
+  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageMismatchedEmails"
 
 flashMessageProblemWithEmailChange :: TemplatesMonad m => m FlashMessage
 flashMessageProblemWithEmailChange =
-  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageProblemWithEmailChange" ()
+  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageProblemWithEmailChange"
 
 flashMessageProblemWithPassword :: TemplatesMonad m => m FlashMessage
 flashMessageProblemWithPassword =
-  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageProblemWithPassword" ()
+  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageProblemWithPassword"
 
 flashMessageYourEmailHasChanged :: TemplatesMonad m => m FlashMessage
 flashMessageYourEmailHasChanged =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageYourEmailHasChanged" ()
+  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageYourEmailHasChanged"
 
 -------------------------------------------------------------------------------
 
 {- | Basic fields for the user  -}
-userBasicFields :: MonadIO m => User -> Maybe Company -> Fields m
+userBasicFields :: Monad m => User -> Maybe Company -> Fields m ()
 userBasicFields u mc = do
-    field "id" $ show $ userid u
-    field "fullname" $ getFullName u
-    field "email" $ getEmail u
-    field "company" $ getCompanyName mc
-    field "phone" $ userphone $ userinfo u
-    field "position" $ usercompanyposition $ userinfo u
-    field "iscompanyadmin" $ useriscompanyadmin u
-    field "TOSdate" $ maybe "-" show (userhasacceptedtermsofservice u)
+    F.value "id" $ show $ userid u
+    F.value "fullname" $ getFullName u
+    F.value "email" $ getEmail u
+    F.value "company" $ getCompanyName mc
+    F.value "phone" $ userphone $ userinfo u
+    F.value "position" $ usercompanyposition $ userinfo u
+    F.value "iscompanyadmin" $ useriscompanyadmin u
+    F.value "TOSdate" $ maybe "-" show (userhasacceptedtermsofservice u)

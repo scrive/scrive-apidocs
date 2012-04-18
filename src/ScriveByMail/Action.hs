@@ -8,7 +8,7 @@ module ScriveByMail.Action
 
 import Company.Model
 import Control.Logic
-import DB.Classes
+import DB
 import Doc.DocStateData
 import Doc.DocStorage
 import Doc.DocUtils
@@ -26,6 +26,7 @@ import Redirect
 import ScriveByMail.Model
 import ScriveByMail.Parse
 import ScriveByMail.View
+import Stats.Control
 import User.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -86,18 +87,18 @@ doMailAPI content = do
     -- extension and can be used as for example password
   let extension = takeWhile (/= '@') $ dropWhile (== '+') $ dropWhile (/= '+') to
 
-  muser <- runDBQuery (GetUserByEmail Nothing (Email username))
+  muser <- dbQuery (GetUserByEmail Nothing (Email username))
   
   minfo <- case muser of
     Just user -> do
-      mmailapi <- runDBQuery $ GetUserMailAPI $ userid user
+      mmailapi <- dbQuery $ GetUserMailAPI $ userid user
       case mmailapi of
         Just mailapi | Just (umapiKey mailapi) == maybeRead extension -> do
           -- we have a user with matching mailapi key
           return $ Just (user, UserMailAPIInfo mailapi)
         _ -> case usercompany user of
                Just companyid -> do
-                 mcmailapi <- runDBQuery $ GetCompanyMailAPI companyid
+                 mcmailapi <- dbQuery $ GetCompanyMailAPI companyid
                  case mcmailapi of
                    Just cmailapi | Just (umapiKey cmailapi) == maybeRead extension -> do
                      -- we have a user with company with matching company mailapi key
@@ -111,18 +112,18 @@ doMailAPI content = do
     _ ->  -- no user for this address
       case break (== '@') $ map toLower username of
         (_, '@':domain) -> do 
-          mcompany <- runDBQuery $ GetCompanyByEmailDomain domain
+          mcompany <- dbQuery $ GetCompanyByEmailDomain domain
           case mcompany of
             Just company -> do
-              mcmailapi <- runDBQuery $ GetCompanyMailAPI (companyid company)
+              mcmailapi <- dbQuery $ GetCompanyMailAPI (companyid company)
               case mcmailapi of
                 Just cmailapi | Just (umapiKey cmailapi) == maybeRead extension -> do
                   -- we have a non-user with company email domain with matching company mailapi key
                   -- we need to store the email, send a confirmation to the company admins, a message to the sender
-                  mdelay <- runDBUpdate $ AddMailAPIDelay username content (companyid company) (ctxtime ctx)
+                  mdelay <- dbUpdate $ AddMailAPIDelay username content (companyid company) (ctxtime ctx)
                   case mdelay of
                     Just (delayid, key, True) -> do
-                      cusers <- runDBQuery $ GetCompanyAccounts (companyid company)
+                      cusers <- dbQuery $ GetCompanyAccounts (companyid company)
                       forM_ (filter useriscompanyadmin cusers) $ \admin -> do
                         sendMailAPIDelayAdminEmail (getEmail admin) username delayid key (ctxtime ctx)
                       return ()
@@ -251,13 +252,14 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   let signatories = map (\p -> (p, [SignatoryPartner])) sigdets
       
   mcompany <- case usercompany user of
-    Just companyid -> runDBQuery $ GetCompany companyid
+    Just companyid -> dbQuery $ GetCompany companyid
     Nothing -> return Nothing
   
   let userDetails = signatoryDetailsFromUser user mcompany
 
-  let actor = MailAPIActor ctxtime (userid user) (getEmail user)
-  edoc <- runDBUpdate $ NewDocument user mcompany title doctype 0 actor
+  let actor = mailAPIActor ctxtime (userid user) (getEmail user)
+  edoc <- dbUpdate $ NewDocument user mcompany title doctype 0 actor
+  
   
   when (isLeft edoc) $ do
     let Left msg = edoc
@@ -270,13 +272,16 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
     internalError
     
   let Right doc = edoc
+
       
   content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) pdfBinary
-  file <- runDB $ dbUpdate $ NewFile title content14
-  _ <- guardRightM $ runDBUpdate (AttachFile (documentid doc) (fileid file) actor)
-  _ <- runDBUpdate $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality actor
-  _ <- runDBUpdate $ SetDocumentIdentification (documentid doc) [EmailIdentification] actor
-  errs <- lefts <$> (sequence $ [runDBUpdate $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) actor])
+  file <- dbUpdate $ NewFile title content14
+  _ <- guardRightM $ dbUpdate (AttachFile (documentid doc) (fileid file) actor)
+  _ <- dbUpdate $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality actor
+  _ <- dbUpdate $ SetDocumentIdentification (documentid doc) [EmailIdentification] actor
+  res <- (sequence $ [dbUpdate $ ResetSignatoryDetails (documentid doc) ((userDetails, arole):signatories) actor])
+
+  let errs = lefts res
           
   when ([] /= errs) $ do
     Log.scrivebymail $ "Could not set up document: " ++ (intercalate "; " errs)
@@ -285,8 +290,11 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what is wrong. I created it in Scrive, but I cannot get it ready to send. If you want to see your document, you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
     
     internalError
-    
-  edoc2 <- runDBUpdate $ PreparationToPending (documentid doc) actor           
+
+  let Right resdoc = last res
+  _ <- addDocumentCreateStatEvents resdoc
+
+  edoc2 <- dbUpdate $ PreparationToPending (documentid doc) actor    
   
   when (isLeft edoc2) $ do
     Log.scrivebymail $ "Could not got to pending document: " ++ (intercalate "; " errs)
@@ -298,12 +306,14 @@ scriveByMail mailapi username user to subject isOutlook pdfs plains content = do
   
   let Right doc2 = edoc2
 
+
+
   markDocumentAuthorReadAndSeen doc2
   --_ <- DocControl.postDocumentChangeAction doc2 doc Nothing
     
   _ <- case (mailapi, usercompany user) of
-    (CompanyMailAPIInfo _, Just companyid) -> runDBUpdate $ IncrementCompanyMailAPI companyid
-    (UserMailAPIInfo _, _) -> runDBUpdate $ IncrementUserMailAPI (userid user)
+    (CompanyMailAPIInfo _, Just companyid) -> dbUpdate $ IncrementCompanyMailAPI companyid
+    (UserMailAPIInfo _, _) -> dbUpdate $ IncrementUserMailAPI (userid user)
     _ -> do
       Log.scrivebymail $ "Company API Key with user with no companyid?"
       return Nothing
@@ -342,10 +352,10 @@ markDocumentAuthorReadAndSeen doc@Document{documentid} = do
   let Just sl@SignatoryLink{signatorylinkid, signatorymagichash, maybesignatory} =
         getAuthorSigLink doc
   time <- ctxtime <$> getContext
-  _ <- runDBUpdate $ MarkInvitationRead documentid signatorylinkid 
-       (MailAPIActor time (fromJust maybesignatory) (getEmail sl))
-  _ <- runDBUpdate $ MarkDocumentSeen documentid signatorylinkid signatorymagichash 
-       (MailAPIActor time (fromJust maybesignatory) (getEmail sl))
+  _ <- dbUpdate $ MarkInvitationRead documentid signatorylinkid
+       (mailAPIActor time (fromJust maybesignatory) (getEmail sl))
+  _ <- dbUpdate $ MarkDocumentSeen documentid signatorylinkid signatorymagichash
+       (mailAPIActor time (fromJust maybesignatory) (getEmail sl))
   return ()
 
 parseEmailMessageToParts :: BS.ByteString -> (MIME.MIMEValue, [(MIME.Type, BS.ByteString)])
@@ -481,7 +491,7 @@ jsonMailAPI mailapi username user pdfs plains content = do
   -- send document
 
   mcompany <- case usercompany user of
-    Just companyid -> runDBQuery $ GetCompany companyid
+    Just companyid -> dbQuery $ GetCompany companyid
     Nothing -> return Nothing
 
   let userDetails = signatoryDetailsFromUser user mcompany
@@ -518,9 +528,9 @@ jsonMailAPI mailapi username user pdfs plains content = do
 
   let doctype = dcrType dcr
       title = maybe (basename $ getAttachmentFilename $ fst pdf) decodeWords $ dcrTitle dcr
-      actor = MailAPIActor ctxtime (userid user) (getEmail user)
+      actor = mailAPIActor ctxtime (userid user) (getEmail user)
       
-  edoc <- runDBUpdate $ NewDocument user mcompany title doctype 0 actor
+  edoc <- dbUpdate $ NewDocument user mcompany title doctype 0 actor
 
   when (isLeft edoc) $ do
     let Left msg = edoc
@@ -533,25 +543,32 @@ jsonMailAPI mailapi username user pdfs plains content = do
 
   let Right doc = edoc
 
+
+
   content14 <- guardRightM $ liftIO $ preCheckPDF (ctxgscmd ctx) pdfBinary
-  file <- runDB $ dbUpdate $ NewFile title content14
-  _ <- guardRightM $ runDBUpdate (AttachFile (documentid doc) (fileid file) actor)
+  file <- dbUpdate $ NewFile title content14
+  _ <- guardRightM $ dbUpdate (AttachFile (documentid doc) (fileid file) actor)
   
-  _ <- runDBUpdate $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality actor
-  _ <- runDBUpdate $ SetDocumentIdentification (documentid doc) [EmailIdentification] actor
+  _ <- dbUpdate $ SetDocumentFunctionality (documentid doc) AdvancedFunctionality actor
+  _ <- dbUpdate $ SetDocumentIdentification (documentid doc) [EmailIdentification] actor
 
   let signatories = for (dcrInvolved dcr) $ \InvolvedRequest{irRole,irData} ->
         (SignatoryDetails{signatorysignorder = SignOrder 0, signatoryfields = irData},
          irRole)
 
-  errs <- lefts <$> (sequence $ [runDBUpdate $ ResetSignatoryDetails (documentid doc) signatories actor])
+  res <- (sequence $ [dbUpdate $ ResetSignatoryDetails (documentid doc) signatories actor])
+
+  let errs = lefts res
 
   when ([] /= errs) $ do
     Log.jsonMailAPI $ "Could not set up document: " ++ (intercalate "; " errs)
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what is wrong. I created it in Scrive, but I cannot get it ready to send. If you want to see your document, you can <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
     internalError
 
-  edoc2 <- runDBUpdate $ PreparationToPending (documentid doc) actor
+  let Right resdoc = last res
+  _ <- addDocumentCreateStatEvents resdoc
+
+  edoc2 <- dbUpdate $ PreparationToPending (documentid doc) actor
   when (isLeft edoc2) $ do
     Log.jsonMailAPI $ "Could not get to pending document: " ++ (intercalate "; " errs)
     sendMailAPIErrorEmail ctx username $ "<p>I apologize, but I could not forward your document. I do not know what's wrong. Your document is created and ready to be sent. To see your document and send it yourself, <a href=\"" ++ ctxhostpart ctx ++ (show $ LinkIssueDoc (documentid doc)) ++ "\">click here</a>.</p>"
@@ -562,8 +579,8 @@ jsonMailAPI mailapi username user pdfs plains content = do
   --_ <- DocControl.postDocumentChangeAction doc2 doc Nothing
 
   _ <- case (mailapi, usercompany user) of
-    (CompanyMailAPIInfo _, Just companyid) -> runDBUpdate $ IncrementCompanyMailAPI companyid
-    (UserMailAPIInfo _, _) -> runDBUpdate $ IncrementUserMailAPI (userid user)
+    (CompanyMailAPIInfo _, Just companyid) -> dbUpdate $ IncrementCompanyMailAPI companyid
+    (UserMailAPIInfo _, _) -> dbUpdate $ IncrementUserMailAPI (userid user)
     _ -> do
       Log.jsonMailAPI $ "Company API Key with user with no companyid?"
       return Nothing

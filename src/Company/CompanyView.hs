@@ -6,4 +6,4 @@ module Company.CompanyView (
 import Templates.Templates
 
 viewCompanySettings :: TemplatesMonad m => m String
-viewCompanySettings = renderTemplateM "viewCompany" ()
+viewCompanySettings = renderTemplate_ "viewCompany"

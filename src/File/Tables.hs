@@ -1,9 +1,6 @@
 module File.Tables where
 
-import Database.HDBC
-
-import DB.Classes
-import DB.Model
+import DB
 
 tableFiles :: Table
 tableFiles = Table {

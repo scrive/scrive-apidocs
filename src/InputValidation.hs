@@ -67,6 +67,7 @@ import Numeric
 import qualified Log (security)
 import Misc hiding (getFields)
 import Templates.Templates
+import qualified Templates.Fields as F
 import Util.FlashUtil
 import User.Model
 import Data.Monoid
@@ -660,7 +661,7 @@ checkWithinLowerBound lowerbound fieldtemplate val
 
 flashMessageNumberBelowMinimum :: (Num a, Show a) => String -> a -> ValidationMessage
 flashMessageNumberBelowMinimum fieldtemplate lowerbound =
-    flashMessageWithFieldName fieldtemplate "flashMessageNumberBelowMinimum"  . Just $ field "min" (show lowerbound)
+    flashMessageWithFieldName fieldtemplate "flashMessageNumberBelowMinimum"  . Just $ F.value "min" (show lowerbound)
 
 {- |
     Checks the upper bound of a number
@@ -672,7 +673,7 @@ checkWithinUpperBound upperbound fieldtemplate val
 
 flashMessageNumberAboveMaximum :: (Num a, Show a) => String -> a -> ValidationMessage
 flashMessageNumberAboveMaximum fieldtemplate upperbound =
-    flashMessageWithFieldName fieldtemplate "flashMessageNumberAboveMaximum" . Just $ field "max" (show upperbound)
+    flashMessageWithFieldName fieldtemplate "flashMessageNumberAboveMaximum" . Just $ F.value "max" (show upperbound)
 
 {- |
     Parses a string as a Num
@@ -712,7 +713,7 @@ flashMessageInvalidUnprintableCharsInInput fieldtemplate =
 
 flashMessageInvalidPrintableCharsInInput :: String -> String -> ValidationMessage
 flashMessageInvalidPrintableCharsInInput fieldtemplate invalidchars =
-    flashMessageWithFieldName fieldtemplate "flashMessageInvalidPrintableCharsInInput" . Just $ field "invalidchar" (head invalidchars)
+    flashMessageWithFieldName fieldtemplate "flashMessageInvalidPrintableCharsInInput" . Just $ F.value "invalidchar" (head invalidchars)
 
 {- |
     Checks that a string meets the min length restriction.
@@ -724,7 +725,7 @@ checkLengthIsMin minlength fieldtemplate xs
 
 flashMessageInputLessThanMinLength :: String -> Int -> ValidationMessage
 flashMessageInputLessThanMinLength fieldtemplate minlength =
-    flashMessageWithFieldName fieldtemplate "flashMessageInputLessThanMinLength" . Just $ field "minlength" minlength
+    flashMessageWithFieldName fieldtemplate "flashMessageInputLessThanMinLength" . Just $ F.value "minlength" minlength
 
 {- |
     Checks that a string doesn't exceed the max length restriction.
@@ -736,7 +737,7 @@ checkLengthIsMax maxlength fieldtemplate xs
 
 flashMessageInputExceedsMaxLength :: String -> Int -> ValidationMessage
 flashMessageInputExceedsMaxLength fieldtemplate maxlength =
-    flashMessageWithFieldName fieldtemplate "flashMessageInputExceedsMaxLength" . Just $ field "maxlength" maxlength
+    flashMessageWithFieldName fieldtemplate "flashMessageInputExceedsMaxLength" . Just $ F.value "maxlength" maxlength
 
 {- |
     Checks if the input is empty, assigning it value Empty.
@@ -761,19 +762,19 @@ flashMessageInvalidFormat :: String -> ValidationMessage
 flashMessageInvalidFormat fieldtemplate =
     flashMessageWithFieldName fieldtemplate "flashMessageInvalidFormat" Nothing
 
-flashMessageWithFieldName :: TemplatesMonad m => String -> String -> Maybe (Fields m) -> m FlashMessage
+flashMessageWithFieldName :: TemplatesMonad m => String -> String -> Maybe (Fields m ()) -> m FlashMessage
 flashMessageWithFieldName fieldtemplate templatename mfields = do
-   fieldname <- renderTemplateM fieldtemplate ()
+   fieldname <- renderTemplate_ fieldtemplate
    let fields = do
        when (isJust mfields) (fromJust mfields)
-       field "fieldnametitlecase" (titleCase fieldname)
-       field "fieldnamelowercase" (lowerCase fieldname)
+       F.value "fieldnametitlecase" (titleCase fieldname)
+       F.value "fieldnamelowercase" (lowerCase fieldname)
    flashMessage templatename (Just fields)
    where titleCase (x:xs) = toUpper x : lowerCase xs
          titleCase [] = []
          lowerCase = map toLower
 
-flashMessage :: TemplatesMonad m => String -> Maybe (Fields m) -> m FlashMessage
+flashMessage :: TemplatesMonad m => String -> Maybe (Fields m ()) -> m FlashMessage
 flashMessage templatename mfields =
-    toFlashMsg OperationFailed <$> renderTemplateFM templatename
+    toFlashMsg OperationFailed <$> renderTemplate templatename
         (when (isJust mfields) (fromJust mfields))

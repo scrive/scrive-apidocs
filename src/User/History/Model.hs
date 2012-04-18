@@ -10,21 +10,18 @@ module User.History.Model (
   , LogHistoryTOSAccept(..)
   , LogHistoryDetailsChanged(..)
   , LogHistoryUserInfoChanged(..)
+  , LogHistoryPadLoginAttempt(..)
+  , LogHistoryPadLoginSuccess(..)
   , GetUserHistoryByUserID(..)
   ) where
 
 import Data.List (intersperse)
-import Database.HDBC
 import Text.JSON
 
 import qualified Paths_kontrakcja as Paths
 import qualified Data.Version as Ver
 
-import DB.Classes
-import DB.Derive
-import DB.Fetcher2
-import DB.Utils
-
+import DB
 import IPAddress
 import MinutesTime
 import Misc
@@ -56,6 +53,8 @@ data UserHistoryEventType = UserLoginAttempt
                           | UserAccountCreated 
                           | UserDetailsChange 
                           | UserTOSAccept
+                          | UserPadLoginAttempt
+                          | UserPadLoginSuccess
   deriving (Eq, Show)
 
 {- |
@@ -70,7 +69,8 @@ instance Convertible UserHistoryEventType SqlValue where
   safeConvert UserAccountCreated   = return . toSql $ (5 :: Int)
   safeConvert UserDetailsChange    = return . toSql $ (6 :: Int)
   safeConvert UserTOSAccept        = return . toSql $ (7 :: Int)
-
+  safeConvert UserPadLoginAttempt  = return . toSql $ (8 :: Int)
+  safeConvert UserPadLoginSuccess  = return . toSql $ (9 :: Int)
 instance Convertible SqlValue UserHistoryEventType where
   safeConvert a = case (fromSql a :: Int) of
     1 -> return UserLoginAttempt
@@ -80,6 +80,8 @@ instance Convertible SqlValue UserHistoryEventType where
     5 -> return UserAccountCreated
     6 -> return UserDetailsChange
     7 -> return UserTOSAccept
+    8 -> return UserPadLoginAttempt
+    9 -> return UserPadLoginSuccess
     n -> Left ConvertError {
         convSourceValue = show n
       , convSourceType = "Int"
@@ -88,15 +90,15 @@ instance Convertible SqlValue UserHistoryEventType where
     }
 
 data GetUserHistoryByUserID = GetUserHistoryByUserID UserID
-instance DBQuery GetUserHistoryByUserID [UserHistory] where
-  dbQuery (GetUserHistoryByUserID uid) = do
+instance MonadDB m => DBQuery m GetUserHistoryByUserID [UserHistory] where
+  query (GetUserHistoryByUserID uid) = do
     _ <- kRun $ selectUserHistorySQL
       <++> SQL "WHERE user_id = ? ORDER BY time" [toSql uid]
     fetchUserHistory
 
 data LogHistoryLoginAttempt = LogHistoryLoginAttempt UserID IPAddress MinutesTime
-instance DBUpdate LogHistoryLoginAttempt Bool where
-  dbUpdate (LogHistoryLoginAttempt userid ip time) = addUserHistory
+instance MonadDB m => DBUpdate m LogHistoryLoginAttempt Bool where
+  update (LogHistoryLoginAttempt userid ip time) = addUserHistory
     userid
     UserHistoryEvent {uheventtype = UserLoginAttempt, uheventdata = Nothing}
     ip
@@ -104,17 +106,36 @@ instance DBUpdate LogHistoryLoginAttempt Bool where
     Nothing
 
 data LogHistoryLoginSuccess = LogHistoryLoginSuccess UserID IPAddress MinutesTime
-instance DBUpdate LogHistoryLoginSuccess Bool where
-  dbUpdate (LogHistoryLoginSuccess userid ip time) = addUserHistory
+instance MonadDB m => DBUpdate m LogHistoryLoginSuccess Bool where
+  update (LogHistoryLoginSuccess userid ip time) = addUserHistory
     userid
     UserHistoryEvent {uheventtype = UserLoginSuccess, uheventdata = Nothing}
     ip
     time
     (Just userid)
 
+data LogHistoryPadLoginAttempt = LogHistoryPadLoginAttempt UserID IPAddress MinutesTime
+instance MonadDB m => DBUpdate m LogHistoryPadLoginAttempt Bool where
+  update (LogHistoryPadLoginAttempt userid ip time) = addUserHistory
+    userid
+    UserHistoryEvent {uheventtype = UserPadLoginAttempt, uheventdata = Nothing}
+    ip
+    time
+    Nothing
+
+data LogHistoryPadLoginSuccess = LogHistoryPadLoginSuccess UserID IPAddress MinutesTime
+instance MonadDB m => DBUpdate m LogHistoryPadLoginSuccess Bool where
+  update (LogHistoryPadLoginSuccess userid ip time) = addUserHistory
+    userid
+    UserHistoryEvent {uheventtype = UserPadLoginSuccess, uheventdata = Nothing}
+    ip
+    time
+    (Just userid)
+
+    
 data LogHistoryPasswordSetup = LogHistoryPasswordSetup UserID IPAddress MinutesTime (Maybe UserID)
-instance DBUpdate LogHistoryPasswordSetup Bool where
-  dbUpdate (LogHistoryPasswordSetup userid ip time mpuser) = addUserHistory
+instance MonadDB m => DBUpdate m LogHistoryPasswordSetup Bool where
+  update (LogHistoryPasswordSetup userid ip time mpuser) = addUserHistory
     userid
     UserHistoryEvent {uheventtype = UserPasswordSetup, uheventdata = Nothing}
     ip
@@ -122,8 +143,8 @@ instance DBUpdate LogHistoryPasswordSetup Bool where
     mpuser
 
 data LogHistoryPasswordSetupReq = LogHistoryPasswordSetupReq UserID IPAddress MinutesTime (Maybe UserID)
-instance DBUpdate LogHistoryPasswordSetupReq Bool where
-  dbUpdate (LogHistoryPasswordSetupReq userid ip time mpuser) = addUserHistory
+instance MonadDB m => DBUpdate m LogHistoryPasswordSetupReq Bool where
+  update (LogHistoryPasswordSetupReq userid ip time mpuser) = addUserHistory
     userid
     UserHistoryEvent {uheventtype = UserPasswordSetupReq, uheventdata = Nothing}
     ip
@@ -131,8 +152,8 @@ instance DBUpdate LogHistoryPasswordSetupReq Bool where
     mpuser
 
 data LogHistoryAccountCreated = LogHistoryAccountCreated UserID IPAddress MinutesTime Email (Maybe UserID)
-instance DBUpdate LogHistoryAccountCreated Bool where
-  dbUpdate (LogHistoryAccountCreated userid ip time email mpuser) = addUserHistory
+instance MonadDB m => DBUpdate m LogHistoryAccountCreated Bool where
+  update (LogHistoryAccountCreated userid ip time email mpuser) = addUserHistory
     userid
     UserHistoryEvent {
         uheventtype = UserAccountCreated
@@ -147,8 +168,8 @@ instance DBUpdate LogHistoryAccountCreated Bool where
     mpuser
 
 data LogHistoryTOSAccept = LogHistoryTOSAccept UserID IPAddress MinutesTime (Maybe UserID)
-instance DBUpdate LogHistoryTOSAccept Bool where
-  dbUpdate (LogHistoryTOSAccept userid ip time mpuser) = addUserHistory
+instance MonadDB m => DBUpdate m LogHistoryTOSAccept Bool where
+  update (LogHistoryTOSAccept userid ip time mpuser) = addUserHistory
     userid
     UserHistoryEvent {uheventtype = UserTOSAccept, uheventdata = Nothing}
     ip
@@ -156,8 +177,8 @@ instance DBUpdate LogHistoryTOSAccept Bool where
     mpuser
 
 data LogHistoryDetailsChanged = LogHistoryDetailsChanged UserID IPAddress MinutesTime [(String, String, String)] (Maybe UserID)
-instance DBUpdate LogHistoryDetailsChanged Bool where
-  dbUpdate (LogHistoryDetailsChanged userid ip time details mpuser) = addUserHistory
+instance MonadDB m => DBUpdate m LogHistoryDetailsChanged Bool where
+  update (LogHistoryDetailsChanged userid ip time details mpuser) = addUserHistory
     userid
     UserHistoryEvent {
         uheventtype = UserDetailsChange
@@ -173,12 +194,12 @@ instance DBUpdate LogHistoryDetailsChanged Bool where
     mpuser
 
 data LogHistoryUserInfoChanged = LogHistoryUserInfoChanged UserID IPAddress MinutesTime UserInfo UserInfo (Maybe UserID)
-instance DBUpdate LogHistoryUserInfoChanged Bool where
-  dbUpdate (LogHistoryUserInfoChanged userid ip time oldinfo newinfo mpuser) = do
+instance MonadDB m => DBUpdate m LogHistoryUserInfoChanged Bool where
+  update (LogHistoryUserInfoChanged userid ip time oldinfo newinfo mpuser) = do
     let diff = diffUserInfos oldinfo newinfo
     case diff of
       [] -> return False
-      _  -> dbUpdate $ LogHistoryDetailsChanged userid ip time diff mpuser
+      _  -> update $ LogHistoryDetailsChanged userid ip time diff mpuser
 
 diffUserInfos :: UserInfo -> UserInfo -> [(String, String, String)]
 diffUserInfos old new = fstNameDiff 
@@ -211,7 +232,7 @@ diffUserInfos old new = fstNameDiff
       then [("email", unEmail $ useremail old, unEmail $ useremail new)]
       else []
 
-addUserHistory :: UserID -> UserHistoryEvent -> IPAddress -> MinutesTime -> Maybe UserID -> DB Bool
+addUserHistory :: MonadDB m => UserID -> UserHistoryEvent -> IPAddress -> MinutesTime -> Maybe UserID -> DBEnv m Bool
 addUserHistory user event ip time mpuser =
   kRun01 $ mkSQL INSERT tableUsersHistory [
       sql "user_id" user
@@ -235,7 +256,7 @@ selectUserHistorySQL = SQL ("SELECT"
  ++ "  FROM users_history"
  ++ " ") []
 
-fetchUserHistory :: DB [UserHistory]
+fetchUserHistory :: MonadDB m => DBEnv m [UserHistory]
 fetchUserHistory = foldDB decoder []
   where
     decoder acc userid eventtype meventdata ip time sysver mpuser = UserHistory {

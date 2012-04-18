@@ -19,8 +19,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Map as Map
 
-import DB.Classes
-import DB.Types
+import DB
 import Company.CompanyView
 import Company.Model
 import Kontra
@@ -51,7 +50,7 @@ handlePostCompany = withCompanyAdmin $ \(_user, company) -> do
         return $ companyui company
   cui <- setCompanyLogoFromRequest cui'
   Log.debug $ "company UI " ++ (show $ companyid company) ++ " updated to " ++ (show cui)
-  _ <- runDBUpdate $ UpdateCompanyUI (companyid company) cui
+  _ <- dbUpdate $ UpdateCompanyUI (companyid company) cui
   return LinkAccountCompany
 
 setCompanyLogoFromRequest :: Kontrakcja m => CompanyUI -> m CompanyUI
@@ -84,7 +83,7 @@ companyUiFromJSON jsv = do
 
 handleCompanyLogo :: Kontrakcja m => CompanyID -> m Response
 handleCompanyLogo cid = do
-  mimg <- join <$> fmap (companylogo . companyui) <$> (runDBQuery $ GetCompany cid)
+  mimg <- join <$> fmap (companylogo . companyui) <$> (dbQuery $ GetCompany cid)
   return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $
     Response 200 Map.empty nullRsFlags (BSL.fromChunks $ map unBinary $ maybeToList mimg) Nothing
 

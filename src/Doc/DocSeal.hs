@@ -11,6 +11,7 @@
 -----------------------------------------------------------------------------
 module Doc.DocSeal(sealDocument) where
 
+import Control.Monad.Trans.Control
 import Control.Monad.Reader
 import Data.Maybe
 import Data.List
@@ -27,9 +28,7 @@ import Misc
 import System.Directory
 import System.Exit
 import Kontra
-import Templates.Trans
 import Templates.Templates
-import qualified Control.Exception as E
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS hiding (length)
@@ -43,10 +42,13 @@ import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import File.Model
-import DB.Classes
+import DB
 import Control.Applicative
 import EvidenceLog.Model
 import Control.Concurrent
+import Data.String.Utils
+import qualified Templates.Fields as F
+
 personFromSignatoryDetails :: SignatoryDetails -> Seal.Person
 personFromSignatoryDetails details =
     Seal.Person { Seal.fullname = (getFullName details) ++
@@ -63,16 +65,17 @@ personFromSignatoryDetails details =
                 , Seal.emailverified = True
                 }
 
-personFields :: MonadIO m => (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider,String) -> Fields m
-personFields (person, signinfo,_seeninfo, _ , mprovider, _initials) = do
-   field "personname" $ Seal.fullname person
-   field "signip" $  formatIP (signipnumber signinfo)
-   field "seenip" $  formatIP (signipnumber signinfo)
-   field "provider" $ isJust mprovider
-   field "bankid" $ mprovider == Just BankIDProvider
-   field "nordea" $ mprovider == Just NordeaProvider
-   field "telia"  $ mprovider == Just TeliaProvider
-
+personFields :: Monad m => Document -> (Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, String) -> Fields m ()
+personFields doc (person, signinfo,_seeninfo, _ , mprovider, _initials) = do
+   F.value "personname" $ Seal.fullname person
+   F.value "signip" $  formatIP (signipnumber signinfo)
+   F.value "seenip" $  formatIP (signipnumber signinfo)
+   F.value "provider" $ isJust mprovider
+   F.value "bankid" $ mprovider == Just BankIDProvider
+   F.value "nordea" $ mprovider == Just NordeaProvider
+   F.value "telia"  $ mprovider == Just TeliaProvider
+   F.value "email"  $ EmailIdentification `elem` (documentallowedidtypes doc)
+   F.value "pad"    $ PadIdentification `elem` (documentallowedidtypes doc)
 
 personsFromDocument :: Document -> [(Seal.Person, SignInfo, SignInfo, Bool, Maybe SignatureProvider, String)]
 personsFromDocument document =
@@ -109,8 +112,8 @@ fieldsFromSignatory SignatoryDetails{signatoryfields} =
   where
     makeSealField :: SignatoryField -> [Seal.Field]
     makeSealField sf = case  sfType sf of
-                         SignatureFT -> map (fieldJPEGFromPlacement (sfValue sf)) (sfPlacements sf) 
-                         _ -> map (fieldFromPlacement (sfValue sf)) (sfPlacements sf) 
+                         SignatureFT -> concatMap (maybeToList . (fieldJPEGFromPlacement (sfValue sf))) (sfPlacements sf)
+                         _ -> map (fieldFromPlacement (sfValue sf)) (sfPlacements sf)
     fieldFromPlacement sf placement = Seal.Field {
         Seal.value = sf
       , Seal.x = placementx placement
@@ -119,18 +122,24 @@ fieldsFromSignatory SignatoryDetails{signatoryfields} =
       , Seal.w = placementpagewidth placement
       , Seal.h = placementpageheight placement
      }
-    fieldJPEGFromPlacement sf placement = Seal.FieldJPG
-      { valueBase64      =  dropWhile (\c -> c == ';' || c == ',') sf
-      , Seal.x = placementx placement
-      , Seal.y = placementy placement + 17 -- Fix for signature box header from UI
-      , Seal.page = placementpage placement
-      , Seal.w = placementpagewidth placement
-      , Seal.h = placementpageheight placement
-      , Seal.image_w       = 250
-      , Seal.image_h       = 100
-      , Seal.internal_image_w = 250
-      , Seal.internal_image_h = 100
-      }
+    fieldJPEGFromPlacement v placement =
+      case split "|" v of
+              [w,h,c] -> do
+                wi <- maybeRead w -- NOTE: Maybe monad usage
+                hi <- maybeRead h
+                Just $ Seal.FieldJPG
+                 {  valueBase64      =  drop 1 $ dropWhile (\e -> e /= ',') c
+                  , Seal.x = placementx placement
+                  , Seal.y = placementy placement
+                  , Seal.page = placementpage placement
+                  , Seal.w = placementpagewidth placement
+                  , Seal.h = placementpageheight placement
+                  , Seal.image_w       = wi
+                  , Seal.image_h       = hi
+                  , Seal.internal_image_w = 4 * wi
+                  , Seal.internal_image_h = 4 * hi
+                 }
+              _ -> Nothing
 
 sealSpecFromDocument :: TemplatesMonad m => String -> Document -> [DocumentEvidenceEvent] -> String -> String -> m Seal.SealSpec
 sealSpecFromDocument hostpart document elog inputpath outputpath =
@@ -150,13 +159,13 @@ sealSpecFromDocument hostpart document elog inputpath outputpath =
       initials = concatComma initialsx
       makeHistoryEntryFromSignatory personInfo@(_ ,seen, signed, isauthor, _, _)  = do
           seenDesc <- renderLocalTemplateForProcess document processseenhistentry $ do
-                        personFields personInfo
+                        personFields document personInfo
                         documentInfoFields document
           let seenEvent = Seal.HistEntry
                             { Seal.histdate = show (signtime seen)
                             , Seal.histcomment = pureString seenDesc}
           signDesc <- renderLocalTemplateForProcess document processsignhistentry $ do
-                        personFields personInfo
+                        personFields document personInfo
                         documentInfoFields document
           let signEvent = Seal.HistEntry
                             { Seal.histdate = show (signtime signed)
@@ -164,20 +173,19 @@ sealSpecFromDocument hostpart document elog inputpath outputpath =
           return $ if (isauthor)
                     then [signEvent]
                     else [seenEvent,signEvent]
-      invitationSentEntry = case documentinvitetime document of
-                                Nothing -> return []
-                                Just (SignInfo time ipnumber) -> do
+      invitationSentEntry = case (documentinvitetime document,sendMailsDurringSigning document) of
+                                (Just (SignInfo time ipnumber),True) -> do
                                    desc <-  renderLocalTemplateForProcess document processinvitationsententry $ do
                                        documentInfoFields document
                                        documentAuthorInfo document
-                                       field "oneSignatory"  (length signatories>1)
-                                       field "personname" $ listToMaybe $ map getFullName  signatoriesdetails
-                                       field "ip" $ formatIP ipnumber
+                                       F.value "oneSignatory"  (length signatories>1)
+                                       F.value "personname" $ listToMaybe $ map getFullName  signatoriesdetails
+                                       F.value "ip" $ formatIP ipnumber
                                    return  [ Seal.HistEntry
                                       { Seal.histdate = show time
                                       , Seal.histcomment = pureString desc
                                       }]
-
+                                _ -> return []   
       maxsigntime = maximum (map (signtime . (\(_,_,c,_,_,_) -> c)) signatories)
       concatComma = concat . intersperse ", "
 
@@ -205,7 +213,7 @@ sealSpecFromDocument hostpart document elog inputpath outputpath =
       -- Log.debug ("about to render staticTexts")
       staticTexts <- renderLocalTemplateForProcess document processsealingtext $ do
                         documentInfoFields document
-                        field "hostpart" hostpart
+                        F.value "hostpart" hostpart
       -- Log.debug ("finished staticTexts: " ++ show staticTexts)
       let readtexts :: Seal.SealingTexts = read staticTexts -- this should never fail since we control templates
       -- Log.debug ("read texts: " ++ show readtexts)
@@ -230,18 +238,16 @@ sealSpecFromDocument hostpart document elog inputpath outputpath =
             }
 
 
-sealDocument :: Context
-             -> Document
-             -> DB (Either String Document)
-sealDocument ctx document = do
+sealDocument :: (MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m)
+             => Document
+             -> m (Either String Document)
+sealDocument document = do
   files <- documentfilesM document
   Log.debug $ "Sealing document"
-  mapM_ (sealDocumentFile ctx document) files
+  mapM_ (sealDocumentFile document) files
   Log.debug $ "Sealing should be done now"
   Just newdocument <- dbQuery $ GetDocumentByDocumentID (documentid document)
   return $ Right newdocument
-
-
 
 {- Someday:
 
@@ -256,25 +262,20 @@ sealDocument ctx document = do
                return ()
  -}
 
-
-sealDocumentFile :: Context
-                 -> Document
+sealDocumentFile :: (MonadBaseControl IO m, MonadDB m, KontraMonad m, TemplatesMonad m)
+                 => Document
                  -> File
-                 -> DB (Either String Document)
-sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplates}
-                 document@Document{documentid, documenttitle}
-                 file@File{fileid, filename} = do
-  tmppath <- liftIO $ do
-    tmpdir <- getTemporaryDirectory
-    createTempDirectory tmpdir $ "seal-" ++ show documentid ++ "-" ++ show fileid ++ "-"
-  result <- tryDB $ do
+                 -> m (Either String Document)
+sealDocumentFile document@Document{documentid, documenttitle} file@File{fileid, filename} =
+  withSystemTempDirectory' ("seal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
+    Context{ctxtwconf, ctxhostpart, ctxtime} <- getContext
     elog <- dbQuery $ GetEvidenceLog documentid
     Log.debug ("sealing: " ++ show fileid)
     let tmpin = tmppath ++ "/input.pdf"
     let tmpout = tmppath ++ "/output.pdf"
-    content <- liftIO $ getFileContents ctx file
+    content <- getFileContents file
     liftIO $ BS.writeFile tmpin content
-    config <- runTemplatesT (ctxlocale, ctxglobaltemplates) $ sealSpecFromDocument ctxhostpart document elog tmpin tmpout
+    config <- sealSpecFromDocument ctxhostpart document elog tmpin tmpout
     Log.debug $ "Config " ++ show config
     (code,_stdout,stderr) <- liftIO $ readProcessWithExitCode' "dist/build/pdfseal/pdfseal" [] (BSL.fromString (show config))
     liftIO $ threadDelay 500000
@@ -303,14 +304,14 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplat
         Log.debug $ "Adding new sealed file to DB"
         File{fileid = sealedfileid} <- dbUpdate $ NewFile filename newfilepdf
         Log.debug $ "Finished adding sealed file to DB with fileid " ++ show sealedfileid ++ "; now adding to document"
-        res <- dbUpdate $ AttachSealedFile documentid sealedfileid (SystemActor (ctxtime ctx))
+        res <- dbUpdate $ AttachSealedFile documentid sealedfileid (systemActor ctxtime)
         Log.debug $ "Should be attached to document; is it? " ++ show ((elem sealedfileid . documentsealedfiles) <$> res)
         return res
       ExitFailure _ -> do
         -- error handling
         msg <- liftIO $ do
           systmp <- getTemporaryDirectory
-          (path,handle) <- openTempFile systmp ("seal-failed-" ++ show documentid ++ "-" ++ show fileid ++ "-.pdf")
+          (path, handle) <- openTempFile systmp ("seal-failed-" ++ show documentid ++ "-" ++ show fileid ++ "-.pdf")
           let msg = "Cannot seal document #" ++ show documentid ++ " because of file #" ++ show fileid
           Log.error $ msg ++ ": " ++ path
           Log.error $ BSL.toString stderr
@@ -318,9 +319,5 @@ sealDocumentFile ctx@Context{ctxtwconf, ctxhostpart, ctxlocale, ctxglobaltemplat
           BS.hPutStr handle content
           hClose handle
           return msg
-        _ <- dbUpdate $ ErrorDocument documentid ("Could not seal document because of file #" ++ show fileid) (SystemActor (ctxtime ctx))
+        _ <- dbUpdate $ ErrorDocument documentid ("Could not seal document because of file #" ++ show fileid) (systemActor ctxtime)
         return $ Left msg
-  liftIO $ removeDirectoryRecursive tmppath
-  case result of
-    Right res -> return res
-    Left (e::E.SomeException) -> E.throw e

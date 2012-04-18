@@ -41,8 +41,6 @@ module Doc.DocView (
   , uploadPage
   , documentJSON
   , csvLandPage
-  , documentStatusClass
-  , signatoryStatusClass
   ) where
 
 import AppView (kontrakcja, standardPageFields)
@@ -73,59 +71,58 @@ import Data.Maybe
 import Text.JSON
 import Data.List (sortBy)
 import File.Model
-import DB.Classes
-import Text.JSON.Fields as JSON (json)
-import qualified Text.JSON.Fields as JSON (field)
-import Util.JSON
-
+import DB
+import PadQueue.Model
+import Text.JSON.Gen hiding (value)
+import qualified Text.JSON.Gen as J
+import qualified Templates.Fields as F
 
 modalMismatch :: TemplatesMonad m => String -> SignatoryLink -> m FlashMessage
 modalMismatch msg author = toModal <$>  do
-    renderTemplateFM "signCanceledDataMismatchModal" $ do
-                    field "authorname"  $ getSmartName author
-                    field "authoremail" $ getEmail author
-                    field "message"     $ concatMap para $ lines msg
+    renderTemplate "signCanceledDataMismatchModal" $ do
+                    F.value "authorname"  $ getSmartName author
+                    F.value "authoremail" $ getEmail author
+                    F.value "message"     $ concatMap para $ lines msg
 
 modalPdfTooLarge :: TemplatesMonad m => m FlashMessage
-modalPdfTooLarge = toModal <$> renderTemplateM "pdfTooBigModal" ()
+modalPdfTooLarge = toModal <$> renderTemplate_ "pdfTooBigModal"
 
 modalSignAwaitingAuthorLast :: TemplatesMonad m => m FlashMessage
-modalSignAwaitingAuthorLast = toModal <$> renderTemplateM "signAwaitingAuthorLast" ()
+modalSignAwaitingAuthorLast = toModal <$> renderTemplate_ "signAwaitingAuthorLast"
 
 modalSendConfirmationView :: TemplatesMonad m => Document -> m FlashMessage
 modalSendConfirmationView document = do
   partylist <- renderListTemplate . map getSmartName $ partyListButAuthor document
   toModal <$> (renderTemplateForProcess document processmodalsendconfirmation $ do
-    field "partyListButAuthor" partylist
-    field "signatory" . listToMaybe $ map getSmartName $ partyList document
-    -- field "signed" $ isJust $ join (maybesigninfo <$> getAuthorSigLink document)
+    F.value "partyListButAuthor" partylist
+    F.value "signatory" . listToMaybe $ map getSmartName $ partyList document
     documentInfoFields document)
 
 modalSendInviteView :: TemplatesMonad m => Document -> m FlashMessage
 modalSendInviteView document = do
   partylist <- renderListTemplate . map getSmartName $ partyListButAuthor document
-  toModal <$> (renderTemplateFM "modalSendInviteView" $ do
-    field "partyListButAuthor" partylist
-    field "documenttitle" $ documenttitle document)
+  toModal <$> (renderTemplate "modalSendInviteView" $ do
+    F.value "partyListButAuthor" partylist
+    F.value "documenttitle" $ documenttitle document)
 
 modalRejectedView :: TemplatesMonad m => Document -> m FlashMessage
 modalRejectedView document = do
   partylist <- renderListTemplate . map getSmartName $ partyList document
-  toModal <$> (renderTemplateFM "modalRejectedView" $ do
-    field "partyList" partylist
-    field "documenttitle" $ documenttitle document)
+  toModal <$> (renderTemplate "modalRejectedView" $ do
+    F.value "partyList" partylist
+    F.value "documenttitle" $ documenttitle document)
 
 modalLoginForSaveView :: TemplatesMonad m => m FlashMessage
-modalLoginForSaveView = toModal <$> renderTemplateM "modalLoginForSaveView" ()
+modalLoginForSaveView = toModal <$> renderTemplate_ "modalLoginForSaveView"
 
 flashDocumentDraftSaved :: TemplatesMonad m => m FlashMessage
 flashDocumentDraftSaved =
-  toFlashMsg SigningRelated <$> renderTemplateM "flashDocumentDraftSaved" ()
+  toFlashMsg SigningRelated <$> renderTemplate_ "flashDocumentDraftSaved"
 
 
 flashDocumentTemplateSaved :: TemplatesMonad m => m FlashMessage
 flashDocumentTemplateSaved =
-  toFlashMsg SigningRelated <$> renderTemplateM "flashDocumentTemplateSaved" ()
+  toFlashMsg SigningRelated <$> renderTemplate_ "flashDocumentTemplateSaved"
 
 flashDocumentRestarted :: TemplatesMonad m => Document -> m FlashMessage
 flashDocumentRestarted document = do
@@ -133,8 +130,8 @@ flashDocumentRestarted document = do
 
 flashRemindMailSent :: TemplatesMonad m => SignatoryLink -> m FlashMessage
 flashRemindMailSent signlink@SignatoryLink{maybesigninfo} =
-  toFlashMsg OperationDone <$> (renderTemplateFM (template_name maybesigninfo) $ do
-    field "personname" $ getSmartName signlink)
+  toFlashMsg OperationDone <$> (renderTemplate (template_name maybesigninfo) $ do
+    F.value "personname" $ getSmartName signlink)
   where
     template_name =
       maybe "flashRemindMailSentNotSigned"
@@ -142,7 +139,7 @@ flashRemindMailSent signlink@SignatoryLink{maybesigninfo} =
 
 flashMessageCannotCancel :: TemplatesMonad m => m FlashMessage
 flashMessageCannotCancel =
-  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageCannotCancel" ()
+  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageCannotCancel"
 
 flashMessageCanceled :: TemplatesMonad m => Document -> m FlashMessage
 flashMessageCanceled document = do
@@ -150,7 +147,7 @@ flashMessageCanceled document = do
 
 flashAuthorSigned :: TemplatesMonad m => m FlashMessage
 flashAuthorSigned =
-  toFlashMsg OperationDone <$> renderTemplateM "flashAuthorSigned" ()
+  toFlashMsg OperationDone <$> renderTemplate_ "flashAuthorSigned"
 
 flashMessageBulkRemindsSent :: TemplatesMonad m => DocumentType -> m FlashMessage
 flashMessageBulkRemindsSent doctype = do
@@ -162,46 +159,46 @@ flashMessageNoBulkRemindsSent doctype = do
 
 flashMessageRubbishRestoreDone :: TemplatesMonad m => m FlashMessage
 flashMessageRubbishRestoreDone =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageRubbishRestoreDone" ()
+  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageRubbishRestoreDone"
 
 flashMessageRubbishHardDeleteDone :: TemplatesMonad m => m FlashMessage
 flashMessageRubbishHardDeleteDone =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageRubbishHardDeleteDone" ()
+  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageRubbishHardDeleteDone"
 
 flashMessageInvalidCSV :: TemplatesMonad m => m FlashMessage
 flashMessageInvalidCSV =
-  toFlashMsg OperationFailed <$> renderTemplateM "flashMessageInvalidCSV" ()
+  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageInvalidCSV"
 
 flashMessageCSVSent :: TemplatesMonad m => Int -> m FlashMessage
 flashMessageCSVSent doccount =
-  toFlashMsg OperationDone <$> (renderTemplateFM "flashMessageCSVSent" $ field "doccount" doccount)
+  toFlashMsg OperationDone <$> (renderTemplate "flashMessageCSVSent" $ F.value "doccount" doccount)
 
 flashMessageSingleTemplateShareDone :: TemplatesMonad m => String -> m FlashMessage
 flashMessageSingleTemplateShareDone docname =
-  toFlashMsg OperationDone <$> (renderTemplateFM "flashMessageSingleTemplateShareDone" $ field "docname" docname)
+  toFlashMsg OperationDone <$> (renderTemplate "flashMessageSingleTemplateShareDone" $ F.value "docname" docname)
 
 flashMessageMultipleTemplateShareDone :: TemplatesMonad m => m FlashMessage
 flashMessageMultipleTemplateShareDone =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageMultipleTemplateShareDone" ()
+  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageMultipleTemplateShareDone"
 
 flashMessageSingleAttachmentShareDone :: TemplatesMonad m => String -> m FlashMessage
 flashMessageSingleAttachmentShareDone docname =
-  toFlashMsg OperationDone <$> (renderTemplateFM "flashMessageSingleAttachmentShareDone" $ field "docname" docname)
+  toFlashMsg OperationDone <$> (renderTemplate "flashMessageSingleAttachmentShareDone" $ F.value "docname" docname)
 
 flashMessageMultipleAttachmentShareDone :: TemplatesMonad m => m FlashMessage
 flashMessageMultipleAttachmentShareDone =
-  toFlashMsg OperationDone <$> renderTemplateM "flashMessageMultipleAttachmentShareDone" ()
+  toFlashMsg OperationDone <$> renderTemplate_ "flashMessageMultipleAttachmentShareDone"
 
-documentJSON :: (TemplatesMonad m, KontraMonad m, DBMonad m) => Maybe SignatoryLink -> MinutesTime -> Document -> m (JSObject JSValue)
-documentJSON msl _crttime doc = do
+documentJSON :: (TemplatesMonad m, KontraMonad m, MonadDB m) => PadQueue -> Maybe SignatoryLink -> MinutesTime -> Document -> m JSValue
+documentJSON pq msl _crttime doc = do
     ctx <- getContext
-    files <- runDB $ documentfilesM doc
-    sealedfiles <- runDB $ documentsealedfilesM doc
-    authorattachmentfiles <- mapM (runDBQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
+    files <- documentfilesM doc
+    sealedfiles <- documentsealedfilesM doc
+    authorattachmentfiles <- mapM (dbQuery . GetFileByFileID . authorattachmentfile) (documentauthorattachments doc)
     let isauthoradmin = maybe False (flip isAuthorAdmin doc) (ctxmaybeuser ctx)
-    mauthor <- maybe (return Nothing) (runDBQuery . GetUserByID) (getAuthorSigLink doc >>= maybesignatory)
-    mservice <- maybe (return Nothing) (runDBQuery . GetService) (documentservice doc)
-    mcompany <- maybe (return Nothing) (runDBQuery . GetCompany) (getAuthorSigLink doc >>= maybecompany)
+    mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) (getAuthorSigLink doc >>= maybesignatory)
+    mservice <- maybe (return Nothing) (dbQuery . GetService) (documentservice doc)
+    mcompany <- maybe (return Nothing) (dbQuery . GetCompany) (getAuthorSigLink doc >>= maybecompany)
     let logo  = if (isJust mcompany && isJust (companylogo $ companyui (fromJust mcompany)))
                   then show <$> LinkCompanyLogo <$> companyid <$> mcompany
                   else if ((isJust mservice) &&  (isJust $ servicelogo $ serviceui $ fromJust mservice))
@@ -215,96 +212,91 @@ documentJSON msl _crttime doc = do
     let bbtc  = if (isJust mcompany && isJust (companybarstextcolour $ companyui (fromJust mcompany)))
                   then companybarstextcolour $ companyui (fromJust mcompany)
                   else Nothing
-    fmap toJSObject $ propagateMonad  $
-     [ ("title",return $ JSString $ toJSString $ documenttitle doc),
-       ("files", return $ JSArray $ jsonPack <$> fileJSON <$> files ),
-       ("sealedfiles", return $ JSArray $ jsonPack <$> fileJSON <$> sealedfiles ),
-       ("authorattachments", return $ JSArray $ jsonPack <$> fileJSON <$> catMaybes authorattachmentfiles),
-       ("process", processJSON doc ),
-       ("region",  liftIO $ regionJSON doc ),
-       ("infotext", JSString <$> toJSString <$> documentInfoText ctx doc msl),
-       ("canberestarted", return $ JSBool $  isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])),
-       ("canbecanceled", return $ JSBool $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending && not (canAuthorSignLast doc) && isNothing (documenttimeouttime doc)),
-       ("canseeallattachments", return $ JSBool $ isAuthor msl || isauthoradmin),
-       ("timeouttime", return $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc),
-       ("status", return $ JSString $ toJSString $ show $ documentstatus doc),
-       ("signatories", JSArray <$> mapM (signatoryJSON doc msl) (documentsignatorylinks doc)),
-       ("signorder", return $ JSRational True (toRational $ unSignOrder $ documentcurrentsignorder doc)),
-       ("authorization", return $ authorizationJSON $ head $ (documentallowedidtypes doc) ++ [EmailIdentification] ),
-       ("template", return $ JSBool $ isTemplate doc),
-       ("functionality", return $ JSString $ toJSString $ "basic" <| documentfunctionality doc == BasicFunctionality |> "advanced"),
-       ("daystosign", return $ maybe JSNull (JSRational True . toRational) $ documentdaystosign doc),
-       ("invitationmessage", return $ if (null $ documentinvitetext doc) then JSNull else JSString $ toJSString $ documentinvitetext doc),
-       ("logo", return $ maybe JSNull (JSString . toJSString)  logo),
-       ("barsbackgroundcolor", return $ maybe JSNull (JSString . toJSString)  $ bbc),
-       ("barsbackgroundtextcolor",  return $ maybe JSNull (JSString . toJSString)  $ bbtc),
-       ("author", liftIO $ authorJSON mauthor mcompany)
-     ]
+    runJSONGenT $ do
+      J.value "title" $ documenttitle doc
+      J.value "files" $ map fileJSON files
+      J.value "sealedfiles" $ map fileJSON sealedfiles
+      J.value "authorattachments" $ map fileJSON (catMaybes authorattachmentfiles)
+      J.object "process" $ processJSON doc
+      J.value "region" $ regionJSON doc
+      J.valueM "infotext" $ documentInfoText ctx doc msl
+      J.value "canberestarted" $ isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])
+      J.value "canbecanceled" $ (isAuthor msl || isauthoradmin) && documentstatus doc == Pending && not (canAuthorSignLast doc) && isNothing (documenttimeouttime doc)
+      J.value "canseeallattachments" $ isAuthor msl || isauthoradmin
+      J.value "timeouttime" $ jsonDate $ unTimeoutTime <$> documenttimeouttime doc
+      J.value "status" $ show $ documentstatus doc
+      J.objects "signatories" $ map (signatoryJSON pq doc msl) (documentsignatorylinks doc)
+      J.value "signorder" $ unSignOrder $ documentcurrentsignorder doc
+      J.value "authorization" $ authorizationJSON $ head $ (documentallowedidtypes doc) ++ [EmailIdentification]
+      J.value "template" $ isTemplate doc
+      J.value "functionality" $ "basic" <| documentfunctionality doc == BasicFunctionality |> "advanced"
+      J.value "daystosign" $ documentdaystosign doc
+      J.value "invitationmessage" $ documentinvitetext doc
+      J.value "logo" logo
+      J.value "barsbackgroundcolor" bbc
+      J.value "barsbackgroundtextcolor" bbtc
+      J.value "author" $ authorJSON mauthor mcompany
+      J.value "whitelabel" $ isJust mservice
 
 authorizationJSON :: IdentificationType -> JSValue
-authorizationJSON EmailIdentification = JSString $ toJSString "email"
-authorizationJSON ELegitimationIdentification = JSString $ toJSString "eleg"
+authorizationJSON EmailIdentification = toJSValue "email"
+authorizationJSON ELegitimationIdentification = toJSValue "eleg"
+authorizationJSON PadIdentification = toJSValue "pad"
 
-
-
-signatoryJSON :: (TemplatesMonad m, DBMonad m) => Document -> Maybe SignatoryLink -> SignatoryLink -> m JSValue
-signatoryJSON doc viewer siglink = do
-    fmap (JSObject . toJSObject) $ propagateMonad $ [
-        ("id", return $ JSString $ toJSString  $ show $ signatorylinkid siglink)
-      , ("current", return $ JSBool $ (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink))
-      , ("signorder",return $ JSRational True (toRational $ unSignOrder $ signatorysignorder $ signatorydetails siglink))
-      , ("undeliveredEmail", return $ JSBool $ (invitationdeliverystatus siglink == Undelivered))
-      , ("deliveredEmail", return $ JSBool $ (invitationdeliverystatus siglink == Delivered))
-      , ("signs", return $ JSBool $ isSignatory siglink)
-      , ("author",return $ JSBool $ isAuthor siglink)
-      , ("saved", return $ JSBool $ isJust . maybesignatory $ siglink)
-      , ("datamismatch", return $ JSBool datamismatch)
-      , ("signdate", return $ jsonDate $ signtime <$> maybesigninfo siglink)
-      , ("seendate", return $ jsonDate $ signtime <$> maybeseeninfo siglink)
-      , ("readdate", return $ jsonDate $ maybereadinvite siglink)
-      , ("rejecteddate", return $ jsonDate $ rejectedDate)
-      , ("fields", liftIO $ signatoryFieldsJSON doc siglink)
-      , ("status", return $ JSString $ toJSString  $ show $ signatoryStatusClass doc siglink)
-      , ("attachments", fmap JSArray $ sequence $ signatoryAttachmentJSON <$> signatoryattachments siglink)
-      , ("csv", case (csvcontents <$> signatorylinkcsvupload siglink) of
-                     Just a1 ->  return $ JSArray $ for a1 (\a2 -> JSArray $ map (JSString . toJSString) a2 )
-                     Nothing -> return $ JSNull)
-      ]
+signatoryJSON :: (TemplatesMonad m, MonadDB m) => PadQueue -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
+signatoryJSON pq doc viewer siglink = do
+    J.value "id" $ show $ signatorylinkid siglink
+    J.value "current" $ isCurrent
+    J.value "signorder" $ unSignOrder $ signatorysignorder $ signatorydetails siglink
+    J.value "undeliveredEmail" $ invitationdeliverystatus siglink == Undelivered
+    J.value "deliveredEmail" $ invitationdeliverystatus siglink == Delivered
+    J.value "signs" $ isSignatory siglink
+    J.value "author" $ isAuthor siglink
+    J.value "saved" $ isJust . maybesignatory $ siglink
+    J.value "datamismatch" datamismatch
+    J.value "signdate" $ jsonDate $ signtime <$> maybesigninfo siglink
+    J.value "seendate" $ jsonDate $ signtime <$> maybeseeninfo siglink
+    J.value "readdate" $ jsonDate $ maybereadinvite siglink
+    J.value "rejecteddate" $ jsonDate rejectedDate
+    J.value "fields" $ signatoryFieldsJSON doc siglink
+    J.value "status" $ show $ signatorylinkstatusclass siglink
+    J.objects "attachments" $ map signatoryAttachmentJSON (signatoryattachments siglink)
+    J.value "csv" $ csvcontents <$> signatorylinkcsvupload siglink
+    J.value "inpadqueue"  $ (fmap fst pq == Just (documentid doc)) && (fmap snd pq == Just (signatorylinkid siglink))
+    J.value "hasUser" $ isJust (maybesignatory siglink) && isCurrent -- we only inform about current user
     where
-    datamismatch = case documentcancelationreason doc of
-                    Just (ELegDataMismatch _ sid _ _ _) -> sid == signatorylinkid siglink
-                    _                                   -> False
-    rejectedDate = case documentrejectioninfo doc of
-                    Just (rt, slid, _)
-                        | slid == signatorylinkid siglink -> Just rt
-                    _                             -> Nothing
+      datamismatch = case documentcancelationreason doc of
+        Just (ELegDataMismatch _ sid _ _ _) -> sid == signatorylinkid siglink
+        _                                   -> False
+      isCurrent = (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink)
+      rejectedDate = case documentrejectioninfo doc of
+        Just (rt, slid, _) | slid == signatorylinkid siglink -> Just rt
+        _                                                    -> Nothing
 
-signatoryAttachmentJSON :: (TemplatesMonad m, DBMonad m) => SignatoryAttachment -> m JSValue
+signatoryAttachmentJSON :: MonadDB m => SignatoryAttachment -> JSONGenT m ()
 signatoryAttachmentJSON sa = do
-  mfile <- case (signatoryattachmentfile sa) of
-                Just fid -> runDBQuery $ GetFileByFileID fid
-                _ -> return Nothing
-  return $ (JSObject . toJSObject) $
-     [ ("name", JSString $ toJSString $ signatoryattachmentname sa)
-     , ("description", JSString $ toJSString $ signatoryattachmentdescription sa)
-     , ("file", fromMaybe JSNull $ jsonPack <$> fileJSON <$> mfile)
-     ]
+  mfile <- lift $ case (signatoryattachmentfile sa) of
+    Just fid -> dbQuery $ GetFileByFileID fid
+    _ -> return Nothing
+  J.value "name" $ signatoryattachmentname sa
+  J.value "description" $ signatoryattachmentdescription sa
+  J.value "file" $ fileJSON <$> mfile
 
-
-signatoryFieldsJSON:: Document -> SignatoryLink -> IO JSValue
-signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}}) = fmap JSArray $
-  forM orderedFields $ \sf@SignatoryField{sfType, sfValue, sfPlacements} ->
+signatoryFieldsJSON :: Document -> SignatoryLink -> JSValue
+signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{signatoryfields}}) = JSArray $
+  for orderedFields $ \sf@SignatoryField{sfType, sfValue, sfPlacements} ->
     case sfType of
-      FirstNameFT -> fieldJSON doc "fstname" sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
-      LastNameFT -> fieldJSON doc "sndname" sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
-      EmailFT -> fieldJSON doc "email" sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
-      PersonalNumberFT -> fieldJSON doc "sigpersnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
-      CompanyFT -> fieldJSON doc "sigco" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
-      CompanyNumberFT -> fieldJSON doc "sigcompnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
-      SignatureFT -> fieldJSON doc "signature" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
-      CustomFT label closed -> fieldJSON doc label sfValue (closed  && (not $ isPreparation doc))  sfPlacements
+      FirstNameFT           -> fieldJSON doc "fstname"   sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      LastNameFT            -> fieldJSON doc "sndname"   sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      EmailFT               -> fieldJSON doc "email"     sfValue ((not $ isPreparation doc) || isAuthor sl) sfPlacements
+      PersonalNumberFT      -> fieldJSON doc "sigpersnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      CompanyFT             -> fieldJSON doc "sigco"     sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      CompanyNumberFT       -> fieldJSON doc "sigcompnr" sfValue (closedF sf  && (not $ isPreparation doc)) sfPlacements
+      SignatureFT           -> fieldJSON doc "signature" sfValue (closedSignatureF sf  && (not $ isPreparation doc)) sfPlacements
+      CustomFT label closed -> fieldJSON doc label       sfValue (closed  && (not $ isPreparation doc))  sfPlacements
   where
     closedF sf = ((not $ null $ sfValue sf) || (null $ sfPlacements sf))
+    closedSignatureF sf = ((not $ null $ dropWhile (/= ',') $ sfValue sf) || (null $ sfPlacements sf))
     orderedFields = sortBy (\f1 f2 -> ftOrder (sfType f1) (sfType f2)) signatoryfields
     ftOrder FirstNameFT _ = LT
     ftOrder LastNameFT _ = LT
@@ -314,182 +306,124 @@ signatoryFieldsJSON doc sl@(SignatoryLink{signatorydetails = SignatoryDetails{si
     ftOrder CompanyNumberFT _ = LT
     ftOrder _ _ = EQ
 
-fieldJSON :: Document -> String -> String -> Bool -> [FieldPlacement] -> IO JSValue
-fieldJSON  doc name value closed placements = json $ do
-    JSON.field "name" name
-    JSON.field "value" value
-    JSON.field "closed" closed
-    JSON.field "placements"  $ map (placementJSON doc) placements
+fieldJSON :: Document -> String -> String -> Bool -> [FieldPlacement] -> JSValue
+fieldJSON  doc name value closed placements = runJSONGen $ do
+    J.value "name" name
+    J.value "value" value
+    J.value "closed" closed
+    J.value "placements" $ map (placementJSON doc) placements
 
 placementJSON :: Document -> FieldPlacement -> JSValue
-placementJSON doc placement = JSObject $ toJSObject $
-    [   ("x", JSRational True (toRational $ placementx  placement))
-      , ("y", JSRational True (toRational $ placementy  placement))
-      , ("page", JSRational True (toRational $ placementpage  placement))
-      , ("fileid", JSString $ toJSString $ fromMaybe "" $ show <$> (listToMaybe $ documentfiles doc))
-    ]
-
+placementJSON doc placement = runJSONGen $ do
+    J.value "x" $ placementx placement
+    J.value "y" $ placementy placement
+    J.value "page" $ placementpage placement
+    J.value "fileid" $ fromMaybe "" $ show <$> (listToMaybe $ documentfiles doc)
 
 jsonDate :: Maybe MinutesTime -> JSValue
-jsonDate mdate = fromMaybe JSNull $ JSString <$> toJSString <$> showDateYMD <$> mdate
+jsonDate mdate = toJSValue $ showDateYMD <$> mdate
 
+processJSON :: TemplatesMonad m => Document -> JSONGenT m ()
+processJSON doc = do
+    J.valueM "title" $ text processtitle
+    J.valueM "name" $ text processname
+    J.valueM "corename" $ text processcorename
+    -- used in the design view
+    J.value "basicavailable" $ bool processbasicavailable
+    J.value "authorsend" $ bool processauthorsend
+    J.value "validationchoiceforbasic" $ bool processvalidationchoiceforbasic
+    J.value "expiryforbasic" $ bool processexpiryforbasic
+    J.valueM "step1text" $ text processstep1text
+    J.valueM "expirywarntext" $ text processexpirywarntext
+    J.valueM "sendbuttontext" $ text processsendbuttontext
+    J.valueM "confirmsendtitle" $ text processconfirmsendtitle
+    J.valueM "confirmsendtext" $ text processconfirmsendtext
+    J.valueM "expirytext" $ text processexpirytext
+    -- some buttons texts
+    J.valueM "restartbuttontext" $ text processrestartbuttontext
+    J.valueM "cancelbuttontext" $ text processcancelbuttontext
+    J.valueM "rejectbuttontext" $ text processrejectbuttontext
+    J.valueM "cancelmodaltitle" $ text processcancelmodaltitle
+    J.valueM "cancelmodaltext" $ text processcancelmodaltext
 
-processJSON :: (TemplatesMonad m) => Document -> m JSValue
-processJSON doc = fmap (JSObject . toJSObject) $ propagateMonad  $
-      [
-        ("title", text processtitle)
-      , ("name", text processname)
-        -- used in the design view
-      , ("basicavailable", bool processbasicavailable)
-      , ("authorsend", bool processauthorsend)
-      , ("validationchoiceforbasic", bool processvalidationchoiceforbasic)
-      , ("expiryforbasic", bool processexpiryforbasic)
-      , ("step1text", text processstep1text )
-      , ("expirywarntext", text processexpirywarntext )
-      , ("sendbuttontext", text processsendbuttontext )
-      , ("confirmsendtitle", text processconfirmsendtitle )
-      , ("confirmsendtext", text processconfirmsendtext )
-      , ("expirytext", text processexpirytext )
-      -- some buttons texts
-      , ("restartbuttontext", text processrestartbuttontext)
-      , ("cancelbuttontext", text processcancelbuttontext)
-      , ("rejectbuttontext", text processrejectbuttontext)
-      , ("cancelmodaltitle", text processcancelmodaltitle)
-      , ("cancelmodaltext", text processcancelmodaltext)
+    J.valueM "authorissecretarytext" $ text processauthorissecretarytext
+    J.valueM "remindagainbuttontext" $ text processremindagainbuttontext
+    -- And more
+    J.value "requiressignguard" $ bool processrequiressignguard
+    J.valueM "signbuttontext" $ text processsignbuttontext
+    J.valueM "signatorycancelmodaltitle" $ text processsignatorycancelmodaltitle
+    J.valueM "signguardwarntext" $ text processsignguardwarntext
+    J.valueM "signatorysignmodalcontentlast" $ text processsignatorysignmodalcontentlast
+    J.valueM "signatorysignmodalcontentnotlast" $ text processsignatorysignmodalcontentnotlast
+    J.valueM "signatorysignmodalcontentauthorlast" $ text processsignatorysignmodalcontentauthorlast
+    J.valueM "signatorysignmodalcontentdesignvieweleg" $ text processsignatorysignmodalcontentdesignvieweleg
+    J.valueM "signatorysignmodalcontentsignvieweleg" $ text processsignatorysignmodalcontentdesignvieweleg
 
-      , ("authorissecretarytext", text processauthorissecretarytext)
-      , ("remindagainbuttontext", text processremindagainbuttontext)
-      -- And more
-      , ("requiressignguard", bool processrequiressignguard)
-      , ("signbuttontext", text processsignbuttontext)
-      , ("signatorycancelmodaltitle", text processsignatorycancelmodaltitle)
-      , ("signguardwarntext", text processsignguardwarntext)
-      , ("signatorysignmodalcontentlast", text processsignatorysignmodalcontentlast)
-      , ("signatorysignmodalcontentnotlast", text processsignatorysignmodalcontentnotlast)
-      , ("signatorysignmodalcontentauthorlast", text processsignatorysignmodalcontentauthorlast)
-      , ("signbuttontext", text processsignbuttontext)
-      , ("signbuttontextauthor", text processsignbuttontextauthor)
-      , ("signatorysignmodaltitle", text processsignatorysignmodaltitle)
-      , ("authorsignlastbutton", text processauthorsignlastbuttontext)
+    J.valueM "signbuttontext" $ text processsignbuttontext
+    J.valueM "signbuttontextauthor" $ text processsignbuttontextauthor
+    J.valueM "signatorysignmodaltitle" $ text processsignatorysignmodaltitle
+    J.valueM "authorsignlastbutton" $ text processauthorsignlastbuttontext
 
-      , ("authorname", text processauthorname)
-      , ("authorsignatoryname", text processauthorsignatoryname)
-      , ("signatoryname", text processsignatoryname)
-      , ("nonsignatoryname", text processnonsignatoryname)
-      , ("numberedsignatories", bool processnumberedsignatories)
-
-     ]
+    J.valueM "authorname" $ text processauthorname
+    J.valueM "authorsignatoryname" $ text processauthorsignatoryname
+    J.valueM "signatoryname" $ text processsignatoryname
+    J.valueM "nonsignatoryname" $ text processnonsignatoryname
+    J.value "numberedsignatories" $ bool processnumberedsignatories
     where
-        text  k = JSString <$> toJSString <$> renderTextForProcess doc k
-        bool k = return $ JSBool <$> fromMaybe False $ getValueForProcess doc k
+      text k = do
+        partylist <- renderListTemplate . map getSmartName $ partyList doc
+        renderTemplateForProcess doc k $ do
+          F.value "partylist" partylist
+          documentInfoFields doc
+      bool = fromMaybe False . getValueForProcess doc
+
+regionJSON :: Document -> JSValue
+regionJSON doc = runJSONGen $ do
+    J.value "haspeopleids" $ regionhaspeopleids $ getRegionInfo doc
+    J.value "iselegavailable" $ regionelegavailable $ getRegionInfo doc
+    J.value "gb" $ REGION_GB == getRegion doc
+    J.value "se" $ REGION_SE == getRegion doc
+
+fileJSON :: File -> JSValue
+fileJSON file = runJSONGen $ do
+    J.value "id" $ show $ fileid file
+    J.value "name" $ filename file
+
+authorJSON :: Maybe User -> Maybe Company -> JSValue
+authorJSON mauthor mcompany = runJSONGen $ do
+    J.value "fullname" $ getFullName <$> mauthor
+    J.value "email" $ getEmail <$> mauthor
+    J.value "company" $ (\a -> getCompanyName (a,mcompany)) <$> mauthor
+    J.value "phone" $ userphone <$> userinfo <$> mauthor
+    J.value "position" $ usercompanyposition <$> userinfo <$>mauthor
 
 
-regionJSON  :: Document -> IO JSValue
-regionJSON doc = json $ do
-      JSON.field "haspeopleids" $ regionhaspeopleids $ getRegionInfo doc
-      JSON.field "iselegavailable" $ regionelegavailable $ getRegionInfo doc
-      JSON.field "gb" $ REGION_GB == getRegion doc
-      JSON.field "se" $ REGION_SE == getRegion doc
 
-
-fileJSON :: File ->  [(String,String)]
-fileJSON file =
-    [  ("id",   show $ fileid file),
-       ("name", filename file)
-    ]
-
-authorJSON :: Maybe User -> Maybe Company -> IO JSValue
-authorJSON mauthor mcompany = json $ do
-    JSON.field "fullname" $ getFullName <$> mauthor
-    JSON.field "email" $ getEmail <$> mauthor
-    JSON.field "company" $ (\a -> getCompanyName (a,mcompany)) <$> mauthor 
-    JSON.field "phone"  $ userphone <$> userinfo <$> mauthor
-    JSON.field "position"  $ usercompanyposition <$> userinfo <$>mauthor
-
-{- |
-    We want the documents to be ordered like the icons in the bottom
-    of the document list.  So this means:
-    0 Draft - 1 Cancel - 2 Fall due - 3 Sent - 4 Opened - 5 Signed
--}
-
-data StatusClass = SCDraft
-                  | SCCancelled
-                  | SCSent
-                  | SCDelivered
-                  | SCRead
-                  | SCOpened
-                  | SCSigned
-                  deriving (Eq, Ord)
-
-instance Show StatusClass where
-  show SCDraft = "draft"
-  show SCCancelled = "cancelled"
-  show SCSent = "sent"
-  show SCDelivered = "delivered"
-  show SCRead = "read"
-  show SCOpened = "opened"
-  show SCSigned = "signed"
-
-signatoryStatusClass :: Document -> SignatoryLink -> StatusClass
-signatoryStatusClass
-  Document {
-    documentstatus
-  }
-  SignatoryLink {
-    maybesigninfo
-  , maybeseeninfo
-  , maybereadinvite
-  , invitationdeliverystatus
-  } =
-  caseOf [
-      (errorStatus documentstatus, SCCancelled)
-    , (documentstatus==Preparation, SCDraft)
-    , (documentstatus==Canceled, SCCancelled)
-    , (documentstatus==Rejected, SCCancelled)
-    , (documentstatus==Timedout, SCCancelled)
-    , (isJust maybesigninfo, SCSigned)
-    , (isJust maybeseeninfo, SCOpened)
-    , (isJust maybereadinvite, SCRead)
-    , (invitationdeliverystatus==Undelivered,  SCCancelled)
-    , (invitationdeliverystatus==Delivered, SCDelivered)
-    ] SCSent
-  where
-      errorStatus (DocumentError _) = True
-      errorStatus _ = False
-
-documentStatusClass :: Document -> StatusClass
-documentStatusClass doc =
-  case (map (signatoryStatusClass doc) $ getSignatoryPartnerLinks doc) of
-    [] -> SCDraft
-    xs -> minimum xs
-
---
 showFileImages :: TemplatesMonad m => DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> FileID -> JpegPages -> m String
-showFileImages _ _ _ JpegPagesPending =
-  renderTemplateM "showFileImagesPending" ()
+showFileImages _ _ _ JpegPagesPending = renderTemplate_ "showFileImagesPending"
 
 showFileImages _ _ _ (JpegPagesError normalizelog) =
-  renderTemplateFM "showFileImagesError" $ do
-    field "normalizelog" normalizelog
+  renderTemplate "showFileImagesError" $ do
+    F.value "normalizelog" normalizelog
 
 showFileImages docid mtokens fileid (JpegPages jpgpages) =
-  renderTemplateFM "showFileImagesReady" $ do
-    field "pageurl" $ "/pages/" ++ pageurl mtokens
-    fieldFL "images" . map page $ zip ([1..]::[Int]) jpgpages
+  renderTemplate "showFileImagesReady" $ do
+    F.value "pageurl" $ "/pages/" ++ pageurl mtokens
+    F.objects "images" . map page $ zip ([1..]::[Int]) jpgpages
   where
     pageurl Nothing =  show docid ++ "/" ++ show fileid
     pageurl (Just (siglinkid, sigmagichash)) =
            show docid ++ "/" ++ show siglinkid ++ "/"
         ++ show sigmagichash ++ "/" ++ show fileid
     page (x,(_,w,h)) = do
-      field "number" x
-      field "width" w
-      field "height" h
+      F.value "number" x
+      F.value "width" w
+      F.value "height" h
 
 showFilesImages2 :: TemplatesMonad m => DocumentID -> Maybe (SignatoryLinkID, MagicHash) -> [(FileID, JpegPages)] -> m String
 showFilesImages2 docid mtokens files = do
   filesPages <- sequence $ map (uncurry (showFileImages docid mtokens)) files
-  renderTemplateFM "spanNoEscape" $ field "it" (concat filesPages)
+  renderTemplate "spanNoEscape" $ F.value "it" (concat filesPages)
 
 
 pageAttachmentDesign :: TemplatesMonad m
@@ -503,32 +437,32 @@ pageAttachment' :: TemplatesMonad m
                 -> Document
                 -> m String
 pageAttachment' iseditable msiglink doc@Document {documentid, documenttitle} =
-    renderTemplateFM "pageAttachment" $ do
-      field "documentid" $ show documentid
-      field "documenttitle" documenttitle
-      field "editable" $ iseditable
-      field "renamelink" $ show $ LinkRenameAttachment documentid
-      field "siglinkid" $ fmap (show . signatorylinkid) msiglink
-      field "sigmagichash" $ fmap (show . signatorymagichash) msiglink
-      field "linkissuedocpdf" $ show (LinkIssueDocPDF msiglink doc)
+    renderTemplate "pageAttachment" $ do
+      F.value "documentid" $ show documentid
+      F.value "documenttitle" documenttitle
+      F.value "editable" $ iseditable
+      F.value "renamelink" $ show $ LinkRenameAttachment documentid
+      F.value "siglinkid" $ fmap (show . signatorylinkid) msiglink
+      F.value "sigmagichash" $ fmap (show . signatorymagichash) msiglink
+      F.value "linkissuedocpdf" $ show (LinkIssueDocPDF msiglink doc)
 
 pageDocumentDesign :: TemplatesMonad m
                    => Document
                    -> m String
 pageDocumentDesign document = do
-     renderTemplateFM "pageDocumentDesign" $ do
-         field "isbasic" $ (documentfunctionality document) ==BasicFunctionality
-         field "documentid" $ show $ documentid document
+     renderTemplate "pageDocumentDesign" $ do
+         F.value "isbasic" $ (documentfunctionality document) ==BasicFunctionality
+         F.value "documentid" $ show $ documentid document
 
 pageDocumentView :: TemplatesMonad m
                     => Document
                     -> Maybe SignatoryLink
                     -> m String
 pageDocumentView document msiglink =
-  renderTemplateFM "pageDocumentView" $ do
-      field "documentid" $ show $ documentid document
-      field "siglinkid" $ fmap (show . signatorylinkid) msiglink
-      field "sigmagichash" $ fmap (show .  signatorymagichash) msiglink
+  renderTemplate "pageDocumentView" $ do
+      F.value "documentid" $ show $ documentid document
+      F.value "siglinkid" $ fmap (show . signatorylinkid) msiglink
+      F.value "sigmagichash" $ fmap (show .  signatorymagichash) msiglink
 
 pageDocumentSignView :: TemplatesMonad m
                     => Context
@@ -536,106 +470,107 @@ pageDocumentSignView :: TemplatesMonad m
                     -> SignatoryLink
                     -> m String
 pageDocumentSignView ctx document siglink =
-  renderTemplateFM "pageDocumentSignView" $ do
-      field "documentid" $ show $ documentid document
-      field "siglinkid" $ show $ signatorylinkid siglink
-      field "sigmagichash" $ show $  signatorymagichash siglink
+  renderTemplate "pageDocumentSignView" $ do
+      F.value "documentid" $ show $ documentid document
+      F.value "siglinkid" $ show $ signatorylinkid siglink
+      F.value "sigmagichash" $ show $  signatorymagichash siglink
+      F.value "documenttitle" $ documenttitle document
       standardPageFields ctx kontrakcja Nothing False False Nothing Nothing
 
 csvLandPage :: TemplatesMonad m => Int -> m String
-csvLandPage count = renderTemplateFM "csvlandpage" $ do
-  field "doccount" (show count)
+csvLandPage count = renderTemplate "csvlandpage" $ do
+  F.value "doccount" (show count)
 
 -- Helper to get document after signing info text
 documentInfoText :: TemplatesMonad m => Context -> Document -> Maybe SignatoryLink -> m String
 documentInfoText ctx document siglnk =
-  renderTemplateFM "documentInfoText" $ do
+  renderTemplate "documentInfoText" $ do
     mainFields
-    fieldF "process" processFields
+    F.object "process" processFields
   where
     mainFields = do
       documentInfoFields document
       documentAuthorInfo document
-      fieldFL "signatories" $ for (documentsignatorylinks document) $ \sl -> do
-                field "name" $   getSmartName sl
-                field "author" $ (isAuthor sl)
-      field "notsignedbyme" $ (isJust siglnk) && (isNothing $ maybesigninfo $ fromJust siglnk)
-      field "signedbyme" $ (isJust siglnk) && (isJust $ maybesigninfo $ fromJust siglnk)
-      field "iamauthor" $ maybe False isAuthor siglnk
-      field "isviewonly" $ not $ isAuthor siglnk || maybe False (flip isAuthorAdmin document) (ctxmaybeuser ctx)
+      F.objects "signatories" $ for (documentsignatorylinks document) $ \sl -> do
+                F.value "name" $   getSmartName sl
+                F.value "author" $ (isAuthor sl)
+      F.value "notsignedbyme" $ (isJust siglnk) && (isNothing $ maybesigninfo $ fromJust siglnk)
+      F.value "signedbyme" $ (isJust siglnk) && (isJust $ maybesigninfo $ fromJust siglnk)
+      F.value "iamauthor" $ maybe False isAuthor siglnk
+      F.value "isviewonly" $ not $ isAuthor siglnk || maybe False (flip isAuthorAdmin document) (ctxmaybeuser ctx)
     getProcessText = renderTextForProcess document
     getProcessTextWithFields f = renderTemplateForProcess document f mainFields
     processFields = do
-      fieldM "pendingauthornotsignedinfoheader" $ getProcessText processpendingauthornotsignedinfoheader
-      fieldM "pendingauthornotsignedinfotext" $ getProcessText processpendingauthornotsignedinfotext
-      fieldM "pendinginfotext" $ getProcessTextWithFields processpendinginfotext
-      fieldM "cancelledinfoheader" $ getProcessText processcancelledinfoheader
-      fieldM "cancelledinfotext" $ getProcessTextWithFields processcancelledinfotext
-      fieldM "signedinfoheader" $ getProcessText processsignedinfoheader
-      fieldM "signedinfotext" $ getProcessTextWithFields processsignedinfotext
-      fieldM "statusinfotext" $ getProcessTextWithFields processstatusinfotext
+      F.valueM "pendingauthornotsignedinfoheader" $ getProcessText processpendingauthornotsignedinfoheader
+      F.valueM "pendingauthornotsignedinfotext" $ getProcessText processpendingauthornotsignedinfotext
+      F.valueM "pendinginfotext" $ getProcessTextWithFields processpendinginfotext
+      F.valueM "cancelledinfoheader" $ getProcessText processcancelledinfoheader
+      F.valueM "cancelledinfotext" $ getProcessTextWithFields processcancelledinfotext
+      F.valueM "signedinfoheader" $ getProcessText processsignedinfoheader
+      F.valueM "signedinfotext" $ getProcessTextWithFields processsignedinfotext
+      F.valueM "statusinfotext" $ getProcessTextWithFields processstatusinfotext
 
 -- | Basic info about document , name, id ,author
-documentInfoFields :: MonadIO m => Document -> Fields m
+documentInfoFields :: Monad m => Document -> Fields m ()
 documentInfoFields  document  = do
-  field "documenttitle" $ documenttitle document
-  field "title" $ documenttitle document
-  field "name" $ documenttitle document
-  field "id" $ show $ documentid document
-  field "documentid" $ show $ documentid document
-  field "timetosignset" $  isJust $ documentdaystosign document
-  field "template" $  isTemplate document
-  field "emailselected" $ document `allowsIdentification` EmailIdentification
-  field "elegselected" $ document `allowsIdentification` ELegitimationIdentification
-  field "hasanyattachments" $ length (documentauthorattachments document) + length (concatMap signatoryattachments $ documentsignatorylinks document) > 0
+  F.value "documenttitle" $ documenttitle document
+  F.value "title" $ documenttitle document
+  F.value "name" $ documenttitle document
+  F.value "id" $ show $ documentid document
+  F.value "documentid" $ show $ documentid document
+  F.value "timetosignset" $  isJust $ documentdaystosign document
+  F.value "template" $  isTemplate document
+  F.value "emailselected" $ document `allowsIdentification` EmailIdentification
+  F.value "elegselected" $ document `allowsIdentification` ELegitimationIdentification
+  F.value "hasanyattachments" $ length (documentauthorattachments document) + length (concatMap signatoryattachments $ documentsignatorylinks document) > 0
   documentStatusFields document
 
-documentAuthorInfo :: MonadIO m => Document -> Fields m
+documentAuthorInfo :: Monad m => Document -> Fields m ()
 documentAuthorInfo document =
   case getAuthorSigLink document of
     Nothing -> return ()
     Just siglink -> do
-      field "authorfstname"       $ nothingIfEmpty $ getFirstName      siglink
-      field "authorsndname"       $ nothingIfEmpty $ getLastName       siglink
-      field "authorcompany"       $ nothingIfEmpty $ getCompanyName    siglink
-      field "authoremail"         $ nothingIfEmpty $ getEmail          siglink
-      field "authorpersonnumber"  $ nothingIfEmpty $ getPersonalNumber siglink
-      field "authorcompanynumber" $ nothingIfEmpty $ getCompanyNumber  siglink
+      F.value "authorfstname"       $ nothingIfEmpty $ getFirstName      siglink
+      F.value "authorsndname"       $ nothingIfEmpty $ getLastName       siglink
+      F.value "authorcompany"       $ nothingIfEmpty $ getCompanyName    siglink
+      F.value "authoremail"         $ nothingIfEmpty $ getEmail          siglink
+      F.value "authorpersonnumber"  $ nothingIfEmpty $ getPersonalNumber siglink
+      F.value "authorcompanynumber" $ nothingIfEmpty $ getCompanyNumber  siglink
 
 -- | Fields indication what is a document status
-documentStatusFields :: MonadIO m => Document -> Fields m
+documentStatusFields :: Monad m => Document -> Fields m ()
 documentStatusFields document = do
-  field "preparation" $ documentstatus document == Preparation
-  field "pending" $ documentstatus document == Pending
-  field "cancel" $ (documentstatus document == Canceled
+  F.value "preparation" $ documentstatus document == Preparation
+  F.value "pending" $ documentstatus document == Pending
+  F.value "cancel" $ (documentstatus document == Canceled
       && documentcancelationreason document == Just ManualCancel)
-  field "timedout" $ documentstatus document == Timedout
-  field "rejected" $ documentstatus document == Rejected
-  field "signed" $ documentstatus document == Closed
-  field "awaitingauthor" $ canAuthorSignLast document
-  field "datamismatch" $ (documentstatus document == Canceled
+  F.value "timedout" $ documentstatus document == Timedout
+  F.value "rejected" $ documentstatus document == Rejected
+  F.value "signed" $ documentstatus document == Closed
+  F.value "awaitingauthor" $ canAuthorSignLast document
+  F.value "datamismatch" $ (documentstatus document == Canceled
       && case documentcancelationreason document of
            Just (ELegDataMismatch _ _ _ _ _) -> True
            _ -> False)
 
 uploadPage :: TemplatesMonad m => (Maybe DocumentProcess) -> Bool -> m String
-uploadPage mdocprocess showTemplates = renderTemplateFM "uploadPage" $ do
-    field "isprocessselected" $ isJust mdocprocess
-    field "showTemplates" showTemplates
-    fieldFL "processes" $ map processFields [Contract,Offer,Order]
-    field "processid" $ show <$> mdocprocess
-    field "linkupload" $ show LinkUpload
+uploadPage mdocprocess showTemplates = renderTemplate "uploadPage" $ do
+    F.value "isprocessselected" $ isJust mdocprocess
+    F.value "showTemplates" showTemplates
+    F.objects "processes" $ map processFields [Contract,Offer,Order]
+    F.value "processid" $ show <$> mdocprocess
+    F.value "linkupload" $ show LinkUpload
     case mdocprocess of
       Just selecteprocess -> do
-        fieldF "selectedprocess" $ processFields selecteprocess
+        F.object "selectedprocess" $ processFields selecteprocess
       _ -> return ()
     where
       processFields process = do
-        field "id" $ show process
-        field "selected" $ (Just process == mdocprocess)
-        fieldM "name" $ renderTextForProcess (Signable process) processuploadname
-        fieldM "uploadprompttext" $ renderTextForProcess (Signable process) processuploadprompttext
-        field "apiid" $ fromSafeEnumInt (Signable process)
+        F.value "id" $ show process
+        F.value "selected" $ (Just process == mdocprocess)
+        F.valueM "name" $ renderTextForProcess (Signable process) processuploadname
+        F.valueM "uploadprompttext" $ renderTextForProcess (Signable process) processuploadprompttext
+        F.value "apiid" $ fromSafeEnumInt (Signable process)
 
 
 getDataMismatchMessage :: Maybe CancelationReason -> Maybe String
@@ -645,9 +580,9 @@ getDataMismatchMessage _ = Nothing
 -- This is temporary method used to see list of broken documents
 documentsToFixView :: TemplatesMonad m => [Document] -> m String
 documentsToFixView docs = do
-    renderTemplateFM "documentsToFixView" $ do
-        fieldFL "documents" $ for docs $ \doc -> do
-            field "title" $ documenttitle doc
-            field "id" $ show $ documentid doc
-            field "involved" $ map getEmail  $ documentsignatorylinks doc
-            field "cdate" $  show $ documentctime doc
+    renderTemplate "documentsToFixView" $ do
+        F.objects "documents" $ for docs $ \doc -> do
+            F.value "title" $ documenttitle doc
+            F.value "id" $ show $ documentid doc
+            F.value "involved" $ map getEmail  $ documentsignatorylinks doc
+            F.value "cdate" $  show $ documentctime doc

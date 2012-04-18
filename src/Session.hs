@@ -6,6 +6,7 @@ module Session
     , getUserFromSession
     , getCompanyFromSession
     , getLocationFromSession
+    , getPadUserFromSession
     , handleSession
     , updateSessionWithContextData
     , getELegTransactions
@@ -28,7 +29,6 @@ module Session
 import Control.Arrow (first)
 import Control.Monad.Reader (ask)
 import Control.Monad.State hiding (State)
-import qualified Data.ByteString.UTF8 as BS
 import Data.Maybe (isNothing,isJust, fromJust)
 import Happstack.Data.IxSet
 import qualified Happstack.Data.IxSet as IxSet
@@ -37,19 +37,18 @@ import User.Model
 import Numeric
 import MinutesTime
 import Happstack.Server (RqData, ServerMonad, FilterMonad, Response, mkCookie,
-  readCookieValue, withDataFn, ServerPartT, HasRqData, CookieLife(MaxAge), FromReqURI(..))
+  readCookieValue, withDataFn, HasRqData, CookieLife(MaxAge), FromReqURI(..))
 import System.Random (StdGen, randomR)
 import System.Random.CryptoRNG ()
-import Crypto.RNG (CryptoRNGState, CryptoRNG, random, inIO)
+import Crypto.RNG (CryptoRNG, random)
 import Happstack.Util.Common ( readM)
 import Misc (mkTypeOf, isSecure, isHTTPS)
 import ELegitimation.ELegTransaction
 import Data.Typeable
-import API.Service.Model
 import Cookies
 import Company.Model
-import DB.Classes
-import MagicHash (MagicHash, unsafeMagicHash)
+import DB hiding (getOne, query, update)
+import MagicHash (MagicHash)
 import Util.MonadUtils
 import Doc.SignatoryLinkID
 import qualified Data.Map as Map
@@ -73,125 +72,20 @@ $(deriveSerialize ''SessionId)
 instance Version SessionId
 
 {------------------------------------------------------------------------------}
--- THIS IS OLD FLASH MESSAGE STRUCTURE, IT'S FOR COMPATIBILITY PURPOSES ONLY.
--- ACTUAL VERSION IS IN FLASHMESSAGE MODULE. DO NOT EXPOSE ANY OF BELOW FUNCTIONS.
--- Below code should be removed as soon as we get rid of old Session instances
--- in Session (we do not serialize flash messages to database anymore).
-newtype FlashMessage = FlashMessage (FlashType, String)
-  deriving (Eq, Ord, Show, Typeable)
 
-data FlashType
-    = SigningRelated
-    | OperationDone
-    | OperationFailed
-    | Modal
-      deriving (Eq, Ord, Show, Typeable)
-
-newtype FlashMessage0 = FlashMessage0 BS.ByteString
-  deriving Typeable
-
-instance Migrate FlashMessage0 FlashMessage where
-    migrate (FlashMessage0 msg) =
-        FlashMessage (SigningRelated, BS.toString msg)
-
-instance Version FlashType
-instance Version FlashMessage0
-instance Version FlashMessage where
-    mode = extension 1 (Proxy :: Proxy FlashMessage0)
-
-$(deriveSerializeFor [''FlashMessage0, ''FlashMessage, ''FlashType])
-{------------------------------------------------------------------------------}
-
-data SessionData0 = SessionData0 { userID0 :: Maybe UserID,
-                                   flashMessages0 :: [FlashMessage]
-                                 } deriving (Ord,Eq,Show,Typeable)
-$(deriveSerialize ''SessionData0)
-instance Version (SessionData0)
-
-data SessionData1 = SessionData1 {
-                                  userID1 :: Maybe UserID,
-                                  flashMessages1 :: [FlashMessage],
-                                  expires1 :: MinutesTime
-                               }  deriving (Ord,Eq,Show,Typeable)
-
-$(deriveSerialize ''SessionData1)
-instance Version (SessionData1) where
-   mode = extension 1 (Proxy :: Proxy SessionData0)
-
-data SessionData2 = SessionData2 {
-                                  userID2 :: Maybe UserID,
-                                  flashMessages2 :: [FlashMessage],
-                                  expires2 :: MinutesTime,
-                                  hash2 :: MagicHash
-                               }  deriving (Ord,Eq,Show,Typeable)
-
-$(deriveSerialize ''SessionData2)
-instance Version (SessionData2) where
-   mode = extension 2 (Proxy :: Proxy SessionData1)
-
-data SessionData3 = SessionData3
-    { userID3           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
-    , flashMessages3    :: [FlashMessage]    -- ^ 'FlashMessage's that are to be shown on next page
-    , expires3          :: MinutesTime       -- ^ when does this session expire
-    , hash3             :: MagicHash         -- ^ session security token
-    , elegtransactions3 :: [ELegTransaction] -- ^ ELeg transaction stuff
-    } deriving (Ord,Eq,Show,Typeable)
-
-data SessionData4 = SessionData4
-    { userID4           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
-    , flashMessages4    :: [FlashMessage]    -- ^ 'FlashMessage's that are to be shown on next page
-    , expires4          :: MinutesTime       -- ^ when does this session expire
-    , hash4             :: MagicHash         -- ^ session security token
-    , elegtransactions4 :: [ELegTransaction] -- ^ ELeg transaction stuff
-    , xtoken4           :: MagicHash         -- ^ Random string to prevent CSRF
-    } deriving (Ord,Eq,Show,Typeable)
-
-data SessionData5 = SessionData5
-    { userID5           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
-    , expires5          :: MinutesTime       -- ^ when does this session expire
-    , hash5             :: MagicHash         -- ^ session security token
-    , elegtransactions5 :: [ELegTransaction] -- ^ ELeg transaction stuff
-    , xtoken5           :: MagicHash         -- ^ Random string to prevent CSRF
-    } deriving (Ord,Eq,Show,Typeable)
-
--- | SessionData is everything we want to know about a person clicking
--- on the other side of the wire.
-data SessionData6 = SessionData6
-    { userID6           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
-    , expires6          :: MinutesTime       -- ^ when does this session expire
-    , hash6             :: MagicHash         -- ^ session security token
-    , elegtransactions6 :: [ELegTransaction] -- ^ ELeg transaction stuff
-    , xtoken6           :: MagicHash         -- ^ Random string to prevent CSRF
-    , service6          :: Maybe ServiceID   -- ^ Id of the service that we are now working with
-    } deriving (Ord,Eq,Show,Typeable)
-
-data SessionData7 = SessionData7
-    { userID7           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
-    , expires7          :: MinutesTime       -- ^ when does this session expire
-    , hash7             :: MagicHash         -- ^ session security token
-    , elegtransactions7 :: [ELegTransaction] -- ^ ELeg transaction stuff
-    , xtoken7           :: MagicHash         -- ^ Random string to prevent CSRF
-    , service7          :: Maybe (ServiceID,String)   -- ^ Id of the service that we are now working with. Also lint to page that embeds it (hash location hack)
-    } deriving (Ord,Eq,Show,Typeable)
-
-data SessionData8 = SessionData8
-    { userID8           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
-    , expires8          :: MinutesTime       -- ^ when does this session expire
-    , hash8             :: MagicHash         -- ^ session security token
-    , elegtransactions8 :: [ELegTransaction] -- ^ ELeg transaction stuff
-    , xtoken8           :: MagicHash         -- ^ Random string to prevent CSRF
-    , service8          :: Maybe (ServiceID,String)   -- ^ Id of the service that we are now working with. Also lint to page that embeds it (hash location hack)
-    , company8        :: Maybe CompanyID
-    } deriving (Ord,Eq,Show,Typeable)
-
-data SessionData9 = SessionData9
-    { userID9           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
-    , expires9          :: MinutesTime       -- ^ when does this session expire
-    , hash9             :: MagicHash         -- ^ session security token
-    , elegtransactions9 :: [ELegTransaction] -- ^ ELeg transaction stuff
-    , xtoken9           :: MagicHash         -- ^ Random string to prevent CSRF
-    , location9         :: String            -- ^ Id of the service that we are now working with. Also link to page that embeds it (hash location hack)
-    , company9          :: Maybe CompanyID
+data SessionData11 = SessionData11
+    { userID11           :: Maybe UserID      -- ^ Just 'UserID' if a person is logged in
+    , expires11          :: MinutesTime       -- ^ when does this session expire
+    , hash11             :: MagicHash         -- ^ session security token
+    , elegtransactions11 :: [ELegTransaction] -- ^ ELeg transaction stuff
+    , xtoken11           :: MagicHash         -- ^ Random string to prevent CSRF
+    , location11         :: String            -- ^ Id of the service
+                                            -- that we are now working
+                                            -- with. Also link to page
+                                            -- that embeds it (hash
+                                            -- location hack)
+    , company11          :: Maybe CompanyID
+    , magichashes11      :: Map.Map SignatoryLinkID MagicHash
     } deriving (Ord,Eq,Show,Typeable)
 
 data SessionData = SessionData
@@ -207,159 +101,42 @@ data SessionData = SessionData
                                             -- location hack)
     , company          :: Maybe CompanyID
     , magichashes      :: Map.Map SignatoryLinkID MagicHash
-
+    , padUserID         :: Maybe UserID      -- Other version of login - for pad devices, when you don't want to give control over a device.
     } deriving (Ord,Eq,Show,Typeable)
-
-$(deriveSerialize ''SessionData3)
-instance Version (SessionData3) where
-    mode = extension 3 (Proxy :: Proxy SessionData2)
-
-$(deriveSerialize ''SessionData4)
-instance Version (SessionData4) where
-    mode = extension 4 (Proxy :: Proxy SessionData3)
-
-$(deriveSerialize ''SessionData5)
-instance Version (SessionData5) where
-    mode = extension 5 (Proxy :: Proxy SessionData4)
-
-$(deriveSerialize ''SessionData6)
-instance Version (SessionData6) where
-    mode = extension 6 (Proxy :: Proxy SessionData5)
-
-$(deriveSerialize ''SessionData7)
-instance Version (SessionData7) where
-    mode = extension 7 (Proxy :: Proxy SessionData6)
-
-$(deriveSerialize ''SessionData8)
-instance Version (SessionData8) where
-    mode = extension 8 (Proxy :: Proxy SessionData7)
-
-$(deriveSerialize ''SessionData9)
-instance Version (SessionData9) where
-    mode = extension 9 (Proxy :: Proxy SessionData8)
+    
+$(deriveSerialize ''SessionData11)
+instance Version (SessionData11) where
+    mode = extension 10 (Proxy :: Proxy ())
 
 $(deriveSerialize ''SessionData)
 instance Version (SessionData) where
-    mode = extension 10 (Proxy :: Proxy SessionData9)
+    mode = extension 11 (Proxy :: Proxy SessionData11)
+    
+instance Migrate () SessionData11 where
+    migrate () = error "Migration session from nothing"
 
-
-instance Migrate SessionData0 SessionData1 where
-    migrate (SessionData0 { userID0 = _
-                          , flashMessages0 = _
-                          }) =
-        SessionData1 { userID1 = Nothing
-                     , flashMessages1 = []
-                     , expires1 = fromSeconds 0
-                     }
-
-instance Migrate SessionData1 SessionData2 where
-    migrate (SessionData1 { userID1 = _
-                          , flashMessages1 = _
-                          , expires1 = _
-                          }) =
-        SessionData2 { userID2 = Nothing
-                     , flashMessages2 = []
-                     , expires2 = fromSeconds 0
-                     , hash2 = unsafeMagicHash 0
-                     }
-
-instance Migrate SessionData2 SessionData3 where
-    migrate (SessionData2 { userID2 = _
-                          , flashMessages2 = _
-                          , expires2 = _
-                          }) =
-        SessionData3 { userID3 = Nothing
-                    , flashMessages3 = []
-                    , expires3 = fromSeconds 0
-                    , hash3 = unsafeMagicHash 0
-                    , elegtransactions3 = []
-                    }
-
-instance Migrate SessionData3 SessionData4 where
-    migrate (SessionData3 { userID3 = _
-                          , flashMessages3 = _
-                          , expires3 = _
-                          , elegtransactions3 = _
-                          }) =
-        SessionData4 { userID4           = Nothing
-                    , flashMessages4    = []
-                    , expires4          = fromSeconds 0
-                    , hash4             = unsafeMagicHash 0
-                    , elegtransactions4 = []
-                    , xtoken4           = unsafeMagicHash 0
-                    }
-
-instance Migrate SessionData4 SessionData5 where
-    migrate SessionData4{} =
-        SessionData5 { userID5           = Nothing
-                    , expires5          = fromSeconds 0
-                    , hash5             = unsafeMagicHash 0
-                    , elegtransactions5 = []
-                    , xtoken5           = unsafeMagicHash 0
-                    }
-
-instance Migrate SessionData5 SessionData6 where
-    migrate SessionData5{} =
-        SessionData6 { userID6           = Nothing
-                    , expires6          = fromSeconds 0
-                    , hash6             = unsafeMagicHash 0
-                    , elegtransactions6 = []
-                    , xtoken6           = unsafeMagicHash 0
-                    , service6          = Nothing
-                    }
-
-instance Migrate SessionData6 SessionData7 where
-    migrate SessionData6{} =
-        SessionData7 { userID7           = Nothing
-                    , expires7          = fromSeconds 0
-                    , hash7             = unsafeMagicHash 0
-                    , elegtransactions7 = []
-                    , xtoken7           = unsafeMagicHash 0
-                    , service7          = Nothing
-                    }
-
-instance Migrate SessionData7 SessionData8 where
-    migrate SessionData7{} =
-        SessionData8 { userID8           = Nothing
-                    , expires8          = fromSeconds 0
-                    , hash8             = unsafeMagicHash 0
-                    , elegtransactions8 = []
-                    , xtoken8           = unsafeMagicHash 0
-                    , service8          = Nothing
-                    , company8          = Nothing
-                    }
-
-instance Migrate SessionData8 SessionData9 where
-    migrate SessionData8{} =
-        SessionData9 { userID9           = Nothing
-                     , expires9          = fromSeconds 0
-                     , hash9             = unsafeMagicHash 0
-                     , elegtransactions9 = []
-                     , xtoken9           = unsafeMagicHash 0
-                     , location9         = ""
-                     , company9          = Nothing
-                     }
-
-instance Migrate SessionData9 SessionData where
-    migrate SessionData9 
-              { userID9
-              , expires9
-              , hash9
-              , elegtransactions9
-              , xtoken9
-              , location9
-              , company9
-              } =
-        SessionData { userID           = userID9
-                    , expires          = expires9
-                    , hash             = hash9
-                    , elegtransactions = elegtransactions9
-                    , xtoken           = xtoken9
-                    , location         = location9
-                    , company          = company9
-                    , magichashes      = Map.empty
-                    }
-
+instance Migrate SessionData11 SessionData where
+    migrate (SessionData11
+     { userID11       
+     , expires11   
+     , hash11       
+     , elegtransactions11 
+     , xtoken11   
+     , location11 
+     , company11   
+     , magichashes11  
+     })  = SessionData
+        { userID = userID11       
+        , expires = expires11   
+        , hash = hash11       
+        , elegtransactions = elegtransactions11 
+        , xtoken = xtoken11   
+        , location = location11 
+        , company = company11   
+        , magichashes = magichashes11  
+        , padUserID = Nothing
+        }
+    
 -- | 'Session' data as we keep it in our database
 data Session = Session { sessionId::SessionId
                        , sessionData::SessionData
@@ -504,7 +281,7 @@ sessionAndCookieHashMatch session sci = (cookieSessionHash sci) == (hash $ sessi
 
 
 -- | Add a session cookie to browser.
-startSessionCookie :: (FilterMonad Response m,ServerMonad m, MonadIO m, Functor m) => Session -> m ()
+startSessionCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m) => Session -> m ()
 startSessionCookie session = do
     issecure <- isSecure
     ishttps  <- isHTTPS
@@ -514,19 +291,17 @@ startSessionCookie session = do
 
 -- | Read current session cookie from request.
 currentSessionInfoCookie:: RqData (Maybe SessionCookieInfo)
-currentSessionInfoCookie = (optional (readCookieValue "sessionId"))
+currentSessionInfoCookie = optional (readCookieValue "sessionId")
 
 -- | Get current session based on cookies set.
 currentSession ::(HasRqData m, MonadIO m, ServerMonad m, MonadPlus m, FilterMonad Response m) => m (Maybe Session)
-currentSession =
-    withDataFn currentSessionInfoCookie $ \mscd ->
-        case mscd of
-            Just scd -> do
-                session <- query $ GetSession $ cookieSessionId scd
-                case session of
-                    Just s | sessionAndCookieHashMatch s scd -> return $ Just s
-                    _ -> return Nothing
-            Nothing ->  return Nothing
+currentSession = withDataFn currentSessionInfoCookie $ \mscd -> case mscd of
+  Just scd -> do
+    session <- query $ GetSession $ cookieSessionId scd
+    case session of
+      Just s | sessionAndCookieHashMatch s scd -> return $ Just s
+      _ -> return Nothing
+  Nothing ->  return Nothing
 
 -- | Create empty session data. It has proper timeout already set.
 emptySessionData :: (MonadIO m, CryptoRNG m) => m SessionData
@@ -542,12 +317,14 @@ emptySessionData = do
                          , location = ""
                          , company = Nothing
                          , magichashes = Map.empty
+                         , padUserID = Nothing
                          }
 
 -- | Check if session data is empty
 isSessionDataEmpty :: SessionData -> Bool
-isSessionDataEmpty SessionData{userID, elegtransactions, location, company, magichashes} =
+isSessionDataEmpty SessionData{userID, elegtransactions, location, company, magichashes, padUserID} =
        userID == Nothing
+    && padUserID == Nothing   
     && Prelude.null elegtransactions && location == "" && company == Nothing
     && Map.null magichashes
 
@@ -560,49 +337,52 @@ startSession :: (MonadIO m, CryptoRNG m) => m Session
 startSession = emptySessionData >>= return . Session tempSessionID
 
 -- | Get 'User' record from database based on userid in session
-getUserFromSession :: DBEnv -> Session -> ServerPartT IO (Maybe User)
-getUserFromSession dbenv s =
-  liftMM (ioRunDB dbenv . dbQuery . GetUserByID) (return $ userID $ sessionData s)
+getUserFromSession :: MonadDB m => Session -> m (Maybe User)
+getUserFromSession = liftMM (dbQuery . GetUserByID) . return . userID . sessionData
 
-getCompanyFromSession :: DBEnv -> Session -> ServerPartT IO (Maybe Company)
-getCompanyFromSession dbenv s =
-  liftMM (ioRunDB dbenv . dbQuery . GetCompany) (return $ company $ sessionData s)
+getPadUserFromSession :: MonadDB m => Session -> m (Maybe User)
+getPadUserFromSession = liftMM (dbQuery . GetUserByID) . return . padUserID . sessionData
 
-getLocationFromSession :: Session -> ServerPartT IO String
-getLocationFromSession s = return $ location $ sessionData s
+getCompanyFromSession :: MonadDB m => Session -> m (Maybe Company)
+getCompanyFromSession = liftMM (dbQuery . GetCompany) . return . company . sessionData
 
+getLocationFromSession :: Session -> String
+getLocationFromSession = location . sessionData
 
 -- | Handles session timeout. Starts new session when old session timed out.
-handleSession :: CryptoRNGState -> ServerPartT IO Session
-handleSession r = do
-    msession <- currentSession
-    case msession of
-        Just session ->do
-                      now <- liftIO getMinutesTime
-                      if (now >= (expires $ sessionData $ session))
-                          then do
-                             _ <- update $ DelSession (sessionId session)
-                             liftIO $ inIO r $ startSession
-                          else return session
-        Nothing -> inIO r $ startSession
+handleSession :: (CryptoRNG m, FilterMonad Response m, HasRqData m, MonadIO m, MonadPlus m, ServerMonad m) => m Session
+handleSession = do
+  msession <- currentSession
+  case msession of
+    Just session -> do
+      now <- getMinutesTime
+      if now >= (expires $ sessionData $ session)
+        then do
+          _ <- update $ DelSession (sessionId session)
+          startSession
+        else return session
+    Nothing -> startSession
 
 -- | Updates session data. If session is temporary and new
 -- session data is non-empty, register session in the system
 -- and add a cookie. Is user loggs in, check whether there is
 -- an old session with his userid and throw it away.
-updateSessionWithContextData :: StdGen
-                             -> Session
+updateSessionWithContextData :: (FilterMonad Response m, ServerMonad m, MonadDB m, CryptoRNG m)
+                             => Session
                              -> Maybe UserID
                              -> [ELegTransaction]
                              -> Map.Map SignatoryLinkID MagicHash
-                             -> ServerPartT IO ()
-updateSessionWithContextData rng (Session i sd) u trans magichashes' = do
-    now <- liftIO getMinutesTime
+                             -> Maybe UserID
+                             -> m ()
+updateSessionWithContextData (Session i sd) u trans magichashes' pu = do
+    now <- getMinutesTime
+    rng <- random
     let newsd = sd
                 { userID = u
                 , expires = 60 `minutesAfter` now
                 , elegtransactions = trans
                 , magichashes = magichashes'
+                , padUserID = pu
                 }
     if i == tempSessionID && not (isSessionDataEmpty newsd)
        then do
@@ -616,28 +396,14 @@ updateSessionWithContextData rng (Session i sd) u trans magichashes' = do
            update (NewSession rng newsd) >>= startSessionCookie
        else update $ UpdateSession (Session i newsd)
 
--- | This are special sessions used for passwords reminder links. Such links should be carefully.
-{-createLongTermSession :: (MonadIO m) =>  UserID -> m Session
-createLongTermSession uid = do
-    now <- liftIO $ getMinutesTime
-    magicHash <- liftIO $ randomIO
-    let longUserSession = SessionData { userID = Just uid
-                                      , flashMessages = []
-                                      , expires = (60 * 12) `minutesAfter` now
-                                      , hash = magicHash
-                                      , elegtransactions = []
-                                      }
-    update $ NewSession $ longUserSession
-    -}
-
 -- | Find session in the database. Check auth token match. Check timeout.
-findSession :: (MonadIO m) => SessionId -> MagicHash -> m (Maybe Session)
+findSession :: MonadIO m => SessionId -> MagicHash -> m (Maybe Session)
 findSession sid mh = do
     ms <- query $ GetSession $ sid
     case ms of
         Just session ->
             do
-                now <- liftIO getMinutesTime
+                now <- getMinutesTime
                 let hashmatch = mh == (hash $ sessionData session)
                 let notexpired = now <= (expires $ sessionData $ session)
                 if (hashmatch && notexpired)
@@ -709,7 +475,7 @@ newSession' userorcompany loc = do
 
 
 -- This is used to connect user or company to session when it was created by same service
-loadServiceSession :: (MonadIO m, Functor m, ServerMonad m, FilterMonad Response m) => Either CompanyID UserID -> SessionId -> m Bool
+loadServiceSession :: (MonadIO m, ServerMonad m, FilterMonad Response m) => Either CompanyID UserID -> SessionId -> m Bool
 loadServiceSession userorcompany ssid  = do
     msession <- query $ GetSession ssid
     case msession of

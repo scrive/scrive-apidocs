@@ -1,9 +1,6 @@
 module Company.Tables where
 
-import Database.HDBC
-
-import DB.Classes
-import DB.Model
+import DB
 
 tableCompanies :: Table
 tableCompanies = Table {

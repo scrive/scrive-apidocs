@@ -1,3 +1,4 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 module CompanyAccounts.Model (
     module User.Model
   , module Company.Model
@@ -8,14 +9,11 @@ module CompanyAccounts.Model (
   , GetCompanyInvites(..)
   ) where
 
-import Data.Monoid
-import Database.HDBC
-import qualified Control.Exception as E
+import Control.Monad
 
 import Company.Model
-import DB.Classes
-import DB.Fetcher2
-import DB.Utils
+import DB
+import OurPrelude
 import User.Model
 
 {- |
@@ -31,8 +29,8 @@ data CompanyInvite = CompanyInvite {
   } deriving (Eq, Ord, Show)
 
 data AddCompanyInvite = AddCompanyInvite CompanyInvite
-instance DBUpdate AddCompanyInvite CompanyInvite where
-  dbUpdate (AddCompanyInvite CompanyInvite{..}) = do
+instance MonadDB m => DBUpdate m AddCompanyInvite CompanyInvite where
+  update (AddCompanyInvite CompanyInvite{..}) = do
     _ <- kRunRaw "LOCK TABLE companyinvites IN ACCESS EXCLUSIVE MODE"
     kPrepare "DELETE FROM companyinvites WHERE (company_id = ? AND email = ?)"
     _ <- kExecute [toSql invitingcompany, toSql invitedemail]
@@ -47,25 +45,24 @@ instance DBUpdate AddCompanyInvite CompanyInvite where
       , toSql invitedsndname
       , toSql invitingcompany
       ]
-    dbQuery (GetCompanyInvite invitingcompany invitedemail)
-      >>= maybe (E.throw $ NoObject mempty) return
+    $fromJust `liftM` query (GetCompanyInvite invitingcompany invitedemail)
 
 data RemoveCompanyInvite = RemoveCompanyInvite CompanyID Email
-instance DBUpdate RemoveCompanyInvite Bool where
-  dbUpdate (RemoveCompanyInvite companyid email) = do
+instance MonadDB m => DBUpdate m RemoveCompanyInvite Bool where
+  update (RemoveCompanyInvite companyid email) = do
     kPrepare "DELETE FROM companyinvites WHERE (company_id = ? AND email = ?)"
     kExecute01 [toSql companyid, toSql email]
 
 data GetCompanyInvite = GetCompanyInvite CompanyID Email
-instance DBQuery GetCompanyInvite (Maybe CompanyInvite) where
-  dbQuery (GetCompanyInvite companyid email) = do
+instance MonadDB m => DBQuery m GetCompanyInvite (Maybe CompanyInvite) where
+  query (GetCompanyInvite companyid email) = do
     kPrepare $ selectCompanyInvitesSQL ++ "WHERE (ci.company_id = ? AND ci.email = ?)"
     _ <- kExecute [toSql companyid, toSql email]
     fetchCompanyInvites >>= oneObjectReturnedGuard
 
 data GetCompanyInvites = GetCompanyInvites CompanyID
-instance DBQuery GetCompanyInvites [CompanyInvite] where
-  dbQuery (GetCompanyInvites companyid) = do
+instance MonadDB m => DBQuery m GetCompanyInvites [CompanyInvite] where
+  query (GetCompanyInvites companyid) = do
     kPrepare $ selectCompanyInvitesSQL ++ "WHERE (ci.company_id = ?)"
     _ <- kExecute [toSql companyid]
     fetchCompanyInvites
@@ -80,7 +77,7 @@ selectCompanyInvitesSQL = "SELECT"
   ++ "  FROM companyinvites ci"
   ++ " "
 
-fetchCompanyInvites :: DB [CompanyInvite]
+fetchCompanyInvites :: MonadDB m => DBEnv m [CompanyInvite]
 fetchCompanyInvites = foldDB decoder []
   where
     decoder acc email fstname sndname cid = CompanyInvite {

@@ -6,8 +6,7 @@
  *
  *
  */
-
-$(function(){
+(function(window){
 
 
 window.Tab = Backbone.Model.extend({
@@ -205,5 +204,4 @@ window.KontraTabs = {
 };
 
 
-
-});
+})(window);

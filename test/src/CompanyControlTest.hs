@@ -6,50 +6,44 @@ import Happstack.Server hiding (simpleHTTP)
 import Text.JSON
 import Text.JSON.Types
 import Test.Framework
-import Test.Framework.Providers.HUnit
-import Test.HUnit (Assertion)
 
 import Company.CompanyControl
 import Company.Model
 import CompanyAccounts.Model
 import Context
-import DB.Classes
+import DB
 import Misc
 import Redirect
-import StateHelper
-import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
 import Util.JSON
 
-companyControlTests :: DBEnv -> Test
+companyControlTests :: TestEnvSt -> Test
 companyControlTests env = testGroup "CompanyControl" [
-    testCase "handleGetCompany works" $ test_handleGetCompany env
-  , testCase "handleGetCompanyJSON works" $ test_handleGetCompanyJSON env
-  , testCase "handlePostCompany can be used to set the company ui" $ test_settingUIWithHandlePostCompany env
-  , testCase "handleCompanyLogo responds when noone is logged in" $ test_handleCompanyLogo env
+    testThat "handleGetCompany works" env test_handleGetCompany
+  , testThat "handleGetCompanyJSON works" env test_handleGetCompanyJSON
+  , testThat "handlePostCompany can be used to set the company ui" env test_settingUIWithHandlePostCompany
+  , testThat "handleCompanyLogo responds when noone is logged in" env test_handleCompanyLogo
   ]
 
-test_handleGetCompany :: DBEnv -> Assertion
-test_handleGetCompany env = withTestEnvironment env $ do
+test_handleGetCompany :: TestEnv ()
+test_handleGetCompany = do
   (user, _company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
-  globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest GET []
   (res, _ctx') <- runTestKontra req ctx $ handleGetCompany
 
   assertBool "Something is returned" (length res > 0)
 
-test_handleGetCompanyJSON :: DBEnv -> Assertion
-test_handleGetCompanyJSON env = withTestEnvironment env $ do
+test_handleGetCompanyJSON :: TestEnv ()
+test_handleGetCompanyJSON = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
-  globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest GET []
   (jsv, _ctx') <- runTestKontra req ctx $ handleGetCompanyJSON
@@ -66,13 +60,12 @@ test_handleGetCompanyJSON env = withTestEnvironment env $ do
       JSString (JSONString jsonid) <- jsget "id" companyjsv
       return jsonid
 
-test_settingUIWithHandlePostCompany :: DBEnv -> Assertion
-test_settingUIWithHandlePostCompany env = withTestEnvironment env $ do
+test_settingUIWithHandlePostCompany :: TestEnv ()
+test_settingUIWithHandlePostCompany = do
   (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
-  globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req1 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"barsbackground\":\"green\",\"barstextcolour\":\"yellow\"}")
                         , ("logo", inFile "public/img/email-logo.png")
@@ -106,20 +99,18 @@ test_settingUIWithHandlePostCompany env = withTestEnvironment env $ do
   assertEqual "Text colour was set" (Just "pink") (companybarstextcolour $ companyui newcompany3)
   assertEqual "File reset" Nothing (companylogo $ companyui newcompany3)
 
-test_handleCompanyLogo :: DBEnv -> Assertion
-test_handleCompanyLogo env = withTestEnvironment env $ do
+test_handleCompanyLogo :: TestEnv ()
+test_handleCompanyLogo = do
   (_user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
-  globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- mkContext $ mkLocaleFromRegion defaultValue
 
   req <- mkRequest GET []
   (res, _ctx') <- runTestKontra req ctx $ handleCompanyLogo (companyid company)
 
   assertEqual "Response code is 200" 200 (rsCode res)
 
-addNewAdminUserAndCompany :: String -> String -> String -> DB (User, Company)
+addNewAdminUserAndCompany :: String -> String -> String -> TestEnv (User, Company)
 addNewAdminUserAndCompany fstname sndname email = do
   company <- addNewCompany
   Just user <- addNewCompanyUser fstname sndname email (companyid company)

@@ -790,7 +790,7 @@ a.new-btn-small.black p {
 	border-right: 0;
 }
 
-.body-container .price-plan tr:last-child td {
+.body-container .price-plan tr.last-child td {
 	border-bottom: 0;
 }
 
@@ -840,7 +840,7 @@ a.new-btn-small.black p {
         margin-top:8px;
         font: 17px "Copse";
         margin-bottom: 4px;
-} 
+}
 
 .price-plan-container .price-comment {
         display:block;
@@ -958,7 +958,7 @@ a.new-btn-small.black p {
 	color: #000;
 }
 
-.body-container .highlight-container .highlight-rows li:last-child {
+.body-container .highlight-container .highlight-rows li.last-child {
 	border: 0;
 }
 
@@ -1425,7 +1425,7 @@ div.price-plan-details {
 	border-right: 0;
 }
 
-.body-container .big-pp-container tr:last-child td {
+.body-container .big-pp-container tr.last-child td {
 	border-bottom: 0;
 }
 
@@ -2046,10 +2046,6 @@ a {
     line-height: 1.4em;
     /*height: 750px;*/
     /*overflow: scroll;*/
-}
-
-.createaccountbox {
-    height: 250px;
 }
 
 .contactus strong{

@@ -3,7 +3,6 @@ module Context (
     ) where
 
 import Control.Concurrent.MVar
-import DB.Classes (DBEnv)
 import File.FileID
 import Doc.JpegPages
 import Doc.SignatoryLinkID
@@ -12,7 +11,7 @@ import User.Model
 import qualified Data.ByteString as BS
 import qualified Data.Map as Map
 import qualified Network.AWS.Authentication as AWS
-import Templates.Templates
+import Templates.TemplatesLoader
 import qualified TrustWeaver as TW
 import ELegitimation.ELegTransaction
 import qualified MemCache
@@ -26,11 +25,11 @@ import IPAddress
 data Context = Context
     { ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
     , ctxhostpart            :: String -- ^ The hostname of the URL for the request.
+    , ctxresourcehostpart    :: String -- ^ The hostname for the resources (will be https if possible)
     , ctxflashmessages       :: [FlashMessage] -- ^ The flash messages for the NEXT request.
     , ctxtime                :: MinutesTime -- ^ The time of the request.
     , ctxnormalizeddocuments :: MVar (Map.Map FileID JpegPages) -- ^
     , ctxipnumber            :: IPAddress -- ^ The ip number of the client.
-    , ctxdbenv               :: DBEnv -- ^ PostgreSQL database environment
     , ctxdocstore            :: FilePath -- ^ The temporary document directory.
     , ctxs3action            :: AWS.S3Action -- ^
     , ctxgscmd               :: String -- ^
@@ -50,4 +49,5 @@ data Context = Context
     , ctxadminaccounts       :: [Email] -- ^
     , ctxsalesaccounts       :: [Email] -- ^
     , ctxmagichashes         :: Map.Map SignatoryLinkID MagicHash
+    , ctxmaybepaduser        :: Maybe User -- ^ If we are loged in to the pad view
     }

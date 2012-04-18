@@ -27,11 +27,9 @@ module Administration.AdministrationView(
 
 import KontraLink
 import Templates.Templates
-import Text.StringTemplate.GenericStandard()
 import Control.Applicative
-import Control.Monad.IO.Class
 import Data.Maybe
-import DB.Classes
+import DB
 import Misc
 import User.UserView
 import User.Model
@@ -43,158 +41,156 @@ import Util.HasSomeCompanyInfo
 import Kontra
 import ScriveByMail.Model
 import ScriveByMail.View
+import qualified Templates.Fields as F
 
 import Control.Monad
 
 {-| Main admin page - can go from here to other pages -}
 adminMainPage :: TemplatesMonad m => Context -> m String
-adminMainPage ctx = renderTemplateFM "adminsmain" $ do
-    field "admin" $ (isAdmin) ctx
+adminMainPage ctx = renderTemplate "adminsmain" $ do
+    F.value "admin" $ isAdmin ctx
 
 {-| Manage users page - can find user here -}
 adminUsersPage :: TemplatesMonad m => m String
 adminUsersPage =
-    renderTemplateFM "adminusers" $ do
-        field "adminlink" $ show $ LinkAdminOnly
+    renderTemplate "adminusers" $ do
+        F.value "adminlink" $ show $ LinkAdminOnly
 
 {- | Manage companies page - can find a company here -}
 adminCompaniesPage :: TemplatesMonad m => m String
 adminCompaniesPage =
-    renderTemplateFM "admincompanies" $ do
-        field "adminlink" $ show $ LinkAdminOnly
+    renderTemplate "admincompanies" $ do
+        F.value "adminlink" $ show $ LinkAdminOnly
 
 {- | Manage company users page - can find a company user here -}
 adminCompanyUsersPage :: TemplatesMonad m => CompanyID -> m String
 adminCompanyUsersPage cid =
-    renderTemplateFM "admincompanyusers" $ do
-        field "adminlink" $ show $ LinkAdminOnly
-        field "admincompanieslink" $ show $ LinkCompanyAdmin Nothing
-        field "adminuserslink" $ show $ LinkUserAdmin Nothing
-        field "companyid" $ show cid
+    renderTemplate "admincompanyusers" $ do
+        F.value "adminlink" $ show $ LinkAdminOnly
+        F.value "admincompanieslink" $ show $ LinkCompanyAdmin Nothing
+        F.value "adminuserslink" $ show $ LinkUserAdmin Nothing
+        F.value "companyid" $ show cid
 
 {-| Manage users page - can find user here -}
 adminUsersPageForSales :: TemplatesMonad m => m String
 adminUsersPageForSales =
-    renderTemplateFM "adminUsersForSales" $ do
-            field "adminlink" $ show $ LinkAdminOnly
+    renderTemplate "adminUsersForSales" $ do
+            F.value "adminlink" $ show $ LinkAdminOnly
 
 {-| Manage user page - can change user info and settings here -}
 adminUserPage :: TemplatesMonad m => User -> Maybe Company -> m String
 adminUserPage user mcompany =
-    renderTemplateFM "adminuser" $ do
-        field "adminuserslink" $ show $ LinkUserAdmin Nothing
-        fieldF "user" $ userFields user
-        fieldF "company" $ companyFields mcompany
-        --field "paymentmodel" $ getModelView paymentModel
-        field "adminlink" $ show $ LinkAdminOnly
+    renderTemplate "adminuser" $ do
+        F.value "adminuserslink" $ show $ LinkUserAdmin Nothing
+        F.object "user" $ userFields user
+        F.object "company" $ companyFields mcompany
+        F.value "adminlink" $ show $ LinkAdminOnly
 
 {- | Manager company page - can change company info and settings here -}
 adminCompanyPage :: TemplatesMonad m => Company -> Maybe MailAPIInfo -> m String
 adminCompanyPage company mmailapiinfo =
-  renderTemplateFM "admincompany" $ do
-    field "admincompanieslink" $ show $ LinkCompanyAdmin Nothing
+  renderTemplate "admincompany" $ do
+    F.value "admincompanieslink" $ show $ LinkCompanyAdmin Nothing
     companyFields (Just company)
     when (isJust mmailapiinfo) $ mailAPIInfoFields (fromJust mmailapiinfo)
-    field "hasmailapi" $ isJust mmailapiinfo
-    field "adminlink" $ show $ LinkAdminOnly
+    F.value "hasmailapi" $ isJust mmailapiinfo
+    F.value "adminlink" $ show $ LinkAdminOnly
 
-adminUserStatisticsPage :: TemplatesMonad m => Fields m -> m String
+adminUserStatisticsPage :: TemplatesMonad m => Fields m () -> m String
 adminUserStatisticsPage morefields =
-  renderTemplateFM "statisticsPage" $ do
+  renderTemplate "statisticsPage" $ do
     morefields
-    field "adminlink" $ show $ LinkAdminOnly
+    F.value "adminlink" $ show $ LinkAdminOnly
 
 adminFunctionalityStatsPage :: TemplatesMonad m => [(String, Int)]
                                               -> [(String, Int)]
                                               -> m String
 adminFunctionalityStatsPage userstats docstats =
-  renderTemplateFM "adminFunctionalityStatsPage" $ do
-    fieldFL "userfunctionalitystats" $ map functionalityStatFields userstats
-    fieldFL "docfunctionalitystats" $ map functionalityStatFields docstats
-    field "adminlink" $ show $ LinkAdminOnly
+  renderTemplate "adminFunctionalityStatsPage" $ do
+    F.objects "userfunctionalitystats" $ map functionalityStatFields userstats
+    F.objects "docfunctionalitystats" $ map functionalityStatFields docstats
+    F.value "adminlink" $ show $ LinkAdminOnly
   where
     functionalityStatFields (label, count) = do
-      field "label" label
-      field "count" count
+      F.value "label" label
+      F.value "count" count
 
 {-| Manage user page - can change user info and settings here -}
 -- adminUserUsageStatsPage :: KontrakcjaTemplates -> User -> DocStatsL -> IO String
-adminUserUsageStatsPage :: TemplatesMonad m => User -> Maybe Company -> Fields m -> m String
+adminUserUsageStatsPage :: TemplatesMonad m => User -> Maybe Company -> Fields m () -> m String
 adminUserUsageStatsPage user mcompany morefields =
-    renderTemplateFM "userusagestats" $ do
-        field "adminuserslink" $ show $ LinkUserAdmin Nothing
-        fieldF "user" $ userFields user
-        fieldF "company" $ companyFields mcompany
-        field "adminlink" $ show $ LinkAdminOnly
+    renderTemplate "userusagestats" $ do
+        F.value "adminuserslink" $ show $ LinkUserAdmin Nothing
+        F.object "user" $ userFields user
+        F.object "company" $ companyFields mcompany
+        F.value "adminlink" $ show $ LinkAdminOnly
         morefields
 
 {-| The company stats page -}
-adminCompanyUsageStatsPage :: TemplatesMonad m => CompanyID -> Fields m -> m String
+adminCompanyUsageStatsPage :: TemplatesMonad m => CompanyID -> Fields m () -> m String
 adminCompanyUsageStatsPage companyid morefields =
-    renderTemplateFM "companyusagestats" $ do
-        field "admincompanieslink" $ show $ LinkCompanyAdmin Nothing
-        field "adminlink" $ show $ LinkAdminOnly
-        field "companyid" $ show companyid
+    renderTemplate "companyusagestats" $ do
+        F.value "admincompanieslink" $ show $ LinkCompanyAdmin Nothing
+        F.value "adminlink" $ show $ LinkAdminOnly
+        F.value "companyid" $ show companyid
         morefields
 
-adminDocuments:: TemplatesMonad m => Context -> m String
+adminDocuments :: TemplatesMonad m => Context -> m String
 adminDocuments ctx = do
-    renderTemplateFM "admindocumentslist" $ do
-       field "adminlink" $ show $ LinkAdminOnly
-       field "admin" $ (isAdmin) ctx
-
-
+    renderTemplate "admindocumentslist" $ do
+       F.value "adminlink" $ show $ LinkAdminOnly
+       F.value "admin" $ isAdmin ctx
 
 allUsersTable :: TemplatesMonad m => [(User,Maybe Company,DocStats)] -> m String
 allUsersTable users =
-    renderTemplateFM "allUsersTable" $ do
-        fieldFL "users" $ map mkUserInfoView $ users
-        field "adminlink" $ show $ LinkAdminOnly
+    renderTemplate "allUsersTable" $ do
+        F.objects "users" $ map mkUserInfoView $ users
+        F.value "adminlink" $ show $ LinkAdminOnly
 
-servicesAdminPage :: TemplatesMonad m => DBEnv -> [Service] -> m String
-servicesAdminPage env services = do
-    renderTemplateFM "servicesAdmin" $ do
-        field "adminlink" $ show $ LinkAdminOnly
-        fieldFL "services" $ for services $ \ service -> do
-            field "name"  $ show $ serviceid service
-            fieldM "admin" $ fmap getSmartName <$> (ioRunDB env $ dbQuery $ GetUserByID $ serviceadmin $ servicesettings service)
-            field "location" $ show $ servicelocation $ servicesettings service
+servicesAdminPage :: (MonadDB m, TemplatesMonad m) => [Service] -> m String
+servicesAdminPage services = do
+    renderTemplate "servicesAdmin" $ do
+        F.value "adminlink" $ show $ LinkAdminOnly
+        F.objects "services" $ for services $ \ service -> do
+            F.value "name"  $ show $ serviceid service
+            F.valueM "admin" $ fmap getSmartName <$> (dbQuery $ GetUserByID $ serviceadmin $ servicesettings service)
+            F.value "location" $ show $ servicelocation $ servicesettings service
 
-mkUserInfoView :: (Functor m, MonadIO m) => (User, Maybe Company, DocStats) -> Fields m
+mkUserInfoView :: Monad m => (User, Maybe Company, DocStats) -> Fields m ()
 mkUserInfoView (user, mcompany, docstats) = do
-  fieldF "userdetails" $ userBasicFields user mcompany
-  field "docstats" $ docstats
-  fieldF "adminview" $ do userFields user
-                          companyFields mcompany
+  F.object "userdetails" $ userBasicFields user mcompany
+  F.value "docstats" $ docstats
+  F.object "adminview" $ do
+    userFields user
+    companyFields mcompany
 
-companyFields :: MonadIO m => Maybe Company -> Fields m
+companyFields :: Monad m => Maybe Company -> Fields m ()
 companyFields mc = do
-        field "companyid" $ maybe "" (show . companyid) mc
-        field "companyname" $  getCompanyName mc
-        field "companynumber" $ getCompanyNumber mc
-        field "companyaddress" $ maybe "" (companyaddress . companyinfo) mc
-        field "companyzip" $  maybe "" (companyzip . companyinfo)  mc
-        field "companycity" $  maybe "" (companycity . companyinfo) mc
-        field "companycountry" $ maybe "" (companycountry . companyinfo) mc
-        field "companyemaildomain" $ maybe "" (fromMaybe "" . (companyemaildomain . companyinfo)) mc
+        F.value "companyid" $ maybe "" (show . companyid) mc
+        F.value "companyname" $  getCompanyName mc
+        F.value "companynumber" $ getCompanyNumber mc
+        F.value "companyaddress" $ maybe "" (companyaddress . companyinfo) mc
+        F.value "companyzip" $  maybe "" (companyzip . companyinfo)  mc
+        F.value "companycity" $  maybe "" (companycity . companyinfo) mc
+        F.value "companycountry" $ maybe "" (companycountry . companyinfo) mc
+        F.value "companyemaildomain" $ maybe "" (fromMaybe "" . (companyemaildomain . companyinfo)) mc
 
 {-| Full fields set about user -}
-userFields :: MonadIO m => User -> Fields m
+userFields :: Monad m => User -> Fields m ()
 userFields u =  do
-        field "fstname"          $ getFirstName u
-        field "sndname"          $ getLastName u
-        field "personalnumber"   $ getPersonalNumber u
-        field "companyposition"  $ usercompanyposition $ userinfo u
-        field "phone"            $ userphone $ userinfo u
-        field "mobile"           $ usermobile $ userinfo u
-        field "email"            $ getEmail u
-        field "regionse"         $ REGION_SE == getRegion u
-        field "regiongb"         $ REGION_GB == getRegion u
-        field "langsv"           $ LANG_SE == getLang u
-        field "langen"           $ LANG_EN == getLang u
-        field "iscompanyaccount" $ isJust $ usercompany u
-        field "iscompanyadmin"   $ useriscompanyadmin u
-        field "id"               $ show (userid u)
-        field "companynumber"    $ getCompanyNumber u
-        field "companyname"      $ getCompanyName   u
-
+        F.value "fstname"          $ getFirstName u
+        F.value "sndname"          $ getLastName u
+        F.value "personalnumber"   $ getPersonalNumber u
+        F.value "companyposition"  $ usercompanyposition $ userinfo u
+        F.value "phone"            $ userphone $ userinfo u
+        F.value "mobile"           $ usermobile $ userinfo u
+        F.value "email"            $ getEmail u
+        F.value "regionse"         $ REGION_SE == getRegion u
+        F.value "regiongb"         $ REGION_GB == getRegion u
+        F.value "langsv"           $ LANG_SE == getLang u
+        F.value "langen"           $ LANG_EN == getLang u
+        F.value "iscompanyaccount" $ isJust $ usercompany u
+        F.value "iscompanyadmin"   $ useriscompanyadmin u
+        F.value "id"               $ show (userid u)
+        F.value "companynumber"    $ getCompanyNumber u
+        F.value "companyname"      $ getCompanyName   u

@@ -7,7 +7,7 @@ import Test.Framework.Providers.HUnit
 import Test.HUnit (Assertion)
 
 import AppControl
-import DB.Classes
+import DB
 import Doc.Model
 import Doc.DocStateData
 import Context
@@ -15,8 +15,6 @@ import Kontra (Kontra(..))
 import Login
 import MinutesTime
 import Redirect
-import StateHelper
-import Templates.TemplatesLoader
 import TestingUtil
 import TestKontra as T
 import User.Locale
@@ -25,15 +23,14 @@ import User.UserControl
 import Misc
 import EvidenceLog.Model
 
-
-localeTests :: DBEnv -> Test
+localeTests :: TestEnvSt -> Test
 localeTests env = testGroup "Locale" [
       testCase "restricts allowed locales" $ testRestrictsAllowedLocales
-    , testCase "logged in locale switching" $ testLoggedInLocaleSwitching env
-    , testCase "doc locale can be switched from sweden to britain" $
-               testDocumentLocaleSwitchToBritain env
-    , testCase "doc locale can be switched from britain to sweden" $
-               testDocumentLocaleSwitchToSweden env
+    , testThat "logged in locale switching" env testLoggedInLocaleSwitching
+    , testThat "doc locale can be switched from sweden to britain" env
+               testDocumentLocaleSwitchToBritain
+    , testThat "doc locale can be switched from britain to sweden" env
+               testDocumentLocaleSwitchToSweden
     ]
 
 {- |
@@ -57,13 +54,12 @@ testRestrictsAllowedLocales = do
     Checks along the way that the user has the correct locale, and also that the
     context has the correct locale.
 -}
-testLoggedInLocaleSwitching :: DBEnv -> Assertion
-testLoggedInLocaleSwitching env = withTestEnvironment env $ do
+testLoggedInLocaleSwitching :: TestEnv ()
+testLoggedInLocaleSwitching = do
     --create a new uk user and login
     user <- createTestUser REGION_GB LANG_EN
-    globaltemplates <- readGlobalTemplates
-    ctx0 <- (\c -> c { ctxdbenv = env, ctxlocale = mkLocale REGION_GB LANG_EN })
-      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    ctx0 <- (\c -> c { ctxlocale = mkLocale REGION_GB LANG_EN })
+      <$> mkContext (mkLocaleFromRegion defaultValue)
     req0 <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin")]
     (res1, ctx1) <- runTestKontra req0 ctx0 $ handleLoginPost >>= sendRedirect
     assertLoggedInAndOnUploadPage (userid user) res1 ctx1
@@ -92,7 +88,7 @@ testLoggedInLocaleSwitching env = withTestEnvironment env $ do
       muser <- dbQuery $ GetUserByID uid
       (userlocale, _) <- runTestKontra emptyReq ctx $ Kontra $ getStandardLocale muser
       assertLocale userlocale region lang
-    assertLocale :: HasLocale a => a -> Region -> Lang -> DB ()
+    assertLocale :: HasLocale a => a -> Region -> Lang -> TestEnv ()
     assertLocale locale region lang = do
       assertEqual "Region" region (getRegion locale)
       assertEqual "Lang" lang (getLang locale)
@@ -102,12 +98,11 @@ testLoggedInLocaleSwitching env = withTestEnvironment env $ do
       assertBool "User was logged into context" $ (userid <$> ctxmaybeuser ctx) == Just uid
       assertBool "No flash messages were added" $ null $ ctxflashmessages ctx
 
-testDocumentLocaleSwitchToBritain :: DBEnv -> Assertion
-testDocumentLocaleSwitchToBritain env = withTestEnvironment env $ do
+testDocumentLocaleSwitchToBritain :: TestEnv ()
+testDocumentLocaleSwitchToBritain = do
   user <- createTestUser REGION_SE LANG_SE
-  globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue)
   doc <- createTestElegDoc user (ctxtime ctx)
 
   --make sure the doc locale matches the author locale
@@ -117,12 +112,11 @@ testDocumentLocaleSwitchToBritain env = withTestEnvironment env $ do
   -- check that eleg is used
   assertEqual "Eleg is used" [ELegitimationIdentification] (documentallowedidtypes doc)
 
-testDocumentLocaleSwitchToSweden :: DBEnv -> Assertion
-testDocumentLocaleSwitchToSweden env = withTestEnvironment env $ do
+testDocumentLocaleSwitchToSweden :: TestEnv ()
+testDocumentLocaleSwitchToSweden = do
   user <- createTestUser REGION_GB LANG_EN
-  globaltemplates <- readGlobalTemplates
-  ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user })
-    <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+  ctx <- (\c -> c { ctxmaybeuser = Just user })
+    <$> mkContext (mkLocaleFromRegion defaultValue)
   doc <- createTestElegDoc user (ctxtime ctx)
 
   -- make sure the doc locale matches the author locale
@@ -130,15 +124,15 @@ testDocumentLocaleSwitchToSweden env = withTestEnvironment env $ do
   assertEqual "Initial lang is English" LANG_EN (getLang doc)
 
 
-createTestElegDoc :: User -> MinutesTime -> DB Document
+createTestElegDoc :: User -> MinutesTime -> TestEnv Document
 createTestElegDoc user ctxtime = do
   doc <- addRandomDocumentWithAuthorAndCondition user
            (\d -> documentstatus d == Preparation
                   && documentfunctionality d == AdvancedFunctionality)
-  (Right elegdoc) <- dbUpdate $ SetDocumentIdentification (documentid doc) [ELegitimationIdentification] (SystemActor ctxtime)
+  (Right elegdoc) <- dbUpdate $ SetDocumentIdentification (documentid doc) [ELegitimationIdentification] (systemActor ctxtime)
   return elegdoc
 
-createTestUser :: Region -> Lang -> DB User
+createTestUser :: Region -> Lang -> TestEnv User
 createTestUser region lang = do
     pwd <- createPassword "admin"
     Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) False Nothing Nothing (mkLocale region lang)

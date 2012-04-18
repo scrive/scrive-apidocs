@@ -59,6 +59,8 @@ templateFiles = ["landpages.st",
                  "docpages/docseal.st",
                  "docpages/attachmentpage.st",
                  "docpages/rubbishbinlist.st",
+                 "docpages/paddevicearchive.st",
+                 "docpages/paddeviceview.st",
                  "apppages.st",
                  "firstpage.st",
                  "staticpages/sitemap.st",
@@ -117,5 +119,3 @@ parseLines handle = do
         else if e
             then return [l]
             else fmap ((:) l) (parseLines handle)
-
-

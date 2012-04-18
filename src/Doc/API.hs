@@ -26,11 +26,10 @@ import Util.SignatoryLinkUtils
 import Util.HasSomeUserInfo
 import Happstack.Server.RqData
 import Doc.DocStorage
---import qualified Doc.DocControl as DocControl
+import DB
 --import Doc.DocControl
 --import Control.Concurrent.MVar
 
-import DB.Classes
 import File.Model
 import MagicHash (MagicHash)
 import Kontra
@@ -46,13 +45,13 @@ import Stats.Control
 --import MinutesTime
 import EvidenceLog.Model
 
-documentAPI :: Route (Kontra' Response)
+documentAPI :: Route (KontraPlus Response)
 documentAPI = choice [
   dir "api" $ dir "document" $ hPostNoXToken $ toK0 $ documentNew,
+
   -- /api/mainfile/{docid} ==> Change main file
   dir "api" $ dir "mainfile" $ hPostNoXToken $ toK1 $ documentChangeMainFile,
 
---  dir "api" $ dir "document" $ hGet          $ toK1 $ documentView,
   dir "api" $ dir "document" $ hPostNoXToken $ toK6 $ documentUploadSignatoryAttachment,
   dir "api" $ dir "document" $ hDelete       $ toK6 $ documentDeleteSignatoryAttachment
   ]
@@ -64,8 +63,9 @@ documentNew = api $ do
   
   (user, actor) <- getAPIUser
   mcompany <- case usercompany user of
-    Just companyid -> lift $ runDBQuery $ GetCompany companyid
+    Just companyid -> apiGuardL' $ dbQuery $ GetCompany companyid
     Nothing -> return Nothing
+    
 
   jsons <- apiGuardL (badInput "The MIME part 'json' must exist and must be a JSON.") $ getDataFn' (look "json")
 
@@ -90,11 +90,11 @@ documentNew = api $ do
   -- we use gs to do that of course
   ctx <- getContext
   
-  d1 <- apiGuardL' $ runDBUpdate $ NewDocument user mcompany filename doctype 1 actor
+  d1 <- apiGuardL' $ dbUpdate $ NewDocument user mcompany filename doctype 1 actor
   
-  file <- lift $ runDBUpdate $ NewFile filename $ concatChunks content1
+  file <- lift $ dbUpdate $ NewFile filename $ concatChunks content1
 
-  d2 <- apiGuardL' $ runDBUpdate $ AttachFile (documentid d1) (fileid file) actor
+  d2 <- apiGuardL' $ dbUpdate $ AttachFile (documentid d1) (fileid file) actor
 
   -- we really need to check SignatoryDetails before adding them
 
@@ -134,14 +134,14 @@ documentChangeMainFile docid = api $ do
               content <- apiGuardL (badInput "PDF precheck failed.") $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
               let filename = basename filename'
       
-              fileid <$> (lift $ runDB $ dbUpdate $ NewFile filename content)
+              fileid <$> (dbUpdate $ NewFile filename content)
             (_, Just templateids) -> do
               templateid <- apiGuard (badInput $ "Template id in bad format: " ++ templateids) $ maybeRead templateids
               temp <- apiGuardL' $ getDocByDocID templateid
               apiGuard (badInput "No template found for that id (or you don't have permissions).") $ listToMaybe $ documentfiles temp
             _ -> throwError $ badInput "This API call requires one of 'file' or 'template' POST parameters."
   
-  _ <- apiGuardL' $ runDBUpdate $ AttachFile docid fileid aa
+  _ <- apiGuardL $ dbUpdate $ AttachFile docid fileid aa
   return ()
 
 
@@ -197,9 +197,9 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
 
   content <- apiGuardL (badInput "The PDF was invalid.") $ liftIO $ preCheckPDF (ctxgscmd ctx) (concatChunks content1)
   
-  file <- lift $ runDBUpdate $ NewFile (basename filename) content
-  let actor = SignatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) email slid
-  d <- apiGuardL' $ runDBUpdate $ SaveSigAttachment (documentid doc) sid aname (fileid file) actor
+  file <- lift $ dbUpdate $ NewFile (basename filename) content
+  let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) email slid
+  d <- apiGuardL $ dbUpdate $ SaveSigAttachment (documentid doc) sid aname (fileid file) actor
   
   -- let's dig the attachment out again
   sigattach' <- apiGuard' $ getSignatoryAttachment d sid aname
@@ -223,8 +223,8 @@ documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
   -- attachment must have a file
   fileid <- apiGuard (actionNotAvailable "That signatory attachment request does not have a file uploaded for it, or it has been previously deleted.") $ signatoryattachmentfile sigattach
 
-  d <- apiGuardL' $ runDBUpdate $ DeleteSigAttachment (documentid doc) sid fileid 
-       (SignatoryActor ctxtime ctxipnumber muid email sid)
+  d <- apiGuardL $ dbUpdate $ DeleteSigAttachment (documentid doc) sid fileid
+       (signatoryActor ctxtime ctxipnumber muid email sid)
   
   -- let's dig the attachment out again
   sigattach' <- apiGuard' $ getSignatoryAttachment d sid aname

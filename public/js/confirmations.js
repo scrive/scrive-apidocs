@@ -76,7 +76,10 @@ var ConfirmationModel = Backbone.Model.extend({
       this.set({acceptVisible : false});
   },
   acceptVisible : function() {
-      return this.get("acceptVisible");
+      return this.get("acceptVisible");   
+  },
+  extraClass : function() {
+            return this.get("extraClass");   
   }
 });
 
@@ -97,8 +100,9 @@ window.ExposeMaskFixer =  Backbone.Model.extend({
         {
             var em = $("#exposeMask");
             var body = $("body");
-            if (em.size() == 1 && (body.height() != em.height()))
-                em.height(body.height());
+            var height = Math.max(body.height(),$(document).height());
+            if (em.size() == 1 && (height != em.height()))
+                em.height(height);
             setTimeout(function() {fixer.fixer();},1000);
         }
     }
@@ -127,6 +131,8 @@ var ConfirmationView = Backbone.View.extend({
        var view = this;
        var model = this.model;
        $(this.el).addClass("modal-container");
+       if (model.extraClass() != undefined)
+            $(this.el).addClass(model.extraClass());
        $(this.el).css("width",model.width());
        var header = $("<div class='modal-header'><span class='modal-icon message'></span></div>");
        var title = $("<span class='modal-title'/>");

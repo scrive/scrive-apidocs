@@ -4,18 +4,41 @@ import Control.Monad
 import Data.Int
 import Database.HDBC
 import Text.JSON
-
-import DB.Classes
-import DB.Fetcher2
-import DB.Model
-import DB.Utils
-import Doc.Tables
-import Log
-import Doc.DocumentID
-import Doc.DocStateData()
 import qualified Data.ByteString as BS
 
-updateDocumentStatusAfterRemovingAwaitingAuthor :: Migration
+import DB
+import Doc.Tables
+import qualified Log
+
+moveDocumentTagsFromDocumentsTableToDocumentTagsTable :: MonadDB m => Migration m
+moveDocumentTagsFromDocumentsTableToDocumentTagsTable = Migration {
+    mgrTable = tableDocuments
+  , mgrFrom = 4
+  , mgrDo = do
+    _ <- kRun $ SQL "SELECT id, tags FROM documents WHERE tags <> '' AND tags <> '[]'" [];
+    values <- foldDB fetch []
+    forM_ values $ \(docid, tags) -> do
+      forM_ tags $ \tag -> do
+        let Just (JSString tagname) = lookup "tagname" tag
+            Just (JSString tagvalue) = lookup "tagvalue" tag
+        kRun $ mkSQL INSERT tableDocumentTags
+           [ sql "name" $ fromJSString tagname
+           , sql "value" $ fromJSString tagvalue
+           , sql "document_id" docid
+           ]
+      return ()
+    kRunRaw $ "ALTER TABLE documents DROP COLUMN tags"
+  }
+  where
+    fetch acc docid tagsstr = (docid :: Int64, tags) : acc
+      where
+        Ok (JSArray arr) = decode tagsstr
+        fromJSValue (JSObject obj) = fromJSObject obj
+        fromJSValue x = 
+          error $ "moveDocumentTagsFromDocumentsTableToDocumentTagsTable: expected {tagname:'',tagvalue:''}, got: " ++ encode x
+        tags = map fromJSValue arr
+
+updateDocumentStatusAfterRemovingAwaitingAuthor :: MonadDB m => Migration m
 updateDocumentStatusAfterRemovingAwaitingAuthor = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 3
@@ -26,7 +49,7 @@ updateDocumentStatusAfterRemovingAwaitingAuthor = Migration {
     kRunRaw "UPDATE documents SET status = 7 WHERE status = 8"
   }
 
-removeOldSignatoryLinkIDFromCancelationReason :: Migration
+removeOldSignatoryLinkIDFromCancelationReason :: MonadDB m => Migration m
 removeOldSignatoryLinkIDFromCancelationReason = Migration {
     mgrTable = tableDocuments
   , mgrFrom = 1
@@ -47,7 +70,7 @@ removeOldSignatoryLinkIDFromCancelationReason = Migration {
         Ok (JSObject o) = decode reason
         [("ELegDataMismatch", JSArray params)] = fromJSObject o
 
-addColumnToRecordInternalInsertionOrder :: Migration
+addColumnToRecordInternalInsertionOrder :: MonadDB m => Migration m
 addColumnToRecordInternalInsertionOrder =
   Migration {
     mgrTable = tableSignatoryLinks
@@ -59,7 +82,7 @@ addColumnToRecordInternalInsertionOrder =
       return ()
   }
 
-addDocumentIdIndexOnSignatoryLinks :: Migration
+addDocumentIdIndexOnSignatoryLinks :: MonadDB m => Migration m
 addDocumentIdIndexOnSignatoryLinks =
   Migration {
     mgrTable = tableSignatoryLinks
@@ -69,7 +92,7 @@ addDocumentIdIndexOnSignatoryLinks =
       return ()
   }
 
-addIdSerialOnSignatoryLinks :: Migration
+addIdSerialOnSignatoryLinks :: MonadDB m => Migration m
 addIdSerialOnSignatoryLinks =
   Migration {
     mgrTable = tableSignatoryLinks
@@ -85,7 +108,7 @@ addIdSerialOnSignatoryLinks =
       return ()
   }
 
-addIdSerialOnDocuments :: Migration
+addIdSerialOnDocuments :: MonadDB m => Migration m
 addIdSerialOnDocuments =
   Migration {
     mgrTable = tableDocuments
@@ -101,7 +124,7 @@ addIdSerialOnDocuments =
       return ()
   }
 
-addNameColumnInSignatoryAttachments :: Migration
+addNameColumnInSignatoryAttachments :: MonadDB m => Migration m
 addNameColumnInSignatoryAttachments =
   Migration {
     mgrTable = tableSignatoryAttachments
@@ -110,7 +133,7 @@ addNameColumnInSignatoryAttachments =
       kRunRaw "ALTER TABLE signatory_attachments ADD COLUMN name TEXT NOT NULL DEFAULT ''"
   }
 
-addCSVUploadDataFromDocumentToSignatoryLink :: Migration
+addCSVUploadDataFromDocumentToSignatoryLink :: MonadDB m => Migration m
 addCSVUploadDataFromDocumentToSignatoryLink =
   Migration {
     mgrTable = tableSignatoryLinks
@@ -122,7 +145,7 @@ addCSVUploadDataFromDocumentToSignatoryLink =
         ++ " ADD COLUMN csv_signatory_index INTEGER NULL"
   }
 
-addSignatoryLinkIdToSignatoryAttachment :: Migration
+addSignatoryLinkIdToSignatoryAttachment :: MonadDB m => Migration m
 addSignatoryLinkIdToSignatoryAttachment =
   Migration {
     mgrTable = tableSignatoryAttachments
@@ -148,7 +171,6 @@ addSignatoryLinkIdToSignatoryAttachment =
     kRunRaw $ "CREATE INDEX idx_signatory_attachments_signatory_link_id ON signatory_attachments(signatory_link_id)"
   }
   where
-    logAndDeleteBadAttachments :: DB ()
     logAndDeleteBadAttachments = do 
       kRunRaw $ "SELECT document_id, name, email, description FROM signatory_attachments WHERE signatory_link_id = 0"
       atts <- foldDB decoder []
@@ -160,6 +182,4 @@ addSignatoryLinkIdToSignatoryAttachment =
                  ++ ", description = " ++ show s) atts
       return ()
       where
-        decoder :: [(DocumentID, BS.ByteString, BS.ByteString, BS.ByteString)] -> DocumentID -> BS.ByteString -> BS.ByteString -> BS.ByteString -> [(DocumentID, BS.ByteString, BS.ByteString, BS.ByteString)]
-        decoder acc docid name email desc = (docid, name, email, desc) : acc
-
+        decoder acc docid name email desc = (docid :: Int64, name :: BS.ByteString, email :: BS.ByteString, desc :: BS.ByteString) : acc

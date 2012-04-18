@@ -11,8 +11,8 @@ import qualified Control.Exception as E
 import Crypto.RNG (newCryptoRNGState)
 import Configuration
 import Dispatcher
-import DB.Classes
 import DB.Checks
+import DB.PostgreSQL
 import Handlers
 import Mails.Migrations
 import Mails.Tables
@@ -27,7 +27,7 @@ main = Log.withLogger $ do
   appname <- getProgName
   conf <- readConfig Log.mailingServer appname [] "mailing_server.conf"
   rng <- newCryptoRNGState
-  withPostgreSQLDB (mscDBConfig conf) rng $
+  withPostgreSQL (mscDBConfig conf) $
     performDBChecks Log.mailingServer mailerTables mailerMigrations
   E.bracket (do
     let (iface, port) = mscHttpBindAddress conf

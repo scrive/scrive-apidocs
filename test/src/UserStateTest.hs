@@ -5,17 +5,18 @@ import Data.Maybe
 import Test.Framework
 
 import Company.Model
-import DB.Classes
+import DB
 import MinutesTime
 import User.Model
 import TestingUtil
+import TestKontra
 import Data.List
 
 sortByEmail :: [User] -> [User]
 sortByEmail = sortBy (\a b -> compare (f a) (f b))
   where f = useremail . userinfo
 
-userStateTests :: DBEnv -> Test
+userStateTests :: TestEnvSt -> Test
 userStateTests env = testGroup "UserState" [
     testGroup "getUserByEmail" [
       testThat "returns nothing when there isn't a user with a matching email" env test_getUserByEmail_returnsNothing
@@ -45,31 +46,31 @@ userStateTests env = testGroup "UserState" [
   , testThat "SetSignupMethod works" env test_setSignupMethod
   ]
 
-test_getUserByEmail_returnsNothing :: DB ()
+test_getUserByEmail_returnsNothing :: TestEnv ()
 test_getUserByEmail_returnsNothing = do
   queriedUser <- dbQuery $ GetUserByEmail Nothing (Email "emily@green.com")
   assert (isNothing queriedUser)
 
-test_getUserByEmail_returnsTheRightUser :: DB ()
+test_getUserByEmail_returnsTheRightUser :: TestEnv ()
 test_getUserByEmail_returnsTheRightUser = do
   Just user <- addNewUser "Emily" "Green" "emily@green.com"
   queriedUser <- dbQuery $ GetUserByEmail Nothing (Email "emily@green.com")
   assert (isJust queriedUser)
   assertEqual "For GetUserByEmail result" user (fromJust queriedUser)
 
-test_getUserByID_returnsNothing :: DB ()
+test_getUserByID_returnsNothing :: TestEnv ()
 test_getUserByID_returnsNothing = do
   queriedUser <- dbQuery $ GetUserByID (unsafeUserID 100)
   assert (isNothing queriedUser)
 
-test_getUserByID_returnsTheRightUser :: DB ()
+test_getUserByID_returnsTheRightUser :: TestEnv ()
 test_getUserByID_returnsTheRightUser = do
   Just user <- addNewUser "Emily" "Green" "emiy@green.com"
   queriedUser <- dbQuery $ GetUserByID $ userid user
   assert (isJust queriedUser)
   assertEqual "For GetUserByUserID result" user (fromJust queriedUser)
 
-test_getAllUsers_returnsAllUsers :: DB ()
+test_getAllUsers_returnsAllUsers :: TestEnv ()
 test_getAllUsers_returnsAllUsers = do
   Just user0 <- addNewUser "Emily" "Green" "emily@green.com"
   Just user1 <- addNewUser "Bob" "Blue" "bob@blue.com"
@@ -78,7 +79,7 @@ test_getAllUsers_returnsAllUsers = do
   assert $ user0 `elem` queriedUsers
   assert $ user1 `elem` queriedUsers
 
-test_setUserPassword_changesPassword :: DB ()
+test_setUserPassword_changesPassword :: TestEnv ()
 test_setUserPassword_changesPassword = do
   Just user <- addNewUser "Emily" "Green" "emily@green.com"
   passwordhash <- createPassword "Secret Password!"
@@ -86,13 +87,13 @@ test_setUserPassword_changesPassword = do
   queriedUser <- dbQuery $ GetUserByEmail Nothing (Email "emily@green.com")
   assert $ verifyPassword (userpassword (fromJust queriedUser)) "Secret Password!"
 
-test_addUser_repeatedEmailReturnsNothing :: DB ()
+test_addUser_repeatedEmailReturnsNothing :: TestEnv ()
 test_addUser_repeatedEmailReturnsNothing = do
   Just _ <- addNewUser "Emily" "Green" "emily@green.com"
   result <- addNewUser "Emily" "Green Again" "emily@green.com"
   assert $ isNothing result
 
-test_getCompanyAccounts :: DB ()
+test_getCompanyAccounts :: TestEnv ()
 test_getCompanyAccounts = do
   Company{companyid = cid} <- dbUpdate $ CreateCompany Nothing Nothing
   let emails = ["emily@green.com", "emily2@green.com", "andrzej@skrivapa.se"]
@@ -102,7 +103,7 @@ test_getCompanyAccounts = do
   company_accounts <- dbQuery $ GetCompanyAccounts cid
   assertBool "Company accounts returned in proper order (sorted by email)" $ sortByEmail users == company_accounts
 
-test_getInviteInfo :: DB ()
+test_getInviteInfo :: TestEnv ()
 test_getInviteInfo = do
   Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   now <- getMinutesTime
@@ -124,7 +125,7 @@ test_getInviteInfo = do
   noii <- dbQuery $ GetInviteInfo userid
   assertBool "No InviteInfo returned" $ isNothing noii
 
-test_setUserCompany :: DB ()
+test_setUserCompany :: TestEnv ()
 test_setUserCompany = do
   Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   Company{companyid} <- dbUpdate $ CreateCompany Nothing Nothing
@@ -133,7 +134,7 @@ test_setUserCompany = do
   Just user <- dbQuery $ GetUserByID userid
   assertBool "Returned user has proper companyid" $ usercompany user == Just companyid
 
-test_deleteUser :: DB ()
+test_deleteUser :: TestEnv ()
 test_deleteUser = do
   Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   res <- dbUpdate $ DeleteUser userid
@@ -141,7 +142,7 @@ test_deleteUser = do
   nouser <- dbQuery $ GetUserByID userid
   assertBool "No user returned after removal" $ isNothing nouser
 
-test_setUserInfo :: DB ()
+test_setUserInfo :: TestEnv ()
 test_setUserInfo = do
   Just User{userid, userinfo} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   let ui = userinfo {
@@ -155,7 +156,7 @@ test_setUserInfo = do
   Just User{userinfo = ui2} <- dbQuery $ GetUserByID userid
   assertBool "Updated UserInfo returned" $ ui == ui2
 
-test_setUserSettings :: DB ()
+test_setUserSettings :: TestEnv ()
 test_setUserSettings = do
   Just User{userid, usersettings} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   let us = usersettings { preferreddesignmode = Just AdvancedMode }
@@ -164,7 +165,7 @@ test_setUserSettings = do
   Just User{usersettings = us2} <- dbQuery $ GetUserByID userid
   assertBool "Updated UserSettings returned" $ us == us2
 
-test_setPreferredDesignMode :: DB ()
+test_setPreferredDesignMode :: TestEnv ()
 test_setPreferredDesignMode = do
   Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   let mode = Just AdvancedMode
@@ -173,7 +174,7 @@ test_setPreferredDesignMode = do
   Just User{usersettings = UserSettings{preferreddesignmode}} <- dbQuery $ GetUserByID userid
   assertBool "Updated DesignMode returned" $ mode == preferreddesignmode
 
-test_acceptTermsOfService :: DB ()
+test_acceptTermsOfService :: TestEnv ()
 test_acceptTermsOfService = do
   Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   now <- getMinutesTime
@@ -182,7 +183,7 @@ test_acceptTermsOfService = do
   Just User{userhasacceptedtermsofservice = accepted} <- dbQuery $ GetUserByID userid
   assertBool "Time of acceptance is correct" $ accepted == Just now
 
-test_setSignupMethod :: DB ()
+test_setSignupMethod :: TestEnv ()
 test_setSignupMethod = do
   Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   let method = ViralInvitation

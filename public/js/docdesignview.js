@@ -7,10 +7,11 @@
 
 var DocumentDesignView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render', 'refreshFinalButton');
+        _.bindAll(this, 'render', 'refreshFinalButton', 'refreshAuthorizationDependantOptions');
         this.model.bind('reset', this.render);
         this.model.bind('change:ready', this.render);
         this.model.bind('change:signatories', this.refreshFinalButton);
+        this.model.bind('change:authorization', this.refreshAuthorizationDependantOptions);
         this.model.view = this;
         this.prerender();
         this.render();
@@ -139,7 +140,7 @@ var DocumentDesignView = Backbone.View.extend({
 
       var up = new WizardStep;
       var upview = new ChangeFileUploadView({model: up});
-      
+
       var tmp = new WizardStep;
       var tmpview = new ChangeFileTemplateView({model: tmp});
 
@@ -161,13 +162,12 @@ var DocumentDesignView = Backbone.View.extend({
     finalBasicBox : function() {
         var document = this.model;
         var finalBox = $("<div class='finalbox'/>");
-        if (document.region().iselegavailable())
-            finalBox.append(this.verifikationMethodSelection());
+
+        finalBox.append(this.verifikationMethodSelection());
         finalBox.append(this.finalDateSelection());
-
         finalBox.append(this.editInvitationOption());
-
         finalBox.append(this.finalButton());
+
         return finalBox;
 
     },
@@ -197,46 +197,61 @@ var DocumentDesignView = Backbone.View.extend({
        var box1 = $("<div class='signStepsBodyPart first'/>");
        box1.append(this.finalDateSelection());
        box1.append(this.selectLanguageOption());
-       box1.append(this.editInvitationOption());
+       this.editInvitationOptionBox = this.editInvitationOption();
+       box1.append(this.editInvitationOptionBox);
        box.append(box1).append($("<div class='border'/>"));
 
        var box2 = $("<div class='signStepsBodyPart middle'/>");
        box2.append(this.authorAttachmentsSetup());
-       box2.append(this.signatoryAttachmentSetup());
+       this.signatoryAttachmentSetupBox = this.signatoryAttachmentSetup();
+       box2.append(this.signatoryAttachmentSetupBox);
 
        box.append(box2).append($("<div class='border'/>"));
 
        var box3 = $("<div class='signStepsBodyPart last'/>");
-       if (document.region().iselegavailable())
-            box3.append(this.verifikationMethodSelection());
-
+       box3.append(this.verifikationMethodSelection());
        box3.append(this.finalButton());
        box.append(box3);
        return box;
     },
     verifikationMethodSelection : function() {
         var document = this.model;
+        var elegAvaible = document.region().iselegavailable() || document.elegAuthorization();;
+        var padAvaible = !document.isBasic() || document.padAuthorization();
+        if (!elegAvaible && !padAvaible) return $("<div sttle='display:none;'/>");
         var box = $("<div class='verificationmethodselect'/>");
         var select= $("<select/>");
         var eleg =  $("<option value='eleg'/>").text(localization.eleg);
         var email = $("<option value='email'/>").text(localization.email);
-        select.append(eleg);
+        var pad = $("<option value='pad'/>").text(localization.pad.authorization);
         select.append(email);
+        if (elegAvaible) select.append(eleg);
+        if (padAvaible) select.append(pad);
         box.text(localization.verification.selectmethod);
         box.append(select);
-        if (document.elegAuthorization())
-        {
-          eleg.attr("selected","YES");
+        if (document.elegAuthorization()) {
           email.attr("selected","");
+          pad.attr("selected","");
+          eleg.attr("selected","YES");
         }
-        else
-        {
+        else if  (document.padAuthorization()) {
           eleg.attr("selected","");
-          email.attr("selected","YES");
+          email.attr("selected","");
+          pad.attr("selected","YES");
+
         }
+        else if  (document.emailAuthorization()) {
+          eleg.attr("selected","");
+          pad.attr("selected","");
+          email.attr("selected","YES");
+
+        }
+
         select.change(function(){
             if ($(this).val() == 'eleg')
                 document.setElegVerification();
+            else if ($(this).val() == 'pad')
+                document.setPadVerification();
             else
                 document.setEmailVerification();
         });
@@ -296,7 +311,8 @@ var DocumentDesignView = Backbone.View.extend({
     },
     editInvitationOption: function() {
         var document = this.model;
-        var box = $("<div class='editinvitemessage'/>");
+        if (document.padAuthorization()) return $("<div class='display:none'>");
+        var box  = $("<div class='editinvitemessage'/>");
         var icon = $("<span class='editinvitemessageicon'/>");
         var text = $("<span class='editinvitemessagetext'/>").text(localization.editInviteText);
         box.append(icon).append(text);
@@ -397,8 +413,10 @@ var DocumentDesignView = Backbone.View.extend({
         return box;
 
     },
-    signatoryAttachmentSetup: function() {
+    signatoryAttachmentSetup : function() {
         var document = this.model;
+        if (document.padAuthorization()) return $("<div style='display:none'/>");
+
         var box = $("<div class='signatoryattachmentssetup'/>");
         var icon = $("<span class='signatoryattachmentssetupicon'/>");
         var text = $("<span class='signatoryattachmentssetuptext'/>").text(localization.signatoryAttachments.requestAttachments);
@@ -437,6 +455,25 @@ var DocumentDesignView = Backbone.View.extend({
          SessionStorage.set(this.model.documentid(), "signLastChecked", "" + v);
          this.refreshFinalButton();
     },
+    refreshInvitationMessageOption : function() {
+        if (this.editInvitationOptionBox != undefined)
+        {   var tmp = this.editInvitationOption();
+            this.editInvitationOptionBox.replaceWith(tmp);
+            this.editInvitationOptionBox = tmp;
+        }
+    },
+    refreshSignatoryAttachmentsOption : function() {
+       if (this.signatoryAttachmentSetupBox != undefined)
+        {   var tmp = this.signatoryAttachmentSetup();
+            this.signatoryAttachmentSetupBox.replaceWith(tmp);
+            this.signatoryAttachmentSetupBox = tmp;
+        }
+    },
+    refreshAuthorizationDependantOptions : function() {
+        this.refreshInvitationMessageOption();
+        this.refreshSignatoryAttachmentsOption();
+        this.refreshFinalButton();
+    },
     refreshFinalButton : function() {
         if (this.finalButtonBox != undefined)
             this.finalButtonBox.replaceWith(this.finalButton());
@@ -463,7 +500,7 @@ var DocumentDesignView = Backbone.View.extend({
                         color: "blue",
                         size: document.isBasic() ? "small" : "big" ,
                         cssClass: "finalbutton",
-                        text: document.process().signbuttontext(),
+                        text: localization.designview.sign,
                         onClick: function() {
                             if (!view.verificationBeforeSendingOrSigning()) return;
                                document.save().sendAjax();
@@ -496,16 +533,21 @@ var DocumentDesignView = Backbone.View.extend({
             var bankid = $("<a href='#' class='bankid'><img src='/img/bankid.png' alt='BankID' /></a>");
             var telia = $("<a href='#' class='telia'><img src='/img/telia.png' alt='Telia Eleg'/></a>");
             var nordea = $("<a href='#' class='nordea'><img src='/img/nordea.png' alt='Nordea Eleg'/></a>");
+            var callback = function(submit) {   submit.sendAjax(function(resp) {
+                                                var link = JSON.parse(resp).link;
+                                                window.location = link;
+                                            });
+                            }
             bankid.click(function() {
-                    Eleg.bankidSign(document,signatory, document.signByAuthor());
+                    Eleg.bankidSign(document,signatory, document.signByAuthor(),callback);
                     return false;
             });
             telia.click(function() {
-                    Eleg.teliaSign(document,signatory, document.signByAuthor());
+                    Eleg.teliaSign(document,signatory, document.signByAuthor(),callback);
                     return false;
             });
             nordea.click(function() {
-                    Eleg.nordeaSign(document,signatory, document.signByAuthor());
+                    Eleg.nordeaSign(document,signatory, document.signByAuthor(),callback);
                     return false;
             });
             acceptButton.append(bankid).append(telia).append(nordea);
@@ -515,14 +557,19 @@ var DocumentDesignView = Backbone.View.extend({
             acceptButton = Button.init({
                   size: "small",
                   color : "blue",
-                  icon : $("<span class='btn-symbol cross' style='margin-left: 10px'/>"),
+                  icon : $("<span class='btn-symbol cross' />"),
                   text : document.process().signbuttontext(),
                   onClick : function() {
-                      document.signByAuthor().send();
+                      document.signByAuthor().sendAjax(function(resp) {
+                                        var link = JSON.parse(resp).link;
+                                        window.location = link;
+                                    });;
                     }
                 }).input();
         }
         var content = document.lastSignatoryLeft() ? $(document.process().signatorysignmodalcontentlast()) : $(document.process().signatorysignmodalcontentnotlast());
+        if (document.elegAuthorization())
+            content = $(document.process().signatorysignmodalcontentdesignvieweleg());
         DocumentDataFiller.fill(document, content);
         if (document.elegAuthorization())
         {
@@ -541,9 +588,17 @@ var DocumentDesignView = Backbone.View.extend({
 
     },
     sendConfirmation : function() {
+       var view = this;
        var document = this.model;
        var signatory = document.currentSignatory();
+       var box = $("<div>");
        var content = $("<p>" + document.process().confirmsendtext() + " <strong class='documenttitle'/> " + localization.to + "<span class='unsignedpartynotcurrent'/></p>");
+       box.append(DocumentDataFiller.fill(document,content));
+       var padDesignViewUtil = undefined;
+       if (document.padAuthorization())
+       {   var padDesignViewUtil = new PadDesignViewUtilsModel({document : document});
+           box.append(new PadDesignViewUtilsView({model : padDesignViewUtil}).el);
+       }
        Confirmation.popup({
               title : document.process().confirmsendtitle(),
               acceptButton : Button.init({
@@ -551,11 +606,18 @@ var DocumentDesignView = Backbone.View.extend({
                                 color : "green",
                                 text : document.process().sendbuttontext(),
                                 onClick : function() {
-                                    document.sendByAuthor().send();
+                                    LoadingDialog.open(localization.designview.messages.sendingDocument);
+                                    document.sendByAuthor().sendAjax(function(resp) {
+                                        var link = JSON.parse(resp).link;
+                                        if (padDesignViewUtil != undefined)
+                                            padDesignViewUtil.postSendAction(link);
+                                        else
+                                            window.location = link;
+                                    });
                                 }
-                }).input(),
+                              }).input(),
               rejectText: localization.cancel,
-              content  : DocumentDataFiller.fill(document,content)
+              content  : box
         });
     },
     verificationBeforeSendingOrSigning : function() {
@@ -630,10 +692,10 @@ var DocumentDesignView = Backbone.View.extend({
                       KontraDesignDocument.model.save().sendAjax();
                       SessionStorage.set(document.documentid(), "step", "1");
                       window.UploadWizardView.model.setStepIndex(0);
-                    },    
+                    },
                     elems : [
                       changemainfile
-                            ]  
+                            ]
                   }),
                 this.tab2 = new Tab({
                     name  : document.isTemplate() ? localization.step2template : document.isBasic() ? localization.step2basic : localization.step2normal,

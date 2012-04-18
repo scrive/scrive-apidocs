@@ -20,11 +20,11 @@ import User.Model
 import Util.SignatoryLinkUtils
 import Doc.DocInfo
 import Company.Model
-import DB.Classes
+import DB
 import Misc
+import qualified Templates.Fields as F
 
 import Control.Monad
-import Control.Monad.IO.Class
 import Data.List hiding (insert)
 import Data.Maybe
 import File.Model
@@ -80,21 +80,21 @@ joinWith s (x:xs) = x ++ s ++ joinWith s xs
 
 -- where does this go? -EN
 renderListTemplate :: TemplatesMonad m => [String] -> m String
-renderListTemplate = renderListTemplate' renderTemplateFM
+renderListTemplate = renderListTemplateHelper renderTemplate
 
 renderLocalListTemplate :: (HasLocale a, TemplatesMonad m) => a -> [String] -> m String
-renderLocalListTemplate haslocale = renderListTemplate' (renderLocalTemplateFM haslocale)
+renderLocalListTemplate = renderListTemplateHelper .renderLocalTemplate
 
-renderListTemplate' :: TemplatesMonad m
-                       => (String -> Fields m -> m String)
-                       -> [String]
-                       -> m String
-renderListTemplate' renderFunc list =
+renderListTemplateHelper :: TemplatesMonad m
+                         => (String -> Fields m () -> m String)
+                         -> [String]
+                         -> m String
+renderListTemplateHelper renderFunc list =
   if length list > 1
      then renderFunc "morethenonelist" $ do
-         field "list" $ init list
-         field "last" $ last list
-     else renderFunc "nomorethanonelist" $ field "list" list
+         F.value "list" $ init list
+         F.value "last" $ last list
+     else renderFunc "nomorethanonelist" $ F.value "list" list
 
 -- CHECKERS
 
@@ -126,7 +126,6 @@ class MaybeTemplate a where
 
 instance MaybeTemplate DocumentType where
    isTemplate (Template _) = True
-   isTemplate AttachmentTemplate = True
    isTemplate _ = False
    isSignable (Signable _) = True
    isSignable _ = False
@@ -139,7 +138,7 @@ class MaybeAttachment a where
    isAttachment :: a -> Bool
 
 instance  MaybeAttachment DocumentType where
-   isAttachment t =  (t == AttachmentTemplate) || (t == Attachment)
+   isAttachment t = (t == Attachment)
 
 instance  MaybeAttachment Document where
    isAttachment =  isAttachment . documenttype
@@ -265,6 +264,10 @@ isELegDataMismatch _                            = False
  -}
 allowsIdentification :: Document -> IdentificationType -> Bool
 allowsIdentification document idtype = idtype `elem` documentallowedidtypes document
+
+{- | Determine is document is designed to be signed using pad - this determines if invitation emais are send and if author can get access to siglink -}
+sendMailsDurringSigning :: Document -> Bool
+sendMailsDurringSigning doc = not $ doc `allowsIdentification` PadIdentification
 
 {- |
     Checks whether a signatory link is eligible for sending a reminder.
@@ -400,17 +403,17 @@ getFileIDsByStatus doc
   | isClosed doc =  documentsealedfiles doc
   | otherwise    =  documentfiles doc
 
-getFilesByStatus :: (MonadIO m, DBMonad m) => Document -> m [File]
-getFilesByStatus doc = liftM catMaybes $ mapM runDBQuery (GetFileByFileID <$> (getFileIDsByStatus doc))
+getFilesByStatus :: MonadDB m => Document -> m [File]
+getFilesByStatus doc = liftM catMaybes $ mapM dbQuery (GetFileByFileID <$> (getFileIDsByStatus doc))
 
 
-documentfilesM :: Document -> DB [File]
+documentfilesM :: MonadDB m => Document -> m [File]
 documentfilesM Document{documentfiles} = do
-    liftM catMaybes $ mapM (dbQuery . GetFileByFileID) documentfiles
+  catMaybes `liftM` mapM (dbQuery . GetFileByFileID) documentfiles
 
-documentsealedfilesM :: Document -> DB [File]
+documentsealedfilesM :: MonadDB m => Document -> m [File]
 documentsealedfilesM Document{documentsealedfiles} = do
-    liftM catMaybes $ mapM (dbQuery . GetFileByFileID) documentsealedfiles
+  catMaybes `liftM` mapM (dbQuery . GetFileByFileID) documentsealedfiles
 
 fileInDocument :: Document -> FileID -> Bool
 fileInDocument doc fid =

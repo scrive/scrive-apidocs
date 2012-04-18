@@ -2,13 +2,11 @@ module File.Migrations where
 
 import Data.Int
 
-import DB.Classes
-import DB.Model
-import DB.Utils
+import DB
 import File.Tables
 import qualified Log
 
-addFileIdSequence :: Migration
+addFileIdSequence :: MonadDB m => Migration m
 addFileIdSequence = Migration {
     mgrTable = tableFiles
   , mgrFrom = 1

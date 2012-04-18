@@ -2,20 +2,23 @@
 module TestMain where
 
 import Control.Applicative
+import Control.Monad.IO.Class
 import Data.Char
 import Data.Either
 import System.Environment.UTF8
 import System.IO
 import Test.Framework
 import qualified Log
+import qualified Control.Exception as E
 import qualified Data.ByteString as BS
 
-import Crypto.RNG (unsafeCryptoRNGState)
 import AppDB
+import Crypto.RNG
+import DB
 import DB.Checks
-import DB.Classes
-import Control.Exception
-import DB.Nexus
+import DB.PostgreSQL
+import Templates.TemplatesLoader
+import TestKontra
 
 -- Note: if you add new testsuites here, please add them in a similar
 -- manner to existing ones, i.e. wrap them around ifdefs and add appropriate
@@ -115,22 +118,22 @@ import StatsTest
 import EvidenceLogTest
 #endif
 
-allTests :: [(String, [String] -> DBEnv -> Test)]
+allTests :: [(String, [String] -> TestEnvSt -> Test)]
 allTests = tail tests
   where
     tests = [
         undefined
 #ifndef NO_COMPANYSTATE
-      , ("companystate", const $ companyStateTests)
+      , ("companystate", const companyStateTests)
 #endif
 #ifndef NO_COMPANYCONTROL
-      , ("companycontrol", const $ companyControlTests)
+      , ("companycontrol", const companyControlTests)
 #endif
 #ifndef NO_DOCSTATE
-      , ("docstate", const $ docStateTests)
+      , ("docstate", const docStateTests)
 #endif
 #ifndef NO_DOCCONTROL
-      , ("doccontrol", const $ docControlTests)
+      , ("doccontrol", const docControlTests)
 #endif
 #ifndef NO_DOCSTATEQUERY
       , ("docstatequery", const $ const docStateQueryTests)
@@ -142,35 +145,35 @@ allTests = tail tests
       , ("inputvalidation", const $ const inputValidationTests)
 #endif
 #ifndef NO_INTEGRATIONAPI
-      , ("integrationapi", const $ integrationAPITests)
+      , ("integrationapi", const integrationAPITests)
 #endif
 #ifndef NO_LOGIN
-      , ("login", const $ loginTests)
+      , ("login", const loginTests)
 #endif
 #ifndef NO_SIGNUP
-      , ("signup", const $ signupTests)
+      , ("signup", const signupTests)
 #endif
 #ifndef NO_ACCOUNTINFO
-     , ("accountinfo", const $ accountInfoTests)
+     , ("accountinfo", const accountInfoTests)
 #endif
 #ifndef NO_MAILAPI
-      , ("mailapi", const $ mailApiTests)
+      , ("mailapi", const mailApiTests)
 #endif
 #ifndef NO_REDIRECT
-      , ("redirect", const $ const redirectTests)
+      , ("redirect", const redirectTests)
 #endif
 #ifndef NO_SERVICESTATE
-      , ("servicestate", const $ serviceStateTests)
+      , ("servicestate", const serviceStateTests)
 #endif
 #ifndef NO_TRUSTWEAVER
       -- everything fails for trustweaver, so commenting out for now
       , ("trustweaver", const $ const trustWeaverTests)
 #endif
 #ifndef NO_USERSTATE
-      , ("userstate", const $ userStateTests)
+      , ("userstate", const userStateTests)
 #endif
 #ifndef NO_USERSTATE
-      , ("userhistory", const $ userHistoryTests)
+      , ("userhistory", const userHistoryTests)
 #endif
 #ifndef NO_CSVUTIL
       , ("csvutil", const $ const csvUtilTests)
@@ -179,38 +182,38 @@ allTests = tail tests
       , ("simplemail", const $ const simpleMailTests)
 #endif
 #ifndef NO_LOCALE
-      , ("locale", const $ localeTests)
+      , ("locale", const localeTests)
 #endif
 #ifndef NO_COMPANYACCOUNTS
-      , ("companyaccounts", const $ companyAccountsTests)
+      , ("companyaccounts", const companyAccountsTests)
 #endif
 #ifndef NO_MAILS
       , ("mails", mailsTests )
 #endif
 #ifndef NO_MAILS
-      , ("apicommons", const $ const apiCommonsTest )
+      , ("apicommons", const apiCommonsTest )
 #endif
 #ifndef NO_JSON
-      , ("jsonutil", const $ const jsonUtilTests )
+      , ("jsonutil", const jsonUtilTests )
 #endif
 #ifndef NO_FILE
-      , ("file", const $ fileTests )
+      , ("file", const fileTests )
 #endif
 #ifndef NO_DOCJSON
-      , ("docjson", const $ const documentJSONTests)
+      , ("docjson", const documentJSONTests)
 #endif
 #ifndef NO_SQLUTILS
-      , ("sqlutil", const $ const sqlUtilsTests )
+      , ("sqlutil", const sqlUtilsTests )
 #endif
 #ifndef NO_STATS
-      , ("stats", const $ statsTests)
+      , ("stats", const statsTests)
 #endif
 #ifndef NO_EVIDENCELOG
-      , ("evidencelog", const $ evidenceLogTests)
+      , ("evidencelog", const evidenceLogTests)
 #endif
       ]
 
-testsToRun :: [String] -> [Either String (DBEnv -> Test)]
+testsToRun :: [String] -> [Either String (TestEnvSt -> Test)]
 testsToRun [] = []
 testsToRun (t:ts)
   | lt == "$" = []
@@ -223,29 +226,30 @@ testsToRun (t:ts)
     rest = testsToRun ts
     params = drop 1 $ dropWhile (/= ("$")) ts
 
-testMany :: ([String],[(DBEnv -> Test)]) -> IO ()
+testMany :: ([String], [(TestEnvSt -> Test)]) -> IO ()
 testMany (args, ts) = Log.withLogger $ do
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
   pgconf <- readFile "kontrakcja_test.conf"
   rng <- unsafeCryptoRNGState (BS.pack (replicate 128 0))
-  withPostgreSQLDB' pgconf rng $ \dbenv -> do
-    ioRunDB dbenv $ performDBChecks Log.debug kontraTables kontraMigrations
-
-    -- defaultMainWithArgs does not feel like returning like a normal function
-    -- so have to get around that 'feature'!!
-    bracket_ (return ())
-             (do
-               stats <- getNexusStats (nexus dbenv)
-               putStrLn $ "SQL: " ++ show stats)
-
-             (defaultMainWithArgs (map ($ dbenv) ts) args)
+  templates <- readGlobalTemplates
+  withPostgreSQL pgconf $ do
+    performDBChecks Log.debug kontraTables kontraMigrations
+    nex <- getNexus
+    let env = TestEnvSt {
+          teNexus = nex
+        , teRNGState = rng
+        , teGlobalTemplates = templates
+        }
+    liftIO $ E.finally (defaultMainWithArgs (map ($ env) ts) args) $ do
+      stats <- getNexusStats nex
+      putStrLn $ "SQL: " ++ show stats
 
 -- | Useful for running an individual test in ghci like so:
 --   @
 --    testone flip (testThat "") testPreparationAttachCSVUploadNonExistingSignatoryLink
 --   @
-testone :: (DBEnv -> Test) -> IO ()
+testone :: (TestEnvSt -> Test) -> IO ()
 testone t = do
   args <- getArgs
   testMany (args, [t])

@@ -38,7 +38,7 @@ import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BS
 import Util.MonadUtils
-
+import qualified PadQueue.Control as PadQueue
 
 {- |
    The routing table for the app.
@@ -54,7 +54,7 @@ import Util.MonadUtils
    That is, all routing logic should be in this table to ensure that we can find
    the function for any given path and method.
 -}
-staticRoutes :: Route (Kontra' Response)
+staticRoutes :: Route (KontraPlus Response)
 staticRoutes = choice
      [ allLocaleDirs $ const $ hGetAllowHttp $ toK0 handleHomepage
      , hGetAllowHttp $ getContext >>= (redirectKontraResponse . LinkHome . ctxlocale)
@@ -128,6 +128,7 @@ staticRoutes = choice
      , dir "r" $ param "restore" $ hPost $ toK0 $ DocControl.handleRubbishRestore
      , dir "r" $ param "reallydelete" $ hPost $ toK0 $ DocControl.handleRubbishReallyDelete
 
+
      , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showContractsList
      , dir "d"                     $ hGet  $ toK1 $ DocControl.handleIssueShowGet
      , dir "d" $ dir "eleg"        $ hGet  $ toK1 $ BankID.generateBankIDTransactionForAuthor
@@ -164,6 +165,15 @@ staticRoutes = choice
      , dir "pagesofdoc" $ hGetAjax $ toK3 $ DocControl.handlePageOfDocumentForSignatory
 
      , dir "csvlandpage" $ hGet $ toK1 $ DocControl.handleCSVLandpage
+
+     , dir "padqueue" $ dir "add" $ hPost $ toK2 $ PadQueue.addToQueue
+     , dir "padqueue" $ dir "clear" $ hPost $ toK0 $ PadQueue.clearQueue
+    
+     , dir "padqueue" $ dir "state" $ hGet $ toK0 $ PadQueue.padQueueState
+     , dir "padqueue" $ hGet $ toK0 $ PadQueue.showPadQueuePage
+     , dir "padqueue" $ dir "archive" $ hGet $ toK0 $ ArchiveControl.showPadDeviceArchive
+     , dir "padqueue" $ dir "login"  $ hPostNoXToken $ toK0 $ PadQueue.handlePadLogin
+     , dir "padqueue" $ dir "logout" $ hPostNoXToken $ toK0 $ PadQueue.handlePadLogout
 
      -- UserControl
      , dir "account"                    $ hGet  $ toK0 $ UserControl.handleUserGet
@@ -298,7 +308,7 @@ staticRoutes = choice
 {- |
     This is a helper function for routing a public dir.
 -}
-publicDir :: String -> String -> (Locale -> KontraLink) -> Kontra Response -> Route (Kontra' Response)
+publicDir :: String -> String -> (Locale -> KontraLink) -> Kontra Response -> Route (KontraPlus Response)
 publicDir swedish english link handler = choice [
     -- the correct url with region/lang/publicdir where the publicdir must be in the correct lang
     allLocaleDirs $ \locale -> dirByLang locale swedish english $ hGetAllowHttp $ handler

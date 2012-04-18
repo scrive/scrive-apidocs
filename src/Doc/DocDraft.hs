@@ -16,7 +16,7 @@ import Util.HasSomeUserInfo
 import Data.List
 import User.Region
 import Doc.Model
-import DB.Classes
+import DB
 import EvidenceLog.Model
 import Util.MonadUtils
 
@@ -30,7 +30,7 @@ data DraftData = DraftData {
     , region :: Region
     , template :: Bool
     } deriving Show
-    
+
 instance FromJSON DocumentFunctionality where
     fromJSValue j = case fromJSValue j of 
              Just "basic" -> Just BasicFunctionality
@@ -40,14 +40,14 @@ instance FromJSON DocumentFunctionality where
 instance FromJSON IdentificationType where
     fromJSValue j = case fromJSValue j of 
              Just "eleg" -> Just ELegitimationIdentification
+             Just "pad" -> Just PadIdentification
              _ -> Just EmailIdentification
-                 
+
 instance FromJSON Region where
     fromJSValue j = do
          s <-fromJSValue j
          find (\r -> codeFromRegion r  == s) allValues
 
-    
 instance FromJSON DraftData where
    fromJSON = do
         title' <- fromJSONField "title"
@@ -70,12 +70,10 @@ instance FromJSON DraftData where
                                     , template = joinB template'
                                  }
             _ -> return Nothing
-        
-        
-        
-applyDraftDataToDocument :: (Actor a) =>  Kontrakcja m =>  Document -> DraftData -> a -> m (Either String Document)
+
+applyDraftDataToDocument :: Kontrakcja m =>  Document -> DraftData -> Actor -> m (Either String Document)
 applyDraftDataToDocument doc draft actor = do
-    _ <- runDB $ dbUpdate $ UpdateDraft (documentid doc) ( doc {
+    _ <- dbUpdate $ UpdateDraft (documentid doc) ( doc {
                                   documenttitle = title draft
                                 , documentfunctionality = functionality draft
                                 , documentinvitetext = fromMaybe "" $ invitationmessage draft
@@ -84,14 +82,11 @@ applyDraftDataToDocument doc draft actor = do
                                 , documentregion = region draft
                             }) actor
     when_ (template draft && (not $ isTemplate doc)) $ do
-         runDBUpdate $ TemplateFromDocument (documentid doc) actor
+         dbUpdate $ TemplateFromDocument (documentid doc) actor
     case (mergeSignatories (fromJust $ getAuthorSigLink doc) (signatories draft)) of
          Nothing   -> return $ Left "Problem with author details while sending draft"
-         Just sigs -> runDBUpdate $ ResetSignatoryDetails2 (documentid doc) sigs actor
+         Just sigs -> dbUpdate $ ResetSignatoryDetails2 (documentid doc) sigs actor
 
-                            
-
-                            
 mergeSignatories :: SignatoryLink -> [SignatoryTMP] -> Maybe [(SignatoryDetails, [SignatoryRole], [SignatoryAttachment], Maybe CSVUpload)]
 mergeSignatories docAuthor tmps = 
         let (atmp, notatmps) = partition isAuthorTMP tmps

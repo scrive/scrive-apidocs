@@ -1,4 +1,3 @@
-{-# LANGUAGE TupleSections #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 -----------------------------------------------------------------------------
 -- |
@@ -40,25 +39,18 @@ import qualified Data.ByteString.Base64 as Base64
 import API.API
 import Doc.DocStorage
 import Doc.DocUtils
-import Control.Monad.Trans
 import Kontra
 import Misc
 import Data.Maybe
 import Data.Functor
 import Control.Monad
---import Util.SignatoryLinkUtils
-import DB.Classes
-import qualified Log ()
+import DB
 import Util.JSON
 import User.Lang
 import User.Region
 import Doc.JSON()
 import User.Locale
 import Doc.SignatoryTMP
-{- -}
-
-
-
 
 api_signatory :: SignatoryLink -> JSValue
 api_signatory sl = JSObject $ toJSObject $ 
@@ -104,8 +96,7 @@ api_file name content =
 
 api_document_file_read :: (APIContext c, Kontrakcja m) => File -> APIFunction m c JSValue
 api_document_file_read file = do
-    ctx <- getContext
-    content <- liftIO $ getFileContents ctx file
+    content <- getFileContents file
     return $ api_file (filename file) content
 
 api_document :: Maybe [JSValue] -> Document -> JSValue
@@ -125,7 +116,7 @@ api_document mfiles doc = JSObject $ toJSObject $ [
   Just files -> [("files", JSArray files)]
 
 
-api_document_read :: (APIContext c, Kontrakcja m, DBMonad m) => Bool -> Document -> APIFunction m c JSValue
+api_document_read :: (APIContext c, Kontrakcja m, MonadDB m) => Bool -> Document -> APIFunction m c JSValue
 api_document_read False doc = do
   return $ api_document Nothing doc
 api_document_read True doc = do
@@ -136,7 +127,7 @@ api_document_read True doc = do
 api_date :: MinutesTime -> JSValue
 api_date = showJSON  . showMinutesTimeForAPI
 
-                      
+
 getSignatoryTMP :: (APIContext c, Kontrakcja m) => [SignatoryRole] -> APIFunction m c (Maybe SignatoryTMP)
 getSignatoryTMP defaultRoles = do
     fstname'        <- fromJSONField "fstname"

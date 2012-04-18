@@ -10,7 +10,7 @@ module Redirect
 
 import Control.Applicative ((<$>))
 import Data.Maybe
-import Happstack.Server.SimpleHTTP
+import Happstack.Server hiding (finishWith)
 import qualified Codec.Binary.Url as URL
 import qualified Codec.Binary.UTF8.String as UTF
 import qualified Data.ByteString.UTF8 as BS
@@ -23,6 +23,7 @@ import Misc
 import Util.FlashUtil
 import DBError
 import User.UserView
+import Util.FinishWith
 import Util.KontraLinkUtils
 
 seeOtherXML :: String -> Response
@@ -81,8 +82,7 @@ instance GuardRight DBError where
   guardRight (Right b)            = return b
   guardRight (Left DBNotLoggedIn) = do
     ctx <- getContext
-    r <- sendRedirect $ LinkLogin (ctxlocale ctx) NotLogged
-    finishWith r
+    finishWith $ sendRedirect $ LinkLogin (ctxlocale ctx) NotLogged
   guardRight _                    = internalError
 
 {- |
@@ -97,6 +97,5 @@ guardLoggedIn = do
   case ctxmaybeuser of
     Nothing -> do
       ctx <- getContext
-      r <- sendRedirect $ LinkLogin (ctxlocale ctx) NotLogged
-      finishWith r
+      finishWith $ sendRedirect $ LinkLogin (ctxlocale ctx) NotLogged
     Just _ -> return ()

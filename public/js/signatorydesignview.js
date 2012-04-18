@@ -186,6 +186,9 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
        var signatory = this.model;
        var field = signatory.field("signature");
        var placeSignatureIcon = $("<a class='placeSignatureIcon' href='#'/>");
+       field.view = placeSignatureIcon;
+       field.view.redborder = function() {placeSignatureIcon.addClass('redborder')};
+       field.view.mousedown(function() {placeSignatureIcon.removeClass('redborder')});
        var fileview = signatory.document().mainfile().view;
        placeSignatureIcon.draggable({
                     handle: ".ddIcon",
@@ -222,8 +225,8 @@ window.SignatoryDesignViewAdvanced = SignatoryDesignViewBasic.extend({
             top.append(this.setCsvSignatoryIcon());
         if (signatory.signs())
             top.append(this.setSignOrderIcon());
-        //if (signatory.signs() && !signatory.author() )
-            //top.append(this.placeSignatureIcon());
+        if (signatory.signs())
+            top.append(this.placeSignatureIcon());
         top.append(this.addFieldButton());
         if (signatory.signs() && document.view.signOrderVisible())
             top.append(this.signOrderSelector());

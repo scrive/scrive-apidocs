@@ -1,4 +1,3 @@
-{-# LANGUAGE OverlappingInstances #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Templates.Templates
@@ -75,65 +74,74 @@
 --  In templates use maybe. You can use 'if' in template body to check for Nothing
 --  Always change ByteString to String. We have a problems with encoding, so please watch for this.
 -----------------------------------------------------------------------------
-module Templates.Templates
-    ( RenderTemplate(..)
-    , renderTemplateF
-    , renderTemplateFM
-    , renderLocalTemplateFM
-    , readGlobalTemplates
-    , templateList
-    , KontrakcjaTemplates
-    , KontrakcjaGlobalTemplates
-    , localizedVersion
-    , TemplatesMonad(..)
-    , Fields
-    , field
-    , fieldM
-    , fieldF
-    , fieldFL
-    , getTemplatesModTime
-    ) where
+module Templates.Templates (
+    Fields
+  , runFields
+  , TemplatesMonad(..)
+  , renderTemplate
+  , renderTemplate_
+  , renderLocalTemplate
+  , renderLocalTemplate_
+  ) where
 
-import Control.Applicative
-import Control.Monad.Reader
-import Control.Monad.State.Strict
-import Text.StringTemplate.Base hiding (ToSElem, toSElem)
-import Text.StringTemplate.Classes hiding (ToSElem, toSElem)
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS
-import qualified Data.Map as Map
-import qualified Text.StringTemplate.Classes as HST
+import Text.StringTemplate.Base hiding (ToSElem, toSElem, render)
 
 import User.Locale
-import Templates.TemplatesLoader hiding (getTemplates)
+import Templates.Fields
+import Templates.TemplatesLoader
 
-class (Functor a, MonadIO a) => TemplatesMonad a where
-    getTemplates :: a KontrakcjaTemplates
-    getLocalTemplates :: Locale -> a KontrakcjaTemplates
+class (Functor m, Monad m) => TemplatesMonad m where
+  getTemplates      :: m KontrakcjaTemplates
+  getLocalTemplates :: Locale -> m KontrakcjaTemplates
 
+renderTemplate :: TemplatesMonad m => String -> Fields m () -> m String
+renderTemplate name fields = do
+  ts <- getTemplates
+  renderHelper ts name fields
+
+renderTemplate_ :: TemplatesMonad m => String -> m String
+renderTemplate_ name = renderTemplate name $ return ()
+
+renderLocalTemplate :: (HasLocale a, TemplatesMonad m) => a -> String -> Fields m () -> m String
+renderLocalTemplate haslocale name fields = do
+  ts <- getLocalTemplates $ getLocale haslocale
+  renderHelper ts name fields
+
+renderLocalTemplate_ :: (HasLocale a, TemplatesMonad m) => a -> String -> m String
+renderLocalTemplate_ haslocale name = renderLocalTemplate haslocale name $ return ()
+
+renderHelper :: Monad m => KontrakcjaTemplates -> String -> Fields m () -> m String
+renderHelper ts name fields = do
+  attrs <- runFields fields
+  return $ renderTemplateMain ts name ([]::[(String, String)]) (setManyAttrib attrs)
+
+{-
+  
 -- | Filling template with a given name using given attributes.  It
 -- never fail, just returns empty message and writes something in the
 -- logs.  Params - Templates (loaded from local files), Name of
 -- template, something that sets params value.
 class RenderTemplate a where
-    renderTemplate  :: MonadIO m => KontrakcjaTemplates -> String -> a -> m String
-    renderTemplateM :: TemplatesMonad m => String -> a -> m String
-    renderTemplateM name value = do
-        templates <- getTemplates
-        renderTemplate templates name value
-    renderLocalTemplateM :: (HasLocale a, TemplatesMonad m) => a -> String -> a -> m String
-    renderLocalTemplateM haslocale name value = do
-        templates <- getLocalTemplates (getLocale haslocale)
-        renderTemplate templates name value
+  renderTemplate :: MonadIO m => KontrakcjaTemplates -> String -> a -> m String
+
+renderTemplateM :: (RenderTemplate a, TemplatesMonad m) => String -> a -> m String
+renderTemplateM name value = do
+  templates <- getTemplates
+  renderTemplate templates name value
+
+renderLocalTemplateM :: (HasLocale a, RenderTemplate a, TemplatesMonad m) => a -> String -> a -> m String
+renderLocalTemplateM haslocale name value = do
+  templates <- getLocalTemplates (getLocale haslocale)
+  renderTemplate templates name value
 
 -- | Basic rendering interface It allows to pass some string
 -- attributes to templates. Usefull when working with simple templates.
 instance RenderTemplate () where
     renderTemplate ts name () =
-        liftIO $ renderTemplateMain ts name ([] :: [(String,String)]) id
+        return $ renderTemplateMain ts name ([] :: [(String,String)]) id
 
 instance RenderTemplate [(String, String)] where
-    renderTemplate ts name attrs = liftIO $ renderTemplateMain ts name attrs id
+    renderTemplate ts name attrs = return $ renderTemplateMain ts name attrs id
 
 -- Same here what below for Field typeclass - generalized Fields
 -- won't work as instances of RenderTemplate, so I had to make
@@ -142,7 +150,7 @@ instance RenderTemplate [(String, String)] where
 renderTemplateF :: MonadIO m => KontrakcjaTemplates -> String -> Fields m -> m String
 renderTemplateF ts name fields = do
     attrs <- sequence $ map packIO $ execState fields []
-    liftIO $ renderTemplateMain ts name ([] :: [(String, String)]) (setManyAttrib attrs)
+    return $ renderTemplateMain ts name ([] :: [(String, String)]) (setManyAttrib attrs)
 
 renderTemplateFM :: TemplatesMonad m => String -> Fields m -> m String
 renderTemplateFM name fields = do
@@ -184,30 +192,4 @@ packIO (name, comp)= do
     res <- comp
     return (name,res)
 
--- | Importan Util. We overide default serialisation to support serialisation of bytestrings .
--- | We use ByteString with UTF all the time but default is Latin-1 and we get strange chars
--- | after rendering. !This will not always work with advanced structures.! So always convert to String.
-
-class ToSElem a where
-    toSElem :: (Stringable b) => a -> SElem b
-
-instance (HST.ToSElem a) => ToSElem a where
-    toSElem = HST.toSElem
-
-instance ToSElem BS.ByteString where
-    toSElem = HST.toSElem . BS.toString
-
-instance ToSElem (Maybe BS.ByteString) where
-    toSElem = HST.toSElem . fmap BS.toString
-
-instance ToSElem [BS.ByteString] where
-    toSElem = toSElem . fmap BS.toString
-
-instance ToSElem String where
-    toSElem l = HST.toSElem l
-
-instance (HST.ToSElem a) => ToSElem [a] where
-    toSElem l  = LI $ map HST.toSElem l
-
-instance (HST.ToSElem a) => ToSElem (Map.Map String a) where
-    toSElem m =  SM $ Map.map HST.toSElem m
+-}

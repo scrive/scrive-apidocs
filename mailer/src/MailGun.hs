@@ -8,7 +8,7 @@ import Control.Monad
 import Data.Maybe
 import Happstack.Server
 
-import DB.Classes
+import DB
 import Mails.Model
 import Mailer
 import Misc
@@ -25,7 +25,7 @@ handleMailGunEvents = do
   mident <- (,) <$> readField "email_id" <*> readField "email_token"
   case mident of
     (Just mid, Just token) -> do
-      mmail <- runDBQuery $ GetEmail mid token
+      mmail <- dbQuery $ GetEmail mid token
       case mmail of
         Nothing -> logMsg $ "Email with id = " ++ show mid ++ ", token = " ++ show token ++ " doesn't exist."
         Just Mail{..} -> do
@@ -42,7 +42,7 @@ handleMailGunEvents = do
                 Just event -> do
                   email <- fromMaybe "" <$> getField "recipient"
                   let ev = MailGunEvent email event
-                  res <- runDBUpdate $ UpdateWithEvent mailID ev
+                  res <- dbUpdate $ UpdateWithEvent mailID ev
                   logMsg $ if not res
                     then "UpdateWithEvent didn't update anything"
                     else "Event '" ++ show event ++ "' for email #" ++ show mailID ++ " received."

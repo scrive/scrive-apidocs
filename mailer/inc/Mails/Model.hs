@@ -17,13 +17,10 @@ module Mails.Model (
   , UpdateWithEvent(..)
   ) where
 
-import Control.Applicative
-import Database.HDBC
+import Control.Monad
 
-import DB.Classes
-import DB.Fetcher2
-import DB.Utils
-import MagicHash (MagicHash)
+import DB
+import MagicHash
 import Mails.Data
 import Mails.Tables
 import MinutesTime
@@ -31,13 +28,13 @@ import Misc
 import OurPrelude
 
 data CreateEmail = CreateEmail MagicHash Address [Address] MinutesTime
-instance DBUpdate CreateEmail MailID where
-  dbUpdate (CreateEmail token sender to to_be_sent) =
-    $(fromJust) <$> insertEmail False token sender to to_be_sent
+instance MonadDB m => DBUpdate m CreateEmail MailID where
+  update (CreateEmail token sender to to_be_sent) =
+    $(fromJust) `liftM` insertEmail False token sender to to_be_sent
 
 data AddContentToEmail = AddContentToEmail MailID String String [Attachment] XSMTPAttrs
-instance DBUpdate AddContentToEmail Bool where
-  dbUpdate (AddContentToEmail mid title content attachments xsmtpapi) =
+instance MonadDB m => DBUpdate m AddContentToEmail Bool where
+  update (AddContentToEmail mid title content attachments xsmtpapi) =
     kRun01 $ mkSQL UPDATE tableMails [
         sql "title" title
       , sql "content" content
@@ -46,30 +43,30 @@ instance DBUpdate AddContentToEmail Bool where
       ] <++> SQL "WHERE id = ?" [toSql mid]
 
 data MarkEventAsRead = MarkEventAsRead EventID MinutesTime
-instance DBUpdate MarkEventAsRead Bool where
-  dbUpdate (MarkEventAsRead eid time) =
+instance MonadDB m => DBUpdate m MarkEventAsRead Bool where
+  update (MarkEventAsRead eid time) =
     kRun01 $ mkSQL UPDATE tableMailEvents [sql "event_read" time]
       <++> SQL "WHERE id = ?" [toSql eid]
 
 data DeleteEmail = DeleteEmail MailID
-instance DBUpdate DeleteEmail Bool where
-  dbUpdate (DeleteEmail mid) = do
+instance MonadDB m => DBUpdate m DeleteEmail Bool where
+  update (DeleteEmail mid) = do
     kPrepare "DELETE FROM mails WHERE id = ?"
     kExecute01 [toSql mid]
 
 data GetUnreadEvents = GetUnreadEvents
-instance DBQuery GetUnreadEvents [(EventID, MailID, XSMTPAttrs, Event)] where
-  dbQuery GetUnreadEvents = getUnreadEvents False
+instance MonadDB m => DBQuery m GetUnreadEvents [(EventID, MailID, XSMTPAttrs, Event)] where
+  query GetUnreadEvents = getUnreadEvents False
 
 data GetIncomingEmails = GetIncomingEmails
-instance DBQuery GetIncomingEmails [Mail] where
-  dbQuery GetIncomingEmails = do
+instance MonadDB m => DBQuery m GetIncomingEmails [Mail] where
+  query GetIncomingEmails = do
     _ <- kRun $ selectMailsSQL <++> SQL "WHERE title IS NOT NULL AND content IS NOT NULL AND to_be_sent <= now() AND sent IS NULL ORDER BY id DESC" []
     fetchMails
 
 data GetEmails = GetEmails
-instance DBQuery GetEmails [Mail] where
-  dbQuery GetEmails = do
+instance MonadDB m => DBQuery m GetEmails [Mail] where
+  query GetEmails = do
     _ <- kRun $ selectMailsSQL <++> SQL "WHERE title IS NOT NULL AND content IS NOT NULL ORDER BY to_be_sent" []
     fetchMails
 
@@ -78,43 +75,43 @@ instance DBQuery GetEmails [Mail] where
 -- here for now. do not use it though.
 
 data CreateServiceTest = CreateServiceTest MagicHash Address [Address] MinutesTime
-instance DBUpdate CreateServiceTest MailID where
-  dbUpdate (CreateServiceTest token sender to to_be_sent) =
-    $(fromJust) <$> insertEmail True token sender to to_be_sent
+instance MonadDB m => DBUpdate m CreateServiceTest MailID where
+  update (CreateServiceTest token sender to to_be_sent) =
+    $(fromJust) `liftM` insertEmail True token sender to to_be_sent
 
 data GetServiceTestEvents = GetServiceTestEvents
-instance DBQuery GetServiceTestEvents [(EventID, MailID, XSMTPAttrs, Event)] where
-  dbQuery GetServiceTestEvents = getUnreadEvents True
+instance MonadDB m => DBQuery m GetServiceTestEvents [(EventID, MailID, XSMTPAttrs, Event)] where
+  query GetServiceTestEvents = getUnreadEvents True
 
 data GetEmail = GetEmail MailID MagicHash
-instance DBQuery GetEmail (Maybe Mail) where
-  dbQuery (GetEmail mid token) = do
+instance MonadDB m => DBQuery m GetEmail (Maybe Mail) where
+  query (GetEmail mid token) = do
     _ <- kRun $ selectMailsSQL <++> SQL "WHERE id = ? AND token = ?"
       [toSql mid, toSql token]
     fetchMails >>= oneObjectReturnedGuard
 
 data ResendEmailsSentSince = ResendEmailsSentSince MinutesTime
-instance DBUpdate ResendEmailsSentSince Integer where
-  dbUpdate (ResendEmailsSentSince time) =
+instance MonadDB m => DBUpdate m ResendEmailsSentSince Integer where
+  update (ResendEmailsSentSince time) =
     kRun $ mkSQL UPDATE tableMails [sql "sent" SqlNull]
       <++> SQL "WHERE service_test = FALSE AND sent >= ?" [toSql time]
 
 data DeferEmail = DeferEmail MailID MinutesTime
-instance DBUpdate DeferEmail Bool where
-  dbUpdate (DeferEmail mid time) =
+instance MonadDB m => DBUpdate m DeferEmail Bool where
+  update (DeferEmail mid time) =
     kRun01 $ mkSQL UPDATE tableMails [
         sql "to_be_sent" time
       ] <++> SQL "WHERE id = ?" [toSql mid]
 
 data MarkEmailAsSent = MarkEmailAsSent MailID MinutesTime
-instance DBUpdate MarkEmailAsSent Bool where
-  dbUpdate (MarkEmailAsSent mid time) = do
+instance MonadDB m => DBUpdate m MarkEmailAsSent Bool where
+  update (MarkEmailAsSent mid time) = do
     kPrepare "UPDATE mails SET sent = ? WHERE id = ?"
     kExecute01 [toSql time, toSql mid]
 
 data UpdateWithEvent = UpdateWithEvent MailID Event
-instance DBUpdate UpdateWithEvent Bool where
-  dbUpdate (UpdateWithEvent mid ev) = do
+instance MonadDB m => DBUpdate m UpdateWithEvent Bool where
+  update (UpdateWithEvent mid ev) = do
     kPrepare "INSERT INTO mail_events (mail_id, event) VALUES (?, ?)"
     kExecute01 [toSql mid, toSql ev]
 
@@ -132,7 +129,7 @@ selectMailsSQL = SQL ("SELECT"
   ++ " FROM mails"
   ++ " ") []
 
-insertEmail :: Bool -> MagicHash -> Address -> [Address] -> MinutesTime -> DB (Maybe MailID)
+insertEmail :: MonadDB m => Bool -> MagicHash -> Address -> [Address] -> MinutesTime -> DBEnv m (Maybe MailID)
 insertEmail service_test token sender to to_be_sent =
   getOne $ mkSQL INSERT tableMails [
       sql "token" token
@@ -142,7 +139,7 @@ insertEmail service_test token sender to to_be_sent =
     , sql "service_test" service_test
     ] <++> SQL "RETURNING id" []
 
-getUnreadEvents :: Bool -> DB [(EventID, MailID, XSMTPAttrs, Event)]
+getUnreadEvents :: MonadDB m => Bool -> DBEnv m [(EventID, MailID, XSMTPAttrs, Event)]
 getUnreadEvents service_test = do
   kPrepare $ "SELECT"
     ++ "  e.id"
@@ -157,7 +154,7 @@ getUnreadEvents service_test = do
   where
     fetchEvents acc eid mid attrs event = (eid, mid, attrs, event) : acc
 
-fetchMails :: DB [Mail]
+fetchMails :: MonadDB m => DBEnv m [Mail]
 fetchMails = foldDB decoder []
   where
     -- Note: this function gets mails in reversed order, but all queries

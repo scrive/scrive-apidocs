@@ -1,9 +1,9 @@
-{-# LANGUAGE CPP #-}
 module AppDB (
     kontraMigrations
   , kontraTables
   ) where
 
+import DB.Core
 import DB.Model
 
 import API.Service.Tables
@@ -20,6 +20,7 @@ import Stats.Migrations
 import File.Tables
 import File.Migrations
 import Mails.Tables
+import PadQueue.Tables
 import Mails.Migrations
 import OAuth.Tables
 import ScriveByMail.Tables
@@ -28,7 +29,7 @@ import EvidenceLog.Tables
 -- Note: ALWAYS append new migrations TO THE END of this list.
 -- (mailerMigrations always stay at the end though. They are
 -- disjoint with kontrakcja, so it can be done that way).
-kontraMigrations :: [Migration]
+kontraMigrations :: MonadDB m => [Migration m]
 kontraMigrations = [
     addRegionToUserSettings
   , addServiceAndCompanyToStats
@@ -51,6 +52,7 @@ kontraMigrations = [
   , addEmailDomainOnCompanies
   , addCompanyNameNumberOnUsers
   , updateDocumentStatusAfterRemovingAwaitingAuthor
+  , moveDocumentTagsFromDocumentsTableToDocumentTagsTable
   ] ++ mailerMigrations
 
 kontraTables :: [Table]
@@ -72,9 +74,11 @@ kontraTables = [
   , tableAuthorAttachments
   , tableSignatoryAttachments
   , tableEvidenceLog
+  , tablePadQueue
   , tableCompanyMailAPIs
   , tableUserRequest
   , tableMailAPIDelay
+  , tableDocumentTags
   , tableTempCredential
   , tableTempPrivileges
   , tableAPIToken

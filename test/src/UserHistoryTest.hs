@@ -1,13 +1,10 @@
 module UserHistoryTest (userHistoryTests) where
 
-import Test.HUnit (Assertion)
 import Test.Framework
-import Test.Framework.Providers.HUnit
-import StateHelper
 import TestingUtil
 import IPAddress
 import Misc
-import DB.Classes
+import DB
 import MinutesTime
 import User.Model
 import User.UserControl
@@ -16,40 +13,39 @@ import Context
 import TestKontra as T
 import Control.Applicative
 import Happstack.Server
-import Templates.TemplatesLoader
 import Text.JSON
 import ActionSchedulerState
 import Login
 import SignupTest (getAccountCreatedActions)
 
-userHistoryTests :: DBEnv -> Test
+userHistoryTests :: TestEnvSt -> Test
 userHistoryTests env = testGroup "User's history" [
-      testCase "Test creating login attempt event"          $ testLoginAttempt env
-    , testCase "Test creating login success event"          $ testLoginSuccess env
-    , testCase "Test creating password setup event"         $ testPasswordSetup env
-    , testCase "Test creating password setup request event" $ testPasswordSetupReq env
-    , testCase "Test creating account created event"        $ testAccountCreated env
-    , testCase "Test creating TOS accept event"             $ testTOSAccept env
-    , testCase "Test creating details changed event"        $ testDetailsChanged env
+      testThat "Test creating login attempt event"          env testLoginAttempt
+    , testThat "Test creating login success event"          env testLoginSuccess
+    , testThat "Test creating password setup event"         env testPasswordSetup
+    , testThat "Test creating password setup request event" env testPasswordSetupReq
+    , testThat "Test creating account created event"        env testAccountCreated
+    , testThat "Test creating TOS accept event"             env testTOSAccept
+    , testThat "Test creating details changed event"        env testDetailsChanged
     -- Handlers:
-    , testCase "Test creating login attempt event by handler" 
-               $ testHandlerForLoginAttempt env
-    , testCase "Test creating login success event by handler" 
-               $ testHandlerForLoginSuccess env
-    , testCase "Test creating password setup event by handler" 
-               $ testHandlerForPasswordSetup env
-    , testCase "Test creating password setup request event by handler" 
-               $ testHandlerForPasswordSetupReq env
-    , testCase "Test creating account created event by handler" 
-               $ testHandlerForAccountCreated env
-    , testCase "Test creating TOS Accept event by handler" 
-               $ testHandlerForTOSAccept env
-    , testCase "Test creating details changed event by handler" 
-               $ testHandlerForDetailsChanged env
+    , testThat "Test creating login attempt event by handler"
+               env testHandlerForLoginAttempt
+    , testThat "Test creating login success event by handler"
+               env testHandlerForLoginSuccess
+    , testThat "Test creating password setup event by handler"
+               env testHandlerForPasswordSetup
+    , testThat "Test creating password setup request event by handler"
+               env testHandlerForPasswordSetupReq
+    , testThat "Test creating account created event by handler"
+               env testHandlerForAccountCreated
+    , testThat "Test creating TOS Accept event by handler"
+               env testHandlerForTOSAccept
+    , testThat "Test creating details changed event by handler"
+               env testHandlerForDetailsChanged
     ]
 
-testLoginAttempt :: DBEnv -> Assertion
-testLoginAttempt env = withTestEnvironment env $ do
+testLoginAttempt :: TestEnv ()
+testLoginAttempt = do
     User{userid} <- createTestUser
     now <- getMinutesTime
     success <- dbUpdate $ LogHistoryLoginAttempt userid noIP now
@@ -57,8 +53,8 @@ testLoginAttempt env = withTestEnvironment env $ do
     history <- dbQuery $ GetUserHistoryByUserID userid
     assertBool "User's history is not empty" (not $ null history)
 
-testLoginSuccess :: DBEnv -> Assertion
-testLoginSuccess env = withTestEnvironment env $ do
+testLoginSuccess :: TestEnv ()
+testLoginSuccess = do
     User{userid} <- createTestUser
     now <- getMinutesTime
     success <- dbUpdate $ LogHistoryLoginSuccess userid noIP now
@@ -66,8 +62,8 @@ testLoginSuccess env = withTestEnvironment env $ do
     history <- dbQuery $ GetUserHistoryByUserID userid
     assertBool "User's history is not empty" (not $ null history)
 
-testPasswordSetup :: DBEnv -> Assertion
-testPasswordSetup env = withTestEnvironment env $ do
+testPasswordSetup :: TestEnv ()
+testPasswordSetup = do
     User{userid} <- createTestUser
     now <- getMinutesTime
     success <- dbUpdate $ LogHistoryPasswordSetup userid noIP now Nothing
@@ -75,8 +71,8 @@ testPasswordSetup env = withTestEnvironment env $ do
     history <- dbQuery $ GetUserHistoryByUserID userid
     assertBool "User's history is not empty" (not $ null history)
 
-testPasswordSetupReq :: DBEnv -> Assertion
-testPasswordSetupReq env = withTestEnvironment env $ do
+testPasswordSetupReq :: TestEnv ()
+testPasswordSetupReq = do
     User{userid} <- createTestUser
     now <- getMinutesTime
     success <- dbUpdate $ LogHistoryPasswordSetupReq userid noIP now Nothing
@@ -84,8 +80,8 @@ testPasswordSetupReq env = withTestEnvironment env $ do
     history <- dbQuery $ GetUserHistoryByUserID userid
     assertBool "User's history is not empty" (not $ null history)
 
-testAccountCreated :: DBEnv -> Assertion
-testAccountCreated env = withTestEnvironment env $ do
+testAccountCreated :: TestEnv ()
+testAccountCreated = do
     User{userid} <- createTestUser
     now <- getMinutesTime
     success <- dbUpdate $ LogHistoryAccountCreated userid noIP now
@@ -94,8 +90,8 @@ testAccountCreated env = withTestEnvironment env $ do
     history <- dbQuery $ GetUserHistoryByUserID userid
     assertBool "User's history is not empty" (not $ null history)
 
-testTOSAccept :: DBEnv -> Assertion
-testTOSAccept env = withTestEnvironment env $ do
+testTOSAccept :: TestEnv ()
+testTOSAccept = do
     User{userid} <- createTestUser
     now <- getMinutesTime
     success <- dbUpdate $ LogHistoryTOSAccept userid noIP now Nothing
@@ -103,8 +99,8 @@ testTOSAccept env = withTestEnvironment env $ do
     history <- dbQuery $ GetUserHistoryByUserID userid
     assertBool "User's history is not empty" (not $ null history)
 
-testDetailsChanged :: DBEnv -> Assertion
-testDetailsChanged env = withTestEnvironment env $ do
+testDetailsChanged :: TestEnv ()
+testDetailsChanged = do
     User{userid} <- createTestUser
     now <- getMinutesTime
     success <- dbUpdate $ LogHistoryDetailsChanged userid noIP now
@@ -113,12 +109,10 @@ testDetailsChanged env = withTestEnvironment env $ do
     history <- dbQuery $ GetUserHistoryByUserID userid
     assertBool "User's history is not empty" (not $ null history)
 
-testHandlerForLoginAttempt :: DBEnv -> Assertion
-testHandlerForLoginAttempt env = withTestEnvironment env $ do
+testHandlerForLoginAttempt :: TestEnv ()
+testHandlerForLoginAttempt = do
     user <- createTestUser
-    globaltemplates <- readGlobalTemplates
-    ctx <- (\c -> c { ctxdbenv = env })
-      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    ctx <- mkContext (mkLocaleFromRegion defaultValue)
     req <- mkRequest POST [ ("email", inText "karol@skrivapa.se")
                           , ("password", inText "test")
                           ]
@@ -128,12 +122,10 @@ testHandlerForLoginAttempt env = withTestEnvironment env $ do
     assertBool "History log contains login attempt event" 
                 $ compareEventTypeFromList UserLoginAttempt history
 
-testHandlerForLoginSuccess :: DBEnv -> Assertion
-testHandlerForLoginSuccess env = withTestEnvironment env $ do
+testHandlerForLoginSuccess :: TestEnv ()
+testHandlerForLoginSuccess = do
     user <- createTestUser
-    globaltemplates <- readGlobalTemplates
-    ctx <- (\c -> c { ctxdbenv = env })
-      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    ctx <- mkContext (mkLocaleFromRegion defaultValue)
     req <- mkRequest POST [ ("email", inText "karol@skrivapa.se")
                           , ("password", inText "test_password")
                           ]
@@ -143,12 +135,11 @@ testHandlerForLoginSuccess env = withTestEnvironment env $ do
     assertBool "History log contains login success event" 
                 $ compareEventTypeFromList UserLoginSuccess history
 
-testHandlerForPasswordSetup :: DBEnv -> Assertion
-testHandlerForPasswordSetup env = withTestEnvironment env $ do
+testHandlerForPasswordSetup :: TestEnv ()
+testHandlerForPasswordSetup = do
     user <- createTestUser
-    globaltemplates <- readGlobalTemplates
-    ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user})
-      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    ctx <- (\c -> c { ctxmaybeuser = Just user})
+      <$> mkContext (mkLocaleFromRegion defaultValue)
     req <- mkRequest POST [ ("oldpassword", inText "test_password")
                           , ("password", inText "test1111test")
                           , ("password2", inText "test1111test")
@@ -159,12 +150,11 @@ testHandlerForPasswordSetup env = withTestEnvironment env $ do
     assertBool "History log contains password setup event" 
                 $ compareEventTypeFromList UserPasswordSetup $ history
 
-testHandlerForPasswordSetupReq :: DBEnv -> Assertion
-testHandlerForPasswordSetupReq env = withTestEnvironment env $ do
+testHandlerForPasswordSetupReq :: TestEnv ()
+testHandlerForPasswordSetupReq = do
     user <- createTestUser
-    globaltemplates <- readGlobalTemplates
-    ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user})
-      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    ctx <- (\c -> c { ctxmaybeuser = Just user})
+      <$> mkContext (mkLocaleFromRegion defaultValue)
     req <- mkRequest POST [ ("oldpassword", inText "test")
                           , ("password", inText "test1111test")
                           , ("password2", inText "test1111test")
@@ -175,11 +165,9 @@ testHandlerForPasswordSetupReq env = withTestEnvironment env $ do
     assertBool "History log contains password setup event" 
                 $ compareEventTypeFromList UserPasswordSetupReq $ history
 
-testHandlerForAccountCreated :: DBEnv -> Assertion
-testHandlerForAccountCreated env = withTestEnvironment env $ do
-    globaltemplates <- readGlobalTemplates
-    ctx <- (\c -> c { ctxdbenv = env})
-      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+testHandlerForAccountCreated :: TestEnv ()
+testHandlerForAccountCreated = do
+    ctx <- mkContext (mkLocaleFromRegion defaultValue)
     req <- mkRequest POST [ ("email", inText "test@test.com")]
     _ <- runTestKontra req ctx $ signupPagePost
     Just user <- dbQuery $ GetUserByEmail Nothing $ Email "test@test.com"
@@ -191,11 +179,9 @@ testHandlerForAccountCreated env = withTestEnvironment env $ do
                $ compareEventDataFromList [("email", "", "test@test.com")] 
                $ history
 
-testHandlerForTOSAccept :: DBEnv -> Assertion
-testHandlerForTOSAccept env = withTestEnvironment env $ do
-    globaltemplates <- readGlobalTemplates
-    ctx <- (\c -> c { ctxdbenv = env})
-      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+testHandlerForTOSAccept :: TestEnv ()
+testHandlerForTOSAccept = do
+    ctx <- mkContext (mkLocaleFromRegion defaultValue)
     req1 <- mkRequest POST [("email", inText "karol@skrivapa.se")]
     (_, ctx1) <- runTestKontra req1 ctx $ signupPagePost
     actions <- getAccountCreatedActions
@@ -213,12 +199,11 @@ testHandlerForTOSAccept env = withTestEnvironment env $ do
     assertBool "History log contains TOS accept event"
                $ compareEventTypeFromList UserTOSAccept $ history
 
-testHandlerForDetailsChanged :: DBEnv -> Assertion
-testHandlerForDetailsChanged env = withTestEnvironment env $ do
+testHandlerForDetailsChanged :: TestEnv ()
+testHandlerForDetailsChanged = do
     user <- createTestUser
-    globaltemplates <- readGlobalTemplates
-    ctx <- (\c -> c { ctxdbenv = env, ctxmaybeuser = Just user})
-      <$> mkContext (mkLocaleFromRegion defaultValue) globaltemplates
+    ctx <- (\c -> c { ctxmaybeuser = Just user})
+      <$> mkContext (mkLocaleFromRegion defaultValue)
     req <- mkRequest POST [ ("fstname", inText "Karol")
                           , ("sndname", inText "Samborski")
                           , ("personalnumber", inText "123")
@@ -251,7 +236,7 @@ compareEventDataFromList d l = (uheventdata . uhevent . head $ l) == (Just $ JSA
         , ("newval", JSString $ toJSString newv)
         ]) d)
 
-createTestUser :: DB User
+createTestUser :: TestEnv User
 createTestUser = do
     pwd <- createPassword "test_password"
     muser <- dbUpdate $ AddUser ("", "")

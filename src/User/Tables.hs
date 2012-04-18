@@ -1,9 +1,6 @@
 module User.Tables where
 
-import Database.HDBC
-
-import DB.Classes
-import DB.Model
+import DB
 
 tableUserFriends :: Table
 tableUserFriends = Table {

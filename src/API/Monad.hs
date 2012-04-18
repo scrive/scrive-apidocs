@@ -1,5 +1,4 @@
 {-# LANGUAGE FunctionalDependencies #-}
-
 module API.Monad (
                  APIError(),
                  badInput,
@@ -36,6 +35,7 @@ import Control.Applicative
 import Network.HTTP (urlEncodeVars)
 import qualified Data.Text as T
 
+import DB
 import Util.JSON
 import Misc
 import Kontra
@@ -108,16 +108,19 @@ class ToAPIResponse a where
 
 instance ToAPIResponse Response where
   toAPIResponse = id
-  
+
 instance ToAPIResponse JSValue where
   toAPIResponse jv = let r1 = Web.toResponse $ encode jv in
     setHeader "Content-Type" "text/plain" r1 -- must be text/plain because some browsers complain about JSON type
 
 instance ToAPIResponse () where
   toAPIResponse _ = Web.toResponse ("" :: String)
-    
+
 instance ToAPIResponse a => ToAPIResponse (Created a) where
   toAPIResponse (Created a) = (toAPIResponse a) { rsCode = 201 }
+  
+instance ToAPIResponse () where
+  toAPIResponse () = toResponse ""
 
 instance ToAPIResponse FormEncoded where
   toAPIResponse (FormEncoded kvs) = 
@@ -125,8 +128,8 @@ instance ToAPIResponse FormEncoded where
     in setHeader "Content-Type" "application/x-www-form-urlencoded" r1
     
 newtype APIMonad m a = AM { runAPIMonad :: ErrorT APIError m a }
-    deriving (MonadTrans, Monad, MonadError APIError, Functor, Applicative, MonadIO)
-                              
+  deriving (Applicative, Functor, Monad, MonadDB, MonadError APIError, MonadIO, MonadTrans)
+
 instance KontraMonad m => KontraMonad (APIMonad m) where
   getContext = lift getContext
   modifyContext = lift . modifyContext
@@ -134,14 +137,8 @@ instance KontraMonad m => KontraMonad (APIMonad m) where
 jsonError :: JSValue
 jsonError = fromRight $ jsset ("status" :: String) ("error" :: String) jsempty
 
-{-
-"The input sent was invalid. Please try again." 
-"The resource you are trying to access does not exist or you do not have permission to access it."
-"You must identify yourself to access this resource."
-"We're sorry. The server just does not know what to do."
-"The action you requested is not available on this resource."
--}
-            
+
+
 -- | convert the return type to the appropriate response
 -- This defines the possible outputs of the api.
 api :: (Kontrakcja m, ToAPIResponse v) => APIMonad m v -> m Response

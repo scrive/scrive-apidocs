@@ -4,7 +4,6 @@ module Mails.SendMail
     , emptyMail
     , MailAddress(..)
     , MailInfo(..)
-    , scheduleEmailSendout'
     , scheduleEmailSendout
     ) where
 
@@ -12,8 +11,8 @@ import Control.Applicative
 import Control.Monad
 
 import API.Service.Model
-import DB.Classes
-import Crypto.RNG(random)
+import DB
+import Crypto.RNG
 import InputValidation
 import Mails.MailsConfig
 import Mails.MailsData
@@ -29,11 +28,8 @@ import Util.SignatoryLinkUtils
 import Doc.Model
 import Doc.DocStateData
 
-scheduleEmailSendout :: DBMonad m => MailsConfig -> Mail -> m ()
-scheduleEmailSendout mc = runDB . scheduleEmailSendout' mc
-
-scheduleEmailSendout' :: MailsConfig -> Mail -> DB ()
-scheduleEmailSendout' MailsConfig{..} mail@Mail{..} = do
+scheduleEmailSendout :: (CryptoRNG m, Functor m, MonadDB m) => MailsConfig -> Mail -> m ()
+scheduleEmailSendout MailsConfig{..} mail@Mail{..} = do
   if unsendable to
     then Log.error $ "Email " ++ show mail ++ " is unsendable, discarding."
     else do
@@ -83,7 +79,7 @@ wrapHTML body = concat [
 -- Prototyped. This is why texts are here. But the propper way to do
 -- that is not to add some extra info in Mail data structure
 -- Propper way is to hold as abstract data there.
-fromNiceAddress :: MailInfo -> String -> DB String
+fromNiceAddress :: MonadDB m => MailInfo -> String -> m String
 fromNiceAddress (None) servicename = return servicename
 fromNiceAddress (Invitation did _) servicename = do
   mdoc <- dbQuery $ GetDocumentByDocumentID did

@@ -14,6 +14,7 @@ import Control.Applicative
 import Control.Arrow
 import Control.Concurrent
 import Control.Monad.State
+import Control.Monad.Trans.Control
 import Data.Char
 import Data.Data
 import Data.List
@@ -37,6 +38,10 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.ByteString.UTF8 as BS
 import Network.HTTP (urlDecode)
+
+withSystemTempDirectory' :: MonadBaseControl IO m => String -> (FilePath -> m a) -> m a
+withSystemTempDirectory' dir handler =
+  control $ \runInIO -> withSystemTempDirectory dir (runInIO . handler)
 
 -- | Infix version of mappend, provided for convenience.
 (<++>) :: Monoid m => m -> m -> m
@@ -278,6 +283,13 @@ getHostpart = do
   let scheme = maybe "http" BS.toString $ getHeader "scheme" rq
   return $ scheme ++ "://" ++ hostpart
 
+getResourceHostpart :: ServerMonad m => m String
+getResourceHostpart = do
+  rq <- askRq
+  let hostpart = maybe "scrive.com" BS.toString $ getHeader "host" rq
+  let scheme = maybe "http" (const "https") $ getHeader "scheme" rq
+  return $ scheme ++ "://" ++ hostpart
+
 getSecureLink :: ServerMonad m => m String
 getSecureLink = (++) "https://" `liftM` currentLinkBody
 
@@ -376,15 +388,6 @@ mapSnd = fmap . second
 propagateFst :: (a,[b]) -> [(a,b)]
 propagateFst (a,bs) = for bs (\b -> (a,b))
 
-propagateMonad :: (Monad m)  => [(a, m b)] -> m [(a,b)]
-propagateMonad ((a,mb):rest) = do
-    b <- mb
-    rest' <- propagateMonad rest
-    return $ (a,b): rest'
-
-propagateMonad _ = return []
-
-
 -- Splits string over some substring
 splitOver:: (Eq a) => [a] -> [a] -> [[a]]
 splitOver = splitOver' []
@@ -467,7 +470,7 @@ toCSV header ls =
    BSL.concat $ map csvline (header:ls)
     where csvline line = BSL.concat $ [BSL.fromString "\"", BSL.intercalate (BSL.fromString "\",\"") (map BSL.fromString line),BSL.fromString  "\"\n"]
 
-{- Version of elem that as a value takes Maybe-}    
+{- Version of elem that as a value takes Maybe-}
 melem :: (Eq a) => Maybe a -> [a] -> Bool
 melem Nothing   _  = False
 melem (Just  e) es = elem e es
@@ -479,7 +482,16 @@ firstWithDefault (ma:mas) da = do
     case a of
          Just a' -> return a'
          Nothing -> firstWithDefault mas da
-         
+
+findM :: Monad f => (a -> Bool) -> [f a] -> f (Maybe a)
+findM _ [] = return Nothing
+findM f (a:as) = do
+      a' <- a
+      if f a' then return $ Just a' else findM f as
+
+firstOrNothing :: (Monad m, Functor m) => [m (Maybe a)] -> m (Maybe a)
+firstOrNothing l = join <$> findM isJust l
+
 -- changing an element in a list
 chng :: [a] -> Int -> a -> [a]
 chng ls i v = let (h, t) = splitAt i ls
@@ -502,12 +514,12 @@ urlDecodeVars s = makeKV (splitOver "&" s) []
           _ -> Nothing
           
 containsAll :: Eq a => [a] -> [a] -> Bool
-containsAll elems inList = foldl (\a e-> a && e `elem` inList) True elems
+containsAll elems inList = all (`elem` inList) elems
 
 listsEqualNoOrder :: Eq a => [a] -> [a] -> Bool
 listsEqualNoOrder a b = containsAll a b && containsAll b a
 
 listDiff :: Eq a => [a] -> [a] -> ([a], [a], [a])
-listDiff a b = ([x|x <- a, x `notElem` b], 
+listDiff a b = ([x|x <- a, x `notElem` b],
                 [x|x <- a, x `elem`    b],
                 [x|x <- b, x `notElem` a])

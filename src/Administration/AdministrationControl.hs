@@ -54,7 +54,7 @@ import Company.Model
 import KontraLink
 import MinutesTime
 import System.Directory
-import DB.Classes
+import DB
 import User.UserControl
 import User.UserView
 import User.Model
@@ -92,6 +92,7 @@ import User.History.Model
 import Codec.Archive.Zip
 import qualified Data.Map as Map
 import Doc.DocStorage
+import qualified Templates.Fields as F
 
 {- | Main page. Redirects users to other admin panels -}
 showAdminMainPage :: Kontrakcja m => m String
@@ -106,7 +107,7 @@ showAdminUsers :: Kontrakcja m => Maybe UserID -> m String
 showAdminUsers Nothing = onlySalesOrAdmin adminUsersPage
 
 showAdminUsers (Just userId) = onlySalesOrAdmin $ do
-  muser <- runDBQuery $ GetUserByID userId
+  muser <- dbQuery $ GetUserByID userId
   case muser of
     Nothing -> internalError
     Just user -> adminUserPage user =<< getCompanyForUser user
@@ -116,14 +117,14 @@ showAdminCompanies = onlySalesOrAdmin $  adminCompaniesPage
 
 showAdminCompany :: Kontrakcja m => CompanyID -> m String
 showAdminCompany companyid = onlySalesOrAdmin $ do
-  company  <- guardJustM . runDBQuery $ GetCompany companyid
-  mmailapi <- runDBQuery $ GetCompanyMailAPI companyid
+  company  <- guardJustM . dbQuery $ GetCompany companyid
+  mmailapi <- dbQuery $ GetCompanyMailAPI companyid
   adminCompanyPage company mmailapi
 
 jsonCompanies :: Kontrakcja m => m JSValue
 jsonCompanies = onlySalesOrAdmin $ do
     params <- getListParamsNew
-    allCompanies <- runDBQuery $ GetCompanies Nothing
+    allCompanies <- dbQuery $ GetCompanies Nothing
     let companies = companiesSortSearchPage params allCompanies
     return . JSObject . toJSObject $
         [("list", JSArray $ map (\company ->
@@ -302,7 +303,7 @@ getUsersAndStatsInv = do
     mapM addInviteType users
   where
     addInviteType = \(user,mcompany,docstats) -> do
-        invite <- runDBQuery $ GetInviteInfo (userid user)
+        invite <- dbQuery $ GetInviteInfo (userid user)
         let invitestype = case invite of
                           Nothing                     -> Admin
                           Just (InviteInfo _ _ mtype) -> fromMaybe Admin mtype
@@ -322,11 +323,11 @@ handleUserChange uid = onlySalesOrAdmin $ do
   ctx <- getContext
   _ <- getAsString "change"
   museraccounttype <- getField "useraccounttype"
-  olduser <- runDBOrFail $ dbQuery $ GetUserByID uid
+  olduser <- guardJustM $ dbQuery $ GetUserByID uid
   user <- case (museraccounttype, usercompany olduser, useriscompanyadmin olduser) of
     (Just "companyadminaccount", Just _companyid, False) -> do
       --then we just want to make this account an admin
-      newuser <- runDBOrFail $ do
+      newuser <- guardJustM $ do
         _ <- dbUpdate $ SetUserCompanyAdmin uid True
         _ <- dbUpdate $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
              [("is_company_admin", "false", "true")] 
@@ -336,7 +337,7 @@ handleUserChange uid = onlySalesOrAdmin $ do
     (Just "companyadminaccount", Nothing, False) -> do
       --then we need to create a company and make this account an admin
       --we also need to tie all the existing docs to the company
-      newuser <- runDBOrFail $ do
+      newuser <- guardJustM $ do
         company <- dbUpdate $ CreateCompany Nothing Nothing
         _ <- dbUpdate $ SetUserCompany uid (Just $ companyid company)
         _ <- dbUpdate 
@@ -353,7 +354,7 @@ handleUserChange uid = onlySalesOrAdmin $ do
       return newuser
     (Just "companystandardaccount", Just _companyid, True) -> do
       --then we just want to downgrade this account to a standard
-      newuser <- runDBOrFail $ do
+      newuser <- guardJustM $ do
         _ <- dbUpdate $ SetUserCompanyAdmin uid False
         _ <- dbUpdate 
                  $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
@@ -364,7 +365,7 @@ handleUserChange uid = onlySalesOrAdmin $ do
     (Just "companystandardaccount", Nothing, False) -> do
       --then we need to create a company and make this account a standard user
       --we also need to tie all the existing docs to the company
-      newuser <- runDBOrFail $ do
+      newuser <- guardJustM $ do
         company <- dbUpdate $ CreateCompany Nothing Nothing
         _ <- dbUpdate $ SetUserCompany uid (Just $ companyid company)
         _ <- dbUpdate 
@@ -378,7 +379,7 @@ handleUserChange uid = onlySalesOrAdmin $ do
       --then we need to downgrade this user and possibly delete their company
       --we also need to untie all their existing docs from the company
       --we may also need to delete the company if it's empty, but i haven't implemented this bit
-      newuser <- runDBOrFail $ do
+      newuser <- guardJustM $ do
         _ <- dbUpdate $ SetUserCompany uid Nothing
         _ <- dbUpdate 
                  $ LogHistoryDetailsChanged uid (ctxipnumber ctx) (ctxtime ctx) 
@@ -389,35 +390,35 @@ handleUserChange uid = onlySalesOrAdmin $ do
       return newuser
     _ -> return olduser
   infoChange <- getUserInfoChange
-  _ <- runDBUpdate $ SetUserInfo uid $ infoChange $ userinfo user
-  _ <- runDBUpdate
+  _ <- dbUpdate $ SetUserInfo uid $ infoChange $ userinfo user
+  _ <- dbUpdate
            $ LogHistoryUserInfoChanged uid (ctxipnumber ctx) (ctxtime ctx) 
                                        (userinfo user) (infoChange $ userinfo user)
                                        (userid <$> ctxmaybeuser ctx)
   settingsChange <- getUserSettingsChange
-  _ <- runDBUpdate $ SetUserSettings uid $ settingsChange $ usersettings user
+  _ <- dbUpdate $ SetUserSettings uid $ settingsChange $ usersettings user
   return $ LinkUserAdmin $ Just uid
 
 resaveDocsForUser :: Kontrakcja m => UserID -> m ()
 resaveDocsForUser uid = onlySalesOrAdmin $ do
   Context{ctxmaybeuser = Just admin, ctxtime, ctxipnumber} <- getContext
-  let actor = AdminActor ctxtime ctxipnumber (userid admin) (getEmail admin)
-  user <- runDBOrFail $ dbQuery $ GetUserByID uid
-  userdocs <- runDBQuery $ GetDocumentsByAuthor uid
-  mapM_ (\doc -> runDBUpdate $ AdminOnlySaveForUser (documentid doc) user actor) userdocs 
+  let actor = adminActor ctxtime ctxipnumber (userid admin) (getEmail admin)
+  user <- guardJustM $ dbQuery $ GetUserByID uid
+  userdocs <- dbQuery $ GetDocumentsByAuthor uid
+  mapM_ (\doc -> dbUpdate $ AdminOnlySaveForUser (documentid doc) user actor) userdocs
   return ()
 
 {- | Handling company details change. It reads user info change -}
 handleCompanyChange :: Kontrakcja m => CompanyID -> m KontraLink
 handleCompanyChange companyid = onlySalesOrAdmin $ do
   _ <- getAsString "change"
-  company <- runDBOrFail $ dbQuery $ GetCompany companyid
+  company <- guardJustM $ dbQuery $ GetCompany companyid
   companyInfoChange <- getCompanyInfoChange
-  _ <- runDBUpdate $ SetCompanyInfo companyid (companyInfoChange $ companyinfo company)
-  mmailapi <- runDBQuery $ GetCompanyMailAPI companyid
+  _ <- dbUpdate $ SetCompanyInfo companyid (companyInfoChange $ companyinfo company)
+  mmailapi <- dbQuery $ GetCompanyMailAPI companyid
   when_ (isNothing mmailapi) $ do
     key <- random
-    runDBUpdate $ SetCompanyMailAPIKey companyid key 1000
+    dbUpdate $ SetCompanyMailAPIKey companyid key 1000
   return $ LinkCompanyAdmin $ Just companyid
 
 handleCreateUser :: Kontrakcja m => m KontraLink
@@ -447,14 +448,14 @@ handlePrivateUserCompanyInvite companyid = onlySalesOrAdmin $ do
   ctx <- getContext
   user <- guardJust $ ctxmaybeuser ctx
   email <- Email <$> getCriticalField asValidEmail "email"
-  existinguser <- guardJustM $ runDBQuery $ GetUserByEmail Nothing email
-  _ <- runDBUpdate $ AddCompanyInvite CompanyInvite{
+  existinguser <- guardJustM $ dbQuery $ GetUserByEmail Nothing email
+  _ <- dbUpdate $ AddCompanyInvite CompanyInvite{
           invitedemail = email
         , invitedfstname = getFirstName existinguser
         , invitedsndname = getLastName existinguser
         , invitingcompany = companyid
         }
-  company <- guardJustM $ runDBQuery $ GetCompany companyid
+  company <- guardJustM $ dbQuery $ GetCompany companyid
   sendTakeoverPrivateUserMail user company existinguser
 
 handleCreateCompanyUser :: Kontrakcja m => CompanyID -> m ()
@@ -470,8 +471,8 @@ handleCreateCompanyUser companyid = onlySalesOrAdmin $ do
   muser <- createNewUserByAdmin ctx (fstname, sndname) email Nothing custommessage (mkLocaleFromRegion region)
   case muser of
     Just (User{userid}) -> do
-      _ <- runDBUpdate $ SetUserCompany userid (Just companyid)
-      when_ admin $ runDBUpdate $ SetUserCompanyAdmin userid True
+      _ <- dbUpdate $ SetUserCompany userid (Just companyid)
+      when_ admin $ dbUpdate $ SetUserCompanyAdmin userid True
     Nothing -> addFlashM flashMessageUserWithSameEmailExists
   return ()
 
@@ -535,16 +536,16 @@ handleCreateService :: (CryptoRNG m, Kontrakcja m) => m KontraLink
 handleCreateService = onlySalesOrAdmin $ do
     name <- guardJustM $ getField "name"
     Log.debug $ "name: " ++ name
-    admin <- guardJustM $ liftMM  (runDBQuery . GetUserByEmail Nothing . Email) (getField "admin")
+    admin <- guardJustM $ liftMM  (dbQuery . GetUserByEmail Nothing . Email) (getField "admin")
     Log.debug $ "admin: " ++ show admin
     pwdBS <- getField' "password"
     Log.debug $ "password: " ++ show pwdBS
     pwd <- createPassword pwdBS
-    service <- guardJustM $ runDBUpdate $ CreateService (ServiceID $ BS.fromString name) (Just pwd) (userid admin)
+    service <- guardJustM $ dbUpdate $ CreateService (ServiceID $ BS.fromString name) (Just pwd) (userid admin)
     Log.debug $ "service: " ++ show service
     location <- getField "location"
     Log.debug $ "location: " ++ show location
-    _ <- runDBUpdate $ UpdateServiceSettings (serviceid service) (servicesettings service)
+    _ <- dbUpdate $ UpdateServiceSettings (serviceid service) (servicesettings service)
                                                {servicelocation = ServiceLocation <$> location}
     Log.debug $ "LoopBack"
     return LoopBack
@@ -552,9 +553,8 @@ handleCreateService = onlySalesOrAdmin $ do
 {- Services page-}
 showServicesPage :: Kontrakcja m => m String
 showServicesPage = onlySalesOrAdmin $ do
-  env <- getDBEnv
-  services <- runDBQuery GetServices
-  servicesAdminPage env services
+  services <- dbQuery GetServices
+  servicesAdminPage services
 
 
 {-
@@ -651,8 +651,8 @@ Used signatures last 12 months
 showFunctionalityStats :: Kontrakcja m => m String
 showFunctionalityStats = onlySalesOrAdmin $ do
   ctx@Context{ ctxtime } <- getContext
-  users <- runDBQuery GetUsers
-  documents <- runDBQuery $ GetDocuments $ currentServiceID ctx
+  users <- dbQuery GetUsers
+  documents <- dbQuery $ GetDocumentsByService $ currentServiceID ctx
   adminFunctionalityStatsPage (mkStats ctxtime users)
                               (mkStats ctxtime documents)
   where
@@ -697,9 +697,9 @@ showDocuments = onlySalesOrAdmin $ adminDocuments =<< getContext
 
 jsonDocuments :: Kontrakcja m => m JSValue
 jsonDocuments = onlySalesOrAdmin $ do
-    srvs <- runDBQuery $ GetServices
+    srvs <- dbQuery $ GetServices
     Log.debug "Document list for admin per service"
-    docs <- join <$> (sequence $ map (runDBQuery . GetDocuments) (Nothing:(map (Just . serviceid) srvs)))
+    docs <- join <$> (sequence $ map (dbQuery . GetDocumentsByService) (Nothing:(map (Just . serviceid) srvs)))
     Log.debug $ "Total document found:" ++ show (length docs)
     params <- getListParamsNew
     let documents = documentsSortSearchPage params docs
@@ -762,17 +762,16 @@ documentsPageSize = 100
 handleBackdoorQuery :: Kontrakcja m => String -> m String
 handleBackdoorQuery email = onlySalesOrAdmin $ onlyBackdoorOpen $ do
   minfo <- listToMaybe . filter ((email `elem`) . map addrEmail . mailTo)
-    <$> runDBQuery GetEmails
+    <$> dbQuery GetEmails
   return $ maybe "No email found" mailContent minfo
 
 -- This method can be used do reseal a document
 resealFile :: Kontrakcja m => DocumentID -> m KontraLink
 resealFile docid = onlyAdmin $ do
   Log.debug $ "Trying to reseal document "++ show docid ++" | Only superadmin can do that"
-  ctx <- getContext
-  doc <- guardJustM $ runDBQuery $ GetDocumentByDocumentID docid
+  doc <- guardJustM $ dbQuery $ GetDocumentByDocumentID docid
   Log.debug "Document is valid for resealing sealing"
-  res <- runDB $ sealDocument ctx doc
+  res <- sealDocument doc
   case res of
       Left  _ -> Log.debug "We failed to reseal the document"
       Right _ -> Log.debug "Ok, so the document has been resealed"
@@ -782,18 +781,18 @@ resealFile docid = onlyAdmin $ do
 replaceMainFile :: Kontrakcja m => DocumentID -> m KontraLink
 replaceMainFile did = onlyAdmin $ do
   Log.debug $ "Replaing main file | SUPER CRITICAL | If you see this check who did this ask who did this and why"
-  doc <- guardJustM $ runDBQuery $ GetDocumentByDocumentID did
+  doc <- guardJustM $ dbQuery $ GetDocumentByDocumentID did
   input <- getDataFnM (lookInput "file")
   case (input, documentfiles doc) of
        (Input contentspec _ _contentType, cf:_)  -> do
             content <- case contentspec of
                 Left filepath -> liftIO $ BSL.readFile filepath
                 Right c -> return c
-            fn <- fromMaybe "file" <$> fmap filename <$> (runDB $ dbQuery $ GetFileByFileID cf)
+            fn <- fromMaybe "file" <$> fmap filename <$> (dbQuery $ GetFileByFileID cf)
             Context{ctxipnumber,ctxtime, ctxmaybeuser = Just user} <- getContext
-            let actor = AdminActor ctxtime ctxipnumber (userid user) (getEmail user)
-            file <- runDB $ dbUpdate $ NewFile fn (concatChunks content)
-            _ <- runDBUpdate $ ChangeMainfile did (fileid file) actor
+            let actor = adminActor ctxtime ctxipnumber (userid user) (getEmail user)
+            file <- dbUpdate $ NewFile fn (concatChunks content)
+            _ <- dbUpdate $ ChangeMainfile did (fileid file) actor
             return LoopBack
        _ -> internalError
 
@@ -811,11 +810,11 @@ daveDocument documentid = onlyAdmin $ do
     Log.debug $ "location: " ++ location
     if "/" `isSuffixOf` location
      then do
-      document <- queryOrFail $ GetDocumentByDocumentID documentid
-      r <- renderTemplateFM  "daveDocument" $ do
-        field "daveBody" $  inspectXML document
-        field "id" $ show documentid
-        field "closed" $ documentstatus document == Closed
+      document <- guardJustM . dbQuery $ GetDocumentByDocumentID documentid
+      r <- renderTemplate "daveDocument" $ do
+        F.value "daveBody" $  inspectXML document
+        F.value "id" $ show documentid
+        F.value "closed" $ documentstatus document == Closed
       return $ Right r
      else return $ Left $ LinkDaveDocument documentid
 
@@ -824,16 +823,16 @@ daveDocument documentid = onlyAdmin $ do
 -}
 daveSignatoryLink :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m  String
 daveSignatoryLink documentid siglinkid = onlyAdmin $ do
-    document <- queryOrFail $ GetDocumentByDocumentID documentid
+    document <- guardJustM . dbQuery $ GetDocumentByDocumentID documentid
     siglink <- guardJust $ getSigLinkFor document siglinkid
-    renderTemplateFM  "daveSignatoryLink" $ do
-        field "daveBody" $ inspectXML siglink
-        field "docid" $ show documentid
-        field "slid" $ show siglinkid
-        fieldFL "fields" $ for (signatoryfields $ signatorydetails siglink) $ \sf -> do
-            field "fieldname" $ fieldTypeToString (sfType sf)
-            field "fieldvalue" $ sfValue sf
-            field "label" $ show $ sfType sf
+    renderTemplate  "daveSignatoryLink" $ do
+        F.value "daveBody" $ inspectXML siglink
+        F.value "docid" $ show documentid
+        F.value "slid" $ show siglinkid
+        F.objects "fields" $ for (signatoryfields $ signatorydetails siglink) $ \sf -> do
+            F.value "fieldname" $ fieldTypeToString (sfType sf)
+            F.value "fieldvalue" $ sfValue sf
+            F.value "label" $ show $ sfType sf
       where fieldTypeToString sf = case sf of
               FirstNameFT      -> "sigfstname"
               LastNameFT       -> "sigsndname"
@@ -852,7 +851,7 @@ updateFields did slid = onlyAdmin $ do
   fieldvalue <- getDataFnM (look "fieldvalue")
   ctx <- getContext
   actor <- guardJust $ mkAdminActor ctx
-  _ <- runDBUpdate $ UpdateFieldsNoStatusCheck did slid (fieldname, fieldvalue) actor
+  _ <- dbUpdate $ UpdateFieldsNoStatusCheck did slid (fieldname, fieldvalue) actor
   return LoopBack
 
 {- |
@@ -860,7 +859,7 @@ updateFields did slid = onlyAdmin $ do
 -}
 daveUser :: Kontrakcja m => UserID ->  m String
 daveUser userid = onlyAdmin $ do
-    user <- runDBOrFail $ dbQuery $ GetUserByID userid
+    user <- guardJustM $ dbQuery $ GetUserByID userid
     return $ inspectXML user
 
 {- |
@@ -868,7 +867,7 @@ daveUser userid = onlyAdmin $ do
 -}
 daveUserHistory :: Kontrakcja m => UserID -> m String
 daveUserHistory userid = onlyAdmin $ do
-    history <- runDBQuery $ GetUserHistoryByUserID userid
+    history <- dbQuery $ GetUserHistoryByUserID userid
     return $ inspectXML history
 
 {- |
@@ -876,7 +875,7 @@ daveUserHistory userid = onlyAdmin $ do
 -}
 daveCompany :: Kontrakcja m => CompanyID -> m String
 daveCompany companyid = onlyAdmin $ do
-  company <- runDBOrFail $ dbQuery $ GetCompany companyid
+  company <- guardJustM $ dbQuery $ GetCompany companyid
   return $ inspectXML company
 
 
@@ -900,7 +899,10 @@ companyClosedFilesZip cid start _filenamefordownload = onlyAdmin $ do
 companyFilesArchive :: Kontrakcja m => CompanyID -> Int -> m Archive
 companyFilesArchive cid start = do
     Log.debug $ "Getting all files archive for company " ++ show cid
-    docs <- runDB $ dbQuery $ GetDocumentsByCompanyWithFiltering Nothing cid [] Nothing Nothing Nothing
+    docs <- dbQuery $ GetDocumentsByCompanyWithFiltering cid [
+        DocumentFilterByService Nothing
+      , DocumentFilterStatuses [Closed]
+      ]
     let cdocs = sortBy (\d1 d2 -> compare (documentid d1) (documentid d2)) $ filter (\doc -> documentstatus doc == Closed)  $ docs
     let sdocs = take zipCount $ drop (zipCount*start) $ cdocs
     Log.debug $ "Found  " ++ show (length $ filter (\doc -> documentstatus doc == Closed)  $ docs) ++ "document"
@@ -908,16 +910,15 @@ companyFilesArchive cid start = do
     return $ foldr addEntryToArchive emptyArchive $ map fromJust $ filter isJust $ mentries
   where
     zipCount = 80
-    
+
 docToEntry ::  Kontrakcja m => Document -> m (Maybe Entry)
 docToEntry doc = do
       let snpart = concat $ for (take 5 $ documentsignatorylinks doc) $ \sl -> (take 8 $ getFirstName sl) ++ "_"++(take 8 $ getFirstName sl) ++ "_"
       let name = filter ((/= ' ')) $ filter (isAscii) $ (documenttitle doc) ++ "_" ++ (show $ documentmtime doc) ++ "_" ++ snpart ++".pdf"
-      ctx <- getContext
       case (documentsealedfiles doc) of
         [fid] -> do
             Log.debug $ "Getting content for the file " ++ show fid
-            content <- liftIO $ getFileIDContents ctx fid
+            content <- getFileIDContents fid
             return $ Just $ toEntry name 0 $ BSL.pack $ BSS.unpack content
         _ -> do
             Log.debug $ "Bad sealed file number " ++ show (documentid doc)
