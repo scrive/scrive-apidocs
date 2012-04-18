@@ -146,6 +146,7 @@ data DocumentDomain
   | DocumentsOfService (Maybe ServiceID)         -- ^ All documents of service
   | DocumentsOfCompany CompanyID Bool Bool       -- ^ All documents of a company, with flag for selecting also drafts and deleted
   | AttachmentsOfAuthorDeleteValue UserID Bool   -- ^ Attachments of user, with deleted flag
+  | AttachmentsSharedInUsersCompany UserID       -- ^ Attachments shared in the user company
 
 -- | These are possible order by clauses that make documents sorted by.
 data DocumentOrderBy
@@ -234,7 +235,17 @@ documentDomainToSQL (AttachmentsOfAuthorDeleteValue uid deleted) =
        ++ " AND signatory_links.really_deleted = FALSE"
        ++ " AND documents.type = 3")
         [toSql uid, toSql deleted]
-
+documentDomainToSQL (AttachmentsSharedInUsersCompany uid) =
+  SQL ("signatory_links.deleted = FALSE"
+       ++ " AND documents.type = 3"
+       ++ " AND documents.sharing = ?"
+       ++ " AND signatory_links.really_deleted = FALSE"
+       ++ " AND EXISTS (SELECT 1 FROM users AS usr1, users AS usr2 "
+       ++ "                WHERE signatory_links.user_id = usr2.id "
+       ++ "                  AND usr2.company_id = usr1.company_id "
+       ++ "                  AND usr1.id = ?)")
+        [toSql Shared, toSql uid]
+        
 
 
 maxselect :: String

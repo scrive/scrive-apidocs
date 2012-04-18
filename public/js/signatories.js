@@ -817,9 +817,9 @@ window.SignatoryStandardView = Backbone.View.extend({
             && signatory.document().signingInProcess()
             && signatory.canSign()
             && signatory.document().padAuthorization() && !signatory.author()) {
-                  if (!signatory.author() && BrowserInfo.isIpad())
+                  if (!signatory.author() && BrowserInfo.isPadDevice())
                       container.append(this.giveForSigningOnThisDeviceOption());
-                  if (!BrowserInfo.isIpad()) {
+                  if (!BrowserInfo.isPadDevice()) {
                     if (signatory.inpadqueue())
                       container.append(this.removeFromPadQueueOption());
                     else    
