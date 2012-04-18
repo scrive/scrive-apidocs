@@ -40,6 +40,9 @@ import Crypto.RNG
 import DB
 import Templates.Templates
 import Util.JSON
+--import Control.Monad.Base
+--import Control.Monad.Trans.Control
+--import Control.Monad.Trans.Control.Util
 
 {- | API calls user JSPO object as a response and work within json value as a context-}
 type APIResponse = JSObject JSValue
@@ -48,6 +51,15 @@ type APIRequestBody = JSValue
 {- | API functions are build over Kontra with an ability to exit, and with some context -}
 newtype APIFunction m c a = AF { unAF :: ReaderT c (ErrorT (API_ERROR, String) m) a }
     deriving (Applicative, CryptoRNG, Functor, Monad, MonadDB, MonadError (API_ERROR, String), MonadIO, MonadReader c)
+
+{-
+instance (MonadBase IO m, MonadBaseControl IO m) => MonadBaseControl IO (APIFunction m c) where
+  newtype StM (APIFunction m c) a = StAPIFunction { unStAPIFunction :: StM (ReaderT c (ErrorT (API_ERROR, String) m)) a }
+  liftBaseWith = newtypeLiftBaseWith AF unStAPIFunction StAPIFunction
+  restoreM     = newtypeRestoreM AF unAF
+  {-# INLINE liftBaseWith #-}
+  {-# INLINE restoreM #-}
+-}
 
 instance TemplatesMonad m => TemplatesMonad (APIFunction m c) where
     getTemplates = liftKontra getTemplates

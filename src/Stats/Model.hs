@@ -58,6 +58,11 @@ data DocStatQuantity = DocStatClose       -- ^ A Close Document event
                      | DocStatTimeout
                      | DocStatEmailSignatureTimeout
                      | DocStatElegSignatureTimeout
+                     | DocStatPadSignatures
+                     | DocStatPadSignaturePending
+                     | DocStatPadSignatureCancel
+                     | DocStatPadSignatureReject
+                     | DocStatPadSignatureTimeout
   deriving (Eq, Ord, Show)
 $(enumDeriveConvertible ''DocStatQuantity)
 
