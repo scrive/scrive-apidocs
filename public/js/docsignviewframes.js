@@ -18,9 +18,9 @@ window.DocumentSignViewHeader = Backbone.View.extend({
   tagName: "div",
   refresh : function() {
       var el = $(this.el);
-      var tbd = $("<span/>")
+      var tbd = $("<span/>");
       $(this.el).append(tbd);
-      setTimeout(function() {tbd.remove();},1)
+      setTimeout(function() {tbd.remove();},1);
       var width = Math.max($('body').width(),$(document).width());
       if (width > 1020)
           el.css("min-width",width + "px");
@@ -96,9 +96,9 @@ window.DocumentSignViewFooter = Backbone.View.extend({
   },
   refresh : function() {
       var el = $(this.el);
-      var tbd = $("<span/>")
+      var tbd = $("<span/>");
       $(this.el).append(tbd);
-      setTimeout(function() {tbd.remove();},1)
+      setTimeout(function() {tbd.remove();},1);
       var width = Math.max($('body').width(),$(document).width());
       if (width > 1020)
           el.css("min-width",width + "px");
