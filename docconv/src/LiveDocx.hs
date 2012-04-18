@@ -3,10 +3,16 @@ module LiveDocx (
   , convertToPDF
 ) where
 
+import Control.Concurrent
 import Control.Monad()
+import Data.List
+import Text.XML.HaXml.XmlContent.Parser
 import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
+
+import SOAP.SOAP
+import qualified Log
 
 data LiveDocxConf = LiveDocxConf {
     url :: String
@@ -14,17 +20,17 @@ data LiveDocxConf = LiveDocxConf {
   , password :: String
 }
 
-data LiveDocx a = Success a | Problem String
+data LiveDocx a = LDXSuccess a | LDXProblem String
 
 instance Monad LiveDocx where
-  return = Success
+  return = LDXSuccess
 
-  Success x >>= f = f x
-  Problem msg >>= _ = Problem msg
+  LDXSuccess x >>= f = f x
+  LDXProblem msg >>= _ = LDXProblem msg
 
 liveDocxToEither :: LiveDocx a -> Either String a
-liveDocxToEither (Success x) = Right x
-liveDocxToEither (Problem msg) = Left msg
+liveDocxToEither (LDXSuccess x) = Right x
+liveDocxToEither (LDXProblem msg) = Left msg
 
 logIn :: LiveDocxConf -> LiveDocx ()
 logIn = undefined
@@ -67,7 +73,10 @@ convertToPDF conf uniquefilename filecontents = liveDocxToEither . withLiveDocxA
 liveDocxNamespace = "http://api.livedocx.com/1.2/mailmerge/"
 
 data LogIn = LogIn String String
+  deriving (Eq,Ord,Show,Read)
 
+instance HTypeable LogIn where
+    toHType _ = Defined "LogIn" [] []
 instance XMLContent LogIn where
   toContents (LogIn username password) =
     [CElem (Elem "LogIn" [mkAttr "xmlns" liveDocxNamespace]
@@ -77,7 +86,10 @@ instance XMLContent LogIn where
   parseContents = error "Please do not parse a LogIn"
 
 data LogInResponse = LogInResponse
+  deriving (Eq,Ord,Show,Read)
 
+instance HTypeable LogInResponse where
+    toHType _ = Defined "LogInResponse" [] []
 instance XmlContent LogInResponse where
   toContents LogInResponse = error "Please do not serialize LogInResponse"
   parseContents = do
@@ -86,14 +98,20 @@ instance XmlContent LogInResponse where
   } `adjustErr` ("in <LogInResponse>, " ++)
 
 data LogOut = LogOut
+  deriving (Eq,Ord,Show,Read)
 
+instance HTypeable LogOut where
+    toHType _ = Defined "LogOut" [] []
 instance XMLContent LogOut where
   toContents LogOut =
     [CElem (Elem "LogOut" [mkAttr "xmlns" liveDocxNamespace] []) ()]
   parseContents = error "Please do not parse a LogOut"
 
 data LogOutResponse = LogOutResponse
+  deriving (Eq,Ord,Show,Read)
 
+instance HTypeable LogOutResponse where
+    toHType _ = Defined "LogOutResponse" [] []
 instance XmlContent LogOutResponse where
   toContents LogOutResponse = error "Please do not serialize LogOutResponse"
   parseContents = do
@@ -102,7 +120,10 @@ instance XmlContent LogOutResponse where
   } `adjustErr` ("in <LogOutResponse>, " ++)
 
 data UploadTemplate = UploadTemplate BS.ByteString String
+  deriving (Eq,Ord,Show,Read)
 
+instance HTypeable UploadTemplate where
+    toHType _ = Defined "UploadTemplate" [] []
 instance XMLContent UploadTemplate where
   toContents (UploadTemplate template filename) =
     let base64data = BSC.unpack (Base64.encode template) in
@@ -113,7 +134,10 @@ instance XMLContent UploadTemplate where
   parseContents = error "Please do not parse an UploadTemplate"
 
 data UploadTemplateResponse = UploadTemplateResponse
+  deriving (Eq,Ord,Show,Read)
 
+instance HTypeable UploadTemplateResponse where
+    toHType _ = Defined "UploadTemplateResponse" [] []
 instance XmlContent UploadTemplateResponse where
   toContents UploadTemplateResponse = error "Please do not serialize UploadTemplateResponse"
   parseContents = do
@@ -122,16 +146,22 @@ instance XmlContent UploadTemplateResponse where
   } `adjustErr` ("in <UploadTemplateResponse>, " ++)
 
 data SetRemoteTemplate = SetRemoteTemplate String
+  deriving (Eq,Ord,Show,Read)
 
+instance HTypeable SetRemoteTemplate where
+    toHType _ = Defined "SetRemoteTemplate" [] []
 instance XMLContent SetRemoteTemplate where
   toContents (SetRemoteTemplate filename) =
     [CElem (Elem "SetRemoteTemplate" [mkAttr "xmlns" liveDocxNamespace]
-      , mkElemC "filename" (toText filename)
+      [ mkElemC "filename" (toText filename)
       ]) ()]
   parseContents = error "Please do not parse an SetRemoteTemplate"
 
 data SetRemoteTemplateResponse = SetRemoteTemplateResponse
+  deriving (Eq,Ord,Show,Read)
 
+instance HTypeable SetRemoteTemplateResponse where
+    toHType _ = Defined "SetRemoteTemplateResponse" [] []
 instance XmlContent SetRemoteTemplateResponse where
   toContents SetRemoteTemplateResponse = error "Please do not serialize UploadTemplateResponse"
   parseContents = do
@@ -140,14 +170,20 @@ instance XmlContent SetRemoteTemplateResponse where
   } `adjustErr` ("in <SetRemoteTemplateResponse>, " ++)
 
 data CreateDocument = CreateDocument
+  deriving (Eq,Ord,Show,Read)
 
+instance HTypeable CreateDocument where
+    toHType _ = Defined "CreateDocument" [] []
 instance XMLContent CreateDocument where
   toContents CreateDocument =
     [CElem (Elem "CreateDocument" [mkAttr "xmlns" liveDocxNamespace] []) ()]
   parseContents = error "Please do not parse a CreateDocument"
 
 data CreateDocumentResponse = CreateDocumentResponse
+  deriving (Eq,Ord,Show,Read)
 
+instance HTypeable CreateDocumentResponse where
+    toHType _ = Defined "CreateDocumentResponse" [] []
 instance XmlContent CreateDocumentResponse where
   toContents CreateDocumentResponse = error "Please do not serialize CreateDocumentResponse"
   parseContents = do
@@ -156,16 +192,22 @@ instance XmlContent CreateDocumentResponse where
   } `adjustErr` ("in <CreateDocumentResponse>, " ++)
 
 data RetrieveDocument = RetrieveDocument String
+  deriving (Eq,Ord,Show,Read)
 
+instance HTypeable RetrieveDocument where
+    toHType _ = Defined "RetrieveDocument" [] []
 instance XMLContent RetrieveDocument where
   toContents (RetrieveDocument format) =
     [CElem (Elem "RetrieveDocument" [mkAttr "xmlns" liveDocxNamespace]
-      , mkElemC "format" (toText format)
+      [ mkElemC "format" (toText format)
       ]) ()]
   parseContents = error "Please do not parse a RetrieveDocument"
 
 data RetrieveDocumentResponse = RetrieveDocumentResponse BS.ByteString
+  deriving (Eq,Ord,Show,Read)
 
+instance HTypeable RetrieveDocumentResponse where
+    toHType _ = Defined "RetrieveDocumentResponse" [] []
 instance XmlContent (RetrieveDocumentResponse) where
   toContents (RetrieveDocumentResponse _result) = error "Please do not serialize RetrieveDocumentResponse"
   parseContents =  do
