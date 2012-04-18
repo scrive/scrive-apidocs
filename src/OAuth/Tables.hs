@@ -118,6 +118,22 @@ tablePrivilege = Table {
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
 
+migrateTempCredentialRemoveEmail ::  MonadDB m => Migration m
+migrateTempCredentialRemoveEmail = 
+  Migration {
+    mgrTable = tableTempCredential
+  , mgrFrom = 2
+  , mgrDo = do
+      kRunRaw "ALTER TABLE oauth_temp_credential DROP COLUMN email"
+      kRunRaw "ALTER TABLE oauth_temp_credential ADD COLUMN user_id BIGINT NULL"
+      kRunRaw $ "ALTER TABLE oauth_temp_credential"
+        ++ " ADD CONSTRAINT fk_oauth_temp_credential_user_id FOREIGN KEY(user_id)"
+        -- we want the temp credentials to disappear when the api_token disappears
+        ++ " REFERENCES users(id) ON UPDATE RESTRICT ON DELETE CASCADE"
+        ++ " DEFERRABLE INITIALLY IMMEDIATE"
+
+  } 
+
 {-
    Temporary Credentials are used during the OAuth flow.
 
@@ -126,7 +142,7 @@ tablePrivilege = Table {
 tableTempCredential :: Table
 tableTempCredential = Table {
   tblName = "oauth_temp_credential"
-  , tblVersion = 2
+  , tblVersion = 3
   , tblCreateOrValidate = \desc -> do
     case desc of
       [("id", SqlColDesc { colType = SqlBigIntT
@@ -141,10 +157,11 @@ tableTempCredential = Table {
                                  , colNullable = Just False}),
        ("expires",    SqlColDesc { colType     = SqlTimestampWithZoneT
                                  , colNullable = Just False}),
-       ("email",     SqlColDesc { colType     = SqlVarCharT
-                                 , colNullable = Just False}),
        ("callback",  SqlColDesc { colType = SqlVarCharT
-                                , colNullable = Just False})] -> return TVRvalid
+                                , colNullable = Just False}),
+       ("user_id",    SqlColDesc { colType      = SqlBigIntT
+                                 , colNullable  = Just True})
+       ] -> return TVRvalid
       [] -> do
         kRunRaw $ "CREATE TABLE oauth_temp_credential ("
           ++ "  id          BIGSERIAL   NOT NULL"
@@ -153,8 +170,8 @@ tableTempCredential = Table {
           ++ ", api_token_id BIGINT      NOT NULL"          
           ++ ", verifier    BIGINT      NOT NULL"
           ++ ", expires     TIMESTAMPTZ NOT NULL"
-          ++ ", email       VARCHAR     NOT NULL"
           ++ ", callback    VARCHAR     NOT NULL"
+          ++ ", user_id     BIGINT          NULL"
           ++ ", CONSTRAINT pk_oauth_temp_credential PRIMARY KEY (id)"
           ++ ")"
         return TVRcreated
@@ -164,6 +181,11 @@ tableTempCredential = Table {
       ++ " ADD CONSTRAINT fk_oauth_temp_credential FOREIGN KEY(api_token_id)"
       -- we want the temp credentials to disappear when the api_token disappears
       ++ " REFERENCES oauth_api_token(id) ON UPDATE RESTRICT ON DELETE CASCADE"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
+    kRunRaw $ "ALTER TABLE oauth_temp_credential"
+      ++ " ADD CONSTRAINT fk_oauth_temp_credential_user_id FOREIGN KEY(user_id)"
+      -- we want the temp credentials to disappear when the api_token disappears
+      ++ " REFERENCES users(id) ON UPDATE RESTRICT ON DELETE CASCADE"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
 

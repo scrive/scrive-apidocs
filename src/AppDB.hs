@@ -53,6 +53,7 @@ kontraMigrations = [
   , addCompanyNameNumberOnUsers
   , updateDocumentStatusAfterRemovingAwaitingAuthor
   , moveDocumentTagsFromDocumentsTableToDocumentTagsTable
+  , migrateTempCredentialRemoveEmail 
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

@@ -7,7 +7,6 @@ import qualified Log
 import User.Model
 import MagicHash
 
-
 import Crypto.RNG
 import Data.Int
 import Data.Data (Data)
@@ -59,13 +58,12 @@ instance Convertible SqlValue APIPrivilege where
 data RequestTempCredentials = RequestTempCredentials
                               APIToken 
                               MagicHash
-                              String -- email address
                               [APIPrivilege]
                               String -- callback URL
                               MinutesTime
 instance (CryptoRNG m, MonadDB m) => DBUpdate m RequestTempCredentials (Maybe (APIToken, MagicHash)) where
-  update (RequestTempCredentials _     _      _     []    _        _) = return Nothing
-  update (RequestTempCredentials token secret email privs callback time) = do
+  update (RequestTempCredentials _     _      []    _        _) = return Nothing
+  update (RequestTempCredentials token secret privs callback time) = do
     temptoken  :: MagicHash <- lift random
     tempsecret :: MagicHash <- lift random
     verifier   :: MagicHash <- lift random
@@ -75,16 +73,14 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m RequestTempCredentials (Maybe (A
                            ++ ", api_token_id"
                            ++ ", verifier"
                            ++ ", expires"
-                           ++ ", email"
                            ++ ", callback"
-                           ++ ") (SELECT ?, ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM oauth_api_token WHERE id = ? AND api_token = ? AND api_secret = ?))"
+                           ++ ") (SELECT ?, ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM oauth_api_token WHERE id = ? AND api_token = ? AND api_secret = ?))"
                            ++ " RETURNING id")
                            [ toSql temptoken
                            , toSql tempsecret
                            , toSql $ atID token
                            , toSql verifier
                            , toSql $ 10 `minutesAfter` time
-                           , toSql email
                            , toSql callback
                            , toSql $ atID token
                            , toSql $ atToken token
@@ -97,7 +93,6 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m RequestTempCredentials (Maybe (A
                    , toSql $ atID token
                    , toSql verifier
                    , toSql $ 10 `minutesAfter` time
-                   , toSql email
                    , toSql callback
                    , toSql $ atID token
                    , toSql $ atToken token
@@ -115,34 +110,32 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m RequestTempCredentials (Maybe (A
 
 data VerifyCredentials = VerifyCredentials
                               APIToken 
-                              String -- email address
+                              UserID
                               MinutesTime
 instance MonadDB m => DBUpdate m VerifyCredentials (Maybe (String, MagicHash)) where
-  update (VerifyCredentials token email time) = do
-    kPrepare ("SELECT callback, verifier FROM oauth_temp_credential WHERE email = ? AND id = ? AND temp_token = ? AND expires > ?")
-    _ <- kExecute [ toSql email, toSql $ atID token, toSql $ atToken token, toSql time ]
+  update (VerifyCredentials token uid time) = do
+    kPrepare ("UPDATE oauth_temp_credential SET user_id = ? WHERE id = ? AND temp_token = ? AND expires > ? RETURNING callback, verifier")
+    _ <- kExecute [ toSql uid, toSql $ atID token, toSql $ atToken token, toSql time ]
     mr <- foldDB (\acc cb vr -> (cb, vr):acc) []
     oneObjectReturnedGuard mr
 
 data GetRequestedPrivileges = GetRequestedPrivileges
                               APIToken 
-                              String -- email address
                               MinutesTime
 instance MonadDB m => DBQuery m GetRequestedPrivileges (Maybe (String, [APIPrivilege])) where
-  query (GetRequestedPrivileges token email time) = do
+  query (GetRequestedPrivileges token time) = do
     kPrepare (   "SELECT com.name, p.privilege FROM oauth_temp_privileges p " 
               ++ "JOIN oauth_temp_credential c ON p.temp_token_id =   c.id "
               ++ "JOIN oauth_api_token t       ON c.api_token_id  =   t.id "
               ++ "JOIN users u                 ON t.user_id       =   u.id "
               ++ "JOIN companies com           ON u.company_id    = com.id "
-              ++ "WHERE c.temp_token = ? AND c.id = ? AND c.email = ? AND expires > ?")
-    _ <- kExecute [ toSql $ atToken token, toSql $ atID token, toSql email, toSql time ]
+              ++ "WHERE c.temp_token = ? AND c.id = ? AND expires > ? AND c.user_id IS NULL")
+    _ <- kExecute [ toSql $ atToken token, toSql $ atID token, toSql time ]
     foldDB f Nothing
     where f :: Maybe (String, [APIPrivilege]) -> String -> APIPrivilege -> Maybe (String, [APIPrivilege])
           f Nothing         name pr = Just (name, [pr])
           f (Just (_, acc)) name pr = Just (name, pr:acc)
 
--- do we need to check the email address?
 data RequestAccessToken = RequestAccessToken
                           APIToken  -- API Token
                           MagicHash -- API Token Secret
@@ -155,9 +148,8 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m RequestAccessToken (Maybe (APITo
     accesstoken  :: MagicHash <- lift random
     accesssecret :: MagicHash <- lift random
     kPrepare (   "INSERT INTO oauth_access_token (access_token, access_secret, api_token_id, user_id, created) "
-              ++ "SELECT ?, ?, c.api_token_id, u.id, ? FROM oauth_temp_credential c "
+              ++ "SELECT ?, ?, c.api_token_id, c.user_id, ? FROM oauth_temp_credential c "
               ++ "JOIN oauth_api_token a ON c.api_token_id = a.id "
-              ++ "JOIN users u ON c.email = u.email "
               ++ "WHERE a.id = ? AND a.api_token = ? "
               ++ "AND   a.api_secret = ? "
               ++ "AND   c.temp_secret = ? "
@@ -197,7 +189,6 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m RequestAccessToken (Maybe (APITo
                          ++ "SELECT ?, privilege FROM oauth_temp_privileges p "
                          ++ "JOIN oauth_temp_credential c ON p.temp_token_id = c.id "
                          ++ "JOIN oauth_api_token a ON c.api_token_id = a.id "
-                         ++ "JOIN users u ON c.email = u.email "
                          ++ "WHERE a.id = ? AND a.api_token = ? "
                          ++ "AND   a.api_secret = ? "
                          ++ "AND   c.temp_secret = ? "
@@ -234,12 +225,11 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m RequestAccessToken (Maybe (APITo
 
 data DenyCredentials = DenyCredentials
                        APIToken
-                       String -- email address
                        MinutesTime
 instance MonadDB m => DBUpdate m DenyCredentials () where
-  update (DenyCredentials token email time) = do
-    _ <- kRun $ SQL "DELETE FROM oauth_temp_credential WHERE (id = ? AND temp_token = ? AND email = ?) OR expires <= ?" 
-                    [ toSql $ atID token, toSql $ atToken token, toSql email, toSql time ]
+  update (DenyCredentials token time) = do
+    _ <- kRun $ SQL "DELETE FROM oauth_temp_credential WHERE (id = ? AND temp_token = ?) OR expires <= ?" 
+                    [ toSql $ atID token, toSql $ atToken token, toSql time ]
     return ()
 
 data GetUserIDForAPIWithPrivilege = GetUserIDForAPIWithPrivilege
