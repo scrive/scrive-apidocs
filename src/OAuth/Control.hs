@@ -4,7 +4,7 @@ import Kontra
 import API.Monad
 import Routing
 import OAuth.Model
-import DB.Classes
+import DB
 import Misc
 import KontraLink
 import Redirect
@@ -30,7 +30,7 @@ import Network.URI
 
 --import qualified Log
 
-oauthAPI :: Route (Kontra' Response)
+oauthAPI :: Route (KontraPlus Response)
 oauthAPI = choice [
   dir "oauth" $ dir "temporarycredentials" $ hGet  $ toK0 $ tempCredRequest,
   dir "oauth" $ dir "authorization"        $ hGet  $ toK0 $ authorization,
@@ -68,7 +68,7 @@ tempCredRequest = api $ do
 
   email <- apiGuardL (badInput "useremail is missing.") $ getDataFn' (look "useremail")
 
-  (temptoken, tempsecret) <- apiGuardL' $ runDBUpdate $ RequestTempCredentials apitoken apisecret email privileges callback time
+  (temptoken, tempsecret) <- apiGuardL' $ dbUpdate $ RequestTempCredentials apitoken apisecret email privileges callback time
 
   return $ FormEncoded [("oauth_token", show temptoken),
                         ("oauth_token_secret", show tempsecret),
@@ -87,7 +87,7 @@ authorization = do
       mtk <- getDataFn' (look "oauth_token")
       token <- guardJust $ maybeRead =<< mtk
 
-      mprivs <- runDBQuery $ GetRequestedPrivileges token email time
+      mprivs <- dbQuery $ GetRequestedPrivileges token email time
 
       case mprivs of
         Just (companyname, p:ps) -> Right <$> pagePrivilegesConfirm (p:ps) companyname token
@@ -105,7 +105,7 @@ authorizationDenied = do
       mtk <- getDataFn' (look "oauth_token")
       token <- guardJust $ maybeRead =<< mtk
 
-      _ <- runDBUpdate $ DenyCredentials token email time
+      _ <- dbUpdate $ DenyCredentials token email time
 
       sendRedirect $ LinkHome locale
 
@@ -121,7 +121,7 @@ authorizationGranted = do
       mtk <- getDataFn' (look "oauth_token")
       token <- guardJust $ maybeRead =<< mtk
 
-      (callback, verifier) <- guardJustM $ runDBUpdate $ VerifyCredentials token email time
+      (callback, verifier) <- guardJustM $ dbUpdate $ VerifyCredentials token email time
 
       url <- guardJust $ parseURI callback
 
@@ -152,7 +152,7 @@ tokenCredRequest = api $ do
   temptoken <- apiGuard (badInput "oauth_token is required.") $ maybeRead =<< maybeRead =<< lookup "oauth_token" params
   verifier  <- apiGuard (badInput "oauth_verifier is required.") $ maybeRead =<< maybeRead =<< lookup "oauth_verifier" params
 
-  (accesstoken, accesssecret) <- apiGuardL' $ runDBUpdate $ RequestAccessToken apitoken apisecret temptoken tokensecret verifier time
+  (accesstoken, accesssecret) <- apiGuardL' $ dbUpdate $ RequestAccessToken apitoken apisecret temptoken tokensecret verifier time
 
   return $ FormEncoded [("oauth_token",        show accesstoken)
                        ,("oauth_token_secret", show accesssecret)

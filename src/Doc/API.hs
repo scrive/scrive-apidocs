@@ -63,7 +63,7 @@ documentNew = api $ do
   
   (user, actor) <- getAPIUser
   mcompany <- case usercompany user of
-    Just companyid -> apiGuardL' $ dbQuery $ GetCompany companyid
+    Just companyid -> Just <$> (apiGuardL' $ dbQuery $ GetCompany companyid)
     Nothing -> return Nothing
     
 
@@ -98,15 +98,15 @@ documentNew = api $ do
 
   -- we really need to check SignatoryDetails before adding them
 
-  d3 <- apiGuardL' $ runDBUpdate $ ResetSignatoryDetails2 (documentid d2) (map (\ir -> (SignatoryDetails {
-                                                                                           signatorysignorder = SignOrder (toInteger $ fromMaybe 1 $ irSignOrder ir),
-                                                                                           signatoryfields = irData ir
-                                                                                         },
-                                                                                         irRole ir,
-                                                                                         irAttachments ir,
-                                                                                         Nothing)) -- No CSV
+  d3 <- apiGuardL' $ dbUpdate $ ResetSignatoryDetails2 (documentid d2) (map (\ir -> (SignatoryDetails {
+                                                                                                 signatorysignorder = SignOrder (toInteger $ fromMaybe 1 $ irSignOrder ir),
+                                                                                                 signatoryfields = irData ir
+                                                                                                 },
+                                                                                     irRole ir,
+                                                                                     irAttachments ir,
+                                                                                     Nothing)) -- No CSV
                                                                                 (dcrInvolved dcr))
-                                                                          actor
+                                                                                actor
   _ <- lift $ addDocumentCreateStatEvents d3
   return $ Created $ jsonDocumentForAuthor d3 (ctxhostpart ctx)
 
@@ -141,7 +141,7 @@ documentChangeMainFile docid = api $ do
               apiGuard (badInput "No template found for that id (or you don't have permissions).") $ listToMaybe $ documentfiles temp
             _ -> throwError $ badInput "This API call requires one of 'file' or 'template' POST parameters."
   
-  _ <- apiGuardL $ dbUpdate $ AttachFile docid fileid aa
+  _ <- apiGuardL' $ dbUpdate $ AttachFile docid fileid aa
   return ()
 
 
@@ -199,7 +199,7 @@ documentUploadSignatoryAttachment did _ sid _ aname _ = api $ do
   
   file <- lift $ dbUpdate $ NewFile (basename filename) content
   let actor = signatoryActor (ctxtime ctx) (ctxipnumber ctx) (maybesignatory sl) email slid
-  d <- apiGuardL $ dbUpdate $ SaveSigAttachment (documentid doc) sid aname (fileid file) actor
+  d <- apiGuardL' $ dbUpdate $ SaveSigAttachment (documentid doc) sid aname (fileid file) actor
   
   -- let's dig the attachment out again
   sigattach' <- apiGuard' $ getSignatoryAttachment d sid aname
@@ -223,7 +223,7 @@ documentDeleteSignatoryAttachment did _ sid _ aname _ = api $ do
   -- attachment must have a file
   fileid <- apiGuard (actionNotAvailable "That signatory attachment request does not have a file uploaded for it, or it has been previously deleted.") $ signatoryattachmentfile sigattach
 
-  d <- apiGuardL $ dbUpdate $ DeleteSigAttachment (documentid doc) sid fileid
+  d <- apiGuardL' $ dbUpdate $ DeleteSigAttachment (documentid doc) sid fileid
        (signatoryActor ctxtime ctxipnumber muid email sid)
   
   -- let's dig the attachment out again

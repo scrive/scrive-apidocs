@@ -4,6 +4,7 @@ import Templates.Templates
 --import qualified Data.ByteString as BS
 --import qualified Data.ByteString.UTF8 as BS
 import OAuth.Model
+import qualified Templates.Fields as F
 
 pagePrivilegesConfirm :: TemplatesMonad m
                       => [APIPrivilege]
@@ -11,7 +12,7 @@ pagePrivilegesConfirm :: TemplatesMonad m
                       -> APIToken
                       -> m String  
 pagePrivilegesConfirm privileges companyname token = do
-     renderTemplateFM "pagePrivilegesConfirm" $ do
-         field "isDocumentCreate" $ APIDocCreate `elem` privileges
-         field "companyname" companyname
-         field "token" $ show token
+     renderTemplate "pagePrivilegesConfirm" $ do
+         F.value "isDocumentCreate" $ APIDocCreate `elem` privileges
+         F.value "companyname" companyname
+         F.value "token" $ show token

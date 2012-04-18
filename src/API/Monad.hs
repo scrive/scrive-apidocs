@@ -27,6 +27,7 @@ module API.Monad (
   where
 
 import Control.Monad.Trans
+import Happstack.Server (toResponse)
 import Happstack.Server.Types
 import Text.JSON
 import qualified Happstack.Server.Response as Web
@@ -45,7 +46,6 @@ import EvidenceLog.Model
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import Util.HasSomeUserInfo
 
-import DB.Classes
 import OAuth.Model
 import Doc.DocStorage
 import qualified Data.Map as Map
@@ -112,9 +112,6 @@ instance ToAPIResponse Response where
 instance ToAPIResponse JSValue where
   toAPIResponse jv = let r1 = Web.toResponse $ encode jv in
     setHeader "Content-Type" "text/plain" r1 -- must be text/plain because some browsers complain about JSON type
-
-instance ToAPIResponse () where
-  toAPIResponse _ = Web.toResponse ("" :: String)
 
 instance ToAPIResponse a => ToAPIResponse (Created a) where
   toAPIResponse (Created a) = (toAPIResponse a) { rsCode = 201 }
@@ -212,25 +209,25 @@ instance (Monad m, JSON b) => APIGuard m (Result b) b where
 -- get the user for the api; it can either be 
 --  1. OAuth using Authorization header
 --  2. Session for Ajax client
-getAPIUser :: Kontrakcja m => APIMonad m (User, Either AuthorActor APIActor)
+getAPIUser :: Kontrakcja m => APIMonad m (User, Actor)
 getAPIUser = do
   moauthuser <- getOAuthUser
   case moauthuser of
-    Just (user, actor) -> return (user, Right actor)
+    Just (user, actor) -> return (user, actor)
     Nothing -> do
       msessionuser <- getSessionUser
       case msessionuser of
-        Just (user, actor) -> return (user, Left actor)
+        Just (user, actor) -> return (user, actor)
         Nothing -> throwError notLoggedIn'
 
-getSessionUser :: Kontrakcja m => APIMonad m (Maybe (User, AuthorActor))
+getSessionUser :: Kontrakcja m => APIMonad m (Maybe (User, Actor))
 getSessionUser = do
   ctx <- getContext
   case ctxmaybeuser ctx of
     Nothing -> return Nothing
-    Just user -> return $ Just (user, AuthorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (getEmail user))
+    Just user -> return $ Just (user, authorActor (ctxtime ctx) (ctxipnumber ctx) (userid user) (getEmail user))
 
-getOAuthUser :: Kontrakcja m => APIMonad m (Maybe (User, APIActor))
+getOAuthUser :: Kontrakcja m => APIMonad m (Maybe (User, Actor))
 getOAuthUser = do
   rq <- lift $ askRq
   ctx <- getContext
@@ -253,9 +250,9 @@ getOAuthUser = do
       apitoken    <- apiGuard (badInput "The Authorization header must contain oauth_consumer_key.") $ maybeRead =<< maybeRead =<< lookup "oauth_consumer_key" params
       accesstoken <- apiGuard (badInput "The Authorization header must contain oauth_token.") $ maybeRead =<< maybeRead =<< lookup "oauth_token" params
 
-      (userid, apistring) <- apiGuardL (forbidden "OAuth credentials are invalid.") $ runDBQuery $ GetUserIDForAPIWithPrivilege apitoken apisecret accesstoken tokensecret APIDocCreate
+      (userid, apistring) <- apiGuardL (forbidden "OAuth credentials are invalid.") $ dbQuery $ GetUserIDForAPIWithPrivilege apitoken apisecret accesstoken tokensecret APIDocCreate
   
-      user <- apiGuardL (serverError "The User account for those credentials does not exist.") $ runDBQuery $ GetUserByID userid
+      user <- apiGuardL (serverError "The User account for those credentials does not exist.") $ dbQuery $ GetUserByID userid
 
-      let actor = APIActor (ctxtime ctx) (ctxipnumber ctx) userid (getEmail user) apistring
+      let actor = apiActor (ctxtime ctx) (ctxipnumber ctx) userid (getEmail user) apistring
       return $ Just (user, actor)

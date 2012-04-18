@@ -1,5 +1,6 @@
 module EvidenceLog.Model (
     Actor(actorTime, actorIP, actorUserID, actorEmail, actorSigLinkID, actorAPIString, actorWho)
+  , apiActor
   , authorActor
   , signatoryActor
   , systemActor
@@ -71,6 +72,17 @@ systemActor time = Actor {
   , actorAPIString = Nothing
   , actorWho = "the Scrive system"
 }
+
+apiActor :: MinutesTime -> IPAddress -> UserID -> String -> String -> Actor
+apiActor time ip uid email apistring = Actor {
+    actorTime = time
+  , actorIP = Just ip
+  , actorUserID = Just uid
+  , actorEmail = Just email
+  , actorSigLinkID = Nothing
+  , actorAPIString = Just apistring
+  , actorWho = "the user with email " ++ show email ++ " using the API" 
+  }
 
 -- | For an action that requires an operation on a document and an
 -- author to be logged in
@@ -192,22 +204,6 @@ data DocumentEvidenceEvent = DocumentEvidenceEvent {
   , evSigLinkID  :: Maybe SignatoryLinkID
   , evAPI        :: Maybe String
   }
-
-instance (Actor a, Actor b) => Actor (Either a b) where
-  actorTime      (Left a)  = actorTime a
-  actorTime      (Right a) = actorTime a
-  actorIP        (Left a)  = actorIP a
-  actorIP        (Right a) = actorIP a
-  actorUserID    (Left a)  = actorUserID a
-  actorUserID    (Right a) = actorUserID a
-  actorEmail     (Left a)  = actorEmail a
-  actorEmail     (Right a) = actorEmail a
-  actorSigLinkID (Left a)  = actorSigLinkID a
-  actorSigLinkID (Right a) = actorSigLinkID a
-  actorAPIString (Left a)  = actorAPIString a
-  actorAPIString (Right a) = actorAPIString a
-  actorWho       (Left a)  = actorWho a
-  actorWho       (Right a) = actorWho a
 
 htmlDocFromEvidenceLog :: TemplatesMonad m => String -> [DocumentEvidenceEvent] -> m String
 htmlDocFromEvidenceLog title elog = do

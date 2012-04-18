@@ -2,7 +2,7 @@ module OAuth.Tables where
 
 import Database.HDBC
 
-import DB.Classes
+import DB
 import DB.Model
 
 {-
