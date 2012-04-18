@@ -464,7 +464,7 @@
                             td.append($("<a href='" + this.model.link() + "'>" + value + "</a>"));
                     }
                    else if (value != undefined) {
-                        var span = $("<span >" + value + "</span>");
+                        var span = $("<span/>").text(value);
                         td.html(span);
                     }
                 mainrow.append(td);
