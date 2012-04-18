@@ -4,8 +4,8 @@ module LiveDocx (
   , convertToPDF
 ) where
 
-import Control.Exception.Base (bracket_)
 import Control.Monad()
+import Control.Monad.Reader
 import Text.XML.HaXml.XmlContent.Parser
 import System.IO.Temp
 import qualified Data.ByteString.Base64 as Base64
@@ -19,48 +19,63 @@ import LiveDocxConf
 data FileFormat = DOC | DOCX | RTF | TXD
   deriving (Eq,Ord,Show,Read)
 
-ignoreIfRight :: Either String a -> IO (Either String ())
+data LiveDocxContext = LiveDocxContext {
+    ctxurl :: String
+  , ctxcookiefile :: FilePath
+}
+
+type LiveDocx a = ReaderT LiveDocxContext IO (Either String a)
+
+mkLiveDocxContext :: LiveDocxConf -> FilePath -> LiveDocxContext
+mkLiveDocxContext conf cookiefile = LiveDocxContext {
+    ctxurl = url conf
+  , ctxcookiefile = cookiefile
+}
+
+makeLiveDocxCall :: (XmlContent request, XmlContent result)
+                      => String
+                      -> request
+                      -> LiveDocx result
+makeLiveDocxCall action request = do
+  ctx <- ask
+  liftIO $ makeSoapCallWithCookies
+    (ctxurl ctx)
+    (ctxcookiefile ctx)
+    (liveDocxNamespace ++ action)
+    request
+
+ignoreIfRight :: Either String a -> LiveDocx ()
 ignoreIfRight (Left x) = return $ Left x
 ignoreIfRight (Right _) = return $ Right ()
 
-logIn :: LiveDocxConf -> FilePath -> IO (Either String ())
-logIn conf cookiefile = ignoreIfRight =<<
-  (makeSoapCallWithCookies
-    (url conf)
-    cookiefile
-    (liveDocxNamespace ++ "LogIn")
-    (LogIn (username conf) (password conf)) :: IO (Either String LogInResponse))
+logIn :: String -> String -> LiveDocx ()
+logIn username password = ignoreIfRight =<<
+  (makeLiveDocxCall
+    "LogIn"
+    (LogIn username password) :: LiveDocx LogInResponse)
 
-logOut :: LiveDocxConf -> FilePath -> IO (Either String ())
-logOut conf cookiefile = ignoreIfRight =<<
-  (makeSoapCallWithCookies
-    (url conf)
-    cookiefile
-    (liveDocxNamespace ++ "LogOut")
-    LogOut :: IO (Either String LogOutResponse))
+logOut :: LiveDocx ()
+logOut = ignoreIfRight =<<
+  (makeLiveDocxCall
+    "LogOut"
+    LogOut :: LiveDocx LogOutResponse)
 
-setLocalTemplate :: LiveDocxConf -> FilePath -> BS.ByteString -> FileFormat -> IO (Either String ())
-setLocalTemplate conf cookiefile filecontents format = ignoreIfRight =<<
-  (makeSoapCallWithCookies
-    (url conf)
-    cookiefile
-    (liveDocxNamespace ++ "SetLocalTemplate")
-    (SetLocalTemplate filecontents format) :: IO (Either String SetLocalTemplateResponse))
+setLocalTemplate :: BS.ByteString -> FileFormat ->  LiveDocx ()
+setLocalTemplate filecontents format = ignoreIfRight =<<
+  (makeLiveDocxCall
+    "SetLocalTemplate"
+    (SetLocalTemplate filecontents format) :: LiveDocx SetLocalTemplateResponse)
 
-createDocument :: LiveDocxConf -> FilePath -> IO (Either String ())
-createDocument conf cookiefile = ignoreIfRight =<<
-  (makeSoapCallWithCookies
-    (url conf)
-    cookiefile
-    (liveDocxNamespace ++ "CreateDocument")
-    CreateDocument :: IO (Either String CreateDocumentResponse))
+createDocument ::  LiveDocx ()
+createDocument = ignoreIfRight =<<
+  (makeLiveDocxCall
+    "CreateDocument"
+    CreateDocument :: LiveDocx CreateDocumentResponse)
 
-retrieveDocument :: LiveDocxConf -> FilePath -> String -> IO (Either String BS.ByteString)
-retrieveDocument conf cookiefile format = do
-  result <- makeSoapCallWithCookies
-              (url conf)
-              cookiefile
-              (liveDocxNamespace ++ "RetrieveDocument")
+retrieveDocument :: String ->  LiveDocx BS.ByteString
+retrieveDocument format = do
+  result <- makeLiveDocxCall
+              "RetrieveDocument"
               (RetrieveDocument format)
   case result of
     Right (RetrieveDocumentResponse pdfcontents) -> return $ Right pdfcontents
@@ -69,10 +84,16 @@ retrieveDocument conf cookiefile format = do
 convertToPDF :: LiveDocxConf -> BS.ByteString -> FileFormat -> IO (Either String BS.ByteString)
 convertToPDF conf filecontents format =
   withSystemTempFile "livedocx-cookies.txt" $ \cookiefile _cookiefilehandle ->
-    bracket_ (logIn conf cookiefile) (logOut conf cookiefile) $ do
-      _ <- setLocalTemplate conf cookiefile filecontents format
-      _ <- createDocument conf cookiefile
-      retrieveDocument conf cookiefile "PDF"
+    liftIO $ runReaderT convertDocument (mkLiveDocxContext conf cookiefile)
+  where
+    convertDocument :: LiveDocx BS.ByteString
+    convertDocument = do
+      _ <- logIn (username conf) (password conf)
+      _ <- setLocalTemplate filecontents format
+      _ <- createDocument
+      pdfcontents <- retrieveDocument "PDF"
+      _ <- logOut
+      return pdfcontents
 
 {- |
     Definitions of all the calls and responses we want to use.
