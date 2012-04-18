@@ -1,11 +1,13 @@
 module LiveDocx (
-    LiveDocxConf(..)
+  LiveDocxConf(..)
+  , FileFormat(..)
   , convertToPDF
 ) where
 
 import Control.Exception.Base (bracket_)
 import Control.Monad()
 import Text.XML.HaXml.XmlContent.Parser
+import System.IO.Temp
 import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
@@ -13,6 +15,9 @@ import qualified Data.ByteString.UTF8 as BS
 import SOAP.SOAP
 
 import LiveDocxConf
+
+data FileFormat = DOC | DOCX | RTF | TXD
+  deriving (Eq,Ord,Show,Read)
 
 ignoreIfRight :: Either String a -> IO (Either String ())
 ignoreIfRight (Left x) = return $ Left x
@@ -34,21 +39,13 @@ logOut conf cookiefile = ignoreIfRight =<<
     (liveDocxNamespace ++ "LogOut")
     LogOut :: IO (Either String LogOutResponse))
 
-uploadTemplate :: LiveDocxConf -> FilePath -> BS.ByteString -> String -> IO (Either String ())
-uploadTemplate conf cookiefile filecontents filename = ignoreIfRight =<<
+setLocalTemplate :: LiveDocxConf -> FilePath -> BS.ByteString -> FileFormat -> IO (Either String ())
+setLocalTemplate conf cookiefile filecontents format = ignoreIfRight =<<
   (makeSoapCallWithCookies
     (url conf)
     cookiefile
-    (liveDocxNamespace ++ "UploadTemplate")
-    (UploadTemplate filecontents filename) :: IO (Either String UploadTemplateResponse))
-
-setRemoteTemplate :: LiveDocxConf -> FilePath -> String -> IO (Either String ())
-setRemoteTemplate conf cookiefile filename = ignoreIfRight =<<
-  (makeSoapCallWithCookies
-    (url conf)
-    cookiefile
-    (liveDocxNamespace ++ "SetRemoteTemplate")
-    (SetRemoteTemplate filename) :: IO (Either String SetRemoteTemplateResponse))
+    (liveDocxNamespace ++ "SetLocalTemplate")
+    (SetLocalTemplate filecontents format) :: IO (Either String SetLocalTemplateResponse))
 
 createDocument :: LiveDocxConf -> FilePath -> IO (Either String ())
 createDocument conf cookiefile = ignoreIfRight =<<
@@ -69,14 +66,13 @@ retrieveDocument conf cookiefile format = do
     Right (RetrieveDocumentResponse pdfcontents) -> return $ Right pdfcontents
     Left msg -> return $ Left msg
 
-convertToPDF :: LiveDocxConf -> String -> BS.ByteString -> IO (Either String BS.ByteString)
-convertToPDF conf uniquefilename filecontents =
-  let cookiefile = uniquefilename ++ "_cookies.txt" in
-  bracket_ (logIn conf cookiefile) (logOut conf cookiefile) $ do
-    _ <- uploadTemplate conf cookiefile filecontents uniquefilename
-    _ <- setRemoteTemplate conf cookiefile uniquefilename
-    _ <- createDocument conf cookiefile
-    retrieveDocument conf cookiefile "PDF"
+convertToPDF :: LiveDocxConf -> BS.ByteString -> FileFormat -> IO (Either String BS.ByteString)
+convertToPDF conf filecontents format =
+  withSystemTempFile "livedocx-cookies.txt" $ \cookiefile _cookiefilehandle ->
+    bracket_ (logIn conf cookiefile) (logOut conf cookiefile) $ do
+      _ <- setLocalTemplate conf cookiefile filecontents format
+      _ <- createDocument conf cookiefile
+      retrieveDocument conf cookiefile "PDF"
 
 {- |
     Definitions of all the calls and responses we want to use.
@@ -133,55 +129,31 @@ instance XmlContent LogOutResponse where
   ; return LogOutResponse
   } `adjustErr` ("in <LogOutResponse>, " ++)
 
-data UploadTemplate = UploadTemplate BS.ByteString String
+data SetLocalTemplate = SetLocalTemplate BS.ByteString FileFormat
   deriving (Eq,Ord,Show,Read)
 
-instance HTypeable UploadTemplate where
-    toHType _ = Defined "UploadTemplate" [] []
-instance XmlContent UploadTemplate where
-  toContents (UploadTemplate template filename) =
+instance HTypeable SetLocalTemplate where
+    toHType _ = Defined "SetLocalTemplate" [] []
+instance XmlContent SetLocalTemplate where
+  toContents (SetLocalTemplate template format) =
     let base64data = BSC.unpack (Base64.encode template) in
-    [CElem (Elem "UploadTemplate" [mkAttr "xmlns" liveDocxNamespace]
+    [CElem (Elem "SetLocalTemplate" [mkAttr "xmlns" liveDocxNamespace]
       [ mkElemC "template" (toText base64data)
-      , mkElemC "filename" (toText filename)
+      , mkElemC "format" (toText $ show format)
       ]) ()]
-  parseContents = error "Please do not parse an UploadTemplate"
+  parseContents = error "Please do not parse an SetLocalTemplate"
 
-data UploadTemplateResponse = UploadTemplateResponse
+data SetLocalTemplateResponse = SetLocalTemplateResponse
   deriving (Eq,Ord,Show,Read)
 
-instance HTypeable UploadTemplateResponse where
-    toHType _ = Defined "UploadTemplateResponse" [] []
-instance XmlContent UploadTemplateResponse where
-  toContents UploadTemplateResponse = error "Please do not serialize UploadTemplateResponse"
+instance HTypeable SetLocalTemplateResponse where
+    toHType _ = Defined "SetLocalTemplateResponse" [] []
+instance XmlContent SetLocalTemplateResponse where
+  toContents SetLocalTemplateResponse = error "Please do not serialize SetLocalTemplateResponse"
   parseContents = do
-  { _e <- elementNS "UploadTemplateResponse"
-  ; return UploadTemplateResponse
-  } `adjustErr` ("in <UploadTemplateResponse>, " ++)
-
-data SetRemoteTemplate = SetRemoteTemplate String
-  deriving (Eq,Ord,Show,Read)
-
-instance HTypeable SetRemoteTemplate where
-    toHType _ = Defined "SetRemoteTemplate" [] []
-instance XmlContent SetRemoteTemplate where
-  toContents (SetRemoteTemplate filename) =
-    [CElem (Elem "SetRemoteTemplate" [mkAttr "xmlns" liveDocxNamespace]
-      [ mkElemC "filename" (toText filename)
-      ]) ()]
-  parseContents = error "Please do not parse an SetRemoteTemplate"
-
-data SetRemoteTemplateResponse = SetRemoteTemplateResponse
-  deriving (Eq,Ord,Show,Read)
-
-instance HTypeable SetRemoteTemplateResponse where
-    toHType _ = Defined "SetRemoteTemplateResponse" [] []
-instance XmlContent SetRemoteTemplateResponse where
-  toContents SetRemoteTemplateResponse = error "Please do not serialize UploadTemplateResponse"
-  parseContents = do
-  { _e <- elementNS "SetRemoteTemplateResponse"
-  ; return SetRemoteTemplateResponse
-  } `adjustErr` ("in <SetRemoteTemplateResponse>, " ++)
+  { _e <- elementNS "SetLocalTemplateResponse"
+  ; return SetLocalTemplateResponse
+  } `adjustErr` ("in <SetLocalTemplateResponse>, " ++)
 
 data CreateDocument = CreateDocument
   deriving (Eq,Ord,Show,Read)
