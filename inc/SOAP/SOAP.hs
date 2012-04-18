@@ -74,6 +74,49 @@ tryAndJoinEither action = do
     Right value -> return value
     Left (excpt :: E.SomeException) -> return (Left (show excpt))
 
+makeSoapCallWithCookies :: (XmlContent request, XmlContent result)
+                           => String
+                           -> FilePath
+                           -> String
+                           -> request
+                           -> IO (Either String result)
+makeSoapCallWithCookies url cookiefile action request = tryAndJoinEither $ do
+  let input = fpsShowXml False (SOAP request)
+  BSL.appendFile "soap.xml" input
+
+  let args = [ "-X", "POST",
+               "-k", "--silent", "--show-error",
+               "--cookie", cookiefile,
+               "--cookie-jar", cookiefile,
+               "--data-binary", "@-",
+               "-H", "Content-Type: text/xml; charset=UTF-8",
+               "-H", "Expect: 100-continue",
+               "-H", "SOAPAction: " ++ action,
+               url
+             ]
+  (code,stdout,stderr) <- readCurl args input
+
+  let (boundary,rest) = BS.breakSubstring (BS.fromString "\r\n") (BS.concat (BSL.toChunks (BSL.drop 2 stdout)))
+      (_,rest2) = BS.breakSubstring (BS.fromString "\r\n\r\n") rest
+      (xml1,_) = BS.breakSubstring boundary rest2
+  let xml = if BSL.fromString "\r\n--" `BSL.isPrefixOf` stdout
+            then BSL.fromChunks [xml1]
+            else stdout
+  case code of
+    ExitFailure _ -> do
+       return (Left $ "Cannot execute 'curl' for LiveDocX: " ++ show args ++ BSL.toString stderr)
+    ExitSuccess -> do
+      BSL.appendFile "soap.xml" xml
+      let s = BSL.toString xml
+      Log.debug $ "length of xml string from LiveDocX: " ++ (show $ length s)
+      let rx = readXml s
+      Log.debug $ "readXml returned left or right: " ++ if isLeft rx then "Left" else "Right"
+      case rx of
+        Right (SOAP result) -> return (Right result)
+        Right (SOAPFault soapcode string actor) -> return (Left (soapcode ++":" ++ string ++":" ++ actor))
+        Left errmsg -> return (Left (errmsg ++ ": " ++ BSL.toString stdout))
+
+
 makeSoapCall :: (XmlContent request, XmlContent result)
                 => String
              -> String

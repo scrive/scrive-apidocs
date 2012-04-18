@@ -3,73 +3,87 @@ module LiveDocx (
   , convertToPDF
 ) where
 
-import Control.Concurrent
+import Control.Exception.Base (bracket_)
 import Control.Monad()
-import Data.List
 import Text.XML.HaXml.XmlContent.Parser
 import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
 
 import SOAP.SOAP
-import qualified Log
 
-data LiveDocxConf = LiveDocxConf {
-    url :: String
-  , username :: String
-  , password :: String
-}
+import LiveDocxConf
 
-data LiveDocx a = LDXSuccess a | LDXProblem String
+ignoreIfRight :: Either String a -> IO (Either String ())
+ignoreIfRight (Left x) = return $ Left x
+ignoreIfRight (Right _) = return $ Right ()
 
-instance Monad LiveDocx where
-  return = LDXSuccess
+logIn :: LiveDocxConf -> FilePath -> IO (Either String ())
+logIn conf cookiefile = ignoreIfRight =<<
+  (makeSoapCallWithCookies
+    (url conf)
+    cookiefile
+    (liveDocxNamespace ++ "LogIn")
+    (LogIn (username conf) (password conf)) :: IO (Either String LogInResponse))
 
-  LDXSuccess x >>= f = f x
-  LDXProblem msg >>= _ = LDXProblem msg
+logOut :: LiveDocxConf -> FilePath -> IO (Either String ())
+logOut conf cookiefile = ignoreIfRight =<<
+  (makeSoapCallWithCookies
+    (url conf)
+    cookiefile
+    (liveDocxNamespace ++ "LogOut")
+    LogOut :: IO (Either String LogOutResponse))
 
-liveDocxToEither :: LiveDocx a -> Either String a
-liveDocxToEither (LDXSuccess x) = Right x
-liveDocxToEither (LDXProblem msg) = Left msg
+uploadTemplate :: LiveDocxConf -> FilePath -> BS.ByteString -> String -> IO (Either String ())
+uploadTemplate conf cookiefile filecontents filename = ignoreIfRight =<<
+  (makeSoapCallWithCookies
+    (url conf)
+    cookiefile
+    (liveDocxNamespace ++ "UploadTemplate")
+    (UploadTemplate filecontents filename) :: IO (Either String UploadTemplateResponse))
 
-logIn :: LiveDocxConf -> LiveDocx ()
-logIn = undefined
+setRemoteTemplate :: LiveDocxConf -> FilePath -> String -> IO (Either String ())
+setRemoteTemplate conf cookiefile filename = ignoreIfRight =<<
+  (makeSoapCallWithCookies
+    (url conf)
+    cookiefile
+    (liveDocxNamespace ++ "SetRemoteTemplate")
+    (SetRemoteTemplate filename) :: IO (Either String SetRemoteTemplateResponse))
 
-logOut :: LiveDocx ()
-logOut = undefined
+createDocument :: LiveDocxConf -> FilePath -> IO (Either String ())
+createDocument conf cookiefile = ignoreIfRight =<<
+  (makeSoapCallWithCookies
+    (url conf)
+    cookiefile
+    (liveDocxNamespace ++ "CreateDocument")
+    CreateDocument :: IO (Either String CreateDocumentResponse))
 
-uploadTemplate :: BS.ByteString -> String -> LiveDocx ()
-uploadTemplate = undefined
+retrieveDocument :: LiveDocxConf -> FilePath -> String -> IO (Either String BS.ByteString)
+retrieveDocument conf cookiefile format = do
+  result <- makeSoapCallWithCookies
+              (url conf)
+              cookiefile
+              (liveDocxNamespace ++ "RetrieveDocument")
+              (RetrieveDocument format)
+  case result of
+    Right (RetrieveDocumentResponse pdfcontents) -> return $ Right pdfcontents
+    Left msg -> return $ Left msg
 
-setRemoteTemplate :: String -> LiveDocx ()
-setRemoteTemplate = undefined
-
-createDocument :: LiveDocx ()
-createDocument = undefined
-
-retrieveDocument :: String -> LiveDocx BS.ByteString
-retrieveDocument = undefined
-
---TODO: make like a try finally
-withLiveDocxAccount :: LiveDocxConf -> LiveDocx a -> LiveDocx a
-withLiveDocxAccount conf action = do
-  _ <- logIn conf
-  result <- action
-  _ <- logOut
-  return result
-
-convertToPDF :: LiveDocxConf -> String -> BS.ByteString -> Either String BS.ByteString
-convertToPDF conf uniquefilename filecontents = liveDocxToEither . withLiveDocxAccount conf $ do
-    _ <- uploadTemplate filecontents uniquefilename
-    _ <- setRemoteTemplate uniquefilename
-    _ <- createDocument
-    retrieveDocument "PDF"
+convertToPDF :: LiveDocxConf -> String -> BS.ByteString -> IO (Either String BS.ByteString)
+convertToPDF conf uniquefilename filecontents =
+  let cookiefile = uniquefilename ++ "_cookies.txt" in
+  bracket_ (logIn conf cookiefile) (logOut conf cookiefile) $ do
+    _ <- uploadTemplate conf cookiefile filecontents uniquefilename
+    _ <- setRemoteTemplate conf cookiefile uniquefilename
+    _ <- createDocument conf cookiefile
+    retrieveDocument conf cookiefile "PDF"
 
 {- |
     Definitions of all the calls and responses we want to use.
     The documentation for these is here: https://api.livedocx.com/1.2/mailmerge.asmx?wsdl
 -}
 
+liveDocxNamespace :: String
 liveDocxNamespace = "http://api.livedocx.com/1.2/mailmerge/"
 
 data LogIn = LogIn String String
@@ -77,7 +91,7 @@ data LogIn = LogIn String String
 
 instance HTypeable LogIn where
     toHType _ = Defined "LogIn" [] []
-instance XMLContent LogIn where
+instance XmlContent LogIn where
   toContents (LogIn username password) =
     [CElem (Elem "LogIn" [mkAttr "xmlns" liveDocxNamespace]
       [ mkElemC "username" (toText username)
@@ -102,7 +116,7 @@ data LogOut = LogOut
 
 instance HTypeable LogOut where
     toHType _ = Defined "LogOut" [] []
-instance XMLContent LogOut where
+instance XmlContent LogOut where
   toContents LogOut =
     [CElem (Elem "LogOut" [mkAttr "xmlns" liveDocxNamespace] []) ()]
   parseContents = error "Please do not parse a LogOut"
@@ -124,7 +138,7 @@ data UploadTemplate = UploadTemplate BS.ByteString String
 
 instance HTypeable UploadTemplate where
     toHType _ = Defined "UploadTemplate" [] []
-instance XMLContent UploadTemplate where
+instance XmlContent UploadTemplate where
   toContents (UploadTemplate template filename) =
     let base64data = BSC.unpack (Base64.encode template) in
     [CElem (Elem "UploadTemplate" [mkAttr "xmlns" liveDocxNamespace]
@@ -142,7 +156,7 @@ instance XmlContent UploadTemplateResponse where
   toContents UploadTemplateResponse = error "Please do not serialize UploadTemplateResponse"
   parseContents = do
   { _e <- elementNS "UploadTemplateResponse"
-  ; return LogOutResponse
+  ; return UploadTemplateResponse
   } `adjustErr` ("in <UploadTemplateResponse>, " ++)
 
 data SetRemoteTemplate = SetRemoteTemplate String
@@ -150,7 +164,7 @@ data SetRemoteTemplate = SetRemoteTemplate String
 
 instance HTypeable SetRemoteTemplate where
     toHType _ = Defined "SetRemoteTemplate" [] []
-instance XMLContent SetRemoteTemplate where
+instance XmlContent SetRemoteTemplate where
   toContents (SetRemoteTemplate filename) =
     [CElem (Elem "SetRemoteTemplate" [mkAttr "xmlns" liveDocxNamespace]
       [ mkElemC "filename" (toText filename)
@@ -166,7 +180,7 @@ instance XmlContent SetRemoteTemplateResponse where
   toContents SetRemoteTemplateResponse = error "Please do not serialize UploadTemplateResponse"
   parseContents = do
   { _e <- elementNS "SetRemoteTemplateResponse"
-  ; return LogOutResponse
+  ; return SetRemoteTemplateResponse
   } `adjustErr` ("in <SetRemoteTemplateResponse>, " ++)
 
 data CreateDocument = CreateDocument
@@ -174,7 +188,7 @@ data CreateDocument = CreateDocument
 
 instance HTypeable CreateDocument where
     toHType _ = Defined "CreateDocument" [] []
-instance XMLContent CreateDocument where
+instance XmlContent CreateDocument where
   toContents CreateDocument =
     [CElem (Elem "CreateDocument" [mkAttr "xmlns" liveDocxNamespace] []) ()]
   parseContents = error "Please do not parse a CreateDocument"
@@ -188,7 +202,7 @@ instance XmlContent CreateDocumentResponse where
   toContents CreateDocumentResponse = error "Please do not serialize CreateDocumentResponse"
   parseContents = do
   { _e <- elementNS "CreateDocumentResponse"
-  ; return LogOutResponse
+  ; return CreateDocumentResponse
   } `adjustErr` ("in <CreateDocumentResponse>, " ++)
 
 data RetrieveDocument = RetrieveDocument String
@@ -196,7 +210,7 @@ data RetrieveDocument = RetrieveDocument String
 
 instance HTypeable RetrieveDocument where
     toHType _ = Defined "RetrieveDocument" [] []
-instance XMLContent RetrieveDocument where
+instance XmlContent RetrieveDocument where
   toContents (RetrieveDocument format) =
     [CElem (Elem "RetrieveDocument" [mkAttr "xmlns" liveDocxNamespace]
       [ mkElemC "format" (toText format)
