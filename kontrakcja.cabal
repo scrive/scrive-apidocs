@@ -326,7 +326,7 @@ Executable doc-converter
   else
     Buildable: False
 
-  Hs-source-dirs: docconv/src
+  Hs-source-dirs: inc docconv/src
 
   GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall
   if !flag(allow-warnings)
@@ -343,6 +343,8 @@ Executable doc-converter
 
   cpp-options: -DDocConverterMain=Main
   Main-is: DocConverterMain.hs
+
+  Build-depends: HaXml == 1.20.*
 
   Extensions: BangPatterns,
               DeriveDataTypeable,
