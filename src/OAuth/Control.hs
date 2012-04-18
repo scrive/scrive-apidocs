@@ -81,7 +81,7 @@ authorization = do
   locale <- ctxlocale    <$> getContext
   case muser of
     -- soon this should be custom page, not login
-    Nothing -> return $ Left $ LinkLogin locale LoginTry
+    Nothing -> return $ Left $ LinkLogin locale NotLogged
     Just user -> do
       let email = getEmail user
       mtk <- getDataFn' (look "oauth_token")
