@@ -10,55 +10,61 @@
 -----------------------------------------------------------------------------
 
 module SOAP.SOAP
-    -- (signDocument)
-    where
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
-import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length, drop)
-import qualified Data.ByteString.Lazy as BSL
+  ( elementNS
+  , inElementNS
+  , makeSoapCallWithCert
+  , makeSoapCallWithCA
+  , makeSoapCallWithCookies ) where
+
 import Misc hiding(optional)
 import System.Exit
 import Text.XML.HaXml.XmlContent.Parser
 import Text.XML.HaXml.XmlContent
 import Text.XML.HaXml.Posn
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.UTF8 as BS hiding (length, drop, break)
+import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length, drop)
+import qualified Data.ByteString.Lazy as BSL
 import qualified Control.Exception as E
 import qualified Log
+
 import Prelude hiding (print, putStrLn, putStr)
 
 data SOAP a = SOAP a
-            | SOAPFault String String String
-            deriving (Eq,Ord,Show,Read)
+              | SOAPFault String String String
+  deriving (Eq,Ord,Show,Read)
 
 instance HTypeable (SOAP a) where
-    toHType _ = Defined "soap" [] []
+  toHType _ = Defined "soap" [] []
 instance (XmlContent a) => XmlContent (SOAP a) where
-    toContents (SOAP a) =
-        [CElem (Elem "Envelope" [mkAttr "xmlns" "http://schemas.xmlsoap.org/soap/envelope/"]
-                         [CElem (Elem "Body" []
-                         (toContents a)) ()]) ()]
-    toContents _ = error "Please do not serialize SOAPFault"
-    parseContents = do
-        { inElementNS "Envelope" $ do
-            { _ <- optional $ elementNS "Header"
-            ; inElementNS "Body" $ choice SOAP
-                                             (inElementNS "Fault" $ do
-                                                { faultcode <- inElementNS "faultcode" text
-                                                ; faultstring <- inElementNS "faultstring" text
-                                                -- ; faultactor <- optional $ inElementNS "faultactor" text
-                                                ; _ <- optional $ elementNS "detail"
-                                                -- ; return (SOAPFault faultcode faultstring (maybe "" id faultactor))
-                                                ; return (SOAPFault faultcode faultstring "")
-                                                }
-                                              )
-           }
-        } `adjustErr` ("in <Envelope/Body>, "++)
+  toContents (SOAP a) =
+    [CElem (Elem "Envelope" [mkAttr "xmlns" "http://schemas.xmlsoap.org/soap/envelope/"]
+      [CElem (Elem "Body" []
+      (toContents a)) ()]) ()]
+  toContents _ = error "Please do not serialize SOAPFault"
+  parseContents = do
+    { inElementNS "Envelope" $ do
+      { _ <- optional $ elementNS "Header"
+      ; inElementNS "Body" $ choice SOAP
+                                    (inElementNS "Fault" $ do
+                                      { faultcode <- inElementNS "faultcode" text
+                                      ; faultstring <- inElementNS "faultstring" text
+                                      -- ; faultactor <- optional $ inElementNS "faultactor" text
+                                      ; _ <- optional $ elementNS "detail"
+                                      -- ; return (SOAPFault faultcode faultstring (maybe "" id faultactor))
+                                      ; return (SOAPFault faultcode faultstring "")
+                                      }
+                                    )
+      }
+    } `adjustErr` ("in <Envelope/Body>, "++)
 
 skipNamespacePrefix :: String -> String -> Bool
 skipNamespacePrefix fqname tomatch =
-    case break (==':') fqname of
-      (name,"") -> name == tomatch
-      (_,':':name) -> name == tomatch
-      _ -> False
+  case break (==':') fqname of
+    (name,"") -> name == tomatch
+    (_,':':name) -> name == tomatch
+    _ -> False
+
 elementNS :: String -> XMLParser (Element Text.XML.HaXml.Posn.Posn)
 elementNS name = elementWith skipNamespacePrefix [name]
 
@@ -74,65 +80,20 @@ tryAndJoinEither action = do
     Right value -> return value
     Left (excpt :: E.SomeException) -> return (Left (show excpt))
 
-makeSoapCallWithCookies :: (XmlContent request, XmlContent result)
-                           => String
-                           -> FilePath
-                           -> String
-                           -> request
-                           -> IO (Either String result)
-makeSoapCallWithCookies url cookiefile action request = tryAndJoinEither $ do
-  let input = fpsShowXml False (SOAP request)
-  BSL.appendFile "soap.xml" input
-
-  let args = [ "-X", "POST",
-               "-k", "--silent", "--show-error",
-               "--cookie", cookiefile,
-               "--cookie-jar", cookiefile,
-               "--data-binary", "@-",
-               "-H", "Content-Type: text/xml; charset=UTF-8",
-               "-H", "Expect: 100-continue",
-               "-H", "SOAPAction: " ++ action,
-               url
-             ]
-  (code,stdout,stderr) <- readCurl args input
-
-  let (boundary,rest) = BS.breakSubstring (BS.fromString "\r\n") (BS.concat (BSL.toChunks (BSL.drop 2 stdout)))
-      (_,rest2) = BS.breakSubstring (BS.fromString "\r\n\r\n") rest
-      (xml1,_) = BS.breakSubstring boundary rest2
-  let xml = if BSL.fromString "\r\n--" `BSL.isPrefixOf` stdout
-            then BSL.fromChunks [xml1]
-            else stdout
-  case code of
-    ExitFailure _ -> do
-       return (Left $ "Cannot execute 'curl' for LiveDocX: " ++ show args ++ BSL.toString stderr)
-    ExitSuccess -> do
-      BSL.appendFile "soap.xml" xml
-      let s = BSL.toString xml
-      Log.debug $ "length of xml string from LiveDocX: " ++ (show $ length s)
-      let rx = readXml s
-      Log.debug $ "readXml returned left or right: " ++ if isLeft rx then "Left" else "Right"
-      case rx of
-        Right (SOAP result) -> return (Right result)
-        Right (SOAPFault soapcode string actor) -> return (Left (soapcode ++":" ++ string ++":" ++ actor))
-        Left errmsg -> return (Left (errmsg ++ ": " ++ BSL.toString stdout))
-
-
+-- other makeSoapCallXXX functions use this as their base
 makeSoapCall :: (XmlContent request, XmlContent result)
                 => String
-             -> String
-             -> String
-             -> String
-             -> request
-             -> IO (Either String result)
-makeSoapCall url action cert certpwd request = tryAndJoinEither $ do
+                -> String
+                -> [String]
+                -> request
+                -> IO (Either String result)
+makeSoapCall url action extraargs request = tryAndJoinEither $ do
   let input = fpsShowXml False (SOAP request)
   -- BSL.appendFile "soap.xml" input
 
   let args = [ "-X", "POST",
-               "-k", "--silent", "--show-error",
-               "--cert", cert ++ ":" ++ certpwd,
-               "--cacert", cert,
-               "--data-binary", "@-",
+               "-k", "--show-error" ] ++ extraargs ++
+             [ "--data-binary", "@-",
                "-H", "Content-Type: text/xml; charset=UTF-8",
                "-H", "Expect: 100-continue",
                "-H", "SOAPAction: " ++ action,
@@ -168,11 +129,12 @@ makeSoapCall url action cert certpwd request = tryAndJoinEither $ do
             then BSL.fromChunks [xml1]
             else stdout
   case code of
-    ExitFailure _ -> do
-       return (Left $ "Cannot execute 'curl' for TrustWeaver: " ++ show args ++ BSL.toString stderr)
+    ExitFailure _ ->
+      return (Left $ "Cannot execute 'curl' for soap: " ++ show args ++ BSL.toString stderr)
     ExitSuccess -> do
+      BSL.appendFile "soap.xml" xml
       let s = BSL.toString xml
-      Log.debug $ "length of xml string from Trustweaver: " ++ (show $ length s)
+      Log.debug $ "length of xml string from soap call: " ++ show (length s)
       let rx = readXml s
       Log.debug $ "readXml returned left or right: " ++ if isLeft rx then "Left" else "Right"
       case rx of
@@ -180,67 +142,41 @@ makeSoapCall url action cert certpwd request = tryAndJoinEither $ do
         Right (SOAPFault soapcode string actor) -> return (Left (soapcode ++":" ++ string ++":" ++ actor))
         Left errmsg -> return (Left (errmsg ++ ": " ++ BSL.toString stdout))
 
-makeSoapCallCA :: (XmlContent request, XmlContent response) =>
-                        String -> String -> String -> request -> IO (Either String response)
-makeSoapCallCA url cert action request = do
-  let input = fpsShowXml False (SOAP request)
-  -- BSL.appendFile "soap.xml" input
-  let args = [               "-k", "--verbose", "--show-error",
-               -- "--cert", cert ++ ":" ++ certpwd,
-               "--cacert", cert,
-               "--data-binary", "@-",
-               "-H", "Content-Type: text/xml; charset=UTF-8",
-               "-H", "Expect: 100-continue",
-               "-H", "SOAPAction: " ++ action,
-               url
-             ]
+makeSoapCallWithCert :: (XmlContent request, XmlContent result)
+                        => String
+                        -> String
+                        -> String
+                        -> String
+                        -> request
+                        -> IO (Either String result)
+makeSoapCallWithCert url action cert certpwd request =
+  let args = [ "--silent",
+               "--cert", cert ++ ":" ++ certpwd,
+               "--cacert", cert
+             ] in
+  makeSoapCall url action args request
 
-  (code,stdout,stderr) <- readProcessWithExitCode' "curl" args input
+makeSoapCallWithCA :: (XmlContent request, XmlContent response)
+                      => String
+                      -> String
+                      -> String
+                      -> request
+                      -> IO (Either String response)
+makeSoapCallWithCA url cert action request =
+  let args = [ "--verbose",
+               "--cacert", cert
+             ] in
+  makeSoapCall url action args request
 
-  let (boundary,rest) = BS.breakSubstring (BS.fromString "\r\n") (BS.concat (BSL.toChunks (BSL.drop 2 stdout)))
-      (_,rest2) = BS.breakSubstring (BS.fromString "\r\n\r\n") rest
-      (xml1,_) = BS.breakSubstring boundary rest2
-
-  xml <- if BSL.fromString "\r\n--" `BSL.isPrefixOf` stdout
-            then do
-              return (BSL.fromChunks [xml1])
-            else return stdout
-  if (code /= ExitSuccess)
-       then return (Left $ "Cannot execute ./curl for BankID: " ++ show args ++ BSL.toString stderr)
-     else case readXml (BSL.toString xml) of
-            Right (SOAP result) -> return (Right result)
-            Right (SOAPFault soapcode string actor) -> return (Left (soapcode ++":" ++ string ++":" ++ actor))
-            Left errmsg -> return (Left (errmsg ++ ": " ++ BSL.toString stdout))
-
-makeSoapCallINSECURE :: (XmlContent request, XmlContent response) =>
-                        String -> String -> request -> IO (Either String response)
-makeSoapCallINSECURE url action request = do
-  let input = fpsShowXml False (SOAP request)
-  -- BSL.appendFile "soap.xml" input
-
-  let args = [               "-k", "--verbose", "--show-error",
-               -- "--cert", cert ++ ":" ++ certpwd,
-               --"--cacert", cert,
-               "--data-binary", "@-",
-               "-H", "Content-Type: text/xml; charset=UTF-8",
-               "-H", "Expect: 100-continue",
-               "-H", "SOAPAction: " ++ action,
-               url
-             ]
-
-  (code,stdout,stderr) <- readProcessWithExitCode' "curl" args input
-
-  let (boundary,rest) = BS.breakSubstring (BS.fromString "\r\n") (BS.concat (BSL.toChunks (BSL.drop 2 stdout)))
-      (_,rest2) = BS.breakSubstring (BS.fromString "\r\n\r\n") rest
-      (xml1,_) = BS.breakSubstring boundary rest2
-
-  xml <- if BSL.fromString "\r\n--" `BSL.isPrefixOf` stdout
-            then do
-              return (BSL.fromChunks [xml1])
-            else return stdout
-  if (code /= ExitSuccess)
-       then return (Left $ "Cannot execute ./curl for BankID: " ++ show args ++ BSL.toString stderr)
-     else case readXml (BSL.toString xml) of
-            Right (SOAP result) -> return (Right result)
-            Right (SOAPFault soapcode string actor) -> return (Left (soapcode ++":" ++ string ++":" ++ actor))
-            Left errmsg -> return (Left (errmsg ++ ": " ++ BSL.toString stdout))
+makeSoapCallWithCookies :: (XmlContent request, XmlContent result)
+                           => String
+                           -> FilePath
+                           -> String
+                           -> request
+                           -> IO (Either String result)
+makeSoapCallWithCookies url cookiefile action request =
+  let args = [ "--silent",
+               "--cookie", cookiefile,
+               "--cookie-jar", cookiefile
+             ] in
+  makeSoapCall url action args request
