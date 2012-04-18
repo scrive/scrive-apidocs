@@ -2,6 +2,7 @@
 module DocConverterMain where
 
 
+import Data.Char
 import System.Environment
 import System.FilePath
 import qualified Data.ByteString as BS
@@ -19,7 +20,9 @@ main = Log.withLogger $ do
       conf <- readConfig Log.docConverter appname [] "doc_converter.conf"
       let fileout = replaceExtension filein "pdf"
       filecontents <- BS.readFile filein
-      result <- convertToPDF conf (takeFileName filein) filecontents
+      let fileformat = read . map toUpper . tail $ takeExtension filein
+      Log.docConverter $ "Converting from " ++ show fileformat ++ " to PDF"
+      result <- convertToPDF conf filecontents fileformat
       case result of
         Left msg -> do
           putStrLn $ "Error: " ++ msg
