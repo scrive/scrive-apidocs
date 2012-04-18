@@ -77,7 +77,7 @@ import qualified Templates.Fields as F
 -}
 
 data IntegrationAPIContext = IntegrationAPIContext {ibody :: APIRequestBody , service :: Service}
-type IntegrationAPIFunction m a = APIFunction m IntegrationAPIContext a
+type IntegrationAPIFunction m a = APIFunction IntegrationAPIContext m a
 
 instance APIContext IntegrationAPIContext where
     apiContext  = do

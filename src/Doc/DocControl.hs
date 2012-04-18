@@ -301,20 +301,22 @@ handleIssueShowGet docid = checkUserTOSGet $ do
   document <- guardRightM $ getDocByDocID docid
   disableLocalSwitch -- Don't show locale flag on this page
   switchLocale (getLocale document)
-  user <- guardJustM $ ctxmaybeuser <$> getContext
+  muser <- ctxmaybeuser <$> getContext
+  mcompany <- ctxcompany <$> getContext
 
   let mMismatchMessage = getDataMismatchMessage $ documentcancelationreason document
-  when (isAuthor (document, user) && isCanceled document && isJust mMismatchMessage) $
+  when (isAuthor (document, muser) && isCanceled document && isJust mMismatchMessage) $
     addFlash (OperationFailed, fromJust mMismatchMessage)
 
   authorsiglink <- guardJust $ getAuthorSigLink document
   let ispreparation = documentstatus document == Preparation
-      isauthor = (Just $ userid user) == maybesignatory authorsiglink
+      isauthor = (userid <$> muser) == maybesignatory authorsiglink
       isincompany = isJust (maybecompany authorsiglink) &&
-                      usercompany user == maybecompany authorsiglink
+                      ((usercompany =<< muser) == maybecompany authorsiglink || 
+                       (companyid <$> mcompany) == maybecompany authorsiglink)
       isauthororincompany = isauthor || isincompany
       isattachment = isAttachment document
-      msiglink = find (isSigLinkFor $ userid user) $ documentsignatorylinks document
+      msiglink = find (isSigLinkFor muser) $ documentsignatorylinks document
 
   ctx <- getContext
   case (ispreparation, msiglink) of

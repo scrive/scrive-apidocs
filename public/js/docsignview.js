@@ -911,6 +911,7 @@ window.DocumentSignView = Backbone.View.extend({
       });
       return $(new DocumentSignViewArrowView({
         model: model,
+        mainview : this,
         el: $("<div />")
       }).el);
     },
@@ -1105,10 +1106,12 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
     _.each(this.model.tasks(), function(task) {
       task.bind("change", render);
     });
+    this.mainview = args.mainview;
     this.render();
   },
   render: function() {
     var view = this;
+    var document = this.document;
     console.log("rendering arrows");
     $(this.el).empty();
 
@@ -1201,6 +1204,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
         downarrow.show();
         uparrow.hide();
         actionarrow.hide();
+        view.mainview.trigger("change:task");
       } else {
         var scrolltop = $(window).scrollTop();
         var scrollbottom = scrolltop + $(window).height();
@@ -1227,6 +1231,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
           uparrow.hide();
           downarrow.hide();
           view.pointingAt = nextTask;
+          view.mainview.trigger("change:task");
         } else if ((elbottom + bottommargin) > scrollbottom) {
             if(scrollpoint !== 16) {
                 scrollpoint = 6;
@@ -1235,6 +1240,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
                 uparrow.hide();
                 actionarrow.hide();
                 view.pointingAt = undefined;
+                view.mainview.trigger("change:task");
             }
         } else {
             if(scrollpoint !== 17) {
@@ -1244,6 +1250,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
                 downarrow.hide();
                 actionarrow.hide();
                 view.pointingAt = undefined;
+                view.mainview.trigger("change:task");
             }
         }
       }

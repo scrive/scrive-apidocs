@@ -52,6 +52,7 @@ kontraMigrations = [
   , addCompanyNameNumberOnUsers
   , updateDocumentStatusAfterRemovingAwaitingAuthor
   , moveDocumentTagsFromDocumentsTableToDocumentTagsTable
+  , fixSignatoryLinksSwedishChars
   , addAPIStringDocStats
   ] ++ mailerMigrations 
 
