@@ -8,9 +8,15 @@
 (function(window){
 
 window.BrowserInfo = {
+    isPadDevice : function() {
+       return  BrowserInfo.isIpad() || BrowserInfo.isIphone();        
+    },
     isIpad : function(){
         return navigator.userAgent.match(/iPad/i) != null;      
-    }
+    },
+    isIphone : function(){
+        return navigator.userAgent.match(/iPhone/i) != null;
+    },
 };
 
 })(window); 
