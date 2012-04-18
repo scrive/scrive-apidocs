@@ -3,7 +3,6 @@ module OAuth.Tables where
 import Database.HDBC
 
 import DB
-import DB.Model
 
 {-
    A User may have one or more API Tokens, which allow it to request privileges from other Users.

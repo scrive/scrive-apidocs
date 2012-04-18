@@ -7,6 +7,7 @@ import qualified Log
 import User.Model
 import MagicHash
 
+
 import Crypto.RNG
 import Data.Int
 import Data.Data (Data)
