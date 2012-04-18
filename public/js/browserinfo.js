@@ -16,7 +16,7 @@ window.BrowserInfo = {
     },
     isIphone : function(){
         return navigator.userAgent.match(/iPhone/i) != null;
-    },
+    }
 };
 
 })(window); 
