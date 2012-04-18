@@ -4,7 +4,7 @@ module LiveDocx (
   , convertToPDF
 ) where
 
-import Control.Concurrent
+import Control.Exception.Base (bracket_)
 import Control.Monad()
 import Control.Monad.Reader
 import Text.XML.HaXml.XmlContent.Parser
