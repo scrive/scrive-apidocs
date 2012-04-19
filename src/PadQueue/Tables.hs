@@ -5,7 +5,7 @@ import DB
 tablePadQueue :: Table
 tablePadQueue = Table {
     tblName = "padqueue"
-  , tblVersion = 1
+  , tblVersion = 4
   , tblCreateOrValidate = \desc -> case desc of
       [  ("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})

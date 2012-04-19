@@ -128,7 +128,7 @@ tableAuthorAttachments = Table {
 tableSignatoryAttachments :: Table
 tableSignatoryAttachments = Table {
     tblName = "signatory_attachments"
-  , tblVersion = 3
+  , tblVersion = 6
   , tblCreateOrValidate = \desc -> case desc of
       [  ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -143,7 +143,7 @@ tableSignatoryAttachments = Table {
           ++ ", description TEXT NOT NULL"
           ++ ", name TEXT NOT NULL"
           ++ ", signatory_link_id BIGINT NOT NULL DEFAULT 0"
-          ++ ", CONSTRAINT pk_signatory_attachments PRIMARY KEY (document_id, signatory_link_id, name)"
+          ++ ", CONSTRAINT pk_signatory_attachments PRIMARY KEY (signatory_link_id, name)"
           ++ ")"
         return TVRcreated
       _ -> do
@@ -168,7 +168,7 @@ tableSignatoryAttachments = Table {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = Table {
     tblName = "signatory_links"
-  , tblVersion = 6
+  , tblVersion = 8
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
