@@ -70,6 +70,15 @@ setSignatoryAttachmentsForeignKeyToSLIDOnly = Migration {
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
 
+dropDocumentIDColumntFromSignatoryAttachments :: MonadDB m => Migration m
+dropDocumentIDColumntFromSignatoryAttachments = Migration {
+    mgrTable = tableSignatoryAttachments
+  , mgrFrom = 6
+  , mgrDo = do
+    kRunRaw $ "ALTER TABLE signatory_attachments"
+      ++ " DROP COLUMN document_id"
+  }
+
 {-
 - migrate padqueue - set fk referencing signatory_links to ON UPDATE CASCADE
 - migrate signatory_attachments - set fk referencing signatory_links to ON UPDATE CASCADE

@@ -63,6 +63,7 @@ kontraMigrations = [
   , setSignatoryLinksPrimaryKeyToIDOnly
   , setPadQueueForeignKeyToSLIDOnly
   , setSignatoryAttachmentsForeignKeyToSLIDOnly
+  , dropDocumentIDColumntFromSignatoryAttachments
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

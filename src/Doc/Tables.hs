@@ -128,10 +128,9 @@ tableAuthorAttachments = Table {
 tableSignatoryAttachments :: Table
 tableSignatoryAttachments = Table {
     tblName = "signatory_attachments"
-  , tblVersion = 6
+  , tblVersion = 7
   , tblCreateOrValidate = \desc -> case desc of
       [  ("file_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
-       , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("description", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("name", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("signatory_link_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -139,7 +138,6 @@ tableSignatoryAttachments = Table {
       [] -> do
         kRunRaw $ "CREATE TABLE signatory_attachments "
           ++ "( file_id BIGINT NULL"
-          ++ ", document_id BIGINT NOT NULL"
           ++ ", description TEXT NOT NULL"
           ++ ", name TEXT NOT NULL"
           ++ ", signatory_link_id BIGINT NOT NULL DEFAULT 0"
@@ -154,10 +152,6 @@ tableSignatoryAttachments = Table {
     kRunRaw $ "ALTER TABLE signatory_attachments"
       ++ " ADD CONSTRAINT fk_signatory_attachments_files FOREIGN KEY(file_id)"
       ++ " REFERENCES files(id) ON DELETE CASCADE ON UPDATE RESTRICT"
-      ++ " DEFERRABLE INITIALLY IMMEDIATE"
-    kRunRaw $ "ALTER TABLE signatory_attachments"
-      ++ " ADD CONSTRAINT fk_signatory_attachments_documents FOREIGN KEY(document_id)"
-      ++ " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
     kRunRaw $ "ALTER TABLE signatory_attachments"
       ++ " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(signatory_link_id)"
