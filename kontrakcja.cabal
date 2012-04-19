@@ -116,6 +116,11 @@ Flag test-userhistory
   Manual: True
   Default: True
 
+Flag test-livedocx
+  Description: Build livedocx testsuite
+  Manual: True
+  Default: True
+
 Flag test-csvutil
   Description: Build csvutil testsuite
   Manual: True
@@ -371,7 +376,7 @@ Executable kontrakcja-test
   if impl(ghc >= 7)
     ghc-options: -rtsopts
 
-  Hs-source-dirs: inc test/src src pdfseal/inc mailer/inc
+  Hs-source-dirs: inc test/src src pdfseal/inc mailer/inc docconv/src docconv/test/src
 
   GHC-Options: -fwarn-tabs -fwarn-unused-do-bind -fwarn-incomplete-record-updates -Wall -fcontext-stack=34
   if flag(test-coverage)
@@ -422,6 +427,8 @@ Executable kontrakcja-test
     cpp-options: -DNO_DOCSTATEQUERY
   if !flag(test-userhistory)
     cpp-options: -DNO_USERHISTORY
+  if !flag(test-livedocx)
+    cpp-options: -DNO_LIVEDOCX
 
   cpp-options: -DTestMain=Main
   Main-is: TestMain.hs
