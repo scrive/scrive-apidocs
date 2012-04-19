@@ -269,3 +269,35 @@ tableDocumentTags = Table {
   , tblPutProperties = do
     kRunRaw $ "CREATE INDEX idx_document_tags_document_id ON document_tags(document_id)"
   }
+
+tableSignatoryLinkFields :: Table
+tableSignatoryLinkFields = Table {
+    tblName = "signatory_link_fields"
+  , tblVersion = 1
+  , tblCreateOrValidate = \desc -> case desc of
+      [ ("signatory_link_id", SqlColDesc {colType = SqlBigIntT,   colNullable = Just False})
+       , ("type",             SqlColDesc {colType = SqlSmallIntT, colNullable = Just False})
+       , ("custom_name",      SqlColDesc {colType = SqlVarCharT,  colNullable = Just False})
+       , ("value",            SqlColDesc {colType = SqlVarCharT,  colNullable = Just False})
+       , ("is_author_filled", SqlColDesc {colType = SqlBitT,      colNullable = Just False})
+       , ("placements",       SqlColDesc {colType = SqlVarCharT,  colNullable = Just False})
+       , ("order_seq",        SqlColDesc {colType = SqlBigIntT,   colNullable = Just False})
+       ] -> return TVRvalid
+      [] -> do
+        kRunRaw $ "CREATE TABLE signatory_link_fields"
+                  ++ "( signatory_link_id BIGINT    NOT NULL"
+                  ++ ", type              SMALLINT  NOT NULL"
+                  ++ ", custom_name       TEXT      NOT NULL DEFAULT ''"
+                  ++ ", value             TEXT      NOT NULL DEFAULT ''"
+                  ++ ", is_author_filled  BOOL      NOT NULL DEFAULT FALSE"
+                  ++ ", placements        TEXT      NOT NULL DEFAULT ''"
+                  ++ ", order_seq         BIGSERIAL"
+                  ++ ")"
+        return TVRcreated
+      _ -> return TVRinvalid
+  , tblPutProperties = do
+    kRunRaw $ "ALTER TABLE signatory_link_fields"
+      ++ " ADD CONSTRAINT fk_signatory_link_fields_signatory_links FOREIGN KEY(signatory_link_id)"
+      ++ " REFERENCES signatory_links(id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
+  }

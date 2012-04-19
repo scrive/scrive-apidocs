@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.Migrations where
 
 import Control.Monad
@@ -13,6 +14,8 @@ import Doc.DocStateData
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.UTF8 as BS
+
+$(jsonableDeriveConvertible [t| [SignatoryField] |])
 
 setCascadeOnSignatoryAttachments :: MonadDB m => Migration m
 setCascadeOnSignatoryAttachments = Migration {
@@ -89,6 +92,7 @@ dropDocumentIDColumntFromSignatoryAttachments = Migration {
 - migrate padqueue - add new fk referencing signatory_links
 - migrate signatory_attachments - add new fk referencing signatory_links
 -}
+
 
 moveDocumentTagsFromDocumentsTableToDocumentTagsTable :: MonadDB m => Migration m
 moveDocumentTagsFromDocumentsTableToDocumentTagsTable = Migration {

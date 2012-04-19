@@ -244,7 +244,7 @@ _hasLastName _ document =
 -- | Email looks like email
 hasValidEmail :: MinutesTime -> Document -> Maybe String
 hasValidEmail _ document =
-  assertInvariant "has a signatory with invalid email" $
+  assertInvariant ("has a signatory with invalid email: " ++ intercalate ", " (map getEmail (documentsignatorylinks document))) $
     all (\sl -> (isPending document || isClosed document) =>>
                 (isGood $ asValidEmail $ getEmail sl))
         (documentsignatorylinks document)

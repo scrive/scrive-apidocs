@@ -381,6 +381,7 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                          , checkEqualBy "signatorylinkdeleted" signatorylinkdeleted
                          , checkEqualBy "signatorylinkreallydeleted" signatorylinkreallydeleted
                          , checkEqualBy "signatorylinkcsvupload" signatorylinkcsvupload
+                         , checkEqualBy "signatoryfields" (sort . signatoryfields . signatorydetails)
                          ]
 
     inequalities = catMaybes $ map (\f -> f d1 d2)
@@ -519,7 +520,6 @@ signatoryLinksSelectors = intercalate ", "
   , "signatory_links.document_id"
   , "signatory_links.user_id"
   , "signatory_links.company_id"
-  , "signatory_links.fields"
   , "signatory_links.sign_order"
   , "signatory_links.token"
   , "signatory_links.sign_time"
@@ -567,7 +567,7 @@ fetchSignatoryLinks = do
   return $ (\(d, l, m) -> M.insertWith' (++) d l m) sigs
   where
     nulldocid = unsafeDocumentID $ -1
-    decoder (docid, links, linksmap) slid document_id user_id company_id fields
+    decoder (docid, links, linksmap) slid document_id user_id company_id
      sign_order token sign_time sign_ip seen_time seen_ip read_invitation
      invitation_delivery_status signinfo_text signinfo_signature signinfo_certificate
      signinfo_provider signinfo_first_name_verified signinfo_last_name_verified
@@ -589,7 +589,7 @@ fetchSignatoryLinks = do
             signatorylinkid = slid
           , signatorydetails = SignatoryDetails {
               signatorysignorder = sign_order
-            , signatoryfields = fields
+            , signatoryfields = []
           }
           , signatorymagichash = token
           , maybesignatory = user_id
@@ -632,7 +632,7 @@ insertSignatoryLinkAsIs documentid link = do
            , sql "roles" $ signatoryroles link
            , sql "company_id" $ maybecompany link
            , sql "token" $ signatorymagichash link
-           , sql "fields" $ signatoryfields $ signatorydetails link
+           , sql "fields" $ ""
            , sql "sign_order"$ signatorysignorder $ signatorydetails link
            , sql "sign_time" $ signtime `fmap` maybesigninfo link
            , sql "sign_ip" $ signipnumber `fmap` maybesigninfo link
@@ -666,10 +666,13 @@ insertSignatoryLinkAsIs documentid link = do
     Nothing -> return Nothing
     Just siglink -> do
       msigattaches <- mapM (insertSignatoryAttachmentAsIs (signatorylinkid siglink)) (signatoryattachments link)
-      if any isNothing msigattaches
+      mfields <- mapM (insertSignatoryLinkFieldAsIs (signatorylinkid siglink)) ((signatoryfields . signatorydetails) link)
+      if any isNothing msigattaches || any isNothing mfields
         then return Nothing
         else do
-          let newsiglink = link { signatoryattachments = catMaybes msigattaches }
+          let newsiglink = siglink { signatoryattachments = catMaybes msigattaches
+                                , signatorydetails = (signatorydetails siglink) { signatoryfields = catMaybes mfields }
+                                }
           return (Just newsiglink)
 
 signatoryAttachmentsSelectors :: String
@@ -761,6 +764,52 @@ insertSignatoryAttachmentAsIs slid SignatoryAttachment {..} = do
        ] <++> SQL ("RETURNING " ++ signatoryAttachmentsSelectors) []
 
   fetchSignatoryAttachments
+    >>= oneObjectReturnedGuard . concatMap snd . M.toList
+
+signatoryLinkFieldsSelectors :: String
+signatoryLinkFieldsSelectors = intercalate ", " 
+  [ "signatory_link_id"
+  , "type"
+  , "custom_name"
+  , "is_author_filled"
+  , "value"
+  , "placements"
+  ]
+
+selectSignatoryLinkFieldsSQL :: SQL
+selectSignatoryLinkFieldsSQL = SQL ("SELECT "
+  ++ signatoryLinkFieldsSelectors
+  ++ " FROM signatory_link_fields ") []
+
+fetchSignatoryLinkFields :: MonadDB m => DBEnv m (M.Map SignatoryLinkID [SignatoryField])
+fetchSignatoryLinkFields = foldDB decoder M.empty
+  where
+    decoder acc slid xtype custom_name is_author_filled value placements =
+      M.insertWith' (++) slid
+         [SignatoryField
+          { sfValue = value
+          , sfPlacements = placements
+          , sfType = case xtype of
+                        CustomFT{} -> CustomFT custom_name is_author_filled
+                        _   -> xtype
+          }] acc
+
+insertSignatoryLinkFieldAsIs :: MonadDB m => SignatoryLinkID -> SignatoryField -> DBEnv m (Maybe SignatoryField)
+insertSignatoryLinkFieldAsIs slid field = do
+  _ <- kRun $ mkSQL INSERT tableSignatoryLinkFields
+       [ sql "signatory_link_id" $ slid
+       , sql "type" $ sfType field
+       , sql "custom_name" $ case sfType field of
+                                CustomFT name _ -> name
+                                _ -> ""
+       , sql "is_author_filled"  $ case sfType field of
+                                CustomFT _ authorfilled -> authorfilled
+                                _ -> False
+       , sql "value" $ sfValue field
+       , sql "placements" $ sfPlacements field
+       ] <++> SQL ("RETURNING " ++ signatoryLinkFieldsSelectors) []
+
+  fetchSignatoryLinkFields
     >>= oneObjectReturnedGuard . concatMap snd . M.toList
 
 insertDocumentAsIs :: MonadDB m => Document -> DBEnv m (Maybe Document)
@@ -1046,30 +1095,33 @@ data ChangeSignatoryEmailWhenUndelivered = ChangeSignatoryEmailWhenUndelivered D
 instance MonadDB m => DBUpdate m ChangeSignatoryEmailWhenUndelivered (Either String Document) where
   update (ChangeSignatoryEmailWhenUndelivered did slid muser email actor) = do
     Just doc <- query $ GetDocumentByDocumentID did
-    let setEmail signatoryfields =
-         map (\sf -> case sfType sf of
-                 EmailFT -> sf { sfValue = email }
-                 _       -> sf) signatoryfields
+    if (documentstatus doc /= Pending) 
+     then 
+         return $ Left $ "Cannot ChangeSignatoryEmailWhenUndelivered for document #" ++ show did
+               ++ " that is in " ++ show (documentstatus doc) ++ " state"
+     else do
 
-    let Just sl = getSigLinkFor doc slid
-        oldemail = getEmail sl
-    r <- kRun $ mkSQL UPDATE tableSignatoryLinks [
-        sql "invitation_delivery_status" Unknown
-      , sql "fields" $ setEmail $ signatoryfields $ signatorydetails sl
-      , sql "user_id" $ fmap userid muser
-      , sql "company_id" $ muser >>= usercompany
-      ] <++> SQL "WHERE EXISTS (SELECT 1 FROM documents WHERE documents.id = signatory_links.document_id AND documents.status = ?) AND id = ?" [
-        toSql Pending
-      , toSql slid
-      ]
-    when_ (r == 1) $ 
-      update $ InsertEvidenceEvent
-      ChangeSignatoryEmailWhenUndeliveredEvidence
-      ("Changed the email address for signatory from \"" ++ oldemail ++ "\" to \"" ++ email ++ "\" by " ++ actorWho actor ++ ".")
-      (Just did)
-      actor
+      let Just sl = getSigLinkFor doc slid
+          oldemail = getEmail sl
+      r1 <- kRun $ mkSQL UPDATE tableSignatoryLinkFields [
+             sql "value" email
+            ] <++> SQL (" WHERE signatory_link_id = ? AND type = ?") [toSql slid, toSql EmailFT]
+      r <- kRun $ mkSQL UPDATE tableSignatoryLinks [
+          sql "invitation_delivery_status" Unknown
+        , sql "user_id" $ fmap userid muser
+        , sql "company_id" $ muser >>= usercompany
+        ] <++> SQL "WHERE EXISTS (SELECT 1 FROM documents WHERE documents.id = signatory_links.document_id AND documents.status = ?) AND id = ?" [
+          toSql Pending
+        , toSql slid
+        ]
+      when_ (r == 1 && r1 == 1) $ 
+        update $ InsertEvidenceEvent
+          ChangeSignatoryEmailWhenUndeliveredEvidence
+          ("Changed the email address for signatory from \"" ++ oldemail ++ "\" to \"" ++ email ++ "\" by " ++ actorWho actor ++ ".")
+          (Just did)
+          actor
    
-    getOneDocumentAffected "ChangeSignatoryEmailWhenUndelivered" r did
+      getOneDocumentAffected "ChangeSignatoryEmailWhenUndelivered" r did
 
 data PreparationToPending = PreparationToPending DocumentID Actor
 instance MonadDB m => DBUpdate m PreparationToPending (Either String Document) where
@@ -1220,8 +1272,14 @@ selectDocuments sqlquery = do
     _ <- kRun $ SQL "SELECT * FROM docs" []
     docs <- reverse `liftM` fetchDocuments
 
-    _ <- kRun $ selectSignatoryLinksSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE signatory_links.document_id = docs.id) ORDER BY document_id DESC, internal_insert_order DESC" []
+    _ <- kRun $ SQL "CREATE TEMP TABLE links AS " [] <++> 
+         selectSignatoryLinksSQL <++> 
+         SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE signatory_links.document_id = docs.id) ORDER BY document_id DESC, internal_insert_order DESC" []
+    _ <- kRun $ SQL "SELECT * FROM links" []
     sls <- fetchSignatoryLinks
+
+    _ <- kRun $ selectSignatoryLinkFieldsSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM links WHERE links.id = signatory_link_fields.signatory_link_id) ORDER BY order_seq" []
+    fields <- fetchSignatoryLinkFields
 
     _ <- kRun $ selectAuthorAttachmentsSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE author_attachments.document_id = docs.id) ORDER BY document_id DESC" []
     ats <- fetchAuthorAttachments
@@ -1230,9 +1288,13 @@ selectDocuments sqlquery = do
     tags <- fetchDocumentTags
 
     kRunRaw "DROP TABLE docs"
+    kRunRaw "DROP TABLE links"
+
+    let sls2 = M.map (map $ \sl -> sl { signatorydetails = 
+                                    (signatorydetails sl) { signatoryfields = reverse $ M.findWithDefault [] (signatorylinkid sl) fields }}) sls
 
     let fill doc = doc
-                   { documentsignatorylinks       = M.findWithDefault [] (documentid doc) sls
+                   { documentsignatorylinks       = M.findWithDefault [] (documentid doc) sls2
                    , documentauthorattachments    = M.findWithDefault [] (documentid doc) ats
                    , documenttags                 = M.findWithDefault [] (documentid doc) tags
                    }
@@ -2187,71 +2249,91 @@ instance MonadDB m => DBUpdate m SetDocumentIdentification (Either String Docume
 data UpdateFields = UpdateFields DocumentID SignatoryLinkID [(String, String)] Actor
 instance MonadDB m => DBUpdate m UpdateFields (Either String Document) where
   update (UpdateFields did slid fields actor) = do
-  Just document <- query $ GetDocumentByDocumentID did
-  case checkUpdateFields document slid of
-    [] -> do
-      let updateSigField sf =
-                let updateF n = case lookup n fields of
-                      Just v  -> sf { sfValue = v }
-                      Nothing -> sf
-                in case sfType sf of
-                  CompanyFT        -> updateF "sigco"
-                  PersonalNumberFT -> updateF "sigpersnr"
-                  CompanyNumberFT  -> updateF "sigcompnr"
-                  SignatureFT      -> updateF "signature"
-                  CustomFT label _ -> updateF label
-                  _                -> sf
+    -- Document has to be in Pending state
+    -- signatory could not have signed already
+    eml <- $(fromJust) `liftM` getOne  
+           (SQL ("SELECT value FROM signatory_link_fields"
+                ++ " WHERE signatory_link_fields.signatory_link_id = ?"
+                ++ "   AND signatory_link_fields.type = ?")
+                 [toSql slid, toSql EmailFT])
 
-      let Just sl = getSigLinkFor document slid
-          eml     = getEmail sl
-      r <- kRun $ mkSQL UPDATE tableSignatoryLinks [
-          sql "fields" $ map updateSigField $ signatoryfields $ signatorydetails sl
-        ] <++> SQL "WHERE EXISTS (SELECT 1 FROM documents WHERE documents.id = signatory_links.document_id AND documents.status = ?) AND document_id = ? AND id = ? " [
-          toSql Pending
-        , toSql did
-        , toSql slid
-        ]
-      when_ (r == 1) $ forM_ fields $ \(n, v) -> 
+    let updateValue xtype custom_name value = do
+          _ <- kRun $ mkSQL UPDATE tableSignatoryLinkFields
+                 [ sql "value" value ]
+                 <++> SQL (" WHERE EXISTS (SELECT 1 FROM documents, signatory_links"
+                           ++             " WHERE documents.id = signatory_links.document_id"
+                           ++             "   AND documents.status = ?"
+                           ++             "   AND signatory_links.sign_time IS NULL"
+                           ++             "   AND signatory_links.id = signatory_link_id)"
+                           ++      "  AND signatory_link_id = ?"
+                           ++      "  AND custom_name = ?"
+                           ++      "  AND type = ?")
+                        [ toSql Pending, toSql slid, toSql custom_name, toSql (xtype :: Int)]
+          return ()
+
+    forM_ fields $ \(n, v) -> do
+        case n of
+          "sigco"     -> updateValue 3 "" v
+          "sigpersnr" -> updateValue 4 "" v
+          "sigcompnr" -> updateValue 5 "" v
+          "signature" -> updateValue 8 "" v
+          label       -> updateValue 7 label v
+
         update $ InsertEvidenceEvent
-        UpdateFieldsEvidence
-        ("Information for signatory with email \"" ++ eml ++ "\" for field \"" ++ n ++ "\" was set to \"" ++ v ++ "\" by " ++ actorWho actor ++ ".")
-        (Just did)
-        actor
-      getOneDocumentAffected "UpdateFields" r did
-    s -> return $ Left $ "Cannot updateFields on document " ++ show did ++ " because " ++ concat s
+               UpdateFieldsEvidence
+               ("Information for signatory with email \"" ++ eml ++ "\" for field \"" ++ n ++ "\" was set to \"" ++ v ++ "\" by " ++ actorWho actor ++ ".")
+               (Just did)
+               actor
+    getOneDocumentAffected "UpdateFields" (1) did
+
 
 data UpdateFieldsNoStatusCheck = UpdateFieldsNoStatusCheck DocumentID SignatoryLinkID (String, String) Actor
 instance MonadDB m => DBUpdate m UpdateFieldsNoStatusCheck (Either String Document) where
   update (UpdateFieldsNoStatusCheck did slid (fieldname, fieldvalue) actor) = do
-  Just document <- query $ GetDocumentByDocumentID did
-  let updateSigField sf =
-        let updateF n = if n == fieldname
-                        then sf { sfValue = fieldvalue }
-                        else sf
-        in case sfType sf of
-              FirstNameFT      -> updateF $ "sigfstname"
-              LastNameFT       -> updateF $ "sigsndname"
-              EmailFT          -> updateF $ "sigemail"
-              CompanyFT        -> updateF $ "sigco"
-              PersonalNumberFT -> updateF $ "sigpersnr"
-              CompanyNumberFT  -> updateF $ "sigcompnr"
-              SignatureFT      -> updateF $ "signature"
-              CustomFT label _ -> updateF $  label
+    eml <- $(fromJust) `liftM` getOne  
+           (SQL ("SELECT value FROM signatory_link_fields"
+                ++ " WHERE signatory_link_fields.signatory_link_id = ?"
+                ++ "   AND signatory_link_fields.type = ?")
+                 [toSql slid, toSql EmailFT])
+    let updateValue xtype value = do
+          _ <- kRun $ mkSQL UPDATE tableSignatoryLinkFields
+                 [ sql "value" value ]
+                 <++> SQL (" WHERE EXISTS (SELECT 1 FROM documents, signatory_links"
+                           ++             " WHERE documents.id = signatory_links.document_id"
+                           ++             "   AND documents.status = ?"
+                           ++             "   AND signatory_links.sign_time IS NULL"
+                           ++             "   AND signatory_links.id = signatory_link_id)"
+                           ++      "  AND signatory_link_id = ?"
+                           ++      "  AND custom_name = ?"
+                           ++      "  AND type = ?")
+                        [ toSql Pending
+                        , toSql slid
+                        , toSql (case xtype of
+                                   CustomFT custom_name _ -> custom_name
+                                   _ -> "")
+                        , toSql xtype
+                        ]
+          return ()
 
-  let Just sl = getSigLinkFor document slid
-  r <- kRun $ mkSQL UPDATE tableSignatoryLinks [
-    sql "fields" $ map updateSigField $ signatoryfields $ signatorydetails sl
-    ] <++> SQL "WHERE document_id = ? AND id = ? " [
-      toSql did
-    , toSql slid
-    ]
-  when_ (r == 1) $
-    update $ InsertEvidenceEvent
-      UpdateFieldsEvidence
-      ("Information for signatory with email \"" ++  (getEmail sl) ++ "\" for field \"" ++ fieldname ++ "\" was set to \"" ++ fieldvalue ++ "\" by " ++ actorWho actor ++ ".")
-      (Just did)
-      actor
-  getOneDocumentAffected "UpdateFields" r did
+    case fieldname of
+      "sigfstname" -> updateValue FirstNameFT fieldvalue
+      "sigsndname" -> updateValue LastNameFT fieldvalue
+      "sigco"      -> updateValue CompanyFT fieldvalue
+      "sigpersnr"  -> updateValue PersonalNumberFT fieldvalue
+      "sigcompnr"  -> updateValue CompanyNumberFT fieldvalue
+      "sigemail"   -> updateValue EmailFT fieldvalue
+      "signature"  -> updateValue SignatureFT fieldvalue
+      label        -> updateValue (CustomFT label False) fieldvalue
+
+    _ <- update $ InsertEvidenceEvent
+               UpdateFieldsEvidence
+               ("Information for signatory with email \"" ++ eml 
+                ++ "\" for field \"" ++ fieldname ++ "\" was set to \""
+                ++ fieldvalue ++ "\" by " ++ actorWho actor ++ ".")
+               (Just did)
+               actor
+    getOneDocumentAffected "UpdateFieldsNoStatusCheck" (1) did
+
 
 data AddDocumentAttachment = AddDocumentAttachment DocumentID FileID Actor
 instance MonadDB m => DBUpdate m AddDocumentAttachment (Either String Document) where

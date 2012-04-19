@@ -91,4 +91,5 @@ kontraTables = [
   , tableUserRequest
   , tableMailAPIDelay
   , tableDocumentTags
+  , tableSignatoryLinkFields
   ] ++ mailerTables
