@@ -63,13 +63,20 @@ pagePrivilegesConfirmNoUser=
     They will show up in your archive.
   </p>
   $endif$
-
-  <div class="login" style="margin:12px;padding:12px">
+  
+  <div class="login" style="margin:12px;padding:12px;">
     <form id="loginForm" method="post" action="/oauth/authorizationconfirmlogin">
       <h2>Log in and confirm privileges</h2>
-      <span class="txt">$_email()$</span><input type="email" name="email" value="" infotext="$_email()$" autocomplete="off"/><br />
+      <span class="txt">$_email()$</span><input type="email"
+                                                name="email" value=""
+                                                infotext="$_email()$"
+                                                autocomplete="off" />
+      <br />
       <span class="txt">$_password()$</span><input type="password"
-      name="password" infotext="password" autocomplete="off"/><br />
+                                                   name="password"
+                                                   infotext="password"
+                                                   autocomplete="off" />
+      <br />
       <input type="hidden" value="$token$" name="oauth_token" />
       <input type="submit" class="hidden" />
       <div class="finalbuttonbox">
@@ -82,21 +89,33 @@ pagePrivilegesConfirmNoUser=
     </form>
   </div>
   
-  <div class="newuser" style="margin:12px;padding:12px;width:500px">
+  <div class="newuser" style="margin:12px;padding:12px;width:500px;">
     <h2>Create new account (3 free signatures per month!)</h2>
     <form method="post" action="/oauth/authorizationconfirmnewuser" class="requestAccount">
       <input class="shiny float-left"
              name="email" type="email"
              infotext="$_FillInEmail()$"
-             autocomplete="off"
-             />
+             autocomplete="off" />
       <input type="hidden" value="$token$" name="oauth_token" />
-      <a href="#" class="submit new-btn-small green2 center float-right
-                         "><p>Create account</p></a>
-                         <input type="submit" class="hidden" />
-                         <div class="clearfix" />
+      <a href="#" class="submit new-btn-small green2 center float-right">
+        <p>Create account</p>
+      </a>
+      <input type="submit" class="hidden" />
+      <div class="clearfix" > </div>
     </form>
   </div>
+
+  <form method="POST" action="/oauth/authorizationdeny">
+    <div class="finalbuttonbox">
+      <a class="submit red btn-small">
+        <div class="left"></div>
+        <div class="label">Deny</div>
+        <div class="right"></div>
+      </a>
+    </div>
+    <input type="hidden" name="oauth_token" value="$token$" />
+    <input type="submit" class="hidden" />
+  </form>
 </div>
 ###
 ####

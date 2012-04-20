@@ -108,22 +108,17 @@ authorization = do
 
 authorizationDenied :: Kontrakcja m => m KontraLink
 authorizationDenied = do
-  muser  <- ctxmaybeuser <$> getContext
   time   <- ctxtime <$> getContext
   locale <- ctxlocale <$> getContext
   mtk <- getDataFn' (look "oauth_token")
   token <- guardJust $ maybeRead =<< mtk
-  case muser of
-    Nothing ->
-      return $ LinkOAuthAuthorization token
-    Just _user -> do
-      murl <- dbUpdate $ DenyCredentials token time
-      case murl of
-        Nothing -> return $ LinkHome locale
-        Just callback -> do
-          url <- guardJust $ parseURI callback
-          -- here we redirect to callback with denied=true
-          return $ LinkOAuthCallback url token Nothing
+  murl <- dbUpdate $ DenyCredentials token time
+  case murl of
+    Nothing -> return $ LinkHome locale
+    Just callback -> do
+      url <- guardJust $ parseURI callback
+      -- here we redirect to callback with denied=true
+      return $ LinkOAuthCallback url token Nothing
 
 authorizationGranted :: Kontrakcja m => m KontraLink
 authorizationGranted = do
