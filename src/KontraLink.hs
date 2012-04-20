@@ -106,7 +106,7 @@ data KontraLink
     | LinkPadDeviceView
     | LinkMailAPIDelayConfirmation String Int64 MagicHash
     | LinkOAuthAuthorization APIToken
-    | LinkOAuthCallback URI APIToken MagicHash
+    | LinkOAuthCallback URI APIToken (Maybe MagicHash)
     | LinkOAuthDashboard
     deriving (Eq)
 
@@ -239,8 +239,13 @@ instance Show KontraLink where
       (++) ("/padqueue")
     showsPrec _ (LinkMailAPIDelayConfirmation email delayid key) = (++) ("/mailapi/confirmdelay/" ++ (URL.encode $ UTF.encode email) ++ "/" ++ show delayid ++ "/" ++ show key)
     showsPrec _ (LinkOAuthAuthorization token) = (++) ("/oauth/authorization?oauth_token=" ++ show token)
-    showsPrec _ (LinkOAuthCallback url token verifier) = 
+    showsPrec _ (LinkOAuthCallback url token (Just verifier)) = 
       let newvars = [("oauth_token", show token), ("oauth_verifier", show verifier)]
+          mvars = urlDecodeVars $ uriQuery url
+          vars = urlEncodeVars $ maybe newvars (++ newvars) mvars
+      in (++) (show $ url { uriQuery = "?" ++ vars})
+    showsPrec _ (LinkOAuthCallback url token Nothing) = 
+      let newvars = [("oauth_token", show token), ("denied", "true")]
           mvars = urlDecodeVars $ uriQuery url
           vars = urlEncodeVars $ maybe newvars (++ newvars) mvars
       in (++) (show $ url { uriQuery = "?" ++ vars})

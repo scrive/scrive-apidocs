@@ -230,11 +230,12 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m RequestAccessToken (Maybe (APITo
 data DenyCredentials = DenyCredentials
                        APIToken
                        MinutesTime
-instance MonadDB m => DBUpdate m DenyCredentials () where
+instance MonadDB m => DBUpdate m DenyCredentials (Maybe String) where
   update (DenyCredentials token time) = do
-    _ <- kRun $ SQL "DELETE FROM oauth_temp_credential WHERE (id = ? AND temp_token = ?) OR expires <= ?" 
+    _ <- kRun $ SQL "DELETE FROM oauth_temp_credential WHERE (id = ? AND temp_token = ?) OR expires <= ? RETURNING callback" 
                     [ toSql $ atID token, toSql $ atToken token, toSql time ]
-    return ()
+    mr <- foldDB (\acc url->url:acc) []
+    oneObjectReturnedGuard mr
 
 data GetUserIDForAPIWithPrivilege = GetUserIDForAPIWithPrivilege
                                     APIToken

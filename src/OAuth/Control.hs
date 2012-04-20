@@ -7,7 +7,6 @@ import OAuth.Model
 import DB
 import Misc
 import KontraLink
-import Redirect
 import Happstack.StaticRouting(Route, choice, dir)
 import User.Utils
 import Util.HasSomeUserInfo
@@ -107,7 +106,7 @@ authorization = do
     _ -> -- no privileges recorded? we just take the traffic
       return $ Left $ LinkHome locale
 
-authorizationDenied :: Kontrakcja m => m Response
+authorizationDenied :: Kontrakcja m => m KontraLink
 authorizationDenied = do
   muser  <- ctxmaybeuser <$> getContext
   time   <- ctxtime <$> getContext
@@ -115,33 +114,34 @@ authorizationDenied = do
   mtk <- getDataFn' (look "oauth_token")
   token <- guardJust $ maybeRead =<< mtk
   case muser of
-    Nothing -> do
-      -- add flash message here
-      sendRedirect $ LinkOAuthAuthorization token
+    Nothing ->
+      return $ LinkOAuthAuthorization token
     Just _user -> do
-      -- could make callback useful here
-      _ <- dbUpdate $ DenyCredentials token time
+      murl <- dbUpdate $ DenyCredentials token time
+      case murl of
+        Nothing -> return $ LinkHome locale
+        Just callback -> do
+          url <- guardJust $ parseURI callback
+          -- here we redirect to callback with denied=true
+          return $ LinkOAuthCallback url token Nothing
 
-      sendRedirect $ LinkHome locale
-
-authorizationGranted :: Kontrakcja m => m Response
+authorizationGranted :: Kontrakcja m => m KontraLink
 authorizationGranted = do
   mtk <- getDataFn' (look "oauth_token")
   token <- guardJust $ maybeRead =<< mtk
   muser <- ctxmaybeuser <$> getContext
   time <- ctxtime <$> getContext
   case muser of
-    Nothing -> do
-      -- flash message
-      sendRedirect $ LinkOAuthAuthorization token
+    Nothing ->
+      return $ LinkOAuthAuthorization token
     Just user -> do
       (callback, verifier) <- guardJustM $ dbUpdate $ VerifyCredentials token (userid user) time
 
       url <- guardJust $ parseURI callback
 
-      sendRedirect $ LinkOAuthCallback url token verifier
+      return $ LinkOAuthCallback url token $ Just verifier
 
-authorizationGrantedLogin :: Kontrakcja m => m Response
+authorizationGrantedLogin :: Kontrakcja m => m KontraLink
 authorizationGrantedLogin = do
   mtk <- getDataFn' (look "oauth_token")
   token <- guardJust $ maybeRead =<< mtk
@@ -150,24 +150,23 @@ authorizationGrantedLogin = do
   muser <- ctxmaybeuser <$> getContext  
   time <- ctxtime <$> getContext
   case muser of
-    Nothing -> do
-      -- flash message
-      sendRedirect $ LinkOAuthAuthorization token
+    Nothing ->
+      return $ LinkOAuthAuthorization token
     Just user -> do
       (callback, verifier) <- guardJustM $ dbUpdate $ VerifyCredentials token (userid user) time
 
       url <- guardJust $ parseURI callback
 
-      sendRedirect $ LinkOAuthCallback url token verifier
+      return $ LinkOAuthCallback url token $ Just verifier
 
-authorizationGrantedNewUser :: Kontrakcja m => m Response
+authorizationGrantedNewUser :: Kontrakcja m => m KontraLink
 authorizationGrantedNewUser = do
   mtk <- getDataFn' (look "oauth_token")
   token <- guardJust $ maybeRead =<< mtk
   _ <- signupPagePost
   -- flash message one by signup page
   
-  sendRedirect $ LinkOAuthAuthorization token
+  return $ LinkOAuthAuthorization token
 
 tokenCredRequest :: Kontrakcja m => m Response
 tokenCredRequest = api $ do
