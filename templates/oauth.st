@@ -64,7 +64,7 @@ pagePrivilegesConfirmNoUser=
   </p>
   $endif$
   
-  <div class="login" style="margin:12px;padding:12px;">
+  <div class="login option">
     <form id="loginForm" method="post" action="/oauth/authorizationconfirmlogin">
       <h2>Log in and confirm privileges</h2>
       <span class="txt">$_email()$</span><input type="email"
@@ -89,33 +89,36 @@ pagePrivilegesConfirmNoUser=
     </form>
   </div>
   
-  <div class="newuser" style="margin:12px;padding:12px;width:500px;">
-    <h2>Create new account (3 free signatures per month!)</h2>
+  <div class="newuser option">
+    <h2>Create new account 
+      <br /> (3 free signatures per month!)</h2>
     <form method="post" action="/oauth/authorizationconfirmnewuser" class="requestAccount">
-      <input class="shiny float-left"
+      <input class="shiny"
              name="email" type="email"
              infotext="$_FillInEmail()$"
              autocomplete="off" />
       <input type="hidden" value="$token$" name="oauth_token" />
-      <a href="#" class="submit new-btn-small green2 center float-right">
+      <a href="#" class="submit new-btn-small green2 center">
         <p>Create account</p>
       </a>
       <input type="submit" class="hidden" />
       <div class="clearfix" > </div>
     </form>
   </div>
-
-  <form method="POST" action="/oauth/authorizationdeny">
-    <div class="finalbuttonbox">
-      <a class="submit red btn-small">
-        <div class="left"></div>
-        <div class="label">Deny</div>
-        <div class="right"></div>
-      </a>
-    </div>
-    <input type="hidden" name="oauth_token" value="$token$" />
-    <input type="submit" class="hidden" />
-  </form>
+  <div class="deny option right">
+    <h2>Deny the privileges</h2>
+    <form method="POST" action="/oauth/authorizationdeny">
+      <div class="finalbuttonbox">
+        <a class="submit red btn-small">
+          <div class="left"></div>
+          <div class="label">Deny</div>
+          <div class="right"></div>
+        </a>
+      </div>
+      <input type="hidden" name="oauth_token" value="$token$" />
+      <input type="submit" class="hidden" />
+    </form>
+  </div>
 </div>
 ###
 ####

@@ -128,3 +128,33 @@
 .apidashboard h2.first {
     margin-top: 0px;
 }
+
+.oauth-confirm h2 {
+    margin-bottom: 24px;
+}
+
+.oauth-confirm h3 {
+    margin-bottom: 24px;
+    margin-top: 24px;
+}
+
+.oauth-confirm .option {
+    float:left;
+    max-width: 300px;
+    margin:12px;
+    padding:12px;
+    border-right: 1px solid gray;
+}
+
+.oauth-confirm .option.right {
+    border-right: 0px;
+}
+
+.oauth-confirm .newuser {
+}
+
+.oauth-confirm .login .txt {
+    width: 64px;
+    display:inline-block;
+}
+
