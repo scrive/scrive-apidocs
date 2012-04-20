@@ -9,12 +9,15 @@ import Misc
 import KontraLink
 import Redirect
 import Happstack.StaticRouting(Route, choice, dir)
+import User.Utils
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import OAuth.View
 import OAuth.Parse
 import Login
 import User.Model
+import AppView
+
 
 import Happstack.Server.RqData
 import qualified Data.ByteString.UTF8 as BS hiding (length)
@@ -40,7 +43,13 @@ oauthAPI = choice [
   dir "oauth" $ dir "authorizationconfirmlogin"   $ hPostNoXToken $ toK0 $ authorizationGrantedLogin,
   dir "oauth" $ dir "authorizationconfirmnewuser" $ hPostNoXToken $ toK0 $ authorizationGrantedNewUser,  
   dir "oauth" $ dir "authorizationdeny"    $ hPost $ toK0 $ authorizationDenied,
-  dir "oauth" $ dir "tokencredentials"     $ hGet  $ toK0 $ tokenCredRequest
+  dir "oauth" $ dir "tokencredentials"     $ hGet  $ toK0 $ tokenCredRequest,
+  dir "oauth" $ dir "createapitoken"       $ hPost $ toK0 $ createAPIToken,
+  dir "oauth" $ dir "deleteapitoken"       $ hPost $ toK0 $ deleteAPIToken,
+  dir "oauth" $ dir "createpersonaltoken"  $ hPost $ toK0 $ createPersonalToken,
+  dir "oauth" $ dir "deletepersonaltoken"  $ hPost $ toK0 $ deletePersonalToken,
+  dir "oauth" $ dir "deleteprivilege"      $ hPost $ toK0 $ deletePrivilege,
+  dir "oauth" $ dir "dashboard"            $ hGet  $ toK0 $ apiDashboard
   ]
 
 tempCredRequest :: Kontrakcja m => m Response
@@ -157,6 +166,7 @@ authorizationGrantedNewUser = do
   token <- guardJust $ maybeRead =<< mtk
   _ <- signupPagePost
   -- flash message one by signup page
+  
   sendRedirect $ LinkOAuthAuthorization token
 
 tokenCredRequest :: Kontrakcja m => m Response
@@ -189,4 +199,53 @@ tokenCredRequest = api $ do
   return $ FormEncoded [("oauth_token",        show accesstoken)
                        ,("oauth_token_secret", show accesssecret)
                        ]
+    
+apiDashboard :: Kontrakcja m => m (Either KontraLink Response)
+apiDashboard = checkUserTOSGet $ do
+  Just user <- ctxmaybeuser <$> getContext -- safe because we check user
+  apitokens      <- dbQuery $ GetAPITokensForUser  (userid user)
+  apiprivileges  <- dbQuery $ GetGrantedPrivileges (userid user)
+  mpersonaltoken <- dbQuery $ GetPersonalToken     (userid user)
+  showAPIDashboard user apitokens apiprivileges mpersonaltoken >>= renderFromBody kontrakcja
+  
+createAPIToken :: Kontrakcja m => m KontraLink
+createAPIToken = withUserPost $ do
+  Just user <- ctxmaybeuser <$> getContext -- safe because we check user
+  _success <- dbUpdate $ CreateAPIToken (userid user)
+  return LinkOAuthDashboard
+  
+deleteAPIToken :: Kontrakcja m => m KontraLink
+deleteAPIToken = withUserPost $ do
+  Just user <- ctxmaybeuser <$> getContext -- safe because we check user
+  mtk <- getDataFn' (look "apitoken")
+  case maybeRead =<< mtk of
+    Nothing -> return LinkOAuthDashboard
+    Just token -> do
+      _success <- dbUpdate $ DeleteAPIToken (userid user) token
+      return LinkOAuthDashboard
+      
+createPersonalToken :: Kontrakcja m => m KontraLink
+createPersonalToken = withUserPost $ do
+  Just user <- ctxmaybeuser <$> getContext -- safe because we check user
+  _success <- dbUpdate $ CreatePersonalToken (userid user)
+  return LinkOAuthDashboard
+  
+deletePersonalToken :: Kontrakcja m => m KontraLink
+deletePersonalToken = withUserPost $ do
+  Just user <- ctxmaybeuser <$> getContext -- safe because we check user
+  _success <- dbUpdate $ DeletePersonalToken (userid user)
+  return LinkOAuthDashboard
 
+deletePrivilege :: Kontrakcja m => m KontraLink
+deletePrivilege = withUserPost $ do
+  Just user <- ctxmaybeuser <$> getContext -- safe because we check user
+  mtk <- getDataFn' (look "tokenid")
+  case maybeRead =<< mtk of
+    Nothing -> return ()
+    Just tokenid -> do
+      mpr <- getDataFn' (look "privilege")
+      case maybeRead =<< mpr of
+        Nothing -> ignore $ dbUpdate $ DeletePrivileges (userid user) tokenid
+        Just pr -> ignore $ dbUpdate $ DeletePrivilege  (userid user) tokenid pr
+  return LinkOAuthDashboard
+  

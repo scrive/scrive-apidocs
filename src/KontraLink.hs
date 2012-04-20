@@ -107,6 +107,7 @@ data KontraLink
     | LinkMailAPIDelayConfirmation String Int64 MagicHash
     | LinkOAuthAuthorization APIToken
     | LinkOAuthCallback URI APIToken MagicHash
+    | LinkOAuthDashboard
     deriving (Eq)
 
 localeFolder :: Locale -> String
@@ -243,3 +244,4 @@ instance Show KontraLink where
           mvars = urlDecodeVars $ uriQuery url
           vars = urlEncodeVars $ maybe newvars (++ newvars) mvars
       in (++) (show $ url { uriQuery = "?" ++ vars})
+    showsPrec _ LinkOAuthDashboard = (++) ("/oauth/dashboard")

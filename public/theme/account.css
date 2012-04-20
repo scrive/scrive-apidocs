@@ -95,3 +95,36 @@
 .companybranding .save {
   margin-right: 40px;
 }
+
+.apidashboard p {
+    margin: 12px 0px;
+    font-size: 14px;
+}
+
+.apidashboard table {
+    border: 1px solid black;
+    width: 100%;
+}
+
+.apidashboard td {
+    padding: 4px;
+}
+
+.apidashboard tbody {
+    min-height: 100px;
+    font-size: 14px;
+}
+
+.apidashboard thead {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.apidashboard h2 {
+    margin-top: 34px;
+    font-size: 18px;
+}
+
+.apidashboard h2.first {
+    margin-top: 0px;
+}
