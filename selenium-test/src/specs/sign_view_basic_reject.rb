@@ -41,7 +41,7 @@ describe "rejecting document" do
     @emailhelper.follow_link_in_latest_mail_for @ctx.props.first_counterpart_email
 
     puts "make sure it's a signatory is in an opened state"
-    @wait.until { @driver.find_element :css => ".summary.opened" }
+    @dochelper.checkOpened
 
     puts "reject the document"
     (@wait.until { @driver.find_element :css => ".rejectwrapper a" }).click
