@@ -147,7 +147,6 @@ tableSignatoryAttachments = Table {
       _ -> do
         return TVRinvalid
   , tblPutProperties = do
-    kRunRaw $ "CREATE INDEX idx_signatory_attachments_document_id ON signatory_attachments(document_id)"
     kRunRaw $ "CREATE INDEX idx_signatory_attachments_signatory_link_id ON signatory_attachments(signatory_link_id)"
     kRunRaw $ "ALTER TABLE signatory_attachments"
       ++ " ADD CONSTRAINT fk_signatory_attachments_files FOREIGN KEY(file_id)"
