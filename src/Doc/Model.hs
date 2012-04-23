@@ -245,7 +245,6 @@ documentDomainToSQL (AttachmentsSharedInUsersCompany uid) =
        ++ "                  AND usr2.company_id = usr1.company_id "
        ++ "                  AND usr1.id = ?)")
         [toSql Shared, toSql uid]
-        
 
 
 maxselect :: String
@@ -280,8 +279,8 @@ documentFilterToSQL (DocumentFilterByTags tags) =
   sqlConcatAND $ map (\tag -> SQL "EXISTS (SELECT 1 FROM document_tags WHERE name = ? AND value = ? AND document_id = documents.id)"
                               [toSql $ tagname tag, toSql $ tagvalue tag]) tags
 documentFilterToSQL (DocumentFilterByString string) =
-  SQL "documents.title ILIKE ?" [sqlpat] `sqlOR` 
-     sqlJoinWithAND (map (\wordpat -> SQL "signatory_links.fields ILIKE ?" [wordpat]) sqlwordpat)
+  SQL "documents.title ILIKE ?" [sqlpat] `sqlOR`
+     sqlJoinWithAND (map (\wordpat -> SQL "EXISTS (SELECT 1 FROM signatory_link_fields WHERE signatory_link_fields.signatory_link_id = signatory_links.id AND signatory_link_fields.value ILIKE ?)" [wordpat]) sqlwordpat)
   where
       sqlpat = toSql $ "%" ++ concatMap escape string ++ "%"
       sqlwordpat = map (\word -> toSql $ "%" ++ concatMap escape word ++ "%") (words string)
@@ -1267,6 +1266,7 @@ instance MonadDB m => DBUpdate m ErrorDocument (Either String Document) where
 
 selectDocuments :: MonadDB m => SQL -> DBEnv m [Document]
 selectDocuments sqlquery = do
+
     _ <- kRun $ SQL "CREATE TEMP TABLE docs AS " [] <++> sqlquery
 
     _ <- kRun $ SQL "SELECT * FROM docs" []
