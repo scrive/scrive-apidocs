@@ -34,6 +34,7 @@ module User.Model (
   ) where
 
 import Control.Applicative
+import Data.Char
 import Data.Data
 --import Data.Int
 import Database.HDBC
@@ -135,7 +136,7 @@ data GetUserByEmail = GetUserByEmail (Maybe ServiceID) Email
 instance DBQuery GetUserByEmail (Maybe User) where
   dbQuery (GetUserByEmail msid email) = do
     kPrepare $ selectUsersSQL ++ " WHERE deleted = FALSE AND service_id IS NOT DISTINCT FROM ? AND email = ?"
-    _ <- kExecute [toSql msid, toSql email]
+    _ <- kExecute [toSql msid, toSql $ map toLower $ unEmail email]
     fetchUsers >>= oneObjectReturnedGuard
 
 data GetCompanyAccounts = GetCompanyAccounts CompanyID
@@ -236,7 +237,7 @@ instance DBUpdate SetUserEmail Bool where
   dbUpdate (SetUserEmail msid uid email) = do
     kPrepare $ "UPDATE users SET email = ?"
       ++ " WHERE id = ? AND deleted = FALSE AND service_id IS NOT DISTINCT FROM ?"
-    kExecute01 [toSql email, toSql uid, toSql msid]
+    kExecute01 [toSql $ map toLower $ unEmail email, toSql uid, toSql msid]
 
 data SetUserPassword = SetUserPassword UserID Password
 instance DBUpdate SetUserPassword Bool where
