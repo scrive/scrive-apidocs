@@ -94,6 +94,61 @@ dropDocumentIDColumntFromSignatoryAttachments = Migration {
 -}
 
 
+
+moveSignatoryLinkFieldsToSeparateTable :: MonadDB m => Migration m
+moveSignatoryLinkFieldsToSeparateTable = Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 8
+  , mgrDo = do
+    _ <- kRun $ SQL "SELECT id, fields FROM signatory_links WHERE fields <> '' AND fields <> '[]'" [];
+    values <- foldDB fetch []
+    forM_ values $ \(slid, fields) -> do
+      forM_ fields $ \field -> do
+        let (xtypestr :: String, custom_name :: String, is_author_filled :: Bool) =
+              case lookup "sfType" field of
+                Just (JSString x_sfType) -> (fromJSString x_sfType,"",False)
+                Just obj@(JSObject xcustom) -> 
+                  case lookup "CustomFT" (fromJSObject xcustom) of
+                    Just (JSArray [JSString custname, JSBool authorfilled]) ->
+                      ("CustomFT", fromJSString custname, authorfilled)
+                    _ -> error $ "Custom field has unrecognized format: " ++ encode obj
+                Just x -> error $ "Field type must be either string or object, found: " ++ encode x
+                Nothing -> error $ "Field definition does not have sfType, whole def: " ++ encode field
+
+            Just (JSString x_sfValue) = lookup "sfValue" field
+            Just placement = lookup "sfPlacements" field
+            (xtype :: Int) = case xtypestr of
+                      "FirstNameFT"      -> 1
+                      "LastNameFT"       -> 2
+                      "CompanyFT"        -> 3
+                      "PersonalNumberFT" -> 4
+                      "CompanyNumberFT"  -> 5
+                      "EmailFT"          -> 6
+                      "CustomFT"         -> 7
+                      "SignatureFT"      -> 8
+                      _                  -> error $ "Unknown field type: " ++ xtypestr
+
+        _ <- kRun $ mkSQL INSERT tableSignatoryLinkFields
+           [ sql "type" xtype
+           , sql "value" $ fromJSString x_sfValue
+           , sql "signatory_link_id" slid
+           , sql "is_author_filled" is_author_filled
+           , sql "custom_name" custom_name
+           , sql "placements" $ encode placement
+           ]
+        return ()
+      return ()
+    kRunRaw $ "ALTER TABLE signatory_links DROP COLUMN fields"
+  }
+  where
+    fetch acc slid fieldsstr = (slid :: Int64, fields) : acc
+      where
+        Ok (JSArray arr) = decode fieldsstr
+        fromJSValue (JSObject obj) = fromJSObject obj
+        fromJSValue x =
+          error $ "moveSignatoryLinkFieldsToSeparateTable: expected valid object, got: " ++ encode x
+        fields = map fromJSValue arr
+
 moveDocumentTagsFromDocumentsTableToDocumentTagsTable :: MonadDB m => Migration m
 moveDocumentTagsFromDocumentsTableToDocumentTagsTable = Migration {
     mgrTable = tableDocuments

@@ -65,6 +65,7 @@ kontraMigrations = [
   , setSignatoryAttachmentsForeignKeyToSLIDOnly
   , dropDocumentIDColumntFromSignatoryAttachments
   , addCheckLowercaseEmailsUsers
+  , moveSignatoryLinkFieldsToSeparateTable
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

@@ -161,13 +161,12 @@ tableSignatoryAttachments = Table {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = Table {
     tblName = "signatory_links"
-  , tblVersion = 8
+  , tblVersion = 9
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
        , ("company_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just True})
-       , ("fields", SqlColDesc {colType = SqlVarCharT, colNullable = Just False})
        , ("sign_order", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("token", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("sign_time", SqlColDesc {colType = SqlTimestampWithZoneT, colNullable = Just True})
@@ -198,7 +197,6 @@ tableSignatoryLinks = Table {
           ++ ", document_id BIGINT NOT NULL"
           ++ ", user_id BIGINT NULL DEFAULT NULL"
           ++ ", company_id BIGINT NULL DEFAULT NULL"
-          ++ ", fields TEXT NOT NULL DEFAULT NULL"
           ++ ", sign_order INTEGER NOT NULL DEFAULT 1"
           ++ ", token BIGINT NOT NULL"
           ++ ", sign_time TIMESTAMPTZ NULL DEFAULT NULL"
