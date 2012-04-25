@@ -294,6 +294,7 @@ tableSignatoryLinkFields = Table {
         return TVRcreated
       _ -> return TVRinvalid
   , tblPutProperties = do
+    kRunRaw $ "CREATE INDEX idx_signatory_link_fields_signatory_links_signatory_link_id ON signatory_link_fields(signatory_link_id)"
     kRunRaw $ "ALTER TABLE signatory_link_fields"
       ++ " ADD CONSTRAINT fk_signatory_link_fields_signatory_links FOREIGN KEY(signatory_link_id)"
       ++ " REFERENCES signatory_links(id) ON DELETE CASCADE ON UPDATE RESTRICT"
