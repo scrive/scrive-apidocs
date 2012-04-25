@@ -159,14 +159,16 @@ runKontrakcjaServer = Log.withLogger $ do
                               let scheddata = SchedulerData appConf templates (mailsConfig appConf)
                               t2 <- forkIO $ cron 60 $ runScheduler rng (oldScheduler >> actionScheduler UrgentAction) scheddata
                               t3 <- forkIO $ cron 600 $ runScheduler rng (actionScheduler LeisureAction) scheddata
-                              t4 <- forkIO $ cron (60 * 60 * 4) $ runScheduler rng runDocumentProblemsCheck scheddata
-                              t5 <- forkIO $ cron (60 * 60 * 24) $ runScheduler rng runArchiveProblemsCheck scheddata
+                              --Removed to test if invariants are causing crashing. --EN
+                              --t4 <- forkIO $ cron (60 * 60 * 4) $ runScheduler rng runDocumentProblemsCheck scheddata
+                              --t5 <- forkIO $ cron (60 * 60 * 24) $ runScheduler rng runArchiveProblemsCheck scheddata
                               t6 <- forkIO $ cron 5 $ runScheduler rng processEvents scheddata
                               t7 <- forkIO $ cron (60) $ (let loop = (do
                                                                         r <- uploadFileToAmazon rng appConf
                                                                         if r then loop else return ()) in loop)
                               t8 <- forkIO $ cron (60*60) System.Mem.performGC
-                              return [t1, t2, t3, t4, t5, t6, t7, t8]
+                              --return [t1, t2, t3, t4, t5, t6, t7, t8]
+                              return [t1, t2, t3, t6, t7, t8]
                            )
                            (mapM_ killThread) $ \_ -> E.bracket
                                         -- checkpoint the state once a day
