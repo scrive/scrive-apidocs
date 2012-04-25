@@ -16,7 +16,7 @@ var documentsTable = KontraList().init({
     schema: new Schema({
     url: "/docs",
     extraParams : { documentType : "Contract" },
-    sorting: new Sorting({ fields: ["title", "status", "time"/*,"party","author"*/]}),
+    sorting: new Sorting({ fields: ["title", "status", "time","party",/*"author"*/]}),
     paging: new Paging({}),
     filtering: new Filtering({text: "", infotext: "$_SearchDoc()$"}),
     cells : [

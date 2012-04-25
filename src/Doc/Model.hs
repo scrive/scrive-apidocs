@@ -155,6 +155,7 @@ data DocumentOrderBy
   | DocumentOrderByStatusClass -- ^ Order by status class.
   | DocumentOrderByType        -- ^ Order by document type.
   | DocumentOrderByProcess     -- ^ Order by process
+  | DocumentOrderByPartners    -- ^ Order by partner names or emails
 
 -- | 'AscDesc' marks ORDER BY order as ascending or descending.
 -- Conversion to SQL adds DESC marker to descending and no marker
@@ -169,6 +170,48 @@ documentOrderByToSQL DocumentOrderByStatusClass =
   SQL (documentStatusClassExpression) []
 documentOrderByToSQL DocumentOrderByType = SQL "documents.type" []
 documentOrderByToSQL DocumentOrderByProcess = SQL "documents.process" []
+documentOrderByToSQL DocumentOrderByPartners =
+  parenthesize selectSignatoryLinksSmartNames
+
+selectSignatoryLinksSmartNames :: SQL
+selectSignatoryLinksSmartNames =
+      SQL ("SELECT COALESCE(string_agg(x.value,' '),'no fields') FROM ") [] <++>
+      SQL ("(SELECT (") [] <++>
+      selectSmartName <++>
+      SQL (") AS value FROM signatory_links" ++
+           " WHERE signatory_links.document_id = documents.id" ++
+           "   AND ((signatory_links.roles & ?) <>0)" ++
+           " ORDER BY signatory_links.internal_insert_order) AS x") [toSql [SignatoryPartner]]
+  where
+    selectFieldAs xtype name = SQL ("(SELECT signatory_link_fields.value AS value " ++
+                                    "FROM signatory_link_fields " ++
+                                    "WHERE signatory_link_fields.signatory_link_id = signatory_links.id " ++
+                                    "AND type = ? " ++
+                                    "LIMIT 1) " ++
+                                    "AS " ++ name) [toSql xtype]
+    {-
+     selectSmartName explanation:
+     1. Select fields first name, last name and email into separate tables
+     2. Use FULL JOIN so we get NULL when field is not there
+     3. Convert possible NULLs into empty strings
+     4. Concatenate first name and last name with a space between
+     5. Trim that string both ends
+     6. See if it is empty, if it is, convert to NULL
+     7. If NULL use email address instead
+     -}
+    selectSmartName = SQL ("SELECT " ++
+                           "COALESCE(NULLIF(TRIM(BOTH FROM (COALESCE(first_name.value,'') " ++
+                           "                                || ' ' || " ++
+                           "                                COALESCE(last_name.value,''))), ''),email.value) " ++
+                           "FROM (") [] <++>
+                      selectFieldAs FirstNameFT "first_name" <++>
+                      SQL " FULL JOIN " [] <++>
+                      selectFieldAs LastNameFT "last_name" <++>
+                      SQL " ON TRUE " [] <++>
+                      SQL " FULL JOIN " [] <++>
+                      selectFieldAs EmailFT "email" <++>
+                      SQL " ON TRUE " [] <++>
+                      SQL ") WHERE signatory_links.document_id = documents.id" []
 
 documentOrderByAscDescToSQL :: AscDesc DocumentOrderBy -> SQL
 documentOrderByAscDescToSQL (Asc x) = documentOrderByToSQL x
@@ -412,8 +455,8 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
                    concat (zipWith checkSigLink sl1 sl2)
 
 
-documentsSelectors :: String
-documentsSelectors = intercalate ", " [
+documentsSelectors :: SQL
+documentsSelectors = SQL (intercalate ", " [
     "id"
   , "title"
   , "file_id"
@@ -442,12 +485,12 @@ documentsSelectors = intercalate ", " [
   , "region"
   , "sharing"
   , documentStatusClassExpression
-  ]
+  ]) [] 
 
 selectDocumentsSQL :: SQL
-selectDocumentsSQL = SQL ("SELECT "
-  ++ documentsSelectors
-  ++ " FROM documents ") []
+selectDocumentsSQL = SQL "SELECT " [] <++>
+                     documentsSelectors <++>
+                     SQL " FROM documents " []
 
 fetchDocuments :: MonadDB m => DBEnv m [Document]
 fetchDocuments = foldDB decoder []
@@ -458,7 +501,8 @@ fetchDocuments = foldDB decoder []
      process functionality ctime mtime days_to_sign timeout_time invite_time
      invite_ip dlog invite_text allowed_id_types cancelationreason rejection_time
      rejection_signatory_link_id rejection_reason service deleted mail_footer
-     region sharing status_class = Document {
+     region sharing status_class
+       = Document {
          documentid = did
        , documenttitle = title
        , documentsignatorylinks = []
@@ -631,7 +675,6 @@ insertSignatoryLinkAsIs documentid link = do
            , sql "roles" $ signatoryroles link
            , sql "company_id" $ maybecompany link
            , sql "token" $ signatorymagichash link
-           , sql "fields" $ ""
            , sql "sign_order"$ signatorysignorder $ signatorydetails link
            , sql "sign_time" $ signtime `fmap` maybesigninfo link
            , sql "sign_ip" $ signipnumber `fmap` maybesigninfo link
@@ -869,7 +912,7 @@ insertDocumentAsIs document = do
       , sql "mail_footer" $ documentmailfooter $ documentui -- should go into separate table?
       , sql "region" documentregion
       , sql "sharing" documentsharing
-      ] <++> SQL ("RETURNING " ++ documentsSelectors) []
+      ] <++> SQL "RETURNING " [] <++> documentsSelectors
 
     mdoc <- fetchDocuments >>= oneObjectReturnedGuard
     case mdoc of
@@ -1266,7 +1309,7 @@ instance MonadDB m => DBUpdate m ErrorDocument (Either String Document) where
 
 selectDocuments :: MonadDB m => SQL -> DBEnv m [Document]
 selectDocuments sqlquery = do
-
+    trace (show sqlquery) $ return ()
     _ <- kRun $ SQL "CREATE TEMP TABLE docs AS " [] <++> sqlquery
 
     _ <- kRun $ SQL "SELECT * FROM docs" []

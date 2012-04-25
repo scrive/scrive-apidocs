@@ -1543,6 +1543,7 @@ testGetDocumentsSQLSorted = doTimes 1 $ do
             , Desc DocumentOrderByStatusClass
             , Desc DocumentOrderByType
             , Desc DocumentOrderByProcess
+            , Desc DocumentOrderByPartners
             ]
             (DocumentPagination 0 maxBound)
   validTest $ do
