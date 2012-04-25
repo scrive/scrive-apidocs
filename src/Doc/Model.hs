@@ -156,6 +156,7 @@ data DocumentOrderBy
   | DocumentOrderByType        -- ^ Order by document type.
   | DocumentOrderByProcess     -- ^ Order by process
   | DocumentOrderByPartners    -- ^ Order by partner names or emails
+  | DocumentOrderByAuthor      -- ^ Order by author name or email
 
 -- | 'AscDesc' marks ORDER BY order as ascending or descending.
 -- Conversion to SQL adds DESC marker to descending and no marker
@@ -171,17 +172,19 @@ documentOrderByToSQL DocumentOrderByStatusClass =
 documentOrderByToSQL DocumentOrderByType = SQL "documents.type" []
 documentOrderByToSQL DocumentOrderByProcess = SQL "documents.process" []
 documentOrderByToSQL DocumentOrderByPartners =
-  parenthesize selectSignatoryLinksSmartNames
+  parenthesize (selectSignatoryLinksSmartNames [SignatoryPartner])
+documentOrderByToSQL DocumentOrderByAuthor =
+  parenthesize (selectSignatoryLinksSmartNames [SignatoryAuthor])
 
-selectSignatoryLinksSmartNames :: SQL
-selectSignatoryLinksSmartNames =
+selectSignatoryLinksSmartNames :: [SignatoryRole] -> SQL
+selectSignatoryLinksSmartNames roles =
       SQL ("SELECT COALESCE(string_agg(x.value,' '),'no fields') FROM ") [] <++>
       SQL ("(SELECT (") [] <++>
       selectSmartName <++>
       SQL (") AS value FROM signatory_links" ++
            " WHERE signatory_links.document_id = documents.id" ++
            "   AND ((signatory_links.roles & ?) <>0)" ++
-           " ORDER BY signatory_links.internal_insert_order) AS x") [toSql [SignatoryPartner]]
+           " ORDER BY signatory_links.internal_insert_order) AS x") [toSql roles]
   where
     selectFieldAs xtype name = SQL ("(SELECT signatory_link_fields.value AS value " ++
                                     "FROM signatory_link_fields " ++
@@ -1309,7 +1312,7 @@ instance MonadDB m => DBUpdate m ErrorDocument (Either String Document) where
 
 selectDocuments :: MonadDB m => SQL -> DBEnv m [Document]
 selectDocuments sqlquery = do
-    trace (show sqlquery) $ return ()
+
     _ <- kRun $ SQL "CREATE TEMP TABLE docs AS " [] <++> sqlquery
 
     _ <- kRun $ SQL "SELECT * FROM docs" []

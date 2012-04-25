@@ -206,8 +206,8 @@ docSortingFromParams params =
     x "processREV"        = [Desc DocumentOrderByProcess]
     x "type"              = [Asc DocumentOrderByType]
     x "typeREV"           = [Desc DocumentOrderByType]
-    -- x "author"         = viewComparing getAuthorName
-    -- x "authorRev"      = viewComparingRev getAuthorName
+    x "author"            = [Asc DocumentOrderByAuthor]
+    x "authorRev"         = [Desc DocumentOrderByAuthor]
     x _                   = []
 
 
