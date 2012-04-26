@@ -57,6 +57,16 @@ test_getUserByEmail_returnsTheRightUser = do
   queriedUser <- dbQuery $ GetUserByEmail Nothing (Email "emily@green.com")
   assert (isJust queriedUser)
   assertEqual "For GetUserByEmail result" user (fromJust queriedUser)
+  queriedUser2 <- dbQuery $ GetUserByEmail Nothing (Email "EMILY@green.com")
+  assert (isJust queriedUser2)
+  assertEqual "For GetUserByEmail result" user (fromJust queriedUser2)
+  Just user3 <- addNewUser "Eric" "Normand" "ERIc@Normand.Com"
+  queriedUser3 <- dbQuery $ GetUserByEmail Nothing (Email "eric@normand.com")
+  assert (isJust queriedUser3)
+  assertEqual "For GetUserByEmail result" user3 (fromJust queriedUser3)
+  queriedUser4 <- dbQuery $ GetUserByEmail Nothing (Email "erIc@normand.com")
+  assert (isJust queriedUser4)
+  assertEqual "For GetUserByEmail result" user3 (fromJust queriedUser4)
 
 test_getUserByID_returnsNothing :: TestEnv ()
 test_getUserByID_returnsNothing = do
