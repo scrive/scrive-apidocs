@@ -225,7 +225,7 @@ Executable kontrakcja-server
   Build-depends: zip-archive == 0.1.1.7
   Build-depends: semigroups == 0.8.2
   Build-depends: blaze-html == 0.4.3.3
-  Build-depends: tagged == 0.4.2
+  Build-depends: tagged == 0.4.1
   Main-Is: Main.hs
 
   Extensions: BangPatterns,
