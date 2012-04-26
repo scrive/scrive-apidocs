@@ -63,7 +63,7 @@ a.btn-big.black .label:active, a.btn-small.black .label:active, a.btn-tiny.black
     text-shadow: none;
 }
 
-a.btn-big .btn-symbol, a.btn-small .btn-symbol, a.btn-tiny .btn-symbol{
+a.btn-big .btn-symbol, a.btn-small .btn-symbol, a.btn-tiny .btn-symbol, .icon.cross{
     display: none;
 }
 
