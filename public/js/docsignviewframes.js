@@ -42,6 +42,7 @@ window.DocumentSignViewHeader = Backbone.View.extend({
       maindiv.removeClass();
       maindiv.attr("style","");
     maindiv.addClass("pageheader");
+
     if(inService) {
         maindiv.addClass('withstandardlogo');
         var content = $("<div class='content' />");
@@ -62,6 +63,7 @@ window.DocumentSignViewHeader = Backbone.View.extend({
         logowrapper.append("<a href='/'><div class='logo'></div></a>");
 
     } else {
+      maindiv.append($("<div class='poweredbyscrive'/>"));
         maindiv.addClass(document.logo() == undefined ? 'withstandardlogo' : 'withcustomlogo');
         if (document.barsbackgroundcolor() != undefined)
         {
