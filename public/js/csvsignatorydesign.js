@@ -89,13 +89,13 @@ var CsvProblem = Backbone.Model.extend({
   },
   upload : function(input) {
        var sigdesign = this;
-       var submit = new Submit({ url : "/parsecsv", method : "POST"});
+       var submit = new Submit({ url : "/parsecsv", method : "POST", expectedType:"json"});
        submit.add("customfieldscount",this.signatory().customFields().length);
        if (this.signatory().document().elegAuthorization())
         submit.add("eleg","YES");
        submit.addInputs(input);
        submit.sendAjax(function (resp) {
-           var jresp = JSON.parse(resp);
+           var jresp = resp;
            sigdesign.set({'rows': jresp.rows, 'problems': _.map(jresp.problems, function(pdata) {return new CsvProblem(pdata);}) });
            sigdesign.trigger("change");
           });
