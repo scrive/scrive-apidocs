@@ -1,6 +1,7 @@
 module User.UserControl where
 
 import Control.Monad.State
+import Data.Char
 import Data.Functor
 import Data.Maybe
 import Happstack.Server hiding (simpleHTTP)
@@ -739,6 +740,26 @@ handlePasswordReminderPost aid hash = do
                    _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) (ctxipnumber) (ctxtime) (userid <$> ctxmaybeuser)
                    addFlashM $ modalNewPasswordView aid hash
                    getHomeOrUploadLink
+
+-- Please run these on production but then delete them!
+-- Delete after July 1, 2012
+-- Eric
+handleMigrateLowercaseEmails :: Kontrakcja m => m String
+handleMigrateLowercaseEmails = onlyAdmin $ do
+  users <- dbQuery $ GetUsers
+  case filter (any isUpper . unEmail . useremail . userinfo) users of
+    [] -> return "No need to migrate! All users have lowercase emails."
+    us -> return $ (show $ map (useremail . userinfo) us) ++ "<form method='POST'><input type='submit' value='Clean!' /></form>"
+
+handleMigrateLowercaseEmailsPost :: Kontrakcja m => m KontraLink
+handleMigrateLowercaseEmailsPost = onlyAdmin $ do
+  users <- dbQuery $ GetUsers
+  case filter (any isUpper . unEmail . useremail . userinfo) users of
+    [] -> return LoopBack
+    us -> do
+       forM_ us $ \u -> dbUpdate $ SetUserEmail (userservice u) (userid u) (Email $ map toLower $ unEmail $ useremail $ userinfo u)
+       return LoopBack
+    
 
 getUserFromActionOfType :: Kontrakcja m => ActionTypeID -> ActionID -> MagicHash -> m (Maybe User)
 getUserFromActionOfType atypeid aid hash = do

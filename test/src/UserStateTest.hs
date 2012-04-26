@@ -29,6 +29,10 @@ userStateTests env = testGroup "UserState" [
   , testGroup "getAllUsers" [
       testThat "returns all the users" env test_getAllUsers_returnsAllUsers
     ]
+  , testGroup "setUserEmail" [
+      testThat "email casing works with set user email" env test_setUserEmail_GetByEmail
+    , testThat "email gets set!" env test_setUserEmail_works
+    ]
   , testGroup "setUserPassword" [
       testThat "password is successfully set" env test_setUserPassword_changesPassword
     ]
@@ -88,6 +92,29 @@ test_getAllUsers_returnsAllUsers = do
   assertEqual "For GetUsers result" 2 (length queriedUsers)
   assert $ user0 `elem` queriedUsers
   assert $ user1 `elem` queriedUsers
+
+test_setUserEmail_GetByEmail :: TestEnv ()
+test_setUserEmail_GetByEmail = do
+  Just user' <- addNewUser "Emily" "Green" "emily@green.com"
+  _ <- dbUpdate $ SetUserEmail Nothing (userid user') $ Email "Emily@green.coM"
+  Just user <- dbQuery $ GetUserByID $ userid user'
+  queriedUser <- dbQuery $ GetUserByEmail Nothing (Email "emily@green.com")
+  assert (isJust queriedUser)
+  assertEqual "For GetUserByEmail result" user (fromJust queriedUser)
+  queriedUser2 <- dbQuery $ GetUserByEmail Nothing (Email "EMILY@green.com")
+  assert (isJust queriedUser2)
+  assertEqual "For GetUserByEmail result" user (fromJust queriedUser2)
+
+test_setUserEmail_works :: TestEnv ()
+test_setUserEmail_works = do
+  Just user' <- addNewUser "Emily" "Green" "emily@green.com"
+  _ <- dbUpdate $ SetUserEmail Nothing (userid user') $ Email "other@email.com"
+  Just user <- dbQuery $ GetUserByID $ userid user'
+  queriedUser <- dbQuery $ GetUserByEmail Nothing (Email "emily@green.com")
+  assert (isNothing queriedUser)
+  queriedUser2 <- dbQuery $ GetUserByEmail Nothing (Email "Other@EmAil.com")
+  assert (isJust queriedUser2)
+  assertEqual "For GetUserByEmail result" user (fromJust queriedUser2)
 
 test_setUserPassword_changesPassword :: TestEnv ()
 test_setUserPassword_changesPassword = do
