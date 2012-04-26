@@ -142,7 +142,7 @@ window.PadDesignViewUtilsView = Backbone.View.extend({
                model.toogleSendToPad();
             });
 
-           if (BrowserInfo.isIpad())
+           if (BrowserInfo.isPadDevice())
             box.append(giveForSigning);
            else
             box.append(sendToPad);

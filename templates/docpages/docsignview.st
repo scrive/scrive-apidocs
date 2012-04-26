@@ -21,8 +21,8 @@ $doctype()$
                        })
                     $endif$
                 });
-            jQuery('body').prepend(new DocumentSignViewHeader({model : docview.view.saveAfterSignModel}).el)
-            jQuery('body').append(new DocumentSignViewFooter({model : docview.view.saveAfterSignModel}).el)
+            jQuery('body').prepend(new DocumentSignViewHeader({model : docview.view.saveAfterSignModel, mainview : docview.view}).el)
+            jQuery('body').append(new DocumentSignViewFooter({model : docview.view.saveAfterSignModel,  mainview : docview.view}).el)
             jQuery(".body-container").replaceWith(docview.view.el);
             })
        </script>

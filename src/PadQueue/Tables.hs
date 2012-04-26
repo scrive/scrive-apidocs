@@ -5,7 +5,7 @@ import DB
 tablePadQueue :: Table
 tablePadQueue = Table {
     tblName = "padqueue"
-  , tblVersion = 1
+  , tblVersion = 4
   , tblCreateOrValidate = \desc -> case desc of
       [  ("user_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("document_id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
@@ -31,8 +31,8 @@ tablePadQueue = Table {
       ++ " REFERENCES documents(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
     kRunRaw $ "ALTER TABLE padqueue"
-      ++ " ADD CONSTRAINT fk_padqueue_signatorylinks FOREIGN KEY(document_id,signatorylink_id)"
-      ++ " REFERENCES signatory_links(document_id,id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      ++ " ADD CONSTRAINT fk_padqueue_signatorylinks FOREIGN KEY(signatorylink_id)"
+      ++ " REFERENCES signatory_links(id) ON DELETE CASCADE ON UPDATE RESTRICT"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
     return ()
   }

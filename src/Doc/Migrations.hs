@@ -4,11 +4,91 @@ import Control.Monad
 import Data.Int
 import Database.HDBC
 import Text.JSON
-import qualified Data.ByteString as BS
 
 import DB
 import Doc.Tables
 import qualified Log
+import Doc.DocumentID
+import Doc.DocStateData
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BSC
+import qualified Data.ByteString.UTF8 as BS
+
+setCascadeOnSignatoryAttachments :: MonadDB m => Migration m
+setCascadeOnSignatoryAttachments = Migration {
+    mgrTable = tableSignatoryAttachments
+  , mgrFrom = 3
+  , mgrDo = do
+    -- this is supposed to aid in the signatory_links renumeration step that follows
+    kRunRaw $ "ALTER TABLE signatory_attachments"
+              ++ " DROP CONSTRAINT fk_signatory_attachments_signatory_links,"
+              ++ " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(document_id,signatory_link_id)"
+              ++ " REFERENCES signatory_links(document_id,id) ON DELETE RESTRICT ON UPDATE CASCADE"
+              ++ " DEFERRABLE INITIALLY IMMEDIATE"
+  }
+
+renumerateSignatoryLinkIDS :: MonadDB m => Migration m
+renumerateSignatoryLinkIDS = Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 6
+  , mgrDo = do
+    kRunRaw $ "UPDATE signatory_links"
+              ++ " SET id = DEFAULT"
+              ++ " FROM signatory_links AS sl2"
+              ++ " WHERE signatory_links.id = sl2.id"
+              ++ " AND signatory_links.document_id <>"
+              ++ " sl2.document_id"
+  }
+
+dropSLForeignKeyOnSignatoryAttachments :: MonadDB m => Migration m
+dropSLForeignKeyOnSignatoryAttachments = Migration {
+    mgrTable = tableSignatoryAttachments
+  , mgrFrom = 4
+  , mgrDo = do
+    kRunRaw $ "ALTER TABLE signatory_attachments"
+           ++ " DROP CONSTRAINT fk_signatory_attachments_signatory_links"
+  }
+
+setSignatoryLinksPrimaryKeyToIDOnly :: MonadDB m => Migration m
+setSignatoryLinksPrimaryKeyToIDOnly = Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 7
+  , mgrDo = do
+    kRunRaw $ "ALTER TABLE signatory_links"
+              ++ " DROP CONSTRAINT pk_signatory_links,"
+              ++ " ADD CONSTRAINT pk_signatory_links PRIMARY KEY (id)"
+  }
+
+setSignatoryAttachmentsForeignKeyToSLIDOnly :: MonadDB m => Migration m
+setSignatoryAttachmentsForeignKeyToSLIDOnly = Migration {
+    mgrTable = tableSignatoryAttachments
+  , mgrFrom = 5
+  , mgrDo = do
+    kRunRaw $ "ALTER TABLE signatory_attachments"
+      ++ " ADD CONSTRAINT fk_signatory_attachments_signatory_links FOREIGN KEY(signatory_link_id)"
+      ++ " REFERENCES signatory_links(id) ON DELETE CASCADE ON UPDATE RESTRICT"
+      ++ " DEFERRABLE INITIALLY IMMEDIATE"
+  }
+
+dropDocumentIDColumntFromSignatoryAttachments :: MonadDB m => Migration m
+dropDocumentIDColumntFromSignatoryAttachments = Migration {
+    mgrTable = tableSignatoryAttachments
+  , mgrFrom = 6
+  , mgrDo = do
+    kRunRaw $ "ALTER TABLE signatory_attachments"
+      ++ " DROP COLUMN document_id"
+  }
+
+{-
+- migrate padqueue - set fk referencing signatory_links to ON UPDATE CASCADE
+- migrate signatory_attachments - set fk referencing signatory_links to ON UPDATE CASCADE
+- migrate signatory_links - renumerate ids (references in padqueue/signatory_attachments are properly updated if necessary)
+- migrate padqueue - drop fk referencing signatory_links
+- migrate signatory_attachments - drop fk referencing signatory_links
+- migrate signatory_links - change primary key
+- migrate padqueue - add new fk referencing signatory_links
+- migrate signatory_attachments - add new fk referencing signatory_links
+-}
 
 moveDocumentTagsFromDocumentsTableToDocumentTagsTable :: MonadDB m => Migration m
 moveDocumentTagsFromDocumentsTableToDocumentTagsTable = Migration {
@@ -183,3 +263,41 @@ addSignatoryLinkIdToSignatoryAttachment =
       return ()
       where
         decoder acc docid name email desc = (docid :: Int64, name :: BS.ByteString, email :: BS.ByteString, desc :: BS.ByteString) : acc
+
+
+fixSignatoryLinksSwedishChars :: MonadDB m => Migration m
+fixSignatoryLinksSwedishChars =
+  Migration {
+    mgrTable = tableSignatoryLinks
+  , mgrFrom = 5
+  , mgrDo = do
+     _ <- kRun $ SQL "SELECT id, document_id, fields FROM signatory_links" []
+     sls <- foldDB decoder []
+     forM_ sls $ \(sid,did,fields) -> do
+       let fixedfields = fixSwedishChars fields
+       when (fields /= fixedfields) $ do
+         _ <- kRun $ SQL "UPDATE signatory_links SET fields = ? WHERE id = ? AND document_id = ?" 
+                [ toSql fixedfields
+                , toSql sid
+                , toSql did
+                ]
+         return ()
+
+  }
+    where
+        decoder :: [(SignatoryLinkID, DocumentID, [SignatoryField])] ->  SignatoryLinkID ->  DocumentID -> [SignatoryField] -> [(SignatoryLinkID, DocumentID, [SignatoryField])]
+        decoder !acc sid did fields = (sid,did,fields) : acc
+        fixSwedishChars :: [SignatoryField] ->  [SignatoryField]
+        fixSwedishChars = map fixSwedishCharsForAField
+        fixSwedishCharsForAField :: SignatoryField -> SignatoryField
+        fixSwedishCharsForAField f = f { sfType = fixSwedishCharsForAFieldType (sfType f)
+                                       , sfValue = fixSwedishCharsForAString (sfValue f)
+                                       }
+        fixSwedishCharsForAFieldType (CustomFT s b) = CustomFT (fixSwedishCharsForAString s) b
+        fixSwedishCharsForAFieldType a = a
+        fixSwedishCharsForAString :: String -> String
+        fixSwedishCharsForAString s = 
+          let value = BS.toString $ BSC.pack s
+          in if value /= s && BS.replacement_char `notElem` value
+             then value
+             else s

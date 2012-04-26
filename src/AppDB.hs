@@ -21,6 +21,7 @@ import File.Tables
 import File.Migrations
 import Mails.Tables
 import PadQueue.Tables
+import PadQueue.Migrations
 import Mails.Migrations
 import OAuth.Tables
 import ScriveByMail.Tables
@@ -54,6 +55,16 @@ kontraMigrations = [
   , updateDocumentStatusAfterRemovingAwaitingAuthor
   , moveDocumentTagsFromDocumentsTableToDocumentTagsTable
   , migrateTempCredentialRemoveEmail 
+  , fixSignatoryLinksSwedishChars
+  , setCascadeOnPadQueue
+  , setCascadeOnSignatoryAttachments
+  , renumerateSignatoryLinkIDS
+  , dropSLForeignKeyOnPadQueue
+  , dropSLForeignKeyOnSignatoryAttachments
+  , setSignatoryLinksPrimaryKeyToIDOnly
+  , setPadQueueForeignKeyToSLIDOnly
+  , setSignatoryAttachmentsForeignKeyToSLIDOnly
+  , dropDocumentIDColumntFromSignatoryAttachments
   ] ++ mailerMigrations
 
 kontraTables :: [Table]

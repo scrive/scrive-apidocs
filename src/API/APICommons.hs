@@ -94,7 +94,7 @@ api_file name content =
   JSObject $ toJSObject [ ("name", showJSON name)
                         , ("content", showJSON base64data)]
 
-api_document_file_read :: (APIContext c, Kontrakcja m) => File -> APIFunction m c JSValue
+api_document_file_read :: (APIContext c, Kontrakcja m) => File -> APIFunction c m JSValue
 api_document_file_read file = do
     content <- getFileContents file
     return $ api_file (filename file) content
@@ -116,7 +116,7 @@ api_document mfiles doc = JSObject $ toJSObject $ [
   Just files -> [("files", JSArray files)]
 
 
-api_document_read :: (APIContext c, Kontrakcja m, MonadDB m) => Bool -> Document -> APIFunction m c JSValue
+api_document_read :: (APIContext c, Kontrakcja m, MonadDB m) => Bool -> Document -> APIFunction c m JSValue
 api_document_read False doc = do
   return $ api_document Nothing doc
 api_document_read True doc = do
@@ -128,7 +128,7 @@ api_date :: MinutesTime -> JSValue
 api_date = showJSON  . showMinutesTimeForAPI
 
 
-getSignatoryTMP :: (APIContext c, Kontrakcja m) => [SignatoryRole] -> APIFunction m c (Maybe SignatoryTMP)
+getSignatoryTMP :: (APIContext c, Kontrakcja m) => [SignatoryRole] -> APIFunction c m (Maybe SignatoryTMP)
 getSignatoryTMP defaultRoles = do
     fstname'        <- fromJSONField "fstname"
     sndname'        <- fromJSONField "sndname"
@@ -159,7 +159,7 @@ applyRelation _                      = id
 
 
 -- High level commons. Used buy some simmilar API's, but not all of them
-getFiles :: (APIContext c, Kontrakcja m) => APIFunction m c [(String, BS.ByteString)]
+getFiles :: (APIContext c, Kontrakcja m) => APIFunction c m [(String, BS.ByteString)]
 getFiles = fmap (fromMaybe []) $ fromJSONLocal "files" $ fromJSONLocalMap $ do
     name    <- fromJSONField "name"
     content <- fromJSONFieldBase64 "content"

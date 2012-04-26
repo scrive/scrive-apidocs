@@ -144,8 +144,9 @@ data DocumentDomain
   | TemplatesOfAuthorDeleteValue UserID Bool     -- ^ Templates by author, with deleted flag
   | TemplatesSharedInUsersCompany UserID         -- ^ Templates shared in company
   | DocumentsOfService (Maybe ServiceID)         -- ^ All documents of service
-  | DocumentsOfCompany CompanyID                 -- ^ All documents of a company, not deleted
+  | DocumentsOfCompany CompanyID Bool Bool       -- ^ All documents of a company, with flag for selecting also drafts and deleted
   | AttachmentsOfAuthorDeleteValue UserID Bool   -- ^ Attachments of user, with deleted flag
+  | AttachmentsSharedInUsersCompany UserID       -- ^ Attachments shared in the user company
 
 -- | These are possible order by clauses that make documents sorted by.
 data DocumentOrderBy
@@ -225,16 +226,26 @@ documentDomainToSQL (TemplatesSharedInUsersCompany uid) =
 documentDomainToSQL (DocumentsOfService sid) =
   SQL "documents.service_id IS NOT DISTINCT FROM ? AND documents.type = 1"
         [toSql sid]
-documentDomainToSQL (DocumentsOfCompany cid) =
-  SQL "signatory_links.company_id = ? AND signatory_links.deleted = FALSE"
-        [toSql cid]
+documentDomainToSQL (DocumentsOfCompany cid preparation deleted) =
+  SQL "signatory_links.company_id = ? AND (? OR documents.status <> ?) AND signatory_links.deleted = ? AND signatory_links.really_deleted = FALSE"
+        [toSql cid,toSql preparation, toSql Preparation, toSql deleted]
 documentDomainToSQL (AttachmentsOfAuthorDeleteValue uid deleted) =
   SQL ("signatory_links.user_id = ?"
        ++ " AND signatory_links.deleted = ?"
        ++ " AND signatory_links.really_deleted = FALSE"
        ++ " AND documents.type = 3")
         [toSql uid, toSql deleted]
-
+documentDomainToSQL (AttachmentsSharedInUsersCompany uid) =
+  SQL ("signatory_links.deleted = FALSE"
+       ++ " AND documents.type = 3"
+       ++ " AND documents.sharing = ?"
+       ++ " AND signatory_links.really_deleted = FALSE"
+       ++ " AND EXISTS (SELECT 1 FROM users AS usr1, users AS usr2 "
+       ++ "                WHERE signatory_links.user_id = usr2.id "
+       ++ "                  AND usr2.company_id = usr1.company_id "
+       ++ "                  AND usr1.id = ?)")
+        [toSql Shared, toSql uid]
+        
 
 
 maxselect :: String
@@ -546,8 +557,7 @@ selectSignatoryLinksSQL = SQL ("SELECT "
   ++ ", signatory_attachments.description as sigdesc "
   ++ " FROM (signatory_links "
   ++ " LEFT JOIN signatory_attachments "
-  ++ " ON signatory_attachments.document_id = signatory_links.document_id "
-  ++ " AND signatory_attachments.signatory_link_id = signatory_links.id) "
+  ++ " ON signatory_attachments.signatory_link_id = signatory_links.id) "
   ++ " JOIN documents "
   ++ " ON signatory_links.document_id = documents.id ") []
 
@@ -655,7 +665,7 @@ insertSignatoryLinkAsIs documentid link = do
   case msiglink of
     Nothing -> return Nothing
     Just siglink -> do
-      msigattaches <- mapM (insertSignatoryAttachmentAsIs documentid (signatorylinkid siglink)) (signatoryattachments link)
+      msigattaches <- mapM (insertSignatoryAttachmentAsIs (signatorylinkid siglink)) (signatoryattachments link)
       if any isNothing msigattaches
         then return Nothing
         else do
@@ -663,19 +673,18 @@ insertSignatoryLinkAsIs documentid link = do
           return (Just newsiglink)
 
 signatoryAttachmentsSelectors :: String
-signatoryAttachmentsSelectors = intercalate ", " [
-    "document_id"
-  , "signatory_link_id"
+signatoryAttachmentsSelectors = intercalate ", "
+  [ "signatory_link_id"
   , "file_id"
   , "name"
   , "description"
   ]
 
-fetchSignatoryAttachments :: MonadDB m => DBEnv m (M.Map (DocumentID, SignatoryLinkID) [SignatoryAttachment])
+fetchSignatoryAttachments :: MonadDB m => DBEnv m (M.Map SignatoryLinkID [SignatoryAttachment])
 fetchSignatoryAttachments = foldDB decoder M.empty
   where
-    decoder acc document_id signatory_link_id file_id name description =
-      M.insertWith' (++) (document_id, signatory_link_id) [SignatoryAttachment {
+    decoder acc signatory_link_id file_id name description =
+      M.insertWith' (++) signatory_link_id [SignatoryAttachment {
           signatoryattachmentfile = file_id
         , signatoryattachmentname = name
         , signatoryattachmentdescription = description
@@ -742,13 +751,12 @@ insertAuthorAttachmentAsIs documentid attach = do
   fetchAuthorAttachments
     >>= oneObjectReturnedGuard . concatMap snd . M.toList
 
-insertSignatoryAttachmentAsIs :: MonadDB m => DocumentID -> SignatoryLinkID -> SignatoryAttachment -> DBEnv m (Maybe SignatoryAttachment)
-insertSignatoryAttachmentAsIs did slid SignatoryAttachment {..} = do
+insertSignatoryAttachmentAsIs :: MonadDB m => SignatoryLinkID -> SignatoryAttachment -> DBEnv m (Maybe SignatoryAttachment)
+insertSignatoryAttachmentAsIs slid SignatoryAttachment {..} = do
   _ <- kRun $ mkSQL INSERT tableSignatoryAttachments [
         sql "file_id" signatoryattachmentfile
        , sql "name" signatoryattachmentname
        , sql "description" signatoryattachmentdescription
-       , sql "document_id" did
        , sql "signatory_link_id" slid
        ] <++> SQL ("RETURNING " ++ signatoryAttachmentsSelectors) []
 
@@ -877,7 +885,7 @@ data ArchiveDocument = ArchiveDocument User DocumentID Actor
 instance MonadDB m => DBUpdate m ArchiveDocument (Either String Document) where
   update (ArchiveDocument user did actor) = do
     r <- case (usercompany user, useriscompanyadmin user) of
-      (Just cid, True) -> updateArchivableDoc $ SQL "WHERE company_id = ?" [toSql cid]
+      (Just cid, True) -> updateArchivableDoc $ SQL "WHERE (company_id = ? OR user_id = ?)" [toSql cid,toSql $ userid user]
       _ -> updateArchivableDoc $ SQL "WHERE user_id = ?" [toSql $ userid user]
     -- a supervisor could delete both their own and another subaccount's links
     -- on the same document, so this would mean the sig link count affected
@@ -1128,9 +1136,8 @@ data DeleteSigAttachment = DeleteSigAttachment DocumentID SignatoryLinkID FileID
 instance MonadDB m => DBUpdate m DeleteSigAttachment (Either String Document) where
   update (DeleteSigAttachment did slid fid actor) = do
     r <- kRun $ mkSQL UPDATE tableSignatoryAttachments [sql "file_id" SqlNull]
-      <++> SQL "WHERE document_id = ? AND file_id = ? AND signatory_link_id = ?" [
-        toSql did
-      , toSql fid
+      <++> SQL "WHERE file_id = ? AND signatory_link_id = ?"
+      [ toSql fid
       , toSql slid
       ]
     when_ (r == 1) $
@@ -1307,7 +1314,8 @@ instance MonadDB m => DBQuery m GetDocumentsCount Int where
 data GetDocumentsByCompanyWithFiltering = GetDocumentsByCompanyWithFiltering CompanyID [DocumentFilter]
 instance MonadDB m => DBQuery m GetDocumentsByCompanyWithFiltering [Document] where
   query (GetDocumentsByCompanyWithFiltering companyid filters) =
-    query (GetDocuments [DocumentsOfCompany companyid] filters [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
+    query (GetDocuments [DocumentsOfCompany companyid True False] filters [Asc DocumentOrderByMTime] (DocumentPagination 0 maxBound))
+
 
 data GetDeletedDocumentsByUser = GetDeletedDocumentsByUser UserID
 instance MonadDB m => DBQuery m GetDeletedDocumentsByUser [Document] where
@@ -1526,22 +1534,24 @@ instance MonadDB m => DBUpdate m ReallyDeleteDocument (Either String Document) w
     -- transaction. -EN
     r <- case (usercompany user, useriscompanyadmin user) of
       (Just cid, True) -> deleteDoc $ SQL "WHERE company_id = ?" [toSql cid]
-      _ -> deleteDoc $ SQL "WHERE user_id = ? AND company_id IS NULL" [toSql $ userid user]
+      _ -> deleteDoc $ SQL "WHERE user_id = ? AND (company_id IS NULL OR EXISTS (SELECT 1 FROM documents WHERE id = ? AND status = ?))" [toSql $ userid user,toSql did, toSql Preparation]
     let txt = case (usercompany user, useriscompanyadmin user) of
           (Just _, True) -> "the company with admin email \"" ++ getEmail user ++ "\""
           _ -> "the user with email \"" ++ getEmail user ++ "\""
-    when_ (r == 1) $ do
+    let fudgedr = if r==0 then 0 else 1
+    when_ (fudgedr == 1) $ do
       update $ InsertEvidenceEvent
         ReallyDeleteDocumentEvidence
         ("The document was removed from the rubbish bin for " ++ txt ++ " by " ++ actorWho actor ++ ".")
         (Just did)
         actor
-    getOneDocumentAffected "ReallyDeleteDocument" r did
+    getOneDocumentAffected "ReallyDeleteDocument" fudgedr did
     where
       deleteDoc whereClause = kRun $ mconcat [
           mkSQL UPDATE tableSignatoryLinks [sql "really_deleted" True]
         , whereClause
         , SQL " AND document_id = ? AND deleted = TRUE" [toSql did]
+        
         ]
 
 data RejectDocument = RejectDocument DocumentID SignatoryLinkID (Maybe String) Actor
@@ -1683,9 +1693,8 @@ data SaveSigAttachment = SaveSigAttachment DocumentID SignatoryLinkID String Fil
 instance MonadDB m => DBUpdate m SaveSigAttachment (Either String Document) where
   update (SaveSigAttachment did slid name fid actor) = do
     r <- kRun $ mkSQL UPDATE tableSignatoryAttachments [sql "file_id" fid]
-      <++> SQL "WHERE document_id = ? AND file_id IS NULL AND name = ? AND signatory_link_id = ?" [
-        toSql did
-      , toSql name
+      <++> SQL "WHERE file_id IS NULL AND name = ? AND signatory_link_id = ?"
+      [ toSql name
       , toSql slid
       ]
     when_ (r == 1) $
@@ -2289,17 +2298,16 @@ instance MonadDB m => DBUpdate m RemoveDocumentAttachment (Either String Documen
 
 data SetSigAttachments = SetSigAttachments DocumentID SignatoryLinkID [SignatoryAttachment] Actor
 instance MonadDB m => DBUpdate m SetSigAttachments () where
-  update (SetSigAttachments did slid sigatts _actor) = do
+  update (SetSigAttachments _did slid sigatts _actor) = do
     _ <-doDeleteAll
     forM_ sigatts doInsertOne
     where
-     doDeleteAll = kRun $ SQL "DELETE FROM signatory_attachments WHERE document_id = ? AND signatory_link_id = ?" [toSql did, toSql slid]
+     doDeleteAll = kRun $ SQL "DELETE FROM signatory_attachments WHERE signatory_link_id = ?" [toSql slid]
      doInsertOne SignatoryAttachment{..} = do
         kRun $ mkSQL INSERT tableSignatoryAttachments [
             sql "file_id" signatoryattachmentfile
           , sql "name" signatoryattachmentname
           , sql "description" signatoryattachmentdescription
-          , sql "document_id" did
           , sql "signatory_link_id" slid
           ]
 
