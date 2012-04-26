@@ -42,6 +42,7 @@ window.DocumentSignViewHeader = Backbone.View.extend({
       maindiv.removeClass();
       maindiv.attr("style","");
     maindiv.addClass("pageheader");
+      maindiv.append($("<div class='poweredbyscrive'/>"));
     if(inService) {
         maindiv.addClass('withstandardlogo');
         var content = $("<div class='content' />");
