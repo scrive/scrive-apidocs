@@ -36,7 +36,6 @@ import KontraLink
 import Misc
 
 import Control.Applicative
-import Control.Monad.Trans
 import Data.List
 import Data.Maybe
 import Happstack.Server.SimpleHTTP
@@ -114,9 +113,10 @@ embeddedErrorPage = do
 notFoundPage :: Kontrakcja m => m Response
 notFoundPage = renderTemplate_ "notFound" >>= renderFromBody kontrakcja
 
-serviceFields :: MonadIO m => String -> Maybe Service -> Fields m ()
+serviceFields :: Monad m => String -> Maybe Service -> Fields m ()
 serviceFields location (Just service)  = do
   F.value "location" location
+  F.value "isservice" True
   F.value "buttons" $ isJust $ servicebuttons $ serviceui service
   F.value "buttonBodyLink"  $ show $ LinkServiceButtonsBody $ serviceid service
   F.value "buttonRestLink"  $ show $ LinkServiceButtonsRest $  serviceid service
@@ -206,6 +206,7 @@ standardPageFields ctx title mpubliclink showCreateAccount loginOn referer email
   contextInfoFields ctx
   publicSafeFlagField ctx loginOn (isJust mpubliclink)
   loginModal loginOn referer email
+  serviceFields (ctxlocation ctx) (ctxservice ctx)
 
 {- |
    The contents of the signup page.  This is read from a template.

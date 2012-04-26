@@ -42,9 +42,11 @@ window.DocumentSignViewHeader = Backbone.View.extend({
       maindiv.removeClass();
       maindiv.attr("style","");
     maindiv.addClass("pageheader");
-    if(model.hasSigned() && model.saved()) {
+    if(inService) {
         maindiv.addClass('withstandardlogo');
-/*
+        var content = $("<div class='content' />");
+        var logowrapper = $("<div class='logowrapper' />");
+        logowrapper.append("<a href='/'><div class='logo'></div></a>");
         if (document.barsbackgroundcolor() != undefined)
         {
             maindiv.css('background-image', 'none');
@@ -52,7 +54,9 @@ window.DocumentSignViewHeader = Backbone.View.extend({
         }
         if (document.barsbackgroundtextcolor() != undefined)
             maindiv.css("color", document.barsbackgroundtextcolor());
-*/
+
+    } else if(model.hasSigned() && model.saved()) {
+        maindiv.addClass('withstandardlogo');
         var content = $("<div class='content' />");
         var logowrapper = $("<div class='logowrapper' />");
         logowrapper.append("<a href='/'><div class='logo'></div></a>");
@@ -158,7 +162,10 @@ window.DocumentSignViewFooter = Backbone.View.extend({
       sender.append(name).append(position).append(company).append(phone).append(email);
     }
 
-    content.append(sender).append(powerdiv).append("<div class='clearboth'/>");
+    content.append(sender);
+      if(!inService)
+          content.append(powerdiv);
+      content.append("<div class='clearboth'/>");
     maindiv.append(dogtooth.append(content));
     return this;
   }
