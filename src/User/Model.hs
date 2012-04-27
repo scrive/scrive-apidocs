@@ -213,7 +213,7 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
           , toSql fname
           , toSql lname
           ] ++ replicate 6 (toSql "")
-            ++ [toSql email] ++ [
+            ++ [toSql $ map toLower email] ++ [
               SqlNull
             , toSql $ getLang l
             , toSql $ getRegion l
@@ -298,7 +298,7 @@ instance MonadDB m => DBUpdate m SetUserInfo Bool where
       , toSql $ usercompanyposition info
       , toSql $ userphone info
       , toSql $ usermobile info
-      , toSql $ useremail info
+      , toSql $ map toLower $ unEmail $ useremail info
       , toSql $ usercompanyname info
       , toSql $ usercompanynumber info
       , toSql uid

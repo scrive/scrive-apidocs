@@ -49,13 +49,6 @@ body.signview {
   vertical-align: middle;
 }
 
-.signview .pageheader.withcustomlogo .content .sender.shoved {
-  float: none;
-  position: absolute;
-  top: 10px;
-  right: 100px;
-}
-
 .signview .pageheader .content .sender .name {
   font-weight: bold;
   vertical-align: middle;
@@ -973,6 +966,24 @@ div.spacing.butt {
     #position: relative;
     #top: -50%;
     margin-right: 30px;
+}
+
+@media screen and (max-width: 1220px) {
+  .signview .sender .inner {
+      margin-right: 100px;
+  }
+}
+
+@media screen and (max-width: 1000px) {
+  .signview .sender .inner {
+      margin-right: 150px;
+  }
+}
+
+@media screen and (max-width: 980px) {
+  .signview .sender .inner {
+      margin-right: 180px;
+  }
 }
 
 .signview .signbuttons.section {

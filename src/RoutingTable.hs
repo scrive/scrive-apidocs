@@ -256,7 +256,6 @@ staticRoutes = choice
 
      , dir "adminonly" $ dir "upsalesdeleted" $ hGet $ toK0 $ DocControl.handleUpsalesDeleted
 
-
      , dir "services" $ hGet $ toK0 $ handleShowServiceList
      , dir "services" $ hGet $ toK1 $ handleShowService
      , dir "services" $ dir "ui" $ hPost $ toK1 $ handleChangeServiceUI

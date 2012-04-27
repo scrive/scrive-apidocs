@@ -64,7 +64,7 @@ kontraMigrations = [
   , setPadQueueForeignKeyToSLIDOnly
   , setSignatoryAttachmentsForeignKeyToSLIDOnly
   , dropDocumentIDColumntFromSignatoryAttachments
-  
+  , addCheckLowercaseEmailsUsers
   , migrateTempCredentialRemoveEmail -- for oauth
   ] ++ mailerMigrations
 
