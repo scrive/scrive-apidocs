@@ -99,9 +99,9 @@ javascriptLocalisation =
                           guardCBox : "$_signGuardCBox()$"
                         , eleg : {
                                      subhead : "$_pageDocumentForSignContentElegSubhead()$"
-                                   , body1: "$_pageDocumentForSignContentElegBody1()$"
+                                   , body1: " $_pageDocumentForSignContentElegBody1()$ "
                                    , clickHere : "$_pageDocumentForSignContentElegBody2ClickHere()$"
-                                   , body2 : "$_pageDocumentForSignContentElegBody3()$"
+                                   , body2 : " $_pageDocumentForSignContentElegBody3()$ "
                                  }
                     }
              , signByAuthor : {
@@ -111,9 +111,9 @@ javascriptLocalisation =
                         , modalBody3 : "$_dialogConfirmSignByAuthorBody3()$"
                         , eleg : {
                                      subhead : "$_dialogConfirmSignByAuthorElegSubHead()$"
-                                   , body1: "$_dialogConfirmSignByAuthorElegBody()$"
+                                   , body1: " $_dialogConfirmSignByAuthorElegBody()$ "
                                    , clickHere : "$_dialogConfirmSignByAuthorElegClickHere1()$"
-                                   , body2 : "$_dialogConfirmSignByAuthorElegClickHere2()$"
+                                   , body2 : " $_dialogConfirmSignByAuthorElegClickHere2()$"
                                  }
 
                }

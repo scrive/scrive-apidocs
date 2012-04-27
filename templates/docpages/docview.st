@@ -66,6 +66,12 @@ offersignatorysignmodalcontentsignvieweleg=<p>  $_offersignatorysignmodalcontent
 ####
 ordersignatorysignmodalcontentsignvieweleg=<p>  $_ordersignatorysignmodalcontentsignvieweleg()$ </p>
 ####
+contractsignatorysignmodalcontentauthoronly=<p>  $_contractsignatorysignmodalcontentauthoronly()$ </p>
+####
+offersignatorysignmodalcontentauthoronly=<p>  $_offersignatorysignmodalcontentauthoronly()$ </p>
+####
+ordersignatorysignmodalcontentauthoronly=<p>  $_ordersignatorysignmodalcontentauthoronly()$ </p>
+####
 contractauthorsignlastbuttontext=$_contractauthorsignlastbuttontext()$
 ####
 offerauthorsignlastbuttontext=$_offerauthorsignlastbuttontext()$

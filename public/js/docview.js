@@ -363,7 +363,9 @@ window.DocumentSignConfirmation = Backbone.View.extend({
 
     if (signatory.author) {
      var content = $("<div />");
-     if (document.elegAuthorization())
+     if (document.authorIsOnlySignatory())
+            content = $(document.process().authorIsOnlySignatory());
+     else if (document.elegAuthorization())
           content.append(document.process().signatorysignmodalcontentsignvieweleg());
      else if (document.lastSignatoryLeft())
           content.append(document.process().signatorysignmodalcontentauthorlast());
