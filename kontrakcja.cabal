@@ -160,7 +160,6 @@ Executable kontrakcja-server
     ghc-options: -rtsopts
 
   Build-depends: Crypto == 4.2.*
-  Build-depends: crypto-api == 0.7
   Build-depends: DRBG == 0.2.3
   Build-depends: HDBC == 2.3.1.0
   Build-depends: HDBC-postgresql == 2.3.2.0
@@ -178,8 +177,8 @@ Executable kontrakcja-server
   Build-depends: bytestring
   Build-depends: containers
   Build-depends: convertible == 1.0.11.0
-  Build-depends: crypto-api==0.7
-  Build-depends: cryptocipher == 0.2.14
+  Build-depends: crypto-api == 0.10.1
+  Build-depends: cryptocipher == 0.3.0
   Build-depends: dataenc == 0.14.0.2
   Build-depends: directory
   Build-depends: explicit-exception == 0.1.6
@@ -224,6 +223,9 @@ Executable kontrakcja-server
   Build-depends: utf8-string == 0.3.6
   Build-depends: zlib == 0.5.3.1
   Build-depends: zip-archive == 0.1.1.7
+  Build-depends: semigroups == 0.8.2
+  Build-depends: blaze-html == 0.4.3.3
+  Build-depends: tagged == 0.4.2
   Main-Is: Main.hs
 
   Extensions: BangPatterns,

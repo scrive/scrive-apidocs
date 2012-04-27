@@ -688,7 +688,7 @@ body.signview {
     width: 260px;
     float: left;
     border: solid #bababc 1px;
-    height: 185px;
+    min-height: 185px;
 }
 
 .signview .signatories .name {
@@ -1011,4 +1011,23 @@ div.spacing.butt {
    padding: 30px;
    margin-left: 227px;
    height: 328px;
+}
+
+.signview .line {
+    display: table;
+    #position: relative;
+    overflow: hidden;
+    height: 15px;
+}
+
+.signview .line .middle {
+    #position: absolute;
+    #top: 50%;
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.signview .middle * {
+    #position: relative; 
+    #top: -50%
 }

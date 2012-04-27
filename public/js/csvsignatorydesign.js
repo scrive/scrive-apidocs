@@ -119,17 +119,26 @@ var CsvSignatoryDesignView = Backbone.View.extend({
         });
        return box;
     },
+    // we fix the order of the standard fields
+    csvheaderorder: ['fstname', 'sndname', 'email', 'sigco', 'sigpersnr', 'sigcompnr'],
     dataTable : function() {
       var model = this.model;
-      var fields = model.signatory().fields();
       var table = $("<table class='csvDataTable'/>");
       var thead = $("<thead/>");
       var tbody = $("<tbody/>");
       table.append(thead).append(tbody);
-      for (var i=0;i< fields.length;i++)
-      {  if (fields[i].isSignature()) continue;
-         thead.append($("<th/>").text(fields[i].nicename()));
-      }
+
+      // make sure the field names are in the right order
+      var fieldnames = 
+            this.csvheaderorder.concat(
+                _.difference(_.invoke(model.signatory().fields(),  'name'),
+                             this.csvheaderorder));
+      _.each(fieldnames, function(e) {
+          var field = model.signatory().field(e);
+          if(!field.isSignature())
+              thead.append($("<th />").text(field.nicename()));
+      });
+
       var rows = model.rows();
       for (var i =0 ; i< rows.length; i++)
       {

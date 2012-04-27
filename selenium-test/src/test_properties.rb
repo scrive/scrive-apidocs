@@ -4,7 +4,7 @@ class TestProperties
 
   attr_accessor :selenium_url, :kontrakcja_url
   attr_accessor :browser
-  attr_accessor :tester_email, :tester_password
+  attr_accessor :tester_email, :tester_password, :tester_fstname, :tester_sndname
   attr_accessor :first_counterpart_email, :first_counterpart_password, :first_counterpart_fstname, :first_counterpart_sndname
   attr_accessor :second_counterpart_email, :second_counterpart_password, :second_counterpart_fstname, :second_counterpart_sndname
   attr_accessor :third_counterpart_email, :third_counterpart_password, :third_counterpart_fstname, :third_counterpart_sndname
@@ -25,6 +25,8 @@ class TestProperties
     @browser = props["browser"]
     @tester_email = props["tester-email"]
     @tester_password = props["tester-password"]
+    @tester_fstname = props["tester-fstname"]
+    @tester_sndname = props["tester-sndname"]
     @first_counterpart_email = props["first-counterpart-email"]
     @first_counterpart_password = props["first-counterpart-password"]
     @first_counterpart_fstname = props["first-counterpart-fstname"]
@@ -63,7 +65,7 @@ class TestProperties
       @first_sig_attachment_pdf_path = Dir.pwd + "/selenium-test/samples/sig-att-1.pdf"
     end
     if @second_sig_attachment_pdf_path.nil? then
-      @second_sig_attachment_pdf_path = Dir.pwd + "/selenium-test/samples/sig-att-1.pdf"
+      @second_sig_attachment_pdf_path = Dir.pwd + "/selenium-test/samples/sig-att-2.pdf"
     end
     is_missing_pdf = @contract_pdf_path.nil? || @first_author_attachment_pdf_path.nil? || @second_author_attachment_pdf_path.nil? || @first_sig_attachment_pdf_path.nil? || @second_sig_attachment_pdf_path.nil?
     

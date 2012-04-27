@@ -368,7 +368,7 @@ instance Arbitrary DocumentFunctionality where
   arbitrary = elements [BasicFunctionality, AdvancedFunctionality]
 
 instance Arbitrary IdentificationType where
-  arbitrary = elements [EmailIdentification, ELegitimationIdentification]
+  arbitrary = elements [EmailIdentification, ELegitimationIdentification, PadIdentification]
 
 instance Arbitrary UserInfo where
   arbitrary = do
@@ -850,7 +850,7 @@ guardMethodM m = do
   unless (rqMethod rq == m) internalError
 
 -- | Runs API function and returns its json response
-testAPI :: (APIContext c, Kontrakcja m) => APIFunction m c APIResponse -> m APIResponse
+testAPI :: (APIContext c, Kontrakcja m) => APIFunction c m APIResponse -> m APIResponse
 testAPI f = do
     guardMethodM POST
     mcontext <- apiContext

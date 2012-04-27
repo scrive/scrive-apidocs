@@ -35,9 +35,6 @@ checkDBTimeZone logger = do
 checkDBConsistency :: MonadDB m => (String -> DBEnv m ()) -> [Table] -> [Migration m] -> DBEnv m ()
 checkDBConsistency logger tables migrations = do
   (created, to_migration) <- checkTables
-  forM_ created $ \table -> do
-    logger $ "Putting properties on table '" ++ tblName table ++ "'..."
-    tblPutProperties table
   when (not $ null to_migration) $ do
     logger "Running migrations..."
     migrate migrations to_migration
@@ -45,6 +42,9 @@ checkDBConsistency logger tables migrations = do
     (_, to_migration_again) <- checkTables
     when (not $ null to_migration_again) $
       error $ "The following tables were not migrated to their latest versions: " ++ concatMap descNotMigrated to_migration_again
+  forM_ created $ \table -> do
+    logger $ "Putting properties on table '" ++ tblName table ++ "'..."
+    tblPutProperties table
   where
     descNotMigrated (t, from) = "\n * " ++ tblName t ++ ", current version: " ++ show from ++ ", needed version: " ++ show (tblVersion t)
 

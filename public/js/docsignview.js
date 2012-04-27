@@ -146,16 +146,24 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
           if(index === 0)
               sigdiv.addClass('first');
           var name       = $("<div class='name' />").text(signatory.name);
+          var line       = $("<div class='line' />");
+          var middle1    = $("<div class='middle' />");
+          var middle2    = $("<div class='middle' />");
+          var middle3    = $("<div class='middle' />");
           var statusicon = $("<div class='icon status' />").addClass(signatory.statusicon);
           var status     = $("<span class='statustext' />").addClass(signatory.statusicon).text(signatory.status);
           var details    = $('<a class="details" href="#" />').text(localization.docsignview.showDetails);
 
+          middle1.append(statusicon);
+          middle2.append(status);
+          middle3.append(details);
+          line.append(middle1).append(middle2).append(middle3);
           details.click(function() {
               sigbox.setSignatoryIndex(index);
               return false;
           });
 
-          sigdiv.append(name).append(statusicon).append(status).append(details);
+          sigdiv.append(name).append(line);
           list.append(sigdiv);
       });
       return list;
@@ -911,6 +919,7 @@ window.DocumentSignView = Backbone.View.extend({
       });
       return $(new DocumentSignViewArrowView({
         model: model,
+        mainview : this,
         el: $("<div />")
       }).el);
     },
@@ -1105,10 +1114,12 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
     _.each(this.model.tasks(), function(task) {
       task.bind("change", render);
     });
+    this.mainview = args.mainview;
     this.render();
   },
   render: function() {
     var view = this;
+    var document = this.document;
     console.log("rendering arrows");
     $(this.el).empty();
 
@@ -1201,6 +1212,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
         downarrow.show();
         uparrow.hide();
         actionarrow.hide();
+        view.mainview.trigger("change:task");
       } else {
         var scrolltop = $(window).scrollTop();
         var scrollbottom = scrolltop + $(window).height();
@@ -1227,6 +1239,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
           uparrow.hide();
           downarrow.hide();
           view.pointingAt = nextTask;
+          view.mainview.trigger("change:task");
         } else if ((elbottom + bottommargin) > scrollbottom) {
             if(scrollpoint !== 16) {
                 scrollpoint = 6;
@@ -1235,6 +1248,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
                 uparrow.hide();
                 actionarrow.hide();
                 view.pointingAt = undefined;
+                view.mainview.trigger("change:task");
             }
         } else {
             if(scrollpoint !== 17) {
@@ -1244,6 +1258,7 @@ window.DocumentSignViewArrowView = Backbone.View.extend({
                 downarrow.hide();
                 actionarrow.hide();
                 view.pointingAt = undefined;
+                view.mainview.trigger("change:task");
             }
         }
       }

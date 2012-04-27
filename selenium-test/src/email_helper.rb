@@ -1,7 +1,5 @@
 require "rubygems"
 gem "rspec"
-require "selenium/rspec/spec_helper"
-require "spec/test/unit"
 require "selenium-webdriver"
 
 class EmailHelper
