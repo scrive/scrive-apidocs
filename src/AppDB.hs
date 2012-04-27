@@ -55,7 +55,6 @@ kontraMigrations = [
   , updateDocumentStatusAfterRemovingAwaitingAuthor
   , moveDocumentTagsFromDocumentsTableToDocumentTagsTable
   , fixSignatoryLinksSwedishChars
-
   , setCascadeOnPadQueue
   , setCascadeOnSignatoryAttachments
   , renumerateSignatoryLinkIDS
