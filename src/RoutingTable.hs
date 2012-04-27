@@ -255,9 +255,6 @@ staticRoutes = choice
 
      , dir "adminonly" $ dir "upsalesdeleted" $ hGet $ toK0 $ DocControl.handleUpsalesDeleted
 
-     , dir "migrate" $ dir "loweremails" $ hGet $ toK0 $ UserControl.handleMigrateLowercaseEmails
-     , dir "migrate" $ dir "loweremails" $ hPost $ toK0 $ UserControl.handleMigrateLowercaseEmailsPost
-
      , dir "services" $ hGet $ toK0 $ handleShowServiceList
      , dir "services" $ hGet $ toK1 $ handleShowService
      , dir "services" $ dir "ui" $ hPost $ toK1 $ handleChangeServiceUI

@@ -58,3 +58,14 @@ addCompanyNameNumberOnUsers =
       _ <- kRunRaw $ "ALTER TABLE users ADD COLUMN company_number TEXT NOT NULL DEFAULT ''"
       return ()
   }
+
+addCheckLowercaseEmailsUsers :: MonadDB m => Migration m
+addCheckLowercaseEmailsUsers =
+  Migration {
+    mgrTable = tableUsers
+  , mgrFrom = 6
+  , mgrDo = do
+      _ <- kRunRaw $ "UPDATE users SET email = lower(email)"
+      _ <- kRunRaw $ "ALTER TABLE users ADD CONSTRAINT users_email_lowercase_chk CHECK (email = lower(email))"
+      return ()
+  }
