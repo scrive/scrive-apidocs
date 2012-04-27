@@ -34,7 +34,6 @@ import qualified Happstack.Server.Response as Web
 import Control.Monad.Error
 import Control.Applicative
 import Network.HTTP (urlEncodeVars)
-import qualified Data.Text as T
 
 import DB
 import Util.JSON
@@ -61,39 +60,39 @@ data Created a = Created a
 -- | Values to be form encoded
 data FormEncoded = FormEncoded [(String, String)]
                    
-data APIError = BadInput           T.Text
-              | NotLoggedIn        T.Text
-              | Forbidden          T.Text -- | also used for not found, since we don't want to reveal the non-existence of resources
-              | ActionNotAvailable T.Text
-              | ServerError        T.Text
+data APIError = BadInput           String
+              | NotLoggedIn        String
+              | Forbidden          String -- | also used for not found, since we don't want to reveal the non-existence of resources
+              | ActionNotAvailable String
+              | ServerError        String
               deriving (Show, Eq)
 
 badInput :: String -> APIError
-badInput = BadInput . T.pack
+badInput = BadInput
 
 badInput' :: APIError
 badInput' = badInput "The input sent was invalid. Please try again."
 
 notLoggedIn :: String -> APIError
-notLoggedIn = NotLoggedIn . T.pack
+notLoggedIn = NotLoggedIn
 
 notLoggedIn' :: APIError
 notLoggedIn' = notLoggedIn "You must identify yourself to access this resource."
 
 forbidden :: String -> APIError
-forbidden = Forbidden . T.pack
+forbidden = Forbidden
 
 forbidden' :: APIError
 forbidden' = forbidden "The resource you are trying to access does not exist or you do not have permission to access it."
 
 actionNotAvailable :: String -> APIError
-actionNotAvailable = ActionNotAvailable . T.pack
+actionNotAvailable = ActionNotAvailable
 
 actionNotAvailable' :: APIError
 actionNotAvailable' = actionNotAvailable "The action you requested is not available on this resource."
 
 serverError :: String -> APIError
-serverError = ServerError . T.pack
+serverError = ServerError
 
 serverError' :: APIError
 serverError' = serverError "An internal server error occurred which could not be resolved."
