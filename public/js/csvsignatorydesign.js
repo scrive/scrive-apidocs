@@ -89,13 +89,13 @@ var CsvProblem = Backbone.Model.extend({
   },
   upload : function(input) {
        var sigdesign = this;
-       var submit = new Submit({ url : "/parsecsv", method : "POST"});
+       var submit = new Submit({ url : "/parsecsv", method : "POST", expectedType:"json"});
        submit.add("customfieldscount",this.signatory().customFields().length);
        if (this.signatory().document().elegAuthorization())
         submit.add("eleg","YES");
        submit.addInputs(input);
        submit.sendAjax(function (resp) {
-           var jresp = JSON.parse(resp);
+           var jresp = resp;
            sigdesign.set({'rows': jresp.rows, 'problems': _.map(jresp.problems, function(pdata) {return new CsvProblem(pdata);}) });
            sigdesign.trigger("change");
           });
@@ -119,17 +119,26 @@ var CsvSignatoryDesignView = Backbone.View.extend({
         });
        return box;
     },
+    // we fix the order of the standard fields
+    csvheaderorder: ['fstname', 'sndname', 'email', 'sigco', 'sigpersnr', 'sigcompnr'],
     dataTable : function() {
       var model = this.model;
-      var fields = model.signatory().fields();
       var table = $("<table class='csvDataTable'/>");
       var thead = $("<thead/>");
       var tbody = $("<tbody/>");
       table.append(thead).append(tbody);
-      for (var i=0;i< fields.length;i++)
-      {  if (fields[i].isSignature()) continue;
-         thead.append($("<th/>").text(fields[i].nicename()));
-      }
+
+      // make sure the field names are in the right order
+      var fieldnames = 
+            this.csvheaderorder.concat(
+                _.difference(_.invoke(model.signatory().fields(),  'name'),
+                             this.csvheaderorder));
+      _.each(fieldnames, function(e) {
+          var field = model.signatory().field(e);
+          if(!field.isSignature())
+              thead.append($("<th />").text(field.nicename()));
+      });
+
       var rows = model.rows();
       for (var i =0 ; i< rows.length; i++)
       {

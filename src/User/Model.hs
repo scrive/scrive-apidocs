@@ -34,6 +34,7 @@ module User.Model (
   ) where
 
 import Control.Applicative
+import Data.Char
 import Data.Data
 import Database.HDBC
 import Happstack.State (Version, deriveSerialize)
@@ -129,7 +130,7 @@ data GetUserByEmail = GetUserByEmail (Maybe ServiceID) Email
 instance MonadDB m => DBQuery m GetUserByEmail (Maybe User) where
   query (GetUserByEmail msid email) = do
     kPrepare $ selectUsersSQL ++ " WHERE deleted = FALSE AND service_id IS NOT DISTINCT FROM ? AND email = ?"
-    _ <- kExecute [toSql msid, toSql email]
+    _ <- kExecute [toSql msid, toSql $ map toLower $ unEmail email]
     fetchUsers >>= oneObjectReturnedGuard
 
 data GetCompanyAccounts = GetCompanyAccounts CompanyID
@@ -212,7 +213,7 @@ instance MonadDB m => DBUpdate m AddUser (Maybe User) where
           , toSql fname
           , toSql lname
           ] ++ replicate 6 (toSql "")
-            ++ [toSql email] ++ [
+            ++ [toSql $ map toLower email] ++ [
               SqlNull
             , toSql $ getLang l
             , toSql $ getRegion l
@@ -225,7 +226,7 @@ instance MonadDB m => DBUpdate m SetUserEmail Bool where
   update (SetUserEmail msid uid email) = do
     kPrepare $ "UPDATE users SET email = ?"
       ++ " WHERE id = ? AND deleted = FALSE AND service_id IS NOT DISTINCT FROM ?"
-    kExecute01 [toSql email, toSql uid, toSql msid]
+    kExecute01 [toSql $ map toLower $ unEmail email, toSql uid, toSql msid]
 
 data SetUserPassword = SetUserPassword UserID Password
 instance MonadDB m => DBUpdate m SetUserPassword Bool where

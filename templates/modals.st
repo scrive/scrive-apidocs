@@ -32,7 +32,7 @@ modalSignInviteView=
       <div class="left"></div>
       <div class="label">
         <p>$_close()$</p>
-        <div class="btn-symbol green arrow-left"></div>
+        <div class="btn-symbol green arrow-left s-sign-confirmation"></div>
       </div>
       <div class="right"></div>
     </a>

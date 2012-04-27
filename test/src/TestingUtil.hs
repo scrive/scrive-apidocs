@@ -368,7 +368,7 @@ instance Arbitrary DocumentFunctionality where
   arbitrary = elements [BasicFunctionality, AdvancedFunctionality]
 
 instance Arbitrary IdentificationType where
-  arbitrary = elements [EmailIdentification, ELegitimationIdentification]
+  arbitrary = elements [EmailIdentification, ELegitimationIdentification, PadIdentification]
 
 instance Arbitrary UserInfo where
   arbitrary = do

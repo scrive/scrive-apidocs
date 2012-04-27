@@ -147,12 +147,12 @@
         <li class='last-child'> <span class='price'>29.99 €/month</span><span class='price-comment'>Per user.</span>
         </li>
     </ul>",
-"_PriceTablePriceRow","<td><span class='price'>99 kr/månad </span><span class='price-comment'>Per användare.</span></td>
-                       <td><span class='price'>249kr/månad </span><span class='price-comment'>Per användare.</span></td>
+"_PriceTablePriceRow","<td><span class='price'>199 kr/månad </span><span class='price-comment'>Per användare.</span></td>
+                       <td><span class='price'>279kr/månad </span><span class='price-comment'>Per användare.</span></td>
                        <td><span class='price'>299kr/månad</span><span class='price-comment'>Per användare.</span></td>
                        <td><span class='price'>Från 2999kr/månad</span><span class='price-comment'>Kontakta oss för offert!</span></td>",,"
-                       <td><span class='price'>9.99 €/month</span><span class='price-comment'>Per user.</span></td>
-                       <td><span class='price'>24.99 €/month </span><span class='price-comment'>Per user.</span></td>
+                       <td><span class='price'>19.99 €/month</span><span class='price-comment'>Per user.</span></td>
+                       <td><span class='price'>27.99 €/month </span><span class='price-comment'>Per user.</span></td>
                        <td><span class='price'>29.99 €/month</span><span class='price-comment'>Per user.</span></td>
                        <td><span class='price'>From 299 €/month</span><span class='price-comment'>Contact us for your offer!</span></td>"
 "_PriceTableRow1","<td>Fria signaturer *</td>
@@ -470,7 +470,7 @@ If the other party clicks on the signing link after you have withdrawn the invit
 "_contractsignedinfoheader","Färdigställt",,"Finished"
 "_contractsignedinfotext","Samtliga parter har signerat dokumentet.",,"All parties have signed the document."
 "_contractsignguardwarntext","För att signera måste du först klicka i kryssrutan",,"You must fill in the check box to be able to sign."
-"_contractstatusinfotext","Du har valt att signera sist. Vänligen invänta övriga parters signatur.",,"You have chosen to sign last. Please wait for the other signatories to sign."
+"_contractstatusinfotext","Du har skickat en inbjudan att signera avtalet. Vänligen invänta övriga parters signatur.",,"You have sent an invitation to sign the document. Please wait for the other signatories to sign."
 "_contractstep1text","Välj dokument",,"Select document"
 "_contracttitle","DOKUMENT",,"DOCUMENT"
 "_contractuploadname","AVTAL",,"CONTRACT"
@@ -2527,7 +2527,7 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_phoneSubmitButtonLabel","OK",,"OK"
 "_phoneConfirmationText","Tack, en representant för Scrive kommer att ringa dig snart.",,"Thanks, someone from Scrive will call you soon!"
 "_startButtonLabel","Ta mig till tjänsten bara!",,"Just take me to the service!"
-"_designViewMessageSending","Sending document",,"Sending document"
+"_designViewMessageSending","Skickar dokument",,"Sending document"
 "_designViewMessageReloading","Reloading document",,"Reloading document"
 "_designViewMessageExtraActions","Performing additional actions",,"Performing additional actions"
 "_signatureSign","Sign",,"Sign"

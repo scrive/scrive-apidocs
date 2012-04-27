@@ -316,7 +316,7 @@ var DocumentDesignView = Backbone.View.extend({
         var icon = $("<span class='editinvitemessageicon'/>");
         var text = $("<span class='editinvitemessagetext'/>").text(localization.editInviteText);
         box.append(icon).append(text);
-        box.find("span").click(function() {
+        icon.add(text).click(function() {
               document.save().sendAjax( function() {
                          ConfirmationWithEmail.popup({
                             title :localization.editInviteDialogHead,
@@ -331,7 +331,8 @@ var DocumentDesignView = Backbone.View.extend({
                             }
                             });
             });
-       });
+            return false;
+        });
         return box;
     },
     selectLanguageOption: function() {
@@ -406,9 +407,10 @@ var DocumentDesignView = Backbone.View.extend({
         var countspan = $("<span class='countspan' />").text("(" + document.authorattachments().length + ")").appendTo(text);
         box.append(icon).append(text);
 
-        box.find("span").click(function() {
+        icon.add(text).click(function() {
             document.save().sendAjax();
             DesignAuthorAttachmentsPopup.popup({document: document});
+            return false;
         });
         return box;
 
@@ -426,9 +428,10 @@ var DocumentDesignView = Backbone.View.extend({
         document.bind("change:attachments", function(){
           countspan.text("(" + document.signatoryattachments().length + ")");
         });
-        box.find("span").click(function() {
+        icon.add(text).click(function() {
             document.save().sendAjax();
             DesignSignatoryAttachmentsPopup.popup({document: document});
+            return false;
         });
         return box;
     },
