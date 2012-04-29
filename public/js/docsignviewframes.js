@@ -24,6 +24,8 @@ window.DocumentSignViewHeader = Backbone.View.extend({
       var width = Math.max($('body').width(),$(document).width());
       if (width > 1020)
           el.css("min-width",width + "px");
+      $(".padicon").css("right","0");
+      $(".poweredbyscrive").css("right","0");
   },
   updateHeaderSenderPosition: function() {
     if ($(window).width() < 1150) {
