@@ -43,7 +43,7 @@ window.DocumentSignViewHeader = Backbone.View.extend({
       maindiv.attr("style","");
     maindiv.addClass("pageheader");
 
-    if(inService) {
+    if(inService == true) {
         maindiv.addClass('withstandardlogo');
         var content = $("<div class='content' />");
         var logowrapper = $("<div class='logowrapper' />");
