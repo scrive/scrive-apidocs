@@ -43,7 +43,10 @@ userStateTests env = testGroup "UserState" [
   , testThat "GetInviteInfo/SetInviteInfo works" env test_getInviteInfo
   , testThat "SetUserCompany works" env test_setUserCompany
   , testThat "DeleteUser works" env test_deleteUser
-  , testThat "SetUserInfo works" env test_setUserInfo
+  , testGroup "SetUserInfo" [
+      testThat "SetUserInfo works" env test_setUserInfo   
+    , testThat "SetUserInfo handles email correctly" env test_setUserInfoCapEmail
+    ]   
   , testThat "SetUserSettings works" env test_setUserSettings
   , testThat "SetPreferredDesignMode works" env test_setPreferredDesignMode
   , testThat "AcceptTermsOfService works" env test_acceptTermsOfService
@@ -192,6 +195,21 @@ test_setUserInfo = do
   assertBool "UserInfo updated correctly" res
   Just User{userinfo = ui2} <- dbQuery $ GetUserByID userid
   assertBool "Updated UserInfo returned" $ ui == ui2
+
+test_setUserInfoCapEmail :: TestEnv ()
+test_setUserInfoCapEmail = do
+  Just User{userid, userinfo} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  let ui = userinfo {
+      userpersonalnumber = "1234567"
+    , usercompanyposition = "blabla"
+    , userphone = "66346343"
+    , usermobile = "989834343"
+    , useremail = Email "DFSFS@fsdfs.com"
+  }
+  res <- dbUpdate $ SetUserInfo userid ui
+  assertBool "UserInfo updated correctly" res
+  Just User{userinfo = ui2} <- dbQuery $ GetUserByID userid
+  assertBool "Updated UserInfo returned" $ ui {useremail = Email "dfsfs@fsdfs.com"} == ui2
 
 test_setUserSettings :: TestEnv ()
 test_setUserSettings = do
