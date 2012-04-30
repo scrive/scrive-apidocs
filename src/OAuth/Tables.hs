@@ -4,8 +4,37 @@ import Database.HDBC
 
 import DB
 
-{-
+{- |
+       
+   Module: OAuth.Tables
+   Author: Eric Normand
+
+   Description:
+
+     OAuth is a widely accepted web standard. The spec is available at
+     http://tools.ietf.org/html/rfc5849 . More information is available at
+     http://oauth.net/ . There are many libraries for accessing an OAuth
+     enabled service from different languages. This should allow an easy
+     onramp for using the API.
+
+     OAuth is a mechanism for a service to control a user's account without
+     the user sharing their username and password. Instead, the user is guided
+     through a flow where he/she grants permissions to the service.
+
+     These tables manage that flow.
+
+-}
+
+
+{- |
+   
    A User may have one or more API Tokens, which allow it to request privileges from other Users.
+
+   These API tokens are used in the first step of the OAuth permission flow.
+
+   Users may add and delete the API Tokens in their account screen, though most users will not 
+   use them.
+
 -}
 tableAPIToken :: Table
 tableAPIToken = Table {
@@ -40,7 +69,13 @@ tableAPIToken = Table {
   }
 
 {-
+
     Access Tokens belong to an API Token and grant privileges from a User.
+
+    Access Tokens are generated in the last step of the OAuth flow. They are
+    linked to a User account and to an API Token. This signifies that the owner
+    of the API Token has been granted privileges by the User refered to by
+    user_id.
 
 -}
 tableAccessToken :: Table
@@ -89,7 +124,9 @@ tableAccessToken = Table {
   }
 
 {-
-    Privileges granted to an Access token by a User
+    Privileges granted to an Access token by a User.
+
+    These privileges belong to an Access Token.
 
 -}
 tablePrivilege :: Table
@@ -134,10 +171,15 @@ migrateTempCredentialRemoveEmail =
 
   } 
 
-{-
+{- |
+   
    Temporary Credentials are used during the OAuth flow.
 
+   A Temporary Credential is created at the beginning of the OAuth flow
+   and represents a request for privileges.
+
    They should expire after 10 minutes and only be used once.
+
 -}
 tableTempCredential :: Table
 tableTempCredential = Table {
@@ -188,7 +230,16 @@ tableTempCredential = Table {
       ++ " REFERENCES users(id) ON UPDATE RESTRICT ON DELETE CASCADE"
       ++ " DEFERRABLE INITIALLY IMMEDIATE"
   }
+                      
+                      
+{- |
+   
+   Temporary Privileges are the privileges that are being requested from
+   the User.
 
+   They belong to a Temp Credential.
+
+-}
 tableTempPrivileges :: Table
 tableTempPrivileges = Table {
   tblName = "oauth_temp_privileges"
