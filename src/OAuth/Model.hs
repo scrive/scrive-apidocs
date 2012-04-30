@@ -14,6 +14,7 @@ import Happstack.Data
 import Data.List
 import Control.Monad.Trans
 import Network.URI
+import Data.Maybe
 
 data APIToken = APIToken { atID :: Int64
                          , atToken :: MagicHash
@@ -131,17 +132,18 @@ data GetRequestedPrivileges = GetRequestedPrivileges
                               MinutesTime
 instance MonadDB m => DBQuery m GetRequestedPrivileges (Maybe (String, [APIPrivilege])) where
   query (GetRequestedPrivileges token time) = do
-    kPrepare (   "SELECT com.name, p.privilege FROM oauth_temp_privileges p " 
-              ++ "JOIN oauth_temp_credential c ON p.temp_token_id =   c.id "
-              ++ "JOIN oauth_api_token t       ON c.api_token_id  =   t.id "
-              ++ "JOIN users u                 ON t.user_id       =   u.id "
-              ++ "JOIN companies com           ON u.company_id    = com.id "
+    kPrepare (   "SELECT com.name, u.company_name, p.privilege "
+              ++ "FROM oauth_temp_privileges p " 
+              ++ "JOIN oauth_temp_credential c  ON p.temp_token_id =   c.id "
+              ++ "JOIN oauth_api_token t        ON c.api_token_id  =   t.id "
+              ++ "JOIN users u                  ON t.user_id       =   u.id "
+              ++ "LEFT OUTER JOIN companies com ON u.company_id    = com.id "
               ++ "WHERE c.temp_token = ? AND c.id = ? AND expires > ? AND c.user_id IS NULL")
     _ <- kExecute [ toSql $ atToken token, toSql $ atID token, toSql time ]
     foldDB f Nothing
-    where f :: Maybe (String, [APIPrivilege]) -> String -> APIPrivilege -> Maybe (String, [APIPrivilege])
-          f Nothing         name pr = Just (name, [pr])
-          f (Just (_, acc)) name pr = Just (name, pr:acc)
+    where f :: Maybe (String, [APIPrivilege]) -> Maybe String -> String -> APIPrivilege -> Maybe (String, [APIPrivilege])
+          f Nothing         cname name pr = Just (fromMaybe name cname, [pr])
+          f (Just (_, acc)) cname name pr = Just (fromMaybe name cname, pr:acc)
 
 data RequestAccessToken = RequestAccessToken
                           APIToken  -- API Token
@@ -418,6 +420,7 @@ data OAuthTempCredRequest = OAuthTempCredRequest { tcCallback   :: URI
                                                  , tcAPISecret  :: MagicHash
                                                  , tcPrivileges :: [APIPrivilege]
                                                  }
+                          deriving (Show)
 
 data OAuthTokenRequest = OAuthTokenRequest { trAPIToken   :: APIToken
                                            , trAPISecret  :: MagicHash

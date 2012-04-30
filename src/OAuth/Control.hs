@@ -16,6 +16,7 @@ import OAuth.Util
 import Login
 import User.Model
 import AppView
+import qualified Log
 
 
 import Happstack.Server.RqData
@@ -49,10 +50,12 @@ tempCredRequest = api $ do
   time <- ctxtime <$> getContext
 
   etcr <- lift $ getTempCredRequest
+  
 
   case etcr of
     Left errors -> throwError $ badInput errors
     Right tcr -> do
+      Log.debug $ "TempCredRequest: " ++ show tcr
       (temptoken, tempsecret) <- apiGuardL' $ dbUpdate $ RequestTempCredentials (tcAPIToken tcr) (tcAPISecret tcr) (tcPrivileges tcr) (tcCallback tcr) time
 
       return $ FormEncoded [("oauth_token", show temptoken),
