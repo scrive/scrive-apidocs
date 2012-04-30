@@ -32,7 +32,7 @@ tableUserFriends = Table {
 tableUsers :: Table
 tableUsers = Table {
     tblName = "users"
-  , tblVersion = 6
+  , tblVersion = 7
   , tblCreateOrValidate = \desc -> case desc of
       [  ("id", SqlColDesc {colType = SqlBigIntT, colNullable = Just False})
        , ("password", SqlColDesc {colType = SqlVarBinaryT, colNullable = Just True})
@@ -101,6 +101,7 @@ tableUsers = Table {
     kRunRaw $ "CREATE SEQUENCE users_id_seq"
     kRunRaw $ "SELECT setval('users_id_seq',(SELECT COALESCE(max(id)+1,1000) FROM users))"
     kRunRaw $ "ALTER TABLE users ALTER id SET DEFAULT nextval('users_id_seq')"
+    kRunRaw $ "ALTER TABLE users ADD CONSTRAINT users_email_lowercase_chk CHECK (email = lower(email))"
     return ()
   }
 
