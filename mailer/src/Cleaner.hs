@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
 module Cleaner (
     cleaner
   ) where
@@ -18,10 +17,9 @@ cleaner rng dbconf = do
     Log.mailingServer $ "Removing mails that were (or should be) send " ++ show daylimit ++ " days ago."
     removedCount <- dbUpdate $ DeleteMailsOlderThenDays daylimit
     Log.mailingServer $ (show removedCount) ++ " mails were removed."
-    dbCommit -- commit after email was handled properly
   case res of
     Right () -> Log.mailingServer $ "Cleaner done. Next run in " ++ (show freq) ++ " secunds."
-    Left (e::E.SomeException) -> Log.mailingServer $ "Cleaner failed with " ++ (show $ e) ++ ". Next run in " ++ (show freq) ++ " secunds."
+    Left (e::E.SomeException) -> Log.mailingServer $ "Cleaner failed with " ++ (show $ e) ++ ". Next run in " ++ (show freq) ++ " sec."
   threadDelay $ freq * second
   cleaner rng dbconf
   where
