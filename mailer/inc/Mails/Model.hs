@@ -5,6 +5,7 @@ module Mails.Model (
   , AddContentToEmail(..)
   , MarkEventAsRead(..)
   , DeleteEmail(..)
+  , DeleteMailsOlderThenDays(..)
   , GetUnreadEvents(..)
   , GetIncomingEmails(..)
   , GetEmails(..)
@@ -54,6 +55,12 @@ instance MonadDB m => DBUpdate m DeleteEmail Bool where
     kPrepare "DELETE FROM mails WHERE id = ?"
     kExecute01 [toSql mid]
 
+data DeleteMailsOlderThenDays = DeleteMailsOlderThenDays Integer
+instance MonadDB m => DBUpdate m DeleteMailsOlderThenDays Integer where
+  update (DeleteMailsOlderThenDays days) = do
+    kPrepare $ "DELETE FROM mails where (now() > to_be_sent + interval '"++show days++" days')" -- Sorry but it did not work as param.
+    kExecute []
+    
 data GetUnreadEvents = GetUnreadEvents
 instance MonadDB m => DBQuery m GetUnreadEvents [(EventID, MailID, XSMTPAttrs, Event)] where
   query GetUnreadEvents = getUnreadEvents False

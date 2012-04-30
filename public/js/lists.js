@@ -453,9 +453,11 @@
                 var value = this.model.field(cell.field());
                 if (cell.isSpecial()) {
                     if (cell.isSelect()) {
-                        td.append(this.checkbox = $("<input type='checkbox' class='selectme check'/>"));
+                        this.checkbox = $("<input type='checkbox' class='selectme check'/>");
+                        td.append(this.checkbox);
                     } else if (cell.isRendered() && value != undefined) {
-                        td.append(cell.rendering(value, undefined, this.model));
+                        var a = cell.rendering(value, undefined, this.model);
+                        td.append(a);
                     } else if (cell.isExpandable() && value != undefined) {
                         var a = $("<a href='#' class='expand'>").text(value);
                         td.append(a);

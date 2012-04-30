@@ -298,7 +298,7 @@ instance MonadDB m => DBUpdate m SetUserInfo Bool where
       , toSql $ usercompanyposition info
       , toSql $ userphone info
       , toSql $ usermobile info
-      , toSql $ useremail info
+      , toSql $ map toLower $ unEmail $ useremail info
       , toSql $ usercompanyname info
       , toSql $ usercompanynumber info
       , toSql uid
