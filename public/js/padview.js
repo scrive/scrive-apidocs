@@ -139,14 +139,14 @@ window.PadQueueView = Backbone.View.extend({
             });
     },
     padLogoutIcon : function() {
-        var icon = $("<div class='padicon logout-image' style='float: right;position: absolute;top: 0;right:0'>");
+        var icon = $("<div class='padTopIcon logout-image' style='float: right;position: absolute;top: 0;right:0'>");
         var padqueue = this.model;
         icon.click(function() {padqueue.logout().send();});
         return icon;
     },
     backToSystemIcon : function() {
         var padqueue = this.model;
-        var icon = $("<div class='padicon go-back-image' style='float:right;position: absolute;top: 0;right:0'>");
+        var icon = $("<div class='padTopIcon go-back-image' style='float:right;position: absolute;top: 0;right:0'>");
         icon.click(function() { if (padqueue.hasDocument())
                                  window.location = '/d/' + padqueue.documentid();
                                 else

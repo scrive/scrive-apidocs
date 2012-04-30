@@ -21,11 +21,17 @@ window.DocumentSignViewHeader = Backbone.View.extend({
       var tbd = $("<span/>");
       $(this.el).append(tbd);
       setTimeout(function() {tbd.remove();},1);
-      var width = Math.max($('body').width(),$(document).width());
-      if (width > 1020)
+      if (!$.browser.msie) {
+        var width = Math.max($('body').width(),$(document).width());
+        if (width > 1020)
           el.css("min-width",width + "px");
-      $(".padicon").css("right","0");
-      $(".poweredbyscrive").css("right","0");
+        var pbs = $(".poweredbyscrive",this.el);
+        if (pbs.size() > 0)
+            pbs.css("left", width - pbs.width() - 1);
+        var pti = $(".padTopIcon");
+        if (pti.size() > 0)
+            pti.css("left", width - pti.width() - 2);
+      }
   },
   updateHeaderSenderPosition: function() {
     if ($(window).width() < 1150) {
@@ -126,9 +132,11 @@ window.DocumentSignViewFooter = Backbone.View.extend({
       var tbd = $("<span/>");
       $(this.el).append(tbd);
       setTimeout(function() {tbd.remove();},1);
-      var width = Math.max($('body').width(),$(document).width());
-      if (width > 1020)
+      if (!$.browser.msie) {
+        var width = Math.max($('body').width(),$(document).width());
+        if (width > 1020)
           el.css("min-width",width + "px");
+      }   
   },
   tagName: "div",
   render: function() {
