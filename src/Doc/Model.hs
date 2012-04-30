@@ -1324,7 +1324,7 @@ selectDocuments sqlquery = do
     _ <- kRun $ SQL "SELECT * FROM links" []
     sls <- fetchSignatoryLinks
 
-    _ <- kRun $ selectSignatoryLinkFieldsSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM links WHERE links.id = signatory_link_fields.signatory_link_id) ORDER BY order_seq" []
+    _ <- kRun $ selectSignatoryLinkFieldsSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM links WHERE links.id = signatory_link_fields.signatory_link_id) ORDER BY signatory_link_fields.id" []
     fields <- fetchSignatoryLinkFields
 
     _ <- kRun $ selectAuthorAttachmentsSQL <++> SQL "WHERE EXISTS (SELECT 1 FROM docs WHERE author_attachments.document_id = docs.id) ORDER BY document_id DESC" []
