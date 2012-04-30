@@ -133,7 +133,8 @@ data DocumentFilter
   | DocumentFilterByIdentification IdentificationType -- ^ Only documents that use selected identification type
 
 data DocumentDomain
-  = DocumentsOfAuthor UserID                     -- ^ Documents by author, not deleted
+  = DocumentsOfWholeUniverse                     -- ^ All documents in the system. Only for admin view.
+  | DocumentsOfAuthor UserID                     -- ^ Documents by author, not deleted
   | DocumentsOfAuthorDeleted UserID              -- ^ Documents by author, deleted
   | DocumentsOfAuthorDeleteValue UserID Bool     -- ^ Documents by author, with delete flag
   | DocumentsForSignatory UserID                 -- ^ Documents by signatory, not deleted
@@ -152,11 +153,13 @@ data DocumentDomain
 data DocumentOrderBy
   = DocumentOrderByTitle       -- ^ Order by title, alphabetically, case insensitive
   | DocumentOrderByMTime       -- ^ Order by modification time
+  | DocumentOrderByCTime       -- ^ Order by creation time
   | DocumentOrderByStatusClass -- ^ Order by status class.
   | DocumentOrderByType        -- ^ Order by document type.
   | DocumentOrderByProcess     -- ^ Order by process
   | DocumentOrderByPartners    -- ^ Order by partner names or emails
   | DocumentOrderByAuthor      -- ^ Order by author name or email
+  | DocumentOrderByService     -- ^ Order by service
 
 -- | 'AscDesc' marks ORDER BY order as ascending or descending.
 -- Conversion to SQL adds DESC marker to descending and no marker
@@ -167,6 +170,7 @@ data AscDesc a = Asc a | Desc a
 documentOrderByToSQL :: DocumentOrderBy -> SQL
 documentOrderByToSQL DocumentOrderByTitle = SQL "documents.title" []
 documentOrderByToSQL DocumentOrderByMTime = SQL "documents.mtime" []
+documentOrderByToSQL DocumentOrderByCTime = SQL "documents.ctime" []
 documentOrderByToSQL DocumentOrderByStatusClass = 
   SQL (documentStatusClassExpression) []
 documentOrderByToSQL DocumentOrderByType = SQL "documents.type" []
@@ -175,6 +179,7 @@ documentOrderByToSQL DocumentOrderByPartners =
   parenthesize (selectSignatoryLinksSmartNames [SignatoryPartner])
 documentOrderByToSQL DocumentOrderByAuthor =
   parenthesize (selectSignatoryLinksSmartNames [SignatoryAuthor])
+documentOrderByToSQL DocumentOrderByService = SQL "documents.service" []
 
 selectSignatoryLinksSmartNames :: [SignatoryRole] -> SQL
 selectSignatoryLinksSmartNames roles =
@@ -221,6 +226,8 @@ documentOrderByAscDescToSQL (Asc x) = documentOrderByToSQL x
 documentOrderByAscDescToSQL (Desc x) = documentOrderByToSQL x <++> SQL " DESC" []
 
 documentDomainToSQL :: DocumentDomain -> SQL
+documentDomainToSQL (DocumentsOfWholeUniverse) =
+  SQL "TRUE" []
 documentDomainToSQL (DocumentsOfAuthorDeleteValue uid deleted) =
   SQL ("(signatory_links.roles & ?) <> 0"
        ++ " AND signatory_links.user_id = ?"
