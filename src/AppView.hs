@@ -97,7 +97,6 @@ embeddedPage pb = do
   ctx <- getContext
   bdy <- renderTemplate "embeddedPage" $ do
     F.value "content" pb
-    serviceFields (ctxlocation ctx) (ctxservice ctx)
     standardPageFields ctx "" Nothing False False Nothing Nothing
   res <- simpleResponse bdy
   clearFlashMsgs

@@ -56,7 +56,7 @@ data KontraLink
     | LinkAttachments
     | LinkRubbishBin
     | LinkAccount
-    | LinkAccountCompany
+    | LinkAccountCompany (Maybe CompanyID)
     | LinkCompanyLogo CompanyID
     | LinkChangeUserEmail ActionID MagicHash
     | LinkAccountSecurity
@@ -167,7 +167,8 @@ instance Show KontraLink where
     showsPrec _ (LinkRubbishBin) = (++) $ "/r"
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
     showsPrec _ (LinkAccount) = (++) "/account"
-    showsPrec _ LinkAccountCompany = (++) "/account/company"
+    showsPrec _ (LinkAccountCompany Nothing) = (++) "/account/company"
+    showsPrec _ (LinkAccountCompany (Just cid)) = (++) $ "/adminonly/companyadmin/branding/" ++ show cid
     showsPrec _ (LinkCompanyLogo cid) = (++) $ "/account/company/" ++ show cid
     showsPrec _ (LinkChangeUserEmail actionid magichash) =
         (++) $ "/account/" ++ show actionid ++  "/" ++ show magichash

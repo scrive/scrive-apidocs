@@ -18,7 +18,7 @@ viewCompany =
   </div>
 </div>
 <script>
-var company = CompanyBranding.init();
+var company = CompanyBranding.init({ companyid: null });
 var tabcontent = jQuery(".tab-content");
 tabcontent.append(company.input());
 tabcontent.append(jQuery("<div class='clearfix' />"));

@@ -8,6 +8,9 @@ $doctype()$
     <link rel="apple-touch-startup-image" href="/img/logo-scrive-big-black.png"/>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <link rel="apple-touch-icon" href="/img/ipad-logo.jpg"/>
+    <script>
+        var inService = false;
+    </script>
   </head>
   <body class="signview" style="min-height:100%">
     <div class="mainContainer960" >

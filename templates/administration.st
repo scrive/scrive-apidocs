@@ -415,6 +415,7 @@ admincompany=
 	</div>
 	<ul class="tabs">
 	  <li class="active"><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+	  <li><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
 	  <li><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
 	  <li><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
 	</ul>
@@ -501,6 +502,32 @@ admincompany=
       </div>
     </form>
 ####
+admincompanybranding=
+    <a href="$adminlink$">Go back to main admin page</a>
+    <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
+    <br/>
+    <br/>
+      <div class="tab-viewer">
+	<div class="tab-header">
+	</div>
+	<ul class="tabs">
+	  <li><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+	  <li class="active"><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
+	  <li><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
+	  <li><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
+	</ul>
+      <div class="tab-container">
+	<div class="tab-content account">
+	</div>
+      </div>
+    </div>
+<script>
+var company = CompanyBranding.init({ companyid: "$companyid$" });
+var tabcontent = jQuery(".tab-content");
+tabcontent.append(company.input());
+tabcontent.append(jQuery("<div class='clearfix' />"));
+</script>
+####
 admincompanyusers=
 <a href="$adminlink$">Go back to main admin page</a>
 <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
@@ -512,6 +539,7 @@ admincompanyusers=
   </div>
   <ul class="tabs">
     <li><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+    <li><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
     <li class="active"><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
     <li><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
   </ul>
@@ -753,6 +781,7 @@ companyusagestats=
 	</div>
 	<ul class="tabs">
 	  <li><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+	  <li><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
 	  <li><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
 	  <li class="active"><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
 	</ul>

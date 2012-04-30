@@ -8,16 +8,14 @@ module RoutingTable (
 import API.IntegrationAPI
 import API.Service.ServiceControl
 
-import AppView as V
 import Kontra
 import KontraLink
+import LocaleRouting (allLocaleDirs)
 import Login
-import Misc
+import PublicPages (publicPages)
 import Redirect
 import Routing
 import Happstack.StaticRouting(Route, choice, dir, path, param, remainingPath)
-import User.Model
---import User.History.Model
 import qualified Stats.Control as Stats
 import qualified Administration.AdministrationControl as Administration
 import qualified Company.CompanyControl as Company
@@ -30,14 +28,8 @@ import qualified ScriveByMail.Control as MailAPI
 import Doc.API
 import OAuth.Control
 
-import Control.Monad.Error
-import Data.Functor
-import Data.List
 import Happstack.Server hiding (simpleHTTP, host, https, dir, path)
 
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BS
-import Util.MonadUtils
 import qualified PadQueue.Control as PadQueue
 
 {- |
@@ -56,24 +48,9 @@ import qualified PadQueue.Control as PadQueue
 -}
 staticRoutes :: Route (KontraPlus Response)
 staticRoutes = choice
-     [ allLocaleDirs $ const $ hGetAllowHttp $ toK0 handleHomepage
-     , hGetAllowHttp $ getContext >>= (redirectKontraResponse . LinkHome . ctxlocale)
+     [ hGetAllowHttp $ getContext >>= (redirectKontraResponse . LinkHome . ctxlocale)
 
-     , publicDir "priser" "pricing" LinkPriceplan handlePriceplanPage
-     , publicDir "sakerhet" "security" LinkSecurity handleSecurityPage
-     , publicDir "juridik" "legal" LinkLegal handleLegalPage
-     , publicDir "sekretesspolicy" "privacy-policy" LinkPrivacyPolicy handlePrivacyPolicyPage
-     , publicDir "allmana-villkor" "terms" LinkTerms handleTermsPage
-     , publicDir "om-scrive" "about" LinkAbout handleAboutPage
-     , publicDir "partners" "partners" LinkPartners handlePartnersPage -- FIXME: Same dirs for two languages is broken
-     , publicDir "kunder" "clients" LinkClients handleClientsPage
-     , publicDir "kontakta" "contact" LinkContactUs handleContactUsPage
-     , publicDir "scriveapi" "scriveapi" LinkAPIPage handleApiPage
-     , publicDir "scrivebymail" "scrivebymail" LinkScriveByMailPage handleScriveByMailPage
-
-     -- sitemap
-     , dir "webbkarta"       $ hGetAllowHttp $ handleSitemapPage
-     , dir "sitemap"         $ hGetAllowHttp $ handleSitemapPage
+     , publicPages
 
      -- this is SMTP to HTTP gateway
      , dir "mailapi" $ hPostNoXToken             $ toK0 $ MailAPI.handleMailAPI
@@ -168,7 +145,7 @@ staticRoutes = choice
 
      , dir "padqueue" $ dir "add" $ hPost $ toK2 $ PadQueue.addToQueue
      , dir "padqueue" $ dir "clear" $ hPost $ toK0 $ PadQueue.clearQueue
-    
+
      , dir "padqueue" $ dir "state" $ hGet $ toK0 $ PadQueue.padQueueState
      , dir "padqueue" $ hGet $ toK0 $ PadQueue.showPadQueuePage
      , dir "padqueue" $ dir "archive" $ hGet $ toK0 $ ArchiveControl.showPadDeviceArchive
@@ -182,10 +159,7 @@ staticRoutes = choice
      , dir "account" $ hPost $ toK2 $ UserControl.handlePostChangeEmail
      , dir "account" $ dir "security" $ hGet $ toK0 $ UserControl.handleGetUserSecurity
      , dir "account" $ dir "security" $ hPost $ toK0 $ UserControl.handlePostUserSecurity
-     , dir "account" $ dir "company" $ hGet $ toK0 $ Company.handleGetCompany
-     , dir "account" $ dir "company" $ hPost $ toK0 $ Company.handlePostCompany
-     , dir "account" $ dir "company" $ dir "json" $ hGet $ toK0 $ Company.handleGetCompanyJSON
-     , dir "account" $ dir "company" $ hGet $ toK1 $ Company.handleCompanyLogo
+     , dir "account" $ dir "company" $ Company.routes
      , dir "account" $ dir "mailapi" $ hGet $ toK0 $ UserControl.handleGetUserMailAPI
      , dir "account" $ dir "mailapi" $ hPost $ toK0 $ UserControl.handlePostUserMailAPI
      , dir "account" $ dir "usagestats" $ hGet $ toK0 $ UserControl.handleUsageStatsForUser
@@ -217,6 +191,7 @@ staticRoutes = choice
      , dir "adminonly" $ dir "useradmin" $ hPost $ toK1 $ Administration.handleUserChange
      , dir "adminonly" $ dir "companyadmin" $ hGet $ toK0 $ Administration.showAdminCompanies
      , dir "adminonly" $ dir "companyadmin" $ hGet $ toK1 $ Administration.showAdminCompany
+     , dir "adminonly" $ dir "companyadmin" $ dir "branding" $ Company.adminRoutes
      , dir "adminonly" $ dir "companyadmin" $ dir "users" $ hGet $ toK1 $ Administration.showAdminCompanyUsers
      , dir "adminonly" $ dir "companyadmin" $ dir "users" $ hPost $ toK1 $ Administration.handlePostAdminCompanyUsers
      , dir "adminonly" $ dir "companyaccounts" $ hGet  $ toK1 $ CompanyAccounts.handleCompanyAccountsForAdminOnly
@@ -298,114 +273,5 @@ staticRoutes = choice
      , documentAPI
      , oauthAPI
      -- static files
-     , remainingPath GET $ msum
-         [ allowHttp $ serveHTMLFiles
-         , allowHttp $ serveDirectory DisableBrowsing [] "public"
-         ]
+     , remainingPath GET $ allowHttp $ serveDirectory DisableBrowsing [] "public"
      ]
-
-{- |
-    This is a helper function for routing a public dir.
--}
-publicDir :: String -> String -> (Locale -> KontraLink) -> Kontra Response -> Route (KontraPlus Response)
-publicDir swedish english link handler = choice [
-    -- the correct url with region/lang/publicdir where the publicdir must be in the correct lang
-    allLocaleDirs $ \locale -> dirByLang locale swedish english $ hGetAllowHttp $ handler
-
-    -- if they use the swedish name without region/lang we should redirect to the correct swedish locale
-  , dir swedish $ hGetAllowHttp $ redirectKontraResponse $ link (mkLocaleFromRegion REGION_SE)
-
-    -- if they use the english name without region/lang we should redirect to the correct british locale
-  , dir english $ hGetAllowHttp $ redirectKontraResponse $ link (mkLocaleFromRegion REGION_GB)
-  ]
-
-
-forAllTargetedLocales :: (Locale -> Route h) -> Route h
-forAllTargetedLocales r = choice (map r targetedLocales)
-
-allLocaleDirs :: (Locale -> Route a) -> Route a
-allLocaleDirs r = forAllTargetedLocales $ \l -> regionDir l $ langDir l $ r l
-
-regionDir :: Locale -> Route a -> Route a
-regionDir = dir . codeFromRegion . getRegion
-
-langDir :: Locale -> Route a -> Route a
-langDir = dir . codeFromLang . getLang
-
-dirByLang :: HasLocale l => l -> String -> String -> Route a -> Route a
-dirByLang locale swedishdir englishdir
-  | getLang locale == LANG_SE = dir swedishdir
-  | otherwise = dir englishdir
-
-handleHomepage :: Kontra (Either Response (Either KontraLink String))
-handleHomepage = do
-  ctx@Context{ ctxmaybeuser,ctxservice } <- getContext
-  loginOn <- isFieldSet "logging"
-  referer <- getField "referer"
-  email   <- getField "email"
-  case (ctxmaybeuser, ctxservice) of
-    (Just _user, _) -> do
-      response <- V.simpleResponse =<< firstPage ctx loginOn referer email
-      clearFlashMsgs
-      return $ Left response
-    (Nothing, Nothing) -> do
-      response <- V.simpleResponse =<< firstPage ctx loginOn referer email
-      clearFlashMsgs
-      return $ Left response
-    _ -> Left <$> embeddedErrorPage
-
-handleSitemapPage :: Kontra Response
-handleSitemapPage = handleWholePage sitemapPage
-
-handlePriceplanPage :: Kontra Response
-handlePriceplanPage = handleWholePage priceplanPage
-
-handleSecurityPage :: Kontra Response
-handleSecurityPage = handleWholePage securityPage
-
-handleLegalPage :: Kontra Response
-handleLegalPage = handleWholePage legalPage
-
-handlePrivacyPolicyPage :: Kontra Response
-handlePrivacyPolicyPage = handleWholePage privacyPolicyPage
-
-handleTermsPage :: Kontra Response
-handleTermsPage = handleWholePage termsPage
-
-handleAboutPage :: Kontra Response
-handleAboutPage = handleWholePage aboutPage
-
-handlePartnersPage :: Kontra Response
-handlePartnersPage = handleWholePage partnersPage
-
-handleClientsPage :: Kontra Response
-handleClientsPage = handleWholePage clientsPage
-
-handleContactUsPage :: Kontra Response
-handleContactUsPage = handleWholePage contactUsPage
-
-handleApiPage :: Kontra Response
-handleApiPage = handleWholePage apiPage
-
-handleScriveByMailPage :: Kontra Response
-handleScriveByMailPage = handleWholePage scriveByMailPage
-
-handleWholePage :: Kontra String -> Kontra Response
-handleWholePage f = do
-  content <- f
-  response <- V.simpleResponse content
-  clearFlashMsgs
-  return response
-
-{- |
-   Serves out the static html files.
--}
-serveHTMLFiles :: (Kontrakcja m, MonadPlus m) => m Response
-serveHTMLFiles =  do
-  rq <- askRq
-  let fileName = last (rqPaths rq)
-  guard ((length (rqPaths rq) > 0) && (isSuffixOf ".html" fileName))
-  s <- guardJustM $ (liftIO $ catch (fmap Just $ BS.readFile ("html/" ++ fileName))
-                                      (const $ return Nothing))
-  renderFromBody V.kontrakcja $ BS.toString s
-
