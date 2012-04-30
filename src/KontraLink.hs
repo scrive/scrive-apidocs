@@ -249,6 +249,6 @@ instance Show KontraLink where
 setParams :: URI -> [(String, String)] -> URI
 setParams uri params = 
   let mvars = urlDecodeVars $ uriQuery uri
-      vars = urlEncodeVars $ maybe newvars (++ newvars) mvars
-  in (++) (show $ uri { uriQuery = "?" ++ vars})
+      vars = urlEncodeVars $ maybe params (++ params) mvars
+  in uri { uriQuery = "?" ++ vars}
   
