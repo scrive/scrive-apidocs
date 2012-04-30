@@ -265,8 +265,6 @@ pageFooter=
     <div class="col left">
       <strong>$_pageFooterTheService()$</strong>
       <ul>
-        <!--<li><a href="/features.html">Funktioner</a></li> -->
-        <!--<li><a href="/benefits.html">Fördelar</a></li> -->
         <li><a href="$linkpriceplan$">$_pageFooterPrices()$</a></li>
       </ul>
       <br />
