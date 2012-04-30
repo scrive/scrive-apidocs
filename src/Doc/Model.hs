@@ -2289,7 +2289,7 @@ instance MonadDB m => DBUpdate m SetDocumentIdentification (Either String Docume
       (SetElegitimationIdentificationEvidence <| ELegitimationIdentification `elem` identification |> SetEmailIdentificationEvidence)
       ("Document identification type set to " ++ show identification ++ " by " ++ actorWho actor ++ ".")
       (Just did)
-      actor     
+      actor
     getOneDocumentAffected "SetDocumentIdentification" r did
 
 data UpdateFields = UpdateFields DocumentID SignatoryLinkID [(String, String)] Actor
@@ -2297,14 +2297,17 @@ instance MonadDB m => DBUpdate m UpdateFields (Either String Document) where
   update (UpdateFields did slid fields actor) = do
     -- Document has to be in Pending state
     -- signatory could not have signed already
-    eml <- $(fromJust) `liftM` getOne  
+    eml <- $(fromJust) `liftM` getOne
            (SQL ("SELECT value FROM signatory_link_fields"
                 ++ " WHERE signatory_link_fields.signatory_link_id = ?"
                 ++ "   AND signatory_link_fields.type = ?")
                  [toSql slid, toSql EmailFT])
 
-    let updateValue xtype custom_name value = do
-          _ <- kRun $ mkSQL UPDATE tableSignatoryLinkFields
+    let updateValue name fieldtype value = do
+          let custom_name = case fieldtype of
+                              CustomFT xname _ -> xname
+                              _ -> ""
+          r <- kRun $ mkSQL UPDATE tableSignatoryLinkFields
                  [ sql "value" value ]
                  <++> SQL (" WHERE EXISTS (SELECT 1 FROM documents, signatory_links"
                            ++             " WHERE documents.id = signatory_links.document_id"
@@ -2314,23 +2317,23 @@ instance MonadDB m => DBUpdate m UpdateFields (Either String Document) where
                            ++      "  AND signatory_link_id = ?"
                            ++      "  AND custom_name = ?"
                            ++      "  AND type = ?")
-                        [ toSql Pending, toSql slid, toSql custom_name, toSql (xtype :: Int)]
-          return ()
-
-    forM_ fields $ \(n, v) -> do
-        case n of
-          "sigco"     -> updateValue 3 "" v
-          "sigpersnr" -> updateValue 4 "" v
-          "sigcompnr" -> updateValue 5 "" v
-          "signature" -> updateValue 8 "" v
-          label       -> updateValue 7 label v
-
-        update $ InsertEvidenceEvent
+                        [ toSql Pending, toSql slid, toSql custom_name, toSql fieldtype]
+          when_ (r>0) $ do
+            update $ InsertEvidenceEvent
                UpdateFieldsEvidence
-               ("Information for signatory with email \"" ++ eml ++ "\" for field \"" ++ n ++ "\" was set to \"" ++ v ++ "\" by " ++ actorWho actor ++ ".")
+               ("Information for signatory with email \"" ++ eml ++ "\" for field \"" ++ name ++ "\" was set to \"" ++ value ++ "\" by " ++ actorWho actor ++ ".")
                (Just did)
                actor
-    getOneDocumentAffected "UpdateFields" (1) did
+          return (r :: Integer)
+
+    updatedRows <- forM fields $ \(n, v) -> do
+        case n of
+          "sigco"     -> updateValue n CompanyFT v
+          "sigpersnr" -> updateValue n PersonalNumberFT v
+          "sigcompnr" -> updateValue n CompanyNumberFT v
+          "signature" -> updateValue n SignatureFT v
+          label       -> updateValue n (CustomFT label False) v
+    getOneDocumentAffected "UpdateFields" (if sum updatedRows > 0 then 1 else 0) did
 
 
 data UpdateFieldsNoStatusCheck = UpdateFieldsNoStatusCheck DocumentID SignatoryLinkID (String, String) Actor

@@ -26,6 +26,7 @@ import EvidenceLog.Tables
 import IPAddress
 import MinutesTime
 import Misc
+import Data.Typeable
 import User.Model
 import Util.HasSomeUserInfo
 import Version
@@ -59,7 +60,7 @@ data Actor = Actor {
   , actorAPIString :: Maybe String
     -- | A textual string describing this actor, used for building evidence strings
   , actorWho       :: String
-  } deriving Show
+  } deriving (Show, Ord, Eq, Typeable)
 
 systemActor :: MinutesTime -> Actor
 systemActor time = Actor {
@@ -164,6 +165,8 @@ data InsertEvidenceEvent = InsertEvidenceEvent
                            String                 -- Text for evidence
                            (Maybe DocumentID)     -- The documentid if this event is about a document
                            Actor                  -- Actor
+    deriving (Eq, Ord, Show, Typeable)
+
 instance MonadDB m => DBUpdate m InsertEvidenceEvent Bool where
   update (InsertEvidenceEvent event text mdid actor) =
     kRun01 $ mkSQL INSERT tableEvidenceLog [
@@ -192,6 +195,7 @@ data DocumentEvidenceEvent = DocumentEvidenceEvent {
   , evSigLinkID  :: Maybe SignatoryLinkID
   , evAPI        :: Maybe String
   }
+  deriving (Eq, Ord, Show, Typeable)
 
 htmlDocFromEvidenceLog :: TemplatesMonad m => String -> [DocumentEvidenceEvent] -> m String
 htmlDocFromEvidenceLog title elog = do

@@ -567,8 +567,12 @@ testUpdateFieldsEvidenceLog = doTimes 10 $ do
   etdoc <- randomUpdate $ \f t->UpdateFields (documentid doc) (signatorylinkid sl) [f] (systemActor t)
   lg <- dbQuery $ GetEvidenceLog (documentid doc)
   validTest $ do
-    assertRight etdoc
-    assertJust $ find (\e -> evType e == UpdateFieldsEvidence) lg
+    case etdoc of
+      Right _ ->
+        assertJust $ find (\e -> evType e == UpdateFieldsEvidence) lg
+      Left _ ->
+        assertEqual "if UpdateFields did not change any rows it should not add to the evidence" Nothing
+                    (find (\e -> evType e == UpdateFieldsEvidence) lg)
   
 testPreparationToPendingEvidenceLog :: TestEnv ()
 testPreparationToPendingEvidenceLog = do
