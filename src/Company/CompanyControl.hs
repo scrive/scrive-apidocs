@@ -3,14 +3,18 @@ module Company.CompanyControl (
   , handlePostCompany
   , handleGetCompanyJSON
   , handleCompanyLogo
+  , routes
+  , adminRoutes
 
   , withCompanyAdmin
   ) where
 
 import Control.Monad.State
+import Control.Arrow (first)
 import Data.Functor
 import Data.Maybe
-import Happstack.Server hiding (simpleHTTP)
+import Happstack.Server hiding (dir, simpleHTTP)
+import Happstack.StaticRouting (Route, dir, choice)
 import Text.JSON
 import Text.JSON.String
 import Text.JSON.Types
@@ -21,22 +25,44 @@ import qualified Data.Map as Map
 
 import DB
 import Company.CompanyView
+import Administration.AdministrationView (adminCompanyBrandingPage)
 import Company.Model
 import Kontra
 import KontraLink
 import Misc
 import Redirect
+import Routing (hGet, hPost, toK0, toK1)
 import User.Model
 import User.Utils
 import Util.HasSomeCompanyInfo
 import Util.MonadUtils
 import qualified Log
 
-handleGetCompany :: Kontrakcja m => m String
-handleGetCompany = withCompanyUser $ \_ -> viewCompanySettings
+routes :: Route (KontraPlus Response)
+routes = choice
+  [ hGet $ toK0 $ handleGetCompany
+  , hPost $ toK0 $ handlePostCompany Nothing
+  , dir "json" $ hGet $ toK0 $ handleGetCompanyJSON Nothing
+  , hGet $ toK1 $ handleCompanyLogo
+  ]
 
-handlePostCompany :: Kontrakcja m => m KontraLink
-handlePostCompany = withCompanyAdmin $ \(_user, company) -> do
+adminRoutes :: Route (KontraPlus Response)
+adminRoutes = choice
+  [ hGet $ toK1 $ handleAdminGetCompany
+  , hPost $ toK1 $ handlePostCompany . Just
+  , dir "json" $ hGet $ toK1 $ handleGetCompanyJSON . Just
+  ]
+
+
+handleGetCompany :: Kontrakcja m => m String
+handleGetCompany = withCompanyUser $ const viewCompanySettings
+
+handleAdminGetCompany :: Kontrakcja m => CompanyID -> m String
+handleAdminGetCompany cid = withCompanyAdminOrAdminOnly (Just cid) $
+  const $ adminCompanyBrandingPage cid
+
+handlePostCompany :: Kontrakcja m => Maybe CompanyID -> m KontraLink
+handlePostCompany mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
   iscompanyjson <- isFieldSet "company"
   cui' <-
     if iscompanyjson
@@ -51,7 +77,7 @@ handlePostCompany = withCompanyAdmin $ \(_user, company) -> do
   cui <- setCompanyLogoFromRequest cui'
   Log.debug $ "company UI " ++ (show $ companyid company) ++ " updated to " ++ (show cui)
   _ <- dbUpdate $ UpdateCompanyUI (companyid company) cui
-  return LinkAccountCompany
+  return $ LinkAccountCompany mcid
 
 setCompanyLogoFromRequest :: Kontrakcja m => CompanyUI -> m CompanyUI
 setCompanyLogoFromRequest cui = do
@@ -87,12 +113,11 @@ handleCompanyLogo cid = do
   return $ setHeaderBS (BS.fromString "Content-Type") (BS.fromString "image/png") $
     Response 200 Map.empty nullRsFlags (BSL.fromChunks $ map unBinary $ maybeToList mimg) Nothing
 
-handleGetCompanyJSON :: Kontrakcja m => m JSValue
-handleGetCompanyJSON = withCompanyUser $ \(user, company) ->
-  return $ companyJSON company (useriscompanyadmin user)
+handleGetCompanyJSON :: Kontrakcja m => Maybe CompanyID -> m JSValue
+handleGetCompanyJSON mcid = withCompanyUserOrAdminOnly mcid $ return . companyJSON
 
-companyJSON :: Company -> Bool -> JSValue
-companyJSON company editable =
+companyJSON :: (Bool, Company) -> JSValue
+companyJSON (editable, company) =
   JSObject $ toJSObject
                [ ("company",
                    JSObject $ toJSObject [
@@ -127,3 +152,14 @@ withCompanyUser action = do
 withCompanyAdmin :: Kontrakcja m => ((User, Company) -> m a) -> m a
 withCompanyAdmin action = withCompanyUser $ \(user, company) ->
   if useriscompanyadmin user then action (user, company) else internalError
+
+
+withCompanyUserOrAdminOnly :: Kontrakcja m => Maybe CompanyID -> ((Bool, Company) -> m a) -> m a
+withCompanyUserOrAdminOnly Nothing action = withCompanyUser (action . first useriscompanyadmin)
+withCompanyUserOrAdminOnly (Just cid) action = onlySalesOrAdmin $
+  guardJustM (dbQuery (GetCompany cid)) >>= curry action True
+
+withCompanyAdminOrAdminOnly :: Kontrakcja m => Maybe CompanyID -> (Company -> m a) -> m a
+withCompanyAdminOrAdminOnly Nothing action = withCompanyAdmin (action . snd)
+withCompanyAdminOrAdminOnly (Just cid) action = onlySalesOrAdmin $
+  guardJustM (dbQuery (GetCompany cid)) >>= action

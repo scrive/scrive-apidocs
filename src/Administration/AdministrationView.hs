@@ -14,6 +14,7 @@ module Administration.AdministrationView(
             , adminUsersPage
             , adminCompanyPage
             , adminCompaniesPage
+            , adminCompanyBrandingPage
             , adminCompanyUsersPage
             , adminUsersPageForSales
             , allUsersTable
@@ -69,6 +70,14 @@ adminCompanyUsersPage cid =
         F.value "adminlink" $ show $ LinkAdminOnly
         F.value "admincompanieslink" $ show $ LinkCompanyAdmin Nothing
         F.value "adminuserslink" $ show $ LinkUserAdmin Nothing
+        F.value "companyid" $ show cid
+
+{- | Manage company branding page -}
+adminCompanyBrandingPage :: TemplatesMonad m => CompanyID -> m String
+adminCompanyBrandingPage cid =
+    renderTemplate "admincompanybranding" $ do
+        F.value "adminlink" $ show $ LinkAdminOnly
+        F.value "admincompanieslink" $ show $ LinkCompanyAdmin Nothing
         F.value "companyid" $ show cid
 
 {-| Manage users page - can find user here -}
