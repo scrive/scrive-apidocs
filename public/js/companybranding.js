@@ -261,8 +261,13 @@ window.CompanyModel = Backbone.Model.extend({
       editable: false
     },
     initialize: function(args) {
-      this.submiturl = "/account/company";
-      this.url = "/account/company/json";
+      if (!args.companyid) {
+        this.submiturl = "/account/company";
+        this.url = "/account/company/json";
+      } else {
+        this.submiturl = "/adminonly/companyadmin/branding/"+args.companyid;
+        this.url = "/adminonly/companyadmin/branding/json/"+args.companyid;
+      }
       this.fetch({cache: false});
     },
     id: function() {
@@ -514,7 +519,7 @@ window.CompanyBrandingView = Backbone.View.extend({
 
 window.CompanyBranding = {
   init: function(args) {
-    var model = new CompanyModel();
+    var model = new CompanyModel(args);
     var div = $("<div />");
     var view = new CompanyBrandingView({ model: model, el: div});
     return new Object({
