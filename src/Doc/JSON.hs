@@ -17,6 +17,7 @@ where
 import Doc.DocStateData
 import Text.JSON
 import Text.JSON.Types
+import Text.JSON.FromJSValue
 import Util.JSON
 import Misc
 import KontraLink
@@ -166,7 +167,7 @@ sfFromJSON (name, jsv) = do
 irFromJSON :: JSValue -> Either String InvolvedRequest
 irFromJSON jsv = do
   i'@(JSRational _ _) <- jsgetdef "role" (showJSON (5::Int)) jsv
-  let Just (i::Int) = fromJSON i'
+  let Just (i::Int) = fromJSValue i'
   JSObject dat' <- jsget "data" jsv
   let dat = fromJSObject dat'
   JSArray attachmentjs <- jsgetdef "attachments" (showJSON ([]::[JSValue])) jsv
@@ -192,7 +193,7 @@ dcrFromJSON jsv = do
   f <- fileNameFromJSON =<< jsget "mainfile" jsv
   JSString (JSONString title) <- jsgetdef "title" (showJSON f) jsv
   tp''@(JSRational _ _) <- jsgetdef "type" (showJSON (1::Int)) jsv
-  let Just (tp'::Int) = fromJSON tp''
+  let Just (tp'::Int) = fromJSValue tp''
   tp <- maybe (Left $ "Unrecognized document type: " ++ show tp') Right $ toSafeEnum tp'
   JSArray tags' <- jsgetdef "tags" (showJSON ([]::[JSValue])) jsv
   tags <- mapM tagFromJSON tags'

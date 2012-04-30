@@ -40,9 +40,9 @@ import Misc
 import Data.List
 import Doc.DocUtils
 import Data.Foldable hiding (concat, elem)
-import Util.JSON
 import Data.Maybe
 import Control.Monad
+import Text.JSON.FromJSValue
 
 -- Structure definition + pointed
 data SignatoryTMP = SignatoryTMP {
@@ -165,14 +165,14 @@ toSignatoryDetails2 sTMP  =
    withRolesAndAttsAndCSV x = (x,roles $ sTMP, attachments $ sTMP, csvupload $ sTMP)
    
 
-instance FromJSON SignatoryTMP where
-    fromJSON = do
-        author <- fromJSONField "author"
-        signs  <- fromJSONField "signs" 
-        fields <- fromJSONField "fields"
-        signorder <- fromJSONField "signorder"
-        attachments <- fromJSONField "attachments"
-        csv <- fromJSONField "csv"
+instance FromJSValue SignatoryTMP where
+    fromJSValue = do
+        author <- fromJSValueField "author"
+        signs  <- fromJSValueField "signs"
+        fields <- fromJSValueField "fields"
+        signorder <- fromJSValueField "signorder"
+        attachments <- fromJSValueField "attachments"
+        csv <- fromJSValueField "csv"
 
         return $ Just $
             (setSignOrder (SignOrder $ fromMaybe 1 signorder)) $
@@ -183,11 +183,11 @@ instance FromJSON SignatoryTMP where
             (map addAttachment $ concat $ maybeToList attachments) $^^
             emptySignatoryTMP
             
-instance FromJSON SignatoryField where
-    fromJSON = do
-        ftype <- fromJSONField "name"
-        value  <- fromJSONField "value" 
-        placements <- fromJSONField "placements" 
+instance FromJSValue SignatoryField where
+    fromJSValue = do
+        ftype <- fromJSValueField "name"
+        value  <- fromJSValueField "value"
+        placements <- fromJSValueField "placements"
         case (ftype,value) of 
           (Just ft, Just v) -> do
               let fixFT (CustomFT name _)= CustomFT name (not $ null v)
@@ -196,19 +196,19 @@ instance FromJSON SignatoryField where
           _ -> return Nothing
         
 
-instance FromJSON SignatoryAttachment where
-    fromJSON = do
-        name<- fromJSONField "name"
-        description  <- fromJSONField "description"
+instance FromJSValue SignatoryAttachment where
+    fromJSValue = do
+        name<- fromJSValueField "name"
+        description  <- fromJSValueField "description"
         case (name,description) of
              (Just n, Just d) -> return $ Just $ SignatoryAttachment {signatoryattachmentname  = n ,
                                                                       signatoryattachmentdescription = d,
                                                                       signatoryattachmentfile = Nothing}
              _ -> return Nothing  
 
-instance FromJSON FieldType where
-   fromJSON = do 
-    s <- fromJSON
+instance FromJSValue FieldType where
+   fromJSValue = do
+    s <- fromJSValue
     return $ case s of
          Just "fstname"   -> Just $ FirstNameFT
          Just "sndname"   -> Just $ LastNameFT
@@ -220,18 +220,18 @@ instance FromJSON FieldType where
          Just name        -> Just $ CustomFT  name False
          _ -> Nothing
 
-instance FromJSON FieldPlacement where
-    fromJSON = do
-         x          <- fromJSONField "x"
-         y          <- fromJSONField "y"  
-         page       <- fromJSONField "page"
-         pagewidth  <- fromJSONField "pagewidth"
-         pageheight <- fromJSONField "pageheight"
+instance FromJSValue FieldPlacement where
+    fromJSValue = do
+         x          <- fromJSValueField "x"
+         y          <- fromJSValueField "y"
+         page       <- fromJSValueField "page"
+         pagewidth  <- fromJSValueField "pagewidth"
+         pageheight <- fromJSValueField "pageheight"
          return $ liftM5 FieldPlacement x y page pagewidth pageheight
 
-instance FromJSON CSVUpload  where
-    fromJSON = do
-        rows <- fromJSON
+instance FromJSValue CSVUpload  where
+    fromJSValue = do
+        rows <- fromJSValue
         case rows of
              Just rs -> return $ Just $ CSVUpload {
                     csvtitle = ""

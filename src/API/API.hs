@@ -39,7 +39,7 @@ import Control.Monad.Trans.Control
 import Crypto.RNG
 import DB
 import Templates.Templates
-import Util.JSON
+import Text.JSON.JSValueContainer
 
 {- | API calls user JSPO object as a response and work within json value as a context-}
 type APIResponse = JSObject JSValue
@@ -119,7 +119,7 @@ apiUnknownCall = remainingPath POST $ apiResponse $ return $ apiError API_ERROR_
    But each context has to be able get read from HTTP params and should have JSON object inside.
 -}
 
-class (JSONContainer a) =>  APIContext a where
+class (JSValueContainer a) =>  APIContext a where
     apiContext :: Kontrakcja m => m (Either (API_ERROR,String) a)
 
 --- ERROR Response
