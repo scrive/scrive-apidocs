@@ -41,7 +41,7 @@ showAPIDashboard :: TemplatesMonad m
                     => User
                     -> [(APIToken, MagicHash)]
                     -> [(Int64, String, [APIPrivilege])]
-                    -> Maybe (APIToken, MagicHash)
+                    -> Maybe (APIToken, MagicHash, APIToken, MagicHash)
                     -> m String
 showAPIDashboard user apitokens apiprivileges mpersonaltoken = do
   renderTemplate "apiDashboard" $ do
@@ -56,8 +56,10 @@ showAPIDashboard user apitokens apiprivileges mpersonaltoken = do
         F.valueM "privileges" $ mapM privilegeDescription ps
     case mpersonaltoken of
       Nothing -> return ()
-      Just (tok, mh) ->
+      Just (apitoken, apisecret, tok, mh) ->
         F.object "personaltoken" $ do
+          F.value "apitoken" $ show apitoken
+          F.value "apisecret" $ show apisecret
           F.value "token" $ show tok 
           F.value "secret" $ show mh
           

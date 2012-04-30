@@ -42,17 +42,11 @@ import Kontra
 import DBError
 import User.Model
 import EvidenceLog.Model
-import qualified Data.ByteString.UTF8 as BS hiding (length)
 import Util.HasSomeUserInfo
 
+import OAuth.Util
 import OAuth.Model
 import Doc.DocStorage
-import qualified Data.Map as Map
---import Happstack.Server.RqData
-import Happstack.Server.Monads
-
-import Data.Maybe
-import OAuth.Parse
 
 -- | Respond with a 201 Created status
 data Created a = Created a
@@ -228,28 +222,13 @@ getSessionUser = do
 
 getOAuthUser :: Kontrakcja m => APIMonad m (Maybe (User, Actor))
 getOAuthUser = do
-  rq <- lift $ askRq
   ctx <- getContext
-  case Map.lookup (BS.fromString "authorization") $ rqHeaders rq of
-    Nothing -> return Nothing
-    Just (HeaderPair _ auths) -> do
-
-      auth <- apiGuard (notLoggedIn "Missing Authorization headers.") $ BS.toString <$> listToMaybe auths
-
-      -- pull the data out of Authorization
-      let params = splitAuthorization auth
-
-      sigtype <- apiGuard (badInput "Authorization header must contain oauth_signature_method.") $ maybeRead =<< lookup "oauth_signature_method" params
-      when (sigtype /= "PLAINTEXT") $ throwError $ badInput "oauth_signatory_method must be PLAINTEXT."
-
-      (mapisecret, mtokensecret) <- apiGuard (badInput "Authorization header must contain a valid oauth_signature.") $ splitSignature =<< maybeRead =<< lookup "oauth_signature" params
-      apisecret <- apiGuard (badInput "The API Secret is invalid format.") mapisecret
-      tokensecret <- apiGuard (badInput "The Token Secret is invalid format.") mtokensecret
-     
-      apitoken    <- apiGuard (badInput "The Authorization header must contain oauth_consumer_key.") $ maybeRead =<< maybeRead =<< lookup "oauth_consumer_key" params
-      accesstoken <- apiGuard (badInput "The Authorization header must contain oauth_token.") $ maybeRead =<< maybeRead =<< lookup "oauth_token" params
-
-      (userid, apistring) <- apiGuardL (forbidden "OAuth credentials are invalid.") $ dbQuery $ GetUserIDForAPIWithPrivilege apitoken apisecret accesstoken tokensecret APIDocCreate
+  eauth <- lift $ getAuthorization
+  case eauth of
+    Left errors -> throwError $ badInput errors
+    Right auth -> do
+      (userid, apistring) <- apiGuardL (forbidden "OAuth credentials are invalid.") $ 
+                              dbQuery $ GetUserIDForAPIWithPrivilege (oaAPIToken auth) (oaAPISecret auth) (oaAccessToken auth) (oaAccessSecret auth) APIDocCreate
   
       user <- apiGuardL (serverError "The User account for those credentials does not exist.") $ dbQuery $ GetUserByID userid
 

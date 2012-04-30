@@ -13,6 +13,7 @@ import Data.Data (Data)
 import Happstack.Data
 import Data.List
 import Control.Monad.Trans
+import Network.URI
 
 data APIToken = APIToken { atID :: Int64
                          , atToken :: MagicHash
@@ -63,7 +64,7 @@ data RequestTempCredentials = RequestTempCredentials
                               APIToken 
                               MagicHash
                               [APIPrivilege]
-                              String -- callback URL
+                              URI
                               MinutesTime
 instance (CryptoRNG m, MonadDB m) => DBUpdate m RequestTempCredentials (Maybe (APIToken, MagicHash)) where
   update (RequestTempCredentials _     _      []    _        _) = return Nothing
@@ -85,7 +86,7 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m RequestTempCredentials (Maybe (A
                            , toSql $ atID token
                            , toSql verifier
                            , toSql $ 10 `minutesAfter` time
-                           , toSql callback
+                           , toSql $ show callback
                            , toSql $ atID token
                            , toSql $ atToken token
                            , toSql secret
@@ -97,7 +98,7 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m RequestTempCredentials (Maybe (A
                    , toSql $ atID token
                    , toSql verifier
                    , toSql $ 10 `minutesAfter` time
-                   , toSql callback
+                   , toSql $ show callback
                    , toSql $ atID token
                    , toSql $ atToken token
                    , toSql secret
@@ -116,11 +117,13 @@ data VerifyCredentials = VerifyCredentials
                               APIToken 
                               UserID
                               MinutesTime
-instance MonadDB m => DBUpdate m VerifyCredentials (Maybe (String, MagicHash)) where
+instance MonadDB m => DBUpdate m VerifyCredentials (Maybe (URI, MagicHash)) where
   update (VerifyCredentials token uid time) = do
     kPrepare ("UPDATE oauth_temp_credential SET user_id = ? WHERE id = ? AND temp_token = ? AND expires > ? RETURNING callback, verifier")
     _ <- kExecute [ toSql uid, toSql $ atID token, toSql $ atToken token, toSql time ]
-    mr <- foldDB (\acc cb vr -> (cb, vr):acc) []
+    mr <- foldDB (\acc cb vr -> case parseURI cb of 
+                     Just uri -> (uri, vr):acc
+                     Nothing  -> acc) []
     oneObjectReturnedGuard mr
 
 data GetRequestedPrivileges = GetRequestedPrivileges
@@ -230,11 +233,13 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m RequestAccessToken (Maybe (APITo
 data DenyCredentials = DenyCredentials
                        APIToken
                        MinutesTime
-instance MonadDB m => DBUpdate m DenyCredentials (Maybe String) where
+instance MonadDB m => DBUpdate m DenyCredentials (Maybe URI) where
   update (DenyCredentials token time) = do
     _ <- kRun $ SQL "DELETE FROM oauth_temp_credential WHERE (id = ? AND temp_token = ?) OR expires <= ? RETURNING callback" 
                     [ toSql $ atID token, toSql $ atToken token, toSql time ]
-    mr <- foldDB (\acc url->url:acc) []
+    mr <- foldDB (\acc cb-> case parseURI cb of
+                     Nothing  -> acc
+                     Just url -> url:acc) []
     oneObjectReturnedGuard mr
 
 data GetUserIDForAPIWithPrivilege = GetUserIDForAPIWithPrivilege
@@ -304,14 +309,14 @@ instance MonadDB m => DBQuery m GetGrantedPrivileges [(Int64, String, [APIPrivil
             f acc tid _ _  _  cn _     p = (tid, cn, [p]):acc                     -- user's company name
 
 data GetPersonalToken = GetPersonalToken UserID
-instance MonadDB m => DBQuery m GetPersonalToken (Maybe (APIToken, MagicHash)) where
+instance MonadDB m => DBQuery m GetPersonalToken (Maybe (APIToken, MagicHash, APIToken, MagicHash)) where
   query (GetPersonalToken userid) = do
-    kPrepare (  "SELECT a.id, a.access_token, a.access_secret "
+    kPrepare (  "SELECT t.id, t.api_token, t.api_secret, a.id, a.access_token, a.access_secret "
              ++ "FROM oauth_access_token a "
              ++ "JOIN oauth_api_token t on a.api_token_id = t.id "
              ++ "WHERE a.user_id = ? AND t.user_id = ? AND a.id IN (SELECT access_token_id FROM oauth_privilege WHERE access_token_id = a.id AND privilege = ?)")
     _ <- kExecute [toSql userid, toSql userid, toSql APIPersonal]
-    mr <- foldDB (\acc i t s -> (APIToken i t, s):acc) []
+    mr <- foldDB (\acc ti tt ts i t s -> (APIToken ti tt, ts, APIToken i t, s):acc) []
     oneObjectReturnedGuard mr
     
 data CreateAPIToken = CreateAPIToken UserID
@@ -407,3 +412,24 @@ instance MonadDB m => DBUpdate m DeletePrivilege Bool where
              ++ "WHERE user_id = ? AND id = ? AND id NOT IN (SELECT access_token_id FROM oauth_privilege)") 
     _ <- kExecute [toSql userid, toSql tokenid]
     return $ r == 0
+
+data OAuthTempCredRequest = OAuthTempCredRequest { tcCallback   :: URI
+                                                 , tcAPIToken   :: APIToken
+                                                 , tcAPISecret  :: MagicHash
+                                                 , tcPrivileges :: [APIPrivilege]
+                                                 }
+
+data OAuthTokenRequest = OAuthTokenRequest { trAPIToken   :: APIToken
+                                           , trAPISecret  :: MagicHash
+                                           , trTempToken  :: APIToken
+                                           , trTempSecret :: MagicHash
+                                           , trVerifier   :: MagicHash
+                                           }
+
+data OAuthAuthorization = OAuthAuthorization { oaAPIToken     :: APIToken
+                                             , oaAPISecret    :: MagicHash
+                                             , oaAccessToken  :: APIToken
+                                             , oaAccessSecret :: MagicHash
+                                             }
+                                               
+                                               

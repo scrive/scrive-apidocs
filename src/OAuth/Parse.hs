@@ -44,3 +44,4 @@ readPrivileges s = privs (splitOver "+" s) []
         privs (p:pp) a = case maybeRead p of
           Just priv -> privs pp (priv:a)
           Nothing -> Nothing
+

@@ -72,7 +72,7 @@
                     method : "POST",
                     url : url,
                     ajax: true,
-                  json: '{"type" : ' + (wiz.get('process')?wiz.get('process').signable:"1") + '}',
+                    json: JSON.stringify({"type" : (wiz.get('process') ? wiz.get('process').signable : 1)}),
                     expectedType: 'json',
                     beforeSend: function() {
                         console.log("first");

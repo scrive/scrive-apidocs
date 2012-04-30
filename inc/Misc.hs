@@ -523,3 +523,10 @@ listDiff :: Eq a => [a] -> [a] -> ([a], [a], [a])
 listDiff a b = ([x|x <- a, x `notElem` b],
                 [x|x <- a, x `elem`    b],
                 [x|x <- b, x `notElem` a])
+
+lookupAndRead :: (Read a, Eq k) => k -> [(k, String)] -> Maybe a
+lookupAndRead k kvs = maybeRead =<< lookup k kvs
+
+lookupAndReadString :: (Read a, Eq k) => k -> [(k, String)] -> Maybe a
+lookupAndReadString k kvs = maybeRead =<< maybeRead =<< lookup k kvs
+

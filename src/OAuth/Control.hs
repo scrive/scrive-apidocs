@@ -12,25 +12,18 @@ import User.Utils
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import OAuth.View
-import OAuth.Parse
+import OAuth.Util
 import Login
 import User.Model
 import AppView
 
 
 import Happstack.Server.RqData
-import qualified Data.ByteString.UTF8 as BS hiding (length)
-import qualified Codec.Binary.UTF8.String as UTF
-import qualified Codec.Binary.Url as URL
 import Control.Monad.Trans
 import Control.Applicative
---import Happstack.Server.RqData
 import Happstack.Server.Types
-import Happstack.Server.Monads
-import qualified Data.Map as Map
 import Data.Maybe
 import Control.Monad.Error
-import Network.URI
 
 --import qualified Log
 
@@ -54,35 +47,17 @@ oauthAPI = choice [
 tempCredRequest :: Kontrakcja m => m Response
 tempCredRequest = api $ do
   time <- ctxtime <$> getContext
-  rq <- lift askRq
-  let headers = rqHeaders rq
 
-  HeaderPair _ auths <- apiGuard (badInput "Authorization header is required.") $ Map.lookup (BS.fromString "authorization") headers
+  etcr <- lift $ getTempCredRequest
 
-  auth <- apiGuard' $ BS.toString <$> listToMaybe auths
+  case etcr of
+    Left errors -> throwError $ badInput errors
+    Right tcr -> do
+      (temptoken, tempsecret) <- apiGuardL' $ dbUpdate $ RequestTempCredentials (tcAPIToken tcr) (tcAPISecret tcr) (tcPrivileges tcr) (tcCallback tcr) time
 
-  -- pull the data out of Authorization
-  let params = splitAuthorization auth
-
-  sigtype <- apiGuard (badInput "oauth_signature_method is required") $ maybeRead =<< lookup "oauth_signature_method" params
-  when (sigtype /= "PLAINTEXT") $ throwError $ badInput "oauth_signature_method must be 'PLAINTEXT'."
-
-  (mapisecret, _) <- apiGuard (badInput "oauth_signature was missing or in bad format.") $ splitSignature =<< maybeRead =<< lookup "oauth_signature" params
-  apisecret <- apiGuard (badInput "API Secret is missing or in bad format.") mapisecret
-
-  callback <- apiGuard (badInput "oauth_callback is required and must be a valid URL.") $ UTF.decode <$> (URL.decode =<< maybeRead =<< lookup "oauth_callback" params)
-
-  apitoken <- apiGuard (badInput "oauth_consumer_key is missing or is invalid.") $ maybeRead =<< maybeRead =<< lookup "oauth_consumer_key" params
-
-  privilegesstring <- apiGuardL (badInput "'privileges' parameter must exist.") $ getDataFn' (look "privileges")
-
-  privileges <- apiGuard (badInput "'privileges' parameter is invalid.") $ readPrivileges privilegesstring
-
-  (temptoken, tempsecret) <- apiGuardL' $ dbUpdate $ RequestTempCredentials apitoken apisecret privileges callback time
-
-  return $ FormEncoded [("oauth_token", show temptoken),
-                        ("oauth_token_secret", show tempsecret),
-                        ("oauth_callback_confirmed", "true")]
+      return $ FormEncoded [("oauth_token", show temptoken),
+                            ("oauth_token_secret", show tempsecret),
+                            ("oauth_callback_confirmed", "true")]
 
 authorization :: Kontrakcja m => m (Either KontraLink String)
 authorization = do
@@ -115,8 +90,7 @@ authorizationDenied = do
   murl <- dbUpdate $ DenyCredentials token time
   case murl of
     Nothing -> return $ LinkHome locale
-    Just callback -> do
-      url <- guardJust $ parseURI callback
+    Just url -> do
       -- here we redirect to callback with denied=true
       return $ LinkOAuthCallback url token Nothing
 
@@ -130,10 +104,7 @@ authorizationGranted = do
     Nothing ->
       return $ LinkOAuthAuthorization token
     Just user -> do
-      (callback, verifier) <- guardJustM $ dbUpdate $ VerifyCredentials token (userid user) time
-
-      url <- guardJust $ parseURI callback
-
+      (url, verifier) <- guardJustM $ dbUpdate $ VerifyCredentials token (userid user) time
       return $ LinkOAuthCallback url token $ Just verifier
 
 authorizationGrantedLogin :: Kontrakcja m => m KontraLink
@@ -148,10 +119,7 @@ authorizationGrantedLogin = do
     Nothing ->
       return $ LinkOAuthAuthorization token
     Just user -> do
-      (callback, verifier) <- guardJustM $ dbUpdate $ VerifyCredentials token (userid user) time
-
-      url <- guardJust $ parseURI callback
-
+      (url, verifier) <- guardJustM $ dbUpdate $ VerifyCredentials token (userid user) time
       return $ LinkOAuthCallback url token $ Just verifier
 
 authorizationGrantedNewUser :: Kontrakcja m => m KontraLink
@@ -166,33 +134,14 @@ authorizationGrantedNewUser = do
 tokenCredRequest :: Kontrakcja m => m Response
 tokenCredRequest = api $ do
   time <- ctxtime <$> getContext
-  rq <- lift askRq
-  let headers = rqHeaders rq
-
-  HeaderPair _ auths <- apiGuard (badInput "Authorization header is required.") $ Map.lookup (BS.fromString "authorization") headers
-
-  auth <- apiGuard (badInput "Authorization header is required.") $ BS.toString <$> listToMaybe auths
-
-  -- pull the data out of Authorization
-  let params = splitAuthorization auth
-
-  sigtype <- apiGuard (badInput "oauth_signature_method is required") $ maybeRead =<< lookup "oauth_signature_method" params
-  when (sigtype /= "PLAINTEXT") $ throwError $ badInput "oauth_signature_method must be PLAINTEXT."
-
-  (mapisecret, mtoksecret) <- apiGuard (badInput "oauth_signature is required.") $ splitSignature =<< maybeRead =<< lookup "oauth_signature" params
-  apisecret <- apiGuard (badInput "API Secret is in bad format.") mapisecret
-  tokensecret <- apiGuard (badInput "Token Secret is in bad format.") mtoksecret
-
-  apitoken <- apiGuard (badInput "oauth_consumer_key is required.") $ maybeRead =<< maybeRead =<< lookup "oauth_consumer_key" params
-
-  temptoken <- apiGuard (badInput "oauth_token is required.") $ maybeRead =<< maybeRead =<< lookup "oauth_token" params
-  verifier  <- apiGuard (badInput "oauth_verifier is required.") $ maybeRead =<< maybeRead =<< lookup "oauth_verifier" params
-
-  (accesstoken, accesssecret) <- apiGuardL' $ dbUpdate $ RequestAccessToken apitoken apisecret temptoken tokensecret verifier time
-
-  return $ FormEncoded [("oauth_token",        show accesstoken)
-                       ,("oauth_token_secret", show accesssecret)
-                       ]
+  etr <- lift $ getTokenRequest
+  case etr of
+    Left errors -> throwError $ badInput errors
+    Right tr -> do
+      (accesstoken, accesssecret) <- apiGuardL' $ dbUpdate $ RequestAccessToken (trAPIToken tr) (trAPISecret tr) (trTempToken tr) (trTempSecret tr) (trVerifier tr) time
+      return $ FormEncoded [("oauth_token",        show accesstoken)
+                           ,("oauth_token_secret", show accesssecret)
+                           ]
     
 apiDashboard :: Kontrakcja m => m (Either KontraLink Response)
 apiDashboard = checkUserTOSGet $ do
@@ -242,4 +191,3 @@ deletePrivilege = withUserPost $ do
         Nothing -> ignore $ dbUpdate $ DeletePrivileges (userid user) tokenid
         Just pr -> ignore $ dbUpdate $ DeletePrivilege  (userid user) tokenid pr
   return LinkOAuthDashboard
-  

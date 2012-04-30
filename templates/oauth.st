@@ -222,6 +222,8 @@ apiDashboard =
       <table>
         <thead>
           <tr>
+            <td>API Token</td>
+            <td>API Secret</td>
             <td>Access Token</td>
             <td>Access Secret</td>
             <td></td>
@@ -229,6 +231,12 @@ apiDashboard =
         </thead>
         <tbody>
           <tr>
+            <td>
+              $personaltoken.apitoken$
+            </td>
+            <td>
+              $personaltoken.apisecret$
+            </td>
             <td>
               $personaltoken.token$
             </td>
