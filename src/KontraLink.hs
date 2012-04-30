@@ -241,13 +241,14 @@ instance Show KontraLink where
     showsPrec _ (LinkMailAPIDelayConfirmation email delayid key) = (++) ("/mailapi/confirmdelay/" ++ (URL.encode $ UTF.encode email) ++ "/" ++ show delayid ++ "/" ++ show key)
     showsPrec _ (LinkOAuthAuthorization token) = (++) ("/oauth/authorization?oauth_token=" ++ show token)
     showsPrec _ (LinkOAuthCallback url token (Just verifier)) = 
-      let newvars = [("oauth_token", show token), ("oauth_verifier", show verifier)]
-          mvars = urlDecodeVars $ uriQuery url
-          vars = urlEncodeVars $ maybe newvars (++ newvars) mvars
-      in (++) (show $ url { uriQuery = "?" ++ vars})
+      (++) (show $ setParams url [("oauth_token", show token), ("oauth_verifier", show verifier)])
     showsPrec _ (LinkOAuthCallback url token Nothing) = 
-      let newvars = [("oauth_token", show token), ("denied", "true")]
-          mvars = urlDecodeVars $ uriQuery url
-          vars = urlEncodeVars $ maybe newvars (++ newvars) mvars
-      in (++) (show $ url { uriQuery = "?" ++ vars})
+      (++) (show $ setParams url [("oauth_token", show token), ("denied", "true")])
     showsPrec _ LinkOAuthDashboard = (++) ("/oauth/dashboard")
+
+setParams :: URI -> [(String, String)] -> URI
+setParams uri params = 
+  let mvars = urlDecodeVars $ uriQuery uri
+      vars = urlEncodeVars $ maybe newvars (++ newvars) mvars
+  in (++) (show $ uri { uriQuery = "?" ++ vars})
+  
