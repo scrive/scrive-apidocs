@@ -146,16 +146,24 @@ window.DocumentSignSignatoriesView = Backbone.View.extend({
           if(index === 0)
               sigdiv.addClass('first');
           var name       = $("<div class='name' />").text(signatory.name);
+          var line       = $("<div class='line' />");
+          var middle1    = $("<div class='middle' />");
+          var middle2    = $("<div class='middle' />");
+          var middle3    = $("<div class='middle' />");
           var statusicon = $("<div class='icon status' />").addClass(signatory.statusicon);
           var status     = $("<span class='statustext' />").addClass(signatory.statusicon).text(signatory.status);
           var details    = $('<a class="details" href="#" />').text(localization.docsignview.showDetails);
 
+          middle1.append(statusicon);
+          middle2.append(status);
+          middle3.append(details);
+          line.append(middle1).append(middle2).append(middle3);
           details.click(function() {
               sigbox.setSignatoryIndex(index);
               return false;
           });
 
-          sigdiv.append(name).append(statusicon).append(status).append(details);
+          sigdiv.append(name).append(line);
           list.append(sigdiv);
       });
       return list;

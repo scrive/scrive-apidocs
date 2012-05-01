@@ -3,6 +3,7 @@
 # This script assumes a command-line arg which is the enhanced deployment zip
 # This script assumes DIR which is the directory where scripts can be found
 # This script assumes TMP which is the directory as a temporary workspace
+# This script assumes TWPASSWORD which is the trustweaver certificate password
 # example:
 # DIR=/home/eric/haskell/kontrakcja
 
@@ -53,7 +54,7 @@ cd ..
 
 # For https authentication of Trustweaver
 twcert=$DIR/certs/credentials.pem
-twcertpwd=jhdaEo5LLejh
+twcertpwd=$TWPASSWORD
 twurl=https://tseiod.trustweaver.com/ts/svs.asmx
 
 echo "Constructing SOAP Message"

@@ -44,9 +44,7 @@ describe "sign up after signing a document" do
     @emailhelper.follow_link_in_latest_mail_for random_email
 
     puts "sign the doc"
-    (@wait.until { @driver.find_element :css => ".sign a" }).click
-    (@wait.until { @driver.find_element :css => ".signguard input[type='checkbox']"  }).click
-    (@wait.until { @driver.find_element :css => ".modal-container a.btn-small.float-right" }).click
+    @dochelper.partSign
 
     puts "we should be given the option to accept the tos"
     @wait.until { @driver.find_element :css => ".tos input[type='checkbox']" }.click

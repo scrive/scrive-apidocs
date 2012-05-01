@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
 # This script assumes the existence of BUILD_NUMBER from TeamCity
+# This script assumes the existence of TWPASSWORD as the password for trustweaver certificates
 # This script assumes TMP which is the directory as a temporary workspace
 # example:
 #DIR=/home/eric/haskell/kontrakcja
@@ -71,7 +72,7 @@ base64 "$hashdoc" | cat scripts/top - scripts/bottom > "$soaprequest"
 
 # For https authentication of Trustweaver
 twcert=certs/credentials.pem
-twcertpwd=jhdaEo5LLejh
+twcertpwd=$TWPASSWORD
 twurl=https://tseiod.trustweaver.com/ts/svs.asmx
 
 echo "Signing with trustweaver"

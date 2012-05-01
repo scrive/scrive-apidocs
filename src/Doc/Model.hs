@@ -557,8 +557,7 @@ selectSignatoryLinksSQL = SQL ("SELECT "
   ++ ", signatory_attachments.description as sigdesc "
   ++ " FROM (signatory_links "
   ++ " LEFT JOIN signatory_attachments "
-  ++ " ON signatory_attachments.document_id = signatory_links.document_id "
-  ++ " AND signatory_attachments.signatory_link_id = signatory_links.id) "
+  ++ " ON signatory_attachments.signatory_link_id = signatory_links.id) "
   ++ " JOIN documents "
   ++ " ON signatory_links.document_id = documents.id ") []
 
@@ -666,7 +665,7 @@ insertSignatoryLinkAsIs documentid link = do
   case msiglink of
     Nothing -> return Nothing
     Just siglink -> do
-      msigattaches <- mapM (insertSignatoryAttachmentAsIs documentid (signatorylinkid siglink)) (signatoryattachments link)
+      msigattaches <- mapM (insertSignatoryAttachmentAsIs (signatorylinkid siglink)) (signatoryattachments link)
       if any isNothing msigattaches
         then return Nothing
         else do
@@ -674,19 +673,18 @@ insertSignatoryLinkAsIs documentid link = do
           return (Just newsiglink)
 
 signatoryAttachmentsSelectors :: String
-signatoryAttachmentsSelectors = intercalate ", " [
-    "document_id"
-  , "signatory_link_id"
+signatoryAttachmentsSelectors = intercalate ", "
+  [ "signatory_link_id"
   , "file_id"
   , "name"
   , "description"
   ]
 
-fetchSignatoryAttachments :: MonadDB m => DBEnv m (M.Map (DocumentID, SignatoryLinkID) [SignatoryAttachment])
+fetchSignatoryAttachments :: MonadDB m => DBEnv m (M.Map SignatoryLinkID [SignatoryAttachment])
 fetchSignatoryAttachments = foldDB decoder M.empty
   where
-    decoder acc document_id signatory_link_id file_id name description =
-      M.insertWith' (++) (document_id, signatory_link_id) [SignatoryAttachment {
+    decoder acc signatory_link_id file_id name description =
+      M.insertWith' (++) signatory_link_id [SignatoryAttachment {
           signatoryattachmentfile = file_id
         , signatoryattachmentname = name
         , signatoryattachmentdescription = description
@@ -753,13 +751,12 @@ insertAuthorAttachmentAsIs documentid attach = do
   fetchAuthorAttachments
     >>= oneObjectReturnedGuard . concatMap snd . M.toList
 
-insertSignatoryAttachmentAsIs :: MonadDB m => DocumentID -> SignatoryLinkID -> SignatoryAttachment -> DBEnv m (Maybe SignatoryAttachment)
-insertSignatoryAttachmentAsIs did slid SignatoryAttachment {..} = do
+insertSignatoryAttachmentAsIs :: MonadDB m => SignatoryLinkID -> SignatoryAttachment -> DBEnv m (Maybe SignatoryAttachment)
+insertSignatoryAttachmentAsIs slid SignatoryAttachment {..} = do
   _ <- kRun $ mkSQL INSERT tableSignatoryAttachments [
         sql "file_id" signatoryattachmentfile
        , sql "name" signatoryattachmentname
        , sql "description" signatoryattachmentdescription
-       , sql "document_id" did
        , sql "signatory_link_id" slid
        ] <++> SQL ("RETURNING " ++ signatoryAttachmentsSelectors) []
 
@@ -1139,9 +1136,8 @@ data DeleteSigAttachment = DeleteSigAttachment DocumentID SignatoryLinkID FileID
 instance MonadDB m => DBUpdate m DeleteSigAttachment (Either String Document) where
   update (DeleteSigAttachment did slid fid actor) = do
     r <- kRun $ mkSQL UPDATE tableSignatoryAttachments [sql "file_id" SqlNull]
-      <++> SQL "WHERE document_id = ? AND file_id = ? AND signatory_link_id = ?" [
-        toSql did
-      , toSql fid
+      <++> SQL "WHERE file_id = ? AND signatory_link_id = ?"
+      [ toSql fid
       , toSql slid
       ]
     when_ (r == 1) $
@@ -1697,9 +1693,8 @@ data SaveSigAttachment = SaveSigAttachment DocumentID SignatoryLinkID String Fil
 instance MonadDB m => DBUpdate m SaveSigAttachment (Either String Document) where
   update (SaveSigAttachment did slid name fid actor) = do
     r <- kRun $ mkSQL UPDATE tableSignatoryAttachments [sql "file_id" fid]
-      <++> SQL "WHERE document_id = ? AND file_id IS NULL AND name = ? AND signatory_link_id = ?" [
-        toSql did
-      , toSql name
+      <++> SQL "WHERE file_id IS NULL AND name = ? AND signatory_link_id = ?"
+      [ toSql name
       , toSql slid
       ]
     when_ (r == 1) $
@@ -2303,17 +2298,16 @@ instance MonadDB m => DBUpdate m RemoveDocumentAttachment (Either String Documen
 
 data SetSigAttachments = SetSigAttachments DocumentID SignatoryLinkID [SignatoryAttachment] Actor
 instance MonadDB m => DBUpdate m SetSigAttachments () where
-  update (SetSigAttachments did slid sigatts _actor) = do
+  update (SetSigAttachments _did slid sigatts _actor) = do
     _ <-doDeleteAll
     forM_ sigatts doInsertOne
     where
-     doDeleteAll = kRun $ SQL "DELETE FROM signatory_attachments WHERE document_id = ? AND signatory_link_id = ?" [toSql did, toSql slid]
+     doDeleteAll = kRun $ SQL "DELETE FROM signatory_attachments WHERE signatory_link_id = ?" [toSql slid]
      doInsertOne SignatoryAttachment{..} = do
         kRun $ mkSQL INSERT tableSignatoryAttachments [
             sql "file_id" signatoryattachmentfile
           , sql "name" signatoryattachmentname
           , sql "description" signatoryattachmentdescription
-          , sql "document_id" did
           , sql "signatory_link_id" slid
           ]
 

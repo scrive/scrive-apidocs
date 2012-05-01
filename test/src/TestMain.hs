@@ -122,6 +122,10 @@ import EvidenceLogTest
 import LiveDocxTest
 #endif
 
+#ifndef NO_EVIDENCELOG
+import PadTest
+#endif
+
 allTests :: [(String, [String] -> TestEnvSt -> Test)]
 allTests = tail tests
   where
@@ -217,6 +221,9 @@ allTests = tail tests
 #endif
 #ifndef NO_LIVEDOCX
       , ("livedocx", const $ const liveDocxTests)
+#endif
+#ifndef NO_PAD
+      , ("pad", const padTests)
 #endif
       ]
 

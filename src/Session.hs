@@ -53,6 +53,7 @@ import Util.MonadUtils
 import Doc.SignatoryLinkID
 import qualified Data.Map as Map
 import Misc (optional)
+
 -- | Session ID is a wrapped 'Integer' really
 newtype SessionId = SessionId Integer
     deriving (Eq, Ord, Num, Typeable)

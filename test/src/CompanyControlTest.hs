@@ -46,7 +46,7 @@ test_handleGetCompanyJSON = do
     <$> mkContext (mkLocaleFromRegion defaultValue)
 
   req <- mkRequest GET []
-  (jsv, _ctx') <- runTestKontra req ctx $ handleGetCompanyJSON
+  (jsv, _ctx') <- runTestKontra req ctx $ handleGetCompanyJSON Nothing
 
   let ejsonid = getIDFromJSON jsv
   assertBool "Able to get id from json" (isRight ejsonid)
@@ -70,7 +70,7 @@ test_settingUIWithHandlePostCompany = do
   req1 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"barsbackground\":\"green\",\"barstextcolour\":\"yellow\"}")
                         , ("logo", inFile "public/img/email-logo.png")
                         ]
-  (res1, _ctx') <- runTestKontra req1 ctx $ handlePostCompany >>= sendRedirect
+  (res1, _ctx') <- runTestKontra req1 ctx $ handlePostCompany Nothing >>= sendRedirect
 
   assertEqual "Response code is 303" 303 (rsCode res1)
   Just newcompany1 <- dbQuery $ GetCompany (companyid company)
@@ -80,7 +80,7 @@ test_settingUIWithHandlePostCompany = do
 
   req2 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"barsbackground\":\"\",\"barstextcolour\":\"\"}")
                          ]
-  (res2, _ctx') <- runTestKontra req2 ctx $ handlePostCompany >>= sendRedirect
+  (res2, _ctx') <- runTestKontra req2 ctx $ handlePostCompany Nothing >>= sendRedirect
 
   assertEqual "Response code is 303" 303 (rsCode res2)
   Just newcompany2 <- dbQuery $ GetCompany (companyid company)
@@ -91,7 +91,7 @@ test_settingUIWithHandlePostCompany = do
   req3 <- mkRequest POST [ ("company", inText $ "{\"id\":\"" ++ show (companyid company) ++ "\",\"barsbackground\":\"blue\",\"barstextcolour\":\"pink\"}")
                          , ("islogo", inText "false")
                          ]
-  (res3, _ctx') <- runTestKontra req3 ctx $ handlePostCompany >>= sendRedirect
+  (res3, _ctx') <- runTestKontra req3 ctx $ handlePostCompany Nothing >>= sendRedirect
 
   assertEqual "Response code is 303" 303 (rsCode res3)
   Just newcompany3 <- dbQuery $ GetCompany (companyid company)
