@@ -7,10 +7,11 @@
 
 var DocumentDesignView = Backbone.View.extend({
     initialize: function (args) {
-        _.bindAll(this, 'render', 'refreshFinalButton', 'refreshAuthorizationDependantOptions');
+        _.bindAll(this, 'render', 'refreshFinalButton', 'refreshSignatoryAttachmentsOption', 'refreshAuthorizationDependantOptions');
         this.model.bind('reset', this.render);
         this.model.bind('change:ready', this.render);
         this.model.bind('change:signatories', this.refreshFinalButton);
+        this.model.bind('change:signatories', this.refreshSignatoryAttachmentsOption);
         this.model.bind('change:authorization', this.refreshAuthorizationDependantOptions);
         this.model.view = this;
         this.prerender();
