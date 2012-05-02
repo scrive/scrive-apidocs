@@ -1,15 +1,15 @@
 ###
-modalSignInviteView=
+modalContractCreated=
 <div class="modal-container">
   <div class="modal-header">
     <span class="modal-icon message"></span>
     $if(signed)$
     <span class="modal-title">
-      <h3>$_modalSignInviteViewHeaderIfSigned()$</h3>
+      <h3>$_modalContractCreatedHeaderIfSigned()$</h3>
     </span>
     $else$
     <span class="modal-title">
-      <h3>$_modalSignInviteViewHeaderIfElse()$</h3>
+      <h3>$_modalContractCreatedHeaderIfElse()$</h3>
     </span>
     $endif$
     <a class="modal-close close"> </a>
@@ -18,11 +18,11 @@ modalSignInviteView=
     <div class="modal-content">
       $if(signed)$
       <p>
-        $_modalSignInviteViewBodyIfSigned()$
+        $_modalContractCreatedBodyIfSigned()$
       </p>
       $else$
       <p>
-        $_modalSignInviteViewBodyIfElse()$
+        $_modalContractCreatedBodyIfElse()$
       </p>
       $endif$
     </div>
@@ -241,34 +241,6 @@ jQuery('form[action="$signuplink$"]').submit(function(){
 }
 </script>
 ###
-modalSendInviteView=
-<div class="modal-container">
-  <div class="modal-header">
-    <span class="modal-icon message"></span>
-    <span class="modal-title">
-      <h3>$_modalSendInviteViewHeader()$</h3>
-    </span>
-    <a class="modal-close close"> </a>
-  </div>
-  <div class="modal-body">
-    <div class="modal-content">
-      <p>$_modalSendInviteViewBody()$
-      </p>
-    </div>
-  </div>
-  <div class="modal-footer">
-    <a class="btn-small green float-right close">
-      <div class="left"></div>
-      <div class="label">
-        <p>$_close()$</p>
-        <div class="btn-symbol green arrow-left"></div>
-      </div>
-      <div class="right"></div>
-    </a>
-  </div>
-</div>
-######
-######
 modalLoginForSaveView=
 <div class="modal-container">
   <div class="modal-header">

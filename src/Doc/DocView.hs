@@ -28,7 +28,6 @@ module Doc.DocView (
   , mailInvitation
   , modalLoginForSaveView
   , modalRejectedView
-  , modalSendInviteView
   , modalSignAwaitingAuthorLast
   , modalSendConfirmationView
   , pageAttachmentDesign
@@ -98,12 +97,6 @@ modalSendConfirmationView document = do
     F.value "signatory" . listToMaybe $ map getSmartName $ partyList document
     documentInfoFields document)
 
-modalSendInviteView :: TemplatesMonad m => Document -> m FlashMessage
-modalSendInviteView document = do
-  partylist <- renderListTemplate . map getSmartName $ partyListButAuthor document
-  toModal <$> (renderTemplate "modalSendInviteView" $ do
-    F.value "partyListButAuthor" partylist
-    F.value "documenttitle" $ documenttitle document)
 
 modalRejectedView :: TemplatesMonad m => Document -> m FlashMessage
 modalRejectedView document = do

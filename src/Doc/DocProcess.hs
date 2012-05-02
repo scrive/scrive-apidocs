@@ -219,7 +219,7 @@ contractProcess =
   , processflashmessagenobulkremindssent = "flashMessageNoBulkContractRemindsSent"
 
   -- process specific modal templates
-  , processmodalsendconfirmation = "modalSignInviteView"
+  , processmodalsendconfirmation = "modalContractCreated"
 
   -- process specific seal information
   , processsealincludesmaxtime = True
