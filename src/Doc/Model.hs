@@ -179,7 +179,7 @@ documentOrderByToSQL DocumentOrderByPartners =
   parenthesize (selectSignatoryLinksSmartNames [SignatoryPartner])
 documentOrderByToSQL DocumentOrderByAuthor =
   parenthesize (selectSignatoryLinksSmartNames [SignatoryAuthor])
-documentOrderByToSQL DocumentOrderByService = SQL "documents.service" []
+documentOrderByToSQL DocumentOrderByService = SQL "documents.service_id" []
 
 selectSignatoryLinksSmartNames :: [SignatoryRole] -> SQL
 selectSignatoryLinksSmartNames roles =
