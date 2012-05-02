@@ -298,7 +298,7 @@
 "_aboutPagePerson3Contact","daniel@scrive.com <BR/> +46 735 44 56 81",,"daniel@scrive.com <BR/> +46 735 44 56 81"
 "_aboutPagePerson3Position","SALES REP",,"SALES REP"
 "_aboutPagePerson4","Joakim Larsson",,"Joakim Larsson"
-"_aboutPagePerson4Body","Joakim har en kandidatexamen i företagsekonomi från Lunds Universitet och har även gått eCommerce Business-programmet på Hyper Island i Stockholm. Han har tidigare arbetat med online-marknadsföring på ett större e-handelsbolag i London. Joakim jobbar med marknadsföring på Scrive.",,"Joakim has a bachelor’s degree in business administration from Lund University and a degree in eCommerce Business from Hyper Island in Stockholm. Previously he has worked with online marketing for a large eCommerce company in London. Joakim works with marketing at Scrive."
+"_aboutPagePerson4Body","Joakim har en kandidatexamen i företagsekonomi från Lunds Universitet och har även gått eCommerce Business-programmet på Hyper Island i Stockholm. Han har tidigare arbetat med online-marknadsföring på ett större e-handelsbolag i London. Joakim jobbar med marknadsföring på Scrive.",,"Joakim has a bachelor’s degree in business administration from Lund University and a degree in eCommerce Business from Hyper Island in Stockholm. Previously he worked with online marketing for a large eCommerce company in London. Joakim works with marketing at Scrive."
 "_aboutPagePerson4Contact","joakim@scrive.com <BR/>",,"joakim@scrive.com <BR/>"
 "_aboutPagePerson4Position","MARKETING",,"MARKETING"
 "_aboutPagePerson5","Daniel Dudek",,"Daniel Dudek"
@@ -334,7 +334,7 @@
 "_aboutPagePerson12Contact","tim@scrive.com",,"tim@scrive.com"
 "_aboutPagePerson12Position","HEAD OF IT OPERATIONS",,"HEAD OF IT OPERATIONS"
 "_aboutPageTitle","| Om Scrive",,"| About Scrive"
-"_aboutPageTopBody","<p>Scrive är en tjänst för att e-signera offerter, avtal och andra typer av dokument. Vi hjälper våra kunder att stänga affärer snabbare, minska den administrativa bördan och samtidigt förbättra kundupplevelsen. </p> <BR/> <p>Vi är ett ungt företag som växer i en rasande fart. Idag har vi tolv medarbetare som arbetar från åtta platser runt om i världen. Du finner våra medarbetare i bland annat Stockholm, Berlin, New Orleans och Warszawa. Vi är stolta över att vi på så kort tid lyckats bygga en tjänst som är marknadsledande på svenska marknaden och vi berättar gärna mer om hur mycket vi tycker om Haskell, den teknologi vi valt för att bygga tjänsten.  </p> <BR/> <p>Scrive grundades av Lukas Duczko och Gracjan Polak som lärde känna varandra under sin tid på kreditbolaget Klarna. </p> <BR/> ",,"<p>Scrive is a service for e-signing tenders, contracts, and other documents. We help our clients close deals faster, decrease the administrative burden, and improve our clients’ customers’ experience. </p> <BR/> <p>We are a young company in rapid growth. Today we are twelve team members working from eight different places from around the globe. You can find us in cities such as Stockholm, Berlin, New Orleans and Warszaw. We are proud that we have managed to build a market-leading solution for the Swedish market in such a short time and we would love to tell you more about how much we like Haskell, our technology of choice. </p> <BR/> <p>Scrive was founded by Lukas Duczko and Gracjan Polak who got to know each other at the Swedish credit company Klarna.
+"_aboutPageTopBody","<p>Scrive är en tjänst för att e-signera offerter, avtal och andra typer av dokument. Vi hjälper våra kunder att stänga affärer snabbare, minska den administrativa bördan och samtidigt förbättra kundupplevelsen. </p> <BR/> <p>Vi är ett ungt företag som växer i en rasande fart. Idag har vi tolv medarbetare som arbetar från åtta platser runt om i världen. Du finner våra medarbetare i bland annat Stockholm, Berlin, New Orleans och Warszawa. Vi är stolta över att vi på så kort tid lyckats bygga en tjänst som är marknadsledande på svenska marknaden och vi berättar gärna mer om hur mycket vi tycker om Haskell, den teknologi vi valt för att bygga tjänsten.  </p> <BR/> <p>Scrive grundades av Lukas Duczko och Gracjan Polak som lärde känna varandra under sin tid på kreditbolaget Klarna. </p> <BR/> ",,"<p>Scrive is a service for e-signing tenders, contracts, and other documents. We help our clients close deals faster, decrease their administrative burden, and improve their customers’ experience. </p> <BR/> <p>We are a young company in rapid growth. Today we are twelve team members working from eight different places around the globe. You can find us in cities such as Stockholm, Berlin, New Orleans and Warszaw. We are proud that we have managed to build a market-leading solution for the Swedish market in such a short time and we would love to tell you more about how much we like Haskell, our technology of choice. </p> <BR/> <p>Scrive was founded by Lukas Duczko and Gracjan Polak, who got to know each other at the Swedish credit company Klarna.
  </p> <BR/> "
 "_accountFromSignInputsBodyAcceptTOS","Jag har läst och accepterat <a target=""_blank"" href=""$linkterms$"">Scrive
  Allmänna Villkor</a>",,"I have read and accept the <a target=""_blank"" href=""$linkterms$"">Scrive Terms of Service</a>"
@@ -2477,8 +2477,8 @@ Möjliga försiktighet.",,"Sign and store your contracts online. All information
 "_signatureMissing","Var vänliga och skriv din signatur",,"Please draw you signature"
 "_signaturePlaceYour","Signera här",,"Place your signature here"
 "_selectFileToUpload","Välj fil från dator",,"Select file from computer"
-"_atLeastOnePersonOtherThenAuthor","Document needs to have at least one more person",,"Document needs to have at least one more person"
-"_fieldnameRestricted","Field name restricted",,"Field name restricted"
+"_atLeastOnePersonMustSigns","Dokumentet måste ha åtminstone en signerande part.",,"Document needs to have at least one signatory."
+"_fieldnameRestricted","Begränsat fältnamn",,"Field name restricted"
 "_PasswordValidationMessageInputExceedsMaxLength","Lösenord får max innehålla 250 tecken.",,"Password must contain max 250 characters."
 "_PasswordValidationMessageInputLessThanMinLength","Lösenord måste innehålla minst 8 tecken.",,"Password must contain at least 8 characters."
 "_PasswordValidationMessageNeedsLetterAndDigit","Lösenord måste innehålla åtminstone två bokstäver
@@ -2543,9 +2543,9 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_padAddToPadQueueNotAdded","Misslyckades med att skicka till pad.",,"Document could not be send to pad device"
 "_padRemoveFromPadQueue","Avlägsna från pad",,"Remove from pad device"
 "_padDrawSignatureBoxHeader","Signera dokument",,"Sign document"
-"_padSigningOnSameDeviceFor1","Signera på denna enhet  ",,"Give for signing on this device to"
+"_padSigningOnSameDeviceFor1","Signera på denna enhet  ",,"Give for signing on this device to "
 "_padSigningOnSameDeviceFor2"," skall signera.    ",,". "
-"_padAddToPadQueueFor","Send to pad device to be signed by ",,"Skcika till pad för att signeras av "
+"_padAddToPadQueueFor","Skcika till pad för att signeras av ",,"Send to pad device to be signed by "
 "_padCleanImage","Rensa",,"Clean image"
 "_notFound","<h2>Oj! Sidan kunde inte hittas</h2><p>Du kanske hamnade här för att sidan inte finns eller har flyttats.</p>",,"<h2>Oops, the page couldn't be found</h2><p>You may have landed here because the page doesn't exist or has been moved.</p>"
 "_notFoundGoHome","<h3>Besök någon av dessa sidor istället:</h3><p><a href='/'>Startsidan</a></p><p><a href='/upload'>Min sida</a></p><p><a href='#' onClick='history.go(-1);return false;'>Bakåt</a></p>",,"<h3>Visit any of these pages instead:</h3><p><a href='/'>Homepage</a></p><p><a href='/upload'>My page</a></p><p><a href='#' onClick='history.go(-1);return false;'>Back</a></p>"
@@ -2557,3 +2557,6 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_offersignatorysignmodalcontentsignvieweleg","När du undertecknat blir dokumentet juridiskt bindande och det färdigställda avtalet skickas till din e-post.",,"When you signed the document becomes legally binding and the document will be sent to your e-mail."
 "_ordersignatorysignmodalcontentsignvieweleg","När du undertecknat blir dokumentet juridiskt bindande och det färdigställda avtalet skickas till din e-post.",,"When you signed the document becomes legally binding and the document will be sent to your e-mail."
 "_contact","Kontakt",,"Contact"
+"_contractsignatorysignmodalcontentauthoronly","När du signerat avtalet <strong class='documenttitle'>$documenttitle$</strong> kommer din signatur att registreras av e-signeringstjänsten Scrive.",,"When you've signed the document <strong class='documenttitle'>$documenttitle$</strong> your signature will be register by the e-signing service Scrive"
+"_offersignatorysignmodalcontentauthoronly","När du signerat avtalet <strong class='documenttitle'>$documenttitle$</strong> kommer din signatur att registreras av e-signeringstjänsten Scrive.",,"When you've signed the document <strong class='documenttitle'>$documenttitle$</strong> your signature will be register by the e-signing service Scrive"
+"_ordersignatorysignmodalcontentauthoronly","När du signerat avtalet <strong class='documenttitle'>$documenttitle$</strong> kommer din signatur att registreras av e-signeringstjänsten Scrive.",,"When you've signed the document <strong class='documenttitle'>$documenttitle$</strong> your signature will be register by the e-signing service Scrive"
