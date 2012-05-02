@@ -2340,7 +2340,7 @@ instance MonadDB m => DBUpdate m UpdateFields (Either String Document) where
           "sigcompnr" -> updateValue n CompanyNumberFT v
           "signature" -> updateValue n SignatureFT v
           label       -> updateValue n (CustomFT label False) v
-    getOneDocumentAffected "UpdateFields" (if sum updatedRows > 0 then 1 else 0) did
+    getOneDocumentAffected "UpdateFields" (if (fromInteger (sum updatedRows) == length fields) then 1 else 0) did
 
 
 data UpdateFieldsNoStatusCheck = UpdateFieldsNoStatusCheck DocumentID SignatoryLinkID (String, String) Actor

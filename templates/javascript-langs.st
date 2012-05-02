@@ -259,7 +259,7 @@ javascriptLocalisation =
                     , notReadyField : "$_setAllFields()$"
                     , notPlacedField : "$_placeAllFields()$"
                     , restrictedName : "$_fieldnameRestricted()$"
-                    , notPlacedSignature : "Signature must be placed for signing party with pad authorization"
+                    , notPlacedSignature : "$_signatureMustBePlacedForPad()$"
                 }
              , messages : {
                       sendingDocument: "$_designViewMessageSending()$"
