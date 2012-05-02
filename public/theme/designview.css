@@ -610,8 +610,10 @@
     padding: 0px;
 }
 
+.padoptions .label span, .padoptions .label strong{
+    margin-right: 5px;
+}
 .padoptions select{
-    float:right;
     top: -5px;
     position: relative;
     margin-top: 0px;

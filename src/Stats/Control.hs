@@ -616,28 +616,16 @@ getUsersAndStats = do
   list <- dbQuery GetUsersAndStats
   return $ convert' ctxtime list
   where
-    convert' _ []   = []
-    convert' ctxtime list = map (innerGroup' ctxtime)
-             $ groupBy (\(u1,_,_) (u2,_,_) -> u1 == u2) list
-    innerGroup' _ [] = error "empty list grouped"
-    innerGroup' ctxtime l@((u,m,_):_) =
-        transform' ctxtime $ foldr (\(_,_,r) (au,ac,al) ->
-                           (au,ac,r:al)) (u,m,[]) l
-    transform' :: MinutesTime
-               -> (User, Maybe Company, [( Maybe MinutesTime
-                                         , Maybe DocStatQuantity
-                                         , Maybe Int)])
-               -> (User, Maybe Company, DocStats)
-    transform' ctxtime (u,mc,l) = (u,mc,calculateDocStats ctxtime $ tuples' l)
-    tuples' :: [(Maybe MinutesTime, Maybe DocStatQuantity, Maybe Int)]
+    convert' ctxtime list = map (\(u,mc,l) -> (u,mc,calculateDocStats ctxtime $ tuples' l)) list
+    tuples' :: [(MinutesTime, DocStatQuantity, Int)]
             -> [(Int, [Int])]
     tuples' l = map toTuple' l
-    toTuple' (Just time, Just quantity, Just amount) =
+    toTuple' (time, quantity, amount) =
         case quantity of
             DocStatClose  -> (asInt time, [amount, 0])
             DocStatCreate -> (asInt time, [0, amount])
             _             -> (asInt time, [0,      0])
-    toTuple' (_, _, _) = (0, [0, 0])
+
 
 getDocStatsForUser :: Kontrakcja m => UserID -> m DocStats
 getDocStatsForUser uid = do

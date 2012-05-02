@@ -415,6 +415,7 @@ admincompany=
 	</div>
 	<ul class="tabs">
 	  <li class="active"><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+	  <li><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
 	  <li><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
 	  <li><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
 	</ul>
@@ -501,6 +502,32 @@ admincompany=
       </div>
     </form>
 ####
+admincompanybranding=
+    <a href="$adminlink$">Go back to main admin page</a>
+    <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
+    <br/>
+    <br/>
+      <div class="tab-viewer">
+	<div class="tab-header">
+	</div>
+	<ul class="tabs">
+	  <li><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+	  <li class="active"><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
+	  <li><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
+	  <li><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
+	</ul>
+      <div class="tab-container">
+	<div class="tab-content account">
+	</div>
+      </div>
+    </div>
+<script>
+var company = CompanyBranding.init({ companyid: "$companyid$" });
+var tabcontent = jQuery(".tab-content");
+tabcontent.append(company.input());
+tabcontent.append(jQuery("<div class='clearfix' />"));
+</script>
+####
 admincompanyusers=
 <a href="$adminlink$">Go back to main admin page</a>
 <a style="padding-left:100px" href="$admincompanieslink$">Go back to company admin page</a>
@@ -512,6 +539,7 @@ admincompanyusers=
   </div>
   <ul class="tabs">
     <li><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+    <li><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
     <li class="active"><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
     <li><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
   </ul>
@@ -753,6 +781,7 @@ companyusagestats=
 	</div>
 	<ul class="tabs">
 	  <li><a href="$admincompanieslink$/$companyid$">Company Information</a></li>
+	  <li><a href="$admincompanieslink$/branding/$companyid$">Branding</a></li>
 	  <li><a href="$admincompanieslink$/users/$companyid$">Users</a></li>
 	  <li class="active"><a href="$admincompanieslink$/usagestats/$companyid$">Statistics</a></li>
 	</ul>
@@ -933,48 +962,52 @@ admindocumentslist =
             cells : [
                 new Cell({name: "Dates", width:"80px", field: "ctime", special: "rendered",
                         rendering: function(_, _, doc) {
-                               return jQuery("<small><span>"
-                                          + doc.field("ctime") + " <BR/> "
-                                          + doc.field("mtime") +
-                                       " </small>");
+                               return jQuery("<small/>")
+                                           .append(jQuery("<span/>").text(doc.field("ctime")))
+                                           .append("<BR/>")
+                                           .append(jQuery("<span/>").text(doc.field("mtime")));
                           }}),
                 new Cell({name: "Author", width:"120px", field:"author", special: "rendered",
                         rendering: function(value, idx, doc) {
                             if (value != undefined)
-                                return jQuery("<small><span>" + value.name    + " <BR/> "
-                                                   + value.email   + " <BR/> "
-                                                   + value.company + "</span></small>");
+                                return jQuery("<small/>")
+                                                  .append(jQuery("<span/>").text(value.name))
+                                                  .append("<BR/>")
+                                                  .append(jQuery("<span/>").text(value.email)) 
+                                                  .append("<BR/>")
+                                                  .append(jQuery("<span/>").text(value.company));
                           }}),
                 new Cell({name: "Title", width:"120px", field:"title",  special: "rendered",
                         rendering: function(value, idx, doc) {
-                                return jQuery("<small>"+value+"</small>");
+                                return jQuery("<small/>").text(value);
                           }}),
                 new Cell({name: "Service", width:"40px", field:"service", special: "rendered",
                           rendering: function(value, idx, doc) {
                             if (value == undefined)
-                                return jQuery("<small>" + value + "</small>");
+                                return jQuery("<small/>").text(value);
 
                             return jQuery("<small>Scrive</small>");
                           }}),
                 new Cell({name: "Status", width:"40px", field:"status",  special: "rendered",
                         rendering: function(value, idx, doc) {
-                                return jQuery("<small>"+value+"</small>");
+                                return jQuery("<small/>").text(value);
                           }}),
                 new Cell({name: "Type", width:"40px", field:"type",  special: "rendered",
                         rendering: function(value, idx, doc) {
-                                return jQuery("<small>"+value+"</small>");
+                                return jQuery("<small/>").text(value);
                           }}),
                 new Cell({name: "Signatories", width:"120px", field:"signs", special: "rendered",
                           rendering: function(value, idx, doc) {
                             if (value == undefined)
                                 return ;
-
-                            return jQuery("<small>" + value.join('<BR/>') + "</small>");
+                            var res = jQuery("<small/>");
+                            _.each(value,function(v) {res.append(jQuery("<span/>").text(v)).append("<BR/>");});
+                            return res;
                           }}),
                 $if(admin)$
                 new Cell({name: "DAVE", width:"30px", field:"id", special:"rendered",
                           rendering: function(value, idx, doc) {
-                            return jQuery("<a href='/dave/document/" + value + "/' class='gotodave'>");
+                            return jQuery("<a class='gotodave'>").attr('href','/dave/document/" + value + "/');
                           }})
                 $endif$
 
