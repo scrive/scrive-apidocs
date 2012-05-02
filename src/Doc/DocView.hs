@@ -89,12 +89,13 @@ modalPdfTooLarge = toModal <$> renderTemplate_ "pdfTooBigModal"
 modalSignAwaitingAuthorLast :: TemplatesMonad m => m FlashMessage
 modalSignAwaitingAuthorLast = toModal <$> renderTemplate_ "signAwaitingAuthorLast"
 
-modalSendConfirmationView :: TemplatesMonad m => Document -> m FlashMessage
-modalSendConfirmationView document = do
+modalSendConfirmationView :: TemplatesMonad m => Document -> Bool -> m FlashMessage
+modalSendConfirmationView document authorWillSign = do
   partylist <- renderListTemplate . map getSmartName $ partyListButAuthor document
   toModal <$> (renderTemplateForProcess document processmodalsendconfirmation $ do
     F.value "partyListButAuthor" partylist
     F.value "signatory" . listToMaybe $ map getSmartName $ partyList document
+    F.value "willBeSigned" (authorWillSign && (not $ hasOtherSignatoriesThenAuthor document))
     documentInfoFields document)
 
 

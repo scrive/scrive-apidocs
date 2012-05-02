@@ -367,7 +367,7 @@ handleIssueSign document = do
         case partitionEithers mndocs of
           ([], [d]) -> do
             when_ (sendMailsDurringSigning d) $ do
-                addFlashM $ modalSendConfirmationView d
+                addFlashM $ modalSendConfirmationView d True
             return $ LinkIssueDoc (documentid d)
           ([], ds) -> do
             if isJust $ ctxservice ctx
@@ -421,7 +421,7 @@ handleIssueSend document = do
         case partitionEithers mndocs of
           ([], [d]) -> do
             when_ (sendMailsDurringSigning d) $ do
-                addFlashM $ modalSendConfirmationView d
+                addFlashM $ modalSendConfirmationView d False
             return $ LinkIssueDoc (documentid d)
           ([], ds) -> do
             if isJust $ ctxservice ctx

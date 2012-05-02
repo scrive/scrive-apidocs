@@ -7,6 +7,10 @@ modalContractCreated=
     <span class="modal-title">
       <h3>$_modalContractCreatedHeaderIfSigned()$</h3>
     </span>
+    $elseif(willBeSigned)$
+    <span class="modal-title">
+      <h3>$_modalContractCreatedHeaderIfSigned()$</h3>
+    </span>
     $else$
     <span class="modal-title">
       <h3>$_modalContractCreatedHeaderIfElse()$</h3>
@@ -17,6 +21,10 @@ modalContractCreated=
   <div class="modal-body">
     <div class="modal-content">
       $if(signed)$
+      <p>
+        $_modalContractCreatedBodyIfSigned()$
+      </p>
+      $elseif(willBeSigned)$
       <p>
         $_modalContractCreatedBodyIfSigned()$
       </p>
