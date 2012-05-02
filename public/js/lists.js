@@ -462,11 +462,13 @@
                         var a = $("<a href='#' class='expand'>").text(value);
                         td.append(a);
                     } else if (cell.isBool()) {
-                        if (value)  td.append("<center><a href='" + this.model.link() + "'>&#10003;</a></center>");
-                    } else
+                        if (value)
+                            td.append("<center><a href='" + this.model.link() + "'>&#10003;</a></center>");
+                    } else {
                            var a = $("<a href='" + this.model.link() + "'/>").text(value);
                            td.append(a);
                     }
+                   } 
                    else if (value != undefined) {
                         var span = $("<span/>").text(value);
                         td.append(span);
