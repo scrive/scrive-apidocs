@@ -2560,5 +2560,5 @@ _modalConfirmDelay,"Tack. $email$ har skapats som ett användarkonto i ditt för
 "_contractsignatorysignmodalcontentauthoronly","När du signerat avtalet <strong class='documenttitle'>$documenttitle$</strong> kommer din signatur att registreras av e-signeringstjänsten Scrive.",,"When you've signed the document <strong class='documenttitle'>$documenttitle$</strong> your signature will be register by the e-signing service Scrive"
 "_offersignatorysignmodalcontentauthoronly","När du signerat avtalet <strong class='documenttitle'>$documenttitle$</strong> kommer din signatur att registreras av e-signeringstjänsten Scrive.",,"When you've signed the document <strong class='documenttitle'>$documenttitle$</strong> your signature will be register by the e-signing service Scrive"
 "_ordersignatorysignmodalcontentauthoronly","När du signerat avtalet <strong class='documenttitle'>$documenttitle$</strong> kommer din signatur att registreras av e-signeringstjänsten Scrive.",,"When you've signed the document <strong class='documenttitle'>$documenttitle$</strong> your signature will be register by the e-signing service Scrive"
-"_signatureMustBePlacedForPad","",,"Signature field must be placed for pad verification method."
-"_missingPlacedAuthorFieldValue","",,"All author fields must be filled."
+"_signatureMustBePlacedForPad","Signaturfält måste placeras för pad signering.",,"Signature field must be placed for pad verification method."
+"_missingPlacedAuthorFieldValue","Alla fält för avsändaren måste vara ifyllda.",,"All author fields must be filled."
