@@ -1007,7 +1007,7 @@ admindocumentslist =
                 $if(admin)$
                 new Cell({name: "DAVE", width:"30px", field:"id", special:"rendered",
                           rendering: function(value, idx, doc) {
-                            return jQuery("<a class='gotodave'>").attr('href','/dave/document/" + value + "/');
+                            return jQuery("<a class='gotodave'>").attr('href','/dave/document/' + value + '/');
                           }})
                 $endif$
 
