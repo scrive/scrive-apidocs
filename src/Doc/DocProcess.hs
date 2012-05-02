@@ -90,10 +90,12 @@ data DocProcessInfo =
   , processcancelmodaltext :: String
 
   , processrejectbuttontext :: String
+
+  -- Texts for modal that is shown when someone is about to sign (clicked the blue sign button).
   , processsignatorysignmodaltitle :: String
-  , processsignatorysignmodalcontentlast :: String           -- Sign & design view. When person is signing and is last
-  , processsignatorysignmodalcontentnotlast :: String        -- Sign & design view. When person is signing and is not last
-  , processsignatorysignmodalcontentauthorlast :: String     -- Sign view. When person is author and is last
+  , processsignatorysignmodalcontentlast :: String           -- Sign & design view. When person is last to sign
+  , processsignatorysignmodalcontentnotlast :: String        -- Sign & design view. When person is not last to sign
+  , processsignatorysignmodalcontentauthorlast :: String     -- Sign view. When person is author and is last to sign
   , processsignatorysignmodalcontentdesignvieweleg :: String -- Design view, eleg authorization
   , processsignatorysignmodalcontentsignvieweleg   :: String   -- Sign view, eleg authorization
   , processsignatorysignmodalcontentauthoronly     :: String   -- Sign & design view. Only author is signatory.
