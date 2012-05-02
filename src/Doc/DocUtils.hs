@@ -274,6 +274,9 @@ sendMailsDurringSigning doc = not $ isPadDocument doc
 isPadDocument :: Document -> Bool
 isPadDocument doc = doc `allowsIdentification` PadIdentification
 
+hasOtherSignatoriesThenAuthor :: Document -> Bool
+hasOtherSignatoriesThenAuthor doc = not . null $ filter (isSignatory &&^ not . isAuthor) $ documentsignatorylinks doc
+
 {- |
     Checks whether a signatory link is eligible for sending a reminder.
     The user must be the author, and the signatory musn't be the author.
