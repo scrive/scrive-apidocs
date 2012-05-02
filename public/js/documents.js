@@ -391,6 +391,12 @@ window.Document = Backbone.Model.extend({
         }
         return true;
     },
+    authorIsOnlySignatory : function() {
+       for (var i = 0; i < this.signatories().length; ++i) 
+         if (this.signatories()[i].signs() && !this.signatories()[i].author())
+                    return false;
+       return this.author().signs();  
+    },
     allowsDD: function() {
         return this.preparation() && !this.isBasic();
     },

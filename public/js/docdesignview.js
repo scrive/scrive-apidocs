@@ -570,9 +570,17 @@ var DocumentDesignView = Backbone.View.extend({
                     }
                 }).input();
         }
-        var content = document.lastSignatoryLeft() ? $(document.process().signatorysignmodalcontentlast()) : $(document.process().signatorysignmodalcontentnotlast());
-        if (document.elegAuthorization())
-            content = $(document.process().signatorysignmodalcontentdesignvieweleg());
+        var content = $("<span/>");
+        if (document.authorIsOnlySignatory())
+            content = $(document.process().authorIsOnlySignatory());
+        else if (document.elegAuthorization())
+            content = $(document.process().signatorysignmodalcontentdesignvieweleg());    
+        else if (document.lastSignatoryLeft())
+            content = $(document.process().signatorysignmodalcontentlast());
+        else
+            content = $(document.process().signatorysignmodalcontentnotlast());
+
+        
         DocumentDataFiller.fill(document, content);
         if (document.elegAuthorization())
         {
@@ -595,7 +603,11 @@ var DocumentDesignView = Backbone.View.extend({
        var document = this.model;
        var signatory = document.currentSignatory();
        var box = $("<div>");
-       var content = $("<p>" + document.process().confirmsendtext() + " <strong class='documenttitle'/> " + localization.to + "<span class='unsignedpartynotcurrent'/></p>");
+       var confirmtext =  $("<span/>").append(document.process().confirmsendtext());
+       var content = $("<p/>").append(confirmtext);
+       if (!document.authorIsOnlySignatory())
+           content.append($("<span/>").text(localization.to)).append("<span class='unsignedpartynotcurrent'/>");
+       content.append($("<span>.</span>"));
        box.append(DocumentDataFiller.fill(document,content));
        var padDesignViewUtil = undefined;
        if (document.padAuthorization())
@@ -630,7 +642,7 @@ var DocumentDesignView = Backbone.View.extend({
         var vres = true;
         var atLeastOneSignatory = false;
         for(var i =0; i< sigs.length; i++)
-        {   if (!sigs[i].author() && sigs[i].signs()) atLeastOneSignatory = true;
+        {   if (sigs[i].signs()) atLeastOneSignatory = true;
             var fields = sigs[i].fields();
             for(var j = 0; j< fields.length; j++) {
                 var field = fields[j];
@@ -647,7 +659,7 @@ var DocumentDesignView = Backbone.View.extend({
 
         if (!atLeastOneSignatory)
         {
-              FlashMessages.add({color: 'red', content : localization.designview.validation.atLeastOnePersonOtherThenAuthor});
+              FlashMessages.add({color: 'red', content : localization.designview.validation.atLeastOnePersonMustSigns});
               this.tabs.activate(this.tab2);
               return false;
         }
