@@ -12,6 +12,10 @@ menu, nav, output, ruby, section, summary, time, mark, audio, video {
 	/* vertical-align: baseline; */
 }
 
+textarea {
+   resize: none;
+}
+
 @font-face {
     font-family: 'Helvetica Neue';
     src: local('Helvetica Neue'),
