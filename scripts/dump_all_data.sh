@@ -7,6 +7,10 @@
 ROOT1=`dirname $0`
 ROOT=`dirname $ROOT1`
 
+export PATH=/opt/postgresql-9.1.3/bin:$PATH
+export PGHOST=/var/run/postgresql9
+export PGPORT=5332
+
 LOCAL_STATE=$ROOT/_local/kontrakcja_state
 CONF=$ROOT/kontrakcja.conf
 ALLDATA=all-data-`date +%Y-%m-%d-%H-%M-%S`
