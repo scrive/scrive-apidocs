@@ -122,6 +122,14 @@ import EvidenceLogTest
 import PadTest
 #endif
 
+#ifndef NO_GENERALAPI
+import GeneralAPI
+#endif
+
+#ifndef NO_OAUTH
+import OAuth
+#endif
+
 allTests :: [(String, [String] -> TestEnvSt -> Test)]
 allTests = tail tests
   where
@@ -217,6 +225,12 @@ allTests = tail tests
 #endif
 #ifndef NO_PAD
       , ("pad", const padTests)
+#endif
+#ifndef NO_GENERALAPI
+      , ("generalapi", const generalAPITest)
+#endif
+#ifndef NO_OAUTH
+      , ("oauth", const oauthTest)
 #endif
       ]
 
