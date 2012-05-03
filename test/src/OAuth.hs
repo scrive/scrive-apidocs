@@ -19,9 +19,16 @@ import DB
 oauthTest :: TestEnvSt -> Test
 oauthTest env = testGroup "OAuth" [
   testThat "CreateAPIToken makes readable token." env testCreateAPIToken,
-  testThat "DeleteAPIToken does delete it." env testDeleteAPIToken,
-  testThat "RequestTempCredentials security." env testRTCSecurity,
-  testThat "VerifyCredentials security." env testVerifyCredentials
+  testThat "DeleteAPIToken does delete it."       env testDeleteAPIToken,
+  testThat "RequestTempCredentials security."     env testRTCSecurity,
+  testThat "VerifyCredentials security."          env testVerifyCredentials,
+  testThat "RequestAccessToken security."         env testRequestAccessToken,
+  testThat "OAuthFlow."                           env testOAuthFlow,
+  testThat "OAuthFlow with deny"                  env testOAuthFlowWithDeny,
+  testThat "GetGrantedPrivileges"                 env testGetGrantedPrivileges,
+  testThat "DeletePrivileges"                     env testDeletePrivileges,
+  testThat "DeletePrivilege"                      env testDeletePrivilege,
+  testThat "PersonalToken"                        env testPersonalToken
   ]
 
 -- test model
@@ -135,3 +142,223 @@ testVerifyCredentials = do
     Just (tok, _sec) -> do
       mvc' <- dbUpdate $ VerifyCredentials tok nonuid time
       assertBool "VerifyCredentials: user does not exist should return Nothing." $ isNothing mvc'
+      
+  -- cannot verify twice on same token
+  (apitoken', apisecret'):_ <- dbQuery $ GetAPITokensForUser (userid apiuser)
+  mcr' <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback = fromJust $ parseURI "http://www.google.com/"
+                                                                  , tcAPIToken = apitoken'
+                                                                  , tcAPISecret = apisecret'
+                                                                  , tcPrivileges = [APIDocCreate]
+                                                                  }) time
+  case mcr' of
+    Nothing -> assertFailure "RequestTempCredentials should work!"
+    Just (tok', _) -> do
+      user1 <- addNewRandomUser
+      _ <- dbUpdate $ VerifyCredentials tok' (userid user1) time
+      user2 <- addNewRandomUser
+      mvc'' <- dbUpdate $ VerifyCredentials tok' (userid user2) time
+      assertBool "VerifyCredentials: second user verifying should not work." $ isNothing mvc''
+      
+testRequestAccessToken :: TestEnv ()
+testRequestAccessToken = do
+  -- setup
+  apiclient <- addNewRandomUser
+  user      <- addNewRandomUser
+  time      <- rand 10 arbitrary  
+  _ <- dbUpdate $ CreateAPIToken (userid apiclient)
+  (apitoken,apisecret):_ <- dbQuery $ GetAPITokensForUser (userid apiclient)  
+  Just (tok, sec) <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback   = fromJust $ parseURI "http://www.google.com/"
+                                                                             , tcAPIToken   = apitoken
+                                                                             , tcAPISecret  = apisecret
+                                                                             , tcPrivileges = [APIDocCreate]
+                                                                             }) time
+  
+  Just (_, ver) <- dbUpdate $ VerifyCredentials tok (userid user) time
+  
+  -- api token must exist
+  mrat1 <- dbUpdate $ RequestAccessToken (OAuthTokenRequest { trAPIToken = (APIToken 0 $ unsafeMagicHash 0)
+                                                            , trAPISecret = apisecret
+                                                            , trTempToken = tok
+                                                            , trTempSecret = sec
+                                                            , trVerifier = ver
+                                                            }) time
+         
+  assertBool "RequestAccessToken: when APIToken does not exist should return Nothing." $ isNothing mrat1
+  
+  -- api secret must match
+  mrat2 <- dbUpdate $ RequestAccessToken (OAuthTokenRequest { trAPIToken = apitoken
+                                                            , trAPISecret = unsafeMagicHash 0
+                                                            , trTempToken = tok
+                                                            , trTempSecret = sec
+                                                            , trVerifier = ver
+                                                            }) time
+         
+  assertBool "RequestAccessToken: when APISecret does not exist should return Nothing." $ isNothing mrat2
+  
+  -- temp token must exist
+  mrat3 <- dbUpdate $ RequestAccessToken (OAuthTokenRequest { trAPIToken = apitoken
+                                                            , trAPISecret = apisecret
+                                                            , trTempToken = (APIToken 0 $ unsafeMagicHash 0)
+                                                            , trTempSecret = sec
+                                                            , trVerifier = ver
+                                                            }) time
+         
+  assertBool "RequestAccessToken: when Temp Token does not match should return Nothing." $ isNothing mrat3
+  
+  -- temp secret must match
+  mrat4 <- dbUpdate $ RequestAccessToken (OAuthTokenRequest { trAPIToken = apitoken
+                                                            , trAPISecret = apisecret
+                                                            , trTempToken = tok
+                                                            , trTempSecret = unsafeMagicHash 0
+                                                            , trVerifier = ver
+                                                            }) time
+         
+  assertBool "RequestAccessToken: when Temp Secret does not match should return Nothing." $ isNothing mrat4
+  
+  -- verifier must match
+  mrat5 <- dbUpdate $ RequestAccessToken (OAuthTokenRequest { trAPIToken = apitoken
+                                                            , trAPISecret = apisecret
+                                                            , trTempToken = tok
+                                                            , trTempSecret = sec
+                                                            , trVerifier = unsafeMagicHash 0
+                                                            }) time
+         
+  assertBool "RequestAccessToken: when verifier does not match should return Nothing." $ isNothing mrat5
+
+testOAuthFlow :: TestEnv ()
+testOAuthFlow = do
+  apiclient <- addNewRandomUser
+  user      <- addNewRandomUser
+  time      <- rand 10 arbitrary  
+  _ <- dbUpdate $ CreateAPIToken (userid apiclient)
+  (apitoken,apisecret):_ <- dbQuery $ GetAPITokensForUser (userid apiclient)  
+  Just (tok, sec) <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback   = fromJust $ parseURI "http://www.google.com/"
+                                                                             , tcAPIToken   = apitoken
+                                                                             , tcAPISecret  = apisecret
+                                                                             , tcPrivileges = [APIDocCreate]
+                                                                             }) time
+  
+  Just (_, ver) <- dbUpdate $ VerifyCredentials tok (userid user) time
+  Just (t, s) <- dbUpdate $ RequestAccessToken (OAuthTokenRequest { trAPIToken = apitoken
+                                                                  , trAPISecret = apisecret
+                                                                  , trTempToken = tok
+                                                                  , trTempSecret = sec
+                                                                  , trVerifier = ver
+                                                                  }) time
+  mup <- dbQuery $ GetUserIDForAPIWithPrivilege apitoken apisecret t s APIDocCreate
+  assertBool "GetUserIDForAPIWithPrivilege: returned Nothing but should have worked" $ isJust mup
+  
+testOAuthFlowWithDeny :: TestEnv ()
+testOAuthFlowWithDeny = do
+  apiclient <- addNewRandomUser
+  time      <- rand 10 arbitrary  
+  _ <- dbUpdate $ CreateAPIToken (userid apiclient)
+  (apitoken,apisecret):_ <- dbQuery $ GetAPITokensForUser (userid apiclient)  
+  Just (tok, sec) <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback   = fromJust $ parseURI "http://www.google.com/"
+                                                                             , tcAPIToken   = apitoken
+                                                                             , tcAPISecret  = apisecret
+                                                                             , tcPrivileges = [APIDocCreate]
+                                                                             }) time
+  
+  Just _ <- dbUpdate $ DenyCredentials tok time
+  mup <- dbUpdate $ RequestAccessToken (OAuthTokenRequest { trAPIToken = apitoken
+                                                          , trAPISecret = apisecret
+                                                          , trTempToken = tok
+                                                          , trTempSecret = sec
+                                                          , trVerifier = unsafeMagicHash 0
+                                                          }) time
+  assertBool "RequestAccessToken should return Nothing" $ isNothing mup
+  
+testGetGrantedPrivileges :: TestEnv ()
+testGetGrantedPrivileges = do
+  apiclient <- addNewRandomUser
+  user      <- addNewRandomUser
+  time      <- rand 10 arbitrary  
+  _ <- dbUpdate $ CreateAPIToken (userid apiclient)
+  (apitoken,apisecret):_ <- dbQuery $ GetAPITokensForUser (userid apiclient)  
+  Just (tok, sec) <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback   = fromJust $ parseURI "http://www.google.com/"
+                                                                             , tcAPIToken   = apitoken
+                                                                             , tcAPISecret  = apisecret
+                                                                             , tcPrivileges = [APIDocCreate]
+                                                                             }) time
+  
+  Just (_, ver) <- dbUpdate $ VerifyCredentials tok (userid user) time
+  Just (t,_) <- dbUpdate $ RequestAccessToken (OAuthTokenRequest { trAPIToken = apitoken
+                                                             , trAPISecret = apisecret
+                                                             , trTempToken = tok
+                                                             , trTempSecret = sec
+                                                             , trVerifier = ver
+                                                             }) time
+  [(tid, _, [APIDocCreate])] <- dbQuery $ GetGrantedPrivileges (userid user)
+  
+  assertBool "GetGrantedPrivileges: id should be the same" $ tid == atID t
+  
+testDeletePrivileges :: TestEnv ()
+testDeletePrivileges = do
+  apiclient <- addNewRandomUser
+  user      <- addNewRandomUser
+  time      <- rand 10 arbitrary  
+  _ <- dbUpdate $ CreateAPIToken (userid apiclient)
+  (apitoken,apisecret):_ <- dbQuery $ GetAPITokensForUser (userid apiclient)  
+  Just (tok, sec) <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback   = fromJust $ parseURI "http://www.google.com/"
+                                                                             , tcAPIToken   = apitoken
+                                                                             , tcAPISecret  = apisecret
+                                                                             , tcPrivileges = [APIDocCreate]
+                                                                             }) time
+  
+  Just (_, ver) <- dbUpdate $ VerifyCredentials tok (userid user) time
+  Just (t,_) <- dbUpdate $ RequestAccessToken (OAuthTokenRequest { trAPIToken = apitoken
+                                                                 , trAPISecret = apisecret
+                                                                 , trTempToken = tok
+                                                                 , trTempSecret = sec
+                                                                 , trVerifier = ver
+                                                                 }) time
+  
+  _ <- dbUpdate $ DeletePrivileges (userid user) (atID t)
+  ps <- dbQuery $ GetGrantedPrivileges (userid user)
+  assertBool "DeletePrivileges: should have 0 privileges granted." $ ps == []
+
+testDeletePrivilege :: TestEnv ()
+testDeletePrivilege = do
+  apiclient <- addNewRandomUser
+  user      <- addNewRandomUser
+  time      <- rand 10 arbitrary  
+  _ <- dbUpdate $ CreateAPIToken (userid apiclient)
+  (apitoken,apisecret):_ <- dbQuery $ GetAPITokensForUser (userid apiclient)  
+  Just (tok, sec) <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback   = fromJust $ parseURI "http://www.google.com/"
+                                                                             , tcAPIToken   = apitoken
+                                                                             , tcAPISecret  = apisecret
+                                                                             , tcPrivileges = [APIDocCreate]
+                                                                             }) time
+  
+  Just (_, ver) <- dbUpdate $ VerifyCredentials tok (userid user) time
+  Just (t,_) <- dbUpdate $ RequestAccessToken (OAuthTokenRequest { trAPIToken = apitoken
+                                                                 , trAPISecret = apisecret
+                                                                 , trTempToken = tok
+                                                                 , trTempSecret = sec
+                                                                 , trVerifier = ver
+                                                                 }) time
+  
+  _ <- dbUpdate $ DeletePrivilege (userid user) (atID t) APIDocCreate
+  ps <- dbQuery $ GetGrantedPrivileges (userid user)
+  assertBool "DeletePrivileges: should have 0 privileges granted." $ ps == []
+
+testPersonalToken :: TestEnv ()
+testPersonalToken = do
+  user      <- addNewRandomUser
+  mt <- dbQuery $ GetPersonalToken (userid user)
+  assertBool "GetPersonalToken: should return Nothing with new User." $ mt == Nothing
+  
+  r <- dbUpdate $ CreatePersonalToken (userid user)
+  assertBool "Should have worked!" $ r
+  
+  mt' <- dbQuery $ GetPersonalToken (userid user)
+  assertBool "CreatePersonalToken: should return Just!" $ isJust mt'
+
+  r' <- dbUpdate $ CreatePersonalToken (userid user)
+  assertBool "Should have failed!" $ not r'
+  
+  _ <- dbUpdate $ DeletePersonalToken (userid user)
+  mt'' <- dbQuery $ GetPersonalToken (userid user)
+  assertBool "GetPersonalToken: should return Nothing with User who just deleted." $ mt'' == Nothing
+  

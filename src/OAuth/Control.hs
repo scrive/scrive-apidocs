@@ -141,7 +141,7 @@ tokenCredRequest = api $ do
   case etr of
     Left errors -> throwError $ badInput errors
     Right tr -> do
-      (accesstoken, accesssecret) <- apiGuardL' $ dbUpdate $ RequestAccessToken (trAPIToken tr) (trAPISecret tr) (trTempToken tr) (trTempSecret tr) (trVerifier tr) time
+      (accesstoken, accesssecret) <- apiGuardL' $ dbUpdate $ RequestAccessToken tr time
       return $ FormEncoded [("oauth_token",        show accesstoken)
                            ,("oauth_token_secret", show accesssecret)
                            ]
